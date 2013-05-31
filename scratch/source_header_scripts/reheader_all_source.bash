@@ -36,7 +36,8 @@ find_shell_source() {
     base_dir=$1
     find $base_dir -type f \
         -name "*.bash" -or \
-        -name "*.sh"
+        -name "*.sh" -or \
+        -name "configure"
 }
 
 
