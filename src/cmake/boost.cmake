@@ -73,15 +73,15 @@ endmacro ()
 macro(static_find_boost boost_version boost_components)
 
     # pthread library required by boost
-    manta_find_library(PTHREAD "pthread.h" pthread)
+    static_find_library(PTHREAD "pthread.h" pthread)
     if    (HAVE_PTHREAD)
         set  (MANTA_ADDITIONAL_LIB ${MANTA_ADDITIONAL_LIB} pthread)
         message(STATUS "pthread supported")
-    else  (HAVE_PTHREAD)
+    else  ()
         message(STATUS "pthread headers: ${PTHREAD_INCLUDE_DIR}")
         message(STATUS "pthread library: ${PTHREAD_LIBRARY}")
         message(FATAL_ERROR "pthread library is required to build the iSAAC")
-    endif (HAVE_PTHREAD)
+    endif ()
 
     find_package(Boost ${boost_version} REQUIRED ${boost_components})
 
@@ -91,7 +91,6 @@ macro(static_find_boost boost_version boost_components)
     set      (HAVE_LIBBOOST_FILESYSTEM      ${Boost_FILESYSTEM_FOUND})
     set      (HAVE_LIBBOOST_IOSTREAMS       ${Boost_IOSTREAMS_FOUND})
     set      (HAVE_LIBBOOST_PROGRAM_OPTIONS ${Boost_PROGRAM_OPTIONS_FOUND})
-    set      (HAVE_LIBBOOST_PYTHON          ${Boost_PYTHON_FOUND})
     set      (HAVE_LIBBOOST_REGEX           ${Boost_REGEX_FOUND})
     set      (HAVE_LIBBOOST_SERIALIZATION   ${Boost_SERIALIZATION_FOUND})
     set      (HAVE_LIBBOOST_SYSTEM          ${Boost_SYSTEM_FOUND})
@@ -124,9 +123,7 @@ if (NOT Boost_FOUND)
 
     set(ENV{MANTA_BOOST_BUILD_COMPONENTS} "${MANTA_BOOST_BUILD_COMPONENTS}")
     set(ENV{MANTA_BOOST_VERSION} "${MANTA_BOOST_VERSION}")
-    if (NOT CMAKE_PARALLEL)
-        set (CMAKE_PARALLEL "1")
-    endif ()
+
     message(STATUS 
 "${CMAKE_SOURCE_DIR}/cmake/bootstrap/installBoost.bash" "${BOOST_REDIST_DIR}"
 "${CMAKE_CURRENT_BINARY_DIR}/bootstrap" "${CMAKE_PARALLEL}")
