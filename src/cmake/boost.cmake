@@ -104,6 +104,11 @@ endif ()
 
 find_package(Boost ${MANTA_BOOST_VERSION} COMPONENTS ${MANTA_BOOST_COMPONENTS})
 
+# only used if boost is found, but moving down here supresses a cmake warning:
+if (NOT CMAKE_PARALLEL)
+    set (CMAKE_PARALLEL "1")
+endif ()
+
 #
 # If the right version of boost is not found, it will be built from the distribution
 #
@@ -136,6 +141,5 @@ bash "${CMAKE_SOURCE_DIR}/cmake/bootstrap/installBoost.bash" "${BOOST_REDIST_DIR
     endif ()
 
     set (BOOST_ROOT "${CMAKE_CURRENT_BINARY_DIR}/bootstrap")
-
 endif ()
 
