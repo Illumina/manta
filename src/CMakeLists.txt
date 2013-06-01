@@ -124,9 +124,9 @@ include ("${CMAKE_SOURCE_DIR}/cmake/boost.cmake")
 
 add_subdirectory (cmake/preInstall)
 add_subdirectory (opt)
-#add_subdirectory (c++)
+add_subdirectory (c++)
 #add_subdirectory (python)
-#add_subdirectory (cmake/postInstall)
+add_subdirectory (cmake/postInstall)
 
 
 
