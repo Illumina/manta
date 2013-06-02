@@ -32,7 +32,7 @@ foreach(MANTA_PROGRAM_SOURCE ${MANTA_PROGRAM_SOURCE_LIST})
     get_filename_component(MANTA_PROGRAM ${MANTA_PROGRAM_SOURCE} NAME_WE)
     add_executable        (${MANTA_PROGRAM} ${MANTA_PROGRAM_SOURCE})
     target_link_libraries (${MANTA_PROGRAM} ${MANTA_AVAILABLE_LIBRARIES}
-                           ${BAM_LIBRARY} ${Boost_LIBRARIES}  
+                           ${BAM_LIBRARY} ${Boost_LIBRARIES}
                            ${MANTA_ADDITIONAL_LIB})
     install(TARGETS ${MANTA_PROGRAM} RUNTIME DESTINATION ${MANTA_LIBEXECDIR})
 endforeach()

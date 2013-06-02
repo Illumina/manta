@@ -87,7 +87,7 @@ fix_slashes ()
 create_path ()
 {
 	mkdir -p "$1" || exit 1
-	rel2abs "$1" || exit 1 
+	rel2abs "$1" || exit 1
 }
 
 
@@ -175,7 +175,7 @@ for a in "$@"; do
         manta_package=`echo $a | sed "s/^--package-type=//"`
     elif echo $a | grep "^--jobs=" > /dev/null 2> /dev/null; then
         parallel_jobs=`echo $a | sed "s/^--jobs=//"`
-    else 
+    else
         echo "ERROR: unknown argument: $a" 1>&2
         exit 2
     fi
@@ -206,7 +206,7 @@ if   [ "deb" == "${manta_package}" ]; then
         -DCPACK_DEBIAN_PACKAGE_ARCHITECTURE:STRING='`dpkg --print-architecture`'"
 
     CMAKE_OPTIONS="$CMAKE_OPTIONS -DCPACK_DEBIAN_PACKAGE_DEPENDS:STRING="
-    
+
 elif [ "rpm" == "${manta_package}" ]; then
     CMAKE_OPTIONS="${CMAKE_OPTIONS} \
         -DCPACK_GENERATOR:STRING=RPM \
@@ -234,7 +234,7 @@ CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX:PATH=${prefix_dir} ${CMAKE_OPTIONS}"
 
 
 # create the build directory if necessary
-if ! [ -d "${build_dir}" ]; then 
+if ! [ -d "${build_dir}" ]; then
     mkdir "${build_dir}"
     if [ "$?" != 0 ]; then
         echo "Couldn't create the build directory: ${build_dir}" 1>&2
@@ -282,7 +282,7 @@ Build   directory: ${build_dir}
 Cmake  executable: ${cmake}
 
 EOF
-fi  
+fi
 
 
 

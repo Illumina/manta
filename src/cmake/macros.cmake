@@ -49,16 +49,16 @@ macro(install_files_recursively srcDir destDir pattern perm)
     endforeach()
 endmacro()
 
-#   
+#
 # Macro to find libraries, with support for static-only search
 #
 macro(static_find_library name header library)
     if    (NOT ${name}_INCLUDE_DIR)
-        find_path(${name}_INCLUDE_DIR ${header} 
+        find_path(${name}_INCLUDE_DIR ${header}
                   HINTS ENV C_INCLUDE_PATH ENV CPATH ENV CPLUS_INCLUDE_PATH)
     endif ()
     if    (${name}_INCLUDE_DIR AND NOT ${name}_LIBRARY)
-        find_library(${name}_LIBRARY 
+        find_library(${name}_LIBRARY
                      NAMES "${LIBRARY_PREFIX}${library}${LIBRARY_SUFFIX}"
                      HINTS ENV LIBRARY_PATH)
     endif ()

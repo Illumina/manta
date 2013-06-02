@@ -29,7 +29,7 @@ macro (resetFindBoost)
     unset (Boost_MAJOR_VERSION CACHE)
     unset (Boost_MINOR_VERSION CACHE)
     unset (Boost_SUBMINOR_VERSION CACHE)
-    unset (Boost_USE_STATIC_LIBS CACHE) 
+    unset (Boost_USE_STATIC_LIBS CACHE)
 
     unset (ENV{BOOST_LIBRARYDIR})
     unset (Boost_USE_MULTITHREADED CACHE)
@@ -41,7 +41,7 @@ macro (resetFindBoost)
         unset (Boost_${UPPERCOMPONENT}_LIBRARY_RELEASE CACHE)
         unset (Boost_${UPPERCOMPONENT}_LIBRARY_DEBUG CACHE)
     endforeach (COMPONENT ${MANTA_BOOST_COMPONENTS})
-    
+
 
     unset (Boost_FOUND)
     unset (Boost_INCLUDE_DIRS)
@@ -65,7 +65,7 @@ macro (resetFindBoost)
 
 endmacro ()
 
-#   
+#
 # Not only finds boost but also sets the variables so that
 # it is being used for include and linking
 # Also makes sure pthread is available for boost
@@ -98,7 +98,7 @@ endmacro()
 
 
 if (MANTA_FORCE_STATIC_LINK)
-    set(Boost_USE_STATIC_LIBS ON) 
+    set(Boost_USE_STATIC_LIBS ON)
 endif ()
 
 find_package(Boost ${MANTA_BOOST_VERSION} COMPONENTS ${MANTA_BOOST_COMPONENTS})
@@ -124,7 +124,7 @@ if (NOT Boost_FOUND)
     set(ENV{MANTA_BOOST_BUILD_COMPONENTS} "${MANTA_BOOST_BUILD_COMPONENTS}")
     set(ENV{MANTA_BOOST_VERSION} "${MANTA_BOOST_VERSION}")
 
-    message(STATUS 
+    message(STATUS
 "${CMAKE_SOURCE_DIR}/cmake/bootstrap/installBoost.bash" "${BOOST_REDIST_DIR}"
 "${CMAKE_CURRENT_BINARY_DIR}/bootstrap" "${CMAKE_PARALLEL}")
     execute_process(COMMAND

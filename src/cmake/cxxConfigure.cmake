@@ -99,12 +99,12 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     string(REGEX REPLACE "^([0-9])\\.[0-9]\\.[0-9]" "\\1" gcc_major_version ${gcc_version})
     string(REGEX REPLACE "^[0-9]\\.([0-9])\\.[0-9]" "\\1" gcc_minor_version ${gcc_version})
     string(REGEX REPLACE "^[0-9]\\.[0-9]\\.([0-9])" "\\1" gcc_patch_version ${gcc_version})
-    
+
     set(min_gcc_major_version 4)
     set(min_gcc_minor_version 1)
     set(min_gcc_patch_version 2)
     set(min_gcc_version ${gcc_major_version}.${gcc_minor_version}.${gcc_patch_version})
-    
+
     if    (gcc_major_version LESS min_gcc_major_version OR
            (gcc_major_version EQUAL min_gcc_major_version AND (gcc_minor_version LESS min_gcc_minor_version OR
            (gcc_minor_version EQUAL min_gcc_minor_version AND gcc_patch_version LESS min_gcc_patch_version) ) ) )

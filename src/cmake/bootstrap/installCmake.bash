@@ -67,7 +67,7 @@ if [[ "${AVAILABLE_CMAKE_VERSION}" =~ ^cmake\ version\ ([0-9]+)\.([0-9]+)\.([0-9
         echo nothing to be done >&2
         exit 1
     fi
-fi 
+fi
 
 OLD_CMAKE_VERSION=`${BIN_DIR}/cmake --version 2> /dev/null`;
 if [[ $OLD_CMAKE_VERSION == "cmake version $TARBALL_VERSION" && ! $FORCE ]] ; then
@@ -75,11 +75,11 @@ if [[ $OLD_CMAKE_VERSION == "cmake version $TARBALL_VERSION" && ! $FORCE ]] ; th
     echo nothing to be done >&2
     exit 0
 elif [[ $OLD_CMAKE_VERSION != "" ]] ; then
-    echo unable to install cmake version \"$TARBALL_VERSION\" in ${BIN_DIR} >&2 
+    echo unable to install cmake version \"$TARBALL_VERSION\" in ${BIN_DIR} >&2
     echo cmake version \"$OLD_CMAKE_VERSION\" is in the way. >&2
     echo Please use an empty location to build the product. >&2
     exit 2
-fi 
+fi
 
 
 ##

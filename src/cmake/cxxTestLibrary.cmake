@@ -27,7 +27,7 @@ message (STATUS "Building unit tests for: ${CURRENT_DIR_NAME}")
 file (GLOB TEST_SOURCE "*.cpp")
 
 set(TEST_TARGET unit_test_${MANTA_LIB_DIR})
-    
+
 add_executable(${TEST_TARGET} ${TEST_SOURCE})
 add_dependencies(${TEST_TARGET} MANTA_OPT)
 

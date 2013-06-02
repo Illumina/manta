@@ -38,11 +38,11 @@ function common_create_source () {
     if [[ ! -e $SOURCE_TARBALL ]] ; then
         echo $SCRIPT: source tarball $SOURCE_TARBALL not found >&2
         exit 2
-    fi  
+    fi
     echo Decompressing $SOURCE_TARBALL >&2
     mkdir -p ${BUILD_DIR}
     tar -C ${BUILD_DIR} -${TARBALL_COMPRESSION}xf $SOURCE_TARBALL
-    
+
     if [[ ! -d $SOURCE_DIR ]] ; then
         echo $SOURCE_DIR does not exist >&2
         exit 2
