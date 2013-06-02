@@ -17,10 +17,11 @@ cxx_base_dir=$thisDir/../src/c++
 cd $cxx_base_dir 
 astyle \
 --align-pointer=type \
---keep-one-line-blocks \
---keep-one-line-statements \
 --max-instatement-indent=80 \
 --min-conditional-indent=0 \
+--pad-header \
 --recursive \
 *.cpp *.hh *.h
 
+#--keep-one-line-blocks \
+#--keep-one-line-statements \
