@@ -12,12 +12,14 @@ basedir=$(reltoabs $scriptdir/..)
 
 
 if [ $# != 1 ] || [ "$1" != "-imeanit" ]; then
-    echo
-    echo "usage: $0 -imeanit"
-    echo ""
-    echo "Cleanup whitespace in all manta code"
-    echo "This is a slightly dangerous script, make sure your work is committed before running it"
-    echo
+    cat <<EOF
+
+usage: $0 -imeanit
+
+Cleanup whitespace in all manta code
+This is a slightly dangerous script, make sure your work is committed before running it
+
+EOF
     exit 2
 fi
 
@@ -43,6 +45,7 @@ find_script_source() {
     find $base_dir -type f \
         -name "*.bash" -or \
         -name "*.sh" -or \
+        -name "configure" -or \
         -name "*.py"
 }
 
