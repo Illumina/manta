@@ -117,10 +117,10 @@ include ("${CMAKE_SOURCE_DIR}/cmake/boost.cmake")
 
 # force unit tests at compile time, and set them to be more verbose than
 # cmake's default "test" target:
-#add_custom_target(MANTA_UNITTESTS
-#    ALL
-#    COMMAND ${CMAKE_CTEST_COMMAND} --force-new-ctest-process --output-on-failure
-#    )
+add_custom_target(MANTA_UNITTESTS
+        ALL
+        COMMAND ${CMAKE_CTEST_COMMAND} --force-new-ctest-process --output-on-failure
+        )
 
 add_subdirectory (cmake/preInstall)
 add_subdirectory (opt)
