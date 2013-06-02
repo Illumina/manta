@@ -24,6 +24,13 @@ find_cxx_source() {
 }
 
 
+find_python_source() {
+    base_dir=$1
+    find $base_dir -type f \
+        -name "*.py"
+}
+
+
 find_cmake_source() {
     base_dir=$1
     find $base_dir -type f \
@@ -66,6 +73,7 @@ reheader_file() {
 
 project_base_dir=$(rel2abs $thisdir/../..)
 cxx_base_dir=$project_base_dir/src/c++
+python_base_dir=$project_base_dir/src/python
 cmake_base_dir=$project_base_dir/src
 shell_base_dir=$project_base_dir/src
 
@@ -73,7 +81,7 @@ for file in $(find_cxx_source $cxx_base_dir); do
     reheader_file "python $thisdir/reheader_cxx_file.py" $file
 done
 
-for file in $(find_cmake_source $cmake_base_dir) $(find_shell_source $shell_base_dir); do
+for file in $(find_python_source $python_base_dir) $(find_cmake_source $cmake_base_dir) $(find_shell_source $shell_base_dir); do
     reheader_file "python $thisdir/reheader_script_file.py" $file
 done
 
