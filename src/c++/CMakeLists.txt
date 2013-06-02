@@ -48,8 +48,7 @@ add_subdirectory (lib)
 ##
 ## build all the applications for the project
 ##
-
-#add_subdirectory (bin)
+add_subdirectory (bin)
 
 
 ##
