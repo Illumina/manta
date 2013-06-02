@@ -33,20 +33,10 @@ message(STATUS "sDIR: ${SAMTOOLS_DIR}")
 
 set (SAMTOOLS_LIB "${SAMTOOLS_DIR}/libbam.a")
 
-set (SAMTOOLS_DFLAGS "DFLAGS:=-D_FILE_OFFSET_BITS=64 -D_USE_KNETFILE")
-set (SAMTOOLS_CFLAGS "")
-
-if (MANTA_FORCE_STATIC_LINK)
-    # Disable the interactive samtools functionality in case of --static
-    # as the static linking of ncurses library is problemmatic on FedoraCore 10.
-    set(SAMTOOLS_DFLAGS "${SAMTOOLS_DFLAGS} -D_CURSES_LIB=0 -static") 
-    set(SAMTOOLS_CFLAGS "CFLAGS:=-g -static -Wall -O2") 
-endif ()
-
 add_custom_command(OUTPUT ${SAMTOOLS_LIB}
                    COMMAND rm -rf "${SAMTOOLS_DIR}"
                    COMMAND tar -jxf "${SAMTOOLS_REDIST_DIR}/${SAMTOOLS}.tar.bz2"
-                   COMMAND $(MAKE) -C "${SAMTOOLS_DIR}" "${SAMTOOLS_DFLAGS}" "${SAMTOOLS_CFLAGS}" -f Makefile all bgzip
+                   COMMAND $(MAKE) -C "${SAMTOOLS_DIR}" all bgzip
                    COMMENT "Building the SAM/BAM library and tools")
 add_custom_target(MANTA_SAMTOOLS DEPENDS "${SAMTOOLS_LIB}")
 
