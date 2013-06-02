@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 #
 # Manta
 # Copyright (c) 2013 Illumina, Inc.
@@ -11,20 +10,5 @@
 # <https://github.com/downloads/sequencing/licenses/>.
 #
 
-#
-# get version number from git describe
-#
-
-set -o nounset
-
-script_dir=$(dirname $0)
-
-version="UNKNOWN"
-cd $script_dir
-git_version=$(git describe 2> /dev/null)
-if [ $? == 0 ]; then
-    version=$git_version
-fi
-
-echo -n $version
-
+add_subdirectory (bin)
+add_subdirectory (lib)

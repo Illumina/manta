@@ -185,7 +185,6 @@ done
 #
 # setup cmake options
 #
-CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_INSTALL_PREFIX:PATH=${prefix_dir}"
 CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_BUILD_TYPE:STRING=${build_type}"
 CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_PARALLEL:STRING=${parallel_jobs}"
 
@@ -229,6 +228,8 @@ else
     if [ "x${prefix_dir}" != "x" ]; then prefix_dir=$(create_path "${prefix_dir}") || exit 1; fi
 
 fi
+
+CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX:PATH=${prefix_dir} ${CMAKE_OPTIONS}"
 
 
 

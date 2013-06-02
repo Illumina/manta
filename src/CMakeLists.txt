@@ -34,7 +34,8 @@ set(MANTA_PROJECT_NAME "manta")
 # get version
 set(SOURCE_BOOTSTRAP_DIR "${CMAKE_SOURCE_DIR}/cmake/bootstrap")
 
-execute_process(COMMAND "${SOURCE_BOOTSTRAP_DIR}/getVersion.bash" OUTPUT_VARIABLE MANTA_VERSION)
+execute_process(COMMAND bash ${SOURCE_BOOTSTRAP_DIR}/getVersion.bash OUTPUT_VARIABLE MANTA_GIT_VERSION)
+set(MANTA_VERSION "${MANTA_GIT_VERSION}")
 set(MANTA_VERSION_FULL "${MANTA_PROJECT_NAME}-${MANTA_VERSION}")
 message (STATUS "MANTA_VERSION: ${MANTA_VERSION}")
 
@@ -81,18 +82,17 @@ endfunction()
 
 check_prefix()
 
-set(MANTA_EXEC_PREFIX ".")
+set(MANTA_EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(MANTA_BINDIR "${MANTA_EXEC_PREFIX}/bin")
 set(MANTA_LIBDIR "${MANTA_EXEC_PREFIX}/lib/${MANTA_VERSION_FULL}")
-set(MANTA_PYTHON_LIBDIR "${MANTA_LIBDIR}/python")
+set(MANTA_PYTHON_LIBDIR "${CMAKE_INSTALL_PREFIX}/lib/${MANTA_VERSION_FULL}/python")
 set(MANTA_LIBEXECDIR "${MANTA_EXEC_PREFIX}/libexec/${MANTA_VERSION_FULL}")
-set(MANTA_DATADIR "share/${MANTA_VERSION_FULL}")
-set(MANTA_ETCDIR "${MANTA_EXEC_PREFIX}/etc/${MANTA_VERSION_FULL}")
-set(MANTA_DOCDIR "doc/${MANTA_VERSION_FULL}")
+set(MANTA_DATADIR "${CMAKE_INSTALL_PREFIX}/share/${MANTA_VERSION_FULL}")
+set(MANTA_ETCDIR "${CMAKE_INSTALL_PREFIX}/etc/${MANTA_VERSION_FULL}")
+set(MANTA_DOCDIR "${CMAKE_INSTALL_PREFIX}/doc/${MANTA_VERSION_FULL}")
 
 message (STATUS "install prefix: ${CMAKE_INSTALL_PREFIX}")
 
-#add_custom_target(MANTA_CXX)
 add_custom_target(MANTA_OPT ALL)
 
 set(BOOST_REDIST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../redist")
@@ -125,7 +125,7 @@ add_custom_target(MANTA_UNITTESTS
 add_subdirectory (cmake/preInstall)
 add_subdirectory (opt)
 add_subdirectory (c++)
-#add_subdirectory (python)
+add_subdirectory (python)
 add_subdirectory (cmake/postInstall)
 
 
