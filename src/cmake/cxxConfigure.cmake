@@ -84,47 +84,64 @@ endif ()
 
 static_find_boost(${MANTA_BOOST_VERSION} "${MANTA_BOOST_COMPONENTS}")
 
-static_find_library(CPGPLOT cpgplot.h cpgplot)
-static_find_library(PGPLOT cpgplot.h pgplot)
-static_find_library(X11 X.h X11)
-
-set (CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -Wall -Wextra -Wunused -Wno-long-long -Wsign-compare -Wpointer-arith" CACHE STRING "g++ flags" FORCE)
-set (CMAKE_CXX_FLAGS_DEBUG "-O0 -DNDEBUG -g " CACHE STRING "g++ flags" FORCE)
-set (CMAKE_CXX_FLAGS_PROFILE "-O0 -DNDEBUG -g -pg -fprofile-arcs -ftest-coverage" CACHE STRING "g++ flags" FORCE)
-set (CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG" CACHE STRING "g++ flags" FORCE)
-set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g" CACHE STRING "g++ flags" )
+# why is this here?:
+#static_find_library(CPGPLOT cpgplot.h cpgplot)
+#static_find_library(PGPLOT cpgplot.h pgplot)
+#static_find_library(X11 X.h X11)
 
 # Force static linking
 set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE version)
+    execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE gcc_version)
+    STRING(REGEX REPLACE "(\r?\n)+$" "" gcc_version "${gcc_version}")
+
+    string(REGEX REPLACE "^([0-9])\\.[0-9]\\.[0-9]" "\\1" gcc_major_version ${gcc_version})
+    string(REGEX REPLACE "^[0-9]\\.([0-9])\\.[0-9]" "\\1" gcc_minor_version ${gcc_version})
+    string(REGEX REPLACE "^[0-9]\\.[0-9]\\.([0-9])" "\\1" gcc_patch_version ${gcc_version})
     
-    string(REGEX REPLACE "^([0-9])\\.[0-9]\\.[0-9]" "\\1" major_version ${version})
-    string(REGEX REPLACE "^[0-9]\\.([0-9])\\.[0-9]" "\\1" minor_version ${version})
-    string(REGEX REPLACE "^[0-9]\\.[0-9]\\.([0-9])" "\\1" patch_version ${version})
-    if    (major_version LESS 4 OR major_version EQUAL 4 AND minor_version LESS 1)
-        message (FATAL_ERROR "Unsupported GNU C++ compiler: g++ version ${version}: "
-                             "only g++ versions >= 4.1.0 are supported")
+    set(min_gcc_major_version 4)
+    set(min_gcc_minor_version 1)
+    set(min_gcc_patch_version 2)
+    set(min_gcc_version ${gcc_major_version}.${gcc_minor_version}.${gcc_patch_version})
+    
+    if    (gcc_major_version LESS min_gcc_major_version OR
+           (gcc_major_version EQUAL min_gcc_major_version AND (gcc_minor_version LESS min_gcc_minor_version OR
+           (gcc_minor_version EQUAL min_gcc_minor_version AND gcc_patch_version LESS min_gcc_patch_version) ) ) )
+        message (FATAL_ERROR "Unsupported GNU C++ compiler: g++ version ${gcc_version}: "
+                             "only g++ versions >= ${min_gcc_version} are supported")
     endif ()
 
-    set("${CMAKE_CXX_COMPILER_ID}${major_version}" true)
-    set("${CMAKE_CXX_COMPILER_ID}${major_version}${minor_version}" true)
-    set("${CMAKE_CXX_COMPILER_ID}${major_version}${minor_version}${patch_version}" true)
-    message (STATUS "using compiler: gcc version ${version}")
+    set("${CMAKE_CXX_COMPILER_ID}${gcc_major_version}" true)
+    set("${CMAKE_CXX_COMPILER_ID}${gcc_major_version}${gcc_minor_version}" true)
+    set("${CMAKE_CXX_COMPILER_ID}${gcc_major_version}${gcc_minor_version}${gcc_patch_version}" true)
+    message (STATUS "using compiler: gcc version ${gcc_version}")
+else ()
+    message (STATUS "using compiler: ${CMAKE_CXX_COMPILER_ID}")
+endif ()
+
+
+#
+# set compile flags, and modify by compiler/compiler version:
+#
+set (CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -Wredundant-decls -pedantic")
+set (CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+set (CMAKE_CXX_FLAGS_RELEASE "-O3")
+set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
+#set (CMAKE_CXX_FLAGS_PROFILE "-O0 -g -pg -fprofile-arcs -ftest-coverage")
+
+# this should be tied to a 'developer' switch -- for now,
+# anyone touching manta is a developer so this is always on:
+if (true)
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
 endif ()
 
 ##
 ## Suppress spurious warnings in less recent compilers
 ##
-if    (NOT GNU42)
+#if    (NOT GNU42)
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter ")
-endif ()
-
-if    (GNU412 OR GNU42 OR GNU43)
-    ## Before 4.1.2, pedantic breaks on boost lambda expressions
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic ")
-endif ()
+#endif ()
 
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "^i[67]86$")
     ##
