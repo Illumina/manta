@@ -56,7 +56,7 @@ git archive --prefix=$pname_root/ HEAD: | tar -x -C $outdir
 source_dir=$(pwd)/starka
 tmp_file=$(mktemp)
 cml=$pname/src/CMakeLists.txt
-awk -v gver=$gitversion '{if(/^set(MANTA_VERSION/) print "set(MANTA_VERSION " gver ")"; else print;}' $cml >| $tmp_file
+awk -v gver=$gitversion '{if($1=="set\(MANTA_VERSION") printf "set(MANTA_VERSION \"%s\")\n",gver; else print;}' $cml >| $tmp_file
 mv $tmp_file $cml
 
 # tar it up:

@@ -21,7 +21,7 @@ script_dir=$(dirname $0)
 
 version="UNKNOWN"
 cd $script_dir
-git_version=$(git describe 2> /dev/null)
+git_version=$(git describe | sed "s/^v//" 2> /dev/null)
 if [ $? == 0 ]; then
     version=$git_version
 fi
