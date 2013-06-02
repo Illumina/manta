@@ -24,7 +24,7 @@ include ("${MANTA_GLOBALS_CMAKE}")
 
 set(MANTA_REDIST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../redist")
 
-set(SAMTOOLS "samtools-0.1.18")
+set(SAMTOOLS "samtools-0.1.18_no_tview")
 set(SAMTOOLS_DIR "${CMAKE_CURRENT_BINARY_DIR}/${SAMTOOLS}")
 set(SAMTOOLS_REDIST_DIR "${MANTA_REDIST_DIR}")
 
