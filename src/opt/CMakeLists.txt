@@ -28,9 +28,6 @@ set(SAMTOOLS "samtools-0.1.18_no_tview")
 set(SAMTOOLS_DIR "${CMAKE_CURRENT_BINARY_DIR}/${SAMTOOLS}")
 set(SAMTOOLS_REDIST_DIR "${MANTA_REDIST_DIR}")
 
-message(STATUS "bDIR: ${CMAKE_CURRENT_BINARY_DIR}")
-message(STATUS "sDIR: ${SAMTOOLS_DIR}")
-
 set (SAMTOOLS_LIB "${SAMTOOLS_DIR}/libbam.a")
 
 add_custom_command(OUTPUT ${SAMTOOLS_LIB}
