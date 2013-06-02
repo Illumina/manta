@@ -48,11 +48,19 @@ reheader_file() {
 
     if [ ! -f $file ]; then return; fi
     echo $file
+
+    is_exe=false
+    if [ -x $file ]; then
+        is_exe=true
+    fi
     tmpfile=$(mktemp)
     $script new_header < $file >| $tmpfile
     if [ $? != 0 ]; then echo "error on file $file"; exit 1; fi
     mv $tmpfile $file
     if [ $? != 0 ]; then echo "error on file $file"; exit 1; fi
+    if $is_exe; then
+        chmod +x $file
+    fi
 }
 
 
