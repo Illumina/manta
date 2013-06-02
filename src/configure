@@ -37,7 +37,8 @@ Configuration:
                           options). Allowed values are "Debug", "Release",
                           "RelWithDebInfo" [$build_type]
   --static                forces library static linking
-  --rpm                   enables Linux RPM generation target (make package)
+  --package-type=type     enables generation of deployment package target (make package)
+                          Valid types are: rpm, deb, tgz
 
 Directory and file names:
   --prefix=PREFIX         install files in tree rooted at PREFIX
@@ -70,9 +71,9 @@ EOF
 #
 
 # rel to absolute path. works for existing paths only
-rel2abs()
+rel2abs ()
 {
-    (cd $1 && pwd -P)
+    (cd "$1" && pwd -P)
 }
 
 
@@ -80,6 +81,13 @@ rel2abs()
 fix_slashes ()
 {
     echo "$1" | sed 's/\\/\//g'
+}
+
+
+create_path ()
+{
+	mkdir -p "$1" || exit 1
+	rel2abs "$1" || exit 1 
 }
 
 
@@ -140,7 +148,7 @@ parallel_jobs=1
 cmake_generator="Unix Makefiles"
 is_static=false
 is_verbose=false
-is_rpm=false
+manta_package=none
 if [ -z "${CMAKE_OPTIONS+xxx}" ]; then CMAKE_OPTIONS=""; fi
 
 # Parse arguments
@@ -163,8 +171,8 @@ for a in "$@"; do
         is_verbose=true
     elif echo $a | grep "^--static" > /dev/null 2> /dev/null; then
         is_static=true
-    elif echo $a | grep "^--rpm" > /dev/null 2> /dev/null; then
-        is_rpm=true
+    elif echo $a | grep "^--package-type=" > /dev/null 2> /dev/null; then
+        manta_package=`echo $a | sed "s/^--package-type=//"`
     elif echo $a | grep "^--jobs=" > /dev/null 2> /dev/null; then
         parallel_jobs=`echo $a | sed "s/^--jobs=//"`
     else 
@@ -173,6 +181,71 @@ for a in "$@"; do
     fi
 done
 
+
+#
+# setup cmake options
+#
+CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_INSTALL_PREFIX:PATH=${prefix_dir}"
+CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_BUILD_TYPE:STRING=${build_type}"
+CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_PARALLEL:STRING=${parallel_jobs}"
+
+if $is_static; then
+    CMAKE_OPTIONS="$CMAKE_OPTIONS -DFORCE_STATIC_LINK:BOOL=ON"
+fi
+
+if $is_verbose; then
+    CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -DBoost_DEBUG:BOOL=ON"
+fi
+
+
+is_package=true
+if   [ "deb" == "${manta_package}" ]; then
+    CMAKE_OPTIONS="$CMAKE_OPTIONS \
+        -DCPACK_GENERATOR:STRING=DEB \
+        -DCPACK_SYSTEM_NAME:STRING=${system}-$processor \
+        -DCPACK_PACKAGE_CONTACT:STRING='support@illumina.com' \
+        -DCPACK_DEBIAN_PACKAGE_ARCHITECTURE:STRING='`dpkg --print-architecture`'"
+
+    CMAKE_OPTIONS="$CMAKE_OPTIONS -DCPACK_DEBIAN_PACKAGE_DEPENDS:STRING="
+    
+elif [ "rpm" == "${manta_package}" ]; then
+    CMAKE_OPTIONS="${CMAKE_OPTIONS} \
+        -DCPACK_GENERATOR:STRING=RPM \
+        -DCPACK_SYSTEM_NAME:STRING=${isaac_system}-${isaac_processor} \
+        -DCPACK_PACKAGE_CONTACT:STRING='support@illumina.com'"
+
+    CMAKE_OPTIONS="$CMAKE_OPTIONS -DCPACK_RPM_PACKAGE_REQUIRES:STRING="
+
+elif [ "tgz" == "${manta_package}" ]; then
+    CMAKE_OPTIONS="${CMAKE_OPTIONS} \
+        -DCPACK_GENERATOR:STRING=TGZ"
+
+elif [ "none" != "${manta_package}" ]; then
+	echo "ERROR: unrecognized package option: $manta_package" 1>&2
+	exit 2
+
+else
+    is_package=false
+    if [ "x${prefix_dir}" != "x" ]; then prefix_dir=$(create_path "${prefix_dir}") || exit 1; fi
+
+fi
+
+
+
+# create the build directory if necessary
+if ! [ -d "${build_dir}" ]; then 
+    mkdir "${build_dir}"
+    if [ "$?" != 0 ]; then
+        echo "Couldn't create the build directory: ${build_dir}" 1>&2
+        exit 4
+    fi
+fi
+
+
+
+#
+# install cmake if required:
+#
 cmake_install_dir="${build_dir}/bootstrap"
 if [ "x${cmake}"       == "x" ] ; then
     isCmakeFailed=false
@@ -210,35 +283,14 @@ Cmake  executable: ${cmake}
 EOF
 fi  
 
-# create the build directory if necessary
-if ! [ -d "${build_dir}" ]; then 
-    mkdir "${build_dir}"
-    if [ "$?" != 0 ]; then
-        echo "Couldn't create the build directory: ${build_dir}" 1>&2
-        exit 4
-    fi
-fi
 
-# invoke cmake
-CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_INSTALL_PREFIX:PATH=${prefix_dir}"
-CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_BUILD_TYPE:STRING=${build_type}"
-CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_PARALLEL:STRING=${parallel_jobs}"
 
-if $is_static; then
-    CMAKE_OPTIONS="$CMAKE_OPTIONS -DFORCE_STATIC_LINK:BOOL=ON"
-fi
-
-if $is_verbose; then
-    CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -DBoost_DEBUG:BOOL=ON"
-fi
-
-if $is_rpm; then
-    CMAKE_OPTIONS="$CMAKE_OPTIONS -DCPACK_GENERATOR:STRING=RPM -DCPACK_SYSTEM_NAME:STRING=${system}-${processor}"
-fi
-
+#
+# finally, invoke cmake
+#
 cmake_command="${cmake} -H\"${source_dir}\" -B\"${build_dir}\" -G\"${cmake_generator}\" ${CMAKE_OPTIONS}"
 
-if $is_verbose || $is_rpm ; then
+if $is_verbose || $is_package ; then
     cat<<EOF
 
 Running on: $arch
@@ -247,7 +299,6 @@ Configuring the build directory with:
 EOF
 fi
 
-# finally run cmake:
 eval $cmake_command
 
 
