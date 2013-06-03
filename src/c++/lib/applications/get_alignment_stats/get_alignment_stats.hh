@@ -11,13 +11,25 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
+/// \file
+
 /// \author Chris Saunders
 ///
+
 #pragma once
 
-/// \brief logs sigint/sigterm events (with cmdline):
-///
-void
-initialize_blt_signals(const char* progname,
-                       const char* cmdline);
+#include "manta_common/program.hh"
 
+
+/// estimate per-library information from alignment file(s)
+///
+struct get_alignment_stats : public manta::program {
+
+    const char*
+    name() const {
+        return "get_alignment_stats";
+    }
+
+    void
+    run_internal(int argc, char* argv[]) const;
+};

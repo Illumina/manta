@@ -30,8 +30,9 @@ file (GLOB MANTA_PROGRAM_SOURCE_LIST [a-zA-Z0-9]*.cpp)
 set(BAM_LIBRARY "${SAMTOOLS_DIR}/libbam.a")
 foreach(MANTA_PROGRAM_SOURCE ${MANTA_PROGRAM_SOURCE_LIST})
     get_filename_component(MANTA_PROGRAM ${MANTA_PROGRAM_SOURCE} NAME_WE)
+    set(MANTA_APPLICATION_LIB manta_${MANTA_PROGRAM})
     add_executable        (${MANTA_PROGRAM} ${MANTA_PROGRAM_SOURCE})
-    target_link_libraries (${MANTA_PROGRAM} ${MANTA_AVAILABLE_LIBRARIES}
+    target_link_libraries (${MANTA_PROGRAM}  ${MANTA_APPLICATION_LIB} ${MANTA_AVAILABLE_LIBRARIES}
                            ${BAM_LIBRARY} ${Boost_LIBRARIES}
                            ${MANTA_ADDITIONAL_LIB})
     install(TARGETS ${MANTA_PROGRAM} RUNTIME DESTINATION ${MANTA_LIBEXECDIR})

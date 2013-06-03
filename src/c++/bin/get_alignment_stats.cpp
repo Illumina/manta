@@ -11,13 +11,10 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
-/// \author Chris Saunders
-///
-#pragma once
+#include "applications/get_alignment_stats/get_alignment_stats.hh"
 
-/// \brief logs sigint/sigterm events (with cmdline):
-///
-void
-initialize_blt_signals(const char* progname,
-                       const char* cmdline);
 
+int
+main(int argc, char* argv[]) {
+    return get_alignment_stats().run(argc,argv);
+}

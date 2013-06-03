@@ -21,7 +21,7 @@
 ##
 ## List of libraries
 ##
-set (MANTA_ALL_LIBRARIES blt_util)
+set (MANTA_ALL_LIBRARIES blt_util common manta_common)
 
 ##
 ## Build all the libraries for the project
@@ -34,4 +34,10 @@ foreach (MANTA_LIB_DIR ${MANTA_ALL_LIBRARIES})
 endforeach ()
 
 set (MANTA_AVAILABLE_LIBRARIES ${MANTA_AVAILABLE_LIBRARIES} PARENT_SCOPE)
+
+
+#
+# handle applications separately
+#
+add_subdirectory(applications)
 

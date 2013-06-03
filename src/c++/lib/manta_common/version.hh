@@ -11,18 +11,23 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
-#include <iostream>
+/// \brief provide access to cmake project version numbers
 
-#include <boost/algorithm/string.hpp>
-#include <boost/program_options.hpp>
+#pragma once
 
-#include "blt_util/parse_util.hh"
+namespace manta {
+
+inline
+const char*
+get_version() {
+    return "@MANTA_VERSION@";
+}
 
 
-int
-main() {
-    using namespace illumina::blt_util;
+inline
+const char*
+get_full_version() {
+    return "@MANTA_FULL_VERSION@";
+}
 
-    static const char two[] = "2";
-    parse_int_str(std::string(two));
 }
