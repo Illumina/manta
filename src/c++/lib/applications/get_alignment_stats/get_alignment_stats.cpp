@@ -63,9 +63,9 @@ run_internal(int argc, char* argv[]) const {
     }
 
     if ((argc<=1) || (vm.count("help")) || po_parse_fail) {
-        log_os << "\n" << name() << " get statistics for SV-calling from 1 or more alignment files.\n\n";
+        log_os << "\n" << name() << ": get statistics for SV-calling from alignment files.\n\n";
         log_os << "version: " << version() << "\n\n";
-        log_os << "usage: " << name() << " [options] > trio_report\n\n";
+        log_os << "usage: " << name() << " [options] > stats\n\n";
         log_os << visible << "\n";
         exit(EXIT_FAILURE);
     }

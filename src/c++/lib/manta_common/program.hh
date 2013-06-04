@@ -37,7 +37,7 @@ struct program {
 
     const char*
     version() const {
-        return manta::get_full_version();
+        return manta::get_version_full();
     }
 
 protected:

@@ -15,19 +15,21 @@
 
 #pragma once
 
+#include "config.h"
+
 namespace manta {
 
 inline
 const char*
 get_version() {
-    return "@MANTA_VERSION@";
+    return MANTA_VERSION;
 }
 
 
 inline
 const char*
-get_full_version() {
-    return "@MANTA_FULL_VERSION@";
+get_version_full() {
+    return MANTA_VERSION_FULL;
 }
 
 }

@@ -146,6 +146,7 @@
 /* Version number of package */
 #cmakedefine VERSION @VERSION@
 
+#define MANTA_VERSION "@MANTA_VERSION@"
 #define MANTA_VERSION_FULL "@MANTA_VERSION_FULL@"
 
 /* Define to empty if `const' does not conform to ANSI C. */
