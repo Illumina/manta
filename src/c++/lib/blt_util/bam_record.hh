@@ -15,12 +15,11 @@
 
 /// \author Chris Saunders
 ///
-#ifndef __BAM_RECORD_HH
-#define __BAM_RECORD_HH
+
+#pragma once
 
 #include "blt_util/bam_util.hh"
 #include "blt_util/bam_seq.hh"
-//#include "blt_util/read_record.hh"
 
 
 struct bam_record {
@@ -159,6 +158,10 @@ public:
         return alt_map_qual(astag);
     }
 
+    int32_t template_size() const {
+        return _bp->core.isize;
+    }
+
 
     // Test if SM and AM fields both exist and are equal to zero. Any
     // other result returns false:
@@ -247,6 +250,3 @@ private:
 
     bam1_t* _bp;
 };
-
-
-#endif

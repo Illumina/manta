@@ -19,8 +19,7 @@
 /// bam record manipulation functions
 ///
 
-#ifndef __BAM_UTIL_HH
-#define __BAM_UTIL_HH
+#pragma once
 
 extern "C" {
 #include "sam.h"
@@ -114,5 +113,3 @@ bam_update_bin(bam1_t& br) {
 bool
 check_header_compatibility(const bam_header_t* h1,
                            const bam_header_t* h2);
-
-#endif
