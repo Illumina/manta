@@ -23,6 +23,7 @@
 #include <iostream>
 #include <vector>
 
+//#define DEBUG_RPS
 
 
 // Stats file data format
@@ -249,7 +250,7 @@ read_group_stats(const std::string& bamFile) {
 #ifdef DEBUG_RPS
                 log_os << "INFO: Checking stats convergence at record count : " << recordCnts << "'\n"
                        << "INFO: Stats before convergence check: ";
-                write(log_os);
+                store(log_os);
                 log_os << "\n";
 #endif
 
