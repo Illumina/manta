@@ -115,8 +115,6 @@ store(std::ostream& os) const {
     // write column header for better readability
     os << "#\tindex"
        << "\tmeanInsertSize\tsdInsSize\tmedianInsSize"
-       << "\tmeanQuality\tsdQuality\tmedianQuality"
-       << "\tmeanSingleAln\tsdSingleAln\tmedianSingleAln"
        << "\treadLen1\treadLen2\treadOrientation"
        << '\n';
 
