@@ -22,7 +22,7 @@
 
 #include "blt_util/blt_exception.hh"
 #include "blt_util/log.hh"
-#include "manta_common/sinput_stream_handler.hh"
+#include "manta_common/input_stream_handler.hh"
 
 #include <cstdlib>
 
