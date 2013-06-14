@@ -11,25 +11,25 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
-/// \file
-
-/// \author Chris Saunders
-///
-
-#pragma once
-
-#include "manta/Program.hh"
+#include "EstimateSVLoci.hh"
+#include "ESLOptions.hh"
 
 
-/// estimate per-library information from alignment file(s)
-///
-struct GetAlignmentStats : public manta::Program {
+static
+void
+runESL(const ESLOptions& opt) {
 
-    const char*
-    name() const {
-        return "GetAlignmentStats";
-    }
+    // placeholder
+}
 
-    void
-    runInternal(int argc, char* argv[]) const;
-};
+
+
+void
+EstimateSVLoci::
+runInternal(int argc, char* argv[]) const {
+
+    ESLOptions opt;
+
+    parseESLOptions(*this,argc,argv,opt);
+    runESL(opt);
+}

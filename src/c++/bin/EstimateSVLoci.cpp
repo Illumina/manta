@@ -11,25 +11,10 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
-/// \file
-
-/// \author Chris Saunders
-///
-
-#pragma once
-
-#include "manta/Program.hh"
+#include "applications/EstimateSVLoci/EstimateSVLoci.hh"
 
 
-/// estimate per-library information from alignment file(s)
-///
-struct GetAlignmentStats : public manta::Program {
-
-    const char*
-    name() const {
-        return "GetAlignmentStats";
-    }
-
-    void
-    runInternal(int argc, char* argv[]) const;
-};
+int
+main(int argc, char* argv[]) {
+    return EstimateSVLoci().run(argc,argv);
+}

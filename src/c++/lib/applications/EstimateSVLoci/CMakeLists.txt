@@ -10,8 +10,4 @@
 # <https://github.com/downloads/sequencing/licenses/>.
 #
 
-subdirlist(subdirs ${CMAKE_CURRENT_SOURCE_DIR})
-
-foreach(subdir ${subdirs})
-    add_subdirectory(${subdir})
-endforeach()
+include(${MANTA_CXX_LIBRARY_CMAKE})

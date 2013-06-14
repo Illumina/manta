@@ -13,7 +13,7 @@
 
 /// \file
 
-#include "AlignmentStatsOptions.hh"
+#include "ESLOptions.hh"
 
 #include "blt_util/log.hh"
 
@@ -24,9 +24,9 @@
 
 
 void
-parseAlignmentStatsOptions(const manta::Program& prog,
-                           int argc, char* argv[],
-                           AlignmentStatsOptions& opt) {
+parseESLOptions(const manta::Program& prog,
+                int argc, char* argv[],
+                ESLOptions& opt) {
 
     namespace po = boost::program_options;
     po::options_description req("configuration");
@@ -53,7 +53,7 @@ parseAlignmentStatsOptions(const manta::Program& prog,
     }
 
     if ((argc<=1) || (vm.count("help")) || po_parse_fail) {
-        log_os << "\n" << prog.name() << ": get statistics for SV-calling from alignment files\n\n";
+        log_os << "\n" << prog.name() << ": partition sv evidence regions\n\n";
         log_os << "version: " << prog.version() << "\n\n";
         log_os << "usage: " << prog.name() << " [options] > stats\n\n";
         log_os << visible << "\n";

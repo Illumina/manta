@@ -23,11 +23,11 @@
 
 /// estimate per-library information from alignment file(s)
 ///
-struct GetAlignmentStats : public manta::Program {
+struct EstimateSVLoci : public manta::Program {
 
     const char*
     name() const {
-        return "GetAlignmentStats";
+        return "EstimateSVLoci";
     }
 
     void

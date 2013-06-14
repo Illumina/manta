@@ -11,25 +11,23 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
-/// \file
-
-/// \author Chris Saunders
-///
 
 #pragma once
 
 #include "manta/Program.hh"
 
+#include <string>
+#include <vector>
 
-/// estimate per-library information from alignment file(s)
-///
-struct GetAlignmentStats : public manta::Program {
 
-    const char*
-    name() const {
-        return "GetAlignmentStats";
-    }
 
-    void
-    runInternal(int argc, char* argv[]) const;
+struct ESLOptions {
+
+    std::vector<std::string> alignmentFilename;
 };
+
+
+void
+parseESLOptions(const manta::Program& prog,
+                int argc, char* argv[],
+                ESLOptions& opt);
