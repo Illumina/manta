@@ -10,29 +10,22 @@ Manta must be built on a *nix flavor os. It is currently developed on Centos5 an
 
 An out-of-source build is recommended. Example:
 
-> "
-git clone $MANTA_GIT_URL manta
-mkdir build
-cd build
-../manta/src/configure --prefix=/path/to/install
-make
-make install
-"
+    git clone $MANTA_GIT_URL manta
+    mkdir build
+    cd build
+    ../manta/src/configure --prefix=/path/to/install
+    make
+    make install
 
 All configure/make steps can be parallelized as follows:
 
-> "
-../manta/src/configure --prefix=/path/to/install --jobs=4
-make -j4
-make -j4 install
-"
+   ../manta/src/configure --prefix=/path/to/install --jobs=4
+    make -j4
+    make -j4 install
 
 To see more options:
-> "
-../manta/src/configure --prefix=/path/to/install --jobs=4
-make -j4
-make -j4 install
-"
+
+    ../manta/src/configure --help
 
 
 ### Known RHEL package dependencies:
