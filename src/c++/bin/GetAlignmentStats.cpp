@@ -11,10 +11,10 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
-#include "applications/get_alignment_stats/get_alignment_stats.hh"
+#include "applications/GetAlignmentStats/GetAlignmentStats.hh"
 
 
 int
 main(int argc, char* argv[]) {
-    return get_alignment_stats().run(argc,argv);
+    return GetAlignmentStats().run(argc,argv);
 }

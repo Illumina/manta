@@ -18,12 +18,12 @@
 
 #pragma once
 
-#include "manta_common/program.hh"
+#include "manta/Program.hh"
 
 
 /// estimate per-library information from alignment file(s)
 ///
-struct get_alignment_stats : public manta::program {
+struct GetAlignmentStats : public manta::Program {
 
     const char*
     name() const {
@@ -31,5 +31,5 @@ struct get_alignment_stats : public manta::program {
     }
 
     void
-    run_internal(int argc, char* argv[]) const;
+    runInternal(int argc, char* argv[]) const;
 };

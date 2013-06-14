@@ -26,7 +26,7 @@
  **
  **/
 
-#include "read_group_stats_set.hh"
+#include "ReadGroupStatsSet.hh"
 
 #include "blt_util/log.hh"
 #include "blt_util/parse_util.hh"
@@ -62,7 +62,7 @@ const unsigned STAT_REL_ORIENT_IDX         = 12;
 
 
 void
-read_group_stats_set::
+ReadGroupStatsSet::
 load(std::istream& is) {
 
     using namespace illumina::blt_util;
@@ -97,15 +97,15 @@ load(std::istream& is) {
             exit(EXIT_FAILURE);
         }
 
-        const read_group_stats rps(data);
-        set_stats(gmap[key],rps);
+        const ReadGroupStats rps(data);
+        setStats(gmap[key],rps);
     }
 }
 
 
 
 void
-read_group_stats_set::
+ReadGroupStatsSet::
 store(std::ostream& os) const {
     const unsigned n_groups(_group.size());
     for (unsigned i(0); i<n_groups; ++i)
@@ -121,7 +121,7 @@ store(std::ostream& os) const {
     for (unsigned i(0); i<n_groups; ++i)
     {
         os << i << '\t';
-        get_stats(i).store(os);
+        getStats(i).store(os);
         os << '\n';
     }
 }

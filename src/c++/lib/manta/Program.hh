@@ -16,17 +16,17 @@
 
 #pragma once
 
-#include "manta_common/version.hh"
+#include "manta/version.hh"
 
 namespace manta {
 
 /// base-class for all command-line programs
 ///
 /// this is used to standardize bottom-level exception handling
-struct program {
+struct Program {
 
     virtual
-    ~program() {}
+    ~Program() {}
 
     int
     run(int argc, char* argv[]) const;
@@ -37,13 +37,13 @@ struct program {
 
     const char*
     version() const {
-        return manta::get_version_full();
+        return manta::getFullVersion();
     }
 
 protected:
     virtual
     void
-    run_internal(int argc, char* argv[]) const = 0;
+    runInternal(int argc, char* argv[]) const = 0;
 };
 
 }

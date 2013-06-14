@@ -11,23 +11,25 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
+/// \brief provide access to cmake project version numbers
 
 #pragma once
 
-#include "manta_common/program.hh"
+#include "config.h"
 
-#include <string>
-#include <vector>
+namespace manta {
 
-
-
-struct alignment_stats_options {
-
-    std::vector<std::string> alignment_filename;
-};
+inline
+const char*
+getVersion() {
+    return MANTA_VERSION;
+}
 
 
-void
-parse_alignment_stats_options(const manta::program& prog,
-                              int argc, char* argv[],
-                              alignment_stats_options& opt);
+inline
+const char*
+getFullVersion() {
+    return MANTA_FULL_VERSION;
+}
+
+}

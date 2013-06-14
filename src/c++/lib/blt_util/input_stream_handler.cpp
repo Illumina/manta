@@ -10,19 +10,14 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
-/// \file
 ///
 /// \author Chris Saunders
-///
-/// note coding convention for all ranges '_pos fields' is:
-/// XXX_begin_pos is zero-indexed position at the begining of the range
-/// XXX_end_pos is zero-index position 1 step after the end of the range
 ///
 
 
 #include "blt_util/blt_exception.hh"
 #include "blt_util/log.hh"
-#include "manta_common/input_stream_handler.hh"
+#include "blt_util/input_stream_handler.hh"
 
 #include <cstdlib>
 

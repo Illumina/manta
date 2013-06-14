@@ -12,7 +12,7 @@
 //
 
 
-#include "read_group_stats.hh"
+#include "ReadGroupStats.hh"
 
 #include "blt_util/bam_streamer.hh"
 #include "blt_util/log.hh"
@@ -103,7 +103,7 @@ isStatSetMatch(const PairStatSet& a,
 // This produces a useful result only when both reads align to the same
 // chromosome.
 static
-pair_orient
+ReadPairOrient
 getRelOrient(const bam_record& br) {
 
     pos_t pos1 = br.pos();
@@ -116,9 +116,9 @@ getRelOrient(const bam_record& br) {
         std::swap(is_fwd_strand1,is_fwd_strand2);
     }
 
-    pair_orient po;
-    po.set_val(PAIR_ORIENT::get_index(pos1,is_fwd_strand1,pos2,is_fwd_strand2));
-    return po;
+    ReadPairOrient rpo;
+    rpo.setVal(PAIR_ORIENT::get_index(pos1,is_fwd_strand1,pos2,is_fwd_strand2));
+    return rpo;
 }
 
 
@@ -139,8 +139,8 @@ operator<<(std::ostream& os, const PairStatSet& pss) {
  *
  * ----- ----- ----- ----- ----- ----- */
 
-read_group_stats::
-read_group_stats(const std::vector<std::string>& data) {
+ReadGroupStats::
+ReadGroupStats(const std::vector<std::string>& data) {
 
     using namespace illumina::blt_util;
 
@@ -154,15 +154,15 @@ read_group_stats(const std::vector<std::string>& data) {
     readLens[0] = parse_int_str(data[STAT_READ1_LEN_IDX]);
     readLens[1] = parse_int_str(data[STAT_READ2_LEN_IDX]);
 
-    relOrients.set_val(PAIR_ORIENT::get_index(data[STAT_REL_ORIENT_IDX].c_str()));
+    relOrients.setVal(PAIR_ORIENT::get_index(data[STAT_REL_ORIENT_IDX].c_str()));
 }
 
 
 
 // set read pair statistics from a bam reader object:
 //
-read_group_stats::
-read_group_stats(const std::string& bamFile) {
+ReadGroupStats::
+ReadGroupStats(const std::string& bamFile) {
 
     static const unsigned statsCheckCnt(100000);
     static const unsigned maxPosCount(1);
@@ -280,7 +280,7 @@ read_group_stats(const std::string& bamFile) {
 
 
 unsigned
-read_group_stats::
+ReadGroupStats::
 getReadLen(const unsigned readNum) const {
     assert(readNum>0);
     return readLens[readNum - 1];
@@ -289,7 +289,7 @@ getReadLen(const unsigned readNum) const {
 
 
 bool
-read_group_stats::
+ReadGroupStats::
 computePairStats(PairStatsData& psd, const bool isForcedConvergence) {
 
     // Calculate new mean, median and sd
@@ -310,7 +310,7 @@ computePairStats(PairStatsData& psd, const bool isForcedConvergence) {
 
 
 void
-read_group_stats::
+ReadGroupStats::
 store(std::ostream& os) const {
     os << InsSize << "\t"
        << readLens[0] << "\t"

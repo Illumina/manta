@@ -11,8 +11,6 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
-/// \file
-
 /// \author Chris Saunders
 ///
 
@@ -20,7 +18,7 @@
 #include "blt_util/log.hh"
 #include "blt_util/sig_handler.hh"
 #include "common/Exceptions.hh"
-#include "manta_common/program.hh"
+#include "manta/Program.hh"
 
 #include <cstdlib>
 
@@ -59,7 +57,7 @@ namespace manta {
 
 
 int
-program::
+Program::
 run(int argc, char* argv[]) const {
 
     try {
@@ -73,7 +71,7 @@ run(int argc, char* argv[]) const {
 
         initialize_blt_signals(name(),cmdline.c_str());
 
-        run_internal(argc,argv);
+        runInternal(argc,argv);
     }
     catch (const blt_exception& e)
     {

@@ -10,5 +10,5 @@
 # <https://github.com/downloads/sequencing/licenses/>.
 #
 
-add_subdirectory(get_alignment_stats)
+add_subdirectory(getAlignmentStats)
 

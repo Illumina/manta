@@ -11,11 +11,11 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
-#include "get_alignment_stats.hh"
-#include "alignment_stats_options.hh"
+#include "GetAlignmentStats.hh"
+#include "AlignmentStatsOptions.hh"
 
 #include "blt_util/log.hh"
-#include "manta_common/read_group_stats_set.hh"
+#include "manta/ReadGroupStatsSet.hh"
 
 #include "boost/foreach.hpp"
 
@@ -27,19 +27,19 @@
 
 static
 void
-run_alignment_stats(const alignment_stats_options& opt) {
+runAlignmentStats(const AlignmentStatsOptions& opt) {
 
     // calculate mean, median and standard deviation of the insert
     // size for each bam file
-    read_group_stats_set rstats;
+    ReadGroupStatsSet rstats;
 
-    if (opt.alignment_filename.empty()) {
+    if (opt.alignmentFilename.empty()) {
         log_os << "ERROR: No input files specified.\n";
         exit(EXIT_FAILURE);
     }
 
-    BOOST_FOREACH(const std::string& file, opt.alignment_filename) {
-        rstats.set_stats(file,read_group_stats(file));
+    BOOST_FOREACH(const std::string& file, opt.alignmentFilename) {
+        rstats.setStats(file,ReadGroupStats(file));
     }
 
     std::ostream& statfp(std::cout);
@@ -49,11 +49,11 @@ run_alignment_stats(const alignment_stats_options& opt) {
 
 
 void
-get_alignment_stats::
-run_internal(int argc, char* argv[]) const {
+GetAlignmentStats::
+runInternal(int argc, char* argv[]) const {
 
-    alignment_stats_options opt;
+    AlignmentStatsOptions opt;
 
-    parse_alignment_stats_options(*this,argc,argv,opt);
-    run_alignment_stats(opt);
+    parseAlignmentStatsOptions(*this,argc,argv,opt);
+    runAlignmentStats(opt);
 }

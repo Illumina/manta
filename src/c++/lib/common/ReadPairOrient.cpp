@@ -11,25 +11,21 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
-/// \brief provide access to cmake project version numbers
+/**
+ ** \brief Encapsulation of the concept of a read pair relative orientation.
+ **
+ ** Encapsulation of the concept of a read pair relative orientation.
+ **
+ ** \author Richard Shaw
+ **/
 
-#pragma once
+#include "common/ReadPairOrient.hh"
 
-#include "config.h"
-
-namespace manta {
-
-inline
-const char*
-get_version() {
-    return MANTA_VERSION;
-}
+#include <iostream>
 
 
-inline
-const char*
-get_version_full() {
-    return MANTA_VERSION_FULL;
-}
-
+std::ostream&
+operator<<(std::ostream& os, const ReadPairOrient& rpo) {
+    os << PAIR_ORIENT::label(rpo.val());
+    return os;
 }

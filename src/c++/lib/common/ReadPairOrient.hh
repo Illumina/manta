@@ -79,9 +79,9 @@ get_index(const char* str) {
 
 
 /// pair orientation status wrapper:
-struct pair_orient {
+struct ReadPairOrient {
 
-    pair_orient()
+    ReadPairOrient()
         : _val(PAIR_ORIENT::UNKNOWN)
     {}
 
@@ -91,7 +91,7 @@ struct pair_orient {
     }
 
     void
-    set_val(const PAIR_ORIENT::index_t new_val) {
+    setVal(const PAIR_ORIENT::index_t new_val) {
         _val=new_val;
     }
 
@@ -101,5 +101,5 @@ private:
 
 
 std::ostream&
-operator<<(std::ostream& os, const pair_orient& po);
+operator<<(std::ostream& os, const ReadPairOrient& rpo);
 

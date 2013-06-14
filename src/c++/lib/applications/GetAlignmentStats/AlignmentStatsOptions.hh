@@ -11,21 +11,23 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
-/**
- ** \brief Encapsulation of the concept of a read pair relative orientation.
- **
- ** Encapsulation of the concept of a read pair relative orientation.
- **
- ** \author Richard Shaw
- **/
 
-#include "common/pair_orient.hh"
+#pragma once
 
-#include <iostream>
+#include "manta/Program.hh"
+
+#include <string>
+#include <vector>
 
 
-std::ostream&
-operator<<(std::ostream& os, const pair_orient& po) {
-    os << PAIR_ORIENT::label(po.val());
-    return os;
-}
+
+struct AlignmentStatsOptions {
+
+    std::vector<std::string> alignmentFilename;
+};
+
+
+void
+parseAlignmentStatsOptions(const manta::Program& prog,
+                           int argc, char* argv[],
+                           AlignmentStatsOptions& opt);

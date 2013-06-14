@@ -29,7 +29,7 @@
 #pragma once
 
 #include "blt_util/id_map.hh"
-#include "manta_common/read_group_stats.hh"
+#include "manta/ReadGroupStats.hh"
 
 #include <iosfwd>
 #include <string>
@@ -40,7 +40,7 @@
 
 /// \brief manages multiple read_group_stats
 ///
-struct read_group_stats_set {
+struct ReadGroupStatsSet {
 
     /// \brief get the index of a read group
     ///
@@ -53,20 +53,20 @@ struct read_group_stats_set {
     /// for now, a "read group" is fixed to the name of
     /// each bam file
     boost::optional<unsigned>
-    get_group_index(const std::string& bam_file) const {
+    getGroupIndex(const std::string& bam_file) const {
         return _group.get_optional_id(bam_file);
     }
 
     /// get stats associated with index
-    const read_group_stats&
-    get_stats(const unsigned group_index) const {
+    const ReadGroupStats&
+    getStats(const unsigned group_index) const {
         return _group.get_value(group_index);
     }
 
     /// set stats for index
     void
-    set_stats(const std::string& bam_file,
-              const read_group_stats& rps) {
+    setStats(const std::string& bam_file,
+              const ReadGroupStats& rps) {
         _group.insert(bam_file,rps);
     }
 
@@ -85,6 +85,6 @@ private:
         _group.clear();
     }
 
-    id_map<std::string, read_group_stats> _group;
+    id_map<std::string, ReadGroupStats> _group;
 };
 

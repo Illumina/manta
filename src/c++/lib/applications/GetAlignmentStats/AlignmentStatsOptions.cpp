@@ -13,7 +13,7 @@
 
 /// \file
 
-#include "alignment_stats_options.hh"
+#include "AlignmentStatsOptions.hh"
 
 #include "blt_util/log.hh"
 
@@ -24,9 +24,9 @@
 
 
 void
-parse_alignment_stats_options(const manta::program& prog,
-                              int argc, char* argv[],
-                              alignment_stats_options& opt) {
+parseAlignmentStatsOptions(const manta::Program& prog,
+                           int argc, char* argv[],
+                           AlignmentStatsOptions& opt) {
 
     namespace po = boost::program_options;
     po::options_description req("configuration");

@@ -15,7 +15,7 @@
 #pragma once
 
 #include "blt_util/id_map.hh"
-#include "common/pair_orient.hh"
+#include "common/ReadPairOrient.hh"
 
 #include <iosfwd>
 #include <vector>
@@ -49,11 +49,11 @@ operator<<(std::ostream& os, const PairStatSet& pss);
 // Read pair insert stats can be computed for each sample or read group, this
 // class represents the statistics for one group:
 //
-struct read_group_stats {
+struct ReadGroupStats {
 
-    read_group_stats() {}
-    read_group_stats(const std::string& bamFile);
-    read_group_stats(const std::vector<std::string>& data);
+    ReadGroupStats() {}
+    ReadGroupStats(const std::string& bamFile);
+    ReadGroupStats(const std::vector<std::string>& data);
 
     unsigned getReadLen(const unsigned readNum) const;
 
@@ -78,7 +78,7 @@ private:
 
 public:
     //////////////// data:
-    pair_orient relOrients;
+    ReadPairOrient relOrients;
 
     PairStatSet InsSize;
 
