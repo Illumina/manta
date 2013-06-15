@@ -79,6 +79,9 @@ struct ReadGroupStatsSet {
     void
     load(std::istream& os);
 
+    void
+    load(const char* filename);
+
 private:
     void
     clear() {

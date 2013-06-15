@@ -23,16 +23,41 @@
 
 
 
+static
+void
+usage(
+        std::ostream& os,
+        const manta::Program& prog,
+        const boost::program_options::options_description& visible,
+        const char* msg = NULL)
+{
+    os << "\n" << prog.name() << ": partition sv evidence regions\n\n";
+    os << "version: " << prog.version() << "\n\n";
+    os << "usage: " << prog.name() << " [options] > stats\n\n";
+    os << visible << "\n\n";
+
+    if(NULL != msg)
+    {
+        os << msg << "\n\n";
+    }
+    exit(2);
+}
+
+
 void
 parseESLOptions(const manta::Program& prog,
                 int argc, char* argv[],
-                ESLOptions& opt) {
-
+                ESLOptions& opt)
+{
     namespace po = boost::program_options;
     po::options_description req("configuration");
     req.add_options()
     ("align-file", po::value<std::vector<std::string> >(&opt.alignmentFilename),
-     "alignment file in bam format");
+     "alignment file in bam format")
+    ("align-stats", po::value<std::string>(&opt.statsFilename),
+     "pre-computed alignment statistics for the input alignment files (required)")
+    ("region", po::value<std::string>(&opt.region),
+     "samtools formatted region, eg. 'chr1:20-30' (optional)");
 
     po::options_description help("help");
     help.add_options()
@@ -53,11 +78,15 @@ parseESLOptions(const manta::Program& prog,
     }
 
     if ((argc<=1) || (vm.count("help")) || po_parse_fail) {
-        log_os << "\n" << prog.name() << ": partition sv evidence regions\n\n";
-        log_os << "version: " << prog.version() << "\n\n";
-        log_os << "usage: " << prog.name() << " [options] > stats\n\n";
-        log_os << visible << "\n";
-        exit(EXIT_FAILURE);
+        usage(log_os,prog,visible);
+    }
+
+    // fast check of config state:
+    if(opt.alignmentFilename.empty()) {
+        usage(log_os,prog,visible,"Must specify at least one input alignment file");
+    }
+    if(opt.statsFilename.empty()) {
+        usage(log_os,prog,visible,"Must specify alignment statistics file");
     }
 }
 

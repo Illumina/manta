@@ -24,6 +24,8 @@
 struct ESLOptions {
 
     std::vector<std::string> alignmentFilename;
+    std::string region;
+    std::string statsFilename;
 };
 
 

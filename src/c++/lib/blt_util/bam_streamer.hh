@@ -19,10 +19,12 @@
 
 #include "blt_util/bam_record.hh"
 
+#include "boost/utility.hpp"
+
 #include <string>
 
 
-struct bam_streamer {
+struct bam_streamer : public boost::noncopyable {
 
     explicit
     bam_streamer(const char* filename,

@@ -29,9 +29,11 @@
 #include "ReadGroupStatsSet.hh"
 
 #include "blt_util/log.hh"
+#include "blt_util/io_util.hh"
 #include "blt_util/parse_util.hh"
 #include "blt_util/string_util.hh"
 
+#include <fstream>
 #include <iostream>
 
 
@@ -58,6 +60,18 @@ const unsigned STAT_SINGLES_MEDIAN_IDX     = 9;
 const unsigned STAT_READ1_LEN_IDX          = 10;
 const unsigned STAT_READ2_LEN_IDX          = 11;
 const unsigned STAT_REL_ORIENT_IDX         = 12;
+
+
+
+void
+ReadGroupStatsSet::
+load(const char* filename) {
+    assert(NULL != filename);
+
+    std::ifstream ifs;
+    open_ifstream(ifs,filename);
+    load(ifs);
+}
 
 
 

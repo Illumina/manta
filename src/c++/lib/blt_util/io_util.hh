@@ -1,7 +1,6 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Manta
-// Copyright (c) 2013 Illumina, Inc.
+// Copyright (c) 2009-2013 Illumina, Inc.
 //
 // This software is provided under the terms and conditions of the
 // Illumina Open Source Software License 1.
@@ -16,18 +15,10 @@
 
 #pragma once
 
-#include "manta/Program.hh"
+#include <iosfwd>
 
 
-/// estimate per-library information from alignment file(s)
-///
-struct GetAlignmentStats : public manta::Program {
+void
+open_ifstream(std::ifstream& ifs,
+              const char* filename);
 
-    const char*
-    name() const {
-        return "GetAlignmentStats";
-    }
-
-    void
-    runInternal(int argc, char* argv[]) const;
-};
