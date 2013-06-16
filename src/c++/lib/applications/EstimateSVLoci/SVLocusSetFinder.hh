@@ -15,8 +15,10 @@
 
 #include "blt_util/bam_record.hh"
 #include "manta/ReadGroupStatsSet.hh"
+#include "manta/SVLocus.hh"
 
 #include <string>
+#include <vector>
 
 
 // estimate an SVLocusSet
@@ -37,5 +39,6 @@ struct SVLocusSetFinder {
 
 private:
     ReadGroupStatsSet _rss;
+    std::vector<SVLocus> _loci;
 };
 

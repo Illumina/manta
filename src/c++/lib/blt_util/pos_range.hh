@@ -11,20 +11,19 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
-/// \file
 ///
 /// \author Chris Saunders
 ///
 
-#ifndef __POS_RANGE_HH
-#define __POS_RANGE_HH
+#pragma once
 
 #include "blt_util/blt_types.hh"
 
 #include <algorithm>
 #include <iosfwd>
 
-/// \brief number ranges which are potentially unbounded
+
+/// \brief integer ranges which are potentially unbounded
 ///
 /// Object handles representation, including intersection with positions
 /// and other ranges.
@@ -121,7 +120,3 @@ private:
 
 
 std::ostream& operator<<(std::ostream& os, const pos_range& pr);
-
-
-
-#endif
