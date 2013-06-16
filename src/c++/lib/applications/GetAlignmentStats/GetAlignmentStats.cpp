@@ -43,7 +43,7 @@ runAlignmentStats(const AlignmentStatsOptions& opt) {
     }
 
     std::ostream& statfp(std::cout);
-    rstats.store(statfp);
+    rstats.write(statfp);
 }
 
 

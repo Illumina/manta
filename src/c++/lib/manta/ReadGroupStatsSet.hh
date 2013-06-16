@@ -74,13 +74,13 @@ struct ReadGroupStatsSet {
     // persistence:
     //
     void
-    store(std::ostream& os) const;
+    write(std::ostream& os) const;
 
     void
-    load(std::istream& os);
+    read(std::istream& os);
 
     void
-    load(const char* filename);
+    read(const char* filename);
 
 private:
     void

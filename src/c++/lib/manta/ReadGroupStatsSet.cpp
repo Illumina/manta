@@ -49,35 +49,25 @@ const unsigned STAT_INS_SIZE_MEAN_IDX      = 1;
 const unsigned STAT_INS_SIZE_SD_IDX        = 2;
 const unsigned STAT_INS_SIZE_MEDIAN_IDX    = 3;
 
-const unsigned STAT_QUALITY_MEAN_IDX       = 4;
-const unsigned STAT_QUALITY_SD_IDX         = 5;
-const unsigned STAT_QUALITY_MEDIAN_IDX     = 6;
-
-const unsigned STAT_SINGLES_MEAN_IDX       = 7;
-const unsigned STAT_SINGLES_SD_IDX         = 8;
-const unsigned STAT_SINGLES_MEDIAN_IDX     = 9;
-
-const unsigned STAT_READ1_LEN_IDX          = 10;
-const unsigned STAT_READ2_LEN_IDX          = 11;
-const unsigned STAT_REL_ORIENT_IDX         = 12;
+const unsigned STAT_REL_ORIENT_IDX         = 4;
 
 
 
 void
 ReadGroupStatsSet::
-load(const char* filename) {
+read(const char* filename) {
     assert(NULL != filename);
 
     std::ifstream ifs;
     open_ifstream(ifs,filename);
-    load(ifs);
+    this->read(ifs);
 }
 
 
 
 void
 ReadGroupStatsSet::
-load(std::istream& is) {
+read(std::istream& is) {
 
     using namespace illumina::blt_util;
 
@@ -120,7 +110,7 @@ load(std::istream& is) {
 
 void
 ReadGroupStatsSet::
-store(std::ostream& os) const {
+write(std::ostream& os) const {
     const unsigned n_groups(_group.size());
     for (unsigned i(0); i<n_groups; ++i)
     {
@@ -129,13 +119,13 @@ store(std::ostream& os) const {
     // write column header for better readability
     os << "#\tindex"
        << "\tmeanInsertSize\tsdInsSize\tmedianInsSize"
-       << "\treadLen1\treadLen2\treadOrientation"
+       << "\treadOrientation"
        << '\n';
 
     for (unsigned i(0); i<n_groups; ++i)
     {
         os << i << '\t';
-        getStats(i).store(os);
+        getStats(i).write(os);
         os << '\n';
     }
 }

@@ -23,6 +23,13 @@
 
 struct ESLOptions {
 
+    ESLOptions() :
+        breakendEdgeTrimProb(0.1)
+    {}
+
+    /// report breakend regions with x prob regions removed from each edge
+    float breakendEdgeTrimProb;
+
     std::vector<std::string> alignmentFilename;
     std::string region;
     std::string statsFilename;

@@ -55,10 +55,8 @@ struct ReadGroupStats {
     ReadGroupStats(const std::string& bamFile);
     ReadGroupStats(const std::vector<std::string>& data);
 
-    unsigned getReadLen(const unsigned readNum) const;
-
     void
-    store(std::ostream& os) const;
+    write(std::ostream& os) const;
 
 private:
     // These data are used temporarily during ReadPairStats estimation
@@ -81,8 +79,5 @@ public:
     ReadPairOrient relOrients;
 
     PairStatSet InsSize;
-
-private:
-    std::vector<unsigned> readLens;
 };
 

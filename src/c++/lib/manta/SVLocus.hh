@@ -27,7 +27,6 @@ struct GenomeLocation
         pos(0)
     {}
 
-
     int32_t tid;
     int32_t pos;
 };

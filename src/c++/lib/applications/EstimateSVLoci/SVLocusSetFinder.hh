@@ -13,6 +13,8 @@
 
 #pragma once
 
+#include "ESLOptions.hh"
+
 #include "blt_util/bam_record.hh"
 #include "manta/ReadGroupStatsSet.hh"
 #include "manta/SVLocus.hh"
@@ -26,11 +28,10 @@
 struct SVLocusSetFinder {
 
     SVLocusSetFinder(
-            const std::string& statsFilename,
-            const std::string& region)
+            const ESLOptions& opt)
     {
         // pull in insert stats:
-        _rss.load(statsFilename.c_str());
+        _rss.read(opt.statsFilename.c_str());
     }
 
     void

@@ -30,7 +30,7 @@ static
 void
 runESL(const ESLOptions& opt) {
 
-    SVLocusSetFinder locusFinder(opt.statsFilename,opt.region);
+    SVLocusSetFinder locusFinder(opt);
 
     typedef boost::shared_ptr<bam_streamer> stream_ptr;
     std::vector<stream_ptr> bam_streams;

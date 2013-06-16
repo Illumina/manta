@@ -37,17 +37,7 @@ const unsigned STAT_INS_SIZE_MEAN_IDX      = 1;
 const unsigned STAT_INS_SIZE_SD_IDX        = 2;
 const unsigned STAT_INS_SIZE_MEDIAN_IDX    = 3;
 
-const unsigned STAT_QUALITY_MEAN_IDX       = 4;
-const unsigned STAT_QUALITY_SD_IDX         = 5;
-const unsigned STAT_QUALITY_MEDIAN_IDX     = 6;
-
-const unsigned STAT_SINGLES_MEAN_IDX       = 7;
-const unsigned STAT_SINGLES_SD_IDX         = 8;
-const unsigned STAT_SINGLES_MEDIAN_IDX     = 9;
-
-const unsigned STAT_READ1_LEN_IDX          = 10;
-const unsigned STAT_READ2_LEN_IDX          = 11;
-const unsigned STAT_REL_ORIENT_IDX         = 12;
+const unsigned STAT_REL_ORIENT_IDX         = 4;
 
 
 /* ----- ----- ----- ----- ----- -----
@@ -149,11 +139,6 @@ ReadGroupStats(const std::vector<std::string>& data) {
     InsSize.sd = parse_double_str(data[STAT_INS_SIZE_SD_IDX]);
     InsSize.median = parse_double_str(data[STAT_INS_SIZE_MEDIAN_IDX]);
 
-    // Limiting to 2 reads per fragment
-    readLens.resize(2);
-    readLens[0] = parse_int_str(data[STAT_READ1_LEN_IDX]);
-    readLens[1] = parse_int_str(data[STAT_READ2_LEN_IDX]);
-
     relOrients.setVal(PAIR_ORIENT::get_index(data[STAT_REL_ORIENT_IDX].c_str()));
 }
 
@@ -166,8 +151,6 @@ ReadGroupStats(const std::string& bamFile) {
 
     static const unsigned statsCheckCnt(100000);
     static const unsigned maxPosCount(1);
-
-    readLens.resize(2,0);
 
     bam_streamer read_stream(bamFile.c_str());
 
@@ -186,8 +169,6 @@ ReadGroupStats(const std::string& bamFile) {
     unsigned posCount(0);
 
     bool isPairTypeSet(false);
-    bool isRead1Set(false);
-    bool isRead2Set(false);
 
     PairStatsData psd;
 
@@ -233,13 +214,9 @@ ReadGroupStats(const std::string& bamFile) {
                 assert(al.is_second() == (readNum == 2));
 
                 if (! isPairTypeSet) {
+                    // TODO: does orientation need to be averaged over several observations?
                     relOrients = getRelOrient(al);
-
-                    if (readNum==1) isRead1Set=true;
-                    if (readNum==2) isRead2Set=true;
-
-                    readLens[readNum-1] = al.read_size();
-                    isPairTypeSet=(isRead1Set && isRead2Set);
+                    isPairTypeSet=true;
                 }
 
                 //  NOTE: Apparently we should not remove length from insert size...
@@ -250,7 +227,7 @@ ReadGroupStats(const std::string& bamFile) {
 #ifdef DEBUG_RPS
                 log_os << "INFO: Checking stats convergence at record count : " << recordCnts << "'\n"
                        << "INFO: Stats before convergence check: ";
-                store(log_os);
+                write(log_os);
                 log_os << "\n";
 #endif
 
@@ -279,15 +256,6 @@ ReadGroupStats(const std::string& bamFile) {
 
 
 
-unsigned
-ReadGroupStats::
-getReadLen(const unsigned readNum) const {
-    assert(readNum>0);
-    return readLens[readNum - 1];
-}
-
-
-
 bool
 ReadGroupStats::
 computePairStats(PairStatsData& psd, const bool isForcedConvergence) {
@@ -311,10 +279,8 @@ computePairStats(PairStatsData& psd, const bool isForcedConvergence) {
 
 void
 ReadGroupStats::
-store(std::ostream& os) const {
+write(std::ostream& os) const {
     os << InsSize << "\t"
-       << readLens[0] << "\t"
-       << readLens[1] << "\t"
        << relOrients;
 }
 
