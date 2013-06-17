@@ -131,8 +131,8 @@ set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
 #set (CMAKE_CXX_FLAGS_PROFILE "-O0 -g -pg -fprofile-arcs -ftest-coverage")
 
 # this should be tied to a 'developer' switch -- for now,
-# anyone touching manta is a developer so this is always on:
-if (true)
+# anyone touching manta is a developer might want to turn this on
+if (false)
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
 endif ()
 
