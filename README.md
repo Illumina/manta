@@ -19,7 +19,7 @@ An out-of-source build is recommended. Example:
 
 All configure/make steps can be parallelized as follows:
 
-    ../manta/src/configure --prefix=/path/to/install --jobs=4
+    ../src/configure --prefix=/path/to/install --jobs=4
     make -j4
     make -j4 install
 
