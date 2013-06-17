@@ -18,6 +18,8 @@
 #include "blt_util/log.hh"
 #include "blt_util/parse_util.hh"
 
+#include <boost/math/distributions/normal.hpp>
+
 #include <cmath>
 
 #include <iostream>
@@ -33,11 +35,10 @@ const unsigned HEAD_NAME_IDX = 2;
 
 // Stats file data format
 const unsigned STAT_SOURCE_IDX             = 0;
-const unsigned STAT_INS_SIZE_MEAN_IDX      = 1;
-const unsigned STAT_INS_SIZE_SD_IDX        = 2;
-const unsigned STAT_INS_SIZE_MEDIAN_IDX    = 3;
+const unsigned STAT_INS_SIZE_SD_IDX        = 1;
+const unsigned STAT_INS_SIZE_MEDIAN_IDX    = 2;
 
-const unsigned STAT_REL_ORIENT_IDX         = 4;
+const unsigned STAT_REL_ORIENT_IDX         = 3;
 
 
 /* ----- ----- ----- ----- ----- -----
@@ -60,16 +61,11 @@ calcStats(std::vector<int32_t>& data,
 
     // First we'll sort to calculate the median
     sort(data.begin(), data.end());
-    stats.median = data[(uint32_t)(n * 0.5)];
+    stats.median=(data[(uint32_t)(n * 0.5)]);
 
     // this is iqr, but we call it sd:
-    stats.sd = data[(uint32_t)(n * 0.75)] - data[(uint32_t)(n * 0.25)];
+    stats.sd=(data[(uint32_t)(n * 0.75)] - data[(uint32_t)(n * 0.25)]);
 
-    double sum(0);
-    for (unsigned ii(0); ii < n; ii++) {
-        sum += data[ii];
-    }
-    stats.mean = sum / (double)n;
     return true;
 }
 
@@ -84,7 +80,6 @@ isStatSetMatch(const PairStatSet& a,
 
     if (std::abs(a.median-b.median)>=statsPrecision) return false;
     if (std::abs(a.sd-b.sd)>=statsPrecision) return false;
-    if (std::abs(a.mean-b.mean)>=statsPrecision) return false;
     return true;
 }
 
@@ -116,9 +111,27 @@ getRelOrient(const bam_record& br) {
 /* ----- ----- ----- ----- ----- -----
  * ----- PairStatSet  -----
  * ----- ----- ----- ----- ----- ----- */
+double
+PairStatSet::
+quantile(const double p) const {
+
+    // put in hack temporary implementation:
+    boost::math::normal dist(median,sd);
+    return boost::math::quantile(dist, p);
+}
+
+double
+PairStatSet::
+cdf(const double x) const {
+
+    // put in hack temporary implementation:
+    boost::math::normal dist(median,sd);
+    return boost::math::cdf(dist, x);
+}
+
 std::ostream&
 operator<<(std::ostream& os, const PairStatSet& pss) {
-    os << pss.mean << '\t' << pss.sd << '\t' << pss.median;
+    os << '\t' << pss.sd << '\t' << pss.median;
     return os;
 }
 
@@ -135,7 +148,6 @@ ReadGroupStats(const std::vector<std::string>& data) {
     using namespace illumina::blt_util;
 
     // Initialize data
-    InsSize.mean = parse_double_str(data[STAT_INS_SIZE_MEAN_IDX]);
     InsSize.sd = parse_double_str(data[STAT_INS_SIZE_SD_IDX]);
     InsSize.median = parse_double_str(data[STAT_INS_SIZE_MEDIAN_IDX]);
 
@@ -260,7 +272,7 @@ bool
 ReadGroupStats::
 computePairStats(PairStatsData& psd, const bool isForcedConvergence) {
 
-    // Calculate new mean, median and sd
+    // Calculate new median and sd
     PairStatSet newVals;
     const bool calcStatus(calcStats(psd.fragmentLengths, newVals));
     if (! isForcedConvergence) {

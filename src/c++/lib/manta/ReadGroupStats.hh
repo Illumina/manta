@@ -30,14 +30,30 @@ struct PairStatSet {
         clear();
     }
 
+    ///
+    /// const interface used by variant callers:
+    ///
+
+    // return value for which we observe value or less with prob p
+    // (not sure what the exact way to phrase this is for the discrete case)
+    double
+    quantile(const double p) const;
+
+    // cdf(x)
+    double
+    cdf(const double x) const;
+
+
+    ///
+    /// remainder of interface for estimation, store/read from disk
+    ///
     void clear() {
         median = 0.;
-        mean = 0.;
         sd = 0.;
     }
 
+    /// TODO: hide implementation details, better estimate:
     double median;
-    double mean;
     double sd;
 };
 
