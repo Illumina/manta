@@ -1,6 +1,7 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Copyright (c) 2009-2013 Illumina, Inc.
+// Manta
+// Copyright (c) 2013 Illumina, Inc.
 //
 // This software is provided under the terms and conditions of the
 // Illumina Open Source Software License 1.
@@ -43,7 +44,7 @@ struct input_stream_data {
     void
     register_reads(bam_streamer& bs,
                    const int sample_no = 0) {
-        if(_reads.test_key(sample_no)) register_error("reads",sample_no);
+        if (_reads.test_key(sample_no)) register_error("reads",sample_no);
         _reads.insert(sample_no,&bs);
     }
 
@@ -77,10 +78,10 @@ struct input_record_info {
     //
     bool
     operator<(const input_record_info& rhs) const {
-        if(pos > rhs.pos) return true;
-        if(pos == rhs.pos) {
-            if(itype < rhs.itype) return true;
-            if(itype==rhs.itype) {
+        if (pos > rhs.pos) return true;
+        if (pos == rhs.pos) {
+            if (itype < rhs.itype) return true;
+            if (itype==rhs.itype) {
                 if (sample_no > rhs.sample_no) return true;
                 if (sample_no == rhs.sample_no) {
                     return (_order > rhs._order);
@@ -90,7 +91,9 @@ struct input_record_info {
         return false;
     }
 
-    unsigned get_order() const { return _order; }
+    unsigned get_order() const {
+        return _order;
+    }
 
     pos_t pos;
     INPUT_TYPE::index_t itype;
@@ -112,15 +115,19 @@ private:
 struct input_stream_handler {
 
     input_stream_handler(
-            const input_stream_data& data);
+        const input_stream_data& data);
 
     bool next();
 
     input_record_info
-    get_current() const { return _current; }
+    get_current() const {
+        return _current;
+    }
 
     pos_t
-    get_head_pos() const { return _head_pos; }
+    get_head_pos() const {
+        return _head_pos;
+    }
 
 private:
 

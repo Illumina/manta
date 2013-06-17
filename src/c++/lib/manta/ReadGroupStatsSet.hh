@@ -66,7 +66,7 @@ struct ReadGroupStatsSet {
     /// set stats for index
     void
     setStats(const std::string& bam_file,
-              const ReadGroupStats& rps) {
+             const ReadGroupStats& rps) {
         _group.insert(bam_file,rps);
     }
 

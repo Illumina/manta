@@ -1,6 +1,7 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Copyright (c) 2009-2013 Illumina, Inc.
+// Manta
+// Copyright (c) 2013 Illumina, Inc.
 //
 // This software is provided under the terms and conditions of the
 // Illumina Open Source Software License 1.
@@ -32,7 +33,7 @@ bam_cigar_to_apath(const uint32_t* bam_cigar,
     // this assertion isn't really required...
     //    assert(n_cigar>0);
     apath.resize(n_cigar);
-    for(unsigned i(0); i<n_cigar; ++i) {
+    for (unsigned i(0); i<n_cigar; ++i) {
         apath[i].length=(bam_cigar[i]>>BAM_CIGAR_SHIFT);
         apath[i].type = static_cast<align_t>(1+(bam_cigar[i]&BAM_CIGAR_MASK));
     }
@@ -45,7 +46,7 @@ apath_to_bam_cigar(const path_t& apath,
                    uint32_t* bam_cigar) {
 
     const unsigned as(apath.size());
-    for(unsigned i(0); i<as; ++i) {
+    for (unsigned i(0); i<as; ++i) {
         const path_segment& ps(apath[i]);
         assert(ps.type != NONE);
         bam_cigar[i] = (ps.length<<BAM_CIGAR_SHIFT | (static_cast<uint32_t>(ps.type)-1));
@@ -64,7 +65,7 @@ edit_bam_cigar(const path_t& apath,
     const int new_n_cigar(apath.size());
     const int delta(4*(new_n_cigar-old_n_cigar));
 
-    if(0 != delta) {
+    if (0 != delta) {
         const int end(bc.l_qname+(4*old_n_cigar));
         change_bam_data_segment_len(end,delta,br);
         bc.n_cigar=new_n_cigar;

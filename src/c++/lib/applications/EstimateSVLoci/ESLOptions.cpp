@@ -26,17 +26,17 @@
 static
 void
 usage(
-        std::ostream& os,
-        const manta::Program& prog,
-        const boost::program_options::options_description& visible,
-        const char* msg = NULL)
+    std::ostream& os,
+    const manta::Program& prog,
+    const boost::program_options::options_description& visible,
+    const char* msg = NULL)
 {
     os << "\n" << prog.name() << ": partition sv evidence regions\n\n";
     os << "version: " << prog.version() << "\n\n";
     os << "usage: " << prog.name() << " [options] > stats\n\n";
     os << visible << "\n\n";
 
-    if(NULL != msg)
+    if (NULL != msg)
     {
         os << msg << "\n\n";
     }
@@ -82,10 +82,10 @@ parseESLOptions(const manta::Program& prog,
     }
 
     // fast check of config state:
-    if(opt.alignmentFilename.empty()) {
+    if (opt.alignmentFilename.empty()) {
         usage(log_os,prog,visible,"Must specify at least one input alignment file");
     }
-    if(opt.statsFilename.empty()) {
+    if (opt.statsFilename.empty()) {
         usage(log_os,prog,visible,"Must specify alignment statistics file");
     }
 }

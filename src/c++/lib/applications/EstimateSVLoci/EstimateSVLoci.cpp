@@ -35,7 +35,7 @@ runESL(const ESLOptions& opt) {
     typedef boost::shared_ptr<bam_streamer> stream_ptr;
     std::vector<stream_ptr> bam_streams;
 
-     // setup all data for main alignment loop:
+    // setup all data for main alignment loop:
     BOOST_FOREACH(const std::string& afile, opt.alignmentFilename)
     {
         stream_ptr tmp(new bam_streamer(afile.c_str(),opt.region.c_str()));
@@ -46,14 +46,14 @@ runESL(const ESLOptions& opt) {
 
     input_stream_data sdata;
     const unsigned n_inputs(bam_streams.size());
-    for(unsigned i(0);i<n_inputs;++i)
+    for (unsigned i(0); i<n_inputs; ++i)
     {
         sdata.register_reads(*bam_streams[i],i);
     }
 
     // loop through alignments:
     input_stream_handler sinput(sdata);
-    while(sinput.next())
+    while (sinput.next())
     {
         const input_record_info current(sinput.get_current());
 

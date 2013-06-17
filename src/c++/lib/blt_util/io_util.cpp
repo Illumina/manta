@@ -1,6 +1,7 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Copyright (c) 2009-2013 Illumina, Inc.
+// Manta
+// Copyright (c) 2013 Illumina, Inc.
 //
 // This software is provided under the terms and conditions of the
 // Illumina Open Source Software License 1.
@@ -28,7 +29,7 @@ open_ifstream(std::ifstream& ifs,
               const char* filename) {
 
     ifs.open(filename);
-    if(! ifs) {
+    if (! ifs) {
         std::ostringstream oss;
         oss << "ERROR: Can't open file: " << filename << "\n";
         throw blt_exception(oss.str().c_str());

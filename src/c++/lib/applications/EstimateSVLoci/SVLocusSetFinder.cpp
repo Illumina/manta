@@ -44,10 +44,10 @@ update(const bam_record& read,
        const unsigned defaultReadGroupIndex)
 {
     // shortcut to speed things up:
-    if(read.is_proper_pair()) return;
+    if (read.is_proper_pair()) return;
 
     // start out looking for chimeric reads only:
-    if(read.is_chimeric())
+    if (read.is_chimeric())
     {
         ALIGNPATH::path_t apath;
         bam_cigar_to_apath(read.raw_cigar(),read.n_cigar(),apath);
@@ -56,7 +56,7 @@ update(const bam_record& read,
 
         // expected breakpoint range is from the end of the read alignment to the (probabalistic) end of the fragment:
         //if(read.is_fwd_strand())
-        if(read_size==0) {
+        if (read_size==0) {
             exit(0);
         }
     }

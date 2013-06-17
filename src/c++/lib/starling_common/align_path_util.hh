@@ -1,6 +1,7 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Copyright (c) 2009-2013 Illumina, Inc.
+// Manta
+// Copyright (c) 2013 Illumina, Inc.
 //
 // This software is provided under the terms and conditions of the
 // Illumina Open Source Software License 1.
@@ -38,11 +39,11 @@ increment_path(const path_t& path,
     if       (ps.type == MATCH) {
         read_offset += ps.length;
         ref_offset += ps.length;
-    } else if(ps.type == DELETE || ps.type == SKIP) {
+    } else if (ps.type == DELETE || ps.type == SKIP) {
         ref_offset += ps.length;
-    } else if(ps.type == INSERT || ps.type == SOFT_CLIP) {
+    } else if (ps.type == INSERT || ps.type == SOFT_CLIP) {
         read_offset += ps.length;
-    } else if(ps.type == HARD_CLIP || ps.type == PAD) {
+    } else if (ps.type == HARD_CLIP || ps.type == PAD) {
         // do nothing
     } else {
         assert(0); // can't handle other CIGAR types yet
@@ -64,11 +65,17 @@ struct swap_info {
         , delete_length(0)
     {
         const unsigned aps(path.size());
-        for(; (n_seg<aps) && is_segment_type_indel(path[n_seg].type); ++n_seg) {
+        for (; (n_seg<aps) && is_segment_type_indel(path[n_seg].type); ++n_seg) {
             const path_segment& ps(path[n_seg]);
-            if     (ps.type==INSERT) { insert_length += ps.length; }
-            else if(ps.type==DELETE) { delete_length += ps.length; }
-            else                     { assert(0); }
+            if     (ps.type==INSERT) {
+                insert_length += ps.length;
+            }
+            else if (ps.type==DELETE) {
+                delete_length += ps.length;
+            }
+            else                     {
+                assert(0);
+            }
         }
         n_seg -= path_index;
     }

@@ -1,6 +1,7 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Copyright (c) 2009-2013 Illumina, Inc.
+// Manta
+// Copyright (c) 2013 Illumina, Inc.
 //
 // This software is provided under the terms and conditions of the
 // Illumina Open Source Software License 1.
@@ -46,62 +47,84 @@ enum align_t {
 inline
 char
 segment_type_to_cigar_code(const align_t id) {
-    switch(id) {
-    case MATCH     : return 'M';
-    case INSERT    : return 'I';
-    case DELETE    : return 'D';
-    case SKIP      : return 'N';
-    case SOFT_CLIP : return 'S';
-    case HARD_CLIP : return 'H';
-    case PAD       : return 'P';
-    default :        return 'X';
+    switch (id) {
+    case MATCH     :
+        return 'M';
+    case INSERT    :
+        return 'I';
+    case DELETE    :
+        return 'D';
+    case SKIP      :
+        return 'N';
+    case SOFT_CLIP :
+        return 'S';
+    case HARD_CLIP :
+        return 'H';
+    case PAD       :
+        return 'P';
+    default :
+        return 'X';
     }
 }
 
 inline
 align_t
 cigar_code_to_segment_type(const char c) {
-    switch(c) {
-    case 'M' : return MATCH;
-    case 'I' : return INSERT;
-    case 'D' : return DELETE;
-    case 'N' : return SKIP;
-    case 'S' : return SOFT_CLIP;
-    case 'H' : return HARD_CLIP;
-    case 'P' : return PAD;
-    default  : return NONE;
+    switch (c) {
+    case 'M' :
+        return MATCH;
+    case 'I' :
+        return INSERT;
+    case 'D' :
+        return DELETE;
+    case 'N' :
+        return SKIP;
+    case 'S' :
+        return SOFT_CLIP;
+    case 'H' :
+        return HARD_CLIP;
+    case 'P' :
+        return PAD;
+    default  :
+        return NONE;
     }
 }
 
 inline
 bool
 is_segment_type_read_length(const align_t id) {
-    switch(id) {
+    switch (id) {
     case MATCH     :
     case INSERT    :
-    case SOFT_CLIP : return true;
-    default        : return false;
+    case SOFT_CLIP :
+        return true;
+    default        :
+        return false;
     }
 }
 
 inline
 bool
 is_segment_type_ref_length(const align_t id) {
-    switch(id) {
+    switch (id) {
     case MATCH  :
     case DELETE :
-    case SKIP   : return true;
-    default     : return false;
+    case SKIP   :
+        return true;
+    default     :
+        return false;
     }
 }
 
 inline
 bool
 is_segment_type_indel(const align_t id) {
-    switch(id) {
+    switch (id) {
     case INSERT :
-    case DELETE : return true;
-    default     : return false;
+    case DELETE :
+        return true;
+    default     :
+        return false;
     }
 }
 
@@ -123,8 +146,8 @@ struct path_segment {
     // arbitrary ordering which lets us look up from a set of alignments:
     bool
     operator<(const path_segment& rhs) const {
-        if(type<rhs.type) return true;
-        if(type==rhs.type) {
+        if (type<rhs.type) return true;
+        if (type==rhs.type) {
             return length<rhs.length;
         }
         return false;
@@ -270,17 +293,19 @@ struct exon_offsets {
     bool
     next() {
         bool is_break_next(false);
-        for(; _segment<_asize; ++_segment) {
-            if(is_break_next) return true;
+        for (; _segment<_asize; ++_segment) {
+            if (is_break_next) return true;
             const path_segment& ps(_apath[_segment]);
-            if(ps.type==SKIP) is_break_next=true;
-            if(is_segment_type_ref_length(ps.type)) _offset += ps.length;
+            if (ps.type==SKIP) is_break_next=true;
+            if (is_segment_type_ref_length(ps.type)) _offset += ps.length;
         }
         return false;
     }
 
     unsigned
-    offset() const { return _offset; }
+    offset() const {
+        return _offset;
+    }
 
 private:
     const path_t& _apath;
@@ -323,31 +348,39 @@ is_apath_floating(const path_t& apath);
 
 
 namespace ALIGN_ISSUE {
-    enum issue_t {
-        NONE,
-        CLIPPING,
-        EDGE_DELETE,
-        EDGE_SKIP,
-        UNKNOWN_SEGMENT,
-        REPEATED_SEGMENT,
-        FLOATING,
-        LENGTH
-    };
+enum issue_t {
+    NONE,
+    CLIPPING,
+    EDGE_DELETE,
+    EDGE_SKIP,
+    UNKNOWN_SEGMENT,
+    REPEATED_SEGMENT,
+    FLOATING,
+    LENGTH
+};
 
-    inline
-    const char*
-    description(const issue_t i) {
-        switch(i){
-        case CLIPPING: return "alignment contains invalid clipping";
-        case EDGE_DELETE: return "deletion on alignment edge";
-        case EDGE_SKIP: return "skip on alignment edge";
-        case UNKNOWN_SEGMENT: return "unknown segment in alignment";
-        case REPEATED_SEGMENT: return "alignment contains repeated segment";
-        case FLOATING: return "alignment contains no match segments";
-        case LENGTH: return "alignment length does not match read length";
-        default: return "no error";
-        }
+inline
+const char*
+description(const issue_t i) {
+    switch (i) {
+    case CLIPPING:
+        return "alignment contains invalid clipping";
+    case EDGE_DELETE:
+        return "deletion on alignment edge";
+    case EDGE_SKIP:
+        return "skip on alignment edge";
+    case UNKNOWN_SEGMENT:
+        return "unknown segment in alignment";
+    case REPEATED_SEGMENT:
+        return "alignment contains repeated segment";
+    case FLOATING:
+        return "alignment contains no match segments";
+    case LENGTH:
+        return "alignment length does not match read length";
+    default:
+        return "no error";
     }
+}
 }
 
 
