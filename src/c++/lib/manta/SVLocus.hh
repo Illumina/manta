@@ -16,6 +16,7 @@
 
 #include "blt_util/pos_range.hh"
 
+#include <vector>
 
 
 // all internal locations use a chromosome index number

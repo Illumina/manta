@@ -94,6 +94,6 @@ public:
     //////////////// data:
     ReadPairOrient relOrients;
 
-    PairStatSet InsSize;
+    PairStatSet fragSize;
 };
 

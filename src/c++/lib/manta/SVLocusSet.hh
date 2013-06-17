@@ -11,13 +11,18 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
-/// \author Chris Saunders
-///
-
 #pragma once
 
-#include <stdint.h>
+#include "manta/SVLocus.hh"
 
-typedef int32_t pos_t;
+#include <iosfwd>
+#include <vector>
 
-typedef float blt_float_t;
+
+struct SVLocusSet {
+
+    void
+    write(std::ostream& os) const;
+
+    std::vector<SVLocus> loci;
+};

@@ -148,8 +148,8 @@ ReadGroupStats(const std::vector<std::string>& data) {
     using namespace illumina::blt_util;
 
     // Initialize data
-    InsSize.sd = parse_double_str(data[STAT_INS_SIZE_SD_IDX]);
-    InsSize.median = parse_double_str(data[STAT_INS_SIZE_MEDIAN_IDX]);
+    fragSize.sd = parse_double_str(data[STAT_INS_SIZE_SD_IDX]);
+    fragSize.median = parse_double_str(data[STAT_INS_SIZE_MEDIAN_IDX]);
 
     relOrients.setVal(PAIR_ORIENT::get_index(data[STAT_REL_ORIENT_IDX].c_str()));
 }
@@ -231,8 +231,7 @@ ReadGroupStats(const std::string& bamFile) {
                     isPairTypeSet=true;
                 }
 
-                //  NOTE: Apparently we should not remove length from insert size...
-                psd.fragmentLengths.push_back((std::abs(al.template_size()) - al.read_size()));
+                psd.fragmentLengths.push_back(std::abs(al.template_size()));
 
                 if ((recordCnts % statsCheckCnt) != 0) continue;
 
@@ -278,8 +277,8 @@ computePairStats(PairStatsData& psd, const bool isForcedConvergence) {
     if (! isForcedConvergence) {
         if (! calcStatus) return false;
 
-        if (! isStatSetMatch(InsSize,newVals)) {
-            InsSize = newVals;
+        if (! isStatSetMatch(fragSize,newVals)) {
+            fragSize = newVals;
             return false;
         }
     }
@@ -292,7 +291,7 @@ computePairStats(PairStatsData& psd, const bool isForcedConvergence) {
 void
 ReadGroupStats::
 write(std::ostream& os) const {
-    os << InsSize << "\t"
+    os << fragSize << "\t"
        << relOrients;
 }
 
