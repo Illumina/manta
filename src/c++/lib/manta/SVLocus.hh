@@ -18,6 +18,8 @@
 
 #include "boost/shared_ptr.hpp"
 
+#include <map>
+#include <set>
 #include <vector>
 
 
@@ -112,44 +114,102 @@ struct SVLocusNode
 /// The locus is composed of a set of non-overlapping contiguous genomic regions and links between them.
 /// Each link has an associated evidence count.
 ///
+/// This class internally manages the node shared pointers in a synced data structure, there's probably a better
+/// way to do this with transform_iterator, but I've always regretted using that.
 ///
-struct SVLocus {
+struct SVLocus
+{
+    typedef std::set<SVLocusNode*> graph_type;
+
+    typedef graph_type::iterator iterator;
+    typedef graph_type::const_iterator const_iterator;
+
 
     bool
     empty() const
     {
-        return graph.empty();
+        return _graph.empty();
     }
 
+    iterator
+    begin()
+    {
+        return _graph.begin();
+    }
+
+    iterator
+    end()
+    {
+        return _graph.end();
+    }
+
+    const_iterator
+    begin() const
+    {
+        return _graph.begin();
+    }
+
+    const_iterator
+    end() const
+    {
+        return _graph.end();
+    }
 
     SVLocusNode*
     addNode(
             const int32_t tid,
-            const int32_t begin,
-            const int32_t end,
+            const int32_t beginPos,
+            const int32_t endPos,
             SVLocusNode* linkTo = NULL)
     {
-        SVLocusNode* nodePtr(new SVLocusNode());
-        boost::shared_ptr<SVLocusNode> sPtr(nodePtr);
-        graph.push_back(sPtr);
-        SVLocusNode& node (*(graph.back()));
-        node.interval.tid=tid;
-        node.interval.range.set_range(begin,end);
-        node.count+=1;
+        SVLocusNode* nodePtr(newGraphNode());
+        nodePtr->interval.tid=tid;
+        nodePtr->interval.range.set_range(beginPos,endPos);
+        nodePtr->count+=1;
 
         if(NULL != linkTo) {
-            node.addLink(*linkTo);
+            nodePtr->addLink(*linkTo);
         }
         return nodePtr;
+    }
+
+    // copy a node from fromLocus into this locus
+    void
+    copyNode(const SVLocus& fromLocus,
+             SVLocusNode* nodePtr)
+    {
+        const shared_map& from_smap(fromLocus._smap);
+        shared_map::const_iterator iter(from_smap.find(nodePtr));
+        assert(iter != from_smap.end());
+
+        _graph.insert(nodePtr);
+        _smap.insert(std::make_pair(nodePtr,iter->second));
     }
 
     void
     clear()
     {
-        graph.clear();
+        _graph.clear();
+        _smap.clear();
     }
 
 
-    std::vector<boost::shared_ptr<SVLocusNode> > graph;
+private:
+
+    SVLocusNode*
+    newGraphNode()
+    {
+        SVLocusNode* nodePtr(new SVLocusNode());
+        boost::shared_ptr<SVLocusNode> sPtr(nodePtr);
+        _graph.insert(nodePtr);
+        _smap.insert(std::make_pair(nodePtr,sPtr));
+        return nodePtr;
+    }
+
+    typedef boost::shared_ptr<SVLocusNode> shared_type;
+    typedef std::map<graph_type::value_type,shared_type> shared_map;
+
+    graph_type _graph;
+    shared_map _smap;
 };
 

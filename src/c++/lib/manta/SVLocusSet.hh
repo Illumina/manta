@@ -16,13 +16,14 @@
 #include "manta/SVLocus.hh"
 
 #include <iosfwd>
-#include <set>
+#include <map>
 #include <vector>
 
 
 // A set of non-overlapping SVLocus objects
 //
-struct SVLocusSet {
+struct SVLocusSet
+{
 
     /// merge new locus into the set:
     ///
@@ -35,31 +36,24 @@ struct SVLocusSet {
     write(std::ostream& os) const;
 
 private:
+
+    /// combine all content from loci from into to
+    ///
+    /// this is typically required when a node is merged
+    /// which combines two loci
+    void
+    combineLoci(
+            const unsigned fromIndex,
+            const unsigned toIndex);
+
+
+
+    typedef std::map<SVLocusNode*, unsigned> ins_type;
+
+
     // contains the full set of loci
     std::vector<SVLocus> _loci;
 
-    // indexing representation of SVLocusNodes:
-    struct inode {
-        inode() :
-            nodePtr(NULL),
-            index(0)
-        {}
-
-        SVLocusNode* nodePtr;
-        unsigned index;
-    };
-
-    struct inodeCompare {
-
-        bool
-        operator()(const inode a,
-                   const inode b) const
-        {
-            return ((a.nodePtr->interval)<(b.nodePtr->interval));
-        }
-    };
-
     // provides an intersection search of non-overlapping nodes:
-    typedef std::set<inode, inodeCompare> ins_type;
     ins_type _inodes;
 };
