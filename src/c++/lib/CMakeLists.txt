@@ -21,7 +21,7 @@
 ##
 ## List of libraries
 ##
-set (MANTA_ALL_LIBRARIES blt_util common manta starling_common)
+set (MANTA_ALL_LIBRARIES blt_util common manta)
 
 ##
 ## Build all the libraries for the project

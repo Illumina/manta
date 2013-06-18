@@ -11,13 +11,11 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
-/// \file
 ///
 /// \author Chris Saunders
 ///
 
-#ifndef __ALIGN_PATH_BAM_UTIL_HH
-#define __ALIGN_PATH_BAM_UTIL_HH
+#pragma once
 
 #include "blt_util/bam_util.hh"
 #include "blt_util/align_path.hh"
@@ -44,4 +42,3 @@ void
 edit_bam_cigar(const ALIGNPATH::path_t& apath,
                bam1_t& br);
 
-#endif

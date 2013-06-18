@@ -61,6 +61,13 @@ struct pos_range {
         is_end_pos=true;
     }
 
+    void
+    set_range(const pos_t begin,
+            const pos_t end) {
+        set_begin_pos(begin);
+        set_end_pos(end);
+    }
+
     bool
     is_empty() const {
         return ! (is_begin_pos || is_end_pos);

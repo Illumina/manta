@@ -11,21 +11,19 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
-/// \file
 ///
 /// \author Chris Saunders
 ///
 
-#ifndef __ALIGN_PATH_HH
-#define __ALIGN_PATH_HH
+#pragma once
 
 #include "blt_util/pos_range.hh"
 
-#include <ciso646>
 #include <iosfwd>
 #include <stdint.h>
 #include <string>
 #include <vector>
+
 
 /// process export MD and output the alignment information in a format
 /// which will not need to change significantly for SAM/BAM (by
@@ -190,22 +188,6 @@ apath_to_export_md(path_t& apath,
                    const bool is_fwd_strand,
                    std::string& md);
 
-void
-fwd_apath_to_export_md(path_t& apath,
-                       const char* ref_begin,
-                       const char* ref_seq,
-                       const char* ref_end,
-                       const char* read_bases,
-                       std::string& md);
-
-void
-rev_apath_to_export_md(path_t& apath,
-                       const char* ref_begin,
-                       const char* ref_seq,
-                       const char* ref_end,
-                       const char* read_bases,
-                       std::string& md);
-
 // Convert cigar string into apath format
 //
 // any padding in the CIGAR string is removed
@@ -278,11 +260,13 @@ apath_clip_adder(path_t& apath,
 bool
 apath_cleaner(path_t& apath);
 
+#if 0
 // Get the match descriptor segment numbers for the first and last
 // non-soft/hard clipped segments. Return total segment size on
 // error.
 std::pair<unsigned,unsigned>
 get_nonclip_end_segments(const path_t& apath);
+#endif
 
 // return the read coordinate range after clipping:
 pos_range
@@ -291,7 +275,7 @@ get_nonclip_range(const path_t& apath);
 // Get the match descriptor segment numbers for the first and last
 // match segments. Return total segment size on error.
 std::pair<unsigned,unsigned>
-get_match_end_segments(const path_t& apath);
+get_match_edge_segments(const path_t& apath);
 
 unsigned
 apath_exon_count(const path_t& apath);
@@ -330,13 +314,23 @@ private:
     unsigned _segment;
 };
 
-// is either edge of the alignment soft-clipped or hard-clipped?
+/// does the alignment contain any soft-clipped segments?
+bool
+is_soft_clipped(const path_t& apath);
+
+/// is either edge of the alignment soft-clipped or hard-clipped?
 bool
 is_clipped(const path_t& apath);
 
-// is either edge of the alignment soft-clipped or insert-clipped (optionally inside of a hard-clip)?
+/// does either edge of the alignment
+/// contain a segment which impacts read length or reference positions?
+/// (INSERT,DELETE,SKIP,SOFT_CLIP)
+///
+/// Note: "edge" is defined as any segment with match segments to only one side
+/// Note: edge HARD_CLIP, PAD, etc.. are ignored
+///
 bool
-is_edge_clipped(const path_t& apath);
+is_edge_readref_len_segment(const path_t& apath);
 
 // does alignment contain an adjacent insertion/deletion event?
 //
@@ -348,20 +342,75 @@ bool
 is_segment_swap_start(const path_t& apath,
                       const unsigned i);
 
-// test if alignment has not match:
+// test if alignment has no match:
 bool
 is_apath_floating(const path_t& apath);
 
-// test that:
-// 1) clipping only occurs on the edge
-// 2) delete and skip cannot occur on edge
-// 3) no unknown segments
-// 4) no repeated segments
-// 5) must contain at least one match segment
-//
+
+namespace ALIGN_ISSUE {
+enum issue_t {
+    NONE,
+    CLIPPING,
+    EDGE_DELETE,
+    EDGE_SKIP,
+    UNKNOWN_SEGMENT,
+    REPEATED_SEGMENT,
+    FLOATING,
+    LENGTH
+};
+
+inline
+const char*
+description(const issue_t i) {
+    switch (i) {
+    case CLIPPING:
+        return "alignment contains invalid clipping";
+    case EDGE_DELETE:
+        return "deletion on alignment edge";
+    case EDGE_SKIP:
+        return "skip on alignment edge";
+    case UNKNOWN_SEGMENT:
+        return "unknown segment in alignment";
+    case REPEATED_SEGMENT:
+        return "alignment contains repeated segment";
+    case FLOATING:
+        return "alignment contains no match segments";
+    case LENGTH:
+        return "alignment length does not match read length";
+    default:
+        return "no error";
+    }
+}
+}
+
+
+/// Take a shot at the relatively simple stuff:
+///
+/// 1) clipping only occurs on the edge and hardclip must occur outside of soft-clip
+/// 2) delete and skip cannot occur on edge
+///   2a) delete and skip cannot occur with only insert and clip connecting them to edge
+/// 3) no unknown segments
+/// 4) no repeated segments
+///      Note this might semi-legitimately occur where padding is stripped out of an alignment.
+/// 5) must contain at least one match segment
+///
+ALIGN_ISSUE::issue_t
+get_apath_invalid_type(const path_t& path,
+                       const unsigned seq_length);
+
+/// if is_apath_invalid fails, this supplies an error string
+std::string
+get_apath_invalid_reason(const path_t& apath,
+                         const unsigned seq_length);
+
+/// simple boolean call to the invalid alignment typer.
+inline
 bool
 is_apath_invalid(const path_t& apath,
-                 const unsigned seq_length);
+                 const unsigned seq_length) {
+
+    return (ALIGN_ISSUE::NONE != get_apath_invalid_type(apath,seq_length));
+}
 
 // check for conditions on an otherwise valid path which starling
 // does not handle:
@@ -373,5 +422,3 @@ normalize_path();
 #endif
 }
 
-
-#endif
