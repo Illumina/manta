@@ -16,6 +16,8 @@
 
 #include "blt_util/pos_range.hh"
 
+#include "boost/shared_ptr.hpp"
+
 #include <vector>
 
 
@@ -87,6 +89,48 @@ struct SVLocusNode
 ///
 struct SVLocus {
 
-    std::vector<SVLocusNode> graph;
+    bool
+    empty() const
+    {
+        return graph.empty();
+    }
+
+
+    SVLocusNode*
+    addNode(
+            const int32_t tid,
+            const int32_t begin,
+            const int32_t end,
+            SVLocusNode* linkTo = NULL)
+    {
+        SVLocusNode* nodePtr(new SVLocusNode());
+        boost::shared_ptr<SVLocusNode> sPtr(nodePtr);
+        graph.push_back(sPtr);
+        SVLocusNode& node (*(graph.back()));
+        node.interval.tid=tid;
+        node.interval.range.set_range(begin,end);
+        node.count+=1;
+        if(NULL != linkTo) {
+            node.edges.push_back(SVLocusEdge());
+            node.edges.back().count=1;
+            node.edges.back().next=linkTo;
+
+            linkTo->edges.push_back(SVLocusEdge());
+            linkTo->edges.back().count=1;
+            linkTo->edges.back().next=nodePtr;
+        }
+        return nodePtr;
+    }
+
+    void
+    clear()
+    {
+        graph.clear();
+    }
+
+
+
+
+    std::vector<boost::shared_ptr<SVLocusNode> > graph;
 };
 

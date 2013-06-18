@@ -39,8 +39,6 @@ struct SVLocusSetFinder {
            const unsigned defaultReadGroupIndex);
 
 private:
-    ReadGroupStatsSet _rss;
-    SVLocusSet svloci;
 
     struct CachedReadGroupStats {
         CachedReadGroupStats() :
@@ -51,6 +49,19 @@ private:
         double min;
         double max;
     };
+
+
+    static
+    void
+    getChimericSVLocus(
+            const CachedReadGroupStats& rstats,
+            const bam_record& read,
+            SVLocus& locus);
+
+    /////////////////////////////////////////////////
+    // data:
+    ReadGroupStatsSet _rss;
+    SVLocusSet svloci;
 
     std::vector<CachedReadGroupStats> _stats;
 };
