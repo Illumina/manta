@@ -44,6 +44,17 @@ struct GenomeInterval
         range(0,0)
     {}
 
+    bool
+    operator<(const GenomeInterval& rhs) const
+    {
+        if(tid<rhs.tid) return true;
+        if(tid==rhs.tid)
+        {
+            return (range<rhs.range);
+        }
+        return false;
+    }
+
     int32_t tid;
     known_pos_range range;
 };
@@ -71,6 +82,7 @@ struct SVLocusNode
     SVLocusNode() :
         count(0)
     {}
+
     unsigned count;
     GenomeInterval interval;
     std::vector<SVLocusEdge> edges;
@@ -127,8 +139,6 @@ struct SVLocus {
     {
         graph.clear();
     }
-
-
 
 
     std::vector<boost::shared_ptr<SVLocusNode> > graph;

@@ -121,6 +121,7 @@ update(const bam_record& read,
         getChimericSVLocus(rstats,read,locus);
     }
 
+    _svLoci.merge(locus);
 }
 
 

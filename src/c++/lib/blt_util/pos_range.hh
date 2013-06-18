@@ -108,6 +108,26 @@ struct pos_range {
         return std::max(0,end_pos-begin_pos);
     }
 
+    bool
+    operator<(const pos_range& rhs) const
+    {
+        if     ((!is_begin_pos) && rhs.is_begin_pos) return true;
+        else if((is_begin_pos) && (!rhs.is_begin_pos)) return false;
+        else if(is_begin_pos && rhs.is_begin_pos)
+        {
+            if(begin_pos < rhs.begin_pos) return true;
+            if(begin_pos > rhs.begin_pos) return false;
+        }
+
+        if     ((!is_end_pos) && rhs.is_end_pos) return true;
+        else if(is_end_pos && rhs.is_end_pos)
+        {
+            if(end_pos < rhs.end_pos) return true;
+        }
+
+        return false;
+    }
+
     bool is_begin_pos;
     bool is_end_pos;
     pos_t begin_pos;
@@ -120,6 +140,17 @@ struct pos_range {
 struct known_pos_range : public pos_range {
 
     known_pos_range(const pos_t bp,const pos_t ep) : pos_range(bp,ep) {}
+
+    bool
+    operator<(const pos_range& rhs) const
+    {
+        if(begin_pos < rhs.begin_pos) return true;
+        if(begin_pos == rhs.begin_pos)
+        {
+            if(end_pos < rhs.end_pos) return true;
+        }
+        return false;
+    }
 
 private:
     void clear();

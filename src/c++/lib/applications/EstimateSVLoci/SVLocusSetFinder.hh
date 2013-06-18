@@ -61,7 +61,7 @@ private:
     /////////////////////////////////////////////////
     // data:
     ReadGroupStatsSet _rss;
-    SVLocusSet svloci;
+    SVLocusSet _svLoci;
 
     std::vector<CachedReadGroupStats> _stats;
 };

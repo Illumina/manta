@@ -16,13 +16,39 @@
 #include "manta/SVLocus.hh"
 
 #include <iosfwd>
+#include <set>
 #include <vector>
 
 
+// A set of non-overlapping SVLocus objects
+//
 struct SVLocusSet {
+
+    /// merge new locus into the set:
+    ///
+    /// locus is destroyed in this process
+    ///
+    void
+    merge(SVLocus& locus);
 
     void
     write(std::ostream& os) const;
 
-    std::vector<SVLocus> loci;
+private:
+    // contains the full set of loci
+    std::vector<SVLocus> _loci;
+
+    struct nodeCompare {
+
+        bool
+        operator()(const SVLocusNode* a,
+                   const SVLocusNode* b) const
+        {
+            return ((a->interval)<(b->interval));
+        }
+    };
+
+    // provides an intersection search of non-overlapping nodes:
+    typedef std::set<SVLocusNode*, nodeCompare> in_type;
+    in_type _inodes;
 };
