@@ -38,17 +38,28 @@ private:
     // contains the full set of loci
     std::vector<SVLocus> _loci;
 
-    struct nodeCompare {
+    // indexing representation of SVLocusNodes:
+    struct inode {
+        inode() :
+            nodePtr(NULL),
+            index(0)
+        {}
+
+        SVLocusNode* nodePtr;
+        unsigned index;
+    };
+
+    struct inodeCompare {
 
         bool
-        operator()(const SVLocusNode* a,
-                   const SVLocusNode* b) const
+        operator()(const inode a,
+                   const inode b) const
         {
-            return ((a->interval)<(b->interval));
+            return ((a.nodePtr->interval)<(b.nodePtr->interval));
         }
     };
 
     // provides an intersection search of non-overlapping nodes:
-    typedef std::set<SVLocusNode*, nodeCompare> in_type;
-    in_type _inodes;
+    typedef std::set<inode, inodeCompare> ins_type;
+    ins_type _inodes;
 };

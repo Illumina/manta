@@ -83,6 +83,20 @@ struct SVLocusNode
         count(0)
     {}
 
+    void
+    addLink(SVLocusNode& linkTo,
+            const bool isMakeReciprical = true)
+    {
+        edges.push_back(SVLocusEdge());
+        edges.back().count=1;
+        edges.back().next=&linkTo;
+
+        if(isMakeReciprical)
+        {
+            linkTo.addLink(*this,false);
+        }
+    }
+
     unsigned count;
     GenomeInterval interval;
     std::vector<SVLocusEdge> edges;
@@ -122,14 +136,9 @@ struct SVLocus {
         node.interval.tid=tid;
         node.interval.range.set_range(begin,end);
         node.count+=1;
-        if(NULL != linkTo) {
-            node.edges.push_back(SVLocusEdge());
-            node.edges.back().count=1;
-            node.edges.back().next=linkTo;
 
-            linkTo->edges.push_back(SVLocusEdge());
-            linkTo->edges.back().count=1;
-            linkTo->edges.back().next=nodePtr;
+        if(NULL != linkTo) {
+            node.addLink(*linkTo);
         }
         return nodePtr;
     }
