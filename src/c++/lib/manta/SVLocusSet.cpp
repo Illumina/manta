@@ -254,8 +254,21 @@ checkState() const
             repeatCheck.insert(val);
 
             ins_type::const_iterator iter(_inodes.find(nodePtr));
-            assert(iter != _inodes.end());
-            assert(iter->second == locusIndex);
+            if(iter == _inodes.end())
+            {
+                std::ostringstream oss;
+                oss << "ERROR: locus node is missing from node index\n"
+                    << "\tNode index: " << locusIndex << " node: " << *nodePtr;
+                BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
+            }
+            if(iter->second != locusIndex)
+            {
+                std::ostringstream oss;
+                oss << "ERROR: locus node is mis-assigned has conflicting index number in node index\n"
+                    << "\tinode index_value: " << iter->second << "\n"
+                    << "\tNode index: " << locusIndex << " node: " << *nodePtr;
+                BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
+            }
         }
         locusIndex++;
     }
