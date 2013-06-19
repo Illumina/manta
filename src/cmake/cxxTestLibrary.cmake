@@ -31,11 +31,10 @@ set(TEST_TARGET unit_test_${MANTA_LIB_DIR})
 add_executable(${TEST_TARGET} ${TEST_SOURCE})
 add_dependencies(${TEST_TARGET} MANTA_OPT)
 
-set(ADD_LIB manta_${MANTA_LIB_DIR})
+set(ADDITIONAL_UNITTEST_LIB manta_${MANTA_LIB_DIR})
 
-target_link_libraries (${TEST_TARGET} ${MANTA_AVAILABLE_LIBRARIES}
-                      ${Boost_LIBRARIES} ${MANTA_ADDITIONAL_LIB}
-                      ${ADD_LIB})
+target_link_libraries (${TEST_TARGET} ${ADDITIONAL_UNITTEST_LIB} ${MANTA_AVAILABLE_LIBRARIES}
+                      ${Boost_LIBRARIES} ${MANTA_ADDITIONAL_LIB})
 
 set(TEST_BINARY ${CMAKE_CURRENT_BINARY_DIR}/${TEST_TARGET})
 

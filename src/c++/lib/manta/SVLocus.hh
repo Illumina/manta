@@ -96,10 +96,30 @@ operator<<(std::ostream& os, const SVLocusEdge& edge);
 
 struct SVLocusNode
 {
+    typedef std::map<SVLocusNode*,SVLocusEdge> edges_type;
+    typedef edges_type::const_iterator const_iterator;
 
     SVLocusNode() :
         count(0)
     {}
+
+    unsigned
+    edgeSize() const
+    {
+        return _edges.size();
+    }
+
+    const_iterator
+    edgeBegin() const
+    {
+        return _edges.begin();
+    }
+
+    const_iterator
+    edgeEnd() const
+    {
+        return _edges.end();
+    }
 
     void
     addEdge(SVLocusNode& linkTo,
@@ -133,7 +153,6 @@ struct SVLocusNode
     operator<<(std::ostream& os, const SVLocusNode& node);
 
 private:
-    typedef std::map<SVLocusNode*,SVLocusEdge> edges_type;
     edges_type _edges;
 };
 
@@ -168,6 +187,12 @@ struct SVLocus
     empty() const
     {
         return _graph.empty();
+    }
+
+    unsigned
+    size() const
+    {
+        return _graph.size();
     }
 
     iterator
