@@ -45,11 +45,10 @@ const unsigned HEAD_NAME_IDX = 2;
 
 // Stats file data format
 const unsigned STAT_SOURCE_IDX             = 0;
-const unsigned STAT_INS_SIZE_MEAN_IDX      = 1;
-const unsigned STAT_INS_SIZE_SD_IDX        = 2;
-const unsigned STAT_INS_SIZE_MEDIAN_IDX    = 3;
+const unsigned STAT_INS_SIZE_SD_IDX        = 1;
+const unsigned STAT_INS_SIZE_MEDIAN_IDX    = 2;
 
-const unsigned STAT_REL_ORIENT_IDX         = 4;
+const unsigned STAT_REL_ORIENT_IDX         = 3;
 
 
 
@@ -118,7 +117,7 @@ write(std::ostream& os) const {
     }
     // write column header for better readability
     os << "#\tindex"
-       << "\tmeanInsertSize\tsdInsSize\tmedianInsSize"
+       << "\tsdInsSize\tmedianInsSize"
        << "\treadOrientation"
        << '\n';
 

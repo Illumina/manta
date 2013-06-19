@@ -131,7 +131,7 @@ cdf(const double x) const {
 
 std::ostream&
 operator<<(std::ostream& os, const PairStatSet& pss) {
-    os << '\t' << pss.sd << '\t' << pss.median;
+    os << pss.sd << '\t' << pss.median;
     return os;
 }
 
