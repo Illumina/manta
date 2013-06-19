@@ -152,6 +152,14 @@ struct known_pos_range : public pos_range {
         return false;
     }
 
+    // expand range to extend of a second range:
+    void
+    merge_range(const known_pos_range& kpr)
+    {
+        if(kpr.begin_pos<begin_pos) begin_pos=kpr.begin_pos;
+        if(kpr.end_pos>end_pos) end_pos=kpr.end_pos;
+    }
+
 private:
     void clear();
 };

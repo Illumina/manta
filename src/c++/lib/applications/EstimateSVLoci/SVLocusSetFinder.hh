@@ -38,6 +38,11 @@ struct SVLocusSetFinder {
     update(const bam_record& read,
            const unsigned defaultReadGroupIndex);
 
+
+    // debug dump state to stderr:
+    void
+    dump() const;
+
 private:
 
     struct CachedReadGroupStats {

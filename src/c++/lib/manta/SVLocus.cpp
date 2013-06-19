@@ -12,11 +12,29 @@
 //
 
 
-#pragma once
-
 #include "manta/SVLocus.hh"
 
 #include "boost/foreach.hpp"
+
+#include <iostream>
+
+
+
+std::ostream&
+operator<<(std::ostream& os, const GenomeInterval& gi)
+{
+    os << "GenomeIntreval: " << gi.tid << ":" << gi.range;
+    return os;
+}
+
+
+std::ostream&
+operator<<(std::ostream& os, const SVLocusEdge& edge)
+{
+    os << "Edgecount: " << edge.count;
+    return os;
+}
+
 
 
 void
@@ -84,4 +102,32 @@ clearEdges()
         remoteEdges.erase(thisRemoteIter);
     }
     _edges.clear();
+}
+
+
+
+std::ostream&
+operator<<(std::ostream& os, const SVLocusNode& node)
+{
+    os << "LocusNode: " << &node << " count: " << node.count << " " << node.interval << "\n";
+
+    BOOST_FOREACH(const SVLocusNode::edges_type::value_type& edgeIter, node._edges)
+    {
+        os << "\tEdgeTo: " << edgeIter.first << " " << edgeIter.second << "\n";
+    }
+    return os;
+}
+
+
+
+std::ostream&
+operator<<(std::ostream& os, const SVLocus& locus)
+{
+    os << "LOCUS_BEGIN\n";
+    BOOST_FOREACH(const SVLocusNode* nodePtr, locus)
+    {
+         os << *nodePtr;
+    }
+    os << "LOCUS_END\n";
+    return os;
 }

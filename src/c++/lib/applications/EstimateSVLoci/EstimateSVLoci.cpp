@@ -69,6 +69,8 @@ runESL(const ESLOptions& opt) {
         locusFinder.update(read,current.sample_no);
     }
 
+    // debug output
+    locusFinder.dump();
 }
 
 

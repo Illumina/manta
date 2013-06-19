@@ -59,7 +59,7 @@ merge(SVLocus& inputLocus)
 
         if(intersect.empty())
         {
-            // if no nodes intersect, then insert inputNode into inputLocus set:
+            // if no nodes intersect, then insert inputNode into a new locus:
             if(locusIndex>=_loci.size())
             {
                 _loci.resize(locusIndex+1);
@@ -69,7 +69,7 @@ merge(SVLocus& inputLocus)
         }
         else
         {
-            // otherwise, merge inputNode to the first intersecting inputNode, then merge remaining nodes with each other
+            // otherwise, merge inputNode into an existing locus
 
             {
                 //
@@ -143,9 +143,15 @@ combineLoci(
 }
 
 
+
 void
 SVLocusSet::
 write(std::ostream& os) const
 {
-    os << "FOO";
+    os << "LOCUSSET_START\n";
+    BOOST_FOREACH(const SVLocus& locus, _loci)
+    {
+        os << locus;
+    }
+    os << "LOCUSSET_END\n";
 }

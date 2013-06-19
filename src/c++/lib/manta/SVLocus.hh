@@ -18,6 +18,7 @@
 
 #include "boost/shared_ptr.hpp"
 
+#include <iostream>
 #include <map>
 #include <set>
 #include <vector>
@@ -62,6 +63,11 @@ struct GenomeInterval
 };
 
 
+std::ostream&
+operator<<(std::ostream& os, const GenomeInterval& gi);
+
+
+
 struct SVLocusNode;
 
 
@@ -81,6 +87,10 @@ struct SVLocusEdge
 
     unsigned count;
 };
+
+
+std::ostream&
+operator<<(std::ostream& os, const SVLocusEdge& edge);
 
 
 
@@ -119,9 +129,19 @@ struct SVLocusNode
     unsigned count;
     GenomeInterval interval;
 
+    friend std::ostream&
+    operator<<(std::ostream& os, const SVLocusNode& node);
+
+private:
     typedef std::map<SVLocusNode*,SVLocusEdge> edges_type;
     edges_type _edges;
 };
+
+
+
+std::ostream&
+operator<<(std::ostream& os, const SVLocusNode& node);
+
 
 
 
@@ -249,4 +269,8 @@ private:
     graph_type _graph;
     shared_map _smap;
 };
+
+
+std::ostream&
+operator<<(std::ostream& os, const SVLocus& locus);
 

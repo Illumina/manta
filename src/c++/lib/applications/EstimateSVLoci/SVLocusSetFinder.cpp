@@ -16,6 +16,7 @@
 
 #include "boost/foreach.hpp"
 
+#include <iostream>
 
 
 SVLocusSetFinder::
@@ -125,3 +126,10 @@ update(const bam_record& read,
 }
 
 
+
+void
+SVLocusSetFinder::
+dump() const
+{
+    _svLoci.write(std::cerr);
+}
