@@ -65,8 +65,7 @@ merge(SVLocus& inputLocus)
                 _loci.resize(locusIndex+1);
             }
 
-            _loci[locusIndex].copyNode(inputLocus,inputNodePtr);
-            _inodes[inputNodePtr] = locusIndex;
+            insertLocusNode(locusIndex,inputLocus,inputNodePtr);
         }
         else
         {
@@ -98,26 +97,19 @@ merge(SVLocus& inputLocus)
                 //
                 // second step is to add this inputNode into the graph
                 //
-                _loci[locusIndex].copyNode(inputLocus,inputNodePtr);
-                _inodes[inputNodePtr] = locusIndex;
+                insertLocusNode(locusIndex,inputLocus,inputNodePtr);
             }
 
             {
                 //
-                // third step is to merge this inputNode with each intersecting inputNode:
+                // third step is to merge this inputNode with each intersecting inputNode,
+                // and eliminate the intersecting node:
                 //
-#if 0
                 BOOST_FOREACH(const ins_type::value_type& val, intersect)
                 {
-                    val.first
-                    combineLoci(val.second,locusIndex);
+                    inputNodePtr->mergeNode(*val.first);
+                    removeNode(val.first);
                 }
-                _loci[locusIndex]._graph.push_back(inputLocus._graph[i]);
-
-                inode key;
-                key.nodePtr=nodePtr;
-                _inodes[key] = locusIndex;
-#endif
             }
         }
     }

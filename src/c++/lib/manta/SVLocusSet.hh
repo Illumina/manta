@@ -46,6 +46,36 @@ private:
             const unsigned fromIndex,
             const unsigned toIndex);
 
+    // add node from a locus which is not part of this locusSet
+    void
+    insertLocusNode(
+            const unsigned locusIndex,
+            SVLocus& inputLocus,
+            SVLocusNode* inputNodePtr)
+    {
+        assert(NULL != inputNodePtr);
+
+        _loci[locusIndex].copyNode(inputLocus,inputNodePtr);
+        _inodes[inputNodePtr] = locusIndex;
+    }
+
+    void
+    removeNode(SVLocusNode* inputNodePtr)
+    {
+        assert(NULL != inputNodePtr);
+
+        ins_type::iterator iter(_inodes.find(inputNodePtr));
+        if(iter == _inodes.end()) return;
+
+        const unsigned index(iter->second);
+
+        assert(index<_loci.size());
+
+        SVLocus& locus(_loci[index]);
+        locus.erase(inputNodePtr);
+        _inodes.erase(iter);
+    }
+
 
 
     typedef std::map<SVLocusNode*, unsigned> ins_type;

@@ -67,13 +67,19 @@ struct SVLocusNode;
 
 struct SVLocusEdge
 {
-    SVLocusEdge() :
-        count(0),
-        next(NULL)
+    SVLocusEdge(const unsigned init_count = 0) :
+        count(init_count)
     {}
 
+    // merge edge into this one
+    //
+    void
+    mergeEdge(SVLocusEdge& edge)
+    {
+        count += edge.count;
+    }
+
     unsigned count;
-    SVLocusNode* next;
 };
 
 
@@ -86,22 +92,35 @@ struct SVLocusNode
     {}
 
     void
-    addLink(SVLocusNode& linkTo,
+    addEdge(SVLocusNode& linkTo,
             const bool isMakeReciprical = true)
     {
-        edges.push_back(SVLocusEdge());
-        edges.back().count=1;
-        edges.back().next=&linkTo;
+        // no self edges allowed:
+        if(&linkTo == this) return;
 
-        if(isMakeReciprical)
-        {
-            linkTo.addLink(*this,false);
-        }
+        _edges.insert(std::make_pair(&linkTo,SVLocusEdge(1)));
+
+        if(! isMakeReciprical) return;
+        linkTo.addEdge(*this,false);
     }
+
+    /// join the argument node into this one
+    ///
+    /// inputNode is required to intersect this node. inputNode is effectively destroyed,
+    //// because all incoming edges will be updated
+    ///
+    void
+    mergeNode(SVLocusNode& node);
+
+    /// remove all outgoing and incoming edges to this node
+    void
+    clearEdges();
 
     unsigned count;
     GenomeInterval interval;
-    std::vector<SVLocusEdge> edges;
+
+    typedef std::map<SVLocusNode*,SVLocusEdge> edges_type;
+    edges_type _edges;
 };
 
 
@@ -168,7 +187,7 @@ struct SVLocus
         nodePtr->count+=1;
 
         if(NULL != linkTo) {
-            nodePtr->addLink(*linkTo);
+            nodePtr->addEdge(*linkTo);
         }
         return nodePtr;
     }
@@ -184,6 +203,24 @@ struct SVLocus
 
         _graph.insert(nodePtr);
         _smap.insert(std::make_pair(nodePtr,iter->second));
+    }
+
+    // remove node
+    //
+    void
+    erase(SVLocusNode* nodePtr)
+    {
+        assert(NULL != nodePtr);
+        iterator iter(_graph.find(nodePtr));
+        if(iter == _graph.end()) return;
+
+        shared_map::iterator siter(_smap.find(nodePtr));
+        assert(siter != _smap.end());
+
+        nodePtr->clearEdges();
+
+        _graph.erase(iter);
+        _smap.erase(siter);
     }
 
     void
