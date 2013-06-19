@@ -86,6 +86,12 @@ merge(SVLocus& inputLocus)
                 {
                     combineLoci(val.second,locusIndex);
                 }
+
+#ifdef DEBUG_SVL
+                log_os << "Reassigned all intersecting nodes to index: " << locusIndex << " sli:" << startLocusIndex << "\n";
+                checkState();
+#endif
+
             }
 
             {
@@ -93,6 +99,10 @@ merge(SVLocus& inputLocus)
                 // second step is to add this inputNode into the graph
                 //
                 insertLocusNode(locusIndex,inputLocus,inputNodePtr);
+#ifdef DEBUG_SVL
+                log_os << "InsertedNewNode  in locus " << locusIndex << "\n";
+                checkState();
+#endif
             }
 
             {
@@ -102,9 +112,17 @@ merge(SVLocus& inputLocus)
                 //
                 BOOST_FOREACH(const ins_type::value_type& val, intersect)
                 {
+#ifdef DEBUG_SVL
+                    log_os << "MergeAndRemove: " << *val.first << "\n";
+#endif
                     inputNodePtr->mergeNode(*val.first);
                     removeNode(val.first);
+#ifdef DEBUG_SVL
+                    log_os << "Finished: " << *val.first << "\n";
+                    checkState();
+#endif
                 }
+
             }
         }
     }
@@ -205,10 +223,28 @@ void
 SVLocusSet::
 checkState() const
 {
+    using namespace illumina::common;
+
+    ins_type repeatCheck;
+
+    unsigned locusIndex(0);
     unsigned nodeSize(0);
     BOOST_FOREACH(const SVLocus& locus, _loci)
     {
         nodeSize += locus.size();
+
+        BOOST_FOREACH(SVLocusNode* nodePtr, locus)
+        {
+            assert(repeatCheck.count(nodePtr) == 0);
+
+            ins_type::value_type val(std::make_pair(nodePtr,locusIndex));
+            repeatCheck.insert(val);
+
+            ins_type::const_iterator iter(_inodes.find(nodePtr));
+            assert(iter != _inodes.end());
+            assert(iter->second == locusIndex);
+        }
+        locusIndex++;
     }
 
     if (nodeSize != _inodes.size())
