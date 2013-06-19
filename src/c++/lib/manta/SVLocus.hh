@@ -301,6 +301,10 @@ struct SVLocus
         _smap.clear();
     }
 
+    /// debug func to check that internal data-structures are in
+    /// a consistent state
+    void
+    checkState() const;
 
 private:
 
@@ -315,7 +319,7 @@ private:
     }
 
     typedef boost::shared_ptr<SVLocusNode> shared_type;
-    typedef std::map<graph_type::value_type,shared_type> shared_map;
+    typedef std::map<const SVLocusNode*,shared_type> shared_map;
 
     graph_type _graph;
     shared_map _smap;

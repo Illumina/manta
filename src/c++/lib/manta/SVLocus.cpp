@@ -43,6 +43,7 @@ SVLocusNode::
 mergeNode(SVLocusNode& inputNode) {
 
     using namespace illumina::common;
+
     if ((interval.tid != inputNode.interval.tid) ||
         (! interval.range.is_range_intersect(inputNode.interval.range))) {
         std::ostringstream oss;
@@ -102,11 +103,20 @@ void
 SVLocusNode::
 clearEdges()
 {
+    using namespace illumina::common;
+
     BOOST_FOREACH(edges_type::value_type& edgeIter, _edges)
     {
         edges_type& remoteEdges(edgeIter.first->_edges);
         edges_type::iterator thisRemoteIter(remoteEdges.find(this));
-        assert(thisRemoteIter != remoteEdges.end());
+        if(thisRemoteIter == remoteEdges.end())
+        {
+            std::ostringstream oss;
+            oss << "ERROR: no return edge on remote node.\n";
+            oss << "\tlocal_node: " << *this;
+            oss << "\tremote_ndoe: " << *(edgeIter.first);
+            BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
+        }
 
         remoteEdges.erase(thisRemoteIter);
     }
@@ -127,6 +137,19 @@ operator<<(std::ostream& os, const SVLocusNode& node)
     return os;
 }
 
+
+
+void
+SVLocus::
+checkState() const
+{
+    assert(_graph.size() == _smap.size());
+
+    BOOST_FOREACH(const SVLocusNode* nodePtr, *this)
+    {
+        assert(1 == _smap.count(nodePtr));
+    }
+}
 
 
 std::ostream&
