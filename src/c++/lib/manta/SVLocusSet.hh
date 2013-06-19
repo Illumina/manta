@@ -43,7 +43,12 @@ private:
             const ins_key_type& a,
             const ins_key_type& b) const
         {
-            return ((a->interval)<(b->interval));
+            if((a->interval)<(b->interval)) return true;
+            if((a->interval)==(b->interval))
+            {
+                return (a<b);
+            }
+            return false;
         }
     };
 
@@ -74,6 +79,7 @@ private:
         SVLocusNode* inputNodePtr)
     {
         assert(NULL != inputNodePtr);
+        assert(locusIndex < _loci.size());
 
         _loci[locusIndex].copyNode(inputLocus,inputNodePtr);
         _inodes[inputNodePtr] = locusIndex;

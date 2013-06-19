@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocus1 ) {
 
     BOOST_FOREACH(const SVLocusNode* nodePtr1, locus1)
     {
-        BOOST_REQUIRE_EQUAL(nodePtr1->edgeSize(),1u);
+        BOOST_REQUIRE_EQUAL(nodePtr1->size(),1u);
     }
 }
 
@@ -90,10 +90,10 @@ BOOST_AUTO_TEST_CASE( test_SVLocusClearEdges ) {
 
     BOOST_REQUIRE_EQUAL(locus1.size(),4u);
 
-    BOOST_REQUIRE_EQUAL(nodePtr1->edgeSize(),0u);
-    BOOST_REQUIRE_EQUAL(nodePtr2->edgeSize(),1u);
-    BOOST_REQUIRE_EQUAL(nodePtr3->edgeSize(),1u);
-    BOOST_REQUIRE_EQUAL(nodePtr4->edgeSize(),2u);
+    BOOST_REQUIRE_EQUAL(nodePtr1->size(),0u);
+    BOOST_REQUIRE_EQUAL(nodePtr2->size(),1u);
+    BOOST_REQUIRE_EQUAL(nodePtr3->size(),1u);
+    BOOST_REQUIRE_EQUAL(nodePtr4->size(),2u);
 }
 
 

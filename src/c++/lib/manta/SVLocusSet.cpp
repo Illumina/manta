@@ -186,6 +186,7 @@ combineLoci(
 {
     assert(toIndex<_loci.size());
 
+    if (fromIndex == toIndex) return;
     if (fromIndex>=_loci.size()) return;
 
     SVLocus& fromLocus(_loci[fromIndex]);
@@ -231,11 +232,23 @@ checkState() const
     unsigned nodeSize(0);
     BOOST_FOREACH(const SVLocus& locus, _loci)
     {
+        locus.checkState();
+
         nodeSize += locus.size();
 
         BOOST_FOREACH(SVLocusNode* nodePtr, locus)
         {
-            assert(repeatCheck.count(nodePtr) == 0);
+            {
+                ins_type::const_iterator iter(repeatCheck.find(nodePtr));
+                if(iter != repeatCheck.end())
+                {
+                    std::ostringstream oss;
+                    oss << "ERROR: repeated node in SVLocusSet\n"
+                        << "\tPrevObs index: " << iter->second << " node: " << *(iter->first)
+                        << "\tThisObs index: " << locusIndex << " node: " << *nodePtr;
+                    BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
+                }
+            }
 
             ins_type::value_type val(std::make_pair(nodePtr,locusIndex));
             repeatCheck.insert(val);

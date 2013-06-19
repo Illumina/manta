@@ -125,19 +125,19 @@ struct SVLocusNode
     {}
 
     unsigned
-    edgeSize() const
+    size() const
     {
         return _edges.size();
     }
 
     const_iterator
-    edgeBegin() const
+    begin() const
     {
         return _edges.begin();
     }
 
     const_iterator
-    edgeEnd() const
+    end() const
     {
         return _edges.end();
     }
@@ -166,6 +166,10 @@ struct SVLocusNode
     /// remove all outgoing and incoming edges to this node
     void
     clearEdges();
+
+    /// debug function to check consistency
+    void
+    checkState() const;
 
     unsigned count;
     GenomeInterval interval;
@@ -263,12 +267,17 @@ struct SVLocus
     copyNode(const SVLocus& fromLocus,
              SVLocusNode* nodePtr)
     {
-        const shared_map& from_smap(fromLocus._smap);
-        shared_map::const_iterator iter(from_smap.find(nodePtr));
-        assert(iter != from_smap.end());
+        assert(&fromLocus != this);
+
+        const shared_map& fromSmap(fromLocus._smap);
+        shared_map::const_iterator fromIter(fromSmap.find(nodePtr));
+        assert(fromIter != fromSmap.end());
+
+        shared_map::const_iterator toIter(_smap.find(nodePtr));
+        assert(toIter == _smap.end());
 
         _graph.insert(nodePtr);
-        _smap.insert(std::make_pair(nodePtr,iter->second));
+        _smap.insert(std::make_pair(nodePtr,fromIter->second));
     }
 
     // remove node
@@ -296,6 +305,10 @@ struct SVLocus
         _smap.clear();
     }
 
+    /// debug func to check that internal data-structures are in
+    /// a consistent state
+    void
+    checkState() const;
 
 private:
 
@@ -310,7 +323,7 @@ private:
     }
 
     typedef boost::shared_ptr<SVLocusNode> shared_type;
-    typedef std::map<graph_type::value_type,shared_type> shared_map;
+    typedef std::map<const SVLocusNode*,shared_type> shared_map;
 
     graph_type _graph;
     shared_map _smap;
