@@ -24,6 +24,10 @@
 #include <vector>
 
 
+//#define DEBUG_SVL
+
+
+
 // all internal locations use a chromosome index number
 // and zero indexed position:
 struct GenomeLocation

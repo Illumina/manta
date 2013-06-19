@@ -57,6 +57,15 @@ merge(SVLocus& inputLocus)
             }
         }
 
+#ifdef DEBUG_SVL
+        log_os << "inputNode: " << *inputNodePtr << "\n";
+        log_os << "insersect_size: " << intersect.size() << "\n";
+        BOOST_FOREACH(const ins_type::value_type& val, intersect)
+        {
+            os << "i-index: " << val.second << " " << *val.first << "\n";
+        }
+#endif
+
         if(intersect.empty())
         {
             // if no nodes intersect, then insert inputNode into a new locus:

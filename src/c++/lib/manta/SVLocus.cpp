@@ -12,6 +12,7 @@
 //
 
 
+#include "common/Exceptions.hh"
 #include "manta/SVLocus.hh"
 
 #include "boost/foreach.hpp"
@@ -40,8 +41,16 @@ operator<<(std::ostream& os, const SVLocusEdge& edge)
 void
 SVLocusNode::
 mergeNode(SVLocusNode& inputNode) {
-    assert(interval.tid == inputNode.interval.tid);
-    assert(interval.range.is_range_intersect(inputNode.interval.range));
+
+    using namespace illumina::common;
+    if((interval.tid != inputNode.interval.tid) ||
+       (! interval.range.is_range_intersect(inputNode.interval.range))) {
+        std::ostringstream oss;
+        oss << "ERROR: Attempting to merge non-intersecting nodes\n"
+            << "\tNode1: " << *this
+            << "\tNode2: " << inputNode;
+        BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
+    }
 
     interval.range.merge_range(inputNode.interval.range);
     count += inputNode.count;

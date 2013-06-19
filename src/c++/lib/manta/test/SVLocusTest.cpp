@@ -52,5 +52,32 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeMerge) {
 }
 
 
+BOOST_AUTO_TEST_CASE( test_SVLocusClearEdges ) {
+
+    // construct a diamond four-node locus
+    //
+    //  1
+    // 2 3
+    //  4
+    //
+    SVLocus locus1;
+    SVLocusNode* nodePtr1 = locus1.addNode(1,1000,2000);
+    SVLocusNode* nodePtr2 = locus1.addNode(1,3000,4000,nodePtr1);
+    SVLocusNode* nodePtr3 = locus1.addNode(1,5000,6000,nodePtr1);
+    SVLocusNode* nodePtr4 = locus1.addNode(1,7000,8000,nodePtr2);
+    nodePtr4->addEdge(*nodePtr3);
+
+    // now disconnect 1 from 2,3:
+    nodePtr1->clearEdges();
+
+    BOOST_CHECK_EQUAL(locus1.size(),4u);
+
+    BOOST_CHECK_EQUAL(nodePtr1->edgeSize(),0u);
+    BOOST_CHECK_EQUAL(nodePtr2->edgeSize(),1u);
+    BOOST_CHECK_EQUAL(nodePtr3->edgeSize(),1u);
+    BOOST_CHECK_EQUAL(nodePtr4->edgeSize(),2u);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
