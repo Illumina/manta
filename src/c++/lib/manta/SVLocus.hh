@@ -125,19 +125,19 @@ struct SVLocusNode
     {}
 
     unsigned
-    edgeSize() const
+    size() const
     {
         return _edges.size();
     }
 
     const_iterator
-    edgeBegin() const
+    begin() const
     {
         return _edges.begin();
     }
 
     const_iterator
-    edgeEnd() const
+    end() const
     {
         return _edges.end();
     }
@@ -166,6 +166,10 @@ struct SVLocusNode
     /// remove all outgoing and incoming edges to this node
     void
     clearEdges();
+
+    /// debug function to check consistency
+    void
+    checkState() const;
 
     unsigned count;
     GenomeInterval interval;
