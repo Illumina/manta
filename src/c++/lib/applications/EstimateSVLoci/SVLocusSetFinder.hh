@@ -19,6 +19,7 @@
 #include "manta/ReadGroupStatsSet.hh"
 #include "manta/SVLocusSet.hh"
 
+#include <iosfwd>
 #include <string>
 #include <vector>
 
@@ -41,7 +42,7 @@ struct SVLocusSetFinder {
 
     // debug dump state to stderr:
     void
-    dump() const;
+    dump(std::ostream& os) const;
 
 private:
 

@@ -47,8 +47,8 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeMerge) {
     nodePtr1->mergeNode(*nodePtr2);
 
     BOOST_CHECK_EQUAL(nodePtr1->count,2u);
-    BOOST_CHECK_EQUAL(nodePtr1->interval.range.begin_pos,1000u);
-    BOOST_CHECK_EQUAL(nodePtr1->interval.range.end_pos,2500u);
+    BOOST_CHECK_EQUAL(nodePtr1->interval.range.begin_pos,1000);
+    BOOST_CHECK_EQUAL(nodePtr1->interval.range.end_pos,2500);
 }
 
 

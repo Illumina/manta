@@ -129,7 +129,7 @@ update(const bam_record& read,
 
 void
 SVLocusSetFinder::
-dump() const
+dump(std::ostream& os) const
 {
-    _svLoci.write(std::cerr);
+    _svLoci.write(os);
 }

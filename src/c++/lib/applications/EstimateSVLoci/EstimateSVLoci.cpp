@@ -22,6 +22,7 @@
 #include "boost/foreach.hpp"
 #include "boost/shared_ptr.hpp"
 
+#include <iostream>
 #include <vector>
 
 
@@ -70,7 +71,7 @@ runESL(const ESLOptions& opt) {
     }
 
     // debug output
-    locusFinder.dump();
+    locusFinder.dump(std::cout);
 }
 
 

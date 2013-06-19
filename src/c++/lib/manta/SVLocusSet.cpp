@@ -11,6 +11,7 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
+#include "blt_util/log.hh"
 #include "manta/SVLocusSet.hh"
 
 #include "boost/foreach.hpp"
@@ -62,7 +63,7 @@ merge(SVLocus& inputLocus)
         log_os << "insersect_size: " << intersect.size() << "\n";
         BOOST_FOREACH(const ins_type::value_type& val, intersect)
         {
-            os << "i-index: " << val.second << " " << *val.first << "\n";
+            log_os << "i-index: " << val.second << " " << *val.first << "\n";
         }
 #endif
 
