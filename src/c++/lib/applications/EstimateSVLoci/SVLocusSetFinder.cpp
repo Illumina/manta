@@ -75,12 +75,12 @@ getChimericSVLocus(
         if(read.is_fwd_strand())
         {
             breakendMin=(endRefPos);
-            breakendMax=(endRefPos + (rstats.max-(totalNoninsertSize)));
+            breakendMax=(endRefPos + static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
         }
         else
         {
             breakendMax=(startRefPos);
-            breakendMin=(startRefPos - (rstats.max-(totalNoninsertSize)));
+            breakendMin=(startRefPos - static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
         }
     }
     SVLocusNode* nodePtr(locus.addNode(read.target_id(),breakendMin,breakendMax));
@@ -91,12 +91,12 @@ getChimericSVLocus(
         if(read.is_mate_fwd_strand())
         {
             breakendMin=(endRefPos);
-            breakendMax=(endRefPos + (rstats.max-(totalNoninsertSize)));
+            breakendMax=(endRefPos + static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
         }
         else
         {
             breakendMax=(startRefPos);
-            breakendMin=(startRefPos - (rstats.max-(totalNoninsertSize)));
+            breakendMin=(startRefPos - static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
         }
     }
     locus.addNode(read.mate_target_id(),breakendMin,breakendMax,nodePtr);
