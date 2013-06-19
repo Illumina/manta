@@ -135,6 +135,7 @@ struct pos_range {
 };
 
 
+
 /// \brief pos_range for bounded intervals only
 ///
 struct known_pos_range : public pos_range {
@@ -150,6 +151,12 @@ struct known_pos_range : public pos_range {
             if(end_pos < rhs.end_pos) return true;
         }
         return false;
+    }
+
+    bool
+    operator==(const pos_range& rhs) const
+    {
+        return ((begin_pos==rhs.begin_pos) && (end_pos==rhs.end_pos));
     }
 
     // expand range to extend of a second range:

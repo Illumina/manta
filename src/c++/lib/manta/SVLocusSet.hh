@@ -24,7 +24,6 @@
 //
 struct SVLocusSet
 {
-
     /// merge new locus into the set:
     ///
     /// locus is destroyed in this process
@@ -36,6 +35,27 @@ struct SVLocusSet
     write(std::ostream& os) const;
 
 private:
+    typedef SVLocusNode* ins_key_type;
+
+    struct insKeySorter {
+        bool
+        operator()(
+                const ins_key_type& a,
+                const ins_key_type& b) const
+        {
+            return ((a->interval)<(b->interval));
+        }
+    };
+
+    typedef std::map<ins_key_type, unsigned, insKeySorter> ins_type;
+
+
+    /// get all nodes in this object which intersect with
+    /// the inputNode
+    void
+    getNodeIntersect(
+            SVLocusNode* inputNodePtr,
+            ins_type& intersect);
 
     /// combine all content from loci from into to
     ///
@@ -76,10 +96,13 @@ private:
         _inodes.erase(iter);
     }
 
+    /// check that internal data-structures are in
+    /// a consistent state, throw on error
+    void
+    checkState() const;
 
 
-    typedef std::map<SVLocusNode*, unsigned> ins_type;
-
+    ///////////////////// data
 
     // contains the full set of loci
     std::vector<SVLocus> _loci;

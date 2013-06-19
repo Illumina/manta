@@ -46,20 +46,37 @@ struct GenomeLocation
 // all internal locations use a chromosome index number
 struct GenomeInterval
 {
-    GenomeInterval() :
-        tid(0),
-        range(0,0)
+    GenomeInterval(
+            const int32_t initTid = 0,
+            const pos_t beginPos = 0,
+            const pos_t endPos = 0) :
+        tid(initTid),
+        range(beginPos,endPos)
     {}
+
+    /// does this intersect a second GenomeInterval?
+    bool
+    isIntersect(const GenomeInterval& gi) const
+    {
+        if(tid != gi.tid) return false;
+        return range.is_range_intersect(gi.range);
+    }
 
     bool
     operator<(const GenomeInterval& rhs) const
     {
-        if(tid<rhs.tid) return true;
-        if(tid==rhs.tid)
+        if (tid<rhs.tid) return true;
+        if (tid == rhs.tid)
         {
             return (range<rhs.range);
         }
         return false;
+    }
+
+    bool
+    operator==(const GenomeInterval& rhs) const
+    {
+        return ((tid==rhs.tid) && (range==rhs.range));
     }
 
     int32_t tid;

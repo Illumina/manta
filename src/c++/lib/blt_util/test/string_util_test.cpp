@@ -25,18 +25,18 @@ test_split_string_bytype(T test) {
     std::vector<std::string> result;
 
     split_string(test,'2',result);
-    BOOST_CHECK_EQUAL(static_cast<int>(result.size()), 4);
-    BOOST_CHECK_EQUAL(result[0], "");
-    BOOST_CHECK_EQUAL(result[1], "3456");
-    BOOST_CHECK_EQUAL(result[3], "");
+    BOOST_REQUIRE_EQUAL(static_cast<int>(result.size()), 4);
+    BOOST_REQUIRE_EQUAL(result[0], "");
+    BOOST_REQUIRE_EQUAL(result[1], "3456");
+    BOOST_REQUIRE_EQUAL(result[3], "");
 
     split_string(test,'X',result);
-    BOOST_CHECK_EQUAL(static_cast<int>(result.size()), 1);
-    BOOST_CHECK_EQUAL(result[0], test);
+    BOOST_REQUIRE_EQUAL(static_cast<int>(result.size()), 1);
+    BOOST_REQUIRE_EQUAL(result[0], test);
 
     split_string("",'X',result);
-    BOOST_CHECK_EQUAL(static_cast<int>(result.size()), 1);
-    BOOST_CHECK_EQUAL(result[0], "");
+    BOOST_REQUIRE_EQUAL(static_cast<int>(result.size()), 1);
+    BOOST_REQUIRE_EQUAL(result[0], "");
 }
 
 BOOST_AUTO_TEST_CASE( test_split_string_cstr ) {
@@ -51,8 +51,8 @@ BOOST_AUTO_TEST_CASE( test_split_string ) {
 BOOST_AUTO_TEST_CASE( test_split_match ) {
     const std::string test(test_string);
 
-    BOOST_CHECK(split_match(test,'2',"34"));
-    BOOST_CHECK(! split_match(test,'2',"XX"));
+    BOOST_REQUIRE(split_match(test,'2',"34"));
+    BOOST_REQUIRE(! split_match(test,'2',"XX"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

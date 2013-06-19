@@ -12,12 +12,14 @@
 //
 
 #include "blt_util/log.hh"
+#include "common/Exceptions.hh"
 #include "manta/SVLocusSet.hh"
 
 #include "boost/foreach.hpp"
 
 #include <algorithm>
 #include <iostream>
+#include <sstream>
 
 
 
@@ -25,41 +27,24 @@ void
 SVLocusSet::
 merge(SVLocus& inputLocus)
 {
+
+#ifdef DEBUG_SVL
+    checkState();
+    log_os << "SVLocusSet::merge inputLocus: " << inputLocus;
+#endif
+
     const unsigned startLocusIndex(_loci.size());
     unsigned locusIndex(startLocusIndex);
+
 
     // test each node for intersection and insert/join to existing node:
     BOOST_FOREACH(SVLocusNode* inputNodePtr, inputLocus)
     {
-        typedef ins_type::iterator in_iter;
-
         ins_type intersect;
-
-        // get all existing nodes which intersect with this one:
-        {
-            ins_type::value_type search(std::make_pair(inputNodePtr,0));
-            in_iter it(std::lower_bound(_inodes.begin(), _inodes.end(), search));
-
-            // first look forward and extend to find all nodes which this inputNode intersects:
-            for(in_iter it_fwd(it); it_fwd !=_inodes.end(); ++it_fwd)
-            {
-                SVLocusNode* nodePtr(it_fwd->first);
-                if(! inputNodePtr->interval.range.is_range_intersect(nodePtr->interval.range)) break;
-                intersect[nodePtr] = it_fwd->second;
-            }
-
-            // now find all intersecting nodes in reverse direction:
-            for(in_iter it_rev(it); it_rev !=_inodes.begin(); )
-            {
-                --it_rev;
-                SVLocusNode* nodePtr(it_rev->first);
-                if(! inputNodePtr->interval.range.is_range_intersect(nodePtr->interval.range)) break;
-                intersect[nodePtr] = it_rev->second;
-            }
-        }
+        getNodeIntersect(inputNodePtr,intersect);
 
 #ifdef DEBUG_SVL
-        log_os << "inputNode: " << *inputNodePtr << "\n";
+        log_os << "SVLocusSet::merge inputNode: " << *inputNodePtr;
         log_os << "insersect_size: " << intersect.size() << "\n";
         BOOST_FOREACH(const ins_type::value_type& val, intersect)
         {
@@ -123,6 +108,54 @@ merge(SVLocus& inputLocus)
             }
         }
     }
+
+#ifdef DEBUG_SVL
+    checkState();
+#endif
+}
+
+
+
+void
+SVLocusSet::
+getNodeIntersect(
+        SVLocusNode* inputNodePtr,
+        ins_type& intersect)
+{
+    typedef ins_type::iterator in_iter;
+
+    intersect.clear();
+
+#ifdef DEBUG_SVL
+    log_os << "SVLocusSet::getNodeIntersect inputNode: " << *inputNodePtr;
+    checkState();
+#endif
+
+    // get all existing nodes which intersect with this one:
+    in_iter it(_inodes.lower_bound(inputNodePtr));
+
+    // first look forward and extend to find all nodes which this inputNode intersects:
+    for(in_iter it_fwd(it); it_fwd !=_inodes.end(); ++it_fwd)
+    {
+        SVLocusNode* nodePtr(it_fwd->first);
+#ifdef DEBUG_SVL
+        log_os << "FWD test: " << *nodePtr;
+#endif
+        if(! inputNodePtr->interval.isIntersect(nodePtr->interval)) break;
+        intersect[nodePtr] = it_fwd->second;
+    }
+
+    // now find all intersecting nodes in reverse direction:
+    for(in_iter it_rev(it); it_rev !=_inodes.begin(); )
+    {
+        --it_rev;
+        SVLocusNode* nodePtr(it_rev->first);
+#ifdef DEBUG_SVL
+        log_os << "REV test: " << *nodePtr;
+#endif
+        if(! inputNodePtr->interval.isIntersect(nodePtr->interval)) break;
+        intersect[nodePtr] = it_rev->second;
+    }
 }
 
 
@@ -131,8 +164,8 @@ void
 SVLocusSet::
 combineLoci(
         const unsigned fromIndex,
-        const unsigned toIndex) {
-
+        const unsigned toIndex)
+{
     assert(toIndex<_loci.size());
 
     if(fromIndex>=_loci.size()) return;
@@ -165,3 +198,25 @@ write(std::ostream& os) const
     }
     os << "LOCUSSET_END\n";
 }
+
+
+
+void
+SVLocusSet::
+checkState() const
+{
+    unsigned nodeSize(0);
+    BOOST_FOREACH(const SVLocus& locus, _loci)
+    {
+        nodeSize += locus.size();
+    }
+
+    if(nodeSize != _inodes.size())
+    {
+        using namespace illumina::common;
+        std::ostringstream oss;
+        oss << "ERROR: SVLocusSet conflicting internal node counts. nodeSize: " << nodeSize << " inodeSize: " << _inodes.size() << "n";
+        BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
+    }
+}
+

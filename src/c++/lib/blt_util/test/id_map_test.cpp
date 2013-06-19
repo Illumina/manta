@@ -28,13 +28,13 @@ BOOST_AUTO_TEST_CASE( test_id_set ) {
     iset.insert_key("brown");
     iset.insert_key("fox");
 
-    BOOST_CHECK_EQUAL(iset.test_key("brown"),true);
-    BOOST_CHECK_EQUAL(iset.test_key("x"),false);
+    BOOST_REQUIRE_EQUAL(iset.test_key("brown"),true);
+    BOOST_REQUIRE_EQUAL(iset.test_key("x"),false);
 
     const unsigned expect_id(1);
 
-    BOOST_CHECK_EQUAL(iset.get_id("fox"),expect_id);
-    BOOST_CHECK_EQUAL(iset.get_key(expect_id),std::string("fox"));
+    BOOST_REQUIRE_EQUAL(iset.get_id("fox"),expect_id);
+    BOOST_REQUIRE_EQUAL(iset.get_key(expect_id),std::string("fox"));
 }
 
 
@@ -45,18 +45,18 @@ BOOST_AUTO_TEST_CASE( test_id_map ) {
     imap.insert("brown","123");
     imap.insert("fox","456");
 
-    BOOST_CHECK_EQUAL(imap.test_key("brown"),true);
-    BOOST_CHECK_EQUAL(imap.test_key("x"),false);
+    BOOST_REQUIRE_EQUAL(imap.test_key("brown"),true);
+    BOOST_REQUIRE_EQUAL(imap.test_key("x"),false);
 
     // test key replacement:
     imap.insert("brown","789");
-    BOOST_CHECK_EQUAL(imap.get_value(imap.get_id("brown")),std::string("789"));
+    BOOST_REQUIRE_EQUAL(imap.get_value(imap.get_id("brown")),std::string("789"));
 
     const unsigned expect_id(1);
 
-    BOOST_CHECK_EQUAL(imap.get_id("fox"),expect_id);
-    BOOST_CHECK_EQUAL(imap.get_key(expect_id),std::string("fox"));
-    BOOST_CHECK_EQUAL(imap.get_value(expect_id),std::string("456"));
+    BOOST_REQUIRE_EQUAL(imap.get_id("fox"),expect_id);
+    BOOST_REQUIRE_EQUAL(imap.get_key(expect_id),std::string("fox"));
+    BOOST_REQUIRE_EQUAL(imap.get_value(expect_id),std::string("456"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
