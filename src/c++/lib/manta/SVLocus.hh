@@ -263,12 +263,17 @@ struct SVLocus
     copyNode(const SVLocus& fromLocus,
              SVLocusNode* nodePtr)
     {
-        const shared_map& from_smap(fromLocus._smap);
-        shared_map::const_iterator iter(from_smap.find(nodePtr));
-        assert(iter != from_smap.end());
+        assert(&fromLocus != this);
+
+        const shared_map& fromSmap(fromLocus._smap);
+        shared_map::const_iterator fromIter(fromSmap.find(nodePtr));
+        assert(fromIter != fromSmap.end());
+
+        shared_map::const_iterator toIter(_smap.find(nodePtr));
+        assert(toIter == _smap.end());
 
         _graph.insert(nodePtr);
-        _smap.insert(std::make_pair(nodePtr,iter->second));
+        _smap.insert(std::make_pair(nodePtr,fromIter->second));
     }
 
     // remove node

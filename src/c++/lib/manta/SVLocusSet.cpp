@@ -186,6 +186,7 @@ combineLoci(
 {
     assert(toIndex<_loci.size());
 
+    if (fromIndex == toIndex) return;
     if (fromIndex>=_loci.size()) return;
 
     SVLocus& fromLocus(_loci[fromIndex]);
