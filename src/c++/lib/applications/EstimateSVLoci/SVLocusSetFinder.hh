@@ -56,6 +56,10 @@ private:
         double max;
     };
 
+    /// this predicate runs any fast tests on the acceptability of a
+    /// read for the SVLocus build
+    bool
+    isReadFiltered(const bam_record& read) const;
 
     static
     void
@@ -66,6 +70,7 @@ private:
 
     /////////////////////////////////////////////////
     // data:
+    const ESLOptions& _opt;
     ReadGroupStatsSet _rss;
     SVLocusSet _svLoci;
 

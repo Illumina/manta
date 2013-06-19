@@ -24,10 +24,12 @@
 struct ESLOptions {
 
     ESLOptions() :
-        breakendEdgeTrimProb(0.1)
+        minMapq(10),
+        breakendEdgeTrimProb(0.2)
     {}
 
     /// report breakend regions with x prob regions removed from each edge
+    unsigned minMapq;
     float breakendEdgeTrimProb;
 
     std::vector<std::string> alignmentFilename;

@@ -21,6 +21,7 @@
 
 SVLocusSetFinder::
 SVLocusSetFinder(const ESLOptions& opt)
+     : _opt(opt)
 {
     // pull in insert stats:
     _rss.read(opt.statsFilename.c_str());
@@ -104,13 +105,27 @@ getChimericSVLocus(
 
 
 
+bool
+SVLocusSetFinder::
+isReadFiltered(const bam_record& read) const
+{
+    if (read.is_filter()) return true;
+    if (read.is_dup()) return true;
+    if (read.is_secondary()) return true;
+    if (! read.is_proper_pair()) return true;
+    if (read.map_qual() < _opt.minMapq) return true;
+    return false;
+}
+
+
+
 void
 SVLocusSetFinder::
 update(const bam_record& read,
        const unsigned defaultReadGroupIndex)
 {
     // shortcut to speed things up:
-    if (read.is_proper_pair()) return;
+    if (isReadFiltered(read)) return;
 
     const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);
 
@@ -122,7 +137,10 @@ update(const bam_record& read,
         getChimericSVLocus(rstats,read,locus);
     }
 
-    _svLoci.merge(locus);
+    if(! locus.empty())
+    {
+        _svLoci.merge(locus);
+    }
 }
 
 
