@@ -148,7 +148,6 @@ checkState() const
             oss << "\tremote_node: " << *edgeNodePtr;
             BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
         }
-        if(1 == edgeNodePtr->_edges.count(edgeNodePtr));
     }
 }
 
