@@ -47,9 +47,9 @@ struct GenomeLocation
 struct GenomeInterval
 {
     GenomeInterval(
-            const int32_t initTid = 0,
-            const pos_t beginPos = 0,
-            const pos_t endPos = 0) :
+        const int32_t initTid = 0,
+        const pos_t beginPos = 0,
+        const pos_t endPos = 0) :
         tid(initTid),
         range(beginPos,endPos)
     {}
@@ -58,7 +58,7 @@ struct GenomeInterval
     bool
     isIntersect(const GenomeInterval& gi) const
     {
-        if(tid != gi.tid) return false;
+        if (tid != gi.tid) return false;
         return range.is_range_intersect(gi.range);
     }
 
@@ -147,11 +147,11 @@ struct SVLocusNode
             const bool isMakeReciprical = true)
     {
         // no self edges allowed:
-        if(&linkTo == this) return;
+        if (&linkTo == this) return;
 
         _edges.insert(std::make_pair(&linkTo,SVLocusEdge(1)));
 
-        if(! isMakeReciprical) return;
+        if (! isMakeReciprical) return;
         linkTo.addEdge(*this,false);
     }
 
@@ -242,17 +242,17 @@ struct SVLocus
 
     SVLocusNode*
     addNode(
-            const int32_t tid,
-            const int32_t beginPos,
-            const int32_t endPos,
-            SVLocusNode* linkTo = NULL)
+        const int32_t tid,
+        const int32_t beginPos,
+        const int32_t endPos,
+        SVLocusNode* linkTo = NULL)
     {
         SVLocusNode* nodePtr(newGraphNode());
         nodePtr->interval.tid=tid;
         nodePtr->interval.range.set_range(beginPos,endPos);
         nodePtr->count+=1;
 
-        if(NULL != linkTo) {
+        if (NULL != linkTo) {
             nodePtr->addEdge(*linkTo);
         }
         return nodePtr;
@@ -278,7 +278,7 @@ struct SVLocus
     {
         assert(NULL != nodePtr);
         iterator iter(_graph.find(nodePtr));
-        if(iter == _graph.end()) return;
+        if (iter == _graph.end()) return;
 
         shared_map::iterator siter(_smap.find(nodePtr));
         assert(siter != _smap.end());

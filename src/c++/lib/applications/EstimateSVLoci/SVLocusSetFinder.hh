@@ -60,9 +60,9 @@ private:
     static
     void
     getChimericSVLocus(
-            const CachedReadGroupStats& rstats,
-            const bam_record& read,
-            SVLocus& locus);
+        const CachedReadGroupStats& rstats,
+        const bam_record& read,
+        SVLocus& locus);
 
     /////////////////////////////////////////////////
     // data:

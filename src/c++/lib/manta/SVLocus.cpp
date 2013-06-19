@@ -43,8 +43,8 @@ SVLocusNode::
 mergeNode(SVLocusNode& inputNode) {
 
     using namespace illumina::common;
-    if((interval.tid != inputNode.interval.tid) ||
-       (! interval.range.is_range_intersect(inputNode.interval.range))) {
+    if ((interval.tid != inputNode.interval.tid) ||
+        (! interval.range.is_range_intersect(inputNode.interval.range))) {
         std::ostringstream oss;
         oss << "ERROR: Attempting to merge non-intersecting nodes\n"
             << "\tNode1: " << *this
@@ -60,10 +60,10 @@ mergeNode(SVLocusNode& inputNode) {
         // update local edge:
         {
             edges_type::iterator thisEdgeIter(_edges.find(inputNodeEdgeIter.first));
-            if(thisEdgeIter == _edges.end())
+            if (thisEdgeIter == _edges.end())
             {
                 // no self-edges:
-                if(inputNodeEdgeIter.first != this)
+                if (inputNodeEdgeIter.first != this)
                 {
                     _edges.insert(inputNodeEdgeIter);
                 }
@@ -82,7 +82,7 @@ mergeNode(SVLocusNode& inputNode) {
 
             edges_type::iterator newRemoteIter(remoteEdges.find(this));
 
-            if(newRemoteIter == remoteEdges.end())
+            if (newRemoteIter == remoteEdges.end())
             {
                 remoteEdges.insert(std::make_pair(this,oldRemoteIter->second));
             }
@@ -135,7 +135,7 @@ operator<<(std::ostream& os, const SVLocus& locus)
     os << "LOCUS_BEGIN\n";
     BOOST_FOREACH(const SVLocusNode* nodePtr, locus)
     {
-         os << *nodePtr;
+        os << *nodePtr;
     }
     os << "LOCUS_END\n";
     return os;

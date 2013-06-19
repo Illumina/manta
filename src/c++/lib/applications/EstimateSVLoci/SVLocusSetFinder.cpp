@@ -43,9 +43,9 @@ SVLocusSetFinder(const ESLOptions& opt)
 void
 SVLocusSetFinder::
 getChimericSVLocus(
-        const CachedReadGroupStats& rstats,
-        const bam_record& read,
-        SVLocus& locus)
+    const CachedReadGroupStats& rstats,
+    const bam_record& read,
+    SVLocus& locus)
 {
     ALIGNPATH::path_t apath;
     bam_cigar_to_apath(read.raw_cigar(),read.n_cigar(),apath);
@@ -53,7 +53,7 @@ getChimericSVLocus(
     const unsigned readSize(apath_read_length(apath));
 
     unsigned thisReadNoninsertSize(0);
-    if(read.is_fwd_strand())
+    if (read.is_fwd_strand())
     {
         thisReadNoninsertSize=(readSize-apath_read_trail_size(apath));
     }
@@ -72,7 +72,7 @@ getChimericSVLocus(
         const pos_t startRefPos(read.pos()-1);
         const pos_t endRefPos(startRefPos+apath_ref_length(apath));
         // expected breakpoint range is from the end of the read alignment to the (probabilistic) end of the fragment:
-        if(read.is_fwd_strand())
+        if (read.is_fwd_strand())
         {
             breakendMin=(endRefPos);
             breakendMax=(endRefPos + static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
@@ -88,7 +88,7 @@ getChimericSVLocus(
     {
         const pos_t startRefPos(read.mate_pos()-1);
         const pos_t endRefPos(startRefPos+readSize);
-        if(read.is_mate_fwd_strand())
+        if (read.is_mate_fwd_strand())
         {
             breakendMin=(endRefPos);
             breakendMax=(endRefPos + static_cast<pos_t>(rstats.max-(totalNoninsertSize)));

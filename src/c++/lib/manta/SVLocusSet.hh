@@ -40,8 +40,8 @@ private:
     struct insKeySorter {
         bool
         operator()(
-                const ins_key_type& a,
-                const ins_key_type& b) const
+            const ins_key_type& a,
+            const ins_key_type& b) const
         {
             return ((a->interval)<(b->interval));
         }
@@ -54,8 +54,8 @@ private:
     /// the inputNode
     void
     getNodeIntersect(
-            SVLocusNode* inputNodePtr,
-            ins_type& intersect);
+        SVLocusNode* inputNodePtr,
+        ins_type& intersect);
 
     /// combine all content from loci from into to
     ///
@@ -63,15 +63,15 @@ private:
     /// which combines two loci
     void
     combineLoci(
-            const unsigned fromIndex,
-            const unsigned toIndex);
+        const unsigned fromIndex,
+        const unsigned toIndex);
 
     // add node from a locus which is not part of this locusSet
     void
     insertLocusNode(
-            const unsigned locusIndex,
-            SVLocus& inputLocus,
-            SVLocusNode* inputNodePtr)
+        const unsigned locusIndex,
+        SVLocus& inputLocus,
+        SVLocusNode* inputNodePtr)
     {
         assert(NULL != inputNodePtr);
 
@@ -85,7 +85,7 @@ private:
         assert(NULL != inputNodePtr);
 
         ins_type::iterator iter(_inodes.find(inputNodePtr));
-        if(iter == _inodes.end()) return;
+        if (iter == _inodes.end()) return;
 
         const unsigned index(iter->second);
 

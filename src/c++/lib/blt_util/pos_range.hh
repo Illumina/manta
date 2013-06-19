@@ -63,7 +63,7 @@ struct pos_range {
 
     void
     set_range(const pos_t begin,
-            const pos_t end) {
+              const pos_t end) {
         set_begin_pos(begin);
         set_end_pos(end);
     }
@@ -112,17 +112,17 @@ struct pos_range {
     operator<(const pos_range& rhs) const
     {
         if     ((!is_begin_pos) && rhs.is_begin_pos) return true;
-        else if((is_begin_pos) && (!rhs.is_begin_pos)) return false;
-        else if(is_begin_pos && rhs.is_begin_pos)
+        else if ((is_begin_pos) && (!rhs.is_begin_pos)) return false;
+        else if (is_begin_pos && rhs.is_begin_pos)
         {
-            if(begin_pos < rhs.begin_pos) return true;
-            if(begin_pos > rhs.begin_pos) return false;
+            if (begin_pos < rhs.begin_pos) return true;
+            if (begin_pos > rhs.begin_pos) return false;
         }
 
         if     ((!is_end_pos) && rhs.is_end_pos) return true;
-        else if(is_end_pos && rhs.is_end_pos)
+        else if (is_end_pos && rhs.is_end_pos)
         {
-            if(end_pos < rhs.end_pos) return true;
+            if (end_pos < rhs.end_pos) return true;
         }
 
         return false;
@@ -145,10 +145,10 @@ struct known_pos_range : public pos_range {
     bool
     operator<(const pos_range& rhs) const
     {
-        if(begin_pos < rhs.begin_pos) return true;
-        if(begin_pos == rhs.begin_pos)
+        if (begin_pos < rhs.begin_pos) return true;
+        if (begin_pos == rhs.begin_pos)
         {
-            if(end_pos < rhs.end_pos) return true;
+            if (end_pos < rhs.end_pos) return true;
         }
         return false;
     }
@@ -163,8 +163,8 @@ struct known_pos_range : public pos_range {
     void
     merge_range(const known_pos_range& kpr)
     {
-        if(kpr.begin_pos<begin_pos) begin_pos=kpr.begin_pos;
-        if(kpr.end_pos>end_pos) end_pos=kpr.end_pos;
+        if (kpr.begin_pos<begin_pos) begin_pos=kpr.begin_pos;
+        if (kpr.end_pos>end_pos) end_pos=kpr.end_pos;
     }
 
 private:

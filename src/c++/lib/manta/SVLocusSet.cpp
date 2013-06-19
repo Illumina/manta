@@ -52,10 +52,10 @@ merge(SVLocus& inputLocus)
         }
 #endif
 
-        if(intersect.empty())
+        if (intersect.empty())
         {
             // if no nodes intersect, then insert inputNode into a new locus:
-            if(locusIndex>=_loci.size())
+            if (locusIndex>=_loci.size())
             {
                 _loci.resize(locusIndex+1);
             }
@@ -74,7 +74,7 @@ merge(SVLocus& inputLocus)
                 // get lowest index number:
                 BOOST_FOREACH(const ins_type::value_type& val, intersect)
                 {
-                    if(val.second < locusIndex)
+                    if (val.second < locusIndex)
                     {
                         locusIndex = val.second;
                     }
@@ -119,8 +119,8 @@ merge(SVLocus& inputLocus)
 void
 SVLocusSet::
 getNodeIntersect(
-        SVLocusNode* inputNodePtr,
-        ins_type& intersect)
+    SVLocusNode* inputNodePtr,
+    ins_type& intersect)
 {
     typedef ins_type::iterator in_iter;
 
@@ -135,25 +135,25 @@ getNodeIntersect(
     in_iter it(_inodes.lower_bound(inputNodePtr));
 
     // first look forward and extend to find all nodes which this inputNode intersects:
-    for(in_iter it_fwd(it); it_fwd !=_inodes.end(); ++it_fwd)
+    for (in_iter it_fwd(it); it_fwd !=_inodes.end(); ++it_fwd)
     {
         SVLocusNode* nodePtr(it_fwd->first);
 #ifdef DEBUG_SVL
         log_os << "FWD test: " << *nodePtr;
 #endif
-        if(! inputNodePtr->interval.isIntersect(nodePtr->interval)) break;
+        if (! inputNodePtr->interval.isIntersect(nodePtr->interval)) break;
         intersect[nodePtr] = it_fwd->second;
     }
 
     // now find all intersecting nodes in reverse direction:
-    for(in_iter it_rev(it); it_rev !=_inodes.begin(); )
+    for (in_iter it_rev(it); it_rev !=_inodes.begin(); )
     {
         --it_rev;
         SVLocusNode* nodePtr(it_rev->first);
 #ifdef DEBUG_SVL
         log_os << "REV test: " << *nodePtr;
 #endif
-        if(! inputNodePtr->interval.isIntersect(nodePtr->interval)) break;
+        if (! inputNodePtr->interval.isIntersect(nodePtr->interval)) break;
         intersect[nodePtr] = it_rev->second;
     }
 }
@@ -163,15 +163,15 @@ getNodeIntersect(
 void
 SVLocusSet::
 combineLoci(
-        const unsigned fromIndex,
-        const unsigned toIndex)
+    const unsigned fromIndex,
+    const unsigned toIndex)
 {
     assert(toIndex<_loci.size());
 
-    if(fromIndex>=_loci.size()) return;
+    if (fromIndex>=_loci.size()) return;
 
     SVLocus& fromLocus(_loci[fromIndex]);
-    if(fromLocus.empty()) return;
+    if (fromLocus.empty()) return;
 
     SVLocus& toLocus(_loci[toIndex]);
     BOOST_FOREACH(SVLocusNode* fromNodePtr, fromLocus)
@@ -211,7 +211,7 @@ checkState() const
         nodeSize += locus.size();
     }
 
-    if(nodeSize != _inodes.size())
+    if (nodeSize != _inodes.size())
     {
         using namespace illumina::common;
         std::ostringstream oss;
