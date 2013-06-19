@@ -115,7 +115,7 @@ merge(SVLocus& inputLocus)
 #ifdef DEBUG_SVL
                     log_os << "MergeAndRemove: " << *val.first << "\n";
 #endif
-                    inputNodePtr->mergeNode(*val.first);
+                    mergeNodePtr(val.first,inputNodePtr);
                     removeNode(val.first);
 #ifdef DEBUG_SVL
                     log_os << "Finished: " << *val.first << "\n";
@@ -208,6 +208,22 @@ combineLoci(
 
 void
 SVLocusSet::
+mergeNodePtr(SVLocusNode* fromPtr,
+             SVLocusNode* toPtr) 
+{
+    ins_type::iterator iter(_inodes.find(toPtr));
+    assert(iter != _inodes.end());
+    ins_type::value_type val(*iter);
+    _inodes.erase(iter);
+    toPtr->mergeNode(*fromPtr);
+    _inodes.insert(val);
+}
+
+
+
+
+void
+SVLocusSet::
 write(std::ostream& os) const
 {
     os << "LOCUSSET_START\n";
@@ -216,6 +232,20 @@ write(std::ostream& os) const
         os << locus;
     }
     os << "LOCUSSET_END\n";
+}
+
+
+
+void
+SVLocusSet::
+dumpIndex(std::ostream& os) const
+{
+    os << "SVLocusSet Index START\n";
+    BOOST_FOREACH(const ins_type::value_type& in, _inodes)
+    {
+        os << "Index: " << in.second << " nodeptr: " << in.first << "\n";
+    }
+    os << "SVLocusSet Index END\n";
 }
 
 
@@ -236,7 +266,7 @@ checkState() const
 
         nodeSize += locus.size();
 
-        BOOST_FOREACH(SVLocusNode* nodePtr, locus)
+        BOOST_FOREACH(SVLocusNode * const nodePtr, locus)
         {
             {
                 ins_type::const_iterator iter(repeatCheck.find(nodePtr));
@@ -253,19 +283,19 @@ checkState() const
             ins_type::value_type val(std::make_pair(nodePtr,locusIndex));
             repeatCheck.insert(val);
 
-            ins_type::const_iterator iter(_inodes.find(nodePtr));
-            if(iter == _inodes.end())
+            ins_type::const_iterator citer(_inodes.find(nodePtr));
+            if(citer == _inodes.end())
             {
                 std::ostringstream oss;
                 oss << "ERROR: locus node is missing from node index\n"
                     << "\tNode index: " << locusIndex << " node: " << *nodePtr;
                 BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
             }
-            if(iter->second != locusIndex)
+            if(citer->second != locusIndex)
             {
                 std::ostringstream oss;
                 oss << "ERROR: locus node is mis-assigned has conflicting index number in node index\n"
-                    << "\tinode index_value: " << iter->second << "\n"
+                    << "\tinode index_value: " << citer->second << "\n"
                     << "\tNode index: " << locusIndex << " node: " << *nodePtr;
                 BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
             }

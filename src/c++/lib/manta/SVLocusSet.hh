@@ -102,10 +102,17 @@ private:
         _inodes.erase(iter);
     }
 
+    void
+    mergeNodePtr(SVLocusNode* fromPtr,
+                 SVLocusNode* toPtr);
+
     /// check that internal data-structures are in
     /// a consistent state, throw on error
     void
     checkState() const;
+
+    void
+    dumpIndex(std::ostream& os) const;
 
 
     ///////////////////// data
