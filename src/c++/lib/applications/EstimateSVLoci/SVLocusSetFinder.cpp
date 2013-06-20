@@ -11,6 +11,10 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
+///
+/// \author Chris Saunders
+///
+
 #include "SVLocusSetFinder.hh"
 #include "blt_util/align_path_bam_util.hh"
 

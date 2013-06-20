@@ -11,6 +11,10 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
+///
+/// \author Chris Saunders
+///
+
 #include "blt_util/log.hh"
 #include "common/Exceptions.hh"
 #include "manta/SVLocusSet.hh"

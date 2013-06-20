@@ -11,6 +11,9 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
+///
+/// \author Chris Saunders
+///
 
 #include "boost/foreach.hpp"
 #include "boost/test/unit_test.hpp"

@@ -11,6 +11,9 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
+///
+/// \author Chris Saunders
+///
 
 #pragma once
 

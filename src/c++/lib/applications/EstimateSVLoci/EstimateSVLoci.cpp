@@ -11,6 +11,10 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
+///
+/// \author Chris Saunders
+///
+
 #include "EstimateSVLoci.hh"
 #include "ESLOptions.hh"
 #include "SVLocusSetFinder.hh"

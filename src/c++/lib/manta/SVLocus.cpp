@@ -11,6 +11,9 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
+///
+/// \author Chris Saunders
+///
 
 #include "common/Exceptions.hh"
 #include "manta/SVLocus.hh"
