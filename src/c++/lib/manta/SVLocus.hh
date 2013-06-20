@@ -127,7 +127,7 @@ struct SVLocusEdge
         ar & count;
     }
 
-    unsigned count;
+    unsigned short count;
 };
 
 
@@ -205,7 +205,7 @@ struct SVLocusNode
     operator<<(std::ostream& os, const SVLocusNode& node);
 
     //////////////////  data:
-    unsigned count;
+    unsigned short count;
     GenomeInterval interval;
 
 private:
