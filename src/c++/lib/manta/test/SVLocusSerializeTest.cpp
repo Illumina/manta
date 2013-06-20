@@ -15,12 +15,11 @@
 /// \author Chris Saunders
 ///
 
-#include <boost/archive/tmpdir.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/archive/binary_oarchive.hpp>
-
+#include "boost/archive/tmpdir.hpp"
+#include "boost/archive/text_iarchive.hpp"
+#include "boost/archive/text_oarchive.hpp"
+#include "boost/archive/binary_iarchive.hpp"
+#include "boost/archive/binary_oarchive.hpp"
 #include "boost/foreach.hpp"
 #include "boost/test/unit_test.hpp"
 
@@ -48,7 +47,7 @@ GenomeIntervalSerializeTest(const char* extension)
 
     // serialize
     {
-        std::ofstream ofs(filename.c_str());
+        std::ofstream ofs(filename.c_str(), std::ios::binary);
         OutputArchiver oa(ofs);
         oa << gi;
     }
@@ -57,7 +56,7 @@ GenomeIntervalSerializeTest(const char* extension)
 
     // deserialize
     {
-        std::ifstream ifs(filename.c_str());
+        std::ifstream ifs(filename.c_str(), std::ios::binary);
         InputArchiver ia(ifs);
         ia >> gi_copy;
     }
@@ -91,7 +90,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeSerialze )
 
     // serialize
     {
-        std::ofstream ofs(filename.c_str());
+        std::ofstream ofs(filename.c_str(), std::ios::binary);
         binary_oarchive oa(ofs);
         oa << *nodePtr1;
     }
@@ -100,7 +99,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeSerialze )
 
     // deserialize
     {
-        std::ifstream ifs(filename.c_str());
+        std::ifstream ifs(filename.c_str(), std::ios::binary);
         binary_iarchive ia(ifs);
         ia >> node_copy1;
       }
@@ -137,7 +136,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSerialze )
 
     // serialize
     {
-        std::ofstream ofs(filename.c_str());
+        std::ofstream ofs(filename.c_str(), std::ios::binary);
         binary_oarchive oa(ofs);
         oa << locus1;
     }
@@ -146,7 +145,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSerialze )
 
     // deserialize
     {
-        std::ifstream ifs(filename.c_str());
+        std::ifstream ifs(filename.c_str(), std::ios::binary);
         binary_iarchive ia(ifs);
         ia >> locus1_copy;
     }

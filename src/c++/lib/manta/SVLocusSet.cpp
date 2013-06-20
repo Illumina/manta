@@ -19,9 +19,12 @@
 #include "common/Exceptions.hh"
 #include "manta/SVLocusSet.hh"
 
+#include "boost/archive/binary_iarchive.hpp"
+#include "boost/archive/binary_oarchive.hpp"
 #include "boost/foreach.hpp"
 
 #include <algorithm>
+#include <fstream>
 #include <iostream>
 #include <sstream>
 
@@ -73,13 +76,11 @@ merge(SVLocus& inputLocus)
                 _loci.resize(locusIndex+1);
             }
 
-            if(locusIndex == startLocusIndex)
+            if(isFirst && (locusIndex == startLocusIndex))
             {
-                if(isFirst) {
-                    assert(_loci[locusIndex].empty());
-                    _emptyLoci.erase(locusIndex);
-                    isFirst=false;
-                }
+                assert(_loci[locusIndex].empty());
+                _emptyLoci.erase(locusIndex);
+                isFirst=false;
             }
 
             insertLocusNode(locusIndex,inputLocus,inputNodePtr);
@@ -248,7 +249,7 @@ mergeNodePtr(SVLocusNode* fromPtr,
 
 void
 SVLocusSet::
-write(std::ostream& os) const
+dump(std::ostream& os) const
 {
     os << "LOCUSSET_START\n";
     BOOST_FOREACH(const SVLocus& locus, _loci)
@@ -256,6 +257,72 @@ write(std::ostream& os) const
         os << locus;
     }
     os << "LOCUSSET_END\n";
+}
+
+
+
+void
+SVLocusSet::
+save(const char* filename) const
+{
+    using namespace boost::archive;
+
+    assert(NULL != filename);
+    std::ofstream ofs(filename, std::ios::binary);
+    binary_oarchive oa(ofs);
+
+    BOOST_FOREACH(const SVLocus& locus, _loci)
+    {
+        if(locus.empty()) continue;
+        oa << locus;
+    }
+}
+
+
+
+void
+SVLocusSet::
+load(const char* filename)
+{
+    using namespace boost::archive;
+
+    clear();
+
+    assert(NULL != filename);
+    std::ifstream ifs(filename, std::ios::binary);
+    binary_iarchive ia(ifs);
+
+    SVLocus locus;
+    while(ifs.peek() != EOF)
+    {
+        locus.clear();
+        ia >> locus;
+        if(locus.empty()) continue;
+        _loci.push_back(locus);
+    }
+
+    reconstructIndex();
+}
+
+
+
+void
+SVLocusSet::
+reconstructIndex()
+{
+    _inodes.clear();
+    _emptyLoci.clear();
+
+    unsigned index(0);
+    BOOST_FOREACH(SVLocus& locus, _loci)
+    {
+        BOOST_FOREACH(SVLocusNode* nodePtr, locus)
+        {
+            _inodes.insert(std::make_pair(nodePtr,index));
+        }
+        if(locus.empty()) _emptyLoci.insert(index);
+        index++;
+    }
 }
 
 

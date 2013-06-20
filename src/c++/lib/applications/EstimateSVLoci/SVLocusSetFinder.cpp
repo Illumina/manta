@@ -153,5 +153,5 @@ void
 SVLocusSetFinder::
 dump(std::ostream& os) const
 {
-    _svLoci.write(os);
+    _svLoci.dump(os);
 }

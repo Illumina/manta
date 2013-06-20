@@ -28,6 +28,27 @@
 //
 struct SVLocusSet
 {
+    typedef std::vector<SVLocus> locusset_type;
+    typedef locusset_type::const_iterator const_iterator;
+
+    unsigned
+    size() const
+    {
+        return _loci.size();
+    }
+
+    const_iterator
+    begin() const
+    {
+        return _loci.begin();
+    }
+
+    const_iterator
+    end() const
+    {
+        return _loci.end();
+    }
+
     /// merge new locus into the set:
     ///
     /// locus is destroyed in this process
@@ -36,7 +57,33 @@ struct SVLocusSet
     merge(SVLocus& locus);
 
     void
-    write(std::ostream& os) const;
+    clear()
+    {
+        _loci.clear();
+        _emptyLoci.clear();
+        _inodes.clear();
+    }
+
+    // binary serialization
+    void
+    save(const char* filename) const;
+
+    // restore from binary serialization
+    void
+    load(const char* filename);
+
+    // debug output
+    void
+    dump(std::ostream& os) const;
+
+#if 0
+    // debug output
+    void
+    dump_region(std::ostream& os,
+            const int32_t tid,
+            const int32_t beginPos,
+            const int32_t endPos) const;
+#endif
 
 private:
     typedef SVLocusNode* ins_key_type;
@@ -114,19 +161,22 @@ private:
     mergeNodePtr(SVLocusNode* fromPtr,
                  SVLocusNode* toPtr);
 
-    /// check that internal data-structures are in
-    /// a consistent state, throw on error
     void
-    checkState() const;
+    reconstructIndex();
 
     void
     dumpIndex(std::ostream& os) const;
 
 
+    /// check that internal data-structures are in
+    /// a consistent state, throw on error
+    void
+    checkState() const;
+
     ///////////////////// data
 
     // contains the full set of loci
-    std::vector<SVLocus> _loci;
+    locusset_type _loci;
     std::set<unsigned> _emptyLoci;
 
     // provides an intersection search of non-overlapping nodes:
