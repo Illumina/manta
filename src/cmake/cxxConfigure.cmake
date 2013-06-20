@@ -92,30 +92,34 @@ static_find_boost(${MANTA_BOOST_VERSION} "${MANTA_BOOST_COMPONENTS}")
 # Force static linking
 set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE gcc_version)
-    STRING(REGEX REPLACE "(\r?\n)+$" "" gcc_version "${gcc_version}")
+macro(get_compiler_version compiler_version)
+    execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE ${compiler_version})
+    STRING(REGEX REPLACE "(\r?\n)+$" "" ${compiler_version} "${${compiler_version}}")
+endmacro()
 
-    string(REGEX REPLACE "^([0-9])\\.[0-9]\\.[0-9]" "\\1" gcc_major_version ${gcc_version})
-    string(REGEX REPLACE "^[0-9]\\.([0-9])\\.[0-9]" "\\1" gcc_minor_version ${gcc_version})
-    string(REGEX REPLACE "^[0-9]\\.[0-9]\\.([0-9])" "\\1" gcc_patch_version ${gcc_version})
+# clang doesn't make this easy for us...
+macro(get_clang_version compiler_version)
+    execute_process(COMMAND bash -c "${CMAKE_CXX_COMPILER} -v 2>&1 | awk '{printf $3; exit}'" OUTPUT_VARIABLE ${compiler_version})
+endmacro()
 
-    set(min_gcc_major_version 4)
-    set(min_gcc_minor_version 1)
-    set(min_gcc_patch_version 2)
-    set(min_gcc_version ${gcc_major_version}.${gcc_minor_version}.${gcc_patch_version})
-
-    if    (gcc_major_version LESS min_gcc_major_version OR
-           (gcc_major_version EQUAL min_gcc_major_version AND (gcc_minor_version LESS min_gcc_minor_version OR
-           (gcc_minor_version EQUAL min_gcc_minor_version AND gcc_patch_version LESS min_gcc_patch_version) ) ) )
-        message (FATAL_ERROR "Unsupported GNU C++ compiler: g++ version ${gcc_version}: "
-                             "only g++ versions >= ${min_gcc_version} are supported")
+macro(test_min_compiler compiler_version min_compiler_version compiler_label)
+    if (${compiler_version} VERSION_LESS ${min_compiler_version})
+        message (FATAL_ERROR "Unsupported ${compiler_label} version: ${compiler_version}: "
+                             "only versions >= ${min_compiler_version} are supported")
     endif ()
+endmacro()
 
-    set("${CMAKE_CXX_COMPILER_ID}${gcc_major_version}" true)
-    set("${CMAKE_CXX_COMPILER_ID}${gcc_major_version}${gcc_minor_version}" true)
-    set("${CMAKE_CXX_COMPILER_ID}${gcc_major_version}${gcc_minor_version}${gcc_patch_version}" true)
-    message (STATUS "using compiler: gcc version ${gcc_version}")
+
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    get_compiler_version(compiler_version)
+    test_min_compiler(${compiler_version} "4.1.2" "g++")
+    message (STATUS "using compiler: g++ version ${compiler_version}")
+
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    get_clang_version(compiler_version)
+    test_min_compiler(${compiler_version} "3.1" "clang++")
+    message (STATUS "using compiler: clang++ version ${compiler_version}")
 else ()
     message (STATUS "using compiler: ${CMAKE_CXX_COMPILER_ID}")
 endif ()
@@ -124,24 +128,17 @@ endif ()
 #
 # set compile flags, and modify by compiler/compiler version:
 #
-set (CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -Wredundant-decls -pedantic")
+set (CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -Wredundant-decls -pedantic -Wno-unused-parameter")
 set (CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 set (CMAKE_CXX_FLAGS_RELEASE "-O3")
 set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
 #set (CMAKE_CXX_FLAGS_PROFILE "-O0 -g -pg -fprofile-arcs -ftest-coverage")
 
 # this should be tied to a 'developer' switch -- for now,
-# anyone touching manta is a developer might want to turn this on
+# anyone touching manta is a developer and might want to turn this on
 if (false)
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
 endif ()
-
-##
-## Suppress spurious warnings in less recent compilers
-##
-#if    (NOT GNU42)
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter ")
-#endif ()
 
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "^i[67]86$")
     ##
