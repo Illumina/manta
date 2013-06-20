@@ -26,6 +26,15 @@
 #include <sstream>
 
 
+unsigned
+SVLocusSet::
+getStartLocusIndex() const
+{
+    if(_emptyLoci.empty()) return _loci.size();
+    return *_emptyLoci.begin();
+}
+
+
 
 void
 SVLocusSet::
@@ -37,9 +46,9 @@ merge(SVLocus& inputLocus)
     log_os << "SVLocusSet::merge inputLocus: " << inputLocus;
 #endif
 
-    const unsigned startLocusIndex(_loci.size());
+    const unsigned startLocusIndex(getStartLocusIndex());
     unsigned locusIndex(startLocusIndex);
-
+    bool isFirst(true);
 
     // test each node for intersection and insert/join to existing node:
     BOOST_FOREACH(SVLocusNode* inputNodePtr, inputLocus)
@@ -64,6 +73,15 @@ merge(SVLocus& inputLocus)
                 _loci.resize(locusIndex+1);
             }
 
+            if(locusIndex == startLocusIndex)
+            {
+                if(isFirst) {
+                    assert(_loci[locusIndex].empty());
+                    _emptyLoci.erase(locusIndex);
+                    isFirst=false;
+                }
+            }
+
             insertLocusNode(locusIndex,inputLocus,inputNodePtr);
         }
         else
@@ -86,9 +104,11 @@ merge(SVLocus& inputLocus)
 
                 // assign all intersect clusters to the lowest index number
                 combineLoci(startLocusIndex,locusIndex);
+                if(startLocusIndex<_loci.size()) _emptyLoci.insert(startLocusIndex);
                 BOOST_FOREACH(const ins_type::value_type& val, intersect)
                 {
                     combineLoci(val.second,locusIndex);
+                    _emptyLoci.insert(val.second);
                 }
 
 #ifdef DEBUG_SVL

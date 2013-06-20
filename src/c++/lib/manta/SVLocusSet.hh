@@ -59,6 +59,10 @@ private:
     typedef std::map<ins_key_type, unsigned, insKeySorter> ins_type;
 
 
+    unsigned
+    getStartLocusIndex() const;
+
+
     /// get all nodes in this object which intersect with
     /// the inputNode
     void
@@ -123,6 +127,7 @@ private:
 
     // contains the full set of loci
     std::vector<SVLocus> _loci;
+    std::set<unsigned> _emptyLoci;
 
     // provides an intersection search of non-overlapping nodes:
     ins_type _inodes;
