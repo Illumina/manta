@@ -77,6 +77,7 @@ The pipeline reference sequence is currently fixed to human hg19.
             'alignerMode' : "isaac",
             'runDir' : 'MantaWorkflow',
             'isExome' : False,
+            'binSize' : 25000000,
                           })
         return defaults
 

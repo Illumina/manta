@@ -99,16 +99,15 @@ def javaHeapMemReqest(self,javaMb,javaMinMb=None,overheadMb=None) :
 
 
 
-def getFastaChromOrderSize(fastaFile) :
+def getFastaChromOrderSize(faiFile) :
     """
-    assuming fasta file has an fai index,
+    given a fasta index file,
     returns
     (chromOrder,chromSizes)
     where:
     chromOrder -- list of chromosomes in fasta order
     chromSizes -- hash of chromosome sizes
     """
-    faiFile=fastaFile+".fai"
     assert os.path.isfile(faiFile)
 
     chromOrder=[]

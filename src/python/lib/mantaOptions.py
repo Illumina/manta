@@ -55,6 +55,12 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         samtoolsBin=os.path.join(libexecDir,"samtools")
         assert os.path.isfile(samtoolsBin)
 
+        mantaStatsBin=os.path.join(libexecDir,"GetAlignmentStats")
+        assert os.path.isfile(mantaStatsBin)
+
+        mantaGraphBin=os.path.join(libexecDir,"EstimateSVLoci")
+        assert os.path.isfile(mantaGraphBin)
+
         return cleanLocals(locals())
 
 
