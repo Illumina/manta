@@ -57,8 +57,9 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
 
         mantaStatsBin=os.path.join(libexecDir,"GetAlignmentStats")
         assert os.path.isfile(mantaStatsBin)
-
         mantaGraphBin=os.path.join(libexecDir,"EstimateSVLoci")
+        assert os.path.isfile(mantaGraphBin)
+        mantaGraphMergeBin=os.path.join(libexecDir,"MergeSVLoci")
         assert os.path.isfile(mantaGraphBin)
 
         return cleanLocals(locals())

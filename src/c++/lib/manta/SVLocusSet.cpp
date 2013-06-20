@@ -135,6 +135,18 @@ merge(SVLocus& inputLocus)
 
 void
 SVLocusSet::
+merge(SVLocusSet& inputSet)
+{
+    BOOST_FOREACH(SVLocus& locus, inputSet._loci)
+    {
+        merge(locus);
+    }
+}
+
+
+
+void
+SVLocusSet::
 getNodeIntersect(
     SVLocusNode* inputNodePtr,
     ins_type& intersect)

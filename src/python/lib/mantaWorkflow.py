@@ -117,8 +117,15 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
         graphCmd.extend(["--region",gseg.bamRegion])
         for bamPath in self.params.bamList :
             graphCmd.extend(["--align-file",bamPath])
-        graphTaskLabel=preJoin(taskPrefix,"makeGraph_"+gseg.id)
+        graphTaskLabel=preJoin(taskPrefix,"makeLocusGraph_"+gseg.id)
         graphTasks.add(self.addTask(graphTaskLabel,graphCmd,dependencies=dirTask))
+
+    mergeCmd= [ self.params.mantaGraphMergeBin ]
+    mergeCmd.extend(["--output-file", graphPath])
+    for gfile in tmpGraphFiles :
+        mergeCmd.extend(["--graph-file", gfile])
+    
+    mergeTask=self.addTask(preJoin(taskPrefix,"mergeGraph"),mergeCmd,dependencies=graphTasks)
 
     nextStepWait = set()
     return nextStepWait

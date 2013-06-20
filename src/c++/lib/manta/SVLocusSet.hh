@@ -49,12 +49,19 @@ struct SVLocusSet
         return _loci.end();
     }
 
-    /// merge new locus into the set:
+    /// merge locus into this:
     ///
     /// locus is destroyed in this process
     ///
     void
     merge(SVLocus& locus);
+
+    /// merge locus set into this:
+    ///
+    /// locus set is destroyed in this process
+    ///
+    void
+    merge(SVLocusSet& set);
 
     void
     clear()
