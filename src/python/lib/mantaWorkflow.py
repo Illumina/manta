@@ -55,14 +55,18 @@ class GenomeSegment(object) :
     1. chromosome
     2. begin position (1-indexed closed)
     3. end position (1-indexed closed)
+    4. chromosome segment (ie. bin) number (0-indexed)
     """
 
-    def __init__(self,chrom,beginPos,endPos) :
+    def __init__(self,chrom,beginPos,endPos,binId) :
         """
-        arguments are the three genomic interval descriptors detailed in class documentation
+        arguments are the 4 genomic interval descriptors detailed in class documentation
         """
         self.chrom = chrom
         self.bamRegion = chrom + ':' + str(beginPos) + '-' + str(endPos)
+        self.binId = binId
+        self.binStr = str(binId).zfill(4)
+        self.id = chrom + "_" + self.binStr
 
 
 
@@ -71,8 +75,8 @@ def getNextGenomeSegment(params) :
     generator which iterates through all genomic segments and
     returns a segmentValues object for each one.
     """
-    for (chrom,beginPos,endPos,_) in getChromIntervals(params.chromOrder,params.chromSizes,params.binSize) :
-        yield GenomeSegment(chrom,beginPos,endPos)
+    for (chrom,beginPos,endPos,binId) in getChromIntervals(params.chromOrder,params.chromSizes,params.binSize) :
+        yield GenomeSegment(chrom,beginPos,endPos,binId)
 
 
 
@@ -97,23 +101,23 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
     statsPath=self.paths.getStatsPath()
     graphPath=self.paths.getGraphPath()
 
-    graphFilename=os.path.basename(graphFile)
+    graphFilename=os.path.basename(graphPath)
     tmpGraphDir=os.path.join(self.params.workDir,graphFilename+".tmpdir")
     dirTask=self.addTask(preJoin(taskPrefix,"makeTmpDir"), "mkdir -p "+tmpGraphDir, dependencies=dependencies, isForceLocal=True)
 
     tmpGraphFiles = []
-    graphTasks= []
+    graphTasks = set()
 
     for gseg in getNextGenomeSegment(self.params) :
 
-        tmpGraphFile=os.path.join(tmpGraphDir,graphFilename+gseg.bamRegion)
+        tmpGraphFiles.append(os.path.join(tmpGraphDir,graphFilename+"."+gseg.id+".bin"))
         graphCmd=[ self.params.mantaGraphBin ]
-        graphCmd.extend(["--output-file", tmpGraphFile])
+        graphCmd.extend(["--output-file", tmpGraphFiles[-1]])
         graphCmd.extend(["--align-stats",statsPath])
-        graphCmd.region(["--region",gseg.bamRegion])
+        graphCmd.extend(["--region",gseg.bamRegion])
         for bamPath in self.params.bamList :
             graphCmd.extend(["--align-file",bamPath])
-        graphTaskLabel=preJoin(taskPrefix,"makeGraph."+gseg.bamRegion)
+        graphTaskLabel=preJoin(taskPrefix,"makeGraph."+gseg.id)
         graphTasks.add(self.addTask(graphTaskLabel),graphCmd,dependencies=dirTask)
 
     nextStepWait = set()
@@ -173,9 +177,9 @@ class MantaWorkflow(WorkflowRunner) :
             checkFile(indexRefFasta,"reference fasta index")
 
         self.params.bamList = []
-        for bam in (options.tumorBam,options.normalBam) :
+        for bam in (self.params..tumorBam,self.params.normalBam) :
             if bam is None : continue
-            bamList.append(bam)
+            self.params.bamList.append(bam)
 
         # read fasta index
         (self.params.chromOrder,self.params.chromSizes) = getFastaChromOrderSize(indexRefFasta)
@@ -200,4 +204,4 @@ class MantaWorkflow(WorkflowRunner) :
         self.flowLog("Initiating Manta workflow version: %s" % (__version__))
 
         statsTasks = runStats(self)
-        graphTasks = runLocusGraph(self,dependencies=statsTask)
+        graphTasks = runLocusGraph(self,dependencies=statsTasks)

@@ -128,12 +128,21 @@ The pipeline reference sequence is currently fixed to human hg19.
         MantaWorkflowOptionsBase.validateOptionExistence(self,options)
 
         # check that the reference and the two bams are using the same set of chromosomes:
+        bamList=[]
+        bamLabels=[]
+        if options.normalBam is not None :
+            bamList.append(options.normalBam)
+            bamLabels.append("Normal")
+
+        if options.tumorBam is not None :
+            bamList.append(options.tumorBam)
+            bamLabels.append("Tumor")
+
         checkChromSet(options.samtoolsBin,
                       options.referenceFasta,
-                      [options.normalBam,options.tumorBam],
-                      ["Normal","Tumor"],
+                      bamList,
+                      bamLabels,
                       isReferenceLocked=True)
-
 
 
 

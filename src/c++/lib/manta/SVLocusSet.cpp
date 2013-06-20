@@ -240,7 +240,7 @@ combineLoci(
 void
 SVLocusSet::
 mergeNodePtr(SVLocusNode* fromPtr,
-             SVLocusNode* toPtr) 
+             SVLocusNode* toPtr)
 {
     ins_type::iterator iter(_inodes.find(toPtr));
     assert(iter != _inodes.end());
