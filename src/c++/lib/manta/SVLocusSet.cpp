@@ -51,6 +51,10 @@ merge(SVLocus& inputLocus)
 
     const unsigned startLocusIndex(getStartLocusIndex());
     unsigned locusIndex(startLocusIndex);
+    if(locusIndex<_loci.size())
+    {
+        assert(_loci[locusIndex].empty());
+    }
     bool isFirst(true);
 
     // test each node for intersection and insert/join to existing node:
@@ -68,6 +72,7 @@ merge(SVLocus& inputLocus)
         }
 #endif
 
+
         if (intersect.empty())
         {
             // if no nodes intersect, then insert inputNode into a new locus:
@@ -76,48 +81,12 @@ merge(SVLocus& inputLocus)
                 _loci.resize(locusIndex+1);
             }
 
-            if(isFirst && (locusIndex == startLocusIndex))
-            {
-                assert(_loci[locusIndex].empty());
-                _emptyLoci.erase(locusIndex);
-                isFirst=false;
-            }
-
             insertLocusNode(locusIndex,inputLocus,inputNodePtr);
         }
         else
         {
             // otherwise, merge inputNode into an existing locus
-
-            {
-                //
-                // first step is to assign all intersect clusters to the lowest index number
-                //
-
-                // get lowest index number:
-                BOOST_FOREACH(const ins_type::value_type& val, intersect)
-                {
-                    if (val.second < locusIndex)
-                    {
-                        locusIndex = val.second;
-                    }
-                }
-
-                // assign all intersect clusters to the lowest index number
-                combineLoci(startLocusIndex,locusIndex);
-                if(startLocusIndex<_loci.size()) _emptyLoci.insert(startLocusIndex);
-                BOOST_FOREACH(const ins_type::value_type& val, intersect)
-                {
-                    combineLoci(val.second,locusIndex);
-                    _emptyLoci.insert(val.second);
-                }
-
-#ifdef DEBUG_SVL
-                log_os << "Reassigned all intersecting nodes to index: " << locusIndex << " sli:" << startLocusIndex << "\n";
-                checkState();
-#endif
-
-            }
+            moveIntersectToLowIndex(intersect,startLocusIndex,locusIndex);
 
             {
                 //
@@ -147,8 +116,13 @@ merge(SVLocus& inputLocus)
                     checkState();
 #endif
                 }
-
             }
+        }
+
+        if(isFirst && (locusIndex == startLocusIndex))
+        {
+            _emptyLoci.erase(locusIndex);
+            isFirst=false;
         }
     }
 
@@ -199,6 +173,39 @@ getNodeIntersect(
         if (! inputNodePtr->interval.isIntersect(nodePtr->interval)) break;
         intersect[nodePtr] = it_rev->second;
     }
+}
+
+
+
+void
+SVLocusSet::
+moveIntersectToLowIndex(
+        ins_type& intersect,
+        const unsigned startLocusIndex,
+        unsigned& locusIndex)
+{
+    // get lowest index number:
+    BOOST_FOREACH(const ins_type::value_type& val, intersect)
+    {
+        if (val.second < locusIndex)
+        {
+            locusIndex = val.second;
+        }
+    }
+
+    // assign all intersect clusters to the lowest index number
+    combineLoci(startLocusIndex,locusIndex);
+    if(startLocusIndex<_loci.size()) _emptyLoci.insert(startLocusIndex);
+    BOOST_FOREACH(const ins_type::value_type& val, intersect)
+    {
+        combineLoci(val.second,locusIndex);
+        _emptyLoci.insert(val.second);
+    }
+
+#ifdef DEBUG_SVL
+    log_os << "Reassigned all intersecting nodes to index: " << locusIndex << " sli:" << startLocusIndex << "\n";
+    checkState();
+#endif
 }
 
 

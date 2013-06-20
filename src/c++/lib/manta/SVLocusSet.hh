@@ -117,6 +117,14 @@ private:
         SVLocusNode* inputNodePtr,
         ins_type& intersect);
 
+    /// assign all intersect clusters to the lowest index number
+    ///
+    void
+    moveIntersectToLowIndex(
+            ins_type& intersect,
+            const unsigned startLocusIndex,
+            unsigned& locusIndex);
+
     /// combine all content from loci from into to
     ///
     /// this is typically required when a node is merged
