@@ -100,12 +100,12 @@ set(BOOST_REDIST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../redist")
 # required boost libraries
 set (MANTA_BOOST_VERSION 1.49.0)
 set (MANTA_BOOST_COMPONENTS date_time filesystem iostreams program_options
-                            regex system unit_test_framework)
+                            regex serialization system unit_test_framework)
 
 # the name given to boost.build and the library name are the same for all libraries, except
 # for test, so we need two lists now:
 set (MANTA_BOOST_BUILD_COMPONENTS date_time filesystem iostreams program_options
-                                 regex system test)
+                                 regex serialization system test)
 set (Boost_USE_MULTITHREADED OFF)
 set (Boost_USE_STATIC_LIBS ON)
 

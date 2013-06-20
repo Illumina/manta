@@ -19,6 +19,8 @@
 
 #include "blt_util/blt_types.hh"
 
+#include "boost/serialization/level.hpp"
+
 #include <algorithm>
 #include <iosfwd>
 
@@ -128,6 +130,12 @@ struct pos_range {
         return false;
     }
 
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned /* version */)
+    {
+        ar & is_begin_pos & is_end_pos & begin_pos & end_pos;
+    }
+
     bool is_begin_pos;
     bool is_end_pos;
     pos_t begin_pos;
@@ -173,3 +181,6 @@ private:
 
 
 std::ostream& operator<<(std::ostream& os, const pos_range& pr);
+
+BOOST_CLASS_IMPLEMENTATION(pos_range, boost::serialization::object_serializable)
+

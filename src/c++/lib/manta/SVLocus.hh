@@ -11,11 +11,18 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
+///
+/// \author Chris Saunders
+///
 
 #pragma once
 
 #include "blt_util/pos_range.hh"
 
+#include "boost/foreach.hpp"
+#include "boost/serialization/map.hpp"
+#include "boost/serialization/set.hpp"
+#include <boost/serialization/split_member.hpp>
 #include "boost/shared_ptr.hpp"
 
 #include <iostream>
@@ -79,6 +86,12 @@ struct GenomeInterval
         return ((tid==rhs.tid) && (range==rhs.range));
     }
 
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned /* version */)
+    {
+        ar & tid & range;
+    }
+
     int32_t tid;
     known_pos_range range;
 };
@@ -86,6 +99,8 @@ struct GenomeInterval
 
 std::ostream&
 operator<<(std::ostream& os, const GenomeInterval& gi);
+
+BOOST_CLASS_IMPLEMENTATION(GenomeInterval, boost::serialization::object_serializable)
 
 
 
@@ -106,12 +121,20 @@ struct SVLocusEdge
         count += edge.count;
     }
 
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned /* version */)
+    {
+        ar & count;
+    }
+
     unsigned count;
 };
 
 
 std::ostream&
 operator<<(std::ostream& os, const SVLocusEdge& edge);
+
+BOOST_CLASS_IMPLEMENTATION(SVLocusEdge, boost::serialization::object_serializable)
 
 
 
@@ -171,21 +194,29 @@ struct SVLocusNode
     void
     checkState() const;
 
-    unsigned count;
-    GenomeInterval interval;
+
+    template<class Archive>
+    void serialize(Archive & ar,const unsigned /* version */)
+    {
+        ar & count & interval & _edges;
+    }
 
     friend std::ostream&
     operator<<(std::ostream& os, const SVLocusNode& node);
+
+    //////////////////  data:
+    unsigned count;
+    GenomeInterval interval;
 
 private:
     edges_type _edges;
 };
 
 
-
 std::ostream&
 operator<<(std::ostream& os, const SVLocusNode& node);
 
+BOOST_CLASS_IMPLEMENTATION(SVLocusNode, boost::serialization::object_serializable)
 
 
 
@@ -310,6 +341,29 @@ struct SVLocus
     void
     checkState() const;
 
+    template<class Archive>
+    void save(Archive & ar, const unsigned /* version */) const
+    {
+        // boost::serialize has shared_ptr options, but I'd rather not figure it out,
+        // instead we will recreate shared_map on load:
+        ar << _graph;
+    }
+
+    template<class Archive>
+    void load(Archive & ar, const unsigned /* version */)
+    {
+        // boost::serialize has shared_ptr options, but I'd rather not figure it out,
+        // instead we will recreate shared_map on load:
+        clear();
+        ar >> _graph;
+        BOOST_FOREACH(SVLocusNode* nodePtr, *this)
+        {
+            _smap[nodePtr] = boost::shared_ptr<SVLocusNode>(nodePtr);
+        }
+    }
+
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
+
 private:
 
     SVLocusNode*
@@ -333,3 +387,4 @@ private:
 std::ostream&
 operator<<(std::ostream& os, const SVLocus& locus);
 
+BOOST_CLASS_IMPLEMENTATION(SVLocus, boost::serialization::object_serializable)
