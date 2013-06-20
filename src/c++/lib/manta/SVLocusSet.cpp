@@ -195,11 +195,9 @@ moveIntersectToLowIndex(
 
     // assign all intersect clusters to the lowest index number
     combineLoci(startLocusIndex,locusIndex);
-    if(startLocusIndex<_loci.size()) _emptyLoci.insert(startLocusIndex);
     BOOST_FOREACH(const ins_type::value_type& val, intersect)
     {
         combineLoci(val.second,locusIndex);
-        _emptyLoci.insert(val.second);
     }
 
 #ifdef DEBUG_SVL
@@ -234,6 +232,7 @@ combineLoci(
         _inodes[fromNodePtr] = toIndex;
     }
     fromLocus.clear();
+    _emptyLoci.insert(fromIndex);
 }
 
 
