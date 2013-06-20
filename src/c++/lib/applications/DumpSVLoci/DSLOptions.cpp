@@ -15,7 +15,7 @@
 /// \author Chris Saunders
 ///
 
-#include "ESLOptions.hh"
+#include "DSLOptions.hh"
 
 #include "blt_util/log.hh"
 
@@ -33,9 +33,9 @@ usage(
     const boost::program_options::options_description& visible,
     const char* msg = NULL)
 {
-    os << "\n" << prog.name() << ": partition sv evidence regions\n\n";
+    os << "\n" << prog.name() << ": write binary sv locus graph to stdout\n\n";
     os << "version: " << prog.version() << "\n\n";
-    os << "usage: " << prog.name() << " [options]\n\n";
+    os << "usage: " << prog.name() << " [options] > graph_dump\n\n";
     os << visible << "\n\n";
 
     if (NULL != msg)
@@ -47,21 +47,17 @@ usage(
 
 
 void
-parseESLOptions(const manta::Program& prog,
+parseDSLOptions(const manta::Program& prog,
                 int argc, char* argv[],
-                ESLOptions& opt)
+                DSLOptions& opt)
 {
     namespace po = boost::program_options;
     po::options_description req("configuration");
     req.add_options()
-    ("align-file", po::value<std::vector<std::string> >(&opt.alignmentFilename),
-     "alignment file in bam format")
-    ("output-file", po::value<std::string>(&opt.outputFilename),
-      "write stats to filename [required]")
-    ("align-stats", po::value<std::string>(&opt.statsFilename),
-     "pre-computed alignment statistics for the input alignment files (required)")
-    ("region", po::value<std::string>(&opt.region),
-     "samtools formatted region, eg. 'chr1:20-30' (optional)");
+    ("graph-file", po::value<std::string>(&opt.graphFilename),
+     "sv locus graph file");
+//    ("region", po::value<std::string>(&opt.region),
+//     "samtools formatted region, eg. 'chr1:20-30' (optional)");
 
     po::options_description help("help");
     help.add_options()
@@ -86,14 +82,8 @@ parseESLOptions(const manta::Program& prog,
     }
 
     // fast check of config state:
-    if (opt.alignmentFilename.empty()) {
-        usage(log_os,prog,visible,"Must specify at least one input alignment file");
-    }
-    if (opt.statsFilename.empty()) {
-        usage(log_os,prog,visible,"Must specify alignment statistics file");
-    }
-    if (opt.outputFilename.empty()) {
-        usage(log_os,prog,visible,"Must specify a graph output file");
+    if (opt.graphFilename.empty()) {
+        usage(log_os,prog,visible,"Must specify sv locus graph file");
     }
 }
 

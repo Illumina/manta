@@ -146,12 +146,3 @@ update(const bam_record& read,
         _svLoci.merge(locus);
     }
 }
-
-
-
-void
-SVLocusSetFinder::
-dump(std::ostream& os) const
-{
-    _svLoci.dump(os);
-}

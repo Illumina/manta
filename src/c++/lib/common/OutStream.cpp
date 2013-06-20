@@ -15,7 +15,8 @@
 /// \author Chris Saunders
 ///
 
-#include "OutStream.hh"
+#include "common/OutStream.hh"
+
 #include "common/Exceptions.hh"
 
 #include <fstream>

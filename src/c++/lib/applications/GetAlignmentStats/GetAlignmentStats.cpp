@@ -14,9 +14,9 @@
 #include "GetAlignmentStats.hh"
 
 #include "AlignmentStatsOptions.hh"
-#include "OutStream.hh"
 
 #include "blt_util/log.hh"
+#include "common/OutStream.hh"
 #include "manta/ReadGroupStatsSet.hh"
 
 #include "boost/foreach.hpp"

@@ -43,10 +43,11 @@ struct SVLocusSetFinder {
     update(const bam_record& read,
            const unsigned defaultReadGroupIndex);
 
-
-    // debug dump state to stderr:
-    void
-    dump(std::ostream& os) const;
+    const SVLocusSet&
+    getSet()
+    {
+        return _svLoci;
+    }
 
 private:
 

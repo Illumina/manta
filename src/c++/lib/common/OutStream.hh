@@ -23,7 +23,7 @@
 
 
 
-/// provide a stream from a file or a default (stdout)
+/// provide an output stream which comes from either a file or a tty default
 ///
 struct OutStream
 {

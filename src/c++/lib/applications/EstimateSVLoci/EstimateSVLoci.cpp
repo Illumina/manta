@@ -21,6 +21,7 @@
 
 #include "blt_util/input_stream_handler.hh"
 #include "blt_util/log.hh"
+#include "common/OutStream.hh"
 #include "manta/ReadGroupStatsSet.hh"
 
 #include "boost/foreach.hpp"
@@ -34,6 +35,11 @@
 static
 void
 runESL(const ESLOptions& opt) {
+
+    {
+        // early test that we have permission to write to output file
+        OutStream outs(opt.outputFilename);
+    }
 
     SVLocusSetFinder locusFinder(opt);
 
@@ -75,7 +81,7 @@ runESL(const ESLOptions& opt) {
     }
 
     // debug output
-    locusFinder.dump(std::cout);
+    locusFinder.getSet().save(opt.outputFilename.c_str());
 }
 
 

@@ -20,29 +20,19 @@
 #include "manta/Program.hh"
 
 #include <string>
-#include <vector>
 
 
 
-struct ESLOptions {
+struct DSLOptions {
 
-    ESLOptions() :
-        minMapq(10),
-        breakendEdgeTrimProb(0.2)
+    DSLOptions()
     {}
 
-    /// report breakend regions with x prob regions removed from each edge
-    unsigned minMapq;
-    float breakendEdgeTrimProb;
-
-    std::vector<std::string> alignmentFilename;
-    std::string outputFilename;
-    std::string region;
-    std::string statsFilename;
+    std::string graphFilename;
 };
 
 
 void
-parseESLOptions(const manta::Program& prog,
+parseDSLOptions(const manta::Program& prog,
                 int argc, char* argv[],
-                ESLOptions& opt);
+                DSLOptions& opt);
