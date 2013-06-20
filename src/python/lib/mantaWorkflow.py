@@ -117,8 +117,8 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
         graphCmd.extend(["--region",gseg.bamRegion])
         for bamPath in self.params.bamList :
             graphCmd.extend(["--align-file",bamPath])
-        graphTaskLabel=preJoin(taskPrefix,"makeGraph."+gseg.id)
-        graphTasks.add(self.addTask(graphTaskLabel),graphCmd,dependencies=dirTask)
+        graphTaskLabel=preJoin(taskPrefix,"makeGraph_"+gseg.id)
+        graphTasks.add(self.addTask(graphTaskLabel,graphCmd,dependencies=dirTask))
 
     nextStepWait = set()
     return nextStepWait
@@ -177,7 +177,7 @@ class MantaWorkflow(WorkflowRunner) :
             checkFile(indexRefFasta,"reference fasta index")
 
         self.params.bamList = []
-        for bam in (self.params..tumorBam,self.params.normalBam) :
+        for bam in (self.params.tumorBam,self.params.normalBam) :
             if bam is None : continue
             self.params.bamList.append(bam)
 
