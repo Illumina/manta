@@ -24,6 +24,7 @@
 struct AlignmentStatsOptions {
 
     std::vector<std::string> alignmentFilename;
+    std::string outputFilename;
 };
 
 

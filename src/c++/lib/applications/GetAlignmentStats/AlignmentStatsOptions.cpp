@@ -32,7 +32,9 @@ parseAlignmentStatsOptions(const manta::Program& prog,
     po::options_description req("configuration");
     req.add_options()
     ("align-file", po::value<std::vector<std::string> >(&opt.alignmentFilename),
-     "alignment file in bam format");
+     "alignment file in bam format (may be specified multiple times)")
+    ("output-file", po::value<std::string>(&opt.outputFilename),
+     "write stats to filename (default: stdout)");
 
     po::options_description help("help");
     help.add_options()

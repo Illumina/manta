@@ -12,7 +12,9 @@
 //
 
 #include "GetAlignmentStats.hh"
+
 #include "AlignmentStatsOptions.hh"
+#include "OutStream.hh"
 
 #include "blt_util/log.hh"
 #include "manta/ReadGroupStatsSet.hh"
@@ -21,37 +23,37 @@
 
 #include <cstdlib>
 
-#include <iostream>
-
 
 
 static
 void
-runAlignmentStats(const AlignmentStatsOptions& opt) {
+runAlignmentStats(const AlignmentStatsOptions& opt)
+{
+    // calculate fragment size statistics for all read groups in all bams
 
-    // calculate mean, median and standard deviation of the insert
-    // size for each bam file
+    // instantiate early to test for filename/permissions problems
+    OutStream outs(opt.outputFilename);
+
     ReadGroupStatsSet rstats;
-
     if (opt.alignmentFilename.empty()) {
         log_os << "ERROR: No input files specified.\n";
         exit(EXIT_FAILURE);
     }
 
+
     BOOST_FOREACH(const std::string& file, opt.alignmentFilename) {
         rstats.setStats(file,ReadGroupStats(file));
     }
 
-    std::ostream& statfp(std::cout);
-    rstats.write(statfp);
+    rstats.write(outs.getStream());
 }
 
 
 
 void
 GetAlignmentStats::
-runInternal(int argc, char* argv[]) const {
-
+runInternal(int argc, char* argv[]) const
+{
     AlignmentStatsOptions opt;
 
     parseAlignmentStatsOptions(*this,argc,argv,opt);

@@ -1,0 +1,56 @@
+// -*- mode: c++; indent-tabs-mode: nil; -*-
+//
+// Manta
+// Copyright (c) 2013 Illumina, Inc.
+//
+// This software is provided under the terms and conditions of the
+// Illumina Open Source Software License 1.
+//
+// You should have received a copy of the Illumina Open Source
+// Software License 1 along with this program. If not, see
+// <https://github.com/downloads/sequencing/licenses/>.
+//
+
+///
+/// \author Chris Saunders
+///
+
+#pragma once
+
+#include <iosfwd>
+#include <memory>
+#include <string>
+
+
+
+/// provide a stream from a file or a default (stdout)
+///
+struct OutStream
+{
+    OutStream(const std::string& fileName);
+
+    ~OutStream();
+
+    std::ostream&
+    getStream()
+    {
+        if(! _isInit) initStream();
+        return *_osptr;
+    }
+
+private:
+
+    void
+    initStream();
+
+    static
+    void
+    openFile(
+            const std::string& filename,
+            std::ofstream& ofs);
+
+    bool _isInit;
+    std::string _fileName;
+    std::ostream* _osptr;
+    std::auto_ptr<std::ofstream> _ofsptr;
+};
