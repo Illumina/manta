@@ -71,7 +71,6 @@ BOOST_AUTO_TEST_CASE( test_simple_observer )
     BOOST_REQUIRE_EQUAL(obs1.val,4);
 }
 
-#if 0
 BOOST_AUTO_TEST_CASE( test_multi_observer )
 {
     observer_test obs1;
@@ -93,7 +92,6 @@ BOOST_AUTO_TEST_CASE( test_multi_observer )
     BOOST_REQUIRE_EQUAL(obs1.val,4);
     BOOST_REQUIRE_EQUAL(obs2.val,2);
 }
-#endif
 
 BOOST_AUTO_TEST_SUITE_END()
 
