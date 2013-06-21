@@ -93,5 +93,39 @@ BOOST_AUTO_TEST_CASE( test_multi_observer )
     BOOST_REQUIRE_EQUAL(obs2.val,2);
 }
 
+BOOST_AUTO_TEST_CASE( test_notifier_copy )
+{
+    // copy behavior for notify is designed for sane behavior in stl
+    // structures, test this here
+    observer_test obs1;
+    observer_test obs2;
+    std::vector<notifier_test> notvec(2);
+
+    obs1.watch(notvec[0]);
+    obs1.watch(notvec[1]);
+
+    obs2.watch(notvec[0]);
+
+    BOOST_REQUIRE_EQUAL(obs1.val,0);
+    BOOST_REQUIRE_EQUAL(obs2.val,0);
+
+    notvec[0].increment_observers();
+    notvec[1].increment_observers();
+
+    BOOST_REQUIRE_EQUAL(obs1.val,4);
+    BOOST_REQUIRE_EQUAL(obs2.val,2);
+
+    // simulate an alloc'd resize:
+    std::vector<notifier_test> notvec2(notvec);
+    notvec.clear();
+
+    notvec2[0].increment_observers();
+    notvec2[1].increment_observers();
+
+    BOOST_REQUIRE_EQUAL(obs1.val,8);
+    BOOST_REQUIRE_EQUAL(obs2.val,4);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 

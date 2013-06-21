@@ -68,6 +68,9 @@ private:
                        const T&) = 0;
 
   void
+  register_notifier(const notifier<T>* n) const { _nots.insert(n); }
+
+  void
   unregister_notifier(const notifier<T>* n)
   {
     const typename nots_t::iterator i(_nots.find(n));
@@ -88,14 +91,31 @@ struct notifier {
 
   notifier() {}
 
-  notifier(const self_t&)  {} // do not copy observer set
-
-  virtual ~notifier()
+  notifier(const self_t& rhs) :
+      _obss(rhs._obss)
   {
       BOOST_FOREACH(typename obss_t::value_type val, _obss)
       {
-          val->unregister_notifier(this);
+          val->register_notifier(this);
       }
+  }
+
+  self_t&
+  operator=(const self_t& rhs)
+  {
+      if (this == &rhs) return *this;
+      self_unregister();
+      _obss=rhs._obss;
+      BOOST_FOREACH(typename obss_t::value_type val, _obss)
+      {
+          val->register_notifier(this);
+      }
+      return *this;
+  }
+
+  virtual ~notifier()
+  {
+      self_unregister();
   }
 
 protected:
@@ -109,7 +129,15 @@ protected:
   }
 
 private:
-  self_t& operator=(const self_t&);
+
+  void
+  self_unregister() const
+  {
+      BOOST_FOREACH(typename obss_t::value_type val, _obss)
+      {
+          val->unregister_notifier(this);
+      }
+  }
 
   void
   register_observer(observer<T>* n) const { _obss.insert(n); }
