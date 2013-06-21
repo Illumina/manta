@@ -31,7 +31,21 @@ runDSL(const DSLOptions& opt) {
     SVLocusSet set;
 
     set.load(opt.graphFilename.c_str());
-    set.dump(std::cout);
+
+    std::ostream& os(std::cout);
+    if(opt.region.empty())
+    {
+        set.dump(os);
+    }
+    else
+    {
+#if 0
+        int ref,beg,end;
+        bam_parse_region(_bfp->header, region, &ref, &beg, &end); // parse the region
+
+        set.dumpRegion(os);
+#endif
+    }
 }
 
 

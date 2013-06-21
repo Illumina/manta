@@ -55,9 +55,12 @@ parseDSLOptions(const manta::Program& prog,
     po::options_description req("configuration");
     req.add_options()
     ("graph-file", po::value<std::string>(&opt.graphFilename),
-     "sv locus graph file");
-//    ("region", po::value<std::string>(&opt.region),
-//     "samtools formatted region, eg. 'chr1:20-30' (optional)");
+     "sv locus graph file")
+#if 0
+    ("region", po::value<std::string>(&opt.region),
+     "samtools formatted region, eg. 'chr1:20-30' (optional)")
+#endif
+     ;
 
     po::options_description help("help");
     help.add_options()

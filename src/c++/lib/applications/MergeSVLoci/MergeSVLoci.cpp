@@ -35,9 +35,16 @@ runMSL(const MSLOptions& opt) {
 
     BOOST_FOREACH(const std::string& graphFile, opt.graphFilename)
     {
-        SVLocusSet inputSet;
-        inputSet.load(graphFile.c_str());
-        mergedSet.merge(inputSet);
+        if(mergedSet.empty())
+        {
+            mergedSet.load(graphFile.c_str());
+        }
+        else
+        {
+            SVLocusSet inputSet;
+            inputSet.load(graphFile.c_str());
+            mergedSet.merge(inputSet);
+        }
     }
 
     mergedSet.save(opt.outputFilename.c_str());

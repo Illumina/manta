@@ -11,29 +11,17 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
-///
 /// \author Chris Saunders
 ///
 
-#pragma once
-
-#include "manta/Program.hh"
-
-#include <string>
+#include "blt_util/bam_header_info.hh"
 
 
-
-struct DSLOptions {
-
-    DSLOptions()
-    {}
-
-    std::string graphFilename;
-    std::string region;
-};
-
-
-void
-parseDSLOptions(const manta::Program& prog,
-                int argc, char* argv[],
-                DSLOptions& opt);
+bam_header_info::
+bam_header_info(const bam_header_t& header)
+{
+    for(int i(0);i<header.n_targets;++i)
+    {
+        chrom_data.push_back(chrom_info(header.target_name[i],header.target_len[i]));
+    }
+}

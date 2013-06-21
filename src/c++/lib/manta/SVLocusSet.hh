@@ -31,6 +31,12 @@ struct SVLocusSet
     typedef std::vector<SVLocus> locusset_type;
     typedef locusset_type::const_iterator const_iterator;
 
+    bool
+    empty() const
+    {
+        return _loci.empty();
+    }
+
     unsigned
     size() const
     {
@@ -83,14 +89,13 @@ struct SVLocusSet
     void
     dump(std::ostream& os) const;
 
-#if 0
     // debug output
     void
-    dump_region(std::ostream& os,
+    dumpRegion(
+            std::ostream& os,
             const int32_t tid,
             const int32_t beginPos,
-            const int32_t endPos) const;
-#endif
+            const int32_t endPos);
 
 private:
     typedef SVLocusNode* ins_key_type;

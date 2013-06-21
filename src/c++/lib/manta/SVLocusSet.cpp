@@ -281,6 +281,27 @@ dump(std::ostream& os) const
 
 void
 SVLocusSet::
+dumpRegion(std::ostream& os,
+        const int32_t tid,
+        const int32_t beginPos,
+        const int32_t endPos)
+{
+    SVLocusNode inputNode;
+    inputNode.interval.tid=tid;
+    inputNode.interval.range.set_range(beginPos,endPos);
+
+    ins_type intersect;
+    getNodeIntersect(&inputNode,intersect);
+    BOOST_FOREACH(const ins_type::value_type& val, intersect)
+    {
+        os << "SVNode from LocusIndex: " << val.second << " "<< val.first;
+    }
+}
+
+
+
+void
+SVLocusSet::
 save(const char* filename) const
 {
     using namespace boost::archive;
