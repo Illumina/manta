@@ -56,9 +56,14 @@ def checkFile(filename,label="") :
 
 
 def which(searchFile) :
+    """
+    search the PATH for searchFile
+    
+    result should be the similar to *nix 'which' utility
+    """
     for searchPath in os.environ["PATH"].split(":"):
         test=os.path.join(searchPath,searchFile)
-        if os.path.exists(test): return test
+        if os.path.isfile(test): return test
 
     return None
 
