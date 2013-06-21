@@ -301,14 +301,14 @@ struct SVLocus
         assert(&fromLocus != this);
 
         const shared_map& fromSmap(fromLocus._smap);
-        shared_map::const_iterator fromIter(fromSmap.find(nodePtr));
+        shared_map::const_iterator fromIter(fromLocus.sharedMapFind(nodePtr));
         assert(fromIter != fromSmap.end());
 
-        shared_map::const_iterator toIter(_smap.find(nodePtr));
+        shared_map::const_iterator toIter(sharedMapFind(nodePtr));
         assert(toIter == _smap.end());
 
         _graph.insert(nodePtr);
-        _smap.insert(std::make_pair(nodePtr,fromIter->second));
+        _smap.insert(*fromIter);
     }
 
     // remove node
@@ -320,7 +320,7 @@ struct SVLocus
         iterator iter(_graph.find(nodePtr));
         if (iter == _graph.end()) return;
 
-        shared_map::iterator siter(_smap.find(nodePtr));
+        shared_map::iterator siter(sharedMapFind(nodePtr));
         assert(siter != _smap.end());
 
         nodePtr->clearEdges();
@@ -358,7 +358,7 @@ struct SVLocus
         ar >> _graph;
         BOOST_FOREACH(SVLocusNode* nodePtr, *this)
         {
-            _smap[nodePtr] = boost::shared_ptr<SVLocusNode>(nodePtr);
+            _smap.insert(boost::shared_ptr<SVLocusNode>(nodePtr));
         }
     }
 
@@ -372,12 +372,43 @@ private:
         SVLocusNode* nodePtr(new SVLocusNode());
         boost::shared_ptr<SVLocusNode> sPtr(nodePtr);
         _graph.insert(nodePtr);
-        _smap.insert(std::make_pair(nodePtr,sPtr));
+        _smap.insert(sPtr);
         return nodePtr;
     }
 
     typedef boost::shared_ptr<SVLocusNode> shared_type;
-    typedef std::map<const SVLocusNode*,shared_type> shared_map;
+
+    struct sharedComp
+    {
+        bool
+        operator()(
+                const shared_type& a,
+                const shared_type& b) const
+        {
+            return (a.get()<b.get());
+        }
+    };
+
+    typedef std::set<shared_type,sharedComp> shared_map;
+
+    struct null_deleter {
+        void operator()(void const *) const { }
+    };
+
+    shared_map::iterator
+    sharedMapFind(SVLocusNode* nodePtr)
+    {
+        shared_type tmp(nodePtr, null_deleter());
+        return _smap.find(tmp);
+    }
+
+    shared_map::const_iterator
+    sharedMapFind(SVLocusNode* nodePtr) const
+    {
+        shared_type tmp(nodePtr, null_deleter());
+        return _smap.find(tmp);
+    }
+
 
     graph_type _graph;
     shared_map _smap;

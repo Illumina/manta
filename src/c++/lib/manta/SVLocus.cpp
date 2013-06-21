@@ -175,9 +175,9 @@ checkState() const
 {
     assert(_graph.size() == _smap.size());
 
-    BOOST_FOREACH(const SVLocusNode* nodePtr, *this)
+    BOOST_FOREACH(SVLocusNode* nodePtr, *this)
     {
-        assert(1 == _smap.count(nodePtr));
+        assert(_smap.end() != sharedMapFind(nodePtr));
 
         nodePtr->checkState();
     }
