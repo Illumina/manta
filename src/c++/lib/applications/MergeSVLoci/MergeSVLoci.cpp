@@ -18,6 +18,7 @@
 #include "MergeSVLoci.hh"
 #include "MSLOptions.hh"
 
+#include "blt_util/log.hh"
 #include "common/OutStream.hh"
 #include "manta/SVLocusSet.hh"
 
@@ -35,6 +36,11 @@ runMSL(const MSLOptions& opt) {
 
     BOOST_FOREACH(const std::string& graphFile, opt.graphFilename)
     {
+        if(opt.isVerbose)
+        {
+            log_os << "INFO: Merging file: " << graphFile << "\n";
+        }
+
         if(mergedSet.empty())
         {
             mergedSet.load(graphFile.c_str());
@@ -44,6 +50,11 @@ runMSL(const MSLOptions& opt) {
             SVLocusSet inputSet;
             inputSet.load(graphFile.c_str());
             mergedSet.merge(inputSet);
+        }
+
+        if(opt.isVerbose)
+        {
+            log_os << "INFO: Finished merging file: " << graphFile << "\n";
         }
     }
 

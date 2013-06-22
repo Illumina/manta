@@ -57,7 +57,9 @@ parseMSLOptions(const manta::Program& prog,
     ("graph-file", po::value<std::vector<std::string> >(&opt.graphFilename),
      "input sv locus graph file (may be specified multiple times)")
     ("output-file", po::value<std::string>(&opt.outputFilename),
-     "merged output sv locus graph file");
+     "merged output sv locus graph file")
+    ("verbose",
+     "provide additional progress logging");
 
     po::options_description help("help");
     help.add_options()
@@ -94,5 +96,6 @@ parseMSLOptions(const manta::Program& prog,
     {
         usage(log_os,prog,visible, "Must specify a graph output file");
     }
+    if (vm.count("verbose")) opt.isVerbose=true;
 }
 

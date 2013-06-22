@@ -26,11 +26,13 @@
 
 struct MSLOptions {
 
-    MSLOptions()
+    MSLOptions() :
+        isVerbose(false)
     {}
 
     std::vector<std::string> graphFilename;
     std::string outputFilename;
+    bool isVerbose;
 };
 
 
