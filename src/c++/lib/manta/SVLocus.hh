@@ -276,12 +276,14 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
     SVLocusNode&
     getNode(const NodeIndexType nodePtr)
     {
+        assert(nodePtr<_graph.size());
         return _graph[nodePtr];
     }
 
     const SVLocusNode&
     getNode(const NodeIndexType nodePtr) const
     {
+        assert(nodePtr<_graph.size());
         return _graph[nodePtr];
     }
 
