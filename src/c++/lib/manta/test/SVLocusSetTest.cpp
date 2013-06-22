@@ -33,12 +33,8 @@ testOverlap(
     const int32_t beginPos,
     const int32_t endPos)
 {
-    SVLocusSet::ins_type intersect;
-
-    // non-overlap test:
-    SVLocus locus2;
-    SVLocusNode* nodePtr1 = locus2.addNode(tid,beginPos,endPos);
-    locusSet.getNodeIntersect(nodePtr1,intersect);
+    SVLocusSet::LocusSetIndexerType intersect(locusSet);
+    locusSet.getRegionIntersect(tid,beginPos,endPos,intersect);
     return intersect.size();
 }
 
@@ -48,8 +44,9 @@ BOOST_AUTO_TEST_CASE( test_SVLocusIntersect ) {
 
     // construct a simple two-node locus
     SVLocus locus1;
-    SVLocusNode* nodePtr = locus1.addNode(1,10,20);
-    locus1.addNode(2,30,40,nodePtr);
+    NodeIndexType nodePtr1 = locus1.addNode(1,10,20);
+    NodeIndexType nodePtr2 = locus1.addNode(2,30,40);
+    locus1.linkNodes(nodePtr1,nodePtr2);
 
     SVLocusSet set1;
     set1.merge(locus1);
@@ -80,18 +77,20 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMerge ) {
 
     // construct a simple two-node locus
     SVLocus locus1;
-    SVLocusNode* nodePtr1 = locus1.addNode(1,10,20);
-    locus1.addNode(2,30,40,nodePtr1);
+    NodeIndexType nodePtr1 = locus1.addNode(1,10,20);
+    NodeIndexType nodePtr2 = locus1.addNode(2,30,40);
+    locus1.linkNodes(nodePtr1,nodePtr2);
 
     SVLocus locus2;
-    SVLocusNode* nodePtr2 = locus2.addNode(1,10,20);
-    locus2.addNode(2,30,40,nodePtr2);
+    NodeIndexType nodePtr3 = locus2.addNode(1,10,20);
+    NodeIndexType nodePtr4 = locus2.addNode(2,30,40);
+    locus2.linkNodes(nodePtr3,nodePtr4);
 
     SVLocusSet set1;
     set1.merge(locus1);
     set1.merge(locus2);
 
-    BOOST_REQUIRE_EQUAL(set1._loci.size(),1u);
+    BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),1u);
     BOOST_REQUIRE_EQUAL(set1._loci[0].size(),2u);
 }
 
@@ -102,16 +101,19 @@ BOOST_AUTO_TEST_CASE( test_SVLocusCombine ) {
 
     // construct a simple two-node locus
     SVLocus locus1;
-    SVLocusNode* nodePtr1 = locus1.addNode(1,10,20);
-    locus1.addNode(2,30,40,nodePtr1);
+    NodeIndexType nodePtr1 = locus1.addNode(1,10,20);
+    NodeIndexType nodePtr2 = locus1.addNode(2,30,40);
+    locus1.linkNodes(nodePtr1,nodePtr2);
 
     SVLocus locus2;
-    SVLocusNode* nodePtr2 = locus2.addNode(3,10,20);
-    locus2.addNode(4,30,40,nodePtr2);
+    NodeIndexType nodePtr3 = locus2.addNode(3,10,20);
+    NodeIndexType nodePtr4 = locus2.addNode(4,30,40);
+    locus2.linkNodes(nodePtr3,nodePtr4);
 
     SVLocus locus3;
-    SVLocusNode* nodePtr3 = locus3.addNode(5,10,20);
-    locus3.addNode(6,30,40,nodePtr3);
+    NodeIndexType nodePtr5 = locus3.addNode(5,10,20);
+    NodeIndexType nodePtr6 = locus3.addNode(6,30,40);
+    locus3.linkNodes(nodePtr5,nodePtr6);
 
     SVLocusSet set1;
     set1.merge(locus1);

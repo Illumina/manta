@@ -17,36 +17,21 @@
 
 #pragma once
 
+#include "blt_util/observer.hh"
 #include "blt_util/pos_range.hh"
 
 #include "boost/foreach.hpp"
 #include "boost/serialization/map.hpp"
-#include "boost/serialization/set.hpp"
-#include <boost/serialization/split_member.hpp>
-#include "boost/shared_ptr.hpp"
+#include "boost/serialization/vector.hpp"
+#include "boost/serialization/split_member.hpp"
 
 #include <iostream>
+#include <limits>
 #include <map>
-#include <set>
 #include <vector>
 
 
 //#define DEBUG_SVL
-
-
-
-// all internal locations use a chromosome index number
-// and zero indexed position:
-struct GenomeLocation
-{
-    GenomeLocation() :
-        tid(0),
-        pos(0)
-    {}
-
-    int32_t tid;
-    int32_t pos;
-};
 
 
 
@@ -104,9 +89,6 @@ BOOST_CLASS_IMPLEMENTATION(GenomeInterval, boost::serialization::object_serializ
 
 
 
-struct SVLocusNode;
-
-
 struct SVLocusEdge
 {
     SVLocusEdge(const unsigned init_count = 0) :
@@ -138,67 +120,67 @@ BOOST_CLASS_IMPLEMENTATION(SVLocusEdge, boost::serialization::object_serializabl
 
 
 
+typedef unsigned short NodeIndexType;
+
+
+
 struct SVLocusNode
 {
-    typedef std::map<SVLocusNode*,SVLocusEdge> edges_type;
+    typedef std::map<NodeIndexType,SVLocusEdge> edges_type;
+    typedef edges_type::iterator iterator;
     typedef edges_type::const_iterator const_iterator;
 
     SVLocusNode() :
         count(0)
     {}
 
+    // specialized copy ctor which offsets all address:
+    SVLocusNode(
+            const SVLocusNode& in,
+            const unsigned offset) :
+        count(in.count),
+        interval(in.interval)
+    {
+        BOOST_FOREACH(const edges_type::value_type& val, in)
+        {
+            edges.insert(std::make_pair(val.first+offset,val.second));
+        }
+    }
+
     unsigned
     size() const
     {
-        return _edges.size();
+        return edges.size();
+    }
+
+    iterator
+    begin()
+    {
+        return edges.begin();
+    }
+
+    iterator
+    end()
+    {
+        return edges.end();
     }
 
     const_iterator
     begin() const
     {
-        return _edges.begin();
+        return edges.begin();
     }
 
     const_iterator
     end() const
     {
-        return _edges.end();
+        return edges.end();
     }
-
-    void
-    addEdge(SVLocusNode& linkTo,
-            const bool isMakeReciprical = true)
-    {
-        // no self edges allowed:
-        if (&linkTo == this) return;
-
-        _edges.insert(std::make_pair(&linkTo,SVLocusEdge(1)));
-
-        if (! isMakeReciprical) return;
-        linkTo.addEdge(*this,false);
-    }
-
-    /// join the argument node into this one
-    ///
-    /// inputNode is required to intersect this node. inputNode is effectively destroyed,
-    //// because all incoming edges will be updated
-    ///
-    void
-    mergeNode(SVLocusNode& node);
-
-    /// remove all outgoing and incoming edges to this node
-    void
-    clearEdges();
-
-    /// debug function to check consistency
-    void
-    checkState() const;
-
 
     template<class Archive>
     void serialize(Archive & ar,const unsigned /* version */)
     {
-        ar & count & interval & _edges;
+        ar & count & interval & edges;
     }
 
     friend std::ostream&
@@ -208,8 +190,7 @@ struct SVLocusNode
     unsigned short count;
     GenomeInterval interval;
 
-private:
-    edges_type _edges;
+    edges_type edges;
 };
 
 
@@ -217,6 +198,12 @@ std::ostream&
 operator<<(std::ostream& os, const SVLocusNode& node);
 
 BOOST_CLASS_IMPLEMENTATION(SVLocusNode, boost::serialization::object_serializable)
+
+
+
+typedef unsigned short LocusIndexType;
+typedef std::pair<bool, std::pair<LocusIndexType,NodeIndexType> > SVLocusNodeMoveMessage;
+
 
 
 
@@ -231,13 +218,18 @@ BOOST_CLASS_IMPLEMENTATION(SVLocusNode, boost::serialization::object_serializabl
 /// This class internally manages the node shared pointers in a synced data structure, there's probably a better
 /// way to do this with transform_iterator, but I've always regretted using that.
 ///
-struct SVLocus
+struct SVLocus : public notifier<SVLocusNodeMoveMessage>
 {
-    typedef std::set<SVLocusNode*> graph_type;
+    typedef std::vector<SVLocusNode> graph_type;
 
     typedef graph_type::iterator iterator;
     typedef graph_type::const_iterator const_iterator;
 
+    typedef SVLocusNode::edges_type edges_type;
+
+    SVLocus(const LocusIndexType index = 0) :
+        _index(index)
+    {}
 
     bool
     empty() const
@@ -275,65 +267,90 @@ struct SVLocus
         return _graph.end();
     }
 
-    SVLocusNode*
+    void
+    updateIndex(const LocusIndexType& index)
+    {
+        _index=index;
+    }
+
+    SVLocusNode&
+    getNode(const NodeIndexType nodePtr)
+    {
+        return _graph[nodePtr];
+    }
+
+    const SVLocusNode&
+    getNode(const NodeIndexType nodePtr) const
+    {
+        return _graph[nodePtr];
+    }
+
+    NodeIndexType
     addNode(
         const int32_t tid,
         const int32_t beginPos,
-        const int32_t endPos,
-        SVLocusNode* linkTo = NULL)
+        const int32_t endPos)
     {
-        SVLocusNode* nodePtr(newGraphNode());
-        nodePtr->interval.tid=tid;
-        nodePtr->interval.range.set_range(beginPos,endPos);
-        nodePtr->count+=1;
-
-        if (NULL != linkTo) {
-            nodePtr->addEdge(*linkTo);
-        }
+        NodeIndexType nodePtr(newGraphNode());
+        SVLocusNode& node(getNode(nodePtr));
+        node.interval.tid=tid;
+        node.interval.range.set_range(beginPos,endPos);
+        node.count+=1;
+        notifyAdd(nodePtr);
         return nodePtr;
     }
 
-    // copy a node from fromLocus into this locus
     void
-    copyNode(const SVLocus& fromLocus,
-             SVLocusNode* nodePtr)
+    linkNodes(
+            const NodeIndexType nodePtr1,
+            const NodeIndexType nodePtr2)
+    {
+        SVLocusNode& node1(getNode(nodePtr1));
+        SVLocusNode& node2(getNode(nodePtr2));
+        assert(0 == node1.edges.count(nodePtr2));
+        assert(0 == node2.edges.count(nodePtr1));
+        node1.edges.insert(std::make_pair(nodePtr2,SVLocusEdge(1)));
+        node2.edges.insert(std::make_pair(nodePtr1,SVLocusEdge(1)));
+    }
+
+    void
+    clearNodeEdges(const NodeIndexType nodePtr);
+
+    // copy fromLocus into this locus (this should be an intermediate part of a locus merge)
+    void
+    copyLocus(const SVLocus& fromLocus)
     {
         assert(&fromLocus != this);
 
-        const shared_map& fromSmap(fromLocus._smap);
-        shared_map::const_iterator fromIter(fromLocus.sharedMapFind(nodePtr));
-        assert(fromIter != fromSmap.end());
-
-        shared_map::const_iterator toIter(sharedMapFind(nodePtr));
-        assert(toIter == _smap.end());
-
-        _graph.insert(nodePtr);
-        _smap.insert(*fromIter);
+        // simple method -- copy everything in with an offset in all index numbers:
+        const unsigned offset(_graph.size());
+        BOOST_FOREACH(const SVLocusNode& fromNode, fromLocus)
+        {
+            _graph.push_back(SVLocusNode(fromNode, offset));
+            notifyAdd(_graph.size()-1);
+        }
     }
+
+    /// join from node into to node
+    ///
+    /// from node is effectively destroyed,
+    //// because all incoming edges will be updated
+    ///
+    void
+    mergeNode(
+            const NodeIndexType fromIndex,
+            const NodeIndexType toIndex);
 
     // remove node
     //
     void
-    erase(SVLocusNode* nodePtr)
-    {
-        assert(NULL != nodePtr);
-        iterator iter(_graph.find(nodePtr));
-        if (iter == _graph.end()) return;
-
-        shared_map::iterator siter(sharedMapFind(nodePtr));
-        assert(siter != _smap.end());
-
-        nodePtr->clearEdges();
-
-        _graph.erase(iter);
-        _smap.erase(siter);
-    }
+    eraseNode(const NodeIndexType nodePtr);
 
     void
     clear()
     {
+        for(NodeIndexType i(0);i<size();++i) notifyDelete(i);
         _graph.clear();
-        _smap.clear();
     }
 
     /// debug func to check that internal data-structures are in
@@ -344,74 +361,44 @@ struct SVLocus
     template<class Archive>
     void save(Archive & ar, const unsigned /* version */) const
     {
-        // boost::serialize has shared_ptr options, but I'd rather not figure it out,
-        // instead we will recreate shared_map on load:
         ar << _graph;
     }
 
     template<class Archive>
     void load(Archive & ar, const unsigned /* version */)
     {
-        // boost::serialize has shared_ptr options, but I'd rather not figure it out,
-        // instead we will recreate shared_map on load:
         clear();
         ar >> _graph;
-        BOOST_FOREACH(SVLocusNode* nodePtr, *this)
-        {
-            _smap.insert(boost::shared_ptr<SVLocusNode>(nodePtr));
-        }
     }
 
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
 private:
 
-    SVLocusNode*
+    NodeIndexType
     newGraphNode()
     {
-        SVLocusNode* nodePtr(new SVLocusNode());
-        boost::shared_ptr<SVLocusNode> sPtr(nodePtr);
-        _graph.insert(nodePtr);
-        _smap.insert(sPtr);
-        return nodePtr;
+        static const unsigned maxIndex(std::numeric_limits<NodeIndexType>::max());
+        unsigned index(_graph.size());
+        assert(index<maxIndex);
+        _graph.resize(index+1);
+        return static_cast<NodeIndexType>(index);
     }
 
-    typedef boost::shared_ptr<SVLocusNode> shared_type;
-
-    struct sharedComp
+    void
+    notifyAdd(const NodeIndexType nodePtr)
     {
-        bool
-        operator()(
-                const shared_type& a,
-                const shared_type& b) const
-        {
-            return (a.get()<b.get());
-        }
-    };
-
-    typedef std::set<shared_type,sharedComp> shared_map;
-
-    struct null_deleter {
-        void operator()(void const *) const { }
-    };
-
-    shared_map::iterator
-    sharedMapFind(SVLocusNode* nodePtr)
-    {
-        shared_type tmp(nodePtr, null_deleter());
-        return _smap.find(tmp);
+        notify_observers(std::make_pair(true,std::make_pair(_index,nodePtr)));
     }
 
-    shared_map::const_iterator
-    sharedMapFind(SVLocusNode* nodePtr) const
+    void
+    notifyDelete(const NodeIndexType nodePtr)
     {
-        shared_type tmp(nodePtr, null_deleter());
-        return _smap.find(tmp);
+        notify_observers(std::make_pair(false,std::make_pair(_index,nodePtr)));
     }
-
 
     graph_type _graph;
-    shared_map _smap;
+    LocusIndexType _index;
 };
 
 

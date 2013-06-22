@@ -24,12 +24,19 @@
 #include <vector>
 
 
+
+
+
 // A set of non-overlapping SVLocus objects
 //
-struct SVLocusSet
+struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
 {
     typedef std::vector<SVLocus> locusset_type;
     typedef locusset_type::const_iterator const_iterator;
+
+    SVLocusSet() :
+        _inodes(NodeAddressSorter(*this))
+    {}
 
     bool
     empty() const
@@ -43,6 +50,12 @@ struct SVLocusSet
         return _loci.size();
     }
 
+    unsigned
+    nonEmptySize() const
+    {
+        return size()-_emptyLoci.size();
+    }
+
     const_iterator
     begin() const
     {
@@ -53,6 +66,13 @@ struct SVLocusSet
     end() const
     {
         return _loci.end();
+    }
+
+    const SVLocus&
+    getLocus(const LocusIndexType index) const
+    {
+        assert(index<_loci.size());
+        return _loci[index];
     }
 
     /// merge locus into this:
@@ -98,88 +118,134 @@ struct SVLocusSet
             const int32_t endPos);
 
 private:
-    typedef SVLocusNode* ins_key_type;
 
-    struct insKeySorter {
+    typedef std::pair<LocusIndexType,NodeIndexType> NodeAddressType;
+
+    struct NodeAddressSorter {
+
+        NodeAddressSorter(const SVLocusSet& set) :
+            _set(set)
+        {}
+
         bool
         operator()(
-            const ins_key_type& a,
-            const ins_key_type& b) const
+            const NodeAddressType& a,
+            const NodeAddressType& b) const
         {
-            if((a->interval)<(b->interval)) return true;
-            if((a->interval)==(b->interval))
+            if(getInterval(a)<getInterval(b)) return true;
+            if(getInterval(a)==getInterval(b))
             {
                 return (a<b);
             }
             return false;
         }
+
+    private:
+        const GenomeInterval&
+        getInterval(const NodeAddressType& n) const
+        {
+            return (_set.getLocus(n.first).getNode(n.second).interval);
+        }
+
+        const SVLocusSet& _set;
     };
 
-    typedef std::map<ins_key_type, unsigned, insKeySorter> ins_type;
+    typedef std::set<NodeAddressType, NodeAddressSorter> LocusSetIndexerType;
 
+    friend
+    std::ostream&
+    operator<<(std::ostream& os, const NodeAddressType& a);
 
-    unsigned
-    getStartLocusIndex() const;
+    SVLocus&
+    getLocus(const LocusIndexType index)
+    {
+        assert(index<_loci.size());
+        return _loci[index];
+    }
 
+    const SVLocusNode&
+    getNode(const NodeAddressType n) const
+    {
+        return getLocus(n.first).getNode(n.second);
+    }
+
+    void
+    clearLocus(const LocusIndexType locusIndex)
+    {
+        _loci[locusIndex].clear();
+        _emptyLoci.insert(locusIndex);
+    }
 
     /// get all nodes in this object which intersect with
     /// the inputNode
     void
     getNodeIntersect(
-        SVLocusNode* inputNodePtr,
-        ins_type& intersect);
+            const LocusIndexType locusIndex,
+            const NodeIndexType nodeIndex,
+            LocusSetIndexerType& intersect);
+
+    /// get all nodes in this object which intersect with
+    /// a external node
+    void
+    getRegionIntersect(
+            const int32_t tid,
+            const int32_t beginPos,
+            const int32_t endPos,
+            LocusSetIndexerType& intersect);
 
     /// assign all intersect clusters to the lowest index number
     ///
     void
     moveIntersectToLowIndex(
-            ins_type& intersect,
-            const unsigned startLocusIndex,
-            unsigned& locusIndex);
+            LocusSetIndexerType& intersect,
+            const LocusIndexType startLocusIndex,
+            LocusIndexType& locusIndex);
 
-    /// combine all content from loci from into to
+    /// combine all content from 'from' locus into 'to' locus
     ///
     /// this is typically required when a node is merged
     /// which combines two loci
     void
     combineLoci(
-        const unsigned fromIndex,
-        const unsigned toIndex);
+            const LocusIndexType fromIndex,
+            const LocusIndexType toIndex,
+            const bool isClearSource = true);
 
-    // add node from a locus which is not part of this locusSet
-    void
-    insertLocusNode(
-        const unsigned locusIndex,
-        SVLocus& inputLocus,
-        SVLocusNode* inputNodePtr)
-    {
-        assert(NULL != inputNodePtr);
-        assert(locusIndex < _loci.size());
 
-        _loci[locusIndex].copyNode(inputLocus,inputNodePtr);
-        _inodes[inputNodePtr] = locusIndex;
-    }
+    // add locus to this locusSet (intermediate step in merging)
+    LocusIndexType
+    insertLocus(
+        const SVLocus& inputLocus);
 
     void
-    removeNode(SVLocusNode* inputNodePtr)
+    removeNode(const NodeAddressType inputNodePtr)
     {
-        assert(NULL != inputNodePtr);
-
-        ins_type::iterator iter(_inodes.find(inputNodePtr));
+        LocusSetIndexerType::iterator iter(_inodes.find(inputNodePtr));
         if (iter == _inodes.end()) return;
 
-        const unsigned index(iter->second);
-
-        assert(index<_loci.size());
-
-        SVLocus& locus(_loci[index]);
-        locus.erase(inputNodePtr);
-        _inodes.erase(iter);
+        SVLocus& locus(getLocus(inputNodePtr.first));
+        locus.eraseNode(inputNodePtr.second);
     }
 
     void
-    mergeNodePtr(SVLocusNode* fromPtr,
-                 SVLocusNode* toPtr);
+    mergeNodePtr(NodeAddressType fromPtr,
+                 NodeAddressType toPtr);
+
+    // update index when nodes are moved:
+    void
+    recieve_notification(const notifier<SVLocusNodeMoveMessage>&,
+                         const SVLocusNodeMoveMessage& msg) {
+
+        if(msg.first)
+        {    // add
+            _inodes.insert(msg.second);
+        }
+        else
+        {    // delete
+            _inodes.erase(msg.second);
+        }
+    }
+
 
     void
     reconstructIndex();
@@ -200,5 +266,9 @@ private:
     std::set<unsigned> _emptyLoci;
 
     // provides an intersection search of non-overlapping nodes:
-    ins_type _inodes;
+    LocusSetIndexerType _inodes;
 };
+
+
+std::ostream&
+operator<<(std::ostream& os, const SVLocusSet::NodeAddressType& a);

@@ -18,9 +18,11 @@
 #include "common/Exceptions.hh"
 #include "manta/SVLocus.hh"
 
-#include "boost/foreach.hpp"
-
 #include <iostream>
+
+#ifdef DEBUG_SVL
+#include "blt_util/log.hh"
+#endif
 
 
 
@@ -40,127 +42,187 @@ operator<<(std::ostream& os, const SVLocusEdge& edge)
 }
 
 
-
 void
-SVLocusNode::
-mergeNode(SVLocusNode& inputNode) {
-
+SVLocus::
+mergeNode(
+        const NodeIndexType fromIndex,
+        const NodeIndexType toIndex)
+{
     using namespace illumina::common;
 
-    if(! interval.isIntersect(inputNode.interval))
+#ifdef DEBUG_SVL
+    log_os << "mergeNode from: " << fromIndex << " to: " << toIndex << "\n";
+#endif
+
+    SVLocusNode& fromNode(getNode(fromIndex));
+    SVLocusNode& toNode(getNode(toIndex));
+
+    if(fromNode.interval.tid != toNode.interval.tid)
     {
         std::ostringstream oss;
-        oss << "ERROR: Attempting to merge non-intersecting nodes\n"
-            << "\tNode1: " << *this
-            << "\tNode2: " << inputNode;
+        oss << "ERROR: Attempting to merge nodes on different chromosomes\n"
+            << "\tNode1: " << fromNode
+            << "\tNode2: " << toNode;
         BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
     }
 
-    interval.range.merge_range(inputNode.interval.range);
-    count += inputNode.count;
+    notifyDelete(toIndex);
 
-    BOOST_FOREACH(edges_type::value_type& inputNodeEdgeIter, inputNode._edges)
+    toNode.interval.range.merge_range(fromNode.interval.range);
+    toNode.count += fromNode.count;
+
+    notifyAdd(toIndex);
+
+    BOOST_FOREACH(edges_type::value_type& fromNodeEdgeIter, fromNode)
     {
+
+#ifdef DEBUG_SVL
+        log_os << "mergeNode: handle fromEdge: " << fromNodeEdgeIter.first << "\n";
+#endif
+
         // update local edge:
         {
             // this node and input node could both have an edge to the same node already
             // -- check that case here:
-            edges_type::iterator thisEdgeIter(_edges.find(inputNodeEdgeIter.first));
-            if (thisEdgeIter == _edges.end())
+            edges_type::iterator toNodeEdgeIter(toNode.edges.find(fromNodeEdgeIter.first));
+            if (toNodeEdgeIter == toNode.edges.end())
             {
-                // this node does not contain a link to the remote node already:
-
+#ifdef DEBUG_SVL
+                log_os << "mergeNode: fromEdge is not in toNode\n";
+#endif
                 // no self-edges:
-                if (inputNodeEdgeIter.first != this)
+                if (fromNodeEdgeIter.first != toIndex)
                 {
-                    _edges.insert(inputNodeEdgeIter);
+#ifdef DEBUG_SVL
+                    log_os << "mergeNode: toNode add " << fromNodeEdgeIter.first << "\n";
+#endif
+
+                    toNode.edges.insert(fromNodeEdgeIter);
                 }
             }
             else
             {
+#ifdef DEBUG_SVL
+                log_os << "mergeNode: fromEdge is already in toNode\n";
+#endif
                 // this node does contain a link to the remote node already:
-                thisEdgeIter->second.mergeEdge(inputNodeEdgeIter.second);
+                toNodeEdgeIter->second.mergeEdge(fromNodeEdgeIter.second);
             }
         }
 
         // update remote inputNodeEdgeIter
         {
-            edges_type& remoteEdges(inputNodeEdgeIter.first->_edges);
-            edges_type::iterator oldRemoteIter(remoteEdges.find(&inputNode));
+            edges_type& remoteEdges(getNode(fromNodeEdgeIter.first).edges);
+            edges_type::iterator oldRemoteIter(remoteEdges.find(fromIndex));
             assert(oldRemoteIter != remoteEdges.end());
 
-            // the remote node could contain a link to this already, check that here:
-            edges_type::iterator newRemoteIter(remoteEdges.find(this));
+            // the remote node could contain a link to toIndex already, check that here:
+            edges_type::iterator newRemoteIter(remoteEdges.find(toIndex));
             if (newRemoteIter == remoteEdges.end())
             {
-                remoteEdges.insert(std::make_pair(this,oldRemoteIter->second));
+#ifdef DEBUG_SVL
+                log_os << "mergeNode: fromRemote does not point to toIndex\n";
+#endif
+                remoteEdges.insert(std::make_pair(toIndex,oldRemoteIter->second));
             }
             else
             {
+#ifdef DEBUG_SVL
+                log_os << "mergeNode: fromRemote already points to toIndex\n";
+#endif
                 newRemoteIter->second.mergeEdge(oldRemoteIter->second);
             }
         }
     }
 
-    inputNode.clearEdges();
+    clearNodeEdges(fromIndex);
 }
 
 
 
 void
-SVLocusNode::
-clearEdges()
+SVLocus::
+clearNodeEdges(NodeIndexType nodePtr)
 {
     using namespace illumina::common;
 
-    BOOST_FOREACH(edges_type::value_type& edgeIter, _edges)
+    SVLocusNode& node(getNode(nodePtr));
+    BOOST_FOREACH(edges_type::value_type& edgeIter, node)
     {
-        edges_type& remoteEdges(edgeIter.first->_edges);
-        edges_type::iterator thisRemoteIter(remoteEdges.find(this));
+        SVLocusNode& remoteNode(getNode(edgeIter.first));
+        edges_type& remoteEdges(remoteNode.edges);
+        edges_type::iterator thisRemoteIter(remoteEdges.find(nodePtr));
         if(thisRemoteIter == remoteEdges.end())
         {
             std::ostringstream oss;
             oss << "ERROR: no return edge on remote node.\n";
-            oss << "\tlocal_node: " << *this;
-            oss << "\tremote_noee: " << *(edgeIter.first);
+            oss << "\tlocal_node: " << node;
+            oss << "\tremote_node: " << remoteNode;
             BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
         }
 
         remoteEdges.erase(thisRemoteIter);
     }
-    _edges.clear();
+    node.edges.clear();
 }
+
 
 
 void
-SVLocusNode::
-checkState() const
+SVLocus::
+eraseNode(const NodeIndexType nodePtr)
 {
     using namespace illumina::common;
 
-    BOOST_FOREACH(const edges_type::value_type& edgeIter, *this)
+    if (nodePtr >= _graph.size()) return;
+
+    clearNodeEdges(nodePtr);
+
+    NodeIndexType fromPtr(_graph.size()-1);
+
+#ifdef DEBUG_SVL
+    log_os << "eraseNode: from: " << fromPtr << " to: " << nodePtr << "\n";
+#endif
+
+    if(fromPtr != nodePtr)
     {
-        // check that that every edge has a return path:
-        SVLocusNode* edgeNodePtr(const_cast<SVLocusNode*>(edgeIter.first));
-        const_iterator iter(_edges.find(edgeNodePtr));
-        if(_edges.end() == iter)
+        // reassign fromNode's remote edges before shifting its address:
+        //
+        SVLocusNode& fromNode(getNode(fromPtr));
+        BOOST_FOREACH(edges_type::value_type& edgeIter, fromNode)
         {
-            std::ostringstream oss;
-            oss << "ERROR: no return edge on remote node.\n";
-            oss << "\tlocal_node: " << *this;
-            oss << "\tremote_node: " << *edgeNodePtr;
-            BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
+            SVLocusNode& remoteNode(getNode(edgeIter.first));
+            edges_type& remoteEdges(remoteNode.edges);
+            edges_type::iterator thisRemoteIter(remoteEdges.find(fromPtr));
+            if(thisRemoteIter == remoteEdges.end())
+            {
+                std::ostringstream oss;
+                oss << "ERROR: eraseNode: no return edge on remote node.\n";
+                oss << "\tlocal_node: " << fromNode;
+                oss << "\tremote_node: " << remoteNode;
+                BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
+            }
+
+            remoteEdges.insert(std::make_pair(nodePtr,thisRemoteIter->second));
+            remoteEdges.erase(thisRemoteIter);
         }
+
+        notifyDelete(nodePtr);
+        _graph[nodePtr] = _graph[fromPtr];
+        notifyAdd(nodePtr);
     }
+    notifyDelete(fromPtr);
+    _graph.resize(fromPtr);
 }
+
 
 
 std::ostream&
 operator<<(std::ostream& os, const SVLocusNode& node)
 {
-    os << "LocusNode: " << &node << " count: " << node.count << " " << node.interval << "\n";
+    os << "LocusNode: count: " << node.count << " " << node.interval << "\n";
 
-    BOOST_FOREACH(const SVLocusNode::edges_type::value_type& edgeIter, node._edges)
+    BOOST_FOREACH(const SVLocusNode::edges_type::value_type& edgeIter, node)
     {
         os << "\tEdgeTo: " << edgeIter.first << " " << edgeIter.second << "\n";
     }
@@ -173,13 +235,27 @@ void
 SVLocus::
 checkState() const
 {
-    assert(_graph.size() == _smap.size());
+    using namespace illumina::common;
 
-    BOOST_FOREACH(SVLocusNode* nodePtr, *this)
+    const unsigned nodeSize(size());
+    for(unsigned nodeIndex(0);nodeIndex<nodeSize;++nodeIndex)
     {
-        assert(_smap.end() != sharedMapFind(nodePtr));
+        const SVLocusNode& node(getNode(nodeIndex));
 
-        nodePtr->checkState();
+        BOOST_FOREACH(const edges_type::value_type& edgeIter, node)
+        {
+            // check that that every edge has a return path:
+            const SVLocusNode& edgeNode(getNode(edgeIter.first));
+            SVLocusNode::const_iterator iter(edgeNode.edges.find(nodeIndex));
+            if(edgeNode.edges.end() == iter)
+            {
+                std::ostringstream oss;
+                oss << "ERROR: no return edge on remote node.\n";
+                oss << "\tlocal_node: " << _index << ":" << nodeIndex << " " << node;
+                oss << "\tremote_node: " << _index << ":" << edgeIter.first << " " << edgeNode;
+                BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
+            }
+        }
     }
 }
 
@@ -189,9 +265,9 @@ std::ostream&
 operator<<(std::ostream& os, const SVLocus& locus)
 {
     os << "LOCUS_BEGIN\n";
-    BOOST_FOREACH(const SVLocusNode* nodePtr, locus)
+    BOOST_FOREACH(const SVLocusNode& node, locus)
     {
-        os << *nodePtr;
+        os << node;
     }
     os << "LOCUS_END\n";
     return os;

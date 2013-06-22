@@ -30,12 +30,14 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSetSerialze )
 {
     // construct a simple two-node locus
     SVLocus locus1;
-    SVLocusNode* nodePtr1 = locus1.addNode(1,10,20);
-    locus1.addNode(2,30,40,nodePtr1);
+    NodeIndexType nodePtr1 = locus1.addNode(1,10,20);
+    NodeIndexType nodePtr2 = locus1.addNode(2,30,40);
+    locus1.linkNodes(nodePtr1,nodePtr2);
 
     SVLocus locus2;
-    SVLocusNode* nodePtr2 = locus2.addNode(3,10,20);
-    locus2.addNode(4,30,40,nodePtr2);
+    NodeIndexType nodePtr3 = locus2.addNode(3,10,20);
+    NodeIndexType nodePtr4 = locus2.addNode(4,30,40);
+    locus2.linkNodes(nodePtr3,nodePtr4);
 
     SVLocusSet set1;
     set1.merge(locus1);

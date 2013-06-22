@@ -29,12 +29,12 @@
 #include <sstream>
 
 
-unsigned
-SVLocusSet::
-getStartLocusIndex() const
+
+std::ostream&
+operator<<(std::ostream& os, const SVLocusSet::NodeAddressType& a)
 {
-    if(_emptyLoci.empty()) return _loci.size();
-    return *_emptyLoci.begin();
+    os << a.first << ":" << a.second;
+    return os;
 }
 
 
@@ -49,82 +49,75 @@ merge(SVLocus& inputLocus)
     log_os << "SVLocusSet::merge inputLocus: " << inputLocus;
 #endif
 
-    const unsigned startLocusIndex(getStartLocusIndex());
-    unsigned locusIndex(startLocusIndex);
-    if(locusIndex<_loci.size())
-    {
-        assert(_loci[locusIndex].empty());
-    }
-    bool isFirst(true);
+    const LocusIndexType startLocusIndex(insertLocus(inputLocus));
+    const SVLocus& startLocus(_loci[startLocusIndex]);
+    LocusIndexType headLocusIndex(startLocusIndex);
 
     // test each node for intersection and insert/join to existing node:
-    BOOST_FOREACH(SVLocusNode* inputNodePtr, inputLocus)
+    const unsigned nodeCount(startLocus.size());
+    for(unsigned nodeIndex(0);nodeIndex<nodeCount;++nodeIndex)
     {
-        ins_type intersect;
-        getNodeIntersect(inputNodePtr,intersect);
+        LocusSetIndexerType intersect(*this);
+        getNodeIntersect(startLocusIndex, nodeIndex, intersect);
 
 #ifdef DEBUG_SVL
-        log_os << "SVLocusSet::merge inputNode: " << *inputNodePtr;
+        log_os << "SVLocusSet::merge inputNode: " << startLocus.getNode(nodeIndex);
         log_os << "insersect_size: " << intersect.size() << "\n";
-        BOOST_FOREACH(const ins_type::value_type& val, intersect)
+        BOOST_FOREACH(const LocusSetIndexerType::value_type& val, intersect)
         {
-            log_os << "i-index: " << val.second << " " << *val.first << "\n";
+            log_os << "i-index: " << val << " node: " <<  getNode(val) << "\n";
         }
 #endif
 
-
-        if (intersect.empty())
+        if(headLocusIndex!=startLocusIndex)
         {
-            // if no nodes intersect, then insert inputNode into a new locus:
-            if (locusIndex>=_loci.size())
-            {
-                _loci.resize(locusIndex+1);
-            }
-
-            insertLocusNode(locusIndex,inputLocus,inputNodePtr);
+            assert(! intersect.empty());
+            if(1==intersect.size()) continue;
         }
         else
         {
-            // otherwise, merge inputNode into an existing locus
-            moveIntersectToLowIndex(intersect,startLocusIndex,locusIndex);
-
-            {
-                //
-                // second step is to add this inputNode into the graph
-                //
-                insertLocusNode(locusIndex,inputLocus,inputNodePtr);
-#ifdef DEBUG_SVL
-                log_os << "InsertedNewNode  in locus " << locusIndex << "\n";
-                checkState();
-#endif
-            }
-
-            {
-                //
-                // third step is to merge this inputNode with each intersecting inputNode,
-                // and eliminate the intersecting node:
-                //
-                BOOST_FOREACH(const ins_type::value_type& val, intersect)
-                {
-#ifdef DEBUG_SVL
-                    log_os << "MergeAndRemove: " << *val.first << "\n";
-#endif
-                    mergeNodePtr(val.first,inputNodePtr);
-                    removeNode(val.first);
-#ifdef DEBUG_SVL
-                    log_os << "Finished: " << *val.first << "\n";
-                    checkState();
-#endif
-                }
-            }
+            if(intersect.empty()) continue;
         }
 
-        if(isFirst && (locusIndex == startLocusIndex))
+        // merge inputNode into an existing locus
+        moveIntersectToLowIndex(intersect,startLocusIndex,headLocusIndex);
+
+        intersect.clear();
+        getNodeIntersect(startLocusIndex, nodeIndex, intersect);
+#ifdef DEBUG_SVL
+        log_os << "insersect2_size: " << intersect.size() << "\n";
+        BOOST_FOREACH(const LocusSetIndexerType::value_type& val, intersect)
         {
-            _emptyLoci.erase(locusIndex);
-            isFirst=false;
+            log_os << "i2-index: " << val << " node: " <<  getNode(val) << "\n";
+        }
+#endif
+
+        // merge this inputNode with each intersecting inputNode,
+        // and eliminate the intersecting node:
+        //
+        bool isFirst(true);
+        LocusSetIndexerType::value_type first_val;
+        BOOST_FOREACH(LocusSetIndexerType::value_type val, intersect)
+        {
+#ifdef DEBUG_SVL
+            log_os << "MergeAndRemove: " << val << "\n";
+#endif
+            if(isFirst)
+            {
+                first_val=val;
+                isFirst=false;
+                continue;
+            }
+            mergeNodePtr(val,first_val);
+            removeNode(val);
+#ifdef DEBUG_SVL
+            log_os << "Finished: " << val << "\n";
+            checkState();
+#endif
         }
     }
+
+    if(startLocusIndex != headLocusIndex) clearLocus(startLocusIndex);
 
 #ifdef DEBUG_SVL
     checkState();
@@ -148,42 +141,51 @@ merge(SVLocusSet& inputSet)
 void
 SVLocusSet::
 getNodeIntersect(
-    SVLocusNode* inputNodePtr,
-    ins_type& intersect)
+        const LocusIndexType locusIndex,
+        const NodeIndexType nodeIndex,
+        LocusSetIndexerType& intersect)
 {
-    typedef ins_type::iterator in_iter;
+    typedef LocusSetIndexerType::iterator in_iter;
 
     intersect.clear();
 
 #ifdef DEBUG_SVL
-    log_os << "SVLocusSet::getNodeIntersect inputNode: " << *inputNodePtr;
+    log_os << "SVLocusSet::getNodeIntersect inputNode: " << locusIndex << ":" << nodeIndex << " " << getNode(std::make_pair(locusIndex,nodeIndex));
     checkState();
 #endif
 
     // get all existing nodes which intersect with this one:
-    in_iter it(_inodes.lower_bound(inputNodePtr));
+    const NodeAddressType inputAddy(std::make_pair(locusIndex,nodeIndex));
+    in_iter it(_inodes.lower_bound(inputAddy));
+    const SVLocusNode& inputNode(getNode(inputAddy));
 
     // first look forward and extend to find all nodes which this inputNode intersects:
     for (in_iter it_fwd(it); it_fwd !=_inodes.end(); ++it_fwd)
     {
-        SVLocusNode* nodePtr(it_fwd->first);
+        if(it_fwd->first == locusIndex) continue;
 #ifdef DEBUG_SVL
-        log_os << "FWD test: " << *nodePtr;
+        log_os << "FWD test: " << (*it_fwd) << " " << getNode(*it_fwd);
 #endif
-        if (! inputNodePtr->interval.isIntersect(nodePtr->interval)) break;
-        intersect[nodePtr] = it_fwd->second;
+        if (! inputNode.interval.isIntersect(getNode(*it_fwd).interval)) break;
+        intersect.insert(*it_fwd);
+#ifdef DEBUG_SVL
+        log_os << "FWD insert: " << (*it_fwd) << "\n";
+#endif
     }
 
     // now find all intersecting nodes in reverse direction:
     for (in_iter it_rev(it); it_rev !=_inodes.begin(); )
     {
         --it_rev;
-        SVLocusNode* nodePtr(it_rev->first);
+        if(it_rev->first == locusIndex) continue;
 #ifdef DEBUG_SVL
-        log_os << "REV test: " << *nodePtr;
+        log_os << "REV test: " << (*it_rev) << " " << getNode(*it_rev);
 #endif
-        if (! inputNodePtr->interval.isIntersect(nodePtr->interval)) break;
-        intersect[nodePtr] = it_rev->second;
+        if (! inputNode.interval.isIntersect(getNode(*it_rev).interval)) break;
+        intersect.insert(*it_rev);
+#ifdef DEBUG_SVL
+        log_os << "REV insert: " << (*it_rev) << "\n";
+#endif
     }
 }
 
@@ -191,29 +193,50 @@ getNodeIntersect(
 
 void
 SVLocusSet::
-moveIntersectToLowIndex(
-        ins_type& intersect,
-        const unsigned startLocusIndex,
-        unsigned& locusIndex)
+getRegionIntersect(
+        const int32_t tid,
+        const int32_t beginPos,
+        const int32_t endPos,
+        LocusSetIndexerType& intersect)
 {
+    const LocusIndexType startLocusIndex(insertLocus(SVLocus()));
+    const NodeIndexType nodeIndex = getLocus(startLocusIndex).addNode(tid,beginPos,endPos);
+
+    getNodeIntersect(startLocusIndex,nodeIndex,intersect);
+
+    clearLocus(startLocusIndex);
+}
+
+
+void
+SVLocusSet::
+moveIntersectToLowIndex(
+        LocusSetIndexerType& intersect,
+        const LocusIndexType startLocusIndex,
+        LocusIndexType& locusIndex)
+{
+    const unsigned startHeadLocusIndex(locusIndex);
+
+    // assign all intersect clusters to the lowest index number
+    const bool isClearSource(startLocusIndex!=startHeadLocusIndex);
+
     // get lowest index number:
-    BOOST_FOREACH(const ins_type::value_type& val, intersect)
+    BOOST_FOREACH(const LocusSetIndexerType::value_type& val, intersect)
     {
-        if (val.second < locusIndex)
+        if (val.first < locusIndex)
         {
-            locusIndex = val.second;
+            locusIndex = val.first;
         }
     }
 
-    // assign all intersect clusters to the lowest index number
-    combineLoci(startLocusIndex,locusIndex);
-    BOOST_FOREACH(const ins_type::value_type& val, intersect)
+    combineLoci(startHeadLocusIndex,locusIndex,isClearSource);
+    BOOST_FOREACH(const LocusSetIndexerType::value_type& val, intersect)
     {
-        combineLoci(val.second,locusIndex);
+        combineLoci(val.first,locusIndex);
     }
 
 #ifdef DEBUG_SVL
-    log_os << "Reassigned all intersecting nodes to index: " << locusIndex << " sli:" << startLocusIndex << "\n";
+    log_os << "Reassigned all intersecting nodes to index: " << locusIndex << " shli: " << startHeadLocusIndex << " sli:" << startLocusIndex << "\n";
     checkState();
 #endif
 }
@@ -223,10 +246,15 @@ moveIntersectToLowIndex(
 void
 SVLocusSet::
 combineLoci(
-    const unsigned fromIndex,
-    const unsigned toIndex)
+    const LocusIndexType fromIndex,
+    const LocusIndexType toIndex,
+    const bool isClearSource)
 {
     assert(toIndex<_loci.size());
+
+#ifdef DEBUG_SVL
+    log_os << "ClearLoci: from: " << fromIndex << " toIndex: " << toIndex << " isClear:" << isClearSource << "\n";
+#endif
 
     if (fromIndex == toIndex) return;
     if (fromIndex>=_loci.size()) return;
@@ -235,31 +263,51 @@ combineLoci(
     if (fromLocus.empty()) return;
 
     SVLocus& toLocus(_loci[toIndex]);
-    BOOST_FOREACH(SVLocusNode* fromNodePtr, fromLocus)
-    {
-        toLocus.copyNode(fromLocus,fromNodePtr);
-
-        // update indexing structure:
-        assert(_inodes[fromNodePtr] == fromIndex);
-        _inodes[fromNodePtr] = toIndex;
-    }
-    fromLocus.clear();
-    _emptyLoci.insert(fromIndex);
+    toLocus.copyLocus(fromLocus);
+    if(isClearSource) clearLocus(fromIndex);
 }
 
 
 
+LocusIndexType
+SVLocusSet::
+insertLocus(
+    const SVLocus& inputLocus)
+{
+    LocusIndexType locusIndex(0);
+    if(_emptyLoci.empty())
+    {
+        static const unsigned maxIndex(std::numeric_limits<LocusIndexType>::max());
+        locusIndex=_loci.size();
+        assert(locusIndex<maxIndex);
+        _loci.resize(locusIndex+1);
+    }
+    else
+    {
+        locusIndex=(*_emptyLoci.begin());
+        assert(_loci[locusIndex].empty());
+        _emptyLoci.erase(locusIndex);
+    }
+
+    SVLocus& locus(_loci[locusIndex]);
+    observe_notifier(locus);
+    locus.updateIndex(locusIndex);
+    locus.copyLocus(inputLocus);
+    return locusIndex;
+}
+
 void
 SVLocusSet::
-mergeNodePtr(SVLocusNode* fromPtr,
-             SVLocusNode* toPtr)
+mergeNodePtr(NodeAddressType fromPtr,
+             NodeAddressType toPtr)
 {
-    ins_type::iterator iter(_inodes.find(toPtr));
+#ifdef DEBUG_SVL
+    log_os << "MergeNode: from: " << fromPtr << " to: " << toPtr << "\n";
+#endif
+    LocusSetIndexerType::iterator iter(_inodes.find(toPtr));
     assert(iter != _inodes.end());
-    ins_type::value_type val(*iter);
-    _inodes.erase(iter);
-    toPtr->mergeNode(*fromPtr);
-    _inodes.insert(val);
+    assert(fromPtr.first == toPtr.first);
+    getLocus(fromPtr.first).mergeNode(fromPtr.second,toPtr.second);
 }
 
 
@@ -286,13 +334,9 @@ dumpRegion(std::ostream& os,
         const int32_t beginPos,
         const int32_t endPos)
 {
-    SVLocusNode inputNode;
-    inputNode.interval.tid=tid;
-    inputNode.interval.range.set_range(beginPos,endPos);
-
-    ins_type intersect;
-    getNodeIntersect(&inputNode,intersect);
-    BOOST_FOREACH(const ins_type::value_type& val, intersect)
+    LocusSetIndexerType intersect(*this);
+    getRegionIntersect(tid,beginPos,endPos,intersect);
+    BOOST_FOREACH(const LocusSetIndexerType::value_type& val, intersect)
     {
         os << "SVNode from LocusIndex: " << val.second << " "<< val.first;
     }
@@ -352,15 +396,16 @@ reconstructIndex()
     _inodes.clear();
     _emptyLoci.clear();
 
-    unsigned index(0);
+    LocusIndexType locusIndex(0);
     BOOST_FOREACH(SVLocus& locus, _loci)
     {
-        BOOST_FOREACH(SVLocusNode* nodePtr, locus)
+        const unsigned nodeCount(locus.size());
+        for(NodeIndexType nodeIndex(0);nodeIndex<nodeCount;++nodeIndex)
         {
-            _inodes.insert(std::make_pair(nodePtr,index));
+            _inodes.insert(std::make_pair(locusIndex,nodeIndex));
         }
-        if(locus.empty()) _emptyLoci.insert(index);
-        index++;
+        if(locus.empty()) _emptyLoci.insert(locusIndex);
+        locusIndex++;
     }
 }
 
@@ -371,7 +416,7 @@ SVLocusSet::
 dumpIndex(std::ostream& os) const
 {
     os << "SVLocusSet Index START\n";
-    BOOST_FOREACH(const ins_type::value_type& in, _inodes)
+    BOOST_FOREACH(const LocusSetIndexerType::value_type& in, _inodes)
     {
         os << "Index: " << in.second << " nodeptr: " << in.first << "\n";
     }
@@ -386,58 +431,42 @@ checkState() const
 {
     using namespace illumina::common;
 
-    ins_type repeatCheck;
-
     unsigned locusIndex(0);
-    unsigned nodeSize(0);
+    unsigned totalNodeCount(0);
     BOOST_FOREACH(const SVLocus& locus, _loci)
     {
         locus.checkState();
 
-        nodeSize += locus.size();
+        const unsigned nodeCount(locus.size());
+        totalNodeCount += nodeCount;
 
-        BOOST_FOREACH(SVLocusNode * const nodePtr, locus)
+        for(NodeIndexType nodeIndex(0);nodeIndex<nodeCount;++nodeIndex)
         {
-            {
-                ins_type::const_iterator iter(repeatCheck.find(nodePtr));
-                if(iter != repeatCheck.end())
-                {
-                    std::ostringstream oss;
-                    oss << "ERROR: repeated node in SVLocusSet\n"
-                        << "\tPrevObs index: " << iter->second << " node: " << *(iter->first)
-                        << "\tThisObs index: " << locusIndex << " node: " << *nodePtr;
-                    BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
-                }
-            }
-
-            ins_type::value_type val(std::make_pair(nodePtr,locusIndex));
-            repeatCheck.insert(val);
-
-            ins_type::const_iterator citer(_inodes.find(nodePtr));
+            LocusSetIndexerType::const_iterator citer(_inodes.find(std::make_pair(locusIndex,nodeIndex)));
             if(citer == _inodes.end())
             {
                 std::ostringstream oss;
                 oss << "ERROR: locus node is missing from node index\n"
-                    << "\tNode index: " << locusIndex << " node: " << *nodePtr;
+                    << "\tNode index: " << locusIndex << " node: " << getNode(std::make_pair(locusIndex,nodeIndex));
                 BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
             }
-            if(citer->second != locusIndex)
+            if((citer->first != locusIndex) || (citer->second != nodeIndex))
             {
                 std::ostringstream oss;
                 oss << "ERROR: locus node is mis-assigned has conflicting index number in node index\n"
-                    << "\tinode index_value: " << citer->second << "\n"
-                    << "\tNode index: " << locusIndex << " node: " << *nodePtr;
+                    << "\tinode index_value: " << citer->first << ":" << citer->second << "\n"
+                    << "\tNode index: " << locusIndex << ":" << locusIndex << " node: " << getNode(std::make_pair(locusIndex,nodeIndex));
                 BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
             }
         }
         locusIndex++;
     }
 
-    if (nodeSize != _inodes.size())
+    if (totalNodeCount != _inodes.size())
     {
         using namespace illumina::common;
         std::ostringstream oss;
-        oss << "ERROR: SVLocusSet conflicting internal node counts. nodeSize: " << nodeSize << " inodeSize: " << _inodes.size() << "n";
+        oss << "ERROR: SVLocusSet conflicting internal node counts. totalNodeCount: " << totalNodeCount << " inodeSize: " << _inodes.size() << "n";
         BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
     }
 }

@@ -46,30 +46,31 @@ BOOST_AUTO_TEST_CASE( test_SVLocus1 ) {
 
     // construct a simple two-node locus
     SVLocus locus1;
-    SVLocusNode* nodePtr = locus1.addNode(1,10,20);
-    locus1.addNode(1,30,40,nodePtr);
+    NodeIndexType nodePtr1 = locus1.addNode(1,10,20);
+    NodeIndexType nodePtr2 = locus1.addNode(1,30,40);
+    locus1.linkNodes(nodePtr1,nodePtr2);
 
     BOOST_REQUIRE_EQUAL(locus1.size(),2u);
 
-    BOOST_FOREACH(const SVLocusNode* nodePtr1, locus1)
+    BOOST_FOREACH(const SVLocusNode& node, locus1)
     {
-        BOOST_REQUIRE_EQUAL(nodePtr1->size(),1u);
+        BOOST_REQUIRE_EQUAL(node.size(),1u);
     }
 }
 
 
 BOOST_AUTO_TEST_CASE( test_SVLocusNodeMerge) {
     SVLocus locus1;
-    SVLocusNode* nodePtr1 = locus1.addNode(1,10,20);
+    NodeIndexType nodePtr1 = locus1.addNode(1,10,20);
+    NodeIndexType nodePtr2 = locus1.addNode(1,15,25);
 
-    SVLocus locus2;
-    SVLocusNode* nodePtr2 = locus2.addNode(1,15,25);
+    locus1.mergeNode(nodePtr2,nodePtr1);
 
-    nodePtr1->mergeNode(*nodePtr2);
+    const SVLocusNode& node1(locus1.getNode(nodePtr1));
 
-    BOOST_REQUIRE_EQUAL(nodePtr1->count,2u);
-    BOOST_REQUIRE_EQUAL(nodePtr1->interval.range.begin_pos,10);
-    BOOST_REQUIRE_EQUAL(nodePtr1->interval.range.end_pos,25);
+    BOOST_REQUIRE_EQUAL(node1.count,2u);
+    BOOST_REQUIRE_EQUAL(node1.interval.range.begin_pos,10);
+    BOOST_REQUIRE_EQUAL(node1.interval.range.end_pos,25);
 }
 
 
@@ -82,21 +83,24 @@ BOOST_AUTO_TEST_CASE( test_SVLocusClearEdges ) {
     //  4
     //
     SVLocus locus1;
-    SVLocusNode* nodePtr1 = locus1.addNode(1,10,20);
-    SVLocusNode* nodePtr2 = locus1.addNode(1,30,40,nodePtr1);
-    SVLocusNode* nodePtr3 = locus1.addNode(1,50,60,nodePtr1);
-    SVLocusNode* nodePtr4 = locus1.addNode(1,70,80,nodePtr2);
-    nodePtr4->addEdge(*nodePtr3);
+    NodeIndexType nodePtr1 = locus1.addNode(1,10,20);
+    NodeIndexType nodePtr2 = locus1.addNode(1,30,40);
+    NodeIndexType nodePtr3 = locus1.addNode(1,50,60);
+    NodeIndexType nodePtr4 = locus1.addNode(1,70,80);
+    locus1.linkNodes(nodePtr1,nodePtr2);
+    locus1.linkNodes(nodePtr1,nodePtr3);
+    locus1.linkNodes(nodePtr2,nodePtr4);
+    locus1.linkNodes(nodePtr3,nodePtr4);
 
     // now disconnect 1 from 2,3:
-    nodePtr1->clearEdges();
+    locus1.clearNodeEdges(nodePtr1);
 
     BOOST_REQUIRE_EQUAL(locus1.size(),4u);
 
-    BOOST_REQUIRE_EQUAL(nodePtr1->size(),0u);
-    BOOST_REQUIRE_EQUAL(nodePtr2->size(),1u);
-    BOOST_REQUIRE_EQUAL(nodePtr3->size(),1u);
-    BOOST_REQUIRE_EQUAL(nodePtr4->size(),2u);
+    BOOST_REQUIRE_EQUAL(locus1.getNode(nodePtr1).size(),0u);
+    BOOST_REQUIRE_EQUAL(locus1.getNode(nodePtr2).size(),1u);
+    BOOST_REQUIRE_EQUAL(locus1.getNode(nodePtr3).size(),1u);
+    BOOST_REQUIRE_EQUAL(locus1.getNode(nodePtr4).size(),2u);
 }
 
 

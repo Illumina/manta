@@ -82,17 +82,20 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeSerialze )
 
     // construct a simple two-node locus
     SVLocus locus1;
-    SVLocusNode* nodePtr1 = locus1.addNode(1,10,20);
-    locus1.addNode(1,30,40,nodePtr1);
+    NodeIndexType nodePtr1 = locus1.addNode(1,10,20);
+    NodeIndexType nodePtr2 = locus1.addNode(1,30,40);
+    locus1.linkNodes(nodePtr1,nodePtr2);
 
     std::string filename(boost::archive::tmpdir());
     filename += "/testfile.bin";
+
+    const SVLocusNode node1(locus1.getNode(nodePtr1));
 
     // serialize
     {
         std::ofstream ofs(filename.c_str(), std::ios::binary);
         binary_oarchive oa(ofs);
-        oa << *nodePtr1;
+        oa << node1;
     }
 
     SVLocusNode node_copy1;
@@ -102,23 +105,18 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeSerialze )
         std::ifstream ifs(filename.c_str(), std::ios::binary);
         binary_iarchive ia(ifs);
         ia >> node_copy1;
-      }
+    }
 
-    BOOST_REQUIRE_EQUAL(nodePtr1->count,node_copy1.count);
-    BOOST_REQUIRE_EQUAL(nodePtr1->interval,node_copy1.interval);
-    BOOST_REQUIRE_EQUAL(nodePtr1->size(),node_copy1.size());
+    BOOST_REQUIRE_EQUAL(node1.count,node_copy1.count);
+    BOOST_REQUIRE_EQUAL(node1.interval,node_copy1.interval);
+    BOOST_REQUIRE_EQUAL(node1.size(),node_copy1.size());
 
-    SVLocusNode::const_iterator ibegin(nodePtr1->begin());
+    SVLocusNode::const_iterator ibegin(node1.begin());
     SVLocusNode::const_iterator copy_ibegin(node_copy1.begin());
 
     BOOST_REQUIRE_EQUAL(ibegin->second.count, copy_ibegin->second.count);
 
-    BOOST_REQUIRE_EQUAL(ibegin->first->count, copy_ibegin->first->count);
-    BOOST_REQUIRE_EQUAL(ibegin->first->interval, copy_ibegin->first->interval);
-    BOOST_REQUIRE_EQUAL((ibegin->first->begin()->first),nodePtr1);
-    BOOST_REQUIRE_EQUAL((copy_ibegin->first->begin()->first),&node_copy1);
-
-    delete copy_ibegin->first;
+    BOOST_REQUIRE_EQUAL(ibegin->first, copy_ibegin->first);
 }
 
 
@@ -128,8 +126,9 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSerialze )
 
     // construct a simple two-node locus
     SVLocus locus1;
-    SVLocusNode* nodePtr1 = locus1.addNode(1,10,20);
-    locus1.addNode(1,30,40,nodePtr1);
+    NodeIndexType nodePtr1 = locus1.addNode(1,10,20);
+    NodeIndexType nodePtr2 = locus1.addNode(1,30,40);
+    locus1.linkNodes(nodePtr1,nodePtr2);
 
     std::string filename(boost::archive::tmpdir());
     filename += "/testfile.bin";
@@ -153,9 +152,9 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSerialze )
     BOOST_REQUIRE_EQUAL(locus1.size(),locus1_copy.size());
 
     bool isMatchFound(false);
-    BOOST_FOREACH(SVLocusNode* nodePtr, locus1_copy)
+    BOOST_FOREACH(const SVLocusNode& node, locus1_copy)
     {
-        if(nodePtr->interval == (*locus1.begin())->interval) isMatchFound=true;
+        if(node.interval == (locus1.begin())->interval) isMatchFound=true;
     }
     BOOST_REQUIRE(isMatchFound);
 }

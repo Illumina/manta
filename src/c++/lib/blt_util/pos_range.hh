@@ -175,6 +175,14 @@ struct known_pos_range : public pos_range {
         if (kpr.end_pos>end_pos) end_pos=kpr.end_pos;
     }
 
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned /* version */)
+    {
+        ar & begin_pos & end_pos;
+        is_begin_pos=true;
+        is_end_pos=true;
+    }
+
 private:
     void clear();
 };

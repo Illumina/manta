@@ -88,7 +88,7 @@ getChimericSVLocus(
             breakendMin=(startRefPos - static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
         }
     }
-    SVLocusNode* nodePtr(locus.addNode(read.target_id(),breakendMin,breakendMax));
+    NodeIndexType nodePtr1(locus.addNode(read.target_id(),breakendMin,breakendMax));
 
     {
         const pos_t startRefPos(read.mate_pos()-1);
@@ -104,7 +104,9 @@ getChimericSVLocus(
             breakendMin=(startRefPos - static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
         }
     }
-    locus.addNode(read.mate_target_id(),breakendMin,breakendMax,nodePtr);
+    NodeIndexType nodePtr2(locus.addNode(read.mate_target_id(),breakendMin,breakendMax));
+
+    locus.linkNodes(nodePtr1,nodePtr2);
 }
 
 
