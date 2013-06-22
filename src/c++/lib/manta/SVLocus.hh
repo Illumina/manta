@@ -34,6 +34,14 @@
 //#define DEBUG_SVL
 
 
+#ifdef DEBUG_SVL
+#include "blt_util/log.hh"
+
+#include <iostream>
+#endif
+
+
+
 
 // all internal locations use a chromosome index number
 struct GenomeInterval
@@ -390,12 +398,18 @@ private:
     void
     notifyAdd(const NodeIndexType nodePtr)
     {
+#ifdef DEBUG_SVL
+            log_os << "Notifier: Add node: " << _index << ":" << nodePtr << "\n";
+#endif
         notify_observers(std::make_pair(true,std::make_pair(_index,nodePtr)));
     }
 
     void
     notifyDelete(const NodeIndexType nodePtr)
     {
+#ifdef DEBUG_SVL
+            log_os << "Notifier: Delete node: " << _index << ":" << nodePtr << "\n";
+#endif
         notify_observers(std::make_pair(false,std::make_pair(_index,nodePtr)));
     }
 

@@ -51,7 +51,7 @@ mergeNode(
     using namespace illumina::common;
 
 #ifdef DEBUG_SVL
-    log_os << "mergeNode from: " << fromIndex << " to: " << toIndex << "\n";
+    log_os << "mergeNode from: " << fromIndex << " to: " << toIndex << " size: " << size() << "\n";
 #endif
 
     SVLocusNode& fromNode(getNode(fromIndex));
@@ -77,7 +77,7 @@ mergeNode(
     {
 
 #ifdef DEBUG_SVL
-        log_os << "mergeNode: handle fromEdge: " << fromNodeEdgeIter.first << "\n";
+        log_os << "mergeNode: handle fromEdge: " << _index << ":" << fromNodeEdgeIter.first << "\n";
 #endif
 
         // update local edge:
@@ -94,7 +94,7 @@ mergeNode(
                 if (fromNodeEdgeIter.first != toIndex)
                 {
 #ifdef DEBUG_SVL
-                    log_os << "mergeNode: toNode add " << fromNodeEdgeIter.first << "\n";
+                    log_os << "mergeNode: toNode add " << _index << ":" << fromNodeEdgeIter.first << "\n";
 #endif
 
                     toNode.edges.insert(fromNodeEdgeIter);
@@ -118,7 +118,7 @@ mergeNode(
             if(oldRemoteIter == remoteEdges.end())
             {
                 std::ostringstream oss;
-                oss << "ERROR: Can't find return edge to node index: " << fromIndex << " in remote node index: " << fromNodeEdgeIter.first << "\n"
+                oss << "ERROR: Can't find return edge to node index: " << _index << ":" << fromIndex << " in remote node index: " << _index << ":" << fromNodeEdgeIter.first << "\n"
                     << "\tlocal_node: " << fromNode
                     << "\tremote_node: " << remoteNode;
                 BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
@@ -189,7 +189,7 @@ eraseNode(const NodeIndexType nodePtr)
     NodeIndexType fromPtr(_graph.size()-1);
 
 #ifdef DEBUG_SVL
-    log_os << "eraseNode: from: " << fromPtr << " to: " << nodePtr << "\n";
+    log_os << "eraseNode: from: " << _index << ":" << fromPtr << " to: " << _index << ":" << nodePtr << "\n";
 #endif
 
     if(fromPtr != nodePtr)

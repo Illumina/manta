@@ -302,7 +302,7 @@ mergeNodePtr(NodeAddressType fromPtr,
              NodeAddressType toPtr)
 {
 #ifdef DEBUG_SVL
-    log_os << "MergeNode: from: " << fromPtr << " to: " << toPtr << "\n";
+    log_os << "MergeNode: from: " << fromPtr << " to: " << toPtr << " fromLocusSize: " << getLocus(fromPtr.first).size() << "\n";
 #endif
     LocusSetIndexerType::iterator iter(_inodes.find(toPtr));
     assert(iter != _inodes.end());

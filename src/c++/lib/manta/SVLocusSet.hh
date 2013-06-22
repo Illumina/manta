@@ -238,10 +238,16 @@ private:
 
         if(msg.first)
         {    // add
+#ifdef DEBUG_SVL
+            log_os << "Observer: Adding node: " << msg.second.first << ":" << msg.second.second << "\n";
+#endif
             _inodes.insert(msg.second);
         }
         else
         {    // delete
+#ifdef DEBUG_SVL
+            log_os << "Observer: Deleting node: " << msg.second.first << ":" << msg.second.second << "\n";
+#endif
             _inodes.erase(msg.second);
         }
     }
