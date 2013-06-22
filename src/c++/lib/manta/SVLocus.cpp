@@ -112,9 +112,17 @@ mergeNode(
 
         // update remote inputNodeEdgeIter
         {
-            edges_type& remoteEdges(getNode(fromNodeEdgeIter.first).edges);
+            SVLocusNode& remoteNode(getNode(fromNodeEdgeIter.first));
+            edges_type& remoteEdges(remoteNode.edges);
             edges_type::iterator oldRemoteIter(remoteEdges.find(fromIndex));
-            assert(oldRemoteIter != remoteEdges.end());
+            if(oldRemoteIter == remoteEdges.end())
+            {
+                std::ostringstream oss;
+                oss << "ERROR: Can't find return edge to node index: " << fromIndex << " in remote node index: " << fromNodeEdgeIter.first << "\n"
+                    << "\tlocal_node: " << fromNode
+                    << "\tremote_node: " << remoteNode;
+                BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
+            }
 
             // the remote node could contain a link to toIndex already, check that here:
             edges_type::iterator newRemoteIter(remoteEdges.find(toIndex));

@@ -253,7 +253,7 @@ combineLoci(
     assert(toIndex<_loci.size());
 
 #ifdef DEBUG_SVL
-    log_os << "ClearLoci: from: " << fromIndex << " toIndex: " << toIndex << " isClear:" << isClearSource << "\n";
+    log_os << "combineLoci: from: " << fromIndex << " toIndex: " << toIndex << " isClear:" << isClearSource << "\n";
 #endif
 
     if (fromIndex == toIndex) return;
