@@ -209,7 +209,7 @@ BOOST_CLASS_IMPLEMENTATION(SVLocusNode, boost::serialization::object_serializabl
 
 
 
-typedef unsigned short LocusIndexType;
+typedef unsigned LocusIndexType;
 typedef std::pair<bool, std::pair<LocusIndexType,NodeIndexType> > SVLocusNodeMoveMessage;
 
 
