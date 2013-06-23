@@ -503,7 +503,7 @@ checkState() const
             if((citer->first != locusIndex) || (citer->second != nodeIndex))
             {
                 std::ostringstream oss;
-                oss << "ERROR: locus node is mis-assigned has conflicting index number in node index\n"
+                oss << "ERROR: locus node is has conflicting index number in node index\n"
                     << "\tinode index_value: " << citer->first << ":" << citer->second << "\n"
                     << "\tNode index: " << locusIndex << ":" << locusIndex << " node: " << getNode(std::make_pair(locusIndex,nodeIndex));
                 BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
