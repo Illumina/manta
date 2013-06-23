@@ -117,6 +117,10 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
             const int32_t beginPos,
             const int32_t endPos);
 
+    // dump stats on each locus in csv format:
+    void
+    dumpStats(std::ostream& os) const;
+
 private:
 
     typedef std::pair<LocusIndexType,NodeIndexType> NodeAddressType;

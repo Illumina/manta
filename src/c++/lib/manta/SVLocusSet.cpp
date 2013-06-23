@@ -391,6 +391,48 @@ dumpRegion(std::ostream& os,
 
 void
 SVLocusSet::
+dumpStats(std::ostream& os) const
+{
+    LocusIndexType locusIndex(0);
+
+    os << "locusIndex, nodeCount, nodeObsCount, maxNodeObsCount, edgeCount, maxEdgeCount, edgeObsCount, maxEdgeObsCount\n";
+    BOOST_FOREACH(const SVLocus& locus, _loci)
+    {
+        unsigned locusNodeObsCount(0), maxNodeObsCount(0), locusEdgeCount(0), maxEdgeCount(0), locusEdgeObsCount(0), maxEdgeObsCount;
+        BOOST_FOREACH(const SVLocusNode& node, locus)
+        {
+            // nodes:
+            const unsigned nodeObsCount(node.count);
+            maxNodeObsCount = std::max(maxNodeObsCount,nodeObsCount);
+            locusNodeObsCount += nodeObsCount;
+
+            // edges:
+            maxEdgeCount = std::max(maxEdgeCount,node.size());
+            locusEdgeCount += node.size();
+            BOOST_FOREACH(const SVLocusNode::edges_type::value_type& edge, node)
+            {
+                const unsigned edgeObsCount(edge.second.count);
+                maxEdgeObsCount = std::max(maxEdgeObsCount,edgeObsCount);
+                locusEdgeObsCount += edgeObsCount;
+            }
+        }
+        os << locusIndex
+           << ", " << locus.size()
+           << ", " << locusNodeObsCount
+           << ", " << maxNodeObsCount
+           << ", " << locusEdgeCount
+           << ", " << maxEdgeCount
+           << ", " << locusEdgeObsCount
+           << ", " << maxEdgeObsCount
+           << "\n";
+        locusIndex++;
+    }
+}
+
+
+
+void
+SVLocusSet::
 save(const char* filename) const
 {
     using namespace boost::archive;
