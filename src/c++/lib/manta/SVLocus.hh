@@ -336,8 +336,9 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
         const unsigned offset(_graph.size());
         BOOST_FOREACH(const SVLocusNode& fromNode, fromLocus)
         {
-            _graph.push_back(SVLocusNode(fromNode, offset));
-            notifyAdd(_graph.size()-1);
+            const NodeIndexType nodeIndex(newGraphNode());
+            getNode(nodeIndex) = SVLocusNode(fromNode, offset);
+            notifyAdd(nodeIndex);
         }
     }
 
