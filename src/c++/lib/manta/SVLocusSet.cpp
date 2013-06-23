@@ -43,6 +43,7 @@ void
 SVLocusSet::
 merge(SVLocus& inputLocus)
 {
+    using namespace illumina::common;
 
 #ifdef DEBUG_SVL
     checkState();
@@ -71,7 +72,15 @@ merge(SVLocus& inputLocus)
 
         if (headLocusIndex != startLocusIndex)
         {
-            assert(! intersect.empty());
+            if(intersect.empty())
+            {
+                NodeAddressType val(std::make_pair(startLocusIndex,nodeIndex));
+                std::ostringstream oss;
+                oss << "ERROR: no intersecting nodes found during merge\n"
+                    << "\tsearch node: " << val << " " << getNode(val)
+                    << "\thli: " << headLocusIndex << "\n";
+                BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
+            }
             if(1==intersect.size()) continue;
         }
         else
