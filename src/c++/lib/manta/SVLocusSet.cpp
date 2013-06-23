@@ -417,7 +417,11 @@ load(const char* filename)
         locus.clear();
         ia >> locus;
         if(locus.empty()) continue;
+        const LocusIndexType locusIndex(size());
         _loci.push_back(locus);
+        SVLocus& locusCopy(_loci.back());
+        observe_notifier(locusCopy);
+        locusCopy.updateIndex(locusIndex);
     }
 
     reconstructIndex();
