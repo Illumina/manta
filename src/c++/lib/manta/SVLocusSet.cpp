@@ -46,7 +46,7 @@ merge(SVLocus& inputLocus)
     using namespace illumina::common;
 
 #ifdef DEBUG_SVL
-    checkState();
+    checkState(true);
     log_os << "SVLocusSet::merge inputLocus: " << inputLocus;
 #endif
 
@@ -162,7 +162,7 @@ merge(SVLocus& inputLocus)
     }
 
 #ifdef DEBUG_SVL
-    checkState();
+    checkState(true);
 #endif
 }
 
@@ -434,7 +434,7 @@ load(const char* filename)
     }
 
     reconstructIndex();
-    checkState();
+    checkState(true);
 }
 
 
@@ -477,7 +477,7 @@ dumpIndex(std::ostream& os) const
 
 void
 SVLocusSet::
-checkState() const
+checkState(const bool isCheckOverlap) const
 {
     using namespace illumina::common;
 
@@ -518,6 +518,36 @@ checkState() const
         std::ostringstream oss;
         oss << "ERROR: SVLocusSet conflicting internal node counts. totalNodeCount: " << totalNodeCount << " inodeSize: " << _inodes.size() << "n";
         BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
+    }
+
+    if(! isCheckOverlap) return;
+
+    bool isFirst(true);
+    GenomeInterval lastInterval;
+    BOOST_FOREACH(const NodeAddressType& addy, _inodes)
+    {
+        const GenomeInterval& interval(getNode(addy).interval);
+
+        // don't allow zero-length or negative intervals:
+        assert(interval.range.begin_pos < interval.range.end_pos);
+
+        // don't allow overlapping intervals:
+        if(isFirst)
+        {
+           isFirst=false;
+        }
+        else if(interval.tid == lastInterval.tid)
+        {
+            if(lastInterval.range.end_pos > interval.range.begin_pos)
+            {
+                std::ostringstream oss;
+                oss << "ERROR: Overlapping nodes in graph\n"
+                    << "\tlast_interval: " << lastInterval << "\n"
+                    << "\tthis_interval: " << interval << "\n";
+                BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
+            }
+        }
+        lastInterval = interval;
     }
 }
 

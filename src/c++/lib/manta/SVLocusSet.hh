@@ -263,7 +263,7 @@ private:
     /// check that internal data-structures are in
     /// a consistent state, throw on error
     void
-    checkState() const;
+    checkState(const bool isCheckOverlap = false) const;
 
     ///////////////////// data
 
