@@ -69,48 +69,12 @@
 /* Define to 1 if you have the `powf' function. */
 #cmakedefine HAVE_POWF 1
 
-/* Define to 1 if you have the `erf' function. */
-#cmakedefine HAVE_ERF 1
-
-/* Define to 1 if you have the `erff' function. */
-#cmakedefine HAVE_ERFF 1
-
-/* Define to 1 if you have the `erfc' function. */
-#cmakedefine HAVE_ERFC 1
-
-/* Define to 1 if you have the `erfcf' function. */
-#cmakedefine HAVE_ERFCF 1
-
-/* Define to 1 if you have the numa library. */
-#cmakedefine HAVE_NUMA 1
-
 /* Define to 1 if you have the `zlib' library */
 #cmakedefine HAVE_ZLIB 1
-
-/* Define to 1 if you have the `sysconf' library */
-#cmakedefine HAVE_SYSCONF 1
-
-/* Define to 1 if you have the `clock' library */
-#cmakedefine HAVE_CLOCK 1
 
 /* Define to 1 if you have the `bzip2' library */
 #cmakedefine HAVE_BZIP2 1
 #cmakedefine HAVE_BZLIB 1
-
-/* Define to 1 if you have the `fftw3f' library */
-#cmakedefine HAVE_FFTW3F 1
-
-/* Define to 1 if you have the `cpgplot' library */
-#cmakedefine HAVE_CPGPLOT 1
-
-/* Define to 1 if you have the `pgplot' library */
-#cmakedefine HAVE_PGPLOT 1
-
-/* Define to 1 if you have the `X11' library */
-#cmakedefine HAVE_X11 1
-
-/* Define to 1 if you have the `g2c' library */
-#cmakedefine HAVE_G2C 1
 
 /* Define to 1 if you have the `boost_xxx_yyy' library
    (-lboost_xxx_yyy). */

@@ -19,9 +19,6 @@
 ################################################################################
 
 
-INCLUDE(TestBigEndian)
-TEST_BIG_ENDIAN(IS_BIG_ENDIAN)
-
 INCLUDE(CheckFunctionExists)
 
 find_path(HAVE_INTTYPES_H  inttypes.h)
@@ -31,18 +28,12 @@ find_path(HAVE_STDLIB_H    stdlib.h)
 find_path(HAVE_STRING_H    string.h)
 find_path(HAVE_STRINGS_H   strings.h)
 find_path(HAVE_UNISTD_H    unistd.h)
-find_path(HAVE_SYS_STAT_H  sys/stat.h)
-find_path(HAVE_SYS_TYPES_H sys/types.h)
 
 set (CMAKE_REQUIRED_LIBRARIES m)
 check_function_exists(floorf HAVE_FLOORF)
 check_function_exists(round  HAVE_ROUND)
 check_function_exists(roundf HAVE_ROUNDF)
 check_function_exists(powf HAVE_POWF)
-check_function_exists(erf HAVE_ERF)
-check_function_exists(erf HAVE_ERFF)
-check_function_exists(erfc HAVE_ERFC)
-check_function_exists(erfc HAVE_ERFCF)
 
 include ("${MANTA_MACROS_CMAKE}")
 
