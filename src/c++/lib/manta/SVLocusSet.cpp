@@ -127,12 +127,14 @@ merge(SVLocus& inputLocus)
         // merge this inputNode with each intersecting inputNode,
         // and eliminate the intersecting node:
         //
-        BOOST_FOREACH(const NodeAddressType nodeAddy, nodeIndices)
+        NodeAddressType mergeTargetAddy(inputSuperAddy);
+        BOOST_FOREACH(NodeAddressType nodeAddy, nodeIndices)
         {
+            if(nodeAddy<mergeTargetAddy) std::swap(nodeAddy,mergeTargetAddy);
 #ifdef DEBUG_SVL
             log_os << "MergeAndRemove: " << nodeAddy << "\n";
 #endif
-            mergeNodePtr(nodeAddy,inputSuperAddy);
+            mergeNodePtr(nodeAddy,mergeTargetAddy);
             removeNode(nodeAddy);
 #ifdef DEBUG_SVL
             log_os << "Finished: " << nodeAddy << "\n";
