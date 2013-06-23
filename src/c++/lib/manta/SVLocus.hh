@@ -128,7 +128,7 @@ BOOST_CLASS_IMPLEMENTATION(SVLocusEdge, boost::serialization::object_serializabl
 
 
 
-typedef unsigned short NodeIndexType;
+typedef unsigned NodeIndexType;
 
 
 
