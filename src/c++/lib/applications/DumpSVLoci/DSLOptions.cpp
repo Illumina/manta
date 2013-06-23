@@ -54,12 +54,14 @@ parseDSLOptions(const manta::Program& prog,
     namespace po = boost::program_options;
     po::options_description req("configuration");
     req.add_options()
-    ("graph-file", po::value<std::string>(&opt.graphFilename),
+    ("graph-file", po::value(&opt.graphFilename),
      "sv locus graph file")
 #if 0
     ("region", po::value<std::string>(&opt.region),
      "samtools formatted region, eg. 'chr1:20-30' (optional)")
 #endif
+     ("locus-index", po::value(&opt.locusIndex),
+      "dump only the specified locus")
      ;
 
     po::options_description help("help");
@@ -87,6 +89,10 @@ parseDSLOptions(const manta::Program& prog,
     // fast check of config state:
     if (opt.graphFilename.empty()) {
         usage(log_os,prog,visible,"Must specify sv locus graph file");
+    }
+    if(vm.count("locus-index"))
+    {
+        opt.isLocusIndex=true;
     }
 }
 

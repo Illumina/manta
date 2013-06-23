@@ -29,15 +29,12 @@ void
 runDSL(const DSLOptions& opt) {
 
     SVLocusSet set;
-
     set.load(opt.graphFilename.c_str());
 
+    const SVLocusSet& cset(set);
+
     std::ostream& os(std::cout);
-    if(opt.region.empty())
-    {
-        set.dump(os);
-    }
-    else
+    if(! opt.region.empty())
     {
 #if 0
         int ref,beg,end;
@@ -45,6 +42,14 @@ runDSL(const DSLOptions& opt) {
 
         set.dumpRegion(os);
 #endif
+    }
+    else if(opt.isLocusIndex)
+    {
+        os << cset.getLocus(opt.locusIndex);
+    }
+    else
+    {
+        cset.dump(os);
     }
 }
 
