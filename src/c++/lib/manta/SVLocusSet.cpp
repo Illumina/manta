@@ -395,16 +395,23 @@ dumpStats(std::ostream& os) const
 {
     LocusIndexType locusIndex(0);
 
-    os << "locusIndex, nodeCount, nodeObsCount, maxNodeObsCount, edgeCount, maxEdgeCount, edgeObsCount, maxEdgeObsCount\n";
+    os << "locusIndex, nodeCount, nodeObsCount, maxNodeObsCount, regionSize, maxRegionSize, edgeCount, maxEdgeCount, edgeObsCount, maxEdgeObsCount\n";
     BOOST_FOREACH(const SVLocus& locus, _loci)
     {
-        unsigned locusNodeObsCount(0), maxNodeObsCount(0), locusEdgeCount(0), maxEdgeCount(0), locusEdgeObsCount(0), maxEdgeObsCount;
+        unsigned locusNodeObsCount(0), maxNodeObsCount(0);
+        unsigned locusRegionSize(0), maxRegionSize(0);
+        unsigned locusEdgeCount(0), maxEdgeCount(0), locusEdgeObsCount(0), maxEdgeObsCount(0);
         BOOST_FOREACH(const SVLocusNode& node, locus)
         {
             // nodes:
             const unsigned nodeObsCount(node.count);
             maxNodeObsCount = std::max(maxNodeObsCount,nodeObsCount);
             locusNodeObsCount += nodeObsCount;
+
+            // regions:
+            const unsigned regionSize(node.interval.range.size());
+            maxRegionSize = std::max(maxRegionSize,regionSize);
+            locusRegionSize += regionSize;
 
             // edges:
             maxEdgeCount = std::max(maxEdgeCount,node.size());
@@ -420,6 +427,8 @@ dumpStats(std::ostream& os) const
            << ", " << locus.size()
            << ", " << locusNodeObsCount
            << ", " << maxNodeObsCount
+           << ", " << locusRegionSize
+           << ", " << maxRegionSize
            << ", " << locusEdgeCount
            << ", " << maxEdgeCount
            << ", " << locusEdgeObsCount
