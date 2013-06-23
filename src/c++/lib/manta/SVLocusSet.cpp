@@ -434,6 +434,7 @@ load(const char* filename)
     }
 
     reconstructIndex();
+    checkState();
 }
 
 
