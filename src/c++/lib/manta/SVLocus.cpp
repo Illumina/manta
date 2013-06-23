@@ -272,11 +272,11 @@ checkState() const
 std::ostream&
 operator<<(std::ostream& os, const SVLocus& locus)
 {
-    os << "LOCUS_BEGIN\n";
+    os << "LOCUS INDEX" << locus.getIndex() << " BEGIN\n";
     BOOST_FOREACH(const SVLocusNode& node, locus)
     {
         os << node;
     }
-    os << "LOCUS_END\n";
+    os << "LOCUS INDEX" << locus.getIndex() << " END\n";
     return os;
 }

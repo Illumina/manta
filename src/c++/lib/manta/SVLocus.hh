@@ -281,6 +281,12 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
         _index=index;
     }
 
+    LocusIndexType
+    getIndex() const
+    {
+        return _index;
+    }
+
     SVLocusNode&
     getNode(const NodeIndexType nodePtr)
     {

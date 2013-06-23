@@ -508,9 +508,9 @@ SVLocusSet::
 dumpIndex(std::ostream& os) const
 {
     os << "SVLocusSet Index START\n";
-    BOOST_FOREACH(const LocusSetIndexerType::value_type& in, _inodes)
+    BOOST_FOREACH(const NodeAddressType& in, _inodes)
     {
-        os << "Index: " << in.second << " nodeptr: " << in.first << "\n";
+        os << "SVNodeIndex: " << in << "\n";
     }
     os << "SVLocusSet Index END\n";
 }
