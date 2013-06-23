@@ -84,40 +84,71 @@ merge(SVLocus& inputLocus)
 
         intersect.clear();
         getNodeIntersect(startLocusIndex, nodeIndex, intersect);
+
+        assert(!intersect.empty());
+
 #ifdef DEBUG_SVL
-        log_os << "insersect2_size: " << intersect.size() << "\n";
+        log_os << "intersect2_size: " << intersect.size() << "\n";
         BOOST_FOREACH(const LocusSetIndexerType::value_type& val, intersect)
         {
             log_os << "i2-index: " << val << " node: " <<  getNode(val) << "\n";
         }
 #endif
 
+        // merge overlapping nodes in order from highest nodeid to lowest, so that the
+        // merge process does not invalid nodeids of higher value
+        //
+        // to do this, we first need to find a node corresponding the input node, and sort
+        // the remaining nodes by nodeIndex:
+        //
+        NodeAddressType inputSuperAddy;
+        std::vector<NodeAddressType> nodeIndices;
+        {
+            bool isInputSuperFound(false);
+            const known_pos_range& inputRange(getLocus(startLocusIndex).getNode(nodeIndex).interval.range);
+
+            BOOST_FOREACH(const LocusSetIndexerType::value_type& val, intersect)
+            {
+                assert(val.first==headLocusIndex);
+
+                // one node must be a superset of the input node, find this and store separately:
+                if((! isInputSuperFound) && getNode(val).interval.range.is_superset_of(inputRange))
+                {
+                    inputSuperAddy=val;
+                    isInputSuperFound=true;
+                    continue;
+                }
+                nodeIndices.push_back(val);
+            }
+            assert(isInputSuperFound);
+            std::sort(nodeIndices.rbegin(),nodeIndices.rend());
+        }
+
         // merge this inputNode with each intersecting inputNode,
         // and eliminate the intersecting node:
         //
-        bool isFirst(true);
-        LocusSetIndexerType::value_type first_val;
-        BOOST_FOREACH(LocusSetIndexerType::value_type val, intersect)
+        BOOST_FOREACH(const NodeAddressType nodeAddy, nodeIndices)
         {
 #ifdef DEBUG_SVL
-            log_os << "MergeAndRemove: " << val << "\n";
+            log_os << "MergeAndRemove: " << nodeAddy << "\n";
 #endif
-            if(isFirst)
-            {
-                first_val=val;
-                isFirst=false;
-                continue;
-            }
-            mergeNodePtr(val,first_val);
-            removeNode(val);
+            mergeNodePtr(nodeAddy,inputSuperAddy);
+            removeNode(nodeAddy);
 #ifdef DEBUG_SVL
-            log_os << "Finished: " << val << "\n";
+            log_os << "Finished: " << nodeAddy << "\n";
             checkState();
 #endif
         }
     }
 
-    if(startLocusIndex != headLocusIndex) clearLocus(startLocusIndex);
+    if(startLocusIndex != headLocusIndex)
+    {
+#ifdef DEBUG_SVL
+        log_os << "clearLocusIndex: " << startLocusIndex << "\n";
+#endif
+
+        clearLocus(startLocusIndex);
+    }
 
 #ifdef DEBUG_SVL
     checkState();

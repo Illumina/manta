@@ -399,7 +399,7 @@ private:
     notifyAdd(const NodeIndexType nodePtr)
     {
 #ifdef DEBUG_SVL
-            log_os << "Notifier: Add node: " << _index << ":" << nodePtr << "\n";
+            log_os << "SVLocusNotifier: Add node: " << _index << ":" << nodePtr << "\n";
 #endif
         notify_observers(std::make_pair(true,std::make_pair(_index,nodePtr)));
     }
@@ -408,7 +408,7 @@ private:
     notifyDelete(const NodeIndexType nodePtr)
     {
 #ifdef DEBUG_SVL
-            log_os << "Notifier: Delete node: " << _index << ":" << nodePtr << "\n";
+            log_os << "SVLocusNotifier: Delete node: " << _index << ":" << nodePtr << "\n";
 #endif
         notify_observers(std::make_pair(false,std::make_pair(_index,nodePtr)));
     }
