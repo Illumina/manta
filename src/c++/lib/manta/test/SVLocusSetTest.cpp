@@ -98,9 +98,8 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMerge ) {
 
 BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge ) {
 
-    // test merge of overlapping loci
+    // test merge of overlapping loci, reproduces production failure
 
-    // construct a simple two-node locus
     SVLocus locus1;
     {
         NodeIndexType nodePtr1 = locus1.addNode(1,10,20);
@@ -132,6 +131,41 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge ) {
 
     BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),1u);
     BOOST_REQUIRE_EQUAL(set1.getLocus(0).size(),4u);
+
+    bool isFound(false);
+    BOOST_FOREACH(const SVLocusNode& node, set1.getLocus(0))
+    {
+        if(node.interval == testInterval) isFound=true;
+    }
+    BOOST_REQUIRE(isFound);
+}
+
+
+
+BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge2 ) {
+
+    // test merge of overlapping loci, reproduces production failure
+
+    SVLocus locus1;
+    {
+        locus1.addNode(1,10,20);
+        locus1.addNode(1,30,40);
+        locus1.addNode(1,50,60);
+    }
+
+    SVLocus locus2;
+    {
+        locus2.addNode(1,10,60);
+    }
+
+    SVLocusSet set1;
+    set1.merge(locus1);
+    set1.merge(locus2);
+
+    GenomeInterval testInterval(1,10,60);
+
+    BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),1u);
+    BOOST_REQUIRE_EQUAL(set1.getLocus(0).size(),1u);
 
     bool isFound(false);
     BOOST_FOREACH(const SVLocusNode& node, set1.getLocus(0))
