@@ -20,6 +20,9 @@
 
 #include "manta/SVLocusSet.hh"
 
+#include "boost/archive/binary_oarchive.hpp"
+
+#include <fstream>
 #include <iostream>
 
 
@@ -45,7 +48,17 @@ runDSL(const DSLOptions& opt) {
     }
     else if(opt.isLocusIndex)
     {
-        os << cset.getLocus(opt.locusIndex);
+        const SVLocus& locus(cset.getLocus(opt.locusIndex));
+        if(opt.locusFilename.empty())
+        {
+            os << locus;
+        }
+        else
+        {
+            std::ofstream ofs(opt.locusFilename.c_str(), std::ios::binary);
+            boost::archive::binary_oarchive oa(ofs);
+            oa << locus;
+        }
     }
     else
     {

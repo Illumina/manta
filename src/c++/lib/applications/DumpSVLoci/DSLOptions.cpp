@@ -62,6 +62,8 @@ parseDSLOptions(const manta::Program& prog,
 #endif
      ("locus-index", po::value(&opt.locusIndex),
       "dump only the specified locus")
+     ("locus-file", po::value(&opt.locusFilename),
+      "Write a binary sv locus file if locus-index is specified")
      ;
 
     po::options_description help("help");
@@ -93,6 +95,10 @@ parseDSLOptions(const manta::Program& prog,
     if(vm.count("locus-index"))
     {
         opt.isLocusIndex=true;
+    }
+    if(! opt.locusFilename.empty())
+    {
+        if(! opt.isLocusIndex) usage(log_os,prog,visible,"Must specify sv locus index with locus file");
     }
 }
 
