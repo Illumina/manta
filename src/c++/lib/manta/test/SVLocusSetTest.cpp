@@ -176,6 +176,46 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge2 ) {
 }
 
 
+BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge3 ) {
+
+    // test merge of overlapping loci, reproduces production failure
+
+    SVLocus locus1;
+    locus1.addNode(1,10,20);
+
+    SVLocus locus2;
+    locus2.addNode(1,30,40);
+
+    SVLocus locus3;
+    locus3.addNode(2,30,40);
+
+    SVLocus locus4;
+    locus4.addNode(1,15,35);
+
+    SVLocus locus5;
+    locus5.addNode(2,15,35);
+
+    SVLocusSet set1;
+    set1.merge(locus1);
+    set1.merge(locus2);
+    set1.merge(locus3);
+    set1.merge(locus4);
+    set1.merge(locus5);
+
+    GenomeInterval testInterval(1,10,40);
+
+    BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),2u);
+    BOOST_REQUIRE_EQUAL(set1.getLocus(0).size(),1u);
+
+    bool isFound(false);
+    BOOST_FOREACH(const SVLocusNode& node, set1.getLocus(0))
+    {
+        if(node.interval == testInterval) isFound=true;
+    }
+    BOOST_REQUIRE(isFound);
+}
+
+
 
 BOOST_AUTO_TEST_CASE( test_SVLocusCombine ) {
 

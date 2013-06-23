@@ -69,7 +69,7 @@ merge(SVLocus& inputLocus)
         }
 #endif
 
-        if(headLocusIndex!=startLocusIndex)
+        if (headLocusIndex != startLocusIndex)
         {
             assert(! intersect.empty());
             if(1==intersect.size()) continue;
@@ -85,7 +85,7 @@ merge(SVLocus& inputLocus)
         intersect.clear();
         getNodeIntersect(startLocusIndex, nodeIndex, intersect);
 
-        assert(!intersect.empty());
+        assert(! intersect.empty());
 
 #ifdef DEBUG_SVL
         log_os << "intersect2_size: " << intersect.size() << "\n";
@@ -241,6 +241,7 @@ getRegionIntersect(
 }
 
 
+
 void
 SVLocusSet::
 moveIntersectToLowIndex(
@@ -253,13 +254,13 @@ moveIntersectToLowIndex(
     // assign all intersect clusters to the lowest index number
     const bool isClearSource(startLocusIndex!=startHeadLocusIndex);
 
-    // get lowest index number:
+    // get lowest index number that is not startLocusIndex:
+    bool isFirst(true);
     BOOST_FOREACH(const LocusSetIndexerType::value_type& val, intersect)
     {
-        if (val.first < locusIndex)
-        {
-            locusIndex = val.first;
-        }
+        if ((!isFirst) && (val.first >= locusIndex)) continue;
+        locusIndex = val.first;
+        isFirst=false;
     }
 
     combineLoci(startHeadLocusIndex,locusIndex,isClearSource);
@@ -328,6 +329,8 @@ insertLocus(
     locus.copyLocus(inputLocus);
     return locusIndex;
 }
+
+
 
 void
 SVLocusSet::

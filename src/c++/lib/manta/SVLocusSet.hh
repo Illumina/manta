@@ -193,7 +193,7 @@ private:
             const int32_t endPos,
             LocusSetIndexerType& intersect);
 
-    /// assign all intersect clusters to the lowest index number
+    /// assign all intersect clusters to the lowest index number that is not startLocusIndex
     ///
     void
     moveIntersectToLowIndex(
