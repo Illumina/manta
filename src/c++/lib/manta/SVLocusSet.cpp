@@ -174,7 +174,17 @@ merge(SVLocusSet& inputSet)
 {
     BOOST_FOREACH(SVLocus& locus, inputSet._loci)
     {
-        merge(locus);
+        try
+        {
+            merge(locus);
+        }
+        catch(...)
+        {
+            log_os << "ERROR: SVLocusSet merge failed.\n"
+                   << "\tSVLocusSet source: " << inputSet.getSource() << "\n"
+                   << "\tSVLocus index: " << locus.getIndex() << "\n";
+            throw;
+        }
     }
 }
 
@@ -471,6 +481,8 @@ load(const char* filename)
     std::ifstream ifs(filename, std::ios::binary);
     binary_iarchive ia(ifs);
 
+    _source=filename;
+
     SVLocus locus;
     while(ifs.peek() != EOF)
     {
@@ -575,6 +587,7 @@ checkState(const bool isCheckOverlap) const
 
     bool isFirst(true);
     GenomeInterval lastInterval;
+    NodeAddressType lastAddy;
     BOOST_FOREACH(const NodeAddressType& addy, _inodes)
     {
         const GenomeInterval& interval(getNode(addy).interval);
@@ -593,11 +606,12 @@ checkState(const bool isCheckOverlap) const
             {
                 std::ostringstream oss;
                 oss << "ERROR: Overlapping nodes in graph\n"
-                    << "\tlast_interval: " << lastInterval << "\n"
-                    << "\tthis_interval: " << interval << "\n";
+                    << "\tlast_index: " << lastAddy << " interval: " << lastInterval << "\n"
+                    << "\tthis_index: " << addy << " interval: " << interval << "\n";
                 BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
             }
         }
+        lastAddy = addy;
         lastInterval = interval;
     }
 }

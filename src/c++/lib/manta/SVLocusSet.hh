@@ -20,7 +20,7 @@
 #include "manta/SVLocus.hh"
 
 #include <iosfwd>
-#include <map>
+#include <string>
 #include <vector>
 
 
@@ -35,7 +35,8 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
     typedef locusset_type::const_iterator const_iterator;
 
     SVLocusSet() :
-        _inodes(NodeAddressSorter(*this))
+        _inodes(NodeAddressSorter(*this)),
+        _source("UNKNOWN")
     {}
 
     bool
@@ -121,6 +122,12 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
     void
     dumpStats(std::ostream& os) const;
 
+    const std::string&
+    getSource() const
+    {
+        return _source;
+    }
+
 private:
 
     typedef std::pair<LocusIndexType,NodeIndexType> NodeAddressType;
@@ -178,6 +185,7 @@ private:
     {
         _loci[locusIndex].clear();
         _emptyLoci.insert(locusIndex);
+        _source="UNKNOWN";
     }
 
     /// get all nodes in this object which intersect with
@@ -277,6 +285,9 @@ private:
 
     // provides an intersection search of non-overlapping nodes:
     LocusSetIndexerType _inodes;
+
+    // simple debug string describing the source of this
+    std::string _source;
 };
 
 
