@@ -18,10 +18,13 @@
 
 #include "blt_util/bam_util.hh"
 
+#include "boost/serialization/string.hpp"
 #include "boost/serialization/vector.hpp"
 
+#include <iosfwd>
 #include <string>
 #include <vector>
+
 
 
 /// minimal c++ bam header info
@@ -39,6 +42,19 @@ struct bam_header_info
 
     bam_header_info(const bam_header_t& header);
 
+    bool
+    operator==(const bam_header_info& rhs) const
+    {
+        const unsigned data_size(chrom_data.size());
+        if(chrom_data.size() != rhs.chrom_data.size()) return false;
+        for(unsigned i(0);i<data_size;++i)
+        {
+            if(chrom_data[i] == rhs.chrom_data[i]) continue;
+            return false;
+        }
+        return true;
+    }
+
     template<class Archive>
     void serialize(Archive & ar, const unsigned /* version */)
     {
@@ -50,9 +66,15 @@ struct bam_header_info
         chrom_info(
                 const char* init_label = NULL,
                 const unsigned init_length = 0) :
-                    label(init_label),
+                    label((NULL==init_label) ? "" : init_label ),
                     length(init_length)
         {}
+
+        bool
+        operator==(const chrom_info& rhs) const
+        {
+            return ((label == rhs.label) && (length == rhs.length));
+        }
 
         template<class Archive>
         void serialize(Archive & ar, const unsigned /* version */)
@@ -63,6 +85,9 @@ struct bam_header_info
         std::string label;
         unsigned length;
     };
-
     std::vector<chrom_info> chrom_data;
 };
+
+
+std::ostream&
+operator<<(std::ostream& os, const bam_header_info& bhi);
