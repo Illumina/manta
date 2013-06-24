@@ -72,6 +72,7 @@ getChimericSVLocus(
 
     const unsigned totalNoninsertSize(thisReadNoninsertSize+mateReadNoninsertSize);
 
+    // get local breakend estimate:
     pos_t breakendMin(0),breakendMax(0);
     {
         const pos_t startRefPos(read.pos()-1);
@@ -90,6 +91,7 @@ getChimericSVLocus(
     }
     NodeIndexType nodePtr1(locus.addNode(read.target_id(),breakendMin,breakendMax));
 
+    // get remote breakend estimate:
     {
         const pos_t startRefPos(read.mate_pos()-1);
         const pos_t endRefPos(startRefPos+readSize);
@@ -104,7 +106,7 @@ getChimericSVLocus(
             breakendMin=(startRefPos - static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
         }
     }
-    NodeIndexType nodePtr2(locus.addNode(read.mate_target_id(),breakendMin,breakendMax));
+    NodeIndexType nodePtr2(locus.addRemoteNode(read.mate_target_id(),breakendMin,breakendMax));
 
     locus.linkNodes(nodePtr1,nodePtr2);
 }

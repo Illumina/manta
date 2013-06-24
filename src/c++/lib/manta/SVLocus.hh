@@ -305,28 +305,40 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
     addNode(
         const int32_t tid,
         const int32_t beginPos,
-        const int32_t endPos)
+        const int32_t endPos,
+        const unsigned count = 1)
     {
         NodeIndexType nodePtr(newGraphNode());
         SVLocusNode& node(getNode(nodePtr));
         node.interval.tid=tid;
         node.interval.range.set_range(beginPos,endPos);
-        node.count+=1;
+        node.count=count;
         notifyAdd(nodePtr);
         return nodePtr;
     }
 
+
+    NodeIndexType
+    addRemoteNode(
+        const int32_t tid,
+        const int32_t beginPos,
+        const int32_t endPos)
+    {
+        return addNode(tid,beginPos,endPos,0);
+    }
+
+    // an edge count is only added on on from->to
     void
     linkNodes(
-            const NodeIndexType nodePtr1,
-            const NodeIndexType nodePtr2)
+            const NodeIndexType fromIndex,
+            const NodeIndexType toIndex)
     {
-        SVLocusNode& node1(getNode(nodePtr1));
-        SVLocusNode& node2(getNode(nodePtr2));
-        assert(0 == node1.edges.count(nodePtr2));
-        assert(0 == node2.edges.count(nodePtr1));
-        node1.edges.insert(std::make_pair(nodePtr2,SVLocusEdge(1)));
-        node2.edges.insert(std::make_pair(nodePtr1,SVLocusEdge(1)));
+        SVLocusNode& fromNode(getNode(fromIndex));
+        SVLocusNode& toNode(getNode(toIndex));
+        assert(0 == fromNode.edges.count(toIndex));
+        assert(0 == toNode.edges.count(fromIndex));
+        fromNode.edges.insert(std::make_pair(toIndex,SVLocusEdge(1)));
+        toNode.edges.insert(std::make_pair(fromIndex,SVLocusEdge(0)));
     }
 
     void
