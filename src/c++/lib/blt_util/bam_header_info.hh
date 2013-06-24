@@ -46,11 +46,17 @@ struct bam_header_info
     struct chrom_info
     {
         chrom_info(
-                const char* init_label,
-                const unsigned init_length) :
+                const char* init_label = NULL,
+                const unsigned init_length = 0) :
                     label(init_label),
                     length(init_length)
         {}
+
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned /* version */)
+        {
+            ar & label & length;
+        }
 
         std::string label;
         unsigned length;
