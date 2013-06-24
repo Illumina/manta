@@ -54,10 +54,24 @@ merge(SVLocus& inputLocus)
     const SVLocus& startLocus(_loci[startLocusIndex]);
     LocusIndexType headLocusIndex(startLocusIndex);
 
-    // test each node for intersection and insert/join to existing node:
-    const unsigned nodeCount(startLocus.size());
-    for(unsigned nodeIndex(0);nodeIndex<nodeCount;++nodeIndex)
+    // test each node for intersection and insert/join to existing node
+    //
+    // because we have a non-general interval overlap test, we must order search
+    // nodes by begin_pos on each chromosome
+    //
+    typedef std::map<GenomeInterval,NodeIndexType> nodeMap_t;
+    nodeMap_t nodeMap;
     {
+        const NodeIndexType nodeCount(startLocus.size());
+        for(NodeIndexType nodeIndex(0);nodeIndex<nodeCount;++nodeIndex)
+        {
+            nodeMap.insert(std::make_pair(startLocus.getNode(nodeIndex).interval,nodeIndex));
+        }
+    }
+
+    BOOST_FOREACH(const nodeMap_t::value_type& nodeVal, nodeMap)
+    {
+        NodeIndexType nodeIndex(nodeVal.second);
         LocusSetIndexerType intersect(*this);
         getNodeIntersect(startLocusIndex, nodeIndex, intersect);
 

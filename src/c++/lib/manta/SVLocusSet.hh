@@ -25,8 +25,6 @@
 
 
 
-
-
 // A set of non-overlapping SVLocus objects
 //
 struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
