@@ -27,8 +27,8 @@
 struct ESLOptions {
 
     ESLOptions() :
-        minMapq(10),
-        breakendEdgeTrimProb(0.2)
+        minMapq(15),
+        breakendEdgeTrimProb(0.25)
     {}
 
     /// report breakend regions with x prob regions removed from each edge
