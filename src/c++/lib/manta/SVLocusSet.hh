@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "blt_util/bam_header_info.hh"
 #include "manta/SVLocus.hh"
 
 #include <iosfwd>
@@ -125,6 +126,7 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
     {
         return _source;
     }
+
 
 private:
 
@@ -277,6 +279,9 @@ private:
 
     ///////////////////// data
 
+public:
+    bam_header_info header;
+private:
     // contains the full set of loci
     locusset_type _loci;
     std::set<unsigned> _emptyLoci;

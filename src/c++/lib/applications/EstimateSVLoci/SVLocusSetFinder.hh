@@ -44,9 +44,15 @@ struct SVLocusSetFinder {
            const unsigned defaultReadGroupIndex);
 
     const SVLocusSet&
-    getSet()
+    getLocusSet()
     {
         return _svLoci;
+    }
+
+    void
+    setBamHeader(const bam_header_t& header)
+    {
+        _svLoci.header = bam_header_info(header);
     }
 
 private:

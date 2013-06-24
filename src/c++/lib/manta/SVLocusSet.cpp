@@ -186,6 +186,8 @@ void
 SVLocusSet::
 merge(SVLocusSet& inputSet)
 {
+    // TODO: check for compatible bam headers between inputSet and this
+
     BOOST_FOREACH(SVLocus& locus, inputSet._loci)
     {
         try
@@ -407,7 +409,7 @@ dumpRegion(std::ostream& os,
     getRegionIntersect(tid,beginPos,endPos,intersect);
     BOOST_FOREACH(const LocusSetIndexerType::value_type& val, intersect)
     {
-        os << "SVNode from LocusIndex: " << val.second << " "<< val.first;
+        os << "SVNode from LocusIndex: " << val.second << "\n" << val.first;
     }
 }
 
@@ -486,6 +488,7 @@ save(const char* filename) const
     std::ofstream ofs(filename, std::ios::binary);
     binary_oarchive oa(ofs);
 
+    oa << header;
     BOOST_FOREACH(const SVLocus& locus, _loci)
     {
         if(locus.empty()) continue;
@@ -509,6 +512,7 @@ load(const char* filename)
 
     _source=filename;
 
+    ia >> header;
     SVLocus locus;
     while(ifs.peek() != EOF)
     {

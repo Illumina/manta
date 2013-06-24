@@ -18,6 +18,7 @@
 #include "DumpSVLoci.hh"
 #include "DSLOptions.hh"
 
+#include "blt_util/bam_header_util.hh"
 #include "manta/SVLocusSet.hh"
 
 #include "boost/archive/binary_oarchive.hpp"
@@ -39,12 +40,10 @@ runDSL(const DSLOptions& opt) {
     std::ostream& os(std::cout);
     if(! opt.region.empty())
     {
-#if 0
-        int ref,beg,end;
-        bam_parse_region(_bfp->header, region, &ref, &beg, &end); // parse the region
+        int32_t tid,beginPos,endPos;
+        parse_bam_region(set.header, opt.region, tid, beginPos, endPos); // parse the region
 
-        set.dumpRegion(os);
-#endif
+        set.dumpRegion(os,tid,beginPos,endPos);
     }
     else if(opt.isLocusIndex)
     {

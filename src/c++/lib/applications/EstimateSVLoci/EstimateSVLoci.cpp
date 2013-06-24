@@ -54,9 +54,16 @@ runESL(const ESLOptions& opt) {
     }
 
     // TODO check header compatibility between all open bam streams
+    const unsigned n_inputs(bam_streams.size());
+
+    // assume headers compatible after this point....
+
+    if(n_inputs)
+    {
+        locusFinder.setBamHeader(*(bam_streams[0]->get_header()));
+    }
 
     input_stream_data sdata;
-    const unsigned n_inputs(bam_streams.size());
     for (unsigned i(0); i<n_inputs; ++i)
     {
         sdata.register_reads(*bam_streams[i],i);
@@ -81,7 +88,7 @@ runESL(const ESLOptions& opt) {
     }
 
     // debug output
-    locusFinder.getSet().save(opt.outputFilename.c_str());
+    locusFinder.getLocusSet().save(opt.outputFilename.c_str());
 }
 
 
