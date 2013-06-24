@@ -18,6 +18,8 @@
 
 #include "blt_util/bam_util.hh"
 
+#include "boost/serialization/vector.hpp"
+
 #include <string>
 #include <vector>
 
