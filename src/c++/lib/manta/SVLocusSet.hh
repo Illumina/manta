@@ -116,7 +116,7 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
             const int32_t beginPos,
             const int32_t endPos);
 
-    // dump stats on each locus in csv format:
+    // dump stats on each locus in tsv format:
     void
     dumpStats(std::ostream& os) const;
 

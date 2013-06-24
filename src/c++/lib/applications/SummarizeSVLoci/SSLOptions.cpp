@@ -33,7 +33,7 @@ usage(
     const boost::program_options::options_description& visible,
     const char* msg = NULL)
 {
-    os << "\n" << prog.name() << ": write summary stats for binary sv locus graph to stdout\n\n";
+    os << "\n" << prog.name() << ": write graph summary stats to stdout (tsv format)\n\n";
     os << "version: " << prog.version() << "\n\n";
     os << "usage: " << prog.name() << " [options] > graph_summary\n\n";
     os << visible << "\n\n";

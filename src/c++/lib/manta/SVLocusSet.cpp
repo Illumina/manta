@@ -417,9 +417,21 @@ void
 SVLocusSet::
 dumpStats(std::ostream& os) const
 {
-    LocusIndexType locusIndex(0);
+    static const char sep('\t');
 
-    os << "locusIndex, nodeCount, nodeObsCount, maxNodeObsCount, regionSize, maxRegionSize, edgeCount, maxEdgeCount, edgeObsCount, maxEdgeObsCount\n";
+    os << "locusIndex"
+       << sep << "nodeCount"
+       << sep << "nodeObsCount"
+       << sep << "maxNodeObsCount"
+       << sep << "regionSize"
+       << sep << "maxRegionSize"
+       << sep << "edgeCount"
+       << sep << "maxEdgeCount"
+       << sep << "edgeObsCount"
+       << sep << "maxEdgeObsCount"
+       << '\n';
+
+    LocusIndexType locusIndex(0);
     BOOST_FOREACH(const SVLocus& locus, _loci)
     {
         unsigned locusNodeObsCount(0), maxNodeObsCount(0);
@@ -448,15 +460,15 @@ dumpStats(std::ostream& os) const
             }
         }
         os << locusIndex
-           << ", " << locus.size()
-           << ", " << locusNodeObsCount
-           << ", " << maxNodeObsCount
-           << ", " << locusRegionSize
-           << ", " << maxRegionSize
-           << ", " << locusEdgeCount
-           << ", " << maxEdgeCount
-           << ", " << locusEdgeObsCount
-           << ", " << maxEdgeObsCount
+           << sep << locus.size()
+           << sep << locusNodeObsCount
+           << sep << maxNodeObsCount
+           << sep << locusRegionSize
+           << sep << maxRegionSize
+           << sep << locusEdgeCount
+           << sep << maxEdgeCount
+           << sep << locusEdgeObsCount
+           << sep << maxEdgeObsCount
            << "\n";
         locusIndex++;
     }
