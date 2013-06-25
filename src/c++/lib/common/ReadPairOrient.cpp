@@ -25,7 +25,8 @@
 
 
 std::ostream&
-operator<<(std::ostream& os, const ReadPairOrient& rpo) {
+operator<<(std::ostream& os, const ReadPairOrient& rpo)
+{
     os << PAIR_ORIENT::label(rpo.val());
     return os;
 }

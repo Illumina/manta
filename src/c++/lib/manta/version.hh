@@ -17,18 +17,21 @@
 
 #include "config.h"
 
-namespace manta {
+namespace manta
+{
 
 inline
 const char*
-getVersion() {
+getVersion()
+{
     return MANTA_VERSION;
 }
 
 
 inline
 const char*
-getFullVersion() {
+getFullVersion()
+{
     return MANTA_FULL_VERSION;
 }
 

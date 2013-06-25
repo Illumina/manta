@@ -31,9 +31,11 @@
 ///
 /// idea is for this code to migrate to some kind of joint export/sam api code
 ///
-namespace ALIGNPATH {
+namespace ALIGNPATH
+{
 
-enum align_t {
+enum align_t
+{
     NONE,
     MATCH,
     INSERT,
@@ -46,8 +48,10 @@ enum align_t {
 
 inline
 char
-segment_type_to_cigar_code(const align_t id) {
-    switch (id) {
+segment_type_to_cigar_code(const align_t id)
+{
+    switch (id)
+    {
     case MATCH     :
         return 'M';
     case INSERT    :
@@ -69,8 +73,10 @@ segment_type_to_cigar_code(const align_t id) {
 
 inline
 align_t
-cigar_code_to_segment_type(const char c) {
-    switch (c) {
+cigar_code_to_segment_type(const char c)
+{
+    switch (c)
+    {
     case 'M' :
         return MATCH;
     case 'I' :
@@ -92,8 +98,10 @@ cigar_code_to_segment_type(const char c) {
 
 inline
 bool
-is_segment_type_read_length(const align_t id) {
-    switch (id) {
+is_segment_type_read_length(const align_t id)
+{
+    switch (id)
+    {
     case MATCH     :
     case INSERT    :
     case SOFT_CLIP :
@@ -105,8 +113,10 @@ is_segment_type_read_length(const align_t id) {
 
 inline
 bool
-is_segment_type_ref_length(const align_t id) {
-    switch (id) {
+is_segment_type_ref_length(const align_t id)
+{
+    switch (id)
+    {
     case MATCH  :
     case DELETE :
     case SKIP   :
@@ -118,8 +128,10 @@ is_segment_type_ref_length(const align_t id) {
 
 inline
 bool
-is_segment_type_indel(const align_t id) {
-    switch (id) {
+is_segment_type_indel(const align_t id)
+{
+    switch (id)
+    {
     case INSERT :
     case DELETE :
         return true;
@@ -128,26 +140,31 @@ is_segment_type_indel(const align_t id) {
     }
 }
 
-struct path_segment {
+struct path_segment
+{
     path_segment(const align_t t = NONE,
                  const unsigned l = 0) : type(t), length(l) {}
 
     void
-    clear() {
+    clear()
+    {
         type=NONE;
         length=0;
     }
 
     bool
-    operator==(const path_segment& rhs) const {
+    operator==(const path_segment& rhs) const
+    {
         return ((type==rhs.type) and (length==rhs.length));
     }
 
     // arbitrary ordering which lets us look up from a set of alignments:
     bool
-    operator<(const path_segment& rhs) const {
+    operator<(const path_segment& rhs) const
+    {
         if (type<rhs.type) return true;
-        if (type==rhs.type) {
+        if (type==rhs.type)
+        {
             return length<rhs.length;
         }
         return false;
@@ -173,7 +190,8 @@ apath_to_cigar(const path_t& apath,
 
 inline
 std::string
-apath_to_cigar(const path_t& apath) {
+apath_to_cigar(const path_t& apath)
+{
     std::string cigar;
     apath_to_cigar(apath,cigar);
     return cigar;
@@ -282,7 +300,8 @@ apath_exon_count(const path_t& apath);
 
 // provide reference offsets for the begining of each exon:
 //
-struct exon_offsets {
+struct exon_offsets
+{
     exon_offsets(const path_t& apath)
         : _apath(apath)
         , _asize(apath.size())
@@ -291,9 +310,11 @@ struct exon_offsets {
     {}
 
     bool
-    next() {
+    next()
+    {
         bool is_break_next(false);
-        for (; _segment<_asize; ++_segment) {
+        for (; _segment<_asize; ++_segment)
+        {
             if (is_break_next) return true;
             const path_segment& ps(_apath[_segment]);
             if (ps.type==SKIP) is_break_next=true;
@@ -303,7 +324,8 @@ struct exon_offsets {
     }
 
     unsigned
-    offset() const {
+    offset() const
+    {
         return _offset;
     }
 
@@ -347,8 +369,10 @@ bool
 is_apath_floating(const path_t& apath);
 
 
-namespace ALIGN_ISSUE {
-enum issue_t {
+namespace ALIGN_ISSUE
+{
+enum issue_t
+{
     NONE,
     CLIPPING,
     EDGE_DELETE,
@@ -361,8 +385,10 @@ enum issue_t {
 
 inline
 const char*
-description(const issue_t i) {
-    switch (i) {
+description(const issue_t i)
+{
+    switch (i)
+    {
     case CLIPPING:
         return "alignment contains invalid clipping";
     case EDGE_DELETE:
@@ -407,7 +433,8 @@ get_apath_invalid_reason(const path_t& apath,
 inline
 bool
 is_apath_invalid(const path_t& apath,
-                 const unsigned seq_length) {
+                 const unsigned seq_length)
+{
 
     return (ALIGN_ISSUE::NONE != get_apath_invalid_type(apath,seq_length));
 }

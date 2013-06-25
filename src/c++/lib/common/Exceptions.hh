@@ -71,7 +71,8 @@ public:
     IlluminaException(int errorNumber, const std::string& message) : ExceptionData(errorNumber, message) {}
     IlluminaException(const std::string& message) : ExceptionData(0, message) {}
     IlluminaException(const IlluminaException& e) : std::exception(e), ExceptionData(e) {}
-    virtual const char* what() const throw() {
+    virtual const char* what() const throw()
+    {
         return getMessage().c_str();
     }
 private:

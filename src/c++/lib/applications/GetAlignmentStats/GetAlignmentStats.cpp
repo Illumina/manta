@@ -35,13 +35,15 @@ runAlignmentStats(const AlignmentStatsOptions& opt)
     OutStream outs(opt.outputFilename);
 
     ReadGroupStatsSet rstats;
-    if (opt.alignmentFilename.empty()) {
+    if (opt.alignmentFilename.empty())
+    {
         log_os << "ERROR: No input files specified.\n";
         exit(EXIT_FAILURE);
     }
 
 
-    BOOST_FOREACH(const std::string& file, opt.alignmentFilename) {
+    BOOST_FOREACH(const std::string& file, opt.alignmentFilename)
+    {
         rstats.setStats(file,ReadGroupStats(file));
     }
 

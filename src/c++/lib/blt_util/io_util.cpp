@@ -26,10 +26,12 @@
 
 void
 open_ifstream(std::ifstream& ifs,
-              const char* filename) {
+              const char* filename)
+{
 
     ifs.open(filename);
-    if (! ifs) {
+    if (! ifs)
+    {
         std::ostringstream oss;
         oss << "ERROR: Can't open file: " << filename << "\n";
         throw blt_exception(oss.str().c_str());

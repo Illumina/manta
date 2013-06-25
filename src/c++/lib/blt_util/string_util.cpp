@@ -28,12 +28,15 @@
 void
 split_string(const char* str,
              const char delimiter,
-             std::vector<std::string>& v) {
+             std::vector<std::string>& v)
+{
 
     v.clear();
-    while (true) {
+    while (true)
+    {
         const char* next(strchr(str,delimiter));
-        if ((NULL == next) || (delimiter == '\0')) {
+        if ((NULL == next) || (delimiter == '\0'))
+        {
             v.push_back(std::string(str));
             return;
         }
@@ -47,12 +50,14 @@ split_string(const char* str,
 void
 split_string(const std::string& str,
              const char delimiter,
-             std::vector<std::string>& v) {
+             std::vector<std::string>& v)
+{
 
     v.clear();
 
     size_t start(0);
-    while (true) {
+    while (true)
+    {
         size_t next(str.find(delimiter,start));
         v.push_back(std::string(str.substr(start,next-start)));
         if (next == std::string::npos) return;
@@ -65,10 +70,12 @@ split_string(const std::string& str,
 bool
 split_match(const std::string& str,
             const char delimiter,
-            const char* needle) {
+            const char* needle)
+{
 
     size_t start(0);
-    while (true) {
+    while (true)
+    {
         size_t next(str.find(delimiter,start));
         if (0 == str.compare(start,next-start,needle)) return true;
         if (next == std::string::npos) break;

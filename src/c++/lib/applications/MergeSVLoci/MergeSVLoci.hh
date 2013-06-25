@@ -22,10 +22,12 @@
 
 /// estimate per-library information from alignment file(s)
 ///
-struct MergeSVLoci : public manta::Program {
+struct MergeSVLoci : public manta::Program
+{
 
     const char*
-    name() const {
+    name() const
+    {
         return "MergeSVLoci";
     }
 

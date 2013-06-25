@@ -24,7 +24,8 @@
 
 
 
-struct ESLOptions {
+struct ESLOptions
+{
 
     ESLOptions() :
         minMapq(15),

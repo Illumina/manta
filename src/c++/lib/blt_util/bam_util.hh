@@ -26,7 +26,8 @@ extern "C" {
 }
 
 
-namespace BAM_FLAG {
+namespace BAM_FLAG
+{
 enum index_t {
     PAIRED        = 0x001,
     PROPER_PAIR   = 0x002,
@@ -84,7 +85,8 @@ change_bam_data_segment_len(const int end,
 //
 inline
 void
-bam_update_bin(bam1_t& br) {
+bam_update_bin(bam1_t& br)
+{
 
     // set bin value:
     //
@@ -92,15 +94,21 @@ bam_update_bin(bam1_t& br) {
     // because we want to index shadow reads.
     //
     bam1_core_t& brc(br.core);
-    if (brc.pos>=0) {
-        if (brc.n_cigar!=0) {
+    if (brc.pos>=0)
+    {
+        if (brc.n_cigar!=0)
+        {
             // normal case:
             brc.bin = bam_reg2bin(brc.pos, bam_calend(&brc, bam1_cigar(&br)));
-        } else {
+        }
+        else
+        {
             // shadow case: (match logic from samtools)
             brc.bin = bam_reg2bin(brc.pos, brc.pos+1);
         }
-    } else {
+    }
+    else
+    {
         // unmapped, non-shadow reads:
         brc.bin = 0;
     }

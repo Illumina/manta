@@ -51,10 +51,12 @@ const unsigned STAT_REL_ORIENT_IDX         = 3;
 
 bool
 calcStats(std::vector<int32_t>& data,
-          PairStatSet& stats) {
+          PairStatSet& stats)
+{
 
     const unsigned n(data.size());
-    if (n == 0) {
+    if (n == 0)
+    {
         stats.clear();
         return false;
     }
@@ -74,7 +76,8 @@ calcStats(std::vector<int32_t>& data,
 static
 bool
 isStatSetMatch(const PairStatSet& a,
-               const PairStatSet& b) {
+               const PairStatSet& b)
+{
 
     static const double statsPrecision(0.005);
 
@@ -89,14 +92,16 @@ isStatSetMatch(const PairStatSet& a,
 // chromosome.
 static
 ReadPairOrient
-getRelOrient(const bam_record& br) {
+getRelOrient(const bam_record& br)
+{
 
     pos_t pos1 = br.pos();
     bool is_fwd_strand1 = br.is_fwd_strand();
     pos_t pos2 = br.mate_pos();
     bool is_fwd_strand2 = br.is_mate_fwd_strand();
 
-    if (! br.is_first()) {
+    if (! br.is_first())
+    {
         std::swap(pos1,pos2);
         std::swap(is_fwd_strand1,is_fwd_strand2);
     }
@@ -113,7 +118,8 @@ getRelOrient(const bam_record& br) {
  * ----- ----- ----- ----- ----- ----- */
 double
 PairStatSet::
-quantile(const double p) const {
+quantile(const double p) const
+{
 
     // put in hack temporary implementation:
     boost::math::normal dist(median,sd);
@@ -122,7 +128,8 @@ quantile(const double p) const {
 
 double
 PairStatSet::
-cdf(const double x) const {
+cdf(const double x) const
+{
 
     // put in hack temporary implementation:
     boost::math::normal dist(median,sd);
@@ -130,7 +137,8 @@ cdf(const double x) const {
 }
 
 std::ostream&
-operator<<(std::ostream& os, const PairStatSet& pss) {
+operator<<(std::ostream& os, const PairStatSet& pss)
+{
     os << pss.sd << '\t' << pss.median;
     return os;
 }
@@ -143,7 +151,8 @@ operator<<(std::ostream& os, const PairStatSet& pss) {
  * ----- ----- ----- ----- ----- ----- */
 
 ReadGroupStats::
-ReadGroupStats(const std::vector<std::string>& data) {
+ReadGroupStats(const std::vector<std::string>& data)
+{
 
     using namespace illumina::blt_util;
 
@@ -159,7 +168,8 @@ ReadGroupStats(const std::vector<std::string>& data) {
 // set read pair statistics from a bam reader object:
 //
 ReadGroupStats::
-ReadGroupStats(const std::string& bamFile) {
+ReadGroupStats(const std::string& bamFile)
+{
 
     static const unsigned statsCheckCnt(100000);
     static const unsigned maxPosCount(1);
@@ -170,7 +180,8 @@ ReadGroupStats(const std::string& bamFile) {
     const int32_t nChrom(header.n_targets);
     std::vector<int32_t> chromSize(nChrom,0);
     std::vector<int32_t> chromHighestPos(nChrom,-1);
-    for (int32_t i(0); i<nChrom; ++i) {
+    for (int32_t i(0); i<nChrom; ++i)
+    {
         chromSize[i] = (header.target_len[i]);
     }
 
@@ -185,9 +196,11 @@ ReadGroupStats(const std::string& bamFile) {
     PairStatsData psd;
 
     bool isActiveChrom(true);
-    while (isActiveChrom && (!isStopEstimation)) {
+    while (isActiveChrom && (!isStopEstimation))
+    {
         isActiveChrom=false;
-        for (int32_t i(0); i<nChrom; ++i) {
+        for (int32_t i(0); i<nChrom; ++i)
+        {
             if (isStopEstimation) break;
 
             const int32_t startPos(chromHighestPos[i]+1);
@@ -195,11 +208,13 @@ ReadGroupStats(const std::string& bamFile) {
             std::cerr << "INFO: Stats requesting bam region starting from: chrid: " << i << " start: " << startPos << "\n";
 #endif
             read_stream.set_new_region(i,startPos,chromSize[i]);
-            while (read_stream.next()) {
+            while (read_stream.next())
+            {
                 const bam_record& al(*(read_stream.get_record_ptr()));
                 if (al.pos()<startPos) continue;
 
-                if (al.pos()!=chromHighestPos[i]) {
+                if (al.pos()!=chromHighestPos[i])
+                {
                     posCount=0;
                 }
 
@@ -225,7 +240,8 @@ ReadGroupStats(const std::string& bamFile) {
                 const unsigned int readNum(al.is_first() ? 1 : 2);
                 assert(al.is_second() == (readNum == 2));
 
-                if (! isPairTypeSet) {
+                if (! isPairTypeSet)
+                {
                     // TODO: does orientation need to be averaged over several observations?
                     relOrients = getRelOrient(al);
                     isPairTypeSet=true;
@@ -249,15 +265,18 @@ ReadGroupStats(const std::string& bamFile) {
         }
     }
 
-    if (! isConverged) {
-        if (psd.fragmentLengths.size()<1000) {
+    if (! isConverged)
+    {
+        if (psd.fragmentLengths.size()<1000)
+        {
             log_os << "ERROR: Can't generate pair statistics for BAM file " << bamFile << "\n";
             log_os << "\tTotal observed read pairs: " << psd.fragmentLengths.size() << "\n";
             exit(EXIT_FAILURE);
         }
         isConverged=computePairStats(psd);
     }
-    if (! isConverged) {
+    if (! isConverged)
+    {
         log_os << "WARNING: read pair statistics did not converge\n";
 
         // make sure stats are estimated for all values if we're going to continue:
@@ -269,15 +288,18 @@ ReadGroupStats(const std::string& bamFile) {
 
 bool
 ReadGroupStats::
-computePairStats(PairStatsData& psd, const bool isForcedConvergence) {
+computePairStats(PairStatsData& psd, const bool isForcedConvergence)
+{
 
     // Calculate new median and sd
     PairStatSet newVals;
     const bool calcStatus(calcStats(psd.fragmentLengths, newVals));
-    if (! isForcedConvergence) {
+    if (! isForcedConvergence)
+    {
         if (! calcStatus) return false;
 
-        if (! isStatSetMatch(fragSize,newVals)) {
+        if (! isStatSetMatch(fragSize,newVals))
+        {
             fragSize = newVals;
             return false;
         }
@@ -290,7 +312,8 @@ computePairStats(PairStatsData& psd, const bool isForcedConvergence) {
 
 void
 ReadGroupStats::
-write(std::ostream& os) const {
+write(std::ostream& os) const
+{
     os << fragSize << "\t"
        << relOrients;
 }

@@ -28,14 +28,17 @@
 
 #include <iosfwd>
 
-namespace PAIR_ORIENT {
+namespace PAIR_ORIENT
+{
 
 enum index_t { UNKNOWN, Fm, Fp, Rm, Rp, SIZE };
 
 inline
 const char*
-label(const index_t i) {
-    switch (i) {
+label(const index_t i)
+{
+    switch (i)
+    {
     case Fm:
         return "Fm";
     case Fp:
@@ -56,12 +59,15 @@ get_index(const pos_t pos1, const bool is_fwd_strand1,
 {
     const bool is_read1_left(pos1 < pos2);
 
-    if (is_fwd_strand1 != is_fwd_strand2) {
+    if (is_fwd_strand1 != is_fwd_strand2)
+    {
         const bool left_strand(is_read1_left
                                ? is_fwd_strand1
                                : is_fwd_strand2);
         return (left_strand ? Rp : Rm);
-    } else {
+    }
+    else
+    {
         return ((is_read1_left == is_fwd_strand1) ? Fp : Fm);
     }
 }
@@ -69,8 +75,10 @@ get_index(const pos_t pos1, const bool is_fwd_strand1,
 /// inefficient label to id lookup, returns SIZE for unknown string:
 inline
 index_t
-get_index(const char* str) {
-    for (int i(0); i<SIZE; ++i) {
+get_index(const char* str)
+{
+    for (int i(0); i<SIZE; ++i)
+    {
         if (0==strcmp(str,label(static_cast<index_t>(i)))) return static_cast<index_t>(i);
     }
     return SIZE;
@@ -79,19 +87,22 @@ get_index(const char* str) {
 
 
 /// pair orientation status wrapper:
-struct ReadPairOrient {
+struct ReadPairOrient
+{
 
     ReadPairOrient()
         : _val(PAIR_ORIENT::UNKNOWN)
     {}
 
     PAIR_ORIENT::index_t
-    val() const {
+    val() const
+    {
         return _val;
     }
 
     void
-    setVal(const PAIR_ORIENT::index_t new_val) {
+    setVal(const PAIR_ORIENT::index_t new_val)
+    {
         _val=new_val;
     }
 

@@ -25,18 +25,23 @@
 
 unsigned
 bam_record::
-alt_map_qual(const char* tag) const {
+alt_map_qual(const char* tag) const
+{
     uint8_t* alt_ptr(bam_aux_get(_bp,tag));
-    if ((NULL != alt_ptr) && is_int_code(alt_ptr[0])) {
+    if ((NULL != alt_ptr) && is_int_code(alt_ptr[0]))
+    {
         const int alt_map(bam_aux2i(alt_ptr));
-        if (alt_map<0) {
+        if (alt_map<0)
+        {
             std::ostringstream oss;
             oss << "ERROR: Unexpected negative value in optional BAM tag: '" << std::string(tag,2) << "'\n"
                 << "\tRemove the --eland-compatability flag to stop using this tag.\n";
             throw blt_exception(oss.str().c_str());
         }
         return static_cast<unsigned>(alt_map);
-    } else {
+    }
+    else
+    {
         return map_qual();
     }
 }
@@ -45,7 +50,8 @@ alt_map_qual(const char* tag) const {
 
 const char*
 bam_record::
-get_string_tag(const char* tag) const {
+get_string_tag(const char* tag) const
+{
 
     // retrieve the BAM tag
     uint8_t* pTag = bam_aux_get(_bp, tag);
@@ -62,7 +68,8 @@ get_string_tag(const char* tag) const {
 
 bool
 bam_record::
-get_num_tag(const char* tag, int32_t& num) const {
+get_num_tag(const char* tag, int32_t& num) const
+{
 
     // retrieve the BAM tag
     uint8_t* pTag = bam_aux_get(_bp, tag);

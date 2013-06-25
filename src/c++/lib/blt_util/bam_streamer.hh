@@ -24,7 +24,8 @@
 #include <string>
 
 
-struct bam_streamer : public boost::noncopyable {
+struct bam_streamer : public boost::noncopyable
+{
 
     explicit
     bam_streamer(const char* filename,
@@ -45,16 +46,19 @@ struct bam_streamer : public boost::noncopyable {
 
     bool next();
 
-    const bam_record* get_record_ptr() const {
+    const bam_record* get_record_ptr() const
+    {
         if (_is_record_set) return &_brec;
         else               return NULL;
     }
 
-    const char* name() const {
+    const char* name() const
+    {
         return _stream_name.c_str();
     }
 
-    unsigned record_no() const {
+    unsigned record_no() const
+    {
         return _record_no;
     }
 
@@ -67,7 +71,8 @@ struct bam_streamer : public boost::noncopyable {
     target_name_to_id(const char* seq_name) const;
 
     const bam_header_t*
-    get_header() const {
+    get_header() const
+    {
         return _bfp->header;
     }
 

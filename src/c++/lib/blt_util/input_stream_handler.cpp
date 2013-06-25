@@ -29,10 +29,12 @@
 
 static
 const char*
-input_type_label(const INPUT_TYPE::index_t i) {
+input_type_label(const INPUT_TYPE::index_t i)
+{
     using namespace INPUT_TYPE;
 
-    switch (i) {
+    switch (i)
+    {
     case NONE   :
         return "NONE";
     case READ   :
@@ -48,7 +50,8 @@ input_type_label(const INPUT_TYPE::index_t i) {
 void
 input_stream_data::
 register_error(const char* label,
-               const int sample_no) const {
+               const int sample_no) const
+{
     log_os << "ERROR: attempting to register " << label
            << " with sample number: " << sample_no
            << " more than once\n";
@@ -68,7 +71,8 @@ input_stream_handler(
 {
     // initial loading for _stream_queue:
     const unsigned rs(_data._reads.size());
-    for (unsigned i(0); i<rs; ++i) {
+    for (unsigned i(0); i<rs; ++i)
+    {
         push_next(INPUT_TYPE::READ,_data._reads.get_key(i),i);
     }
 }
@@ -77,17 +81,21 @@ input_stream_handler(
 
 bool
 input_stream_handler::
-next() {
+next()
+{
     if (_is_end) return false;
 
-    while (true) {
-        if (_current.itype != INPUT_TYPE::NONE) {
+    while (true)
+    {
+        if (_current.itype != INPUT_TYPE::NONE)
+        {
             // reload stream_queue with current type and sample_no;
             push_next(_current.itype,_current.sample_no,_current._order);
             _last=_current;
         }
 
-        if (_stream_queue.empty()) {
+        if (_stream_queue.empty())
+        {
             _current=input_record_info();
             _is_end=true;
             return false;
@@ -97,8 +105,10 @@ next() {
         _stream_queue.pop();
 
         if (_is_head_pos &&
-            (_current.pos < _head_pos)) {
-            if (_current.itype == INPUT_TYPE::READ) {
+            (_current.pos < _head_pos))
+        {
+            if (_current.itype == INPUT_TYPE::READ)
+            {
                 std::ostringstream oss;
                 oss << "ERROR: unexpected read order:\n"
                     << "\tInput-record with pos/type/sample_no: "
@@ -106,16 +116,21 @@ next() {
                     << " follows pos/type/sample_no: "
                     << (_last.pos+1) << "/" << input_type_label(_last.itype) << "/" << _current.sample_no << "\n";
                 throw blt_exception(oss.str().c_str());
-            } else {
+            }
+            else
+            {
                 std::ostringstream oss;
                 oss << "ERROR: unexpected input type: " << _current.itype << "\n";
                 throw blt_exception(oss.str().c_str());
             }
         }
 
-        if (_is_head_pos) {
+        if (_is_head_pos)
+        {
             _head_pos=std::max(_head_pos,_current.pos);
-        } else {
+        }
+        else
+        {
             _is_head_pos=true;
             _head_pos=_current.pos;
         }
@@ -131,13 +146,17 @@ static
 void
 get_next_read_pos(bool& is_next_read,
                   pos_t& next_read_pos,
-                  bam_streamer& read_stream) {
+                  bam_streamer& read_stream)
+{
 
     is_next_read=read_stream.next();
-    if (is_next_read) {
+    if (is_next_read)
+    {
         const bam_record& read_rec(*(read_stream.get_record_ptr()));
         next_read_pos=(read_rec.pos()-1);
-    } else {
+    }
+    else
+    {
         next_read_pos=0;
     }
 }
@@ -148,14 +167,18 @@ void
 input_stream_handler::
 push_next(const INPUT_TYPE::index_t itype,
           const int sample_no,
-          const unsigned order) {
+          const unsigned order)
+{
 
     bool is_next(false);
     pos_t next_pos;
-    if       (itype == INPUT_TYPE::READ) {
+    if       (itype == INPUT_TYPE::READ)
+    {
         bam_streamer& read_stream(*(_data._reads.get_value(order)));
         get_next_read_pos(is_next,next_pos,read_stream);
-    } else {
+    }
+    else
+    {
         std::ostringstream oss;
         oss << "ERROR: unexpected input type: " << itype << "\n";
         throw blt_exception(oss.str().c_str());

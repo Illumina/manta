@@ -132,7 +132,8 @@ private:
 
     typedef std::pair<LocusIndexType,NodeIndexType> NodeAddressType;
 
-    struct NodeAddressSorter {
+    struct NodeAddressSorter
+    {
 
         NodeAddressSorter(const SVLocusSet& set) :
             _set(set)
@@ -246,17 +247,20 @@ private:
     // update index when nodes are moved:
     void
     recieve_notification(const notifier<SVLocusNodeMoveMessage>&,
-                         const SVLocusNodeMoveMessage& msg) {
+                         const SVLocusNodeMoveMessage& msg)
+    {
 
         if (msg.first)
-        {   // add
+        {
+            // add
 #ifdef DEBUG_SVL
             log_os << "SVLocusSetObserver: Adding node: " << msg.second.first << ":" << msg.second.second << "\n";
 #endif
             _inodes.insert(msg.second);
         }
         else
-        {   // delete
+        {
+            // delete
 #ifdef DEBUG_SVL
             log_os << "SVLocusSetObserver: Deleting node: " << msg.second.first << ":" << msg.second.second << "\n";
 #endif

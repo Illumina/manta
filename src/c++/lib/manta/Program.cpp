@@ -29,10 +29,12 @@ static
 void
 dump_cl(int argc,
         char* argv[],
-        std::ostream& os) {
+        std::ostream& os)
+{
 
     os << "cmdline:";
-    for (int i(0); i<argc; ++i) {
+    for (int i(0); i<argc; ++i)
+    {
         os << ' ' << argv[i];
     }
     os << std::endl;
@@ -44,7 +46,8 @@ static
 void
 post_catch(int argc,
            char* argv[],
-           std::ostream& os) {
+           std::ostream& os)
+{
 
     os << "...caught in program.run()\n";
     dump_cl(argc,argv,log_os);
@@ -52,19 +55,23 @@ post_catch(int argc,
 }
 
 
-namespace manta {
+namespace manta
+{
 
 
 
 int
 Program::
-run(int argc, char* argv[]) const {
+run(int argc, char* argv[]) const
+{
 
-    try {
+    try
+    {
         std::ios_base::sync_with_stdio(false);
 
         std::string cmdline;
-        for (int i(0); i<argc; ++i) {
+        for (int i(0); i<argc; ++i)
+        {
             if (i) cmdline += ' ';
             cmdline += argv[i];
         }

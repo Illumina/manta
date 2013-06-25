@@ -24,7 +24,8 @@
 
 
 
-struct MSLOptions {
+struct MSLOptions
+{
 
     MSLOptions() :
         isVerbose(false)

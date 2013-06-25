@@ -23,7 +23,8 @@
 
 
 
-struct DSLOptions {
+struct DSLOptions
+{
 
     DSLOptions() :
         isLocusIndex(false),

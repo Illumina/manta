@@ -21,7 +21,8 @@
 BOOST_AUTO_TEST_SUITE( test_id_map )
 
 
-BOOST_AUTO_TEST_CASE( test_id_set ) {
+BOOST_AUTO_TEST_CASE( test_id_set )
+{
 
     id_set<std::string> iset;
 
@@ -38,7 +39,8 @@ BOOST_AUTO_TEST_CASE( test_id_set ) {
 }
 
 
-BOOST_AUTO_TEST_CASE( test_id_map ) {
+BOOST_AUTO_TEST_CASE( test_id_map )
+{
 
     id_map<std::string,std::string> imap;
 

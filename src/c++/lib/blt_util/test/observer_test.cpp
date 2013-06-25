@@ -46,7 +46,8 @@ struct observer_test : public observer<int>
 private:
     void
     recieve_notification(const notifier<int>&,
-                         const int& n) {
+                         const int& n)
+    {
         val += n;
     }
 

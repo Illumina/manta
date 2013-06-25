@@ -23,7 +23,8 @@
 
 
 
-struct SSLOptions {
+struct SSLOptions
+{
 
     SSLOptions()
     {}

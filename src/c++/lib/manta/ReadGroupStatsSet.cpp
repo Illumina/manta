@@ -39,7 +39,8 @@ const unsigned STAT_REL_ORIENT_IDX         = 3;
 
 void
 ReadGroupStatsSet::
-read(const char* filename) {
+read(const char* filename)
+{
     assert(NULL != filename);
 
     std::ifstream ifs;
@@ -51,7 +52,8 @@ read(const char* filename) {
 
 void
 ReadGroupStatsSet::
-read(std::istream& is) {
+read(std::istream& is)
+{
 
     using namespace illumina::blt_util;
 
@@ -59,7 +61,8 @@ read(std::istream& is) {
     std::map<int,std::string> gmap;
 
     std::string line;
-    while (! is.eof()) {
+    while (! is.eof())
+    {
         std::getline(is, line);
         if (line.length() == 0) continue;
 
@@ -67,11 +70,13 @@ read(std::istream& is) {
         split_string(line,'\t', data);
         if (((data[0] == "#") && (data[1] == "index"))
             || (data[0] == "# Bam_Size_To_Use")
-            || (data[0] == "# Bam_Orig_Path")) {
+            || (data[0] == "# Bam_Orig_Path"))
+        {
             continue;
         }
 
-        if (data[0] == "# Bam_Path") {
+        if (data[0] == "# Bam_Path")
+        {
             gmap[parse_int_str(data[HEAD_SRC_IDX])] = data[HEAD_NAME_IDX];
             continue;
         }
@@ -79,7 +84,8 @@ read(std::istream& is) {
         const int32_t key = parse_int_str(data[STAT_SOURCE_IDX]);
 
         // Make sure we have a BAM file source mapping!
-        if (gmap.count(key) == 0) {
+        if (gmap.count(key) == 0)
+        {
             log_os << "[ERROR]: While loading stats file unmapped data found for index: " << key
                    << ", on line: " << line << '\n';
             exit(EXIT_FAILURE);
@@ -94,7 +100,8 @@ read(std::istream& is) {
 
 void
 ReadGroupStatsSet::
-write(std::ostream& os) const {
+write(std::ostream& os) const
+{
     const unsigned n_groups(_group.size());
     for (unsigned i(0); i<n_groups; ++i)
     {

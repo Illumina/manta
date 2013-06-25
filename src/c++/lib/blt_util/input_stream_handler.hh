@@ -31,7 +31,8 @@
 #include <utility>
 
 
-namespace INPUT_TYPE {
+namespace INPUT_TYPE
+{
 enum index_t { NONE, READ };
 }
 
@@ -39,11 +40,13 @@ struct input_stream_hander;
 
 /// all inputs to be merged are registered to
 /// this object first
-struct input_stream_data {
+struct input_stream_data
+{
 
     void
     register_reads(bam_streamer& bs,
-                   const int sample_no = 0) {
+                   const int sample_no = 0)
+    {
         if (_reads.test_key(sample_no)) register_error("reads",sample_no);
         _reads.insert(sample_no,&bs);
     }
@@ -64,7 +67,8 @@ private:
 
 
 
-struct input_record_info {
+struct input_record_info
+{
 
     input_record_info(const pos_t p = 0,
                       const INPUT_TYPE::index_t t = INPUT_TYPE::NONE,
@@ -77,13 +81,17 @@ struct input_record_info {
     // priority_queue
     //
     bool
-    operator<(const input_record_info& rhs) const {
+    operator<(const input_record_info& rhs) const
+    {
         if (pos > rhs.pos) return true;
-        if (pos == rhs.pos) {
+        if (pos == rhs.pos)
+        {
             if (itype < rhs.itype) return true;
-            if (itype==rhs.itype) {
+            if (itype==rhs.itype)
+            {
                 if (sample_no > rhs.sample_no) return true;
-                if (sample_no == rhs.sample_no) {
+                if (sample_no == rhs.sample_no)
+                {
                     return (_order > rhs._order);
                 }
             }
@@ -91,7 +99,8 @@ struct input_record_info {
         return false;
     }
 
-    unsigned get_order() const {
+    unsigned get_order() const
+    {
         return _order;
     }
 
@@ -112,7 +121,8 @@ private:
 // in positional order (but with offsets for vcfs to
 // run ahead of the bam reads)
 //
-struct input_stream_handler {
+struct input_stream_handler
+{
 
     input_stream_handler(
         const input_stream_data& data);
@@ -120,12 +130,14 @@ struct input_stream_handler {
     bool next();
 
     input_record_info
-    get_current() const {
+    get_current() const
+    {
         return _current;
     }
 
     pos_t
-    get_head_pos() const {
+    get_head_pos() const
+    {
         return _head_pos;
     }
 

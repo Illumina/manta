@@ -19,7 +19,8 @@
 BOOST_AUTO_TEST_SUITE( test_bam_header_util )
 
 
-BOOST_AUTO_TEST_CASE( test_parse_bam_region ) {
+BOOST_AUTO_TEST_CASE( test_parse_bam_region )
+{
 
     bam_header_info header;
 

@@ -72,27 +72,34 @@ parseESLOptions(const manta::Program& prog,
 
     bool po_parse_fail(false);
     po::variables_map vm;
-    try {
+    try
+    {
         po::store(po::parse_command_line(argc, argv, visible,
                                          po::command_line_style::unix_style ^ po::command_line_style::allow_short), vm);
         po::notify(vm);
-    } catch (const boost::program_options::error& e) { // todo:: find out what is the more specific exception class thrown by program options
+    }
+    catch (const boost::program_options::error& e)     // todo:: find out what is the more specific exception class thrown by program options
+    {
         log_os << "\nERROR: Exception thrown by option parser: " << e.what() << "\n";
         po_parse_fail=true;
     }
 
-    if ((argc<=1) || (vm.count("help")) || po_parse_fail) {
+    if ((argc<=1) || (vm.count("help")) || po_parse_fail)
+    {
         usage(log_os,prog,visible);
     }
 
     // fast check of config state:
-    if (opt.alignmentFilename.empty()) {
+    if (opt.alignmentFilename.empty())
+    {
         usage(log_os,prog,visible,"Must specify at least one input alignment file");
     }
-    if (opt.statsFilename.empty()) {
+    if (opt.statsFilename.empty())
+    {
         usage(log_os,prog,visible,"Must specify alignment statistics file");
     }
-    if (opt.outputFilename.empty()) {
+    if (opt.outputFilename.empty())
+    {
         usage(log_os,prog,visible,"Must specify a graph output file");
     }
 }

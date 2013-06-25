@@ -18,12 +18,14 @@
 
 #include "manta/version.hh"
 
-namespace manta {
+namespace manta
+{
 
 /// base-class for all command-line programs
 ///
 /// this is used to standardize bottom-level exception handling
-struct Program {
+struct Program
+{
 
     virtual
     ~Program() {}
@@ -36,7 +38,8 @@ struct Program {
     name() const = 0;
 
     const char*
-    version() const {
+    version() const
+    {
         return manta::getFullVersion();
     }
 

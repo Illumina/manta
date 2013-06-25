@@ -30,9 +30,11 @@ std::string _cmdline;
 
 
 void
-blt_sig_handler (int sig) {
+blt_sig_handler (int sig)
+{
 
-    switch (sig) {
+    switch (sig)
+    {
     case SIGTERM:
         log_os << "ERROR: " << _progname << " received termination signal. cmdline: " << _cmdline << std::endl;
         exit(EXIT_FAILURE);
@@ -51,7 +53,8 @@ blt_sig_handler (int sig) {
 
 void
 initialize_blt_signals(const char* progname,
-                       const char* cmdline) {
+                       const char* cmdline)
+{
 
     _progname=progname;
     _cmdline=cmdline;

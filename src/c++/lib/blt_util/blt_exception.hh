@@ -22,13 +22,15 @@
 #include <string>
 
 /// \brief a minimal exception class
-struct blt_exception : public std::exception {
+struct blt_exception : public std::exception
+{
 
     blt_exception(const char* s);
 
     ~blt_exception() throw() {}
 
-    const char* what() const throw() {
+    const char* what() const throw()
+    {
         return message.c_str();
     }
 

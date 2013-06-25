@@ -31,7 +31,8 @@
 static
 void
 parse_exception(const char* type_label,
-                const char* parse_str) {
+                const char* parse_str)
+{
 
     std::ostringstream oss;
     oss << "ERROR: Can't parse " << type_label << " from string: '" << parse_str << "'";
@@ -39,11 +40,14 @@ parse_exception(const char* type_label,
 }
 
 
-namespace illumina {
-namespace blt_util {
+namespace illumina
+{
+namespace blt_util
+{
 
 unsigned
-parse_unsigned(const char*& s) {
+parse_unsigned(const char*& s)
+{
 
     static const int base(10);
 
@@ -52,11 +56,13 @@ parse_unsigned(const char*& s) {
     char* endptr;
     const unsigned long val(strtoul(s, &endptr, base));
     if ((errno == ERANGE && (val == ULONG_MAX || val == 0))
-        || (errno != 0 && val == 0) || (endptr == s)) {
+        || (errno != 0 && val == 0) || (endptr == s))
+    {
         parse_exception("unsigned long",s);
     }
 
-    if (val > std::numeric_limits<unsigned>::max()) {
+    if (val > std::numeric_limits<unsigned>::max())
+    {
         parse_exception("unsigned",s);
     }
 
@@ -68,10 +74,12 @@ parse_unsigned(const char*& s) {
 
 
 unsigned
-parse_unsigned_str(const std::string& s) {
+parse_unsigned_str(const std::string& s)
+{
     const char* s2(s.c_str());
     const unsigned val(parse_unsigned(s2));
-    if ((s2-s.c_str())!=static_cast<int>(s.length())) {
+    if ((s2-s.c_str())!=static_cast<int>(s.length()))
+    {
         parse_exception("unsigned",s.c_str());
     }
     return val;
@@ -80,12 +88,14 @@ parse_unsigned_str(const std::string& s) {
 
 
 int
-parse_int(const char*& s) {
+parse_int(const char*& s)
+{
 
     const char* endptr(s);
     const long val(parse_long(endptr));
 
-    if (val > std::numeric_limits<int>::max()) {
+    if (val > std::numeric_limits<int>::max())
+    {
         parse_exception("int",s);
     }
 
@@ -97,10 +107,12 @@ parse_int(const char*& s) {
 
 
 int
-parse_int_str(const std::string& s) {
+parse_int_str(const std::string& s)
+{
     const char* s2(s.c_str());
     const int val(parse_int(s2));
-    if ((s2-s.c_str())!=static_cast<int>(s.length())) {
+    if ((s2-s.c_str())!=static_cast<int>(s.length()))
+    {
         parse_exception("int",s.c_str());
     }
     return val;
@@ -109,7 +121,8 @@ parse_int_str(const std::string& s) {
 
 
 long
-parse_long(const char*& s) {
+parse_long(const char*& s)
+{
 
     static const int base(10);
 
@@ -118,7 +131,8 @@ parse_long(const char*& s) {
     char* endptr;
     const long val(strtol(s, &endptr, base));
     if ((errno == ERANGE && (val == LONG_MIN || val == LONG_MAX))
-        || (errno != 0 && val == 0) || (endptr == s)) {
+        || (errno != 0 && val == 0) || (endptr == s))
+    {
         parse_exception("long int",s);
     }
 
@@ -130,10 +144,12 @@ parse_long(const char*& s) {
 
 
 long
-parse_long_str(const std::string& s) {
+parse_long_str(const std::string& s)
+{
     const char* s2(s.c_str());
     const long val(parse_long(s2));
-    if ((s2-s.c_str())!=static_cast<int>(s.length())) {
+    if ((s2-s.c_str())!=static_cast<int>(s.length()))
+    {
         parse_exception("long int",s.c_str());
     }
     return val;
@@ -142,13 +158,15 @@ parse_long_str(const std::string& s) {
 
 
 double
-parse_double(const char*& s) {
+parse_double(const char*& s)
+{
 
     errno = 0;
 
     char* endptr;
     const double val(strtod(s, &endptr));
-    if ((errno == ERANGE) || (endptr == s)) {
+    if ((errno == ERANGE) || (endptr == s))
+    {
         parse_exception("double",s);
     }
 
@@ -159,10 +177,12 @@ parse_double(const char*& s) {
 
 
 double
-parse_double_str(const std::string& s) {
+parse_double_str(const std::string& s)
+{
     const char* s2(s.c_str());
     const double val(parse_double(s2));
-    if ((s2-s.c_str())!=static_cast<int>(s.length())) {
+    if ((s2-s.c_str())!=static_cast<int>(s.length()))
+    {
         parse_exception("double",s.c_str());
     }
     return val;

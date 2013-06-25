@@ -23,8 +23,10 @@
 #include <string>
 
 
-namespace illumina {
-namespace blt_util {
+namespace illumina
+{
+namespace blt_util
+{
 
 /// parse TYPE from char* with several error checks, and advance
 /// pointer to end of TYPE input
@@ -64,7 +66,8 @@ parse_double_str(const std::string& s);
 ///
 template <typename T>
 T
-parse_type(const char*&) {
+parse_type(const char*&)
+{
     // no scan_string available for type:
     BOOST_STATIC_ASSERT(sizeof(T)==0);
     return T();
@@ -74,28 +77,32 @@ parse_type(const char*&) {
 template <>
 inline
 unsigned
-parse_type<unsigned>(const char*& s) {
+parse_type<unsigned>(const char*& s)
+{
     return parse_unsigned(s);
 }
 
 template <>
 inline
 int
-parse_type<int>(const char*& s) {
+parse_type<int>(const char*& s)
+{
     return parse_int(s);
 }
 
 template <>
 inline
 long
-parse_type<long>(const char*& s) {
+parse_type<long>(const char*& s)
+{
     return parse_long(s);
 }
 
 template <>
 inline
 double
-parse_type<double>(const char*& s) {
+parse_type<double>(const char*& s)
+{
     return parse_double(s);
 }
 

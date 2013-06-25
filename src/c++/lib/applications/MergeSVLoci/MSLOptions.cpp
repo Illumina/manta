@@ -77,7 +77,8 @@ parseMSLOptions(const manta::Program& prog,
         po::notify(vm);
     }
     catch (const boost::program_options::error& e)
-    {   // todo:: find out what is the more specific exception class thrown by program options
+    {
+        // todo:: find out what is the more specific exception class thrown by program options
         log_os << "\nERROR: Exception thrown by option parser: " << e.what() << "\n";
         po_parse_fail=true;
     }

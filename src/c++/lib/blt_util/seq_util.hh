@@ -28,8 +28,10 @@
 
 #include <iterator>
 
-namespace BASE_ID {
-enum index_t {
+namespace BASE_ID
+{
+enum index_t
+{
     A,
     C,
     G,
@@ -46,9 +48,11 @@ base_error(const char* func,
 
 inline
 uint8_t
-base_to_id(const char a) {
+base_to_id(const char a)
+{
     using namespace BASE_ID;
-    switch (a) {
+    switch (a)
+    {
     case 'A':
         return A;
     case 'C':
@@ -68,11 +72,13 @@ base_to_id(const char a) {
 inline
 uint8_t
 bam_seq_code_to_id(const uint8_t a,
-                   const uint8_t ref = BAM_BASE::ANY) {
+                   const uint8_t ref = BAM_BASE::ANY)
+{
 
     using namespace BAM_BASE;
 
-    switch (a) {
+    switch (a)
+    {
     case REF:
         return bam_seq_code_to_id(ref);
     case A:
@@ -96,7 +102,8 @@ id_to_base_error(const uint8_t i);
 
 inline
 char
-id_to_base(const uint8_t i) {
+id_to_base(const uint8_t i)
+{
     static const char base[] = "ACGTN";
 
     if (i>N_BASE) id_to_base_error(i);
@@ -108,8 +115,10 @@ id_to_base(const uint8_t i) {
 /// valid in the ELAND sense [ACGTN]
 inline
 bool
-is_valid_base(char a) {
-    switch (a) {
+is_valid_base(char a)
+{
+    switch (a)
+    {
     case 'A':
     case 'C':
     case 'G':
@@ -123,8 +132,10 @@ is_valid_base(char a) {
 
 inline
 bool
-is_iupac_base(char a) {
-    switch (a) {
+is_iupac_base(char a)
+{
+    switch (a)
+    {
     case 'A':
     case 'C':
     case 'G':
@@ -155,8 +166,10 @@ is_valid_seq(const char* seq);
 
 inline
 char
-elandize_base(char a) {
-    switch (a) {
+elandize_base(char a)
+{
+    switch (a)
+    {
     case 'A':
         return 'A';
     case 'C':
@@ -188,8 +201,10 @@ elandize_base(char a) {
 
 inline
 char
-comp_base(char a) {
-    switch (a) {
+comp_base(char a)
+{
+    switch (a)
+    {
     case 'A':
         return 'T';
     case 'C':
@@ -210,11 +225,15 @@ inline
 char
 get_seq_base(const char* seq,
              const pos_t size,
-             const pos_t pos) {
+             const pos_t pos)
+{
 
-    if ((pos<0) || (pos>=size)) {
+    if ((pos<0) || (pos>=size))
+    {
         return 'N';
-    } else {
+    }
+    else
+    {
         return seq[pos];
     }
 }
@@ -222,7 +241,8 @@ get_seq_base(const char* seq,
 inline
 char
 get_seq_base(const std::string& seq,
-             const pos_t pos) {
+             const pos_t pos)
+{
 
     return get_seq_base(seq.c_str(),seq.size(),pos);
 }
@@ -231,10 +251,13 @@ get_seq_base(const std::string& seq,
 //
 template <typename Iter>
 void
-reverseComp(Iter b,Iter e) {
+reverseComp(Iter b,Iter e)
+{
     char t;
-    for (; b!=e; ++b) {
-        if ((--e)==b) {
+    for (; b!=e; ++b)
+    {
+        if ((--e)==b)
+        {
             *b=comp_base(*b);
             break;
         }
@@ -247,13 +270,15 @@ reverseComp(Iter b,Iter e) {
 // easy string version:
 inline
 void
-reverseCompStr(std::string& seq) {
+reverseCompStr(std::string& seq)
+{
     reverseComp(seq.begin(),seq.end());
 }
 
 
 template <typename T> void fixCstring(T) {}
-inline void fixCstring(char* b) {
+inline void fixCstring(char* b)
+{
     *b='\0';
 }
 
@@ -262,8 +287,10 @@ inline void fixCstring(char* b) {
 //
 template <typename ConstIter,typename Iter>
 void
-reverseCompCopy(ConstIter cb,ConstIter ce,Iter b) {
-    while (cb!=ce) {
+reverseCompCopy(ConstIter cb,ConstIter ce,Iter b)
+{
+    while (cb!=ce)
+    {
         *b++ = comp_base(*--ce);
     }
     fixCstring(b);
@@ -272,7 +299,8 @@ reverseCompCopy(ConstIter cb,ConstIter ce,Iter b) {
 // easy char*->string version:
 inline
 std::string
-reverseCompCopyCStr(const char* str) {
+reverseCompCopyCStr(const char* str)
+{
     std::string result;
     reverseCompCopy(str,str+strlen(str),
                     std::back_insert_iterator<std::string>(result));
@@ -282,7 +310,8 @@ reverseCompCopyCStr(const char* str) {
 // easy string->string version:
 inline
 std::string
-reverseCompCopyStr(const std::string& seq) {
+reverseCompCopyStr(const std::string& seq)
+{
     std::string result;
     reverseCompCopy(seq.begin(),seq.end(),
                     std::back_insert_iterator<std::string>(result));
@@ -308,7 +337,8 @@ standardize_ref_seq(const char* ref_seq_file,
 inline
 void
 standardize_ref_seq(const char* ref_seq_file,
-                    std::string& ref_seq) {
+                    std::string& ref_seq)
+{
     standardize_ref_seq(ref_seq_file,NULL,ref_seq,0);
 }
 

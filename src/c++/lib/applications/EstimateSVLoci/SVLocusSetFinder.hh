@@ -30,7 +30,8 @@
 
 // estimate an SVLocusSet
 //
-struct SVLocusSetFinder {
+struct SVLocusSetFinder
+{
 
     explicit
     SVLocusSetFinder(const ESLOptions& opt);
@@ -57,7 +58,8 @@ struct SVLocusSetFinder {
 
 private:
 
-    struct CachedReadGroupStats {
+    struct CachedReadGroupStats
+    {
         CachedReadGroupStats() :
             min(0),
             max(0)

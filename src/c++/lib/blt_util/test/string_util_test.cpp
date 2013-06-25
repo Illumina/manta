@@ -21,7 +21,8 @@ static const char* test_string("234562342");
 
 template <typename T>
 void
-test_split_string_bytype(T test) {
+test_split_string_bytype(T test)
+{
     std::vector<std::string> result;
 
     split_string(test,'2',result);
@@ -39,16 +40,19 @@ test_split_string_bytype(T test) {
     BOOST_REQUIRE_EQUAL(result[0], "");
 }
 
-BOOST_AUTO_TEST_CASE( test_split_string_cstr ) {
+BOOST_AUTO_TEST_CASE( test_split_string_cstr )
+{
     test_split_string_bytype(test_string);
 }
 
-BOOST_AUTO_TEST_CASE( test_split_string ) {
+BOOST_AUTO_TEST_CASE( test_split_string )
+{
     const std::string test(test_string);
     test_split_string_bytype(test);
 }
 
-BOOST_AUTO_TEST_CASE( test_split_match ) {
+BOOST_AUTO_TEST_CASE( test_split_match )
+{
     const std::string test(test_string);
 
     BOOST_REQUIRE(split_match(test,'2',"34"));

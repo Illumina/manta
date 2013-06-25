@@ -30,7 +30,8 @@
 
 static
 void
-runDSL(const DSLOptions& opt) {
+runDSL(const DSLOptions& opt)
+{
 
     SVLocusSet set;
     set.load(opt.graphFilename.c_str());
@@ -69,7 +70,8 @@ runDSL(const DSLOptions& opt) {
 
 void
 DumpSVLoci::
-runInternal(int argc, char* argv[]) const {
+runInternal(int argc, char* argv[]) const
+{
 
     DSLOptions opt;
 

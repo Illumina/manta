@@ -26,7 +26,8 @@
 
 static
 void
-runSSL(const SSLOptions& opt) {
+runSSL(const SSLOptions& opt)
+{
 
     SVLocusSet set;
 
@@ -41,7 +42,8 @@ runSSL(const SSLOptions& opt) {
 
 void
 SummarizeSVLoci::
-runInternal(int argc, char* argv[]) const {
+runInternal(int argc, char* argv[]) const
+{
 
     SSLOptions opt;
 

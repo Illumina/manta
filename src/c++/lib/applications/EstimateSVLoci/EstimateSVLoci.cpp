@@ -34,7 +34,8 @@
 
 static
 void
-runESL(const ESLOptions& opt) {
+runESL(const ESLOptions& opt)
+{
 
     {
         // early test that we have permission to write to output file
@@ -95,7 +96,8 @@ runESL(const ESLOptions& opt) {
 
 void
 EstimateSVLoci::
-runInternal(int argc, char* argv[]) const {
+runInternal(int argc, char* argv[]) const
+{
 
     ESLOptions opt;
 

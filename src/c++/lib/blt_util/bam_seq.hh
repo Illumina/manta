@@ -29,8 +29,10 @@
 #include <string>
 
 
-namespace BAM_BASE {
-enum index_t {
+namespace BAM_BASE
+{
+enum index_t
+{
     REF = 0x0,
     A = 0x1,
     C = 0x2,
@@ -43,11 +45,13 @@ enum index_t {
 
 inline
 char
-get_bam_seq_char(const uint8_t a) {
+get_bam_seq_char(const uint8_t a)
+{
 
     using namespace BAM_BASE;
 
-    switch (a) {
+    switch (a)
+    {
     case REF:
         return '=';
     case A:
@@ -66,11 +70,13 @@ get_bam_seq_char(const uint8_t a) {
 
 inline
 uint8_t
-get_bam_seq_code(const char c) {
+get_bam_seq_code(const char c)
+{
 
     using namespace BAM_BASE;
 
-    switch (c) {
+    switch (c)
+    {
     case '=':
         return REF;
     case 'A':
@@ -91,7 +97,8 @@ get_bam_seq_code(const char c) {
 // sequences from bam files and regular strings using the same
 // object:
 //
-struct bam_seq_base {
+struct bam_seq_base
+{
 
     virtual ~bam_seq_base() {}
 
@@ -103,7 +110,8 @@ struct bam_seq_base {
 
 protected:
     bool
-    is_in_range(const pos_t i) const {
+    is_in_range(const pos_t i) const
+    {
         return ((i>=0) && (i<static_cast<pos_t>(size())));
     }
 };
@@ -113,7 +121,8 @@ std::ostream& operator<<(std::ostream& os, const bam_seq_base& bs);
 
 //
 //
-struct bam_seq : public bam_seq_base {
+struct bam_seq : public bam_seq_base
+{
 
     bam_seq(const uint8_t* s,
             const uint16_t init_size,
@@ -124,24 +133,28 @@ struct bam_seq : public bam_seq_base {
     bam_seq(const bam_seq bs,
             const uint16_t size,
             const uint16_t offset=0)
-        : _s(bs.s), _size(size), _offset(bs.offset+offset) {
+        : _s(bs.s), _size(size), _offset(bs.offset+offset)
+    {
         assert((offset+size)<=bs.size);
     }
 #endif
 
     uint8_t
-    get_code(pos_t i) const {
+    get_code(pos_t i) const
+    {
         if (! is_in_range(i)) return BAM_BASE::ANY;
         i += static_cast<pos_t>(_offset);
         return _s[(i/2)] >> 4*(1-(i%2)) & 0xf;
     }
 
     char
-    get_char(const pos_t i) const {
+    get_char(const pos_t i) const
+    {
         return get_bam_seq_char(get_code(i));
     }
 
-    unsigned size() const {
+    unsigned size() const
+    {
         return _size;
     }
 
@@ -154,7 +167,8 @@ private:
 
 //
 //
-struct string_bam_seq : public bam_seq_base {
+struct string_bam_seq : public bam_seq_base
+{
 
     string_bam_seq(const std::string& s)
         : _s(s.c_str()), _size(s.size()) {}
@@ -164,17 +178,20 @@ struct string_bam_seq : public bam_seq_base {
         : _s(s), _size(init_size) {}
 
     uint8_t
-    get_code(pos_t i) const {
+    get_code(pos_t i) const
+    {
         return get_bam_seq_code(get_char(i));
     }
 
     char
-    get_char(const pos_t i) const {
+    get_char(const pos_t i) const
+    {
         if (! is_in_range(i)) return 'N';
         return _s[i];
     }
 
-    unsigned size() const {
+    unsigned size() const
+    {
         return _size;
     }
 
@@ -186,23 +203,27 @@ private:
 
 //
 //
-struct rc_segment_bam_seq : public bam_seq_base {
+struct rc_segment_bam_seq : public bam_seq_base
+{
 
     rc_segment_bam_seq(const reference_contig_segment& r)
         : _r(r)
     {}
 
     uint8_t
-    get_code(pos_t i) const {
+    get_code(pos_t i) const
+    {
         return get_bam_seq_code(get_char(i));
     }
 
     char
-    get_char(const pos_t i) const {
+    get_char(const pos_t i) const
+    {
         return _r.get_base(i);
     }
 
-    unsigned size() const {
+    unsigned size() const
+    {
         return _r.end();
     }
 

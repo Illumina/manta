@@ -68,7 +68,8 @@ private:
                          const T&) = 0;
 
     void
-    register_notifier(const notifier<T>* n) const {
+    register_notifier(const notifier<T>* n) const
+    {
         _nots.insert(n);
     }
 
@@ -86,7 +87,8 @@ private:
 
 
 template <typename T>
-struct notifier {
+struct notifier
+{
     friend struct observer<T>;
 
     typedef notifier self_t;
@@ -142,7 +144,8 @@ private:
     }
 
     void
-    register_observer(observer<T>* n) const {
+    register_observer(observer<T>* n) const
+    {
         _obss.insert(n);
     }
 

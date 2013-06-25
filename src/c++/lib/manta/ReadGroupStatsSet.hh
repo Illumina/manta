@@ -25,7 +25,8 @@
 
 /// \brief manages multiple read_group_stats
 ///
-struct ReadGroupStatsSet {
+struct ReadGroupStatsSet
+{
 
     /// \brief get the index of a read group
     ///
@@ -38,20 +39,23 @@ struct ReadGroupStatsSet {
     /// for now, a "read group" is fixed to the name of
     /// each bam file
     boost::optional<unsigned>
-    getGroupIndex(const std::string& bam_file) const {
+    getGroupIndex(const std::string& bam_file) const
+    {
         return _group.get_optional_id(bam_file);
     }
 
     /// get stats associated with index
     const ReadGroupStats&
-    getStats(const unsigned group_index) const {
+    getStats(const unsigned group_index) const
+    {
         return _group.get_value(group_index);
     }
 
     /// set stats for index
     void
     setStats(const std::string& bam_file,
-             const ReadGroupStats& rps) {
+             const ReadGroupStats& rps)
+    {
         _group.insert(bam_file,rps);
     }
 
@@ -69,7 +73,8 @@ struct ReadGroupStatsSet {
 
 private:
     void
-    clear() {
+    clear()
+    {
         _group.clear();
     }
 

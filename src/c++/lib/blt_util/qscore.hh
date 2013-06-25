@@ -28,32 +28,37 @@
 
 template <typename FloatType>
 int
-error_prob_to_qphred(const FloatType prob) {
+error_prob_to_qphred(const FloatType prob)
+{
     static const FloatType minlog10(static_cast<FloatType>(std::numeric_limits<FloatType>::min_exponent10));
     return static_cast<int>(std::floor(-10.*std::max(minlog10,std::log10(prob))+0.5));
 }
 
 inline
 double
-phred_to_error_prob(const double val) {
+phred_to_error_prob(const double val)
+{
     return std::pow(10.,-val/10.);
 }
 
 inline
 double
-qphred_to_error_prob(const int qscore) {
+qphred_to_error_prob(const int qscore)
+{
     return qphred_cache::get_error_prob(qscore);
 }
 
 inline
 double
-qphred_to_ln_comp_error_prob(const int qscore) {
+qphred_to_ln_comp_error_prob(const int qscore)
+{
     return qphred_cache::get_ln_comp_error_prob(qscore);
 }
 
 inline
 double
-qphred_to_ln_error_prob(const int qscore) {
+qphred_to_ln_error_prob(const int qscore)
+{
     return qphred_cache::get_ln_error_prob(qscore);
 }
 
@@ -63,7 +68,8 @@ qphred_to_ln_error_prob(const int qscore) {
 inline
 double
 phred_to_mapped_error_prob(const double basecall_val,
-                           const double mapping_val) {
+                           const double mapping_val)
+{
     const double be(phred_to_error_prob(basecall_val));
     const double me(phred_to_error_prob(mapping_val));
     return ((1.-me)*be)+(me*0.75);
@@ -72,7 +78,8 @@ phred_to_mapped_error_prob(const double basecall_val,
 inline
 int
 qphred_to_mapped_qphred(const int basecall_val,
-                        const int mapping_val) {
+                        const int mapping_val)
+{
     return qphred_cache::get_mapped_qscore(basecall_val,mapping_val);
 }
 
@@ -80,30 +87,37 @@ qphred_to_mapped_qphred(const int basecall_val,
 // logodds aka solexa:
 inline
 int
-error_prob_to_qlogodds(const double prob) {
+error_prob_to_qlogodds(const double prob)
+{
     static const double maxlog10(static_cast<double>(std::numeric_limits<double>::max_exponent10));
     return static_cast<int>(std::floor(10.*std::min(maxlog10,std::log10((1.-prob)/prob))+0.5));
 }
 
 inline
 double
-logodds_to_error_prob(const double val) {
+logodds_to_error_prob(const double val)
+{
     return 1./(1.+std::pow(10.,val/10.));
 }
 
 inline
 double
-qlogodds_to_error_prob(const int qscore) {
+qlogodds_to_error_prob(const int qscore)
+{
     return qlogodds_cache::get_error_prob(qscore);
 }
 
 inline
 int
 error_prob_to_qscore(const double prob,
-                     const bool is_qphred) {
-    if (is_qphred) {
+                     const bool is_qphred)
+{
+    if (is_qphred)
+    {
         return error_prob_to_qphred(prob);
-    } else {
+    }
+    else
+    {
         return error_prob_to_qlogodds(prob);
     }
 }
@@ -111,10 +125,14 @@ error_prob_to_qscore(const double prob,
 inline
 double
 qscore_to_error_prob(const int qscore,
-                     const bool is_qphred) {
-    if (is_qphred) {
+                     const bool is_qphred)
+{
+    if (is_qphred)
+    {
         return qphred_to_error_prob(qscore);
-    } else {
+    }
+    else
+    {
         return qlogodds_to_error_prob(qscore);
     }
 }

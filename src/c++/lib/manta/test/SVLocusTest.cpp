@@ -23,7 +23,8 @@
 
 BOOST_AUTO_TEST_SUITE( test_SVLocus )
 
-BOOST_AUTO_TEST_CASE( test_GenomeInterval ) {
+BOOST_AUTO_TEST_CASE( test_GenomeInterval )
+{
 
     // test that GenomeInterval sorting follows expect:
     std::vector<GenomeInterval> test;
@@ -42,7 +43,8 @@ BOOST_AUTO_TEST_CASE( test_GenomeInterval ) {
 }
 
 
-BOOST_AUTO_TEST_CASE( test_SVLocus1 ) {
+BOOST_AUTO_TEST_CASE( test_SVLocus1 )
+{
 
     // construct a simple two-node locus
     SVLocus locus1;
@@ -59,7 +61,8 @@ BOOST_AUTO_TEST_CASE( test_SVLocus1 ) {
 }
 
 
-BOOST_AUTO_TEST_CASE( test_SVLocusNodeMerge) {
+BOOST_AUTO_TEST_CASE( test_SVLocusNodeMerge)
+{
     SVLocus locus1;
     NodeIndexType nodePtr1 = locus1.addNode(1,10,20);
     NodeIndexType nodePtr2 = locus1.addNode(1,15,25);
@@ -74,7 +77,8 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeMerge) {
 }
 
 
-BOOST_AUTO_TEST_CASE( test_SVLocusClearEdges ) {
+BOOST_AUTO_TEST_CASE( test_SVLocusClearEdges )
+{
 
     // construct a diamond four-node locus
     //

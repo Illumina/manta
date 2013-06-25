@@ -15,6 +15,7 @@
 
 
 int
-main(int argc, char* argv[]) {
+main(int argc, char* argv[])
+{
     return EstimateSVLoci().run(argc,argv);
 }

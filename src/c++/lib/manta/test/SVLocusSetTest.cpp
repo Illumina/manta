@@ -39,7 +39,8 @@ testOverlap(
 
 
 
-BOOST_AUTO_TEST_CASE( test_SVLocusIntersect ) {
+BOOST_AUTO_TEST_CASE( test_SVLocusIntersect )
+{
 
     // construct a simple two-node locus
     SVLocus locus1;
@@ -70,7 +71,8 @@ BOOST_AUTO_TEST_CASE( test_SVLocusIntersect ) {
 
 
 
-BOOST_AUTO_TEST_CASE( test_SVLocusMerge ) {
+BOOST_AUTO_TEST_CASE( test_SVLocusMerge )
+{
 
     // test merge of overlapping loci
 
@@ -95,7 +97,8 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMerge ) {
 
 
 
-BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge ) {
+BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge )
+{
 
     // test merge of overlapping loci, reproduces production failure
 
@@ -141,7 +144,8 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge ) {
 
 
 
-BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge2 ) {
+BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge2 )
+{
 
     // test merge of overlapping loci, reproduces production failure
 
@@ -176,7 +180,8 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge2 ) {
 
 
 
-BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge3 ) {
+BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge3 )
+{
 
     // test merge of overlapping loci, reproduces production failure
 
@@ -217,7 +222,8 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge3 ) {
 
 
 
-BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge4 ) {
+BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge4 )
+{
 
     // test merge of overlapping loci, reproduces production failure
 
@@ -249,7 +255,8 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge4 ) {
 
 
 
-BOOST_AUTO_TEST_CASE( test_SVLocusCombine ) {
+BOOST_AUTO_TEST_CASE( test_SVLocusCombine )
+{
 
     // test reassigning the locus numbers of non-overlapping loci in a set:
 

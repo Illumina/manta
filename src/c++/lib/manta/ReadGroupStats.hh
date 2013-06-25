@@ -25,8 +25,10 @@
 #include "boost/optional.hpp"
 
 
-struct PairStatSet {
-    PairStatSet() {
+struct PairStatSet
+{
+    PairStatSet()
+    {
         clear();
     }
 
@@ -47,7 +49,8 @@ struct PairStatSet {
     ///
     /// remainder of interface for estimation, store/read from disk
     ///
-    void clear() {
+    void clear()
+    {
         median = 0.;
         sd = 0.;
     }
@@ -65,7 +68,8 @@ operator<<(std::ostream& os, const PairStatSet& pss);
 // Read pair insert stats can be computed for each sample or read group, this
 // class represents the statistics for one group:
 //
-struct ReadGroupStats {
+struct ReadGroupStats
+{
 
     ReadGroupStats() {}
     ReadGroupStats(const std::string& bamFile);
@@ -76,7 +80,8 @@ struct ReadGroupStats {
 
 private:
     // These data are used temporarily during ReadPairStats estimation
-    struct PairStatsData {
+    struct PairStatsData
+    {
         std::vector<int32_t> fragmentLengths;
     };
 
