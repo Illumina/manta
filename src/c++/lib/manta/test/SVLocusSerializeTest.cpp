@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSerialze )
     bool isMatchFound(false);
     BOOST_FOREACH(const SVLocusNode& node, locus1_copy)
     {
-        if(node.interval == (locus1.begin())->interval) isMatchFound=true;
+        if (node.interval == (locus1.begin())->interval) isMatchFound=true;
     }
     BOOST_REQUIRE(isMatchFound);
 }

@@ -112,10 +112,10 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
     // debug output
     void
     dumpRegion(
-            std::ostream& os,
-            const int32_t tid,
-            const int32_t beginPos,
-            const int32_t endPos);
+        std::ostream& os,
+        const int32_t tid,
+        const int32_t beginPos,
+        const int32_t endPos);
 
     // dump stats on each locus in tsv format:
     void
@@ -143,8 +143,8 @@ private:
             const NodeAddressType& a,
             const NodeAddressType& b) const
         {
-            if(getInterval(a)<getInterval(b)) return true;
-            if(getInterval(a)==getInterval(b))
+            if (getInterval(a)<getInterval(b)) return true;
+            if (getInterval(a)==getInterval(b))
             {
                 return (a<b);
             }
@@ -192,26 +192,26 @@ private:
     /// the inputNode
     void
     getNodeIntersect(
-            const LocusIndexType locusIndex,
-            const NodeIndexType nodeIndex,
-            LocusSetIndexerType& intersect);
+        const LocusIndexType locusIndex,
+        const NodeIndexType nodeIndex,
+        LocusSetIndexerType& intersect);
 
     /// get all nodes in this object which intersect with
     /// a external node
     void
     getRegionIntersect(
-            const int32_t tid,
-            const int32_t beginPos,
-            const int32_t endPos,
-            LocusSetIndexerType& intersect);
+        const int32_t tid,
+        const int32_t beginPos,
+        const int32_t endPos,
+        LocusSetIndexerType& intersect);
 
     /// assign all intersect clusters to the lowest index number that is not startLocusIndex
     ///
     void
     moveIntersectToLowIndex(
-            LocusSetIndexerType& intersect,
-            const LocusIndexType startLocusIndex,
-            LocusIndexType& locusIndex);
+        LocusSetIndexerType& intersect,
+        const LocusIndexType startLocusIndex,
+        LocusIndexType& locusIndex);
 
     /// combine all content from 'from' locus into 'to' locus
     ///
@@ -219,9 +219,9 @@ private:
     /// which combines two loci
     void
     combineLoci(
-            const LocusIndexType fromIndex,
-            const LocusIndexType toIndex,
-            const bool isClearSource = true);
+        const LocusIndexType fromIndex,
+        const LocusIndexType toIndex,
+        const bool isClearSource = true);
 
 
     // add locus to this locusSet (intermediate step in merging)
@@ -248,15 +248,15 @@ private:
     recieve_notification(const notifier<SVLocusNodeMoveMessage>&,
                          const SVLocusNodeMoveMessage& msg) {
 
-        if(msg.first)
-        {    // add
+        if (msg.first)
+        {   // add
 #ifdef DEBUG_SVL
             log_os << "SVLocusSetObserver: Adding node: " << msg.second.first << ":" << msg.second.second << "\n";
 #endif
             _inodes.insert(msg.second);
         }
         else
-        {    // delete
+        {   // delete
 #ifdef DEBUG_SVL
             log_os << "SVLocusSetObserver: Deleting node: " << msg.second.first << ":" << msg.second.second << "\n";
 #endif

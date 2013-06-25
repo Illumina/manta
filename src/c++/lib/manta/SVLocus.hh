@@ -80,9 +80,9 @@ struct GenomeInterval
     }
 
     template<class Archive>
-    void serialize(Archive & ar, const unsigned /* version */)
+    void serialize(Archive& ar, const unsigned /* version */)
     {
-        ar & tid & range;
+        ar& tid& range;
     }
 
     int32_t tid;
@@ -112,9 +112,9 @@ struct SVLocusEdge
     }
 
     template<class Archive>
-    void serialize(Archive & ar, const unsigned /* version */)
+    void serialize(Archive& ar, const unsigned /* version */)
     {
-        ar & count;
+        ar& count;
     }
 
     unsigned short count;
@@ -144,8 +144,8 @@ struct SVLocusNode
 
     // specialized copy ctor which offsets all address:
     SVLocusNode(
-            const SVLocusNode& in,
-            const unsigned offset) :
+        const SVLocusNode& in,
+        const unsigned offset) :
         count(in.count),
         interval(in.interval)
     {
@@ -186,9 +186,9 @@ struct SVLocusNode
     }
 
     template<class Archive>
-    void serialize(Archive & ar,const unsigned /* version */)
+    void serialize(Archive& ar,const unsigned /* version */)
     {
-        ar & count & interval & edges;
+        ar& count& interval& edges;
     }
 
     friend std::ostream&
@@ -330,8 +330,8 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
     // an edge count is only added on on from->to
     void
     linkNodes(
-            const NodeIndexType fromIndex,
-            const NodeIndexType toIndex)
+        const NodeIndexType fromIndex,
+        const NodeIndexType toIndex)
     {
         SVLocusNode& fromNode(getNode(fromIndex));
         SVLocusNode& toNode(getNode(toIndex));
@@ -367,8 +367,8 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
     ///
     void
     mergeNode(
-            const NodeIndexType fromIndex,
-            const NodeIndexType toIndex);
+        const NodeIndexType fromIndex,
+        const NodeIndexType toIndex);
 
     // remove node
     //
@@ -378,7 +378,7 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
     void
     clear()
     {
-        for(NodeIndexType i(0);i<size();++i) notifyDelete(i);
+        for (NodeIndexType i(0); i<size(); ++i) notifyDelete(i);
         _graph.clear();
     }
 
@@ -388,13 +388,13 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
     checkState() const;
 
     template<class Archive>
-    void save(Archive & ar, const unsigned /* version */) const
+    void save(Archive& ar, const unsigned /* version */) const
     {
         ar << _graph;
     }
 
     template<class Archive>
-    void load(Archive & ar, const unsigned /* version */)
+    void load(Archive& ar, const unsigned /* version */)
     {
         clear();
         ar >> _graph;
@@ -418,7 +418,7 @@ private:
     notifyAdd(const NodeIndexType nodePtr)
     {
 #ifdef DEBUG_SVL
-            log_os << "SVLocusNotifier: Add node: " << _index << ":" << nodePtr << "\n";
+        log_os << "SVLocusNotifier: Add node: " << _index << ":" << nodePtr << "\n";
 #endif
         notify_observers(std::make_pair(true,std::make_pair(_index,nodePtr)));
     }
@@ -427,7 +427,7 @@ private:
     notifyDelete(const NodeIndexType nodePtr)
     {
 #ifdef DEBUG_SVL
-            log_os << "SVLocusNotifier: Delete node: " << _index << ":" << nodePtr << "\n";
+        log_os << "SVLocusNotifier: Delete node: " << _index << ":" << nodePtr << "\n";
 #endif
         notify_observers(std::make_pair(false,std::make_pair(_index,nodePtr)));
     }

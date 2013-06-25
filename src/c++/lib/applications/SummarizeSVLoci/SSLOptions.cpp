@@ -56,7 +56,7 @@ parseSSLOptions(const manta::Program& prog,
     req.add_options()
     ("graph-file", po::value<std::string>(&opt.graphFilename),
      "sv locus graph file")
-     ;
+    ;
 
     po::options_description help("help");
     help.add_options()

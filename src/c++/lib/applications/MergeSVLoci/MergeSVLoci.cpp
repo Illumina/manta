@@ -36,12 +36,12 @@ runMSL(const MSLOptions& opt) {
 
     BOOST_FOREACH(const std::string& graphFile, opt.graphFilename)
     {
-        if(opt.isVerbose)
+        if (opt.isVerbose)
         {
             log_os << "INFO: Merging file: " << graphFile << "\n";
         }
 
-        if(mergedSet.empty())
+        if (mergedSet.empty())
         {
             mergedSet.load(graphFile.c_str());
         }
@@ -52,7 +52,7 @@ runMSL(const MSLOptions& opt) {
             mergedSet.merge(inputSet);
         }
 
-        if(opt.isVerbose)
+        if (opt.isVerbose)
         {
             log_os << "INFO: Finished merging file: " << graphFile << "\n";
         }

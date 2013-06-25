@@ -25,7 +25,7 @@
 
 SVLocusSetFinder::
 SVLocusSetFinder(const ESLOptions& opt)
-     : _opt(opt)
+    : _opt(opt)
 {
     // pull in insert stats:
     _rss.read(opt.statsFilename.c_str());
@@ -145,7 +145,7 @@ update(const bam_record& read,
         getChimericSVLocus(rstats,read,locus);
     }
 
-    if(! locus.empty())
+    if (! locus.empty())
     {
         _svLoci.merge(locus);
     }

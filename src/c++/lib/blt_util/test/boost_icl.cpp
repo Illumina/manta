@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE( boost_icl_test_map )
     {
         map_t::const_iterator begin(test_map.find(5));
         map_t::const_iterator end(test_map.find(7));
-        for(;begin!=end;++begin)
+        for (; begin!=end; ++begin)
         {
             std::cerr << "CCC" << begin->first;
             BOOST_FOREACH(const std::string& s, begin->second)
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE( boost_icl_test_map )
     {
         map_t::const_iterator begin(test_map.find(5));
         map_t::const_iterator end(test_map.find(7));
-        for(;begin!=end;++begin)
+        for (; begin!=end; ++begin)
         {
             std::cerr << "CCC" << begin->first;
             BOOST_FOREACH(const std::string& s, begin->second)

@@ -59,10 +59,10 @@ parseDSLOptions(const manta::Program& prog,
     ("region", po::value<std::string>(&opt.region),
      "list nodes in the specified region only. region in samtools format, eg. 'chr1:20-30' (optional)")
     ("locus-index", po::value(&opt.locusIndex),
-      "dump only the specified locus")
+     "dump only the specified locus")
     ("locus-file", po::value(&opt.locusFilename),
-      "Write a binary sv locus file if locus-index is specified")
-     ;
+     "Write a binary sv locus file if locus-index is specified")
+    ;
 
     po::options_description help("help");
     help.add_options()
@@ -90,14 +90,14 @@ parseDSLOptions(const manta::Program& prog,
     if (opt.graphFilename.empty()) {
         usage(log_os,prog,visible,"Must specify sv locus graph file");
     }
-    if(vm.count("locus-index"))
+    if (vm.count("locus-index"))
     {
-        if(! opt.region.empty()) usage(log_os,prog,visible,"locus-index and region cannot be used together");
+        if (! opt.region.empty()) usage(log_os,prog,visible,"locus-index and region cannot be used together");
         opt.isLocusIndex=true;
     }
-    if(! opt.locusFilename.empty())
+    if (! opt.locusFilename.empty())
     {
-        if(! opt.isLocusIndex) usage(log_os,prog,visible,"Must specify sv locus index with locus file");
+        if (! opt.isLocusIndex) usage(log_os,prog,visible,"Must specify sv locus index with locus file");
     }
 }
 

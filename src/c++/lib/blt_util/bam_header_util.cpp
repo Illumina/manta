@@ -25,17 +25,17 @@
 
 void
 parse_bam_region(
-        const bam_header_info& header,
-        const std::string& region,
-        int32_t& tid,
-        int32_t& begin_pos,
-        int32_t& end_pos)
+    const bam_header_info& header,
+    const std::string& region,
+    int32_t& tid,
+    int32_t& begin_pos,
+    int32_t& end_pos)
 {
     static const char region_sep1(':');
     std::vector<std::string> words;
     split_string(region,region_sep1,words);
 
-    if(words.empty() || words[0].empty() || (words.size() > 2))
+    if (words.empty() || words[0].empty() || (words.size() > 2))
     {
         std::ostringstream oss;
         oss << "ERROR: can't parse bam_region " << region << "\n";
@@ -44,9 +44,9 @@ parse_bam_region(
 
     bool isFound(false);
     const unsigned n_chroms(header.chrom_data.size());
-    for(unsigned i(0);i<n_chroms;++i)
+    for (unsigned i(0); i<n_chroms; ++i)
     {
-        if(words[0]==header.chrom_data[i].label)
+        if (words[0]==header.chrom_data[i].label)
         {
             tid=i;
             isFound=true;
@@ -54,7 +54,7 @@ parse_bam_region(
         }
     }
 
-    if(! isFound)
+    if (! isFound)
     {
         std::ostringstream oss;
         oss << "ERROR: can't parse bam_region " << region << "\n"
@@ -64,13 +64,13 @@ parse_bam_region(
 
     begin_pos = 0;
     end_pos = header.chrom_data[tid].length;
-    if(1 == words.size()) return;
+    if (1 == words.size()) return;
 
     static const char region_sep2('-');
     std::vector<std::string> words2;
     split_string(words[1],region_sep2,words2);
 
-    if(words2.empty() || (words2.size() > 2))
+    if (words2.empty() || (words2.size() > 2))
     {
         std::ostringstream oss;
         oss << "ERROR: can't parse bam_region " << region << "\n";
@@ -79,6 +79,6 @@ parse_bam_region(
 
     begin_pos = (illumina::blt_util::parse_int_str(words2[0]))-1;
 
-    if(1 == words2.size()) return;
+    if (1 == words2.size()) return;
     end_pos = (illumina::blt_util::parse_int_str(words2[1]));
 }

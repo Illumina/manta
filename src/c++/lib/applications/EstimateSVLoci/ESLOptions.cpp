@@ -57,7 +57,7 @@ parseESLOptions(const manta::Program& prog,
     ("align-file", po::value<std::vector<std::string> >(&opt.alignmentFilename),
      "alignment file in bam format")
     ("output-file", po::value<std::string>(&opt.outputFilename),
-      "write stats to filename [required]")
+     "write stats to filename [required]")
     ("align-stats", po::value<std::string>(&opt.statsFilename),
      "pre-computed alignment statistics for the input alignment files (required)")
     ("region", po::value<std::string>(&opt.region),

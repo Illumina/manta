@@ -36,121 +36,125 @@ struct notifier;
 template <typename T>
 struct observer
 {
-  friend struct notifier<T>;
+    friend struct notifier<T>;
 
-  typedef observer self_t;
+    typedef observer self_t;
 
-  observer() {}
+    observer() {}
 
-  observer(const self_t&)  {} // do not copy notifier set
+    observer(const self_t&)  {} // do not copy notifier set
 
-  virtual ~observer()
-  {
-      BOOST_FOREACH(typename nots_t::value_type val, _nots)
-      {
-          val->unregister_observer(this);
-      }
-  }
+    virtual ~observer()
+    {
+        BOOST_FOREACH(typename nots_t::value_type val, _nots)
+        {
+            val->unregister_observer(this);
+        }
+    }
 
 protected:
-  void
-  observe_notifier(const notifier<T>& n)
-  {
-      n.register_observer(this);
-      _nots.insert(&n);
-  }
+    void
+    observe_notifier(const notifier<T>& n)
+    {
+        n.register_observer(this);
+        _nots.insert(&n);
+    }
 
 private:
-  self_t& operator=(const self_t&);
+    self_t& operator=(const self_t&);
 
-  virtual void
-  recieve_notification(const notifier<T>&,
-                       const T&) = 0;
+    virtual void
+    recieve_notification(const notifier<T>&,
+                         const T&) = 0;
 
-  void
-  register_notifier(const notifier<T>* n) const { _nots.insert(n); }
+    void
+    register_notifier(const notifier<T>* n) const {
+        _nots.insert(n);
+    }
 
-  void
-  unregister_notifier(const notifier<T>* n)
-  {
-    const typename nots_t::iterator i(_nots.find(n));
-    if(i != _nots.end()) _nots.erase(i);
-  }
+    void
+    unregister_notifier(const notifier<T>* n)
+    {
+        const typename nots_t::iterator i(_nots.find(n));
+        if (i != _nots.end()) _nots.erase(i);
+    }
 
-  ////////// data:
-  typedef typename std::set<const notifier<T>*> nots_t;
-  mutable nots_t _nots;
+    ////////// data:
+    typedef typename std::set<const notifier<T>*> nots_t;
+    mutable nots_t _nots;
 };
 
 
 template <typename T>
 struct notifier {
-  friend struct observer<T>;
+    friend struct observer<T>;
 
-  typedef notifier self_t;
+    typedef notifier self_t;
 
-  notifier() {}
+    notifier() {}
 
-  notifier(const self_t& rhs) :
-      _obss(rhs._obss)
-  {
-      BOOST_FOREACH(typename obss_t::value_type val, _obss)
-      {
-          val->register_notifier(this);
-      }
-  }
+    notifier(const self_t& rhs) :
+        _obss(rhs._obss)
+    {
+        BOOST_FOREACH(typename obss_t::value_type val, _obss)
+        {
+            val->register_notifier(this);
+        }
+    }
 
-  self_t&
-  operator=(const self_t& rhs)
-  {
-      if (this == &rhs) return *this;
-      self_unregister();
-      _obss=rhs._obss;
-      BOOST_FOREACH(typename obss_t::value_type val, _obss)
-      {
-          val->register_notifier(this);
-      }
-      return *this;
-  }
+    self_t&
+    operator=(const self_t& rhs)
+    {
+        if (this == &rhs) return *this;
+        self_unregister();
+        _obss=rhs._obss;
+        BOOST_FOREACH(typename obss_t::value_type val, _obss)
+        {
+            val->register_notifier(this);
+        }
+        return *this;
+    }
 
-  virtual ~notifier()
-  {
-      self_unregister();
-  }
+    virtual ~notifier()
+    {
+        self_unregister();
+    }
 
 protected:
-  void
-  notify_observers(const T& msg) const
-  {
-      BOOST_FOREACH(typename obss_t::value_type val, _obss)
-      {
-          val->recieve_notification(*this, msg);
-      }
-  }
+    void
+    notify_observers(const T& msg) const
+    {
+        BOOST_FOREACH(typename obss_t::value_type val, _obss)
+        {
+            val->recieve_notification(*this, msg);
+        }
+    }
 
 private:
 
-  void
-  self_unregister() const
-  {
-      BOOST_FOREACH(typename obss_t::value_type val, _obss)
-      {
-          val->unregister_notifier(this);
-      }
-  }
+    void
+    self_unregister() const
+    {
+        BOOST_FOREACH(typename obss_t::value_type val, _obss)
+        {
+            val->unregister_notifier(this);
+        }
+    }
 
-  void
-  register_observer(observer<T>* n) const { _obss.insert(n); }
+    void
+    register_observer(observer<T>* n) const {
+        _obss.insert(n);
+    }
 
-  void
-  unregister_observer(observer<T>* n) const
-  {
-    const typename obss_t::iterator i(_obss.find(n));
-    if(i != _obss.end()) _obss.erase(i);
-  }
+    void
+    unregister_observer(observer<T>* n) const
+    {
+        const typename obss_t::iterator i(_obss.find(n));
+        if (i != _obss.end()) _obss.erase(i);
+    }
 
-  ////////// data:
-  typedef typename std::set<observer<T>*> obss_t;
-  mutable obss_t _obss;
+    ////////// data:
+    typedef typename std::set<observer<T>*> obss_t;
+    mutable obss_t _obss;
 };
 

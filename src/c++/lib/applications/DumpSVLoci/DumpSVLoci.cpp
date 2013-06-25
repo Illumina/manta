@@ -38,17 +38,17 @@ runDSL(const DSLOptions& opt) {
     const SVLocusSet& cset(set);
 
     std::ostream& os(std::cout);
-    if(! opt.region.empty())
+    if (! opt.region.empty())
     {
         int32_t tid,beginPos,endPos;
         parse_bam_region(set.header, opt.region, tid, beginPos, endPos); // parse the region
 
         set.dumpRegion(os,tid,beginPos,endPos);
     }
-    else if(opt.isLocusIndex)
+    else if (opt.isLocusIndex)
     {
         const SVLocus& locus(cset.getLocus(opt.locusIndex));
-        if(opt.locusFilename.empty())
+        if (opt.locusFilename.empty())
         {
             os << locus;
         }

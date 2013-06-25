@@ -34,7 +34,7 @@ struct OutStream
     std::ostream&
     getStream()
     {
-        if(! _isInit) initStream();
+        if (! _isInit) initStream();
         return *_osptr;
     }
 
@@ -46,8 +46,8 @@ private:
     static
     void
     openFile(
-            const std::string& filename,
-            std::ofstream& ofs);
+        const std::string& filename,
+        std::ofstream& ofs);
 
     bool _isInit;
     std::string _fileName;

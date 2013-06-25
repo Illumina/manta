@@ -131,9 +131,9 @@ struct pos_range {
     }
 
     template<class Archive>
-    void serialize(Archive & ar, const unsigned /* version */)
+    void serialize(Archive& ar, const unsigned /* version */)
     {
-        ar & is_begin_pos & is_end_pos & begin_pos & end_pos;
+        ar& is_begin_pos& is_end_pos& begin_pos& end_pos;
     }
 
     bool is_begin_pos;
@@ -176,9 +176,9 @@ struct known_pos_range : public pos_range {
     }
 
     template<class Archive>
-    void serialize(Archive & ar, const unsigned /* version */)
+    void serialize(Archive& ar, const unsigned /* version */)
     {
-        ar & begin_pos & end_pos;
+        ar& begin_pos& end_pos;
         is_begin_pos=true;
         is_end_pos=true;
     }

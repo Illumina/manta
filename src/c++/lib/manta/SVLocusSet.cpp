@@ -63,7 +63,7 @@ merge(SVLocus& inputLocus)
     nodeMap_t nodeMap;
     {
         const NodeIndexType nodeCount(startLocus.size());
-        for(NodeIndexType nodeIndex(0);nodeIndex<nodeCount;++nodeIndex)
+        for (NodeIndexType nodeIndex(0); nodeIndex<nodeCount; ++nodeIndex)
         {
             nodeMap.insert(std::make_pair(startLocus.getNode(nodeIndex).interval,nodeIndex));
         }
@@ -86,7 +86,7 @@ merge(SVLocus& inputLocus)
 
         if (headLocusIndex != startLocusIndex)
         {
-            if(intersect.empty())
+            if (intersect.empty())
             {
                 NodeAddressType val(std::make_pair(startLocusIndex,nodeIndex));
                 std::ostringstream oss;
@@ -95,11 +95,11 @@ merge(SVLocus& inputLocus)
                     << "\thli: " << headLocusIndex << "\n";
                 BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
             }
-            if(1==intersect.size()) continue;
+            if (1==intersect.size()) continue;
         }
         else
         {
-            if(intersect.empty()) continue;
+            if (intersect.empty()) continue;
         }
 
         // merge inputNode into an existing locus
@@ -135,7 +135,7 @@ merge(SVLocus& inputLocus)
                 assert(val.first==headLocusIndex);
 
                 // one node must be a superset of the input node, find this and store separately:
-                if((! isInputSuperFound) && getNode(val).interval.range.is_superset_of(inputRange))
+                if ((! isInputSuperFound) && getNode(val).interval.range.is_superset_of(inputRange))
                 {
                     inputSuperAddy=val;
                     isInputSuperFound=true;
@@ -153,7 +153,7 @@ merge(SVLocus& inputLocus)
         NodeAddressType mergeTargetAddy(inputSuperAddy);
         BOOST_FOREACH(NodeAddressType nodeAddy, nodeIndices)
         {
-            if(nodeAddy<mergeTargetAddy) std::swap(nodeAddy,mergeTargetAddy);
+            if (nodeAddy<mergeTargetAddy) std::swap(nodeAddy,mergeTargetAddy);
 #ifdef DEBUG_SVL
             log_os << "MergeAndRemove: " << nodeAddy << "\n";
 #endif
@@ -166,7 +166,7 @@ merge(SVLocus& inputLocus)
         }
     }
 
-    if(startLocusIndex != headLocusIndex)
+    if (startLocusIndex != headLocusIndex)
     {
 #ifdef DEBUG_SVL
         log_os << "clearLocusIndex: " << startLocusIndex << "\n";
@@ -194,7 +194,7 @@ merge(SVLocusSet& inputSet)
         {
             merge(locus);
         }
-        catch(...)
+        catch (...)
         {
             log_os << "ERROR: SVLocusSet merge failed.\n"
                    << "\tSVLocusSet source: " << inputSet.getSource() << "\n"
@@ -209,9 +209,9 @@ merge(SVLocusSet& inputSet)
 void
 SVLocusSet::
 getNodeIntersect(
-        const LocusIndexType locusIndex,
-        const NodeIndexType nodeIndex,
-        LocusSetIndexerType& intersect)
+    const LocusIndexType locusIndex,
+    const NodeIndexType nodeIndex,
+    LocusSetIndexerType& intersect)
 {
     typedef LocusSetIndexerType::iterator in_iter;
 
@@ -230,7 +230,7 @@ getNodeIntersect(
     // first look forward and extend to find all nodes which this inputNode intersects:
     for (in_iter it_fwd(it); it_fwd !=_inodes.end(); ++it_fwd)
     {
-        if(it_fwd->first == locusIndex) continue;
+        if (it_fwd->first == locusIndex) continue;
 #ifdef DEBUG_SVL
         log_os << "FWD test: " << (*it_fwd) << " " << getNode(*it_fwd);
 #endif
@@ -245,7 +245,7 @@ getNodeIntersect(
     for (in_iter it_rev(it); it_rev !=_inodes.begin(); )
     {
         --it_rev;
-        if(it_rev->first == locusIndex) continue;
+        if (it_rev->first == locusIndex) continue;
 #ifdef DEBUG_SVL
         log_os << "REV test: " << (*it_rev) << " " << getNode(*it_rev);
 #endif
@@ -262,10 +262,10 @@ getNodeIntersect(
 void
 SVLocusSet::
 getRegionIntersect(
-        const int32_t tid,
-        const int32_t beginPos,
-        const int32_t endPos,
-        LocusSetIndexerType& intersect)
+    const int32_t tid,
+    const int32_t beginPos,
+    const int32_t endPos,
+    LocusSetIndexerType& intersect)
 {
     const LocusIndexType startLocusIndex(insertLocus(SVLocus()));
     const NodeIndexType nodeIndex = getLocus(startLocusIndex).addNode(tid,beginPos,endPos);
@@ -280,9 +280,9 @@ getRegionIntersect(
 void
 SVLocusSet::
 moveIntersectToLowIndex(
-        LocusSetIndexerType& intersect,
-        const LocusIndexType startLocusIndex,
-        LocusIndexType& locusIndex)
+    LocusSetIndexerType& intersect,
+    const LocusIndexType startLocusIndex,
+    LocusIndexType& locusIndex)
 {
     const unsigned startHeadLocusIndex(locusIndex);
 
@@ -333,7 +333,7 @@ combineLoci(
 
     SVLocus& toLocus(_loci[toIndex]);
     toLocus.copyLocus(fromLocus);
-    if(isClearSource) clearLocus(fromIndex);
+    if (isClearSource) clearLocus(fromIndex);
 }
 
 
@@ -344,7 +344,7 @@ insertLocus(
     const SVLocus& inputLocus)
 {
     LocusIndexType locusIndex(0);
-    if(_emptyLoci.empty())
+    if (_emptyLoci.empty())
     {
         static const unsigned maxIndex(std::numeric_limits<LocusIndexType>::max());
         locusIndex=_loci.size();
@@ -401,9 +401,9 @@ dump(std::ostream& os) const
 void
 SVLocusSet::
 dumpRegion(std::ostream& os,
-        const int32_t tid,
-        const int32_t beginPos,
-        const int32_t endPos)
+           const int32_t tid,
+           const int32_t beginPos,
+           const int32_t endPos)
 {
     LocusSetIndexerType intersect(*this);
     getRegionIntersect(tid,beginPos,endPos,intersect);
@@ -492,7 +492,7 @@ save(const char* filename) const
     oa << header;
     BOOST_FOREACH(const SVLocus& locus, _loci)
     {
-        if(locus.empty()) continue;
+        if (locus.empty()) continue;
         oa << locus;
     }
 }
@@ -515,11 +515,11 @@ load(const char* filename)
 
     ia >> header;
     SVLocus locus;
-    while(ifs.peek() != EOF)
+    while (ifs.peek() != EOF)
     {
         locus.clear();
         ia >> locus;
-        if(locus.empty()) continue;
+        if (locus.empty()) continue;
         const LocusIndexType locusIndex(size());
         _loci.push_back(locus);
         SVLocus& locusCopy(_loci.back());
@@ -544,11 +544,11 @@ reconstructIndex()
     BOOST_FOREACH(SVLocus& locus, _loci)
     {
         const unsigned nodeCount(locus.size());
-        for(NodeIndexType nodeIndex(0);nodeIndex<nodeCount;++nodeIndex)
+        for (NodeIndexType nodeIndex(0); nodeIndex<nodeCount; ++nodeIndex)
         {
             _inodes.insert(std::make_pair(locusIndex,nodeIndex));
         }
-        if(locus.empty()) _emptyLoci.insert(locusIndex);
+        if (locus.empty()) _emptyLoci.insert(locusIndex);
         locusIndex++;
     }
 }
@@ -584,17 +584,17 @@ checkState(const bool isCheckOverlap) const
         const unsigned nodeCount(locus.size());
         totalNodeCount += nodeCount;
 
-        for(NodeIndexType nodeIndex(0);nodeIndex<nodeCount;++nodeIndex)
+        for (NodeIndexType nodeIndex(0); nodeIndex<nodeCount; ++nodeIndex)
         {
             LocusSetIndexerType::const_iterator citer(_inodes.find(std::make_pair(locusIndex,nodeIndex)));
-            if(citer == _inodes.end())
+            if (citer == _inodes.end())
             {
                 std::ostringstream oss;
                 oss << "ERROR: locus node is missing from node index\n"
                     << "\tNode index: " << locusIndex << " node: " << getNode(std::make_pair(locusIndex,nodeIndex));
                 BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
             }
-            if((citer->first != locusIndex) || (citer->second != nodeIndex))
+            if ((citer->first != locusIndex) || (citer->second != nodeIndex))
             {
                 std::ostringstream oss;
                 oss << "ERROR: locus node is has conflicting index number in node index\n"
@@ -614,7 +614,7 @@ checkState(const bool isCheckOverlap) const
         BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
     }
 
-    if(! isCheckOverlap) return;
+    if (! isCheckOverlap) return;
 
     bool isFirst(true);
     GenomeInterval lastInterval;
@@ -627,13 +627,13 @@ checkState(const bool isCheckOverlap) const
         assert(interval.range.begin_pos < interval.range.end_pos);
 
         // don't allow overlapping intervals:
-        if(isFirst)
+        if (isFirst)
         {
-           isFirst=false;
+            isFirst=false;
         }
-        else if(interval.tid == lastInterval.tid)
+        else if (interval.tid == lastInterval.tid)
         {
-            if(lastInterval.range.end_pos > interval.range.begin_pos)
+            if (lastInterval.range.end_pos > interval.range.begin_pos)
             {
                 std::ostringstream oss;
                 oss << "ERROR: Overlapping nodes in graph\n"

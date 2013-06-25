@@ -58,7 +58,7 @@ runESL(const ESLOptions& opt) {
 
     // assume headers compatible after this point....
 
-    if(n_inputs)
+    if (n_inputs)
     {
         locusFinder.setBamHeader(*(bam_streams[0]->get_header()));
     }

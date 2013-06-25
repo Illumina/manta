@@ -30,7 +30,7 @@ OutStream(const std::string& fileName) :
     _osptr(&std::cout),
     _ofsptr(new std::ofstream)
 {
-    if(! _fileName.empty())
+    if (! _fileName.empty())
     {
         std::ofstream test;
         openFile(_fileName,test);
@@ -49,7 +49,7 @@ void
 OutStream::
 initStream()
 {
-    if(! _fileName.empty())
+    if (! _fileName.empty())
     {
         openFile(_fileName,*_ofsptr);
         _osptr=_ofsptr.get();
@@ -60,11 +60,11 @@ initStream()
 void
 OutStream::
 openFile(
-        const std::string& filename,
-        std::ofstream& ofs)
+    const std::string& filename,
+    std::ofstream& ofs)
 {
     ofs.open(filename.c_str());
-    if(ofs) return;
+    if (ofs) return;
     std::ostringstream oss;
     oss << "ERROR: Can't open output file: " << filename << "\n";
     BOOST_THROW_EXCEPTION(illumina::common::PreConditionException(oss.str()));

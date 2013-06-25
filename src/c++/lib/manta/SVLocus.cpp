@@ -45,8 +45,8 @@ operator<<(std::ostream& os, const SVLocusEdge& edge)
 void
 SVLocus::
 mergeNode(
-        const NodeIndexType fromIndex,
-        const NodeIndexType toIndex)
+    const NodeIndexType fromIndex,
+    const NodeIndexType toIndex)
 {
     using namespace illumina::common;
 
@@ -57,7 +57,7 @@ mergeNode(
     SVLocusNode& fromNode(getNode(fromIndex));
     SVLocusNode& toNode(getNode(toIndex));
 
-    if(fromNode.interval.tid != toNode.interval.tid)
+    if (fromNode.interval.tid != toNode.interval.tid)
     {
         std::ostringstream oss;
         oss << "ERROR: Attempting to merge nodes on different chromosomes\n"
@@ -115,7 +115,7 @@ mergeNode(
             SVLocusNode& remoteNode(getNode(fromNodeEdgeIter.first));
             edges_type& remoteEdges(remoteNode.edges);
             edges_type::iterator oldRemoteIter(remoteEdges.find(fromIndex));
-            if(oldRemoteIter == remoteEdges.end())
+            if (oldRemoteIter == remoteEdges.end())
             {
                 std::ostringstream oss;
                 oss << "ERROR: Can't find return edge to node index: " << _index << ":" << fromIndex << " in remote node index: " << _index << ":" << fromNodeEdgeIter.first << "\n"
@@ -160,7 +160,7 @@ clearNodeEdges(NodeIndexType nodePtr)
         SVLocusNode& remoteNode(getNode(edgeIter.first));
         edges_type& remoteEdges(remoteNode.edges);
         edges_type::iterator thisRemoteIter(remoteEdges.find(nodePtr));
-        if(thisRemoteIter == remoteEdges.end())
+        if (thisRemoteIter == remoteEdges.end())
         {
             std::ostringstream oss;
             oss << "ERROR: no return edge on remote node.\n";
@@ -192,7 +192,7 @@ eraseNode(const NodeIndexType nodePtr)
     log_os << "eraseNode: from: " << _index << ":" << fromPtr << " to: " << _index << ":" << nodePtr << "\n";
 #endif
 
-    if(fromPtr != nodePtr)
+    if (fromPtr != nodePtr)
     {
         // reassign fromNode's remote edges before shifting its address:
         //
@@ -202,7 +202,7 @@ eraseNode(const NodeIndexType nodePtr)
             SVLocusNode& remoteNode(getNode(edgeIter.first));
             edges_type& remoteEdges(remoteNode.edges);
             edges_type::iterator thisRemoteIter(remoteEdges.find(fromPtr));
-            if(thisRemoteIter == remoteEdges.end())
+            if (thisRemoteIter == remoteEdges.end())
             {
                 std::ostringstream oss;
                 oss << "ERROR: eraseNode: no return edge on remote node.\n";
@@ -246,7 +246,7 @@ checkState() const
     using namespace illumina::common;
 
     const unsigned nodeSize(size());
-    for(unsigned nodeIndex(0);nodeIndex<nodeSize;++nodeIndex)
+    for (unsigned nodeIndex(0); nodeIndex<nodeSize; ++nodeIndex)
     {
         const SVLocusNode& node(getNode(nodeIndex));
 
@@ -255,7 +255,7 @@ checkState() const
             // check that that every edge has a return path:
             const SVLocusNode& edgeNode(getNode(edgeIter.first));
             SVLocusNode::const_iterator iter(edgeNode.edges.find(nodeIndex));
-            if(edgeNode.edges.end() == iter)
+            if (edgeNode.edges.end() == iter)
             {
                 std::ostringstream oss;
                 oss << "ERROR: no return edge on remote node.\n";

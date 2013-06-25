@@ -46,28 +46,28 @@ struct bam_header_info
     operator==(const bam_header_info& rhs) const
     {
         const unsigned data_size(chrom_data.size());
-        if(chrom_data.size() != rhs.chrom_data.size()) return false;
-        for(unsigned i(0);i<data_size;++i)
+        if (chrom_data.size() != rhs.chrom_data.size()) return false;
+        for (unsigned i(0); i<data_size; ++i)
         {
-            if(chrom_data[i] == rhs.chrom_data[i]) continue;
+            if (chrom_data[i] == rhs.chrom_data[i]) continue;
             return false;
         }
         return true;
     }
 
     template<class Archive>
-    void serialize(Archive & ar, const unsigned /* version */)
+    void serialize(Archive& ar, const unsigned /* version */)
     {
-        ar & chrom_data;
+        ar& chrom_data;
     }
 
     struct chrom_info
     {
         chrom_info(
-                const char* init_label = NULL,
-                const unsigned init_length = 0) :
-                    label((NULL==init_label) ? "" : init_label ),
-                    length(init_length)
+            const char* init_label = NULL,
+            const unsigned init_length = 0) :
+            label((NULL==init_label) ? "" : init_label ),
+            length(init_length)
         {}
 
         bool
@@ -77,9 +77,9 @@ struct bam_header_info
         }
 
         template<class Archive>
-        void serialize(Archive & ar, const unsigned /* version */)
+        void serialize(Archive& ar, const unsigned /* version */)
         {
-            ar & label & length;
+            ar& label& length;
         }
 
         std::string label;
