@@ -15,6 +15,7 @@ cxx_base_dir=$thisDir/../src/c++
 
 cd $cxx_base_dir 
 astyle \
+--style=ansi \
 --align-pointer=type \
 --max-instatement-indent=80 \
 --min-conditional-indent=0 \
