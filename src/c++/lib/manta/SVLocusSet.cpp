@@ -128,7 +128,7 @@ merge(SVLocus& inputLocus)
         std::vector<NodeAddressType> nodeIndices;
         {
             bool isInputSuperFound(false);
-            const known_pos_range& inputRange(getLocus(startLocusIndex).getNode(nodeIndex).interval.range);
+            const known_pos_range2& inputRange(getLocus(startLocusIndex).getNode(nodeIndex).interval.range);
 
             BOOST_FOREACH(const LocusSetIndexerType::value_type& val, intersect)
             {
@@ -624,7 +624,7 @@ checkState(const bool isCheckOverlap) const
         const GenomeInterval& interval(getNode(addy).interval);
 
         // don't allow zero-length or negative intervals:
-        assert(interval.range.begin_pos < interval.range.end_pos);
+        assert(interval.range.begin_pos() < interval.range.end_pos());
 
         // don't allow overlapping intervals:
         if (isFirst)
@@ -633,7 +633,7 @@ checkState(const bool isCheckOverlap) const
         }
         else if (interval.tid == lastInterval.tid)
         {
-            if (lastInterval.range.end_pos > interval.range.begin_pos)
+            if (lastInterval.range.end_pos() > interval.range.begin_pos())
             {
                 std::ostringstream oss;
                 oss << "ERROR: Overlapping nodes in graph\n"

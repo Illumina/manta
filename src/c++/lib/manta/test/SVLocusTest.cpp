@@ -72,8 +72,8 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeMerge)
     const SVLocusNode& node1(locus1.getNode(nodePtr1));
 
     BOOST_REQUIRE_EQUAL(node1.count,2u);
-    BOOST_REQUIRE_EQUAL(node1.interval.range.begin_pos,10);
-    BOOST_REQUIRE_EQUAL(node1.interval.range.end_pos,25);
+    BOOST_REQUIRE_EQUAL(node1.interval.range.begin_pos(),10);
+    BOOST_REQUIRE_EQUAL(node1.interval.range.end_pos(),25);
 }
 
 

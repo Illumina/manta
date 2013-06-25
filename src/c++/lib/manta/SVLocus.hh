@@ -18,7 +18,7 @@
 #pragma once
 
 #include "blt_util/observer.hh"
-#include "blt_util/pos_range.hh"
+#include "blt_util/known_pos_range2.hh"
 
 #include "boost/foreach.hpp"
 #include "boost/serialization/map.hpp"
@@ -86,7 +86,7 @@ struct GenomeInterval
     }
 
     int32_t tid;
-    known_pos_range range;
+    known_pos_range2 range;
 };
 
 
@@ -316,7 +316,6 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
         notifyAdd(nodePtr);
         return nodePtr;
     }
-
 
     NodeIndexType
     addRemoteNode(
