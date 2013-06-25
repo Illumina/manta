@@ -213,6 +213,8 @@ getNodeIntersect(
     const NodeIndexType nodeIndex,
     LocusSetIndexerType& intersect)
 {
+    static const bool isAssumeOverlap(true);
+
     typedef LocusSetIndexerType::iterator in_iter;
 
     intersect.clear();
@@ -225,7 +227,8 @@ getNodeIntersect(
     // get all existing nodes which intersect with this one:
     const NodeAddressType inputAddy(std::make_pair(locusIndex,nodeIndex));
     in_iter it(_inodes.lower_bound(inputAddy));
-    const SVLocusNode& inputNode(getNode(inputAddy));
+    const GenomeInterval& inputInterval(getNode(inputAddy).interval);
+    const pos_t maxRegionSize(_maxRegionSize[inputInterval.tid]);
 
     // first look forward and extend to find all nodes which this inputNode intersects:
     for (in_iter it_fwd(it); it_fwd !=_inodes.end(); ++it_fwd)
@@ -234,7 +237,7 @@ getNodeIntersect(
 #ifdef DEBUG_SVL
         log_os << "FWD test: " << (*it_fwd) << " " << getNode(*it_fwd);
 #endif
-        if (! inputNode.interval.isIntersect(getNode(*it_fwd).interval)) break;
+        if (! inputInterval.isIntersect(getNode(*it_fwd).interval)) break;
         intersect.insert(*it_fwd);
 #ifdef DEBUG_SVL
         log_os << "FWD insert: " << (*it_fwd) << "\n";
@@ -249,7 +252,16 @@ getNodeIntersect(
 #ifdef DEBUG_SVL
         log_os << "REV test: " << (*it_rev) << " " << getNode(*it_rev);
 #endif
-        if (! inputNode.interval.isIntersect(getNode(*it_rev).interval)) break;
+        const GenomeInterval& searchInterval(getNode(*it_rev).interval);
+        if (! inputInterval.isIntersect(searchInterval))
+        {
+            if(! isAssumeOverlap) break;
+
+            if(inputInterval.tid != searchInterval.tid) break;
+            if((searchInterval.range.begin_pos()+maxRegionSize)<inputInterval.range.begin_pos()) break;
+            continue;
+        }
+
         intersect.insert(*it_rev);
 #ifdef DEBUG_SVL
         log_os << "REV insert: " << (*it_rev) << "\n";
@@ -537,8 +549,7 @@ void
 SVLocusSet::
 reconstructIndex()
 {
-    _inodes.clear();
-    _emptyLoci.clear();
+    clearIndex();
 
     LocusIndexType locusIndex(0);
     BOOST_FOREACH(SVLocus& locus, _loci)
@@ -546,7 +557,9 @@ reconstructIndex()
         const unsigned nodeCount(locus.size());
         for (NodeIndexType nodeIndex(0); nodeIndex<nodeCount; ++nodeIndex)
         {
-            _inodes.insert(std::make_pair(locusIndex,nodeIndex));
+            const NodeAddressType addy(std::make_pair(locusIndex,nodeIndex));
+            _inodes.insert(addy);
+            updateMaxRegionSize(getNode(addy).interval);
         }
         if (locus.empty()) _emptyLoci.insert(locusIndex);
         locusIndex++;

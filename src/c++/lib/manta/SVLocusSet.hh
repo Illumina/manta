@@ -93,8 +93,7 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
     clear()
     {
         _loci.clear();
-        _emptyLoci.clear();
-        _inodes.clear();
+        clearIndex();
     }
 
     // binary serialization
@@ -257,6 +256,7 @@ private:
             log_os << "SVLocusSetObserver: Adding node: " << msg.second.first << ":" << msg.second.second << "\n";
 #endif
             _inodes.insert(msg.second);
+            updateMaxRegionSize(getNode(msg.second).interval);
         }
         else
         {
@@ -268,9 +268,28 @@ private:
         }
     }
 
+    void
+    updateMaxRegionSize(const GenomeInterval& interval)
+    {
+        const unsigned tid(interval.tid);
+        if(tid >= _maxRegionSize.size())
+        {
+            _maxRegionSize.resize((tid+1),0);
+        }
+        _maxRegionSize[tid] = std::max(_maxRegionSize[tid], interval.range.size());
+    }
+
 
     void
     reconstructIndex();
+
+    void
+    clearIndex()
+    {
+        _emptyLoci.clear();
+        _inodes.clear();
+        _maxRegionSize.clear();
+    }
 
     void
     dumpIndex(std::ostream& os) const;
@@ -290,8 +309,11 @@ private:
     locusset_type _loci;
     std::set<unsigned> _emptyLoci;
 
-    // provides an intersection search of non-overlapping nodes:
+    // provides an intersection search of overlapping nodes given a bound node size:
     LocusSetIndexerType _inodes;
+
+    // maximum region size per chromosome:
+    std::vector<unsigned> _maxRegionSize;
 
     // simple debug string describing the source of this
     std::string _source;
