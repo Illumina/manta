@@ -273,9 +273,11 @@ std::ostream&
 operator<<(std::ostream& os, const SVLocus& locus)
 {
     os << "LOCUS BEGIN INDEX " << locus.getIndex() << "\n";
+    unsigned locusIndex(0);
     BOOST_FOREACH(const SVLocusNode& node, locus)
     {
-        os << node;
+        os << "LocusIndex: " << locusIndex << " " << node;
+        locusIndex++;
     }
     os << "LOCUS END INDEX " << locus.getIndex() << "\n";
     return os;

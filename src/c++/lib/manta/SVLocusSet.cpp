@@ -409,7 +409,8 @@ dumpRegion(std::ostream& os,
     getRegionIntersect(tid,beginPos,endPos,intersect);
     BOOST_FOREACH(const LocusSetIndexerType::value_type& val, intersect)
     {
-        os << "SVNode from LocusIndex: " << val.second << "\n" << val.first;
+        os << "SVNode LocusIndex:NodeIndex : " << val << "\n";
+        os << getNode(val);
     }
 }
 
