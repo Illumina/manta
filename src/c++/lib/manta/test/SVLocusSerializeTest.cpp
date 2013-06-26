@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeSerialze )
     std::string filename(boost::archive::tmpdir());
     filename += "/testfile.bin";
 
-    const SVLocusNode node1(locus1.getNode(nodePtr1));
+    const SVLocusNode& node1(static_cast<const SVLocus&>(locus1).getNode(nodePtr1));
 
     // serialize
     {

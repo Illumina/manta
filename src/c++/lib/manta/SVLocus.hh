@@ -41,6 +41,8 @@
 #endif
 
 
+struct SVLocusSet;
+
 
 
 // all internal locations use a chromosome index number
@@ -235,8 +237,11 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
 
     typedef SVLocusNode::edges_type edges_type;
 
-    SVLocus(const LocusIndexType index = 0) :
-        _index(index)
+    friend struct SVLocusSet;
+
+
+    SVLocus() :
+        _index(0)
     {}
 
     bool
@@ -275,23 +280,10 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
         return _graph.end();
     }
 
-    void
-    updateIndex(const LocusIndexType& index)
-    {
-        _index=index;
-    }
-
     LocusIndexType
     getIndex() const
     {
         return _index;
-    }
-
-    SVLocusNode&
-    getNode(const NodeIndexType nodePtr)
-    {
-        assert(nodePtr<_graph.size());
-        return _graph[nodePtr];
     }
 
     const SVLocusNode&
@@ -340,6 +332,50 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
         toNode.edges.insert(std::make_pair(fromIndex,SVLocusEdge(0)));
     }
 
+    /// find all node indices connected to startIndex
+    ///
+    /// non-recursive version
+    void
+    findConnected(
+            const NodeIndexType startIndex,
+            std::set<NodeIndexType>& connected) const;
+
+    /// debug func to check that internal data-structures are in
+    /// a consistent state
+    void
+    checkState(const bool isCheckConnected = false) const;
+
+    template<class Archive>
+    void save(Archive& ar, const unsigned /* version */) const
+    {
+        ar << _graph;
+    }
+
+    template<class Archive>
+    void load(Archive& ar, const unsigned /* version */)
+    {
+        clear();
+        ar >> _graph;
+    }
+
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
+
+private:
+
+    SVLocusNode&
+    getNode(const NodeIndexType nodePtr)
+    {
+        assert(nodePtr<_graph.size());
+        return _graph[nodePtr];
+    }
+
+    void
+    updateIndex(const LocusIndexType& index)
+    {
+        _index=index;
+    }
+
+
     void
     clearNodeEdges(const NodeIndexType nodePtr);
 
@@ -380,36 +416,6 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
         for (NodeIndexType i(0); i<size(); ++i) notifyDelete(i);
         _graph.clear();
     }
-
-    /// find all node indices connected to startIndex
-    ///
-    /// non-recursive version
-    void
-    findConnected(
-            const NodeIndexType startIndex,
-            std::set<NodeIndexType>& connected) const;
-
-    /// debug func to check that internal data-structures are in
-    /// a consistent state
-    void
-    checkState(const bool isCheckConnected = false) const;
-
-    template<class Archive>
-    void save(Archive& ar, const unsigned /* version */) const
-    {
-        ar << _graph;
-    }
-
-    template<class Archive>
-    void load(Archive& ar, const unsigned /* version */)
-    {
-        clear();
-        ar >> _graph;
-    }
-
-    BOOST_SERIALIZATION_SPLIT_MEMBER()
-
-private:
 
     NodeIndexType
     newGraphNode()

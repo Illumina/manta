@@ -18,6 +18,7 @@
 #include "boost/foreach.hpp"
 #include "boost/test/unit_test.hpp"
 
+#define private public
 #include "manta/SVLocus.hh"
 
 
