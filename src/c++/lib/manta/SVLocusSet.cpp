@@ -181,7 +181,7 @@ merge(SVLocus& inputLocus)
     }
 
 #ifdef DEBUG_SVL
-    checkState(true);
+    checkState(true,true);
 #endif
 }
 
@@ -635,7 +635,7 @@ load(const char* filename)
     }
 
     reconstructIndex();
-    checkState(true);
+    checkState(true,true);
 }
 
 
@@ -679,7 +679,9 @@ dumpIndex(std::ostream& os) const
 
 void
 SVLocusSet::
-checkState(const bool isCheckOverlap) const
+checkState(
+        const bool isCheckOverlap,
+        const bool isCheckLocusConnected) const
 {
     using namespace illumina::common;
 
@@ -687,7 +689,7 @@ checkState(const bool isCheckOverlap) const
     unsigned totalNodeCount(0);
     BOOST_FOREACH(const SVLocus& locus, _loci)
     {
-        locus.checkState();
+        locus.checkState(isCheckLocusConnected);
 
         const unsigned nodeCount(locus.size());
         totalNodeCount += nodeCount;

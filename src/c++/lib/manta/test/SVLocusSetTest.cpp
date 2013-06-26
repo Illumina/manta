@@ -151,9 +151,11 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge2 )
 
     SVLocus locus1;
     {
-        locus1.addNode(1,10,20);
-        locus1.addNode(1,30,40);
-        locus1.addNode(1,50,60);
+        NodeIndexType nodePtr1 = locus1.addNode(1,10,20);
+        NodeIndexType nodePtr2 = locus1.addNode(1,30,40);
+        NodeIndexType nodePtr3 = locus1.addNode(1,50,60);
+        locus1.linkNodes(nodePtr1,nodePtr2);
+        locus1.linkNodes(nodePtr1,nodePtr3);
     }
 
     SVLocus locus2;
@@ -231,8 +233,9 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge4 )
     locus1.addNode(1,10,60);
 
     SVLocus locus2;
-    locus2.addNode(1,40,50);
-    locus2.addNode(1,20,30);
+    NodeIndexType nodePtr1 = locus2.addNode(1,40,50);
+    NodeIndexType nodePtr2 = locus2.addNode(1,20,30);
+    locus2.linkNodes(nodePtr1,nodePtr2);
 
     SVLocusSet set1;
     set1.merge(locus1);

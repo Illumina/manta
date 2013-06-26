@@ -267,7 +267,7 @@ findConnected(
 
 void
 SVLocus::
-checkState() const
+checkState(const bool isCheckConnected) const
 {
     using namespace illumina::common;
 
@@ -293,6 +293,8 @@ checkState() const
     }
 
     if(0 == nodeSize) return;
+
+    if(! isCheckConnected) return;
 
     // check that every locus in the graph is connected:
     std::set<NodeIndexType> connected;

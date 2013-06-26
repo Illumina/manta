@@ -392,7 +392,7 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
     /// debug func to check that internal data-structures are in
     /// a consistent state
     void
-    checkState() const;
+    checkState(const bool isCheckConnected = false) const;
 
     template<class Archive>
     void save(Archive& ar, const unsigned /* version */) const

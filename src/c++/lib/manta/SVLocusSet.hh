@@ -325,7 +325,9 @@ private:
     /// check that internal data-structures are in
     /// a consistent state, throw on error
     void
-    checkState(const bool isCheckOverlap = false) const;
+    checkState(
+            const bool isCheckOverlap = false,
+            const bool isCheckLocusConnected = false) const;
 
     ///////////////////// data
 
