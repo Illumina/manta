@@ -32,7 +32,7 @@ testOverlap(
     const int32_t beginPos,
     const int32_t endPos)
 {
-    SVLocusSet::LocusSetIndexerType intersect(locusSet);
+    std::vector<SVLocusSet::NodeAddressType> intersect;
     locusSet.getRegionIntersect(tid,beginPos,endPos,intersect);
     return intersect.size();
 }

@@ -35,7 +35,9 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
 
     SVLocusSet() :
         _inodes(NodeAddressSorter(*this)),
-        _source("UNKNOWN")
+        _source("UNKNOWN"),
+        _minMergeEdgeCount(2),
+        _isOverlapAllowed(true)
     {}
 
     bool
@@ -126,6 +128,12 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
         return _source;
     }
 
+    unsigned
+    getMinMergeEdgeCount() const
+    {
+        return _minMergeEdgeCount;
+    }
+
 
 private:
 
@@ -188,13 +196,32 @@ private:
         _source="UNKNOWN";
     }
 
+    /// shared node intersection utility
+    ///
+    void
+    getNodeIntersectCore(
+        const LocusIndexType locusIndex,
+        const NodeIndexType nodeIndex,
+        const LocusSetIndexerType& searchNodes,
+        std::vector<NodeAddressType>& intersectNodes) const;
+
     /// get all nodes in this object which intersect with
     /// the inputNode
     void
     getNodeIntersect(
         const LocusIndexType locusIndex,
         const NodeIndexType nodeIndex,
-        LocusSetIndexerType& intersect);
+        std::vector<NodeAddressType>& intersectNodes) const
+    {
+        getNodeIntersectCore(locusIndex,nodeIndex,_inodes,intersectNodes);
+    }
+
+    void
+    getNodeMergableIntersect(
+        const LocusIndexType locusIndex,
+        const NodeIndexType nodeIndex,
+        const bool isInputLocusMoved,
+        std::vector<NodeAddressType>& mergeIntersect) const;
 
     /// get all nodes in this object which intersect with
     /// a external node
@@ -203,13 +230,13 @@ private:
         const int32_t tid,
         const int32_t beginPos,
         const int32_t endPos,
-        LocusSetIndexerType& intersect);
+        std::vector<NodeAddressType>& intersectNodes);
 
     /// assign all intersect clusters to the lowest index number that is not startLocusIndex
     ///
     void
     moveIntersectToLowIndex(
-        LocusSetIndexerType& intersect,
+        const std::vector<NodeAddressType>& intersectNodes,
         const LocusIndexType startLocusIndex,
         LocusIndexType& locusIndex);
 
@@ -317,6 +344,13 @@ private:
 
     // simple debug string describing the source of this
     std::string _source;
+
+    // to reduce noise in the graph, we only merge once shared edges (including self-edges), reach this count:
+    unsigned _minMergeEdgeCount;
+
+    // the graph has intermediate states (during build) when overlapping regions are allowed,
+    // once complete, overlaps are not present and disallowed:
+    bool _isOverlapAllowed;
 };
 
 
