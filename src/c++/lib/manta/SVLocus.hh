@@ -381,6 +381,14 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
         _graph.clear();
     }
 
+    /// find all node indices connected to startIndex
+    ///
+    /// non-recursive version
+    void
+    findConnected(
+            const NodeIndexType startIndex,
+            std::set<NodeIndexType>& connected) const;
+
     /// debug func to check that internal data-structures are in
     /// a consistent state
     void

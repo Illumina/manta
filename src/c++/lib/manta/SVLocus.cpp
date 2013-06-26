@@ -19,6 +19,7 @@
 #include "manta/SVLocus.hh"
 
 #include <iostream>
+#include <stack>
 
 #ifdef DEBUG_SVL
 #include "blt_util/log.hh"
@@ -241,6 +242,31 @@ operator<<(std::ostream& os, const SVLocusNode& node)
 
 void
 SVLocus::
+findConnected(
+        const NodeIndexType startIndex,
+        std::set<NodeIndexType>& connected) const
+{
+    connected.clear();
+
+    std::stack<NodeIndexType> nodeStack;
+    nodeStack.push(startIndex);
+
+    while(! nodeStack.empty())
+    {
+        connected.insert(nodeStack.top());
+        const SVLocusNode& node(getNode(nodeStack.top()));
+        nodeStack.pop();
+        BOOST_FOREACH(const edges_type::value_type& edgeIter, node)
+        {
+            if(! connected.count(edgeIter.first)) nodeStack.push(edgeIter.first);
+        }
+    }
+}
+
+
+
+void
+SVLocus::
 checkState() const
 {
     using namespace illumina::common;
@@ -264,6 +290,19 @@ checkState() const
                 BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
             }
         }
+    }
+
+    if(0 == nodeSize) return;
+
+    // check that every locus in the graph is connected:
+    std::set<NodeIndexType> connected;
+    findConnected(0,connected);
+
+    if(nodeSize != connected.size())
+    {
+        std::ostringstream oss;
+        oss << "ERROR: SVLocus contains unconnected components, LocusIndex: " << _index << "\n";
+        BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
     }
 }
 
