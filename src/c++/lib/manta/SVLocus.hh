@@ -322,14 +322,16 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
     void
     linkNodes(
         const NodeIndexType fromIndex,
-        const NodeIndexType toIndex)
+        const NodeIndexType toIndex,
+        const unsigned fromCount = 1,
+        const unsigned toCount = 0)
     {
         SVLocusNode& fromNode(getNode(fromIndex));
         SVLocusNode& toNode(getNode(toIndex));
         assert(0 == fromNode.edges.count(toIndex));
         assert(0 == toNode.edges.count(fromIndex));
-        fromNode.edges.insert(std::make_pair(toIndex,SVLocusEdge(1)));
-        toNode.edges.insert(std::make_pair(fromIndex,SVLocusEdge(0)));
+        fromNode.edges.insert(std::make_pair(toIndex,SVLocusEdge(fromCount)));
+        toNode.edges.insert(std::make_pair(fromIndex,SVLocusEdge(toCount)));
     }
 
     /// find all node indices connected to startIndex
