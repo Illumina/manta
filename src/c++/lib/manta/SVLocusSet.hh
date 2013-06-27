@@ -33,10 +33,11 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
     typedef std::vector<SVLocus> locusset_type;
     typedef locusset_type::const_iterator const_iterator;
 
-    SVLocusSet() :
+    SVLocusSet(
+            const unsigned minMergeEdgeCount = 2) :
         _inodes(NodeAddressSorter(*this)),
         _source("UNKNOWN"),
-        _minMergeEdgeCount(2),
+        _minMergeEdgeCount(minMergeEdgeCount),
         _isOverlapAllowed(true)
     {}
 
@@ -203,7 +204,7 @@ private:
         const LocusIndexType locusIndex,
         const NodeIndexType nodeIndex,
         const LocusSetIndexerType& searchNodes,
-        std::vector<NodeAddressType>& intersectNodes) const;
+        std::set<NodeAddressType>& intersectNodes) const;
 
     /// get all nodes in this object which intersect with
     /// the inputNode
@@ -211,17 +212,17 @@ private:
     getNodeIntersect(
         const LocusIndexType locusIndex,
         const NodeIndexType nodeIndex,
-        std::vector<NodeAddressType>& intersectNodes) const
+        std::set<NodeAddressType>& intersectNodes) const
     {
         getNodeIntersectCore(locusIndex,nodeIndex,_inodes,intersectNodes);
     }
 
     void
-    getNodeMergableIntersect(
+    getNodeMergeableIntersect(
         const LocusIndexType locusIndex,
         const NodeIndexType nodeIndex,
         const bool isInputLocusMoved,
-        std::vector<NodeAddressType>& mergeIntersect) const;
+        std::set<NodeAddressType>& mergeIntersect) const;
 
     /// get all nodes in this object which intersect with
     /// a external node
@@ -230,13 +231,13 @@ private:
         const int32_t tid,
         const int32_t beginPos,
         const int32_t endPos,
-        std::vector<NodeAddressType>& intersectNodes);
+        std::set<NodeAddressType>& intersectNodes);
 
     /// assign all intersect clusters to the lowest index number that is not startLocusIndex
     ///
     void
     moveIntersectToLowIndex(
-        const std::vector<NodeAddressType>& intersectNodes,
+        const std::set<NodeAddressType>& intersectNodes,
         const LocusIndexType startLocusIndex,
         LocusIndexType& locusIndex);
 
