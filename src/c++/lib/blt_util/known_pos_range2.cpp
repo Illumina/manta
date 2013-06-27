@@ -25,7 +25,7 @@
 std::ostream& operator<<(std::ostream& os, const known_pos_range2& pr)
 {
     os << '['
-       << (pr.begin_pos()+1)
+       << pr.begin_pos()
        << ','
        << pr.end_pos()
        << ')';
