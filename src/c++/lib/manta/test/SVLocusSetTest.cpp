@@ -67,6 +67,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusIntersect )
 
     SVLocusSet set1;
     set1.merge(locus1);
+    set1.checkState(true,true);
 
     // test for various intersections:
 
@@ -102,6 +103,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMerge )
     SVLocusSet set1(2);
     set1.merge(locus1);
     set1.merge(locus2);
+    set1.checkState(true,true);
 
     BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),1u);
     BOOST_REQUIRE_EQUAL(set1.getLocus(0).size(),2u);
@@ -127,6 +129,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge )
     set1.merge(locus1);
     set1.merge(locus2);
     set1.merge(locus3);
+    set1.checkState(true,true);
 
     GenomeInterval testInterval(12,30,60);
 
@@ -162,6 +165,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge2 )
     SVLocusSet set1(1);
     set1.merge(locus1);
     set1.merge(locus2);
+    set1.checkState(true,true);
 
     GenomeInterval testInterval(1,10,60);
 
@@ -202,6 +206,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge3 )
     set1.merge(locus3);
     set1.merge(locus4);
     set1.merge(locus5);
+    set1.checkState(true,true);
 
     GenomeInterval testInterval(1,10,40);
 
@@ -231,8 +236,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge4 )
     SVLocusSet set1(1);
     set1.merge(locus1);
     set1.merge(locus2);
-
-    set1.checkState(true);
+    set1.checkState(true,true);
 
     GenomeInterval testInterval(1,10,60);
 
@@ -252,43 +256,46 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge4 )
 BOOST_AUTO_TEST_CASE( test_SVLocusNoiseMerge )
 {
     SVLocus locus1;
-    {
-        NodeIndexType nodePtr1 = locus1.addNode(1,10,60);
-        NodeIndexType nodePtr2 = locus1.addRemoteNode(2,20,30);
-        locus1.linkNodes(nodePtr1,nodePtr2);
-    }
+    locusAddPair(locus1,1,10,60,2,20,30);
 
     SVLocus locus2;
-    {
-        NodeIndexType nodePtr1 = locus2.addNode(1,10,60);
-        NodeIndexType nodePtr2 = locus2.addRemoteNode(2,20,30);
-        locus2.linkNodes(nodePtr1,nodePtr2);
-    }
+    locusAddPair(locus2,1,10,60,2,20,30);
 
     SVLocus locus3;
+    locusAddPair(locus3,1,10,60,3,20,30);
+
     {
-        NodeIndexType nodePtr1 = locus3.addNode(1,10,60);
-        NodeIndexType nodePtr2 = locus3.addRemoteNode(3,20,30);
-        locus3.linkNodes(nodePtr1,nodePtr2);
+        SVLocusSet set1(1);
+        set1.merge(locus1);
+        set1.merge(locus2);
+        set1.merge(locus3);
+        set1.checkState(true,true);
+
+        BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),1u);
+        BOOST_REQUIRE_EQUAL(set1.getLocus(0).size(),3u);
     }
 
-    SVLocusSet set1(1);
-    set1.merge(locus1);
-    set1.merge(locus2);
-
-    set1.checkState(true);
-
-    GenomeInterval testInterval(1,10,60);
-
-    BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),1u);
-    BOOST_REQUIRE_EQUAL(set1.getLocus(0).size(),2u);
-
-    bool isFound(false);
-    BOOST_FOREACH(const SVLocusNode& node, set1.getLocus(0))
     {
-        if (node.interval == testInterval) isFound=true;
+        SVLocusSet set1(2);
+        set1.merge(locus1);
+        set1.merge(locus2);
+        set1.merge(locus3);
+        set1.checkState(true,true);
+
+        BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),2u);
+        BOOST_REQUIRE_EQUAL(set1.getLocus(0).size(),2u);
     }
-    BOOST_REQUIRE(isFound);
+
+    {
+        SVLocusSet set1(3);
+        set1.merge(locus1);
+        set1.merge(locus2);
+        set1.merge(locus3);
+        set1.checkState(true,true);
+
+        BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),3u);
+        BOOST_REQUIRE_EQUAL(set1.getLocus(0).size(),2u);
+    }
 }
 
 
@@ -299,30 +306,19 @@ BOOST_AUTO_TEST_CASE( test_SVLocusCombine )
 
     // construct a simple two-node locus
     SVLocus locus1;
-    {
-        NodeIndexType nodePtr1 = locus1.addNode(1,10,20);
-        NodeIndexType nodePtr2 = locus1.addRemoteNode(2,30,40);
-        locus1.linkNodes(nodePtr1,nodePtr2);
-    }
+    locusAddPair(locus1,1,10,20,2,30,40);
 
     SVLocus locus2;
-    {
-        NodeIndexType nodePtr3 = locus2.addNode(3,10,20);
-        NodeIndexType nodePtr4 = locus2.addRemoteNode(4,30,40);
-        locus2.linkNodes(nodePtr3,nodePtr4);
-    }
+    locusAddPair(locus2,3,10,20,4,30,40);
 
     SVLocus locus3;
-    {
-        NodeIndexType nodePtr5 = locus3.addNode(5,10,20);
-        NodeIndexType nodePtr6 = locus3.addRemoteNode(6,30,40);
-        locus3.linkNodes(nodePtr5,nodePtr6);
-    }
+    locusAddPair(locus3,5,10,20,6,30,40);
 
     SVLocusSet set1(1);
     set1.merge(locus1);
     set1.merge(locus2);
     set1.merge(locus3);
+    set1.checkState(true,true);
 
     BOOST_REQUIRE_EQUAL(set1._loci[0].size(),2u);
     BOOST_REQUIRE_EQUAL(set1._loci[1].size(),2u);
