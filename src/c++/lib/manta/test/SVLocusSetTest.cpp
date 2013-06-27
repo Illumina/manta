@@ -24,6 +24,7 @@
 
 BOOST_AUTO_TEST_SUITE( test_SVLocusSet )
 
+
 static
 unsigned
 testOverlap(
@@ -39,13 +40,30 @@ testOverlap(
 
 
 
+static
+void
+locusAddPair(
+        SVLocus& locus,
+        const int32_t tid1,
+        const int32_t beginPos1,
+        const int32_t endPos1,
+        const int32_t tid2,
+        const int32_t beginPos2,
+        const int32_t endPos2)
+{
+    const NodeIndexType nodePtr1 = locus.addNode(tid1,beginPos1,endPos1);
+    const NodeIndexType nodePtr2 = locus.addRemoteNode(tid2,beginPos2,endPos2);
+    locus.linkNodes(nodePtr1,nodePtr2);
+}
+
+
+
+
 BOOST_AUTO_TEST_CASE( test_SVLocusIntersect )
 {
     // construct a simple two-node locus
     SVLocus locus1;
-    NodeIndexType nodePtr1 = locus1.addNode(1,10,20);
-    NodeIndexType nodePtr2 = locus1.addNode(2,30,40);
-    locus1.linkNodes(nodePtr1,nodePtr2);
+    locusAddPair(locus1,1,10,20,2,30,40);
 
     SVLocusSet set1;
     set1.merge(locus1);
@@ -76,14 +94,10 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMerge )
 
     // construct a simple two-node locus
     SVLocus locus1;
-    NodeIndexType nodePtr1 = locus1.addNode(1,10,20);
-    NodeIndexType nodePtr2 = locus1.addRemoteNode(2,30,40);
-    locus1.linkNodes(nodePtr1,nodePtr2);
+    locusAddPair(locus1,1,10,20,2,30,40);
 
     SVLocus locus2;
-    NodeIndexType nodePtr3 = locus2.addNode(1,10,20);
-    NodeIndexType nodePtr4 = locus2.addRemoteNode(2,30,40);
-    locus2.linkNodes(nodePtr3,nodePtr4);
+    locusAddPair(locus2,1,10,20,2,30,40);
 
     SVLocusSet set1(2);
     set1.merge(locus1);
@@ -100,25 +114,13 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge )
     // test merge of overlapping loci, reproduces production failure
 
     SVLocus locus1;
-    {
-        NodeIndexType nodePtr1 = locus1.addNode(1,10,20);
-        NodeIndexType nodePtr2 = locus1.addRemoteNode(12,30,40);
-        locus1.linkNodes(nodePtr1,nodePtr2);
-    }
+    locusAddPair(locus1,1,10,20,12,30,40);
 
     SVLocus locus2;
-    {
-        NodeIndexType nodePtr1 = locus2.addNode(2,10,20);
-        NodeIndexType nodePtr2 = locus2.addRemoteNode(12,50,60);
-        locus2.linkNodes(nodePtr1,nodePtr2);
-    }
+    locusAddPair(locus2,2,10,20,12,50,60);
 
     SVLocus locus3;
-    {
-        NodeIndexType nodePtr1 = locus3.addNode(3,10,20);
-        NodeIndexType nodePtr2 = locus3.addRemoteNode(12,35,55);
-        locus3.linkNodes(nodePtr1,nodePtr2);
-    }
+    locusAddPair(locus3,3,10,20,12,35,55);
 
 
     SVLocusSet set1(1);
@@ -155,11 +157,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge2 )
     }
 
     SVLocus locus2;
-    {
-        NodeIndexType nodePtr1 = locus2.addNode(1,10,60);
-        NodeIndexType nodePtr2 = locus2.addRemoteNode(2,10,60);
-        locus2.linkNodes(nodePtr1,nodePtr2);
-    }
+    locusAddPair(locus2,1,10,60,2,10,60);
 
     SVLocusSet set1(1);
     set1.merge(locus1);
@@ -179,45 +177,24 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge2 )
 }
 
 
-
 BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge3 )
 {
     // test merge of overlapping loci, reproduces production failure
 
     SVLocus locus1;
-    {
-        NodeIndexType nodePtr1 = locus1.addNode(1,10,20);
-        NodeIndexType nodePtr2 = locus1.addRemoteNode(3,10,20);
-        locus1.linkNodes(nodePtr1,nodePtr2);
-    }
+    locusAddPair(locus1,1,10,20,3,10,20);
 
     SVLocus locus2;
-    {
-        NodeIndexType nodePtr1 = locus2.addNode(1,30,40);
-        NodeIndexType nodePtr2 = locus2.addRemoteNode(4,10,20);
-        locus2.linkNodes(nodePtr1,nodePtr2);
-    }
+    locusAddPair(locus2,1,30,40,4,10,20);
 
     SVLocus locus3;
-    {
-        NodeIndexType nodePtr1 = locus3.addNode(2,30,40);
-        NodeIndexType nodePtr2 = locus3.addRemoteNode(5,10,20);
-        locus3.linkNodes(nodePtr1,nodePtr2);
-    }
+    locusAddPair(locus3,2,30,40,5,10,20);
 
     SVLocus locus4;
-    {
-        NodeIndexType nodePtr1 = locus4.addNode(1,15,35);
-        NodeIndexType nodePtr2 = locus4.addRemoteNode(6,10,20);
-        locus4.linkNodes(nodePtr1,nodePtr2);
-    }
+    locusAddPair(locus4,1,15,35,6,10,20);
 
     SVLocus locus5;
-    {
-        NodeIndexType nodePtr1 = locus5.addNode(2,15,35);
-        NodeIndexType nodePtr2 = locus5.addRemoteNode(7,10,20);
-        locus5.linkNodes(nodePtr1,nodePtr2);
-    }
+    locusAddPair(locus5,2,15,35,7,10,20);
 
     SVLocusSet set1(1);
     set1.merge(locus1);
@@ -246,17 +223,53 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge4 )
     // test merge of overlapping loci, reproduces production failure
 
     SVLocus locus1;
+    locusAddPair(locus1,1,10,60,2,20,30);
+
+    SVLocus locus2;
+    locusAddPair(locus2,1,40,50,1,20,30);
+
+    SVLocusSet set1(1);
+    set1.merge(locus1);
+    set1.merge(locus2);
+
+    set1.checkState(true);
+
+    GenomeInterval testInterval(1,10,60);
+
+    BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),1u);
+    BOOST_REQUIRE_EQUAL(set1.getLocus(0).size(),2u);
+
+    bool isFound(false);
+    BOOST_FOREACH(const SVLocusNode& node, set1.getLocus(0))
+    {
+        if (node.interval == testInterval) isFound=true;
+    }
+    BOOST_REQUIRE(isFound);
+}
+
+
+
+BOOST_AUTO_TEST_CASE( test_SVLocusNoiseMerge )
+{
+    SVLocus locus1;
     {
         NodeIndexType nodePtr1 = locus1.addNode(1,10,60);
-        NodeIndexType nodePtr2 = locus1.addNode(2,20,30);
+        NodeIndexType nodePtr2 = locus1.addRemoteNode(2,20,30);
         locus1.linkNodes(nodePtr1,nodePtr2);
     }
 
     SVLocus locus2;
     {
-        NodeIndexType nodePtr1 = locus2.addNode(1,40,50);
-        NodeIndexType nodePtr2 = locus2.addNode(1,20,30);
+        NodeIndexType nodePtr1 = locus2.addNode(1,10,60);
+        NodeIndexType nodePtr2 = locus2.addRemoteNode(2,20,30);
         locus2.linkNodes(nodePtr1,nodePtr2);
+    }
+
+    SVLocus locus3;
+    {
+        NodeIndexType nodePtr1 = locus3.addNode(1,10,60);
+        NodeIndexType nodePtr2 = locus3.addRemoteNode(3,20,30);
+        locus3.linkNodes(nodePtr1,nodePtr2);
     }
 
     SVLocusSet set1(1);
