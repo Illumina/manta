@@ -284,6 +284,11 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNoiseMerge )
 
         BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),2u);
         BOOST_REQUIRE_EQUAL(set1.getLocus(0).size(),2u);
+
+        set1.clean();
+
+        BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),1u);
+        BOOST_REQUIRE_EQUAL(set1.getLocus(0).size(),2u);
     }
 
     {
