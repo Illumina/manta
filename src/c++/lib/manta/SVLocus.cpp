@@ -158,6 +158,7 @@ clearNodeEdges(NodeIndexType nodePtr)
     SVLocusNode& node(getNode(nodePtr));
     BOOST_FOREACH(edges_type::value_type& edgeIter, node)
     {
+
         SVLocusNode& remoteNode(getNode(edgeIter.first));
         edges_type& remoteEdges(remoteNode.edges);
         edges_type::iterator thisRemoteIter(remoteEdges.find(nodePtr));
@@ -202,18 +203,8 @@ eraseNode(const NodeIndexType nodePtr)
         {
             SVLocusNode& remoteNode(getNode(edgeIter.first));
             edges_type& remoteEdges(remoteNode.edges);
-            edges_type::iterator thisRemoteIter(remoteEdges.find(fromPtr));
-            if (thisRemoteIter == remoteEdges.end())
-            {
-                std::ostringstream oss;
-                oss << "ERROR: eraseNode: no return edge on remote node.\n";
-                oss << "\tlocal_node: " << fromNode;
-                oss << "\tremote_node: " << remoteNode;
-                BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
-            }
-
-            remoteEdges.insert(std::make_pair(nodePtr,thisRemoteIter->second));
-            remoteEdges.erase(thisRemoteIter);
+            remoteEdges.insert(std::make_pair(nodePtr,getEdge(edgeIter.first,fromPtr)));
+            remoteEdges.erase(fromPtr);
         }
 
         notifyDelete(nodePtr);
@@ -279,16 +270,7 @@ checkState(const bool isCheckConnected) const
         BOOST_FOREACH(const edges_type::value_type& edgeIter, node)
         {
             // check that that every edge has a return path:
-            const SVLocusNode& edgeNode(getNode(edgeIter.first));
-            SVLocusNode::const_iterator iter(edgeNode.edges.find(nodeIndex));
-            if (edgeNode.edges.end() == iter)
-            {
-                std::ostringstream oss;
-                oss << "ERROR: no return edge on remote node.\n";
-                oss << "\tlocal_node: " << _index << ":" << nodeIndex << " " << node;
-                oss << "\tremote_node: " << _index << ":" << edgeIter.first << " " << edgeNode;
-                BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
-            }
+            getEdge(edgeIter.first,nodeIndex);
         }
     }
 

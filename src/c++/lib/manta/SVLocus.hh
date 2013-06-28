@@ -381,6 +381,11 @@ private:
     void
     clearNodeEdges(const NodeIndexType nodePtr);
 
+    void
+    getEdgeException(
+            const NodeIndexType fromIndex,
+            const NodeIndexType toIndex) const;
+
     /// return from->to edge
     const SVLocusEdge&
     getEdge(const NodeIndexType fromIndex,
