@@ -83,14 +83,14 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
     /// locus is destroyed in this process
     ///
     void
-    merge(SVLocus& locus);
+    merge(const SVLocus& locus);
 
     /// merge locus set into this:
     ///
     /// locus set is destroyed in this process
     ///
     void
-    merge(SVLocusSet& set);
+    merge(const SVLocusSet& set);
 
     void
     clear()

@@ -41,7 +41,7 @@ operator<<(std::ostream& os, const SVLocusSet::NodeAddressType& a)
 
 void
 SVLocusSet::
-merge(SVLocus& inputLocus)
+merge(const SVLocus& inputLocus)
 {
     //
     // test each node in input locus for intersection and insert/join to existing node
@@ -194,11 +194,11 @@ merge(SVLocus& inputLocus)
 
 void
 SVLocusSet::
-merge(SVLocusSet& inputSet)
+merge(const SVLocusSet& inputSet)
 {
     // TODO: check for compatible bam headers between inputSet and this
 
-    BOOST_FOREACH(SVLocus& locus, inputSet._loci)
+    BOOST_FOREACH(const SVLocus& locus, inputSet._loci)
     {
         try
         {
