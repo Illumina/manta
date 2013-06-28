@@ -381,7 +381,18 @@ private:
     void
     clearNodeEdges(const NodeIndexType nodePtr);
 
-    // copy fromLocus into this locus (this should be an intermediate part of a locus merge)
+    /// return from->to edge
+    const SVLocusEdge&
+    getEdge(const NodeIndexType fromIndex,
+            const NodeIndexType toIndex) const
+    {
+        const SVLocusNode& fromNode(getNode(fromIndex));
+        edges_type::const_iterator i(fromNode.edges.find(toIndex));
+        assert(i != fromNode.edges.end());
+        return i->second;
+    }
+
+    /// copy fromLocus into this locus (this should be an intermediate part of a locus merge)
     void
     copyLocus(const SVLocus& fromLocus)
     {

@@ -341,10 +341,8 @@ getNodeMergeableIntersect(
                 }
                 else
                 {
-                    const SVLocusNode& remoteIntersectNode(getNode(remoteAddy));
-                    const SVLocusNode::edges_type::const_iterator toLocalEdgeIter(remoteIntersectNode.edges.find(addy.second));
-                    assert(toLocalEdgeIter != remoteIntersectNode.edges.end());
-                    if(toLocalEdgeIter->second.count >= _minMergeEdgeCount)
+                    const SVLocus& isectLocus(getLocus(remoteAddy.first));
+                    if(isectLocus.getEdge(remoteAddy.second,addy.second).count >= _minMergeEdgeCount)
                     {
                         signalIntersectNodes.insert(addy);
                     }
@@ -383,35 +381,25 @@ getNodeMergeableIntersect(
         // total counts for this edge:
         unsigned mergedRemoteEdgeCount(0);
         unsigned mergedLocalEdgeCount(0);
-        BOOST_FOREACH(const NodeAddressType remoteIntersectAddy, countStore)
+        BOOST_FOREACH(const NodeAddressType remoteIsectAddy, countStore)
         {
 
 #ifdef DEBUG_SVL
-            log_os << "SVLocusSet::getNodeMergableIntersect countStore addy: " << remoteIntersectAddy << "\n";
+            log_os << "SVLocusSet::getNodeMergableIntersect countStore addy: " << remoteIsectAddy << "\n";
 #endif
 
-            const rlmap_range_t remoteIsectRange(remoteToLocal.equal_range(remoteIntersectAddy));
+            const rlmap_range_t remoteIsectRange(remoteToLocal.equal_range(remoteIsectAddy));
             assert(remoteIsectRange.first != remoteToLocal.end());
             for(rliter_t riter(remoteIsectRange.first); riter != remoteIsectRange.second; ++riter)
             {
                 const NodeIndexType localNodeIndex(riter->second);
+                const SVLocus& remoteIsectLocus(getLocus(remoteIsectAddy.first));
 
-                {  // total edge counts on the remote->local edge:
-                    const SVLocusNode& remoteIntersectNode(getNode(remoteIntersectAddy));
-                    const SVLocusNode::const_iterator toLocalEdgeIter(remoteIntersectNode.edges.find(localNodeIndex));
-                    assert(toLocalEdgeIter != remoteIntersectNode.edges.end());
+                // total edge counts on the remote->local edge:
+                mergedRemoteEdgeCount += remoteIsectLocus.getEdge(remoteIsectAddy.second,localNodeIndex).count;
 
-                    mergedRemoteEdgeCount += toLocalEdgeIter->second.count;
-                }
-
-                {  // total edge counts on the local->remote edge:
-                    const NodeAddressType localIntersectAddy(std::make_pair(remoteIntersectAddy.first,localNodeIndex));
-                    const SVLocusNode& localIntersectNode(getNode(localIntersectAddy));
-                    const SVLocusNode::const_iterator edgeIter(localIntersectNode.edges.find(remoteIntersectAddy.second));
-                    assert(edgeIter != localIntersectNode.edges.end());
-
-                    mergedLocalEdgeCount += edgeIter->second.count;
-                }
+                // total edge counts on the local->remote edge:
+                mergedLocalEdgeCount += remoteIsectLocus.getEdge(localNodeIndex,remoteIsectAddy.second).count;
             }
         }
 
@@ -423,11 +411,8 @@ getNodeMergeableIntersect(
         if(! isInputLocusMoved)
         {
             { // total edge counts on the input remote->local edge
-                const SVLocusNode& remoteNode(getNode(std::make_pair(inputAddy.first,inputEdge.first)));
-                const SVLocusNode::const_iterator toLocalEdgeIter(remoteNode.edges.find(nodeIndex));
-                assert(toLocalEdgeIter != remoteNode.edges.end());
-
-                mergedRemoteEdgeCount += toLocalEdgeIter->second.count;
+                const SVLocus& inputLocus(getLocus(inputAddy.first));
+                mergedRemoteEdgeCount += inputLocus.getEdge(inputEdge.first,nodeIndex).count;
             }
 
             // total edge counts on the input local->remote edge
