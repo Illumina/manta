@@ -377,6 +377,9 @@ private:
         _index=index;
     }
 
+    /// remove all unmerged noise edges
+    void
+    clean(const unsigned minMergeEdgeCount);
 
     void
     clearNodeEdges(const NodeIndexType nodePtr);
@@ -393,8 +396,27 @@ private:
     {
         const SVLocusNode& fromNode(getNode(fromIndex));
         edges_type::const_iterator i(fromNode.edges.find(toIndex));
-        assert(i != fromNode.edges.end());
+        if(i == fromNode.edges.end()) getEdgeException(fromIndex,toIndex);
         return i->second;
+    }
+
+    /// erase edges in both directions:
+    void
+    clearEdgePair(
+            const NodeIndexType index1,
+            const NodeIndexType index2)
+    {
+        clearEdge(index1,index2);
+        clearEdge(index2,index1);
+    }
+
+    /// erase edge in one direction
+    void
+    clearEdge(
+            const NodeIndexType fromIndex,
+            const NodeIndexType toIndex)
+    {
+        getNode(fromIndex).edges.erase(toIndex);
     }
 
     /// copy fromLocus into this locus (this should be an intermediate part of a locus merge)

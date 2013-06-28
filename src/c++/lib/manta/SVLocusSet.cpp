@@ -574,6 +574,20 @@ mergeNodePtr(NodeAddressType fromPtr,
 
 
 
+void
+SVLocusSet::
+clean()
+{
+    BOOST_FOREACH(SVLocus& locus, _loci)
+    {
+        if(locus.empty()) continue;
+        locus.clean(_minMergeEdgeCount);
+        if(locus.empty()) _emptyLoci.insert(locus.getIndex());
+    }
+    _isOverlapAllowed=false;
+}
+
+
 
 void
 SVLocusSet::

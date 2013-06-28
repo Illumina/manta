@@ -99,6 +99,10 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
         clearIndex();
     }
 
+    /// remove all existing edges with less than minMergeEdgeCount support:
+    void
+    clean();
+
     // binary serialization
     void
     save(const char* filename) const;

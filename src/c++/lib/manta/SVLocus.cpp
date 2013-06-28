@@ -148,6 +148,84 @@ mergeNode(
 }
 
 
+void
+SVLocus::
+getEdgeException(
+        const NodeIndexType fromIndex,
+        const NodeIndexType toIndex) const
+{
+    using namespace illumina::common;
+
+    std::ostringstream oss;
+    oss << "ERROR: SVLocus::getEdge() no edge exists\n";
+    oss << "\tfrom_node: " << _index << ":" << fromIndex << " " << getNode(fromIndex);
+    oss << "\tto_node: " << _index << ":" << toIndex << " " << getNode(toIndex);
+    BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
+}
+
+
+
+void
+SVLocus::
+clean(const unsigned minMergeEdgeCount)
+{
+    if(0 == minMergeEdgeCount) return;
+
+    std::vector<NodeIndexType> eraseNodes;
+
+    const unsigned nodeSize(size());
+    for (unsigned nodeIndex(0); nodeIndex<nodeSize; ++nodeIndex)
+    {
+        SVLocusNode& queryNode(getNode(nodeIndex));
+
+        std::vector<NodeIndexType> eraseEdges;
+        BOOST_FOREACH(edges_type::value_type& edgeIter, queryNode)
+        {
+            if(0!=edgeIter.second.count)
+            {
+                if(edgeIter.second.count < minMergeEdgeCount)
+                {
+                    assert(queryNode.count>=edgeIter.second.count);
+                    queryNode.count -= edgeIter.second.count;
+                    edgeIter.second.count = 0;
+                }
+            }
+
+            if(0 == edgeIter.second.count)
+            {
+                if(0 == getEdge(edgeIter.first,nodeIndex).count)
+                {
+                    eraseEdges.push_back(edgeIter.first);
+                }
+            }
+
+        }
+
+        // delete empty edges:
+        BOOST_FOREACH(const NodeIndexType toIndex, eraseEdges)
+        {
+            clearEdgePair(nodeIndex,toIndex);
+        }
+
+        // mark node for deletion
+        if((0 == queryNode.edges.size()) &&
+           (0 == queryNode.count))
+        {
+            eraseNodes.push_back(nodeIndex);
+        }
+    }
+
+    // erase empty nodes -- must be done in descending order:
+    std::sort(eraseNodes.rbegin(),eraseNodes.rend());
+    BOOST_FOREACH(NodeIndexType nodeIndex, eraseNodes)
+    {
+        eraseNode(nodeIndex);
+    }
+
+}
+
+
+
 
 void
 SVLocus::
