@@ -38,7 +38,7 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
         _inodes(NodeAddressSorter(*this)),
         _source("UNKNOWN"),
         _minMergeEdgeCount(minMergeEdgeCount),
-        _isOverlapAllowed(true)
+        _isFinalized(false)
     {}
 
     bool
@@ -97,6 +97,14 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
     {
         _loci.clear();
         clearIndex();
+    }
+
+    /// indicate that the set is complete
+    void
+    finalize()
+    {
+        clean();
+        _isFinalized=true;
     }
 
     /// remove all existing edges with less than minMergeEdgeCount support:
@@ -270,6 +278,12 @@ private:
         locus.eraseNode(inputNodePtr.second);
     }
 
+    bool
+    isOverlapAllowed() const
+    {
+        return (! _isFinalized);
+    }
+
     void
     mergeNodePtr(NodeAddressType fromPtr,
                  NodeAddressType toPtr);
@@ -356,7 +370,7 @@ private:
 
     // the graph has intermediate states (during build) when overlapping regions are allowed,
     // once complete, overlaps are not present and disallowed:
-    bool _isOverlapAllowed;
+    bool _isFinalized;
 };
 
 

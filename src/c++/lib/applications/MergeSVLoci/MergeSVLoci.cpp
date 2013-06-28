@@ -59,7 +59,7 @@ runMSL(const MSLOptions& opt)
         }
     }
 
-    mergedSet.clean();
+    mergedSet.finalize();
     mergedSet.save(opt.outputFilename.c_str());
 }
 

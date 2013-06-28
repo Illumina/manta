@@ -49,6 +49,8 @@ merge(const SVLocus& inputLocus)
 
     using namespace illumina::common;
 
+    assert(! _isFinalized);
+
 #ifdef DEBUG_SVL
     checkState(true);
     log_os << "SVLocusSet::merge inputLocus: " << inputLocus;
@@ -280,7 +282,7 @@ getNodeIntersectCore(
         const GenomeInterval& searchInterval(getNode(*it_rev).interval);
         if (! inputInterval.isIntersect(searchInterval))
         {
-            if(! _isOverlapAllowed) break;
+            if(! isOverlapAllowed()) break;
 
             if(inputInterval.tid != searchInterval.tid) break;
             if((searchInterval.range.begin_pos()+maxRegionSize)<inputInterval.range.begin_pos()) break;
@@ -596,7 +598,6 @@ clean()
         locus.clean(getMinMergeEdgeCount());
         if(locus.empty()) _emptyLoci.insert(locus.getIndex());
     }
-    _isOverlapAllowed=false;
 }
 
 
@@ -731,6 +732,7 @@ save(const char* filename) const
 
     oa << header;
     oa << _minMergeEdgeCount;
+    oa << _isFinalized;
     BOOST_FOREACH(const SVLocus& locus, _loci)
     {
         if (locus.empty()) continue;
@@ -756,6 +758,7 @@ load(const char* filename)
 
     ia >> header;
     ia >> _minMergeEdgeCount;
+    ia >> _isFinalized;
     SVLocus locus;
     while (ifs.peek() != EOF)
     {
@@ -861,7 +864,7 @@ checkState(
 
     if (! isCheckOverlap) return;
 
-    if(_isOverlapAllowed) return;
+    if(isOverlapAllowed()) return;
 
     bool isFirst(true);
     GenomeInterval lastInterval;
