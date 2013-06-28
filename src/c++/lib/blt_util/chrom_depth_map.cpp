@@ -79,7 +79,7 @@ parse_chrom_depth(const std::string& chrom_depth_file,
             const char* s(word2);
             chrom_depth[buff] = illumina::blt_util::parse_double(s);
         }
-        catch (const blt_exception& e)
+        catch (const blt_exception&)
         {
             log_os << "ERROR: unexpected format in read chrom depth file line " << (line_no) << "\n";
             throw;

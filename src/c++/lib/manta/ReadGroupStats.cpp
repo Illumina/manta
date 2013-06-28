@@ -49,6 +49,7 @@ const unsigned STAT_REL_ORIENT_IDX         = 3;
 
 
 
+static
 bool
 calcStats(std::vector<int32_t>& data,
           PairStatSet& stats)
