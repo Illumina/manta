@@ -198,6 +198,8 @@ merge(const SVLocusSet& inputSet)
 {
     // TODO: check for compatible bam headers between inputSet and this
 
+    assert(getMinMergeEdgeCount() == inputSet.getMinMergeEdgeCount());
+
     BOOST_FOREACH(const SVLocus& locus, inputSet._loci)
     {
         try
@@ -702,6 +704,7 @@ save(const char* filename) const
     binary_oarchive oa(ofs);
 
     oa << header;
+    oa << _minMergeEdgeCount;
     BOOST_FOREACH(const SVLocus& locus, _loci)
     {
         if (locus.empty()) continue;
@@ -726,6 +729,7 @@ load(const char* filename)
     _source=filename;
 
     ia >> header;
+    ia >> _minMergeEdgeCount;
     SVLocus locus;
     while (ifs.peek() != EOF)
     {
