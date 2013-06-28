@@ -275,6 +275,31 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNoiseMerge )
     }
 
     {
+        SVLocusSet set1(2);
+        set1.merge(locus1);
+        set1.merge(locus2);
+        set1.merge(locus3);
+
+        BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),2u);
+        BOOST_REQUIRE_EQUAL(set1.getLocus(1).size(),2u);
+
+        set1.cleanRegion(GenomeInterval(3,0,70));
+
+        BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),2u);
+        BOOST_REQUIRE_EQUAL(set1.getLocus(1).size(),2u);
+
+        set1.cleanRegion(GenomeInterval(1,0,70));
+
+        BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),2u);
+        BOOST_REQUIRE_EQUAL(set1.getLocus(1).size(),1u);
+
+        set1.cleanRegion(GenomeInterval(3,0,70));
+
+        BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),1u);
+        BOOST_REQUIRE_EQUAL(set1.getLocus(0).size(),2u);
+    }
+
+    {
         SVLocusSet set1(3);
         set1.merge(locus1);
         set1.merge(locus2);

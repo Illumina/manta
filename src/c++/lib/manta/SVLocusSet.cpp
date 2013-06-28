@@ -593,10 +593,28 @@ clean()
     BOOST_FOREACH(SVLocus& locus, _loci)
     {
         if(locus.empty()) continue;
-        locus.clean(_minMergeEdgeCount);
+        locus.clean(getMinMergeEdgeCount());
         if(locus.empty()) _emptyLoci.insert(locus.getIndex());
     }
     _isOverlapAllowed=false;
+}
+
+
+
+void
+SVLocusSet::
+cleanRegion(const GenomeInterval interval)
+{
+    std::set<NodeAddressType> intersectNodes;
+    getRegionIntersect(interval,intersectNodes);
+
+    BOOST_FOREACH(const NodeAddressType& val, intersectNodes)
+    {
+        SVLocus& locus(getLocus(val.first));
+        assert(! locus.empty());
+        locus.cleanNode(getMinMergeEdgeCount(), val.second);
+        if(locus.empty()) _emptyLoci.insert(locus.getIndex());
+    }
 }
 
 

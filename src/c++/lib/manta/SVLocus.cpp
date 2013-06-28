@@ -165,51 +165,72 @@ getEdgeException(
 
 
 
+bool
+SVLocus::
+cleanNodeCore(
+        const unsigned minMergeEdgeCount,
+        const NodeIndexType nodeIndex)
+{
+    SVLocusNode& queryNode(getNode(nodeIndex));
+
+    std::vector<NodeIndexType> eraseEdges;
+    BOOST_FOREACH(edges_type::value_type& edgeIter, queryNode)
+    {
+        if(0!=edgeIter.second.count)
+        {
+            if(edgeIter.second.count < minMergeEdgeCount)
+            {
+                assert(queryNode.count>=edgeIter.second.count);
+                queryNode.count -= edgeIter.second.count;
+                edgeIter.second.count = 0;
+            }
+        }
+
+        if(0 == edgeIter.second.count)
+        {
+            if(0 == getEdge(edgeIter.first,nodeIndex).count)
+            {
+                eraseEdges.push_back(edgeIter.first);
+            }
+        }
+
+    }
+
+    // delete empty edges:
+    BOOST_FOREACH(const NodeIndexType toIndex, eraseEdges)
+    {
+        clearEdgePair(nodeIndex,toIndex);
+    }
+
+    // return true if node should be deleted
+    return ((0 == queryNode.edges.size()) && (0 == queryNode.count));
+}
+
+
+
+void
+SVLocus::
+cleanNode(
+        const unsigned minMergeEdgeCount,
+        const NodeIndexType nodeIndex)
+{
+    if(cleanNodeCore(minMergeEdgeCount,nodeIndex))
+    {
+        eraseNode(nodeIndex);
+    }
+}
+
+
+
 void
 SVLocus::
 clean(const unsigned minMergeEdgeCount)
 {
-    if(0 == minMergeEdgeCount) return;
-
     std::vector<NodeIndexType> eraseNodes;
-
     const unsigned nodeSize(size());
     for (unsigned nodeIndex(0); nodeIndex<nodeSize; ++nodeIndex)
     {
-        SVLocusNode& queryNode(getNode(nodeIndex));
-
-        std::vector<NodeIndexType> eraseEdges;
-        BOOST_FOREACH(edges_type::value_type& edgeIter, queryNode)
-        {
-            if(0!=edgeIter.second.count)
-            {
-                if(edgeIter.second.count < minMergeEdgeCount)
-                {
-                    assert(queryNode.count>=edgeIter.second.count);
-                    queryNode.count -= edgeIter.second.count;
-                    edgeIter.second.count = 0;
-                }
-            }
-
-            if(0 == edgeIter.second.count)
-            {
-                if(0 == getEdge(edgeIter.first,nodeIndex).count)
-                {
-                    eraseEdges.push_back(edgeIter.first);
-                }
-            }
-
-        }
-
-        // delete empty edges:
-        BOOST_FOREACH(const NodeIndexType toIndex, eraseEdges)
-        {
-            clearEdgePair(nodeIndex,toIndex);
-        }
-
-        // mark node for deletion
-        if((0 == queryNode.edges.size()) &&
-           (0 == queryNode.count))
+        if(cleanNodeCore(minMergeEdgeCount,nodeIndex))
         {
             eraseNodes.push_back(nodeIndex);
         }

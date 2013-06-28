@@ -372,6 +372,19 @@ private:
         _index=index;
     }
 
+    /// remove all unmerged noise in-edges of node and
+    /// return whether the node should be deleted
+    bool
+    cleanNodeCore(
+            const unsigned minMergeEdgeCount,
+            const NodeIndexType nodeIndex);
+
+    /// remove all unmerged noise in-edges of node and possibly node itself
+    void
+    cleanNode(
+            const unsigned minMergeEdgeCount,
+            const NodeIndexType nodeIndex);
+
     /// remove all unmerged noise edges
     void
     clean(const unsigned minMergeEdgeCount);

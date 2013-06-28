@@ -28,7 +28,6 @@ static
 void
 runMSL(const MSLOptions& opt)
 {
-
     {
         // early test that we have permission to write to output file
         OutStream outs(opt.outputFilename);

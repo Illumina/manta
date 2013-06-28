@@ -103,6 +103,9 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
     void
     clean();
 
+    void
+    cleanRegion(const GenomeInterval interval);
+
     // binary serialization
     void
     save(const char* filename) const;
