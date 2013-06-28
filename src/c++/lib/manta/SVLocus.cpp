@@ -215,13 +215,21 @@ clean(const unsigned minMergeEdgeCount)
         }
     }
 
-    // erase empty nodes -- must be done in descending order:
-    std::sort(eraseNodes.rbegin(),eraseNodes.rend());
-    BOOST_FOREACH(NodeIndexType nodeIndex, eraseNodes)
+    // erase empty nodes:
+    if(size() == eraseNodes.size())
     {
-        eraseNode(nodeIndex);
+        // if the whole locus is being erased, this is more efficient:
+        clear();
     }
-
+    else
+    {
+        // erase empty nodes -- must be done in descending order:
+        std::sort(eraseNodes.rbegin(),eraseNodes.rend());
+        BOOST_FOREACH(NodeIndexType nodeIndex, eraseNodes)
+        {
+            eraseNode(nodeIndex);
+        }
+    }
 }
 
 
