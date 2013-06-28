@@ -20,5 +20,5 @@
 
 # samtools used by classes: bam_streamer and bam_record
 #
-include_directories ("${SAMTOOLS_DIR}")
+include_directories (BEFORE SYSTEM "${SAMTOOLS_DIR}")
 include(${MANTA_CXX_LIBRARY_CMAKE})

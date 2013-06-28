@@ -126,9 +126,23 @@ set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
 #set (CMAKE_CXX_FLAGS_PROFILE "-O0 -g -pg -fprofile-arcs -ftest-coverage")
 
 # this should be tied to a 'developer' switch -- for now,
-# anyone touching manta is a developer and might want to turn this on
-if (false)
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+# anyone touching manta is a developer, so this is true:
+set(DEVELOPER_MODE true)
+
+if (${DEVELOPER_MODE})
+    # some compiler versions will produce warnings with no reasonable workaround,
+    # in this case, turn Werror off
+    set(IS_WERROR true)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        if (${compiler_version} VERSION_LESS "4.2.0")
+            set(IS_WERROR false)
+        endif ()
+    endif ()
+
+    if(${IS_WERROR})
+        message (STATUS "building in developer mode: treating compiler errors as warnings")
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+    endif ()
 endif ()
 
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "^i[67]86$")
