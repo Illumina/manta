@@ -125,6 +125,13 @@ set (CMAKE_CXX_FLAGS_RELEASE "-O3")
 set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
 #set (CMAKE_CXX_FLAGS_PROFILE "-O0 -g -pg -fprofile-arcs -ftest-coverage")
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    # extra clang warnings:
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wmissing-prototypes -Wunused-exception-parameter")
+    # documentation of other possible warning flags from clang
+    #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Weverything -Wno-sign-conversion -Wno-weak-vtables -Wno-conversion -Wno-cast-align -Wno-padded -Wno-switch-enum -Wno-missing-noreturn -Wno-covered-switch-default -Wno-unreachable-code -Wno-global-constructors -Wno-exit-time-destructors")
+endif()
+
 # this should be tied to a 'developer' switch -- for now,
 # anyone touching manta is a developer, so this is true:
 set(DEVELOPER_MODE true)
