@@ -73,42 +73,48 @@ getChimericSVLocus(
     const unsigned totalNoninsertSize(thisReadNoninsertSize+mateReadNoninsertSize);
 
     // get local breakend estimate:
-    pos_t breakendMin(0),breakendMax(0);
+    NodeIndexType localBreakendNode(0);
     {
+        GenomeInterval localBreakend(read.target_id());
+
         const pos_t startRefPos(read.pos()-1);
         const pos_t endRefPos(startRefPos+apath_ref_length(apath));
         // expected breakpoint range is from the end of the read alignment to the (probabilistic) end of the fragment:
         if (read.is_fwd_strand())
         {
-            breakendMin=(endRefPos);
-            breakendMax=(endRefPos + static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
+            localBreakend.range.set_begin_pos(endRefPos);
+            localBreakend.range.set_end_pos(endRefPos + static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
         }
         else
         {
-            breakendMax=(startRefPos);
-            breakendMin=(startRefPos - static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
+            localBreakend.range.set_end_pos(startRefPos);
+            localBreakend.range.set_begin_pos(startRefPos - static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
         }
+
+        localBreakendNode = locus.addNode(localBreakend);
     }
-    const NodeIndexType nodePtr1(locus.addNode(read.target_id(),breakendMin,breakendMax));
 
     // get remote breakend estimate:
     {
+        GenomeInterval remoteBreakend(read.mate_target_id());
+
         const pos_t startRefPos(read.mate_pos()-1);
         const pos_t endRefPos(startRefPos+readSize);
         if (read.is_mate_fwd_strand())
         {
-            breakendMin=(endRefPos);
-            breakendMax=(endRefPos + static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
+            remoteBreakend.range.set_begin_pos(endRefPos);
+            remoteBreakend.range.set_end_pos(endRefPos + static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
         }
         else
         {
-            breakendMax=(startRefPos);
-            breakendMin=(startRefPos - static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
+            remoteBreakend.range.set_end_pos(startRefPos);
+            remoteBreakend.range.set_begin_pos(startRefPos - static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
         }
-    }
-    const NodeIndexType nodePtr2(locus.addRemoteNode(read.mate_target_id(),breakendMin,breakendMax));
 
-    locus.linkNodes(nodePtr1,nodePtr2);
+        const NodeIndexType remoteBreakendNode(locus.addRemoteNode(remoteBreakend));
+        locus.linkNodes(localBreakendNode,remoteBreakendNode);
+    }
+
 }
 
 

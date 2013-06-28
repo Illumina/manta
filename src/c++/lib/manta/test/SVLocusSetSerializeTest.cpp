@@ -20,6 +20,8 @@
 
 #include "manta/SVLocusSet.hh"
 
+#include "SVLocusTestUtil.hh"
+
 using namespace boost::archive;
 
 
@@ -30,14 +32,10 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSetSerialze )
 {
     // construct a simple two-node locus
     SVLocus locus1;
-    NodeIndexType nodePtr1 = locus1.addNode(1,10,20);
-    NodeIndexType nodePtr2 = locus1.addNode(2,30,40);
-    locus1.linkNodes(nodePtr1,nodePtr2);
+    locusAddPair(locus1,1,10,20,2,30,40);
 
     SVLocus locus2;
-    NodeIndexType nodePtr3 = locus2.addNode(3,10,20);
-    NodeIndexType nodePtr4 = locus2.addNode(4,30,40);
-    locus2.linkNodes(nodePtr3,nodePtr4);
+    locusAddPair(locus2,3,10,20,4,30,40);
 
     SVLocusSet set1;
     set1.merge(locus1);
@@ -72,14 +70,10 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSetSerialze2 )
     SVLocusSet set1;
     {
         SVLocus locus1;
-        NodeIndexType nodePtr1 = locus1.addNode(1,10,20);
-        NodeIndexType nodePtr2 = locus1.addNode(2,30,40);
-        locus1.linkNodes(nodePtr1,nodePtr2);
+        locusAddPair(locus1,1,10,20,2,30,40);
 
         SVLocus locus2;
-        NodeIndexType nodePtr3 = locus2.addNode(3,10,20);
-        NodeIndexType nodePtr4 = locus2.addNode(4,30,40);
-        locus2.linkNodes(nodePtr3,nodePtr4);
+        locusAddPair(locus2,3,10,20,4,30,40);
 
         set1.merge(locus1);
         set1.merge(locus2);
@@ -88,14 +82,10 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSetSerialze2 )
     SVLocusSet set2;
     {
         SVLocus locus1;
-        NodeIndexType nodePtr1 = locus1.addNode(1,15,25);
-        NodeIndexType nodePtr2 = locus1.addNode(4,30,40);
-        locus1.linkNodes(nodePtr1,nodePtr2);
+        locusAddPair(locus1,1,15,25,4,30,40);
 
         SVLocus locus2;
-        NodeIndexType nodePtr3 = locus2.addNode(3,30,40);
-        NodeIndexType nodePtr4 = locus2.addNode(2,30,40);
-        locus2.linkNodes(nodePtr3,nodePtr4);
+        locusAddPair(locus2,3,30,40,2,30,40);
 
         set2.merge(locus1);
         set2.merge(locus2);

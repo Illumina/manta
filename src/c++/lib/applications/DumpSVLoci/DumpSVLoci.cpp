@@ -44,7 +44,7 @@ runDSL(const DSLOptions& opt)
         int32_t tid,beginPos,endPos;
         parse_bam_region(set.header, opt.region, tid, beginPos, endPos); // parse the region
 
-        set.dumpRegion(os,tid,beginPos,endPos);
+        set.dumpRegion(os,GenomeInterval(tid,beginPos,endPos));
     }
     else if (opt.isLocusIndex)
     {

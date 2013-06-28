@@ -21,6 +21,8 @@
 #define private public
 #include "manta/SVLocus.hh"
 
+#include "SVLocusTestUtil.hh"
+
 
 BOOST_AUTO_TEST_SUITE( test_SVLocus )
 
@@ -49,9 +51,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocus1 )
 
     // construct a simple two-node locus
     SVLocus locus1;
-    NodeIndexType nodePtr1 = locus1.addNode(1,10,20);
-    NodeIndexType nodePtr2 = locus1.addNode(1,30,40);
-    locus1.linkNodes(nodePtr1,nodePtr2);
+    locusAddPair(locus1,1,10,20,1,30,40);
 
     BOOST_REQUIRE_EQUAL(locus1.size(),2u);
 
@@ -65,8 +65,8 @@ BOOST_AUTO_TEST_CASE( test_SVLocus1 )
 BOOST_AUTO_TEST_CASE( test_SVLocusNodeMerge)
 {
     SVLocus locus1;
-    NodeIndexType nodePtr1 = locus1.addNode(1,10,20);
-    NodeIndexType nodePtr2 = locus1.addNode(1,15,25);
+    NodeIndexType nodePtr1 = locus1.addNode(GenomeInterval(1,10,20));
+    NodeIndexType nodePtr2 = locus1.addNode(GenomeInterval(1,15,25));
 
     locus1.mergeNode(nodePtr2,nodePtr1);
 
@@ -88,10 +88,10 @@ BOOST_AUTO_TEST_CASE( test_SVLocusClearEdges )
     //  4
     //
     SVLocus locus1;
-    NodeIndexType nodePtr1 = locus1.addNode(1,10,20);
-    NodeIndexType nodePtr2 = locus1.addNode(1,30,40);
-    NodeIndexType nodePtr3 = locus1.addNode(1,50,60);
-    NodeIndexType nodePtr4 = locus1.addNode(1,70,80);
+    NodeIndexType nodePtr1 = locus1.addNode(GenomeInterval(1,10,20));
+    NodeIndexType nodePtr2 = locus1.addNode(GenomeInterval(1,30,40));
+    NodeIndexType nodePtr3 = locus1.addNode(GenomeInterval(1,50,60));
+    NodeIndexType nodePtr4 = locus1.addNode(GenomeInterval(1,70,80));
     locus1.linkNodes(nodePtr1,nodePtr2);
     locus1.linkNodes(nodePtr1,nodePtr3);
     locus1.linkNodes(nodePtr2,nodePtr4);

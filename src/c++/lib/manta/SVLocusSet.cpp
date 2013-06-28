@@ -455,13 +455,11 @@ getNodeMergeableIntersect(
 void
 SVLocusSet::
 getRegionIntersect(
-    const int32_t tid,
-    const int32_t beginPos,
-    const int32_t endPos,
+    const GenomeInterval interval,
     std::set<NodeAddressType>& intersectNodes)
 {
     const LocusIndexType startLocusIndex(insertLocus(SVLocus()));
-    const NodeIndexType nodeIndex = getLocus(startLocusIndex).addNode(tid,beginPos,endPos);
+    const NodeIndexType nodeIndex = getLocus(startLocusIndex).addNode(interval);
 
     getNodeIntersect(startLocusIndex,nodeIndex,intersectNodes);
 
@@ -608,12 +606,10 @@ dump(std::ostream& os) const
 void
 SVLocusSet::
 dumpRegion(std::ostream& os,
-           const int32_t tid,
-           const int32_t beginPos,
-           const int32_t endPos)
+           const GenomeInterval interval)
 {
     std::set<NodeAddressType> intersectNodes;
-    getRegionIntersect(tid,beginPos,endPos,intersectNodes);
+    getRegionIntersect(interval,intersectNodes);
 
     LocusSetIndexerType sortedNodes(*this);
     BOOST_FOREACH(const NodeAddressType& val, intersectNodes)

@@ -119,9 +119,7 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
     void
     dumpRegion(
         std::ostream& os,
-        const int32_t tid,
-        const int32_t beginPos,
-        const int32_t endPos);
+        const GenomeInterval interval);
 
     // dump stats on each locus in tsv format:
     void
@@ -232,9 +230,7 @@ private:
     /// a external node
     void
     getRegionIntersect(
-        const int32_t tid,
-        const int32_t beginPos,
-        const int32_t endPos,
+        const GenomeInterval interval,
         std::set<NodeAddressType>& intersectNodes);
 
     /// assign all intersect clusters to the lowest index number that is not startLocusIndex

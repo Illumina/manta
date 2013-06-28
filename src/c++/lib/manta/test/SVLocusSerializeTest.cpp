@@ -25,6 +25,8 @@
 
 #include "manta/SVLocus.hh"
 
+#include "SVLocusTestUtil.hh"
+
 #include <fstream>
 
 using namespace boost::archive;
@@ -82,14 +84,12 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeSerialze )
 
     // construct a simple two-node locus
     SVLocus locus1;
-    NodeIndexType nodePtr1 = locus1.addNode(1,10,20);
-    NodeIndexType nodePtr2 = locus1.addNode(1,30,40);
-    locus1.linkNodes(nodePtr1,nodePtr2);
+    locusAddPair(locus1,1,10,20,1,30,40);
 
     std::string filename(boost::archive::tmpdir());
     filename += "/testfile.bin";
 
-    const SVLocusNode& node1(static_cast<const SVLocus&>(locus1).getNode(nodePtr1));
+    const SVLocusNode& node1(static_cast<const SVLocus&>(locus1).getNode(0));
 
     // serialize
     {
@@ -126,9 +126,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSerialze )
 
     // construct a simple two-node locus
     SVLocus locus1;
-    NodeIndexType nodePtr1 = locus1.addNode(1,10,20);
-    NodeIndexType nodePtr2 = locus1.addNode(1,30,40);
-    locus1.linkNodes(nodePtr1,nodePtr2);
+    locusAddPair(locus1,1,10,20,1,30,40);
 
     std::string filename(boost::archive::tmpdir());
     filename += "/testfile.bin";

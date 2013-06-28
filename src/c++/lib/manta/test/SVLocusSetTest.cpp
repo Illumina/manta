@@ -21,6 +21,8 @@
 #define private public
 #include "manta/SVLocusSet.hh"
 
+#include "SVLocusTestUtil.hh"
+
 
 BOOST_AUTO_TEST_SUITE( test_SVLocusSet )
 
@@ -34,28 +36,9 @@ testOverlap(
     const int32_t endPos)
 {
     std::set<SVLocusSet::NodeAddressType> intersect;
-    locusSet.getRegionIntersect(tid,beginPos,endPos,intersect);
+    locusSet.getRegionIntersect(GenomeInterval(tid,beginPos,endPos),intersect);
     return intersect.size();
 }
-
-
-
-static
-void
-locusAddPair(
-        SVLocus& locus,
-        const int32_t tid1,
-        const int32_t beginPos1,
-        const int32_t endPos1,
-        const int32_t tid2,
-        const int32_t beginPos2,
-        const int32_t endPos2)
-{
-    const NodeIndexType nodePtr1 = locus.addNode(tid1,beginPos1,endPos1);
-    const NodeIndexType nodePtr2 = locus.addRemoteNode(tid2,beginPos2,endPos2);
-    locus.linkNodes(nodePtr1,nodePtr2);
-}
-
 
 
 
@@ -152,9 +135,9 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge2 )
 
     SVLocus locus1;
     {
-        NodeIndexType nodePtr1 = locus1.addNode(1,10,20);
-        NodeIndexType nodePtr2 = locus1.addRemoteNode(1,30,40);
-        NodeIndexType nodePtr3 = locus1.addRemoteNode(1,50,60);
+        NodeIndexType nodePtr1 = locus1.addNode(GenomeInterval(1,10,20));
+        NodeIndexType nodePtr2 = locus1.addRemoteNode(GenomeInterval(1,30,40));
+        NodeIndexType nodePtr3 = locus1.addRemoteNode(GenomeInterval(1,50,60));
         locus1.linkNodes(nodePtr1,nodePtr2);
         locus1.linkNodes(nodePtr1,nodePtr3);
     }

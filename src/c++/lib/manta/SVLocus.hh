@@ -295,15 +295,12 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
 
     NodeIndexType
     addNode(
-        const int32_t tid,
-        const int32_t beginPos,
-        const int32_t endPos,
+        const GenomeInterval interval,
         const unsigned count = 1)
     {
         NodeIndexType nodePtr(newGraphNode());
         SVLocusNode& node(getNode(nodePtr));
-        node.interval.tid=tid;
-        node.interval.range.set_range(beginPos,endPos);
+        node.interval = interval;
         node.count=count;
         notifyAdd(nodePtr);
         return nodePtr;
@@ -311,11 +308,9 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
 
     NodeIndexType
     addRemoteNode(
-        const int32_t tid,
-        const int32_t beginPos,
-        const int32_t endPos)
+        const GenomeInterval interval)
     {
-        return addNode(tid,beginPos,endPos,0);
+        return addNode(interval,0);
     }
 
     // an edge count is only added on on from->to
