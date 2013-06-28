@@ -111,14 +111,26 @@ merge(const SVLocus& inputLocus)
             if (intersectNodes.empty()) continue;
         }
 
-        // if there are any intersections, copy the loci of all intersecting nodes into
-        // a single locus, by convention we use the lowest locusIndex of the intersecting set
-        moveIntersectToLowIndex(intersectNodes,startLocusIndex,headLocusIndex);
-        if(! isInputLocusMoved) isInputLocusMoved=(headLocusIndex != startLocusIndex);
+        bool isMultiLocus(false);
+        BOOST_FOREACH(const NodeAddressType& addy, intersectNodes)
+        {
+            if(addy.first != headLocusIndex)
+            {
+                isMultiLocus=true;
+                break;
+            }
+        }
 
-        getNodeMergeableIntersect(startLocusIndex, nodeIndex, isInputLocusMoved, intersectNodes);
+        if(isMultiLocus)
+        {
+            // if there are any intersections, copy the loci of all intersecting nodes into
+            // a single locus, by convention we use the lowest locusIndex of the intersecting set
+            moveIntersectToLowIndex(intersectNodes,startLocusIndex,headLocusIndex);
+            if(! isInputLocusMoved) isInputLocusMoved=(headLocusIndex != startLocusIndex);
 
-        assert(! intersectNodes.empty());
+            getNodeMergeableIntersect(startLocusIndex, nodeIndex, isInputLocusMoved, intersectNodes);
+            assert(! intersectNodes.empty());
+        }
 
 #ifdef DEBUG_SVL
         log_os << "intersect2_size: " << intersectNodes.size() << "\n";
