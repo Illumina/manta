@@ -38,6 +38,11 @@ struct SVLocusSetFinder : public pos_processor_base
             const ESLOptions& opt,
             const GenomeInterval& scanRegion);
 
+    ~SVLocusSetFinder()
+    {
+        _stageman.reset();
+    }
+
     ///
     /// index is the read group index to use by in the absense of an RG tag
     /// (for now RGs are ignored for the purpose of gathering insert stats)

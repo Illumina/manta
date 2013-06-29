@@ -257,6 +257,8 @@ update(const bam_record& read,
     // check that this read starts in our scan region:
     if(! _scanRegion.range.is_pos_intersect(read.pos()-1)) return;
 
+    _stageman.handle_new_pos_value(read.pos()-1);
+
     const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);
 
     SVLocus locus;
