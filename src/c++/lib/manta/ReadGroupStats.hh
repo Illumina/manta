@@ -72,7 +72,7 @@ struct ReadGroupStats
 {
 
     ReadGroupStats() {}
-    ReadGroupStats(const std::string& bamFile);
+    ReadGroupStats(const std::string& statsBamFile);
     ReadGroupStats(const std::vector<std::string>& data);
 
     void

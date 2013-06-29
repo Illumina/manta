@@ -169,13 +169,13 @@ ReadGroupStats(const std::vector<std::string>& data)
 // set read pair statistics from a bam reader object:
 //
 ReadGroupStats::
-ReadGroupStats(const std::string& bamFile)
+ReadGroupStats(const std::string& statsBamFile)
 {
 
     static const unsigned statsCheckCnt(100000);
     static const unsigned maxPosCount(1);
 
-    bam_streamer read_stream(bamFile.c_str());
+    bam_streamer read_stream(statsBamFile.c_str());
 
     const bam_header_t& header(* read_stream.get_header());
     const int32_t nChrom(header.n_targets);
@@ -270,7 +270,7 @@ ReadGroupStats(const std::string& bamFile)
     {
         if (psd.fragmentLengths.size()<1000)
         {
-            log_os << "ERROR: Can't generate pair statistics for BAM file " << bamFile << "\n";
+            log_os << "ERROR: Can't generate pair statistics for BAM file " << statsBamFile << "\n";
             log_os << "\tTotal observed read pairs: " << psd.fragmentLengths.size() << "\n";
             exit(EXIT_FAILURE);
         }
