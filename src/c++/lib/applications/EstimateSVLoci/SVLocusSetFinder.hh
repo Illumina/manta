@@ -30,6 +30,10 @@
 #include <vector>
 
 
+//#define DEBUG_SFINDER
+
+
+
 // estimate an SVLocusSet
 //
 struct SVLocusSetFinder : public pos_processor_base

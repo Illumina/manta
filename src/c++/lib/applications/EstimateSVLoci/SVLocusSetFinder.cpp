@@ -17,6 +17,7 @@
 
 #include "SVLocusSetFinder.hh"
 #include "blt_util/align_path_bam_util.hh"
+#include "blt_util/log.hh"
 
 #include "boost/foreach.hpp"
 
@@ -104,6 +105,11 @@ updateDenoiseRegion()
     {
         range.set_end_pos(range.end_pos()-REGION_DENOISE_BORDER);
     }
+
+#ifdef DEBUG_SFINDER
+    log_os << "SFinder::updateDenoiseRegion " << _denoiseRegion << "\n";
+#endif
+
 }
 
 
@@ -113,6 +119,11 @@ SVLocusSetFinder::
 process_pos(const int stage_no,
             const pos_t pos)
 {
+
+#ifdef DEBUG_SFINDER
+    log_os << "SFinder::process_pos stage_no: " << stage_no << " pos: " << pos << "\n";
+#endif
+
     if     (stage_no == STAGE::HEAD)
     {
         // pass
@@ -123,6 +134,11 @@ process_pos(const int stage_no,
 
         if(_denoiseRegion.range.is_pos_intersect(pos))
         {
+
+#ifdef DEBUG_SFINDER
+    log_os << "SFinder::process_pos pos intersect. is in region: " << _isInDenoiseRegion << "\n";
+#endif
+
             if(! _isInDenoiseRegion)
             {
                 _denoisePos=_denoiseRegion.range.begin_pos();
@@ -137,6 +153,11 @@ process_pos(const int stage_no,
         }
         else
         {
+
+#ifdef DEBUG_SFINDER
+    log_os << "SFinder::process_pos pos intersect. is in region: " << _isInDenoiseRegion << "\n";
+#endif
+
             if(_isInDenoiseRegion)
             {
                 if( (_denoiseRegion.range.end_pos()-_denoisePos) > 0)
