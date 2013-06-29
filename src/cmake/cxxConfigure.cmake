@@ -119,7 +119,7 @@ endif ()
 #
 # set compile flags, and modify by compiler/compiler version:
 #
-set (CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -Wredundant-decls -pedantic -Wno-unused-parameter")
+set (CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -Wredundant-decls -pedantic -Wunused-parameter -Wundef -Wuninitialized")
 set (CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 set (CMAKE_CXX_FLAGS_RELEASE "-O3")
 set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
