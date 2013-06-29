@@ -23,15 +23,51 @@
 #include <iostream>
 
 
+
+namespace STAGE {
+    enum index_t {
+        HEAD,
+        DENOISE
+    };
+
+
+    static
+    stage_data
+    getStageData(const unsigned denoiseBorderSize)
+    {
+        stage_data sd;
+        sd.add_stage(HEAD);
+        sd.add_stage(DENOISE, HEAD, denoiseBorderSize);
+
+        return sd;
+    }
+}
+
+
+
 SVLocusSetFinder::
-SVLocusSetFinder(const ESLOptions& opt)
-    : _opt(opt)
+SVLocusSetFinder(
+        const ESLOptions& opt,
+        const GenomeInterval& scanRegion) :
+        _opt(opt),
+        _scanRegion(scanRegion),
+        _stageman(
+                STAGE::getStageData(REGION_DENOISE_BORDER),
+                pos_range(
+                        scanRegion.range.begin_pos(),
+                        scanRegion.range.end_pos()),
+                *this),
+        _isScanStarted(false),
+        _isInDenoiseRegion(false),
+        _denoisePos(0)
 {
     // pull in insert stats:
     _rss.read(opt.statsFilename.c_str());
 
+    updateDenoiseRegion();
+
     // cache the insert stats we'll be looking up most often:
-    BOOST_FOREACH(std::string file, opt.alignmentFilename)
+    BOOST_FOREACH(const std::string& file, opt.alignmentFilename)
     {
         const boost::optional<unsigned> index(_rss.getGroupIndex(file));
         assert(index);
@@ -40,6 +76,81 @@ SVLocusSetFinder(const ESLOptions& opt)
         _stats.resize(_stats.size()+1);
         _stats.back().min=rgs.fragSize.quantile(opt.breakendEdgeTrimProb);
         _stats.back().max=rgs.fragSize.quantile((1-opt.breakendEdgeTrimProb));
+    }
+}
+
+
+
+void
+SVLocusSetFinder::
+updateDenoiseRegion()
+{
+    _denoiseRegion=_scanRegion;
+
+    known_pos_range2& range(_denoiseRegion.range);
+    if (range.begin_pos() > 0)
+    {
+        range.set_begin_pos(range.begin_pos()+REGION_DENOISE_BORDER);
+    }
+
+    bool isEndBorder(true);
+    if(static_cast<int32_t>(_svLoci.header.chrom_data.size()) > _denoiseRegion.tid)
+    {
+        const pos_t chromEndPos(_svLoci.header.chrom_data[_denoiseRegion.tid].length);
+        isEndBorder=(range.end_pos() < chromEndPos);
+    }
+
+    if (isEndBorder)
+    {
+        range.set_end_pos(range.end_pos()-REGION_DENOISE_BORDER);
+    }
+}
+
+
+
+void
+SVLocusSetFinder::
+process_pos(const int stage_no,
+            const pos_t pos)
+{
+    if     (stage_no == STAGE::HEAD)
+    {
+        // pass
+    }
+    else if(stage_no == STAGE::DENOISE)
+    {
+        static const pos_t denoiseMinChunk(1000);
+
+        if(_denoiseRegion.range.is_pos_intersect(pos))
+        {
+            if(! _isInDenoiseRegion)
+            {
+                _denoisePos=_denoiseRegion.range.begin_pos();
+                _isInDenoiseRegion=true;
+            }
+
+            if( (1 + pos-_denoisePos) >= denoiseMinChunk)
+            {
+                _svLoci.cleanRegion(GenomeInterval(_denoiseRegion.tid, _denoisePos, (pos+1)));
+                _denoisePos = (pos+1);
+            }
+        }
+        else
+        {
+            if(_isInDenoiseRegion)
+            {
+                if( (_denoiseRegion.range.end_pos()-_denoisePos) > 0)
+                {
+                    _svLoci.cleanRegion(GenomeInterval(_denoiseRegion.tid, _denoisePos, _denoiseRegion.range.end_pos()));
+                    _denoisePos = _denoiseRegion.range.end_pos();
+                }
+                _isInDenoiseRegion=false;
+            }
+        }
+    }
+    else
+    {
+        assert(0);
     }
 }
 
@@ -138,8 +249,13 @@ SVLocusSetFinder::
 update(const bam_record& read,
        const unsigned defaultReadGroupIndex)
 {
+    _isScanStarted=true;
+
     // shortcut to speed things up:
     if (isReadFiltered(read)) return;
+
+    // check that this read starts in our scan region:
+    if(! _scanRegion.range.is_pos_intersect(read.pos()-1)) return;
 
     const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);
 

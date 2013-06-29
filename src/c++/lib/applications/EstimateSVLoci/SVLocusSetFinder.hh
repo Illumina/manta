@@ -20,6 +20,8 @@
 #include "ESLOptions.hh"
 
 #include "blt_util/bam_record.hh"
+#include "blt_util/pos_processor_base.hh"
+#include "blt_util/stage_manager.hh"
 #include "manta/ReadGroupStatsSet.hh"
 #include "manta/SVLocusSet.hh"
 
@@ -30,11 +32,11 @@
 
 // estimate an SVLocusSet
 //
-struct SVLocusSetFinder
+struct SVLocusSetFinder : public pos_processor_base
 {
-
-    explicit
-    SVLocusSetFinder(const ESLOptions& opt);
+    SVLocusSetFinder(
+            const ESLOptions& opt,
+            const GenomeInterval& scanRegion);
 
     ///
     /// index is the read group index to use by in the absense of an RG tag
@@ -53,7 +55,9 @@ struct SVLocusSetFinder
     void
     setBamHeader(const bam_header_t& header)
     {
+        assert(! _isScanStarted);
         _svLoci.header = bam_header_info(header);
+        updateDenoiseRegion();
     }
 
 private:
@@ -81,12 +85,32 @@ private:
         const bam_record& read,
         SVLocus& locus);
 
+    void
+    process_pos(const int stage_no,
+                const pos_t pos);
+
+    void
+    updateDenoiseRegion();
+
+    // TODO -- compute this number from read insert ranges:
+    enum hack_t {
+        REGION_DENOISE_BORDER = 5000
+    };
+
     /////////////////////////////////////////////////
     // data:
     const ESLOptions& _opt;
+    const GenomeInterval _scanRegion;
+    GenomeInterval _denoiseRegion;
+    stage_manager _stageman;
     ReadGroupStatsSet _rss;
     SVLocusSet _svLoci;
 
     std::vector<CachedReadGroupStats> _stats;
+
+    bool _isScanStarted;
+
+    bool _isInDenoiseRegion;
+    pos_t _denoisePos;
 };
 

@@ -85,6 +85,7 @@ struct bam_header_info
         std::string label;
         unsigned length;
     };
+
     std::vector<chrom_info> chrom_data;
 };
 

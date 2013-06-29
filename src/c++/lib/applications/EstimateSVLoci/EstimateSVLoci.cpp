@@ -19,6 +19,7 @@
 #include "ESLOptions.hh"
 #include "SVLocusSetFinder.hh"
 
+#include "blt_util/bam_header_util.hh"
 #include "blt_util/input_stream_handler.hh"
 #include "blt_util/log.hh"
 #include "common/OutStream.hh"
@@ -42,7 +43,6 @@ runESL(const ESLOptions& opt)
         OutStream outs(opt.outputFilename);
     }
 
-    SVLocusSetFinder locusFinder(opt);
 
     typedef boost::shared_ptr<bam_streamer> stream_ptr;
     std::vector<stream_ptr> bam_streams;
@@ -59,10 +59,18 @@ runESL(const ESLOptions& opt)
 
     // assume headers compatible after this point....
 
-    if (n_inputs)
-    {
-        locusFinder.setBamHeader(*(bam_streams[0]->get_header()));
-    }
+    assert(0 != n_inputs);
+
+    const bam_header_t& header(*(bam_streams[0]->get_header()));
+    const bam_header_info bamHeader(header);
+    int32_t tid(0), beginPos(0), endPos(0);
+    parse_bam_region(bamHeader,opt.region,tid,beginPos,endPos);
+
+    const GenomeInterval scanRegion(tid,beginPos,endPos);
+
+    SVLocusSetFinder locusFinder(opt,scanRegion);
+    locusFinder.setBamHeader(header);
+
 
     input_stream_data sdata;
     for (unsigned i(0); i<n_inputs; ++i)
