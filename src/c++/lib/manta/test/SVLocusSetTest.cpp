@@ -395,29 +395,20 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNoiseOverlap )
     locusAddPair(locus1,1,10,60,2,20,30);
     SVLocus locus2;
     locusAddPair(locus2,1,10,60,2,20,30);
-
     SVLocus locus3;
     locusAddPair(locus3,1,59,70,3,20,30);
     SVLocus locus4;
-    locusAddPair(locus4,1,59,70,3,20,30);
+    locusAddPair(locus4,1,65,70,3,20,30);
 
     {
         SVLocusSet set1(2);
         set1.merge(locus1);
         set1.merge(locus2);
-        set1.cleanRegion(GenomeInterval(1,0,100));
+        set1.merge(locus3);
+        set1.merge(locus4);
 
-        SVLocusSet set2(2);
-        set2.merge(locus3);
-        set2.merge(locus4);
-
-        set2.cleanRegion(GenomeInterval(1,0,100));
-
-        set2.merge(set1);
-
-        set2.finalize();
-
-        set2.checkState(true,true);
+        set1.finalize();
+        set1.checkState(true,true);
     }
 }
 

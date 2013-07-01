@@ -165,6 +165,23 @@ getEdgeException(
 
 
 
+bool
+SVLocus::
+isNoiseNode(
+        const unsigned minMergeEdgeCount,
+        const NodeIndexType nodeIndex) const
+{
+    const SVLocusNode& node(getNode(nodeIndex));
+    BOOST_FOREACH(const SVLocusNode::edges_type::value_type& edge, node)
+    {
+        if(edge.second.count >= minMergeEdgeCount) return false;
+        if(getEdge(edge.first,nodeIndex).count >= minMergeEdgeCount) return false;
+    }
+    return true;
+}
+
+
+
 void
 SVLocus::
 cleanNodeCore(

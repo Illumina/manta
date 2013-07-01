@@ -155,7 +155,6 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
             const bool isCheckOverlap = false,
             const bool isCheckLocusConnected = false) const;
 
-
 private:
 
     typedef std::pair<LocusIndexType,NodeIndexType> NodeAddressType;
@@ -224,6 +223,7 @@ private:
         const LocusIndexType locusIndex,
         const NodeIndexType nodeIndex,
         const LocusSetIndexerType& searchNodes,
+        const LocusIndexType fitlerLocusIndex,
         std::set<NodeAddressType>& intersectNodes) const;
 
     /// get all nodes in this object which intersect with
@@ -234,7 +234,7 @@ private:
         const NodeIndexType nodeIndex,
         std::set<NodeAddressType>& intersectNodes) const
     {
-        getNodeIntersectCore(locusIndex,nodeIndex,_inodes,intersectNodes);
+        getNodeIntersectCore(locusIndex, nodeIndex, _inodes, locusIndex, intersectNodes);
     }
 
     void

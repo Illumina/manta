@@ -372,6 +372,13 @@ private:
         _index=index;
     }
 
+    // return true if node contains no out or in edges greater than
+    // minMergeEdgeCount
+    bool
+    isNoiseNode(
+            const unsigned minMergeEdgeCount,
+            const NodeIndexType nodeIndex) const;
+
     /// remove all unmerged noise in-edges of node and
     /// return list of nodes which should be deleted
     void
