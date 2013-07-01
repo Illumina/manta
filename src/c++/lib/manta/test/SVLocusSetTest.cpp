@@ -267,6 +267,42 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNoiseMerge )
 
         BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),2u);
         BOOST_REQUIRE_EQUAL(set1.getLocus(0).size(),2u);
+    }
+
+    {
+        SVLocusSet set1(3);
+        set1.merge(locus1);
+        set1.merge(locus2);
+        set1.merge(locus3);
+        set1.checkState(true,true);
+
+        BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),3u);
+        BOOST_REQUIRE_EQUAL(set1.getLocus(0).size(),2u);
+    }
+}
+
+
+
+BOOST_AUTO_TEST_CASE( test_SVLocusNoiseClean )
+{
+    SVLocus locus1;
+    locusAddPair(locus1,1,10,60,2,20,30);
+
+    SVLocus locus2;
+    locusAddPair(locus2,1,10,60,2,20,30);
+
+    SVLocus locus3;
+    locusAddPair(locus3,1,10,60,3,20,30);
+
+    {
+        SVLocusSet set1(2);
+        set1.merge(locus1);
+        set1.merge(locus2);
+        set1.merge(locus3);
+        set1.checkState(true,true);
+
+        BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),2u);
+        BOOST_REQUIRE_EQUAL(set1.getLocus(0).size(),2u);
 
         set1.clean();
 
@@ -290,25 +326,31 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNoiseMerge )
 
         set1.cleanRegion(GenomeInterval(1,0,70));
 
-        BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),2u);
-        BOOST_REQUIRE_EQUAL(set1.getLocus(1).size(),1u);
-
-        set1.cleanRegion(GenomeInterval(3,0,70));
-
         BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),1u);
         BOOST_REQUIRE_EQUAL(set1.getLocus(0).size(),2u);
     }
 
-    {
-        SVLocusSet set1(3);
-        set1.merge(locus1);
-        set1.merge(locus2);
-        set1.merge(locus3);
-        set1.checkState(true,true);
+}
 
-        BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),3u);
+
+
+BOOST_AUTO_TEST_CASE( test_SVLocusNoiseCleanRemote )
+{
+    SVLocus locus1;
+    locusAddPair(locus1,1,100,110,1,10,20);
+
+    {
+        SVLocusSet set1(2);
+        set1.merge(locus1);
+
+        BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),1u);
         BOOST_REQUIRE_EQUAL(set1.getLocus(0).size(),2u);
+
+        set1.cleanRegion(GenomeInterval(1,0,120));
+
+        BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),0u);
     }
+
 }
 
 

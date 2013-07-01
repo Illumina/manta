@@ -606,15 +606,23 @@ void
 SVLocusSet::
 cleanRegion(const GenomeInterval interval)
 {
+#ifdef DEBUG_SVL
+    log_os << "cleanRegion interval: " << interval << "\n";
+#endif
+
     std::set<NodeAddressType> intersectNodes;
     getRegionIntersect(interval,intersectNodes);
 
     BOOST_FOREACH(const NodeAddressType& val, intersectNodes)
     {
         SVLocus& locus(getLocus(val.first));
-        assert(! locus.empty());
+        if(locus.empty()) continue;
         locus.cleanNode(getMinMergeEdgeCount(), val.second);
         if(locus.empty()) _emptyLoci.insert(locus.getIndex());
+
+#ifdef DEBUG_SVL
+        log_os << "cleanRegion intersect: " << val << " empty_after_clean: " << locus.empty() << "\n";
+#endif
     }
 }
 

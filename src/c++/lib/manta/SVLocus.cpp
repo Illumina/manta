@@ -165,12 +165,17 @@ getEdgeException(
 
 
 
-bool
+void
 SVLocus::
 cleanNodeCore(
         const unsigned minMergeEdgeCount,
-        const NodeIndexType nodeIndex)
+        const NodeIndexType nodeIndex,
+        std::set<NodeIndexType>& emptyNodes)
 {
+#ifdef DEBUG_SVL
+    log_os << "cleanNodeCore nodeIndex: " << nodeIndex << "\n";
+#endif
+
     SVLocusNode& queryNode(getNode(nodeIndex));
 
     std::vector<NodeIndexType> eraseEdges;
@@ -188,12 +193,22 @@ cleanNodeCore(
 
         if(0 == edgeIter.second.count)
         {
-            if(0 == getEdge(edgeIter.first,nodeIndex).count)
+
+            const SVLocusEdge& fromRemoteEdge(getEdge(edgeIter.first,nodeIndex));
+            if(0 == fromRemoteEdge.count)
             {
                 eraseEdges.push_back(edgeIter.first);
+
+                // also check to see if the remote node will be empty after
+                // this edge deletion:
+                const SVLocusNode& remoteNode(getNode(edgeIter.first));
+                if((0 == remoteNode.count) &&
+                   (1 == remoteNode.edges.size()))
+                {
+                    emptyNodes.insert(edgeIter.first);
+                }
             }
         }
-
     }
 
     // delete empty edges:
@@ -203,7 +218,20 @@ cleanNodeCore(
     }
 
     // return true if node should be deleted
-    return ((0 == queryNode.edges.size()) && (0 == queryNode.count));
+    if((0 == queryNode.edges.size()) && (0 == queryNode.count))
+    {
+        // if true add the target node to the erase list:
+        emptyNodes.insert(nodeIndex);
+    }
+
+#ifdef DEBUG_SVL
+    log_os << "cleanNodeCore emptyNodes\n";
+    BOOST_FOREACH(const NodeIndexType nodeIndex2, emptyNodes)
+    {
+        log_os << "\tnodeIndex: " << nodeIndex2 << "\n";
+    }
+#endif
+
 }
 
 
@@ -214,10 +242,9 @@ cleanNode(
         const unsigned minMergeEdgeCount,
         const NodeIndexType nodeIndex)
 {
-    if(cleanNodeCore(minMergeEdgeCount,nodeIndex))
-    {
-        eraseNode(nodeIndex);
-    }
+    std::set<NodeIndexType> emptyNodes;
+    cleanNodeCore(minMergeEdgeCount,nodeIndex,emptyNodes);
+    eraseNodes(emptyNodes);
 }
 
 
@@ -226,31 +253,13 @@ void
 SVLocus::
 clean(const unsigned minMergeEdgeCount)
 {
-    std::vector<NodeIndexType> eraseNodes;
+    std::set<NodeIndexType> emptyNodes;
     const unsigned nodeSize(size());
     for (unsigned nodeIndex(0); nodeIndex<nodeSize; ++nodeIndex)
     {
-        if(cleanNodeCore(minMergeEdgeCount,nodeIndex))
-        {
-            eraseNodes.push_back(nodeIndex);
-        }
+        cleanNodeCore(minMergeEdgeCount,nodeIndex,emptyNodes);
     }
-
-    // erase empty nodes:
-    if(size() == eraseNodes.size())
-    {
-        // if the whole locus is being erased, this is more efficient:
-        clear();
-    }
-    else
-    {
-        // erase empty nodes -- must be done in descending order:
-        std::sort(eraseNodes.rbegin(),eraseNodes.rend());
-        BOOST_FOREACH(NodeIndexType nodeIndex, eraseNodes)
-        {
-            eraseNode(nodeIndex);
-        }
-    }
+    eraseNodes(emptyNodes);
 }
 
 
@@ -320,6 +329,29 @@ eraseNode(const NodeIndexType nodePtr)
     }
     notifyDelete(fromPtr);
     _graph.resize(fromPtr);
+}
+
+
+
+void
+SVLocus::
+eraseNodes(const std::set<NodeIndexType>& nodes)
+{
+
+    if(nodes.empty()) return;
+
+    if(size() == nodes.size())
+    {
+        // if the whole locus is being erased, this is more efficient:
+        clear();
+        return;
+    }
+
+    // partial deletion must be done in descending order:
+    BOOST_REVERSE_FOREACH(const NodeIndexType nodeIndex, nodes)
+    {
+        eraseNode(nodeIndex);
+    }
 }
 
 

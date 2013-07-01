@@ -373,19 +373,21 @@ private:
     }
 
     /// remove all unmerged noise in-edges of node and
-    /// return whether the node should be deleted
-    bool
+    /// return list of nodes which should be deleted
+    void
     cleanNodeCore(
             const unsigned minMergeEdgeCount,
-            const NodeIndexType nodeIndex);
+            const NodeIndexType nodeIndex,
+            std::set<NodeIndexType>& emptyNodes);
 
-    /// remove all unmerged noise in-edges of node and possibly node itself
+    /// remove all unmerged noise in-edges of node and possibly
+    /// delete empty nodes
     void
     cleanNode(
             const unsigned minMergeEdgeCount,
             const NodeIndexType nodeIndex);
 
-    /// remove all unmerged noise edges
+    /// remove all unmerged noise edges and nodes
     void
     clean(const unsigned minMergeEdgeCount);
 
@@ -457,6 +459,10 @@ private:
     //
     void
     eraseNode(const NodeIndexType nodePtr);
+
+    // remove a list of node ids
+    void
+    eraseNodes(const std::set<NodeIndexType>& nodes);
 
     void
     clear()
