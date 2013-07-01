@@ -896,7 +896,9 @@ checkState(
                 std::ostringstream oss;
                 oss << "ERROR: Overlapping nodes in graph\n"
                     << "\tlast_index: " << lastAddy << " interval: " << lastInterval << "\n"
-                    << "\tthis_index: " << addy << " interval: " << interval << "\n";
+                    << "\tthis_index: " << addy << " interval: " << interval << "\n"
+                    << "\tlast_node: " << lastAddy << " "<< getNode(lastAddy) << "\n"
+                    << "\tthis_node: " << addy << " "<< getNode(addy) << "\n";
                 BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
             }
         }

@@ -37,12 +37,10 @@ static
 void
 runESL(const ESLOptions& opt)
 {
-
     {
         // early test that we have permission to write to output file
         OutStream outs(opt.outputFilename);
     }
-
 
     typedef boost::shared_ptr<bam_streamer> stream_ptr;
     std::vector<stream_ptr> bam_streams;
