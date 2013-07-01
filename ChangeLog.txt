@@ -1,1 +1,4 @@
-init
+v0.2
+working proof of concept denoised sv locus graph
+v0.1
+initial prototype code tag
