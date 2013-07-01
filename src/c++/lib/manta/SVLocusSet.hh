@@ -148,6 +148,13 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
         return _minMergeEdgeCount;
     }
 
+    /// check that internal data-structures are in
+    /// a consistent state, throw on error
+    void
+    checkState(
+            const bool isCheckOverlap = false,
+            const bool isCheckLocusConnected = false) const;
+
 
 private:
 
@@ -338,14 +345,6 @@ private:
 
     void
     dumpIndex(std::ostream& os) const;
-
-
-    /// check that internal data-structures are in
-    /// a consistent state, throw on error
-    void
-    checkState(
-            const bool isCheckOverlap = false,
-            const bool isCheckLocusConnected = false) const;
 
     ///////////////////// data
 
