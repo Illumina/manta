@@ -119,18 +119,26 @@ endif ()
 #
 # set compile flags, and modify by compiler/compiler version:
 #
-set (CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -Wredundant-decls -pedantic -Wunused-parameter -Wundef -Wuninitialized")
+
+# start with warning flags:
+set (CXX_WARN_FLAGS "-Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -Wredundant-decls -pedantic -Wunused-parameter -Wundef")
+
+if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wuninitialized")
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    set (CMAKE_CXX_FLAGS "${CXX_WARN_FLAGS} -Wmissing-prototypes -Wunused-exception-parameter")
+    # documentation of other possible warning flags from clang
+    #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Weverything -Wno-sign-conversion -Wno-weak-vtables -Wno-conversion -Wno-cast-align -Wno-padded -Wno-switch-enum -Wno-missing-noreturn -Wno-covered-switch-default -Wno-unreachable-code -Wno-global-constructors -Wno-exit-time-destructors")
+endif()
+
+
+set (CMAKE_CXX_FLAGS "${CXX_WARN_FLAGS}")
 set (CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 set (CMAKE_CXX_FLAGS_RELEASE "-O3")
 set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
 #set (CMAKE_CXX_FLAGS_PROFILE "-O0 -g -pg -fprofile-arcs -ftest-coverage")
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    # extra clang warnings:
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wmissing-prototypes -Wunused-exception-parameter")
-    # documentation of other possible warning flags from clang
-    #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Weverything -Wno-sign-conversion -Wno-weak-vtables -Wno-conversion -Wno-cast-align -Wno-padded -Wno-switch-enum -Wno-missing-noreturn -Wno-covered-switch-default -Wno-unreachable-code -Wno-global-constructors -Wno-exit-time-destructors")
-endif()
 
 # this should be tied to a 'developer' switch -- for now,
 # anyone touching manta is a developer, so this is true:
