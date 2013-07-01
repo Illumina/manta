@@ -187,6 +187,17 @@ struct SVLocusNode
         return edges.end();
     }
 
+    unsigned
+    outCount() const
+    {
+        unsigned sum(0);
+        BOOST_FOREACH(const edges_type::value_type& edgeIter, *this)
+        {
+            sum += edgeIter.second.count;
+        }
+        return sum;
+    }
+
     template<class Archive>
     void serialize(Archive& ar,const unsigned /* version */)
     {
@@ -341,6 +352,17 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
     /// a consistent state
     void
     checkState(const bool isCheckConnected = false) const;
+
+    // total the evidence count of all in-edges to this node
+    unsigned
+    getNodeInCount(const LocusIndexType nodeIndex) const;
+
+    // a fancier version of the SVLocusNode dumper which can
+    // report in-edge information
+    void
+    dumpNode(
+            std::ostream& os,
+            const LocusIndexType nodeIndex) const;
 
     template<class Archive>
     void save(Archive& ar, const unsigned /* version */) const

@@ -376,13 +376,54 @@ eraseNodes(const std::set<NodeIndexType>& nodes)
 std::ostream&
 operator<<(std::ostream& os, const SVLocusNode& node)
 {
-    os << "LocusNode: count: " << node.count << " " << node.interval << "\n";
+    os << "LocusNode: count: " << node.count << " " << node.interval << " n_edges: " << node.size() << " out_count: " << node.outCount() << "\n";
 
     BOOST_FOREACH(const SVLocusNode::edges_type::value_type& edgeIter, node)
     {
         os << "\tEdgeTo: " << edgeIter.first << " " << edgeIter.second << "\n";
     }
     return os;
+}
+
+
+
+unsigned
+SVLocus::
+getNodeInCount(
+        const LocusIndexType nodeIndex) const
+{
+    const SVLocusNode& node(getNode(nodeIndex));
+
+    unsigned sum(0);
+    BOOST_FOREACH(const SVLocusNode::edges_type::value_type& edgeIter, node)
+    {
+        sum += getEdge(edgeIter.first,nodeIndex).count;
+    }
+    return sum;
+}
+
+
+
+
+void
+SVLocus::
+dumpNode(
+        std::ostream& os,
+        const LocusIndexType nodeIndex) const
+{
+    const SVLocusNode& node(getNode(nodeIndex));
+    os << "LocusNode: count: " << node.count << " " << node.interval
+       << " n_edges: " << node.size()
+       << " out_count: " << node.outCount()
+       << " in_count: " << getNodeInCount(nodeIndex)
+       << "\n";
+
+    BOOST_FOREACH(const SVLocusNode::edges_type::value_type& edgeIter, node)
+    {
+        os << "\tEdgeTo: " << edgeIter.first
+           << " out_count: " << edgeIter.second
+           << " in_count: " << getEdge(edgeIter.first,nodeIndex).count << "\n";
+    }
 }
 
 
@@ -452,11 +493,12 @@ std::ostream&
 operator<<(std::ostream& os, const SVLocus& locus)
 {
     os << "LOCUS BEGIN INDEX " << locus.getIndex() << "\n";
-    unsigned locusIndex(0);
-    BOOST_FOREACH(const SVLocusNode& node, locus)
+    const unsigned nodeCount(locus.size());
+    for(unsigned nodeIndex(0); nodeIndex<nodeCount; ++nodeIndex)
     {
-        os << "LocusIndex: " << locusIndex << " " << node;
-        locusIndex++;
+        os << "NodeIndex: " << nodeIndex << " ";
+        locus.dumpNode(os,nodeIndex);
+        nodeIndex++;
     }
     os << "LOCUS END INDEX " << locus.getIndex() << "\n";
     return os;
