@@ -421,7 +421,7 @@ dumpNode(
     BOOST_FOREACH(const SVLocusNode::edges_type::value_type& edgeIter, node)
     {
         os << "\tEdgeTo: " << edgeIter.first
-           << " out_count: " << edgeIter.second
+           << " out_count: " << edgeIter.second.count
            << " in_count: " << getEdge(edgeIter.first,nodeIndex).count << "\n";
     }
 }
@@ -498,7 +498,6 @@ operator<<(std::ostream& os, const SVLocus& locus)
     {
         os << "NodeIndex: " << nodeIndex << " ";
         locus.dumpNode(os,nodeIndex);
-        nodeIndex++;
     }
     os << "LOCUS END INDEX " << locus.getIndex() << "\n";
     return os;
