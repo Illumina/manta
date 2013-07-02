@@ -56,6 +56,8 @@ parseSSLOptions(const manta::Program& prog,
     req.add_options()
     ("graph-file", po::value<std::string>(&opt.graphFilename),
      "sv locus graph file")
+    ("global",
+      "provide global stats on full graph (default output is per-locus stats)")
     ;
 
     po::options_description help("help");
@@ -88,6 +90,10 @@ parseSSLOptions(const manta::Program& prog,
     if (opt.graphFilename.empty())
     {
         usage(log_os,prog,visible,"Must specify sv locus graph file");
+    }
+    if(vm.count("global"))
+    {
+        opt.isGlobalStats=true;
     }
 }
 

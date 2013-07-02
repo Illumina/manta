@@ -26,10 +26,12 @@
 struct SSLOptions
 {
 
-    SSLOptions()
+    SSLOptions() :
+        isGlobalStats(false)
     {}
 
     std::string graphFilename;
+    bool isGlobalStats;
 };
 
 

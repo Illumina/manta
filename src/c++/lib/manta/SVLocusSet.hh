@@ -141,9 +141,13 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
         std::ostream& os,
         const GenomeInterval interval);
 
-    // dump stats on each locus in tsv format:
+    // dump stats on the whole SVLocus set:
     void
     dumpStats(std::ostream& os) const;
+
+    // dump stats on each locus in tsv format:
+    void
+    dumpLocusStats(std::ostream& os) const;
 
     const std::string&
     getSource() const
