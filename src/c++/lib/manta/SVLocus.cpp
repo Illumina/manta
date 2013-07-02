@@ -70,6 +70,7 @@ mergeNode(
     notifyDelete(toIndex);
 
     toNode.interval.range.merge_range(fromNode.interval.range);
+    toNode.evidenceRange.merge_range(fromNode.evidenceRange);
     toNode.count += fromNode.count;
 
     notifyAdd(toIndex);
@@ -376,7 +377,11 @@ eraseNodes(const std::set<NodeIndexType>& nodes)
 std::ostream&
 operator<<(std::ostream& os, const SVLocusNode& node)
 {
-    os << "LocusNode: count: " << node.count << " " << node.interval << " n_edges: " << node.size() << " out_count: " << node.outCount() << "\n";
+    os << "LocusNode: count: " << node.count << " " << node.interval
+      << " n_edges: " << node.size()
+      << " out_count: " << node.outCount()
+      << " evidence: " << node.evidenceRange
+      << "\n";
 
     BOOST_FOREACH(const SVLocusNode::edges_type::value_type& edgeIter, node)
     {
@@ -418,6 +423,7 @@ dumpNode(
        << " n_edges: " << node.size()
        << " out_count: " << node.outCount()
        << " in_count: " << getNodeInCount(nodeIndex)
+       << " evidence: " << node.evidenceRange
        << "\n";
 
     BOOST_FOREACH(const SVLocusNode::edges_type::value_type& edgeIter, node)

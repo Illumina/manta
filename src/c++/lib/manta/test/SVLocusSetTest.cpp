@@ -355,6 +355,37 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNoiseCleanRemote )
 
 
 
+BOOST_AUTO_TEST_CASE( test_SVLocusEvidenceRange )
+{
+    SVLocus locus1;
+    {
+        NodeIndexType node1 = locus1.addNode(GenomeInterval(1,100,110));
+        NodeIndexType node2 = locus1.addRemoteNode(GenomeInterval(2,100,110));
+        locus1.linkNodes(node1,node2);
+        locus1.setNodeEvidence(node1,known_pos_range2(50,60));
+    }
+
+    SVLocus locus2;
+    {
+        NodeIndexType node1 = locus2.addNode(GenomeInterval(1,100,110));
+        NodeIndexType node2 = locus2.addRemoteNode(GenomeInterval(2,100,110));
+        locus2.linkNodes(node1,node2);
+        locus2.setNodeEvidence(node1,known_pos_range2(30,40));
+    }
+
+    {
+        SVLocusSet set1(2);
+        set1.merge(locus1);
+        set1.merge(locus2);
+
+        BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),1u);
+        BOOST_REQUIRE_EQUAL(set1.getLocus(0).getNode(0).evidenceRange,known_pos_range2(30,60));
+    }
+
+}
+
+
+
 BOOST_AUTO_TEST_CASE( test_SVLocusCombine )
 {
     // test reassigning the locus numbers of non-overlapping loci in a set:

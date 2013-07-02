@@ -223,7 +223,9 @@ getChimericSVLocus(
             localBreakend.range.set_begin_pos(startRefPos - static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
         }
 
+        const known_pos_range2 evidenceRange(startRefPos,endRefPos);
         localBreakendNode = locus.addNode(localBreakend);
+        locus.setNodeEvidence(localBreakendNode,evidenceRange);
     }
 
     // get remote breakend estimate:

@@ -149,7 +149,8 @@ struct SVLocusNode
         const SVLocusNode& in,
         const unsigned offset) :
         count(in.count),
-        interval(in.interval)
+        interval(in.interval),
+        evidenceRange(in.evidenceRange)
     {
         BOOST_FOREACH(const edges_type::value_type& val, in)
         {
@@ -201,7 +202,7 @@ struct SVLocusNode
     template<class Archive>
     void serialize(Archive& ar,const unsigned /* version */)
     {
-        ar& count& interval& edges;
+        ar& count& interval& evidenceRange& edges;
     }
 
     friend std::ostream&
@@ -210,6 +211,7 @@ struct SVLocusNode
     //////////////////  data:
     unsigned short count;
     GenomeInterval interval;
+    known_pos_range2 evidenceRange;
 
     edges_type edges;
 };
@@ -312,6 +314,8 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
         NodeIndexType nodePtr(newGraphNode());
         SVLocusNode& node(getNode(nodePtr));
         node.interval = interval;
+        // default evidenceRange to the breakend interval unless a better estimate is provided
+        node.evidenceRange = interval.range;
         node.count=count;
         notifyAdd(nodePtr);
         return nodePtr;
@@ -338,6 +342,14 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
         assert(0 == toNode.edges.count(fromIndex));
         fromNode.edges.insert(std::make_pair(toIndex,SVLocusEdge(fromCount)));
         toNode.edges.insert(std::make_pair(fromIndex,SVLocusEdge(toCount)));
+    }
+
+    void
+    setNodeEvidence(
+            const NodeIndexType nodeIndex,
+            const known_pos_range2& evidenceRange)
+    {
+        getNode(nodeIndex).evidenceRange = evidenceRange;
     }
 
     /// find all node indices connected to startIndex
