@@ -161,6 +161,17 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
         return _minMergeEdgeCount;
     }
 
+    unsigned
+    totalCount() const
+    {
+        unsigned sum(0);
+        BOOST_FOREACH(const SVLocus& locus, *this)
+        {
+            sum += locus.totalCount();
+        }
+        return sum;
+    }
+
     /// check that internal data-structures are in
     /// a consistent state, throw on error
     void

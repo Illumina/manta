@@ -691,14 +691,8 @@ dumpStats(std::ostream& os) const
 {
     static const char sep('\t');
 
-    unsigned long totalCount(0);
-    BOOST_FOREACH(const SVLocus& locus, *this)
-    {
-        totalCount = locus.totalCount();
-    }
-
     os << "locusCount: " << sep << nonEmptySize() << "\n";
-    os << "totalEvidenceCount: " << sep << totalCount << "\n";
+    os << "totalEvidenceCount: " << sep << totalCount() << "\n";
     os << "totalCleaned: " << sep << _totalCleaned << "\n";
 }
 
