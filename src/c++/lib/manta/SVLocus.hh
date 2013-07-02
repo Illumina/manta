@@ -269,18 +269,6 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
         return _graph.size();
     }
 
-    iterator
-    begin()
-    {
-        return _graph.begin();
-    }
-
-    iterator
-    end()
-    {
-        return _graph.end();
-    }
-
     const_iterator
     begin() const
     {

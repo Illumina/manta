@@ -380,6 +380,7 @@ private:
     // once complete, overlaps are not present and disallowed:
     bool _isFinalized;
 
+    // total number of observations removed on edges with less than minMergeEdgeCount counts
     unsigned _totalCleaned;
 };
 

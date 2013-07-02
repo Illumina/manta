@@ -17,59 +17,12 @@
 
 #include "boost/test/unit_test.hpp"
 
-// hack to call private methods of SVLocusSet:
-#define private public
 #include "manta/SVLocusSet.hh"
 
 #include "SVLocusTestUtil.hh"
 
 
 BOOST_AUTO_TEST_SUITE( test_SVLocusSet )
-
-
-static
-unsigned
-testOverlap(
-    SVLocusSet& locusSet,
-    const int32_t tid,
-    const int32_t beginPos,
-    const int32_t endPos)
-{
-    std::set<SVLocusSet::NodeAddressType> intersect;
-    locusSet.getRegionIntersect(GenomeInterval(tid,beginPos,endPos),intersect);
-    return intersect.size();
-}
-
-
-
-BOOST_AUTO_TEST_CASE( test_SVLocusIntersect )
-{
-    // construct a simple two-node locus
-    SVLocus locus1;
-    locusAddPair(locus1,1,10,20,2,30,40);
-
-    SVLocusSet set1;
-    set1.merge(locus1);
-    set1.checkState(true,true);
-
-    // test for various intersections:
-
-    // non-overlap test:
-    BOOST_REQUIRE_EQUAL(testOverlap(set1,1,1,2),0u);
-
-    // left-edge overlap:
-    BOOST_REQUIRE_EQUAL(testOverlap(set1,1,9,11),1u);
-
-    // right-edge overlap:
-    BOOST_REQUIRE_EQUAL(testOverlap(set1,1,19,21),1u);
-
-    // non-overlap:
-    BOOST_REQUIRE_EQUAL(testOverlap(set1,1,29,31),0u);
-
-    // non-overlap (diff tid):
-    BOOST_REQUIRE_EQUAL(testOverlap(set1,2,9,11),0u);
-}
-
 
 
 BOOST_AUTO_TEST_CASE( test_SVLocusMerge )
@@ -87,9 +40,10 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMerge )
     set1.merge(locus1);
     set1.merge(locus2);
     set1.checkState(true,true);
+    const SVLocusSet& cset1(set1);
 
-    BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),1u);
-    BOOST_REQUIRE_EQUAL(set1.getLocus(0).size(),2u);
+    BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+    BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),2u);
 }
 
 
@@ -113,14 +67,15 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge )
     set1.merge(locus2);
     set1.merge(locus3);
     set1.checkState(true,true);
+    const SVLocusSet& cset1(set1);
 
     GenomeInterval testInterval(12,30,60);
 
-    BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),1u);
-    BOOST_REQUIRE_EQUAL(set1.getLocus(0).size(),4u);
+    BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+    BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),4u);
 
     bool isFound(false);
-    BOOST_FOREACH(const SVLocusNode& node, set1.getLocus(0))
+    BOOST_FOREACH(const SVLocusNode& node, cset1.getLocus(0))
     {
         if (node.interval == testInterval) isFound=true;
     }
@@ -149,14 +104,15 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge2 )
     set1.merge(locus1);
     set1.merge(locus2);
     set1.checkState(true,true);
+    const SVLocusSet& cset1(set1);
 
     GenomeInterval testInterval(1,10,60);
 
-    BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),1u);
-    BOOST_REQUIRE_EQUAL(set1.getLocus(0).size(),2u);
+    BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+    BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),2u);
 
     bool isFound(false);
-    BOOST_FOREACH(const SVLocusNode& node, set1.getLocus(0))
+    BOOST_FOREACH(const SVLocusNode& node, cset1.getLocus(0))
     {
         if (node.interval == testInterval) isFound=true;
     }
@@ -190,14 +146,15 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge3 )
     set1.merge(locus4);
     set1.merge(locus5);
     set1.checkState(true,true);
+    const SVLocusSet& cset1(set1);
 
     GenomeInterval testInterval(1,10,40);
 
-    BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),2u);
-    BOOST_REQUIRE_EQUAL(set1.getLocus(0).size(),4u);
+    BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),2u);
+    BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),4u);
 
     bool isFound(false);
-    BOOST_FOREACH(const SVLocusNode& node, set1.getLocus(0))
+    BOOST_FOREACH(const SVLocusNode& node, cset1.getLocus(0))
     {
         if (node.interval == testInterval) isFound=true;
     }
@@ -219,15 +176,18 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge4 )
     SVLocusSet set1(1);
     set1.merge(locus1);
     set1.merge(locus2);
-    set1.checkState(true,true);
+
+    const SVLocusSet& cset1(set1);
+    cset1.checkState(true,true);
+
 
     GenomeInterval testInterval(1,10,60);
 
-    BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),1u);
-    BOOST_REQUIRE_EQUAL(set1.getLocus(0).size(),2u);
+    BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+    BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),2u);
 
     bool isFound(false);
-    BOOST_FOREACH(const SVLocusNode& node, set1.getLocus(0))
+    BOOST_FOREACH(const SVLocusNode& node, cset1.getLocus(0))
     {
         if (node.interval == testInterval) isFound=true;
     }
@@ -252,10 +212,11 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNoiseMerge )
         set1.merge(locus1);
         set1.merge(locus2);
         set1.merge(locus3);
-        set1.checkState(true,true);
+        const SVLocusSet& cset1(set1);
 
-        BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),1u);
-        BOOST_REQUIRE_EQUAL(set1.getLocus(0).size(),3u);
+        cset1.checkState(true,true);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),3u);
     }
 
     {
@@ -263,10 +224,11 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNoiseMerge )
         set1.merge(locus1);
         set1.merge(locus2);
         set1.merge(locus3);
-        set1.checkState(true,true);
+        const SVLocusSet& cset1(set1);
 
-        BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),2u);
-        BOOST_REQUIRE_EQUAL(set1.getLocus(0).size(),2u);
+        cset1.checkState(true,true);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),2u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),2u);
     }
 
     {
@@ -274,10 +236,11 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNoiseMerge )
         set1.merge(locus1);
         set1.merge(locus2);
         set1.merge(locus3);
-        set1.checkState(true,true);
+        const SVLocusSet& cset1(set1);
 
-        BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),3u);
-        BOOST_REQUIRE_EQUAL(set1.getLocus(0).size(),2u);
+        cset1.checkState(true,true);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),3u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),2u);
     }
 }
 
@@ -299,15 +262,16 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNoiseClean )
         set1.merge(locus1);
         set1.merge(locus2);
         set1.merge(locus3);
-        set1.checkState(true,true);
+        const SVLocusSet& cset1(set1);
 
-        BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),2u);
-        BOOST_REQUIRE_EQUAL(set1.getLocus(0).size(),2u);
+        cset1.checkState(true,true);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),2u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),2u);
 
         set1.clean();
 
-        BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),1u);
-        BOOST_REQUIRE_EQUAL(set1.getLocus(0).size(),2u);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),2u);
     }
 
     {
@@ -315,19 +279,20 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNoiseClean )
         set1.merge(locus1);
         set1.merge(locus2);
         set1.merge(locus3);
+        const SVLocusSet& cset1(set1);
 
-        BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),2u);
-        BOOST_REQUIRE_EQUAL(set1.getLocus(1).size(),2u);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),2u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(1).size(),2u);
 
         set1.cleanRegion(GenomeInterval(3,0,70));
 
-        BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),2u);
-        BOOST_REQUIRE_EQUAL(set1.getLocus(1).size(),2u);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),2u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(1).size(),2u);
 
         set1.cleanRegion(GenomeInterval(1,0,70));
 
-        BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),1u);
-        BOOST_REQUIRE_EQUAL(set1.getLocus(0).size(),2u);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),2u);
     }
 
 }
@@ -342,13 +307,14 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNoiseCleanRemote )
     {
         SVLocusSet set1(2);
         set1.merge(locus1);
+        const SVLocusSet& cset1(set1);
 
-        BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),1u);
-        BOOST_REQUIRE_EQUAL(set1.getLocus(0).size(),2u);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),2u);
 
         set1.cleanRegion(GenomeInterval(1,0,120));
 
-        BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),0u);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),0u);
     }
 
 }
@@ -377,45 +343,16 @@ BOOST_AUTO_TEST_CASE( test_SVLocusEvidenceRange )
         SVLocusSet set1(2);
         set1.merge(locus1);
         set1.merge(locus2);
+        const SVLocusSet& cset1(set1);
 
-        BOOST_REQUIRE_EQUAL(set1.nonEmptySize(),1u);
-        BOOST_REQUIRE_EQUAL(set1.getLocus(0).getNode(0).evidenceRange,known_pos_range2(30,60));
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).getNode(0).evidenceRange,known_pos_range2(30,60));
     }
 
 }
 
 
 
-BOOST_AUTO_TEST_CASE( test_SVLocusCombine )
-{
-    // test reassigning the locus numbers of non-overlapping loci in a set:
-
-    // construct a simple two-node locus
-    SVLocus locus1;
-    locusAddPair(locus1,1,10,20,2,30,40);
-
-    SVLocus locus2;
-    locusAddPair(locus2,3,10,20,4,30,40);
-
-    SVLocus locus3;
-    locusAddPair(locus3,5,10,20,6,30,40);
-
-    SVLocusSet set1(1);
-    set1.merge(locus1);
-    set1.merge(locus2);
-    set1.merge(locus3);
-    set1.checkState(true,true);
-
-    BOOST_REQUIRE_EQUAL(set1._loci[0].size(),2u);
-    BOOST_REQUIRE_EQUAL(set1._loci[1].size(),2u);
-    BOOST_REQUIRE_EQUAL(set1._loci[2].size(),2u);
-    set1.combineLoci(0,0);
-    set1.combineLoci(2,0);
-
-    BOOST_REQUIRE_EQUAL(set1._loci[0].size(),4u);
-    BOOST_REQUIRE_EQUAL(set1._loci[1].size(),2u);
-    BOOST_REQUIRE_EQUAL(set1._loci[2].size(),0u);
-}
 
 
 
@@ -437,9 +374,10 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNoiseOverlap )
         set1.merge(locus2);
         set1.merge(locus3);
         set1.merge(locus4);
+        const SVLocusSet& cset1(set1);
 
         set1.finalize();
-        set1.checkState(true,true);
+        cset1.checkState(true,true);
     }
 }
 

@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocus1 )
 
     BOOST_REQUIRE_EQUAL(locus1.size(),2u);
 
-    BOOST_FOREACH(const SVLocusNode& node, locus1)
+    BOOST_FOREACH(const SVLocusNode& node, static_cast<const SVLocus&>(locus1))
     {
         BOOST_REQUIRE_EQUAL(node.size(),1u);
     }
