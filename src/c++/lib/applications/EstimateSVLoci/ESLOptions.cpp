@@ -19,6 +19,7 @@
 
 #include "blt_util/log.hh"
 
+#include "boost/filesystem.hpp"
 #include "boost/program_options.hpp"
 
 #include <iostream>
@@ -97,6 +98,10 @@ parseESLOptions(const manta::Program& prog,
     if (opt.statsFilename.empty())
     {
         usage(log_os,prog,visible,"Must specify alignment statistics file");
+    }
+    if (! boost::filesystem::exists(opt.statsFilename))
+    {
+        usage(log_os,prog,visible,"alignment statistics file does not exist");
     }
     if (opt.outputFilename.empty())
     {

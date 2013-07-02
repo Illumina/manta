@@ -19,6 +19,7 @@
 
 #include "blt_util/log.hh"
 
+#include "boost/filesystem.hpp"
 #include "boost/program_options.hpp"
 
 #include <iostream>
@@ -94,6 +95,10 @@ parseDSLOptions(const manta::Program& prog,
     if (opt.graphFilename.empty())
     {
         usage(log_os,prog,visible,"Must specify sv locus graph file");
+    }
+    if (! boost::filesystem::exists(opt.graphFilename))
+    {
+        usage(log_os,prog,visible,"SV locus graph file does not exist");
     }
     if (vm.count("locus-index"))
     {

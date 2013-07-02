@@ -19,6 +19,7 @@
 
 #include "blt_util/log.hh"
 
+#include "boost/filesystem.hpp"
 #include "boost/program_options.hpp"
 
 #include <iostream>
@@ -103,13 +104,17 @@ parseGSCOptions(const manta::Program& prog,
     {
         usage(log_os,prog,visible,"Must specify alignment statistics file");
     }
-    if (opt.graphFilename.empty())
+    if (! boost::filesystem::exists(opt.statsFilename))
     {
-        usage(log_os,prog,visible,"Must specify a SV locus graph input file");
+        usage(log_os,prog,visible,"alignment statistics file does not exist");
     }
     if (opt.graphFilename.empty())
     {
         usage(log_os,prog,visible,"Must specify a SV locus graph input file");
+    }
+    if (! boost::filesystem::exists(opt.graphFilename))
+    {
+        usage(log_os,prog,visible,"SV locus graph file does not exist");
     }
 }
 
