@@ -35,7 +35,14 @@ runSSL(const SSLOptions& opt)
 
     std::ostream& os(std::cout);
 
-    set.dumpStats(os);
+    if(opt.isGlobalStats)
+    {
+        set.dumpStats(os);
+    }
+    else
+    {
+        set.dumpLocusStats(os);
+    }
 }
 
 
