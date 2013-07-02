@@ -360,6 +360,18 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
             const NodeIndexType startIndex,
             std::set<NodeIndexType>& connected) const;
 
+    /// the total observations in all nodes of the locus
+    unsigned
+    totalCounts() const
+    {
+        unsigned sum(0);
+        BOOST_FOREACH(const SVLocusNode& node, *this)
+        {
+            sum += node.count;
+        }
+        return sum;
+    }
+
     /// debug func to check that internal data-structures are in
     /// a consistent state
     void
