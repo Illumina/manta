@@ -152,14 +152,15 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
 
     hygenTasks=set()
 
-    for binId in range(int(self.params.nonlocalWorkBins)) :
+    for binId in range(self.params.nonlocalWorkBins) :
         binStr = str(binId).zfill(4)
 
         hygenCmd = [ self.params.mantaHyGenBin ]
         hygenCmd.extend(["--align-stats",statsPath])
         hygenCmd.extend(["--graph-file",graphPath])
         hygenCmd.extend(["--bin-index", str(binId)])
-        hygenCmd.extend(["--bin-count", self.params.nonlocalWorkBins])
+        hygenCmd.extend(["--bin-count", str(self.params.nonlocalWorkBins)])
+        hygenCmd.extend(["--ref",self.params.referenceFasta])
         hygenCmd.extend(["--output-file", self.paths.getHyGenPath(binStr)])
         for bamPath in self.params.bamList :
             hygenCmd.extend(["--align-file",bamPath])
@@ -238,6 +239,7 @@ class MantaWorkflow(WorkflowRunner) :
 
         # sanity check some parameter typing:
         self.params.binSize = int(self.params.binSize)
+        self.params.nonlocalWorkBins = int(self.params.nonlocalWorkBins)
 
         self.paths = PathInfo(self.params)
 

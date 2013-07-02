@@ -34,6 +34,7 @@ struct GSCOptions
     std::vector<std::string> alignmentFilename;
     std::string graphFilename;
     std::string outputFilename;
+    std::string referenceFilename;
     std::string statsFilename;
 
     unsigned binIndex;

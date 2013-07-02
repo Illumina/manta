@@ -47,6 +47,32 @@ usage(
 }
 
 
+
+static
+void
+checkUsageFile(
+        std::ostream& os,
+        const manta::Program& prog,
+        const boost::program_options::options_description& visible,
+        const std::string& filename,
+        const char* fileLabel)
+{
+    if (filename.empty())
+    {
+        std::ostringstream oss;
+        oss << "Must specify " << fileLabel << " file";
+        usage(os,prog,visible,oss.str().c_str());
+    }
+    if (! boost::filesystem::exists(filename))
+    {
+        std::ostringstream oss;
+        oss << "Can't find " << fileLabel << " file '" << filename << "'";
+        usage(os,prog,visible,oss.str().c_str());
+    }
+}
+
+
+
 void
 parseGSCOptions(const manta::Program& prog,
                 int argc, char* argv[],
@@ -59,13 +85,15 @@ parseGSCOptions(const manta::Program& prog,
      "alignment file in bam format (may be specified multiple times, at least one required)")
     ("graph-file", po::value(&opt.graphFilename),
      "sv locus graph file (required)")
-    ("align-stats", po::value<std::string>(&opt.statsFilename),
+    ("align-stats", po::value(&opt.statsFilename),
      "pre-computed alignment statistics for the input alignment files (required)")
-    ("output-file", po::value<std::string>(&opt.outputFilename),
-     "write SV candidates to file (required)")
-    ("bin-count", po::value<unsigned>(&opt.binCount)->default_value(opt.binCount),
+    ("ref", po::value(&opt.referenceFilename),
+     "fasta reference sequence (required)")
+     ("output-file", po::value(&opt.outputFilename),
+      "write SV candidates to file (required)")
+    ("bin-count", po::value(&opt.binCount)->default_value(opt.binCount),
      "Specify how many bins the SV candidate problem should be divided into, where bin-index can be used to specify which bin to solve")
-    ("bin-index", po::value<unsigned>(&opt.binIndex)->default_value(opt.binIndex),
+    ("bin-index", po::value(&opt.binIndex)->default_value(opt.binIndex),
      "specify which bin to solve when the SV candidate problem is subdivided into bins (value must bin in [1,bin-count])")
     ;
 
@@ -100,21 +128,8 @@ parseGSCOptions(const manta::Program& prog,
     {
         usage(log_os,prog,visible,"Must specify at least one input alignment file");
     }
-    if (opt.statsFilename.empty())
-    {
-        usage(log_os,prog,visible,"Must specify alignment statistics file");
-    }
-    if (! boost::filesystem::exists(opt.statsFilename))
-    {
-        usage(log_os,prog,visible,"alignment statistics file does not exist");
-    }
-    if (opt.graphFilename.empty())
-    {
-        usage(log_os,prog,visible,"Must specify a SV locus graph input file");
-    }
-    if (! boost::filesystem::exists(opt.graphFilename))
-    {
-        usage(log_os,prog,visible,"SV locus graph file does not exist");
-    }
+    checkUsageFile(log_os,prog,visible,opt.statsFilename,"alignment statistics");
+    checkUsageFile(log_os,prog,visible,opt.graphFilename,"SV locus graph");
+    checkUsageFile(log_os,prog,visible,opt.referenceFilename,"reference fasta");
 }
 
