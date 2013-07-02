@@ -414,8 +414,10 @@ private:
             const NodeIndexType nodeIndex) const;
 
     /// remove all unmerged noise in-edges of node and
-    /// return list of nodes which should be deleted
-    void
+    /// provide list of nodes which should be deleted
+    ///
+    /// return amount of evidence cleaned
+    unsigned
     cleanNodeCore(
             const unsigned minMergeEdgeCount,
             const NodeIndexType nodeIndex,
@@ -423,13 +425,17 @@ private:
 
     /// remove all unmerged noise in-edges of node and possibly
     /// delete empty nodes
-    void
+    ///
+    /// return amount of evidence cleaned
+    unsigned
     cleanNode(
             const unsigned minMergeEdgeCount,
             const NodeIndexType nodeIndex);
 
     /// remove all unmerged noise edges and nodes
-    void
+    ///
+    /// return amount of evidence cleaned
+    unsigned
     clean(const unsigned minMergeEdgeCount);
 
     void

@@ -614,7 +614,7 @@ clean()
     BOOST_FOREACH(SVLocus& locus, _loci)
     {
         if(locus.empty()) continue;
-        locus.clean(getMinMergeEdgeCount());
+        _totalCleaned += locus.clean(getMinMergeEdgeCount());
         if(locus.empty()) _emptyLoci.insert(locus.getIndex());
     }
 }
@@ -636,7 +636,7 @@ cleanRegion(const GenomeInterval interval)
     {
         SVLocus& locus(getLocus(val.first));
         if(locus.empty()) continue;
-        locus.cleanNode(getMinMergeEdgeCount(), val.second);
+        _totalCleaned += locus.cleanNode(getMinMergeEdgeCount(), val.second);
         if(locus.empty()) _emptyLoci.insert(locus.getIndex());
 
 #ifdef DEBUG_SVL
@@ -760,6 +760,7 @@ save(const char* filename) const
     oa << header;
     oa << _minMergeEdgeCount;
     oa << _isFinalized;
+    oa << _totalCleaned;
     BOOST_FOREACH(const SVLocus& locus, _loci)
     {
         if (locus.empty()) continue;
@@ -786,6 +787,7 @@ load(const char* filename)
     ia >> header;
     ia >> _minMergeEdgeCount;
     ia >> _isFinalized;
+    ia >> _totalCleaned;
     SVLocus locus;
     while (ifs.peek() != EOF)
     {

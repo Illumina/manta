@@ -38,7 +38,8 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
         _inodes(NodeAddressSorter(*this)),
         _source("UNKNOWN"),
         _minMergeEdgeCount(minMergeEdgeCount),
-        _isFinalized(false)
+        _isFinalized(false),
+        _totalCleaned(0)
     {}
 
     bool
@@ -97,6 +98,8 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
     {
         _loci.clear();
         clearIndex();
+        _isFinalized=false;
+        _totalCleaned=0;
     }
 
     /// indicate that the set is complete
@@ -113,6 +116,12 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
 
     void
     cleanRegion(const GenomeInterval interval);
+
+    unsigned
+    totalCleaned() const
+    {
+        return _totalCleaned;
+    }
 
     // binary serialization
     void
@@ -370,6 +379,8 @@ private:
     // the graph has intermediate states (during build) when overlapping regions are allowed,
     // once complete, overlaps are not present and disallowed:
     bool _isFinalized;
+
+    unsigned _totalCleaned;
 };
 
 

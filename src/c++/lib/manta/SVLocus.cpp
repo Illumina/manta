@@ -183,7 +183,7 @@ isNoiseNode(
 
 
 
-void
+unsigned
 SVLocus::
 cleanNodeCore(
         const unsigned minMergeEdgeCount,
@@ -194,6 +194,7 @@ cleanNodeCore(
     log_os << "cleanNodeCore nodeIndex: " << nodeIndex << "\n";
 #endif
 
+    unsigned totalCleaned(0);
     SVLocusNode& queryNode(getNode(nodeIndex));
 
     std::vector<NodeIndexType> eraseEdges;
@@ -204,6 +205,7 @@ cleanNodeCore(
             if(edgeIter.second.count < minMergeEdgeCount)
             {
                 assert(queryNode.count>=edgeIter.second.count);
+                totalCleaned += edgeIter.second.count;
                 queryNode.count -= edgeIter.second.count;
                 edgeIter.second.count = 0;
             }
@@ -250,34 +252,39 @@ cleanNodeCore(
     }
 #endif
 
+    return totalCleaned;
 }
 
 
 
-void
+unsigned
 SVLocus::
 cleanNode(
         const unsigned minMergeEdgeCount,
         const NodeIndexType nodeIndex)
 {
     std::set<NodeIndexType> emptyNodes;
-    cleanNodeCore(minMergeEdgeCount,nodeIndex,emptyNodes);
+    const unsigned totalCleaned(cleanNodeCore(minMergeEdgeCount,nodeIndex,emptyNodes));
     eraseNodes(emptyNodes);
+    return totalCleaned;
 }
 
 
 
-void
+unsigned
 SVLocus::
 clean(const unsigned minMergeEdgeCount)
 {
     std::set<NodeIndexType> emptyNodes;
+    unsigned totalCleaned(0);
+
     const unsigned nodeSize(size());
     for (unsigned nodeIndex(0); nodeIndex<nodeSize; ++nodeIndex)
     {
-        cleanNodeCore(minMergeEdgeCount,nodeIndex,emptyNodes);
+        totalCleaned += cleanNodeCore(minMergeEdgeCount,nodeIndex,emptyNodes);
     }
     eraseNodes(emptyNodes);
+    return totalCleaned;
 }
 
 
