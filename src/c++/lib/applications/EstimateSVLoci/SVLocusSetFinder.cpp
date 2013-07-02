@@ -58,6 +58,7 @@ SVLocusSetFinder(
                         scanRegion.range.begin_pos(),
                         scanRegion.range.end_pos()),
                 *this),
+        _svLoci(opt.minMergeEdgeCount),
         _isScanStarted(false),
         _isInDenoiseRegion(false),
         _denoisePos(0)
