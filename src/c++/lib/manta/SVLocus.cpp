@@ -70,7 +70,18 @@ mergeNode(
     notifyDelete(toIndex);
 
     toNode.interval.range.merge_range(fromNode.interval.range);
-    toNode.evidenceRange.merge_range(fromNode.evidenceRange);
+    if     ((toNode.count==0) && (fromNode.count!=0))
+    {
+        toNode.evidenceRange = fromNode.evidenceRange;
+    }
+    else if((fromNode.count==0) && (toNode.count!=0))
+    {
+        // pass (keep toNode value as is
+    }
+    else
+    {
+        toNode.evidenceRange.merge_range(fromNode.evidenceRange);
+    }
     toNode.count += fromNode.count;
 
     notifyAdd(toIndex);
