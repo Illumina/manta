@@ -97,7 +97,10 @@ def runStats(self,taskPrefix="",dependencies=None):
 
 
 def runLocusGraph(self,taskPrefix="",dependencies=None):
-
+    """
+    Create the full SV locus graph
+    """
+    
     statsPath=self.paths.getStatsPath()
     graphPath=self.paths.getGraphPath()
 
@@ -127,7 +130,42 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
     
     mergeTask=self.addTask(preJoin(taskPrefix,"mergeGraph"),mergeCmd,dependencies=graphTasks)
 
-    nextStepWait = set()
+    rmGraphTmpCmd = "rm -rf tmpGraphDir"
+    rmTask=self.addTask(preJoin(taskPrefix,"rmGraphTmp"),rmGraphTmpCmd,dependencies=mergeTask)
+
+    nextStepWait = set(mergeTask)
+    return nextStepWait
+
+
+
+def runHyGen(self, taskPrefix="", dependencies=None) :
+    """
+    Run hypothesis generation on each SV locus
+    """
+    
+    statsPath=self.paths.getStatsPath()
+    graphPath=self.paths.getGraphPath()
+    hygenDir=self.paths.getHyGenDir()
+
+    dirTask=self.addTask(preJoin(taskPrefix,"makeHyGenDir"), "mkdir -p "+ hygenDir, dependencies=dependencies, isForceLocal=True)
+
+    hygenTasks=set()
+
+    for binId in range(params.nonlocalWorkBins) :
+        binStr = str(binId).zfill(4)
+
+        hygenCmd = [ self.params.mantaHyGenBin ]
+        hygenCmd.extend(["--align-stats",statsPath])
+        hygenCmd.extend(["--graph-file",graphPath])
+        hygenCmd.extend(["--bin", str(binId)])
+        hygenCmd.extend(["--bin-count", str(params.nonlocalWorkBins)])
+        hygenCmd.extend(["--output-file", self.paths.getHyGenPath(binStr)])
+        for bamPath in self.params.bamList :
+            hygenCmd.extend(["--align-file",bamPath])
+        hygenTaskLabel=preJoin(taskPrefix,"generateSVCandidates_"+binStr)
+        hgenTasks.add(self.addTask(hygenTaskLabel,hygenCmd,dependencies=dirTask))
+
+    nextStepWait = hygenTasks
     return nextStepWait
 
 
@@ -145,6 +183,12 @@ class PathInfo:
 
     def getGraphPath(self) :
         return os.path.join(self.params.workDir,"svLocusGraph.bin")
+
+    def getHyGenDir(self) :
+        return os.path.join(self.params.workDir,"svHyGen")
+
+    def getHyGenPath(self, binStr) :
+        return os.path.join(getHyGenDir,"svHyGen_%s.bin" % (binStr))
 
 
 
@@ -212,3 +256,5 @@ class MantaWorkflow(WorkflowRunner) :
 
         statsTasks = runStats(self)
         graphTasks = runLocusGraph(self,dependencies=statsTasks)
+        hygenTasks = runHyGen(self,dependencies=graphTasks)
+        

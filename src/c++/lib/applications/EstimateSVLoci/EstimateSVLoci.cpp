@@ -23,7 +23,6 @@
 #include "blt_util/input_stream_handler.hh"
 #include "blt_util/log.hh"
 #include "common/OutStream.hh"
-#include "manta/ReadGroupStatsSet.hh"
 
 #include "boost/foreach.hpp"
 #include "boost/shared_ptr.hpp"

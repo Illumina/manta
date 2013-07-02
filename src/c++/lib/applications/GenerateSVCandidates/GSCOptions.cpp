@@ -15,7 +15,7 @@
 /// \author Chris Saunders
 ///
 
-#include "ESLOptions.hh"
+#include "GSCOptions.hh"
 
 #include "blt_util/log.hh"
 
@@ -33,7 +33,7 @@ usage(
     const boost::program_options::options_description& visible,
     const char* msg = NULL)
 {
-    os << "\n" << prog.name() << ": partition sv evidence regions\n\n";
+    os << "\n" << prog.name() << ": call candidates from an SV Locus graph\n\n";
     os << "version: " << prog.version() << "\n\n";
     os << "usage: " << prog.name() << " [options]\n\n";
     os << visible << "\n\n";
@@ -47,21 +47,26 @@ usage(
 
 
 void
-parseESLOptions(const manta::Program& prog,
+parseGSCOptions(const manta::Program& prog,
                 int argc, char* argv[],
-                ESLOptions& opt)
+                GSCOptions& opt)
 {
     namespace po = boost::program_options;
     po::options_description req("configuration");
     req.add_options()
     ("align-file", po::value<std::vector<std::string> >(&opt.alignmentFilename),
-     "alignment file in bam format (more than one file may be specified, at least one required)")
-    ("output-file", po::value<std::string>(&opt.outputFilename),
-     "write SV Locus graph to file (required)")
+     "alignment file in bam format (may be specified multiple times, at least one required)")
+    ("graph-file", po::value(&opt.graphFilename),
+     "sv locus graph file (required)")
     ("align-stats", po::value<std::string>(&opt.statsFilename),
      "pre-computed alignment statistics for the input alignment files (required)")
-    ("region", po::value<std::string>(&opt.region),
-     "samtools formatted region, eg. 'chr1:20-30' (optional)");
+    ("output-file", po::value<std::string>(&opt.outputFilename),
+     "write SV candidates to file (required)")
+    ("bin-count", po::value<unsigned>(&opt.binCount)->default_value(opt.binCount),
+     "Specify how many bins the SV candidate problem should be divided into, where bin-index can be used to specify which bin to solve")
+    ("bin-index", po::value<unsigned>(&opt.binIndex)->default_value(opt.binIndex),
+     "specify which bin to solve when the SV candidate problem is subdivided into bins (value must bin in [1,bin-count])")
+    ;
 
     po::options_description help("help");
     help.add_options()
@@ -98,9 +103,13 @@ parseESLOptions(const manta::Program& prog,
     {
         usage(log_os,prog,visible,"Must specify alignment statistics file");
     }
-    if (opt.outputFilename.empty())
+    if (opt.graphFilename.empty())
     {
-        usage(log_os,prog,visible,"Must specify a graph output file");
+        usage(log_os,prog,visible,"Must specify a SV locus graph input file");
+    }
+    if (opt.graphFilename.empty())
+    {
+        usage(log_os,prog,visible,"Must specify a SV locus graph input file");
     }
 }
 

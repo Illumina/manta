@@ -78,6 +78,7 @@ The pipeline reference sequence is currently fixed to human hg19.
             'runDir' : 'MantaWorkflow',
             'isExome' : False,
             'binSize' : 25000000,
+            'nonlocalWorkBins' : 128
                           })
         return defaults
 

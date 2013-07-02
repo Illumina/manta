@@ -61,6 +61,8 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         assert os.path.isfile(mantaGraphBin)
         mantaGraphMergeBin=os.path.join(libexecDir,"MergeSVLoci")
         assert os.path.isfile(mantaGraphMergeBin)
+        mantaHyGenBin=os.path.join(libexecDir,"GenerateSVCandidates")
+        assert os.path.isfile(mantaHyGenBin)
 
         return cleanLocals(locals())
 
