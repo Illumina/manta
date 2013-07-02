@@ -226,6 +226,8 @@ merge(const SVLocusSet& inputSet)
             throw;
         }
     }
+
+    _totalCleaned += inputSet._totalCleaned;
 }
 
 
