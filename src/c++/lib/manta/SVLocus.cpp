@@ -380,7 +380,9 @@ operator<<(std::ostream& os, const SVLocusNode& node)
 
     BOOST_FOREACH(const SVLocusNode::edges_type::value_type& edgeIter, node)
     {
-        os << "\tEdgeTo: " << edgeIter.first << " " << edgeIter.second << "\n";
+        os << "\tEdgeTo: " << edgeIter.first
+           << " out_count: " << edgeIter.second.count
+           << "\n";
     }
     return os;
 }
