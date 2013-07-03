@@ -51,6 +51,7 @@ runGSC(const GSCOptions& opt)
     while (edger.next())
     {
         const EdgeInfo& edge=edger.getEdge();
+//findSVs(opt, set, edge);
 
         ///BOGUS:
         if (edge.locusIndex==0) return;

@@ -28,14 +28,6 @@
 
 
 std::ostream&
-operator<<(std::ostream& os, const GenomeInterval& gi)
-{
-    os << "GenomeInterval: " << gi.tid << ":" << gi.range;
-    return os;
-}
-
-
-std::ostream&
 operator<<(std::ostream& os, const SVLocusEdge& edge)
 {
     os << "Edgecount: " << edge.count;

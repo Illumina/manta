@@ -18,14 +18,14 @@
 #pragma once
 
 #include "blt_util/observer.hh"
-#include "blt_util/known_pos_range2.hh"
+#include "manta/GenomeInterval.hh"
 
 #include "boost/foreach.hpp"
 #include "boost/serialization/map.hpp"
 #include "boost/serialization/vector.hpp"
 #include "boost/serialization/split_member.hpp"
 
-#include <iostream>
+#include <iosfwd>
 #include <limits>
 #include <map>
 #include <vector>
@@ -39,63 +39,6 @@
 
 #include <iostream>
 #endif
-
-
-struct SVLocusSet;
-
-
-
-// all internal locations use a chromosome index number
-struct GenomeInterval
-{
-    GenomeInterval(
-        const int32_t initTid = 0,
-        const pos_t beginPos = 0,
-        const pos_t endPos = 0) :
-        tid(initTid),
-        range(beginPos,endPos)
-    {}
-
-    /// does this intersect a second GenomeInterval?
-    bool
-    isIntersect(const GenomeInterval& gi) const
-    {
-        if (tid != gi.tid) return false;
-        return range.is_range_intersect(gi.range);
-    }
-
-    bool
-    operator<(const GenomeInterval& rhs) const
-    {
-        if (tid<rhs.tid) return true;
-        if (tid == rhs.tid)
-        {
-            return (range<rhs.range);
-        }
-        return false;
-    }
-
-    bool
-    operator==(const GenomeInterval& rhs) const
-    {
-        return ((tid==rhs.tid) && (range==rhs.range));
-    }
-
-    template<class Archive>
-    void serialize(Archive& ar, const unsigned /* version */)
-    {
-        ar& tid& range;
-    }
-
-    int32_t tid;
-    known_pos_range2 range;
-};
-
-
-std::ostream&
-operator<<(std::ostream& os, const GenomeInterval& gi);
-
-BOOST_CLASS_IMPLEMENTATION(GenomeInterval, boost::serialization::object_serializable)
 
 
 
@@ -227,6 +170,9 @@ BOOST_CLASS_IMPLEMENTATION(SVLocusNode, boost::serialization::object_serializabl
 typedef unsigned LocusIndexType;
 typedef std::pair<bool, std::pair<LocusIndexType,NodeIndexType> > SVLocusNodeMoveMessage;
 
+
+
+struct SVLocusSet;
 
 
 
