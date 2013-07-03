@@ -56,8 +56,8 @@ The pipeline reference sequence is currently fixed to human hg19.
                           help="Tumor sample BAM file. [optional] (no default)")
 #         group.add_option("--aligner", type="string",dest="alignerMode",metavar="ALIGNER",
 #                          help="Aligner type. Accepted option are {%s} [required] (no default)" % (",".join(['%s' % (x) for x in self.validAlignerModes])))
-        group.add_option("--exome", dest="isExome", action="store_true",
-                         help="Turn off depth filters which don't make sense for exome or other targeted output.")
+#        group.add_option("--exome", dest="isExome", action="store_true",
+#                         help="Turn off depth filters which don't make sense for exome or other targeted output.")
         # TODO:
         # need argument to set the workflow to either ISAAC or bwa mode
 
