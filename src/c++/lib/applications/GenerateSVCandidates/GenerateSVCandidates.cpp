@@ -17,6 +17,7 @@
 
 #include "GenerateSVCandidates.hh"
 #include "GSCOptions.hh"
+#include "EdgeRetriever.hh"
 
 #include "blt_util/input_stream_handler.hh"
 #include "blt_util/bam_streamer.hh"
@@ -30,6 +31,7 @@
 #include <iostream>
 
 
+
 static
 void
 runGSC(const GSCOptions& opt)
@@ -39,12 +41,24 @@ runGSC(const GSCOptions& opt)
         OutStream outs(opt.outputFilename);
     }
 
+    // load in set:
     SVLocusSet set;
     set.load(opt.graphFilename.c_str());
-
     const SVLocusSet& cset(set);
 
-    cset.dump(std::cerr);
+    EdgeRetriever edger(opt.binIndex,opt.binCount,cset);
+
+    while(edger.next())
+    {
+        const EdgeInfo& edge=edger.getEdge();
+
+        ///BOGUS:
+        if(edge.locusIndex==0) return;
+    }
+
+
+
+
 
     typedef boost::shared_ptr<bam_streamer> stream_ptr;
     std::vector<stream_ptr> bam_streams;

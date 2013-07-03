@@ -124,6 +124,15 @@ parseGSCOptions(const manta::Program& prog,
     }
 
     // fast check of config state:
+    if ((opt.binIndex < 1) ||
+        (opt.binIndex > opt.binCount))
+    {
+        usage(log_os,prog,visible,"bin-index must be in range [1,bin-count]");
+    }
+    if (opt.binCount <= 0)
+    {
+        usage(log_os,prog,visible,"bin-count must be 1 or greater");
+    }
     if (opt.alignmentFilename.empty())
     {
         usage(log_os,prog,visible,"Must specify at least one input alignment file");

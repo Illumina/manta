@@ -360,6 +360,17 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
         return sum;
     }
 
+    /// return from->to edge
+    const SVLocusEdge&
+    getEdge(const NodeIndexType fromIndex,
+            const NodeIndexType toIndex) const
+    {
+        const SVLocusNode& fromNode(getNode(fromIndex));
+        edges_type::const_iterator i(fromNode.edges.find(toIndex));
+        if(i == fromNode.edges.end()) getEdgeException(fromIndex,toIndex);
+        return i->second;
+    }
+
     /// debug func to check that internal data-structures are in
     /// a consistent state
     void
@@ -445,17 +456,6 @@ private:
     getEdgeException(
             const NodeIndexType fromIndex,
             const NodeIndexType toIndex) const;
-
-    /// return from->to edge
-    const SVLocusEdge&
-    getEdge(const NodeIndexType fromIndex,
-            const NodeIndexType toIndex) const
-    {
-        const SVLocusNode& fromNode(getNode(fromIndex));
-        edges_type::const_iterator i(fromNode.edges.find(toIndex));
-        if(i == fromNode.edges.end()) getEdgeException(fromIndex,toIndex);
-        return i->second;
-    }
 
     /// erase edges in both directions:
     void
