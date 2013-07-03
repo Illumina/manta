@@ -1,3 +1,15 @@
+// -*- mode: c++; indent-tabs-mode: nil; -*-
+//
+// Manta
+// Copyright (c) 2013 Illumina, Inc.
+//
+// This software is provided under the terms and conditions of the
+// Illumina Open Source Software License 1.
+//
+// You should have received a copy of the Illumina Open Source
+// Software License 1 along with this program. If not, see
+// <https://github.com/downloads/sequencing/licenses/>.
+//
 
 ///
 /// \author Chris Saunders
@@ -31,7 +43,8 @@
 /// always), but the second stage is executed at positions 100 bases
 /// behind the reference position pointer.
 ///
-struct stage_data {
+struct stage_data
+{
 
     // position,stage_id pair, where position is total distance of this stage from the root stage:
     typedef std::pair<unsigned,int> pos_stage_id;
@@ -40,7 +53,8 @@ struct stage_data {
 
     /// \brief Add a "root" stage:
     void
-    add_stage(const int id) {
+    add_stage(const int id)
+    {
         return add_stage(id,0,0,false);
     }
 
@@ -59,12 +73,16 @@ struct stage_data {
     /// following interface:
     ///
     const stage_pos_t&
-    stage_pos() const { return _stage_pos; }
+    stage_pos() const
+    {
+        return _stage_pos;
+    }
 
     /// lookup total distance from root stage for any stage id:
     ///
     unsigned
-    get_stage_id_shift(const int id) const {
+    get_stage_id_shift(const int id) const
+    {
         idmap_t::const_iterator i(_ids.find(id));
         if (i==_ids.end()) unknown_id_error(id);
         return i->second;
@@ -106,7 +124,8 @@ private:
 /// if end_pos is not specified, then processing ends after last_pos
 /// with information submitted, else at end_pos.
 ///
-struct stage_manager {
+struct stage_manager
+{
 
     // stage_data structure is described above
     //
@@ -163,13 +182,22 @@ struct stage_manager {
                            const int stage_id);
 
     pos_t
-    max_pos() const { return _max_pos; }
+    max_pos() const
+    {
+        return _max_pos;
+    }
 
     pos_t
-    min_pos() const { return _min_pos; }
+    min_pos() const
+    {
+        return _min_pos;
+    }
 
     bool
-    is_first_pos_set() const { return _is_first_pos_set; }
+    is_first_pos_set() const
+    {
+        return _is_first_pos_set;
+    }
 
     // Revising stage data is very restricted -- the new sdata
     // must have the the same number of stages, with the same set

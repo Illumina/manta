@@ -1,3 +1,15 @@
+// -*- mode: c++; indent-tabs-mode: nil; -*-
+//
+// Manta
+// Copyright (c) 2013 Illumina, Inc.
+//
+// This software is provided under the terms and conditions of the
+// Illumina Open Source Software License 1.
+//
+// You should have received a copy of the Illumina Open Source
+// Software License 1 along with this program. If not, see
+// <https://github.com/downloads/sequencing/licenses/>.
+//
 
 ///
 /// \author Chris Saunders
@@ -13,7 +25,8 @@
 /// Work progress is communicated via the process_pos() method. This base class is designed to
 /// link the worker with the stage_manager
 ///
-struct pos_processor_base {
+struct pos_processor_base
+{
 
     pos_processor_base()
         : _is_skip_process_pos(false) {}
@@ -23,7 +36,8 @@ struct pos_processor_base {
 
     void
     check_process_pos(const int stage_no,
-                      const pos_t pos) {
+                      const pos_t pos)
+    {
         if (_is_skip_process_pos) return;
         process_pos(stage_no,pos);
     }

@@ -116,17 +116,17 @@ merge(const SVLocus& inputLocus)
         bool isMultiLocus(false);
         BOOST_FOREACH(const NodeAddressType& addy, intersectNodes)
         {
-            if(addy.first == headLocusIndex) continue;
+            if (addy.first == headLocusIndex) continue;
             isMultiLocus=true;
             break;
         }
 
-        if(isMultiLocus)
+        if (isMultiLocus)
         {
             // if there are any intersections, copy the loci of all intersecting nodes into
             // a single locus, by convention we use the lowest locusIndex of the intersecting set
             moveIntersectToLowIndex(intersectNodes,startLocusIndex,headLocusIndex);
-            if(! isInputLocusMoved) isInputLocusMoved=(headLocusIndex != startLocusIndex);
+            if (! isInputLocusMoved) isInputLocusMoved=(headLocusIndex != startLocusIndex);
 
             getNodeMergeableIntersect(startLocusIndex, nodeIndex, isInputLocusMoved, intersectNodes);
             assert(! intersectNodes.empty());
@@ -283,10 +283,10 @@ getNodeIntersectCore(
         const GenomeInterval& searchInterval(getNode(*it_rev).interval);
         if (! inputInterval.isIntersect(searchInterval))
         {
-            if(! isOverlapAllowed()) break;
+            if (! isOverlapAllowed()) break;
 
-            if(inputInterval.tid != searchInterval.tid) break;
-            if((searchInterval.range.begin_pos()+maxRegionSize)<inputInterval.range.begin_pos()) break;
+            if (inputInterval.tid != searchInterval.tid) break;
+            if ((searchInterval.range.begin_pos()+maxRegionSize)<inputInterval.range.begin_pos()) break;
             continue;
         }
 
@@ -354,7 +354,7 @@ getNodeMergeableIntersect(
             }
 
             // 2. build the signal node set:
-            if(! intersectLocus.isNoiseNode(_minMergeEdgeCount,addy.second))
+            if (! intersectLocus.isNoiseNode(_minMergeEdgeCount,addy.second))
             {
                 signalIntersectNodes.insert(addy);
             }
@@ -399,7 +399,7 @@ getNodeMergeableIntersect(
 
             const rlmap_range_t remoteIsectRange(remoteToLocal.equal_range(remoteIsectAddy));
             assert(remoteIsectRange.first != remoteToLocal.end());
-            for(rliter_t riter(remoteIsectRange.first); riter != remoteIsectRange.second; ++riter)
+            for (rliter_t riter(remoteIsectRange.first); riter != remoteIsectRange.second; ++riter)
             {
                 const NodeIndexType localNodeIndex(riter->second);
                 const SVLocus& remoteIsectLocus(getLocus(remoteIsectAddy.first));
@@ -417,9 +417,10 @@ getNodeMergeableIntersect(
         checkState();
 #endif
 
-        if(! isInputLocusMoved)
+        if (! isInputLocusMoved)
         {
-            { // total edge counts on the input remote->local edge
+            {
+                // total edge counts on the input remote->local edge
                 const SVLocus& inputLocus(getLocus(inputAddy.first));
                 mergedRemoteEdgeCount += inputLocus.getEdge(inputEdge.first,nodeIndex).count;
             }
@@ -434,8 +435,8 @@ getNodeMergeableIntersect(
         checkState();
 #endif
 
-        if((mergedLocalEdgeCount < _minMergeEdgeCount) &&
-           (mergedRemoteEdgeCount < _minMergeEdgeCount)) continue;
+        if ((mergedLocalEdgeCount < _minMergeEdgeCount) &&
+            (mergedRemoteEdgeCount < _minMergeEdgeCount)) continue;
 
         // Add type (1) mergeable nodes:
         std::set<NodeAddressType> thisEdgeMergeIntersectNodes;
@@ -443,7 +444,7 @@ getNodeMergeableIntersect(
         {
             const rlmap_range_t remoteIsectRange(remoteToLocal.equal_range(remoteAddy));
             assert(remoteIsectRange.first != remoteToLocal.end());
-            for(rliter_t riter(remoteIsectRange.first); riter != remoteIsectRange.second; ++riter)
+            for (rliter_t riter(remoteIsectRange.first); riter != remoteIsectRange.second; ++riter)
             {
                 const NodeAddressType localIntersectAddy(std::make_pair(remoteAddy.first,riter->second));
                 thisEdgeMergeIntersectNodes.insert(localIntersectAddy);
@@ -464,10 +465,10 @@ getNodeMergeableIntersect(
             BOOST_FOREACH(const NodeAddressType& intersectAddy, intersectNodes)
             {
                 const SVLocus& intersectLocus(getLocus(intersectAddy.first));
-                if(intersectLocus.isNoiseNode(_minMergeEdgeCount,intersectAddy.second)) continue;
+                if (intersectLocus.isNoiseNode(_minMergeEdgeCount,intersectAddy.second)) continue;
 
 #ifdef DEBUG_SVL
-                if(signalIntersectNodes.count(intersectAddy) == 0)
+                if (signalIntersectNodes.count(intersectAddy) == 0)
                 {
                     log_os << "SVLocusSet::getNodeMergableIntersect signal boost merge/new: " << mergeAddy << " " << intersectAddy << "\n";
                 }
@@ -615,9 +616,9 @@ clean()
 {
     BOOST_FOREACH(SVLocus& locus, _loci)
     {
-        if(locus.empty()) continue;
+        if (locus.empty()) continue;
         _totalCleaned += locus.clean(getMinMergeEdgeCount());
-        if(locus.empty()) _emptyLoci.insert(locus.getIndex());
+        if (locus.empty()) _emptyLoci.insert(locus.getIndex());
     }
 }
 
@@ -637,9 +638,9 @@ cleanRegion(const GenomeInterval interval)
     BOOST_FOREACH(const NodeAddressType& val, intersectNodes)
     {
         SVLocus& locus(getLocus(val.first));
-        if(locus.empty()) continue;
+        if (locus.empty()) continue;
         _totalCleaned += locus.cleanNode(getMinMergeEdgeCount(), val.second);
-        if(locus.empty()) _emptyLoci.insert(locus.getIndex());
+        if (locus.empty()) _emptyLoci.insert(locus.getIndex());
 
 #ifdef DEBUG_SVL
         log_os << "cleanRegion intersect: " << val << " empty_after_clean: " << locus.empty() << "\n";
@@ -862,8 +863,8 @@ dumpIndex(std::ostream& os) const
 void
 SVLocusSet::
 checkState(
-        const bool isCheckOverlap,
-        const bool isCheckLocusConnected) const
+    const bool isCheckOverlap,
+    const bool isCheckLocusConnected) const
 {
     using namespace illumina::common;
 
@@ -908,7 +909,7 @@ checkState(
 
     if (! isCheckOverlap) return;
 
-    if(isOverlapAllowed()) return;
+    if (isOverlapAllowed()) return;
 
     bool isFirst(true);
     GenomeInterval lastInterval;

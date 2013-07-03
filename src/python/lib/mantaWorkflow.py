@@ -100,7 +100,7 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
     """
     Create the full SV locus graph
     """
-    
+
     statsPath=self.paths.getStatsPath()
     graphPath=self.paths.getGraphPath()
 
@@ -127,7 +127,7 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
     mergeCmd.extend(["--output-file", graphPath])
     for gfile in tmpGraphFiles :
         mergeCmd.extend(["--graph-file", gfile])
-    
+
     mergeTask=self.addTask(preJoin(taskPrefix,"mergeGraph"),mergeCmd,dependencies=graphTasks)
 
     rmGraphTmpCmd = "rm -rf tmpGraphDir"
@@ -143,7 +143,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
     """
     Run hypothesis generation on each SV locus
     """
-    
+
     statsPath=self.paths.getStatsPath()
     graphPath=self.paths.getGraphPath()
     hygenDir=self.paths.getHyGenDir()
@@ -260,4 +260,4 @@ class MantaWorkflow(WorkflowRunner) :
         statsTasks = runStats(self)
         graphTasks = runLocusGraph(self,dependencies=statsTasks)
         hygenTasks = runHyGen(self,dependencies=graphTasks)
-        
+

@@ -48,12 +48,12 @@ runGSC(const GSCOptions& opt)
 
     EdgeRetriever edger(opt.binIndex,opt.binCount,cset);
 
-    while(edger.next())
+    while (edger.next())
     {
         const EdgeInfo& edge=edger.getEdge();
 
         ///BOGUS:
-        if(edge.locusIndex==0) return;
+        if (edge.locusIndex==0) return;
     }
 
 

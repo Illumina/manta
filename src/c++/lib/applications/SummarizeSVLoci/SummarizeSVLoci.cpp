@@ -35,7 +35,7 @@ runSSL(const SSLOptions& opt)
 
     std::ostream& os(std::cout);
 
-    if(opt.isGlobalStats)
+    if (opt.isGlobalStats)
     {
         set.dumpStats(os);
     }

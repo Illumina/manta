@@ -51,11 +51,11 @@ usage(
 static
 void
 checkUsageFile(
-        std::ostream& os,
-        const manta::Program& prog,
-        const boost::program_options::options_description& visible,
-        const std::string& filename,
-        const char* fileLabel)
+    std::ostream& os,
+    const manta::Program& prog,
+    const boost::program_options::options_description& visible,
+    const std::string& filename,
+    const char* fileLabel)
 {
     if (filename.empty())
     {
@@ -89,8 +89,8 @@ parseGSCOptions(const manta::Program& prog,
      "pre-computed alignment statistics for the input alignment files (required)")
     ("ref", po::value(&opt.referenceFilename),
      "fasta reference sequence (required)")
-     ("output-file", po::value(&opt.outputFilename),
-      "write SV candidates to file (required)")
+    ("output-file", po::value(&opt.outputFilename),
+     "write SV candidates to file (required)")
     ("bin-count", po::value(&opt.binCount)->default_value(opt.binCount),
      "Specify how many bins the SV candidate problem should be divided into, where bin-index can be used to specify which bin to solve")
     ("bin-index", po::value(&opt.binIndex)->default_value(opt.binIndex),

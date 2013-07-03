@@ -74,7 +74,7 @@ mergeNode(
     {
         toNode.evidenceRange = fromNode.evidenceRange;
     }
-    else if((fromNode.count==0) && (toNode.count!=0))
+    else if ((fromNode.count==0) && (toNode.count!=0))
     {
         // pass (keep toNode value as is
     }
@@ -163,8 +163,8 @@ mergeNode(
 void
 SVLocus::
 getEdgeException(
-        const NodeIndexType fromIndex,
-        const NodeIndexType toIndex) const
+    const NodeIndexType fromIndex,
+    const NodeIndexType toIndex) const
 {
     using namespace illumina::common;
 
@@ -180,14 +180,14 @@ getEdgeException(
 bool
 SVLocus::
 isNoiseNode(
-        const unsigned minMergeEdgeCount,
-        const NodeIndexType nodeIndex) const
+    const unsigned minMergeEdgeCount,
+    const NodeIndexType nodeIndex) const
 {
     const SVLocusNode& node(getNode(nodeIndex));
     BOOST_FOREACH(const SVLocusNode::edges_type::value_type& edge, node)
     {
-        if(edge.second.count >= minMergeEdgeCount) return false;
-        if(getEdge(edge.first,nodeIndex).count >= minMergeEdgeCount) return false;
+        if (edge.second.count >= minMergeEdgeCount) return false;
+        if (getEdge(edge.first,nodeIndex).count >= minMergeEdgeCount) return false;
     }
     return true;
 }
@@ -197,9 +197,9 @@ isNoiseNode(
 unsigned
 SVLocus::
 cleanNodeCore(
-        const unsigned minMergeEdgeCount,
-        const NodeIndexType nodeIndex,
-        std::set<NodeIndexType>& emptyNodes)
+    const unsigned minMergeEdgeCount,
+    const NodeIndexType nodeIndex,
+    std::set<NodeIndexType>& emptyNodes)
 {
 #ifdef DEBUG_SVL
     log_os << "cleanNodeCore nodeIndex: " << nodeIndex << "\n";
@@ -211,9 +211,9 @@ cleanNodeCore(
     std::vector<NodeIndexType> eraseEdges;
     BOOST_FOREACH(edges_type::value_type& edgeIter, queryNode)
     {
-        if(0!=edgeIter.second.count)
+        if (0!=edgeIter.second.count)
         {
-            if(edgeIter.second.count < minMergeEdgeCount)
+            if (edgeIter.second.count < minMergeEdgeCount)
             {
                 assert(queryNode.count>=edgeIter.second.count);
                 totalCleaned += edgeIter.second.count;
@@ -222,19 +222,19 @@ cleanNodeCore(
             }
         }
 
-        if(0 == edgeIter.second.count)
+        if (0 == edgeIter.second.count)
         {
 
             const SVLocusEdge& fromRemoteEdge(getEdge(edgeIter.first,nodeIndex));
-            if(0 == fromRemoteEdge.count)
+            if (0 == fromRemoteEdge.count)
             {
                 eraseEdges.push_back(edgeIter.first);
 
                 // also check to see if the remote node will be empty after
                 // this edge deletion:
                 const SVLocusNode& remoteNode(getNode(edgeIter.first));
-                if((0 == remoteNode.count) &&
-                   (1 == remoteNode.edges.size()))
+                if ((0 == remoteNode.count) &&
+                    (1 == remoteNode.edges.size()))
                 {
                     emptyNodes.insert(edgeIter.first);
                 }
@@ -249,7 +249,7 @@ cleanNodeCore(
     }
 
     // return true if node should be deleted
-    if((0 == queryNode.edges.size()) && (0 == queryNode.count))
+    if ((0 == queryNode.edges.size()) && (0 == queryNode.count))
     {
         // if true add the target node to the erase list:
         emptyNodes.insert(nodeIndex);
@@ -271,8 +271,8 @@ cleanNodeCore(
 unsigned
 SVLocus::
 cleanNode(
-        const unsigned minMergeEdgeCount,
-        const NodeIndexType nodeIndex)
+    const unsigned minMergeEdgeCount,
+    const NodeIndexType nodeIndex)
 {
     std::set<NodeIndexType> emptyNodes;
     const unsigned totalCleaned(cleanNodeCore(minMergeEdgeCount,nodeIndex,emptyNodes));
@@ -374,9 +374,9 @@ SVLocus::
 eraseNodes(const std::set<NodeIndexType>& nodes)
 {
 
-    if(nodes.empty()) return;
+    if (nodes.empty()) return;
 
-    if(size() == nodes.size())
+    if (size() == nodes.size())
     {
         // if the whole locus is being erased, this is more efficient:
         clear();
@@ -396,10 +396,10 @@ std::ostream&
 operator<<(std::ostream& os, const SVLocusNode& node)
 {
     os << "LocusNode: count: " << node.count << " " << node.interval
-      << " n_edges: " << node.size()
-      << " out_count: " << node.outCount()
-      << " evidence: " << node.evidenceRange
-      << "\n";
+       << " n_edges: " << node.size()
+       << " out_count: " << node.outCount()
+       << " evidence: " << node.evidenceRange
+       << "\n";
 
     BOOST_FOREACH(const SVLocusNode::edges_type::value_type& edgeIter, node)
     {
@@ -415,7 +415,7 @@ operator<<(std::ostream& os, const SVLocusNode& node)
 unsigned
 SVLocus::
 getNodeInCount(
-        const LocusIndexType nodeIndex) const
+    const LocusIndexType nodeIndex) const
 {
     const SVLocusNode& node(getNode(nodeIndex));
 
@@ -433,8 +433,8 @@ getNodeInCount(
 void
 SVLocus::
 dumpNode(
-        std::ostream& os,
-        const LocusIndexType nodeIndex) const
+    std::ostream& os,
+    const LocusIndexType nodeIndex) const
 {
     const SVLocusNode& node(getNode(nodeIndex));
     os << "LocusNode: count: " << node.count << " " << node.interval
@@ -457,22 +457,22 @@ dumpNode(
 void
 SVLocus::
 findConnected(
-        const NodeIndexType startIndex,
-        std::set<NodeIndexType>& connected) const
+    const NodeIndexType startIndex,
+    std::set<NodeIndexType>& connected) const
 {
     connected.clear();
 
     std::stack<NodeIndexType> nodeStack;
     nodeStack.push(startIndex);
 
-    while(! nodeStack.empty())
+    while (! nodeStack.empty())
     {
         connected.insert(nodeStack.top());
         const SVLocusNode& node(getNode(nodeStack.top()));
         nodeStack.pop();
         BOOST_FOREACH(const edges_type::value_type& edgeIter, node)
         {
-            if(! connected.count(edgeIter.first)) nodeStack.push(edgeIter.first);
+            if (! connected.count(edgeIter.first)) nodeStack.push(edgeIter.first);
         }
     }
 }
@@ -497,15 +497,15 @@ checkState(const bool isCheckConnected) const
         }
     }
 
-    if(0 == nodeSize) return;
+    if (0 == nodeSize) return;
 
-    if(! isCheckConnected) return;
+    if (! isCheckConnected) return;
 
     // check that every locus in the graph is connected:
     std::set<NodeIndexType> connected;
     findConnected(0,connected);
 
-    if(nodeSize != connected.size())
+    if (nodeSize != connected.size())
     {
         std::ostringstream oss;
         oss << "ERROR: SVLocus contains unconnected components, LocusIndex: " << _index << "\n";
@@ -520,7 +520,7 @@ operator<<(std::ostream& os, const SVLocus& locus)
 {
     os << "LOCUS BEGIN INDEX " << locus.getIndex() << "\n";
     const unsigned nodeCount(locus.size());
-    for(unsigned nodeIndex(0); nodeIndex<nodeCount; ++nodeIndex)
+    for (unsigned nodeIndex(0); nodeIndex<nodeCount; ++nodeIndex)
     {
         os << "NodeIndex: " << nodeIndex << " ";
         locus.dumpNode(os,nodeIndex);

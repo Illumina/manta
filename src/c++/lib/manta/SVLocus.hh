@@ -334,8 +334,8 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
 
     void
     setNodeEvidence(
-            const NodeIndexType nodeIndex,
-            const known_pos_range2& evidenceRange)
+        const NodeIndexType nodeIndex,
+        const known_pos_range2& evidenceRange)
     {
         getNode(nodeIndex).evidenceRange = evidenceRange;
     }
@@ -345,8 +345,8 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
     /// non-recursive version
     void
     findConnected(
-            const NodeIndexType startIndex,
-            std::set<NodeIndexType>& connected) const;
+        const NodeIndexType startIndex,
+        std::set<NodeIndexType>& connected) const;
 
     /// the total observations in all nodes of the locus
     unsigned
@@ -367,7 +367,7 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
     {
         const SVLocusNode& fromNode(getNode(fromIndex));
         edges_type::const_iterator i(fromNode.edges.find(toIndex));
-        if(i == fromNode.edges.end()) getEdgeException(fromIndex,toIndex);
+        if (i == fromNode.edges.end()) getEdgeException(fromIndex,toIndex);
         return i->second;
     }
 
@@ -384,8 +384,8 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
     // report in-edge information
     void
     dumpNode(
-            std::ostream& os,
-            const LocusIndexType nodeIndex) const;
+        std::ostream& os,
+        const LocusIndexType nodeIndex) const;
 
     template<class Archive>
     void save(Archive& ar, const unsigned /* version */) const
@@ -421,8 +421,8 @@ private:
     // minMergeEdgeCount
     bool
     isNoiseNode(
-            const unsigned minMergeEdgeCount,
-            const NodeIndexType nodeIndex) const;
+        const unsigned minMergeEdgeCount,
+        const NodeIndexType nodeIndex) const;
 
     /// remove all unmerged noise in-edges of node and
     /// provide list of nodes which should be deleted
@@ -430,9 +430,9 @@ private:
     /// return amount of evidence cleaned
     unsigned
     cleanNodeCore(
-            const unsigned minMergeEdgeCount,
-            const NodeIndexType nodeIndex,
-            std::set<NodeIndexType>& emptyNodes);
+        const unsigned minMergeEdgeCount,
+        const NodeIndexType nodeIndex,
+        std::set<NodeIndexType>& emptyNodes);
 
     /// remove all unmerged noise in-edges of node and possibly
     /// delete empty nodes
@@ -440,8 +440,8 @@ private:
     /// return amount of evidence cleaned
     unsigned
     cleanNode(
-            const unsigned minMergeEdgeCount,
-            const NodeIndexType nodeIndex);
+        const unsigned minMergeEdgeCount,
+        const NodeIndexType nodeIndex);
 
     /// remove all unmerged noise edges and nodes
     ///
@@ -454,14 +454,14 @@ private:
 
     void
     getEdgeException(
-            const NodeIndexType fromIndex,
-            const NodeIndexType toIndex) const;
+        const NodeIndexType fromIndex,
+        const NodeIndexType toIndex) const;
 
     /// erase edges in both directions:
     void
     clearEdgePair(
-            const NodeIndexType index1,
-            const NodeIndexType index2)
+        const NodeIndexType index1,
+        const NodeIndexType index2)
     {
         clearEdge(index1,index2);
         clearEdge(index2,index1);
@@ -470,8 +470,8 @@ private:
     /// erase edge in one direction
     void
     clearEdge(
-            const NodeIndexType fromIndex,
-            const NodeIndexType toIndex)
+        const NodeIndexType fromIndex,
+        const NodeIndexType toIndex)
     {
         getNode(fromIndex).edges.erase(toIndex);
     }

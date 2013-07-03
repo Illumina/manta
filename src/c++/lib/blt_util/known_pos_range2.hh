@@ -40,8 +40,8 @@ struct known_pos_range2
     {}
 
     known_pos_range2(
-            const pos_t bp,
-            const pos_t ep) :
+        const pos_t bp,
+        const pos_t ep) :
         _begin_pos(bp),
         _end_pos(ep)
     {}

@@ -34,7 +34,7 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
     typedef locusset_type::const_iterator const_iterator;
 
     SVLocusSet(
-            const unsigned minMergeEdgeCount = 2) :
+        const unsigned minMergeEdgeCount = 2) :
         _inodes(NodeAddressSorter(*this)),
         _source("UNKNOWN"),
         _minMergeEdgeCount(minMergeEdgeCount),
@@ -176,8 +176,8 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
     /// a consistent state, throw on error
     void
     checkState(
-            const bool isCheckOverlap = false,
-            const bool isCheckLocusConnected = false) const;
+        const bool isCheckOverlap = false,
+        const bool isCheckLocusConnected = false) const;
 
 private:
 
@@ -348,7 +348,7 @@ private:
     updateMaxRegionSize(const GenomeInterval& interval)
     {
         const unsigned tid(interval.tid);
-        if(tid >= _maxRegionSize.size())
+        if (tid >= _maxRegionSize.size())
         {
             _maxRegionSize.resize((tid+1),0);
         }

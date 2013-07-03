@@ -44,9 +44,9 @@ operator<<(std::ostream& os, const EdgeInfo& ei);
 struct EdgeRetriever
 {
     EdgeRetriever(
-            const unsigned binIndex,
-            const unsigned binCount,
-            const SVLocusSet& set);
+        const unsigned binIndex,
+        const unsigned binCount,
+        const SVLocusSet& set);
 
     bool
     next();

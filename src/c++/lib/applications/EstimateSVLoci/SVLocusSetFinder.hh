@@ -39,8 +39,8 @@
 struct SVLocusSetFinder : public pos_processor_base
 {
     SVLocusSetFinder(
-            const ESLOptions& opt,
-            const GenomeInterval& scanRegion);
+        const ESLOptions& opt,
+        const GenomeInterval& scanRegion);
 
     ~SVLocusSetFinder()
     {
@@ -102,7 +102,8 @@ private:
     updateDenoiseRegion();
 
     // TODO -- compute this number from read insert ranges:
-    enum hack_t {
+    enum hack_t
+    {
         REGION_DENOISE_BORDER = 5000
     };
 

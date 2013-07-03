@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE( test_EdgeRetrieverManyBin )
     set1.merge(locus6);
     set1.checkState(true,true);
 
-    for(unsigned binIndex(0);binIndex<3;++binIndex)
+    for (unsigned binIndex(0); binIndex<3; ++binIndex)
     {
         std::cerr << "binIndex: " << binIndex << "\n";
         EdgeRetriever edger(binIndex+1,3,set1);

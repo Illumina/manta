@@ -43,9 +43,9 @@ operator<<(std::ostream& os, const EdgeInfo& ei)
 static
 unsigned long
 getBoundaryCount(
-        const double totalCount,
-        const double binIndex,
-        const double binCount)
+    const double totalCount,
+    const double binIndex,
+    const double binCount)
 {
     return static_cast<unsigned>(std::floor((totalCount*binIndex)/binCount));
 }
@@ -54,11 +54,11 @@ getBoundaryCount(
 
 EdgeRetriever::
 EdgeRetriever(
-        const unsigned binIndex,
-        const unsigned binCount,
-        const SVLocusSet& set) :
-        _set(set),
-        _headCount(0)
+    const unsigned binIndex,
+    const unsigned binCount,
+    const SVLocusSet& set) :
+    _set(set),
+    _headCount(0)
 {
     assert((binIndex >= 1) && (binIndex <= binCount));
     assert(binCount > 0);
@@ -83,14 +83,14 @@ EdgeRetriever::
 jumpToFirstEdge()
 {
     // first catch headCount up to the begin edge if required:
-    while(true)
+    while (true)
     {
         const SVLocus& locus(_set.getLocus(_edge.locusIndex));
         const unsigned locusCount(locus.totalCount());
 
-        if((_headCount+locusCount) > _beginCount)
+        if ((_headCount+locusCount) > _beginCount)
         {
-            while(true)
+            while (true)
             {
                 const SVLocusNode& node(locus.getNode(_edge.nodeIndex1));
 
@@ -98,15 +98,15 @@ jumpToFirstEdge()
                 edgeiter_t edgeIter(node.edges.upper_bound(_edge.nodeIndex1));
                 const edgeiter_t edgeiterEnd(node.edges.end());
 
-                for(;edgeIter != edgeiterEnd; ++edgeIter)
+                for (; edgeIter != edgeiterEnd; ++edgeIter)
                 {
-                     const unsigned edgeCount(edgeIter->second.count + locus.getEdge(edgeIter->first,_edge.nodeIndex1).count);
-                     _headCount += edgeCount;
-                     if(_headCount >= _beginCount)
-                     {
-                         _edge.nodeIndex2 = edgeIter->first;
-                         return;
-                     }
+                    const unsigned edgeCount(edgeIter->second.count + locus.getEdge(edgeIter->first,_edge.nodeIndex1).count);
+                    _headCount += edgeCount;
+                    if (_headCount >= _beginCount)
+                    {
+                        _edge.nodeIndex2 = edgeIter->first;
+                        return;
+                    }
                 }
 
                 _edge.nodeIndex1++;
@@ -126,16 +126,16 @@ advanceEdge()
 {
     typedef SVLocusNode::edges_type::const_iterator edgeiter_t;
 
-    while(true)
+    while (true)
     {
         const SVLocus& locus(_set.getLocus(_edge.locusIndex));
-        while(_edge.nodeIndex1<locus.size())
+        while (_edge.nodeIndex1<locus.size())
         {
             const SVLocusNode& node(locus.getNode(_edge.nodeIndex1));
             edgeiter_t edgeIter(node.edges.upper_bound(_edge.nodeIndex2));
             const edgeiter_t edgeIterEnd(node.edges.end());
 
-            for(;edgeIter != edgeIterEnd; ++edgeIter)
+            for (; edgeIter != edgeIterEnd; ++edgeIter)
             {
                 const unsigned edgeCount(edgeIter->second.count + locus.getEdge(edgeIter->first,_edge.nodeIndex1).count);
                 _headCount += edgeCount;
@@ -161,21 +161,21 @@ next()
     log_os << "EDGER: start next hc: " << _headCount << "\n";
 #endif
 
-    if(_headCount >= _endCount) return false;
+    if (_headCount >= _endCount) return false;
 
     // first catch headCount up to the begin edge if required:
-    if(_headCount < _beginCount)
+    if (_headCount < _beginCount)
     {
         jumpToFirstEdge();
 #ifdef DEBUG_EDGER
-    log_os << "EDGER: jumped hc: " << _headCount << " " << _edge  << "\n";
+        log_os << "EDGER: jumped hc: " << _headCount << " " << _edge  << "\n";
 #endif
     }
     else
     {
         advanceEdge();
 #ifdef DEBUG_EDGER
-    log_os << "EDGER: advanced hc: " << _headCount << " " << _edge  << "\n";
+        log_os << "EDGER: advanced hc: " << _headCount << " " << _edge  << "\n";
 #endif
     }
 

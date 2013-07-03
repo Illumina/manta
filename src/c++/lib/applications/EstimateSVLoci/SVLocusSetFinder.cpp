@@ -25,43 +25,45 @@
 
 
 
-namespace STAGE {
-    enum index_t {
-        HEAD,
-        DENOISE
-    };
+namespace STAGE
+{
+enum index_t
+{
+    HEAD,
+    DENOISE
+};
 
 
-    static
-    stage_data
-    getStageData(const unsigned denoiseBorderSize)
-    {
-        stage_data sd;
-        sd.add_stage(HEAD);
-        sd.add_stage(DENOISE, HEAD, denoiseBorderSize);
+static
+stage_data
+getStageData(const unsigned denoiseBorderSize)
+{
+    stage_data sd;
+    sd.add_stage(HEAD);
+    sd.add_stage(DENOISE, HEAD, denoiseBorderSize);
 
-        return sd;
-    }
+    return sd;
+}
 }
 
 
 
 SVLocusSetFinder::
 SVLocusSetFinder(
-        const ESLOptions& opt,
-        const GenomeInterval& scanRegion) :
-        _opt(opt),
-        _scanRegion(scanRegion),
-        _stageman(
-                STAGE::getStageData(REGION_DENOISE_BORDER),
-                pos_range(
-                        scanRegion.range.begin_pos(),
-                        scanRegion.range.end_pos()),
-                *this),
-        _svLoci(opt.minMergeEdgeCount),
-        _isScanStarted(false),
-        _isInDenoiseRegion(false),
-        _denoisePos(0)
+    const ESLOptions& opt,
+    const GenomeInterval& scanRegion) :
+    _opt(opt),
+    _scanRegion(scanRegion),
+    _stageman(
+        STAGE::getStageData(REGION_DENOISE_BORDER),
+        pos_range(
+            scanRegion.range.begin_pos(),
+            scanRegion.range.end_pos()),
+        *this),
+    _svLoci(opt.minMergeEdgeCount),
+    _isScanStarted(false),
+    _isInDenoiseRegion(false),
+    _denoisePos(0)
 {
     // pull in insert stats:
     _rss.read(opt.statsFilename.c_str());
@@ -96,7 +98,7 @@ updateDenoiseRegion()
     }
 
     bool isEndBorder(true);
-    if(static_cast<int32_t>(_svLoci.header.chrom_data.size()) > _denoiseRegion.tid)
+    if (static_cast<int32_t>(_svLoci.header.chrom_data.size()) > _denoiseRegion.tid)
     {
         const pos_t chromEndPos(_svLoci.header.chrom_data[_denoiseRegion.tid].length);
         isEndBorder=(range.end_pos() < chromEndPos);
@@ -129,24 +131,24 @@ process_pos(const int stage_no,
     {
         // pass
     }
-    else if(stage_no == STAGE::DENOISE)
+    else if (stage_no == STAGE::DENOISE)
     {
         static const pos_t denoiseMinChunk(1000);
 
-        if(_denoiseRegion.range.is_pos_intersect(pos))
+        if (_denoiseRegion.range.is_pos_intersect(pos))
         {
 
 #ifdef DEBUG_SFINDER
-    log_os << "SFinder::process_pos pos intersect. is in region: " << _isInDenoiseRegion << "\n";
+            log_os << "SFinder::process_pos pos intersect. is in region: " << _isInDenoiseRegion << "\n";
 #endif
 
-            if(! _isInDenoiseRegion)
+            if (! _isInDenoiseRegion)
             {
                 _denoisePos=_denoiseRegion.range.begin_pos();
                 _isInDenoiseRegion=true;
             }
 
-            if( (1 + pos-_denoisePos) >= denoiseMinChunk)
+            if ( (1 + pos-_denoisePos) >= denoiseMinChunk)
             {
                 _svLoci.cleanRegion(GenomeInterval(_denoiseRegion.tid, _denoisePos, (pos+1)));
                 _denoisePos = (pos+1);
@@ -156,12 +158,12 @@ process_pos(const int stage_no,
         {
 
 #ifdef DEBUG_SFINDER
-    log_os << "SFinder::process_pos pos intersect. is in region: " << _isInDenoiseRegion << "\n";
+            log_os << "SFinder::process_pos pos intersect. is in region: " << _isInDenoiseRegion << "\n";
 #endif
 
-            if(_isInDenoiseRegion)
+            if (_isInDenoiseRegion)
             {
-                if( (_denoiseRegion.range.end_pos()-_denoisePos) > 0)
+                if ( (_denoiseRegion.range.end_pos()-_denoisePos) > 0)
                 {
                     _svLoci.cleanRegion(GenomeInterval(_denoiseRegion.tid, _denoisePos, _denoiseRegion.range.end_pos()));
                     _denoisePos = _denoiseRegion.range.end_pos();
@@ -279,7 +281,7 @@ update(const bam_record& read,
     if (isReadFiltered(read)) return;
 
     // check that this read starts in our scan region:
-    if(! _scanRegion.range.is_pos_intersect(read.pos()-1)) return;
+    if (! _scanRegion.range.is_pos_intersect(read.pos()-1)) return;
 
     _stageman.handle_new_pos_value(read.pos()-1);
 
