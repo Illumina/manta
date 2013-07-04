@@ -17,28 +17,8 @@
 
 #pragma once
 
+#include "EdgeInfo.hh"
 #include "manta/SVLocusSet.hh"
-
-#include <iosfwd>
-
-
-
-struct EdgeInfo
-{
-    EdgeInfo() :
-        locusIndex(0),
-        nodeIndex1(0),
-        nodeIndex2(0)
-    {}
-
-    LocusIndexType locusIndex;
-    NodeIndexType nodeIndex1;
-    NodeIndexType nodeIndex2;
-};
-
-std::ostream&
-operator<<(std::ostream& os, const EdgeInfo& ei);
-
 
 
 struct EdgeRetriever
@@ -71,4 +51,3 @@ private:
     unsigned long _headCount;
     EdgeInfo _edge;
 };
-

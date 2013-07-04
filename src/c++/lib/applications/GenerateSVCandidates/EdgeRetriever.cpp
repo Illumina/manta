@@ -31,15 +31,6 @@
 
 
 
-std::ostream&
-operator<<(std::ostream& os, const EdgeInfo& ei)
-{
-    os << "edgeinfo l,n1,n2: " << ei.locusIndex << " " << ei.nodeIndex1 << " " << ei.nodeIndex2 << "\n";
-    return os;
-}
-
-
-
 static
 unsigned long
 getBoundaryCount(
