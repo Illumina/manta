@@ -18,6 +18,7 @@
 #pragma once
 
 #include "manta/Program.hh"
+#include "options/ReadScannerOptions.hh"
 
 #include <string>
 #include <vector>
@@ -30,6 +31,8 @@ struct GSCOptions
         binIndex(1),
         binCount(1)
     {}
+
+    ReadScannerOptions scanOpt;
 
     std::vector<std::string> alignmentFilename;
     std::string graphFilename;

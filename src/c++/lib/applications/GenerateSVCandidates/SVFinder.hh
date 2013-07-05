@@ -22,6 +22,8 @@
 
 #include "blt_util/bam_streamer.hh"
 #include "manta/SVCandidate.hh"
+#include "manta/SVCandidateData.hh"
+#include "manta/SVLocusScanner.hh"
 #include "manta/SVLocusSet.hh"
 
 #include "boost/shared_ptr.hpp"
@@ -45,7 +47,16 @@ struct SVFinder {
             std::vector<SVCandidate>& svs);
 
 private:
+
+    void
+    addSVNodeData(
+            const SVLocus& locus,
+            const NodeIndexType node1,
+            const NodeIndexType node2,
+            SVCandidateData& svData);
+
     SVLocusSet _set;
+    SVLocusScanner _readScanner;
 
     typedef boost::shared_ptr<bam_streamer> streamPtr;
     std::vector<streamPtr> _bamStreams;
