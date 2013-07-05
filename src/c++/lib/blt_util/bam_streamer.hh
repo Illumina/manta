@@ -24,6 +24,16 @@
 #include <string>
 
 
+
+/// convenient bam record iterator for whole genome or chromosome segments
+///
+//
+// Example use:
+// while (stream.next()) {
+//     const bam_record& read(*(stream.get_record_ptr()));
+//     if(read.is_unmapped) foo++;
+// }
+//
 struct bam_streamer : public boost::noncopyable
 {
 
