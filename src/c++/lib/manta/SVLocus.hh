@@ -317,6 +317,13 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
         return i->second;
     }
 
+    void
+    clear()
+    {
+        for (NodeIndexType i(0); i<size(); ++i) notifyDelete(i);
+        _graph.clear();
+    }
+
     /// debug func to check that internal data-structures are in
     /// a consistent state
     void
@@ -456,13 +463,6 @@ private:
     // remove a list of node ids
     void
     eraseNodes(const std::set<NodeIndexType>& nodes);
-
-    void
-    clear()
-    {
-        for (NodeIndexType i(0); i<size(); ++i) notifyDelete(i);
-        _graph.clear();
-    }
 
     NodeIndexType
     newGraphNode()

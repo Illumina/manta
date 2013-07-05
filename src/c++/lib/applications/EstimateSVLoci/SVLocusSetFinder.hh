@@ -22,7 +22,7 @@
 #include "blt_util/bam_record.hh"
 #include "blt_util/pos_processor_base.hh"
 #include "blt_util/stage_manager.hh"
-#include "manta/ReadGroupStatsSet.hh"
+#include "manta/SVLocusScanner.hh"
 #include "manta/SVLocusSet.hh"
 
 #include <iosfwd>
@@ -71,29 +71,6 @@ struct SVLocusSetFinder : public pos_processor_base
 
 private:
 
-    struct CachedReadGroupStats
-    {
-        CachedReadGroupStats() :
-            min(0),
-            max(0)
-        {}
-
-        double min;
-        double max;
-    };
-
-    /// this predicate runs any fast tests on the acceptability of a
-    /// read for the SVLocus build
-    bool
-    isReadFiltered(const bam_record& read) const;
-
-    static
-    void
-    getChimericSVLocus(
-        const CachedReadGroupStats& rstats,
-        const bam_record& read,
-        SVLocus& locus);
-
     void
     process_pos(const int stage_no,
                 const pos_t pos);
@@ -113,14 +90,13 @@ private:
     const GenomeInterval _scanRegion;
     GenomeInterval _denoiseRegion;
     stage_manager _stageman;
-    ReadGroupStatsSet _rss;
     SVLocusSet _svLoci;
-
-    std::vector<CachedReadGroupStats> _stats;
 
     bool _isScanStarted;
 
     bool _isInDenoiseRegion;
     pos_t _denoisePos;
+
+    SVLocusScanner _readScanner;
 };
 

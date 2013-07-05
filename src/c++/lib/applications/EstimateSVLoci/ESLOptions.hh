@@ -18,6 +18,7 @@
 #pragma once
 
 #include "manta/Program.hh"
+#include "options/ReadScannerOptions.hh"
 
 #include <string>
 #include <vector>
@@ -28,14 +29,10 @@ struct ESLOptions
 {
 
     ESLOptions() :
-        minMapq(15),
-        breakendEdgeTrimProb(0.25),
         minMergeEdgeCount(3)
     {}
 
-    /// report breakend regions with x prob regions removed from each edge
-    unsigned minMapq;
-    float breakendEdgeTrimProb;
+    ReadScannerOptions scanOpt;
     unsigned minMergeEdgeCount;
 
     std::vector<std::string> alignmentFilename;

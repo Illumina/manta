@@ -16,6 +16,7 @@
 ///
 
 #include "SVLocusSetFinder.hh"
+
 #include "blt_util/align_path_bam_util.hh"
 #include "blt_util/log.hh"
 
@@ -63,24 +64,10 @@ SVLocusSetFinder(
     _svLoci(opt.minMergeEdgeCount),
     _isScanStarted(false),
     _isInDenoiseRegion(false),
-    _denoisePos(0)
+    _denoisePos(0),
+    _readScanner(opt.scanOpt,opt.statsFilename,opt.alignmentFilename)
 {
-    // pull in insert stats:
-    _rss.read(opt.statsFilename.c_str());
-
     updateDenoiseRegion();
-
-    // cache the insert stats we'll be looking up most often:
-    BOOST_FOREACH(const std::string& file, opt.alignmentFilename)
-    {
-        const boost::optional<unsigned> index(_rss.getGroupIndex(file));
-        assert(index);
-        const ReadGroupStats rgs(_rss.getStats(*index));
-
-        _stats.resize(_stats.size()+1);
-        _stats.back().min=rgs.fragSize.quantile(opt.breakendEdgeTrimProb);
-        _stats.back().max=rgs.fragSize.quantile((1-opt.breakendEdgeTrimProb));
-    }
 }
 
 
@@ -182,118 +169,23 @@ process_pos(const int stage_no,
 
 void
 SVLocusSetFinder::
-getChimericSVLocus(
-    const CachedReadGroupStats& rstats,
-    const bam_record& read,
-    SVLocus& locus)
-{
-    ALIGNPATH::path_t apath;
-    bam_cigar_to_apath(read.raw_cigar(),read.n_cigar(),apath);
-
-    const unsigned readSize(apath_read_length(apath));
-
-    unsigned thisReadNoninsertSize(0);
-    if (read.is_fwd_strand())
-    {
-        thisReadNoninsertSize=(readSize-apath_read_trail_size(apath));
-    }
-    else
-    {
-        thisReadNoninsertSize=(readSize-apath_read_lead_size(apath));
-    }
-
-    // estimate mate read size to be same as this, and no clipping on mate read:
-    const unsigned mateReadNoninsertSize(readSize);
-
-    const unsigned totalNoninsertSize(thisReadNoninsertSize+mateReadNoninsertSize);
-
-    // get local breakend estimate:
-    NodeIndexType localBreakendNode(0);
-    {
-        GenomeInterval localBreakend(read.target_id());
-
-        const pos_t startRefPos(read.pos()-1);
-        const pos_t endRefPos(startRefPos+apath_ref_length(apath));
-        // expected breakpoint range is from the end of the read alignment to the (probabilistic) end of the fragment:
-        if (read.is_fwd_strand())
-        {
-            localBreakend.range.set_begin_pos(endRefPos);
-            localBreakend.range.set_end_pos(endRefPos + static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
-        }
-        else
-        {
-            localBreakend.range.set_end_pos(startRefPos);
-            localBreakend.range.set_begin_pos(startRefPos - static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
-        }
-
-        const known_pos_range2 evidenceRange(startRefPos,endRefPos);
-        localBreakendNode = locus.addNode(localBreakend);
-        locus.setNodeEvidence(localBreakendNode,evidenceRange);
-    }
-
-    // get remote breakend estimate:
-    {
-        GenomeInterval remoteBreakend(read.mate_target_id());
-
-        const pos_t startRefPos(read.mate_pos()-1);
-        const pos_t endRefPos(startRefPos+readSize);
-        if (read.is_mate_fwd_strand())
-        {
-            remoteBreakend.range.set_begin_pos(endRefPos);
-            remoteBreakend.range.set_end_pos(endRefPos + static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
-        }
-        else
-        {
-            remoteBreakend.range.set_end_pos(startRefPos);
-            remoteBreakend.range.set_begin_pos(startRefPos - static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
-        }
-
-        const NodeIndexType remoteBreakendNode(locus.addRemoteNode(remoteBreakend));
-        locus.linkNodes(localBreakendNode,remoteBreakendNode);
-    }
-
-}
-
-
-
-bool
-SVLocusSetFinder::
-isReadFiltered(const bam_record& read) const
-{
-    if (read.is_filter()) return true;
-    if (read.is_dup()) return true;
-    if (read.is_secondary()) return true;
-    if (read.is_proper_pair()) return true;
-    if (read.map_qual() < _opt.minMapq) return true;
-    return false;
-}
-
-
-
-void
-SVLocusSetFinder::
 update(const bam_record& read,
        const unsigned defaultReadGroupIndex)
 {
     _isScanStarted=true;
 
     // shortcut to speed things up:
-    if (isReadFiltered(read)) return;
+    if (_readScanner.isReadFiltered(read)) return;
 
     // check that this read starts in our scan region:
     if (! _scanRegion.range.is_pos_intersect(read.pos()-1)) return;
 
     _stageman.handle_new_pos_value(read.pos()-1);
 
-    const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);
-
     SVLocus locus;
 
     // start out looking for chimeric reads only:
-    if (read.is_chimeric())
-    {
-        getChimericSVLocus(rstats,read,locus);
-    }
+    _readScanner.getChimericSVLocus(read, defaultReadGroupIndex, locus);
 
     if (! locus.empty())
     {
