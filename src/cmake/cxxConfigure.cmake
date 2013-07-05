@@ -146,7 +146,11 @@ set(DEVELOPER_MODE true)
 
 if (${DEVELOPER_MODE})
     # some compiler versions will produce warnings with no reasonable workaround,
-    # in this case, turn Werror off
+    # turn Werror off in this case
+    #
+    # a very common example are warnings from boost generated despite this library
+    # being identified as a system header
+    #
     set(IS_WERROR true)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         if (${compiler_version} VERSION_LESS "4.2.0")
