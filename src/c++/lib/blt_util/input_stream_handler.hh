@@ -150,7 +150,7 @@ private:
 
 
 ///////////////////////////////// data:
-    const input_stream_data& _data;
+    const input_stream_data _data;
 
     input_record_info _current;
     input_record_info _last;

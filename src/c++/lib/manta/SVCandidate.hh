@@ -20,7 +20,32 @@
 #include "manta/GenomeInterval.hh"
 
 
+struct SVBreakend
+{
+    SVBreakend() :
+        isKnown(true),
+        isRightOpen(true)
+    {}
+
+    // this can be set to false for one breakend when an open-ended breakend is found with unclear
+    // evidence on the other side
+    bool isKnown;
+
+    // the interval is the X% confidence interval of the SV breakend, the interface allows for
+    // various probabiity distributions to back this interval, but these must be accessed via
+    // SVCandidate:
+    GenomeInterval interval;
+    bool isRightOpen;
+};
+
+
 struct SVCandidate
 {
-    GenomeInterval
+#if 0
+    double
+    breakpointProb(pos_t x, pos_t y) const;
+#endif
+
+    SVBreakend bp1;
+    SVBreakend bp2;
 };

@@ -18,14 +18,11 @@
 #include "GenerateSVCandidates.hh"
 #include "GSCOptions.hh"
 #include "EdgeRetriever.hh"
+#include "SVFinder.hh"
 
-#include "blt_util/input_stream_handler.hh"
-#include "blt_util/bam_streamer.hh"
 #include "common/OutStream.hh"
 #include "manta/ReadGroupStatsSet.hh"
-#include "manta/SVLocusSet.hh"
 
-#include "boost/shared_ptr.hpp"
 #include "boost/foreach.hpp"
 
 #include <iostream>
@@ -41,50 +38,31 @@ runGSC(const GSCOptions& opt)
         OutStream outs(opt.outputFilename);
     }
 
+    SVFinder finder(opt);
+
     // load in set:
     SVLocusSet set;
     set.load(opt.graphFilename.c_str());
-    const SVLocusSet& cset(set);
+    const SVLocusSet& cset(finder.getSet());
 
     EdgeRetriever edger(opt.binIndex,opt.binCount,cset);
 
+    std::vector<SVCandidate> svs;
     while (edger.next())
     {
-        const EdgeInfo& edge=edger.getEdge();
-//findSVs(opt, set, edge);
+        const EdgeInfo& edge(edger.getEdge());
 
-        ///BOGUS:
-        if (edge.locusIndex==0) return;
+        // find number, type and breakend range of SVs on this edge:
+        finder.findSVCandidates(edge,svs);
+
+        BOOST_FOREACH(const SVCandidate& sv, svs)
+        {
+            //scoreSV
+
+            //bogus
+            if(sv.bp1.isKnown) exit(0);
+        }
     }
-
-
-
-
-
-    typedef boost::shared_ptr<bam_streamer> stream_ptr;
-    std::vector<stream_ptr> bam_streams;
-
-    // setup all data for main analysis loop:
-    BOOST_FOREACH(const std::string& afile, opt.alignmentFilename)
-    {
-        stream_ptr tmp(new bam_streamer(afile.c_str()));
-        bam_streams.push_back(tmp);
-    }
-
-    // TODO check header compatibility between all open bam streams
-    const unsigned n_inputs(bam_streams.size());
-
-    // assume headers compatible after this point....
-
-    assert(0 != n_inputs);
-
-    input_stream_data sdata;
-    for (unsigned i(0); i<n_inputs; ++i)
-    {
-        sdata.register_reads(*bam_streams[i],i);
-    }
-
-    input_stream_handler sinput(sdata);
 
 }
 
