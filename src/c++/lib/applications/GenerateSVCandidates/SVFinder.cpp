@@ -162,6 +162,9 @@ getCandidatesFromData(
             bool isSVFound(false);
             unsigned svIndex(0);
 
+            // temporary hack hypoth gen method assumes that only one SV exists for each overlapping breakpoint range with
+            // the same orientation:
+            //
             // we anticipate so few svs from the POC method, that there's no indexing on them
             BOOST_FOREACH(SVCandidate& sv, svs)
             {
@@ -179,6 +182,71 @@ getCandidatesFromData(
             {
                 pair.svIndex = svs.size();
                 svs.push_back(cand);
+            }
+        }
+    }
+
+    // finally check wether any svs have grown to intersect each other
+    //
+    // this is also part of the temp hygen hack, so just make it function:
+    //
+    std::set<unsigned> deletedSVIndex;
+    const unsigned svCount(svs.size());
+    for(unsigned outerIndex(0); outerIndex<svCount; ++outerIndex)
+    {
+        const unsigned routerIndex(svCount-(outerIndex+1));
+        for(unsigned innerIndex(0); innerIndex<routerIndex; ++innerIndex)
+        {
+            if(svs[innerIndex].isIntersect(svs[routerIndex]))
+            {
+                svs[innerIndex].merge(svs[routerIndex]);
+                deletedSVIndex.insert(routerIndex);
+            }
+        }
+    }
+
+    if(deletedSVIndex.size())
+    {
+        std::map<unsigned,unsigned> moveSVIndex;
+        {
+            unsigned shift(0);
+            bool isLastIndex(false);
+            unsigned lastIndex(0);
+            BOOST_FOREACH(const unsigned index, deletedSVIndex)
+            {
+                shift++;
+                if(isLastIndex)
+                {
+                    for(unsigned i(lastIndex+1);i<index;++i)
+                    {
+                        assert(shift>0);
+                        assert(i>=shift);
+                        moveSVIndex[i] = (i-shift);
+                    }
+                }
+                lastIndex=index;
+                isLastIndex=true;
+            }
+            if(isLastIndex)
+            {
+                for(unsigned i(lastIndex+1);i<svCount;++i)
+                {
+                    assert(shift>0);
+                    assert(i>=shift);
+                    moveSVIndex[i] = (i-shift);
+                }
+            }
+        }
+
+        for(unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
+        {
+            SVCandidateDataGroup& svDataGroup(svData.getDataGroup(bamIndex));
+            BOOST_FOREACH(SVCandidateReadPair& pair, svDataGroup)
+            {
+                if(moveSVIndex.count(pair.svIndex))
+                {
+                    pair.svIndex = moveSVIndex[pair.svIndex];
+                }
             }
         }
     }
@@ -227,7 +295,7 @@ findSVCandidates(
     //
 
     addSVNodeData(locus,edge.nodeIndex1,edge.nodeIndex2,svData);
-    addSVNodeData(locus,edge.nodeIndex1,edge.nodeIndex2,svData);
+    addSVNodeData(locus,edge.nodeIndex2,edge.nodeIndex1,svData);
 
     getCandidatesFromData(svData,svs);
 }
