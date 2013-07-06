@@ -86,8 +86,10 @@ def runStats(self,taskPrefix="",dependencies=None):
 
     cmd = [ self.params.mantaStatsBin ]
     cmd.extend(["--output-file",statsPath])
-    for bamPath in self.params.bamList :
+    for bamPath in self.params.normalBamList :
         cmd.extend(["--align-file",bamPath])
+    for bamPath in self.params.tumorBamList :
+        cmd.extend(["--tumor-align-file",bamPath])
 
     nextStepWait = set()
     nextStepWait.add(self.addTask(preJoin(taskPrefix,"generateStats"),cmd,dependencies=dependencies))
@@ -118,8 +120,11 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
         graphCmd.extend(["--output-file", tmpGraphFiles[-1]])
         graphCmd.extend(["--align-stats",statsPath])
         graphCmd.extend(["--region",gseg.bamRegion])
-        for bamPath in self.params.bamList :
-            graphCmd.extend(["--align-file",bamPath])
+        for bamPath in self.params.normalBamList :
+            cmd.extend(["--align-file",bamPath])
+        for bamPath in self.params.tumorBamList :
+            cmd.extend(["--tumor-align-file",bamPath])
+
         graphTaskLabel=preJoin(taskPrefix,"makeLocusGraph_"+gseg.id)
         graphTasks.add(self.addTask(graphTaskLabel,graphCmd,dependencies=dirTask))
 
@@ -150,6 +155,8 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
 
     dirTask=self.addTask(preJoin(taskPrefix,"makeHyGenDir"), "mkdir -p "+ hygenDir, dependencies=dependencies, isForceLocal=True)
 
+    isSomatic = (length(self.params.normalBamList) and length(self.params.tumorBamList))
+
     hygenTasks=set()
 
     for binId in range(self.params.nonlocalWorkBins) :
@@ -161,9 +168,15 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         hygenCmd.extend(["--bin-index", str(binId)])
         hygenCmd.extend(["--bin-count", str(self.params.nonlocalWorkBins)])
         hygenCmd.extend(["--ref",self.params.referenceFasta])
-        hygenCmd.extend(["--output-file", self.paths.getHyGenPath(binStr)])
-        for bamPath in self.params.bamList :
-            hygenCmd.extend(["--align-file",bamPath])
+        hygenCmd.extend(["--candidate-output-file", self.paths.getHyGenCandidatePath(binStr)])
+        if isSomatic :
+            hygenCmd.extend(["--somatic-output-file", self.paths.getHyGenSomaticPath(binStr)])
+            
+        for bamPath in self.params.normalBamList :
+            cmd.extend(["--align-file",bamPath])
+        for bamPath in self.params.tumorBamList :
+            cmd.extend(["--tumor-align-file",bamPath])
+
         hygenTaskLabel=preJoin(taskPrefix,"generateSVCandidates_"+binStr)
         hygenTasks.add(self.addTask(hygenTaskLabel,hygenCmd,dependencies=dirTask))
 
@@ -189,8 +202,11 @@ class PathInfo:
     def getHyGenDir(self) :
         return os.path.join(self.params.workDir,"svHyGen")
 
-    def getHyGenPath(self, binStr) :
-        return os.path.join(self.getHyGenDir(),"svHyGen_%s.bin" % (binStr))
+    def getHyGenCandidatePath(self, binStr) :
+        return os.path.join(self.getHyGenDir(),"candidateSV.%s.vcf" % (binStr))
+
+    def getHyGenSomaticPath(self, binStr) :
+        return os.path.join(self.getHyGenDir(),"somaticSV.%s.vcf" % (binStr))
 
 
 
@@ -229,10 +245,15 @@ class MantaWorkflow(WorkflowRunner) :
             checkFile(self.params.referenceFasta,"reference fasta")
             checkFile(indexRefFasta,"reference fasta index")
 
-        self.params.bamList = []
-        for bam in (self.params.tumorBam,self.params.normalBam) :
+        self.params.normalBamList = []
+        for bam in (self.params.normalBam,) :
             if bam is None : continue
-            self.params.bamList.append(bam)
+            self.params.normalBamList.append(bam)
+
+        self.params.tumorBamList = []
+        for bam in (self.params.tumorBam,) :
+            if bam is None : continue
+            self.params.tumorBamList.append(bam)
 
         # read fasta index
         (self.params.chromOrder,self.params.chromSizes) = getFastaChromOrderSize(indexRefFasta)

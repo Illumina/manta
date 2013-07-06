@@ -19,6 +19,7 @@
 
 #include "blt_util/log.hh"
 
+#include "boost/foreach.hpp"
 #include "boost/filesystem.hpp"
 #include "boost/program_options.hpp"
 
@@ -47,16 +48,48 @@ usage(
 }
 
 
+
+static
+void
+checkStandardizeUsageFile(
+    std::ostream& os,
+    const manta::Program& prog,
+    const boost::program_options::options_description& visible,
+    std::string& filename,
+    const char* fileLabel)
+{
+    if (filename.empty())
+    {
+        std::ostringstream oss;
+        oss << "Must specify " << fileLabel << " file";
+        usage(os,prog,visible,oss.str().c_str());
+    }
+    if (! boost::filesystem::exists(filename))
+    {
+        std::ostringstream oss;
+        oss << "Can't find " << fileLabel << " file '" << filename << "'";
+        usage(os,prog,visible,oss.str().c_str());
+    }
+    filename = boost::filesystem::canonical(filename).string();
+}
+
+
+
 void
 parseESLOptions(const manta::Program& prog,
                 int argc, char* argv[],
                 ESLOptions& opt)
 {
+    std::vector<std::string> normalAlignmentFilename;
+    std::vector<std::string> tumorAlignmentFilename;
+
     namespace po = boost::program_options;
     po::options_description req("configuration");
     req.add_options()
-    ("align-file", po::value<std::vector<std::string> >(&opt.alignmentFilename),
-     "alignment file in bam format (more than one file may be specified, at least one required)")
+    ("align-file", po::value(&normalAlignmentFilename),
+     "alignment file in bam format (may be specified multiple times, assumed to be non-tumor if tumor file(s) provided)")
+    ("tumor-align-file", po::value(&tumorAlignmentFilename),
+     "tumor sample alignment file in bam format (may be specified multiple times)")
     ("output-file", po::value<std::string>(&opt.outputFilename),
      "write SV Locus graph to file (required)")
     ("align-stats", po::value<std::string>(&opt.statsFilename),
@@ -90,19 +123,37 @@ parseESLOptions(const manta::Program& prog,
         usage(log_os,prog,visible);
     }
 
+    {
+        // paste together tumor and normal:
+        opt.alignmentFilename = normalAlignmentFilename;
+        opt.alignmentFilename.insert(opt.alignmentFilename.end(),
+                                     tumorAlignmentFilename.begin(),
+                                     tumorAlignmentFilename.end());
+    }
+
     // fast check of config state:
     if (opt.alignmentFilename.empty())
     {
         usage(log_os,prog,visible,"Must specify at least one input alignment file");
     }
-    if (opt.statsFilename.empty())
     {
-        usage(log_os,prog,visible,"Must specify alignment statistics file");
+        // check that alignment files exist, and names do not repeat
+        std::set<std::string> nameCheck;
+        BOOST_FOREACH(std::string& afile, opt.alignmentFilename)
+        {
+            checkStandardizeUsageFile(log_os,prog,visible,afile,"alignment file");
+            if(nameCheck.count(afile))
+            {
+                std::ostringstream oss;
+                oss << "Repeated alignment filename: " << afile << "\n";
+                usage(log_os,prog,visible,oss.str().c_str());
+            }
+            nameCheck.insert(afile);
+        }
     }
-    if (! boost::filesystem::exists(opt.statsFilename))
-    {
-        usage(log_os,prog,visible,"alignment statistics file does not exist");
-    }
+
+    checkStandardizeUsageFile(log_os,prog,visible,opt.statsFilename,"alignment statistics");
+
     if (opt.outputFilename.empty())
     {
         usage(log_os,prog,visible,"Must specify a graph output file");

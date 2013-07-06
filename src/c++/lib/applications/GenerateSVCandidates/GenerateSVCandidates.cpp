@@ -35,7 +35,12 @@ runGSC(const GSCOptions& opt)
 {
     {
         // early test that we have permission to write to output file
-        OutStream outs(opt.outputFilename);
+        OutStream outs(opt.candidateOutputFilename);
+
+        if(! opt.somaticOutputFilename.empty())
+        {
+            OutStream somouts(opt.somaticOutputFilename);
+        }
     }
 
     SVFinder finder(opt);
@@ -47,7 +52,7 @@ runGSC(const GSCOptions& opt)
 
     EdgeRetriever edger(cset, opt.binCount, opt.binIndex);
 
-    OutStream outs(opt.outputFilename);
+    OutStream outs(opt.candidateOutputFilename);
     std::ostream& outfp(outs.getStream());
 
     SVCandidateData svData;

@@ -17,9 +17,59 @@
 
 #include "blt_util/log.hh"
 
+#include "boost/filesystem.hpp"
+#include "boost/foreach.hpp"
 #include "boost/program_options.hpp"
 
 #include <iostream>
+
+
+
+static
+void
+usage(
+    std::ostream& os,
+    const manta::Program& prog,
+    const boost::program_options::options_description& visible,
+    const char* msg = NULL)
+{
+    os << "\n" << prog.name() << ": get statistics for SV-calling from alignment files\n\n";
+    os << "version: " << prog.version() << "\n\n";
+    os << "usage: " << prog.name() << " [options] > stats\n\n";
+    os << visible << "\n\n";
+
+    if (NULL != msg)
+    {
+        os << msg << "\n\n";
+    }
+    exit(2);
+}
+
+
+
+static
+void
+checkStandardizeUsageFile(
+    std::ostream& os,
+    const manta::Program& prog,
+    const boost::program_options::options_description& visible,
+    std::string& filename,
+    const char* fileLabel)
+{
+    if (filename.empty())
+    {
+        std::ostringstream oss;
+        oss << "Must specify " << fileLabel << " file";
+        usage(os,prog,visible,oss.str().c_str());
+    }
+    if (! boost::filesystem::exists(filename))
+    {
+        std::ostringstream oss;
+        oss << "Can't find " << fileLabel << " file '" << filename << "'";
+        usage(os,prog,visible,oss.str().c_str());
+    }
+    filename = boost::filesystem::canonical(filename).string();
+}
 
 
 
@@ -28,12 +78,16 @@ parseAlignmentStatsOptions(const manta::Program& prog,
                            int argc, char* argv[],
                            AlignmentStatsOptions& opt)
 {
+    std::vector<std::string> normalAlignmentFilename;
+    std::vector<std::string> tumorAlignmentFilename;
 
     namespace po = boost::program_options;
     po::options_description req("configuration");
     req.add_options()
-    ("align-file", po::value<std::vector<std::string> >(&opt.alignmentFilename),
-     "alignment file in bam format (may be specified multiple times)")
+    ("align-file", po::value(&normalAlignmentFilename),
+     "alignment file in bam format (may be specified multiple times, assumed to be non-tumor if tumor file(s) provided)")
+    ("tumor-align-file", po::value(&tumorAlignmentFilename),
+     "tumor sample alignment file in bam format (may be specified multiple times)")
     ("output-file", po::value(&opt.outputFilename),
      "write stats to filename (default: stdout)");
 
@@ -60,11 +114,42 @@ parseAlignmentStatsOptions(const manta::Program& prog,
 
     if ((argc<=1) || (vm.count("help")) || po_parse_fail)
     {
+        usage(log_os,prog,visible);
         log_os << "\n" << prog.name() << ": get statistics for SV-calling from alignment files\n\n";
         log_os << "version: " << prog.version() << "\n\n";
         log_os << "usage: " << prog.name() << " [options] > stats\n\n";
         log_os << visible << "\n";
         exit(EXIT_FAILURE);
+    }
+
+    {
+        // paste together tumor and normal:
+        opt.alignmentFilename = normalAlignmentFilename;
+        opt.alignmentFilename.insert(opt.alignmentFilename.end(),
+                                     tumorAlignmentFilename.begin(),
+                                     tumorAlignmentFilename.end());
+    }
+
+
+    // fast check of config state:
+    if (opt.alignmentFilename.empty())
+    {
+        usage(log_os,prog,visible,"Must specify at least one input alignment file");
+    }
+    {
+        // check that alignment files exist, and names do not repeat
+        std::set<std::string> nameCheck;
+        BOOST_FOREACH(std::string& afile, opt.alignmentFilename)
+        {
+            checkStandardizeUsageFile(log_os,prog,visible,afile,"alignment file");
+            if(nameCheck.count(afile))
+            {
+                std::ostringstream oss;
+                oss << "Repeated alignment filename: " << afile << "\n";
+                usage(log_os,prog,visible,oss.str().c_str());
+            }
+            nameCheck.insert(afile);
+        }
     }
 }
 

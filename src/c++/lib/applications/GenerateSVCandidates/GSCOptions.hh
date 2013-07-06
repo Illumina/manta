@@ -35,10 +35,14 @@ struct GSCOptions
     ReadScannerOptions scanOpt;
 
     std::vector<std::string> alignmentFilename;
+    std::vector<bool> isAlignmentTumor;
     std::string graphFilename;
-    std::string outputFilename;
     std::string referenceFilename;
     std::string statsFilename;
+
+    std::string candidateOutputFilename;
+    //std::string germlineOutputFilename;
+    std::string somaticOutputFilename;
 
     unsigned binCount;
     unsigned binIndex;

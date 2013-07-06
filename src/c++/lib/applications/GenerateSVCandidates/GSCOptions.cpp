@@ -81,19 +81,26 @@ parseGSCOptions(const manta::Program& prog,
                 int argc, char* argv[],
                 GSCOptions& opt)
 {
+    std::vector<std::string> normalAlignmentFilename;
+    std::vector<std::string> tumorAlignmentFilename;
+
     namespace po = boost::program_options;
     po::options_description req("configuration");
     req.add_options()
-    ("align-file", po::value<std::vector<std::string> >(&opt.alignmentFilename),
-     "alignment file in bam format (may be specified multiple times, at least one required)")
+    ("align-file", po::value(&normalAlignmentFilename),
+     "alignment file in bam format (may be specified multiple times, assumed to be non-tumor if tumor file(s) provided)")
+    ("tumor-align-file", po::value(&tumorAlignmentFilename),
+      "tumor sample alignment file in bam format (may be specified multiple times)")
     ("graph-file", po::value(&opt.graphFilename),
      "sv locus graph file (required)")
     ("align-stats", po::value(&opt.statsFilename),
      "pre-computed alignment statistics for the input alignment files (required)")
     ("ref", po::value(&opt.referenceFilename),
      "fasta reference sequence (required)")
-    ("output-file", po::value(&opt.outputFilename),
-     "write SV candidates to file (required)")
+    ("candidate-output-file", po::value(&opt.candidateOutputFilename),
+     "Write SV candidates to file (required)")
+    ("somatic-output-file", po::value(&opt.somaticOutputFilename),
+      "Write somatic SV candidates to file (at least one tumor and non-tumor alignment file must be specified)")
     ("bin-count", po::value(&opt.binCount)->default_value(opt.binCount),
      "Specify how many bins the SV candidate problem should be divided into, where bin-index can be used to specify which bin to solve")
     ("bin-index", po::value(&opt.binIndex)->default_value(opt.binIndex),
@@ -126,6 +133,17 @@ parseGSCOptions(const manta::Program& prog,
         usage(log_os,prog,visible);
     }
 
+    {
+        // paste together tumor and normal:
+        opt.alignmentFilename = normalAlignmentFilename;
+        opt.alignmentFilename.insert(opt.alignmentFilename.end(),
+                                     tumorAlignmentFilename.begin(),
+                                     tumorAlignmentFilename.end());
+        opt.isAlignmentTumor.clear();
+        opt.isAlignmentTumor.resize(normalAlignmentFilename.size(),false);
+        opt.isAlignmentTumor.resize(opt.alignmentFilename.size(),true);
+    }
+
     // fast check of config state:
     if (opt.binCount < 1)
     {
@@ -140,6 +158,7 @@ parseGSCOptions(const manta::Program& prog,
         usage(log_os,prog,visible,"Must specify at least one input alignment file");
     }
     {
+        // check that alignment files exist, and names do not repeat
         std::set<std::string> nameCheck;
         BOOST_FOREACH(std::string& afile, opt.alignmentFilename)
         {
@@ -156,5 +175,18 @@ parseGSCOptions(const manta::Program& prog,
     checkStandardizeUsageFile(log_os,prog,visible,opt.statsFilename,"alignment statistics");
     checkStandardizeUsageFile(log_os,prog,visible,opt.graphFilename,"SV locus graph");
     checkStandardizeUsageFile(log_os,prog,visible,opt.referenceFilename,"reference fasta");
+
+    if (opt.candidateOutputFilename.empty())
+    {
+        usage(log_os,prog,visible,"Must specify candidate output file");
+    }
+
+    if (! opt.somaticOutputFilename.empty())
+    {
+        if(normalAlignmentFilename.empty() || tumorAlignmentFilename.empty())
+        {
+            usage(log_os,prog,visible,"Must specify at least one tumor and non-tumor alignment file for somatic output");
+        }
+    }
 }
 
