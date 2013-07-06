@@ -43,6 +43,17 @@ operator<<(std::ostream& os, const SVCandidateRead& svr)
 
 
 
+std::ostream&
+operator<<(std::ostream& os, const SVCandidateReadPair& svp)
+{
+    os << "SVCandidateReadPair svIndex: " << svp.svIndex << "\n";
+    os << "\tread1: " << svp.read1;
+    os << "\tread2: " << svp.read2;
+    return os;
+}
+
+
+
 SVCandidateReadPair&
 SVCandidateDataGroup::
 getReadPair(const pindex_t::key_type& key)

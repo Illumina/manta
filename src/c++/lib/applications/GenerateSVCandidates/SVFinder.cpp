@@ -121,10 +121,6 @@ addSVNodeData(
         {
             const bam_record& bamRead(*(read_stream.get_record_ptr()));
 
-#ifdef DEBUG_SVDATA
-            log_os << "addSVNodeData: scanning read: " << bamRead << "\n";
-#endif
-
             // test if read supports an SV on this edge, if so, add to SVData
             addSVNodeRead(_readScanner,localNode,remoteNode,bamRead, bamIndex,svDataGroup);
         }
@@ -159,6 +155,11 @@ getCandidatesFromData(
             cand.clear();
             _readScanner.getBreakendPair(localRead.bamrec, remoteReadPtr, bamIndex, cand.bp1, cand.bp2);
 
+#ifdef DEBUG_SVDATA
+            log_os << "Checking pair: " << pair << "\n";
+            log_os << "Translated to cand: " << cand << "\n";
+#endif
+
             bool isSVFound(false);
             unsigned svIndex(0);
 
@@ -170,6 +171,9 @@ getCandidatesFromData(
             {
                 if(sv.isIntersect(cand))
                 {
+#ifdef DEBUG_SVDATA
+                    log_os << "Adding to svIndex: " << svIndex << "\n";
+#endif
                     sv.merge(cand);
                     pair.svIndex = svIndex;
                     isSVFound=true;
@@ -180,13 +184,21 @@ getCandidatesFromData(
 
             if(! isSVFound)
             {
+#ifdef DEBUG_SVDATA
+                    log_os << "New svIndex: " << svs.size() << "\n";
+#endif
                 pair.svIndex = svs.size();
                 svs.push_back(cand);
             }
         }
     }
 
-    // finally check wether any svs have grown to intersect each other
+#ifdef DEBUG_SVDATA
+    log_os << "findSVCandidates: precount: " << svs.size() << "\n";
+#endif
+
+
+    // finally check whether any svs have grown to intersect each other
     //
     // this is also part of the temp hygen hack, so just make it function:
     //
@@ -249,6 +261,8 @@ getCandidatesFromData(
                 }
             }
         }
+
+        svs.resize(svs.size()-deletedSVIndex.size());
     }
 }
 
@@ -298,6 +312,10 @@ findSVCandidates(
     addSVNodeData(locus,edge.nodeIndex2,edge.nodeIndex1,svData);
 
     getCandidatesFromData(svData,svs);
+
+#ifdef DEBUG_SVDATA
+    log_os << "findSVCandidates: count: " << svs.size() << "\n";
+#endif
 }
 
 

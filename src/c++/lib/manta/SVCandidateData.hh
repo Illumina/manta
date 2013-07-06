@@ -57,6 +57,10 @@ struct SVCandidateReadPair
 };
 
 
+std::ostream&
+operator<<(std::ostream& os, const SVCandidateReadPair& svp);
+
+
 
 /// SVCandidateData associated with a specific bam-file/read-group
 struct SVCandidateDataGroup
