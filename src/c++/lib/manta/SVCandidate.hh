@@ -38,10 +38,11 @@ namespace SVBreakendState
     {
         switch(idx)
         {
-        case UNKNOWN: return "UNKNOWN";
+        case UNKNOWN:    return "UNKNOWN";
         case RIGHT_OPEN: return "RIGHT_OPEN";
-        case LEFT_OPEN: return "LEFT_OPEN";
-        case COMPLEX: return "COMPLEX";
+        case LEFT_OPEN:  return "LEFT_OPEN";
+        case COMPLEX:    return "COMPLEX";
+        default:         return "UNKNOWN";
         }
     }
 
@@ -55,6 +56,7 @@ namespace SVBreakendState
         case RIGHT_OPEN: return "__/    ";
         case LEFT_OPEN:  return "    \\__";
         case COMPLEX:    return "__???__";
+        default:         return "UNKNOWN";
         }
     }
 }
@@ -154,12 +156,14 @@ struct SVCandidate
         bp2.clear();
     }
 
+#if 0
     std::pair<const SVBreakend&, const SVBreakend&>
     getOrderedBreakends() const
     {
         if(bp2 < bp1) { return std::make_pair(bp2,bp1); }
         else          { return std::make_pair(bp1,bp2); }
     }
+#endif
 
     SVBreakend bp1;
     SVBreakend bp2;
