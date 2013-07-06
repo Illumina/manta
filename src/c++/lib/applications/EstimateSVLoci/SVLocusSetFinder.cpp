@@ -190,4 +190,8 @@ update(const bam_record& bamRead,
     {
         _svLoci.merge(locus);
     }
+    else
+    {
+        _svLoci.nullmerge();
+    }
 }
