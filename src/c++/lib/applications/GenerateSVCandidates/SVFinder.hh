@@ -47,6 +47,11 @@ struct SVFinder {
             SVCandidateData& svData,
             std::vector<SVCandidate>& svs);
 
+    void
+    checkResult(
+            const SVCandidateData& svData,
+            const std::vector<SVCandidate>& svs) const;
+
 private:
 
     void

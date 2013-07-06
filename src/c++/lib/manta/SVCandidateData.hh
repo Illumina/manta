@@ -84,6 +84,18 @@ struct SVCandidateDataGroup
         return _pairs.end();
     }
 
+    const_iterator
+    begin() const
+    {
+        return _pairs.begin();
+    }
+
+    const_iterator
+    end() const
+    {
+        return _pairs.end();
+    }
+
 
 private:
     typedef std::string bamqname_t;
@@ -116,6 +128,14 @@ struct SVCandidateData
 
         std::pair<data_t::iterator,bool> diter2 = _data.insert(std::make_pair(bamIndex,SVCandidateDataGroup()));
         return diter2.first->second;
+    }
+
+    const SVCandidateDataGroup&
+    getDataGroup(const unsigned bamIndex) const
+    {
+        data_t::const_iterator diter(_data.find(bamIndex));
+        assert(diter != _data.end());
+        return diter->second;
     }
 
     void

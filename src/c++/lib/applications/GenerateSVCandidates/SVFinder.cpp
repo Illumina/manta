@@ -130,6 +130,42 @@ addSVNodeData(
 
 
 
+// sanity check the final result
+void
+SVFinder::
+checkResult(
+        const SVCandidateData& svData,
+        const std::vector<SVCandidate>& svs) const
+{
+    // check that the counts totalled up from the data match those in the sv candidates
+    std::map<unsigned,unsigned> counts;
+    const unsigned svCount(svs.size());
+    for(unsigned i(0);i<svCount;++i)
+    {
+        counts[i] = 0;
+    }
+
+    const unsigned bamCount(_bamStreams.size());
+    for(unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
+    {
+        const SVCandidateDataGroup& svDataGroup(svData.getDataGroup(bamIndex));
+        BOOST_FOREACH(const SVCandidateReadPair& pair, svDataGroup)
+        {
+            assert(pair.svIndex<svCount);
+            if(pair.read1.isSet()) counts[pair.svIndex]++;
+            if(pair.read2.isSet()) counts[pair.svIndex]++;
+        }
+    }
+
+    for(unsigned svIndex(0); svIndex<svCount; ++svIndex)
+    {
+        const unsigned svObsCount(svs[svIndex].bp1.count + svs[svIndex].bp2.count);
+        const unsigned dataObsCount(counts[svIndex]);
+        assert(svObsCount == dataObsCount);
+    }
+}
+
+
 void
 SVFinder::
 getCandidatesFromData(
@@ -336,7 +372,7 @@ findSVCandidates(
     getCandidatesFromData(svData,svs);
 
 #ifdef DEBUG_SVDATA
-    log_os << "findSVCandidates: count: " << svs.size() << "\n";
+    checkResult(svData,svs);
 #endif
 }
 
