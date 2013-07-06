@@ -52,7 +52,7 @@ struct SVLocusSetFinder : public pos_processor_base
     /// (for now RGs are ignored for the purpose of gathering insert stats)
     ///
     void
-    update(const bam_record& read,
+    update(const bam_record& bamRead,
            const unsigned defaultReadGroupIndex);
 
     const SVLocusSet&

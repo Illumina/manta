@@ -228,6 +228,7 @@ merge(const SVLocusSet& inputSet)
     }
 
     _totalCleaned += inputSet._totalCleaned;
+    _totalNull += inputSet._totalNull;
 }
 
 
@@ -697,6 +698,7 @@ dumpStats(std::ostream& os) const
     os << "locusCount: " << sep << nonEmptySize() << "\n";
     os << "totalEvidenceCount: " << sep << totalCount() << "\n";
     os << "totalCleaned: " << sep << _totalCleaned << "\n";
+    os << "totalNullCount: " << sep << _totalNull << "\n";
 }
 
 
@@ -777,6 +779,7 @@ save(const char* filename) const
     oa << _minMergeEdgeCount;
     oa << _isFinalized;
     oa << _totalCleaned;
+    oa << _totalNull;
     BOOST_FOREACH(const SVLocus& locus, _loci)
     {
         if (locus.empty()) continue;
@@ -804,6 +807,7 @@ load(const char* filename)
     ia >> _minMergeEdgeCount;
     ia >> _isFinalized;
     ia >> _totalCleaned;
+    ia >> _totalNull;
     SVLocus locus;
     while (ifs.peek() != EOF)
     {

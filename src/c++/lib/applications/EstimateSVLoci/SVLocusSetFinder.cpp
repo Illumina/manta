@@ -168,23 +168,23 @@ process_pos(const int stage_no,
 
 void
 SVLocusSetFinder::
-update(const bam_record& read,
+update(const bam_record& bamRead,
        const unsigned defaultReadGroupIndex)
 {
     _isScanStarted=true;
 
     // shortcut to speed things up:
-    if (_readScanner.isReadFiltered(read)) return;
+    if (_readScanner.isReadFiltered(bamRead)) return;
 
     // check that this read starts in our scan region:
-    if (! _scanRegion.range.is_pos_intersect(read.pos()-1)) return;
+    if (! _scanRegion.range.is_pos_intersect(bamRead.pos()-1)) return;
 
-    _stageman.handle_new_pos_value(read.pos()-1);
+    _stageman.handle_new_pos_value(bamRead.pos()-1);
 
     SVLocus locus;
 
     // start out looking for chimeric reads only:
-    _readScanner.getChimericSVLocus(read, defaultReadGroupIndex, locus);
+    _readScanner.getChimericSVLocus(bamRead, defaultReadGroupIndex, locus);
 
     if (! locus.empty())
     {
