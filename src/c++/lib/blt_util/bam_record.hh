@@ -30,11 +30,7 @@ struct bam_record
 
     ~bam_record()
     {
-        if (NULL != _bp)
-        {
-            if (NULL != _bp->data) free(_bp->data);
-            free(_bp);
-        }
+        freeBam();
     }
 
     bam_record(const bam_record& br)
@@ -43,7 +39,27 @@ struct bam_record
     void
     copy(const bam_record& br)
     {
-        bam_copy1(_bp,br._bp);
+        if(empty())
+        {
+            if(! br.empty())
+            {
+                freeBam();
+                _bp=bam_dup1(br._bp);
+            }
+            // else empty->empty : do nothing...
+        }
+        else
+        {
+            if(! br.empty())
+            {
+                bam_copy1(_bp,br._bp);
+            }
+            else
+            {
+                freeBam();
+                _bp=bam_init1();
+            }
+        }
     }
 
 private:
@@ -274,6 +290,7 @@ public:
     bool
     empty() const
     {
+        assert(NULL != _bp);
         return (_bp->data_len == 0);
     }
 
@@ -297,6 +314,16 @@ private:
             return true;
         default  :
             return false;
+        }
+    }
+
+    void
+    freeBam()
+    {
+        if (NULL != _bp)
+        {
+            if (NULL != _bp->data) free(_bp->data);
+            free(_bp);
         }
     }
 
