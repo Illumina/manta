@@ -53,7 +53,6 @@ SVLocusSetFinder::
 SVLocusSetFinder(
     const ESLOptions& opt,
     const GenomeInterval& scanRegion) :
-    _opt(opt),
     _scanRegion(scanRegion),
     _stageman(
         STAGE::getStageData(REGION_DENOISE_BORDER),

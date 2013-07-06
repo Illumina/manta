@@ -21,7 +21,7 @@
 
 
 SVCandidateReadPair&
-SVCandidateData::
+SVCandidateDataGroup::
 getReadPair(const pindex_t::key_type& key)
 {
     const pindex_t::const_iterator kiter(_pairIndex.find(key));
@@ -41,20 +41,10 @@ getReadPair(const pindex_t::key_type& key)
 
 
 void
-SVCandidateData::
-add(const bam_record& read,
-    const unsigned bamIndex)
+SVCandidateDataGroup::
+add(const bam_record& read)
 {
-    SVCandidateReadPair& pair(getReadPair(std::make_pair(bamIndex,read.qname())));
-
-    if(pair.read1.isSet() || pair.read2.isSet())
-    {
-        assert(bamIndex == pair.bamIndex);
-    }
-    else
-    {
-        pair.bamIndex = bamIndex;
-    }
+    SVCandidateReadPair& pair(getReadPair(read.qname()));
 
     SVCandidateRead* target_read_ptr(&(pair.read1));
     if(2 == read.read_no())

@@ -50,18 +50,22 @@ SVLocusScanner(
 
 void
 SVLocusScanner::
-getChimericSVLocusImpl(
+getReadBreakendsImpl(
     const CachedReadGroupStats& rstats,
-    const bam_record& read,
-    SVLocus& locus)
+    const bam_record& localRead,
+    const bam_record* remoteReadPtr,
+    SVBreakend& localBreakend,
+    SVBreakend& remoteBreakend,
+    known_pos_range2& evidenceRange)
 {
     ALIGNPATH::path_t apath;
-    bam_cigar_to_apath(read.raw_cigar(),read.n_cigar(),apath);
+    bam_cigar_to_apath(localRead.raw_cigar(),localRead.n_cigar(),apath);
 
     const unsigned readSize(apath_read_length(apath));
+    const unsigned localRefLength(apath_ref_length(apath));
 
     unsigned thisReadNoninsertSize(0);
-    if (read.is_fwd_strand())
+    if (localRead.is_fwd_strand())
     {
         thisReadNoninsertSize=(readSize-apath_read_trail_size(apath));
     }
@@ -70,53 +74,105 @@ getChimericSVLocusImpl(
         thisReadNoninsertSize=(readSize-apath_read_lead_size(apath));
     }
 
-    // estimate mate read size to be same as this, and no clipping on mate read:
-    const unsigned mateReadNoninsertSize(readSize);
+    localBreakend.count = 1;
 
-    const unsigned totalNoninsertSize(thisReadNoninsertSize+mateReadNoninsertSize);
+    // if remoteRead is not available, estimate mate localRead size to be same as local,
+    // and assume no clipping on mate localRead:
+    unsigned remoteReadNoninsertSize(readSize);
+    unsigned remoteRefLength(localRefLength);
 
-    // get local breakend estimate:
-    NodeIndexType localBreakendNode(0);
+    if(NULL != remoteReadPtr)
     {
-        GenomeInterval localBreakend(read.target_id());
+        // if remoteRead is available, we can more accurately determine the size:
+        const bam_record& remoteRead(*remoteReadPtr);
 
-        const pos_t startRefPos(read.pos()-1);
-        const pos_t endRefPos(startRefPos+apath_ref_length(apath));
-        // expected breakpoint range is from the end of the read alignment to the (probabilistic) end of the fragment:
-        if (read.is_fwd_strand())
+        ALIGNPATH::path_t remoteApath;
+        bam_cigar_to_apath(remoteRead.raw_cigar(),remoteRead.n_cigar(),remoteApath);
+
+        const unsigned remoteReadSize(apath_read_length(remoteApath));
+        remoteRefLength = (apath_ref_length(remoteApath));
+
+        if (remoteRead.is_fwd_strand())
         {
-            localBreakend.range.set_begin_pos(endRefPos);
-            localBreakend.range.set_end_pos(endRefPos + static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
+            remoteReadNoninsertSize=(remoteReadSize-apath_read_trail_size(remoteApath));
         }
         else
         {
-            localBreakend.range.set_end_pos(startRefPos);
-            localBreakend.range.set_begin_pos(startRefPos - static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
+            remoteReadNoninsertSize=(remoteReadSize-apath_read_lead_size(remoteApath));
         }
 
-        const known_pos_range2 evidenceRange(startRefPos,endRefPos);
-        localBreakendNode = locus.addNode(localBreakend);
-        locus.setNodeEvidence(localBreakendNode,evidenceRange);
+        remoteBreakend.count = 1;
+    }
+
+    const unsigned totalNoninsertSize(thisReadNoninsertSize+remoteReadNoninsertSize);
+
+    {
+        localBreakend.interval.tid = (localRead.target_id());
+
+        const pos_t startRefPos(localRead.pos()-1);
+        const pos_t endRefPos(startRefPos+localRefLength);
+        // expected breakpoint range is from the end of the localRead alignment to the (probabilistic) end of the fragment:
+        if (localRead.is_fwd_strand())
+        {
+            localBreakend.state = SVBreakendState::RIGHT_OPEN;
+            localBreakend.interval.range.set_begin_pos(endRefPos);
+            localBreakend.interval.range.set_end_pos(endRefPos + static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
+        }
+        else
+        {
+            localBreakend.state = SVBreakendState::LEFT_OPEN;
+            localBreakend.interval.range.set_end_pos(startRefPos);
+            localBreakend.interval.range.set_begin_pos(startRefPos - static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
+        }
+
+        evidenceRange.set_range(startRefPos,endRefPos);
     }
 
     // get remote breakend estimate:
     {
-        GenomeInterval remoteBreakend(read.mate_target_id());
+        remoteBreakend.interval.tid = (localRead.mate_target_id());
 
-        const pos_t startRefPos(read.mate_pos()-1);
-        const pos_t endRefPos(startRefPos+readSize);
-        if (read.is_mate_fwd_strand())
+        const pos_t startRefPos(localRead.mate_pos()-1);
+        pos_t endRefPos(startRefPos+remoteRefLength);
+        if (localRead.is_mate_fwd_strand())
         {
-            remoteBreakend.range.set_begin_pos(endRefPos);
-            remoteBreakend.range.set_end_pos(endRefPos + static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
+            remoteBreakend.state = SVBreakendState::RIGHT_OPEN;
+            remoteBreakend.interval.range.set_begin_pos(endRefPos);
+            remoteBreakend.interval.range.set_end_pos(endRefPos + static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
         }
         else
         {
-            remoteBreakend.range.set_end_pos(startRefPos);
-            remoteBreakend.range.set_begin_pos(startRefPos - static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
+            remoteBreakend.state = SVBreakendState::LEFT_OPEN;
+            remoteBreakend.interval.range.set_end_pos(startRefPos);
+            remoteBreakend.interval.range.set_begin_pos(startRefPos - static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
         }
+    }
+}
 
-        const NodeIndexType remoteBreakendNode(locus.addRemoteNode(remoteBreakend));
+
+
+void
+SVLocusScanner::
+getChimericSVLocusImpl(
+    const CachedReadGroupStats& rstats,
+    const bam_record& read,
+    SVLocus& locus)
+{
+    SVBreakend localBreakend;
+    SVBreakend remoteBreakend;
+    known_pos_range2 evidenceRange;
+    getReadBreakendsImpl(rstats, read, NULL, localBreakend, remoteBreakend, evidenceRange);
+
+    // set local breakend estimate:
+    NodeIndexType localBreakendNode(0);
+    {
+        localBreakendNode = locus.addNode(localBreakend.interval);
+        locus.setNodeEvidence(localBreakendNode,evidenceRange);
+    }
+
+    // set remote breakend estimate:
+    {
+        const NodeIndexType remoteBreakendNode(locus.addRemoteNode(remoteBreakend.interval));
         locus.linkNodes(localBreakendNode,remoteBreakendNode);
     }
 
@@ -151,4 +207,19 @@ getChimericSVLocus(const bam_record& read,
         const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);
         getChimericSVLocusImpl(rstats,read,locus);
     }
+}
+
+
+
+void
+SVLocusScanner::
+getBreakendPair(const bam_record& localRead,
+                const bam_record* remoteReadPtr,
+                const unsigned defaultReadGroupIndex,
+                SVBreakend& localBreakend,
+                SVBreakend& remoteBreakend) const
+{
+    const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);
+    known_pos_range2 evidenceRange;
+    getReadBreakendsImpl(rstats, localRead, remoteReadPtr, localBreakend, remoteBreakend, evidenceRange);
 }

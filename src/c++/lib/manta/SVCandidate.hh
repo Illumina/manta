@@ -20,23 +20,68 @@
 #include "manta/GenomeInterval.hh"
 
 
+namespace SVBreakendState
+{
+    enum index_t {
+        UNKNOWN,    // Everything else not covered below
+        RIGHT_OPEN, // 5' side of region is mapped
+        LEFT_OPEN,  // 3' side of region is mapped
+        COMPLEX     // A typical small scale assembly locus -- something is happening in a small region,
+                    // the event might be local to that region but we don't know
+    };
+}
+
+
 struct SVBreakend
 {
     SVBreakend() :
-        isKnown(true),
-        isRightOpen(true)
+        state(SVBreakendState::UNKNOWN),
+        count(0)
     {}
 
-    // this can be set to false for one breakend when an open-ended breakend is found with unclear
-    // evidence on the other side
-    bool isKnown;
+    bool
+    isIntersect(const SVBreakend& rhs) const
+    {
+        if(state != rhs.state) return false;
+        return interval.isIntersect(rhs.interval);
+    }
+
+    bool
+    operator<(const SVBreakend& rhs) const
+    {
+        if(state < rhs.state) return true;
+        if(state == rhs.state)
+        {
+            return (interval < rhs.interval);
+        }
+        return false;
+    }
+
+    bool
+    merge(const SVBreakend& rhs)
+    {
+        if(! isIntersect(rhs)) return false;
+        interval.range.merge_range(rhs.interval.range);
+        count += rhs.count;
+        return true;
+    }
+
+    void
+    clear()
+    {
+        interval.clear();
+        state=SVBreakendState::UNKNOWN;
+        count=0;
+    }
 
     // the interval is the X% confidence interval of the SV breakend, the interface allows for
-    // various probabiity distributions to back this interval, but these must be accessed via
+    // various probability distributions to back this interval, but these must be accessed via
     // SVCandidate:
     GenomeInterval interval;
-    bool isRightOpen;
+    SVBreakendState::index_t state;
+    unsigned short count;
 };
+
 
 
 struct SVCandidate
@@ -45,6 +90,45 @@ struct SVCandidate
     double
     breakpointProb(pos_t x, pos_t y) const;
 #endif
+
+    bool
+    isIntersect(const SVCandidate& rhs) const
+    {
+        return ((bp1.isIntersect(rhs.bp1) && bp2.isIntersect(rhs.bp2)) ||
+                (bp1.isIntersect(rhs.bp2) && bp2.isIntersect(rhs.bp1)));
+    }
+
+    bool
+    merge(const SVCandidate& rhs)
+    {
+        if(! isIntersect(rhs)) return false;
+
+        if(bp1.isIntersect(rhs.bp1))
+        {
+            bp1.merge(rhs.bp1);
+            bp2.merge(rhs.bp2);
+        }
+        else
+        {
+            bp1.merge(rhs.bp2);
+            bp2.merge(rhs.bp1);
+        }
+        return true;
+    }
+
+    void
+    clear()
+    {
+        bp1.clear();
+        bp2.clear();
+    }
+
+    std::pair<const SVBreakend&, const SVBreakend&>
+    getOrderedBreakends() const
+    {
+        if(bp2 < bp1) { return std::make_pair(bp2,bp1); }
+        else          { return std::make_pair(bp1,bp2); }
+    }
 
     SVBreakend bp1;
     SVBreakend bp2;

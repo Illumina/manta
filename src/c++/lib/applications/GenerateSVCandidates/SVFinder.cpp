@@ -55,7 +55,7 @@ addSVNodeRead(
         const SVLocusNode& remoteNode,
         const bam_record& read,
         const unsigned bamIndex,
-        SVCandidateData& svData)
+        SVCandidateDataGroup& svDataGroup)
 {
     if(scanner.isReadFiltered(read)) return;
 
@@ -76,7 +76,7 @@ addSVNodeRead(
     if(! clocus.getNode(readLocalIndex).interval.isIntersect(localNode.interval)) return;
     if(! clocus.getNode(readRemoteIndex).interval.isIntersect(remoteNode.interval)) return;
 
-    svData.add(read,bamIndex);
+    svDataGroup.add(read);
 }
 
 
@@ -106,16 +106,66 @@ addSVNodeData(
     unsigned bamIndex(0);
     BOOST_FOREACH(streamPtr& bamPtr, _bamStreams)
     {
+        SVCandidateDataGroup& svDataGroup(svData.getDataGroup(bamIndex));
         bam_streamer& read_stream(*bamPtr);
         while (read_stream.next())
         {
             const bam_record& read(*(read_stream.get_record_ptr()));
 
             // test if read supports an SV on this edge, if so, add to SVData
-            addSVNodeRead(_readScanner,localNode,remoteNode,read, bamIndex,svData);
+            addSVNodeRead(_readScanner,localNode,remoteNode,read, bamIndex,svDataGroup);
         }
         bamIndex++;
     }
+}
+
+
+
+void
+SVFinder::
+getCandidatesFromData(
+        SVCandidateData& svData,
+        std::vector<SVCandidate>& svs)
+{
+    svs.clear();
+
+    SVCandidate cand;
+
+    const unsigned bamCount(_bamStreams.size());
+    for(unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
+    {
+        SVCandidateDataGroup& svDataGroup(svData.getDataGroup(bamIndex));
+        BOOST_FOREACH(SVCandidateReadPair& pair, svDataGroup)
+        {
+            SVCandidateRead& localRead(pair.read1);
+            SVCandidateRead& remoteRead(pair.read2);
+            if(! localRead.isSet())
+            {
+                std::swap(localRead,remoteRead);
+            }
+            const bam_record* remoteReadPtr( remoteRead.isSet() ? &(remoteRead.bamrec) : NULL);
+            _readScanner.getBreakendPair(localRead.bamrec, remoteReadPtr, bamIndex, cand.bp1, cand.bp2);
+
+            bool isSVFound(false);
+            BOOST_FOREACH(SVCandidate& sv, svs)
+            {
+                if(sv.isIntersect(cand))
+                {
+                    sv.merge(cand);
+                    isSVFound=true;
+                }
+            }
+
+            if(! isSVFound)
+            {
+                svs.push_back(cand);
+            }
+        }
+    }
+
+    // we anticipate so few svs from the POC method, that there's no indexing on them
+
+
 }
 
 
@@ -162,6 +212,8 @@ findSVCandidates(
 
     addSVNodeData(locus,edge.nodeIndex1,edge.nodeIndex2,svData);
     addSVNodeData(locus,edge.nodeIndex1,edge.nodeIndex2,svData);
+
+    getCandidatesFromData(svData,svs);
 }
 
 

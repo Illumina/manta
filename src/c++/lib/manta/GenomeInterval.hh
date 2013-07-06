@@ -60,6 +60,13 @@ struct GenomeInterval
         return ((tid==rhs.tid) && (range==rhs.range));
     }
 
+    void
+    clear()
+    {
+        tid = 0;
+        range.clear();
+    }
+
     template<class Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {

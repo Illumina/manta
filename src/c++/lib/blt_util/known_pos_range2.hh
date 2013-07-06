@@ -132,6 +132,13 @@ struct known_pos_range2
         if (kpr._end_pos>_end_pos) _end_pos=kpr._end_pos;
     }
 
+    void
+    clear()
+    {
+        _begin_pos=0;
+        _end_pos=0;
+    }
+
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned /* version */)

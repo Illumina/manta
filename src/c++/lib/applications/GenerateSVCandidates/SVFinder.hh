@@ -55,6 +55,12 @@ private:
             const NodeIndexType node2,
             SVCandidateData& svData);
 
+
+    void
+    getCandidatesFromData(
+            SVCandidateData& svData,
+            std::vector<SVCandidate>& svs);
+
     SVLocusSet _set;
     SVLocusScanner _readScanner;
 

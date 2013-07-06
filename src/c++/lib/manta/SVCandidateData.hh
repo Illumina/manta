@@ -37,14 +37,52 @@ struct SVCandidateRead
 
 struct SVCandidateReadPair
 {
-    SVCandidateReadPair() :
-        bamIndex(0)
+    SVCandidateReadPair()
+        : svIndex(0)
     {}
 
-    unsigned bamIndex;
+    // which sv is this read associated with?
+    unsigned short svIndex;
     SVCandidateRead read1;
     SVCandidateRead read2;
 };
+
+
+
+/// SVCandidateData associated with a specific bam-file/read-group
+struct SVCandidateDataGroup
+{
+    typedef std::vector<SVCandidateReadPair> pair_t;
+    typedef pair_t::iterator iterator;
+    typedef pair_t::const_iterator const_iterator;
+
+    void
+    add(const bam_record& read);
+
+    iterator
+    begin()
+    {
+        return _pairs.begin();
+    }
+
+    iterator
+    end()
+    {
+        return _pairs.begin();
+    }
+
+
+private:
+    typedef std::string bamqname_t;
+    typedef std::map<bamqname_t,unsigned> pindex_t;
+
+    SVCandidateReadPair&
+    getReadPair(const pindex_t::key_type& key);
+
+    pair_t _pairs;
+    pindex_t _pairIndex;
+};
+
 
 
 /// any information which travels with the final SVCandidate
@@ -54,19 +92,20 @@ struct SVCandidateReadPair
 ///
 /// ideally scoring model should not have to touch bam again after hygen step..
 ///
+
 struct SVCandidateData
 {
-    void
-    add(const bam_record& read,
-        const unsigned bamIndex);
+    SVCandidateDataGroup&
+    getDataGroup(const unsigned bamIndex)
+    {
+        data_t::iterator diter(_data.find(bamIndex));
+        if(diter != _data.end()) return diter->second;
+
+        std::pair<data_t::iterator,bool> diter2 = _data.insert(std::make_pair(bamIndex,SVCandidateDataGroup()));
+        return diter2.first->second;
+    }
 
 private:
-    typedef std::pair<unsigned,std::string> bamqname_t;
-    typedef std::map<bamqname_t,unsigned> pindex_t;
-
-    SVCandidateReadPair&
-    getReadPair(const pindex_t::key_type& key);
-
-    std::vector<SVCandidateReadPair> _pairs;
-    pindex_t _pairIndex;
+    typedef std::map<unsigned,SVCandidateDataGroup> data_t;
+    data_t _data;
 };

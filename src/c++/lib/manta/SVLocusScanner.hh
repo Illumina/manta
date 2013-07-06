@@ -19,6 +19,7 @@
 
 #include "blt_util/bam_record.hh"
 #include "manta/ReadGroupStatsSet.hh"
+#include "manta/SVCandidate.hh"
 #include "manta/SVLocus.hh"
 #include "options/ReadScannerOptions.hh"
 
@@ -57,6 +58,17 @@ struct SVLocusScanner
                        const unsigned defaultReadGroupIndex,
                        SVLocus& locus) const;
 
+    /// get local and remote breakends from read pair
+    ///
+    /// if remote read is not available, set to NULL and best estimate will be generated
+    ///
+    void
+    getBreakendPair(const bam_record& localRead,
+                    const bam_record* remoteReadPtr,
+                    const unsigned defaultReadGroupIndex,
+                    SVBreakend& localBreakend,
+                    SVBreakend& remoteBreakend) const;
+
 private:
 
     struct CachedReadGroupStats
@@ -69,6 +81,17 @@ private:
         double min;
         double max;
     };
+
+
+    static
+    void
+    getReadBreakendsImpl(
+        const CachedReadGroupStats& rstats,
+        const bam_record& localRead,
+        const bam_record* remoteReadPtr,
+        SVBreakend& localBreakend,
+        SVBreakend& remoteBreakend,
+        known_pos_range2& evidenceRange);
 
     static
     void

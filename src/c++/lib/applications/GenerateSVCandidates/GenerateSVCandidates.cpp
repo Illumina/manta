@@ -59,8 +59,6 @@ runGSC(const GSCOptions& opt)
         {
             //scoreSV
 
-            //bogus
-            if(sv.bp1.isKnown) exit(0);
         }
     }
 

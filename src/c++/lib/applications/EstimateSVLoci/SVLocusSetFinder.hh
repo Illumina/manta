@@ -86,7 +86,6 @@ private:
 
     /////////////////////////////////////////////////
     // data:
-    const ESLOptions& _opt;
     const GenomeInterval _scanRegion;
     GenomeInterval _denoiseRegion;
     stage_manager _stageman;
