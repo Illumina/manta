@@ -44,6 +44,7 @@ struct SVFinder {
     void
     findSVCandidates(
             const EdgeInfo& edge,
+            SVCandidateData& svData,
             std::vector<SVCandidate>& svs);
 
 private:

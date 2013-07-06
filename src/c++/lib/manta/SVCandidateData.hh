@@ -105,6 +105,12 @@ struct SVCandidateData
         return diter2.first->second;
     }
 
+    void
+    clear()
+    {
+        _data.clear();
+    }
+
 private:
     typedef std::map<unsigned,SVCandidateDataGroup> data_t;
     data_t _data;

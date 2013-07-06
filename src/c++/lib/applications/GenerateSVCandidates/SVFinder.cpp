@@ -127,8 +127,6 @@ getCandidatesFromData(
         SVCandidateData& svData,
         std::vector<SVCandidate>& svs)
 {
-    svs.clear();
-
     SVCandidate cand;
 
     const unsigned bamCount(_bamStreams.size());
@@ -144,28 +142,33 @@ getCandidatesFromData(
                 std::swap(localRead,remoteRead);
             }
             const bam_record* remoteReadPtr( remoteRead.isSet() ? &(remoteRead.bamrec) : NULL);
+
+            cand.clear();
             _readScanner.getBreakendPair(localRead.bamrec, remoteReadPtr, bamIndex, cand.bp1, cand.bp2);
 
             bool isSVFound(false);
+            unsigned svIndex(0);
+
+            // we anticipate so few svs from the POC method, that there's no indexing on them
             BOOST_FOREACH(SVCandidate& sv, svs)
             {
                 if(sv.isIntersect(cand))
                 {
                     sv.merge(cand);
+                    pair.svIndex = svIndex;
                     isSVFound=true;
+                    break;
                 }
+                svIndex++;
             }
 
             if(! isSVFound)
             {
+                pair.svIndex = svs.size();
                 svs.push_back(cand);
             }
         }
     }
-
-    // we anticipate so few svs from the POC method, that there's no indexing on them
-
-
 }
 
 
@@ -174,8 +177,10 @@ void
 SVFinder::
 findSVCandidates(
         const EdgeInfo& edge,
+        SVCandidateData& svData,
         std::vector<SVCandidate>& svs)
 {
+    svData.clear();
     svs.clear();
 
     const SVLocusSet& set(getSet());
@@ -207,8 +212,6 @@ findSVCandidates(
     // assign data to each breakend candidates
     // come up with an ultra-simple model-free scoring rule: >10 obs = Q60,k else Q0
     //
-
-    SVCandidateData svData;
 
     addSVNodeData(locus,edge.nodeIndex1,edge.nodeIndex2,svData);
     addSVNodeData(locus,edge.nodeIndex1,edge.nodeIndex2,svData);

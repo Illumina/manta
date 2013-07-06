@@ -19,6 +19,8 @@
 
 #include "manta/GenomeInterval.hh"
 
+#include <iosfwd>
+
 
 namespace SVBreakendState
 {
@@ -29,6 +31,32 @@ namespace SVBreakendState
         COMPLEX     // A typical small scale assembly locus -- something is happening in a small region,
                     // the event might be local to that region but we don't know
     };
+
+    inline
+    const char*
+    label(const index_t idx)
+    {
+        switch(idx)
+        {
+        case UNKNOWN: return "UNKNOWN";
+        case RIGHT_OPEN: return "RIGHT_OPEN";
+        case LEFT_OPEN: return "LEFT_OPEN";
+        case COMPLEX: return "COMPLEX";
+        }
+    }
+
+    inline
+    const char*
+    picLabel(const index_t idx)
+    {
+        switch(idx)
+        {
+        case UNKNOWN:    return "XX???XX";
+        case RIGHT_OPEN: return "__/    ";
+        case LEFT_OPEN:  return "    \\__";
+        case COMPLEX:    return "__???__";
+        }
+    }
 }
 
 
@@ -83,6 +111,9 @@ struct SVBreakend
 };
 
 
+std::ostream&
+operator<<(std::ostream& os, const SVBreakend& svb);
+
 
 struct SVCandidate
 {
@@ -133,3 +164,7 @@ struct SVCandidate
     SVBreakend bp1;
     SVBreakend bp2;
 };
+
+
+std::ostream&
+operator<<(std::ostream& os, const SVCandidate& svc);

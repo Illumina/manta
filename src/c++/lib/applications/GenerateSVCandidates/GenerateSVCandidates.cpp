@@ -47,18 +47,24 @@ runGSC(const GSCOptions& opt)
 
     EdgeRetriever edger(opt.binIndex,opt.binCount,cset);
 
+    OutStream outs(opt.outputFilename);
+    std::ostream& outfp(outs.getStream());
+
+    SVCandidateData svData;
     std::vector<SVCandidate> svs;
     while (edger.next())
     {
         const EdgeInfo& edge(edger.getEdge());
 
         // find number, type and breakend range of SVs on this edge:
-        finder.findSVCandidates(edge,svs);
+        finder.findSVCandidates(edge,svData,svs);
 
         BOOST_FOREACH(const SVCandidate& sv, svs)
         {
-            //scoreSV
+            //write debug output
+            outfp << sv;
 
+            //scoreSV
         }
     }
 
