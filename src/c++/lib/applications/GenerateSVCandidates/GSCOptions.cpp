@@ -94,7 +94,7 @@ parseGSCOptions(const manta::Program& prog,
     ("bin-count", po::value(&opt.binCount)->default_value(opt.binCount),
      "Specify how many bins the SV candidate problem should be divided into, where bin-index can be used to specify which bin to solve")
     ("bin-index", po::value(&opt.binIndex)->default_value(opt.binIndex),
-     "specify which bin to solve when the SV candidate problem is subdivided into bins (value must bin in [1,bin-count])")
+     "specify which bin to solve when the SV candidate problem is subdivided into bins. Value must bin in [0,bin-count)")
     ;
 
     po::options_description help("help");
@@ -124,14 +124,13 @@ parseGSCOptions(const manta::Program& prog,
     }
 
     // fast check of config state:
-    if ((opt.binIndex < 1) ||
-        (opt.binIndex > opt.binCount))
-    {
-        usage(log_os,prog,visible,"bin-index must be in range [1,bin-count]");
-    }
-    if (opt.binCount <= 0)
+    if (opt.binCount < 1)
     {
         usage(log_os,prog,visible,"bin-count must be 1 or greater");
+    }
+    if (opt.binIndex >= opt.binCount)
+    {
+        usage(log_os,prog,visible,"bin-index must be in range [0,bin-count)");
     }
     if (opt.alignmentFilename.empty())
     {

@@ -34,9 +34,9 @@
 static
 unsigned long
 getBoundaryCount(
-    const double totalCount,
+    const double binCount,
     const double binIndex,
-    const double binCount)
+    const double totalCount)
 {
     return static_cast<unsigned>(std::floor((totalCount*binIndex)/binCount));
 }
@@ -45,18 +45,18 @@ getBoundaryCount(
 
 EdgeRetriever::
 EdgeRetriever(
-    const unsigned binIndex,
+    const SVLocusSet& set,
     const unsigned binCount,
-    const SVLocusSet& set) :
+    const unsigned binIndex) :
     _set(set),
     _headCount(0)
 {
-    assert((binIndex >= 1) && (binIndex <= binCount));
     assert(binCount > 0);
+    assert(binIndex < binCount);
 
     const unsigned long totalCount(_set.totalCount());
-    _beginCount=(getBoundaryCount(totalCount,(binIndex-1),binCount));
-    _endCount=(getBoundaryCount(totalCount,binIndex,binCount));
+    _beginCount=(getBoundaryCount(binCount,binIndex,totalCount));
+    _endCount=(getBoundaryCount(binCount,binIndex+1,totalCount));
 
 #ifdef DEBUG_EDGER
     log_os << "EDGER: bi,bc,begin,end: "

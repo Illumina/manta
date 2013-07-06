@@ -21,12 +21,20 @@
 #include "manta/SVLocusSet.hh"
 
 
+/// provide an iterator over edges in a set of SV locus graphs
+///
+/// iteration is designed to allow parallization of the graph
+/// iteration by dividing iteration into a set of bins with similar
+/// total edge observation counts
+///
 struct EdgeRetriever
 {
+    /// \param binCount Total number of parallel bins, must be 1 or greater
+    /// \param binIndex parallel bin id, must be less than binCount
     EdgeRetriever(
-        const unsigned binIndex,
-        const unsigned binCount,
-        const SVLocusSet& set);
+        const SVLocusSet& set,
+        const unsigned binCount = 1,
+        const unsigned binIndex = 0);
 
     bool
     next();

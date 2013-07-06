@@ -45,7 +45,7 @@ runGSC(const GSCOptions& opt)
     set.load(opt.graphFilename.c_str());
     const SVLocusSet& cset(finder.getSet());
 
-    EdgeRetriever edger(opt.binIndex,opt.binCount,cset);
+    EdgeRetriever edger(cset, opt.binCount, opt.binIndex);
 
     OutStream outs(opt.outputFilename);
     std::ostream& outfp(outs.getStream());

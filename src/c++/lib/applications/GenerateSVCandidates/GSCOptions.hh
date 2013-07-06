@@ -28,8 +28,8 @@
 struct GSCOptions
 {
     GSCOptions() :
-        binIndex(1),
-        binCount(1)
+        binCount(1),
+        binIndex(0)
     {}
 
     ReadScannerOptions scanOpt;
@@ -40,8 +40,8 @@ struct GSCOptions
     std::string referenceFilename;
     std::string statsFilename;
 
-    unsigned binIndex;
     unsigned binCount;
+    unsigned binIndex;
 };
 
 
