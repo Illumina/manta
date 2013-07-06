@@ -33,10 +33,10 @@ struct ReadKey
       , _readNo(br.read_no())
     {}
 
-    ReadKey(const std::string& qname,
-            const int read_no)
-      : _qname(qname)
-      , _readNo(read_no)
+    ReadKey(const std::string& init_qname,
+            const int init_read_no)
+      : _qname(init_qname)
+      , _readNo(init_read_no)
     {}
 
     int
