@@ -144,16 +144,16 @@ getCandidatesFromData(
         SVCandidateDataGroup& svDataGroup(svData.getDataGroup(bamIndex));
         BOOST_FOREACH(SVCandidateReadPair& pair, svDataGroup)
         {
-            SVCandidateRead& localRead(pair.read1);
-            SVCandidateRead& remoteRead(pair.read2);
-            if(! localRead.isSet())
+            SVCandidateRead* localReadPtr(&(pair.read1));
+            SVCandidateRead* remoteReadPtr(&(pair.read2));
+            if(! localReadPtr->isSet())
             {
-                std::swap(localRead,remoteRead);
+                std::swap(localReadPtr,remoteReadPtr);
             }
-            const bam_record* remoteReadPtr( remoteRead.isSet() ? &(remoteRead.bamrec) : NULL);
+            const bam_record* remoteBamRecPtr( remoteReadPtr->isSet() ? &(remoteReadPtr->bamrec) : NULL);
 
             cand.clear();
-            _readScanner.getBreakendPair(localRead.bamrec, remoteReadPtr, bamIndex, cand.bp1, cand.bp2);
+            _readScanner.getBreakendPair(localReadPtr->bamrec, remoteBamRecPtr, bamIndex, cand.bp1, cand.bp2);
 
 #ifdef DEBUG_SVDATA
             log_os << "Checking pair: " << pair << "\n";

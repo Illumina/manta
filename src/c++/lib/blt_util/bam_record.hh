@@ -36,9 +36,11 @@ struct bam_record
     bam_record(const bam_record& br)
         : _bp(br.empty() ? bam_init1() : bam_dup1(br._bp)) {}
 
-    void
-    copy(const bam_record& br)
+    const bam_record&
+    operator=(const bam_record& br)
     {
+        if(this == &br) return (*this);
+
         if(empty())
         {
             if(! br.empty())
@@ -60,12 +62,8 @@ struct bam_record
                 _bp=bam_init1();
             }
         }
+        return (*this);
     }
-
-private:
-    const bam_record&
-    operator==(const bam_record& rhs);
-public:
 
     const char*
     qname() const
