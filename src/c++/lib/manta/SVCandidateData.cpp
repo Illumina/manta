@@ -14,9 +14,31 @@
 ///
 /// \author Chris Saunders
 
+#include "common/Exceptions.hh"
 #include "manta/SVCandidateData.hh"
 
 #include <cassert>
+
+#include <iostream>
+#include <sstream>
+
+
+
+std::ostream&
+operator<<(std::ostream& os, const bam_record& br)
+{
+    os << br.qname() << "/" << br.read_no() << " tid:pos " << br.target_id() << ":" << (br.pos()-1);
+    return os;
+}
+
+
+
+std::ostream&
+operator<<(std::ostream& os, const SVCandidateRead& svr)
+{
+    os << "SVCandidateRead: " << svr.bamrec << "\n";
+    return os;
+}
 
 
 
@@ -44,6 +66,8 @@ void
 SVCandidateDataGroup::
 add(const bam_record& read)
 {
+    using namespace illumina::common;
+
     SVCandidateReadPair& pair(getReadPair(read.qname()));
 
     SVCandidateRead* target_read_ptr(&(pair.read1));
@@ -51,6 +75,13 @@ add(const bam_record& read)
     {
         target_read_ptr = (&(pair.read2));
     }
-    assert(! target_read_ptr->isSet());
+    if(target_read_ptr->isSet())
+    {
+        std::ostringstream oss;
+        oss << "Unexpected read name collision.\n"
+            << "\tExisting read: " << (*target_read_ptr) << "\n"
+            << "\tNew read: " << read << "\n";
+        BOOST_THROW_EXCEPTION(PreConditionException(oss.str())); 
+    }
     target_read_ptr->bamrec.copy(read);
 }

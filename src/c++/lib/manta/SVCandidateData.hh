@@ -18,6 +18,7 @@
 
 #include "blt_util/bam_record.hh"
 
+#include <iosfwd>
 #include <map>
 #include <vector>
 
@@ -33,6 +34,10 @@ struct SVCandidateRead
     //realignment info, etc...
     bam_record bamrec;
 };
+
+
+std::ostream&
+operator<<(std::ostream& os, const SVCandidateRead& svr);
 
 
 struct SVCandidateReadPair

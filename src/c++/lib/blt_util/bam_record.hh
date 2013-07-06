@@ -273,7 +273,6 @@ public:
 
 private:
     friend struct bam_streamer;
-    friend struct starling_read;
 
     unsigned alt_map_qual(const char* tag) const;
 
