@@ -195,6 +195,10 @@ getCandidatesFromData(
 
 #ifdef DEBUG_SVDATA
     log_os << "findSVCandidates: precount: " << svs.size() << "\n";
+    BOOST_FOREACH(SVCandidate& sv, svs)
+    {
+        log_os << "\tPRECOUNT: " << sv << "\n";
+    }
 #endif
 
 
@@ -202,6 +206,7 @@ getCandidatesFromData(
     //
     // this is also part of the temp hygen hack, so just make it function:
     //
+    std::map<unsigned,unsigned> moveSVIndex;
     std::set<unsigned> deletedSVIndex;
     const unsigned svCount(svs.size());
     for(unsigned outerIndex(0); outerIndex<svCount; ++outerIndex)
@@ -211,15 +216,19 @@ getCandidatesFromData(
         {
             if(svs[innerIndex].isIntersect(svs[routerIndex]))
             {
+#ifdef DEBUG_SVDATA
+                log_os << "Merging outer:inner: " << routerIndex << " " << innerIndex << "\n";
+#endif
                 svs[innerIndex].merge(svs[routerIndex]);
+                moveSVIndex[routerIndex] = innerIndex;
                 deletedSVIndex.insert(routerIndex);
+                break;
             }
         }
     }
 
     if(! deletedSVIndex.empty())
     {
-        std::map<unsigned,unsigned> moveSVIndex;
         {
             unsigned shift(0);
             bool isLastIndex(false);
@@ -234,6 +243,7 @@ getCandidatesFromData(
                         assert(shift>0);
                         assert(i>=shift);
                         moveSVIndex[i] = (i-shift);
+                        svs[(i-shift)] = svs[i];
                     }
                 }
                 lastIndex=index;
@@ -246,10 +256,16 @@ getCandidatesFromData(
                     assert(shift>0);
                     assert(i>=shift);
                     moveSVIndex[i] = (i-shift);
+                    svs[(i-shift)] = svs[i];
                 }
             }
         }
 
+        svs.resize(svs.size()-deletedSVIndex.size());
+    }
+
+    if(! moveSVIndex.empty())
+    {
         for(unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
         {
             SVCandidateDataGroup& svDataGroup(svData.getDataGroup(bamIndex));
@@ -261,9 +277,15 @@ getCandidatesFromData(
                 }
             }
         }
-
-        svs.resize(svs.size()-deletedSVIndex.size());
     }
+
+#ifdef DEBUG_SVDATA
+    log_os << "findSVCandidates: postcount: " << svs.size() << "\n";
+    BOOST_FOREACH(SVCandidate& sv, svs)
+    {
+        log_os << "\tPOSTCOUNT: " << sv << "\n";
+    }
+#endif
 }
 
 
