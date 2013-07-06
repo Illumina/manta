@@ -45,20 +45,6 @@ namespace SVBreakendState
         default:         return "UNKNOWN";
         }
     }
-
-    inline
-    const char*
-    picLabel(const index_t idx)
-    {
-        switch(idx)
-        {
-        case UNKNOWN:    return "XX???XX";
-        case RIGHT_OPEN: return "__/    ";
-        case LEFT_OPEN:  return "    \\__";
-        case COMPLEX:    return "__???__";
-        default:         return "UNKNOWN";
-        }
-    }
 }
 
 

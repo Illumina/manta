@@ -26,7 +26,7 @@ operator<<(std::ostream& os, const SVBreakend& svb)
 {
     os << "Breakend:"
        << " " << svb.interval
-       << " " << SVBreakendState::picLabel(svb.state)
+       << " " << SVBreakendState::label(svb.state)
        << " count: " << svb.count;
     return os;
 }
@@ -38,6 +38,6 @@ operator<<(std::ostream& os, const SVCandidate& svc)
 {
     os << "SVCandidate:\n"
        << "\t" << svc.bp1 << "\n"
-       << "\t" << svc.bp1 << "\n";
+       << "\t" << svc.bp2 << "\n";
     return os;
 }
