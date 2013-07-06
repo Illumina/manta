@@ -27,7 +27,8 @@ operator<<(std::ostream& os, const SVBreakend& svb)
     os << "Breakend:"
        << " " << svb.interval
        << " " << SVBreakendState::label(svb.state)
-       << " count: " << svb.count;
+       << " readCount: " << svb.readCount
+       << " pairCount: " << svb.pairCount;
     return os;
 }
 

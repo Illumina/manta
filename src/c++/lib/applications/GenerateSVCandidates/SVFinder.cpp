@@ -159,7 +159,7 @@ checkResult(
 
     for(unsigned svIndex(0); svIndex<svCount; ++svIndex)
     {
-        const unsigned svObsCount(svs[svIndex].bp1.count + svs[svIndex].bp2.count);
+        const unsigned svObsCount(svs[svIndex].bp1.readCount + svs[svIndex].bp2.readCount);
         const unsigned dataObsCount(counts[svIndex]);
         assert(svObsCount == dataObsCount);
     }

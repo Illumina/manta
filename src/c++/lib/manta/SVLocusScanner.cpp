@@ -74,7 +74,7 @@ getReadBreakendsImpl(
         thisReadNoninsertSize=(readSize-apath_read_lead_size(apath));
     }
 
-    localBreakend.count = 1;
+    localBreakend.readCount = 1;
 
     // if remoteRead is not available, estimate mate localRead size to be same as local,
     // and assume no clipping on mate localRead:
@@ -101,7 +101,11 @@ getReadBreakendsImpl(
             remoteReadNoninsertSize=(remoteReadSize-apath_read_lead_size(remoteApath));
         }
 
-        remoteBreakend.count = 1;
+        remoteBreakend.readCount = 1;
+
+        localBreakend.pairCount = 1;
+        remoteBreakend.pairCount = 1;
+
     }
 
     const unsigned totalNoninsertSize(thisReadNoninsertSize+remoteReadNoninsertSize);

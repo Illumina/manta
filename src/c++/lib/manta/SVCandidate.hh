@@ -52,7 +52,8 @@ struct SVBreakend
 {
     SVBreakend() :
         state(SVBreakendState::UNKNOWN),
-        count(0)
+        readCount(0),
+        pairCount(0)
     {}
 
     bool
@@ -78,7 +79,8 @@ struct SVBreakend
     {
         if(! isIntersect(rhs)) return false;
         interval.range.merge_range(rhs.interval.range);
-        count += rhs.count;
+        readCount += rhs.readCount;
+        pairCount += rhs.pairCount;
         return true;
     }
 
@@ -87,7 +89,8 @@ struct SVBreakend
     {
         interval.clear();
         state=SVBreakendState::UNKNOWN;
-        count=0;
+        readCount=0;
+        pairCount=0;
     }
 
     // the interval is the X% confidence interval of the SV breakend, the interface allows for
@@ -95,7 +98,12 @@ struct SVBreakend
     // SVCandidate:
     GenomeInterval interval;
     SVBreakendState::index_t state;
-    unsigned short count;
+
+    // reads which support this SV (inclusive of read pairs)
+    unsigned short readCount;
+
+    // number of cases where both ends of a read pair pass QC and have been found to both support this SV in a consistent way:
+    unsigned short pairCount;
 };
 
 
