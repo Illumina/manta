@@ -17,8 +17,9 @@
 
 #include "SVFinder.hh"
 
-#include "blt_util/input_stream_handler.hh"
 #include "blt_util/bam_streamer.hh"
+#include "blt_util/input_stream_handler.hh"
+#include "blt_util/log.hh"
 #include "manta/ReadGroupStatsSet.hh"
 
 #include "boost/foreach.hpp"
@@ -96,11 +97,12 @@ addSVNodeData(
 
     searchInterval.range.merge_range(localNode.evidenceRange);
 
-    // set all bam streams to new search interval:
-    BOOST_FOREACH(streamPtr& bamPtr, _bamStreams)
-    {
-        bamPtr->set_new_region(searchInterval.tid,searchInterval.range.begin_pos(),searchInterval.range.end_pos());
-    }
+#ifdef DEBUG_SVDATA
+    log_os << "addSVNodeData: bp_interval: " << localNode.interval
+           << " evidnece_interval: " << localNode.evidenceRange
+           << " search_interval: " << searchInterval
+           << "\n";
+#endif
 
     // iterate through reads, test reads for association and add to svData:
     unsigned bamIndex(0);
@@ -108,12 +110,23 @@ addSVNodeData(
     {
         SVCandidateDataGroup& svDataGroup(svData.getDataGroup(bamIndex));
         bam_streamer& read_stream(*bamPtr);
+
+        // set bam stream to new search interval:
+        read_stream.set_new_region(searchInterval.tid,searchInterval.range.begin_pos(),searchInterval.range.end_pos());
+
+#ifdef DEBUG_SVDATA
+    log_os << "addSVNodeData: scanning bamIndex: " << bamIndex << "\n";
+#endif
         while (read_stream.next())
         {
-            const bam_record& read(*(read_stream.get_record_ptr()));
+            const bam_record& bamRead(*(read_stream.get_record_ptr()));
+
+#ifdef DEBUG_SVDATA
+            log_os << "addSVNodeData: scanning read: " << bamRead << "\n";
+#endif
 
             // test if read supports an SV on this edge, if so, add to SVData
-            addSVNodeRead(_readScanner,localNode,remoteNode,read, bamIndex,svDataGroup);
+            addSVNodeRead(_readScanner,localNode,remoteNode,bamRead, bamIndex,svDataGroup);
         }
         bamIndex++;
     }

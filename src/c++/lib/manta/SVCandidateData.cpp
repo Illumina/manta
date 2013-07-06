@@ -14,6 +14,7 @@
 ///
 /// \author Chris Saunders
 
+#include "blt_util/log.hh"
 #include "common/Exceptions.hh"
 #include "manta/SVCandidateData.hh"
 
@@ -64,14 +65,18 @@ getReadPair(const pindex_t::key_type& key)
 
 void
 SVCandidateDataGroup::
-add(const bam_record& read)
+add(const bam_record& bamRead)
 {
     using namespace illumina::common;
 
-    SVCandidateReadPair& pair(getReadPair(read.qname()));
+#ifdef DEBUG_SVDATA
+    log_os << "SVDataGroup adding: " << bamRead << "\n";
+#endif
+
+    SVCandidateReadPair& pair(getReadPair(bamRead.qname()));
 
     SVCandidateRead* target_read_ptr(&(pair.read1));
-    if(2 == read.read_no())
+    if(2 == bamRead.read_no())
     {
         target_read_ptr = (&(pair.read2));
     }
@@ -80,8 +85,8 @@ add(const bam_record& read)
         std::ostringstream oss;
         oss << "Unexpected read name collision.\n"
             << "\tExisting read: " << (*target_read_ptr) << "\n"
-            << "\tNew read: " << read << "\n";
+            << "\tNew read: " << bamRead << "\n";
         BOOST_THROW_EXCEPTION(PreConditionException(oss.str())); 
     }
-    target_read_ptr->bamrec.copy(read);
+    target_read_ptr->bamrec.copy(bamRead);
 }

@@ -20,9 +20,11 @@
 #include "blt_util/log.hh"
 
 #include "boost/filesystem.hpp"
+#include "boost/foreach.hpp"
 #include "boost/program_options.hpp"
 
 #include <iostream>
+#include <set>
 
 
 
@@ -50,11 +52,11 @@ usage(
 
 static
 void
-checkUsageFile(
+checkStandardizeUsageFile(
     std::ostream& os,
     const manta::Program& prog,
     const boost::program_options::options_description& visible,
-    const std::string& filename,
+    std::string& filename,
     const char* fileLabel)
 {
     if (filename.empty())
@@ -69,6 +71,7 @@ checkUsageFile(
         oss << "Can't find " << fileLabel << " file '" << filename << "'";
         usage(os,prog,visible,oss.str().c_str());
     }
+    filename = boost::filesystem::canonical(filename).string();
 }
 
 
@@ -136,8 +139,22 @@ parseGSCOptions(const manta::Program& prog,
     {
         usage(log_os,prog,visible,"Must specify at least one input alignment file");
     }
-    checkUsageFile(log_os,prog,visible,opt.statsFilename,"alignment statistics");
-    checkUsageFile(log_os,prog,visible,opt.graphFilename,"SV locus graph");
-    checkUsageFile(log_os,prog,visible,opt.referenceFilename,"reference fasta");
+    {
+        std::set<std::string> nameCheck;
+        BOOST_FOREACH(std::string& afile, opt.alignmentFilename)
+        {
+            checkStandardizeUsageFile(log_os,prog,visible,afile,"alignment file");
+            if(nameCheck.count(afile))
+            {
+                std::ostringstream oss;
+                oss << "Repeated alignment filename: " << afile << "\n";
+                usage(log_os,prog,visible,oss.str().c_str());
+            }
+            nameCheck.insert(afile);
+        }
+    }
+    checkStandardizeUsageFile(log_os,prog,visible,opt.statsFilename,"alignment statistics");
+    checkStandardizeUsageFile(log_os,prog,visible,opt.graphFilename,"SV locus graph");
+    checkStandardizeUsageFile(log_os,prog,visible,opt.referenceFilename,"reference fasta");
 }
 

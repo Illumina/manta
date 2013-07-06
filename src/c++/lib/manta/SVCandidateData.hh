@@ -22,6 +22,8 @@
 #include <map>
 #include <vector>
 
+//#define DEBUG_SVDATA
+
 
 struct SVCandidateRead
 {
@@ -35,6 +37,8 @@ struct SVCandidateRead
     bam_record bamrec;
 };
 
+std::ostream&
+operator<<(std::ostream& os, const bam_record& br);
 
 std::ostream&
 operator<<(std::ostream& os, const SVCandidateRead& svr);
@@ -62,7 +66,7 @@ struct SVCandidateDataGroup
     typedef pair_t::const_iterator const_iterator;
 
     void
-    add(const bam_record& read);
+    add(const bam_record& bamRead);
 
     iterator
     begin()
