@@ -81,7 +81,7 @@ struct SVCandidateDataGroup
     iterator
     end()
     {
-        return _pairs.begin();
+        return _pairs.end();
     }
 
 
