@@ -28,7 +28,14 @@
 std::ostream&
 operator<<(std::ostream& os, const bam_record& br)
 {
-    os << br.qname() << "/" << br.read_no() << " tid:pos " << br.target_id() << ":" << (br.pos()-1);
+    if(br.empty())
+    {
+        os << "NONE";
+    }
+    else
+    {
+        os << br.qname() << "/" << br.read_no() << " tid:pos " << br.target_id() << ":" << (br.pos()-1);
+    }
     return os;
 }
 
