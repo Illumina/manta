@@ -271,6 +271,12 @@ public:
         return _bp;
     }
 
+    bool
+    empty() const
+    {
+        return (_bp->data_len == 0);
+    }
+
 private:
     friend struct bam_streamer;
 

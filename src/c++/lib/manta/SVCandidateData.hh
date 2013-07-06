@@ -30,7 +30,7 @@ struct SVCandidateRead
     bool
     isSet() const
     {
-        return (*(bamrec.qname()) != '\0');
+        return (! bamrec.empty());
     }
 
     //realignment info, etc...
