@@ -205,7 +205,7 @@ getCandidatesFromData(
         }
     }
 
-    if(deletedSVIndex.size())
+    if(! deletedSVIndex.empty())
     {
         std::map<unsigned,unsigned> moveSVIndex;
         {
