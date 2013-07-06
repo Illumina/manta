@@ -38,7 +38,7 @@ struct bam_record
     }
 
     bam_record(const bam_record& br)
-        : _bp(bam_dup1(br._bp)) {}
+        : _bp(br.empty() ? bam_init1() : bam_dup1(br._bp)) {}
 
     void
     copy(const bam_record& br)
