@@ -155,7 +155,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
 
     dirTask=self.addTask(preJoin(taskPrefix,"makeHyGenDir"), "mkdir -p "+ hygenDir, dependencies=dependencies, isForceLocal=True)
 
-    isSomatic = (length(self.params.normalBamList) and length(self.params.tumorBamList))
+    isSomatic = (len(self.params.normalBamList) and len(self.params.tumorBamList))
 
     hygenTasks=set()
 
