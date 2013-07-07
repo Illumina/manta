@@ -20,6 +20,7 @@
 #include "blt_util/bam_streamer.hh"
 #include "blt_util/input_stream_handler.hh"
 #include "blt_util/log.hh"
+#include "common/Exceptions.hh"
 #include "manta/ReadGroupStatsSet.hh"
 
 #include "boost/foreach.hpp"
@@ -142,6 +143,8 @@ checkResult(
     const SVCandidateData& svData,
     const std::vector<SVCandidate>& svs) const
 {
+    using namespace illumina::common;
+
     // check that the counts totalled up from the data match those in the sv candidates
     std::map<unsigned,unsigned> readCounts;
     std::map<unsigned,unsigned> pairCounts;
@@ -158,7 +161,12 @@ checkResult(
         const SVCandidateDataGroup& svDataGroup(svData.getDataGroup(bamIndex));
         BOOST_FOREACH(const SVCandidateReadPair& pair, svDataGroup)
         {
-            assert(pair.svIndex<svCount);
+            if(pair.svIndex>=svCount)
+            {
+                std::ostringstream oss;
+                oss << "Searching for SVIndex: " << pair.svIndex << " with svSize: " << svCount << "\n";
+                BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
+            }
             if (pair.read1.isSet()) readCounts[pair.svIndex]++;
             if (pair.read2.isSet()) readCounts[pair.svIndex]++;
             if (pair.read1.isSet() && pair.read2.isSet()) pairCounts[pair.svIndex] += 2;
@@ -184,6 +192,111 @@ checkResult(
         assert(svObsPairCount == dataObsPairCount);
     }
 }
+
+
+
+// check whether any svs have grown to intersect each other
+//
+// this is also part of the temp hygen hack, so just make this minimally work:
+//
+static
+void
+consolidateOverlap(
+        const unsigned bamCount,
+        SVCandidateData& svData,
+        std::vector<SVCandidate>& svs)
+{
+    typedef std::map<unsigned,unsigned> movemap_t;
+    movemap_t moveSVIndex;
+    std::set<unsigned> deletedSVIndex;
+
+    const unsigned svCount(svs.size());
+    for (unsigned outerIndex(0); outerIndex<svCount; ++outerIndex)
+    {
+        const unsigned routerIndex(svCount-(outerIndex+1));
+        for (unsigned innerIndex(0); innerIndex<routerIndex; ++innerIndex)
+        {
+            if (svs[innerIndex].isIntersect(svs[routerIndex]))
+            {
+#ifdef DEBUG_SVDATA
+                log_os << "Merging outer:inner: " << routerIndex << " " << innerIndex << "\n";
+#endif
+                svs[innerIndex].merge(svs[routerIndex]);
+                moveSVIndex[routerIndex] = innerIndex;
+                deletedSVIndex.insert(routerIndex);
+                break;
+            }
+        }
+    }
+
+    if (! deletedSVIndex.empty())
+    {
+#ifdef DEBUG_SVDATA
+        BOOST_FOREACH(const unsigned index, deletedSVIndex)
+        {
+            log_os << "deleted index: " << index << "\n";
+        }
+#endif
+
+        {
+            unsigned shift(0);
+            bool isLastIndex(false);
+            unsigned lastIndex(0);
+            BOOST_FOREACH(const unsigned index, deletedSVIndex)
+            {
+                shift++;
+                if (isLastIndex)
+                {
+                    for (unsigned i(lastIndex+1); i<index; ++i)
+                    {
+                        assert(shift>0);
+                        assert(i>=shift);
+                        moveSVIndex[i] = (i-shift);
+                        svs[(i-shift)] = svs[i];
+                    }
+                }
+                lastIndex=index;
+                isLastIndex=true;
+            }
+            if (isLastIndex)
+            {
+                for (unsigned i(lastIndex+1); i<svCount; ++i)
+                {
+                    assert(shift>0);
+                    assert(i>=shift);
+                    moveSVIndex[i] = (i-shift);
+                    svs[(i-shift)] = svs[i];
+                }
+            }
+        }
+
+        svs.resize(svs.size()-deletedSVIndex.size());
+    }
+
+    if (! moveSVIndex.empty())
+    {
+#ifdef DEBUG_SVDATA
+        BOOST_FOREACH(const movemap_t::value_type& val, moveSVIndex)
+        {
+            log_os << "Movemap from: " << val.first << " to: " << val.second << "\n";
+        }
+#endif
+
+        for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
+        {
+            SVCandidateDataGroup& svDataGroup(svData.getDataGroup(bamIndex));
+            BOOST_FOREACH(SVCandidateReadPair& pair, svDataGroup)
+            {
+                if (moveSVIndex.count(pair.svIndex))
+                {
+                    pair.svIndex = moveSVIndex[pair.svIndex];
+                }
+            }
+        }
+    }
+
+}
+
 
 
 void
@@ -265,83 +378,7 @@ getCandidatesFromData(
     }
 #endif
 
-
-    // finally check whether any svs have grown to intersect each other
-    //
-    // this is also part of the temp hygen hack, so just make it function:
-    //
-    std::map<unsigned,unsigned> moveSVIndex;
-    std::set<unsigned> deletedSVIndex;
-    const unsigned svCount(svs.size());
-    for (unsigned outerIndex(0); outerIndex<svCount; ++outerIndex)
-    {
-        const unsigned routerIndex(svCount-(outerIndex+1));
-        for (unsigned innerIndex(0); innerIndex<routerIndex; ++innerIndex)
-        {
-            if (svs[innerIndex].isIntersect(svs[routerIndex]))
-            {
-#ifdef DEBUG_SVDATA
-                log_os << "Merging outer:inner: " << routerIndex << " " << innerIndex << "\n";
-#endif
-                svs[innerIndex].merge(svs[routerIndex]);
-                moveSVIndex[routerIndex] = innerIndex;
-                deletedSVIndex.insert(routerIndex);
-                break;
-            }
-        }
-    }
-
-    if (! deletedSVIndex.empty())
-    {
-        {
-            unsigned shift(0);
-            bool isLastIndex(false);
-            unsigned lastIndex(0);
-            BOOST_FOREACH(const unsigned index, deletedSVIndex)
-            {
-                shift++;
-                if (isLastIndex)
-                {
-                    for (unsigned i(lastIndex+1); i<index; ++i)
-                    {
-                        assert(shift>0);
-                        assert(i>=shift);
-                        moveSVIndex[i] = (i-shift);
-                        svs[(i-shift)] = svs[i];
-                    }
-                }
-                lastIndex=index;
-                isLastIndex=true;
-            }
-            if (isLastIndex)
-            {
-                for (unsigned i(lastIndex+1); i<svCount; ++i)
-                {
-                    assert(shift>0);
-                    assert(i>=shift);
-                    moveSVIndex[i] = (i-shift);
-                    svs[(i-shift)] = svs[i];
-                }
-            }
-        }
-
-        svs.resize(svs.size()-deletedSVIndex.size());
-    }
-
-    if (! moveSVIndex.empty())
-    {
-        for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
-        {
-            SVCandidateDataGroup& svDataGroup(svData.getDataGroup(bamIndex));
-            BOOST_FOREACH(SVCandidateReadPair& pair, svDataGroup)
-            {
-                if (moveSVIndex.count(pair.svIndex))
-                {
-                    pair.svIndex = moveSVIndex[pair.svIndex];
-                }
-            }
-        }
-    }
+    consolidateOverlap(bamCount,svData,svs);
 
 #ifdef DEBUG_SVDATA
     log_os << "findSVCandidates: postcount: " << svs.size() << "\n";
