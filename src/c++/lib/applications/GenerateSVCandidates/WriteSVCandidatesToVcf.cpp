@@ -35,6 +35,8 @@ writeSVCandidateVcfHeader(std::ostream& os)
     os << "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n";
     os << "##INFO=<ID=CIPOS,Number=2,Type=Integer,Description=\"Confidence interval around POS for imprecise variants\">\n";
     os << "##INFO=<ID=MATEID,Number=.,Type=String,Description=\"ID of mate breakend\">\n";
+    os << "##INFO=<ID=BND_PAIR_SUPPORT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at this breakend (mapping may not be confident at remote breakend)\">\n";
+    os << "##INFO=<ID=PAIR_SUPPORT,Number=1,Type=Integer,Description=\"Read pairs supporting this variant where both reads are confidently mapped\">\n";
 
     os << "##ALT=<ID=BND,Description=\"Translocation Breakend\">\n";
 
@@ -134,6 +136,8 @@ writeTransloc(
     // build INFO field
     infotags.push_back("SVTYPE=BND");
     infotags.push_back("MATEID="+mateId);
+    infotags.push_back( str(boost::format("BND_PAIR_SUPPORT=%i") % bp1.readCount) );
+    infotags.push_back( str(boost::format("PAIR_SUPPORT=%i") % bp1.pairCount) );
     if(! bp1.isPrecise())
     {
         infotags.push_back("IMPRECISE");
