@@ -78,6 +78,12 @@ struct known_pos_range2
         return _end_pos;
     }
 
+    pos_t
+    center_pos() const
+    {
+        return _begin_pos + ((std::min(size(),1u)-1)/2);
+    }
+
     bool
     is_pos_intersect(const pos_t pos) const
     {

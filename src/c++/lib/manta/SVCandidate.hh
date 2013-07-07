@@ -63,6 +63,12 @@ struct SVBreakend
     {}
 
     bool
+    isPrecise() const
+    {
+        return (0 == interval.range.size());
+    }
+
+    bool
     isIntersect(const SVBreakend& rhs) const
     {
         if (state != rhs.state) return false;

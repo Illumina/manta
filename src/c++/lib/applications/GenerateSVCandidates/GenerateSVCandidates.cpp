@@ -19,6 +19,7 @@
 #include "GSCOptions.hh"
 #include "EdgeRetriever.hh"
 #include "SVFinder.hh"
+#include "WriteSVCandidatesToVcf.hh"
 
 #include "common/OutStream.hh"
 #include "manta/ReadGroupStatsSet.hh"
@@ -28,72 +29,6 @@
 #include <iostream>
 
 
-
-static
-void
-writeVcfHeader(std::ostream& os)
-{
-    os << "##fileformat=VCFv4.1\n";
-    os << "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO";
-}
-
-
-static
-void
-writeTransloc(
-        const bam_header_info& header,
-        const SVBreakend& bp1,
-        const SVBreakend& bp2,
-        std::ostream& os)
-{
-    const std::string& chrom1(header.chrom_data[bp1.interval.tid].label);
-    const std::string& chrom2(header.chrom_data[bp2.interval.tid].label);
-
-    pos_t pos(0);
-
-    os << chrom1
-       << '\t' << pos
-       << '\t' << '.' // ID
-       << '\t' << '.' // REF
-       << '\t' << chrom2 // ALT
-       << '\t' << '.' // QUAL
-       << '\t' << '.' // FILTER
-       << '\t' << '.' // INFO
-       << '\n';
-}
-
-
-static
-void
-writeCandidates(
-        const SVLocusSet& set,
-        const SVCandidateData& ,
-        const std::vector<SVCandidate>& svs,
-        std::ostream& outfp)
-{
-    const unsigned minPairCount(set.getMinMergeEdgeCount());
-    const bam_header_info& header(set.header);
-
-    BOOST_FOREACH(const SVCandidate& sv, svs)
-    {
-        if(sv.bp1.pairCount < minPairCount) continue;
-
-        const SV_TYPE::index_t svType(getSVType(sv));
-        if(svType == SV_TYPE::INTERTRANSLOC)
-        {
-            writeTransloc(header, sv.bp1, sv.bp2, outfp);
-            writeTransloc(header, sv.bp2, sv.bp1, outfp);
-        }
-        else
-        {
-            assert(! "Unknown SV type");
-        }
-        //write debug output
-        outfp << sv;
-
-        //scoreSV
-    }
-}
 
 
 static
@@ -121,7 +56,7 @@ runGSC(const GSCOptions& opt)
 
     OutStream outs(opt.candidateOutputFilename);
     std::ostream& outfp(outs.getStream());
-    writeVcfHeader(outfp);
+    writeSVCandidateVcfHeader(outfp);
 
 
     SVCandidateData svData;
@@ -133,7 +68,7 @@ runGSC(const GSCOptions& opt)
         // find number, type and breakend range of SVs on this edge:
         finder.findSVCandidates(edge,svData,svs);
 
-        writeCandidates(set,svData,svs,outfp);
+        writeSVCandidatesToVcf(opt.referenceFilename, set,svData,svs,outfp);
     }
 
 }
