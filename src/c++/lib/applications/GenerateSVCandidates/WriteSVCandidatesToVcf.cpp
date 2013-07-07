@@ -171,7 +171,7 @@ writeSVCandidatesToVcf(
     const unsigned minPairCount(set.getMinMergeEdgeCount());
     const bam_header_info& header(set.header);
 
-    boost::format idFormatter("MantaBND:%i:%i:%i:%i");
+    boost::format idFormatter("MantaBND:%i:%i:%i:%i:");
 
     unsigned svIndex(0);
     BOOST_FOREACH(const SVCandidate& sv, svs)
@@ -184,6 +184,9 @@ writeSVCandidatesToVcf(
             const std::string idPrefix( str(idFormatter % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % svIndex ) );
             writeTransloc(referenceFilename, header, sv.bp1, sv.bp2, idPrefix, true, os);
             writeTransloc(referenceFilename, header, sv.bp2, sv.bp1, idPrefix, false, os);
+
+            // keep the debug output for now:
+            os << sv;
         }
         else
         {
