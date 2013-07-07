@@ -28,9 +28,14 @@
 
 
 
+static const bool isExcludeUnpaired(true);
+
+
+
 SVFinder::
 SVFinder(const GSCOptions& opt) :
-    _readScanner(opt.scanOpt,opt.statsFilename,opt.alignmentFilename)
+    _scanOpt(opt.scanOpt),
+    _readScanner(_scanOpt,opt.statsFilename,opt.alignmentFilename)
 {
     // load in set:
     _set.load(opt.graphFilename.c_str());
@@ -138,11 +143,13 @@ checkResult(
         const std::vector<SVCandidate>& svs) const
 {
     // check that the counts totalled up from the data match those in the sv candidates
-    std::map<unsigned,unsigned> counts;
+    std::map<unsigned,unsigned> readCounts;
+    std::map<unsigned,unsigned> pairCounts;
     const unsigned svCount(svs.size());
     for(unsigned i(0);i<svCount;++i)
     {
-        counts[i] = 0;
+        readCounts[i] = 0;
+        pairCounts[i] = 0;
     }
 
     const unsigned bamCount(_bamStreams.size());
@@ -152,16 +159,29 @@ checkResult(
         BOOST_FOREACH(const SVCandidateReadPair& pair, svDataGroup)
         {
             assert(pair.svIndex<svCount);
-            if(pair.read1.isSet()) counts[pair.svIndex]++;
-            if(pair.read2.isSet()) counts[pair.svIndex]++;
+            if(pair.read1.isSet()) readCounts[pair.svIndex]++;
+            if(pair.read2.isSet()) readCounts[pair.svIndex]++;
+            if(pair.read1.isSet() && pair.read2.isSet()) pairCounts[pair.svIndex] += 2;
         }
     }
 
     for(unsigned svIndex(0); svIndex<svCount; ++svIndex)
     {
-        const unsigned svObsCount(svs[svIndex].bp1.readCount + svs[svIndex].bp2.readCount);
-        const unsigned dataObsCount(counts[svIndex]);
-        assert(svObsCount == dataObsCount);
+        const unsigned svObsReadCount(svs[svIndex].bp1.readCount + svs[svIndex].bp2.readCount);
+        const unsigned svObsPairCount(svs[svIndex].bp1.pairCount + svs[svIndex].bp2.pairCount);
+        assert(svs[svIndex].bp1.pairCount == svs[svIndex].bp2.pairCount);
+
+        const unsigned dataObsReadCount(readCounts[svIndex]);
+        const unsigned dataObsPairCount(pairCounts[svIndex]);
+        if(isExcludeUnpaired)
+        {
+            assert(svObsReadCount <= dataObsReadCount);
+        }
+        else
+        {
+            assert(svObsReadCount == dataObsReadCount);
+        }
+        assert(svObsPairCount == dataObsPairCount);
     }
 }
 
@@ -182,9 +202,17 @@ getCandidatesFromData(
         {
             SVCandidateRead* localReadPtr(&(pair.read1));
             SVCandidateRead* remoteReadPtr(&(pair.read2));
-            if(! localReadPtr->isSet())
+
+            if(isExcludeUnpaired)
             {
-                std::swap(localReadPtr,remoteReadPtr);
+                if((! localReadPtr->isSet()) || (! remoteReadPtr->isSet())) continue;
+            }
+            else
+            {
+                if(! localReadPtr->isSet())
+                {
+                    std::swap(localReadPtr,remoteReadPtr);
+                }
             }
             const bam_record* remoteBamRecPtr( remoteReadPtr->isSet() ? &(remoteReadPtr->bamrec) : NULL);
 

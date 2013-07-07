@@ -67,6 +67,7 @@ private:
             SVCandidateData& svData,
             std::vector<SVCandidate>& svs);
 
+    const ReadScannerOptions _scanOpt;
     SVLocusSet _set;
     SVLocusScanner _readScanner;
 
