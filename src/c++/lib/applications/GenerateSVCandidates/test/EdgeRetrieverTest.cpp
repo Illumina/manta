@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE( test_EdgeRetrieverOddBin )
     {
         EdgeRetriever edger(set1,3,binIndex);
 
-        while(edger.next())
+        while (edger.next())
         {
             count++;
         }

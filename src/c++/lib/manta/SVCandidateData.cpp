@@ -28,7 +28,7 @@
 std::ostream&
 operator<<(std::ostream& os, const bam_record& br)
 {
-    if(br.empty())
+    if (br.empty())
     {
         os << "NONE";
     }
@@ -67,7 +67,7 @@ getReadPair(const pindex_t::key_type& key)
 {
     const pindex_t::const_iterator kiter(_pairIndex.find(key));
 
-    if(kiter == _pairIndex.end())
+    if (kiter == _pairIndex.end())
     {
         _pairIndex[key] = _pairs.size();
         _pairs.push_back(SVCandidateReadPair());
@@ -94,17 +94,17 @@ add(const bam_record& bamRead)
     SVCandidateReadPair& pair(getReadPair(bamRead.qname()));
 
     SVCandidateRead* targetReadPtr(&(pair.read1));
-    if(2 == bamRead.read_no())
+    if (2 == bamRead.read_no())
     {
         targetReadPtr = (&(pair.read2));
     }
-    if(targetReadPtr->isSet())
+    if (targetReadPtr->isSet())
     {
         std::ostringstream oss;
         oss << "Unexpected read name collision.\n"
             << "\tExisting read: " << (*targetReadPtr) << "\n"
             << "\tNew read: " << bamRead << "\n";
-        BOOST_THROW_EXCEPTION(PreConditionException(oss.str())); 
+        BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
     }
     targetReadPtr->bamrec = bamRead;
 }

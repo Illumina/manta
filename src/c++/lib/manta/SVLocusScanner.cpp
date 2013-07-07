@@ -81,7 +81,7 @@ getReadBreakendsImpl(
     unsigned remoteReadNoninsertSize(readSize);
     unsigned remoteRefLength(localRefLength);
 
-    if(NULL != remoteReadPtr)
+    if (NULL != remoteReadPtr)
     {
         // if remoteRead is available, we can more accurately determine the size:
         const bam_record& remoteRead(*remoteReadPtr);

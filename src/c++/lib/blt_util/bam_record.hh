@@ -39,11 +39,11 @@ struct bam_record
     const bam_record&
     operator=(const bam_record& br)
     {
-        if(this == &br) return (*this);
+        if (this == &br) return (*this);
 
-        if(empty())
+        if (empty())
         {
-            if(! br.empty())
+            if (! br.empty())
             {
                 freeBam();
                 _bp=bam_dup1(br._bp);
@@ -52,7 +52,7 @@ struct bam_record
         }
         else
         {
-            if(! br.empty())
+            if (! br.empty())
             {
                 bam_copy1(_bp,br._bp);
             }

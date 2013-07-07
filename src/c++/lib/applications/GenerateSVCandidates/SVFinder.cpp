@@ -56,31 +56,31 @@ SVFinder(const GSCOptions& opt) :
 static
 void
 addSVNodeRead(
-        const SVLocusScanner& scanner,
-        const SVLocusNode& localNode,
-        const SVLocusNode& remoteNode,
-        const bam_record& read,
-        const unsigned bamIndex,
-        SVCandidateDataGroup& svDataGroup)
+    const SVLocusScanner& scanner,
+    const SVLocusNode& localNode,
+    const SVLocusNode& remoteNode,
+    const bam_record& read,
+    const unsigned bamIndex,
+    SVCandidateDataGroup& svDataGroup)
 {
-    if(scanner.isReadFiltered(read)) return;
+    if (scanner.isReadFiltered(read)) return;
 
     SVLocus locus;
     scanner.getChimericSVLocus(read,bamIndex,locus);
     const SVLocus& clocus(locus);
 
-    if(clocus.empty()) return;
-    if(2 != clocus.size()) return;
+    if (clocus.empty()) return;
+    if (2 != clocus.size()) return;
 
     unsigned readLocalIndex(0);
     unsigned readRemoteIndex(1);
-    if(0 == clocus.getNode(readLocalIndex).count)
+    if (0 == clocus.getNode(readLocalIndex).count)
     {
         std::swap(readLocalIndex,readRemoteIndex);
     }
 
-    if(! clocus.getNode(readLocalIndex).interval.isIntersect(localNode.interval)) return;
-    if(! clocus.getNode(readRemoteIndex).interval.isIntersect(remoteNode.interval)) return;
+    if (! clocus.getNode(readLocalIndex).interval.isIntersect(localNode.interval)) return;
+    if (! clocus.getNode(readRemoteIndex).interval.isIntersect(remoteNode.interval)) return;
 
     svDataGroup.add(read);
 }
@@ -90,10 +90,10 @@ addSVNodeRead(
 void
 SVFinder::
 addSVNodeData(
-        const SVLocus& locus,
-        const NodeIndexType localNodeIndex,
-        const NodeIndexType remoteNodeIndex,
-        SVCandidateData& svData)
+    const SVLocus& locus,
+    const NodeIndexType localNodeIndex,
+    const NodeIndexType remoteNodeIndex,
+    SVCandidateData& svData)
 {
     // get full search interval:
     const SVLocusNode& localNode(locus.getNode(localNodeIndex));
@@ -120,7 +120,7 @@ addSVNodeData(
         read_stream.set_new_region(searchInterval.tid,searchInterval.range.begin_pos(),searchInterval.range.end_pos());
 
 #ifdef DEBUG_SVDATA
-    log_os << "addSVNodeData: scanning bamIndex: " << bamIndex << "\n";
+        log_os << "addSVNodeData: scanning bamIndex: " << bamIndex << "\n";
 #endif
         while (read_stream.next())
         {
@@ -139,33 +139,33 @@ addSVNodeData(
 void
 SVFinder::
 checkResult(
-        const SVCandidateData& svData,
-        const std::vector<SVCandidate>& svs) const
+    const SVCandidateData& svData,
+    const std::vector<SVCandidate>& svs) const
 {
     // check that the counts totalled up from the data match those in the sv candidates
     std::map<unsigned,unsigned> readCounts;
     std::map<unsigned,unsigned> pairCounts;
     const unsigned svCount(svs.size());
-    for(unsigned i(0);i<svCount;++i)
+    for (unsigned i(0); i<svCount; ++i)
     {
         readCounts[i] = 0;
         pairCounts[i] = 0;
     }
 
     const unsigned bamCount(_bamStreams.size());
-    for(unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
+    for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
         const SVCandidateDataGroup& svDataGroup(svData.getDataGroup(bamIndex));
         BOOST_FOREACH(const SVCandidateReadPair& pair, svDataGroup)
         {
             assert(pair.svIndex<svCount);
-            if(pair.read1.isSet()) readCounts[pair.svIndex]++;
-            if(pair.read2.isSet()) readCounts[pair.svIndex]++;
-            if(pair.read1.isSet() && pair.read2.isSet()) pairCounts[pair.svIndex] += 2;
+            if (pair.read1.isSet()) readCounts[pair.svIndex]++;
+            if (pair.read2.isSet()) readCounts[pair.svIndex]++;
+            if (pair.read1.isSet() && pair.read2.isSet()) pairCounts[pair.svIndex] += 2;
         }
     }
 
-    for(unsigned svIndex(0); svIndex<svCount; ++svIndex)
+    for (unsigned svIndex(0); svIndex<svCount; ++svIndex)
     {
         const unsigned svObsReadCount(svs[svIndex].bp1.readCount + svs[svIndex].bp2.readCount);
         const unsigned svObsPairCount(svs[svIndex].bp1.pairCount + svs[svIndex].bp2.pairCount);
@@ -173,7 +173,7 @@ checkResult(
 
         const unsigned dataObsReadCount(readCounts[svIndex]);
         const unsigned dataObsPairCount(pairCounts[svIndex]);
-        if(isExcludeUnpaired)
+        if (isExcludeUnpaired)
         {
             assert(svObsReadCount <= dataObsReadCount);
         }
@@ -189,13 +189,13 @@ checkResult(
 void
 SVFinder::
 getCandidatesFromData(
-        SVCandidateData& svData,
-        std::vector<SVCandidate>& svs)
+    SVCandidateData& svData,
+    std::vector<SVCandidate>& svs)
 {
     SVCandidate cand;
 
     const unsigned bamCount(_bamStreams.size());
-    for(unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
+    for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
         SVCandidateDataGroup& svDataGroup(svData.getDataGroup(bamIndex));
         BOOST_FOREACH(SVCandidateReadPair& pair, svDataGroup)
@@ -203,13 +203,13 @@ getCandidatesFromData(
             SVCandidateRead* localReadPtr(&(pair.read1));
             SVCandidateRead* remoteReadPtr(&(pair.read2));
 
-            if(isExcludeUnpaired)
+            if (isExcludeUnpaired)
             {
-                if((! localReadPtr->isSet()) || (! remoteReadPtr->isSet())) continue;
+                if ((! localReadPtr->isSet()) || (! remoteReadPtr->isSet())) continue;
             }
             else
             {
-                if(! localReadPtr->isSet())
+                if (! localReadPtr->isSet())
                 {
                     std::swap(localReadPtr,remoteReadPtr);
                 }
@@ -233,7 +233,7 @@ getCandidatesFromData(
             // we anticipate so few svs from the POC method, that there's no indexing on them
             BOOST_FOREACH(SVCandidate& sv, svs)
             {
-                if(sv.isIntersect(cand))
+                if (sv.isIntersect(cand))
                 {
 #ifdef DEBUG_SVDATA
                     log_os << "Adding to svIndex: " << svIndex << "\n";
@@ -246,10 +246,10 @@ getCandidatesFromData(
                 svIndex++;
             }
 
-            if(! isSVFound)
+            if (! isSVFound)
             {
 #ifdef DEBUG_SVDATA
-                    log_os << "New svIndex: " << svs.size() << "\n";
+                log_os << "New svIndex: " << svs.size() << "\n";
 #endif
                 pair.svIndex = svs.size();
                 svs.push_back(cand);
@@ -273,12 +273,12 @@ getCandidatesFromData(
     std::map<unsigned,unsigned> moveSVIndex;
     std::set<unsigned> deletedSVIndex;
     const unsigned svCount(svs.size());
-    for(unsigned outerIndex(0); outerIndex<svCount; ++outerIndex)
+    for (unsigned outerIndex(0); outerIndex<svCount; ++outerIndex)
     {
         const unsigned routerIndex(svCount-(outerIndex+1));
-        for(unsigned innerIndex(0); innerIndex<routerIndex; ++innerIndex)
+        for (unsigned innerIndex(0); innerIndex<routerIndex; ++innerIndex)
         {
-            if(svs[innerIndex].isIntersect(svs[routerIndex]))
+            if (svs[innerIndex].isIntersect(svs[routerIndex]))
             {
 #ifdef DEBUG_SVDATA
                 log_os << "Merging outer:inner: " << routerIndex << " " << innerIndex << "\n";
@@ -291,7 +291,7 @@ getCandidatesFromData(
         }
     }
 
-    if(! deletedSVIndex.empty())
+    if (! deletedSVIndex.empty())
     {
         {
             unsigned shift(0);
@@ -300,9 +300,9 @@ getCandidatesFromData(
             BOOST_FOREACH(const unsigned index, deletedSVIndex)
             {
                 shift++;
-                if(isLastIndex)
+                if (isLastIndex)
                 {
-                    for(unsigned i(lastIndex+1);i<index;++i)
+                    for (unsigned i(lastIndex+1); i<index; ++i)
                     {
                         assert(shift>0);
                         assert(i>=shift);
@@ -313,9 +313,9 @@ getCandidatesFromData(
                 lastIndex=index;
                 isLastIndex=true;
             }
-            if(isLastIndex)
+            if (isLastIndex)
             {
-                for(unsigned i(lastIndex+1);i<svCount;++i)
+                for (unsigned i(lastIndex+1); i<svCount; ++i)
                 {
                     assert(shift>0);
                     assert(i>=shift);
@@ -328,14 +328,14 @@ getCandidatesFromData(
         svs.resize(svs.size()-deletedSVIndex.size());
     }
 
-    if(! moveSVIndex.empty())
+    if (! moveSVIndex.empty())
     {
-        for(unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
+        for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
         {
             SVCandidateDataGroup& svDataGroup(svData.getDataGroup(bamIndex));
             BOOST_FOREACH(SVCandidateReadPair& pair, svDataGroup)
             {
-                if(moveSVIndex.count(pair.svIndex))
+                if (moveSVIndex.count(pair.svIndex))
                 {
                     pair.svIndex = moveSVIndex[pair.svIndex];
                 }
@@ -357,9 +357,9 @@ getCandidatesFromData(
 void
 SVFinder::
 findSVCandidates(
-        const EdgeInfo& edge,
-        SVCandidateData& svData,
-        std::vector<SVCandidate>& svs)
+    const EdgeInfo& edge,
+    SVCandidateData& svData,
+    std::vector<SVCandidate>& svs)
 {
     svData.clear();
     svs.clear();
@@ -372,8 +372,8 @@ findSVCandidates(
     // edge must be bidirectional at the noise threshold of the locus set:
     const SVLocus& locus(set.getLocus(edge.locusIndex));
 
-    if((locus.getEdge(edge.nodeIndex1,edge.nodeIndex2).count <= minEdgeCount) ||
-       (locus.getEdge(edge.nodeIndex2,edge.nodeIndex1).count <= minEdgeCount))
+    if ((locus.getEdge(edge.nodeIndex1,edge.nodeIndex2).count <= minEdgeCount) ||
+        (locus.getEdge(edge.nodeIndex2,edge.nodeIndex1).count <= minEdgeCount))
     {
         return;
     }

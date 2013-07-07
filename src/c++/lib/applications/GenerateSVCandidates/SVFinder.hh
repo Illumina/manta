@@ -31,7 +31,8 @@
 #include <vector>
 
 
-struct SVFinder {
+struct SVFinder
+{
 
     SVFinder(const GSCOptions& opt);
 
@@ -43,29 +44,29 @@ struct SVFinder {
 
     void
     findSVCandidates(
-            const EdgeInfo& edge,
-            SVCandidateData& svData,
-            std::vector<SVCandidate>& svs);
+        const EdgeInfo& edge,
+        SVCandidateData& svData,
+        std::vector<SVCandidate>& svs);
 
     void
     checkResult(
-            const SVCandidateData& svData,
-            const std::vector<SVCandidate>& svs) const;
+        const SVCandidateData& svData,
+        const std::vector<SVCandidate>& svs) const;
 
 private:
 
     void
     addSVNodeData(
-            const SVLocus& locus,
-            const NodeIndexType node1,
-            const NodeIndexType node2,
-            SVCandidateData& svData);
+        const SVLocus& locus,
+        const NodeIndexType node1,
+        const NodeIndexType node2,
+        SVCandidateData& svData);
 
 
     void
     getCandidatesFromData(
-            SVCandidateData& svData,
-            std::vector<SVCandidate>& svs);
+        SVCandidateData& svData,
+        std::vector<SVCandidate>& svs);
 
     const ReadScannerOptions _scanOpt;
     SVLocusSet _set;

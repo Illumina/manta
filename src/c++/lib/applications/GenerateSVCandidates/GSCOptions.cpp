@@ -90,7 +90,7 @@ parseGSCOptions(const manta::Program& prog,
     ("align-file", po::value(&normalAlignmentFilename),
      "alignment file in bam format (may be specified multiple times, assumed to be non-tumor if tumor file(s) provided)")
     ("tumor-align-file", po::value(&tumorAlignmentFilename),
-      "tumor sample alignment file in bam format (may be specified multiple times)")
+     "tumor sample alignment file in bam format (may be specified multiple times)")
     ("graph-file", po::value(&opt.graphFilename),
      "sv locus graph file (required)")
     ("align-stats", po::value(&opt.statsFilename),
@@ -100,7 +100,7 @@ parseGSCOptions(const manta::Program& prog,
     ("candidate-output-file", po::value(&opt.candidateOutputFilename),
      "Write SV candidates to file (required)")
     ("somatic-output-file", po::value(&opt.somaticOutputFilename),
-      "Write somatic SV candidates to file (at least one tumor and non-tumor alignment file must be specified)")
+     "Write somatic SV candidates to file (at least one tumor and non-tumor alignment file must be specified)")
     ("bin-count", po::value(&opt.binCount)->default_value(opt.binCount),
      "Specify how many bins the SV candidate problem should be divided into, where bin-index can be used to specify which bin to solve")
     ("bin-index", po::value(&opt.binIndex)->default_value(opt.binIndex),
@@ -163,7 +163,7 @@ parseGSCOptions(const manta::Program& prog,
         BOOST_FOREACH(std::string& afile, opt.alignmentFilename)
         {
             checkStandardizeUsageFile(log_os,prog,visible,afile,"alignment file");
-            if(nameCheck.count(afile))
+            if (nameCheck.count(afile))
             {
                 std::ostringstream oss;
                 oss << "Repeated alignment filename: " << afile << "\n";
@@ -183,7 +183,7 @@ parseGSCOptions(const manta::Program& prog,
 
     if (! opt.somaticOutputFilename.empty())
     {
-        if(normalAlignmentFilename.empty() || tumorAlignmentFilename.empty())
+        if (normalAlignmentFilename.empty() || tumorAlignmentFilename.empty())
         {
             usage(log_os,prog,visible,"Must specify at least one tumor and non-tumor alignment file for somatic output");
         }

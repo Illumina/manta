@@ -28,7 +28,7 @@ getOptionsDescription(ReadScannerOptions& opt)
      "Reads with MAPQ less than this value will be ignored")
     ("edge-prob", po::value(&opt.breakendEdgeTrimProb)->default_value(opt.breakendEdgeTrimProb),
      "Breakend range associated with each read will have this probability trimmed from each edge")
-     ;
+    ;
 
     return desc;
 }

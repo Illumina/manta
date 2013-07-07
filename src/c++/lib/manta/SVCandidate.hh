@@ -24,27 +24,33 @@
 
 namespace SVBreakendState
 {
-    enum index_t {
-        UNKNOWN,    // Everything else not covered below
-        RIGHT_OPEN, // 5' side of region is mapped
-        LEFT_OPEN,  // 3' side of region is mapped
-        COMPLEX     // A typical small scale assembly locus -- something is happening in a small region,
-                    // the event might be local to that region but we don't know
-    };
+enum index_t
+{
+    UNKNOWN,    // Everything else not covered below
+    RIGHT_OPEN, // 5' side of region is mapped
+    LEFT_OPEN,  // 3' side of region is mapped
+    COMPLEX     // A typical small scale assembly locus -- something is happening in a small region,
+    // the event might be local to that region but we don't know
+};
 
-    inline
-    const char*
-    label(const index_t idx)
+inline
+const char*
+label(const index_t idx)
+{
+    switch (idx)
     {
-        switch(idx)
-        {
-        case UNKNOWN:    return "UNKNOWN";
-        case RIGHT_OPEN: return "RIGHT_OPEN";
-        case LEFT_OPEN:  return "LEFT_OPEN";
-        case COMPLEX:    return "COMPLEX";
-        default:         return "UNKNOWN";
-        }
+    case UNKNOWN:
+        return "UNKNOWN";
+    case RIGHT_OPEN:
+        return "RIGHT_OPEN";
+    case LEFT_OPEN:
+        return "LEFT_OPEN";
+    case COMPLEX:
+        return "COMPLEX";
+    default:
+        return "UNKNOWN";
     }
+}
 }
 
 
@@ -59,15 +65,15 @@ struct SVBreakend
     bool
     isIntersect(const SVBreakend& rhs) const
     {
-        if(state != rhs.state) return false;
+        if (state != rhs.state) return false;
         return interval.isIntersect(rhs.interval);
     }
 
     bool
     operator<(const SVBreakend& rhs) const
     {
-        if(state < rhs.state) return true;
-        if(state == rhs.state)
+        if (state < rhs.state) return true;
+        if (state == rhs.state)
         {
             return (interval < rhs.interval);
         }
@@ -77,7 +83,7 @@ struct SVBreakend
     bool
     merge(const SVBreakend& rhs)
     {
-        if(! isIntersect(rhs)) return false;
+        if (! isIntersect(rhs)) return false;
         interval.range.merge_range(rhs.interval.range);
         readCount += rhs.readCount;
         pairCount += rhs.pairCount;
@@ -128,9 +134,9 @@ struct SVCandidate
     bool
     merge(const SVCandidate& rhs)
     {
-        if(! isIntersect(rhs)) return false;
+        if (! isIntersect(rhs)) return false;
 
-        if(bp1.isIntersect(rhs.bp1))
+        if (bp1.isIntersect(rhs.bp1))
         {
             bp1.merge(rhs.bp1);
             bp2.merge(rhs.bp2);
@@ -154,8 +160,14 @@ struct SVCandidate
     std::pair<const SVBreakend&, const SVBreakend&>
     getOrderedBreakends() const
     {
-        if(bp2 < bp1) { return std::make_pair(bp2,bp1); }
-        else          { return std::make_pair(bp1,bp2); }
+        if (bp2 < bp1)
+        {
+            return std::make_pair(bp2,bp1);
+        }
+        else
+        {
+            return std::make_pair(bp1,bp2);
+        }
     }
 #endif
 

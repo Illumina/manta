@@ -142,7 +142,7 @@ parseAlignmentStatsOptions(const manta::Program& prog,
         BOOST_FOREACH(std::string& afile, opt.alignmentFilename)
         {
             checkStandardizeUsageFile(log_os,prog,visible,afile,"alignment file");
-            if(nameCheck.count(afile))
+            if (nameCheck.count(afile))
             {
                 std::ostringstream oss;
                 oss << "Repeated alignment filename: " << afile << "\n";

@@ -29,32 +29,41 @@ struct ReadKey
 {
 
     ReadKey(const bam_record& br)
-      : _qname(br.qname())
-      , _readNo(br.read_no())
+        : _qname(br.qname())
+        , _readNo(br.read_no())
     {}
 
     ReadKey(const std::string& init_qname,
             const int init_read_no)
-      : _qname(init_qname)
-      , _readNo(init_read_no)
+        : _qname(init_qname)
+        , _readNo(init_read_no)
     {}
 
     int
-    readNo() const { return _readNo; }
+    readNo() const
+    {
+        return _readNo;
+    }
 
     const char*
-    qname() const { return _qname.c_str(); }
+    qname() const
+    {
+        return _qname.c_str();
+    }
 
-    bool operator<(const ReadKey& rhs) const {
+    bool operator<(const ReadKey& rhs) const
+    {
         if (readNo() < rhs.readNo())
             return true;
-        if (readNo() == rhs.readNo()) {
+        if (readNo() == rhs.readNo())
+        {
             return (strcmp(qname(), rhs.qname()) < 0);
         }
         return false;
     }
 
-    bool operator==(const ReadKey& rhs) const {
+    bool operator==(const ReadKey& rhs) const
+    {
         return ((readNo() == rhs.readNo()) and ((0 == strcmp(qname(), rhs.qname()))));
     }
 

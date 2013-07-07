@@ -124,7 +124,7 @@ struct SVCandidateData
     getDataGroup(const unsigned bamIndex)
     {
         data_t::iterator diter(_data.find(bamIndex));
-        if(diter != _data.end()) return diter->second;
+        if (diter != _data.end()) return diter->second;
 
         std::pair<data_t::iterator,bool> diter2 = _data.insert(std::make_pair(bamIndex,SVCandidateDataGroup()));
         return diter2.first->second;

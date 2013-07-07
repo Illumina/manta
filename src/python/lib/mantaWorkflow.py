@@ -171,7 +171,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         hygenCmd.extend(["--candidate-output-file", self.paths.getHyGenCandidatePath(binStr)])
         if isSomatic :
             hygenCmd.extend(["--somatic-output-file", self.paths.getHyGenSomaticPath(binStr)])
-            
+
         for bamPath in self.params.normalBamList :
             hygenCmd.extend(["--align-file",bamPath])
         for bamPath in self.params.tumorBamList :

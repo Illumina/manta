@@ -37,7 +37,7 @@ runGSC(const GSCOptions& opt)
         // early test that we have permission to write to output file
         OutStream outs(opt.candidateOutputFilename);
 
-        if(! opt.somaticOutputFilename.empty())
+        if (! opt.somaticOutputFilename.empty())
         {
             OutStream somouts(opt.somaticOutputFilename);
         }
