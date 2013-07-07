@@ -254,7 +254,6 @@ consolidateOverlap(
             unsigned lastIndex(0);
             BOOST_FOREACH(const unsigned index, deletedSVIndex)
             {
-                shift++;
                 if (isLastIndex)
                 {
                     for (unsigned i(lastIndex+1); i<index; ++i)
@@ -267,6 +266,7 @@ consolidateOverlap(
                 }
                 lastIndex=index;
                 isLastIndex=true;
+                shift++;
             }
             if (isLastIndex)
             {
@@ -387,7 +387,7 @@ getCandidatesFromData(
         unsigned svIndex(0);
         BOOST_FOREACH(SVCandidate& sv, svs)
         {
-            log_os << "\tPRECOUNT: index: " << svIndex << " " << sv << "\n";
+            log_os << "\tPRECOUNT: index: " << svIndex << " " << sv;
             svIndex++;
         }
     }
@@ -402,7 +402,7 @@ getCandidatesFromData(
         unsigned svIndex(0);
         BOOST_FOREACH(SVCandidate& sv, svs)
         {
-            log_os << "\tPOSTCOUNT: index: " << svIndex << " " << sv << "\n";
+            log_os << "\tPOSTCOUNT: index: " << svIndex << " " << sv;
             svIndex++;
         }
     }
