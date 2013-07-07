@@ -68,7 +68,7 @@ runGSC(const GSCOptions& opt)
         // find number, type and breakend range of SVs on this edge:
         finder.findSVCandidates(edge,svData,svs);
 
-        writeSVCandidatesToVcf(opt.referenceFilename, set,svData,svs,outfp);
+        writeSVCandidatesToVcf(opt.referenceFilename, set, edge, svData, svs, outfp);
     }
 
 }
