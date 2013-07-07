@@ -145,10 +145,13 @@ checkResult(
 {
     using namespace illumina::common;
 
+    const unsigned svCount(svs.size());
+    if(0 == svCount) return;
+
     // check that the counts totalled up from the data match those in the sv candidates
     std::map<unsigned,unsigned> readCounts;
     std::map<unsigned,unsigned> pairCounts;
-    const unsigned svCount(svs.size());
+
     for (unsigned i(0); i<svCount; ++i)
     {
         readCounts[i] = 0;
