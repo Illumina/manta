@@ -117,6 +117,7 @@ std::ostream&
 operator<<(std::ostream& os, const SVBreakend& svb);
 
 
+
 struct SVCandidate
 {
 #if 0
@@ -175,6 +176,27 @@ struct SVCandidate
     SVBreakend bp2;
 };
 
+
+namespace SV_TYPE {
+    enum index_t
+    {
+        UNKNOWN,
+        INTERTRANSLOC
+    };
+}
+
+
+inline
+SV_TYPE::index_t
+getSVType(const SVCandidate& sv)
+{
+    if(sv.bp1.interval.tid != sv.bp2.interval.tid)
+    {
+        return SV_TYPE::INTERTRANSLOC;
+    }
+
+    return SV_TYPE::UNKNOWN;
+}
 
 std::ostream&
 operator<<(std::ostream& os, const SVCandidate& svc);
