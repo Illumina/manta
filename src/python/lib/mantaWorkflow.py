@@ -121,9 +121,9 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
         graphCmd.extend(["--align-stats",statsPath])
         graphCmd.extend(["--region",gseg.bamRegion])
         for bamPath in self.params.normalBamList :
-            cmd.extend(["--align-file",bamPath])
+            graphCmd.extend(["--align-file",bamPath])
         for bamPath in self.params.tumorBamList :
-            cmd.extend(["--tumor-align-file",bamPath])
+            graphCmd.extend(["--tumor-align-file",bamPath])
 
         graphTaskLabel=preJoin(taskPrefix,"makeLocusGraph_"+gseg.id)
         graphTasks.add(self.addTask(graphTaskLabel,graphCmd,dependencies=dirTask))
@@ -173,9 +173,9 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
             hygenCmd.extend(["--somatic-output-file", self.paths.getHyGenSomaticPath(binStr)])
             
         for bamPath in self.params.normalBamList :
-            cmd.extend(["--align-file",bamPath])
+            hygenCmd.extend(["--align-file",bamPath])
         for bamPath in self.params.tumorBamList :
-            cmd.extend(["--tumor-align-file",bamPath])
+            hygenCmd.extend(["--tumor-align-file",bamPath])
 
         hygenTaskLabel=preJoin(taskPrefix,"generateSVCandidates_"+binStr)
         hygenTasks.add(self.addTask(hygenTaskLabel,hygenCmd,dependencies=dirTask))
