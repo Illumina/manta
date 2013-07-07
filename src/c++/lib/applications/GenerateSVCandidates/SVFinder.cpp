@@ -198,7 +198,7 @@ checkResult(
             oss << "Unexpected difference in sv and data read pair counts. SVcount: " << svObsPairCount << " Datacout: " << dataObsPairCount << "\n"
                 << "\tSVreadCount: " << svObsReadCount << " DataReadCount: " << dataObsReadCount << "\n"
                 << "\tsvIndex: " << svIndex << " SV: " << svs[svIndex];
-            BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
+            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
         }
     }
 }
