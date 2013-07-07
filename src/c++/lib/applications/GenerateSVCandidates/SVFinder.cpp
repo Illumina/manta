@@ -381,20 +381,30 @@ getCandidatesFromData(
     }
 
 #ifdef DEBUG_SVDATA
-    log_os << "findSVCandidates: precount: " << svs.size() << "\n";
-    BOOST_FOREACH(SVCandidate& sv, svs)
     {
-        log_os << "\tPRECOUNT: " << sv << "\n";
+        log_os << "findSVCandidates: precount: " << svs.size() << "\n";
+
+        unsigned svIndex(0);
+        BOOST_FOREACH(SVCandidate& sv, svs)
+        {
+            log_os << "\tPRECOUNT: index: " << svIndex << " " << sv << "\n";
+            svIndex++;
+        }
     }
 #endif
 
     consolidateOverlap(bamCount,svData,svs);
 
 #ifdef DEBUG_SVDATA
-    log_os << "findSVCandidates: postcount: " << svs.size() << "\n";
-    BOOST_FOREACH(SVCandidate& sv, svs)
     {
-        log_os << "\tPOSTCOUNT: " << sv << "\n";
+        log_os << "findSVCandidates: postcount: " << svs.size() << "\n";
+
+        unsigned svIndex(0);
+        BOOST_FOREACH(SVCandidate& sv, svs)
+        {
+            log_os << "\tPOSTCOUNT: index: " << svIndex << " " << sv << "\n";
+            svIndex++;
+        }
     }
 #endif
 }
