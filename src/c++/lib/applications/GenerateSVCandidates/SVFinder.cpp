@@ -148,7 +148,7 @@ checkResult(
     const unsigned svCount(svs.size());
     if(0 == svCount) return;
 
-    // check that the counts totalled up from the data match those in the sv candidates
+    // check that the counts totaled up from the data match those in the sv candidates
     std::map<unsigned,unsigned> readCounts;
     std::map<unsigned,unsigned> pairCounts;
 
@@ -192,7 +192,14 @@ checkResult(
         {
             assert(svObsReadCount == dataObsReadCount);
         }
-        assert(svObsPairCount == dataObsPairCount);
+        if(svObsPairCount != dataObsPairCount)
+        {
+            std::ostringstream oss;
+            oss << "Unexpected difference in sv and data read pair counts. SVcount: " << svObsPairCount << " Datacout: " << dataObsPairCount << "\n"
+                << "\tSVreadCount: " << svObsReadCount << " DataReadCount: " << dataObsReadCount << "\n"
+                << "\tsvIndex: " << svIndex << " SV: " << svs[svIndex];
+            BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
+        }
     }
 }
 
