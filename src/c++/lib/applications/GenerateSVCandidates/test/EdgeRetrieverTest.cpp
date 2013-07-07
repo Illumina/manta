@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE( test_EdgeRetrieverOddBin )
         }
     }
 
-    BOOST_REQUIRE_EQUAL(count,7);
+    BOOST_REQUIRE_EQUAL(count,7u);
 }
 
 
