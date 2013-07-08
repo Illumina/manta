@@ -17,35 +17,31 @@
 
 #pragma once
 
-#include "GSCOptions.hh"
-
-#include "blt_util/bam_streamer.hh"
-#include "manta/SVCandidate.hh"
-#include "manta/SVCandidateData.hh"
-#include "manta/SVLocusScanner.hh"
 #include "manta/SomaticSVScoreInfo.hh"
-
-#include "boost/shared_ptr.hpp"
-
-#include <vector>
+#include "manta/VcfWriterSV.hh"
+#include "options/SomaticCallOptions.hh"
 
 
-struct SVScorer
+struct VcfWriterSomaticSV : public VcfWriterSV
 {
-    SVScorer(const GSCOptions& opt);
+    VcfWriterSomaticSV(
+        const SomaticCallOptions& somaticOpt,
+        const std::string& referenceFilename,
+        const SVLocusSet& set,
+        std::ostream& os) :
+        VcfWriterSV(referenceFilename,set,os),
+        _somaticOpt(somaticOpt)
+    {}
 
     void
-    scoreSomaticSV(
+    writeSV(
+        const EdgeInfo& edge,
         const SVCandidateData& svData,
         const unsigned svIndex,
         const SVCandidate& sv,
-        SomaticSVScoreInfo& ssInfo);
+        const SomaticSVScoreInfo& ssInfo);
 
 private:
-    const std::vector<bool> _isAlignmentTumor;
-    const SomaticCallOptions _somaticOpt;
-    SVLocusScanner _readScanner;
-
-    typedef boost::shared_ptr<bam_streamer> streamPtr;
-    std::vector<streamPtr> _bamStreams;
+    const SomaticCallOptions& _somaticOpt;
 };
+

@@ -18,7 +18,7 @@
 #pragma once
 
 #include "GSCOptions.hh"
-#include "EdgeInfo.hh"
+#include "manta/EdgeInfo.hh"
 
 #include "blt_util/bam_streamer.hh"
 #include "manta/SVCandidate.hh"

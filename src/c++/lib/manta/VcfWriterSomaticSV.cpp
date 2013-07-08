@@ -15,32 +15,18 @@
 /// \author Chris Saunders
 ///
 
-#pragma once
+#include "manta/VcfWriterSomaticSV.hh"
 
-#include "EdgeInfo.hh"
-#include "manta/SVCandidate.hh"
-#include "manta/SVCandidateData.hh"
-#include "manta/SVLocusSet.hh"
-#include "manta/SomaticSVScoreInfo.hh"
-
-#include <iosfwd>
-#include <vector>
 
 
 void
-writeSomaticSVVcfHeader(
-    const char* referenceFilename,
-    const char* version,
-    std::ostream& os);
-
-
-void
-writeSomaticSVToVcf(
-    const std::string& referenceFilename,
-    const SVLocusSet& set,
+VcfWriterSomaticSV::
+writeSV(
     const EdgeInfo& edge,
-    const SVCandidateData& svData,
+    const SVCandidateData& ,
     const unsigned svIndex,
     const SVCandidate& sv,
-    const SomaticSVScoreInfo& ssInfo,
-    std::ostream& os);
+    const SomaticSVScoreInfo& )
+{
+    writeTranslocPair(edge, svIndex, sv);
+}

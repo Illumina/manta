@@ -22,13 +22,51 @@
 #include <vector>
 
 
+struct SVSampleInfo
+{
+
+    SVSampleInfo() :
+        bp1SpanReads(0),
+        bp2SpanReads(0),
+        spanPairs(0)
+    {}
+
+    void
+    clear()
+    {
+        bp1SpanReads=0;
+        bp2SpanReads=0;
+        spanPairs=0;
+    }
+
+    unsigned bp1SpanReads;
+    unsigned bp2SpanReads;
+    unsigned spanPairs;
+};
+
+
+
 /// consolidate all somatic scoring results applied to an SV candidate
 struct SomaticSVScoreInfo
 {
-    SomaticSVScoreInfo()
+    SomaticSVScoreInfo() :
+        somaticScore(0)
     {}
 
+    void
+    clear()
+    {
+        tumor.clear();
+        normal.clear();
+        filters.clear();
+        somaticScore=0;
+    }
+
+    SVSampleInfo tumor;
+    SVSampleInfo normal;
     std::vector<std::string> filters;
+
+    unsigned somaticScore;
 };
 
 

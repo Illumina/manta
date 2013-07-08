@@ -17,15 +17,22 @@
 
 #pragma once
 
-#include <iosfwd>
+#include "manta/VcfWriterSV.hh"
 
 
-void
-writeSVVcfHeaderPrefix(
-    const char* referenceFilename,
-    const char* version,
-    std::ostream& os);
+struct VcfWriterCandidateSV : public VcfWriterSV
+{
+    VcfWriterCandidateSV(
+        const std::string& referenceFilename,
+        const SVLocusSet& set,
+        std::ostream& os) :
+        VcfWriterSV(referenceFilename,set,os)
+    {}
 
+    void
+    writeSV(
+        const EdgeInfo& edge,
+        const SVCandidateData& svData,
+        const std::vector<SVCandidate>& svs);
+};
 
-void
-writeSVVcfHeaderSuffix(std::ostream& os);

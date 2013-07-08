@@ -20,11 +20,11 @@
 #include "EdgeRetriever.hh"
 #include "SVFinder.hh"
 #include "SVScorer.hh"
-#include "WriteCandidateSVToVcf.hh"
-#include "WriteSomaticSVToVcf.hh"
 
 #include "common/OutStream.hh"
 #include "manta/ReadGroupStatsSet.hh"
+#include "manta/VcfWriterCandidateSV.hh"
+#include "manta/VcfWriterSomaticSV.hh"
 
 #include "boost/foreach.hpp"
 
@@ -64,14 +64,12 @@ runGSC(
 
     const bool isSomatic(! opt.somaticOutputFilename.empty());
 
+    VcfWriterCandidateSV candWriter(opt.referenceFilename,set,outfp);
+    VcfWriterSomaticSV somWriter(opt.somaticOpt, opt.referenceFilename,set,outfp);
     if (0 == opt.binIndex)
     {
-        writeCandidateSVVcfHeader(opt.referenceFilename.c_str(), version, outfp);
-
-        if(isSomatic)
-        {
-            writeSomaticSVVcfHeader(opt.referenceFilename.c_str(), version, outfp);
-        }
+        candWriter.writeHeader(version);
+        if(isSomatic) somWriter.writeHeader(version);
     }
 
     SVCandidateData svData;
@@ -84,15 +82,15 @@ runGSC(
         // find number, type and breakend range of SVs on this edge:
         svFind.findCandidateSV(edge,svData,svs);
 
-        writeCandidateSVToVcf(opt.referenceFilename, set, edge, svData, svs, outfp);
+        candWriter.writeSV(edge, svData, svs);
 
         if(isSomatic)
         {
             const unsigned svIndex(0);
             BOOST_FOREACH(const SVCandidate& sv, svs)
             {
-                svScore.scoreSomaticSV(svData, svIndex,sv,ssInfo);
-                writeSomaticSVToVcf(opt.referenceFilename, set, edge, svData, svIndex, sv, ssInfo, outfp);
+                svScore.scoreSomaticSV(svData, svIndex, sv, ssInfo);
+                somWriter.writeSV(edge, svData, svIndex, sv, ssInfo);
             }
         }
     }

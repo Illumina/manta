@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "EdgeInfo.hh"
+#include "manta/EdgeInfo.hh"
 #include "manta/SVLocusSet.hh"
 
 

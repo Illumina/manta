@@ -15,28 +15,55 @@
 /// \author Chris Saunders
 ///
 
-#include "WriteCandidateSVToVcf.hh"
-
-#include "WriteSVToVcf.hh"
+#include "manta/VcfWriterSV.hh"
 
 #include "blt_util/samtools_fasta_util.hh"
-
-#include "boost/foreach.hpp"
-#include "boost/format.hpp"
 
 #include <iostream>
 
 
+VcfWriterSV::
+VcfWriterSV(
+    const std::string& referenceFilename,
+    const SVLocusSet& set,
+    std::ostream& os) :
+    _referenceFilename(referenceFilename),
+    _minPairCount(set.getMinMergeEdgeCount()),
+    _header(set.header),
+    _os(os),
+    _idFormatter("MantaBND:%i:%i:%i:%i:")
+{
+}
+
+
 
 void
-writeCandidateSVVcfHeader(
-    const char* referenceFilename,
-    const char* version,
-    std::ostream& os)
+VcfWriterSV::
+writeHeaderPrefix(const char* progVersion)
 {
-    writeSVVcfHeaderPrefix(referenceFilename,version,os);
-    writeSVVcfHeaderSuffix(os);
+    _os << "##fileformat=VCFv4.1\n";
+    _os << "##source=manta " << progVersion << "\n";
+    _os << "##reference=file://" << _referenceFilename << "\n";
+    _os << "##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description=\"Imprecise structural variation\">\n";
+    _os << "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n";
+    _os << "##INFO=<ID=CIPOS,Number=2,Type=Integer,Description=\"Confidence interval around POS for imprecise variants\">\n";
+    _os << "##INFO=<ID=MATEID,Number=.,Type=String,Description=\"ID of mate breakend\">\n";
+    _os << "##INFO=<ID=BND_PAIR_SUPPORT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at this breakend (mapping may not be confident at remote breakend)\">\n";
+    _os << "##INFO=<ID=PAIR_SUPPORT,Number=1,Type=Integer,Description=\"Read pairs supporting this variant where both reads are confidently mapped\">\n";
+
+    _os << "##ALT=<ID=BND,Description=\"Translocation Breakend\">\n";
+
 }
+
+
+
+void
+VcfWriterSV::
+writeHeaderSuffix()
+{
+    _os << "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n";
+}
+
 
 
 
@@ -58,22 +85,19 @@ makeInfoField(
 
 
 
-static
 void
+VcfWriterSV::
 writeTransloc(
-    const std::string& referenceFilename,
-    const bam_header_info& header,
     const SVBreakend& bp1,
     const SVBreakend& bp2,
     const std::string& idPrefix,
-    const bool isFirstOfPair,
-    std::ostream& os)
+    const bool isFirstOfPair)
 {
     std::vector<std::string> infotags;
 
     // get CHROM
-    const std::string& chrom(header.chrom_data[bp1.interval.tid].label);
-    const std::string& mate_chrom(header.chrom_data[bp2.interval.tid].label);
+    const std::string& chrom(_header.chrom_data[bp1.interval.tid].label);
+    const std::string& mate_chrom(_header.chrom_data[bp2.interval.tid].label);
 
     const known_pos_range2& bp1range(bp1.interval.range);
     const known_pos_range2& bp2range(bp2.interval.range);
@@ -88,7 +112,7 @@ writeTransloc(
 
     // get REF
     std::string ref;
-    get_standardized_region_seq(referenceFilename,chrom,pos-1,pos-1,ref);
+    get_standardized_region_seq(_referenceFilename,chrom,pos-1,pos-1,ref);
 
     assert(1 == ref.size());
 
@@ -140,7 +164,7 @@ writeTransloc(
     }
 
     // write out record:
-    os << chrom
+    _os << chrom
        << '\t' << pos
        << '\t' << localId // ID
        << '\t' << ref // REF
@@ -148,45 +172,20 @@ writeTransloc(
        << '\t' << '.' // QUAL
        << '\t' << '.' // FILTER
        << '\t';
-    makeInfoField(infotags,os); // INFO
-    os << '\n';
+    makeInfoField(infotags,_os); // INFO
+    _os << '\n';
 }
 
 
 
 void
-writeCandidateSVToVcf(
-    const std::string& referenceFilename,
-    const SVLocusSet& set,
-    const EdgeInfo& edge,
-    const SVCandidateData& ,
-    const std::vector<SVCandidate>& svs,
-    std::ostream& os)
+VcfWriterSV::
+writeTranslocPair(
+        const EdgeInfo& edge,
+        const unsigned svIndex,
+        const SVCandidate& sv)
 {
-    const unsigned minPairCount(set.getMinMergeEdgeCount());
-    const bam_header_info& header(set.header);
-
-    boost::format idFormatter("MantaBND:%i:%i:%i:%i:");
-
-    unsigned svIndex(0);
-    BOOST_FOREACH(const SVCandidate& sv, svs)
-    {
-        if (sv.bp1.pairCount < minPairCount) continue;
-
-        const SV_TYPE::index_t svType(getSVType(sv));
-        if (svType == SV_TYPE::INTERTRANSLOC)
-        {
-            const std::string idPrefix( str(idFormatter % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % svIndex ) );
-            writeTransloc(referenceFilename, header, sv.bp1, sv.bp2, idPrefix, true, os);
-            writeTransloc(referenceFilename, header, sv.bp2, sv.bp1, idPrefix, false, os);
-        }
-        else
-        {
-            assert(! "Unknown SV type");
-        }
-
-        svIndex++;
-    }
+    const std::string idPrefix( str(_idFormatter % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % svIndex ) );
+    writeTransloc(sv.bp1, sv.bp2, idPrefix, true);
+    writeTransloc(sv.bp2, sv.bp1, idPrefix, false);
 }
-
-

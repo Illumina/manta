@@ -24,11 +24,14 @@ struct SomaticCallOptions
 {
 
     SomaticCallOptions() :
-        maxDepthFactor(3.0)
+        maxDepthFactor(3.0),
+        minOutputSomaticScore(10)
     {}
 
     // breakpoints where the non-tumor depth is greater than the chromosome average x this factor are filtered out:
     float maxDepthFactor;
+
+    unsigned minOutputSomaticScore;
 };
 
 
