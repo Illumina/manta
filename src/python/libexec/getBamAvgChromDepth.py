@@ -52,10 +52,10 @@ def getOptions() :
 
     # validate input:
     if options.bamFile is None :
-        parse.print_help()
+        parser.print_help()
         sys.exit(2)
 
-    checkFile(bamFile,"input bam")
+    checkFile(options.bamFile,"input bam")
 
     return (options,args)
 
@@ -71,7 +71,7 @@ def main() :
     samtoolsBin = os.path.join(libexecDir,'samtools')
     checkFile(samtoolsBin,"samtools binary")
 
-    chromInfo = {}
+    chromData = {}
     chromList = []
 
     if True :
@@ -81,7 +81,7 @@ def main() :
             word = line.strip().split('\t')
             if word[0] == "*" : continue
 
-            chromInfo[word[0]] = (word[1],word[2])
+            chromData[word[0]] = (int(word[1]),int(word[2]))
             chromList.append(word[0])
 
 
@@ -110,6 +110,9 @@ def main() :
 
     if count <= 100000 :
         raise Exception("Unexpected read length approximation results")
+
+
+    outfp=sys.stdout
 
     avg_length = float(length)/float(count)
 
