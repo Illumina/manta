@@ -184,21 +184,27 @@ checkResult(
 
         const unsigned dataObsReadCount(readCounts[svIndex]);
         const unsigned dataObsPairCount(pairCounts[svIndex]);
+
+        bool isCountException(false);
         if (isExcludeUnpaired)
         {
-            assert(svObsReadCount <= dataObsReadCount);
+            if(svObsReadCount > dataObsReadCount) isCountException=true;
         }
         else
         {
-            assert(svObsReadCount == dataObsReadCount);
+            if(svObsReadCount != dataObsReadCount) isCountException=true;
         }
-        if(svObsPairCount != dataObsPairCount)
+        if(svObsPairCount != dataObsPairCount) isCountException=true;
+
+        if(isCountException)
         {
             std::ostringstream oss;
-            oss << "Unexpected difference in sv and data read pair counts. SVcount: " << svObsPairCount << " Datacout: " << dataObsPairCount << "\n"
+            oss << "Unexpected difference in sv and data read counts.\n"
                 << "\tSVreadCount: " << svObsReadCount << " DataReadCount: " << dataObsReadCount << "\n"
+                << "\tSVpaircount: " << svObsPairCount << " DataPaircount: " << dataObsPairCount << "\n"
                 << "\tsvIndex: " << svIndex << " SV: " << svs[svIndex];
             BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+
         }
     }
 }
