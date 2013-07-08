@@ -146,7 +146,7 @@ checkResult(
     using namespace illumina::common;
 
     const unsigned svCount(svs.size());
-    if(0 == svCount) return;
+    if (0 == svCount) return;
 
     // check that the counts totaled up from the data match those in the sv candidates
     std::map<unsigned,unsigned> readCounts;
@@ -164,7 +164,7 @@ checkResult(
         const SVCandidateDataGroup& svDataGroup(svData.getDataGroup(bamIndex));
         BOOST_FOREACH(const SVCandidateReadPair& pair, svDataGroup)
         {
-            if(pair.svIndex>=svCount)
+            if (pair.svIndex>=svCount)
             {
                 std::ostringstream oss;
                 oss << "Searching for SVIndex: " << pair.svIndex << " with svSize: " << svCount << "\n";
@@ -188,15 +188,15 @@ checkResult(
         bool isCountException(false);
         if (isExcludeUnpaired)
         {
-            if(svObsReadCount > dataObsReadCount) isCountException=true;
+            if (svObsReadCount > dataObsReadCount) isCountException=true;
         }
         else
         {
-            if(svObsReadCount != dataObsReadCount) isCountException=true;
+            if (svObsReadCount != dataObsReadCount) isCountException=true;
         }
-        if(svObsPairCount != dataObsPairCount) isCountException=true;
+        if (svObsPairCount != dataObsPairCount) isCountException=true;
 
-        if(isCountException)
+        if (isCountException)
         {
             std::ostringstream oss;
             oss << "Unexpected difference in sv and data read counts.\n"
@@ -218,9 +218,9 @@ checkResult(
 static
 void
 consolidateOverlap(
-        const unsigned bamCount,
-        SVCandidateData& svData,
-        std::vector<SVCandidate>& svs)
+    const unsigned bamCount,
+    SVCandidateData& svData,
+    std::vector<SVCandidate>& svs)
 {
     typedef std::map<unsigned,unsigned> movemap_t;
     movemap_t moveSVIndex;

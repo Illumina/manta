@@ -183,12 +183,13 @@ struct SVCandidate
 };
 
 
-namespace SV_TYPE {
-    enum index_t
-    {
-        UNKNOWN,
-        INTERTRANSLOC
-    };
+namespace SV_TYPE
+{
+enum index_t
+{
+    UNKNOWN,
+    INTERTRANSLOC
+};
 }
 
 
@@ -196,7 +197,7 @@ inline
 SV_TYPE::index_t
 getSVType(const SVCandidate& sv)
 {
-    if(sv.bp1.interval.tid != sv.bp2.interval.tid)
+    if (sv.bp1.interval.tid != sv.bp2.interval.tid)
     {
         return SV_TYPE::INTERTRANSLOC;
     }

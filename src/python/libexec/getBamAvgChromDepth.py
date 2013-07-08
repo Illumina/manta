@@ -1,4 +1,15 @@
 #!/usr/bin/env python
+#
+# Manta
+# Copyright (c) 2013 Illumina, Inc.
+#
+# This software is provided under the terms and conditions of the
+# Illumina Open Source Software License 1.
+#
+# You should have received a copy of the Illumina Open Source
+# Software License 1 along with this program. If not, see
+# <https://github.com/downloads/sequencing/licenses/>.
+#
 
 """
 Estimate average chromosome depth from a WGS BAM file. This will
@@ -24,9 +35,9 @@ def log(msg) :
 
 
 def getOptions() :
-    
+
     from optparse import OptionParser
-    
+
     usage = "usage: %prog -bam file > depth.txt"
     parser = OptionParser(usage=usage)
 
@@ -43,7 +54,7 @@ def getOptions() :
     if options.bamFile is None :
         parse.print_help()
         sys.exit(2)
-        
+
     checkFile(bamFile,"input bam")
 
     return (options,args)
@@ -52,7 +63,7 @@ def getOptions() :
 def main() :
 
     import subprocess
-    
+
     (options,args) = getOptions()
 
     checkDir(libexecDir)
@@ -69,7 +80,7 @@ def main() :
         for line in proc.stdout :
             word = line.strip().split('\t')
             if word[0] == "*" : continue
-            
+
             chromInfo[word[0]] = (word[1],word[2])
             chromList.append(word[0])
 
@@ -89,10 +100,10 @@ def main() :
             word = line.strip().split('\t',7)
             mr = matchRex.match(word[5])
             if mr is None : continue
-            length += int(mr.group(1)) 
+            length += int(mr.group(1))
             count += 1
             if count >= 200000 : break
-            
+
         # done with subprocess:
         os.kill(proc.pid, signal.SIGINT)
 

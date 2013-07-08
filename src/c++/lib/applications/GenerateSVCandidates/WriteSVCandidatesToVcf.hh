@@ -32,9 +32,9 @@ writeSVCandidateVcfHeader(std::ostream& os);
 
 void
 writeSVCandidatesToVcf(
-        const std::string& referenceFilename,
-        const SVLocusSet& set,
-        const EdgeInfo& edge,
-        const SVCandidateData& svData,
-        const std::vector<SVCandidate>& svs,
-        std::ostream& os);
+    const std::string& referenceFilename,
+    const SVLocusSet& set,
+    const EdgeInfo& edge,
+    const SVCandidateData& svData,
+    const std::vector<SVCandidate>& svs,
+    std::ostream& os);

@@ -1,4 +1,15 @@
 #!/usr/bin/env python
+#
+# Manta
+# Copyright (c) 2013 Illumina, Inc.
+#
+# This software is provided under the terms and conditions of the
+# Illumina Open Source Software License 1.
+#
+# You should have received a copy of the Illumina Open Source
+# Software License 1 along with this program. If not, see
+# <https://github.com/downloads/sequencing/licenses/>.
+#
 
 """
 sort input vcf
@@ -8,9 +19,9 @@ import os, sys
 
 
 def getOptions() :
-    
+
     from optparse import OptionParser
-    
+
     usage = "usage: %prog [vcf [vcf...]] > sorted_vcf"
     parser = OptionParser(usage=usage)
 
@@ -25,7 +36,7 @@ def getOptions() :
     for arg in args :
         if not os.path.isfile(arg) :
             raise Exception("Can't find input vcf file: " +arg)
-    
+
     return (options,args)
 
 
@@ -43,7 +54,7 @@ def processFile(arg,isFirst,header,recList) :
     """
     read in a vcf file
     """
-    
+
     for line in open(arg) :
         if line[0] == "#" :
             if isFirst : header.append(line)
@@ -55,7 +66,7 @@ def processFile(arg,isFirst,header,recList) :
 def main() :
 
     outfp = sys.stdout
-    
+
     (options,args) = getOptions()
 
     header=[]
@@ -70,7 +81,7 @@ def main() :
 
     for line in header :
         outfp.write(line)
-    
+
     for vcfrec in recList :
         outfp.write(vcfrec.line)
 

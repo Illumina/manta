@@ -1,3 +1,15 @@
+// -*- mode: c++; indent-tabs-mode: nil; -*-
+//
+// Manta
+// Copyright (c) 2013 Illumina, Inc.
+//
+// This software is provided under the terms and conditions of the
+// Illumina Open Source Software License 1.
+//
+// You should have received a copy of the Illumina Open Source
+// Software License 1 along with this program. If not, see
+// <https://github.com/downloads/sequencing/licenses/>.
+//
 
 ///
 /// \author Bret Barnes
@@ -28,7 +40,8 @@ extern "C"
 
 void
 get_chrom_sizes(const std::string& fai_file,
-                std::map<std::string,unsigned>& chrom_sizes) {
+                std::map<std::string,unsigned>& chrom_sizes)
+{
 
     static const char delim('\t');
 
@@ -38,7 +51,8 @@ get_chrom_sizes(const std::string& fai_file,
     std::string line;
     std::vector<std::string> word;
 
-    while(! fis.eof()) {
+    while (! fis.eof())
+    {
         getline(fis, line);
 
         split_string(line, delim, word);
@@ -56,7 +70,8 @@ get_chrom_sizes(const std::string& fai_file,
 
 unsigned
 get_chrom_length(const std::string& fai_file,
-                 const std::string& chrom_name) {
+                 const std::string& chrom_name)
+{
 
     static const char delim('\t');
 
@@ -68,7 +83,8 @@ get_chrom_length(const std::string& fai_file,
         std::string line;
         std::vector<std::string> word;
 
-        while(! fis.eof()) {
+        while (! fis.eof())
+        {
             getline(fis, line);
 
             split_string(line, delim, word);
@@ -81,7 +97,7 @@ get_chrom_length(const std::string& fai_file,
         }
     }
 
-    if(! isFound)
+    if (! isFound)
     {
         std::ostringstream oss;
         oss << "ERROR: Unable to find chromosome '" << chrom_name << "' in fai file '" << fai_file << "'\n";
@@ -137,11 +153,11 @@ get_region_seq(const std::string& ref_file,
 
 void
 get_standardized_region_seq(
-        const std::string& ref_file,
-        const std::string& chrom,
-        const int begin_pos,
-        const int end_pos,
-        std::string& ref_seq)
+    const std::string& ref_file,
+    const std::string& chrom,
+    const int begin_pos,
+    const int end_pos,
+    std::string& ref_seq)
 {
     get_region_seq(ref_file,chrom,begin_pos,end_pos,ref_seq);
     standardize_ref_seq(ref_file.c_str(), chrom.c_str(), ref_seq, begin_pos);

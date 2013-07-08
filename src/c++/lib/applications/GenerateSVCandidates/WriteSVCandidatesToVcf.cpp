@@ -48,14 +48,14 @@ writeSVCandidateVcfHeader(std::ostream& os)
 static
 void
 makeInfoField(
-        const std::vector<std::string>& info,
-        std::ostream& os)
+    const std::vector<std::string>& info,
+    std::ostream& os)
 {
     static const char sep(';');
     bool isFirst(true);
     BOOST_FOREACH(const std::string& is, info)
     {
-        if(! isFirst) os << sep;
+        if (! isFirst) os << sep;
         else          isFirst = false;
         os << is;
     }
@@ -66,13 +66,13 @@ makeInfoField(
 static
 void
 writeTransloc(
-        const std::string& referenceFilename,
-        const bam_header_info& header,
-        const SVBreakend& bp1,
-        const SVBreakend& bp2,
-        const std::string& idPrefix,
-        const bool isFirstOfPair,
-        std::ostream& os)
+    const std::string& referenceFilename,
+    const bam_header_info& header,
+    const SVBreakend& bp1,
+    const SVBreakend& bp2,
+    const std::string& idPrefix,
+    const bool isFirstOfPair,
+    std::ostream& os)
 {
     std::vector<std::string> infotags;
 
@@ -106,7 +106,7 @@ writeTransloc(
         {
             altPrefix=ref;
         }
-        else if(bp1.state == SVBreakendState::LEFT_OPEN)
+        else if (bp1.state == SVBreakendState::LEFT_OPEN)
         {
             altSuffix=ref;
         }
@@ -121,7 +121,7 @@ writeTransloc(
         {
             altSep=']';
         }
-        else if(bp2.state == SVBreakendState::LEFT_OPEN)
+        else if (bp2.state == SVBreakendState::LEFT_OPEN)
         {
             altSep='[';
         }
@@ -138,7 +138,7 @@ writeTransloc(
     infotags.push_back("MATEID="+mateId);
     infotags.push_back( str(boost::format("BND_PAIR_SUPPORT=%i") % bp1.readCount) );
     infotags.push_back( str(boost::format("PAIR_SUPPORT=%i") % bp1.pairCount) );
-    if(! bp1.isPrecise())
+    if (! bp1.isPrecise())
     {
         infotags.push_back("IMPRECISE");
         infotags.push_back( str( boost::format("CIPOS=%i,%i") % (bp1range.begin_pos()+1) % bp1range.end_pos() ) );
@@ -161,12 +161,12 @@ writeTransloc(
 
 void
 writeSVCandidatesToVcf(
-        const std::string& referenceFilename,
-        const SVLocusSet& set,
-        const EdgeInfo& edge,
-        const SVCandidateData& ,
-        const std::vector<SVCandidate>& svs,
-        std::ostream& os)
+    const std::string& referenceFilename,
+    const SVLocusSet& set,
+    const EdgeInfo& edge,
+    const SVCandidateData& ,
+    const std::vector<SVCandidate>& svs,
+    std::ostream& os)
 {
     const unsigned minPairCount(set.getMinMergeEdgeCount());
     const bam_header_info& header(set.header);
@@ -176,10 +176,10 @@ writeSVCandidatesToVcf(
     unsigned svIndex(0);
     BOOST_FOREACH(const SVCandidate& sv, svs)
     {
-        if(sv.bp1.pairCount < minPairCount) continue;
+        if (sv.bp1.pairCount < minPairCount) continue;
 
         const SV_TYPE::index_t svType(getSVType(sv));
-        if(svType == SV_TYPE::INTERTRANSLOC)
+        if (svType == SV_TYPE::INTERTRANSLOC)
         {
             const std::string idPrefix( str(idFormatter % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % svIndex ) );
             writeTransloc(referenceFilename, header, sv.bp1, sv.bp2, idPrefix, true, os);
