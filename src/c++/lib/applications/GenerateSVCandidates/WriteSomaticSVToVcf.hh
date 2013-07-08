@@ -27,14 +27,14 @@
 
 
 void
-writeSVCandidateVcfHeader(
+writeSomaticSVVcfHeader(
     const char* referenceFilename,
     const char* version,
     std::ostream& os);
 
 
 void
-writeSVCandidatesToVcf(
+writeSomaticSVToVcf(
     const std::string& referenceFilename,
     const SVLocusSet& set,
     const EdgeInfo& edge,

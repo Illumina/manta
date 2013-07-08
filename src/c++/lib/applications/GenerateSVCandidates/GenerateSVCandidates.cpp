@@ -19,7 +19,8 @@
 #include "GSCOptions.hh"
 #include "EdgeRetriever.hh"
 #include "SVFinder.hh"
-#include "WriteSVCandidatesToVcf.hh"
+#include "WriteCandidateSVToVcf.hh"
+#include "WriteSomaticSVToVcf.hh"
 
 #include "common/OutStream.hh"
 #include "manta/ReadGroupStatsSet.hh"
@@ -59,7 +60,11 @@ runGSC(
     OutStream outs(opt.candidateOutputFilename);
     std::ostream& outfp(outs.getStream());
 
-    if (0 == opt.binIndex) writeSVCandidateVcfHeader(opt.referenceFilename.c_str(), version, outfp);
+    if (0 == opt.binIndex)
+    {
+        writeCandidateSVVcfHeader(opt.referenceFilename.c_str(), version, outfp);
+        writeSomaticSVVcfHeader(opt.referenceFilename.c_str(), version, outfp);
+    }
 
     SVCandidateData svData;
     std::vector<SVCandidate> svs;
@@ -70,7 +75,7 @@ runGSC(
         // find number, type and breakend range of SVs on this edge:
         finder.findSVCandidates(edge,svData,svs);
 
-        writeSVCandidatesToVcf(opt.referenceFilename, set, edge, svData, svs, outfp);
+        writeCandidateSVToVcf(opt.referenceFilename, set, edge, svData, svs, outfp);
     }
 
 }
