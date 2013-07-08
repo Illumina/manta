@@ -18,6 +18,25 @@
 #include "manta/VcfWriterSomaticSV.hh"
 
 
+void
+VcfWriterSomaticSV::
+modifyInfo(
+        const bool isFirstOfPair,
+        std::vector<std::string>& infotags)
+{
+    assert(_ssInfoPtr != NULL);
+    const SomaticSVScoreInfo& ssInfo(*_ssInfoPtr);
+
+    infotags.push_back( str(boost::format("SOMATIC_SCORE=%i") % ssInfo.somaticScore) );
+    infotags.push_back( str(boost::format("NORMAL_PAIR_SUPPORT=%i") % ssInfo.normal.spanPairs) );
+    infotags.push_back( str(boost::format("TUMOR_PAIR_SUPPORT=%i") % ssInfo.tumor.spanPairs) );
+    infotags.push_back( str(boost::format("NORMAL_BND_PAIR_SUPPORT=%i") %
+            (isFirstOfPair ? ssInfo.normal.bp1SpanReads : ssInfo.normal.bp2SpanReads) ) );
+    infotags.push_back( str(boost::format("TUMOR_BND_PAIR_SUPPORT=%i") %
+            (isFirstOfPair ? ssInfo.tumor.bp1SpanReads : ssInfo.tumor.bp2SpanReads) ) );
+}
+
+
 
 void
 VcfWriterSomaticSV::
@@ -26,7 +45,13 @@ writeSV(
     const SVCandidateData& ,
     const unsigned svIndex,
     const SVCandidate& sv,
-    const SomaticSVScoreInfo& )
+    const SomaticSVScoreInfo& ssInfo)
 {
+
+    if(ssInfo.somaticScore < _somaticOpt.minOutputSomaticScore) return;
+
+    //TODO: this is a lame way to customize subclass behavior:
+    _ssInfoPtr=&ssInfo;
     writeTranslocPair(edge, svIndex, sv);
+    _ssInfoPtr=NULL;
 }

@@ -163,6 +163,8 @@ writeTransloc(
         infotags.push_back( str( boost::format("CIPOS=%i,%i") % (bp1range.begin_pos()+1) % bp1range.end_pos() ) );
     }
 
+    modifyInfo(isFirstOfPair, infotags);
+
     // write out record:
     _os << chrom
        << '\t' << pos

@@ -60,6 +60,13 @@ protected:
             const unsigned svIndex,
             const SVCandidate& sv);
 
+    virtual
+    void
+    modifyInfo(
+            const bool /*isFirstOfPair*/,
+            std::vector<std::string>& /*infotags*/)
+    {}
+
 private:
 
     void

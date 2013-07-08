@@ -30,7 +30,8 @@ struct VcfWriterSomaticSV : public VcfWriterSV
         const SVLocusSet& set,
         std::ostream& os) :
         VcfWriterSV(referenceFilename,set,os),
-        _somaticOpt(somaticOpt)
+        _somaticOpt(somaticOpt),
+        _ssInfoPtr(NULL)
     {}
 
     void
@@ -42,6 +43,14 @@ struct VcfWriterSomaticSV : public VcfWriterSV
         const SomaticSVScoreInfo& ssInfo);
 
 private:
+
+    virtual
+    void
+    modifyInfo(
+            const bool isFirstOfPair,
+            std::vector<std::string>& infotags);
+
     const SomaticCallOptions& _somaticOpt;
+    const SomaticSVScoreInfo* _ssInfoPtr;
 };
 
