@@ -78,7 +78,7 @@ runGSC(
 
         if(isSomatic)
         {
-            const unsigned svIndex(0);
+            unsigned svIndex(0);
             BOOST_FOREACH(const SVCandidate& sv, svs)
             {
                 svScore.scoreSomaticSV(svData, svIndex, sv, ssInfo);

@@ -91,21 +91,38 @@ scoreSomaticSV(
     // apply filters
 
     // assign bogus somatic score just to get started:
-    if((ssInfo.tumor.spanPairs > 4) && (ssInfo.normal.spanPairs < 2))
+    bool isSomatic(true);
+    if((ssInfo.tumor.spanPairs < 6) || (ssInfo.normal.spanPairs > 1)) isSomatic=false;
+
+    if(isSomatic)
     {
-        if(0==ssInfo.normal.spanPairs)
-        {
-            ssInfo.somaticScore=60;
-        }
-        else
+        if(ssInfo.normal.spanPairs)
         {
             const double ratio(static_cast<double>(ssInfo.tumor.spanPairs)/static_cast<double>(ssInfo.normal.spanPairs));
-            if(ratio>=5)
+            if(ratio<9)
             {
-                ssInfo.somaticScore=60;
+                isSomatic=false;
+            }
+        }
+        if(ssInfo.normal.bp1SpanReads)
+        {
+            const double ratio(static_cast<double>(ssInfo.tumor.bp1SpanReads)/static_cast<double>(ssInfo.normal.bp1SpanReads));
+            if(ratio<9)
+            {
+                isSomatic=false;
+            }
+        }
+        if(ssInfo.normal.bp2SpanReads)
+        {
+            const double ratio(static_cast<double>(ssInfo.tumor.bp2SpanReads)/static_cast<double>(ssInfo.normal.bp2SpanReads));
+            if(ratio<9)
+            {
+                isSomatic=false;
             }
         }
     }
+
+    if(isSomatic) ssInfo.somaticScore=60;
 }
 
 
