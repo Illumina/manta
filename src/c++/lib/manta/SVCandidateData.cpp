@@ -104,7 +104,7 @@ add(const bam_record& bamRead)
         oss << "Unexpected read name collision.\n"
             << "\tExisting read: " << (*targetReadPtr) << "\n"
             << "\tNew read: " << bamRead << "\n";
-        BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
+        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
     }
     targetReadPtr->bamrec = bamRead;
 }

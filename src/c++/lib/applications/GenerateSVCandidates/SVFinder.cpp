@@ -168,7 +168,7 @@ checkResult(
             {
                 std::ostringstream oss;
                 oss << "Searching for SVIndex: " << pair.svIndex << " with svSize: " << svCount << "\n";
-                BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
+                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
             }
             if (pair.read1.isSet()) readCounts[pair.svIndex]++;
             if (pair.read2.isSet()) readCounts[pair.svIndex]++;

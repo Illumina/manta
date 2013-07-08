@@ -889,7 +889,7 @@ checkState(
                 std::ostringstream oss;
                 oss << "ERROR: locus node is missing from node index\n"
                     << "\tNode index: " << locusIndex << " node: " << getNode(std::make_pair(locusIndex,nodeIndex));
-                BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
+                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
             }
             if ((citer->first != locusIndex) || (citer->second != nodeIndex))
             {
@@ -897,7 +897,7 @@ checkState(
                 oss << "ERROR: locus node is has conflicting index number in node index\n"
                     << "\tinode index_value: " << citer->first << ":" << citer->second << "\n"
                     << "\tNode index: " << locusIndex << ":" << locusIndex << " node: " << getNode(std::make_pair(locusIndex,nodeIndex));
-                BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
+                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
             }
         }
         locusIndex++;
@@ -908,7 +908,7 @@ checkState(
         using namespace illumina::common;
         std::ostringstream oss;
         oss << "ERROR: SVLocusSet conflicting internal node counts. totalNodeCount: " << totalNodeCount << " inodeSize: " << _inodes.size() << "n";
-        BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
+        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
     }
 
     if (! isCheckOverlap) return;
@@ -940,7 +940,7 @@ checkState(
                     << "\tthis_index: " << addy << " interval: " << interval << "\n"
                     << "\tlast_node: " << lastAddy << " "<< getNode(lastAddy) << "\n"
                     << "\tthis_node: " << addy << " "<< getNode(addy) << "\n";
-                BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
+                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
             }
         }
         lastAddy = addy;

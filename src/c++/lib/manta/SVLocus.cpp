@@ -56,7 +56,7 @@ mergeNode(
         oss << "ERROR: Attempting to merge nodes on different chromosomes\n"
             << "\tNode1: " << fromNode
             << "\tNode2: " << toNode;
-        BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
+        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
     }
 
     notifyDelete(toIndex);
@@ -126,7 +126,7 @@ mergeNode(
                 oss << "ERROR: Can't find return edge to node index: " << _index << ":" << fromIndex << " in remote node index: " << _index << ":" << fromNodeEdgeIter.first << "\n"
                     << "\tlocal_node: " << fromNode
                     << "\tremote_node: " << remoteNode;
-                BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
+                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
             }
 
             // the remote node could contain a link to toIndex already, check that here:
@@ -164,7 +164,7 @@ getEdgeException(
     oss << "ERROR: SVLocus::getEdge() no edge exists\n";
     oss << "\tfrom_node: " << _index << ":" << fromIndex << " " << getNode(fromIndex);
     oss << "\tto_node: " << _index << ":" << toIndex << " " << getNode(toIndex);
-    BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
+    BOOST_THROW_EXCEPTION(LogicException(oss.str()));
 }
 
 
@@ -312,7 +312,7 @@ clearNodeEdges(NodeIndexType nodePtr)
             oss << "ERROR: no return edge on remote node.\n";
             oss << "\tlocal_node: " << node;
             oss << "\tremote_node: " << remoteNode;
-            BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
+            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
         }
 
         remoteEdges.erase(thisRemoteIter);
@@ -501,7 +501,7 @@ checkState(const bool isCheckConnected) const
     {
         std::ostringstream oss;
         oss << "ERROR: SVLocus contains unconnected components, LocusIndex: " << _index << "\n";
-        BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
+        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
     }
 }
 

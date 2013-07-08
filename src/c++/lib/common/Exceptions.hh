@@ -180,7 +180,7 @@ struct LogicException: public std::logic_error, public ExceptionData
 {
     LogicException(const std::string& message) :
         std::logic_error(message),
-        ExceptionData(0, message)
+        ExceptionData(EPERM, message)
     {}
 };
 
