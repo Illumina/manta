@@ -95,6 +95,8 @@ parseGSCOptions(const manta::Program& prog,
      "sv locus graph file (required)")
     ("align-stats", po::value(&opt.statsFilename),
      "pre-computed alignment statistics for the input alignment files (required)")
+    ("chrom-depth", po::value(&opt.chromDepthFilename),
+      "average depth estimate for each chromosome")
     ("ref", po::value(&opt.referenceFilename),
      "fasta reference sequence (required)")
     ("candidate-output-file", po::value(&opt.candidateOutputFilename),

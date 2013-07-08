@@ -97,6 +97,31 @@ def runStats(self,taskPrefix="",dependencies=None):
     return nextStepWait
 
 
+def runDepth(self,taskPrefix="",dependencies=None) :
+    """
+    estimate chrom dpeth
+    """
+
+    
+    bamFile=""
+    if len(self.params.normalBamList) :
+        bamFile = self.params.normalBamList[0]
+    elif len(self.params.tumorBamList) :
+        bamFile = self.params.tumorBamList[0]
+    else :
+        return set()
+
+
+    cmd  = "%s -E %s" % (sys.executable, self.params.mantaChromDepth)
+    cmd += " --bam %s" % (bamFile)
+    cmd += " > %s" % (self.paths.getChromDepth())
+
+    nextStepWait = set()
+    nextStepWait.add(self.addTask(preJoin(taskPrefix,"estimateChromDepth"),cmd,dependencies=dependencies))
+
+    return nextStepWait
+
+
 
 def runLocusGraph(self,taskPrefix="",dependencies=None):
     """
@@ -177,6 +202,9 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         if isSomatic :
             hygenCmd.extend(["--somatic-output-file", somaticVcfPaths[-1]])
 
+        if not self.params.isExome :
+            hygenCmd.extend(["--chrom-depth", self.paths.getChromDepth()])
+
 
         for bamPath in self.params.normalBamList :
             hygenCmd.extend(["--align-file",bamPath])
@@ -222,6 +250,9 @@ class PathInfo:
 
     def getStatsPath(self) :
         return os.path.join(self.params.workDir,"alignmentStats.txt")
+    
+    def getChromDepth(self) :
+        return os.path.join(self.params.workDir,"chromDepth.txt")
 
     def getGraphPath(self) :
         return os.path.join(self.params.workDir,"svLocusGraph.bin")
@@ -312,6 +343,15 @@ class MantaWorkflow(WorkflowRunner) :
         self.flowLog("Initiating Manta workflow version: %s" % (__version__))
 
         statsTasks = runStats(self)
+        
+        if not self.params.isExome :
+            depthTasks = runDepth(self)
+        
         graphTasks = runLocusGraph(self,dependencies=statsTasks)
-        hygenTasks = runHyGen(self,dependencies=graphTasks)
+        
+        hygenPrereq = graphTasks
+        if not self.params.isExome :
+            hygenPrereq.add(depthTasks)
+            
+        hygenTasks = runHyGen(self,dependencies=hygenPrereq)
 

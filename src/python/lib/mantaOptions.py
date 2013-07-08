@@ -66,6 +66,9 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         assert os.path.isfile(mantaGraphMergeBin)
         mantaHyGenBin=os.path.join(libexecDir,"GenerateSVCandidates")
         assert os.path.isfile(mantaHyGenBin)
+
+        mantaChromDepth=os.path.join(libexecDir,"getBamAvgChromDepth.py")
+        assert os.path.isfile(mantaChromDepth)        
         mantaSortVcf=os.path.join(libexecDir,"sortVcf.py")
         assert os.path.isfile(mantaSortVcf)
 

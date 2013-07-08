@@ -39,6 +39,7 @@ struct GSCOptions
     std::string graphFilename;
     std::string referenceFilename;
     std::string statsFilename;
+    std::string chromDepthFilename;
 
     std::string candidateOutputFilename;
     //std::string germlineOutputFilename;
