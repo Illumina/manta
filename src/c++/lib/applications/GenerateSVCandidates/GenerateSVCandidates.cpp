@@ -83,6 +83,7 @@ runGSC(
             {
                 svScore.scoreSomaticSV(svData, svIndex, sv, ssInfo);
                 somWriter.writeSV(edge, svData, svIndex, sv, ssInfo);
+                svIndex++;
             }
         }
     }

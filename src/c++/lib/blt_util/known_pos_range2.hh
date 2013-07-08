@@ -81,7 +81,7 @@ struct known_pos_range2
     pos_t
     center_pos() const
     {
-        return _begin_pos + ((std::min(size(),1u)-1)/2);
+        return _begin_pos + ((std::max(size(),1u)-1)/2);
     }
 
     bool
