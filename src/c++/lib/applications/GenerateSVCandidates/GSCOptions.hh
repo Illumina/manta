@@ -19,6 +19,7 @@
 
 #include "manta/Program.hh"
 #include "options/ReadScannerOptions.hh"
+#include "options/SomaticCallOptions.hh"
 
 #include <string>
 #include <vector>
@@ -33,6 +34,7 @@ struct GSCOptions
     {}
 
     ReadScannerOptions scanOpt;
+    SomaticCallOptions somaticOpt;
 
     std::vector<std::string> alignmentFilename;
     std::vector<bool> isAlignmentTumor;

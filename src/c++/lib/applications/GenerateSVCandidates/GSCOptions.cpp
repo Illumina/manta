@@ -174,10 +174,14 @@ parseGSCOptions(const manta::Program& prog,
             nameCheck.insert(afile);
         }
     }
-    checkStandardizeUsageFile(log_os,prog,visible,opt.statsFilename,"alignment statistics");
     checkStandardizeUsageFile(log_os,prog,visible,opt.graphFilename,"SV locus graph");
     checkStandardizeUsageFile(log_os,prog,visible,opt.referenceFilename,"reference fasta");
+    checkStandardizeUsageFile(log_os,prog,visible,opt.statsFilename,"alignment statistics");
 
+    if(! opt.chromDepthFilename.empty())
+    {
+        checkStandardizeUsageFile(log_os,prog,visible,opt.chromDepthFilename,"chromosome depth");
+    }
     if (opt.candidateOutputFilename.empty())
     {
         usage(log_os,prog,visible,"Must specify candidate output file");
