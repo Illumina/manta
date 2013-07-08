@@ -12,7 +12,7 @@ def getOptions() :
     from optparse import OptionParser
     
     usage = "usage: %prog [vcf [vcf...]] > sorted_vcf"
-    parser = OptionParser()
+    parser = OptionParser(usage=usage)
 
 
     (options,args) = parser.parse_args()
