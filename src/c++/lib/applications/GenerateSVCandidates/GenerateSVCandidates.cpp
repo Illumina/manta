@@ -33,7 +33,9 @@
 
 static
 void
-runGSC(const GSCOptions& opt)
+runGSC(
+    const GSCOptions& opt,
+    const char* version)
 {
     {
         // early test that we have permission to write to output file
@@ -57,7 +59,7 @@ runGSC(const GSCOptions& opt)
     OutStream outs(opt.candidateOutputFilename);
     std::ostream& outfp(outs.getStream());
 
-    if (0 == opt.binIndex) writeSVCandidateVcfHeader(outfp);
+    if (0 == opt.binIndex) writeSVCandidateVcfHeader(opt.referenceFilename.c_str(), version, outfp);
 
     SVCandidateData svData;
     std::vector<SVCandidate> svs;
@@ -83,5 +85,5 @@ runInternal(int argc, char* argv[]) const
     GSCOptions opt;
 
     parseGSCOptions(*this,argc,argv,opt);
-    runGSC(opt);
+    runGSC(opt,version());
 }

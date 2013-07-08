@@ -27,10 +27,14 @@
 
 
 void
-writeSVCandidateVcfHeader(std::ostream& os)
+writeSVCandidateVcfHeader(
+    const char* referenceFilename,
+    const char* version,
+    std::ostream& os)
 {
     os << "##fileformat=VCFv4.1\n";
-
+    os << "##source=manta " << version << "\n";
+    os << "##reference=file://" << referenceFilename << "\n";
     os << "##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description=\"Imprecise structural variation\">\n";
     os << "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n";
     os << "##INFO=<ID=CIPOS,Number=2,Type=Integer,Description=\"Confidence interval around POS for imprecise variants\">\n";

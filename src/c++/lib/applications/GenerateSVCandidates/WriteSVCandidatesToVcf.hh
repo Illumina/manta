@@ -27,7 +27,10 @@
 
 
 void
-writeSVCandidateVcfHeader(std::ostream& os);
+writeSVCandidateVcfHeader(
+    const char* referenceFilename,
+    const char* version,
+    std::ostream& os);
 
 
 void
