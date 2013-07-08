@@ -158,9 +158,14 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
     isSomatic = (len(self.params.normalBamList) and len(self.params.tumorBamList))
 
     hygenTasks=set()
+    candidateVcfPaths = []
+    somaticVcfPaths = []
 
     for binId in range(self.params.nonlocalWorkBins) :
         binStr = str(binId).zfill(4)
+        candidateVcfPaths.append(self.paths.getHyGenCandidatePath(binStr))
+        if isSomatic :
+            somaticVcfPaths.append(self.paths.getHyGenSomaticPath(binStr))
 
         hygenCmd = [ self.params.mantaHyGenBin ]
         hygenCmd.extend(["--align-stats",statsPath])
@@ -168,19 +173,40 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         hygenCmd.extend(["--bin-index", str(binId)])
         hygenCmd.extend(["--bin-count", str(self.params.nonlocalWorkBins)])
         hygenCmd.extend(["--ref",self.params.referenceFasta])
-        hygenCmd.extend(["--candidate-output-file", self.paths.getHyGenCandidatePath(binStr)])
+        hygenCmd.extend(["--candidate-output-file", candidateVcfPaths[-1]])
         if isSomatic :
-            hygenCmd.extend(["--somatic-output-file", self.paths.getHyGenSomaticPath(binStr)])
+            hygenCmd.extend(["--somatic-output-file", somaticVcfPaths[-1]])
+
 
         for bamPath in self.params.normalBamList :
             hygenCmd.extend(["--align-file",bamPath])
         for bamPath in self.params.tumorBamList :
             hygenCmd.extend(["--tumor-align-file",bamPath])
 
-        hygenTaskLabel=preJoin(taskPrefix,"generateSVCandidates_"+binStr)
+        hygenTaskLabel=preJoin(taskPrefix,"generateCandidateSV_"+binStr)
         hygenTasks.add(self.addTask(hygenTaskLabel,hygenCmd,dependencies=dirTask))
 
     nextStepWait = hygenTasks
+
+    def getVcfSortCmd(vcfPaths, outPath) :
+        cmd  = "%s -E %s " % (sys.executable,self.params.mantaSortVcf)
+        cmd += " ".join(vcfPaths)
+        cmd += " | %s -c > %s && %s -p vcf %s" % (self.params.bgzipBin, outPath, self.params.tabixBin, outPath)
+        return cmd
+
+    # consolidate output:
+    if len(candidateVcfPaths) :
+        outPath = self.paths.getSortedCandidatePath()
+        candSortCmd = getVcfSortCmd(candidateVcfPaths,outPath)
+        candSortLabel=preJoin(taskPrefix,"sortCandidateSV")
+        nextStepWait.add(self.addTask(candSortLabel,candSortCmd,dependencies=hygenTasks))
+
+    if len(somaticVcfPaths) :
+        outPath = self.paths.getSortedSomaticPath()
+        candSortCmd = getVcfSortCmd(somaticVcfPaths,outPath)
+        candSortLabel=preJoin(taskPrefix,"sortSomaticSV")
+        nextStepWait.add(self.addTask(candSortLabel,candSortCmd,dependencies=hygenTasks))
+
     return nextStepWait
 
 
@@ -205,8 +231,14 @@ class PathInfo:
     def getHyGenCandidatePath(self, binStr) :
         return os.path.join(self.getHyGenDir(),"candidateSV.%s.vcf" % (binStr))
 
+    def getSortedCandidatePath(self) :
+        return os.path.join(self.params.resultsDir,"candidateSV.vcf.gz")
+
     def getHyGenSomaticPath(self, binStr) :
         return os.path.join(self.getHyGenDir(),"somaticSV.%s.vcf" % (binStr))
+
+    def getSortedSomaticPath(self) :
+        return os.path.join(self.params.resultsDir,"somaticSV.vcf.gz")
 
 
 

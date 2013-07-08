@@ -51,9 +51,12 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         libexecDir="@MANTA_FULL_LIBEXECDIR@"
         assert os.path.isdir(libexecDir)
 
-        # a hacky way to get at this, but works...
+        bgzipBin=os.path.join(libexecDir,"bgzip")
+        assert os.path.isfile(bgzipBin)
         samtoolsBin=os.path.join(libexecDir,"samtools")
         assert os.path.isfile(samtoolsBin)
+        tabixBin=os.path.join(libexecDir,"tabix")
+        assert os.path.isfile(tabixBin)
 
         mantaStatsBin=os.path.join(libexecDir,"GetAlignmentStats")
         assert os.path.isfile(mantaStatsBin)
@@ -63,6 +66,8 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         assert os.path.isfile(mantaGraphMergeBin)
         mantaHyGenBin=os.path.join(libexecDir,"GenerateSVCandidates")
         assert os.path.isfile(mantaHyGenBin)
+        mantaSortVcf=os.path.join(libexecDir,"sortVcf.py")
+        assert os.path.isfile(mantaSortVcf)
 
         return cleanLocals(locals())
 
