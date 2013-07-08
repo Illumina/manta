@@ -17,7 +17,7 @@ def getOptions() :
 
     (options,args) = parser.parse_args()
 
-    if options.mode is None :
+    if len(args) == 0 :
         parser.print_help()
         sys.exit(2)
 
@@ -59,7 +59,7 @@ def main() :
     (options,args) = getOptions()
 
     header=[]
-    reclist=[]
+    recList=[]
 
     isFirst=True
     for arg in args :
