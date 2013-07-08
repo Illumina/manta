@@ -24,15 +24,17 @@ include ("${MANTA_GLOBALS_CMAKE}")
 
 set(MANTA_REDIST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../redist")
 
-set(SAMTOOLS "samtools-0.1.18_no_tview")
-set(SAMTOOLS_DIR "${CMAKE_CURRENT_BINARY_DIR}/${SAMTOOLS}")
-set(SAMTOOLS_REDIST_DIR "${MANTA_REDIST_DIR}")
+#
+# samtools
+#
+set(SAMTOOLS_PREFIX "samtools-0.1.18_no_tview")
+set(SAMTOOLS_DIR "${CMAKE_CURRENT_BINARY_DIR}/${SAMTOOLS_PREFIX}")
 
 set (SAMTOOLS_LIB "${SAMTOOLS_DIR}/libbam.a")
 
 add_custom_command(OUTPUT ${SAMTOOLS_LIB}
                    COMMAND rm -rf "${SAMTOOLS_DIR}"
-                   COMMAND tar -jxf "${SAMTOOLS_REDIST_DIR}/${SAMTOOLS}.tar.bz2"
+                   COMMAND tar -xjf "${MANTA_REDIST_DIR}/${SAMTOOLS_PREFIX}.tar.bz2"
                    COMMAND $(MAKE) -C "${SAMTOOLS_DIR}" all bgzip
                    COMMENT "Building the SAM/BAM library and tools")
 add_custom_target(MANTA_SAMTOOLS DEPENDS "${SAMTOOLS_LIB}")
@@ -40,21 +42,43 @@ add_custom_target(MANTA_SAMTOOLS DEPENDS "${SAMTOOLS_LIB}")
 install(PROGRAMS "${SAMTOOLS_DIR}/samtools" DESTINATION "${MANTA_LIBEXECDIR}")
 install(PROGRAMS "${SAMTOOLS_DIR}/bgzip"    DESTINATION "${MANTA_LIBEXECDIR}")
 
+#
+# tabix
+#
+set(TABIX_PREFIX "tabix-0.2.6")
+set(TABIX_DIR "${CMAKE_CURRENT_BINARY_DIR}/${TABIX_PREFIX}")
+set(TABIX_PROG "${TABIX_DIR}/tabix")
+
+add_custom_command(OUTPUT ${TABIX_PROG}
+                   COMMAND rm -rf "${TABIX_DIR}"
+                   COMMAND tar -xjf "${MANTA_REDIST_DIR}/${TABIX_PREFIX}.tar.bz2"
+                   COMMAND $(MAKE) -C "${TABIX_DIR}" all
+                   COMMENT "Building tabix")
+add_custom_target(MANTA_TABIX DEPENDS "${TABIX_PROG}")
+
+install(PROGRAMS "${TABIX_PROG}" DESTINATION "${MANTA_LIBEXECDIR}")
+
+
+#
+# pyflow
+#
+
 #make sure unpacking happens regardless of whether ${VCF_TOOLS_DIR} exists
+set(PYFLOW_PREFIX "pyflow-1.0.0")
+set(PYFLOW_DIR "${CMAKE_CURRENT_BINARY_DIR}/${PYFLOW_PREFIX}")
+set(PYFLOW_SCRIPT "${PYFLOW_DIR}/src/pyflow.py")
 
-set(PYFLOW "pyflow-1.0.0")
-set(PYFLOW_DIR "${CMAKE_CURRENT_BINARY_DIR}/${PYFLOW}")
-set(PYFLOW_REDIST_DIR "${MANTA_REDIST_DIR}")
+add_custom_command(OUTPUT ${PYFLOW_SCRIPT}
+                   COMMAND rm -rf "${PYFLOW_DIR}"
+                   COMMAND tar -xjf "${MANTA_REDIST_DIR}/${PYFLOW_PREFIX}.tar.bz2"
+                   COMMENT "Extracting pyflow")
+add_custom_target(MANTA_PYFLOW DEPENDS "${PYFLOW_SCRIPT}")
 
-add_custom_target(MANTA_PYFLOW
-                  COMMAND tar -xjf "${PYFLOW_REDIST_DIR}/${PYFLOW}.tar.bz2"
-                  COMMAND touch "${PYFLOW_DIR}"
-                  COMMENT "Extracting pyflow")
 install (DIRECTORY ${PYFLOW_DIR}/src/ DESTINATION "${MANTA_PYTHON_LIBDIR}/pyflow" FILES_MATCHING PATTERN "*.py")
 
 # tie results back to parent:
 #
 set(SAMTOOLS_DIR "${SAMTOOLS_DIR}" PARENT_SCOPE)
-add_dependencies(MANTA_OPT MANTA_SAMTOOLS MANTA_PYFLOW)
+add_dependencies(MANTA_OPT MANTA_SAMTOOLS MANTA_TABIX MANTA_PYFLOW)
 
 
