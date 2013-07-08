@@ -19,6 +19,7 @@
 #include "GSCOptions.hh"
 #include "EdgeRetriever.hh"
 #include "SVFinder.hh"
+#include "SVScorer.hh"
 #include "WriteCandidateSVToVcf.hh"
 #include "WriteSomaticSVToVcf.hh"
 
@@ -48,34 +49,52 @@ runGSC(
         }
     }
 
-    SVFinder finder(opt);
+    SVFinder svFind(opt);
+    SVScorer svScore(opt);
 
     // load in set:
     SVLocusSet set;
     set.load(opt.graphFilename.c_str());
-    const SVLocusSet& cset(finder.getSet());
+    const SVLocusSet& cset(svFind.getSet());
 
     EdgeRetriever edger(cset, opt.binCount, opt.binIndex);
 
     OutStream outs(opt.candidateOutputFilename);
     std::ostream& outfp(outs.getStream());
 
+    const bool isSomatic(! opt.somaticOutputFilename.empty());
+
     if (0 == opt.binIndex)
     {
         writeCandidateSVVcfHeader(opt.referenceFilename.c_str(), version, outfp);
-        writeSomaticSVVcfHeader(opt.referenceFilename.c_str(), version, outfp);
+
+        if(isSomatic)
+        {
+            writeSomaticSVVcfHeader(opt.referenceFilename.c_str(), version, outfp);
+        }
     }
 
     SVCandidateData svData;
     std::vector<SVCandidate> svs;
+    SomaticSVScoreInfo ssInfo;
     while (edger.next())
     {
         const EdgeInfo& edge(edger.getEdge());
 
         // find number, type and breakend range of SVs on this edge:
-        finder.findSVCandidates(edge,svData,svs);
+        svFind.findCandidateSV(edge,svData,svs);
 
         writeCandidateSVToVcf(opt.referenceFilename, set, edge, svData, svs, outfp);
+
+        if(isSomatic)
+        {
+            const unsigned svIndex(0);
+            BOOST_FOREACH(const SVCandidate& sv, svs)
+            {
+                svScore.scoreSomaticSV(svData, svIndex,sv,ssInfo);
+                writeSomaticSVToVcf(opt.referenceFilename, set, edge, svData, svIndex, sv, ssInfo, outfp);
+            }
+        }
     }
 
 }

@@ -18,58 +18,31 @@
 #pragma once
 
 #include "GSCOptions.hh"
-#include "EdgeInfo.hh"
 
 #include "blt_util/bam_streamer.hh"
 #include "manta/SVCandidate.hh"
 #include "manta/SVCandidateData.hh"
 #include "manta/SVLocusScanner.hh"
-#include "manta/SVLocusSet.hh"
+#include "manta/SomaticSVScoreInfo.hh"
 
 #include "boost/shared_ptr.hpp"
 
 #include <vector>
 
 
-struct SVFinder
+struct SVScorer
 {
-
-    SVFinder(const GSCOptions& opt);
-
-    const SVLocusSet&
-    getSet() const
-    {
-        return _set;
-    }
+    SVScorer(const GSCOptions& opt);
 
     void
-    findCandidateSV(
-        const EdgeInfo& edge,
-        SVCandidateData& svData,
-        std::vector<SVCandidate>& svs);
-
-    void
-    checkResult(
+    scoreSomaticSV(
         const SVCandidateData& svData,
-        const std::vector<SVCandidate>& svs) const;
+        const unsigned svIndex,
+        const SVCandidate& sv,
+        SomaticSVScoreInfo& ssInfo);
 
 private:
-
-    void
-    addSVNodeData(
-        const SVLocus& locus,
-        const NodeIndexType node1,
-        const NodeIndexType node2,
-        SVCandidateData& svData);
-
-
-    void
-    getCandidatesFromData(
-        SVCandidateData& svData,
-        std::vector<SVCandidate>& svs);
-
-    const ReadScannerOptions _scanOpt;
-    SVLocusSet _set;
+    const SomaticCallOptions _somaticOpt;
     SVLocusScanner _readScanner;
 
     typedef boost::shared_ptr<bam_streamer> streamPtr;

@@ -21,6 +21,7 @@
 #include "manta/SVCandidate.hh"
 #include "manta/SVCandidateData.hh"
 #include "manta/SVLocusSet.hh"
+#include "manta/SomaticSVScoreInfo.hh"
 
 #include <iosfwd>
 #include <vector>
@@ -39,5 +40,7 @@ writeSomaticSVToVcf(
     const SVLocusSet& set,
     const EdgeInfo& edge,
     const SVCandidateData& svData,
-    const std::vector<SVCandidate>& svs,
+    const unsigned svIndex,
+    const SVCandidate& sv,
+    const SomaticSVScoreInfo& ssInfo,
     std::ostream& os);

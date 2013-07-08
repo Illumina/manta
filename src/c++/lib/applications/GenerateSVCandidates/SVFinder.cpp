@@ -18,7 +18,6 @@
 #include "SVFinder.hh"
 
 #include "blt_util/bam_streamer.hh"
-#include "blt_util/input_stream_handler.hh"
 #include "blt_util/log.hh"
 #include "common/Exceptions.hh"
 #include "manta/ReadGroupStatsSet.hh"
@@ -418,7 +417,7 @@ getCandidatesFromData(
 
 void
 SVFinder::
-findSVCandidates(
+findCandidateSV(
     const EdgeInfo& edge,
     SVCandidateData& svData,
     std::vector<SVCandidate>& svs)

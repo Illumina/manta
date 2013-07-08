@@ -160,7 +160,9 @@ writeSomaticSVToVcf(
     const SVLocusSet& set,
     const EdgeInfo& edge,
     const SVCandidateData& ,
-    const std::vector<SVCandidate>& svs,
+    const unsigned svIndex,
+    const SVCandidate& sv,
+    const SomaticSVScoreInfo& ssInfo,
     std::ostream& os)
 {
     const unsigned minPairCount(set.getMinMergeEdgeCount());
@@ -168,10 +170,8 @@ writeSomaticSVToVcf(
 
     boost::format idFormatter("MantaBND:%i:%i:%i:%i:");
 
-    unsigned svIndex(0);
-    BOOST_FOREACH(const SVCandidate& sv, svs)
     {
-        if (sv.bp1.pairCount < minPairCount) continue;
+        if (sv.bp1.pairCount < minPairCount) return;
 
         const SV_TYPE::index_t svType(getSVType(sv));
         if (svType == SV_TYPE::INTERTRANSLOC)
@@ -184,8 +184,6 @@ writeSomaticSVToVcf(
         {
             assert(! "Unknown SV type");
         }
-
-        svIndex++;
     }
 }
 
