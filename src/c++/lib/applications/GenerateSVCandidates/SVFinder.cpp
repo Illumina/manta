@@ -227,19 +227,18 @@ consolidateOverlap(
     std::set<unsigned> deletedSVIndex;
 
     const unsigned svCount(svs.size());
-    for (unsigned outerIndex(0); outerIndex<svCount; ++outerIndex)
+    for (unsigned outerIndex(1); outerIndex<svCount; ++outerIndex)
     {
-        const unsigned routerIndex(svCount-(outerIndex+1));
-        for (unsigned innerIndex(0); innerIndex<routerIndex; ++innerIndex)
+        for (unsigned innerIndex(0); innerIndex<outerIndex; ++innerIndex)
         {
-            if (svs[innerIndex].isIntersect(svs[routerIndex]))
+            if (svs[innerIndex].isIntersect(svs[outerIndex]))
             {
 #ifdef DEBUG_SVDATA
-                log_os << "Merging outer:inner: " << routerIndex << " " << innerIndex << "\n";
+                log_os << "Merging outer:inner: " << outerIndex << " " << innerIndex << "\n";
 #endif
-                svs[innerIndex].merge(svs[routerIndex]);
-                moveSVIndex[routerIndex] = innerIndex;
-                deletedSVIndex.insert(routerIndex);
+                svs[innerIndex].merge(svs[outerIndex]);
+                moveSVIndex[outerIndex] = (innerIndex - deletedSVIndex.size());
+                deletedSVIndex.insert(outerIndex);
                 break;
             }
         }
