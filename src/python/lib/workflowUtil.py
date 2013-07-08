@@ -55,6 +55,14 @@ def checkFile(filename,label="") :
 
 
 
+def checkDir(dirname,label="") :
+    if os.path.isdir(dirname) : return
+    if label is None : label=""
+    if label != "" : label=" "+label.strip()
+    raise Exception("Can't find%s directory '%s'" % (label,dirname) )
+
+
+
 def which(searchFile) :
     """
     search the PATH for searchFile
