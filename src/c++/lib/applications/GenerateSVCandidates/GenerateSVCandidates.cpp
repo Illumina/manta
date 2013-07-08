@@ -39,15 +39,7 @@ runGSC(
     const GSCOptions& opt,
     const char* version)
 {
-    {
-        // early test that we have permission to write to output file
-        OutStream outs(opt.candidateOutputFilename);
-
-        if (! opt.somaticOutputFilename.empty())
-        {
-            OutStream somouts(opt.somaticOutputFilename);
-        }
-    }
+    const bool isSomatic(! opt.somaticOutputFilename.empty());
 
     SVFinder svFind(opt);
     SVScorer svScore(opt);
@@ -59,13 +51,12 @@ runGSC(
 
     EdgeRetriever edger(cset, opt.binCount, opt.binIndex);
 
-    OutStream outs(opt.candidateOutputFilename);
-    std::ostream& outfp(outs.getStream());
+    OutStream candfs(opt.candidateOutputFilename);
+    OutStream somfs(opt.somaticOutputFilename);
 
-    const bool isSomatic(! opt.somaticOutputFilename.empty());
+    VcfWriterCandidateSV candWriter(opt.referenceFilename,set,candfs.getStream());
+    VcfWriterSomaticSV somWriter(opt.somaticOpt, opt.referenceFilename,set,somfs.getStream());
 
-    VcfWriterCandidateSV candWriter(opt.referenceFilename,set,outfp);
-    VcfWriterSomaticSV somWriter(opt.somaticOpt, opt.referenceFilename,set,outfp);
     if (0 == opt.binIndex)
     {
         candWriter.writeHeader(version);

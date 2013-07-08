@@ -351,7 +351,7 @@ class MantaWorkflow(WorkflowRunner) :
         
         hygenPrereq = graphTasks
         if not self.params.isExome :
-            hygenPrereq.add(depthTasks)
+            hygenPrereq |= depthTasks
             
         hygenTasks = runHyGen(self,dependencies=hygenPrereq)
 
