@@ -85,7 +85,8 @@ scoreSomaticSV(
         }
     }
 
-    // Get Data on standard reads crossing the two breakends
+    // Get Data on standard read pairs crossing the two breakends,
+    // and get a breakend depth estimate
 
     // apply filters
 

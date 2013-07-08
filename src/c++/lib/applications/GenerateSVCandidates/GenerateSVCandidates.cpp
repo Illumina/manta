@@ -37,7 +37,8 @@ static
 void
 runGSC(
     const GSCOptions& opt,
-    const char* version)
+    const char* progName,
+    const char* progVersion)
 {
     const bool isSomatic(! opt.somaticOutputFilename.empty());
 
@@ -59,8 +60,8 @@ runGSC(
 
     if (0 == opt.binIndex)
     {
-        candWriter.writeHeader(version);
-        if(isSomatic) somWriter.writeHeader(version);
+        candWriter.writeHeader(progName, progVersion);
+        if(isSomatic) somWriter.writeHeader(progName, progVersion);
     }
 
     SVCandidateData svData;
@@ -98,5 +99,5 @@ runInternal(int argc, char* argv[]) const
     GSCOptions opt;
 
     parseGSCOptions(*this,argc,argv,opt);
-    runGSC(opt,version());
+    runGSC(opt, name(), version());
 }

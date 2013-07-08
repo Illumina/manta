@@ -41,15 +41,19 @@ struct VcfWriterSV
 
     virtual
     void
-    writeHeader(const char* progVersion)
+    writeHeader(
+            const char* progName,
+            const char* progVersion)
     {
-        writeHeaderPrefix(progVersion);
+        writeHeaderPrefix(progName, progVersion);
         writeHeaderSuffix();
     }
 
 protected:
     void
-    writeHeaderPrefix(const char* progVersion);
+    writeHeaderPrefix(
+            const char* progName,
+            const char* progVersion);
 
     void
     writeHeaderSuffix();

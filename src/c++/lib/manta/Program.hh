@@ -26,7 +26,6 @@ namespace manta
 /// this is used to standardize bottom-level exception handling
 struct Program
 {
-
     virtual
     ~Program() {}
 

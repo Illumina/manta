@@ -39,10 +39,12 @@ VcfWriterSV(
 
 void
 VcfWriterSV::
-writeHeaderPrefix(const char* progVersion)
+writeHeaderPrefix(
+        const char* progName,
+        const char* progVersion)
 {
     _os << "##fileformat=VCFv4.1\n";
-    _os << "##source=manta " << progVersion << "\n";
+    _os << "##source=" << progName << " " << progVersion << "\n";
     _os << "##reference=file://" << _referenceFilename << "\n";
     _os << "##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description=\"Imprecise structural variation\">\n";
     _os << "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n";
