@@ -93,7 +93,7 @@ writeTransloc(
 
     // get REF
     std::string ref;
-    get_standardized_region_seq(referenceFilename,chrom,pos,pos,ref);
+    get_standardized_region_seq(referenceFilename,chrom,pos-1,pos-1,ref);
 
     assert(1 == ref.size());
 
@@ -184,9 +184,6 @@ writeSVCandidatesToVcf(
             const std::string idPrefix( str(idFormatter % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % svIndex ) );
             writeTransloc(referenceFilename, header, sv.bp1, sv.bp2, idPrefix, true, os);
             writeTransloc(referenceFilename, header, sv.bp2, sv.bp1, idPrefix, false, os);
-
-            // keep the debug output for now:
-            os << sv;
         }
         else
         {

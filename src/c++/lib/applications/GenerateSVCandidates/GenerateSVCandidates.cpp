@@ -56,8 +56,8 @@ runGSC(const GSCOptions& opt)
 
     OutStream outs(opt.candidateOutputFilename);
     std::ostream& outfp(outs.getStream());
-    writeSVCandidateVcfHeader(outfp);
 
+    if(0 == opt.binIndex) writeSVCandidateVcfHeader(outfp);
 
     SVCandidateData svData;
     std::vector<SVCandidate> svs;

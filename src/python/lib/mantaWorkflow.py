@@ -188,6 +188,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
 
     nextStepWait = hygenTasks
 
+
     def getVcfSortCmd(vcfPaths, outPath) :
         cmd  = "%s -E %s " % (sys.executable,self.params.mantaSortVcf)
         cmd += " ".join(vcfPaths)
