@@ -1,3 +1,5 @@
+v0.3
+POC translation of graph into candidate transloc vcf
 v0.2
 working proof of concept denoised sv locus graph
 v0.1
