@@ -19,7 +19,7 @@
 
 #include <iosfwd>
 #include <string>
-#include <vector>
+#include <set>
 
 
 struct SVSampleInfo
@@ -50,6 +50,8 @@ struct SVSampleInfo
 struct SomaticSVScoreInfo
 {
     SomaticSVScoreInfo() :
+        bp1MaxDepth(0),
+        bp2MaxDepth(0),
         somaticScore(0)
     {}
 
@@ -59,13 +61,19 @@ struct SomaticSVScoreInfo
         tumor.clear();
         normal.clear();
         filters.clear();
+
+        bp1MaxDepth=0;
+        bp2MaxDepth=0;
         somaticScore=0;
     }
 
     SVSampleInfo tumor;
     SVSampleInfo normal;
-    std::vector<std::string> filters;
 
+    std::set<std::string> filters;
+
+    unsigned bp1MaxDepth;
+    unsigned bp2MaxDepth;
     unsigned somaticScore;
 };
 

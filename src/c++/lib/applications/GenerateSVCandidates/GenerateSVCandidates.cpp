@@ -43,20 +43,17 @@ runGSC(
     const bool isSomatic(! opt.somaticOutputFilename.empty());
 
     SVFinder svFind(opt);
-    SVScorer svScore(opt);
-
-    // load in set:
-    SVLocusSet set;
-    set.load(opt.graphFilename.c_str());
     const SVLocusSet& cset(svFind.getSet());
+
+    SVScorer svScore(opt, cset.header);
 
     EdgeRetriever edger(cset, opt.binCount, opt.binIndex);
 
     OutStream candfs(opt.candidateOutputFilename);
     OutStream somfs(opt.somaticOutputFilename);
 
-    VcfWriterCandidateSV candWriter(opt.referenceFilename,set,candfs.getStream());
-    VcfWriterSomaticSV somWriter(opt.somaticOpt, opt.referenceFilename,set,somfs.getStream());
+    VcfWriterCandidateSV candWriter(opt.referenceFilename,cset,candfs.getStream());
+    VcfWriterSomaticSV somWriter(opt.somaticOpt, opt.referenceFilename,cset,somfs.getStream());
 
     if (0 == opt.binIndex)
     {

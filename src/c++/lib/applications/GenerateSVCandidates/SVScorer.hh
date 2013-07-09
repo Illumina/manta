@@ -20,6 +20,8 @@
 #include "GSCOptions.hh"
 
 #include "blt_util/bam_streamer.hh"
+#include "blt_util/bam_header_info.hh"
+#include "manta/ChromDepthFilterUtil.hh"
 #include "manta/SVCandidate.hh"
 #include "manta/SVCandidateData.hh"
 #include "manta/SVLocusScanner.hh"
@@ -32,7 +34,9 @@
 
 struct SVScorer
 {
-    SVScorer(const GSCOptions& opt);
+    SVScorer(
+            const GSCOptions& opt,
+            const bam_header_info& header);
 
     void
     scoreSomaticSV(
@@ -49,6 +53,7 @@ private:
 
     const std::vector<bool> _isAlignmentTumor;
     const SomaticCallOptions _somaticOpt;
+    const ChromDepthFilterUtil _dFilter;
     SVLocusScanner _readScanner;
 
     typedef boost::shared_ptr<bam_streamer> streamPtr;

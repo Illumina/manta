@@ -31,9 +31,12 @@
 
 
 SVScorer::
-SVScorer(const GSCOptions& opt) :
+SVScorer(
+        const GSCOptions& opt,
+        const bam_header_info& header) :
     _isAlignmentTumor(opt.isAlignmentTumor),
     _somaticOpt(opt.somaticOpt),
+    _dFilter(opt.chromDepthFilename, opt.somaticOpt.maxDepthFactor, header),
     _readScanner(opt.scanOpt,opt.statsFilename,opt.alignmentFilename)
 {
     // setup regionless bam_streams:
@@ -173,16 +176,25 @@ scoreSomaticSV(
     }
 
     // get breakend center_pos depth estimate:
-    const unsigned bp1MaxDepth(getBreakendMaxMappedDepth(sv.bp1));
-    const unsigned bp2MaxDepth(getBreakendMaxMappedDepth(sv.bp2));
-
-    if (bp1MaxDepth+bp2MaxDepth > 1) return;
+    ssInfo.bp1MaxDepth=(getBreakendMaxMappedDepth(sv.bp1));
+    ssInfo.bp2MaxDepth=(getBreakendMaxMappedDepth(sv.bp2));
 
     // Get Data on standard read pairs crossing the two breakends,
     // and get a breakend depth estimate
 
     // apply filters
+    if(_dFilter.isMaxDepthFilter())
+    {
+        if     (ssInfo.bp1MaxDepth > _dFilter.maxDepth(sv.bp1.interval.tid))
+        {
+            ssInfo.filters.insert(_somaticOpt.maxDepthFilterLabel);
+        }
+        else if(ssInfo.bp2MaxDepth > _dFilter.maxDepth(sv.bp2.interval.tid))
+        {
+            ssInfo.filters.insert(_somaticOpt.maxDepthFilterLabel);
+        }
 
+    }
 
     // assign bogus somatic score just to get started:
     bool isSomatic(true);
