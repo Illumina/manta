@@ -17,6 +17,7 @@
 
 #include "SVScorer.hh"
 
+#include "blt_util/align_path_bam_util.hh"
 #include "blt_util/bam_streamer.hh"
 #include "blt_util/log.hh"
 #include "common/Exceptions.hh"
@@ -24,6 +25,7 @@
 
 #include "boost/foreach.hpp"
 
+#include <algorithm>
 #include <iostream>
 
 
@@ -46,13 +48,98 @@ SVScorer(const GSCOptions& opt) :
 
 
 
+static
+void
+addReadToDepthEst(
+        const bam_record& bamRead,
+        const pos_t beginPos,
+        std::vector<unsigned>& depth)
+{
+    using namespace ALIGNPATH;
+
+    const pos_t endPos(beginPos+depth.size());
+
+    // get cigar:
+    path_t apath;
+    bam_cigar_to_apath(bamRead.raw_cigar(), bamRead.n_cigar(), apath);
+
+    pos_t refPos(bamRead.pos()-1);
+    BOOST_FOREACH(const path_segment& ps, apath)
+    {
+        if(refPos>=endPos) return;
+
+        if(MATCH == ps.type)
+        {
+            for(pos_t pos(refPos); pos < (refPos+static_cast<pos_t>(ps.length)); ++pos)
+            {
+                if(pos>=beginPos)
+                {
+                    if(pos>=endPos) return;
+                    depth[pos-beginPos]++;
+                }
+            }
+        }
+        if(is_segment_type_ref_length(ps.type)) refPos += ps.length;
+    }
+}
+
+
+
+unsigned
+SVScorer::
+getBreakendMaxMappedDepth(const SVBreakend& bp)
+{
+    /// define a new interval -/+ 50 bases around the center pos
+    /// of the breakpoint
+    static const pos_t regionSize(50);
+    const pos_t centerPos(bp.interval.range.center_pos());
+    const known_pos_range2 searchRange(std::max((centerPos-regionSize),0), (centerPos+regionSize));
+
+    std::vector<unsigned> depth(searchRange.size(),0);
+
+    bool isNormalFound(false);
+
+    const unsigned bamCount(_bamStreams.size());
+    for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
+    {
+        if(_isAlignmentTumor[bamIndex]) continue;
+
+        bam_streamer& bamStream(*_bamStreams[bamIndex]);
+
+        // set bam stream to new search interval:
+        bamStream.set_new_region(bp.interval.tid, searchRange.begin_pos(), searchRange.end_pos());
+
+        while (bamStream.next())
+        {
+            const bam_record& bamRead(*(bamStream.get_record_ptr()));
+
+            // turn filtration off down to mapped only to match depth estimate method:
+            //if (_readScanner.isReadFiltered(bamRead)) continue;
+            if(bamRead.is_unmapped()) continue;
+
+            if((bamRead.pos()-1) >= searchRange.end_pos()) break;
+
+            addReadToDepthEst(bamRead,searchRange.begin_pos(),depth);
+        }
+
+        isNormalFound=true;
+        break;
+    }
+
+    assert(isNormalFound);
+
+    return *(std::max_element(depth.begin(),depth.end()));
+}
+
+
+
 
 void
 SVScorer::
 scoreSomaticSV(
     const SVCandidateData& svData,
     const unsigned svIndex,
-    const SVCandidate&,
+    const SVCandidate& sv,
     SomaticSVScoreInfo& ssInfo)
 {
     ssInfo.clear();
@@ -85,10 +172,17 @@ scoreSomaticSV(
         }
     }
 
+    // get breakend center_pos depth estimate:
+    const unsigned bp1MaxDepth(getBreakendMaxMappedDepth(sv.bp1));
+    const unsigned bp2MaxDepth(getBreakendMaxMappedDepth(sv.bp2));
+
+    if(bp1MaxDepth+bp2MaxDepth > 1) return;
+
     // Get Data on standard read pairs crossing the two breakends,
     // and get a breakend depth estimate
 
     // apply filters
+
 
     // assign bogus somatic score just to get started:
     bool isSomatic(true);

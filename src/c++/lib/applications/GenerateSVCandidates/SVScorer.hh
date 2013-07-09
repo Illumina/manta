@@ -42,6 +42,11 @@ struct SVScorer
         SomaticSVScoreInfo& ssInfo);
 
 private:
+
+    /// determine maximum depth in region around breakend
+    unsigned
+    getBreakendMaxMappedDepth(const SVBreakend& bp);
+
     const std::vector<bool> _isAlignmentTumor;
     const SomaticCallOptions _somaticOpt;
     SVLocusScanner _readScanner;
