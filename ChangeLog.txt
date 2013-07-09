@@ -1,3 +1,5 @@
+v0.4
+POC somatic transloc output
 v0.3
 POC translation of graph into candidate transloc vcf
 v0.2
