@@ -92,7 +92,17 @@ scoreSomaticSV(
 
     // assign bogus somatic score just to get started:
     bool isSomatic(true);
-    if((ssInfo.tumor.spanPairs < 6) || (ssInfo.normal.spanPairs > 1)) isSomatic=false;
+    if(ssInfo.normal.spanPairs > 1) isSomatic=false;
+
+    if(isSomatic)
+    {
+        const bool lowPairSupport(ssInfo.tumor.spanPairs < 6);
+        const bool lowSingleSupport((ssInfo.tumor.bp1SpanReads < 14) || (ssInfo.tumor.bp2SpanReads < 14));
+        const bool highSingleContam((ssInfo.normal.bp1SpanReads > 1) || (ssInfo.normal.bp2SpanReads > 1));
+
+        /// allow single pair support to rescue an SV only if the evidence looks REALLY good:
+        if(lowPairSupport && (lowSingleSupport || highSingleContam)) isSomatic=false;
+    }
 
     if(isSomatic)
     {
