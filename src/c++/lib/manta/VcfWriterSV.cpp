@@ -46,6 +46,11 @@ writeHeaderPrefix(
     _os << "##fileformat=VCFv4.1\n";
     _os << "##source=" << progName << " " << progVersion << "\n";
     _os << "##reference=file://" << _referenceFilename << "\n";
+
+    BOOST_FOREACH(const bam_header_info::chrom_info& cdata, _header.chrom_data)
+    {
+        _os << "##contig=<ID=" << cdata.label << ",length=" << cdata.length << ">\n";
+    }
     _os << "##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description=\"Imprecise structural variation\">\n";
     _os << "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n";
     _os << "##INFO=<ID=CIPOS,Number=2,Type=Integer,Description=\"Confidence interval around POS for imprecise variants\">\n";
