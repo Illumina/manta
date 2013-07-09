@@ -46,7 +46,7 @@ struct ChromDepthFilterUtil
     double
     maxDepth(const int32_t tid) const
     {
-        assert((tid > 0) && (tid < static_cast<int32_t>(_maxDepthFilter.size())));
+        assert((tid >= 0) && (tid < static_cast<int32_t>(_maxDepthFilter.size())));
         return _maxDepthFilter[tid];
     }
 
