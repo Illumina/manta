@@ -60,6 +60,10 @@ writeHeaderPrefix(
     _os << "##INFO=<ID=BND_PAIR_SUPPORT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at this breakend (mapping may not be confident at remote breakend)\">\n";
     _os << "##INFO=<ID=PAIR_SUPPORT,Number=1,Type=Integer,Description=\"Read pairs supporting this variant where both reads are confidently mapped\">\n";
 
+    addHeaderInfo();
+
+    addHeaderFilters();
+
     _os << "##ALT=<ID=BND,Description=\"Translocation Breakend\">\n";
 
 }
@@ -181,7 +185,7 @@ writeTransloc(
         << '\t' << ref // REF
         << '\t' << str( altFormat ) // ALT
         << '\t' << '.' // QUAL
-        << '\t' << '.' // FILTER
+        << '\t' << getFilter() // FILTER
         << '\t';
     makeInfoField(infotags,_os); // INFO
     _os << '\n';

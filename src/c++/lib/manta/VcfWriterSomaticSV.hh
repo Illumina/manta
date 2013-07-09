@@ -26,11 +26,13 @@ struct VcfWriterSomaticSV : public VcfWriterSV
 {
     VcfWriterSomaticSV(
         const SomaticCallOptions& somaticOpt,
+        const bool isMaxDepthFilter,
         const std::string& referenceFilename,
         const SVLocusSet& set,
         std::ostream& os) :
         VcfWriterSV(referenceFilename,set,os),
         _somaticOpt(somaticOpt),
+        _isMaxDepthFilter(isMaxDepthFilter),
         _ssInfoPtr(NULL)
     {}
 
@@ -44,13 +46,22 @@ struct VcfWriterSomaticSV : public VcfWriterSV
 
 private:
 
-    virtual
+    void
+    addHeaderInfo() const;
+
+    void
+    addHeaderFilters() const;
+
     void
     modifyInfo(
         const bool isFirstOfPair,
-        std::vector<std::string>& infotags);
+        std::vector<std::string>& infotags) const;
+
+    std::string
+    getFilter() const;
 
     const SomaticCallOptions& _somaticOpt;
+    const bool _isMaxDepthFilter;
     const SomaticSVScoreInfo* _ssInfoPtr;
 };
 

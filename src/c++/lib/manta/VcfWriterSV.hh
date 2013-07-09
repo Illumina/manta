@@ -39,7 +39,6 @@ struct VcfWriterSV
     virtual
     ~VcfWriterSV() {}
 
-    virtual
     void
     writeHeader(
         const char* progName,
@@ -58,6 +57,14 @@ protected:
     void
     writeHeaderSuffix();
 
+    virtual
+    void
+    addHeaderInfo() const {}
+
+    virtual
+    void
+    addHeaderFilters() const {}
+
     void
     writeTranslocPair(
         const EdgeInfo& edge,
@@ -68,8 +75,15 @@ protected:
     void
     modifyInfo(
         const bool /*isFirstOfPair*/,
-        std::vector<std::string>& /*infotags*/)
+        std::vector<std::string>& /*infotags*/) const
     {}
+
+    virtual
+    std::string
+    getFilter() const
+    {
+        return ".";
+    }
 
 private:
 
@@ -86,8 +100,9 @@ protected:
 
 private:
     const bam_header_info& _header;
+protected:
     std::ostream& _os;
-
+private:
     boost::format _idFormatter;
 };
 
