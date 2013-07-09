@@ -21,8 +21,8 @@
 void
 VcfWriterSomaticSV::
 modifyInfo(
-        const bool isFirstOfPair,
-        std::vector<std::string>& infotags)
+    const bool isFirstOfPair,
+    std::vector<std::string>& infotags)
 {
     assert(_ssInfoPtr != NULL);
     const SomaticSVScoreInfo& ssInfo(*_ssInfoPtr);
@@ -31,9 +31,9 @@ modifyInfo(
     infotags.push_back( str(boost::format("NORMAL_PAIR_SUPPORT=%i") % ssInfo.normal.spanPairs) );
     infotags.push_back( str(boost::format("TUMOR_PAIR_SUPPORT=%i") % ssInfo.tumor.spanPairs) );
     infotags.push_back( str(boost::format("NORMAL_BND_PAIR_SUPPORT=%i") %
-            (isFirstOfPair ? ssInfo.normal.bp1SpanReads : ssInfo.normal.bp2SpanReads) ) );
+                            (isFirstOfPair ? ssInfo.normal.bp1SpanReads : ssInfo.normal.bp2SpanReads) ) );
     infotags.push_back( str(boost::format("TUMOR_BND_PAIR_SUPPORT=%i") %
-            (isFirstOfPair ? ssInfo.tumor.bp1SpanReads : ssInfo.tumor.bp2SpanReads) ) );
+                            (isFirstOfPair ? ssInfo.tumor.bp1SpanReads : ssInfo.tumor.bp2SpanReads) ) );
 }
 
 
@@ -48,7 +48,7 @@ writeSV(
     const SomaticSVScoreInfo& ssInfo)
 {
 
-    if(ssInfo.somaticScore < _somaticOpt.minOutputSomaticScore) return;
+    if (ssInfo.somaticScore < _somaticOpt.minOutputSomaticScore) return;
 
     //TODO: this is a lame way to customize subclass behavior:
     _ssInfoPtr=&ssInfo;

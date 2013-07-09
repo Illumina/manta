@@ -47,8 +47,8 @@ private:
     virtual
     void
     modifyInfo(
-            const bool isFirstOfPair,
-            std::vector<std::string>& infotags);
+        const bool isFirstOfPair,
+        std::vector<std::string>& infotags);
 
     const SomaticCallOptions& _somaticOpt;
     const SomaticSVScoreInfo* _ssInfoPtr;

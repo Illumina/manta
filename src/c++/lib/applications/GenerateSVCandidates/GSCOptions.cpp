@@ -96,7 +96,7 @@ parseGSCOptions(const manta::Program& prog,
     ("align-stats", po::value(&opt.statsFilename),
      "pre-computed alignment statistics for the input alignment files (required)")
     ("chrom-depth", po::value(&opt.chromDepthFilename),
-      "average depth estimate for each chromosome")
+     "average depth estimate for each chromosome")
     ("ref", po::value(&opt.referenceFilename),
      "fasta reference sequence (required)")
     ("candidate-output-file", po::value(&opt.candidateOutputFilename),
@@ -178,7 +178,7 @@ parseGSCOptions(const manta::Program& prog,
     checkStandardizeUsageFile(log_os,prog,visible,opt.referenceFilename,"reference fasta");
     checkStandardizeUsageFile(log_os,prog,visible,opt.statsFilename,"alignment statistics");
 
-    if(! opt.chromDepthFilename.empty())
+    if (! opt.chromDepthFilename.empty())
     {
         checkStandardizeUsageFile(log_os,prog,visible,opt.chromDepthFilename,"chromosome depth");
     }

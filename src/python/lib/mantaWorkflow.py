@@ -102,7 +102,7 @@ def runDepth(self,taskPrefix="",dependencies=None) :
     estimate chrom dpeth
     """
 
-    
+
     bamFile=""
     if len(self.params.normalBamList) :
         bamFile = self.params.normalBamList[0]
@@ -250,7 +250,7 @@ class PathInfo:
 
     def getStatsPath(self) :
         return os.path.join(self.params.workDir,"alignmentStats.txt")
-    
+
     def getChromDepth(self) :
         return os.path.join(self.params.workDir,"chromDepth.txt")
 
@@ -343,15 +343,15 @@ class MantaWorkflow(WorkflowRunner) :
         self.flowLog("Initiating Manta workflow version: %s" % (__version__))
 
         statsTasks = runStats(self)
-        
+
         if not self.params.isExome :
             depthTasks = runDepth(self)
-        
+
         graphTasks = runLocusGraph(self,dependencies=statsTasks)
-        
+
         hygenPrereq = graphTasks
         if not self.params.isExome :
             hygenPrereq |= depthTasks
-            
+
         hygenTasks = runHyGen(self,dependencies=hygenPrereq)
 

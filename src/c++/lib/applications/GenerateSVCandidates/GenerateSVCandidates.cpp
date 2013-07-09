@@ -61,7 +61,7 @@ runGSC(
     if (0 == opt.binIndex)
     {
         candWriter.writeHeader(progName, progVersion);
-        if(isSomatic) somWriter.writeHeader(progName, progVersion);
+        if (isSomatic) somWriter.writeHeader(progName, progVersion);
     }
 
     SVCandidateData svData;
@@ -76,7 +76,7 @@ runGSC(
 
         candWriter.writeSV(edge, svData, svs);
 
-        if(isSomatic)
+        if (isSomatic)
         {
             unsigned svIndex(0);
             BOOST_FOREACH(const SVCandidate& sv, svs)

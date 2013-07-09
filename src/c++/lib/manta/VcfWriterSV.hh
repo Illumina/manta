@@ -42,8 +42,8 @@ struct VcfWriterSV
     virtual
     void
     writeHeader(
-            const char* progName,
-            const char* progVersion)
+        const char* progName,
+        const char* progVersion)
     {
         writeHeaderPrefix(progName, progVersion);
         writeHeaderSuffix();
@@ -52,23 +52,23 @@ struct VcfWriterSV
 protected:
     void
     writeHeaderPrefix(
-            const char* progName,
-            const char* progVersion);
+        const char* progName,
+        const char* progVersion);
 
     void
     writeHeaderSuffix();
 
     void
     writeTranslocPair(
-            const EdgeInfo& edge,
-            const unsigned svIndex,
-            const SVCandidate& sv);
+        const EdgeInfo& edge,
+        const unsigned svIndex,
+        const SVCandidate& sv);
 
     virtual
     void
     modifyInfo(
-            const bool /*isFirstOfPair*/,
-            std::vector<std::string>& /*infotags*/)
+        const bool /*isFirstOfPair*/,
+        std::vector<std::string>& /*infotags*/)
     {}
 
 private:

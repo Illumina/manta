@@ -41,8 +41,8 @@ VcfWriterSV(
 void
 VcfWriterSV::
 writeHeaderPrefix(
-        const char* progName,
-        const char* progVersion)
+    const char* progName,
+    const char* progVersion)
 {
     _os << "##fileformat=VCFv4.1\n";
     _os << "##fileData=" << vcf_fileDate << "\n";
@@ -176,13 +176,13 @@ writeTransloc(
 
     // write out record:
     _os << chrom
-       << '\t' << pos
-       << '\t' << localId // ID
-       << '\t' << ref // REF
-       << '\t' << str( altFormat ) // ALT
-       << '\t' << '.' // QUAL
-       << '\t' << '.' // FILTER
-       << '\t';
+        << '\t' << pos
+        << '\t' << localId // ID
+        << '\t' << ref // REF
+        << '\t' << str( altFormat ) // ALT
+        << '\t' << '.' // QUAL
+        << '\t' << '.' // FILTER
+        << '\t';
     makeInfoField(infotags,_os); // INFO
     _os << '\n';
 }
@@ -192,9 +192,9 @@ writeTransloc(
 void
 VcfWriterSV::
 writeTranslocPair(
-        const EdgeInfo& edge,
-        const unsigned svIndex,
-        const SVCandidate& sv)
+    const EdgeInfo& edge,
+    const unsigned svIndex,
+    const SVCandidate& sv)
 {
     const std::string idPrefix( str(_idFormatter % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % svIndex ) );
     writeTransloc(sv.bp1, sv.bp2, idPrefix, true);
