@@ -18,6 +18,7 @@
 #include "manta/VcfWriterSV.hh"
 
 #include "blt_util/samtools_fasta_util.hh"
+#include "blt_util/vcf_util.hh"
 
 #include <iostream>
 
@@ -44,6 +45,7 @@ writeHeaderPrefix(
         const char* progVersion)
 {
     _os << "##fileformat=VCFv4.1\n";
+    _os << "##fileData=" << vcf_fileDate << "\n";
     _os << "##source=" << progName << " " << progVersion << "\n";
     _os << "##reference=file://" << _referenceFilename << "\n";
 
