@@ -44,6 +44,8 @@ struct SVLocusSetFinder : public pos_processor_base
 
     ~SVLocusSetFinder()
     {
+        _svLoci.addAnomCount(_anomCount);
+        _svLoci.addNonAnomCount(_nonAnomCount);
         _stageman.reset();
     }
 
@@ -97,5 +99,8 @@ private:
     pos_t _denoisePos;
 
     SVLocusScanner _readScanner;
+
+    unsigned _anomCount;
+    unsigned _nonAnomCount;
 };
 

@@ -64,6 +64,7 @@ addSVNodeRead(
     SVCandidateDataGroup& svDataGroup)
 {
     if (scanner.isReadFiltered(read)) return;
+    if (read.is_proper_pair()) return;
 
     SVLocus locus;
     scanner.getChimericSVLocus(read,bamIndex,locus);

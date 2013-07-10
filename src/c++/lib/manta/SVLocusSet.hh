@@ -40,7 +40,8 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
         _minMergeEdgeCount(minMergeEdgeCount),
         _isFinalized(false),
         _totalCleaned(0),
-        _totalNull(0)
+        _totalAnom(0),
+        _totalNonAnom(0)
     {}
 
     bool
@@ -94,14 +95,24 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
     void
     merge(const SVLocusSet& set);
 
-    /// indicates that an observed read is not being
-    /// added to the graph
+    /// indicates the total count of non-filtered
+    /// anomolous reads used to construct the graph
     ///
     /// useful for tracking read stats/chimera rates
     void
-    nullmerge(const unsigned count = 1)
+    addAnomCount(const unsigned count = 1)
     {
-        _totalNull += count;
+        _totalAnom += count;
+    }
+
+    /// indicates the total count of non-filtered
+    /// non-anomolous reads used to construct the graph
+    ///
+    /// useful for tracking read stats/chimera rates
+    void
+    addNonAnomCount(const unsigned count = 1)
+    {
+        _totalNonAnom += count;
     }
 
     void
@@ -111,7 +122,8 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
         clearIndex();
         _isFinalized=false;
         _totalCleaned=0;
-        _totalNull=0;
+        _totalAnom=0;
+        _totalNonAnom=0;
     }
 
     /// indicate that the set is complete
@@ -410,8 +422,11 @@ private:
     // total number of observations removed on edges with less than minMergeEdgeCount counts
     unsigned _totalCleaned;
 
-    // total number of observations scanned but not in graph:
-    unsigned long _totalNull;
+    // total number of non-filtered anomalous reads scanned but not in graph:
+    unsigned long _totalAnom;
+
+    // total number of non-filtered non-anomalous reads scanned but not in graph:
+    unsigned long _totalNonAnom;
 };
 
 

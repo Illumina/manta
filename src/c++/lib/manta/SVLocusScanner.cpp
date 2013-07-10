@@ -191,7 +191,6 @@ isReadFiltered(const bam_record& read) const
     if (read.is_filter()) return true;
     if (read.is_dup()) return true;
     if (read.is_secondary()) return true;
-    if (read.is_proper_pair()) return true;
     if (read.map_qual() < _opt.minMapq) return true;
     return false;
 }

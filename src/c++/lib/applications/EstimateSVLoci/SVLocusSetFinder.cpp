@@ -64,7 +64,9 @@ SVLocusSetFinder(
     _isScanStarted(false),
     _isInDenoiseRegion(false),
     _denoisePos(0),
-    _readScanner(opt.scanOpt,opt.statsFilename,opt.alignmentFilename)
+    _readScanner(opt.scanOpt,opt.statsFilename,opt.alignmentFilename),
+    _anomCount(0),
+    _nonAnomCount(0)
 {
     updateDenoiseRegion();
 }
@@ -175,6 +177,11 @@ update(const bam_record& bamRead,
 
     // shortcut to speed things up:
     if (_readScanner.isReadFiltered(bamRead)) return;
+    if (bamRead.is_proper_pair()) {
+        _nonAnomCount++;
+        return;
+    }
+    _anomCount++;
 
     // check that this read starts in our scan region:
     if (! _scanRegion.range.is_pos_intersect(bamRead.pos()-1)) return;
@@ -189,9 +196,5 @@ update(const bam_record& bamRead,
     if (! locus.empty())
     {
         _svLoci.merge(locus);
-    }
-    else
-    {
-        _svLoci.nullmerge();
     }
 }
