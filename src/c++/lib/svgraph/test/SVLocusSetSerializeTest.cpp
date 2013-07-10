@@ -18,7 +18,7 @@
 #include "boost/archive/tmpdir.hpp"
 #include "boost/test/unit_test.hpp"
 
-#include "manta/SVLocusSet.hh"
+#include "svgraph/SVLocusSet.hh"
 
 #include "SVLocusTestUtil.hh"
 

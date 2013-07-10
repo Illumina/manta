@@ -18,7 +18,7 @@
 #include "SummarizeSVLoci.hh"
 #include "SSLOptions.hh"
 
-#include "manta/SVLocusSet.hh"
+#include "svgraph/SVLocusSet.hh"
 
 #include <iostream>
 

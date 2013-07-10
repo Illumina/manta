@@ -18,7 +18,7 @@
 #pragma once
 
 #include "blt_util/bam_header_info.hh"
-#include "manta/SVLocus.hh"
+#include "svgraph/SVLocus.hh"
 
 #include <iosfwd>
 #include <string>

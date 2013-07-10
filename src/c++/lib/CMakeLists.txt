@@ -21,7 +21,7 @@
 ##
 ## List of libraries
 ##
-set (MANTA_ALL_LIBRARIES blt_util common manta options)
+set (MANTA_ALL_LIBRARIES blt_util common format manta options svgraph)
 
 ##
 ## Build all the libraries for the project

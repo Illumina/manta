@@ -7,6 +7,9 @@ general utility functions from starling/strelka/gvcftools
 common:
 general utiltiy functions from CASAVA/Grouper/Isaac
 
+format:
+conversion of data into external formats
+
 manta:
 common code to the manta project (ie. too specific for general utility
 libraries but does not fit the category of another library). This is also

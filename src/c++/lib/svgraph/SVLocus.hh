@@ -18,7 +18,7 @@
 #pragma once
 
 #include "blt_util/observer.hh"
-#include "manta/GenomeInterval.hh"
+#include "svgraph/GenomeInterval.hh"
 
 #include "boost/foreach.hpp"
 #include "boost/serialization/map.hpp"

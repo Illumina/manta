@@ -17,7 +17,7 @@
 
 #include "blt_util/log.hh"
 #include "common/Exceptions.hh"
-#include "manta/SVLocusSet.hh"
+#include "svgraph/SVLocusSet.hh"
 
 #include "boost/archive/binary_iarchive.hpp"
 #include "boost/archive/binary_oarchive.hpp"

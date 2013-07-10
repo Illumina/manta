@@ -19,7 +19,7 @@
 #include "DSLOptions.hh"
 
 #include "blt_util/bam_header_util.hh"
-#include "manta/SVLocusSet.hh"
+#include "svgraph/SVLocusSet.hh"
 
 #include "boost/archive/binary_oarchive.hpp"
 

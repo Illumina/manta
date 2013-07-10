@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "manta/VcfWriterSV.hh"
+#include "format/VcfWriterSV.hh"
 
 
 struct VcfWriterCandidateSV : public VcfWriterSV

@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "manta/SVLocus.hh"
+#include "svgraph/SVLocus.hh"
 
 
 inline

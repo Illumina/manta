@@ -19,7 +19,7 @@
 
 // hack to call private methods of SVLocusSet:
 #define private public
-#include "manta/SVLocusSet.hh"
+#include "svgraph/SVLocusSet.hh"
 
 #include "SVLocusTestUtil.hh"
 

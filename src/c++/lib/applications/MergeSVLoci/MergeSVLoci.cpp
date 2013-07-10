@@ -20,7 +20,7 @@
 
 #include "blt_util/log.hh"
 #include "common/OutStream.hh"
-#include "manta/SVLocusSet.hh"
+#include "svgraph/SVLocusSet.hh"
 
 
 

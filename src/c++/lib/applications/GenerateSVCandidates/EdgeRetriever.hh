@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "manta/EdgeInfo.hh"
-#include "manta/SVLocusSet.hh"
+#include "svgraph/EdgeInfo.hh"
+#include "svgraph/SVLocusSet.hh"
 
 
 /// provide an iterator over edges in a set of SV locus graphs

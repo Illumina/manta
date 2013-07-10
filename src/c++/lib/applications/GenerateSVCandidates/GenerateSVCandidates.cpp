@@ -23,8 +23,8 @@
 
 #include "common/OutStream.hh"
 #include "manta/ReadGroupStatsSet.hh"
-#include "manta/VcfWriterCandidateSV.hh"
-#include "manta/VcfWriterSomaticSV.hh"
+#include "format/VcfWriterCandidateSV.hh"
+#include "format/VcfWriterSomaticSV.hh"
 
 #include "boost/foreach.hpp"
 

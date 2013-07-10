@@ -15,7 +15,7 @@
 /// \author Chris Saunders
 ///
 
-#include "manta/VcfWriterSomaticSV.hh"
+#include "format/VcfWriterSomaticSV.hh"
 
 #include "boost/algorithm/string/join.hpp"
 

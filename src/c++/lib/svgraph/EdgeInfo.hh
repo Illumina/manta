@@ -15,14 +15,25 @@
 /// \author Chris Saunders
 ///
 
-#include "manta/ReadKey.hh"
+#pragma once
 
-#include <iostream>
+#include "svgraph/SVLocus.hh"
+
+#include <iosfwd>
 
 
-
-std::ostream& operator<<(std::ostream& os, const ReadKey& rk)
+struct EdgeInfo
 {
-    os << rk.qname() << "/" << rk.readNo();
-    return os;
-}
+    EdgeInfo() :
+        locusIndex(0),
+        nodeIndex1(0),
+        nodeIndex2(0)
+    {}
+
+    LocusIndexType locusIndex;
+    NodeIndexType nodeIndex1;
+    NodeIndexType nodeIndex2;
+};
+
+std::ostream&
+operator<<(std::ostream& os, const EdgeInfo& ei);

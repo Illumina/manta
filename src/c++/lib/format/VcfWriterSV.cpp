@@ -15,7 +15,7 @@
 /// \author Chris Saunders
 ///
 
-#include "manta/VcfWriterSV.hh"
+#include "format/VcfWriterSV.hh"
 
 #include "blt_util/samtools_fasta_util.hh"
 #include "blt_util/vcf_util.hh"

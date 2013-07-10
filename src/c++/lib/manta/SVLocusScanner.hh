@@ -20,7 +20,7 @@
 #include "blt_util/bam_record.hh"
 #include "manta/ReadGroupStatsSet.hh"
 #include "manta/SVCandidate.hh"
-#include "manta/SVLocus.hh"
+#include "svgraph/SVLocus.hh"
 #include "options/ReadScannerOptions.hh"
 
 #include <string>

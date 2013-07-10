@@ -15,7 +15,7 @@
 /// \author Chris Saunders
 ///
 
-#include "manta/GenomeInterval.hh"
+#include "svgraph/GenomeInterval.hh"
 
 #include <iostream>
 

@@ -18,7 +18,7 @@
 #pragma once
 
 #include "manta/SomaticSVScoreInfo.hh"
-#include "manta/VcfWriterSV.hh"
+#include "format/VcfWriterSV.hh"
 #include "options/SomaticCallOptions.hh"
 
 

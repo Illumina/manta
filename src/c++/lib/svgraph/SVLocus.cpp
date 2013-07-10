@@ -16,7 +16,7 @@
 ///
 
 #include "common/Exceptions.hh"
-#include "manta/SVLocus.hh"
+#include "svgraph/SVLocus.hh"
 
 #include <iostream>
 #include <stack>

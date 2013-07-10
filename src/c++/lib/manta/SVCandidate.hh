@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "manta/GenomeInterval.hh"
+#include "svgraph/GenomeInterval.hh"
 
 #include <iosfwd>
 

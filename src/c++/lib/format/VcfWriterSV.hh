@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "manta/EdgeInfo.hh"
+#include "svgraph/EdgeInfo.hh"
 #include "manta/SVCandidate.hh"
 #include "manta/SVCandidateData.hh"
-#include "manta/SVLocusSet.hh"
+#include "svgraph/SVLocusSet.hh"
 #include "manta/SomaticSVScoreInfo.hh"
 #include "options/SomaticCallOptions.hh"
 

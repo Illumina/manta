@@ -18,13 +18,13 @@
 #pragma once
 
 #include "GSCOptions.hh"
-#include "manta/EdgeInfo.hh"
+#include "svgraph/EdgeInfo.hh"
 
 #include "blt_util/bam_streamer.hh"
 #include "manta/SVCandidate.hh"
 #include "manta/SVCandidateData.hh"
 #include "manta/SVLocusScanner.hh"
-#include "manta/SVLocusSet.hh"
+#include "svgraph/SVLocusSet.hh"
 
 #include "boost/shared_ptr.hpp"
 

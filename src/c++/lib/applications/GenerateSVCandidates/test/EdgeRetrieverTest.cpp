@@ -18,9 +18,9 @@
 #include "boost/test/unit_test.hpp"
 
 #include "applications/GenerateSVCandidates/EdgeRetriever.hh"
-#include "manta/SVLocusSet.hh"
+#include "svgraph/SVLocusSet.hh"
 
-#include "manta/test/SVLocusTestUtil.hh"
+#include "svgraph/test/SVLocusTestUtil.hh"
 
 
 BOOST_AUTO_TEST_SUITE( test_EdgeRetriever )

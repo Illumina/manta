@@ -23,7 +23,7 @@
 #include "blt_util/pos_processor_base.hh"
 #include "blt_util/stage_manager.hh"
 #include "manta/SVLocusScanner.hh"
-#include "manta/SVLocusSet.hh"
+#include "svgraph/SVLocusSet.hh"
 
 #include <iosfwd>
 #include <string>

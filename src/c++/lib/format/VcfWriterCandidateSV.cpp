@@ -15,7 +15,7 @@
 /// \author Chris Saunders
 ///
 
-#include "manta/VcfWriterCandidateSV.hh"
+#include "format/VcfWriterCandidateSV.hh"
 
 
 
