@@ -54,7 +54,7 @@ runGSC(
 
     VcfWriterCandidateSV candWriter(opt.referenceFilename,cset,candfs.getStream());
     VcfWriterSomaticSV somWriter(opt.somaticOpt, (! opt.chromDepthFilename.empty()),
-            opt.referenceFilename,cset,somfs.getStream());
+                                 opt.referenceFilename,cset,somfs.getStream());
 
     if (0 == opt.binIndex)
     {

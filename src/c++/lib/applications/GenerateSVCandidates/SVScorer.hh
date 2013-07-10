@@ -35,8 +35,8 @@
 struct SVScorer
 {
     SVScorer(
-            const GSCOptions& opt,
-            const bam_header_info& header);
+        const GSCOptions& opt,
+        const bam_header_info& header);
 
     void
     scoreSomaticSV(

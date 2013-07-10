@@ -33,9 +33,9 @@
 struct ChromDepthFilterUtil
 {
     ChromDepthFilterUtil(
-            const std::string& chromDepthFile,
-            const double maxDepthFactor,
-            const bam_header_info& header);
+        const std::string& chromDepthFile,
+        const double maxDepthFactor,
+        const bam_header_info& header);
 
     bool
     isMaxDepthFilter() const

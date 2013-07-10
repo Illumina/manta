@@ -72,7 +72,7 @@ getFilter() const
     assert(_ssInfoPtr != NULL);
     const SomaticSVScoreInfo& ssInfo(*_ssInfoPtr);
 
-    if(ssInfo.filters.empty())
+    if (ssInfo.filters.empty())
     {
         return "PASS";
     }

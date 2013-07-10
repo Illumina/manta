@@ -32,8 +32,8 @@
 
 SVScorer::
 SVScorer(
-        const GSCOptions& opt,
-        const bam_header_info& header) :
+    const GSCOptions& opt,
+    const bam_header_info& header) :
     _isAlignmentTumor(opt.isAlignmentTumor),
     _somaticOpt(opt.somaticOpt),
     _dFilter(opt.chromDepthFilename, opt.somaticOpt.maxDepthFactor, header),
@@ -183,13 +183,13 @@ scoreSomaticSV(
     // and get a breakend depth estimate
 
     // apply filters
-    if(_dFilter.isMaxDepthFilter())
+    if (_dFilter.isMaxDepthFilter())
     {
         if     (ssInfo.bp1MaxDepth > _dFilter.maxDepth(sv.bp1.interval.tid))
         {
             ssInfo.filters.insert(_somaticOpt.maxDepthFilterLabel);
         }
-        else if(ssInfo.bp2MaxDepth > _dFilter.maxDepth(sv.bp2.interval.tid))
+        else if (ssInfo.bp2MaxDepth > _dFilter.maxDepth(sv.bp2.interval.tid))
         {
             ssInfo.filters.insert(_somaticOpt.maxDepthFilterLabel);
         }
