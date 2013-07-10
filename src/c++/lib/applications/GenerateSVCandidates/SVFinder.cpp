@@ -59,15 +59,15 @@ addSVNodeRead(
     const SVLocusScanner& scanner,
     const SVLocusNode& localNode,
     const SVLocusNode& remoteNode,
-    const bam_record& read,
+    const bam_record& bamRead,
     const unsigned bamIndex,
     SVCandidateDataGroup& svDataGroup)
 {
-    if (scanner.isReadFiltered(read)) return;
-    if (read.is_proper_pair()) return;
+    if (scanner.isReadFiltered(bamRead)) return;
+    if (bamRead.is_proper_pair()) return;
 
     SVLocus locus;
-    scanner.getChimericSVLocus(read,bamIndex,locus);
+    scanner.getChimericSVLocus(bamRead,bamIndex,locus);
     const SVLocus& clocus(locus);
 
     if (clocus.empty()) return;
@@ -83,7 +83,7 @@ addSVNodeRead(
     if (! clocus.getNode(readLocalIndex).interval.isIntersect(localNode.interval)) return;
     if (! clocus.getNode(readRemoteIndex).interval.isIntersect(remoteNode.interval)) return;
 
-    svDataGroup.add(read);
+    svDataGroup.add(bamRead);
 }
 
 
