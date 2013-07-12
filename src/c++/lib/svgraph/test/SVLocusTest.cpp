@@ -26,25 +26,6 @@
 
 BOOST_AUTO_TEST_SUITE( test_SVLocus )
 
-BOOST_AUTO_TEST_CASE( test_GenomeInterval )
-{
-
-    // test that GenomeInterval sorting follows expect:
-    std::vector<GenomeInterval> test;
-
-    test.push_back(GenomeInterval(1,15,19));
-    test.push_back(GenomeInterval(1,15,22));
-    test.push_back(GenomeInterval(1,10,20));
-    test.push_back(GenomeInterval(2,5,10));
-    test.push_back(GenomeInterval(2,8,10));
-
-    std::sort(test.begin(),test.end());
-
-    BOOST_REQUIRE_EQUAL(test[0],GenomeInterval(1,10,20));
-    BOOST_REQUIRE_EQUAL(test[2],GenomeInterval(1,15,22));
-    BOOST_REQUIRE_EQUAL(test[4],GenomeInterval(2,8,10));
-}
-
 
 BOOST_AUTO_TEST_CASE( test_SVLocus1 )
 {
