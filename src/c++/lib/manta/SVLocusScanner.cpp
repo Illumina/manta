@@ -157,7 +157,7 @@ getReadBreakendsImpl(
 
 void
 SVLocusScanner::
-getChimericSVLocusImpl(
+getSVLocusImpl(
     const CachedReadGroupStats& rstats,
     const bam_record& read,
     SVLocus& locus)
@@ -199,16 +199,17 @@ isReadFiltered(const bam_record& read) const
 
 void
 SVLocusScanner::
-getChimericSVLocus(const bam_record& read,
-                   const unsigned defaultReadGroupIndex,
-                   SVLocus& locus) const
+getChimericSVLocus(
+    const bam_record& read,
+    const unsigned defaultReadGroupIndex,
+    SVLocus& locus) const
 {
     locus.clear();
 
     if (read.is_chimeric())
     {
         const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);
-        getChimericSVLocusImpl(rstats,read,locus);
+        getSVLocusImpl(rstats,read,locus);
     }
 }
 
@@ -216,11 +217,31 @@ getChimericSVLocus(const bam_record& read,
 
 void
 SVLocusScanner::
-getBreakendPair(const bam_record& localRead,
-                const bam_record* remoteReadPtr,
-                const unsigned defaultReadGroupIndex,
-                SVBreakend& localBreakend,
-                SVBreakend& remoteBreakend) const
+getSVLocus(
+    const bam_record& read,
+    const unsigned defaultReadGroupIndex,
+    SVLocus& locus) const
+{
+    locus.clear();
+
+    if(! read.is_chimeric())
+    {
+        if(read.template_size()<10000) return;
+    }
+
+    const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);
+    getSVLocusImpl(rstats,read,locus);
+}
+
+
+void
+SVLocusScanner::
+getBreakendPair(
+    const bam_record& localRead,
+    const bam_record* remoteReadPtr,
+    const unsigned defaultReadGroupIndex,
+    SVBreakend& localBreakend,
+    SVBreakend& remoteBreakend) const
 {
     const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);
     known_pos_range2 evidenceRange;

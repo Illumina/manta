@@ -85,6 +85,10 @@ mergeNode(
         log_os << "mergeNode: handle fromEdge: " << _index << ":" << fromNodeEdgeIter.first << "\n";
 #endif
 
+        // is this edge between the to and from nodes?
+        const bool isToFromEdge(fromNodeEdgeIter.first == toIndex);
+
+
         // update local edge:
         {
             // this node and input node could both have an edge to the same node already
@@ -94,16 +98,10 @@ mergeNode(
             {
 #ifdef DEBUG_SVL
                 log_os << "mergeNode: fromEdge is not in toNode\n";
-#endif
-                // no self-edges:
-                if (fromNodeEdgeIter.first != toIndex)
-                {
-#ifdef DEBUG_SVL
-                    log_os << "mergeNode: toNode add " << _index << ":" << fromNodeEdgeIter.first << "\n";
+                log_os << "mergeNode: toNode add " << _index << ":" << fromNodeEdgeIter.first << "\n";
 #endif
 
-                    toNode.edges.insert(fromNodeEdgeIter);
-                }
+                toNode.edges.insert(fromNodeEdgeIter);
             }
             else
             {
@@ -129,21 +127,25 @@ mergeNode(
                 BOOST_THROW_EXCEPTION(LogicException(oss.str()));
             }
 
-            // the remote node could contain a link to toIndex already, check that here:
-            edges_type::iterator newRemoteIter(remoteEdges.find(toIndex));
-            if (newRemoteIter == remoteEdges.end())
-            {
-#ifdef DEBUG_SVL
-                log_os << "mergeNode: fromRemote does not point to toIndex\n";
-#endif
-                remoteEdges.insert(std::make_pair(toIndex,oldRemoteIter->second));
-            }
-            else
-            {
-#ifdef DEBUG_SVL
-                log_os << "mergeNode: fromRemote already points to toIndex\n";
-#endif
-                newRemoteIter->second.mergeEdge(oldRemoteIter->second);
+            // if this is an edge between to and from, it's already been handled by the
+            // local edge routine above:
+            if(! isToFromEdge) {
+                // the remote node could contain a link to toIndex already, check that here:
+                edges_type::iterator newRemoteIter(remoteEdges.find(toIndex));
+                if (newRemoteIter == remoteEdges.end())
+                {
+    #ifdef DEBUG_SVL
+                    log_os << "mergeNode: fromRemote does not point to toIndex\n";
+    #endif
+                    remoteEdges.insert(std::make_pair(toIndex,oldRemoteIter->second));
+                }
+                else
+                {
+    #ifdef DEBUG_SVL
+                    log_os << "mergeNode: fromRemote already points to toIndex\n";
+    #endif
+                    newRemoteIter->second.mergeEdge(oldRemoteIter->second);
+                }
             }
         }
     }

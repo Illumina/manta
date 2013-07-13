@@ -54,20 +54,31 @@ struct SVLocusScanner
     /// (for now RGs are ignored for the purpose of gathering insert stats)
     ///
     void
-    getChimericSVLocus(const bam_record& read,
-                       const unsigned defaultReadGroupIndex,
-                       SVLocus& locus) const;
+    getChimericSVLocus(
+        const bam_record& read,
+        const unsigned defaultReadGroupIndex,
+        SVLocus& locus) const;
+
+    /// if read supports any structural variant (which Manta is currently configured to discover), then
+    /// return this as a single observation SVLocus object
+    ///
+    void
+    getSVLocus(
+        const bam_record& read,
+        const unsigned defaultReadGroupIndex,
+        SVLocus& locus) const;
 
     /// get local and remote breakends from read pair
     ///
     /// if remote read is not available, set to NULL and best estimate will be generated
     ///
     void
-    getBreakendPair(const bam_record& localRead,
-                    const bam_record* remoteReadPtr,
-                    const unsigned defaultReadGroupIndex,
-                    SVBreakend& localBreakend,
-                    SVBreakend& remoteBreakend) const;
+    getBreakendPair(
+        const bam_record& localRead,
+        const bam_record* remoteReadPtr,
+        const unsigned defaultReadGroupIndex,
+        SVBreakend& localBreakend,
+        SVBreakend& remoteBreakend) const;
 
 private:
 
@@ -95,7 +106,7 @@ private:
 
     static
     void
-    getChimericSVLocusImpl(
+    getSVLocusImpl(
         const CachedReadGroupStats& rstats,
         const bam_record& read,
         SVLocus& locus);

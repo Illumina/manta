@@ -274,6 +274,13 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
         SVLocusNode& toNode(getNode(toIndex));
         assert(0 == fromNode.edges.count(toIndex));
         assert(0 == toNode.edges.count(fromIndex));
+
+        // test whether from and to intersect, if they do, merge this into a self-edge node:
+        if(fromNode.interval.isIntersect(toNode.interval))
+        {
+           // fromNode.interval;
+        }
+
         fromNode.edges.insert(std::make_pair(toIndex,SVLocusEdge(fromCount)));
         toNode.edges.insert(std::make_pair(fromIndex,SVLocusEdge(toCount)));
     }
