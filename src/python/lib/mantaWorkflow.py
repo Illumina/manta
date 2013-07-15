@@ -280,6 +280,13 @@ class MantaWorkflow(WorkflowRunner) :
     """
 
     def __init__(self,params,iniSections) :
+
+        # clear out some potentially destabilizing env variables:
+        clearList = [ "PYTHONPATH", "PYTHONHOME"]
+        for key in clearList :
+            if key in os.environ :
+                del os.environ[key]
+
         self.params=params
         self.iniSections=iniSections
 
