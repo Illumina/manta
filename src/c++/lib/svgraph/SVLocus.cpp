@@ -80,14 +80,11 @@ mergeNode(
 
     BOOST_FOREACH(edges_type::value_type& fromNodeEdgeIter, fromNode)
     {
-
 #ifdef DEBUG_SVL
-        log_os << "mergeNode: handle fromEdge: " << _index << ":" << fromNodeEdgeIter.first << "\n";
-#endif
-
         // is this edge between the to and from nodes?
         const bool isToFromEdge(fromNodeEdgeIter.first == toIndex);
-
+       log_os << "mergeNode: handle fromEdge: " << _index << ":" << fromNodeEdgeIter.first << " isToFromEdge: " << isToFromEdge << "\n";
+#endif
 
         // update local edge:
         {
@@ -127,25 +124,21 @@ mergeNode(
                 BOOST_THROW_EXCEPTION(LogicException(oss.str()));
             }
 
-            // if this is an edge between to and from, it's already been handled by the
-            // local edge routine above:
-            if(! isToFromEdge) {
-                // the remote node could contain a link to toIndex already, check that here:
-                edges_type::iterator newRemoteIter(remoteEdges.find(toIndex));
-                if (newRemoteIter == remoteEdges.end())
-                {
-    #ifdef DEBUG_SVL
-                    log_os << "mergeNode: fromRemote does not point to toIndex\n";
-    #endif
-                    remoteEdges.insert(std::make_pair(toIndex,oldRemoteIter->second));
-                }
-                else
-                {
-    #ifdef DEBUG_SVL
-                    log_os << "mergeNode: fromRemote already points to toIndex\n";
-    #endif
-                    newRemoteIter->second.mergeEdge(oldRemoteIter->second);
-                }
+            // the remote node could contain a link to toIndex already, check that here:
+            edges_type::iterator newRemoteIter(remoteEdges.find(toIndex));
+            if (newRemoteIter == remoteEdges.end())
+            {
+#ifdef DEBUG_SVL
+                log_os << "mergeNode: fromRemote does not point to toIndex\n";
+#endif
+                remoteEdges.insert(std::make_pair(toIndex,oldRemoteIter->second));
+            }
+            else
+            {
+#ifdef DEBUG_SVL
+                log_os << "mergeNode: fromRemote already points to toIndex\n";
+#endif
+                newRemoteIter->second.mergeEdge(oldRemoteIter->second);
             }
         }
     }
