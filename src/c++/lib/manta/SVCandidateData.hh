@@ -38,9 +38,6 @@ struct SVCandidateRead
 };
 
 std::ostream&
-operator<<(std::ostream& os, const bam_record& br);
-
-std::ostream&
 operator<<(std::ostream& os, const SVCandidateRead& svr);
 
 

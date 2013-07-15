@@ -299,6 +299,49 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNoiseClean )
 
 
 
+BOOST_AUTO_TEST_CASE( test_SVLocusNoiseCleanOrder )
+{
+    SVLocus locus1;
+    locusAddPair(locus1,1,10,60,2,20,30);
+
+    SVLocus locus2;
+    locusAddPair(locus2,1,10,60,2,20,30);
+
+    SVLocus locus3;
+    locusAddPair(locus3,1,10,60,3,20,30);
+
+    SVLocus locus4;
+    locusAddPair(locus4,1,10,60,4,20,30);
+
+    SVLocus locus5;
+    locusAddPair(locus5,1,10,60,4,20,30);
+
+    SVLocus locus6;
+    locusAddPair(locus6,1,10,60,5,20,30);
+
+    {
+        SVLocusSet set1(2);
+        set1.merge(locus1);
+        set1.merge(locus2);
+        set1.merge(locus3);
+        set1.merge(locus4);
+        set1.merge(locus5);
+        set1.merge(locus6);
+        const SVLocusSet& cset1(set1);
+
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),3u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(1).size(),2u);
+
+        set1.cleanRegion(GenomeInterval(1,0,70));
+
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),3u);
+    }
+
+}
+
+
+
 BOOST_AUTO_TEST_CASE( test_SVLocusNoiseCleanRemote )
 {
     SVLocus locus1;

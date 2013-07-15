@@ -248,7 +248,7 @@ cleanNodeCore(
     log_os << "cleanNodeCore emptyEdges:\n";
     BOOST_FOREACH(const NodeIndexType toIndex, eraseEdges)
     {
-        log_os << "\t" << _index << ":" << nodeIndex << "->" << _index << ":" << toIndex << "\n";
+        log_os << "\tedge: " << _index << ":" << nodeIndex << "->" << _index << ":" << toIndex << "\n";
     }
 
     log_os << "cleanNodeCore emptyNodes\n";
@@ -340,7 +340,7 @@ eraseNode(const NodeIndexType nodePtr)
     NodeIndexType fromPtr(_graph.size()-1);
 
 #ifdef DEBUG_SVL
-    log_os << "eraseNode: from: " << _index << ":" << fromPtr << " to: " << _index << ":" << nodePtr << "\n";
+    log_os << "eraseNode: " << _index << ":" << nodePtr << " transfer_in: " << _index << ":" << fromPtr << " \n";
 #endif
 
     if (fromPtr != nodePtr)

@@ -19,7 +19,24 @@
 #include "blt_util/bam_record.hh"
 #include "blt_util/blt_exception.hh"
 
+#include <iostream>
 #include <sstream>
+
+
+
+std::ostream&
+operator<<(std::ostream& os, const bam_record& br)
+{
+    if (br.empty())
+    {
+        os << "NONE";
+    }
+    else
+    {
+        os << br.qname() << "/" << br.read_no() << " tid:pos " << br.target_id() << ":" << (br.pos()-1);
+    }
+    return os;
+}
 
 
 

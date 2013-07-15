@@ -18,6 +18,7 @@
 #include "manta/SVLocusScanner.hh"
 #include "blt_util/align_path_bam_util.hh"
 #include "blt_util/log.hh"
+#include "common/Exceptions.hh"
 
 #include "boost/foreach.hpp"
 
@@ -162,10 +163,23 @@ getSVLocusImpl(
     const bam_record& read,
     SVLocus& locus)
 {
+    using namespace illumina::common;
+
     SVBreakend localBreakend;
     SVBreakend remoteBreakend;
     known_pos_range2 evidenceRange;
     getReadBreakendsImpl(rstats, read, NULL, localBreakend, remoteBreakend, evidenceRange);
+
+    if((0==localBreakend.interval.range.size()) ||
+       (0==remoteBreakend.interval.range.size()))
+    {
+        std::ostringstream oss;
+        oss << "Empty Breakend proposed from bam record.\n"
+            << "\tlocal_breakend: " << localBreakend << "\n"
+            << "\tremote_breakend: " << remoteBreakend << "\n"
+            << "\tbam_record: " << read << "\n";
+        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+    }
 
     // set local breakend estimate:
     NodeIndexType localBreakendNode(0);

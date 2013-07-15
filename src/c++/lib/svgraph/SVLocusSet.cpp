@@ -645,7 +645,7 @@ cleanRegion(const GenomeInterval interval)
         if (locus.empty()) _emptyLoci.insert(locus.getIndex());
 
 #ifdef DEBUG_SVL
-        log_os << "cleanRegion intersect: " << val << " empty_after_clean: " << locus.empty() << "\n";
+        log_os << "cleanRegion intersect: " << val << " is_empty_after_clean: " << locus.empty() << "\n";
 #endif
     }
 }

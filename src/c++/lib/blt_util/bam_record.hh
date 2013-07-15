@@ -21,6 +21,8 @@
 #include "blt_util/bam_util.hh"
 #include "blt_util/bam_seq.hh"
 
+#include <iosfwd>
+
 
 struct bam_record
 {
@@ -327,3 +329,9 @@ private:
 
     bam1_t* _bp;
 };
+
+
+std::ostream&
+operator<<(std::ostream& os, const bam_record& br);
+
+
