@@ -189,7 +189,7 @@ cleanNodeCore(
     std::set<NodeIndexType>& emptyNodes)
 {
 #ifdef DEBUG_SVL
-    log_os << "cleanNodeCore nodeIndex: " << nodeIndex << "\n";
+    log_os << "cleanNodeCore nodeAddy: " << _index << ":" << nodeIndex << "\n";
 #endif
 
     unsigned totalCleaned(0);
@@ -198,10 +198,11 @@ cleanNodeCore(
     std::vector<NodeIndexType> eraseEdges;
     BOOST_FOREACH(edges_type::value_type& edgeIter, queryNode)
     {
-        if (0!=edgeIter.second.count)
+        if (0 != edgeIter.second.count)
         {
             if (edgeIter.second.count < minMergeEdgeCount)
             {
+                // clean criteria met -- go ahead and erase edge count:
                 assert(queryNode.count>=edgeIter.second.count);
                 totalCleaned += edgeIter.second.count;
                 queryNode.count -= edgeIter.second.count;
@@ -211,7 +212,9 @@ cleanNodeCore(
 
         if (0 == edgeIter.second.count)
         {
-
+            // if the out edge count is zero, see if the in-edge count is also zero --
+            // if so, erase edge
+            //
             const SVLocusEdge& fromRemoteEdge(getEdge(edgeIter.first,nodeIndex));
             if (0 == fromRemoteEdge.count)
             {
@@ -235,19 +238,26 @@ cleanNodeCore(
         clearEdgePair(nodeIndex,toIndex);
     }
 
-    // return true if node should be deleted
+    // if true add the target node to the erase list:
     if ((0 == queryNode.edges.size()) && (0 == queryNode.count))
     {
-        // if true add the target node to the erase list:
         emptyNodes.insert(nodeIndex);
     }
 
 #ifdef DEBUG_SVL
+    log_os << "cleanNodeCore emptyEdges:\n";
+    BOOST_FOREACH(const NodeIndexType toIndex, eraseEdges)
+    {
+        log_os << "\t" << _index << ":" << nodeIndex << "->" << _index << ":" << toIndex << "\n";
+    }
+
     log_os << "cleanNodeCore emptyNodes\n";
     BOOST_FOREACH(const NodeIndexType nodeIndex2, emptyNodes)
     {
-        log_os << "\tnodeIndex: " << nodeIndex2 << "\n";
+        log_os << "\tnodeAddy: " << _index << ":" << nodeIndex2 << "\n";
     }
+
+    log_os << "totalCleaned: " << totalCleaned << "\n";
 #endif
 
     return totalCleaned;
