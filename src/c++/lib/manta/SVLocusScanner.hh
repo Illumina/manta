@@ -59,8 +59,8 @@ struct SVLocusScanner
         const unsigned defaultReadGroupIndex,
         SVLocus& locus) const;
 
-    /// if read supports any structural variant (which Manta is currently configured to discover), then
-    /// return this as a single observation SVLocus object
+    /// if read supports any structural variant (of a subset which Manta is currently configured to discover), then
+    /// return  a single observation SVLocus object
     ///
     void
     getSVLocus(
