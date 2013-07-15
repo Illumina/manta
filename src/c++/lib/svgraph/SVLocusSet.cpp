@@ -696,11 +696,13 @@ dumpStats(std::ostream& os) const
 {
     static const char sep('\t');
 
-    os << "locusCount: " << sep << nonEmptySize() << "\n";
-    os << "totalEvidenceCount: " << sep << totalCount() << "\n";
-    os << "totalCleaned: " << sep << _totalCleaned << "\n";
-    os << "totalAnomalousConsidered: " << sep << _totalAnom << "\n";
-    os << "totalNonAnomalousConsidered: " << sep << _totalNonAnom << "\n";
+    os << "disjointSubgraphCount:" << sep << nonEmptySize() << "\n";
+    os << "nodeCount:" << sep << totalNodeCount() << "\n";
+    os << "directedEdgeCount:" << sep << totalEdgeCount() << "\n";
+    os << "totalEvidenceCount:" << sep << totalObservationCount() << "\n";
+    os << "totalCleaned:" << sep << _totalCleaned << "\n";
+    os << "totalAnomalousConsidered:" << sep << _totalAnom << "\n";
+    os << "totalNonAnomalousConsidered:" << sep << _totalNonAnom << "\n";
 }
 
 
@@ -877,13 +879,13 @@ checkState(
     using namespace illumina::common;
 
     unsigned locusIndex(0);
-    unsigned totalNodeCount(0);
+    unsigned checkStateTotalNodeCount(0);
     BOOST_FOREACH(const SVLocus& locus, _loci)
     {
         locus.checkState(isCheckLocusConnected);
 
         const unsigned nodeCount(locus.size());
-        totalNodeCount += nodeCount;
+        checkStateTotalNodeCount += nodeCount;
 
         for (NodeIndexType nodeIndex(0); nodeIndex<nodeCount; ++nodeIndex)
         {
@@ -907,11 +909,11 @@ checkState(
         locusIndex++;
     }
 
-    if (totalNodeCount != _inodes.size())
+    if (checkStateTotalNodeCount != _inodes.size())
     {
         using namespace illumina::common;
         std::ostringstream oss;
-        oss << "ERROR: SVLocusSet conflicting internal node counts. totalNodeCount: " << totalNodeCount << " inodeSize: " << _inodes.size() << "n";
+        oss << "ERROR: SVLocusSet conflicting internal node counts. TotalNodeCount: " << checkStateTotalNodeCount << " inodeSize: " << _inodes.size() << "n";
         BOOST_THROW_EXCEPTION(LogicException(oss.str()));
     }
 

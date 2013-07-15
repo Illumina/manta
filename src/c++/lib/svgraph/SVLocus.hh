@@ -307,12 +307,24 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
 
     /// the total observations in all nodes of the locus
     unsigned
-    totalCount() const
+    totalObservationCount() const
     {
         unsigned sum(0);
         BOOST_FOREACH(const SVLocusNode& node, *this)
         {
             sum += node.count;
+        }
+        return sum;
+    }
+
+    // the total number of edges between all nodes of the locus
+    unsigned
+    totalEdgeCount() const
+    {
+        unsigned sum(0);
+        BOOST_FOREACH(const SVLocusNode& node, *this)
+        {
+            sum += node.size();
         }
         return sum;
     }

@@ -99,7 +99,7 @@ def runStats(self,taskPrefix="",dependencies=None):
 
 def runDepth(self,taskPrefix="",dependencies=None) :
     """
-    estimate chrom dpeth
+    estimate chrom depth
     """
 
 
@@ -130,6 +130,7 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
 
     statsPath=self.paths.getStatsPath()
     graphPath=self.paths.getGraphPath()
+    graphStatsPath=self.paths.getGraphStatsPath()
 
     graphFilename=os.path.basename(graphPath)
     tmpGraphDir=os.path.join(self.params.workDir,graphFilename+".tmpdir")
@@ -141,7 +142,7 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
     for gseg in getNextGenomeSegment(self.params) :
 
         tmpGraphFiles.append(os.path.join(tmpGraphDir,graphFilename+"."+gseg.id+".bin"))
-        graphCmd=[ self.params.mantaGraphBin ]
+        graphCmd = [ self.params.mantaGraphBin ]
         graphCmd.extend(["--output-file", tmpGraphFiles[-1]])
         graphCmd.extend(["--align-stats",statsPath])
         graphCmd.extend(["--region",gseg.bamRegion])
@@ -153,15 +154,22 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
         graphTaskLabel=preJoin(taskPrefix,"makeLocusGraph_"+gseg.id)
         graphTasks.add(self.addTask(graphTaskLabel,graphCmd,dependencies=dirTask))
 
-    mergeCmd= [ self.params.mantaGraphMergeBin ]
+    mergeCmd = [ self.params.mantaGraphMergeBin ]
     mergeCmd.extend(["--output-file", graphPath])
     for gfile in tmpGraphFiles :
         mergeCmd.extend(["--graph-file", gfile])
 
-    mergeTask=self.addTask(preJoin(taskPrefix,"mergeGraph"),mergeCmd,dependencies=graphTasks)
+    mergeTask = self.addTask(preJoin(taskPrefix,"mergeLocusGraph"),mergeCmd,dependencies=graphTasks)
 
-    rmGraphTmpCmd = "rm -rf tmpGraphDir"
+    rmGraphTmpCmd = "rm -rf " + tmpGraphDir
     #rmTask=self.addTask(preJoin(taskPrefix,"rmGraphTmp"),rmGraphTmpCmd,dependencies=mergeTask)
+
+    graphStatsCmd  = self.params.mantaGraphStatsBin
+    graphStatsCmd += "--global"
+    graphStatsCmd += "--graph-file " + graphPath
+    graphStatsCmd += " >| " + graphStatsPath
+
+    graphStatsTask = self.addTask(preJoin(taskPrefix,"locusGraphStats"),graphStatsCmd,dependencies=mergeTask)
 
     nextStepWait = set()
     nextStepWait.add(mergeTask)
@@ -264,13 +272,16 @@ class PathInfo:
         return os.path.join(self.getHyGenDir(),"candidateSV.%s.vcf" % (binStr))
 
     def getSortedCandidatePath(self) :
-        return os.path.join(self.params.resultsDir,"candidateSV.vcf.gz")
+        return os.path.join(self.params.variantsDir,"candidateSV.vcf.gz")
 
     def getHyGenSomaticPath(self, binStr) :
         return os.path.join(self.getHyGenDir(),"somaticSV.%s.vcf" % (binStr))
 
     def getSortedSomaticPath(self) :
-        return os.path.join(self.params.resultsDir,"somaticSV.vcf.gz")
+        return os.path.join(self.params.variantsDir,"somaticSV.vcf.gz")
+
+    def getGraphStatsPath(self) :
+        return os.path.join(self.params.statsDir,"svLocusGraphStats.tsv")
 
 
 
@@ -301,10 +312,10 @@ class MantaWorkflow(WorkflowRunner) :
         # all finalized pretty results get transfered to resultsDir
         self.params.resultsDir=os.path.join(self.params.runDir,"results")
         ensureDir(self.params.resultsDir)
-#         self.params.statsDir=os.path.join(self.params.resultsDir,"stats")
-#         ensureDir(self.params.statsDir)
-#         self.params.variantsDir=os.path.join(self.params.resultsDir,"variants")
-#         ensureDir(self.params.variantsDir)
+        self.params.statsDir=os.path.join(self.params.resultsDir,"stats")
+        ensureDir(self.params.statsDir)
+        self.params.variantsDir=os.path.join(self.params.resultsDir,"variants")
+        ensureDir(self.params.variantsDir)
 #         self.params.reportsDir=os.path.join(self.params.resultsDir,"reports")
 #         ensureDir(self.params.reportsDir)
 

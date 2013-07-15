@@ -185,13 +185,38 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
         return _minMergeEdgeCount;
     }
 
+    // total number of reads used as supporting evidence in the graph
     unsigned
-    totalCount() const
+    totalObservationCount() const
     {
         unsigned sum(0);
         BOOST_FOREACH(const SVLocus& locus, *this)
         {
-            sum += locus.totalCount();
+            sum += locus.totalObservationCount();
+        }
+        return sum;
+    }
+
+    // total nodes in the graph
+    unsigned
+    totalNodeCount() const
+    {
+        unsigned sum(0);
+        BOOST_FOREACH(const SVLocus& locus, *this)
+        {
+            sum += locus.size();
+        }
+        return sum;
+    }
+
+    // total number of directed edges in the graph
+    unsigned
+    totalEdgeCount() const
+    {
+        unsigned sum(0);
+        BOOST_FOREACH(const SVLocus& locus, *this)
+        {
+            sum += locus.totalEdgeCount();
         }
         return sum;
     }

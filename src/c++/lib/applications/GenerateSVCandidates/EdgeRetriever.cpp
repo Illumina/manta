@@ -54,9 +54,9 @@ EdgeRetriever(
     assert(binCount > 0);
     assert(binIndex < binCount);
 
-    const unsigned long totalCount(_set.totalCount());
-    _beginCount=(getBoundaryCount(binCount,binIndex,totalCount));
-    _endCount=(getBoundaryCount(binCount,binIndex+1,totalCount));
+    const unsigned long totalObservationCount(_set.totalObservationCount());
+    _beginCount=(getBoundaryCount(binCount,binIndex,totalObservationCount));
+    _endCount=(getBoundaryCount(binCount,binIndex+1,totalObservationCount));
 
 #ifdef DEBUG_EDGER
     log_os << "EDGER: bi,bc,begin,end: "
@@ -77,9 +77,9 @@ jumpToFirstEdge()
     while (true)
     {
         const SVLocus& locus(_set.getLocus(_edge.locusIndex));
-        const unsigned locusCount(locus.totalCount());
+        const unsigned locusObservatinoCount(locus.totalObservationCount());
 
-        if ((_headCount+locusCount) > _beginCount)
+        if ((_headCount+locusObservatinoCount) > _beginCount)
         {
             while (true)
             {
@@ -104,7 +104,7 @@ jumpToFirstEdge()
             }
             assert(_headCount >= _beginCount);
         }
-        _headCount += locusCount;
+        _headCount += locusObservatinoCount;
         _edge.locusIndex++;
     }
 }
