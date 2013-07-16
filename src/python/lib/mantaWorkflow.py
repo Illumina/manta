@@ -165,8 +165,8 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
     #rmTask=self.addTask(preJoin(taskPrefix,"rmGraphTmp"),rmGraphTmpCmd,dependencies=mergeTask)
 
     graphStatsCmd  = self.params.mantaGraphStatsBin
-    graphStatsCmd += "--global"
-    graphStatsCmd += "--graph-file " + graphPath
+    graphStatsCmd += " --global"
+    graphStatsCmd += " --graph-file " + graphPath
     graphStatsCmd += " >| " + graphStatsPath
 
     graphStatsTask = self.addTask(preJoin(taskPrefix,"locusGraphStats"),graphStatsCmd,dependencies=mergeTask)
