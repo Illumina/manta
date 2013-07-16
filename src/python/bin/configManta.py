@@ -42,8 +42,6 @@ class MantaWorkflowOptions(MantaWorkflowOptionsBase) :
     def workflowDescription(self) :
         return """This script configures the Manta SV analysis pipeline.
 You must specify a BAM file for at least one sample.
-
-The pipeline reference sequence is currently fixed to human hg19.
 """
 
     validAlignerModes = ["bwa","isaac"]
@@ -65,8 +63,8 @@ The pipeline reference sequence is currently fixed to human hg19.
 
 
     def addExtendedGroupOptions(self,group) :
-        group.add_option("--hg19ReferenceFasta",type="string",dest="hg19ReferenceFasta",metavar="FILE",
-                         help="Single samtools-indexed file fasta for the hg19 reference [required] (default: %default)")
+        group.add_option("--referenceFasta",type="string",dest="referenceFasta",metavar="FILE",
+                         help="samtools-indexed reference fasta file [required] (default: %default)")
         MantaWorkflowOptionsBase.addExtendedGroupOptions(self,group)
 
 
@@ -101,21 +99,16 @@ The pipeline reference sequence is currently fixed to human hg19.
             if options.alignerMode not in self.validAlignerModes :
                 raise OptParseException("Invalid aligner mode: '%s'" % options.alignerMode)
 
-        options.hg19ReferenceFasta=validateFixExistingFileArg(options.hg19ReferenceFasta,"hg19 reference")
+        options.referenceFasta=validateFixExistingFileArg(options.referenceFasta,"reference")
 
 
         # check for reference fasta index file:
-        if options.hg19ReferenceFasta is not None :
-            faiFile=options.hg19ReferenceFasta + ".fai"
+        if options.referenceFasta is not None :
+            faiFile=options.referenceFasta + ".fai"
             if not os.path.isfile(faiFile) :
                 raise OptParseException("Can't find expected fasta index file: '%s'" % (faiFile))
 
         MantaWorkflowOptionsBase.validateAndSanitizeExistingOptions(self,options)
-
-        # In the UI, we make it clear that only hg19 is supported,
-        # however the internal code is written to anticipate some
-        # degree of reference generalization, so we use 'referenceFasta':
-        options.referenceFasta=options.hg19ReferenceFasta
 
 
 
