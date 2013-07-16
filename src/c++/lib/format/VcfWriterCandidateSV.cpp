@@ -30,17 +30,7 @@ writeSV(
     BOOST_FOREACH(const SVCandidate& sv, svs)
     {
         if (sv.bp1.pairCount < _minPairCount) continue;
-
-        const SV_TYPE::index_t svType(getSVType(sv));
-        if (svType == SV_TYPE::INTERTRANSLOC)
-        {
-            writeTranslocPair(edge, svIndex, sv);
-        }
-        else
-        {
-            assert(! "Unknown SV type");
-        }
-
+        writeSVCore(edge, svIndex, sv);
         svIndex++;
     }
 }

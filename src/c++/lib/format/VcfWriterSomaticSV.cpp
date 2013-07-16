@@ -97,6 +97,6 @@ writeSV(
 
     //TODO: this is a lame way to customize subclass behavior:
     _ssInfoPtr=&ssInfo;
-    writeTranslocPair(edge, svIndex, sv);
+    writeSVCore(edge, svIndex, sv);
     _ssInfoPtr=NULL;
 }

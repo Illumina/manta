@@ -67,7 +67,7 @@ addSVNodeRead(
     if (bamRead.is_proper_pair()) return;
 
     SVLocus locus;
-    scanner.getChimericSVLocus(bamRead,bamIndex,locus);
+    scanner.getSVLocus(bamRead,bamIndex,locus);
     const SVLocus& clocus(locus);
 
     if (clocus.empty()) return;

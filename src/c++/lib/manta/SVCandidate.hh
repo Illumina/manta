@@ -51,6 +51,53 @@ label(const index_t idx)
         return "UNKNOWN";
     }
 }
+
+inline
+bool
+isSimpleBreakend(
+    const index_t idx)
+{
+    return ((idx==RIGHT_OPEN) || (idx==LEFT_OPEN));
+}
+
+inline
+bool
+isSameOrientation(
+    const index_t idx1,
+    const index_t idx2)
+{
+    if(! isSimpleBreakend(idx1)) return false;
+    if(! isSimpleBreakend(idx2)) return false;
+    return (idx1==idx2);
+}
+
+inline
+bool
+isInnies(
+    const bool isIdx1First,
+    const index_t idx1,
+    const index_t idx2)
+{
+    if(isIdx1First)
+    {
+        return ((idx1==RIGHT_OPEN) && (idx2==LEFT_OPEN));
+    }
+    else
+    {
+        return ((idx2==RIGHT_OPEN) && (idx1==LEFT_OPEN));
+    }
+}
+
+inline
+bool
+isOutties(
+    const bool isIdx1First,
+    const index_t idx1,
+    const index_t idx2)
+{
+    return isInnies((! isIdx1First),idx1,idx2);
+}
+
 }
 
 
@@ -188,22 +235,18 @@ namespace SV_TYPE
 enum index_t
 {
     UNKNOWN,
-    INTERTRANSLOC
+    INTERTRANSLOC,
+    INVERSION,
+    DELETION,
+    TANDUP,
+    COMPLEX
 };
 }
 
 
-inline
 SV_TYPE::index_t
-getSVType(const SVCandidate& sv)
-{
-    if (sv.bp1.interval.tid != sv.bp2.interval.tid)
-    {
-        return SV_TYPE::INTERTRANSLOC;
-    }
+getSVType(const SVCandidate& sv);
 
-    return SV_TYPE::UNKNOWN;
-}
 
 std::ostream&
 operator<<(std::ostream& os, const SVCandidate& svc);

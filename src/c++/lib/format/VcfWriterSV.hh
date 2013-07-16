@@ -66,7 +66,7 @@ protected:
     addHeaderFilters() const {}
 
     void
-    writeTranslocPair(
+    writeSVCore(
         const EdgeInfo& edge,
         const unsigned svIndex,
         const SVCandidate& sv);
@@ -93,6 +93,25 @@ private:
         const SVBreakend& bp2,
         const std::string& idPrefix,
         const bool isFirstOfPair);
+
+    void
+    writeTranslocPair(
+        const EdgeInfo& edge,
+        const unsigned svIndex,
+        const SVCandidate& sv);
+
+    void
+    writeInvdel(
+        const SVCandidate& sv,
+        const std::string label);
+
+    void
+    writeInversion(
+        const SVCandidate& sv);
+
+    void
+    writeDeletion(
+        const SVCandidate& sv);
 
 protected:
     const std::string& _referenceFilename;
