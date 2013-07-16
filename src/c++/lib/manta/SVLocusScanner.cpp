@@ -44,6 +44,10 @@ SVLocusScanner(
         _stats.resize(_stats.size()+1);
         _stats.back().min=rgs.fragSize.quantile(_opt.breakendEdgeTrimProb);
         _stats.back().max=rgs.fragSize.quantile((1-_opt.breakendEdgeTrimProb));
+
+        if(_stats.back().min<0.) _stats.back().min = 0;
+
+        assert(_stats.back().max>0.);
     }
 }
 
@@ -59,6 +63,8 @@ getReadBreakendsImpl(
     SVBreakend& remoteBreakend,
     known_pos_range2& evidenceRange)
 {
+    static const pos_t minPairBreakendSize(40);
+
     ALIGNPATH::path_t apath;
     bam_cigar_to_apath(localRead.raw_cigar(),localRead.n_cigar(),apath);
 
@@ -109,7 +115,8 @@ getReadBreakendsImpl(
 
     }
 
-    const unsigned totalNoninsertSize(thisReadNoninsertSize+remoteReadNoninsertSize);
+    const pos_t totalNoninsertSize(thisReadNoninsertSize+remoteReadNoninsertSize);
+    const pos_t breakendSize(std::max(minPairBreakendSize,static_cast<pos_t>(rstats.max-totalNoninsertSize)));
 
     {
         localBreakend.interval.tid = (localRead.target_id());
@@ -121,13 +128,13 @@ getReadBreakendsImpl(
         {
             localBreakend.state = SVBreakendState::RIGHT_OPEN;
             localBreakend.interval.range.set_begin_pos(endRefPos);
-            localBreakend.interval.range.set_end_pos(endRefPos + static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
+            localBreakend.interval.range.set_end_pos(endRefPos + breakendSize);
         }
         else
         {
             localBreakend.state = SVBreakendState::LEFT_OPEN;
             localBreakend.interval.range.set_end_pos(startRefPos);
-            localBreakend.interval.range.set_begin_pos(startRefPos - static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
+            localBreakend.interval.range.set_begin_pos(startRefPos - breakendSize);
         }
 
         evidenceRange.set_range(startRefPos,endRefPos);
@@ -143,13 +150,13 @@ getReadBreakendsImpl(
         {
             remoteBreakend.state = SVBreakendState::RIGHT_OPEN;
             remoteBreakend.interval.range.set_begin_pos(endRefPos);
-            remoteBreakend.interval.range.set_end_pos(endRefPos + static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
+            remoteBreakend.interval.range.set_end_pos(endRefPos + breakendSize);
         }
         else
         {
             remoteBreakend.state = SVBreakendState::LEFT_OPEN;
             remoteBreakend.interval.range.set_end_pos(startRefPos);
-            remoteBreakend.interval.range.set_begin_pos(startRefPos - static_cast<pos_t>(rstats.max-(totalNoninsertSize)));
+            remoteBreakend.interval.range.set_begin_pos(startRefPos - breakendSize);
         }
     }
 }
