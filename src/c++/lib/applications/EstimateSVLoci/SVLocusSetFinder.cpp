@@ -192,7 +192,7 @@ update(const bam_record& bamRead,
     SVLocus locus;
 
     //_readScanner.getSVLocus(bamRead, defaultReadGroupIndex, locus);
-    _readScanner.getChimericSVLocus(bamRead, defaultReadGroupIndex, locus);
+    _readScanner.getSVLocus(bamRead, defaultReadGroupIndex, locus);
 
     if (! locus.empty())
     {
