@@ -44,9 +44,7 @@ struct SVLocusSetFinder : public pos_processor_base
 
     ~SVLocusSetFinder()
     {
-        _svLoci.addAnomCount(_anomCount);
-        _svLoci.addNonAnomCount(_nonAnomCount);
-        _stageman.reset();
+        flush();
     }
 
     ///
@@ -70,6 +68,19 @@ struct SVLocusSetFinder : public pos_processor_base
         _svLoci.header = bam_header_info(header);
         updateDenoiseRegion();
     }
+
+    // flush any cached values built up during the update process
+    void
+    flush()
+    {
+        _svLoci.addAnomCount(_anomCount);
+        _svLoci.addNonAnomCount(_nonAnomCount);
+        _stageman.reset();
+
+        _anomCount=0;
+        _nonAnomCount=0;
+    }
+
 
 private:
 

@@ -68,7 +68,6 @@ runESL(const ESLOptions& opt)
     SVLocusSetFinder locusFinder(opt,scanRegion);
     locusFinder.setBamHeader(header);
 
-
     input_stream_data sdata;
     for (unsigned i(0); i<n_inputs; ++i)
     {
@@ -93,7 +92,9 @@ runESL(const ESLOptions& opt)
         locusFinder.update(read,current.sample_no);
     }
 
-    // debug output
+    // finished updating:
+    locusFinder.flush();
+
     locusFinder.getLocusSet().save(opt.outputFilename.c_str());
 }
 
