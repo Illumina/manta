@@ -696,10 +696,10 @@ dumpStats(std::ostream& os) const
 {
     static const char sep('\t');
 
-    os << "disjointSubgraphCount:" << sep << nonEmptySize() << "\n";
-    os << "nodeCount:" << sep << totalNodeCount() << "\n";
-    os << "directedEdgeCount:" << sep << totalEdgeCount() << "\n";
-    os << "totalEvidenceCount:" << sep << totalObservationCount() << "\n";
+    os << "disjointSubgraphs:" << sep << nonEmptySize() << "\n";
+    os << "nodes:" << sep << totalNodeCount() << "\n";
+    os << "directedEdges:" << sep << totalEdgeCount() << "\n";
+    os << "totalGraphEvidence:" << sep << totalObservationCount() << "\n";
     os << "totalCleaned:" << sep << _totalCleaned << "\n";
     os << "totalAnomalousConsidered:" << sep << _totalAnom << "\n";
     os << "totalNonAnomalousConsidered:" << sep << _totalNonAnom << "\n";

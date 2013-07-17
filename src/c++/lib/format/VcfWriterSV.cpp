@@ -218,7 +218,7 @@ void
 VcfWriterSV::
 writeInvdel(
     const SVCandidate& sv,
-    const std::string label)
+    const std::string& label)
 {
     const bool isBp1First(sv.bp1.interval.range.end_pos()<sv.bp2.interval.range.begin_pos());
 
@@ -249,7 +249,7 @@ writeInvdel(
     assert(1 == ref.size());
 
     // build alt:
-    static const std::string alt( str( boost::format("<%s>") % label));
+    const std::string alt( str( boost::format("<%s>") % label));
 
     // build INFO field
     std::vector<std::string> words;

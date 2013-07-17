@@ -103,7 +103,7 @@ private:
     void
     writeInvdel(
         const SVCandidate& sv,
-        const std::string label);
+        const std::string& label);
 
     void
     writeInversion(
