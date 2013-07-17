@@ -113,6 +113,14 @@ private:
     writeDeletion(
         const SVCandidate& sv);
 
+    void
+    writeTanDup(
+        const SVCandidate& sv);
+
+    void
+    writeComplex(
+        const SVCandidate& sv);
+
 protected:
     const std::string& _referenceFilename;
     const unsigned _minPairCount;

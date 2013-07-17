@@ -18,6 +18,7 @@
 #include "format/VcfWriterSV.hh"
 
 #include "blt_util/samtools_fasta_util.hh"
+#include "blt_util/string_util.hh"
 #include "blt_util/vcf_util.hh"
 
 #include <iostream>
@@ -70,7 +71,8 @@ writeHeaderPrefix(
     _os << "##ALT=<ID=BND,Description=\"Translocation Breakend\">\n";
     _os << "##ALT=<ID=INV,Description=\"Inversion\">\n";
     _os << "##ALT=<ID=DEL,Description=\"Deletion\">\n";
-
+    _os << "##ALT=<ID=DUP:TANDEM,Description=\"Tandem Duplication\">";
+    _os << "##ALT=<ID=COMPLEX,Description=\"Unknown Candidate Type\">";
 }
 
 
@@ -248,8 +250,11 @@ writeInvdel(
     static const std::string alt( str( boost::format("<%s>") % label));
 
     // build INFO field
-    infotags.push_back( str(boost::format("SVTYPE=%s") % label));
+    std::vector<std::string> words;
+    split_string(label,':',words);
+    infotags.push_back( str(boost::format("SVTYPE=%s") % words[0]));
     infotags.push_back( str(boost::format("END=%i") % endPos));
+    infotags.push_back( str(boost::format("SVLEN=%i") % (endPos-pos+1)));
     infotags.push_back( str(boost::format("UPSTREAM_PAIR_SUPPORT=%i") % bpA.readCount) );
     infotags.push_back( str(boost::format("DOWNSTREAM_PAIR_SUPPORT=%i") % bpB.readCount) );
     infotags.push_back( str(boost::format("PAIR_SUPPORT=%i") % bpA.pairCount) );
@@ -304,6 +309,24 @@ writeDeletion(
 }
 
 
+void
+VcfWriterSV::
+writeTanDup(
+    const SVCandidate& sv)
+{
+    writeInvdel(sv,"DUP:TANDEM");
+}
+
+
+void
+VcfWriterSV::
+writeComplex(
+    const SVCandidate& sv)
+{
+    writeInvdel(sv,"COMPLEX");
+}
+
+
 
 void
 VcfWriterSV::
@@ -327,11 +350,11 @@ writeSVCore(
     }
     else if (svType == SV_TYPE::TANDUP)
     {
-    //            writeTranslocPair(edge, svIndex, sv);
+        writeTanDup(sv);
     }
     else if (svType == SV_TYPE::COMPLEX)
     {
-    //            writeTranslocPair(edge, svIndex, sv);
+        writeComplex(sv);
     }
     else
     {
