@@ -395,10 +395,6 @@ BOOST_AUTO_TEST_CASE( test_SVLocusEvidenceRange )
 }
 
 
-
-
-
-
 BOOST_AUTO_TEST_CASE( test_SVLocusNoiseOverlap )
 {
     // adapted from a production failure case:

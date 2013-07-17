@@ -86,8 +86,9 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeMergeSelfEdge)
     NodeIndexType nodePtr1 = locus1.addNode(GenomeInterval(1,10,20));
     NodeIndexType nodePtr2 = locus1.addRemoteNode(GenomeInterval(1,15,25));
     locus1.linkNodes(nodePtr1,nodePtr2);
+    locus1.mergeSelfOverlap();
 
-    const SVLocusNode& node1(locus1.getNode(nodePtr1));
+    const SVLocusNode& node1(locus1.getNode(0));
 
     BOOST_REQUIRE_EQUAL(node1.count,1u);
     BOOST_REQUIRE_EQUAL(node1.interval.range.begin_pos(),10);
@@ -95,7 +96,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeMergeSelfEdge)
     BOOST_REQUIRE_EQUAL(node1.size(),1u);
 
     // test that the single edge of the merged node is to self:
-    BOOST_REQUIRE_EQUAL(node1.begin()->first,nodePtr1);
+    BOOST_REQUIRE_EQUAL(node1.begin()->first,0);
     BOOST_REQUIRE_EQUAL(node1.outCount(),1u);
 }
 
@@ -106,8 +107,9 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeMergeSelfEdgeReverse)
     NodeIndexType nodePtr1 = locus1.addRemoteNode(GenomeInterval(1,10,20));
     NodeIndexType nodePtr2 = locus1.addNode(GenomeInterval(1,15,25));
     locus1.linkNodes(nodePtr1,nodePtr2);
+    locus1.mergeSelfOverlap();
 
-    const SVLocusNode& node1(locus1.getNode(nodePtr1));
+    const SVLocusNode& node1(locus1.getNode(0));
 
     BOOST_REQUIRE_EQUAL(node1.count,1u);
     BOOST_REQUIRE_EQUAL(node1.interval.range.begin_pos(),10);
@@ -115,7 +117,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeMergeSelfEdgeReverse)
     BOOST_REQUIRE_EQUAL(node1.size(),1u);
 
     // test that the single edge of the merged node is to self:
-    BOOST_REQUIRE_EQUAL(node1.begin()->first,nodePtr1);
+    BOOST_REQUIRE_EQUAL(node1.begin()->first,0);
     BOOST_REQUIRE_EQUAL(node1.outCount(),1u);
 }
 
@@ -129,7 +131,9 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeMergeMultiSelfEdge)
     locus1.linkNodes(nodePtr1,nodePtr1copy);
     locus1.linkNodes(nodePtr1,nodePtr2);
 
-    const SVLocusNode& node1(locus1.getNode(nodePtr1));
+    locus1.mergeSelfOverlap();
+
+    const SVLocusNode& node1(locus1.getNode(0));
 
     BOOST_REQUIRE_EQUAL(node1.count,2u);
     BOOST_REQUIRE_EQUAL(node1.interval.range.begin_pos(),10);
@@ -137,7 +141,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeMergeMultiSelfEdge)
     BOOST_REQUIRE_EQUAL(node1.size(),1u);
 
     // test that the single edge of the merged node is to self:
-    BOOST_REQUIRE_EQUAL(node1.begin()->first,nodePtr1);
+    BOOST_REQUIRE_EQUAL(node1.begin()->first,0);
     BOOST_REQUIRE_EQUAL(node1.outCount(),2u);
 }
 

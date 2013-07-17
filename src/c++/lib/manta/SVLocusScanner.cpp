@@ -199,6 +199,7 @@ getSVLocusImpl(
     {
         const NodeIndexType remoteBreakendNode(locus.addRemoteNode(remoteBreakend.interval));
         locus.linkNodes(localBreakendNode,remoteBreakendNode);
+        locus.mergeSelfOverlap();
     }
 
 }

@@ -492,6 +492,31 @@ findConnected(
 
 void
 SVLocus::
+mergeSelfOverlap()
+{
+    const unsigned nodeSize(size());
+    for (unsigned nodeIndex(0); nodeIndex<nodeSize; ++nodeIndex)
+    {
+        for (unsigned nodeIndex2(nodeIndex+1); nodeIndex2<nodeSize; ++nodeIndex2)
+        {
+            const unsigned revNodeIndex(nodeSize-(nodeIndex+1));
+            const unsigned revNodeIndex2(nodeSize-(nodeIndex2+1));
+            SVLocusNode& node1(getNode(revNodeIndex));
+            SVLocusNode& node2(getNode(revNodeIndex2));
+
+            // test whether 1 and 2 intersect, if they do, merge this into a self-edge node:
+            if(! node2.interval.isIntersect(node1.interval)) continue;
+            mergeNode(revNodeIndex,revNodeIndex2);
+            eraseNode(revNodeIndex);
+            break;
+        }
+    }
+}
+
+
+
+void
+SVLocus::
 checkState(const bool isCheckConnected) const
 {
     using namespace illumina::common;

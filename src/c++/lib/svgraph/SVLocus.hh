@@ -267,8 +267,7 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
 
     // an edge count is only added on on from->to
     //
-    // returns true if to was merged into from
-    bool
+    void
     linkNodes(
         const NodeIndexType fromIndex,
         const NodeIndexType toIndex,
@@ -282,14 +281,6 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
 
         fromNode.edges.insert(std::make_pair(toIndex,SVLocusEdge(fromCount)));
         toNode.edges.insert(std::make_pair(fromIndex,SVLocusEdge(toCount)));
-
-        // test whether from and to intersect, if they do, merge this into a self-edge node:
-        if(fromNode.interval.isIntersect(toNode.interval))
-        {
-            mergeNode(toIndex,fromIndex);
-            return true;
-        }
-        return false;
     }
 
     void
@@ -349,6 +340,10 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
         for (NodeIndexType i(0); i<size(); ++i) notifyDelete(i);
         _graph.clear();
     }
+
+    // find any self-overlapping nodes within the locus and merge
+    void
+    mergeSelfOverlap();
 
     /// debug func to check that internal data-structures are in
     /// a consistent state
