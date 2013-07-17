@@ -236,6 +236,9 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
     const SVLocusNode&
     getNode(const NodeIndexType nodePtr) const
     {
+#ifdef DEBUG_SVL
+        if(nodePtr>=_graph.size()) nodeHurl(nodePtr);
+#endif
         assert(nodePtr<_graph.size());
         return _graph[nodePtr];
     }
@@ -383,9 +386,15 @@ private:
     SVLocusNode&
     getNode(const NodeIndexType nodePtr)
     {
+#ifdef DEBUG_SVL
+        if(nodePtr>=_graph.size()) nodeHurl(nodePtr);
+#endif
         assert(nodePtr<_graph.size());
         return _graph[nodePtr];
     }
+
+    void
+    nodeHurl(const NodeIndexType nodePtr) const;
 
     void
     updateIndex(const LocusIndexType& index)

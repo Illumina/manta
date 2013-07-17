@@ -35,6 +35,20 @@ operator<<(std::ostream& os, const SVLocusEdge& edge)
 }
 
 
+
+void
+SVLocus::
+nodeHurl(const NodeIndexType nodePtr) const
+{
+    using namespace illumina::common;
+
+    std::ostringstream oss;
+    oss << "ERROR: Attempting to access node: " << _index << ":" << nodePtr << " in locus with size: " << size() << "\n";
+    BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+}
+
+
+
 void
 SVLocus::
 mergeNode(
