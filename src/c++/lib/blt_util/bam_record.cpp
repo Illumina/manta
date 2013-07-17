@@ -33,7 +33,7 @@ operator<<(std::ostream& os, const bam_record& br)
     }
     else
     {
-        os << br.qname() << "/" << br.read_no() << " tid:pos " << br.target_id() << ":" << (br.pos()-1);
+        os << br.qname() << "/" << br.read_no() << " tid:pos " << br.target_id() << ":" << (br.pos()-1) << " mate_tid:pos " << br.mate_target_id() << ":" << (br.mate_pos()-1);
     }
     return os;
 }
