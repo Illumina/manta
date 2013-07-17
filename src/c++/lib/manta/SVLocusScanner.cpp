@@ -248,7 +248,7 @@ getSVLocus(
 
     if(! read.is_chimeric())
     {
-        if(read.template_size()<1000) return;
+        if(std::abs(read.template_size())<5000) return;
     }
 
     const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);
