@@ -223,7 +223,7 @@ writeInvdel(
     const bool isBp1First(sv.bp1.interval.range.end_pos()<sv.bp2.interval.range.begin_pos());
 
     const SVBreakend& bpA(isBp1First ? sv.bp1 : sv.bp2);
-    const SVBreakend& bpB(isBp1First ? sv.bp1 : sv.bp2);
+    const SVBreakend& bpB(isBp1First ? sv.bp2 : sv.bp1);
 
     std::vector<std::string> infotags;
 
@@ -235,6 +235,8 @@ writeInvdel(
 
     // get POS
     const pos_t pos(bpArange.center_pos()+1);
+    if(pos<1) return;
+
     const pos_t endPos(bpBrange.center_pos()+1);
 
     // get ID
