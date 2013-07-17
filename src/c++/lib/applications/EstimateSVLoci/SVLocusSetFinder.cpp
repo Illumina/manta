@@ -184,6 +184,9 @@ update(const bam_record& bamRead,
     }
     _anomCount++;
 
+    // can't handle these yet:
+    if (bamRead.is_mate_unmapped()) return;
+
     // check that this read starts in our scan region:
     if (! _scanRegion.range.is_pos_intersect(bamRead.pos()-1)) return;
 
