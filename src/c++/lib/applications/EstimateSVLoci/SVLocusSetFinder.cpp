@@ -127,7 +127,7 @@ process_pos(const int stage_no,
         {
 
 #ifdef DEBUG_SFINDER
-            log_os << "SFinder::process_pos pos intersect. is in region: " << _isInDenoiseRegion << "\n";
+            log_os << "SFinder::process_pos pos intersect. pos: " << pos << " dnRegion: " << _denoiseRegion << " is in region: " << _isInDenoiseRegion << "\n";
 #endif
 
             if (! _isInDenoiseRegion)
@@ -146,7 +146,7 @@ process_pos(const int stage_no,
         {
 
 #ifdef DEBUG_SFINDER
-            log_os << "SFinder::process_pos pos intersect. is in region: " << _isInDenoiseRegion << "\n";
+            log_os << "SFinder::process_pos no pos intersect. pos: " << pos << " dnRegion: " << _denoiseRegion << " is in region: " << _isInDenoiseRegion << "\n";
 #endif
 
             if (_isInDenoiseRegion)
