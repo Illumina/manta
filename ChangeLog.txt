@@ -1,3 +1,5 @@
+v0.5
+Expand POC calls to include intrachromosomal variants down to ~5kb. Minor modifications to method based on FFPE testing.
 v0.4
 POC somatic transloc output
 v0.3
