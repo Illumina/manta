@@ -177,7 +177,9 @@ update(const bam_record& bamRead,
 
     // shortcut to speed things up:
     if (_readScanner.isReadFiltered(bamRead)) return;
-    if (bamRead.is_proper_pair())
+
+    // don't rely on the properPair bit to be set correctly:
+    if (_readScanner.isProperPair(bamRead,defaultReadGroupIndex))
     {
         _nonAnomCount++;
         return;

@@ -42,12 +42,24 @@ SVLocusScanner(
         const ReadGroupStats rgs(_rss.getStats(*index));
 
         _stats.resize(_stats.size()+1);
-        _stats.back().min=rgs.fragSize.quantile(_opt.breakendEdgeTrimProb);
-        _stats.back().max=rgs.fragSize.quantile((1-_opt.breakendEdgeTrimProb));
+        CachedReadGroupStats& stat(_stats.back());
+        {
+            Range& breakend(stat.breakendRegion);
+            breakend.min=rgs.fragSize.quantile(_opt.breakendEdgeTrimProb);
+            breakend.max=rgs.fragSize.quantile((1-_opt.breakendEdgeTrimProb));
 
-        if(_stats.back().min<0.) _stats.back().min = 0;
+            if(breakend.min<0.) breakend.min = 0;
+            assert(breakend.max>0.);
+        }
+        {
+            Range& ppair(stat.properPair);
+            ppair.min=rgs.fragSize.quantile(_opt.properPairTrimProb);
+            ppair.max=rgs.fragSize.quantile((1-_opt.properPairTrimProb));
 
-        assert(_stats.back().max>0.);
+            if(ppair.min<0.) ppair.min = 0;
+
+            assert(ppair.max>0.);
+        }
     }
 }
 
@@ -116,7 +128,7 @@ getReadBreakendsImpl(
     }
 
     const pos_t totalNoninsertSize(thisReadNoninsertSize+remoteReadNoninsertSize);
-    const pos_t breakendSize(std::max(minPairBreakendSize,static_cast<pos_t>(rstats.max-totalNoninsertSize)));
+    const pos_t breakendSize(std::max(minPairBreakendSize,static_cast<pos_t>(rstats.breakendRegion.max-totalNoninsertSize)));
 
     {
         localBreakend.interval.tid = (localRead.target_id());
@@ -215,6 +227,38 @@ isReadFiltered(const bam_record& read) const
     if (read.is_secondary()) return true;
     if (read.map_qual() < _opt.minMapq) return true;
     return false;
+}
+
+
+
+bool
+SVLocusScanner::
+isProperPair(
+    const bam_record& read,
+    const unsigned defaultReadGroupIndex) const
+{
+    if (read.is_unmapped() || read.is_mate_unmapped()) return false;
+    if (read.target_id() != read.mate_target_id()) return false;
+
+    const Range& ppr(_stats[defaultReadGroupIndex].properPair);
+    if (read.template_size() > ppr.max || read.template_size() < ppr.min) return false;
+
+    if     (read.pos() < read.mate_pos())
+    {
+        if(! read.is_fwd_strand()) return false;
+        if(  read.is_mate_fwd_strand()) return false;
+    }
+    else if(read.pos() > read.mate_pos())
+    {
+        if(  read.is_fwd_strand()) return false;
+        if(! read.is_mate_fwd_strand()) return false;
+    }
+    else
+    {
+        if(read.is_fwd_strand() == read.is_mate_fwd_strand()) return false;
+    }
+
+    return true;
 }
 
 

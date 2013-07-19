@@ -64,7 +64,7 @@ addSVNodeRead(
     SVCandidateDataGroup& svDataGroup)
 {
     if (scanner.isReadFiltered(bamRead)) return;
-    if (bamRead.is_proper_pair()) return;
+    if (scanner.isProperPair(bamRead,bamIndex)) return;
     if (bamRead.is_mate_unmapped()) return;
 
     SVLocus locus;

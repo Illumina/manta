@@ -47,6 +47,12 @@ struct SVLocusScanner
     bool
     isReadFiltered(const bam_record& read) const;
 
+    /// custom version of proper pair bit test:
+    bool
+    isProperPair(
+        const bam_record& read,
+        const unsigned defaultReadGroupIndex) const;
+
     /// if read supports a chimera candidate return this as a single observation SVLocus object,
     /// else return an empty object.
     ///
@@ -82,15 +88,21 @@ struct SVLocusScanner
 
 private:
 
-    struct CachedReadGroupStats
+    struct Range
     {
-        CachedReadGroupStats() :
+        Range() :
             min(0),
             max(0)
         {}
 
         double min;
         double max;
+    };
+
+    struct CachedReadGroupStats
+    {
+        Range breakendRegion;
+        Range properPair;
     };
 
 

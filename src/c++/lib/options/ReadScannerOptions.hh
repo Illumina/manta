@@ -25,13 +25,17 @@ struct ReadScannerOptions
 
     ReadScannerOptions() :
         minMapq(15),
-        breakendEdgeTrimProb(0.25)
+        breakendEdgeTrimProb(0.25),
+        properPairTrimProb(0.05)
     {}
 
     unsigned minMapq;
 
     /// report breakend regions with x prob regions removed from each edge
     float breakendEdgeTrimProb;
+
+    /// report a pair as "proper pair" if fragement size is within x prob region removed from each edge
+    float properPairTrimProb;
 };
 
 
