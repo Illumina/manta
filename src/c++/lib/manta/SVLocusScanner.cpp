@@ -179,7 +179,7 @@ void
 SVLocusScanner::
 getSVLocusImpl(
     const CachedReadGroupStats& rstats,
-    const bam_record& read,
+    const bam_record& bamRead,
     SVLocus& locus)
 {
     using namespace illumina::common;
@@ -187,7 +187,7 @@ getSVLocusImpl(
     SVBreakend localBreakend;
     SVBreakend remoteBreakend;
     known_pos_range2 evidenceRange;
-    getReadBreakendsImpl(rstats, read, NULL, localBreakend, remoteBreakend, evidenceRange);
+    getReadBreakendsImpl(rstats, bamRead, NULL, localBreakend, remoteBreakend, evidenceRange);
 
     if((0==localBreakend.interval.range.size()) ||
        (0==remoteBreakend.interval.range.size()))
@@ -196,7 +196,7 @@ getSVLocusImpl(
         oss << "Empty Breakend proposed from bam record.\n"
             << "\tlocal_breakend: " << localBreakend << "\n"
             << "\tremote_breakend: " << remoteBreakend << "\n"
-            << "\tbam_record: " << read << "\n";
+            << "\tbam_record: " << bamRead << "\n";
         BOOST_THROW_EXCEPTION(LogicException(oss.str()));
     }
 
@@ -220,12 +220,12 @@ getSVLocusImpl(
 
 bool
 SVLocusScanner::
-isReadFiltered(const bam_record& read) const
+isReadFiltered(const bam_record& bamRead) const
 {
-    if (read.is_filter()) return true;
-    if (read.is_dup()) return true;
-    if (read.is_secondary()) return true;
-    if (read.map_qual() < _opt.minMapq) return true;
+    if (bamRead.is_filter()) return true;
+    if (bamRead.is_dup()) return true;
+    if (bamRead.is_secondary()) return true;
+    if (bamRead.map_qual() < _opt.minMapq) return true;
     return false;
 }
 
@@ -234,29 +234,29 @@ isReadFiltered(const bam_record& read) const
 bool
 SVLocusScanner::
 isProperPair(
-    const bam_record& read,
+    const bam_record& bamRead,
     const unsigned defaultReadGroupIndex) const
 {
-    if (read.is_unmapped() || read.is_mate_unmapped()) return false;
-    if (read.target_id() != read.mate_target_id()) return false;
+    if (bamRead.is_unmapped() || bamRead.is_mate_unmapped()) return false;
+    if (bamRead.target_id() != bamRead.mate_target_id()) return false;
 
     const Range& ppr(_stats[defaultReadGroupIndex].properPair);
-    const int32_t fragmentSize(std::abs(read.template_size()));
+    const int32_t fragmentSize(std::abs(bamRead.template_size()));
     if (fragmentSize > ppr.max || fragmentSize < ppr.min) return false;
 
-    if     (read.pos() < read.mate_pos())
+    if     (bamRead.pos() < bamRead.mate_pos())
     {
-        if(! read.is_fwd_strand()) return false;
-        if(  read.is_mate_fwd_strand()) return false;
+        if(! bamRead.is_fwd_strand()) return false;
+        if(  bamRead.is_mate_fwd_strand()) return false;
     }
-    else if(read.pos() > read.mate_pos())
+    else if(bamRead.pos() > bamRead.mate_pos())
     {
-        if(  read.is_fwd_strand()) return false;
-        if(! read.is_mate_fwd_strand()) return false;
+        if(  bamRead.is_fwd_strand()) return false;
+        if(! bamRead.is_mate_fwd_strand()) return false;
     }
     else
     {
-        if(read.is_fwd_strand() == read.is_mate_fwd_strand()) return false;
+        if(bamRead.is_fwd_strand() == bamRead.is_mate_fwd_strand()) return false;
     }
 
     return true;
@@ -267,16 +267,16 @@ isProperPair(
 void
 SVLocusScanner::
 getChimericSVLocus(
-    const bam_record& read,
+    const bam_record& bamRead,
     const unsigned defaultReadGroupIndex,
     SVLocus& locus) const
 {
     locus.clear();
 
-    if (read.is_chimeric())
+    if (bamRead.is_chimeric())
     {
         const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);
-        getSVLocusImpl(rstats,read,locus);
+        getSVLocusImpl(rstats,bamRead,locus);
     }
 }
 
@@ -285,19 +285,19 @@ getChimericSVLocus(
 void
 SVLocusScanner::
 getSVLocus(
-    const bam_record& read,
+    const bam_record& bamRead,
     const unsigned defaultReadGroupIndex,
     SVLocus& locus) const
 {
     locus.clear();
 
-    if(! read.is_chimeric())
+    if(! bamRead.is_chimeric())
     {
-        if(std::abs(read.template_size())<5000) return;
+        if(std::abs(bamRead.template_size())<5000) return;
     }
 
     const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);
-    getSVLocusImpl(rstats,read,locus);
+    getSVLocusImpl(rstats,bamRead,locus);
 }
 
 

@@ -45,12 +45,12 @@ struct SVLocusScanner
     /// this predicate runs any fast tests on the acceptability of a
     /// read for the SVLocus build
     bool
-    isReadFiltered(const bam_record& read) const;
+    isReadFiltered(const bam_record& bamRead) const;
 
     /// custom version of proper pair bit test:
     bool
     isProperPair(
-        const bam_record& read,
+        const bam_record& bamRead,
         const unsigned defaultReadGroupIndex) const;
 
     /// if read supports a chimera candidate return this as a single observation SVLocus object,
@@ -61,7 +61,7 @@ struct SVLocusScanner
     ///
     void
     getChimericSVLocus(
-        const bam_record& read,
+        const bam_record& bamRead,
         const unsigned defaultReadGroupIndex,
         SVLocus& locus) const;
 
@@ -70,7 +70,7 @@ struct SVLocusScanner
     ///
     void
     getSVLocus(
-        const bam_record& read,
+        const bam_record& bamRead,
         const unsigned defaultReadGroupIndex,
         SVLocus& locus) const;
 
@@ -120,7 +120,7 @@ private:
     void
     getSVLocusImpl(
         const CachedReadGroupStats& rstats,
-        const bam_record& read,
+        const bam_record& bamRead,
         SVLocus& locus);
 
     /////////////////////////////////////////////////
