@@ -241,7 +241,8 @@ isProperPair(
     if (read.target_id() != read.mate_target_id()) return false;
 
     const Range& ppr(_stats[defaultReadGroupIndex].properPair);
-    if (read.template_size() > ppr.max || read.template_size() < ppr.min) return false;
+    const int32_t fragmentSize(std::abs(read.template_size()));
+    if (fragmentSize > ppr.max || fragmentSize < ppr.min) return false;
 
     if     (read.pos() < read.mate_pos())
     {
