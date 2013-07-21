@@ -41,7 +41,7 @@ dumpEdgeInfo(
     const SVLocusSet& set,
     std::ostream& os)
 {
-    os << edge << "\n";
+    os << "Exception caught while processing graph component: " << edge;
     os << "\tnode1:" << set.getLocus(edge.locusIndex).getNode(edge.nodeIndex1);
     os << "\tnode2:" << set.getLocus(edge.locusIndex).getNode(edge.nodeIndex2);
 }
@@ -112,7 +112,6 @@ runGSC(
         }
         catch (...)
         {
-            log_os << "Exception caught while processing graph component: ";
             dumpEdgeInfo(edge,cset,log_os);
             throw;
         }
