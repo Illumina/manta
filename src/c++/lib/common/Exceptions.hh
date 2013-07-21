@@ -36,6 +36,11 @@ namespace illumina
 namespace common
 {
 
+/// this type can be used to add more info onto an in-flight exception:
+///
+typedef boost::error_info<struct extra_exception_message,std::string> ExceptionMsg;
+
+
 /**
  ** \brief Virtual base class to all the exception classes
  **

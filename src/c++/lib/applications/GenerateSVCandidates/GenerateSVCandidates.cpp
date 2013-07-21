@@ -22,6 +22,7 @@
 #include "SVScorer.hh"
 
 #include "blt_util/log.hh"
+#include "common/Exceptions.hh"
 #include "common/OutStream.hh"
 #include "manta/ReadGroupStatsSet.hh"
 #include "format/VcfWriterCandidateSV.hh"
@@ -30,6 +31,20 @@
 #include "boost/foreach.hpp"
 
 #include <iostream>
+
+
+
+static
+void
+dumpEdgeInfo(
+    const EdgeInfo& edge,
+    const SVLocusSet& set,
+    std::ostream& os)
+{
+    os << edge << "\n";
+    os << "\tnode1:" << set.getLocus(edge.locusIndex).getNode(edge.nodeIndex1);
+    os << "\tnode2:" << set.getLocus(edge.locusIndex).getNode(edge.nodeIndex2);
+}
 
 
 
@@ -88,12 +103,17 @@ runGSC(
                 }
             }
         }
+        catch (illumina::common::ExceptionData& e)
+        {
+            std::ostringstream oss;
+            dumpEdgeInfo(edge,cset,oss);
+            e << illumina::common::ExceptionMsg(oss.str());
+            throw;
+        }
         catch (...)
         {
-            log_os << "Exception caught while processing graph component: " << edge << "\n";
-            log_os << "\tnode1:" << cset.getLocus(edge.locusIndex).getNode(edge.nodeIndex1);
-            log_os << "\tnode2:" << cset.getLocus(edge.locusIndex).getNode(edge.nodeIndex2);
-
+            log_os << "Exception caught while processing graph component: ";
+            dumpEdgeInfo(edge,cset,log_os);
             throw;
         }
     }

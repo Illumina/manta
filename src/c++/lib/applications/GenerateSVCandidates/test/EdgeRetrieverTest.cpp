@@ -22,6 +22,8 @@
 
 #include "svgraph/test/SVLocusTestUtil.hh"
 
+#include <iostream>
+
 
 BOOST_AUTO_TEST_SUITE( test_EdgeRetriever )
 
@@ -142,6 +144,58 @@ BOOST_AUTO_TEST_CASE( test_EdgeRetrieverOddBin )
 
         while (edger.next())
         {
+            count++;
+        }
+    }
+
+    BOOST_REQUIRE_EQUAL(count,7u);
+}
+
+
+
+BOOST_AUTO_TEST_CASE( test_EdgeRetrieverOddBinSelfEdge )
+{
+    SVLocus locus1;
+    locusAddPair(locus1,1,10,20,1,10,20);
+    SVLocus locus2;
+    locusAddPair(locus2,3,10,20,3,10,20);
+    SVLocus locus3;
+    locusAddPair(locus3,5,10,20,5,10,20);
+    SVLocus locus4;
+    locusAddPair(locus4,7,10,20,8,30,40);
+    SVLocus locus5;
+    locusAddPair(locus5,9,10,20,9,10,20);
+    SVLocus locus6;
+    locusAddPair(locus6,11,10,20,12,30,40);
+    SVLocus locus7;
+    locusAddPair(locus7,13,10,20,14,30,40);
+
+    locus1.mergeSelfOverlap();
+    locus2.mergeSelfOverlap();
+    locus3.mergeSelfOverlap();
+    locus5.mergeSelfOverlap();
+
+    SVLocusSet set1(1);
+    set1.merge(locus1);
+    set1.merge(locus2);
+    set1.merge(locus3);
+    set1.merge(locus4);
+    set1.merge(locus5);
+    set1.merge(locus6);
+    set1.merge(locus7);
+    set1.checkState(true,true);
+
+    std::set<unsigned> loci;
+    unsigned count(0);
+    for (unsigned binIndex(0); binIndex<3; ++binIndex)
+    {
+        EdgeRetriever edger(set1,3,binIndex);
+
+        while (edger.next())
+        {
+            const EdgeInfo& edge(edger.getEdge());
+            BOOST_REQUIRE_EQUAL(loci.count(edge.locusIndex),0);
+            loci.insert(edge.locusIndex);
             count++;
         }
     }
