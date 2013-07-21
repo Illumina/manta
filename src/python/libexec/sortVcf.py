@@ -16,6 +16,49 @@ sort input vcf
 """
 
 import os, sys
+import re
+
+
+
+def getKeyVal(string,key) :
+    match=re.search("%s=([^;]*);?" % (key) ,string)
+    if match is None : return None
+    return match.group(1);
+
+
+VCF_CHROM = 0
+VCF_POS = 1
+VCF_REF = 3
+VCF_ALT = 4
+VCF_FILTER = 6
+VCF_INFO = 7
+
+
+
+class VcfRecord :
+    def __init__(self,line) :
+        self.line = line
+        w=line.strip().split('\t')
+        self.chrom=w[VCF_CHROM]
+        self.pos=int(w[VCF_POS])
+        self.endPos=self.pos+len(w[VCF_REF])-1
+        val = getKeyVal(w[VCF_INFO],"END")
+        if val is not None :
+            self.endPos = int(val)
+
+
+
+def processFile(arg,isFirst,header,recList) :
+    """
+    read in a vcf file
+    """
+
+    for line in open(arg) :
+        if line[0] == "#" :
+            if isFirst : header.append(line)
+        else :
+            recList.append(VcfRecord(line))
+
 
 
 def getOptions() :
@@ -41,28 +84,6 @@ def getOptions() :
 
 
 
-class VcfRecord :
-    def __init__(self,line) :
-        self.line = line
-        w=line.strip().split('\t')
-        self.chrom=w[0]
-        self.pos=int(w[1])
-
-
-
-def processFile(arg,isFirst,header,recList) :
-    """
-    read in a vcf file
-    """
-
-    for line in open(arg) :
-        if line[0] == "#" :
-            if isFirst : header.append(line)
-        else :
-            recList.append(VcfRecord(line))
-
-
-
 def main() :
 
     outfp = sys.stdout
@@ -77,14 +98,13 @@ def main() :
         processFile(arg,isFirst,header,recList)
         isFirst-False
 
-    recList.sort(key = lambda x: (x.chrom, x.pos))
+    recList.sort(key = lambda x: (x.chrom, x.pos, x.endPos))
 
     for line in header :
         outfp.write(line)
 
     for vcfrec in recList :
         outfp.write(vcfrec.line)
-
 
 
 main()
