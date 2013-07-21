@@ -21,6 +21,7 @@
 #include "SVFinder.hh"
 #include "SVScorer.hh"
 
+#include "blt_util/log.hh"
 #include "common/OutStream.hh"
 #include "manta/ReadGroupStatsSet.hh"
 #include "format/VcfWriterCandidateSV.hh"
@@ -69,20 +70,31 @@ runGSC(
     {
         const EdgeInfo& edge(edger.getEdge());
 
-        // find number, type and breakend range of SVs on this edge:
-        svFind.findCandidateSV(edge,svData,svs);
-
-        candWriter.writeSV(edge, svData, svs);
-
-        if (isSomatic)
+        try
         {
-            unsigned svIndex(0);
-            BOOST_FOREACH(const SVCandidate& sv, svs)
+            // find number, type and breakend range of SVs on this edge:
+            svFind.findCandidateSV(edge,svData,svs);
+
+            candWriter.writeSV(edge, svData, svs);
+
+            if (isSomatic)
             {
-                svScore.scoreSomaticSV(svData, svIndex, sv, ssInfo);
-                somWriter.writeSV(edge, svData, svIndex, sv, ssInfo);
-                svIndex++;
+                unsigned svIndex(0);
+                BOOST_FOREACH(const SVCandidate& sv, svs)
+                {
+                    svScore.scoreSomaticSV(svData, svIndex, sv, ssInfo);
+                    somWriter.writeSV(edge, svData, svIndex, sv, ssInfo);
+                    svIndex++;
+                }
             }
+        }
+        catch (...)
+        {
+            log_os << "Exception caught while processing graph component: " << edge << "\n";
+            log_os << "\tnode1:" << cset.getLocus(edge.locusIndex).getNode(edge.nodeIndex1);
+            log_os << "\tnode2:" << cset.getLocus(edge.locusIndex).getNode(edge.nodeIndex2);
+
+            throw;
         }
     }
 

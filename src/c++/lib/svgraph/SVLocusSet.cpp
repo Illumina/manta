@@ -41,6 +41,19 @@ operator<<(std::ostream& os, const SVLocusSet::NodeAddressType& a)
 
 void
 SVLocusSet::
+locusHurl(const LocusIndexType index, const char* label) const
+{
+    using namespace illumina::common;
+
+    std::ostringstream oss;
+    oss << "ERROR: Attempting to access locus: " << index << " in locusSet with size: " << size() << " accessLabel: " << label << "\n";
+    BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+}
+
+
+
+void
+SVLocusSet::
 merge(const SVLocus& inputLocus)
 {
     //

@@ -77,6 +77,10 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
     const SVLocus&
     getLocus(const LocusIndexType index) const
     {
+#ifdef DEBUG_SVL
+        if (index>=_loci.size()) locusHurl(index,"const");
+#endif
+
         assert(index<_loci.size());
         return _loci[index];
     }
@@ -172,7 +176,6 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
     // dump stats on each locus in tsv format:
     void
     dumpLocusStats(std::ostream& os) const;
-
     const std::string&
     getSource() const
     {
@@ -271,9 +274,17 @@ private:
     SVLocus&
     getLocus(const LocusIndexType index)
     {
+#ifdef DEBUG_SVL
+        if (index>=_loci.size()) locusHurl(index,"non-const");
+#endif
+
         assert(index<_loci.size());
         return _loci[index];
     }
+
+    void
+    locusHurl(const LocusIndexType index, const char* label) const;
+
 
     const SVLocusNode&
     getNode(const NodeAddressType n) const
