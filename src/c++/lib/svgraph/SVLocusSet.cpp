@@ -813,6 +813,10 @@ load(const char* filename)
 {
     using namespace boost::archive;
 
+#ifdef DEBUG_SVL
+    log_os << "SVLocusSet::load BEGIN\n";
+#endif
+
     clear();
 
     assert(NULL != filename);
@@ -842,6 +846,10 @@ load(const char* filename)
 
     reconstructIndex();
     checkState(true,true);
+
+#ifdef DEBUG_SVL
+    log_os << "SVLocusSet::load END\n";
+#endif
 }
 
 
@@ -850,7 +858,14 @@ void
 SVLocusSet::
 reconstructIndex()
 {
+#ifdef DEBUG_SVL
+    log_os << "reconstructIndex BEGIN\n";
+#endif
     clearIndex();
+
+#ifdef DEBUG_SVL
+    log_os << "reconstructIndex cleared\n";
+#endif
 
     LocusIndexType locusIndex(0);
     BOOST_FOREACH(SVLocus& locus, _loci)
@@ -865,6 +880,10 @@ reconstructIndex()
         if (locus.empty()) _emptyLoci.insert(locusIndex);
         locusIndex++;
     }
+
+#ifdef DEBUG_SVL
+    log_os << "reconstructIndex END\n";
+#endif
 }
 
 
