@@ -102,7 +102,7 @@ mergeNode(
 #ifdef DEBUG_SVL
         // is this edge between the to and from nodes?
         const bool isToFromEdge(fromNodeEdgeIter.first == toIndex);
-       log_os << "mergeNode: handle fromEdge: " << _index << ":" << fromNodeEdgeIter.first << " isToFromEdge: " << isToFromEdge << "\n";
+        log_os << "mergeNode: handle fromEdge: " << _index << ":" << fromNodeEdgeIter.first << " isToFromEdge: " << isToFromEdge << "\n";
 #endif
 
         // update local edge:
@@ -524,7 +524,7 @@ mergeSelfOverlap()
             SVLocusNode& node2(getNode(revNodeIndex2));
 
             // test whether 1 and 2 intersect, if they do, merge this into a self-edge node:
-            if(! node2.interval.isIntersect(node1.interval)) continue;
+            if (! node2.interval.isIntersect(node1.interval)) continue;
             mergeNode(revNodeIndex,revNodeIndex2);
             eraseNode(revNodeIndex);
             break;

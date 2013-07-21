@@ -66,8 +66,8 @@ isSameOrientation(
     const index_t idx1,
     const index_t idx2)
 {
-    if(! isSimpleBreakend(idx1)) return false;
-    if(! isSimpleBreakend(idx2)) return false;
+    if (! isSimpleBreakend(idx1)) return false;
+    if (! isSimpleBreakend(idx2)) return false;
     return (idx1==idx2);
 }
 
@@ -78,7 +78,7 @@ isInnies(
     const index_t idx1,
     const index_t idx2)
 {
-    if(isIdx1First)
+    if (isIdx1First)
     {
         return ((idx1==RIGHT_OPEN) && (idx2==LEFT_OPEN));
     }

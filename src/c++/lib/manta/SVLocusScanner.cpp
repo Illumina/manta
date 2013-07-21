@@ -48,7 +48,7 @@ SVLocusScanner(
             breakend.min=rgs.fragSize.quantile(_opt.breakendEdgeTrimProb);
             breakend.max=rgs.fragSize.quantile((1-_opt.breakendEdgeTrimProb));
 
-            if(breakend.min<0.) breakend.min = 0;
+            if (breakend.min<0.) breakend.min = 0;
             assert(breakend.max>0.);
         }
         {
@@ -56,7 +56,7 @@ SVLocusScanner(
             ppair.min=rgs.fragSize.quantile(_opt.properPairTrimProb);
             ppair.max=rgs.fragSize.quantile((1-_opt.properPairTrimProb));
 
-            if(ppair.min<0.) ppair.min = 0;
+            if (ppair.min<0.) ppair.min = 0;
 
             assert(ppair.max>0.);
         }
@@ -189,8 +189,8 @@ getSVLocusImpl(
     known_pos_range2 evidenceRange;
     getReadBreakendsImpl(rstats, bamRead, NULL, localBreakend, remoteBreakend, evidenceRange);
 
-    if((0==localBreakend.interval.range.size()) ||
-       (0==remoteBreakend.interval.range.size()))
+    if ((0==localBreakend.interval.range.size()) ||
+        (0==remoteBreakend.interval.range.size()))
     {
         std::ostringstream oss;
         oss << "Empty Breakend proposed from bam record.\n"
@@ -246,17 +246,17 @@ isProperPair(
 
     if     (bamRead.pos() < bamRead.mate_pos())
     {
-        if(! bamRead.is_fwd_strand()) return false;
-        if(  bamRead.is_mate_fwd_strand()) return false;
+        if (! bamRead.is_fwd_strand()) return false;
+        if (  bamRead.is_mate_fwd_strand()) return false;
     }
-    else if(bamRead.pos() > bamRead.mate_pos())
+    else if (bamRead.pos() > bamRead.mate_pos())
     {
-        if(  bamRead.is_fwd_strand()) return false;
-        if(! bamRead.is_mate_fwd_strand()) return false;
+        if (  bamRead.is_fwd_strand()) return false;
+        if (! bamRead.is_mate_fwd_strand()) return false;
     }
     else
     {
-        if(bamRead.is_fwd_strand() == bamRead.is_mate_fwd_strand()) return false;
+        if (bamRead.is_fwd_strand() == bamRead.is_mate_fwd_strand()) return false;
     }
 
     return true;
@@ -291,9 +291,9 @@ getSVLocus(
 {
     locus.clear();
 
-    if(! bamRead.is_chimeric())
+    if (! bamRead.is_chimeric())
     {
-        if(std::abs(bamRead.template_size())<5000) return;
+        if (std::abs(bamRead.template_size())<5000) return;
     }
 
     const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);

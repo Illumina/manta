@@ -61,19 +61,19 @@ getSVType(const SVCandidate& sv)
     {
         return INTERTRANSLOC;
     }
-    else if(! (isBp1First || isBp2First))
+    else if (! (isBp1First || isBp2First))
     {
         return COMPLEX;
     }
-    else if(SVBreakendState::isSameOrientation(sv.bp1.state,sv.bp2.state))
+    else if (SVBreakendState::isSameOrientation(sv.bp1.state,sv.bp2.state))
     {
         return INVERSION;
     }
-    else if(isInnies(isBp1First,sv.bp1.state,sv.bp2.state))
+    else if (isInnies(isBp1First,sv.bp1.state,sv.bp2.state))
     {
         return DELETION;
     }
-    else if(isOutties(isBp1First,sv.bp1.state,sv.bp2.state))
+    else if (isOutties(isBp1First,sv.bp1.state,sv.bp2.state))
     {
         return TANDUP;
     }

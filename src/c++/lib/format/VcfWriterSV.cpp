@@ -235,7 +235,7 @@ writeInvdel(
 
     // get POS
     const pos_t pos(bpArange.center_pos()+1);
-    if(pos<1) return;
+    if (pos<1) return;
 
     const pos_t endPos(bpBrange.center_pos()+1);
 
