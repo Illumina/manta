@@ -64,6 +64,11 @@ mergeNode(
     SVLocusNode& fromNode(getNode(fromIndex));
     SVLocusNode& toNode(getNode(toIndex));
 
+#ifdef DEBUG_SVL
+    log_os << "mergeNode BEFORE fromNode: " << fromNode;
+    log_os << "mergeNode BEFORE toNode: " << toNode;
+#endif
+
     if (fromNode.interval.tid != toNode.interval.tid)
     {
         std::ostringstream oss;
@@ -156,6 +161,10 @@ mergeNode(
             }
         }
     }
+
+#ifdef DEBUG_SVL
+    log_os << "mergeNode AFTER toNode: " << toNode;
+#endif
 
     clearNodeEdges(fromIndex);
 }
@@ -355,10 +364,15 @@ eraseNode(const NodeIndexType nodePtr)
 
 #ifdef DEBUG_SVL
     log_os << "eraseNode: " << _index << ":" << nodePtr << " transfer_in: " << _index << ":" << fromPtr << " \n";
+
+    log_os << "eraseNode BEFORE: " << getNode(nodePtr) << "\n";
 #endif
 
     if (fromPtr != nodePtr)
     {
+#ifdef DEBUG_SVL
+        log_os << "eraseNode transfer_in: BEFORE: " << getNode(fromPtr) << "\n";
+#endif
         // reassign fromNode's remote edges before shifting its address:
         //
         SVLocusNode& fromNode(getNode(fromPtr));
@@ -373,9 +387,14 @@ eraseNode(const NodeIndexType nodePtr)
         notifyDelete(nodePtr);
         _graph[nodePtr] = _graph[fromPtr];
         notifyAdd(nodePtr);
+
+#ifdef DEBUG_SVL
+        log_os << "eraseNode transfer_in: AFTER: " << getNode(nodePtr) << "\n";
+#endif
     }
     notifyDelete(fromPtr);
     _graph.resize(fromPtr);
+
 }
 
 
