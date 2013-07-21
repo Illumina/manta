@@ -102,8 +102,39 @@ mergeNode(
 #ifdef DEBUG_SVL
         // is this edge between the to and from nodes?
         const bool isToFromEdge(fromNodeEdgeIter.first == toIndex);
+
         log_os << "mergeNode: handle fromEdge: " << _index << ":" << fromNodeEdgeIter.first << " isToFromEdge: " << isToFromEdge << "\n";
 #endif
+
+        // is this a self edge of the from node?
+        const bool isSelfFromEdge(fromNodeEdgeIter.first == fromIndex);
+
+        if(isSelfFromEdge)
+        {
+            // self-edge needs to be handled as a special case:
+
+            // to node could already have a self edge -- check that here:
+            edges_type::iterator toNodeEdgeIter(toNode.edges.find(toIndex));
+            if (toNodeEdgeIter == toNode.edges.end())
+            {
+#ifdef DEBUG_SVL
+                log_os << "mergeNode: toNode does not have self-edge\n";
+                log_os << "mergeNode: toNode add " << _index << ":" << toIndex << "\n";
+#endif
+
+                toNode.edges.insert(std::make_pair(toIndex,fromNodeEdgeIter.second));
+            }
+            else
+            {
+#ifdef DEBUG_SVL
+                log_os << "mergeNode: toNode already has self edge\n";
+#endif
+                // this node does contain a link to the remote node already:
+                toNodeEdgeIter->second.mergeEdge(fromNodeEdgeIter.second);
+            }
+
+            continue;
+        }
 
         // update local edge:
         {
