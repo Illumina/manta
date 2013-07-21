@@ -358,9 +358,19 @@ clearNodeEdges(NodeIndexType nodePtr)
 {
     using namespace illumina::common;
 
+#ifdef DEBUG_SVL
+    log_os << "clearNodeEdges from nodeIndex: " << nodePtr << "\n";
+#endif
+
     SVLocusNode& node(getNode(nodePtr));
     BOOST_FOREACH(edges_type::value_type& edgeIter, node)
     {
+
+#ifdef DEBUG_SVL
+        log_os << "clearNodeEdges clearing remote Index: " << edgeIter.first << "\n";
+#endif
+        // skip self edge (otherwise we invalidate iterators in this foreach loop)
+        if(edgeIter.first == nodePtr) continue;
 
         SVLocusNode& remoteNode(getNode(edgeIter.first));
         edges_type& remoteEdges(remoteNode.edges);
@@ -374,6 +384,9 @@ clearNodeEdges(NodeIndexType nodePtr)
             BOOST_THROW_EXCEPTION(LogicException(oss.str()));
         }
 
+#ifdef DEBUG_SVL
+        log_os << "clearNodeEdges remote clearing Index: " << thisRemoteIter->first << "\n";
+#endif
         remoteEdges.erase(thisRemoteIter);
     }
     node.edges.clear();
