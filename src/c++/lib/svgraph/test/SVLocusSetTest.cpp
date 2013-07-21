@@ -421,5 +421,57 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNoiseOverlap )
 }
 
 
+
+BOOST_AUTO_TEST_CASE( test_SVLocusSingleSelfEdge )
+{
+    SVLocus locus1;
+    locusAddPair(locus1,1,10,60,1,20,70);
+    locus1.mergeSelfOverlap();
+
+    {
+        SVLocusSet set1(1);
+        set1.merge(locus1);
+        const SVLocusSet& cset1(set1);
+
+        cset1.checkState(true,true);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),1u);
+
+        set1.clean();
+
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),1u);
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE( test_SVLocusDoubleSelfEdge )
+{
+    SVLocus locus1;
+    locusAddPair(locus1,1,10,60,1,20,70);
+    SVLocus locus2;
+    locusAddPair(locus2,1,20,70,1,10,60);
+
+    locus1.mergeSelfOverlap();
+    locus2.mergeSelfOverlap();
+
+    {
+        SVLocusSet set1(1);
+        set1.merge(locus1);
+        set1.merge(locus2);
+        const SVLocusSet& cset1(set1);
+
+        cset1.checkState(true,true);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),1u);
+
+        set1.clean();
+
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),1u);
+    }
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
