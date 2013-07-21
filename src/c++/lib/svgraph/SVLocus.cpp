@@ -419,13 +419,28 @@ eraseNode(const NodeIndexType nodePtr)
 #endif
         // reassign fromNode's remote edges before shifting its address:
         //
+        bool isHandleSelfEdge(false);
         SVLocusNode& fromNode(getNode(fromPtr));
         BOOST_FOREACH(edges_type::value_type& edgeIter, fromNode)
         {
+            const bool isSelfEdge(edgeIter.first == fromPtr);
+
+            if(isSelfEdge)
+            {
+                isHandleSelfEdge=true;
+                continue;
+            }
+
             SVLocusNode& remoteNode(getNode(edgeIter.first));
             edges_type& remoteEdges(remoteNode.edges);
             remoteEdges.insert(std::make_pair(nodePtr,getEdge(edgeIter.first,fromPtr)));
             remoteEdges.erase(fromPtr);
+        }
+
+        if(isHandleSelfEdge)
+        {
+            fromNode.edges.insert(std::make_pair(nodePtr,getEdge(fromPtr,fromPtr)));
+            fromNode.edges.erase(fromPtr);
         }
 
         notifyDelete(nodePtr);
