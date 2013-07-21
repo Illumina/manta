@@ -17,6 +17,7 @@
 #pragma once
 
 #include "blt_util/bam_record.hh"
+#include "svgraph/GenomeInterval.hh"
 
 #include <iosfwd>
 #include <map>
@@ -67,7 +68,8 @@ struct SVCandidateDataGroup
     typedef pair_t::const_iterator const_iterator;
 
     void
-    add(const bam_record& bamRead);
+    add(const bam_record& bamRead,
+        const bool isExpectRepeat);
 
     iterator
     begin()
@@ -141,7 +143,13 @@ struct SVCandidateData
         _data.clear();
     }
 
+    /// return true if this search interval overlaps with any previous:
+    bool
+    setNewSearchInterval(const GenomeInterval& newSearch);
+
 private:
     typedef std::map<unsigned,SVCandidateDataGroup> data_t;
     data_t _data;
+
+    std::vector<GenomeInterval> _searchIntervals;
 };

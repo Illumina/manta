@@ -61,6 +61,7 @@ addSVNodeRead(
     const SVLocusNode& remoteNode,
     const bam_record& bamRead,
     const unsigned bamIndex,
+    const bool isExpectRepeat,
     SVCandidateDataGroup& svDataGroup)
 {
     if (scanner.isReadFiltered(bamRead)) return;
@@ -84,7 +85,7 @@ addSVNodeRead(
     if (! clocus.getNode(readLocalIndex).interval.isIntersect(localNode.interval)) return;
     if (! clocus.getNode(readRemoteIndex).interval.isIntersect(remoteNode.interval)) return;
 
-    svDataGroup.add(bamRead);
+    svDataGroup.add(bamRead,isExpectRepeat);
 }
 
 
@@ -103,6 +104,8 @@ addSVNodeData(
     GenomeInterval searchInterval(localNode.interval);
 
     searchInterval.range.merge_range(localNode.evidenceRange);
+
+    const bool isExpectRepeat(svData.setNewSearchInterval(searchInterval));
 
 #ifdef DEBUG_SVDATA
     log_os << "addSVNodeData: bp_interval: " << localNode.interval
@@ -129,7 +132,7 @@ addSVNodeData(
             const bam_record& bamRead(*(read_stream.get_record_ptr()));
 
             // test if read supports an SV on this edge, if so, add to SVData
-            addSVNodeRead(_readScanner,localNode,remoteNode,bamRead, bamIndex,svDataGroup);
+            addSVNodeRead(_readScanner,localNode,remoteNode,bamRead, bamIndex,isExpectRepeat,svDataGroup);
         }
         bamIndex++;
     }
@@ -441,6 +444,10 @@ findCandidateSV(
         return;
     }
 
+    // for now, don't process self edges -- eventually these will be used as assembly targets
+    if(edge.nodeIndex1 == edge.nodeIndex2) return;
+
+
     // start gathering evidence required for hypothesis generation,
     //
     // first step is to scan through each region, and identify all reads supporting
@@ -458,7 +465,10 @@ findCandidateSV(
     //
 
     addSVNodeData(locus,edge.nodeIndex1,edge.nodeIndex2,svData);
-    addSVNodeData(locus,edge.nodeIndex2,edge.nodeIndex1,svData);
+    if(edge.nodeIndex1 != edge.nodeIndex2)
+    {
+        addSVNodeData(locus,edge.nodeIndex2,edge.nodeIndex1,svData);
+    }
 
     getCandidatesFromData(svData,svs);
 

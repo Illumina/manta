@@ -18,6 +18,8 @@
 #include "common/Exceptions.hh"
 #include "manta/SVCandidateData.hh"
 
+#include "boost/foreach.hpp"
+
 #include <cassert>
 
 #include <iostream>
@@ -67,7 +69,8 @@ getReadPair(const pindex_t::key_type& key)
 
 void
 SVCandidateDataGroup::
-add(const bam_record& bamRead)
+add(const bam_record& bamRead,
+    const bool isExpectRepeat)
 {
     using namespace illumina::common;
 
@@ -84,6 +87,11 @@ add(const bam_record& bamRead)
     }
     if (targetReadPtr->isSet())
     {
+        if(isExpectRepeat)
+        {
+            return;
+        }
+
         std::ostringstream oss;
         oss << "Unexpected read name collision.\n"
             << "\tExisting read: " << (*targetReadPtr) << "\n"
@@ -92,3 +100,22 @@ add(const bam_record& bamRead)
     }
     targetReadPtr->bamrec = bamRead;
 }
+
+
+bool
+SVCandidateData::
+setNewSearchInterval(const GenomeInterval& newSearch)
+{
+    bool retval(false);
+    BOOST_FOREACH(const GenomeInterval& oldSearch, _searchIntervals)
+    {
+        if(oldSearch.isIntersect(newSearch))
+        {
+            retval=true;
+            break;
+        }
+    }
+    _searchIntervals.push_back(newSearch);
+    return retval;
+}
+
