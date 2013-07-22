@@ -16,8 +16,9 @@
 ///
 
 #include "GenerateSVCandidates.hh"
+#include "EdgeRetrieverBin.hh"
+#include "EdgeRetrieverLocus.hh"
 #include "GSCOptions.hh"
-#include "EdgeRetriever.hh"
 #include "SVFinder.hh"
 #include "SVScorer.hh"
 
@@ -31,6 +32,7 @@
 #include "boost/foreach.hpp"
 
 #include <iostream>
+#include <memory>
 
 
 
@@ -44,6 +46,24 @@ dumpEdgeInfo(
     os << "Exception caught while processing graph component: " << edge;
     os << "\tnode1:" << set.getLocus(edge.locusIndex).getNode(edge.nodeIndex1);
     os << "\tnode2:" << set.getLocus(edge.locusIndex).getNode(edge.nodeIndex2);
+}
+
+
+
+static
+EdgeRetriever*
+edgeRFactory(
+    const SVLocusSet& set,
+    const GSCOptions& opt)
+{
+    if(opt.isLocusIndex)
+    {
+        return new EdgeRetrieverLocus(set,opt.locusIndex);
+    }
+    else
+    {
+        return new EdgeRetrieverBin(set,opt.binCount,opt.binIndex);
+    }
 }
 
 
@@ -63,7 +83,8 @@ runGSC(
 
     SVScorer svScore(opt, cset.header);
 
-    EdgeRetriever edger(cset, opt.binCount, opt.binIndex);
+    std::auto_ptr<EdgeRetriever> edgerPtr(edgeRFactory(cset, opt));
+    EdgeRetriever& edger(*edgerPtr);
 
     OutStream candfs(opt.candidateOutputFilename);
     OutStream somfs(opt.somaticOutputFilename);
