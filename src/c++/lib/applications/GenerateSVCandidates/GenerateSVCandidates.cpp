@@ -25,6 +25,7 @@
 #include "common/Exceptions.hh"
 #include "common/OutStream.hh"
 #include "manta/ReadGroupStatsSet.hh"
+#include "manta/SVLocusAssembler.hh"
 #include "format/VcfWriterCandidateSV.hh"
 #include "format/VcfWriterSomaticSV.hh"
 
@@ -60,6 +61,8 @@ runGSC(
 
     SVFinder svFind(opt);
     const SVLocusSet& cset(svFind.getSet());
+
+    SVLocusAssembler();
 
     SVScorer svScore(opt, cset.header);
 
