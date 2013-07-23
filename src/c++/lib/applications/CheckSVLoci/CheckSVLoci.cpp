@@ -56,7 +56,6 @@ void
 CheckSVLoci::
 runInternal(int argc, char* argv[]) const
 {
-
     CSLOptions opt;
 
     parseCSLOptions(*this,argc,argv,opt);

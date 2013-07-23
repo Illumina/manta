@@ -5,7 +5,7 @@ blt_util:
 general utility functions from starling/strelka/gvcftools
 
 common:
-general utiltiy functions from CASAVA/Grouper/Isaac
+general utility functions from CASAVA/Grouper/Isaac
 
 format:
 conversion of data into external formats
@@ -18,4 +18,7 @@ pattern to justify a new library.
 
 options:
 command-line options objects which are shared between applications
+
+svgraph:
+SV locus graph components
 
