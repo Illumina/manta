@@ -31,6 +31,10 @@ struct EdgeRetriever
     {}
 
     virtual
+    ~EdgeRetriever()
+    {}
+
+    virtual
     bool
     next() = 0;
 
