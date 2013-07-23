@@ -39,7 +39,12 @@ operator<<(std::ostream& os, const SVCandidateRead& svr)
 std::ostream&
 operator<<(std::ostream& os, const SVCandidateReadPair& svp)
 {
-    os << "SVCandidateReadPair svIndex: " << svp.svIndex << "\n";
+    os << "SVCandidateReadPair svIndices:";
+    BOOST_FOREACH(const SVCandidateReadPair::index_t index, svp.svIndex)
+    {
+        os << " " << index;
+    }
+    os << "\n";
     os << "\tread1: " << svp.read1;
     os << "\tread2: " << svp.read2;
     return os;

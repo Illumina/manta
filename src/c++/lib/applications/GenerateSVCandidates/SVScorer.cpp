@@ -158,7 +158,7 @@ scoreSomaticSV(
         const SVCandidateDataGroup& svDataGroup(svData.getDataGroup(bamIndex));
         BOOST_FOREACH(const SVCandidateReadPair& pair, svDataGroup)
         {
-            if (svIndex != pair.svIndex) continue;
+            if(0 == std::count(pair.svIndex.begin(),pair.svIndex.end(), svIndex)) continue;
 
             if (pair.read1.isSet())
             {

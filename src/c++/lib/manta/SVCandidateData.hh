@@ -45,11 +45,11 @@ operator<<(std::ostream& os, const SVCandidateRead& svr);
 struct SVCandidateReadPair
 {
     SVCandidateReadPair()
-        : svIndex(0)
     {}
 
-    // which sv is this read associated with?
-    unsigned short svIndex;
+    // which svs are this molecule associated with?
+    typedef uint16_t index_t;
+    std::vector<index_t> svIndex;
     SVCandidateRead read1;
     SVCandidateRead read2;
 };

@@ -68,15 +68,13 @@ SVLocusScanner(
 void
 SVLocusScanner::
 getReadBreakendsImpl(
+    const ReadScannerOptions& opt,
     const CachedReadGroupStats& rstats,
     const bam_record& localRead,
     const bam_record* remoteReadPtr,
-    SVBreakend& localBreakend,
-    SVBreakend& remoteBreakend,
-    known_pos_range2& evidenceRange)
+    std::vector<SVCandidate>& candidates,
+    known_pos_range2& localEvidenceRange)
 {
-    static const pos_t minPairBreakendSize(40);
-
     ALIGNPATH::path_t apath;
     bam_cigar_to_apath(localRead.raw_cigar(),localRead.n_cigar(),apath);
 
@@ -92,6 +90,11 @@ getReadBreakendsImpl(
     {
         thisReadNoninsertSize=(readSize-apath_read_lead_size(apath));
     }
+
+    candidates.resize(1);
+
+    SVBreakend& localBreakend(candidates[0].bp1);
+    SVBreakend& remoteBreakend(candidates[0].bp2);
 
     localBreakend.readCount = 1;
 
@@ -124,11 +127,12 @@ getReadBreakendsImpl(
 
         localBreakend.pairCount = 1;
         remoteBreakend.pairCount = 1;
-
     }
 
     const pos_t totalNoninsertSize(thisReadNoninsertSize+remoteReadNoninsertSize);
-    const pos_t breakendSize(std::max(minPairBreakendSize,static_cast<pos_t>(rstats.breakendRegion.max-totalNoninsertSize)));
+    const pos_t breakendSize(std::max(
+        static_cast<pos_t>(opt.minPairBreakendSize),
+        static_cast<pos_t>(rstats.breakendRegion.max-totalNoninsertSize)));
 
     {
         localBreakend.interval.tid = (localRead.target_id());
@@ -149,7 +153,7 @@ getReadBreakendsImpl(
             localBreakend.interval.range.set_begin_pos(startRefPos - breakendSize);
         }
 
-        evidenceRange.set_range(startRefPos,endRefPos);
+        localEvidenceRange.set_range(startRefPos,endRefPos);
     }
 
     // get remote breakend estimate:
@@ -177,43 +181,52 @@ getReadBreakendsImpl(
 
 void
 SVLocusScanner::
-getSVLocusImpl(
+getSVLociImpl(
+    const ReadScannerOptions& opt,
     const CachedReadGroupStats& rstats,
     const bam_record& bamRead,
-    SVLocus& locus)
+    std::vector<SVLocus>& loci)
 {
     using namespace illumina::common;
 
-    SVBreakend localBreakend;
-    SVBreakend remoteBreakend;
-    known_pos_range2 evidenceRange;
-    getReadBreakendsImpl(rstats, bamRead, NULL, localBreakend, remoteBreakend, evidenceRange);
+    loci.clear();
+    std::vector<SVCandidate> candidates;
+    known_pos_range2 localEvidenceRange;
 
-    if ((0==localBreakend.interval.range.size()) ||
-        (0==remoteBreakend.interval.range.size()))
+    getReadBreakendsImpl(opt, rstats, bamRead, NULL, candidates, localEvidenceRange);
+
+    BOOST_FOREACH(const SVCandidate& cand, candidates)
     {
-        std::ostringstream oss;
-        oss << "Empty Breakend proposed from bam record.\n"
-            << "\tlocal_breakend: " << localBreakend << "\n"
-            << "\tremote_breakend: " << remoteBreakend << "\n"
-            << "\tbam_record: " << bamRead << "\n";
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
-    }
+        const SVBreakend& localBreakend(cand.bp1);
+        const SVBreakend& remoteBreakend(cand.bp2);
+        if ((0==localBreakend.interval.range.size()) ||
+            (0==remoteBreakend.interval.range.size()))
+        {
+            std::ostringstream oss;
+            oss << "Empty Breakend proposed from bam record.\n"
+                << "\tlocal_breakend: " << localBreakend << "\n"
+                << "\tremote_breakend: " << remoteBreakend << "\n"
+                << "\tbam_record: " << bamRead << "\n";
+            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        }
 
-    // set local breakend estimate:
-    NodeIndexType localBreakendNode(0);
-    {
-        localBreakendNode = locus.addNode(localBreakend.interval);
-        locus.setNodeEvidence(localBreakendNode,evidenceRange);
-    }
+        SVLocus locus;
+        // set local breakend estimate:
+        NodeIndexType localBreakendNode(0);
+        {
+            localBreakendNode = locus.addNode(localBreakend.interval);
+            locus.setNodeEvidence(localBreakendNode,localEvidenceRange);
+        }
 
-    // set remote breakend estimate:
-    {
-        const NodeIndexType remoteBreakendNode(locus.addRemoteNode(remoteBreakend.interval));
-        locus.linkNodes(localBreakendNode,remoteBreakendNode);
-        locus.mergeSelfOverlap();
-    }
+        // set remote breakend estimate:
+        {
+            const NodeIndexType remoteBreakendNode(locus.addRemoteNode(remoteBreakend.interval));
+            locus.linkNodes(localBreakendNode,remoteBreakendNode);
+            locus.mergeSelfOverlap();
+        }
 
+        loci.push_back(locus);
+    }
 }
 
 
@@ -266,30 +279,12 @@ isProperPair(
 
 void
 SVLocusScanner::
-getChimericSVLocus(
+getSVLoci(
     const bam_record& bamRead,
     const unsigned defaultReadGroupIndex,
-    SVLocus& locus) const
+    std::vector<SVLocus>& loci) const
 {
-    locus.clear();
-
-    if (bamRead.is_chimeric())
-    {
-        const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);
-        getSVLocusImpl(rstats,bamRead,locus);
-    }
-}
-
-
-
-void
-SVLocusScanner::
-getSVLocus(
-    const bam_record& bamRead,
-    const unsigned defaultReadGroupIndex,
-    SVLocus& locus) const
-{
-    locus.clear();
+    loci.clear();
 
     if (! bamRead.is_chimeric())
     {
@@ -297,7 +292,7 @@ getSVLocus(
     }
 
     const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);
-    getSVLocusImpl(rstats,bamRead,locus);
+    getSVLociImpl(_opt, rstats, bamRead, loci);
 }
 
 
@@ -308,10 +303,11 @@ getBreakendPair(
     const bam_record& localRead,
     const bam_record* remoteReadPtr,
     const unsigned defaultReadGroupIndex,
-    SVBreakend& localBreakend,
-    SVBreakend& remoteBreakend) const
+    std::vector<SVCandidate>& candidates) const
 {
     const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);
+
+    // throw evidence range away in this case
     known_pos_range2 evidenceRange;
-    getReadBreakendsImpl(rstats, localRead, remoteReadPtr, localBreakend, remoteBreakend, evidenceRange);
+    getReadBreakendsImpl(_opt, rstats, localRead, remoteReadPtr, candidates, evidenceRange);
 }

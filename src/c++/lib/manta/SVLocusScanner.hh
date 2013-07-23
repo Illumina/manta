@@ -53,38 +53,27 @@ struct SVLocusScanner
         const bam_record& bamRead,
         const unsigned defaultReadGroupIndex) const;
 
-    /// if read supports a chimera candidate return this as a single observation SVLocus object,
-    /// else return an empty object.
-    ///
-    /// \param defaultReadGroupIndex the read group index to use by in the absence of an RG tag
-    /// (for now RGs are ignored for the purpose of gathering insert stats)
+    /// return zero to many SVLocus objects if the read supports any structural variant(s) (detectable by Manta)
     ///
     void
-    getChimericSVLocus(
+    getSVLoci(
         const bam_record& bamRead,
         const unsigned defaultReadGroupIndex,
-        SVLocus& locus) const;
+        std::vector<SVLocus>& loci) const;
 
-    /// if read supports any structural variant (of a subset which Manta is currently configured to discover), then
-    /// return  a single observation SVLocus object
+    /// get local and remote breakends for each SV Candidate which can be extracted from a read pair
     ///
-    void
-    getSVLocus(
-        const bam_record& bamRead,
-        const unsigned defaultReadGroupIndex,
-        SVLocus& locus) const;
-
-    /// get local and remote breakends from read pair
+    /// if remote read is not available, set remoteReadPtr to NULL and a best estimate will be generated for the remote breakend
     ///
-    /// if remote read is not available, set to NULL and best estimate will be generated
+    /// for all candidates, if one breakend is estimated from localRead and one is estimated from remoteRead, then
+    /// the local breakend will be placed in candidate bp1 and the remote breakend will be placed in candidate.bp2
     ///
     void
     getBreakendPair(
         const bam_record& localRead,
         const bam_record* remoteReadPtr,
         const unsigned defaultReadGroupIndex,
-        SVBreakend& localBreakend,
-        SVBreakend& remoteBreakend) const;
+        std::vector<SVCandidate>& candidates) const;
 
 private:
 
@@ -109,19 +98,20 @@ private:
     static
     void
     getReadBreakendsImpl(
+        const ReadScannerOptions& opt,
         const CachedReadGroupStats& rstats,
         const bam_record& localRead,
         const bam_record* remoteReadPtr,
-        SVBreakend& localBreakend,
-        SVBreakend& remoteBreakend,
-        known_pos_range2& evidenceRange);
+        std::vector<SVCandidate>& candidates,
+        known_pos_range2& localEvidenceRange);
 
     static
     void
-    getSVLocusImpl(
+    getSVLociImpl(
+        const ReadScannerOptions& opt,
         const CachedReadGroupStats& rstats,
         const bam_record& bamRead,
-        SVLocus& locus);
+        std::vector<SVLocus>& loci);
 
     /////////////////////////////////////////////////
     // data:

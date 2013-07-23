@@ -68,24 +68,27 @@ addSVNodeRead(
     if (scanner.isProperPair(bamRead,bamIndex)) return;
     if (bamRead.is_mate_unmapped()) return;
 
-    SVLocus locus;
-    scanner.getSVLocus(bamRead,bamIndex,locus);
-    const SVLocus& clocus(locus);
+    typedef std::vector<SVLocus> loci_t;
+    loci_t loci;
+    scanner.getSVLoci(bamRead,bamIndex,loci);
 
-    if (clocus.empty()) return;
-    if (2 != clocus.size()) return;
-
-    unsigned readLocalIndex(0);
-    unsigned readRemoteIndex(1);
-    if (0 == clocus.getNode(readLocalIndex).count)
+    BOOST_FOREACH(const SVLocus& locus, loci)
     {
-        std::swap(readLocalIndex,readRemoteIndex);
+        if (locus.empty()) continue;
+        if (2 != locus.size()) continue;
+
+        unsigned readLocalIndex(0);
+        unsigned readRemoteIndex(1);
+        if (0 == locus.getNode(readLocalIndex).count)
+        {
+            std::swap(readLocalIndex,readRemoteIndex);
+        }
+
+        if (! locus.getNode(readLocalIndex).interval.isIntersect(localNode.interval)) continue;
+        if (! locus.getNode(readRemoteIndex).interval.isIntersect(remoteNode.interval)) continue;
+
+        svDataGroup.add(bamRead,isExpectRepeat);
     }
-
-    if (! clocus.getNode(readLocalIndex).interval.isIntersect(localNode.interval)) return;
-    if (! clocus.getNode(readRemoteIndex).interval.isIntersect(remoteNode.interval)) return;
-
-    svDataGroup.add(bamRead,isExpectRepeat);
 }
 
 
@@ -168,15 +171,19 @@ checkResult(
         const SVCandidateDataGroup& svDataGroup(svData.getDataGroup(bamIndex));
         BOOST_FOREACH(const SVCandidateReadPair& pair, svDataGroup)
         {
-            if (pair.svIndex>=svCount)
+            BOOST_FOREACH(const SVCandidateReadPair::index_t svIndex, pair.svIndex)
             {
-                std::ostringstream oss;
-                oss << "Searching for SVIndex: " << pair.svIndex << " with svSize: " << svCount << "\n";
-                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                if (svIndex>=svCount)
+                {
+                    std::ostringstream oss;
+                    oss << "Searching for SVIndex: " << svIndex << " with svSize: " << svCount << "\n";
+                    BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                }
+
+                if (pair.read1.isSet()) readCounts[svIndex]++;
+                if (pair.read2.isSet()) readCounts[svIndex]++;
+                if (pair.read1.isSet() && pair.read2.isSet()) pairCounts[svIndex] += 2;
             }
-            if (pair.read1.isSet()) readCounts[pair.svIndex]++;
-            if (pair.read2.isSet()) readCounts[pair.svIndex]++;
-            if (pair.read1.isSet() && pair.read2.isSet()) pairCounts[pair.svIndex] += 2;
         }
     }
 
@@ -306,9 +313,12 @@ consolidateOverlap(
             SVCandidateDataGroup& svDataGroup(svData.getDataGroup(bamIndex));
             BOOST_FOREACH(SVCandidateReadPair& pair, svDataGroup)
             {
-                if (moveSVIndex.count(pair.svIndex))
+                BOOST_FOREACH(SVCandidateReadPair::index_t& svIndex, pair.svIndex)
                 {
-                    pair.svIndex = moveSVIndex[pair.svIndex];
+                    if (moveSVIndex.count(svIndex))
+                    {
+                        svIndex = moveSVIndex[svIndex];
+                    }
                 }
             }
         }
@@ -324,7 +334,7 @@ getCandidatesFromData(
     SVCandidateData& svData,
     std::vector<SVCandidate>& svs)
 {
-    SVCandidate cand;
+    std::vector<SVCandidate> readCandidates;
 
     const unsigned bamCount(_bamStreams.size());
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
@@ -334,6 +344,7 @@ getCandidatesFromData(
         {
             SVCandidateRead* localReadPtr(&(pair.read1));
             SVCandidateRead* remoteReadPtr(&(pair.read2));
+            pair.svIndex.clear();
 
             if (isExcludeUnpaired)
             {
@@ -348,8 +359,8 @@ getCandidatesFromData(
             }
             const bam_record* remoteBamRecPtr( remoteReadPtr->isSet() ? &(remoteReadPtr->bamrec) : NULL);
 
-            cand.clear();
-            _readScanner.getBreakendPair(localReadPtr->bamrec, remoteBamRecPtr, bamIndex, cand.bp1, cand.bp2);
+            readCandidates.clear();
+            _readScanner.getBreakendPair(localReadPtr->bamrec, remoteBamRecPtr, bamIndex, readCandidates);
 
 #ifdef DEBUG_SVDATA
             log_os << "Checking pair: " << pair << "\n";
@@ -363,28 +374,30 @@ getCandidatesFromData(
             // the same orientation:
             //
             // we anticipate so few svs from the POC method, that there's no indexing on them
-            BOOST_FOREACH(SVCandidate& sv, svs)
+            BOOST_FOREACH(const SVCandidate& readCand, readCandidates)
             {
-                if (sv.isIntersect(cand))
+                BOOST_FOREACH(SVCandidate& sv, svs)
+                {
+                    if (sv.isIntersect(readCand))
+                    {
+#ifdef DEBUG_SVDATA
+                        log_os << "Adding to svIndex: " << svIndex << "\n";
+#endif
+                        sv.merge(readCand);
+                        pair.svIndex.push_back(svIndex);
+                        isSVFound=true;
+                        break;
+                    }
+                    svIndex++;
+                }
+                if (! isSVFound)
                 {
 #ifdef DEBUG_SVDATA
-                    log_os << "Adding to svIndex: " << svIndex << "\n";
+                    log_os << "New svIndex: " << svs.size() << "\n";
 #endif
-                    sv.merge(cand);
-                    pair.svIndex = svIndex;
-                    isSVFound=true;
-                    break;
+                    pair.svIndex.push_back(svs.size());
+                    svs.push_back(readCand);
                 }
-                svIndex++;
-            }
-
-            if (! isSVFound)
-            {
-#ifdef DEBUG_SVDATA
-                log_os << "New svIndex: " << svs.size() << "\n";
-#endif
-                pair.svIndex = svs.size();
-                svs.push_back(cand);
             }
         }
     }
