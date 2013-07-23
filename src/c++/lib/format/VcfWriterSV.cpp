@@ -71,8 +71,8 @@ writeHeaderPrefix(
     _os << "##ALT=<ID=BND,Description=\"Translocation Breakend\">\n";
     _os << "##ALT=<ID=INV,Description=\"Inversion\">\n";
     _os << "##ALT=<ID=DEL,Description=\"Deletion\">\n";
-    _os << "##ALT=<ID=DUP:TANDEM,Description=\"Tandem Duplication\">";
-    _os << "##ALT=<ID=COMPLEX,Description=\"Unknown Candidate Type\">";
+    _os << "##ALT=<ID=DUP:TANDEM,Description=\"Tandem Duplication\">\n";
+    _os << "##ALT=<ID=COMPLEX,Description=\"Unknown Candidate Type\">\n";
 }
 
 
