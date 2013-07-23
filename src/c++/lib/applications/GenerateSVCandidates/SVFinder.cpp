@@ -109,8 +109,8 @@ addSVNodeData(
 
 #ifdef DEBUG_SVDATA
     log_os << "addSVNodeData: bp_interval: " << localNode.interval
-           << " evidnece_interval: " << localNode.evidenceRange
-           << " search_interval: " << searchInterval
+           << " evidenceInterval: " << localNode.evidenceRange
+           << " searchInterval: " << searchInterval
            << "\n";
 #endif
 
