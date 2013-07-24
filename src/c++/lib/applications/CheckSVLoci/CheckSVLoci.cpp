@@ -33,7 +33,6 @@ static
 void
 runCSL(const CSLOptions& opt)
 {
-
     log_os << "INFO: loading graph: " << opt.graphFilename << "\n";
 
     SVLocusSet set;

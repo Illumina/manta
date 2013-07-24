@@ -94,7 +94,7 @@ jumpToFirstEdge()
                 {
                     unsigned edgeCount(edgeIter->second.count);
                     const bool isSelfEdge(edgeIter->first == _edge.nodeIndex1);
-                    if(! isSelfEdge) edgeCount += locus.getEdge(edgeIter->first,_edge.nodeIndex1).count;
+                    if (! isSelfEdge) edgeCount += locus.getEdge(edgeIter->first,_edge.nodeIndex1).count;
                     _headCount += edgeCount;
                     if (_headCount >= _beginCount)
                     {
@@ -122,7 +122,7 @@ advanceEdge()
 {
     typedef SVLocusNode::edges_type::const_iterator edgeiter_t;
 
-    if(0 != _headCount) _edge.nodeIndex2++;
+    if (0 != _headCount) _edge.nodeIndex2++;
 
     while (true)
     {
@@ -138,7 +138,7 @@ advanceEdge()
             {
                 unsigned edgeCount(edgeIter->second.count);
                 const bool isSelfEdge(edgeIter->first == _edge.nodeIndex1);
-                if(! isSelfEdge) edgeCount += locus.getEdge(edgeIter->first,_edge.nodeIndex1).count;
+                if (! isSelfEdge) edgeCount += locus.getEdge(edgeIter->first,_edge.nodeIndex1).count;
                 _headCount += edgeCount;
                 _edge.nodeIndex2 = edgeIter->first;
                 return;
