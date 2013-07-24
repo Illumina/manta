@@ -38,8 +38,8 @@ ostream& dbg_os(cerr);
  *	@return The extended contig.
  */
 string SVLocusAssembler::addBase(const string& contig,
-                                   const char base,
-                                   const unsigned int mode) {
+                                 const char base,
+                                 const unsigned int mode) {
 
     switch (mode) {
     case 0:
@@ -175,12 +175,46 @@ void SVLocusAssembler::walk(const string& seed,
     return;
 } // walk()
 
+void
+SVLocusAssembler::getBreakendReads(const SVBreakend& bp,
+								   ReadSeqVec& reads)
+{
+	/// define a new interval -/+ 50 bases around the center pos
+	/// of the breakpoint
+	static const pos_t regionSize(50);
+	const pos_t centerPos(bp.interval.range.center_pos());
+	const known_pos_range2 searchRange(std::max((centerPos-regionSize),0), (centerPos+regionSize));
 
-void SVLocusAssembler::assembleSVLocus(const SVCandidateData svCandData&,
-                                       const std::vector<SVCandidate>& svCandidates,
-                                       Assembly& as) {
+	const unsigned bamCount(_bamStreams.size());
+	for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
+	{
 
-    unsigned iterations(0); // number of assembly iterations
+		bam_streamer& bamStream(*_bamStreams[bamIndex]);
+
+		// set bam stream to new search interval:
+		bamStream.set_new_region(bp.interval.tid, searchRange.begin_pos(), searchRange.end_pos());
+
+		while (bamStream.next())
+		{
+			const bam_record& bamRead(*(bamStream.get_record_ptr()));
+
+			// add some criteria to filter for "interesting" reads here
+
+			if ((bamRead.pos()-1) >= searchRange.end_pos()) break;
+			reads.push_back(bamRead.get_bam_read());
+		}
+	}
+}
+
+
+void
+SVLocusAssembler::assembleSVBreakend(const SVBreakend& bp,
+                                     Assembly& as) {
+
+	ReadSeqVec reads;
+	getBreakendReads(bp,reads);
+
+    /*unsigned iterations(0); // number of assembly iterations
     unsigned unused_reads_now(0);
     //cout << "Unused reads " << unused_reads_now << endl;
     unsigned unused_reads_prev(0);
@@ -190,8 +224,8 @@ void SVLocusAssembler::assembleSVLocus(const SVCandidateData svCandData&,
         ++iterations;
         for (unsigned int wl=wordLength_; wl<=maxWordLength_; wl+=2)
         {
-            bool ret = buildContigs(svCandData,wl,as,unused_reads_now);
-            if (ret) break; // stop iteration at first succesful assembly
+            bool ret = buildContigs(data,wl,as,unused_reads_now);
+            if (ret) break; // stop iteration at first successful assembly
         }
         //cout << "unused reads now " << unused_reads_now << " unused reads previous iteration " << unused_reads_prev << endl;
         if (unused_reads_now == unused_reads_prev)
@@ -205,16 +239,16 @@ void SVLocusAssembler::assembleSVLocus(const SVCandidateData svCandData&,
         {
             break;
         }
-    }
+    }*/
 }
 
-bool SVLocusAssembler::buildContigs(ShadowReadVec& shadows,
-                                      const unsigned wordLength,
-                                      Assembly& as,
-                                      unsigned& unused_reads) {
+bool SVLocusAssembler::buildContigs(const ReadSeqVec& reads,
+                                    const unsigned wordLength,
+                                    Assembly& as,
+                                    unsigned& unused_reads) {
 
     //cout << "In SVLocusAssembler::buildContig. word length=" << wordLength << endl;
-    const unsigned shadow_size(shadows.size());
+    const unsigned shadow_size(reads.size());
 
 #ifdef DEBUG_ASBL
     //dbg_os << "----------------------------------------" << endl;
@@ -229,9 +263,9 @@ bool SVLocusAssembler::buildContigs(ShadowReadVec& shadows,
 
     // a set of read hashes; each read hash stores the starting positions of all kmers in the read
     vector<pair<unsigned,str_uint_map_t> > readHashes;
-    // counts the number of occurences for each kmer in all shadow reads
+    // counts the number of occurrences for each kmer in all shadow reads
     str_uint_map_t wordHash;
-    // most frequent kmer and its number of occurences
+    // most frequent kmer and its number of occurrences
     unsigned maxOcc = 0;
     string maxWord;
 

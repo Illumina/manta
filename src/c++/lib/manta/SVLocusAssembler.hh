@@ -18,7 +18,11 @@
 #pragma once
 
 #include "AssembledContig.hh"
+#include "SVCandidate.hh"
 #include "SVCandidateData.hh"
+#include "SVCandidateRead.hh"
+
+#include "GSCOptions.hh"
 
 #include <string>
 #include <utility>
@@ -48,24 +52,6 @@ public:
         minCoverage_(1), maxError_(0.2), minSeedReads_(2),
         maxAssemblyIterations_(50)
          {};
-
-    // a shadow/anomalous/semi-aligning read which stores its position in the cluster and remember if
-    // it has been used in an assembly.
-    /*struct ShadowRead
-    {
-        ShadowRead() : seq("EMPTY"), pos(0), used(false) {}
-        ShadowRead(std::string s, unsigned p, bool u) : seq(s), pos(p), used(u) {}
-
-        std::string seq; // sequence
-        unsigned pos; // position in cluster
-        bool used;		// used in assembly?
-    };*/
-
-    // Vector of shadow reads with their index (i.e. position in the cluster)
-    //typedef std::vector<std::pair<unsigned,std::string> > ShadowReadVec;
-    //typedef std::vector< ShadowRead > ShadowReadVec;
-    typedef std::vector< SVCandidateRead > SVCandidateReadVec;
-
     // maps kmers to positions in read
     typedef boost::unordered_map<std::string,unsigned> str_uint_map_t;
     // remembers used reads
@@ -73,19 +59,26 @@ public:
 
     typedef std::vector<AssembledContig> Assembly;
 
+    typedef std::vector<bam_seq> ReadSeqVec;
+
     /**
      * @brief Performs a simple de-novo assembly using a group of reads
      *
      * Assembles a cluster of shadow reads. This function iterates over a range
-     * of word lengths until the first succesful assembly.
+     * of word lengths until the first successful assembly.
      *
      * If unused reads remain, the assembly is re-started using this subset.
      */
-    void assembleSVLocus(const SVCandidateData&,
-                         const std::vector<SVCandidate>&,
-                         Assembly&);
+    void
+    assembleSVBreakend(const SVBreakend& bp,
+                       Assembly& as);
 
 private:
+
+    // Collects the reads crossing an SV breakpoint
+    void
+    getBreakendReads(const SVBreakend& bp,
+    				 ReadSeqVec& reads);
 
     /**
      * @brief Performs a simple de-novo assembly using a group of reads
@@ -94,24 +87,29 @@ private:
      * frequent k-mer is used as seed and is then gradually extended.
      *
      */
-    bool buildContigs(SVCandidateReadVec& shadows,
-                      const unsigned wordLength,
-                      std::vector<AssembledContig>& contigs,
-                      unsigned& unused_reads);
+    bool
+    buildContigs(const ReadSeqVec& reads,
+                 const unsigned wordLength,
+                 Assembly& contigs,
+                 /*unsigned& unused_reads*/);
 
     /**
     * Adds base @p base to the end (mode=0) or start (mode=1) of the contig.
      *
      * @return The extended contig.
      */
-    std::string addBase(const std::string& contig, const char base, const unsigned int mode);
+    std::string addBase(const std::string& contig,
+    					const char base,
+    					const unsigned int mode);
 
     /**
     * Returns suffix (mode=0) or prefix (mode=1) of @p contig with length @p length.
     *
     *  @return The suffix or prefix.
     */
-    std::string getEnd(const std::string& contig, const unsigned length, const unsigned mode);
+    std::string getEnd(const std::string& contig,
+    				   const unsigned length,
+    				   const unsigned mode);
 
     /**
      * Extends the seed contig (aka most frequent k-mer)
