@@ -11,7 +11,7 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
-/// based off of ELAND implementation by Tony Cox
+/// derived from ELAND implementation by Tony Cox
 
 #pragma once
 
@@ -169,12 +169,14 @@ struct AlignState
 
 
 
-/**
- * @class Aligner
- *
- * @brief Implementation of global alignment with affine gap costs.
- *
- */
+/// \brief Implementation of global alignment with affine gap costs
+///
+/// alignment outputs start positions and CIGAR-style alignment
+/// expression of seq1 (query) to seq2 (referenece). Alignment of
+/// seq1 is global -- seq1 can "fall-off" either end of the reference,
+/// in this case, each unaligned postiion is scored as a mismatch and
+/// the base is soft-clipped in the alignment
+///
 template <typename ScoreType>
 struct GlobalAligner
 {
@@ -182,7 +184,7 @@ struct GlobalAligner
         _scores(scores)
     {}
 
-    /// returns alignment path of 1 to 2
+    /// returns alignment path of 1 (query) to 2 (reference)
     template <typename SymIter>
     void
     align(
@@ -232,23 +234,6 @@ private:
     // insert and delete are for seq1 wrt seq2
     struct ScoreVal
     {
-        ScoreType
-        get(const AlignState::index_t i)
-        {
-            switch (i)
-            {
-            case AlignState::MATCH:
-                return match;
-            case AlignState::INSERT:
-                return ins;
-            case AlignState::DELETE:
-                return del;
-            default:
-                assert(! "Unexpected Index Value");
-                return match;
-            }
-        }
-
         ScoreType match;
         ScoreType ins;
         ScoreType del;
@@ -278,6 +263,7 @@ private:
         uint8_t del : 2;
     };
 
+    // add the matrices here to reduce allocations over many alignment calls:
     BasicMatrix<ScoreVal> _scoreMat;
     BasicMatrix<PtrVal> _ptrMat;
 };
