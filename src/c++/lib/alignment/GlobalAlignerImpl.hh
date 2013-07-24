@@ -15,6 +15,9 @@
 
 //#define ALN_DEBUG
 
+#include "AlignerUtil.hh"
+
+#include <cassert>
 
 #ifdef ALN_DEBUG
 #include <iostream>
@@ -27,8 +30,8 @@ template <typename SymIter>
 void
 GlobalAligner<ScoreType>::
 align(
-    const SymIter begin1, const SymIter end1,
-    const SymIter begin2, const SymIter end2,
+    const SymIter queryBegin, const SymIter queryEnd,
+    const SymIter refBegin, const SymIter refEnd,
     AlignmentResult<ScoreType>& result)
 {
 #ifdef ALN_DEBUG
@@ -37,61 +40,61 @@ align(
 
     result.clear();
 
-    const size_t size1(std::distance(begin1, end1));
-    const size_t size2(std::distance(begin2, end2));
+    const size_t querySize(std::distance(queryBegin, queryEnd));
+    const size_t refSize(std::distance(refBegin, refEnd));
 
-    assert(0 != size1);
-    assert(0 != size2);
+    assert(0 != querySize);
+    assert(0 != refSize);
 
-    _scoreMat.resize(size1+1, size2+1);
-    _ptrMat.resize(size1+1, size2+1);
+    _scoreMat.resize(querySize+1, refSize+1);
+    _ptrMat.resize(querySize+1, refSize+1);
 
     static const ScoreType badVal(-10000);
 
     // global alignment of seq1 -- disallow start from insertion or deletion
     // state, seq1 can 'fall-off' the end of a short reference, in which case it will
     // be soft-clipped and each base off the end will count as a mismatch:
-    for (unsigned index1(0); index1<=size1; index1++)
+    for (unsigned queryIndex(0); queryIndex<=querySize; queryIndex++)
     {
-        ScoreVal& val(_scoreMat.val(index1,0));
-        val.match = index1 * _scores.mismatch;
+        ScoreVal& val(_scoreMat.val(queryIndex,0));
+        val.match = queryIndex * _scores.mismatch;
         val.del = badVal;
         val.ins = badVal;
     }
 
     // disallow start from the insert or delete state:
-    for (unsigned index2(0); index2<=size2; index2++)
+    for (unsigned refIndex(0); refIndex<=refSize; refIndex++)
     {
-        ScoreVal& val(_scoreMat.val(0,index2));
+        ScoreVal& val(_scoreMat.val(0,refIndex));
         val.match = 0;
         val.del = badVal;
         val.ins = badVal;
     }
 
     {
-        unsigned index1(0);
-        for (SymIter iter1(begin1); iter1 != end1; ++iter1, ++index1)
+        unsigned queryIndex(0);
+        for (SymIter queryIter(queryBegin); queryIter != queryEnd; ++queryIter, ++queryIndex)
         {
-            unsigned index2(0);
-            for (SymIter iter2(begin2); iter2 != end2; ++iter2, ++index2)
+            unsigned refIndex(0);
+            for (SymIter refIter(refBegin); refIter != refEnd; ++refIter, ++refIndex)
             {
                 // update match matrix
-                ScoreVal& headScore(_scoreMat.val(index1+1,index2+1));
-                PtrVal& headPtr(_ptrMat.val(index1+1,index2+1));
+                ScoreVal& headScore(_scoreMat.val(queryIndex+1,refIndex+1));
+                PtrVal& headPtr(_ptrMat.val(queryIndex+1,refIndex+1));
                 {
-                    const ScoreVal& sval(_scoreMat.val(index1,index2));
+                    const ScoreVal& sval(_scoreMat.val(queryIndex,refIndex));
                     headPtr.match = max3(
                                         headScore.match,
                                         sval.match,
                                         sval.del,
                                         sval.ins);
 
-                    headScore.match += ((*iter1==*iter2) ? _scores.match : _scores.mismatch);
+                    headScore.match += ((*queryIter==*refIter) ? _scores.match : _scores.mismatch);
                 }
 
                 // update delete
                 {
-                    const ScoreVal& sval(_scoreMat.val(index1+1,index2));
+                    const ScoreVal& sval(_scoreMat.val(queryIndex+1,refIndex));
                     headPtr.del = max3(
                                       headScore.del,
                                       sval.match + _scores.open,
@@ -103,7 +106,7 @@ align(
 
                 // update insert
                 {
-                    const ScoreVal& sval(_scoreMat.val(index1,index2+1));
+                    const ScoreVal& sval(_scoreMat.val(queryIndex,refIndex+1));
                     headPtr.ins = max3(
                                       headScore.ins,
                                       sval.match + _scores.open,
@@ -114,7 +117,7 @@ align(
                 }
 
 #ifdef ALN_DEBUG
-                log_os << "i1i2: " << index1+1 << " " << index2+1 << "\n";
+                log_os << "i1i2: " << queryIndex+1 << " " << refIndex+1 << "\n";
                 log_os << headScore.match << ":" << headScore.del << ":" << headScore.ins << "/"
                        << static_cast<int>(headPtr.match) << static_cast<int>(headPtr.del) << static_cast<int>(headPtr.ins) << "\n";
 #endif
@@ -130,71 +133,72 @@ align(
     //
     ScoreType max(0);
     AlignState::index_t whichMatrix(AlignState::MATCH);
-    unsigned start1(0),start2(0);
+    unsigned queryStart(0),refStart(0);
     bool isInit(false);
 
-    for (unsigned index2(0); index2<=size2; index2++)
+    for (unsigned refIndex(0); refIndex<=refSize; refIndex++)
     {
-        const ScoreVal& val(_scoreMat.val(size1, index2));
+        const ScoreVal& val(_scoreMat.val(querySize, refIndex));
         const ScoreType thisMax(val.match);
         if(isInit && (thisMax<=max)) continue;
         max=thisMax;
-        start2=index2;
-        start1=size1;
+        refStart=refIndex;
+        queryStart=querySize;
         isInit=true;
     }
 
     // also allow for the case where seq1 falls-off the end of the reference:
-    for (unsigned index1(0); index1<=size1; index1++)
+    for (unsigned queryIndex(0); queryIndex<=querySize; queryIndex++)
     {
-        const ScoreVal& val(_scoreMat.val(index1, size2));
-        const ScoreType thisMax(val.match + (size1-index1) * _scores.mismatch);
+        const ScoreVal& val(_scoreMat.val(queryIndex, refSize));
+        const ScoreType thisMax(val.match + (querySize-queryIndex) * _scores.mismatch);
         if(isInit && (thisMax<=max)) continue;
         max=thisMax;
-        start2=size2;
-        start1=index1;
+        refStart=refSize;
+        queryStart=queryIndex;
         isInit=true;
     }
 
     assert(isInit);
-    assert(start2 <= size2);
-    assert(start1 <= size1);
+    assert(refStart <= refSize);
+    assert(queryStart <= querySize);
 
     result.score = max;
 
 #ifdef ALN_DEBUG
-    log_os << "bt-start queryIndex: " << start1 << " refIndex: " << start2 << " state: " << AlignState::label(whichMatrix) << " maxScore: " << max << "\n";
+    log_os << "bt-start queryIndex: " << queryStart << " refIndex: " << refStart << " state: " << AlignState::label(whichMatrix) << " maxScore: " << max << "\n";
 #endif
 
     // traceback:
+    ALIGNPATH::path_t& apath(result.align.apath);
     ALIGNPATH::path_segment ps;
 
     // add any trailing soft-clip if we go off the end of the reference:
-    if(start1 < size1)
+    if(queryStart < querySize)
     {
         ps.type = ALIGNPATH::SOFT_CLIP;
-        ps.length = (size1-start1);
+        ps.length = (querySize-queryStart);
     }
 
-    while ((start1>0) && (start2>0))
+    while ((queryStart>0) && (refStart>0))
     {
-        const AlignState::index_t nextMatrix(static_cast<AlignState::index_t>(_ptrMat.val(start1,start2).get(whichMatrix)));
+        const AlignState::index_t nextMatrix(static_cast<AlignState::index_t>(_ptrMat.val(queryStart,refStart).get(whichMatrix)));
 
         if (whichMatrix==AlignState::MATCH)
         {
-            updatePath(result.apath,ps,ALIGNPATH::MATCH);
-            start1--;
-            start2--;
+            AlignerUtil::updatePath(apath,ps,ALIGNPATH::MATCH);
+            queryStart--;
+            refStart--;
         }
         else if (whichMatrix==AlignState::DELETE)
         {
-            updatePath(result.apath,ps,ALIGNPATH::DELETE);
-            start2--;
+            AlignerUtil::updatePath(apath,ps,ALIGNPATH::DELETE);
+            refStart--;
         }
         else if (whichMatrix==AlignState::INSERT)
         {
-            updatePath(result.apath,ps,ALIGNPATH::INSERT);
-            start1--;
+            AlignerUtil::updatePath(apath,ps,ALIGNPATH::INSERT);
+            queryStart--;
         }
         else
         {
@@ -204,17 +208,17 @@ align(
         ps.length++;
     }
 
-    if (ps.type != ALIGNPATH::NONE) result.apath.push_back(ps);
+    if (ps.type != ALIGNPATH::NONE) apath.push_back(ps);
 
     // soft-clip beginning of read if we fall off the end of the reference
-    if(start1!=0)
+    if(queryStart!=0)
     {
         ps.type = ALIGNPATH::SOFT_CLIP;
-        ps.length = start1;
-        result.apath.push_back(ps);
+        ps.length = queryStart;
+        apath.push_back(ps);
     }
 
-    result.alignStart = start2;
-    std::reverse(result.apath.begin(),result.apath.end());
+    result.align.alignStart = refStart;
+    std::reverse(apath.begin(),apath.end());
 }
 

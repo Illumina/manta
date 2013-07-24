@@ -51,8 +51,8 @@ BOOST_AUTO_TEST_CASE( test_GlobalAligner )
 
     AlignmentResult<score_t> result = testAlign(seq,ref);
 
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.apath),"1M");
-    BOOST_REQUIRE_EQUAL(result.alignStart,3);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align.apath),"1M");
+    BOOST_REQUIRE_EQUAL(result.align.alignStart,3);
 }
 
 
@@ -64,8 +64,8 @@ BOOST_AUTO_TEST_CASE( test_GlobalAlignerDelete )
 
     AlignmentResult<score_t> result = testAlign(seq,ref);
 
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.apath),"5M1D5M");
-    BOOST_REQUIRE_EQUAL(result.alignStart,1);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align.apath),"5M1D5M");
+    BOOST_REQUIRE_EQUAL(result.align.alignStart,1);
 }
 
 
@@ -76,8 +76,8 @@ BOOST_AUTO_TEST_CASE( test_GlobalAlignerInsert )
 
     AlignmentResult<score_t> result = testAlign(seq,ref);
 
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.apath),"6M1I5M");
-    BOOST_REQUIRE_EQUAL(result.alignStart,1);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align.apath),"6M1I5M");
+    BOOST_REQUIRE_EQUAL(result.align.alignStart,1);
 }
 
 
@@ -88,8 +88,8 @@ BOOST_AUTO_TEST_CASE( test_GlobalAlignerInsertDelete )
 
     AlignmentResult<score_t> result = testAlign(seq,ref);
 
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.apath),"8M3I3D8M");
-    BOOST_REQUIRE_EQUAL(result.alignStart,1);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align.apath),"8M3I3D8M");
+    BOOST_REQUIRE_EQUAL(result.align.alignStart,1);
 }
 
 BOOST_AUTO_TEST_CASE( test_GlobalAlignerInsertDelete2 )
@@ -99,8 +99,8 @@ BOOST_AUTO_TEST_CASE( test_GlobalAlignerInsertDelete2 )
 
     AlignmentResult<score_t> result = testAlign(seq,ref);
 
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.apath),"19M");
-    BOOST_REQUIRE_EQUAL(result.alignStart,1);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align.apath),"19M");
+    BOOST_REQUIRE_EQUAL(result.align.alignStart,1);
 }
 
 
@@ -111,8 +111,8 @@ BOOST_AUTO_TEST_CASE( test_GlobalAlignerShortRef1 )
 
     AlignmentResult<score_t> result = testAlign(seq,ref);
 
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.apath),"1S3M");
-    BOOST_REQUIRE_EQUAL(result.alignStart,0);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align.apath),"1S3M");
+    BOOST_REQUIRE_EQUAL(result.align.alignStart,0);
     BOOST_REQUIRE_EQUAL(result.score,2);
 }
 
@@ -124,8 +124,8 @@ BOOST_AUTO_TEST_CASE( test_GlobalAlignerShortRef2 )
 
     AlignmentResult<score_t> result = testAlign(seq,ref);
 
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.apath),"3M1S");
-    BOOST_REQUIRE_EQUAL(result.alignStart,0);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align.apath),"3M1S");
+    BOOST_REQUIRE_EQUAL(result.align.alignStart,0);
     BOOST_REQUIRE_EQUAL(result.score,2);
 }
 
@@ -137,8 +137,8 @@ BOOST_AUTO_TEST_CASE( test_GlobalAlignerShortRef3 )
 
     AlignmentResult<score_t> result = testAlign(seq,ref);
 
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.apath),"1S1M2S");
-    BOOST_REQUIRE_EQUAL(result.alignStart,0);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align.apath),"1S1M2S");
+    BOOST_REQUIRE_EQUAL(result.align.alignStart,0);
     BOOST_REQUIRE_EQUAL(result.score,-10);
 }
 

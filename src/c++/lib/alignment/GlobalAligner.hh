@@ -15,130 +15,30 @@
 
 #pragma once
 
-#include "blt_util/align_path.hh"
+#include "Alignment.hh"
+#include "AlignmentScores.hh"
 
-#include <vector>
-
-
-
-/// very simple matrix implementation, row major
-template <typename T>
-struct BasicMatrix
-{
-    typedef typename std::vector<T> data_t;
-    typedef typename data_t::iterator iterator;
-    typedef typename data_t::const_iterator const_iterator;
-
-    BasicMatrix(
-        const unsigned rowCount = 0,
-        const unsigned colCount = 0) :
-        _colCount(colCount),
-        _data(rowCount* colCount)
-    {}
-
-    void
-    resize(
-        const unsigned rowCount,
-        const unsigned colCount)
-    {
-        _colCount=colCount;
-        _data.resize(rowCount*colCount);
-    }
-
-    T&
-    val(const unsigned row,
-        const unsigned col)
-    {
-        return _data[(row*_colCount+col)];
-    }
-
-    const T&
-    val(const unsigned row,
-        const unsigned col) const
-    {
-        return _data[(row*_colCount+col)];
-    }
-
-    bool
-    empty()
-    {
-        return _data.empty();
-    }
-
-    size_t
-    size()
-    {
-        return _data.size();
-    }
-
-    iterator
-    begin()
-    {
-        return _data.begin();
-    }
-
-    const_iterator
-    begin() const
-    {
-        return _data.begin();
-    }
-
-    iterator
-    end()
-    {
-        return _data.end();
-    }
-
-    const_iterator
-    end() const
-    {
-        return _data.end();
-    }
-
-private:
-    unsigned _colCount;
-    std::vector<T> _data;
-};
-
-
-
-template <typename ScoreType>
-struct AlignmentScores
-{
-    AlignmentScores(
-        ScoreType initMatch,
-        ScoreType initMismatch,
-        ScoreType initOpen,
-        ScoreType initExtend) :
-        match(initMatch),
-        mismatch(initMismatch),
-        open(initOpen),
-        extend(initExtend)
-    {}
-
-    const ScoreType match;
-    const ScoreType mismatch;
-    const ScoreType open;
-    const ScoreType extend;
-};
+#include "blt_util/basic_matrix.hh"
 
 
 template <typename ScoreType>
 struct AlignmentResult
 {
+    AlignmentResult()
+    {
+        clear();
+    }
 
     void
     clear()
     {
         score=0;
-        alignStart=0;
-        apath.clear();
+        align.clear();
     }
 
 
     ScoreType score;
-    unsigned alignStart;
-    ALIGNPATH::path_t apath;
+    Alignment align;
 };
 
 
@@ -172,24 +72,25 @@ struct AlignState
 /// \brief Implementation of global alignment with affine gap costs
 ///
 /// alignment outputs start positions and CIGAR-style alignment
-/// expression of seq1 (query) to seq2 (referenece). Alignment of
+/// expression of query to reference. Alignment of
 /// seq1 is global -- seq1 can "fall-off" either end of the reference,
-/// in this case, each unaligned postiion is scored as a mismatch and
+/// in this case, each unaligned position is scored as a mismatch and
 /// the base is soft-clipped in the alignment
 ///
 template <typename ScoreType>
 struct GlobalAligner
 {
-    GlobalAligner(AlignmentScores<ScoreType>& scores) :
+    GlobalAligner(
+        const AlignmentScores<ScoreType>& scores) :
         _scores(scores)
     {}
 
-    /// returns alignment path of 1 (query) to 2 (reference)
+    /// returns alignment path of query to reference
     template <typename SymIter>
     void
     align(
-        const SymIter begin1, const SymIter end1,
-        const SymIter begin2, const SymIter end2,
+        const SymIter queryBegin, const SymIter queryEnd,
+        const SymIter refBegin, const SymIter refEnd,
         AlignmentResult<ScoreType>& result);
 
 private:
@@ -214,17 +115,6 @@ private:
             ptr=2;
         }
         return ptr;
-    }
-
-    void
-    updatePath(ALIGNPATH::path_t& path,
-               ALIGNPATH::path_segment& ps,
-               ALIGNPATH::align_t atype)
-    {
-        if (ps.type == atype) return;
-        if (ps.type != ALIGNPATH::NONE) path.push_back(ps);
-        ps.type = atype;
-        ps.length = 0;
     }
 
 
@@ -264,8 +154,8 @@ private:
     };
 
     // add the matrices here to reduce allocations over many alignment calls:
-    BasicMatrix<ScoreVal> _scoreMat;
-    BasicMatrix<PtrVal> _ptrMat;
+    basic_matrix<ScoreVal> _scoreMat;
+    basic_matrix<PtrVal> _ptrMat;
 };
 
 
