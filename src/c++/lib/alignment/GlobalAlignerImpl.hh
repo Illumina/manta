@@ -1,9 +1,28 @@
+// -*- mode: c++; indent-tabs-mode: nil; -*-
+//
+// Manta
+// Copyright (c) 2013 Illumina, Inc.
+//
+// This software is provided under the terms and conditions of the
+// Illumina Open Source Software License 1.
+//
+// You should have received a copy of the Illumina Open Source
+// Software License 1 along with this program. If not, see
+// <https://github.com/downloads/sequencing/licenses/>.
+//
 
-#include <algorithm>
+#include <limits>
+
+#define ALN_DEBUG
+
 
 #ifdef ALN_DEBUG
 #include <iostream>
 #endif
+
+
+
+
 
 
 template <typename ScoreType>
@@ -11,71 +30,91 @@ template <typename SymIter>
 void
 GlobalAligner<ScoreType>::
 align(
-    SymIter begin1, SymIter end1,
-    SymIter begin2, SymIter end2,
-    AlignmentResult& result)
+    const SymIter begin1, const SymIter end1,
+    const SymIter begin2, const SymIter end2,
+    AlignmentResult<ScoreType>& result)
 {
 #ifdef ALN_DEBUG
     std::ostream& log_os(std::cerr);
 #endif
 
-    result.apath.clear();
+    result.clear();
 
     const size_t size1(std::distance(begin1, end1));
     const size_t size2(std::distance(begin2, end2));
     _scoreMat.resize(size1+1, size2+1);
-    _whichMat.resize(size2+1, size2+1);
+    _ptrMat.resize(size1+1, size2+1);
 
-    for (unsigned i(0); i<=size1; i++)
+    static const ScoreType badVal(-10000);
+
+    // global alignment of seq1 -- disallow partial alignment:
+    for (unsigned index1(0); index1<=size1; index1++)
     {
-        E_[i][0]=-10000;
-        F_[i][0]=-10000;
-        _scoreMat.match[i][0]=-10000;
+        ScoreVal& val(_scoreMat.val(index1,0));
+        val.match = badVal;
+        val.del = badVal;
+        val.ins = badVal;
     }
 
-    for (unsigned j(0); j<=y_size; j++)
+    // disallow start from the delete state:
+    for (unsigned index2(0); index2<=size2; index2++)
     {
-        F_[0][j]=0;
-        E_[0][j]=-10000;
-        _scoreMat.match[0][j]=0;
+        ScoreVal& val(_scoreMat.val(0,index2));
+        val.match = 0;
+        val.del = badVal;
+        val.ins = 0;
     }
-    for (unsigned i(1); i<=x_size; i++)
+
+    unsigned index1(0);
+    for (SymIter iter1(begin1); iter1 != end1; ++iter1, ++index1)
     {
-#ifdef ALN_DEBUG
-        log_os << i << ": ";
-#endif
-        for (unsigned j(1); j<=y_size; j++)
+        unsigned index2(0);
+        for (SymIter iter2(begin2); iter2 != end2; ++iter2, ++index2)
         {
-            // update _scoreMat.match
-            max3(_scoreMat.match[i][j],T_scoreMat.match[i][j],
-                 _scoreMat.match[i-1][j-1],E_[i-1][j-1] - w_open_, F_[i-1][j-1] - w_open_);
-
-            if (x[i-1]==y[j-1])
-            {
-                _scoreMat.match[i][j]+=w_match_;
-            }
-            else
-            {
-                _scoreMat.match[i][j]-=w_mismatch_;
-            }
-
-            // update E_
-            max3(E_[i][j],TE_[i][j],
-                 _scoreMat.match[i][j-1]-w_open_,
-                 E_[i][j-1],
-                 F_[i][j-1]-w_open_);
-
-            E_[i][j]-=w_extend_;
-
-            // update F_
-            max3(F_[i][j],TF_[i][j],
-                 _scoreMat.match[i-1][j]-w_open_,
-                 E_[i-1][j]-w_open_,
-                 F_[i-1][j]);
-
-            F_[i][j]-=w_extend_;
 #ifdef ALN_DEBUG
-            printf(" %3d:%3d:%3d/%1d%1d%1d",_scoreMat.match[i][j],E_[i][j],F_[i][j],T_scoreMat.match[i][j],TE_[i][j],TF_[i][j]);
+            log_os << "i1i2: " << index1 << " " << index2 << "\n";
+#endif
+            // update match matrix
+            ScoreVal& headScore(_scoreMat.val(index1+1,index2+1));
+            PtrVal& headPtr(_ptrMat.val(index1+1,index2+1));
+            {
+                const ScoreVal& sval(_scoreMat.val(index1,index2));
+                headPtr.match = max3(
+                                    headScore.match,
+                                    sval.match,
+                                    sval.del + _scores.open,
+                                    sval.ins + _scores.open);
+
+                headScore.match += ((*iter1==*iter2) ? _scores.match : _scores.mismatch);
+            }
+
+            // update delete
+            {
+                const ScoreVal& sval(_scoreMat.val(index1+1,index2));
+                headPtr.del = max3(
+                                  headScore.del,
+                                  sval.match,
+                                  sval.del,
+                                  sval.ins + _scores.open);
+
+                headScore.del += _scores.extend;
+            }
+
+            // update insert
+            {
+                const ScoreVal& sval(_scoreMat.val(index1,index2+1));
+                headPtr.ins = max3(
+                                  headScore.ins,
+                                  sval.match,
+                                  sval.del + _scores.open,
+                                  sval.ins);
+
+                headScore.ins += _scores.extend;
+            }
+
+#ifdef ALN_DEBUG
+            log_os << headScore.match << ":" << headScore.del << ":" << headScore.ins << "/"
+                   << static_cast<int>(headPtr.match) << static_cast<int>(headPtr.del) << static_cast<int>(headPtr.ins) << "\n";
 #endif
         }
 #ifdef ALN_DEBUG
@@ -83,99 +122,65 @@ align(
 #endif
     }
 
-    ScoreType max(0),thisMax;
-    uint8_t whichMatrix(0),thisMatrix;
-    int ii(0),jj(0);
+    ScoreType max(0);
+    matrix_t whichMatrix(MATCH);
+    unsigned start1(size1+1);
+    unsigned start2(0);
 
-    for (unsigned j(0); j<=y_size; j++)
+    for (unsigned index2(0); index2<=size2; index2++)
     {
-        if (_scoreMat.match[x_size][j] > F_[x_size][j]) {
-            thisMax=_scoreMat.match[x_size][j];
-            thisMatrix=0;
-        } else {
-            thisMax=F_[x_size][j];
-            thisMatrix=2;
+        const ScoreVal& val(_scoreMat.val(size1+1, index2));
+        ScoreType thisMax(val.match);
+        matrix_t thisMatrix(MATCH);
+        if (val.match <= val.ins)
+        {
+            thisMax=val.ins;
+            thisMatrix=INSERT;
         }
 
-        if ((j==0) || (thisMax>max))
+        if ((index2==0) || (thisMax>max))
         {
             max=thisMax;
-            ii=x_size;
-            jj=j;
+            start2=index2;
             whichMatrix=thisMatrix;
         }
     }
 
+    result.score = max;
 
-    result.myScore = max;
 #ifdef ALN_DEBUG
-    cout << "start cell = " << ii << " " << jj << " " << whichMatrix << endl;
+    log_os << "start cell = " << start1 << " " << start2 << " " << whichMatrix << " " << max << "\n";
 #endif
-    result.x_start_ = ii;
-    result.y_start_ = jj;
 
-    DPMatrixN* pT_ =&TE_;
-
-    while ((ii>0)&&(jj>0))
+    // traceback:
+    ALIGNPATH::path_segment ps;
+    while ((start1>0) && (start2>0))
     {
-        if (whichMatrix==0)
-        {
-            pT_=&T_scoreMat.match;
-        }
-        else if (whichMatrix==1)
-        {
-            pT_=&TE_;
-        }
-        else
-        {
-            //assert(whichMatrix==2);
-            pT_=&TF_;
-        }
+        const matrix_t nextMatrix(static_cast<matrix_t>(_ptrMat.val(start1,start2).get(whichMatrix)));
 
-#ifdef ALN_DEBUG
-        log_os << ii << " " << jj << " " << whichMatrix << " "
-               << " "<< _scoreMat.match[ii][jj]<< ":"<< E_[ii][jj] << ":" << F_[ii][jj]
-               << "/"
-               << " "<< T_scoreMat.match[ii][jj] << ":"<< TE_[ii][jj] << ":" << TF_[ii][jj]
-               << " - " << (*pT_)[ii][jj] << "\n"
-#endif
-        const uint8_t nextMatrix=(*pT_)[ii][jj];
-        if (whichMatrix==0)
+        if (whichMatrix==MATCH)
         {
-            xt_+=x[ii-1];
-            yt_+=y[jj-1];
-            at_+=((x[ii-1]==y[jj-1])?'|':'.');
-            ii--;
-            jj--;
-            // whichMatrix=0;
-        } // ~if
-        else if (whichMatrix==1)
+            updatePath(result.apath,ps,ALIGNPATH::MATCH);
+            start1--;
+            start2--;
+        }
+        else if (whichMatrix==DELETE)
         {
-            xt_+='-';
-            yt_+=y[jj-1];
-            at_+=' ';
-            jj--;
-            //    whichMatrix=1;
-        } // ~else if
+            updatePath(result.apath,ps,ALIGNPATH::DELETE);
+            start2--;
+        }
         else
         {
-            //assert(whichMatrix==2);
-            xt_+=x[ii-1];
-            yt_+='-';
-            at_+=' ';
-            ii--;
-            //      whichMatrix=2;
-        } // ~else
+            updatePath(result.apath,ps,ALIGNPATH::INSERT);
+            start1--;
+        }
+        ps.length++;
         whichMatrix=nextMatrix;
-    } // ~while
-#ifdef ALN_DEBUG
-    log_os << "end cell = " << ii << " " << jj << "\n";
-#endif
-    result.x_end_ = ii;
-    result.y_end_ = jj;
+    }
 
-    reverse(xt_.begin(),xt_.end());
-    reverse(at_.begin(),at_.end());
-    reverse(yt_.begin(),yt_.end());
+    if (ps.type != ALIGNPATH::NONE) result.apath.push_back(ps);
+
+    result.alignStart = start2;
+    std::reverse(result.apath.begin(),result.apath.end());
 }
 

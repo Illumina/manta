@@ -1,3 +1,15 @@
+// -*- mode: c++; indent-tabs-mode: nil; -*-
+//
+// Manta
+// Copyright (c) 2013 Illumina, Inc.
+//
+// This software is provided under the terms and conditions of the
+// Illumina Open Source Software License 1.
+//
+// You should have received a copy of the Illumina Open Source
+// Software License 1 along with this program. If not, see
+// <https://github.com/downloads/sequencing/licenses/>.
+//
 
 /// based off of ELAND implementation by Tony Cox
 
@@ -20,8 +32,8 @@ struct BasicMatrix
     BasicMatrix(
         const unsigned rowCount = 0,
         const unsigned colCount = 0) :
-      _colCount(colCount),
-      _data(rowCount*colCount)
+        _colCount(colCount),
+        _data(rowCount* colCount)
     {}
 
     void
@@ -48,22 +60,40 @@ struct BasicMatrix
     }
 
     bool
-    empty() { return _data.empty(); }
+    empty()
+    {
+        return _data.empty();
+    }
 
     size_t
-    size() { return _data.size(); }
+    size()
+    {
+        return _data.size();
+    }
 
     iterator
-    begin() { return _data.begin(); }
+    begin()
+    {
+        return _data.begin();
+    }
 
     const_iterator
-    begin() const { return _data.begin(); }
+    begin() const
+    {
+        return _data.begin();
+    }
 
     iterator
-    end() { return _data.end(); }
+    end()
+    {
+        return _data.end();
+    }
 
     const_iterator
-    end() const { return _data.end(); }
+    end() const
+    {
+        return _data.end();
+    }
 
 private:
     unsigned _colCount;
@@ -80,10 +110,10 @@ struct AlignmentScores
         ScoreType initMismatch,
         ScoreType initOpen,
         ScoreType initExtend) :
-      match(initMatch),
-      mismatch(initMismatch),
-      open(initOpen),
-      extend(initExtend)
+        match(initMatch),
+        mismatch(initMismatch),
+        open(initOpen),
+        extend(initExtend)
     {}
 
     const ScoreType match;
@@ -93,8 +123,20 @@ struct AlignmentScores
 };
 
 
-struct AlignmentResult {
+template <typename ScoreType>
+struct AlignmentResult
+{
 
+    void
+    clear()
+    {
+        score=0;
+        alignStart=0;
+        apath.clear();
+    }
+
+    ScoreType score;
+    unsigned alignStart;
     ALIGNPATH::path_t apath;
 };
 
@@ -117,54 +159,104 @@ struct GlobalAligner
     template <typename SymIter>
     void
     align(
-        SymIter begin1, SymIter end1,
-        SymIter begin2, SymIter end2,
-        AlignmentResult& result);
+        const SymIter begin1, const SymIter end1,
+        const SymIter begin2, const SymIter end2,
+        AlignmentResult<ScoreType>& result);
 
 private:
 
-    void
+    uint8_t
     max3(
         ScoreType& max,
-        uint8_t& which,
         const ScoreType v0,
         const ScoreType v1,
         const ScoreType v2)
     {
         max=v0;
-        which=0;
+        uint8_t ptr=0;
         if (v1>v0)
         {
             max=v1;
-            which=1;
+            ptr=1;
         }
         if (v2>max)
         {
             max=v2;
-            which=2;
+            ptr=2;
         }
+        return ptr;
+    }
+
+    void
+    updatePath(ALIGNPATH::path_t& path,
+               ALIGNPATH::path_segment& ps,
+               ALIGNPATH::align_t atype)
+    {
+        if (ps.type == atype) return;
+        if (ps.type != ALIGNPATH::NONE) path.push_back(ps);
+        ps.type = atype;
+        ps.length = 0;
     }
 
 
     const AlignmentScores<ScoreType> _scores;
 
+    enum matrix_t
+    {
+        MATCH,
+        INSERT,
+        DELETE,
+        SIZE
+    };
+
     // insert and delete are for seq1 wrt seq2
     struct ScoreVal
     {
+        ScoreType
+        get(const matrix_t i)
+        {
+            switch (i)
+            {
+            case MATCH:
+                return match;
+            case INSERT:
+                return ins;
+            case DELETE:
+                return del;
+            }
+        }
+
         ScoreType match;
         ScoreType ins;
         ScoreType del;
     };
 
-    struct WhichVal
+    struct PtrVal
     {
+        uint8_t
+        get(const matrix_t i)
+        {
+            switch (i)
+            {
+            case MATCH:
+                return match;
+            case INSERT:
+                return ins;
+            case DELETE:
+                return del;
+            default:
+                assert(! "Unexpected Index Value");
+                return 0;
+            }
+        }
+
         uint8_t match : 2;
         uint8_t ins : 2;
         uint8_t del : 2;
     };
 
     BasicMatrix<ScoreVal> _scoreMat;
-    BasicMatrix<WhichVal> _whichMat;
+    BasicMatrix<PtrVal> _ptrMat;
 };
 
 
