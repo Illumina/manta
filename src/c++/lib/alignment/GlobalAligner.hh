@@ -135,9 +135,36 @@ struct AlignmentResult
         apath.clear();
     }
 
+
     ScoreType score;
     unsigned alignStart;
     ALIGNPATH::path_t apath;
+};
+
+
+
+struct AlignState
+{
+    enum index_t
+    {
+        MATCH,
+        DELETE,
+        INSERT,
+        SIZE
+    };
+
+    static
+    const char*
+    label(const index_t i)
+    {
+        switch(i)
+        {
+        case MATCH:  return "MATCH";
+        case DELETE: return "DELETE";
+        case INSERT: return "INSERT";
+        default:     return "UNKNOWN";
+        }
+    }
 };
 
 
@@ -201,28 +228,24 @@ private:
 
     const AlignmentScores<ScoreType> _scores;
 
-    enum matrix_t
-    {
-        MATCH,
-        INSERT,
-        DELETE,
-        SIZE
-    };
 
     // insert and delete are for seq1 wrt seq2
     struct ScoreVal
     {
         ScoreType
-        get(const matrix_t i)
+        get(const AlignState::index_t i)
         {
             switch (i)
             {
-            case MATCH:
+            case AlignState::MATCH:
                 return match;
-            case INSERT:
+            case AlignState::INSERT:
                 return ins;
-            case DELETE:
+            case AlignState::DELETE:
                 return del;
+            default:
+                assert(! "Unexpected Index Value");
+                return match;
             }
         }
 
@@ -234,15 +257,15 @@ private:
     struct PtrVal
     {
         uint8_t
-        get(const matrix_t i)
+        get(const AlignState::index_t i)
         {
             switch (i)
             {
-            case MATCH:
+            case AlignState::MATCH:
                 return match;
-            case INSERT:
+            case AlignState::INSERT:
                 return ins;
-            case DELETE:
+            case AlignState::DELETE:
                 return del;
             default:
                 assert(! "Unexpected Index Value");
