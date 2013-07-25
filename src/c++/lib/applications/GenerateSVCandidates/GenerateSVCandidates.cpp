@@ -113,6 +113,17 @@ runGSC(
         {
             // find number, type and breakend range of SVs on this edge:
             svFind.findCandidateSV(edge,svData,svs);
+            BOOST_FOREACH(const SVCandidate& sv, svs)
+            {
+                // assemble across breakpoint 1
+                SVLocusAssembler::Assembly a1;
+                svAssembler.assembleSVBreakend(sv.bp1,a1);
+                // assemble across breakpoint 2
+                SVLocusAssembler::Assembly a2;
+                svAssembler.assembleSVBreakend(sv.bp2,a1);
+                // TODO: what to do with contigs, how to align them etc?
+
+            }
 
             candWriter.writeSV(edge, svData, svs);
 

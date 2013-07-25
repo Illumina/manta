@@ -229,6 +229,9 @@ getBreakendReads(const SVBreakend& bp,
             // only clipped reads
 			if ((bamRead.pos()-1) >= searchRange.end_pos()) break;
             if (!_readScanner.isClipped(bamRead) ) continue;
+#ifdef DEBUG_ASBL
+            dbg_os << "Adding " << bamRead.qname() << endl;
+#endif
 			reads[bamRead.qname()] = AssemblyRead(bamRead.get_bam_read().get_string(),
                                                   false
                                                  );
