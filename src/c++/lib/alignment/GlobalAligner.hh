@@ -154,7 +154,9 @@ private:
     };
 
     // add the matrices here to reduce allocations over many alignment calls:
-    basic_matrix<ScoreVal> _scoreMat;
+    typedef std::vector<ScoreVal> ScoreVec;
+    ScoreVec _score1;
+    ScoreVec _score2;
     basic_matrix<PtrVal> _ptrMat;
 };
 

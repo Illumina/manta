@@ -143,5 +143,32 @@ BOOST_AUTO_TEST_CASE( test_GlobalAlignerShortRef3 )
 }
 
 
+// show that the method left aligns a deletion within a repeat
+//
+BOOST_AUTO_TEST_CASE( test_GlobalAlignerLeftShift )
+{
+    static const std::string seq("ABCDEFFFFFGHIJKL");
+    static const std::string ref("ABCDEFFFFFFGHIJKL");
+
+    AlignmentResult<score_t> result = testAlign(seq,ref);
+
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align.apath),"5M1D11M");
+    BOOST_REQUIRE_EQUAL(result.align.alignStart,0);
+}
+
+// show that the method left aligns an insertion within a repeat
+//
+BOOST_AUTO_TEST_CASE( test_GlobalAlignerLeftShift2 )
+{
+    static const std::string seq("ABCDEFFFFFFFGHIJKL");
+    static const std::string ref("ABCDEFFFFFFGHIJKL");
+
+    AlignmentResult<score_t> result = testAlign(seq,ref);
+
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align.apath),"5M1I12M");
+    BOOST_REQUIRE_EQUAL(result.align.alignStart,0);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 

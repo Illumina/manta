@@ -24,6 +24,23 @@
 #endif
 
 
+template <typename ScoreType>
+struct BackTrace {
+    BackTrace() :
+        max(0),
+        state(AlignState::MATCH),
+        queryStart(0),
+        refStart(0),
+        isInit(false)
+    {}
+
+    ScoreType max;
+    AlignState::index_t state;
+    unsigned queryStart,refStart;
+    bool isInit;
+};
+
+
 
 template <typename ScoreType>
 template <typename SymIter>
@@ -46,8 +63,12 @@ align(
     assert(0 != querySize);
     assert(0 != refSize);
 
-    _scoreMat.resize(querySize+1, refSize+1);
+    _score1.resize(querySize+1);
+    _score2.resize(querySize+1);
     _ptrMat.resize(querySize+1, refSize+1);
+
+    ScoreVec* thisSV(&_score1);
+    ScoreVec* prevSV(&_score2);
 
     static const ScoreType badVal(-10000);
 
@@ -56,33 +77,36 @@ align(
     // be soft-clipped and each base off the end will count as a mismatch:
     for (unsigned queryIndex(0); queryIndex<=querySize; queryIndex++)
     {
-        ScoreVal& val(_scoreMat.val(queryIndex,0));
+        ScoreVal& val((*thisSV)[queryIndex]);
         val.match = queryIndex * _scores.mismatch;
         val.del = badVal;
         val.ins = badVal;
     }
 
-    // disallow start from the insert or delete state:
-    for (unsigned refIndex(0); refIndex<=refSize; refIndex++)
-    {
-        ScoreVal& val(_scoreMat.val(0,refIndex));
-        val.match = 0;
-        val.del = badVal;
-        val.ins = badVal;
-    }
+    BackTrace<ScoreType> bt;
 
     {
-        unsigned queryIndex(0);
-        for (SymIter queryIter(queryBegin); queryIter != queryEnd; ++queryIter, ++queryIndex)
+        unsigned refIndex(0);
+        for (SymIter refIter(refBegin); refIter != refEnd; ++refIter, ++refIndex)
         {
-            unsigned refIndex(0);
-            for (SymIter refIter(refBegin); refIter != refEnd; ++refIter, ++refIndex)
+            std::swap(thisSV,prevSV);
+
+            {
+                // disallow start from the insert or delete state:
+                ScoreVal& val((*thisSV)[0]);
+                val.match = 0;
+                val.del = badVal;
+                val.ins = badVal;
+            }
+
+            unsigned queryIndex(0);
+            for (SymIter queryIter(queryBegin); queryIter != queryEnd; ++queryIter, ++queryIndex)
             {
                 // update match matrix
-                ScoreVal& headScore(_scoreMat.val(queryIndex+1,refIndex+1));
+                ScoreVal& headScore((*thisSV)[queryIndex+1]);
                 PtrVal& headPtr(_ptrMat.val(queryIndex+1,refIndex+1));
                 {
-                    const ScoreVal& sval(_scoreMat.val(queryIndex,refIndex));
+                    const ScoreVal& sval((*prevSV)[queryIndex]);
                     headPtr.match = max3(
                                         headScore.match,
                                         sval.match,
@@ -94,7 +118,7 @@ align(
 
                 // update delete
                 {
-                    const ScoreVal& sval(_scoreMat.val(queryIndex+1,refIndex));
+                    const ScoreVal& sval((*prevSV)[queryIndex+1]);
                     headPtr.del = max3(
                                       headScore.del,
                                       sval.match + _scores.open,
@@ -106,7 +130,7 @@ align(
 
                 // update insert
                 {
-                    const ScoreVal& sval(_scoreMat.val(queryIndex,refIndex+1));
+                    const ScoreVal& sval((*thisSV)[queryIndex]);
                     headPtr.ins = max3(
                                       headScore.ins,
                                       sval.match + _scores.open,
@@ -125,48 +149,40 @@ align(
 #ifdef ALN_DEBUG
             log_os << "\n";
 #endif
+
+            // get backtrace info:
+            {
+                const ScoreVal& sval((*thisSV)[querySize]);
+                const ScoreType thisMax(sval.match);
+                if(bt.isInit && (thisMax<=bt.max)) continue;
+                bt.max=thisMax;
+                bt.refStart=refIndex+1;
+                bt.queryStart=querySize;
+                bt.isInit=true;
+            }
         }
-    }
-
-    //
-    // find starting point for backtrace:
-    //
-    ScoreType max(0);
-    AlignState::index_t whichMatrix(AlignState::MATCH);
-    unsigned queryStart(0),refStart(0);
-    bool isInit(false);
-
-    for (unsigned refIndex(0); refIndex<=refSize; refIndex++)
-    {
-        const ScoreVal& val(_scoreMat.val(querySize, refIndex));
-        const ScoreType thisMax(val.match);
-        if(isInit && (thisMax<=max)) continue;
-        max=thisMax;
-        refStart=refIndex;
-        queryStart=querySize;
-        isInit=true;
     }
 
     // also allow for the case where seq1 falls-off the end of the reference:
     for (unsigned queryIndex(0); queryIndex<=querySize; queryIndex++)
     {
-        const ScoreVal& val(_scoreMat.val(queryIndex, refSize));
-        const ScoreType thisMax(val.match + (querySize-queryIndex) * _scores.mismatch);
-        if(isInit && (thisMax<=max)) continue;
-        max=thisMax;
-        refStart=refSize;
-        queryStart=queryIndex;
-        isInit=true;
+        const ScoreVal& sval((*thisSV)[queryIndex]);
+        const ScoreType thisMax(sval.match + (querySize-queryIndex) * _scores.mismatch);
+        if(bt.isInit && (thisMax<=bt.max)) continue;
+        bt.max=thisMax;
+        bt.refStart=refSize;
+        bt.queryStart=queryIndex;
+        bt.isInit=true;
     }
 
-    assert(isInit);
-    assert(refStart <= refSize);
-    assert(queryStart <= querySize);
+    assert(bt.isInit);
+    assert(bt.refStart <= refSize);
+    assert(bt.queryStart <= querySize);
 
-    result.score = max;
+    result.score = bt.max;
 
 #ifdef ALN_DEBUG
-    log_os << "bt-start queryIndex: " << queryStart << " refIndex: " << refStart << " state: " << AlignState::label(whichMatrix) << " maxScore: " << max << "\n";
+    log_os << "bt-start queryIndex: " << queryStart << " refIndex: " << refStart << " state: " << AlignState::label(bt.state) << " maxScore: " << max << "\n";
 #endif
 
     // traceback:
@@ -174,51 +190,51 @@ align(
     ALIGNPATH::path_segment ps;
 
     // add any trailing soft-clip if we go off the end of the reference:
-    if(queryStart < querySize)
+    if(bt.queryStart < querySize)
     {
         ps.type = ALIGNPATH::SOFT_CLIP;
-        ps.length = (querySize-queryStart);
+        ps.length = (querySize-bt.queryStart);
     }
 
-    while ((queryStart>0) && (refStart>0))
+    while ((bt.queryStart>0) && (bt.refStart>0))
     {
-        const AlignState::index_t nextMatrix(static_cast<AlignState::index_t>(_ptrMat.val(queryStart,refStart).get(whichMatrix)));
+        const AlignState::index_t nextMatrix(static_cast<AlignState::index_t>(_ptrMat.val(bt.queryStart,bt.refStart).get(bt.state)));
 
-        if (whichMatrix==AlignState::MATCH)
+        if (bt.state==AlignState::MATCH)
         {
             AlignerUtil::updatePath(apath,ps,ALIGNPATH::MATCH);
-            queryStart--;
-            refStart--;
+            bt.queryStart--;
+            bt.refStart--;
         }
-        else if (whichMatrix==AlignState::DELETE)
+        else if (bt.state==AlignState::DELETE)
         {
             AlignerUtil::updatePath(apath,ps,ALIGNPATH::DELETE);
-            refStart--;
+            bt.refStart--;
         }
-        else if (whichMatrix==AlignState::INSERT)
+        else if (bt.state==AlignState::INSERT)
         {
             AlignerUtil::updatePath(apath,ps,ALIGNPATH::INSERT);
-            queryStart--;
+            bt.queryStart--;
         }
         else
         {
             assert(! "Unknown align state");
         }
-        whichMatrix=nextMatrix;
+        bt.state=nextMatrix;
         ps.length++;
     }
 
     if (ps.type != ALIGNPATH::NONE) apath.push_back(ps);
 
     // soft-clip beginning of read if we fall off the end of the reference
-    if(queryStart!=0)
+    if(bt.queryStart!=0)
     {
         ps.type = ALIGNPATH::SOFT_CLIP;
-        ps.length = queryStart;
+        ps.length = bt.queryStart;
         apath.push_back(ps);
     }
 
-    result.align.alignStart = refStart;
+    result.align.alignStart = bt.refStart;
     std::reverse(apath.begin(),apath.end());
 }
 
