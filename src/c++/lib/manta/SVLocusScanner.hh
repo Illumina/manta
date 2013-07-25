@@ -44,6 +44,7 @@ struct SVLocusScanner
 
     /// this predicate runs any fast tests on the acceptability of a
     /// read for the SVLocus build
+    /// Tests also for low mapq
     bool
     isReadFiltered(const bam_record& bamRead) const;
 
@@ -52,6 +53,12 @@ struct SVLocusScanner
     isProperPair(
         const bam_record& bamRead,
         const unsigned defaultReadGroupIndex) const;
+
+    /// test for semi-alignedness
+    /// Dummy implementation, returns true for now
+    bool
+    isSemiAligned(
+    	const bam_record& bamRead) const;
 
     /// if read supports a chimera candidate return this as a single observation SVLocus object,
     /// else return an empty object.

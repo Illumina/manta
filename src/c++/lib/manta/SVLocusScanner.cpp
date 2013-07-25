@@ -229,6 +229,13 @@ isReadFiltered(const bam_record& bamRead) const
     return false;
 }
 
+bool
+SVLocusScanner::
+isSemiAligned(const bam_record& bamRead) const
+{
+	// TODO
+	return true;
+}
 
 
 bool
