@@ -107,6 +107,8 @@ parseGSCOptions(const manta::Program& prog,
      "Specify how many bins the SV candidate problem should be divided into, where bin-index can be used to specify which bin to solve")
     ("bin-index", po::value(&opt.binIndex)->default_value(opt.binIndex),
      "specify which bin to solve when the SV candidate problem is subdivided into bins. Value must bin in [0,bin-count)")
+    ("locus-index", po::value(&opt.locusIndex),
+      "Instead of solving for all SV candidates in a bin, solve for candidates of a particular locus. If specified then bin-index is ignored.")
     ;
 
     po::options_description help("help");
@@ -134,6 +136,8 @@ parseGSCOptions(const manta::Program& prog,
     {
         usage(log_os,prog,visible);
     }
+
+    opt.isLocusIndex=vm.count("locus-index");
 
     {
         // paste together tumor and normal:

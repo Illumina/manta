@@ -15,7 +15,7 @@
 /// \author Chris Saunders
 ///
 
-#include "EdgeRetriever.hh"
+#include "EdgeRetrieverBin.hh"
 
 #include "boost/foreach.hpp"
 
@@ -43,12 +43,12 @@ getBoundaryCount(
 
 
 
-EdgeRetriever::
-EdgeRetriever(
+EdgeRetrieverBin::
+EdgeRetrieverBin(
     const SVLocusSet& set,
     const unsigned binCount,
     const unsigned binIndex) :
-    _set(set),
+    EdgeRetriever(set),
     _headCount(0)
 {
     assert(binCount > 0);
@@ -70,7 +70,7 @@ EdgeRetriever(
 
 
 void
-EdgeRetriever::
+EdgeRetrieverBin::
 jumpToFirstEdge()
 {
     // first catch headCount up to the begin edge if required:
@@ -110,12 +110,14 @@ jumpToFirstEdge()
         _headCount += locusObservationCount;
         _edge.locusIndex++;
     }
+
+    assert(! "jumpToFirstEdge: invalid state");
 }
 
 
 
 void
-EdgeRetriever::
+EdgeRetrieverBin::
 advanceEdge()
 {
     typedef SVLocusNode::edges_type::const_iterator edgeiter_t;
@@ -148,12 +150,14 @@ advanceEdge()
         _edge.nodeIndex1=0;
         _edge.nodeIndex2=0;
     }
+
+    assert(! "advanceEdge: invalid state");
 }
 
 
 
 bool
-EdgeRetriever::
+EdgeRetrieverBin::
 next()
 {
 #ifdef DEBUG_EDGER

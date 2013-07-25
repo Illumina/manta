@@ -1,5 +1,9 @@
+v0.6
+Fix sensitivity problems caused by unexpected proper pair bit settings, fix
+several self-edge issues. Detect intrachrom variants down to ~2kb.
 v0.5
-Expand POC calls to include intrachromosomal variants down to ~5kb. Minor modifications to method based on FFPE testing.
+Expand POC calls to include intrachromosomal variants down to ~5kb.
+Minor modifications to method based on FFPE testing.
 v0.4
 POC somatic transloc output
 v0.3

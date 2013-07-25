@@ -109,8 +109,8 @@ addSVNodeData(
 
 #ifdef DEBUG_SVDATA
     log_os << "addSVNodeData: bp_interval: " << localNode.interval
-           << " evidnece_interval: " << localNode.evidenceRange
-           << " search_interval: " << searchInterval
+           << " evidenceInterval: " << localNode.evidenceRange
+           << " searchInterval: " << searchInterval
            << "\n";
 #endif
 
@@ -433,6 +433,10 @@ findCandidateSV(
     const SVLocusSet& set(getSet());
     const unsigned minEdgeCount(set.getMinMergeEdgeCount());
 
+#ifdef DEBUG_SVDATA
+    log_os << "SVDATA: Evaluating edge: " << edge << "\n";
+#endif
+
     // first determine if this is an edge we're going to evaluate
     //
     // edge must be bidirectional at the noise threshold of the locus set:
@@ -441,6 +445,9 @@ findCandidateSV(
     if ((locus.getEdge(edge.nodeIndex1,edge.nodeIndex2).count <= minEdgeCount) ||
         (locus.getEdge(edge.nodeIndex2,edge.nodeIndex1).count <= minEdgeCount))
     {
+#ifdef DEBUG_SVDATA
+        log_os << "SVDATA: Edge failed min edge count.\n";
+#endif
         return;
     }
 

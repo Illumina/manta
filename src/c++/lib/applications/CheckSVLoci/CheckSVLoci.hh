@@ -24,7 +24,6 @@
 ///
 struct CheckSVLoci : public manta::Program
 {
-
     const char*
     name() const
     {

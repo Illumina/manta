@@ -17,34 +17,29 @@
 
 #pragma once
 
-#include "svgraph/EdgeInfo.hh"
-#include "svgraph/SVLocusSet.hh"
+#include "EdgeRetriever.hh"
 
 
 /// provide an iterator over edges in a set of SV locus graphs
 ///
-struct EdgeRetriever
+/// designed to allow parallelization of the graph processing by
+/// dividing iteration into a set of bins with similar total edge
+/// observation counts
+///
+struct EdgeRetrieverLocus : public EdgeRetriever
 {
-    EdgeRetriever(
-        const SVLocusSet& set) :
-        _set(set)
-    {}
+    /// \param locusIndex iterate over all edges of a specific locus
+    EdgeRetrieverLocus(
+        const SVLocusSet& set,
+        const unsigned locusIndex);
 
-    virtual
-    ~EdgeRetriever()
-    {}
-
-    virtual
     bool
-    next() = 0;
+    next();
 
-    const EdgeInfo&
-    getEdge() const
-    {
-        return _edge;
-    }
+private:
+    void
+    advanceEdge();
 
-protected:
-    const SVLocusSet& _set;
-    EdgeInfo _edge;
+    unsigned _locusIndex;
+    bool _isInit;
 };

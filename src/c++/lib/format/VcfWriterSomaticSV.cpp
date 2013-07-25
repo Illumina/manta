@@ -25,6 +25,7 @@ void
 VcfWriterSomaticSV::
 addHeaderInfo() const
 {
+    _os << "##INFO=<ID=SOMATIC,Number=0,Type=Flag,Description=\"Somatic mutation\">\n";
     _os << "##INFO=<ID=SOMATICSCORE,Number=1,Type=Integer,Description=\"Somatic variant Quality score\">\n";
 }
 
@@ -51,6 +52,7 @@ modifyInfo(
     assert(_ssInfoPtr != NULL);
     const SomaticSVScoreInfo& ssInfo(*_ssInfoPtr);
 
+    infotags.push_back("SOMATIC");
     infotags.push_back( str(boost::format("SOMATICSCORE=%i") % ssInfo.somaticScore) );
     infotags.push_back( str(boost::format("NORMAL_PAIR_SUPPORT=%i") % ssInfo.normal.spanPairs) );
     infotags.push_back( str(boost::format("TUMOR_PAIR_SUPPORT=%i") % ssInfo.tumor.spanPairs) );

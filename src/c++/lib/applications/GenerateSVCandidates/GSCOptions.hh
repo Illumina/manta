@@ -30,7 +30,9 @@ struct GSCOptions
 {
     GSCOptions() :
         binCount(1),
-        binIndex(0)
+        binIndex(0),
+        isLocusIndex(false),
+        locusIndex(0)
     {}
 
     ReadScannerOptions scanOpt;
@@ -49,6 +51,10 @@ struct GSCOptions
 
     unsigned binCount;
     unsigned binIndex;
+
+    bool isLocusIndex;
+    unsigned locusIndex;
+
 };
 
 
