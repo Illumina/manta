@@ -32,14 +32,36 @@ using namespace std;
 ostream& dbg_os(cerr);
 #endif
 
+
+SVLocusAssembler::
+SVLocusAssembler(const GSCOptions& opt) :
+    _scanOpt(opt.scanOpt),
+    _readScanner(_scanOpt,opt.statsFilename,opt.alignmentFilename),
+    // reasonable default values for 30x and 100bp reads
+    wordLength_(37), maxWordLength_(65), minContigLength_(15),
+    minCoverage_(1), maxError_(0.2), minSeedReads_(2),
+    maxAssemblyIterations_(50)
+{
+    // setup regionless bam_streams:
+    // setup all data for main analysis loop:
+    BOOST_FOREACH(const std::string& afile, opt.alignmentFilename)
+    {
+        // avoid creating shared_ptr temporaries:
+        streamPtr tmp(new bam_streamer(afile.c_str()));
+        _bamStreams.push_back(tmp);
+    }
+}
+
 /**
  * Adds base @p base to the end (mode=0) or start (mode=1) of the contig.
  *
  *	@return The extended contig.
  */
-string SVLocusAssembler::addBase(const string& contig,
-                                 const char base,
-                                 const unsigned int mode) {
+string 
+SVLocusAssembler::
+addBase(const string& contig,
+        const char base,
+        const unsigned int mode) {
 
     switch (mode) {
     case 0:
@@ -51,17 +73,20 @@ string SVLocusAssembler::addBase(const string& contig,
         exit(EXIT_FAILURE);
     }
 
+    // FIXME: Why return empty string?
     return string();
 } // addBase()
 
 /**
  * Returns a suffix (mode=0) or prefix (mode=1) of @p contig with length @p length.
- *
+ * 
  *	@return The suffix or prefix.
  */
-string SVLocusAssembler::getEnd(const string& contig,
-                                  const unsigned length,
-                                  const unsigned mode) {
+string 
+SVLocusAssembler::
+getEnd(const string& contig,
+       const unsigned length,
+       const unsigned mode) {
 
     const unsigned csize(contig.size());
     assert(length <= csize);
@@ -76,19 +101,21 @@ string SVLocusAssembler::getEnd(const string& contig,
         exit(EXIT_FAILURE);
     }
 
+    // FIXME: Why return empty string?
     return string();
 } // getEnd()
 
 /**
  * Extends the seed contig (aka most frequent k-mer)
  *
- *	@return The extended contig.
  */
-void SVLocusAssembler::walk(const string& seed,
-                              const unsigned wordLength,
-                              const str_uint_map_t& wordHash,
-                              unsigned& stepsBackward,
-                              string& contig) {
+void 
+SVLocusAssembler::
+walk(const string& seed,
+     const unsigned wordLength,
+     const str_uint_map_t& wordHash,
+     //unsigned& stepsBackward,
+     string& contig) {
 
     // we start with the seed
     contig = seed;
@@ -163,9 +190,9 @@ void SVLocusAssembler::walk(const string& seed,
 #ifdef DEBUG_ASBL
             dbg_os << "New contig: " << contig << endl;
 #endif
-            if (mode == 1) {
+            /*if (mode == 1) {
                 ++stepsBackward;
-            }
+            }*/
         } // while(true)
 #ifdef DEBUG_ASBL
         dbg_os << "mode change. Current mode " << mode << endl;
@@ -176,12 +203,13 @@ void SVLocusAssembler::walk(const string& seed,
 } // walk()
 
 void
-SVLocusAssembler::getBreakendReads(const SVBreakend& bp,
-								   ReadSeqVec& reads)
+SVLocusAssembler::
+getBreakendReads(const SVBreakend& bp,
+                 AssemblyReadMap& reads)
 {
-	/// define a new interval -/+ 50 bases around the center pos
+	/// define a new interval -/+ 75 bases around the center pos
 	/// of the breakpoint
-	static const pos_t regionSize(50);
+	static const pos_t regionSize(75);
 	const pos_t centerPos(bp.interval.range.center_pos());
 	const known_pos_range2 searchRange(std::max((centerPos-regionSize),0), (centerPos+regionSize));
 
@@ -201,30 +229,33 @@ SVLocusAssembler::getBreakendReads(const SVBreakend& bp,
 			// add some criteria to filter for "interesting" reads here
 
 			if ((bamRead.pos()-1) >= searchRange.end_pos()) break;
-			reads.push_back(bamRead.get_bam_read());
+			reads[bamRead.qname()] = AssemblyRead(bamRead.get_bam_read().get_string(),
+                                                  false
+                                                 );
 		}
 	}
 }
 
 
 void
-SVLocusAssembler::assembleSVBreakend(const SVBreakend& bp,
-                                     Assembly& as) {
+SVLocusAssembler::
+assembleSVBreakend(const SVBreakend& bp,
+                   Assembly& as) {
 
-	ReadSeqVec reads;
+	AssemblyReadMap reads;
 	getBreakendReads(bp,reads);
+    std::cerr << "Starting assembly with " << reads.size() << std::endl;
 
-    /*unsigned iterations(0); // number of assembly iterations
+    unsigned iterations(0); // number of assembly iterations
     unsigned unused_reads_now(0);
     //cout << "Unused reads " << unused_reads_now << endl;
     unsigned unused_reads_prev(0);
 
-    while (unused_reads_now>0)
-    {
+    while (unused_reads_now>0) {
         ++iterations;
         for (unsigned int wl=wordLength_; wl<=maxWordLength_; wl+=2)
         {
-            bool ret = buildContigs(data,wl,as,unused_reads_now);
+            bool ret = buildContigs(reads,wl,as,unused_reads_now);
             if (ret) break; // stop iteration at first successful assembly
         }
         //cout << "unused reads now " << unused_reads_now << " unused reads previous iteration " << unused_reads_prev << endl;
@@ -237,60 +268,56 @@ SVLocusAssembler::assembleSVBreakend(const SVBreakend& bp,
         // stop assembling if we surpassed the max number of iterations
         if (iterations>maxAssemblyIterations_)
         {
+#ifdef DEBUG_ASBL
+            dbg_os << "Reached max number of assembly iterations: " << maxAssemblyIterations_ << endl;
+#endif
             break;
         }
-    }*/
+    }
 }
 
-bool SVLocusAssembler::buildContigs(const ReadSeqVec& reads,
+bool SVLocusAssembler::buildContigs(AssemblyReadMap& reads,
                                     const unsigned wordLength,
                                     Assembly& as,
                                     unsigned& unused_reads) {
 
-    //cout << "In SVLocusAssembler::buildContig. word length=" << wordLength << endl;
-    const unsigned shadow_size(reads.size());
-
 #ifdef DEBUG_ASBL
-    //dbg_os << "----------------------------------------" << endl;
-    for (unsigned i(0); i<shadow_size; ++i) {
-        //const unsigned readNum(shadows[i].pos);
-        const string& read(shadows[i].seq);
-        //const bool used(shadows[i].used);
-        //dbg_os << ">read" << readNum << "_used" << used << endl;
-        dbg_os << read << endl;
+    cout << "In SVLocusAssembler::buildContig. word length=" << wordLength << endl;
+    for (AssemblyReadMap:const_iterator ct = reads.begin(); ct!=reads.end();++ct) {
+        dbg_os << ct->second.seq << " used=" << ct->second.used << endl;
     }
 #endif
 
     // a set of read hashes; each read hash stores the starting positions of all kmers in the read
-    vector<pair<unsigned,str_uint_map_t> > readHashes;
+    vector<pair<std::string,str_uint_map_t> > readHashes;
     // counts the number of occurrences for each kmer in all shadow reads
     str_uint_map_t wordHash;
     // most frequent kmer and its number of occurrences
     unsigned maxOcc = 0;
     string maxWord;
 
-    for (unsigned i(0); i<shadow_size; ++i) {
+    for (AssemblyReadMap::const_iterator ct = reads.begin(); ct != reads.end();++ct) {
         // skip shadow reads used in an previous iteration
-        if (shadows[i].used) continue;
+        if (ct->second.used_) continue;
         // stores the index of a kmer in a read sequence
-        //const unsigned readNum(shadows[i].pos);
-        const string& read(shadows[i].seq);
+        const string& seq(ct->second.seq_);
+        const string& qn(ct->first);
 
-        const unsigned readLen(read.size());
+        const unsigned readLen(seq.size());
         assert(readLen>=wordLength);
 
         readHashes.resize(readHashes.size()+1);
-        //readHashes.back().first=readNum;
+        readHashes.back().first  = qn;
         str_uint_map_t& readHash = readHashes.back().second;
 
         for (unsigned j(0); j<=(readLen-wordLength); ++j) {
-            const string word(read.substr(j,wordLength));
+            const string word(seq.substr(j,wordLength));
             if (readHash.find(word) != readHash.end()) {
                 // try again with different k-mer size
 #ifdef DEBUG_ASBL
-                dbg_os << "word " << word << " repeated in read " << read << "\n"
+                dbg_os << "word " << word << " repeated in read " << qn << endl
                        << "... try again with word length " << wordLength+2
-                       << " and " << shadow_size << " shadow reads." << endl;
+                       << " and " << reads.size() << " reads left." << endl;
 #endif
                 return false;
             }
@@ -299,7 +326,7 @@ bool SVLocusAssembler::buildContigs(const ReadSeqVec& reads,
             //cout << "Recording " << word << " at " << j << endl;
             readHash[word]=j;
 
-            // count occurences
+            // count occurrences
             ++wordHash[word];
             if (wordHash[word]>maxOcc) {
                 //cout << "Setting max word to " << maxWord << " " << maxOcc << endl;
@@ -321,17 +348,18 @@ bool SVLocusAssembler::buildContigs(const ReadSeqVec& reads,
 #endif
 
     // counts the number of steps taken backwards from the start kmer during the assembly.
-    unsigned stepsBackward(0);
+    //unsigned stepsBackward(0);
 
     // start initial assembly with most frequent kmer as seed
     AssembledContig ctg;
-    walk(maxWord,wordLength,wordHash,stepsBackward,ctg.seq);
+    walk(maxWord,wordLength,wordHash,/*stepsBackward,*/ctg.seq);
 
     // done with this now:
     wordHash.clear();
 
     const unsigned rh_size(readHashes.size());
     const unsigned contig_size(ctg.seq.size());
+    const AssemblyReadMap::const_iterator arm_e = reads.end();
 
 #ifdef DEBUG_ASBL
     dbg_os << "First pass assembly resulted in "
@@ -340,45 +368,30 @@ bool SVLocusAssembler::buildContigs(const ReadSeqVec& reads,
 #endif
 
     for (unsigned i(0); i<rh_size; ++i) {
-        //const unsigned readNum(readHashes[i].first);
+        const std::string qName(readHashes[i].first);
         const str_uint_map_t& readHash(readHashes[i].second);
-#ifdef DEBUG_ASBL
-        /*{
-            string read("NOTFOUND");
-            for (unsigned j(0); j<shadow_size; ++j) {
-                if (shadows[j].pos == readNum) {
-                    read=shadows[j].seq;
-                    break;
-                }
-            }
-            dbg_os << "Checking readNum: " << readNum << " read : " << read << "\n"
-                   << "vs " << ctg.seq << "\n"
-                   << "number of kmers : " << readHash.size() << endl;
-        }*/
-#endif
         const str_uint_map_t::const_iterator rhe(readHash.end());
 
-        // record number of reads containing the seeding kmer
+        // increment number of reads containing the seeding kmer
         if (readHash.find(maxWord) != rhe) {
-            //cout << "++seedReadCount" << endl;
             ++ctg.seedReadCount;
         }
 
-        // store all reads aligning to the contig with gaps
-        // (we don't count gaps at the end or beginning of the read)
+        // store all reads sharing k-mers of the current word length with the contig
+        // TODO: check if we still needs this
         for (unsigned j(0); j<=(contig_size-wordLength); ++j) {
             const string word(ctg.seq.substr(j,wordLength));
             //cout << "Testing word " << word << " " << readNum << endl;
             //cout << "with counts : " << wordHash[word] << endl;
             const str_uint_map_t::const_iterator rhi(readHash.find(word));
             if (rhi != rhe) {
-                //const int startPos(static_cast<int>(j)-static_cast<int>(rhi->second));
-                //cout << "pos in read/contig : " << wordHash[word] << " " << j << endl;
-                /*if (ctg.contigReads.find(readNum) == ctg.contigReads.end() ) {
-                    ctg.contigReads[readNum] = startPos;
-                    shadows[readNum].used = true;
+                AssemblyReadMap::iterator arm_i(reads.find(qName));
+                if (arm_i != arm_e) {
+                    arm_i->second.used_ = true;
                     --unused_reads;
-                }*/
+                } else {
+                    std::cerr << "Read " << qName << " not found in hash" << std::endl;
+                }
             }
         } // for each kmer...
     }

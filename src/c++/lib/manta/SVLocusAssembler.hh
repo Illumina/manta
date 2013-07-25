@@ -20,9 +20,11 @@
 #include "AssembledContig.hh"
 #include "SVCandidate.hh"
 #include "SVCandidateData.hh"
-#include "SVCandidateRead.hh"
+#include "SVLocusScanner.hh"
 
-#include "GSCOptions.hh"
+#include "blt_util/bam_streamer.hh"
+
+#include "applications/GenerateSVCandidates/GSCOptions.hh"
 
 #include <string>
 #include <utility>
@@ -44,14 +46,21 @@ extern std::ostream& dbg_os;
 
 class SVLocusAssembler {
 
-
 public:
-    SVLocusAssembler() :
-        // reasonable default values for 30x and 100bp reads
-        wordLength_(37), maxWordLength_(65), minContigLength_(15),
-        minCoverage_(1), maxError_(0.2), minSeedReads_(2),
-        maxAssemblyIterations_(50)
-         {};
+
+    struct AssemblyRead {
+        AssemblyRead() 
+            : seq_(""),used_(false) {}
+
+        AssemblyRead(std::string s,
+                     //std::string qn,
+                     bool u) 
+            : seq_(s), /*qname_(qn),*/ used_(u) {}
+        std::string seq_;
+        //std::string qname_;
+        bool used_;
+    };
+
     // maps kmers to positions in read
     typedef boost::unordered_map<std::string,unsigned> str_uint_map_t;
     // remembers used reads
@@ -59,13 +68,18 @@ public:
 
     typedef std::vector<AssembledContig> Assembly;
 
-    typedef std::vector<bam_seq> ReadSeqVec;
+    //typedef std::vector<AssemblyRead> AssemblyReadMap;
+    typedef std::map<std::string,AssemblyRead> AssemblyReadMap;
+
+    typedef boost::shared_ptr<bam_streamer> streamPtr;
+
+
+    SVLocusAssembler(const GSCOptions& opt);
 
     /**
-     * @brief Performs a simple de-novo assembly using a group of reads
+     * @brief Performs a de-novo assembly of a set of reads crossing a breakpoint.
      *
-     * Assembles a cluster of shadow reads. This function iterates over a range
-     * of word lengths until the first successful assembly.
+     * Iterates over a range of word lengths until the first successful assembly.
      *
      * If unused reads remain, the assembly is re-started using this subset.
      */
@@ -78,49 +92,56 @@ private:
     // Collects the reads crossing an SV breakpoint
     void
     getBreakendReads(const SVBreakend& bp,
-    				 ReadSeqVec& reads);
+    				 AssemblyReadMap& reads);
 
     /**
-     * @brief Performs a simple de-novo assembly using a group of reads
+     * @brief Performs a de-novo assembly of a read group.
      *
-     * We build a hash of the k-mers in the shadow reads. The most
-     * frequent k-mer is used as seed and is then gradually extended.
-     *
+     * Build a hash of the k-mers in the shadow reads. The most
+     * frequent k-mer is used as seed and extended in a greedy fashion.
      */
     bool
-    buildContigs(const ReadSeqVec& reads,
+    buildContigs(AssemblyReadMap& reads,
                  const unsigned wordLength,
                  Assembly& contigs,
-                 /*unsigned& unused_reads*/);
+                 unsigned& unused_reads);
 
     /**
     * Adds base @p base to the end (mode=0) or start (mode=1) of the contig.
      *
      * @return The extended contig.
      */
-    std::string addBase(const std::string& contig,
-    					const char base,
-    					const unsigned int mode);
+    std::string 
+    addBase(const std::string& contig,
+    		const char base,
+        	const unsigned int mode);
 
     /**
     * Returns suffix (mode=0) or prefix (mode=1) of @p contig with length @p length.
     *
     *  @return The suffix or prefix.
     */
-    std::string getEnd(const std::string& contig,
-    				   const unsigned length,
-    				   const unsigned mode);
+    std::string 
+    getEnd(const std::string& contig,
+    	   const unsigned length,
+    	   const unsigned mode);
 
     /**
      * Extends the seed contig (aka most frequent k-mer)
     *
     *  @return The extended contig.
     */
-    void walk(const std::string& seed,
-              const unsigned wordLength,
-              const str_uint_map_t& wordHash,
-              unsigned& stepsBackward,
-              std::string& contig);
+    void 
+    walk(const std::string& seed,
+         const unsigned wordLength,
+         const str_uint_map_t& wordHash,
+         //unsigned& stepsBackward,
+         std::string& contig);
+
+    const ReadScannerOptions _scanOpt;
+    // functions to detect anomalous read
+    SVLocusScanner _readScanner;
+    std::vector<streamPtr> _bamStreams;
 
     //  initial word (kmer) length
     unsigned wordLength_;

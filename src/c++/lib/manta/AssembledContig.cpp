@@ -15,8 +15,6 @@
 /// \author Ole Schulz-Trieglaff
 ///
 
-#pragma once
-
 #include "AssembledContig.hh"
 
 

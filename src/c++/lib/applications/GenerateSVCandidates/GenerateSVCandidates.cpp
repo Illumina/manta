@@ -82,7 +82,7 @@ runGSC(
     SVFinder svFind(opt);
     const SVLocusSet& cset(svFind.getSet());
 
-    SVLocusAssembler();
+    SVLocusAssembler svAssembler(opt);
 
     SVScorer svScore(opt, cset.header);
 

@@ -153,6 +153,16 @@ struct bam_seq : public bam_seq_base
         return get_bam_seq_char(get_code(i));
     }
 
+    std::string
+    get_string() const
+    {
+    	std::string s(_size,'N');
+    	for (unsigned i(0); i<_size;++i) {
+    		s[i] = get_char(i);
+    	}
+    	return s;
+    }
+
     unsigned size() const
     {
         return _size;
