@@ -216,7 +216,6 @@ getBreakendReads(const SVBreakend& bp,
 	const unsigned bamCount(_bamStreams.size());
 	for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
 	{
-
 		bam_streamer& bamStream(*_bamStreams[bamIndex]);
 
 		// set bam stream to new search interval:
@@ -226,9 +225,10 @@ getBreakendReads(const SVBreakend& bp,
 		{
 			const bam_record& bamRead(*(bamStream.get_record_ptr()));
 
-			// add some criteria to filter for "interesting" reads here
-
+			// FIXME: add some criteria to filter for "interesting" reads here, for now we add 
+            // only clipped reads
 			if ((bamRead.pos()-1) >= searchRange.end_pos()) break;
+            if (!_readScanner.isClipped(bamRead) ) continue;
 			reads[bamRead.qname()] = AssemblyRead(bamRead.get_bam_read().get_string(),
                                                   false
                                                  );

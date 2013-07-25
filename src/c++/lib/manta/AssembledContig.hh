@@ -18,8 +18,10 @@
 #pragma once
 
 #include <string>
-#include <map>
+//#include <map>
 
+// stores for each contig the sequence and the number of reads 
+// containing its seeding k-mer
 struct AssembledContig {
 
     AssembledContig() : seedReadCount(0) {}
@@ -27,7 +29,7 @@ struct AssembledContig {
     // sequence
     std::string seq;
     // reads used for assembly of contig <read_no,mapping position to contig>
-    std::map<std::string,int> contigReads;
+    //std::map<std::string,int> contigReads;
     // no of reads containing the seeding kmer
     unsigned seedReadCount;
 };

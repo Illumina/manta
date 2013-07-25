@@ -237,6 +237,15 @@ isSemiAligned(const bam_record& /*bamRead*/) const
 	return true;
 }
 
+bool
+SVLocusScanner::
+isClipped(const bam_record& bamRead) const
+{
+    ALIGNPATH::path_t apath;
+    bam_cigar_to_apath(bamRead.raw_cigar(),bamRead.n_cigar(),apath);
+    return is_clipped(apath);
+}
+
 
 bool
 SVLocusScanner::

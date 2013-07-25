@@ -60,6 +60,10 @@ struct SVLocusScanner
     isSemiAligned(
     	const bam_record& bamRead) const;
 
+    bool
+    isClipped(
+    	const bam_record& bamRead) const;
+
     /// if read supports a chimera candidate return this as a single observation SVLocus object,
     /// else return an empty object.
     ///
