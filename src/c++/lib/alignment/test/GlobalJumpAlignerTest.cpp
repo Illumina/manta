@@ -17,7 +17,7 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "GlobalAligner.hh"
+#include "GlobalJumpAligner.hh"
 
 #include "blt_util/align_path.hh"
 
@@ -25,38 +25,47 @@
 
 
 
-BOOST_AUTO_TEST_SUITE( test_GlobalAligner )
+BOOST_AUTO_TEST_SUITE( test_GlobalJumpAligner )
 
 typedef short int score_t;
 
 static
-AlignmentResult<score_t>
+JumpAlignmentResult<score_t>
 testAlign(
         const std::string& seq,
-        const std::string& ref)
+        const std::string& ref1,
+        const std::string& ref2)
 {
     AlignmentScores<score_t> scores(2,-4,-5,-1);
-    GlobalAligner<score_t> aligner(scores);
-    AlignmentResult<score_t> result;
-    aligner.align(seq.begin(),seq.end(),ref.begin(),ref.end(),result);
+    score_t jumpScore(-4);
+    GlobalJumpAligner<score_t> aligner(scores,jumpScore);
+    JumpAlignmentResult<score_t> result;
+    aligner.align(
+            seq.begin(),seq.end(),
+            ref1.begin(),ref1.end(),
+            ref2.begin(),ref2.end(),
+            result);
 
     return result;
 }
 
 
-BOOST_AUTO_TEST_CASE( test_GlobalAligner1 )
+BOOST_AUTO_TEST_CASE( test_GlobalJumpALigner1 )
 {
-    static const std::string seq("D");
-    static const std::string ref("ABCDEF");
+    static const std::string seq("ABABACDCDC");
+    static const std::string ref1("ABABABABAB");
+    static const std::string ref2("XCDCDCDCDCD");
 
-    AlignmentResult<score_t> result = testAlign(seq,ref);
+    JumpAlignmentResult<score_t> result = testAlign(seq,ref1,ref2);
 
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align.apath),"1M");
-    BOOST_REQUIRE_EQUAL(result.align.alignStart,3);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"5M");
+    BOOST_REQUIRE_EQUAL(result.align2.alignStart,1);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath),"5M");
+    BOOST_REQUIRE_EQUAL(result.align1.alignStart,0);
 }
 
 
-
+#if 0
 BOOST_AUTO_TEST_CASE( test_GlobalAlignerDelete )
 {
     static const std::string seq("BCDEFHIKLM");
@@ -168,7 +177,7 @@ BOOST_AUTO_TEST_CASE( test_GlobalAlignerLeftShift2 )
     BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align.apath),"5M1I12M");
     BOOST_REQUIRE_EQUAL(result.align.alignStart,0);
 }
-
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()
 

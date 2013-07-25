@@ -155,6 +155,7 @@ private:
         }
         return ptr;
     }
+
     const AlignmentScores<ScoreType> _scores;
     const ScoreType _jumpScore;
 
@@ -198,8 +199,10 @@ private:
     typedef std::vector<ScoreVal> ScoreVec;
     ScoreVec _score1;
     ScoreVec _score2;
-    basic_matrix<PtrVal> _ptrMat1;
-    basic_matrix<PtrVal> _ptrMat2;
+
+    typedef basic_matrix<PtrVal> PtrMat;
+    PtrMat _ptrMat1;
+    PtrMat _ptrMat2;
 };
 
 
