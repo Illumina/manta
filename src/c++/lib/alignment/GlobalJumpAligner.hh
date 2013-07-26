@@ -69,13 +69,18 @@ struct AlignState
     const char*
     label(const index_t i)
     {
-        switch(i)
+        switch (i)
         {
-        case MATCH:  return "MATCH";
-        case DELETE: return "DELETE";
-        case INSERT: return "INSERT";
-        case JUMP: return "JUMP";
-        default:     return "UNKNOWN";
+        case MATCH:
+            return "MATCH";
+        case DELETE:
+            return "DELETE";
+        case INSERT:
+            return "INSERT";
+        case JUMP:
+            return "JUMP";
+        default:
+            return "UNKNOWN";
         }
     }
 };
@@ -171,7 +176,7 @@ private:
     struct PtrVal
     {
         uint8_t
-        get(const AlignState::index_t i)
+        get(const AlignState::index_t i) const
         {
             switch (i)
             {

@@ -32,10 +32,10 @@ typedef short int score_t;
 static
 AlignmentResult<score_t>
 testAlign(
-        const std::string& seq,
-        const std::string& ref)
+    const std::string& seq,
+    const std::string& ref)
 {
-    AlignmentScores<score_t> scores(2,-4,-5,-1);
+    AlignmentScores<score_t> scores(2,-4,-5,-1,-4);
     GlobalAligner<score_t> aligner(scores);
     AlignmentResult<score_t> result;
     aligner.align(seq.begin(),seq.end(),ref.begin(),ref.end(),result);

@@ -57,12 +57,16 @@ struct AlignState
     const char*
     label(const index_t i)
     {
-        switch(i)
+        switch (i)
         {
-        case MATCH:  return "MATCH";
-        case DELETE: return "DELETE";
-        case INSERT: return "INSERT";
-        default:     return "UNKNOWN";
+        case MATCH:
+            return "MATCH";
+        case DELETE:
+            return "DELETE";
+        case INSERT:
+            return "INSERT";
+        default:
+            return "UNKNOWN";
         }
     }
 };

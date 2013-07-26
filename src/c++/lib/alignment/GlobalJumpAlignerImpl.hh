@@ -24,24 +24,6 @@
 #endif
 
 
-// bookkeeping variables used during alignment backtrace
-template <typename ScoreType>
-struct BackTrace {
-    BackTrace() :
-        max(0),
-        state(AlignState::MATCH),
-        queryStart(0),
-        refStart(0),
-        isInit(false)
-    {}
-
-    ScoreType max;
-    AlignState::index_t state;
-    unsigned queryStart,refStart;
-    bool isInit;
-};
-
-
 
 template <typename ScoreType>
 template <typename SymIter>
@@ -83,7 +65,7 @@ align(
     for (unsigned queryIndex(0); queryIndex<=querySize; queryIndex++)
     {
         ScoreVal& val((*thisSV)[queryIndex]);
-        val.match = queryIndex * _scores.mismatch;
+        val.match = queryIndex * _scores.offEdge;
         val.del = badVal;
         val.ins = badVal;
         val.jump = badVal;
@@ -103,6 +85,7 @@ align(
                 val.match = 0;
                 val.del = badVal;
                 val.ins = badVal;
+                val.jump = badVal;
             }
 
             unsigned queryIndex(0);
@@ -132,6 +115,7 @@ align(
                                       sval.ins);
 
                     headScore.del += _scores.extend;
+                    if (0==queryIndex) headScore.del += badVal;
                 }
 
                 // update insert
@@ -144,22 +128,22 @@ align(
                                       sval.ins);
 
                     headScore.ins += _scores.extend;
+                    if (0==queryIndex) headScore.ins += badVal;
                 }
 
                 // update jump
                 {
                     const ScoreVal& sval((*prevSV)[queryIndex+1]);
                     headPtr.jump = max4(
-                                      headScore.jump,
-                                      sval.match + _jumpScore,
-                                      badVal,
-                                      sval.ins + _jumpScore,
-                                      sval.jump);
-
+                                       headScore.jump,
+                                       headScore.match + _jumpScore,
+                                       badVal,
+                                       headScore.ins + _jumpScore,
+                                       sval.jump);
                 }
 
 #ifdef ALN_DEBUG
-                log_os << "i1i2: " << queryIndex+1 << " " << ref1Index+1 << "\n";
+                log_os << "queryIdx refIdx ref1Idx: " << queryIndex+1 << " " << ref1Index+1 << " " << ref1Index+1 << "\n";
                 log_os << headScore.match << ":" << headScore.del << ":" << headScore.ins << ":" << headScore.jump << "/"
                        << static_cast<int>(headPtr.match) << static_cast<int>(headPtr.del) << static_cast<int>(headPtr.ins) << static_cast<int>(headPtr.jump) << "\n";
 #endif
@@ -172,7 +156,7 @@ align(
             {
                 const ScoreVal& sval((*thisSV)[querySize]);
                 const ScoreType thisMax(sval.match);
-                if(bt.isInit && (thisMax<=bt.max)) continue;
+                if (bt.isInit && (thisMax<=bt.max)) continue;
                 bt.max=thisMax;
                 bt.refStart=ref1Index+1;
                 bt.queryStart=querySize;
@@ -185,8 +169,8 @@ align(
     for (unsigned queryIndex(0); queryIndex<=querySize; queryIndex++)
     {
         const ScoreVal& sval((*thisSV)[queryIndex]);
-        const ScoreType thisMax(sval.match + (querySize-queryIndex) * _scores.mismatch);
-        if(bt.isInit && (thisMax<=bt.max)) continue;
+        const ScoreType thisMax(sval.match + (querySize-queryIndex) * _scores.offEdge);
+        if (bt.isInit && (thisMax<=bt.max)) continue;
         bt.max=thisMax;
         bt.refStart=ref1Size;
         bt.queryStart=queryIndex;
@@ -201,7 +185,7 @@ align(
         for (unsigned queryIndex(0); queryIndex<=querySize; queryIndex++)
         {
             ScoreVal& val((*thisSV)[queryIndex]);
-            val.match = queryIndex * _scores.mismatch;
+            val.match = queryIndex * _scores.offEdge;
             val.del = badVal;
             val.ins = badVal;
             //val.jump = badVal; // preserve jump setting from laster iteration of ref1
@@ -218,6 +202,7 @@ align(
                 val.match = 0;
                 val.del = badVal;
                 val.ins = badVal;
+                val.jump = badVal;
             }
 
             unsigned queryIndex(0);
@@ -271,7 +256,7 @@ align(
                 }
 
 #ifdef ALN_DEBUG
-                log_os << "i1i2: " << queryIndex+1 << " " << ref2Index+1 << "\n";
+                log_os << "queryIdx refIdx ref2Idx: " << queryIndex+1 << " " << ref1Size+ref2Index+1 << " " << ref2Index+1 << "\n";
                 log_os << headScore.match << ":" << headScore.del << ":" << headScore.ins << ":" << headScore.jump << "/"
                        << static_cast<int>(headPtr.match) << static_cast<int>(headPtr.del) << static_cast<int>(headPtr.ins) << static_cast<int>(headPtr.jump) << "\n";
 #endif
@@ -284,22 +269,22 @@ align(
             {
                 const ScoreVal& sval((*thisSV)[querySize]);
                 const ScoreType thisMax(sval.match);
-                if(bt.isInit && (thisMax<=bt.max)) continue;
+                if (bt.isInit && (thisMax<=bt.max)) continue;
                 bt.max=thisMax;
                 bt.refStart=ref1Size+ref2Index+1;
                 bt.queryStart=querySize;
                 bt.isInit=true;
             }
         }
-    
+
     }
 
     // in the backtrace start search, also allow for the case where the query falls-off the end of the reference:
     for (unsigned queryIndex(0); queryIndex<=querySize; queryIndex++)
     {
         const ScoreVal& sval((*thisSV)[queryIndex]);
-        const ScoreType thisMax(sval.match + (querySize-queryIndex) * _scores.mismatch);
-        if(bt.isInit && (thisMax<=bt.max)) continue;
+        const ScoreType thisMax(sval.match + (querySize-queryIndex) * _scores.offEdge);
+        if (bt.isInit && (thisMax<=bt.max)) continue;
         bt.max=thisMax;
         bt.refStart=ref1Size+ref2Size;
         bt.queryStart=queryIndex;
@@ -322,7 +307,7 @@ align(
     ALIGNPATH::path_segment ps;
 
     // add any trailing soft-clip if we go off the end of the reference:
-    if(bt.queryStart < querySize)
+    if (bt.queryStart < querySize)
     {
         ps.type = ALIGNPATH::SOFT_CLIP;
         ps.length = (querySize-bt.queryStart);
@@ -332,21 +317,20 @@ align(
     {
         const bool isRef1(bt.refStart<=ref1Size);
         ALIGNPATH::path_t& apath( isRef1 ? apath1 : apath2 );
-        AlignState::index_t nextState;
-        if(isRef1)
-        {
-            nextState = (static_cast<AlignState::index_t>(_ptrMat1.val(bt.queryStart,bt.refStart).get(bt.state)));
-        }
-        else
-        {
-            nextState = (static_cast<AlignState::index_t>(_ptrMat2.val(bt.queryStart,bt.refStart- ref1Size).get(bt.state)));
-        }
+        const unsigned refXStart(bt.refStart - (isRef1 ? 0 : ref1Size));
+        const PtrMat* ptrMatX(isRef1 ? &_ptrMat1 : &_ptrMat2 );
+        const AlignState::index_t nextState(static_cast<AlignState::index_t>(ptrMatX->val(bt.queryStart,refXStart).get(bt.state)));
 
 #ifdef ALN_DEBUG
-        log_os << "bt-iter queryIndex: " << bt.queryStart << " refIndex: " << bt.refStart << " state: " << AlignState::label(bt.state) << " next: " << AlignState::label(nextState) << "\n";
+        log_os << "bt-iter queryIndex: " << bt.queryStart
+               << " refIndex: " << bt.refStart
+               << " state: " << AlignState::label(bt.state)
+               << " next: " << AlignState::label(nextState)
+               << "\n";
+        log_os << "\tisref1: " << isRef1 << " refXStart: " << refXStart << "\n";
 #endif
 
-        if (bt.state==AlignState::MATCH)
+        if      (bt.state==AlignState::MATCH)
         {
             AlignerUtil::updatePath(apath,ps,ALIGNPATH::MATCH);
             bt.queryStart--;
@@ -364,13 +348,25 @@ align(
         }
         else if (bt.state==AlignState::JUMP)
         {
-            if(ps.type != ALIGNPATH::NONE)
+            if (ps.type != ALIGNPATH::NONE)
             {
-                assert(! isRef1);
+                assert(bt.refStart>=ref1Size);
                 result.align2.alignStart = bt.refStart-ref1Size;
+                if (ps.type == ALIGNPATH::INSERT)
+                {
+                    result.jumpInsertSize += ps.length;
+                    ps.type = ALIGNPATH::NONE;
+                    ps.length = 0;
+                }
+                else
+                {
+                    AlignerUtil::updatePath(apath2,ps,ALIGNPATH::NONE);
+                }
             }
-            AlignerUtil::updatePath(apath,ps,ALIGNPATH::NONE);
-            bt.refStart--;
+            else
+            {
+                if (nextState == AlignState::JUMP) bt.refStart--;
+            }
         }
         else
         {
@@ -380,26 +376,26 @@ align(
         ps.length++;
     }
 
-    const bool isRef1(bt.refStart>ref1Size);
+    const bool isRef1(bt.refStart<=ref1Size);
     ALIGNPATH::path_t& apath( isRef1 ? apath1 : apath2 );
 
     if (ps.type != ALIGNPATH::NONE) apath.push_back(ps);
 
     // soft-clip beginning of read if we fall off the end of the reference
-    if(bt.queryStart!=0)
+    if (bt.queryStart!=0)
     {
         ps.type = ALIGNPATH::SOFT_CLIP;
         ps.length = bt.queryStart;
         apath.push_back(ps);
     }
 
-    if(isRef1)
+    if (isRef1)
     {
         result.align1.alignStart = bt.refStart;
     }
     else
     {
-        result.align2.alignStart = bt.refStart;
+        result.align2.alignStart = bt.refStart-ref1Size;
     }
 
     std::reverse(apath1.begin(),apath1.end());

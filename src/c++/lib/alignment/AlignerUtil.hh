@@ -39,3 +39,26 @@ struct AlignerUtil
     }
 };
 
+
+
+/// bookkeeping variables used during alignment backtrace
+template <typename ScoreType>
+struct BackTrace {
+    BackTrace() :
+        max(0),
+        state(AlignState::MATCH),
+        queryStart(0),
+        refStart(0),
+        isInit(false)
+    {}
+
+    ScoreType max;
+    AlignState::index_t state;
+    unsigned queryStart,refStart;
+    bool isInit;
+};
+
+
+
+
+

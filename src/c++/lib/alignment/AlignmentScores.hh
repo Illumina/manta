@@ -21,15 +21,18 @@ struct AlignmentScores
         ScoreType initMatch,
         ScoreType initMismatch,
         ScoreType initOpen,
-        ScoreType initExtend) :
+        ScoreType initExtend,
+        ScoreType initOffEdge) :
         match(initMatch),
         mismatch(initMismatch),
         open(initOpen),
-        extend(initExtend)
+        extend(initExtend),
+        offEdge(initOffEdge)
     {}
 
     const ScoreType match;
     const ScoreType mismatch;
-    const ScoreType open;
-    const ScoreType extend;
+    const ScoreType open; /// gap open, gap of length N is scored (open + N * extend)
+    const ScoreType extend; /// gap extend, gap of length N is scored (open + N * extend)
+    const ScoreType offEdge; /// score applied when query goes off the end of an edge
 };

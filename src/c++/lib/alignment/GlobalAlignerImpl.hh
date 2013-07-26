@@ -24,23 +24,6 @@
 #endif
 
 
-template <typename ScoreType>
-struct BackTrace {
-    BackTrace() :
-        max(0),
-        state(AlignState::MATCH),
-        queryStart(0),
-        refStart(0),
-        isInit(false)
-    {}
-
-    ScoreType max;
-    AlignState::index_t state;
-    unsigned queryStart,refStart;
-    bool isInit;
-};
-
-
 
 template <typename ScoreType>
 template <typename SymIter>
@@ -78,7 +61,7 @@ align(
     for (unsigned queryIndex(0); queryIndex<=querySize; queryIndex++)
     {
         ScoreVal& val((*thisSV)[queryIndex]);
-        val.match = queryIndex * _scores.mismatch;
+        val.match = queryIndex * _scores.offEdge;
         val.del = badVal;
         val.ins = badVal;
     }
@@ -126,6 +109,7 @@ align(
                                       sval.ins);
 
                     headScore.del += _scores.extend;
+                    if (0==queryIndex) headScore.del += badVal;
                 }
 
                 // update insert
@@ -138,6 +122,7 @@ align(
                                       sval.ins);
 
                     headScore.ins += _scores.extend;
+                    if (0==queryIndex) headScore.ins += badVal;
                 }
 
 #ifdef ALN_DEBUG
@@ -154,7 +139,7 @@ align(
             {
                 const ScoreVal& sval((*thisSV)[querySize]);
                 const ScoreType thisMax(sval.match);
-                if(bt.isInit && (thisMax<=bt.max)) continue;
+                if (bt.isInit && (thisMax<=bt.max)) continue;
                 bt.max=thisMax;
                 bt.refStart=refIndex+1;
                 bt.queryStart=querySize;
@@ -167,8 +152,8 @@ align(
     for (unsigned queryIndex(0); queryIndex<=querySize; queryIndex++)
     {
         const ScoreVal& sval((*thisSV)[queryIndex]);
-        const ScoreType thisMax(sval.match + (querySize-queryIndex) * _scores.mismatch);
-        if(bt.isInit && (thisMax<=bt.max)) continue;
+        const ScoreType thisMax(sval.match + (querySize-queryIndex) * _scores.offEdge);
+        if (bt.isInit && (thisMax<=bt.max)) continue;
         bt.max=thisMax;
         bt.refStart=refSize;
         bt.queryStart=queryIndex;
@@ -190,7 +175,7 @@ align(
     ALIGNPATH::path_segment ps;
 
     // add any trailing soft-clip if we go off the end of the reference:
-    if(bt.queryStart < querySize)
+    if (bt.queryStart < querySize)
     {
         ps.type = ALIGNPATH::SOFT_CLIP;
         ps.length = (querySize-bt.queryStart);
@@ -227,7 +212,7 @@ align(
     if (ps.type != ALIGNPATH::NONE) apath.push_back(ps);
 
     // soft-clip beginning of read if we fall off the end of the reference
-    if(bt.queryStart!=0)
+    if (bt.queryStart!=0)
     {
         ps.type = ALIGNPATH::SOFT_CLIP;
         ps.length = bt.queryStart;
