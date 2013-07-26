@@ -21,7 +21,9 @@
 ##
 ## List of libraries
 ##
-set (MANTA_ALL_LIBRARIES alignment blt_util common format manta options svgraph)
+## note that order approximates dependency chain, where libraries are listed
+## after libraries upon which they depend:
+set (MANTA_ALL_LIBRARIES blt_util common options alignment format svgraph manta)
 
 ##
 ## Build all the libraries for the project
@@ -31,7 +33,7 @@ set (MANTA_AVAILABLE_LIBRARIES "")
 foreach (MANTA_LIB_DIR ${MANTA_ALL_LIBRARIES})
     add_subdirectory(${MANTA_LIB_DIR})
     if (NOT ${MANTA_LIB_DIR} MATCHES alignment)
-        set(MANTA_AVAILABLE_LIBRARIES manta_${MANTA_LIB_DIR} ${MANTA_AVAILABLE_LIBRARIES} )
+        set(MANTA_AVAILABLE_LIBRARIES manta_${MANTA_LIB_DIR} ${MANTA_AVAILABLE_LIBRARIES})
     endif()
 endforeach ()
 
