@@ -88,6 +88,10 @@ parseASBOptions(const manta::Program& prog,
       "alignment file in bam format (may be specified multiple times, assumed to be non-tumor if tumor file(s) provided)")
      ("tumor-align-file", po::value(&tumorAlignmentFilename),
       "tumor sample alignment file in bam format (may be specified multiple times)")
+     ("align-stats", po::value(&opt.statsFilename),
+      "pre-computed alignment statistics for the input alignment files (required)")
+     ("contig-file", po::value(&opt.contigOutfile),
+      "Fasta outfile for contig sequences (required)")
     ;
 
     po::options_description help("help");
@@ -119,7 +123,7 @@ parseASBOptions(const manta::Program& prog,
     // fast check of config state:
     if (opt.breakend.empty())
     {
-        usage(log_os,prog,visible,"Must breakpoint coordinates");
+        usage(log_os,prog,visible,"Must specify breakpoint coordinates");
     }
 
     {
@@ -135,6 +139,14 @@ parseASBOptions(const manta::Program& prog,
     if (opt.alignmentFilename.empty())
     {
         usage(log_os,prog,visible,"Must specify at least one input alignment file");
+    }
+    if (opt.statsFilename.empty())
+    {
+        usage(log_os,prog,visible,"Need the alignment stats file");
+    }
+    if (opt.contigOutfile.empty())
+    {
+        usage(log_os,prog,visible,"Need the Fasta contig outfile");
     }
     {
         // check that alignment files exist, and names do not repeat

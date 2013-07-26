@@ -50,13 +50,14 @@ public:
 
     struct AssemblyRead {
         AssemblyRead() 
-            : seq_(""),used_(false) {}
+            : seq(""),used(false) {}
 
         AssemblyRead(std::string s,
                      bool u) 
-            : seq_(s), used_(u) {}
-        std::string seq_;
-        bool used_;
+            : seq(s), used(u) {}
+        
+        std::string seq;
+        bool used;
     };
 
     // maps kmers to positions in read
@@ -142,18 +143,18 @@ private:
     std::vector<streamPtr> _bamStreams;
 
     //  initial word (kmer) length
-    unsigned wordLength_;
+    unsigned _wordLength;
     // max word length
-    unsigned maxWordLength_;
+    unsigned _maxWordLength;
     // min contig size
-    unsigned minContigLength_;
+    unsigned _minContigLength;
     // min. coverage required for contig extension
-    unsigned minCoverage_;
+    unsigned _minCoverage;
     // max error rates allowed during contig extension
-    double  maxError_;
+    double  _maxError;
     // min. number of reads required to start assembly
-    unsigned minSeedReads_;
+    unsigned _minSeedReads;
     // Max. number of assembly iterations for a cluster before we give up
-    unsigned maxAssemblyIterations_;
+    unsigned _maxAssemblyIterations;
 };
 

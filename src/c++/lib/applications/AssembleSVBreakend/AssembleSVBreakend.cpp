@@ -24,6 +24,8 @@
 #include "blt_util/bam_header_util.hh"
 #include "blt_util/input_stream_handler.hh"
 #include "blt_util/log.hh"
+#include "blt_util/io_util.hh"
+
 #include "common/OutStream.hh"
 
 #include "boost/foreach.hpp"
@@ -51,7 +53,7 @@ runASB(const ASBOptions& opt)
     // TODO check header compatibility between all open bam streams
     const unsigned n_inputs(bam_streams.size());
 
-    std::cout << "Testing region " << opt.breakend << std::endl;
+    std::cout << "Assembling region " << opt.breakend << std::endl;
 
     // assume headers compatible after this point....
     assert(0 != n_inputs);
@@ -66,12 +68,27 @@ runASB(const ASBOptions& opt)
     SVBreakend bp;
     bp.interval = breakendRegion;
 
-    std::cout << "Translating into region " << breakendRegion << std::endl;
-    std::cout << "Translating into breakend " << bp << std::endl;
+    std::cout << "Translating into " << breakendRegion << std::endl;
+    std::cout << "Translating into " << bp << std::endl;
 
     SVLocusAssembler svla(opt);
     SVLocusAssembler::Assembly a;
     svla.assembleSVBreakend(bp,a);
+    
+    std::cout << "Assembled " << a.size() << " contig(s)." << std::endl;
+    std::ofstream os(opt.contigOutfile.c_str());
+    unsigned n(1);
+    for (SVLocusAssembler::Assembly::const_iterator ct = a.begin();
+         ct != a.end();
+         ++ct)
+    {
+        //std::cout << ct->seq << std::endl;
+        //std::cout << "seed read count " << ct->seedReadCount << std::endl;
+        os << ">contig_" << n << std::endl;
+        os << ct->seq << std::endl;
+        ++n;
+    }
+    os.close();
 }
 
 

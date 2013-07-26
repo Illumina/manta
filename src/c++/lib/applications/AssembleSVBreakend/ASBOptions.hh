@@ -30,10 +30,13 @@ struct ASBOptions : public GSCOptions
 {
 
     ASBOptions() :
-    	GSCOptions(),breakend("NA")
+    	GSCOptions(),
+        breakend(""),
+        contigOutfile("")
     {}
 
     std::string breakend;
+    std::string contigOutfile;
 
 };
 

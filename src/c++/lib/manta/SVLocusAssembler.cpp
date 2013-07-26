@@ -38,9 +38,9 @@ SVLocusAssembler(const GSCOptions& opt) :
     _scanOpt(opt.scanOpt),
     _readScanner(_scanOpt,opt.statsFilename,opt.alignmentFilename),
     // reasonable default values for 30x and 100bp reads
-    wordLength_(37), maxWordLength_(65), minContigLength_(15),
-    minCoverage_(1), maxError_(0.2), minSeedReads_(2),
-    maxAssemblyIterations_(50)
+    _wordLength(37), _maxWordLength(65), _minContigLength(15),
+    _minCoverage(1), _maxError(0.2), _minSeedReads(2),
+    _maxAssemblyIterations(50)
 {
     // setup regionless bam_streams:
     // setup all data for main analysis loop:
@@ -173,12 +173,12 @@ walk(const string& seed,
             dbg_os << "Winner is : " << maxBase << " with " << maxOcc << " occurrences." << endl;
 #endif
 
-            if ((maxOcc < minCoverage_) or
-                (maxOcc < (1.-maxError_)* totalOcc)) {
+            if ((maxOcc < _minCoverage) or
+                (maxOcc < (1.-_maxError)* totalOcc)) {
 #ifdef DEBUG_ASBL
                 dbg_os << "Coverage or error rate below threshold.\n"
-                       << "maxocc : " << maxOcc << " min coverage: " << asmOptions.minCoverage << "\n"
-                       << "maxocc : " << maxOcc << " error threshold: " << ((1.0-asmOptions.maxError)* totalOcc) << endl;
+                       << "maxocc : " << maxOcc << " min coverage: " << _minCoverage << "\n"
+                       << "maxocc : " << maxOcc << " error threshold: " << ((1.0-_maxError)* totalOcc) << endl;
 #endif
                 break;
             }
@@ -247,16 +247,16 @@ assembleSVBreakend(const SVBreakend& bp,
 
 	AssemblyReadMap reads;
 	getBreakendReads(bp,reads);
-    std::cerr << "Starting assembly with " << reads.size() << std::endl;
+    std::cerr << "Starting assembly with " << reads.size() << " reads." << std::endl;
 
     unsigned iterations(0); // number of assembly iterations
-    unsigned unused_reads_now(0);
+    unsigned unused_reads_now(reads.size());
     //cout << "Unused reads " << unused_reads_now << endl;
-    unsigned unused_reads_prev(0);
+    unsigned unused_reads_prev(reads.size());
 
     while (unused_reads_now>0) {
         ++iterations;
-        for (unsigned int wl=wordLength_; wl<=maxWordLength_; wl+=2)
+        for (unsigned int wl=_wordLength; wl<=_maxWordLength; wl+=2)
         {
             bool ret = buildContigs(reads,wl,as,unused_reads_now);
             if (ret) break; // stop iteration at first successful assembly
@@ -269,24 +269,26 @@ assembleSVBreakend(const SVBreakend& bp,
         }
         unused_reads_prev=unused_reads_now;
         // stop assembling if we surpassed the max number of iterations
-        if (iterations>maxAssemblyIterations_)
+        if (iterations>_maxAssemblyIterations)
         {
 #ifdef DEBUG_ASBL
-            dbg_os << "Reached max number of assembly iterations: " << maxAssemblyIterations_ << endl;
+            dbg_os << "Reached max number of assembly iterations: " << _maxAssemblyIterations << endl;
 #endif
             break;
         }
     }
 }
 
-bool SVLocusAssembler::buildContigs(AssemblyReadMap& reads,
-                                    const unsigned wordLength,
-                                    Assembly& as,
-                                    unsigned& unused_reads) {
+bool 
+SVLocusAssembler::
+buildContigs(AssemblyReadMap& reads,
+             const unsigned wordLength,
+             Assembly& as,
+             unsigned& unused_reads) {
 
 #ifdef DEBUG_ASBL
     cout << "In SVLocusAssembler::buildContig. word length=" << wordLength << endl;
-    for (AssemblyReadMap:const_iterator ct = reads.begin(); ct!=reads.end();++ct) {
+    for (AssemblyReadMap::const_iterator ct = reads.begin(); ct!=reads.end();++ct) {
         dbg_os << ct->second.seq << " used=" << ct->second.used << endl;
     }
 #endif
@@ -301,9 +303,9 @@ bool SVLocusAssembler::buildContigs(AssemblyReadMap& reads,
 
     for (AssemblyReadMap::const_iterator ct = reads.begin(); ct != reads.end();++ct) {
         // skip shadow reads used in an previous iteration
-        if (ct->second.used_) continue;
+        if (ct->second.used) continue;
         // stores the index of a kmer in a read sequence
-        const string& seq(ct->second.seq_);
+        const string& seq(ct->second.seq);
         const string& qn(ct->first);
 
         const unsigned readLen(seq.size());
@@ -339,9 +341,9 @@ bool SVLocusAssembler::buildContigs(AssemblyReadMap& reads,
         }
     }
 
-    if (maxOcc < minCoverage_) {
+    if (maxOcc < _minCoverage) {
 #ifdef DEBUG_ASBL
-        dbg_os << "Coverage too low : " << maxOcc << " " << minCoverage_ << endl;
+        dbg_os << "Coverage too low : " << maxOcc << " " << _minCoverage << endl;
 #endif
         return false;
     }
@@ -390,7 +392,7 @@ bool SVLocusAssembler::buildContigs(AssemblyReadMap& reads,
             if (rhi != rhe) {
                 AssemblyReadMap::iterator arm_i(reads.find(qName));
                 if (arm_i != arm_e) {
-                    arm_i->second.used_ = true;
+                    arm_i->second.used = true;
                     --unused_reads;
                 } else {
                     std::cerr << "Read " << qName << " not found in hash" << std::endl;
