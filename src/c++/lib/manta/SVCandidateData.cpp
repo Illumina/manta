@@ -87,7 +87,7 @@ add(const bam_record& bamRead,
     }
     if (targetReadPtr->isSet())
     {
-        if(isExpectRepeat)
+        if (isExpectRepeat)
         {
             return;
         }
@@ -109,7 +109,7 @@ setNewSearchInterval(const GenomeInterval& newSearch)
     bool retval(false);
     BOOST_FOREACH(const GenomeInterval& oldSearch, _searchIntervals)
     {
-        if(oldSearch.isIntersect(newSearch))
+        if (oldSearch.isIntersect(newSearch))
         {
             retval=true;
             break;

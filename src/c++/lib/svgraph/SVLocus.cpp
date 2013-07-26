@@ -109,7 +109,7 @@ mergeNode(
         // is this a self edge of the from node?
         const bool isSelfFromEdge(fromNodeEdgeIter.first == fromIndex);
 
-        if(isSelfFromEdge)
+        if (isSelfFromEdge)
         {
             // self-edge needs to be handled as a special case:
 
@@ -370,7 +370,7 @@ clearNodeEdges(NodeIndexType nodePtr)
         log_os << "clearNodeEdges clearing remote Index: " << edgeIter.first << "\n";
 #endif
         // skip self edge (otherwise we invalidate iterators in this foreach loop)
-        if(edgeIter.first == nodePtr) continue;
+        if (edgeIter.first == nodePtr) continue;
 
         SVLocusNode& remoteNode(getNode(edgeIter.first));
         edges_type& remoteEdges(remoteNode.edges);
@@ -425,7 +425,7 @@ eraseNode(const NodeIndexType nodePtr)
         {
             const bool isSelfEdge(edgeIter.first == fromPtr);
 
-            if(isSelfEdge)
+            if (isSelfEdge)
             {
                 isHandleSelfEdge=true;
                 continue;
@@ -437,7 +437,7 @@ eraseNode(const NodeIndexType nodePtr)
             remoteEdges.erase(fromPtr);
         }
 
-        if(isHandleSelfEdge)
+        if (isHandleSelfEdge)
         {
             fromNode.edges.insert(std::make_pair(nodePtr,getEdge(fromPtr,fromPtr)));
             fromNode.edges.erase(fromPtr);

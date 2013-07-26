@@ -49,9 +49,11 @@ endforeach ()
 
 get_filename_component(CURRENT_DIR_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
-#include_directories (${MANTA_COMMON_INCLUDE})
-add_library     (manta_${CURRENT_DIR_NAME} STATIC ${MANTA_LIBRARY_SOURCES})
-add_dependencies(manta_${CURRENT_DIR_NAME} MANTA_OPT)
+if (MANTA_LIBRARY_SOURCES)
+    #include_directories (${MANTA_COMMON_INCLUDE})
+    add_library     (manta_${CURRENT_DIR_NAME} STATIC ${MANTA_LIBRARY_SOURCES})
+    add_dependencies(manta_${CURRENT_DIR_NAME} MANTA_OPT)
+endif()
 
 ##
 ## build the unit tests if a "test" subdirectory is found:

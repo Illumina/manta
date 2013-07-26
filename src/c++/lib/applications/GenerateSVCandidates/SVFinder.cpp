@@ -452,7 +452,7 @@ findCandidateSV(
     }
 
     // for now, don't process self edges -- eventually these will be used as assembly targets
-    if(edge.nodeIndex1 == edge.nodeIndex2) return;
+    if (edge.nodeIndex1 == edge.nodeIndex2) return;
 
 
     // start gathering evidence required for hypothesis generation,
@@ -472,7 +472,7 @@ findCandidateSV(
     //
 
     addSVNodeData(locus,edge.nodeIndex1,edge.nodeIndex2,svData);
-    if(edge.nodeIndex1 != edge.nodeIndex2)
+    if (edge.nodeIndex1 != edge.nodeIndex2)
     {
         addSVNodeData(locus,edge.nodeIndex2,edge.nodeIndex1,svData);
     }

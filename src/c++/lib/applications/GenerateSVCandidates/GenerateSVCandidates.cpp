@@ -57,7 +57,7 @@ edgeRFactory(
     const SVLocusSet& set,
     const GSCOptions& opt)
 {
-    if(opt.isLocusIndex)
+    if (opt.isLocusIndex)
     {
         return new EdgeRetrieverLocus(set,opt.locusIndex);
     }

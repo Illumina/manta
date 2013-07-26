@@ -50,7 +50,7 @@ advanceEdge()
 {
     typedef SVLocusNode::edges_type::const_iterator edgeiter_t;
 
-    if(_isInit)
+    if (_isInit)
     {
         _edge.nodeIndex2++;
     }
