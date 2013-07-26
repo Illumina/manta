@@ -21,6 +21,7 @@
 
 #include "boost/filesystem.hpp"
 #include "boost/program_options.hpp"
+#include "boost/foreach.hpp"
 
 #include <iostream>
 
@@ -45,17 +46,48 @@ usage(
     exit(2);
 }
 
+static
+void
+checkStandardizeUsageFile(
+    std::ostream& os,
+    const manta::Program& prog,
+    const boost::program_options::options_description& visible,
+    std::string& filename,
+    const char* fileLabel)
+{
+    if (filename.empty())
+    {
+        std::ostringstream oss;
+        oss << "Must specify " << fileLabel << " file";
+        usage(os,prog,visible,oss.str().c_str());
+    }
+    if (! boost::filesystem::exists(filename))
+    {
+        std::ostringstream oss;
+        oss << "Can't find " << fileLabel << " file '" << filename << "'";
+        usage(os,prog,visible,oss.str().c_str());
+    }
+    filename = boost::filesystem::canonical(filename).string();
+}
+
 
 void
 parseASBOptions(const manta::Program& prog,
                 int argc, char* argv[],
                 ASBOptions& opt)
 {
+    std::vector<std::string> normalAlignmentFilename;
+    std::vector<std::string> tumorAlignmentFilename;
+
     namespace po = boost::program_options;
     po::options_description req("configuration");
     req.add_options()
     ("breakend", po::value<std::string>(&opt.breakend),
      "Position of the breakend, e.g. chr20:1000")
+     ("align-file", po::value(&normalAlignmentFilename),
+      "alignment file in bam format (may be specified multiple times, assumed to be non-tumor if tumor file(s) provided)")
+     ("tumor-align-file", po::value(&tumorAlignmentFilename),
+      "tumor sample alignment file in bam format (may be specified multiple times)")
     ;
 
     po::options_description help("help");
@@ -90,5 +122,34 @@ parseASBOptions(const manta::Program& prog,
         usage(log_os,prog,visible,"Must breakpoint coordinates");
     }
 
-}
+    {
+    	// paste together tumor and normal:
+        opt.alignmentFilename = normalAlignmentFilename;
+        opt.alignmentFilename.insert(opt.alignmentFilename.end(),
+                                     tumorAlignmentFilename.begin(),
+                                     tumorAlignmentFilename.end());
+        opt.isAlignmentTumor.clear();
+        opt.isAlignmentTumor.resize(normalAlignmentFilename.size(),false);
+        opt.isAlignmentTumor.resize(opt.alignmentFilename.size(),true);
+    }
+    if (opt.alignmentFilename.empty())
+    {
+        usage(log_os,prog,visible,"Must specify at least one input alignment file");
+    }
+    {
+        // check that alignment files exist, and names do not repeat
+        std::set<std::string> nameCheck;
+        BOOST_FOREACH(std::string& afile, opt.alignmentFilename)
+        {
+            checkStandardizeUsageFile(log_os,prog,visible,afile,"alignment file");
+            if (nameCheck.count(afile))
+            {
+                std::ostringstream oss;
+                oss << "Repeated alignment filename: " << afile << "\n";
+                usage(log_os,prog,visible,oss.str().c_str());
+            }
+            nameCheck.insert(afile);
+        }
+    }
 
+}

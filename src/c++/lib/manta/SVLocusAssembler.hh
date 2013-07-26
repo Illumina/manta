@@ -53,11 +53,9 @@ public:
             : seq_(""),used_(false) {}
 
         AssemblyRead(std::string s,
-                     //std::string qn,
                      bool u) 
-            : seq_(s), /*qname_(qn),*/ used_(u) {}
+            : seq_(s), used_(u) {}
         std::string seq_;
-        //std::string qname_;
         bool used_;
     };
 
