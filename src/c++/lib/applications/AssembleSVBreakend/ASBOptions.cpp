@@ -47,15 +47,13 @@ usage(
 
 
 void
-parseDSLOptions(const manta::Program& prog,
+parseASBOptions(const manta::Program& prog,
                 int argc, char* argv[],
                 ASBOptions& opt)
 {
     namespace po = boost::program_options;
     po::options_description req("configuration");
     req.add_options()
-    ("alignment-file", po::value(&opt.alignmentFilename),
-     "alignment file")
     ("breakend", po::value<std::string>(&opt.breakend),
      "Position of the breakend, e.g. chr20:1000")
     ;
@@ -87,13 +85,10 @@ parseDSLOptions(const manta::Program& prog,
     }
 
     // fast check of config state:
-    if (opt.alignmentFilename.empty())
+    if (opt.breakend.empty())
     {
-        usage(log_os,prog,visible,"Must specify alignment file");
+        usage(log_os,prog,visible,"Must breakpoint coordinates");
     }
-    if (! boost::filesystem::exists(opt.alignmentFilename))
-    {
-        usage(log_os,prog,visible,"Alignment file does not exist");
-    }
+
 }
 

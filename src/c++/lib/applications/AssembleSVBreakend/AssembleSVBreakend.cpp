@@ -17,6 +17,7 @@
 
 #include "AssembleSVBreakend.hh"
 #include "applications/GenerateSVCandidates/GSCOptions.hh"
+#include "applications/AssembleSVBreakend/ASBOptions.hh"
 
 #include "manta/SVLocusAssembler.hh"
 
@@ -26,8 +27,9 @@
 
 static
 void
-runASB(const GSCOptions& opt)
+runASB(const ASBOptions& opt)
 {
+	///
     SVLocusAssembler svla(opt);
 }
 
@@ -36,8 +38,9 @@ void
 AssembleSVBreakend::
 runInternal(int argc, char* argv[]) const
 {
-    GSCOptions opt;
-    parseGSCOptions(*this,argc,argv,opt);
+	ASBOptions opt;
+    parseASBOptions(*this,argc,argv,opt);
+    //parseGSCOptions(*this,argc,argv,opt);
     runASB(opt);
 }
 

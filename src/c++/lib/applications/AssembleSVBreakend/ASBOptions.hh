@@ -18,23 +18,27 @@
 #pragma once
 
 #include "manta/Program.hh"
+#include "manta/SVCandidate.hh"
+
+#include "applications/GenerateSVCandidates/GSCOptions.hh"
 
 #include <string>
 
 
 
-struct ASBOptions
+struct ASBOptions : public GSCOptions
 {
 
-    ASBOptions()
+    ASBOptions() :
+    	GSCOptions(),breakend("NA")
     {}
 
-    std::string alignmentFilename;
     std::string breakend;
+
 };
 
 
 void
-parseOptions(const manta::Program& prog,
+parseASBOptions(const manta::Program& prog,
                 int argc, char* argv[],
                 ASBOptions& opt);
