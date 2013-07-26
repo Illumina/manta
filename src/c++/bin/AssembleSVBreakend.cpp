@@ -18,5 +18,5 @@ int
 main(int argc, char* argv[])
 {
     return AssembleSVBreakend().run(argc,argv);
-    return 0;
+    //return 0;
 }
