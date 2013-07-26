@@ -55,9 +55,9 @@ align(
 
     static const ScoreType badVal(-10000);
 
-    // global alignment of seq1 -- disallow start from insertion or deletion
-    // state, seq1 can 'fall-off' the end of a short reference, in which case it will
-    // be soft-clipped and each base off the end will count as a mismatch:
+    // global alignment of query -- disallow start from insertion or deletion
+    // state, query can 'fall-off' the end of a short reference, in which case it will
+    // be soft-clipped and each base off the end will be scored as offEdge:
     for (unsigned queryIndex(0); queryIndex<=querySize; queryIndex++)
     {
         ScoreVal& val((*thisSV)[queryIndex]);
@@ -85,7 +85,7 @@ align(
             unsigned queryIndex(0);
             for (SymIter queryIter(queryBegin); queryIter != queryEnd; ++queryIter, ++queryIndex)
             {
-                // update match matrix
+                // update match
                 ScoreVal& headScore((*thisSV)[queryIndex+1]);
                 PtrVal& headPtr(_ptrMat.val(queryIndex+1,refIndex+1));
                 {
@@ -148,7 +148,7 @@ align(
         }
     }
 
-    // also allow for the case where seq1 falls-off the end of the reference:
+    // also allow for the case where query falls-off the end of the reference:
     for (unsigned queryIndex(0); queryIndex<=querySize; queryIndex++)
     {
         const ScoreVal& sval((*thisSV)[queryIndex]);

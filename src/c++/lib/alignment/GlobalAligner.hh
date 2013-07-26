@@ -36,7 +36,6 @@ struct AlignmentResult
         align.clear();
     }
 
-
     ScoreType score;
     Alignment align;
 };
@@ -77,8 +76,8 @@ struct AlignState
 ///
 /// alignment outputs start positions and CIGAR-style alignment
 /// expression of query to reference. Alignment of
-/// seq1 is global -- seq1 can "fall-off" either end of the reference,
-/// in this case, each unaligned position is scored as a mismatch and
+/// query is global -- query can "fall-off" either end of the reference,
+/// in this case, each unaligned position is given an "off-edge" score and
 /// the base is soft-clipped in the alignment
 ///
 template <typename ScoreType>
@@ -125,7 +124,7 @@ private:
     const AlignmentScores<ScoreType> _scores;
 
 
-    // insert and delete are for seq1 wrt seq2
+    // insert and delete are for query wrt reference
     struct ScoreVal
     {
         ScoreType match;

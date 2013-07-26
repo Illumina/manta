@@ -59,8 +59,8 @@ align(
 
     static const ScoreType badVal(-10000);
 
-    // global alignment of seq1 -- disallow start from insertion or deletion
-    // state, seq1 can 'fall-off' the end of a short reference, in which case it will
+    // global alignment of query -- disallow start from insertion or deletion
+    // state, query can 'fall-off' the end of a short reference, in which case it will
     // be soft-clipped and each base off the end will count as a mismatch:
     for (unsigned queryIndex(0); queryIndex<=querySize; queryIndex++)
     {
@@ -91,7 +91,7 @@ align(
             unsigned queryIndex(0);
             for (SymIter queryIter(queryBegin); queryIter != queryEnd; ++queryIter, ++queryIndex)
             {
-                // update match matrix
+                // update match
                 ScoreVal& headScore((*thisSV)[queryIndex+1]);
                 PtrVal& headPtr(_ptrMat1.val(queryIndex+1,ref1Index+1));
                 {
@@ -179,16 +179,13 @@ align(
 
 
     {
-        // global alignment of seq1 -- disallow start from insertion or deletion
-        // state, seq1 can 'fall-off' the end of a short reference, in which case it will
-        // be soft-clipped and each base off the end will count as a mismatch:
         for (unsigned queryIndex(0); queryIndex<=querySize; queryIndex++)
         {
             ScoreVal& val((*thisSV)[queryIndex]);
             val.match = queryIndex * _scores.offEdge;
             val.del = badVal;
             val.ins = badVal;
-            //val.jump = badVal; // preserve jump setting from laster iteration of ref1
+            //val.jump = badVal; // preserve jump setting from last iteration of ref1
         }
 
         unsigned ref2Index(0);
@@ -208,7 +205,7 @@ align(
             unsigned queryIndex(0);
             for (SymIter queryIter(queryBegin); queryIter != queryEnd; ++queryIter, ++queryIndex)
             {
-                // update match matrix
+                // update match
                 ScoreVal& headScore((*thisSV)[queryIndex+1]);
                 PtrVal& headPtr(_ptrMat2.val(queryIndex+1,ref2Index+1));
                 {
