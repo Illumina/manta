@@ -48,7 +48,7 @@ operator<<(std::ostream& os, const SVCandidateReadPair& svp)
 
 
 SVCandidateReadPair&
-SVCandidateDataGroup::
+SVCandidateReadPairGroup::
 getReadPair(const pindex_t::key_type& key)
 {
     const pindex_t::const_iterator kiter(_pairIndex.find(key));
@@ -68,7 +68,7 @@ getReadPair(const pindex_t::key_type& key)
 
 
 void
-SVCandidateDataGroup::
+SVCandidateReadPairGroup::
 add(const bam_record& bamRead,
     const bool isExpectRepeat)
 {

@@ -155,7 +155,7 @@ scoreSomaticSV(
         const bool isTumor(_isAlignmentTumor[bamIndex]);
         SVSampleInfo& sample(isTumor ? ssInfo.tumor : ssInfo.normal);
 
-        const SVCandidateDataGroup& svDataGroup(svData.getDataGroup(bamIndex));
+        const SVCandidateReadPairGroup& svDataGroup(svData.getDataGroup(bamIndex));
         BOOST_FOREACH(const SVCandidateReadPair& pair, svDataGroup)
         {
             if (svIndex != pair.svIndex) continue;

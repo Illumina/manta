@@ -62,7 +62,7 @@ addSVNodeRead(
     const bam_record& bamRead,
     const unsigned bamIndex,
     const bool isExpectRepeat,
-    SVCandidateDataGroup& svDataGroup)
+    SVCandidateReadPairGroup& svDataGroup)
 {
     if (scanner.isReadFiltered(bamRead)) return;
     if (scanner.isProperPair(bamRead,bamIndex)) return;
@@ -118,7 +118,7 @@ addSVNodeData(
     unsigned bamIndex(0);
     BOOST_FOREACH(streamPtr& bamPtr, _bamStreams)
     {
-        SVCandidateDataGroup& svDataGroup(svData.getDataGroup(bamIndex));
+        SVCandidateReadPairGroup& svDataGroup(svData.getDataGroup(bamIndex));
         bam_streamer& read_stream(*bamPtr);
 
         // set bam stream to new search interval:
@@ -165,7 +165,7 @@ checkResult(
     const unsigned bamCount(_bamStreams.size());
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
-        const SVCandidateDataGroup& svDataGroup(svData.getDataGroup(bamIndex));
+        const SVCandidateReadPairGroup& svDataGroup(svData.getDataGroup(bamIndex));
         BOOST_FOREACH(const SVCandidateReadPair& pair, svDataGroup)
         {
             if (pair.svIndex>=svCount)
@@ -303,7 +303,7 @@ consolidateOverlap(
 
         for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
         {
-            SVCandidateDataGroup& svDataGroup(svData.getDataGroup(bamIndex));
+            SVCandidateReadPairGroup& svDataGroup(svData.getDataGroup(bamIndex));
             BOOST_FOREACH(SVCandidateReadPair& pair, svDataGroup)
             {
                 if (moveSVIndex.count(pair.svIndex))
@@ -329,7 +329,7 @@ getCandidatesFromData(
     const unsigned bamCount(_bamStreams.size());
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
-        SVCandidateDataGroup& svDataGroup(svData.getDataGroup(bamIndex));
+        SVCandidateReadPairGroup& svDataGroup(svData.getDataGroup(bamIndex));
         BOOST_FOREACH(SVCandidateReadPair& pair, svDataGroup)
         {
             SVCandidateRead* localReadPtr(&(pair.read1));

@@ -19,6 +19,8 @@
 #include "blt_util/bam_record.hh"
 #include "svgraph/GenomeInterval.hh"
 
+#include "SVLocusAssembler.hh"
+
 #include <iosfwd>
 #include <map>
 #include <vector>
@@ -61,7 +63,7 @@ operator<<(std::ostream& os, const SVCandidateReadPair& svp);
 
 
 /// SVCandidateData associated with a specific bam-file/read-group
-struct SVCandidateDataGroup
+struct SVCandidateReadPairGroup
 {
     typedef std::vector<SVCandidateReadPair> pair_t;
     typedef pair_t::iterator iterator;
@@ -119,17 +121,17 @@ private:
 
 struct SVCandidateData
 {
-    SVCandidateDataGroup&
+	SVCandidateReadPairGroup&
     getDataGroup(const unsigned bamIndex)
     {
         data_t::iterator diter(_data.find(bamIndex));
         if (diter != _data.end()) return diter->second;
 
-        std::pair<data_t::iterator,bool> diter2 = _data.insert(std::make_pair(bamIndex,SVCandidateDataGroup()));
+        std::pair<data_t::iterator,bool> diter2 = _data.insert(std::make_pair(bamIndex,SVCandidateReadPairGroup()));
         return diter2.first->second;
     }
 
-    const SVCandidateDataGroup&
+    const SVCandidateReadPairGroup&
     getDataGroup(const unsigned bamIndex) const
     {
         data_t::const_iterator diter(_data.find(bamIndex));
@@ -148,8 +150,10 @@ struct SVCandidateData
     setNewSearchInterval(const GenomeInterval& newSearch);
 
 private:
-    typedef std::map<unsigned,SVCandidateDataGroup> data_t;
+    typedef std::map<unsigned,SVCandidateReadPairGroup> data_t;
     data_t _data;
 
     std::vector<GenomeInterval> _searchIntervals;
+
+
 };
