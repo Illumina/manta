@@ -17,6 +17,7 @@
 
 #include "manta/SVLocusScanner.hh"
 #include "blt_util/align_path_bam_util.hh"
+#include "blt_util/align_path_util.hh"
 #include "blt_util/log.hh"
 #include "common/Exceptions.hh"
 
@@ -24,77 +25,170 @@
 
 
 
-SVLocusScanner::
-SVLocusScanner(
-    const ReadScannerOptions& opt,
-    const std::string& statsFilename,
-    const std::vector<std::string>& alignmentFilename) :
-    _opt(opt)
+struct simpleAlignment
 {
-    // pull in insert stats:
-    _rss.read(statsFilename.c_str());
+    simpleAlignment() :
+        is_fwd_strand(true),
+        pos(0)
+    {}
 
-    // cache the insert stats we'll be looking up most often:
-    BOOST_FOREACH(const std::string& file, alignmentFilename)
+    simpleAlignment(const bam_record& bamRead) :
+        is_fwd_strand(bamRead.is_fwd_strand()),
+        pos(bamRead.pos()-1)
     {
-        const boost::optional<unsigned> index(_rss.getGroupIndex(file));
-        assert(index);
-        const ReadGroupStats rgs(_rss.getStats(*index));
+        bam_cigar_to_apath(bamRead.raw_cigar(),bamRead.n_cigar(),path);
+    }
 
-        _stats.resize(_stats.size()+1);
-        CachedReadGroupStats& stat(_stats.back());
+    bool is_fwd_strand;
+    pos_t pos;
+    ALIGNPATH::path_t path;
+};
+
+
+
+static
+SVCandidate
+GetSplitSVCandidate(
+    const ReadScannerOptions& opt,
+    const int32_t alignTid,
+    const pos_t leftPos,
+    const pos_t rightPos)
+{
+    SVCandidate sv;
+    SVBreakend& localBreakend(sv.bp1);
+    SVBreakend& remoteBreakend(sv.bp2);
+
+    localBreakend.splitCount++;
+    remoteBreakend.splitCount++;
+
+    localBreakend.state = SVBreakendState::RIGHT_OPEN;
+    remoteBreakend.state = SVBreakendState::LEFT_OPEN;
+
+    localBreakend.interval.tid = alignTid;
+    remoteBreakend.interval.tid = alignTid;
+
+    localBreakend.interval.range.set_begin_pos(std::max(0,leftPos-static_cast<pos_t>(opt.minSplitBreakendSize)));
+    localBreakend.interval.range.set_end_pos(leftPos+static_cast<pos_t>(opt.minSplitBreakendSize));
+
+    remoteBreakend.interval.range.set_begin_pos(std::max(0,rightPos-static_cast<pos_t>(opt.minSplitBreakendSize)));
+    remoteBreakend.interval.range.set_end_pos(rightPos+static_cast<pos_t>(opt.minSplitBreakendSize));
+
+    return sv;
+}
+
+
+
+static
+void
+getSVCandidatesFromRead(
+    const ReadScannerOptions& opt,
+    const simpleAlignment& align,
+    const int32_t alignTid,
+    std::vector<SVCandidate>& candidates)
+{
+    using namespace ALIGNPATH;
+
+    const std::pair<unsigned,unsigned> ends(get_match_edge_segments(align.path));
+
+    unsigned pathIndex(0);
+    unsigned readOffset(0);
+    pos_t refHeadPos(align.pos);
+
+    const unsigned pathSize(align.path.size());
+    while (pathIndex<pathSize)
+    {
+        const path_segment& ps(align.path[pathIndex]);
+        const bool isBeginEdge(pathIndex<ends.first);
+        const bool isEndEdge(pathIndex>ends.second);
+        const bool isEdgeSegment(isBeginEdge || isEndEdge);
+
+        // in this case, swap means combined insertion/deletion
+        const bool isSwapStart(is_segment_swap_start(align.path,pathIndex));
+
+        assert(ps.type != SKIP);
+        assert(! (isEdgeSegment && isSwapStart));
+
+        unsigned nPathSegments(1); // number of path segments consumed
+        if (isEdgeSegment)
         {
-            Range& breakend(stat.breakendRegion);
-            breakend.min=rgs.fragSize.quantile(_opt.breakendEdgeTrimProb);
-            breakend.max=rgs.fragSize.quantile((1-_opt.breakendEdgeTrimProb));
+            // edge inserts are allowed for intron adjacent and grouper reads, edge deletions for intron adjacent only
 
-            if (breakend.min<0.) breakend.min = 0;
-            assert(breakend.max>0.);
+            if (ps.type == INSERT)
+            {
+                // ignore for now...
+            }
+            else if (ps.type == SOFT_CLIP)
+            {
+                // ignore for now...
+            }
         }
+        else if (isSwapStart)
         {
-            Range& ppair(stat.properPair);
-            ppair.min=rgs.fragSize.quantile(_opt.properPairTrimProb);
-            ppair.max=rgs.fragSize.quantile((1-_opt.properPairTrimProb));
+            const swap_info sinfo(align.path,pathIndex);
+            if(sinfo.delete_length >= opt.minCandidateIndelSize)
+            {
+                candidates.push_back(GetSplitSVCandidate(opt,alignTid,refHeadPos,refHeadPos+sinfo.delete_length));
+            }
 
-            if (ppair.min<0.) ppair.min = 0;
+            nPathSegments = sinfo.n_seg;
+        }
+        else if (is_segment_type_indel(align.path[pathIndex].type))
+        {
+            // regular indel:
 
-            assert(ppair.max>0.);
+            if(ps.type == DELETE)
+            {
+                if(align.path[pathIndex].length >= opt.minCandidateIndelSize)
+                {
+                    candidates.push_back(GetSplitSVCandidate(opt,alignTid,refHeadPos,refHeadPos+align.path[pathIndex].length));
+                }
+            }
+
+            // ignore other indel types for now...
+        }
+
+        for (unsigned i(0); i<nPathSegments; ++i)
+        {
+            increment_path(align.path,pathIndex,readOffset,refHeadPos);
         }
     }
 }
 
 
 
+static
 void
-SVLocusScanner::
 getReadBreakendsImpl(
     const ReadScannerOptions& opt,
-    const CachedReadGroupStats& rstats,
+    const SVLocusScanner::CachedReadGroupStats& rstats,
     const bam_record& localRead,
     const bam_record* remoteReadPtr,
     std::vector<SVCandidate>& candidates,
     known_pos_range2& localEvidenceRange)
 {
-    ALIGNPATH::path_t apath;
-    bam_cigar_to_apath(localRead.raw_cigar(),localRead.n_cigar(),apath);
+    const simpleAlignment localAlign(localRead);
 
-    const unsigned readSize(apath_read_length(apath));
-    const unsigned localRefLength(apath_ref_length(apath));
+    // 1) process any large indels in the localRead:
+    getSVCandidatesFromRead(opt, localAlign, localRead.target_id(), candidates);
+
+    // 2) process anomalous read pair relationships:
+    const unsigned readSize(apath_read_length(localAlign.path));
+    const unsigned localRefLength(apath_ref_length(localAlign.path));
 
     unsigned thisReadNoninsertSize(0);
-    if (localRead.is_fwd_strand())
+    if (localAlign.is_fwd_strand)
     {
-        thisReadNoninsertSize=(readSize-apath_read_trail_size(apath));
+        thisReadNoninsertSize=(readSize-apath_read_trail_size(localAlign.path));
     }
     else
     {
-        thisReadNoninsertSize=(readSize-apath_read_lead_size(apath));
+        thisReadNoninsertSize=(readSize-apath_read_lead_size(localAlign.path));
     }
 
-    candidates.resize(1);
+    SVCandidate sv;
 
-    SVBreakend& localBreakend(candidates[0].bp1);
-    SVBreakend& remoteBreakend(candidates[0].bp2);
+    SVBreakend& localBreakend(sv.bp1);
+    SVBreakend& remoteBreakend(sv.bp2);
 
     localBreakend.readCount = 1;
 
@@ -175,15 +269,23 @@ getReadBreakendsImpl(
             remoteBreakend.interval.range.set_begin_pos(startRefPos - breakendSize);
         }
     }
+
+    known_pos_range2 mergeRange(localBreakend.interval.range);
+    mergeRange.merge_range(remoteBreakend.interval.range);
+
+    // read pair separation is non-anomalous:
+    if(mergeRange.size() <= rstats.breakendRegion.max) return;
+
+    candidates.push_back(sv);
 }
 
 
 
+static
 void
-SVLocusScanner::
 getSVLociImpl(
     const ReadScannerOptions& opt,
-    const CachedReadGroupStats& rstats,
+    const SVLocusScanner::CachedReadGroupStats& rstats,
     const bam_record& bamRead,
     std::vector<SVLocus>& loci)
 {
@@ -226,6 +328,47 @@ getSVLociImpl(
         }
 
         loci.push_back(locus);
+    }
+}
+
+
+
+SVLocusScanner::
+SVLocusScanner(
+    const ReadScannerOptions& opt,
+    const std::string& statsFilename,
+    const std::vector<std::string>& alignmentFilename) :
+    _opt(opt)
+{
+    // pull in insert stats:
+    _rss.read(statsFilename.c_str());
+
+    // cache the insert stats we'll be looking up most often:
+    BOOST_FOREACH(const std::string& file, alignmentFilename)
+    {
+        const boost::optional<unsigned> index(_rss.getGroupIndex(file));
+        assert(index);
+        const ReadGroupStats rgs(_rss.getStats(*index));
+
+        _stats.resize(_stats.size()+1);
+        CachedReadGroupStats& stat(_stats.back());
+        {
+            Range& breakend(stat.breakendRegion);
+            breakend.min=rgs.fragSize.quantile(_opt.breakendEdgeTrimProb);
+            breakend.max=rgs.fragSize.quantile((1-_opt.breakendEdgeTrimProb));
+
+            if (breakend.min<0.) breakend.min = 0;
+            assert(breakend.max>0.);
+        }
+        {
+            Range& ppair(stat.properPair);
+            ppair.min=rgs.fragSize.quantile(_opt.properPairTrimProb);
+            ppair.max=rgs.fragSize.quantile((1-_opt.properPairTrimProb));
+
+            if (ppair.min<0.) ppair.min = 0;
+
+            assert(ppair.max>0.);
+        }
     }
 }
 
@@ -288,7 +431,7 @@ getSVLoci(
 
     if (! bamRead.is_chimeric())
     {
-        if (std::abs(bamRead.template_size())<2000) return;
+        if (std::abs(bamRead.template_size())<500) return;
     }
 
     const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);

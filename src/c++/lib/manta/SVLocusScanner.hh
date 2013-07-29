@@ -53,7 +53,8 @@ struct SVLocusScanner
         const bam_record& bamRead,
         const unsigned defaultReadGroupIndex) const;
 
-    /// return zero to many SVLocus objects if the read supports any structural variant(s) (detectable by Manta)
+    /// return zero to many SVLocus objects if the read supports any
+    /// structural variant(s) (detectable by manta)
     ///
     void
     getSVLoci(
@@ -75,7 +76,6 @@ struct SVLocusScanner
         const unsigned defaultReadGroupIndex,
         std::vector<SVCandidate>& candidates) const;
 
-private:
 
     struct Range
     {
@@ -94,24 +94,7 @@ private:
         Range properPair;
     };
 
-
-    static
-    void
-    getReadBreakendsImpl(
-        const ReadScannerOptions& opt,
-        const CachedReadGroupStats& rstats,
-        const bam_record& localRead,
-        const bam_record* remoteReadPtr,
-        std::vector<SVCandidate>& candidates,
-        known_pos_range2& localEvidenceRange);
-
-    static
-    void
-    getSVLociImpl(
-        const ReadScannerOptions& opt,
-        const CachedReadGroupStats& rstats,
-        const bam_record& bamRead,
-        std::vector<SVLocus>& loci);
+private:
 
     /////////////////////////////////////////////////
     // data:

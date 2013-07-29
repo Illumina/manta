@@ -106,7 +106,8 @@ struct SVBreakend
     SVBreakend() :
         state(SVBreakendState::UNKNOWN),
         readCount(0),
-        pairCount(0)
+        pairCount(0),
+        splitCount(0)
     {}
 
     bool
@@ -158,11 +159,14 @@ struct SVBreakend
     GenomeInterval interval;
     SVBreakendState::index_t state;
 
-    // reads which support this SV (inclusive of read pairs)
+    // reads which support this SV via mate-spanning
     unsigned short readCount;
 
-    // number of cases where both ends of a read pair pass QC and have been found to both support this SV in a consistent way:
+    // number of cases where both ends of a read pair pass QC and have been found to both support this SV in a consistent way (must be <= readCount):
     unsigned short pairCount;
+
+    // reads which support this SV via split alignment:
+    unsigned short splitCount;
 };
 
 

@@ -51,7 +51,7 @@ struct ReadScannerOptions
 
     // whenever a breakend is predicted from an individual read split (ie. non-assembled), set the predicted breakend size to this fraction of the
     // event size (modified by the min and max limits below)
-    unsigned splitBreakendSizeFraction;
+    float splitBreakendSizeFraction;
 
     // whenever a breakend is predicted from an individual read split (ie. non-assembled), the predicted breakend range should be no
     // larger than this:
