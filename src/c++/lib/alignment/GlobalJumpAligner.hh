@@ -23,9 +23,9 @@
 #include <cassert>
 
 
-/// represents alignment of a query sequence which can switch over from reference1 to refernece2
+/// represents alignment of a query sequence which can switch over from reference1 to reference2
 ///
-/// an empty alignment to one reference indicates that the entire alignment is the other reference
+/// an empty alignment to one reference indicates that the entire alignment is to the other reference
 ///
 template <typename ScoreType>
 struct JumpAlignmentResult

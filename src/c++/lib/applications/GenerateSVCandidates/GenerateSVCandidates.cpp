@@ -115,14 +115,24 @@ runGSC(
             svFind.findCandidateSV(edge,svData,svs);
             BOOST_FOREACH(const SVCandidate& sv, svs)
             {
+            	// TODO: what to do with contigs, how to align them etc?
                 // assemble across breakpoint 1
-                SVLocusAssembler::Assembly a1;
+                Assembly a1;
                 svAssembler.assembleSVBreakend(sv.bp1,a1);
-                // assemble across breakpoint 2
-                SVLocusAssembler::Assembly a2;
-                svAssembler.assembleSVBreakend(sv.bp2,a1);
-                // TODO: what to do with contigs, how to align them etc?
+                svData.getAssemblyBreakp1().insert(svData.getAssemblyBreakp1().end(),
+                                                   a1.begin(),
+                                                   a1.end()
+                                                  );
 
+                // assemble across breakpoint 2
+                Assembly a2;
+                svAssembler.assembleSVBreakend(sv.bp2,a2);
+                svData.getAssemblyBreakp2().insert(svData.getAssemblyBreakp2().end(),
+                                                   a2.begin(),
+                                                   a2.end());
+
+
+                // TODO: how to get the reference segment against which to align the contig?
             }
 
             candWriter.writeSV(edge, svData, svs);

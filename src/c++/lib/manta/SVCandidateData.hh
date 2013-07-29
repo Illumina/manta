@@ -19,6 +19,8 @@
 #include "blt_util/bam_record.hh"
 #include "svgraph/GenomeInterval.hh"
 
+#include "alignment/Alignment.hh"
+
 #include "SVLocusAssembler.hh"
 
 #include <iosfwd>
@@ -139,6 +141,18 @@ struct SVCandidateData
         return diter->second;
     }
 
+    Assembly&
+    getAssemblyBreakp1() { return asBp1; }
+
+    Assembly&
+    getAssemblyBreakp2() { return asBp2; }
+
+    const Assembly&
+    getAssemblyBreakp1() const { return asBp1; }
+
+    const Assembly&
+    getAssemblyBreakp2() const { return asBp2; }
+
     void
     clear()
     {
@@ -155,5 +169,13 @@ private:
 
     std::vector<GenomeInterval> _searchIntervals;
 
+    // contigs for breakpoint 1
+    Assembly asBp1;
+    // contigs for breakpoint 2
+    Assembly asBp2;
 
+    // contig alignments for breakpoint 1
+    std::vector<Alignment> alBp1;
+    // contig alignments for breakpoint 2
+    std::vector<Alignment> alBp2;
 };

@@ -65,8 +65,6 @@ public:
     // remembers used reads
     typedef boost::unordered_map<std::string,bool> str_bool_map_t;
 
-    typedef std::vector<AssembledContig> Assembly;
-
     //typedef std::vector<AssemblyRead> AssemblyReadMap;
     typedef std::map<std::string,AssemblyRead> AssemblyReadMap;
 

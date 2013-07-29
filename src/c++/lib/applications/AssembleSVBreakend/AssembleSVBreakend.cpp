@@ -20,6 +20,7 @@
 #include "applications/AssembleSVBreakend/ASBOptions.hh"
 
 #include "manta/SVLocusAssembler.hh"
+#include "manta/AssembledContig.hh"
 
 #include "blt_util/bam_header_util.hh"
 #include "blt_util/input_stream_handler.hh"
@@ -72,13 +73,13 @@ runASB(const ASBOptions& opt)
     std::cout << "Translating into " << bp << std::endl;
 
     SVLocusAssembler svla(opt);
-    SVLocusAssembler::Assembly a;
+    Assembly a;
     svla.assembleSVBreakend(bp,a);
     
     std::cout << "Assembled " << a.size() << " contig(s)." << std::endl;
     std::ofstream os(opt.contigOutfile.c_str());
     unsigned n(1);
-    for (SVLocusAssembler::Assembly::const_iterator ct = a.begin();
+    for (Assembly::const_iterator ct = a.begin();
          ct != a.end();
          ++ct)
     {
