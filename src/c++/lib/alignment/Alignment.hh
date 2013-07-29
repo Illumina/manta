@@ -18,6 +18,8 @@
 #include "blt_util/align_path.hh"
 
 
+/// minimal summary of a query sequence aligned to a reference, roughly
+/// following bam conventions
 struct Alignment
 {
     void

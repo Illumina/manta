@@ -87,8 +87,9 @@ struct AlignState
 
 
 
-/// \brief a method to align a contig to two references, where the alignment can make
-/// a single jump from reference one to reference 2
+/// \brief a method to align a contig to two references
+///
+/// the alignment can make a single jump from reference1 to reference2
 ///
 template <typename ScoreType>
 struct GlobalJumpAligner
