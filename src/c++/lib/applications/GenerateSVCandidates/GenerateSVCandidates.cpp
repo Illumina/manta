@@ -23,6 +23,7 @@
 #include "SVScorer.hh"
 
 #include "blt_util/log.hh"
+#include "blt_util/samtools_fasta_util.hh"
 #include "common/Exceptions.hh"
 #include "common/OutStream.hh"
 #include "manta/ReadGroupStatsSet.hh"
@@ -34,6 +35,49 @@
 
 #include <iostream>
 #include <memory>
+
+
+
+static
+void
+getIntervalReferenceSegment(
+    const std::string& referenceFilename,
+    const bam_header_info& header,
+    const pos_t extraRefEdgeSize,
+    const GenomeInterval& interval,
+    reference_contig_segment& intervalRef)
+{
+    const bam_header_info::chrom_info& chromInfo(header.chrom_data[interval.tid]);
+    const std::string& chrom(chromInfo.label);
+    const pos_t beginPos(std::max(0, (interval.range.begin_pos()-extraRefEdgeSize)));
+    const pos_t endPos(std::min(static_cast<pos_t>(chromInfo.length), (interval.range.end_pos()+extraRefEdgeSize)));
+
+    // get REF
+    intervalRef.set_offset(beginPos);
+    get_standardized_region_seq(referenceFilename,chrom,beginPos,endPos,intervalRef.seq());
+}
+
+
+
+/// extract the reference sequence around each breakend into a reference_contig_segment
+/// object
+///
+/// for each region, we extract the hypothetical breakend region + extraRefEdgeSize bases
+/// on each side
+///
+static
+void
+getSVReferenceSegments(
+    const std::string& referenceFilename,
+    const bam_header_info& header,
+    const pos_t extraRefEdgeSize,
+    const SVCandidate& sv,
+    reference_contig_segment& bp1ref,
+    reference_contig_segment& bp2ref)
+{
+    getIntervalReferenceSegment(referenceFilename,header,extraRefEdgeSize,sv.bp1.interval,bp1ref);
+    getIntervalReferenceSegment(referenceFilename,header,extraRefEdgeSize,sv.bp2.interval,bp2ref);
+}
 
 
 
@@ -51,6 +95,11 @@ dumpEdgeInfo(
 
 
 
+/// we can either traverse all edges in a single locus (disjount subgraph) of the graph
+/// OR
+/// traverse all edges in out "bin" -- that is, 1 of binCount subsets of the total graph edges
+/// designed to be of roughly equal size for parallel processing
+///
 static
 EdgeRetriever*
 edgeRFactory(
@@ -115,6 +164,13 @@ runGSC(
             svFind.findCandidateSV(edge,svData,svs);
             BOOST_FOREACH(const SVCandidate& sv, svs)
             {
+                // how much additional reference sequence should we extract from around
+                // each side of the breakend region?
+                static const pos_t extraRefEdgeSize(100);
+
+                reference_contig_segment bp1ref,bp2ref;
+                getSVReferenceSegments(opt.referenceFilename, cset.header, extraRefEdgeSize, sv, bp1ref, bp2ref);
+
             	// TODO: what to do with contigs, how to align them etc?
                 // assemble across breakpoint 1
                 Assembly a1;
