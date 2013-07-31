@@ -19,20 +19,14 @@
 ################################################################################
 
 macro (resetFindBoost)
-    unset (Boost_FOUND CACHE)
-    unset (Boost_INCLUDE_DIRS CACHE)
-    unset (Boost_INCLUDE_DIR CACHE)
-    unset (Boost_LIBRARIES CACHE)
-    unset (Boost_LIBRARY_DIRS CACHE)
-    unset (Boost_VERSION CACHE)
-    unset (Boost_LIB_VERSION CACHE)
-    unset (Boost_MAJOR_VERSION CACHE)
-    unset (Boost_MINOR_VERSION CACHE)
-    unset (Boost_SUBMINOR_VERSION CACHE)
-    unset (Boost_USE_STATIC_LIBS CACHE)
+
+    set(BOOST_RESET_SYMBOLS FOUND INCLUDE_DIRS INCLUDE_DIR LIBRARIES LIBRARY_DIRS VERSION LIB_VERSION MAJOR_VERSION MINOR_VERSION SUBMINOR_VERSION USE_STATIC_LIBS USE_MULTITHREADED CACHE)
+
+    foreach (TAG ${BOOST_RESET_SYMBOLS})
+        unset (Boost_${TAG} CACHE)
+    endforeach()
 
     unset (ENV{BOOST_LIBRARYDIR})
-    unset (Boost_USE_MULTITHREADED CACHE)
 
     foreach (COMPONENT ${MANTA_BOOST_COMPONENTS})
         STRING(TOUPPER ${COMPONENT} UPPERCOMPONENT)
@@ -42,18 +36,9 @@ macro (resetFindBoost)
         unset (Boost_${UPPERCOMPONENT}_LIBRARY_DEBUG CACHE)
     endforeach ()
 
-
-    unset (Boost_FOUND)
-    unset (Boost_INCLUDE_DIRS)
-    unset (Boost_INCLUDE_DIR)
-    unset (Boost_LIBRARIES)
-    unset (Boost_LIBRARY_DIRS)
-    unset (Boost_VERSION)
-    unset (Boost_LIB_VERSION)
-    unset (Boost_MAJOR_VERSION)
-    unset (Boost_MINOR_VERSION)
-    unset (Boost_SUBMINOR_VERSION)
-    unset (Boost_USE_STATIC_LIBS)
+    foreach (TAG ${BOOST_RESET_SYMBOLS})
+        unset (Boost_${TAG})
+    endforeach()
 
     foreach (COMPONENT ${MANTA_BOOST_COMPONENTS})
         STRING(TOUPPER ${COMPONENT} UPPERCOMPONENT)

@@ -73,7 +73,7 @@ macro(get_compiler_version compiler_version)
     STRING(REGEX REPLACE "(\r?\n)+$" "" ${compiler_version} "${${compiler_version}}")
 endmacro()
 
-# clang doesn't make this easy for us...
+# clang doesn't make finding the version easy for us...
 macro(get_clang_version compiler_version)
     execute_process(COMMAND bash -c "${CMAKE_CXX_COMPILER} -v 2>&1 | awk '{printf $3; exit}'" OUTPUT_VARIABLE ${compiler_version})
 endmacro()
