@@ -20,6 +20,7 @@
 #include "svgraph/GenomeInterval.hh"
 
 #include "alignment/Alignment.hh"
+#include "alignment/GlobalJumpAligner.hh"
 
 #include "SVLocusAssembler.hh"
 
@@ -123,6 +124,9 @@ private:
 
 struct SVCandidateData
 {
+	// should be a template...
+	typedef JumpAlignmentResult<int> JumpAlignmentResultType;
+
 	SVCandidateReadPairGroup&
     getDataGroup(const unsigned bamIndex)
     {
@@ -142,16 +146,17 @@ struct SVCandidateData
     }
 
     Assembly&
-    getAssemblyBreakp1() { return asBp1; }
-
-    Assembly&
-    getAssemblyBreakp2() { return asBp2; }
+    getAssembly() { return ctgs; }
 
     const Assembly&
-    getAssemblyBreakp1() const { return asBp1; }
+    getAssembly() const { return ctgs; }
 
-    const Assembly&
-    getAssemblyBreakp2() const { return asBp2; }
+    std::vector<JumpAlignmentResultType>&
+    getAlignments() { return align; }
+
+    const std::vector<JumpAlignmentResultType>&
+    getAlignments() const { return align; }
+
 
     void
     clear()
@@ -169,13 +174,9 @@ private:
 
     std::vector<GenomeInterval> _searchIntervals;
 
-    // contigs for breakpoint 1
-    Assembly asBp1;
-    // contigs for breakpoint 2
-    Assembly asBp2;
+    // assembled contigs for both breakpoints
+    Assembly ctgs;
+    // contig alignments
+    std::vector<JumpAlignmentResultType > align;
 
-    // contig alignments for breakpoint 1
-    std::vector<Alignment> alBp1;
-    // contig alignments for breakpoint 2
-    std::vector<Alignment> alBp2;
 };

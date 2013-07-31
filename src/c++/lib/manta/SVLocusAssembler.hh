@@ -81,10 +81,19 @@ public:
      * If unused reads remain, the assembly is re-started using this subset.
      */
     void
-    assembleSVBreakend(const SVBreakend& bp,
-                       Assembly& as);
+    assembleSingleSVBreakend(const SVBreakend& bp,
+                       	   	 Assembly& as);
+
+    void
+    assembleSVBreakends(const SVBreakend& bp1,
+    				    const SVBreakend& bp2,
+                        Assembly& as);
 
 private:
+
+    void
+    iterateAssembly(AssemblyReadMap& map,
+    				Assembly& as);
 
     // Collects the reads crossing an SV breakpoint
     void

@@ -30,6 +30,7 @@
 #include "manta/SVLocusAssembler.hh"
 #include "format/VcfWriterCandidateSV.hh"
 #include "format/VcfWriterSomaticSV.hh"
+#include "alignment/GlobalJumpAligner.hh"
 
 #include "boost/foreach.hpp"
 
@@ -154,6 +155,8 @@ runGSC(
     SVCandidateData svData;
     std::vector<SVCandidate> svs;
     SomaticSVScoreInfo ssInfo;
+    int jumpScore(3);
+    GlobalJumpAligner<int> aligner(AlignmentScores<int>(1,2,6,0,3),jumpScore);
     while (edger.next())
     {
         const EdgeInfo& edge(edger.getEdge());
@@ -164,31 +167,31 @@ runGSC(
             svFind.findCandidateSV(edge,svData,svs);
             BOOST_FOREACH(const SVCandidate& sv, svs)
             {
+                Assembly as;
+                svAssembler.assembleSVBreakends(sv.bp1,sv.bp2,as);
+                svData.getAssembly().insert(svData.getAssembly().end(),
+                                            as.begin(),
+                                            as.end()
+                                            );
+
                 // how much additional reference sequence should we extract from around
                 // each side of the breakend region?
-                static const pos_t extraRefEdgeSize(100);
+                static const pos_t extraRefEdgeSize(200);
 
                 reference_contig_segment bp1ref,bp2ref;
+                const std::string bp1RefStr(bp1ref.seq());
+                const std::string bp2RefStr(bp2ref.seq());
                 getSVReferenceSegments(opt.referenceFilename, cset.header, extraRefEdgeSize, sv, bp1ref, bp2ref);
-
-            	// TODO: what to do with contigs, how to align them etc?
-                // assemble across breakpoint 1
-                Assembly a1;
-                svAssembler.assembleSVBreakend(sv.bp1,a1);
-                svData.getAssemblyBreakp1().insert(svData.getAssemblyBreakp1().end(),
-                                                   a1.begin(),
-                                                   a1.end()
-                                                  );
-
-                // assemble across breakpoint 2
-                Assembly a2;
-                svAssembler.assembleSVBreakend(sv.bp2,a2);
-                svData.getAssemblyBreakp2().insert(svData.getAssemblyBreakp2().end(),
-                                                   a2.begin(),
-                                                   a2.end());
-
-
-                // TODO: how to get the reference segment against which to align the contig?
+                for(Assembly::const_iterator ct = as.begin();
+                	ct != as.end();
+                	++ct) {
+                	JumpAlignmentResult<int> res;
+                	aligner.align(ct->seq.begin(),ct->seq.end(),
+                				  bp1RefStr.begin(),bp1RefStr.end(),
+                				  bp2RefStr.begin(),bp2RefStr.end(),
+                				  res);
+                	svData.getAlignments().push_back(res);
+                }
             }
 
             candWriter.writeSV(edge, svData, svs);

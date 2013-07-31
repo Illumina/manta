@@ -232,9 +232,14 @@ getBreakendReads(const SVBreakend& bp,
 #ifdef DEBUG_ASBL
             dbg_os << "Adding " << bamRead.qname() << endl;
 #endif
-			reads[bamRead.qname()] = AssemblyRead(bamRead.get_bam_read().get_string(),
-                                                  false
-                                                 );
+            if (reads.find(bamRead.qname()) != reads.end()) {
+            	reads[bamRead.qname()] = AssemblyRead(bamRead.get_bam_read().get_string(),
+                                                  	  false
+            										   );
+            } else {
+            	std::cout << "Read name collision : " << bamRead.qname() << std::endl;
+
+            }
 		}
 	}
 }
@@ -242,12 +247,31 @@ getBreakendReads(const SVBreakend& bp,
 
 void
 SVLocusAssembler::
-assembleSVBreakend(const SVBreakend& bp,
-                   Assembly& as) {
-
+assembleSingleSVBreakend(const SVBreakend& bp,
+                         Assembly& as)
+{
 	AssemblyReadMap reads;
 	getBreakendReads(bp,reads);
-    std::cerr << "Starting assembly with " << reads.size() << " reads." << std::endl;
+	iterateAssembly(reads,as);
+}
+
+void
+SVLocusAssembler::
+assembleSVBreakends(const SVBreakend& bp1,
+				    const SVBreakend& bp2,
+                    Assembly& as)
+{
+	AssemblyReadMap reads;
+	getBreakendReads(bp1,reads);
+	getBreakendReads(bp2,reads);
+	iterateAssembly(reads,as);
+}
+
+void
+SVLocusAssembler::
+iterateAssembly(AssemblyReadMap& reads, Assembly& as)
+{
+    //std::cerr << "Starting assembly with " << reads.size() << " reads." << std::endl;
 
     unsigned iterations(0); // number of assembly iterations
     unsigned unused_reads_now(reads.size());
@@ -284,7 +308,8 @@ SVLocusAssembler::
 buildContigs(AssemblyReadMap& reads,
              const unsigned wordLength,
              Assembly& as,
-             unsigned& unused_reads) {
+             unsigned& unused_reads)
+{
 
 #ifdef DEBUG_ASBL
     cout << "In SVLocusAssembler::buildContig. word length=" << wordLength << endl;

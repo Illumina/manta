@@ -74,7 +74,7 @@ runASB(const ASBOptions& opt)
 
     SVLocusAssembler svla(opt);
     Assembly a;
-    svla.assembleSVBreakend(bp,a);
+    svla.assembleSingleSVBreakend(bp,a);
     
     std::cout << "Assembled " << a.size() << " contig(s)." << std::endl;
     std::ofstream os(opt.contigOutfile.c_str());
