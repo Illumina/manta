@@ -40,7 +40,7 @@ macro (resetFindBoost)
         unset (Boost_${UPPERCOMPONENT}_LIBRARY CACHE)
         unset (Boost_${UPPERCOMPONENT}_LIBRARY_RELEASE CACHE)
         unset (Boost_${UPPERCOMPONENT}_LIBRARY_DEBUG CACHE)
-    endforeach (COMPONENT ${MANTA_BOOST_COMPONENTS})
+    endforeach ()
 
 
     unset (Boost_FOUND)
@@ -61,7 +61,7 @@ macro (resetFindBoost)
         unset (Boost_${UPPERCOMPONENT}_LIBRARY)
         unset (Boost_${UPPERCOMPONENT}_LIBRARY_RELEASE)
         unset (Boost_${UPPERCOMPONENT}_LIBRARY_DEBUG)
-    endforeach (COMPONENT ${MANTA_BOOST_COMPONENTS})
+    endforeach ()
 
 endmacro ()
 
@@ -80,20 +80,17 @@ macro(static_find_boost boost_version boost_components)
     else  ()
         message(STATUS "pthread headers: ${PTHREAD_INCLUDE_DIR}")
         message(STATUS "pthread library: ${PTHREAD_LIBRARY}")
-        message(FATAL_ERROR "pthread library is required to build the iSAAC")
+        message(FATAL_ERROR "pthread library is required to build")
     endif ()
 
     find_package(Boost ${boost_version} REQUIRED ${boost_components})
 
     include_directories(BEFORE SYSTEM ${Boost_INCLUDE_DIRS})
 
-    set      (HAVE_LIBBOOST_DATE_TIME       ${Boost_DATE_TIME_FOUND})
-    set      (HAVE_LIBBOOST_FILESYSTEM      ${Boost_FILESYSTEM_FOUND})
-    set      (HAVE_LIBBOOST_IOSTREAMS       ${Boost_IOSTREAMS_FOUND})
-    set      (HAVE_LIBBOOST_PROGRAM_OPTIONS ${Boost_PROGRAM_OPTIONS_FOUND})
-    set      (HAVE_LIBBOOST_REGEX           ${Boost_REGEX_FOUND})
-    set      (HAVE_LIBBOOST_SERIALIZATION   ${Boost_SERIALIZATION_FOUND})
-    set      (HAVE_LIBBOOST_SYSTEM          ${Boost_SYSTEM_FOUND})
+    foreach(COMPONENT ${MANTA_BOOST_COMPONENTS})
+        STRING(TOUPPER ${COMPONENT} UPPERCOMPONENT)
+        set(HAVE_LIBBOOST_${UPPERCOMPONENT}       ${Boost_${UPPERCOMPONENT}_FOUND})
+    endforeach()
 endmacro()
 
 
@@ -102,6 +99,7 @@ if (MANTA_FORCE_STATIC_LINK)
 endif ()
 
 find_package(Boost ${MANTA_BOOST_VERSION} COMPONENTS ${MANTA_BOOST_COMPONENTS})
+
 
 # only used if boost is found, but moving down here supresses a cmake warning:
 if (NOT CMAKE_PARALLEL)
@@ -112,8 +110,19 @@ endif ()
 # If the right version of boost is not found, it will be built from the distribution
 #
 if (NOT Boost_FOUND)
+
+    foreach(COMPONENT ${MANTA_BOOST_COMPONENTS})
+        STRING(TOUPPER ${COMPONENT} UPPERCOMPONENT)
+        if (${Boost_${UPPERCOMPONENT}_FOUND})
+            set(FOUND_STATUS "found")
+        else()
+            set(FOUND_STATUS "NOT FOUND")
+        endif()
+        message(STATUS "Boost component: ${COMPONENT}\tstatus: ${FOUND_STATUS}")
+    endforeach()
+
     if (BOOST_ROOT)
-        message (STATUS "BOOST_ROOT is set to ${BOOST_ROOT} but boost ${MANTA_BOOST_VERSION} was not found.")
+        message (STATUS "BOOST_ROOT is set to ${BOOST_ROOT} but boost ${MANTA_BOOST_VERSION} or one of its components was not found.")
         message (FATAL_ERROR "Unset BOOST_ROOT or set it to the root location of boost ${MANTA_BOOST_VERSION}.")
     endif()
 
@@ -124,17 +133,16 @@ if (NOT Boost_FOUND)
     set(ENV{MANTA_BOOST_BUILD_COMPONENTS} "${MANTA_BOOST_BUILD_COMPONENTS}")
     set(ENV{MANTA_BOOST_VERSION} "${MANTA_BOOST_VERSION}")
 
-    message(STATUS
-"${CMAKE_SOURCE_DIR}/cmake/bootstrap/installBoost.bash" "${BOOST_REDIST_DIR}"
-"${CMAKE_CURRENT_BINARY_DIR}/bootstrap" "${CMAKE_PARALLEL}")
-    execute_process(COMMAND
-bash "${CMAKE_SOURCE_DIR}/cmake/bootstrap/installBoost.bash" "${BOOST_REDIST_DIR}"
-"${CMAKE_CURRENT_BINARY_DIR}/bootstrap" "${CMAKE_PARALLEL}"  RESULT_VARIABLE TMP_RESULT )
+    set(BOOST_BUILD_COMMAND bash "${CMAKE_SOURCE_DIR}/cmake/bootstrap/installBoost.bash" "${BOOST_REDIST_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/bootstrap" "${CMAKE_PARALLEL}")
 
-    if (NOT TMP_RESULT)
-        message(STATUS "Successfuly built boost ${MANTA_BOOST_VERSION} from the distribution package...")
-    else ()
+    string(REPLACE ";" " " PRETTY_BOOST_BUILD_COMMAND "${BOOST_BUILD_COMMAND}")
+    message(STATUS "${PRETTY_BOOST_BUILD_COMMAND}")
+    execute_process(COMMAND ${BOOST_BUILD_COMMAND} RESULT_VARIABLE TMP_RESULT)
+
+    if (TMP_RESULT)
         message (FATAL_ERROR "Failed to build boost ${MANTA_BOOST_VERSION}")
+    else ()
+        message(STATUS "Successfuly built boost ${MANTA_BOOST_VERSION} from the distribution package...")
     endif ()
 
     set (BOOST_ROOT "${CMAKE_CURRENT_BINARY_DIR}/bootstrap")

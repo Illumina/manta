@@ -27,6 +27,10 @@ REDIST_DIR=$1
 INSTALL_DIR=$2
 if [[ $# -ge 3 ]] ; then PARALLEL=$3 ; else PARALLEL=1 ; fi
 
+# test that these values are defined:
+test=${MANTA_BOOST_VERSION}
+test=${MANTA_BOOST_BUILD_COMPONENTS}
+
 script_dir="$(dirname "$0")"
 source $script_dir/common.bash
 
@@ -41,6 +45,8 @@ SOURCE_TARBALL=${REDIST_DIR}/boost_${VERSION}.tar.bz2
 TARBALL_COMPRESSION=j
 SOURCE_DIR=${BUILD_DIR}/boost_${VERSION}
 
+BOOST_LIBRARY_LIST=$(echo ${MANTA_BOOST_BUILD_COMPONENTS} | sed "s/;/,/g")
+
 if [ -z "${BOOTSTRAP_OPTIONS+xxx}" ]; then BOOTSTRAP_OPTIONS=""; fi
 if [ -z "${BJAM_OPTIONS+xxx}" ]; then BJAM_OPTIONS=""; fi
 
@@ -54,8 +60,9 @@ if [[ $CLEAN ]] ; then
 fi
 
 common_create_source
+
 cd ${SOURCE_DIR} \
-    && ./bootstrap.sh ${BOOTSTRAP_OPTIONS} --prefix=${INSTALL_DIR} --with-libraries=`echo ${MANTA_BOOST_BUILD_COMPONENTS} | sed "s/;/,/g"` \
+    && ./bootstrap.sh ${BOOTSTRAP_OPTIONS} --prefix=${INSTALL_DIR} --with-libraries=$BOOST_LIBRARY_LIST \
     && ./bjam -j$PARALLEL ${BJAM_OPTIONS} --libdir=${INSTALL_DIR}/lib --layout=system link=static threading=single install
 
 if [ $? != 0 ] ; then echo "$SCRIPT: build failed: Terminating..." >&2 ; exit 1 ; fi
