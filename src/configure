@@ -86,8 +86,8 @@ fix_slashes ()
 
 create_path ()
 {
-	mkdir -p "$1" || exit 1
-	rel2abs "$1" || exit 1
+    mkdir -p "$1" || exit 1
+    rel2abs "$1" || exit 1
 }
 
 
@@ -103,6 +103,23 @@ source_dir="$(rel2abs $source_dir)"
 redist_dir="${source_dir}/../redist"
 bootstrap_dir="${source_dir}/cmake/bootstrap"
 build_dir="$(pwd -P)"
+
+if [ "$source_dir" == "$build_dir" ]; then
+    cat <<EOF
+
+ERROR: This project cannot be built in the source directory. Please run
+       configuration in a separate directory. Example:
+
+    """
+    mkdir ../build
+    cd ../build
+    \${MANTA_ROOT_DIR}/src/configure [configure_options]
+    """
+
+EOF
+    exit 1
+fi
+
 
 # Determine whether this is a MinGW environment.
 if echo "${system}" | grep MINGW >/dev/null 2>&1; then

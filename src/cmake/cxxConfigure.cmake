@@ -63,22 +63,7 @@ else  ()
     message(FATAL_ERROR "No support for gzip compression")
 endif ()
 
-# optional support for bzip2 compression
-static_find_library(BZIP2 bzlib.h bz2)
-if    (HAVE_BZIP2)
-    set(HAVE_BZLIB HAVE_BZIP2)
-    set(MANTA_ADDITIONAL_LIB ${MANTA_ADDITIONAL_LIB} bz2)
-    message(STATUS "bzip2 compression supported")
-else  ()
-    message(FATAL_ERROR "No support for bzip2 compression")
-endif ()
-
 static_find_boost(${MANTA_BOOST_VERSION} "${MANTA_BOOST_COMPONENTS}")
-
-# why is this here?:
-#static_find_library(CPGPLOT cpgplot.h cpgplot)
-#static_find_library(PGPLOT cpgplot.h pgplot)
-#static_find_library(X11 X.h X11)
 
 # Force static linking
 set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
@@ -88,7 +73,7 @@ macro(get_compiler_version compiler_version)
     STRING(REGEX REPLACE "(\r?\n)+$" "" ${compiler_version} "${${compiler_version}}")
 endmacro()
 
-# clang doesn't make this easy for us...
+# clang doesn't make finding the version easy for us...
 macro(get_clang_version compiler_version)
     execute_process(COMMAND bash -c "${CMAKE_CXX_COMPILER} -v 2>&1 | awk '{printf $3; exit}'" OUTPUT_VARIABLE ${compiler_version})
 endmacro()
