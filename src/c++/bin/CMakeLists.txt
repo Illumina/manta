@@ -18,6 +18,8 @@
 ##
 ################################################################################
 
+include_directories (BEFORE SYSTEM "${SAMTOOLS_DIR}")
+
 include_directories (${MANTA_CXX_ALL_INCLUDES})
 
 include(${MANTA_CXX_EXECUTABLE_CMAKE})

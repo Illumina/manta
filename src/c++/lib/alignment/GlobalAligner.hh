@@ -41,37 +41,6 @@ struct AlignmentResult
 };
 
 
-
-struct AlignState
-{
-    enum index_t
-    {
-        MATCH,
-        DELETE,
-        INSERT,
-        SIZE
-    };
-
-    static
-    const char*
-    label(const index_t i)
-    {
-        switch (i)
-        {
-        case MATCH:
-            return "MATCH";
-        case DELETE:
-            return "DELETE";
-        case INSERT:
-            return "INSERT";
-        default:
-            return "UNKNOWN";
-        }
-    }
-};
-
-
-
 /// \brief Implementation of global alignment with affine gap costs
 ///
 /// alignment outputs start positions and CIGAR-style alignment

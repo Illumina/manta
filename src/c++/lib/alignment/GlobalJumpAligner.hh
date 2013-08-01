@@ -53,40 +53,6 @@ struct JumpAlignmentResult
 
 
 
-
-struct AlignState
-{
-    enum index_t
-    {
-        MATCH,
-        DELETE,
-        INSERT,
-        JUMP,
-        SIZE
-    };
-
-    static
-    const char*
-    label(const index_t i)
-    {
-        switch (i)
-        {
-        case MATCH:
-            return "MATCH";
-        case DELETE:
-            return "DELETE";
-        case INSERT:
-            return "INSERT";
-        case JUMP:
-            return "JUMP";
-        default:
-            return "UNKNOWN";
-        }
-    }
-};
-
-
-
 /// \brief a method to align a contig to two references
 ///
 /// the alignment can make a single jump from reference1 to reference2

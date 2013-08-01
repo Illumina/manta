@@ -27,6 +27,8 @@
 #include "blt_util/log.hh"
 #include "blt_util/io_util.hh"
 
+#include "alignment/GlobalAligner.hh"
+
 #include "common/OutStream.hh"
 
 #include "boost/foreach.hpp"
@@ -76,6 +78,17 @@ runASB(const ASBOptions& opt)
     Assembly a;
     svla.assembleSingleSVBreakend(bp,a);
     
+    // how much additional reference sequence should we extract from around
+    // each side of the breakend region?
+    static const pos_t extraRefEdgeSize(200);
+
+    reference_contig_segment bpref;
+    const std::string bpRefStr(bpref.seq());
+
+    getIntervalReferenceSegment(opt.referenceFilename, bamHeader, extraRefEdgeSize, bp.interval, bpref);
+
+    GlobalAligner<int> aligner(AlignmentScores<int>(1,2,6,0,3));
+
     std::cout << "Assembled " << a.size() << " contig(s)." << std::endl;
     std::ofstream os(opt.contigOutfile.c_str());
     unsigned n(1);
@@ -88,6 +101,10 @@ runASB(const ASBOptions& opt)
         os << ">contig_" << n << std::endl;
         os << ct->seq << std::endl;
         ++n;
+        AlignmentResult<int> res;
+        aligner.align(ct->seq.begin(),ct->seq.end(),
+        			  bpRefStr.begin(),bpRefStr.end(),
+        			  res);
     }
     os.close();
 }

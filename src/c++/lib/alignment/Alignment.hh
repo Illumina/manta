@@ -32,3 +32,34 @@ struct Alignment
     unsigned alignStart;
     ALIGNPATH::path_t apath;
 };
+
+struct AlignState
+{
+    enum index_t
+    {
+        MATCH,
+        DELETE,
+        INSERT,
+        JUMP,
+        SIZE
+    };
+
+    static
+    const char*
+    label(const index_t i)
+    {
+        switch (i)
+        {
+        case MATCH:
+            return "MATCH";
+        case DELETE:
+            return "DELETE";
+        case INSERT:
+            return "INSERT";
+        case JUMP:
+            return "JUMP";
+        default:
+            return "UNKNOWN";
+        }
+    }
+};

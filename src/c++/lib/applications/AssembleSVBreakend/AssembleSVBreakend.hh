@@ -20,7 +20,7 @@
 #include "manta/Program.hh"
 
 #include "applications/GenerateSVCandidates/GSCOptions.hh"
-
+#include "applications/GenerateSVCandidates/GenerateSVCandidates.hh"
 
 /// Assembles an SV breakend
 ///
