@@ -36,7 +36,7 @@ usage(
 {
     os << "\n" << prog.name() << ": assemble reads crossing breakpoint\n\n";
     os << "version: " << prog.version() << "\n\n";
-    os << "usage: " << prog.name() << " [options] > contigs.fa\n\n";
+    os << "usage: " << prog.name() << " [options] \n\n";
     os << visible << "\n\n";
 
     if (NULL != msg)
@@ -92,6 +92,8 @@ parseASBOptions(const manta::Program& prog,
       "pre-computed alignment statistics for the input alignment files (required)")
      ("contig-file", po::value(&opt.contigOutfile),
       "Fasta outfile for contig sequences (required)")
+      ("ref", po::value(&opt.referenceFilename),
+       "fasta reference sequence (required)")
     ;
 
     po::options_description help("help");
@@ -147,6 +149,10 @@ parseASBOptions(const manta::Program& prog,
     if (opt.contigOutfile.empty())
     {
         usage(log_os,prog,visible,"Need the Fasta contig outfile");
+    }
+    if (opt.referenceFilename.empty())
+    {
+    	usage(log_os,prog,visible,"Need the FASTA reference file");
     }
     {
         // check that alignment files exist, and names do not repeat

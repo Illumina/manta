@@ -37,6 +37,7 @@ struct ASBOptions : public GSCOptions
 
     std::string breakend;
     std::string contigOutfile;
+    std::string referenceFilename;
 
 };
 
