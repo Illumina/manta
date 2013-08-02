@@ -66,6 +66,8 @@ runASB(const ASBOptions& opt)
 
     int32_t tid(0), beginPos(0), endPos(0);
     parse_bam_region(bamHeader,opt.breakend,tid,beginPos,endPos);
+    std::cout << "Parse result of BAM region: " << beginPos << " " << endPos
+              << " with length " << (endPos-beginPos) << std::endl;
 
     const GenomeInterval breakendRegion(tid,beginPos,endPos);
     SVBreakend bp;
@@ -77,27 +79,29 @@ runASB(const ASBOptions& opt)
     SVLocusAssembler svla(opt);
     Assembly a;
     svla.assembleSingleSVBreakend(bp,a);
+    std::cout << "Assembled " << a.size() << " contig(s)." << std::endl;
     
     // how much additional reference sequence should we extract from around
     // each side of the breakend region?
     static const pos_t extraRefEdgeSize(200);
 
     reference_contig_segment bpref;
-    const std::string bpRefStr(bpref.seq());
 
     getIntervalReferenceSegment(opt.referenceFilename, bamHeader, extraRefEdgeSize, bp.interval, bpref);
+    const std::string bpRefStr(bpref.seq());
 
     GlobalAligner<int> aligner(AlignmentScores<int>(1,2,6,0,3));
 
-    std::cout << "Assembled " << a.size() << " contig(s)." << std::endl;
+    std::cout << "Aligning to reference with length " << bpRefStr.length() << std::endl;
+
     std::ofstream os(opt.contigOutfile.c_str());
     unsigned n(1);
     for (Assembly::const_iterator ct = a.begin();
          ct != a.end();
          ++ct)
     {
-        //std::cout << ct->seq << std::endl;
-        //std::cout << "seed read count " << ct->seedReadCount << std::endl;
+        std::cout << ct->seq << std::endl;
+        std::cout << "seed read count " << ct->seedReadCount << std::endl;
         os << ">contig_" << n << std::endl;
         os << ct->seq << std::endl;
         ++n;
@@ -105,6 +109,9 @@ runASB(const ASBOptions& opt)
         aligner.align(ct->seq.begin(),ct->seq.end(),
         			  bpRefStr.begin(),bpRefStr.end(),
         			  res);
+
+        std::cout << "score = " << res.score << std::endl;
+        std::cout << "start = " << res.align.alignStart << " apath = " << res.align.apath << std::endl;
     }
     os.close();
 }

@@ -38,7 +38,7 @@ SVLocusAssembler(const GSCOptions& opt) :
     _scanOpt(opt.scanOpt),
     _readScanner(_scanOpt,opt.statsFilename,opt.alignmentFilename),
     // reasonable default values for 30x and 100bp reads
-    _wordLength(37), _maxWordLength(65), _minContigLength(15),
+    _wordLength(37), _maxWordLength(80), _minContigLength(15),
     _minCoverage(1), _maxError(0.2), _minSeedReads(2),
     _maxAssemblyIterations(50)
 {
@@ -229,15 +229,19 @@ getBreakendReads(const SVBreakend& bp,
             // only clipped reads
 			if ((bamRead.pos()-1) >= searchRange.end_pos()) break;
             if (!_readScanner.isClipped(bamRead) ) continue;
+            string flag = "1";
+            if (bamRead.is_second()) { flag = "2"; }
+            string readKey = string(bamRead.qname()) + "_" + flag + "_" + boost::lexical_cast<std::string>(bamIndex);
 #ifdef DEBUG_ASBL
-            dbg_os << "Adding " << bamRead.qname() << endl;
+            dbg_os << "Adding " << readKey << endl;
+            dbg_os << bamRead.get_bam_read().get_string() << endl;
 #endif
-            if (reads.find(bamRead.qname()) != reads.end()) {
-            	reads[bamRead.qname()] = AssemblyRead(bamRead.get_bam_read().get_string(),
-                                                  	  false
-            										   );
+            if (reads.find(readKey) == reads.end()) {
+            	reads[readKey] = AssemblyRead(bamRead.get_bam_read().get_string(),
+                                              false
+                                               );
             } else {
-            	std::cout << "Read name collision : " << bamRead.qname() << std::endl;
+            	std::cout << "Read name collision : " << readKey << std::endl;
 
             }
 		}
@@ -271,7 +275,9 @@ void
 SVLocusAssembler::
 iterateAssembly(AssemblyReadMap& reads, Assembly& as)
 {
-    //std::cerr << "Starting assembly with " << reads.size() << " reads." << std::endl;
+#ifdef DEBUG_ASBL
+    std::cerr << "Starting assembly with " << reads.size() << " reads." << std::endl;
+#endif
 
     unsigned iterations(0); // number of assembly iterations
     unsigned unused_reads_now(reads.size());
