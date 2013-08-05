@@ -90,7 +90,8 @@ runASB(const ASBOptions& opt)
     getIntervalReferenceSegment(opt.referenceFilename, bamHeader, extraRefEdgeSize, bp.interval, bpref);
     const std::string bpRefStr(bpref.seq());
 
-    GlobalAligner<int> aligner(AlignmentScores<int>(1,2,6,0,3));
+    //GlobalAligner<int> aligner(AlignmentScores<int>(1,2,3,1,3));
+    GlobalAligner<int> aligner(AlignmentScores<int>(5,2,3,1,3));
 
     std::cout << "Aligning to reference with length " << bpRefStr.length() << std::endl;
 
