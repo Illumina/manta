@@ -83,7 +83,7 @@ runASB(const ASBOptions& opt)
     
     // how much additional reference sequence should we extract from around
     // each side of the breakend region?
-    static const pos_t extraRefEdgeSize(200);
+    static const pos_t extraRefEdgeSize(600);
 
     reference_contig_segment bpref;
 
@@ -101,7 +101,7 @@ runASB(const ASBOptions& opt)
          ct != a.end();
          ++ct)
     {
-        std::cout << ct->seq << std::endl;
+        std::cout << "ctg : " << ct->seq << std::endl;
         std::cout << "seed read count " << ct->seedReadCount << std::endl;
         os << ">contig_" << n << std::endl;
         os << ct->seq << std::endl;
