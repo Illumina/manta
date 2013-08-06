@@ -18,6 +18,8 @@
 
 #include "SVLocusAssembler.hh"
 
+#include "blt_util/align_path_bam_util.hh"
+
 #include <cassert>
 #include <cstdlib>
 
@@ -38,8 +40,8 @@ SVLocusAssembler(const GSCOptions& opt) :
     _scanOpt(opt.scanOpt),
     _readScanner(_scanOpt,opt.statsFilename,opt.alignmentFilename),
     // reasonable default values for 30x and 100bp reads
-    _wordLength(37), _maxWordLength(80), _minContigLength(15),
-    _minCoverage(1), _maxError(0.2), _minSeedReads(2),
+    _wordLength(37), _maxWordLength(61), _minContigLength(15),
+    _minCoverage(1), _maxError(0.35), _minSeedReads(2),
     _maxAssemblyIterations(50)
 {
     // setup regionless bam_streams:
@@ -114,7 +116,6 @@ SVLocusAssembler::
 walk(const string& seed,
      const unsigned wordLength,
      const str_uint_map_t& wordHash,
-     //unsigned& stepsBackward,
      string& contig) {
 
     // we start with the seed
@@ -190,9 +191,6 @@ walk(const string& seed,
 #ifdef DEBUG_ASBL
             dbg_os << "New contig: " << contig << endl;
 #endif
-            /*if (mode == 1) {
-                ++stepsBackward;
-            }*/
         } // while(true)
 #ifdef DEBUG_ASBL
         dbg_os << "mode change. Current mode " << mode << endl;
@@ -224,16 +222,20 @@ getBreakendReads(const SVBreakend& bp,
 		while (bamStream.next())
 		{
 			const bam_record& bamRead(*(bamStream.get_record_ptr()));
+            ALIGNPATH::path_t apath;
+            bam_cigar_to_apath(bamRead.raw_cigar(), bamRead.n_cigar(), apath);
 
 			// FIXME: add some criteria to filter for "interesting" reads here, for now we add 
             // only clipped reads
 			if ((bamRead.pos()-1) >= searchRange.end_pos()) break;
             if (!_readScanner.isClipped(bamRead) ) continue;
+            if (bamRead.get_bam_read().get_string().find('N') != std::string::npos) continue;
+            //if ( bamRead.pe_map_qual() == 0 ) continue;
             string flag = "1";
             if (bamRead.is_second()) { flag = "2"; }
             string readKey = string(bamRead.qname()) + "_" + flag + "_" + boost::lexical_cast<std::string>(bamIndex);
 #ifdef DEBUG_ASBL
-            dbg_os << "Adding " << readKey << endl;
+            dbg_os << "Adding " << readKey << " " << apath << " " << bamRead.pe_map_qual() << " " << bamRead.pos() << endl;
             dbg_os << bamRead.get_bam_read().get_string() << endl;
 #endif
             if (reads.find(readKey) == reads.end()) {
@@ -383,12 +385,9 @@ buildContigs(AssemblyReadMap& reads,
     dbg_os << "Seeding kmer : " << maxWord << endl;
 #endif
 
-    // counts the number of steps taken backwards from the start kmer during the assembly.
-    //unsigned stepsBackward(0);
-
     // start initial assembly with most frequent kmer as seed
     AssembledContig ctg;
-    walk(maxWord,wordLength,wordHash,/*stepsBackward,*/ctg.seq);
+    walk(maxWord,wordLength,wordHash,ctg.seq);
 
     // done with this now:
     wordHash.clear();
@@ -400,7 +399,7 @@ buildContigs(AssemblyReadMap& reads,
 #ifdef DEBUG_ASBL
     dbg_os << "First pass assembly resulted in "
            << ctg.seq << "\n"
-           << " with length " << contig_size << " assembled from " << rh_size << " reads. " << endl;
+           << " with length " << contig_size << ". Input consisted of " << rh_size << " reads. " << endl;
 #endif
 
     for (unsigned i(0); i<rh_size; ++i) {
@@ -434,7 +433,15 @@ buildContigs(AssemblyReadMap& reads,
 
     // don't need this anymore:
     readHashes.clear();
-    //cout << "final seeding reading count: " << ctg.seedReadCount << endl;
-    as.push_back(ctg);
+#ifdef DEBUG_ASBL
+    cout << "final seeding reading count: " << ctg.seedReadCount << endl;
+#endif
+    if (ctg.seedReadCount > _minSeedReads) {
+        as.push_back(ctg);
+    } else {
+#ifdef DEBUG_ASBL
+    cout << "which is below minSeedReadCount of " << _minSeedReads << " discarding."  << endl;
+#endif
+    }
     return true;
 }

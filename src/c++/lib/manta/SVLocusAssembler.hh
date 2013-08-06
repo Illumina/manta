@@ -23,6 +23,8 @@
 #include "SVLocusScanner.hh"
 
 #include "blt_util/bam_streamer.hh"
+//#include "blt_util/log.hh"
+#include "blt_util/align_path.hh"
 
 #include "applications/GenerateSVCandidates/GSCOptions.hh"
 
@@ -37,7 +39,7 @@
 
 
 // compile with this macro to get verbose output:
-//#define DEBUG_ASBL
+#define DEBUG_ASBL
 
 #ifdef DEBUG_ASBL
 #include <iosfwd>
@@ -141,7 +143,6 @@ private:
     walk(const std::string& seed,
          const unsigned wordLength,
          const str_uint_map_t& wordHash,
-         //unsigned& stepsBackward,
          std::string& contig);
 
     const ReadScannerOptions _scanOpt;
