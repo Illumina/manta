@@ -103,10 +103,8 @@ runASB(const ASBOptions& opt)
     getIntervalReferenceSegment(opt.referenceFilename, bamHeader, extraRefEdgeSize, bp2.interval, bpref2);
     const std::string bpRefStr2(bpref2.seq());
 
-    //GlobalAligner<int> aligner(AlignmentScores<int>(1,2,6,0,3));
-
-    int jumpScore(3);
-    GlobalJumpAligner<int> aligner(AlignmentScores<int>(1,2,6,0,3),jumpScore);
+    int jumpScore(-2);
+    GlobalJumpAligner<int> aligner(AlignmentScores<int>(5,-2,-3,-1,-2),jumpScore);
 
     std::ofstream os(opt.contigOutfile.c_str());
     unsigned n(1);
@@ -125,6 +123,17 @@ runASB(const ASBOptions& opt)
         			  bpRefStr1.begin(),bpRefStr1.end(),
         			  bpRefStr2.begin(),bpRefStr2.end(),
         			  res);
+
+        std::string cigar1;
+        apath_to_cigar(res.align1.apath,cigar1);
+        std::cout << "align1 start = " << res.align1.alignStart << std::endl;
+        std::cout << "align1 cigar = " << cigar1 << std::endl;
+
+        std::string cigar2;
+        apath_to_cigar(res.align2.apath,cigar2);
+        std::cout << "align2 start" << res.align2.alignStart << std::endl;
+        std::cout << "align2 cigar = " << cigar2 << std::endl;
+        
     }
     os.close();
 }
