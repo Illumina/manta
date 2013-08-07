@@ -44,56 +44,69 @@ runASB(const ASBOptions& opt)
 {
 	///
     typedef boost::shared_ptr<bam_streamer> stream_ptr;
-    std::vector<stream_ptr> bam_streams;
+    std::vector<stream_ptr> bam_streams_bkpt1;
+    std::vector<stream_ptr> bam_streams_bkpt2;
 
     // setup all data for main alignment loop:
     BOOST_FOREACH(const std::string& afile, opt.alignmentFilename)
     {
-        stream_ptr tmp(new bam_streamer(afile.c_str(),opt.breakend.c_str()));
-        bam_streams.push_back(tmp);
+        stream_ptr tmp(new bam_streamer(afile.c_str(),opt.breakend1.c_str()));
+        bam_streams_bkpt1.push_back(tmp);
+    }
+    BOOST_FOREACH(const std::string& afile, opt.alignmentFilename)
+    {
+    	stream_ptr tmp(new bam_streamer(afile.c_str(),opt.breakend2.c_str()));
+        bam_streams_bkpt2.push_back(tmp);
     }
 
     // TODO check header compatibility between all open bam streams
-    const unsigned n_inputs(bam_streams.size());
-
-    std::cout << "Assembling region " << opt.breakend << std::endl;
-
+    const unsigned n_inputs(bam_streams_bkpt1.size());
     // assume headers compatible after this point....
     assert(0 != n_inputs);
 
-    const bam_header_t& header(*(bam_streams[0]->get_header()));
+    std::cout << "Assembling region 1 " << opt.breakend1 << std::endl;
+    std::cout << "Assembling region 2 " << opt.breakend2 << std::endl;
+
+    const bam_header_t& header(*(bam_streams_bkpt1[0]->get_header()));
     const bam_header_info bamHeader(header);
 
-    int32_t tid(0), beginPos(0), endPos(0);
-    parse_bam_region(bamHeader,opt.breakend,tid,beginPos,endPos);
-    std::cout << "Parse result of BAM region: " << beginPos << " " << endPos
-              << " with length " << (endPos-beginPos) << std::endl;
+    int32_t tid1(0), beginPos1(0), endPos1(0);
+    int32_t tid2(0), beginPos2(0), endPos2(0);
+    parse_bam_region(bamHeader,opt.breakend1,tid1,beginPos1,endPos1);
+    parse_bam_region(bamHeader,opt.breakend2,tid2,beginPos2,endPos2);
 
-    const GenomeInterval breakendRegion(tid,beginPos,endPos);
-    SVBreakend bp;
-    bp.interval = breakendRegion;
+    const GenomeInterval breakendRegion1(tid1,beginPos1,endPos1);
+    SVBreakend bp1;
+    bp1.interval = breakendRegion1;
+    const GenomeInterval breakendRegion2(tid2,beginPos2,endPos2);
+    SVBreakend bp2;
+    bp1.interval = breakendRegion2;
 
-    std::cout << "Translating into " << breakendRegion << std::endl;
-    std::cout << "Translating into " << bp << std::endl;
+    std::cout << "Translating into " << breakendRegion1 << " and " << breakendRegion2 << std::endl;
+    std::cout << "Translating into " << bp1 << " and " << bp2 << std::endl;
 
     SVLocusAssembler svla(opt);
     Assembly a;
-    svla.assembleSingleSVBreakend(bp,a);
+//    /svla.assembleSingleSVBreakend(bp1,a);
+    svla.assembleSVBreakends(bp1,bp2,a);
     std::cout << "Assembled " << a.size() << " contig(s)." << std::endl;
     
     // how much additional reference sequence should we extract from around
     // each side of the breakend region?
     static const pos_t extraRefEdgeSize(600);
 
-    reference_contig_segment bpref;
+    reference_contig_segment bpref1;
+    getIntervalReferenceSegment(opt.referenceFilename, bamHeader, extraRefEdgeSize, bp1.interval, bpref1);
+    const std::string bpRefStr1(bpref1.seq());
 
-    getIntervalReferenceSegment(opt.referenceFilename, bamHeader, extraRefEdgeSize, bp.interval, bpref);
-    const std::string bpRefStr(bpref.seq());
+    reference_contig_segment bpref2;
+    getIntervalReferenceSegment(opt.referenceFilename, bamHeader, extraRefEdgeSize, bp2.interval, bpref2);
+    const std::string bpRefStr2(bpref2.seq());
 
-    //GlobalAligner<int> aligner(AlignmentScores<int>(1,2,3,1,3));
-    GlobalAligner<int> aligner(AlignmentScores<int>(5,2,3,1,3));
+    //GlobalAligner<int> aligner(AlignmentScores<int>(1,2,6,0,3));
 
-    std::cout << "Aligning to reference with length " << bpRefStr.length() << std::endl;
+    int jumpScore(3);
+    GlobalJumpAligner<int> aligner(AlignmentScores<int>(1,2,6,0,3),jumpScore);
 
     std::ofstream os(opt.contigOutfile.c_str());
     unsigned n(1);
@@ -106,13 +119,12 @@ runASB(const ASBOptions& opt)
         os << ">contig_" << n << std::endl;
         os << ct->seq << std::endl;
         ++n;
-        AlignmentResult<int> res;
+        //AlignmentResult<int> res;
+        JumpAlignmentResult<int> res;
         aligner.align(ct->seq.begin(),ct->seq.end(),
-        			  bpRefStr.begin(),bpRefStr.end(),
+        			  bpRefStr1.begin(),bpRefStr1.end(),
+        			  bpRefStr2.begin(),bpRefStr2.end(),
         			  res);
-
-        std::cout << "score = " << res.score << std::endl;
-        std::cout << "start = " << res.align.alignStart << " apath = " << res.align.apath << std::endl;
     }
     os.close();
 }

@@ -31,11 +31,13 @@ struct ASBOptions : public GSCOptions
 
     ASBOptions() :
     	GSCOptions(),
-        breakend(""),
+        breakend1(""),
+        breakend2(""),
         contigOutfile("")
     {}
 
-    std::string breakend;
+    std::string breakend1;
+    std::string breakend2;
     std::string contigOutfile;
     std::string referenceFilename;
 

@@ -46,7 +46,6 @@ struct GSCOptions
     std::string chromDepthFilename;
 
     std::string candidateOutputFilename;
-    //std::string germlineOutputFilename;
     std::string somaticOutputFilename;
 
     unsigned binCount;

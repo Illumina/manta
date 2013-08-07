@@ -52,7 +52,7 @@ dumpEdgeInfo(
 
 
 
-/// we can either traverse all edges in a single locus (disjount subgraph) of the graph
+/// we can either traverse all edges in a single locus (disjoint subgraph) of the graph
 /// OR
 /// traverse all edges in out "bin" -- that is, 1 of binCount subsets of the total graph edges
 /// designed to be of roughly equal size for parallel processing

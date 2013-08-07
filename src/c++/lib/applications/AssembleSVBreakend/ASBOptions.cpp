@@ -34,7 +34,7 @@ usage(
     const boost::program_options::options_description& visible,
     const char* msg = NULL)
 {
-    os << "\n" << prog.name() << ": assemble reads crossing breakpoint\n\n";
+    os << "\n" << prog.name() << ": assembling reads crossing breakpoint\n\n";
     os << "version: " << prog.version() << "\n\n";
     os << "usage: " << prog.name() << " [options] \n\n";
     os << visible << "\n\n";
@@ -82,18 +82,20 @@ parseASBOptions(const manta::Program& prog,
     namespace po = boost::program_options;
     po::options_description req("configuration");
     req.add_options()
-    ("breakend", po::value<std::string>(&opt.breakend),
-     "Position of the breakend, e.g. chr20:1000")
-     ("align-file", po::value(&normalAlignmentFilename),
-      "alignment file in bam format (may be specified multiple times, assumed to be non-tumor if tumor file(s) provided)")
-     ("tumor-align-file", po::value(&tumorAlignmentFilename),
-      "tumor sample alignment file in bam format (may be specified multiple times)")
-     ("align-stats", po::value(&opt.statsFilename),
-      "pre-computed alignment statistics for the input alignment files (required)")
-     ("contig-file", po::value(&opt.contigOutfile),
-      "Fasta outfile for contig sequences (required)")
-      ("ref", po::value(&opt.referenceFilename),
-       "fasta reference sequence (required)")
+    ("breakend", po::value<std::string>(&opt.breakend1),
+     "Position of the first breakend, e.g. chr20:1000-1050")
+    ("breakend2", po::value<std::string>(&opt.breakend2),
+     "Position of the second breakend (optional)")
+    ("align-file", po::value(&normalAlignmentFilename),
+     "alignment file in bam format (may be specified multiple times, assumed to be non-tumor if tumor file(s) provided)")
+    ("tumor-align-file", po::value(&tumorAlignmentFilename),
+     "tumor sample alignment file in bam format (may be specified multiple times)")
+    ("align-stats", po::value(&opt.statsFilename),
+     "pre-computed alignment statistics for the input alignment files (required)")
+    ("contig-file", po::value(&opt.contigOutfile),
+     "Fasta outfile for contig sequences (required)")
+    ("ref", po::value(&opt.referenceFilename),
+     "fasta reference sequence (required)")
     ;
 
     po::options_description help("help");
@@ -123,9 +125,9 @@ parseASBOptions(const manta::Program& prog,
     }
 
     // fast check of config state:
-    if (opt.breakend.empty())
+    if (opt.breakend1.empty())
     {
-        usage(log_os,prog,visible,"Must specify breakpoint coordinates");
+        usage(log_os,prog,visible,"Must specify at least one set breakpoint coordinates");
     }
 
     {
@@ -148,7 +150,7 @@ parseASBOptions(const manta::Program& prog,
     }
     if (opt.contigOutfile.empty())
     {
-        usage(log_os,prog,visible,"Need the Fasta contig outfile");
+        usage(log_os,prog,visible,"Need the FASTA contig outfile");
     }
     if (opt.referenceFilename.empty())
     {
