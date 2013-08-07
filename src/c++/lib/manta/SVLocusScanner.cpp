@@ -67,11 +67,14 @@ GetSplitSVCandidate(
     localBreakend.interval.tid = alignTid;
     remoteBreakend.interval.tid = alignTid;
 
-    localBreakend.interval.range.set_begin_pos(std::max(0,leftPos-static_cast<pos_t>(opt.minSplitBreakendSize)));
-    localBreakend.interval.range.set_end_pos(leftPos+static_cast<pos_t>(opt.minSplitBreakendSize));
+    const pos_t beforeBreakend(opt.minPairBreakendSize/2);
+    const pos_t afterBreakend(opt.minPairBreakendSize-beforeBreakend);
 
-    remoteBreakend.interval.range.set_begin_pos(std::max(0,rightPos-static_cast<pos_t>(opt.minSplitBreakendSize)));
-    remoteBreakend.interval.range.set_end_pos(rightPos+static_cast<pos_t>(opt.minSplitBreakendSize));
+    localBreakend.interval.range.set_begin_pos(std::max(0,leftPos-beforeBreakend));
+    localBreakend.interval.range.set_end_pos(leftPos+afterBreakend);
+
+    remoteBreakend.interval.range.set_begin_pos(std::max(0,rightPos-beforeBreakend));
+    remoteBreakend.interval.range.set_end_pos(rightPos+afterBreakend);
 
     return sv;
 }
@@ -322,7 +325,16 @@ getSVLociImpl(
 
         // set remote breakend estimate:
         {
-            const NodeIndexType remoteBreakendNode(locus.addRemoteNode(remoteBreakend.interval));
+            NodeIndexType remoteBreakendNode;
+            if((remoteBreakend.readCount != 0) ||
+               (remoteBreakend.splitCount != 0))
+            {
+                remoteBreakendNode = locus.addNode(remoteBreakend.interval);
+            }
+            else
+            {
+                remoteBreakendNode = locus.addRemoteNode(remoteBreakend.interval);
+            }
             locus.linkNodes(localBreakendNode,remoteBreakendNode);
             locus.mergeSelfOverlap();
         }
