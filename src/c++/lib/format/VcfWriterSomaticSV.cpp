@@ -46,8 +46,11 @@ addHeaderFilters() const
 void
 VcfWriterSomaticSV::
 modifyInfo(
+	const SVBreakend& bp1,
+	const SVBreakend& bp2,
     const bool isFirstOfPair,
-    std::vector<std::string>& infotags) const
+    std::vector<std::string>& infotags,
+    const SVCandidateData& svData) const
 {
     assert(_ssInfoPtr != NULL);
     const SomaticSVScoreInfo& ssInfo(*_ssInfoPtr);
@@ -64,6 +67,29 @@ modifyInfo(
                             (isFirstOfPair ? ssInfo.bp1MaxDepth : ssInfo.bp2MaxDepth) ) );
     infotags.push_back( str(boost::format("MATE_BND_DEPTH=%i") %
                             (isFirstOfPair ? ssInfo.bp2MaxDepth : ssInfo.bp1MaxDepth) ) );
+
+    if (isFirstOfPair) {
+    	// store alignment start + cigar string for each section of the jumping alignment.
+    	// there can be several contigs per breakend, so we iterate over all of them.
+    	// only the first breakpoint gets the alignments attached to its VCF entry
+    	const unsigned numAlign(svData.getAlignments().size());
+    	std::string cigar1;
+    	std::string cigar2;
+    	for (unsigned i(0); i<numAlign;++i) {
+    		infotags.push_back( str(boost::format("CTG_JALIGN_%i_POS_A=%i") %
+    								i %
+    								(bp1.interval.range.begin_pos()+svData.getAlignments()[i].align1.alignStart)) );
+    		infotags.push_back( str(boost::format("CTG_JALIGN_%i_POS_B=%i") %
+    								i %
+    								(bp2.interval.range.begin_pos()+svData.getAlignments()[i].align2.alignStart)) );
+
+    		apath_to_cigar(svData.getAlignments()[i].align1.apath,cigar1);
+    		apath_to_cigar(svData.getAlignments()[i].align2.apath,cigar2);
+
+    		infotags.push_back( str(boost::format("CTG_JALIGN_%i_CIGAR_A=%s") % i % cigar1) );
+    		infotags.push_back( str(boost::format("CTG_JALIGN_%i_CIGAR_B=%s") % i % cigar2) );
+    	}
+    }
 }
 
 
@@ -89,7 +115,7 @@ void
 VcfWriterSomaticSV::
 writeSV(
     const EdgeInfo& edge,
-    const SVCandidateData& ,
+    const SVCandidateData& svData ,
     const unsigned svIndex,
     const SVCandidate& sv,
     const SomaticSVScoreInfo& ssInfo)
@@ -99,6 +125,6 @@ writeSV(
 
     //TODO: this is a lame way to customize subclass behavior:
     _ssInfoPtr=&ssInfo;
-    writeSVCore(edge, svIndex, sv);
+    writeSVCore(edge, svIndex, sv, svData);
     _ssInfoPtr=NULL;
 }

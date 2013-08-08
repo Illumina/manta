@@ -80,7 +80,7 @@ runASB(const ASBOptions& opt)
     bp1.interval = breakendRegion1;
     const GenomeInterval breakendRegion2(tid2,beginPos2,endPos2);
     SVBreakend bp2;
-    bp1.interval = breakendRegion2;
+    bp2.interval = breakendRegion2;
 
     std::cout << "Translating into " << breakendRegion1 << " and " << breakendRegion2 << std::endl;
     std::cout << "Translating into " << bp1 << " and " << bp2 << std::endl;

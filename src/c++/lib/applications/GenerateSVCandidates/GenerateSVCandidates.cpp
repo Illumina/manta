@@ -132,7 +132,7 @@ runGSC(
 
                 // how much additional reference sequence should we extract from around
                 // each side of the breakend region?
-                static const pos_t extraRefEdgeSize(200);
+                static const pos_t extraRefEdgeSize(300);
 
                 reference_contig_segment bp1ref,bp2ref;
                 const std::string bp1RefStr(bp1ref.seq());

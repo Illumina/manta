@@ -23,7 +23,6 @@
 #include "svgraph/SVLocusSet.hh"
 #include "manta/SomaticSVScoreInfo.hh"
 #include "options/SomaticCallOptions.hh"
-
 #include "boost/format.hpp"
 
 #include <iosfwd>
@@ -69,13 +68,17 @@ protected:
     writeSVCore(
         const EdgeInfo& edge,
         const unsigned svIndex,
-        const SVCandidate& sv);
+        const SVCandidate& sv,
+        const SVCandidateData& svData);
 
     virtual
     void
     modifyInfo(
+    	const SVBreakend& /*bp1*/,
+    	const SVBreakend& /*bp2*/,
         const bool /*isFirstOfPair*/,
-        std::vector<std::string>& /*infotags*/) const
+        std::vector<std::string>& /*infotags*/,
+        const SVCandidateData& /*svData*/) const
     {}
 
     virtual
@@ -92,13 +95,15 @@ private:
         const SVBreakend& bp1,
         const SVBreakend& bp2,
         const std::string& idPrefix,
-        const bool isFirstOfPair);
+        const bool isFirstOfPair,
+        const SVCandidateData& svData);
 
     void
     writeTranslocPair(
         const EdgeInfo& edge,
         const unsigned svIndex,
-        const SVCandidate& sv);
+        const SVCandidate& sv,
+        const SVCandidateData& svData);
 
     void
     writeInvdel(

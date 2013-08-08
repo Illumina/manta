@@ -23,14 +23,14 @@ void
 VcfWriterCandidateSV::
 writeSV(
     const EdgeInfo& edge,
-    const SVCandidateData&,
+    const SVCandidateData& svData,
     const std::vector<SVCandidate>& svs)
 {
     unsigned svIndex(0);
     BOOST_FOREACH(const SVCandidate& sv, svs)
     {
         if (sv.bp1.pairCount < _minPairCount) continue;
-        writeSVCore(edge, svIndex, sv);
+        writeSVCore(edge, svIndex, sv, svData);
         svIndex++;
     }
 }
