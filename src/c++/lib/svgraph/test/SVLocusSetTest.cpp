@@ -496,5 +496,107 @@ BOOST_AUTO_TEST_CASE( test_SVLocusDoubleSelfEdge2 )
 }
 
 
+BOOST_AUTO_TEST_CASE( test_SVLocusNodeOverlapEdge )
+{
+    // test merge of two edges: one edge node encompasses both nodes of the second edge:
+    //
+
+    SVLocus locus1;
+    locusAddPair(locus1,1,10,60,2,20,70);
+    SVLocus locus2;
+    locusAddPair(locus2,1,10,20,1,30,40);
+
+    locus1.mergeSelfOverlap();
+    locus2.mergeSelfOverlap();
+
+    {
+        SVLocusSet set1(2);
+        set1.merge(locus1);
+        set1.merge(locus2);
+        const SVLocusSet& cset1(set1);
+
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),2u);
+
+        set1.finalize();
+        cset1.checkState(true,true);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),0u);
+    }
+
+    { // reverse the order of locus addition to be sure:
+        SVLocusSet set1(2);
+        set1.merge(locus2);
+        set1.merge(locus1);
+        const SVLocusSet& cset1(set1);
+
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),2u);
+
+        set1.finalize();
+        cset1.checkState(true,true);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),0u);
+    }
+
+}
+
+
+BOOST_AUTO_TEST_CASE( test_SVLocusNodeOverlapSelfEdge )
+{
+    // test merge of two edges: one edge node overlaps a self-edge
+    //
+
+    SVLocus locus1;
+    locusAddPair(locus1,1,10,60,2,20,70);
+    SVLocus locus2;
+    locusAddPair(locus2,1,10,20,1,10,20);
+
+    locus1.mergeSelfOverlap();
+    locus2.mergeSelfOverlap();
+
+    {
+        SVLocusSet set1(2);
+        set1.merge(locus1);
+        set1.merge(locus2);
+        const SVLocusSet& cset1(set1);
+
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),2u);
+
+        set1.finalize();
+        cset1.checkState(true,true);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),0u);
+    }
+
+    { // reverse the order of locus addition to be sure:
+        SVLocusSet set1(2);
+        set1.merge(locus2);
+        set1.merge(locus1);
+        const SVLocusSet& cset1(set1);
+
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),2u);
+
+        set1.finalize();
+        cset1.checkState(true,true);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),0u);
+    }
+
+    SVLocus locus3;
+    locusAddPair(locus3,1,10,20,1,10,20);
+
+    locus3.mergeSelfOverlap();
+
+    {
+        SVLocusSet set1(2);
+        set1.merge(locus1);
+        set1.merge(locus2);
+        set1.merge(locus3);
+        const SVLocusSet& cset1(set1);
+
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),2u);
+
+        set1.finalize();
+        cset1.checkState(true,true);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+    }
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
