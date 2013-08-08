@@ -123,6 +123,8 @@ runGSC(
             svFind.findCandidateSV(edge,svData,svs);
             BOOST_FOREACH(const SVCandidate& sv, svs)
             {
+                //std::cout << "sv.bp1 = " << sv.bp1 << std::endl;
+                //std::cout << "sv.bp2 = " << sv.bp2 << std::endl;
                 Assembly as;
                 svAssembler.assembleSVBreakends(sv.bp1,sv.bp2,as);
                 svData.getAssembly().insert(svData.getAssembly().end(),
@@ -135,9 +137,9 @@ runGSC(
                 static const pos_t extraRefEdgeSize(300);
 
                 reference_contig_segment bp1ref,bp2ref;
+                getSVReferenceSegments(opt.referenceFilename, cset.header, extraRefEdgeSize, sv, bp1ref, bp2ref);
                 const std::string bp1RefStr(bp1ref.seq());
                 const std::string bp2RefStr(bp2ref.seq());
-                getSVReferenceSegments(opt.referenceFilename, cset.header, extraRefEdgeSize, sv, bp1ref, bp2ref);
                 for(Assembly::const_iterator ct = as.begin();
                 	ct != as.end();
                 	++ct) {
