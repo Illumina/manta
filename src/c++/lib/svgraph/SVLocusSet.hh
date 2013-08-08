@@ -307,8 +307,8 @@ private:
     ///
     void
     getNodeIntersectCore(
-        const LocusIndexType locusIndex,
-        const NodeIndexType nodeIndex,
+        const LocusIndexType inputLocusIndex,
+        const NodeIndexType inputNodeIndex,
         const LocusSetIndexerType& searchNodes,
         const LocusIndexType fitlerLocusIndex,
         std::set<NodeAddressType>& intersectNodes) const;
@@ -324,10 +324,13 @@ private:
         getNodeIntersectCore(locusIndex, nodeIndex, _inodes, locusIndex, intersectNodes);
     }
 
+    ///
+    /// \param isInputLocusMoved has the input locus been moved into the graph from an initial temporary locus?
+    ///
     void
     getNodeMergeableIntersect(
-        const LocusIndexType locusIndex,
-        const NodeIndexType nodeIndex,
+        const LocusIndexType inputLocusIndex,
+        const NodeIndexType inputNodeIndex,
         const bool isInputLocusMoved,
         std::set<NodeAddressType>& mergeIntersect) const;
 
