@@ -219,7 +219,9 @@ getBreakendReads(const SVBreakend& bp,
 		// set bam stream to new search interval:
 		bamStream.set_new_region(bp.interval.tid, searchRange.begin_pos(), searchRange.end_pos());
 
-		while (bamStream.next())
+        const unsigned MAX_NUM_READS(1000);
+
+		while (bamStream.next() && reads.size() < MAX_NUM_READS)
 		{
 			const bam_record& bamRead(*(bamStream.get_record_ptr()));
             ALIGNPATH::path_t apath;
