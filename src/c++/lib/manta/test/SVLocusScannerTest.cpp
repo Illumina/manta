@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE( test_getSVCandidates )
     getSVCandidatesFromRead(opt,align,0,candidates);
 
 
-    BOOST_REQUIRE_EQUAL(candidates.size(),1);
+    BOOST_REQUIRE_EQUAL(candidates.size(),1u);
     BOOST_REQUIRE(candidates[0].bp1.interval.range.is_pos_intersect(100));
     BOOST_REQUIRE(candidates[0].bp2.interval.range.is_pos_intersect(2100));
 }
