@@ -25,14 +25,14 @@
 
 
 
-struct simpleAlignment
+struct SimpleAlignment
 {
-    simpleAlignment() :
+    SimpleAlignment() :
         is_fwd_strand(true),
         pos(0)
     {}
 
-    simpleAlignment(const bam_record& bamRead) :
+    SimpleAlignment(const bam_record& bamRead) :
         is_fwd_strand(bamRead.is_fwd_strand()),
         pos(bamRead.pos()-1)
     {
@@ -85,7 +85,7 @@ static
 void
 getSVCandidatesFromRead(
     const ReadScannerOptions& opt,
-    const simpleAlignment& align,
+    const SimpleAlignment& align,
     const int32_t alignTid,
     std::vector<SVCandidate>& candidates)
 {
@@ -169,7 +169,7 @@ getReadBreakendsImpl(
     std::vector<SVCandidate>& candidates,
     known_pos_range2& localEvidenceRange)
 {
-    const simpleAlignment localAlign(localRead);
+    const SimpleAlignment localAlign(localRead);
 
     // 1) process any large indels in the localRead:
     getSVCandidatesFromRead(opt, localAlign, localRead.target_id(), candidates);
