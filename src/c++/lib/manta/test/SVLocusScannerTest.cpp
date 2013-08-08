@@ -25,7 +25,6 @@ BOOST_AUTO_TEST_SUITE( test_SVLocusScanner )
 
 BOOST_AUTO_TEST_CASE( test_getSVCandidates )
 {
-
     ReadScannerOptions opt;
 
     ALIGNPATH::path_t inputPath;

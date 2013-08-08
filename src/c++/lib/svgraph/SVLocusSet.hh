@@ -302,6 +302,9 @@ private:
 
     /// shared node intersection utility
     ///
+    /// \param searchNodes the set of nodes to search for intersections in
+    /// \param filterLocusIndex ignore intersections from this locus
+    ///
     void
     getNodeIntersectCore(
         const LocusIndexType locusIndex,

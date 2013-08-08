@@ -184,8 +184,9 @@ struct SVLocusSet;
 /// The locus is composed of a set of non-overlapping contiguous genomic regions and links between them.
 /// Each link has an associated evidence count.
 ///
-/// This class internally manages the node shared pointers in a synced data structure, there's probably a better
-/// way to do this with transform_iterator, but I've always regretted using that.
+/// This class internally manages the node shared pointers in a synced data structure,
+/// there's probably a better way to do this with transform_iterator, but I've always
+/// regretted using that.
 ///
 struct SVLocus : public notifier<SVLocusNodeMoveMessage>
 {

@@ -322,7 +322,7 @@ getNodeMergeableIntersect(
     const bool isInputLocusMoved,
     std::set<NodeAddressType>& mergeIntersectNodes) const
 {
-    // Two ways sets of mergeable nodes can occur:
+    // There are two ways sets of mergeable nodes can occur:
     // (1) There is a set of nodes which overlap with both input Node and one of the remote nodes that the input points to. When totaled together,
     // the edge count of this set + the inputNode edge exceeds minMergeEdgeCount.
     // (2) The input node either contains an edge which is greater than minMergeEdgeCOunt or will contain such an edge due to (1),
@@ -354,24 +354,24 @@ getNodeMergeableIntersect(
         // get a standard intersection of the input node:
         std::set<NodeAddressType> intersectNodes;
         getNodeIntersect(locusIndex,nodeIndex,intersectNodes);
-        BOOST_FOREACH(const NodeAddressType& addy, intersectNodes)
+        BOOST_FOREACH(const NodeAddressType& intersectAddy, intersectNodes)
         {
-            const SVLocus& intersectLocus(getLocus(addy.first));
-            const SVLocusNode& intersectNode(getNode(addy));
+            const SVLocus& intersectLocus(getLocus(intersectAddy.first));
+            const SVLocusNode& intersectNode(getNode(intersectAddy));
 
             // for each remote node of the input, get all existing nodes which intersect with it:
             BOOST_FOREACH(const SVLocusNode::edges_type::value_type& intersectEdge, intersectNode)
             {
                 // 1. build remote <-> local indexing structures:
-                NodeAddressType remoteAddy(std::make_pair(addy.first,intersectEdge.first));
-                remoteToLocal.insert(std::make_pair(remoteAddy,addy.second));
+                NodeAddressType remoteAddy(std::make_pair(intersectAddy.first,intersectEdge.first));
+                remoteToLocal.insert(std::make_pair(remoteAddy,intersectAddy.second));
                 remoteIntersect.insert(remoteAddy);
             }
 
             // 2. build the signal node set:
-            if (! intersectLocus.isNoiseNode(_minMergeEdgeCount,addy.second))
+            if (! intersectLocus.isNoiseNode(_minMergeEdgeCount,intersectAddy.second))
             {
-                signalIntersectNodes.insert(addy);
+                signalIntersectNodes.insert(intersectAddy);
             }
         }
 
