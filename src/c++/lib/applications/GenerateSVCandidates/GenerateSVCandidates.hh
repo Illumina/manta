@@ -48,7 +48,6 @@ getIntervalReferenceSegment(
 }
 
 
-
 /// extract the reference sequence around each breakend into a reference_contig_segment
 /// object
 ///

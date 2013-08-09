@@ -111,8 +111,8 @@ runGSC(
     SVCandidateData svData;
     std::vector<SVCandidate> svs;
     SomaticSVScoreInfo ssInfo;
-    int jumpScore(3);
-    GlobalJumpAligner<int> aligner(AlignmentScores<int>(1,2,6,0,3),jumpScore);
+    int jumpScore(-2);
+    GlobalJumpAligner<int> aligner(AlignmentScores<int>(5,-2,-3,-1,-2),jumpScore);
     while (edger.next())
     {
         const EdgeInfo& edge(edger.getEdge());
@@ -148,6 +148,9 @@ runGSC(
                 				  bp1RefStr.begin(),bp1RefStr.end(),
                 				  bp2RefStr.begin(),bp2RefStr.end(),
                 				  res);
+
+
+
                 	svData.getAlignments().push_back(res);
                 }
             }
