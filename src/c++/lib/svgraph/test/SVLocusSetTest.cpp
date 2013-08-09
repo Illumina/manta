@@ -466,7 +466,6 @@ BOOST_AUTO_TEST_CASE( test_SVLocusDoubleSelfEdge )
         BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),1u);
         BOOST_REQUIRE_EQUAL(cset1.getLocus(0).getNode(0).size(),1u);
 
-        std::cerr << "TestLocus: " << cset1.getLocus(0);
         BOOST_REQUIRE_EQUAL(cset1.getLocus(0).getNode(0).outCount(),2u);
     }
 }
@@ -590,6 +589,33 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeOverlapSelfEdge )
         const SVLocusSet& cset1(set1);
 
         BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),2u);
+
+        set1.finalize();
+        cset1.checkState(true,true);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE( test_SVLocusMergeToSelfEdge )
+{
+    // test merge or edges which are not self-edges themselves, but merge to
+    // a state where they should be a self edge.
+    //
+
+    SVLocus locus1;
+    locusAddPair(locus1,1,10,20,1,25,40);
+    SVLocus locus2;
+    locusAddPair(locus2,1,15,30,1,35,40);
+
+    locus1.mergeSelfOverlap();
+    locus2.mergeSelfOverlap();
+
+    {
+        SVLocusSet set1(2);
+        set1.merge(locus1);
+        set1.merge(locus2);
+        const SVLocusSet& cset1(set1);
 
         set1.finalize();
         cset1.checkState(true,true);
