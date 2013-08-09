@@ -235,6 +235,13 @@ private:
 
     typedef std::pair<LocusIndexType,NodeIndexType> NodeAddressType;
 
+    typedef NodeAddressType EdgeMapKeyType;
+    typedef NodeIndexType EdgeMapValueType;
+
+    typedef std::multimap<EdgeMapKeyType, EdgeMapValueType> EdgeMapType;
+
+    typedef std::pair<EdgeMapKeyType, EdgeMapValueType> EdgeInfoType;
+
     struct NodeAddressSorter
     {
 
@@ -323,6 +330,14 @@ private:
     {
         getNodeIntersectCore(locusIndex, nodeIndex, _inodes, locusIndex, intersectNodes);
     }
+
+    void
+    getIntersectingEdgeNodes(
+        const LocusIndexType inputLocusIndex,
+        const NodeIndexType inputRemoteNodeIndex,
+        const EdgeMapType& remoteToLocal,
+        const LocusSetIndexerType& remoteIntersect,
+        std::vector<EdgeInfoType>& edges) const;
 
     ///
     /// \param isInputLocusMoved has the input locus been moved into the graph from an initial temporary locus?
@@ -441,6 +456,7 @@ private:
 public:
     bam_header_info header;
 private:
+
     // contains the full set of loci
     locusset_type _loci;
     std::set<unsigned> _emptyLoci;
