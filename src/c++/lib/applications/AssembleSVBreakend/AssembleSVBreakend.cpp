@@ -106,7 +106,8 @@ runASB(const ASBOptions& opt)
     GlobalJumpAligner<int> aligner(AlignmentScores<int>(5,-2,-3,-1,-2),jumpScore);
 
     std::ofstream os(opt.contigOutfile.c_str());
-    unsigned n(1);
+    unsigned n(0);
+    unsigned minAlignLen(5);
     for (Assembly::const_iterator ct = a.begin();
          ct != a.end();
          ++ct)
@@ -127,17 +128,18 @@ runASB(const ASBOptions& opt)
         apath_to_cigar(res.align1.apath,cigar1);
         std::cout << "align1 start = " << res.align1.alignStart << std::endl;
         std::cout << "align1 cigar = " << cigar1 << std::endl;
-        std::cout << "align1 cigar prefix aligned " << (hasAlignedPrefix(res.align1) ? "Yes" : "No") << std::endl;
-        std::cout << "align1 cigar suffix aligned " << (hasAlignedSuffix(res.align1) ? "Yes" : "No") << std::endl;
+        std::cout << "align1 cigar prefix aligned " << (hasAlignedPrefix(res.align1,minAlignLen) > 0 ? "Yes" : "No") << std::endl;
+        std::cout << "align1 cigar suffix aligned " << (hasAlignedSuffix(res.align1,minAlignLen) > 0 ? "Yes" : "No") << std::endl;
 
         std::string cigar2;
         apath_to_cigar(res.align2.apath,cigar2);
-        std::cout << "align2 start" << res.align2.alignStart << std::endl;
+        std::cout << "align2 start = " << res.align2.alignStart << std::endl;
         std::cout << "align2 cigar = " << cigar2 << std::endl;
-        std::cout << "align2 cigar prefix aligned " << (hasAlignedPrefix(res.align2) ? "Yes" : "No") << std::endl;
-        std::cout << "align2 cigar suffix aligned " << (hasAlignedSuffix(res.align2) ? "Yes" : "No") << std::endl;
+        std::cout << "align2 cigar prefix aligned " << (hasAlignedPrefix(res.align2,minAlignLen) > 0 ? "Yes" : "No") << std::endl;
+        std::cout << "align2 cigar suffix aligned " << (hasAlignedSuffix(res.align2,minAlignLen) > 0 ? "Yes" : "No") << std::endl;
         
     }
+    std::cout << "\nAssembled " << n << " contigs." << std::endl;
     os.close();
 }
 

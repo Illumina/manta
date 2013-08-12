@@ -29,6 +29,12 @@ struct Alignment
         apath.clear();
     }
 
+    bool
+    isAligned()
+    {
+        return !apath.empty();
+    }
+
     unsigned alignStart;
     ALIGNPATH::path_t apath;
 };

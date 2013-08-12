@@ -72,22 +72,33 @@ getSVReferenceSegments(
     getIntervalReferenceSegment(referenceFilename,header,extraRefEdgeSize,sv.bp2.interval,bp2ref);
 }
 
+// tests if prefix of aligned sequence matches target, returns length of alignment (zero if no alignment)
 static
-bool
-hasAlignedPrefix(const Alignment& al) {
-	static const boost::regex re("^(\\d+)M");
-	std::string cigar;
-	apath_to_cigar(al.apath,cigar);
-	return (boost::regex_match(cigar, re));
+unsigned
+hasAlignedPrefix(const Alignment& al, const unsigned minMatchLen) 
+{
+    if (al.apath.empty()) return false;
+    //std::cout << "hasAlignedSuffix: " << segment_type_to_cigar_code(al.apath[0].type) << " " << al.apath[0].length << std::endl;
+    unsigned alignLen(0);
+    if (al.apath[0].type == ALIGNPATH::MATCH && al.apath[0].length >= minMatchLen) {
+        alignLen = al.apath[0].length;
+    }
+    return alignLen;
 }
 
+// tests if suffix of aligned sequence matches target, returns length of alignment (zero if no alignment)
 static
-bool
-hasAlignedSuffix(const Alignment& al) {
-	static const boost::regex re("(\\d+)M$");
-	std::string cigar;
-	apath_to_cigar(al.apath,cigar);
-	return (boost::regex_match(cigar, re));
+unsigned
+hasAlignedSuffix(const Alignment& al, const unsigned minMatchLen) 
+{
+    if (al.apath.empty()) return false;
+    size_t apLen = al.apath.size();
+    //std::cout << "hasAlignedSuffix: " << segment_type_to_cigar_code(al.apath[apLen-1].type) << " " << al.apath[apLen-1].length << std::endl;
+    unsigned alignLen(0);
+    if (al.apath[apLen-1].type == ALIGNPATH::MATCH && al.apath[apLen-1].length >= minMatchLen) {
+        alignLen = al.apath[apLen-1].length;
+    }
+    return alignLen;
 }
 
 /// generates candidate calls from graph edges
