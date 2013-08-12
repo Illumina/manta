@@ -17,10 +17,11 @@
 
 #pragma once
 
+#include <string>
+#include <boost/regex.hpp>
+
 #include "manta/Program.hh"
 #include "manta/SVCandidate.hh"
-
-#include <string>
 
 #include "svgraph/GenomeInterval.hh"
 
@@ -29,8 +30,8 @@
 #include "blt_util/samtools_fasta_util.hh"
 #include "blt_util/bam_header_util.hh"
 
-#include <boost/regex.hpp>
 #include "alignment/Alignment.hh"
+#include "alignment/GlobalJumpAligner.hh"
 
 static
 void
@@ -72,13 +73,12 @@ getSVReferenceSegments(
     getIntervalReferenceSegment(referenceFilename,header,extraRefEdgeSize,sv.bp2.interval,bp2ref);
 }
 
-// tests if prefix of aligned sequence matches target, returns length of alignment (zero if no alignment)
+// tests if prefix of aligned sequence matches target, returns length of alignment (zero if no match)
 static
 unsigned
-hasAlignedPrefix(const Alignment& al, const unsigned minMatchLen) 
+hasAlignedPrefix(const Alignment& al, const unsigned minMatchLen = 0)
 {
     if (al.apath.empty()) return false;
-    //std::cout << "hasAlignedSuffix: " << segment_type_to_cigar_code(al.apath[0].type) << " " << al.apath[0].length << std::endl;
     unsigned alignLen(0);
     if (al.apath[0].type == ALIGNPATH::MATCH && al.apath[0].length >= minMatchLen) {
         alignLen = al.apath[0].length;
@@ -86,20 +86,57 @@ hasAlignedPrefix(const Alignment& al, const unsigned minMatchLen)
     return alignLen;
 }
 
-// tests if suffix of aligned sequence matches target, returns length of alignment (zero if no alignment)
+// tests if suffix of aligned sequence matches target, returns length of alignment (zero if no match)
 static
 unsigned
-hasAlignedSuffix(const Alignment& al, const unsigned minMatchLen) 
+hasAlignedSuffix(const Alignment& al, const unsigned minMatchLen = 0)
 {
     if (al.apath.empty()) return false;
     size_t apLen = al.apath.size();
-    //std::cout << "hasAlignedSuffix: " << segment_type_to_cigar_code(al.apath[apLen-1].type) << " " << al.apath[apLen-1].length << std::endl;
     unsigned alignLen(0);
     if (al.apath[apLen-1].type == ALIGNPATH::MATCH && al.apath[apLen-1].length >= minMatchLen) {
         alignLen = al.apath[apLen-1].length;
     }
     return alignLen;
 }
+
+// check a jump alignment for consistency (only one end aligning)
+static
+bool
+isConsistentAlignment(const JumpAlignmentResult<int> & res, const unsigned minAlignContext)
+{
+	return ( (hasAlignedPrefix(res.align1,minAlignContext) && hasAlignedSuffix(res.align2,minAlignContext)) ||
+			 (hasAlignedSuffix(res.align1,minAlignContext) && hasAlignedPrefix(res.align2,minAlignContext))
+		   );
+}
+
+static
+int
+estimateBreakPointPos(const Alignment& al, const unsigned refOffset)
+{
+	// -1 means no breakpoint found or estimation failed
+	int breakPointPosEstimate(-1);
+
+	unsigned prefAlLen = hasAlignedPrefix(al);
+	unsigned suffAlLen = hasAlignedSuffix(al);
+
+	if (! (prefAlLen || suffAlLen) )
+	{
+		return breakPointPosEstimate;
+	}
+
+	if (prefAlLen) {
+		breakPointPosEstimate = refOffset + al.alignStart + prefAlLen;
+	}
+	if (prefAlLen) {
+		breakPointPosEstimate = refOffset + al.alignEnd - suffAlLen;
+	}
+
+	assert(breakPointPosEstimate>0);
+
+	return breakPointPosEstimate;
+}
+
 
 /// generates candidate calls from graph edges
 ///

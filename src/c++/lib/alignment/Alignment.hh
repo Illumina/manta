@@ -25,7 +25,8 @@ struct Alignment
     void
     clear()
     {
-        alignStart=0;
+        alignStart = 0;
+        alignEnd   = 0;
         apath.clear();
     }
 
@@ -36,6 +37,7 @@ struct Alignment
     }
 
     unsigned alignStart;
+    unsigned alignEnd;
     ALIGNPATH::path_t apath;
 };
 

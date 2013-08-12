@@ -107,7 +107,7 @@ runASB(const ASBOptions& opt)
 
     std::ofstream os(opt.contigOutfile.c_str());
     unsigned n(0);
-    unsigned minAlignLen(5);
+    unsigned minAlignContext(4);
     for (Assembly::const_iterator ct = a.begin();
          ct != a.end();
          ++ct)
@@ -128,16 +128,30 @@ runASB(const ASBOptions& opt)
         apath_to_cigar(res.align1.apath,cigar1);
         std::cout << "align1 start = " << res.align1.alignStart << std::endl;
         std::cout << "align1 cigar = " << cigar1 << std::endl;
-        std::cout << "align1 cigar prefix aligned " << (hasAlignedPrefix(res.align1,minAlignLen) > 0 ? "Yes" : "No") << std::endl;
-        std::cout << "align1 cigar suffix aligned " << (hasAlignedSuffix(res.align1,minAlignLen) > 0 ? "Yes" : "No") << std::endl;
+        std::cout << "align1 cigar prefix aligned " << (hasAlignedPrefix(res.align1,minAlignContext) > 0 ? "Yes" : "No") << std::endl;
+        std::cout << "align1 cigar suffix aligned " << (hasAlignedSuffix(res.align1,minAlignContext) > 0 ? "Yes" : "No") << std::endl;
 
         std::string cigar2;
         apath_to_cigar(res.align2.apath,cigar2);
         std::cout << "align2 start = " << res.align2.alignStart << std::endl;
         std::cout << "align2 cigar = " << cigar2 << std::endl;
-        std::cout << "align2 cigar prefix aligned " << (hasAlignedPrefix(res.align2,minAlignLen) > 0 ? "Yes" : "No") << std::endl;
-        std::cout << "align2 cigar suffix aligned " << (hasAlignedSuffix(res.align2,minAlignLen) > 0 ? "Yes" : "No") << std::endl;
+        std::cout << "align2 cigar prefix aligned " << (hasAlignedPrefix(res.align2,minAlignContext) > 0 ? "Yes" : "No") << std::endl;
+        std::cout << "align2 cigar suffix aligned " << (hasAlignedSuffix(res.align2,minAlignContext) > 0 ? "Yes" : "No") << std::endl;
         
+        const pos_t refOffset1(std::max(0, (bp1.interval.range.begin_pos()-extraRefEdgeSize)));
+        const pos_t refOffset2(std::max(0, (bp2.interval.range.begin_pos()-extraRefEdgeSize)));
+
+        std::cout << "breakpoint estimate 1 " << estimateBreakPointPos(res.align1, refOffset1) << std::endl;
+        std::cout << "breakpoint estimate 2 " << estimateBreakPointPos(res.align2, refOffset2) << std::endl;
+
+      	if (! (res.align1.isAligned() && res.align2.isAligned()) ) {
+      		std::cout << "Both not aligned." << std::endl;
+      	}
+
+        if (!isConsistentAlignment(res,minAlignContext)) {
+        	std::cout << "Alignments not consistent." << std::endl;
+        }
+
     }
     std::cout << "\nAssembled " << n << " contigs." << std::endl;
     os.close();

@@ -136,6 +136,9 @@ runGSC(
                 // each side of the breakend region?
                 static const pos_t extraRefEdgeSize(300);
 
+                // min alignment context
+                const unsigned minAlignContext(4);
+
                 reference_contig_segment bp1ref,bp2ref;
                 getSVReferenceSegments(opt.referenceFilename, cset.header, extraRefEdgeSize, sv, bp1ref, bp2ref);
                 const std::string bp1RefStr(bp1ref.seq());
@@ -148,6 +151,13 @@ runGSC(
                 				  bp1RefStr.begin(),bp1RefStr.end(),
                 				  bp2RefStr.begin(),bp2RefStr.end(),
                 				  res);
+
+                	// skip if one of the alignments is not aligned (quite strict)
+                	if (! (res.align1.isAligned() && res.align2.isAligned()) ) continue;
+
+                	// skip inconsistent alignments
+                	if (!isConsistentAlignment(res,minAlignContext)) continue;
+
                 	svData.getAlignments().push_back(res);
                 }
             }
