@@ -26,7 +26,6 @@ struct Alignment
     clear()
     {
         alignStart = 0;
-        alignEnd   = 0;
         apath.clear();
     }
 
@@ -37,9 +36,16 @@ struct Alignment
     }
 
     unsigned alignStart;
-    unsigned alignEnd;
     ALIGNPATH::path_t apath;
 };
+
+inline
+unsigned
+alignEnd(const Alignment& align)
+{
+	return (align.alignStart + ALIGNPATH::apath_ref_length(align.apath));
+}
+
 
 struct AlignState
 {
