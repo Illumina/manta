@@ -603,18 +603,32 @@ checkState(const bool isCheckConnected) const
     using namespace illumina::common;
 
     const unsigned nodeSize(size());
+    if (0 == nodeSize) return;
+
     for (unsigned nodeIndex(0); nodeIndex<nodeSize; ++nodeIndex)
     {
         const SVLocusNode& node(getNode(nodeIndex));
 
+        // check that that every edge has a return path:
         BOOST_FOREACH(const edges_type::value_type& edgeIter, node)
         {
-            // check that that every edge has a return path:
             getEdge(edgeIter.first,nodeIndex);
         }
-    }
 
-    if (0 == nodeSize) return;
+        // check that node and edge counts are consistent:
+        unsigned edgeCount(0);
+        BOOST_FOREACH(const edges_type::value_type& edgeIter, node)
+        {
+            edgeCount += edgeIter.second.count;
+        }
+
+        if(edgeCount != node.count)
+        {
+            std::ostringstream oss;
+            oss << "ERROR: SVLocusNode " << _index << ":" << nodeIndex << " has inconsistent counts. NodeCount: " << node.count << " EdgeCount: " << edgeCount << "\n";
+            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        }
+    }
 
     if (! isCheckConnected) return;
 

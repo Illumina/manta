@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge2 )
 
     SVLocus locus1;
     {
-        NodeIndexType nodePtr1 = locus1.addNode(GenomeInterval(1,10,20));
+        NodeIndexType nodePtr1 = locus1.addNode(GenomeInterval(1,10,20),2);
         NodeIndexType nodePtr2 = locus1.addRemoteNode(GenomeInterval(1,30,40));
         NodeIndexType nodePtr3 = locus1.addRemoteNode(GenomeInterval(1,50,60));
         locus1.linkNodes(nodePtr1,nodePtr2);

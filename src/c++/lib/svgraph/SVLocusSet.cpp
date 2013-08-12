@@ -69,6 +69,8 @@ merge(const SVLocus& inputLocus)
     log_os << "SVLocusSet::merge inputLocus: " << inputLocus;
 #endif
 
+    inputLocus.checkState(true);
+
     const LocusIndexType startLocusIndex(insertLocus(inputLocus));
     const SVLocus& startLocus(_loci[startLocusIndex]);
     LocusIndexType headLocusIndex(startLocusIndex);

@@ -51,7 +51,7 @@ struct SVLocusEdge
     // merge edge into this one
     //
     void
-    mergeEdge(SVLocusEdge& edge)
+    mergeEdge(const SVLocusEdge& edge)
     {
         count += edge.count;
     }
@@ -148,8 +148,25 @@ struct SVLocusNode
         ar& count& interval& evidenceRange& edges;
     }
 
+    /// add new edge to node, or merge this edge info in if node already has edge:
+    void
+    mergeEdge(const NodeIndexType toIndex, const SVLocusEdge& edge)
+    {
+        iterator edgeIter(edges.find(toIndex));
+        if (edgeIter == edges.end())
+        {
+            edges.insert(std::make_pair(toIndex,edge));
+        }
+        else
+        {
+            edgeIter->second.mergeEdge(edge);
+        }
+    }
+
     friend std::ostream&
     operator<<(std::ostream& os, const SVLocusNode& node);
+
+
 
     //////////////////  data:
     unsigned short count;
@@ -280,8 +297,8 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
         assert(0 == fromNode.edges.count(toIndex));
         assert(0 == toNode.edges.count(fromIndex));
 
-        fromNode.edges.insert(std::make_pair(toIndex,SVLocusEdge(fromCount)));
-        toNode.edges.insert(std::make_pair(fromIndex,SVLocusEdge(toCount)));
+        fromNode.mergeEdge(toIndex,SVLocusEdge(fromCount));
+        toNode.mergeEdge(fromIndex,SVLocusEdge(toCount));
     }
 
     void
