@@ -30,7 +30,6 @@
 #include "blt_util/bam_header_util.hh"
 
 #include <boost/regex.hpp>
-
 #include "alignment/Alignment.hh"
 
 static
