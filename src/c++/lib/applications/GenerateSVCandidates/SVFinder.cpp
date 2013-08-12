@@ -114,6 +114,7 @@ addSVNodeData(
     log_os << "addSVNodeData: bp_interval: " << localNode.interval
            << " evidenceInterval: " << localNode.evidenceRange
            << " searchInterval: " << searchInterval
+           << " isExpectRepeat: " << isExpectRepeat
            << "\n";
 #endif
 
