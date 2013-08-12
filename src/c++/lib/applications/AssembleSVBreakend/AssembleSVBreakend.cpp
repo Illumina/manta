@@ -87,7 +87,6 @@ runASB(const ASBOptions& opt)
 
     SVLocusAssembler svla(opt);
     Assembly a;
-//    /svla.assembleSingleSVBreakend(bp1,a);
     svla.assembleSVBreakends(bp1,bp2,a);
     std::cout << "Assembled " << a.size() << " contig(s)." << std::endl;
     
@@ -117,7 +116,7 @@ runASB(const ASBOptions& opt)
         os << ">contig_" << n << std::endl;
         os << ct->seq << std::endl;
         ++n;
-        //AlignmentResult<int> res;
+
         JumpAlignmentResult<int> res;
         aligner.align(ct->seq.begin(),ct->seq.end(),
         			  bpRefStr1.begin(),bpRefStr1.end(),
@@ -128,11 +127,15 @@ runASB(const ASBOptions& opt)
         apath_to_cigar(res.align1.apath,cigar1);
         std::cout << "align1 start = " << res.align1.alignStart << std::endl;
         std::cout << "align1 cigar = " << cigar1 << std::endl;
+        std::cout << "align1 cigar prefix aligned " << (hasAlignedPrefix(res.align1) ? "Yes" : "No") << std::endl;
+        std::cout << "align1 cigar suffix aligned " << (hasAlignedSuffix(res.align1) ? "Yes" : "No") << std::endl;
 
         std::string cigar2;
         apath_to_cigar(res.align2.apath,cigar2);
         std::cout << "align2 start" << res.align2.alignStart << std::endl;
         std::cout << "align2 cigar = " << cigar2 << std::endl;
+        std::cout << "align2 cigar prefix aligned " << (hasAlignedPrefix(res.align2) ? "Yes" : "No") << std::endl;
+        std::cout << "align2 cigar suffix aligned " << (hasAlignedSuffix(res.align2) ? "Yes" : "No") << std::endl;
         
     }
     os.close();

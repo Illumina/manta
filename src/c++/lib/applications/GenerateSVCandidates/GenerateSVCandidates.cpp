@@ -148,9 +148,6 @@ runGSC(
                 				  bp1RefStr.begin(),bp1RefStr.end(),
                 				  bp2RefStr.begin(),bp2RefStr.end(),
                 				  res);
-
-
-
                 	svData.getAlignments().push_back(res);
                 }
             }

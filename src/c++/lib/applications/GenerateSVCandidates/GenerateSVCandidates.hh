@@ -27,6 +27,9 @@
 #include "blt_util/bam_header_util.hh"
 #include "blt_util/reference_contig_segment.hh"
 #include "blt_util/samtools_fasta_util.hh"
+#include "blt_util/bam_header_util.hh"
+
+#include <boost/regex.hpp>
 
 static
 void
@@ -66,6 +69,24 @@ getSVReferenceSegments(
 {
     getIntervalReferenceSegment(referenceFilename,header,extraRefEdgeSize,sv.bp1.interval,bp1ref);
     getIntervalReferenceSegment(referenceFilename,header,extraRefEdgeSize,sv.bp2.interval,bp2ref);
+}
+
+static
+bool
+hasAlignedPrefix(const Alignment& al) {
+	static const boost::regex re("^(\d+)M");
+	std::string cigar;
+	apath_to_cigar(al.apath,cigar);
+	return (boost::regex_match(cigar, re));
+}
+
+static
+bool
+hasAlignedSuffix(const Alignment& al) {
+	static const boost::regex re("(\d+)M$");
+	std::string cigar;
+	apath_to_cigar(al.apath,cigar);
+	return (boost::regex_match(cigar, re));
 }
 
 /// generates candidate calls from graph edges

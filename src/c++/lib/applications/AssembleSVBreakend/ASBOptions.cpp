@@ -85,7 +85,7 @@ parseASBOptions(const manta::Program& prog,
     ("breakend", po::value<std::string>(&opt.breakend1),
      "Position of the first breakend, e.g. chr20:1000-1050")
     ("breakend2", po::value<std::string>(&opt.breakend2),
-     "Position of the second breakend (optional)")
+     "Position of the second breakend")
     ("align-file", po::value(&normalAlignmentFilename),
      "alignment file in bam format (may be specified multiple times, assumed to be non-tumor if tumor file(s) provided)")
     ("tumor-align-file", po::value(&tumorAlignmentFilename),
@@ -127,7 +127,11 @@ parseASBOptions(const manta::Program& prog,
     // fast check of config state:
     if (opt.breakend1.empty())
     {
-        usage(log_os,prog,visible,"Must specify at least one set breakpoint coordinates");
+        usage(log_os,prog,visible,"Must specify coordinates of first breakpoint");
+    }
+    if (opt.breakend2.empty())
+    {
+          usage(log_os,prog,visible,"Must specify coordinates of second breakpoint");
     }
 
     {
