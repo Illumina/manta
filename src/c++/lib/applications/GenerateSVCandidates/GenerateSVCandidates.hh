@@ -31,6 +31,8 @@
 
 #include <boost/regex.hpp>
 
+#include "alignment/Alignment.hh"
+
 static
 void
 getIntervalReferenceSegment(
@@ -74,7 +76,7 @@ getSVReferenceSegments(
 static
 bool
 hasAlignedPrefix(const Alignment& al) {
-	static const boost::regex re("^(\d+)M");
+	static const boost::regex re("^(\\d+)M");
 	std::string cigar;
 	apath_to_cigar(al.apath,cigar);
 	return (boost::regex_match(cigar, re));
@@ -83,7 +85,7 @@ hasAlignedPrefix(const Alignment& al) {
 static
 bool
 hasAlignedSuffix(const Alignment& al) {
-	static const boost::regex re("(\d+)M$");
+	static const boost::regex re("(\\d+)M$");
 	std::string cigar;
 	apath_to_cigar(al.apath,cigar);
 	return (boost::regex_match(cigar, re));
