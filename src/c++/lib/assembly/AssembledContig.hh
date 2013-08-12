@@ -17,24 +17,24 @@
 
 #pragma once
 
-#include <string>
 #include <vector>
+#include <string>
 
 
-// stores for each contig the sequence and the number of reads
-// containing its seeding k-mer
+/// stores for each contig the sequence and the number of reads
+/// containing its seeding k-mer
 struct AssembledContig
 {
-
     AssembledContig() : seedReadCount(0) {}
 
-    // sequence
-    std::string seq;
+    std::string seq; ///< contigsequence
+
     // reads used for assembly of contig <read_no,mapping position to contig>
     //std::map<std::string,int> contigReads;
-    // no of reads containing the seeding kmer
-    unsigned seedReadCount;
+
+    unsigned seedReadCount; ///< no of reads containing the seeding kmer
 };
+
 
 typedef std::vector<AssembledContig> Assembly;
 

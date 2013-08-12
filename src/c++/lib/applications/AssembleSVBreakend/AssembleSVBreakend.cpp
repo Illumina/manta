@@ -20,7 +20,7 @@
 #include "applications/AssembleSVBreakend/ASBOptions.hh"
 
 #include "manta/SVLocusAssembler.hh"
-#include "manta/AssembledContig.hh"
+#include "assembly/AssembledContig.hh"
 
 #include "blt_util/bam_header_util.hh"
 #include "blt_util/input_stream_handler.hh"
@@ -185,7 +185,8 @@ runASB(const ASBOptions& opt)
     std::cout << "Translating into " << breakendRegion1 << " and " << breakendRegion2 << std::endl;
     std::cout << "Translating into " << bp1 << " and " << bp2 << std::endl;
 
-    SVLocusAssembler svla(opt);
+    SmallAssemblerOptions assembleOpt;
+    SVLocusAssembler svla(opt, assembleOpt);
     Assembly a;
     svla.assembleSVBreakends(bp1,bp2,a);
     std::cout << "Assembled " << a.size() << " contig(s)." << std::endl;

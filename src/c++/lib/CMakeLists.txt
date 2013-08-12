@@ -23,7 +23,7 @@
 ##
 ## note that order approximates dependency chain, where libraries are listed
 ## after libraries upon which they depend:
-set (MANTA_ALL_LIBRARIES blt_util common options alignment format svgraph manta)
+set (MANTA_ALL_LIBRARIES blt_util common options assembly alignment format svgraph manta)
 
 ##
 ## Build all the libraries for the project
@@ -32,6 +32,8 @@ set (MANTA_ALL_LIBRARIES blt_util common options alignment format svgraph manta)
 set (MANTA_AVAILABLE_LIBRARIES "")
 foreach (MANTA_LIB_DIR ${MANTA_ALL_LIBRARIES})
     add_subdirectory(${MANTA_LIB_DIR})
+    
+    # We make a special exception for alignment because this is a header-only library right now:
     if (NOT ${MANTA_LIB_DIR} MATCHES alignment)
         set(MANTA_AVAILABLE_LIBRARIES manta_${MANTA_LIB_DIR} ${MANTA_AVAILABLE_LIBRARIES})
     endif()
