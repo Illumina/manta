@@ -289,6 +289,9 @@ cleanNodeCore(
     // delete empty edges:
     BOOST_FOREACH(const NodeIndexType toIndex, eraseEdges)
     {
+#ifdef DEBUG_SVL
+        log_os << "cleanNodeCore deleting edge: " << _index << ":" << nodeIndex << "->" << _index << ":" << toIndex << "\n";
+#endif
         clearEdgePair(nodeIndex,toIndex);
     }
 

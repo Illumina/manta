@@ -624,5 +624,218 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMergeToSelfEdge )
 }
 
 
+BOOST_AUTO_TEST_CASE( test_SVLocusMergeToSelfEdge2 )
+{
+    // Situation: Large signal region spans connected region pair.
+    //
+    // Criteria: Large region gains self-edge only if connected regions are signal
+
+
+    SVLocus locus1;
+    locusAddPair(locus1,1,10,20,1,30,40);
+    SVLocus locus2;
+    locusAddPair(locus2,1,10,20,1,30,40);
+    SVLocus locus3;
+    locusAddPair(locus3,1,10,40,2,10,20);
+    SVLocus locus4;
+    locusAddPair(locus4,1,10,40,2,10,20);
+
+    { // test non-signal spanned pair
+        SVLocusSet set1(2);
+        set1.merge(locus1);
+        set1.merge(locus3);
+        set1.merge(locus4);
+        const SVLocusSet& cset1(set1);
+
+        set1.finalize();
+        cset1.checkState(true,true);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(1).size(),2u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(1).getNode(0).size(),1u);
+    }
+
+    { // test signal spanned pair
+        SVLocusSet set1(2);
+        set1.merge(locus1);
+        set1.merge(locus2);
+        set1.merge(locus3);
+        set1.merge(locus4);
+        const SVLocusSet& cset1(set1);
+
+        set1.finalize();
+        cset1.checkState(true,true);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),2u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).getNode(0).size(),2u);
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE( test_SVLocusMergeToSelfEdge3 )
+{
+    // Situation: Large signal region with self edge spans connected region.
+    //
+    // Criteria: self edge count increases by one
+
+
+    SVLocus locus1;
+    locusAddPair(locus1,1,10,40,1,10,40);
+    SVLocus locus2;
+    locusAddPair(locus2,1,10,40,1,10,40);
+    SVLocus locus3;
+    locusAddPair(locus3,1,10,20,1,30,40);
+
+    locus1.mergeSelfOverlap();
+    locus2.mergeSelfOverlap();
+
+    {
+        SVLocusSet set1(2);
+        set1.merge(locus1);
+        set1.merge(locus2);
+        set1.merge(locus3);
+        const SVLocusSet& cset1(set1);
+
+        set1.finalize();
+        cset1.checkState(true,true);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),1u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).getNode(0).size(),1u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).getNode(0).count,3u);
+    }
+
+    { // run again with locus3 first
+        SVLocusSet set1(2);
+        set1.merge(locus3);
+        set1.merge(locus1);
+        set1.merge(locus2);
+        const SVLocusSet& cset1(set1);
+
+        set1.finalize();
+        cset1.checkState(true,true);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),1u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).getNode(0).size(),1u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).getNode(0).count,3u);
+    }
+
+}
+
+#if 0
+BOOST_AUTO_TEST_CASE( test_SVLocusMergeToSelfEdge4 )
+{
+    // Situation: Large signal region spans 2 connected region pairs.
+    //
+    // Criteria: Large region gains self-edge only if the connected region pairs total to a self-edge signal
+
+
+    SVLocus locus1;
+    locusAddPair(locus1,1,10,20,1,30,40);
+    SVLocus locus2;
+    locusAddPair(locus2,1,10,20,1,30,40);
+    SVLocus locus3;
+    locusAddPair(locus3,1,10,40,2,10,20);
+    SVLocus locus4;
+    locusAddPair(locus4,1,10,40,2,10,20);
+
+    { // test non-signal spanned pair
+        SVLocusSet set1(2);
+        set1.merge(locus1);
+        set1.merge(locus3);
+        set1.merge(locus4);
+        const SVLocusSet& cset1(set1);
+
+        set1.finalize();
+        cset1.checkState(true,true);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(1).size(),2u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(1).getNode(0).size(),1u);
+    }
+
+    { // test signal spanned pair
+        SVLocusSet set1(2);
+        set1.merge(locus1);
+        set1.merge(locus2);
+        set1.merge(locus3);
+        set1.merge(locus4);
+        const SVLocusSet& cset1(set1);
+
+        set1.finalize();
+        cset1.checkState(true,true);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),2u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).getNode(0).size(),2u);
+    }
+}
+#endif
+
+
+BOOST_AUTO_TEST_CASE( test_SVLocusSmallRegionClean )
+{
+    //
+    // challenge the region cleaner with regions which (1) span both nodes of a pair (2) span the first node (3) span the second node
+    //
+    SVLocus locus1;
+    locusAddPair(locus1,1,10,20,1,30,40);
+
+    {
+        SVLocusSet set1(2);
+        set1.merge(locus1);
+        const SVLocusSet& cset1(set1);
+
+        set1.cleanRegion(GenomeInterval(1,0,70));
+
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),0u);
+    }
+
+    {
+        SVLocusSet set1(2);
+        set1.merge(locus1);
+        const SVLocusSet& cset1(set1);
+
+        set1.cleanRegion(GenomeInterval(1,25,70));
+
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+    }
+
+    {
+        SVLocusSet set1(2);
+        set1.merge(locus1);
+        const SVLocusSet& cset1(set1);
+
+        set1.cleanRegion(GenomeInterval(1,5,25));
+
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),0u);
+    }
+
+}
+
+BOOST_AUTO_TEST_CASE( test_SVLocusSmallDelRegionClean )
+{
+    // regions picked up from deletions have counts on both sides
+    //
+    SVLocus locus1;
+    locusAddDoublePair(locus1,1,10,20,1,30,40);
+
+    {
+        SVLocusSet set1(2);
+        set1.merge(locus1);
+        const SVLocusSet& cset1(set1);
+
+        set1.cleanRegion(GenomeInterval(1,0,70));
+
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),0u);
+    }
+
+    {
+        SVLocusSet set1(2);
+        set1.merge(locus1);
+        const SVLocusSet& cset1(set1);
+
+        set1.clean();
+
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),0u);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 

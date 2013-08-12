@@ -330,12 +330,13 @@ getSVLociImpl(
                (remoteBreakend.splitCount != 0))
             {
                 remoteBreakendNode = locus.addNode(remoteBreakend.interval);
+                locus.linkNodes(localBreakendNode,remoteBreakendNode,1,1);
             }
             else
             {
                 remoteBreakendNode = locus.addRemoteNode(remoteBreakend.interval);
+                locus.linkNodes(localBreakendNode,remoteBreakendNode);
             }
-            locus.linkNodes(localBreakendNode,remoteBreakendNode);
             locus.mergeSelfOverlap();
         }
 
