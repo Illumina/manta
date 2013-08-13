@@ -76,11 +76,11 @@ getSVReferenceSegments(
 // tests if prefix of aligned sequence matches target, returns length of alignment (zero if no match)
 static
 unsigned
-hasAlignedPrefix(const Alignment& al, const unsigned minMatchLen = 0)
+hasAlignedPrefix(const Alignment& al, const unsigned minAlignContext = 0)
 {
     if (al.apath.empty()) return false;
     unsigned alignLen(0);
-    if (al.apath[0].type == ALIGNPATH::MATCH && al.apath[0].length >= minMatchLen) {
+    if (al.apath[0].type == ALIGNPATH::MATCH && al.apath[0].length >= minAlignContext) {
         alignLen = al.apath[0].length;
     }
     return alignLen;
@@ -89,22 +89,35 @@ hasAlignedPrefix(const Alignment& al, const unsigned minMatchLen = 0)
 // tests if suffix of aligned sequence matches target, returns length of alignment (zero if no match)
 static
 unsigned
-hasAlignedSuffix(const Alignment& al, const unsigned minMatchLen = 0)
+hasAlignedSuffix(const Alignment& al, const unsigned minAlignContext = 0)
 {
     if (al.apath.empty()) return false;
     size_t apLen = al.apath.size();
     unsigned alignLen(0);
-    if (al.apath[apLen-1].type == ALIGNPATH::MATCH && al.apath[apLen-1].length >= minMatchLen) {
+    if (al.apath[apLen-1].type == ALIGNPATH::MATCH && al.apath[apLen-1].length >= minAlignContext) {
         alignLen = al.apath[apLen-1].length;
     }
     return alignLen;
 }
 
+static
+bool
+bothEndsAligned(const Alignment& al, const unsigned minAlignContext = 0)
+{
+    return (hasAlignedPrefix(al,minAlignContext) && hasAlignedSuffix(al,minAlignContext));
+}
+
 // check a jump alignment for consistency (only one end aligning)
 static
 bool
-isConsistentAlignment(const JumpAlignmentResult<int> & res, const unsigned minAlignContext)
+isConsistentAlignment(const JumpAlignmentResult<int> & res, const unsigned minAlignContext = 0)
 {
+    // not consistent if both unaligned
+    if (! (res.align1.isAligned() && res.align2.isAligned()) ) return false;
+
+    // not consistent if both ends aligned for each alignment
+    if ( bothEndsAligned(res.align1) && bothEndsAligned(res.align2) ) return false;
+   
 	return ( (hasAlignedPrefix(res.align1,minAlignContext) && hasAlignedSuffix(res.align2,minAlignContext)) ||
 			 (hasAlignedSuffix(res.align1,minAlignContext) && hasAlignedPrefix(res.align2,minAlignContext))
 		   );
@@ -127,8 +140,7 @@ estimateBreakPointPos(const Alignment& al, const unsigned refOffset)
 
 	if (prefAlLen) {
 		breakPointPosEstimate = refOffset + al.alignStart + prefAlLen;
-	}
-	if (prefAlLen) {
+	} else if (suffAlLen) {
 		breakPointPosEstimate = refOffset + al.alignEnd - suffAlLen;
 	}
 

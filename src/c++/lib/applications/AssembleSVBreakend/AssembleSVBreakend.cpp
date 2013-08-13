@@ -92,7 +92,7 @@ runASB(const ASBOptions& opt)
     
     // how much additional reference sequence should we extract from around
     // each side of the breakend region?
-    static const pos_t extraRefEdgeSize(600);
+    static const pos_t extraRefEdgeSize(300);
 
     reference_contig_segment bpref1;
     getIntervalReferenceSegment(opt.referenceFilename, bamHeader, extraRefEdgeSize, bp1.interval, bpref1);
@@ -106,17 +106,29 @@ runASB(const ASBOptions& opt)
     GlobalJumpAligner<int> aligner(AlignmentScores<int>(5,-2,-3,-1,-2),jumpScore);
 
     std::ofstream os(opt.contigOutfile.c_str());
-    unsigned n(0);
+
     unsigned minAlignContext(4);
+    unsigned minContigLength(75);
+
+    unsigned numTotal(0);
+    unsigned numConsistentAndAligned(0);
+    unsigned numTooShort(0);
+
+
     for (Assembly::const_iterator ct = a.begin();
          ct != a.end();
          ++ct)
     {
+        if (ct->seq.size() < minContigLength) {
+            ++numTooShort;
+            continue;
+        }
+    
         std::cout << "ctg : " << ct->seq << std::endl;
         std::cout << "seed read count " << ct->seedReadCount << std::endl;
-        os << ">contig_" << n << std::endl;
+        os << ">contig_" << numTotal << std::endl;
         os << ct->seq << std::endl;
-        ++n;
+        ++numTotal;
 
         JumpAlignmentResult<int> res;
         aligner.align(ct->seq.begin(),ct->seq.end(),
@@ -146,14 +158,19 @@ runASB(const ASBOptions& opt)
 
       	if (! (res.align1.isAligned() && res.align2.isAligned()) ) {
       		std::cout << "Both not aligned." << std::endl;
+            continue;
       	}
 
         if (!isConsistentAlignment(res,minAlignContext)) {
         	std::cout << "Alignments not consistent." << std::endl;
+            continue;
         }
+        ++numConsistentAndAligned;
 
     }
-    std::cout << "\nAssembled " << n << " contigs." << std::endl;
+    std::cout << "\nAssembled " << numTotal << " contigs." << std::endl;
+    std::cout << "numConsistentAndAligned = " << numConsistentAndAligned << std::endl;
+    std::cout << "numTooShort = " << numTooShort << std::endl;
     os.close();
 }
 

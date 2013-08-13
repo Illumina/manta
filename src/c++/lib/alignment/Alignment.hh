@@ -32,6 +32,7 @@ struct Alignment
 
     bool
     isAligned()
+    const
     {
         return !apath.empty();
     }

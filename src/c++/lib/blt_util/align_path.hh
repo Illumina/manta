@@ -344,6 +344,10 @@ is_soft_clipped(const path_t& apath);
 bool
 is_clipped(const path_t& apath);
 
+/// return length of clipped pre- or postfix
+unsigned
+get_clip_len(const path_t& apath);
+
 /// does either edge of the alignment
 /// contain a segment which impacts read length or reference positions?
 /// (INSERT,DELETE,SKIP,SOFT_CLIP)

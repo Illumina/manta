@@ -207,9 +207,12 @@ getBreakendReads(const SVBreakend& bp,
 {
 	/// define a new interval -/+ 75 bases around the center pos
 	/// of the breakpoint
-	static const pos_t regionSize(75);
-	const pos_t centerPos(bp.interval.range.center_pos());
-	const known_pos_range2 searchRange(std::max((centerPos-regionSize),0), (centerPos+regionSize));
+	//static const pos_t regionSize(75);
+	//const pos_t centerPos(bp.interval.range.center_pos());
+	//const known_pos_range2 searchRange(std::max((centerPos-regionSize),0), (centerPos+regionSize));
+	const known_pos_range2 searchRange(bp.interval.range);
+
+    const unsigned minClipLen(3);
 
 	const unsigned bamCount(_bamStreams.size());
 	for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
@@ -228,9 +231,10 @@ getBreakendReads(const SVBreakend& bp,
             bam_cigar_to_apath(bamRead.raw_cigar(), bamRead.n_cigar(), apath);
 
 			// FIXME: add some criteria to filter for "interesting" reads here, for now we add 
-            // only clipped reads
+            // only clipped reads and reads without N
 			if ((bamRead.pos()-1) >= searchRange.end_pos()) break;
             if (!_readScanner.isClipped(bamRead) ) continue;
+            if (_readScanner.getClipLength(bamRead)<minClipLen ) continue;
             if (bamRead.get_bam_read().get_string().find('N') != std::string::npos) continue;
             //if ( bamRead.pe_map_qual() == 0 ) continue;
             string flag = "1";

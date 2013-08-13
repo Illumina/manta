@@ -64,6 +64,11 @@ struct SVLocusScanner
     isClipped(
     	const bam_record& bamRead) const;
 
+    unsigned
+    getClipLength(
+        const bam_record& bamRead) const;
+
+
     /// if read supports a chimera candidate return this as a single observation SVLocus object,
     /// else return an empty object.
     ///
