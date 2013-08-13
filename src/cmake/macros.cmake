@@ -70,19 +70,21 @@ macro(static_find_library name header library)
 endmacro()
 
 
+
 #
 # get all sub directories: (refaim@stackoverflow)
 #
 function(subdirlist result curdir)
-  FILE(GLOB children RELATIVE ${curdir} ${curdir}/*)
-  SET(dirlist "")
-  FOREACH(child ${children})
-    IF(IS_DIRECTORY ${curdir}/${child})
-        SET(dirlist ${dirlist} ${child})
-    ENDIF()
-  ENDFOREACH()
-  SET(${result} ${dirlist} PARENT_SCOPE)
+    file(GLOB children RELATIVE ${curdir} ${curdir}/*)
+    set(dirlist "")
+    foreach(child ${children})
+        if(IS_DIRECTORY ${curdir}/${child})
+            set(dirlist ${dirlist} ${child})
+        endif()
+    endforeach()
+    set(${result} ${dirlist} PARENT_SCOPE)
 endfunction()
+
 
 
 # (http://nctusdk.blogspot.com/2011/10/add-all-subdirectories-in-cmake.html)
