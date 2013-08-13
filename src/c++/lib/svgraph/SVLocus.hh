@@ -62,7 +62,7 @@ struct SVLocusEdge
         ar& count;
     }
 
-    unsigned short count;
+    unsigned count;
 };
 
 
@@ -169,7 +169,7 @@ struct SVLocusNode
 
 
     //////////////////  data:
-    unsigned short count;
+    unsigned count;
     GenomeInterval interval;
     known_pos_range2 evidenceRange;
 
