@@ -128,7 +128,7 @@ getSVCandidatesFromRead(
         else if (isSwapStart)
         {
             const swap_info sinfo(align.path,pathIndex);
-            if(sinfo.delete_length >= opt.minCandidateIndelSize)
+            if (sinfo.delete_length >= opt.minCandidateIndelSize)
             {
                 candidates.push_back(GetSplitSVCandidate(opt,alignTid,refHeadPos,refHeadPos+sinfo.delete_length));
             }
@@ -139,9 +139,9 @@ getSVCandidatesFromRead(
         {
             // regular indel:
 
-            if(ps.type == DELETE)
+            if (ps.type == DELETE)
             {
-                if(align.path[pathIndex].length >= opt.minCandidateIndelSize)
+                if (align.path[pathIndex].length >= opt.minCandidateIndelSize)
                 {
                     candidates.push_back(GetSplitSVCandidate(opt,alignTid,refHeadPos,refHeadPos+align.path[pathIndex].length));
                 }
@@ -231,8 +231,8 @@ getReadBreakendsImpl(
 
     const pos_t totalNoninsertSize(thisReadNoninsertSize+remoteReadNoninsertSize);
     const pos_t breakendSize(std::max(
-        static_cast<pos_t>(opt.minPairBreakendSize),
-        static_cast<pos_t>(rstats.breakendRegion.max-totalNoninsertSize)));
+                                 static_cast<pos_t>(opt.minPairBreakendSize),
+                                 static_cast<pos_t>(rstats.breakendRegion.max-totalNoninsertSize)));
 
     {
         localBreakend.interval.tid = (localRead.target_id());
@@ -285,13 +285,13 @@ getReadBreakendsImpl(
     }
 
     // check if read pair separation is non-anomalous after accounting for read alignments:
-    if((localRead.target_id() == localRead.mate_target_id()) &&
-       (localRead.is_fwd_strand() != localRead.is_mate_fwd_strand()))
+    if ((localRead.target_id() == localRead.mate_target_id()) &&
+        (localRead.is_fwd_strand() != localRead.is_mate_fwd_strand()))
     {
         // get length of fragment after accounting for any variants described directly in either read alignment:
         const pos_t cigarAdjustedFragmentSize(totalNoninsertSize + (insertRange.end_pos() - insertRange.begin_pos()));
-        if((cigarAdjustedFragmentSize <= rstats.properPair.max) &&
-           (cigarAdjustedFragmentSize >= rstats.properPair.min)) return;
+        if ((cigarAdjustedFragmentSize <= rstats.properPair.max) &&
+            (cigarAdjustedFragmentSize >= rstats.properPair.min)) return;
     }
 
     candidates.push_back(sv);
@@ -347,8 +347,8 @@ getSVLociImpl(
         // set remote breakend estimate:
         {
             NodeIndexType remoteBreakendNode;
-            if((remoteBreakend.readCount != 0) ||
-               (remoteBreakend.splitCount != 0))
+            if ((remoteBreakend.readCount != 0) ||
+                (remoteBreakend.splitCount != 0))
             {
                 remoteBreakendNode = locus.addNode(remoteBreakend.interval);
                 locus.linkNodes(localBreakendNode,remoteBreakendNode,1,1);

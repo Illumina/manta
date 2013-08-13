@@ -521,7 +521,8 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeOverlapEdge )
         BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),0u);
     }
 
-    { // reverse the order of locus addition to be sure:
+    {
+        // reverse the order of locus addition to be sure:
         SVLocusSet set1(2);
         set1.merge(locus2);
         set1.merge(locus1);
@@ -563,7 +564,8 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeOverlapSelfEdge )
         BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),0u);
     }
 
-    { // reverse the order of locus addition to be sure:
+    {
+        // reverse the order of locus addition to be sure:
         SVLocusSet set1(2);
         set1.merge(locus2);
         set1.merge(locus1);
@@ -640,7 +642,8 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMergeToSelfEdge2 )
     SVLocus locus4;
     locusAddPair(locus4,1,10,40,2,10,20);
 
-    { // test non-signal spanned pair
+    {
+        // test non-signal spanned pair
         SVLocusSet set1(2);
         set1.merge(locus1);
         set1.merge(locus3);
@@ -654,7 +657,8 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMergeToSelfEdge2 )
         BOOST_REQUIRE_EQUAL(cset1.getLocus(1).getNode(0).size(),1u);
     }
 
-    { // test signal spanned pair
+    {
+        // test signal spanned pair
         SVLocusSet set1(2);
         set1.merge(locus1);
         set1.merge(locus2);
@@ -703,7 +707,8 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMergeToSelfEdge3 )
         BOOST_REQUIRE_EQUAL(cset1.getLocus(0).getNode(0).count,3u);
     }
 
-    { // run again with locus3 first
+    {
+        // run again with locus3 first
         SVLocusSet set1(2);
         set1.merge(locus3);
         set1.merge(locus1);
@@ -737,7 +742,8 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMergeToSelfEdge4 )
     SVLocus locus4;
     locusAddPair(locus4,1,10,40,2,10,20);
 
-    { // test non-signal spanned pair
+    {
+        // test non-signal spanned pair
         SVLocusSet set1(2);
         set1.merge(locus1);
         set1.merge(locus3);
@@ -751,7 +757,8 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMergeToSelfEdge4 )
         BOOST_REQUIRE_EQUAL(cset1.getLocus(1).getNode(0).size(),1u);
     }
 
-    { // test signal spanned pair
+    {
+        // test signal spanned pair
         SVLocusSet set1(2);
         set1.merge(locus1);
         set1.merge(locus2);

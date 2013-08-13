@@ -622,7 +622,7 @@ checkState(const bool isCheckConnected) const
             edgeCount += edgeIter.second.count;
         }
 
-        if(edgeCount != node.count)
+        if (edgeCount != node.count)
         {
             std::ostringstream oss;
             oss << "ERROR: SVLocusNode " << _index << ":" << nodeIndex << " has inconsistent counts. NodeCount: " << node.count << " EdgeCount: " << edgeCount << "\n";

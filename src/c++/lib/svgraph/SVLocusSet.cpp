@@ -533,9 +533,9 @@ getNodeMergeableIntersect(
                 if (intersectLocus.isNoiseNode(_minMergeEdgeCount,intersectAddy.second))
                 {
                     // check for the rare remote intersect condition:
-                    if(! isIntersectOwnRemotes)
+                    if (! isIntersectOwnRemotes)
                     {
-                        if(inputIntersectRemotes.count(intersectAddy)) isIntersectOwnRemotes = true;
+                        if (inputIntersectRemotes.count(intersectAddy)) isIntersectOwnRemotes = true;
                     }
                     continue;
                 }
@@ -551,7 +551,7 @@ getNodeMergeableIntersect(
             }
         }
 
-        if(isIntersectOwnRemotes)
+        if (isIntersectOwnRemotes)
         {
             BOOST_FOREACH(const EdgeInfoType edgeInfo, inputIntersectEdges)
             {
