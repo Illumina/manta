@@ -216,12 +216,17 @@ SVLocusAssembler::
 getBreakendReads(const SVBreakend& bp,
                  AssemblyReadMap& reads)
 {
-    /// define a new interval -/+ 75 bases around the center pos
-    /// of the breakpoint
-    //static const pos_t regionSize(75);
-    //const pos_t centerPos(bp.interval.range.center_pos());
-    //const known_pos_range2 searchRange(std::max((centerPos-regionSize),0), (centerPos+regionSize));
-    const known_pos_range2 searchRange(bp.interval.range);
+    const size_t minIntervalSize(300);
+    known_pos_range2 searchRange;
+    if (bp.interval.range.size() >= minIntervalSize) {
+        searchRange = bp.interval.range;
+    } else {
+        size_t missing = minIntervalSize - bp.interval.range.size();
+        assert(missing > 0);
+        size_t wobble = missing/2;
+        // FIXME : not sure what happens if (end_pos + wobble) > chromosome size?
+        searchRange.set_range(std::max((bp.interval.range.begin_pos()-wobble),static_cast<unsigned long>(0)),(bp.interval.range.end_pos()+wobble));
+    }
 
     const unsigned minClipLen(3);
 
@@ -235,11 +240,9 @@ getBreakendReads(const SVBreakend& bp,
 
         const unsigned MAX_NUM_READS(1000);
 
-        while (bamStream.next() && reads.size() < MAX_NUM_READS)
-        {
-            const bam_record& bamRead(*(bamStream.get_record_ptr()));
-            ALIGNPATH::path_t apath;
-            bam_cigar_to_apath(bamRead.raw_cigar(), bamRead.n_cigar(), apath);
+		while (bamStream.next() && reads.size() < MAX_NUM_READS)
+		{
+			const bam_record& bamRead(*(bamStream.get_record_ptr()));
 
             // FIXME: add some criteria to filter for "interesting" reads here, for now we add
             // only clipped reads and reads without N
@@ -254,20 +257,20 @@ getBreakendReads(const SVBreakend& bp,
                 flag = "2";
             }
             string readKey = string(bamRead.qname()) + "_" + flag + "_" + boost::lexical_cast<std::string>(bamIndex);
+
 #ifdef DEBUG_ASBL
+            ALIGNPATH::path_t apath;
+            bam_cigar_to_apath(bamRead.raw_cigar(), bamRead.n_cigar(), apath);
             dbg_os << "Adding " << readKey << " " << apath << " " << bamRead.pe_map_qual() << " " << bamRead.pos() << endl;
             dbg_os << bamRead.get_bam_read().get_string() << endl;
 #endif
-            if (reads.find(readKey) == reads.end())
-            {
-                reads[readKey] = AssemblyRead(bamRead.get_bam_read().get_string(),
-                                              false
-                                             );
-            }
-            else
-            {
-                std::cout << "Read name collision : " << readKey << std::endl;
 
+            if (reads.find(readKey) == reads.end()) {
+                // the API gives us always the sequence w.r.t to the fwd ref, so no need
+                // to reverse complement here
+                reads[readKey] = AssemblyRead(bamRead.get_bam_read().get_string(),false);
+            } else {
+            	std::cout << "Read name collision : " << readKey << std::endl;
             }
         }
     }

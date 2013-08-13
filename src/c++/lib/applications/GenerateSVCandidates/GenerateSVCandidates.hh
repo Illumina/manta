@@ -112,17 +112,20 @@ bothEndsAligned(const Alignment& al, const unsigned minAlignContext = 0)
 // check a jump alignment for consistency (only one end aligning)
 static
 bool
-isConsistentAlignment(const JumpAlignmentResult<int>& res, const unsigned minAlignContext = 0)
+isConsistentAlignment(const JumpAlignmentResult<int>& res, const unsigned /*minAlignContext = 0*/)
 {
+    if (res.align1.isAligned() && res.align2.isAligned()) return true;
+    return false;
+
     // not consistent if both unaligned
-    if (! (res.align1.isAligned() && res.align2.isAligned()) ) return false;
+    //if (! (res.align1.isAligned() && res.align2.isAligned()) ) return false;
 
     // not consistent if both ends aligned for each alignment
-    if ( bothEndsAligned(res.align1) && bothEndsAligned(res.align2) ) return false;
-
-    return ( (hasAlignedPrefix(res.align1,minAlignContext) && hasAlignedSuffix(res.align2,minAlignContext)) ||
-             (hasAlignedSuffix(res.align1,minAlignContext) && hasAlignedPrefix(res.align2,minAlignContext))
-           );
+    //if ( bothEndsAligned(res.align1) && bothEndsAligned(res.align2) ) return false;
+   
+	/*return ( (hasAlignedPrefix(res.align1,minAlignContext) && hasAlignedSuffix(res.align2,minAlignContext)) ||
+			 (hasAlignedSuffix(res.align1,minAlignContext) && hasAlignedPrefix(res.align2,minAlignContext))
+		   );*/
 }
 
 static
@@ -140,14 +143,11 @@ estimateBreakPointPos(const Alignment& al, const unsigned refOffset)
         return breakPointPosEstimate;
     }
 
-    if (prefAlLen)
-    {
-        breakPointPosEstimate = refOffset + al.alignStart + prefAlLen;
-    }
-    else if (suffAlLen)
-    {
-        breakPointPosEstimate = refOffset + al.alignEnd - suffAlLen;
-    }
+	if (prefAlLen) {
+		breakPointPosEstimate = refOffset + al.alignStart + prefAlLen;
+	} else if (suffAlLen) {
+		breakPointPosEstimate = refOffset + alignEnd(al) - suffAlLen;
+	}
 
     assert(breakPointPosEstimate>0);
 
