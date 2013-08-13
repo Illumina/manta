@@ -157,8 +157,7 @@ runASB(const ASBOptions& opt)
         std::cout << "breakpoint estimate 2 " << estimateBreakPointPos(res.align2, refOffset2) << std::endl;
 
       	if (! (res.align1.isAligned() && res.align2.isAligned()) ) {
-      		std::cout << "Both not aligned." << std::endl;
-            continue;
+      		std::cout << "At least one not aligned." << std::endl;
       	}
 
         if (!isConsistentAlignment(res,minAlignContext)) {
