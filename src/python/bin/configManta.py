@@ -56,6 +56,12 @@ You must specify a BAM file for at least one sample.
 #                          help="Aligner type. Accepted option are {%s} [required] (no default)" % (",".join(['%s' % (x) for x in self.validAlignerModes])))
         group.add_option("--exome", dest="isExome", action="store_true",
                          help="Turn off depth filters which don't make sense for exome or other targeted output.")
+        group.add_option("--useExistingAlignStats",
+                         dest="useExistingAlignStats", action="store_true",
+                         help="Use pre-calculated alignment statistics.")
+        group.add_option("--useExistingChromDepths",
+                         dest="useExistingChromDepths", action="store_true",
+                         help="Use pre-calculated chromosome depths.")
         # TODO:
         # need argument to set the workflow to either ISAAC or bwa mode
 
@@ -75,6 +81,8 @@ You must specify a BAM file for at least one sample.
             'alignerMode' : "isaac",
             'runDir' : 'MantaWorkflow',
             'isExome' : False,
+            'useExistingAlignStats' : False,
+            'useExistingChromDepths' : False,
             'binSize' : 25000000,
             'nonlocalWorkBins' : 128
                           })
