@@ -130,7 +130,7 @@ runGSC(
                 svData.getAssembly().insert(svData.getAssembly().end(),
                                             as.begin(),
                                             as.end()
-                                            );
+                                           );
 
                 // how much additional reference sequence should we extract from around
                 // each side of the breakend region?
@@ -143,22 +143,23 @@ runGSC(
                 getSVReferenceSegments(opt.referenceFilename, cset.header, extraRefEdgeSize, sv, bp1ref, bp2ref);
                 const std::string bp1RefStr(bp1ref.seq());
                 const std::string bp2RefStr(bp2ref.seq());
-                for(Assembly::const_iterator ct = as.begin();
-                	ct != as.end();
-                	++ct) {
-                	JumpAlignmentResult<int> res;
-                	aligner.align(ct->seq.begin(),ct->seq.end(),
-                				  bp1RefStr.begin(),bp1RefStr.end(),
-                				  bp2RefStr.begin(),bp2RefStr.end(),
-                				  res);
+                for (Assembly::const_iterator ct = as.begin();
+                     ct != as.end();
+                     ++ct)
+                {
+                    JumpAlignmentResult<int> res;
+                    aligner.align(ct->seq.begin(),ct->seq.end(),
+                                  bp1RefStr.begin(),bp1RefStr.end(),
+                                  bp2RefStr.begin(),bp2RefStr.end(),
+                                  res);
 
-                	// skip if one of the alignments is not aligned (quite strict)
-                	if (! (res.align1.isAligned() && res.align2.isAligned()) ) continue;
+                    // skip if one of the alignments is not aligned (quite strict)
+                    if (! (res.align1.isAligned() && res.align2.isAligned()) ) continue;
 
-                	// skip inconsistent alignments
-                	if (!isConsistentAlignment(res,minAlignContext)) continue;
+                    // skip inconsistent alignments
+                    if (!isConsistentAlignment(res,minAlignContext)) continue;
 
-                	svData.getAlignments().push_back(res);
+                    svData.getAlignments().push_back(res);
                 }
             }
 

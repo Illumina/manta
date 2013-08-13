@@ -30,7 +30,7 @@ struct ASBOptions : public GSCOptions
 {
 
     ASBOptions() :
-    	GSCOptions(),
+        GSCOptions(),
         breakend1(""),
         breakend2(""),
         contigOutfile("")

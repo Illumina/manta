@@ -46,18 +46,20 @@
 extern std::ostream& dbg_os;
 #endif
 
-class SVLocusAssembler {
+class SVLocusAssembler
+{
 
 public:
 
-    struct AssemblyRead {
-        AssemblyRead() 
+    struct AssemblyRead
+    {
+        AssemblyRead()
             : seq(""),used(false) {}
 
         AssemblyRead(std::string s,
-                     bool u) 
+                     bool u)
             : seq(s), used(u) {}
-        
+
         std::string seq;
         bool used;
     };
@@ -84,23 +86,23 @@ public:
      */
     void
     assembleSingleSVBreakend(const SVBreakend& bp,
-                       	   	 Assembly& as);
+                             Assembly& as);
 
     void
     assembleSVBreakends(const SVBreakend& bp1,
-    				    const SVBreakend& bp2,
+                        const SVBreakend& bp2,
                         Assembly& as);
 
 private:
 
     void
     iterateAssembly(AssemblyReadMap& map,
-    				Assembly& as);
+                    Assembly& as);
 
     // Collects the reads crossing an SV breakpoint
     void
     getBreakendReads(const SVBreakend& bp,
-    				 AssemblyReadMap& reads);
+                     AssemblyReadMap& reads);
 
     /**
      * @brief Performs a de-novo assembly of a read group.
@@ -119,27 +121,27 @@ private:
      *
      * @return The extended contig.
      */
-    std::string 
+    std::string
     addBase(const std::string& contig,
-    		const char base,
-        	const unsigned int mode);
+            const char base,
+            const unsigned int mode);
 
     /**
     * Returns suffix (mode=0) or prefix (mode=1) of @p contig with length @p length.
     *
     *  @return The suffix or prefix.
     */
-    std::string 
+    std::string
     getEnd(const std::string& contig,
-    	   const unsigned length,
-    	   const unsigned mode);
+           const unsigned length,
+           const unsigned mode);
 
     /**
      * Extends the seed contig (aka most frequent k-mer)
     *
     *  @return The extended contig.
     */
-    void 
+    void
     walk(const std::string& seed,
          const unsigned wordLength,
          const str_uint_map_t& wordHash,

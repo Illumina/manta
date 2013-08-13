@@ -233,8 +233,8 @@ bool
 SVLocusScanner::
 isSemiAligned(const bam_record& /*bamRead*/) const
 {
-	// TODO
-	return true;
+    // TODO
+    return true;
 }
 
 bool

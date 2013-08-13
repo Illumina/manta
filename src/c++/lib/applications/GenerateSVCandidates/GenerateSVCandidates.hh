@@ -80,7 +80,8 @@ hasAlignedPrefix(const Alignment& al, const unsigned minAlignContext = 0)
 {
     if (al.apath.empty()) return false;
     unsigned alignLen(0);
-    if (al.apath[0].type == ALIGNPATH::MATCH && al.apath[0].length >= minAlignContext) {
+    if (al.apath[0].type == ALIGNPATH::MATCH && al.apath[0].length >= minAlignContext)
+    {
         alignLen = al.apath[0].length;
     }
     return alignLen;
@@ -94,7 +95,8 @@ hasAlignedSuffix(const Alignment& al, const unsigned minAlignContext = 0)
     if (al.apath.empty()) return false;
     size_t apLen = al.apath.size();
     unsigned alignLen(0);
-    if (al.apath[apLen-1].type == ALIGNPATH::MATCH && al.apath[apLen-1].length >= minAlignContext) {
+    if (al.apath[apLen-1].type == ALIGNPATH::MATCH && al.apath[apLen-1].length >= minAlignContext)
+    {
         alignLen = al.apath[apLen-1].length;
     }
     return alignLen;
@@ -110,43 +112,46 @@ bothEndsAligned(const Alignment& al, const unsigned minAlignContext = 0)
 // check a jump alignment for consistency (only one end aligning)
 static
 bool
-isConsistentAlignment(const JumpAlignmentResult<int> & res, const unsigned minAlignContext = 0)
+isConsistentAlignment(const JumpAlignmentResult<int>& res, const unsigned minAlignContext = 0)
 {
     // not consistent if both unaligned
     if (! (res.align1.isAligned() && res.align2.isAligned()) ) return false;
 
     // not consistent if both ends aligned for each alignment
     if ( bothEndsAligned(res.align1) && bothEndsAligned(res.align2) ) return false;
-   
-	return ( (hasAlignedPrefix(res.align1,minAlignContext) && hasAlignedSuffix(res.align2,minAlignContext)) ||
-			 (hasAlignedSuffix(res.align1,minAlignContext) && hasAlignedPrefix(res.align2,minAlignContext))
-		   );
+
+    return ( (hasAlignedPrefix(res.align1,minAlignContext) && hasAlignedSuffix(res.align2,minAlignContext)) ||
+             (hasAlignedSuffix(res.align1,minAlignContext) && hasAlignedPrefix(res.align2,minAlignContext))
+           );
 }
 
 static
 int
 estimateBreakPointPos(const Alignment& al, const unsigned refOffset)
 {
-	// -1 means no breakpoint found or estimation failed
-	int breakPointPosEstimate(-1);
+    // -1 means no breakpoint found or estimation failed
+    int breakPointPosEstimate(-1);
 
-	unsigned prefAlLen = hasAlignedPrefix(al);
-	unsigned suffAlLen = hasAlignedSuffix(al);
+    unsigned prefAlLen = hasAlignedPrefix(al);
+    unsigned suffAlLen = hasAlignedSuffix(al);
 
-	if (! (prefAlLen || suffAlLen) )
-	{
-		return breakPointPosEstimate;
-	}
+    if (! (prefAlLen || suffAlLen) )
+    {
+        return breakPointPosEstimate;
+    }
 
-	if (prefAlLen) {
-		breakPointPosEstimate = refOffset + al.alignStart + prefAlLen;
-	} else if (suffAlLen) {
-		breakPointPosEstimate = refOffset + al.alignEnd - suffAlLen;
-	}
+    if (prefAlLen)
+    {
+        breakPointPosEstimate = refOffset + al.alignStart + prefAlLen;
+    }
+    else if (suffAlLen)
+    {
+        breakPointPosEstimate = refOffset + al.alignEnd - suffAlLen;
+    }
 
-	assert(breakPointPosEstimate>0);
+    assert(breakPointPosEstimate>0);
 
-	return breakPointPosEstimate;
+    return breakPointPosEstimate;
 }
 
 

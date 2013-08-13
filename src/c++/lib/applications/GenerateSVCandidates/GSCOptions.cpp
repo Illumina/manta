@@ -169,7 +169,7 @@ parseGSCOptions(const manta::Program& prog,
     }
     if (opt.referenceFilename.empty())
     {
-    	usage(log_os,prog,visible,"Need the FASTA reference file");
+        usage(log_os,prog,visible,"Need the FASTA reference file");
     }
     {
         // check that alignment files exist, and names do not repeat

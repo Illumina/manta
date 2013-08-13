@@ -54,8 +54,8 @@ private:
 
     void
     modifyInfo(
-    	const SVBreakend& bp1,
-    	const SVBreakend& bp2,
+        const SVBreakend& bp1,
+        const SVBreakend& bp2,
         const bool isFirstOfPair,
         std::vector<std::string>& infotags,
         const SVCandidateData& svData) const;

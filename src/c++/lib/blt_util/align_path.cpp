@@ -985,13 +985,13 @@ get_clip_len(const path_t& apath)
 {
     const unsigned as(apath.size());
     if (as==0) return 0;
-    if ((apath[0].type == SOFT_CLIP) || (apath[0].type == HARD_CLIP)) 
+    if ((apath[0].type == SOFT_CLIP) || (apath[0].type == HARD_CLIP))
     {
         return apath[0].length;
     }
     if (as>1)
     {
-        if ((apath[as-1].type == SOFT_CLIP) || (apath[as-1].type == HARD_CLIP)) 
+        if ((apath[as-1].type == SOFT_CLIP) || (apath[as-1].type == HARD_CLIP))
         {
             return apath[as-1].length;
         }

@@ -44,7 +44,7 @@ inline
 unsigned
 alignEnd(const Alignment& align)
 {
-	return (align.alignStart + ALIGNPATH::apath_ref_length(align.apath));
+    return (align.alignStart + ALIGNPATH::apath_ref_length(align.apath));
 }
 
 

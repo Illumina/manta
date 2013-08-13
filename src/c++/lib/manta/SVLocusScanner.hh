@@ -58,11 +58,11 @@ struct SVLocusScanner
     /// Dummy implementation, returns true for now
     bool
     isSemiAligned(
-    	const bam_record& bamRead) const;
+        const bam_record& bamRead) const;
 
     bool
     isClipped(
-    	const bam_record& bamRead) const;
+        const bam_record& bamRead) const;
 
     unsigned
     getClipLength(

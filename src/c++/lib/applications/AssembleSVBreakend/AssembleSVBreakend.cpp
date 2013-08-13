@@ -42,7 +42,7 @@ static
 void
 runASB(const ASBOptions& opt)
 {
-	///
+    ///
     typedef boost::shared_ptr<bam_streamer> stream_ptr;
     std::vector<stream_ptr> bam_streams_bkpt1;
     std::vector<stream_ptr> bam_streams_bkpt2;
@@ -55,7 +55,7 @@ runASB(const ASBOptions& opt)
     }
     BOOST_FOREACH(const std::string& afile, opt.alignmentFilename)
     {
-    	stream_ptr tmp(new bam_streamer(afile.c_str(),opt.breakend2.c_str()));
+        stream_ptr tmp(new bam_streamer(afile.c_str(),opt.breakend2.c_str()));
         bam_streams_bkpt2.push_back(tmp);
     }
 
@@ -89,7 +89,7 @@ runASB(const ASBOptions& opt)
     Assembly a;
     svla.assembleSVBreakends(bp1,bp2,a);
     std::cout << "Assembled " << a.size() << " contig(s)." << std::endl;
-    
+
     // how much additional reference sequence should we extract from around
     // each side of the breakend region?
     static const pos_t extraRefEdgeSize(300);
@@ -119,11 +119,12 @@ runASB(const ASBOptions& opt)
          ct != a.end();
          ++ct)
     {
-        if (ct->seq.size() < minContigLength) {
+        if (ct->seq.size() < minContigLength)
+        {
             ++numTooShort;
             continue;
         }
-    
+
         std::cout << "ctg : " << ct->seq << std::endl;
         std::cout << "seed read count " << ct->seedReadCount << std::endl;
         os << ">contig_" << numTotal << std::endl;
@@ -132,9 +133,9 @@ runASB(const ASBOptions& opt)
 
         JumpAlignmentResult<int> res;
         aligner.align(ct->seq.begin(),ct->seq.end(),
-        			  bpRefStr1.begin(),bpRefStr1.end(),
-        			  bpRefStr2.begin(),bpRefStr2.end(),
-        			  res);
+                      bpRefStr1.begin(),bpRefStr1.end(),
+                      bpRefStr2.begin(),bpRefStr2.end(),
+                      res);
 
         std::string cigar1;
         apath_to_cigar(res.align1.apath,cigar1);
@@ -149,19 +150,21 @@ runASB(const ASBOptions& opt)
         std::cout << "align2 cigar = " << cigar2 << std::endl;
         std::cout << "align2 cigar prefix aligned " << (hasAlignedPrefix(res.align2,minAlignContext) > 0 ? "Yes" : "No") << std::endl;
         std::cout << "align2 cigar suffix aligned " << (hasAlignedSuffix(res.align2,minAlignContext) > 0 ? "Yes" : "No") << std::endl;
-        
+
         const pos_t refOffset1(std::max(0, (bp1.interval.range.begin_pos()-extraRefEdgeSize)));
         const pos_t refOffset2(std::max(0, (bp2.interval.range.begin_pos()-extraRefEdgeSize)));
 
         std::cout << "breakpoint estimate 1 " << estimateBreakPointPos(res.align1, refOffset1) << std::endl;
         std::cout << "breakpoint estimate 2 " << estimateBreakPointPos(res.align2, refOffset2) << std::endl;
 
-      	if (! (res.align1.isAligned() && res.align2.isAligned()) ) {
-      		std::cout << "At least one not aligned." << std::endl;
-      	}
+        if (! (res.align1.isAligned() && res.align2.isAligned()) )
+        {
+            std::cout << "At least one not aligned." << std::endl;
+        }
 
-        if (!isConsistentAlignment(res,minAlignContext)) {
-        	std::cout << "Alignments not consistent." << std::endl;
+        if (!isConsistentAlignment(res,minAlignContext))
+        {
+            std::cout << "Alignments not consistent." << std::endl;
             continue;
         }
         ++numConsistentAndAligned;
@@ -178,7 +181,7 @@ void
 AssembleSVBreakend::
 runInternal(int argc, char* argv[]) const
 {
-	ASBOptions opt;
+    ASBOptions opt;
     parseASBOptions(*this,argc,argv,opt);
     runASB(opt);
 }

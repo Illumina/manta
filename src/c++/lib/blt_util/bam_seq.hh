@@ -180,29 +180,31 @@ struct bam_seq : public bam_seq_base
     char
     get_complement_char(const pos_t i) const
     {
-    	return get_bam_seq_complement_char(get_code(i));
+        return get_bam_seq_complement_char(get_code(i));
     }
 
     std::string
     get_string() const
     {
-    	std::string s(_size,'N');
-    	for (unsigned i(0); i<_size;++i) {
-    		s[i] = get_char(i);
-    	}
-    	return s;
+        std::string s(_size,'N');
+        for (unsigned i(0); i<_size; ++i)
+        {
+            s[i] = get_char(i);
+        }
+        return s;
     }
 
     // returns the reverse complement
     std::string
     get_rc_string() const
     {
-    	std::string s(_size,'N');
-    	for (unsigned i(0); i<_size;++i) {
-    		s[i] = get_complement_char(i);
-    	}
-    	reverse(s.begin(),s.end());
-    	return s;
+        std::string s(_size,'N');
+        for (unsigned i(0); i<_size; ++i)
+        {
+            s[i] = get_complement_char(i);
+        }
+        reverse(s.begin(),s.end());
+        return s;
     }
 
     unsigned size() const

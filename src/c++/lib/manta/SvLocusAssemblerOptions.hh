@@ -17,7 +17,8 @@
 
 #pragma once
 
-struct SmallAssemblerOptions {
+struct SmallAssemblerOptions
+{
 
     SmallAssemblerOptions() :
         // reasonable default values for 30x and 100bp reads

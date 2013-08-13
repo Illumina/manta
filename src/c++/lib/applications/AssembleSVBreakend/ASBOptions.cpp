@@ -131,11 +131,11 @@ parseASBOptions(const manta::Program& prog,
     }
     if (opt.breakend2.empty())
     {
-          usage(log_os,prog,visible,"Must specify coordinates of second breakpoint");
+        usage(log_os,prog,visible,"Must specify coordinates of second breakpoint");
     }
 
     {
-    	// paste together tumor and normal:
+        // paste together tumor and normal:
         opt.alignmentFilename = normalAlignmentFilename;
         opt.alignmentFilename.insert(opt.alignmentFilename.end(),
                                      tumorAlignmentFilename.begin(),
@@ -158,7 +158,7 @@ parseASBOptions(const manta::Program& prog,
     }
     if (opt.referenceFilename.empty())
     {
-    	usage(log_os,prog,visible,"Need the FASTA reference file");
+        usage(log_os,prog,visible,"Need the FASTA reference file");
     }
     {
         // check that alignment files exist, and names do not repeat

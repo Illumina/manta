@@ -21,9 +21,10 @@
 #include <vector>
 
 
-// stores for each contig the sequence and the number of reads 
+// stores for each contig the sequence and the number of reads
 // containing its seeding k-mer
-struct AssembledContig {
+struct AssembledContig
+{
 
     AssembledContig() : seedReadCount(0) {}
 

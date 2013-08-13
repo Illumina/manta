@@ -124,10 +124,10 @@ private:
 
 struct SVCandidateData
 {
-	// should be a template...
-	typedef JumpAlignmentResult<int> JumpAlignmentResultType;
+    // should be a template...
+    typedef JumpAlignmentResult<int> JumpAlignmentResultType;
 
-	SVCandidateReadPairGroup&
+    SVCandidateReadPairGroup&
     getDataGroup(const unsigned bamIndex)
     {
         data_t::iterator diter(_data.find(bamIndex));
@@ -146,16 +146,28 @@ struct SVCandidateData
     }
 
     Assembly&
-    getAssembly() { return ctgs; }
+    getAssembly()
+    {
+        return ctgs;
+    }
 
     const Assembly&
-    getAssembly() const { return ctgs; }
+    getAssembly() const
+    {
+        return ctgs;
+    }
 
     std::vector<JumpAlignmentResultType>&
-    getAlignments() { return align; }
+    getAlignments()
+    {
+        return align;
+    }
 
     const std::vector<JumpAlignmentResultType>&
-    getAlignments() const { return align; }
+    getAlignments() const
+    {
+        return align;
+    }
 
 
     void
