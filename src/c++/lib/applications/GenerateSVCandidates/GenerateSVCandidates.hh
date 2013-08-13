@@ -132,7 +132,7 @@ static
 int
 estimateBreakPointPos(const Alignment& al, const unsigned refOffset)
 {
-    // -1 means no breakpoint found or estimation failed
+    // -1 means no breakpoint found
     int breakPointPosEstimate(-1);
 
     unsigned prefAlLen = hasAlignedPrefix(al);

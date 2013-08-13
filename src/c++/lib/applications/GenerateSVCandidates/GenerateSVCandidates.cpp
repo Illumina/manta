@@ -148,6 +148,7 @@ runGSC(
                      ++ct)
                 {
                     JumpAlignmentResult<int> res;
+
                     aligner.align(ct->seq.begin(),ct->seq.end(),
                                   bp1RefStr.begin(),bp1RefStr.end(),
                                   bp2RefStr.begin(),bp2RefStr.end(),

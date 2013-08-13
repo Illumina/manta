@@ -27,7 +27,7 @@
 #include <ciso646>
 #include <iosfwd>
 #include <string>
-
+#include <algorithm>
 
 namespace BAM_BASE
 {
@@ -203,7 +203,7 @@ struct bam_seq : public bam_seq_base
         {
             s[i] = get_complement_char(i);
         }
-        reverse(s.begin(),s.end());
+        std::reverse(s.begin(),s.end());
         return s;
     }
 

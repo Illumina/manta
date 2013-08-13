@@ -225,7 +225,8 @@ getBreakendReads(const SVBreakend& bp,
         assert(missing > 0);
         size_t wobble = missing/2;
         // FIXME : not sure what happens if (end_pos + wobble) > chromosome size?
-        searchRange.set_range(std::max((bp.interval.range.begin_pos()-wobble),static_cast<unsigned long>(0)),(bp.interval.range.end_pos()+wobble));
+        size_t zero(0);
+        searchRange.set_range(std::max((bp.interval.range.begin_pos()-wobble),zero),(bp.interval.range.end_pos()+wobble));
     }
 
     const unsigned minClipLen(3);
