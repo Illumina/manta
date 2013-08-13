@@ -94,7 +94,6 @@ BOOST_AUTO_TEST_CASE( test_GlobalJumpAligner2 )
     BOOST_REQUIRE_EQUAL(result.align2.alignStart,1);
 }
 
-
 BOOST_AUTO_TEST_CASE( test_GlobalJumpAlignerLong )
 {
     static const std::string seq("ABABACDCDC");

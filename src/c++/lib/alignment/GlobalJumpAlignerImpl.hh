@@ -389,12 +389,10 @@ align(
     if (isRef1)
     {
         result.align1.alignStart = bt.refStart;
-        result.align1.alignEnd   = bt.refStart+ref1Size;
     }
     else
     {
-        result.align2.alignStart = bt.refStart-ref2Size;
-        result.align2.alignEnd   = bt.refStart;
+        result.align2.alignStart = bt.refStart-ref1Size;
     }
 
     std::reverse(apath1.begin(),apath1.end());
