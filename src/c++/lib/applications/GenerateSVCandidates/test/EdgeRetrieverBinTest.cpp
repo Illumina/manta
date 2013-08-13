@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE( test_EdgeRetrieverOddBinSelfEdge )
         while (edger.next())
         {
             const EdgeInfo& edge(edger.getEdge());
-            BOOST_REQUIRE_EQUAL(loci.count(edge.locusIndex),0);
+            BOOST_REQUIRE_EQUAL(loci.count(edge.locusIndex),0u);
             loci.insert(edge.locusIndex);
             count++;
         }

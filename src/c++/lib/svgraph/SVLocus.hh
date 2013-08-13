@@ -51,7 +51,7 @@ struct SVLocusEdge
     // merge edge into this one
     //
     void
-    mergeEdge(SVLocusEdge& edge)
+    mergeEdge(const SVLocusEdge& edge)
     {
         count += edge.count;
     }
@@ -62,7 +62,7 @@ struct SVLocusEdge
         ar& count;
     }
 
-    unsigned short count;
+    unsigned count;
 };
 
 
@@ -148,11 +148,28 @@ struct SVLocusNode
         ar& count& interval& evidenceRange& edges;
     }
 
+    /// add new edge to node, or merge this edge info in if node already has edge:
+    void
+    mergeEdge(const NodeIndexType toIndex, const SVLocusEdge& edge)
+    {
+        iterator edgeIter(edges.find(toIndex));
+        if (edgeIter == edges.end())
+        {
+            edges.insert(std::make_pair(toIndex,edge));
+        }
+        else
+        {
+            edgeIter->second.mergeEdge(edge);
+        }
+    }
+
     friend std::ostream&
     operator<<(std::ostream& os, const SVLocusNode& node);
 
+
+
     //////////////////  data:
-    unsigned short count;
+    unsigned count;
     GenomeInterval interval;
     known_pos_range2 evidenceRange;
 
@@ -184,8 +201,9 @@ struct SVLocusSet;
 /// The locus is composed of a set of non-overlapping contiguous genomic regions and links between them.
 /// Each link has an associated evidence count.
 ///
-/// This class internally manages the node shared pointers in a synced data structure, there's probably a better
-/// way to do this with transform_iterator, but I've always regretted using that.
+/// This class internally manages the node shared pointers in a synced data structure,
+/// there's probably a better way to do this with transform_iterator, but I've always
+/// regretted using that.
 ///
 struct SVLocus : public notifier<SVLocusNodeMoveMessage>
 {
@@ -279,8 +297,8 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
         assert(0 == fromNode.edges.count(toIndex));
         assert(0 == toNode.edges.count(fromIndex));
 
-        fromNode.edges.insert(std::make_pair(toIndex,SVLocusEdge(fromCount)));
-        toNode.edges.insert(std::make_pair(fromIndex,SVLocusEdge(toCount)));
+        fromNode.mergeEdge(toIndex,SVLocusEdge(fromCount));
+        toNode.mergeEdge(fromIndex,SVLocusEdge(toCount));
     }
 
     void

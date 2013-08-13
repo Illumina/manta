@@ -262,7 +262,7 @@ apath_clip_adder(path_t& apath,
                  const unsigned sc_lead,
                  const unsigned sc_trail);
 
-// 'cleans' the path so that it can be used, or used more consistently, in starka
+// 'cleans' the path so that it can be used, or used more consistently
 //
 // note this does not try to correct or work around anything
 // which can't be unambiguously reinterpreted to a simpler form
@@ -363,7 +363,7 @@ is_edge_readref_len_segment(const path_t& apath);
 bool
 is_seq_swap(const path_t& apath);
 
-// is the given segment the begining of a seq swap?
+// is the given segment the beginning of a seq swap?
 bool
 is_segment_swap_start(const path_t& apath,
                       const unsigned i);

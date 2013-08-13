@@ -1,3 +1,6 @@
+alignment:
+sequence alignment utilities
+
 applications/X:
 code specific to command-line application X
 

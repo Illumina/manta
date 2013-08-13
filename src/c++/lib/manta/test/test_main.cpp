@@ -11,6 +11,6 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
-#define BOOST_TEST_MODULE libalignment
+#define BOOST_TEST_MODULE libmanta
 #include "boost/test/unit_test.hpp"
 

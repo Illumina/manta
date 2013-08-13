@@ -235,6 +235,13 @@ private:
 
     typedef std::pair<LocusIndexType,NodeIndexType> NodeAddressType;
 
+    typedef NodeAddressType EdgeMapKeyType;
+    typedef NodeIndexType EdgeMapValueType;
+
+    typedef std::multimap<EdgeMapKeyType, EdgeMapValueType> EdgeMapType;
+
+    typedef std::pair<EdgeMapKeyType, EdgeMapValueType> EdgeInfoType;
+
     struct NodeAddressSorter
     {
 
@@ -302,10 +309,13 @@ private:
 
     /// shared node intersection utility
     ///
+    /// \param searchNodes the set of nodes to search for intersections in
+    /// \param filterLocusIndex ignore intersections from this locus
+    ///
     void
     getNodeIntersectCore(
-        const LocusIndexType locusIndex,
-        const NodeIndexType nodeIndex,
+        const LocusIndexType inputLocusIndex,
+        const NodeIndexType inputNodeIndex,
         const LocusSetIndexerType& searchNodes,
         const LocusIndexType fitlerLocusIndex,
         std::set<NodeAddressType>& intersectNodes) const;
@@ -322,9 +332,20 @@ private:
     }
 
     void
+    getIntersectingEdgeNodes(
+        const LocusIndexType inputLocusIndex,
+        const NodeIndexType inputRemoteNodeIndex,
+        const EdgeMapType& remoteToLocal,
+        const LocusSetIndexerType& remoteIntersect,
+        std::vector<EdgeInfoType>& edges) const;
+
+    ///
+    /// \param isInputLocusMoved has the input locus been moved into the graph from an initial temporary locus?
+    ///
+    void
     getNodeMergeableIntersect(
-        const LocusIndexType locusIndex,
-        const NodeIndexType nodeIndex,
+        const LocusIndexType inputLocusIndex,
+        const NodeIndexType inputNodeIndex,
         const bool isInputLocusMoved,
         std::set<NodeAddressType>& mergeIntersect) const;
 
@@ -435,6 +456,7 @@ private:
 public:
     bam_header_info header;
 private:
+
     // contains the full set of loci
     locusset_type _loci;
     std::set<unsigned> _emptyLoci;
