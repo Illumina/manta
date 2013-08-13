@@ -626,6 +626,7 @@ checkState(const bool isCheckConnected) const
         {
             std::ostringstream oss;
             oss << "ERROR: SVLocusNode " << _index << ":" << nodeIndex << " has inconsistent counts. NodeCount: " << node.count << " EdgeCount: " << edgeCount << "\n";
+            oss << "\tnode: " << node;
             BOOST_THROW_EXCEPTION(LogicException(oss.str()));
         }
     }
