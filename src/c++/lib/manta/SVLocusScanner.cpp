@@ -198,7 +198,7 @@ getReadBreakendsImpl(
     // if remoteRead is not available, estimate mate localRead size to be same as local,
     // and assume no clipping on mate localRead:
     unsigned remoteReadNoninsertSize(readSize);
-    unsigned remoteRefLength(localRefLength);
+    unsigned remoteRefLength(readSize);
 
     if (NULL != remoteReadPtr)
     {
