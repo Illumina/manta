@@ -369,7 +369,11 @@ getCandidatesFromData(
 
 #ifdef DEBUG_SVDATA
             log_os << "Checking pair: " << pair << "\n";
-            log_os << "Translated to cand: " << cand << "\n";
+            log_os << "Translated to candidates:\n";
+            BOOST_FOREACH(const SVCandidate& cand, readCandidates)
+            {
+                log_os << "\tcand: " << cand << "\n";
+            }
 #endif
 
             bool isSVFound(false);
