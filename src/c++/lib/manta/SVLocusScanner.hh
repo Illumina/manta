@@ -90,8 +90,13 @@ struct SVLocusScanner
 
     struct CachedReadGroupStats
     {
+        /// fragment size range assumed for the purpose of creating SVLocusGraph regions
         Range breakendRegion;
+
+        /// fragment size range used to determine if a read is anomalous
         Range properPair;
+
+        Range evidencePair;
     };
 
 private:

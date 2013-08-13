@@ -27,6 +27,7 @@ struct ReadScannerOptions
         minMapq(15),
         breakendEdgeTrimProb(0.25),
         properPairTrimProb(0.05),
+        evidenceTrimProb(0.15),
         minCandidateIndelSize(50),
         minPairBreakendSize(40),
         splitBreakendSizeFraction(0.1),
@@ -39,8 +40,11 @@ struct ReadScannerOptions
     /// report breakend regions with x prob regions removed from each edge
     float breakendEdgeTrimProb;
 
-    /// report a pair as "proper pair" if fragement size is within x prob region removed from each edge
+    /// report a pair as "proper pair" if fragment size is within x prob region removed from each edge
     float properPairTrimProb;
+
+    /// add a pair to the evidence pool if frag size is within x prob region removed from each edge
+    float evidenceTrimProb;
 
     /// ignore indels smaller than this when building graph:
     unsigned minCandidateIndelSize;

@@ -286,10 +286,10 @@ getReadBreakendsImpl(
 
     // check if read pair separation is non-anomalous after accounting for read alignments:
     if((localRead.target_id() == localRead.mate_target_id()) &&
-       (localRead.is_fwd_strand() == localRead.is_mate_fwd_strand()))
+       (localRead.is_fwd_strand() != localRead.is_mate_fwd_strand()))
     {
         // get length of fragment after accounting for any variants described directly in either read alignment:
-        const pos_t cigarAdjustedFragmentSize(totalNoninsertSize + insertRange.size());
+        const pos_t cigarAdjustedFragmentSize(totalNoninsertSize + (insertRange.end_pos() - insertRange.begin_pos()));
         if((cigarAdjustedFragmentSize <= rstats.properPair.max) &&
            (cigarAdjustedFragmentSize >= rstats.properPair.min)) return;
     }
@@ -402,6 +402,15 @@ SVLocusScanner(
             if (ppair.min<0.) ppair.min = 0;
 
             assert(ppair.max>0.);
+        }
+        {
+            Range& evid(stat.evidencePair);
+            evid.min=rgs.fragSize.quantile(_opt.evidenceTrimProb);
+            evid.max=rgs.fragSize.quantile((1-_opt.evidenceTrimProb));
+
+            if (evid.min<0.) evid.min = 0;
+
+            assert(evid.max>0.);
         }
     }
 }
