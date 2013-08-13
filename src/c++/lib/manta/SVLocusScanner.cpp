@@ -474,7 +474,7 @@ getSVLoci(
 
     if (! bamRead.is_chimeric())
     {
-        if (std::abs(bamRead.template_size())<500) return;
+        if (std::abs(bamRead.template_size())<2000) return;
     }
 
     const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);
