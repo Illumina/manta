@@ -226,6 +226,9 @@ getReadBreakendsImpl(
         remoteBreakend.pairCount = 1;
     }
 
+    // this is only designed to be valid when reads are on the same chrom with default orientation:
+    known_pos_range2 insertRange;
+
     const pos_t totalNoninsertSize(thisReadNoninsertSize+remoteReadNoninsertSize);
     const pos_t breakendSize(std::max(
         static_cast<pos_t>(opt.minPairBreakendSize),
@@ -242,12 +245,16 @@ getReadBreakendsImpl(
             localBreakend.state = SVBreakendState::RIGHT_OPEN;
             localBreakend.interval.range.set_begin_pos(endRefPos);
             localBreakend.interval.range.set_end_pos(endRefPos + breakendSize);
+
+            insertRange.set_begin_pos(endRefPos);
         }
         else
         {
             localBreakend.state = SVBreakendState::LEFT_OPEN;
             localBreakend.interval.range.set_end_pos(startRefPos);
             localBreakend.interval.range.set_begin_pos(startRefPos - breakendSize);
+
+            insertRange.set_end_pos(startRefPos);
         }
 
         localEvidenceRange.set_range(startRefPos,endRefPos);
@@ -264,26 +271,40 @@ getReadBreakendsImpl(
             remoteBreakend.state = SVBreakendState::RIGHT_OPEN;
             remoteBreakend.interval.range.set_begin_pos(endRefPos);
             remoteBreakend.interval.range.set_end_pos(endRefPos + breakendSize);
+
+            insertRange.set_begin_pos(endRefPos);
         }
         else
         {
             remoteBreakend.state = SVBreakendState::LEFT_OPEN;
             remoteBreakend.interval.range.set_end_pos(startRefPos);
             remoteBreakend.interval.range.set_begin_pos(startRefPos - breakendSize);
+
+            insertRange.set_end_pos(startRefPos);
         }
     }
 
-    known_pos_range2 mergeRange(localBreakend.interval.range);
-    mergeRange.merge_range(remoteBreakend.interval.range);
-
-    // read pair separation is non-anomalous:
-    if(mergeRange.size() <= rstats.breakendRegion.max) return;
+    // check if read pair separation is non-anomalous after accounting for read alignments:
+    if((localRead.target_id() == localRead.mate_target_id()) &&
+       (localRead.is_fwd_strand() == localRead.is_mate_fwd_strand()))
+    {
+        // get length of fragment after accounting for any variants described directly in either read alignment:
+        const pos_t cigarAdjustedFragmentSize(totalNoninsertSize + insertRange.size());
+        if((cigarAdjustedFragmentSize <= rstats.properPair.max) &&
+           (cigarAdjustedFragmentSize >= rstats.properPair.min)) return;
+    }
 
     candidates.push_back(sv);
 }
 
 
 
+/// Create an SVLocus for each potential SV event supported by the BAM record
+///
+/// the loci count should almost always be one (or, depending on input filtration, zero).
+/// multiple suggested loci from one read is more of a theoretical possibility than an
+/// expectation.
+///
 static
 void
 getSVLociImpl(

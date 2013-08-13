@@ -88,6 +88,10 @@ addSVNodeRead(
         if (! locus.getNode(readRemoteIndex).interval.isIntersect(remoteNode.interval)) continue;
 
         svDataGroup.add(bamRead,isExpectRepeat);
+
+        // once any loci has achieved the local/remote overlap criteria, there's no reason to keep scanning loci
+        // of the same bam record:
+        break;
     }
 }
 
