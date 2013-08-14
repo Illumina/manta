@@ -50,7 +50,7 @@ modifyInfo(
     const SVBreakend& bp2,
     const bool isFirstOfPair,
     std::vector<std::string>& infotags,
-    const SVCandidateData& svData) const
+    const SVCandidateSetData& svData) const
 {
     assert(_ssInfoPtr != NULL);
     const SomaticSVScoreInfo& ssInfo(*_ssInfoPtr);
@@ -117,7 +117,7 @@ void
 VcfWriterSomaticSV::
 writeSV(
     const EdgeInfo& edge,
-    const SVCandidateData& svData ,
+    const SVCandidateSetData& svData ,
     const unsigned svIndex,
     const SVCandidate& sv,
     const SomaticSVScoreInfo& ssInfo)

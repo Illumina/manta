@@ -112,7 +112,7 @@ writeTransloc(
     const SVBreakend& bp2,
     const std::string& idPrefix,
     const bool isFirstOfPair,
-    const SVCandidateData& svData )
+    const SVCandidateSetData& svData )
 {
     std::vector<std::string> infotags;
 
@@ -207,7 +207,7 @@ writeTranslocPair(
     const EdgeInfo& edge,
     const unsigned svIndex,
     const SVCandidate& sv,
-    const SVCandidateData& svData)
+    const SVCandidateSetData& svData)
 {
     const std::string idPrefix( str(_idFormatter % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % svIndex ) );
 
@@ -338,7 +338,7 @@ writeSVCore(
     const EdgeInfo& edge,
     const unsigned svIndex,
     const SVCandidate& sv,
-    const SVCandidateData& svData)
+    const SVCandidateSetData& svData)
 {
     const SV_TYPE::index_t svType(getSVType(sv));
     if      (svType == SV_TYPE::INTERTRANSLOC)

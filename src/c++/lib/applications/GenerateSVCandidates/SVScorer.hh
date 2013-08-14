@@ -23,7 +23,7 @@
 #include "blt_util/bam_header_info.hh"
 #include "manta/ChromDepthFilterUtil.hh"
 #include "manta/SVCandidate.hh"
-#include "manta/SVCandidateData.hh"
+#include "manta/SVCandidateSetData.hh"
 #include "manta/SVLocusScanner.hh"
 #include "manta/SomaticSVScoreInfo.hh"
 
@@ -40,7 +40,7 @@ struct SVScorer
 
     void
     scoreSomaticSV(
-        const SVCandidateData& svData,
+        const SVCandidateSetData& svData,
         const unsigned svIndex,
         const SVCandidate& sv,
         SomaticSVScoreInfo& ssInfo);

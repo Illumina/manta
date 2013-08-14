@@ -16,7 +16,7 @@
 
 #include "blt_util/log.hh"
 #include "common/Exceptions.hh"
-#include "manta/SVCandidateData.hh"
+#include "manta/SVCandidateSetData.hh"
 
 #include "boost/foreach.hpp"
 
@@ -28,19 +28,19 @@
 
 
 std::ostream&
-operator<<(std::ostream& os, const SVCandidateRead& svr)
+operator<<(std::ostream& os, const SVCandidateSetRead& svr)
 {
-    os << "SVCandidateRead: " << svr.bamrec << "\n";
+    os << "SVCandidateSetRead: " << svr.bamrec << "\n";
     return os;
 }
 
 
 
 std::ostream&
-operator<<(std::ostream& os, const SVCandidateReadPair& svp)
+operator<<(std::ostream& os, const SVCandidateSetReadPair& svp)
 {
     os << "SVCandidateReadPair svIndices:";
-    BOOST_FOREACH(const SVCandidateReadPair::index_t index, svp.svIndex)
+    BOOST_FOREACH(const SVCandidateSetReadPair::index_t index, svp.svIndex)
     {
         os << " " << index;
     }
@@ -52,8 +52,8 @@ operator<<(std::ostream& os, const SVCandidateReadPair& svp)
 
 
 
-SVCandidateReadPair&
-SVCandidateReadPairGroup::
+SVCandidateSetReadPair&
+SVCandidateSetReadPairSampleGroup::
 getReadPair(const pindex_t::key_type& key)
 {
     const pindex_t::const_iterator kiter(_pairIndex.find(key));
@@ -61,7 +61,7 @@ getReadPair(const pindex_t::key_type& key)
     if (kiter == _pairIndex.end())
     {
         _pairIndex[key] = _pairs.size();
-        _pairs.push_back(SVCandidateReadPair());
+        _pairs.push_back(SVCandidateSetReadPair());
         return _pairs.back();
     }
     else
@@ -73,7 +73,7 @@ getReadPair(const pindex_t::key_type& key)
 
 
 void
-SVCandidateReadPairGroup::
+SVCandidateSetReadPairSampleGroup::
 add(const bam_record& bamRead,
     const bool isExpectRepeat)
 {
@@ -83,9 +83,9 @@ add(const bam_record& bamRead,
     log_os << "SVDataGroup adding: " << bamRead << "\n";
 #endif
 
-    SVCandidateReadPair& pair(getReadPair(bamRead.qname()));
+    SVCandidateSetReadPair& pair(getReadPair(bamRead.qname()));
 
-    SVCandidateRead* targetReadPtr(&(pair.read1));
+    SVCandidateSetRead* targetReadPtr(&(pair.read1));
     if (2 == bamRead.read_no())
     {
         targetReadPtr = (&(pair.read2));
@@ -108,7 +108,7 @@ add(const bam_record& bamRead,
 
 
 bool
-SVCandidateData::
+SVCandidateSetData::
 setNewSearchInterval(const GenomeInterval& newSearch)
 {
     bool retval(false);

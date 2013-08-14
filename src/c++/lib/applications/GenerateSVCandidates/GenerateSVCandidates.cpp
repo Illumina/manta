@@ -109,11 +109,11 @@ runGSC(
         if (isSomatic) somWriter.writeHeader(progName, progVersion);
     }
 
-    SVCandidateData svData;
+    SVCandidateSetData svData;
     std::vector<SVCandidate> svs;
     SomaticSVScoreInfo ssInfo;
     int jumpScore(-3);
-    GlobalJumpAligner<int> aligner(AlignmentScores<int>(1,-2,-6,0,-2),jumpScore);
+    GlobalJumpAligner<int> aligner(AlignmentScores<int>(1,-2,-5,-1,-2),jumpScore);
     while (edger.next())
     {
         const EdgeInfo& edge(edger.getEdge());

@@ -23,7 +23,7 @@ void
 VcfWriterCandidateSV::
 writeSV(
     const EdgeInfo& edge,
-    const SVCandidateData& svData,
+    const SVCandidateSetData& svData,
     const std::vector<SVCandidate>& svs)
 {
     unsigned svIndex(0);

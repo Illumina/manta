@@ -31,7 +31,11 @@
 //#define DEBUG_SVDATA
 
 
-struct SVCandidateRead
+/// A read associated with an SV associated set of regions
+///
+/// note this read could be linked with zero to many specific SVCandidates
+///
+struct SVCandidateSetRead
 {
     bool
     isSet() const
@@ -44,34 +48,40 @@ struct SVCandidateRead
 };
 
 std::ostream&
-operator<<(std::ostream& os, const SVCandidateRead& svr);
+operator<<(std::ostream& os, const SVCandidateSetRead& svr);
 
 
-struct SVCandidateReadPair
+
+/// A read associated with an SV associated set of regions
+///
+/// note this read could be linked with zero to many specific SVCandidates
+///
+struct SVCandidateSetReadPair
 {
-    SVCandidateReadPair()
+    SVCandidateSetReadPair()
     {}
 
-    // which svs are this molecule associated with?
     typedef uint16_t index_t;
-    std::vector<index_t> svIndex;
-    SVCandidateRead read1;
-    SVCandidateRead read2;
+    std::vector<index_t> svIndex; ///< which SVs from the set are this molecule associated with?
+    SVCandidateSetRead read1;
+    SVCandidateSetRead read2;
 };
 
 
 std::ostream&
-operator<<(std::ostream& os, const SVCandidateReadPair& svp);
+operator<<(std::ostream& os, const SVCandidateSetReadPair& svp);
 
 
 
-/// SVCandidateData associated with a specific bam-file/read-group
-struct SVCandidateReadPairGroup
+/// SVCandidateSet data associated with a specific bam-file/read-group
+///
+struct SVCandidateSetReadPairSampleGroup
 {
-    typedef std::vector<SVCandidateReadPair> pair_t;
+    typedef std::vector<SVCandidateSetReadPair> pair_t;
     typedef pair_t::iterator iterator;
     typedef pair_t::const_iterator const_iterator;
 
+    /// add a new bam record to the set:
     void
     add(const bam_record& bamRead,
         const bool isExpectRepeat);
@@ -105,7 +115,7 @@ private:
     typedef std::string bamqname_t;
     typedef std::map<bamqname_t,unsigned> pindex_t;
 
-    SVCandidateReadPair&
+    SVCandidateSetReadPair&
     getReadPair(const pindex_t::key_type& key);
 
     pair_t _pairs;
@@ -113,31 +123,33 @@ private:
 };
 
 
-
-/// any information which travels with the final SVCandidate
-/// which would be useful at score time
+/// Data gathered from a set of regions implicated to contain one or more SVs
 ///
-/// example: realigned/reassembled reads
+/// Note these data are used for initial hypothesis generation, therefore the
+/// reads are potentially associated with zero to many specific SV candidates
+/// (although we expect any one read to usually be associated with no more
+/// one).
 ///
-/// ideally scoring model should not have to touch bam again after hygen step..
 ///
-
-struct SVCandidateData
+///
+struct SVCandidateSetData
 {
     // should be a template...
     typedef JumpAlignmentResult<int> JumpAlignmentResultType;
 
-    SVCandidateReadPairGroup&
+    /// get evidence associated with a specific sample group:
+    SVCandidateSetReadPairSampleGroup&
     getDataGroup(const unsigned bamIndex)
     {
         data_t::iterator diter(_data.find(bamIndex));
         if (diter != _data.end()) return diter->second;
 
-        std::pair<data_t::iterator,bool> diter2 = _data.insert(std::make_pair(bamIndex,SVCandidateReadPairGroup()));
+        std::pair<data_t::iterator,bool> diter2 = _data.insert(std::make_pair(bamIndex,SVCandidateSetReadPairSampleGroup()));
         return diter2.first->second;
     }
 
-    const SVCandidateReadPairGroup&
+    /// get evidence associated with a specific sample group:
+    const SVCandidateSetReadPairSampleGroup&
     getDataGroup(const unsigned bamIndex) const
     {
         data_t::const_iterator diter(_data.find(bamIndex));
@@ -176,12 +188,16 @@ struct SVCandidateData
         _data.clear();
     }
 
-    /// return true if this search interval overlaps with any previous:
+    /// return true if this search interval overlaps with any previous
+    /// intervals
+    ///
+    /// if true, we know to expect repeated qnames
+    ///
     bool
     setNewSearchInterval(const GenomeInterval& newSearch);
 
 private:
-    typedef std::map<unsigned,SVCandidateReadPairGroup> data_t;
+    typedef std::map<unsigned,SVCandidateSetReadPairSampleGroup> data_t;
     data_t _data;
 
     std::vector<GenomeInterval> _searchIntervals;

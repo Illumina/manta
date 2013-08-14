@@ -21,7 +21,7 @@
 #include "assembly/SmallAssembler.hh"
 #include "blt_util/bam_streamer.hh"
 #include "manta/SVCandidate.hh"
-#include "manta/SVCandidateData.hh"
+#include "manta/SVCandidateSetData.hh"
 #include "manta/SVLocusScanner.hh"
 
 #include "boost/shared_ptr.hpp"

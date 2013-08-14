@@ -140,7 +140,7 @@ getBreakendMaxMappedDepth(const SVBreakend& bp)
 void
 SVScorer::
 scoreSomaticSV(
-    const SVCandidateData& svData,
+    const SVCandidateSetData& svData,
     const unsigned svIndex,
     const SVCandidate& sv,
     SomaticSVScoreInfo& ssInfo)
@@ -155,8 +155,8 @@ scoreSomaticSV(
         const bool isTumor(_isAlignmentTumor[bamIndex]);
         SVSampleInfo& sample(isTumor ? ssInfo.tumor : ssInfo.normal);
 
-        const SVCandidateReadPairGroup& svDataGroup(svData.getDataGroup(bamIndex));
-        BOOST_FOREACH(const SVCandidateReadPair& pair, svDataGroup)
+        const SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
+        BOOST_FOREACH(const SVCandidateSetReadPair& pair, svDataGroup)
         {
             if (0 == std::count(pair.svIndex.begin(),pair.svIndex.end(), svIndex)) continue;
 
