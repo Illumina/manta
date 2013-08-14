@@ -44,7 +44,7 @@ typedef boost::unordered_map<std::string,unsigned> str_uint_map_t;
 
 
 /**
- * Adds base @p base to the end (isEnd is true) or start (otherwise of the contig.
+ * Adds base @p base to the end (isEnd is true) or start (otherwise) of the contig.
  *
  *	@return The extended contig.
  */
@@ -61,7 +61,7 @@ addBase(const std::string& contig,
 
 
 /**
- * Returns a suffix (isEnd is true) or prefix (others) of @p contig with length @p length.
+ * Returns a suffix (isEnd is true) or prefix (otherwise) of @p contig with length @p length.
  *
  *	@return The suffix or prefix.
  */
@@ -210,7 +210,7 @@ buildContigs(
     {
         const AssemblyReadInfo& rinfo(readInfo[readIndex]);
 
-        // skip reads used in an previous iteration
+        // skip reads used in a previous iteration
         if (rinfo.isUsed) continue;
 
         // stores the index of a kmer in a read sequence
@@ -336,7 +336,7 @@ runSmallAssembler(
     Assembly& as)
 {
 #ifdef DEBUG_ASBL
-    dbg_os << "SmallAssember: Starting assembly with " << reads.size() << " readd.\n";
+    dbg_os << "SmallAssember: Starting assembly with " << reads.size() << " read.\n";
 #endif
 
     assembledReadInfo.clear();
