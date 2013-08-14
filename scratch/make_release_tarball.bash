@@ -4,10 +4,6 @@ set -o nounset
 set -o pipefail
 set -o xtrace
 
-#
-# this makes the starling/strelka binary tarball assuming it's being called in the release checkout version
-# the tarball is written to the caller's working directory
-#
 
 package_name=manta
 
@@ -16,7 +12,10 @@ if [ $# -gt 1 ]; then
     cat <<END
 usage: $0 [tarball_rootname]
 
-This script makes the manta release tarball, assuming the targeted version is already checked out from git.
+This script makes the manta source tarball
+
+- script assumes that it is located in the release checkout version
+- the tarball is written to the caller's working directory
 END
     exit 2
 elif [ $# == 1 ]; then

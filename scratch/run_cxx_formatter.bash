@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# if asytle is found, then run it on all cxx source
+# if astyle is found, then run it on all cxx source
 #
 
 set -o nounset

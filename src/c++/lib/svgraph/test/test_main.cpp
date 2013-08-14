@@ -11,6 +11,6 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
-#define BOOST_TEST_MODULE libmanta
+#define BOOST_TEST_MODULE libsvgraph
 #include "boost/test/unit_test.hpp"
 

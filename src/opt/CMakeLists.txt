@@ -29,15 +29,15 @@ set(MANTA_REDIST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../redist")
 #
 set(SAMTOOLS_PREFIX "samtools-0.1.18_no_tview")
 set(SAMTOOLS_DIR "${CMAKE_CURRENT_BINARY_DIR}/${SAMTOOLS_PREFIX}")
+set(SAMTOOLS_LIBRARY "${SAMTOOLS_DIR}/libbam.a")
+set(SAMTOOLS_LIBRARY ${SAMTOOLS_LIBRARY} PARENT_SCOPE)
 
-set (SAMTOOLS_LIB "${SAMTOOLS_DIR}/libbam.a")
-
-add_custom_command(OUTPUT ${SAMTOOLS_LIB}
+add_custom_command(OUTPUT ${SAMTOOLS_LIBRARY}
                    COMMAND rm -rf "${SAMTOOLS_DIR}"
                    COMMAND tar -xjf "${MANTA_REDIST_DIR}/${SAMTOOLS_PREFIX}.tar.bz2"
                    COMMAND $(MAKE) -C "${SAMTOOLS_DIR}" all bgzip
                    COMMENT "Building the SAM/BAM library and tools")
-add_custom_target(MANTA_SAMTOOLS DEPENDS "${SAMTOOLS_LIB}")
+add_custom_target(MANTA_SAMTOOLS DEPENDS "${SAMTOOLS_LIBRARY}")
 
 install(PROGRAMS "${SAMTOOLS_DIR}/samtools" DESTINATION "${MANTA_LIBEXECDIR}")
 install(PROGRAMS "${SAMTOOLS_DIR}/bgzip"    DESTINATION "${MANTA_LIBEXECDIR}")

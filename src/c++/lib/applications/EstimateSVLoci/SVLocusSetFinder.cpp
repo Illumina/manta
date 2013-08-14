@@ -194,13 +194,14 @@ update(const bam_record& bamRead,
 
     _stageman.handle_new_pos_value(bamRead.pos()-1);
 
-    SVLocus locus;
+    std::vector<SVLocus> loci;
 
     //_readScanner.getSVLocus(bamRead, defaultReadGroupIndex, locus);
-    _readScanner.getSVLocus(bamRead, defaultReadGroupIndex, locus);
+    _readScanner.getSVLoci(bamRead, defaultReadGroupIndex, loci);
 
-    if (! locus.empty())
+    BOOST_FOREACH(const SVLocus& locus, loci)
     {
+        if (locus.empty()) continue;
         _svLoci.merge(locus);
     }
 }

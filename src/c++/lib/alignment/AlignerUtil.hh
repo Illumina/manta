@@ -43,7 +43,8 @@ struct AlignerUtil
 
 /// bookkeeping variables used during alignment backtrace
 template <typename ScoreType>
-struct BackTrace {
+struct BackTrace
+{
     BackTrace() :
         max(0),
         state(AlignState::MATCH),

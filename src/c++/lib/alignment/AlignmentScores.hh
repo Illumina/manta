@@ -30,9 +30,9 @@ struct AlignmentScores
         offEdge(initOffEdge)
     {}
 
-    const ScoreType match;
-    const ScoreType mismatch;
-    const ScoreType open; /// gap open, gap of length N is scored (open + N * extend)
-    const ScoreType extend; /// gap extend, gap of length N is scored (open + N * extend)
-    const ScoreType offEdge; /// score applied when query goes off the end of an edge
+    const ScoreType match; ///< match score
+    const ScoreType mismatch; ///< mismatch score (should be negative)
+    const ScoreType open; ///< gap open, gap of length N is scored (open + N * extend) (should be negative)
+    const ScoreType extend; ///< gap extend, gap of length N is scored (open + N * extend) (should be negative or zero)
+    const ScoreType offEdge; ///< score applied when query goes off the end of an edge (should be negative)
 };
