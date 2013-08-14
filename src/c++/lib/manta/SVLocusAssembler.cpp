@@ -16,6 +16,7 @@
 ///
 
 
+#include "blt_util/log.hh"
 #include "manta/SVLocusAssembler.hh"
 
 #include "boost/foreach.hpp"
@@ -103,7 +104,7 @@ getBreakendReads(
             {
                 flag = "2";
             }
-            std::string readKey = std::string(bamRead.qname()) + "_" + flag + "_" + boost::lexical_cast<std::string>(bamIndex);
+            const std::string readKey = std::string(bamRead.qname()) + "_" + flag + "_" + boost::lexical_cast<std::string>(bamIndex);
 
 #ifdef DEBUG_ASBL
             ALIGNPATH::path_t apath;
@@ -121,9 +122,7 @@ getBreakendReads(
             }
             else
             {
-                // TODO: is this an error or a warning?
-            	// (olest) it is a warning.
-            	std::cerr << "WARNIING : Read name collision : " << readKey << std::endl;
+                log_os << "WARNING : Read name collision : " << readKey << "\n"; 
             }
         }
     }
