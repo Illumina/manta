@@ -99,7 +99,7 @@ walk(const SmallAssemblerOptions& opt,
     std::set<std::string> seenBefore;	// records k-mers already encountered during extension
     seenBefore.insert(contig);
 
-    const str_uint_map_t::const_iterator whe(wordCount.end());
+    const str_uint_map_t::const_iterator wordCountEnd(wordCount.end());
 
     // 0 => walk to the right, 1 => walk to the left
     for (unsigned mode(0); mode<2; ++mode)
@@ -115,7 +115,7 @@ walk(const SmallAssemblerOptions& opt,
                    << " getEnd : " << tmp << "\n";
 #endif
 
-            if (seenBefore.find(tmp) != seenBefore.end())
+            if (seenBefore.count(tmp))
             {
 #ifdef DEBUG_ASBL
                 dbg_os << "Seen word " << tmp << " before on this walk, terminating" << "\n";
@@ -125,25 +125,27 @@ walk(const SmallAssemblerOptions& opt,
 
             seenBefore.insert(tmp);
 
+            static const std::string ALPHABET("ACGT");
+
             unsigned maxBaseCount(0);
             unsigned totalBaseCount(0);
-            char maxBase('N');
+            char maxBase(ALPHABET[0]);
 
-            static const std::string BASES("ACGT");
-            BOOST_FOREACH(const char b, BASES)
+            BOOST_FOREACH(const char symbol, ALPHABET)
             {
-                const std::string newKey(addBase(tmp,b,isEnd));
+                const std::string newKey(addBase(tmp, symbol, isEnd));
 #ifdef DEBUG_ASBL
-                dbg_os << "Extending end : base " << b << " " << newKey << "\n";
+                dbg_os << "Extending end : base " << symbol << " " << newKey << "\n";
 #endif
-                const str_uint_map_t::const_iterator whi(wordCount.find(newKey));
-                const unsigned val((whi == whe) ? 0 : whi->second);
+                const str_uint_map_t::const_iterator wordCountIter(wordCount.find(newKey));
+                if(wordCountIter == wordCountEnd) continue;
 
+                const unsigned val(wordCountIter->second);
                 totalBaseCount += val;
                 if (val > maxBaseCount)
                 {
                     maxBaseCount  = val;
-                    maxBase = b;
+                    maxBase = symbol;
                 }
             }
 #ifdef DEBUG_ASBL
@@ -160,6 +162,9 @@ walk(const SmallAssemblerOptions& opt,
 #endif
                 break;
             }
+
+            /// double check that word exists in reads at least once:
+            if(maxBaseCount == 0) break;
 
 #ifdef DEBUG_ASBL
             dbg_os << "Adding base " << contig << " " << maxBase << " " << mode << "\n";
@@ -217,8 +222,8 @@ buildContigs(
         const std::string& seq(reads[readIndex]);
         const unsigned readLen(seq.size());
 
-        // TODO: (csaunders) should this be reduced from an assertion to something more robust? What if we skipped short reads instead of asserting?
-        assert(readLen>=wordLength);
+        // this read is unusable for assembly:
+        if(readLen < wordLength) continue;
 
         str_uint_map_t& readWordOffset(readWordOffsets[readIndex]);
 
@@ -313,6 +318,8 @@ buildContigs(
             {
                 rinfo.isUsed = true;
                 rinfo.contigId = contigs.size();
+
+                assert(unusedReads != 0);
                 --unusedReads;
                 break;
             }
