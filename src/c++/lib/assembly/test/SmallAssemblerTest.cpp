@@ -25,6 +25,8 @@ BOOST_AUTO_TEST_SUITE( test_SmallAssembler )
 
 BOOST_AUTO_TEST_CASE( test_SmallAssembler1 )
 {
+    // test simple assembly functions at a single word size:
+
     SmallAssemblerOptions assembleOpt;
 
     assembleOpt.minWordLength = 6;
@@ -47,6 +49,14 @@ BOOST_AUTO_TEST_CASE( test_SmallAssembler1 )
     
     BOOST_REQUIRE_EQUAL(contigs.size(),1u);
     BOOST_REQUIRE_EQUAL(contigs[0].seq,"GTGTATTACCTAGTAC");
+    for(unsigned i(0);i<4;++i)
+    {
+        BOOST_REQUIRE(readInfo[i].isUsed);
+        BOOST_REQUIRE_EQUAL(readInfo[i].contigId,0u);
+    }
+    BOOST_REQUIRE(! readInfo[5].isUsed);
+
+
 }
 
 
