@@ -24,11 +24,11 @@ struct SmallAssemblerOptions
 {
     SmallAssemblerOptions() :
         // reasonable default values for 30x and 100bp reads
-        wordLength(37), maxWordLength(61), minContigLength(15),
-        minCoverage(1), maxError(0.35), minSeedReads(2),
+        minWordLength(37), maxWordLength(61), minContigLength(15),
+        minCoverage(1), maxError(0.35), minSeedReads(3),
         maxAssemblyIterations(50), contigRangeWobble(200) {}
 
-    unsigned wordLength; ///<  initial word (kmer) length
+    unsigned minWordLength; ///<  initial word (kmer) length
     unsigned maxWordLength; ///< max word length
     unsigned minContigLength; ///< min contig size
     unsigned minCoverage; ///< min. coverage required for contig extension

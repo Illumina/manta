@@ -40,13 +40,11 @@ std::ostream& dbg_os(std::cerr);
 
 // maps kmers to positions in read
 typedef boost::unordered_map<std::string,unsigned> str_uint_map_t;
-// remembers used reads
-typedef boost::unordered_map<std::string,bool> str_bool_map_t;
 
 
 
 /**
- * Adds base @p base to the end (mode=0) or start (mode=1) of the contig.
+ * Adds base @p base to the end (isEnd is true) or start (otherwise of the contig.
  *
  *	@return The extended contig.
  */
@@ -54,28 +52,16 @@ static
 std::string
 addBase(const std::string& contig,
         const char base,
-        const unsigned int mode)
+        const bool isEnd)
 {
-
-    switch (mode)
-    {
-    case 0:
-        return contig + base;
-    case 1:
-        return base + contig;
-    default:
-        std::cerr << "ERROR: addBase() : " << contig << " " << base << " " << mode << "\n";
-        exit(EXIT_FAILURE);
-    }
-
-    // FIXME: Why return empty string?
-    return std::string();
+    if(isEnd) return contig + base;
+    else      return base + contig;
 }
 
 
 
 /**
- * Returns a suffix (mode=0) or prefix (mode=1) of @p contig with length @p length.
+ * Returns a suffix (isEnd is true) or prefix (others) of @p contig with length @p length.
  *
  *	@return The suffix or prefix.
  */
@@ -83,25 +69,14 @@ static
 std::string
 getEnd(const std::string& contig,
        const unsigned length,
-       const unsigned mode)
+       const bool isEnd)
 {
 
     const unsigned csize(contig.size());
     assert(length <= csize);
 
-    switch (mode)
-    {
-    case 0:
-        return contig.substr((csize-length),length);
-    case 1:
-        return contig.substr(0,length);
-    default:
-        std::cerr << "ERROR:: getEnd() : " << contig << " " << length << " " << mode << "\n";
-        exit(EXIT_FAILURE);
-    }
-
-    // FIXME: Why return empty string?
-    return std::string();
+    if(isEnd) return contig.substr((csize-length),length);
+    else      return contig.substr(0,length);
 }
 
 
@@ -115,7 +90,7 @@ void
 walk(const SmallAssemblerOptions& opt,
      const std::string& seed,
      const unsigned wordLength,
-     const str_uint_map_t& wordHash,
+     const str_uint_map_t& wordCount,
      std::string& contig)
 {
     // we start with the seed
@@ -124,14 +99,16 @@ walk(const SmallAssemblerOptions& opt,
     std::set<std::string> seenBefore;	// records k-mers already encountered during extension
     seenBefore.insert(contig);
 
-    const str_uint_map_t::const_iterator whe(wordHash.end());
+    const str_uint_map_t::const_iterator whe(wordCount.end());
 
     // 0 => walk to the right, 1 => walk to the left
     for (unsigned mode(0); mode<2; ++mode)
     {
+        const bool isEnd(mode==0);
+
         while (true)
         {
-            const std::string tmp(getEnd(contig,wordLength-1,mode));
+            const std::string tmp(getEnd(contig, wordLength-1, isEnd));
 
 #ifdef DEBUG_ASBL
             dbg_os << "# current contig : " << contig << " size : " << contig.size() << "\n"
@@ -148,41 +125,38 @@ walk(const SmallAssemblerOptions& opt,
 
             seenBefore.insert(tmp);
 
-            unsigned maxOcc(0);
-            unsigned totalOcc(0);
+            unsigned maxBaseCount(0);
+            unsigned totalBaseCount(0);
             char maxBase('N');
 
             static const std::string BASES("ACGT");
             BOOST_FOREACH(const char b, BASES)
             {
-                const std::string newKey(addBase(tmp,b,mode));
+                const std::string newKey(addBase(tmp,b,isEnd));
 #ifdef DEBUG_ASBL
                 dbg_os << "Extending end : base " << b << " " << newKey << "\n";
 #endif
-                const str_uint_map_t::const_iterator whi(wordHash.find(newKey));
+                const str_uint_map_t::const_iterator whi(wordCount.find(newKey));
                 const unsigned val((whi == whe) ? 0 : whi->second);
 
-                totalOcc += val;
-                if (val > maxOcc)
+                totalBaseCount += val;
+                if (val > maxBaseCount)
                 {
-                    maxOcc  = val;
+                    maxBaseCount  = val;
                     maxBase = b;
                 }
-#ifdef DEBUG_ASBL
-                dbg_os << b << " " << newKey << " " << val << " " << "\n";
-#endif
             }
 #ifdef DEBUG_ASBL
-            dbg_os << "Winner is : " << maxBase << " with " << maxOcc << " occurrences." << "\n";
+            dbg_os << "Winner is : " << maxBase << " with " << maxBaseCount << " occurrences." << "\n";
 #endif
 
-            if ((maxOcc < opt.minCoverage) ||
-                (maxOcc < (1.- opt.maxError)* totalOcc))
+            if ((maxBaseCount < opt.minCoverage) ||
+                (maxBaseCount < (1.- opt.maxError)* totalBaseCount))
             {
 #ifdef DEBUG_ASBL
                 dbg_os << "Coverage or error rate below threshold.\n"
-                       << "maxocc : " << maxOcc << " min coverage: " << _minCoverage << "\n"
-                       << "maxocc : " << maxOcc << " error threshold: " << ((1.0-_maxError)* totalOcc) << "\n";
+                       << "maxBaseCount : " << maxBaseCount << " minCverage: " << opt.minCoverage << "\n"
+                       << "error threshold: " << ((1.0-opt.maxError)* totalBaseCount) << "\n";
 #endif
                 break;
             }
@@ -190,7 +164,7 @@ walk(const SmallAssemblerOptions& opt,
 #ifdef DEBUG_ASBL
             dbg_os << "Adding base " << contig << " " << maxBase << " " << mode << "\n";
 #endif
-            contig = addBase(contig,maxBase,mode);
+            contig = addBase(contig,maxBase,isEnd);
 #ifdef DEBUG_ASBL
             dbg_os << "New contig: " << contig << "\n";
 #endif
@@ -199,86 +173,86 @@ walk(const SmallAssemblerOptions& opt,
         dbg_os << "mode change. Current mode " << mode << "\n";
 #endif
     }
-
-    return;
 }
 
 
 
 bool
-buildContigs(const SmallAssemblerOptions& opt,
-             AssemblyReadMap& reads,
-             const unsigned wordLength,
-             Assembly& as,
-             unsigned& unused_reads)
+buildContigs(
+    const SmallAssemblerOptions& opt,
+    const AssemblyReadInput& reads,
+    AssemblyReadOutput& readInfo,
+    const unsigned wordLength,
+    Assembly& as,
+    unsigned& unusedReads)
 {
+    const unsigned readCount(reads.size());
+
 #ifdef DEBUG_ASBL
     dbg_os << "In SVLocusAssembler::buildContig. word length=" << wordLength << "\n";
-    for (AssemblyReadMap::const_iterator ct = reads.begin(); ct!=reads.end(); ++ct)
+    for (unsigned readIndex(0); readIndex<readCount; ++readIndex)
     {
-        dbg_os << ct->second.seq << " used=" << ct->second.used << "\n";
+        dbg_os << reads[readIndex] << " used=" << readInfo[readIndex].isUsed << "\n";
     }
 #endif
 
     // a set of read hashes; each read hash stores the starting positions of all kmers in the read
-    std::vector<std::pair<std::string,str_uint_map_t> > readHashes;
-    // counts the number of occurrences for each kmer in all shadow reads
-    str_uint_map_t wordHash;
+    std::vector<str_uint_map_t> readWordOffsets(readCount);
+
+    // counts the number of occurrences for each kmer in all reads
+    str_uint_map_t wordCount;
+
     // most frequent kmer and its number of occurrences
-    unsigned maxOcc = 0;
+    unsigned maxWordCount(0);
     std::string maxWord;
 
-    BOOST_FOREACH(const AssemblyReadMap::value_type& contigRead, reads)
+    for (unsigned readIndex(0); readIndex<readCount; ++readIndex)
     {
+        const AssemblyReadInfo& rinfo(readInfo[readIndex]);
+
         // skip reads used in an previous iteration
-        if (contigRead.second.used) continue;
+        if (rinfo.isUsed) continue;
 
         // stores the index of a kmer in a read sequence
-        const std::string& seq(contigRead.second.seq);
-        const std::string& qn(contigRead.first);
-
+        const std::string& seq(reads[readIndex]);
         const unsigned readLen(seq.size());
 
-        // TODO: (csaunders) should this be reduced from an assertion to something more robust? What if we skipped short reads?
+        // TODO: (csaunders) should this be reduced from an assertion to something more robust? What if we skipped short reads instead of asserting?
         assert(readLen>=wordLength);
 
-        readHashes.resize(readHashes.size()+1);
-        readHashes.back().first  = qn;
-        str_uint_map_t& readHash = readHashes.back().second;
+        str_uint_map_t& readWordOffset(readWordOffsets[readIndex]);
 
         for (unsigned j(0); j<=(readLen-wordLength); ++j)
         {
             const std::string word(seq.substr(j,wordLength));
-            if (readHash.find(word) != readHash.end())
+            if (readWordOffset.find(word) != readWordOffset.end())
             {
                 // try again with different k-mer size
 #ifdef DEBUG_ASBL
-                dbg_os << "word " << word << " repeated in read " << qn << "\n"
-                       << "... try again with word length " << wordLength+2
-                       << " and " << reads.size() << " reads left.\n";
+                dbg_os << "word " << word << " repeated in read " << readIndex << "\n";
 #endif
                 return false;
             }
 
             // record (0-indexed) start point for word in read
             //cout << "Recording " << word << " at " << j << "\n";
-            readHash[word]=j;
+            readWordOffset[word]=j;
 
             // count occurrences
-            ++wordHash[word];
-            if (wordHash[word]>maxOcc)
+            ++wordCount[word];
+            if (wordCount[word]>maxWordCount)
             {
                 //cout << "Setting max word to " << maxWord << " " << maxOcc << "\n";
-                maxOcc  = wordHash[word];
+                maxWordCount  = wordCount[word];
                 maxWord = word;
-            } // if (maxOcc)
+            }
         }
     }
 
-    if (maxOcc < opt.minCoverage)
+    if (maxWordCount < opt.minCoverage)
     {
 #ifdef DEBUG_ASBL
-        dbg_os << "Coverage too low : " << maxOcc << " " << _minCoverage << "\n";
+        dbg_os << "Coverage too low : " << maxWordCount << " " << opt.minCoverage << "\n";
 #endif
         return false;
     }
@@ -288,73 +262,67 @@ buildContigs(const SmallAssemblerOptions& opt,
 #endif
 
     // start initial assembly with most frequent kmer as seed
-    AssembledContig ctg;
-    walk(opt,maxWord,wordLength,wordHash,ctg.seq);
+    AssembledContig contig;
+    walk(opt,maxWord,wordLength,wordCount,contig.seq);
 
     // done with this now:
-    wordHash.clear();
+    wordCount.clear();
 
-    const unsigned rh_size(readHashes.size());
-    const unsigned contig_size(ctg.seq.size());
-    const AssemblyReadMap::const_iterator arm_e = reads.end();
+    const unsigned contigSize(contig.seq.size());
 
 #ifdef DEBUG_ASBL
     dbg_os << "First pass assembly resulted in "
-           << ctg.seq << "\n"
-           << " with length " << contig_size << ". Input consisted of " << rh_size << " reads.\n";
+           << contig.seq << "\n"
+           << " with length " << contigSize << ". Input consisted of " << readCount << " reads.\n";
 #endif
 
-    for (unsigned i(0); i<rh_size; ++i) {
-        const std::string& qName(readHashes[i].first);
-        const str_uint_map_t& readHash(readHashes[i].second);
-        const str_uint_map_t::const_iterator rhe(readHash.end());
+    // increment number of reads containing the seeding kmer
+    for (unsigned readIndex(0); readIndex<readCount; ++readIndex)
+    {
+        const str_uint_map_t& readWordOffset(readWordOffsets[readIndex]);
+        if (readWordOffset.count(maxWord)) ++contig.seedReadCount;
+    }
 
-        // increment number of reads containing the seeding kmer
-        if (readHash.find(maxWord) != rhe)
-        {
-            ++ctg.seedReadCount;
-        }
+#ifdef DEBUG_ASBL
+    dbg_os << "final seeding reading count: " << contig.seedReadCount << "\n";
+#endif
+    if (contig.seedReadCount < opt.minSeedReads)
+    {
+#ifdef DEBUG_ASBL
+        dbg_os << "which is below minSeedReadCount of " << opt.minSeedReads << " discarding.\n";
+#endif
+        return false;
+    }
+
+    // finally -- set isUsed and decrement unusedReads
+    for (unsigned readIndex(0); readIndex<readCount; ++readIndex)
+    {
+        const str_uint_map_t& readWordOffset(readWordOffsets[readIndex]);
+        AssemblyReadInfo& rinfo(readInfo[readIndex]);
+
+        if(rinfo.isUsed) continue;
 
         // store all reads sharing k-mers of the current word length with the contig
         // TODO: check if we still needs this
-        for (unsigned j(0); j<=(contig_size-wordLength); ++j)
+        for (unsigned j(0); j<=(contigSize-wordLength); ++j)
         {
-            const std::string word(ctg.seq.substr(j,wordLength));
+            const std::string word(contig.seq.substr(j,wordLength));
             //cout << "Testing word " << word << " " << readNum << "\n";
-            //cout << "with counts : " << wordHash[word] << "\n";
-            const str_uint_map_t::const_iterator rhi(readHash.find(word));
-            if (rhi != rhe)
+            //cout << "with counts : " << wordCount[word] << "\n";
+            if(readWordOffset.count(word))
             {
-                AssemblyReadMap::iterator arm_i(reads.find(qName));
-                if (arm_i != arm_e)
-                {
-                    arm_i->second.used = true;
-                    --unused_reads;
-                }
-                else
-                {
-                    // TODO: is this an error or a warning??
-                    std::cerr << "Read " << qName << " not found in hash\n";
-                }
+                rinfo.isUsed = true;
+                rinfo.contigId = as.size();
+                --unusedReads;
+                break;
             }
         }
     }
 
     // don't need this anymore:
-    readHashes.clear();
-#ifdef DEBUG_ASBL
-    dbg_os << "final seeding reading count: " << ctg.seedReadCount << "\n";
-#endif
-    if (ctg.seedReadCount > opt.minSeedReads)
-    {
-        as.push_back(ctg);
-    }
-    else
-    {
-#ifdef DEBUG_ASBL
-        dbg_os << "which is below minSeedReadCount of " << opt.minSeedReads << " discarding.\n";
-#endif
-    }
+    readWordOffsets.clear();
+
+    as.push_back(contig);
     return true;
 }
 
@@ -363,20 +331,26 @@ buildContigs(const SmallAssemblerOptions& opt,
 void
 runSmallAssembler(
     const SmallAssemblerOptions& opt,
-    AssemblyReadMap& readMap,
+    const AssemblyReadInput& reads,
+    AssemblyReadOutput& assembledReadInfo,
     Assembly& as)
 {
 #ifdef DEBUG_ASBL
-    dbg_os << "SmallAssember: Starting assembly with " << readMap.size() << " readMap.\n";
+    dbg_os << "SmallAssember: Starting assembly with " << reads.size() << " readd.\n";
 #endif
 
-    unsigned unusedReadsNow(readMap.size());
+    assembledReadInfo.clear();
+    as.clear();
+
+    assembledReadInfo.resize(reads.size());
+
+    unsigned unusedReadsNow(reads.size());
     for(unsigned iterations(0); iterations < opt.maxAssemblyIterations; ++iterations)
     {
         const unsigned unusedReadsPrev(unusedReadsNow);
-        for (unsigned wl(opt.wordLength); wl<=opt.maxWordLength; wl+=2)
+        for (unsigned wordLength(opt.minWordLength); wordLength<=opt.maxWordLength; wordLength+=2)
         {
-            const bool isAssemblySuccess = buildContigs(opt,readMap,wl,as,unusedReadsNow);
+            const bool isAssemblySuccess = buildContigs(opt, reads, assembledReadInfo, wordLength, as, unusedReadsNow);
             if (isAssemblySuccess) break;
         }
         //dbg_os << "iter: " << iteration << "unused readMap now: " << unusedReadsNow << " unused readMap previous: " << unusedReadsPrev << "\n";
@@ -390,5 +364,4 @@ runSmallAssembler(
     dbg_os << "SmallAssembler: Reached max number of assembly iterations: " << opt.maxAssemblyIterations << "\n";
 #endif
 }
-
 

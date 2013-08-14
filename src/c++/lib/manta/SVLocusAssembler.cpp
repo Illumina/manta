@@ -53,8 +53,10 @@ SVLocusAssembler(
 
 void
 SVLocusAssembler::
-getBreakendReads(const SVBreakend& bp,
-                 AssemblyReadMap& reads)
+getBreakendReads(
+    const SVBreakend& bp,
+    ReadIndexType& readIndex,
+    AssemblyReadInput& reads)
 {
     static const size_t minIntervalSize(300);
 
@@ -110,11 +112,15 @@ getBreakendReads(const SVBreakend& bp,
             dbg_os << bamRead.get_bam_read().get_string() << endl;
 #endif
 
-            if (reads.find(readKey) == reads.end())
+            if (readIndex.count(readKey) == 0)
             {
                 // the API gives us always the sequence w.r.t to the fwd ref, so no need
                 // to reverse complement here
-                reads[readKey] = AssemblyRead(bamRead.get_bam_read().get_string(),false);
+                //
+                // (csaunders) but why not always assemble reads with fwd orientation
+                //
+                readIndex.insert(std::make_pair(readKey,reads.size()));
+                reads.push_back(bamRead.get_bam_read().get_string());
             }
             else
             {
@@ -132,9 +138,11 @@ SVLocusAssembler::
 assembleSingleSVBreakend(const SVBreakend& bp,
                          Assembly& as)
 {
-    AssemblyReadMap reads;
-    getBreakendReads(bp,reads);
-    runSmallAssembler(_assembleOpt, reads, as);
+    ReadIndexType readIndex;
+    AssemblyReadInput reads;
+    getBreakendReads(bp,readIndex, reads);
+    AssemblyReadOutput readInfo;
+    runSmallAssembler(_assembleOpt, reads, readInfo, as);
 }
 
 
@@ -145,9 +153,11 @@ assembleSVBreakends(const SVBreakend& bp1,
                     const SVBreakend& bp2,
                     Assembly& as)
 {
-    AssemblyReadMap reads;
-    getBreakendReads(bp1,reads);
-    getBreakendReads(bp2,reads);
-    runSmallAssembler(_assembleOpt, reads, as);
+    ReadIndexType readIndex;
+    AssemblyReadInput reads;
+    getBreakendReads(bp1,readIndex, reads);
+    getBreakendReads(bp2,readIndex, reads);
+    AssemblyReadOutput readInfo;
+    runSmallAssembler(_assembleOpt, reads, readInfo, as);
 }
 

@@ -56,10 +56,14 @@ struct SVLocusAssembler
 private:
     typedef boost::shared_ptr<bam_streamer> streamPtr;
 
+    typedef std::map<std::string,unsigned> ReadIndexType;
+
     // Collects the reads crossing an SV breakpoint
     void
-    getBreakendReads(const SVBreakend& bp,
-                     AssemblyReadMap& reads);
+    getBreakendReads(
+        const SVBreakend& bp,
+        ReadIndexType& readIndex,
+        AssemblyReadInput& reads);
 
     const ReadScannerOptions _scanOpt;
     const SmallAssemblerOptions _assembleOpt;

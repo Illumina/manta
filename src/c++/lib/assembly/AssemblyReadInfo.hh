@@ -17,22 +17,23 @@
 
 #pragma once
 
-#include <map>
+#include <vector>
 #include <string>
 
 
-struct AssemblyRead
+/// information added to each read in the process of assembly
+///
+struct AssemblyReadInfo
 {
-    AssemblyRead()
-        : used(false) {}
+    AssemblyReadInfo() :
+        isUsed(false),
+        contigId(0)
+    {}
 
-    AssemblyRead(std::string s,
-                 bool u)
-        : seq(s), used(u) {}
-
-    std::string seq;
-    bool used;
+    bool isUsed;
+    unsigned contigId; ///< index of the contig that this read is used in
 };
 
 
-typedef std::map<std::string,AssemblyRead> AssemblyReadMap;
+typedef std::vector<std::string> AssemblyReadInput;
+typedef std::vector<AssemblyReadInfo> AssemblyReadOutput;

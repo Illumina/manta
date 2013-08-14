@@ -27,14 +27,26 @@ BOOST_AUTO_TEST_CASE( test_SmallAssembler1 )
 {
     SmallAssemblerOptions assembleOpt;
 
-    assembleOpt.wordLength = 5;
-    assembleOpt.maxWordLength = 5;
+    assembleOpt.minWordLength = 6;
+    assembleOpt.maxWordLength = 6;
+    assembleOpt.minCoverage = 2;
+    assembleOpt.minSeedReads = 3;
 
-    // ********************  still setting this up....
+    AssemblyReadInput reads;
 
-    //runSmallAssembler(assembleOpt,,);
+    reads.push_back("ACGTGTATTACC");
+    reads.push_back("GTGTATTACCTA");
+    reads.push_back("ATTACCTAGTAC");
+    reads.push_back("TACCTAGTACTC");
+    reads.push_back("123456789123");
+
+    AssemblyReadOutput readInfo;
+    Assembly contigs;
+
+    runSmallAssembler(assembleOpt, reads, readInfo, contigs);
     
-    BOOST_REQUIRE(true);
+    BOOST_REQUIRE_EQUAL(contigs.size(),1u);
+    BOOST_REQUIRE_EQUAL(contigs[0].seq,"GTGTATTACCTAGTAC");
 }
 
 
