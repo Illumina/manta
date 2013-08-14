@@ -116,16 +116,14 @@ getBreakendReads(
             {
                 // the API gives us always the sequence w.r.t to the fwd ref, so no need
                 // to reverse complement here
-                //
-                // (csaunders) but why not always assemble reads with fwd orientation
-                //
                 readIndex.insert(std::make_pair(readKey,reads.size()));
                 reads.push_back(bamRead.get_bam_read().get_string());
             }
             else
             {
                 // TODO: is this an error or a warning?
-            	std::cout << "Read name collision : " << readKey << std::endl;
+            	// (olest) it is a warning.
+            	std::cerr << "WARNIING : Read name collision : " << readKey << std::endl;
             }
         }
     }

@@ -43,10 +43,7 @@ analyzeAlignment(const JumpAlignmentResult<int>& res,
 				 const pos_t refOffset1,
 				 const pos_t refOffset2)
 {
-
-
 	//onst unsigned minAlignContext(4);
-
 
     std::cout << "alignment score = " << res.score << std::endl;
     //std::cout << "alignment jumpInsertSize = " << res.jumpInsertSize << std::endl;
@@ -66,6 +63,9 @@ analyzeAlignment(const JumpAlignmentResult<int>& res,
 
     std::cout << "breakpoint estimate 1 " << estimateBreakPointPos(res.align1, refOffset1) << std::endl;
     std::cout << "breakpoint estimate 2 " << estimateBreakPointPos(res.align2, refOffset2) << std::endl;
+
+    std::cout << "Alignment 1 length " << apath_read_length(res.align1.apath) << std::endl;
+    std::cout << "Alignment 2 length " << apath_read_length(res.align2.apath) << std::endl;
 
     if (! (res.align1.isAligned() && res.align2.isAligned()) )
     {
@@ -178,25 +178,20 @@ runASB(const ASBOptions& opt)
         ++numTotal;
 
     	std::cout << "FORWARD" << std::endl;
-    
         JumpAlignmentResult<int> forwardRes;
         aligner.align(ct->seq.begin(),ct->seq.end(),
+        			  bpRefStr1.begin(),bpRefStr1.end(),
         			  bpRefStr2.begin(),bpRefStr2.end(),
-                      bpRefStr1.begin(),bpRefStr1.end(),
                       forwardRes);
-
         analyzeAlignment(forwardRes,refOffset1,refOffset2);
 
     	std::cout << "BACKWARD" << std::endl;
-
         JumpAlignmentResult<int> backwardRes;
         aligner.align(ct->seq.begin(),ct->seq.end(),
-        			  bpRefStr2.begin(),bpRefStr2.end(),
-                      bpRefStr1.begin(),bpRefStr1.end(),
+        		 	  bpRefStr2.begin(),bpRefStr2.end(),
+        			  bpRefStr1.begin(),bpRefStr1.end(),
                       backwardRes);
-
         analyzeAlignment(backwardRes,refOffset1,refOffset2);
-
 
         //++numConsistentAndAligned;
     }
