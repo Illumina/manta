@@ -110,22 +110,16 @@ bothEndsAligned(const Alignment& al, const unsigned minAlignContext = 0)
 }
 
 // check a jump alignment for consistency (only one end aligning)
+// FIXME: not used, need to think what makes an alignment consistent
+// (how about : total number of matches shouldn't exceed sequence length?)
 static
 bool
 isConsistentAlignment(const JumpAlignmentResult<int>& res, const unsigned /*minAlignContext = 0*/)
 {
-    if (res.align1.isAligned() && res.align2.isAligned()) return true;
-    return false;
-
     // not consistent if both unaligned
-    //if (! (res.align1.isAligned() && res.align2.isAligned()) ) return false;
+    if (! (res.align1.isAligned() && res.align2.isAligned()) ) return false;
 
-    // not consistent if both ends aligned for each alignment
-    //if ( bothEndsAligned(res.align1) && bothEndsAligned(res.align2) ) return false;
-   
-	/*return ( (hasAlignedPrefix(res.align1,minAlignContext) && hasAlignedSuffix(res.align2,minAlignContext)) ||
-			 (hasAlignedSuffix(res.align1,minAlignContext) && hasAlignedPrefix(res.align2,minAlignContext))
-		   );*/
+    return true;
 }
 
 static

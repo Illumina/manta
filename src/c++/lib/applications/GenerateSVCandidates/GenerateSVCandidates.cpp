@@ -138,7 +138,7 @@ runGSC(
                 static const pos_t extraRefEdgeSize(300);
 
                 // min alignment context
-                const unsigned minAlignContext(4);
+                //const unsigned minAlignContext(4);
                 // don't align contigs shorter than this
                 const unsigned minContigLen(75);
 
@@ -152,20 +152,39 @@ runGSC(
                 {
                     if (ct->seq.size() < minContigLen) continue;
 
-                    JumpAlignmentResult<int> res;
+                    // JumpAligner allows only one jump per alignment, so we need to align
+                    // two times:
+                    JumpAlignmentResult<int> forwardRes;
+                    JumpAlignmentResult<int> backwardRes;
 
                     aligner.align(ct->seq.begin(),ct->seq.end(),
                                   bp1RefStr.begin(),bp1RefStr.end(),
                                   bp2RefStr.begin(),bp2RefStr.end(),
-                                  res);
+                                  forwardRes);
 
-                    // skip if one of the alignments is not aligned (quite strict)
-                    if (! (res.align1.isAligned() && res.align2.isAligned()) ) continue;
+                    aligner.align(ct->seq.begin(),ct->seq.end(),
+                            	  bp2RefStr.begin(),bp2RefStr.end(),
+                                  bp1RefStr.begin(),bp1RefStr.end(),
+                                  backwardRes);
 
-                    // skip inconsistent alignments
-                    if (!isConsistentAlignment(res,minAlignContext)) continue;
+                    // check which jump alignment has anchors/alignments to both breakends
+                    bool forwardGood(forwardRes.align1.isAligned() && forwardRes.align2.isAligned());
+                    bool backwardGood(backwardRes.align1.isAligned() && backwardRes.align2.isAligned());
 
-                    svData.getAlignments().push_back(res);
+                    if (forwardGood && !backwardGood)
+                    {
+                    	svData.getAlignments().push_back(forwardRes);
+                    }
+                    else if (!forwardGood && backwardGood)
+                    {
+                    	svData.getAlignments().push_back(backwardRes);
+                    }
+                    else
+                    {
+                    	// tie, store jump alignment with higher score
+                    	svData.getAlignments().push_back(forwardRes.score>=backwardRes.score ? forwardRes : backwardRes);
+                    }
+
                 }
             }
 

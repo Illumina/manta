@@ -39,22 +39,14 @@
 
 
 void
-alignForward(const std::string& seq,
-			 const std::string& bpRefStr1,
-			 const std::string& bpRefStr2,
-			 GlobalJumpAligner<int>& aligner,
-			 const pos_t refOffset1,
-			 const pos_t refOffset2)
+analyzeAlignment(const JumpAlignmentResult<int>& res,
+				 const pos_t refOffset1,
+				 const pos_t refOffset2)
 {
-	std::cout << "FORWARD" << std::endl;
 
-	const unsigned minAlignContext(4);
 
-    JumpAlignmentResult<int> res;
-    aligner.align(seq.begin(),seq.end(),
-                  bpRefStr1.begin(),bpRefStr1.end(),
-                  bpRefStr2.begin(),bpRefStr2.end(),
-                  res);
+	//onst unsigned minAlignContext(4);
+
 
     std::cout << "alignment score = " << res.score << std::endl;
     //std::cout << "alignment jumpInsertSize = " << res.jumpInsertSize << std::endl;
@@ -72,8 +64,6 @@ alignForward(const std::string& seq,
     //std::cout << "align2 cigar prefix aligned " << (hasAlignedPrefix(res.align2,minAlignContext) > 0 ? "Yes" : "No") << std::endl;
     //std::cout << "align2 cigar suffix aligned " << (hasAlignedSuffix(res.align2,minAlignContext) > 0 ? "Yes" : "No") << std::endl;
 
-
-
     std::cout << "breakpoint estimate 1 " << estimateBreakPointPos(res.align1, refOffset1) << std::endl;
     std::cout << "breakpoint estimate 2 " << estimateBreakPointPos(res.align2, refOffset2) << std::endl;
 
@@ -82,60 +72,10 @@ alignForward(const std::string& seq,
         std::cout << "At least one not aligned." << std::endl;
     }
 
-    if (!isConsistentAlignment(res,minAlignContext))
-    {
-        std::cout << "Alignments not consistent." << std::endl;
-    }
-}
-
-void
-alignBackward(const std::string& seq,
-			 const std::string& bpRefStr1,
-			 const std::string& bpRefStr2,
-			 GlobalJumpAligner<int>& aligner,
-			 const pos_t refOffset1,
-			 const pos_t refOffset2)
-{
-	std::cout << "BACKWARD" << std::endl;
-
-	const unsigned minAlignContext(4);
-
-    JumpAlignmentResult<int> res;
-    aligner.align(seq.begin(),seq.end(),
-    			  bpRefStr2.begin(),bpRefStr2.end(),
-                  bpRefStr1.begin(),bpRefStr1.end(),
-                  res);
-
-    std::cout << "alignment score = " << res.score << std::endl;
-    //std::cout << "alignment jumpInsertSize = " << res.jumpInsertSize << std::endl;
-    std::string cigar1;
-    apath_to_cigar(res.align1.apath,cigar1);
-    std::cout << "align1 start = " << res.align1.alignStart << std::endl;
-    std::cout << "align1 cigar = " << cigar1 << std::endl;
-    //std::cout << "align1 cigar prefix aligned " << (hasAlignedPrefix(res.align1,minAlignContext) > 0 ? "Yes" : "No") << std::endl;
-    //std::cout << "align1 cigar suffix aligned " << (hasAlignedSuffix(res.align1,minAlignContext) > 0 ? "Yes" : "No") << std::endl;
-
-    std::string cigar2;
-    apath_to_cigar(res.align2.apath,cigar2);
-    std::cout << "align2 start = " << res.align2.alignStart << std::endl;
-    std::cout << "align2 cigar = " << cigar2 << std::endl;
-    //std::cout << "align2 cigar prefix aligned " << (hasAlignedPrefix(res.align2,minAlignContext) > 0 ? "Yes" : "No") << std::endl;
-    //std::cout << "align2 cigar suffix aligned " << (hasAlignedSuffix(res.align2,minAlignContext) > 0 ? "Yes" : "No") << std::endl;
-
-
-
-    std::cout << "breakpoint estimate 1 " << estimateBreakPointPos(res.align1, refOffset1) << std::endl;
-    std::cout << "breakpoint estimate 2 " << estimateBreakPointPos(res.align2, refOffset2) << std::endl;
-
-    if (! (res.align1.isAligned() && res.align2.isAligned()) )
-    {
-        std::cout << "At least one not aligned." << std::endl;
-    }
-
-    if (!isConsistentAlignment(res,minAlignContext))
-    {
-        std::cout << "Alignments not consistent." << std::endl;
-    }
+//    if (!isConsistentAlignment(res,minAlignContext))
+//    {
+//        std::cout << "Alignments not consistent." << std::endl;
+//    }
 }
 
 static
@@ -229,17 +169,36 @@ runASB(const ASBOptions& opt)
         }
 
         std::cout << "ctg : " << ct->seq << std::endl;
+        std::cout << "contig length " << ct->seq.size() << std::endl;
         std::cout << "seed read count " << ct->seedReadCount << std::endl;
+
         os << ">contig_" << numTotal << std::endl;
         os << ct->seq << std::endl;
-        ++numTotal;
-    
 
-        alignForward(ct->seq,bpRefStr1,bpRefStr2, aligner, refOffset1,refOffset2);
-        alignBackward(ct->seq,bpRefStr1,bpRefStr2, aligner, refOffset1,refOffset2);
+        ++numTotal;
+
+    	std::cout << "FORWARD" << std::endl;
+    
+        JumpAlignmentResult<int> forwardRes;
+        aligner.align(ct->seq.begin(),ct->seq.end(),
+        			  bpRefStr2.begin(),bpRefStr2.end(),
+                      bpRefStr1.begin(),bpRefStr1.end(),
+                      forwardRes);
+
+        analyzeAlignment(forwardRes,refOffset1,refOffset2);
+
+    	std::cout << "BACKWARD" << std::endl;
+
+        JumpAlignmentResult<int> backwardRes;
+        aligner.align(ct->seq.begin(),ct->seq.end(),
+        			  bpRefStr2.begin(),bpRefStr2.end(),
+                      bpRefStr1.begin(),bpRefStr1.end(),
+                      backwardRes);
+
+        analyzeAlignment(backwardRes,refOffset1,refOffset2);
+
 
         //++numConsistentAndAligned;
-
     }
     std::cout << "\nAssembled " << numTotal << " contigs." << std::endl;
     //std::cout << "numConsistentAndAligned = " << numConsistentAndAligned << std::endl;
