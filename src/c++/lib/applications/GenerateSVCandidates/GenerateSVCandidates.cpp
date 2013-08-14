@@ -112,8 +112,8 @@ runGSC(
     SVCandidateData svData;
     std::vector<SVCandidate> svs;
     SomaticSVScoreInfo ssInfo;
-    int jumpScore(-2);
-    GlobalJumpAligner<int> aligner(AlignmentScores<int>(5,-2,-3,-1,-2),jumpScore);
+    int jumpScore(-3);
+    GlobalJumpAligner<int> aligner(AlignmentScores<int>(1,-2,-6,0,-2),jumpScore);
     while (edger.next())
     {
         const EdgeInfo& edge(edger.getEdge());
@@ -139,6 +139,8 @@ runGSC(
 
                 // min alignment context
                 const unsigned minAlignContext(4);
+                // don't align contigs shorter than this
+                const unsigned minContigLen(75);
 
                 reference_contig_segment bp1ref,bp2ref;
                 getSVReferenceSegments(opt.referenceFilename, cset.header, extraRefEdgeSize, sv, bp1ref, bp2ref);
@@ -148,6 +150,8 @@ runGSC(
                      ct != as.end();
                      ++ct)
                 {
+                    if (ct->seq.size() < minContigLen) continue;
+
                     JumpAlignmentResult<int> res;
 
                     aligner.align(ct->seq.begin(),ct->seq.end(),

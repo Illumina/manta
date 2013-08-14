@@ -206,11 +206,10 @@ runASB(const ASBOptions& opt)
     const pos_t refOffset1(std::max(0, (bp1.interval.range.begin_pos()-extraRefEdgeSize)));
     const pos_t refOffset2(std::max(0, (bp2.interval.range.begin_pos()-extraRefEdgeSize)));
 
-    int jumpScore(-1);
-    GlobalJumpAligner<int> aligner(AlignmentScores<int>(5,-20,-20,-40,-20),jumpScore);
+    int jumpScore(-3);
+    GlobalJumpAligner<int> aligner(AlignmentScores<int>(1,-2,-6,-0,-2),jumpScore);
 
     std::ofstream os(opt.contigOutfile.c_str());
-
 
     unsigned minContigLength(75);
 
@@ -234,9 +233,9 @@ runASB(const ASBOptions& opt)
         os << ">contig_" << numTotal << std::endl;
         os << ct->seq << std::endl;
         ++numTotal;
+    
 
         alignForward(ct->seq,bpRefStr1,bpRefStr2, aligner, refOffset1,refOffset2);
-
         alignBackward(ct->seq,bpRefStr1,bpRefStr2, aligner, refOffset1,refOffset2);
 
         //++numConsistentAndAligned;

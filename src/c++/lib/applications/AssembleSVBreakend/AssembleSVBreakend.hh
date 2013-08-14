@@ -22,7 +22,7 @@
 #include "applications/GenerateSVCandidates/GSCOptions.hh"
 #include "applications/GenerateSVCandidates/GenerateSVCandidates.hh"
 
-/// Assembles an SV breakend
+/// Command line app to test SmallAssembler
 ///
 struct AssembleSVBreakend : public manta::Program
 {
