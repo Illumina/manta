@@ -183,7 +183,7 @@ buildContigs(
     const AssemblyReadInput& reads,
     AssemblyReadOutput& readInfo,
     const unsigned wordLength,
-    Assembly& as,
+    Assembly& contigs,
     unsigned& unusedReads)
 {
     const unsigned readCount(reads.size());
@@ -312,7 +312,7 @@ buildContigs(
             if(readWordOffset.count(word))
             {
                 rinfo.isUsed = true;
-                rinfo.contigId = as.size();
+                rinfo.contigId = contigs.size();
                 --unusedReads;
                 break;
             }
@@ -322,7 +322,7 @@ buildContigs(
     // don't need this anymore:
     readWordOffsets.clear();
 
-    as.push_back(contig);
+    contigs.push_back(contig);
     return true;
 }
 
@@ -333,14 +333,14 @@ runSmallAssembler(
     const SmallAssemblerOptions& opt,
     const AssemblyReadInput& reads,
     AssemblyReadOutput& assembledReadInfo,
-    Assembly& as)
+    Assembly& contigs)
 {
 #ifdef DEBUG_ASBL
     dbg_os << "SmallAssember: Starting assembly with " << reads.size() << " read.\n";
 #endif
 
     assembledReadInfo.clear();
-    as.clear();
+    contigs.clear();
 
     assembledReadInfo.resize(reads.size());
 
@@ -350,7 +350,7 @@ runSmallAssembler(
         const unsigned unusedReadsPrev(unusedReadsNow);
         for (unsigned wordLength(opt.minWordLength); wordLength<=opt.maxWordLength; wordLength+=2)
         {
-            const bool isAssemblySuccess = buildContigs(opt, reads, assembledReadInfo, wordLength, as, unusedReadsNow);
+            const bool isAssemblySuccess = buildContigs(opt, reads, assembledReadInfo, wordLength, contigs, unusedReadsNow);
             if (isAssemblySuccess) break;
         }
         //dbg_os << "iter: " << iteration << "unused readMap now: " << unusedReadsNow << " unused readMap previous: " << unusedReadsPrev << "\n";
