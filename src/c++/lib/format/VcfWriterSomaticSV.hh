@@ -40,6 +40,7 @@ struct VcfWriterSomaticSV : public VcfWriterSV
     writeSV(
         const EdgeInfo& edge,
         const SVCandidateSetData& svData,
+        const SVCandidateAssemblyData& adata,
         const unsigned svIndex,
         const SVCandidate& sv,
         const SomaticSVScoreInfo& ssInfo);
@@ -57,8 +58,9 @@ private:
         const SVBreakend& bp1,
         const SVBreakend& bp2,
         const bool isFirstOfPair,
-        std::vector<std::string>& infotags,
-        const SVCandidateSetData& svData) const;
+        const SVCandidateSetData& svData,
+        const SVCandidateAssemblyData& adata,
+        std::vector<std::string>& infotags) const;
 
     std::string
     getFilter() const;

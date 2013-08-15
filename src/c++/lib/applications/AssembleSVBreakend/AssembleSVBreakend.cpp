@@ -16,10 +16,12 @@
 ///
 
 #include "AssembleSVBreakend.hh"
+
 #include "applications/GenerateSVCandidates/GSCOptions.hh"
 #include "applications/AssembleSVBreakend/ASBOptions.hh"
 
 #include "manta/SVLocusAssembler.hh"
+#include "manta/SVReferenceUtil.hh"
 #include "assembly/AssembledContig.hh"
 
 #include "blt_util/bam_header_util.hh"
@@ -27,7 +29,9 @@
 #include "blt_util/log.hh"
 #include "blt_util/io_util.hh"
 
+#include "alignment/AlignmentUtil.hh"
 #include "alignment/GlobalAligner.hh"
+#include "alignment/GlobalJumpAligner.hh"
 
 #include "common/OutStream.hh"
 

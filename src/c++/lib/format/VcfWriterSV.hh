@@ -19,6 +19,7 @@
 
 #include "svgraph/EdgeInfo.hh"
 #include "manta/SVCandidate.hh"
+#include "manta/SVCandidateAssemblyData.hh"
 #include "manta/SVCandidateSetData.hh"
 #include "svgraph/SVLocusSet.hh"
 #include "manta/SomaticSVScoreInfo.hh"
@@ -67,9 +68,10 @@ protected:
     void
     writeSVCore(
         const EdgeInfo& edge,
+        const SVCandidateSetData& svData,
+        const SVCandidateAssemblyData& adata,
         const unsigned svIndex,
-        const SVCandidate& sv,
-        const SVCandidateSetData& svData);
+        const SVCandidate& sv);
 
     virtual
     void
@@ -77,8 +79,9 @@ protected:
         const SVBreakend& /*bp1*/,
         const SVBreakend& /*bp2*/,
         const bool /*isFirstOfPair*/,
-        std::vector<std::string>& /*infotags*/,
-        const SVCandidateSetData& /*svData*/) const
+        const SVCandidateSetData& /*svData*/,
+        const SVCandidateAssemblyData& /*adata*/,
+        std::vector<std::string>& /*infotags*/) const
     {}
 
     virtual
@@ -96,14 +99,16 @@ private:
         const SVBreakend& bp2,
         const std::string& idPrefix,
         const bool isFirstOfPair,
-        const SVCandidateSetData& svData);
+        const SVCandidateSetData& svData,
+        const SVCandidateAssemblyData& adata);
 
     void
     writeTranslocPair(
         const EdgeInfo& edge,
         const unsigned svIndex,
         const SVCandidate& sv,
-        const SVCandidateSetData& svData);
+        const SVCandidateSetData& svData,
+        const SVCandidateAssemblyData& adata);
 
     void
     writeInvdel(

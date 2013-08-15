@@ -20,9 +20,6 @@
 #include "svgraph/GenomeInterval.hh"
 
 #include "alignment/Alignment.hh"
-#include "alignment/GlobalJumpAligner.hh"
-
-#include "SVLocusAssembler.hh"
 
 #include <iosfwd>
 #include <map>
@@ -134,9 +131,6 @@ private:
 ///
 struct SVCandidateSetData
 {
-    // should be a template...
-    typedef JumpAlignmentResult<int> JumpAlignmentResultType;
-
     /// get evidence associated with a specific sample group:
     SVCandidateSetReadPairSampleGroup&
     getDataGroup(const unsigned bamIndex)
@@ -157,31 +151,6 @@ struct SVCandidateSetData
         return diter->second;
     }
 
-    Assembly&
-    getAssembly()
-    {
-        return ctgs;
-    }
-
-    const Assembly&
-    getAssembly() const
-    {
-        return ctgs;
-    }
-
-    std::vector<JumpAlignmentResultType>&
-    getAlignments()
-    {
-        return align;
-    }
-
-    const std::vector<JumpAlignmentResultType>&
-    getAlignments() const
-    {
-        return align;
-    }
-
-
     void
     clear()
     {
@@ -201,10 +170,4 @@ private:
     data_t _data;
 
     std::vector<GenomeInterval> _searchIntervals;
-
-    // assembled contigs for both breakpoints
-    Assembly ctgs;
-    // contig alignments
-    std::vector<JumpAlignmentResultType > align;
-
 };

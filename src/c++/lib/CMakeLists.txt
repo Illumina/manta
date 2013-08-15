@@ -33,10 +33,7 @@ set (MANTA_AVAILABLE_LIBRARIES "")
 foreach (MANTA_LIB_DIR ${MANTA_ALL_LIBRARIES})
     add_subdirectory(${MANTA_LIB_DIR})
     
-    # We make a special exception for alignment because this is a header-only library right now:
-    if (NOT ${MANTA_LIB_DIR} MATCHES alignment)
-        set(MANTA_AVAILABLE_LIBRARIES manta_${MANTA_LIB_DIR} ${MANTA_AVAILABLE_LIBRARIES})
-    endif()
+    set(MANTA_AVAILABLE_LIBRARIES manta_${MANTA_LIB_DIR} ${MANTA_AVAILABLE_LIBRARIES})
 endforeach ()
 
 set (MANTA_AVAILABLE_LIBRARIES ${MANTA_AVAILABLE_LIBRARIES} PARENT_SCOPE)

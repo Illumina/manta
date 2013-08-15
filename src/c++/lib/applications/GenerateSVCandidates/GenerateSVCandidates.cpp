@@ -19,6 +19,7 @@
 #include "EdgeRetrieverBin.hh"
 #include "EdgeRetrieverLocus.hh"
 #include "GSCOptions.hh"
+#include "SVCandidateAssemblyRefiner.hh"
 #include "SVFinder.hh"
 #include "SVScorer.hh"
 
@@ -27,10 +28,9 @@
 #include "common/Exceptions.hh"
 #include "common/OutStream.hh"
 #include "manta/ReadGroupStatsSet.hh"
-#include "manta/SVLocusAssembler.hh"
+#include "manta/SVCandidateAssemblyData.hh"
 #include "format/VcfWriterCandidateSV.hh"
 #include "format/VcfWriterSomaticSV.hh"
-#include "alignment/GlobalJumpAligner.hh"
 
 #include "boost/foreach.hpp"
 
@@ -75,7 +75,6 @@ edgeRFactory(
 
 
 
-
 static
 void
 runGSC(
@@ -90,6 +89,12 @@ runGSC(
 
     const SmallAssemblerOptions assembleOpt;
     SVLocusAssembler svAssembler(opt,assembleOpt);
+
+    // maybe these can be a contig aligner option struct?
+    static const AlignmentScores<int> alignScores(1,-2,-5,-1,-2);
+    static const int jumpScore(-3);
+
+    SVCandidateAssemblyRefiner svRefine(opt, cset.header, assembleOpt, alignScores, jumpScore);
 
     SVScorer svScore(opt, cset.header);
 
@@ -112,8 +117,7 @@ runGSC(
     SVCandidateSetData svData;
     std::vector<SVCandidate> svs;
     SomaticSVScoreInfo ssInfo;
-    int jumpScore(-3);
-    GlobalJumpAligner<int> aligner(AlignmentScores<int>(1,-2,-5,-1,-2),jumpScore);
+
     while (edger.next())
     {
         const EdgeInfo& edge(edger.getEdge());
@@ -122,82 +126,19 @@ runGSC(
         {
             // find number, type and breakend range of SVs on this edge:
             svFind.findCandidateSV(edge,svData,svs);
-            BOOST_FOREACH(const SVCandidate& sv, svs)
+            for(unsigned svIndex(0); svIndex<svs.size(); ++svIndex)
             {
-                //std::cout << "sv.bp1 = " << sv.bp1 << std::endl;
-                //std::cout << "sv.bp2 = " << sv.bp2 << std::endl;
-                Assembly as;
-                svAssembler.assembleSVBreakends(sv.bp1,sv.bp2,as);
-                svData.getAssembly().insert(svData.getAssembly().end(),
-                                            as.begin(),
-                                            as.end()
-                                           );
+                const SVCandidate& sv(svs[svIndex]);
 
-                // how much additional reference sequence should we extract from around
-                // each side of the breakend region?
-                static const pos_t extraRefEdgeSize(300);
+                SVCandidateAssemblyData adata;
+                svRefine.getCandidateAssemblyData(sv,svData,adata);
 
-                // min alignment context
-                //const unsigned minAlignContext(4);
-                // don't align contigs shorter than this
-                const unsigned minContigLen(75);
+                candWriter.writeSV(edge, svData, adata, svIndex, sv);
 
-                reference_contig_segment bp1ref,bp2ref;
-                getSVReferenceSegments(opt.referenceFilename, cset.header, extraRefEdgeSize, sv, bp1ref, bp2ref);
-                const std::string bp1RefStr(bp1ref.seq());
-                const std::string bp2RefStr(bp2ref.seq());
-                for (Assembly::const_iterator ct = as.begin();
-                     ct != as.end();
-                     ++ct)
-                {
-                    if (ct->seq.size() < minContigLen) continue;
-
-                    // JumpAligner allows only one jump per alignment, so we need to align
-                    // two times:
-                    JumpAlignmentResult<int> forwardRes;
-                    JumpAlignmentResult<int> backwardRes;
-
-                    aligner.align(ct->seq.begin(),ct->seq.end(),
-                                  bp1RefStr.begin(),bp1RefStr.end(),
-                                  bp2RefStr.begin(),bp2RefStr.end(),
-                                  forwardRes);
-
-                    aligner.align(ct->seq.begin(),ct->seq.end(),
-                            	  bp2RefStr.begin(),bp2RefStr.end(),
-                                  bp1RefStr.begin(),bp1RefStr.end(),
-                                  backwardRes);
-
-                    // check which jump alignment has anchors/alignments to both breakends
-                    bool forwardGood(forwardRes.align1.isAligned() && forwardRes.align2.isAligned());
-                    bool backwardGood(backwardRes.align1.isAligned() && backwardRes.align2.isAligned());
-
-                    if (forwardGood && !backwardGood)
-                    {
-                    	svData.getAlignments().push_back(forwardRes);
-                    }
-                    else if (!forwardGood && backwardGood)
-                    {
-                    	svData.getAlignments().push_back(backwardRes);
-                    }
-                    else
-                    {
-                    	// tie, store jump alignment with higher score
-                    	svData.getAlignments().push_back(forwardRes.score>=backwardRes.score ? forwardRes : backwardRes);
-                    }
-
-                }
-            }
-
-            candWriter.writeSV(edge, svData, svs);
-
-            if (isSomatic)
-            {
-                unsigned svIndex(0);
-                BOOST_FOREACH(const SVCandidate& sv, svs)
+                if (isSomatic)
                 {
                     svScore.scoreSomaticSV(svData, svIndex, sv, ssInfo);
-                    somWriter.writeSV(edge, svData, svIndex, sv, ssInfo);
-                    svIndex++;
+                    somWriter.writeSV(edge, svData, adata, svIndex, sv, ssInfo);
                 }
             }
         }

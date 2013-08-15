@@ -57,7 +57,7 @@ SVLocusAssembler::
 getBreakendReads(
     const SVBreakend& bp,
     ReadIndexType& readIndex,
-    AssemblyReadInput& reads)
+    AssemblyReadInput& reads) const
 {
     static const size_t minIntervalSize(300);
 
@@ -133,7 +133,7 @@ getBreakendReads(
 void
 SVLocusAssembler::
 assembleSingleSVBreakend(const SVBreakend& bp,
-                         Assembly& as)
+                         Assembly& as) const
 {
     ReadIndexType readIndex;
     AssemblyReadInput reads;
@@ -148,7 +148,7 @@ void
 SVLocusAssembler::
 assembleSVBreakends(const SVBreakend& bp1,
                     const SVBreakend& bp2,
-                    Assembly& as)
+                    Assembly& as) const
 {
     ReadIndexType readIndex;
     AssemblyReadInput reads;

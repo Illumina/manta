@@ -49,8 +49,9 @@ modifyInfo(
     const SVBreakend& bp1,
     const SVBreakend& bp2,
     const bool isFirstOfPair,
-    std::vector<std::string>& infotags,
-    const SVCandidateSetData& svData) const
+    const SVCandidateSetData& /*svData*/,
+    const SVCandidateAssemblyData& adata,
+    std::vector<std::string>& infotags) const
 {
     assert(_ssInfoPtr != NULL);
     const SomaticSVScoreInfo& ssInfo(*_ssInfoPtr);
@@ -73,26 +74,28 @@ modifyInfo(
         // store alignment start + cigar string for each section of the jumping alignment.
         // there can be several contigs per breakend, so we iterate over all of them.
         // only the first breakpoint gets the alignments attached to its VCF entry
-        const unsigned numAlign(svData.getAlignments().size());
+        const unsigned numAlign(adata.alignments.size());
         std::string cigar1;
         std::string cigar2;
-        for (unsigned i(0); i<numAlign; ++i)
+        for (unsigned alignIndex(0); alignIndex<numAlign; ++alignIndex)
         {
-            infotags.push_back( str(boost::format("CTG_JALIGN_%i_POS_A=%i") %
-                                    i %
-                                    (bp1.interval.range.begin_pos()+svData.getAlignments()[i].align1.alignStart)) );
-            infotags.push_back( str(boost::format("CTG_JALIGN_%i_POS_B=%i") %
-                                    i %
-                                    (bp2.interval.range.begin_pos()+svData.getAlignments()[i].align2.alignStart)) );
+            const SVCandidateAssemblyData::JumpAlignmentResultType align(adata.alignments[alignIndex]);
+            infotags.push_back( str(boost::format("CTG_JALIGN_%i_POS_A=%alignIndex") %
+                                    alignIndex %
+                                    (bp1.interval.range.begin_pos()+align.align1.alignStart)) );
+            infotags.push_back( str(boost::format("CTG_JALIGN_%i_POS_B=%alignIndex") %
+                                    alignIndex %
+                                    (bp2.interval.range.begin_pos()+align.align2.alignStart)) );
 
-            apath_to_cigar(svData.getAlignments()[i].align1.apath,cigar1);
-            apath_to_cigar(svData.getAlignments()[i].align2.apath,cigar2);
+            apath_to_cigar(align.align1.apath,cigar1);
+            apath_to_cigar(align.align2.apath,cigar2);
 
-            infotags.push_back( str(boost::format("CTG_JALIGN_%i_CIGAR_A=%s") % i % cigar1) );
-            infotags.push_back( str(boost::format("CTG_JALIGN_%i_CIGAR_B=%s") % i % cigar2) );
+            infotags.push_back( str(boost::format("CTG_JALIGN_%i_CIGAR_A=%s") % alignIndex % cigar1) );
+            infotags.push_back( str(boost::format("CTG_JALIGN_%i_CIGAR_B=%s") % alignIndex % cigar2) );
         }
     }
 }
+
 
 
 std::string
@@ -117,7 +120,8 @@ void
 VcfWriterSomaticSV::
 writeSV(
     const EdgeInfo& edge,
-    const SVCandidateSetData& svData ,
+    const SVCandidateSetData& svData,
+    const SVCandidateAssemblyData& adata,
     const unsigned svIndex,
     const SVCandidate& sv,
     const SomaticSVScoreInfo& ssInfo)
@@ -127,6 +131,6 @@ writeSV(
 
     //TODO: this is a lame way to customize subclass behavior:
     _ssInfoPtr=&ssInfo;
-    writeSVCore(edge, svIndex, sv, svData);
+    writeSVCore(edge, svData, adata, svIndex, sv);
     _ssInfoPtr=NULL;
 }

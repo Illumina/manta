@@ -112,7 +112,8 @@ writeTransloc(
     const SVBreakend& bp2,
     const std::string& idPrefix,
     const bool isFirstOfPair,
-    const SVCandidateSetData& svData )
+    const SVCandidateSetData& svData,
+    const SVCandidateAssemblyData& adata)
 {
     std::vector<std::string> infotags;
 
@@ -184,7 +185,7 @@ writeTransloc(
         infotags.push_back( str( boost::format("CIPOS=%i,%i") % (bp1range.begin_pos()+1) % bp1range.end_pos() ) );
     }
 
-    modifyInfo(bp1,bp2,isFirstOfPair,infotags,svData);
+    modifyInfo(bp1,bp2,isFirstOfPair,svData, adata, infotags);
 
     // write out record:
     _os << chrom
@@ -207,12 +208,13 @@ writeTranslocPair(
     const EdgeInfo& edge,
     const unsigned svIndex,
     const SVCandidate& sv,
-    const SVCandidateSetData& svData)
+    const SVCandidateSetData& svData,
+    const SVCandidateAssemblyData& adata)
 {
     const std::string idPrefix( str(_idFormatter % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % svIndex ) );
 
-    writeTransloc(sv.bp1, sv.bp2, idPrefix, true, svData);
-    writeTransloc(sv.bp2, sv.bp1, idPrefix, false, svData);
+    writeTransloc(sv.bp1, sv.bp2, idPrefix, true, svData, adata);
+    writeTransloc(sv.bp2, sv.bp1, idPrefix, false, svData, adata);
 }
 
 
@@ -336,14 +338,15 @@ void
 VcfWriterSV::
 writeSVCore(
     const EdgeInfo& edge,
+    const SVCandidateSetData& svData,
+    const SVCandidateAssemblyData& adata,
     const unsigned svIndex,
-    const SVCandidate& sv,
-    const SVCandidateSetData& svData)
+    const SVCandidate& sv)
 {
     const SV_TYPE::index_t svType(getSVType(sv));
     if      (svType == SV_TYPE::INTERTRANSLOC)
     {
-        writeTranslocPair(edge, svIndex, sv, svData);
+        writeTranslocPair(edge, svIndex, sv, svData, adata);
     }
     else if (svType == SV_TYPE::INVERSION)
     {

@@ -19,8 +19,6 @@
 
 #include "manta/Program.hh"
 
-#include "applications/GenerateSVCandidates/GSCOptions.hh"
-#include "applications/GenerateSVCandidates/GenerateSVCandidates.hh"
 
 /// Command line app to test SmallAssembler
 ///
@@ -36,8 +34,3 @@ struct AssembleSVBreakend : public manta::Program
     void
     runInternal(int argc, char* argv[]) const;
 };
-
-void
-parseOptions(const manta::Program& prog,
-             int argc, char* argv[],
-             GSCOptions& opt);

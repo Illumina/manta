@@ -46,12 +46,12 @@ struct SVLocusAssembler
      */
     void
     assembleSingleSVBreakend(const SVBreakend& bp,
-                             Assembly& as);
+                             Assembly& as) const;
 
     void
     assembleSVBreakends(const SVBreakend& bp1,
                         const SVBreakend& bp2,
-                        Assembly& as);
+                        Assembly& as) const;
 
 private:
     typedef boost::shared_ptr<bam_streamer> streamPtr;
@@ -63,7 +63,7 @@ private:
     getBreakendReads(
         const SVBreakend& bp,
         ReadIndexType& readIndex,
-        AssemblyReadInput& reads);
+        AssemblyReadInput& reads) const;
 
     const ReadScannerOptions _scanOpt;
     const SmallAssemblerOptions _assembleOpt;
