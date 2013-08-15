@@ -63,10 +63,11 @@ struct GlobalAligner
     align(
         const SymIter queryBegin, const SymIter queryEnd,
         const SymIter refBegin, const SymIter refEnd,
-        AlignmentResult<ScoreType>& result);
+        AlignmentResult<ScoreType>& result) const;
 
 private:
 
+    static
     uint8_t
     max3(
         ScoreType& max,
@@ -127,9 +128,9 @@ private:
 
     // add the matrices here to reduce allocations over many alignment calls:
     typedef std::vector<ScoreVal> ScoreVec;
-    ScoreVec _score1;
-    ScoreVec _score2;
-    basic_matrix<PtrVal> _ptrMat;
+    mutable ScoreVec _score1;
+    mutable ScoreVec _score2;
+    mutable basic_matrix<PtrVal> _ptrMat;
 };
 
 

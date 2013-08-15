@@ -33,7 +33,7 @@ align(
     const SymIter queryBegin, const SymIter queryEnd,
     const SymIter ref1Begin, const SymIter ref1End,
     const SymIter ref2Begin, const SymIter ref2End,
-    JumpAlignmentResult<ScoreType>& result)
+    JumpAlignmentResult<ScoreType>& result) const
 {
 #ifdef ALN_DEBUG
     std::ostream& log_os(std::cerr);

@@ -74,10 +74,11 @@ struct GlobalJumpAligner
         const SymIter queryBegin, const SymIter queryEnd,
         const SymIter ref1Begin, const SymIter ref1End,
         const SymIter ref2Begin, const SymIter ref2End,
-        JumpAlignmentResult<ScoreType>& result);
+        JumpAlignmentResult<ScoreType>& result) const;
 
 private:
 
+    static
     uint8_t
     max3(
         ScoreType& max,
@@ -100,6 +101,7 @@ private:
         return ptr;
     }
 
+    static
     uint8_t
     max4(
         ScoreType& max,
@@ -169,12 +171,12 @@ private:
 
     // add the matrices here to reduce allocations over many alignment calls:
     typedef std::vector<ScoreVal> ScoreVec;
-    ScoreVec _score1;
-    ScoreVec _score2;
+    mutable ScoreVec _score1;
+    mutable ScoreVec _score2;
 
     typedef basic_matrix<PtrVal> PtrMat;
-    PtrMat _ptrMat1;
-    PtrMat _ptrMat2;
+    mutable PtrMat _ptrMat1;
+    mutable PtrMat _ptrMat2;
 };
 
 

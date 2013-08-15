@@ -32,7 +32,7 @@ GlobalAligner<ScoreType>::
 align(
     const SymIter queryBegin, const SymIter queryEnd,
     const SymIter refBegin, const SymIter refEnd,
-    AlignmentResult<ScoreType>& result)
+    AlignmentResult<ScoreType>& result) const
 {
 #ifdef ALN_DEBUG
     std::ostream& log_os(std::cerr);
