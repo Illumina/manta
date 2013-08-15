@@ -11,12 +11,11 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
-/// derived from ELAND implementation by Tony Cox
-
 #pragma once
 
 #include "blt_util/align_path.hh"
 
+#include <iosfwd>
 
 /// minimal summary of a query sequence aligned to a reference, roughly
 /// following bam conventions
@@ -40,12 +39,9 @@ struct Alignment
     ALIGNPATH::path_t apath;
 };
 
-inline
-unsigned
-alignEnd(const Alignment& align)
-{
-    return (align.alignStart + ALIGNPATH::apath_ref_length(align.apath));
-}
+std::ostream&
+operator<<(std::ostream& os, const Alignment& align);
+
 
 
 struct AlignState

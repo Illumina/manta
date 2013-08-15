@@ -28,6 +28,12 @@
 const double invlog10(1./(std::log(10.)));
 const int phredScoreOffset = 33;
 
+inline
+unsigned
+alignEnd(const Alignment& align)
+{
+    return (align.alignStart + ALIGNPATH::apath_ref_length(align.apath));
+}
 
 /// tests if prefix of aligned sequence matches target, returns length of alignment (zero if no match)
 unsigned
