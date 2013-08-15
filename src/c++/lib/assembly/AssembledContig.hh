@@ -17,12 +17,16 @@
 
 #pragma once
 
-#include <vector>
+#include <iosfwd>
 #include <string>
+#include <vector>
 
 
+/// \brief data pertaining to a de-novo assembly contig
+///
 /// stores for each contig the sequence and the number of reads
 /// containing its seeding k-mer
+///
 struct AssembledContig
 {
     AssembledContig() : seedReadCount(0) {}
@@ -34,6 +38,9 @@ struct AssembledContig
 
     unsigned seedReadCount; ///< no of reads containing the seeding kmer
 };
+
+
+std::ostream& operator<<(std::ostream& os, const AssembledContig& contig);
 
 
 typedef std::vector<AssembledContig> Assembly;
