@@ -20,6 +20,14 @@
 #include "alignment/Alignment.hh"
 #include "alignment/GlobalJumpAligner.hh"
 
+#include <cmath>
+
+#include <boost/utility.hpp>
+
+
+const double invlog10(1./(std::log(10.)));
+const int phredScoreOffset = 33;
+
 
 /// tests if prefix of aligned sequence matches target, returns length of alignment (zero if no match)
 unsigned
@@ -44,3 +52,29 @@ isConsistentAlignment(const JumpAlignmentResult<int>& res, const unsigned minAli
 
 int
 estimateBreakPointPos(const Alignment& al, const unsigned refOffset);
+
+
+
+struct ReadScorer : private boost::noncopyable {
+
+	/** Instance getter
+	 *
+	*/
+	static const ReadScorer& get() {
+		static const ReadScorer rs;
+		return rs;
+	}
+
+
+	double
+	getSemiAlignedMetric(const std::string& matchDescriptor, const std::string& qualities);
+
+private:
+	explicit
+	ReadScorer();
+	~ReadScorer() {}
+
+	enum { MAX_Q = 128 };
+	const int _qmin;
+	double _logpcorrectratio[MAX_Q];
+};
