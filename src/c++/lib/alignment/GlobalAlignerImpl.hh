@@ -19,9 +19,22 @@
 
 #include <cassert>
 
+#include <iostream>
+
 #ifdef ALN_DEBUG
 #include <iostream>
 #endif
+
+
+
+template <typename ScoreType>
+std::ostream&
+operator<<(std::ostream& os, AlignmentResult<ScoreType>& alignment)
+{
+    os << "AlignerResult: score: " << alignment.score << "\n"
+       << "\talignment: " << alignment.align << "\n";
+    return os;
+}
 
 
 

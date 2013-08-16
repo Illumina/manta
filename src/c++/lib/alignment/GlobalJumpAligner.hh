@@ -51,6 +51,9 @@ struct JumpAlignmentResult
     Alignment align2;
 };
 
+template <typename ScoreType>
+std::ostream& operator<<(std::ostream& os, JumpAlignmentResult<ScoreType>& alignment);
+
 
 
 /// \brief a method to align a contig to two references

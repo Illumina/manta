@@ -20,6 +20,8 @@
 
 #include "blt_util/basic_matrix.hh"
 
+#include <iosfwd>
+
 
 template <typename ScoreType>
 struct AlignmentResult
@@ -39,6 +41,12 @@ struct AlignmentResult
     ScoreType score;
     Alignment align;
 };
+
+
+template <typename ScoreType>
+std::ostream&
+operator<<(std::ostream& os, AlignmentResult<ScoreType>& alignment);
+
 
 
 /// \brief Implementation of global alignment with affine gap costs

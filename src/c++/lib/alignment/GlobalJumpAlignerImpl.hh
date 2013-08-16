@@ -19,9 +19,22 @@
 
 #include <cassert>
 
+#include <iostream>
+
 #ifdef ALN_DEBUG
 #include <iostream>
 #endif
+
+
+template <typename ScoreType>
+std::ostream&
+operator<<(std::ostream& os, JumpAlignmentResult<ScoreType>& alignment)
+{
+    os << "JumpAligner: score: " << alignment.score << "\n"
+       << "\talign1: " << alignment.align1 << "\n"
+       << "\talign2: " << alignment.align2 << "\n";
+    return os;
+}
 
 
 
