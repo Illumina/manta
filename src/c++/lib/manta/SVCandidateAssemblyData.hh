@@ -35,16 +35,25 @@
 ///
 struct SVCandidateAssemblyData
 {
+    SVCandidateAssemblyData() :
+        isBestAlignment(false),
+        bestAlignmnetIndex(0)
+    {}
+
     void
     clear()
     {
         contigs.clear();
         alignments.clear();
+        isBestAlignment=false;
+        bestAlignmnetIndex=0;
     }
 
     typedef JumpAlignmentResult<int> JumpAlignmentResultType;
 
     Assembly contigs; ///< assembled contigs for both breakpoints
-    std::vector<JumpAlignmentResultType> alignments; ///< contig alignments -- one for each contig
+    std::vector<JumpAlignmentResultType> alignments; ///< contig alignments, one per contig, may be empty
 
+    bool isBestAlignment;        ///< is there a contig/alignment good enough to be used for reporting?
+    unsigned bestAlignmnetIndex; ///< if isBestAlignment, which is the best?
 };

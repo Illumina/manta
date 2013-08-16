@@ -92,7 +92,7 @@ runGSC(
 
     // maybe these can be a contig aligner option struct?
     static const AlignmentScores<int> alignScores(1,-2,-5,-1,-2);
-    static const int jumpScore(-3);
+    static const int jumpScore(-10);
 
     SVCandidateAssemblyRefiner svRefine(opt, cset.header, assembleOpt, alignScores, jumpScore);
 

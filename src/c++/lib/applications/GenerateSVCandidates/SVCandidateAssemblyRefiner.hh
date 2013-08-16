@@ -12,7 +12,7 @@
 //
 
 ///
-/// \author Chris Saunders
+/// \author Ole Schulz-Trieglaff
 ///
 
 # pragma once
@@ -27,7 +27,7 @@
 #include "manta/SVLocusAssembler.hh"
 
 
-/// methods to improve low-resolution SVCandidates via assembly and contig alignment
+/// \brief methods to improve low-resolution SVCandidates via assembly and contig alignment
 ///
 struct SVCandidateAssemblyRefiner
 {
@@ -38,6 +38,8 @@ struct SVCandidateAssemblyRefiner
         const AlignmentScores<int>& alignScore,
         const int jumpScore);
 
+    /// \brief add assembly and assembly post-processing data to SV candidate
+    ///
     void
     getCandidateAssemblyData(
         const SVCandidate& sv,

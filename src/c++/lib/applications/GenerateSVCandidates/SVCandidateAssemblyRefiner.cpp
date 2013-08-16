@@ -12,7 +12,7 @@
 //
 
 ///
-/// \author Chris Saunders
+/// \author Ole Schulz-Trieglaff
 ///
 
 #include "SVCandidateAssemblyRefiner.hh"
@@ -21,6 +21,15 @@
 #include "blt_util/samtools_fasta_util.hh"
 #include "manta/SVLocusAssembler.hh"
 #include "manta/SVReferenceUtil.hh"
+
+#include "boost/foreach.hpp"
+
+#define DEBUG_REFINER
+
+#ifdef DEBUG_REFINER
+#include <iostream>
+#include "blt_util/log.hh"
+#endif
 
 
 
@@ -46,13 +55,15 @@ getCandidateAssemblyData(
     const SVCandidateSetData& /*svData*/,
     SVCandidateAssemblyData& adata) const
 {
-    //log_os << "sv: " << sv;
+#ifdef DEBUG_REFINER
+    log_os << "getCandidateAssemblyData START sv: " << sv;
+#endif
 
     adata.clear();
 
     // assemble contig spanning the breakend:
     _svAssembler.assembleSVBreakends(sv.bp1, sv.bp2, adata.contigs);
-#if 1
+
 
     // how much additional reference sequence should we extract from around
     // each side of the breakend region?
@@ -61,49 +72,69 @@ getCandidateAssemblyData(
     // min alignment context
     //const unsigned minAlignContext(4);
     // don't align contigs shorter than this
-    const unsigned minContigLen(75);
+    static const unsigned minContigLen(75);
 
     reference_contig_segment bp1ref,bp2ref;
     getSVReferenceSegments(_opt.referenceFilename, _header, extraRefEdgeSize, sv, bp1ref, bp2ref);
-    const std::string bp1RefStr(bp1ref.seq());
-    const std::string bp2RefStr(bp2ref.seq());
+    const std::string& bp1RefStr(bp1ref.seq());
+    const std::string& bp2RefStr(bp2ref.seq());
 
-    BOOST_FOREACH(const AssembledContig& contig, adata.contigs)
+    const unsigned contigCount(adata.contigs.size());
+
+#ifdef DEBUG_REFINER
+    log_os << "contigCount: " << contigCount << "\n";
+    for(unsigned contigIndex(0);contigIndex<contigCount; ++contigIndex)
     {
-        if (contig.seq.size() < minContigLen) continue;
-
-        // JumpAligner allows only one jump per alignment, so we need to align
-        // two times:
-        JumpAlignmentResult<int> forwardRes;
-        JumpAlignmentResult<int> backwardRes;
-
-        _aligner.align(contig.seq.begin(),contig.seq.end(),
-                      bp1RefStr.begin(),bp1RefStr.end(),
-                      bp2RefStr.begin(),bp2RefStr.end(),
-                      forwardRes);
-
-        _aligner.align(contig.seq.begin(),contig.seq.end(),
-                      bp2RefStr.begin(),bp2RefStr.end(),
-                      bp1RefStr.begin(),bp1RefStr.end(),
-                      backwardRes);
-
-        // check which jump alignment has anchors/alignments to both breakends
-        bool forwardGood(forwardRes.align1.isAligned() && forwardRes.align2.isAligned());
-        bool backwardGood(backwardRes.align1.isAligned() && backwardRes.align2.isAligned());
-
-        if (forwardGood && !backwardGood)
-        {
-            adata.alignments.push_back(forwardRes);
-        }
-        else if (!forwardGood && backwardGood)
-        {
-            adata.alignments.push_back(backwardRes);
-        }
-        else
-        {
-            // tie, store jump alignment with higher score
-            adata.alignments.push_back(forwardRes.score>=backwardRes.score ? forwardRes : backwardRes);
-        }
+        const AssembledContig& contig(adata.contigs[contigIndex]);
+        log_os << "cid: " << contigIndex << " contig: " << contig;
     }
 #endif
+
+    // make sure an alignment object exists for every contig, even if it's empty:
+    adata.alignments.resize(contigCount);
+
+    bool isHighScore(false);
+    unsigned highScoreIndex(0);
+
+    for(unsigned contigIndex(0);contigIndex<contigCount; ++contigIndex)
+    {
+        const AssembledContig& contig(adata.contigs[contigIndex]);
+
+        // QC contigs prior to alignment:
+        if (contig.seq.size() < minContigLen) continue;
+
+        JumpAlignmentResult<int> alignment(adata.alignments[contigIndex]);
+
+        _aligner.align(contig.seq.begin(),contig.seq.end(),
+                      bp1RefStr.begin(),bp1RefStr.end(),
+                      bp2RefStr.begin(),bp2RefStr.end(),
+                      alignment);
+
+#ifdef DEBUG_REFINER
+        log_os << "cid: " << contigIndex << " alignment: " << alignment;
+#endif
+
+        // check which jump alignment has anchors/alignments to both breakends
+        bool isAlignmentGood(alignment.align1.isAligned() && alignment.align2.isAligned());
+
+        if(! isAlignmentGood) continue;
+
+        if((! isHighScore) || (alignment.score > adata.alignments[highScoreIndex].score))
+        {
+            highScoreIndex=contigIndex;
+        }
+    }
+
+    // set any additional QC steps before deciding an alignment is usable:
+
+
+    // ok, passed QC -- mark the high-scoring alignment as usable:
+    if(isHighScore)
+    {
+        adata.isBestAlignment = true;
+        adata.bestAlignmnetIndex = highScoreIndex;
+#ifdef DEBUG_REFINER
+        log_os << "highscoreid: " << highScoreIndex << " alignment: " << adata.alignments[highScoreIndex];
+#endif
+    }
 }
