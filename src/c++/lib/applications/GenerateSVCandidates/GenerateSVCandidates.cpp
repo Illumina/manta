@@ -24,7 +24,6 @@
 #include "SVScorer.hh"
 
 #include "blt_util/log.hh"
-#include "blt_util/samtools_fasta_util.hh"
 #include "common/Exceptions.hh"
 #include "common/OutStream.hh"
 #include "manta/ReadGroupStatsSet.hh"
@@ -87,14 +86,13 @@ runGSC(
     SVFinder svFind(opt);
     const SVLocusSet& cset(svFind.getSet());
 
-    const SmallAssemblerOptions assembleOpt;
-    SVLocusAssembler svAssembler(opt,assembleOpt);
-
-    // maybe these can be a contig aligner option struct?
-    static const AlignmentScores<int> alignScores(1,-2,-5,-1,-2);
+    // maybe these can be an SV refiner option struct?
+    static const AlignmentScores<int> spanningAlignScores(1,-2,-5,-1,-2);
     static const int jumpScore(-10);
+    SmallAssemblerOptions spanningAssembleOpt;
+    spanningAssembleOpt.minContigLength=75;
 
-    SVCandidateAssemblyRefiner svRefine(opt, cset.header, assembleOpt, alignScores, jumpScore);
+    SVCandidateAssemblyRefiner svRefine(opt, cset.header, spanningAssembleOpt, spanningAlignScores, jumpScore);
 
     SVScorer svScore(opt, cset.header);
 

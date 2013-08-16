@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE( test_getQuerySegments )
     cigar_to_apath("3M",result.align2.apath);
 
     std::string bp1Seq,insertSeq,bp2Seq;
-    getFwdStrandQuerySegments(result,querySeq,true,false,
+    getFwdStrandQuerySegments(result,querySeq,false,true,false,
         bp1Seq,bp2Seq,insertSeq);
 
     BOOST_REQUIRE_EQUAL(bp1Seq,"TTTT");

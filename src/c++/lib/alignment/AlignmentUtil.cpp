@@ -78,23 +78,29 @@ void
 getFwdStrandQuerySegments(
     const JumpAlignmentResult<int>& align,
     const std::string& querySeq,
+    const bool isBp2AlignedFirst,
     const bool isBp1Reversed,
     const bool isBp2Reversed,
     std::string& bp1Seq,
     std::string& bp2Seq,
     std::string& insertSeq)
 {
-    const unsigned bp1Size(apath_read_length(align.align1.apath));
+    const unsigned align1Size(apath_read_length(align.align1.apath));
     const unsigned insertSize(align.jumpInsertSize);
-    const unsigned insertOffset(bp1Size + insertSize);
-    const unsigned bp2Size(apath_read_length(align.align2.apath));
-    const unsigned bp2Offset(insertOffset + bp2Size);
+    const unsigned insertOffset(align1Size + insertSize);
+    const unsigned align2Size(apath_read_length(align.align2.apath));
+    const unsigned align2Offset(insertOffset + align2Size);
 
-    assert(querySeq.size() == bp2Offset);
+    assert(querySeq.size() == align2Offset);
 
-    bp1Seq = querySeq.substr(0,bp1Size);
-    insertSeq = querySeq.substr(bp1Size,insertSize);
-    bp2Seq = querySeq.substr(insertOffset,bp2Size);
+    bp1Seq = querySeq.substr(0,align1Size);
+    insertSeq = querySeq.substr(align1Size,insertSize);
+    bp2Seq = querySeq.substr(insertOffset,align2Size);
+
+    if(isBp2AlignedFirst)
+    {
+        std::swap(bp1Seq,bp2Seq);
+    }
 
     if(isBp1Reversed)
     {

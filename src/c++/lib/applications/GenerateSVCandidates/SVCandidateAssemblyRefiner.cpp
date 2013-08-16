@@ -132,12 +132,10 @@ getCandidateAssemblyData(
 
     // how much additional reference sequence should we extract from around
     // each side of the breakend region?
-    static const pos_t extraRefEdgeSize(300);
+    static const pos_t extraRefEdgeSize(100);
 
     // min alignment context
     //const unsigned minAlignContext(4);
-    // don't align contigs shorter than this
-    static const unsigned minContigLen(75);
 
     reference_contig_segment bp1ref, bp2ref;
     getSVReferenceSegments(_opt.referenceFilename, _header, extraRefEdgeSize, sv, bp1ref, bp2ref);
@@ -171,8 +169,9 @@ getCandidateAssemblyData(
         const AssembledContig& contig(adata.contigs[contigIndex]);
 
         // QC contig prior to alignment:
-        if (contig.seq.size() < minContigLen) continue;
 
+
+        // done with contig QC
         JumpAlignmentResult<int>& alignment(adata.alignments[contigIndex]);
 
         _aligner.align(
@@ -183,6 +182,14 @@ getCandidateAssemblyData(
 
 #ifdef DEBUG_REFINER
         log_os << "cid: " << contigIndex << " alignment: " << alignment;
+
+        std::string bp1Seq,bp2Seq,insertSeq;
+        getFwdStrandQuerySegments(alignment, contig.seq,
+            isBp2AlignedFirst, isBp1Reversed, isBp2Reversed,
+            bp1Seq, bp2Seq, insertSeq);
+        log_os << "\tbp1seq_fwd: " << bp1Seq << "\n";
+        log_os << "\tinsseq_fwd: " << insertSeq << "\n";
+        log_os << "\tbp2seq_fwd: " << bp2Seq << "\n";
 #endif
 
         // QC the alignment to make sure it spans the two breakend locations:
