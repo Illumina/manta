@@ -16,6 +16,7 @@
 ///
 
 #include "alignment/AlignmentUtil.hh"
+#include "blt_util/seq_util.hh"
 
 #include <cassert>
 #include <math.h>
@@ -69,6 +70,42 @@ isConsistentAlignment(const JumpAlignmentResult<int>& res, const unsigned /*minA
     if (! (res.align1.isAligned() && res.align2.isAligned()) ) return false;
 
     return true;
+}
+
+
+
+void
+getFwdStrandQuerySegments(
+    const JumpAlignmentResult<int>& align,
+    const std::string& querySeq,
+    const bool isBp1Reversed,
+    const bool isBp2Reversed,
+    std::string& bp1Seq,
+    std::string& bp2Seq,
+    std::string& insertSeq)
+{
+    const unsigned bp1Size(apath_read_length(align.align1.apath));
+    const unsigned insertSize(align.jumpInsertSize);
+    const unsigned insertOffset(bp1Size + insertSize);
+    const unsigned bp2Size(apath_read_length(align.align2.apath));
+    const unsigned bp2Offset(insertOffset + bp2Size);
+
+    assert(querySeq.size() == bp2Offset);
+
+    bp1Seq = querySeq.substr(0,bp1Size);
+    insertSeq = querySeq.substr(bp1Size,insertSize);
+    bp2Seq = querySeq.substr(insertOffset,bp2Size);
+
+    if(isBp1Reversed)
+    {
+        reverseCompStr(bp1Seq);
+        reverseCompStr(insertSeq);
+    }
+
+    if(isBp2Reversed)
+    {
+        reverseCompStr(bp2Seq);
+    }
 }
 
 

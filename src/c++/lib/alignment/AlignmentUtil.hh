@@ -96,6 +96,21 @@ bothEndsAligned(const Alignment& al, const unsigned minAlignContext = 0);
 bool
 isConsistentAlignment(const JumpAlignmentResult<int>& res, const unsigned minAlignContext = 0);
 
+/// given a jump alignment and query sequence, return the bp1,insert and bp2 query sequences
+///
+/// the insert sequence is converted to fwd-strand by assuming it is "attached" to bp1
+/// note this is targeted for debug-code only
+///
+void
+getFwdStrandQuerySegments(
+    const JumpAlignmentResult<int>& align,
+    const std::string& querySeq,
+    const bool isBp1Reversed,
+    const bool isBp2Reversed,
+    std::string& bp1Seq,
+    std::string& bp2Seq,
+    std::string& insertSeq);
+
 
 int
 estimateBreakPointPos(const Alignment& al, const unsigned refOffset);
