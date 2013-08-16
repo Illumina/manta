@@ -880,6 +880,38 @@ apath_cleaner(path_t& apath)
 }
 
 
+
+void
+apath_clean_seqinfo(path_t& apath)
+{
+    path_t apath2;
+    bool is_match(false);
+    const unsigned as(apath.size());
+    for (unsigned i(0); i<as; ++i)
+    {
+        const path_segment& ps(apath[i]);
+        if(is_segment_align_match(ps.type))
+        {
+            if(is_match)
+            {
+                apath2.back().length += ps.length;
+            }
+            else
+            {
+                apath2.push_back(path_segment(MATCH,ps.length));
+            }
+            is_match=true;
+        }
+        else
+        {
+            apath2.push_back(ps);
+            is_match=false;
+        }
+    }
+
+    apath = apath2;
+}
+
 #if 0
 std::pair<unsigned,unsigned>
 get_nonclip_end_segments(const path_t& apath)
@@ -941,7 +973,7 @@ get_match_edge_segments(const path_t& apath)
     for (unsigned i(0); i<as; ++i)
     {
         const path_segment& ps(apath[i]);
-        if (MATCH == ps.type)
+        if (is_segment_align_match(ps.type))
         {
             if (! is_first_match) res.first=i;
             is_first_match=true;
@@ -1092,7 +1124,7 @@ is_apath_floating(const path_t& apath)
 
     BOOST_FOREACH(const path_segment& ps, apath)
     {
-        if (ps.type==MATCH) return false;
+        if (is_segment_align_match(ps.type)) return false;
     }
     return true;
 }
@@ -1168,7 +1200,7 @@ get_apath_invalid_type(const path_t& apath,
             }
         }
 
-        if ((! is_match) && (ps.type==MATCH)) is_match=true;
+        if ((! is_match) && (is_segment_align_match(ps.type))) is_match=true;
 
         last_type=ps.type;
     }
@@ -1179,7 +1211,7 @@ get_apath_invalid_type(const path_t& apath,
     for (unsigned i(0); i<as; ++i)
     {
         const path_segment& ps(apath[as-(i+1)]);
-        if (ps.type==MATCH) break;
+        if (is_segment_align_match(ps.type)) break;
         //if(ps.type==DELETE) return ALIGN_ISSUE::EDGE_DELETE;
         if (ps.type==SKIP) return ALIGN_ISSUE::EDGE_SKIP;
     }

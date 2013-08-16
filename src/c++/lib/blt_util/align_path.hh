@@ -43,7 +43,9 @@ enum align_t
     SKIP,
     SOFT_CLIP,
     HARD_CLIP,
-    PAD
+    PAD,
+    SEQ_MATCH,
+    SEQ_MISMATCH
 };
 
 inline
@@ -66,6 +68,10 @@ segment_type_to_cigar_code(const align_t id)
         return 'H';
     case PAD       :
         return 'P';
+    case SEQ_MATCH  :
+        return '=';
+    case SEQ_MISMATCH  :
+        return 'X';
     default :
         return 'X';
     }
@@ -91,6 +97,10 @@ cigar_code_to_segment_type(const char c)
         return HARD_CLIP;
     case 'P' :
         return PAD;
+    case '=' :
+        return SEQ_MATCH;
+    case 'X' :
+        return SEQ_MISMATCH;
     default  :
         return NONE;
     }
@@ -105,6 +115,8 @@ is_segment_type_read_length(const align_t id)
     case MATCH     :
     case INSERT    :
     case SOFT_CLIP :
+    case SEQ_MATCH :
+    case SEQ_MISMATCH :
         return true;
     default        :
         return false;
@@ -120,6 +132,23 @@ is_segment_type_ref_length(const align_t id)
     case MATCH  :
     case DELETE :
     case SKIP   :
+    case SEQ_MATCH :
+    case SEQ_MISMATCH :
+        return true;
+    default     :
+        return false;
+    }
+}
+
+inline
+bool
+is_segment_align_match(const align_t id)
+{
+    switch (id)
+    {
+    case MATCH :
+    case SEQ_MATCH :
+    case SEQ_MISMATCH :
         return true;
     default     :
         return false;
@@ -278,6 +307,12 @@ apath_clip_adder(path_t& apath,
 bool
 apath_cleaner(path_t& apath);
 
+/// Convert any cigar string using the seq_match/seq_mismatch operators (=/X) to the
+/// more widely accepted align match "M"
+void
+apath_clean_seqinfo(path_t& apath);
+
+
 #if 0
 // Get the match descriptor segment numbers for the first and last
 // non-soft/hard clipped segments. Return total segment size on
@@ -298,7 +333,7 @@ get_match_edge_segments(const path_t& apath);
 unsigned
 apath_exon_count(const path_t& apath);
 
-// provide reference offsets for the begining of each exon:
+// provide reference offsets for the beginning of each exon:
 //
 struct exon_offsets
 {
