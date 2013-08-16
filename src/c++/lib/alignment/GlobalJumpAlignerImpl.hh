@@ -254,7 +254,7 @@ align(
                                       sval.match + _scores.open,
                                       sval.del,
                                       sval.ins,
-                                      sval.jump + _scores.open);
+                                      sval.jump); // jump->ins moves get a pass on the gap-open penalty, to support mirco-insertions
 
                     headScore.ins += _scores.extend;
                 }
