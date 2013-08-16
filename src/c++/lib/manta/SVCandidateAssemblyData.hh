@@ -18,6 +18,7 @@
 
 #include "assembly/AssembledContig.hh"
 #include "alignment/GlobalJumpAligner.hh"
+#include "manta/SVCandidate.hh"
 
 #include <vector>
 
@@ -37,7 +38,7 @@ struct SVCandidateAssemblyData
 {
     SVCandidateAssemblyData() :
         isBestAlignment(false),
-        bestAlignmnetIndex(0)
+        bestAlignmentIndex(0)
     {}
 
     void
@@ -46,7 +47,7 @@ struct SVCandidateAssemblyData
         contigs.clear();
         alignments.clear();
         isBestAlignment=false;
-        bestAlignmnetIndex=0;
+        bestAlignmentIndex=0;
     }
 
     typedef JumpAlignmentResult<int> JumpAlignmentResultType;
@@ -55,5 +56,7 @@ struct SVCandidateAssemblyData
     std::vector<JumpAlignmentResultType> alignments; ///< contig alignments, one per contig, may be empty
 
     bool isBestAlignment;        ///< is there a contig/alignment good enough to be used for reporting?
-    unsigned bestAlignmnetIndex; ///< if isBestAlignment, which is the best?
+    unsigned bestAlignmentIndex; ///< if isBestAlignment, which is the best?
+
+    SVCandidate sv; ///< if isBestAlignment, summarize refined sv candidate
 };

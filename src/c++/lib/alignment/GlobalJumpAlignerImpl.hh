@@ -32,7 +32,8 @@ operator<<(std::ostream& os, JumpAlignmentResult<ScoreType>& alignment)
 {
     os << "JumpAligner: score: " << alignment.score << "\n"
        << "\talign1: " << alignment.align1 << "\n"
-       << "\talign2: " << alignment.align2 << "\n";
+       << "\talign2: " << alignment.align2 << "\n"
+       << "\tjumpInsertSize " << alignment.jumpInsertSize << "\n";
     return os;
 }
 

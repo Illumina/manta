@@ -77,6 +77,12 @@ struct reference_contig_segment
         return _seq;
     }
 
+    pos_t
+    get_offset() const
+    {
+        return _offset;
+    }
+
     void
     set_offset(const pos_t offset)
     {

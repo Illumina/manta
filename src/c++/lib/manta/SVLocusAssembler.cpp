@@ -17,6 +17,7 @@
 
 
 #include "blt_util/log.hh"
+#include "blt_util/seq_util.hh"
 #include "manta/SVLocusAssembler.hh"
 
 #include "boost/foreach.hpp"
@@ -56,6 +57,7 @@ void
 SVLocusAssembler::
 getBreakendReads(
     const SVBreakend& bp,
+    const bool isReversed,
     ReadIndexType& readIndex,
     AssemblyReadInput& reads) const
 {
@@ -119,6 +121,7 @@ getBreakendReads(
                 // to reverse complement here
                 readIndex.insert(std::make_pair(readKey,reads.size()));
                 reads.push_back(bamRead.get_bam_read().get_string());
+                if(isReversed) reverseCompStr(reads.back());
             }
             else
             {
@@ -137,7 +140,7 @@ assembleSingleSVBreakend(const SVBreakend& bp,
 {
     ReadIndexType readIndex;
     AssemblyReadInput reads;
-    getBreakendReads(bp,readIndex, reads);
+    getBreakendReads(bp, false, readIndex, reads);
     AssemblyReadOutput readInfo;
     runSmallAssembler(_assembleOpt, reads, readInfo, as);
 }
@@ -148,12 +151,17 @@ void
 SVLocusAssembler::
 assembleSVBreakends(const SVBreakend& bp1,
                     const SVBreakend& bp2,
+                    const bool isBp1Reversed,
+                    const bool isBp2Reversed,
                     Assembly& as) const
 {
     ReadIndexType readIndex;
     AssemblyReadInput reads;
-    getBreakendReads(bp1,readIndex, reads);
-    getBreakendReads(bp2,readIndex, reads);
+    AssemblyReadReversal readRev;
+    getBreakendReads(bp1, isBp1Reversed, readIndex, reads);
+    readRev.resize(reads.size(),isBp1Reversed);
+    getBreakendReads(bp2, isBp2Reversed, readIndex, reads);
+    readRev.resize(reads.size(),isBp2Reversed);
     AssemblyReadOutput readInfo;
     runSmallAssembler(_assembleOpt, reads, readInfo, as);
 }

@@ -51,6 +51,8 @@ struct SVLocusAssembler
     void
     assembleSVBreakends(const SVBreakend& bp1,
                         const SVBreakend& bp2,
+                        const bool isBp1Reversed,
+                        const bool isBp2Reversed,
                         Assembly& as) const;
 
 private:
@@ -58,10 +60,13 @@ private:
 
     typedef std::map<std::string,unsigned> ReadIndexType;
 
-    // Collects the reads crossing an SV breakpoint
+    /// Collects the reads crossing an SV breakpoint and adds them to reads
+    ///
+    /// \param[in] isReversed if true revcomp all reads on input
     void
     getBreakendReads(
         const SVBreakend& bp,
+        const bool isReversed,
         ReadIndexType& readIndex,
         AssemblyReadInput& reads) const;
 

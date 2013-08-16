@@ -132,7 +132,7 @@ runASB(const ASBOptions& opt)
     SmallAssemblerOptions assembleOpt;
     SVLocusAssembler svla(opt, assembleOpt);
     Assembly a;
-    svla.assembleSVBreakends(bp1,bp2,a);
+    svla.assembleSVBreakends(bp1,bp2, false, false, a);
     std::cout << "Assembled " << a.size() << " contig(s)." << std::endl;
 
     // how much additional reference sequence should we extract from around

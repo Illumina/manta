@@ -36,4 +36,5 @@ struct AssemblyReadInfo
 
 
 typedef std::vector<std::string> AssemblyReadInput;
+typedef std::vector<bool> AssemblyReadReversal;
 typedef std::vector<AssemblyReadInfo> AssemblyReadOutput;
