@@ -37,6 +37,7 @@ getIntervalReferenceSegment(
     // get REF
     intervalRef.set_offset(beginPos);
     get_standardized_region_seq(referenceFilename,chrom,beginPos,endPos,intervalRef.seq());
+    assert(static_cast<pos_t>(intervalRef.seq().size()) == (endPos-beginPos));
 }
 
 

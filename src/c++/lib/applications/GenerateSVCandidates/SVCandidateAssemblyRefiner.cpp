@@ -47,7 +47,7 @@ adjustAssembledBreakend(
 
     const bool isBpAtAlignEnd(bp.state == SVBreakendState::RIGHT_OPEN);
 
-    const pos_t bpBreakendOffset(isBpAtAlignEnd ? bpEndOffset : bpBeginOffset+1);
+    const pos_t bpBreakendOffset(isBpAtAlignEnd ? (bpEndOffset -1) : bpBeginOffset );
     const pos_t bpBreakendPos(ref.get_offset() + bpBreakendOffset);
 
     known_pos_range2& range(bp.interval.range);
