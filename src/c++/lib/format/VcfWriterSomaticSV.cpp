@@ -19,6 +19,7 @@
 
 #include "boost/algorithm/string/join.hpp"
 
+#include "manta/SomaticSVScoreInfo.hh"
 
 
 void
@@ -80,10 +81,10 @@ modifyInfo(
         for (unsigned alignIndex(0); alignIndex<numAlign; ++alignIndex)
         {
             const SVCandidateAssemblyData::JumpAlignmentResultType align(adata.alignments[alignIndex]);
-            infotags.push_back( str(boost::format("CTG_JALIGN_%i_POS_A=%alignIndex") %
+            infotags.push_back( str(boost::format("CTG_JALIGN_%i_POS_A=%d") %
                                     alignIndex %
                                     (bp1.interval.range.begin_pos()+align.align1.alignStart)) );
-            infotags.push_back( str(boost::format("CTG_JALIGN_%i_POS_B=%alignIndex") %
+            infotags.push_back( str(boost::format("CTG_JALIGN_%i_POS_B=%d") %
                                     alignIndex %
                                     (bp2.interval.range.begin_pos()+align.align2.alignStart)) );
 
