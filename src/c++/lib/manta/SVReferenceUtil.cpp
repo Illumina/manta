@@ -31,12 +31,17 @@ getIntervalReferenceSegment(
 {
     const bam_header_info::chrom_info& chromInfo(header.chrom_data[interval.tid]);
     const std::string& chrom(chromInfo.label);
+
     const pos_t beginPos(std::max(0, (interval.range.begin_pos()-extraRefEdgeSize)));
     const pos_t endPos(std::min(static_cast<pos_t>(chromInfo.length), (interval.range.end_pos()+extraRefEdgeSize)));
 
     // get REF
     intervalRef.set_offset(beginPos);
-    get_standardized_region_seq(referenceFilename,chrom,beginPos,endPos,intervalRef.seq());
+
+    // note: begin and end pos follow Manta's closed-open interval conventions (a la bedtools,
+    // but the ref function below takes closed-closed endpoints, so we subract one from endPos
+    get_standardized_region_seq(referenceFilename,chrom,beginPos,(endPos-1),intervalRef.seq());
+
     assert(static_cast<pos_t>(intervalRef.seq().size()) == (endPos-beginPos));
 }
 

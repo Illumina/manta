@@ -56,8 +56,8 @@ get_region_seq(
 
 /// get reference sequence from decomposed region and run standardization result
 ///
-/// \param begin_pos begin position (zero-indexed)
-/// \param end_pos end position (zero-indexed)
+/// \param begin_pos begin position (zero-indexed, closed)
+/// \param end_pos end position (zero-indexed, closed)
 void
 get_standardized_region_seq(
     const std::string& ref_file,
