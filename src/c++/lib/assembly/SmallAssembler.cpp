@@ -55,7 +55,7 @@ addBase(const std::string& contig,
         const bool isEnd)
 {
     if (isEnd) return contig + base;
-    else      return base + contig;
+    else       return base + contig;
 }
 
 
@@ -76,7 +76,7 @@ getEnd(const std::string& contig,
     assert(length <= csize);
 
     if (isEnd) return contig.substr((csize-length),length);
-    else      return contig.substr(0,length);
+    else       return contig.substr(0,length);
 }
 
 
@@ -125,13 +125,11 @@ walk(const SmallAssemblerOptions& opt,
 
             seenBefore.insert(tmp);
 
-            static const std::string ALPHABET("ACGT");
-
             unsigned maxBaseCount(0);
             unsigned totalBaseCount(0);
-            char maxBase(ALPHABET[0]);
+            char maxBase(opt.alphabet[0]);
 
-            BOOST_FOREACH(const char symbol, ALPHABET)
+            BOOST_FOREACH(const char symbol, opt.alphabet)
             {
                 const std::string newKey(addBase(tmp, symbol, isEnd));
 #ifdef DEBUG_ASBL
@@ -182,6 +180,7 @@ walk(const SmallAssemblerOptions& opt,
 
 
 
+static
 bool
 buildContigs(
     const SmallAssemblerOptions& opt,
@@ -346,15 +345,22 @@ runSmallAssembler(
     dbg_os << "SmallAssember: Starting assembly with " << reads.size() << " read.\n";
 #endif
 
+    assert(opt.alphabet.size()>1);
+
     assembledReadInfo.clear();
     contigs.clear();
 
     assembledReadInfo.resize(reads.size());
 
+    std::vector<unsigned> iterationUusedReads; ///< track unused reads at each iteration
+
     unsigned unusedReadsNow(reads.size());
-    for (unsigned iterations(0); iterations < opt.maxAssemblyIterations; ++iterations)
+
+    for (unsigned iteration(0); iteration < opt.maxAssemblyIterations; ++iteration)
     {
-        const unsigned unusedReadsPrev(unusedReadsNow);
+        if(unusedReadsNow < opt.minSeedReads) return;
+
+        iterationUusedReads.push_back(unusedReadsNow);
         for (unsigned wordLength(opt.minWordLength); wordLength<=opt.maxWordLength; wordLength+=2)
         {
             const bool isAssemblySuccess = buildContigs(opt, reads, assembledReadInfo, wordLength, contigs, unusedReadsNow);
@@ -362,10 +368,9 @@ runSmallAssembler(
         }
         //dbg_os << "iter: " << iteration << "unused readMap now: " << unusedReadsNow << " unused readMap previous: " << unusedReadsPrev << "\n";
 
-        if (unusedReadsNow == 0) return;
-
-        // stop if no change in number of unused reads
-        if (unusedReadsNow == unusedReadsPrev) return;
+        // stop if no change in number of unused reads for last unusedLookback iterations:
+        static const unsigned unusedLookback(4);
+        if ( (iteration>=unusedLookback) && (unusedReadsNow == iterationUusedReads[(iteration-unusedLookback)])) return;
     }
 #ifdef DEBUG_ASBL
     dbg_os << "SmallAssembler: Reached max number of assembly iterations: " << opt.maxAssemblyIterations << "\n";
