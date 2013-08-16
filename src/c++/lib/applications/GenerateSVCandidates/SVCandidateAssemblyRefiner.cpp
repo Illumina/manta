@@ -148,7 +148,7 @@ getCandidateAssemblyData(
         // QC contig prior to alignment:
         if (contig.seq.size() < minContigLen) continue;
 
-        JumpAlignmentResult<int> alignment(adata.alignments[contigIndex]);
+        JumpAlignmentResult<int>& alignment(adata.alignments[contigIndex]);
 
         _aligner.align(
                 contig.seq.begin(), contig.seq.end(),
