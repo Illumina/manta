@@ -126,7 +126,7 @@ runGSC(
         {
             // find number, type and breakend range of SVs on this edge:
             svFind.findCandidateSV(edge,svData,svs);
-            for(unsigned svIndex(0); svIndex<svs.size(); ++svIndex)
+            for (unsigned svIndex(0); svIndex<svs.size(); ++svIndex)
             {
                 const SVCandidate& sv(svs[svIndex]);
 

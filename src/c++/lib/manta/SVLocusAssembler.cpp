@@ -90,9 +90,9 @@ getBreakendReads(
 
         static const unsigned MAX_NUM_READS(1000);
 
-		while (bamStream.next() && (reads.size() < MAX_NUM_READS))
-		{
-			const bam_record& bamRead(*(bamStream.get_record_ptr()));
+        while (bamStream.next() && (reads.size() < MAX_NUM_READS))
+        {
+            const bam_record& bamRead(*(bamStream.get_record_ptr()));
 
             // FIXME: add some criteria to filter for "interesting" reads here, for now we add
             // only clipped reads and reads without N
@@ -121,11 +121,11 @@ getBreakendReads(
                 // to reverse complement here
                 readIndex.insert(std::make_pair(readKey,reads.size()));
                 reads.push_back(bamRead.get_bam_read().get_string());
-                if(isReversed) reverseCompStr(reads.back());
+                if (isReversed) reverseCompStr(reads.back());
             }
             else
             {
-                log_os << "WARNING : Read name collision : " << readKey << "\n"; 
+                log_os << "WARNING : Read name collision : " << readKey << "\n";
             }
         }
     }

@@ -890,9 +890,9 @@ apath_clean_seqinfo(path_t& apath)
     for (unsigned i(0); i<as; ++i)
     {
         const path_segment& ps(apath[i]);
-        if(is_segment_align_match(ps.type))
+        if (is_segment_align_match(ps.type))
         {
-            if(is_match)
+            if (is_match)
             {
                 apath2.back().length += ps.length;
             }

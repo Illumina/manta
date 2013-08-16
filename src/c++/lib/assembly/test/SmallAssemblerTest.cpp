@@ -46,10 +46,10 @@ BOOST_AUTO_TEST_CASE( test_SmallAssembler1 )
     Assembly contigs;
 
     runSmallAssembler(assembleOpt, reads, readInfo, contigs);
-    
+
     BOOST_REQUIRE_EQUAL(contigs.size(),1u);
     BOOST_REQUIRE_EQUAL(contigs[0].seq,"GTGTATTACCTAGTAC");
-    for(unsigned i(0);i<4;++i)
+    for (unsigned i(0); i<4; ++i)
     {
         BOOST_REQUIRE(readInfo[i].isUsed);
         BOOST_REQUIRE_EQUAL(readInfo[i].contigId,0u);

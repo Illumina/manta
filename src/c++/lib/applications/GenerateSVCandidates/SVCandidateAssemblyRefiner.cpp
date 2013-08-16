@@ -86,7 +86,7 @@ getCandidateAssemblyData(
     adata.clear();
 
     // filter out simple single region breakends for now:
-    if(! (isSimpleBreakend(sv.bp1.state) && isSimpleBreakend(sv.bp1.state))) return;
+    if (! (isSimpleBreakend(sv.bp1.state) && isSimpleBreakend(sv.bp1.state))) return;
 
     //
     // based on sv candidate, we classify the expected relationship between the contig and the sv breakends:
@@ -96,14 +96,14 @@ getCandidateAssemblyData(
     bool isBp1Reversed(false); ///< should all bp1 reads be reversed for the contig to assemble correctly?
     bool isBp2Reversed(false); ///< should all bp2 reads be reversed for the contig to assemble correctly?
 
-    if(sv.bp1.state != sv.bp2.state)
+    if (sv.bp1.state != sv.bp2.state)
     {
         // if there's one right-open breakend and one left-open breakend, no matter the bp1/bp2 chromosome and
         // relative bp1/bp2 order etc. we:
         // 1. don't need to do any read/reference reversals
         // 2. always treat the right-open breakend as the first alignment region in order:
         //
-        if(sv.bp2.state == SVBreakendState::RIGHT_OPEN)
+        if (sv.bp2.state == SVBreakendState::RIGHT_OPEN)
         {
             isBp2AlignedFirst = true;
         }
@@ -116,7 +116,7 @@ getCandidateAssemblyData(
         // 3. Treat the un-reversed RIGHT_OPEN or reversed LEFT_OPEN as the first alignment region in order
         //      Note that in the scheme below, we chose which bp to reverse so that no-reordering is required
         //
-        if(sv.bp1.state == SVBreakendState::RIGHT_OPEN)
+        if (sv.bp1.state == SVBreakendState::RIGHT_OPEN)
         {
             isBp2Reversed = true;
         }
@@ -144,16 +144,16 @@ getCandidateAssemblyData(
     const std::string* align1RefStrPtr(&bp1ref.seq());
     const std::string* align2RefStrPtr(&bp2ref.seq());
 
-    if(isBp1Reversed) reverseCompStr(bp1ref.seq());
-    if(isBp2Reversed) reverseCompStr(bp2ref.seq());
+    if (isBp1Reversed) reverseCompStr(bp1ref.seq());
+    if (isBp2Reversed) reverseCompStr(bp2ref.seq());
 
-    if(isBp2AlignedFirst) std::swap(align1RefStrPtr, align2RefStrPtr);
+    if (isBp2AlignedFirst) std::swap(align1RefStrPtr, align2RefStrPtr);
 
     const unsigned contigCount(adata.contigs.size());
 
 #ifdef DEBUG_REFINER
     log_os << "contigCount: " << contigCount << "\n";
-    for(unsigned contigIndex(0);contigIndex<contigCount; ++contigIndex)
+    for (unsigned contigIndex(0); contigIndex<contigCount; ++contigIndex)
     {
         const AssembledContig& contig(adata.contigs[contigIndex]);
         log_os << "cid: " << contigIndex << " contig: " << contig;
@@ -166,7 +166,7 @@ getCandidateAssemblyData(
     bool isHighScore(false);
     unsigned highScoreIndex(0);
 
-    for(unsigned contigIndex(0);contigIndex<contigCount; ++contigIndex)
+    for (unsigned contigIndex(0); contigIndex<contigCount; ++contigIndex)
     {
         const AssembledContig& contig(adata.contigs[contigIndex]);
 
@@ -176,10 +176,10 @@ getCandidateAssemblyData(
         JumpAlignmentResult<int>& alignment(adata.alignments[contigIndex]);
 
         _aligner.align(
-                contig.seq.begin(), contig.seq.end(),
-                align1RefStrPtr->begin(), align1RefStrPtr->end(),
-                align2RefStrPtr->begin(), align2RefStrPtr->end(),
-                alignment);
+            contig.seq.begin(), contig.seq.end(),
+            align1RefStrPtr->begin(), align1RefStrPtr->end(),
+            align2RefStrPtr->begin(), align2RefStrPtr->end(),
+            alignment);
 
 #ifdef DEBUG_REFINER
         log_os << "cid: " << contigIndex << " alignment: " << alignment;
@@ -191,9 +191,9 @@ getCandidateAssemblyData(
         const bool isAlignment2Good(alignment.align2.isAligned() && (apath_ref_length(alignment.align2.apath) >= minAlignRefSpan));
         const bool isAlignmentGood(isAlignment1Good && isAlignment2Good);
 
-        if(! isAlignmentGood) continue;
+        if (! isAlignmentGood) continue;
 
-        if((! isHighScore) || (alignment.score > adata.alignments[highScoreIndex].score))
+        if ((! isHighScore) || (alignment.score > adata.alignments[highScoreIndex].score))
         {
             isHighScore = true;
             highScoreIndex=contigIndex;
@@ -206,7 +206,7 @@ getCandidateAssemblyData(
 
 
     // ok, passed QC -- mark the high-scoring alignment as usable for hypothesis refinement:
-    if(isHighScore)
+    if (isHighScore)
     {
         adata.isBestAlignment = true;
         adata.bestAlignmentIndex = highScoreIndex;
@@ -224,7 +224,7 @@ getCandidateAssemblyData(
         Alignment* bp1AlignPtr(&bestAlignCopy.align1);
         Alignment* bp2AlignPtr(&bestAlignCopy.align2);
 
-        if(isBp2AlignedFirst) std::swap(bp1AlignPtr, bp2AlignPtr);
+        if (isBp2AlignedFirst) std::swap(bp1AlignPtr, bp2AlignPtr);
 
         adata.sv = sv;
 

@@ -32,7 +32,8 @@ struct GSCOptions
         binCount(1),
         binIndex(0),
         isLocusIndex(false),
-        locusIndex(0)
+        locusIndex(0),
+        isSkipAssembly(false)
     {}
 
     ReadScannerOptions scanOpt;
@@ -51,9 +52,10 @@ struct GSCOptions
     unsigned binCount;
     unsigned binIndex;
 
-    bool isLocusIndex;
+    bool isLocusIndex; ///< if true, generate candidates for a specific SVgraph locus only
     unsigned locusIndex;
 
+    bool isSkipAssembly; ///< if true, skip assembly and run a low-resolution, breakdancer-like subset of the workflow
 };
 
 

@@ -87,9 +87,12 @@ estimateBreakPointPos(const Alignment& al, const unsigned refOffset)
         return breakPointPosEstimate;
     }
 
-    if (prefAlLen) {
+    if (prefAlLen)
+    {
         breakPointPosEstimate = refOffset + al.beginPos /*+ prefAlLen*/;
-    } else if (suffAlLen) {
+    }
+    else if (suffAlLen)
+    {
         breakPointPosEstimate = refOffset + alignEnd(al) /*- suffAlLen*/;
     }
 
@@ -105,18 +108,23 @@ estimateBreakPointPos(const Alignment& al, const unsigned refOffset)
 ///
 static
 double
-log1p_switch(const double x) {
+log1p_switch(const double x)
+{
     // better number??
     static const double smallx_thresh(0.01);
-    if (std::abs(x)<smallx_thresh) {
+    if (std::abs(x)<smallx_thresh)
+    {
         return log1p(x);
-    } else {
+    }
+    else
+    {
         return std::log(1+x);
     }
 }
 
 static
-double convertPhredToProbError(int qv) {
+double convertPhredToProbError(int qv)
+{
     return std::min(1.,std::pow(10.,(-static_cast<double>(qv)/10.)));
 }
 
@@ -124,13 +132,15 @@ double convertPhredToProbError(int qv) {
 
 ReadScorer::
 ReadScorer()
-    : _qmin(phredScoreOffset) {
+    : _qmin(phredScoreOffset)
+{
 
 #ifdef DEBUG_SU
     std::cout << "Filling logpcorrectratio table" << std::endl;
 #endif
     _logpcorrectratio[_qmin] = 0;
-    for (int i(_qmin+1); i<MAX_Q; ++i) {
+    for (int i(_qmin+1); i<MAX_Q; ++i)
+    {
         const double eprob(convertPhredToProbError(i-phredScoreOffset));
 #ifdef DEBUG_SU
         std::cout << "i=" << i << " " << log1p_switch(-eprob) << " " << std::log(eprob/3.) << std::endl;
@@ -140,7 +150,8 @@ ReadScorer()
 
 #ifdef DEBUG_SU
     std::cout << "Readscorer dumping _logpcorrectratio : " << std::endl;
-    for (int i(_qmin); i<MAX_Q; ++i) {
+    for (int i(_qmin); i<MAX_Q; ++i)
+    {
         std::cout << "_logpcorrectratio[" <<  i << "] = " << _logpcorrectratio[i] << std::endl;
     }
 #endif
@@ -150,20 +161,21 @@ ReadScorer()
 
 double
 ReadScorer::
-getSemiAlignedMetric(const std::string& matchDescriptor, const std::string& qualities) {
+getSemiAlignedMetric(const std::string& matchDescriptor, const std::string& qualities)
+{
 
     int posInRead = 0;
     int tmp = 0;
     double alignScore(0.);
     bool inGap(false);
 
-/*    if (!isValidQualString(qualityString)) {
-#ifdef DEBUG_SU
-        std::cout << "!isValidQualString(qualityString)" << std::endl;
-#endif
-        return alignScore;
-    }
-*/
+    /*    if (!isValidQualString(qualityString)) {
+    #ifdef DEBUG_SU
+            std::cout << "!isValidQualString(qualityString)" << std::endl;
+    #endif
+            return alignScore;
+        }
+    */
 
 #ifdef DEBUG_SU
     std::cout << "getAlignmentScore type=" << matchDescriptor << std::endl;
@@ -190,7 +202,8 @@ getSemiAlignedMetric(const std::string& matchDescriptor, const std::string& qual
             tmp=0;
             // Bases in gap -> dels : ignoring for scoring purposes
             //                        & do not advance the read position.
-            if (!inGap) {
+            if (!inGap)
+            {
                 // mismatch
 #ifdef DEBUG_SU
                 std::cerr << "getAlignmentScore: " << posInRead << " " << _logpcorrectratio[static_cast<int>(qualities[posInRead])]
@@ -199,24 +212,32 @@ getSemiAlignedMetric(const std::string& matchDescriptor, const std::string& qual
                 alignScore +=  _logpcorrectratio[static_cast<int>(qualities[posInRead])];
                 ++posInRead;
             }
-        } else if (matchDescriptor[i] == 'N') {
+        }
+        else if (matchDescriptor[i] == 'N')
+        {
             posInRead += tmp;
             tmp=0;
             // what should N in the reference be?? for now it counts as a match
             ++posInRead;
-        } else if (matchDescriptor[i]=='^') {
+        }
+        else if (matchDescriptor[i]=='^')
+        {
             posInRead += tmp;
             tmp=0;
             inGap = true;
-        } else if (matchDescriptor[i] == '$') {
+        }
+        else if (matchDescriptor[i] == '$')
+        {
             // If tmp is non-zero here, it indicates an insertion.
             // FIXME : probably should update score using open & extend penalties.
             // Currently just advancing the read position.
             posInRead += tmp;
             tmp=0;
             inGap = false;
-        } else {
-        	// this
+        }
+        else
+        {
+            // this
             assert(!"ERROR: Unexpected match descriptor!");
         }
     }

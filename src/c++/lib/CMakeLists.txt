@@ -32,7 +32,7 @@ set (MANTA_ALL_LIBRARIES blt_util common options assembly alignment format svgra
 set (MANTA_AVAILABLE_LIBRARIES "")
 foreach (MANTA_LIB_DIR ${MANTA_ALL_LIBRARIES})
     add_subdirectory(${MANTA_LIB_DIR})
-    
+
     set(MANTA_AVAILABLE_LIBRARIES manta_${MANTA_LIB_DIR} ${MANTA_AVAILABLE_LIBRARIES})
 endforeach ()
 

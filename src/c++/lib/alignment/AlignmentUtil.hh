@@ -45,7 +45,7 @@ getAlignBeginOffset(
     const unsigned refSize,
     const bool isReversed)
 {
-    if(isReversed)
+    if (isReversed)
     {
         return (refSize - alignEnd(align));
     }
@@ -65,7 +65,7 @@ getAlignEndOffset(
     const unsigned refSize,
     const bool isReversed)
 {
-    if(isReversed)
+    if (isReversed)
     {
         return (refSize - align.beginPos);
     }
@@ -102,26 +102,28 @@ estimateBreakPointPos(const Alignment& al, const unsigned refOffset);
 
 
 
-struct ReadScorer : private boost::noncopyable {
+struct ReadScorer : private boost::noncopyable
+{
 
-	/** Instance getter
-	 *
-	*/
-	static const ReadScorer& get() {
-		static const ReadScorer rs;
-		return rs;
-	}
+    /** Instance getter
+     *
+    */
+    static const ReadScorer& get()
+    {
+        static const ReadScorer rs;
+        return rs;
+    }
 
 
-	double
-	getSemiAlignedMetric(const std::string& matchDescriptor, const std::string& qualities);
+    double
+    getSemiAlignedMetric(const std::string& matchDescriptor, const std::string& qualities);
 
 private:
-	explicit
-	ReadScorer();
-	~ReadScorer() {}
+    explicit
+    ReadScorer();
+    ~ReadScorer() {}
 
-	enum { MAX_Q = 128 };
-	const int _qmin;
-	double _logpcorrectratio[MAX_Q];
+    enum { MAX_Q = 128 };
+    const int _qmin;
+    double _logpcorrectratio[MAX_Q];
 };

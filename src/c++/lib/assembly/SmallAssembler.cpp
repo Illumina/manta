@@ -54,7 +54,7 @@ addBase(const std::string& contig,
         const char base,
         const bool isEnd)
 {
-    if(isEnd) return contig + base;
+    if (isEnd) return contig + base;
     else      return base + contig;
 }
 
@@ -75,7 +75,7 @@ getEnd(const std::string& contig,
     const unsigned csize(contig.size());
     assert(length <= csize);
 
-    if(isEnd) return contig.substr((csize-length),length);
+    if (isEnd) return contig.substr((csize-length),length);
     else      return contig.substr(0,length);
 }
 
@@ -138,7 +138,7 @@ walk(const SmallAssemblerOptions& opt,
                 dbg_os << "Extending end : base " << symbol << " " << newKey << "\n";
 #endif
                 const str_uint_map_t::const_iterator wordCountIter(wordCount.find(newKey));
-                if(wordCountIter == wordCountEnd) continue;
+                if (wordCountIter == wordCountEnd) continue;
 
                 const unsigned val(wordCountIter->second);
                 totalBaseCount += val;
@@ -164,7 +164,7 @@ walk(const SmallAssemblerOptions& opt,
             }
 
             /// double check that word exists in reads at least once:
-            if(maxBaseCount == 0) break;
+            if (maxBaseCount == 0) break;
 
 #ifdef DEBUG_ASBL
             dbg_os << "Adding base " << contig << " " << maxBase << " " << mode << "\n";
@@ -223,7 +223,7 @@ buildContigs(
         const unsigned readLen(seq.size());
 
         // this read is unusable for assembly:
-        if(readLen < wordLength) continue;
+        if (readLen < wordLength) continue;
 
         str_uint_map_t& readWordOffset(readWordOffsets[readIndex]);
 
@@ -305,7 +305,7 @@ buildContigs(
         const str_uint_map_t& readWordOffset(readWordOffsets[readIndex]);
         AssemblyReadInfo& rinfo(readInfo[readIndex]);
 
-        if(rinfo.isUsed) continue;
+        if (rinfo.isUsed) continue;
 
         // store all reads sharing k-mers of the current word length with the contig
         // TODO: check if we still needs this
@@ -314,7 +314,7 @@ buildContigs(
             const std::string word(contig.seq.substr(j,wordLength));
             //cout << "Testing word " << word << " " << readNum << "\n";
             //cout << "with counts : " << wordCount[word] << "\n";
-            if(readWordOffset.count(word))
+            if (readWordOffset.count(word))
             {
                 rinfo.isUsed = true;
                 rinfo.contigId = contigs.size();
@@ -352,7 +352,7 @@ runSmallAssembler(
     assembledReadInfo.resize(reads.size());
 
     unsigned unusedReadsNow(reads.size());
-    for(unsigned iterations(0); iterations < opt.maxAssemblyIterations; ++iterations)
+    for (unsigned iterations(0); iterations < opt.maxAssemblyIterations; ++iterations)
     {
         const unsigned unusedReadsPrev(unusedReadsNow);
         for (unsigned wordLength(opt.minWordLength); wordLength<=opt.maxWordLength; wordLength+=2)
