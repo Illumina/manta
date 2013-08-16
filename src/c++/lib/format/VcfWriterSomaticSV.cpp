@@ -83,10 +83,10 @@ modifyInfo(
             const SVCandidateAssemblyData::JumpAlignmentResultType align(adata.alignments[alignIndex]);
             infotags.push_back( str(boost::format("CTG_JALIGN_%i_POS_A=%d") %
                                     alignIndex %
-                                    (bp1.interval.range.begin_pos()+align.align1.alignStart)) );
+                                    (bp1.interval.range.begin_pos()+align.align1.beginPos)) );
             infotags.push_back( str(boost::format("CTG_JALIGN_%i_POS_B=%d") %
                                     alignIndex %
-                                    (bp2.interval.range.begin_pos()+align.align2.alignStart)) );
+                                    (bp2.interval.range.begin_pos()+align.align2.beginPos)) );
 
             apath_to_cigar(align.align1.apath,cigar1);
             apath_to_cigar(align.align2.apath,cigar2);

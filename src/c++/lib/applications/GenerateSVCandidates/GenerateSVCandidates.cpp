@@ -133,12 +133,14 @@ runGSC(
                 SVCandidateAssemblyData adata;
                 svRefine.getCandidateAssemblyData(sv,svData,adata);
 
-                candWriter.writeSV(edge, svData, adata, svIndex, sv);
+                const SVCandidate& submitSV(adata.isBestAlignment ? adata.sv : sv);
+
+                candWriter.writeSV(edge, svData, adata, svIndex, submitSV);
 
                 if (isSomatic)
                 {
-                    svScore.scoreSomaticSV(svData, svIndex, sv, ssInfo);
-                    somWriter.writeSV(edge, svData, adata, svIndex, sv, ssInfo);
+                    svScore.scoreSomaticSV(svData, svIndex, submitSV, ssInfo);
+                    somWriter.writeSV(edge, svData, adata, svIndex, submitSV, ssInfo);
                 }
             }
         }

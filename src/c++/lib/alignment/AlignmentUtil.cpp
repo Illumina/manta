@@ -88,7 +88,7 @@ estimateBreakPointPos(const Alignment& al, const unsigned refOffset)
     }
 
     if (prefAlLen) {
-        breakPointPosEstimate = refOffset + al.alignStart /*+ prefAlLen*/;
+        breakPointPosEstimate = refOffset + al.beginPos /*+ prefAlLen*/;
     } else if (suffAlLen) {
         breakPointPosEstimate = refOffset + alignEnd(al) /*- suffAlLen*/;
     }

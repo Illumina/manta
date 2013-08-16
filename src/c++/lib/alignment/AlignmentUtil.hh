@@ -29,11 +29,52 @@ const double invlog10(1./(std::log(10.)));
 const int phredScoreOffset = 33;
 
 inline
-unsigned
+pos_t
 alignEnd(const Alignment& align)
 {
-    return (align.alignStart + ALIGNPATH::apath_ref_length(align.apath));
+    return (align.beginPos + ALIGNPATH::apath_ref_length(align.apath));
 }
+
+
+/// get begin position of alignment, accounting for a possibly reversed reference/alignment:
+///
+inline
+pos_t
+getAlignBeginOffset(
+    const Alignment& align,
+    const unsigned refSize,
+    const bool isReversed)
+{
+    if(isReversed)
+    {
+        return (refSize - alignEnd(align));
+    }
+    else
+    {
+        return align.beginPos;
+    }
+}
+
+
+/// get end position of alignment, accounting for a possibly reversed reference/alignment:
+///
+inline
+pos_t
+getAlignEndOffset(
+    const Alignment& align,
+    const unsigned refSize,
+    const bool isReversed)
+{
+    if(isReversed)
+    {
+        return (refSize - align.beginPos);
+    }
+    else
+    {
+        return alignEnd(align);
+    }
+}
+
 
 /// tests if prefix of aligned sequence matches target, returns length of alignment (zero if no match)
 unsigned

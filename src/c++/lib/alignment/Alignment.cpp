@@ -19,7 +19,7 @@
 std::ostream&
 operator<<(std::ostream& os, const Alignment& align)
 {
-    os << "start: " << align.alignStart << " cigar: " << apath_to_cigar(align.apath);
+    os << "start: " << align.beginPos << " cigar: " << apath_to_cigar(align.apath);
     return os;
 }
 

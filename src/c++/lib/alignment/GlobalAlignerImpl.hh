@@ -154,8 +154,8 @@ align(
                 const ScoreType thisMax(sval.match);
                 if (bt.isInit && (thisMax<=bt.max)) continue;
                 bt.max=thisMax;
-                bt.refStart=refIndex+1;
-                bt.queryStart=querySize;
+                bt.refBegin=refIndex+1;
+                bt.queryBegin=querySize;
                 bt.isInit=true;
             }
         }
@@ -168,19 +168,19 @@ align(
         const ScoreType thisMax(sval.match + (querySize-queryIndex) * _scores.offEdge);
         if (bt.isInit && (thisMax<=bt.max)) continue;
         bt.max=thisMax;
-        bt.refStart=refSize;
-        bt.queryStart=queryIndex;
+        bt.refBegin=refSize;
+        bt.queryBegin=queryIndex;
         bt.isInit=true;
     }
 
     assert(bt.isInit);
-    assert(bt.refStart <= refSize);
-    assert(bt.queryStart <= querySize);
+    assert(bt.refBegin <= refSize);
+    assert(bt.queryBegin <= querySize);
 
     result.score = bt.max;
 
 #ifdef ALN_DEBUG
-    log_os << "bt-start queryIndex: " << queryStart << " refIndex: " << refStart << " state: " << AlignState::label(bt.state) << " maxScore: " << max << "\n";
+    log_os << "bt-start queryIndex: " << queryBegin << " refIndex: " << refBegin << " state: " << AlignState::label(bt.state) << " maxScore: " << max << "\n";
 #endif
 
     // traceback:
@@ -188,31 +188,31 @@ align(
     ALIGNPATH::path_segment ps;
 
     // add any trailing soft-clip if we go off the end of the reference:
-    if (bt.queryStart < querySize)
+    if (bt.queryBegin < querySize)
     {
         ps.type = ALIGNPATH::SOFT_CLIP;
-        ps.length = (querySize-bt.queryStart);
+        ps.length = (querySize-bt.queryBegin);
     }
 
-    while ((bt.queryStart>0) && (bt.refStart>0))
+    while ((bt.queryBegin>0) && (bt.refBegin>0))
     {
-        const AlignState::index_t nextMatrix(static_cast<AlignState::index_t>(_ptrMat.val(bt.queryStart,bt.refStart).get(bt.state)));
+        const AlignState::index_t nextMatrix(static_cast<AlignState::index_t>(_ptrMat.val(bt.queryBegin,bt.refBegin).get(bt.state)));
 
         if (bt.state==AlignState::MATCH)
         {
             AlignerUtil::updatePath(apath,ps,ALIGNPATH::MATCH);
-            bt.queryStart--;
-            bt.refStart--;
+            bt.queryBegin--;
+            bt.refBegin--;
         }
         else if (bt.state==AlignState::DELETE)
         {
             AlignerUtil::updatePath(apath,ps,ALIGNPATH::DELETE);
-            bt.refStart--;
+            bt.refBegin--;
         }
         else if (bt.state==AlignState::INSERT)
         {
             AlignerUtil::updatePath(apath,ps,ALIGNPATH::INSERT);
-            bt.queryStart--;
+            bt.queryBegin--;
         }
         else
         {
@@ -225,14 +225,14 @@ align(
     if (ps.type != ALIGNPATH::NONE) apath.push_back(ps);
 
     // soft-clip beginning of read if we fall off the end of the reference
-    if (bt.queryStart!=0)
+    if (bt.queryBegin!=0)
     {
         ps.type = ALIGNPATH::SOFT_CLIP;
-        ps.length = bt.queryStart;
+        ps.length = bt.queryBegin;
         apath.push_back(ps);
     }
 
-    result.align.alignStart = bt.refStart;
+    result.align.beginPos = bt.refBegin;
     std::reverse(apath.begin(),apath.end());
 }
 

@@ -33,6 +33,29 @@
 #endif
 
 
+/// process assembly/align info into simple reference coordinates that can be reported in the output vcf:
+static
+void
+adjustAssembledBreakend(
+    const Alignment& align,
+    const reference_contig_segment& ref,
+    const bool isReversed,
+    SVBreakend& bp)
+{
+    const pos_t bpBeginOffset(getAlignBeginOffset(align, ref.seq().size(), isReversed));
+    const pos_t bpEndOffset(getAlignEndOffset(align, ref.seq().size(), isReversed));
+
+    const bool isBpAtAlignEnd(bp.state == SVBreakendState::RIGHT_OPEN);
+
+    const pos_t bpBreakendOffset(isBpAtAlignEnd ? bpEndOffset : bpBeginOffset);
+    const pos_t bpBreakendPos(ref.get_offset() + bpBreakendOffset);
+
+    known_pos_range2& range(bp.interval.range);
+    range.set_begin_pos(bpBreakendPos);
+    range.set_end_pos(bpBreakendPos);
+}
+
+
 
 SVCandidateAssemblyRefiner::
 SVCandidateAssemblyRefiner(
@@ -68,16 +91,17 @@ getCandidateAssemblyData(
     //
     // based on sv candidate, we classify the expected relationship between the contig and the sv breakends:
     //
-    bool isBp2AlignedFirst(false);
+    bool isBp2AlignedFirst(false); ///< should the contig on the fwd strand align bp2->bp1 (true) or bp1->bp2 (false)
 
-    bool isBp1Reversed(false);
-    bool isBp2Reversed(false);
+    bool isBp1Reversed(false); ///< should all bp1 reads be reversed for the contig to assemble correctly?
+    bool isBp2Reversed(false); ///< should all bp2 reads be reversed for the contig to assemble correctly?
 
     if(sv.bp1.state != sv.bp2.state)
     {
-        // if there's one right-open breakend and one left-open breakend, no matter the chromsome, order etc. we:
-        // 1. don't need to do any reversals
-        // 2. always treat the right open breakend as the first alignment region in order:
+        // if there's one right-open breakend and one left-open breakend, no matter the bp1/bp2 chromosome and
+        // relative bp1/bp2 order etc. we:
+        // 1. don't need to do any read/reference reversals
+        // 2. always treat the right-open breakend as the first alignment region in order:
         //
         if(sv.bp2.state == SVBreakendState::RIGHT_OPEN)
         {
@@ -86,10 +110,11 @@ getCandidateAssemblyData(
     }
     else
     {
-        // if both breakends open in the same direction, then:
+        // If both breakends open in the same direction, then:
         // 1. the reads from one breakend need to be reversed
         // 2. the reference from that same breakend needs to be reversed
-        // 3. Treat the unreversed RIGHT_OPEN or reversed LEFT_OPEN as the first alignment region in order
+        // 3. Treat the un-reversed RIGHT_OPEN or reversed LEFT_OPEN as the first alignment region in order
+        //      Note that in the scheme below, we chose which bp to reverse so that no-reordering is required
         //
         if(sv.bp1.state == SVBreakendState::RIGHT_OPEN)
         {
@@ -114,7 +139,7 @@ getCandidateAssemblyData(
     // don't align contigs shorter than this
     static const unsigned minContigLen(75);
 
-    reference_contig_segment bp1ref,bp2ref;
+    reference_contig_segment bp1ref, bp2ref;
     getSVReferenceSegments(_opt.referenceFilename, _header, extraRefEdgeSize, sv, bp1ref, bp2ref);
     const std::string* align1RefStrPtr(&bp1ref.seq());
     const std::string* align2RefStrPtr(&bp2ref.seq());
@@ -180,7 +205,7 @@ getCandidateAssemblyData(
     // TODO: min context, etc.
 
 
-    // ok, passed QC -- mark the high-scoring alignment as usable:
+    // ok, passed QC -- mark the high-scoring alignment as usable for hypothesis refinement:
     if(isHighScore)
     {
         adata.isBestAlignment = true;
@@ -189,34 +214,25 @@ getCandidateAssemblyData(
         log_os << "highscoreid: " << highScoreIndex << " alignment: " << adata.alignments[highScoreIndex];
 #endif
 
-        // process the alignment into information that's easily usable in the vcf output (ie. breakends in reference coordinates)
-#if 0
-        SVCandidateAssemblyData::JumpAlignmentResultType& bestAlign(adata.alignments[adata.bestAlignmentIndex]);
+        // process the alignment into information that's easily usable in the vcf output
+        // (ie. breakends in reference coordinates)
+
+        // copy the best alignment so that we can revese coordinates,etc:
+        SVCandidateAssemblyData::JumpAlignmentResultType bestAlignCopy(adata.alignments[adata.bestAlignmentIndex]);
 
         // first get each alignment associated with the correct breakend:
-        Alignment* bp1AlignPtr(&bestAlign.align1);
-        Alignment* bp2AlignPtr(&bestAlign.align2);
-
-
-        // un-reverse alignments:
-        if(isBp1Reversed)
-        {
-            std::reverse(bpAlignPtr)
-        }
+        Alignment* bp1AlignPtr(&bestAlignCopy.align1);
+        Alignment* bp2AlignPtr(&bestAlignCopy.align2);
 
         if(isBp2AlignedFirst) std::swap(bp1AlignPtr, bp2AlignPtr);
 
-        const pos_t align1StartPos(static_cast<pos_t>(bp1AlignPtr->alignStart));
-        const pos_t align1EndPos(static_cast<pos_t>(alignEnd(&bp1AlignPtr)));
-
-        const bool isBp1AtAlignEnd(sv.bp1.state == SVBreakendState::RIGHT_OPEN);
-
         adata.sv = sv;
 
-        const pos_t bp1BreakendPos = bp1ref.get_offset() + bp1AlignPtr->;
+        adjustAssembledBreakend(*bp1AlignPtr,bp1ref,isBp1Reversed,adata.sv.bp1);
+        adjustAssembledBreakend(*bp2AlignPtr,bp2ref,isBp2Reversed,adata.sv.bp2);
 
-                + adata.alignments[adata.bestAlignmentIndex].align1.
-                adata.sv.bp1.interval.range.set_begin_pos()
+#ifdef DEBUG_REFINER
+        log_os << "highscore refined sv: " << adata.sv;
 #endif
     }
 }

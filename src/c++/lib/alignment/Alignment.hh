@@ -24,7 +24,7 @@ struct Alignment
     void
     clear()
     {
-        alignStart = 0;
+        beginPos = 0;
         apath.clear();
     }
 
@@ -32,10 +32,10 @@ struct Alignment
     isAligned()
     const
     {
-        return !apath.empty();
+        return (! apath.empty());
     }
 
-    unsigned alignStart;
+    pos_t beginPos;
     ALIGNPATH::path_t apath;
 };
 
