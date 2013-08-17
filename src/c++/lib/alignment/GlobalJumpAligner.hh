@@ -79,6 +79,21 @@ struct GlobalJumpAligner
         const SymIter ref2Begin, const SymIter ref2End,
         JumpAlignmentResult<ScoreType>& result) const;
 
+
+    /// read-only access to the aligner's scores:
+    const AlignmentScores<ScoreType>&
+    getScores() const
+    {
+        return _scores;
+    }
+
+    /// read-only access to the aligner's scores:
+    const ScoreType&
+    getJumpScore() const
+    {
+        return _jumpScore;
+    }
+
 private:
 
     static

@@ -73,6 +73,13 @@ struct GlobalAligner
         const SymIter refBegin, const SymIter refEnd,
         AlignmentResult<ScoreType>& result) const;
 
+    /// read-only access to the aligner's scores:
+    const AlignmentScores<ScoreType>&
+    getScores() const
+    {
+        return _scores;
+    }
+
 private:
 
     static
