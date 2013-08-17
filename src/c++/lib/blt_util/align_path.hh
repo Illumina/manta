@@ -208,12 +208,6 @@ typedef std::vector<path_segment> path_t;
 std::ostream& operator<<(std::ostream& os, const path_t& apath);
 
 void
-export_md_to_apath(const char* md,
-                   const bool is_fwd_strand,
-                   path_t& apath,
-                   const bool is_edge_deletion_error=true);
-
-void
 apath_to_cigar(const path_t& apath,
                std::string& cigar);
 
@@ -225,15 +219,6 @@ apath_to_cigar(const path_t& apath)
     apath_to_cigar(apath,cigar);
     return cigar;
 }
-
-void
-apath_to_export_md(path_t& apath,
-                   const char* ref_seq,
-                   const char* ref_end,
-                   const int32_t ref_pos,
-                   const std::string& read_bases,
-                   const bool is_fwd_strand,
-                   std::string& md);
 
 /// Convert cigar string into apath format
 ///
