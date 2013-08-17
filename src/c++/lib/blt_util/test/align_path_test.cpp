@@ -19,15 +19,33 @@
 BOOST_AUTO_TEST_SUITE( test_align_path )
 
 
-BOOST_AUTO_TEST_CASE( test_apath_clean_seqinfo )
+BOOST_AUTO_TEST_CASE( test_apath_clean_seqmatch )
 {
     const std::string testCigar("10M1D10=2X10=1D1M1=1=1X1=1X");
     ALIGNPATH::path_t testPath;
     cigar_to_apath(testCigar.c_str(), testPath);
 
-    apath_clean_seqinfo(testPath);
+    apath_clean_seqmatch(testPath);
 
     BOOST_REQUIRE_EQUAL(apath_to_cigar(testPath), "10M1D22M1D6M");
+}
+
+
+BOOST_AUTO_TEST_CASE( test_apath_add_seqmatch )
+{
+    static const std::string testRead("AABAXXXY");
+    static const std::string testRef ("AAAADXXXX");
+
+    static const std::string testCigar("4M1D4M");
+    ALIGNPATH::path_t testPath;
+    cigar_to_apath(testCigar.c_str(), testPath);
+
+    apath_add_seqmatch(
+            testRead.begin(), testRead.end(),
+            testRef.begin(), testRef.end(),
+            testPath);
+
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(testPath), "2=1X1=1D3=1X");
 }
 
 

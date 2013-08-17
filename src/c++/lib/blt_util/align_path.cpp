@@ -700,6 +700,24 @@ apath_insert_trail_size(const path_t& apath)
 
 
 void
+apath_append(
+    path_t& apath,
+    const align_t seg_type,
+    const unsigned length)
+{
+    if(apath.size() && apath.back().type == seg_type)
+    {
+        apath.back().length += length;
+    }
+    else
+    {
+        apath.push_back(path_segment(seg_type,length));
+    }
+}
+
+
+
+void
 apath_clip_clipper(path_t& apath,
                    unsigned& hc_lead,
                    unsigned& hc_trail,
@@ -882,7 +900,7 @@ apath_cleaner(path_t& apath)
 
 
 void
-apath_clean_seqinfo(path_t& apath)
+apath_clean_seqmatch(path_t& apath)
 {
     path_t apath2;
     bool is_match(false);
