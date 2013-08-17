@@ -25,7 +25,7 @@
 
 #include "boost/foreach.hpp"
 
-#define DEBUG_REFINER
+//#define DEBUG_REFINER
 
 #ifdef DEBUG_REFINER
 #include <iostream>
