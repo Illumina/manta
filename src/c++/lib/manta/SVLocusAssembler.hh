@@ -55,6 +55,12 @@ struct SVLocusAssembler
                         const bool isBp2Reversed,
                         Assembly& as) const;
 
+    const SmallAssemblerOptions&
+    getAssembleOpt() const
+    {
+        return _assembleOpt;
+    }
+
 private:
     typedef boost::shared_ptr<bam_streamer> streamPtr;
 

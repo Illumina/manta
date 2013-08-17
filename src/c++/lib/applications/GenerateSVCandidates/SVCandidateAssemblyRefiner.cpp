@@ -209,6 +209,48 @@ getCandidateAssemblyData(
 
     // set any additional QC steps before deciding an alignment is usable:
 
+    // find the fraction of optimal score:
+    {
+        // require min contig length even after off-reference clipping:
+        static const unsigned minNonClippedLength(_svAssembler.getAssembleOpt().minContigLength);
+
+        // require min fraction of optimal score:
+        static const float minScoreFrac(0.75);
+
+        const AssembledContig& hsContig(adata.contigs[highScoreIndex]);
+        const SVCandidateAssemblyData::JumpAlignmentResultType& hsAlign(adata.alignments[highScoreIndex]);
+
+        // first find the length of contig which did not clip off the end of the reference:
+        const unsigned clipSize(apath_soft_clip_lead_size(hsAlign.align1.apath) + apath_soft_clip_trail_size(hsAlign.align2.apath));
+
+        assert(hsContig.seq.size() >= clipSize);
+        const unsigned clippedContigSize(hsContig.seq.size() - clipSize);
+
+        if(clippedContigSize < minNonClippedLength)
+        {
+#ifdef DEBUG_REFINER
+            log_os << "Rejecting highest scoring contig. Aligned contig length after clipping is: " << clippedContigSize << " min size is: " << minNonClippedLength << "\n";
+#endif
+            return;
+        }
+
+        const int optimalScore(clippedContigSize * _aligner.getScores().match);
+        const int normalizedScore(hsAlign.score - _aligner.getJumpScore() - (clipSize * _aligner.getScores().offEdge));
+
+        assert(optimalScore>0);
+        assert(normalizedScore>0);
+
+        const float scoreFrac(static_cast<float>(normalizedScore)/static_cast<float>(optimalScore));
+
+        if(scoreFrac < minScoreFrac)
+        {
+#ifdef DEBUG_REFINER
+            log_os << "Rejecting highest scoring contig. Fraction of optimal alignment score is: " << scoreFrac << " minScoreFrac: " << minScoreFrac << "\n";
+#endif
+            return;
+        }
+    }
+
     // TODO: min context, etc.
 
 
@@ -225,18 +267,18 @@ getCandidateAssemblyData(
         // (ie. breakends in reference coordinates)
 
         // copy the best alignment so that we can revese coordinates,etc:
-        SVCandidateAssemblyData::JumpAlignmentResultType bestAlignCopy(adata.alignments[adata.bestAlignmentIndex]);
+        const SVCandidateAssemblyData::JumpAlignmentResultType& bestAlign(adata.alignments[adata.bestAlignmentIndex]);
 
         // first get each alignment associated with the correct breakend:
-        Alignment* bp1AlignPtr(&bestAlignCopy.align1);
-        Alignment* bp2AlignPtr(&bestAlignCopy.align2);
+        const Alignment* bp1AlignPtr(&bestAlign.align1);
+        const Alignment* bp2AlignPtr(&bestAlign.align2);
 
         if (isBp2AlignedFirst) std::swap(bp1AlignPtr, bp2AlignPtr);
 
         adata.sv = sv;
 
-        adjustAssembledBreakend(*bp1AlignPtr,bp1ref,isBp1Reversed,adata.sv.bp1);
-        adjustAssembledBreakend(*bp2AlignPtr,bp2ref,isBp2Reversed,adata.sv.bp2);
+        adjustAssembledBreakend(*bp1AlignPtr, bp1ref, isBp1Reversed, adata.sv.bp1);
+        adjustAssembledBreakend(*bp2AlignPtr, bp2ref, isBp2Reversed ,adata.sv.bp2);
 
 #ifdef DEBUG_REFINER
         log_os << "highscore refined sv: " << adata.sv;
