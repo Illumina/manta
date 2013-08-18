@@ -39,7 +39,7 @@ operator<<(std::ostream& os, const SVBreakend& svb)
 std::ostream&
 operator<<(std::ostream& os, const SVCandidate& svc)
 {
-    os << "SVCandidate:\n"
+    os << "SVCandidate: isImprecise?: " << svc.isImprecise() << "\n"
        << "\t" << svc.bp1 << "\n"
        << "\t" << svc.bp2 << "\n";
     return os;

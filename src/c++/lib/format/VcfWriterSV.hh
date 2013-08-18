@@ -93,10 +93,11 @@ protected:
 
 private:
 
+    /// \param[in] isBp1 if true report bp1, else report bp2
     void
     writeTransloc(
-        const SVBreakend& bp1,
-        const SVBreakend& bp2,
+        const SVCandidate& sv,
+        const bool isBp1,
         const std::string& idPrefix,
         const bool isFirstOfPair,
         const SVCandidateSetData& svData,

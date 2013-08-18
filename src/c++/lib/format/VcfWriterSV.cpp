@@ -19,6 +19,7 @@
 
 #include "blt_util/samtools_fasta_util.hh"
 #include "blt_util/string_util.hh"
+#include "blt_util/seq_util.hh"
 #include "blt_util/vcf_util.hh"
 
 #include <iostream>
@@ -54,11 +55,21 @@ writeHeaderPrefix(
     {
         _os << "##contig=<ID=" << cdata.label << ",length=" << cdata.length << ">\n";
     }
+
+    /// vcf 4.1 reserved/suggested INFO tags:
     _os << "##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description=\"Imprecise structural variation\">\n";
     _os << "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n";
     _os << "##INFO=<ID=CIPOS,Number=2,Type=Integer,Description=\"Confidence interval around POS for imprecise variants\">\n";
     _os << "##INFO=<ID=CIEND,Number=2,Type=Integer,Description=\"Confidence interval around END for imprecise variants\">\n";
     _os << "##INFO=<ID=MATEID,Number=.,Type=String,Description=\"ID of mate breakend\">\n";
+#if 0
+    _os << "##INFO=<ID=HOMLEN,Number=.,Type=Integer,Description=\"Length of base pair identical micro-homology at event breakpoints\">\n";
+    _os << "##INFO=<ID=HOMSEQ,Number=.,Type=String,Description=\"Sequence of base pair identical micro-homology at event breakpoints\">\n";
+#endif
+
+    /// custom INFO tags:
+    _os << "##INFO=<ID=SVINSLEN,Number=.,Type=Integer,Description=\"Length of micro-insertion at event breakpoints\">\n";
+    _os << "##INFO=<ID=SVINSSEQ,Number=.,Type=String,Description=\"Sequence of micro-insertion at event breakpoints\">\n";
     _os << "##INFO=<ID=PAIR_SUPPORT,Number=1,Type=Integer,Description=\"Read pairs supporting this variant where both reads are confidently mapped\">\n";
     _os << "##INFO=<ID=BND_PAIR_SUPPORT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at this breakend (mapping may not be confident at remote breakend)\">\n";
     _os << "##INFO=<ID=UPSTREAM_PAIR_SUPPORT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at the upstream breakend (mapping may not be confident at downstream breakend)\">\n";
@@ -108,25 +119,48 @@ makeInfoField(
 void
 VcfWriterSV::
 writeTransloc(
-    const SVBreakend& bp1,
-    const SVBreakend& bp2,
+    const SVCandidate& sv,
+    const bool isBp1,
     const std::string& idPrefix,
     const bool isFirstOfPair,
     const SVCandidateSetData& svData,
     const SVCandidateAssemblyData& adata)
 {
+    const bool isImprecise(sv.isImprecise());
+    const bool isBreakendRangeSameShift(sv.isBreakendRangeSameShift());
+
+    const SVBreakend& bpA( isBp1 ? sv.bp1 : sv.bp2);
+    const SVBreakend& bpB( isBp1 ? sv.bp2 : sv.bp1);
+
     std::vector<std::string> infotags;
 
     // get CHROM
-    const std::string& chrom(_header.chrom_data[bp1.interval.tid].label);
-    const std::string& mate_chrom(_header.chrom_data[bp2.interval.tid].label);
+    const std::string& chrom(_header.chrom_data[bpA.interval.tid].label);
+    const std::string& mateChrom(_header.chrom_data[bpB.interval.tid].label);
 
-    const known_pos_range2& bp1range(bp1.interval.range);
-    const known_pos_range2& bp2range(bp2.interval.range);
+    const known_pos_range2& bpArange(bpA.interval.range);
+    const known_pos_range2& bpBrange(bpB.interval.range);
+
+    if(! isImprecise)
+    {
+        assert(bpArange.size() == bpBrange.size());
+    }
 
     // get POS
-    const pos_t pos(bp1range.center_pos()+1);
-    const pos_t mate_pos(bp2range.center_pos()+1);
+    pos_t pos(bpArange.center_pos()+1);
+    pos_t matePos(bpBrange.center_pos()+1);
+    if (! isImprecise)
+    {
+        pos = bpArange.begin_pos()+1;
+        if(isBreakendRangeSameShift)
+        {
+            matePos = bpBrange.begin_pos()+1;
+        }
+        else
+        {
+            matePos = bpBrange.end_pos()+1;
+        }
+    }
 
     // get ID
     const std::string localId(idPrefix + (isFirstOfPair ? '0' : '1'));
@@ -143,49 +177,70 @@ writeTransloc(
     {
         std::string altPrefix;
         std::string altSuffix;
-        if     (bp1.state == SVBreakendState::RIGHT_OPEN)
+        if     (bpA.state == SVBreakendState::RIGHT_OPEN)
         {
-            altPrefix=ref;
+            altPrefix = ref + sv.insertSeq;
         }
-        else if (bp1.state == SVBreakendState::LEFT_OPEN)
+        else if (bpA.state == SVBreakendState::LEFT_OPEN)
         {
-            altSuffix=ref;
+            altSuffix = sv.insertSeq + ref;
         }
         else
         {
-            assert(! "Unexpected bp2.state");
+            assert(! "Unexpected bpA.state");
         }
 
 
         char altSep('?');
-        if     (bp2.state == SVBreakendState::RIGHT_OPEN)
+        if     (bpB.state == SVBreakendState::RIGHT_OPEN)
         {
             altSep=']';
         }
-        else if (bp2.state == SVBreakendState::LEFT_OPEN)
+        else if (bpB.state == SVBreakendState::LEFT_OPEN)
         {
             altSep='[';
         }
         else
         {
-            assert(! "Unexpected bp2.state");
+            assert(! "Unexpected bpB.state");
         }
 
-        altFormat % mate_chrom % mate_pos % altSep % altPrefix % altSuffix;
+        altFormat % mateChrom % matePos % altSep % altPrefix % altSuffix;
     }
 
     // build INFO field
     infotags.push_back("SVTYPE=BND");
     infotags.push_back("MATEID="+mateId);
-    infotags.push_back( str(boost::format("BND_PAIR_SUPPORT=%i") % bp1.readCount) );
-    infotags.push_back( str(boost::format("PAIR_SUPPORT=%i") % bp1.pairCount) );
-    if (! bp1.isPrecise())
+    infotags.push_back( str(boost::format("BND_PAIR_SUPPORT=%i") % bpA.readCount) );
+    infotags.push_back( str(boost::format("PAIR_SUPPORT=%i") % bpA.pairCount) );
+    if (isImprecise)
     {
         infotags.push_back("IMPRECISE");
-        infotags.push_back( str( boost::format("CIPOS=%i,%i") % (bp1range.begin_pos()+1) % bp1range.end_pos() ) );
     }
 
-    modifyInfo(bp1,bp2,isFirstOfPair,svData, adata, infotags);
+    if (bpArange.size() != 0)
+    {
+        infotags.push_back( str( boost::format("CIPOS=%i,%i") % ((bpArange.begin_pos()+1) - pos) % (bpArange.end_pos() - pos) ));
+#if 0
+        infotags.push_back( str( boost::format("HOMLEN=%i") % (bpArange.size()) ));
+#endif
+    }
+
+
+    if (! sv.insertSeq.empty())
+    {
+        infotags.push_back( str( boost::format("SVINSLEN=%i") % (sv.insertSeq.size()) ));
+        if(isBp1 || (bpA.state != bpB.state))
+        {
+            infotags.push_back( str( boost::format("SVINSSEQ=%s") % (sv.insertSeq) ));
+        }
+        else
+        {
+            infotags.push_back( str( boost::format("SVINSSEQ=%s") % reverseCompCopyStr(sv.insertSeq) ));
+        }
+    }
+
+    modifyInfo(bpA,bpB,isFirstOfPair,svData, adata, infotags);
 
     // write out record:
     _os << chrom
@@ -213,8 +268,8 @@ writeTranslocPair(
 {
     const std::string idPrefix( str(_idFormatter % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % svIndex ) );
 
-    writeTransloc(sv.bp1, sv.bp2, idPrefix, true, svData, adata);
-    writeTransloc(sv.bp2, sv.bp1, idPrefix, false, svData, adata);
+    writeTransloc(sv, true, idPrefix, true, svData, adata);
+    writeTransloc(sv, false, idPrefix, false, svData, adata);
 }
 
 
@@ -224,6 +279,9 @@ writeInvdel(
     const SVCandidate& sv,
     const std::string& label)
 {
+    const bool isImprecise(sv.isImprecise());
+    const bool isBreakendRangeSameShift(sv.isBreakendRangeSameShift());
+
     const bool isBp1First(sv.bp1.interval.range.end_pos()<sv.bp2.interval.range.begin_pos());
 
     const SVBreakend& bpA(isBp1First ? sv.bp1 : sv.bp2);
@@ -237,11 +295,28 @@ writeInvdel(
     const known_pos_range2& bpArange(bpA.interval.range);
     const known_pos_range2& bpBrange(bpB.interval.range);
 
-    // get POS
-    const pos_t pos(bpArange.center_pos()+1);
-    if (pos<1) return;
+    if(! isImprecise)
+    {
+        assert(bpArange.size() == bpBrange.size());
+    }
 
-    const pos_t endPos(bpBrange.center_pos()+1);
+    // get POS and endPos
+    pos_t pos(bpArange.center_pos()+1);
+    pos_t endPos(bpBrange.center_pos()+1);
+    if(! isImprecise)
+    {
+        pos = bpArange.begin_pos()+1;
+        if(isBreakendRangeSameShift)
+        {
+            endPos = bpBrange.begin_pos()+1;
+        }
+        else
+        {
+            endPos = bpBrange.end_pos()+1;
+        }
+    }
+
+    if (pos<1) return;
 
     // get ID
     static const std::string localId(".");
@@ -264,18 +339,38 @@ writeInvdel(
     infotags.push_back( str(boost::format("UPSTREAM_PAIR_SUPPORT=%i") % bpA.readCount) );
     infotags.push_back( str(boost::format("DOWNSTREAM_PAIR_SUPPORT=%i") % bpB.readCount) );
     infotags.push_back( str(boost::format("PAIR_SUPPORT=%i") % bpA.pairCount) );
-    if ((! bpA.isPrecise()) || (! bpB.isPrecise()))
+    if (isImprecise)
     {
         infotags.push_back("IMPRECISE");
     }
 
-    if (! bpA.isPrecise())
+    if (bpArange.size() != 0)
     {
-        infotags.push_back( str( boost::format("CIPOS=%i,%i") % (bpArange.begin_pos()+1) % bpArange.end_pos() ) );
+        infotags.push_back( str( boost::format("CIPOS=%i,%i") % ((bpArange.begin_pos()+1) - pos) % (bpArange.end_pos() - pos) ));
     }
-    if (! bpB.isPrecise())
+    if (bpBrange.size() != 0)
     {
-        infotags.push_back( str( boost::format("CIEND=%i,%i") % (bpBrange.begin_pos()+1) % bpBrange.end_pos() ) );
+        infotags.push_back( str( boost::format("CIEND=%i,%i") % ((bpBrange.begin_pos()+1) - endPos) % (bpBrange.end_pos() - endPos) ));
+    }
+
+#if 0
+    if (bpArange.size() != 0)
+    {
+        infotags.push_back( str( boost::format("HOMLEN=%i") % (bpArange.size()) ));
+    }
+#endif
+
+    if (! sv.insertSeq.empty())
+    {
+        infotags.push_back( str( boost::format("SVINSLEN=%i") % (sv.insertSeq.size()) ));
+        if(isBp1First || (bpA.state != bpB.state))
+        {
+            infotags.push_back( str( boost::format("SVINSSEQ=%s") % (sv.insertSeq) ));
+        }
+        else
+        {
+            infotags.push_back( str( boost::format("SVINSSEQ=%s") % reverseCompCopyStr(sv.insertSeq) ));
+        }
     }
 
     //modifyInfo(isFirstOfPair, infotags);

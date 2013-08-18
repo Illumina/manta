@@ -34,10 +34,16 @@
 
 
 /// process assembly/align info into simple reference coordinates that can be reported in the output vcf:
+///
+/// \param[in] isAlign1 if true, this breakend was aligned first by the jump alinger, and therefore left-aligned (if fwd) or right-aligned (if rev)
+/// \param[in] jumpRange homologous range across the breakend
+///
 static
 void
 adjustAssembledBreakend(
     const Alignment& align,
+    const bool isAlign1,
+    const unsigned jumpRange,
     const reference_contig_segment& ref,
     const bool isReversed,
     SVBreakend& bp)
@@ -50,9 +56,20 @@ adjustAssembledBreakend(
     const pos_t bpBreakendOffset(isBpAtAlignEnd ? (bpEndOffset -1) : bpBeginOffset );
     const pos_t bpBreakendPos(ref.get_offset() + bpBreakendOffset);
 
+    const bool isLeftAligned(isAlign1 == isBpAtAlignEnd);
+
     known_pos_range2& range(bp.interval.range);
-    range.set_begin_pos(bpBreakendPos);
-    range.set_end_pos(bpBreakendPos);
+
+    if(isLeftAligned)
+    {
+        range.set_begin_pos(bpBreakendPos);
+        range.set_end_pos(bpBreakendPos + static_cast<pos_t>(jumpRange));
+    }
+    else
+    {
+        range.set_begin_pos(bpBreakendPos - static_cast<pos_t>(jumpRange));
+        range.set_end_pos(bpBreakendPos);
+    }
 }
 
 
@@ -266,7 +283,7 @@ getCandidateAssemblyData(
         // process the alignment into information that's easily usable in the vcf output
         // (ie. breakends in reference coordinates)
 
-        // copy the best alignment so that we can revese coordinates,etc:
+        const AssembledContig& bestContig(adata.contigs[adata.bestAlignmentIndex]);
         const SVCandidateAssemblyData::JumpAlignmentResultType& bestAlign(adata.alignments[adata.bestAlignmentIndex]);
 
         // first get each alignment associated with the correct breakend:
@@ -277,8 +294,17 @@ getCandidateAssemblyData(
 
         adata.sv = sv;
 
-        adjustAssembledBreakend(*bp1AlignPtr, bp1ref, isBp1Reversed, adata.sv.bp1);
-        adjustAssembledBreakend(*bp2AlignPtr, bp2ref, isBp2Reversed ,adata.sv.bp2);
+        adata.sv.setPrecise();
+
+        adjustAssembledBreakend(*bp1AlignPtr, (! isBp2AlignedFirst), bestAlign.jumpRange, bp1ref, isBp1Reversed, adata.sv.bp1);
+        adjustAssembledBreakend(*bp2AlignPtr, (isBp2AlignedFirst), bestAlign.jumpRange, bp2ref, isBp2Reversed , adata.sv.bp2);
+
+        // fill in insertSeq:
+        adata.sv.insertSeq.clear();
+        if(bestAlign.jumpInsertSize > 0)
+        {
+            getFwdStrandInsertSegment(bestAlign, bestContig.seq, isBp1Reversed, adata.sv.insertSeq);
+        }
 
 #ifdef DEBUG_REFINER
         log_os << "highscore refined sv: " << adata.sv;
