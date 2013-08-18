@@ -411,5 +411,16 @@ align(
 
     std::reverse(apath1.begin(),apath1.end());
     std::reverse(apath2.begin(),apath2.end());
+
+    // if true, output final cigars using seq match '=' and mismatch 'X' symbols:
+    static const bool isOutputSeqMatch(true);
+
+    if(isOutputSeqMatch)
+    {
+        apath_add_seqmatch(queryBegin, queryEnd, (ref1Begin+result.align1.beginPos), ref1End, apath1);
+
+        const unsigned queryOffset = apath_read_length(apath1) + result.jumpInsertSize;
+        apath_add_seqmatch(queryBegin + queryOffset, queryEnd, (ref2Begin+result.align2.beginPos), ref2End, apath2);
+    }
 }
 

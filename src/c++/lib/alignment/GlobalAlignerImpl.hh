@@ -234,5 +234,13 @@ align(
 
     result.align.beginPos = bt.refBegin;
     std::reverse(apath.begin(),apath.end());
+
+    // if true, output final cigars using seq match '=' and mismatch 'X' symbols:
+    static const bool isOutputSeqMatch(true);
+
+    if(isOutputSeqMatch)
+    {
+        apath_add_seqmatch(queryBegin, queryEnd, (refBegin+result.align.beginPos), refEnd, apath);
+    }
 }
 
