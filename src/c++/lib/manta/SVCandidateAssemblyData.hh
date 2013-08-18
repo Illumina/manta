@@ -18,6 +18,7 @@
 
 #include "assembly/AssembledContig.hh"
 #include "alignment/GlobalJumpAligner.hh"
+#include "blt_util/reference_contig_segment.hh"
 #include "manta/SVCandidate.hh"
 
 #include <vector>
@@ -48,6 +49,8 @@ struct SVCandidateAssemblyData
         alignments.clear();
         isBestAlignment=false;
         bestAlignmentIndex=0;
+        bp1ref.clear();
+        bp2ref.clear();
     }
 
     typedef JumpAlignmentResult<int> JumpAlignmentResultType;
@@ -57,6 +60,10 @@ struct SVCandidateAssemblyData
 
     bool isBestAlignment;        ///< is there a contig/alignment good enough to be used for reporting?
     unsigned bestAlignmentIndex; ///< if isBestAlignment, which is the best?
+
+    // expanded reference regions around the candidate SV breakend regions:
+    reference_contig_segment bp1ref;
+    reference_contig_segment bp2ref;
 
     SVCandidate sv; ///< if isBestAlignment, summarize refined sv candidate
 };

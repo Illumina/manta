@@ -154,13 +154,12 @@ getCandidateAssemblyData(
     // min alignment context
     //const unsigned minAlignContext(4);
 
-    reference_contig_segment bp1ref, bp2ref;
-    getSVReferenceSegments(_opt.referenceFilename, _header, extraRefEdgeSize, sv, bp1ref, bp2ref);
-    const std::string* align1RefStrPtr(&bp1ref.seq());
-    const std::string* align2RefStrPtr(&bp2ref.seq());
+    getSVReferenceSegments(_opt.referenceFilename, _header, extraRefEdgeSize, sv, adata.bp1ref, adata.bp2ref);
+    const std::string* align1RefStrPtr(&adata.bp1ref.seq());
+    const std::string* align2RefStrPtr(&adata.bp2ref.seq());
 
-    if (isBp1Reversed) reverseCompStr(bp1ref.seq());
-    if (isBp2Reversed) reverseCompStr(bp2ref.seq());
+    if (isBp1Reversed) reverseCompStr(adata.bp1ref.seq());
+    if (isBp2Reversed) reverseCompStr(adata.bp2ref.seq());
 
     if (isBp2AlignedFirst) std::swap(align1RefStrPtr, align2RefStrPtr);
 
@@ -296,8 +295,8 @@ getCandidateAssemblyData(
 
         adata.sv.setPrecise();
 
-        adjustAssembledBreakend(*bp1AlignPtr, (! isBp2AlignedFirst), bestAlign.jumpRange, bp1ref, isBp1Reversed, adata.sv.bp1);
-        adjustAssembledBreakend(*bp2AlignPtr, (isBp2AlignedFirst), bestAlign.jumpRange, bp2ref, isBp2Reversed , adata.sv.bp2);
+        adjustAssembledBreakend(*bp1AlignPtr, (! isBp2AlignedFirst), bestAlign.jumpRange, adata.bp1ref, isBp1Reversed, adata.sv.bp1);
+        adjustAssembledBreakend(*bp2AlignPtr, (isBp2AlignedFirst), bestAlign.jumpRange, adata.bp2ref, isBp2Reversed , adata.sv.bp2);
 
         // fill in insertSeq:
         adata.sv.insertSeq.clear();
