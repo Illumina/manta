@@ -154,6 +154,8 @@ BOOST_AUTO_TEST_CASE( test_GlobalJumpAlignerBPRange )
     BOOST_REQUIRE_EQUAL(result.align1.beginPos,3u);
     BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"15=");
     BOOST_REQUIRE_EQUAL(result.align2.beginPos,6u);
+    BOOST_REQUIRE_EQUAL(result.jumpInsertSize,0u);
+    BOOST_REQUIRE_EQUAL(result.jumpRange,3u);
 }
 
 
@@ -170,6 +172,26 @@ BOOST_AUTO_TEST_CASE( test_GlobalJumpAlignerBPRange2 )
     BOOST_REQUIRE_EQUAL(result.align1.beginPos,3u);
     BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"18=");
     BOOST_REQUIRE_EQUAL(result.align2.beginPos,6u);
+    BOOST_REQUIRE_EQUAL(result.jumpInsertSize,0u);
+    BOOST_REQUIRE_EQUAL(result.jumpRange,9u);
+}
+
+
+// define behavior when the breakpoint solution has an insertion with a repeat
+BOOST_AUTO_TEST_CASE( test_GlobalJumpAlignerInsert )
+{
+    static const std::string seq("xyzxyzxyzABCABCABCABCABCABCxyzxyzxyz");
+    static const std::string ref1("xyzxyzxyzxyzABCABCstustu");
+    static const std::string ref2("stustuABCABCxyzxyzxyzxyz");
+
+    JumpAlignmentResult<score_t> result = testAlign(seq,ref1,ref2);
+
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath),"15=");
+    BOOST_REQUIRE_EQUAL(result.align1.beginPos,3u);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"15=");
+    BOOST_REQUIRE_EQUAL(result.align2.beginPos,6u);
+    BOOST_REQUIRE_EQUAL(result.jumpInsertSize,6u);
+    BOOST_REQUIRE_EQUAL(result.jumpRange,0u);
 }
 
 

@@ -11,7 +11,9 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
-/// derived from ELAND implementation by Tony Cox
+//
+// \author Chris Saunders
+//
 
 //#define ALN_DEBUG
 
@@ -33,7 +35,8 @@ operator<<(std::ostream& os, JumpAlignmentResult<ScoreType>& alignment)
     os << "JumpAligner: score: " << alignment.score << "\n"
        << "\talign1: " << alignment.align1 << "\n"
        << "\talign2: " << alignment.align2 << "\n"
-       << "\tjumpInsertSize " << alignment.jumpInsertSize << "\n";
+       << "\tjumpInsertSize " << alignment.jumpInsertSize << "\n"
+       << "\tjumpRange " << alignment.jumpRange << "\n";
     return os;
 }
 
@@ -411,6 +414,24 @@ align(
 
     std::reverse(apath1.begin(),apath1.end());
     std::reverse(apath2.begin(),apath2.end());
+
+    // figure out jumpRange:
+    if(result.align1.isAligned() && result.align2.isAligned())
+    {
+        // find the distance over which ref1 and ref2 are equal following the start of the breakpoint
+        SymIter ref1JumpIter(ref1Begin + result.align1.beginPos + apath_ref_length(apath1));
+        SymIter ref2JumpIter(ref2Begin + result.align2.beginPos);
+        while(true)
+        {
+            if(ref1JumpIter == ref1End) break;
+            if(ref2JumpIter == ref2End) break;
+             if((*ref1JumpIter) != (*ref2JumpIter)) break;
+
+            result.jumpRange++;
+            ref1JumpIter++;
+            ref2JumpIter++;
+        }
+    }
 
     // if true, output final cigars using seq match '=' and mismatch 'X' symbols:
     static const bool isOutputSeqMatch(true);

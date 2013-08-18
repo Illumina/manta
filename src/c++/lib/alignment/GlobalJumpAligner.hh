@@ -11,7 +11,9 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
+///
 /// \author Chris Saunders
+///
 
 #pragma once
 
@@ -40,6 +42,7 @@ struct JumpAlignmentResult
     {
         score=0;
         jumpInsertSize=0;
+        jumpRange=0;
         align1.clear();
         align2.clear();
     }
@@ -47,6 +50,7 @@ struct JumpAlignmentResult
 
     ScoreType score;
     unsigned jumpInsertSize;
+    unsigned jumpRange; ///< length of sequence over which jump would have the same score (left-most on align1 is reported)
     Alignment align1;
     Alignment align2;
 };
