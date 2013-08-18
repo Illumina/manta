@@ -116,6 +116,23 @@ getFwdStrandQuerySegments(
 
 
 
+void
+getFwdStrandInsertSegment(
+    const JumpAlignmentResult<int>& align,
+    const std::string& querySeq,
+    const bool isBp1Reversed,
+    std::string& insertSeq)
+{
+    const unsigned align1Size(apath_read_length(align.align1.apath));
+    const unsigned insertSize(align.jumpInsertSize);
+
+    insertSeq = querySeq.substr(align1Size,insertSize);
+
+    if(isBp1Reversed) reverseCompStr(insertSeq);
+}
+
+
+
 int
 estimateBreakPointPos(const Alignment& al, const unsigned refOffset)
 {

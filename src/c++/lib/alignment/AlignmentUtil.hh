@@ -114,6 +114,18 @@ getFwdStrandQuerySegments(
     std::string& insertSeq);
 
 
+/// given a jump alignment and query sequence, return the insert sequence
+///
+/// the insert sequence is converted to fwd-strand by assuming it is "attached" to bp1
+///
+void
+getFwdStrandInsertSegment(
+    const JumpAlignmentResult<int>& align,
+    const std::string& querySeq,
+    const bool isBp1Reversed,
+    std::string& insertSeq);
+
+
 int
 estimateBreakPointPos(const Alignment& al, const unsigned refOffset);
 
