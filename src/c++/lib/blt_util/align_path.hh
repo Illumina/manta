@@ -311,10 +311,10 @@ apath_clean_seqmatch(path_t& apath);
 template <typename symIter>
 void
 apath_add_seqmatch(
-    symIter queryBegin,
-    symIter queryEnd,
-    symIter refBegin,
-    symIter refEnd,
+    const symIter queryBegin,
+    const symIter queryEnd,
+    const symIter refBegin,
+    const symIter refEnd,
     path_t& apath);
 
 

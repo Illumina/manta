@@ -163,6 +163,11 @@ getCandidateAssemblyData(
 
     if (isBp2AlignedFirst) std::swap(align1RefStrPtr, align2RefStrPtr);
 
+#ifdef DEBUG_REFINER
+    log_os << "al1Ref: " << *align1RefStrPtr << "\n";
+    log_os << "al2Ref: " << *align2RefStrPtr << "\n";
+#endif
+
     const unsigned contigCount(adata.contigs.size());
 
 #ifdef DEBUG_REFINER
@@ -184,10 +189,10 @@ getCandidateAssemblyData(
     {
         const AssembledContig& contig(adata.contigs[contigIndex]);
 
-        // QC contig prior to alignment:
+#ifdef DEBUG_REFINER
+        log_os << "start aligning cid: " << contigIndex << "\n";
+#endif
 
-
-        // done with contig QC
         JumpAlignmentResult<int>& alignment(adata.alignments[contigIndex]);
 
         _aligner.align(

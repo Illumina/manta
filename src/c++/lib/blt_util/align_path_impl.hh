@@ -17,6 +17,8 @@
 
 #include <iterator>
 
+#include "blt_util/blt_exception.hh"
+
 
 namespace ALIGNPATH
 {
@@ -27,13 +29,16 @@ namespace ALIGNPATH
 template <typename symIter>
 void
 apath_add_seqmatch(
-    symIter queryBegin,
-    symIter queryEnd,
-    symIter refBegin,
-    symIter refEnd,
+    const symIter queryBegin,
+    const symIter queryEnd,
+    const symIter refBegin,
+    const symIter refEnd,
     path_t& apath)
 {
     path_t apath2;
+
+    symIter queryIndex(queryBegin);
+    symIter refIndex(refBegin);
 
     const unsigned as(apath.size());
     for (unsigned segmentIndex(0); segmentIndex<as; ++segmentIndex)
@@ -43,22 +48,29 @@ apath_add_seqmatch(
         {
             for (unsigned segmentPos(0); segmentPos<ps.length; ++segmentPos)
             {
-                assert(queryBegin != queryEnd);
-                assert(refBegin != refEnd);
+                if(queryIndex >= queryEnd)
+                {
+                    throw blt_exception("apath_add_seqmatch: past end of query\n");
+                }
 
-                const bool isSeqMatch((*queryBegin) == (*refBegin));
+                if(refIndex >= refEnd)
+                {
+                    throw blt_exception("apath_add_seqmatch: past end of reference\n");
+                }
+
+                const bool isSeqMatch((*queryIndex) == (*refIndex));
                 apath_append(apath2, ( isSeqMatch ? SEQ_MATCH : SEQ_MISMATCH));
 
-                ++queryBegin;
-                ++refBegin;
+                ++queryIndex;
+                ++refIndex;
             }
         }
         else
         {
             apath2.push_back(ps);
 
-            if (is_segment_type_read_length(ps.type)) std::advance(queryBegin,ps.length);
-            if (is_segment_type_ref_length(ps.type)) std::advance(refBegin,ps.length);
+            if (is_segment_type_read_length(ps.type)) std::advance(queryIndex,ps.length);
+            if (is_segment_type_ref_length(ps.type)) std::advance(refIndex,ps.length);
         }
     }
 

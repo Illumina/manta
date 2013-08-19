@@ -21,6 +21,7 @@
 
 #include "manta/SomaticSVScoreInfo.hh"
 
+#define DEBUG_VCF
 
 void
 VcfWriterSomaticSV::
@@ -70,6 +71,7 @@ modifyInfo(
     infotags.push_back( str(boost::format("MATE_BND_DEPTH=%i") %
                             (isFirstOfPair ? ssInfo.bp2MaxDepth : ssInfo.bp1MaxDepth) ) );
 
+#ifdef DEBUG_VCF
     if (isFirstOfPair)
     {
         // store alignment start + cigar string for each section of the jumping alignment.
@@ -95,6 +97,7 @@ modifyInfo(
             infotags.push_back( str(boost::format("CTG_JALIGN_%i_CIGAR_B=%s") % alignIndex % cigar2) );
         }
     }
+#endif
 }
 
 
