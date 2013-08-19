@@ -1,3 +1,7 @@
+v0.7
+- Add assembly of large-event breakends and basepair resolution SV reporting
+- Correctly parse large deletion reads from Isaac and incorporate this into
+discovery
 v0.6
 Fix sensitivity problems caused by unexpected proper pair bit settings, fix
 several self-edge issues. Detect intrachrom variants down to ~2kb.
