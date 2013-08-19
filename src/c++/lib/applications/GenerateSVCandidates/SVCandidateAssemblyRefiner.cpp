@@ -228,6 +228,8 @@ getCandidateAssemblyData(
         }
     }
 
+    if (! isHighScore) return;
+
     // set any additional QC steps before deciding an alignment is usable:
 
     // find the fraction of optimal score:
@@ -276,7 +278,6 @@ getCandidateAssemblyData(
 
 
     // ok, passed QC -- mark the high-scoring alignment as usable for hypothesis refinement:
-    if (isHighScore)
     {
         adata.isBestAlignment = true;
         adata.bestAlignmentIndex = highScoreIndex;
