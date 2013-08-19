@@ -63,11 +63,11 @@ adjustAssembledBreakend(
     if (isLeftAligned)
     {
         range.set_begin_pos(bpBreakendPos);
-        range.set_end_pos(bpBreakendPos + static_cast<pos_t>(jumpRange));
+        range.set_end_pos(bpBreakendPos + static_cast<pos_t>(jumpRange+1) );
     }
     else
     {
-        range.set_begin_pos(bpBreakendPos - static_cast<pos_t>(jumpRange));
+        range.set_begin_pos(bpBreakendPos - static_cast<pos_t>(jumpRange+1));
         range.set_end_pos(bpBreakendPos);
     }
 }

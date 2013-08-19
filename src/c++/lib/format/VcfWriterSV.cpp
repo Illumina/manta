@@ -218,7 +218,7 @@ writeTransloc(
         infotags.push_back("IMPRECISE");
     }
 
-    if (bpArange.size() != 0)
+    if (bpArange.size() > 1)
     {
         infotags.push_back( str( boost::format("CIPOS=%i,%i") % ((bpArange.begin_pos()+1) - pos) % (bpArange.end_pos() - pos) ));
 #if 0
@@ -344,17 +344,17 @@ writeInvdel(
         infotags.push_back("IMPRECISE");
     }
 
-    if (bpArange.size() != 0)
+    if (bpArange.size() > 1)
     {
         infotags.push_back( str( boost::format("CIPOS=%i,%i") % ((bpArange.begin_pos()+1) - pos) % (bpArange.end_pos() - pos) ));
     }
-    if (bpBrange.size() != 0)
+    if (bpBrange.size() > 1)
     {
         infotags.push_back( str( boost::format("CIEND=%i,%i") % ((bpBrange.begin_pos()+1) - endPos) % (bpBrange.end_pos() - endPos) ));
     }
 
 #if 0
-    if (bpArange.size() != 0)
+    if (bpArange.size() > 1)
     {
         infotags.push_back( str( boost::format("HOMLEN=%i") % (bpArange.size()) ));
     }
