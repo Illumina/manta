@@ -62,7 +62,7 @@ addSVNodeRead(
     const bam_record& bamRead,
     const unsigned bamIndex,
     const bool isExpectRepeat,
-    SVCandidateDataGroup& svDataGroup)
+    SVCandidateSetReadPairSampleGroup& svDataGroup)
 {
     if (scanner.isReadFiltered(bamRead)) return;
     if (scanner.isProperPair(bamRead,bamIndex)) return;
@@ -103,7 +103,7 @@ addSVNodeData(
     const SVLocus& locus,
     const NodeIndexType localNodeIndex,
     const NodeIndexType remoteNodeIndex,
-    SVCandidateData& svData)
+    SVCandidateSetData& svData)
 {
     // get full search interval:
     const SVLocusNode& localNode(locus.getNode(localNodeIndex));
@@ -126,7 +126,7 @@ addSVNodeData(
     unsigned bamIndex(0);
     BOOST_FOREACH(streamPtr& bamPtr, _bamStreams)
     {
-        SVCandidateDataGroup& svDataGroup(svData.getDataGroup(bamIndex));
+        SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
         bam_streamer& read_stream(*bamPtr);
 
         // set bam stream to new search interval:
@@ -152,7 +152,7 @@ addSVNodeData(
 void
 SVFinder::
 checkResult(
-    const SVCandidateData& svData,
+    const SVCandidateSetData& svData,
     const std::vector<SVCandidate>& svs) const
 {
     using namespace illumina::common;
@@ -173,10 +173,10 @@ checkResult(
     const unsigned bamCount(_bamStreams.size());
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
-        const SVCandidateDataGroup& svDataGroup(svData.getDataGroup(bamIndex));
-        BOOST_FOREACH(const SVCandidateReadPair& pair, svDataGroup)
+        const SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
+        BOOST_FOREACH(const SVCandidateSetReadPair& pair, svDataGroup)
         {
-            BOOST_FOREACH(const SVCandidateReadPair::index_t svIndex, pair.svIndex)
+            BOOST_FOREACH(const SVCandidateSetReadPair::index_t svIndex, pair.svIndex)
             {
                 if (svIndex>=svCount)
                 {
@@ -235,7 +235,7 @@ static
 void
 consolidateOverlap(
     const unsigned bamCount,
-    SVCandidateData& svData,
+    SVCandidateSetData& svData,
     std::vector<SVCandidate>& svs)
 {
     typedef std::map<unsigned,unsigned> movemap_t;
@@ -315,10 +315,10 @@ consolidateOverlap(
 
         for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
         {
-            SVCandidateDataGroup& svDataGroup(svData.getDataGroup(bamIndex));
-            BOOST_FOREACH(SVCandidateReadPair& pair, svDataGroup)
+            SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
+            BOOST_FOREACH(SVCandidateSetReadPair& pair, svDataGroup)
             {
-                BOOST_FOREACH(SVCandidateReadPair::index_t& svIndex, pair.svIndex)
+                BOOST_FOREACH(SVCandidateSetReadPair::index_t& svIndex, pair.svIndex)
                 {
                     if (moveSVIndex.count(svIndex))
                     {
@@ -336,7 +336,7 @@ consolidateOverlap(
 void
 SVFinder::
 getCandidatesFromData(
-    SVCandidateData& svData,
+    SVCandidateSetData& svData,
     std::vector<SVCandidate>& svs)
 {
     std::vector<SVCandidate> readCandidates;
@@ -344,11 +344,11 @@ getCandidatesFromData(
     const unsigned bamCount(_bamStreams.size());
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
-        SVCandidateDataGroup& svDataGroup(svData.getDataGroup(bamIndex));
-        BOOST_FOREACH(SVCandidateReadPair& pair, svDataGroup)
+        SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
+        BOOST_FOREACH(SVCandidateSetReadPair& pair, svDataGroup)
         {
-            SVCandidateRead* localReadPtr(&(pair.read1));
-            SVCandidateRead* remoteReadPtr(&(pair.read2));
+            SVCandidateSetRead* localReadPtr(&(pair.read1));
+            SVCandidateSetRead* remoteReadPtr(&(pair.read2));
             pair.svIndex.clear();
 
             if (isExcludeUnpaired)
@@ -446,7 +446,7 @@ void
 SVFinder::
 findCandidateSV(
     const EdgeInfo& edge,
-    SVCandidateData& svData,
+    SVCandidateSetData& svData,
     std::vector<SVCandidate>& svs)
 {
     svData.clear();

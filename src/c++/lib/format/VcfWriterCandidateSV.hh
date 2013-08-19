@@ -32,7 +32,9 @@ struct VcfWriterCandidateSV : public VcfWriterSV
     void
     writeSV(
         const EdgeInfo& edge,
-        const SVCandidateData& svData,
-        const std::vector<SVCandidate>& svs);
+        const SVCandidateSetData& svData,
+        const SVCandidateAssemblyData& adata,
+        const unsigned svIndex,
+        const SVCandidate& sv);
 };
 

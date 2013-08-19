@@ -11,7 +11,9 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
+///
 /// \author Chris Saunders
+///
 
 #pragma once
 
@@ -23,9 +25,9 @@
 #include <cassert>
 
 
-/// represents alignment of a query sequence which can switch over from reference1 to refernece2
+/// represents alignment of a query sequence which can switch over from reference1 to reference2
 ///
-/// an empty alignment to one reference indicates that the entire alignment is the other reference
+/// an empty alignment to one reference indicates that the entire alignment is to the other reference
 ///
 template <typename ScoreType>
 struct JumpAlignmentResult
@@ -40,6 +42,7 @@ struct JumpAlignmentResult
     {
         score=0;
         jumpInsertSize=0;
+        jumpRange=0;
         align1.clear();
         align2.clear();
     }
@@ -47,43 +50,13 @@ struct JumpAlignmentResult
 
     ScoreType score;
     unsigned jumpInsertSize;
+    unsigned jumpRange; ///< length of sequence over which jump would have the same score (left-most on align1 is reported)
     Alignment align1;
     Alignment align2;
 };
 
-
-
-
-struct AlignState
-{
-    enum index_t
-    {
-        MATCH,
-        DELETE,
-        INSERT,
-        JUMP,
-        SIZE
-    };
-
-    static
-    const char*
-    label(const index_t i)
-    {
-        switch (i)
-        {
-        case MATCH:
-            return "MATCH";
-        case DELETE:
-            return "DELETE";
-        case INSERT:
-            return "INSERT";
-        case JUMP:
-            return "JUMP";
-        default:
-            return "UNKNOWN";
-        }
-    }
-};
+template <typename ScoreType>
+std::ostream& operator<<(std::ostream& os, JumpAlignmentResult<ScoreType>& alignment);
 
 
 
@@ -108,10 +81,26 @@ struct GlobalJumpAligner
         const SymIter queryBegin, const SymIter queryEnd,
         const SymIter ref1Begin, const SymIter ref1End,
         const SymIter ref2Begin, const SymIter ref2End,
-        JumpAlignmentResult<ScoreType>& result);
+        JumpAlignmentResult<ScoreType>& result) const;
+
+
+    /// read-only access to the aligner's scores:
+    const AlignmentScores<ScoreType>&
+    getScores() const
+    {
+        return _scores;
+    }
+
+    /// read-only access to the aligner's scores:
+    const ScoreType&
+    getJumpScore() const
+    {
+        return _jumpScore;
+    }
 
 private:
 
+    static
     uint8_t
     max3(
         ScoreType& max,
@@ -134,6 +123,7 @@ private:
         return ptr;
     }
 
+    static
     uint8_t
     max4(
         ScoreType& max,
@@ -203,12 +193,12 @@ private:
 
     // add the matrices here to reduce allocations over many alignment calls:
     typedef std::vector<ScoreVal> ScoreVec;
-    ScoreVec _score1;
-    ScoreVec _score2;
+    mutable ScoreVec _score1;
+    mutable ScoreVec _score2;
 
     typedef basic_matrix<PtrVal> PtrMat;
-    PtrMat _ptrMat1;
-    PtrMat _ptrMat2;
+    mutable PtrMat _ptrMat1;
+    mutable PtrMat _ptrMat2;
 };
 
 

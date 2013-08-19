@@ -19,6 +19,7 @@
 #include "EdgeRetrieverBin.hh"
 #include "EdgeRetrieverLocus.hh"
 #include "GSCOptions.hh"
+#include "SVCandidateAssemblyRefiner.hh"
 #include "SVFinder.hh"
 #include "SVScorer.hh"
 
@@ -26,6 +27,7 @@
 #include "common/Exceptions.hh"
 #include "common/OutStream.hh"
 #include "manta/ReadGroupStatsSet.hh"
+#include "manta/SVCandidateAssemblyData.hh"
 #include "format/VcfWriterCandidateSV.hh"
 #include "format/VcfWriterSomaticSV.hh"
 
@@ -33,7 +35,6 @@
 
 #include <iostream>
 #include <memory>
-
 
 
 static
@@ -50,6 +51,11 @@ dumpEdgeInfo(
 
 
 
+/// we can either traverse all edges in a single locus (disjoint subgraph) of the graph
+/// OR
+/// traverse all edges in out "bin" -- that is, 1 of binCount subsets of the total graph edges
+/// designed to be of roughly equal size for parallel processing
+///
 static
 EdgeRetriever*
 edgeRFactory(
@@ -68,7 +74,6 @@ edgeRFactory(
 
 
 
-
 static
 void
 runGSC(
@@ -80,6 +85,14 @@ runGSC(
 
     SVFinder svFind(opt);
     const SVLocusSet& cset(svFind.getSet());
+
+    // maybe these can be an SV refiner option struct?
+    static const AlignmentScores<int> spanningAlignScores(2,-4,-10,-1,-1);
+    static const int jumpScore(-20);
+    SmallAssemblerOptions spanningAssembleOpt;
+    spanningAssembleOpt.minContigLength=75;
+
+    SVCandidateAssemblyRefiner svRefine(opt, cset.header, spanningAssembleOpt, spanningAlignScores, jumpScore);
 
     SVScorer svScore(opt, cset.header);
 
@@ -99,9 +112,10 @@ runGSC(
         if (isSomatic) somWriter.writeHeader(progName, progVersion);
     }
 
-    SVCandidateData svData;
+    SVCandidateSetData svData;
     std::vector<SVCandidate> svs;
     SomaticSVScoreInfo ssInfo;
+
     while (edger.next())
     {
         const EdgeInfo& edge(edger.getEdge());
@@ -110,17 +124,21 @@ runGSC(
         {
             // find number, type and breakend range of SVs on this edge:
             svFind.findCandidateSV(edge,svData,svs);
-
-            candWriter.writeSV(edge, svData, svs);
-
-            if (isSomatic)
+            for (unsigned svIndex(0); svIndex<svs.size(); ++svIndex)
             {
-                unsigned svIndex(0);
-                BOOST_FOREACH(const SVCandidate& sv, svs)
+                const SVCandidate& sv(svs[svIndex]);
+
+                SVCandidateAssemblyData adata;
+                svRefine.getCandidateAssemblyData(sv,svData,adata);
+
+                const SVCandidate& submitSV(adata.isBestAlignment ? adata.sv : sv);
+
+                candWriter.writeSV(edge, svData, adata, svIndex, submitSV);
+
+                if (isSomatic)
                 {
-                    svScore.scoreSomaticSV(svData, svIndex, sv, ssInfo);
-                    somWriter.writeSV(edge, svData, svIndex, sv, ssInfo);
-                    svIndex++;
+                    svScore.scoreSomaticSV(svData, svIndex, submitSV, ssInfo);
+                    somWriter.writeSV(edge, svData, adata, svIndex, submitSV, ssInfo);
                 }
             }
         }

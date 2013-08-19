@@ -44,6 +44,7 @@ struct SVLocusScanner
 
     /// this predicate runs any fast tests on the acceptability of a
     /// read for the SVLocus build
+    /// Tests also for low mapq
     bool
     isReadFiltered(const bam_record& bamRead) const;
 
@@ -53,8 +54,26 @@ struct SVLocusScanner
         const bam_record& bamRead,
         const unsigned defaultReadGroupIndex) const;
 
+    /// test for semi-alignedness
+    /// Dummy implementation, returns true for now
+    bool
+    isSemiAligned(
+        const bam_record& bamRead) const;
+
+    bool
+    isClipped(
+        const bam_record& bamRead) const;
+
+    unsigned
+    getClipLength(
+        const bam_record& bamRead) const;
+
+
     /// return zero to many SVLocus objects if the read supports any
     /// structural variant(s) (detectable by manta)
+    ///
+    /// \param defaultReadGroupIndex the read group index to use in the absence of an RG tag
+    /// (for now RGs are ignored for the purpose of gathering insert stats)
     ///
     void
     getSVLoci(

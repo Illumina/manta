@@ -48,14 +48,14 @@ struct BackTrace
     BackTrace() :
         max(0),
         state(AlignState::MATCH),
-        queryStart(0),
-        refStart(0),
+        queryBegin(0),
+        refBegin(0),
         isInit(false)
     {}
 
     ScoreType max;
     AlignState::index_t state;
-    unsigned queryStart,refStart;
+    unsigned queryBegin,refBegin;
     bool isInit;
 };
 

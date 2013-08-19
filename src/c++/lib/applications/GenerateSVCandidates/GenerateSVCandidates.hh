@@ -20,7 +20,7 @@
 #include "manta/Program.hh"
 
 
-/// estimate per-library information from alignment file(s)
+/// generates candidate calls from graph edges
 ///
 struct GenerateSVCandidates : public manta::Program
 {

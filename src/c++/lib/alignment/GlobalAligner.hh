@@ -20,6 +20,8 @@
 
 #include "blt_util/basic_matrix.hh"
 
+#include <iosfwd>
+
 
 template <typename ScoreType>
 struct AlignmentResult
@@ -41,34 +43,9 @@ struct AlignmentResult
 };
 
 
-
-struct AlignState
-{
-    enum index_t
-    {
-        MATCH,
-        DELETE,
-        INSERT,
-        SIZE
-    };
-
-    static
-    const char*
-    label(const index_t i)
-    {
-        switch (i)
-        {
-        case MATCH:
-            return "MATCH";
-        case DELETE:
-            return "DELETE";
-        case INSERT:
-            return "INSERT";
-        default:
-            return "UNKNOWN";
-        }
-    }
-};
+template <typename ScoreType>
+std::ostream&
+operator<<(std::ostream& os, AlignmentResult<ScoreType>& alignment);
 
 
 
@@ -94,10 +71,18 @@ struct GlobalAligner
     align(
         const SymIter queryBegin, const SymIter queryEnd,
         const SymIter refBegin, const SymIter refEnd,
-        AlignmentResult<ScoreType>& result);
+        AlignmentResult<ScoreType>& result) const;
+
+    /// read-only access to the aligner's scores:
+    const AlignmentScores<ScoreType>&
+    getScores() const
+    {
+        return _scores;
+    }
 
 private:
 
+    static
     uint8_t
     max3(
         ScoreType& max,
@@ -158,9 +143,9 @@ private:
 
     // add the matrices here to reduce allocations over many alignment calls:
     typedef std::vector<ScoreVal> ScoreVec;
-    ScoreVec _score1;
-    ScoreVec _score2;
-    basic_matrix<PtrVal> _ptrMat;
+    mutable ScoreVec _score1;
+    mutable ScoreVec _score2;
+    mutable basic_matrix<PtrVal> _ptrMat;
 };
 
 

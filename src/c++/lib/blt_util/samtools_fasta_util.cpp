@@ -31,7 +31,6 @@ extern "C"
 
 #include <fstream>
 #include <iostream>
-#include <memory>
 #include <sstream>
 #include <vector>
 
@@ -116,14 +115,15 @@ get_region_seq(const std::string& ref_file,
 
     faidx_t* fai(fai_load(ref_file.c_str()));
     int len; // throwaway...
-    std::auto_ptr<char> ref_tmp(fai_fetch(fai,fa_region.c_str(), &len));
-    if (NULL == ref_tmp.get())
+    char* ref_tmp(fai_fetch(fai,fa_region.c_str(), &len));
+    if (NULL == ref_tmp)
     {
         std::ostringstream oss;
         oss << "ERROR: Can't find sequence region '" << fa_region << "' in reference file: '" << ref_file << "'\n";
         throw blt_exception(oss.str().c_str());
     }
-    ref_seq.assign(ref_tmp.get());
+    ref_seq.assign(ref_tmp);
+    free(ref_tmp);
     fai_destroy(fai);
 }
 
@@ -138,14 +138,15 @@ get_region_seq(const std::string& ref_file,
 {
     faidx_t* fai(fai_load(ref_file.c_str()));
     int len; // throwaway...
-    std::auto_ptr<char> ref_tmp(faidx_fetch_seq(fai,const_cast<char*>(chrom.c_str()), begin_pos, end_pos, &len));
-    if (NULL == ref_tmp.get())
+    char* ref_tmp(faidx_fetch_seq(fai,const_cast<char*>(chrom.c_str()), begin_pos, end_pos, &len));
+    if (NULL == ref_tmp)
     {
         std::ostringstream oss;
         oss << "ERROR: Can't find sequence region '" << chrom << ":" << (begin_pos+1) << "-" << (end_pos+1) << "' in reference file: '" << ref_file << "'\n";
         throw blt_exception(oss.str().c_str());
     }
-    ref_seq.assign(ref_tmp.get());
+    ref_seq.assign(ref_tmp);
+    free(ref_tmp);
     fai_destroy(fai);
 }
 

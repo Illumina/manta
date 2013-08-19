@@ -18,6 +18,8 @@
 
 #include <stdint.h>
 
+
+// OST: should this be unsigned?
 typedef int32_t pos_t;
 
 typedef float blt_float_t;

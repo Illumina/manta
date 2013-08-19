@@ -20,6 +20,7 @@
 #include "svgraph/GenomeInterval.hh"
 
 #include <iosfwd>
+#include <string>
 
 
 namespace SVBreakendState
@@ -111,12 +112,6 @@ struct SVBreakend
     {}
 
     bool
-    isPrecise() const
-    {
-        return (0 == interval.range.size());
-    }
-
-    bool
     isIntersect(const SVBreakend& rhs) const
     {
         if (state != rhs.state) return false;
@@ -153,7 +148,9 @@ struct SVBreakend
         pairCount=0;
     }
 
-    // the interval is the X% confidence interval of the SV breakend, the interface allows for
+public:
+
+    // if ! isPrecise() the interval is the X% confidence interval of the SV breakend, the interface allows for
     // various probability distributions to back this interval, but these must be accessed via
     // SVCandidate:
     GenomeInterval interval;
@@ -177,10 +174,25 @@ operator<<(std::ostream& os, const SVBreakend& svb);
 
 struct SVCandidate
 {
+
+    SVCandidate() :
+        _isImprecise(true)
+    {}
+
 #if 0
     double
     breakpointProb(pos_t x, pos_t y) const;
 #endif
+
+
+    /// if false, the breakend interval is at base-pair resolution
+    ///
+    /// false does not mean that the interval size is zero, a precise breakend interval range represents microhomology at the breakend site
+    bool
+    isImprecise() const
+    {
+        return _isImprecise;
+    }
 
     bool
     isIntersect(const SVCandidate& rhs) const
@@ -204,14 +216,34 @@ struct SVCandidate
             bp1.merge(rhs.bp2);
             bp2.merge(rhs.bp1);
         }
+
+        _isImprecise = (isImprecise() || rhs.isImprecise());
+
         return true;
     }
 
     void
     clear()
     {
+        _isImprecise = true;
         bp1.clear();
         bp2.clear();
+        insertSeq.clear();
+    }
+
+    void
+    setPrecise()
+    {
+        _isImprecise = false;
+    }
+
+    /// if 1 is added to the position of one breakend (within the homologous breakend range), then is 1 also added to the other breakend?
+    ///
+    /// if false then breakends move in opposite directions;
+    bool
+    isBreakendRangeSameShift() const
+    {
+        return (bp1.state != bp2.state);
     }
 
 #if 0
@@ -229,8 +261,16 @@ struct SVCandidate
     }
 #endif
 
+private:
+    bool _isImprecise;
+
+public:
     SVBreakend bp1;
     SVBreakend bp2;
+
+    // this is either a micro-insertion in a large-scale SV, or the inserted sequence of an actual insertion
+    // in case bp1 and bp2 are on opposite strands (ie. an inversion) the insertSeq is oriented to the fwd strand for bp1
+    std::string insertSeq;
 };
 
 

@@ -428,6 +428,31 @@ isReadFiltered(const bam_record& bamRead) const
     return false;
 }
 
+bool
+SVLocusScanner::
+isSemiAligned(const bam_record& /*bamRead*/) const
+{
+    // TODO
+    return true;
+}
+
+bool
+SVLocusScanner::
+isClipped(const bam_record& bamRead) const
+{
+    ALIGNPATH::path_t apath;
+    bam_cigar_to_apath(bamRead.raw_cigar(),bamRead.n_cigar(),apath);
+    return is_clipped(apath);
+}
+
+unsigned
+SVLocusScanner::
+getClipLength(const bam_record& bamRead) const
+{
+    ALIGNPATH::path_t apath;
+    bam_cigar_to_apath(bamRead.raw_cigar(),bamRead.n_cigar(),apath);
+    return get_clip_len(apath);
+}
 
 
 bool

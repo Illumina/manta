@@ -11,7 +11,9 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
-/// derived from ELAND implementation by Tony Cox
+//
+// \author Chris Saunders
+//
 
 //#define ALN_DEBUG
 
@@ -19,9 +21,25 @@
 
 #include <cassert>
 
+#include <iostream>
+
 #ifdef ALN_DEBUG
+#include "blt_util/log.hh"
 #include <iostream>
 #endif
+
+
+template <typename ScoreType>
+std::ostream&
+operator<<(std::ostream& os, JumpAlignmentResult<ScoreType>& alignment)
+{
+    os << "JumpAligner: score: " << alignment.score << "\n"
+       << "\talign1: " << alignment.align1 << "\n"
+       << "\talign2: " << alignment.align2 << "\n"
+       << "\tjumpInsertSize " << alignment.jumpInsertSize << "\n"
+       << "\tjumpRange " << alignment.jumpRange << "\n";
+    return os;
+}
 
 
 
@@ -33,12 +51,8 @@ align(
     const SymIter queryBegin, const SymIter queryEnd,
     const SymIter ref1Begin, const SymIter ref1End,
     const SymIter ref2Begin, const SymIter ref2End,
-    JumpAlignmentResult<ScoreType>& result)
+    JumpAlignmentResult<ScoreType>& result) const
 {
-#ifdef ALN_DEBUG
-    std::ostream& log_os(std::cerr);
-#endif
-
     result.clear();
 
     const size_t querySize(std::distance(queryBegin, queryEnd));
@@ -158,8 +172,8 @@ align(
                 const ScoreType thisMax(sval.match);
                 if (bt.isInit && (thisMax<=bt.max)) continue;
                 bt.max=thisMax;
-                bt.refStart=ref1Index+1;
-                bt.queryStart=querySize;
+                bt.refBegin=ref1Index+1;
+                bt.queryBegin=querySize;
                 bt.isInit=true;
             }
         }
@@ -172,8 +186,8 @@ align(
         const ScoreType thisMax(sval.match + (querySize-queryIndex) * _scores.offEdge);
         if (bt.isInit && (thisMax<=bt.max)) continue;
         bt.max=thisMax;
-        bt.refStart=ref1Size;
-        bt.queryStart=queryIndex;
+        bt.refBegin=ref1Size;
+        bt.queryBegin=queryIndex;
         bt.isInit=true;
     }
 
@@ -240,7 +254,7 @@ align(
                                       sval.match + _scores.open,
                                       sval.del,
                                       sval.ins,
-                                      sval.jump + _scores.open);
+                                      sval.jump); // jump->ins moves get a pass on the gap-open penalty, to support mirco-insertions
 
                     headScore.ins += _scores.extend;
                 }
@@ -268,8 +282,8 @@ align(
                 const ScoreType thisMax(sval.match);
                 if (bt.isInit && (thisMax<=bt.max)) continue;
                 bt.max=thisMax;
-                bt.refStart=ref1Size+ref2Index+1;
-                bt.queryStart=querySize;
+                bt.refBegin=ref1Size+ref2Index+1;
+                bt.queryBegin=querySize;
                 bt.isInit=true;
             }
         }
@@ -283,19 +297,19 @@ align(
         const ScoreType thisMax(sval.match + (querySize-queryIndex) * _scores.offEdge);
         if (bt.isInit && (thisMax<=bt.max)) continue;
         bt.max=thisMax;
-        bt.refStart=ref1Size+ref2Size;
-        bt.queryStart=queryIndex;
+        bt.refBegin=ref1Size+ref2Size;
+        bt.queryBegin=queryIndex;
         bt.isInit=true;
     }
 
     assert(bt.isInit);
-    assert(bt.refStart <= ref1Size+ref2Size);
-    assert(bt.queryStart <= querySize);
+    assert(bt.refBegin <= ref1Size+ref2Size);
+    assert(bt.queryBegin <= querySize);
 
     result.score = bt.max;
 
 #ifdef ALN_DEBUG
-    log_os << "bt-start queryIndex: " << bt.queryStart << " refIndex: " << bt.refStart << " state: " << AlignState::label(bt.state) << " maxScore: " << bt.max << "\n";
+    log_os << "bt-start queryIndex: " << bt.queryBegin << " refIndex: " << bt.refBegin << " state: " << AlignState::label(bt.state) << " maxScore: " << bt.max << "\n";
 #endif
 
     // traceback:
@@ -304,51 +318,56 @@ align(
     ALIGNPATH::path_segment ps;
 
     // add any trailing soft-clip if we go off the end of the reference:
-    if (bt.queryStart < querySize)
+    if (bt.queryBegin < querySize)
     {
         ps.type = ALIGNPATH::SOFT_CLIP;
-        ps.length = (querySize-bt.queryStart);
+        ps.length = (querySize-bt.queryBegin);
     }
 
-    while ((bt.queryStart>0) && (bt.refStart>0))
+    bool isRef2End(false);
+
+    while ((bt.queryBegin>0) && (bt.refBegin>0))
     {
-        const bool isRef1(bt.refStart<=ref1Size);
+        if (isRef2End) break;
+        const bool isRef1(bt.refBegin<=ref1Size);
         ALIGNPATH::path_t& apath( isRef1 ? apath1 : apath2 );
-        const unsigned refXStart(bt.refStart - (isRef1 ? 0 : ref1Size));
+        const unsigned refXBegin(bt.refBegin - (isRef1 ? 0 : ref1Size));
         const PtrMat* ptrMatX(isRef1 ? &_ptrMat1 : &_ptrMat2 );
-        const AlignState::index_t nextState(static_cast<AlignState::index_t>(ptrMatX->val(bt.queryStart,refXStart).get(bt.state)));
+        const AlignState::index_t nextState(static_cast<AlignState::index_t>(ptrMatX->val(bt.queryBegin,refXBegin).get(bt.state)));
 
 #ifdef ALN_DEBUG
-        log_os << "bt-iter queryIndex: " << bt.queryStart
-               << " refIndex: " << bt.refStart
+        log_os << "bt-iter queryIndex: " << bt.queryBegin
+               << " refIndex: " << bt.refBegin
                << " state: " << AlignState::label(bt.state)
                << " next: " << AlignState::label(nextState)
                << "\n";
-        log_os << "\tisref1: " << isRef1 << " refXStart: " << refXStart << "\n";
+        log_os << "\tisref1: " << isRef1 << " refXBegin: " << refXBegin << "\n";
 #endif
 
         if      (bt.state==AlignState::MATCH)
         {
+            if ((!isRef1) && (refXBegin==1) && (nextState==AlignState::MATCH)) isRef2End=true;
+
             AlignerUtil::updatePath(apath,ps,ALIGNPATH::MATCH);
-            bt.queryStart--;
-            bt.refStart--;
+            bt.queryBegin--;
+            bt.refBegin--;
         }
         else if (bt.state==AlignState::DELETE)
         {
             AlignerUtil::updatePath(apath,ps,ALIGNPATH::DELETE);
-            bt.refStart--;
+            bt.refBegin--;
         }
         else if (bt.state==AlignState::INSERT)
         {
             AlignerUtil::updatePath(apath,ps,ALIGNPATH::INSERT);
-            bt.queryStart--;
+            bt.queryBegin--;
         }
         else if (bt.state==AlignState::JUMP)
         {
             if (ps.type != ALIGNPATH::NONE)
             {
-                assert(bt.refStart>=ref1Size);
-                result.align2.alignStart = bt.refStart-ref1Size;
+                assert(bt.refBegin>=ref1Size);
+                result.align2.beginPos = bt.refBegin-ref1Size;
                 if (ps.type == ALIGNPATH::INSERT)
                 {
                     result.jumpInsertSize += ps.length;
@@ -362,7 +381,7 @@ align(
             }
             else
             {
-                if (nextState == AlignState::JUMP) bt.refStart--;
+                if (nextState == AlignState::JUMP) bt.refBegin--;
             }
         }
         else
@@ -373,29 +392,58 @@ align(
         ps.length++;
     }
 
-    const bool isRef1(bt.refStart<=ref1Size);
+    const bool isRef1(bt.refBegin<ref1Size);
     ALIGNPATH::path_t& apath( isRef1 ? apath1 : apath2 );
 
     if (ps.type != ALIGNPATH::NONE) apath.push_back(ps);
 
     // soft-clip beginning of read if we fall off the end of the reference
-    if (bt.queryStart!=0)
+    if (bt.queryBegin!=0)
     {
         ps.type = ALIGNPATH::SOFT_CLIP;
-        ps.length = bt.queryStart;
+        ps.length = bt.queryBegin;
         apath.push_back(ps);
     }
 
     if (isRef1)
     {
-        result.align1.alignStart = bt.refStart;
+        result.align1.beginPos = bt.refBegin;
     }
     else
     {
-        result.align2.alignStart = bt.refStart-ref1Size;
+        result.align2.beginPos = bt.refBegin-ref1Size;
     }
 
     std::reverse(apath1.begin(),apath1.end());
     std::reverse(apath2.begin(),apath2.end());
+
+    // figure out jumpRange:
+    if (result.align1.isAligned() && result.align2.isAligned())
+    {
+        // find the distance over which ref1 and ref2 are equal following the start of the breakpoint
+        SymIter ref1JumpIter(ref1Begin + result.align1.beginPos + apath_ref_length(apath1));
+        SymIter ref2JumpIter(ref2Begin + result.align2.beginPos);
+        while (true)
+        {
+            if (ref1JumpIter == ref1End) break;
+            if (ref2JumpIter == ref2End) break;
+            if ((*ref1JumpIter) != (*ref2JumpIter)) break;
+
+            result.jumpRange++;
+            ref1JumpIter++;
+            ref2JumpIter++;
+        }
+    }
+
+    // if true, output final cigars using seq match '=' and mismatch 'X' symbols:
+    static const bool isOutputSeqMatch(true);
+
+    if (isOutputSeqMatch)
+    {
+        apath_add_seqmatch(queryBegin, queryEnd, (ref1Begin+result.align1.beginPos), ref1End, apath1);
+
+        const unsigned queryOffset = apath_read_length(apath1) + result.jumpInsertSize;
+        apath_add_seqmatch(queryBegin + queryOffset, queryEnd, (ref2Begin+result.align2.beginPos), ref2End, apath2);
+    }
 }
 

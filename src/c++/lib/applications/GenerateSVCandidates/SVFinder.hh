@@ -22,7 +22,7 @@
 
 #include "blt_util/bam_streamer.hh"
 #include "manta/SVCandidate.hh"
-#include "manta/SVCandidateData.hh"
+#include "manta/SVCandidateSetData.hh"
 #include "manta/SVLocusScanner.hh"
 #include "svgraph/SVLocusSet.hh"
 
@@ -45,12 +45,12 @@ struct SVFinder
     void
     findCandidateSV(
         const EdgeInfo& edge,
-        SVCandidateData& svData,
+        SVCandidateSetData& svData,
         std::vector<SVCandidate>& svs);
 
     void
     checkResult(
-        const SVCandidateData& svData,
+        const SVCandidateSetData& svData,
         const std::vector<SVCandidate>& svs) const;
 
 private:
@@ -60,12 +60,12 @@ private:
         const SVLocus& locus,
         const NodeIndexType node1,
         const NodeIndexType node2,
-        SVCandidateData& svData);
+        SVCandidateSetData& svData);
 
 
     void
     getCandidatesFromData(
-        SVCandidateData& svData,
+        SVCandidateSetData& svData,
         std::vector<SVCandidate>& svs);
 
     const ReadScannerOptions _scanOpt;

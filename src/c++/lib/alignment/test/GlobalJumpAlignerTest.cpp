@@ -50,6 +50,27 @@ testAlign(
 }
 
 
+static
+JumpAlignmentResult<score_t>
+testAlign2(
+    const std::string& seq,
+    const std::string& ref1,
+    const std::string& ref2)
+{
+    static const AlignmentScores<score_t> scores(2,-4,-10,-1,-1);
+    static const int jumpScore(-20);
+    GlobalJumpAligner<score_t> aligner(scores,jumpScore);
+    JumpAlignmentResult<score_t> result;
+    aligner.align(
+        seq.begin(),seq.end(),
+        ref1.begin(),ref1.end(),
+        ref2.begin(),ref2.end(),
+        result);
+
+    return result;
+}
+
+
 BOOST_AUTO_TEST_CASE( test_GlobalJumpAligner0 )
 {
     static const std::string seq("ABABACDCDC");
@@ -58,10 +79,10 @@ BOOST_AUTO_TEST_CASE( test_GlobalJumpAligner0 )
 
     JumpAlignmentResult<score_t> result = testAlign(seq,ref1,ref2);
 
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath),"5M");
-    BOOST_REQUIRE_EQUAL(result.align1.alignStart,0u);
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"5M");
-    BOOST_REQUIRE_EQUAL(result.align2.alignStart,0u);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath),"5=");
+    BOOST_REQUIRE_EQUAL(result.align1.beginPos,0u);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"5=");
+    BOOST_REQUIRE_EQUAL(result.align2.beginPos,0u);
 }
 
 
@@ -73,10 +94,10 @@ BOOST_AUTO_TEST_CASE( test_GlobalJumpAligner1 )
 
     JumpAlignmentResult<score_t> result = testAlign(seq,ref1,ref2);
 
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath),"5M");
-    BOOST_REQUIRE_EQUAL(result.align1.alignStart,0u);
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"5M");
-    BOOST_REQUIRE_EQUAL(result.align2.alignStart,0u);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath),"5=");
+    BOOST_REQUIRE_EQUAL(result.align1.beginPos,0u);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"5=");
+    BOOST_REQUIRE_EQUAL(result.align2.beginPos,0u);
 }
 
 
@@ -88,12 +109,11 @@ BOOST_AUTO_TEST_CASE( test_GlobalJumpAligner2 )
 
     JumpAlignmentResult<score_t> result = testAlign(seq,ref1,ref2);
 
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath),"5M");
-    BOOST_REQUIRE_EQUAL(result.align1.alignStart,0u);
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"5M");
-    BOOST_REQUIRE_EQUAL(result.align2.alignStart,1u);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath),"5=");
+    BOOST_REQUIRE_EQUAL(result.align1.beginPos,0u);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"5=");
+    BOOST_REQUIRE_EQUAL(result.align2.beginPos,1u);
 }
-
 
 BOOST_AUTO_TEST_CASE( test_GlobalJumpAlignerLong )
 {
@@ -103,10 +123,10 @@ BOOST_AUTO_TEST_CASE( test_GlobalJumpAlignerLong )
 
     JumpAlignmentResult<score_t> result = testAlign(seq,ref1,ref2);
 
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath),"5M");
-    BOOST_REQUIRE_EQUAL(result.align1.alignStart,11u);
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"5M");
-    BOOST_REQUIRE_EQUAL(result.align2.alignStart,11u);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath),"5=");
+    BOOST_REQUIRE_EQUAL(result.align1.beginPos,11u);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"5=");
+    BOOST_REQUIRE_EQUAL(result.align2.beginPos,11u);
 }
 
 
@@ -118,10 +138,10 @@ BOOST_AUTO_TEST_CASE( test_GlobalJumpAlignerSimpleIndels )
 
     JumpAlignmentResult<score_t> result = testAlign(seq,ref1,ref2);
 
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath),"5M1D5M");
-    BOOST_REQUIRE_EQUAL(result.align1.alignStart,1u);
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"6M1I5M");
-    BOOST_REQUIRE_EQUAL(result.align2.alignStart,1u);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath),"5=1D5=");
+    BOOST_REQUIRE_EQUAL(result.align1.beginPos,1u);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"6=1I5=");
+    BOOST_REQUIRE_EQUAL(result.align2.beginPos,1u);
 }
 
 
@@ -134,10 +154,10 @@ BOOST_AUTO_TEST_CASE( test_GlobalJumpAlignerBPInsert )
 
     JumpAlignmentResult<score_t> result = testAlign(seq,ref1,ref2);
 
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath),"11M");
-    BOOST_REQUIRE_EQUAL(result.align1.alignStart,1u);
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"11M");
-    BOOST_REQUIRE_EQUAL(result.align2.alignStart,1u);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath),"11=");
+    BOOST_REQUIRE_EQUAL(result.align1.beginPos,1u);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"11=");
+    BOOST_REQUIRE_EQUAL(result.align2.beginPos,1u);
     BOOST_REQUIRE_EQUAL(result.jumpInsertSize,4u);
 }
 
@@ -151,10 +171,12 @@ BOOST_AUTO_TEST_CASE( test_GlobalJumpAlignerBPRange )
 
     JumpAlignmentResult<score_t> result = testAlign(seq,ref1,ref2);
 
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath),"12M");
-    BOOST_REQUIRE_EQUAL(result.align1.alignStart,3u);
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"15M");
-    BOOST_REQUIRE_EQUAL(result.align2.alignStart,6u);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath),"12=");
+    BOOST_REQUIRE_EQUAL(result.align1.beginPos,3u);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"15=");
+    BOOST_REQUIRE_EQUAL(result.align2.beginPos,6u);
+    BOOST_REQUIRE_EQUAL(result.jumpInsertSize,0u);
+    BOOST_REQUIRE_EQUAL(result.jumpRange,3u);
 }
 
 
@@ -167,10 +189,30 @@ BOOST_AUTO_TEST_CASE( test_GlobalJumpAlignerBPRange2 )
 
     JumpAlignmentResult<score_t> result = testAlign(seq,ref1,ref2);
 
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath),"9M");
-    BOOST_REQUIRE_EQUAL(result.align1.alignStart,3u);
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"18M");
-    BOOST_REQUIRE_EQUAL(result.align2.alignStart,6u);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath),"9=");
+    BOOST_REQUIRE_EQUAL(result.align1.beginPos,3u);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"18=");
+    BOOST_REQUIRE_EQUAL(result.align2.beginPos,6u);
+    BOOST_REQUIRE_EQUAL(result.jumpInsertSize,0u);
+    BOOST_REQUIRE_EQUAL(result.jumpRange,9u);
+}
+
+
+// define behavior when the breakpoint solution has an insertion with a repeat
+BOOST_AUTO_TEST_CASE( test_GlobalJumpAlignerInsert )
+{
+    static const std::string seq("xyzxyzxyzABCABCABCABCABCABCxyzxyzxyz");
+    static const std::string ref1("xyzxyzxyzxyzABCABCstustu");
+    static const std::string ref2("stustuABCABCxyzxyzxyzxyz");
+
+    JumpAlignmentResult<score_t> result = testAlign(seq,ref1,ref2);
+
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath),"15=");
+    BOOST_REQUIRE_EQUAL(result.align1.beginPos,3u);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"15=");
+    BOOST_REQUIRE_EQUAL(result.align2.beginPos,6u);
+    BOOST_REQUIRE_EQUAL(result.jumpInsertSize,6u);
+    BOOST_REQUIRE_EQUAL(result.jumpRange,0u);
 }
 
 
@@ -182,10 +224,10 @@ BOOST_AUTO_TEST_CASE( test_GlobalJumpAlignerOnly1 )
 
     JumpAlignmentResult<score_t> result = testAlign(seq,ref1,ref2);
 
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath),"5M");
-    BOOST_REQUIRE_EQUAL(result.align1.alignStart,1u);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath),"5=");
+    BOOST_REQUIRE_EQUAL(result.align1.beginPos,1u);
     BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"");
-    BOOST_REQUIRE_EQUAL(result.align2.alignStart,0u);
+    BOOST_REQUIRE_EQUAL(result.align2.beginPos,0u);
 }
 
 
@@ -198,9 +240,9 @@ BOOST_AUTO_TEST_CASE( test_GlobalJumpAlignerOnly2 )
     JumpAlignmentResult<score_t> result = testAlign(seq,ref1,ref2);
 
     BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath),"");
-    BOOST_REQUIRE_EQUAL(result.align1.alignStart,0u);
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"5M");
-    BOOST_REQUIRE_EQUAL(result.align2.alignStart,1u);
+    BOOST_REQUIRE_EQUAL(result.align1.beginPos,0u);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"5=");
+    BOOST_REQUIRE_EQUAL(result.align2.beginPos,1u);
 }
 
 
@@ -213,10 +255,49 @@ BOOST_AUTO_TEST_CASE( test_GlobalJumpAlignerOffEdge )
 
     JumpAlignmentResult<score_t> result = testAlign(seq,ref1,ref2);
 
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath),"5S6M");
-    BOOST_REQUIRE_EQUAL(result.align1.alignStart,0u);
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"6M5S");
-    BOOST_REQUIRE_EQUAL(result.align2.alignStart,1u);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath),"5S1X5=");
+    BOOST_REQUIRE_EQUAL(result.align1.beginPos,0u);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"5=1X5S");
+    BOOST_REQUIRE_EQUAL(result.align2.beginPos,1u);
+}
+
+
+
+BOOST_AUTO_TEST_CASE( test_GlobalJumpAlignerRef2Clip )
+{
+    // extracted from production failure case:
+    //
+    static const std::string seq("GGCAGAAAAGGAAATA");
+    static const std::string ref1("TAAAAAGTAGAT");
+    static const std::string ref2("AAAGGAAATA");
+
+    JumpAlignmentResult<score_t> result = testAlign2(seq,ref1,ref2);
+
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath),"");
+    BOOST_REQUIRE_EQUAL(result.align1.beginPos,0u);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"6S10=");
+    BOOST_REQUIRE_EQUAL(result.align2.beginPos,0u);
+    BOOST_REQUIRE_EQUAL(result.jumpInsertSize,0u);
+    BOOST_REQUIRE_EQUAL(result.jumpRange,0u);
+}
+
+
+BOOST_AUTO_TEST_CASE( test_GlobalJumpAlignerRef1Clip )
+{
+    // extracted from production failure case:
+    //
+    static const std::string seq("TAAAAAGTAGATTTCGT");
+    static const std::string ref1("TAAAAAGTAGAT");
+    static const std::string ref2("AAAGGAAATA");
+
+    JumpAlignmentResult<score_t> result = testAlign2(seq,ref1,ref2);
+
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath),"12=5S");
+    BOOST_REQUIRE_EQUAL(result.align1.beginPos,0u);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"");
+    BOOST_REQUIRE_EQUAL(result.align2.beginPos,0u);
+    BOOST_REQUIRE_EQUAL(result.jumpInsertSize,0u);
+    BOOST_REQUIRE_EQUAL(result.jumpRange,0u);
 }
 
 

@@ -163,6 +163,14 @@ parseGSCOptions(const manta::Program& prog,
     {
         usage(log_os,prog,visible,"Must specify at least one input alignment file");
     }
+    if (opt.statsFilename.empty())
+    {
+        usage(log_os,prog,visible,"Need the alignment stats file");
+    }
+    if (opt.referenceFilename.empty())
+    {
+        usage(log_os,prog,visible,"Need the FASTA reference file");
+    }
     {
         // check that alignment files exist, and names do not repeat
         std::set<std::string> nameCheck;

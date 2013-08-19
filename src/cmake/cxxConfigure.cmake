@@ -106,7 +106,8 @@ endif ()
 #
 
 # start with warning flags:
-set (CXX_WARN_FLAGS "-Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -Wredundant-decls -pedantic -Wunused-parameter -Wundef")
+# switching off warning about unused function because otherwise compilation will fail with g++ 4.7.3 in Ubuntu
+set (CXX_WARN_FLAGS "-Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -Wredundant-decls -pedantic -Wunused-parameter -Wundef -Wno-unused-function")
 
 if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wuninitialized")

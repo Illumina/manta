@@ -77,6 +77,12 @@ struct reference_contig_segment
         return _seq;
     }
 
+    pos_t
+    get_offset() const
+    {
+        return _offset;
+    }
+
     void
     set_offset(const pos_t offset)
     {
@@ -89,10 +95,15 @@ struct reference_contig_segment
         return _offset+_seq.size();
     }
 
+    void
+    clear()
+    {
+        _offset=0;
+        _seq.clear();
+    }
+
 private:
 
     pos_t _offset;
     std::string _seq;
 };
-
-

@@ -19,11 +19,11 @@
 
 #include "svgraph/EdgeInfo.hh"
 #include "manta/SVCandidate.hh"
-#include "manta/SVCandidateData.hh"
+#include "manta/SVCandidateAssemblyData.hh"
+#include "manta/SVCandidateSetData.hh"
 #include "svgraph/SVLocusSet.hh"
 #include "manta/SomaticSVScoreInfo.hh"
 #include "options/SomaticCallOptions.hh"
-
 #include "boost/format.hpp"
 
 #include <iosfwd>
@@ -68,6 +68,8 @@ protected:
     void
     writeSVCore(
         const EdgeInfo& edge,
+        const SVCandidateSetData& svData,
+        const SVCandidateAssemblyData& adata,
         const unsigned svIndex,
         const SVCandidate& sv);
 
@@ -75,6 +77,8 @@ protected:
     void
     modifyInfo(
         const bool /*isFirstOfPair*/,
+        const SVCandidateSetData& /*svData*/,
+        const SVCandidateAssemblyData& /*adata*/,
         std::vector<std::string>& /*infotags*/) const
     {}
 
@@ -87,18 +91,23 @@ protected:
 
 private:
 
+    /// \param[in] idPrefix prefix used for ID/MATEID tags in the vcf ID fields
+    /// \param[in] isFirstBreakend if true report bp1, else report bp2
     void
     writeTransloc(
-        const SVBreakend& bp1,
-        const SVBreakend& bp2,
+        const SVCandidate& sv,
         const std::string& idPrefix,
-        const bool isFirstOfPair);
+        const bool isFirstBreakend,
+        const SVCandidateSetData& svData,
+        const SVCandidateAssemblyData& adata);
 
     void
     writeTranslocPair(
         const EdgeInfo& edge,
         const unsigned svIndex,
-        const SVCandidate& sv);
+        const SVCandidate& sv,
+        const SVCandidateSetData& svData,
+        const SVCandidateAssemblyData& adata);
 
     void
     writeInvdel(

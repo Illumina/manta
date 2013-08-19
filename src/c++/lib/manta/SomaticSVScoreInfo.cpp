@@ -21,10 +21,20 @@
 
 #include <iostream>
 
+std::ostream&
+operator<<(std::ostream& os, const SVSampleInfo& si)
+{
+    os << "SVSampleInfo bp1SpanReads=" << si.bp1SpanReads << " bp2SpanReads=" << si.bp2SpanReads << " spanPairs=" << si.spanPairs << std::endl;
+    return os;
+}
+
 
 std::ostream&
 operator<<(std::ostream& os, const SomaticSVScoreInfo& ssi)
 {
+    os << "SomaticSVScoreInfo bp1MaxDepth=" << ssi.bp1MaxDepth << " bp2MaxDepth=" << ssi.bp2MaxDepth << " somaticScore=" << ssi.somaticScore << std::endl;
+    os << "Tumor sample info " << ssi.tumor;
+    os << "Normal sample info " << ssi.normal;
     BOOST_FOREACH(const std::string& filter, ssi.filters)
     {
         os << " " << filter;

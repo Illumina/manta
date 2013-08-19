@@ -19,6 +19,7 @@
 
 #include "boost/algorithm/string/join.hpp"
 
+#include "manta/SomaticSVScoreInfo.hh"
 
 
 void
@@ -47,6 +48,8 @@ void
 VcfWriterSomaticSV::
 modifyInfo(
     const bool isFirstOfPair,
+    const SVCandidateSetData& /*svData*/,
+    const SVCandidateAssemblyData& /*adata*/,
     std::vector<std::string>& infotags) const
 {
     assert(_ssInfoPtr != NULL);
@@ -65,6 +68,7 @@ modifyInfo(
     infotags.push_back( str(boost::format("MATE_BND_DEPTH=%i") %
                             (isFirstOfPair ? ssInfo.bp2MaxDepth : ssInfo.bp1MaxDepth) ) );
 }
+
 
 
 std::string
@@ -89,7 +93,8 @@ void
 VcfWriterSomaticSV::
 writeSV(
     const EdgeInfo& edge,
-    const SVCandidateData& ,
+    const SVCandidateSetData& svData,
+    const SVCandidateAssemblyData& adata,
     const unsigned svIndex,
     const SVCandidate& sv,
     const SomaticSVScoreInfo& ssInfo)
@@ -99,6 +104,6 @@ writeSV(
 
     //TODO: this is a lame way to customize subclass behavior:
     _ssInfoPtr=&ssInfo;
-    writeSVCore(edge, svIndex, sv);
+    writeSVCore(edge, svData, adata, svIndex, sv);
     _ssInfoPtr=NULL;
 }
