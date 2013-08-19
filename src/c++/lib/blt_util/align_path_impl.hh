@@ -48,12 +48,12 @@ apath_add_seqmatch(
         {
             for (unsigned segmentPos(0); segmentPos<ps.length; ++segmentPos)
             {
-                if(queryIndex >= queryEnd)
+                if (queryIndex >= queryEnd)
                 {
                     throw blt_exception("apath_add_seqmatch: past end of query\n");
                 }
 
-                if(refIndex >= refEnd)
+                if (refIndex >= refEnd)
                 {
                     throw blt_exception("apath_add_seqmatch: past end of reference\n");
                 }

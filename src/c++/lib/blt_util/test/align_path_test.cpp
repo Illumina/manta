@@ -41,9 +41,9 @@ BOOST_AUTO_TEST_CASE( test_apath_add_seqmatch )
     cigar_to_apath(testCigar.c_str(), testPath);
 
     apath_add_seqmatch(
-            testRead.begin(), testRead.end(),
-            testRef.begin(), testRef.end(),
-            testPath);
+        testRead.begin(), testRead.end(),
+        testRef.begin(), testRef.end(),
+        testPath);
 
     BOOST_REQUIRE_EQUAL(apath_to_cigar(testPath), "2=1X1=1D3=1X");
 }

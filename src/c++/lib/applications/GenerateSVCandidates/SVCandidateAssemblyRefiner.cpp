@@ -60,7 +60,7 @@ adjustAssembledBreakend(
 
     known_pos_range2& range(bp.interval.range);
 
-    if(isLeftAligned)
+    if (isLeftAligned)
     {
         range.set_begin_pos(bpBreakendPos);
         range.set_end_pos(bpBreakendPos + static_cast<pos_t>(jumpRange));
@@ -206,8 +206,8 @@ getCandidateAssemblyData(
 
         std::string bp1Seq,bp2Seq,insertSeq;
         getFwdStrandQuerySegments(alignment, contig.seq,
-            isBp2AlignedFirst, isBp1Reversed, isBp2Reversed,
-            bp1Seq, bp2Seq, insertSeq);
+                                  isBp2AlignedFirst, isBp1Reversed, isBp2Reversed,
+                                  bp1Seq, bp2Seq, insertSeq);
         log_os << "\tbp1seq_fwd: " << bp1Seq << "\n";
         log_os << "\tinsseq_fwd: " << insertSeq << "\n";
         log_os << "\tbp2seq_fwd: " << bp2Seq << "\n";
@@ -247,7 +247,7 @@ getCandidateAssemblyData(
         assert(hsContig.seq.size() >= clipSize);
         const unsigned clippedContigSize(hsContig.seq.size() - clipSize);
 
-        if(clippedContigSize < minNonClippedLength)
+        if (clippedContigSize < minNonClippedLength)
         {
 #ifdef DEBUG_REFINER
             log_os << "Rejecting highest scoring contig. Aligned contig length after clipping is: " << clippedContigSize << " min size is: " << minNonClippedLength << "\n";
@@ -263,7 +263,7 @@ getCandidateAssemblyData(
 
         const float scoreFrac(static_cast<float>(normalizedScore)/static_cast<float>(optimalScore));
 
-        if(scoreFrac < minScoreFrac)
+        if (scoreFrac < minScoreFrac)
         {
 #ifdef DEBUG_REFINER
             log_os << "Rejecting highest scoring contig. Fraction of optimal alignment score is: " << scoreFrac << " minScoreFrac: " << minScoreFrac << "\n";
@@ -305,7 +305,7 @@ getCandidateAssemblyData(
 
         // fill in insertSeq:
         adata.sv.insertSeq.clear();
-        if(bestAlign.jumpInsertSize > 0)
+        if (bestAlign.jumpInsertSize > 0)
         {
             getFwdStrandInsertSegment(bestAlign, bestContig.seq, isBp1Reversed, adata.sv.insertSeq);
         }

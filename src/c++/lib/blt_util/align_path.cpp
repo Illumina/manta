@@ -303,7 +303,7 @@ apath_append(
     const align_t seg_type,
     const unsigned length)
 {
-    if(apath.size() && apath.back().type == seg_type)
+    if (apath.size() && apath.back().type == seg_type)
     {
         apath.back().length += length;
     }

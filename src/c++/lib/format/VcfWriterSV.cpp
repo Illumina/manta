@@ -141,7 +141,7 @@ writeTransloc(
     const known_pos_range2& bpArange(bpA.interval.range);
     const known_pos_range2& bpBrange(bpB.interval.range);
 
-    if(! isImprecise)
+    if (! isImprecise)
     {
         assert(bpArange.size() == bpBrange.size());
     }
@@ -152,7 +152,7 @@ writeTransloc(
     if (! isImprecise)
     {
         pos = bpArange.begin_pos()+1;
-        if(isBreakendRangeSameShift)
+        if (isBreakendRangeSameShift)
         {
             matePos = bpBrange.begin_pos()+1;
         }
@@ -230,7 +230,7 @@ writeTransloc(
     if (! sv.insertSeq.empty())
     {
         infotags.push_back( str( boost::format("SVINSLEN=%i") % (sv.insertSeq.size()) ));
-        if(isBp1 || (bpA.state != bpB.state))
+        if (isBp1 || (bpA.state != bpB.state))
         {
             infotags.push_back( str( boost::format("SVINSSEQ=%s") % (sv.insertSeq) ));
         }
@@ -295,7 +295,7 @@ writeInvdel(
     const known_pos_range2& bpArange(bpA.interval.range);
     const known_pos_range2& bpBrange(bpB.interval.range);
 
-    if(! isImprecise)
+    if (! isImprecise)
     {
         assert(bpArange.size() == bpBrange.size());
     }
@@ -303,10 +303,10 @@ writeInvdel(
     // get POS and endPos
     pos_t pos(bpArange.center_pos()+1);
     pos_t endPos(bpBrange.center_pos()+1);
-    if(! isImprecise)
+    if (! isImprecise)
     {
         pos = bpArange.begin_pos()+1;
-        if(isBreakendRangeSameShift)
+        if (isBreakendRangeSameShift)
         {
             endPos = bpBrange.begin_pos()+1;
         }
@@ -363,7 +363,7 @@ writeInvdel(
     if (! sv.insertSeq.empty())
     {
         infotags.push_back( str( boost::format("SVINSLEN=%i") % (sv.insertSeq.size()) ));
-        if(isBp1First || (bpA.state != bpB.state))
+        if (isBp1First || (bpA.state != bpB.state))
         {
             infotags.push_back( str( boost::format("SVINSSEQ=%s") % (sv.insertSeq) ));
         }

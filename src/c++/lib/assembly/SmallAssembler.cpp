@@ -358,7 +358,7 @@ runSmallAssembler(
 
     for (unsigned iteration(0); iteration < opt.maxAssemblyIterations; ++iteration)
     {
-        if(unusedReadsNow < opt.minSeedReads) return;
+        if (unusedReadsNow < opt.minSeedReads) return;
 
         iterationUusedReads.push_back(unusedReadsNow);
         for (unsigned wordLength(opt.minWordLength); wordLength<=opt.maxWordLength; wordLength+=2)

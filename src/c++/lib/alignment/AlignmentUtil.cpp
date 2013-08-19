@@ -97,18 +97,18 @@ getFwdStrandQuerySegments(
     insertSeq = querySeq.substr(align1Size,insertSize);
     bp2Seq = querySeq.substr(insertOffset,align2Size);
 
-    if(isBp2AlignedFirst)
+    if (isBp2AlignedFirst)
     {
         std::swap(bp1Seq,bp2Seq);
     }
 
-    if(isBp1Reversed)
+    if (isBp1Reversed)
     {
         reverseCompStr(bp1Seq);
         reverseCompStr(insertSeq);
     }
 
-    if(isBp2Reversed)
+    if (isBp2Reversed)
     {
         reverseCompStr(bp2Seq);
     }
@@ -128,7 +128,7 @@ getFwdStrandInsertSegment(
 
     insertSeq = querySeq.substr(align1Size,insertSize);
 
-    if(isBp1Reversed) reverseCompStr(insertSeq);
+    if (isBp1Reversed) reverseCompStr(insertSeq);
 }
 
 

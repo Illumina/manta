@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE( test_getQuerySegments )
 
     std::string bp1Seq,insertSeq,bp2Seq;
     getFwdStrandQuerySegments(result,querySeq,false,true,false,
-        bp1Seq,bp2Seq,insertSeq);
+                              bp1Seq,bp2Seq,insertSeq);
 
     BOOST_REQUIRE_EQUAL(bp1Seq,"TTTT");
     BOOST_REQUIRE_EQUAL(insertSeq,"GG");

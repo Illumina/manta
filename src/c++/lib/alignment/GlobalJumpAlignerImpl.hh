@@ -328,7 +328,7 @@ align(
 
     while ((bt.queryBegin>0) && (bt.refBegin>0))
     {
-        if(isRef2End) break;
+        if (isRef2End) break;
         const bool isRef1(bt.refBegin<=ref1Size);
         ALIGNPATH::path_t& apath( isRef1 ? apath1 : apath2 );
         const unsigned refXBegin(bt.refBegin - (isRef1 ? 0 : ref1Size));
@@ -346,7 +346,7 @@ align(
 
         if      (bt.state==AlignState::MATCH)
         {
-            if((!isRef1) && (refXBegin==1) && (nextState==AlignState::MATCH)) isRef2End=true;
+            if ((!isRef1) && (refXBegin==1) && (nextState==AlignState::MATCH)) isRef2End=true;
 
             AlignerUtil::updatePath(apath,ps,ALIGNPATH::MATCH);
             bt.queryBegin--;
@@ -418,16 +418,16 @@ align(
     std::reverse(apath2.begin(),apath2.end());
 
     // figure out jumpRange:
-    if(result.align1.isAligned() && result.align2.isAligned())
+    if (result.align1.isAligned() && result.align2.isAligned())
     {
         // find the distance over which ref1 and ref2 are equal following the start of the breakpoint
         SymIter ref1JumpIter(ref1Begin + result.align1.beginPos + apath_ref_length(apath1));
         SymIter ref2JumpIter(ref2Begin + result.align2.beginPos);
-        while(true)
+        while (true)
         {
-            if(ref1JumpIter == ref1End) break;
-            if(ref2JumpIter == ref2End) break;
-             if((*ref1JumpIter) != (*ref2JumpIter)) break;
+            if (ref1JumpIter == ref1End) break;
+            if (ref2JumpIter == ref2End) break;
+            if ((*ref1JumpIter) != (*ref2JumpIter)) break;
 
             result.jumpRange++;
             ref1JumpIter++;
@@ -438,7 +438,7 @@ align(
     // if true, output final cigars using seq match '=' and mismatch 'X' symbols:
     static const bool isOutputSeqMatch(true);
 
-    if(isOutputSeqMatch)
+    if (isOutputSeqMatch)
     {
         apath_add_seqmatch(queryBegin, queryEnd, (ref1Begin+result.align1.beginPos), ref1End, apath1);
 
