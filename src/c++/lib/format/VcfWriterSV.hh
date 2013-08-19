@@ -93,13 +93,13 @@ protected:
 
 private:
 
-    /// \param[in] isBp1 if true report bp1, else report bp2
+    /// \param[in] idPrefix prefix used for ID/MATEID tags in the vcf ID fields
+    /// \param[in] isFirstBreakend if true report bp1, else report bp2
     void
     writeTransloc(
         const SVCandidate& sv,
-        const bool isBp1,
         const std::string& idPrefix,
-        const bool isFirstOfPair,
+        const bool isFirstBreakend,
         const SVCandidateSetData& svData,
         const SVCandidateAssemblyData& adata);
 

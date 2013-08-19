@@ -120,17 +120,16 @@ void
 VcfWriterSV::
 writeTransloc(
     const SVCandidate& sv,
-    const bool isBp1,
     const std::string& idPrefix,
-    const bool isFirstOfPair,
+    const bool isFirstBreakend,
     const SVCandidateSetData& svData,
     const SVCandidateAssemblyData& adata)
 {
     const bool isImprecise(sv.isImprecise());
     const bool isBreakendRangeSameShift(sv.isBreakendRangeSameShift());
 
-    const SVBreakend& bpA( isBp1 ? sv.bp1 : sv.bp2);
-    const SVBreakend& bpB( isBp1 ? sv.bp2 : sv.bp1);
+    const SVBreakend& bpA( isFirstBreakend ? sv.bp1 : sv.bp2);
+    const SVBreakend& bpB( isFirstBreakend ? sv.bp2 : sv.bp1);
 
     std::vector<std::string> infotags;
 
@@ -163,8 +162,8 @@ writeTransloc(
     }
 
     // get ID
-    const std::string localId(idPrefix + (isFirstOfPair ? '0' : '1'));
-    const std::string mateId(idPrefix + (isFirstOfPair ? '1' : '0'));
+    const std::string localId(idPrefix + (isFirstBreakend ? '0' : '1'));
+    const std::string mateId(idPrefix + (isFirstBreakend ? '1' : '0'));
 
     // get REF
     std::string ref;
@@ -230,7 +229,7 @@ writeTransloc(
     if (! sv.insertSeq.empty())
     {
         infotags.push_back( str( boost::format("SVINSLEN=%i") % (sv.insertSeq.size()) ));
-        if (isBp1 || (bpA.state != bpB.state))
+        if (isFirstBreakend || (bpA.state != bpB.state))
         {
             infotags.push_back( str( boost::format("SVINSSEQ=%s") % (sv.insertSeq) ));
         }
@@ -240,7 +239,7 @@ writeTransloc(
         }
     }
 
-    modifyInfo(bpA,bpB,isFirstOfPair,svData, adata, infotags);
+    modifyInfo(bpA,bpB,isFirstBreakend,svData, adata, infotags);
 
     // write out record:
     _os << chrom
@@ -268,8 +267,8 @@ writeTranslocPair(
 {
     const std::string idPrefix( str(_idFormatter % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % svIndex ) );
 
-    writeTransloc(sv, true, idPrefix, true, svData, adata);
-    writeTransloc(sv, false, idPrefix, false, svData, adata);
+    writeTransloc(sv, idPrefix, true, svData, adata);
+    writeTransloc(sv, idPrefix, false, svData, adata);
 }
 
 
