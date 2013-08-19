@@ -76,8 +76,6 @@ protected:
     virtual
     void
     modifyInfo(
-        const SVBreakend& /*bp1*/,
-        const SVBreakend& /*bp2*/,
         const bool /*isFirstOfPair*/,
         const SVCandidateSetData& /*svData*/,
         const SVCandidateAssemblyData& /*adata*/,
