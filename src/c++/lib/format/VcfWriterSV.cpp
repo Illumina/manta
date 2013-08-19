@@ -311,7 +311,7 @@ writeInvdel(
         }
         else
         {
-            endPos = bpBrange.end_pos()+1;
+            endPos = bpBrange.end_pos();
         }
     }
 
