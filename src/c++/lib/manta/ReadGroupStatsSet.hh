@@ -22,7 +22,6 @@
 #include "boost/optional.hpp"
 
 
-
 /// \brief manages multiple read_group_stats
 ///
 struct ReadGroupStatsSet
@@ -59,17 +58,21 @@ struct ReadGroupStatsSet
         _group.insert(bam_file,rps);
     }
 
-    //
-    // persistence:
-    //
+
+    //TODO: make serialization in xml format
+    // serialization
+    void
+    save(const char* filename) const;
+
+    // restore from serialization
+    void
+    load(const char* filename);
+
+    // write out brief info of the stats class
+    // and some debugging info if under debug mode
     void
     write(std::ostream& os) const;
 
-    void
-    read(std::istream& os);
-
-    void
-    read(const char* filename);
 
 private:
     void

@@ -376,7 +376,7 @@ SVLocusScanner(
     _opt(opt)
 {
     // pull in insert stats:
-    _rss.read(statsFilename.c_str());
+    _rss.load(statsFilename.c_str());
 
     // cache the insert stats we'll be looking up most often:
     BOOST_FOREACH(const std::string& file, alignmentFilename)

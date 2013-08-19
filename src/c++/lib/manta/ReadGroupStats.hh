@@ -20,49 +20,64 @@
 #include <iosfwd>
 #include <vector>
 #include <string>
-#include <map>
+#include <ext/hash_map>
 
+//#include "boost/unordered_map.hpp"
 #include "boost/optional.hpp"
+#include "boost/archive/text_oarchive.hpp"
+#include "boost/archive/text_iarchive.hpp"
+#include "boost/serialization/vector.hpp"
+#include "boost/serialization/hash_map.hpp"
 
 
 struct PairStatSet
 {
     PairStatSet()
     {
-        clear();
+        totalCount = 0;
+        numOfFragSize = 0;
     }
 
+    int totalCount;
+    int numOfFragSize;
+    std::vector<int> fragmentSizes;
+    static const int quantileNum = 1000;
+    float quantiles[quantileNum];
+
+    //typedef boost::unordered_map<int, std::pair<int, float> > hash_map_fragment;
+    typedef __gnu_cxx::hash_map <int, std::pair<int, float> > hash_map_fragment;
+    hash_map_fragment fragmentSizeHash;
+
+    bool
+    calcStats();
     ///
     /// const interface used by variant callers:
     ///
-
     // return value for which we observe value or less with prob p
     // (not sure what the exact way to phrase this is for the discrete case)
-    double
-    quantile(const double p) const;
+    int
+    quantile(const float p) const;
 
     // cdf(x)
-    double
-    cdf(const double x) const;
+    float
+    cdf(const int x) const;
 
-
-    ///
-    /// remainder of interface for estimation, store/read from disk
-    ///
-    void clear()
+private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int version)
     {
-        median = 0.;
-        sd = 0.;
+        ar& totalCount;
+        ar& numOfFragSize;
+        ar& fragmentSizes;
+        ar& quantiles;
+        ar& fragmentSizeHash;
     }
 
-    /// TODO: hide implementation details, better estimate:
-    double median;
-    double sd;
 };
 
 std::ostream&
 operator<<(std::ostream& os, const PairStatSet& pss);
-
 
 
 // Read pair insert stats can be computed for each sample or read group, this
@@ -73,18 +88,15 @@ struct ReadGroupStats
 
     ReadGroupStats() {}
     ReadGroupStats(const std::string& statsBamFile);
-    ReadGroupStats(const std::vector<std::string>& data);
+
+public:
+    PairStatSet fragSize;
+    ReadPairOrient relOrients;
 
     void
     write(std::ostream& os) const;
 
 private:
-    // These data are used temporarily during ReadPairStats estimation
-    struct PairStatsData
-    {
-        std::vector<int32_t> fragmentLengths;
-    };
-
     /// If PairStats has converged (or if isForcedConvergence is true)
     /// 1. All stats are computed
     /// 2. return true
@@ -93,12 +105,16 @@ private:
     /// 1. only insert stats are computed
     /// 2. return false
     ///
-    bool computePairStats(PairStatsData& psd, const bool isForcedConvergence = false);
 
-public:
-    //////////////// data:
-    ReadPairOrient relOrients;
+    bool computePairStats(std::string& statsBamFile,
+                          const bool isForcedConvergence = false);
 
-    PairStatSet fragSize;
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int version)
+    {
+        ar& fragSize;
+        ar& relOrients;
+    }
 };
 
