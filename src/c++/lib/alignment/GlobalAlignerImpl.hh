@@ -22,6 +22,7 @@
 #include <iostream>
 
 #ifdef ALN_DEBUG
+#include "blt_util/log.hh"
 #include <iostream>
 #endif
 
@@ -47,10 +48,6 @@ align(
     const SymIter refBegin, const SymIter refEnd,
     AlignmentResult<ScoreType>& result) const
 {
-#ifdef ALN_DEBUG
-    std::ostream& log_os(std::cerr);
-#endif
-
     result.clear();
 
     const size_t querySize(std::distance(queryBegin, queryEnd));
@@ -180,7 +177,7 @@ align(
     result.score = bt.max;
 
 #ifdef ALN_DEBUG
-    log_os << "bt-start queryIndex: " << queryBegin << " refIndex: " << refBegin << " state: " << AlignState::label(bt.state) << " maxScore: " << max << "\n";
+    log_os << "bt-start queryIndex: " << queryBegin << " refIndex: " << refBegin << " state: " << AlignState::label(bt.state) << " maxScore: " << bt.max << "\n";
 #endif
 
     // traceback:

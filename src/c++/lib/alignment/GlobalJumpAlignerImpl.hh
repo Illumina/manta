@@ -24,6 +24,7 @@
 #include <iostream>
 
 #ifdef ALN_DEBUG
+#include "blt_util/log.hh"
 #include <iostream>
 #endif
 
@@ -52,10 +53,6 @@ align(
     const SymIter ref2Begin, const SymIter ref2End,
     JumpAlignmentResult<ScoreType>& result) const
 {
-#ifdef ALN_DEBUG
-    std::ostream& log_os(std::cerr);
-#endif
-
     result.clear();
 
     const size_t querySize(std::distance(queryBegin, queryEnd));
@@ -327,8 +324,11 @@ align(
         ps.length = (querySize-bt.queryBegin);
     }
 
+    bool isRef2End(false);
+
     while ((bt.queryBegin>0) && (bt.refBegin>0))
     {
+        if(isRef2End) break;
         const bool isRef1(bt.refBegin<=ref1Size);
         ALIGNPATH::path_t& apath( isRef1 ? apath1 : apath2 );
         const unsigned refXBegin(bt.refBegin - (isRef1 ? 0 : ref1Size));
@@ -346,6 +346,8 @@ align(
 
         if      (bt.state==AlignState::MATCH)
         {
+            if((!isRef1) && (refXBegin==1) && (nextState==AlignState::MATCH)) isRef2End=true;
+
             AlignerUtil::updatePath(apath,ps,ALIGNPATH::MATCH);
             bt.queryBegin--;
             bt.refBegin--;
@@ -390,7 +392,7 @@ align(
         ps.length++;
     }
 
-    const bool isRef1(bt.refBegin<=ref1Size);
+    const bool isRef1(bt.refBegin<ref1Size);
     ALIGNPATH::path_t& apath( isRef1 ? apath1 : apath2 );
 
     if (ps.type != ALIGNPATH::NONE) apath.push_back(ps);
