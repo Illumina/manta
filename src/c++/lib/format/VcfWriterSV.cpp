@@ -24,7 +24,7 @@
 
 #include <iostream>
 
-#define DEBUG_VCF
+//#define DEBUG_VCF
 
 
 
