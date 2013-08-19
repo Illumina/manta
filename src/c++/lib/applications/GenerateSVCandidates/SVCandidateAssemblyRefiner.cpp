@@ -258,10 +258,10 @@ getCandidateAssemblyData(
         }
 
         const int optimalScore(clippedContigSize * _aligner.getScores().match);
-        const int normalizedScore(hsAlign.score - _aligner.getJumpScore() - (clipSize * _aligner.getScores().offEdge));
+        int normalizedScore(hsAlign.score - _aligner.getJumpScore() - (clipSize * _aligner.getScores().offEdge));
 
         assert(optimalScore>0);
-        assert(normalizedScore>0);
+        if(normalizedScore < 0) normalizedScore = 0;
 
         const float scoreFrac(static_cast<float>(normalizedScore)/static_cast<float>(optimalScore));
 
