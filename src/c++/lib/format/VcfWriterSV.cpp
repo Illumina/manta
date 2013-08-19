@@ -158,7 +158,7 @@ writeTransloc(
         }
         else
         {
-            matePos = bpBrange.end_pos()+1;
+            matePos = bpBrange.end_pos();
         }
     }
 
