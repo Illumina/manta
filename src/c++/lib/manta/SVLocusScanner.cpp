@@ -19,6 +19,7 @@
 #include "blt_util/align_path_bam_util.hh"
 #include "blt_util/align_path_util.hh"
 #include "blt_util/log.hh"
+#include "alignment/AlignmentUtil.hh"
 #include "common/Exceptions.hh"
 
 #include "boost/foreach.hpp"
@@ -430,10 +431,12 @@ isReadFiltered(const bam_record& bamRead) const
 
 bool
 SVLocusScanner::
-isSemiAligned(const bam_record& /*bamRead*/) const
+isSemiAligned(const bam_record& bamRead) const
 {
-    // TODO
-    return true;
+	ALIGNPATH::path_t apath;
+	bam_cigar_to_apath(bamRead.raw_cigar(),bamRead.n_cigar(),apath);
+    const double minSemiAlignedScore(10.0);
+	return (ReadScorer::get().getSemiAlignedMetric(apath,bamRead.qual())>minSemiAlignedScore);
 }
 
 bool

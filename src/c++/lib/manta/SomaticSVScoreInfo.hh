@@ -47,7 +47,6 @@ struct SVSampleInfo
 std::ostream&
 operator<<(std::ostream& os, const SVSampleInfo& si);
 
-
 /// consolidate all somatic scoring results applied to an SV candidate
 struct SomaticSVScoreInfo
 {
