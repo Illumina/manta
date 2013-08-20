@@ -16,6 +16,7 @@
 ///
 
 
+#include "blt_util/align_path_bam_util.hh"
 #include "blt_util/log.hh"
 #include "blt_util/seq_util.hh"
 #include "manta/SVLocusAssembler.hh"
@@ -61,28 +62,48 @@ getBreakendReads(
     ReadIndexType& readIndex,
     AssemblyReadInput& reads) const
 {
-    static const size_t minIntervalSize(300);
 
+    // get search range:
     known_pos_range2 searchRange;
-    if (bp.interval.range.size() >= minIntervalSize)
     {
-        searchRange = bp.interval.range;
+        static const size_t minIntervalSize(300);
+        if (bp.interval.range.size() >= minIntervalSize)
+        {
+            searchRange = bp.interval.range;
+        }
+        else
+        {
+            const size_t missing = minIntervalSize - bp.interval.range.size();
+            assert(missing > 0);
+            const size_t wobble = missing/2;
+            // FIXME : not sure what happens if (end_pos + wobble) > chromosome size?
+            static const size_t zero(0);
+            searchRange.set_range(std::max((bp.interval.range.begin_pos()-wobble),zero),(bp.interval.range.end_pos()+wobble));
+        }
     }
-    else
-    {
-        const size_t missing = minIntervalSize - bp.interval.range.size();
-        assert(missing > 0);
-        const size_t wobble = missing/2;
-        // FIXME : not sure what happens if (end_pos + wobble) > chromosome size?
-        static const size_t zero(0);
-        searchRange.set_range(std::max((bp.interval.range.begin_pos()-wobble),zero),(bp.interval.range.end_pos()+wobble));
-    }
+
 
     static const unsigned minClipLen(3);
+
+    // depending on breakend type we may only be looking for candidates in one direction:
+    bool isSearchForRightOpen(true);
+    bool isSearchForLeftOpen(true);
+    if (SVBreakendState::RIGHT_OPEN == bp.state)
+    {
+        isSearchForLeftOpen = false;
+    }
+
+    if (SVBreakendState::LEFT_OPEN == bp.state)
+    {
+        isSearchForRightOpen = false;
+    }
+
 
     const unsigned bamCount(_bamStreams.size());
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
+        const std::string bamIndexStr(boost::lexical_cast<std::string>(bamIndex));
+
         bam_streamer& bamStream(*_bamStreams[bamIndex]);
 
         // set bam stream to new search interval:
@@ -94,19 +115,40 @@ getBreakendReads(
         {
             const bam_record& bamRead(*(bamStream.get_record_ptr()));
 
+            // some conservative filtration criteria (including MAPQ) -- note this
+            // means that if we want shadow reads this will have to be changed b/c
+            // unmapped reads are filtered out here:
+            if(_readScanner.isReadFiltered(bamRead)) continue;
+
+
             // FIXME: add some criteria to filter for "interesting" reads here, for now we add
             // only clipped reads and reads without N
             if ((bamRead.pos()-1) >= searchRange.end_pos()) break;
-            if (!_readScanner.isClipped(bamRead) ) continue;
-            if (_readScanner.getClipLength(bamRead)<minClipLen ) continue;
-            if (bamRead.get_bam_read().get_string().find('N') != std::string::npos) continue;
-            //if ( bamRead.pe_map_qual() == 0 ) continue;
-            std::string flag = "1";
-            if (bamRead.is_second())
+
+            ALIGNPATH::path_t apath;
+            bam_cigar_to_apath(bamRead.raw_cigar(), bamRead.n_cigar(), apath);
+
+            bool isClipKeeper(false);
+
+            if(isSearchForRightOpen)
             {
-                flag = "2";
+                const unsigned trailingClipLen(apath_soft_clip_trail_size(apath));
+                if(trailingClipLen >= minClipLen) isClipKeeper = true;
             }
-            const std::string readKey = std::string(bamRead.qname()) + "_" + flag + "_" + boost::lexical_cast<std::string>(bamIndex);
+
+            if(isSearchForLeftOpen)
+            {
+                const unsigned leadingClipLen(apath_soft_clip_lead_size(apath));
+                if(leadingClipLen >= minClipLen) isClipKeeper = true;
+            }
+
+            if(! isClipKeeper) continue;
+
+            if (bamRead.get_bam_read().get_string().find('N') != std::string::npos) continue;
+
+            //if ( bamRead.pe_map_qual() == 0 ) continue;
+            const char flag(bamRead.is_second() ? '2' : '1');
+            const std::string readKey = std::string(bamRead.qname()) + "_" + flag + "_" + bamIndexStr;
 
 #ifdef DEBUG_ASBL
             ALIGNPATH::path_t apath;
