@@ -244,8 +244,8 @@ getSemiAlignedMetric(const ALIGNPATH::path_t& apath, const uint8_t* qual) const
         case HARD_CLIP:
         case SEQ_MISMATCH:
 #ifdef DEBUG_RS
-        	std::cerr << "getAlignmentScore: " << posInRead << " " << _logpcorrectratio[qual[posInRead])]
-                      << " " << qual[posInRead] << " " << qual[posInRead] << std::endl;
+        std::cerr << "getAlignmentScore: " << posInRead << " " << _logpcorrectratio[qual[posInRead]]
+                  << " " << qual[posInRead] << " " << qual[posInRead] << std::endl;
 #endif
             alignScore +=  _logpcorrectratio[qual[posInRead]];
             posInRead += apath[i].length;
