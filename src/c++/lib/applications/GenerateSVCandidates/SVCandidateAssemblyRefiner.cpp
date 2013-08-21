@@ -288,6 +288,7 @@ getCandidateAssemblyData(
 
         if (isFilterContigRead(_aligner, hsAlign.align1.apath, true)) return;
         if (isFilterContigRead(_aligner, hsAlign.align2.apath, false)) return;
+
     }
 
     // TODO: min context, etc.

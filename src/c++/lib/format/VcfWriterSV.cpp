@@ -24,7 +24,7 @@
 
 #include <iostream>
 
-#define DEBUG_VCF
+//#define DEBUG_VCF
 
 
 
@@ -214,6 +214,16 @@ writeTransloc(
 
     assert(1 == ref.size());
 
+    const bool isReverseInsertSeq(! (isFirstBreakend || (bpA.state != bpB.state)));
+    std::string tmpString;
+    const std::string* insertSeqPtr(&sv.insertSeq);
+    if(isReverseInsertSeq)
+    {
+        tmpString = reverseCompCopyStr(sv.insertSeq);
+        insertSeqPtr = &tmpString;
+    }
+    const std::string& insertSeq(*insertSeqPtr);
+
     // build alt:
     boost::format altFormat("%4%%3%%1%:%2%%3%%5%");
     {
@@ -221,11 +231,11 @@ writeTransloc(
         std::string altSuffix;
         if     (bpA.state == SVBreakendState::RIGHT_OPEN)
         {
-            altPrefix = ref + sv.insertSeq;
+            altPrefix = ref + insertSeq;
         }
         else if (bpA.state == SVBreakendState::LEFT_OPEN)
         {
-            altSuffix = sv.insertSeq + ref;
+            altSuffix = insertSeq + ref;
         }
         else
         {
@@ -269,17 +279,10 @@ writeTransloc(
     }
 
 
-    if (! sv.insertSeq.empty())
+    if (! insertSeq.empty())
     {
-        infotags.push_back( str( boost::format("SVINSLEN=%i") % (sv.insertSeq.size()) ));
-        if (isFirstBreakend || (bpA.state != bpB.state))
-        {
-            infotags.push_back( str( boost::format("SVINSSEQ=%s") % (sv.insertSeq) ));
-        }
-        else
-        {
-            infotags.push_back( str( boost::format("SVINSSEQ=%s") % reverseCompCopyStr(sv.insertSeq) ));
-        }
+        infotags.push_back( str( boost::format("SVINSLEN=%i") % (insertSeq.size()) ));
+        infotags.push_back( str( boost::format("SVINSSEQ=%s") % (insertSeq) ));
     }
 
     modifyInfo(isFirstBreakend, svData, adata, infotags);

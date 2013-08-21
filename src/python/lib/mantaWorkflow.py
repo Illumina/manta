@@ -360,15 +360,19 @@ class MantaWorkflow(WorkflowRunner) :
     def workflow(self) :
         self.flowLog("Initiating Manta workflow version: %s" % (__version__))
 
-        statsTasks = runStats(self)
+        graphTasksDependencies=None
 
-        if not self.params.isExome :
+        if not self.params.useExistingAlignStats :
+            statsTasks = runStats(self)
+            graphTasksDependencies=statsTasks
+
+        if not (self.params.isExome or self.params.useExistingChromDepths) :
             depthTasks = runDepth(self)
 
-        graphTasks = runLocusGraph(self,dependencies=statsTasks)
+        graphTasks = runLocusGraph(self,dependencies=graphTasksDependencies)
 
         hygenPrereq = graphTasks
-        if not self.params.isExome :
+        if not (self.params.isExome or self.params.useExistingChromDepths) :
             hygenPrereq |= depthTasks
 
         hygenTasks = runHyGen(self,dependencies=hygenPrereq)

@@ -173,6 +173,8 @@ def main(iniFile, primaryIniSection, workflowClassName) :
 
     # TODO: we need a more scalable system to deal with non-string options, for now there are individually corrected:
     flowOptions.isExome=argToBool(flowOptions.isExome)
+    flowOptions.useExistingAlignStats=argToBool(flowOptions.useExistingAlignStats)
+    flowOptions.useExistingChromDepths=argToBool(flowOptions.useExistingChromDepths)
 
     # new logs and marker files to assist automated workflow monitoring:
     warningpath=os.path.join(flowOptions.runDir,"manta.warning.log.txt")
