@@ -74,6 +74,56 @@ adjustAssembledBreakend(
 
 
 
+bool
+isFilterContigRead(
+    const GlobalJumpAligner<int> aligner,
+    const ALIGNPATH::path_t& apath,
+    const bool isFirstRead)
+{
+    // require min length of each contig sub-alignment even after off-reference clipping:
+    static const unsigned minAlignReadLength(30);
+
+    // require min fraction of optimal score in each contig sub-alignmnet:
+    static const float minScoreFrac(0.75);
+
+    const unsigned readSize(apath_read_length(apath));
+    const unsigned clipSize(isFirstRead ?
+                            apath_soft_clip_lead_size(apath) :
+                            apath_soft_clip_trail_size(apath));
+
+    assert(clipSize <= readSize);
+
+    const unsigned clippedReadSize(readSize-clipSize);
+
+    if (clippedReadSize < minAlignReadLength)
+    {
+#ifdef DEBUG_REFINER
+        log_os << "Rejecting highest scoring contig sub-alignment. isFirst?: " << isFirstRead << ". Sub-alignmnet read length after clipping is: " << clippedReadSize << " min size is: " << minAlignReadLength << "\n";
+#endif
+        return true;
+    }
+
+    int nonClipScore(aligner.getPathScore(apath, false));
+    const int optimalScore(clippedReadSize * aligner.getScores().match);
+
+    assert(optimalScore>0);
+    if(nonClipScore < 0) nonClipScore = 0;
+
+    const float scoreFrac(static_cast<float>(nonClipScore)/static_cast<float>(optimalScore));
+
+    if (scoreFrac < minScoreFrac)
+    {
+#ifdef DEBUG_REFINER
+        log_os << "Rejecting highest scoring contig sub-alignment. isFirst?: " << isFirstRead << ". Fraction of optimal alignment score is: " << scoreFrac << " minScoreFrac: " << minScoreFrac << "\n";
+#endif
+        return true;
+    }
+    return false;
+}
+
+
+
+
 SVCandidateAssemblyRefiner::
 SVCandidateAssemblyRefiner(
     const GSCOptions& opt,
@@ -232,46 +282,12 @@ getCandidateAssemblyData(
 
     // set any additional QC steps before deciding an alignment is usable:
 
-    // find the fraction of optimal score:
+    // check the min size and fraction of optimal score for each sub-alignment:
     {
-        // require min contig length even after off-reference clipping:
-        static const unsigned minNonClippedLength(_svAssembler.getAssembleOpt().minContigLength);
-
-        // require min fraction of optimal score:
-        static const float minScoreFrac(0.75);
-
-        const AssembledContig& hsContig(adata.contigs[highScoreIndex]);
         const SVCandidateAssemblyData::JumpAlignmentResultType& hsAlign(adata.alignments[highScoreIndex]);
 
-        // first find the length of contig which did not clip off the end of the reference:
-        const unsigned clipSize(apath_soft_clip_lead_size(hsAlign.align1.apath) + apath_soft_clip_trail_size(hsAlign.align2.apath));
-
-        assert(hsContig.seq.size() >= clipSize);
-        const unsigned clippedContigSize(hsContig.seq.size() - clipSize);
-
-        if (clippedContigSize < minNonClippedLength)
-        {
-#ifdef DEBUG_REFINER
-            log_os << "Rejecting highest scoring contig. Aligned contig length after clipping is: " << clippedContigSize << " min size is: " << minNonClippedLength << "\n";
-#endif
-            return;
-        }
-
-        const int optimalScore(clippedContigSize * _aligner.getScores().match);
-        int normalizedScore(hsAlign.score - _aligner.getJumpScore() - (clipSize * _aligner.getScores().offEdge));
-
-        assert(optimalScore>0);
-        if(normalizedScore < 0) normalizedScore = 0;
-
-        const float scoreFrac(static_cast<float>(normalizedScore)/static_cast<float>(optimalScore));
-
-        if (scoreFrac < minScoreFrac)
-        {
-#ifdef DEBUG_REFINER
-            log_os << "Rejecting highest scoring contig. Fraction of optimal alignment score is: " << scoreFrac << " minScoreFrac: " << minScoreFrac << "\n";
-#endif
-            return;
-        }
+        if (isFilterContigRead(_aligner, hsAlign.align1.apath, true)) return;
+        if (isFilterContigRead(_aligner, hsAlign.align2.apath, false)) return;
     }
 
     // TODO: min context, etc.
@@ -297,12 +313,13 @@ getCandidateAssemblyData(
 
         if (isBp2AlignedFirst) std::swap(bp1AlignPtr, bp2AlignPtr);
 
+        // summarize usable output information in a second SVBreakend object -- this is the 'refined' sv:
         adata.sv = sv;
 
         adata.sv.setPrecise();
 
         adjustAssembledBreakend(*bp1AlignPtr, (! isBp2AlignedFirst), bestAlign.jumpRange, adata.bp1ref, isBp1Reversed, adata.sv.bp1);
-        adjustAssembledBreakend(*bp2AlignPtr, (isBp2AlignedFirst), bestAlign.jumpRange, adata.bp2ref, isBp2Reversed , adata.sv.bp2);
+        adjustAssembledBreakend(*bp2AlignPtr, (isBp2AlignedFirst), bestAlign.jumpRange, adata.bp2ref, isBp2Reversed, adata.sv.bp2);
 
         // fill in insertSeq:
         adata.sv.insertSeq.clear();

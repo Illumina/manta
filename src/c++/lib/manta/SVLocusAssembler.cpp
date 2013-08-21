@@ -115,11 +115,17 @@ getBreakendReads(
         {
             const bam_record& bamRead(*(bamStream.get_record_ptr()));
 
+#if 0
             // some conservative filtration criteria (including MAPQ) -- note this
             // means that if we want shadow reads this will have to be changed b/c
             // unmapped reads are filtered out here:
             if(_readScanner.isReadFiltered(bamRead)) continue;
+#endif
 
+            // include MAPQ0 because the split reads tend to have reduced mapping scores:
+            if (bamRead.is_filter()) continue;
+            if (bamRead.is_dup()) continue;
+            if (bamRead.is_secondary()) continue;
 
             // FIXME: add some criteria to filter for "interesting" reads here, for now we add
             // only clipped reads and reads without N

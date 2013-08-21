@@ -87,8 +87,10 @@ runGSC(
     const SVLocusSet& cset(svFind.getSet());
 
     // maybe these can be an SV refiner option struct?
-    static const AlignmentScores<int> spanningAlignScores(2,-4,-10,-1,-1);
-    static const int jumpScore(-20);
+
+    // match, mismatch, open ratios taken from bwa:
+    static const AlignmentScores<int> spanningAlignScores(2,-8,-12,-1,-1);
+    static const int jumpScore(-25);
     SmallAssemblerOptions spanningAssembleOpt;
     spanningAssembleOpt.minContigLength=75;
 

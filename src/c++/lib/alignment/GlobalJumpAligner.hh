@@ -22,6 +22,8 @@
 
 #include "blt_util/basic_matrix.hh"
 
+#include "boost/foreach.hpp"
+
 #include <cassert>
 
 
@@ -96,6 +98,50 @@ struct GlobalJumpAligner
     getJumpScore() const
     {
         return _jumpScore;
+    }
+
+    /// recorver a path alignment score without aligning, requires SEQ_MATCH style CIGAR
+    ///
+    ScoreType
+    getPathScore(
+        const ALIGNPATH::path_t& apath,
+        const bool isScoreOffEdge = true) const
+    {
+        using namespace ALIGNPATH;
+
+        ScoreType val(0);
+
+        BOOST_FOREACH(const path_segment& ps, apath)
+        {
+            bool isIndel(false);
+            switch(ps.type)
+            {
+            case MATCH:
+              assert(0);
+              break;
+            case SEQ_MATCH:
+              val += (_scores.match * ps.length);
+              isIndel = false;
+              break;
+            case SEQ_MISMATCH:
+              val += (_scores.mismatch * ps.length);
+              isIndel = false;
+              break;
+            case INSERT:
+            case DELETE:
+              if(! isIndel) val += _scores.open;
+              val += (_scores.extend * ps.length);
+              isIndel = true;
+              break;
+            case SOFT_CLIP:
+              if(isScoreOffEdge) val += (_scores.offEdge * ps.length);
+              isIndel = false;
+              break;
+            default:
+              break;
+            }
+        }
+        return val;
     }
 
 private:
