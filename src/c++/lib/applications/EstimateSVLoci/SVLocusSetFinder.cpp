@@ -178,6 +178,9 @@ update(const bam_record& bamRead,
     // shortcut to speed things up:
     if (_readScanner.isReadFiltered(bamRead)) return;
 
+    /// TODO: Add SA read support -- temporarily reject all supplemental reads:
+    if (bamRead.is_supplement()) return;
+
     // don't rely on the properPair bit to be set correctly:
     if (_readScanner.isProperPair(bamRead,defaultReadGroupIndex))
     {
