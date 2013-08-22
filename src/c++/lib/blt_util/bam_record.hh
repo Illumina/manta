@@ -123,6 +123,10 @@ struct bam_record
     {
         return ((_bp->core.flag & BAM_FLAG::SECONDARY) != 0);
     }
+    bool is_supplement() const
+    {
+        return ((_bp->core.flag & BAM_FLAG::SUPPLEMENT) != 0);
+    }
 
     void toggle_is_paired()
     {
