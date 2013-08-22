@@ -196,7 +196,6 @@ update(const bam_record& bamRead,
 
     std::vector<SVLocus> loci;
 
-    //_readScanner.getSVLocus(bamRead, defaultReadGroupIndex, locus);
     _readScanner.getSVLoci(bamRead, defaultReadGroupIndex, loci);
 
     BOOST_FOREACH(const SVLocus& locus, loci)

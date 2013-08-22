@@ -127,6 +127,9 @@ getBreakendReads(
             if (bamRead.is_dup()) continue;
             if (bamRead.is_secondary()) continue;
 
+            /// TODO: Add SA read support -- temporarily reject all supplemental reads:
+            if (bamRead.is_supplement()) return;
+
             // FIXME: add some criteria to filter for "interesting" reads here, for now we add
             // only clipped reads and reads without N
             if ((bamRead.pos()-1) >= searchRange.end_pos()) break;

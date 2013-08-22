@@ -68,6 +68,9 @@ addSVNodeRead(
     if (scanner.isProperPair(bamRead,bamIndex)) return;
     if (bamRead.is_mate_unmapped()) return;
 
+    /// TODO: Add SA read support -- temporarily reject all supplemental reads:
+    if (bamRead.is_supplement()) return;
+
     typedef std::vector<SVLocus> loci_t;
     loci_t loci;
     scanner.getSVLoci(bamRead,bamIndex,loci);
