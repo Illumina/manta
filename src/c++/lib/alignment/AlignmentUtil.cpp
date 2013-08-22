@@ -218,7 +218,48 @@ ReadScorer()
 }
 
 
+#if 0
 
+double
+ReadScorer::
+getSemiAlignedMetric(
+    const ALIGNPATH::path_t& apath,
+    const uint8_t* qual) const
+{
+    using namespace ALIGNPATH;
+
+    unsigned posInRead = 0;
+    double alignScore(0.);
+
+#ifdef DEBUG_RS
+    log_os << "getAlignmentScore apath=" << apath << "\n";
+#endif
+
+    const unsigned nt(apath.size());
+    for (unsigned i=0; i<nt; ++i)
+    {
+        const path_segment& ps(apath[i]);
+#ifdef DEBUG_RS
+        log_os << "getAlignmentScore : i = " << i << " alignScore = " << alignScore << "\n";
+#endif
+        if((ps.type==SOFT_CLIP) || (ps.type==SEQ_MISMATCH))
+        {
+            for(unsigned j(0);j<ps.length;++j)
+            {
+#ifdef DEBUG_RS
+                log_os << "getAlignmentScore: " << posInRead+j << " " << _logpcorrectratio[qual[posInRead+j]]
+                       << " " << qual[posInRead+j] << "\n";
+#endif
+                alignScore +=  _logpcorrectratio[qual[posInRead+j]];
+            }
+        } // switch
+
+        if(is_segment_type_read_length(ps.type)) posInRead += ps.length;
+   } // for
+   return alignScore;
+}
+
+#else
 double
 ReadScorer::
 getSemiAlignedMetric(const ALIGNPATH::path_t& apath, const uint8_t* qual) const
@@ -266,3 +307,4 @@ getSemiAlignedMetric(const ALIGNPATH::path_t& apath, const uint8_t* qual) const
    } // for
    return alignScore;
 }
+#endif
