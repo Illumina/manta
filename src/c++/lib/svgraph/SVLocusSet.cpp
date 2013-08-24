@@ -160,11 +160,9 @@ merge(const SVLocus& inputLocus)
         // merge overlapping nodes in order from highest nodeid to lowest, so that the
         // merge process does not invalidate nodeids of higher value
         //
-        // to do this, we first need to find a node corresponding the input node, and sort
-        // the remaining nodes by nodeIndex:
+        // we first need to find a node corresponding to the input node (but possibly merged to a larger region:
         //
         NodeAddressType inputSuperAddy;
-        std::vector<NodeAddressType> nodeIndices;
         {
             bool isInputSuperFound(false);
             const known_pos_range2& inputRange(getLocus(startLocusIndex).getNode(nodeIndex).interval.range);
@@ -178,21 +176,20 @@ merge(const SVLocus& inputLocus)
                 {
                     inputSuperAddy=val;
                     isInputSuperFound=true;
-                    continue;
+                    break;
                 }
-                nodeIndices.push_back(val);
             }
             assert(isInputSuperFound);
-            std::sort(nodeIndices.rbegin(),nodeIndices.rend());
         }
 
         // merge this inputNode with each intersecting Node,
         // and eliminate the intersecting node:
         //
         NodeAddressType mergeTargetAddy(inputSuperAddy);
-        BOOST_FOREACH(NodeAddressType nodeAddy, nodeIndices)
+        BOOST_REVERSE_FOREACH(NodeAddressType nodeAddy, intersectNodes)
         {
-            if (nodeAddy<mergeTargetAddy) std::swap(nodeAddy,mergeTargetAddy);
+            if (nodeAddy == inputSuperAddy) continue;
+            if (nodeAddy < mergeTargetAddy) std::swap(nodeAddy,mergeTargetAddy);
 #ifdef DEBUG_SVL
             log_os << "MergeAndRemove: " << nodeAddy << "\n";
 #endif
@@ -271,7 +268,7 @@ getNodeIntersectCore(
 
     // get all existing nodes which intersect with this one:
     const NodeAddressType inputAddy(std::make_pair(inputLocusIndex,inputNodeIndex));
-    in_citer it(searchNodes.lower_bound(inputAddy));
+    const in_citer it(searchNodes.lower_bound(inputAddy));
     const GenomeInterval& inputInterval(getNode(inputAddy).interval);
     const pos_t maxRegionSize(_maxRegionSize[inputInterval.tid]);
 
@@ -394,7 +391,7 @@ getNodeMergeableIntersect(
             const SVLocus& intersectLocus(getLocus(intersectAddy.first));
             const SVLocusNode& intersectNode(getNode(intersectAddy));
 
-            // get the remotes of each node which intersects with the query node,
+            // get the remotes of each node which intersect with the query node,
             // place these in remoteIntersect
             BOOST_FOREACH(const SVLocusNode::edges_type::value_type& intersectEdge, intersectNode)
             {
@@ -431,7 +428,7 @@ getNodeMergeableIntersect(
     //
     mergeIntersectNodes.clear();
 
-    // for each edge from the input node, get all intesecting edges
+    // for each edge from the input node, get all intersecting edges
     BOOST_FOREACH(const SVLocusNode::edges_type::value_type& inputEdge, inputNode)
     {
 #ifdef DEBUG_SVL
