@@ -271,7 +271,7 @@ getSemiAlignedMetric(const ALIGNPATH::path_t& apath, const uint8_t* qual) const
 
 #ifdef DEBUG_RS
     std::cout << "getAlignmentScore apath=" << apath << std::endl;
-    std::cout << "getAlignmentScore qual=" << qualities << std::endl;
+    std::cout << "getAlignmentScore qual=" << qual << std::endl;
 #endif
     const unsigned nt(apath.size());
     for (unsigned i=0; i<nt; ++i)

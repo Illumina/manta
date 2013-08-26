@@ -24,6 +24,8 @@
 
 #include <boost/utility.hpp>
 
+//#define DEBUG_RS
+
 
 const double invlog10(1./(std::log(10.)));
 const int phredScoreOffset = 33;

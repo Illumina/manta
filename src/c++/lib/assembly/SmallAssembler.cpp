@@ -31,10 +31,10 @@
 
 
 // stream used by DEBUG_ASBL:
-#ifdef DEBUG_ASBL
+//#ifdef DEBUG_ASBL
 #include <iostream>
 std::ostream& dbg_os(std::cerr);
-#endif
+//#endif
 
 
 
@@ -341,10 +341,9 @@ runSmallAssembler(
     AssemblyReadOutput& assembledReadInfo,
     Assembly& contigs)
 {
-#ifdef DEBUG_ASBL
+//#ifdef DEBUG_ASBL
     dbg_os << "SmallAssember: Starting assembly with " << reads.size() << " reads.\n";
-#endif
-
+//#endif
     assert(opt.alphabet.size()>1);
 
     assembledReadInfo.clear();
