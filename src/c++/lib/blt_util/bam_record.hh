@@ -251,11 +251,20 @@ struct bam_record
     {
         return _bp->core.l_qseq;
     }
+
     bam_seq get_bam_read() const
     {
         return bam_seq(bam1_seq(_bp),read_size());
     }
+
+    /// get string AUX field, return NULL if field is not found, or field is not a string
+    ///
+    /// \param[in] tag AUX field tag. This is a char array of length two, null term is not required
+    ///
+    /// example tag: static const char smtag[] = {'S','M'};
+    ///
     const char* get_string_tag(const char* tag) const;
+
     bool get_num_tag(const char* tag, int32_t& num) const;
 
     const uint8_t* qual() const

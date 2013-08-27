@@ -331,6 +331,7 @@ private:
         getNodeIntersectCore(locusIndex, nodeIndex, _inodes, locusIndex, intersectNodes);
     }
 
+    /// edges returned are in local_addy->remote_node orientation
     void
     getIntersectingEdgeNodes(
         const LocusIndexType inputLocusIndex,
