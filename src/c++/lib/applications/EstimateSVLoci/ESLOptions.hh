@@ -19,6 +19,7 @@
 
 #include "manta/Program.hh"
 #include "options/ReadScannerOptions.hh"
+#include "options/SVLocusSetOptions.hh"
 
 #include <string>
 #include <vector>
@@ -29,11 +30,11 @@ struct ESLOptions
 {
 
     ESLOptions() :
-        minMergeEdgeCount(3)
+        graphOpt(3)
     {}
 
     ReadScannerOptions scanOpt;
-    unsigned minMergeEdgeCount;
+    SVLocusSetOptions graphOpt;
 
     std::vector<std::string> alignmentFilename;
     std::string outputFilename;

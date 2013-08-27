@@ -114,31 +114,31 @@ struct GlobalJumpAligner
         BOOST_FOREACH(const path_segment& ps, apath)
         {
             bool isIndel(false);
-            switch(ps.type)
+            switch (ps.type)
             {
             case MATCH:
-              assert(0);
-              break;
+                assert(0);
+                break;
             case SEQ_MATCH:
-              val += (_scores.match * ps.length);
-              isIndel = false;
-              break;
+                val += (_scores.match * ps.length);
+                isIndel = false;
+                break;
             case SEQ_MISMATCH:
-              val += (_scores.mismatch * ps.length);
-              isIndel = false;
-              break;
+                val += (_scores.mismatch * ps.length);
+                isIndel = false;
+                break;
             case INSERT:
             case DELETE:
-              if(! isIndel) val += _scores.open;
-              val += (_scores.extend * ps.length);
-              isIndel = true;
-              break;
+                if (! isIndel) val += _scores.open;
+                val += (_scores.extend * ps.length);
+                isIndel = true;
+                break;
             case SOFT_CLIP:
-              if(isScoreOffEdge) val += (_scores.offEdge * ps.length);
-              isIndel = false;
-              break;
+                if (isScoreOffEdge) val += (_scores.offEdge * ps.length);
+                isIndel = false;
+                break;
             default:
-              break;
+                break;
             }
         }
         return val;

@@ -48,7 +48,7 @@ struct SVLocusSetFinder : public pos_processor_base
     }
 
     ///
-    /// index is the read group index to use by in the absense of an RG tag
+    /// index is the read group index to use by in the absence of an RG tag
     /// (for now RGs are ignored for the purpose of gathering insert stats)
     ///
     void
