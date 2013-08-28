@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE( test_EdgeRetrieverLocusSimple )
 
     BOOST_REQUIRE_EQUAL(set1.size(), 2u);
 
-    EdgeRetrieverLocus edger(set1,0);
+    EdgeRetrieverLocus edger(set1, 0, 0);
 
     BOOST_REQUIRE( edger.next() );
 

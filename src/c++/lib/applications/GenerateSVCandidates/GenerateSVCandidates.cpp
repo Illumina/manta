@@ -38,6 +38,7 @@
 
 
 
+/// provide additional edge details, intended for attachment to an in-flight exception:
 static
 void
 dumpEdgeInfo(
@@ -66,11 +67,11 @@ edgeRFactory(
 {
     if (opt.isLocusIndex)
     {
-        return new EdgeRetrieverLocus(set,opt.locusIndex);
+        return new EdgeRetrieverLocus(set, opt.graphNodeMaxEdgeCount, opt.locusIndex);
     }
     else
     {
-        return new EdgeRetrieverBin(set,opt.binCount,opt.binIndex);
+        return new EdgeRetrieverBin(set, opt.graphNodeMaxEdgeCount, opt.binCount, opt.binIndex);
     }
 }
 
@@ -94,7 +95,7 @@ runGSC(
     static const AlignmentScores<int> spanningAlignScores(2,-8,-12,-1,-1);
     static const int jumpScore(-25);
     SmallAssemblerOptions spanningAssembleOpt;
-    spanningAssembleOpt.minContigLength=75;
+    spanningAssembleOpt.minContigLength=75; ///< For breakend-spanning assemblies we require a larger contig than for small-variant assemblies
 
     SVCandidateAssemblyRefiner svRefine(opt, cset.header, spanningAssembleOpt, spanningAlignScores, jumpScore);
 
@@ -168,7 +169,6 @@ void
 GenerateSVCandidates::
 runInternal(int argc, char* argv[]) const
 {
-
     GSCOptions opt;
 
     parseGSCOptions(*this,argc,argv,opt);

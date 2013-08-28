@@ -31,6 +31,7 @@ struct EdgeRetrieverLocus : public EdgeRetriever
     /// \param locusIndex iterate over all edges of a specific locus
     EdgeRetrieverLocus(
         const SVLocusSet& set,
+        const unsigned graphNodeMaxEdgeCount,
         const unsigned locusIndex);
 
     bool

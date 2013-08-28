@@ -33,7 +33,8 @@ struct GSCOptions
         binIndex(0),
         isLocusIndex(false),
         locusIndex(0),
-        isSkipAssembly(false)
+        isSkipAssembly(false),
+        graphNodeMaxEdgeCount(20)
     {}
 
     ReadScannerOptions scanOpt;
@@ -56,6 +57,8 @@ struct GSCOptions
     unsigned locusIndex;
 
     bool isSkipAssembly; ///< if true, skip assembly and run a low-resolution, breakdancer-like subset of the workflow
+
+    unsigned graphNodeMaxEdgeCount; ///< if both nodes of an edge have an edge count higher than this, then skip evaluation of this edge, set to 0 to turn this filtration off
 };
 
 

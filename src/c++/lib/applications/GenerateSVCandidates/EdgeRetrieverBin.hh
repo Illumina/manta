@@ -32,8 +32,9 @@ struct EdgeRetrieverBin : public EdgeRetriever
     /// \param binIndex parallel bin id, must be less than binCount
     EdgeRetrieverBin(
         const SVLocusSet& set,
-        const unsigned binCount = 1,
-        const unsigned binIndex = 0);
+        const unsigned graphNodeMaxEdgeCount,
+        const unsigned binCount,
+        const unsigned binIndex);
 
     bool
     next();
