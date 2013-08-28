@@ -134,6 +134,11 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
         _totalCleaned=0;
         _totalAnom=0;
         _totalNonAnom=0;
+        _highestSearchCount=0;
+        _highestSearchDensity=0;
+
+        _isMaxSearchCount=false;
+        _isMaxSearchDensity=false;
     }
 
     /// indicate that the set is complete
@@ -218,7 +223,7 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
         return sum;
     }
 
-    // total number of directed edges in the graph
+    /// get total number of directed edges in the graph
     unsigned
     totalEdgeCount() const
     {
@@ -356,22 +361,20 @@ private:
         const LocusSetIndexerType& remoteIntersect,
         std::vector<EdgeInfoType>& edges) const;
 
+    /// find nodes which could be merged with the input node, accounting for edge overlap and noise thresholds
     ///
     /// \param[in] isInputLocusMoved has the input locus been moved into the graph from an initial temporary locus?
-    /// \param[in] isTestUsability check whether a node intersection exceeds computablility limits
+    /// \param[out] mergeIntersect nodes which could be merged with input 
     ///
-    /// \return is usable node (can only be false when isTestUsability is true)
-    ///
-    bool
+    void
     getNodeMergeableIntersect(
         const LocusIndexType inputLocusIndex,
         const NodeIndexType inputNodeIndex,
         const bool isInputLocusMoved,
-        std::set<NodeAddressType>& mergeIntersect,
-        const bool isTestUsability = false) const;
+        std::set<NodeAddressType>& mergeIntersect) const;
 
     /// get all nodes in this object which intersect with
-    /// a external node
+    /// an external node
     void
     getRegionIntersect(
         const GenomeInterval interval,
@@ -396,7 +399,7 @@ private:
         const bool isClearSource = true);
 
 
-    // add locus to this locusSet (intermediate step in merging)
+    /// add locus to this locusSet (intermediate step in merging)
     LocusIndexType
     insertLocus(
         const SVLocus& inputLocus);
@@ -421,7 +424,7 @@ private:
     mergeNodePtr(NodeAddressType fromPtr,
                  NodeAddressType toPtr);
 
-    // update index when nodes are moved:
+    /// update index when nodes are moved:
     void
     recieve_notification(const notifier<SVLocusNodeMoveMessage>&,
                          const SVLocusNodeMoveMessage& msg)
