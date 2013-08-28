@@ -37,6 +37,7 @@
 #include <memory>
 
 
+
 static
 void
 dumpEdgeInfo(
@@ -53,8 +54,9 @@ dumpEdgeInfo(
 
 /// we can either traverse all edges in a single locus (disjoint subgraph) of the graph
 /// OR
-/// traverse all edges in out "bin" -- that is, 1 of binCount subsets of the total graph edges
-/// designed to be of roughly equal size for parallel processing
+/// traverse all edges in one "bin" -- that is, one out of binCount subsets of the total
+/// graph edges. Each bin is designed to be of roughly equal size in terms of total
+/// anticipated workload, so that we have good parallel processing performance.
 ///
 static
 EdgeRetriever*
@@ -125,22 +127,23 @@ runGSC(
         try
         {
             // find number, type and breakend range of SVs on this edge:
-            svFind.findCandidateSV(edge,svData,svs);
+            svFind.findCandidateSV(edge, svData, svs);
+
             for (unsigned svIndex(0); svIndex<svs.size(); ++svIndex)
             {
                 const SVCandidate& sv(svs[svIndex]);
 
-                SVCandidateAssemblyData adata;
-                svRefine.getCandidateAssemblyData(sv,svData,adata);
+                SVCandidateAssemblyData assemblyData;
+                svRefine.getCandidateAssemblyData(sv, svData, assemblyData);
 
-                const SVCandidate& submitSV(adata.isBestAlignment ? adata.sv : sv);
+                const SVCandidate& submitSV(assemblyData.isBestAlignment ? assemblyData.sv : sv);
 
-                candWriter.writeSV(edge, svData, adata, svIndex, submitSV);
+                candWriter.writeSV(edge, svData, assemblyData, svIndex, submitSV);
 
                 if (isSomatic)
                 {
                     svScore.scoreSomaticSV(svData, svIndex, submitSV, ssInfo);
-                    somWriter.writeSV(edge, svData, adata, svIndex, submitSV, ssInfo);
+                    somWriter.writeSV(edge, svData, assemblyData, svIndex, submitSV, ssInfo);
                 }
             }
         }

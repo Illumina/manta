@@ -78,6 +78,10 @@ struct SVCandidateSetReadPairSampleGroup
     typedef pair_t::iterator iterator;
     typedef pair_t::const_iterator const_iterator;
 
+    SVCandidateSetReadPairSampleGroup() :
+        _isIncomplete(false)
+    {}
+
     /// add a new bam record to the set:
     void
     add(const bam_record& bamRead,
@@ -107,6 +111,23 @@ struct SVCandidateSetReadPairSampleGroup
         return _pairs.end();
     }
 
+    unsigned
+    size() const
+    {
+        return _pairs.size();
+    }
+
+    bool
+    isIncomplete() const
+    {
+        return _isIncomplete;
+    }
+
+    void
+    setIncomplete()
+    {
+        _isIncomplete = true;
+    }
 
 private:
     typedef std::string bamqname_t;
@@ -117,6 +138,8 @@ private:
 
     pair_t _pairs;
     pindex_t _pairIndex;
+
+    bool _isIncomplete; ///< this flag can be set if the object grows too large to insert more data into it
 };
 
 

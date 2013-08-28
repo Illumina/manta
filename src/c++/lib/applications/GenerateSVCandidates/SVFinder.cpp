@@ -71,6 +71,16 @@ addSVNodeRead(
     /// TODO: Add SA read support -- temporarily reject all supplemental reads:
     if (bamRead.is_supplement()) return;
 
+    // finally, check to see if the svDataGroup is full... for now, we allow a very large
+    // number of reads to be stored in the hope that we never reach this limit, but just in
+    // case we don't want to exaust memory in centromere pileups, etc...
+    static const unsigned maxDataSize(10000);
+    if(svDataGroup.size() >= maxDataSize)
+    {
+        svDataGroup.setIncomplete();
+        return;
+    }
+
     typedef std::vector<SVLocus> loci_t;
     loci_t loci;
     scanner.getSVLoci(bamRead,bamIndex,loci);
