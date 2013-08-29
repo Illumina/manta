@@ -79,14 +79,14 @@ jumpToFirstEdge()
     // first catch headCount up to the begin edge if required:
     while (true)
     {
-        if(! isLastFiltered)
+        if (! isLastFiltered)
         {
             assert(_edge.locusIndex<_set.size());
         }
         else
         {
             assert(_edge.locusIndex<=_set.size());
-            if(_edge.locusIndex == _set.size())
+            if (_edge.locusIndex == _set.size())
             {
                 _headCount = (_endCount + 1);
                 return;
@@ -158,14 +158,14 @@ advanceEdge()
 
     while (true)
     {
-        if(! isLastFiltered)
+        if (! isLastFiltered)
         {
             assert(_edge.locusIndex<_set.size());
         }
         else
         {
             assert(_edge.locusIndex<=_set.size());
-            if(_edge.locusIndex == _set.size())
+            if (_edge.locusIndex == _set.size())
             {
                 _headCount = (_endCount + 1);
                 return;

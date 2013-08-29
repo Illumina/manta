@@ -75,9 +75,9 @@ addSVNodeRead(
     // number of reads to be stored in the hope that we never reach this limit, but just in
     // case we don't want to exaust memory in centromere pileups, etc...
     static const unsigned maxDataSize(2000);
-    if(svDataGroup.size() >= maxDataSize)
+    if (svDataGroup.size() >= maxDataSize)
     {
-        if(! svDataGroup.isIncomplete())
+        if (! svDataGroup.isIncomplete())
         {
             svDataGroup.setIncomplete();
         }

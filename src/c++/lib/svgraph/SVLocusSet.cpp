@@ -115,7 +115,7 @@ merge(const SVLocus& inputLocus)
 
     BOOST_FOREACH(const nodeMap_t::value_type& nodeVal, nodeMap)
     {
-        if(isAbortMerge) break;
+        if (isAbortMerge) break;
 
         const NodeIndexType nodeIndex(nodeVal.second);
 
@@ -328,7 +328,7 @@ getNodeIntersectCore(
 
         if (isTestUsability)
         {
-            if(! isUsable) break;
+            if (! isUsable) break;
             searchCount++;
             if (searchCount > _opt.maxSearchCount)
             {

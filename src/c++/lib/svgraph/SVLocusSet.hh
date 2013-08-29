@@ -364,7 +364,7 @@ private:
     /// find nodes which could be merged with the input node, accounting for edge overlap and noise thresholds
     ///
     /// \param[in] isInputLocusMoved has the input locus been moved into the graph from an initial temporary locus?
-    /// \param[out] mergeIntersect nodes which could be merged with input 
+    /// \param[out] mergeIntersect nodes which could be merged with input
     ///
     void
     getNodeMergeableIntersect(
