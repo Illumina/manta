@@ -151,8 +151,11 @@ ReadGroupStats(const std::string& statsBamFile)
                 if (al.map_qual()==0) continue;
 
                 // sample each read pair once by sampling stats from
-                // upstream read only:
-                if (al.pos()<al.mate_pos()) continue;
+                // downstream read only
+                if (al.pos() > al.mate_pos()) continue;
+
+                // to sample short read pairs only once, we take read1 only:
+                if((al.pos() == al.mate_pos()) && al.is_second()) continue;
 
                 // filter any split reads with an SA tag:
                 static const char SAtag[] = {'S','A'};
@@ -177,11 +180,14 @@ ReadGroupStats(const std::string& statsBamFile)
                 const unsigned readNum(al.is_first() ? 1 : 2);
                 assert(al.is_second() == (readNum == 2));
 
-                if (! isPairTypeSet)
+                if(al.pos() != al.mate_pos())
                 {
-                    // TODO: does orientation need to be averaged over several observations?
-                    relOrients = getRelOrient(al);
-                    isPairTypeSet=true;
+                    if (! isPairTypeSet)
+                    {
+                        // TODO: does orientation need to be averaged over several observations?
+                        relOrients = getRelOrient(al);
+                        isPairTypeSet=true;
+                    }
                 }
 
                 const unsigned currFragSize(std::abs(al.template_size()));
