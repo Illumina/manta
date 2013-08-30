@@ -389,16 +389,16 @@ SVLocusScanner(
         CachedReadGroupStats& stat(_stats.back());
         {
             Range& breakend(stat.breakendRegion);
-            breakend.min=rgs.fragSize.quantile(_opt.breakendEdgeTrimProb);
-            breakend.max=rgs.fragSize.quantile((1-_opt.breakendEdgeTrimProb));
+            breakend.min=rgs.fragStats.quantile(_opt.breakendEdgeTrimProb);
+            breakend.max=rgs.fragStats.quantile((1-_opt.breakendEdgeTrimProb));
 
             if (breakend.min<0.) breakend.min = 0;
             assert(breakend.max>0.);
         }
         {
             Range& ppair(stat.properPair);
-            ppair.min=rgs.fragSize.quantile(_opt.properPairTrimProb);
-            ppair.max=rgs.fragSize.quantile((1-_opt.properPairTrimProb));
+            ppair.min=rgs.fragStats.quantile(_opt.properPairTrimProb);
+            ppair.max=rgs.fragStats.quantile((1-_opt.properPairTrimProb));
 
             if (ppair.min<0.) ppair.min = 0;
 
@@ -406,8 +406,8 @@ SVLocusScanner(
         }
         {
             Range& evidence(stat.evidencePair);
-            evidence.min=rgs.fragSize.quantile(_opt.evidenceTrimProb);
-            evidence.max=rgs.fragSize.quantile((1-_opt.evidenceTrimProb));
+            evidence.min=rgs.fragStats.quantile(_opt.evidenceTrimProb);
+            evidence.max=rgs.fragStats.quantile((1-_opt.evidenceTrimProb));
 
             if (evidence.min<0.) evidence.min = 0;
 

@@ -20,7 +20,9 @@
 
 #include "boost/archive/text_oarchive.hpp"
 #include "boost/archive/text_iarchive.hpp"
+#include "boost/serialization/map.hpp"
 #include "boost/serialization/string.hpp"
+#include "boost/serialization/vector.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -33,7 +35,7 @@ ReadGroupStatsSet::
 save(const char* filename) const
 {
     assert(NULL != filename);
-    std::ofstream ofs(filename, std::ios::binary);
+    std::ofstream ofs(filename);
     boost::archive::text_oarchive oa(ofs);
 
     const unsigned numGroups(_group.size());
@@ -53,7 +55,7 @@ load(const char* filename)
     clear();
 
     assert(NULL != filename);
-    std::ifstream ifs(filename, std::ios::binary);
+    std::ifstream ifs(filename);
     boost::archive::text_iarchive ia(ifs);
 
     int numGroups;
@@ -66,33 +68,7 @@ load(const char* filename)
         ia >> rgs;
 
         setStats(bamFile, rgs);
-
-        std::cerr<<"i= "<<i<<"\n";
-        std::cerr<<"bamFile: "<<bamFile<<"\n";
     }
 }
 
-
-void
-ReadGroupStatsSet::
-write(std::ostream& os) const
-{
-    const unsigned n_groups(_group.size());
-    for (unsigned i(0); i<n_groups; ++i)
-    {
-        os << "# Bam_Path\t" << i << "\t" << _group.get_key(i) << '\n';
-    }
-    // write column header for better readability
-    os << "# index"
-       << "\treadOrientation"
-       << "\tsample-count\tnumber-of-fragment-sizes"
-       << '\n';
-
-    for (unsigned i(0); i<n_groups; ++i)
-    {
-        os << i << '\t';
-        getStats(i).write(os);
-        os << '\n';
-    }
-}
 
