@@ -14,6 +14,7 @@
 
 #include "ReadGroupStats.hh"
 
+#include "blt_util/align_path_bam_util.hh"
 #include "blt_util/bam_streamer.hh"
 #include "blt_util/log.hh"
 
@@ -103,6 +104,8 @@ ReadGroupStats(const std::string& statsBamFile)
         chromSize[i] = (header.target_len[i]);
     }
 
+    ALIGNPATH::path_t apath; // cache-variable -- this does not need to be stored across loop iterations, we just save sys calls by keeping it here
+
     bool isConverged(false);
     bool isStopEstimation(false);
     bool isFirstEstimation(true);
@@ -138,6 +141,12 @@ ReadGroupStats(const std::string& statsBamFile)
                 chromHighestPos[i]=al.pos();
                 isActiveChrom=true;
 
+                // filter common categories of undesirable reads:
+                if(al.is_filter()) continue;
+                if(al.is_dup()) continue;
+                if(al.is_secondary()) continue;
+                if(al.is_supplement()) continue;
+
                 if (! (al.is_paired() && al.is_proper_pair())) continue;
                 if (al.map_qual()==0) continue;
 
@@ -145,12 +154,23 @@ ReadGroupStats(const std::string& statsBamFile)
                 // upstream read only:
                 if (al.pos()<al.mate_pos()) continue;
 
+                // filter any split reads with an SA tag:
+                static const char SAtag[] = {'S','A'};
+                if(NULL != al.get_string_tag(SAtag)) continue;
+
+                bam_cigar_to_apath(al.raw_cigar(), al.n_cigar(), apath);
+
+                // filter reads containing any cigar types besides MATCH:
+                BOOST_FOREACH(const ALIGNPATH::path_segment& ps, apath)
+                {
+                    if (! ALIGNPATH::is_segment_align_match(ps.type)) continue;
+                }
+
                 // to prevent high-depth pileups from overly biasing the
                 // read stats, we only take maxPosCount read pairs from each start
                 // pos:
                 if (posCount>=maxPosCount) continue;
                 posCount++;
-
                 ++recordCnts;
 
                 // Assuming only two reads per fragment - based on bamtools.
