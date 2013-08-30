@@ -20,6 +20,7 @@ astyle \
 --max-instatement-indent=80 \
 --min-conditional-indent=0 \
 --pad-header \
+--lineend=linux \
 --recursive \
 *.cpp *.hh *.h
 

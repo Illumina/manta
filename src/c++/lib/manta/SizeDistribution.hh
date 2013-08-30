@@ -38,7 +38,8 @@ struct SizeData
 };
 
 
-/// this structures only purporse is to provide neat xml output:
+/// this structure's only purpose is to provide neat xml output.
+/// it is not used outside of serialize/deserialize steps
 struct SizeMapXmlElement
 {
     friend class boost::serialization::access;

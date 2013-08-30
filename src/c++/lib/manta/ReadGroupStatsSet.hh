@@ -59,9 +59,7 @@ struct ReadGroupStatsSet
     }
 
 
-    /// serialization
-    ///
-    /// TODO: make serialization in xml format
+    /// serialize
     void
     save(const char* filename) const;
 
