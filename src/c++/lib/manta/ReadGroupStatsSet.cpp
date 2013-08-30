@@ -56,7 +56,8 @@ save(const char* filename) const
 {
     assert(NULL != filename);
     std::ofstream ofs(filename);
-    boost::archive::xml_oarchive oa(ofs);
+    unsigned int flags = boost::archive::no_header;
+    boost::archive::xml_oarchive oa(ofs,flags);
 
     const unsigned numGroups(_group.size());
     oa << boost::serialization::make_nvp("numGroups", numGroups);
