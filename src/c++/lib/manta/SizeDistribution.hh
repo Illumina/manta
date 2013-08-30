@@ -139,7 +139,7 @@ private:
 
     mutable bool _isStatsComputed;
     unsigned _totalCount;
-    mutable std::vector<float> _quantiles;
+    mutable std::vector<int> _quantiles;
     mutable map_type _sizeMap;
 };
 

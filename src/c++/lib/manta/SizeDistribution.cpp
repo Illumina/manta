@@ -44,7 +44,7 @@ void
 populateCdfQuantiles(
     SizeDistribution::map_type& sizeMap,
     const unsigned totalCount,
-    std::vector<float>& quantiles)
+    std::vector<int>& quantiles)
 {
     const unsigned quantileNum(quantiles.size());
     const float pFactor(1./static_cast<float>(totalCount));
@@ -59,7 +59,7 @@ populateCdfQuantiles(
         // update the hash map with cumulative prob value
         val.second.cprob = (cumulativeCount * pFactor);
 
-        const unsigned fillNext = rint(val.second.cprob * quantileNum);
+        const unsigned fillNext = static_cast<unsigned>(rint(val.second.cprob * quantileNum));
         for (; fillBase < fillNext; fillBase++)
         {
             quantiles[fillBase] = val.first;
