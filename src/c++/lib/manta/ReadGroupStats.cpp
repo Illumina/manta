@@ -33,7 +33,7 @@ isStatSetMatch(const SizeDistribution& pss1,
 {
     static const float cdfPrecision(0.005);
 
-    for(float prob(0.05); prob < 1; prob += 0.1)
+    for (float prob(0.05); prob < 1; prob += 0.1)
     {
         // check if percentile values equal
         if (std::abs(pss1.quantile(prob) - pss2.quantile(prob)) >= 1)

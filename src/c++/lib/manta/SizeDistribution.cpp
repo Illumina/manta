@@ -93,11 +93,11 @@ quantile(const float p) const
     assert((p >= 0.) && (p <= 1.));
 
     static const int maxBin(_quantileNum - 1);
-    if(! _isStatsComputed) calcStats();
+    if (! _isStatsComputed) calcStats();
 
     int bin(static_cast<int>(ceil(p * _quantileNum) - 1));
-    if(bin < 0) bin=0;
-    if(bin > maxBin) bin=maxBin;
+    if (bin < 0) bin=0;
+    if (bin > maxBin) bin=maxBin;
     return _quantiles[bin];
 }
 
@@ -107,10 +107,10 @@ float
 SizeDistribution::
 cdf(const int size) const
 {
-    if(! _isStatsComputed) calcStats();
+    if (! _isStatsComputed) calcStats();
 
     const map_type::const_iterator sizeIter(_sizeMap.lower_bound(size));
-    if(sizeIter == _sizeMap.end()) return 0;
+    if (sizeIter == _sizeMap.end()) return 0;
     return sizeIter->second.cprob;
 }
 

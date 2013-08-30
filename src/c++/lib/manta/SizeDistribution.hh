@@ -98,7 +98,7 @@ private:
 
     friend class boost::serialization::access;
     template<class Archive>
-    void save(Archive & ar, const unsigned /*version*/) const
+    void save(Archive& ar, const unsigned /*version*/) const
     {
         ar << boost::serialization::make_nvp("totalObservationCount", _totalCount);
         unsigned mapSize(_sizeMap.size());
@@ -114,7 +114,7 @@ private:
     }
 
     template<class Archive>
-    void load(Archive & ar, const unsigned /*version*/)
+    void load(Archive& ar, const unsigned /*version*/)
     {
         ar >> boost::serialization::make_nvp("totalObservationCount", _totalCount);
         unsigned mapSize(0);
@@ -123,7 +123,7 @@ private:
         SizeMapXmlElement xe;
         _sizeMap.clear();
 
-        for(unsigned i(0); i<mapSize; ++i)
+        for (unsigned i(0); i<mapSize; ++i)
         {
             ar >> boost::serialization::make_nvp("element", xe);
             _sizeMap[xe.size].count = xe.count;
