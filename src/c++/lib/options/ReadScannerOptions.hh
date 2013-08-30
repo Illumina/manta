@@ -25,7 +25,7 @@ struct ReadScannerOptions
 
     ReadScannerOptions() :
         minMapq(15),
-        breakendEdgeTrimProb(0.25),
+        breakendEdgeTrimProb(0.2),
         properPairTrimProb(0.05),
         evidenceTrimProb(0.15),
         minCandidateIndelSize(50),
