@@ -257,7 +257,7 @@ class PathInfo:
         self.params = params
 
     def getStatsPath(self) :
-        return os.path.join(self.params.workDir,"alignmentStats.txt")
+        return os.path.join(self.params.workDir,"alignmentStats.xml")
 
     def getChromDepth(self) :
         return os.path.join(self.params.workDir,"chromDepth.txt")
