@@ -17,6 +17,7 @@
 #include "boost/foreach.hpp"
 #include "boost/serialization/access.hpp"
 #include "boost/serialization/nvp.hpp"
+#include "boost/serialization/split_member.hpp"
 
 #include <iosfwd>
 #include <map>
@@ -32,18 +33,27 @@ struct SizeData
         cprob(initCprob)
     {}
 
-    friend class boost::serialization::access;
-    template<class Archive>
-    void serialize(Archive& ar, const unsigned /*version*/)
-    {
-        ar& boost::serialization::make_nvp("count", count);
-    }
-
     unsigned count;
     float cprob;
 };
 
-BOOST_CLASS_IMPLEMENTATION(SizeData, boost::serialization::object_serializable)
+
+/// this structures only purporse is to provide neat xml output:
+struct SizeMapXmlElement
+{
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned /*version*/)
+    {
+        ar& boost::serialization::make_nvp("size", size);
+        ar& boost::serialization::make_nvp("count", count);
+    }
+
+    int size;
+    unsigned count;
+};
+
+BOOST_CLASS_IMPLEMENTATION(SizeMapXmlElement, boost::serialization::object_serializable)
 
 
 
@@ -88,13 +98,40 @@ private:
 
     friend class boost::serialization::access;
     template<class Archive>
-    void serialize(Archive& ar, const unsigned /*version*/)
+    void save(Archive & ar, const unsigned /*version*/) const
     {
-        ar& boost::serialization::make_nvp("totalCount", _totalCount);
-        ar& boost::serialization::make_nvp("sizeCountDistribution", _sizeMap);
+        ar << boost::serialization::make_nvp("totalObservationCount", _totalCount);
+        unsigned mapSize(_sizeMap.size());
+        ar << boost::serialization::make_nvp("elementCount", mapSize);
+
+        SizeMapXmlElement xe;
+        BOOST_REVERSE_FOREACH(const map_type::value_type& val, _sizeMap)
+        {
+            xe.size = val.first;
+            xe.count = val.second.count;
+            ar << boost::serialization::make_nvp("element", xe);
+        }
+    }
+
+    template<class Archive>
+    void load(Archive & ar, const unsigned /*version*/)
+    {
+        ar >> boost::serialization::make_nvp("totalObservationCount", _totalCount);
+        unsigned mapSize(0);
+        ar >> boost::serialization::make_nvp("elementCount", mapSize);
+
+        SizeMapXmlElement xe;
+        _sizeMap.clear();
+
+        for(unsigned i(0); i<mapSize; ++i)
+        {
+            ar >> boost::serialization::make_nvp("element", xe);
+            _sizeMap[xe.size].count = xe.count;
+        }
         _isStatsComputed = false;
     }
 
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
 
     ///////////////////////////////////// data:
 
