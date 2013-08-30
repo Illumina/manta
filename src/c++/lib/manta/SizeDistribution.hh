@@ -14,7 +14,9 @@
 
 #pragma once
 
+#include "boost/foreach.hpp"
 #include "boost/serialization/access.hpp"
+#include "boost/serialization/nvp.hpp"
 
 #include <iosfwd>
 #include <map>
@@ -30,16 +32,18 @@ struct SizeData
         cprob(initCprob)
     {}
 
+    friend class boost::serialization::access;
     template<class Archive>
     void serialize(Archive& ar, const unsigned /*version*/)
     {
-        ar& count;
-        ar& cprob;
+        ar& boost::serialization::make_nvp("count", count);
     }
 
     unsigned count;
     float cprob;
 };
+
+BOOST_CLASS_IMPLEMENTATION(SizeData, boost::serialization::object_serializable)
 
 
 
@@ -86,8 +90,8 @@ private:
     template<class Archive>
     void serialize(Archive& ar, const unsigned /*version*/)
     {
-        ar& _totalCount;
-        ar& _sizeMap;
+        ar& boost::serialization::make_nvp("totalCount", _totalCount);
+        ar& boost::serialization::make_nvp("sizeCountDistribution", _sizeMap);
         _isStatsComputed = false;
     }
 
@@ -101,6 +105,9 @@ private:
     mutable std::vector<float> _quantiles;
     mutable map_type _sizeMap;
 };
+
+BOOST_CLASS_IMPLEMENTATION(SizeDistribution, boost::serialization::object_serializable)
+
 
 std::ostream&
 operator<<(std::ostream& os, const SizeDistribution& sd);

@@ -115,9 +115,11 @@ private:
     template<class Archive>
     void serialize(Archive& ar, const unsigned /*version*/)
     {
-        ar& _val;
+        ar& boost::serialization::make_nvp("pairOrientation", _val);
     }
 };
+
+BOOST_CLASS_IMPLEMENTATION(ReadPairOrient, boost::serialization::object_serializable)
 
 
 std::ostream&

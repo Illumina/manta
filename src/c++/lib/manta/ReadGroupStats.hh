@@ -45,8 +45,8 @@ private:
     template<class Archive>
     void serialize(Archive& ar, const unsigned /*version*/)
     {
-        ar& fragStats;
-        ar& relOrients;
+        ar& boost::serialization::make_nvp("fragmentSizeDistribution", fragStats);
+        ar& boost::serialization::make_nvp("pairOrientation", relOrients);
     }
 
     ///////////////////////////// data:
@@ -55,4 +55,6 @@ public:
     ReadPairOrient relOrients;
 
 };
+
+BOOST_CLASS_IMPLEMENTATION(ReadGroupStats, boost::serialization::object_serializable)
 

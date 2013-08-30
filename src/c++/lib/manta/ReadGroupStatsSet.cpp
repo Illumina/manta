@@ -18,8 +18,8 @@
 #include "blt_util/parse_util.hh"
 #include "blt_util/string_util.hh"
 
-#include "boost/archive/text_oarchive.hpp"
-#include "boost/archive/text_iarchive.hpp"
+#include "boost/archive/xml_oarchive.hpp"
+#include "boost/archive/xml_iarchive.hpp"
 #include "boost/serialization/map.hpp"
 #include "boost/serialization/string.hpp"
 #include "boost/serialization/vector.hpp"
@@ -29,6 +29,26 @@
 #include <sstream>
 
 
+/// this struct exists for the sole purpose of xml output:
+struct ReadGroupStatsExporter
+{
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned /*version*/)
+    {
+        ar& boost::serialization::make_nvp("groupLabel", groupLabel);
+        ar& boost::serialization::make_nvp("groupStats", groupStats);
+    }
+
+    std::string groupLabel;
+    ReadGroupStats groupStats;
+};
+
+BOOST_CLASS_IMPLEMENTATION(ReadGroupStatsExporter, boost::serialization::object_serializable)
+
+
+
+
 // serialization
 void
 ReadGroupStatsSet::
@@ -36,14 +56,19 @@ save(const char* filename) const
 {
     assert(NULL != filename);
     std::ofstream ofs(filename);
-    boost::archive::text_oarchive oa(ofs);
+    boost::archive::xml_oarchive oa(ofs);
 
     const unsigned numGroups(_group.size());
-    oa << numGroups;
+    oa << boost::serialization::make_nvp("numGroups", numGroups);
+    ReadGroupStatsExporter se;
     for (unsigned i(0); i<numGroups; ++i)
     {
-        oa << _group.get_key(i);
-        oa << getStats(i);
+        se.groupLabel = _group.get_key(i);
+        se.groupStats = getStats(i);
+
+        std::ostringstream oss;
+        oss << "groupStats_" << i;
+        oa << boost::serialization::make_nvp(oss.str().c_str(), se);
     }
 }
 
@@ -56,18 +81,16 @@ load(const char* filename)
 
     assert(NULL != filename);
     std::ifstream ifs(filename);
-    boost::archive::text_iarchive ia(ifs);
+    boost::archive::xml_iarchive ia(ifs);
 
     int numGroups;
-    ia >> numGroups;
+    ia >> boost::serialization::make_nvp("numGroups", numGroups);
+    ReadGroupStatsExporter se;
     for (int i=0; i<numGroups; i++)
     {
-        std::string bamFile;
-        ReadGroupStats rgs;
-        ia >> bamFile;
-        ia >> rgs;
+        ia >> boost::serialization::make_nvp("bogus", se);
 
-        setStats(bamFile, rgs);
+        setStats(se.groupLabel, se.groupStats);
     }
 }
 
