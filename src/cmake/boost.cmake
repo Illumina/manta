@@ -20,8 +20,9 @@
 
 macro (resetFindBoost)
 
-    set(BOOST_RESET_SYMBOLS FOUND INCLUDE_DIRS INCLUDE_DIR LIBRARIES LIBRARY_DIRS VERSION LIB_VERSION MAJOR_VERSION MINOR_VERSION SUBMINOR_VERSION USE_STATIC_LIBS USE_MULTITHREADED CACHE)
+    set(BOOST_RESET_SYMBOLS FOUND INCLUDE_DIRS INCLUDE_DIR LIBRARIES LIBRARY_DIRS VERSION LIB_VERSION MAJOR_VERSION MINOR_VERSION SUBMINOR_VERSION USE_STATIC_LIBS USE_MULTITHREADED)
 
+    # TODO: find a way to parameterize these CACHE/No-CACHE calls
     foreach (TAG ${BOOST_RESET_SYMBOLS})
         unset (Boost_${TAG} CACHE)
     endforeach()
@@ -51,22 +52,23 @@ macro (resetFindBoost)
 endmacro ()
 
 #
-# Not only finds boost but also sets the variables so that
+# finds boost and sets variables so that
 # it is being used for include and linking
-# Also makes sure pthread is available for boost
 #
 macro(static_find_boost boost_version boost_components)
 
+    # MANTA uses the static boost build... assuming pthread is not required in this case, but keeping check code around in case:
+    #
     # pthread library required by boost
-    static_find_library(PTHREAD "pthread.h" pthread)
-    if    (HAVE_PTHREAD)
-        set  (MANTA_ADDITIONAL_LIB ${MANTA_ADDITIONAL_LIB} pthread)
-        message(STATUS "pthread supported")
-    else  ()
-        message(STATUS "pthread headers: ${PTHREAD_INCLUDE_DIR}")
-        message(STATUS "pthread library: ${PTHREAD_LIBRARY}")
-        message(FATAL_ERROR "pthread library is required to build")
-    endif ()
+#    static_find_library(PTHREAD "pthread.h" pthread)
+#    if    (HAVE_PTHREAD)
+#        set  (MANTA_ADDITIONAL_LIB ${MANTA_ADDITIONAL_LIB} pthread)
+#        message(STATUS "pthread supported")
+#    else  ()
+#        message(STATUS "pthread headers: ${PTHREAD_INCLUDE_DIR}")
+#        message(STATUS "pthread library: ${PTHREAD_LIBRARY}")
+#        message(FATAL_ERROR "pthread library is required to build")
+#    endif ()
 
     find_package(Boost ${boost_version} REQUIRED ${boost_components})
 
@@ -86,7 +88,7 @@ endif ()
 find_package(Boost ${MANTA_BOOST_VERSION} COMPONENTS ${MANTA_BOOST_COMPONENTS})
 
 
-# only used if boost is found, but moving down here supresses a cmake warning:
+# CMAKE_PARALLEL is only used if boost is found, but moving the setting here (outside of the if below) supresses a cmake warning:
 if (NOT CMAKE_PARALLEL)
     set (CMAKE_PARALLEL "1")
 endif ()

@@ -25,8 +25,10 @@
 
 #include <cassert>
 #include <cstring>
-
 #include <iosfwd>
+
+#include "boost/archive/text_oarchive.hpp"
+#include "boost/archive/text_iarchive.hpp"
 
 namespace PAIR_ORIENT
 {
@@ -61,6 +63,9 @@ get_index(const pos_t pos1, const bool is_fwd_strand1,
 
     if (is_fwd_strand1 != is_fwd_strand2)
     {
+        // special-case very short fragments as innies:
+        if(pos1 == pos2) return Rp;
+
         const bool left_strand(is_read1_left
                                ? is_fwd_strand1
                                : is_fwd_strand2);
@@ -108,7 +113,18 @@ struct ReadPairOrient
 
 private:
     PAIR_ORIENT::index_t _val;
+
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned /*version*/)
+    {
+        std::string strval(PAIR_ORIENT::label(_val));
+        ar& boost::serialization::make_nvp("pairOrientation", strval);
+        _val = PAIR_ORIENT::get_index(strval.c_str());
+    }
 };
+
+BOOST_CLASS_IMPLEMENTATION(ReadPairOrient, boost::serialization::object_serializable)
 
 
 std::ostream&

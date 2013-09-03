@@ -32,24 +32,21 @@ runAlignmentStats(const AlignmentStatsOptions& opt)
     // calculate fragment size statistics for all read groups in all bams
 
     // instantiate early to test for filename/permissions problems
-    OutStream outs(opt.outputFilename);
-
-    ReadGroupStatsSet rstats;
     if (opt.alignmentFilename.empty())
     {
         log_os << "ERROR: No input files specified.\n";
         exit(EXIT_FAILURE);
     }
 
-
+    ReadGroupStatsSet rstats;
     BOOST_FOREACH(const std::string& file, opt.alignmentFilename)
     {
-        rstats.setStats(file,ReadGroupStats(file));
+        ReadGroupStats rgs = ReadGroupStats(file);
+        rstats.setStats(file,rgs);
     }
 
-    rstats.write(outs.getStream());
+    rstats.save(opt.outputFilename.c_str());
 }
-
 
 
 void

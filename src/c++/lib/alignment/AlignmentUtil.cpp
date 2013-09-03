@@ -266,7 +266,7 @@ getSemiAlignedMetric(const ALIGNPATH::path_t& apath, const uint8_t* qual) const
 {
     using namespace ALIGNPATH;
 
-	unsigned posInRead = 0;
+    unsigned posInRead = 0;
     double alignScore(0.);
 
 #ifdef DEBUG_RS
@@ -285,8 +285,8 @@ getSemiAlignedMetric(const ALIGNPATH::path_t& apath, const uint8_t* qual) const
         case HARD_CLIP:
         case SEQ_MISMATCH:
 #ifdef DEBUG_RS
-        std::cerr << "getAlignmentScore: " << posInRead << " " << _logpcorrectratio[qual[posInRead]]
-                  << " " << qual[posInRead] << " " << qual[posInRead] << std::endl;
+            std::cerr << "getAlignmentScore: " << posInRead << " " << _logpcorrectratio[qual[posInRead]]
+                      << " " << qual[posInRead] << " " << qual[posInRead] << std::endl;
 #endif
             alignScore +=  _logpcorrectratio[qual[posInRead]];
             posInRead += apath[i].length;
@@ -298,13 +298,13 @@ getSemiAlignedMetric(const ALIGNPATH::path_t& apath, const uint8_t* qual) const
         case SKIP      :
         case PAD       :
         case SEQ_MATCH  :
-        	posInRead += apath[i].length;
-        	break;
+            posInRead += apath[i].length;
+            break;
         default :
-        	 assert(!"ERROR: Unexpected match apath in getSemiAlignedMetric !");
-        	 break;
+            assert(!"ERROR: Unexpected match apath in getSemiAlignedMetric !");
+            break;
         } // switch
-   } // for
-   return alignScore;
+    } // for
+    return alignScore;
 }
 #endif

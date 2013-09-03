@@ -14,77 +14,22 @@
 
 #pragma once
 
-#include "blt_util/id_map.hh"
 #include "common/ReadPairOrient.hh"
+#include "manta/SizeDistribution.hh"
 
-#include <iosfwd>
-#include <vector>
 #include <string>
-#include <map>
-
-#include "boost/optional.hpp"
 
 
-struct PairStatSet
-{
-    PairStatSet()
-    {
-        clear();
-    }
-
-    ///
-    /// const interface used by variant callers:
-    ///
-
-    // return value for which we observe value or less with prob p
-    // (not sure what the exact way to phrase this is for the discrete case)
-    double
-    quantile(const double p) const;
-
-    // cdf(x)
-    double
-    cdf(const double x) const;
-
-
-    ///
-    /// remainder of interface for estimation, store/read from disk
-    ///
-    void clear()
-    {
-        median = 0.;
-        sd = 0.;
-    }
-
-    /// TODO: hide implementation details, better estimate:
-    double median;
-    double sd;
-};
-
-std::ostream&
-operator<<(std::ostream& os, const PairStatSet& pss);
-
-
-
-// Read pair insert stats can be computed for each sample or read group, this
-// class represents the statistics for one group:
-//
+/// Read pair insert stats can be computed for each sample or read group, this
+/// class represents the statistics for one group:
+///
 struct ReadGroupStats
 {
 
     ReadGroupStats() {}
     ReadGroupStats(const std::string& statsBamFile);
-    ReadGroupStats(const std::vector<std::string>& data);
-
-    void
-    write(std::ostream& os) const;
 
 private:
-    // These data are used temporarily during ReadPairStats estimation
-    struct PairStatsData
-    {
-        std::vector<int32_t> fragmentLengths;
-    };
-
     /// If PairStats has converged (or if isForcedConvergence is true)
     /// 1. All stats are computed
     /// 2. return true
@@ -93,12 +38,23 @@ private:
     /// 1. only insert stats are computed
     /// 2. return false
     ///
-    bool computePairStats(PairStatsData& psd, const bool isForcedConvergence = false);
+    bool computePairStats(std::string& statsBamFile,
+                          const bool isForcedConvergence = false);
 
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned /*version*/)
+    {
+        ar& boost::serialization::make_nvp("fragmentSizeDistribution", fragStats);
+        ar& boost::serialization::make_nvp("pairOrientation", relOrients);
+    }
+
+    ///////////////////////////// data:
 public:
-    //////////////// data:
+    SizeDistribution fragStats;
     ReadPairOrient relOrients;
 
-    PairStatSet fragSize;
 };
+
+BOOST_CLASS_IMPLEMENTATION(ReadGroupStats, boost::serialization::object_serializable)
 

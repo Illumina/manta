@@ -16,11 +16,10 @@
 #include "blt_util/id_map.hh"
 #include "manta/ReadGroupStats.hh"
 
-#include <iosfwd>
-#include <string>
-
 #include "boost/optional.hpp"
 
+#include <iosfwd>
+#include <string>
 
 
 /// \brief manages multiple read_group_stats
@@ -59,17 +58,21 @@ struct ReadGroupStatsSet
         _group.insert(bam_file,rps);
     }
 
-    //
-    // persistence:
-    //
+
+    /// serialize
+    void
+    save(const char* filename) const;
+
+    /// restore from serialization
+    void
+    load(const char* filename);
+
+#if 0
+    // write out brief info of the stats class
+    // and some debugging info if under debug mode
     void
     write(std::ostream& os) const;
-
-    void
-    read(std::istream& os);
-
-    void
-    read(const char* filename);
+#endif
 
 private:
     void

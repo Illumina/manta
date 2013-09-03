@@ -60,7 +60,7 @@ SVLocusSetFinder(
             scanRegion.range.begin_pos(),
             scanRegion.range.end_pos()),
         *this),
-    _svLoci(opt.minMergeEdgeCount),
+    _svLoci(opt.graphOpt),
     _isScanStarted(false),
     _isInDenoiseRegion(false),
     _denoisePos(0),
@@ -178,6 +178,9 @@ update(const bam_record& bamRead,
     // shortcut to speed things up:
     if (_readScanner.isReadFiltered(bamRead)) return;
 
+    /// TODO: Add SA read support -- temporarily reject all supplemental reads:
+    if (bamRead.is_supplement()) return;
+
     // don't rely on the properPair bit to be set correctly:
     if (_readScanner.isProperPair(bamRead,defaultReadGroupIndex))
     {
@@ -196,7 +199,6 @@ update(const bam_record& bamRead,
 
     std::vector<SVLocus> loci;
 
-    //_readScanner.getSVLocus(bamRead, defaultReadGroupIndex, locus);
     _readScanner.getSVLoci(bamRead, defaultReadGroupIndex, loci);
 
     BOOST_FOREACH(const SVLocus& locus, loci)

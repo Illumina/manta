@@ -107,7 +107,7 @@ isFilterContigRead(
     const int optimalScore(clippedReadSize * aligner.getScores().match);
 
     assert(optimalScore>0);
-    if(nonClipScore < 0) nonClipScore = 0;
+    if (nonClipScore < 0) nonClipScore = 0;
 
     const float scoreFrac(static_cast<float>(nonClipScore)/static_cast<float>(optimalScore));
 

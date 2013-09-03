@@ -129,7 +129,7 @@ addDebugInfo(
     const SVCandidateAssemblyData& adata,
     std::vector<std::string>& infotags)
 {
-    if(! isFirstOfPair) return;
+    if (! isFirstOfPair) return;
 
     // store alignment start + cigar string for each section of the jumping alignment.
     // there can be several contigs per breakend, so we iterate over all of them.
@@ -217,7 +217,7 @@ writeTransloc(
     const bool isReverseInsertSeq(! (isFirstBreakend || (bpA.state != bpB.state)));
     std::string tmpString;
     const std::string* insertSeqPtr(&sv.insertSeq);
-    if(isReverseInsertSeq)
+    if (isReverseInsertSeq)
     {
         tmpString = reverseCompCopyStr(sv.insertSeq);
         insertSeqPtr = &tmpString;

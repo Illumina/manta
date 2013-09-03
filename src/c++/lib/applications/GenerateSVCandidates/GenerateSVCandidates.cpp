@@ -37,6 +37,8 @@
 #include <memory>
 
 
+
+/// provide additional edge details, intended for attachment to an in-flight exception:
 static
 void
 dumpEdgeInfo(
@@ -53,8 +55,9 @@ dumpEdgeInfo(
 
 /// we can either traverse all edges in a single locus (disjoint subgraph) of the graph
 /// OR
-/// traverse all edges in out "bin" -- that is, 1 of binCount subsets of the total graph edges
-/// designed to be of roughly equal size for parallel processing
+/// traverse all edges in one "bin" -- that is, one out of binCount subsets of the total
+/// graph edges. Each bin is designed to be of roughly equal size in terms of total
+/// anticipated workload, so that we have good parallel processing performance.
 ///
 static
 EdgeRetriever*
@@ -64,11 +67,11 @@ edgeRFactory(
 {
     if (opt.isLocusIndex)
     {
-        return new EdgeRetrieverLocus(set,opt.locusIndex);
+        return new EdgeRetrieverLocus(set, opt.graphNodeMaxEdgeCount, opt.locusIndex);
     }
     else
     {
-        return new EdgeRetrieverBin(set,opt.binCount,opt.binIndex);
+        return new EdgeRetrieverBin(set, opt.graphNodeMaxEdgeCount, opt.binCount, opt.binIndex);
     }
 }
 
@@ -92,7 +95,7 @@ runGSC(
     static const AlignmentScores<int> spanningAlignScores(2,-8,-12,-1,-1);
     static const int jumpScore(-25);
     SmallAssemblerOptions spanningAssembleOpt;
-    spanningAssembleOpt.minContigLength=75;
+    spanningAssembleOpt.minContigLength=75; ///< For breakend-spanning assemblies we require a larger contig than for small-variant assemblies
 
     SVCandidateAssemblyRefiner svRefine(opt, cset.header, spanningAssembleOpt, spanningAlignScores, jumpScore);
 
@@ -125,22 +128,23 @@ runGSC(
         try
         {
             // find number, type and breakend range of SVs on this edge:
-            svFind.findCandidateSV(edge,svData,svs);
+            svFind.findCandidateSV(edge, svData, svs);
+
             for (unsigned svIndex(0); svIndex<svs.size(); ++svIndex)
             {
                 const SVCandidate& sv(svs[svIndex]);
 
-                SVCandidateAssemblyData adata;
-                svRefine.getCandidateAssemblyData(sv,svData,adata);
+                SVCandidateAssemblyData assemblyData;
+                svRefine.getCandidateAssemblyData(sv, svData, assemblyData);
 
-                const SVCandidate& submitSV(adata.isBestAlignment ? adata.sv : sv);
+                const SVCandidate& submitSV(assemblyData.isBestAlignment ? assemblyData.sv : sv);
 
-                candWriter.writeSV(edge, svData, adata, svIndex, submitSV);
+                candWriter.writeSV(edge, svData, assemblyData, svIndex, submitSV);
 
                 if (isSomatic)
                 {
                     svScore.scoreSomaticSV(svData, svIndex, submitSV, ssInfo);
-                    somWriter.writeSV(edge, svData, adata, svIndex, submitSV, ssInfo);
+                    somWriter.writeSV(edge, svData, assemblyData, svIndex, submitSV, ssInfo);
                 }
             }
         }
@@ -165,7 +169,6 @@ void
 GenerateSVCandidates::
 runInternal(int argc, char* argv[]) const
 {
-
     GSCOptions opt;
 
     parseGSCOptions(*this,argc,argv,opt);

@@ -1,3 +1,8 @@
+- MANTA-24 Better handle very high depth and chimeric noise complexity based
+on BWA-mem FFPE examples
+- MANTA-26 Extend fragment stats to provide estimate of full fragment size
+distribution
+- Large event assembly fixes
 - MANTA-23 enable use of pre-existing depth and stats files (for sparse bams)
 v0.7
 - Add assembly of large-event breakends and basepair resolution SV reporting

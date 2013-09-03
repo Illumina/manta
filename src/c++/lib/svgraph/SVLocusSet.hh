@@ -18,6 +18,7 @@
 #pragma once
 
 #include "blt_util/bam_header_info.hh"
+#include "options/SVLocusSetOptions.hh"
 #include "svgraph/SVLocus.hh"
 
 #include <iosfwd>
@@ -25,23 +26,28 @@
 #include <vector>
 
 
-
-// A set of non-overlapping SVLocus objects
-//
+/// A set of SVLocus objects comprising a full locus graph
+///
+/// When finalized, the SVLocusSet contains non-overlapping SVLoci
+///
 struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
 {
     typedef std::vector<SVLocus> locusset_type;
     typedef locusset_type::const_iterator const_iterator;
 
     SVLocusSet(
-        const unsigned minMergeEdgeCount = 2) :
+        const SVLocusSetOptions& opt = SVLocusSetOptions()) :
+        _opt(opt),
         _inodes(NodeAddressSorter(*this)),
         _source("UNKNOWN"),
-        _minMergeEdgeCount(minMergeEdgeCount),
         _isFinalized(false),
         _totalCleaned(0),
         _totalAnom(0),
-        _totalNonAnom(0)
+        _totalNonAnom(0),
+        _highestSearchCount(0),
+        _highestSearchDensity(0),
+        _isMaxSearchCount(false),
+        _isMaxSearchDensity(false)
     {}
 
     bool
@@ -128,6 +134,11 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
         _totalCleaned=0;
         _totalAnom=0;
         _totalNonAnom=0;
+        _highestSearchCount=0;
+        _highestSearchDensity=0;
+
+        _isMaxSearchCount=false;
+        _isMaxSearchDensity=false;
     }
 
     /// indicate that the set is complete
@@ -185,7 +196,7 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
     unsigned
     getMinMergeEdgeCount() const
     {
-        return _minMergeEdgeCount;
+        return _opt.minMergeEdgeCount;
     }
 
     // total number of reads used as supporting evidence in the graph
@@ -212,7 +223,7 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
         return sum;
     }
 
-    // total number of directed edges in the graph
+    /// get total number of directed edges in the graph
     unsigned
     totalEdgeCount() const
     {
@@ -309,28 +320,39 @@ private:
 
     /// shared node intersection utility
     ///
-    /// \param searchNodes the set of nodes to search for intersections in
-    /// \param filterLocusIndex ignore intersections from this locus
+    /// \param[in] searchNodes the set of nodes to search for intersections in
+    /// \param[in] filterLocusIndex ignore intersections from this locus
     ///
-    void
+    /// \param[in] isTestUsability check whether a node intersection exceeds computablility limits
+    ///
+    /// \return is usable node (can only be false when isTestUsability is true)
+    ///
+    bool
     getNodeIntersectCore(
         const LocusIndexType inputLocusIndex,
         const NodeIndexType inputNodeIndex,
         const LocusSetIndexerType& searchNodes,
         const LocusIndexType fitlerLocusIndex,
-        std::set<NodeAddressType>& intersectNodes) const;
+        std::set<NodeAddressType>& intersectNodes,
+        const bool isTestUsability = false) const;
 
-    /// get all nodes in this object which intersect with
-    /// the inputNode
-    void
+    /// get all nodes in this object which intersect with the inputNode
+    ///
+    /// \param[in] isTestUsability check whether a node intersection exceeds computablility limits
+    ///
+    /// \return is usable node (can only be false when isTestUsability is true)
+    ///
+    bool
     getNodeIntersect(
         const LocusIndexType locusIndex,
         const NodeIndexType nodeIndex,
-        std::set<NodeAddressType>& intersectNodes) const
+        std::set<NodeAddressType>& intersectNodes,
+        const bool isTestUsability = false) const
     {
-        getNodeIntersectCore(locusIndex, nodeIndex, _inodes, locusIndex, intersectNodes);
+        return getNodeIntersectCore(locusIndex, nodeIndex, _inodes, locusIndex, intersectNodes, isTestUsability);
     }
 
+    /// edges returned are in local_addy->remote_node orientation
     void
     getIntersectingEdgeNodes(
         const LocusIndexType inputLocusIndex,
@@ -339,8 +361,10 @@ private:
         const LocusSetIndexerType& remoteIntersect,
         std::vector<EdgeInfoType>& edges) const;
 
+    /// find nodes which could be merged with the input node, accounting for edge overlap and noise thresholds
     ///
-    /// \param isInputLocusMoved has the input locus been moved into the graph from an initial temporary locus?
+    /// \param[in] isInputLocusMoved has the input locus been moved into the graph from an initial temporary locus?
+    /// \param[out] mergeIntersect nodes which could be merged with input
     ///
     void
     getNodeMergeableIntersect(
@@ -350,7 +374,7 @@ private:
         std::set<NodeAddressType>& mergeIntersect) const;
 
     /// get all nodes in this object which intersect with
-    /// a external node
+    /// an external node
     void
     getRegionIntersect(
         const GenomeInterval interval,
@@ -375,7 +399,7 @@ private:
         const bool isClearSource = true);
 
 
-    // add locus to this locusSet (intermediate step in merging)
+    /// add locus to this locusSet (intermediate step in merging)
     LocusIndexType
     insertLocus(
         const SVLocus& inputLocus);
@@ -400,7 +424,7 @@ private:
     mergeNodePtr(NodeAddressType fromPtr,
                  NodeAddressType toPtr);
 
-    // update index when nodes are moved:
+    /// update index when nodes are moved:
     void
     recieve_notification(const notifier<SVLocusNodeMoveMessage>&,
                          const SVLocusNodeMoveMessage& msg)
@@ -456,6 +480,7 @@ private:
 public:
     bam_header_info header;
 private:
+    SVLocusSetOptions _opt;
 
     // contains the full set of loci
     locusset_type _loci;
@@ -470,9 +495,6 @@ private:
     // simple debug string describing the source of this
     std::string _source;
 
-    // to reduce noise in the graph, we only merge once shared edges (including self-edges), reach this count:
-    unsigned _minMergeEdgeCount;
-
     // the graph has intermediate states (during build) when overlapping regions are allowed,
     // once complete, overlaps are not present and disallowed:
     bool _isFinalized;
@@ -485,6 +507,12 @@ private:
 
     // total number of non-filtered non-anomalous reads scanned but not in graph:
     unsigned long _totalNonAnom;
+
+    mutable unsigned _highestSearchCount; ///< highest search count observed during graph build
+    mutable float _highestSearchDensity; ///< highest node density observed during graph build
+
+    mutable bool _isMaxSearchCount; ///< has input been filtered because we hit the maximum search count
+    mutable bool _isMaxSearchDensity; ///< has input been filtered because we hit the maximum node density
 };
 
 

@@ -57,9 +57,9 @@ parseMSLOptions(const manta::Program& prog,
     namespace po = boost::program_options;
     po::options_description req("configuration");
     req.add_options()
-    ("graph-file", po::value<std::vector<std::string> >(&opt.graphFilename),
+    ("graph-file", po::value(&opt.graphFilename),
      "input sv locus graph file (may be specified multiple times)")
-    ("output-file", po::value<std::string>(&opt.outputFilename),
+    ("output-file", po::value(&opt.outputFilename),
      "merged output sv locus graph file")
     ("verbose",
      "provide additional progress logging");

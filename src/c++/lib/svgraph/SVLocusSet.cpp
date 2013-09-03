@@ -78,6 +78,10 @@ merge(const SVLocus& inputLocus)
     // indicates if the input locus has been 'moved' into another locus in the graph:
     bool isInputLocusMoved(false);
 
+    // indicates that the locus will not be inserted into the graph.
+    // if true, skip merge and clear out the startLocus
+    bool isAbortMerge(false);
+
     // because we have a non-general interval overlap test, we must order search
     // nodes by begin_pos on each chromosome
     //
@@ -91,15 +95,34 @@ merge(const SVLocus& inputLocus)
         }
     }
 
+    // reuse this intersectNodes object throughout the merge:
+    std::set<NodeAddressType> intersectNodes;
+
+    // test if the graph has grown too complex in these regions. If so, abort the insertion of this locus:
     BOOST_FOREACH(const nodeMap_t::value_type& nodeVal, nodeMap)
     {
+        static const bool isTestUsability(true);
+
+        // get a standard intersection of the input node:
+        const bool isUsable(getNodeIntersect(startLocusIndex, nodeVal.second, intersectNodes, isTestUsability));
+
+        if (! isUsable)
+        {
+            isAbortMerge=true;
+            break;
+        }
+    }
+
+    BOOST_FOREACH(const nodeMap_t::value_type& nodeVal, nodeMap)
+    {
+        if (isAbortMerge) break;
+
         const NodeIndexType nodeIndex(nodeVal.second);
 
 #ifdef DEBUG_SVL
         log_os << "SVLocusSet::merge inputNode: " << NodeAddressType(std::make_pair(startLocusIndex,nodeIndex)) << " " << startLocus.getNode(nodeIndex);
 #endif
 
-        std::set<NodeAddressType> intersectNodes;
         getNodeMergeableIntersect(startLocusIndex, nodeIndex, isInputLocusMoved, intersectNodes);
 
 #ifdef DEBUG_SVL
@@ -112,17 +135,6 @@ merge(const SVLocus& inputLocus)
 
         if (isInputLocusMoved)
         {
-#if 0
-            if (intersectNodes.empty())
-            {
-                const NodeAddressType val(std::make_pair(startLocusIndex,nodeIndex));
-                std::ostringstream oss;
-                oss << "ERROR: no intersecting nodes found during merge\n"
-                    << "\tsearch node: " << val << " " << getNode(val)
-                    << "\thli: " << headLocusIndex << "\n";
-                BOOST_THROW_EXCEPTION(PreConditionException(oss.str()));
-            }
-#endif
             if (2>intersectNodes.size()) continue;
         }
         else
@@ -160,11 +172,9 @@ merge(const SVLocus& inputLocus)
         // merge overlapping nodes in order from highest nodeid to lowest, so that the
         // merge process does not invalidate nodeids of higher value
         //
-        // to do this, we first need to find a node corresponding the input node, and sort
-        // the remaining nodes by nodeIndex:
+        // we first need to find a node corresponding to the input node (but possibly merged to a larger region:
         //
         NodeAddressType inputSuperAddy;
-        std::vector<NodeAddressType> nodeIndices;
         {
             bool isInputSuperFound(false);
             const known_pos_range2& inputRange(getLocus(startLocusIndex).getNode(nodeIndex).interval.range);
@@ -178,21 +188,20 @@ merge(const SVLocus& inputLocus)
                 {
                     inputSuperAddy=val;
                     isInputSuperFound=true;
-                    continue;
+                    break;
                 }
-                nodeIndices.push_back(val);
             }
             assert(isInputSuperFound);
-            std::sort(nodeIndices.rbegin(),nodeIndices.rend());
         }
 
         // merge this inputNode with each intersecting Node,
         // and eliminate the intersecting node:
         //
         NodeAddressType mergeTargetAddy(inputSuperAddy);
-        BOOST_FOREACH(NodeAddressType nodeAddy, nodeIndices)
+        BOOST_REVERSE_FOREACH(NodeAddressType nodeAddy, intersectNodes)
         {
-            if (nodeAddy<mergeTargetAddy) std::swap(nodeAddy,mergeTargetAddy);
+            if (nodeAddy == inputSuperAddy) continue;
+            if (nodeAddy < mergeTargetAddy) std::swap(nodeAddy,mergeTargetAddy);
 #ifdef DEBUG_SVL
             log_os << "MergeAndRemove: " << nodeAddy << "\n";
 #endif
@@ -205,7 +214,7 @@ merge(const SVLocus& inputLocus)
         }
     }
 
-    if (startLocusIndex != headLocusIndex)
+    if (isAbortMerge || isInputLocusMoved)
     {
 #ifdef DEBUG_SVL
         log_os << "clearLocusIndex: " << startLocusIndex << "\n";
@@ -247,18 +256,24 @@ merge(const SVLocusSet& inputSet)
     _totalCleaned += inputSet._totalCleaned;
     _totalAnom += inputSet._totalAnom;
     _totalNonAnom += inputSet._totalNonAnom;
+    _highestSearchCount = std::max(_highestSearchCount, inputSet._highestSearchCount);
+    _isMaxSearchCount = (_isMaxSearchCount || inputSet._isMaxSearchCount);
+    _highestSearchDensity = std::max(_highestSearchDensity, inputSet._highestSearchDensity);
+    _isMaxSearchDensity = (_isMaxSearchDensity || inputSet._isMaxSearchDensity);
+
 }
 
 
 
-void
+bool
 SVLocusSet::
 getNodeIntersectCore(
     const LocusIndexType inputLocusIndex,
     const NodeIndexType inputNodeIndex,
     const LocusSetIndexerType& searchNodes,
     const LocusIndexType filterLocusIndex,
-    std::set<NodeAddressType>& intersectNodes) const
+    std::set<NodeAddressType>& intersectNodes,
+    const bool isTestUsability) const
 {
     typedef LocusSetIndexerType::const_iterator in_citer;
 
@@ -271,15 +286,30 @@ getNodeIntersectCore(
 
     // get all existing nodes which intersect with this one:
     const NodeAddressType inputAddy(std::make_pair(inputLocusIndex,inputNodeIndex));
-    in_citer it(searchNodes.lower_bound(inputAddy));
+    const in_citer it(searchNodes.lower_bound(inputAddy));
     const GenomeInterval& inputInterval(getNode(inputAddy).interval);
     const pos_t maxRegionSize(_maxRegionSize[inputInterval.tid]);
 
     const in_citer it_begin(searchNodes.begin()), it_end(searchNodes.end());
 
+    // diagnostics to determine if graph is growing too dense in one region:
+    bool isUsable(true);
+    unsigned searchCount(0);
+
     // first look forward and extend to find all nodes which this inputNode intersects:
     for (in_citer it_fwd(it); it_fwd != it_end; ++it_fwd)
     {
+        if (isTestUsability)
+        {
+            searchCount++;
+            if (searchCount > _opt.maxSearchCount)
+            {
+                isUsable = false;
+                _isMaxSearchCount=true;
+                break;
+            }
+        }
+
         if (it_fwd->first == filterLocusIndex) continue;
 #ifdef DEBUG_SVL
         log_os << "\tFWD test: " << (*it_fwd) << " " << getNode(*it_fwd);
@@ -295,6 +325,19 @@ getNodeIntersectCore(
     for (in_citer it_rev(it); it_rev != it_begin; )
     {
         --it_rev;
+
+        if (isTestUsability)
+        {
+            if (! isUsable) break;
+            searchCount++;
+            if (searchCount > _opt.maxSearchCount)
+            {
+                isUsable = false;
+                _isMaxSearchCount=true;
+                break;
+            }
+        }
+
         if (it_rev->first == filterLocusIndex) continue;
 #ifdef DEBUG_SVL
         log_os << "\tREV test: " << (*it_rev) << " " << getNode(*it_rev);
@@ -314,7 +357,31 @@ getNodeIntersectCore(
         log_os << "\tREV insert: " << (*it_rev) << "\n";
 #endif
     }
+
+    if (! isTestUsability) return true;
+
+    _highestSearchCount = std::max(_highestSearchCount, searchCount);
+
+    pos_t searchSize(inputInterval.range.end_pos() - std::max(0, inputInterval.range.begin_pos()-maxRegionSize));
+
+    assert(searchSize>=0);
+    if (0 != searchSize)
+    {
+        static const pos_t minSearchSize(40);
+        searchSize = std::max(searchSize, minSearchSize);
+        const float searchDensity(static_cast<float>(searchCount)/static_cast<float>(searchSize));
+        _highestSearchDensity = std::max(_highestSearchDensity, searchDensity);
+
+        if (searchDensity > _opt.maxSearchDensity)
+        {
+            isUsable = false;
+            _isMaxSearchDensity=true;
+        }
+    }
+
+    return isUsable;
 }
+
 
 
 void
@@ -358,6 +425,12 @@ getNodeMergeableIntersect(
     const bool isInputLocusMoved,
     std::set<NodeAddressType>& mergeIntersectNodes) const
 {
+    //
+    // TODO: There's room for significant optimization of these methods. The improvements are not trivial,
+    //   but they would allow us to filter fewer nodes from being merged when node intersection counts become large.
+    //
+
+    //
     // There are two ways sets of mergeable nodes can occur:
     //
     // (1) There is a set of nodes which overlap with both input Node and one of the remote nodes that the input points to.
@@ -376,6 +449,9 @@ getNodeMergeableIntersect(
     checkState();
 #endif
 
+    // reuse this intersectNodes temporary in the methods below:
+    std::set<NodeAddressType> intersectNodes;
+
     //
     // build a new index, which contains an enumeration of remote nodes for each intersecting node,
     // and a map pointing back to the intersecting locals for each remote:
@@ -387,14 +463,14 @@ getNodeMergeableIntersect(
     std::set<NodeAddressType> signalIntersectNodes;
     {
         // get a standard intersection of the input node:
-        std::set<NodeAddressType> intersectNodes;
-        getNodeIntersect(inputLocusIndex,inputNodeIndex,intersectNodes);
+        getNodeIntersect(inputLocusIndex, inputNodeIndex, intersectNodes);
+
         BOOST_FOREACH(const NodeAddressType& intersectAddy, intersectNodes)
         {
             const SVLocus& intersectLocus(getLocus(intersectAddy.first));
             const SVLocusNode& intersectNode(getNode(intersectAddy));
 
-            // get the remotes of each node which intersects with the query node,
+            // get the remotes of each node which intersect with the query node,
             // place these in remoteIntersect
             BOOST_FOREACH(const SVLocusNode::edges_type::value_type& intersectEdge, intersectNode)
             {
@@ -405,7 +481,7 @@ getNodeMergeableIntersect(
             }
 
             // 2. build the signal node set:
-            if (! intersectLocus.isNoiseNode(_minMergeEdgeCount,intersectAddy.second))
+            if (! intersectLocus.isNoiseNode(getMinMergeEdgeCount(),intersectAddy.second))
             {
                 signalIntersectNodes.insert(intersectAddy);
             }
@@ -431,7 +507,7 @@ getNodeMergeableIntersect(
     //
     mergeIntersectNodes.clear();
 
-    // for each edge from the input node, get all intesecting edges
+    // for each edge from the input node, get all intersecting edges
     BOOST_FOREACH(const SVLocusNode::edges_type::value_type& inputEdge, inputNode)
     {
 #ifdef DEBUG_SVL
@@ -490,8 +566,8 @@ getNodeMergeableIntersect(
         checkState();
 #endif
 
-        if ((mergedLocalEdgeCount < _minMergeEdgeCount) &&
-            (mergedRemoteEdgeCount < _minMergeEdgeCount)) continue;
+        if ((mergedLocalEdgeCount < getMinMergeEdgeCount()) &&
+            (mergedRemoteEdgeCount < getMinMergeEdgeCount())) continue;
 
         //
         // Add type (1) mergeable nodes:
@@ -522,15 +598,14 @@ getNodeMergeableIntersect(
             log_os << "\tsignal_boost: mergeAddy: " << mergeAddy << "\n";
 #endif
             // get a standard intersection of the input node:
-            std::set<NodeAddressType> intersectNodes;
-            getNodeIntersectCore(mergeAddy.first,mergeAddy.second, _inodes,inputLocusIndex,intersectNodes);
+            getNodeIntersectCore(mergeAddy.first,mergeAddy.second, _inodes,inputLocusIndex, intersectNodes);
             BOOST_FOREACH(const NodeAddressType intersectAddy, intersectNodes)
             {
 #ifdef DEBUG_SVL
                 log_os << "\tsignal_boost: intersectAddy: " << intersectAddy << "\n";
 #endif
                 const SVLocus& intersectLocus(getLocus(intersectAddy.first));
-                if (intersectLocus.isNoiseNode(_minMergeEdgeCount,intersectAddy.second))
+                if (intersectLocus.isNoiseNode(getMinMergeEdgeCount(),intersectAddy.second))
                 {
                     // check for the rare remote intersect condition:
                     if (! isIntersectOwnRemotes)
@@ -588,7 +663,7 @@ getRegionIntersect(
     const LocusIndexType startLocusIndex(insertLocus(SVLocus()));
     const NodeIndexType nodeIndex = getLocus(startLocusIndex).addNode(interval);
 
-    getNodeIntersect(startLocusIndex,nodeIndex,intersectNodes);
+    getNodeIntersect(startLocusIndex, nodeIndex, intersectNodes);
 
     clearLocus(startLocusIndex);
 }
@@ -795,6 +870,10 @@ dumpStats(std::ostream& os) const
     os << "totalCleaned:" << sep << _totalCleaned << "\n";
     os << "totalAnomalousConsidered:" << sep << _totalAnom << "\n";
     os << "totalNonAnomalousConsidered:" << sep << _totalNonAnom << "\n";
+    os << "highestSearchCount:" << sep << _highestSearchCount << "\n";
+    os << "isMaxSearchCount:" << sep << _isMaxSearchCount << "\n";
+    os << "highestSearchDensity:" << sep << _highestSearchDensity << "\n";
+    os << "isMaxSearchDensity:" << sep << _isMaxSearchDensity << "\n";
 }
 
 
@@ -872,11 +951,16 @@ save(const char* filename) const
     binary_oarchive oa(ofs);
 
     oa << header;
-    oa << _minMergeEdgeCount;
+    oa << _opt;
     oa << _isFinalized;
     oa << _totalCleaned;
     oa << _totalAnom;
     oa << _totalNonAnom;
+    oa << _highestSearchCount;
+    oa << _highestSearchDensity;
+    oa << _isMaxSearchCount;
+    oa << _isMaxSearchDensity;
+
     BOOST_FOREACH(const SVLocus& locus, _loci)
     {
         if (locus.empty()) continue;
@@ -905,11 +989,16 @@ load(const char* filename)
     _source=filename;
 
     ia >> header;
-    ia >> _minMergeEdgeCount;
+    ia >> _opt;
     ia >> _isFinalized;
     ia >> _totalCleaned;
     ia >> _totalAnom;
     ia >> _totalNonAnom;
+    ia >> _highestSearchCount;
+    ia >> _highestSearchDensity;
+    ia >> _isMaxSearchCount;
+    ia >> _isMaxSearchDensity;
+
     SVLocus locus;
     while (ifs.peek() != EOF)
     {

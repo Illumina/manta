@@ -376,12 +376,12 @@ SVLocusScanner(
     _opt(opt)
 {
     // pull in insert stats:
-    _rss.read(statsFilename.c_str());
+    _rss.load(statsFilename.c_str());
 
     // cache the insert stats we'll be looking up most often:
-    BOOST_FOREACH(const std::string& file, alignmentFilename)
+    BOOST_FOREACH(const std::string& alignFile, alignmentFilename)
     {
-        const boost::optional<unsigned> index(_rss.getGroupIndex(file));
+        const boost::optional<unsigned> index(_rss.getGroupIndex(alignFile));
         assert(index);
         const ReadGroupStats rgs(_rss.getStats(*index));
 
@@ -389,29 +389,29 @@ SVLocusScanner(
         CachedReadGroupStats& stat(_stats.back());
         {
             Range& breakend(stat.breakendRegion);
-            breakend.min=rgs.fragSize.quantile(_opt.breakendEdgeTrimProb);
-            breakend.max=rgs.fragSize.quantile((1-_opt.breakendEdgeTrimProb));
+            breakend.min=rgs.fragStats.quantile(_opt.breakendEdgeTrimProb);
+            breakend.max=rgs.fragStats.quantile((1-_opt.breakendEdgeTrimProb));
 
             if (breakend.min<0.) breakend.min = 0;
             assert(breakend.max>0.);
         }
         {
             Range& ppair(stat.properPair);
-            ppair.min=rgs.fragSize.quantile(_opt.properPairTrimProb);
-            ppair.max=rgs.fragSize.quantile((1-_opt.properPairTrimProb));
+            ppair.min=rgs.fragStats.quantile(_opt.properPairTrimProb);
+            ppair.max=rgs.fragStats.quantile((1-_opt.properPairTrimProb));
 
             if (ppair.min<0.) ppair.min = 0;
 
             assert(ppair.max>0.);
         }
         {
-            Range& evid(stat.evidencePair);
-            evid.min=rgs.fragSize.quantile(_opt.evidenceTrimProb);
-            evid.max=rgs.fragSize.quantile((1-_opt.evidenceTrimProb));
+            Range& evidence(stat.evidencePair);
+            evidence.min=rgs.fragStats.quantile(_opt.evidenceTrimProb);
+            evidence.max=rgs.fragStats.quantile((1-_opt.evidenceTrimProb));
 
-            if (evid.min<0.) evid.min = 0;
+            if (evidence.min<0.) evidence.min = 0;
 
-            assert(evid.max>0.);
+            assert(evidence.max>0.);
         }
     }
 }
@@ -433,10 +433,10 @@ bool
 SVLocusScanner::
 isSemiAligned(const bam_record& bamRead) const
 {
-	ALIGNPATH::path_t apath;
-	bam_cigar_to_apath(bamRead.raw_cigar(),bamRead.n_cigar(),apath);
+    ALIGNPATH::path_t apath;
+    bam_cigar_to_apath(bamRead.raw_cigar(),bamRead.n_cigar(),apath);
     const double minSemiAlignedScore(10.0);
-	return (ReadScorer::get().getSemiAlignedMetric(apath,bamRead.qual())>minSemiAlignedScore);
+    return (ReadScorer::get().getSemiAlignedMetric(apath,bamRead.qual())>minSemiAlignedScore);
 }
 
 bool

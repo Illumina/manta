@@ -119,13 +119,16 @@ getBreakendReads(
             // some conservative filtration criteria (including MAPQ) -- note this
             // means that if we want shadow reads this will have to be changed b/c
             // unmapped reads are filtered out here:
-            if(_readScanner.isReadFiltered(bamRead)) continue;
+            if (_readScanner.isReadFiltered(bamRead)) continue;
 #endif
 
             // include MAPQ0 because the split reads tend to have reduced mapping scores:
             if (bamRead.is_filter()) continue;
             if (bamRead.is_dup()) continue;
             if (bamRead.is_secondary()) continue;
+
+            /// TODO: Add SA read support -- temporarily reject all supplemental reads:
+            if (bamRead.is_supplement()) return;
 
             // FIXME: add some criteria to filter for "interesting" reads here, for now we add
             // only clipped reads and reads without N
@@ -137,16 +140,16 @@ getBreakendReads(
         
             bool isClipKeeper(false);
 
-            if(isSearchForRightOpen)
+            if (isSearchForRightOpen)
             {
                 const unsigned trailingClipLen(apath_soft_clip_trail_size(apath));
-                if(trailingClipLen >= minClipLen) isClipKeeper = true;
+                if (trailingClipLen >= minClipLen) isClipKeeper = true;
             }
 
-            if(isSearchForLeftOpen)
+            if (isSearchForLeftOpen)
             {
                 const unsigned leadingClipLen(apath_soft_clip_lead_size(apath));
-                if(leadingClipLen >= minClipLen) isClipKeeper = true;
+                if (leadingClipLen >= minClipLen) isClipKeeper = true;
             }
 
             if ( !(isClipKeeper || _readScanner.isSemiAligned(bamRead) ) ) continue;

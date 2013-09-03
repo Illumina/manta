@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE( test_EdgeRetrieverOneBin )
     set1.merge(locus2);
     set1.checkState(true,true);
 
-    EdgeRetrieverBin edger(set1,1,0);
+    EdgeRetrieverBin edger(set1, 0, 1, 0);
 
     BOOST_REQUIRE( edger.next() );
 
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE( test_EdgeRetrieverManyBin )
 
     for (unsigned binIndex(0); binIndex<3; ++binIndex)
     {
-        EdgeRetrieverBin edger(set1,3,binIndex);
+        EdgeRetrieverBin edger(set1, 0, 3, binIndex);
 
         BOOST_REQUIRE( edger.next() );
 
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE( test_EdgeRetrieverOddBin )
     unsigned count(0);
     for (unsigned binIndex(0); binIndex<3; ++binIndex)
     {
-        EdgeRetrieverBin edger(set1,3,binIndex);
+        EdgeRetrieverBin edger(set1, 0, 3, binIndex);
 
         while (edger.next())
         {
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE( test_EdgeRetrieverOddBinSelfEdge )
     unsigned count(0);
     for (unsigned binIndex(0); binIndex<3; ++binIndex)
     {
-        EdgeRetrieverBin edger(set1,3,binIndex);
+        EdgeRetrieverBin edger(set1, 0, 3, binIndex);
 
         while (edger.next())
         {

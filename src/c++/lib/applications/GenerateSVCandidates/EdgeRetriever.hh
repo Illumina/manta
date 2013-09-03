@@ -26,8 +26,10 @@
 struct EdgeRetriever
 {
     EdgeRetriever(
-        const SVLocusSet& set) :
-        _set(set)
+        const SVLocusSet& set,
+        const unsigned graphNodeMaxEdgeCount) :
+        _set(set),
+        _graphNodeMaxEdgeCount(graphNodeMaxEdgeCount)
     {}
 
     virtual
@@ -46,5 +48,6 @@ struct EdgeRetriever
 
 protected:
     const SVLocusSet& _set;
+    const unsigned _graphNodeMaxEdgeCount;
     EdgeInfo _edge;
 };

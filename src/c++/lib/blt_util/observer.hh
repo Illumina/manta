@@ -18,7 +18,7 @@
 ///
 /// \brief simple observer/notifier pattern
 ///
-/// see unit test for demonstration, note this is not meant to be used across treads
+/// see unit test for demonstration, note this is not meant to be used across threads
 ///
 
 #pragma once

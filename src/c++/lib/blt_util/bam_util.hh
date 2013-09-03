@@ -39,7 +39,8 @@ enum index_t {
     SECOND_READ   = 0x080,
     SECONDARY     = 0x100,
     FILTER        = 0x200,
-    DUPLICATE     = 0x400
+    DUPLICATE     = 0x400,
+    SUPPLEMENT    = 0x800
 };
 }
 
