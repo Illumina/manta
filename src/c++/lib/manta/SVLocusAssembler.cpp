@@ -83,10 +83,10 @@ getBreakendReads(
     }
 
 
-    //static const unsigned minClipLen(3);
+    static const unsigned minClipLen(3);
 
     // depending on breakend type we may only be looking for candidates in one direction:
-    /*bool isSearchForRightOpen(true);
+    bool isSearchForRightOpen(true);
     bool isSearchForLeftOpen(true);
     if (SVBreakendState::RIGHT_OPEN == bp.state)
     {
@@ -96,7 +96,7 @@ getBreakendReads(
     if (SVBreakendState::LEFT_OPEN == bp.state)
     {
         isSearchForRightOpen = false;
-    }*/
+    }
 
 
     const unsigned bamCount(_bamStreams.size());
@@ -135,7 +135,7 @@ getBreakendReads(
             bam_cigar_to_apath(bamRead.raw_cigar(), bamRead.n_cigar(), apath);
 
         
-            /* bool isClipKeeper(false);
+            bool isClipKeeper(false);
 
             if(isSearchForRightOpen)
             {
@@ -149,9 +149,7 @@ getBreakendReads(
                 if(leadingClipLen >= minClipLen) isClipKeeper = true;
             }
 
-            if(! isClipKeeper) continue;
-            */
-            if (!_readScanner.isSemiAligned(bamRead)) continue;
+            if ( !(isClipKeeper || _readScanner.isSemiAligned(bamRead) ) ) continue;
 
             if (bamRead.get_bam_read().get_string().find('N') != std::string::npos) continue;
 
