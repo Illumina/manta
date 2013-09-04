@@ -17,14 +17,10 @@
 
 #pragma once
 
+#include "AlignerBase.hh"
 #include "Alignment.hh"
-#include "AlignmentScores.hh"
 
 #include "blt_util/basic_matrix.hh"
-
-#include "boost/foreach.hpp"
-
-#include <cassert>
 
 
 /// represents alignment of a query sequence which can switch over from reference1 to reference2
@@ -67,12 +63,12 @@ std::ostream& operator<<(std::ostream& os, JumpAlignmentResult<ScoreType>& align
 /// the alignment can make a single jump from reference1 to reference2
 ///
 template <typename ScoreType>
-struct GlobalJumpAligner
+struct GlobalJumpAligner : public AlignerBase<ScoreType>
 {
     GlobalJumpAligner(
         const AlignmentScores<ScoreType>& scores,
         const ScoreType jumpScore) :
-        _scores(scores),
+        AlignerBase<ScoreType>(scores),
         _jumpScore(jumpScore)
     {}
 
@@ -87,87 +83,13 @@ struct GlobalJumpAligner
 
 
     /// read-only access to the aligner's scores:
-    const AlignmentScores<ScoreType>&
-    getScores() const
-    {
-        return _scores;
-    }
-
-    /// read-only access to the aligner's scores:
     const ScoreType&
     getJumpScore() const
     {
         return _jumpScore;
     }
 
-    /// recorver a path alignment score without aligning, requires SEQ_MATCH style CIGAR
-    ///
-    ScoreType
-    getPathScore(
-        const ALIGNPATH::path_t& apath,
-        const bool isScoreOffEdge = true) const
-    {
-        using namespace ALIGNPATH;
-
-        ScoreType val(0);
-
-        BOOST_FOREACH(const path_segment& ps, apath)
-        {
-            bool isIndel(false);
-            switch (ps.type)
-            {
-            case MATCH:
-                assert(0);
-                break;
-            case SEQ_MATCH:
-                val += (_scores.match * ps.length);
-                isIndel = false;
-                break;
-            case SEQ_MISMATCH:
-                val += (_scores.mismatch * ps.length);
-                isIndel = false;
-                break;
-            case INSERT:
-            case DELETE:
-                if (! isIndel) val += _scores.open;
-                val += (_scores.extend * ps.length);
-                isIndel = true;
-                break;
-            case SOFT_CLIP:
-                if (isScoreOffEdge) val += (_scores.offEdge * ps.length);
-                isIndel = false;
-                break;
-            default:
-                break;
-            }
-        }
-        return val;
-    }
-
 private:
-
-    static
-    uint8_t
-    max3(
-        ScoreType& max,
-        const ScoreType v0,
-        const ScoreType v1,
-        const ScoreType v2)
-    {
-        max=v0;
-        uint8_t ptr=0;
-        if (v1>v0)
-        {
-            max=v1;
-            ptr=1;
-        }
-        if (v2>max)
-        {
-            max=v2;
-            ptr=2;
-        }
-        return ptr;
-    }
 
     static
     uint8_t
@@ -198,7 +120,6 @@ private:
         return ptr;
     }
 
-    const AlignmentScores<ScoreType> _scores;
     const ScoreType _jumpScore;
 
     // insert and delete are for seq1 wrt seq2

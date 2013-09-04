@@ -50,6 +50,8 @@ align(
 {
     result.clear();
 
+    const AlignmentScores<ScoreType>& scores(this->getScores());
+
     const size_t querySize(std::distance(queryBegin, queryEnd));
     const size_t refSize(std::distance(refBegin, refEnd));
 
@@ -71,7 +73,7 @@ align(
     for (unsigned queryIndex(0); queryIndex<=querySize; queryIndex++)
     {
         ScoreVal& val((*thisSV)[queryIndex]);
-        val.match = queryIndex * _scores.offEdge;
+        val.match = queryIndex * scores.offEdge;
         val.del = badVal;
         val.ins = badVal;
     }
@@ -100,38 +102,38 @@ align(
                 PtrVal& headPtr(_ptrMat.val(queryIndex+1,refIndex+1));
                 {
                     const ScoreVal& sval((*prevSV)[queryIndex]);
-                    headPtr.match = max3(
+                    headPtr.match = this->max3(
                                         headScore.match,
                                         sval.match,
                                         sval.del,
                                         sval.ins);
 
-                    headScore.match += ((*queryIter==*refIter) ? _scores.match : _scores.mismatch);
+                    headScore.match += ((*queryIter==*refIter) ? scores.match : scores.mismatch);
                 }
 
                 // update delete
                 {
                     const ScoreVal& sval((*prevSV)[queryIndex+1]);
-                    headPtr.del = max3(
+                    headPtr.del = this->max3(
                                       headScore.del,
-                                      sval.match + _scores.open,
+                                      sval.match + scores.open,
                                       sval.del,
                                       sval.ins);
 
-                    headScore.del += _scores.extend;
+                    headScore.del += scores.extend;
                     if (0==queryIndex) headScore.del += badVal;
                 }
 
                 // update insert
                 {
                     const ScoreVal& sval((*thisSV)[queryIndex]);
-                    headPtr.ins = max3(
+                    headPtr.ins = this->max3(
                                       headScore.ins,
-                                      sval.match + _scores.open,
+                                      sval.match + scores.open,
                                       sval.del,
                                       sval.ins);
 
-                    headScore.ins += _scores.extend;
+                    headScore.ins += scores.extend;
                     if (0==queryIndex) headScore.ins += badVal;
                 }
 
@@ -162,7 +164,7 @@ align(
     for (unsigned queryIndex(0); queryIndex<=querySize; queryIndex++)
     {
         const ScoreVal& sval((*thisSV)[queryIndex]);
-        const ScoreType thisMax(sval.match + (querySize-queryIndex) * _scores.offEdge);
+        const ScoreType thisMax(sval.match + (querySize-queryIndex) * scores.offEdge);
         if (bt.isInit && (thisMax<=bt.max)) continue;
         bt.max=thisMax;
         bt.refBegin=refSize;

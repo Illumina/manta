@@ -55,6 +55,8 @@ align(
 {
     result.clear();
 
+    const AlignmentScores<ScoreType>& scores(this->getScores());
+
     const size_t querySize(std::distance(queryBegin, queryEnd));
     const size_t ref1Size(std::distance(ref1Begin, ref1End));
     const size_t ref2Size(std::distance(ref2Begin, ref2End));
@@ -79,7 +81,7 @@ align(
     for (unsigned queryIndex(0); queryIndex<=querySize; queryIndex++)
     {
         ScoreVal& val((*thisSV)[queryIndex]);
-        val.match = queryIndex * _scores.offEdge;
+        val.match = queryIndex * scores.offEdge;
         val.del = badVal;
         val.ins = badVal;
         val.jump = badVal;
@@ -110,38 +112,38 @@ align(
                 PtrVal& headPtr(_ptrMat1.val(queryIndex+1,ref1Index+1));
                 {
                     const ScoreVal& sval((*prevSV)[queryIndex]);
-                    headPtr.match = max3(
+                    headPtr.match = this->max3(
                                         headScore.match,
                                         sval.match,
                                         sval.del,
                                         sval.ins);
 
-                    headScore.match += ((*queryIter==*ref1Iter) ? _scores.match : _scores.mismatch);
+                    headScore.match += ((*queryIter==*ref1Iter) ? scores.match : scores.mismatch);
                 }
 
                 // update delete
                 {
                     const ScoreVal& sval((*prevSV)[queryIndex+1]);
-                    headPtr.del = max3(
+                    headPtr.del = this->max3(
                                       headScore.del,
-                                      sval.match + _scores.open,
+                                      sval.match + scores.open,
                                       sval.del,
                                       sval.ins);
 
-                    headScore.del += _scores.extend;
+                    headScore.del += scores.extend;
                     if (0==queryIndex) headScore.del += badVal;
                 }
 
                 // update insert
                 {
                     const ScoreVal& sval((*thisSV)[queryIndex]);
-                    headPtr.ins = max3(
+                    headPtr.ins = this->max3(
                                       headScore.ins,
-                                      sval.match + _scores.open,
+                                      sval.match + scores.open,
                                       sval.del,
                                       sval.ins);
 
-                    headScore.ins += _scores.extend;
+                    headScore.ins += scores.extend;
                     if (0==queryIndex) headScore.ins += badVal;
                 }
 
@@ -183,7 +185,7 @@ align(
     for (unsigned queryIndex(0); queryIndex<=querySize; queryIndex++)
     {
         const ScoreVal& sval((*thisSV)[queryIndex]);
-        const ScoreType thisMax(sval.match + (querySize-queryIndex) * _scores.offEdge);
+        const ScoreType thisMax(sval.match + (querySize-queryIndex) * scores.offEdge);
         if (bt.isInit && (thisMax<=bt.max)) continue;
         bt.max=thisMax;
         bt.refBegin=ref1Size;
@@ -196,7 +198,7 @@ align(
         for (unsigned queryIndex(0); queryIndex<=querySize; queryIndex++)
         {
             ScoreVal& val((*thisSV)[queryIndex]);
-            val.match = queryIndex * _scores.offEdge;
+            val.match = queryIndex * scores.offEdge;
             val.del = badVal;
             val.ins = badVal;
             //val.jump = badVal; // preserve jump setting from last iteration of ref1
@@ -231,19 +233,19 @@ align(
                                         sval.ins,
                                         sval.jump);
 
-                    headScore.match += ((*queryIter==*ref2Iter) ? _scores.match : _scores.mismatch);
+                    headScore.match += ((*queryIter==*ref2Iter) ? scores.match : scores.mismatch);
                 }
 
                 // update delete
                 {
                     const ScoreVal& sval((*prevSV)[queryIndex+1]);
-                    headPtr.del = max3(
+                    headPtr.del = this->max3(
                                       headScore.del,
-                                      sval.match + _scores.open,
+                                      sval.match + scores.open,
                                       sval.del,
                                       sval.ins);
 
-                    headScore.del += _scores.extend;
+                    headScore.del += scores.extend;
                 }
 
                 // update insert
@@ -251,12 +253,12 @@ align(
                     const ScoreVal& sval((*thisSV)[queryIndex]);
                     headPtr.ins = max4(
                                       headScore.ins,
-                                      sval.match + _scores.open,
+                                      sval.match + scores.open,
                                       sval.del,
                                       sval.ins,
                                       sval.jump); // jump->ins moves get a pass on the gap-open penalty, to support mirco-insertions
 
-                    headScore.ins += _scores.extend;
+                    headScore.ins += scores.extend;
                 }
 
                 // update jump
@@ -294,7 +296,7 @@ align(
     for (unsigned queryIndex(0); queryIndex<=querySize; queryIndex++)
     {
         const ScoreVal& sval((*thisSV)[queryIndex]);
-        const ScoreType thisMax(sval.match + (querySize-queryIndex) * _scores.offEdge);
+        const ScoreType thisMax(sval.match + (querySize-queryIndex) * scores.offEdge);
         if (bt.isInit && (thisMax<=bt.max)) continue;
         bt.max=thisMax;
         bt.refBegin=ref1Size+ref2Size;
