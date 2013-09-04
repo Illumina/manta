@@ -57,7 +57,7 @@ parseDSLOptions(const manta::Program& prog,
     req.add_options()
     ("graph-file", po::value(&opt.graphFilename),
      "sv locus graph file")
-    ("region", po::value<std::string>(&opt.region),
+    ("region", po::value(&opt.region),
      "list nodes in the specified region only. region in samtools format, eg. 'chr1:20-30' (optional)")
     ("locus-index", po::value(&opt.locusIndex),
      "dump only the specified locus")

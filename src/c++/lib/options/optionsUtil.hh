@@ -11,21 +11,18 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
-
 #pragma once
 
-#include "manta/Program.hh"
-#include "options/AlignmentFileOptions.hh"
+#include <string>
 
 
-struct AlignmentStatsOptions
-{
-    AlignmentFileOptions alignFileOpt;
-    std::string outputFilename;
-};
-
-
-void
-parseAlignmentStatsOptions(const manta::Program& prog,
-                           int argc, char* argv[],
-                           AlignmentStatsOptions& opt);
+/// check if input file exists and is usable as
+/// input, if so canonicallize the name
+///
+/// In case of error return true and provide error
+/// message
+bool
+checkStandardizeInputFile(
+    std::string& filename,
+    const char* fileLabel,
+    std::string& errorMsg);

@@ -55,9 +55,9 @@ parseSSLOptions(const manta::Program& prog,
     namespace po = boost::program_options;
     po::options_description req("configuration");
     req.add_options()
-    ("graph-file", po::value<std::string>(&opt.graphFilename),
+    ("graph-file", po::value(&opt.graphFilename),
      "sv locus graph file")
-    ("global",
+    ("global", po::value(&opt.isGlobalStats)->zero_tokens(),
      "provide global stats on full graph (default output is per-locus stats)")
     ;
 
@@ -95,10 +95,6 @@ parseSSLOptions(const manta::Program& prog,
     if (! boost::filesystem::exists(opt.graphFilename))
     {
         usage(log_os,prog,visible,"SV locus graph file does not exist");
-    }
-    if (vm.count("global"))
-    {
-        opt.isGlobalStats=true;
     }
 }
 

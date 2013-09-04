@@ -11,21 +11,26 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
+///
+/// \author Chris Saunders
+///
 
 #pragma once
 
-#include "manta/Program.hh"
 #include "options/AlignmentFileOptions.hh"
 
+#include "boost/program_options.hpp"
 
-struct AlignmentStatsOptions
-{
-    AlignmentFileOptions alignFileOpt;
-    std::string outputFilename;
-};
+#include <string>
 
 
-void
-parseAlignmentStatsOptions(const manta::Program& prog,
-                           int argc, char* argv[],
-                           AlignmentStatsOptions& opt);
+boost::program_options::options_description
+getOptionsDescription(
+    AlignmentFileOptions& opt);
+
+
+bool
+parseOptions(
+    const boost::program_options::variables_map& vm,
+    AlignmentFileOptions& opt,
+    std::string& errorMsg);

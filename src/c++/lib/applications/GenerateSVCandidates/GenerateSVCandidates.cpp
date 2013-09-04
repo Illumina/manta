@@ -63,7 +63,7 @@ static
 EdgeRetriever*
 edgeRFactory(
     const SVLocusSet& set,
-    const GSCOptions& opt)
+    const EdgeOptions& opt)
 {
     if (opt.isLocusIndex)
     {
@@ -101,7 +101,7 @@ runGSC(
 
     SVScorer svScore(opt, cset.header);
 
-    std::auto_ptr<EdgeRetriever> edgerPtr(edgeRFactory(cset, opt));
+    std::auto_ptr<EdgeRetriever> edgerPtr(edgeRFactory(cset, opt.edgeOpt));
     EdgeRetriever& edger(*edgerPtr);
 
     OutStream candfs(opt.candidateOutputFilename);
@@ -111,7 +111,7 @@ runGSC(
     VcfWriterSomaticSV somWriter(opt.somaticOpt, (! opt.chromDepthFilename.empty()),
                                  opt.referenceFilename,cset,somfs.getStream());
 
-    if (0 == opt.binIndex)
+    if (0 == opt.edgeOpt.binIndex)
     {
         candWriter.writeHeader(progName, progVersion);
         if (isSomatic) somWriter.writeHeader(progName, progVersion);
@@ -127,7 +127,7 @@ runGSC(
 
         try
         {
-            // find number, type and breakend range of SVs on this edge:
+            // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
             svFind.findCandidateSV(edge, svData, svs);
 
             for (unsigned svIndex(0); svIndex<svs.size(); ++svIndex)

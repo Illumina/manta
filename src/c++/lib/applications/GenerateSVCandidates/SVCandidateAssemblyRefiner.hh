@@ -20,7 +20,7 @@
 #include "GSCOptions.hh"
 
 #include "alignment/GlobalJumpAligner.hh"
-#include "assembly/SmallAssemblerOptions.hh"
+#include "options/SmallAssemblerOptions.hh"
 #include "blt_util/bam_header_info.hh"
 #include "manta/SVCandidateAssemblyData.hh"
 #include "manta/SVCandidate.hh"

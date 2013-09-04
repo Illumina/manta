@@ -18,12 +18,9 @@
 #pragma once
 
 #include "manta/Program.hh"
+#include "options/AlignmentFileOptions.hh"
 #include "options/ReadScannerOptions.hh"
 #include "options/SVLocusSetOptions.hh"
-
-#include <string>
-#include <vector>
-
 
 
 struct ESLOptions
@@ -33,10 +30,10 @@ struct ESLOptions
         graphOpt(3)
     {}
 
+    AlignmentFileOptions alignFileOpt;
     ReadScannerOptions scanOpt;
     SVLocusSetOptions graphOpt;
 
-    std::vector<std::string> alignmentFilename;
     std::string outputFilename;
     std::string region;
     std::string statsFilename;

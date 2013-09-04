@@ -40,11 +40,11 @@ SVLocusAssembler(
     const SmallAssemblerOptions& assembleOpt) :
     _scanOpt(opt.scanOpt),
     _assembleOpt(assembleOpt),
-    _readScanner(_scanOpt,opt.statsFilename,opt.alignmentFilename)
+    _readScanner(_scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilename)
 {
     // setup regionless bam_streams:
     // setup all data for main analysis loop:
-    BOOST_FOREACH(const std::string& afile, opt.alignmentFilename)
+    BOOST_FOREACH(const std::string& afile, opt.alignFileOpt.alignmentFilename)
     {
         // avoid creating shared_ptr temporaries:
         streamPtr tmp(new bam_streamer(afile.c_str()));

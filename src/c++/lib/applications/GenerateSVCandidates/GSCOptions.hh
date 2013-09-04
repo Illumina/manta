@@ -17,7 +17,9 @@
 
 #pragma once
 
+#include "EdgeOptions.hh"
 #include "manta/Program.hh"
+#include "options/AlignmentFileOptions.hh"
 #include "options/ReadScannerOptions.hh"
 #include "options/SomaticCallOptions.hh"
 
@@ -25,23 +27,17 @@
 #include <vector>
 
 
-
 struct GSCOptions
 {
     GSCOptions() :
-        binCount(1),
-        binIndex(0),
-        isLocusIndex(false),
-        locusIndex(0),
-        isSkipAssembly(false),
-        graphNodeMaxEdgeCount(20)
+        isSkipAssembly(false)
     {}
 
+    AlignmentFileOptions alignFileOpt;
+    EdgeOptions edgeOpt;
     ReadScannerOptions scanOpt;
     SomaticCallOptions somaticOpt;
 
-    std::vector<std::string> alignmentFilename;
-    std::vector<bool> isAlignmentTumor;
     std::string graphFilename;
     std::string referenceFilename;
     std::string statsFilename;
@@ -50,15 +46,7 @@ struct GSCOptions
     std::string candidateOutputFilename;
     std::string somaticOutputFilename;
 
-    unsigned binCount;
-    unsigned binIndex;
-
-    bool isLocusIndex; ///< if true, generate candidates for a specific SVgraph locus only
-    unsigned locusIndex;
-
     bool isSkipAssembly; ///< if true, skip assembly and run a low-resolution, breakdancer-like subset of the workflow
-
-    unsigned graphNodeMaxEdgeCount; ///< if both nodes of an edge have an edge count higher than this, then skip evaluation of this edge, set to 0 to turn this filtration off
 };
 
 
