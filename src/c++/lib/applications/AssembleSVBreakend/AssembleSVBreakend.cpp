@@ -130,7 +130,7 @@ runASB(const ASBOptions& opt)
     std::cout << "Translating into " << bp1 << " and " << bp2 << std::endl;
 
     SmallAssemblerOptions assembleOpt;
-    SVLocusAssembler svla(opt, assembleOpt);
+    SVLocusAssembler svla(opt.scanOpt, assembleOpt, opt.alignFileOpt, opt.statsFilename);
     Assembly a;
     svla.assembleSVBreakends(bp1,bp2, false, false, a);
     std::cout << "Assembled " << a.size() << " contig(s)." << std::endl;

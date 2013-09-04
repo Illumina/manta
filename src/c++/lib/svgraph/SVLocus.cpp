@@ -37,6 +37,22 @@ operator<<(std::ostream& os, const SVLocusEdge& edge)
 
 
 void
+SVLocusNode::
+getEdgeException(
+    const NodeIndexType toIndex) const
+{
+    using namespace illumina::common;
+
+    std::ostringstream oss;
+    oss << "ERROR: SVLocusNode::getEdge() no edge exists\n";
+    oss << "\tfrom node: " << (*this) << "\n";
+    oss << "\tto_node index: " << toIndex << "\n";
+    BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+}
+
+
+
+void
 SVLocus::
 nodeHurl(const NodeIndexType nodePtr) const
 {

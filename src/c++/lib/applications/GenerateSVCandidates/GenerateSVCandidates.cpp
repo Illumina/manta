@@ -89,15 +89,7 @@ runGSC(
     SVFinder svFind(opt);
     const SVLocusSet& cset(svFind.getSet());
 
-    // maybe these can be an SV refiner option struct?
-
-    // match, mismatch, open ratios taken from bwa:
-    static const AlignmentScores<int> spanningAlignScores(2,-8,-12,-1,-1);
-    static const int jumpScore(-25);
-    SmallAssemblerOptions spanningAssembleOpt;
-    spanningAssembleOpt.minContigLength=75; ///< For breakend-spanning assemblies we require a larger contig than for small-variant assemblies
-
-    SVCandidateAssemblyRefiner svRefine(opt, cset.header, spanningAssembleOpt, spanningAlignScores, jumpScore);
+    SVCandidateAssemblyRefiner svRefine(opt, cset.header);
 
     SVScorer svScore(opt, cset.header);
 

@@ -369,6 +369,7 @@ getCandidatesFromData(
 
             if (isExcludeUnpaired)
             {
+                // in this case both sides of the read pair need to be observed (and not filtered for MAPQ, etc)
                 if ((! localReadPtr->isSet()) || (! remoteReadPtr->isSet())) continue;
             }
             else
@@ -489,8 +490,24 @@ findCandidateSV(
         return;
     }
 
-    // for now, don't process self edges -- eventually these will be used as assembly targets
-    if (edge.nodeIndex1 == edge.nodeIndex2) return;
+    // if this is a self-edge, then automatically forward it as is to the assembly module:
+    if (edge.nodeIndex1 == edge.nodeIndex2)
+    {
+        SVCandidate sv;
+        SVBreakend& localBreakend(sv.bp1);
+        SVBreakend& remoteBreakend(sv.bp2);
+
+        const SVLocusNode& node(locus.getNode(edge.nodeIndex1));
+
+        localBreakend.splitCount = node.getEdge(edge.nodeIndex1).count;
+        localBreakend.state = SVBreakendState::COMPLEX;
+        localBreakend.interval = node.interval;
+
+        remoteBreakend.state = SVBreakendState::UNKNOWN;
+
+        svs.push_back(sv);
+        return;
+    }
 
 
     // start gathering evidence required for hypothesis generation,

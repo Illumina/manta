@@ -34,9 +34,10 @@
 struct SVLocusAssembler
 {
     SVLocusAssembler(
-        const GSCOptions& opt,
-        const SmallAssemblerOptions& assmbleOpt);
-
+        const ReadScannerOptions& scanOpt,
+        const SmallAssemblerOptions& assembleOpt,
+        const AlignmentFileOptions& alignFileOpt,
+        const std::string& statsFilename);
     /**
      * @brief Performs a de-novo assembly of a set of reads crossing a breakpoint.
      *

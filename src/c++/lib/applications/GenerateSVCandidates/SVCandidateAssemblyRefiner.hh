@@ -19,12 +19,13 @@
 
 #include "GSCOptions.hh"
 
+#include "alignment/GlobalAligner.hh"
 #include "alignment/GlobalJumpAligner.hh"
-#include "options/SmallAssemblerOptions.hh"
 #include "blt_util/bam_header_info.hh"
 #include "manta/SVCandidateAssemblyData.hh"
 #include "manta/SVCandidate.hh"
 #include "manta/SVLocusAssembler.hh"
+#include "options/SmallAssemblerOptions.hh"
 
 
 /// \brief methods to improve low-resolution SVCandidates via assembly and contig alignment
@@ -33,10 +34,7 @@ struct SVCandidateAssemblyRefiner
 {
     SVCandidateAssemblyRefiner(
         const GSCOptions& opt,
-        const bam_header_info& header,
-        const SmallAssemblerOptions& assembleOpt,
-        const AlignmentScores<int>& alignScore,
-        const int jumpScore);
+        const bam_header_info& header);
 
     /// \brief add assembly and assembly post-processing data to SV candidate
     ///
@@ -44,11 +42,27 @@ struct SVCandidateAssemblyRefiner
     getCandidateAssemblyData(
         const SVCandidate& sv,
         const SVCandidateSetData& svData,
-        SVCandidateAssemblyData& adata) const;
+        SVCandidateAssemblyData& assemblyData) const;
 
 private:
+
+    /// large SV assembler
+    void
+    getJumpAssembly(
+        const SVCandidate& sv,
+        SVCandidateAssemblyData& assemblyData) const;
+
+    /// small SV/indel assembler
+    void
+    getSmallSVAssembly(
+        const SVCandidate& sv,
+        SVCandidateAssemblyData& assemblyData) const;
+
+    //////////////////////////////// data:
     const GSCOptions& _opt;
-    const SVLocusAssembler _svAssembler;
     const bam_header_info& _header;
-    const GlobalJumpAligner<int> _aligner;
+    const SVLocusAssembler _smallSVAssembler;
+    const SVLocusAssembler _spanningAssembler;
+    const GlobalAligner<int> _smallSVAligner;
+    const GlobalJumpAligner<int> _spanningAligner;
 };

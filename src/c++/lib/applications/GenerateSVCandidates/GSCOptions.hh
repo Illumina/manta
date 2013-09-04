@@ -22,6 +22,7 @@
 #include "options/AlignmentFileOptions.hh"
 #include "options/ReadScannerOptions.hh"
 #include "options/SomaticCallOptions.hh"
+#include "options/SVRefinerOptions.hh"
 
 #include <string>
 #include <vector>
@@ -36,6 +37,7 @@ struct GSCOptions
     AlignmentFileOptions alignFileOpt;
     EdgeOptions edgeOpt;
     ReadScannerOptions scanOpt;
+    SVRefinerOptions refineOpt;
     SomaticCallOptions somaticOpt;
 
     std::string graphFilename;
