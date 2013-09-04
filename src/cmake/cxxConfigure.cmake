@@ -120,6 +120,9 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 endif()
 
 
+# The NDEBUG macro is intentionally removed from release. One discussion on this is:
+# http://www.drdobbs.com/an-exception-or-a-bug/184401686
+
 set (CMAKE_CXX_FLAGS "${CXX_WARN_FLAGS}")
 set (CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 set (CMAKE_CXX_FLAGS_RELEASE "-O3")
