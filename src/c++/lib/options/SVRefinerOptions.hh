@@ -38,12 +38,12 @@ struct SVRefinerOptions
         spanningAssembleOpt.minContigLength=75; ///< For breakend-spanning assemblies we require a larger contig than for small-variant assemblies
     }
 
-    /// parameters for small SV assembly:
+    /// parameters for small SV assembly/alignment:
     AlignmentScores<int> smallSVAlignScores;
     SmallAssemblerOptions smallSVAssembleOpt;
 
-    // parameters for large SV assembly:
+    // parameters for large SV assembly/alignment:
     AlignmentScores<int> spanningAlignScores;
-    int jumpScore;
+    const int jumpScore;
     SmallAssemblerOptions spanningAssembleOpt;
 };
