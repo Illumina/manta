@@ -37,7 +37,7 @@ increment_path(const path_t& path,
 {
     const path_segment& ps(path[path_index]);
 
-    if       (ps.type == MATCH)
+    if       (ps.type == MATCH || ps.type == SEQ_MATCH || ps.type == SEQ_MISMATCH)
     {
         read_offset += ps.length;
         ref_offset += ps.length;
@@ -56,7 +56,7 @@ increment_path(const path_t& path,
     }
     else
     {
-        assert(0); // can't handle other CIGAR types yet
+        assert(! "Unexpected alignment type"); // can't handle other CIGAR types yet
     }
 
     path_index++;
@@ -89,7 +89,7 @@ struct swap_info
             }
             else
             {
-                assert(0);
+                assert(! "Unexpected alignment type");
             }
         }
         n_seg -= path_index;

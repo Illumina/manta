@@ -59,7 +59,7 @@ struct AlignerBase
             switch (ps.type)
             {
             case MATCH:
-                assert(0); // if MATCH segments exist, then you're using the wrong type of CIGAR for this function
+                assert(! "Unexpected MATCH segment"); // if MATCH segments exist, then you're using the wrong type of CIGAR for this function
                 break;
             case SEQ_MATCH:
                 val += (_scores.match * ps.length);
