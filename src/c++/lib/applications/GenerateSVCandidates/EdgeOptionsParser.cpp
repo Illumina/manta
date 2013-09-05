@@ -33,7 +33,7 @@ getOptionsDescription(
      "specify which bin to solve when the SV candidate problem is subdivided into bins. Value must bin in [0,bin-count)")
     ("locus-index", po::value(&opt.locusIndex),
      "Instead of solving for all SV candidates in a bin, solve for candidates of a particular locus. If specified then bin-index is ignored.")
-;
+    ;
     return optdesc;
 }
 

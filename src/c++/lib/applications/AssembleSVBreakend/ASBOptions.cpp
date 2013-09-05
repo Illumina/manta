@@ -59,7 +59,7 @@ checkStandardizeUsageFile(
     const char* fileLabel)
 {
     std::string errorMsg;
-    if( checkStandardizeInputFile(filename, fileLabel, errorMsg))
+    if ( checkStandardizeInputFile(filename, fileLabel, errorMsg))
     {
         usage(os,prog,visible,errorMsg.c_str());
     }
@@ -127,7 +127,7 @@ parseASBOptions(const manta::Program& prog,
 
     std::string errorMsg;
     if (parseOptions(vm, opt.alignFileOpt, errorMsg))
-    {  
+    {
         usage(log_os,prog,visible,errorMsg.c_str());
     }
     else if (opt.statsFilename.empty())

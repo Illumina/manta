@@ -61,7 +61,7 @@ checkStandardizeUsageFile(
     const char* fileLabel)
 {
     std::string errorMsg;
-    if( checkStandardizeInputFile(filename, fileLabel, errorMsg))
+    if ( checkStandardizeInputFile(filename, fileLabel, errorMsg))
     {
         usage(os,prog,visible,errorMsg.c_str());
     }
@@ -157,7 +157,7 @@ parseGSCOptions(const manta::Program& prog,
         unsigned tumorCount(0);
         BOOST_FOREACH(const bool value, opt.alignFileOpt.isAlignmentTumor)
         {
-            if(value) tumorCount++;
+            if (value) tumorCount++;
             else      normalCount++;
         }
         if ((normalCount==0) || (tumorCount==0))

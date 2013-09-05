@@ -212,7 +212,7 @@ getCandidateAssemblyData(
         // this case assumes two suspected breakends with a direction to each, most common large scale SV case:
         getJumpAssembly(sv, assemblyData);
     }
-    else if((sv.bp1.state == SVBreakendState::COMPLEX))
+    else if ((sv.bp1.state == SVBreakendState::COMPLEX))
     {
         // this case assumes a single-interval local assembly, this is the most common case for small-scale SVs/indels
         getSmallSVAssembly(sv, assemblyData);

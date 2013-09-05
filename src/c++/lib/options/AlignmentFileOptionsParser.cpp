@@ -38,7 +38,7 @@ getOptionsDescription(
      "alignment file in bam format (may be specified multiple times, assumed to be non-tumor if tumor file(s) provided)")
     ("tumor-align-file", po::value<files_t>(),
      "tumor sample alignment file in bam format (may be specified multiple times)")
-     ;
+    ;
     return desc;
 }
 
@@ -73,7 +73,7 @@ parseOptions(
         std::set<std::string> nameCheck;
         BOOST_FOREACH(std::string& afile, opt.alignmentFilename)
         {
-            if(checkStandardizeInputFile(afile,"alignment file",errorMsg)) break;
+            if (checkStandardizeInputFile(afile,"alignment file",errorMsg)) break;
             if (nameCheck.count(afile))
             {
                 std::ostringstream oss;
