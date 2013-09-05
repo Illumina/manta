@@ -448,7 +448,7 @@ getSmallSVAssembly(
 #endif
 
     // make sure an alignment object exists for every contig, even if it's empty:
-    assemblyData.spanningAlignments.resize(contigCount);
+    assemblyData.smallSVAlignments.resize(contigCount);
 
     //bool isHighScore(false);
     //unsigned highScoreIndex(0);

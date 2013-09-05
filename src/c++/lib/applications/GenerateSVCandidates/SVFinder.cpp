@@ -506,6 +506,14 @@ findCandidateSV(
         remoteBreakend.state = SVBreakendState::UNKNOWN;
 
         svs.push_back(sv);
+
+        // minimal setup for svData:
+        const unsigned bamCount(_bamStreams.size());
+        for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
+        {
+            svData.getDataGroup(bamIndex);
+        }
+
         return;
     }
 
