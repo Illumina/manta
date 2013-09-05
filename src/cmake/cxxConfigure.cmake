@@ -129,6 +129,28 @@ set (CMAKE_CXX_FLAGS_RELEASE "-O3")
 set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
 #set (CMAKE_CXX_FLAGS_PROFILE "-O0 -g -pg -fprofile-arcs -ftest-coverage")
 
+
+# add address sanitizer to debug mode:
+set (USE_ADDRESS_SANITIZER false) # if true, turn on Address Sanitizer in debug for compilers which support this:
+
+if (${USE_ADDRESS_SANITIZER})
+    set (IS_ASAN false)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        if (${compiler_version} VERSION_GREATER "4.7")
+            set (IS_ASAN true)
+        endif ()
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        if (${compiler_version} VERSION_GREATER "3.0")
+            set (IS_ASAN true)
+        endif ()
+    endif ()
+
+    if (${IS_ASAN})
+        set (CMAKE_CXX_FLAGS_DEBUG "-fsanitize=address -fno-omit-frame-pointer ${CMAKE_CXX_FLAGS_DEBUG}")
+    endif ()
+endif ()
+
+
 # this should be tied to a 'developer' switch -- for now,
 # anyone touching manta is a developer, so this is true:
 set(DEVELOPER_MODE true)
@@ -142,7 +164,7 @@ if (${DEVELOPER_MODE})
     #
     set(IS_WERROR true)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        if (${compiler_version} VERSION_LESS "4.2.0")
+        if (${compiler_version} VERSION_LESS "4.2")
             set(IS_WERROR false)
         endif ()
     endif ()
