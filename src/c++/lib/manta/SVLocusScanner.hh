@@ -55,8 +55,7 @@ struct SVLocusScanner
         const unsigned defaultReadGroupIndex) const;
 
     /// test for semi-alignedness
-    /// Dummy implementation, returns true for now
-    bool
+    double
     isSemiAligned(
         const bam_record& bamRead) const;
 

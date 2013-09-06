@@ -113,6 +113,8 @@ getBreakendReads(
 
         static const unsigned MAX_NUM_READS(1000);
 
+        static const double minSemiAlignedScore(10.0);
+
         while (bamStream.next() && (reads.size() < MAX_NUM_READS))
         {
             const bam_record& bamRead(*(bamStream.get_record_ptr()));
@@ -138,7 +140,6 @@ getBreakendReads(
 
             ALIGNPATH::path_t apath;
             bam_cigar_to_apath(bamRead.raw_cigar(), bamRead.n_cigar(), apath);
-
         
             bool isClipKeeper(false);
 
@@ -154,7 +155,7 @@ getBreakendReads(
                 if (leadingClipLen >= minClipLen) isClipKeeper = true;
             }
 
-            if ( !(isClipKeeper || _readScanner.isSemiAligned(bamRead) ) ) continue;
+            if ( !(isClipKeeper || _readScanner.isSemiAligned(bamRead) > minSemiAlignedScore ) ) continue;
 
             if (bamRead.get_bam_read().get_string().find('N') != std::string::npos) continue;
 

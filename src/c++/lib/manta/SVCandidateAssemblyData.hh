@@ -64,7 +64,7 @@ struct SVCandidateAssemblyData
 
     bool isSpanning;
 
-    std::vector<SmallAlignmentResultType> smallSVAlignments; ///< contig spanning alignments, one per contig, may be empty
+    std::vector<SmallAlignmentResultType> smallSVAlignments; ///< contig global alignments, one per contig, may be empty
     std::vector<JumpAlignmentResultType> spanningAlignments; ///< contig spanning alignments, one per contig, may be empty
 
     bool isBestAlignment;        ///< is there a contig/alignment good enough to be used for reporting?

@@ -145,7 +145,6 @@ struct ReadScorer : private boost::noncopyable
         return rs;
     }
 
-
     double
     getSemiAlignedMetric(const ALIGNPATH::path_t& apath, const uint8_t* qual) const;
 

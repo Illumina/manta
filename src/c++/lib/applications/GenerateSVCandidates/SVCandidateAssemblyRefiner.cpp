@@ -507,35 +507,40 @@ getSmallSVAssembly(
         assemblyData.isBestAlignment = true;
         assemblyData.bestAlignmentIndex = highScoreIndex;
 #ifdef DEBUG_REFINER
-        log_os << "highscoreid: " << highScoreIndex << " alignment: " << assemblyData.spanningAlignments[highScoreIndex];
+        log_os << "highscoreid: " << highScoreIndex << " alignment: " << assemblyData.smallSVAlignments[highScoreIndex];
 #endif
 
         // process the alignment into information that's easily usable in the vcf output
         // (ie. breakends in reference coordinates)
 
         const AssembledContig& bestContig(assemblyData.contigs[assemblyData.bestAlignmentIndex]);
-        const SVCandidateAssemblyData::JumpAlignmentResultType& bestAlign(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex]);
+        const SVCandidateAssemblyData::SmallAlignmentResultType& bestAlign(assemblyData.smallSVAlignments[assemblyData.bestAlignmentIndex]);
 
         // first get each alignment associated with the correct breakend:
-        const Alignment* bp1AlignPtr(&bestAlign.align1);
-        const Alignment* bp2AlignPtr(&bestAlign.align2);
+        const Alignment* bpAlignPtr(&bestAlign.align);
+        //const Alignment* bp2AlignPtr(&bestAlign.align2);
 
-        if (isBp2AlignedFirst) std::swap(bp1AlignPtr, bp2AlignPtr);
+        //if (isBp2AlignedFirst) std::swap(bp1AlignPtr, bp2AlignPtr);
 
         // summarize usable output information in a second SVBreakend object -- this is the 'refined' sv:
         assemblyData.sv = sv;
 
         assemblyData.sv.setPrecise();
 
-        adjustAssembledBreakend(*bp1AlignPtr, (! isBp2AlignedFirst), bestAlign.jumpRange, assemblyData.bp1ref, isBp1Reversed, assemblyData.sv.bp1);
-        adjustAssembledBreakend(*bp2AlignPtr, (isBp2AlignedFirst), bestAlign.jumpRange, assemblyData.bp2ref, isBp2Reversed, assemblyData.sv.bp2);
+        // TODO: Do we still need this?
+        // I think so :-) looks useful: making my best guess about the parameters required
+        bool isBpAlignedFirst(true);
+        unsigned jumpRange(0);
+        bool isBpReversed(false);
+        adjustAssembledBreakend(*bp1AlignPtr,isBp2AlignedFirst,jumpRange, assemblyData.bp1ref, isBpReversed, assemblyData.sv.bp1);
+        //adjustAssembledBreakend(*bp2AlignPtr, (isBp2AlignedFirst), bestAlign.jumpRange, assemblyData.bp2ref, isBp2Reversed, assemblyData.sv.bp2);
 
         // fill in insertSeq:
-        assemblyData.sv.insertSeq.clear();
+        /*assemblyData.sv.insertSeq.clear();
         if (bestAlign.jumpInsertSize > 0)
         {
             getFwdStrandInsertSegment(bestAlign, bestContig.seq, isBp1Reversed, assemblyData.sv.insertSeq);
-        }
+        }*/
 
 #ifdef DEBUG_REFINER
         log_os << "highscore refined sv: " << assemblyData.sv;
