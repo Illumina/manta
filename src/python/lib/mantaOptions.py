@@ -50,29 +50,25 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         """
         libexecDir="@MANTA_FULL_LIBEXECDIR@"
         assert os.path.isdir(libexecDir)
+        
+        def joinFile(*arg) :
+            filePath = os.path.join(*arg)
+            assert os.path.isfile(filePath)
+            return filePath
 
-        bgzipBin=os.path.join(libexecDir,"bgzip")
-        assert os.path.isfile(bgzipBin)
-        samtoolsBin=os.path.join(libexecDir,"samtools")
-        assert os.path.isfile(samtoolsBin)
-        tabixBin=os.path.join(libexecDir,"tabix")
-        assert os.path.isfile(tabixBin)
+        bgzipBin=joinFile(libexecDir,"bgzip")
+        samtoolsBin=joinFile(libexecDir,"samtools")
+        tabixBin=joinFile(libexecDir,"tabix")
 
-        mantaStatsBin=os.path.join(libexecDir,"GetAlignmentStats")
-        assert os.path.isfile(mantaStatsBin)
-        mantaGraphBin=os.path.join(libexecDir,"EstimateSVLoci")
-        assert os.path.isfile(mantaGraphBin)
-        mantaGraphMergeBin=os.path.join(libexecDir,"MergeSVLoci")
-        assert os.path.isfile(mantaGraphMergeBin)
-        mantaHyGenBin=os.path.join(libexecDir,"GenerateSVCandidates")
-        assert os.path.isfile(mantaHyGenBin)
-        mantaGraphStatsBin=os.path.join(libexecDir,"SummarizeSVLoci")
-        assert os.path.isfile(mantaGraphStatsBin)
+        mantaStatsBin=joinFile(libexecDir,"GetAlignmentStats")
+        mantaGraphBin=joinFile(libexecDir,"EstimateSVLoci")
+        mantaGraphMergeBin=joinFile(libexecDir,"MergeSVLoci")
+        mantaHyGenBin=joinFile(libexecDir,"GenerateSVCandidates")
+        mantaGraphStatsBin=joinFile(libexecDir,"SummarizeSVLoci")
+        mantaStatsSummaryBin=joinFile(libexecDir,"SummarizeAlignmentStats")
 
-        mantaChromDepth=os.path.join(libexecDir,"getBamAvgChromDepth.py")
-        assert os.path.isfile(mantaChromDepth)
-        mantaSortVcf=os.path.join(libexecDir,"sortVcf.py")
-        assert os.path.isfile(mantaSortVcf)
+        mantaChromDepth=joinFile(libexecDir,"getBamAvgChromDepth.py")
+        mantaSortVcf=joinFile(libexecDir,"sortVcf.py")
 
         return cleanLocals(locals())
 

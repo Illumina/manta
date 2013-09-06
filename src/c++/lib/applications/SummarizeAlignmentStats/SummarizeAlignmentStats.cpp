@@ -46,7 +46,7 @@ runSAS(const SASOptions& opt)
         report_os << "group:\t" << label << '\n';
 
         const ReadGroupStats& rgs(rgss.getStats(i));
-        report_os << "fragment quantiles:\n";
+        report_os << "fragment length quantiles:\n";
         for(unsigned j(0); j<quantLevelCount;++j)
         {
             report_os << quantLevel[j] << '\t' << rgs.fragStats.quantile(quantLevel[j]) << '\n';

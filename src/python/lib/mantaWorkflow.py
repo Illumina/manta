@@ -80,7 +80,7 @@ def getNextGenomeSegment(params) :
 
 
 
-def runStats(self,taskPrefix="",dependencies=None):
+def runStats(self,taskPrefix="",dependencies=None) :
 
     statsPath=self.paths.getStatsPath()
 
@@ -91,10 +91,19 @@ def runStats(self,taskPrefix="",dependencies=None):
     for bamPath in self.params.tumorBamList :
         cmd.extend(["--tumor-align-file",bamPath])
 
+    statsTask = self.addTask(preJoin(taskPrefix,"generateStats"),cmd,dependencies=dependencies)
+
     nextStepWait = set()
-    nextStepWait.add(self.addTask(preJoin(taskPrefix,"generateStats"),cmd,dependencies=dependencies))
+    nextStepWait.add(statsTask)
+
+    # summarize stats for humans, no need for follow-up tasks to wait for this:
+    cmd  = self.params.mantaStatsSummaryBin
+    cmd += " --align-stats " + statsPath
+    cmd += " > " + self.paths.getStatsSummaryPath()
+    self.addTask(preJoin(taskPrefix,"summarizeStats"),cmd,dependencies=statsTask)
 
     return nextStepWait
+
 
 
 def runDepth(self,taskPrefix="",dependencies=None) :
@@ -258,6 +267,9 @@ class PathInfo:
 
     def getStatsPath(self) :
         return os.path.join(self.params.workDir,"alignmentStats.xml")
+
+    def getStatsSummaryPath(self) :
+        return os.path.join(self.params.statsDir,"alignmentStatsSummary.txt")
 
     def getChromDepth(self) :
         return os.path.join(self.params.workDir,"chromDepth.txt")
