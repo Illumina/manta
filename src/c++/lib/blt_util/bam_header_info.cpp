@@ -35,10 +35,13 @@ bam_header_info(const bam_header_t& header)
 std::ostream&
 operator<<(std::ostream& os, const bam_header_info& bhi)
 {
+    unsigned index(0);
+
     os << "BAM_HEADER_INFO:\n";
     BOOST_FOREACH(const bam_header_info::chrom_info& info, bhi.chrom_data)
     {
-        os << "label: " << info.label << " length: " << info.length;
+        os << "index: " << index << " label: " << info.label << " length: " << info.length;
+        index++;
     }
     return os;
 }
