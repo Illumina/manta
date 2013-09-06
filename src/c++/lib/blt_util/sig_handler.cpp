@@ -40,7 +40,7 @@ blt_sig_handler (int sig)
         exit(EXIT_FAILURE);
 #ifndef _WIN32
     case SIGINT:
-        log_os << "ERROR: " << _progname << " received interupt signal. cmdline: " << _cmdline << std::endl;
+        log_os << "ERROR: " << _progname << " received interrupt signal. cmdline: " << _cmdline << std::endl;
         exit(EXIT_FAILURE);
 #endif
     default:
