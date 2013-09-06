@@ -163,11 +163,25 @@ struct SVLocusNode
         }
     }
 
+    /// return edge from this to node
+    const SVLocusEdge&
+    getEdge(const NodeIndexType toIndex) const
+    {
+        edges_type::const_iterator i(edges.find(toIndex));
+        if (i == edges.end()) getEdgeException(toIndex);
+        return i->second;
+    }
+
     friend std::ostream&
     operator<<(std::ostream& os, const SVLocusNode& node);
 
 
+private:
+    void
+    getEdgeException(
+        const NodeIndexType toIndex) const;
 
+public:
     //////////////////  data:
     unsigned count;
     GenomeInterval interval;

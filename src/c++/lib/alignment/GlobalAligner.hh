@@ -15,8 +15,8 @@
 
 #pragma once
 
+#include "AlignerBase.hh"
 #include "Alignment.hh"
-#include "AlignmentScores.hh"
 
 #include "blt_util/basic_matrix.hh"
 
@@ -58,11 +58,11 @@ operator<<(std::ostream& os, AlignmentResult<ScoreType>& alignment);
 /// the base is soft-clipped in the alignment
 ///
 template <typename ScoreType>
-struct GlobalAligner
+struct GlobalAligner : public AlignerBase<ScoreType>
 {
     GlobalAligner(
         const AlignmentScores<ScoreType>& scores) :
-        _scores(scores)
+        AlignerBase<ScoreType>(scores)
     {}
 
     /// returns alignment path of query to reference
@@ -73,41 +73,7 @@ struct GlobalAligner
         const SymIter refBegin, const SymIter refEnd,
         AlignmentResult<ScoreType>& result) const;
 
-    /// read-only access to the aligner's scores:
-    const AlignmentScores<ScoreType>&
-    getScores() const
-    {
-        return _scores;
-    }
-
 private:
-
-    static
-    uint8_t
-    max3(
-        ScoreType& max,
-        const ScoreType v0,
-        const ScoreType v1,
-        const ScoreType v2)
-    {
-        max=v0;
-        uint8_t ptr=0;
-        if (v1>v0)
-        {
-            max=v1;
-            ptr=1;
-        }
-        if (v2>max)
-        {
-            max=v2;
-            ptr=2;
-        }
-        return ptr;
-    }
-
-
-    const AlignmentScores<ScoreType> _scores;
-
 
     // insert and delete are for query wrt reference
     struct ScoreVal
@@ -150,4 +116,3 @@ private:
 
 
 #include "alignment/GlobalAlignerImpl.hh"
-

@@ -92,12 +92,12 @@ runASB(const ASBOptions& opt)
     std::vector<stream_ptr> bam_streams_bkpt2;
 
     // setup all data for main alignment loop:
-    BOOST_FOREACH(const std::string& afile, opt.alignmentFilename)
+    BOOST_FOREACH(const std::string& afile, opt.alignFileOpt.alignmentFilename)
     {
         stream_ptr tmp(new bam_streamer(afile.c_str(),opt.breakend1.c_str()));
         bam_streams_bkpt1.push_back(tmp);
     }
-    BOOST_FOREACH(const std::string& afile, opt.alignmentFilename)
+    BOOST_FOREACH(const std::string& afile, opt.alignFileOpt.alignmentFilename)
     {
         stream_ptr tmp(new bam_streamer(afile.c_str(),opt.breakend2.c_str()));
         bam_streams_bkpt2.push_back(tmp);
@@ -130,7 +130,7 @@ runASB(const ASBOptions& opt)
     std::cout << "Translating into " << bp1 << " and " << bp2 << std::endl;
 
     SmallAssemblerOptions assembleOpt;
-    SVLocusAssembler svla(opt, assembleOpt);
+    SVLocusAssembler svla(opt.scanOpt, assembleOpt, opt.alignFileOpt, opt.statsFilename);
     Assembly a;
     svla.assembleSVBreakends(bp1,bp2, false, false, a);
     std::cout << "Assembled " << a.size() << " contig(s)." << std::endl;

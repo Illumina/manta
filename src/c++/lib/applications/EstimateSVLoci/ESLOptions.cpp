@@ -18,9 +18,10 @@
 #include "ESLOptions.hh"
 
 #include "blt_util/log.hh"
+#include "options/AlignmentFileOptionsParser.hh"
+#include "options/optionsUtil.hh"
 
 #include "boost/foreach.hpp"
-#include "boost/filesystem.hpp"
 #include "boost/program_options.hpp"
 
 #include <iostream>
@@ -58,51 +59,39 @@ checkStandardizeUsageFile(
     std::string& filename,
     const char* fileLabel)
 {
-    if (filename.empty())
+    std::string errorMsg;
+    if ( checkStandardizeInputFile(filename, fileLabel, errorMsg))
     {
-        std::ostringstream oss;
-        oss << "Must specify " << fileLabel << " file";
-        usage(os,prog,visible,oss.str().c_str());
+        usage(os,prog,visible,errorMsg.c_str());
     }
-    if (! boost::filesystem::exists(filename))
-    {
-        std::ostringstream oss;
-        oss << "Can't find " << fileLabel << " file '" << filename << "'";
-        usage(os,prog,visible,oss.str().c_str());
-    }
-    filename = boost::filesystem::canonical(filename).string();
 }
 
 
 
 void
-parseESLOptions(const manta::Program& prog,
-                int argc, char* argv[],
-                ESLOptions& opt)
+parseESLOptions(
+    const manta::Program& prog,
+    int argc, char* argv[],
+    ESLOptions& opt)
 {
-    std::vector<std::string> normalAlignmentFilename;
-    std::vector<std::string> tumorAlignmentFilename;
-
     namespace po = boost::program_options;
     po::options_description req("configuration");
     req.add_options()
-    ("align-file", po::value(&normalAlignmentFilename),
-     "alignment file in bam format (may be specified multiple times, assumed to be non-tumor if tumor file(s) provided)")
-    ("tumor-align-file", po::value(&tumorAlignmentFilename),
-     "tumor sample alignment file in bam format (may be specified multiple times)")
-    ("output-file", po::value<std::string>(&opt.outputFilename),
+    ("output-file", po::value(&opt.outputFilename),
      "write SV Locus graph to file (required)")
-    ("align-stats", po::value<std::string>(&opt.statsFilename),
+    ("align-stats", po::value(&opt.statsFilename),
      "pre-computed alignment statistics for the input alignment files (required)")
-    ("region", po::value<std::string>(&opt.region),
+    ("region", po::value(&opt.region),
      "samtools formatted region, eg. 'chr1:20-30' (optional)");
+
+    po::options_description aligndesc(getOptionsDescription(opt.alignFileOpt));
 
     po::options_description help("help");
     help.add_options()
     ("help,h","print this message");
 
     po::options_description visible("options");
-    visible.add(req).add(help);
+    visible.add(aligndesc).add(req).add(help);
 
     bool po_parse_fail(false);
     po::variables_map vm;
@@ -123,40 +112,17 @@ parseESLOptions(const manta::Program& prog,
         usage(log_os,prog,visible);
     }
 
+    std::string errorMsg;
+    if (parseOptions(vm, opt.alignFileOpt, errorMsg))
     {
-        // paste together tumor and normal:
-        opt.alignmentFilename = normalAlignmentFilename;
-        opt.alignmentFilename.insert(opt.alignmentFilename.end(),
-                                     tumorAlignmentFilename.begin(),
-                                     tumorAlignmentFilename.end());
+        usage(log_os,prog,visible,errorMsg.c_str());
     }
-
-    // fast check of config state:
-    if (opt.alignmentFilename.empty())
+    else if (opt.outputFilename.empty())
     {
-        usage(log_os,prog,visible,"Must specify at least one input alignment file");
-    }
-    {
-        // check that alignment files exist, and names do not repeat
-        std::set<std::string> nameCheck;
-        BOOST_FOREACH(std::string& afile, opt.alignmentFilename)
-        {
-            checkStandardizeUsageFile(log_os,prog,visible,afile,"alignment file");
-            if (nameCheck.count(afile))
-            {
-                std::ostringstream oss;
-                oss << "Repeated alignment filename: " << afile << "\n";
-                usage(log_os,prog,visible,oss.str().c_str());
-            }
-            nameCheck.insert(afile);
-        }
+        usage(log_os,prog,visible,"Must specify a graph output file");
     }
 
     checkStandardizeUsageFile(log_os,prog,visible,opt.statsFilename,"alignment statistics");
 
-    if (opt.outputFilename.empty())
-    {
-        usage(log_os,prog,visible,"Must specify a graph output file");
-    }
 }
 

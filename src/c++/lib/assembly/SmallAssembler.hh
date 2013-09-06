@@ -19,7 +19,7 @@
 
 #include "assembly/AssembledContig.hh"
 #include "assembly/AssemblyReadInfo.hh"
-#include "assembly/SmallAssemblerOptions.hh"
+#include "options/SmallAssemblerOptions.hh"
 
 
 /// \brief run a de-bruijn graph assembler intended for small-scale allele discovery

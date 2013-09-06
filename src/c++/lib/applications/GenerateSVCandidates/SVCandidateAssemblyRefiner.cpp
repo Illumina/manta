@@ -73,9 +73,9 @@ adjustAssembledBreakend(
 }
 
 
-
+static
 bool
-isFilterContigRead(
+isFilterSpanningAlignment(
     const GlobalJumpAligner<int> aligner,
     const ALIGNPATH::path_t& apath,
     const bool isFirstRead)
@@ -123,18 +123,71 @@ isFilterContigRead(
 
 
 
+/// test whether this single-node assembly is (1) an interesting variant above the minimum size and
+/// (2) passes QC otherwise (appropriate flanking regions, etc)
+///
+#if 0
+static
+bool
+isFilterSmallSVAlignment(
+    const GlobalAligner<int> aligner,
+    const ALIGNPATH::path_t& apath)
+{
+    // require min length of alignment after off-reference clipping:
+    static const unsigned minAlignReadLength(40);
+
+    // require min fraction of optimal score in each contig sub-alignmnet:
+    static const float minScoreFrac(0.75);
+
+    const unsigned readSize(apath_read_length(apath));
+    const unsigned clipSize(isFirstRead ?
+                            apath_soft_clip_lead_size(apath) :
+                            apath_soft_clip_trail_size(apath));
+
+    assert(clipSize <= readSize);
+
+    const unsigned clippedReadSize(readSize-clipSize);
+
+    if (clippedReadSize < minAlignReadLength)
+    {
+#ifdef DEBUG_REFINER
+        log_os << "Rejecting highest scoring contig sub-alignment. isFirst?: " << isFirstRead << ". Sub-alignmnet read length after clipping is: " << clippedReadSize << " min size is: " << minAlignReadLength << "\n";
+#endif
+        return true;
+    }
+
+    int nonClipScore(aligner.getPathScore(apath, false));
+    const int optimalScore(clippedReadSize * aligner.getScores().match);
+
+    assert(optimalScore>0);
+    if (nonClipScore < 0) nonClipScore = 0;
+
+    const float scoreFrac(static_cast<float>(nonClipScore)/static_cast<float>(optimalScore));
+
+    if (scoreFrac < minScoreFrac)
+    {
+#ifdef DEBUG_REFINER
+        log_os << "Rejecting highest scoring contig sub-alignment. isFirst?: " << isFirstRead << ". Fraction of optimal alignment score is: " << scoreFrac << " minScoreFrac: " << minScoreFrac << "\n";
+#endif
+        return true;
+    }
+    return false;
+}
+#endif
+
+
+
 
 SVCandidateAssemblyRefiner::
 SVCandidateAssemblyRefiner(
     const GSCOptions& opt,
-    const bam_header_info& header,
-    const SmallAssemblerOptions& assembleOpt,
-    const AlignmentScores<int>& alignScore,
-    const int jumpScore) :
+    const bam_header_info& header) :
     _opt(opt),
-    _svAssembler(opt, assembleOpt),
     _header(header),
-    _aligner(alignScore,jumpScore)
+    _smallSVAssembler(opt.scanOpt, opt.refineOpt.smallSVAssembleOpt, opt.alignFileOpt, opt.statsFilename),
+    _spanningAssembler(opt.scanOpt, opt.refineOpt.spanningAssembleOpt, opt.alignFileOpt, opt.statsFilename),
+    _smallSVAligner(opt.refineOpt.smallSVAlignScores),
+    _spanningAligner(opt.refineOpt.spanningAlignScores, opt.refineOpt.jumpScore)
 {}
 
 
@@ -144,16 +197,37 @@ SVCandidateAssemblyRefiner::
 getCandidateAssemblyData(
     const SVCandidate& sv,
     const SVCandidateSetData& /*svData*/,
-    SVCandidateAssemblyData& adata) const
+    SVCandidateAssemblyData& assemblyData) const
 {
 #ifdef DEBUG_REFINER
     log_os << "getCandidateAssemblyData START sv: " << sv;
 #endif
 
-    adata.clear();
+    assemblyData.clear();
 
-    // filter out simple single region breakends for now:
-    if (! (isSimpleBreakend(sv.bp1.state) && isSimpleBreakend(sv.bp1.state))) return;
+    // separate the problem into different assembly categories:
+    //
+    if (isSimpleBreakend(sv.bp1.state) && isSimpleBreakend(sv.bp1.state))
+    {
+        // this case assumes two suspected breakends with a direction to each, most common large scale SV case:
+        getJumpAssembly(sv, assemblyData);
+    }
+    else if ((sv.bp1.state == SVBreakendState::COMPLEX))
+    {
+        // this case assumes a single-interval local assembly, this is the most common case for small-scale SVs/indels
+        getSmallSVAssembly(sv, assemblyData);
+    }
+}
+
+
+
+void
+SVCandidateAssemblyRefiner::
+getJumpAssembly(
+    const SVCandidate& sv,
+    SVCandidateAssemblyData& assemblyData) const
+{
+    assemblyData.isSpanning = true;
 
     //
     // based on sv candidate, we classify the expected relationship between the contig and the sv breakends:
@@ -194,7 +268,7 @@ getCandidateAssemblyData(
     }
 
     // assemble contig spanning the breakend:
-    _svAssembler.assembleSVBreakends(sv.bp1, sv.bp2, isBp1Reversed, isBp2Reversed, adata.contigs);
+    _spanningAssembler.assembleSVBreakends(sv.bp1, sv.bp2, isBp1Reversed, isBp2Reversed, assemblyData.contigs);
 
 
     // how much additional reference sequence should we extract from around
@@ -204,12 +278,12 @@ getCandidateAssemblyData(
     // min alignment context
     //const unsigned minAlignContext(4);
 
-    getSVReferenceSegments(_opt.referenceFilename, _header, extraRefEdgeSize, sv, adata.bp1ref, adata.bp2ref);
-    const std::string* align1RefStrPtr(&adata.bp1ref.seq());
-    const std::string* align2RefStrPtr(&adata.bp2ref.seq());
+    getSVReferenceSegments(_opt.referenceFilename, _header, extraRefEdgeSize, sv, assemblyData.bp1ref, assemblyData.bp2ref);
+    const std::string* align1RefStrPtr(&assemblyData.bp1ref.seq());
+    const std::string* align2RefStrPtr(&assemblyData.bp2ref.seq());
 
-    if (isBp1Reversed) reverseCompStr(adata.bp1ref.seq());
-    if (isBp2Reversed) reverseCompStr(adata.bp2ref.seq());
+    if (isBp1Reversed) reverseCompStr(assemblyData.bp1ref.seq());
+    if (isBp2Reversed) reverseCompStr(assemblyData.bp2ref.seq());
 
     if (isBp2AlignedFirst) std::swap(align1RefStrPtr, align2RefStrPtr);
 
@@ -218,34 +292,34 @@ getCandidateAssemblyData(
     log_os << "al2Ref: " << *align2RefStrPtr << "\n";
 #endif
 
-    const unsigned contigCount(adata.contigs.size());
+    const unsigned contigCount(assemblyData.contigs.size());
 
 #ifdef DEBUG_REFINER
     log_os << "contigCount: " << contigCount << "\n";
     for (unsigned contigIndex(0); contigIndex<contigCount; ++contigIndex)
     {
-        const AssembledContig& contig(adata.contigs[contigIndex]);
+        const AssembledContig& contig(assemblyData.contigs[contigIndex]);
         log_os << "cid: " << contigIndex << " contig: " << contig;
     }
 #endif
 
     // make sure an alignment object exists for every contig, even if it's empty:
-    adata.alignments.resize(contigCount);
+    assemblyData.spanningAlignments.resize(contigCount);
 
     bool isHighScore(false);
     unsigned highScoreIndex(0);
 
     for (unsigned contigIndex(0); contigIndex<contigCount; ++contigIndex)
     {
-        const AssembledContig& contig(adata.contigs[contigIndex]);
+        const AssembledContig& contig(assemblyData.contigs[contigIndex]);
 
 #ifdef DEBUG_REFINER
         log_os << "start aligning cid: " << contigIndex << "\n";
 #endif
 
-        JumpAlignmentResult<int>& alignment(adata.alignments[contigIndex]);
+        JumpAlignmentResult<int>& alignment(assemblyData.spanningAlignments[contigIndex]);
 
-        _aligner.align(
+        _spanningAligner.align(
             contig.seq.begin(), contig.seq.end(),
             align1RefStrPtr->begin(), align1RefStrPtr->end(),
             align2RefStrPtr->begin(), align2RefStrPtr->end(),
@@ -271,7 +345,7 @@ getCandidateAssemblyData(
 
         if (! isAlignmentGood) continue;
 
-        if ((! isHighScore) || (alignment.score > adata.alignments[highScoreIndex].score))
+        if ((! isHighScore) || (alignment.score > assemblyData.spanningAlignments[highScoreIndex].score))
         {
             isHighScore = true;
             highScoreIndex=contigIndex;
@@ -284,10 +358,10 @@ getCandidateAssemblyData(
 
     // check the min size and fraction of optimal score for each sub-alignment:
     {
-        const SVCandidateAssemblyData::JumpAlignmentResultType& hsAlign(adata.alignments[highScoreIndex]);
+        const SVCandidateAssemblyData::JumpAlignmentResultType& hsAlign(assemblyData.spanningAlignments[highScoreIndex]);
 
-        if (isFilterContigRead(_aligner, hsAlign.align1.apath, true)) return;
-        if (isFilterContigRead(_aligner, hsAlign.align2.apath, false)) return;
+        if (isFilterSpanningAlignment(_spanningAligner, hsAlign.align1.apath, true)) return;
+        if (isFilterSpanningAlignment(_spanningAligner, hsAlign.align2.apath, false)) return;
 
     }
 
@@ -296,17 +370,17 @@ getCandidateAssemblyData(
 
     // ok, passed QC -- mark the high-scoring alignment as usable for hypothesis refinement:
     {
-        adata.isBestAlignment = true;
-        adata.bestAlignmentIndex = highScoreIndex;
+        assemblyData.isBestAlignment = true;
+        assemblyData.bestAlignmentIndex = highScoreIndex;
 #ifdef DEBUG_REFINER
-        log_os << "highscoreid: " << highScoreIndex << " alignment: " << adata.alignments[highScoreIndex];
+        log_os << "highscoreid: " << highScoreIndex << " alignment: " << assemblyData.spanningAlignments[highScoreIndex];
 #endif
 
         // process the alignment into information that's easily usable in the vcf output
         // (ie. breakends in reference coordinates)
 
-        const AssembledContig& bestContig(adata.contigs[adata.bestAlignmentIndex]);
-        const SVCandidateAssemblyData::JumpAlignmentResultType& bestAlign(adata.alignments[adata.bestAlignmentIndex]);
+        const AssembledContig& bestContig(assemblyData.contigs[assemblyData.bestAlignmentIndex]);
+        const SVCandidateAssemblyData::JumpAlignmentResultType& bestAlign(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex]);
 
         // first get each alignment associated with the correct breakend:
         const Alignment* bp1AlignPtr(&bestAlign.align1);
@@ -315,22 +389,160 @@ getCandidateAssemblyData(
         if (isBp2AlignedFirst) std::swap(bp1AlignPtr, bp2AlignPtr);
 
         // summarize usable output information in a second SVBreakend object -- this is the 'refined' sv:
-        adata.sv = sv;
+        assemblyData.sv = sv;
 
-        adata.sv.setPrecise();
+        assemblyData.sv.setPrecise();
 
-        adjustAssembledBreakend(*bp1AlignPtr, (! isBp2AlignedFirst), bestAlign.jumpRange, adata.bp1ref, isBp1Reversed, adata.sv.bp1);
-        adjustAssembledBreakend(*bp2AlignPtr, (isBp2AlignedFirst), bestAlign.jumpRange, adata.bp2ref, isBp2Reversed, adata.sv.bp2);
+        adjustAssembledBreakend(*bp1AlignPtr, (! isBp2AlignedFirst), bestAlign.jumpRange, assemblyData.bp1ref, isBp1Reversed, assemblyData.sv.bp1);
+        adjustAssembledBreakend(*bp2AlignPtr, (isBp2AlignedFirst), bestAlign.jumpRange, assemblyData.bp2ref, isBp2Reversed, assemblyData.sv.bp2);
 
         // fill in insertSeq:
-        adata.sv.insertSeq.clear();
+        assemblyData.sv.insertSeq.clear();
         if (bestAlign.jumpInsertSize > 0)
         {
-            getFwdStrandInsertSegment(bestAlign, bestContig.seq, isBp1Reversed, adata.sv.insertSeq);
+            getFwdStrandInsertSegment(bestAlign, bestContig.seq, isBp1Reversed, assemblyData.sv.insertSeq);
         }
 
 #ifdef DEBUG_REFINER
-        log_os << "highscore refined sv: " << adata.sv;
+        log_os << "highscore refined sv: " << assemblyData.sv;
 #endif
     }
+}
+
+
+
+void
+SVCandidateAssemblyRefiner::
+getSmallSVAssembly(
+    const SVCandidate& sv,
+    SVCandidateAssemblyData& assemblyData) const
+{
+    assemblyData.isSpanning = false;
+
+    // assemble contigs in the breakend region
+    _smallSVAssembler.assembleSingleSVBreakend(sv.bp1, assemblyData.contigs);
+
+    // how much additional reference sequence should we extract from around
+    // each side of the breakend region?
+    static const pos_t extraRefEdgeSize(100);
+
+    // min alignment context
+    //const unsigned minAlignContext(4);
+
+    getIntervalReferenceSegment(_opt.referenceFilename, _header, extraRefEdgeSize, sv.bp1.interval, assemblyData.bp1ref);
+    const std::string* align1RefStrPtr(&assemblyData.bp1ref.seq());
+
+#ifdef DEBUG_REFINER
+    log_os << "al1Ref: " << *align1RefStrPtr << "\n";
+#endif
+
+    const unsigned contigCount(assemblyData.contigs.size());
+
+#ifdef DEBUG_REFINER
+    log_os << "contigCount: " << contigCount << "\n";
+    for (unsigned contigIndex(0); contigIndex<contigCount; ++contigIndex)
+    {
+        const AssembledContig& contig(assemblyData.contigs[contigIndex]);
+        log_os << "cid: " << contigIndex << " contig: " << contig;
+    }
+#endif
+
+    // make sure an alignment object exists for every contig, even if it's empty:
+    assemblyData.smallSVAlignments.resize(contigCount);
+
+    //bool isHighScore(false);
+    //unsigned highScoreIndex(0);
+
+    for (unsigned contigIndex(0); contigIndex<contigCount; ++contigIndex)
+    {
+        const AssembledContig& contig(assemblyData.contigs[contigIndex]);
+
+#ifdef DEBUG_REFINER
+        log_os << "start aligning cid: " << contigIndex << "\n";
+#endif
+
+        AlignmentResult<int>& alignment(assemblyData.smallSVAlignments[contigIndex]);
+
+        _smallSVAligner.align(
+            contig.seq.begin(), contig.seq.end(),
+            align1RefStrPtr->begin(), align1RefStrPtr->end(),
+            alignment);
+
+#ifdef DEBUG_REFINER
+        log_os << "cid: " << contigIndex << " alignment: " << alignment;
+#endif
+
+#if 0
+        // QC the alignment:
+        static const unsigned minAlignRefSpan(40);
+        const bool isAlignmentGood(alignment.align.isAligned() && (apath_ref_length(alignment.align.apath) >= minAlignRefSpan));
+
+        if (! isAlignmentGood) continue;
+
+        if ((! isHighScore) || (alignment.score > assemblyData.smallSVAlignments[highScoreIndex].score))
+        {
+            isHighScore = true;
+            highScoreIndex=contigIndex;
+        }
+#endif
+    }
+
+#if 0
+    if (! isHighScore) return;
+
+    // set any additional QC steps before deciding an alignment is usable:
+
+    // check the min size and fraction of optimal score for each sub-alignment:
+    {
+        const SVCandidateAssemblyData::SmallAlignmentResultType& hsAlign(assemblyData.smallSVAlignments[highScoreIndex]);
+
+        if (isFilterSpanningAlignment(_smallSVAligner, hsAlign.align.apath, true)) return;
+    }
+
+    // TODO: min context, etc.
+
+
+    // ok, passed QC -- mark the high-scoring alignment as usable for hypothesis refinement:
+    {
+        assemblyData.isBestAlignment = true;
+        assemblyData.bestAlignmentIndex = highScoreIndex;
+#ifdef DEBUG_REFINER
+        log_os << "highscoreid: " << highScoreIndex << " alignment: " << assemblyData.spanningAlignments[highScoreIndex];
+#endif
+
+        // process the alignment into information that's easily usable in the vcf output
+        // (ie. breakends in reference coordinates)
+
+        const AssembledContig& bestContig(assemblyData.contigs[assemblyData.bestAlignmentIndex]);
+        const SVCandidateAssemblyData::JumpAlignmentResultType& bestAlign(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex]);
+
+        // first get each alignment associated with the correct breakend:
+        const Alignment* bp1AlignPtr(&bestAlign.align1);
+        const Alignment* bp2AlignPtr(&bestAlign.align2);
+
+        if (isBp2AlignedFirst) std::swap(bp1AlignPtr, bp2AlignPtr);
+
+        // summarize usable output information in a second SVBreakend object -- this is the 'refined' sv:
+        assemblyData.sv = sv;
+
+        assemblyData.sv.setPrecise();
+
+        adjustAssembledBreakend(*bp1AlignPtr, (! isBp2AlignedFirst), bestAlign.jumpRange, assemblyData.bp1ref, isBp1Reversed, assemblyData.sv.bp1);
+        adjustAssembledBreakend(*bp2AlignPtr, (isBp2AlignedFirst), bestAlign.jumpRange, assemblyData.bp2ref, isBp2Reversed, assemblyData.sv.bp2);
+
+        // fill in insertSeq:
+        assemblyData.sv.insertSeq.clear();
+        if (bestAlign.jumpInsertSize > 0)
+        {
+            getFwdStrandInsertSegment(bestAlign, bestContig.seq, isBp1Reversed, assemblyData.sv.insertSeq);
+        }
+
+#ifdef DEBUG_REFINER
+        log_os << "highscore refined sv: " << assemblyData.sv;
+#endif
+
+    }
+
+#endif
+
 }

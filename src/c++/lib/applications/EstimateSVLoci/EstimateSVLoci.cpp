@@ -45,7 +45,7 @@ runESL(const ESLOptions& opt)
     std::vector<stream_ptr> bam_streams;
 
     // setup all data for main alignment loop:
-    BOOST_FOREACH(const std::string& afile, opt.alignmentFilename)
+    BOOST_FOREACH(const std::string& afile, opt.alignFileOpt.alignmentFilename)
     {
         stream_ptr tmp(new bam_streamer(afile.c_str(),opt.region.c_str()));
         bam_streams.push_back(tmp);

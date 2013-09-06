@@ -18,8 +18,9 @@
 #include "ASBOptions.hh"
 
 #include "blt_util/log.hh"
+#include "options/AlignmentFileOptionsParser.hh"
+#include "options/optionsUtil.hh"
 
-#include "boost/filesystem.hpp"
 #include "boost/program_options.hpp"
 #include "boost/foreach.hpp"
 
@@ -46,6 +47,8 @@ usage(
     exit(2);
 }
 
+
+
 static
 void
 checkStandardizeUsageFile(
@@ -55,20 +58,13 @@ checkStandardizeUsageFile(
     std::string& filename,
     const char* fileLabel)
 {
-    if (filename.empty())
+    std::string errorMsg;
+    if ( checkStandardizeInputFile(filename, fileLabel, errorMsg))
     {
-        std::ostringstream oss;
-        oss << "Must specify " << fileLabel << " file";
-        usage(os,prog,visible,oss.str().c_str());
+        usage(os,prog,visible,errorMsg.c_str());
     }
-    if (! boost::filesystem::exists(filename))
-    {
-        std::ostringstream oss;
-        oss << "Can't find " << fileLabel << " file '" << filename << "'";
-        usage(os,prog,visible,oss.str().c_str());
-    }
-    filename = boost::filesystem::canonical(filename).string();
 }
+
 
 
 void
@@ -76,9 +72,6 @@ parseASBOptions(const manta::Program& prog,
                 int argc, char* argv[],
                 ASBOptions& opt)
 {
-    std::vector<std::string> normalAlignmentFilename;
-    std::vector<std::string> tumorAlignmentFilename;
-
     namespace po = boost::program_options;
     po::options_description req("configuration");
     req.add_options()
@@ -86,10 +79,6 @@ parseASBOptions(const manta::Program& prog,
      "Position of the first breakend, e.g. chr20:1000-1050")
     ("breakend2", po::value<std::string>(&opt.breakend2),
      "Position of the second breakend")
-    ("align-file", po::value(&normalAlignmentFilename),
-     "alignment file in bam format (may be specified multiple times, assumed to be non-tumor if tumor file(s) provided)")
-    ("tumor-align-file", po::value(&tumorAlignmentFilename),
-     "tumor sample alignment file in bam format (may be specified multiple times)")
     ("align-stats", po::value(&opt.statsFilename),
      "pre-computed alignment statistics for the input alignment files (required)")
     ("contig-file", po::value(&opt.contigOutfile),
@@ -102,8 +91,10 @@ parseASBOptions(const manta::Program& prog,
     help.add_options()
     ("help,h","print this message");
 
+    po::options_description aligndesc(getOptionsDescription(opt.alignFileOpt));
+
     po::options_description visible("options");
-    visible.add(req).add(help);
+    visible.add(aligndesc).add(req).add(help);
 
     bool po_parse_fail(false);
     po::variables_map vm;
@@ -129,51 +120,27 @@ parseASBOptions(const manta::Program& prog,
     {
         usage(log_os,prog,visible,"Must specify coordinates of first breakpoint");
     }
-    if (opt.breakend2.empty())
+    else if (opt.breakend2.empty())
     {
         usage(log_os,prog,visible,"Must specify coordinates of second breakpoint");
     }
 
+    std::string errorMsg;
+    if (parseOptions(vm, opt.alignFileOpt, errorMsg))
     {
-        // paste together tumor and normal:
-        opt.alignmentFilename = normalAlignmentFilename;
-        opt.alignmentFilename.insert(opt.alignmentFilename.end(),
-                                     tumorAlignmentFilename.begin(),
-                                     tumorAlignmentFilename.end());
-        opt.isAlignmentTumor.clear();
-        opt.isAlignmentTumor.resize(normalAlignmentFilename.size(),false);
-        opt.isAlignmentTumor.resize(opt.alignmentFilename.size(),true);
+        usage(log_os,prog,visible,errorMsg.c_str());
     }
-    if (opt.alignmentFilename.empty())
-    {
-        usage(log_os,prog,visible,"Must specify at least one input alignment file");
-    }
-    if (opt.statsFilename.empty())
+    else if (opt.statsFilename.empty())
     {
         usage(log_os,prog,visible,"Need the alignment stats file");
     }
-    if (opt.contigOutfile.empty())
+    else if (opt.contigOutfile.empty())
     {
         usage(log_os,prog,visible,"Need the FASTA contig outfile");
     }
-    if (opt.referenceFilename.empty())
+    else if (opt.referenceFilename.empty())
     {
         usage(log_os,prog,visible,"Need the FASTA reference file");
-    }
-    {
-        // check that alignment files exist, and names do not repeat
-        std::set<std::string> nameCheck;
-        BOOST_FOREACH(std::string& afile, opt.alignmentFilename)
-        {
-            checkStandardizeUsageFile(log_os,prog,visible,afile,"alignment file");
-            if (nameCheck.count(afile))
-            {
-                std::ostringstream oss;
-                oss << "Repeated alignment filename: " << afile << "\n";
-                usage(log_os,prog,visible,oss.str().c_str());
-            }
-            nameCheck.insert(afile);
-        }
     }
 
 }

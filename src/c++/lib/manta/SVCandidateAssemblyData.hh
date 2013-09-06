@@ -17,6 +17,7 @@
 #pragma once
 
 #include "assembly/AssembledContig.hh"
+#include "alignment/GlobalAligner.hh"
 #include "alignment/GlobalJumpAligner.hh"
 #include "blt_util/reference_contig_segment.hh"
 #include "manta/SVCandidate.hh"
@@ -38,6 +39,7 @@
 struct SVCandidateAssemblyData
 {
     SVCandidateAssemblyData() :
+        isSpanning(false),
         isBestAlignment(false),
         bestAlignmentIndex(0)
     {}
@@ -46,17 +48,24 @@ struct SVCandidateAssemblyData
     clear()
     {
         contigs.clear();
-        alignments.clear();
+        isSpanning=false;
+        smallSVAlignments.clear();
+        spanningAlignments.clear();
         isBestAlignment=false;
         bestAlignmentIndex=0;
         bp1ref.clear();
         bp2ref.clear();
     }
 
+    typedef AlignmentResult<int> SmallAlignmentResultType;
     typedef JumpAlignmentResult<int> JumpAlignmentResultType;
 
     Assembly contigs; ///< assembled contigs for both breakpoints
-    std::vector<JumpAlignmentResultType> alignments; ///< contig alignments, one per contig, may be empty
+
+    bool isSpanning;
+
+    std::vector<SmallAlignmentResultType> smallSVAlignments; ///< contig spanning alignments, one per contig, may be empty
+    std::vector<JumpAlignmentResultType> spanningAlignments; ///< contig spanning alignments, one per contig, may be empty
 
     bool isBestAlignment;        ///< is there a contig/alignment good enough to be used for reporting?
     unsigned bestAlignmentIndex; ///< if isBestAlignment, which is the best?

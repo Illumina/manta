@@ -36,15 +36,17 @@ std::ostream& dbg_os(std::cerr);
 
 SVLocusAssembler::
 SVLocusAssembler(
-    const GSCOptions& opt,
-    const SmallAssemblerOptions& assembleOpt) :
-    _scanOpt(opt.scanOpt),
+    const ReadScannerOptions& scanOpt,
+    const SmallAssemblerOptions& assembleOpt,
+    const AlignmentFileOptions& alignFileOpt,
+    const std::string& statsFilename) :
+    _scanOpt(scanOpt),
     _assembleOpt(assembleOpt),
-    _readScanner(_scanOpt,opt.statsFilename,opt.alignmentFilename)
+    _readScanner(_scanOpt, statsFilename, alignFileOpt.alignmentFilename)
 {
     // setup regionless bam_streams:
     // setup all data for main analysis loop:
-    BOOST_FOREACH(const std::string& afile, opt.alignmentFilename)
+    BOOST_FOREACH(const std::string& afile, alignFileOpt.alignmentFilename)
     {
         // avoid creating shared_ptr temporaries:
         streamPtr tmp(new bam_streamer(afile.c_str()));

@@ -142,10 +142,10 @@ ReadGroupStats(const std::string& statsBamFile)
                 isActiveChrom=true;
 
                 // filter common categories of undesirable reads:
-                if(al.is_filter()) continue;
-                if(al.is_dup()) continue;
-                if(al.is_secondary()) continue;
-                if(al.is_supplement()) continue;
+                if (al.is_filter()) continue;
+                if (al.is_dup()) continue;
+                if (al.is_secondary()) continue;
+                if (al.is_supplement()) continue;
 
                 if (! (al.is_paired() && al.is_proper_pair())) continue;
                 if (al.map_qual()==0) continue;
@@ -155,11 +155,11 @@ ReadGroupStats(const std::string& statsBamFile)
                 if (al.pos() > al.mate_pos()) continue;
 
                 // to sample short read pairs only once, we take read1 only:
-                if((al.pos() == al.mate_pos()) && al.is_second()) continue;
+                if ((al.pos() == al.mate_pos()) && al.is_second()) continue;
 
                 // filter any split reads with an SA tag:
                 static const char SAtag[] = {'S','A'};
-                if(NULL != al.get_string_tag(SAtag)) continue;
+                if (NULL != al.get_string_tag(SAtag)) continue;
 
                 bam_cigar_to_apath(al.raw_cigar(), al.n_cigar(), apath);
 
@@ -180,7 +180,7 @@ ReadGroupStats(const std::string& statsBamFile)
                 const unsigned readNum(al.is_first() ? 1 : 2);
                 assert(al.is_second() == (readNum == 2));
 
-                if(al.pos() != al.mate_pos())
+                if (al.pos() != al.mate_pos())
                 {
                     if (! isPairTypeSet)
                     {

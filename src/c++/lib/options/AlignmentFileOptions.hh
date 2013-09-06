@@ -14,18 +14,12 @@
 
 #pragma once
 
-#include "manta/Program.hh"
-#include "options/AlignmentFileOptions.hh"
+#include <string>
+#include <vector>
 
 
-struct AlignmentStatsOptions
+struct AlignmentFileOptions
 {
-    AlignmentFileOptions alignFileOpt;
-    std::string outputFilename;
+    std::vector<std::string> alignmentFilename;
+    std::vector<bool> isAlignmentTumor;
 };
-
-
-void
-parseAlignmentStatsOptions(const manta::Program& prog,
-                           int argc, char* argv[],
-                           AlignmentStatsOptions& opt);

@@ -64,7 +64,7 @@ SVLocusSetFinder(
     _isScanStarted(false),
     _isInDenoiseRegion(false),
     _denoisePos(0),
-    _readScanner(opt.scanOpt,opt.statsFilename,opt.alignmentFilename),
+    _readScanner(opt.scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilename),
     _anomCount(0),
     _nonAnomCount(0)
 {
