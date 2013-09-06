@@ -11,6 +11,9 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
+///
+/// \author Bret Barnes, Xiaoyu Chen
+///
 
 #pragma once
 

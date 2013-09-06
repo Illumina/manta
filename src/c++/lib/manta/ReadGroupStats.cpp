@@ -11,6 +11,9 @@
 // <https://github.com/downloads/sequencing/licenses/>.
 //
 
+///
+/// \author Bret Barnes, Xiaoyu Chen
+///
 
 #include "ReadGroupStats.hh"
 
@@ -157,6 +160,11 @@ ReadGroupStats(const std::string& statsBamFile)
                 // to sample short read pairs only once, we take read1 only:
                 if ((al.pos() == al.mate_pos()) && al.is_second()) continue;
 
+                // to prevent high-depth pileups from overly biasing the
+                // read stats, we only take maxPosCount read pairs from each start
+                // pos:
+                if (posCount>=maxPosCount) continue;
+
                 // filter any split reads with an SA tag:
                 static const char SAtag[] = {'S','A'};
                 if (NULL != al.get_string_tag(SAtag)) continue;
@@ -169,11 +177,8 @@ ReadGroupStats(const std::string& statsBamFile)
                     if (! ALIGNPATH::is_segment_align_match(ps.type)) continue;
                 }
 
-                // to prevent high-depth pileups from overly biasing the
-                // read stats, we only take maxPosCount read pairs from each start
-                // pos:
-                if (posCount>=maxPosCount) continue;
-                posCount++;
+                // made it through all filters!
+                ++posCount;
                 ++recordCnts;
 
                 // Assuming only two reads per fragment - based on bamtools.

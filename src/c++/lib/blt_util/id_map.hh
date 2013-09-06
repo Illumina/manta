@@ -90,12 +90,20 @@ struct id_set
         return _id2k[id];
     }
 
-    unsigned size() const
+    bool
+    empty() const
+    {
+        return _id2k.empty();
+    }
+
+    unsigned
+    size() const
     {
         return _id2k.size();
     }
 
-    void clear()
+    void
+    clear()
     {
         _k2id.clear();
         _id2k.clear();
@@ -188,12 +196,20 @@ struct id_map
         return _id2kv[id].second;
     }
 
-    unsigned size() const
+    bool
+    empty() const
+    {
+        return _id2kv.empty();
+    }
+
+    unsigned
+    size() const
     {
         return _id2kv.size();
     }
 
-    void clear()
+    void
+    clear()
     {
         _k2id.clear();
         _id2kv.clear();

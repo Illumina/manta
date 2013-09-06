@@ -18,28 +18,18 @@
 #pragma once
 
 #include "manta/Program.hh"
-#include "options/AlignmentFileOptions.hh"
-#include "options/ReadScannerOptions.hh"
-#include "options/SVLocusSetOptions.hh"
+
+#include <string>
 
 
-struct ESLOptions
+struct SASOptions
 {
-    ESLOptions() :
-        graphOpt(3)
-    {}
-
-    AlignmentFileOptions alignFileOpt;
-    ReadScannerOptions scanOpt;
-    SVLocusSetOptions graphOpt;
-
-    std::string outputFilename;
-    std::string region;
     std::string statsFilename;
 };
 
 
 void
-parseESLOptions(const manta::Program& prog,
+parseSASOptions(const manta::Program& prog,
                 int argc, char* argv[],
-                ESLOptions& opt);
+                SASOptions& opt);
+
