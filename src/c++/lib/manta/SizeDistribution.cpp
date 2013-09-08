@@ -91,14 +91,14 @@ calcStats() const
 
 int
 SizeDistribution::
-quantile(const float p) const
+quantile(const float prob) const
 {
-    assert((p >= 0.) && (p <= 1.));
+    assert((prob >= 0.) && (prob <= 1.));
 
     static const int maxBin(_quantileNum - 1);
     if (! _isStatsComputed) calcStats();
 
-    int bin(static_cast<int>(ceil(p * _quantileNum) - 1));
+    int bin(static_cast<int>(ceil(prob * _quantileNum) - 1));
     if (bin < 0) bin=0;
     if (bin > maxBin) bin=maxBin;
     return _quantiles[bin];
@@ -115,6 +115,30 @@ cdf(const int size) const
     const map_type::const_iterator sizeIter(_sizeMap.lower_bound(size));
     if (sizeIter == _sizeMap.end()) return 0;
     return sizeIter->second.cprob;
+}
+
+
+
+void
+SizeDistribution::
+filterObservationsOverQuantile(const float prob)
+{
+    const int maxSize(quantile(prob));
+    const map_type::iterator sizeBegin(_sizeMap.begin());
+    map_type::iterator sizeEnd(_sizeMap.lower_bound(maxSize));
+
+    for (map_type::iterator sizeIter(sizeBegin); sizeIter != sizeEnd; ++sizeIter)
+    {
+        if (sizeIter->first <= maxSize)
+        {
+            sizeEnd = sizeIter;
+            break;
+        }
+        _totalCount -= sizeIter->second.count;
+    }
+    _sizeMap.erase(sizeBegin,sizeEnd);
+
+    _isStatsComputed=false;
 }
 
 

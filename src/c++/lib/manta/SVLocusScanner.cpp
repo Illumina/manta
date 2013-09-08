@@ -18,6 +18,7 @@
 #include "manta/SVLocusScanner.hh"
 #include "blt_util/align_path_bam_util.hh"
 #include "blt_util/align_path_util.hh"
+#include "blt_util/bam_record_util.hh"
 #include "blt_util/log.hh"
 #include "alignment/AlignmentUtil.hh"
 #include "common/Exceptions.hh"
@@ -322,6 +323,8 @@ getSVLociImpl(
 
     getReadBreakendsImpl(opt, rstats, bamRead, NULL, candidates, localEvidenceRange);
 
+    // translate SVCandidate to a simpler form for use
+    // in the SV locus graph:
     BOOST_FOREACH(const SVCandidate& cand, candidates)
     {
         const SVBreakend& localBreakend(cand.bp1);
@@ -464,27 +467,11 @@ isProperPair(
     const bam_record& bamRead,
     const unsigned defaultReadGroupIndex) const
 {
-    if (bamRead.is_unmapped() || bamRead.is_mate_unmapped()) return false;
-    if (bamRead.target_id() != bamRead.mate_target_id()) return false;
+    if(! is_innie_pair(bamRead)) return false;
 
     const Range& ppr(_stats[defaultReadGroupIndex].properPair);
     const int32_t fragmentSize(std::abs(bamRead.template_size()));
     if (fragmentSize > ppr.max || fragmentSize < ppr.min) return false;
-
-    if     (bamRead.pos() < bamRead.mate_pos())
-    {
-        if (! bamRead.is_fwd_strand()) return false;
-        if (  bamRead.is_mate_fwd_strand()) return false;
-    }
-    else if (bamRead.pos() > bamRead.mate_pos())
-    {
-        if (  bamRead.is_fwd_strand()) return false;
-        if (! bamRead.is_mate_fwd_strand()) return false;
-    }
-    else
-    {
-        if (bamRead.is_fwd_strand() == bamRead.is_mate_fwd_strand()) return false;
-    }
 
     return true;
 }

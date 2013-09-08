@@ -18,6 +18,7 @@
 #include "ReadGroupStats.hh"
 
 #include "blt_util/align_path_bam_util.hh"
+#include "blt_util/bam_record_util.hh"
 #include "blt_util/bam_streamer.hh"
 #include "blt_util/log.hh"
 
@@ -35,7 +36,7 @@ bool
 isStatSetMatch(const SizeDistribution& pss1,
                const SizeDistribution& pss2)
 {
-    static const float cdfPrecision(0.005);
+    static const float cdfPrecision(0.001);
 
     for (float prob(0.05); prob < 1; prob += 0.1)
     {
@@ -133,32 +134,40 @@ ReadGroupStats(const std::string& statsBamFile)
             read_stream.set_new_region(i,startPos,chromSize[i]);
             while (read_stream.next())
             {
-                const bam_record& al(*(read_stream.get_record_ptr()));
-                if (al.pos()<startPos) continue;
+                const bam_record& bamRead(*(read_stream.get_record_ptr()));
+                if (bamRead.pos()<startPos) continue;
 
-                if (al.pos()!=chromHighestPos[i])
+                if (bamRead.pos()!=chromHighestPos[i])
                 {
                     posCount=0;
                 }
 
-                chromHighestPos[i]=al.pos();
+                chromHighestPos[i]=bamRead.pos();
                 isActiveChrom=true;
 
                 // filter common categories of undesirable reads:
-                if (al.is_filter()) continue;
-                if (al.is_dup()) continue;
-                if (al.is_secondary()) continue;
-                if (al.is_supplement()) continue;
+                if (bamRead.is_filter()) continue;
+                if (bamRead.is_dup()) continue;
+                if (bamRead.is_secondary()) continue;
+                if (bamRead.is_supplement()) continue;
 
-                if (! (al.is_paired() && al.is_proper_pair())) continue;
-                if (al.map_qual()==0) continue;
+                // filter mapped innies on the same chrom
+                //
+                // note we don't rely on the proper pair bit because this already contains an arbitrary length filter AND subjects the method to
+                // aligner specific variation
+                //
+                // TODO: ..note this locks-in standard ilmn orientation -- okay for now but this function needs major re-arrangement for mate-pair support,
+                // we could still keep independence from each aligner's proper pair decisions by estimating a fragement distro for each orientaiton
+                // and only keeping the one with the most samples
+                if (! is_innie_pair(bamRead)) continue;
+                if (bamRead.map_qual()==0) continue;
 
                 // sample each read pair once by sampling stats from
                 // downstream read only
-                if (al.pos() > al.mate_pos()) continue;
+                if (bamRead.pos() > bamRead.mate_pos()) continue;
 
                 // to sample short read pairs only once, we take read1 only:
-                if ((al.pos() == al.mate_pos()) && al.is_second()) continue;
+                if ((bamRead.pos() == bamRead.mate_pos()) && bamRead.is_second()) continue;
 
                 // to prevent high-depth pileups from overly biasing the
                 // read stats, we only take maxPosCount read pairs from each start
@@ -167,9 +176,9 @@ ReadGroupStats(const std::string& statsBamFile)
 
                 // filter any split reads with an SA tag:
                 static const char SAtag[] = {'S','A'};
-                if (NULL != al.get_string_tag(SAtag)) continue;
+                if (NULL != bamRead.get_string_tag(SAtag)) continue;
 
-                bam_cigar_to_apath(al.raw_cigar(), al.n_cigar(), apath);
+                bam_cigar_to_apath(bamRead.raw_cigar(), bamRead.n_cigar(), apath);
 
                 // filter reads containing any cigar types besides MATCH:
                 BOOST_FOREACH(const ALIGNPATH::path_segment& ps, apath)
@@ -182,20 +191,20 @@ ReadGroupStats(const std::string& statsBamFile)
                 ++recordCnts;
 
                 // Assuming only two reads per fragment - based on bamtools.
-                const unsigned readNum(al.is_first() ? 1 : 2);
-                assert(al.is_second() == (readNum == 2));
+                const unsigned readNum(bamRead.is_first() ? 1 : 2);
+                assert(bamRead.is_second() == (readNum == 2));
 
-                if (al.pos() != al.mate_pos())
+                if (bamRead.pos() != bamRead.mate_pos())
                 {
                     if (! isPairTypeSet)
                     {
                         // TODO: does orientation need to be averaged over several observations?
-                        relOrients = getRelOrient(al);
+                        relOrients = getRelOrient(bamRead);
                         isPairTypeSet=true;
                     }
                 }
 
-                const unsigned currFragSize(std::abs(al.template_size()));
+                const unsigned currFragSize(std::abs(bamRead.template_size()));
                 fragStats.addObservation(currFragSize);
 
                 if ((recordCnts % statsCheckCnt) != 0) continue;
@@ -248,4 +257,9 @@ ReadGroupStats(const std::string& statsBamFile)
             log_os << "WARNING: read pair statistics did not converge\n";
         }
     }
+
+    // final step before saving is to cut-off the extreme end of the fragment size distribution, this
+    // is similar the some aligners proper-pair bit definition of (3x the standard mean, etc.)
+    static const float filterQuant(0.9999);
+    fragStats.filterObservationsOverQuantile(filterQuant);
 }

@@ -55,5 +55,28 @@ BOOST_AUTO_TEST_CASE( test_SizeDistribution1 )
     BOOST_REQUIRE_EQUAL(sd.quantile(1.0),4);
 }
 
+BOOST_AUTO_TEST_CASE( test_SizeDistributionFilter )
+{
+    SizeDistribution sd;
+
+    sd.addObservation(1);
+    sd.addObservation(2);
+    sd.addObservation(3);
+    sd.addObservation(4);
+
+    sd.filterObservationsOverQuantile(0.5);
+
+    BOOST_REQUIRE_EQUAL(sd.totalObservations(),2u);
+
+    BOOST_REQUIRE_EQUAL(sd.cdf(0),0.);
+    BOOST_REQUIRE_EQUAL(sd.cdf(1),0.5);
+    BOOST_REQUIRE_EQUAL(sd.cdf(2),1);
+    BOOST_REQUIRE_EQUAL(sd.quantile(0.0),1);
+    BOOST_REQUIRE_EQUAL(sd.quantile(0.25),1);
+    BOOST_REQUIRE_EQUAL(sd.quantile(0.5),1);
+    BOOST_REQUIRE_EQUAL(sd.quantile(0.75),2);
+    BOOST_REQUIRE_EQUAL(sd.quantile(1.0),2);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 

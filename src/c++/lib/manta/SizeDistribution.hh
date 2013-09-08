@@ -73,7 +73,7 @@ struct SizeDistribution
 
     /// return value for which we observe value or less with prob p
     int
-    quantile(const float p) const;
+    quantile(const float prob) const;
 
     /// prob of observing this size or less
     float
@@ -93,6 +93,9 @@ struct SizeDistribution
         _sizeMap[size].count++;
     }
 
+    /// filter high value outliers:
+    void
+    filterObservationsOverQuantile(const float prob);
 
     typedef std::map<int, SizeData, std::greater<int> > map_type;
 
