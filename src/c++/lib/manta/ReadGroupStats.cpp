@@ -100,10 +100,10 @@ ReadGroupStats(const std::string& statsBamFile)
     bam_streamer read_stream(statsBamFile.c_str());
 
     const bam_header_t& header(* read_stream.get_header());
-    const int32_t nChrom(header.n_targets);
-    std::vector<int32_t> chromSize(nChrom,0);
-    std::vector<int32_t> chromHighestPos(nChrom,-1);
-    for (int32_t i(0); i<nChrom; ++i)
+    const int32_t chromCount(header.n_targets);
+    std::vector<int32_t> chromSize(chromCount,0);
+    std::vector<int32_t> chromHighestPos(chromCount,-1);
+    for (int32_t i(0); i<chromCount; ++i)
     {
         chromSize[i] = (header.target_len[i]);
     }
@@ -115,7 +115,7 @@ ReadGroupStats(const std::string& statsBamFile)
     bool isFirstEstimation(true);
     SizeDistribution oldFragSize;
 
-    unsigned recordCnts(0);
+    unsigned recordCount(0);
     unsigned posCount(0);
     bool isPairTypeSet(false);
     bool isActiveChrom(true);
@@ -123,26 +123,26 @@ ReadGroupStats(const std::string& statsBamFile)
     while (isActiveChrom && (!isStopEstimation))
     {
         isActiveChrom=false;
-        for (int32_t i(0); i<nChrom; ++i)
+        for (int32_t chromIndex(0); chromIndex<chromCount; ++chromIndex)
         {
             if (isStopEstimation) break;
 
-            const int32_t startPos(chromHighestPos[i]+1);
+            const int32_t startPos(chromHighestPos[chromIndex]+1);
 #ifdef DEBUG_RPS
-            std::cerr << "INFO: Stats requesting bam region starting from: chrid: " << i << " start: " << startPos << "\n";
+            std::cerr << "INFO: Stats requesting bam region starting from: chrid: " << chromIndex << " start: " << startPos << "\n";
 #endif
-            read_stream.set_new_region(i,startPos,chromSize[i]);
+            read_stream.set_new_region(chromIndex,startPos,chromSize[chromIndex]);
             while (read_stream.next())
             {
                 const bam_record& bamRead(*(read_stream.get_record_ptr()));
                 if (bamRead.pos()<startPos) continue;
 
-                if (bamRead.pos()!=chromHighestPos[i])
+                if (bamRead.pos()!=chromHighestPos[chromIndex])
                 {
                     posCount=0;
                 }
 
-                chromHighestPos[i]=bamRead.pos();
+                chromHighestPos[chromIndex]=bamRead.pos();
                 isActiveChrom=true;
 
                 // filter common categories of undesirable reads:
@@ -188,7 +188,7 @@ ReadGroupStats(const std::string& statsBamFile)
 
                 // made it through all filters!
                 ++posCount;
-                ++recordCnts;
+                ++recordCount;
 
                 // Assuming only two reads per fragment - based on bamtools.
                 const unsigned readNum(bamRead.is_first() ? 1 : 2);
@@ -204,13 +204,26 @@ ReadGroupStats(const std::string& statsBamFile)
                     }
                 }
 
-                const unsigned currFragSize(std::abs(bamRead.template_size()));
+                unsigned currFragSize(std::abs(bamRead.template_size()));
+
+                // reduce fragsize resolution for very large sizes:
+                // (large sizes are uncommon -- this doesn't need to be clever/fast)
+                {
+                    unsigned steps(0);
+                    while(currFragSize>1000)
+                    {
+                        currFragSize /= 10;
+                        steps++;
+                    }
+                    for (unsigned stepIndex(0);stepIndex<steps;++stepIndex) currFragSize *= 10;
+                }
+
                 fragStats.addObservation(currFragSize);
 
-                if ((recordCnts % statsCheckCnt) != 0) continue;
+                if ((recordCount % statsCheckCnt) != 0) continue;
 
 #ifdef DEBUG_RPS
-                log_os << "INFO: Checking stats convergence at record count : " << recordCnts << "'\n"
+                log_os << "INFO: Checking stats convergence at record count : " << recordCount << "'\n"
                        << "INFO: Stats before convergence check: ";
                 //write(log_os);
                 log_os << "\n";
@@ -228,7 +241,8 @@ ReadGroupStats(const std::string& statsBamFile)
 
                 oldFragSize = fragStats;
 
-                if (isConverged || (recordCnts>5000000)) isStopEstimation=true;
+                static const unsigned maxRecordCount(5000000);
+                if (isConverged || (recordCount>maxRecordCount)) isStopEstimation=true;
 
                 // break from reading the current chromosome
                 break;
@@ -244,7 +258,7 @@ ReadGroupStats(const std::string& statsBamFile)
             log_os << "\tTotal observed read pairs: " << fragStats.totalObservations() << "\n";
             exit(EXIT_FAILURE);
         }
-        else if ((recordCnts % statsCheckCnt) != 0)
+        else if ((recordCount % statsCheckCnt) != 0)
         {
             if (! isFirstEstimation)
             {
@@ -260,6 +274,6 @@ ReadGroupStats(const std::string& statsBamFile)
 
     // final step before saving is to cut-off the extreme end of the fragment size distribution, this
     // is similar the some aligners proper-pair bit definition of (3x the standard mean, etc.)
-    static const float filterQuant(0.9999);
+    static const float filterQuant(0.9995);
     fragStats.filterObservationsOverQuantile(filterQuant);
 }
