@@ -37,20 +37,20 @@ increment_path(const path_t& path,
 {
     const path_segment& ps(path[path_index]);
 
-    if       (ps.type == MATCH || ps.type == SEQ_MATCH || ps.type == SEQ_MISMATCH)
+    if       ((ps.type == MATCH) || (ps.type == SEQ_MATCH) || (ps.type == SEQ_MISMATCH))
     {
         read_offset += ps.length;
         ref_offset += ps.length;
     }
-    else if (ps.type == DELETE || ps.type == SKIP)
+    else if ((ps.type == DELETE) || (ps.type == SKIP))
     {
         ref_offset += ps.length;
     }
-    else if (ps.type == INSERT || ps.type == SOFT_CLIP)
+    else if ((ps.type == INSERT) || (ps.type == SOFT_CLIP))
     {
         read_offset += ps.length;
     }
-    else if (ps.type == HARD_CLIP || ps.type == PAD)
+    else if ((ps.type == HARD_CLIP) || (ps.type == PAD))
     {
         // do nothing
     }
