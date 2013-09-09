@@ -113,7 +113,7 @@ getBreakendReads(
 
         static const unsigned MAX_NUM_READS(1000);
 
-        static const double minSemiAlignedScore(10.0);
+        //static const double minSemiAlignedScore(10.0);
 
         while (bamStream.next() && (reads.size() < MAX_NUM_READS))
         {
@@ -155,7 +155,8 @@ getBreakendReads(
                 if (leadingClipLen >= minClipLen) isClipKeeper = true;
             }
 
-            if ( !(isClipKeeper || _readScanner.isSemiAligned(bamRead) > minSemiAlignedScore ) ) continue;
+            //if ( !(isClipKeeper || _readScanner.isSemiAligned(bamRead) > minSemiAlignedScore )) continue;
+            if (!isClipKeeper) continue;
 
             if (bamRead.get_bam_read().get_string().find('N') != std::string::npos) continue;
 
