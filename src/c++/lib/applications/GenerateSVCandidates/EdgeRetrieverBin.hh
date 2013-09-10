@@ -28,8 +28,9 @@
 ///
 struct EdgeRetrieverBin : public EdgeRetriever
 {
-    /// \param binCount total number of parallel bins, must be 1 or greater
-    /// \param binIndex parallel bin id, must be less than binCount
+    /// \param[in] graphNodeMaxEdgeCount filtration parameter for skipping edges from highly connected nodes (set to zero to disable)
+    /// \param[in] binCount total number of parallel bins, must be 1 or greater
+    /// \param[in[ binIndex parallel bin id, must be less than binCount
     EdgeRetrieverBin(
         const SVLocusSet& set,
         const unsigned graphNodeMaxEdgeCount,
