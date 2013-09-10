@@ -36,6 +36,7 @@
 #include <iostream>
 #include <memory>
 
+//#define DEBUG_GSV
 
 
 /// provide additional edge details, intended for attachment to an in-flight exception:
@@ -113,9 +114,20 @@ runGSC(
     std::vector<SVCandidate> svs;
     SomaticSVScoreInfo ssInfo;
 
+#ifdef DEBUG_GSV
+    log_os << "bam_header:\n" << cset.header << "\n";
+#endif
+
     while (edger.next())
     {
         const EdgeInfo& edge(edger.getEdge());
+
+#ifdef DEBUG_GSV
+        log_os << "GSV edge: " << edge
+               << "GSV node1: " << cset.getLocus(edge.locusIndex).getNode(edge.nodeIndex1)
+               << "GSV node2: " << cset.getLocus(edge.locusIndex).getNode(edge.nodeIndex2)
+               << '\n';
+#endif
 
         try
         {
