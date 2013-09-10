@@ -27,6 +27,27 @@
 #include <vector>
 
 
+/// The counts in the SVLocus Graph represent an abstract weight of evidence supporting each edge/node.
+///
+/// To support large and small-scale evidence in a single graph, we need to allow for different weightings
+/// for different evidence types
+///
+struct SVObservationWeights
+{
+    // input evidence:
+    static const unsigned readPair = 2;
+    static const unsigned closeReadPair = 1;
+    static const unsigned internalReadEvent = 2; ///< indels, soft-clip, etc.
+
+    static const float closePairFactor; ///< fragments within this factor of the minimum size cutoff are treated as 'close' pairs and receive a modified evidence count
+
+    // noise reduction:
+    static const unsigned observation = 2; ///< 'average' observation weight, this is used to scale noise filtration, but not for any evidence type
+};
+
+
+
+
 /// consolidate functions which process a read to determine its
 /// SV evidence value
 ///
@@ -109,6 +130,10 @@ struct SVLocusScanner
 
     struct CachedReadGroupStats
     {
+        CachedReadGroupStats() :
+            minFarFragmentSize(0)
+        {}
+
         /// fragment size range assumed for the purpose of creating SVLocusGraph regions
         Range breakendRegion;
 
@@ -116,6 +141,8 @@ struct SVLocusScanner
         Range properPair;
 
         Range evidencePair;
+
+        int minFarFragmentSize; ///< beyond the properPair anomalous threshold, there is a threshold to distinguish near and far pairs for the purpose of evidence weight
     };
 
 private:

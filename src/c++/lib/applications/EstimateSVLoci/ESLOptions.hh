@@ -18,6 +18,7 @@
 #pragma once
 
 #include "manta/Program.hh"
+#include "manta/SVLocusScanner.hh"
 #include "options/AlignmentFileOptions.hh"
 #include "options/ReadScannerOptions.hh"
 #include "options/SVLocusSetOptions.hh"
@@ -25,8 +26,8 @@
 
 struct ESLOptions
 {
-    ESLOptions() :
-        graphOpt(3)
+    ESLOptions(const unsigned minMergeEdgeObservations = 3) :
+        graphOpt(minMergeEdgeObservations * SVObservationWeights::observation)   // initialize noise edge filtration parameters
     {}
 
     AlignmentFileOptions alignFileOpt;

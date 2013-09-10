@@ -96,6 +96,9 @@ mergeNode(
         BOOST_THROW_EXCEPTION(LogicException(oss.str()));
     }
 
+    // store node relationship before merging regions:
+    const bool isFromRegionRightmost(toNode.interval.range < fromNode.interval.range);
+
     notifyDelete(toIndex);
 
     toNode.interval.range.merge_range(fromNode.interval.range);
@@ -139,6 +142,32 @@ mergeNode(
             // self-edge needs to be handled as a special case:
             toNode.mergeEdge(toIndex,fromNodeEdgeIter.second);
             continue;
+        }
+
+        // Check for the special case when there is an edge between from and to, in this case
+        // the counts have to be handled so that counts in each region still approximate
+        // fragment support. Normally (the chimera case) -- a single fragment will create
+        // edges and nodes with weight one. If this is a non-chimera and the nodes collide and
+        // merge, we want to prevent the evidence from being doubled when it should not be.
+        //
+        // To achieve this, we remove the edge counts from the 'right'-most region of the two nodes being merged. This is an
+        // approximate solution, but very simple to add into the graph without blowing up per-node/edge storage.
+        //
+        const bool isFromToEdge(fromNodeEdgeIndex == toIndex);
+        if (isFromToEdge)
+        {
+            if (isFromRegionRightmost)
+            {
+                toNode.count -= fromNodeEdge.count;
+                fromNodeEdge.count = 0;
+            }
+            else
+            {
+                edges_type::iterator toNodeEdgeIter(toNode.edges.find(fromIndex));
+                assert(toNodeEdgeIter != toNode.edges.end());
+                toNode.count -= toNodeEdgeIter->second.count;
+                toNodeEdgeIter->second.count = 0;
+            }
         }
 
         // update local edge:

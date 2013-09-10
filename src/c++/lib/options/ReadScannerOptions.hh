@@ -22,11 +22,10 @@
 
 struct ReadScannerOptions
 {
-
     ReadScannerOptions() :
         minMapq(15),
-        breakendEdgeTrimProb(0.2),
-        properPairTrimProb(0.05),
+        breakendEdgeTrimProb(0.25),
+        properPairTrimProb(0.01),
         evidenceTrimProb(0.15),
         minCandidateIndelSize(50),
         minPairBreakendSize(40),
@@ -69,4 +68,3 @@ struct ReadScannerOptions
 
 boost::program_options::options_description
 getOptionsDescription(ReadScannerOptions& opt);
-

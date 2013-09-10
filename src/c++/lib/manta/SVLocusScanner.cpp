@@ -27,6 +27,10 @@
 
 
 
+const float SVObservationWeights::closePairFactor(4);
+
+
+
 struct SimpleAlignment
 {
     SimpleAlignment() :
@@ -340,30 +344,47 @@ getSVLociImpl(
             BOOST_THROW_EXCEPTION(LogicException(oss.str()));
         }
 
-        SVLocus locus;
-        // set local breakend estimate:
-        NodeIndexType localBreakendNode(0);
+        // determine the evidence weight of this candidate:
+        unsigned localEvidenceWeight(0);
+        unsigned remoteEvidenceWeight(0);
+
+        if (localBreakend.splitCount != 0)
         {
-            localBreakendNode = locus.addNode(localBreakend.interval);
-            locus.setNodeEvidence(localBreakendNode,localEvidenceRange);
+            localEvidenceWeight = SVObservationWeights::internalReadEvent;
+            if (remoteBreakend.splitCount != 0)
+            {
+                remoteEvidenceWeight = SVObservationWeights::internalReadEvent;
+            }
+        }
+        else if (localBreakend.readCount != 0)
+        {
+            bool isClose(false);
+            if (is_innie_pair(bamRead))
+            {
+                isClose = (bamRead.template_size() < rstats.minFarFragmentSize);
+            }
+
+            unsigned thisWeight(SVObservationWeights::readPair);
+            if (isClose) thisWeight = SVObservationWeights::closeReadPair;
+
+            localEvidenceWeight = thisWeight;
+            if (remoteBreakend.readCount != 0)
+            {
+                remoteEvidenceWeight = thisWeight;
+            }
         }
 
+        // finally, create the graph locus:
+        SVLocus locus;
+        // set local breakend estimate:
+        const NodeIndexType localBreakendNode(locus.addNode(localBreakend.interval,localEvidenceWeight));
+        locus.setNodeEvidence(localBreakendNode,localEvidenceRange);
+
         // set remote breakend estimate:
-        {
-            NodeIndexType remoteBreakendNode;
-            if ((remoteBreakend.readCount != 0) ||
-                (remoteBreakend.splitCount != 0))
-            {
-                remoteBreakendNode = locus.addNode(remoteBreakend.interval);
-                locus.linkNodes(localBreakendNode,remoteBreakendNode,1,1);
-            }
-            else
-            {
-                remoteBreakendNode = locus.addRemoteNode(remoteBreakend.interval);
-                locus.linkNodes(localBreakendNode,remoteBreakendNode);
-            }
-            locus.mergeSelfOverlap();
-        }
+        const NodeIndexType remoteBreakendNode(locus.addNode(remoteBreakend.interval,remoteEvidenceWeight));
+        locus.linkNodes(localBreakendNode,remoteBreakendNode,localEvidenceWeight,remoteEvidenceWeight);
+
+        locus.mergeSelfOverlap();
 
         loci.push_back(locus);
     }
@@ -416,6 +437,8 @@ SVLocusScanner(
 
             assert(evidence.max>0.);
         }
+
+        stat.minFarFragmentSize = static_cast<int>(stat.properPair.max*SVObservationWeights::closePairFactor);
     }
 }
 
@@ -467,7 +490,7 @@ isProperPair(
     const bam_record& bamRead,
     const unsigned defaultReadGroupIndex) const
 {
-    if(! is_innie_pair(bamRead)) return false;
+    if (! is_innie_pair(bamRead)) return false;
 
     const Range& ppr(_stats[defaultReadGroupIndex].properPair);
     const int32_t fragmentSize(std::abs(bamRead.template_size()));
@@ -489,7 +512,7 @@ getSVLoci(
 
     if (! bamRead.is_chimeric())
     {
-        if (std::abs(bamRead.template_size())<2000) return;
+        if (std::abs(bamRead.template_size())<500) return;
     }
 
     const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);

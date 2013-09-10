@@ -216,15 +216,15 @@ BOOST_AUTO_TEST_CASE( test_EdgeRetrieverOddBin )
 BOOST_AUTO_TEST_CASE( test_EdgeRetrieverOddBinSelfEdge )
 {
     SVLocus locus1;
-    locusAddPair(locus1,1,10,20,1,10,20);
+    locusAddPair(locus1,1,10,20,1,10,20, true);
     SVLocus locus2;
-    locusAddPair(locus2,3,10,20,3,10,20);
+    locusAddPair(locus2,3,10,20,3,10,20, true);
     SVLocus locus3;
-    locusAddPair(locus3,5,10,20,5,10,20);
+    locusAddPair(locus3,5,10,20,5,10,20, true);
     SVLocus locus4;
     locusAddPair(locus4,7,10,20,8,30,40);
     SVLocus locus5;
-    locusAddPair(locus5,9,10,20,9,10,20);
+    locusAddPair(locus5,9,10,20,9,10,20, true);
     SVLocus locus6;
     locusAddPair(locus6,11,10,20,12,30,40);
     SVLocus locus7;

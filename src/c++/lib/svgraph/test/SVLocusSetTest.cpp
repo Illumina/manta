@@ -450,7 +450,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusDoubleSelfEdge )
     SVLocus locus1;
     locusAddPair(locus1,1,10,60,1,20,70);
     SVLocus locus2;
-    locusAddPair(locus2,1,20,70,1,10,60);
+    locusAddPair(locus2,1,20,70,1,10,60, true);
 
     locus1.mergeSelfOverlap();
     locus2.mergeSelfOverlap();
@@ -476,7 +476,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusDoubleSelfEdge2 )
     SVLocus locus1;
     locusAddPair(locus1,1,10,60,2,20,70);
     SVLocus locus2;
-    locusAddPair(locus2,1,10,60,1,10,60);
+    locusAddPair(locus2,1,10,60,1,10,60, true);
 
     locus1.mergeSelfOverlap();
     locus2.mergeSelfOverlap();
@@ -546,7 +546,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeOverlapSelfEdge )
     SVLocus locus1;
     locusAddPair(locus1,1,10,60,2,20,70);
     SVLocus locus2;
-    locusAddPair(locus2,1,10,20,1,10,20);
+    locusAddPair(locus2,1,10,20,1,10,20,true);
 
     locus1.mergeSelfOverlap();
     locus2.mergeSelfOverlap();
@@ -579,7 +579,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeOverlapSelfEdge )
     }
 
     SVLocus locus3;
-    locusAddPair(locus3,1,10,20,1,10,20);
+    locusAddPair(locus3,1,10,20,1,10,20,true);
 
     locus3.mergeSelfOverlap();
 
@@ -680,11 +680,10 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMergeToSelfEdge3 )
     //
     // Criteria: self edge count increases by one
 
-
     SVLocus locus1;
-    locusAddPair(locus1,1,10,40,1,10,40);
+    locusAddPair(locus1,1,10,40,1,10,40,true);
     SVLocus locus2;
-    locusAddPair(locus2,1,10,40,1,10,40);
+    locusAddPair(locus2,1,10,40,1,10,40,true);
     SVLocus locus3;
     locusAddPair(locus3,1,10,20,1,30,40);
 

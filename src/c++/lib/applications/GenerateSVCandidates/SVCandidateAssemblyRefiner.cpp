@@ -123,41 +123,91 @@ isFilterSpanningAlignment(
 
 
 
-/// test whether this single-node assembly is (1) an interesting variant above the minimum size and
-/// (2) passes QC otherwise (appropriate flanking regions, etc)
+/// identify path indel sequences with an insert or delete segment greater than minSize
 ///
-#if 0
+static
+void
+getLargeIndelSegments(
+    const ALIGNPATH::path_t& apath,
+    const unsigned minSize,
+    std::vector<std::pair<unsigned,unsigned> >& segments)
+{
+    using namespace ALIGNPATH;
+
+    bool isInSegment(false);
+    bool isCandidate(false);
+    unsigned segmentStart(0);
+
+    const unsigned as(apath.size());
+    for (unsigned i(0); i<as; ++i)
+    {
+        const path_segment& ps(apath[i]);
+
+        if ((ps.type == DELETE) || (ps.type == INSERT))
+        {
+            if (ps.length>=minSize) isCandidate=true;
+            if (! isInSegment) segmentStart = i;
+            isInSegment=true;
+        }
+        else
+        {
+            if (isCandidate)
+            {
+                assert(i>0);
+                segments.push_back(std::make_pair(segmentStart,(i-1)));
+            }
+            isInSegment=false;
+            isCandidate=false;
+        }
+    }
+
+    if (isCandidate)
+    {
+        assert(as>0);
+        segments.push_back(std::make_pair(segmentStart,(as-1)));
+    }
+}
+
+
+
 static
 bool
-isFilterSmallSVAlignment(
-    const GlobalAligner<int> aligner,
-    const ALIGNPATH::path_t& apath)
+isSmallSVSegmentFilter(
+    const AlignerBase<int>& aligner,
+    const ALIGNPATH::path_t& apath,
+    const bool isLeadingPath)
 {
-    // require min length of alignment after off-reference clipping:
-    static const unsigned minAlignReadLength(40);
+    static const unsigned minAlignRefSpan(30); ///< min reference lenght for alignment
+    static const unsigned minAlignReadLength(30); ///< min length of alignment after off-reference clipping
+    static const float minScoreFrac(0.75); ///< min fraction of optimal score in each contig sub-alignment:
 
-    // require min fraction of optimal score in each contig sub-alignmnet:
-    static const float minScoreFrac(0.75);
 
-    const unsigned readSize(apath_read_length(apath));
-    const unsigned clipSize(isFirstRead ?
+    const unsigned refSize(apath_read_length(apath));
+
+    if (refSize < minAlignRefSpan)
+    {
+        return true;
+    }
+
+    const unsigned pathSize(apath_read_length(apath));
+    const unsigned clipSize(isLeadingPath ?
                             apath_soft_clip_lead_size(apath) :
                             apath_soft_clip_trail_size(apath));
 
-    assert(clipSize <= readSize);
+    assert(clipSize <= pathSize);
 
-    const unsigned clippedReadSize(readSize-clipSize);
+    const unsigned clippedPathSize(pathSize-clipSize);
 
-    if (clippedReadSize < minAlignReadLength)
+    if (clippedPathSize < minAlignReadLength)
     {
 #ifdef DEBUG_REFINER
-        log_os << "Rejecting highest scoring contig sub-alignment. isFirst?: " << isFirstRead << ". Sub-alignmnet read length after clipping is: " << clippedReadSize << " min size is: " << minAlignReadLength << "\n";
+//        log_os << "Rejecting highest scoring contig sub-alignment. isFirst?: " << isFirstRead << ". Sub-alignmnet read length after clipping is: " << clippedPathSize << " min size is: " << minAlignReadLength << "\n";
 #endif
         return true;
     }
 
     int nonClipScore(aligner.getPathScore(apath, false));
-    const int optimalScore(clippedReadSize * aligner.getScores().match);
+    const int optimalScore(clippedPathSize * aligner.getScores().match);
 
     assert(optimalScore>0);
     if (nonClipScore < 0) nonClipScore = 0;
@@ -167,14 +217,159 @@ isFilterSmallSVAlignment(
     if (scoreFrac < minScoreFrac)
     {
 #ifdef DEBUG_REFINER
-        log_os << "Rejecting highest scoring contig sub-alignment. isFirst?: " << isFirstRead << ". Fraction of optimal alignment score is: " << scoreFrac << " minScoreFrac: " << minScoreFrac << "\n";
+//        log_os << "Rejecting highest scoring contig sub-alignment. isFirst?: " << isFirstRead << ". Fraction of optimal alignment score is: " << scoreFrac << " minScoreFrac: " << minScoreFrac << "\n";
 #endif
         return true;
     }
+
     return false;
 }
-#endif
 
+
+
+/// test whether this single-node assembly is (1) an interesting variant above the minimum size and
+/// (2) passes QC otherwise (appropriate flanking regions, etc)
+///
+static
+bool
+isFilterSmallSVAlignment(
+    const GlobalAligner<int> aligner,
+    const ALIGNPATH::path_t& apath,
+    const unsigned minCandidateIndelSize,
+    std::vector<std::pair<unsigned,unsigned> >& candidateSegments)
+{
+    using namespace ALIGNPATH;
+
+    // (1) identify all indels above minimum size:
+    //
+    getLargeIndelSegments(apath, minCandidateIndelSize, candidateSegments);
+
+    // escape if this is a reference or small indel alignment
+    if (candidateSegments.empty()) return true;
+
+    // test quality of alignmnet segments surrounding the variant region:
+    const unsigned firstCandIndelSegment(candidateSegments.front().first);
+    const unsigned lastCandIndelSegment(candidateSegments.back().second);
+
+    const path_t leadingPath(apath.begin(), apath.begin()+firstCandIndelSegment);
+    const path_t trailingPath(apath.begin()+lastCandIndelSegment+1, apath.end());
+
+    if (isSmallSVSegmentFilter(aligner, leadingPath, true)) return true;
+    if (isSmallSVSegmentFilter(aligner, trailingPath, false)) return true;
+
+    return false;
+}
+
+
+
+/// get the range over which an alignment element can vary with equal edit distance
+///
+/// \param[in] refRange range of the event (ie indel) of interest in reference coordinates
+/// \param[in] readRange range of the event (ie indel) of interest in read coordinates
+///
+/// range coordinates are zero indexed and start at the first affected positions (so are not like vcf coordinates)
+/// for instance:
+////  the deletion 10M1D10M would have refRange(10,11), readRange(10,10)
+////  the insertion 10M1I10M would have refRange(10,10), readRange(10,11)
+///
+static
+known_pos_range2
+getVariantRange(
+    const std::string& ref,
+    const known_pos_range2& refRange,
+    const std::string& read,
+    const known_pos_range2& readRange)
+{
+
+    // check how far we can slide to the right:
+    const pos_t maxRightOffset(std::min(ref.size()-refRange.end_pos(), read.size()-readRange.end_pos()));
+    pos_t rightOffset(0);
+    for (; rightOffset<maxRightOffset; ++rightOffset)
+    {
+        const char refSym(ref[refRange.begin_pos()+rightOffset]);
+        const char readSym(read[readRange.begin_pos()+rightOffset]);
+        if (refSym != readSym) break;
+    }
+
+    const pos_t minLeftOffset(std::max(-refRange.begin_pos(), -readRange.begin_pos()));
+    pos_t leftOffset(0);
+    for (; leftOffset>=minLeftOffset; --leftOffset)
+    {
+        const char refSym(ref[refRange.end_pos()+leftOffset-1]);
+        const char readSym(read[readRange.end_pos()+leftOffset-1]);
+        if (refSym != readSym) break;
+    }
+
+    return known_pos_range2(leftOffset,rightOffset);
+}
+
+
+
+/// process smallSV alignment section into a usable sv candidate
+static
+void
+setSmallCandSV(
+    const reference_contig_segment& ref,
+    const std::string& contig,
+    const Alignment& align,
+    const std::pair<unsigned,unsigned>& segRange,
+    SVCandidate& sv)
+{
+    sv.setPrecise();
+
+    known_pos_range2 readRange;
+    known_pos_range2 refRange;
+
+    // by how many positions can the alignmnet position vary with the same alignmnet score?:
+    known_pos_range2 cipos;
+    {
+        using namespace ALIGNPATH;
+
+        pos_t readPos(0);
+        pos_t refPos(align.beginPos);
+
+        const path_t& apath(align.apath);
+        const unsigned as(apath.size());
+        for (unsigned i(0); i<as; ++i)
+        {
+            const path_segment& ps(apath[i]);
+            if (i == segRange.first)
+            {
+                refRange.set_begin_pos(refPos);
+                readRange.set_begin_pos(readPos);
+            }
+
+            if (is_segment_type_ref_length(ps.type)) refPos += ps.length;
+            if (is_segment_type_read_length(ps.type)) readPos += ps.length;
+
+            if (i == segRange.second)
+            {
+                refRange.set_end_pos(refPos);
+                readRange.set_end_pos(readPos);
+            }
+        }
+
+        cipos = getVariantRange(ref.seq(),refRange, contig, readRange);
+
+        assert(cipos.begin_pos() == 0);
+    }
+
+    sv.bp1.state = SVBreakendState::RIGHT_OPEN;
+    const pos_t beginPos(ref.get_offset()+refRange.begin_pos());
+    sv.bp1.interval.range.set_range(beginPos,beginPos+cipos.end_pos()+1);
+
+    sv.bp2.state = SVBreakendState::LEFT_OPEN;
+    const pos_t endPos(ref.get_offset()+refRange.end_pos());
+    sv.bp2.interval.range.set_range(endPos,endPos+cipos.end_pos()+1);
+
+    sv.insertSeq = contig.substr(readRange.begin_pos(),readRange.size());
+
+    // add CIGAR for non-trivial indels:
+    if (segRange.first != segRange.second)
+    {
+        sv.insertAlignment = ALIGNPATH::path_t(align.apath.begin()+segRange.first, align.apath.begin()+segRange.second+1);
+    }
+}
 
 
 
@@ -227,6 +422,33 @@ getJumpAssembly(
     const SVCandidate& sv,
     SVCandidateAssemblyData& assemblyData) const
 {
+    // how much additional reference sequence should we extract from around
+    // each side of the breakend region?
+    static const pos_t extraRefEdgeSize(100);
+
+    // if the breakends have a simple insert/delete orientation and the alignment regions overlap, then handle this case as
+    // a local assembly problem:
+    {
+        if(! SVBreakendState::isSameOrientation(sv.bp1.state,sv.bp2.state))
+        {
+            const SV_TYPE::index_t svType(getSVType(sv));
+            if ((svType == SV_TYPE::INDEL) || (svType == SV_TYPE::COMPLEX))
+            {
+                if( isRefRegionOverlap( _header, extraRefEdgeSize, sv) )
+                {
+                    // transform SV into a single region format:
+                    SVCandidate singleSV = sv;
+                    singleSV.bp1.state = SVBreakendState::COMPLEX;
+                    singleSV.bp2.state = SVBreakendState::UNKNOWN;
+                    singleSV.bp1.interval.range.merge_range(sv.bp2.interval.range);
+
+                    getSmallSVAssembly(singleSV, assemblyData);
+                    return;
+                }
+            }
+        }
+    }
+
     assemblyData.isSpanning = true;
 
     //
@@ -269,11 +491,6 @@ getJumpAssembly(
 
     // assemble contig spanning the breakend:
     _spanningAssembler.assembleSVBreakends(sv.bp1, sv.bp2, isBp1Reversed, isBp2Reversed, assemblyData.contigs);
-
-
-    // how much additional reference sequence should we extract from around
-    // each side of the breakend region?
-    static const pos_t extraRefEdgeSize(100);
 
     // min alignment context
     //const unsigned minAlignContext(4);
@@ -452,8 +669,8 @@ getSmallSVAssembly(
     assemblyData.smallSVAlignments.resize(contigCount);
     assemblyData.smallSVSegments.resize(contigCount);
 
-    //bool isHighScore(false);
-    //unsigned highScoreIndex(0);
+    bool isHighScore(false);
+    unsigned highScoreIndex(0);
 
     for (unsigned contigIndex(0); contigIndex<contigCount; ++contigIndex)
     {
@@ -474,78 +691,49 @@ getSmallSVAssembly(
         log_os << "cid: " << contigIndex << " alignment: " << alignment;
 #endif
 
-#if 0
-        // QC the alignment:
-        static const unsigned minAlignRefSpan(40);
-        const bool isAlignmentGood(alignment.align.isAligned() && (apath_ref_length(alignment.align.apath) >= minAlignRefSpan));
+        // remove candidate from consideration unless we rind a sufficiently large indel with good flanking sequence:
+        std::vector<std::pair<unsigned,unsigned> >& candidateSegments(assemblyData.smallSVSegments[contigIndex]);
+        if ( isFilterSmallSVAlignment(_smallSVAligner, alignment.align.apath, _opt.scanOpt.minCandidateIndelSize, candidateSegments)) continue;
 
-        if (! isAlignmentGood) continue;
-
+        // keep the highest scoring QC'd candidate:
+        // TODO: we should keep all QC'd candidates for the small event case
         if ((! isHighScore) || (alignment.score > assemblyData.smallSVAlignments[highScoreIndex].score))
         {
             isHighScore = true;
             highScoreIndex=contigIndex;
         }
-#endif
     }
 
-#if 0
     if (! isHighScore) return;
 
     // set any additional QC steps before deciding an alignment is usable:
-
-    // check the min size and fraction of optimal score for each sub-alignment:
-    {
-        const SVCandidateAssemblyData::SmallAlignmentResultType& hsAlign(assemblyData.smallSVAlignments[highScoreIndex]);
-
-        if (isFilterSpanningAlignment(_smallSVAligner, hsAlign.align.apath, true)) return;
-    }
-
-    // TODO: min context, etc.
+    // TODO:
 
 
     // ok, passed QC -- mark the high-scoring alignment as usable for hypothesis refinement:
     {
         assemblyData.bestAlignmentIndex = highScoreIndex;
 #ifdef DEBUG_REFINER
-        log_os << "highscoreid: " << highScoreIndex << " alignment: " << assemblyData.spanningAlignments[highScoreIndex];
+        log_os << "smallSV highscoreid: " << highScoreIndex << " alignment: " << assemblyData.smallSVAlignments[highScoreIndex];
 #endif
 
         // process the alignment into information that's easily usable in the vcf output
         // (ie. breakends in reference coordinates)
 
         const AssembledContig& bestContig(assemblyData.contigs[assemblyData.bestAlignmentIndex]);
-        const SVCandidateAssemblyData::JumpAlignmentResultType& bestAlign(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex]);
+        const SVCandidateAssemblyData::SmallAlignmentResultType& bestAlign(assemblyData.smallSVAlignments[assemblyData.bestAlignmentIndex]);
 
-        // first get each alignment associated with the correct breakend:
-        const Alignment* bp1AlignPtr(&bestAlign.align1);
-        const Alignment* bp2AlignPtr(&bestAlign.align2);
-
-        if (isBp2AlignedFirst) std::swap(bp1AlignPtr, bp2AlignPtr);
-
-        // summarize usable output information in a second SVBreakend object -- this is the 'refined' sv:
-        assemblyData.sv.push_back(sv);
-        SVCandidate& newSV(assemblyData.sv.back());
-        newSV.assemblyIndex = 0;
-
-        newSV.setPrecise();
-
-        adjustAssembledBreakend(*bp1AlignPtr, (! isBp2AlignedFirst), bestAlign.jumpRange, assemblyData.bp1ref, isBp1Reversed, newSV.bp1);
-        adjustAssembledBreakend(*bp2AlignPtr, (isBp2AlignedFirst), bestAlign.jumpRange, assemblyData.bp2ref, isBp2Reversed, newSV.bp2);
-
-        // fill in insertSeq:
-        newSV.insertSeq.clear();
-        if (bestAlign.jumpInsertSize > 0)
+        const SVCandidateAssemblyData::CandidateSegmentSetType& candidateSegments(assemblyData.smallSVSegments[assemblyData.bestAlignmentIndex]);
+        BOOST_FOREACH(const SVCandidateAssemblyData::CandidateSegmentType& segRange, candidateSegments)
         {
-            getFwdStrandInsertSegment(bestAlign, bestContig.seq, isBp1Reversed, newSV.insertSeq);
-        }
+            assemblyData.sv.push_back(sv);
+            SVCandidate& newSV(assemblyData.sv.back());
+            newSV.assemblyIndex = assemblyData.sv.size() - 1;
+            setSmallCandSV(assemblyData.bp1ref, bestContig.seq, bestAlign.align, segRange, newSV);
 
 #ifdef DEBUG_REFINER
-        log_os << "highscore refined sv: " << assemblyData.sv;
+            log_os << "small refined sv: " << assemblyData.sv;
 #endif
-
+        }
     }
-
-#endif
-
 }
