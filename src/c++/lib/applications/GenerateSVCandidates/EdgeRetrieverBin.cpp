@@ -109,7 +109,7 @@ jumpToFirstEdge()
                     const bool isSelfEdge(edgeIter->first == _edge.nodeIndex1);
                     if (! isSelfEdge) edgeCount += locus.getEdge(edgeIter->first,_edge.nodeIndex1).count;
                     _headCount += edgeCount;
-                    if (_headCount >= _beginCount)
+                    if (_headCount > _beginCount)
                     {
                         _edge.nodeIndex2 = edgeIter->first;
 
