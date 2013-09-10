@@ -318,6 +318,12 @@ consolidateOverlap(
         }
 
         svs.resize(svs.size()-deletedSVIndex.size());
+
+        // fix indices:
+        for (unsigned i(0); i<svs.size(); ++i)
+        {
+            svs[i].candidateIndex = i;
+        }
     }
 
     if (! moveSVIndex.empty())
@@ -423,6 +429,7 @@ getCandidatesFromData(
 #endif
                     pair.svIndex.push_back(svs.size());
                     svs.push_back(readCand);
+                    svs.back().candidateIndex = pair.svIndex.back();
                 }
             }
         }
@@ -505,6 +512,7 @@ findCandidateSV(
 
         remoteBreakend.state = SVBreakendState::UNKNOWN;
 
+        sv.candidateIndex=svs.size();
         svs.push_back(sv);
 
         // minimal setup for svData:

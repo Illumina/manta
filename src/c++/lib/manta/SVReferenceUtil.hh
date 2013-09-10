@@ -24,6 +24,14 @@
 #include <string>
 
 
+/// test whether the two jump aligner regions will overlap
+bool
+isRefRegionOverlap(
+    const bam_header_info& header,
+    const pos_t extraRefEdgeSize,
+    const SVCandidate& sv);
+
+
 void
 getIntervalReferenceSegment(
     const std::string& referenceFilename,

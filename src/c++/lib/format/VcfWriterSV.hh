@@ -70,7 +70,6 @@ protected:
         const EdgeInfo& edge,
         const SVCandidateSetData& svData,
         const SVCandidateAssemblyData& adata,
-        const unsigned svIndex,
         const SVCandidate& sv);
 
     virtual
@@ -104,7 +103,6 @@ private:
     void
     writeTranslocPair(
         const EdgeInfo& edge,
-        const unsigned svIndex,
         const SVCandidate& sv,
         const SVCandidateSetData& svData,
         const SVCandidateAssemblyData& adata);

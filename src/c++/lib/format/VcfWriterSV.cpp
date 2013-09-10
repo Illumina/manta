@@ -312,12 +312,11 @@ void
 VcfWriterSV::
 writeTranslocPair(
     const EdgeInfo& edge,
-    const unsigned svIndex,
     const SVCandidate& sv,
     const SVCandidateSetData& svData,
     const SVCandidateAssemblyData& adata)
 {
-    const std::string idPrefix( str(_idFormatter % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % svIndex ) );
+    const std::string idPrefix( str(_idFormatter % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex ) );
 
     writeTransloc(sv, idPrefix, true, svData, adata);
     writeTransloc(sv, idPrefix, false, svData, adata);
@@ -374,7 +373,7 @@ writeInvdel(
 
     // get POS and endPos
     pos_t pos(bpArange.center_pos()+1);
-    pos_t endPos(bpBrange.center_pos()+1);
+    pos_t endPos(bpBrange.center_pos());
     if (! isImprecise)
     {
         pos = bpArange.begin_pos()+1;
@@ -428,6 +427,19 @@ writeInvdel(
     infotags.push_back( str(boost::format("UPSTREAM_PAIR_SUPPORT=%i") % bpA.readCount) );
     infotags.push_back( str(boost::format("DOWNSTREAM_PAIR_SUPPORT=%i") % bpB.readCount) );
     infotags.push_back( str(boost::format("PAIR_SUPPORT=%i") % bpA.pairCount) );
+
+    if (isSmallVariant)
+    {
+        if (! sv.insertAlignment.empty())
+        {
+            std::string cigar;
+            apath_to_cigar(sv.insertAlignment,cigar);
+
+            // add the 1M to signify the leading reference base:
+            infotags.push_back( str(boost::format("CIGAR=1M%s") % cigar));
+        }
+    }
+
     if (isImprecise)
     {
         infotags.push_back("IMPRECISE");
@@ -543,13 +555,12 @@ writeSVCore(
     const EdgeInfo& edge,
     const SVCandidateSetData& svData,
     const SVCandidateAssemblyData& adata,
-    const unsigned svIndex,
     const SVCandidate& sv)
 {
     const SV_TYPE::index_t svType(getSVType(sv));
     if      (svType == SV_TYPE::INTERTRANSLOC)
     {
-        writeTranslocPair(edge, svIndex, sv, svData, adata);
+        writeTranslocPair(edge, sv, svData, adata);
     }
     else if (svType == SV_TYPE::INVERSION)
     {

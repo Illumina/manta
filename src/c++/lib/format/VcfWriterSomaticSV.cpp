@@ -95,7 +95,6 @@ writeSV(
     const EdgeInfo& edge,
     const SVCandidateSetData& svData,
     const SVCandidateAssemblyData& adata,
-    const unsigned svIndex,
     const SVCandidate& sv,
     const SomaticSVScoreInfo& ssInfo)
 {
@@ -104,6 +103,6 @@ writeSV(
 
     //TODO: this is a lame way to customize subclass behavior:
     _ssInfoPtr=&ssInfo;
-    writeSVCore(edge, svData, adata, svIndex, sv);
+    writeSVCore(edge, svData, adata, sv);
     _ssInfoPtr=NULL;
 }

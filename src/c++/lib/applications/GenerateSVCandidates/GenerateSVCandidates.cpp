@@ -78,6 +78,61 @@ edgeRFactory(
 
 
 
+/// hack object setup to allow iteration over multiple sv candidates
+///
+struct SVWriter
+{
+    SVWriter(
+        const GSCOptions& opt,
+        const SVLocusSet& cset,
+        const char* progName,
+        const char* progVersion) :
+        isSomatic(! opt.somaticOutputFilename.empty()),
+        svScore(opt, cset.header),
+        candfs(opt.candidateOutputFilename),
+        somfs(opt.somaticOutputFilename),
+        candWriter(opt.referenceFilename,cset,candfs.getStream()),
+        somWriter(opt.somaticOpt, (! opt.chromDepthFilename.empty()),
+                  opt.referenceFilename,cset,somfs.getStream())
+    {
+        if (0 == opt.edgeOpt.binIndex)
+        {
+            candWriter.writeHeader(progName, progVersion);
+            if (isSomatic) somWriter.writeHeader(progName, progVersion);
+        }
+    }
+
+    void
+    writeSV(
+        const EdgeInfo& edge,
+        const SVCandidateSetData& svData,
+        const SVCandidateAssemblyData& assemblyData,
+        const SVCandidate& sv)
+    {
+        candWriter.writeSV(edge, svData, assemblyData, sv);
+
+        if (isSomatic)
+        {
+            svScore.scoreSomaticSV(svData, sv, ssInfo);
+            somWriter.writeSV(edge, svData, assemblyData, sv, ssInfo);
+        }
+    }
+
+    ///////////////////////// data:
+    const bool isSomatic;
+
+    SVScorer svScore;
+    SomaticSVScoreInfo ssInfo;
+
+    OutStream candfs;
+    OutStream somfs;
+
+    VcfWriterCandidateSV candWriter;
+    VcfWriterSomaticSV somWriter;
+};
+
+
+
 static
 void
 runGSC(
@@ -85,34 +140,18 @@ runGSC(
     const char* progName,
     const char* progVersion)
 {
-    const bool isSomatic(! opt.somaticOutputFilename.empty());
-
     SVFinder svFind(opt);
     const SVLocusSet& cset(svFind.getSet());
 
     SVCandidateAssemblyRefiner svRefine(opt, cset.header);
 
-    SVScorer svScore(opt, cset.header);
-
     std::auto_ptr<EdgeRetriever> edgerPtr(edgeRFactory(cset, opt.edgeOpt));
     EdgeRetriever& edger(*edgerPtr);
 
-    OutStream candfs(opt.candidateOutputFilename);
-    OutStream somfs(opt.somaticOutputFilename);
-
-    VcfWriterCandidateSV candWriter(opt.referenceFilename,cset,candfs.getStream());
-    VcfWriterSomaticSV somWriter(opt.somaticOpt, (! opt.chromDepthFilename.empty()),
-                                 opt.referenceFilename,cset,somfs.getStream());
-
-    if (0 == opt.edgeOpt.binIndex)
-    {
-        candWriter.writeHeader(progName, progVersion);
-        if (isSomatic) somWriter.writeHeader(progName, progVersion);
-    }
+    SVWriter svWriter(opt, cset, progName, progVersion);
 
     SVCandidateSetData svData;
     std::vector<SVCandidate> svs;
-    SomaticSVScoreInfo ssInfo;
 
 #ifdef DEBUG_GSV
     log_os << "bam_header:\n" << cset.header << "\n";
@@ -134,21 +173,21 @@ runGSC(
             // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
             svFind.findCandidateSV(edge, svData, svs);
 
-            for (unsigned svIndex(0); svIndex<svs.size(); ++svIndex)
+            BOOST_FOREACH(const SVCandidate& candidateSV, svs)
             {
-                const SVCandidate& sv(svs[svIndex]);
-
                 SVCandidateAssemblyData assemblyData;
-                svRefine.getCandidateAssemblyData(sv, svData, assemblyData);
+                svRefine.getCandidateAssemblyData(candidateSV, svData, assemblyData);
 
-                const SVCandidate& submitSV(assemblyData.isBestAlignment ? assemblyData.sv : sv);
-
-                candWriter.writeSV(edge, svData, assemblyData, svIndex, submitSV);
-
-                if (isSomatic)
+                if (assemblyData.sv.empty())
                 {
-                    svScore.scoreSomaticSV(svData, svIndex, submitSV, ssInfo);
-                    somWriter.writeSV(edge, svData, assemblyData, svIndex, submitSV, ssInfo);
+                    svWriter.writeSV(edge, svData, assemblyData, candidateSV);
+                }
+                else
+                {
+                    BOOST_FOREACH(const SVCandidate& assembledSV, assemblyData.sv)
+                    {
+                        svWriter.writeSV(edge, svData, assemblyData, assembledSV);
+                    }
                 }
             }
         }

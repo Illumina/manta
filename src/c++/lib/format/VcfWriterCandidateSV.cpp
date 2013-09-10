@@ -25,9 +25,8 @@ writeSV(
     const EdgeInfo& edge,
     const SVCandidateSetData& svData,
     const SVCandidateAssemblyData& adata,
-    const unsigned svIndex,
     const SVCandidate& sv)
 {
     if (sv.bp1.pairCount < _minPairCount) return;
-    writeSVCore(edge, svData, adata, svIndex, sv);
+    writeSVCore(edge, svData, adata, sv);
 }

@@ -370,7 +370,6 @@ getJumpAssembly(
 
     // ok, passed QC -- mark the high-scoring alignment as usable for hypothesis refinement:
     {
-        assemblyData.isBestAlignment = true;
         assemblyData.bestAlignmentIndex = highScoreIndex;
 #ifdef DEBUG_REFINER
         log_os << "highscoreid: " << highScoreIndex << " alignment: " << assemblyData.spanningAlignments[highScoreIndex];
@@ -389,18 +388,20 @@ getJumpAssembly(
         if (isBp2AlignedFirst) std::swap(bp1AlignPtr, bp2AlignPtr);
 
         // summarize usable output information in a second SVBreakend object -- this is the 'refined' sv:
-        assemblyData.sv = sv;
+        assemblyData.sv.push_back(sv);
+        SVCandidate& newSV(assemblyData.sv.back());
+        newSV.assemblyIndex = 0;
 
-        assemblyData.sv.setPrecise();
+        newSV.setPrecise();
 
-        adjustAssembledBreakend(*bp1AlignPtr, (! isBp2AlignedFirst), bestAlign.jumpRange, assemblyData.bp1ref, isBp1Reversed, assemblyData.sv.bp1);
-        adjustAssembledBreakend(*bp2AlignPtr, (isBp2AlignedFirst), bestAlign.jumpRange, assemblyData.bp2ref, isBp2Reversed, assemblyData.sv.bp2);
+        adjustAssembledBreakend(*bp1AlignPtr, (! isBp2AlignedFirst), bestAlign.jumpRange, assemblyData.bp1ref, isBp1Reversed, newSV.bp1);
+        adjustAssembledBreakend(*bp2AlignPtr, (isBp2AlignedFirst), bestAlign.jumpRange, assemblyData.bp2ref, isBp2Reversed, newSV.bp2);
 
         // fill in insertSeq:
-        assemblyData.sv.insertSeq.clear();
+        newSV.insertSeq.clear();
         if (bestAlign.jumpInsertSize > 0)
         {
-            getFwdStrandInsertSegment(bestAlign, bestContig.seq, isBp1Reversed, assemblyData.sv.insertSeq);
+            getFwdStrandInsertSegment(bestAlign, bestContig.seq, isBp1Reversed, newSV.insertSeq);
         }
 
 #ifdef DEBUG_REFINER
@@ -449,6 +450,7 @@ getSmallSVAssembly(
 
     // make sure an alignment object exists for every contig, even if it's empty:
     assemblyData.smallSVAlignments.resize(contigCount);
+    assemblyData.smallSVSegments.resize(contigCount);
 
     //bool isHighScore(false);
     //unsigned highScoreIndex(0);
@@ -504,7 +506,6 @@ getSmallSVAssembly(
 
     // ok, passed QC -- mark the high-scoring alignment as usable for hypothesis refinement:
     {
-        assemblyData.isBestAlignment = true;
         assemblyData.bestAlignmentIndex = highScoreIndex;
 #ifdef DEBUG_REFINER
         log_os << "highscoreid: " << highScoreIndex << " alignment: " << assemblyData.spanningAlignments[highScoreIndex];
@@ -523,18 +524,20 @@ getSmallSVAssembly(
         if (isBp2AlignedFirst) std::swap(bp1AlignPtr, bp2AlignPtr);
 
         // summarize usable output information in a second SVBreakend object -- this is the 'refined' sv:
-        assemblyData.sv = sv;
+        assemblyData.sv.push_back(sv);
+        SVCandidate& newSV(assemblyData.sv.back());
+        newSV.assemblyIndex = 0;
 
-        assemblyData.sv.setPrecise();
+        newSV.setPrecise();
 
-        adjustAssembledBreakend(*bp1AlignPtr, (! isBp2AlignedFirst), bestAlign.jumpRange, assemblyData.bp1ref, isBp1Reversed, assemblyData.sv.bp1);
-        adjustAssembledBreakend(*bp2AlignPtr, (isBp2AlignedFirst), bestAlign.jumpRange, assemblyData.bp2ref, isBp2Reversed, assemblyData.sv.bp2);
+        adjustAssembledBreakend(*bp1AlignPtr, (! isBp2AlignedFirst), bestAlign.jumpRange, assemblyData.bp1ref, isBp1Reversed, newSV.bp1);
+        adjustAssembledBreakend(*bp2AlignPtr, (isBp2AlignedFirst), bestAlign.jumpRange, assemblyData.bp2ref, isBp2Reversed, newSV.bp2);
 
         // fill in insertSeq:
-        assemblyData.sv.insertSeq.clear();
+        newSV.insertSeq.clear();
         if (bestAlign.jumpInsertSize > 0)
         {
-            getFwdStrandInsertSegment(bestAlign, bestContig.seq, isBp1Reversed, assemblyData.sv.insertSeq);
+            getFwdStrandInsertSegment(bestAlign, bestContig.seq, isBp1Reversed, newSV.insertSeq);
         }
 
 #ifdef DEBUG_REFINER

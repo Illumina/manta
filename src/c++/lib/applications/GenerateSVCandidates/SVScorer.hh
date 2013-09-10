@@ -41,7 +41,6 @@ struct SVScorer
     void
     scoreSomaticSV(
         const SVCandidateSetData& svData,
-        const unsigned svIndex,
         const SVCandidate& sv,
         SomaticSVScoreInfo& ssInfo);
 

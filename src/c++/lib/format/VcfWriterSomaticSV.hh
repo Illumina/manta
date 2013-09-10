@@ -41,7 +41,6 @@ struct VcfWriterSomaticSV : public VcfWriterSV
         const EdgeInfo& edge,
         const SVCandidateSetData& svData,
         const SVCandidateAssemblyData& adata,
-        const unsigned svIndex,
         const SVCandidate& sv,
         const SomaticSVScoreInfo& ssInfo);
 

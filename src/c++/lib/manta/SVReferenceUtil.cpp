@@ -102,6 +102,23 @@ getIntervalReferenceSegment(
 
 
 
+bool
+isRefRegionOverlap(
+    const bam_header_info& header,
+    const pos_t extraRefEdgeSize,
+    const SVCandidate& sv)
+{
+    if (sv.bp1.interval.tid != sv.bp2.interval.tid) return false;
+    GenomeInterval bp1RefInterval;
+    GenomeInterval bp2RefInterval;
+    getBpReferenceInterval(header,extraRefEdgeSize,sv.bp1.interval,bp1RefInterval);
+    getBpReferenceInterval(header,extraRefEdgeSize,sv.bp2.interval,bp2RefInterval);
+
+    return (bp1RefInterval.isIntersect(bp2RefInterval));
+}
+
+
+
 void
 getSVReferenceSegments(
     const std::string& referenceFilename,
@@ -116,12 +133,15 @@ getSVReferenceSegments(
     getBpReferenceInterval(header,extraRefEdgeSize,sv.bp1.interval,bp1RefInterval);
     getBpReferenceInterval(header,extraRefEdgeSize,sv.bp2.interval,bp2RefInterval);
 
+    // allow overlap (best performance in case of breakends in opposite orientations...:
+#if 0
     // check that the two reference regions do not overlap
     if (bp1RefInterval.isIntersect(bp2RefInterval))
     {
         // rare case, trim intervals so that they become non-overlapping:
         trimOverlappingRange(bp1RefInterval.range, bp2RefInterval.range);
     }
+#endif
 
     getIntervalReferenceSegment(referenceFilename, header, bp1RefInterval, bp1ref);
     getIntervalReferenceSegment(referenceFilename, header, bp2RefInterval, bp2ref);
