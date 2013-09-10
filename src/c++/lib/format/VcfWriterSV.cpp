@@ -442,7 +442,7 @@ writeInvdel(
     {
         if (bpBrange.size() > 1)
         {
-            infotags.push_back( str( boost::format("CIEND=%i,%i") % ((bpBrange.begin_pos()+1) - endPos) % (bpBrange.end_pos() - endPos) ));
+            infotags.push_back( str( boost::format("CIEND=%i,%i") % (bpBrange.begin_pos() - endPos) % ((bpBrange.end_pos()-1) - endPos) ));
         }
     }
 
