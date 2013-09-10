@@ -109,17 +109,19 @@ private:
         const SVCandidateSetData& svData,
         const SVCandidateAssemblyData& adata);
 
+    /// \param isIndel if true, the variant is a simple right/left breakend insert/delete combination
     void
     writeInvdel(
         const SVCandidate& sv,
-        const std::string& label);
+        const std::string& label,
+        const bool isIndel = false);
 
     void
     writeInversion(
         const SVCandidate& sv);
 
     void
-    writeDeletion(
+    writeIndel(
         const SVCandidate& sv);
 
     void

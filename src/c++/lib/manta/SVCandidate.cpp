@@ -71,7 +71,7 @@ getSVType(const SVCandidate& sv)
     }
     else if (isInnies(isBp1First,sv.bp1.state,sv.bp2.state))
     {
-        return DELETION;
+        return INDEL;
     }
     else if (isOutties(isBp1First,sv.bp1.state,sv.bp2.state))
     {

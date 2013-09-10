@@ -281,7 +281,7 @@ enum index_t
     UNKNOWN,
     INTERTRANSLOC,
     INVERSION,
-    DELETION,
+    INDEL,
     TANDUP,
     COMPLEX
 };

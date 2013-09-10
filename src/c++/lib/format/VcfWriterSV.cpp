@@ -62,8 +62,8 @@ writeHeaderPrefix(
     /// vcf 4.1 reserved/suggested INFO tags:
     _os << "##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description=\"Imprecise structural variation\">\n";
     _os << "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n";
-    _os << "##INFO=<ID=CIPOS,Number=2,Type=Integer,Description=\"Confidence interval around POS for imprecise variants\">\n";
-    _os << "##INFO=<ID=CIEND,Number=2,Type=Integer,Description=\"Confidence interval around END for imprecise variants\">\n";
+    _os << "##INFO=<ID=CIPOS,Number=2,Type=Integer,Description=\"Confidence interval around POS\">\n";
+    _os << "##INFO=<ID=CIEND,Number=2,Type=Integer,Description=\"Confidence interval around END\">\n";
     _os << "##INFO=<ID=MATEID,Number=.,Type=String,Description=\"ID of mate breakend\">\n";
 #if 0
     _os << "##INFO=<ID=HOMLEN,Number=.,Type=Integer,Description=\"Length of base pair identical micro-homology at event breakpoints\">\n";
@@ -77,6 +77,7 @@ writeHeaderPrefix(
     _os << "##INFO=<ID=BND_PAIR_SUPPORT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at this breakend (mapping may not be confident at remote breakend)\">\n";
     _os << "##INFO=<ID=UPSTREAM_PAIR_SUPPORT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at the upstream breakend (mapping may not be confident at downstream breakend)\">\n";
     _os << "##INFO=<ID=DOWNSTREAM_PAIR_SUPPORT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at this downstream breakend (mapping may not be confident at upstream breakend)\">\n";
+    _os << "##INFO=<ID=CIGAR,Number=A,Type=String,Description=\"CIGAR alignment for each alternate indel allele\">\n";
 
     addHeaderInfo();
 
@@ -85,6 +86,7 @@ writeHeaderPrefix(
     _os << "##ALT=<ID=BND,Description=\"Translocation Breakend\">\n";
     _os << "##ALT=<ID=INV,Description=\"Inversion\">\n";
     _os << "##ALT=<ID=DEL,Description=\"Deletion\">\n";
+    _os << "##ALT=<ID=INS,Description=\"Insertion\">\n";
     _os << "##ALT=<ID=DUP:TANDEM,Description=\"Tandem Duplication\">\n";
     _os << "##ALT=<ID=COMPLEX,Description=\"Unknown Candidate Type\">\n";
 }
@@ -326,7 +328,8 @@ void
 VcfWriterSV::
 writeInvdel(
     const SVCandidate& sv,
-    const std::string& label)
+    const std::string& label,
+    const bool isIndel)
 {
     const bool isImprecise(sv.isImprecise());
     const bool isBreakendRangeSameShift(sv.isBreakendRangeSameShift());
@@ -349,6 +352,26 @@ writeInvdel(
         assert(bpArange.size() == bpBrange.size());
     }
 
+    // above this size all records use symbolic alleles (ie. <DEL>):
+    static const unsigned maxNonSymbolicRecordSize(1000);
+
+    // if the variant is a combination of simple insertion and deletions, and below
+    // a large-event size threshold, it is classified as a small variant. In this case
+    // we report the event using full REF and ALT sequences, plus a CIGAR string for
+    // complex in/del combinations
+    //
+    bool isSmallVariant(false);
+    if ((! isImprecise) && isIndel)
+    {
+        const unsigned deleteSize(bpBrange.begin_pos() - bpArange.begin_pos());
+        const unsigned insertSize(sv.insertSeq.size());
+
+        const bool isSmallDelete(deleteSize<=maxNonSymbolicRecordSize);
+        const bool isSmallInsert(insertSize<=maxNonSymbolicRecordSize);
+
+        isSmallVariant = (isSmallDelete && isSmallInsert);
+    }
+
     // get POS and endPos
     pos_t pos(bpArange.center_pos()+1);
     pos_t endPos(bpBrange.center_pos()+1);
@@ -357,11 +380,11 @@ writeInvdel(
         pos = bpArange.begin_pos()+1;
         if (isBreakendRangeSameShift)
         {
-            endPos = bpBrange.begin_pos()+1;
+            endPos = bpBrange.begin_pos();
         }
         else
         {
-            endPos = bpBrange.end_pos();
+            endPos = bpBrange.end_pos()-1;
         }
     }
 
@@ -372,19 +395,36 @@ writeInvdel(
 
     // get REF
     std::string ref;
-    get_standardized_region_seq(_referenceFilename,chrom,pos-1,pos-1,ref);
+    {
+        const pos_t beginRefPos(pos-1);
+        pos_t endRefPos(beginRefPos);
+        if (isSmallVariant) endRefPos=endPos-1;
 
-    assert(1 == ref.size());
+        get_standardized_region_seq(_referenceFilename, chrom, beginRefPos, endRefPos, ref);
+
+        assert(static_cast<unsigned>(1+endRefPos-beginRefPos) == ref.size());
+    }
 
     // build alt:
-    const std::string alt( str( boost::format("<%s>") % label));
+    std::string alt;
+    if (isSmallVariant)
+    {
+        alt = ref[0] + sv.insertSeq;
+    }
+    else
+    {
+        alt = str( boost::format("<%s>") % label);
+    }
 
     // build INFO field
     std::vector<std::string> words;
     split_string(label,':',words);
     infotags.push_back( str(boost::format("SVTYPE=%s") % words[0]));
-    infotags.push_back( str(boost::format("END=%i") % endPos));
-    infotags.push_back( str(boost::format("SVLEN=%i") % (endPos-pos+1)));
+    if (! isSmallVariant)
+    {
+        infotags.push_back( str(boost::format("END=%i") % endPos));
+    }
+    infotags.push_back( str(boost::format("SVLEN=%i") % (endPos-pos)));
     infotags.push_back( str(boost::format("UPSTREAM_PAIR_SUPPORT=%i") % bpA.readCount) );
     infotags.push_back( str(boost::format("DOWNSTREAM_PAIR_SUPPORT=%i") % bpB.readCount) );
     infotags.push_back( str(boost::format("PAIR_SUPPORT=%i") % bpA.pairCount) );
@@ -397,9 +437,13 @@ writeInvdel(
     {
         infotags.push_back( str( boost::format("CIPOS=%i,%i") % ((bpArange.begin_pos()+1) - pos) % (bpArange.end_pos() - pos) ));
     }
-    if (bpBrange.size() > 1)
+
+    if (! isSmallVariant)
     {
-        infotags.push_back( str( boost::format("CIEND=%i,%i") % ((bpBrange.begin_pos()+1) - endPos) % (bpBrange.end_pos() - endPos) ));
+        if (bpBrange.size() > 1)
+        {
+            infotags.push_back( str( boost::format("CIEND=%i,%i") % ((bpBrange.begin_pos()+1) - endPos) % (bpBrange.end_pos() - endPos) ));
+        }
     }
 
 #if 0
@@ -409,16 +453,19 @@ writeInvdel(
     }
 #endif
 
-    if (! sv.insertSeq.empty())
+    if (! isSmallVariant)
     {
-        infotags.push_back( str( boost::format("SVINSLEN=%i") % (sv.insertSeq.size()) ));
-        if (isBp1First || (bpA.state != bpB.state))
+        if (! sv.insertSeq.empty())
         {
-            infotags.push_back( str( boost::format("SVINSSEQ=%s") % (sv.insertSeq) ));
-        }
-        else
-        {
-            infotags.push_back( str( boost::format("SVINSSEQ=%s") % reverseCompCopyStr(sv.insertSeq) ));
+            infotags.push_back( str( boost::format("SVINSLEN=%i") % (sv.insertSeq.size()) ));
+            if (isBp1First || (bpA.state != bpB.state))
+            {
+                infotags.push_back( str( boost::format("SVINSSEQ=%s") % (sv.insertSeq) ));
+            }
+            else
+            {
+                infotags.push_back( str( boost::format("SVINSSEQ=%s") % reverseCompCopyStr(sv.insertSeq) ));
+            }
         }
     }
 
@@ -452,10 +499,22 @@ writeInversion(
 
 void
 VcfWriterSV::
-writeDeletion(
+writeIndel(
     const SVCandidate& sv)
 {
-    writeInvdel(sv,"DEL");
+    static const bool isIndel(true);
+
+    const bool isBp1First(sv.bp1.interval.range.end_pos()<sv.bp2.interval.range.begin_pos());
+
+    const SVBreakend& bpA(isBp1First ? sv.bp1 : sv.bp2);
+    const SVBreakend& bpB(isBp1First ? sv.bp2 : sv.bp1);
+
+    const unsigned deleteSize(bpB.interval.range.begin_pos() - bpA.interval.range.begin_pos());
+    const unsigned insertSize(sv.insertSeq.size());
+
+    const bool isDelete(deleteSize >= insertSize);
+
+    writeInvdel(sv,(isDelete ? "DEL" : "INS"), isIndel);
 }
 
 
@@ -496,9 +555,9 @@ writeSVCore(
     {
         writeInversion(sv);
     }
-    else if (svType == SV_TYPE::DELETION)
+    else if (svType == SV_TYPE::INDEL)
     {
-        writeDeletion(sv);
+        writeIndel(sv);
     }
     else if (svType == SV_TYPE::TANDUP)
     {

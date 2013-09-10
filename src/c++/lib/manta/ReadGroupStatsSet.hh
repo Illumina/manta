@@ -27,12 +27,14 @@
 struct ReadGroupStatsSet
 {
     bool
-    empty() const {
+    empty() const
+    {
         return _group.empty();
     }
 
     unsigned
-    size() const {
+    size() const
+    {
         return _group.size();
     }
 

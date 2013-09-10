@@ -632,7 +632,6 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMergeToSelfEdge2 )
     //
     // Criteria: Large region gains self-edge only if connected regions are signal
 
-
     SVLocus locus1;
     locusAddPair(locus1,1,10,20,1,30,40);
     SVLocus locus2;
@@ -843,6 +842,28 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSmallDelRegionClean )
         BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),0u);
     }
 }
+
+
+BOOST_AUTO_TEST_CASE( test_SVLocusCleanSelfEdge )
+{
+    SVLocus locus1;
+    locusAddPair(locus1,1,10,20,1,10,20,true,0);
+
+    locus1.mergeSelfOverlap();
+
+    {
+        SVLocusSet set1(3);
+        set1.merge(locus1);
+        const SVLocusSet& cset1(set1);
+
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+
+        set1.finalize();
+        cset1.checkState(true,true);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),0u);
+    }
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

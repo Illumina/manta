@@ -210,12 +210,12 @@ ReadGroupStats(const std::string& statsBamFile)
                 // (large sizes are uncommon -- this doesn't need to be clever/fast)
                 {
                     unsigned steps(0);
-                    while(currFragSize>1000)
+                    while (currFragSize>1000)
                     {
                         currFragSize /= 10;
                         steps++;
                     }
-                    for (unsigned stepIndex(0);stepIndex<steps;++stepIndex) currFragSize *= 10;
+                    for (unsigned stepIndex(0); stepIndex<steps; ++stepIndex) currFragSize *= 10;
                 }
 
                 fragStats.addObservation(currFragSize);

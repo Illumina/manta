@@ -51,12 +51,29 @@ runESL(const ESLOptions& opt)
         bamStreams.push_back(tmp);
     }
 
-    // TODO check header compatibility between all open bam streams
     const unsigned bamCount(bamStreams.size());
 
-    // assume headers compatible after this point....
-
     assert(0 != bamCount);
+
+    // check bam header compatibility:
+    if (bamCount > 1)
+    {
+        /// TODO: provide a better error exception for failed bam header check:
+        const bam_header_t* compareHeader(bamStreams[0]->get_header());
+        for (unsigned bamIndex(1); bamIndex<bamCount; ++bamIndex)
+        {
+            const bam_header_t* indexHeader(bamStreams[bamIndex]->get_header());
+            if (! check_header_compatibility(compareHeader,indexHeader))
+            {
+                log_os << "ERROR: incompatible bam headers between files:\n"
+                       << "\t" << opt.alignFileOpt.alignmentFilename[0] << "\n"
+                       << "\t" << opt.alignFileOpt.alignmentFilename[bamIndex] << "\n";
+                exit(EXIT_FAILURE);
+            }
+        }
+    }
+
+    // assume headers compatible after this point....
 
     const bam_header_t& header(*(bamStreams[0]->get_header()));
     const bam_header_info bamHeader(header);

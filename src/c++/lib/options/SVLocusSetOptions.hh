@@ -34,11 +34,13 @@ struct SVLocusSetOptions
     template<class Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {
-        ar& minMergeEdgeCount& maxSearchCount& maxSearchDensity;
+        ar& minMergeEdgeCount;
+        ar& maxSearchCount;
+        ar& maxSearchDensity;
     }
 
-    unsigned minMergeEdgeCount; ///< to reduce noise in the graph, we only merge once shared edges (including self-edges) reach this count
-    unsigned maxSearchCount;
-    float maxSearchDensity;
+    unsigned minMergeEdgeCount; ///< to reduce noise in the graph, we only merge once shared edges reach this count
+    unsigned maxSearchCount; ///< the search for intersecting regions in the graph stops once this number is reached
+    float maxSearchDensity; ///< the search for intersecing regionss in the graph stops once this many regions/base are found
 };
 

@@ -73,6 +73,8 @@ mergeNode(
 {
     using namespace illumina::common;
 
+    assert(fromIndex != toIndex);
+
 #ifdef DEBUG_SVL
     log_os << "mergeNode from: " << fromIndex << " to: " << toIndex << " size: " << size() << "\n";
 #endif
@@ -113,14 +115,21 @@ mergeNode(
 
     notifyAdd(toIndex);
 
+    // now take all fromNode edges and 'redirect' them to the toNode index
+    //
     BOOST_FOREACH(edges_type::value_type& fromNodeEdgeIter, fromNode)
     {
+        // alias value_type components (not required, but makes the logic easier to follow):
+        const NodeIndexType& fromNodeEdgeIndex(fromNodeEdgeIter.first);
+        SVLocusEdge& fromNodeEdge(fromNodeEdgeIter.second);
+
 #ifdef DEBUG_SVL
         // is this edge between the to and from nodes?
-        const bool isToFromEdge(fromNodeEdgeIter.first == toIndex);
+        const bool isToFromEdge(fromNodeEdgeIndex == toIndex);
 
-        log_os << "mergeNode: handle fromEdge: " << _index << ":" << fromNodeEdgeIter.first << " isToFromEdge: " << isToFromEdge << "\n";
+        log_os << "mergeNode: handle fromEdge: " << _index << ":" << fromNodeEdgeIndex << " isToFromEdge: " << isToFromEdge << "\n";
 #endif
+
 
         // is this a self edge of the from node?
         const bool isSelfFromEdge(fromNodeEdgeIter.first == fromIndex);
@@ -133,11 +142,11 @@ mergeNode(
         }
 
         // update local edge:
-        toNode.mergeEdge(fromNodeEdgeIter.first,fromNodeEdgeIter.second);
+        toNode.mergeEdge(fromNodeEdgeIndex,fromNodeEdge);
 
         // update remote inputNodeEdgeIter
         {
-            SVLocusNode& remoteNode(getNode(fromNodeEdgeIter.first));
+            SVLocusNode& remoteNode(getNode(fromNodeEdgeIndex));
             edges_type& remoteEdges(remoteNode.edges);
             edges_type::iterator oldRemoteIter(remoteEdges.find(fromIndex));
             if (oldRemoteIter == remoteEdges.end())

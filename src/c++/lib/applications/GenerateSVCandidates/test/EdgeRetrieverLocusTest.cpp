@@ -22,8 +22,6 @@
 
 #include "svgraph/test/SVLocusTestUtil.hh"
 
-#include <iostream>
-
 
 BOOST_AUTO_TEST_SUITE( test_EdgeRetrieverLocus )
 

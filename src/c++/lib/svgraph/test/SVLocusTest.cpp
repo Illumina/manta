@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeMergeSelfEdgeReverse)
 }
 
 
-BOOST_AUTO_TEST_CASE( test_SVLocusNodeMergeMultiSelfEdge)
+BOOST_AUTO_TEST_CASE( test_SVLocusNodeMergeMultiSelfEdge )
 {
     SVLocus locus1;
     NodeIndexType nodePtr1 = locus1.addNode(GenomeInterval(1,10,20));

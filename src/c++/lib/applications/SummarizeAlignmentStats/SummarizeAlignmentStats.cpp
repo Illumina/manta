@@ -40,7 +40,7 @@ runSAS(const SASOptions& opt)
     rgss.load(opt.statsFilename.c_str());
 
     const unsigned groupCount(rgss.size());
-    for(unsigned i(0);i<groupCount;++i)
+    for (unsigned i(0); i<groupCount; ++i)
     {
         const std::string& label(rgss.getLabel(i));
         report_os << "group:\t" << label << '\n';
@@ -48,7 +48,7 @@ runSAS(const SASOptions& opt)
         const ReadGroupStats& rgs(rgss.getStats(i));
         report_os << "fragment length observations:\t" << rgs.fragStats.totalObservations() << '\n';
         report_os << "fragment length quantiles:\n";
-        for(unsigned j(0); j<quantLevelCount;++j)
+        for (unsigned j(0); j<quantLevelCount; ++j)
         {
             report_os << quantLevel[j] << '\t' << rgs.fragStats.quantile(quantLevel[j]) << '\n';
         }

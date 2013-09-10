@@ -30,7 +30,7 @@ trimOverlappingRange(
     known_pos_range2* r1(&rA);
     known_pos_range2* r2(&rB);
 
-    if(r1->begin_pos() > r2->begin_pos()) std::swap(r1, r2);
+    if (r1->begin_pos() > r2->begin_pos()) std::swap(r1, r2);
 
     const pos_t overlap(r1->end_pos()-r2->begin_pos());
     if (overlap <= 0) return;
