@@ -64,6 +64,11 @@ merge(const SVLocus& inputLocus)
 
     assert(! _isFinalized);
 
+    // meaningless input indicates an error in client code
+    assert(! inputLocus.empty());
+
+    if(inputLocus.empty()) return;
+
 #ifdef DEBUG_SVL
     checkState(true);
     log_os << "SVLocusSet::merge inputLocus: " << inputLocus;
@@ -1086,6 +1091,16 @@ checkState(
 
         const unsigned nodeCount(locus.size());
         checkStateTotalNodeCount += nodeCount;
+
+        if(nodeCount == 0)
+        {
+            if(_emptyLoci.count(locusIndex) == 0)
+            {
+                std::ostringstream oss;
+                oss << "ERROR: empty locus is not updated in the empty index. Locus index: " << locusIndex << "\n";
+                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            }
+        }
 
         for (NodeIndexType nodeIndex(0); nodeIndex<nodeCount; ++nodeIndex)
         {
