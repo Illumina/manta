@@ -179,22 +179,26 @@ update(const bam_record& bamRead,
     if (_readScanner.isReadFiltered(bamRead)) return;
 
     // don't rely on the properPair bit to be set correctly:
-    const bool isAnomolous(! _readScanner.isProperPair(bamRead,defaultReadGroupIndex));
+    const bool isAnomalous(! _readScanner.isProperPair(bamRead,defaultReadGroupIndex));
 
-    if (isAnomolous) _anomCount++;
+    if (isAnomalous) _anomCount++;
     else            _nonAnomCount++;
 
     bool isLocalAssemblyEvidence=false;
-    if (! isAnomolous)
+    if (! isAnomalous)
     {
         isLocalAssemblyEvidence = _readScanner.isLocalAssemblyEvidence(bamRead);
     }
 
-    if ((! isAnomolous) && (! isLocalAssemblyEvidence))
+    if ((! isAnomalous) && (! isLocalAssemblyEvidence))
     {
         return; // this read isn't interesting wrt SV discovery
     }
 
+#ifdef DEBUG_SFINDER
+    isLocalAssemblyEvidence = _readScanner.isLocalAssemblyEvidence(bamRead);
+    log_os << "SFinder: Accepted read. isAnomalous "  << isAnomalous << " is Local assm evidence: " << isLocalAssemblyEvidence << " read: " << bamRead << "\n";
+#endif
     // check that this read starts in our scan region:
     if (! _scanRegion.range.is_pos_intersect(bamRead.pos()-1)) return;
 

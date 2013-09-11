@@ -67,15 +67,15 @@ addSVNodeRead(
     if (scanner.isReadFiltered(bamRead)) return;
 
     // don't rely on the properPair bit to be set correctly:
-    const bool isAnomolous(! scanner.isProperPair(bamRead, bamIndex));
+    const bool isAnomalous(! scanner.isProperPair(bamRead, bamIndex));
 
-    if (! isAnomolous) return;
+    if (! isAnomalous) return;
 
 #if 0
     /// TODO:  move local-assembly and spanning candidate handling together here:
     const bool isLocalAssemblyEvidence(scanner.isLocalAssemblyEvidence(bamRead));
 
-    if (! (isAnomolous || isLocalAssemblyEvidence)) return;
+    if (! (isAnomalous || isLocalAssemblyEvidence)) return;
 #endif
 
     // finally, check to see if the svDataGroup is full... for now, we allow a very large
