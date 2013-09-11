@@ -338,7 +338,7 @@ private:
 
     /// get all nodes in this object which intersect with the inputNode
     ///
-    /// \param[in] isTestUsability check whether a node intersection exceeds computablility limits
+    /// \param[in] isTestUsability check whether a node intersection exceeds computability limits
     ///
     /// \return is usable node (can only be false when isTestUsability is true)
     ///
