@@ -1121,11 +1121,29 @@ checkState(
 
     if (isOverlapAllowed()) return;
 
+    static const bool isFilterNoise(false);
+    checkForOverlapNodes(isFilterNoise);
+}
+
+
+
+void
+SVLocusSet::
+checkForOverlapNodes(
+    const bool isFilterNoise) const
+{
+    using namespace illumina::common;
+
     bool isFirst(true);
     GenomeInterval lastInterval;
     NodeAddressType lastAddy;
     BOOST_FOREACH(const NodeAddressType& addy, _inodes)
     {
+        if(isFilterNoise)
+        {
+             if(isNoiseNode(addy)) continue;
+        }
+
         const GenomeInterval& interval(getNode(addy).interval);
 
         // don't allow zero-length or negative intervals:

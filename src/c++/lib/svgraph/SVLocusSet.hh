@@ -415,6 +415,12 @@ private:
     }
 
     bool
+    isNoiseNode(const NodeAddressType inputAddy) const
+    {
+        return getLocus(inputAddy.first).isNoiseNode(getMinMergeEdgeCount(),inputAddy.second);
+    }
+
+    bool
     isOverlapAllowed() const
     {
         return (! _isFinalized);
@@ -474,6 +480,13 @@ private:
 
     void
     dumpIndex(std::ostream& os) const;
+
+    /// throw an exception if any nodes are overlapping
+    ///
+    /// if isFilterNoise is true, consider only signal nodes
+    void
+    checkForOverlapNodes(
+        const bool isFilterNoise) const;
 
     ///////////////////// data
 
