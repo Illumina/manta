@@ -1145,7 +1145,10 @@ checkState(
                     << "\tlast_index: " << lastAddy << " interval: " << lastInterval << "\n"
                     << "\tthis_index: " << addy << " interval: " << interval << "\n"
                     << "\tlast_node: " << lastAddy << " "<< getNode(lastAddy) << "\n"
-                    << "\tthis_node: " << addy << " "<< getNode(addy) << "\n";
+                    << "\tthis_node: " << addy << " "<< getNode(addy) << "\n"
+                    << "\n"
+                    << "chromosome_map\n"
+                    << header << "\n";
                 BOOST_THROW_EXCEPTION(LogicException(oss.str()));
             }
         }

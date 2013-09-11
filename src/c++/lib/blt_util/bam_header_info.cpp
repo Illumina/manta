@@ -40,7 +40,7 @@ operator<<(std::ostream& os, const bam_header_info& bhi)
     os << "BAM_HEADER_INFO:\n";
     BOOST_FOREACH(const bam_header_info::chrom_info& info, bhi.chrom_data)
     {
-        os << "index: " << index << " label: " << info.label << " length: " << info.length;
+        os << "index: " << index << " label: " << info.label << " length: " << info.length << '\n';
         index++;
     }
     return os;
