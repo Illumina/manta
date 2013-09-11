@@ -58,26 +58,43 @@ GetSplitSVCandidate(
     const ReadScannerOptions& opt,
     const int32_t alignTid,
     const pos_t leftPos,
-    const pos_t rightPos)
+    const pos_t rightPos,
+    const bool isComplex = false)
 {
     SVCandidate sv;
     SVBreakend& localBreakend(sv.bp1);
     SVBreakend& remoteBreakend(sv.bp2);
 
-    localBreakend.splitCount++;
-    remoteBreakend.splitCount++;
-
-    localBreakend.state = SVBreakendState::RIGHT_OPEN;
-    remoteBreakend.state = SVBreakendState::LEFT_OPEN;
-
     localBreakend.interval.tid = alignTid;
     remoteBreakend.interval.tid = alignTid;
+
+    localBreakend.splitCount++;
+
+    if (! isComplex)
+    {
+        remoteBreakend.splitCount++;
+        localBreakend.state = SVBreakendState::RIGHT_OPEN;
+        remoteBreakend.state = SVBreakendState::LEFT_OPEN;
+    }
+    else
+    {
+        localBreakend.state = SVBreakendState::COMPLEX;
+        remoteBreakend.state = SVBreakendState::UNKNOWN;
+    }
 
     const pos_t beforeBreakend(opt.minPairBreakendSize/2);
     const pos_t afterBreakend(opt.minPairBreakendSize-beforeBreakend);
 
     localBreakend.interval.range.set_begin_pos(std::max(0,leftPos-beforeBreakend));
-    localBreakend.interval.range.set_end_pos(leftPos+afterBreakend);
+
+    if(! isComplex)
+    {
+        localBreakend.interval.range.set_end_pos(leftPos+afterBreakend);
+    }
+    else
+    {
+        localBreakend.interval.range.set_end_pos(rightPos+afterBreakend);
+    }
 
     remoteBreakend.interval.range.set_begin_pos(std::max(0,rightPos-beforeBreakend));
     remoteBreakend.interval.range.set_end_pos(rightPos+afterBreakend);
@@ -87,9 +104,10 @@ GetSplitSVCandidate(
 
 
 
+/// get SV candidates from indels in the read alignment
 static
 void
-getSVCandidatesFromRead(
+getSVCandidatesFromReadIndels(
     const ReadScannerOptions& opt,
     const SimpleAlignment& align,
     const int32_t alignTid,
@@ -114,7 +132,6 @@ getSVCandidatesFromRead(
         // in this case, swap means combined insertion/deletion
         const bool isSwapStart(is_segment_swap_start(align.path,pathIndex));
 
-        assert(ps.type != SKIP);
         assert(! (isEdgeSegment && isSwapStart));
 
         unsigned nPathSegments(1); // number of path segments consumed
@@ -124,17 +141,17 @@ getSVCandidatesFromRead(
 
             if (ps.type == INSERT)
             {
-                // ignore for now...
-            }
-            else if (ps.type == SOFT_CLIP)
-            {
-                // ignore for now...
+                if (ps.length >= opt.minCandidateIndelSize)
+                {
+                    static const bool isComplex(true);
+                    candidates.push_back(GetSplitSVCandidate(opt,alignTid,refHeadPos,refHeadPos, isComplex));
+                }
             }
         }
         else if (isSwapStart)
         {
             const swap_info sinfo(align.path,pathIndex);
-            if (sinfo.delete_length >= opt.minCandidateIndelSize)
+            if ((sinfo.delete_length >= opt.minCandidateIndelSize) || (sinfo.insert_length >= opt.minCandidateIndelSize))
             {
                 candidates.push_back(GetSplitSVCandidate(opt,alignTid,refHeadPos,refHeadPos+sinfo.delete_length));
             }
@@ -147,13 +164,18 @@ getSVCandidatesFromRead(
 
             if (ps.type == DELETE)
             {
-                if (align.path[pathIndex].length >= opt.minCandidateIndelSize)
+                if (ps.length >= opt.minCandidateIndelSize)
                 {
-                    candidates.push_back(GetSplitSVCandidate(opt,alignTid,refHeadPos,refHeadPos+align.path[pathIndex].length));
+                    candidates.push_back(GetSplitSVCandidate(opt,alignTid,refHeadPos,refHeadPos+ps.length));
                 }
             }
-
-            // ignore other indel types for now...
+            else if (ps.type == INSERT)
+            {
+                if (ps.length >= opt.minCandidateIndelSize)
+                {
+                    candidates.push_back(GetSplitSVCandidate(opt,alignTid,refHeadPos,refHeadPos));
+                }
+            }
         }
 
         for (unsigned i(0); i<nPathSegments; ++i)
@@ -165,22 +187,101 @@ getSVCandidatesFromRead(
 
 
 
+/// check bam record for soft-clipping which is interesting enough to be used as SV evidence:
+///
+/// ClipLen of zero indicates no interesting evidence
+void
+getSVBreakendCandidateClip(
+    const bam_record& bamRead,
+    const SimpleAlignment& bamAlign,
+    unsigned& leadingClipLen,
+    unsigned& trailingClipLen)
+{
+    static const uint8_t minQ(20);
+    static const unsigned minClipLen(8);
+    static const float minQFrac(0.75); ///< this fraction of bases must have qual>=minQ within the clipped region
+
+    leadingClipLen = 0;
+    trailingClipLen = 0;
+
+    const uint8_t* qual(bamRead.qual());
+    const unsigned readSize(bamRead.read_size());
+
+    const unsigned trailingClipLenTmp(apath_soft_clip_trail_size(bamAlign.path));
+    if (trailingClipLenTmp >= minClipLen)
+    {
+        // check the quality of clipped region
+        unsigned minQCount(0);
+        for (unsigned pos(0); pos<trailingClipLenTmp; ++pos)
+        {
+            if (qual[readSize-pos-1] >= minQ) minQCount++;
+        }
+        if ((static_cast<float>(minQCount)/trailingClipLenTmp) >= minQFrac)
+        {
+            trailingClipLen = trailingClipLenTmp;
+        }
+    }
+
+    const unsigned leadingClipLenTmp(apath_soft_clip_lead_size(bamAlign.path));
+    if (leadingClipLenTmp >= minClipLen)
+    {
+        // check the quality of clipped region
+        unsigned minQCount(0);
+        for (unsigned pos(0); pos<leadingClipLenTmp; ++pos)
+        {
+            if (qual[pos] >= minQ) minQCount++;
+        }
+        if ((static_cast<float>(minQCount)/leadingClipLenTmp) >= minQFrac)
+        {
+            leadingClipLen = leadingClipLenTmp;
+        }
+    }
+}
+
+
+
+/// get SV candidates from read clipping
 static
 void
-getReadBreakendsImpl(
+getSVCandidatesFromReadClip(
+    const ReadScannerOptions& opt,
+    const bam_record& bamRead,
+    const SimpleAlignment& bamAlign,
+    std::vector<SVCandidate>& candidates)
+{
+    unsigned leadingClipLen(0), trailingClipLen(0);
+    getSVBreakendCandidateClip(bamRead, bamAlign, leadingClipLen, trailingClipLen);
+
+    // soft-clipped reads don't define a full hypothesis, so they're always evidence for a 'complex' ie. undefined, event:
+    static const bool isComplex(true);
+
+    if (leadingClipLen != 0)
+    {
+        const pos_t clipPos(bamAlign.pos);
+        candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),clipPos,clipPos,isComplex));
+    }
+
+    if (trailingClipLen != 0)
+    {
+        const pos_t clipPos(bamAlign.pos + apath_ref_length(bamAlign.path));
+        candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),clipPos,clipPos,isComplex));
+    }
+}
+
+
+
+/// get SV candidates from anomalous read pairs
+static
+void
+getSVCandidatesFromPair(
     const ReadScannerOptions& opt,
     const SVLocusScanner::CachedReadGroupStats& rstats,
     const bam_record& localRead,
+    const SimpleAlignment& localAlign,
     const bam_record* remoteReadPtr,
-    std::vector<SVCandidate>& candidates,
-    known_pos_range2& localEvidenceRange)
+    std::vector<SVCandidate>& candidates)
 {
-    const SimpleAlignment localAlign(localRead);
-
-    // 1) process any large indels in the localRead:
-    getSVCandidatesFromRead(opt, localAlign, localRead.target_id(), candidates);
-
-    // 2) process anomalous read pair relationships:
+    // update localEvidenceRange:
     const unsigned readSize(apath_read_length(localAlign.path));
     const unsigned localRefLength(apath_ref_length(localAlign.path));
 
@@ -262,8 +363,6 @@ getReadBreakendsImpl(
 
             insertRange.set_end_pos(startRefPos);
         }
-
-        localEvidenceRange.set_range(startRefPos,endRefPos);
     }
 
     // get remote breakend estimate:
@@ -296,11 +395,59 @@ getReadBreakendsImpl(
     {
         // get length of fragment after accounting for any variants described directly in either read alignment:
         const pos_t cigarAdjustedFragmentSize(totalNoninsertSize + (insertRange.end_pos() - insertRange.begin_pos()));
-        if ((cigarAdjustedFragmentSize <= rstats.properPair.max) &&
-            (cigarAdjustedFragmentSize >= rstats.properPair.min)) return;
+
+        if (((cigarAdjustedFragmentSize + opt.minCandidateIndelSize) <= rstats.properPair.max) &&
+            ((cigarAdjustedFragmentSize - static_cast<pos_t>(opt.minCandidateIndelSize)) >= rstats.properPair.min)) return;
     }
 
     candidates.push_back(sv);
+}
+
+
+/// scan read record (and optionally its mate record) for SV evidence.
+//
+/// note that estimation is improved by the mate record (becuase we have the mate cigar string in this case)
+///
+static
+void
+getReadBreakendsImpl(
+    const ReadScannerOptions& opt,
+    const SVLocusScanner::CachedReadGroupStats& rstats,
+    const bam_record& localRead,
+    const bam_record* remoteReadPtr,
+    std::vector<SVCandidate>& candidates,
+    known_pos_range2& localEvidenceRange)
+{
+    /// TODO: can't handle these yet, but plan to soon:
+    if (localRead.is_mate_unmapped()) return;
+
+    /// TODO: Add SA read support -- temporarily reject all supplemental reads:
+    if (localRead.is_supplement()) return;
+
+    const SimpleAlignment localAlign(localRead);
+
+    // - process any large indels in the localRead:
+    getSVCandidatesFromReadIndels(opt, localAlign, localRead.target_id(), candidates);
+
+    // - process soft-clip in the localRead:
+    getSVCandidatesFromReadClip(opt, localRead, localAlign, candidates);
+
+    // TODO: add semi-aligned read processing
+
+    // TODO: add SA tag processing
+
+    // TODO: process shadow reads
+
+    // - process anomalous read pair relationships:
+    getSVCandidatesFromPair(opt, rstats, localRead, localAlign, remoteReadPtr, candidates);
+
+    // update localEvidence range:
+    // note this is only used if candidates were added, so there's no harm is setting it every time:
+    const unsigned localRefLength(apath_ref_length(localAlign.path));
+    const pos_t startRefPos(localRead.pos()-1);
+    const pos_t endRefPos(startRefPos+localRefLength);
+
+    localEvidenceRange.set_range(startRefPos,endRefPos);
 }
 
 
@@ -333,11 +480,15 @@ getSVLociImpl(
     {
         const SVBreakend& localBreakend(cand.bp1);
         const SVBreakend& remoteBreakend(cand.bp2);
+
+        const bool isComplex((localBreakend.state == SVBreakendState::COMPLEX) &&
+                             (remoteBreakend.state == SVBreakendState::UNKNOWN));
+
         if ((0==localBreakend.interval.range.size()) ||
-            (0==remoteBreakend.interval.range.size()))
+            ((! isComplex) && (0==remoteBreakend.interval.range.size())))
         {
             std::ostringstream oss;
-            oss << "Empty Breakend proposed from bam record.\n"
+            oss << "Unexpected breakend pattern proposed from bam record.\n"
                 << "\tlocal_breakend: " << localBreakend << "\n"
                 << "\tremote_breakend: " << remoteBreakend << "\n"
                 << "\tbam_record: " << bamRead << "\n";
@@ -380,11 +531,18 @@ getSVLociImpl(
         const NodeIndexType localBreakendNode(locus.addNode(localBreakend.interval,localEvidenceWeight));
         locus.setNodeEvidence(localBreakendNode,localEvidenceRange);
 
-        // set remote breakend estimate:
-        const NodeIndexType remoteBreakendNode(locus.addNode(remoteBreakend.interval,remoteEvidenceWeight));
-        locus.linkNodes(localBreakendNode,remoteBreakendNode,localEvidenceWeight,remoteEvidenceWeight);
+        if(isComplex)
+        {
+            locus.linkNodes(localBreakendNode,localBreakendNode,localEvidenceWeight);
+        }
+        else
+        {
+            // set remote breakend estimate:
+            const NodeIndexType remoteBreakendNode(locus.addNode(remoteBreakend.interval,remoteEvidenceWeight));
+            locus.linkNodes(localBreakendNode,remoteBreakendNode,localEvidenceWeight,remoteEvidenceWeight);
 
-        locus.mergeSelfOverlap();
+            locus.mergeSelfOverlap();
+        }
 
         loci.push_back(locus);
     }
@@ -500,6 +658,43 @@ isProperPair(
 }
 
 
+bool
+SVLocusScanner::
+isLocalAssemblyEvidence(
+    const bam_record& bamRead) const
+{
+    using namespace ALIGNPATH;
+
+    const SimpleAlignment bamAlign(bamRead);
+
+    /// TODO: add semi-aligned reads
+
+    //
+    // large indel already in cigar string
+    //
+    BOOST_FOREACH(const path_segment& ps, bamAlign.path)
+    {
+        if (ps.type == INSERT || ps.type == DELETE)
+        {
+            if (ps.length>=_opt.minCandidateIndelSize) return true;
+        }
+    }
+
+    //
+    // soft-clipping:
+    //
+    {
+        unsigned leadingClipLen(0), trailingClipLen(0);
+        getSVBreakendCandidateClip(bamRead, bamAlign, leadingClipLen, trailingClipLen);
+
+        if((leadingClipLen != 0) || (trailingClipLen != 0)) return true;
+    }
+
+    return false;
+}
+
+
+
 
 void
 SVLocusScanner::
@@ -509,11 +704,6 @@ getSVLoci(
     std::vector<SVLocus>& loci) const
 {
     loci.clear();
-
-    if (! bamRead.is_chimeric())
-    {
-        if (std::abs(bamRead.template_size())<500) return;
-    }
 
     const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);
     getSVLociImpl(_opt, rstats, bamRead, loci);

@@ -178,19 +178,22 @@ update(const bam_record& bamRead,
     // shortcut to speed things up:
     if (_readScanner.isReadFiltered(bamRead)) return;
 
-    /// TODO: Add SA read support -- temporarily reject all supplemental reads:
-    if (bamRead.is_supplement()) return;
-
     // don't rely on the properPair bit to be set correctly:
-    if (_readScanner.isProperPair(bamRead,defaultReadGroupIndex))
-    {
-        _nonAnomCount++;
-        return;
-    }
-    _anomCount++;
+    const bool isAnomolous(! _readScanner.isProperPair(bamRead,defaultReadGroupIndex));
 
-    // can't handle these yet:
-    if (bamRead.is_mate_unmapped()) return;
+    if (isAnomolous) _anomCount++;
+    else            _nonAnomCount++;
+
+    bool isLocalAssemblyEvidence=false;
+    if (! isAnomolous)
+    {
+        isLocalAssemblyEvidence = _readScanner.isLocalAssemblyEvidence(bamRead);
+    }
+
+    if ((! isAnomolous) && (! isLocalAssemblyEvidence))
+    {
+        return; // this read isn't interesting wrt SV discovery
+    }
 
     // check that this read starts in our scan region:
     if (! _scanRegion.range.is_pos_intersect(bamRead.pos()-1)) return;

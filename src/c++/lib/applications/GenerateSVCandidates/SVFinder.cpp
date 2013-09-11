@@ -65,11 +65,18 @@ addSVNodeRead(
     SVCandidateSetReadPairSampleGroup& svDataGroup)
 {
     if (scanner.isReadFiltered(bamRead)) return;
-    if (scanner.isProperPair(bamRead,bamIndex)) return;
-    if (bamRead.is_mate_unmapped()) return;
 
-    /// TODO: Add SA read support -- temporarily reject all supplemental reads:
-    if (bamRead.is_supplement()) return;
+    // don't rely on the properPair bit to be set correctly:
+    const bool isAnomolous(! scanner.isProperPair(bamRead, bamIndex));
+
+    if (! isAnomolous) return;
+
+#if 0
+    /// TODO:  move local-assembly and spanning candidate handling together here:
+    const bool isLocalAssemblyEvidence(scanner.isLocalAssemblyEvidence(bamRead));
+
+    if (! (isAnomolous || isLocalAssemblyEvidence)) return;
+#endif
 
     // finally, check to see if the svDataGroup is full... for now, we allow a very large
     // number of reads to be stored in the hope that we never reach this limit, but just in
@@ -498,6 +505,7 @@ findCandidateSV(
     }
 
     // if this is a self-edge, then automatically forward it as is to the assembly module:
+    /// TODO: move self-edge handling into the regular hygen routine below
     if (edge.nodeIndex1 == edge.nodeIndex2)
     {
         SVCandidate sv;

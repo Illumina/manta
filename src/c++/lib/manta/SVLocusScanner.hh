@@ -75,6 +75,21 @@ struct SVLocusScanner
         const bam_record& bamRead,
         const unsigned defaultReadGroupIndex) const;
 
+    /// \brief is the read likely to indicate the presence of a small SV?
+    ///
+    /// this function flags reads which could contribute to a local small-variant assembly
+    /// but would not otherwise be caught by the proper pair function
+    ///
+    /// "small" here is relative -- it means any event at a size where read pair evidence will not be dominant
+    ///
+    /// Note that the thresholds in this function are more stringent than the equivalent scan used to
+    /// pick up reads prior to assembly -- in this case false positives could clog up the graph and
+    /// interfere with larger event discovery if not kept under control
+    bool
+    isLocalAssemblyEvidence(
+        const bam_record& bamRead) const;
+
+
     /// test for semi-alignedness
     /// Dummy implementation, returns true for now
     bool

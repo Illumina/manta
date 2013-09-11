@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE( test_getSVCandidates )
 
     std::vector<SVCandidate> candidates;
 
-    getSVCandidatesFromRead(opt,align,0,candidates);
+    getSVCandidatesFromReadIndels(opt,align,0,candidates);
 
 
     BOOST_REQUIRE_EQUAL(candidates.size(),1u);
