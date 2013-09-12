@@ -826,6 +826,9 @@ clean()
         _totalCleaned += locus.clean(getMinMergeEdgeCount());
         if (locus.empty()) _emptyLoci.insert(locus.getIndex());
     }
+#ifdef DEBUG_SVL
+    checkForOverlapNodes(true);
+#endif
 }
 
 
@@ -856,6 +859,9 @@ cleanRegion(const GenomeInterval interval)
         log_os << logtag << " intersect: " << val << " is_empty_after_clean: " << locus.empty() << "\n";
 #endif
     }
+#ifdef DEBUG_SVL
+    checkForOverlapNodes(true);
+#endif
 }
 
 
@@ -1170,9 +1176,8 @@ checkState(
 
     if (! isCheckOverlap) return;
 
-    if (isOverlapAllowed()) return;
-
-    static const bool isFilterNoise(false);
+    // if isOverlapAllowed() then we should expect noise nodes to overlap, but we can still check signal nodes:
+    const bool isFilterNoise(isOverlapAllowed());
     checkForOverlapNodes(isFilterNoise);
 }
 
