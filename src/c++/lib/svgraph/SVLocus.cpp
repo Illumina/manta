@@ -76,15 +76,16 @@ mergeNode(
     assert(fromIndex != toIndex);
 
 #ifdef DEBUG_SVL
-    log_os << "mergeNode from: " << fromIndex << " to: " << toIndex << " size: " << size() << "\n";
+    static const std::string logtag("SVLocus::mergeNode");
+    log_os << logtag << " from: " << fromIndex << " to: " << toIndex << " size: " << size() << "\n";
 #endif
 
     SVLocusNode& fromNode(getNode(fromIndex));
     SVLocusNode& toNode(getNode(toIndex));
 
 #ifdef DEBUG_SVL
-    log_os << "mergeNode BEFORE fromNode: " << fromNode;
-    log_os << "mergeNode BEFORE toNode: " << toNode;
+    log_os << logtag << " BEFORE fromNode: " << fromNode;
+    log_os << logtag << " BEFORE toNode: " << toNode;
 #endif
 
     if (fromNode.interval.tid != toNode.interval.tid)
@@ -130,7 +131,7 @@ mergeNode(
         // is this edge between the to and from nodes?
         const bool isToFromEdge(fromNodeEdgeIndex == toIndex);
 
-        log_os << "mergeNode: handle fromEdge: " << _index << ":" << fromNodeEdgeIndex << " isToFromEdge: " << isToFromEdge << "\n";
+        log_os << logtag << " handle fromEdge: " << _index << ":" << fromNodeEdgeIndex << " isToFromEdge: " << isToFromEdge << "\n";
 #endif
 
 
@@ -192,7 +193,7 @@ mergeNode(
     }
 
 #ifdef DEBUG_SVL
-    log_os << "mergeNode AFTER toNode: " << toNode;
+    log_os << logtag << " AFTER toNode: " << toNode;
 #endif
 
     clearNodeEdges(fromIndex);
@@ -241,7 +242,8 @@ cleanNodeCore(
     std::set<NodeIndexType>& emptyNodes)
 {
 #ifdef DEBUG_SVL
-    log_os << "cleanNodeCore nodeAddy: " << _index << ":" << nodeIndex << "\n";
+    static const std::string logtag("SVLocus::cleanNodeCore");
+    log_os << logtag << " nodeAddy: " << _index << ":" << nodeIndex << "\n";
 #endif
 
     unsigned totalCleaned(0);
@@ -288,7 +290,7 @@ cleanNodeCore(
     BOOST_FOREACH(const NodeIndexType toIndex, eraseEdges)
     {
 #ifdef DEBUG_SVL
-        log_os << "cleanNodeCore deleting edge: " << _index << ":" << nodeIndex << "->" << _index << ":" << toIndex << "\n";
+        log_os << logtag << " deleting edge: " << _index << ":" << nodeIndex << "->" << _index << ":" << toIndex << "\n";
 #endif
         clearEdgePair(nodeIndex,toIndex);
     }
@@ -300,19 +302,19 @@ cleanNodeCore(
     }
 
 #ifdef DEBUG_SVL
-    log_os << "cleanNodeCore emptyEdges:\n";
+    log_os << logtag << " emptyEdges:\n";
     BOOST_FOREACH(const NodeIndexType toIndex, eraseEdges)
     {
-        log_os << "\tedge: " << _index << ":" << nodeIndex << "->" << _index << ":" << toIndex << "\n";
+        log_os << logtag << "\tedge: " << _index << ":" << nodeIndex << "->" << _index << ":" << toIndex << "\n";
     }
 
     log_os << "cleanNodeCore emptyNodes\n";
     BOOST_FOREACH(const NodeIndexType nodeIndex2, emptyNodes)
     {
-        log_os << "\tnodeAddy: " << _index << ":" << nodeIndex2 << "\n";
+        log_os << logtag << "\tnodeAddy: " << _index << ":" << nodeIndex2 << "\n";
     }
 
-    log_os << "totalCleaned: " << totalCleaned << "\n";
+    log_os << logtag << " totalCleaned: " << totalCleaned << "\n";
 #endif
 
     return totalCleaned;
@@ -360,7 +362,8 @@ clearNodeEdges(NodeIndexType nodePtr)
     using namespace illumina::common;
 
 #ifdef DEBUG_SVL
-    log_os << "clearNodeEdges from nodeIndex: " << nodePtr << "\n";
+    static const std::string logtag("SVLocus::clearNodeEdges");
+    log_os << logtag << " from nodeIndex: " << nodePtr << "\n";
 #endif
 
     SVLocusNode& node(getNode(nodePtr));
@@ -368,7 +371,7 @@ clearNodeEdges(NodeIndexType nodePtr)
     {
 
 #ifdef DEBUG_SVL
-        log_os << "clearNodeEdges clearing remote Index: " << edgeIter.first << "\n";
+        log_os << logtag << " clearing remote Index: " << edgeIter.first << "\n";
 #endif
         // skip self edge (otherwise we invalidate iterators in this foreach loop)
         if (edgeIter.first == nodePtr) continue;
@@ -386,7 +389,7 @@ clearNodeEdges(NodeIndexType nodePtr)
         }
 
 #ifdef DEBUG_SVL
-        log_os << "clearNodeEdges remote clearing Index: " << thisRemoteIter->first << "\n";
+        log_os << logtag << " remote clearing Index: " << thisRemoteIter->first << "\n";
 #endif
         remoteEdges.erase(thisRemoteIter);
     }
@@ -408,15 +411,16 @@ eraseNode(const NodeIndexType nodePtr)
     NodeIndexType fromPtr(_graph.size()-1);
 
 #ifdef DEBUG_SVL
-    log_os << "eraseNode: " << _index << ":" << nodePtr << " transfer_in: " << _index << ":" << fromPtr << " \n";
+    static const std::string logtag("SVLocus::eraseNode");
+    log_os << logtag << " " << _index << ":" << nodePtr << " transfer_in: " << _index << ":" << fromPtr << " \n";
 
-    log_os << "eraseNode BEFORE: " << getNode(nodePtr) << "\n";
+    log_os << logtag << " BEFORE: " << getNode(nodePtr) << "\n";
 #endif
 
     if (fromPtr != nodePtr)
     {
 #ifdef DEBUG_SVL
-        log_os << "eraseNode transfer_in: BEFORE: " << getNode(fromPtr) << "\n";
+        log_os << logtag << " transfer_in: BEFORE: " << getNode(fromPtr) << "\n";
 #endif
         // reassign fromNode's remote edges before shifting its address:
         //
@@ -449,7 +453,7 @@ eraseNode(const NodeIndexType nodePtr)
         notifyAdd(nodePtr);
 
 #ifdef DEBUG_SVL
-        log_os << "eraseNode transfer_in: AFTER: " << getNode(nodePtr) << "\n";
+        log_os << logtag << " transfer_in: AFTER: " << getNode(nodePtr) << "\n";
 #endif
     }
     notifyDelete(fromPtr);

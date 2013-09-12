@@ -311,10 +311,16 @@ private:
     }
 
     void
-    clearLocus(const LocusIndexType locusIndex)
+    clearLocus(const LocusIndexType index)
     {
-        _loci[locusIndex].clear();
-        _emptyLoci.insert(locusIndex);
+#ifdef DEBUG_SVL
+        log_os << "SVLocusSet::clearLocus index: " << index << "\n";
+#endif
+
+        assert(index<_loci.size());
+
+        _loci[index].clear();
+        _emptyLoci.insert(index);
         _source="UNKNOWN";
     }
 
