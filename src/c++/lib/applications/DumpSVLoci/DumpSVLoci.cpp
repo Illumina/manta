@@ -39,6 +39,11 @@ runDSL(const DSLOptions& opt)
     const SVLocusSet& cset(set);
 
     std::ostream& os(std::cout);
+
+    // add this handy map of chromosome id to chromosome label at the start of all output types:
+    os << "chromosome_id_map\n"
+       << cset.header << "\n";
+
     if (! opt.region.empty())
     {
         int32_t tid,beginPos,endPos;
