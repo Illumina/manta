@@ -190,6 +190,7 @@ getSVCandidatesFromReadIndels(
 /// check bam record for soft-clipping which is interesting enough to be used as SV evidence:
 ///
 /// ClipLen of zero indicates no interesting evidence
+static
 void
 getSVBreakendCandidateClip(
     const bam_record& bamRead,

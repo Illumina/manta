@@ -94,7 +94,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     get_clang_version(compiler_version)
-    test_min_compiler(${compiler_version} "3.1" "clang++")
+    test_min_compiler(${compiler_version} "3.2" "clang++")
     message (STATUS "using compiler: clang++ version ${compiler_version}")
 else ()
     message (STATUS "using compiler: ${CMAKE_CXX_COMPILER_ID}")
@@ -113,10 +113,26 @@ if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wuninitialized")
 endif()
 
+#
+# add extra clang warnings:
+#
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set (CMAKE_CXX_FLAGS "${CXX_WARN_FLAGS} -Wmissing-prototypes -Wunused-exception-parameter")
+    # clang 3.2
+    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wmissing-prototypes -Wunused-exception-parameter -Wbool-conversion -Wempty-body -Wimplicit-fallthrough -Wsizeof-array-argument -Wstring-conversion")
+
+    # clang 3.3
+    if (${compiler_version} VERSION_GREATER "3.2")
+        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Woverloaded-shift-op-parentheses")
+    endif ()
+
+    # clang 3.4
+    if (${compiler_version} VERSION_GREATER "3.3")
+        # wait for 3.4 to be released before turning these on by default
+        #set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wheader-guard -Wlogical-not-parentheses -Wloop-analysis -Wunique-enum")
+    endif ()
+
     # documentation of other possible warning flags from clang
-    #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Weverything -Wno-sign-conversion -Wno-weak-vtables -Wno-conversion -Wno-cast-align -Wno-padded -Wno-switch-enum -Wno-missing-noreturn -Wno-covered-switch-default -Wno-unreachable-code -Wno-global-constructors -Wno-exit-time-destructors")
+    #set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Weverything -Wno-sign-conversion -Wno-weak-vtables -Wno-conversion -Wno-cast-align -Wno-padded -Wno-switch-enum -Wno-missing-noreturn -Wno-covered-switch-default -Wno-unreachable-code -Wno-global-constructors -Wno-exit-time-destructors")
 endif()
 
 

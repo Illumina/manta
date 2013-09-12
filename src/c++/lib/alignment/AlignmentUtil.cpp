@@ -260,7 +260,7 @@ getSemiAlignedMetric(const ALIGNPATH::path_t& apath, const uint8_t* qual) const
             posInRead += apath[i].length;
             break;
         default :
-            assert(!"ERROR: Unexpected match apath in getSemiAlignedMetric !");
+            assert(false && "ERROR: Unexpected match apath in getSemiAlignedMetric !");
             break;
         } // switch
     } // for

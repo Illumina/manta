@@ -388,7 +388,7 @@ align(
         }
         else
         {
-            assert(! "Unknown align state");
+            assert(false && "Unknown align state");
         }
         bt.state=nextState;
         ps.length++;

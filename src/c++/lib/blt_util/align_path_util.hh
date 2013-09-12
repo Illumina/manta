@@ -56,7 +56,7 @@ increment_path(const path_t& path,
     }
     else
     {
-        assert(! "Unexpected alignment type"); // can't handle other CIGAR types yet
+        assert(false && "Unexpected alignment type"); // can't handle other CIGAR types yet
     }
 
     path_index++;
@@ -89,7 +89,7 @@ struct swap_info
             }
             else
             {
-                assert(! "Unexpected alignment type");
+                assert(false && "Unexpected alignment type");
             }
         }
         n_seg -= path_index;

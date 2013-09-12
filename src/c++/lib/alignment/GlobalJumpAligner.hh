@@ -147,7 +147,7 @@ private:
             case AlignState::JUMP:
                 return jump;
             default:
-                assert(! "Unexpected Index Value");
+                assert(false && "Unexpected Index Value");
                 return 0;
             }
         }

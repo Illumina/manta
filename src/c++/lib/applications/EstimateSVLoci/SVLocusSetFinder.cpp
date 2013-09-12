@@ -162,7 +162,7 @@ process_pos(const int stage_no,
     }
     else
     {
-        assert(! "Unexpected stage id");
+        assert(false && "Unexpected stage id");
     }
 }
 

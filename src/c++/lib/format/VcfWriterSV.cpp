@@ -241,7 +241,7 @@ writeTransloc(
         }
         else
         {
-            assert(! "Unexpected bpA.state");
+            assert(false && "Unexpected bpA.state");
         }
 
 
@@ -256,7 +256,7 @@ writeTransloc(
         }
         else
         {
-            assert(! "Unexpected bpB.state");
+            assert(false && "Unexpected bpB.state");
         }
 
         altFormat % mateChrom % matePos % altSep % altPrefix % altSuffix;
@@ -580,7 +580,7 @@ writeSVCore(
     }
     else
     {
-        assert(! "Unknown SV type");
+        assert(false && "Unknown SV type");
     }
 }
 

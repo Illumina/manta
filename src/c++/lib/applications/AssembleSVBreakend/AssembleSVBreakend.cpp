@@ -42,6 +42,7 @@
 #include <iostream>
 
 
+static
 void
 analyzeAlignment(const JumpAlignmentResult<int>& res,
                  const pos_t refOffset1,

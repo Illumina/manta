@@ -139,7 +139,7 @@ jumpToFirstEdge()
         _edge.locusIndex++;
     }
 
-    assert(! "jumpToFirstEdge: invalid state");
+    assert(false && "jumpToFirstEdge: invalid state");
 }
 
 
@@ -208,7 +208,7 @@ advanceEdge()
         _edge.nodeIndex2=0;
     }
 
-    assert(! "advanceEdge: invalid state");
+    assert(false && "advanceEdge: invalid state");
 }
 
 
