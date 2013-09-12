@@ -494,6 +494,18 @@ private:
     checkForOverlapNodes(
         const bool isFilterNoise) const;
 
+    /// look for non-noise nodes intersecting findSignalAddy
+    ///
+    ///
+    void
+    findSignalNodes(
+        const LocusIndexType inputLocusIndex,
+        const NodeAddressType findSignalAddy,
+        std::set<NodeAddressType>& signalIntersectNodes,
+        const std::set<NodeAddressType>& inputIntersectRemotes,
+        bool& isIntersectRemotes) const;
+
+
     ///////////////////// data
 
 public:

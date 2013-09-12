@@ -190,10 +190,10 @@ merge(const SVLocus& inputLocus)
 
             BOOST_FOREACH(const NodeAddressType& val, intersectNodes)
             {
-                assert(val.first==headLocusIndex);
+                assert(val.first == headLocusIndex);
 
                 // one node must be a superset of the input node, find this and store separately:
-                if ((! isInputSuperFound) && getNode(val).interval.range.is_superset_of(inputRange))
+                if (getNode(val).interval.range.is_superset_of(inputRange))
                 {
                     inputSuperAddy=val;
                     isInputSuperFound=true;
@@ -428,6 +428,56 @@ getIntersectingEdgeNodes(
 
 void
 SVLocusSet::
+findSignalNodes(
+    const LocusIndexType inputLocusIndex,
+    const NodeAddressType findSignalAddy,
+    std::set<NodeAddressType>& signalIntersectNodes,
+    const std::set<NodeAddressType>& inputIntersectRemotes,
+    bool& isIntersectRemotes) const
+{
+#ifdef DEBUG_SVL
+    static const std::string logtag("SVLocusSet::findSignalNodes");
+#endif
+
+#ifdef DEBUG_SVL
+    log_os << logtag << "tsignal_boost: findSignalAddy: " << findSignalAddy << "\n";
+#endif
+    // get a standard intersection of the input node:
+    std::set<NodeAddressType> intersectNodes;
+    getNodeIntersectCore(findSignalAddy.first, findSignalAddy.second, _inodes, inputLocusIndex, intersectNodes);
+    BOOST_FOREACH(const NodeAddressType intersectAddy, intersectNodes)
+    {
+#ifdef DEBUG_SVL
+        log_os << logtag << "\tsignal_boost: intersectAddy: " << intersectAddy << "\n";
+#endif
+        if (isNoiseNode(intersectAddy))
+        {
+            // check for the rare remote intersect condition:
+            if(! isIntersectRemotes)
+            {
+                if (inputIntersectRemotes.count(intersectAddy))
+                {
+                    isIntersectRemotes=true;
+                }
+            }
+            continue;
+        }
+
+#ifdef DEBUG_SVL
+        if (signalIntersectNodes.count(intersectAddy) == 0)
+        {
+            log_os << logtag << " signal boost merge/new: " << findSignalAddy << " " << intersectAddy << "\n";
+        }
+#endif
+
+        signalIntersectNodes.insert(intersectAddy);
+    }
+}
+
+
+
+void
+SVLocusSet::
 getNodeMergeableIntersect(
     const LocusIndexType inputLocusIndex,
     const NodeIndexType inputNodeIndex,
@@ -442,7 +492,7 @@ getNodeMergeableIntersect(
     //
     // There are two ways sets of mergeable nodes can occur:
     //
-    // (1) There is a set of nodes which overlap with both input Node and one of the remote nodes that the input points to.
+    // (1) There is a set of nodes which overlap with both input node and one of the remote nodes that the input points to (ie they have a shared edge).
     // When totaled together, the edge count of this set + the inputNode edge exceeds minMergeEdgeCount.
     //
     // (2) The input node either contains an edge which is greater than minMergeEdgeCount or will contain such an edge due to (1),
@@ -477,7 +527,6 @@ getNodeMergeableIntersect(
 
         BOOST_FOREACH(const NodeAddressType& intersectAddy, intersectNodes)
         {
-            const SVLocus& intersectLocus(getLocus(intersectAddy.first));
             const SVLocusNode& intersectNode(getNode(intersectAddy));
 
             // get the remotes of each node which intersect with the query node,
@@ -579,72 +628,51 @@ getNodeMergeableIntersect(
             (mergedRemoteEdgeCount < getMinMergeEdgeCount())) continue;
 
         //
-        // Add type (1) mergeable nodes:
+        // Add type1 mergeable nodes:
         //
         BOOST_FOREACH(const EdgeInfoType edgeInfo, inputIntersectEdges)
         {
             mergeIntersectNodes.insert(edgeInfo.first);
         }
 
-        /// for each type (1) node, add any new intersections to the signal node set:
+        /// for each type1 node, add any new intersections to the signal node set:
         ///
-        /// this is not very efficient for now -- each (1) edge added in potentially expands the current node to intersect new signal nodes
+        /// this is not very efficient for now -- each type1 edge added in potentially expands the current node to intersect new signal nodes
         /// -- this loop looks for those new signal nodes
         ///
 
-        /// this bool indicates the (rare) case where the intersection set locals overlap with the intersection set remotes
-        bool isIntersectOwnRemotes(false);
+        /// this is used to search for the (rare) case where the intersection set locals overlap with the intersection set remotes
         std::set<NodeAddressType> inputIntersectRemotes;
         BOOST_FOREACH(const EdgeInfoType edgeInfo, inputIntersectEdges)
         {
             inputIntersectRemotes.insert(std::make_pair(edgeInfo.first.first,edgeInfo.second));
         }
 
+        bool isIntersectRemotes(false);
+
+        // check both the original node and intersected nodes for intersection to any of the group's remotes, and for new type2 signal intersect:
+        findSignalNodes(inputLocusIndex, inputAddy, signalIntersectNodes, inputIntersectRemotes, isIntersectRemotes);
         BOOST_FOREACH(const EdgeInfoType edgeInfo, inputIntersectEdges)
         {
-            const NodeAddressType mergeAddy(edgeInfo.first);
-#ifdef DEBUG_SVL
-            log_os << "\tsignal_boost: mergeAddy: " << mergeAddy << "\n";
-#endif
-            // get a standard intersection of the input node:
-            getNodeIntersectCore(mergeAddy.first,mergeAddy.second, _inodes,inputLocusIndex, intersectNodes);
-            BOOST_FOREACH(const NodeAddressType intersectAddy, intersectNodes)
-            {
-#ifdef DEBUG_SVL
-                log_os << "\tsignal_boost: intersectAddy: " << intersectAddy << "\n";
-#endif
-                const SVLocus& intersectLocus(getLocus(intersectAddy.first));
-                if (intersectLocus.isNoiseNode(getMinMergeEdgeCount(),intersectAddy.second))
-                {
-                    // check for the rare remote intersect condition:
-                    if (! isIntersectOwnRemotes)
-                    {
-                        if (inputIntersectRemotes.count(intersectAddy)) isIntersectOwnRemotes = true;
-                    }
-                    continue;
-                }
-
-#ifdef DEBUG_SVL
-                if (signalIntersectNodes.count(intersectAddy) == 0)
-                {
-                    log_os << "SVLocusSet::getNodeMergableIntersect signal boost merge/new: " << mergeAddy << " " << intersectAddy << "\n";
-                }
-#endif
-
-                signalIntersectNodes.insert(intersectAddy);
-            }
+            findSignalNodes(inputLocusIndex, edgeInfo.first, signalIntersectNodes, inputIntersectRemotes, isIntersectRemotes);
         }
 
-        if (isIntersectOwnRemotes)
+        if(isIntersectRemotes)
         {
-            BOOST_FOREACH(const EdgeInfoType edgeInfo, inputIntersectEdges)
+            BOOST_FOREACH(const NodeAddressType intersectAddy, inputIntersectRemotes)
             {
-                mergeIntersectNodes.insert(std::make_pair(edgeInfo.first.first,edgeInfo.second));
+#ifdef DEBUG_SVL
+                log_os << logtag << " adding ownRemote: " << intersectAddy << "\n";
+#endif
+                mergeIntersectNodes.insert(intersectAddy);
+
+                // check to see if this adds even more signal nodes!
+                findSignalNodes(inputLocusIndex, intersectAddy, signalIntersectNodes, inputIntersectRemotes, isIntersectRemotes);
             }
         }
 
         //
-        // Add type (2) mergeable nodes:
+        // Add type2 mergeable nodes:
         //
         BOOST_FOREACH(const NodeAddressType signalAddy, signalIntersectNodes)
         {
