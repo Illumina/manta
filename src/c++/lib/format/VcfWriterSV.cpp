@@ -21,8 +21,10 @@
 #include "blt_util/string_util.hh"
 #include "blt_util/seq_util.hh"
 #include "blt_util/vcf_util.hh"
+#include "common/Exceptions.hh"
 
 #include <iostream>
+#include <sstream>
 
 //#define DEBUG_VCF
 
@@ -579,7 +581,11 @@ writeSVCore(
     }
     else
     {
-        assert(false && "Unknown SV type");
+        using namespace illumina::common;
+
+        std::ostringstream oss;
+        oss << "ERROR: sv candidate cannot be classified: " << sv << "\n";
+        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
     }
 }
 

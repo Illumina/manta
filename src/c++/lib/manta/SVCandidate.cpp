@@ -60,13 +60,13 @@ getSVType(const SVCandidate& sv)
     using namespace SV_TYPE;
 
     // remove failed local assemblies first:
-    if (sv.bp2.state == SVBreakendState::UNKNOWN)
+    if ((sv.bp1.state == SVBreakendState::UNKNOWN) || (sv.bp2.state == SVBreakendState::UNKNOWN))
     {
         return UNKNOWN;
     }
 
-    const bool isBp1First(sv.bp1.interval.range.end_pos() <= sv.bp2.interval.range.begin_pos());
-    const bool isBp2First(sv.bp2.interval.range.end_pos() <= sv.bp1.interval.range.begin_pos());
+    const bool isBp1First(sv.bp1.interval.range.begin_pos() <= sv.bp2.interval.range.begin_pos());
+    const bool isBp2First(sv.bp2.interval.range.begin_pos() <= sv.bp1.interval.range.begin_pos());
 
     // true for insertions:
     const bool isBpEqual(sv.bp1.interval.range == sv.bp2.interval.range);
