@@ -132,7 +132,6 @@ private:
 
 protected:
     const std::string& _referenceFilename;
-    const unsigned _minPairCount;
 
 private:
     const bam_header_info& _header;

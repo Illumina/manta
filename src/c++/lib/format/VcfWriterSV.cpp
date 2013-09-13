@@ -34,7 +34,6 @@ VcfWriterSV(
     const SVLocusSet& set,
     std::ostream& os) :
     _referenceFilename(referenceFilename),
-    _minPairCount(set.getMinMergeEdgeCount()),
     _header(set.header),
     _os(os),
     _idFormatter("MantaBND:%i:%i:%i:%i:")

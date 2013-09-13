@@ -59,7 +59,7 @@ struct SVCandidateAssemblyData
         bestAlignmentIndex=0;
         bp1ref.clear();
         bp2ref.clear();
-        sv.clear();
+        svs.clear();
     }
 
     typedef AlignmentResult<int> SmallAlignmentResultType;
@@ -83,5 +83,5 @@ struct SVCandidateAssemblyData
     reference_contig_segment bp1ref;
     reference_contig_segment bp2ref;
 
-    std::vector<SVCandidate> sv; ///< summarize candidate refined sv candidates
+    std::vector<SVCandidate> svs; ///< summarize candidate refined sv candidates
 };

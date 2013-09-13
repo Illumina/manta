@@ -27,6 +27,5 @@ writeSV(
     const SVCandidateAssemblyData& adata,
     const SVCandidate& sv)
 {
-    if (sv.isImprecise() && (sv.bp1.pairCount < _minPairCount)) return;
     writeSVCore(edge, svData, adata, sv);
 }

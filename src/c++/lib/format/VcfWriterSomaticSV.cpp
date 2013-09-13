@@ -98,9 +98,6 @@ writeSV(
     const SVCandidate& sv,
     const SomaticSVScoreInfo& ssInfo)
 {
-
-    if (ssInfo.somaticScore < _somaticOpt.minOutputSomaticScore) return;
-
     //TODO: this is a lame way to customize subclass behavior:
     _ssInfoPtr=&ssInfo;
     writeSVCore(edge, svData, adata, sv);

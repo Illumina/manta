@@ -1224,7 +1224,6 @@ checkForOverlapNodes(
                     << "\tlast_node: " << lastAddy << " "<< getNode(lastAddy) << "\n"
                     << "\tthis_node: " << addy << " "<< getNode(addy) << "\n"
                     << "\n"
-                    << "chromosome_id_map\n"
                     << header << "\n";
                 BOOST_THROW_EXCEPTION(LogicException(oss.str()));
             }

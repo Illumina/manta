@@ -37,7 +37,7 @@ operator<<(std::ostream& os, const bam_header_info& bhi)
 {
     unsigned index(0);
 
-    os << "BAM_HEADER_INFO:\n";
+    os << "chomosome_id_map:\n";
     BOOST_FOREACH(const bam_header_info::chrom_info& info, bhi.chrom_data)
     {
         os << "index: " << index << " label: " << info.label << " length: " << info.length << '\n';

@@ -39,9 +39,15 @@ operator<<(std::ostream& os, const SVBreakend& svb)
 std::ostream&
 operator<<(std::ostream& os, const SVCandidate& svc)
 {
-    os << "SVCandidate: isImprecise?: " << svc.isImprecise() << " c:a-index: " << svc.candidateIndex << ":" << svc.assemblyIndex << "\n"
-       << "\tBreakendInsertSeq:" << svc.insertSeq << "\n"
-       << "\t" << svc.bp1 << "\n"
+    os << "SVCandidate:\n"
+       << "\tisImprecise?: " << svc.isImprecise() << "\n"
+       << "\tcandidate:assembly index: " << svc.candidateIndex << ":" << svc.assemblyIndex << "\n";
+    if (! svc.isImprecise())
+    {
+       os << "\tAlignment: " << svc.insertAlignment << "\n"
+          << "\tBreakendInsertSeq: " << svc.insertSeq << "\n";
+    }
+    os << "\t" << svc.bp1 << "\n"
        << "\t" << svc.bp2 << "\n";
     return os;
 }

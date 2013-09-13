@@ -47,7 +47,7 @@ dumpEdgeInfo(
     const SVLocusSet& set,
     std::ostream& os)
 {
-    os << "Exception caught while processing graph component: " << edge;
+    os << edge;
     os << "\tnode1:" << set.getLocus(edge.locusIndex).getNode(edge.nodeIndex1);
     os << "\tnode2:" << set.getLocus(edge.locusIndex).getNode(edge.nodeIndex2);
 }
@@ -83,10 +83,11 @@ edgeRFactory(
 struct SVWriter
 {
     SVWriter(
-        const GSCOptions& opt,
+        const GSCOptions& initOpt,
         const SVLocusSet& cset,
         const char* progName,
         const char* progVersion) :
+        opt(initOpt),
         isSomatic(! opt.somaticOutputFilename.empty()),
         svScore(opt, cset.header),
         candfs(opt.candidateOutputFilename),
@@ -109,16 +110,24 @@ struct SVWriter
         const SVCandidateAssemblyData& assemblyData,
         const SVCandidate& sv)
     {
+        static const unsigned minCandidatePairCount(3);
+        if (sv.isImprecise() && (sv.bp1.pairCount < minCandidatePairCount)) return;
+
         candWriter.writeSV(edge, svData, assemblyData, sv);
 
         if (isSomatic)
         {
             svScore.scoreSomaticSV(svData, sv, ssInfo);
-            somWriter.writeSV(edge, svData, assemblyData, sv, ssInfo);
+
+            if (ssInfo.somaticScore > opt.somaticOpt.minOutputSomaticScore)
+            {
+                somWriter.writeSV(edge, svData, assemblyData, sv, ssInfo);
+            }
         }
     }
 
     ///////////////////////// data:
+    const GSCOptions& opt;
     const bool isSomatic;
 
     SVScorer svScore;
@@ -154,7 +163,8 @@ runGSC(
     std::vector<SVCandidate> svs;
 
 #ifdef DEBUG_GSV
-    log_os << "bam_header:\n" << cset.header << "\n";
+    static const std::string logtag("runGSC");
+    log_os << logtag << " " << cset.header << "\n";
 #endif
 
     while (edger.next())
@@ -162,10 +172,8 @@ runGSC(
         const EdgeInfo& edge(edger.getEdge());
 
 #ifdef DEBUG_GSV
-        log_os << "GSV edge: " << edge
-               << "GSV node1: " << cset.getLocus(edge.locusIndex).getNode(edge.nodeIndex1)
-               << "GSV node2: " << cset.getLocus(edge.locusIndex).getNode(edge.nodeIndex2)
-               << '\n';
+        log_os << logtag << " starting analysis of edge: ";
+        dumpEdgeInfo(edge,cset,log_os);
 #endif
 
         try
@@ -173,19 +181,36 @@ runGSC(
             // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
             svFind.findCandidateSV(edge, svData, svs);
 
+#ifdef DEBUG_GSV
+            log_os << logtag << " low-res candidate generation complete. candidate count: " << svs.size() << "\n";
+#endif
+
             BOOST_FOREACH(const SVCandidate& candidateSV, svs)
             {
+#ifdef DEBUG_GSV
+                log_os << logtag << " starting low-res candidate analysis: " << candidateSV << "\n";
+#endif
                 SVCandidateAssemblyData assemblyData;
                 svRefine.getCandidateAssemblyData(candidateSV, svData, assemblyData);
 
-                if (assemblyData.sv.empty())
+#ifdef DEBUG_GSV
+                log_os << logtag << " assembly candidate refinement complete. assembly count: " << assemblyData.svs.size() << "\n";
+#endif
+
+                if (assemblyData.svs.empty())
                 {
+#ifdef DEBUG_GSV
+                    log_os << logtag << " score and output low-res candidate: " << candidateSV << "\n";
+#endif
                     svWriter.writeSV(edge, svData, assemblyData, candidateSV);
                 }
                 else
                 {
-                    BOOST_FOREACH(const SVCandidate& assembledSV, assemblyData.sv)
+                    BOOST_FOREACH(const SVCandidate& assembledSV, assemblyData.svs)
                     {
+#ifdef DEBUG_GSV
+                        log_os << logtag << " score and output assembly candidate: " << assembledSV << "\n";
+#endif
                         svWriter.writeSV(edge, svData, assemblyData, assembledSV);
                     }
                 }
@@ -200,6 +225,7 @@ runGSC(
         }
         catch (...)
         {
+            log_os << "Exception caught while processing graph component: ";
             dumpEdgeInfo(edge,cset,log_os);
             throw;
         }
