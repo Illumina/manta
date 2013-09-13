@@ -334,7 +334,7 @@ writeInvdel(
     const bool isImprecise(sv.isImprecise());
     const bool isBreakendRangeSameShift(sv.isBreakendRangeSameShift());
 
-    const bool isBp1First(sv.bp1.interval.range.end_pos()<sv.bp2.interval.range.begin_pos());
+    const bool isBp1First(sv.bp1.interval.range.begin_pos()<=sv.bp2.interval.range.begin_pos());
 
     const SVBreakend& bpA(isBp1First ? sv.bp1 : sv.bp2);
     const SVBreakend& bpB(isBp1First ? sv.bp2 : sv.bp1);
@@ -517,7 +517,7 @@ writeIndel(
 {
     static const bool isIndel(true);
 
-    const bool isBp1First(sv.bp1.interval.range.end_pos()<sv.bp2.interval.range.begin_pos());
+    const bool isBp1First(sv.bp1.interval.range.begin_pos()<=sv.bp2.interval.range.begin_pos());
 
     const SVBreakend& bpA(isBp1First ? sv.bp1 : sv.bp2);
     const SVBreakend& bpB(isBp1First ? sv.bp2 : sv.bp1);

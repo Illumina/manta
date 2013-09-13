@@ -68,11 +68,6 @@ getSVType(const SVCandidate& sv)
     const bool isBp1First(sv.bp1.interval.range.begin_pos() <= sv.bp2.interval.range.begin_pos());
     const bool isBp2First(sv.bp2.interval.range.begin_pos() <= sv.bp1.interval.range.begin_pos());
 
-    // true for insertions:
-    const bool isBpEqual(sv.bp1.interval.range == sv.bp2.interval.range);
-
-    assert(! (isBp1First && isBp2First));
-
     if (sv.bp1.interval.tid != sv.bp2.interval.tid)
     {
         return INTERTRANSLOC;
@@ -81,9 +76,9 @@ getSVType(const SVCandidate& sv)
     {
         return INVERSION;
     }
-    else if(isBpEqual || isBp1First || isBp2First)
+    else if(isBp1First || isBp2First)
     {
-        if (isBpEqual || isInnies(isBp1First,sv.bp1.state,sv.bp2.state))
+        if (isInnies(isBp1First,sv.bp1.state,sv.bp2.state))
         {
             return INDEL;
         }
