@@ -180,17 +180,20 @@ update(const bam_record& bamRead,
 
     // don't rely on the properPair bit to be set correctly:
     const bool isAnomalous(! _readScanner.isProperPair(bamRead,defaultReadGroupIndex));
+    const bool isLargeFragment(! _readScanner.isLargeFragment(bamRead,defaultReadGroupIndex));
 
-    if (isAnomalous) _anomCount++;
-    else            _nonAnomCount++;
+    const bool isLargeAnomalous(isAnomalous && isLargeFragment);
 
-    bool isLocalAssemblyEvidence=false;
-    if (! isAnomalous)
+    if (isLargeAnomalous) ++_anomCount;
+    else                  ++_nonAnomCount;
+
+    bool isLocalAssemblyEvidence(false);
+    if (! isLargeAnomalous)
     {
         isLocalAssemblyEvidence = _readScanner.isLocalAssemblyEvidence(bamRead);
     }
 
-    if ((! isAnomalous) && (! isLocalAssemblyEvidence))
+    if (! ( isLargeAnomalous || isLocalAssemblyEvidence))
     {
         return; // this read isn't interesting wrt SV discovery
     }

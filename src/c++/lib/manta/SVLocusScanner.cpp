@@ -391,14 +391,23 @@ getSVCandidatesFromPair(
     }
 
     // check if read pair separation is non-anomalous after accounting for read alignments:
-    if ((localRead.target_id() == localRead.mate_target_id()) &&
-        (localRead.is_fwd_strand() != localRead.is_mate_fwd_strand()))
+    if (localRead.target_id() == localRead.mate_target_id())
     {
-        // get length of fragment after accounting for any variants described directly in either read alignment:
-        const pos_t cigarAdjustedFragmentSize(totalNoninsertSize + (insertRange.end_pos() - insertRange.begin_pos()));
+        if(localRead.is_fwd_strand() != localRead.is_mate_fwd_strand())
+        {
+            // get length of fragment after accounting for any variants described directly in either read alignment:
+            const pos_t cigarAdjustedFragmentSize(totalNoninsertSize + (insertRange.end_pos() - insertRange.begin_pos()));
 
-        if (((cigarAdjustedFragmentSize + opt.minCandidateIndelSize) <= rstats.properPair.max) &&
-            ((cigarAdjustedFragmentSize - static_cast<pos_t>(opt.minCandidateIndelSize)) >= rstats.properPair.min)) return;
+            if (cigarAdjustedFragmentSize <= (rstats.properPair.max + opt.minCandidateIndelSize)) return;
+
+            // disregard anomalously small fragments:
+            // ((cigarAdjustedFragmentSize - static_cast<pos_t>(opt.minCandidateIndelSize)) >= rstats.properPair.min)) return;
+        }
+        else
+        {
+            if (localRead.template_size() <= (rstats.properPair.max + opt.minCandidateIndelSize)) return;
+        }
+
     }
 
     candidates.push_back(sv);
@@ -656,6 +665,21 @@ isProperPair(
     if (fragmentSize > ppr.max || fragmentSize < ppr.min) return false;
 
     return true;
+}
+
+
+
+bool
+SVLocusScanner::
+isLargeFragment(
+    const bam_record& bamRead,
+    const unsigned defaultReadGroupIndex) const
+{
+    if (bamRead.target_id() != bamRead.mate_target_id()) return true;
+
+    const Range& ppr(_stats[defaultReadGroupIndex].properPair);
+    const int32_t fragmentSize(std::abs(bamRead.template_size()));
+    return (fragmentSize > ppr.max);
 }
 
 

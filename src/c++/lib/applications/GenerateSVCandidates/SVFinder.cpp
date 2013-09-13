@@ -71,6 +71,10 @@ addSVNodeRead(
 
     if (! isAnomalous) return;
 
+    const bool isLargeFragment(! scanner.isLargeFragment(bamRead, bamIndex));
+
+    if (! isLargeFragment) return;
+
 #if 0
     /// TODO:  move local-assembly and spanning candidate handling together here:
     const bool isLocalAssemblyEvidence(scanner.isLocalAssemblyEvidence(bamRead));

@@ -75,6 +75,16 @@ struct SVLocusScanner
         const bam_record& bamRead,
         const unsigned defaultReadGroupIndex) const;
 
+    /// test whether a fragment is significantly larger than expected
+    ///
+    /// this function is useful to eliminate reads which fail the ProperPair test
+    /// but are still very small
+    ///
+    bool
+    isLargeFragment(
+        const bam_record& bamRead,
+        const unsigned defaultReadGroupIndex) const;
+
     /// \brief is the read likely to indicate the presence of a small SV?
     ///
     /// this function flags reads which could contribute to a local small-variant assembly
