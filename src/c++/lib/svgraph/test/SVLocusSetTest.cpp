@@ -951,5 +951,37 @@ BOOST_AUTO_TEST_CASE( test_SVLocusTransitiveOverlap2 )
 }
 
 
+
+BOOST_AUTO_TEST_CASE( test_SVLocusTransitiveOverlap3 )
+{
+    // abstracted from real-data error case on MANTA-28
+    //
+    // what happens when there's a complex transitive overlap chain?
+
+    SVLocus locus1;
+    locusAddPair(locus1,1,40,60,1,70,80,true,2);
+    SVLocus locus2a;
+    locusAddPair(locus2a,1,10,40,1,50,60,true,1);
+    SVLocus locus3;
+    locusAddPair(locus3,1,10,20,1,30,60,false,1);
+
+    locus1.mergeSelfOverlap();
+    locus2a.mergeSelfOverlap();
+    locus3.mergeSelfOverlap();
+    {
+        SVLocusSet set1(2);
+        set1.merge(locus1);
+        set1.merge(locus2a);
+        set1.merge(locus3);
+        const SVLocusSet& cset1(set1);
+
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+        set1.finalize();
+        cset1.checkState(true,true);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+    }
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 

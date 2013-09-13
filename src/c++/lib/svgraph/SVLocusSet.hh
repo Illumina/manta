@@ -242,9 +242,10 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
         const bool isCheckOverlap = false,
         const bool isCheckLocusConnected = false) const;
 
-private:
 
     typedef std::pair<LocusIndexType,NodeIndexType> NodeAddressType;
+
+private:
 
     typedef NodeAddressType EdgeMapKeyType;
     typedef NodeIndexType EdgeMapValueType;
