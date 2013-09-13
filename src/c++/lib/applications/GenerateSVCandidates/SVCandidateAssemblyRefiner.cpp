@@ -354,7 +354,7 @@ setSmallCandSV(
     }
 
     sv.bp1.state = SVBreakendState::RIGHT_OPEN;
-    const pos_t beginPos(ref.get_offset()+refRange.begin_pos());
+    const pos_t beginPos(ref.get_offset()+refRange.begin_pos()-1);
     sv.bp1.interval.range.set_range(beginPos,beginPos+cipos.end_pos()+1);
 
     sv.bp2.state = SVBreakendState::LEFT_OPEN;
