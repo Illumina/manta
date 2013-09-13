@@ -44,8 +44,8 @@ operator<<(std::ostream& os, const SVCandidate& svc)
        << "\tcandidate:assembly index: " << svc.candidateIndex << ":" << svc.assemblyIndex << "\n";
     if (! svc.isImprecise())
     {
-       os << "\tAlignment: " << svc.insertAlignment << "\n"
-          << "\tBreakendInsertSeq: " << svc.insertSeq << "\n";
+        os << "\tAlignment: " << svc.insertAlignment << "\n"
+           << "\tBreakendInsertSeq: " << svc.insertSeq << "\n";
     }
     os << "\t" << svc.bp1 << "\n"
        << "\t" << svc.bp2 << "\n";
@@ -76,7 +76,7 @@ getSVType(const SVCandidate& sv)
     {
         return INVERSION;
     }
-    else if(isBp1First || isBp2First)
+    else if (isBp1First || isBp2First)
     {
         if (isInnies(isBp1First,sv.bp1.state,sv.bp2.state))
         {
