@@ -23,14 +23,10 @@
 
 #include "boost/foreach.hpp"
 
-
-// compile with this macro to get verbose output:
-//#define DEBUG_ASBL
-
-#ifdef DEBUG_ASBL
 #include <iostream>
-std::ostream& dbg_os(std::cerr);
-#endif
+
+
+//#define DEBUG_ASBL
 
 
 
@@ -64,7 +60,6 @@ getBreakendReads(
     ReadIndexType& readIndex,
     AssemblyReadInput& reads) const
 {
-
     // get search range:
     known_pos_range2 searchRange;
     {
@@ -83,6 +78,11 @@ getBreakendReads(
             searchRange.set_range(std::max((bp.interval.range.begin_pos()-wobble),zero),(bp.interval.range.end_pos()+wobble));
         }
     }
+
+#ifdef DEBUG_ASBL
+    static const std::string logtag("SVLocusAssembler::getBreakendReads");
+    log_os << logtag << " searchRange " << searchRange << "\n";
+#endif
 
     // for assembler reads, look for indels at report size or somewhat smaller
     const unsigned minAssembleIndelSize(_scanOpt.minCandidateIndelSize/2);
@@ -170,18 +170,19 @@ getBreakendReads(
                 }
             }
 
-            if (! (isClipKeeper || isIndelKeeper)) continue;
+#ifdef DEBUG_ASBL
+            log_os << " cigar: " << apath << " isClipKeeper: " << isClipKeeper << " isIndelKeeper: " << isIndelKeeper << "\n";
+#endif
 
+            if (! (isClipKeeper || isIndelKeeper)) continue;
 
             //if ( bamRead.pe_map_qual() == 0 ) continue;
             const char flag(bamRead.is_second() ? '2' : '1');
             const std::string readKey = std::string(bamRead.qname()) + "_" + flag + "_" + bamIndexStr;
 
 #ifdef DEBUG_ASBL
-            ALIGNPATH::path_t apath;
-            bam_cigar_to_apath(bamRead.raw_cigar(), bamRead.n_cigar(), apath);
-            dbg_os << "Adding " << readKey << " " << apath << " " << bamRead.pe_map_qual() << " " << bamRead.pos() << endl;
-            dbg_os << bamRead.get_bam_read().get_string() << endl;
+            log_os << logtag << " Adding " << readKey << " " << apath << " " << bamRead.pe_map_qual() << " " << bamRead.pos() << "\n"
+                   << bamRead.get_bam_read().get_string() << "\n";
 #endif
 
             if (readIndex.count(readKey) == 0)
