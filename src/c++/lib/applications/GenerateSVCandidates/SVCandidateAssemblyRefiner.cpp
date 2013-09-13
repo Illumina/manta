@@ -364,11 +364,8 @@ setSmallCandSV(
 
     sv.insertSeq = contig.substr(readRange.begin_pos(),readRange.size());
 
-    // add CIGAR for non-trivial indels:
-    if (segRange.first != segRange.second)
-    {
-        sv.insertAlignment = ALIGNPATH::path_t(align.apath.begin()+segRange.first, align.apath.begin()+segRange.second+1);
-    }
+    // add CIGAR for all indels indels:
+    sv.insertAlignment = ALIGNPATH::path_t(align.apath.begin()+segRange.first, align.apath.begin()+segRange.second+1);
 }
 
 
