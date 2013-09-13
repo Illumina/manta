@@ -164,7 +164,7 @@ getBreakendReads(
                 {
                     if (is_segment_type_indel(ps.type))
                     {
-                        if(ps.length>=minAssembleIndelSize) isIndelKeeper = true;
+                        if (ps.length>=minAssembleIndelSize) isIndelKeeper = true;
                         break;
                     }
                 }

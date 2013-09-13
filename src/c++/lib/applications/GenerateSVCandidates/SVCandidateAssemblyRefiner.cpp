@@ -426,12 +426,12 @@ getJumpAssembly(
     // if the breakends have a simple insert/delete orientation and the alignment regions overlap, then handle this case as
     // a local assembly problem:
     {
-        if(! SVBreakendState::isSameOrientation(sv.bp1.state,sv.bp2.state))
+        if (! SVBreakendState::isSameOrientation(sv.bp1.state,sv.bp2.state))
         {
             const SV_TYPE::index_t svType(getSVType(sv));
             if ((svType == SV_TYPE::INDEL) || (svType == SV_TYPE::COMPLEX))
             {
-                if( isRefRegionOverlap( _header, extraRefEdgeSize, sv) )
+                if ( isRefRegionOverlap( _header, extraRefEdgeSize, sv) )
                 {
                     // transform SV into a single region format:
                     SVCandidate singleSV = sv;

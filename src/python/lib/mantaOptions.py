@@ -50,7 +50,7 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         """
         libexecDir="@MANTA_FULL_LIBEXECDIR@"
         assert os.path.isdir(libexecDir)
-        
+
         def joinFile(*arg) :
             filePath = os.path.join(*arg)
             assert os.path.isfile(filePath)

@@ -87,7 +87,7 @@ GetSplitSVCandidate(
 
     localBreakend.interval.range.set_begin_pos(std::max(0,leftPos-beforeBreakend));
 
-    if(! isComplex)
+    if (! isComplex)
     {
         localBreakend.interval.range.set_end_pos(leftPos+afterBreakend);
     }
@@ -393,7 +393,7 @@ getSVCandidatesFromPair(
     // check if read pair separation is non-anomalous after accounting for read alignments:
     if (localRead.target_id() == localRead.mate_target_id())
     {
-        if(localRead.is_fwd_strand() != localRead.is_mate_fwd_strand())
+        if (localRead.is_fwd_strand() != localRead.is_mate_fwd_strand())
         {
             // get length of fragment after accounting for any variants described directly in either read alignment:
             const pos_t cigarAdjustedFragmentSize(totalNoninsertSize + (insertRange.end_pos() - insertRange.begin_pos()));
@@ -541,7 +541,7 @@ getSVLociImpl(
         const NodeIndexType localBreakendNode(locus.addNode(localBreakend.interval,localEvidenceWeight));
         locus.setNodeEvidence(localBreakendNode,localEvidenceRange);
 
-        if(isComplex)
+        if (isComplex)
         {
             locus.linkNodes(localBreakendNode,localBreakendNode,localEvidenceWeight);
         }
@@ -712,7 +712,7 @@ isLocalAssemblyEvidence(
         unsigned leadingClipLen(0), trailingClipLen(0);
         getSVBreakendCandidateClip(bamRead, bamAlign, leadingClipLen, trailingClipLen);
 
-        if((leadingClipLen != 0) || (trailingClipLen != 0)) return true;
+        if ((leadingClipLen != 0) || (trailingClipLen != 0)) return true;
     }
 
     return false;

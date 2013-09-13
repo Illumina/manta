@@ -83,7 +83,7 @@ merge(const SVLocus& inputLocus)
     // meaningless input indicates an error in client code:
     assert(! inputLocus.empty());
 
-    if(inputLocus.empty()) return;
+    if (inputLocus.empty()) return;
 
 #ifdef DEBUG_SVL
     static const std::string logtag("SVLocusSet::merge");
@@ -455,7 +455,7 @@ findSignalNodes(
         if (isNoiseNode(intersectAddy))
         {
             // check for the rare remote intersect condition:
-            if(! isIntersectRemotes)
+            if (! isIntersectRemotes)
             {
                 if (inputIntersectRemotes.count(intersectAddy))
                 {
@@ -660,7 +660,7 @@ getNodeMergeableIntersect(
                 findSignalNodes(inputLocusIndex, edgeInfo.first, signalIntersectNodes, inputIntersectRemotes, isIntersectRemotes);
             }
 
-            if(isIntersectRemotes)
+            if (isIntersectRemotes)
             {
                 BOOST_FOREACH(const NodeAddressType intersectAddy, inputIntersectRemotes)
                 {
@@ -1137,9 +1137,9 @@ checkState(
         const unsigned nodeCount(locus.size());
         checkStateTotalNodeCount += nodeCount;
 
-        if(nodeCount == 0)
+        if (nodeCount == 0)
         {
-            if(_emptyLoci.count(locusIndex) == 0)
+            if (_emptyLoci.count(locusIndex) == 0)
             {
                 std::ostringstream oss;
                 oss << "ERROR: empty locus is not updated in the empty index. Locus index: " << locusIndex << "\n";
@@ -1198,9 +1198,9 @@ checkForOverlapNodes(
     NodeAddressType lastAddy;
     BOOST_FOREACH(const NodeAddressType& addy, _inodes)
     {
-        if(isFilterNoise)
+        if (isFilterNoise)
         {
-             if(isNoiseNode(addy)) continue;
+            if (isNoiseNode(addy)) continue;
         }
 
         const GenomeInterval& interval(getNode(addy).interval);
