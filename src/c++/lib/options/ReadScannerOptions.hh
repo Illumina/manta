@@ -27,7 +27,7 @@ struct ReadScannerOptions
         breakendEdgeTrimProb(0.25),
         properPairTrimProb(0.01),
         evidenceTrimProb(0.15),
-        minCandidateIndelSize(50),
+        minCandidateIndelSize(10),
         minPairBreakendSize(40),
         splitBreakendSizeFraction(0.1),
         maxSplitBreakendSize(100),
