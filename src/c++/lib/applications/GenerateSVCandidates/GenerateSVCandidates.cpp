@@ -111,7 +111,17 @@ struct SVWriter
         const SVCandidate& sv)
     {
         static const unsigned minCandidatePairCount(3);
-        if (sv.isImprecise() && (sv.bp1.pairCount < minCandidatePairCount)) return;
+
+        const bool isSelfEdge(edge.nodeIndex1 == edge.nodeIndex2);
+
+        if (isSelfEdge)
+        {
+            if (sv.isImprecise()) return;
+        }
+        else
+        {
+            if (sv.bp1.pairCount < minCandidatePairCount) return;
+        }
 
         candWriter.writeSV(edge, svData, assemblyData, sv);
 
