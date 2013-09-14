@@ -49,24 +49,6 @@ usage(
 
 
 
-static
-void
-checkStandardizeUsageFile(
-    std::ostream& os,
-    const manta::Program& prog,
-    const boost::program_options::options_description& visible,
-    std::string& filename,
-    const char* fileLabel)
-{
-    std::string errorMsg;
-    if ( checkStandardizeInputFile(filename, fileLabel, errorMsg))
-    {
-        usage(os,prog,visible,errorMsg.c_str());
-    }
-}
-
-
-
 void
 parseASBOptions(const manta::Program& prog,
                 int argc, char* argv[],

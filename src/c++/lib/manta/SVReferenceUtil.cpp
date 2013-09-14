@@ -20,6 +20,8 @@
 #include "blt_util/samtools_fasta_util.hh"
 
 
+
+#if 0
 static
 void
 trimOverlappingRange(
@@ -38,6 +40,7 @@ trimOverlappingRange(
     r1->set_end_pos(r1->end_pos()-(overlap/2));
     r2->set_begin_pos(r1->end_pos());
 }
+#endif
 
 
 

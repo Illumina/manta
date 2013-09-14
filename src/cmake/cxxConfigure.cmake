@@ -106,30 +106,33 @@ endif ()
 #
 
 # start with warning flags:
-# switching off warning about unused function because otherwise compilation will fail with g++ 4.7.3 in Ubuntu
-set (CXX_WARN_FLAGS "-Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -Wredundant-decls -pedantic -Wunused-parameter -Wundef -Wno-unused-function -Wdisabled-optimization")
+set (CXX_WARN_FLAGS "-Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -Wredundant-decls -pedantic -Wunused-parameter -Wundef -Wdisabled-optimization")
 
 if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wuninitialized")
 endif()
 
 #
-# add extra ccompiler specific warnings:
+# add extra compiler specific warnings:
 #
 if     (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wlogical-op")
+    if (NOT (${compiler_version} VERSION_LESS "4.2"))
+        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wlogical-op")
+    endif ()
+
+    if (NOT ((${compiler_version} VERSION_LESS "4.7") OR (${compiler_version} VERSION_GREATER "4.7")))
+        # switching off warning about unused function because otherwise compilation will fail with g++ 4.7.3 in Ubuntu
+        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-unused-function")
+    endif ()
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    # clang 3.2
     set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wmissing-prototypes -Wunused-exception-parameter -Wbool-conversion -Wempty-body -Wimplicit-fallthrough -Wsizeof-array-argument -Wstring-conversion")
 
-    # clang 3.3
-    if (${compiler_version} VERSION_GREATER "3.2")
+    if (NOT (${compiler_version} VERSION_LESS "3.3"))
         set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Woverloaded-shift-op-parentheses")
     endif ()
 
-    # clang 3.4
-    if (${compiler_version} VERSION_GREATER "3.3")
+    if (NOT (${compiler_version} VERSION_LESS "3.4"))
         # wait for 3.4 to be released before turning these on by default
         #set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wheader-guard -Wlogical-not-parentheses -Wloop-analysis -Wunique-enum")
     endif ()
@@ -142,11 +145,13 @@ endif()
 # The NDEBUG macro is intentionally removed from release. One discussion on this is:
 # http://www.drdobbs.com/an-exception-or-a-bug/184401686
 
-set (CMAKE_CXX_FLAGS "${CXX_WARN_FLAGS}")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX_WARN_FLAGS}")
 set (CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
-set (CMAKE_CXX_FLAGS_RELEASE "-O3")
+set (CMAKE_CXX_FLAGS_RELEASE "-O3 -fomit-frame-pointer")
 set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
 #set (CMAKE_CXX_FLAGS_PROFILE "-O0 -g -pg -fprofile-arcs -ftest-coverage")
+
+SET( CMAKE_EXE_LINKER_FLAGS_RELEASE  "${CMAKE_EXE_LINKER_FLAGS_RELEASE} ${GCC_COVERAGE_LINK_FLAGS}" )
 
 
 # add address sanitizer to debug mode:
@@ -155,11 +160,11 @@ set (USE_ADDRESS_SANITIZER false) # if true, turn on Address Sanitizer in debug 
 if (${USE_ADDRESS_SANITIZER})
     set (IS_ASAN false)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        if (${compiler_version} VERSION_GREATER "4.7")
+        if (NOT (${compiler_version} VERSION_LESS "4.8"))
             set (IS_ASAN true)
         endif ()
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        if (${compiler_version} VERSION_GREATER "3.0")
+        if (NOT (${compiler_version} VERSION_LESS "3.1"))
             set (IS_ASAN true)
         endif ()
     endif ()
