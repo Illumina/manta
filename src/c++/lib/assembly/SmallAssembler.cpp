@@ -352,7 +352,7 @@ runSmallAssembler(
 
     assembledReadInfo.resize(reads.size());
 
-    std::vector<unsigned> iterationUusedReads; ///< track unused reads at each iteration
+    std::vector<unsigned> iterationUnusedReads; ///< track unused reads at each iteration
 
     unsigned unusedReadsNow(reads.size());
 
@@ -360,7 +360,7 @@ runSmallAssembler(
     {
         if (unusedReadsNow < opt.minSeedReads) return;
 
-        iterationUusedReads.push_back(unusedReadsNow);
+        iterationUnusedReads.push_back(unusedReadsNow);
         for (unsigned wordLength(opt.minWordLength); wordLength<=opt.maxWordLength; wordLength+=2)
         {
             const bool isAssemblySuccess = buildContigs(opt, reads, assembledReadInfo, wordLength, contigs, unusedReadsNow);
@@ -370,7 +370,7 @@ runSmallAssembler(
 
         // stop if no change in number of unused reads for last unusedLookback iterations:
         static const unsigned unusedLookback(4);
-        if ( (iteration>=unusedLookback) && (unusedReadsNow == iterationUusedReads[(iteration-unusedLookback)])) return;
+        if ( (iteration>=unusedLookback) && (unusedReadsNow == iterationUnusedReads[(iteration-unusedLookback)])) return;
     }
 #ifdef DEBUG_ASBL
     dbg_os << "SmallAssembler: Reached max number of assembly iterations: " << opt.maxAssemblyIterations << "\n";

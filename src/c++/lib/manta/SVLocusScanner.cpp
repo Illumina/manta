@@ -187,29 +187,23 @@ getSVCandidatesFromReadIndels(
 
 
 
-/// check bam record for soft-clipping which is interesting enough to be used as SV evidence:
-///
-/// ClipLen of zero indicates no interesting evidence
-static
 void
 getSVBreakendCandidateClip(
     const bam_record& bamRead,
-    const SimpleAlignment& bamAlign,
+    const ALIGNPATH::path_t& apath,
     unsigned& leadingClipLen,
-    unsigned& trailingClipLen)
+    unsigned& trailingClipLen,
+    const uint8_t minQ,
+    const float minQFrac)
 {
-    static const uint8_t minQ(20);
-    static const unsigned minClipLen(8);
-    static const float minQFrac(0.75); ///< this fraction of bases must have qual>=minQ within the clipped region
-
     leadingClipLen = 0;
     trailingClipLen = 0;
 
     const uint8_t* qual(bamRead.qual());
     const unsigned readSize(bamRead.read_size());
 
-    const unsigned trailingClipLenTmp(apath_soft_clip_trail_size(bamAlign.path));
-    if (trailingClipLenTmp >= minClipLen)
+    const unsigned trailingClipLenTmp(apath_soft_clip_trail_size(apath));
+    if (0 != trailingClipLenTmp)
     {
         // check the quality of clipped region
         unsigned minQCount(0);
@@ -223,8 +217,8 @@ getSVBreakendCandidateClip(
         }
     }
 
-    const unsigned leadingClipLenTmp(apath_soft_clip_lead_size(bamAlign.path));
-    if (leadingClipLenTmp >= minClipLen)
+    const unsigned leadingClipLenTmp(apath_soft_clip_lead_size(apath));
+    if (0 != leadingClipLenTmp)
     {
         // check the quality of clipped region
         unsigned minQCount(0);
@@ -251,18 +245,18 @@ getSVCandidatesFromReadClip(
     std::vector<SVCandidate>& candidates)
 {
     unsigned leadingClipLen(0), trailingClipLen(0);
-    getSVBreakendCandidateClip(bamRead, bamAlign, leadingClipLen, trailingClipLen);
+    getSVBreakendCandidateClip(bamRead, bamAlign.path, leadingClipLen, trailingClipLen);
 
     // soft-clipped reads don't define a full hypothesis, so they're always evidence for a 'complex' ie. undefined, event:
     static const bool isComplex(true);
 
-    if (leadingClipLen != 0)
+    if (leadingClipLen >= opt.minSoftClipLen)
     {
         const pos_t clipPos(bamAlign.pos);
         candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),clipPos,clipPos,isComplex));
     }
 
-    if (trailingClipLen != 0)
+    if (trailingClipLen >= opt.minSoftClipLen)
     {
         const pos_t clipPos(bamAlign.pos + apath_ref_length(bamAlign.path));
         candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),clipPos,clipPos,isComplex));
@@ -710,9 +704,9 @@ isLocalAssemblyEvidence(
     //
     {
         unsigned leadingClipLen(0), trailingClipLen(0);
-        getSVBreakendCandidateClip(bamRead, bamAlign, leadingClipLen, trailingClipLen);
+        getSVBreakendCandidateClip(bamRead, bamAlign.path, leadingClipLen, trailingClipLen);
 
-        if ((leadingClipLen != 0) || (trailingClipLen != 0)) return true;
+        if ((leadingClipLen >= _opt.minSoftClipLen) || (trailingClipLen >= _opt.minSoftClipLen)) return true;
     }
 
     return false;

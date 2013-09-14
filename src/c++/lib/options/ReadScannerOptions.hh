@@ -31,7 +31,8 @@ struct ReadScannerOptions
         minPairBreakendSize(40),
         splitBreakendSizeFraction(0.1),
         maxSplitBreakendSize(100),
-        minSplitBreakendSize(10)
+        minSplitBreakendSize(10),
+        minSoftClipLen(8)
     {}
 
     unsigned minMapq;
@@ -63,6 +64,9 @@ struct ReadScannerOptions
     // whenever a breakend is predicted from an individual read split (ie. non-assembled), the predicted breakend range should be no
     // smaller than this:
     unsigned minSplitBreakendSize;
+
+    // Soft clipped read ends must be of at least this length to be entered as small SV evidence
+    unsigned minSoftClipLen;
 };
 
 

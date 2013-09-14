@@ -87,8 +87,6 @@ getBreakendReads(
     // for assembler reads, look for indels at report size or somewhat smaller
     const unsigned minAssembleIndelSize(_scanOpt.minCandidateIndelSize/2);
 
-    static const unsigned minClipLen(3);
-
     // depending on breakend type we may only be looking for candidates in one direction:
     bool isSearchForRightOpen(true);
     bool isSearchForLeftOpen(true);
@@ -102,7 +100,6 @@ getBreakendReads(
         isSearchForRightOpen = false;
     }
 
-
     const unsigned bamCount(_bamStreams.size());
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
@@ -113,7 +110,7 @@ getBreakendReads(
         // set bam stream to new search interval:
         bamStream.set_new_region(bp.interval.tid, searchRange.begin_pos(), searchRange.end_pos());
 
-        static const unsigned MAX_NUM_READS(2000);
+        static const unsigned MAX_NUM_READS(1000);
 
         while (bamStream.next() && (reads.size() < MAX_NUM_READS))
         {
@@ -144,16 +141,22 @@ getBreakendReads(
 
             /// check whether we keep this read because of soft clipping:
             bool isClipKeeper(false);
-            if (isSearchForRightOpen)
             {
-                const unsigned trailingClipLen(apath_soft_clip_trail_size(apath));
-                if (trailingClipLen >= minClipLen) isClipKeeper = true;
-            }
+                static const unsigned minSoftClipLen(4);
 
-            if (isSearchForLeftOpen)
-            {
-                const unsigned leadingClipLen(apath_soft_clip_lead_size(apath));
-                if (leadingClipLen >= minClipLen) isClipKeeper = true;
+                unsigned leadingClipLen(0);
+                unsigned trailingClipLen(0);
+                getSVBreakendCandidateClip(bamRead, apath, leadingClipLen, trailingClipLen);
+
+                if (isSearchForRightOpen)
+                {
+                    if (trailingClipLen >= minSoftClipLen) isClipKeeper = true;
+                }
+
+                if (isSearchForLeftOpen)
+                {
+                    if (leadingClipLen >= minSoftClipLen) isClipKeeper = true;
+                }
             }
 
             /// check for any indels in read:
@@ -193,7 +196,7 @@ getBreakendReads(
             }
             else
             {
-                log_os << "WARNING: SmallAssembler read name collision : " << readKey << "\n";
+              //  log_os << "WARNING: SmallAssembler read name collision : " << readKey << "\n";
             }
         }
     }
