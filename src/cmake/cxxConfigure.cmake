@@ -107,16 +107,19 @@ endif ()
 
 # start with warning flags:
 # switching off warning about unused function because otherwise compilation will fail with g++ 4.7.3 in Ubuntu
-set (CXX_WARN_FLAGS "-Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -Wredundant-decls -pedantic -Wunused-parameter -Wundef -Wno-unused-function")
+set (CXX_WARN_FLAGS "-Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -Wredundant-decls -pedantic -Wunused-parameter -Wundef -Wno-unused-function -Wdisabled-optimization")
 
 if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wuninitialized")
 endif()
 
 #
-# add extra clang warnings:
+# add extra ccompiler specific warnings:
 #
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+if     (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wlogical-op")
+
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     # clang 3.2
     set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wmissing-prototypes -Wunused-exception-parameter -Wbool-conversion -Wempty-body -Wimplicit-fallthrough -Wsizeof-array-argument -Wstring-conversion")
 
