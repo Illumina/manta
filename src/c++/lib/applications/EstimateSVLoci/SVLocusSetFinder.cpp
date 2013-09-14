@@ -180,7 +180,7 @@ update(const bam_record& bamRead,
 
     // don't rely on the properPair bit to be set correctly:
     const bool isAnomalous(! _readScanner.isProperPair(bamRead,defaultReadGroupIndex));
-    const bool isLargeFragment(! _readScanner.isLargeFragment(bamRead,defaultReadGroupIndex));
+    const bool isLargeFragment(_readScanner.isLargeFragment(bamRead,defaultReadGroupIndex));
 
     const bool isLargeAnomalous(isAnomalous && isLargeFragment);
 
