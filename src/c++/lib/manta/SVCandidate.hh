@@ -297,6 +297,30 @@ enum index_t
     TANDUP,
     COMPLEX
 };
+
+inline
+const char*
+label(const index_t idx)
+{
+    switch (idx)
+    {
+    case UNKNOWN:
+        return "UNKNOWN";
+    case INTERTRANSLOC:
+        return "INTERTRANSLOC";
+    case INVERSION:
+        return "INVERSION";
+    case INDEL:
+        return "INDEL";
+    case TANDUP:
+        return "TANDUP";
+    case COMPLEX:
+        return "COMPLEX";
+    default:
+        return "UNKNOWN";
+    }
+}
+
 }
 
 

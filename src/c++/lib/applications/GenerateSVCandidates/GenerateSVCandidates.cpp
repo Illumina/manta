@@ -114,13 +114,31 @@ struct SVWriter
 
         const bool isSelfEdge(edge.nodeIndex1 == edge.nodeIndex2);
 
+#ifdef DEBUG_GSV
+        static const std::string logtag("SVWriter::writeSV");
+        log_os << logtag << " isSelfEdge: " <<  isSelfEdge << "\n";
+#endif
+
         if (isSelfEdge)
         {
-            if (sv.isImprecise()) return;
+            if (sv.isImprecise())
+            {
+#ifdef DEBUG_GSV
+                log_os << logtag << " rejecting candidate\n";
+#endif
+                return;
+            }
         }
         else
         {
-            if (sv.bp1.pairCount < minCandidatePairCount) return;
+            if (sv.bp1.pairCount < minCandidatePairCount)
+            {
+#ifdef DEBUG_GSV
+                log_os << logtag << " rejecting candidate\n";
+#endif
+
+                return;
+            }
         }
 
         candWriter.writeSV(edge, svData, assemblyData, sv);
