@@ -393,15 +393,11 @@ getSVCandidatesFromPair(
             const pos_t cigarAdjustedFragmentSize(totalNoninsertSize + (insertRange.end_pos() - insertRange.begin_pos()));
 
             if (cigarAdjustedFragmentSize <= (rstats.properPair.max + opt.minCandidateIndelSize)) return;
-
-            // disregard anomalously small fragments:
-            // ((cigarAdjustedFragmentSize - static_cast<pos_t>(opt.minCandidateIndelSize)) >= rstats.properPair.min)) return;
         }
         else
         {
-            if (localRead.template_size() <= (rstats.properPair.max + opt.minCandidateIndelSize)) return;
+            if (std::abs(localRead.template_size()) <= (rstats.properPair.max + opt.minCandidateIndelSize)) return;
         }
-
     }
 
     candidates.push_back(sv);
@@ -516,7 +512,7 @@ getSVLociImpl(
             bool isClose(false);
             if (is_innie_pair(bamRead))
             {
-                isClose = (bamRead.template_size() < rstats.minFarFragmentSize);
+                isClose = (std::abs(bamRead.template_size()) < rstats.minFarFragmentSize);
             }
 
             unsigned thisWeight(SVObservationWeights::readPair);

@@ -21,5 +21,5 @@
 struct AlignmentFileOptions
 {
     std::vector<std::string> alignmentFilename;
-    std::vector<bool> isAlignmentTumor;
+    std::vector<bool> isAlignmentTumor; ///< indicates which positions in the alignmnetFilename correspond to tumor
 };

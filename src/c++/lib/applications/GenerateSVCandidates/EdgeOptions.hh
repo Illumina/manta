@@ -25,7 +25,7 @@ struct EdgeOptions
         binIndex(0),
         isLocusIndex(false),
         locusIndex(0),
-        graphNodeMaxEdgeCount(20)
+        graphNodeMaxEdgeCount(10)
     {}
 
     unsigned binCount;

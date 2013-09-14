@@ -17,7 +17,7 @@
 
 
 /// check if input file exists and is usable as
-/// input, if so canonicallize the name
+/// input, if so canonicalize the name
 ///
 /// In case of error return true and provide error
 /// message
