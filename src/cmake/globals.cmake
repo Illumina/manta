@@ -18,6 +18,7 @@
 ##
 ################################################################################
 
+
 install(CODE "
 
     # With package generator, the location where files are placed is not the location where they will be run.
@@ -36,6 +37,7 @@ install(CODE "
     get_filename_component(MANTA_FULL_PYTHON_LIBDIR  \"\${FULL_PREFIX}${MANTA_PYTHON_LIBDIR}\" ABSOLUTE)
 
     set(MANTA_VERSION_FULL \"${MANTA_VERSION_FULL}\")
+    set(MANTA_VERSION \"${MANTA_VERSION}\")
     set(MANTA_EXECUTABLE_PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ WORLD_READ OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE)
     set(MANTA_LIBRARY_PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ WORLD_READ)
     ")

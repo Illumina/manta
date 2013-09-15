@@ -18,35 +18,29 @@
 ##
 ################################################################################
 
+# simple helper for resetFindBoost
+function(unsetall name)
+    unset (${name} CACHE)
+    unset (${name})
+endfunction()
+
+
 macro (resetFindBoost)
 
     set(BOOST_RESET_SYMBOLS FOUND INCLUDE_DIRS INCLUDE_DIR LIBRARIES LIBRARY_DIRS VERSION LIB_VERSION MAJOR_VERSION MINOR_VERSION SUBMINOR_VERSION USE_STATIC_LIBS USE_MULTITHREADED)
 
-    # TODO: find a way to parameterize these CACHE/No-CACHE calls
     foreach (TAG ${BOOST_RESET_SYMBOLS})
-        unset (Boost_${TAG} CACHE)
+        unsetall (Boost_${TAG})
     endforeach()
 
     unset (ENV{BOOST_LIBRARYDIR})
 
     foreach (COMPONENT ${MANTA_BOOST_COMPONENTS})
         STRING(TOUPPER ${COMPONENT} UPPERCOMPONENT)
-        unset (Boost_${UPPERCOMPONENT}_FOUND CACHE)
-        unset (Boost_${UPPERCOMPONENT}_LIBRARY CACHE)
-        unset (Boost_${UPPERCOMPONENT}_LIBRARY_RELEASE CACHE)
-        unset (Boost_${UPPERCOMPONENT}_LIBRARY_DEBUG CACHE)
-    endforeach ()
-
-    foreach (TAG ${BOOST_RESET_SYMBOLS})
-        unset (Boost_${TAG})
-    endforeach()
-
-    foreach (COMPONENT ${MANTA_BOOST_COMPONENTS})
-        STRING(TOUPPER ${COMPONENT} UPPERCOMPONENT)
-        unset (Boost_${UPPERCOMPONENT}_FOUND)
-        unset (Boost_${UPPERCOMPONENT}_LIBRARY)
-        unset (Boost_${UPPERCOMPONENT}_LIBRARY_RELEASE)
-        unset (Boost_${UPPERCOMPONENT}_LIBRARY_DEBUG)
+        unsetall (Boost_${UPPERCOMPONENT}_FOUND)
+        unsetall (Boost_${UPPERCOMPONENT}_LIBRARY)
+        unsetall (Boost_${UPPERCOMPONENT}_LIBRARY_RELEASE)
+        unsetall (Boost_${UPPERCOMPONENT}_LIBRARY_DEBUG)
     endforeach ()
 
 endmacro ()

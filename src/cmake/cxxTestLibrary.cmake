@@ -18,7 +18,6 @@
 ##
 ################################################################################
 include(${MANTA_CXX_EXECUTABLE_CMAKE})
-include("${MANTA_MACROS_CMAKE}")
 
 get_filename_component(CURRENT_DIR_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 message (STATUS "Building unit tests for: ${CURRENT_DIR_NAME}")
