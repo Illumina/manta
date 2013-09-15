@@ -19,12 +19,10 @@
 #include "blt_util/align_path_bam_util.hh"
 #include "blt_util/align_path_util.hh"
 #include "blt_util/bam_record_util.hh"
-#include "blt_util/log.hh"
 #include "alignment/AlignmentUtil.hh"
 #include "common/Exceptions.hh"
 
 #include "boost/foreach.hpp"
-
 
 
 const float SVObservationWeights::closePairFactor(4);
@@ -392,6 +390,12 @@ getSVCandidatesFromPair(
             // get length of fragment after accounting for any variants described directly in either read alignment:
             const pos_t cigarAdjustedFragmentSize(totalNoninsertSize + (insertRange.end_pos() - insertRange.begin_pos()));
 
+            const bool isLargeFragment(cigarAdjustedFragmentSize > (rstats.properPair.max + opt.minCandidateIndelSize));
+
+            // this is an arbitrary point to start officially tagging 'outties' -- for now  we just want to avoid conventional small fragments from FFPE
+            const bool isOuttie(cigarAdjustedFragmentSize < 0);
+
+            if (! (isLargeFragment || isOuttie)) return;
             if (cigarAdjustedFragmentSize <= (rstats.properPair.max + opt.minCandidateIndelSize)) return;
         }
         else
