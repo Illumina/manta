@@ -25,6 +25,15 @@
 #include "boost/foreach.hpp"
 
 
+//#define DEBUG_SCANNER
+
+
+#ifdef DEBUG_SCANNER
+#include "blt_util/log.hh"
+#include <iostream>
+#endif
+
+
 const float SVObservationWeights::closePairFactor(4);
 
 
@@ -382,6 +391,12 @@ getSVCandidatesFromPair(
         }
     }
 
+#ifdef DEBUG_SCANNER
+    static const std::string logtag("getSVCandidatesFromPair");
+    log_os << logtag << " evaluating sv: " << sv << "\n";
+#endif
+
+
     // check if read pair separation is non-anomalous after accounting for read alignments:
     if (localRead.target_id() == localRead.mate_target_id())
     {
@@ -396,7 +411,6 @@ getSVCandidatesFromPair(
             const bool isOuttie(cigarAdjustedFragmentSize < 0);
 
             if (! (isLargeFragment || isOuttie)) return;
-            if (cigarAdjustedFragmentSize <= (rstats.properPair.max + opt.minCandidateIndelSize)) return;
         }
         else
         {
@@ -433,8 +447,17 @@ getReadBreakendsImpl(
     // - process any large indels in the localRead:
     getSVCandidatesFromReadIndels(opt, localAlign, localRead.target_id(), candidates);
 
+#ifdef DEBUG_SCANNER
+    static const std::string logtag("getReadBreakendsImpl");
+    log_os << logtag << " post-indels candidate_size: " << candidates.size() << "\n";
+#endif
+
     // - process soft-clip in the localRead:
     getSVCandidatesFromReadClip(opt, localRead, localAlign, candidates);
+
+#ifdef DEBUG_SCANNER
+    log_os << logtag << " post-clip candidate_size: " << candidates.size() << "\n";
+#endif
 
     // TODO: add semi-aligned read processing
 
@@ -444,6 +467,10 @@ getReadBreakendsImpl(
 
     // - process anomalous read pair relationships:
     getSVCandidatesFromPair(opt, rstats, localRead, localAlign, remoteReadPtr, candidates);
+
+#ifdef DEBUG_SCANNER
+    log_os << logtag << " post-pair candidate_size: " << candidates.size() << "\n";
+#endif
 
     // update localEvidence range:
     // note this is only used if candidates were added, so there's no harm is setting it every time:
@@ -477,6 +504,11 @@ getSVLociImpl(
     known_pos_range2 localEvidenceRange;
 
     getReadBreakendsImpl(opt, rstats, bamRead, NULL, candidates, localEvidenceRange);
+
+#ifdef DEBUG_SCANNER
+    static const std::string logtag("getSVLociImpl");
+    log_os << logtag << " candidate_size: " << candidates.size() << "\n";
+#endif
 
     // translate SVCandidate to a simpler form for use
     // in the SV locus graph:

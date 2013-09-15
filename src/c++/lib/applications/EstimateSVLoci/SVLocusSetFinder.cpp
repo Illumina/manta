@@ -202,6 +202,7 @@ update(const bam_record& bamRead,
     isLocalAssemblyEvidence = _readScanner.isLocalAssemblyEvidence(bamRead);
     log_os << "SFinder: Accepted read. isAnomalous "  << isAnomalous << " is Local assm evidence: " << isLocalAssemblyEvidence << " read: " << bamRead << "\n";
 #endif
+
     // check that this read starts in our scan region:
     if (! _scanRegion.range.is_pos_intersect(bamRead.pos()-1)) return;
 
