@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -141,7 +141,6 @@ void
 SVScorer::
 scoreSomaticSV(
     const SVCandidateSetData& svData,
-    const unsigned svIndex,
     const SVCandidate& sv,
     SomaticSVScoreInfo& ssInfo)
 {
@@ -158,7 +157,7 @@ scoreSomaticSV(
         const SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
         BOOST_FOREACH(const SVCandidateSetReadPair& pair, svDataGroup)
         {
-            if (0 == std::count(pair.svIndex.begin(),pair.svIndex.end(), svIndex)) continue;
+            if (0 == std::count(pair.svIndex.begin(),pair.svIndex.end(), sv.candidateIndex)) continue;
 
             if (pair.read1.isSet())
             {

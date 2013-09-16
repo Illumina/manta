@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -59,7 +59,7 @@ struct AlignerBase
             switch (ps.type)
             {
             case MATCH:
-                assert(0); // if MATCH segments exist, then you're using the wrong type of CIGAR for this function
+                assert(false && "Unexpected MATCH segment"); // if MATCH segments exist, then you're using the wrong type of CIGAR for this function
                 break;
             case SEQ_MATCH:
                 val += (_scores.match * ps.length);

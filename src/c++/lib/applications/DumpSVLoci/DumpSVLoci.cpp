@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -39,6 +39,10 @@ runDSL(const DSLOptions& opt)
     const SVLocusSet& cset(set);
 
     std::ostream& os(std::cout);
+
+    // add this handy map of chromosome id to chromosome label at the start of all output types:
+    os << cset.header << "\n";
+
     if (! opt.region.empty())
     {
         int32_t tid,beginPos,endPos;

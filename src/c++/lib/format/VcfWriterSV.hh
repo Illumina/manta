@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -70,7 +70,6 @@ protected:
         const EdgeInfo& edge,
         const SVCandidateSetData& svData,
         const SVCandidateAssemblyData& adata,
-        const unsigned svIndex,
         const SVCandidate& sv);
 
     virtual
@@ -104,22 +103,23 @@ private:
     void
     writeTranslocPair(
         const EdgeInfo& edge,
-        const unsigned svIndex,
         const SVCandidate& sv,
         const SVCandidateSetData& svData,
         const SVCandidateAssemblyData& adata);
 
+    /// \param isIndel if true, the variant is a simple right/left breakend insert/delete combination
     void
     writeInvdel(
         const SVCandidate& sv,
-        const std::string& label);
+        const std::string& label,
+        const bool isIndel = false);
 
     void
     writeInversion(
         const SVCandidate& sv);
 
     void
-    writeDeletion(
+    writeIndel(
         const SVCandidate& sv);
 
     void
@@ -132,7 +132,6 @@ private:
 
 protected:
     const std::string& _referenceFilename;
-    const unsigned _minPairCount;
 
 private:
     const bam_header_info& _header;

@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -65,11 +65,22 @@ addSVNodeRead(
     SVCandidateSetReadPairSampleGroup& svDataGroup)
 {
     if (scanner.isReadFiltered(bamRead)) return;
-    if (scanner.isProperPair(bamRead,bamIndex)) return;
-    if (bamRead.is_mate_unmapped()) return;
 
-    /// TODO: Add SA read support -- temporarily reject all supplemental reads:
-    if (bamRead.is_supplement()) return;
+    // don't rely on the properPair bit to be set correctly:
+    const bool isAnomalous(! scanner.isProperPair(bamRead, bamIndex));
+
+    if (! isAnomalous) return;
+
+    const bool isLargeFragment(scanner.isLargeFragment(bamRead, bamIndex));
+
+    if (! isLargeFragment) return;
+
+#if 0
+    /// TODO:  move local-assembly and spanning candidate handling together here:
+    const bool isLocalAssemblyEvidence(scanner.isLocalAssemblyEvidence(bamRead));
+
+    if (! (isAnomalous || isLocalAssemblyEvidence)) return;
+#endif
 
     // finally, check to see if the svDataGroup is full... for now, we allow a very large
     // number of reads to be stored in the hope that we never reach this limit, but just in
@@ -318,6 +329,12 @@ consolidateOverlap(
         }
 
         svs.resize(svs.size()-deletedSVIndex.size());
+
+        // fix indices:
+        for (unsigned i(0); i<svs.size(); ++i)
+        {
+            svs[i].candidateIndex = i;
+        }
     }
 
     if (! moveSVIndex.empty())
@@ -423,6 +440,7 @@ getCandidatesFromData(
 #endif
                     pair.svIndex.push_back(svs.size());
                     svs.push_back(readCand);
+                    svs.back().candidateIndex = pair.svIndex.back();
                 }
             }
         }
@@ -481,8 +499,8 @@ findCandidateSV(
     // edge must be bidirectional at the noise threshold of the locus set:
     const SVLocus& locus(set.getLocus(edge.locusIndex));
 
-    if ((locus.getEdge(edge.nodeIndex1,edge.nodeIndex2).count <= minEdgeCount) ||
-        (locus.getEdge(edge.nodeIndex2,edge.nodeIndex1).count <= minEdgeCount))
+    if ((locus.getEdge(edge.nodeIndex1,edge.nodeIndex2).count < minEdgeCount) ||
+        (locus.getEdge(edge.nodeIndex2,edge.nodeIndex1).count < minEdgeCount))
     {
 #ifdef DEBUG_SVDATA
         log_os << "SVDATA: Edge failed min edge count.\n";
@@ -491,6 +509,7 @@ findCandidateSV(
     }
 
     // if this is a self-edge, then automatically forward it as is to the assembly module:
+    /// TODO: move self-edge handling into the regular hygen routine below
     if (edge.nodeIndex1 == edge.nodeIndex2)
     {
         SVCandidate sv;
@@ -505,6 +524,7 @@ findCandidateSV(
 
         remoteBreakend.state = SVBreakendState::UNKNOWN;
 
+        sv.candidateIndex=svs.size();
         svs.push_back(sv);
 
         // minimal setup for svData:

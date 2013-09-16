@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -73,16 +73,19 @@ mergeNode(
 {
     using namespace illumina::common;
 
+    assert(fromIndex != toIndex);
+
 #ifdef DEBUG_SVL
-    log_os << "mergeNode from: " << fromIndex << " to: " << toIndex << " size: " << size() << "\n";
+    static const std::string logtag("SVLocus::mergeNode");
+    log_os << logtag << " from: " << fromIndex << " to: " << toIndex << " size: " << size() << "\n";
 #endif
 
     SVLocusNode& fromNode(getNode(fromIndex));
     SVLocusNode& toNode(getNode(toIndex));
 
 #ifdef DEBUG_SVL
-    log_os << "mergeNode BEFORE fromNode: " << fromNode;
-    log_os << "mergeNode BEFORE toNode: " << toNode;
+    log_os << logtag << " BEFORE fromNode: " << fromNode;
+    log_os << logtag << " BEFORE toNode: " << toNode;
 #endif
 
     if (fromNode.interval.tid != toNode.interval.tid)
@@ -93,6 +96,9 @@ mergeNode(
             << "\tNode2: " << toNode;
         BOOST_THROW_EXCEPTION(LogicException(oss.str()));
     }
+
+    // store node relationship before merging regions:
+    const bool isFromRegionRightmost(toNode.interval.range < fromNode.interval.range);
 
     notifyDelete(toIndex);
 
@@ -113,14 +119,21 @@ mergeNode(
 
     notifyAdd(toIndex);
 
+    // now take all fromNode edges and 'redirect' them to the toNode index
+    //
     BOOST_FOREACH(edges_type::value_type& fromNodeEdgeIter, fromNode)
     {
+        // alias value_type components (not required, but makes the logic easier to follow):
+        const NodeIndexType& fromNodeEdgeIndex(fromNodeEdgeIter.first);
+        SVLocusEdge& fromNodeEdge(fromNodeEdgeIter.second);
+
 #ifdef DEBUG_SVL
         // is this edge between the to and from nodes?
-        const bool isToFromEdge(fromNodeEdgeIter.first == toIndex);
+        const bool isToFromEdge(fromNodeEdgeIndex == toIndex);
 
-        log_os << "mergeNode: handle fromEdge: " << _index << ":" << fromNodeEdgeIter.first << " isToFromEdge: " << isToFromEdge << "\n";
+        log_os << logtag << " handle fromEdge: " << _index << ":" << fromNodeEdgeIndex << " isToFromEdge: " << isToFromEdge << "\n";
 #endif
+
 
         // is this a self edge of the from node?
         const bool isSelfFromEdge(fromNodeEdgeIter.first == fromIndex);
@@ -128,57 +141,42 @@ mergeNode(
         if (isSelfFromEdge)
         {
             // self-edge needs to be handled as a special case:
-
-            // to node could already have a self edge -- check that here:
-            edges_type::iterator toNodeEdgeIter(toNode.edges.find(toIndex));
-            if (toNodeEdgeIter == toNode.edges.end())
-            {
-#ifdef DEBUG_SVL
-                log_os << "mergeNode: toNode does not have self-edge\n";
-                log_os << "mergeNode: toNode add " << _index << ":" << toIndex << "\n";
-#endif
-
-                toNode.edges.insert(std::make_pair(toIndex,fromNodeEdgeIter.second));
-            }
-            else
-            {
-#ifdef DEBUG_SVL
-                log_os << "mergeNode: toNode already has self edge\n";
-#endif
-                // this node does contain a link to the remote node already:
-                toNodeEdgeIter->second.mergeEdge(fromNodeEdgeIter.second);
-            }
-
+            toNode.mergeEdge(toIndex,fromNodeEdgeIter.second);
             continue;
         }
 
-        // update local edge:
+        // Check for the special case when there is an edge between from and to, in this case
+        // the counts have to be handled so that counts in each region still approximate
+        // fragment support. Normally (the chimera case) -- a single fragment will create
+        // edges and nodes with weight one. If this is a non-chimera and the nodes collide and
+        // merge, we want to prevent the evidence from being doubled when it should not be.
+        //
+        // To achieve this, we remove the edge counts from the 'right'-most region of the two nodes being merged. This is an
+        // approximate solution, but very simple to add into the graph without blowing up per-node/edge storage.
+        //
+        const bool isFromToEdge(fromNodeEdgeIndex == toIndex);
+        if (isFromToEdge)
         {
-            // this node and input node could both have an edge to the same node already
-            // -- check that case here:
-            edges_type::iterator toNodeEdgeIter(toNode.edges.find(fromNodeEdgeIter.first));
-            if (toNodeEdgeIter == toNode.edges.end())
+            if (isFromRegionRightmost)
             {
-#ifdef DEBUG_SVL
-                log_os << "mergeNode: fromEdge is not in toNode\n";
-                log_os << "mergeNode: toNode add " << _index << ":" << fromNodeEdgeIter.first << "\n";
-#endif
-
-                toNode.edges.insert(fromNodeEdgeIter);
+                toNode.count -= fromNodeEdge.count;
+                fromNodeEdge.count = 0;
             }
             else
             {
-#ifdef DEBUG_SVL
-                log_os << "mergeNode: fromEdge is already in toNode\n";
-#endif
-                // this node does contain a link to the remote node already:
-                toNodeEdgeIter->second.mergeEdge(fromNodeEdgeIter.second);
+                edges_type::iterator toNodeEdgeIter(toNode.edges.find(fromIndex));
+                assert(toNodeEdgeIter != toNode.edges.end());
+                toNode.count -= toNodeEdgeIter->second.count;
+                toNodeEdgeIter->second.count = 0;
             }
         }
 
+        // update local edge:
+        toNode.mergeEdge(fromNodeEdgeIndex,fromNodeEdge);
+
         // update remote inputNodeEdgeIter
         {
-            SVLocusNode& remoteNode(getNode(fromNodeEdgeIter.first));
+            SVLocusNode& remoteNode(getNode(fromNodeEdgeIndex));
             edges_type& remoteEdges(remoteNode.edges);
             edges_type::iterator oldRemoteIter(remoteEdges.find(fromIndex));
             if (oldRemoteIter == remoteEdges.end())
@@ -190,27 +188,12 @@ mergeNode(
                 BOOST_THROW_EXCEPTION(LogicException(oss.str()));
             }
 
-            // the remote node could contain a link to toIndex already, check that here:
-            edges_type::iterator newRemoteIter(remoteEdges.find(toIndex));
-            if (newRemoteIter == remoteEdges.end())
-            {
-#ifdef DEBUG_SVL
-                log_os << "mergeNode: fromRemote does not point to toIndex\n";
-#endif
-                remoteEdges.insert(std::make_pair(toIndex,oldRemoteIter->second));
-            }
-            else
-            {
-#ifdef DEBUG_SVL
-                log_os << "mergeNode: fromRemote already points to toIndex\n";
-#endif
-                newRemoteIter->second.mergeEdge(oldRemoteIter->second);
-            }
+            remoteNode.mergeEdge(toIndex, oldRemoteIter->second);
         }
     }
 
 #ifdef DEBUG_SVL
-    log_os << "mergeNode AFTER toNode: " << toNode;
+    log_os << logtag << " AFTER toNode: " << toNode;
 #endif
 
     clearNodeEdges(fromIndex);
@@ -259,7 +242,8 @@ cleanNodeCore(
     std::set<NodeIndexType>& emptyNodes)
 {
 #ifdef DEBUG_SVL
-    log_os << "cleanNodeCore nodeAddy: " << _index << ":" << nodeIndex << "\n";
+    static const std::string logtag("SVLocus::cleanNodeCore");
+    log_os << logtag << " nodeAddy: " << _index << ":" << nodeIndex << "\n";
 #endif
 
     unsigned totalCleaned(0);
@@ -306,7 +290,7 @@ cleanNodeCore(
     BOOST_FOREACH(const NodeIndexType toIndex, eraseEdges)
     {
 #ifdef DEBUG_SVL
-        log_os << "cleanNodeCore deleting edge: " << _index << ":" << nodeIndex << "->" << _index << ":" << toIndex << "\n";
+        log_os << logtag << " deleting edge: " << _index << ":" << nodeIndex << "->" << _index << ":" << toIndex << "\n";
 #endif
         clearEdgePair(nodeIndex,toIndex);
     }
@@ -318,19 +302,19 @@ cleanNodeCore(
     }
 
 #ifdef DEBUG_SVL
-    log_os << "cleanNodeCore emptyEdges:\n";
+    log_os << logtag << " emptyEdges:\n";
     BOOST_FOREACH(const NodeIndexType toIndex, eraseEdges)
     {
-        log_os << "\tedge: " << _index << ":" << nodeIndex << "->" << _index << ":" << toIndex << "\n";
+        log_os << logtag << "\tedge: " << _index << ":" << nodeIndex << "->" << _index << ":" << toIndex << "\n";
     }
 
     log_os << "cleanNodeCore emptyNodes\n";
     BOOST_FOREACH(const NodeIndexType nodeIndex2, emptyNodes)
     {
-        log_os << "\tnodeAddy: " << _index << ":" << nodeIndex2 << "\n";
+        log_os << logtag << "\tnodeAddy: " << _index << ":" << nodeIndex2 << "\n";
     }
 
-    log_os << "totalCleaned: " << totalCleaned << "\n";
+    log_os << logtag << " totalCleaned: " << totalCleaned << "\n";
 #endif
 
     return totalCleaned;
@@ -378,7 +362,8 @@ clearNodeEdges(NodeIndexType nodePtr)
     using namespace illumina::common;
 
 #ifdef DEBUG_SVL
-    log_os << "clearNodeEdges from nodeIndex: " << nodePtr << "\n";
+    static const std::string logtag("SVLocus::clearNodeEdges");
+    log_os << logtag << " from nodeIndex: " << nodePtr << "\n";
 #endif
 
     SVLocusNode& node(getNode(nodePtr));
@@ -386,7 +371,7 @@ clearNodeEdges(NodeIndexType nodePtr)
     {
 
 #ifdef DEBUG_SVL
-        log_os << "clearNodeEdges clearing remote Index: " << edgeIter.first << "\n";
+        log_os << logtag << " clearing remote Index: " << edgeIter.first << "\n";
 #endif
         // skip self edge (otherwise we invalidate iterators in this foreach loop)
         if (edgeIter.first == nodePtr) continue;
@@ -404,7 +389,7 @@ clearNodeEdges(NodeIndexType nodePtr)
         }
 
 #ifdef DEBUG_SVL
-        log_os << "clearNodeEdges remote clearing Index: " << thisRemoteIter->first << "\n";
+        log_os << logtag << " remote clearing Index: " << thisRemoteIter->first << "\n";
 #endif
         remoteEdges.erase(thisRemoteIter);
     }
@@ -426,15 +411,16 @@ eraseNode(const NodeIndexType nodePtr)
     NodeIndexType fromPtr(_graph.size()-1);
 
 #ifdef DEBUG_SVL
-    log_os << "eraseNode: " << _index << ":" << nodePtr << " transfer_in: " << _index << ":" << fromPtr << " \n";
+    static const std::string logtag("SVLocus::eraseNode");
+    log_os << logtag << " " << _index << ":" << nodePtr << " transfer_in: " << _index << ":" << fromPtr << " \n";
 
-    log_os << "eraseNode BEFORE: " << getNode(nodePtr) << "\n";
+    log_os << logtag << " BEFORE: " << getNode(nodePtr) << "\n";
 #endif
 
     if (fromPtr != nodePtr)
     {
 #ifdef DEBUG_SVL
-        log_os << "eraseNode transfer_in: BEFORE: " << getNode(fromPtr) << "\n";
+        log_os << logtag << " transfer_in: BEFORE: " << getNode(fromPtr) << "\n";
 #endif
         // reassign fromNode's remote edges before shifting its address:
         //
@@ -467,7 +453,7 @@ eraseNode(const NodeIndexType nodePtr)
         notifyAdd(nodePtr);
 
 #ifdef DEBUG_SVL
-        log_os << "eraseNode transfer_in: AFTER: " << getNode(nodePtr) << "\n";
+        log_os << logtag << " transfer_in: AFTER: " << getNode(nodePtr) << "\n";
 #endif
     }
     notifyDelete(fromPtr);

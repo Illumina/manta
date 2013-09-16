@@ -7,7 +7,7 @@
 #
 # You should have received a copy of the Illumina Open Source
 # Software License 1 along with this program. If not, see
-# <https://github.com/downloads/sequencing/licenses/>.
+# <https://github.com/sequencing/licenses/>
 #
 
 ################################################################################
@@ -82,11 +82,14 @@ endfunction()
 
 check_prefix()
 
+# paths for binary components -- we don't currently change this from the non-binary components
 set(MANTA_EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(MANTA_BINDIR "${MANTA_EXEC_PREFIX}/bin")
 set(MANTA_LIBDIR "${MANTA_EXEC_PREFIX}/lib")
-set(MANTA_PYTHON_LIBDIR "${CMAKE_INSTALL_PREFIX}/lib/python")
 set(MANTA_LIBEXECDIR "${MANTA_EXEC_PREFIX}/libexec")
+
+# paths w/o architecture dependency
+set(MANTA_PYTHON_LIBDIR "${CMAKE_INSTALL_PREFIX}/lib/python")
 set(MANTA_DATADIR "${CMAKE_INSTALL_PREFIX}/share")
 set(MANTA_ETCDIR "${CMAKE_INSTALL_PREFIX}/etc")
 set(MANTA_DOCDIR "${CMAKE_INSTALL_PREFIX}/doc")

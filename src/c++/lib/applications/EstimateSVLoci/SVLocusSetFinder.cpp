@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -162,7 +162,7 @@ process_pos(const int stage_no,
     }
     else
     {
-        assert(0);
+        assert(false && "Unexpected stage id");
     }
 }
 
@@ -178,19 +178,30 @@ update(const bam_record& bamRead,
     // shortcut to speed things up:
     if (_readScanner.isReadFiltered(bamRead)) return;
 
-    /// TODO: Add SA read support -- temporarily reject all supplemental reads:
-    if (bamRead.is_supplement()) return;
-
     // don't rely on the properPair bit to be set correctly:
-    if (_readScanner.isProperPair(bamRead,defaultReadGroupIndex))
-    {
-        _nonAnomCount++;
-        return;
-    }
-    _anomCount++;
+    const bool isAnomalous(! _readScanner.isProperPair(bamRead,defaultReadGroupIndex));
+    const bool isLargeFragment(_readScanner.isLargeFragment(bamRead,defaultReadGroupIndex));
 
-    // can't handle these yet:
-    if (bamRead.is_mate_unmapped()) return;
+    const bool isLargeAnomalous(isAnomalous && isLargeFragment);
+
+    if (isLargeAnomalous) ++_anomCount;
+    else                  ++_nonAnomCount;
+
+    bool isLocalAssemblyEvidence(false);
+    if (! isLargeAnomalous)
+    {
+        isLocalAssemblyEvidence = _readScanner.isLocalAssemblyEvidence(bamRead);
+    }
+
+    if (! ( isLargeAnomalous || isLocalAssemblyEvidence))
+    {
+        return; // this read isn't interesting wrt SV discovery
+    }
+
+#ifdef DEBUG_SFINDER
+    isLocalAssemblyEvidence = _readScanner.isLocalAssemblyEvidence(bamRead);
+    log_os << "SFinder: Accepted read. isAnomalous "  << isAnomalous << " is Local assm evidence: " << isLocalAssemblyEvidence << " read: " << bamRead << "\n";
+#endif
 
     // check that this read starts in our scan region:
     if (! _scanRegion.range.is_pos_intersect(bamRead.pos()-1)) return;

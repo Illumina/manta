@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -18,6 +18,7 @@
 #pragma once
 
 #include "manta/Program.hh"
+#include "manta/SVLocusScanner.hh"
 #include "options/AlignmentFileOptions.hh"
 #include "options/ReadScannerOptions.hh"
 #include "options/SVLocusSetOptions.hh"
@@ -25,9 +26,8 @@
 
 struct ESLOptions
 {
-
-    ESLOptions() :
-        graphOpt(3)
+    ESLOptions(const unsigned minMergeEdgeObservations = 3) :
+        graphOpt(minMergeEdgeObservations * SVObservationWeights::observation)   // initialize noise edge filtration parameters
     {}
 
     AlignmentFileOptions alignFileOpt;

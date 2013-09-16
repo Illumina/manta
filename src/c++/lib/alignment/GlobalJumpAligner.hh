@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -147,7 +147,7 @@ private:
             case AlignState::JUMP:
                 return jump;
             default:
-                assert(! "Unexpected Index Value");
+                assert(false && "Unexpected Index Value");
                 return 0;
             }
         }

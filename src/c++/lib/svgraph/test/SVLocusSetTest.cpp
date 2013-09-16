@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -450,7 +450,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusDoubleSelfEdge )
     SVLocus locus1;
     locusAddPair(locus1,1,10,60,1,20,70);
     SVLocus locus2;
-    locusAddPair(locus2,1,20,70,1,10,60);
+    locusAddPair(locus2,1,20,70,1,10,60, true);
 
     locus1.mergeSelfOverlap();
     locus2.mergeSelfOverlap();
@@ -476,7 +476,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusDoubleSelfEdge2 )
     SVLocus locus1;
     locusAddPair(locus1,1,10,60,2,20,70);
     SVLocus locus2;
-    locusAddPair(locus2,1,10,60,1,10,60);
+    locusAddPair(locus2,1,10,60,1,10,60, true);
 
     locus1.mergeSelfOverlap();
     locus2.mergeSelfOverlap();
@@ -546,7 +546,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeOverlapSelfEdge )
     SVLocus locus1;
     locusAddPair(locus1,1,10,60,2,20,70);
     SVLocus locus2;
-    locusAddPair(locus2,1,10,20,1,10,20);
+    locusAddPair(locus2,1,10,20,1,10,20,true);
 
     locus1.mergeSelfOverlap();
     locus2.mergeSelfOverlap();
@@ -579,7 +579,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeOverlapSelfEdge )
     }
 
     SVLocus locus3;
-    locusAddPair(locus3,1,10,20,1,10,20);
+    locusAddPair(locus3,1,10,20,1,10,20,true);
 
     locus3.mergeSelfOverlap();
 
@@ -632,7 +632,6 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMergeToSelfEdge2 )
     //
     // Criteria: Large region gains self-edge only if connected regions are signal
 
-
     SVLocus locus1;
     locusAddPair(locus1,1,10,20,1,30,40);
     SVLocus locus2;
@@ -681,11 +680,10 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMergeToSelfEdge3 )
     //
     // Criteria: self edge count increases by one
 
-
     SVLocus locus1;
-    locusAddPair(locus1,1,10,40,1,10,40);
+    locusAddPair(locus1,1,10,40,1,10,40,true);
     SVLocus locus2;
-    locusAddPair(locus2,1,10,40,1,10,40);
+    locusAddPair(locus2,1,10,40,1,10,40,true);
     SVLocus locus3;
     locusAddPair(locus3,1,10,20,1,30,40);
 
@@ -843,6 +841,147 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSmallDelRegionClean )
         BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),0u);
     }
 }
+
+
+BOOST_AUTO_TEST_CASE( test_SVLocusCleanSelfEdge )
+{
+    SVLocus locus1;
+    locusAddPair(locus1,1,10,20,1,10,20,true,0);
+
+    locus1.mergeSelfOverlap();
+
+    {
+        SVLocusSet set1(3);
+        set1.merge(locus1);
+        const SVLocusSet& cset1(set1);
+
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+
+        set1.finalize();
+        cset1.checkState(true,true);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),0u);
+    }
+}
+
+#if 0
+BOOST_AUTO_TEST_CASE( test_SVLocusTransitiveOverlap )
+{
+    // abstracted from real-data error case on MANTA-28
+    //
+    // what happens when there's a complex transitive overlap chain?
+
+    SVLocus locus1;
+    locusAddPair(locus1,1,25,32,1,25,32,true,3);
+    SVLocus locus2a;
+    locusAddPair(locus2a,1,8,12,1,14,27,true,1);
+    SVLocus locus2;
+    locusAddPair(locus2,1,11,14,1,18,22,true,1);
+    SVLocus locus3;
+    locusAddPair(locus3,1,11,16,1,18,20,true,2);
+
+    locus1.mergeSelfOverlap();
+    locus2a.mergeSelfOverlap();
+    locus2.mergeSelfOverlap();
+    locus3.mergeSelfOverlap();
+    {
+        SVLocusSet set1(3);
+        set1.merge(locus1);
+        set1.merge(locus2a);
+        set1.merge(locus2);
+        set1.merge(locus3);
+        const SVLocusSet& cset1(set1);
+
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+        set1.finalize();
+        cset1.checkState(true,true);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+    }
+}
+#endif
+
+BOOST_AUTO_TEST_CASE( test_SVLocusTransitiveOverlap2 )
+{
+    // abstracted from real-data error case on MANTA-28
+    //
+    // what happens when there's a complex transitive overlap chain?
+#if 0
+    // original coordinates extracted from actual failure case:
+    SVLocus locus1;
+    locusAddPair(locus1,1,615,837,1,853,900,true,6);
+    SVLocus locus2a;
+    locusAddPair(locus2a,1,464,614,1,712,862,true,1);
+    SVLocus locus2b;
+    locusAddPair(locus2b,1,645,798,1,421,574,false,1);
+    SVLocus locus2c;
+    locusAddPair(locus2c,1,370,851,1,370,851,true,3);
+    SVLocus locus3;
+    locusAddPair(locus3,1,693,843,1,538,688,false,1);
+#endif
+
+    SVLocus locus1;
+    locusAddPair(locus1,1,30,40,1,50,60,true,6);
+    SVLocus locus2a;
+    locusAddPair(locus2a,1,10,20,1,30,60,true,1);
+    SVLocus locus2b;
+    locusAddPair(locus2b,1,30,40,1,10,20,false,1);
+    SVLocus locus2c;
+    locusAddPair(locus2c,1,10,40,1,10,40,true,3);
+    SVLocus locus3;
+    locusAddPair(locus3,1,30,40,1,10,20,false,1);
+
+    locus1.mergeSelfOverlap();
+    locus2a.mergeSelfOverlap();
+    locus2b.mergeSelfOverlap();
+    locus2c.mergeSelfOverlap();
+    locus3.mergeSelfOverlap();
+    {
+        SVLocusSet set1(6);
+        set1.merge(locus1);
+        set1.merge(locus2c);
+        set1.merge(locus2a);
+        set1.merge(locus2b);
+        set1.merge(locus3);
+        const SVLocusSet& cset1(set1);
+
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+        set1.finalize();
+        cset1.checkState(true,true);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+    }
+}
+
+
+
+BOOST_AUTO_TEST_CASE( test_SVLocusTransitiveOverlap3 )
+{
+    // abstracted from real-data error case on MANTA-28
+    //
+    // what happens when there's a complex transitive overlap chain?
+
+    SVLocus locus1;
+    locusAddPair(locus1,1,40,60,1,70,80,true,2);
+    SVLocus locus2a;
+    locusAddPair(locus2a,1,10,40,1,50,60,true,1);
+    SVLocus locus3;
+    locusAddPair(locus3,1,10,20,1,30,60,false,1);
+
+    locus1.mergeSelfOverlap();
+    locus2a.mergeSelfOverlap();
+    locus3.mergeSelfOverlap();
+    {
+        SVLocusSet set1(2);
+        set1.merge(locus1);
+        set1.merge(locus2a);
+        set1.merge(locus3);
+        const SVLocusSet& cset1(set1);
+
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+        set1.finalize();
+        cset1.checkState(true,true);
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
+    }
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

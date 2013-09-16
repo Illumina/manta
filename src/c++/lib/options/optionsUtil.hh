@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 #pragma once
@@ -17,7 +17,7 @@
 
 
 /// check if input file exists and is usable as
-/// input, if so canonicallize the name
+/// input, if so canonicalize the name
 ///
 /// In case of error return true and provide error
 /// message

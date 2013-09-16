@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 #pragma once
@@ -26,6 +26,17 @@
 ///
 struct ReadGroupStatsSet
 {
+    bool
+    empty() const
+    {
+        return _group.empty();
+    }
+
+    unsigned
+    size() const
+    {
+        return _group.size();
+    }
 
     /// \brief get the index of a read group
     ///
@@ -50,6 +61,12 @@ struct ReadGroupStatsSet
         return _group.get_value(group_index);
     }
 
+    const std::string&
+    getLabel(const unsigned group_index) const
+    {
+        return _group.get_key(group_index);
+    }
+
     /// set stats for index
     void
     setStats(const std::string& bam_file,
@@ -57,7 +74,6 @@ struct ReadGroupStatsSet
     {
         _group.insert(bam_file,rps);
     }
-
 
     /// serialize
     void

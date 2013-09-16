@@ -8,9 +8,12 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
+///
+/// \author Xiaoyu Chen
+///
 
 #pragma once
 
@@ -70,7 +73,7 @@ struct SizeDistribution
 
     /// return value for which we observe value or less with prob p
     int
-    quantile(const float p) const;
+    quantile(const float prob) const;
 
     /// prob of observing this size or less
     float
@@ -90,6 +93,9 @@ struct SizeDistribution
         _sizeMap[size].count++;
     }
 
+    /// filter high value outliers:
+    void
+    filterObservationsOverQuantile(const float prob);
 
     typedef std::map<int, SizeData, std::greater<int> > map_type;
 

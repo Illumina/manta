@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -90,12 +90,20 @@ struct id_set
         return _id2k[id];
     }
 
-    unsigned size() const
+    bool
+    empty() const
+    {
+        return _id2k.empty();
+    }
+
+    unsigned
+    size() const
     {
         return _id2k.size();
     }
 
-    void clear()
+    void
+    clear()
     {
         _k2id.clear();
         _id2k.clear();
@@ -188,12 +196,20 @@ struct id_map
         return _id2kv[id].second;
     }
 
-    unsigned size() const
+    bool
+    empty() const
+    {
+        return _id2kv.empty();
+    }
+
+    unsigned
+    size() const
     {
         return _id2kv.size();
     }
 
-    void clear()
+    void
+    clear()
     {
         _k2id.clear();
         _id2kv.clear();

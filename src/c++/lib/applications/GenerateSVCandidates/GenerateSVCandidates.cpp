@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -36,6 +36,7 @@
 #include <iostream>
 #include <memory>
 
+//#define DEBUG_GSV
 
 
 /// provide additional edge details, intended for attachment to an in-flight exception:
@@ -46,7 +47,7 @@ dumpEdgeInfo(
     const SVLocusSet& set,
     std::ostream& os)
 {
-    os << "Exception caught while processing graph component: " << edge;
+    os << edge;
     os << "\tnode1:" << set.getLocus(edge.locusIndex).getNode(edge.nodeIndex1);
     os << "\tnode2:" << set.getLocus(edge.locusIndex).getNode(edge.nodeIndex2);
 }
@@ -77,6 +78,98 @@ edgeRFactory(
 
 
 
+/// hack object setup to allow iteration over multiple sv candidates
+///
+struct SVWriter
+{
+    SVWriter(
+        const GSCOptions& initOpt,
+        const SVLocusSet& cset,
+        const char* progName,
+        const char* progVersion) :
+        opt(initOpt),
+        isSomatic(! opt.somaticOutputFilename.empty()),
+        svScore(opt, cset.header),
+        candfs(opt.candidateOutputFilename),
+        somfs(opt.somaticOutputFilename),
+        candWriter(opt.referenceFilename,cset,candfs.getStream()),
+        somWriter(opt.somaticOpt, (! opt.chromDepthFilename.empty()),
+                  opt.referenceFilename,cset,somfs.getStream())
+    {
+        if (0 == opt.edgeOpt.binIndex)
+        {
+            candWriter.writeHeader(progName, progVersion);
+            if (isSomatic) somWriter.writeHeader(progName, progVersion);
+        }
+    }
+
+    void
+    writeSV(
+        const EdgeInfo& edge,
+        const SVCandidateSetData& svData,
+        const SVCandidateAssemblyData& assemblyData,
+        const SVCandidate& sv)
+    {
+        static const unsigned minCandidatePairCount(3);
+
+        const bool isSelfEdge(edge.nodeIndex1 == edge.nodeIndex2);
+
+#ifdef DEBUG_GSV
+        static const std::string logtag("SVWriter::writeSV");
+        log_os << logtag << " isSelfEdge: " <<  isSelfEdge << "\n";
+#endif
+
+        if (isSelfEdge)
+        {
+            if (sv.isImprecise())
+            {
+#ifdef DEBUG_GSV
+                log_os << logtag << " rejecting candidate\n";
+#endif
+                return;
+            }
+        }
+        else
+        {
+            if (sv.bp1.pairCount < minCandidatePairCount)
+            {
+#ifdef DEBUG_GSV
+                log_os << logtag << " rejecting candidate\n";
+#endif
+
+                return;
+            }
+        }
+
+        candWriter.writeSV(edge, svData, assemblyData, sv);
+
+        if (isSomatic)
+        {
+            svScore.scoreSomaticSV(svData, sv, ssInfo);
+
+            if (ssInfo.somaticScore > opt.somaticOpt.minOutputSomaticScore)
+            {
+                somWriter.writeSV(edge, svData, assemblyData, sv, ssInfo);
+            }
+        }
+    }
+
+    ///////////////////////// data:
+    const GSCOptions& opt;
+    const bool isSomatic;
+
+    SVScorer svScore;
+    SomaticSVScoreInfo ssInfo;
+
+    OutStream candfs;
+    OutStream somfs;
+
+    VcfWriterCandidateSV candWriter;
+    VcfWriterSomaticSV somWriter;
+};
+
+
+
 static
 void
 runGSC(
@@ -84,59 +177,70 @@ runGSC(
     const char* progName,
     const char* progVersion)
 {
-    const bool isSomatic(! opt.somaticOutputFilename.empty());
-
     SVFinder svFind(opt);
     const SVLocusSet& cset(svFind.getSet());
 
     SVCandidateAssemblyRefiner svRefine(opt, cset.header);
 
-    SVScorer svScore(opt, cset.header);
-
     std::auto_ptr<EdgeRetriever> edgerPtr(edgeRFactory(cset, opt.edgeOpt));
     EdgeRetriever& edger(*edgerPtr);
 
-    OutStream candfs(opt.candidateOutputFilename);
-    OutStream somfs(opt.somaticOutputFilename);
-
-    VcfWriterCandidateSV candWriter(opt.referenceFilename,cset,candfs.getStream());
-    VcfWriterSomaticSV somWriter(opt.somaticOpt, (! opt.chromDepthFilename.empty()),
-                                 opt.referenceFilename,cset,somfs.getStream());
-
-    if (0 == opt.edgeOpt.binIndex)
-    {
-        candWriter.writeHeader(progName, progVersion);
-        if (isSomatic) somWriter.writeHeader(progName, progVersion);
-    }
+    SVWriter svWriter(opt, cset, progName, progVersion);
 
     SVCandidateSetData svData;
     std::vector<SVCandidate> svs;
-    SomaticSVScoreInfo ssInfo;
+
+#ifdef DEBUG_GSV
+    static const std::string logtag("runGSC");
+    log_os << logtag << " " << cset.header << "\n";
+#endif
 
     while (edger.next())
     {
         const EdgeInfo& edge(edger.getEdge());
+
+#ifdef DEBUG_GSV
+        log_os << logtag << " starting analysis of edge: ";
+        dumpEdgeInfo(edge,cset,log_os);
+#endif
 
         try
         {
             // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
             svFind.findCandidateSV(edge, svData, svs);
 
-            for (unsigned svIndex(0); svIndex<svs.size(); ++svIndex)
+#ifdef DEBUG_GSV
+            log_os << logtag << " low-res candidate generation complete. candidate count: " << svs.size() << "\n";
+#endif
+
+            BOOST_FOREACH(const SVCandidate& candidateSV, svs)
             {
-                const SVCandidate& sv(svs[svIndex]);
-
+#ifdef DEBUG_GSV
+                log_os << logtag << " starting low-res candidate analysis: " << candidateSV << "\n";
+#endif
                 SVCandidateAssemblyData assemblyData;
-                svRefine.getCandidateAssemblyData(sv, svData, assemblyData);
+                svRefine.getCandidateAssemblyData(candidateSV, svData, assemblyData);
 
-                const SVCandidate& submitSV(assemblyData.isBestAlignment ? assemblyData.sv : sv);
+#ifdef DEBUG_GSV
+                log_os << logtag << " assembly candidate refinement complete. assembly count: " << assemblyData.svs.size() << "\n";
+#endif
 
-                candWriter.writeSV(edge, svData, assemblyData, svIndex, submitSV);
-
-                if (isSomatic)
+                if (assemblyData.svs.empty())
                 {
-                    svScore.scoreSomaticSV(svData, svIndex, submitSV, ssInfo);
-                    somWriter.writeSV(edge, svData, assemblyData, svIndex, submitSV, ssInfo);
+#ifdef DEBUG_GSV
+                    log_os << logtag << " score and output low-res candidate: " << candidateSV << "\n";
+#endif
+                    svWriter.writeSV(edge, svData, assemblyData, candidateSV);
+                }
+                else
+                {
+                    BOOST_FOREACH(const SVCandidate& assembledSV, assemblyData.svs)
+                    {
+#ifdef DEBUG_GSV
+                        log_os << logtag << " score and output assembly candidate: " << assembledSV << "\n";
+#endif
+                        svWriter.writeSV(edge, svData, assemblyData, assembledSV);
+                    }
                 }
             }
         }
@@ -149,6 +253,7 @@ runGSC(
         }
         catch (...)
         {
+            log_os << "Exception caught while processing graph component: ";
             dumpEdgeInfo(edge,cset,log_os);
             throw;
         }

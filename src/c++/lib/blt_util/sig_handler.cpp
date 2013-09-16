@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 /// \author Chris Saunders
@@ -40,7 +40,7 @@ blt_sig_handler (int sig)
         exit(EXIT_FAILURE);
 #ifndef _WIN32
     case SIGINT:
-        log_os << "ERROR: " << _progname << " received interupt signal. cmdline: " << _cmdline << std::endl;
+        log_os << "ERROR: " << _progname << " received interrupt signal. cmdline: " << _cmdline << std::endl;
         exit(EXIT_FAILURE);
 #endif
     default:

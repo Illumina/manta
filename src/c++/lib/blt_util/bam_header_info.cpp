@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 /// \author Chris Saunders
@@ -35,10 +35,13 @@ bam_header_info(const bam_header_t& header)
 std::ostream&
 operator<<(std::ostream& os, const bam_header_info& bhi)
 {
-    os << "BAM_HEADER_INFO:\n";
+    unsigned index(0);
+
+    os << "chomosome_id_map:\n";
     BOOST_FOREACH(const bam_header_info::chrom_info& info, bhi.chrom_data)
     {
-        os << "label: " << info.label << " length: " << info.length;
+        os << "index: " << index << " label: " << info.label << " length: " << info.length << '\n';
+        index++;
     }
     return os;
 }

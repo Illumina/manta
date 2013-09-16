@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -74,24 +74,19 @@ void
 EdgeRetrieverBin::
 jumpToFirstEdge()
 {
+    const bool isFilterNodes(_graphNodeMaxEdgeCount>0);
+
     bool isLastFiltered(false);
 
     // first catch headCount up to the begin edge if required:
     while (true)
     {
-        if (! isLastFiltered)
+        if ((isLastFiltered) && (_edge.locusIndex == _set.size()))
         {
-            assert(_edge.locusIndex<_set.size());
+            _headCount = (_endCount + 1);
+            return;
         }
-        else
-        {
-            assert(_edge.locusIndex<=_set.size());
-            if (_edge.locusIndex == _set.size())
-            {
-                _headCount = (_endCount + 1);
-                return;
-            }
-        }
+        assert(_edge.locusIndex<_set.size());
 
         const SVLocus& locus(_set.getLocus(_edge.locusIndex));
         const unsigned locusObservationCount(locus.totalObservationCount());
@@ -101,7 +96,7 @@ jumpToFirstEdge()
             while (true)
             {
                 const SVLocusNode& node1(locus.getNode(_edge.nodeIndex1));
-                const bool isEdgeFilterNode1((_graphNodeMaxEdgeCount>0) && node1.edges.size()>_graphNodeMaxEdgeCount);
+                const bool isEdgeFilterNode1(isFilterNodes && (node1.edges.size()>_graphNodeMaxEdgeCount));
 
                 typedef SVLocusNode::edges_type::const_iterator edgeiter_t;
                 edgeiter_t edgeIter(node1.edges.lower_bound(_edge.nodeIndex1));
@@ -114,7 +109,7 @@ jumpToFirstEdge()
                     const bool isSelfEdge(edgeIter->first == _edge.nodeIndex1);
                     if (! isSelfEdge) edgeCount += locus.getEdge(edgeIter->first,_edge.nodeIndex1).count;
                     _headCount += edgeCount;
-                    if (_headCount >= _beginCount)
+                    if (_headCount > _beginCount)
                     {
                         _edge.nodeIndex2 = edgeIter->first;
 
@@ -125,6 +120,9 @@ jumpToFirstEdge()
                             const bool isEdgeFilterNode2(node2.edges.size()>_graphNodeMaxEdgeCount);
                             if (isEdgeFilterNode2)
                             {
+#ifdef DEBUG_EDGER
+                                log_os << "EDGER: jump filtering @ hc: " << _headCount << "\n";
+#endif
                                 isLastFiltered=true;
                                 continue;
                             }
@@ -141,7 +139,7 @@ jumpToFirstEdge()
         _edge.locusIndex++;
     }
 
-    assert(! "jumpToFirstEdge: invalid state");
+    assert(false && "jumpToFirstEdge: invalid state");
 }
 
 
@@ -152,31 +150,26 @@ advanceEdge()
 {
     typedef SVLocusNode::edges_type::const_iterator edgeiter_t;
 
+    const bool isFilterNodes(_graphNodeMaxEdgeCount>0);
+
     if (0 != _headCount) _edge.nodeIndex2++;
 
     bool isLastFiltered(false);
 
     while (true)
     {
-        if (! isLastFiltered)
+        if (isLastFiltered && (_edge.locusIndex == _set.size()))
         {
-            assert(_edge.locusIndex<_set.size());
+            _headCount = (_endCount + 1);
+            return;
         }
-        else
-        {
-            assert(_edge.locusIndex<=_set.size());
-            if (_edge.locusIndex == _set.size())
-            {
-                _headCount = (_endCount + 1);
-                return;
-            }
-        }
+        assert(_edge.locusIndex<_set.size());
 
         const SVLocus& locus(_set.getLocus(_edge.locusIndex));
         while (_edge.nodeIndex1<locus.size())
         {
             const SVLocusNode& node1(locus.getNode(_edge.nodeIndex1));
-            const bool isEdgeFilterNode1((_graphNodeMaxEdgeCount>0) && node1.edges.size()>_graphNodeMaxEdgeCount);
+            const bool isEdgeFilterNode1(isFilterNodes && (node1.edges.size()>_graphNodeMaxEdgeCount));
 
             edgeiter_t edgeIter(node1.edges.lower_bound(_edge.nodeIndex2));
             const edgeiter_t edgeIterEnd(node1.edges.end());
@@ -197,6 +190,9 @@ advanceEdge()
                     const bool isEdgeFilterNode2(node2.edges.size()>_graphNodeMaxEdgeCount);
                     if (isEdgeFilterNode2)
                     {
+#ifdef DEBUG_EDGER
+                        log_os << "EDGER: advance filtering @ hc: " << _headCount << "\n";
+#endif
                         isLastFiltered=true;
                         continue;
                     }
@@ -204,15 +200,15 @@ advanceEdge()
 
                 return;
             }
-            _edge.nodeIndex1++;
+            ++_edge.nodeIndex1;
             _edge.nodeIndex2=_edge.nodeIndex1;
         }
-        _edge.locusIndex++;
+        ++_edge.locusIndex;
         _edge.nodeIndex1=0;
         _edge.nodeIndex2=0;
     }
 
-    assert(! "advanceEdge: invalid state");
+    assert(false && "advanceEdge: invalid state");
 }
 
 

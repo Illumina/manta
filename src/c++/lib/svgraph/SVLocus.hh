@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -155,10 +155,12 @@ struct SVLocusNode
         iterator edgeIter(edges.find(toIndex));
         if (edgeIter == edges.end())
         {
+            // this node does not already have an edge to "toIndex", add a new edge:
             edges.insert(std::make_pair(toIndex,edge));
         }
         else
         {
+            // this node already has an edge to "toIndex", merge the existing edge with the new one:
             edgeIter->second.mergeEdge(edge);
         }
     }

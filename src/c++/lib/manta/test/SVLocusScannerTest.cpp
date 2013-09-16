@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE( test_getSVCandidates )
 
     std::vector<SVCandidate> candidates;
 
-    getSVCandidatesFromRead(opt,align,0,candidates);
+    getSVCandidatesFromReadIndels(opt,align,0,candidates);
 
 
     BOOST_REQUIRE_EQUAL(candidates.size(),1u);

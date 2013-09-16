@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -23,14 +23,10 @@
 
 #include "boost/foreach.hpp"
 
-
-// compile with this macro to get verbose output:
-//#define DEBUG_ASBL
-
-#ifdef DEBUG_ASBL
 #include <iostream>
-std::ostream& dbg_os(std::cerr);
-#endif
+
+
+//#define DEBUG_ASBL
 
 
 
@@ -64,7 +60,6 @@ getBreakendReads(
     ReadIndexType& readIndex,
     AssemblyReadInput& reads) const
 {
-
     // get search range:
     known_pos_range2 searchRange;
     {
@@ -84,8 +79,13 @@ getBreakendReads(
         }
     }
 
+#ifdef DEBUG_ASBL
+    static const std::string logtag("SVLocusAssembler::getBreakendReads");
+    log_os << logtag << " searchRange " << searchRange << "\n";
+#endif
 
-    static const unsigned minClipLen(3);
+    // for assembler reads, look for indels at report size or somewhat smaller
+    const unsigned minAssembleIndelSize(_scanOpt.minCandidateIndelSize/2);
 
     // depending on breakend type we may only be looking for candidates in one direction:
     bool isSearchForRightOpen(true);
@@ -99,7 +99,6 @@ getBreakendReads(
     {
         isSearchForRightOpen = false;
     }
-
 
     const unsigned bamCount(_bamStreams.size());
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
@@ -134,54 +133,72 @@ getBreakendReads(
             /// TODO: Add SA read support -- temporarily reject all supplemental reads:
             if (bamRead.is_supplement()) return;
 
-            // FIXME: add some criteria to filter for "interesting" reads here, for now we add
-            // only clipped reads and reads without N
             if ((bamRead.pos()-1) >= searchRange.end_pos()) break;
+
+            // filter reads with "N"
+            if (bamRead.get_bam_read().get_string().find('N') != std::string::npos) continue;
 
             ALIGNPATH::path_t apath;
             bam_cigar_to_apath(bamRead.raw_cigar(), bamRead.n_cigar(), apath);
-        
-            bool isClipKeeper(false);
 
-            if (isSearchForRightOpen)
+            /// check whether we keep this read because of soft clipping:
+            bool isClipKeeper(false);
             {
-                const unsigned trailingClipLen(apath_soft_clip_trail_size(apath));
-                if (trailingClipLen >= minClipLen) isClipKeeper = true;
+                static const unsigned minSoftClipLen(4);
+
+                unsigned leadingClipLen(0);
+                unsigned trailingClipLen(0);
+                getSVBreakendCandidateClip(bamRead, apath, leadingClipLen, trailingClipLen);
+
+                if (isSearchForRightOpen)
+                {
+                    if (trailingClipLen >= minSoftClipLen) isClipKeeper = true;
+                }
+
+                if (isSearchForLeftOpen)
+                {
+                    if (leadingClipLen >= minSoftClipLen) isClipKeeper = true;
+                }
             }
 
-            if (isSearchForLeftOpen)
+            /// check for any indels in read:
+            bool isIndelKeeper(false);
             {
-                const unsigned leadingClipLen(apath_soft_clip_lead_size(apath));
-                if (leadingClipLen >= minClipLen) isClipKeeper = true;
+                using namespace ALIGNPATH;
+                BOOST_FOREACH(const path_segment& ps, apath)
+                {
+                    if (is_segment_type_indel(ps.type))
+                    {
+                        if (ps.length>=minAssembleIndelSize) isIndelKeeper = true;
+                        break;
+                    }
+                }
             }
 
             //if ( !(isClipKeeper || _readScanner.isSemiAligned(bamRead) > minSemiAlignedScore )) continue;
             if (!isClipKeeper) continue;
-
-            if (bamRead.get_bam_read().get_string().find('N') != std::string::npos) continue;
+#ifdef DEBUG_ASBL
+            log_os << " cigar: " << apath << " isClipKeeper: " << isClipKeeper << " isIndelKeeper: " << isIndelKeeper << "\n";
+#endif
 
             //if ( bamRead.pe_map_qual() == 0 ) continue;
             const char flag(bamRead.is_second() ? '2' : '1');
             const std::string readKey = std::string(bamRead.qname()) + "_" + flag + "_" + bamIndexStr;
 
 #ifdef DEBUG_ASBL
-            ALIGNPATH::path_t apath;
-            bam_cigar_to_apath(bamRead.raw_cigar(), bamRead.n_cigar(), apath);
-            dbg_os << "Adding " << readKey << " " << apath << " " << bamRead.pe_map_qual() << " " << bamRead.pos() << endl;
-            dbg_os << bamRead.get_bam_read().get_string() << endl;
+            log_os << logtag << " Adding " << readKey << " " << apath << " " << bamRead.pe_map_qual() << " " << bamRead.pos() << "\n"
+                   << bamRead.get_bam_read().get_string() << "\n";
 #endif
 
             if (readIndex.count(readKey) == 0)
             {
-                // the API gives us always the sequence w.r.t to the fwd ref, so no need
-                // to reverse complement here
                 readIndex.insert(std::make_pair(readKey,reads.size()));
                 reads.push_back(bamRead.get_bam_read().get_string());
                 if (isReversed) reverseCompStr(reads.back());
             }
             else
             {
-                log_os << "WARNING : Read name collision : " << readKey << "\n";
+              //  log_os << "WARNING: SmallAssembler read name collision : " << readKey << "\n";
             }
         }
     }
@@ -194,9 +211,10 @@ SVLocusAssembler::
 assembleSingleSVBreakend(const SVBreakend& bp,
                          Assembly& as) const
 {
+    static const bool isBpReversed(false);
     ReadIndexType readIndex;
     AssemblyReadInput reads;
-    getBreakendReads(bp, false, readIndex, reads);
+    getBreakendReads(bp, isBpReversed, readIndex, reads);
     AssemblyReadOutput readInfo;
     runSmallAssembler(_assembleOpt, reads, readInfo, as);
 }

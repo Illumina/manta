@@ -7,7 +7,7 @@
 #
 # You should have received a copy of the Illumina Open Source
 # Software License 1 along with this program. If not, see
-# <https://github.com/downloads/sequencing/licenses/>.
+# <https://github.com/sequencing/licenses/>
 #
 
 ################################################################################
@@ -94,7 +94,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     get_clang_version(compiler_version)
-    test_min_compiler(${compiler_version} "3.1" "clang++")
+    test_min_compiler(${compiler_version} "3.2" "clang++")
     message (STATUS "using compiler: clang++ version ${compiler_version}")
 else ()
     message (STATUS "using compiler: ${CMAKE_CXX_COMPILER_ID}")
@@ -106,28 +106,74 @@ endif ()
 #
 
 # start with warning flags:
-# switching off warning about unused function because otherwise compilation will fail with g++ 4.7.3 in Ubuntu
-set (CXX_WARN_FLAGS "-Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -Wredundant-decls -pedantic -Wunused-parameter -Wundef -Wno-unused-function")
+set (CXX_WARN_FLAGS "-Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -Wredundant-decls -pedantic -Wunused-parameter -Wundef -Wdisabled-optimization")
 
 if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wuninitialized")
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set (CMAKE_CXX_FLAGS "${CXX_WARN_FLAGS} -Wmissing-prototypes -Wunused-exception-parameter")
+#
+# add extra compiler specific warnings:
+#
+if     (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if (NOT (${compiler_version} VERSION_LESS "4.2"))
+        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wlogical-op")
+    endif ()
+
+    if (NOT ((${compiler_version} VERSION_LESS "4.7") OR (${compiler_version} VERSION_GREATER "4.7")))
+        # switching off warning about unused function because otherwise compilation will fail with g++ 4.7.3 in Ubuntu
+        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-unused-function")
+    endif ()
+
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wmissing-prototypes -Wunused-exception-parameter -Wbool-conversion -Wempty-body -Wimplicit-fallthrough -Wsizeof-array-argument -Wstring-conversion")
+
+    if (NOT (${compiler_version} VERSION_LESS "3.3"))
+        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Woverloaded-shift-op-parentheses")
+    endif ()
+
+    if (NOT (${compiler_version} VERSION_LESS "3.4"))
+        # wait for 3.4 to be released before turning these on by default
+        #set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wheader-guard -Wlogical-not-parentheses -Wloop-analysis -Wunique-enum")
+    endif ()
+
     # documentation of other possible warning flags from clang
-    #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Weverything -Wno-sign-conversion -Wno-weak-vtables -Wno-conversion -Wno-cast-align -Wno-padded -Wno-switch-enum -Wno-missing-noreturn -Wno-covered-switch-default -Wno-unreachable-code -Wno-global-constructors -Wno-exit-time-destructors")
+    #set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Weverything -Wno-sign-conversion -Wno-weak-vtables -Wno-conversion -Wno-cast-align -Wno-padded -Wno-switch-enum -Wno-missing-noreturn -Wno-covered-switch-default -Wno-unreachable-code -Wno-global-constructors -Wno-exit-time-destructors")
 endif()
 
 
 # The NDEBUG macro is intentionally removed from release. One discussion on this is:
 # http://www.drdobbs.com/an-exception-or-a-bug/184401686
 
-set (CMAKE_CXX_FLAGS "${CXX_WARN_FLAGS}")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX_WARN_FLAGS}")
 set (CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
-set (CMAKE_CXX_FLAGS_RELEASE "-O3")
+set (CMAKE_CXX_FLAGS_RELEASE "-O3 -fomit-frame-pointer")
 set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
 #set (CMAKE_CXX_FLAGS_PROFILE "-O0 -g -pg -fprofile-arcs -ftest-coverage")
+
+SET( CMAKE_EXE_LINKER_FLAGS_RELEASE  "${CMAKE_EXE_LINKER_FLAGS_RELEASE} ${GCC_COVERAGE_LINK_FLAGS}" )
+
+
+# add address sanitizer to debug mode:
+set (USE_ADDRESS_SANITIZER false) # if true, turn on Address Sanitizer in debug for compilers which support this:
+
+if (${USE_ADDRESS_SANITIZER})
+    set (IS_ASAN false)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        if (NOT (${compiler_version} VERSION_LESS "4.8"))
+            set (IS_ASAN true)
+        endif ()
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        if (NOT (${compiler_version} VERSION_LESS "3.1"))
+            set (IS_ASAN true)
+        endif ()
+    endif ()
+
+    if (${IS_ASAN})
+        set (CMAKE_CXX_FLAGS_DEBUG "-fsanitize=address -fno-omit-frame-pointer ${CMAKE_CXX_FLAGS_DEBUG}")
+    endif ()
+endif ()
+
 
 # this should be tied to a 'developer' switch -- for now,
 # anyone touching manta is a developer, so this is true:
@@ -142,7 +188,7 @@ if (${DEVELOPER_MODE})
     #
     set(IS_WERROR true)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        if (${compiler_version} VERSION_LESS "4.2.0")
+        if (${compiler_version} VERSION_LESS "4.2")
             set(IS_WERROR false)
         endif ()
     endif ()

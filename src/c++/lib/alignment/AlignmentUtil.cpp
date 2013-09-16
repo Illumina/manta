@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -248,8 +248,21 @@ getSemiAlignedMetric(
                 log_os << "getAlignmentScore: " << posInRead+j << " " << _logpcorrectratio[qual[posInRead+j]]
                        << " " << qual[posInRead+j] << "\n";
 #endif
-                alignScore +=  _logpcorrectratio[qual[posInRead+j]];
-            }
+            alignScore +=  _logpcorrectratio[qual[posInRead]];
+            posInRead += apath[i].length;
+            break;
+
+        case MATCH     :
+        case INSERT    :
+        case DELETE    :
+        case SKIP      :
+        case PAD       :
+        case SEQ_MATCH  :
+            posInRead += apath[i].length;
+            break;
+        default :
+            assert(false && "ERROR: Unexpected match apath in getSemiAlignedMetric !");
+            break;
         } // switch
 
         if(is_segment_type_read_length(ps.type)) posInRead += ps.length;

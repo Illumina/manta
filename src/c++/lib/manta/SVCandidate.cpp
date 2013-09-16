@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -39,8 +39,15 @@ operator<<(std::ostream& os, const SVBreakend& svb)
 std::ostream&
 operator<<(std::ostream& os, const SVCandidate& svc)
 {
-    os << "SVCandidate: isImprecise?: " << svc.isImprecise() << "\n"
-       << "\t" << svc.bp1 << "\n"
+    os << "SVCandidate:\n"
+       << "\tisImprecise?: " << svc.isImprecise() << "\n"
+       << "\tcandidate:assembly index: " << svc.candidateIndex << ":" << svc.assemblyIndex << "\n";
+    if (! svc.isImprecise())
+    {
+        os << "\tAlignment: " << svc.insertAlignment << "\n"
+           << "\tBreakendInsertSeq: " << svc.insertSeq << "\n";
+    }
+    os << "\t" << svc.bp1 << "\n"
        << "\t" << svc.bp2 << "\n";
     return os;
 }
@@ -52,30 +59,33 @@ getSVType(const SVCandidate& sv)
 {
     using namespace SV_TYPE;
 
-    const bool isBp1First(sv.bp1.interval.range.end_pos() <= sv.bp2.interval.range.begin_pos());
-    const bool isBp2First(sv.bp2.interval.range.end_pos() <= sv.bp1.interval.range.begin_pos());
+    // remove failed local assemblies first:
+    if ((sv.bp1.state == SVBreakendState::UNKNOWN) || (sv.bp2.state == SVBreakendState::UNKNOWN))
+    {
+        return UNKNOWN;
+    }
 
-    assert(! (isBp1First && isBp2First));
+    const bool isBp1First(sv.bp1.interval.range.begin_pos() <= sv.bp2.interval.range.begin_pos());
+    const bool isBp2First(sv.bp2.interval.range.begin_pos() <= sv.bp1.interval.range.begin_pos());
 
     if (sv.bp1.interval.tid != sv.bp2.interval.tid)
     {
         return INTERTRANSLOC;
     }
-    else if (! (isBp1First || isBp2First))
-    {
-        return COMPLEX;
-    }
     else if (SVBreakendState::isSameOrientation(sv.bp1.state,sv.bp2.state))
     {
         return INVERSION;
     }
-    else if (isInnies(isBp1First,sv.bp1.state,sv.bp2.state))
+    else if (isBp1First || isBp2First)
     {
-        return DELETION;
-    }
-    else if (isOutties(isBp1First,sv.bp1.state,sv.bp2.state))
-    {
-        return TANDUP;
+        if (isInnies(isBp1First,sv.bp1.state,sv.bp2.state))
+        {
+            return INDEL;
+        }
+        else if (isOutties(isBp1First,sv.bp1.state,sv.bp2.state))
+        {
+            return TANDUP;
+        }
     }
 
     return UNKNOWN;

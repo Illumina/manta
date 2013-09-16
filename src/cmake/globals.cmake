@@ -7,7 +7,7 @@
 #
 # You should have received a copy of the Illumina Open Source
 # Software License 1 along with this program. If not, see
-# <https://github.com/downloads/sequencing/licenses/>.
+# <https://github.com/sequencing/licenses/>
 #
 
 ################################################################################
@@ -17,6 +17,7 @@
 ## author Roman Petrovski
 ##
 ################################################################################
+
 
 install(CODE "
 
@@ -36,6 +37,7 @@ install(CODE "
     get_filename_component(MANTA_FULL_PYTHON_LIBDIR  \"\${FULL_PREFIX}${MANTA_PYTHON_LIBDIR}\" ABSOLUTE)
 
     set(MANTA_VERSION_FULL \"${MANTA_VERSION_FULL}\")
+    set(MANTA_VERSION \"${MANTA_VERSION}\")
     set(MANTA_EXECUTABLE_PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ WORLD_READ OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE)
     set(MANTA_LIBRARY_PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ WORLD_READ)
     ")

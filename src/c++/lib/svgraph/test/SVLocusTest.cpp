@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeMergeSelfEdgeReverse)
 }
 
 
-BOOST_AUTO_TEST_CASE( test_SVLocusNodeMergeMultiSelfEdge)
+BOOST_AUTO_TEST_CASE( test_SVLocusNodeMergeMultiSelfEdge )
 {
     SVLocus locus1;
     NodeIndexType nodePtr1 = locus1.addNode(GenomeInterval(1,10,20));

@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -20,6 +20,8 @@
 #include "blt_util/samtools_fasta_util.hh"
 
 
+
+#if 0
 static
 void
 trimOverlappingRange(
@@ -30,7 +32,7 @@ trimOverlappingRange(
     known_pos_range2* r1(&rA);
     known_pos_range2* r2(&rB);
 
-    if(r1->begin_pos() > r2->begin_pos()) std::swap(r1, r2);
+    if (r1->begin_pos() > r2->begin_pos()) std::swap(r1, r2);
 
     const pos_t overlap(r1->end_pos()-r2->begin_pos());
     if (overlap <= 0) return;
@@ -38,6 +40,7 @@ trimOverlappingRange(
     r1->set_end_pos(r1->end_pos()-(overlap/2));
     r2->set_begin_pos(r1->end_pos());
 }
+#endif
 
 
 
@@ -102,6 +105,23 @@ getIntervalReferenceSegment(
 
 
 
+bool
+isRefRegionOverlap(
+    const bam_header_info& header,
+    const pos_t extraRefEdgeSize,
+    const SVCandidate& sv)
+{
+    if (sv.bp1.interval.tid != sv.bp2.interval.tid) return false;
+    GenomeInterval bp1RefInterval;
+    GenomeInterval bp2RefInterval;
+    getBpReferenceInterval(header,extraRefEdgeSize,sv.bp1.interval,bp1RefInterval);
+    getBpReferenceInterval(header,extraRefEdgeSize,sv.bp2.interval,bp2RefInterval);
+
+    return (bp1RefInterval.isIntersect(bp2RefInterval));
+}
+
+
+
 void
 getSVReferenceSegments(
     const std::string& referenceFilename,
@@ -116,12 +136,15 @@ getSVReferenceSegments(
     getBpReferenceInterval(header,extraRefEdgeSize,sv.bp1.interval,bp1RefInterval);
     getBpReferenceInterval(header,extraRefEdgeSize,sv.bp2.interval,bp2RefInterval);
 
+    // allow overlap (best performance in case of breakends in opposite orientations...:
+#if 0
     // check that the two reference regions do not overlap
     if (bp1RefInterval.isIntersect(bp2RefInterval))
     {
         // rare case, trim intervals so that they become non-overlapping:
         trimOverlappingRange(bp1RefInterval.range, bp2RefInterval.range);
     }
+#endif
 
     getIntervalReferenceSegment(referenceFilename, header, bp1RefInterval, bp1ref);
     getIntervalReferenceSegment(referenceFilename, header, bp2RefInterval, bp2ref);

@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 /// \file
@@ -33,7 +33,12 @@ operator<<(std::ostream& os, const bam_record& br)
     }
     else
     {
-        os << br.qname() << "/" << br.read_no() << " tid:pos " << br.target_id() << ":" << (br.pos()-1) << " mate_tid:pos " << br.mate_target_id() << ":" << (br.mate_pos()-1);
+        os << br.qname() << "/" << br.read_no()
+           << " tid:pos:strand " << br.target_id() << ":" << (br.pos()-1) << ":" << (br.is_fwd_strand() ? '+' : '-');
+        if(br.is_paired())
+        {
+            os  << " mate_tid:pos:strand " << br.mate_target_id() << ":" << (br.mate_pos()-1) << ":" << (br.is_mate_fwd_strand() ? '+' : '-');
+        }
     }
     return os;
 }

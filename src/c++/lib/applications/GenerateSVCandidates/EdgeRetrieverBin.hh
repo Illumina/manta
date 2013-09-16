@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -28,8 +28,9 @@
 ///
 struct EdgeRetrieverBin : public EdgeRetriever
 {
-    /// \param binCount total number of parallel bins, must be 1 or greater
-    /// \param binIndex parallel bin id, must be less than binCount
+    /// \param[in] graphNodeMaxEdgeCount filtration parameter for skipping edges from highly connected nodes (set to zero to disable)
+    /// \param[in] binCount total number of parallel bins, must be 1 or greater
+    /// \param[in[ binIndex parallel bin id, must be less than binCount
     EdgeRetrieverBin(
         const SVLocusSet& set,
         const unsigned graphNodeMaxEdgeCount,

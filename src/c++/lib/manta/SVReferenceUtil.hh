@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -22,6 +22,14 @@
 #include "manta/SVCandidate.hh"
 
 #include <string>
+
+
+/// test whether the two jump aligner regions will overlap
+bool
+isRefRegionOverlap(
+    const bam_header_info& header,
+    const pos_t extraRefEdgeSize,
+    const SVCandidate& sv);
 
 
 void

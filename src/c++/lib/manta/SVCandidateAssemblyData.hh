@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -25,7 +25,7 @@
 #include <vector>
 
 
-/// Assembly data pertaining to a specific SV candidate
+/// \brief Assembly data pertaining to a specific SV candidate
 ///
 /// Assembly starts from a low-resolution SV candidate. This holds
 /// any persistent data related to the assembly process, such as data
@@ -36,11 +36,15 @@
 /// this struct may cover multiple refined candidates (but always only one input
 /// candidate.
 ///
+/// Also note that this class is representing both large scale/spanning SV's using the locus 'jump' aligner
+/// and small-scale local assemblies. This should probably be refactored into two parts, but
+/// it's hard to see the right strategy/interface until the scoring modules reach greater maturity
+/// (the scoring modules are the primary non-local consumer of information from this struct)
+///
 struct SVCandidateAssemblyData
 {
     SVCandidateAssemblyData() :
         isSpanning(false),
-        isBestAlignment(false),
         bestAlignmentIndex(0)
     {}
 
@@ -51,28 +55,32 @@ struct SVCandidateAssemblyData
         isSpanning=false;
         smallSVAlignments.clear();
         spanningAlignments.clear();
-        isBestAlignment=false;
+        smallSVSegments.clear();
         bestAlignmentIndex=0;
         bp1ref.clear();
         bp2ref.clear();
+        svs.clear();
     }
 
     typedef AlignmentResult<int> SmallAlignmentResultType;
     typedef JumpAlignmentResult<int> JumpAlignmentResultType;
 
+    typedef std::pair<unsigned,unsigned> CandidateSegmentType; ///< 'segments' only pertain to small-event alignments
+    typedef std::vector<CandidateSegmentType> CandidateSegmentSetType; ///< 'segments' only pertain to small-event alignments
+
     Assembly contigs; ///< assembled contigs for both breakpoints
 
-    bool isSpanning;
+    bool isSpanning; ///< is this a 2-locus event (spanning), or a local-assembly?
 
-    std::vector<SmallAlignmentResultType> smallSVAlignments; ///< contig global alignments, one per contig, may be empty
     std::vector<JumpAlignmentResultType> spanningAlignments; ///< contig spanning alignments, one per contig, may be empty
 
-    bool isBestAlignment;        ///< is there a contig/alignment good enough to be used for reporting?
-    unsigned bestAlignmentIndex; ///< if isBestAlignment, which is the best?
+    std::vector<CandidateSegmentSetType> smallSVSegments; ///< list of indel sets, one per small alignment
 
-    // expanded reference regions around the candidate SV breakend regions:
+    unsigned bestAlignmentIndex; ///< if non-empty sv candidate set, which contig/alignment produced them?
+
+    // expanded reference regions around the candidate SV breakend regions, for small events we use only bp1ref:
     reference_contig_segment bp1ref;
     reference_contig_segment bp2ref;
 
-    SVCandidate sv; ///< if isBestAlignment, summarize refined sv candidate
+    std::vector<SVCandidate> svs; ///< summarize candidate refined sv candidates
 };

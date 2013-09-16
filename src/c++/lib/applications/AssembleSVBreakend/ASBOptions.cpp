@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -45,24 +45,6 @@ usage(
         os << msg << "\n\n";
     }
     exit(2);
-}
-
-
-
-static
-void
-checkStandardizeUsageFile(
-    std::ostream& os,
-    const manta::Program& prog,
-    const boost::program_options::options_description& visible,
-    std::string& filename,
-    const char* fileLabel)
-{
-    std::string errorMsg;
-    if ( checkStandardizeInputFile(filename, fileLabel, errorMsg))
-    {
-        usage(os,prog,visible,errorMsg.c_str());
-    }
 }
 
 

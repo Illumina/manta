@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "blt_util/align_path.hh"
 #include "svgraph/GenomeInterval.hh"
 
 #include <iosfwd>
@@ -176,7 +177,9 @@ struct SVCandidate
 {
 
     SVCandidate() :
-        _isImprecise(true)
+        _isImprecise(true),
+        candidateIndex(0),
+        assemblyIndex(0)
     {}
 
 #if 0
@@ -229,6 +232,8 @@ struct SVCandidate
         bp1.clear();
         bp2.clear();
         insertSeq.clear();
+        candidateIndex=0;
+        assemblyIndex=0;
     }
 
     void
@@ -271,6 +276,13 @@ public:
     // this is either a micro-insertion in a large-scale SV, or the inserted sequence of an actual insertion
     // in case bp1 and bp2 are on opposite strands (ie. an inversion) the insertSeq is oriented to the fwd strand for bp1
     std::string insertSeq;
+
+    // for some small indels, the alignment becomes sufficiently complex that a CIGAR string provides better detail
+    // (this is provided for any small SV which is more complicated than a simple insert or deletion)
+    ALIGNPATH::path_t insertAlignment;
+
+    unsigned candidateIndex; // low-res candidate index number, used to generate unique SV id
+    unsigned assemblyIndex; // high-res assembly index number, used to generate unique SV id
 };
 
 
@@ -281,10 +293,34 @@ enum index_t
     UNKNOWN,
     INTERTRANSLOC,
     INVERSION,
-    DELETION,
+    INDEL,
     TANDUP,
     COMPLEX
 };
+
+inline
+const char*
+label(const index_t idx)
+{
+    switch (idx)
+    {
+    case UNKNOWN:
+        return "UNKNOWN";
+    case INTERTRANSLOC:
+        return "INTERTRANSLOC";
+    case INVERSION:
+        return "INVERSION";
+    case INDEL:
+        return "INDEL";
+    case TANDUP:
+        return "TANDUP";
+    case COMPLEX:
+        return "COMPLEX";
+    default:
+        return "UNKNOWN";
+    }
+}
+
 }
 
 

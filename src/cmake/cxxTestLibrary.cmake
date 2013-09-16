@@ -7,7 +7,7 @@
 #
 # You should have received a copy of the Illumina Open Source
 # Software License 1 along with this program. If not, see
-# <https://github.com/downloads/sequencing/licenses/>.
+# <https://github.com/sequencing/licenses/>
 #
 
 ################################################################################
@@ -18,7 +18,6 @@
 ##
 ################################################################################
 include(${MANTA_CXX_EXECUTABLE_CMAKE})
-include("${MANTA_MACROS_CMAKE}")
 
 get_filename_component(CURRENT_DIR_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 message (STATUS "Building unit tests for: ${CURRENT_DIR_NAME}")

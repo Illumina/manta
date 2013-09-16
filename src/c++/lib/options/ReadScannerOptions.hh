@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -22,17 +22,17 @@
 
 struct ReadScannerOptions
 {
-
     ReadScannerOptions() :
         minMapq(15),
-        breakendEdgeTrimProb(0.2),
-        properPairTrimProb(0.05),
+        breakendEdgeTrimProb(0.25),
+        properPairTrimProb(0.01),
         evidenceTrimProb(0.15),
-        minCandidateIndelSize(50),
+        minCandidateIndelSize(10),
         minPairBreakendSize(40),
         splitBreakendSizeFraction(0.1),
         maxSplitBreakendSize(100),
-        minSplitBreakendSize(10)
+        minSplitBreakendSize(10),
+        minSoftClipLen(8)
     {}
 
     unsigned minMapq;
@@ -64,9 +64,11 @@ struct ReadScannerOptions
     // whenever a breakend is predicted from an individual read split (ie. non-assembled), the predicted breakend range should be no
     // smaller than this:
     unsigned minSplitBreakendSize;
+
+    // Soft clipped read ends must be of at least this length to be entered as small SV evidence
+    unsigned minSoftClipLen;
 };
 
 
 boost::program_options::options_description
 getOptionsDescription(ReadScannerOptions& opt);
-

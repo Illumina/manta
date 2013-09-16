@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -95,15 +95,11 @@ writeSV(
     const EdgeInfo& edge,
     const SVCandidateSetData& svData,
     const SVCandidateAssemblyData& adata,
-    const unsigned svIndex,
     const SVCandidate& sv,
     const SomaticSVScoreInfo& ssInfo)
 {
-
-    if (ssInfo.somaticScore < _somaticOpt.minOutputSomaticScore) return;
-
     //TODO: this is a lame way to customize subclass behavior:
     _ssInfoPtr=&ssInfo;
-    writeSVCore(edge, svData, adata, svIndex, sv);
+    writeSVCore(edge, svData, adata, sv);
     _ssInfoPtr=NULL;
 }

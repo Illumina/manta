@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -25,6 +25,43 @@
 
 #include <string>
 #include <vector>
+
+
+/// The counts in the SVLocus Graph represent an abstract weight of evidence supporting each edge/node.
+///
+/// To support large and small-scale evidence in a single graph, we need to allow for different weightings
+/// for different evidence types
+///
+struct SVObservationWeights
+{
+    // input evidence:
+    static const unsigned readPair = 2;
+    static const unsigned closeReadPair = 1;
+    static const unsigned internalReadEvent = 2; ///< indels, soft-clip, etc.
+
+    static const float closePairFactor; ///< fragments within this factor of the minimum size cutoff are treated as 'close' pairs and receive a modified evidence count
+
+    // noise reduction:
+    static const unsigned observation = 2; ///< 'average' observation weight, this is used to scale noise filtration, but not for any evidence type
+};
+
+
+
+/// check bam record for soft-clipping which is interesting enough to be used as SV evidence:
+///
+/// \param[in] minQ
+/// \param[in] minQFrac this fraction of bases must have qual>=minQ within the clipped region
+///
+void
+getSVBreakendCandidateClip(
+    const bam_record& bamRead,
+    const ALIGNPATH::path_t& apath,
+    unsigned& leadingClipLen,
+    unsigned& trailingClipLen,
+    const uint8_t minQ = 20,
+    const float minQFrac = 0.75);
+
+
 
 
 /// consolidate functions which process a read to determine its
@@ -53,6 +90,31 @@ struct SVLocusScanner
     isProperPair(
         const bam_record& bamRead,
         const unsigned defaultReadGroupIndex) const;
+
+    /// test whether a fragment is significantly larger than expected
+    ///
+    /// this function is useful to eliminate reads which fail the ProperPair test
+    /// but are still very small
+    ///
+    bool
+    isLargeFragment(
+        const bam_record& bamRead,
+        const unsigned defaultReadGroupIndex) const;
+
+    /// \brief is the read likely to indicate the presence of a small SV?
+    ///
+    /// this function flags reads which could contribute to a local small-variant assembly
+    /// but would not otherwise be caught by the proper pair function
+    ///
+    /// "small" here is relative -- it means any event at a size where read pair evidence will not be dominant
+    ///
+    /// Note that the thresholds in this function are more stringent than the equivalent scan used to
+    /// pick up reads prior to assembly -- in this case false positives could clog up the graph and
+    /// interfere with larger event discovery if not kept under control
+    bool
+    isLocalAssemblyEvidence(
+        const bam_record& bamRead) const;
+
 
     /// test for semi-alignedness
     double
@@ -108,6 +170,10 @@ struct SVLocusScanner
 
     struct CachedReadGroupStats
     {
+        CachedReadGroupStats() :
+            minFarFragmentSize(0)
+        {}
+
         /// fragment size range assumed for the purpose of creating SVLocusGraph regions
         Range breakendRegion;
 
@@ -115,6 +181,8 @@ struct SVLocusScanner
         Range properPair;
 
         Range evidencePair;
+
+        int minFarFragmentSize; ///< beyond the properPair anomalous threshold, there is a threshold to distinguish near and far pairs for the purpose of evidence weight
     };
 
 private:

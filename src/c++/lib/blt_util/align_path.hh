@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -306,7 +306,7 @@ apath_cleaner(path_t& apath);
 void
 apath_clean_seqmatch(path_t& apath);
 
-/// convert the input alignpath use seq match '=' and mismatch 'X'
+/// convert the input alignpath to use seq match '=' and mismatch 'X' instead of align-match 'M'
 ///
 template <typename symIter>
 void
@@ -479,7 +479,6 @@ bool
 is_apath_invalid(const path_t& apath,
                  const unsigned seq_length)
 {
-
     return (ALIGN_ISSUE::NONE != get_apath_invalid_type(apath,seq_length));
 }
 

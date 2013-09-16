@@ -8,7 +8,7 @@
 //
 // You should have received a copy of the Illumina Open Source
 // Software License 1 along with this program. If not, see
-// <https://github.com/downloads/sequencing/licenses/>.
+// <https://github.com/sequencing/licenses/>
 //
 
 ///
@@ -242,9 +242,10 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
         const bool isCheckOverlap = false,
         const bool isCheckLocusConnected = false) const;
 
-private:
 
     typedef std::pair<LocusIndexType,NodeIndexType> NodeAddressType;
+
+private:
 
     typedef NodeAddressType EdgeMapKeyType;
     typedef NodeIndexType EdgeMapValueType;
@@ -311,10 +312,16 @@ private:
     }
 
     void
-    clearLocus(const LocusIndexType locusIndex)
+    clearLocus(const LocusIndexType index)
     {
-        _loci[locusIndex].clear();
-        _emptyLoci.insert(locusIndex);
+#ifdef DEBUG_SVL
+        log_os << "SVLocusSet::clearLocus index: " << index << "\n";
+#endif
+
+        assert(index<_loci.size());
+
+        _loci[index].clear();
+        _emptyLoci.insert(index);
         _source="UNKNOWN";
     }
 
@@ -338,7 +345,7 @@ private:
 
     /// get all nodes in this object which intersect with the inputNode
     ///
-    /// \param[in] isTestUsability check whether a node intersection exceeds computablility limits
+    /// \param[in] isTestUsability check whether a node intersection exceeds computability limits
     ///
     /// \return is usable node (can only be false when isTestUsability is true)
     ///
@@ -415,6 +422,12 @@ private:
     }
 
     bool
+    isNoiseNode(const NodeAddressType inputAddy) const
+    {
+        return getLocus(inputAddy.first).isNoiseNode(getMinMergeEdgeCount(),inputAddy.second);
+    }
+
+    bool
     isOverlapAllowed() const
     {
         return (! _isFinalized);
@@ -474,6 +487,25 @@ private:
 
     void
     dumpIndex(std::ostream& os) const;
+
+    /// throw an exception if any nodes are overlapping
+    ///
+    /// if isFilterNoise is true, consider only signal nodes
+    void
+    checkForOverlapNodes(
+        const bool isFilterNoise) const;
+
+    /// look for non-noise nodes intersecting findSignalAddy
+    ///
+    ///
+    void
+    findSignalNodes(
+        const LocusIndexType inputLocusIndex,
+        const NodeAddressType findSignalAddy,
+        std::set<NodeAddressType>& signalIntersectNodes,
+        const std::set<NodeAddressType>& inputIntersectRemotes,
+        bool& isIntersectRemotes) const;
+
 
     ///////////////////// data
 
