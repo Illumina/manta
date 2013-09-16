@@ -23,8 +23,13 @@ set -o pipefail
 usage()
 {
     cat <<EOF
+
+Manta SV caller build configuration
+
 Usage: $0 [options]
+
 Options: [defaults in brackets after descriptions]
+
 Configuration:
   --help                  print this message
   --verbose               display more information (enables CMAKE_VERBOSE_MAKEFILE)
@@ -45,17 +50,13 @@ Directory and file names:
                           [$prefix_dir]
 
 Some influential environment variables:
-  BOOST_ROOT       location of the boost library
-  BOOST_INCLUDEDIR location of the include directory of boost
-  BOOST_LIBRARYDIR location of the lib directory of boost
-  CC               C compiler command
-  CFLAGS           C compiler flags
+  BOOST_ROOT       root location of the boost library and headers
+  CXX              C++ compiler command
+  CXXFLAGS         C++ compiler flags
   LDFLAGS          linker flags, e.g. -L<lib dir> if you have libraries in a
                    nonstandard directory <lib dir>
   CPPFLAGS         C/C++ preprocessor flags, e.g. -I<include dir> if you have
                    headers in a nonstandard directory <include dir>
-  CXX              C++ compiler command
-  CXXFLAGS         C++ compiler flags
   CMAKE_OPTIONS    CMake command line options
 
 Use these variables to override the choices made by 'configure' or to help
@@ -103,22 +104,6 @@ source_dir="$(rel2abs $source_dir)"
 redist_dir="${source_dir}/../redist"
 bootstrap_dir="${source_dir}/cmake/bootstrap"
 build_dir="$(pwd -P)"
-
-if [ "$source_dir" == "$build_dir" ]; then
-    cat <<EOF
-
-ERROR: This project cannot be built in the source directory. Please run
-       configuration in a separate directory. Example:
-
-    """
-    mkdir ../build
-    cd ../build
-    \${MANTA_ROOT_DIR}/src/configure [configure_options]
-    """
-
-EOF
-    exit 1
-fi
 
 
 # Determine whether this is a MinGW environment.
@@ -175,6 +160,8 @@ for a in "$@"; do
         prefix_dir=`fix_slashes "${prefix_dir}"`
     elif echo $a | grep "^--help" > /dev/null 2> /dev/null; then
         usage
+    elif echo $a | grep "^-h" > /dev/null 2> /dev/null; then
+        usage
     elif echo $a | grep "^--with-cmake=" > /dev/null 2> /dev/null; then
         cmake=`echo $a | sed "s/^--with-cmake=//"`
         cmake=`fix_slashes "${cmake}"`
@@ -198,6 +185,25 @@ for a in "$@"; do
     fi
 done
 
+
+#
+# prevent in-source builds (but allow usage to be triggered first)
+#
+if [ "$source_dir" == "$build_dir" ]; then
+    cat <<EOF
+
+ERROR: This project cannot be built in the source directory. Please run
+       configuration in a separate directory. Example:
+
+    """
+    mkdir ../build
+    cd ../build
+    \${MANTA_ROOT_DIR}/src/configure [configure_options]
+    """
+
+EOF
+    exit 1
+fi
 
 #
 # setup cmake options
@@ -333,18 +339,6 @@ EOF
     exit 5
 fi
 
-if [ "${build_dir}" == "${source_dir}" ]; then
-    source_dirname=$(basename $source_dir)
-    cat<<EOF 1>&2
-Warning: it is recommended to build outside of the source directory:
-    mkdir ../build
-    cd ../build
-    ../${source_dirname}/configure --prefix=/path/to/install/dir
-    make
-    make install
-
-EOF
-fi
 
 cat<<EOF 1>&2
 
