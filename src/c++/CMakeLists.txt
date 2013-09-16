@@ -35,10 +35,12 @@ include ("${MANTA_CXX_CONFIGURE_CMAKE}")
 ##
 set (MANTA_CXX_ALL_INCLUDES "${CMAKE_CURRENT_SOURCE_DIR}/lib")
 
-add_custom_target(cppcheck
+add_custom_target(MANTA_CPPCHECK
     ALL
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/run_cppcheck.bash
+    COMMAND ${SOURCE_QC_DIR}/run_cppcheck.bash ${CMAKE_CURRENT_SOURCE_DIR}
     )
+
+add_dependencies(MANTA_OPT MANTA_CPPCHECK)
 
 ##
 ## Build all the libraries for the project
