@@ -51,8 +51,16 @@ parseOptions(
 {
     // paste together tumor and normal:
     {
-        const files_t& normal(boost::any_cast<files_t>(vm["align-file"].value()));
-        const files_t& tumor(boost::any_cast<files_t>(vm["tumor-align-file"].value()));
+        files_t normal;
+        files_t tumor;
+        if (vm.count("align-file"))
+        {
+            normal=(boost::any_cast<files_t>(vm["align-file"].value()));
+        }
+        if (vm.count("tumor-align-file"))
+        {
+            tumor=(boost::any_cast<files_t>(vm["tumor-align-file"].value()));
+        }
         opt.alignmentFilename = normal;
         opt.alignmentFilename.insert(opt.alignmentFilename.end(),
                                      tumor.begin(),

@@ -429,12 +429,12 @@ writeInvdel(
     // build INFO field
     std::vector<std::string> words;
     split_string(label,':',words);
-    infotags.push_back( str(boost::format("SVTYPE=%s") % words[0]));
     if (! isSmallVariant)
     {
         infotags.push_back( str(boost::format("END=%i") % endPos));
+        infotags.push_back( str(boost::format("SVTYPE=%s") % words[0]));
+        infotags.push_back( str(boost::format("SVLEN=%i") % (-1*(endPos-pos))));
     }
-    infotags.push_back( str(boost::format("SVLEN=%i") % (endPos-pos)));
     infotags.push_back( str(boost::format("UPSTREAM_PAIR_SUPPORT=%i") % bpA.readCount) );
     infotags.push_back( str(boost::format("DOWNSTREAM_PAIR_SUPPORT=%i") % bpB.readCount) );
     infotags.push_back( str(boost::format("PAIR_SUPPORT=%i") % bpA.pairCount) );
