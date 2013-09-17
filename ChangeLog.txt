@@ -1,3 +1,4 @@
+v0.8
 - MANTA-28 Add prototype discovery/local-assembly of small events down to 10 bases 
 - MANTA-24 Better handle very high depth and chimeric noise complexity based
 on BWA-mem FFPE examples
