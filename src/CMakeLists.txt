@@ -20,7 +20,7 @@
 
 cmake_minimum_required(VERSION 2.8.0)
 
-message (STATUS "**** Initializing project cmake configuration ****")
+message (STATUS "==== Initializing project cmake configuration ====")
 
 enable_testing()
 
@@ -33,6 +33,7 @@ set(MANTA_PROJECT_NAME "manta")
 
 # get version
 set(SOURCE_BOOTSTRAP_DIR "${CMAKE_SOURCE_DIR}/cmake/bootstrap")
+set(SOURCE_QC_DIR "${CMAKE_SOURCE_DIR}/srcqc")
 
 execute_process(COMMAND bash ${SOURCE_BOOTSTRAP_DIR}/getVersion.bash OUTPUT_VARIABLE MANTA_GIT_VERSION)
 set(MANTA_VERSION "${MANTA_GIT_VERSION}")
@@ -118,18 +119,25 @@ set (MANTA_MACROS_CMAKE "${CMAKE_SOURCE_DIR}/cmake/macros.cmake")
 # redist includes
 include ("${CMAKE_SOURCE_DIR}/cmake/boost.cmake")
 
+# global source QC -- don't allow non-ascii chars in source files:
+add_custom_target(MANTA_SOURCE_CHECK
+    ALL
+    COMMAND ${SOURCE_QC_DIR}/check_for_nonascii_source.bash
+    )
+
+# force this to run earlY:
+add_dependencies(MANTA_OPT MANTA_SOURCE_CHECK)
+
 # force unit tests at compile time, and set them to be more verbose than
 # cmake's default "test" target:
 add_custom_target(MANTA_UNITTESTS
-        ALL
-        COMMAND ${CMAKE_CTEST_COMMAND} --force-new-ctest-process --output-on-failure
-        )
+    ALL
+    COMMAND ${CMAKE_CTEST_COMMAND} --force-new-ctest-process --output-on-failure
+    )
 
 add_subdirectory (cmake/preInstall)
 add_subdirectory (opt)
 add_subdirectory (c++)
 add_subdirectory (python)
 add_subdirectory (cmake/postInstall)
-
-
 

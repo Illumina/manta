@@ -16,9 +16,23 @@
 set -o nounset
 set -o pipefail
 
+if [ $# != 1 ]; then
+    cat <<EOF
+
+    usage: $0  cxx_root_directory
+
+    run cppcheck on manta c++ source code, return error for any unsupressed cppcheck issue
+
+EOF
+    exit 2
+fi
+
+srcRoot=$1
+
+
 if ! which -a cppcheck > /dev/null 2>&1 ; then exit 0; fi
 
-thisDir=$(dirname $0)
+#thisDir=$(dirname $0)
 
 outFile=cppcheck.log
 
@@ -32,7 +46,7 @@ cppcheck \
 --suppress=unusedFunction \
 --suppress=unmatchedSuppression \
 --suppress=missingInclude \
-$thisDir 2>| $outFile
+$srcRoot 2>| $outFile
 
 # xml output is usful for getting a warnings id field, which is what you need to supress it:
 # --xml \
