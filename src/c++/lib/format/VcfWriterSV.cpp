@@ -44,7 +44,8 @@ VcfWriterSV(
     _referenceFilename(referenceFilename),
     _header(set.header),
     _os(os),
-    _idFormatter("MantaBND:%i:%i:%i:%i:")
+    _transLocIdFormatter("MantaBND:%i:%i:%i:%i:"),
+    _otherSVIdFormatter("%s:%i:%i:%i:%i:%i")
 {
 }
 
@@ -329,7 +330,7 @@ writeTranslocPair(
     const SVCandidateSetData& svData,
     const SVCandidateAssemblyData& adata)
 {
-    const std::string idPrefix( str(_idFormatter % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex ) );
+    const std::string idPrefix( str(_transLocIdFormatter % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex) );
 
     writeTransloc(sv, idPrefix, true, svData, adata);
     writeTransloc(sv, idPrefix, false, svData, adata);
@@ -341,6 +342,7 @@ VcfWriterSV::
 writeInvdel(
     const SVCandidate& sv,
     const std::string& label,
+    const std::string& vcfId,
     const bool isIndel)
 {
     const bool isImprecise(sv.isImprecise());
@@ -401,9 +403,6 @@ writeInvdel(
     }
 
     if (pos<1) return;
-
-    // get ID
-    static const std::string localId(".");
 
     // get REF
     std::string ref;
@@ -499,7 +498,7 @@ writeInvdel(
     // write out record:
     _os << chrom
         << '\t' << pos
-        << '\t' << localId // ID
+        << '\t' << vcfId // ID
         << '\t' << ref // REF
         << '\t' << alt // ALT
         << '\t' << '.' // QUAL
@@ -515,9 +514,14 @@ writeInvdel(
 void
 VcfWriterSV::
 writeInversion(
-    const SVCandidate& sv)
+	const EdgeInfo& edge,
+    const SVCandidate& sv,
+    const SVCandidateSetData& /*svData*/,
+    const SVCandidateAssemblyData& adata)
 {
-    writeInvdel(sv,"INV");
+	const std::string label("INV");
+    const std::string vcfId( str(_otherSVIdFormatter % label % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex % adata.bestAlignmentIndex ) );
+    writeInvdel(sv,label,vcfId);
 }
 
 
@@ -525,7 +529,10 @@ writeInversion(
 void
 VcfWriterSV::
 writeIndel(
-    const SVCandidate& sv)
+	const EdgeInfo& edge,
+	const SVCandidate& sv,
+	const SVCandidateSetData& /*svData*/,
+	const SVCandidateAssemblyData& adata)
 {
     static const bool isIndel(true);
 
@@ -539,25 +546,38 @@ writeIndel(
 
     const bool isDelete(deleteSize >= insertSize);
 
-    writeInvdel(sv,(isDelete ? "DEL" : "INS"), isIndel);
+	const std::string label(isDelete ? "DEL" : "INS");
+    const std::string vcfId( str(_otherSVIdFormatter % label % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex % adata.bestAlignmentIndex ) );
+
+    writeInvdel(sv,label,vcfId,isIndel);
 }
 
 
 void
 VcfWriterSV::
 writeTanDup(
-    const SVCandidate& sv)
+	const EdgeInfo& edge,
+	const SVCandidate& sv,
+	const SVCandidateSetData& /*svData*/,
+	const SVCandidateAssemblyData& adata)
 {
-    writeInvdel(sv,"DUP:TANDEM");
+	const std::string label("DUP:TANDEM");
+	const std::string vcfId( str(_otherSVIdFormatter % label % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex % adata.bestAlignmentIndex ) );
+    writeInvdel(sv,label,vcfId);
 }
 
 
 void
 VcfWriterSV::
 writeComplex(
-    const SVCandidate& sv)
+	const EdgeInfo& edge,
+	const SVCandidate& sv,
+	const SVCandidateSetData& /*svData*/,
+	const SVCandidateAssemblyData& adata)
 {
-    writeInvdel(sv,"COMPLEX");
+	const std::string label("COMPLEX");
+	const std::string vcfId( str(_otherSVIdFormatter % label % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex % adata.bestAlignmentIndex ) );
+    writeInvdel(sv,label,vcfId);
 }
 
 
@@ -582,19 +602,19 @@ writeSVCore(
     }
     else if (svType == SV_TYPE::INVERSION)
     {
-        writeInversion(sv);
+        writeInversion(edge, sv, svData, adata);
     }
     else if (svType == SV_TYPE::INDEL)
     {
-        writeIndel(sv);
+        writeIndel(edge, sv, svData, adata);
     }
     else if (svType == SV_TYPE::TANDUP)
     {
-        writeTanDup(sv);
+        writeTanDup(edge, sv, svData, adata);
     }
     else if (svType == SV_TYPE::COMPLEX)
     {
-        writeComplex(sv);
+        writeComplex(edge, sv, svData, adata);
     }
     else
     {
