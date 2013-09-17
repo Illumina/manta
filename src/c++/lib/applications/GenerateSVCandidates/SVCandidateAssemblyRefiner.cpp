@@ -717,6 +717,7 @@ getSmallSVAssembly(
 
         // keep the highest scoring QC'd candidate:
         // TODO: we should keep all QC'd candidates for the small event case
+        // FIXME : prevents us from finding overlapping events, keep vector of high-scoring contigs?
         if ((! isHighScore) || (alignment.score > assemblyData.smallSVAlignments[highScoreIndex].score))
         {
 #ifdef DEBUG_REFINER
@@ -746,31 +747,13 @@ getSmallSVAssembly(
         const AssembledContig& bestContig(assemblyData.contigs[assemblyData.bestAlignmentIndex]);
         const SVCandidateAssemblyData::SmallAlignmentResultType& bestAlign(assemblyData.smallSVAlignments[assemblyData.bestAlignmentIndex]);
 
-        // first get each alignment associated with the correct breakend:
-        const Alignment* bpAlignPtr(&bestAlign.align);
-        //const Alignment* bp2AlignPtr(&bestAlign.align2);
-
-        //if (isBp2AlignedFirst) std::swap(bp1AlignPtr, bp2AlignPtr);
-
-        // summarize usable output information in a second SVBreakend object -- this is the 'refined' sv:
-        assemblyData.sv = sv;
-
-        assemblyData.sv.setPrecise();
-
-        // TODO: Do we still need this?
-        // I think so :-) looks useful: making my best guess about the parameters required
-        bool isBpAlignedFirst(true);
-        unsigned jumpRange(0);
-        bool isBpReversed(false);
-        adjustAssembledBreakend(*bp1AlignPtr,isBp2AlignedFirst,jumpRange, assemblyData.bp1ref, isBpReversed, assemblyData.sv.bp1);
-        //adjustAssembledBreakend(*bp2AlignPtr, (isBp2AlignedFirst), bestAlign.jumpRange, assemblyData.bp2ref, isBp2Reversed, assemblyData.sv.bp2);
-
-        // fill in insertSeq:
-        /*assemblyData.sv.insertSeq.clear();
-        if (bestAlign.jumpInsertSize > 0)
+        const SVCandidateAssemblyData::CandidateSegmentSetType& candidateSegments(assemblyData.smallSVSegments[assemblyData.bestAlignmentIndex]);
+        BOOST_FOREACH(const SVCandidateAssemblyData::CandidateSegmentType& segRange, candidateSegments)
         {
-            getFwdStrandInsertSegment(bestAlign, bestContig.seq, isBp1Reversed, assemblyData.sv.insertSeq);
-        }*/
+            assemblyData.svs.push_back(sv);
+            SVCandidate& newSV(assemblyData.svs.back());
+            newSV.assemblyIndex = (assemblyData.svs.size() - 1);
+            setSmallCandSV(assemblyData.bp1ref, bestContig.seq, bestAlign.align, segRange, newSV);
 
 #ifdef DEBUG_REFINER
             log_os << logtag << "small refined sv: " << newSV;

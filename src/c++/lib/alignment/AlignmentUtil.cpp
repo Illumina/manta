@@ -248,22 +248,10 @@ getSemiAlignedMetric(
                 log_os << "getAlignmentScore: " << posInRead+j << " " << _logpcorrectratio[qual[posInRead+j]]
                        << " " << qual[posInRead+j] << "\n";
 #endif
-            alignScore +=  _logpcorrectratio[qual[posInRead]];
-            posInRead += apath[i].length;
-            break;
-
-        case MATCH     :
-        case INSERT    :
-        case DELETE    :
-        case SKIP      :
-        case PAD       :
-        case SEQ_MATCH  :
-            posInRead += apath[i].length;
-            break;
-        default :
-            assert(false && "ERROR: Unexpected match apath in getSemiAlignedMetric !");
-            break;
-        } // switch
+                alignScore +=  _logpcorrectratio[qual[posInRead]];
+                posInRead += apath[i].length;
+            }
+        } 
 
         if(is_segment_type_read_length(ps.type)) posInRead += ps.length;
    } // for

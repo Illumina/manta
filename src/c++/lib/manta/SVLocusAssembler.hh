@@ -80,7 +80,7 @@ private:
     const ReadScannerOptions _scanOpt;
     const SmallAssemblerOptions _assembleOpt;
 
-    // functions to detect anomalous read
+    // contains functions to detect/classify anomalous reads
     SVLocusScanner _readScanner;
     std::vector<streamPtr> _bamStreams;
 };

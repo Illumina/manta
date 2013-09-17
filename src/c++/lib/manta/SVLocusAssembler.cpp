@@ -176,7 +176,7 @@ getBreakendReads(
             }
 
             //if ( !(isClipKeeper || _readScanner.isSemiAligned(bamRead) > minSemiAlignedScore )) continue;
-            if (!isClipKeeper) continue;
+            if (!isClipKeeper || !isIndelKeeper) continue;
 #ifdef DEBUG_ASBL
             log_os << " cigar: " << apath << " isClipKeeper: " << isClipKeeper << " isIndelKeeper: " << isIndelKeeper << "\n";
 #endif
