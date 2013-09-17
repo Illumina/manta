@@ -87,6 +87,7 @@ struct bam_header_info
     };
 
     std::vector<chrom_info> chrom_data;
+    std::map<std::string, int32_t> chrom_to_int;
 };
 
 

@@ -116,6 +116,185 @@ GetSplitSVCandidate(
 
 /// get SV candidates from indels in the read alignment
 static
+SVCandidate
+GetSplitSACandidate(
+    const ReadScannerOptions& opt,
+    const int32_t alignTidLocal,
+    const int32_t alignTidRemote,
+    const pos_t leftPos,
+    const pos_t rightPos,
+    const string& mdLocal,
+    const string& mdRemote,
+    const char strandLocal,
+    const char strandRemote)
+{
+    SVCandidate sv;
+    SVBreakend& localBreakend(sv.bp1);
+    SVBreakend& remoteBreakend(sv.bp2);
+
+    localBreakend.splitCount++;
+    remoteBreakend.splitCount++;
+
+    // Need to use the match descriptors to determine if
+    //  we are upstream clipped or downstream clipped. We 
+    //  also then need to use the strand. Below is the logic
+    //
+    // Upstream & +    => LEFT_OPEN
+    // Upstream & -    => RIGHT_OPEN
+    // DownStream & +  => RIGHT_OPEN
+    // DownStream & -  => LEFT_OPEN
+    //
+    localBreakend.state = SVBreakendState::RIGHT_OPEN;
+    remoteBreakend.state = SVBreakendState::LEFT_OPEN;
+
+    localBreakend.interval.tid = alignTidLocal;
+    remoteBreakend.interval.tid = alignTidRemote;
+
+    const pos_t beforeBreakend(opt.minPairBreakendSize/2);
+    const pos_t afterBreakend(opt.minPairBreakendSize-beforeBreakend);
+
+    localBreakend.interval.range.set_begin_pos(std::max(0,leftPos-beforeBreakend));
+    localBreakend.interval.range.set_end_pos(leftPos+afterBreakend);
+
+    remoteBreakend.interval.range.set_begin_pos(std::max(0,rightPos-beforeBreakend));
+    remoteBreakend.interval.range.set_end_pos(rightPos+afterBreakend);
+
+    return sv;
+}
+
+static 
+void strToVec(const string& line, vector<string>& data, char sep = '\t') 
+{
+  // Ensure data is clean
+  data.clear();
+
+  string::size_type prevIndex = 0;
+  string::size_type currIndex = line.find_first_of(sep);
+  int idx = 0;
+  while(currIndex != string::npos) 
+  {
+    data.push_back(line.substr(prevIndex, currIndex - prevIndex));
+
+    prevIndex = currIndex+1;
+    currIndex = line.find_first_of(sep, prevIndex);
+    idx++;
+  }
+  data.push_back(line.substr(prevIndex, line.length() - prevIndex));
+}
+
+
+static
+void
+getSACandidatesFromRead(
+    const ReadScannerOptions& opt,
+    const bam_record& localRead
+    const int32_t alignTid,
+    std::vector<SVCandidate>& candidates)
+{
+    using namespace ALIGNPATH;
+
+    // Now we need to loop over each SA tag and set that as the end position
+    std::string saStr(localRead.get_string_tag("SA"));
+    std::vector<std::string> saVec;
+    strToVec(saStr, saVec, ';');
+    // For now we will only handle a single split alignment
+    //  In the future we will need to sort the SA tags by order on of segements on
+    //   the actual template. 
+    //  We may also have to toss conflicting segments that map to two different areas,
+    //   or at least find some way of dealing with them. 
+    if (saVec.size() > 1)
+    {
+      return;
+    }
+
+    BOOST_FOREACH(const string& sa, saVec)
+    {
+      std::vector<std::string> saDat;
+      std::vector<std::string> tmpVec;
+      strToVec(sa, tmpVec, ':');
+      strToVec(tmpVec[2], saDat, ',');
+
+      std::string saChr(saDat[0]); // convert chr to int32_t via new bam header map
+      std::string saPos(saDat[1]); // convert to pos_t
+      std::string saStrand(saDat[2]); // convert to char
+      std::string saMd(saDat[3]);
+
+      pos_t refHeadPos(align.pos);
+      
+
+      //candidates.push_back(GetSplitSACandidate(opt,alignTid,refHeadPos,refHeadPos+align.path[pathIndex].length));
+      // At this point we don't care about strand
+      candidates.push_back(GetSplitSACandidate(opt,alignTid,saChr,refHeadPos,saPos));
+    }
+
+    const std::pair<unsigned,unsigned> ends(get_match_edge_segments(align.path));
+
+    unsigned pathIndex(0);
+    unsigned readOffset(0);
+
+    const unsigned pathSize(align.path.size());
+    while (pathIndex<pathSize)
+    {
+        const path_segment& ps(align.path[pathIndex]);
+        const bool isBeginEdge(pathIndex<ends.first);
+        const bool isEndEdge(pathIndex>ends.second);
+        const bool isEdgeSegment(isBeginEdge || isEndEdge);
+
+        // in this case, swap means combined insertion/deletion
+        const bool isSwapStart(is_segment_swap_start(align.path,pathIndex));
+
+        assert(ps.type != SKIP);
+        assert(! (isEdgeSegment && isSwapStart));
+
+        unsigned nPathSegments(1); // number of path segments consumed
+        if (isEdgeSegment)
+        {
+            // edge inserts are allowed for intron adjacent and grouper reads, edge deletions for intron adjacent only
+
+            if (ps.type == INSERT)
+            {
+                // ignore for now...
+            }
+            else if (ps.type == SOFT_CLIP)
+            {
+                // ignore for now...
+            }
+        }
+        else if (isSwapStart)
+        {
+            const swap_info sinfo(align.path,pathIndex);
+            if (sinfo.delete_length >= opt.minCandidateIndelSize)
+            {
+                candidates.push_back(GetSplitSVCandidate(opt,alignTid,refHeadPos,refHeadPos+sinfo.delete_length));
+            }
+
+            nPathSegments = sinfo.n_seg;
+        }
+        else if (is_segment_type_indel(align.path[pathIndex].type))
+        {
+            // regular indel:
+
+            if (ps.type == DELETE)
+            {
+                if (align.path[pathIndex].length >= opt.minCandidateIndelSize)
+                {
+                    candidates.push_back(GetSplitSVCandidate(opt,alignTid,refHeadPos,refHeadPos+align.path[pathIndex].length));
+                }
+            }
+
+            // ignore other indel types for now...
+        }
+
+        for (unsigned i(0); i<nPathSegments; ++i)
+        {
+            increment_path(align.path,pathIndex,readOffset,refHeadPos);
+        }
+    }
+}
+
+
+
+static
 void
 getSVCandidatesFromReadIndels(
     const ReadScannerOptions& opt,
@@ -379,6 +558,13 @@ getSVCandidatesFromPair(
     // update localEvidenceRange:
     const unsigned readSize(apath_read_length(localAlign.path));
     const unsigned localRefLength(apath_ref_length(localAlign.path));
+
+    // 3) process split read (SA tag) segment relationships:
+    if (localRead.is_supplement())
+    {
+      //getSACandidateFromRead(opt, localAlign, localRead.target_id(), candidates);
+      getSACandidateFromRead(opt, localRead, localRead.target_id(), candidates);
+    }
 
     unsigned thisReadNoninsertSize(0);
     if (localAlign.is_fwd_strand)
