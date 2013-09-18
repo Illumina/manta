@@ -177,7 +177,7 @@ getBreakendReads(
             log_os << " cigar: " << apath << " isClipKeeper: " << isClipKeeper << " isIndelKeeper: " << isIndelKeeper << "\n";
 #endif
 
-            bool isSemiAlignedKeeper(false);
+            /*bool isSemiAlignedKeeper(false);
             {
             	if (_readScanner.isSemiAligned(bamRead)) isSemiAlignedKeeper = true;
             }
@@ -185,12 +185,12 @@ getBreakendReads(
             bool isShadowKeeper(false);
             {
             	if (_readScanner.isShadow(bamRead)) isShadowKeeper = true;
-            }
+            }*/
 
             if (! (isClipKeeper
             	|| isIndelKeeper
-            	|| isSemiAlignedKeeper
-            	|| isShadowKeeper
+            	//|| isSemiAlignedKeeper
+            	//|| isShadowKeeper
             	)) continue;
 
             //if ( bamRead.pe_map_qual() == 0 ) continue;
