@@ -61,7 +61,7 @@ reheader_file() {
         is_exe=true
     fi
     tmpfile=$(mktemp)
-    $script new_header < $file >| $tmpfile
+    $script $thisdir/new_header < $file >| $tmpfile
     if [ $? != 0 ]; then echo "error on file $file"; exit 1; fi
     mv $tmpfile $file
     if [ $? != 0 ]; then echo "error on file $file"; exit 1; fi
@@ -71,7 +71,7 @@ reheader_file() {
 }
 
 
-project_base_dir=$(rel2abs $thisdir/../..)
+project_base_dir=$(rel2abs $thisdir/../../..)
 cxx_base_dir=$project_base_dir/src/c++
 python_base_dir=$project_base_dir/src/python
 cmake_base_dir=$project_base_dir/src
