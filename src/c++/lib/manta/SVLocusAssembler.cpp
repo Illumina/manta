@@ -79,10 +79,10 @@ getBreakendReads(
         }
     }
 
-#ifdef DEBUG_ASBL
+//#ifdef DEBUG_ASBL
     static const std::string logtag("SVLocusAssembler::getBreakendReads");
     log_os << logtag << " searchRange " << searchRange << "\n";
-#endif
+//#endif
 
     // for assembler reads, look for indels at report size or somewhat smaller
     const unsigned minAssembleIndelSize(_scanOpt.minCandidateIndelSize/2);
@@ -111,8 +111,6 @@ getBreakendReads(
         bamStream.set_new_region(bp.interval.tid, searchRange.begin_pos(), searchRange.end_pos());
 
         static const unsigned MAX_NUM_READS(1000);
-
-        //static const double minSemiAlignedScore(10.0);
 
         while (bamStream.next() && (reads.size() < MAX_NUM_READS))
         {
@@ -175,12 +173,25 @@ getBreakendReads(
                 }
             }
 
-            //if ( !(isClipKeeper || _readScanner.isSemiAligned(bamRead) > minSemiAlignedScore )) continue;
-            if (!isClipKeeper || !isIndelKeeper) continue;
 #ifdef DEBUG_ASBL
             log_os << " cigar: " << apath << " isClipKeeper: " << isClipKeeper << " isIndelKeeper: " << isIndelKeeper << "\n";
 #endif
 
+            bool isSemiAlignedKeeper(false);
+            {
+            	if (_readScanner.isSemiAligned(bamRead)) isSemiAlignedKeeper = true;
+            }
+
+            bool isShadowKeeper(false);
+            {
+            	if (_readScanner.isShadow(bamRead)) isShadowKeeper = true;
+            }
+
+            if (! (isClipKeeper
+            	|| isIndelKeeper
+            	|| isSemiAlignedKeeper
+            	|| isShadowKeeper
+            	)) continue;
             //if ( bamRead.pe_map_qual() == 0 ) continue;
             const char flag(bamRead.is_second() ? '2' : '1');
             const std::string readKey = std::string(bamRead.qname()) + "_" + flag + "_" + bamIndexStr;

@@ -117,9 +117,15 @@ struct SVLocusScanner
 
 
     /// test for semi-alignedness
-    double
+    bool
     isSemiAligned(
         const bam_record& bamRead) const;
+
+    /// a read is a shadow if it is unaligned but its partner aligns confidently
+    bool
+    isShadow(
+    	const bam_record& bamRead) const;
+
 
     bool
     isClipped(
