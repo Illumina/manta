@@ -25,9 +25,9 @@
 #include "boost/foreach.hpp"
 
 
-#define DEBUG_SCANNER
+//#define DEBUG_SCANNER
 
-#define DEBUG_SEMI_ALIGNED
+//#define DEBUG_SEMI_ALIGNED
 
 
 #ifdef DEBUG_SCANNER
