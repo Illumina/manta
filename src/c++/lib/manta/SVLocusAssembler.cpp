@@ -209,7 +209,9 @@ getBreakendReads(
             }
             else
             {
-              //  log_os << "WARNING: SmallAssembler read name collision : " << readKey << "\n";
+#ifdef DEBUG_ASBL
+              log_os << logtag << "WARNING: SmallAssembler read name collision : " << readKey << "\n";
+#endif
             }
         }
     }

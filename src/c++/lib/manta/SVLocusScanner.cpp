@@ -25,15 +25,15 @@
 #include "boost/foreach.hpp"
 
 
-#define DEBUG_SCANNER
+//#define DEBUG_SCANNER
 
 #define DEBUG_SEMI_ALIGNED
+#define DEBUG_IS_SHADOW
 
-
-#ifdef DEBUG_SCANNER
+//#ifdef DEBUG_SCANNER
 #include "blt_util/log.hh"
 #include <iostream>
-#endif
+//#endif
 
 
 const float SVObservationWeights::closePairFactor(4);
@@ -685,8 +685,8 @@ isShadow(const bam_record& bamRead) const
 	return true;
 
 	// FIXME: use mapq as substitute for single-read alignment score?
-	//uint8_t minMapqShadow(20);
-	//if (bamRead.map_qual() > minMapqShadow) return true;
+	uint8_t minMapqShadow(20);
+	if (bamRead.map_qual() > minMapqShadow) return true;
 }
 
 
