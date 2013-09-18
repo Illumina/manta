@@ -22,6 +22,7 @@ include (${MANTA_GLOBALS_CMAKE})
 
 get_filename_component(CURRENT_DIR_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 message (STATUS "Adding the c++    program subdirectory: ${CURRENT_DIR_NAME}")
+include_directories (BEFORE SYSTEM ${MANTA_CXX_BEFORE_SYSTEM_INCLUDES})
 include_directories (${MANTA_CXX_ALL_INCLUDES})
 include_directories (${CMAKE_CURRENT_BINARY_DIR})
 include_directories (${CMAKE_CURRENT_SOURCE_DIR})

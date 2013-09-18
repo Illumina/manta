@@ -66,8 +66,6 @@ macro(static_find_boost boost_version boost_components)
 
     find_package(Boost ${boost_version} REQUIRED ${boost_components})
 
-    include_directories(BEFORE SYSTEM ${Boost_INCLUDE_DIRS})
-
     foreach(COMPONENT ${MANTA_BOOST_COMPONENTS})
         STRING(TOUPPER ${COMPONENT} UPPERCOMPONENT)
         set(HAVE_LIBBOOST_${UPPERCOMPONENT}       ${Boost_${UPPERCOMPONENT}_FOUND})
@@ -114,7 +112,7 @@ if (NOT Boost_FOUND)
     set(ENV{MANTA_BOOST_BUILD_COMPONENTS} "${MANTA_BOOST_BUILD_COMPONENTS}")
     set(ENV{MANTA_BOOST_VERSION} "${MANTA_BOOST_VERSION}")
 
-    set(BOOST_BUILD_COMMAND bash "${CMAKE_SOURCE_DIR}/cmake/bootstrap/installBoost.bash" "${BOOST_REDIST_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/bootstrap" "${CMAKE_PARALLEL}")
+    set(BOOST_BUILD_COMMAND bash "${MANTA_BOOTSTRAP_DIR}/installBoost.bash" "${MANTA_REDIST_DIR}" "${MANTA_BOOTSTRAP_DIR" "${CMAKE_PARALLEL}")
 
     string(REPLACE ";" " " PRETTY_BOOST_BUILD_COMMAND "${BOOST_BUILD_COMMAND}")
     message(STATUS "${PRETTY_BOOST_BUILD_COMMAND}")
@@ -126,6 +124,6 @@ if (NOT Boost_FOUND)
         message(STATUS "Successfuly built boost ${MANTA_BOOST_VERSION} from the distribution package...")
     endif ()
 
-    set (BOOST_ROOT "${CMAKE_CURRENT_BINARY_DIR}/bootstrap")
+    set (BOOST_ROOT "${MANTA_BOOTSTRAP_DIR}")
 endif ()
 

@@ -18,7 +18,4 @@
 ##
 ################################################################################
 
-#include_directories (BEFORE SYSTEM "${SAMTOOLS_DIR}")
-set(ADDITIONAL_UNITTEST_LIB manta_svgraph)
-
 include(${MANTA_CXX_TEST_LIBRARY_CMAKE})
