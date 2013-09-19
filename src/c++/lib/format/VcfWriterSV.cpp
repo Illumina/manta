@@ -22,6 +22,7 @@
 #include "blt_util/seq_util.hh"
 #include "blt_util/vcf_util.hh"
 #include "common/Exceptions.hh"
+#include "manta/SVCandidateUtil.hh"
 
 #include <iostream>
 #include <sstream>

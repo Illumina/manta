@@ -28,6 +28,7 @@
 #include "common/OutStream.hh"
 #include "manta/ReadGroupStatsSet.hh"
 #include "manta/SVCandidateAssemblyData.hh"
+#include "manta/SVCandidateUtil.hh"
 #include "format/VcfWriterCandidateSV.hh"
 #include "format/VcfWriterSomaticSV.hh"
 
@@ -37,24 +38,6 @@
 #include <memory>
 
 //#define DEBUG_GSV
-
-
-
-/// this should probably be moved to a util function in SVCandidate
-static
-bool
-isSVBelowMinSize(
-    const SVCandidate& sv,
-    const unsigned minSize)
-{
-    if(sv.bp1.interval.tid != sv.bp2.interval.tid) return false;
-
-    const unsigned bpSize(std::abs(sv.bp1.interval.range.begin_pos() - sv.bp2.interval.range.begin_pos()));
-    const unsigned insertSize(sv.insertSeq.size());
-
-    return (std::max(bpSize,insertSize) < minSize);
-}
-
 
 
 /// provide additional edge details, intended for attachment to an in-flight exception:

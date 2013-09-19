@@ -286,47 +286,5 @@ public:
 };
 
 
-namespace SV_TYPE
-{
-enum index_t
-{
-    UNKNOWN,
-    INTERTRANSLOC,
-    INVERSION,
-    INDEL,
-    TANDUP,
-    COMPLEX
-};
-
-inline
-const char*
-label(const index_t idx)
-{
-    switch (idx)
-    {
-    case UNKNOWN:
-        return "UNKNOWN";
-    case INTERTRANSLOC:
-        return "INTERTRANSLOC";
-    case INVERSION:
-        return "INVERSION";
-    case INDEL:
-        return "INDEL";
-    case TANDUP:
-        return "TANDUP";
-    case COMPLEX:
-        return "COMPLEX";
-    default:
-        return "UNKNOWN";
-    }
-}
-
-}
-
-
-SV_TYPE::index_t
-getSVType(const SVCandidate& sv);
-
-
 std::ostream&
 operator<<(std::ostream& os, const SVCandidate& svc);
