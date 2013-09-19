@@ -22,4 +22,6 @@
 
 extern std::ostream& log_os;
 
+void warnOnce(const std::string &msg);
+
 #endif

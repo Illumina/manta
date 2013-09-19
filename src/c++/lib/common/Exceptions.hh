@@ -178,6 +178,15 @@ public:
     PostConditionException(const std::string& message);
 };
 
+/**
+ ** \brief Exception thrown when a method invocation generates an out-of-limits situation.
+ **
+ **/
+class OutOfBoundsException: public std::out_of_range, public ExceptionData
+{
+public:
+    OutOfBoundsException(const std::string &message);
+};
 
 /// General purpose exception for all other cases:
 ///
@@ -188,6 +197,18 @@ struct LogicException: public std::logic_error, public ExceptionData
         ExceptionData(EPERM, message)
     {}
 };
+
+
+/**
+ ** \brief Exception thrown when a VCF violation is encountered.
+ **
+ **/
+class VcfException: public IoException
+{
+public:
+    VcfException(const std::string &message);
+};
+
 
 }
 }
