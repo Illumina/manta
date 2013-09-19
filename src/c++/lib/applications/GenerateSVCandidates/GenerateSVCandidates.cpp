@@ -39,6 +39,24 @@
 //#define DEBUG_GSV
 
 
+
+/// this should probably be moved to a util function in SVCandidate
+static
+bool
+isSVBelowMinSize(
+    const SVCandidate& sv,
+    const unsigned minSize)
+{
+    if(sv.bp1.interval.tid != sv.bp2.interval.tid) return false;
+
+    const unsigned bpSize(std::abs(sv.bp1.interval.range.begin_pos() - sv.bp2.interval.range.begin_pos()));
+    const unsigned insertSize(sv.insertSeq.size());
+
+    return (std::max(bpSize,insertSize) < minSize);
+}
+
+
+
 /// provide additional edge details, intended for attachment to an in-flight exception:
 static
 void
@@ -68,11 +86,11 @@ edgeRFactory(
 {
     if (opt.isLocusIndex)
     {
-        return new EdgeRetrieverLocus(set, opt.graphNodeMaxEdgeCount, opt.locusIndex);
+        return (new EdgeRetrieverLocus(set, opt.graphNodeMaxEdgeCount, opt.locusIndex));
     }
     else
     {
-        return new EdgeRetrieverBin(set, opt.graphNodeMaxEdgeCount, opt.binCount, opt.binIndex);
+        return (new EdgeRetrieverBin(set, opt.graphNodeMaxEdgeCount, opt.binCount, opt.binIndex));
     }
 }
 
@@ -124,7 +142,7 @@ struct SVWriter
             if (sv.isImprecise())
             {
 #ifdef DEBUG_GSV
-                log_os << logtag << " rejecting candidate\n";
+                log_os << logtag << " rejecting candidate, imprecise self-edge\n";
 #endif
                 return;
             }
@@ -134,14 +152,32 @@ struct SVWriter
             if (sv.bp1.pairCount < minCandidatePairCount)
             {
 #ifdef DEBUG_GSV
-                log_os << logtag << " rejecting candidate\n";
+                log_os << logtag << " rejecting candidate, minCandidatePairCount\n";
 #endif
 
                 return;
             }
         }
 
+        // check min size for candidate output:
+        if (isSVBelowMinSize(sv,opt.scanOpt.minCandidateVariantSize))
+        {
+#ifdef DEBUG_GSV
+            log_os << logtag << " filtering out candidate below min size before candidate output stage\n";
+#endif
+            return;
+        }
+
         candWriter.writeSV(edge, svData, assemblyData, sv);
+
+        // check min size for scoring:
+        if (isSVBelowMinSize(sv,opt.minScoredVariantSize))
+        {
+#ifdef DEBUG_GSV
+            log_os << logtag << " filtering out candidate below min size at scoring stage\n";
+#endif
+            return;
+        }
 
         if (isSomatic)
         {
@@ -219,7 +255,11 @@ runGSC(
                 log_os << logtag << " starting low-res candidate analysis: " << candidateSV << "\n";
 #endif
                 SVCandidateAssemblyData assemblyData;
-                svRefine.getCandidateAssemblyData(candidateSV, svData, assemblyData);
+
+                if (! opt.isSkipAssembly)
+                {
+                    svRefine.getCandidateAssemblyData(candidateSV, svData, assemblyData);
+                }
 
 #ifdef DEBUG_GSV
                 log_os << logtag << " assembly candidate refinement complete. assembly count: " << assemblyData.svs.size() << "\n";

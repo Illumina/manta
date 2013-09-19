@@ -35,7 +35,7 @@ operator<<(std::ostream& os, const bam_record& br)
     {
         os << br.qname() << "/" << br.read_no()
            << " tid:pos:strand " << br.target_id() << ":" << (br.pos()-1) << ":" << (br.is_fwd_strand() ? '+' : '-');
-        if(br.is_paired())
+        if (br.is_paired())
         {
             os  << " mate_tid:pos:strand " << br.mate_target_id() << ":" << (br.mate_pos()-1) << ":" << (br.is_mate_fwd_strand() ? '+' : '-');
         }

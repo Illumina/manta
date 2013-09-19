@@ -20,6 +20,7 @@
 
 #include "blt_util/log.hh"
 #include "options/AlignmentFileOptionsParser.hh"
+#include "options/ReadScannerOptionsParser.hh"
 #include "options/optionsUtil.hh"
 
 #include "boost/foreach.hpp"
@@ -89,17 +90,22 @@ parseGSCOptions(const manta::Program& prog,
      "Write SV candidates to file (required)")
     ("somatic-output-file", po::value(&opt.somaticOutputFilename),
      "Write somatic SV candidates to file (at least one tumor and non-tumor alignment file must be specified)")
+    ("skip-assembly", po::value(&opt.isSkipAssembly)->zero_tokens(),
+     "Turn off all breakend and small-variant assembly. Only large, imprecise variants will be reported based on anomalous read pairs.")
+    ("min-scored-sv-size", po::value(&opt.minScoredVariantSize)->default_value(opt.minScoredVariantSize),
+     "minimum size for variants which are scored and output following initial candidate generation")
     ;
 
-    po::options_description aligndesc(getOptionsDescription(opt.alignFileOpt));
-    po::options_description edgedesc(getOptionsDescription(opt.edgeOpt));
+    po::options_description alignDesc(getOptionsDescription(opt.alignFileOpt));
+    po::options_description edgeDesc(getOptionsDescription(opt.edgeOpt));
+    po::options_description scanDesc(getOptionsDescription(opt.scanOpt));
 
     po::options_description help("help");
     help.add_options()
     ("help,h","print this message");
 
     po::options_description visible("options");
-    visible.add(aligndesc).add(req).add(edgedesc).add(help);
+    visible.add(alignDesc).add(scanDesc).add(req).add(edgeDesc).add(help);
 
     bool po_parse_fail(false);
     po::variables_map vm;
@@ -122,21 +128,21 @@ parseGSCOptions(const manta::Program& prog,
 
     std::string errorMsg;
     if (parseOptions(vm, opt.edgeOpt, errorMsg))
-    {
-        usage(log_os,prog,visible,errorMsg.c_str());
-    }
+    {}
     else if (parseOptions(vm, opt.alignFileOpt, errorMsg))
-    {
-        usage(log_os,prog,visible,errorMsg.c_str());
-    }
+    {}
+    else if (parseOptions(vm, opt.scanOpt, errorMsg))
+    {}
     else if (opt.statsFilename.empty())
     {
-        usage(log_os,prog,visible,"Need the alignment stats file");
+        errorMsg="Need the alignment stats file";
     }
     else if (opt.referenceFilename.empty())
     {
-        usage(log_os,prog,visible,"Need the FASTA reference file");
+        errorMsg="Need the FASTA reference file";
     }
+
+    if (! errorMsg.empty()) usage(log_os,prog,visible,errorMsg.c_str());
 
     checkStandardizeUsageFile(log_os,prog,visible,opt.graphFilename,"SV locus graph");
     checkStandardizeUsageFile(log_os,prog,visible,opt.referenceFilename,"reference fasta");

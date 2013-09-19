@@ -144,7 +144,7 @@ addDebugInfo(
     // there can be several contigs per breakend, so we iterate over all of them.
     // only the first breakpoint gets the alignments attached to its VCF entry
 
-    if(assemblyData.isSpanning)
+    if (assemblyData.isSpanning)
     {
         const unsigned numAlign(assemblyData.spanningAlignments.size());
         std::string cigar1;
