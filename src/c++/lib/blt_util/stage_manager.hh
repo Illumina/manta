@@ -28,7 +28,7 @@
 #include <vector>
 
 
-/// \brief describes stages to the stage_manager/
+/// \brief describes stages to the stage_manager
 ///
 /// Each stage has an integer id.
 ///
@@ -37,7 +37,7 @@
 /// defined first, all following stages must have a parent stage and
 /// a distance to the parent.
 ///
-/// \example As used by the stage_manager, a simple two-stage tree
+/// Example: as used by the stage_manager, a simple two-stage tree
 /// where the stages are separated by 100 cycles would mean that the
 /// root stage is executed at the reference position pointer (as
 /// always), but the second stage is executed at positions 100 bases
@@ -105,14 +105,12 @@ private:
 
 
 
-/// \brief help to manage information which is being gathered in an
-/// approximately sequential fashion and processed in sequence in
-/// multiple stages.
+/// \brief help to manage approximately sequential data in stages
 ///
 /// assumes that information related to each position will be
 /// available in an approximately sequential fashion, where all
 /// position values submitted after position X will be greater than
-/// X-first_stage_buffer_size+1. A violation of this assumption will
+/// (X - first_stage_buffer_size + 1). A violation of this assumption will
 /// trigger a runtime error.
 ///
 /// range policy:
