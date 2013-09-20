@@ -670,7 +670,7 @@ isSemiAligned(const bam_record& bamRead) const
 
 bool
 SVLocusScanner::
-isShadow(const bam_record& bamRead) const
+isGoodShadow(const bam_record& bamRead, const uint8_t lastMapq, const std::string& lastQname) const
 {
 	// shadow read should be unmapped
 	if (!bamRead.is_unmapped()) return false;
@@ -679,16 +679,21 @@ isShadow(const bam_record& bamRead) const
 
 #ifdef DEBUG_IS_SHADOW
 	static const std::string logtag("isShadow");
-    log_os << logtag << " mapq score=" << bamRead.map_qual() << std::endl;
+    log_os << logtag << "this mapq  = " << ((unsigned int)bamRead.map_qual()) << std::endl;
+    log_os << logtag << "last mapq  = " << ((unsigned int)lastMapq) << std::endl;
+    log_os << logtag << "this qname = " << bamRead.qname() << std::endl;
+    log_os << logtag << "last qname = " << lastQname << std::endl;
 #endif
 
-	return true;
+    // we want only shadows with a good singleton mapq
+    static const unsigned int minSingletonMapq(10);
+    if ((unsigned int)lastMapq > minSingletonMapq)
+    {
+    	return true;
+    }
 
-	// FIXME: use mapq as substitute for single-read alignment score?
-	uint8_t minMapqShadow(20);
-	if (bamRead.map_qual() > minMapqShadow) return true;
+ 	return false;
 }
-
 
 bool
 SVLocusScanner::

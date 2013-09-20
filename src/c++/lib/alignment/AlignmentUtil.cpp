@@ -227,7 +227,7 @@ getSemiAlignedMetric(
     using namespace ALIGNPATH;
 
     unsigned posInRead = 0;
-    double alignScore(0.);
+    double score(0.);
 
 #ifdef DEBUG_RS
     log_os << "getAlignmentScore apath=" << apath << "\n";
@@ -238,7 +238,7 @@ getSemiAlignedMetric(
     {
         const path_segment& ps(apath[i]);
 #ifdef DEBUG_RS
-        log_os << "getAlignmentScore : i = " << i << " alignScore = " << alignScore << "\n";
+        log_os << "getSemiAlignedMetric : i = " << i << " score = " << score << "\n";
 #endif
         if((ps.type==SOFT_CLIP) || (ps.type==SEQ_MISMATCH))
         {
@@ -248,14 +248,14 @@ getSemiAlignedMetric(
                 log_os << "getAlignmentScore: " << posInRead+j << " " << _logpcorrectratio[qual[posInRead+j]]
                        << " " << qual[posInRead+j] << "\n";
 #endif
-                alignScore +=  _logpcorrectratio[qual[posInRead]];
+                score +=  _logpcorrectratio[qual[posInRead]];
                 posInRead += apath[i].length;
             }
         } 
 
         if(is_segment_type_read_length(ps.type)) posInRead += ps.length;
    } // for
-   return alignScore;
+   return score;
 }
 
 

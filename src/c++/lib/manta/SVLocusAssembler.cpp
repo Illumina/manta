@@ -110,6 +110,12 @@ getBreakendReads(
         // set bam stream to new search interval:
         bamStream.set_new_region(bp.interval.tid, searchRange.begin_pos(), searchRange.end_pos());
 
+        // Singleton/shadow pairs *should* appear consecutively in the BAM file
+        // this keeps track of the mapq score of the singleton read such that
+        // we can access it when we look at the shadow
+        uint8_t lastMapq(0);
+        std::string lastQname("NOT_A_QNAME");
+
         static const unsigned MAX_NUM_READS(1000);
 
         while (bamStream.next() && (reads.size() < MAX_NUM_READS))
@@ -184,8 +190,11 @@ getBreakendReads(
 
             bool isShadowKeeper(false);
             {
-            	if (_readScanner.isShadow(bamRead)) isShadowKeeper = true;
+            	if (_readScanner.isGoodShadow(bamRead,lastMapq,lastQname)) isShadowKeeper = true;
             }
+
+            lastMapq  = bamRead.map_qual();
+            lastQname = bamRead.qname();
 
             if (! (isClipKeeper
             	|| isIndelKeeper
