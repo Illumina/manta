@@ -259,7 +259,7 @@ getSVCandidatesFromSemiAligned(
     static const bool isComplex(true);
 
     const double semiAlignedScore(ReadScorer::get().getSemiAlignedMetric(bamAlign.path,bamRead.qual()));
-    std::cout << "getSVCandidatesFromSemiAligned : semi-aligned score is " << semiAlignedScore << std::endl;
+    //std::cout << "getSVCandidatesFromSemiAligned : semi-aligned score is " << semiAlignedScore << std::endl;
     if (semiAlignedScore>opt.minSemiAlignedScore) {
     	const pos_t pos(bamAlign.pos);
     	candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),pos,pos,isComplex));
@@ -446,7 +446,6 @@ getSVCandidatesFromPair(
     candidates.push_back(sv);
 }
 
-#if 0
 /// get SV candidates from shadow/singleton pairs
 /// look for singletons, create candidateSV around conf. interval of shadow position
 /// cache singletons? might be needed to remove poor quality shadows.
@@ -476,11 +475,9 @@ getSVCandidatesFromShadow(
     const pos_t singletonGenomePos(singletonAlign.pos);
     const pos_t properPairRangeOffset = rstats.properPair.min + (rstats.properPair.max-rstats.properPair.min)/2.0;
     const pos_t shadowGenomePos = singletonGenomePos + properPairRangeOffset;
-    candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),shadowGenomePos,shadowGenomePos,isComplex));
-
-    candidates.push_back(sv);
+    candidates.push_back(GetSplitSVCandidate(opt,singletonRead.target_id(),shadowGenomePos,shadowGenomePos,isComplex));
 }
-#endif
+
 
 /// scan read record (and optionally its mate record) for SV evidence.
 //
@@ -525,6 +522,7 @@ getReadBreakendsImpl(
     // TODO: add SA tag processing
 
     // TODO: process shadow reads
+    getSVCandidatesFromShadow(opt, rstats, localRead, localAlign,candidates);
 
     // - process anomalous read pair relationships:
     getSVCandidatesFromPair(opt, rstats, localRead, localAlign, remoteReadPtr, candidates);
