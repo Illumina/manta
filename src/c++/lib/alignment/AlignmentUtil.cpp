@@ -20,7 +20,12 @@
 
 #include <cassert>
 
+#define DEBUG_RS
 
+#ifdef DEBUG_RS
+#include "blt_util/log.hh"
+//#include <iostream>
+#endif
 
 // tests if prefix of aligned sequence matches target, returns length of alignment (zero if no match)
 unsigned
@@ -63,14 +68,14 @@ bothEndsAligned(const Alignment& al, const unsigned minAlignContext)
 // check a jump alignment for consistency (only one end aligning)
 // FIXME: not used, need to think what makes an alignment consistent
 // (how about : total number of matches shouldn't exceed sequence length?)
-bool
-isConsistentAlignment(const JumpAlignmentResult<int>& res, const unsigned /*minAlignContext = 0*/)
-{
-    // not consistent if both unaligned
-    if (! (res.align1.isAligned() && res.align2.isAligned()) ) return false;
-
-    return true;
-}
+//bool
+//isConsistentAlignment(const JumpAlignmentResult<int>& res, const unsigned /*minAlignContext = 0*/)
+//{
+//    // not consistent if both unaligned
+//    if (! (res.align1.isAligned() && res.align2.isAligned()) ) return false;
+//
+//    return true;
+//}
 
 
 
@@ -238,21 +243,19 @@ getSemiAlignedMetric(
     {
         const path_segment& ps(apath[i]);
 #ifdef DEBUG_RS
-        log_os << "getSemiAlignedMetric : i = " << i << " score = " << score << "\n";
+        log_os << "getSemiAlignedMetric : i=" << i << " posInRead=" << posInRead << " score=" << score << "\n";
 #endif
         if((ps.type==SOFT_CLIP) || (ps.type==SEQ_MISMATCH))
         {
             for(unsigned j(0);j<ps.length;++j)
             {
 #ifdef DEBUG_RS
-                log_os << "getAlignmentScore: " << posInRead+j << " " << _logpcorrectratio[qual[posInRead+j]]
-                       << " " << qual[posInRead+j] << "\n";
+                log_os << "getAlignmentScore: " << (posInRead+j) << " " << _logpcorrectratio[qual[posInRead+j]]
+                       << " " << qual[posInRead] << "\n";
 #endif
-                score +=  _logpcorrectratio[qual[posInRead]];
-                posInRead += apath[i].length;
+                score +=  _logpcorrectratio[qual[posInRead+j]];
             }
-        } 
-
+         }
         if(is_segment_type_read_length(ps.type)) posInRead += ps.length;
    } // for
    return score;

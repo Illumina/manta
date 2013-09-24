@@ -18,12 +18,13 @@
 #include "boost/test/unit_test.hpp"
 
 #include "manta/SVLocusScanner.cpp"
+//#include "blt_util/blt_util.cpp"
 
 
 
 BOOST_AUTO_TEST_SUITE( test_SVLocusScanner )
 
-BOOST_AUTO_TEST_CASE( test_getSVCandidates )
+BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromReadIndels )
 {
     ReadScannerOptions opt;
 
@@ -44,6 +45,37 @@ BOOST_AUTO_TEST_CASE( test_getSVCandidates )
     BOOST_REQUIRE_EQUAL(candidates.size(),1u);
     BOOST_REQUIRE(candidates[0].bp1.interval.range.is_pos_intersect(100));
     BOOST_REQUIRE(candidates[0].bp2.interval.range.is_pos_intersect(2100));
+}
+
+BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromSemiAligned )
+{
+    ReadScannerOptions opt;
+
+    ALIGNPATH::path_t inputPath;
+    cigar_to_apath("5M5X",inputPath);
+
+    bam_record bamRead;
+    bam1_t* bamDataPtr(bamRead.get_data());
+    edit_bam_cigar(inputPath,*bamDataPtr);
+
+    const unsigned char qual[] = "AAAAAAAAAAAA";
+
+    edit_bam_read_and_quality("ACGTTACGTT",qual,*bamDataPtr);
+
+    SimpleAlignment align(bamRead);
+    align.pos = 500;
+
+    std::vector<SVCandidate> candidates;
+
+    getSVCandidatesFromSemiAligned(opt,bamRead,align,candidates);
+
+    std::cout << candidates[0].bp1.interval.range << std::endl;
+    std::cout << candidates[0].bp2.interval.range << std::endl;
+
+    BOOST_REQUIRE_EQUAL(candidates.size(),1u);
+    BOOST_REQUIRE(candidates[0].bp1.interval.range.is_pos_intersect(500));
+    BOOST_REQUIRE_EQUAL(candidates[0].bp1.interval.range.begin_pos(),480);
+    BOOST_REQUIRE_EQUAL(candidates[0].bp1.interval.range.end_pos(),520);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

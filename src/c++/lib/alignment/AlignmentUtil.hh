@@ -24,9 +24,6 @@
 
 #include <boost/utility.hpp>
 
-//#define DEBUG_RS
-
-
 const double invlog10(1./(std::log(10.)));
 const int phredScoreOffset = 33;
 
@@ -95,8 +92,8 @@ bothEndsAligned(const Alignment& al, const unsigned minAlignContext = 0);
 /// check a jump alignment for consistency (only one end aligning)
 /// FIXME: not used, need to think what makes an alignment consistent
 /// (how about : total number of matches shouldn't exceed sequence length?)
-bool
-isConsistentAlignment(const JumpAlignmentResult<int>& res, const unsigned minAlignContext = 0);
+//bool
+//isConsistentAlignment(const JumpAlignmentResult<int>& res, const unsigned minAlignContext = 0);
 
 
 /// given a jump alignment and query sequence, return the bp1,insert and bp2 query sequences

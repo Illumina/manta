@@ -30,10 +30,10 @@
 //#define DEBUG_SEMI_ALIGNED
 //#define DEBUG_IS_SHADOW
 
-//#ifdef DEBUG_SCANNER
+#ifdef DEBUG_SCANNER
 #include "blt_util/log.hh"
 #include <iostream>
-//#endif
+#endif
 
 
 const float SVObservationWeights::closePairFactor(4);
@@ -259,6 +259,7 @@ getSVCandidatesFromSemiAligned(
     static const bool isComplex(true);
 
     const double semiAlignedScore(ReadScorer::get().getSemiAlignedMetric(bamAlign.path,bamRead.qual()));
+    std::cout << "getSVCandidatesFromSemiAligned : semi-aligned score is " << semiAlignedScore << std::endl;
     if (semiAlignedScore>opt.minSemiAlignedScore) {
     	const pos_t pos(bamAlign.pos);
     	candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),pos,pos,isComplex));
@@ -496,7 +497,7 @@ getReadBreakendsImpl(
     known_pos_range2& localEvidenceRange)
 {
     /// TODO: can't handle these yet, but plan to soon:
-    if (localRead.is_mate_unmapped()) return;
+    //if (localRead.is_mate_unmapped()) return;
 
     /// TODO: Add SA read support -- temporarily reject all supplemental reads:
     if (localRead.is_supplement()) return;
