@@ -28,7 +28,9 @@ struct SVSampleInfo
     SVSampleInfo() :
         bp1SpanReads(0),
         bp2SpanReads(0),
-        spanPairs(0)
+        spanPairs(0),
+        contigSplitReads(0),
+        refSplitReads(0)
     {}
 
     void
@@ -42,6 +44,8 @@ struct SVSampleInfo
     unsigned bp1SpanReads;
     unsigned bp2SpanReads;
     unsigned spanPairs;
+    unsigned contigSplitReads;
+    unsigned refSplitReads;
 };
 
 std::ostream&

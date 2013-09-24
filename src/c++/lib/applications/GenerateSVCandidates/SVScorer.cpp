@@ -22,7 +22,6 @@
 #include "blt_util/log.hh"
 #include "common/Exceptions.hh"
 #include "manta/ReadGroupStatsSet.hh"
-
 #include "boost/foreach.hpp"
 
 #include <algorithm>
@@ -135,25 +134,112 @@ getBreakendMaxMappedDepth(const SVBreakend& bp)
 }
 
 
+void
+SVScorer::
+scoreSplitReads(
+		const SVBreakend& bp,
+		const AssembledContig& contig,
+		const unsigned bp1ContigOfs,
+		const unsigned bp2ContigOfs,
+		const reference_contig_segment& bp1Ref,
+		const reference_contig_segment& bp2Ref,
+		const unsigned bp1RefOfs,
+		const unsigned bp2RefOfs,
+		bam_streamer& readStream,
+		const bool isTumor,
+		SomaticSVScoreInfo& ssInfo)
+{
+
+	// extract reads overlapping the break point
+	readStream.set_new_region(bp.interval.tid, bp.interval.range.begin_pos(), bp.interval.range.end_pos());
+	while (readStream.next())
+	{
+		const bam_record& bamRead(*(readStream.get_record_ptr()));
+		std::string readSeq = bamRead.get_bam_read().get_string();
+		splitReadAlignment bp1ContigAlign = alignSplitRead(readSeq, contig, bp1ContigOfs);
+		splitReadAlignment bp2ContigAlign = alignSplitRead(readSeq, contig, bp2ContigOfs);
+		splitReadAlignment bp1RefAlign = alignSplitRead(readSeq, bp1Ref, bp1RefOfs);
+		splitReadAlignment bp2RefAlign = alignSplitRead(readSeq, bp2Ref, bp2RefOfs);
+
+		// scoring
+		float bp1ContigScore(0);
+		float bp2ContigScore(0);
+		float bp1RefScore(0);
+		float bp2RefScore(0);
+
+		if (bp1ContigAlign.has_evidence())
+			bp1ContigScore = bp1ContigAlign.get_score();
+		if (bp2ContigAlign.has_evidence())
+			bp2ContigScore = bp2ContigAlign.get_score();
+
+		if (bp1RefAlign.has_evidence())
+			bp1RefScore = bp1RefAlign.get_score();
+		if (bp2RefAlign.has_evidence())
+			bp2RefScore = bp2RefAlign.get_score();
+
+		if (isTumor)
+		{
+			ssInfo.tumor.contigSplitReads += std::max(bp1ContigScore, bp2ContigScore);
+			ssInfo.tumor.refSplitReads += std::max(bp1RefScore, bp2RefScore);
+		}
+		else
+		{
+			ssInfo.normal.contigSplitReads += std::max(bp1ContigScore, bp2ContigScore);
+			ssInfo.normal.refSplitReads += std::max(bp1RefScore, bp2RefScore);
+		}
+	}
+}
 
 
 void
 SVScorer::
 scoreSomaticSV(
     const SVCandidateSetData& svData,
+    const SVCandidateAssemblyData& assemblyData,
     const SVCandidate& sv,
     SomaticSVScoreInfo& ssInfo)
 {
     ssInfo.clear();
 
-    // first exercise -- just count the sample assignment of the pairs we already have:
+    // get somatic contig
+    const AssembledContig& contig = assemblyData.contigs[assemblyData.bestAlignmentIndex];
+    const JumpAlignmentResult<int>& alignment = assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex];
+    // get offsets of breakpoints in the contig
+    const unsigned align1Size(apath_read_length(alignment.align1.apath));
+    const unsigned insertSize(alignment.jumpInsertSize);
+    const unsigned bp1ContigOffset = align1Size - 1;
+    const unsigned bp2ContigOffset = align1Size + insertSize - 1;
 
+    // get reference regions
+    const reference_contig_segment& bp1Ref = assemblyData.bp1ref;
+    const reference_contig_segment& bp2Ref = assemblyData.bp2ref;
+    // get offsets of breakpoints in the reference regions
+    unsigned bp1RefOffset = sv.bp1.interval.range.begin_pos() - bp1Ref.get_offset();
+    unsigned bp2RefOffset = sv.bp2.interval.range.begin_pos() - bp2Ref.get_offset();
+
+    // first exercise -- just count the sample assignment of the pairs we already have:
     const unsigned bamCount(_bamStreams.size());
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
         const bool isTumor(_isAlignmentTumor[bamIndex]);
-        SVSampleInfo& sample(isTumor ? ssInfo.tumor : ssInfo.normal);
 
+        // consider 2-locus events first
+        // TODO: to add local assembly later
+        if (assemblyData.isSpanning)
+        {
+			streamPtr& bamPtr(_bamStreams[bamIndex]);
+			bam_streamer& read_stream(*bamPtr);
+			// scoring split reads overlapping bp1
+			scoreSplitReads(sv.bp1, contig, bp1ContigOffset, bp2ContigOffset,
+					        bp1Ref, bp2Ref, bp1RefOffset, bp2RefOffset,
+					        read_stream, isTumor, ssInfo);
+			// scoring split reads overlapping bp2
+			scoreSplitReads(sv.bp2, contig, bp1ContigOffset, bp2ContigOffset,
+			        		bp1Ref, bp2Ref, bp1RefOffset, bp2RefOffset,
+			        		read_stream, isTumor, ssInfo);
+        }
+
+        SVSampleInfo& sample(isTumor ? ssInfo.tumor : ssInfo.normal);
         const SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
         BOOST_FOREACH(const SVCandidateSetReadPair& pair, svDataGroup)
         {
@@ -184,7 +270,7 @@ scoreSomaticSV(
     // apply filters
     if (_dFilter.isMaxDepthFilter())
     {
-        if     (ssInfo.bp1MaxDepth > _dFilter.maxDepth(sv.bp1.interval.tid))
+        if (ssInfo.bp1MaxDepth > _dFilter.maxDepth(sv.bp1.interval.tid))
         {
             ssInfo.filters.insert(_somaticOpt.maxDepthFilterLabel);
         }
@@ -197,7 +283,8 @@ scoreSomaticSV(
 
     // assign bogus somatic score just to get started:
     bool isSomatic(true);
-    if (ssInfo.normal.spanPairs > 1) isSomatic=false;
+    if ((ssInfo.normal.spanPairs > 1))
+    	isSomatic=false;
 
     if (isSomatic)
     {
@@ -206,7 +293,8 @@ scoreSomaticSV(
         const bool highSingleContam((ssInfo.normal.bp1SpanReads > 1) || (ssInfo.normal.bp2SpanReads > 1));
 
         /// allow single pair support to rescue an SV only if the evidence looks REALLY good:
-        if (lowPairSupport && (lowSingleSupport || highSingleContam)) isSomatic=false;
+        if (lowPairSupport && (lowSingleSupport || highSingleContam))
+        	isSomatic=false;
     }
 
     if (isSomatic)

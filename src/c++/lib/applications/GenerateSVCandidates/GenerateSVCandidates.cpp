@@ -145,7 +145,7 @@ struct SVWriter
 
         if (isSomatic)
         {
-            svScore.scoreSomaticSV(svData, sv, ssInfo);
+            svScore.scoreSomaticSV(svData, assemblyData, sv, ssInfo);
 
             if (ssInfo.somaticScore > opt.somaticOpt.minOutputSomaticScore)
             {
