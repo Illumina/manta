@@ -246,7 +246,6 @@ getSVBreakendCandidateClip(
 
 
 /// get SV candidates from semi-aligned reads
-#if 0
 static
 void
 getSVCandidatesFromSemiAligned(
@@ -256,7 +255,7 @@ getSVCandidatesFromSemiAligned(
     std::vector<SVCandidate>& candidates)
 {
     // semi-aligned reads don't define a full hypothesis, so they're always evidence for a 'complex' ie. undefined, event
-    // in an analogous fashion to clipped reads
+    // in a fashion analogous to clipped reads
     static const bool isComplex(true);
 
     const double semiAlignedScore(ReadScorer::get().getSemiAlignedMetric(bamAlign.path,bamRead.qual()));
@@ -265,7 +264,7 @@ getSVCandidatesFromSemiAligned(
     	candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),pos,pos,isComplex));
     }
 }
-#endif
+
 
 /// get SV candidates from read clipping
 static
@@ -456,155 +455,27 @@ void
 getSVCandidatesFromShadow(
     const ReadScannerOptions& opt,
     const SVLocusScanner::CachedReadGroupStats& rstats,
-    const bam_record& shadowRead,
-    const SimpleAlignment& localAlign,
-    /*const bam_record* singletonReadPtr,*/
+    const bam_record& singletonRead,
+    const SimpleAlignment& singletonAlign,
     std::vector<SVCandidate>& candidates)
 {
-    // update localEvidenceRange:
-    const unsigned readSize(apath_read_length(localAlign.path));
-    //const unsigned localRefLength(apath_ref_length(localAlign.path));
 
-    unsigned thisReadNoninsertSize(0);
-    if (localAlign.is_fwd_strand)
-    {
-        thisReadNoninsertSize=(readSize-apath_read_trail_size(localAlign.path));
-    }
-    else
-    {
-        thisReadNoninsertSize=(readSize-apath_read_lead_size(localAlign.path));
-    }
-
-    SVCandidate sv;
-
-    // what to do here?
-    // Chris: look at soft-clipping example (local event), set type of sv candidate to complex
-    // complex: something is going on here, could be small SV.
-    SVBreakend& localBreakend(sv.bp1);
-    //SVBreakend& remoteBreakend(sv.bp2);
-
-    localBreakend.readCount = 1;
-
-    // if remoteRead is not available, estimate mate localRead size to be same as local,
-    // and assume no clipping on mate localRead:
-    unsigned remoteReadNoninsertSize(readSize);
-    unsigned remoteRefLength(readSize);
-
-    if (NULL != singletonReadPtr)
-    {
-        // if remoteRead is available, we can more accurately determine the size:
-        const bam_record& remoteRead(*singletonReadPtr);
-
-        ALIGNPATH::path_t remoteApath;
-        bam_cigar_to_apath(remoteRead.raw_cigar(),remoteRead.n_cigar(),remoteApath);
-
-        const unsigned remoteReadSize(apath_read_length(remoteApath));
-        remoteRefLength = (apath_ref_length(remoteApath));
-
-        if (remoteRead.is_fwd_strand())
-        {
-            remoteReadNoninsertSize=(remoteReadSize-apath_read_trail_size(remoteApath));
-        }
-        else
-        {
-            remoteReadNoninsertSize=(remoteReadSize-apath_read_lead_size(remoteApath));
-        }
-
-        //remoteBreakend.readCount = 1;
-
-        localBreakend.pairCount = 1;
-        //remoteBreakend.pairCount = 1;
-    }
-
-    // this is only designed to be valid when reads are on the same chrom with default orientation:
-    known_pos_range2 insertRange;
-
-    const pos_t totalNoninsertSize(thisReadNoninsertSize+remoteReadNoninsertSize);
-    const pos_t breakendSize(std::max(
-                                 static_cast<pos_t>(opt.minPairBreakendSize),
-                                 static_cast<pos_t>(rstats.breakendRegion.max-totalNoninsertSize)));
-
-    {
-        localBreakend.interval.tid = (shadowRead.target_id());
-
-        const pos_t startRefPos(shadowRead.pos()-1);
-        const pos_t endRefPos(startRefPos/*+localRefLength*/);
-        // expected breakpoint range is from the end of the localRead alignment to the (probabilistic) end of the fragment:
-        if (shadowRead.is_fwd_strand())
-        {
-            localBreakend.state = SVBreakendState::RIGHT_OPEN;
-            localBreakend.interval.range.set_begin_pos(endRefPos);
-            localBreakend.interval.range.set_end_pos(endRefPos + breakendSize);
-
-            insertRange.set_begin_pos(endRefPos);
-        }
-        else
-        {
-            localBreakend.state = SVBreakendState::LEFT_OPEN;
-            localBreakend.interval.range.set_end_pos(startRefPos);
-            localBreakend.interval.range.set_begin_pos(startRefPos - breakendSize);
-
-            insertRange.set_end_pos(startRefPos);
-        }
-    }
-
-    // get remote breakend estimate:
-    // don't need this
-    /*{
-        remoteBreakend.interval.tid = (localRead.mate_target_id());
-
-        const pos_t startRefPos(localRead.mate_pos()-1);
-        pos_t endRefPos(startRefPos+remoteRefLength);
-        if (localRead.is_mate_fwd_strand())
-        {
-            remoteBreakend.state = SVBreakendState::RIGHT_OPEN;
-            remoteBreakend.interval.range.set_begin_pos(endRefPos);
-            remoteBreakend.interval.range.set_end_pos(endRefPos + breakendSize);
-
-            insertRange.set_begin_pos(endRefPos);
-        }
-        else
-        {
-            remoteBreakend.state = SVBreakendState::LEFT_OPEN;
-            remoteBreakend.interval.range.set_end_pos(startRefPos);
-            remoteBreakend.interval.range.set_begin_pos(startRefPos - breakendSize);
-
-            insertRange.set_end_pos(startRefPos);
-        }
-    }*/
-
-#ifdef DEBUG_SCANNER
-    static const std::string logtag("getSVCandidatesFromShadow");
-    log_os << logtag << " evaluating sv: " << sv << "\n";
-#endif
-
-
-    // check if read pair separation is non-anomalous after accounting for read alignments:
-    /*
-    if (localRead.target_id() == localRead.mate_target_id())
-    {
-        if (localRead.is_fwd_strand() != localRead.is_mate_fwd_strand())
-        {
-            // get length of fragment after accounting for any variants described directly in either read alignment:
-            const pos_t cigarAdjustedFragmentSize(totalNoninsertSize + (insertRange.end_pos() - insertRange.begin_pos()));
-
-            const bool isLargeFragment(cigarAdjustedFragmentSize > (rstats.properPair.max + opt.minCandidateIndelSize));
-
-            // this is an arbitrary point to start officially tagging 'outties' -- for now  we just want to avoid conventional small fragments from FFPE
-            const bool isOuttie(cigarAdjustedFragmentSize < 0);
-
-            if (! (isLargeFragment || isOuttie)) return;
-        }
-        else
-        {
-            if (std::abs(localRead.template_size()) <= (rstats.properPair.max + opt.minCandidateIndelSize)) return;
-        }
-    }*/
-
-    if ((unsigned int)shadowRead.map_qual() <  (20))
+	// during locus graph construction, we want more stringent thresholds
+	// for singleton/shadow pairs. So during candidate generation, this threshold
+	// defaults to 10 but here it is 40.
+	// TODO: check how many pairs are actually discarded because of this threshold.
+	static const unsigned minSingletonMapq = 40;
+    if ((unsigned int)singletonRead.map_qual() < minSingletonMapq)
     {
       	return;
     }
+
+    static const bool isComplex(true);
+
+    const pos_t singletonGenomePos(singletonAlign.pos);
+    const pos_t properPairRangeOffset = rstats.properPair.min + (rstats.properPair.max-rstats.properPair.min)/2.0;
+    const pos_t shadowGenomePos = singletonGenomePos + properPairRangeOffset;
+    candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),shadowGenomePos,shadowGenomePos,isComplex));
 
     candidates.push_back(sv);
 }
@@ -648,6 +519,7 @@ getReadBreakendsImpl(
 #endif
 
     // TODO: add semi-aligned read processing
+    getSVCandidatesFromSemiAligned(opt, localRead, localAlign, candidates);
 
     // TODO: add SA tag processing
 
