@@ -507,8 +507,8 @@ findCandidateSV(
     // edge must be bidirectional at the noise threshold of the locus set:
     const SVLocus& locus(set.getLocus(edge.locusIndex));
 
-    if ((locus.getEdge(edge.nodeIndex1,edge.nodeIndex2).count < minEdgeCount) ||
-        (locus.getEdge(edge.nodeIndex2,edge.nodeIndex1).count < minEdgeCount))
+    if ((locus.getEdge(edge.nodeIndex1,edge.nodeIndex2).getCount() < minEdgeCount) ||
+        (locus.getEdge(edge.nodeIndex2,edge.nodeIndex1).getCount() < minEdgeCount))
     {
 #ifdef DEBUG_SVDATA
         log_os << "SVDATA: Edge failed min edge count.\n";
@@ -526,7 +526,7 @@ findCandidateSV(
 
         const SVLocusNode& node(locus.getNode(edge.nodeIndex1));
 
-        localBreakend.splitCount = node.getEdge(edge.nodeIndex1).count;
+        localBreakend.splitCount = node.getEdge(edge.nodeIndex1).getCount();
         localBreakend.state = SVBreakendState::COMPLEX;
         localBreakend.interval = node.interval;
 

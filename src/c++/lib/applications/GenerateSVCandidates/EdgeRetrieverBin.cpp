@@ -105,9 +105,9 @@ jumpToFirstEdge()
                 for (; edgeIter != edgeiterEnd; ++edgeIter)
                 {
                     isLastFiltered=false;
-                    unsigned edgeCount(edgeIter->second.count);
+                    unsigned edgeCount(edgeIter->second.getCount());
                     const bool isSelfEdge(edgeIter->first == _edge.nodeIndex1);
-                    if (! isSelfEdge) edgeCount += locus.getEdge(edgeIter->first,_edge.nodeIndex1).count;
+                    if (! isSelfEdge) edgeCount += locus.getEdge(edgeIter->first,_edge.nodeIndex1).getCount();
                     _headCount += edgeCount;
                     if (_headCount > _beginCount)
                     {
@@ -177,9 +177,9 @@ advanceEdge()
             for (; edgeIter != edgeIterEnd; ++edgeIter)
             {
                 isLastFiltered=false;
-                unsigned edgeCount(edgeIter->second.count);
+                unsigned edgeCount(edgeIter->second.getCount());
                 const bool isSelfEdge(edgeIter->first == _edge.nodeIndex1);
-                if (! isSelfEdge) edgeCount += locus.getEdge(edgeIter->first,_edge.nodeIndex1).count;
+                if (! isSelfEdge) edgeCount += locus.getEdge(edgeIter->first,_edge.nodeIndex1).getCount();
                 _headCount += edgeCount;
                 _edge.nodeIndex2 = edgeIter->first;
 

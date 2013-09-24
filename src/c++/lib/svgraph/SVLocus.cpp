@@ -30,7 +30,7 @@
 std::ostream&
 operator<<(std::ostream& os, const SVLocusEdge& edge)
 {
-    os << "Edgecount: " << edge.count;
+    os << "Edgecount: " << edge.getCount() << " isCountExact?: " << edge.isCountExact();
     return os;
 }
 
@@ -157,18 +157,15 @@ mergeNode(
         const bool isFromToEdge(fromNodeEdgeIndex == toIndex);
         if (isFromToEdge)
         {
-            if (isFromRegionRightmost)
-            {
-                toNode.count -= fromNodeEdge.count;
-                fromNodeEdge.count = 0;
-            }
-            else
+            SVLocusEdge* clearedEdgePtr(&fromNodeEdge);
+            if (! isFromRegionRightmost)
             {
                 edges_type::iterator toNodeEdgeIter(toNode.edges.find(fromIndex));
                 assert(toNodeEdgeIter != toNode.edges.end());
-                toNode.count -= toNodeEdgeIter->second.count;
-                toNodeEdgeIter->second.count = 0;
+                clearedEdgePtr=(&(toNodeEdgeIter->second));
             }
+            toNode.count -= clearedEdgePtr->getCount();
+            clearedEdgePtr->clearCount();
         }
 
         // update local edge:
@@ -226,8 +223,8 @@ isNoiseNode(
     const SVLocusNode& node(getNode(nodeIndex));
     BOOST_FOREACH(const SVLocusNode::edges_type::value_type& edge, node)
     {
-        if (edge.second.count >= minMergeEdgeCount) return false;
-        if (getEdge(edge.first,nodeIndex).count >= minMergeEdgeCount) return false;
+        if (edge.second.getCount() >= minMergeEdgeCount) return false;
+        if (getEdge(edge.first,nodeIndex).getCount() >= minMergeEdgeCount) return false;
     }
     return true;
 }
@@ -252,25 +249,25 @@ cleanNodeCore(
     std::vector<NodeIndexType> eraseEdges;
     BOOST_FOREACH(edges_type::value_type& edgeIter, queryNode)
     {
-        if (0 != edgeIter.second.count)
+        if (0 != edgeIter.second.getCount())
         {
-            if (edgeIter.second.count < minMergeEdgeCount)
+            if (edgeIter.second.getCount() < minMergeEdgeCount)
             {
                 // clean criteria met -- go ahead and erase edge count:
-                assert(queryNode.count>=edgeIter.second.count);
-                totalCleaned += edgeIter.second.count;
-                queryNode.count -= edgeIter.second.count;
-                edgeIter.second.count = 0;
+                assert(queryNode.count>=edgeIter.second.getCount());
+                totalCleaned += edgeIter.second.getCount();
+                queryNode.count -= edgeIter.second.getCount();
+                edgeIter.second.clearCount();
             }
         }
 
-        if (0 == edgeIter.second.count)
+        if (0 == edgeIter.second.getCount())
         {
             // if the out edge count is zero, see if the in-edge count is also zero --
             // if so, erase edge
             //
             const SVLocusEdge& fromRemoteEdge(getEdge(edgeIter.first,nodeIndex));
-            if (0 == fromRemoteEdge.count)
+            if (0 == fromRemoteEdge.getCount())
             {
                 eraseEdges.push_back(edgeIter.first);
 
@@ -498,7 +495,7 @@ operator<<(std::ostream& os, const SVLocusNode& node)
     BOOST_FOREACH(const SVLocusNode::edges_type::value_type& edgeIter, node)
     {
         os << "\tEdgeTo: " << edgeIter.first
-           << " out_count: " << edgeIter.second.count
+           << " out_count: " << edgeIter.second.getCount()
            << "\n";
     }
     return os;
@@ -516,7 +513,7 @@ getNodeInCount(
     unsigned sum(0);
     BOOST_FOREACH(const SVLocusNode::edges_type::value_type& edgeIter, node)
     {
-        sum += getEdge(edgeIter.first,nodeIndex).count;
+        sum += getEdge(edgeIter.first,nodeIndex).getCount();
     }
     return sum;
 }
@@ -541,8 +538,8 @@ dumpNode(
     BOOST_FOREACH(const SVLocusNode::edges_type::value_type& edgeIter, node)
     {
         os << "\tEdgeTo: " << edgeIter.first
-           << " out_count: " << edgeIter.second.count
-           << " in_count: " << getEdge(edgeIter.first,nodeIndex).count << "\n";
+           << " out_count: " << edgeIter.second.getCount()
+           << " in_count: " << getEdge(edgeIter.first,nodeIndex).getCount() << "\n";
     }
 }
 
@@ -621,7 +618,7 @@ checkState(const bool isCheckConnected) const
         unsigned edgeCount(0);
         BOOST_FOREACH(const edges_type::value_type& edgeIter, node)
         {
-            edgeCount += edgeIter.second.count;
+            edgeCount += edgeIter.second.getCount();
         }
 
         if (edgeCount != node.count)

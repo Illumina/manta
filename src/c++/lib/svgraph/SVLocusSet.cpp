@@ -589,10 +589,10 @@ getNodeMergeableIntersect(
             const NodeIndexType remoteNodeIndex(edgeInfo.second);
 
             // total edge counts on the remote->local edge:
-            mergedRemoteEdgeCount += edgeLocus.getEdge(remoteNodeIndex,localNodeIndex).count;
+            mergedRemoteEdgeCount += edgeLocus.getEdge(remoteNodeIndex,localNodeIndex).getCount();
 
             // total edge counts on the local->remote edge:
-            mergedLocalEdgeCount += edgeLocus.getEdge(localNodeIndex,remoteNodeIndex).count;
+            mergedLocalEdgeCount += edgeLocus.getEdge(localNodeIndex,remoteNodeIndex).getCount();
         }
 
 #ifdef DEBUG_SVL
@@ -610,11 +610,11 @@ getNodeMergeableIntersect(
             {
                 // total edge counts on the input remote->local edge
                 const SVLocus& inputLocus(getLocus(inputAddy.first));
-                mergedRemoteEdgeCount += inputLocus.getEdge(inputEdge.first,inputNodeIndex).count;
+                mergedRemoteEdgeCount += inputLocus.getEdge(inputEdge.first,inputNodeIndex).getCount();
             }
 
             // total edge counts on the input local->remote edge
-            mergedLocalEdgeCount += inputEdge.second.count;
+            mergedLocalEdgeCount += inputEdge.second.getCount();
         }
 
 
@@ -968,7 +968,7 @@ dumpLocusStats(std::ostream& os) const
             locusEdgeCount += node.size();
             BOOST_FOREACH(const SVLocusNode::edges_type::value_type& edge, node)
             {
-                const unsigned edgeObsCount(edge.second.count);
+                const unsigned edgeObsCount(edge.second.getCount());
                 maxEdgeObsCount = std::max(maxEdgeObsCount,edgeObsCount);
                 locusEdgeObsCount += edgeObsCount;
             }

@@ -44,8 +44,9 @@
 
 struct SVLocusEdge
 {
-    SVLocusEdge(const unsigned init_count = 0) :
-        count(init_count)
+    SVLocusEdge(
+        const unsigned initCount = 0) :
+        _count(initCount)
     {}
 
     // merge edge into this one
@@ -53,16 +54,35 @@ struct SVLocusEdge
     void
     mergeEdge(const SVLocusEdge& edge)
     {
-        count += edge.count;
+        _count += edge._count;
+    }
+
+    unsigned
+    getCount() const
+    {
+        return _count;
+    }
+
+    bool
+    isCountExact() const
+    {
+        return true;
+    }
+
+    void
+    clearCount()
+    {
+        _count = 0;
     }
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {
-        ar& count;
+        ar& _count;
     }
 
-    unsigned count;
+private:
+    unsigned _count;
 };
 
 
@@ -137,7 +157,7 @@ struct SVLocusNode
         unsigned sum(0);
         BOOST_FOREACH(const edges_type::value_type& edgeIter, *this)
         {
-            sum += edgeIter.second.count;
+            sum += edgeIter.second.getCount();
         }
         return sum;
     }

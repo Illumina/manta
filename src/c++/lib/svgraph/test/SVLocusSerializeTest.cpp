@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeSerialze )
     SVLocusNode::const_iterator ibegin(node1.begin());
     SVLocusNode::const_iterator copy_ibegin(node_copy1.begin());
 
-    BOOST_REQUIRE_EQUAL(ibegin->second.count, copy_ibegin->second.count);
+    BOOST_REQUIRE_EQUAL(ibegin->second.getCount(), copy_ibegin->second.getCount());
 
     BOOST_REQUIRE_EQUAL(ibegin->first, copy_ibegin->first);
 }
