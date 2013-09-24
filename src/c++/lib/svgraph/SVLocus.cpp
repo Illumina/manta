@@ -103,11 +103,11 @@ mergeNode(
     notifyDelete(toIndex);
 
     toNode.interval.range.merge_range(fromNode.interval.range);
-    if     ((toNode.count==0) && (fromNode.count!=0))
+    if     ((toNode.getCount() == 0) && (fromNode.getCount() != 0))
     {
         toNode.evidenceRange = fromNode.evidenceRange;
     }
-    else if ((fromNode.count==0) && (toNode.count!=0))
+    else if ((fromNode.getCount() == 0) && (toNode.getCount() != 0))
     {
         // pass (keep toNode value as is
     }
@@ -115,7 +115,7 @@ mergeNode(
     {
         toNode.evidenceRange.merge_range(fromNode.evidenceRange);
     }
-    toNode.count += fromNode.count;
+    toNode.setCount(toNode.getCount()+fromNode.getCount());
 
     notifyAdd(toIndex);
 
@@ -164,7 +164,7 @@ mergeNode(
                 assert(toNodeEdgeIter != toNode.edges.end());
                 clearedEdgePtr=(&(toNodeEdgeIter->second));
             }
-            toNode.count -= clearedEdgePtr->getCount();
+            toNode.setCount(toNode.getCount()-clearedEdgePtr->getCount());
             clearedEdgePtr->clearCount();
         }
 
@@ -254,9 +254,9 @@ cleanNodeCore(
             if (edgeIter.second.getCount() < minMergeEdgeCount)
             {
                 // clean criteria met -- go ahead and erase edge count:
-                assert(queryNode.count>=edgeIter.second.getCount());
+                assert(queryNode.getCount() >= edgeIter.second.getCount());
                 totalCleaned += edgeIter.second.getCount();
-                queryNode.count -= edgeIter.second.getCount();
+                queryNode.setCount(queryNode.getCount()-edgeIter.second.getCount());
                 edgeIter.second.clearCount();
             }
         }
@@ -274,7 +274,7 @@ cleanNodeCore(
                 // also check to see if the remote node will be empty after
                 // this edge deletion:
                 const SVLocusNode& remoteNode(getNode(edgeIter.first));
-                if ((0 == remoteNode.count) &&
+                if ((0 == remoteNode.getCount()) &&
                     (1 == remoteNode.edges.size()))
                 {
                     emptyNodes.insert(edgeIter.first);
@@ -293,7 +293,7 @@ cleanNodeCore(
     }
 
     // if true add the target node to the erase list:
-    if ((0 == queryNode.edges.size()) && (0 == queryNode.count))
+    if ((0 == queryNode.edges.size()) && (0 == queryNode.getCount()))
     {
         emptyNodes.insert(nodeIndex);
     }
@@ -486,7 +486,7 @@ eraseNodes(const std::set<NodeIndexType>& nodes)
 std::ostream&
 operator<<(std::ostream& os, const SVLocusNode& node)
 {
-    os << "LocusNode: count: " << node.count << " " << node.interval
+    os << "LocusNode: count: " << node.getCount() << " " << node.interval
        << " n_edges: " << node.size()
        << " out_count: " << node.outCount()
        << " evidence: " << node.evidenceRange
@@ -528,7 +528,7 @@ dumpNode(
     const LocusIndexType nodeIndex) const
 {
     const SVLocusNode& node(getNode(nodeIndex));
-    os << "LocusNode: count: " << node.count << " " << node.interval
+    os << "LocusNode: count: " << node.getCount() << " " << node.interval
        << " n_edges: " << node.size()
        << " out_count: " << node.outCount()
        << " in_count: " << getNodeInCount(nodeIndex)
@@ -621,10 +621,10 @@ checkState(const bool isCheckConnected) const
             edgeCount += edgeIter.second.getCount();
         }
 
-        if (edgeCount != node.count)
+        if (edgeCount != node.getCount())
         {
             std::ostringstream oss;
-            oss << "ERROR: SVLocusNode " << _index << ":" << nodeIndex << " has inconsistent counts. NodeCount: " << node.count << " EdgeCount: " << edgeCount << "\n";
+            oss << "ERROR: SVLocusNode " << _index << ":" << nodeIndex << " has inconsistent counts. NodeCount: " << node.getCount() << " EdgeCount: " << edgeCount << "\n";
             oss << "\tnode: " << node;
             BOOST_THROW_EXCEPTION(LogicException(oss.str()));
         }

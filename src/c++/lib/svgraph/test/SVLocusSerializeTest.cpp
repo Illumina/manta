@@ -107,9 +107,9 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeSerialze )
         ia >> node_copy1;
     }
 
-    BOOST_REQUIRE_EQUAL(node1.count,node_copy1.count);
-    BOOST_REQUIRE_EQUAL(node1.interval,node_copy1.interval);
-    BOOST_REQUIRE_EQUAL(node1.size(),node_copy1.size());
+    BOOST_REQUIRE_EQUAL(node1.getCount(), node_copy1.getCount());
+    BOOST_REQUIRE_EQUAL(node1.interval, node_copy1.interval);
+    BOOST_REQUIRE_EQUAL(node1.size() ,node_copy1.size());
 
     SVLocusNode::const_iterator ibegin(node1.begin());
     SVLocusNode::const_iterator copy_ibegin(node_copy1.begin());

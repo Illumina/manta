@@ -111,7 +111,7 @@ addSVNodeRead(
 
         unsigned readLocalIndex(0);
         unsigned readRemoteIndex(1);
-        if (0 == locus.getNode(readLocalIndex).count)
+        if (0 == locus.getNode(readLocalIndex).getCount())
         {
             std::swap(readLocalIndex,readRemoteIndex);
         }

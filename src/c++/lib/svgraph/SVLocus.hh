@@ -104,14 +104,14 @@ struct SVLocusNode
     typedef edges_type::const_iterator const_iterator;
 
     SVLocusNode() :
-        count(0)
+        _count(0)
     {}
 
     // specialized copy ctor which offsets all address:
     SVLocusNode(
         const SVLocusNode& in,
         const unsigned offset) :
-        count(in.count),
+        _count(in._count),
         interval(in.interval),
         evidenceRange(in.evidenceRange)
     {
@@ -152,6 +152,18 @@ struct SVLocusNode
     }
 
     unsigned
+    getCount() const
+    {
+        return _count;
+    }
+
+    void
+    setCount(const unsigned c)
+    {
+        _count=c;
+    }
+
+    unsigned
     outCount() const
     {
         unsigned sum(0);
@@ -165,7 +177,7 @@ struct SVLocusNode
     template<class Archive>
     void serialize(Archive& ar,const unsigned /* version */)
     {
-        ar& count& interval& evidenceRange& edges;
+        ar& _count& interval& evidenceRange& edges;
     }
 
     /// add new edge to node, or merge this edge info in if node already has edge:
@@ -203,9 +215,10 @@ private:
     getEdgeException(
         const NodeIndexType toIndex) const;
 
-public:
+private:
     //////////////////  data:
-    unsigned count;
+    unsigned _count;
+public:
     GenomeInterval interval;
     known_pos_range2 evidenceRange;
 
@@ -307,7 +320,7 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
         node.interval = interval;
         // default evidenceRange to the breakend interval unless a better estimate is provided
         node.evidenceRange = interval.range;
-        node.count=count;
+        node.setCount(count);
         notifyAdd(nodePtr);
         return nodePtr;
     }
@@ -360,7 +373,7 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
         unsigned sum(0);
         BOOST_FOREACH(const SVLocusNode& node, *this)
         {
-            sum += node.count;
+            sum += node.getCount();
         }
         return sum;
     }
