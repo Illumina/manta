@@ -27,8 +27,8 @@
 
 //#define DEBUG_SCANNER
 
-#define DEBUG_SEMI_ALIGNED
-#define DEBUG_IS_SHADOW
+//#define DEBUG_SEMI_ALIGNED
+//#define DEBUG_IS_SHADOW
 
 //#ifdef DEBUG_SCANNER
 #include "blt_util/log.hh"
@@ -863,25 +863,26 @@ isGoodShadow(const bam_record& bamRead, const uint8_t lastMapq, const std::strin
 	// but its partner should be aligned
 	if (bamRead.is_mate_unmapped()) return false;
 
-#ifdef DEBUG_IS_SHADOW
-    log_os << logtag << " this mapq  = " << ((unsigned int)bamRead.map_qual())
-    				 << " this qname = " << bamRead.qname() << std::endl;
-    log_os << logtag << " last mapq  = " << ((unsigned int)lastMapq)
-                     << " last qname = " << lastQname << std::endl;
-#endif
 
     if (bamRead.qname() != lastQname)
     {
     	// something went wrong here, shadows should have their singleton partner
     	// preceding them in the BAM file.
 #ifdef DEBUG_IS_SHADOW
-    log_os << logtag << " Shadow without matching singleton : " << bamRead.qname() << " vs " << lastQname << std::endl;
+    log_os << logtag << " ERROR: Shadow without matching singleton : " << bamRead.qname() << " vs " << lastQname << std::endl;
 #endif
     	return false;
     }
 
     if ((unsigned int)lastMapq > _opt.minSingletonMapq)
     {
+#ifdef DEBUG_IS_SHADOW
+    log_os << logtag << " Found shadow!" << std::endl;
+    log_os << logtag << " this mapq  = " << ((unsigned int)bamRead.map_qual())
+    				 << " this qname = " << bamRead.qname() << std::endl;
+    log_os << logtag << " last mapq  = " << ((unsigned int)lastMapq)
+                     << " last qname = " << lastQname << std::endl;
+#endif
     	return true;
     }
 

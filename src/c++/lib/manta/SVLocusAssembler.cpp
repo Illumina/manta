@@ -188,14 +188,21 @@ getBreakendReads(
 
             bool isSemiAlignedKeeper(false);
             {
-            	if (_readScanner.isSemiAligned(bamRead)) isSemiAlignedKeeper = true;
-            	++semiAlignedCnt;
+            	if (_readScanner.isSemiAligned(bamRead))
+            	{
+            		isSemiAlignedKeeper = true;
+            		++semiAlignedCnt;
+            	}
+
             }
 
             bool isShadowKeeper(false);
             {
-            	if (_readScanner.isGoodShadow(bamRead,lastMapq,lastQname)) isShadowKeeper = true;
-            	++shadowCnt;
+            	if (_readScanner.isGoodShadow(bamRead,lastMapq,lastQname))
+            	{
+            		isShadowKeeper = true;
+            		++shadowCnt;
+            	}
             }
 
             lastMapq  = bamRead.map_qual();
