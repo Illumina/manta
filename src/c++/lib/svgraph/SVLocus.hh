@@ -41,6 +41,8 @@
 #endif
 
 
+struct SVLocusNode;
+
 
 struct SVLocusEdge
 {
@@ -48,14 +50,6 @@ struct SVLocusEdge
         const unsigned initCount = 0) :
         _count(initCount)
     {}
-
-    // merge edge into this one
-    //
-    void
-    mergeEdge(const SVLocusEdge& edge)
-    {
-        _count += edge._count;
-    }
 
     unsigned
     getCount() const
@@ -69,12 +63,6 @@ struct SVLocusEdge
         return true;
     }
 
-    void
-    clearCount()
-    {
-        _count = 0;
-    }
-
     template<class Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {
@@ -82,6 +70,25 @@ struct SVLocusEdge
     }
 
 private:
+
+    friend struct SVLocusNode;
+
+    // merge edge into this one
+    //
+    void
+    mergeEdge(const SVLocusEdge& edge)
+    {
+        _count += edge._count;
+    }
+
+
+    void
+    clearCount()
+    {
+        _count = 0;
+    }
+
+
     unsigned _count;
 };
 
@@ -100,7 +107,9 @@ typedef unsigned NodeIndexType;
 struct SVLocusNode
 {
     typedef std::map<NodeIndexType,SVLocusEdge> edges_type;
+private:
     typedef edges_type::iterator iterator;
+public:
     typedef edges_type::const_iterator const_iterator;
 
     SVLocusNode() :
@@ -127,18 +136,6 @@ struct SVLocusNode
         return edges.size();
     }
 
-    iterator
-    begin()
-    {
-        return edges.begin();
-    }
-
-    iterator
-    end()
-    {
-        return edges.end();
-    }
-
     const_iterator
     begin() const
     {
@@ -149,6 +146,12 @@ struct SVLocusNode
     end() const
     {
         return edges.end();
+    }
+
+    const_iterator
+    lower_bound(const NodeIndexType index) const
+    {
+        return edges.lower_bound(index);
     }
 
     unsigned
@@ -174,15 +177,28 @@ struct SVLocusNode
         return sum;
     }
 
-    template<class Archive>
-    void serialize(Archive& ar,const unsigned /* version */)
+    /// return edge from this to node
+    const SVLocusEdge&
+    getEdge(const NodeIndexType toIndex) const
     {
-        ar& _count& interval& evidenceRange& edges;
+        edges_type::const_iterator i(edges.find(toIndex));
+        if (i == edges.end()) getEdgeException(toIndex, "getEdge");
+        return i->second;
+    }
+
+    /// return true if edge exists:
+    bool
+    isEdge(const NodeIndexType toIndex) const
+    {
+        edges_type::const_iterator i(edges.find(toIndex));
+        return (i != edges.end());
     }
 
     /// add new edge to node, or merge this edge info in if node already has edge:
     void
-    mergeEdge(const NodeIndexType toIndex, const SVLocusEdge& edge)
+    mergeEdge(
+        const NodeIndexType toIndex,
+        const SVLocusEdge& edge)
     {
         iterator edgeIter(edges.find(toIndex));
         if (edgeIter == edges.end())
@@ -197,23 +213,68 @@ struct SVLocusNode
         }
     }
 
-    /// return edge from this to node
-    const SVLocusEdge&
-    getEdge(const NodeIndexType toIndex) const
+    /// reduce edge count to zero
+    void
+    clearEdge(const NodeIndexType toIndex)
     {
-        edges_type::const_iterator i(edges.find(toIndex));
-        if (i == edges.end()) getEdgeException(toIndex);
-        return i->second;
+        edges_type::iterator i(edges.find(toIndex));
+        if (i == edges.end()) getEdgeException(toIndex, "clearEdge");
+        clearEdge(i->second);
+    }
+
+    /// eliminate edge
+    void
+    eraseEdge(const NodeIndexType toIndex)
+    {
+        edges_type::iterator i(edges.find(toIndex));
+        if (i == edges.end()) getEdgeException(toIndex, "eraseEdge");
+        //clearEdge(i->second);
+        edges.erase(i);
+    }
+
+    /// unhook edge from one node id, and stick it to another:
+    void
+    moveEdge(
+        const NodeIndexType fromIndex,
+        const NodeIndexType toIndex)
+    {
+        edges.insert(std::make_pair(toIndex,getEdge(fromIndex)));
+        edges.erase(fromIndex);
+    }
+
+    void
+    clear()
+    {
+        //_count = 0;
+        //interval.clear();
+        //evidenceRange.clear();
+        edges.clear();
     }
 
     friend std::ostream&
     operator<<(std::ostream& os, const SVLocusNode& node);
 
 
+    template<class Archive>
+    void serialize(Archive& ar,const unsigned /* version */)
+    {
+        ar& _count& interval& evidenceRange& edges;
+    }
+
 private:
+    /// reduce edge count to zero
+    void
+    clearEdge(SVLocusEdge& edge)
+    {
+        assert(_count >= edge.getCount());
+        _count -= edge.getCount();
+        edge.clearCount();
+    }
+
     void
     getEdgeException(
-        const NodeIndexType toIndex) const;
+        const NodeIndexType toIndex,
+        const char* label) const;
 
 private:
     //////////////////  data:
@@ -222,6 +283,7 @@ public:
     GenomeInterval interval;
     known_pos_range2 evidenceRange;
 
+private:
     edges_type edges;
 };
 
@@ -343,8 +405,8 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
     {
         SVLocusNode& fromNode(getNode(fromIndex));
         SVLocusNode& toNode(getNode(toIndex));
-        assert(0 == fromNode.edges.count(toIndex));
-        assert(0 == toNode.edges.count(fromIndex));
+        assert(! fromNode.isEdge(toIndex));
+        assert(! toNode.isEdge(fromIndex));
 
         fromNode.mergeEdge(toIndex,SVLocusEdge(fromCount));
         toNode.mergeEdge(fromIndex,SVLocusEdge(toCount));
@@ -396,9 +458,19 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
             const NodeIndexType toIndex) const
     {
         const SVLocusNode& fromNode(getNode(fromIndex));
-        edges_type::const_iterator i(fromNode.edges.find(toIndex));
-        if (i == fromNode.edges.end()) getEdgeException(fromIndex,toIndex);
-        return i->second;
+        try
+        {
+            return fromNode.getEdge(toIndex);
+        }
+        catch (...)
+        {
+            // throw a richer exception message than node can produce on its own:
+            getEdgeException(fromIndex,toIndex);
+        }
+
+        // handle return warning:
+        static const SVLocusEdge bogusWarning;
+        return bogusWarning;
     }
 
     void
@@ -506,21 +578,22 @@ private:
 
     /// erase edges in both directions:
     void
-    clearEdgePair(
+    eraseEdgePair(
         const NodeIndexType index1,
         const NodeIndexType index2)
     {
-        clearEdge(index1,index2);
-        clearEdge(index2,index1);
+        eraseEdge(index1,index2);
+        if (index1 == index2) return;
+        eraseEdge(index2,index1);
     }
 
     /// erase edge in one direction
     void
-    clearEdge(
+    eraseEdge(
         const NodeIndexType fromIndex,
         const NodeIndexType toIndex)
     {
-        getNode(fromIndex).edges.erase(toIndex);
+        getNode(fromIndex).eraseEdge(toIndex);
     }
 
     /// copy fromLocus into this locus (this should be an intermediate part of a locus merge)
