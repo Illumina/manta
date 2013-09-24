@@ -447,7 +447,10 @@ getSVCandidatesFromPair(
 }
 
 #if 0
-/// get SV candidates from anomalous read pairs
+/// get SV candidates from shadow/singleton pairs
+/// look for singletons, create candidateSV around conf. interval of shadow position
+/// cache singletons? might be needed to remove poor quality shadows.
+/// should be able to re-use code, follow soft-clipping example.
 static
 void
 getSVCandidatesFromShadow(
@@ -455,7 +458,7 @@ getSVCandidatesFromShadow(
     const SVLocusScanner::CachedReadGroupStats& rstats,
     const bam_record& shadowRead,
     const SimpleAlignment& localAlign,
-    const bam_record* singletonReadPtr,
+    /*const bam_record* singletonReadPtr,*/
     std::vector<SVCandidate>& candidates)
 {
     // update localEvidenceRange:
@@ -474,6 +477,9 @@ getSVCandidatesFromShadow(
 
     SVCandidate sv;
 
+    // what to do here?
+    // Chris: look at soft-clipping example (local event), set type of sv candidate to complex
+    // complex: something is going on here, could be small SV.
     SVBreakend& localBreakend(sv.bp1);
     //SVBreakend& remoteBreakend(sv.bp2);
 
