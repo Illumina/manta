@@ -199,6 +199,5 @@ private:
 
     std::vector<CachedReadGroupStats> _stats;
 
-
 };
 

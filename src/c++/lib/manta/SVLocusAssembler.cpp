@@ -63,7 +63,8 @@ getBreakendReads(
     // get search range:
     known_pos_range2 searchRange;
     {
-        static const size_t minIntervalSize(300);
+    	// ideally this should be dependent on the insert size dist
+        static const size_t minIntervalSize(400);
         if (bp.interval.range.size() >= minIntervalSize)
         {
             searchRange = bp.interval.range;
@@ -117,6 +118,8 @@ getBreakendReads(
         std::string lastQname("NOT_A_QNAME");
 
         static const unsigned MAX_NUM_READS(1000);
+        unsigned int shadowCnt(0);
+        unsigned int semiAlignedCnt(0);
 
         while (bamStream.next() && (reads.size() < MAX_NUM_READS))
         {
@@ -186,11 +189,13 @@ getBreakendReads(
             bool isSemiAlignedKeeper(false);
             {
             	if (_readScanner.isSemiAligned(bamRead)) isSemiAlignedKeeper = true;
+            	++semiAlignedCnt;
             }
 
             bool isShadowKeeper(false);
             {
             	if (_readScanner.isGoodShadow(bamRead,lastMapq,lastQname)) isShadowKeeper = true;
+            	++shadowCnt;
             }
 
             lastMapq  = bamRead.map_qual();
@@ -223,6 +228,7 @@ getBreakendReads(
 #endif
             }
         }
+        std::cerr << "bam " << bamIndex << " semi-aligned " << semiAlignedCnt << " shadow " << shadowCnt << std::endl;
     }
 }
 
