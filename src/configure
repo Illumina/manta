@@ -51,6 +51,7 @@ Directory and file names:
 
 Some influential environment variables:
   BOOST_ROOT       root location of the boost library and headers
+  CC               C compiler command
   CXX              C++ compiler command
   CXXFLAGS         C++ compiler flags
   LDFLAGS          linker flags, e.g. -L<lib dir> if you have libraries in a
