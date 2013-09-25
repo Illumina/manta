@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeSerialze )
         ia >> node_copy1;
     }
 
-    BOOST_REQUIRE_EQUAL(node1.getCount(), node_copy1.getCount());
+    BOOST_REQUIRE_EQUAL(node1.outCount(), node_copy1.outCount());
     BOOST_REQUIRE_EQUAL(node1.interval, node_copy1.interval);
     BOOST_REQUIRE_EQUAL(node1.size() ,node_copy1.size());
 

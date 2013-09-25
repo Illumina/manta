@@ -954,7 +954,7 @@ dumpLocusStats(std::ostream& os) const
         BOOST_FOREACH(const SVLocusNode& node, locus)
         {
             // nodes:
-            const unsigned nodeObsCount(node.getCount());
+            const unsigned nodeObsCount(node.outCount());
             maxNodeObsCount = std::max(maxNodeObsCount,nodeObsCount);
             locusNodeObsCount += nodeObsCount;
 

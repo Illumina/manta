@@ -702,7 +702,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMergeToSelfEdge3 )
         BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
         BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),1u);
         BOOST_REQUIRE_EQUAL(cset1.getLocus(0).getNode(0).size(),1u);
-        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).getNode(0).getCount(),3u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).getNode(0).outCount(),3u);
     }
 
     {
@@ -718,7 +718,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMergeToSelfEdge3 )
         BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
         BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),1u);
         BOOST_REQUIRE_EQUAL(cset1.getLocus(0).getNode(0).size(),1u);
-        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).getNode(0).getCount(),3u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).getNode(0).outCount(),3u);
     }
 
 }

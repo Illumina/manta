@@ -104,11 +104,13 @@ mergeNode(
     notifyDelete(toIndex);
 
     toNode.interval.range.merge_range(fromNode.interval.range);
-    if     ((toNode.getCount() == 0) && (fromNode.getCount() != 0))
+    const bool isToCount(toNode.isOutCount());
+    const bool isFromCount(fromNode.isOutCount());
+    if     ((! isToCount) && (isFromCount))
     {
         toNode.evidenceRange = fromNode.evidenceRange;
     }
-    else if ((fromNode.getCount() == 0) && (toNode.getCount() != 0))
+    else if ((! isFromCount) && (isToCount))
     {
         // pass (keep toNode value as is
     }
@@ -273,7 +275,7 @@ cleanNodeCore(
                 // also check to see if the remote node will be empty after
                 // this edge deletion:
                 const SVLocusNode& remoteNode(getNode(edgeIter.first));
-                if ((0 == remoteNode.getCount()) &&
+                if ((! remoteNode.isOutCount()) &&
                     (1 == remoteNode.size()))
                 {
                     emptyNodes.insert(edgeIter.first);
@@ -292,7 +294,7 @@ cleanNodeCore(
     }
 
     // if true add the target node to the erase list:
-    if ((0 == queryNode.size()) && (0 == queryNode.getCount()))
+    if ((queryNode.empty()) && (! queryNode.isOutCount()))
     {
         emptyNodes.insert(nodeIndex);
     }
@@ -483,7 +485,7 @@ eraseNodes(const std::set<NodeIndexType>& nodes)
 std::ostream&
 operator<<(std::ostream& os, const SVLocusNode& node)
 {
-    os << "LocusNode: count: " << node.getCount() << " " << node.interval
+    os << "LocusNode: " << node.interval
        << " n_edges: " << node.size()
        << " out_count: " << node.outCount()
        << " evidence: " << node.evidenceRange
@@ -525,7 +527,7 @@ dumpNode(
     const LocusIndexType nodeIndex) const
 {
     const SVLocusNode& node(getNode(nodeIndex));
-    os << "LocusNode: count: " << node.getCount() << " " << node.interval
+    os << "LocusNode: " << node.interval
        << " n_edges: " << node.size()
        << " out_count: " << node.outCount()
        << " in_count: " << getNodeInCount(nodeIndex)
@@ -618,10 +620,10 @@ checkState(const bool isCheckConnected) const
             edgeCount += edgeIter.second.getCount();
         }
 
-        if (edgeCount != node.getCount())
+        if (edgeCount != node.outCount())
         {
             std::ostringstream oss;
-            oss << "ERROR: SVLocusNode " << _index << ":" << nodeIndex << " has inconsistent counts. NodeCount: " << node.getCount() << " EdgeCount: " << edgeCount << "\n";
+            oss << "ERROR: SVLocusNode " << _index << ":" << nodeIndex << " has inconsistent counts. NodeCount: " << node.outCount() << " EdgeCount: " << edgeCount << "\n";
             oss << "\tnode: " << node;
             BOOST_THROW_EXCEPTION(LogicException(oss.str()));
         }
