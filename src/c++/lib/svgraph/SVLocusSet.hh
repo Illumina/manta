@@ -166,9 +166,10 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
     void
     save(const char* filename) const;
 
-    // restore from binary serialization
+    /// restore from serialization
     void
-    load(const char* filename);
+    load(
+        const char* filename);
 
     // debug output
     void

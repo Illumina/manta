@@ -612,21 +612,6 @@ checkState(const bool isCheckConnected) const
         {
             getEdge(edgeIter.first,nodeIndex);
         }
-
-        // check that node and edge counts are consistent:
-        unsigned edgeCount(0);
-        BOOST_FOREACH(const edges_type::value_type& edgeIter, node)
-        {
-            edgeCount += edgeIter.second.getCount();
-        }
-
-        if (edgeCount != node.outCount())
-        {
-            std::ostringstream oss;
-            oss << "ERROR: SVLocusNode " << _index << ":" << nodeIndex << " has inconsistent counts. NodeCount: " << node.outCount() << " EdgeCount: " << edgeCount << "\n";
-            oss << "\tnode: " << node;
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
-        }
     }
 
     if (! isCheckConnected) return;

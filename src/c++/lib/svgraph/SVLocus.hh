@@ -48,8 +48,10 @@ struct SVLocusEdge
 {
     SVLocusEdge(
         const unsigned initCount = 0) :
-        _count(initCount)
-    {}
+        _count(0)
+    {
+        addCount(initCount);
+    }
 
     unsigned
     getCount() const
@@ -60,7 +62,7 @@ struct SVLocusEdge
     bool
     isCountExact() const
     {
-        return true;
+        return (_count != maxCount());
     }
 
     template<class Archive>
@@ -70,6 +72,7 @@ struct SVLocusEdge
     }
 
 private:
+    typedef unsigned count_t;
 
     friend struct SVLocusNode;
 
@@ -78,9 +81,21 @@ private:
     void
     mergeEdge(const SVLocusEdge& edge)
     {
-        _count += edge._count;
+        addCount(edge._count);
     }
 
+    void
+    addCount(const unsigned increment)
+    {
+        if((getCount()+increment)>maxCount())
+        {
+            _count = maxCount();
+        }
+        else
+        {
+            _count += increment;
+        }
+    }
 
     void
     clearCount()
@@ -88,8 +103,14 @@ private:
         _count = 0;
     }
 
+    static
+    unsigned
+    maxCount()
+    {
+        return std::numeric_limits<count_t>::max();
+    }
 
-    unsigned _count;
+    count_t _count;
 };
 
 
@@ -121,38 +142,38 @@ struct SVLocusNode
     {
         BOOST_FOREACH(const edges_type::value_type& val, in)
         {
-            edges.insert(std::make_pair(val.first+offset,val.second));
+            _edges.insert(std::make_pair(val.first+offset,val.second));
         }
     }
 
     bool
     empty() const
     {
-        return edges.empty();
+        return _edges.empty();
     }
 
     unsigned
     size() const
     {
-        return edges.size();
+        return _edges.size();
     }
 
     const_iterator
     begin() const
     {
-        return edges.begin();
+        return _edges.begin();
     }
 
     const_iterator
     end() const
     {
-        return edges.end();
+        return _edges.end();
     }
 
     const_iterator
     lower_bound(const NodeIndexType index) const
     {
-        return edges.lower_bound(index);
+        return _edges.lower_bound(index);
     }
 
     bool
@@ -180,8 +201,8 @@ struct SVLocusNode
     const SVLocusEdge&
     getEdge(const NodeIndexType toIndex) const
     {
-        const_iterator i(edges.find(toIndex));
-        if (i == edges.end()) getEdgeException(toIndex, "getEdge");
+        const_iterator i(_edges.find(toIndex));
+        if (i == _edges.end()) getEdgeException(toIndex, "getEdge");
         return i->second;
     }
 
@@ -189,8 +210,8 @@ struct SVLocusNode
     bool
     isEdge(const NodeIndexType toIndex) const
     {
-        const_iterator i(edges.find(toIndex));
-        return (i != edges.end());
+        const_iterator i(_edges.find(toIndex));
+        return (i != _edges.end());
     }
 
     /// add new edge to node, or merge this edge info in if node already has edge:
@@ -201,11 +222,11 @@ struct SVLocusNode
         const NodeIndexType toIndex,
         const SVLocusEdge& edge)
     {
-        edges_type::iterator edgeIter(edges.find(toIndex));
-        if (edgeIter == edges.end())
+        edges_type::iterator edgeIter(_edges.find(toIndex));
+        if (edgeIter == _edges.end())
         {
             // this node does not already have an edge to "toIndex", add a new edge:
-            edges.insert(std::make_pair(toIndex,edge));
+            _edges.insert(std::make_pair(toIndex,edge));
         }
         else
         {
@@ -218,8 +239,8 @@ struct SVLocusNode
     void
     clearEdge(const NodeIndexType toIndex)
     {
-        edges_type::iterator i(edges.find(toIndex));
-        if (i == edges.end()) getEdgeException(toIndex, "clearEdge");
+        edges_type::iterator i(_edges.find(toIndex));
+        if (i == _edges.end()) getEdgeException(toIndex, "clearEdge");
         clearEdge(i->second);
     }
 
@@ -227,10 +248,10 @@ struct SVLocusNode
     void
     eraseEdge(const NodeIndexType toIndex)
     {
-        edges_type::iterator i(edges.find(toIndex));
-        if (i == edges.end()) getEdgeException(toIndex, "eraseEdge");
+        edges_type::iterator i(_edges.find(toIndex));
+        if (i == _edges.end()) getEdgeException(toIndex, "eraseEdge");
         clearEdge(i->second);
-        edges.erase(i);
+        _edges.erase(i);
     }
 
     /// unhook edge from one node id, and stick it to another:
@@ -239,20 +260,20 @@ struct SVLocusNode
         const NodeIndexType fromIndex,
         const NodeIndexType toIndex)
     {
-        edges.insert(std::make_pair(toIndex,getEdge(fromIndex)));
-        edges.erase(fromIndex);
+        _edges.insert(std::make_pair(toIndex,getEdge(fromIndex)));
+        _edges.erase(fromIndex);
     }
 
     void
     clear()
     {
-        edges.clear();
+        _edges.clear();
     }
 
     template<class Archive>
     void serialize(Archive& ar,const unsigned /* version */)
     {
-        ar& interval& evidenceRange& edges;
+        ar& interval& evidenceRange& _edges;
     }
 
 private:
@@ -274,7 +295,7 @@ public:
     known_pos_range2 evidenceRange;
 
 private:
-    edges_type edges;
+    edges_type _edges;
 };
 
 
