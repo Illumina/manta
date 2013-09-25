@@ -116,7 +116,6 @@ mergeNode(
     {
         toNode.evidenceRange.merge_range(fromNode.evidenceRange);
     }
-    toNode.setCount(toNode.getCount()+fromNode.getCount());
 
     notifyAdd(toIndex);
 
@@ -137,7 +136,7 @@ mergeNode(
 
 
         // is this a self edge of the from node?
-        const bool isSelfFromEdge(fromNodeEdgeIter.first == fromIndex);
+        const bool isSelfFromEdge(fromNodeEdgeIndex == fromIndex);
 
         if (isSelfFromEdge)
         {
@@ -160,7 +159,6 @@ mergeNode(
         {
             if(isFromRegionRightmost)
             {
-                toNode.setCount(toNode.getCount()-fromNodeEdge.getCount());
                 fromNode.clearEdge(fromNodeEdgeIndex);
             }
             else

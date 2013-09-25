@@ -90,11 +90,11 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge2 )
 
     SVLocus locus1;
     {
-        NodeIndexType nodePtr1 = locus1.addNode(GenomeInterval(1,10,20),2);
-        NodeIndexType nodePtr2 = locus1.addRemoteNode(GenomeInterval(1,30,40));
-        NodeIndexType nodePtr3 = locus1.addRemoteNode(GenomeInterval(1,50,60));
-        locus1.linkNodes(nodePtr1,nodePtr2);
-        locus1.linkNodes(nodePtr1,nodePtr3);
+        NodeIndexType nodePtr1 = locus1.addNode(GenomeInterval(1,10,20));
+        NodeIndexType nodePtr2 = locus1.addNode(GenomeInterval(1,30,40));
+        NodeIndexType nodePtr3 = locus1.addNode(GenomeInterval(1,50,60));
+        locus1.linkNodes(nodePtr1, nodePtr2);
+        locus1.linkNodes(nodePtr1, nodePtr3);
     }
 
     SVLocus locus2;
@@ -369,7 +369,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusEvidenceRange )
     SVLocus locus1;
     {
         NodeIndexType node1 = locus1.addNode(GenomeInterval(1,100,110));
-        NodeIndexType node2 = locus1.addRemoteNode(GenomeInterval(2,100,110));
+        NodeIndexType node2 = locus1.addNode(GenomeInterval(2,100,110));
         locus1.linkNodes(node1,node2);
         locus1.setNodeEvidence(node1,known_pos_range2(50,60));
     }
@@ -377,7 +377,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusEvidenceRange )
     SVLocus locus2;
     {
         NodeIndexType node1 = locus2.addNode(GenomeInterval(1,100,110));
-        NodeIndexType node2 = locus2.addRemoteNode(GenomeInterval(2,100,110));
+        NodeIndexType node2 = locus2.addNode(GenomeInterval(2,100,110));
         locus2.linkNodes(node1,node2);
         locus2.setNodeEvidence(node1,known_pos_range2(30,40));
     }
@@ -819,7 +819,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSmallDelRegionClean )
     // regions picked up from deletions have counts on both sides
     //
     SVLocus locus1;
-    locusAddDoublePair(locus1,1,10,20,1,30,40);
+    locusAddPair(locus1,1,10,20,1,30,40,true);
 
     {
         SVLocusSet set1(2);

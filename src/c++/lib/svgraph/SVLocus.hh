@@ -160,12 +160,6 @@ public:
         return _count;
     }
 
-    void
-    setCount(const unsigned c)
-    {
-        _count=c;
-    }
-
     unsigned
     outCount() const
     {
@@ -195,6 +189,8 @@ public:
     }
 
     /// add new edge to node, or merge this edge info in if node already has edge:
+    ///
+    /// this method is responsible for merging edge counts into the node count as well
     void
     mergeEdge(
         const NodeIndexType toIndex,
@@ -205,11 +201,18 @@ public:
         {
             // this node does not already have an edge to "toIndex", add a new edge:
             edges.insert(std::make_pair(toIndex,edge));
+            _count += edge.getCount();
         }
         else
         {
             // this node already has an edge to "toIndex", merge the existing edge with the new one:
-            edgeIter->second.mergeEdge(edge);
+            SVLocusEdge& toEdge(edgeIter->second);
+            unsigned beforeCount(toEdge.getCount());
+            toEdge.mergeEdge(edge);
+
+            // the count is added indirectly to allow for the edge to hit it's max count
+            /// ...that is, what we add here may != edge.getCount() in some cases:
+            _count += (toEdge.getCount()-beforeCount);
         }
     }
 
@@ -228,7 +231,7 @@ public:
     {
         edges_type::iterator i(edges.find(toIndex));
         if (i == edges.end()) getEdgeException(toIndex, "eraseEdge");
-        //clearEdge(i->second);
+        clearEdge(i->second);
         edges.erase(i);
     }
 
@@ -245,15 +248,9 @@ public:
     void
     clear()
     {
-        //_count = 0;
-        //interval.clear();
-        //evidenceRange.clear();
+        _count = 0;
         edges.clear();
     }
-
-    friend std::ostream&
-    operator<<(std::ostream& os, const SVLocusNode& node);
-
 
     template<class Archive>
     void serialize(Archive& ar,const unsigned /* version */)
@@ -374,24 +371,15 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
 
     NodeIndexType
     addNode(
-        const GenomeInterval interval,
-        const unsigned count = 1)
+        const GenomeInterval interval)
     {
         NodeIndexType nodePtr(newGraphNode());
         SVLocusNode& node(getNode(nodePtr));
         node.interval = interval;
         // default evidenceRange to the breakend interval unless a better estimate is provided
         node.evidenceRange = interval.range;
-        node.setCount(count);
         notifyAdd(nodePtr);
         return nodePtr;
-    }
-
-    NodeIndexType
-    addRemoteNode(
-        const GenomeInterval interval)
-    {
-        return addNode(interval,0);
     }
 
     // an edge count is only added on on from->to

@@ -701,7 +701,7 @@ getRegionIntersect(
     std::set<NodeAddressType>& intersectNodes)
 {
     const LocusIndexType startLocusIndex(insertLocus(SVLocus()));
-    const NodeIndexType nodeIndex = getLocus(startLocusIndex).addNode(interval,0);
+    const NodeIndexType nodeIndex(getLocus(startLocusIndex).addNode(interval));
 
     getNodeIntersect(startLocusIndex, nodeIndex, intersectNodes);
 
