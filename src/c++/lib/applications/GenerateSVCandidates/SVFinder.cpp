@@ -43,7 +43,7 @@ SVFinder(const GSCOptions& opt) :
     _readScanner(_scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilename)
 {
     // load in set:
-    _set.load(opt.graphFilename.c_str());
+    _set.load(opt.graphFilename.c_str(),true);
 
     // setup regionless bam_streams:
     // setup all data for main analysis loop:

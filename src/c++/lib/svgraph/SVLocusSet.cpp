@@ -296,6 +296,8 @@ getNodeIntersectCore(
     checkState();
 #endif
 
+    assert(_isIndexed);
+
     intersectNodes.clear();
 
     // get all existing nodes which intersect with this one:
@@ -778,6 +780,8 @@ SVLocusSet::
 insertLocus(
     const SVLocus& inputLocus)
 {
+    assert(_isIndexed);
+
     LocusIndexType locusIndex(0);
     if (_emptyLoci.empty())
     {
@@ -811,6 +815,8 @@ mergeNodePtr(NodeAddressType fromPtr,
     static const std::string logtag("SVLocusSet::mergeNodePtr");
     log_os << logtag << " from: " << fromPtr << " to: " << toPtr << " fromLocusSize: " << getLocus(fromPtr.first).size() << "\n";
 #endif
+    assert(_isIndexed);
+
     LocusSetIndexerType::iterator iter(_inodes.find(toPtr));
     assert(iter != _inodes.end());
     assert(fromPtr.first == toPtr.first);
@@ -1023,7 +1029,8 @@ save(const char* filename) const
 void
 SVLocusSet::
 load(
-    const char* filename)
+    const char* filename,
+    const bool isSkipIndex)
 {
     using namespace boost::archive;
 
@@ -1063,8 +1070,15 @@ load(
         locusCopy.updateIndex(locusIndex);
     }
 
-    reconstructIndex();
-    checkState(true,true);
+    if (! isSkipIndex)
+    {
+        reconstructIndex();
+        checkState(true,true);
+    }
+    else
+    {
+        _isIndexed = false;
+    }
 
 #ifdef DEBUG_SVL
     log_os << "SVLocusSet::load END\n";
@@ -1100,6 +1114,8 @@ reconstructIndex()
         locusIndex++;
     }
 
+    _isIndexed=true;
+
 #ifdef DEBUG_SVL
     log_os << "reconstructIndex END\n";
 #endif
@@ -1111,6 +1127,8 @@ void
 SVLocusSet::
 dumpIndex(std::ostream& os) const
 {
+    assert(_isIndexed);
+
     os << "SVLocusSet Index START\n";
     BOOST_FOREACH(const NodeAddressType& in, _inodes)
     {
@@ -1128,6 +1146,8 @@ checkState(
     const bool isCheckLocusConnected) const
 {
     using namespace illumina::common;
+
+    assert(_isIndexed);
 
     unsigned locusIndex(0);
     unsigned checkStateTotalNodeCount(0);

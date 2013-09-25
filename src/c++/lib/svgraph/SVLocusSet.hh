@@ -47,7 +47,8 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
         _highestSearchCount(0),
         _highestSearchDensity(0),
         _isMaxSearchCount(false),
-        _isMaxSearchDensity(false)
+        _isMaxSearchDensity(false),
+        _isIndexed(true)
     {}
 
     bool
@@ -65,6 +66,7 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
     unsigned
     nonEmptySize() const
     {
+        assert(_isIndexed);
         return size()-_emptyLoci.size();
     }
 
@@ -139,6 +141,8 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
 
         _isMaxSearchCount=false;
         _isMaxSearchDensity=false;
+
+        _isIndexed=true;
     }
 
     /// indicate that the set is complete
@@ -167,9 +171,13 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
     save(const char* filename) const;
 
     /// restore from serialization
+    ///
+    /// \param[in] isSkipIndex if true, don't build the graph index, and only allow a limited set of operations:
+    ///
     void
     load(
-        const char* filename);
+        const char* filename,
+        const bool isSkipIndex = false);
 
     // debug output
     void
@@ -188,6 +196,7 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
     // dump stats on each locus in tsv format:
     void
     dumpLocusStats(std::ostream& os) const;
+
     const std::string&
     getSource() const
     {
@@ -257,7 +266,6 @@ private:
 
     struct NodeAddressSorter
     {
-
         NodeAddressSorter(const SVLocusSet& set) :
             _set(set)
         {}
@@ -318,7 +326,6 @@ private:
 #ifdef DEBUG_SVL
         log_os << "SVLocusSet::clearLocus index: " << index << "\n";
 #endif
-
         assert(index<_loci.size());
 
         _loci[index].clear();
@@ -415,6 +422,8 @@ private:
     void
     removeNode(const NodeAddressType inputNodePtr)
     {
+        assert(_isIndexed);
+
         LocusSetIndexerType::iterator iter(_inodes.find(inputNodePtr));
         if (iter == _inodes.end()) return;
 
@@ -443,6 +452,7 @@ private:
     recieve_notification(const notifier<SVLocusNodeMoveMessage>&,
                          const SVLocusNodeMoveMessage& msg)
     {
+        assert(_isIndexed);
 
         if (msg.first)
         {
@@ -546,6 +556,8 @@ private:
 
     mutable bool _isMaxSearchCount; ///< has input been filtered because we hit the maximum search count
     mutable bool _isMaxSearchDensity; ///< has input been filtered because we hit the maximum node density
+
+    bool _isIndexed;
 };
 
 

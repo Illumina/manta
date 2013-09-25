@@ -168,7 +168,16 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
     for gfile in tmpGraphFiles :
         mergeCmd.extend(["--graph-file", gfile])
 
-    mergeTask = self.addTask(preJoin(taskPrefix,"mergeLocusGraph"),mergeCmd,dependencies=graphTasks)
+    fullGraphMemMb=4*1024
+
+    mergeTask = self.addTask(preJoin(taskPrefix,"mergeLocusGraph"),mergeCmd,dependencies=graphTasks,memMb=fullGraphMemMb)
+
+    # Run a separate process to rigorously check that the final graph is valid, the sv candidate generators will check as well, but
+    # this makes the check much more clear:
+    
+    checkCmd = [ self.params.mantaGraphCheckBin ]
+    checkCmd.extend(["--graph-file", graphPath])
+    checkTask = self.addTask(preJoin(taskPrefix,"checkLocusGraph"),checkCmd,dependencies=mergeTask,memMb=fullGraphMemMb)
 
     rmGraphTmpCmd = "rm -rf " + tmpGraphDir
     #rmTask=self.addTask(preJoin(taskPrefix,"rmGraphTmp"),rmGraphTmpCmd,dependencies=mergeTask)
@@ -181,7 +190,7 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
     graphStatsTask = self.addTask(preJoin(taskPrefix,"locusGraphStats"),graphStatsCmd,dependencies=mergeTask)
 
     nextStepWait = set()
-    nextStepWait.add(mergeTask)
+    nextStepWait.add(checkTask)
     return nextStepWait
 
 
