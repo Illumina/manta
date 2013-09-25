@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeSerialze )
     }
 
     BOOST_REQUIRE_EQUAL(node1.outCount(), node_copy1.outCount());
-    BOOST_REQUIRE_EQUAL(node1.interval, node_copy1.interval);
+    BOOST_REQUIRE_EQUAL(node1.getInterval(), node_copy1.getInterval());
     BOOST_REQUIRE_EQUAL(node1.size() ,node_copy1.size());
 
     SVLocusNode::const_iterator ibegin(node1.begin());
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSerialze )
     bool isMatchFound(false);
     BOOST_FOREACH(const SVLocusNode& node, clocus1_copy)
     {
-        if (node.interval == (clocus1.begin())->interval) isMatchFound=true;
+        if (node.getInterval() == (clocus1.begin())->getInterval()) isMatchFound=true;
     }
     BOOST_REQUIRE(isMatchFound);
 }

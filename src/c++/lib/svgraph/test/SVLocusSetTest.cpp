@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge )
     bool isFound(false);
     BOOST_FOREACH(const SVLocusNode& node, cset1.getLocus(0))
     {
-        if (node.interval == testInterval) isFound=true;
+        if (node.getInterval() == testInterval) isFound=true;
     }
     BOOST_REQUIRE(isFound);
 }
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge2 )
     bool isFound(false);
     BOOST_FOREACH(const SVLocusNode& node, cset1.getLocus(0))
     {
-        if (node.interval == testInterval) isFound=true;
+        if (node.getInterval() == testInterval) isFound=true;
     }
     BOOST_REQUIRE(isFound);
 }
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge3 )
     bool isFound(false);
     BOOST_FOREACH(const SVLocusNode& node, cset1.getLocus(0))
     {
-        if (node.interval == testInterval) isFound=true;
+        if (node.getInterval() == testInterval) isFound=true;
     }
     BOOST_REQUIRE(isFound);
 }
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge4 )
     bool isFound(false);
     BOOST_FOREACH(const SVLocusNode& node, cset1.getLocus(0))
     {
-        if (node.interval == testInterval) isFound=true;
+        if (node.getInterval() == testInterval) isFound=true;
     }
     BOOST_REQUIRE(isFound);
 }
@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusEvidenceRange )
         const SVLocusSet& cset1(set1);
 
         BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
-        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).getNode(0).evidenceRange,known_pos_range2(30,60));
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).getNode(0).getEvidenceRange(),known_pos_range2(30,60));
     }
 
 }

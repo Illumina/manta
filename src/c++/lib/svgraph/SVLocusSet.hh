@@ -287,7 +287,7 @@ private:
         const GenomeInterval&
         getInterval(const NodeAddressType& n) const
         {
-            return (_set.getLocus(n.first).getNode(n.second).interval);
+            return (_set.getLocus(n.first).getNode(n.second).getInterval());
         }
 
         const SVLocusSet& _set;
@@ -461,7 +461,7 @@ private:
             log_os << "SVLocusSetObserver: Adding node: " << msg.second.first << ":" << msg.second.second << "\n";
 #endif
             _inodes.insert(msg.second);
-            updateMaxRegionSize(getNode(msg.second).interval);
+            updateMaxRegionSize(getNode(msg.second).getInterval());
         }
         else
         {

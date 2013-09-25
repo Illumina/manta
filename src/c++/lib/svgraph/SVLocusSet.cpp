@@ -113,7 +113,7 @@ merge(const SVLocus& inputLocus)
         const NodeIndexType nodeCount(startLocus.size());
         for (NodeIndexType nodeIndex(0); nodeIndex<nodeCount; ++nodeIndex)
         {
-            nodeMap.insert(std::make_pair(startLocus.getNode(nodeIndex).interval,nodeIndex));
+            nodeMap.insert(std::make_pair(startLocus.getNode(nodeIndex).getInterval(),nodeIndex));
         }
     }
 
@@ -194,14 +194,14 @@ merge(const SVLocus& inputLocus)
         NodeAddressType inputSuperAddy;
         {
             bool isInputSuperFound(false);
-            const known_pos_range2& inputRange(getLocus(startLocusIndex).getNode(nodeIndex).interval.range);
+            const known_pos_range2& inputRange(getLocus(startLocusIndex).getNode(nodeIndex).getInterval().range);
 
             BOOST_FOREACH(const NodeAddressType& val, intersectNodes)
             {
                 assert(val.first == headLocusIndex);
 
                 // one node must be a superset of the input node, find this and store separately:
-                if (getNode(val).interval.range.is_superset_of(inputRange))
+                if (getNode(val).getInterval().range.is_superset_of(inputRange))
                 {
                     inputSuperAddy=val;
                     isInputSuperFound=true;
@@ -303,7 +303,7 @@ getNodeIntersectCore(
     // get all existing nodes which intersect with this one:
     const NodeAddressType inputAddy(std::make_pair(inputLocusIndex,inputNodeIndex));
     const in_citer it(searchNodes.lower_bound(inputAddy));
-    const GenomeInterval& inputInterval(getNode(inputAddy).interval);
+    const GenomeInterval& inputInterval(getNode(inputAddy).getInterval());
     const pos_t maxRegionSize(_maxRegionSize[inputInterval.tid]);
 
     const in_citer it_begin(searchNodes.begin()), it_end(searchNodes.end());
@@ -330,7 +330,7 @@ getNodeIntersectCore(
 #ifdef DEBUG_SVL
         log_os << logtag << "\tFWD test: " << (*it_fwd) << " " << getNode(*it_fwd);
 #endif
-        if (! inputInterval.isIntersect(getNode(*it_fwd).interval)) break;
+        if (! inputInterval.isIntersect(getNode(*it_fwd).getInterval())) break;
         intersectNodes.insert(*it_fwd);
 #ifdef DEBUG_SVL
         log_os << logtag << "\tFWD insert: " << (*it_fwd) << "\n";
@@ -358,7 +358,7 @@ getNodeIntersectCore(
 #ifdef DEBUG_SVL
         log_os << logtag << "\tREV test: " << (*it_rev) << " " << getNode(*it_rev);
 #endif
-        const GenomeInterval& searchInterval(getNode(*it_rev).interval);
+        const GenomeInterval& searchInterval(getNode(*it_rev).getInterval());
         if (! inputInterval.isIntersect(searchInterval))
         {
             if (! isOverlapAllowed()) break;
@@ -965,7 +965,7 @@ dumpLocusStats(std::ostream& os) const
             locusNodeObsCount += nodeObsCount;
 
             // regions:
-            const unsigned regionSize(node.interval.range.size());
+            const unsigned regionSize(node.getInterval().range.size());
             maxRegionSize = std::max(maxRegionSize,regionSize);
             locusRegionSize += regionSize;
 
@@ -1108,7 +1108,7 @@ reconstructIndex()
         {
             const NodeAddressType addy(std::make_pair(locusIndex,nodeIndex));
             _inodes.insert(addy);
-            updateMaxRegionSize(getNode(addy).interval);
+            updateMaxRegionSize(getNode(addy).getInterval());
         }
         if (locus.empty()) _emptyLoci.insert(locusIndex);
         locusIndex++;
@@ -1224,7 +1224,7 @@ checkForOverlapNodes(
             if (isNoiseNode(addy)) continue;
         }
 
-        const GenomeInterval& interval(getNode(addy).interval);
+        const GenomeInterval& interval(getNode(addy).getInterval());
 
         // don't allow zero-length or negative intervals:
         assert(interval.range.begin_pos() < interval.range.end_pos());

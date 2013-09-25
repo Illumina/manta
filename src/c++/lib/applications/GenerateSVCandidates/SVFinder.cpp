@@ -116,8 +116,8 @@ addSVNodeRead(
             std::swap(readLocalIndex,readRemoteIndex);
         }
 
-        if (! locus.getNode(readLocalIndex).interval.isIntersect(localNode.interval)) continue;
-        if (! locus.getNode(readRemoteIndex).interval.isIntersect(remoteNode.interval)) continue;
+        if (! locus.getNode(readLocalIndex).getInterval().isIntersect(localNode.getInterval())) continue;
+        if (! locus.getNode(readRemoteIndex).getInterval().isIntersect(remoteNode.getInterval())) continue;
 
         svDataGroup.add(bamRead,isExpectRepeat);
 
@@ -140,9 +140,9 @@ addSVNodeData(
     // get full search interval:
     const SVLocusNode& localNode(locus.getNode(localNodeIndex));
     const SVLocusNode& remoteNode(locus.getNode(remoteNodeIndex));
-    GenomeInterval searchInterval(localNode.interval);
+    GenomeInterval searchInterval(localNode.getInterval());
 
-    searchInterval.range.merge_range(localNode.evidenceRange);
+    searchInterval.range.merge_range(localNode.getEvidenceRange());
 
     const bool isExpectRepeat(svData.setNewSearchInterval(searchInterval));
 
@@ -528,7 +528,7 @@ findCandidateSV(
 
         localBreakend.splitCount = node.getEdge(edge.nodeIndex1).getCount();
         localBreakend.state = SVBreakendState::COMPLEX;
-        localBreakend.interval = node.interval;
+        localBreakend.interval = node.getInterval();
 
         remoteBreakend.state = SVBreakendState::UNKNOWN;
 

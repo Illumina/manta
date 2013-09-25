@@ -89,7 +89,7 @@ mergeNode(
     log_os << logtag << " BEFORE toNode: " << toNode;
 #endif
 
-    if (fromNode.interval.tid != toNode.interval.tid)
+    if (fromNode.getInterval().tid != toNode.getInterval().tid)
     {
         std::ostringstream oss;
         oss << "ERROR: Attempting to merge nodes on different chromosomes\n"
@@ -99,16 +99,16 @@ mergeNode(
     }
 
     // store node relationship before merging regions:
-    const bool isFromRegionRightmost(toNode.interval.range < fromNode.interval.range);
+    const bool isFromRegionRightmost(toNode.getInterval().range < fromNode.getInterval().range);
 
     notifyDelete(toIndex);
 
-    toNode.interval.range.merge_range(fromNode.interval.range);
+    toNode.setIntervalRange(merge_range(toNode.getInterval().range,fromNode.getInterval().range));
     const bool isToCount(toNode.isOutCount());
     const bool isFromCount(fromNode.isOutCount());
     if     ((! isToCount) && (isFromCount))
     {
-        toNode.evidenceRange = fromNode.evidenceRange;
+        toNode.setEvidenceRange(fromNode.getEvidenceRange());
     }
     else if ((! isFromCount) && (isToCount))
     {
@@ -116,7 +116,7 @@ mergeNode(
     }
     else
     {
-        toNode.evidenceRange.merge_range(fromNode.evidenceRange);
+        toNode.setEvidenceRange(merge_range(toNode.getEvidenceRange(),fromNode.getEvidenceRange()));
     }
 
     notifyAdd(toIndex);
@@ -485,10 +485,10 @@ eraseNodes(const std::set<NodeIndexType>& nodes)
 std::ostream&
 operator<<(std::ostream& os, const SVLocusNode& node)
 {
-    os << "LocusNode: " << node.interval
+    os << "LocusNode: " << node.getInterval()
        << " n_edges: " << node.size()
        << " out_count: " << node.outCount()
-       << " evidence: " << node.evidenceRange
+       << " evidence: " << node.getEvidenceRange()
        << "\n";
 
     BOOST_FOREACH(const SVLocusNode::edges_type::value_type& edgeIter, node)
@@ -527,11 +527,11 @@ dumpNode(
     const LocusIndexType nodeIndex) const
 {
     const SVLocusNode& node(getNode(nodeIndex));
-    os << "LocusNode: " << node.interval
+    os << "LocusNode: " << node.getInterval()
        << " n_edges: " << node.size()
        << " out_count: " << node.outCount()
        << " in_count: " << getNodeInCount(nodeIndex)
-       << " evidence: " << node.evidenceRange
+       << " evidence: " << node.getEvidenceRange()
        << "\n";
 
     BOOST_FOREACH(const SVLocusNode::edges_type::value_type& edgeIter, node)
@@ -584,7 +584,7 @@ mergeSelfOverlap()
             SVLocusNode& node2(getNode(revNodeIndex2));
 
             // test whether 1 and 2 intersect, if they do, merge this into a self-edge node:
-            if (! node2.interval.isIntersect(node1.interval)) continue;
+            if (! node2.getInterval().isIntersect(node1.getInterval())) continue;
             mergeNode(revNodeIndex,revNodeIndex2);
             eraseNode(revNodeIndex);
             break;

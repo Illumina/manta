@@ -137,8 +137,8 @@ struct SVLocusNode
     SVLocusNode(
         const SVLocusNode& in,
         const unsigned offset) :
-        interval(in.interval),
-        evidenceRange(in.evidenceRange)
+        _interval(in._interval),
+        _evidenceRange(in._evidenceRange)
     {
         BOOST_FOREACH(const edges_type::value_type& val, in)
         {
@@ -273,7 +273,37 @@ struct SVLocusNode
     template<class Archive>
     void serialize(Archive& ar,const unsigned /* version */)
     {
-        ar& interval& evidenceRange& _edges;
+        ar& _interval& _evidenceRange& _edges;
+    }
+
+    const GenomeInterval&
+    getInterval() const
+    {
+        return _interval;
+    }
+
+    void
+    setInterval(const GenomeInterval& i)
+    {
+        _interval=i;
+    }
+
+    void
+    setIntervalRange(const known_pos_range2& range)
+    {
+        _interval.range=range;
+    }
+
+    const known_pos_range2&
+    getEvidenceRange() const
+    {
+        return _evidenceRange;
+    }
+
+    void
+    setEvidenceRange(const known_pos_range2& range)
+    {
+        _evidenceRange = range;
     }
 
 private:
@@ -289,12 +319,9 @@ private:
         const NodeIndexType toIndex,
         const char* label) const;
 
-public:
     //////////////////  data:
-    GenomeInterval interval;
-    known_pos_range2 evidenceRange;
-
-private:
+    GenomeInterval _interval;
+    known_pos_range2 _evidenceRange;
     edges_type _edges;
 };
 
@@ -389,9 +416,9 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
     {
         NodeIndexType nodePtr(newGraphNode());
         SVLocusNode& node(getNode(nodePtr));
-        node.interval = interval;
-        // default evidenceRange to the breakend interval unless a better estimate is provided
-        node.evidenceRange = interval.range;
+        node.setInterval(interval);
+        // default _evidenceRange to the breakend interval unless a better estimate is provided
+        node.setEvidenceRange(interval.range);
         notifyAdd(nodePtr);
         return nodePtr;
     }
@@ -419,7 +446,7 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
         const NodeIndexType nodeIndex,
         const known_pos_range2& evidenceRange)
     {
-        getNode(nodeIndex).evidenceRange = evidenceRange;
+        getNode(nodeIndex).setEvidenceRange(evidenceRange);
     }
 
     /// find all node indices connected to startIndex
