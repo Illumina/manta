@@ -30,6 +30,7 @@
 
 static const bool isExcludeUnpaired(true);
 
+#define DEBUG_SVDATA
 
 
 SVFinder::
