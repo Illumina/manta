@@ -20,7 +20,7 @@
 
 #include <cassert>
 
-#define DEBUG_RS
+//#define DEBUG_RS
 
 #ifdef DEBUG_RS
 #include "blt_util/log.hh"
