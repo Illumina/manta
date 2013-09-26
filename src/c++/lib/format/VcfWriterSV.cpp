@@ -74,6 +74,7 @@ writeHeaderPrefix(
     _os << "##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the variant described in this record\">\n";
     _os << "##INFO=<ID=CIPOS,Number=2,Type=Integer,Description=\"Confidence interval around POS\">\n";
     _os << "##INFO=<ID=CIEND,Number=2,Type=Integer,Description=\"Confidence interval around END\">\n";
+    _os << "##INFO=<ID=CIGAR,Number=A,Type=String,Description=\"CIGAR alignment for each alternate indel allele\">\n";
     _os << "##INFO=<ID=MATEID,Number=.,Type=String,Description=\"ID of mate breakend\">\n";
 #if 0
     _os << "##INFO=<ID=HOMLEN,Number=.,Type=Integer,Description=\"Length of base pair identical micro-homology at event breakpoints\">\n";
@@ -87,7 +88,6 @@ writeHeaderPrefix(
     _os << "##INFO=<ID=BND_PAIR_SUPPORT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at this breakend (mapping may not be confident at remote breakend)\">\n";
     _os << "##INFO=<ID=UPSTREAM_PAIR_SUPPORT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at the upstream breakend (mapping may not be confident at downstream breakend)\">\n";
     _os << "##INFO=<ID=DOWNSTREAM_PAIR_SUPPORT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at this downstream breakend (mapping may not be confident at upstream breakend)\">\n";
-    _os << "##INFO=<ID=CIGAR,Number=A,Type=String,Description=\"CIGAR alignment for each alternate indel allele\">\n";
 
     addHeaderInfo();
 
@@ -147,7 +147,7 @@ addDebugInfo(
     // there can be several contigs per breakend, so we iterate over all of them.
     // only the first breakpoint gets the alignments attached to its VCF entry
 
-    if(assemblyData.isSpanning)
+    if (assemblyData.isSpanning)
     {
         const unsigned numAlign(assemblyData.spanningAlignments.size());
         std::string cigar1;
@@ -514,12 +514,12 @@ writeInvdel(
 void
 VcfWriterSV::
 writeInversion(
-	const EdgeInfo& edge,
+    const EdgeInfo& edge,
     const SVCandidate& sv,
     const SVCandidateSetData& /*svData*/,
     const SVCandidateAssemblyData& adata)
 {
-	const std::string label("INV");
+    const std::string label("INV");
     const std::string vcfId( str(_otherSVIdFormatter % label % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex % adata.bestAlignmentIndex ) );
     writeInvdel(sv,label,vcfId);
 }
@@ -529,10 +529,10 @@ writeInversion(
 void
 VcfWriterSV::
 writeIndel(
-	const EdgeInfo& edge,
-	const SVCandidate& sv,
-	const SVCandidateSetData& /*svData*/,
-	const SVCandidateAssemblyData& adata)
+    const EdgeInfo& edge,
+    const SVCandidate& sv,
+    const SVCandidateSetData& /*svData*/,
+    const SVCandidateAssemblyData& adata)
 {
     static const bool isIndel(true);
 
@@ -546,7 +546,7 @@ writeIndel(
 
     const bool isDelete(deleteSize >= insertSize);
 
-	const std::string label(isDelete ? "DEL" : "INS");
+    const std::string label(isDelete ? "DEL" : "INS");
     const std::string vcfId( str(_otherSVIdFormatter % label % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex % adata.bestAlignmentIndex ) );
 
     writeInvdel(sv,label,vcfId,isIndel);
@@ -556,13 +556,13 @@ writeIndel(
 void
 VcfWriterSV::
 writeTanDup(
-	const EdgeInfo& edge,
-	const SVCandidate& sv,
-	const SVCandidateSetData& /*svData*/,
-	const SVCandidateAssemblyData& adata)
+    const EdgeInfo& edge,
+    const SVCandidate& sv,
+    const SVCandidateSetData& /*svData*/,
+    const SVCandidateAssemblyData& adata)
 {
-	const std::string label("DUP:TANDEM");
-	const std::string vcfId( str(_otherSVIdFormatter % label % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex % adata.bestAlignmentIndex ) );
+    const std::string label("DUP:TANDEM");
+    const std::string vcfId( str(_otherSVIdFormatter % label % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex % adata.bestAlignmentIndex ) );
     writeInvdel(sv,label,vcfId);
 }
 
@@ -570,13 +570,13 @@ writeTanDup(
 void
 VcfWriterSV::
 writeComplex(
-	const EdgeInfo& edge,
-	const SVCandidate& sv,
-	const SVCandidateSetData& /*svData*/,
-	const SVCandidateAssemblyData& adata)
+    const EdgeInfo& edge,
+    const SVCandidate& sv,
+    const SVCandidateSetData& /*svData*/,
+    const SVCandidateAssemblyData& adata)
 {
-	const std::string label("COMPLEX");
-	const std::string vcfId( str(_otherSVIdFormatter % label % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex % adata.bestAlignmentIndex ) );
+    const std::string label("COMPLEX");
+    const std::string vcfId( str(_otherSVIdFormatter % label % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex % adata.bestAlignmentIndex ) );
     writeInvdel(sv,label,vcfId);
 }
 

@@ -339,7 +339,7 @@ private:
         const LocusIndexType inputLocusIndex,
         const NodeIndexType inputNodeIndex,
         const LocusSetIndexerType& searchNodes,
-        const LocusIndexType fitlerLocusIndex,
+        const LocusIndexType filterLocusIndex,
         std::set<NodeAddressType>& intersectNodes,
         const bool isTestUsability = false) const;
 

@@ -54,7 +54,7 @@ if [ -z "${BJAM_OPTIONS+xxx}" ]; then BJAM_OPTIONS=""; fi
 common_options $@
 
 if [[ $CLEAN ]] ; then
-    echo removing $SOURCE_DIR
+    ilog removing $SOURCE_DIR
     rm -rf $SOURCE_DIR ${INCLUDE_DIR}/boost ${LIB_DIR}/libboost_*.{a,so}
     exit 0
 fi
@@ -65,9 +65,9 @@ cd ${SOURCE_DIR} \
     && ./bootstrap.sh ${BOOTSTRAP_OPTIONS} --prefix=${INSTALL_DIR} --with-libraries=$BOOST_LIBRARY_LIST \
     && ./bjam -j$PARALLEL ${BJAM_OPTIONS} --libdir=${INSTALL_DIR}/lib --layout=system link=static threading=single install
 
-if [ $? != 0 ] ; then echo "$SCRIPT: build failed: Terminating..." >&2 ; exit 1 ; fi
+if [ $? != 0 ] ; then ilog "$SCRIPT: build failed: Terminating..."; exit 1 ; fi
 
-#echo "Cleaning up ${SOURCE_DIR}"  >&2
-#rm -rf ${SOURCE_DIR}
+ilog "Cleaning up ${SOURCE_DIR}"
+rm -rf ${SOURCE_DIR}
 
-echo "boost-$VERSION installed successfully"  >&2
+ilog "boost-$VERSION installed successfully"

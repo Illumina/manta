@@ -18,9 +18,18 @@
 ##
 ################################################################################
 
-function common_options () {
+# common log definition for bash installation scripts:
+ilog() {
+	echo -e $@ >&2
+}
+
+common_options () {
     TEMP=`getopt -n $SCRIPT -o fc -- "$@"`
-    if [ $? != 0 ] ; then echo $SCRIPT: invalid option  >&2; echo "Terminating..." >&2 ; exit 2 ; fi
+    if [ $? != 0 ] ; then
+        ilog $SCRIPT: invalid option
+        ilog "Terminating..."
+        exit 2
+    fi
     eval set -- "$TEMP"
     FORCE=
     CLEAN=
@@ -29,23 +38,23 @@ function common_options () {
             -f) FORCE=true ; shift ;;
             -c) CLEAN=true ; shift ;;
             --)              shift ; break ;;
-            *) echo "Internal error!" >&2; exit 2 ;;
+            *) ilog "Internal error!"; exit 2 ;;
         esac
     done
 }
 
-function common_create_source () {
+
+common_create_source () {
     if [[ ! -e $SOURCE_TARBALL ]] ; then
-        echo $SCRIPT: source tarball $SOURCE_TARBALL not found >&2
-        exit 2
+        ilog $SCRIPT: source tarball $SOURCE_TARBALL not found
+        exit 1
     fi
-    echo Decompressing $SOURCE_TARBALL >&2
+    ilog Decompressing $SOURCE_TARBALL
     mkdir -p ${BUILD_DIR}
     tar -C ${BUILD_DIR} -${TARBALL_COMPRESSION}xf $SOURCE_TARBALL
 
     if [[ ! -d $SOURCE_DIR ]] ; then
-        echo $SOURCE_DIR does not exist >&2
-        exit 2
+        ilog $SOURCE_DIR does not exist
+        exit 1
     fi
 }
-

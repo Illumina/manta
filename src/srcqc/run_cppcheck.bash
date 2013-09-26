@@ -36,13 +36,9 @@ if ! which -a cppcheck > /dev/null 2>&1 ; then exit 0; fi
 
 outFile=cppcheck.log
 
-
 cppcheck \
 --enable=all --std=c++03 --force --verbose --quiet \
 --template='{file}:{line}:{severity}:{message}' \
---suppress=uninitMemberVar \
---suppress=unsignedLessThanZero \
---suppress=obsoleteFunctionsasctime \
 --suppress=unusedFunction \
 --suppress=unmatchedSuppression \
 --suppress=missingInclude \
@@ -50,6 +46,12 @@ $srcRoot 2>| $outFile
 
 # xml output is usful for getting a warnings id field, which is what you need to supress it:
 # --xml \
+
+# additional suppressed checks fraom starka:
+#--suppress=uninitMemberVar \
+#--suppress=unsignedLessThanZero \
+#--suppress=obsoleteFunctionsasctime \
+
 
 # this is more aggresive and includes more FPs
 # --inconclusive \
