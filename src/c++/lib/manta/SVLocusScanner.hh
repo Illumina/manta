@@ -69,7 +69,7 @@ isSemiAligned(const bam_record& bamRead, const double minSemiAlignedScore);
 bool
 isGoodShadow(const bam_record& bamRead,
 	 	 	 const uint8_t lastMapq,
-	 	 	 const std::string lastQname,
+	 	 	 const std::string& lastQname,
 			 const double minSingletonMapq);
 
 /// consolidate functions which process a read to determine its
