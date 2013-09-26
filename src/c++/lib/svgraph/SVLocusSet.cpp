@@ -703,7 +703,7 @@ getRegionIntersect(
     std::set<NodeAddressType>& intersectNodes)
 {
     const LocusIndexType startLocusIndex(insertLocus(SVLocus()));
-    const NodeIndexType nodeIndex(getLocus(startLocusIndex).addNode(interval));
+    const NodeIndexType nodeIndex(getLocus(startLocusIndex).addNode(interval, this));
 
     getNodeIntersect(startLocusIndex, nodeIndex, intersectNodes);
 
@@ -769,7 +769,7 @@ combineLoci(
     if (fromLocus.empty()) return;
 
     SVLocus& toLocus(_loci[toIndex]);
-    toLocus.copyLocus(fromLocus);
+    toLocus.copyLocus(fromLocus, this);
     if (isClearSource) clearLocus(fromIndex);
 }
 
@@ -798,9 +798,9 @@ insertLocus(
     }
 
     SVLocus& locus(_loci[locusIndex]);
-    observe_notifier(locus);
+    //observe_notifier(locus);
     locus.updateIndex(locusIndex);
-    locus.copyLocus(inputLocus);
+    locus.copyLocus(inputLocus, this);
     return locusIndex;
 }
 
@@ -820,7 +820,7 @@ mergeNodePtr(NodeAddressType fromPtr,
     LocusSetIndexerType::iterator iter(_inodes.find(toPtr));
     assert(iter != _inodes.end());
     assert(fromPtr.first == toPtr.first);
-    getLocus(fromPtr.first).mergeNode(fromPtr.second,toPtr.second);
+    getLocus(fromPtr.first).mergeNode(fromPtr.second, toPtr.second, this);
 }
 
 
@@ -832,7 +832,7 @@ clean()
     BOOST_FOREACH(SVLocus& locus, _loci)
     {
         if (locus.empty()) continue;
-        _totalCleaned += locus.clean(getMinMergeEdgeCount());
+        _totalCleaned += locus.clean(getMinMergeEdgeCount(), this);
         if (locus.empty()) _emptyLoci.insert(locus.getIndex());
     }
 #ifdef DEBUG_SVL
@@ -861,7 +861,7 @@ cleanRegion(const GenomeInterval interval)
     {
         SVLocus& locus(getLocus(val.first));
         if (locus.empty()) continue;
-        _totalCleaned += locus.cleanNode(getMinMergeEdgeCount(), val.second);
+        _totalCleaned += locus.cleanNode(getMinMergeEdgeCount(), val.second, this);
         if (locus.empty()) _emptyLoci.insert(locus.getIndex());
 
 #ifdef DEBUG_SVL
@@ -1060,13 +1060,13 @@ load(
     SVLocus locus;
     while (ifs.peek() != EOF)
     {
-        locus.clear();
+        locus.clear(this);
         ia >> locus;
         if (locus.empty()) continue;
         const LocusIndexType locusIndex(size());
         _loci.push_back(locus);
         SVLocus& locusCopy(_loci.back());
-        observe_notifier(locusCopy);
+       // observe_notifier(locusCopy);
         locusCopy.updateIndex(locusIndex);
     }
 

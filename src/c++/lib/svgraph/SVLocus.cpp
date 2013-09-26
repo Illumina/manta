@@ -70,7 +70,8 @@ void
 SVLocus::
 mergeNode(
     const NodeIndexType fromIndex,
-    const NodeIndexType toIndex)
+    const NodeIndexType toIndex,
+    flyweight_observer_t* obs)
 {
     using namespace illumina::common;
 
@@ -101,7 +102,7 @@ mergeNode(
     // store node relationship before merging regions:
     const bool isFromRegionRightmost(toNode.getInterval().range < fromNode.getInterval().range);
 
-    notifyDelete(toIndex);
+    notifyDelete(obs,toIndex);
 
     toNode.setIntervalRange(merge_range(toNode.getInterval().range,fromNode.getInterval().range));
     const bool isToCount(toNode.isOutCount());
@@ -119,7 +120,7 @@ mergeNode(
         toNode.setEvidenceRange(merge_range(toNode.getEvidenceRange(),fromNode.getEvidenceRange()));
     }
 
-    notifyAdd(toIndex);
+    notifyAdd(obs,toIndex);
 
     // now take all fromNode edges and 'redirect' them to the toNode index
     //
@@ -324,11 +325,12 @@ unsigned
 SVLocus::
 cleanNode(
     const unsigned minMergeEdgeCount,
-    const NodeIndexType nodeIndex)
+    const NodeIndexType nodeIndex,
+    flyweight_observer_t* obs)
 {
     std::set<NodeIndexType> emptyNodes;
     const unsigned totalCleaned(cleanNodeCore(minMergeEdgeCount,nodeIndex,emptyNodes));
-    eraseNodes(emptyNodes);
+    eraseNodes(emptyNodes, obs);
     return totalCleaned;
 }
 
@@ -336,7 +338,9 @@ cleanNode(
 
 unsigned
 SVLocus::
-clean(const unsigned minMergeEdgeCount)
+clean(
+    const unsigned minMergeEdgeCount,
+    flyweight_observer_t* obs)
 {
     std::set<NodeIndexType> emptyNodes;
     unsigned totalCleaned(0);
@@ -346,7 +350,7 @@ clean(const unsigned minMergeEdgeCount)
     {
         totalCleaned += cleanNodeCore(minMergeEdgeCount,nodeIndex,emptyNodes);
     }
-    eraseNodes(emptyNodes);
+    eraseNodes(emptyNodes, obs);
     return totalCleaned;
 }
 
@@ -398,7 +402,9 @@ clearNodeEdges(NodeIndexType nodePtr)
 
 void
 SVLocus::
-eraseNode(const NodeIndexType nodePtr)
+eraseNode(
+    const NodeIndexType nodePtr,
+    flyweight_observer_t* obs)
 {
     using namespace illumina::common;
 
@@ -445,15 +451,15 @@ eraseNode(const NodeIndexType nodePtr)
             fromNode.moveEdge(fromPtr,nodePtr);
         }
 
-        notifyDelete(nodePtr);
+        notifyDelete(obs,nodePtr);
         _graph[nodePtr] = _graph[fromPtr];
-        notifyAdd(nodePtr);
+        notifyAdd(obs,nodePtr);
 
 #ifdef DEBUG_SVL
         log_os << logtag << " transfer_in: AFTER: " << getNode(nodePtr) << "\n";
 #endif
     }
-    notifyDelete(fromPtr);
+    notifyDelete(obs,fromPtr);
     _graph.resize(fromPtr);
 }
 
@@ -461,7 +467,9 @@ eraseNode(const NodeIndexType nodePtr)
 
 void
 SVLocus::
-eraseNodes(const std::set<NodeIndexType>& nodes)
+eraseNodes(
+    const std::set<NodeIndexType>& nodes,
+    flyweight_observer_t* obs)
 {
 
     if (nodes.empty()) return;
@@ -469,14 +477,14 @@ eraseNodes(const std::set<NodeIndexType>& nodes)
     if (size() == nodes.size())
     {
         // if the whole locus is being erased, this is more efficient:
-        clear();
+        clear(obs);
         return;
     }
 
     // partial deletion must be done in descending order:
     BOOST_REVERSE_FOREACH(const NodeIndexType nodeIndex, nodes)
     {
-        eraseNode(nodeIndex);
+        eraseNode(nodeIndex, obs);
     }
 }
 
@@ -585,8 +593,10 @@ mergeSelfOverlap()
 
             // test whether 1 and 2 intersect, if they do, merge this into a self-edge node:
             if (! node2.getInterval().isIntersect(node1.getInterval())) continue;
-            mergeNode(revNodeIndex,revNodeIndex2);
-            eraseNode(revNodeIndex);
+
+            static flyweight_observer_t* obs(NULL);
+            mergeNode(revNodeIndex, revNodeIndex2, obs);
+            eraseNode(revNodeIndex, obs);
             break;
         }
     }

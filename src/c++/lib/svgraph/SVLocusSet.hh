@@ -30,7 +30,7 @@
 ///
 /// When finalized, the SVLocusSet contains non-overlapping SVLoci
 ///
-struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
+struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
 {
     typedef std::vector<SVLocus> locusset_type;
     typedef locusset_type::const_iterator const_iterator;
@@ -328,7 +328,7 @@ private:
 #endif
         assert(index<_loci.size());
 
-        _loci[index].clear();
+        _loci[index].clear(this);
         _emptyLoci.insert(index);
         _source="UNKNOWN";
     }
@@ -428,7 +428,7 @@ private:
         if (iter == _inodes.end()) return;
 
         SVLocus& locus(getLocus(inputNodePtr.first));
-        locus.eraseNode(inputNodePtr.second);
+        locus.eraseNode(inputNodePtr.second, this);
     }
 
     bool
@@ -449,8 +449,7 @@ private:
 
     /// update index when nodes are moved:
     void
-    recieve_notification(const notifier<SVLocusNodeMoveMessage>&,
-                         const SVLocusNodeMoveMessage& msg)
+    recieve_flyweight_notification(const SVLocusNodeMoveMessage& msg)
     {
         assert(_isIndexed);
 
@@ -472,6 +471,7 @@ private:
             _inodes.erase(msg.second);
         }
     }
+
 
     void
     updateMaxRegionSize(const GenomeInterval& interval)

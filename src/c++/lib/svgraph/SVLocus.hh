@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "blt_util/observer.hh"
+#include "blt_util/flyweight_observer.hh"
 #include "svgraph/GenomeInterval.hh"
 
 #include "boost/foreach.hpp"
@@ -28,6 +28,7 @@
 #include <iosfwd>
 #include <limits>
 #include <map>
+#include <set>
 #include <vector>
 
 
@@ -354,7 +355,7 @@ struct SVLocusSet;
 /// there's probably a better way to do this with transform_iterator, but I've always
 /// regretted using that.
 ///
-struct SVLocus : public notifier<SVLocusNodeMoveMessage>
+struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
 {
     typedef std::vector<SVLocusNode> graph_type;
 
@@ -412,14 +413,15 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
 
     NodeIndexType
     addNode(
-        const GenomeInterval interval)
+        const GenomeInterval interval,
+        flyweight_observer_t* obs = NULL)
     {
         NodeIndexType nodePtr(newGraphNode());
         SVLocusNode& node(getNode(nodePtr));
         node.setInterval(interval);
         // default _evidenceRange to the breakend interval unless a better estimate is provided
         node.setEvidenceRange(interval.range);
-        notifyAdd(nodePtr);
+        notifyAdd(obs, nodePtr);
         return nodePtr;
     }
 
@@ -503,9 +505,13 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
     }
 
     void
-    clear()
+    clear(
+        flyweight_observer_t* obs)
     {
-        for (NodeIndexType i(0); i<size(); ++i) notifyDelete(i);
+        for (NodeIndexType i(0); i<size(); ++i)
+        {
+            notifyDelete(obs, i);
+        }
         _graph.clear();
     }
 
@@ -538,7 +544,7 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
     template<class Archive>
     void load(Archive& ar, const unsigned /* version */)
     {
-        clear();
+        clear(NULL);
         ar >> _graph;
     }
 
@@ -589,13 +595,16 @@ private:
     unsigned
     cleanNode(
         const unsigned minMergeEdgeCount,
-        const NodeIndexType nodeIndex);
+        const NodeIndexType nodeIndex,
+        flyweight_observer_t* obs);
 
     /// remove all unmerged noise edges and nodes
     ///
     /// return amount of evidence cleaned
     unsigned
-    clean(const unsigned minMergeEdgeCount);
+    clean(
+        const unsigned minMergeEdgeCount,
+        flyweight_observer_t* obs);
 
     void
     clearNodeEdges(const NodeIndexType nodePtr);
@@ -627,7 +636,9 @@ private:
 
     /// copy fromLocus into this locus (this should be an intermediate part of a locus merge)
     void
-    copyLocus(const SVLocus& fromLocus)
+    copyLocus(
+        const SVLocus& fromLocus,
+        flyweight_observer_t* obs)
     {
         assert(&fromLocus != this);
 
@@ -637,7 +648,7 @@ private:
         {
             const NodeIndexType nodeIndex(newGraphNode());
             getNode(nodeIndex) = SVLocusNode(fromNode, offset);
-            notifyAdd(nodeIndex);
+            notifyAdd(obs, nodeIndex);
         }
     }
 
@@ -649,16 +660,21 @@ private:
     void
     mergeNode(
         const NodeIndexType fromIndex,
-        const NodeIndexType toIndex);
+        const NodeIndexType toIndex,
+        flyweight_observer_t* obs);
 
     // remove node
     //
     void
-    eraseNode(const NodeIndexType nodePtr);
+    eraseNode(
+        const NodeIndexType nodePtr,
+        flyweight_observer_t* obs);
 
     // remove a list of node ids
     void
-    eraseNodes(const std::set<NodeIndexType>& nodes);
+    eraseNodes(
+        const std::set<NodeIndexType>& nodes,
+        flyweight_observer_t* obs);
 
     NodeIndexType
     newGraphNode()
@@ -671,22 +687,30 @@ private:
     }
 
     void
-    notifyAdd(const NodeIndexType nodePtr)
+    notifyAdd(
+        flyweight_observer_t* obs,
+        const NodeIndexType nodePtr)
     {
+        if (NULL == obs) return;
 #ifdef DEBUG_SVL
         log_os << "SVLocusNotifier: Add node: " << _index << ":" << nodePtr << "\n";
 #endif
-        notify_observers(std::make_pair(true,std::make_pair(_index,nodePtr)));
+        notify_flyweight_observer(obs, std::make_pair(true,std::make_pair(_index,nodePtr)));
     }
 
     void
-    notifyDelete(const NodeIndexType nodePtr)
+    notifyDelete(
+        flyweight_observer_t* obs,
+        const NodeIndexType nodePtr)
     {
+        if (NULL == obs) return;
 #ifdef DEBUG_SVL
         log_os << "SVLocusNotifier: Delete node: " << _index << ":" << nodePtr << "\n";
 #endif
-        notify_observers(std::make_pair(false,std::make_pair(_index,nodePtr)));
+        notify_flyweight_observer(obs, std::make_pair(false,std::make_pair(_index,nodePtr)));
     }
+
+
 
     graph_type _graph;
     LocusIndexType _index;
