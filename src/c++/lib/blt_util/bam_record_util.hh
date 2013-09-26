@@ -27,3 +27,7 @@
 bool
 is_innie_pair(
     const bam_record& bam_read);
+
+unsigned
+get_avg_quality(
+	const bam_record& bam_read);

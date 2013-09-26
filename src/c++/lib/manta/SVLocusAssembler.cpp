@@ -80,10 +80,10 @@ getBreakendReads(
         }
     }
 
-//#ifdef DEBUG_ASBL
+#ifdef DEBUG_ASBL
     static const std::string logtag("SVLocusAssembler::getBreakendReads");
     log_os << logtag << " searchRange " << searchRange << "\n";
-//#endif
+#endif
 
     // for assembler reads, look for indels at report size or somewhat smaller
     const unsigned minAssembleIndelSize(_scanOpt.minCandidateIndelSize/2);
@@ -188,7 +188,7 @@ getBreakendReads(
 
             bool isSemiAlignedKeeper(false);
             {
-            	if (_readScanner.isSemiAligned(bamRead))
+            	if (isSemiAligned(bamRead,_scanOpt.minSemiAlignedScoreCandidates))
             	{
             		isSemiAlignedKeeper = true;
             		++semiAlignedCnt;
@@ -198,7 +198,10 @@ getBreakendReads(
 
             bool isShadowKeeper(false);
             {
-            	if (_readScanner.isGoodShadow(bamRead,lastMapq,lastQname))
+            	if (isGoodShadow(bamRead,
+            					lastMapq,
+            					lastQname,
+            			        _scanOpt.minSingletonMapqCandidates))
             	{
             		isShadowKeeper = true;
             		++shadowCnt;
