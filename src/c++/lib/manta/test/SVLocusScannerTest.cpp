@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromSemiAligned )
     ReadScannerOptions opt;
 
     ALIGNPATH::path_t inputPath;
-    cigar_to_apath("5M5X",inputPath);
+    cigar_to_apath("3M7X",inputPath);
 
     bam_record bamRead;
     bam1_t* bamDataPtr(bamRead.get_data());
@@ -68,9 +68,6 @@ BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromSemiAligned )
     std::vector<SVCandidate> candidates;
 
     getSVCandidatesFromSemiAligned(opt,bamRead,align,candidates);
-
-    std::cout << candidates[0].bp1.interval.range << std::endl;
-    std::cout << candidates[0].bp2.interval.range << std::endl;
 
     BOOST_REQUIRE_EQUAL(candidates.size(),1u);
     BOOST_REQUIRE(candidates[0].bp1.interval.range.is_pos_intersect(500));

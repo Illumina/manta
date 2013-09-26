@@ -33,10 +33,10 @@ struct ReadScannerOptions
         maxSplitBreakendSize(100),
         minSplitBreakendSize(10),
         minSoftClipLen(8),
-        minSemiAlignedScoreGraph(30.0),
-        minSemiAlignedScoreCandidates(50.0),
-        minSingletonMapqGraph(10),
-        minSingletonMapqCandidates(40)
+        minSemiAlignedScoreGraph(50.0),
+        minSemiAlignedScoreCandidates(30.0),
+        minSingletonMapqGraph(40),
+        minSingletonMapqCandidates(20)
     {}
 
     unsigned minMapq;
