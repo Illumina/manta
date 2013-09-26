@@ -25,10 +25,10 @@
 #include "boost/foreach.hpp"
 
 
-//#define DEBUG_SCANNER
+#define DEBUG_SCANNER
 
-//#define DEBUG_SEMI_ALIGNED
-//#define DEBUG_IS_SHADOW
+#define DEBUG_SEMI_ALIGNED
+#define DEBUG_IS_SHADOW
 
 #ifdef DEBUG_SCANNER
 #include "blt_util/log.hh"
