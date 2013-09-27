@@ -12,7 +12,7 @@
 //
 
 ///
-/// \author Chris Saunders
+/// \author Chris Saunders and Xiaoyu Chen
 ///
 
 #include "SVScorer.hh"
@@ -26,7 +26,6 @@
 
 #include <algorithm>
 #include <iostream>
-
 
 
 SVScorer::
@@ -138,13 +137,7 @@ void
 SVScorer::
 scoreSplitReads(
 		const SVBreakend& bp,
-		const AssembledContig& contig,
-		const unsigned bp1ContigOfs,
-		const unsigned bp2ContigOfs,
-		const reference_contig_segment& bp1Ref,
-		const reference_contig_segment& bp2Ref,
-		const unsigned bp1RefOfs,
-		const unsigned bp2RefOfs,
+		const SVAlignmentInfo& svAlignInfo,
 		bam_streamer& readStream,
 		const bool isTumor,
 		SomaticSVScoreInfo& ssInfo)
@@ -155,39 +148,59 @@ scoreSplitReads(
 	while (readStream.next())
 	{
 		const bam_record& bamRead(*(readStream.get_record_ptr()));
-		std::string readSeq = bamRead.get_bam_read().get_string();
-		splitReadAlignment bp1ContigAlign = alignSplitRead(readSeq, contig, bp1ContigOfs);
-		splitReadAlignment bp2ContigAlign = alignSplitRead(readSeq, contig, bp2ContigOfs);
-		splitReadAlignment bp1RefAlign = alignSplitRead(readSeq, bp1Ref, bp1RefOfs);
-		splitReadAlignment bp2RefAlign = alignSplitRead(readSeq, bp2Ref, bp2RefOfs);
+		const std::string readSeq = bamRead.get_bam_read().get_string();
+		const std::string readSeqRC = bamRead.get_bam_read().get_rc_string();
+		const unsigned readMapQ = bamRead.map_qual();
+
+		// align the read to the somatic contig
+		splitReadAlignment bp1ContigSR;
+		if (svAlignInfo.bp1ContigReversed)
+			bp1ContigSR.align(readSeqRC, readMapQ, svAlignInfo.contigSeq, svAlignInfo.bp1ContigOffset);
+		else
+			bp1ContigSR.align(readSeq, readMapQ, svAlignInfo.contigSeq, svAlignInfo.bp1ContigOffset);
+		splitReadAlignment bp2ContigSR;
+		if (svAlignInfo.bp2ContigReversed)
+			bp2ContigSR.align(readSeqRC, readMapQ, svAlignInfo.contigSeq, svAlignInfo.bp2ContigOffset);
+		else
+			bp2ContigSR.align(readSeq, readMapQ, svAlignInfo.contigSeq, svAlignInfo.bp2ContigOffset);
+
+		// align the read to reference regions
+		splitReadAlignment bp1RefSR;
+		bp1RefSR.align(readSeq, readMapQ, svAlignInfo.bp1RefSeq, svAlignInfo.bp1RefOffset);
+		splitReadAlignment bp2RefSR;
+		bp2RefSR.align(readSeq, readMapQ, svAlignInfo.bp2RefSeq, svAlignInfo.bp2RefOffset);
 
 		// scoring
-		float bp1ContigScore(0);
-		float bp2ContigScore(0);
-		float bp1RefScore(0);
-		float bp2RefScore(0);
+		float bp1ContigEvidence(0);
+		float bp2ContigEvidence(0);
+		float bp1RefEvidence(0);
+		float bp2RefEvidence(0);
+		if (bp1ContigSR.has_evidence()) bp1ContigEvidence = bp1ContigSR.get_evidence();
+		if (bp2ContigSR.has_evidence()) bp2ContigEvidence = bp2ContigSR.get_evidence();
+		if (bp1RefSR.has_evidence()) bp1RefEvidence = bp1RefSR.get_evidence();
+		if (bp2RefSR.has_evidence()) bp2RefEvidence = bp2RefSR.get_evidence();
 
-		if (bp1ContigAlign.has_evidence())
-			bp1ContigScore = bp1ContigAlign.get_score();
-		if (bp2ContigAlign.has_evidence())
-			bp2ContigScore = bp2ContigAlign.get_score();
-
-		if (bp1RefAlign.has_evidence())
-			bp1RefScore = bp1RefAlign.get_score();
-		if (bp2RefAlign.has_evidence())
-			bp2RefScore = bp2RefAlign.get_score();
-
+		float contigEvidence = std::max(bp1ContigEvidence, bp2ContigEvidence);
+		float refEvidence = std::max(bp1RefEvidence, bp2RefEvidence);
 		if (isTumor)
 		{
-			ssInfo.tumor.contigSplitReads += std::max(bp1ContigScore, bp2ContigScore);
-			ssInfo.tumor.refSplitReads += std::max(bp1RefScore, bp2RefScore);
+			ssInfo.tumor.contigSplitReads += contigEvidence;
+			ssInfo.tumor.contigSplitReadMapQ += contigEvidence * contigEvidence;
+			ssInfo.tumor.refSplitReads += refEvidence;
+			ssInfo.tumor.refSplitReadMapQ += refEvidence * refEvidence;
 		}
 		else
 		{
-			ssInfo.normal.contigSplitReads += std::max(bp1ContigScore, bp2ContigScore);
-			ssInfo.normal.refSplitReads += std::max(bp1RefScore, bp2RefScore);
+			ssInfo.normal.contigSplitReads += contigEvidence;
+			ssInfo.normal.contigSplitReadMapQ += contigEvidence * contigEvidence;
+			ssInfo.normal.refSplitReads += refEvidence;
+			ssInfo.normal.refSplitReadMapQ += refEvidence * refEvidence;
 		}
 	}
+
+	// root mean square
+	ssInfo.tumor.contigSplitReadMapQ = sqrt(ssInfo.tumor.refSplitReadMapQ);
+	ssInfo.tumor.refSplitReadMapQ = sqrt(ssInfo.tumor.refSplitReadMapQ);
 }
 
 
@@ -201,21 +214,8 @@ scoreSomaticSV(
 {
     ssInfo.clear();
 
-    // get somatic contig
-    const AssembledContig& contig = assemblyData.contigs[assemblyData.bestAlignmentIndex];
-    const JumpAlignmentResult<int>& alignment = assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex];
-    // get offsets of breakpoints in the contig
-    const unsigned align1Size(apath_read_length(alignment.align1.apath));
-    const unsigned insertSize(alignment.jumpInsertSize);
-    const unsigned bp1ContigOffset = align1Size - 1;
-    const unsigned bp2ContigOffset = align1Size + insertSize - 1;
-
-    // get reference regions
-    const reference_contig_segment& bp1Ref = assemblyData.bp1ref;
-    const reference_contig_segment& bp2Ref = assemblyData.bp2ref;
-    // get offsets of breakpoints in the reference regions
-    unsigned bp1RefOffset = sv.bp1.interval.range.begin_pos() - bp1Ref.get_offset();
-    unsigned bp2RefOffset = sv.bp2.interval.range.begin_pos() - bp2Ref.get_offset();
+    // extract SV alignment info for split read evidence
+    const SVAlignmentInfo SVAlignInfo(sv, assemblyData);
 
     // first exercise -- just count the sample assignment of the pairs we already have:
     const unsigned bamCount(_bamStreams.size());
@@ -230,14 +230,22 @@ scoreSomaticSV(
 			streamPtr& bamPtr(_bamStreams[bamIndex]);
 			bam_streamer& read_stream(*bamPtr);
 			// scoring split reads overlapping bp1
-			scoreSplitReads(sv.bp1, contig, bp1ContigOffset, bp2ContigOffset,
-					        bp1Ref, bp2Ref, bp1RefOffset, bp2RefOffset,
+			scoreSplitReads(sv.bp1, SVAlignInfo,
 					        read_stream, isTumor, ssInfo);
 			// scoring split reads overlapping bp2
-			scoreSplitReads(sv.bp2, contig, bp1ContigOffset, bp2ContigOffset,
-			        		bp1Ref, bp2Ref, bp1RefOffset, bp2RefOffset,
+			scoreSplitReads(sv.bp2, SVAlignInfo,
 			        		read_stream, isTumor, ssInfo);
         }
+
+        log_os << "tumor contig SP" << ssInfo.tumor.contigSplitReads << "\n";
+        log_os << "tumor contig SP_mapQ" << ssInfo.tumor.contigSplitReadMapQ << "\n";
+        log_os << "normal contig SP" << ssInfo.normal.contigSplitReads << "\n";
+        log_os << "normal contig SP_mapQ" << ssInfo.normal.contigSplitReadMapQ << "\n";
+
+        log_os << "tumor ref SP" << ssInfo.tumor.refSplitReads << "\n";
+        log_os << "tumor ref SP_mapQ" << ssInfo.tumor.refSplitReadMapQ << "\n";
+        log_os << "tumor ref SP" << ssInfo.normal.refSplitReads << "\n";
+        log_os << "tumor ref SP_mapQ" << ssInfo.normal.refSplitReadMapQ << "\n";
 
         SVSampleInfo& sample(isTumor ? ssInfo.tumor : ssInfo.normal);
         const SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));

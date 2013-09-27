@@ -12,7 +12,7 @@
 //
 
 ///
-/// \author Chris Saunders
+/// \author Chris Saunders and Xiaoyu Chen
 ///
 
 #pragma once
@@ -28,6 +28,7 @@
 #include "manta/SomaticSVScoreInfo.hh"
 #include "assembly/AssembledContig.hh"
 #include "manta/SVCandidateAssemblyData.hh"
+#include "splitReadAlignment.hh"
 
 #include "boost/shared_ptr.hpp"
 
@@ -43,13 +44,7 @@ struct SVScorer
     void
     scoreSplitReads(
     		const SVBreakend& bp,
-    		const AssembledContig& contig,
-    		const unsigned bp1ContigOfs,
-    		const unsigned bp2ContigOfs,
-    		const reference_contig_segment& bp1Ref,
-    		const reference_contig_segment& bp2Ref,
-    		const unsigned bp1RefOfs,
-    		const unsigned bp2RefOfs,
+    		const SVAlignmentInfo& SVAlignInfo,
     		bam_streamer& read_stream,
     		const bool isTumor,
     		SomaticSVScoreInfo& ssInfo);
@@ -75,3 +70,4 @@ private:
     typedef boost::shared_ptr<bam_streamer> streamPtr;
     std::vector<streamPtr> _bamStreams;
 };
+
