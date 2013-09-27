@@ -506,6 +506,7 @@ getSVCandidatesFromPair(
 /// look for singletons, create candidateSV around conf. interval of shadow position
 /// cache singletons? might be needed to remove poor quality shadows.
 /// should be able to re-use code, follow soft-clipping example.
+#if 0
 static
 void
 getSVCandidatesFromShadow(
@@ -545,11 +546,11 @@ getSVCandidatesFromShadow(
 		// none unmapped, skip this one
 		return;
 	}
-    const pos_t properPairRangeOffset = rstats.properPair.min + (rstats.properPair.max-rstats.properPair.min)/2;
+    const pos_t properPairRangeOffset = static_cast<int>(rstats.properPair.min + (rstats.properPair.max-rstats.properPair.min)/2);
     const pos_t shadowGenomePos = singletonGenomePos + properPairRangeOffset;
     candidates.push_back(GetSplitSVCandidate(opt,targetId,shadowGenomePos,shadowGenomePos,isComplex));
 }
-
+#endif
 
 /// scan read record (and optionally its mate record) for SV evidence.
 //
