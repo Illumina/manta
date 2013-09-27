@@ -18,7 +18,6 @@
 #include "SVFinder.hh"
 
 #include "blt_util/bam_streamer.hh"
-#include "blt_util/log.hh"
 #include "common/Exceptions.hh"
 #include "manta/ReadGroupStatsSet.hh"
 
@@ -30,7 +29,12 @@
 
 static const bool isExcludeUnpaired(true);
 
-#define DEBUG_SVDATA
+//#define DEBUG_SVDATA
+
+#ifdef DEBUG_SVDATA
+#include "blt_util/log.hh"
+#include <iostream>
+#endif
 
 
 SVFinder::
@@ -418,6 +422,8 @@ getCandidatesFromData(
             // the same orientation:
             //
             // we anticipate so few svs from the POC method, that there's no indexing on them
+            // OST 26/09/2013: Be careful when re-arranging or rewriting the code below, under g++ 4.1.2
+            // this can lead to an infinite loop. 
             BOOST_FOREACH(const SVCandidate& readCand, readCandidates)
             {
                 BOOST_FOREACH(SVCandidate& sv, svs)
@@ -427,14 +433,15 @@ getCandidatesFromData(
 #ifdef DEBUG_SVDATA
                         log_os << "Adding to svIndex: " << svIndex << "\n";
 #endif
-                        sv.merge(readCand);
-                        pair.svIndex.push_back(svIndex);
                         isSVFound=true;
+                        pair.svIndex.push_back(svIndex);
+                        sv.merge(readCand);
                         break;
                     }
                     svIndex++;
                 }
-                if (! isSVFound)
+                if (isSVFound) continue;
+                //if (! isSVFound)
                 {
 #ifdef DEBUG_SVDATA
                     log_os << "New svIndex: " << svs.size() << "\n";
@@ -563,9 +570,9 @@ findCandidateSV(
 
     getCandidatesFromData(svData,svs);
 
-#ifdef DEBUG_SVDATA
+/*#ifdef DEBUG_SVDATA
     checkResult(svData,svs);
-#endif
+#endif*/
 }
 
 

@@ -14,7 +14,7 @@
 ///
 /// \author Chris Saunders
 
-#include "blt_util/log.hh"
+//#include "blt_util/log.hh"
 #include "common/Exceptions.hh"
 #include "manta/SVCandidateSetData.hh"
 
