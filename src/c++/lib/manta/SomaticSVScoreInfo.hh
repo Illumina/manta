@@ -49,10 +49,12 @@ struct SVSampleInfo
         bp1SpanReads(0),
         bp2SpanReads(0),
         spanPairs(0),
-        contigSplitReads(0),
-        refSplitReads(0),
-        contigSplitReadMapQ(0),
-        refSplitReadMapQ(0)
+        contigSRCount(0),
+        contigSREvidence(0),
+        contigSRMapQ(0),
+        refSRCount(0),
+        refSREvidence(0),
+        refSRMapQ(0)
     {}
 
     void
@@ -66,10 +68,12 @@ struct SVSampleInfo
     unsigned bp1SpanReads;
     unsigned bp2SpanReads;
     unsigned spanPairs;
-    float contigSplitReads;
-    float refSplitReads;
-    float contigSplitReadMapQ;
-    float refSplitReadMapQ;
+    unsigned contigSRCount;
+    float contigSREvidence;
+    float contigSRMapQ;
+    unsigned refSRCount;
+    float refSREvidence;
+    float refSRMapQ;
 };
 
 std::ostream&

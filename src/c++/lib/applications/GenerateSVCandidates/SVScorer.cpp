@@ -155,20 +155,20 @@ scoreSplitReads(
 		// align the read to the somatic contig
 		splitReadAlignment bp1ContigSR;
 		if (svAlignInfo.bp1ContigReversed)
-			bp1ContigSR.align(readSeqRC, readMapQ, svAlignInfo.contigSeq, svAlignInfo.bp1ContigOffset);
+			bp1ContigSR.align(readSeqRC, svAlignInfo.contigSeq, svAlignInfo.bp1ContigOffset);
 		else
-			bp1ContigSR.align(readSeq, readMapQ, svAlignInfo.contigSeq, svAlignInfo.bp1ContigOffset);
+			bp1ContigSR.align(readSeq, svAlignInfo.contigSeq, svAlignInfo.bp1ContigOffset);
 		splitReadAlignment bp2ContigSR;
 		if (svAlignInfo.bp2ContigReversed)
-			bp2ContigSR.align(readSeqRC, readMapQ, svAlignInfo.contigSeq, svAlignInfo.bp2ContigOffset);
+			bp2ContigSR.align(readSeqRC, svAlignInfo.contigSeq, svAlignInfo.bp2ContigOffset);
 		else
-			bp2ContigSR.align(readSeq, readMapQ, svAlignInfo.contigSeq, svAlignInfo.bp2ContigOffset);
+			bp2ContigSR.align(readSeq, svAlignInfo.contigSeq, svAlignInfo.bp2ContigOffset);
 
 		// align the read to reference regions
 		splitReadAlignment bp1RefSR;
-		bp1RefSR.align(readSeq, readMapQ, svAlignInfo.bp1RefSeq, svAlignInfo.bp1RefOffset);
+		bp1RefSR.align(readSeq, svAlignInfo.bp1RefSeq, svAlignInfo.bp1RefOffset);
 		splitReadAlignment bp2RefSR;
-		bp2RefSR.align(readSeq, readMapQ, svAlignInfo.bp2RefSeq, svAlignInfo.bp2RefOffset);
+		bp2RefSR.align(readSeq, svAlignInfo.bp2RefSeq, svAlignInfo.bp2RefOffset);
 
 		// scoring
 		float bp1ContigEvidence(0);
@@ -180,27 +180,23 @@ scoreSplitReads(
 		if (bp1RefSR.has_evidence()) bp1RefEvidence = bp1RefSR.get_evidence();
 		if (bp2RefSR.has_evidence()) bp2RefEvidence = bp2RefSR.get_evidence();
 
-		float contigEvidence = std::max(bp1ContigEvidence, bp2ContigEvidence);
-		float refEvidence = std::max(bp1RefEvidence, bp2RefEvidence);
+		const float contigEvidence = std::max(bp1ContigEvidence, bp2ContigEvidence);
+		const float refEvidence = std::max(bp1RefEvidence, bp2RefEvidence);
 		if (isTumor)
 		{
-			ssInfo.tumor.contigSplitReads += contigEvidence;
-			ssInfo.tumor.contigSplitReadMapQ += contigEvidence * contigEvidence;
-			ssInfo.tumor.refSplitReads += refEvidence;
-			ssInfo.tumor.refSplitReadMapQ += refEvidence * refEvidence;
+			ssInfo.tumor.contigSREvidence += contigEvidence;
+			ssInfo.tumor.contigSRMapQ += readMapQ * readMapQ;
+			ssInfo.tumor.refSREvidence += refEvidence;
+			ssInfo.tumor.refSRMapQ += readMapQ * readMapQ;
 		}
 		else
 		{
-			ssInfo.normal.contigSplitReads += contigEvidence;
-			ssInfo.normal.contigSplitReadMapQ += contigEvidence * contigEvidence;
-			ssInfo.normal.refSplitReads += refEvidence;
-			ssInfo.normal.refSplitReadMapQ += refEvidence * refEvidence;
+			ssInfo.normal.contigSREvidence += contigEvidence;
+			ssInfo.normal.contigSRMapQ += contigEvidence * contigEvidence;
+			ssInfo.normal.refSREvidence += refEvidence;
+			ssInfo.normal.refSRMapQ += readMapQ * readMapQ;
 		}
 	}
-
-	// root mean square
-	ssInfo.tumor.contigSplitReadMapQ = sqrt(ssInfo.tumor.refSplitReadMapQ);
-	ssInfo.tumor.refSplitReadMapQ = sqrt(ssInfo.tumor.refSplitReadMapQ);
 }
 
 
@@ -235,17 +231,18 @@ scoreSomaticSV(
 			// scoring split reads overlapping bp2
 			scoreSplitReads(sv.bp2, SVAlignInfo,
 			        		read_stream, isTumor, ssInfo);
+
+			log_os << "\nbam is tumor = " << isTumor << "\n";
+			log_os << "tumor contig SP count: " << ssInfo.tumor.contigSRCount << "\n";
+			log_os << "tumor contig SP evidence: " << ssInfo.tumor.contigSREvidence << "\n";
+			log_os << "normal contig SP count: " << ssInfo.normal.contigSRCount << "\n";
+			log_os << "normal contig SP evidence: " << ssInfo.normal.contigSREvidence << "\n";
+
+			log_os << "tumor ref SP count: " << ssInfo.tumor.refSRCount << "\n";
+			log_os << "tumor ref SP evidence: " << ssInfo.tumor.refSREvidence << "\n";
+			log_os << "normal ref SP count: " << ssInfo.normal.refSRCount << "\n";
+			log_os << "normal ref SP evidence: " << ssInfo.normal.refSREvidence << "\n";
         }
-
-        log_os << "tumor contig SP" << ssInfo.tumor.contigSplitReads << "\n";
-        log_os << "tumor contig SP_mapQ" << ssInfo.tumor.contigSplitReadMapQ << "\n";
-        log_os << "normal contig SP" << ssInfo.normal.contigSplitReads << "\n";
-        log_os << "normal contig SP_mapQ" << ssInfo.normal.contigSplitReadMapQ << "\n";
-
-        log_os << "tumor ref SP" << ssInfo.tumor.refSplitReads << "\n";
-        log_os << "tumor ref SP_mapQ" << ssInfo.tumor.refSplitReadMapQ << "\n";
-        log_os << "tumor ref SP" << ssInfo.normal.refSplitReads << "\n";
-        log_os << "tumor ref SP_mapQ" << ssInfo.normal.refSplitReadMapQ << "\n";
 
         SVSampleInfo& sample(isTumor ? ssInfo.tumor : ssInfo.normal);
         const SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
@@ -267,6 +264,28 @@ scoreSomaticSV(
             }
         }
     }
+
+    // root mean square
+    ssInfo.tumor.contigSRMapQ = sqrt(ssInfo.tumor.contigSRMapQ / (float)ssInfo.tumor.contigSRCount);
+    ssInfo.tumor.refSRMapQ = sqrt(ssInfo.tumor.refSRMapQ / (float)ssInfo.tumor.refSRCount);
+    ssInfo.normal.contigSRMapQ = sqrt(ssInfo.normal.contigSRMapQ / (float)ssInfo.normal.contigSRCount);
+    ssInfo.normal.refSRMapQ = sqrt(ssInfo.normal.refSRMapQ / (float)ssInfo.normal.refSRCount);
+
+    log_os << "\nfinally...\n";
+    log_os << "tumor contig SP count: " << ssInfo.tumor.contigSRCount << "\n";
+    log_os << "tumor contig SP evidence: " << ssInfo.tumor.contigSREvidence << "\n";
+    log_os << "tumor contig SP_mapQ: " << ssInfo.tumor.contigSRCount << "\n";
+    log_os << "normal contig SP count: " << ssInfo.normal.contigSRCount << "\n";
+    log_os << "normal contig SP evidence: " << ssInfo.normal.contigSREvidence << "\n";
+    log_os << "normal contig SP_mapQ: " << ssInfo.normal.contigSRMapQ << "\n";
+
+    log_os << "tumor ref SP count: " << ssInfo.tumor.refSRCount << "\n";
+    log_os << "tumor ref SP evidence: " << ssInfo.tumor.refSREvidence << "\n";
+    log_os << "tumor ref SP_mapQ: " << ssInfo.tumor.refSRMapQ << "\n";
+    log_os << "normal ref SP count: " << ssInfo.normal.refSRCount << "\n";
+    log_os << "normal ref SP evidence: " << ssInfo.normal.refSREvidence << "\n";
+    log_os << "normal ref SP_mapQ: " << ssInfo.normal.refSRMapQ << "\n";
+
 
     // get breakend center_pos depth estimate:
     ssInfo.bp1MaxDepth=(getBreakendMaxMappedDepth(sv.bp1));

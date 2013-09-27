@@ -45,7 +45,6 @@ calculateAlignScore(
 void
 splitReadAlignment::
 align(const std::string& querySeq,
-	  const unsigned readMapQ,
 	  const std::string& targetSeq,
 	  const unsigned bpOffset)
 {
@@ -62,7 +61,6 @@ align(const std::string& querySeq,
 		const unsigned leftSize = bpOffset - i + 1;
 		const unsigned rightSize= querySize - leftSize;
 		_alignment.set_sizes(leftSize, rightSize);
-		_alignment.set_mapQ(readMapQ);
 
 		const std::string scanWindow = targetSeq.substr(i, querySize);
 		const unsigned score = calculateAlignScore(querySeq, scanWindow);
@@ -73,6 +71,8 @@ align(const std::string& querySeq,
 		}
 	}
 
+	// update the alignment with the best one
+	_alignment.update_alignInfo(bestAlignInfo);
 	// filtering the alignment and set evidence
 	set_evidence();
 }

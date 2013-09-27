@@ -26,7 +26,6 @@ struct SRAlignmentInfo
 		_rightSize(0),
 		_leftMismatches(0),
 		_rightMismatches(0),
-		_readMapQ(0),
 		_alignScore(0)
 	{}
 
@@ -55,11 +54,6 @@ struct SRAlignmentInfo
 		return _alignScore;
 	}
 
-	float get_mapQ() const
-	{
-		return _readMapQ;
-	}
-
 	void set_sizes(unsigned lfs, unsigned rfs)
 	{
 		_leftSize = lfs;
@@ -70,11 +64,6 @@ struct SRAlignmentInfo
 	{
 		_leftMismatches = lmm;
 		_rightMismatches = rmm;
-	}
-
-	void set_mapQ(float rmq)
-	{
-		_readMapQ = rmq;
 	}
 
 	void set_score(unsigned asc)
@@ -90,7 +79,6 @@ struct SRAlignmentInfo
 			_rightSize = info._rightSize;
 			_leftMismatches = info._leftMismatches;
 			_rightMismatches = info._rightMismatches;
-			_readMapQ = info._readMapQ;
 			_alignScore = info._alignScore;
 		}
 
@@ -99,7 +87,6 @@ private:
 	unsigned _rightSize;
 	unsigned _leftMismatches;
 	unsigned _rightMismatches;
-	float _readMapQ;
 	unsigned _alignScore;
 
 };
@@ -129,7 +116,6 @@ struct splitReadAlignment
 
     void
     align(const std::string& querySeq,
-    	  const unsigned readMapQ,
     	  const std::string& targetSeq,
           const unsigned bpOffset);
 
