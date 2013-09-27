@@ -798,7 +798,6 @@ insertLocus(
     }
 
     SVLocus& locus(_loci[locusIndex]);
-    //observe_notifier(locus);
     locus.updateIndex(locusIndex);
     locus.copyLocus(inputLocus, this);
     return locusIndex;
@@ -1066,7 +1065,6 @@ load(
         const LocusIndexType locusIndex(size());
         _loci.push_back(locus);
         SVLocus& locusCopy(_loci.back());
-       // observe_notifier(locusCopy);
         locusCopy.updateIndex(locusIndex);
     }
 

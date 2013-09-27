@@ -284,9 +284,10 @@ struct SVLocusNode
     }
 
     void
-    setInterval(const GenomeInterval& i)
+    setInterval(const GenomeInterval& interval)
     {
-        _interval=i;
+        _interval.tid=interval.tid;
+        setIntervalRange(interval.range);
     }
 
     void
@@ -695,7 +696,7 @@ private:
 #ifdef DEBUG_SVL
         log_os << "SVLocusNotifier: Add node: " << _index << ":" << nodePtr << "\n";
 #endif
-        notify_flyweight_observer(obs, std::make_pair(true,std::make_pair(_index,nodePtr)));
+        notify_flyweight_observer(obs, std::make_pair(true,std::make_pair(_index, nodePtr)));
     }
 
     void
@@ -707,10 +708,8 @@ private:
 #ifdef DEBUG_SVL
         log_os << "SVLocusNotifier: Delete node: " << _index << ":" << nodePtr << "\n";
 #endif
-        notify_flyweight_observer(obs, std::make_pair(false,std::make_pair(_index,nodePtr)));
+        notify_flyweight_observer(obs, std::make_pair(false,std::make_pair(_index, nodePtr)));
     }
-
-
 
     graph_type _graph;
     LocusIndexType _index;
