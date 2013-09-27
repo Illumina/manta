@@ -184,17 +184,33 @@ scoreSplitReads(
 		const float refEvidence = std::max(bp1RefEvidence, bp2RefEvidence);
 		if (isTumor)
 		{
-			ssInfo.tumor.contigSREvidence += contigEvidence;
-			ssInfo.tumor.contigSRMapQ += readMapQ * readMapQ;
-			ssInfo.tumor.refSREvidence += refEvidence;
-			ssInfo.tumor.refSRMapQ += readMapQ * readMapQ;
+			if ((bp1ContigSR.has_evidence()) || (bp1ContigSR.has_evidence()))
+			{
+				ssInfo.tumor.contigSRCount++;
+				ssInfo.tumor.contigSREvidence += contigEvidence;
+				ssInfo.tumor.contigSRMapQ += readMapQ * readMapQ;
+			}
+			if ((bp1RefSR.has_evidence()) || (bp2RefSR.has_evidence()))
+			{
+				ssInfo.tumor.refSRCount++;
+				ssInfo.tumor.refSREvidence += refEvidence;
+				ssInfo.tumor.refSRMapQ += readMapQ * readMapQ;
+			}
 		}
 		else
 		{
-			ssInfo.normal.contigSREvidence += contigEvidence;
-			ssInfo.normal.contigSRMapQ += contigEvidence * contigEvidence;
-			ssInfo.normal.refSREvidence += refEvidence;
-			ssInfo.normal.refSRMapQ += readMapQ * readMapQ;
+			if ((bp1ContigSR.has_evidence()) || (bp1ContigSR.has_evidence()))
+			{
+				ssInfo.normal.contigSRCount++;
+				ssInfo.normal.contigSREvidence += contigEvidence;
+				ssInfo.normal.contigSRMapQ += readMapQ * readMapQ;
+			}
+			if ((bp1RefSR.has_evidence()) || (bp2RefSR.has_evidence()))
+			{
+				ssInfo.normal.refSRCount++;
+				ssInfo.normal.refSREvidence += refEvidence;
+				ssInfo.normal.refSRMapQ += readMapQ * readMapQ;
+			}
 		}
 	}
 }
