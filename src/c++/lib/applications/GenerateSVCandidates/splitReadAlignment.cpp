@@ -96,3 +96,20 @@ set_evidence()
 		_evidence = 2 * std::min(leftSize, rightSize) / (float)(leftSize + rightSize);
 	}
 }
+
+std::ostream&
+operator<<(std::ostream& os, const SRAlignmentInfo& info)
+{
+    os << "leftSize=" << info.get_leftSize() << " rightSize=" << info.get_rightSize()
+       << "leftMismatches=" << info.get_leftMismatches() << "rightMismatches=" << info.get_rightMismatches()
+       << "alignScore=" << info.get_alignScore() << "\n";
+    return os;
+}
+
+std::ostream&
+operator<<(std::ostream& os, const splitReadAlignment& srAlign)
+{
+    os << "has_evidence=" << srAlign.has_evidence() << " evidence=" << srAlign.get_evidence() << "\n";
+    os << "alignment:\n" << srAlign.get_alignment();
+    return os;
+}

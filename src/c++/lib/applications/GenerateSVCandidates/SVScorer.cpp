@@ -204,12 +204,19 @@ scoreSplitReads(
 				ssInfo.normal.contigSRCount++;
 				ssInfo.normal.contigSREvidence += contigEvidence;
 				ssInfo.normal.contigSRMapQ += readMapQ * readMapQ;
+
+				log_os << bp1ContigSR << "\n";
+				log_os << bp2ContigSR << "\n";
+
 			}
 			if ((bp1RefSR.has_evidence()) || (bp2RefSR.has_evidence()))
 			{
 				ssInfo.normal.refSRCount++;
 				ssInfo.normal.refSREvidence += refEvidence;
 				ssInfo.normal.refSRMapQ += readMapQ * readMapQ;
+
+				log_os << bp1RefSR << "\n";
+				log_os << bp2RefSR << "\n";
 			}
 		}
 	}
@@ -290,7 +297,7 @@ scoreSomaticSV(
     log_os << "\nfinally...\n";
     log_os << "tumor contig SP count: " << ssInfo.tumor.contigSRCount << "\n";
     log_os << "tumor contig SP evidence: " << ssInfo.tumor.contigSREvidence << "\n";
-    log_os << "tumor contig SP_mapQ: " << ssInfo.tumor.contigSRCount << "\n";
+    log_os << "tumor contig SP_mapQ: " << ssInfo.tumor.contigSRMapQ << "\n";
     log_os << "normal contig SP count: " << ssInfo.normal.contigSRCount << "\n";
     log_os << "normal contig SP evidence: " << ssInfo.normal.contigSREvidence << "\n";
     log_os << "normal contig SP_mapQ: " << ssInfo.normal.contigSRMapQ << "\n";

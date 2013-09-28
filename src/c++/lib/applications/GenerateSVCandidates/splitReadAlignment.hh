@@ -18,6 +18,7 @@
 #pragma once
 
 #include <string>
+#include <iostream>
 
 struct SRAlignmentInfo
 {
@@ -109,6 +110,11 @@ struct splitReadAlignment
     	return _hasEvidence;
     }
 
+    const SRAlignmentInfo& get_alignment() const
+    {
+    	return _alignment;
+    }
+
     unsigned
     calculateAlignScore(
     		const std::string& querySeq,
@@ -129,3 +135,9 @@ private:
     float _evidence;
 
 };
+
+std::ostream&
+operator<<(std::ostream& os, const SRAlignmentInfo& info);
+
+std::ostream&
+operator<<(std::ostream& os, const splitReadAlignment& srAlign);
