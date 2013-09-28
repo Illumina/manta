@@ -205,7 +205,9 @@ scoreSplitReads(
 				ssInfo.normal.contigSREvidence += contigEvidence;
 				ssInfo.normal.contigSRMapQ += readMapQ * readMapQ;
 
+				log_os << "bp1Contig \n";
 				log_os << bp1ContigSR << "\n";
+				log_os << "bp2Contig \n";
 				log_os << bp2ContigSR << "\n";
 
 			}
@@ -215,7 +217,9 @@ scoreSplitReads(
 				ssInfo.normal.refSREvidence += refEvidence;
 				ssInfo.normal.refSRMapQ += readMapQ * readMapQ;
 
+				log_os << "bp1Ref \n";
 				log_os << bp1RefSR << "\n";
+				log_os << "bp2Ref \n";
 				log_os << bp2RefSR << "\n";
 			}
 		}
