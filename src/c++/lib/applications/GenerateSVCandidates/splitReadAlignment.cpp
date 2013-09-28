@@ -87,8 +87,8 @@ set_evidence()
 	const unsigned bestScore = leftSize + rightSize;
 
 	// filters for a read being counted as evidence
-	if (((_alignment.get_leftMismatches()/(float)leftSize) < 0.5) ||
-		((_alignment.get_rightMismatches()/(float)rightSize) < 0.5) ||
+	if (((_alignment.get_leftMismatches()/(float)leftSize) < 0.5) &&
+		((_alignment.get_rightMismatches()/(float)rightSize) < 0.5) &&
 		((_alignment.get_alignScore()/(float)bestScore) >= 0.75))
 	{
 		_hasEvidence = true;
