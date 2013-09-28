@@ -34,8 +34,7 @@ calculateAlignScore(
 	for (unsigned i = leftSize+1; i<querySize; i++)
 		if (querySeq[i] != scanWindow[i]) rightMismatches += 1;
 
-	const unsigned score = leftMismatches+rightMismatches;
-
+	const unsigned score = querySize - (leftMismatches+rightMismatches);
 	_alignment.set_mismatches(leftMismatches, rightMismatches);
 	_alignment.set_score(score);
 
@@ -101,8 +100,8 @@ std::ostream&
 operator<<(std::ostream& os, const SRAlignmentInfo& info)
 {
     os << "leftSize=" << info.get_leftSize() << " rightSize=" << info.get_rightSize()
-       << "leftMismatches=" << info.get_leftMismatches() << "rightMismatches=" << info.get_rightMismatches()
-       << "alignScore=" << info.get_alignScore() << "\n";
+       << " leftMismatches=" << info.get_leftMismatches() << " rightMismatches=" << info.get_rightMismatches()
+       << " alignScore=" << info.get_alignScore() << "\n";
     return os;
 }
 
