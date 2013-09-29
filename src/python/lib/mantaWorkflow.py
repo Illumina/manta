@@ -161,23 +161,21 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
             graphCmd.extend(["--tumor-align-file",bamPath])
 
         graphTaskLabel=preJoin(taskPrefix,"makeLocusGraph_"+gseg.id)
-        graphTasks.add(self.addTask(graphTaskLabel,graphCmd,dependencies=dirTask))
+        graphTasks.add(self.addTask(graphTaskLabel,graphCmd,dependencies=dirTask,memMb=self.params.estimateMemMb))
 
     mergeCmd = [ self.params.mantaGraphMergeBin ]
     mergeCmd.extend(["--output-file", graphPath])
     for gfile in tmpGraphFiles :
         mergeCmd.extend(["--graph-file", gfile])
 
-    fullGraphMemMb=4*1024
-
-    mergeTask = self.addTask(preJoin(taskPrefix,"mergeLocusGraph"),mergeCmd,dependencies=graphTasks,memMb=fullGraphMemMb)
+    mergeTask = self.addTask(preJoin(taskPrefix,"mergeLocusGraph"),mergeCmd,dependencies=graphTasks,memMb=self.params.mergeMemMb)
 
     # Run a separate process to rigorously check that the final graph is valid, the sv candidate generators will check as well, but
     # this makes the check much more clear:
 
     checkCmd = [ self.params.mantaGraphCheckBin ]
     checkCmd.extend(["--graph-file", graphPath])
-    checkTask = self.addTask(preJoin(taskPrefix,"checkLocusGraph"),checkCmd,dependencies=mergeTask,memMb=fullGraphMemMb)
+    checkTask = self.addTask(preJoin(taskPrefix,"checkLocusGraph"),checkCmd,dependencies=mergeTask,memMb=self.params.mergeMemMb)
 
     rmGraphTmpCmd = "rm -rf " + tmpGraphDir
     #rmTask=self.addTask(preJoin(taskPrefix,"rmGraphTmp"),rmGraphTmpCmd,dependencies=mergeTask)
@@ -187,7 +185,7 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
     graphStatsCmd += " --graph-file " + graphPath
     graphStatsCmd += " >| " + graphStatsPath
 
-    graphStatsTask = self.addTask(preJoin(taskPrefix,"locusGraphStats"),graphStatsCmd,dependencies=mergeTask)
+    graphStatsTask = self.addTask(preJoin(taskPrefix,"locusGraphStats"),graphStatsCmd,dependencies=mergeTask,memMb=self.params.mergeMemMb)
 
     nextStepWait = set()
     nextStepWait.add(checkTask)
@@ -238,7 +236,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
             hygenCmd.extend(["--tumor-align-file",bamPath])
 
         hygenTaskLabel=preJoin(taskPrefix,"generateCandidateSV_"+binStr)
-        hygenTasks.add(self.addTask(hygenTaskLabel,hygenCmd,dependencies=dirTask))
+        hygenTasks.add(self.addTask(hygenTaskLabel,hygenCmd,dependencies=dirTask, memMb=self.params.hyGenMemMb))
 
     nextStepWait = hygenTasks
 

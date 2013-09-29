@@ -71,6 +71,11 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         mantaChromDepth=joinFile(libexecDir,"getBamAvgChromDepth.py")
         mantaSortVcf=joinFile(libexecDir,"sortVcf.py")
 
+        # default mem per process type
+        estimateMemMb=2*1024
+        mergeMemMb=4*1024
+        hyGenMemMb=4*1024
+
         return cleanLocals(locals())
 
 
