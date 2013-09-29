@@ -49,7 +49,7 @@ void
 EdgeRetrieverLocus::
 advanceEdge()
 {
-    typedef SVLocusNode::edges_type::const_iterator edgeiter_t;
+    typedef SVLocusEdgesType::const_iterator edgeiter_t;
 
     if (_isInit)
     {
@@ -68,8 +68,9 @@ advanceEdge()
     {
         const SVLocusNode& node1(locus.getNode(_edge.nodeIndex1));
         const bool isEdgeFilterNode1((_graphNodeMaxEdgeCount>0) && node1.size()>_graphNodeMaxEdgeCount);
-        edgeiter_t edgeIter(node1.lower_bound(_edge.nodeIndex2));
-        const edgeiter_t edgeIterEnd(node1.end());
+        const SVLocusEdgeManager node1Manager(node1.getEdgeManager());
+        edgeiter_t edgeIter(node1Manager.getMap().lower_bound(_edge.nodeIndex2));
+        const edgeiter_t edgeIterEnd(node1Manager.getMap().end());
 
         for (; edgeIter != edgeIterEnd; ++edgeIter)
         {

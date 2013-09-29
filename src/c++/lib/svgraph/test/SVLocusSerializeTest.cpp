@@ -111,8 +111,11 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeSerialze )
     BOOST_REQUIRE_EQUAL(node1.getInterval(), node_copy1.getInterval());
     BOOST_REQUIRE_EQUAL(node1.size() ,node_copy1.size());
 
-    SVLocusNode::const_iterator ibegin(node1.begin());
-    SVLocusNode::const_iterator copy_ibegin(node_copy1.begin());
+    const SVLocusEdgeManager node1Manager(node1.getEdgeManager());
+    const SVLocusEdgeManager node1CopyManager(node_copy1.getEdgeManager());
+
+    SVLocusEdgesType::const_iterator ibegin(node1Manager.getMap().begin());
+    SVLocusNode::const_iterator copy_ibegin(node1CopyManager.getMap().begin());
 
     BOOST_REQUIRE_EQUAL(ibegin->second.getCount(), copy_ibegin->second.getCount());
 

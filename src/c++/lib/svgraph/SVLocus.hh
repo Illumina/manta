@@ -18,321 +18,7 @@
 #pragma once
 
 #include "blt_util/flyweight_observer.hh"
-#include "svgraph/GenomeInterval.hh"
-
-#include "boost/foreach.hpp"
-#include "boost/serialization/map.hpp"
-#include "boost/serialization/vector.hpp"
-#include "boost/serialization/split_member.hpp"
-
-#include <iosfwd>
-#include <limits>
-#include <map>
-#include <set>
-#include <vector>
-
-
-//#define DEBUG_SVL
-
-
-#ifdef DEBUG_SVL
-#include "blt_util/log.hh"
-
-#include <iostream>
-#endif
-
-
-struct SVLocusNode;
-
-
-struct SVLocusEdge
-{
-    SVLocusEdge(
-        const unsigned initCount = 0) :
-        _count(0)
-    {
-        addCount(initCount);
-    }
-
-    unsigned
-    getCount() const
-    {
-        return _count;
-    }
-
-    bool
-    isCountExact() const
-    {
-        return (_count != maxCount());
-    }
-
-    template<class Archive>
-    void serialize(Archive& ar, const unsigned /* version */)
-    {
-        ar& _count;
-    }
-
-private:
-    typedef unsigned count_t;
-
-    friend struct SVLocusNode;
-
-    // merge edge into this one
-    //
-    void
-    mergeEdge(const SVLocusEdge& edge)
-    {
-        addCount(edge._count);
-    }
-
-    void
-    addCount(const unsigned increment)
-    {
-        if((getCount()+increment)>maxCount())
-        {
-            _count = maxCount();
-        }
-        else
-        {
-            _count += increment;
-        }
-    }
-
-    void
-    clearCount()
-    {
-        _count = 0;
-    }
-
-    static
-    unsigned
-    maxCount()
-    {
-        return std::numeric_limits<count_t>::max();
-    }
-
-    count_t _count;
-};
-
-
-std::ostream&
-operator<<(std::ostream& os, const SVLocusEdge& edge);
-
-BOOST_CLASS_IMPLEMENTATION(SVLocusEdge, boost::serialization::object_serializable)
-
-
-
-typedef unsigned NodeIndexType;
-
-
-
-struct SVLocusNode
-{
-    typedef std::map<NodeIndexType,SVLocusEdge> edges_type;
-    typedef edges_type::const_iterator const_iterator;
-
-    SVLocusNode()
-    {}
-
-    // specialized copy ctor which offsets all address:
-    SVLocusNode(
-        const SVLocusNode& in,
-        const unsigned offset) :
-        _interval(in._interval),
-        _evidenceRange(in._evidenceRange)
-    {
-        BOOST_FOREACH(const edges_type::value_type& val, in)
-        {
-            _edges.insert(std::make_pair(val.first+offset,val.second));
-        }
-    }
-
-    bool
-    empty() const
-    {
-        return _edges.empty();
-    }
-
-    unsigned
-    size() const
-    {
-        return _edges.size();
-    }
-
-    const_iterator
-    begin() const
-    {
-        return _edges.begin();
-    }
-
-    const_iterator
-    end() const
-    {
-        return _edges.end();
-    }
-
-    const_iterator
-    lower_bound(const NodeIndexType index) const
-    {
-        return _edges.lower_bound(index);
-    }
-
-    bool
-    isOutCount() const
-    {
-        BOOST_FOREACH(const edges_type::value_type& edgeIter, *this)
-        {
-            if (edgeIter.second.getCount() > 0) return true;
-        }
-        return false;
-    }
-
-    unsigned
-    outCount() const
-    {
-        unsigned sum(0);
-        BOOST_FOREACH(const edges_type::value_type& edgeIter, *this)
-        {
-            sum += edgeIter.second.getCount();
-        }
-        return sum;
-    }
-
-    /// return edge from this to node
-    const SVLocusEdge&
-    getEdge(const NodeIndexType toIndex) const
-    {
-        const_iterator i(_edges.find(toIndex));
-        if (i == _edges.end()) getEdgeException(toIndex, "getEdge");
-        return i->second;
-    }
-
-    /// return true if edge exists:
-    bool
-    isEdge(const NodeIndexType toIndex) const
-    {
-        const_iterator i(_edges.find(toIndex));
-        return (i != _edges.end());
-    }
-
-    /// add new edge to node, or merge this edge info in if node already has edge:
-    ///
-    /// this method is responsible for merging edge counts into the node count as well
-    void
-    mergeEdge(
-        const NodeIndexType toIndex,
-        const SVLocusEdge& edge)
-    {
-        edges_type::iterator edgeIter(_edges.find(toIndex));
-        if (edgeIter == _edges.end())
-        {
-            // this node does not already have an edge to "toIndex", add a new edge:
-            _edges.insert(std::make_pair(toIndex,edge));
-        }
-        else
-        {
-            // this node already has an edge to "toIndex", merge the existing edge with the new one:
-            edgeIter->second.mergeEdge(edge);
-        }
-    }
-
-    /// reduce edge count to zero
-    void
-    clearEdge(const NodeIndexType toIndex)
-    {
-        edges_type::iterator i(_edges.find(toIndex));
-        if (i == _edges.end()) getEdgeException(toIndex, "clearEdge");
-        clearEdge(i->second);
-    }
-
-    /// eliminate edge
-    void
-    eraseEdge(const NodeIndexType toIndex)
-    {
-        edges_type::iterator i(_edges.find(toIndex));
-        if (i == _edges.end()) getEdgeException(toIndex, "eraseEdge");
-        clearEdge(i->second);
-        _edges.erase(i);
-    }
-
-    /// unhook edge from one node id, and stick it to another:
-    void
-    moveEdge(
-        const NodeIndexType fromIndex,
-        const NodeIndexType toIndex)
-    {
-        _edges.insert(std::make_pair(toIndex,getEdge(fromIndex)));
-        _edges.erase(fromIndex);
-    }
-
-    void
-    clear()
-    {
-        _edges.clear();
-    }
-
-    template<class Archive>
-    void serialize(Archive& ar,const unsigned /* version */)
-    {
-        ar& _interval& _evidenceRange& _edges;
-    }
-
-    const GenomeInterval&
-    getInterval() const
-    {
-        return _interval;
-    }
-
-    void
-    setInterval(const GenomeInterval& interval)
-    {
-        _interval.tid=interval.tid;
-        setIntervalRange(interval.range);
-    }
-
-    void
-    setIntervalRange(const known_pos_range2& range)
-    {
-        _interval.range=range;
-    }
-
-    const known_pos_range2&
-    getEvidenceRange() const
-    {
-        return _evidenceRange;
-    }
-
-    void
-    setEvidenceRange(const known_pos_range2& range)
-    {
-        _evidenceRange = range;
-    }
-
-private:
-    /// reduce edge count to zero
-    void
-    clearEdge(SVLocusEdge& edge)
-    {
-        edge.clearCount();
-    }
-
-    void
-    getEdgeException(
-        const NodeIndexType toIndex,
-        const char* label) const;
-
-    //////////////////  data:
-    GenomeInterval _interval;
-    known_pos_range2 _evidenceRange;
-    edges_type _edges;
-};
-
-
-std::ostream&
-operator<<(std::ostream& os, const SVLocusNode& node);
-
-BOOST_CLASS_IMPLEMENTATION(SVLocusNode, boost::serialization::object_serializable)
-
+#include "svgraph/SVLocusNode.hh"
 
 
 typedef unsigned LocusIndexType;
@@ -362,8 +48,6 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
 
     typedef graph_type::iterator iterator;
     typedef graph_type::const_iterator const_iterator;
-
-    typedef SVLocusNode::edges_type edges_type;
 
     friend struct SVLocusSet;
 
@@ -440,8 +124,12 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
         assert(! fromNode.isEdge(toIndex));
         assert(! toNode.isEdge(fromIndex));
 
-        fromNode.mergeEdge(toIndex,SVLocusEdge(fromCount));
-        toNode.mergeEdge(fromIndex,SVLocusEdge(toCount));
+        SVLocusEdge fromEdge;
+        fromEdge.setCount(fromCount);
+        SVLocusEdge toEdge;
+        toEdge.setCount(toCount);
+        fromNode.mergeEdge(toIndex,fromEdge);
+        toNode.mergeEdge(fromIndex,toEdge);
     }
 
     void
@@ -486,8 +174,9 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
 
     /// return from->to edge
     const SVLocusEdge&
-    getEdge(const NodeIndexType fromIndex,
-            const NodeIndexType toIndex) const
+    getEdge(
+        const NodeIndexType fromIndex,
+        const NodeIndexType toIndex) const
     {
         const SVLocusNode& fromNode(getNode(fromIndex));
         try
@@ -501,7 +190,7 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
         }
 
         // handle return warning:
-        static const SVLocusEdge bogusWarning;
+        static SVLocusEdge bogusWarning;
         return bogusWarning;
     }
 

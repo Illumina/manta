@@ -535,7 +535,8 @@ getNodeMergeableIntersect(
 
             // get the remotes of each node which intersect with the query node,
             // place these in remoteIntersect
-            BOOST_FOREACH(const SVLocusNode::edges_type::value_type& intersectEdge, intersectNode)
+            const SVLocusEdgeManager edgeMap(intersectNode.getEdgeManager());
+            BOOST_FOREACH(const SVLocusEdgesType::value_type& intersectEdge, edgeMap.getMap())
             {
                 // 1. build remote <-> local indexing structures:
                 NodeAddressType remoteAddy(std::make_pair(intersectAddy.first,intersectEdge.first));
@@ -570,7 +571,8 @@ getNodeMergeableIntersect(
     mergeIntersectNodes.clear();
 
     // for each edge from the input node, get all intersecting edges
-    BOOST_FOREACH(const SVLocusNode::edges_type::value_type& inputEdge, inputNode)
+    const SVLocusEdgeManager edgeMap(inputNode.getEdgeManager());
+    BOOST_FOREACH(const SVLocusEdgesType::value_type& inputEdge, edgeMap.getMap())
     {
 #ifdef DEBUG_SVL
         log_os << logtag << " processing edge: " << inputAddy << "->" << inputLocusIndex << ":" << inputEdge.first << "\n";
@@ -971,7 +973,8 @@ dumpLocusStats(std::ostream& os) const
             // edges:
             maxEdgeCount = std::max(maxEdgeCount,node.size());
             locusEdgeCount += node.size();
-            BOOST_FOREACH(const SVLocusNode::edges_type::value_type& edge, node)
+            const SVLocusEdgeManager edgeMap(node.getEdgeManager());
+            BOOST_FOREACH(const SVLocusEdgesType::value_type& edge, edgeMap.getMap())
             {
                 const unsigned edgeObsCount(edge.second.getCount());
                 maxEdgeObsCount = std::max(maxEdgeObsCount,edgeObsCount);
