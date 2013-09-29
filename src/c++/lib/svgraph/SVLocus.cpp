@@ -134,7 +134,7 @@ mergeNode(
         const bool isFromToEdge(fromNodeEdgeIndex == toIndex);
         if (isFromToEdge)
         {
-            if(isFromRegionRightmost)
+            if (isFromRegionRightmost)
             {
                 fromNode.clearEdge(fromNodeEdgeIndex);
 

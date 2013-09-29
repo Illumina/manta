@@ -88,7 +88,7 @@ private:
     void
     addCount(const unsigned increment)
     {
-        if((getCount()+increment)>maxCount())
+        if ((getCount()+increment)>maxCount())
         {
             _count = maxCount();
         }
@@ -128,24 +128,24 @@ typedef unsigned NodeIndexType;
 ///
 #if 0
 class customConstEdgeIterator
-  : public boost::iterator_adaptor<
-        customConstEdgeIterator            // Derived
-        , Finite_vertices_iterator      // Base
-        , Vertex_handle                 // Value
-        , boost::forward_traversal_tag  // Traversal type
-        , Vertex_handle>                // Reference
+    : public boost::iterator_adaptor<
+    customConstEdgeIterator            // Derived
+    , Finite_vertices_iterator      // Base
+    , Vertex_handle                 // Value
+    , boost::forward_traversal_tag  // Traversal type
+    , Vertex_handle>                // Reference
 {
- private:
+private:
     struct enabler {};
 
- public:
+public:
     my_vertex_iterator()
         : my_vertex_iterator::iterator_adaptor_(0) {}
 
     explicit my_vertex_iterator(const Finite_vertices_iterator p)
         : my_vertex_iterator::iterator_adaptor_(p) {}
 
- private:
+private:
     friend class boost::iterator_core_access;
     typename my_vertex_iterator::reference
     dereference() const
@@ -226,7 +226,7 @@ struct SVLocusNode
         _evidenceRange(in._evidenceRange),
         _isSingle(in._isSingle)
     {
-        if(_isSingle)
+        if (_isSingle)
         {
             _edges.single = in._edges.single;
             if (! _edges.single.isZero)
@@ -249,7 +249,7 @@ struct SVLocusNode
         _evidenceRange(rhs._evidenceRange),
         _isSingle(rhs._isSingle)
     {
-        if(_isSingle)
+        if (_isSingle)
         {
             _edges.single = rhs._edges.single;
         }
@@ -268,7 +268,7 @@ struct SVLocusNode
     SVLocusNode&
     operator=(const SVLocusNode& rhs)
     {
-        if(&rhs==this) return *this;
+        if (&rhs==this) return *this;
 
         clear();
 
@@ -276,7 +276,7 @@ struct SVLocusNode
         _evidenceRange = rhs._evidenceRange;
         _isSingle = rhs._isSingle;
 
-        if(_isSingle)
+        if (_isSingle)
         {
             _edges.single = rhs._edges.single;
         }
@@ -311,7 +311,7 @@ struct SVLocusNode
     SVLocusEdgeManager
     getEdgeManager() const
     {
-        if(_isSingle)
+        if (_isSingle)
         {
             return SVLocusEdgeManager(_edges.single);
         }
@@ -362,7 +362,7 @@ struct SVLocusNode
     const SVLocusEdge&
     getEdge(const NodeIndexType index) const
     {
-        if(_isSingle)
+        if (_isSingle)
         {
             if (! isEdge(index))
             {
@@ -382,7 +382,7 @@ struct SVLocusNode
     bool
     isEdge(const NodeIndexType index) const
     {
-        if(_isSingle)
+        if (_isSingle)
         {
             return ((! _edges.single.isZero) &&
                     (index == _edges.single.index));
@@ -402,16 +402,16 @@ struct SVLocusNode
         const NodeIndexType index,
         const SVLocusEdge& edge)
     {
-        if(_isSingle)
+        if (_isSingle)
         {
-            if(_edges.single.isZero)
+            if (_edges.single.isZero)
             {
                 _edges.single.isZero = false;
                 _edges.single.index = index;
                 _edges.single.edge = edge;
                 return;
             }
-            else if(index == _edges.single.index)
+            else if (index == _edges.single.index)
             {
                 _edges.single.edge.mergeEdge(edge);
                 return;
@@ -441,7 +441,7 @@ struct SVLocusNode
     void
     clearEdge(const NodeIndexType index)
     {
-        if(_isSingle)
+        if (_isSingle)
         {
             if (! isEdge(index))
             {
@@ -461,7 +461,7 @@ struct SVLocusNode
     void
     eraseEdge(const NodeIndexType index)
     {
-        if(_isSingle)
+        if (_isSingle)
         {
             if (! isEdge(index))
             {
@@ -475,7 +475,7 @@ struct SVLocusNode
             if (i == getMap().end()) getEdgeException(index, "eraseEdge");
             getMap().erase(i);
             assert(getMap().size()>=1);
-            if(1 == getMap().size()) convertToSingle();
+            if (1 == getMap().size()) convertToSingle();
         }
     }
 
@@ -485,7 +485,7 @@ struct SVLocusNode
         const NodeIndexType fromIndex,
         const NodeIndexType toIndex)
     {
-        if(_isSingle)
+        if (_isSingle)
         {
             assert(isEdge(fromIndex));
             _edges.single.index = toIndex;
@@ -500,10 +500,10 @@ struct SVLocusNode
     void
     clear()
     {
-        if(! _isSingle)
+        if (! _isSingle)
         {
             delete _edges.multiPtr;
-           _isSingle=true;
+            _isSingle=true;
         }
         _edges.single.isZero = true;
     }

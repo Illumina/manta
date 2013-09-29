@@ -174,7 +174,7 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
 
     # Run a separate process to rigorously check that the final graph is valid, the sv candidate generators will check as well, but
     # this makes the check much more clear:
-    
+
     checkCmd = [ self.params.mantaGraphCheckBin ]
     checkCmd.extend(["--graph-file", graphPath])
     checkTask = self.addTask(preJoin(taskPrefix,"checkLocusGraph"),checkCmd,dependencies=mergeTask,memMb=fullGraphMemMb)
