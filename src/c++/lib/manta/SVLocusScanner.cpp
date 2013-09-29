@@ -246,11 +246,11 @@ getSVBreakendCandidateClip(
 bool
 isSemiAligned(const bam_record& bamRead, const double minSemiAlignedScore)
 {
-	ALIGNPATH::path_t apath;
+    ALIGNPATH::path_t apath;
     bam_cigar_to_apath(bamRead.raw_cigar(),bamRead.n_cigar(),apath);
     const double semiAlignedScore(ReadScorer::get().getSemiAlignedMetric(apath,bamRead.qual()));
 #ifdef DEBUG_SEMI_ALIGNED
-	static const std::string logtag("isSemiAligned");
+    static const std::string logtag("isSemiAligned");
     log_os << logtag << " semi-aligned score=" << semiAlignedScore << " read qname=" << bamRead.qname() << " apath=" << apath <<  std::endl;
 #endif
     return (semiAlignedScore>minSemiAlignedScore);
@@ -258,48 +258,48 @@ isSemiAligned(const bam_record& bamRead, const double minSemiAlignedScore)
 
 bool
 isGoodShadow(const bam_record& bamRead,
-		 	 const uint8_t lastMapq,
-		 	 const std::string& lastQname,
-			 const double minSingletonMapq)
+             const uint8_t lastMapq,
+             const std::string& lastQname,
+             const double minSingletonMapq)
 {
 #ifdef DEBUG_IS_SHADOW
-	static const std::string logtag("isGoodShadow");
+    static const std::string logtag("isGoodShadow");
 #endif
-	// shadow read should be unmapped
-	if (!bamRead.is_unmapped()) return false;
-	// but its partner should be aligned
-	if (bamRead.is_mate_unmapped()) return false;
+    // shadow read should be unmapped
+    if (!bamRead.is_unmapped()) return false;
+    // but its partner should be aligned
+    if (bamRead.is_mate_unmapped()) return false;
 
-	static const unsigned minAvgQualShadow = 25;
+    static const unsigned minAvgQualShadow = 25;
 
-	if (get_avg_quality(bamRead) < minAvgQualShadow)
-	{
-		return false;
-	}
+    if (get_avg_quality(bamRead) < minAvgQualShadow)
+    {
+        return false;
+    }
 
     if (bamRead.qname() != lastQname)
     {
-    	// something went wrong here, shadows should have their singleton partner
-    	// preceding them in the BAM file.
+        // something went wrong here, shadows should have their singleton partner
+        // preceding them in the BAM file.
 #ifdef DEBUG_IS_SHADOW
-    log_os << logtag << " ERROR: Shadow without matching singleton : " << bamRead.qname() << " vs " << lastQname << std::endl;
+        log_os << logtag << " ERROR: Shadow without matching singleton : " << bamRead.qname() << " vs " << lastQname << std::endl;
 #endif
-    	return false;
+        return false;
     }
 
     if ((unsigned int)lastMapq > minSingletonMapq)
     {
 #ifdef DEBUG_IS_SHADOW
-    log_os << logtag << " Found shadow!" << std::endl;
-    log_os << logtag << " this mapq  = " << ((unsigned int)bamRead.map_qual())
-    				 << " this qname = " << bamRead.qname() << std::endl;
-    log_os << logtag << " last mapq  = " << ((unsigned int)lastMapq)
-                     << " last qname = " << lastQname << std::endl;
+        log_os << logtag << " Found shadow!" << std::endl;
+        log_os << logtag << " this mapq  = " << ((unsigned int)bamRead.map_qual())
+               << " this qname = " << bamRead.qname() << std::endl;
+        log_os << logtag << " last mapq  = " << ((unsigned int)lastMapq)
+               << " last qname = " << lastQname << std::endl;
 #endif
-    	return true;
+        return true;
     }
 
- 	return false;
+    return false;
 }
 
 /// get SV candidates from semi-aligned reads
@@ -317,9 +317,10 @@ getSVCandidatesFromSemiAligned(
 
     const double semiAlignedScore(ReadScorer::get().getSemiAlignedMetric(bamAlign.path,bamRead.qual()));
     //std::cout << "getSVCandidatesFromSemiAligned : semi-aligned score is " << semiAlignedScore << std::endl;
-    if (semiAlignedScore>opt.minSemiAlignedScoreGraph) {
-    	const pos_t pos(bamAlign.pos);
-    	candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),pos,pos,isComplex));
+    if (semiAlignedScore>opt.minSemiAlignedScoreGraph)
+    {
+        const pos_t pos(bamAlign.pos);
+        candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),pos,pos,isComplex));
     }
 }
 
@@ -517,35 +518,42 @@ getSVCandidatesFromShadow(
     const bam_record* remoteReadPtr,
     std::vector<SVCandidate>& candidates)
 {
-	if (NULL == remoteReadPtr)
-	{
-		// we want info on both reads
-		return;
-	}
-	static const bool isComplex(true);
-	const bam_record& remoteRead(*remoteReadPtr);
-	const SimpleAlignment remoteAlign(remoteRead);
+    if (NULL == remoteReadPtr)
+    {
+        // we want info on both reads
+        return;
+    }
+    static const bool isComplex(true);
+    const bam_record& remoteRead(*remoteReadPtr);
+    const SimpleAlignment remoteAlign(remoteRead);
 
-	pos_t singletonGenomePos(0);
-	int targetId(0);
-	if (localRead.is_mate_unmapped()) {
-		// remote read is shadow candidate
-		if (!isGoodShadow(remoteRead,localRead.map_qual(),localRead.qname(),opt.minSingletonMapqGraph)) {
-			return;
-		}
-		singletonGenomePos = localAlign.pos;
-		targetId = remoteRead.target_id();
-	} else if (localRead.is_unmapped()){
-		// local is shadow candidate
-		if (!isGoodShadow(localRead,remoteRead.map_qual(),remoteRead.qname(),opt.minSingletonMapqGraph)) {
-			return;
-		}
-		singletonGenomePos = remoteAlign.pos;
-		targetId = localRead.target_id();
-	} else {
-		// none unmapped, skip this one
-		return;
-	}
+    pos_t singletonGenomePos(0);
+    int targetId(0);
+    if (localRead.is_mate_unmapped())
+    {
+        // remote read is shadow candidate
+        if (!isGoodShadow(remoteRead,localRead.map_qual(),localRead.qname(),opt.minSingletonMapqGraph))
+        {
+            return;
+        }
+        singletonGenomePos = localAlign.pos;
+        targetId = remoteRead.target_id();
+    }
+    else if (localRead.is_unmapped())
+    {
+        // local is shadow candidate
+        if (!isGoodShadow(localRead,remoteRead.map_qual(),remoteRead.qname(),opt.minSingletonMapqGraph))
+        {
+            return;
+        }
+        singletonGenomePos = remoteAlign.pos;
+        targetId = localRead.target_id();
+    }
+    else
+    {
+        // none unmapped, skip this one
+        return;
+    }
     const pos_t properPairRangeOffset = static_cast<int>(rstats.properPair.min + (rstats.properPair.max-rstats.properPair.min)/2);
     const pos_t shadowGenomePos = singletonGenomePos + properPairRangeOffset;
     candidates.push_back(GetSplitSVCandidate(opt,targetId,shadowGenomePos,shadowGenomePos,isComplex));
@@ -839,7 +847,7 @@ isLocalAssemblyEvidence(
     using namespace ALIGNPATH;
 
     {
-    	if (isSemiAligned(bamRead,_opt.minSemiAlignedScoreGraph)) return true;
+        if (isSemiAligned(bamRead,_opt.minSemiAlignedScoreGraph)) return true;
     }
 
     const SimpleAlignment bamAlign(bamRead);

@@ -30,4 +30,4 @@ is_innie_pair(
 
 unsigned
 get_avg_quality(
-	const bam_record& bam_read);
+    const bam_record& bam_read);

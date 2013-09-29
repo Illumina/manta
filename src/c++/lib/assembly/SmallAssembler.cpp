@@ -374,11 +374,11 @@ runSmallAssembler(
         if ( (iteration>=unusedLookback) && (unusedReadsNow == iterationUnusedReads[(iteration-unusedLookback)]))
         {
 #ifdef DEBUG_ASBL
-        log_os << "Number of unused reads (" << unusedReadsNow << ") did not change for the past " << unusedLookback << " iterations. Stopping.\n";
+            log_os << "Number of unused reads (" << unusedReadsNow << ") did not change for the past " << unusedLookback << " iterations. Stopping.\n";
 #endif
             break;
         }
-     }
+    }
 #ifdef DEBUG_ASBL
     log_os << "SmallAssembler: Reached max number of assembly iterations: " << opt.maxAssemblyIterations << "\n";
 #endif

@@ -423,7 +423,7 @@ getCandidatesFromData(
             //
             // we anticipate so few svs from the POC method, that there's no indexing on them
             // OST 26/09/2013: Be careful when re-arranging or rewriting the code below, under g++ 4.1.2
-            // this can lead to an infinite loop. 
+            // this can lead to an infinite loop.
             BOOST_FOREACH(const SVCandidate& readCand, readCandidates)
             {
                 BOOST_FOREACH(SVCandidate& sv, svs)
@@ -570,9 +570,9 @@ findCandidateSV(
 
     getCandidatesFromData(svData,svs);
 
-/*#ifdef DEBUG_SVDATA
-    checkResult(svData,svs);
-#endif*/
+    /*#ifdef DEBUG_SVDATA
+        checkResult(svData,svs);
+    #endif*/
 }
 
 

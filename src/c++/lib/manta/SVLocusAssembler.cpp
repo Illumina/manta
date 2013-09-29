@@ -63,7 +63,7 @@ getBreakendReads(
     // get search range:
     known_pos_range2 searchRange;
     {
-    	// ideally this should be dependent on the insert size dist
+        // ideally this should be dependent on the insert size dist
         static const size_t minIntervalSize(400);
         if (bp.interval.range.size() >= minIntervalSize)
         {
@@ -188,34 +188,34 @@ getBreakendReads(
 
             bool isSemiAlignedKeeper(false);
             {
-            	if (isSemiAligned(bamRead,_scanOpt.minSemiAlignedScoreCandidates))
-            	{
-            		isSemiAlignedKeeper = true;
-            		++semiAlignedCnt;
-            	}
+                if (isSemiAligned(bamRead,_scanOpt.minSemiAlignedScoreCandidates))
+                {
+                    isSemiAlignedKeeper = true;
+                    ++semiAlignedCnt;
+                }
 
             }
 
             bool isShadowKeeper(false);
             {
-            	if (isGoodShadow(bamRead,
-            					lastMapq,
-            					lastQname,
-            			        _scanOpt.minSingletonMapqCandidates))
-            	{
-            		isShadowKeeper = true;
-            		++shadowCnt;
-            	}
+                if (isGoodShadow(bamRead,
+                                 lastMapq,
+                                 lastQname,
+                                 _scanOpt.minSingletonMapqCandidates))
+                {
+                    isShadowKeeper = true;
+                    ++shadowCnt;
+                }
             }
 
             lastMapq  = bamRead.map_qual();
             lastQname = bamRead.qname();
 
             if (! (isClipKeeper
-            	|| isIndelKeeper
-            	|| isSemiAlignedKeeper
-            	|| isShadowKeeper
-            	)) continue;
+                   || isIndelKeeper
+                   || isSemiAlignedKeeper
+                   || isShadowKeeper
+                  )) continue;
             //if ( bamRead.pe_map_qual() == 0 ) continue;
             const char flag(bamRead.is_second() ? '2' : '1');
             const std::string readKey = std::string(bamRead.qname()) + "_" + flag + "_" + bamIndexStr;
@@ -234,7 +234,7 @@ getBreakendReads(
             else
             {
 #ifdef DEBUG_ASBL
-              log_os << logtag << "WARNING: SmallAssembler read name collision : " << readKey << "\n";
+                log_os << logtag << "WARNING: SmallAssembler read name collision : " << readKey << "\n";
 #endif
             }
         }

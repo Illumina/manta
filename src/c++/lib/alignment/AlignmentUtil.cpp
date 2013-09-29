@@ -245,9 +245,9 @@ getSemiAlignedMetric(
 #ifdef DEBUG_RS
         log_os << "getSemiAlignedMetric : i=" << i << " posInRead=" << posInRead << " score=" << score << "\n";
 #endif
-        if((ps.type==SOFT_CLIP) || (ps.type==SEQ_MISMATCH))
+        if ((ps.type==SOFT_CLIP) || (ps.type==SEQ_MISMATCH))
         {
-            for(unsigned j(0);j<ps.length;++j)
+            for (unsigned j(0); j<ps.length; ++j)
             {
 #ifdef DEBUG_RS
                 log_os << "getAlignmentScore: " << (posInRead+j) << " " << _logpcorrectratio[qual[posInRead+j]]
@@ -255,10 +255,10 @@ getSemiAlignedMetric(
 #endif
                 score +=  _logpcorrectratio[qual[posInRead+j]];
             }
-         }
-        if(is_segment_type_read_length(ps.type)) posInRead += ps.length;
-   } // for
-   return score;
+        }
+        if (is_segment_type_read_length(ps.type)) posInRead += ps.length;
+    } // for
+    return score;
 }
 
 

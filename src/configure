@@ -276,7 +276,7 @@ fi
 cmake_install_dir="${build_dir}/bootstrap/cmake"
 if [ "x${cmake}" == "x" ] ; then
     cmake=$(bash ${src_bootstrap_dir}/installCmake.bash ${redist_dir} ${cmake_install_dir} ${parallel_jobs})
- 
+
     if [ "$?" != "0" ]; then
         clog "ERROR: Failed to verify or install cmake"
         exit 1

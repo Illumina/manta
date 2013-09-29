@@ -204,7 +204,7 @@ runGSC(
         dumpEdgeInfo(edge,cset,log_os);
 #endif
 
-       try
+        try
         {
             // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
             svFind.findCandidateSV(edge, svData, svs);
