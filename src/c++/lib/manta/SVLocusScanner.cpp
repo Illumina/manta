@@ -15,12 +15,12 @@
 /// \author Chris Saunders
 ///
 
-#include "manta/SVLocusScanner.hh"
+#include "alignment/ReadScorer.hh"
 #include "blt_util/align_path_bam_util.hh"
 #include "blt_util/align_path_util.hh"
 #include "blt_util/bam_record_util.hh"
-#include "alignment/AlignmentUtil.hh"
 #include "common/Exceptions.hh"
+#include "manta/SVLocusScanner.hh"
 
 #include "boost/foreach.hpp"
 
@@ -243,18 +243,22 @@ getSVBreakendCandidateClip(
     }
 }
 
+
+
 bool
 isSemiAligned(const bam_record& bamRead, const double minSemiAlignedScore)
 {
     ALIGNPATH::path_t apath;
     bam_cigar_to_apath(bamRead.raw_cigar(),bamRead.n_cigar(),apath);
-    const double semiAlignedScore(ReadScorer::get().getSemiAlignedMetric(apath,bamRead.qual()));
+    const double semiAlignedScore(ReadScorer::getSemiAlignedMetric(bamRead.read_size(),apath,bamRead.qual()));
 #ifdef DEBUG_SEMI_ALIGNED
     static const std::string logtag("isSemiAligned");
     log_os << logtag << " semi-aligned score=" << semiAlignedScore << " read qname=" << bamRead.qname() << " apath=" << apath <<  std::endl;
 #endif
     return (semiAlignedScore>minSemiAlignedScore);
 }
+
+
 
 bool
 isGoodShadow(const bam_record& bamRead,
@@ -302,8 +306,10 @@ isGoodShadow(const bam_record& bamRead,
     return false;
 }
 
+
+// CTS make non-static temporarily to prevent compiler warning
+
 /// get SV candidates from semi-aligned reads
-static
 void
 getSVCandidatesFromSemiAligned(
     const ReadScannerOptions& opt,
@@ -315,7 +321,8 @@ getSVCandidatesFromSemiAligned(
     // in a fashion analogous to clipped reads
     static const bool isComplex(true);
 
-    const double semiAlignedScore(ReadScorer::get().getSemiAlignedMetric(bamAlign.path,bamRead.qual()));
+    const double semiAlignedScore(ReadScorer::getSemiAlignedMetric(bamRead.read_size(),bamAlign.path,bamRead.qual()));
+
     //std::cout << "getSVCandidatesFromSemiAligned : semi-aligned score is " << semiAlignedScore << std::endl;
     if (semiAlignedScore>opt.minSemiAlignedScoreGraph)
     {
@@ -323,6 +330,7 @@ getSVCandidatesFromSemiAligned(
         candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),pos,pos,isComplex));
     }
 }
+
 
 
 /// get SV candidates from read clipping
@@ -352,6 +360,7 @@ getSVCandidatesFromReadClip(
         candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),clipPos,clipPos,isComplex));
     }
 }
+
 
 
 /// get SV candidates from anomalous read pairs
@@ -598,7 +607,10 @@ getReadBreakendsImpl(
 #endif
 
     // TODO: add semi-aligned read processing
-    getSVCandidatesFromSemiAligned(opt, localRead, localAlign, candidates);
+    //
+    // CTS: temporarily comment out semi-aligned read input pending review of results with corrected qual offset
+    //
+    //getSVCandidatesFromSemiAligned(opt, localRead, localAlign, candidates);
 
     // TODO: add SA tag processing
 

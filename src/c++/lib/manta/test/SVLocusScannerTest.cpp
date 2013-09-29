@@ -18,11 +18,10 @@
 #include "boost/test/unit_test.hpp"
 
 #include "manta/SVLocusScanner.cpp"
-//#include "blt_util/blt_util.cpp"
-
 
 
 BOOST_AUTO_TEST_SUITE( test_SVLocusScanner )
+
 
 BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromReadIndels )
 {
@@ -47,20 +46,26 @@ BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromReadIndels )
     BOOST_REQUIRE(candidates[0].bp2.interval.range.is_pos_intersect(2100));
 }
 
+
 BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromSemiAligned )
 {
     ReadScannerOptions opt;
 
     ALIGNPATH::path_t inputPath;
-    cigar_to_apath("3M7X",inputPath);
+    cigar_to_apath("3=7X",inputPath);
 
     bam_record bamRead;
     bam1_t* bamDataPtr(bamRead.get_data());
     edit_bam_cigar(inputPath,*bamDataPtr);
 
-    const unsigned char qual[] = "AAAAAAAAAAAA";
+    static const char testSeq[] = "ACGTTACGTT";
 
-    edit_bam_read_and_quality("ACGTTACGTT",qual,*bamDataPtr);
+    // initialize test qual array to all Q30's:
+    static const unsigned seqSize((sizeof(testSeq)-1)/sizeof(char));
+    uint8_t qual[seqSize];
+    for(unsigned i(0);i<seqSize;++i) { qual[i] = 30; }
+
+    edit_bam_read_and_quality(testSeq,qual,*bamDataPtr);
 
     SimpleAlignment align(bamRead);
     align.pos = 500;
@@ -74,6 +79,7 @@ BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromSemiAligned )
     BOOST_REQUIRE_EQUAL(candidates[0].bp1.interval.range.begin_pos(),480);
     BOOST_REQUIRE_EQUAL(candidates[0].bp1.interval.range.end_pos(),520);
 }
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

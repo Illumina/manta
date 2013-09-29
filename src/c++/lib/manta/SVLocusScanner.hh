@@ -192,9 +192,6 @@ struct SVLocusScanner
         int minFarFragmentSize; ///< beyond the properPair anomalous threshold, there is a threshold to distinguish near and far pairs for the purpose of evidence weight
     };
 
-    std::string lastQname;
-    uint8_t lastMapq;
-
 private:
 
     /////////////////////////////////////////////////
