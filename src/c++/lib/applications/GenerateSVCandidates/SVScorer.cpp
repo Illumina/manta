@@ -336,7 +336,6 @@ scoreSomaticSV(
     		ssInfo.normal.refSRMapQ = sqrt(ssInfo.normal.refSRMapQ / (float)ssInfo.normal.refSRCount);
 
 #ifdef DEBUG_SVS
-    	log_os << "finally...\n";
     	log_os << "tumor contig SP count: " << ssInfo.tumor.contigSRCount << "\n";
     	log_os << "tumor contig SP evidence: " << ssInfo.tumor.contigSREvidence << "\n";
     	log_os << "tumor contig SP_mapQ: " << ssInfo.tumor.contigSRMapQ << "\n";
