@@ -26,6 +26,9 @@
 
 #include <algorithm>
 #include <iostream>
+#include <string>
+
+#define DEBUG_SVS
 
 
 SVScorer::
@@ -136,13 +139,13 @@ getBreakendMaxMappedDepth(const SVBreakend& bp)
 void
 SVScorer::
 scoreSplitReads(
+		bool isBp1,
 		const SVBreakend& bp,
 		const SVAlignmentInfo& svAlignInfo,
+		read_map_t& readMap,
 		bam_streamer& readStream,
-		const bool isTumor,
-		SomaticSVScoreInfo& ssInfo)
+		SVSampleInfo& sample)
 {
-
 	// extract reads overlapping the break point
 	readStream.set_new_region(bp.interval.tid, bp.interval.range.begin_pos(), bp.interval.range.end_pos());
 	while (readStream.next())
@@ -151,6 +154,26 @@ scoreSplitReads(
 		const std::string readSeq = bamRead.get_bam_read().get_string();
 		const std::string readSeqRC = bamRead.get_bam_read().get_rc_string();
 		const unsigned readMapQ = bamRead.map_qual();
+
+		// TODO: the logic of R1 & R2 should change for alignments with split-reads (e.g. BWA-MEME)
+		std::string readId(bamRead.qname());
+		if (bamRead.is_first())
+			readId += "_R1";
+		else if(bamRead.is_second())
+			readId += "_R2";
+
+		// map all reads for bp1
+		// then for bp2, skip reads that have been considered for bp1 to avoid double-counting
+		if (isBp1)
+		{
+			readMap[readId] = true;
+			log_os << readId << "mapped.\n";
+		}
+		else if (readMap.find(readId) != readMap.end())
+		{
+			log_os << readId << "exists!\n";
+			continue;
+		}
 
 		// align the read to the somatic contig
 		splitReadAlignment bp1ContigSR;
@@ -182,46 +205,37 @@ scoreSplitReads(
 
 		const float contigEvidence = std::max(bp1ContigEvidence, bp2ContigEvidence);
 		const float refEvidence = std::max(bp1RefEvidence, bp2RefEvidence);
-		if (isTumor)
+
+		if ((bp1ContigSR.has_evidence()) || (bp1ContigSR.has_evidence()))
 		{
-			if ((bp1ContigSR.has_evidence()) || (bp1ContigSR.has_evidence()))
-			{
-				ssInfo.tumor.contigSRCount++;
-				ssInfo.tumor.contigSREvidence += contigEvidence;
-				ssInfo.tumor.contigSRMapQ += readMapQ * readMapQ;
-			}
-			if ((bp1RefSR.has_evidence()) || (bp2RefSR.has_evidence()))
-			{
-				ssInfo.tumor.refSRCount++;
-				ssInfo.tumor.refSREvidence += refEvidence;
-				ssInfo.tumor.refSRMapQ += readMapQ * readMapQ;
-			}
+			sample.contigSRCount++;
+			sample.contigSREvidence += contigEvidence;
+			sample.contigSRMapQ += readMapQ * readMapQ;
+
+#ifdef DEBUG_SVS
+			/*
+			log_os << "bp1Contig \n";
+			log_os << bp1ContigSR << "\n";
+			log_os << "bp2Contig \n";
+			log_os << bp2ContigSR << "\n";
+			*/
+
+#endif
 		}
-		else
+		if ((bp1RefSR.has_evidence()) || (bp2RefSR.has_evidence()))
 		{
-			if ((bp1ContigSR.has_evidence()) || (bp1ContigSR.has_evidence()))
-			{
-				ssInfo.normal.contigSRCount++;
-				ssInfo.normal.contigSREvidence += contigEvidence;
-				ssInfo.normal.contigSRMapQ += readMapQ * readMapQ;
+			sample.refSRCount++;
+			sample.refSREvidence += refEvidence;
+			sample.refSRMapQ += readMapQ * readMapQ;
 
-				log_os << "bp1Contig \n";
-				log_os << bp1ContigSR << "\n";
-				log_os << "bp2Contig \n";
-				log_os << bp2ContigSR << "\n";
-
-			}
-			if ((bp1RefSR.has_evidence()) || (bp2RefSR.has_evidence()))
-			{
-				ssInfo.normal.refSRCount++;
-				ssInfo.normal.refSREvidence += refEvidence;
-				ssInfo.normal.refSRMapQ += readMapQ * readMapQ;
-
-				log_os << "bp1Ref \n";
-				log_os << bp1RefSR << "\n";
-				log_os << "bp2Ref \n";
-				log_os << bp2RefSR << "\n";
-			}
+#ifdef DEBUG_SVS
+			/*
+			log_os << "bp1Ref \n";
+			log_os << bp1RefSR << "\n";
+			log_os << "bp2Ref \n";
+			log_os << bp2RefSR << "\n";
+			*/
+#endif
 		}
 	}
 }
@@ -237,6 +251,27 @@ scoreSomaticSV(
 {
     ssInfo.clear();
 
+    // get breakend center_pos depth estimate:
+    ssInfo.bp1MaxDepth=(getBreakendMaxMappedDepth(sv.bp1));
+    ssInfo.bp2MaxDepth=(getBreakendMaxMappedDepth(sv.bp2));
+
+    // Get Data on standard read pairs crossing the two breakends,
+    // and get a breakend depth estimate
+
+    // apply filters
+    if (_dFilter.isMaxDepthFilter())
+    {
+    	if (ssInfo.bp1MaxDepth > _dFilter.maxDepth(sv.bp1.interval.tid))
+    	{
+    		ssInfo.filters.insert(_somaticOpt.maxDepthFilterLabel);
+    	}
+    	else if (ssInfo.bp2MaxDepth > _dFilter.maxDepth(sv.bp2.interval.tid))
+    	{
+    		ssInfo.filters.insert(_somaticOpt.maxDepthFilterLabel);
+    	}
+
+    }
+
     // extract SV alignment info for split read evidence
     const SVAlignmentInfo SVAlignInfo(sv, assemblyData);
 
@@ -245,20 +280,28 @@ scoreSomaticSV(
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
         const bool isTumor(_isAlignmentTumor[bamIndex]);
+        SVSampleInfo& sample(isTumor ? ssInfo.tumor : ssInfo.normal);
 
         // consider 2-locus events first
         // TODO: to add local assembly later
-        if (assemblyData.isSpanning)
+        // apply the split-read scoring, only when the values of max depth are reasonable;
+        // otherwise, the read map may blow out
+        if ((assemblyData.isSpanning) &&
+        	(ssInfo.bp1MaxDepth <= 2*_dFilter.maxDepth(sv.bp1.interval.tid)) &&
+        	(ssInfo.bp2MaxDepth <= 2*_dFilter.maxDepth(sv.bp2.interval.tid)))
         {
-			streamPtr& bamPtr(_bamStreams[bamIndex]);
+        	read_map_t readMap;
+
+        	streamPtr& bamPtr(_bamStreams[bamIndex]);
 			bam_streamer& read_stream(*bamPtr);
 			// scoring split reads overlapping bp1
-			scoreSplitReads(sv.bp1, SVAlignInfo,
-					        read_stream, isTumor, ssInfo);
+			scoreSplitReads(true, sv.bp1, SVAlignInfo, readMap,
+					        read_stream, sample);
 			// scoring split reads overlapping bp2
-			scoreSplitReads(sv.bp2, SVAlignInfo,
-			        		read_stream, isTumor, ssInfo);
+			scoreSplitReads(false, sv.bp2, SVAlignInfo, readMap,
+			        		read_stream, sample);
 
+#ifdef DEBUG_SVS
 			log_os << "\nbam is tumor = " << isTumor << "\n";
 			log_os << "tumor contig SP count: " << ssInfo.tumor.contigSRCount << "\n";
 			log_os << "tumor contig SP evidence: " << ssInfo.tumor.contigSREvidence << "\n";
@@ -269,9 +312,10 @@ scoreSomaticSV(
 			log_os << "tumor ref SP evidence: " << ssInfo.tumor.refSREvidence << "\n";
 			log_os << "normal ref SP count: " << ssInfo.normal.refSRCount << "\n";
 			log_os << "normal ref SP evidence: " << ssInfo.normal.refSREvidence << "\n";
+#endif
         }
 
-        SVSampleInfo& sample(isTumor ? ssInfo.tumor : ssInfo.normal);
+
         const SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
         BOOST_FOREACH(const SVCandidateSetReadPair& pair, svDataGroup)
         {
@@ -293,11 +337,16 @@ scoreSomaticSV(
     }
 
     // root mean square
-    ssInfo.tumor.contigSRMapQ = sqrt(ssInfo.tumor.contigSRMapQ / (float)ssInfo.tumor.contigSRCount);
-    ssInfo.tumor.refSRMapQ = sqrt(ssInfo.tumor.refSRMapQ / (float)ssInfo.tumor.refSRCount);
-    ssInfo.normal.contigSRMapQ = sqrt(ssInfo.normal.contigSRMapQ / (float)ssInfo.normal.contigSRCount);
-    ssInfo.normal.refSRMapQ = sqrt(ssInfo.normal.refSRMapQ / (float)ssInfo.normal.refSRCount);
+    if (ssInfo.tumor.contigSRCount > 0)
+    	ssInfo.tumor.contigSRMapQ = sqrt(ssInfo.tumor.contigSRMapQ / (float)ssInfo.tumor.contigSRCount);
+    if (ssInfo.tumor.refSRCount > 0)
+    	ssInfo.tumor.refSRMapQ = sqrt(ssInfo.tumor.refSRMapQ / (float)ssInfo.tumor.refSRCount);
+    if (ssInfo.normal.contigSRCount > 0)
+    	ssInfo.normal.contigSRMapQ = sqrt(ssInfo.normal.contigSRMapQ / (float)ssInfo.normal.contigSRCount);
+    if (ssInfo.normal.refSRCount > 0)
+    	ssInfo.normal.refSRMapQ = sqrt(ssInfo.normal.refSRMapQ / (float)ssInfo.normal.refSRCount);
 
+#ifdef DEBUG_SVS
     log_os << "\nfinally...\n";
     log_os << "tumor contig SP count: " << ssInfo.tumor.contigSRCount << "\n";
     log_os << "tumor contig SP evidence: " << ssInfo.tumor.contigSREvidence << "\n";
@@ -312,28 +361,9 @@ scoreSomaticSV(
     log_os << "normal ref SP count: " << ssInfo.normal.refSRCount << "\n";
     log_os << "normal ref SP evidence: " << ssInfo.normal.refSREvidence << "\n";
     log_os << "normal ref SP_mapQ: " << ssInfo.normal.refSRMapQ << "\n";
+#endif
 
 
-    // get breakend center_pos depth estimate:
-    ssInfo.bp1MaxDepth=(getBreakendMaxMappedDepth(sv.bp1));
-    ssInfo.bp2MaxDepth=(getBreakendMaxMappedDepth(sv.bp2));
-
-    // Get Data on standard read pairs crossing the two breakends,
-    // and get a breakend depth estimate
-
-    // apply filters
-    if (_dFilter.isMaxDepthFilter())
-    {
-        if (ssInfo.bp1MaxDepth > _dFilter.maxDepth(sv.bp1.interval.tid))
-        {
-            ssInfo.filters.insert(_somaticOpt.maxDepthFilterLabel);
-        }
-        else if (ssInfo.bp2MaxDepth > _dFilter.maxDepth(sv.bp2.interval.tid))
-        {
-            ssInfo.filters.insert(_somaticOpt.maxDepthFilterLabel);
-        }
-
-    }
 
     // assign bogus somatic score just to get started:
     bool isSomatic(true);

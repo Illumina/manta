@@ -60,9 +60,15 @@ struct SVSampleInfo
     void
     clear()
     {
-        bp1SpanReads=0;
-        bp2SpanReads=0;
-        spanPairs=0;
+        bp1SpanReads = 0;
+        bp2SpanReads = 0;
+        spanPairs = 0;
+        contigSRCount = 0;
+        contigSREvidence = 0;
+        contigSRMapQ = 0;
+        refSRCount = 0;
+        refSREvidence = 0;
+        refSRMapQ = 0;
     }
 
     unsigned bp1SpanReads;

@@ -33,21 +33,24 @@
 #include "boost/shared_ptr.hpp"
 
 #include <vector>
-
+#include <string>
 
 struct SVScorer
 {
-    SVScorer(
+	SVScorer(
         const GSCOptions& opt,
         const bam_header_info& header);
 
-    void
+	typedef std::map<std::string, bool> read_map_t;
+
+	void
     scoreSplitReads(
+    		bool isBp1,
     		const SVBreakend& bp,
     		const SVAlignmentInfo& SVAlignInfo,
+    		read_map_t& readMap,
     		bam_streamer& read_stream,
-    		const bool isTumor,
-    		SomaticSVScoreInfo& ssInfo);
+    		SVSampleInfo& sample);
 
     void
     scoreSomaticSV(
@@ -57,7 +60,6 @@ struct SVScorer
         SomaticSVScoreInfo& ssInfo);
 
 private:
-
     /// determine maximum depth in region around breakend
     unsigned
     getBreakendMaxMappedDepth(const SVBreakend& bp);
@@ -69,5 +71,6 @@ private:
 
     typedef boost::shared_ptr<bam_streamer> streamPtr;
     std::vector<streamPtr> _bamStreams;
+
 };
 
