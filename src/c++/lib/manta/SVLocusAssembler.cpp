@@ -63,7 +63,8 @@ getBreakendReads(
     // get search range:
     known_pos_range2 searchRange;
     {
-        static const size_t minIntervalSize(300);
+        // ideally this should be dependent on the insert size dist
+        static const size_t minIntervalSize(400);
         if (bp.interval.range.size() >= minIntervalSize)
         {
             searchRange = bp.interval.range;
@@ -110,7 +111,16 @@ getBreakendReads(
         // set bam stream to new search interval:
         bamStream.set_new_region(bp.interval.tid, searchRange.begin_pos(), searchRange.end_pos());
 
+        // Singleton/shadow pairs *should* appear consecutively in the BAM file
+        // this keeps track of the mapq score of the singleton read such that
+        // we can access it when we look at the shadow
+        bool isLastSet(false);
+        uint8_t lastMapq(0);
+        std::string lastQname;
+
         static const unsigned MAX_NUM_READS(1000);
+        unsigned int shadowCnt(0);
+       // unsigned int semiAlignedCnt(0);
 
         while (bamStream.next() && (reads.size() < MAX_NUM_READS))
         {
@@ -177,8 +187,41 @@ getBreakendReads(
             log_os << " cigar: " << apath << " isClipKeeper: " << isClipKeeper << " isIndelKeeper: " << isIndelKeeper << "\n";
 #endif
 
-            if (! (isClipKeeper || isIndelKeeper)) continue;
+            bool isSemiAlignedKeeper(false);
+            {
+                // CTS temp disable this until qual offset can be resolved
+#if 0
+                if (isSemiAligned(bamRead,_scanOpt.minSemiAlignedScoreCandidates))
+                {
+                    isSemiAlignedKeeper = true;
+                    ++semiAlignedCnt;
+                }
+#endif
+            }
 
+            bool isShadowKeeper(false);
+
+            if (isLastSet)
+            {
+                if (isGoodShadow(bamRead,
+                                 lastMapq,
+                                 lastQname,
+                                 _scanOpt.minSingletonMapqCandidates))
+                {
+                    isShadowKeeper = true;
+                    ++shadowCnt;
+                }
+            }
+
+            lastMapq  = bamRead.map_qual();
+            lastQname = bamRead.qname();
+            isLastSet = true;
+
+            if (! (isClipKeeper
+                   || isIndelKeeper
+                   || isSemiAlignedKeeper
+                   || isShadowKeeper
+                  )) continue;
             //if ( bamRead.pe_map_qual() == 0 ) continue;
             const char flag(bamRead.is_second() ? '2' : '1');
             const std::string readKey = std::string(bamRead.qname()) + "_" + flag + "_" + bamIndexStr;
@@ -196,9 +239,14 @@ getBreakendReads(
             }
             else
             {
-                //  log_os << "WARNING: SmallAssembler read name collision : " << readKey << "\n";
+#ifdef DEBUG_ASBL
+                log_os << logtag << "WARNING: SmallAssembler read name collision : " << readKey << "\n";
+#endif
             }
         }
+#ifdef DEBUG_ASBL
+        log_os << "bam " << bamIndex << " semi-aligned " << semiAlignedCnt << " shadow " << shadowCnt << "\n"; 
+#endif
     }
 }
 

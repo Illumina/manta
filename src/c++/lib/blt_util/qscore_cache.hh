@@ -16,8 +16,7 @@
 /// \author Chris Saunders
 ///
 
-#ifndef __QSCORE_CACHE_HH
-#define __QSCORE_CACHE_HH
+#pragma once
 
 #include <stdint.h>
 
@@ -27,7 +26,6 @@
 
 struct qphred_cache
 {
-
     static
     double
     get_error_prob(const int qscore)
@@ -136,7 +134,6 @@ private:
 
 struct qlogodds_cache
 {
-
     static
     double
     get_error_prob(const int qscore)
@@ -162,6 +159,3 @@ private:
     double q2p_base[MAX_QSCORE+1-MIN_QSCORE];
     double* const q2p;
 };
-
-#endif
-

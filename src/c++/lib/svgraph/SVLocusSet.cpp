@@ -113,7 +113,7 @@ merge(const SVLocus& inputLocus)
         const NodeIndexType nodeCount(startLocus.size());
         for (NodeIndexType nodeIndex(0); nodeIndex<nodeCount; ++nodeIndex)
         {
-            nodeMap.insert(std::make_pair(startLocus.getNode(nodeIndex).interval,nodeIndex));
+            nodeMap.insert(std::make_pair(startLocus.getNode(nodeIndex).getInterval(),nodeIndex));
         }
     }
 
@@ -194,14 +194,14 @@ merge(const SVLocus& inputLocus)
         NodeAddressType inputSuperAddy;
         {
             bool isInputSuperFound(false);
-            const known_pos_range2& inputRange(getLocus(startLocusIndex).getNode(nodeIndex).interval.range);
+            const known_pos_range2& inputRange(getLocus(startLocusIndex).getNode(nodeIndex).getInterval().range);
 
             BOOST_FOREACH(const NodeAddressType& val, intersectNodes)
             {
                 assert(val.first == headLocusIndex);
 
                 // one node must be a superset of the input node, find this and store separately:
-                if (getNode(val).interval.range.is_superset_of(inputRange))
+                if (getNode(val).getInterval().range.is_superset_of(inputRange))
                 {
                     inputSuperAddy=val;
                     isInputSuperFound=true;
@@ -296,12 +296,14 @@ getNodeIntersectCore(
     checkState();
 #endif
 
+    assert(_isIndexed);
+
     intersectNodes.clear();
 
     // get all existing nodes which intersect with this one:
     const NodeAddressType inputAddy(std::make_pair(inputLocusIndex,inputNodeIndex));
     const in_citer it(searchNodes.lower_bound(inputAddy));
-    const GenomeInterval& inputInterval(getNode(inputAddy).interval);
+    const GenomeInterval& inputInterval(getNode(inputAddy).getInterval());
     const pos_t maxRegionSize(_maxRegionSize[inputInterval.tid]);
 
     const in_citer it_begin(searchNodes.begin()), it_end(searchNodes.end());
@@ -328,7 +330,7 @@ getNodeIntersectCore(
 #ifdef DEBUG_SVL
         log_os << logtag << "\tFWD test: " << (*it_fwd) << " " << getNode(*it_fwd);
 #endif
-        if (! inputInterval.isIntersect(getNode(*it_fwd).interval)) break;
+        if (! inputInterval.isIntersect(getNode(*it_fwd).getInterval())) break;
         intersectNodes.insert(*it_fwd);
 #ifdef DEBUG_SVL
         log_os << logtag << "\tFWD insert: " << (*it_fwd) << "\n";
@@ -356,7 +358,7 @@ getNodeIntersectCore(
 #ifdef DEBUG_SVL
         log_os << logtag << "\tREV test: " << (*it_rev) << " " << getNode(*it_rev);
 #endif
-        const GenomeInterval& searchInterval(getNode(*it_rev).interval);
+        const GenomeInterval& searchInterval(getNode(*it_rev).getInterval());
         if (! inputInterval.isIntersect(searchInterval))
         {
             if (! isOverlapAllowed()) break;
@@ -533,7 +535,8 @@ getNodeMergeableIntersect(
 
             // get the remotes of each node which intersect with the query node,
             // place these in remoteIntersect
-            BOOST_FOREACH(const SVLocusNode::edges_type::value_type& intersectEdge, intersectNode)
+            const SVLocusEdgeManager edgeMap(intersectNode.getEdgeManager());
+            BOOST_FOREACH(const SVLocusEdgesType::value_type& intersectEdge, edgeMap.getMap())
             {
                 // 1. build remote <-> local indexing structures:
                 NodeAddressType remoteAddy(std::make_pair(intersectAddy.first,intersectEdge.first));
@@ -568,7 +571,8 @@ getNodeMergeableIntersect(
     mergeIntersectNodes.clear();
 
     // for each edge from the input node, get all intersecting edges
-    BOOST_FOREACH(const SVLocusNode::edges_type::value_type& inputEdge, inputNode)
+    const SVLocusEdgeManager edgeMap(inputNode.getEdgeManager());
+    BOOST_FOREACH(const SVLocusEdgesType::value_type& inputEdge, edgeMap.getMap())
     {
 #ifdef DEBUG_SVL
         log_os << logtag << " processing edge: " << inputAddy << "->" << inputLocusIndex << ":" << inputEdge.first << "\n";
@@ -589,10 +593,10 @@ getNodeMergeableIntersect(
             const NodeIndexType remoteNodeIndex(edgeInfo.second);
 
             // total edge counts on the remote->local edge:
-            mergedRemoteEdgeCount += edgeLocus.getEdge(remoteNodeIndex,localNodeIndex).count;
+            mergedRemoteEdgeCount += edgeLocus.getEdge(remoteNodeIndex,localNodeIndex).getCount();
 
             // total edge counts on the local->remote edge:
-            mergedLocalEdgeCount += edgeLocus.getEdge(localNodeIndex,remoteNodeIndex).count;
+            mergedLocalEdgeCount += edgeLocus.getEdge(localNodeIndex,remoteNodeIndex).getCount();
         }
 
 #ifdef DEBUG_SVL
@@ -610,11 +614,11 @@ getNodeMergeableIntersect(
             {
                 // total edge counts on the input remote->local edge
                 const SVLocus& inputLocus(getLocus(inputAddy.first));
-                mergedRemoteEdgeCount += inputLocus.getEdge(inputEdge.first,inputNodeIndex).count;
+                mergedRemoteEdgeCount += inputLocus.getEdge(inputEdge.first,inputNodeIndex).getCount();
             }
 
             // total edge counts on the input local->remote edge
-            mergedLocalEdgeCount += inputEdge.second.count;
+            mergedLocalEdgeCount += inputEdge.second.getCount();
         }
 
 
@@ -701,7 +705,7 @@ getRegionIntersect(
     std::set<NodeAddressType>& intersectNodes)
 {
     const LocusIndexType startLocusIndex(insertLocus(SVLocus()));
-    const NodeIndexType nodeIndex = getLocus(startLocusIndex).addNode(interval,0);
+    const NodeIndexType nodeIndex(getLocus(startLocusIndex).addNode(interval, this));
 
     getNodeIntersect(startLocusIndex, nodeIndex, intersectNodes);
 
@@ -767,7 +771,7 @@ combineLoci(
     if (fromLocus.empty()) return;
 
     SVLocus& toLocus(_loci[toIndex]);
-    toLocus.copyLocus(fromLocus);
+    toLocus.copyLocus(fromLocus, this);
     if (isClearSource) clearLocus(fromIndex);
 }
 
@@ -778,6 +782,8 @@ SVLocusSet::
 insertLocus(
     const SVLocus& inputLocus)
 {
+    assert(_isIndexed);
+
     LocusIndexType locusIndex(0);
     if (_emptyLoci.empty())
     {
@@ -794,9 +800,8 @@ insertLocus(
     }
 
     SVLocus& locus(_loci[locusIndex]);
-    observe_notifier(locus);
     locus.updateIndex(locusIndex);
-    locus.copyLocus(inputLocus);
+    locus.copyLocus(inputLocus, this);
     return locusIndex;
 }
 
@@ -811,10 +816,12 @@ mergeNodePtr(NodeAddressType fromPtr,
     static const std::string logtag("SVLocusSet::mergeNodePtr");
     log_os << logtag << " from: " << fromPtr << " to: " << toPtr << " fromLocusSize: " << getLocus(fromPtr.first).size() << "\n";
 #endif
+    assert(_isIndexed);
+
     LocusSetIndexerType::iterator iter(_inodes.find(toPtr));
     assert(iter != _inodes.end());
     assert(fromPtr.first == toPtr.first);
-    getLocus(fromPtr.first).mergeNode(fromPtr.second,toPtr.second);
+    getLocus(fromPtr.first).mergeNode(fromPtr.second, toPtr.second, this);
 }
 
 
@@ -826,7 +833,7 @@ clean()
     BOOST_FOREACH(SVLocus& locus, _loci)
     {
         if (locus.empty()) continue;
-        _totalCleaned += locus.clean(getMinMergeEdgeCount());
+        _totalCleaned += locus.clean(getMinMergeEdgeCount(), this);
         if (locus.empty()) _emptyLoci.insert(locus.getIndex());
     }
 #ifdef DEBUG_SVL
@@ -855,7 +862,7 @@ cleanRegion(const GenomeInterval interval)
     {
         SVLocus& locus(getLocus(val.first));
         if (locus.empty()) continue;
-        _totalCleaned += locus.cleanNode(getMinMergeEdgeCount(), val.second);
+        _totalCleaned += locus.cleanNode(getMinMergeEdgeCount(), val.second, this);
         if (locus.empty()) _emptyLoci.insert(locus.getIndex());
 
 #ifdef DEBUG_SVL
@@ -954,21 +961,22 @@ dumpLocusStats(std::ostream& os) const
         BOOST_FOREACH(const SVLocusNode& node, locus)
         {
             // nodes:
-            const unsigned nodeObsCount(node.count);
+            const unsigned nodeObsCount(node.outCount());
             maxNodeObsCount = std::max(maxNodeObsCount,nodeObsCount);
             locusNodeObsCount += nodeObsCount;
 
             // regions:
-            const unsigned regionSize(node.interval.range.size());
+            const unsigned regionSize(node.getInterval().range.size());
             maxRegionSize = std::max(maxRegionSize,regionSize);
             locusRegionSize += regionSize;
 
             // edges:
             maxEdgeCount = std::max(maxEdgeCount,node.size());
             locusEdgeCount += node.size();
-            BOOST_FOREACH(const SVLocusNode::edges_type::value_type& edge, node)
+            const SVLocusEdgeManager edgeMap(node.getEdgeManager());
+            BOOST_FOREACH(const SVLocusEdgesType::value_type& edge, edgeMap.getMap())
             {
-                const unsigned edgeObsCount(edge.second.count);
+                const unsigned edgeObsCount(edge.second.getCount());
                 maxEdgeObsCount = std::max(maxEdgeObsCount,edgeObsCount);
                 locusEdgeObsCount += edgeObsCount;
             }
@@ -1022,7 +1030,9 @@ save(const char* filename) const
 
 void
 SVLocusSet::
-load(const char* filename)
+load(
+    const char* filename,
+    const bool isSkipIndex)
 {
     using namespace boost::archive;
 
@@ -1052,18 +1062,24 @@ load(const char* filename)
     SVLocus locus;
     while (ifs.peek() != EOF)
     {
-        locus.clear();
+        locus.clear(this);
         ia >> locus;
         if (locus.empty()) continue;
         const LocusIndexType locusIndex(size());
         _loci.push_back(locus);
         SVLocus& locusCopy(_loci.back());
-        observe_notifier(locusCopy);
         locusCopy.updateIndex(locusIndex);
     }
 
-    reconstructIndex();
-    checkState(true,true);
+    if (! isSkipIndex)
+    {
+        reconstructIndex();
+        checkState(true,true);
+    }
+    else
+    {
+        _isIndexed = false;
+    }
 
 #ifdef DEBUG_SVL
     log_os << "SVLocusSet::load END\n";
@@ -1093,11 +1109,13 @@ reconstructIndex()
         {
             const NodeAddressType addy(std::make_pair(locusIndex,nodeIndex));
             _inodes.insert(addy);
-            updateMaxRegionSize(getNode(addy).interval);
+            updateMaxRegionSize(getNode(addy).getInterval());
         }
         if (locus.empty()) _emptyLoci.insert(locusIndex);
         locusIndex++;
     }
+
+    _isIndexed=true;
 
 #ifdef DEBUG_SVL
     log_os << "reconstructIndex END\n";
@@ -1110,6 +1128,8 @@ void
 SVLocusSet::
 dumpIndex(std::ostream& os) const
 {
+    assert(_isIndexed);
+
     os << "SVLocusSet Index START\n";
     BOOST_FOREACH(const NodeAddressType& in, _inodes)
     {
@@ -1127,6 +1147,8 @@ checkState(
     const bool isCheckLocusConnected) const
 {
     using namespace illumina::common;
+
+    assert(_isIndexed);
 
     unsigned locusIndex(0);
     unsigned checkStateTotalNodeCount(0);
@@ -1160,7 +1182,7 @@ checkState(
             if ((citer->first != locusIndex) || (citer->second != nodeIndex))
             {
                 std::ostringstream oss;
-                oss << "ERROR: locus node is has conflicting index number in node index\n"
+                oss << "ERROR: locus node has conflicting index number in node index\n"
                     << "\tinode index_value: " << citer->first << ":" << citer->second << "\n"
                     << "\tNode index: " << locusIndex << ":" << locusIndex << " node: " << getNode(std::make_pair(locusIndex,nodeIndex));
                 BOOST_THROW_EXCEPTION(LogicException(oss.str()));
@@ -1203,7 +1225,7 @@ checkForOverlapNodes(
             if (isNoiseNode(addy)) continue;
         }
 
-        const GenomeInterval& interval(getNode(addy).interval);
+        const GenomeInterval& interval(getNode(addy).getInterval());
 
         // don't allow zero-length or negative intervals:
         assert(interval.range.begin_pos() < interval.range.end_pos());

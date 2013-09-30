@@ -65,13 +65,13 @@ BOOST_AUTO_TEST_CASE( test_EdgeRetrieverOneBin )
 BOOST_AUTO_TEST_CASE( test_EdgeRetrieverManyBin )
 {
     SVLocus locus1;
-    const NodeIndexType nodePtr1 = locus1.addNode(GenomeInterval(1,10,20),3);
-    const NodeIndexType nodePtr2 = locus1.addRemoteNode(GenomeInterval(2,30,40));
-    locus1.linkNodes(nodePtr1,nodePtr2);
-    const NodeIndexType nodePtr3 = locus1.addRemoteNode(GenomeInterval(3,30,40));
-    locus1.linkNodes(nodePtr1,nodePtr3);
-    const NodeIndexType nodePtr4 = locus1.addRemoteNode(GenomeInterval(4,30,40));
-    locus1.linkNodes(nodePtr1,nodePtr4);
+    const NodeIndexType nodePtr1 = locus1.addNode(GenomeInterval(1,10,20));
+    const NodeIndexType nodePtr2 = locus1.addNode(GenomeInterval(2,30,40));
+    locus1.linkNodes(nodePtr1, nodePtr2);
+    const NodeIndexType nodePtr3 = locus1.addNode(GenomeInterval(3,30,40));
+    locus1.linkNodes(nodePtr1, nodePtr3);
+    const NodeIndexType nodePtr4 = locus1.addNode(GenomeInterval(4,30,40));
+    locus1.linkNodes(nodePtr1, nodePtr4);
     SVLocus locus4;
     locusAddPair(locus4,7,10,20,8,30,40);
 

@@ -17,17 +17,7 @@
 
 #pragma once
 
-#include "blt_util/bam_record.hh"
+extern "C" {
+#include "tabix.h"
+}
 
-
-/// is this read part of mapped pair with 'Innie' orientation?
-///
-/// Note this does not test MAPQ or fragment size, but could
-/// be used as the core of a 'proper-pair' predicate
-bool
-is_innie_pair(
-    const bam_record& bam_read);
-
-unsigned
-get_avg_quality(
-    const bam_record& bam_read);

@@ -63,12 +63,18 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         mantaStatsBin=joinFile(libexecDir,"GetAlignmentStats")
         mantaGraphBin=joinFile(libexecDir,"EstimateSVLoci")
         mantaGraphMergeBin=joinFile(libexecDir,"MergeSVLoci")
+        mantaGraphCheckBin=joinFile(libexecDir,"CheckSVLoci")
         mantaHyGenBin=joinFile(libexecDir,"GenerateSVCandidates")
         mantaGraphStatsBin=joinFile(libexecDir,"SummarizeSVLoci")
         mantaStatsSummaryBin=joinFile(libexecDir,"SummarizeAlignmentStats")
 
         mantaChromDepth=joinFile(libexecDir,"getBamAvgChromDepth.py")
         mantaSortVcf=joinFile(libexecDir,"sortVcf.py")
+
+        # default mem per process type
+        estimateMemMb=2*1024
+        mergeMemMb=4*1024
+        hyGenMemMb=4*1024
 
         return cleanLocals(locals())
 

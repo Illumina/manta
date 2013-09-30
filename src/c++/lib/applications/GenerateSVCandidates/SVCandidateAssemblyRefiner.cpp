@@ -433,7 +433,7 @@ getJumpAssembly(
 
     // how much additional reference sequence should we extract from around
     // each side of the breakend region?
-    static const pos_t extraRefEdgeSize(100);
+    static const pos_t extraRefEdgeSize(200);
 
     // if the breakends have a simple insert/delete orientation and the alignment regions overlap, then handle this case as
     // a local assembly problem:
@@ -505,9 +505,6 @@ getJumpAssembly(
 
     // assemble contig spanning the breakend:
     _spanningAssembler.assembleSVBreakends(sv.bp1, sv.bp2, isBp1Reversed, isBp2Reversed, assemblyData.contigs);
-
-    // min alignment context
-    //const unsigned minAlignContext(4);
 
     getSVReferenceSegments(_opt.referenceFilename, _header, extraRefEdgeSize, sv, assemblyData.bp1ref, assemblyData.bp2ref);
     const std::string* align1RefStrPtr(&assemblyData.bp1ref.seq());
@@ -661,7 +658,7 @@ getSmallSVAssembly(
 
     // how much additional reference sequence should we extract from around
     // each side of the breakend region?
-    static const pos_t extraRefEdgeSize(100);
+    static const pos_t extraRefEdgeSize(700);
 
     // min alignment context
     //const unsigned minAlignContext(4);
@@ -718,6 +715,7 @@ getSmallSVAssembly(
 
         // keep the highest scoring QC'd candidate:
         // TODO: we should keep all QC'd candidates for the small event case
+        // FIXME : prevents us from finding overlapping events, keep vector of high-scoring contigs?
         if ((! isHighScore) || (alignment.score > assemblyData.smallSVAlignments[highScoreIndex].score))
         {
 #ifdef DEBUG_REFINER

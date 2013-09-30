@@ -17,187 +17,8 @@
 
 #pragma once
 
-#include "blt_util/observer.hh"
-#include "svgraph/GenomeInterval.hh"
-
-#include "boost/foreach.hpp"
-#include "boost/serialization/map.hpp"
-#include "boost/serialization/vector.hpp"
-#include "boost/serialization/split_member.hpp"
-
-#include <iosfwd>
-#include <limits>
-#include <map>
-#include <vector>
-
-
-//#define DEBUG_SVL
-
-
-#ifdef DEBUG_SVL
-#include "blt_util/log.hh"
-
-#include <iostream>
-#endif
-
-
-
-struct SVLocusEdge
-{
-    SVLocusEdge(const unsigned init_count = 0) :
-        count(init_count)
-    {}
-
-    // merge edge into this one
-    //
-    void
-    mergeEdge(const SVLocusEdge& edge)
-    {
-        count += edge.count;
-    }
-
-    template<class Archive>
-    void serialize(Archive& ar, const unsigned /* version */)
-    {
-        ar& count;
-    }
-
-    unsigned count;
-};
-
-
-std::ostream&
-operator<<(std::ostream& os, const SVLocusEdge& edge);
-
-BOOST_CLASS_IMPLEMENTATION(SVLocusEdge, boost::serialization::object_serializable)
-
-
-
-typedef unsigned NodeIndexType;
-
-
-
-struct SVLocusNode
-{
-    typedef std::map<NodeIndexType,SVLocusEdge> edges_type;
-    typedef edges_type::iterator iterator;
-    typedef edges_type::const_iterator const_iterator;
-
-    SVLocusNode() :
-        count(0)
-    {}
-
-    // specialized copy ctor which offsets all address:
-    SVLocusNode(
-        const SVLocusNode& in,
-        const unsigned offset) :
-        count(in.count),
-        interval(in.interval),
-        evidenceRange(in.evidenceRange)
-    {
-        BOOST_FOREACH(const edges_type::value_type& val, in)
-        {
-            edges.insert(std::make_pair(val.first+offset,val.second));
-        }
-    }
-
-    unsigned
-    size() const
-    {
-        return edges.size();
-    }
-
-    iterator
-    begin()
-    {
-        return edges.begin();
-    }
-
-    iterator
-    end()
-    {
-        return edges.end();
-    }
-
-    const_iterator
-    begin() const
-    {
-        return edges.begin();
-    }
-
-    const_iterator
-    end() const
-    {
-        return edges.end();
-    }
-
-    unsigned
-    outCount() const
-    {
-        unsigned sum(0);
-        BOOST_FOREACH(const edges_type::value_type& edgeIter, *this)
-        {
-            sum += edgeIter.second.count;
-        }
-        return sum;
-    }
-
-    template<class Archive>
-    void serialize(Archive& ar,const unsigned /* version */)
-    {
-        ar& count& interval& evidenceRange& edges;
-    }
-
-    /// add new edge to node, or merge this edge info in if node already has edge:
-    void
-    mergeEdge(const NodeIndexType toIndex, const SVLocusEdge& edge)
-    {
-        iterator edgeIter(edges.find(toIndex));
-        if (edgeIter == edges.end())
-        {
-            // this node does not already have an edge to "toIndex", add a new edge:
-            edges.insert(std::make_pair(toIndex,edge));
-        }
-        else
-        {
-            // this node already has an edge to "toIndex", merge the existing edge with the new one:
-            edgeIter->second.mergeEdge(edge);
-        }
-    }
-
-    /// return edge from this to node
-    const SVLocusEdge&
-    getEdge(const NodeIndexType toIndex) const
-    {
-        edges_type::const_iterator i(edges.find(toIndex));
-        if (i == edges.end()) getEdgeException(toIndex);
-        return i->second;
-    }
-
-    friend std::ostream&
-    operator<<(std::ostream& os, const SVLocusNode& node);
-
-
-private:
-    void
-    getEdgeException(
-        const NodeIndexType toIndex) const;
-
-public:
-    //////////////////  data:
-    unsigned count;
-    GenomeInterval interval;
-    known_pos_range2 evidenceRange;
-
-    edges_type edges;
-};
-
-
-std::ostream&
-operator<<(std::ostream& os, const SVLocusNode& node);
-
-BOOST_CLASS_IMPLEMENTATION(SVLocusNode, boost::serialization::object_serializable)
-
+#include "blt_util/flyweight_observer.hh"
+#include "svgraph/SVLocusNode.hh"
 
 
 typedef unsigned LocusIndexType;
@@ -221,14 +42,12 @@ struct SVLocusSet;
 /// there's probably a better way to do this with transform_iterator, but I've always
 /// regretted using that.
 ///
-struct SVLocus : public notifier<SVLocusNodeMoveMessage>
+struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
 {
     typedef std::vector<SVLocusNode> graph_type;
 
     typedef graph_type::iterator iterator;
     typedef graph_type::const_iterator const_iterator;
-
-    typedef SVLocusNode::edges_type edges_type;
 
     friend struct SVLocusSet;
 
@@ -280,23 +99,15 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
     NodeIndexType
     addNode(
         const GenomeInterval interval,
-        const unsigned count = 1)
+        flyweight_observer_t* obs = NULL)
     {
         NodeIndexType nodePtr(newGraphNode());
         SVLocusNode& node(getNode(nodePtr));
-        node.interval = interval;
-        // default evidenceRange to the breakend interval unless a better estimate is provided
-        node.evidenceRange = interval.range;
-        node.count=count;
-        notifyAdd(nodePtr);
+        node.setInterval(interval);
+        // default _evidenceRange to the breakend interval unless a better estimate is provided
+        node.setEvidenceRange(interval.range);
+        notifyAdd(obs, nodePtr);
         return nodePtr;
-    }
-
-    NodeIndexType
-    addRemoteNode(
-        const GenomeInterval interval)
-    {
-        return addNode(interval,0);
     }
 
     // an edge count is only added on on from->to
@@ -310,11 +121,15 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
     {
         SVLocusNode& fromNode(getNode(fromIndex));
         SVLocusNode& toNode(getNode(toIndex));
-        assert(0 == fromNode.edges.count(toIndex));
-        assert(0 == toNode.edges.count(fromIndex));
+        assert(! fromNode.isEdge(toIndex));
+        assert(! toNode.isEdge(fromIndex));
 
-        fromNode.mergeEdge(toIndex,SVLocusEdge(fromCount));
-        toNode.mergeEdge(fromIndex,SVLocusEdge(toCount));
+        SVLocusEdge fromEdge;
+        fromEdge.setCount(fromCount);
+        SVLocusEdge toEdge;
+        toEdge.setCount(toCount);
+        fromNode.mergeEdge(toIndex,fromEdge);
+        toNode.mergeEdge(fromIndex,toEdge);
     }
 
     void
@@ -322,7 +137,7 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
         const NodeIndexType nodeIndex,
         const known_pos_range2& evidenceRange)
     {
-        getNode(nodeIndex).evidenceRange = evidenceRange;
+        getNode(nodeIndex).setEvidenceRange(evidenceRange);
     }
 
     /// find all node indices connected to startIndex
@@ -340,7 +155,7 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
         unsigned sum(0);
         BOOST_FOREACH(const SVLocusNode& node, *this)
         {
-            sum += node.count;
+            sum += node.outCount();
         }
         return sum;
     }
@@ -359,19 +174,34 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
 
     /// return from->to edge
     const SVLocusEdge&
-    getEdge(const NodeIndexType fromIndex,
-            const NodeIndexType toIndex) const
+    getEdge(
+        const NodeIndexType fromIndex,
+        const NodeIndexType toIndex) const
     {
         const SVLocusNode& fromNode(getNode(fromIndex));
-        edges_type::const_iterator i(fromNode.edges.find(toIndex));
-        if (i == fromNode.edges.end()) getEdgeException(fromIndex,toIndex);
-        return i->second;
+        try
+        {
+            return fromNode.getEdge(toIndex);
+        }
+        catch (...)
+        {
+            // throw a richer exception message than node can produce on its own:
+            getEdgeException(fromIndex,toIndex);
+        }
+
+        // handle return warning:
+        static SVLocusEdge bogusWarning;
+        return bogusWarning;
     }
 
     void
-    clear()
+    clear(
+        flyweight_observer_t* obs)
     {
-        for (NodeIndexType i(0); i<size(); ++i) notifyDelete(i);
+        for (NodeIndexType i(0); i<size(); ++i)
+        {
+            notifyDelete(obs, i);
+        }
         _graph.clear();
     }
 
@@ -404,7 +234,7 @@ struct SVLocus : public notifier<SVLocusNodeMoveMessage>
     template<class Archive>
     void load(Archive& ar, const unsigned /* version */)
     {
-        clear();
+        clear(NULL);
         ar >> _graph;
     }
 
@@ -455,13 +285,16 @@ private:
     unsigned
     cleanNode(
         const unsigned minMergeEdgeCount,
-        const NodeIndexType nodeIndex);
+        const NodeIndexType nodeIndex,
+        flyweight_observer_t* obs);
 
     /// remove all unmerged noise edges and nodes
     ///
     /// return amount of evidence cleaned
     unsigned
-    clean(const unsigned minMergeEdgeCount);
+    clean(
+        const unsigned minMergeEdgeCount,
+        flyweight_observer_t* obs);
 
     void
     clearNodeEdges(const NodeIndexType nodePtr);
@@ -473,26 +306,29 @@ private:
 
     /// erase edges in both directions:
     void
-    clearEdgePair(
+    eraseEdgePair(
         const NodeIndexType index1,
         const NodeIndexType index2)
     {
-        clearEdge(index1,index2);
-        clearEdge(index2,index1);
+        eraseEdge(index1,index2);
+        if (index1 == index2) return;
+        eraseEdge(index2,index1);
     }
 
     /// erase edge in one direction
     void
-    clearEdge(
+    eraseEdge(
         const NodeIndexType fromIndex,
         const NodeIndexType toIndex)
     {
-        getNode(fromIndex).edges.erase(toIndex);
+        getNode(fromIndex).eraseEdge(toIndex);
     }
 
     /// copy fromLocus into this locus (this should be an intermediate part of a locus merge)
     void
-    copyLocus(const SVLocus& fromLocus)
+    copyLocus(
+        const SVLocus& fromLocus,
+        flyweight_observer_t* obs)
     {
         assert(&fromLocus != this);
 
@@ -502,7 +338,7 @@ private:
         {
             const NodeIndexType nodeIndex(newGraphNode());
             getNode(nodeIndex) = SVLocusNode(fromNode, offset);
-            notifyAdd(nodeIndex);
+            notifyAdd(obs, nodeIndex);
         }
     }
 
@@ -514,16 +350,21 @@ private:
     void
     mergeNode(
         const NodeIndexType fromIndex,
-        const NodeIndexType toIndex);
+        const NodeIndexType toIndex,
+        flyweight_observer_t* obs);
 
     // remove node
     //
     void
-    eraseNode(const NodeIndexType nodePtr);
+    eraseNode(
+        const NodeIndexType nodePtr,
+        flyweight_observer_t* obs);
 
     // remove a list of node ids
     void
-    eraseNodes(const std::set<NodeIndexType>& nodes);
+    eraseNodes(
+        const std::set<NodeIndexType>& nodes,
+        flyweight_observer_t* obs);
 
     NodeIndexType
     newGraphNode()
@@ -536,21 +377,27 @@ private:
     }
 
     void
-    notifyAdd(const NodeIndexType nodePtr)
+    notifyAdd(
+        flyweight_observer_t* obs,
+        const NodeIndexType nodePtr)
     {
+        if (NULL == obs) return;
 #ifdef DEBUG_SVL
         log_os << "SVLocusNotifier: Add node: " << _index << ":" << nodePtr << "\n";
 #endif
-        notify_observers(std::make_pair(true,std::make_pair(_index,nodePtr)));
+        notify_flyweight_observer(obs, std::make_pair(true,std::make_pair(_index, nodePtr)));
     }
 
     void
-    notifyDelete(const NodeIndexType nodePtr)
+    notifyDelete(
+        flyweight_observer_t* obs,
+        const NodeIndexType nodePtr)
     {
+        if (NULL == obs) return;
 #ifdef DEBUG_SVL
         log_os << "SVLocusNotifier: Delete node: " << _index << ":" << nodePtr << "\n";
 #endif
-        notify_observers(std::make_pair(false,std::make_pair(_index,nodePtr)));
+        notify_flyweight_observer(obs, std::make_pair(false,std::make_pair(_index, nodePtr)));
     }
 
     graph_type _graph;

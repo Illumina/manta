@@ -30,7 +30,11 @@ struct ReadScannerOptions
         splitBreakendSizeFraction(0.1),
         maxSplitBreakendSize(100),
         minSplitBreakendSize(10),
-        minSoftClipLen(8)
+        minSoftClipLen(8),
+        minSemiAlignedScoreGraph(50.0),
+        minSemiAlignedScoreCandidates(30.0),
+        minSingletonMapqGraph(40),
+        minSingletonMapqCandidates(20)
     {}
 
     unsigned minMapq;
@@ -65,4 +69,12 @@ struct ReadScannerOptions
 
     // Soft clipped read ends must be of at least this length to be entered as small SV evidence
     unsigned minSoftClipLen;
+
+    // Accept semi-aligned reads with at least this hypothesis score, different for graph and candidate generation
+    double minSemiAlignedScoreGraph;
+    double minSemiAlignedScoreCandidates;
+
+    // We want only shadows with a good singleton mapq, but use again different thresholds for graph and candidate generation
+    unsigned minSingletonMapqGraph;
+    unsigned minSingletonMapqCandidates;
 };

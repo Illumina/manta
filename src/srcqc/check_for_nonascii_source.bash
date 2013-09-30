@@ -1,4 +1,15 @@
 #!/usr/bin/env bash
+#
+# Manta
+# Copyright (c) 2013 Illumina, Inc.
+#
+# This software is provided under the terms and conditions of the
+# Illumina Open Source Software License 1.
+#
+# You should have received a copy of the Illumina Open Source
+# Software License 1 along with this program. If not, see
+# <https://github.com/sequencing/licenses/>
+#
 
 set -o nounset
 set -o pipefail
@@ -59,7 +70,7 @@ get_source() {
 }
 
 is_error=false
-for f in $(get_source); do
+for f in $(get_source | grep -v "cmake/bootstrap"); do
     #echo "checking: $f"
     grep --color='auto' -n -H -P "[\x80-\xFF]" $f
     if [ $? != 1 ]; then

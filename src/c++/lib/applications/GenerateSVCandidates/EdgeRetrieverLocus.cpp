@@ -49,7 +49,7 @@ void
 EdgeRetrieverLocus::
 advanceEdge()
 {
-    typedef SVLocusNode::edges_type::const_iterator edgeiter_t;
+    typedef SVLocusEdgesType::const_iterator edgeiter_t;
 
     if (_isInit)
     {
@@ -67,9 +67,10 @@ advanceEdge()
     while (_edge.nodeIndex1<locus.size())
     {
         const SVLocusNode& node1(locus.getNode(_edge.nodeIndex1));
-        const bool isEdgeFilterNode1((_graphNodeMaxEdgeCount>0) && node1.edges.size()>_graphNodeMaxEdgeCount);
-        edgeiter_t edgeIter(node1.edges.lower_bound(_edge.nodeIndex2));
-        const edgeiter_t edgeIterEnd(node1.edges.end());
+        const bool isEdgeFilterNode1((_graphNodeMaxEdgeCount>0) && node1.size()>_graphNodeMaxEdgeCount);
+        const SVLocusEdgeManager node1Manager(node1.getEdgeManager());
+        edgeiter_t edgeIter(node1Manager.getMap().lower_bound(_edge.nodeIndex2));
+        const edgeiter_t edgeIterEnd(node1Manager.getMap().end());
 
         for (; edgeIter != edgeIterEnd; ++edgeIter)
         {
@@ -79,7 +80,7 @@ advanceEdge()
             if (isEdgeFilterNode1)
             {
                 const SVLocusNode& node2(locus.getNode(_edge.nodeIndex2));
-                const bool isEdgeFilterNode2(node2.edges.size()>_graphNodeMaxEdgeCount);
+                const bool isEdgeFilterNode2(node2.size()>_graphNodeMaxEdgeCount);
                 if (isEdgeFilterNode2) continue;
             }
             return;

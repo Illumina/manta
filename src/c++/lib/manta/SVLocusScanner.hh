@@ -62,7 +62,15 @@ getSVBreakendCandidateClip(
     const float minQFrac = 0.75);
 
 
+/// check bam record for semi-alignedness (number of mismatches/clipped bases weighted by their q-scores)
+bool
+isSemiAligned(const bam_record& bamRead, const double minSemiAlignedScore);
 
+bool
+isGoodShadow(const bam_record& bamRead,
+             const uint8_t lastMapq,
+             const std::string& lastQname,
+             const double minSingletonMapq);
 
 /// consolidate functions which process a read to determine its
 /// SV evidence value
@@ -115,12 +123,10 @@ struct SVLocusScanner
     isLocalAssemblyEvidence(
         const bam_record& bamRead) const;
 
-
-    /// test for semi-alignedness
-    /// Dummy implementation, returns true for now
+    /// a read is a shadow if it is unaligned but its partner aligns confidently
     bool
-    isSemiAligned(
-        const bam_record& bamRead) const;
+    isGoodShadow(
+        const bam_record& bamRead, const uint8_t lastMapq, const std::string& lastQname) const;
 
     bool
     isClipped(
@@ -194,5 +200,6 @@ private:
     ReadGroupStatsSet _rss;
 
     std::vector<CachedReadGroupStats> _stats;
+
 };
 

@@ -15,18 +15,20 @@
 /// \author Chris Saunders
 ///
 
-#include "manta/SVLocusScanner.hh"
+#include "alignment/ReadScorer.hh"
 #include "blt_util/align_path_bam_util.hh"
 #include "blt_util/align_path_util.hh"
 #include "blt_util/bam_record_util.hh"
-#include "alignment/AlignmentUtil.hh"
 #include "common/Exceptions.hh"
+#include "manta/SVLocusScanner.hh"
 
 #include "boost/foreach.hpp"
 
 
 //#define DEBUG_SCANNER
 
+//#define DEBUG_SEMI_ALIGNED
+//#define DEBUG_IS_SHADOW
 
 #ifdef DEBUG_SCANNER
 #include "blt_util/log.hh"
@@ -108,6 +110,7 @@ GetSplitSVCandidate(
 
     return sv;
 }
+
 
 
 
@@ -237,6 +240,94 @@ getSVBreakendCandidateClip(
         {
             leadingClipLen = leadingClipLenTmp;
         }
+    }
+}
+
+
+
+bool
+isSemiAligned(const bam_record& bamRead, const double minSemiAlignedScore)
+{
+    ALIGNPATH::path_t apath;
+    bam_cigar_to_apath(bamRead.raw_cigar(),bamRead.n_cigar(),apath);
+    const double semiAlignedScore(ReadScorer::getSemiAlignedMetric(bamRead.read_size(),apath,bamRead.qual()));
+#ifdef DEBUG_SEMI_ALIGNED
+    static const std::string logtag("isSemiAligned");
+    log_os << logtag << " semi-aligned score=" << semiAlignedScore << " read qname=" << bamRead.qname() << " apath=" << apath <<  std::endl;
+#endif
+    return (semiAlignedScore>minSemiAlignedScore);
+}
+
+
+
+bool
+isGoodShadow(const bam_record& bamRead,
+             const uint8_t lastMapq,
+             const std::string& lastQname,
+             const double minSingletonMapq)
+{
+#ifdef DEBUG_IS_SHADOW
+    static const std::string logtag("isGoodShadow");
+#endif
+    // shadow read should be unmapped
+    if (!bamRead.is_unmapped()) return false;
+    // but its partner should be aligned
+    if (bamRead.is_mate_unmapped()) return false;
+
+    static const unsigned minAvgQualShadow = 25;
+
+    if (get_avg_quality(bamRead) < minAvgQualShadow)
+    {
+        return false;
+    }
+
+    if (bamRead.qname() != lastQname)
+    {
+        // something went wrong here, shadows should have their singleton partner
+        // preceding them in the BAM file.
+#ifdef DEBUG_IS_SHADOW
+        log_os << logtag << " ERROR: Shadow without matching singleton : " << bamRead.qname() << " vs " << lastQname << std::endl;
+#endif
+        return false;
+    }
+
+    if ((unsigned int)lastMapq > minSingletonMapq)
+    {
+#ifdef DEBUG_IS_SHADOW
+        log_os << logtag << " Found shadow!" << std::endl;
+        log_os << logtag << " this mapq  = " << ((unsigned int)bamRead.map_qual())
+               << " this qname = " << bamRead.qname() << std::endl;
+        log_os << logtag << " last mapq  = " << ((unsigned int)lastMapq)
+               << " last qname = " << lastQname << std::endl;
+#endif
+        return true;
+    }
+
+    return false;
+}
+
+
+// CTS make non-static temporarily to prevent compiler warning
+
+/// get SV candidates from semi-aligned reads
+void
+getSVCandidatesFromSemiAligned(
+    const ReadScannerOptions& opt,
+    const bam_record& bamRead,
+    const SimpleAlignment& bamAlign,
+    std::vector<SVCandidate>& candidates)
+{
+    // semi-aligned reads don't define a full hypothesis, so they're always evidence for a 'complex' ie. undefined, event
+    // in a fashion analogous to clipped reads
+    static const bool isComplex(true);
+
+    const double semiAlignedScore(ReadScorer::getSemiAlignedMetric(bamRead.read_size(),bamAlign.path,bamRead.qual()));
+
+    //std::cout << "getSVCandidatesFromSemiAligned : semi-aligned score is " << semiAlignedScore << std::endl;
+    if (semiAlignedScore>opt.minSemiAlignedScoreGraph)
+    {
+        const pos_t pos(bamAlign.pos);
+        candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),pos,pos,isComplex));
     }
 }
 
@@ -421,10 +512,66 @@ getSVCandidatesFromPair(
     candidates.push_back(sv);
 }
 
+/// get SV candidates from shadow/singleton pairs
+/// look for singletons, create candidateSV around conf. interval of shadow position
+/// cache singletons? might be needed to remove poor quality shadows.
+/// should be able to re-use code, follow soft-clipping example.
+#if 0
+static
+void
+getSVCandidatesFromShadow(
+    const ReadScannerOptions& opt,
+    const SVLocusScanner::CachedReadGroupStats& rstats,
+    const bam_record& localRead,
+    const SimpleAlignment& localAlign,
+    const bam_record* remoteReadPtr,
+    std::vector<SVCandidate>& candidates)
+{
+    if (NULL == remoteReadPtr)
+    {
+        // we want info on both reads
+        return;
+    }
+    static const bool isComplex(true);
+    const bam_record& remoteRead(*remoteReadPtr);
+    const SimpleAlignment remoteAlign(remoteRead);
+
+    pos_t singletonGenomePos(0);
+    int targetId(0);
+    if (localRead.is_mate_unmapped())
+    {
+        // remote read is shadow candidate
+        if (!isGoodShadow(remoteRead,localRead.map_qual(),localRead.qname(),opt.minSingletonMapqGraph))
+        {
+            return;
+        }
+        singletonGenomePos = localAlign.pos;
+        targetId = remoteRead.target_id();
+    }
+    else if (localRead.is_unmapped())
+    {
+        // local is shadow candidate
+        if (!isGoodShadow(localRead,remoteRead.map_qual(),remoteRead.qname(),opt.minSingletonMapqGraph))
+        {
+            return;
+        }
+        singletonGenomePos = remoteAlign.pos;
+        targetId = localRead.target_id();
+    }
+    else
+    {
+        // none unmapped, skip this one
+        return;
+    }
+    const pos_t properPairRangeOffset = static_cast<int>(rstats.properPair.min + (rstats.properPair.max-rstats.properPair.min)/2);
+    const pos_t shadowGenomePos = singletonGenomePos + properPairRangeOffset;
+    candidates.push_back(GetSplitSVCandidate(opt,targetId,shadowGenomePos,shadowGenomePos,isComplex));
+}
+#endif
 
 /// scan read record (and optionally its mate record) for SV evidence.
 //
-/// note that estimation is improved by the mate record (becuase we have the mate cigar string in this case)
+/// note that estimation is improved by the mate record (because we have the mate cigar string in this case)
 ///
 static
 void
@@ -437,7 +584,7 @@ getReadBreakendsImpl(
     known_pos_range2& localEvidenceRange)
 {
     /// TODO: can't handle these yet, but plan to soon:
-    if (localRead.is_mate_unmapped()) return;
+    //if (localRead.is_mate_unmapped()) return;
 
     /// TODO: Add SA read support -- temporarily reject all supplemental reads:
     if (localRead.is_supplement()) return;
@@ -460,10 +607,15 @@ getReadBreakendsImpl(
 #endif
 
     // TODO: add semi-aligned read processing
+    //
+    // CTS: temporarily comment out semi-aligned read input pending review of results with corrected qual offset
+    //
+    //getSVCandidatesFromSemiAligned(opt, localRead, localAlign, candidates);
 
     // TODO: add SA tag processing
 
     // TODO: process shadow reads
+    //getSVCandidatesFromShadow(opt, rstats, localRead, localAlign,remoteReadPtr,candidates);
 
     // - process anomalous read pair relationships:
     getSVCandidatesFromPair(opt, rstats, localRead, localAlign, remoteReadPtr, candidates);
@@ -564,7 +716,7 @@ getSVLociImpl(
         // finally, create the graph locus:
         SVLocus locus;
         // set local breakend estimate:
-        const NodeIndexType localBreakendNode(locus.addNode(localBreakend.interval,localEvidenceWeight));
+        const NodeIndexType localBreakendNode(locus.addNode(localBreakend.interval));
         locus.setNodeEvidence(localBreakendNode,localEvidenceRange);
 
         if (isComplex)
@@ -574,7 +726,7 @@ getSVLociImpl(
         else
         {
             // set remote breakend estimate:
-            const NodeIndexType remoteBreakendNode(locus.addNode(remoteBreakend.interval,remoteEvidenceWeight));
+            const NodeIndexType remoteBreakendNode(locus.addNode(remoteBreakend.interval));
             locus.linkNodes(localBreakendNode,remoteBreakendNode,localEvidenceWeight,remoteEvidenceWeight);
 
             locus.mergeSelfOverlap();
@@ -651,16 +803,6 @@ isReadFiltered(const bam_record& bamRead) const
 
 bool
 SVLocusScanner::
-isSemiAligned(const bam_record& bamRead) const
-{
-    ALIGNPATH::path_t apath;
-    bam_cigar_to_apath(bamRead.raw_cigar(),bamRead.n_cigar(),apath);
-    const double minSemiAlignedScore(10.0);
-    return (ReadScorer::get().getSemiAlignedMetric(apath,bamRead.qual())>minSemiAlignedScore);
-}
-
-bool
-SVLocusScanner::
 isClipped(const bam_record& bamRead) const
 {
     ALIGNPATH::path_t apath;
@@ -716,10 +858,13 @@ isLocalAssemblyEvidence(
 {
     using namespace ALIGNPATH;
 
+    {
+        // TODO: (1) double check semi-aligned thresholds with fixed qual offsets
+        // TODO: For the semi-aligned test to be effective, we need to convert the cigar string to contain match/mis-match infomration first
+      //  if (isSemiAligned(bamRead,_opt.minSemiAlignedScoreGraph)) return true;
+    }
+
     const SimpleAlignment bamAlign(bamRead);
-
-    /// TODO: add semi-aligned reads
-
     //
     // large indel already in cigar string
     //
@@ -735,6 +880,7 @@ isLocalAssemblyEvidence(
     // soft-clipping:
     //
     {
+
         unsigned leadingClipLen(0), trailingClipLen(0);
         getSVBreakendCandidateClip(bamRead, bamAlign.path, leadingClipLen, trailingClipLen);
 
@@ -768,6 +914,7 @@ getBreakendPair(
     const bam_record& localRead,
     const bam_record* remoteReadPtr,
     const unsigned defaultReadGroupIndex,
+
     std::vector<SVCandidate>& candidates) const
 {
     const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);

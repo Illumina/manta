@@ -22,15 +22,18 @@ message(STATUS "Creating external tools in subdirectory opt")
 
 include ("${MANTA_GLOBALS_CMAKE}")
 
-set(MANTA_REDIST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../redist")
+# convenience macro to set in both current and parent scope:
+macro(superset symbol value)
+    set(${symbol} "${value}")
+    set(${symbol} "${value}" PARENT_SCOPE)
+endmacro()
 
 #
 # samtools
 #
 set(SAMTOOLS_PREFIX "samtools-0.1.18_no_tview")
-set(SAMTOOLS_DIR "${CMAKE_CURRENT_BINARY_DIR}/${SAMTOOLS_PREFIX}")
-set(SAMTOOLS_LIBRARY "${SAMTOOLS_DIR}/libbam.a")
-set(SAMTOOLS_LIBRARY ${SAMTOOLS_LIBRARY} PARENT_SCOPE)
+superset(SAMTOOLS_DIR "${CMAKE_CURRENT_BINARY_DIR}/${SAMTOOLS_PREFIX}")
+superset(SAMTOOLS_LIBRARY "${SAMTOOLS_DIR}/libbam.a")
 
 add_custom_command(OUTPUT ${SAMTOOLS_LIBRARY}
                    COMMAND rm -rf "${SAMTOOLS_DIR}"
@@ -46,8 +49,9 @@ install(PROGRAMS "${SAMTOOLS_DIR}/bgzip"    DESTINATION "${MANTA_LIBEXECDIR}")
 # tabix
 #
 set(TABIX_PREFIX "tabix-0.2.6")
-set(TABIX_DIR "${CMAKE_CURRENT_BINARY_DIR}/${TABIX_PREFIX}")
+superset(TABIX_DIR "${CMAKE_CURRENT_BINARY_DIR}/${TABIX_PREFIX}")
 set(TABIX_PROG "${TABIX_DIR}/tabix")
+superset(TABIX_LIBRARY "${TABIX_DIR}/libtabix.a")
 
 add_custom_command(OUTPUT ${TABIX_PROG}
                    COMMAND rm -rf "${TABIX_DIR}"
@@ -78,7 +82,6 @@ install (DIRECTORY ${PYFLOW_DIR}/src/ DESTINATION "${MANTA_PYTHON_LIBDIR}/pyflow
 
 # tie results back to parent:
 #
-set(SAMTOOLS_DIR "${SAMTOOLS_DIR}" PARENT_SCOPE)
 add_dependencies(MANTA_OPT MANTA_SAMTOOLS MANTA_TABIX MANTA_PYFLOW)
 
 

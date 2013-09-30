@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge )
     bool isFound(false);
     BOOST_FOREACH(const SVLocusNode& node, cset1.getLocus(0))
     {
-        if (node.interval == testInterval) isFound=true;
+        if (node.getInterval() == testInterval) isFound=true;
     }
     BOOST_REQUIRE(isFound);
 }
@@ -90,11 +90,11 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge2 )
 
     SVLocus locus1;
     {
-        NodeIndexType nodePtr1 = locus1.addNode(GenomeInterval(1,10,20),2);
-        NodeIndexType nodePtr2 = locus1.addRemoteNode(GenomeInterval(1,30,40));
-        NodeIndexType nodePtr3 = locus1.addRemoteNode(GenomeInterval(1,50,60));
-        locus1.linkNodes(nodePtr1,nodePtr2);
-        locus1.linkNodes(nodePtr1,nodePtr3);
+        NodeIndexType nodePtr1 = locus1.addNode(GenomeInterval(1,10,20));
+        NodeIndexType nodePtr2 = locus1.addNode(GenomeInterval(1,30,40));
+        NodeIndexType nodePtr3 = locus1.addNode(GenomeInterval(1,50,60));
+        locus1.linkNodes(nodePtr1, nodePtr2);
+        locus1.linkNodes(nodePtr1, nodePtr3);
     }
 
     SVLocus locus2;
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge2 )
     bool isFound(false);
     BOOST_FOREACH(const SVLocusNode& node, cset1.getLocus(0))
     {
-        if (node.interval == testInterval) isFound=true;
+        if (node.getInterval() == testInterval) isFound=true;
     }
     BOOST_REQUIRE(isFound);
 }
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge3 )
     bool isFound(false);
     BOOST_FOREACH(const SVLocusNode& node, cset1.getLocus(0))
     {
-        if (node.interval == testInterval) isFound=true;
+        if (node.getInterval() == testInterval) isFound=true;
     }
     BOOST_REQUIRE(isFound);
 }
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge4 )
     bool isFound(false);
     BOOST_FOREACH(const SVLocusNode& node, cset1.getLocus(0))
     {
-        if (node.interval == testInterval) isFound=true;
+        if (node.getInterval() == testInterval) isFound=true;
     }
     BOOST_REQUIRE(isFound);
 }
@@ -369,7 +369,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusEvidenceRange )
     SVLocus locus1;
     {
         NodeIndexType node1 = locus1.addNode(GenomeInterval(1,100,110));
-        NodeIndexType node2 = locus1.addRemoteNode(GenomeInterval(2,100,110));
+        NodeIndexType node2 = locus1.addNode(GenomeInterval(2,100,110));
         locus1.linkNodes(node1,node2);
         locus1.setNodeEvidence(node1,known_pos_range2(50,60));
     }
@@ -377,7 +377,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusEvidenceRange )
     SVLocus locus2;
     {
         NodeIndexType node1 = locus2.addNode(GenomeInterval(1,100,110));
-        NodeIndexType node2 = locus2.addRemoteNode(GenomeInterval(2,100,110));
+        NodeIndexType node2 = locus2.addNode(GenomeInterval(2,100,110));
         locus2.linkNodes(node1,node2);
         locus2.setNodeEvidence(node1,known_pos_range2(30,40));
     }
@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusEvidenceRange )
         const SVLocusSet& cset1(set1);
 
         BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
-        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).getNode(0).evidenceRange,known_pos_range2(30,60));
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).getNode(0).getEvidenceRange(),known_pos_range2(30,60));
     }
 
 }
@@ -702,7 +702,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMergeToSelfEdge3 )
         BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
         BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),1u);
         BOOST_REQUIRE_EQUAL(cset1.getLocus(0).getNode(0).size(),1u);
-        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).getNode(0).count,3u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).getNode(0).outCount(),3u);
     }
 
     {
@@ -718,7 +718,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMergeToSelfEdge3 )
         BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),1u);
         BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),1u);
         BOOST_REQUIRE_EQUAL(cset1.getLocus(0).getNode(0).size(),1u);
-        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).getNode(0).count,3u);
+        BOOST_REQUIRE_EQUAL(cset1.getLocus(0).getNode(0).outCount(),3u);
     }
 
 }
@@ -819,7 +819,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSmallDelRegionClean )
     // regions picked up from deletions have counts on both sides
     //
     SVLocus locus1;
-    locusAddDoublePair(locus1,1,10,20,1,30,40);
+    locusAddPair(locus1,1,10,20,1,30,40,true);
 
     {
         SVLocusSet set1(2);

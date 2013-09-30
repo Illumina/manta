@@ -25,18 +25,20 @@ struct SmallAssemblerOptions
     /// sets reasonable default values for 30x DNA-seq, 100bp reads
     SmallAssemblerOptions() :
         alphabet("ACGT"),
-        minWordLength(37),
+        minWordLength(41),
         maxWordLength(61),
+        wordStepSize(5),
         minContigLength(15),
         minCoverage(1),
         maxError(0.35),
         minSeedReads(3),
-        maxAssemblyIterations(50)
+        maxAssemblyIterations(10)
     {}
 
     std::string alphabet; ///< the symbol set used during assembly
     unsigned minWordLength; ///< initial word (kmer) length
     unsigned maxWordLength; ///< max word length
+    unsigned wordStepSize;
     unsigned minContigLength; ///< min contig size
     unsigned minCoverage; ///< min. coverage required for contig extension
     double maxError; ///< max error rates allowed during contig extension

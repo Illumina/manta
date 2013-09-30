@@ -30,7 +30,7 @@
 ///
 /// When finalized, the SVLocusSet contains non-overlapping SVLoci
 ///
-struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
+struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
 {
     typedef std::vector<SVLocus> locusset_type;
     typedef locusset_type::const_iterator const_iterator;
@@ -47,7 +47,8 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
         _highestSearchCount(0),
         _highestSearchDensity(0),
         _isMaxSearchCount(false),
-        _isMaxSearchDensity(false)
+        _isMaxSearchDensity(false),
+        _isIndexed(true)
     {}
 
     bool
@@ -65,6 +66,7 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
     unsigned
     nonEmptySize() const
     {
+        assert(_isIndexed);
         return size()-_emptyLoci.size();
     }
 
@@ -139,6 +141,8 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
 
         _isMaxSearchCount=false;
         _isMaxSearchDensity=false;
+
+        _isIndexed=true;
     }
 
     /// indicate that the set is complete
@@ -166,9 +170,14 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
     void
     save(const char* filename) const;
 
-    // restore from binary serialization
+    /// restore from serialization
+    ///
+    /// \param[in] isSkipIndex if true, don't build the graph index, and only allow a limited set of operations:
+    ///
     void
-    load(const char* filename);
+    load(
+        const char* filename,
+        const bool isSkipIndex = false);
 
     // debug output
     void
@@ -187,6 +196,7 @@ struct SVLocusSet : public observer<SVLocusNodeMoveMessage>
     // dump stats on each locus in tsv format:
     void
     dumpLocusStats(std::ostream& os) const;
+
     const std::string&
     getSource() const
     {
@@ -256,7 +266,6 @@ private:
 
     struct NodeAddressSorter
     {
-
         NodeAddressSorter(const SVLocusSet& set) :
             _set(set)
         {}
@@ -278,7 +287,7 @@ private:
         const GenomeInterval&
         getInterval(const NodeAddressType& n) const
         {
-            return (_set.getLocus(n.first).getNode(n.second).interval);
+            return (_set.getLocus(n.first).getNode(n.second).getInterval());
         }
 
         const SVLocusSet& _set;
@@ -317,10 +326,9 @@ private:
 #ifdef DEBUG_SVL
         log_os << "SVLocusSet::clearLocus index: " << index << "\n";
 #endif
-
         assert(index<_loci.size());
 
-        _loci[index].clear();
+        _loci[index].clear(this);
         _emptyLoci.insert(index);
         _source="UNKNOWN";
     }
@@ -339,7 +347,7 @@ private:
         const LocusIndexType inputLocusIndex,
         const NodeIndexType inputNodeIndex,
         const LocusSetIndexerType& searchNodes,
-        const LocusIndexType fitlerLocusIndex,
+        const LocusIndexType filterLocusIndex,
         std::set<NodeAddressType>& intersectNodes,
         const bool isTestUsability = false) const;
 
@@ -414,11 +422,13 @@ private:
     void
     removeNode(const NodeAddressType inputNodePtr)
     {
+        assert(_isIndexed);
+
         LocusSetIndexerType::iterator iter(_inodes.find(inputNodePtr));
         if (iter == _inodes.end()) return;
 
         SVLocus& locus(getLocus(inputNodePtr.first));
-        locus.eraseNode(inputNodePtr.second);
+        locus.eraseNode(inputNodePtr.second, this);
     }
 
     bool
@@ -439,9 +449,9 @@ private:
 
     /// update index when nodes are moved:
     void
-    recieve_notification(const notifier<SVLocusNodeMoveMessage>&,
-                         const SVLocusNodeMoveMessage& msg)
+    recieve_flyweight_notification(const SVLocusNodeMoveMessage& msg)
     {
+        assert(_isIndexed);
 
         if (msg.first)
         {
@@ -450,7 +460,7 @@ private:
             log_os << "SVLocusSetObserver: Adding node: " << msg.second.first << ":" << msg.second.second << "\n";
 #endif
             _inodes.insert(msg.second);
-            updateMaxRegionSize(getNode(msg.second).interval);
+            updateMaxRegionSize(getNode(msg.second).getInterval());
         }
         else
         {
@@ -461,6 +471,7 @@ private:
             _inodes.erase(msg.second);
         }
     }
+
 
     void
     updateMaxRegionSize(const GenomeInterval& interval)
@@ -545,6 +556,8 @@ private:
 
     mutable bool _isMaxSearchCount; ///< has input been filtered because we hit the maximum search count
     mutable bool _isMaxSearchDensity; ///< has input been filtered because we hit the maximum node density
+
+    bool _isIndexed;
 };
 
 

@@ -188,6 +188,18 @@ struct SVWriter
 };
 
 
+#if 0
+/// reduce the full (very-large) graph down to just the information we need during SVCandidate generation:
+struct ReducedGraphInfo
+{
+    ReducedGraphInfo(const GSCOptions& opt)
+
+    bam_header_info header;
+
+    std::vector<EnhancedEdgeInfo> edges;
+};
+#endif
+
 
 static
 void
@@ -196,6 +208,12 @@ runGSC(
     const char* progName,
     const char* progVersion)
 {
+#if 0
+    {
+        // to save memory, load the graph and process/store only the information we need from it:
+    }
+#endif
+
     SVFinder svFind(opt);
     const SVLocusSet& cset(svFind.getSet());
 
@@ -231,7 +249,6 @@ runGSC(
 #ifdef DEBUG_GSV
             log_os << logtag << " low-res candidate generation complete. candidate count: " << svs.size() << "\n";
 #endif
-
             BOOST_FOREACH(const SVCandidate& candidateSV, svs)
             {
 #ifdef DEBUG_GSV

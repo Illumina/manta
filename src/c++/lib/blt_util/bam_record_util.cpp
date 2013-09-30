@@ -45,3 +45,19 @@ is_innie_pair(
     return true;
 }
 
+unsigned
+get_avg_quality(
+    const bam_record& bam_read)
+{
+    const uint8_t* qual = bam_read.qual();
+    unsigned sum(0);
+    unsigned len = bam_read.read_size();
+    for (unsigned i=0; i<len; ++i)
+    {
+        sum+=qual[i];
+    }
+    // this does not capture the decimal remainder but well...
+    return (sum/len);
+}
+
+

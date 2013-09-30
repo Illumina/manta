@@ -27,6 +27,11 @@
 
 //#define DEBUG_SVDATA
 
+#ifdef DEBUG_SVDATA
+#include "blt_util/log.hh"
+#include <iostream>
+#endif
+
 
 /// A read associated with an SV associated set of regions
 ///
