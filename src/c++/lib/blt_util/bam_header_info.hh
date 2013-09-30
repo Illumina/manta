@@ -24,7 +24,7 @@
 #include <iosfwd>
 #include <string>
 #include <vector>
-
+#include <map>
 
 
 /// minimal c++ bam header info

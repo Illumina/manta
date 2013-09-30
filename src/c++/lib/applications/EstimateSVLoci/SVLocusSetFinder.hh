@@ -53,7 +53,8 @@ struct SVLocusSetFinder : public pos_processor_base
     ///
     void
     update(const bam_record& bamRead,
-           const unsigned defaultReadGroupIndex);
+           const unsigned defaultReadGroupIndex,
+           std::map<std::string, int32_t>& chromToInt);
 
     const SVLocusSet&
     getLocusSet()

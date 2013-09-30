@@ -171,7 +171,8 @@ process_pos(const int stage_no,
 void
 SVLocusSetFinder::
 update(const bam_record& bamRead,
-       const unsigned defaultReadGroupIndex)
+       const unsigned defaultReadGroupIndex, 
+       std::map<std::string, int32_t>& chromToInt)
 {
     _isScanStarted=true;
 
@@ -210,11 +211,12 @@ update(const bam_record& bamRead,
 
     std::vector<SVLocus> loci;
 
-    _readScanner.getSVLoci(bamRead, defaultReadGroupIndex, loci);
+    _readScanner.getSVLoci(bamRead, defaultReadGroupIndex, loci, chromToInt);
 
     BOOST_FOREACH(const SVLocus& locus, loci)
     {
         if (locus.empty()) continue;
         _svLoci.merge(locus);
+        //std::cout << "LOCUS\t" << locus << "\n\n" << std::endl;
     }
 }

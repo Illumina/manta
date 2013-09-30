@@ -46,7 +46,8 @@ struct SVFinder
     findCandidateSV(
         const EdgeInfo& edge,
         SVCandidateSetData& svData,
-        std::vector<SVCandidate>& svs);
+        std::vector<SVCandidate>& svs,
+        std::map<std::string, int32_t>& chromToInt);
 
     void
     checkResult(
@@ -60,13 +61,15 @@ private:
         const SVLocus& locus,
         const NodeIndexType node1,
         const NodeIndexType node2,
-        SVCandidateSetData& svData);
+        SVCandidateSetData& svData,
+        std::map<std::string, int32_t>& chromToInt);
 
 
     void
     getCandidatesFromData(
         SVCandidateSetData& svData,
-        std::vector<SVCandidate>& svs);
+        std::vector<SVCandidate>& svs,
+        std::map<std::string, int32_t>& chromToInt);
 
     const ReadScannerOptions _scanOpt;
     SVLocusSet _set;

@@ -154,7 +154,8 @@ struct SVLocusScanner
     getSVLoci(
         const bam_record& bamRead,
         const unsigned defaultReadGroupIndex,
-        std::vector<SVLocus>& loci) const;
+        std::vector<SVLocus>& loci,
+        std::map<std::string, int32_t>& chromToInt) const;
 
     /// get local and remote breakends for each SV Candidate which can be extracted from a read pair
     ///
@@ -168,7 +169,8 @@ struct SVLocusScanner
         const bam_record& localRead,
         const bam_record* remoteReadPtr,
         const unsigned defaultReadGroupIndex,
-        std::vector<SVCandidate>& candidates) const;
+        std::vector<SVCandidate>& candidates,
+        std::map<std::string, int32_t>& chromToInt) const;
 
 
     struct Range

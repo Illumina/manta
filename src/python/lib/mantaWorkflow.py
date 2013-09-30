@@ -28,6 +28,9 @@ sys.path.append(os.path.abspath(scriptDir))
 pyflowDir=os.path.join(scriptDir,"pyflow")
 sys.path.append(os.path.abspath(pyflowDir))
 
+## overall memMb value
+memMb=16
+
 from pyflow import WorkflowRunner
 from workflowUtil import checkFile, ensureDir, preJoin, which, \
                          getChromIntervals, getFastaChromOrderSize
@@ -80,7 +83,7 @@ def getNextGenomeSegment(params) :
 
 
 
-def runStats(self,taskPrefix="",dependencies=None) :
+def runStats(self,taskPrefix="",memMb=memMb,dependencies=None) :
 
     statsPath=self.paths.getStatsPath()
 
@@ -91,7 +94,7 @@ def runStats(self,taskPrefix="",dependencies=None) :
     for bamPath in self.params.tumorBamList :
         cmd.extend(["--tumor-align-file",bamPath])
 
-    statsTask = self.addTask(preJoin(taskPrefix,"generateStats"),cmd,dependencies=dependencies)
+    statsTask = self.addTask(preJoin(taskPrefix,"generateStats"),cmd,memMb=memMb,dependencies=dependencies)
 
     nextStepWait = set()
     nextStepWait.add(statsTask)
@@ -100,7 +103,7 @@ def runStats(self,taskPrefix="",dependencies=None) :
     cmd  = self.params.mantaStatsSummaryBin
     cmd += " --align-stats " + statsPath
     cmd += " > " + self.paths.getStatsSummaryPath()
-    self.addTask(preJoin(taskPrefix,"summarizeStats"),cmd,dependencies=statsTask)
+    self.addTask(preJoin(taskPrefix,"summarizeStats"),cmd,memMb=memMb,dependencies=statsTask)
 
     return nextStepWait
 
@@ -126,7 +129,7 @@ def runDepth(self,taskPrefix="",dependencies=None) :
     cmd += " > %s" % (self.paths.getChromDepth())
 
     nextStepWait = set()
-    nextStepWait.add(self.addTask(preJoin(taskPrefix,"estimateChromDepth"),cmd,dependencies=dependencies))
+    nextStepWait.add(self.addTask(preJoin(taskPrefix,"estimateChromDepth"),cmd,memMb=memMb,dependencies=dependencies))
 
     return nextStepWait
 
@@ -143,7 +146,7 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
 
     graphFilename=os.path.basename(graphPath)
     tmpGraphDir=os.path.join(self.params.workDir,graphFilename+".tmpdir")
-    dirTask=self.addTask(preJoin(taskPrefix,"makeTmpDir"), "mkdir -p "+tmpGraphDir, dependencies=dependencies, isForceLocal=True)
+    dirTask=self.addTask(preJoin(taskPrefix,"makeTmpDir"), "mkdir -p "+tmpGraphDir,memMb=memMb,dependencies=dependencies, isForceLocal=True)
 
     tmpGraphFiles = []
     graphTasks = set()
@@ -179,7 +182,7 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
     checkTask = self.addTask(preJoin(taskPrefix,"checkLocusGraph"),checkCmd,dependencies=mergeTask,memMb=self.params.mergeMemMb)
 
     rmGraphTmpCmd = "rm -rf " + tmpGraphDir
-    #rmTask=self.addTask(preJoin(taskPrefix,"rmGraphTmp"),rmGraphTmpCmd,dependencies=mergeTask)
+    #rmTask=self.addTask(preJoin(taskPrefix,"rmGraphTmp"),rmGraphTmpCmd,memMb=memMb,dependencies=mergeTask)
 
     graphStatsCmd  = self.params.mantaGraphStatsBin
     graphStatsCmd += " --global"
@@ -194,7 +197,7 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
 
 
 
-def runHyGen(self, taskPrefix="", dependencies=None) :
+def runHyGen(self, taskPrefix="",dependencies=None) :
     """
     Run hypothesis generation on each SV locus
     """
