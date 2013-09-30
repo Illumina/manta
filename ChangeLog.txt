@@ -1,3 +1,10 @@
+
+- MANTA-33 reduce SV graph ram requirement to ~1/3 of its previous value, increase all post-merge
+task memory requests.
+- MANTA-17 merged shadow reads into assembly and adjusted assembly
+parameters. Large (50+ base) insertion sensitivity improves by ~.35-.4 as a
+result.
+- Improvements to vcf output and cmake build.
 v0.8
 - MANTA-28 Add prototype discovery/local-assembly of small events down to 10 bases 
 - MANTA-24 Better handle very high depth and chimeric noise complexity based
