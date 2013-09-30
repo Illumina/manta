@@ -34,15 +34,7 @@ SVAlignmentInfo(
 	if ((assemblyData.isSpanning) &&
 		(!sv.isImprecise()))
 	{
-		log_os << "bestAlignmentIndex=" << assemblyData.bestAlignmentIndex <<"\n";
-		if (assemblyData.contigs.size() == 0)
-		{
-			log_os << "no contigs available in the assembly data.\n";
-			return;
-		}
-
 		contigSeq = assemblyData.contigs[assemblyData.bestAlignmentIndex].seq;
-		log_os << "contigSeq=" << contigSeq <<"\n";
 		const JumpAlignmentResult<int>& alignment = assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex];
 
 		// get offsets of breakpoints in the contig
@@ -50,8 +42,6 @@ SVAlignmentInfo(
 		const unsigned insertSize(alignment.jumpInsertSize);
 		bp1ContigOffset = align1Size - 1;
 		bp2ContigOffset = align1Size + insertSize;
-		log_os << "bp1ContigOffset=" << bp1ContigOffset << "\n";
-		log_os << "bp2ContigOffset=" << bp2ContigOffset << "\n";
 		bp1ContigReversed = false;
 		bp2ContigReversed = false;
 		if (sv.bp1.state == sv.bp2.state)
@@ -67,8 +57,6 @@ SVAlignmentInfo(
 		const reference_contig_segment& bp2Ref = assemblyData.bp2ref;
 		bp1RefSeq = bp1Ref.seq();
 		bp2RefSeq = bp2Ref.seq();
-		log_os << "bp1RefSeq=" << bp1RefSeq << "\n";
-		log_os << "bp2RefSeq=" << bp2RefSeq << "\n";
 		// get offsets of breakpoints in the reference regions
 		bp1RefOffset = sv.bp1.interval.range.begin_pos() - bp1Ref.get_offset();
 		bp2RefOffset = sv.bp2.interval.range.begin_pos() - bp2Ref.get_offset();
