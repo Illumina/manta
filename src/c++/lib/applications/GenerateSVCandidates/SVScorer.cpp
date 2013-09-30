@@ -270,12 +270,8 @@ scoreSomaticSV(
 
     }
 
-    log_os << "depth check finished\n";
-
     // extract SV alignment info for split read evidence
-    log_os << "start SVAlignmentInfo\n";
     const SVAlignmentInfo SVAlignInfo(sv, assemblyData);
-    log_os << "finish SVAlignmentInfo\n";
 
     // first exercise -- just count the sample assignment of the pairs we already have:
     const unsigned bamCount(_bamStreams.size());
@@ -283,8 +279,6 @@ scoreSomaticSV(
     {
     	const bool isTumor(_isAlignmentTumor[bamIndex]);
         SVSampleInfo& sample(isTumor ? ssInfo.tumor : ssInfo.normal);
-
-        log_os << "is_tumor=" << isTumor <<"\n";
 
         // consider 2-locus events first
         // TODO: to add local assembly later
@@ -304,9 +298,6 @@ scoreSomaticSV(
 			// scoring split reads overlapping bp2
 			scoreSplitReads(false, sv.bp2, SVAlignInfo, readMap,
 			        		read_stream, sample);
-
-			log_os << "finish scoring splitRead\n";
-
         }
 
 
@@ -330,34 +321,37 @@ scoreSomaticSV(
         }
     }
 
-    // root mean square
-    if (ssInfo.tumor.contigSRCount > 0)
-    	ssInfo.tumor.contigSRMapQ = sqrt(ssInfo.tumor.contigSRMapQ / (float)ssInfo.tumor.contigSRCount);
-    if (ssInfo.tumor.refSRCount > 0)
-    	ssInfo.tumor.refSRMapQ = sqrt(ssInfo.tumor.refSRMapQ / (float)ssInfo.tumor.refSRCount);
-    if (ssInfo.normal.contigSRCount > 0)
-    	ssInfo.normal.contigSRMapQ = sqrt(ssInfo.normal.contigSRMapQ / (float)ssInfo.normal.contigSRCount);
-    if (ssInfo.normal.refSRCount > 0)
-    	ssInfo.normal.refSRMapQ = sqrt(ssInfo.normal.refSRMapQ / (float)ssInfo.normal.refSRCount);
+    // consider 2-locus events first
+    // TODO: to add local assembly later
+    if (assemblyData.isSpanning)
+    {
+    	// root mean square
+    	if (ssInfo.tumor.contigSRCount > 0)
+    		ssInfo.tumor.contigSRMapQ = sqrt(ssInfo.tumor.contigSRMapQ / (float)ssInfo.tumor.contigSRCount);
+    	if (ssInfo.tumor.refSRCount > 0)
+    		ssInfo.tumor.refSRMapQ = sqrt(ssInfo.tumor.refSRMapQ / (float)ssInfo.tumor.refSRCount);
+    	if (ssInfo.normal.contigSRCount > 0)
+    		ssInfo.normal.contigSRMapQ = sqrt(ssInfo.normal.contigSRMapQ / (float)ssInfo.normal.contigSRCount);
+    	if (ssInfo.normal.refSRCount > 0)
+    		ssInfo.normal.refSRMapQ = sqrt(ssInfo.normal.refSRMapQ / (float)ssInfo.normal.refSRCount);
 
 #ifdef DEBUG_SVS
-    log_os << "finally...\n";
-    log_os << "tumor contig SP count: " << ssInfo.tumor.contigSRCount << "\n";
-    log_os << "tumor contig SP evidence: " << ssInfo.tumor.contigSREvidence << "\n";
-    log_os << "tumor contig SP_mapQ: " << ssInfo.tumor.contigSRMapQ << "\n";
-    log_os << "normal contig SP count: " << ssInfo.normal.contigSRCount << "\n";
-    log_os << "normal contig SP evidence: " << ssInfo.normal.contigSREvidence << "\n";
-    log_os << "normal contig SP_mapQ: " << ssInfo.normal.contigSRMapQ << "\n";
+    	log_os << "finally...\n";
+    	log_os << "tumor contig SP count: " << ssInfo.tumor.contigSRCount << "\n";
+    	log_os << "tumor contig SP evidence: " << ssInfo.tumor.contigSREvidence << "\n";
+    	log_os << "tumor contig SP_mapQ: " << ssInfo.tumor.contigSRMapQ << "\n";
+    	log_os << "normal contig SP count: " << ssInfo.normal.contigSRCount << "\n";
+    	log_os << "normal contig SP evidence: " << ssInfo.normal.contigSREvidence << "\n";
+    	log_os << "normal contig SP_mapQ: " << ssInfo.normal.contigSRMapQ << "\n";
 
-    log_os << "tumor ref SP count: " << ssInfo.tumor.refSRCount << "\n";
-    log_os << "tumor ref SP evidence: " << ssInfo.tumor.refSREvidence << "\n";
-    log_os << "tumor ref SP_mapQ: " << ssInfo.tumor.refSRMapQ << "\n";
-    log_os << "normal ref SP count: " << ssInfo.normal.refSRCount << "\n";
-    log_os << "normal ref SP evidence: " << ssInfo.normal.refSREvidence << "\n";
-    log_os << "normal ref SP_mapQ: " << ssInfo.normal.refSRMapQ << "\n";
+    	log_os << "tumor ref SP count: " << ssInfo.tumor.refSRCount << "\n";
+    	log_os << "tumor ref SP evidence: " << ssInfo.tumor.refSREvidence << "\n";
+    	log_os << "tumor ref SP_mapQ: " << ssInfo.tumor.refSRMapQ << "\n";
+    	log_os << "normal ref SP count: " << ssInfo.normal.refSRCount << "\n";
+    	log_os << "normal ref SP evidence: " << ssInfo.normal.refSREvidence << "\n";
+    	log_os << "normal ref SP_mapQ: " << ssInfo.normal.refSRMapQ << "\n";
 #endif
-
-
+    }
 
     // assign bogus somatic score just to get started:
     bool isSomatic(true);

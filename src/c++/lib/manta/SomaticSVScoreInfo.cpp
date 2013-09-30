@@ -27,6 +27,8 @@ SVAlignmentInfo(
 			const SVCandidate& sv,
 			const SVCandidateAssemblyData& assemblyData)
 {
+	// consider 2-locus events first
+	// TODO: to add local assembly later
 	if (assemblyData.isSpanning)
 	{
 		contigSeq = assemblyData.contigs[assemblyData.bestAlignmentIndex].seq;
