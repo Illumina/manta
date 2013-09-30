@@ -32,18 +32,21 @@ SVAlignmentInfo(
 	if (assemblyData.isSpanning)
 	{
 		log_os << "bestAlignmentIndex=" << assemblyData.bestAlignmentIndex <<"\n";
+		if (assemblyData.contigs.size() == 0)
+		{
+			log_os << "no contigs available in the assembly data.\n";
+			return;
+		}
+
 		contigSeq = assemblyData.contigs[assemblyData.bestAlignmentIndex].seq;
 		log_os << "contigSeq=" << contigSeq <<"\n";
 		const JumpAlignmentResult<int>& alignment = assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex];
-		log_os << "JumpAligner: score: " << alignment.score << "\n";
-		log_os << "\talign1: " << alignment.align1 << "\n";
-		log_os << "\talign2: " << alignment.align2 << "\n";
 
 		// get offsets of breakpoints in the contig
 		const unsigned align1Size(apath_read_length(alignment.align1.apath));
 		const unsigned insertSize(alignment.jumpInsertSize);
 		bp1ContigOffset = align1Size - 1;
-		bp2ContigOffset = align1Size + insertSize - 1;
+		bp2ContigOffset = align1Size + insertSize;
 		log_os << "bp1ContigOffset=" << bp1ContigOffset << "\n";
 		log_os << "bp2ContigOffset=" << bp2ContigOffset << "\n";
 		bp1ContigReversed = false;
