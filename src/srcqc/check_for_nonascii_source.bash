@@ -70,7 +70,7 @@ get_source() {
 }
 
 is_error=false
-for f in $(get_source | grep -v "cmake/bootstrap"); do
+for f in $(get_source); do
     #echo "checking: $f"
     grep --color='auto' -n -H -P "[\x80-\xFF]" $f
     if [ $? != 1 ]; then

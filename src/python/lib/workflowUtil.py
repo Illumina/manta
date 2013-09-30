@@ -69,7 +69,7 @@ def which(searchFile) :
 
     result should be the similar to *nix 'which' utility
     """
-    for searchPath in os.environ["PATH"].split(":"):
+    for searchPath in os.environ["PATH"].split(os.pathsep):
         test=os.path.join(searchPath,searchFile)
         if os.path.isfile(test): return test
 
