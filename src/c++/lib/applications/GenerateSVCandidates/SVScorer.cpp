@@ -167,11 +167,9 @@ scoreSplitReads(
 		if (isBp1)
 		{
 			readMap[readId] = true;
-			log_os << readId << "mapped.\n";
 		}
 		else if (readMap.find(readId) != readMap.end())
 		{
-			log_os << readId << "exists!\n";
 			continue;
 		}
 
@@ -300,19 +298,6 @@ scoreSomaticSV(
 			// scoring split reads overlapping bp2
 			scoreSplitReads(false, sv.bp2, SVAlignInfo, readMap,
 			        		read_stream, sample);
-
-#ifdef DEBUG_SVS
-			log_os << "\nbam is tumor = " << isTumor << "\n";
-			log_os << "tumor contig SP count: " << ssInfo.tumor.contigSRCount << "\n";
-			log_os << "tumor contig SP evidence: " << ssInfo.tumor.contigSREvidence << "\n";
-			log_os << "normal contig SP count: " << ssInfo.normal.contigSRCount << "\n";
-			log_os << "normal contig SP evidence: " << ssInfo.normal.contigSREvidence << "\n";
-
-			log_os << "tumor ref SP count: " << ssInfo.tumor.refSRCount << "\n";
-			log_os << "tumor ref SP evidence: " << ssInfo.tumor.refSREvidence << "\n";
-			log_os << "normal ref SP count: " << ssInfo.normal.refSRCount << "\n";
-			log_os << "normal ref SP evidence: " << ssInfo.normal.refSREvidence << "\n";
-#endif
         }
 
 
@@ -347,7 +332,6 @@ scoreSomaticSV(
     	ssInfo.normal.refSRMapQ = sqrt(ssInfo.normal.refSRMapQ / (float)ssInfo.normal.refSRCount);
 
 #ifdef DEBUG_SVS
-    log_os << "\nfinally...\n";
     log_os << "tumor contig SP count: " << ssInfo.tumor.contigSRCount << "\n";
     log_os << "tumor contig SP evidence: " << ssInfo.tumor.contigSREvidence << "\n";
     log_os << "tumor contig SP_mapQ: " << ssInfo.tumor.contigSRMapQ << "\n";
