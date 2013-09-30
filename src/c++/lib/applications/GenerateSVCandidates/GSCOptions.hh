@@ -31,7 +31,8 @@
 struct GSCOptions
 {
     GSCOptions() :
-        isSkipAssembly(false)
+        isSkipAssembly(false),
+        minScoredVariantSize(51)
     {}
 
     AlignmentFileOptions alignFileOpt;
@@ -49,6 +50,8 @@ struct GSCOptions
     std::string somaticOutputFilename;
 
     bool isSkipAssembly; ///< if true, skip assembly and run a low-resolution, breakdancer-like subset of the workflow
+
+    unsigned minScoredVariantSize; ///< min size for scoring and scored output following candidate generation
 };
 
 

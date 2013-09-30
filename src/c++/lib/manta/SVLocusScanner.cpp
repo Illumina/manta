@@ -151,7 +151,7 @@ getSVCandidatesFromReadIndels(
 
             if (ps.type == INSERT)
             {
-                if (ps.length >= opt.minCandidateIndelSize)
+                if (ps.length >= opt.minCandidateVariantSize)
                 {
                     static const bool isComplex(true);
                     candidates.push_back(GetSplitSVCandidate(opt,alignTid,refHeadPos,refHeadPos, isComplex));
@@ -161,7 +161,7 @@ getSVCandidatesFromReadIndels(
         else if (isSwapStart)
         {
             const swap_info sinfo(align.path,pathIndex);
-            if ((sinfo.delete_length >= opt.minCandidateIndelSize) || (sinfo.insert_length >= opt.minCandidateIndelSize))
+            if ((sinfo.delete_length >= opt.minCandidateVariantSize) || (sinfo.insert_length >= opt.minCandidateVariantSize))
             {
                 candidates.push_back(GetSplitSVCandidate(opt,alignTid,refHeadPos,refHeadPos+sinfo.delete_length));
             }
@@ -174,14 +174,14 @@ getSVCandidatesFromReadIndels(
 
             if (ps.type == DELETE)
             {
-                if (ps.length >= opt.minCandidateIndelSize)
+                if (ps.length >= opt.minCandidateVariantSize)
                 {
                     candidates.push_back(GetSplitSVCandidate(opt,alignTid,refHeadPos,refHeadPos+ps.length));
                 }
             }
             else if (ps.type == INSERT)
             {
-                if (ps.length >= opt.minCandidateIndelSize)
+                if (ps.length >= opt.minCandidateVariantSize)
                 {
                     candidates.push_back(GetSplitSVCandidate(opt,alignTid,refHeadPos,refHeadPos));
                 }
@@ -496,7 +496,7 @@ getSVCandidatesFromPair(
             // get length of fragment after accounting for any variants described directly in either read alignment:
             const pos_t cigarAdjustedFragmentSize(totalNoninsertSize + (insertRange.end_pos() - insertRange.begin_pos()));
 
-            const bool isLargeFragment(cigarAdjustedFragmentSize > (rstats.properPair.max + opt.minCandidateIndelSize));
+            const bool isLargeFragment(cigarAdjustedFragmentSize > (rstats.properPair.max + opt.minCandidateVariantSize));
 
             // this is an arbitrary point to start officially tagging 'outties' -- for now  we just want to avoid conventional small fragments from FFPE
             const bool isOuttie(cigarAdjustedFragmentSize < 0);
@@ -505,7 +505,7 @@ getSVCandidatesFromPair(
         }
         else
         {
-            if (std::abs(localRead.template_size()) <= (rstats.properPair.max + opt.minCandidateIndelSize)) return;
+            if (std::abs(localRead.template_size()) <= (rstats.properPair.max + opt.minCandidateVariantSize)) return;
         }
     }
 
@@ -872,7 +872,7 @@ isLocalAssemblyEvidence(
     {
         if (ps.type == INSERT || ps.type == DELETE)
         {
-            if (ps.length>=_opt.minCandidateIndelSize) return true;
+            if (ps.length>=_opt.minCandidateVariantSize) return true;
         }
     }
 

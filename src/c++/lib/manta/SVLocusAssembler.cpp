@@ -86,7 +86,7 @@ getBreakendReads(
 #endif
 
     // for assembler reads, look for indels at report size or somewhat smaller
-    const unsigned minAssembleIndelSize(_scanOpt.minCandidateIndelSize/2);
+    const unsigned minAssembleIndelSize(_scanOpt.minCandidateVariantSize/2);
 
     // depending on breakend type we may only be looking for candidates in one direction:
     bool isSearchForRightOpen(true);

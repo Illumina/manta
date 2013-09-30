@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "boost/program_options.hpp"
-
 
 struct ReadScannerOptions
 {
@@ -27,7 +25,7 @@ struct ReadScannerOptions
         breakendEdgeTrimProb(0.25),
         properPairTrimProb(0.01),
         evidenceTrimProb(0.15),
-        minCandidateIndelSize(10),
+        minCandidateVariantSize(10),
         minPairBreakendSize(40),
         splitBreakendSizeFraction(0.1),
         maxSplitBreakendSize(100),
@@ -51,7 +49,7 @@ struct ReadScannerOptions
     float evidenceTrimProb;
 
     /// ignore indels smaller than this when building graph:
-    unsigned minCandidateIndelSize;
+    unsigned minCandidateVariantSize;
 
     // whenever a breakend is predicted from a read pair junction, the predicted breakend range should be no
     // smaller than this:
@@ -80,7 +78,3 @@ struct ReadScannerOptions
     unsigned minSingletonMapqGraph;
     unsigned minSingletonMapqCandidates;
 };
-
-
-boost::program_options::options_description
-getOptionsDescription(ReadScannerOptions& opt);

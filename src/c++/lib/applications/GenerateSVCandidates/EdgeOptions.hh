@@ -18,6 +18,7 @@
 #pragma once
 
 
+/// options for SVLocusGraph edge iteration and noise edge filtration
 struct EdgeOptions
 {
     EdgeOptions() :
@@ -28,12 +29,11 @@ struct EdgeOptions
         graphNodeMaxEdgeCount(10)
     {}
 
-    unsigned binCount;
-    unsigned binIndex;
+    unsigned binCount; ///< divide all edges in the graph into binCount bins of approx equal complexity
+    unsigned binIndex; ///< out of binCount bins, iterate through the edges in this bin only
 
-    bool isLocusIndex; ///< if true, generate candidates for a specific SVgraph locus only
-    unsigned locusIndex;
+    bool isLocusIndex; ///< if true, generate candidates for a specific SVgraph locus only, and ignore binCount/binIndex
+    unsigned locusIndex; ///< if isLocusIndex, report this locus only
 
     unsigned graphNodeMaxEdgeCount; ///< if both nodes of an edge have an edge count higher than this, then skip evaluation of this edge, set to 0 to turn this filtration off
 };
-

@@ -11,16 +11,23 @@
 // <https://github.com/sequencing/licenses/>
 //
 
+///
+/// \author Chris Saunders
+///
 
 #pragma once
 
-#include <string>
-#include <vector>
+#include "options/ReadScannerOptions.hh"
+
+#include "boost/program_options.hpp"
 
 
-/// bam input file object shared by all programs which require these as input
-struct AlignmentFileOptions
-{
-    std::vector<std::string> alignmentFilename;
-    std::vector<bool> isAlignmentTumor; ///< indicates which positions in the alignmnetFilename correspond to tumor
-};
+boost::program_options::options_description
+getOptionsDescription(ReadScannerOptions& opt);
+
+
+bool
+parseOptions(
+    const boost::program_options::variables_map& vm,
+    ReadScannerOptions& opt,
+    std::string& errorMsg);

@@ -21,6 +21,7 @@
 #include "blt_util/log.hh"
 #include "blt_util/samtools_fasta_util.hh"
 #include "blt_util/seq_util.hh"
+#include "manta/SVCandidateUtil.hh"
 #include "manta/SVLocusAssembler.hh"
 #include "manta/SVReferenceUtil.hh"
 
@@ -704,7 +705,7 @@ getSmallSVAssembly(
 
         // remove candidate from consideration unless we rind a sufficiently large indel with good flanking sequence:
         std::vector<std::pair<unsigned,unsigned> >& candidateSegments(assemblyData.smallSVSegments[contigIndex]);
-        const bool isFilterSmallSV( isFilterSmallSVAlignment(_smallSVAligner, alignment.align.apath, _opt.scanOpt.minCandidateIndelSize, candidateSegments));
+        const bool isFilterSmallSV( isFilterSmallSVAlignment(_smallSVAligner, alignment.align.apath, _opt.scanOpt.minCandidateVariantSize, candidateSegments));
 
 #ifdef DEBUG_REFINER
         log_os << logtag << " contigIndex: " << contigIndex << " isFilter " << isFilterSmallSV << " alignment: " << alignment;

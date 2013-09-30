@@ -155,6 +155,7 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
         graphCmd.extend(["--output-file", tmpGraphFiles[-1]])
         graphCmd.extend(["--align-stats",statsPath])
         graphCmd.extend(["--region",gseg.bamRegion])
+        graphCmd.extend(["--min-candidate-sv-size", self.params.minCandidateVariantSize])
         for bamPath in self.params.normalBamList :
             graphCmd.extend(["--align-file",bamPath])
         for bamPath in self.params.tumorBamList :
@@ -221,6 +222,8 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         hygenCmd.extend(["--graph-file",graphPath])
         hygenCmd.extend(["--bin-index", str(binId)])
         hygenCmd.extend(["--bin-count", str(self.params.nonlocalWorkBins)])
+        hygenCmd.extend(["--min-candidate-sv-size", self.params.minCandidateVariantSize])
+        hygenCmd.extend(["--min-scored-sv-size", self.params.minScoredVariantSize])
         hygenCmd.extend(["--ref",self.params.referenceFasta])
         hygenCmd.extend(["--candidate-output-file", candidateVcfPaths[-1]])
         if isSomatic :
@@ -231,9 +234,9 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
 
 
         for bamPath in self.params.normalBamList :
-            hygenCmd.extend(["--align-file",bamPath])
+            hygenCmd.extend(["--align-file", bamPath])
         for bamPath in self.params.tumorBamList :
-            hygenCmd.extend(["--tumor-align-file",bamPath])
+            hygenCmd.extend(["--tumor-align-file", bamPath])
 
         hygenTaskLabel=preJoin(taskPrefix,"generateCandidateSV_"+binStr)
         hygenTasks.add(self.addTask(hygenTaskLabel,hygenCmd,dependencies=dirTask, memMb=self.params.hyGenMemMb))
