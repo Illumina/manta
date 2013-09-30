@@ -282,9 +282,12 @@ scoreSomaticSV(
 
         // consider 2-locus events first
         // TODO: to add local assembly later
-        // apply the split-read scoring, only when the values of max depth are reasonable;
-        // otherwise, the read map may blow out
+
+        // apply the split-read scoring, only when:
+        // 1) the SV is precise, i.e. has successful somatic contigs;
+        // 2) the values of max depth are reasonable (otherwise, the read map may blow out).
         if ((assemblyData.isSpanning) &&
+        	(!sv.isImprecise()) &&
         	(ssInfo.bp1MaxDepth <= 2*_dFilter.maxDepth(sv.bp1.interval.tid)) &&
         	(ssInfo.bp2MaxDepth <= 2*_dFilter.maxDepth(sv.bp2.interval.tid)))
         {
@@ -323,7 +326,8 @@ scoreSomaticSV(
 
     // consider 2-locus events first
     // TODO: to add local assembly later
-    if (assemblyData.isSpanning)
+    if ((assemblyData.isSpanning) &&
+    	(!sv.isImprecise()))
     {
     	// root mean square
     	if (ssInfo.tumor.contigSRCount > 0)

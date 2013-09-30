@@ -29,7 +29,10 @@ SVAlignmentInfo(
 {
 	// consider 2-locus events first
 	// TODO: to add local assembly later
-	if (assemblyData.isSpanning)
+
+	// for imprecise SVs, split-read evidence won't be assigned
+	if ((assemblyData.isSpanning) &&
+		(!sv.isImprecise()))
 	{
 		log_os << "bestAlignmentIndex=" << assemblyData.bestAlignmentIndex <<"\n";
 		if (assemblyData.contigs.size() == 0)
