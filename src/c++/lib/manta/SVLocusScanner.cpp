@@ -859,7 +859,9 @@ isLocalAssemblyEvidence(
     using namespace ALIGNPATH;
 
     {
-        if (isSemiAligned(bamRead,_opt.minSemiAlignedScoreGraph)) return true;
+        // TODO: (1) double check semi-aligned thresholds with fixed qual offsets
+        // TODO: For the semi-aligned test to be effective, we need to convert the cigar string to contain match/mis-match infomration first
+      //  if (isSemiAligned(bamRead,_opt.minSemiAlignedScoreGraph)) return true;
     }
 
     const SimpleAlignment bamAlign(bamRead);
