@@ -35,7 +35,10 @@ SVAlignmentInfo(
 		contigSeq = assemblyData.contigs[assemblyData.bestAlignmentIndex].seq;
 		log_os << "contigSeq=" << contigSeq <<"\n";
 		const JumpAlignmentResult<int>& alignment = assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex];
-		log_os << "alignment: " << alignment << "\n";
+		log_os << "JumpAligner: score: " << alignment.score << "\n";
+		log_os << "\talign1: " << alignment.align1 << "\n";
+		log_os << "\talign2: " << alignment.align2 << "\n";
+
 		// get offsets of breakpoints in the contig
 		const unsigned align1Size(apath_read_length(alignment.align1.apath));
 		const unsigned insertSize(alignment.jumpInsertSize);
