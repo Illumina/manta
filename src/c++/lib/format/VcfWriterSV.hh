@@ -75,7 +75,7 @@ protected:
     virtual
     void
     addSplitReadInfo(
-    	std::vector<std::string>& /*infotags*/) const
+        std::vector<std::string>& /*infotags*/) const
     {}
 
     virtual

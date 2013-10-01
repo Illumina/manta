@@ -37,20 +37,20 @@
 
 struct SVScorer
 {
-	SVScorer(
+    SVScorer(
         const GSCOptions& opt,
         const bam_header_info& header);
 
-	typedef std::map<std::string, bool> read_map_t;
+    typedef std::map<std::string, bool> read_map_t;
 
-	void
+    void
     scoreSplitReads(
-    		bool isBp1,
-    		const SVBreakend& bp,
-    		const SVAlignmentInfo& SVAlignInfo,
-    		read_map_t& readMap,
-    		bam_streamer& read_stream,
-    		SVSampleInfo& sample);
+        bool isBp1,
+        const SVBreakend& bp,
+        const SVAlignmentInfo& SVAlignInfo,
+        read_map_t& readMap,
+        bam_streamer& read_stream,
+        SVSampleInfo& sample);
 
     void
     scoreSomaticSV(

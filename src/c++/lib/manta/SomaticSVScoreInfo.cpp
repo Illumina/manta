@@ -24,43 +24,43 @@
 
 SVAlignmentInfo::
 SVAlignmentInfo(
-			const SVCandidate& sv,
-			const SVCandidateAssemblyData& assemblyData)
+    const SVCandidate& sv,
+    const SVCandidateAssemblyData& assemblyData)
 {
-	// consider 2-locus events first
-	// TODO: to add local assembly later
+    // consider 2-locus events first
+    // TODO: to add local assembly later
 
-	// for imprecise SVs, split-read evidence won't be assigned
-	if ((assemblyData.isSpanning) &&
-		(!sv.isImprecise()))
-	{
-		contigSeq = assemblyData.contigs[assemblyData.bestAlignmentIndex].seq;
-		const JumpAlignmentResult<int>& alignment = assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex];
+    // for imprecise SVs, split-read evidence won't be assigned
+    if ((assemblyData.isSpanning) &&
+        (!sv.isImprecise()))
+    {
+        contigSeq = assemblyData.contigs[assemblyData.bestAlignmentIndex].seq;
+        const JumpAlignmentResult<int>& alignment = assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex];
 
-		// get offsets of breakpoints in the contig
-		const unsigned align1Size(apath_read_length(alignment.align1.apath));
-		const unsigned insertSize(alignment.jumpInsertSize);
-		bp1ContigOffset = align1Size - 1;
-		bp2ContigOffset = align1Size + insertSize;
-		bp1ContigReversed = false;
-		bp2ContigReversed = false;
-		if (sv.bp1.state == sv.bp2.state)
-		{
-			if (sv.bp1.state == SVBreakendState::RIGHT_OPEN)
-				bp2ContigReversed = true;
-			else
-				bp1ContigReversed = true;
-		}
+        // get offsets of breakpoints in the contig
+        const unsigned align1Size(apath_read_length(alignment.align1.apath));
+        const unsigned insertSize(alignment.jumpInsertSize);
+        bp1ContigOffset = align1Size - 1;
+        bp2ContigOffset = align1Size + insertSize;
+        bp1ContigReversed = false;
+        bp2ContigReversed = false;
+        if (sv.bp1.state == sv.bp2.state)
+        {
+            if (sv.bp1.state == SVBreakendState::RIGHT_OPEN)
+                bp2ContigReversed = true;
+            else
+                bp1ContigReversed = true;
+        }
 
-		// get reference regions
-		const reference_contig_segment& bp1Ref = assemblyData.bp1ref;
-		const reference_contig_segment& bp2Ref = assemblyData.bp2ref;
-		bp1RefSeq = bp1Ref.seq();
-		bp2RefSeq = bp2Ref.seq();
-		// get offsets of breakpoints in the reference regions
-		bp1RefOffset = sv.bp1.interval.range.begin_pos() - bp1Ref.get_offset();
-		bp2RefOffset = sv.bp2.interval.range.begin_pos() - bp2Ref.get_offset();
-	}
+        // get reference regions
+        const reference_contig_segment& bp1Ref = assemblyData.bp1ref;
+        const reference_contig_segment& bp2Ref = assemblyData.bp2ref;
+        bp1RefSeq = bp1Ref.seq();
+        bp2RefSeq = bp2Ref.seq();
+        // get offsets of breakpoints in the reference regions
+        bp1RefOffset = sv.bp1.interval.range.begin_pos() - bp1Ref.get_offset();
+        bp2RefOffset = sv.bp2.interval.range.begin_pos() - bp2Ref.get_offset();
+    }
 }
 
 

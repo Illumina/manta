@@ -27,19 +27,19 @@
 
 struct SVAlignmentInfo
 {
-	SVAlignmentInfo(
-			const SVCandidate& sv,
-			const SVCandidateAssemblyData& assemblyData);
+    SVAlignmentInfo(
+        const SVCandidate& sv,
+        const SVCandidateAssemblyData& assemblyData);
 
-	std::string contigSeq;
-	std::string bp1RefSeq;
-	std::string bp2RefSeq;
-	unsigned bp1ContigOffset;
-	unsigned bp2ContigOffset;
-	bool bp1ContigReversed;
-	bool bp2ContigReversed;
-	unsigned bp1RefOffset;
-	unsigned bp2RefOffset;
+    std::string contigSeq;
+    std::string bp1RefSeq;
+    std::string bp2RefSeq;
+    unsigned bp1ContigOffset;
+    unsigned bp2ContigOffset;
+    bool bp1ContigReversed;
+    bool bp2ContigReversed;
+    unsigned bp1RefOffset;
+    unsigned bp2RefOffset;
 };
 
 struct SVSampleInfo

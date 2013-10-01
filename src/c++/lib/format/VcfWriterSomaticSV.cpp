@@ -49,12 +49,12 @@ VcfWriterSomaticSV::
 addSplitReadInfo(
     std::vector<std::string>& infotags) const
 {
-	const SomaticSVScoreInfo& ssInfo(*_ssInfoPtr);
+    const SomaticSVScoreInfo& ssInfo(*_ssInfoPtr);
 
-	infotags.push_back( str(boost::format("NORMAL_CONTIG_SPLIT_READ=%i") % ssInfo.normal.contigSRCount));
-	infotags.push_back( str(boost::format("TUMOR_CONTIG_SPLIT_READ=%i") % ssInfo.tumor.contigSRCount));
-	infotags.push_back( str(boost::format("NORMAL_REF_SPLIT_READ=%i") % ssInfo.normal.refSRCount));
-	infotags.push_back( str(boost::format("TUMOR_REF_SPLIT_READ=%i") % ssInfo.tumor.refSRCount));
+    infotags.push_back( str(boost::format("NORMAL_CONTIG_SPLIT_READ=%i") % ssInfo.normal.contigSRCount));
+    infotags.push_back( str(boost::format("TUMOR_CONTIG_SPLIT_READ=%i") % ssInfo.tumor.contigSRCount));
+    infotags.push_back( str(boost::format("NORMAL_REF_SPLIT_READ=%i") % ssInfo.normal.refSRCount));
+    infotags.push_back( str(boost::format("TUMOR_REF_SPLIT_READ=%i") % ssInfo.tumor.refSRCount));
 
 }
 
