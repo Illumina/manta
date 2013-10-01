@@ -211,6 +211,7 @@ scoreSplitReads(
 			sample.contigSRMapQ += readMapQ * readMapQ;
 
 #ifdef DEBUG_SVS
+			/*
 			log_os << "bp1Contig \n";
 			log_os << bp1ContigSR;
 			log_os << "bp2Contig \n";
@@ -218,6 +219,7 @@ scoreSplitReads(
 			log_os << "contigEvidence = " << contigEvidence << "\n";
 			log_os << "accumulated contigEvidence = " << sample.contigSREvidence << "\n";
 			log_os << "contigCount = " << sample.contigSRCount << "\n\n";
+			*/
 #endif
 		}
 		if ((bp1RefSR.has_evidence()) || (bp2RefSR.has_evidence()))
@@ -227,6 +229,7 @@ scoreSplitReads(
 			sample.refSRMapQ += readMapQ * readMapQ;
 
 #ifdef DEBUG_SVS
+			/*
 			log_os << "bp1Ref \n";
 			log_os << bp1RefSR;
 			log_os << "bp2Ref \n";
@@ -234,6 +237,7 @@ scoreSplitReads(
 			log_os << "refEvidence = " << refEvidence << "\n";
 			log_os << "accumulated refEvidence = " << sample.refSREvidence << "\n";
 			log_os << "refCount = " << sample.refSRCount << "\n\n";
+			*/
 #endif
 		}
 	}
