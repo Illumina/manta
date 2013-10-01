@@ -191,15 +191,6 @@ scoreSplitReads(
 		splitReadAlignment bp2RefSR;
 		bp2RefSR.align(readSeq, svAlignInfo.bp2RefSeq, svAlignInfo.bp2RefOffset);
 
-		log_os << "bp1contigSR\n";
-		log_os << bp1ContigSR << "\n";
-		log_os << "bp2contigSR\n";
-		log_os << bp2ContigSR << "\n";
-		log_os << "bp1RefSR\n";
-		log_os << bp1RefSR << "\n";
-		log_os << "bp2RefSR\n";
-		log_os << bp2RefSR << "\n";
-
 		// scoring
 		float bp1ContigEvidence(0);
 		float bp2ContigEvidence(0);
@@ -220,13 +211,11 @@ scoreSplitReads(
 			sample.contigSRMapQ += readMapQ * readMapQ;
 
 #ifdef DEBUG_SVS
-			/*
 			log_os << "bp1Contig \n";
 			log_os << bp1ContigSR << "\n";
 			log_os << "bp2Contig \n";
 			log_os << bp2ContigSR << "\n";
-			*/
-
+			log_os << "contigEvidence = " << contigEvidence << "\n";
 #endif
 		}
 		if ((bp1RefSR.has_evidence()) || (bp2RefSR.has_evidence()))
@@ -236,12 +225,11 @@ scoreSplitReads(
 			sample.refSRMapQ += readMapQ * readMapQ;
 
 #ifdef DEBUG_SVS
-			/*
 			log_os << "bp1Ref \n";
 			log_os << bp1RefSR << "\n";
 			log_os << "bp2Ref \n";
 			log_os << bp2RefSR << "\n";
-			*/
+			log_os << "refEvidence = " << refEvidence << "\n";
 #endif
 		}
 	}
