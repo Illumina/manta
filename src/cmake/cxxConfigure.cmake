@@ -102,7 +102,7 @@ endif ()
 
 
 #
-# set compile flags, and modify by compiler/compiler version:
+# set compile flags, and modify by compiler/version:
 #
 
 # start with warning flags:
@@ -150,8 +150,6 @@ set (CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 set (CMAKE_CXX_FLAGS_RELEASE "-O3 -fomit-frame-pointer")
 set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
 #set (CMAKE_CXX_FLAGS_PROFILE "-O0 -g -pg -fprofile-arcs -ftest-coverage")
-
-SET( CMAKE_EXE_LINKER_FLAGS_RELEASE  "${CMAKE_EXE_LINKER_FLAGS_RELEASE} ${GCC_COVERAGE_LINK_FLAGS}" )
 
 
 # add address sanitizer to debug mode:
@@ -212,4 +210,12 @@ elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "^i[345]86$")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffloat-store")
 endif ()
 
+set(MANTA_CXX_CONFIG_H_DIR ${CMAKE_CURRENT_BINARY_DIR}/lib/common)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/lib/common/config.h.in ${MANTA_CXX_CONFIG_H_DIR}/config.h @ONLY)
+
+
+#
+# include dirs:
+#
+set (MANTA_CXX_BEFORE_SYSTEM_INCLUDES "${Boost_INCLUDE_DIRS}" "${SAMTOOLS_DIR}" "${TABIX_DIR}")
+set (MANTA_CXX_ALL_INCLUDES "${CMAKE_SOURCE_DIR}/c++/lib")

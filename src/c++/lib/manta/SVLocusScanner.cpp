@@ -27,6 +27,8 @@
 
 //#define DEBUG_SCANNER
 
+//#define DEBUG_SEMI_ALIGNED
+
 
 #ifdef DEBUG_SCANNER
 #include "blt_util/log.hh"
@@ -424,7 +426,7 @@ getSVCandidatesFromPair(
 
 /// scan read record (and optionally its mate record) for SV evidence.
 //
-/// note that estimation is improved by the mate record (becuase we have the mate cigar string in this case)
+/// note that estimation is improved by the mate record (because we have the mate cigar string in this case)
 ///
 static
 void
@@ -653,11 +655,40 @@ bool
 SVLocusScanner::
 isSemiAligned(const bam_record& bamRead) const
 {
-    ALIGNPATH::path_t apath;
+	ALIGNPATH::path_t apath;
     bam_cigar_to_apath(bamRead.raw_cigar(),bamRead.n_cigar(),apath);
     const double minSemiAlignedScore(10.0);
-    return (ReadScorer::get().getSemiAlignedMetric(apath,bamRead.qual())>minSemiAlignedScore);
+    const double semiAlignedScore(ReadScorer::get().getSemiAlignedMetric(apath,bamRead.qual()));
+
+
+#ifdef DEBUG_SEMI_ALIGNED
+	static const std::string logtag("isSemiAligned");
+    log_os << logtag << " semi-aligned score=" << semiAlignedScore << " read qname=" << bamRead.qname() << " apath=" << apath <<  std::endl;
+#endif
+    return (semiAlignedScore>minSemiAlignedScore);
 }
+
+bool
+SVLocusScanner::
+isShadow(const bam_record& bamRead) const
+{
+	// shadow read should be unmapped
+	if (!bamRead.is_unmapped()) return false;
+	// but its partner should be aligned
+	if (bamRead.is_mate_unmapped()) return false;
+
+#ifdef DEBUG_IS_SHADOW
+	static const std::string logtag("isShadow");
+    log_os << logtag << " mapq score=" << bamRead.map_qual() << std::endl;
+#endif
+
+	return true;
+
+	// FIXME: use mapq as substitute for single-read alignment score?
+	//uint8_t minMapqShadow(20);
+	//if (bamRead.map_qual() > minMapqShadow) return true;
+}
+
 
 bool
 SVLocusScanner::

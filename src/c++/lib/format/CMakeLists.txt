@@ -10,5 +10,4 @@
 # <https://github.com/sequencing/licenses/>
 #
 
-include_directories (BEFORE SYSTEM "${SAMTOOLS_DIR}")
 include(${MANTA_CXX_LIBRARY_CMAKE})

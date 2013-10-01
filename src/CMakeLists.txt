@@ -32,10 +32,10 @@ enable_testing()
 set(MANTA_PROJECT_NAME "manta")
 
 # get version
-set(SOURCE_BOOTSTRAP_DIR "${CMAKE_SOURCE_DIR}/cmake/bootstrap")
-set(SOURCE_QC_DIR "${CMAKE_SOURCE_DIR}/srcqc")
+set(MANTA_BOOTSTRAP_DIR "${CMAKE_SOURCE_DIR}/cmake/bootstrap")
+set(MANTA_SOURCE_QC_DIR "${CMAKE_SOURCE_DIR}/srcqc")
 
-execute_process(COMMAND bash ${SOURCE_BOOTSTRAP_DIR}/getVersion.bash OUTPUT_VARIABLE MANTA_GIT_VERSION)
+execute_process(COMMAND bash ${MANTA_BOOTSTRAP_DIR}/getVersion.bash OUTPUT_VARIABLE MANTA_GIT_VERSION)
 set(MANTA_VERSION "${MANTA_GIT_VERSION}")
 set(MANTA_FULL_VERSION "${MANTA_PROJECT_NAME}-${MANTA_VERSION}")
 message (STATUS "MANTA_VERSION: ${MANTA_VERSION}")
@@ -99,7 +99,7 @@ message (STATUS "install prefix: ${CMAKE_INSTALL_PREFIX}")
 
 add_custom_target(MANTA_OPT ALL)
 
-set(BOOST_REDIST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../redist")
+set(MANTA_REDIST_DIR "${CMAKE_SOURCE_DIR}/../redist")
 
 # required boost libraries
 set (MANTA_BOOST_VERSION 1.49.0)
@@ -122,7 +122,7 @@ include ("${CMAKE_SOURCE_DIR}/cmake/boost.cmake")
 # global source QC -- don't allow non-ascii chars in source files:
 add_custom_target(MANTA_SOURCE_CHECK
     ALL
-    COMMAND ${SOURCE_QC_DIR}/check_for_nonascii_source.bash
+    COMMAND ${MANTA_SOURCE_QC_DIR}/check_for_nonascii_source.bash
     )
 
 # force this to run earlY:

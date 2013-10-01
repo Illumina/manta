@@ -187,7 +187,7 @@ checkResult(
     const unsigned svCount(svs.size());
     if (0 == svCount) return;
 
-    // check that the counts totaled up from the data match those in the sv candidates
+    // check that the counts totalled up from the data match those in the sv candidates
     std::map<unsigned,unsigned> readCounts;
     std::map<unsigned,unsigned> pairCounts;
 

@@ -177,8 +177,21 @@ getBreakendReads(
             log_os << " cigar: " << apath << " isClipKeeper: " << isClipKeeper << " isIndelKeeper: " << isIndelKeeper << "\n";
 #endif
 
-            if (! (isClipKeeper || isIndelKeeper)) continue;
+            bool isSemiAlignedKeeper(false);
+            {
+            	if (_readScanner.isSemiAligned(bamRead)) isSemiAlignedKeeper = true;
+            }
 
+            bool isShadowKeeper(false);
+            {
+            	if (_readScanner.isShadow(bamRead)) isShadowKeeper = true;
+            }
+
+            if (! (isClipKeeper
+            	|| isIndelKeeper
+            	|| isSemiAlignedKeeper
+            	|| isShadowKeeper
+            	)) continue;
             //if ( bamRead.pe_map_qual() == 0 ) continue;
             const char flag(bamRead.is_second() ? '2' : '1');
             const std::string readKey = std::string(bamRead.qname()) + "_" + flag + "_" + bamIndexStr;

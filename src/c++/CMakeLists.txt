@@ -27,17 +27,11 @@ set (MANTA_CXX_LIBRARY_CMAKE "${CMAKE_SOURCE_DIR}/cmake/cxxLibrary.cmake")
 set (MANTA_CXX_CONFIGURE_CMAKE "${CMAKE_SOURCE_DIR}/cmake/cxxConfigure.cmake")
 set (MANTA_CXX_TEST_LIBRARY_CMAKE "${CMAKE_SOURCE_DIR}/cmake/cxxTestLibrary.cmake")
 
-set(MANTA_CXX_CONFIG_H_DIR ${CMAKE_CURRENT_BINARY_DIR}/common)
 include ("${MANTA_CXX_CONFIGURE_CMAKE}")
-
-##
-## The include directories
-##
-set (MANTA_CXX_ALL_INCLUDES "${CMAKE_CURRENT_SOURCE_DIR}/lib")
 
 add_custom_target(MANTA_CPPCHECK
     ALL
-    COMMAND ${SOURCE_QC_DIR}/run_cppcheck.bash ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND ${MANTA_SOURCE_QC_DIR}/run_cppcheck.bash ${CMAKE_CURRENT_SOURCE_DIR}
     )
 
 add_dependencies(MANTA_OPT MANTA_CPPCHECK)

@@ -344,7 +344,6 @@ runSmallAssembler(
 #ifdef DEBUG_ASBL
     dbg_os << "SmallAssember: Starting assembly with " << reads.size() << " reads.\n";
 #endif
-
     assert(opt.alphabet.size()>1);
 
     assembledReadInfo.clear();

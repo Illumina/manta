@@ -90,8 +90,9 @@ rm -rf $SOURCE_DIR
 common_create_source
 
 echo "Extracted cmake version $TARBALL_VERSION source code into $SOURCE_DIR" >&2
-echo "Installing cmake using: './bootstrap --prefix=\"${INSTALL_DIR}\" --parallel=\"$PARALLEL\" && make -j \"$PARALLEL\" && make install'" >&2
-cd $SOURCE_DIR && ./bootstrap --prefix="${INSTALL_DIR}" --parallel="$PARALLEL" && make -j "$PARALLEL" && make install
+cmd="cd $SOURCE_DIR && ./bootstrap --prefix=\"${INSTALL_DIR}\" --parallel=\"$PARALLEL\" && make -j \"$PARALLEL\" && make install"
+echo "Installing cmake using: '$cmd'" >&2
+eval $cmd
 
 if [ $? != 0 ] ; then echo "cmake: build failed: Terminating..." >&2 ; exit 2 ; fi
 

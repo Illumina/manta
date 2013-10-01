@@ -119,26 +119,35 @@ private:
         const SVCandidate& sv,
         const SVCandidateAssemblyData& adata,
         const std::string& label,
+        const std::string& vcfId,
         const bool isIndel = false);
 
     void
     writeInversion(
+        const EdgeInfo& edge,
         const SVCandidate& sv,
+        const SVCandidateSetData& svData,
         const SVCandidateAssemblyData& adata);
 
     void
     writeIndel(
+        const EdgeInfo& edge,
         const SVCandidate& sv,
+        const SVCandidateSetData& svData,
         const SVCandidateAssemblyData& adata);
 
     void
     writeTanDup(
+        const EdgeInfo& edge,
         const SVCandidate& sv,
+        const SVCandidateSetData& svData,
         const SVCandidateAssemblyData& adata);
 
     void
     writeComplex(
+        const EdgeInfo& edge,
         const SVCandidate& sv,
+        const SVCandidateSetData& svData,
         const SVCandidateAssemblyData& adata);
 
 protected:
@@ -149,6 +158,7 @@ private:
 protected:
     std::ostream& _os;
 private:
-    boost::format _idFormatter;
+    boost::format _transLocIdFormatter;
+    boost::format _otherSVIdFormatter;
 };
 

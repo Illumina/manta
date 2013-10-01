@@ -8,7 +8,7 @@ reltoabs() {
 }
 
 scriptdir=$(dirname $0)
-basedir=$(reltoabs $scriptdir/..)
+basedir=$(reltoabs $scriptdir/../..)
 
 
 if [ $# != 1 ] || [ "$1" != "-imeanit" ]; then

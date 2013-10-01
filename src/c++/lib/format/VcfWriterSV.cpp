@@ -44,7 +44,8 @@ VcfWriterSV(
     _referenceFilename(referenceFilename),
     _header(set.header),
     _os(os),
-    _idFormatter("MantaBND:%i:%i:%i:%i:")
+    _transLocIdFormatter("MantaBND:%i:%i:%i:%i:"),
+    _otherSVIdFormatter("%s:%i:%i:%i:%i:%i")
 {
 }
 
@@ -69,8 +70,11 @@ writeHeaderPrefix(
     /// vcf 4.1 reserved/suggested INFO tags:
     _os << "##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description=\"Imprecise structural variation\">\n";
     _os << "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n";
+    _os << "##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Difference in length between REF and ALT alleles\">\n";
+    _os << "##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the variant described in this record\">\n";
     _os << "##INFO=<ID=CIPOS,Number=2,Type=Integer,Description=\"Confidence interval around POS\">\n";
     _os << "##INFO=<ID=CIEND,Number=2,Type=Integer,Description=\"Confidence interval around END\">\n";
+    _os << "##INFO=<ID=CIGAR,Number=A,Type=String,Description=\"CIGAR alignment for each alternate indel allele\">\n";
     _os << "##INFO=<ID=MATEID,Number=.,Type=String,Description=\"ID of mate breakend\">\n";
 #if 0
     _os << "##INFO=<ID=HOMLEN,Number=.,Type=Integer,Description=\"Length of base pair identical micro-homology at event breakpoints\">\n";
@@ -84,7 +88,6 @@ writeHeaderPrefix(
     _os << "##INFO=<ID=BND_PAIR_SUPPORT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at this breakend (mapping may not be confident at remote breakend)\">\n";
     _os << "##INFO=<ID=UPSTREAM_PAIR_SUPPORT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at the upstream breakend (mapping may not be confident at downstream breakend)\">\n";
     _os << "##INFO=<ID=DOWNSTREAM_PAIR_SUPPORT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at this downstream breakend (mapping may not be confident at upstream breakend)\">\n";
-    _os << "##INFO=<ID=CIGAR,Number=A,Type=String,Description=\"CIGAR alignment for each alternate indel allele\">\n";
 
     addHeaderInfo();
 
@@ -331,7 +334,7 @@ writeTranslocPair(
     const SVCandidateSetData& svData,
     const SVCandidateAssemblyData& adata)
 {
-    const std::string idPrefix( str(_idFormatter % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex ) );
+    const std::string idPrefix( str(_transLocIdFormatter % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex) );
 
     writeTransloc(sv, idPrefix, true, svData, adata);
     writeTransloc(sv, idPrefix, false, svData, adata);
@@ -344,6 +347,7 @@ writeInvdel(
     const SVCandidate& sv,
     const SVCandidateAssemblyData& adata,
     const std::string& label,
+    const std::string& vcfId,
     const bool isIndel)
 {
     const bool isImprecise(sv.isImprecise());
@@ -405,9 +409,6 @@ writeInvdel(
 
     if (pos<1) return;
 
-    // get ID
-    static const std::string localId(".");
-
     // get REF
     std::string ref;
     {
@@ -434,12 +435,12 @@ writeInvdel(
     // build INFO field
     std::vector<std::string> words;
     split_string(label,':',words);
-    infotags.push_back( str(boost::format("SVTYPE=%s") % words[0]));
     if (! isSmallVariant)
     {
         infotags.push_back( str(boost::format("END=%i") % endPos));
+        infotags.push_back( str(boost::format("SVTYPE=%s") % words[0]));
+        infotags.push_back( str(boost::format("SVLEN=%i") % (-1*(endPos-pos))));
     }
-    infotags.push_back( str(boost::format("SVLEN=%i") % (endPos-pos)));
     infotags.push_back( str(boost::format("UPSTREAM_PAIR_SUPPORT=%i") % bpA.readCount) );
     infotags.push_back( str(boost::format("DOWNSTREAM_PAIR_SUPPORT=%i") % bpB.readCount) );
     infotags.push_back( str(boost::format("PAIR_SUPPORT=%i") % bpA.pairCount) );
@@ -506,7 +507,7 @@ writeInvdel(
     // write out record:
     _os << chrom
         << '\t' << pos
-        << '\t' << localId // ID
+        << '\t' << vcfId // ID
         << '\t' << ref // REF
         << '\t' << alt // ALT
         << '\t' << '.' // QUAL
@@ -522,10 +523,14 @@ writeInvdel(
 void
 VcfWriterSV::
 writeInversion(
+    const EdgeInfo& edge,
     const SVCandidate& sv,
+    const SVCandidateSetData& /*svData*/,
     const SVCandidateAssemblyData& adata)
 {
-    writeInvdel(sv, adata, "INV");
+    const std::string label("INV");
+    const std::string vcfId( str(_otherSVIdFormatter % label % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex % adata.bestAlignmentIndex ) );
+    writeInvdel(sv,adata, label,vcfId);
 }
 
 
@@ -533,7 +538,9 @@ writeInversion(
 void
 VcfWriterSV::
 writeIndel(
+    const EdgeInfo& edge,
     const SVCandidate& sv,
+    const SVCandidateSetData& /*svData*/,
     const SVCandidateAssemblyData& adata)
 {
     static const bool isIndel(true);
@@ -548,27 +555,38 @@ writeIndel(
 
     const bool isDelete(deleteSize >= insertSize);
 
-    writeInvdel(sv, adata, (isDelete ? "DEL" : "INS"), isIndel);
+    const std::string label(isDelete ? "DEL" : "INS");
+    const std::string vcfId( str(_otherSVIdFormatter % label % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex % adata.bestAlignmentIndex ) );
+
+    writeInvdel(sv, adata, label, vcfId, isIndel);
 }
 
 
 void
 VcfWriterSV::
 writeTanDup(
+    const EdgeInfo& edge,
     const SVCandidate& sv,
+    const SVCandidateSetData& /*svData*/,
     const SVCandidateAssemblyData& adata)
 {
-    writeInvdel(sv,adata, "DUP:TANDEM");
+    const std::string label("DUP:TANDEM");
+    const std::string vcfId( str(_otherSVIdFormatter % label % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex % adata.bestAlignmentIndex ) );
+    writeInvdel(sv,adata, label, vcfId);
 }
 
 
 void
 VcfWriterSV::
 writeComplex(
+    const EdgeInfo& edge,
     const SVCandidate& sv,
+    const SVCandidateSetData& /*svData*/,
     const SVCandidateAssemblyData& adata)
 {
-    writeInvdel(sv,adata, "COMPLEX");
+    const std::string label("COMPLEX");
+    const std::string vcfId( str(_otherSVIdFormatter % label % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex % adata.bestAlignmentIndex ) );
+    writeInvdel(sv, adata, label, vcfId);
 }
 
 
@@ -593,19 +611,19 @@ writeSVCore(
     }
     else if (svType == SV_TYPE::INVERSION)
     {
-        writeInversion(sv, adata);
+    	writeInversion(edge, sv, svData, adata);
     }
     else if (svType == SV_TYPE::INDEL)
     {
-        writeIndel(sv, adata);
+        writeIndel(edge, sv, svData, adata);
     }
     else if (svType == SV_TYPE::TANDUP)
     {
-        writeTanDup(sv, adata);
+        writeTanDup(edge, sv, svData, adata);
     }
     else if (svType == SV_TYPE::COMPLEX)
     {
-        writeComplex(sv, adata);
+        writeComplex(edge, sv, svData, adata);
     }
     else
     {
