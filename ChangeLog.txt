@@ -1,4 +1,4 @@
-
+v0.9
 - MANTA-20 preliminary work on this branch allows assembly skip and control of
 min indel candidate size and min indel score size
 - MANTA-33 reduce SV graph ram requirement to ~1/3 of its previous value, increase all post-merge
