@@ -50,7 +50,7 @@ You must specify a BAM file for at least one sample.
     def addWorkflowGroupOptions(self,group) :
         group.add_option("--normalBam", type="string",dest="normalBam",metavar="FILE",
                          help="Normal sample BAM file. [required] (no default)")
-        group.add_option("--tumorBam", type="string",dest="tumorBam",metavar="FILE",
+        group.add_option("--tumorBam","--tumourBam", type="string",dest="tumorBam",metavar="FILE",
                           help="Tumor sample BAM file. [optional] (no default)")
 #         group.add_option("--aligner", type="string",dest="alignerMode",metavar="ALIGNER",
 #                          help="Aligner type. Accepted option are {%s} [required] (no default)" % (",".join(['%s' % (x) for x in self.validAlignerModes])))
