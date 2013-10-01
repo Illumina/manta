@@ -192,13 +192,13 @@ scoreSplitReads(
 		bp2RefSR.align(readSeq, svAlignInfo.bp2RefSeq, svAlignInfo.bp2RefOffset);
 
 		log_os << "bp1contigSR\n";
-		log_os << bp1ContigSR.get_alignment() << "\n";
+		log_os << bp1ContigSR << "\n";
 		log_os << "bp2contigSR\n";
-		log_os << bp2ContigSR.get_alignment() << "\n";
+		log_os << bp2ContigSR << "\n";
 		log_os << "bp1RefSR\n";
-		log_os << bp1RefSR.get_alignment() << "\n";
+		log_os << bp1RefSR << "\n";
 		log_os << "bp2RefSR\n";
-		log_os << bp2RefSR.get_alignment() << "\n";
+		log_os << bp2RefSR << "\n";
 
 		// scoring
 		float bp1ContigEvidence(0);
