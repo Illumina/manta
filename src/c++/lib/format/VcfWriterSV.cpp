@@ -282,6 +282,10 @@ writeTransloc(
     {
         infotags.push_back("IMPRECISE");
     }
+    else if (adata.isSpanning)
+    {
+    	addSplitReadInfo(infotags);
+    }
 
     if (bpArange.size() > 1)
     {
@@ -338,6 +342,7 @@ void
 VcfWriterSV::
 writeInvdel(
     const SVCandidate& sv,
+    const SVCandidateAssemblyData& adata,
     const std::string& label,
     const bool isIndel)
 {
@@ -455,6 +460,10 @@ writeInvdel(
     {
         infotags.push_back("IMPRECISE");
     }
+    else if (adata.isSpanning)
+    {
+    	addSplitReadInfo(infotags);
+    }
 
     if (bpArange.size() > 1)
     {
@@ -513,9 +522,10 @@ writeInvdel(
 void
 VcfWriterSV::
 writeInversion(
-    const SVCandidate& sv)
+    const SVCandidate& sv,
+    const SVCandidateAssemblyData& adata)
 {
-    writeInvdel(sv,"INV");
+    writeInvdel(sv, adata, "INV");
 }
 
 
@@ -523,7 +533,8 @@ writeInversion(
 void
 VcfWriterSV::
 writeIndel(
-    const SVCandidate& sv)
+    const SVCandidate& sv,
+    const SVCandidateAssemblyData& adata)
 {
     static const bool isIndel(true);
 
@@ -537,25 +548,27 @@ writeIndel(
 
     const bool isDelete(deleteSize >= insertSize);
 
-    writeInvdel(sv,(isDelete ? "DEL" : "INS"), isIndel);
+    writeInvdel(sv, adata, (isDelete ? "DEL" : "INS"), isIndel);
 }
 
 
 void
 VcfWriterSV::
 writeTanDup(
-    const SVCandidate& sv)
+    const SVCandidate& sv,
+    const SVCandidateAssemblyData& adata)
 {
-    writeInvdel(sv,"DUP:TANDEM");
+    writeInvdel(sv,adata, "DUP:TANDEM");
 }
 
 
 void
 VcfWriterSV::
 writeComplex(
-    const SVCandidate& sv)
+    const SVCandidate& sv,
+    const SVCandidateAssemblyData& adata)
 {
-    writeInvdel(sv,"COMPLEX");
+    writeInvdel(sv,adata, "COMPLEX");
 }
 
 
@@ -580,19 +593,19 @@ writeSVCore(
     }
     else if (svType == SV_TYPE::INVERSION)
     {
-        writeInversion(sv);
+        writeInversion(sv, adata);
     }
     else if (svType == SV_TYPE::INDEL)
     {
-        writeIndel(sv);
+        writeIndel(sv, adata);
     }
     else if (svType == SV_TYPE::TANDUP)
     {
-        writeTanDup(sv);
+        writeTanDup(sv, adata);
     }
     else if (svType == SV_TYPE::COMPLEX)
     {
-        writeComplex(sv);
+        writeComplex(sv, adata);
     }
     else
     {

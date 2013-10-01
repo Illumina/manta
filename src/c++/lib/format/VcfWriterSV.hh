@@ -74,6 +74,12 @@ protected:
 
     virtual
     void
+    addSplitReadInfo(
+    	std::vector<std::string>& /*infotags*/) const
+    {}
+
+    virtual
+    void
     modifyInfo(
         const bool /*isFirstOfPair*/,
         const SVCandidateSetData& /*svData*/,
@@ -111,24 +117,29 @@ private:
     void
     writeInvdel(
         const SVCandidate& sv,
+        const SVCandidateAssemblyData& adata,
         const std::string& label,
         const bool isIndel = false);
 
     void
     writeInversion(
-        const SVCandidate& sv);
+        const SVCandidate& sv,
+        const SVCandidateAssemblyData& adata);
 
     void
     writeIndel(
-        const SVCandidate& sv);
+        const SVCandidate& sv,
+        const SVCandidateAssemblyData& adata);
 
     void
     writeTanDup(
-        const SVCandidate& sv);
+        const SVCandidate& sv,
+        const SVCandidateAssemblyData& adata);
 
     void
     writeComplex(
-        const SVCandidate& sv);
+        const SVCandidate& sv,
+        const SVCandidateAssemblyData& adata);
 
 protected:
     const std::string& _referenceFilename;

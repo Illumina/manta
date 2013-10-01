@@ -53,6 +53,10 @@ private:
     addHeaderFilters() const;
 
     void
+    addSplitReadInfo(
+        std::vector<std::string>& infotags) const;
+
+    void
     modifyInfo(
         const bool isFirstOfPair,
         const SVCandidateSetData& svData,
