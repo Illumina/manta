@@ -214,7 +214,7 @@ scoreSplitReads(
 			log_os << "bp1Contig \n";
 			log_os << bp1ContigSR;
 			log_os << "bp2Contig \n";
-			log_os << bp2ContigSR";
+			log_os << bp2ContigSR;
 			log_os << "contigEvidence = " << contigEvidence << "\n";
 			log_os << "accumulated contigEvidence = " << sample.contigSREvidence << "\n\n";
 #endif
