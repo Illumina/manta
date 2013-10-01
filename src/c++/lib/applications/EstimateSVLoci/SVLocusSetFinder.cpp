@@ -171,7 +171,7 @@ process_pos(const int stage_no,
 void
 SVLocusSetFinder::
 update(const bam_record& bamRead,
-       const unsigned defaultReadGroupIndex, 
+       const unsigned defaultReadGroupIndex,
        std::map<std::string, int32_t>& chromToInt)
 {
     _isScanStarted=true;

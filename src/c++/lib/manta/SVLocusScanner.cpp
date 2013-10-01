@@ -149,7 +149,7 @@ GetSplitSACandidate(
     remoteBreakend.splitCount++;
 
     // Need to use the match descriptors to determine if
-    //  we are upstream clipped or downstream clipped. We 
+    //  we are upstream clipped or downstream clipped. We
     //  also then need to use the strand. Below is the logic
     //
     // Upstream & +    => LEFT_OPEN
@@ -199,7 +199,7 @@ GetSplitSACandidate(
       BOOST_THROW_EXCEPTION(LogicException(oss.str()));
     }
 
-    // Set chromosomes 
+    // Set chromosomes
     localBreakend.interval.tid = alignTidLocal;
     remoteBreakend.interval.tid = alignTidRemote;
 
@@ -215,10 +215,10 @@ GetSplitSACandidate(
     return sv;
 }
 
-static 
-void strToVec(const std::string& line, 
-              std::vector<std::string>& data, 
-              char sep = '\t') 
+static
+void strToVec(const std::string& line,
+              std::vector<std::string>& data,
+              char sep = '\t')
 {
   // Ensure data is clean
   data.clear();
@@ -226,7 +226,7 @@ void strToVec(const std::string& line,
   std::string::size_type prevIndex = 0;
   std::string::size_type currIndex = line.find_first_of(sep);
   int idx = 0;
-  while(currIndex != std::string::npos) 
+  while(currIndex != std::string::npos)
   {
     data.push_back(line.substr(prevIndex, currIndex - prevIndex));
 
@@ -266,10 +266,10 @@ getSACandidatesFromRead(
     strToVec(saStr, saVec, ';');
     // For now we will only handle a single split alignment
     //  In the future we will need to sort the SA tags by order on of segements on
-    //   the actual template. 
+    //   the actual template.
     //  We may also have to toss conflicting segments that map to two different areas,
-    //   or at least find some way of dealing with them. 
-    //std::cerr << "At: '" << saStr << "', '" << localRead << "'" << std::endl;    
+    //   or at least find some way of dealing with them.
+    //std::cerr << "At: '" << saStr << "', '" << localRead << "'" << std::endl;
     //std::cerr << "Size: " << saVec.size() << std::endl;
 
     if (saVec.size() > 1) return;
@@ -289,10 +289,10 @@ getSACandidatesFromRead(
       const char saStrand(saDat[2][0]); // convert to char
       std::string saMd(saDat[3]);
 
-      /*std::cerr << "SA Values: " 
-                << ", " << saChr 
+      /*std::cerr << "SA Values: "
+                << ", " << saChr
                 << ", " << saPos
-                << ", " << saStrand 
+                << ", " << saStrand
                 << ", " << saMd << std::endl;
       */
       ALIGNPATH::path_t remotePath;
@@ -303,15 +303,15 @@ getSACandidatesFromRead(
       candidates.push_back(GetSplitSACandidate(opt,alignTid,saChr,refHeadPos,saPos,localStrand,saStrand,
                                                localPath,remotePath));
       /*
-      std::cerr << "SA\t" 
+      std::cerr << "SA\t"
                 << localRead << ", "
-                << alignTid << ", " 
-                << saChr << ", " 
-                << refHeadPos << ", " 
-                << saPos << ", " 
-                << localStrand << ", " 
-                << saStrand << ", " 
-                << localPath << ", " 
+                << alignTid << ", "
+                << saChr << ", "
+                << refHeadPos << ", "
+                << saPos << ", "
+                << localStrand << ", "
+                << saStrand << ", "
+                << localPath << ", "
                 << remotePath << "." << std::endl;
       */
     }
