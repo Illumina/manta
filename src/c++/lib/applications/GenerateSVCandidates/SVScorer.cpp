@@ -212,10 +212,11 @@ scoreSplitReads(
 
 #ifdef DEBUG_SVS
 			log_os << "bp1Contig \n";
-			log_os << bp1ContigSR << "\n";
+			log_os << bp1ContigSR;
 			log_os << "bp2Contig \n";
-			log_os << bp2ContigSR << "\n";
+			log_os << bp2ContigSR";
 			log_os << "contigEvidence = " << contigEvidence << "\n";
+			log_os << "accumulated contigEvidence = " << sample.contigSREvidence << "\n\n";
 #endif
 		}
 		if ((bp1RefSR.has_evidence()) || (bp2RefSR.has_evidence()))
@@ -226,10 +227,11 @@ scoreSplitReads(
 
 #ifdef DEBUG_SVS
 			log_os << "bp1Ref \n";
-			log_os << bp1RefSR << "\n";
+			log_os << bp1RefSR;
 			log_os << "bp2Ref \n";
-			log_os << bp2RefSR << "\n";
+			log_os << bp2RefSR;
 			log_os << "refEvidence = " << refEvidence << "\n";
+			log_os << "accumulated refEvidence = " << sample.refSREvidence << "\n\n";
 #endif
 		}
 	}
