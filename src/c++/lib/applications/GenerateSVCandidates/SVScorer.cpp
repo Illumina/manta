@@ -216,7 +216,8 @@ scoreSplitReads(
 			log_os << "bp2Contig \n";
 			log_os << bp2ContigSR;
 			log_os << "contigEvidence = " << contigEvidence << "\n";
-			log_os << "accumulated contigEvidence = " << sample.contigSREvidence << "\n\n";
+			log_os << "accumulated contigEvidence = " << sample.contigSREvidence << "\n";
+			log_os << "contigCount = " << sample.contigSRCount << "\n\n"
 #endif
 		}
 		if ((bp1RefSR.has_evidence()) || (bp2RefSR.has_evidence()))
@@ -231,7 +232,8 @@ scoreSplitReads(
 			log_os << "bp2Ref \n";
 			log_os << bp2RefSR;
 			log_os << "refEvidence = " << refEvidence << "\n";
-			log_os << "accumulated refEvidence = " << sample.refSREvidence << "\n\n";
+			log_os << "accumulated refEvidence = " << sample.refSREvidence << "\n";
+			log_os << "refCount = " << sample.refSRCount << "\n\n";
 #endif
 		}
 	}
