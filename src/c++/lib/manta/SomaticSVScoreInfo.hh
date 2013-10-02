@@ -12,15 +12,35 @@
 //
 
 ///
-/// \author Chris Saunders
+/// \author Chris Saunders and Xiaoyu Chen
 ///
 
 #pragma once
+
+
+#include "manta/SVCandidateAssemblyData.hh"
+#include "manta/SVCandidate.hh"
 
 #include <iosfwd>
 #include <string>
 #include <set>
 
+struct SVAlignmentInfo
+{
+    SVAlignmentInfo(
+        const SVCandidate& sv,
+        const SVCandidateAssemblyData& assemblyData);
+
+    std::string contigSeq;
+    std::string bp1RefSeq;
+    std::string bp2RefSeq;
+    unsigned bp1ContigOffset;
+    unsigned bp2ContigOffset;
+    bool bp1ContigReversed;
+    bool bp2ContigReversed;
+    unsigned bp1RefOffset;
+    unsigned bp2RefOffset;
+};
 
 struct SVSampleInfo
 {
@@ -28,20 +48,38 @@ struct SVSampleInfo
     SVSampleInfo() :
         bp1SpanReads(0),
         bp2SpanReads(0),
-        spanPairs(0)
+        spanPairs(0),
+        contigSRCount(0),
+        contigSREvidence(0),
+        contigSRMapQ(0),
+        refSRCount(0),
+        refSREvidence(0),
+        refSRMapQ(0)
     {}
 
     void
     clear()
     {
-        bp1SpanReads=0;
-        bp2SpanReads=0;
-        spanPairs=0;
+        bp1SpanReads = 0;
+        bp2SpanReads = 0;
+        spanPairs = 0;
+        contigSRCount = 0;
+        contigSREvidence = 0;
+        contigSRMapQ = 0;
+        refSRCount = 0;
+        refSREvidence = 0;
+        refSRMapQ = 0;
     }
 
     unsigned bp1SpanReads;
     unsigned bp2SpanReads;
     unsigned spanPairs;
+    unsigned contigSRCount;
+    float contigSREvidence;
+    float contigSRMapQ;
+    unsigned refSRCount;
+    float refSREvidence;
+    float refSRMapQ;
 };
 
 std::ostream&
@@ -77,7 +115,6 @@ struct SomaticSVScoreInfo
     unsigned bp2MaxDepth;
     unsigned somaticScore;
 };
-
 
 std::ostream&
 operator<<(std::ostream& os, const SomaticSVScoreInfo& ssi);

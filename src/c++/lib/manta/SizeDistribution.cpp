@@ -27,20 +27,6 @@
 
 //#define DEBUG_RPS
 
-#if 0
-static
-void
-writeFragSizeHashItem(std::ostream& os, const PairStatSet::frag_map_type& _fragMap, const int k)
-{
-    os << k << " -> <"
-       << _fragMap.find(k)->second.first
-       << ", "
-       << _fragMap.find(k)->second.second
-       << ">\n";
-}
-#endif
-
-
 
 static
 void

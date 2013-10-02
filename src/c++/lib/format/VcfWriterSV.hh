@@ -74,6 +74,12 @@ protected:
 
     virtual
     void
+    addSplitReadInfo(
+        std::vector<std::string>& /*infotags*/) const
+    {}
+
+    virtual
+    void
     modifyInfo(
         const bool /*isFirstOfPair*/,
         const SVCandidateSetData& /*svData*/,
@@ -111,6 +117,7 @@ private:
     void
     writeInvdel(
         const SVCandidate& sv,
+        const SVCandidateAssemblyData& adata,
         const std::string& label,
         const std::string& vcfId,
         const bool isIndel = false);

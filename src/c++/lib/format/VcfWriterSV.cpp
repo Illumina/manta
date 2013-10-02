@@ -286,6 +286,10 @@ writeTransloc(
     {
         infotags.push_back("IMPRECISE");
     }
+    else if (adata.isSpanning)
+    {
+        addSplitReadInfo(infotags);
+    }
 
     if (bpArange.size() > 1)
     {
@@ -342,6 +346,7 @@ void
 VcfWriterSV::
 writeInvdel(
     const SVCandidate& sv,
+    const SVCandidateAssemblyData& adata,
     const std::string& label,
     const std::string& vcfId,
     const bool isIndel)
@@ -457,6 +462,10 @@ writeInvdel(
     {
         infotags.push_back("IMPRECISE");
     }
+    else if (adata.isSpanning)
+    {
+        addSplitReadInfo(infotags);
+    }
 
     if (bpArange.size() > 1)
     {
@@ -522,7 +531,7 @@ writeInversion(
 {
     const std::string label("INV");
     const std::string vcfId( str(_otherSVIdFormatter % label % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex % adata.bestAlignmentIndex ) );
-    writeInvdel(sv,label,vcfId);
+    writeInvdel(sv,adata, label,vcfId);
 }
 
 
@@ -550,7 +559,7 @@ writeIndel(
     const std::string label(isDelete ? "DEL" : "INS");
     const std::string vcfId( str(_otherSVIdFormatter % label % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex % adata.bestAlignmentIndex ) );
 
-    writeInvdel(sv,label,vcfId,isIndel);
+    writeInvdel(sv, adata, label, vcfId, isIndel);
 }
 
 
@@ -564,7 +573,7 @@ writeTanDup(
 {
     const std::string label("DUP:TANDEM");
     const std::string vcfId( str(_otherSVIdFormatter % label % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex % adata.bestAlignmentIndex ) );
-    writeInvdel(sv,label,vcfId);
+    writeInvdel(sv,adata, label, vcfId);
 }
 
 
@@ -578,7 +587,7 @@ writeComplex(
 {
     const std::string label("COMPLEX");
     const std::string vcfId( str(_otherSVIdFormatter % label % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex % adata.bestAlignmentIndex ) );
-    writeInvdel(sv,label,vcfId);
+    writeInvdel(sv, adata, label, vcfId);
 }
 
 
@@ -603,7 +612,7 @@ writeSVCore(
     }
     else if (svType == SV_TYPE::INVERSION)
     {
-        writeInversion(edge, sv, svData, adata);
+    	writeInversion(edge, sv, svData, adata);
     }
     else if (svType == SV_TYPE::INDEL)
     {
