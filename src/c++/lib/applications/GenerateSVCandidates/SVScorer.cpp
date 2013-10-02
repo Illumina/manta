@@ -28,7 +28,7 @@
 #include <iostream>
 #include <string>
 
-//#define DEBUG_SVS
+#define DEBUG_SVS
 
 
 SVScorer::
