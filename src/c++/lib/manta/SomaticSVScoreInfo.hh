@@ -17,9 +17,9 @@
 
 #pragma once
 
-
 #include "manta/SVCandidateAssemblyData.hh"
 #include "manta/SVCandidate.hh"
+#include "blt_util/ReadKey.hh"
 
 #include <iosfwd>
 #include <string>
@@ -42,13 +42,15 @@ struct SVAlignmentInfo
     unsigned bp2RefOffset;
 };
 
+/// sample-specific evidence info
 struct SVSampleInfo
 {
-
     SVSampleInfo() :
-        bp1SpanReads(0),
-        bp2SpanReads(0),
-        spanPairs(0),
+        altAlleleBp1SpanReads(0),
+        altAlleleBp2SpanReads(0),
+        altAlleleSpanPairs(0),
+        refAlleleBp1SpanPairs(0),
+        refAlleleBp2SpanPairs(0)
         contigSRCount(0),
         contigSREvidence(0),
         contigSRMapQ(0),
@@ -60,9 +62,11 @@ struct SVSampleInfo
     void
     clear()
     {
-        bp1SpanReads = 0;
-        bp2SpanReads = 0;
-        spanPairs = 0;
+        altAlleleBp1SpanReads=0;
+        altAlleleBp2SpanReads=0;
+        altAlleleSpanPairs=0;
+        refAlleleBp1SpanPairs=0;
+        refAlleleBp2SpanPairs=0;
         contigSRCount = 0;
         contigSREvidence = 0;
         contigSRMapQ = 0;
@@ -71,9 +75,13 @@ struct SVSampleInfo
         refSRMapQ = 0;
     }
 
-    unsigned bp1SpanReads;
-    unsigned bp2SpanReads;
-    unsigned spanPairs;
+    unsigned altAlleleBp1SpanReads;
+    unsigned altAlleleBp2SpanReads;
+    unsigned altAlleleSpanPairs;
+
+    unsigned refAlleleBp1SpanPairs;
+    unsigned refAlleleBp2SpanPairs;
+
     unsigned contigSRCount;
     float contigSREvidence;
     float contigSRMapQ;
@@ -84,6 +92,7 @@ struct SVSampleInfo
 
 std::ostream&
 operator<<(std::ostream& os, const SVSampleInfo& si);
+
 
 /// consolidate all somatic scoring results applied to an SV candidate
 struct SomaticSVScoreInfo
@@ -118,5 +127,3 @@ struct SomaticSVScoreInfo
 
 std::ostream&
 operator<<(std::ostream& os, const SomaticSVScoreInfo& ssi);
-
-

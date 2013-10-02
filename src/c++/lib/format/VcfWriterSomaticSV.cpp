@@ -73,12 +73,12 @@ modifyInfo(
 
     infotags.push_back("SOMATIC");
     infotags.push_back( str(boost::format("SOMATICSCORE=%i") % ssInfo.somaticScore) );
-    infotags.push_back( str(boost::format("NORMAL_PAIR_SUPPORT=%i") % ssInfo.normal.spanPairs) );
-    infotags.push_back( str(boost::format("TUMOR_PAIR_SUPPORT=%i") % ssInfo.tumor.spanPairs) );
+    infotags.push_back( str(boost::format("NORMAL_PAIR_SUPPORT=%i") % ssInfo.normal.altAlleleSpanPairs) );
+    infotags.push_back( str(boost::format("TUMOR_PAIR_SUPPORT=%i") % ssInfo.tumor.altAlleleSpanPairs) );
     infotags.push_back( str(boost::format("NORMAL_BND_PAIR_SUPPORT=%i") %
-                            (isFirstOfPair ? ssInfo.normal.bp1SpanReads : ssInfo.normal.bp2SpanReads) ) );
+                            (isFirstOfPair ? ssInfo.normal.altAlleleBp1SpanReads : ssInfo.normal.altAlleleBp2SpanReads) ) );
     infotags.push_back( str(boost::format("TUMOR_BND_PAIR_SUPPORT=%i") %
-                            (isFirstOfPair ? ssInfo.tumor.bp1SpanReads : ssInfo.tumor.bp2SpanReads) ) );
+                            (isFirstOfPair ? ssInfo.tumor.altAlleleBp1SpanReads : ssInfo.tumor.altAlleleBp2SpanReads) ) );
     infotags.push_back( str(boost::format("BND_DEPTH=%i") %
                             (isFirstOfPair ? ssInfo.bp1MaxDepth : ssInfo.bp2MaxDepth) ) );
     infotags.push_back( str(boost::format("MATE_BND_DEPTH=%i") %
