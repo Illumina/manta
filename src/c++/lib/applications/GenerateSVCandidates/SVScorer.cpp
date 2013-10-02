@@ -204,7 +204,7 @@ scoreSplitReads(
         const float contigEvidence = std::max(bp1ContigEvidence, bp2ContigEvidence);
         const float refEvidence = std::max(bp1RefEvidence, bp2RefEvidence);
 
-        if ((bp1ContigSR.has_evidence()) || (bp1ContigSR.has_evidence()))
+        if ((bp1ContigSR.has_evidence()) || (bp2ContigSR.has_evidence()))
         {
             sample.contigSRCount++;
             sample.contigSREvidence += contigEvidence;
