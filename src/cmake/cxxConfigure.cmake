@@ -86,7 +86,6 @@ macro(test_min_compiler compiler_version min_compiler_version compiler_label)
 endmacro()
 
 
-
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     get_compiler_version(compiler_version)
     test_min_compiler(${compiler_version} "4.1.2" "g++")
@@ -104,13 +103,16 @@ endif ()
 #
 # set compile flags, and modify by compiler/version:
 #
+set (GNU_COMPAT_COMPILER ( (CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang") ))
 
 # start with warning flags:
-set (CXX_WARN_FLAGS "-Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -Wredundant-decls -pedantic -Wunused-parameter -Wundef -Wdisabled-optimization")
+if (GNU_COMPAT_COMPILER)
+    set (CXX_WARN_FLAGS "-Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -Wredundant-decls -pedantic -Wunused-parameter -Wundef -Wdisabled-optimization")
 
-if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
-    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wuninitialized")
-endif()
+    if (NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wuninitialized")
+    endif ()
+endif ()
 
 #
 # add extra compiler specific warnings:
@@ -146,10 +148,13 @@ endif()
 # http://www.drdobbs.com/an-exception-or-a-bug/184401686
 
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX_WARN_FLAGS}")
-set (CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
-set (CMAKE_CXX_FLAGS_RELEASE "-O3 -fomit-frame-pointer")
-set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
-#set (CMAKE_CXX_FLAGS_PROFILE "-O0 -g -pg -fprofile-arcs -ftest-coverage")
+
+if (GNU_COMPAT_COMPILER)
+    set (CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+    set (CMAKE_CXX_FLAGS_RELEASE "-O3 -fomit-frame-pointer")
+    set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
+    #set (CMAKE_CXX_FLAGS_PROFILE "-O0 -g -pg -fprofile-arcs -ftest-coverage")
+endif()
 
 
 # add address sanitizer to debug mode:
@@ -177,7 +182,9 @@ endif ()
 # anyone touching manta is a developer, so this is true:
 set(DEVELOPER_MODE true)
 
-if (${DEVELOPER_MODE})
+if (GNU_COMPAT_COMPILER)
+
+  if (${DEVELOPER_MODE})
     # some compiler versions will produce warnings with no reasonable workaround,
     # turn Werror off in this case
     #
@@ -195,20 +202,22 @@ if (${DEVELOPER_MODE})
         message (STATUS "building in developer mode: treating compiler errors as warnings")
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
     endif ()
-endif ()
+  endif ()
 
-if (CMAKE_SYSTEM_PROCESSOR MATCHES "^i[67]86$")
+  if (CMAKE_SYSTEM_PROCESSOR MATCHES "^i[67]86$")
     ##
     ## Use scalar floating point instructions from the SSE instruction set.
     ## Note: Pentium3 SSE supports only single precision arithmetics
     ##
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse -mfpmath=sse")
-elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "^i[345]86$")
+  elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "^i[345]86$")
     ##
     ## Prevent using 80bits registers (more consistent rounding)
     ##
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffloat-store")
-endif ()
+  endif ()
+
+endif()
 
 set(MANTA_CXX_CONFIG_H_DIR ${CMAKE_CURRENT_BINARY_DIR}/lib/common)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/lib/common/config.h.in ${MANTA_CXX_CONFIG_H_DIR}/config.h @ONLY)

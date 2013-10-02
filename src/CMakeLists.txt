@@ -28,8 +28,15 @@ enable_testing()
 # setup project/version
 #
 
-#project (MANTA)
+project (MANTA)
 set(MANTA_PROJECT_NAME "manta")
+
+# find interpreters
+find_package(PythonInterp)
+if (NOT PYTHONINTERP_FOUND)
+    message (FATAL_ERROR "No python interpreter found")
+endif()
+
 
 # get version
 set(MANTA_BOOTSTRAP_DIR "${CMAKE_SOURCE_DIR}/cmake/bootstrap")
