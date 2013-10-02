@@ -65,6 +65,17 @@ SVAlignmentInfo(
 
 
 std::ostream&
+operator<<(std::ostream& os, const SVAlignmentInfo& ai)
+{
+    os << "Contig seq\n" << ai.contigSeq << "\n";
+    os << "bp1 contig offset = " << ai.bp1ContigOffset << "bp1 contig reversed = " << ai.bp1ContigReversed << "\n";
+    os << "bp2 contig offset = " << ai.bp2ContigOffset << "bp2 contig reversed = " << ai.bp2ContigReversed << "\n";
+
+    return os;
+}
+
+
+std::ostream&
 operator<<(std::ostream& os, const SVSampleInfo& si)
 {
     os << "SVSampleInfo bp1SpanReads=" << si.bp1SpanReads << " bp2SpanReads=" << si.bp2SpanReads << " spanPairs=" << si.spanPairs << std::endl;

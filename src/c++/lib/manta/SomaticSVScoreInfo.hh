@@ -42,6 +42,9 @@ struct SVAlignmentInfo
     unsigned bp2RefOffset;
 };
 
+std::ostream&
+operator<<(std::ostream& os, const SVAlignmentInfo& ai);
+
 struct SVSampleInfo
 {
 
