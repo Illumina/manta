@@ -68,7 +68,9 @@ SVAlignmentInfo(
 
 
 std::ostream&
-operator<<(std::ostream& os, const SVAlignmentInfo& ai)
+operator<<(
+    std::ostream& os,
+    const SVAlignmentInfo& ai)
 {
     os << "Contig seq\n" << ai.contigSeq << "\n";
     os << "bp1 contig offset = " << ai.bp1ContigOffset << " bp1 contig reversed = " << ai.bp1ContigReversed << "\n";
@@ -81,17 +83,29 @@ operator<<(std::ostream& os, const SVAlignmentInfo& ai)
 
 
 std::ostream&
-operator<<(std::ostream& os, const SVSampleInfo& si)
+operator<<(
+    std::ostream& os,
+    const SVSampleInfo& si)
 {
-    os << "SVSampleInfo bp1SpanReads=" << si.bp1SpanReads << " bp2SpanReads=" << si.bp2SpanReads << " spanPairs=" << si.spanPairs << std::endl;
+    static const char indent('\t');
+    os << "SVSampleInfo:\n"
+       << indent << "altAlleleBp1SpanReads: " << si.altAlleleBp1SpanReads << "\n"
+       << indent << "altAlleleBp2SpanReads: " << si.altAlleleBp2SpanReads << "\n"
+       << indent << " altAlleleSpanPairs: " << si.altAlleleSpanPairs << "\n"
+       << indent << " refAlleleBp1SpanPairs: " << si.refAlleleBp1SpanPairs << "\n"
+       << indent << " refAlleleBp2SpanPairs: " << si.refAlleleBp2SpanPairs << "\n"
+    ;
     return os;
 }
 
 
+
 std::ostream&
-operator<<(std::ostream& os, const SomaticSVScoreInfo& ssi)
+operator<<(
+    std::ostream& os,
+    const SomaticSVScoreInfo& ssi)
 {
-    os << "SomaticSVScoreInfo bp1MaxDepth=" << ssi.bp1MaxDepth << " bp2MaxDepth=" << ssi.bp2MaxDepth << " somaticScore=" << ssi.somaticScore << std::endl;
+    os << "SomaticSVScoreInfo bp1MaxDepth=" << ssi.bp1MaxDepth << " bp2MaxDepth=" << ssi.bp2MaxDepth << " somaticScore=" << ssi.somaticScore << "\n";
     os << "Tumor sample info " << ssi.tumor;
     os << "Normal sample info " << ssi.normal;
     BOOST_FOREACH(const std::string& filter, ssi.filters)
@@ -100,5 +114,3 @@ operator<<(std::ostream& os, const SomaticSVScoreInfo& ssi)
     }
     return os;
 }
-
-
