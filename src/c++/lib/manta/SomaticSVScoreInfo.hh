@@ -55,7 +55,8 @@ struct SVSampleInfo
         altAlleleBp2SpanReads(0),
         altAlleleSpanPairs(0),
         refAlleleBp1SpanPairs(0),
-        refAlleleBp2SpanPairs(0)
+        refAlleleBp2SpanPairs(0),
+        refAlleleSpanPairs(0),
         contigSRCount(0),
         contigSREvidence(0),
         contigSRMapQ(0),
@@ -72,6 +73,8 @@ struct SVSampleInfo
         altAlleleSpanPairs=0;
         refAlleleBp1SpanPairs=0;
         refAlleleBp2SpanPairs=0;
+        refAlleleSpanPairs=0;
+
         contigSRCount = 0;
         contigSREvidence = 0;
         contigSRMapQ = 0;
@@ -80,16 +83,22 @@ struct SVSampleInfo
         refSRMapQ = 0;
     }
 
+    // alt-allele pair support
     unsigned altAlleleBp1SpanReads;
     unsigned altAlleleBp2SpanReads;
     unsigned altAlleleSpanPairs;
 
+    // ref-allele pair support
     unsigned refAlleleBp1SpanPairs;
     unsigned refAlleleBp2SpanPairs;
+    unsigned refAlleleSpanPairs;
 
+    // alt-allele split support
     unsigned contigSRCount;
     float contigSREvidence;
     float contigSRMapQ;
+
+    // ref-allele split support
     unsigned refSRCount;
     float refSREvidence;
     float refSRMapQ;

@@ -176,6 +176,12 @@ struct SVLocusScanner
         double max;
     };
 
+    const Range&
+    getEvidencePairRange(const unsigned readGroupIndex) const
+    {
+        return _stats[readGroupIndex].evidencePair;
+    }
+
     struct CachedReadGroupStats
     {
         CachedReadGroupStats() :

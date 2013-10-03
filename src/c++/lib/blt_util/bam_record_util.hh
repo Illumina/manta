@@ -12,7 +12,7 @@
 //
 
 ///
-/// \author Chris Saunders
+///
 ///
 
 #pragma once
@@ -28,6 +28,7 @@ bool
 is_innie_pair(
     const bam_record& bam_read);
 
+/// return average basecall qscore for this read
 unsigned
 get_avg_quality(
     const bam_record& bam_read);

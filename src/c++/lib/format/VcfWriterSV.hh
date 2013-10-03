@@ -78,12 +78,18 @@ protected:
         std::vector<std::string>& /*infotags*/) const
     {}
 
+    /// add info tags which can be customized by sub-class
     virtual
     void
     modifyInfo(
+        std::vector<std::string>& /*infotags*/) const
+    {}
+
+    /// add info tags specific to translocations:
+    virtual
+    void
+    modifyTranslocInfo(
         const bool /*isFirstOfPair*/,
-        const SVCandidateSetData& /*svData*/,
-        const SVCandidateAssemblyData& /*adata*/,
         std::vector<std::string>& /*infotags*/) const
     {}
 

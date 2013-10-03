@@ -58,10 +58,13 @@ private:
 
     void
     modifyInfo(
-        const bool isFirstOfPair,
-        const SVCandidateSetData& svData,
-        const SVCandidateAssemblyData& adata,
         std::vector<std::string>& infotags) const;
+
+    void
+    modifyTranslocInfo(
+        const bool isFirstOfPair,
+        std::vector<std::string>& infotags) const;
+
 
     std::string
     getFilter() const;

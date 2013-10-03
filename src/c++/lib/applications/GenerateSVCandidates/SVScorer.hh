@@ -35,23 +35,14 @@
 #include <vector>
 #include <string>
 
+
 struct SVScorer
 {
     SVScorer(
         const GSCOptions& opt,
         const bam_header_info& header);
 
-    typedef std::map<std::string, bool> read_map_t;
-
-    void
-    scoreSplitReads(
-        bool isBp1,
-        const SVBreakend& bp,
-        const SVAlignmentInfo& SVAlignInfo,
-        read_map_t& readMap,
-        bam_streamer& read_stream,
-        SVSampleInfo& sample);
-
+    /// gather supporting evidence and generate somatic quality score for SV candidate
     void
     scoreSomaticSV(
         const SVCandidateSetData& svData,
@@ -60,9 +51,31 @@ struct SVScorer
         SomaticSVScoreInfo& ssInfo);
 
 private:
+
+    /// find spanning read support for the reference allele in a single breakend
+    void
+    getSVRefPairSupport(
+        const SVBreakend& bp,
+        SomaticSVScoreInfo& ssInfo,
+        const bool isBp1);
+
+    /// find spanning read support for the reference allele for sv candidate
+    void
+    getSVRefPairSupport(
+        const SVCandidate& sv,
+        SomaticSVScoreInfo& ssInfo);
+
+    /// find split read support for ref and alt alleles
+    void
+    getSVSplitReadSupport(
+        const SVCandidateAssemblyData& assemblyData,
+        const SVCandidate& sv,
+        SomaticSVScoreInfo& ssInfo);
+
     /// determine maximum depth in region around breakend
     unsigned
-    getBreakendMaxMappedDepth(const SVBreakend& bp);
+    getBreakendMaxMappedDepth(
+         const SVBreakend& bp);
 
     const std::vector<bool> _isAlignmentTumor;
     const SomaticCallOptions _somaticOpt;
@@ -71,6 +84,5 @@ private:
 
     typedef boost::shared_ptr<bam_streamer> streamPtr;
     std::vector<streamPtr> _bamStreams;
-
 };
 

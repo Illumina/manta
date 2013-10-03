@@ -63,9 +63,6 @@ addSplitReadInfo(
 void
 VcfWriterSomaticSV::
 modifyInfo(
-    const bool isFirstOfPair,
-    const SVCandidateSetData& /*svData*/,
-    const SVCandidateAssemblyData& /*adata*/,
     std::vector<std::string>& infotags) const
 {
     assert(_ssInfoPtr != NULL);
@@ -75,6 +72,21 @@ modifyInfo(
     infotags.push_back( str(boost::format("SOMATICSCORE=%i") % ssInfo.somaticScore) );
     infotags.push_back( str(boost::format("NORMAL_PAIR_SUPPORT=%i") % ssInfo.normal.altAlleleSpanPairs) );
     infotags.push_back( str(boost::format("TUMOR_PAIR_SUPPORT=%i") % ssInfo.tumor.altAlleleSpanPairs) );
+
+    infotags.push_back( str(boost::format("NORMAL_REF_PAIR_SUPPORT=%i") % ssInfo.normal.refAlleleSpanPairs) );
+    infotags.push_back( str(boost::format("TUMOR_REF_PAIR_SUPPORT=%i") % ssInfo.tumor.refAlleleSpanPairs) );
+}
+
+
+void
+VcfWriterSomaticSV::
+modifyTranslocInfo(
+    const bool isFirstOfPair,
+    std::vector<std::string>& infotags) const
+{
+    assert(_ssInfoPtr != NULL);
+    const SomaticSVScoreInfo& ssInfo(*_ssInfoPtr);
+
     infotags.push_back( str(boost::format("NORMAL_BND_PAIR_SUPPORT=%i") %
                             (isFirstOfPair ? ssInfo.normal.altAlleleBp1SpanReads : ssInfo.normal.altAlleleBp2SpanReads) ) );
     infotags.push_back( str(boost::format("TUMOR_BND_PAIR_SUPPORT=%i") %
@@ -84,6 +96,7 @@ modifyInfo(
     infotags.push_back( str(boost::format("MATE_BND_DEPTH=%i") %
                             (isFirstOfPair ? ssInfo.bp2MaxDepth : ssInfo.bp1MaxDepth) ) );
 }
+
 
 
 std::string

@@ -170,6 +170,41 @@ getLargeIndelSegments(
 
 
 
+/// add simple cigar string to spanning alignments for the subset of cases (insertions and deletions) where this is possible
+///
+/// note that we may not always print this out, even though we compute the cigar here -- this is dependent on the output file
+/// format and conventions related to variant size, precision, etc.
+///
+static
+void
+addCigarToSpanningAlignment(
+    SVCandidate& sv)
+{
+    const SV_TYPE::index_t svType(getSVType(sv));
+
+    if (svType != SV_TYPE::INDEL) return;
+
+    const bool isBp1First(sv.bp1.interval.range.begin_pos()<=sv.bp2.interval.range.begin_pos());
+
+    const SVBreakend& bpA(isBp1First ? sv.bp1 : sv.bp2);
+    const SVBreakend& bpB(isBp1First ? sv.bp2 : sv.bp1);
+
+    const unsigned deleteSize(bpB.interval.range.begin_pos() - bpA.interval.range.begin_pos());
+    const unsigned insertSize(sv.insertSeq.size());
+
+    if(insertSize)
+    {
+        sv.insertAlignment.push_back(ALIGNPATH::path_segment(ALIGNPATH::INSERT,insertSize));
+    }
+
+    if(deleteSize)
+    {
+        sv.insertAlignment.push_back(ALIGNPATH::path_segment(ALIGNPATH::DELETE,deleteSize));
+    }
+}
+
+
+
 static
 bool
 isSmallSVSegmentFilter(
@@ -280,7 +315,6 @@ getVariantRange(
     const std::string& read,
     const known_pos_range2& readRange)
 {
-
     // check how far we can slide to the right:
     const pos_t maxRightOffset(std::min(ref.size()-refRange.end_pos(), read.size()-readRange.end_pos()));
     pos_t rightOffset(0);
@@ -291,6 +325,7 @@ getVariantRange(
         if (refSym != readSym) break;
     }
 
+    // check how far we can slide to the left:
     const pos_t minLeftOffset(std::max(-refRange.begin_pos(), -readRange.begin_pos()));
     pos_t leftOffset(0);
     for (; leftOffset>=minLeftOffset; --leftOffset)
@@ -320,7 +355,7 @@ setSmallCandSV(
     known_pos_range2 readRange;
     known_pos_range2 refRange;
 
-    // by how many positions can the alignmnet position vary with the same alignmnet score?:
+    // by how many positions can the alignment position vary with the same alignment score?:
     known_pos_range2 cipos;
     {
         using namespace ALIGNPATH;
@@ -365,7 +400,7 @@ setSmallCandSV(
 
     sv.insertSeq = contig.substr(readRange.begin_pos(),readRange.size());
 
-    // add CIGAR for all indels indels:
+    // add CIGAR for all indels:
     sv.insertAlignment = ALIGNPATH::path_t(align.apath.begin()+segRange.first, align.apath.begin()+segRange.second+1);
 }
 
@@ -640,6 +675,9 @@ getJumpAssembly(
             getFwdStrandInsertSegment(bestAlign, bestContig.seq, isBp1Reversed, newSV.insertSeq);
         }
 
+        // add CIGAR for any simple (insert/delete) cases:
+        addCigarToSpanningAlignment(newSV);
+
 #ifdef DEBUG_REFINER
         log_os << logtag << " highscore refined sv: " << newSV;
 #endif
@@ -711,7 +749,7 @@ getSmallSVAssembly(
             align1RefStrPtr->begin(), align1RefStrPtr->end(),
             alignment);
 
-        // remove candidate from consideration unless we rind a sufficiently large indel with good flanking sequence:
+        // remove candidate from consideration unless we find a sufficiently large indel with good flanking sequence:
         std::vector<std::pair<unsigned,unsigned> >& candidateSegments(assemblyData.smallSVSegments[contigIndex]);
         const bool isFilterSmallSV( isFilterSmallSVAlignment(_smallSVAligner, alignment.align.apath, _opt.scanOpt.minCandidateVariantSize, candidateSegments));
 
