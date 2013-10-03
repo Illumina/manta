@@ -46,7 +46,7 @@ VcfWriterSV(
     _header(set.header),
     _os(os),
     _transLocIdFormatter("MantaBND:%i:%i:%i:%i:"),
-    _otherSVIdFormatter("%s:%i:%i:%i:%i:%i")
+    _otherSVIdFormatter("Manta%s:%i:%i:%i:%i:%i")
 {
 }
 
@@ -77,10 +77,8 @@ writeHeaderPrefix(
     _os << "##INFO=<ID=CIEND,Number=2,Type=Integer,Description=\"Confidence interval around END\">\n";
     _os << "##INFO=<ID=CIGAR,Number=A,Type=String,Description=\"CIGAR alignment for each alternate indel allele\">\n";
     _os << "##INFO=<ID=MATEID,Number=.,Type=String,Description=\"ID of mate breakend\">\n";
-#if 0
     _os << "##INFO=<ID=HOMLEN,Number=.,Type=Integer,Description=\"Length of base pair identical micro-homology at event breakpoints\">\n";
     _os << "##INFO=<ID=HOMSEQ,Number=.,Type=String,Description=\"Sequence of base pair identical micro-homology at event breakpoints\">\n";
-#endif
 
     /// custom INFO tags:
     _os << "##INFO=<ID=SVINSLEN,Number=.,Type=Integer,Description=\"Length of micro-insertion at event breakpoints\">\n";
@@ -182,7 +180,7 @@ writeTransloc(
     const SVCandidate& sv,
     const std::string& idPrefix,
     const bool isFirstBreakend,
-    const SVCandidateSetData& svData,
+    const SVCandidateSetData& /*svData*/,
     const SVCandidateAssemblyData& adata)
 {
     const bool isImprecise(sv.isImprecise());
@@ -294,11 +292,15 @@ writeTransloc(
     if (bpArange.size() > 1)
     {
         infotags.push_back( str( boost::format("CIPOS=%i,%i") % ((bpArange.begin_pos()+1) - pos) % (bpArange.end_pos() - pos) ));
-#if 0
-        infotags.push_back( str( boost::format("HOMLEN=%i") % (bpArange.size()) ));
-#endif
     }
 
+    if (bpArange.size() > 1)
+    {
+        infotags.push_back( str( boost::format("HOMLEN=%i") % (bpArange.size()) ));
+        std::string homref;
+        get_standardized_region_seq(_referenceFilename,chrom,bpArange.begin_pos(),bpArange.end_pos()-1,homref);
+        infotags.push_back( str( boost::format("HOMSEQ=%s") % (homref) ));
+    }
 
     if (! insertSeq.empty())
     {
@@ -306,7 +308,8 @@ writeTransloc(
         infotags.push_back( str( boost::format("SVINSSEQ=%s") % (insertSeq) ));
     }
 
-    modifyInfo(isFirstBreakend, svData, adata, infotags);
+    modifyInfo(infotags);
+    modifyTranslocInfo(isFirstBreakend, infotags);
 
 #ifdef DEBUG_VCF
     addDebugInfo(bpA, bpB, isFirstBreakend, adata, infotags);
@@ -340,6 +343,7 @@ writeTranslocPair(
     writeTransloc(sv, idPrefix, true, svData, adata);
     writeTransloc(sv, idPrefix, false, svData, adata);
 }
+
 
 
 void
@@ -480,12 +484,13 @@ writeInvdel(
         }
     }
 
-#if 0
     if (bpArange.size() > 1)
     {
         infotags.push_back( str( boost::format("HOMLEN=%i") % (bpArange.size()) ));
+        std::string homref;
+        get_standardized_region_seq(_referenceFilename,chrom,bpArange.begin_pos(),bpArange.end_pos()-1,homref);
+        infotags.push_back( str( boost::format("HOMSEQ=%s") % (homref) ));
     }
-#endif
 
     if (! isSmallVariant)
     {
@@ -503,7 +508,7 @@ writeInvdel(
         }
     }
 
-    //modifyInfo(isFirstOfPair, infotags);
+    modifyInfo(infotags);
 
     // write out record:
     _os << chrom

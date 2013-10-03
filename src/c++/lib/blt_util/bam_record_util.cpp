@@ -12,7 +12,7 @@
 //
 
 ///
-/// \author Chris Saunders
+///
 ///
 
 #include "blt_util/bam_record_util.hh"
@@ -44,6 +44,8 @@ is_innie_pair(
 
     return true;
 }
+
+
 
 unsigned
 get_avg_quality(

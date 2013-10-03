@@ -189,6 +189,14 @@ struct SVWriter
 
 
 #if 0
+/// edge indices+graph evidence counts and regions:
+///
+/// this is designed to be useful even when the locus graph is not present
+struct EhancedEdgeInfo
+{
+
+};
+
 /// reduce the full (very-large) graph down to just the information we need during SVCandidate generation:
 struct ReducedGraphInfo
 {

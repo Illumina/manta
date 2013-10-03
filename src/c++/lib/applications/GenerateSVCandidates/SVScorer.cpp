@@ -19,7 +19,9 @@
 
 #include "blt_util/align_path_bam_util.hh"
 #include "blt_util/bam_streamer.hh"
+#include "blt_util/bam_record_util.hh"
 #include "blt_util/log.hh"
+#include "blt_util/ReadKey.hh"
 #include "common/Exceptions.hh"
 #include "manta/ReadGroupStatsSet.hh"
 #include "boost/foreach.hpp"
@@ -136,10 +138,15 @@ getBreakendMaxMappedDepth(const SVBreakend& bp)
 }
 
 
+
+typedef std::set<ReadKey> read_map_t;
+
+
+
+static
 void
-SVScorer::
 scoreSplitReads(
-    bool isBp1,
+    const bool isBp1,
     const SVBreakend& bp,
     const SVAlignmentInfo& svAlignInfo,
     read_map_t& readMap,
@@ -156,19 +163,15 @@ scoreSplitReads(
         const unsigned readMapQ = bamRead.map_qual();
 
         // TODO: the logic of R1 & R2 should change for alignments with split-reads (e.g. BWA-MEME)
-        std::string readId(bamRead.qname());
-        if (bamRead.is_first())
-            readId += "_R1";
-        else if (bamRead.is_second())
-            readId += "_R2";
+        const ReadKey readKey(bamRead);
 
         // map all reads for bp1
         // then for bp2, skip reads that have been considered for bp1 to avoid double-counting
         if (isBp1)
         {
-            readMap[readId] = true;
+            readMap.insert(readKey);
         }
-        else if (readMap.find(readId) != readMap.end())
+        if (readMap.find(readKey) != readMap.end())
         {
             continue;
         }
@@ -243,6 +246,8 @@ scoreSplitReads(
     }
 }
 
+
+
 /// get reference allele support at a single breakend:
 ///
 void
@@ -268,11 +273,8 @@ getSVRefPairSupport(
     /// we're interested in any fragments which cross center pos with at least N bases of support on each side
     /// (note this definition is certain to overlap the split read definition whenever N is less than the read length
     
-    static const unsigned minFragSupport(50);
+    static const pos_t minFragSupport(80);
     
-    
-
-
     const unsigned bamCount(_bamStreams.size());
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
@@ -281,32 +283,83 @@ getSVRefPairSupport(
 
         bam_streamer& bamStream(*_bamStreams[bamIndex]);
 
-        /// set the search range around centerPos so that we can get any fragments at the 90th percentile length or smaller which could have
+        /// set the search range around centerPos so that we can get any fragments at the Xth percentile length or smaller which could have
         /// min Fragsupport
+        const SVLocusScanner::Range& pRange(_readScanner.getEvidencePairRange(bamIndex));
+        const unsigned minFrag(pRange.min);
+        const unsigned maxFrag(pRange.max);
+
+        const uint32_t beginPos(centerPos-maxFrag+minFragSupport);
+        const uint32_t endPos(centerPos+maxFrag-minFragSupport+1);
         
-        const 
-        
-        known_pos_range2 searchRange;
+        if (beginPos >= endPos) continue;
 
         // set bam stream to new search interval:
-        bamStream.set_new_region(bp.interval.tid, searchRange.begin_pos(), searchRange.end_pos());
+        bamStream.set_new_region(bp.interval.tid, beginPos, endPos);
 
         while (bamStream.next())
         {
             const bam_record& bamRead(*(bamStream.get_record_ptr()));
 
-            // turn filtration off down to mapped only to match depth estimate method:
-            //if (_readScanner.isReadFiltered(bamRead)) continue;
-            if (bamRead.is_unmapped()) continue;
+            if (_readScanner.isReadFiltered(bamRead)) continue;
+            if (bamRead.is_unmapped() || bamRead.is_mate_unmapped()) continue;
 
-            if ((bamRead.pos()-1) >= searchRange.end_pos()) break;
+            /// check for standard innie orientation:
+            if (! is_innie_pair(bamRead)) continue;
 
-            addReadToDepthEst(bamRead,searchRange.begin_pos(),depth);
+            /// check if fragment is too big or too small:
+            const unsigned tSize(std::abs(bamRead.template_size()));
+            if (tSize < minFrag) continue;
+            if (tSize > maxFrag) continue;
+
+            // count only from the down stream read unless the mate-pos goes past center-pos
+            const bool isLeftMost(bamRead.pos() < bamRead.mate_pos());
+            const bool isMateBeforeCenter(bamRead.mate_pos() < centerPos);
+
+            if ( isLeftMost && isMateBeforeCenter ) continue;
+            if ( (!isLeftMost) && (!isMateBeforeCenter) ) continue;
+
+            // get fragment range:
+            pos_t fragBegin(0);
+            pos_t fragEnd(0);
+            if (isLeftMost)
+            {
+                fragBegin=bamRead.pos()-1;
+                fragEnd=fragBegin+bamRead.template_size();
+            }
+            else
+            {
+                fragBegin=bamRead.mate_pos()-1;
+                fragEnd=fragBegin-bamRead.template_size();
+            }
+
+            assert(fragBegin >= fragEnd);
+
+            const pos_t fragOverlap(std::min((centerPos-fragBegin), (fragEnd-centerPos)));
+
+            if (fragOverlap < minFragSupport) continue;
+
+            if (isBp1)
+            {
+                sample.refAlleleBp1SpanPairs++;
+            }
+            else
+            {
+                sample.refAlleleBp2SpanPairs++;
+            }
         }
-
-        isNormalFound=true;
-        break;
     }
+}
+
+
+
+// make final interpretation of reference support as the minimum breakend support:
+static
+void
+finishSamplePairSupport(
+    SVSampleInfo& sample)
+{
+    sample.refAlleleSpanPairs = std::min(sample.refAlleleBp1SpanPairs, sample.refAlleleBp2SpanPairs);
 }
 
 
@@ -319,6 +372,106 @@ getSVRefPairSupport(
 {    
     getSVRefPairSupport(sv.bp1, ssInfo, true);
     getSVRefPairSupport(sv.bp2, ssInfo, false);
+
+    finishSamplePairSupport(ssInfo.tumor);
+    finishSamplePairSupport(ssInfo.normal);
+}
+
+
+
+/// return rms given sum of squares
+static
+float
+finishRms(
+    const float sumSqr,
+    const unsigned count)
+{
+    if (count == 0) return 0.;
+    return std::sqrt(sumSqr / static_cast<float>(count));
+}
+
+
+
+/// make final split read computations after bam scanning is finished:
+static
+void
+finishSampleSRData(
+    SVSampleInfo& sample)
+{
+    // root mean square
+    sample.contigSRMapQ = finishRms(sample.contigSRMapQ, sample.contigSRCount);
+    sample.refSRMapQ = finishRms(sample.refSRMapQ, sample.refSRCount);
+}
+
+
+
+void
+SVScorer::
+getSVSplitReadSupport(
+    const SVCandidateAssemblyData& assemblyData,
+    const SVCandidate& sv,
+    SomaticSVScoreInfo& ssInfo)
+{
+    static const unsigned maxDepthSRFactor(2); ///< at what multiple of the maxDepth do we skip split read analysis?
+    const bool isSkipSRSearchDepth(
+        (ssInfo.bp1MaxDepth > maxDepthSRFactor*_dFilter.maxDepth(sv.bp1.interval.tid)) ||
+        (ssInfo.bp2MaxDepth > maxDepthSRFactor*_dFilter.maxDepth(sv.bp2.interval.tid)));
+
+    // apply the split-read scoring, only when:
+    // 1) the SV is precise, i.e. has successful somatic contigs;
+    // 2) the values of max depth are reasonable (otherwise, the read map may blow out).
+    //
+    // consider 2-locus events first
+    // TODO: to add local assembly later
+    //
+    const bool isSkipSRSearch(
+            (! assemblyData.isSpanning) ||
+            (sv.isImprecise()) ||
+            (isSkipSRSearchDepth));
+
+    if(isSkipSRSearch) return;
+
+    // Get Data on standard read pairs crossing the two breakends,
+
+    // extract SV alignment info for split read evidence
+    const SVAlignmentInfo SVAlignInfo(sv, assemblyData);
+
+
+    const unsigned bamCount(_bamStreams.size());
+    for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
+    {
+        const bool isTumor(_isAlignmentTumor[bamIndex]);
+        SVSampleInfo& sample(isTumor ? ssInfo.tumor : ssInfo.normal);
+        bam_streamer& bamStream(*_bamStreams[bamIndex]);
+
+        read_map_t readMap;
+
+        // scoring split reads overlapping bp1
+        scoreSplitReads(true, sv.bp1, SVAlignInfo, readMap,
+                        bamStream, sample);
+        // scoring split reads overlapping bp2
+        scoreSplitReads(false, sv.bp2, SVAlignInfo, readMap,
+                        bamStream, sample);
+    }
+
+    finishSampleSRData(ssInfo.tumor);
+    finishSampleSRData(ssInfo.normal);
+
+#ifdef DEBUG_SVS
+    log_os << "tumor contig SP count: " << ssInfo.tumor.contigSRCount << "\n";
+    log_os << "tumor contig SP evidence: " << ssInfo.tumor.contigSREvidence << "\n";
+    log_os << "tumor contig SP_mapQ: " << ssInfo.tumor.contigSRMapQ << "\n";
+    log_os << "normal contig SP count: " << ssInfo.normal.contigSRCount << "\n";
+    log_os << "normal contig SP evidence: " << ssInfo.normal.contigSREvidence << "\n";
+    log_os << "normal contig SP_mapQ: " << ssInfo.normal.contigSRMapQ << "\n";
+
+    log_os << "tumor ref SP count: " << ssInfo.tumor.refSRCount << "\n";
+    log_os << "tumor ref SP evidence: " << ssInfo.tumor.refSREvidence << "\n";
+    log_os << "tumor ref SP_mapQ: " << ssInfo.tumor.refSRMapQ << "\n";
+    log_os << "normal ref SP count: " << ssInfo.normal.refSRCount << "\n";
+    log_os << "normal ref SP evidence: " << ssInfo.normal.refSREvidence << "\n";
+    log_os << "normal ref SP_mapQ: " << ssInfo.normal.refSRMapQ << "\n";
+#endif
 }
 
 
@@ -337,10 +490,9 @@ scoreSomaticSV(
     ssInfo.bp1MaxDepth=(getBreakendMaxMappedDepth(sv.bp1));
     ssInfo.bp2MaxDepth=(getBreakendMaxMappedDepth(sv.bp2));
 
-    // Get Data on standard read pairs crossing the two breakends,
-
-    // extract SV alignment info for split read evidence
-    const SVAlignmentInfo SVAlignInfo(sv, assemblyData);
+    // count the split reads supporting the ref and alt alleles in each sample
+    //
+    getSVSplitReadSupport(assemblyData, sv, ssInfo);
 
     // count the read pairs supporting the alternate allele in each sample, using data we already produced during candidate generation:
     //
@@ -349,30 +501,6 @@ scoreSomaticSV(
     {
         const bool isTumor(_isAlignmentTumor[bamIndex]);
         SVSampleInfo& sample(isTumor ? ssInfo.tumor : ssInfo.normal);
-
-        // consider 2-locus events first
-        // TODO: to add local assembly later
-
-        // apply the split-read scoring, only when:
-        // 1) the SV is precise, i.e. has successful somatic contigs;
-        // 2) the values of max depth are reasonable (otherwise, the read map may blow out).
-        if ((assemblyData.isSpanning) &&
-            (!sv.isImprecise()) &&
-            (ssInfo.bp1MaxDepth <= 2*_dFilter.maxDepth(sv.bp1.interval.tid)) &&
-            (ssInfo.bp2MaxDepth <= 2*_dFilter.maxDepth(sv.bp2.interval.tid)))
-        {
-            read_map_t readMap;
-
-            streamPtr& bamPtr(_bamStreams[bamIndex]);
-            bam_streamer& read_stream(*bamPtr);
-            // scoring split reads overlapping bp1
-            scoreSplitReads(true, sv.bp1, SVAlignInfo, readMap,
-                            read_stream, sample);
-            // scoring split reads overlapping bp2
-            scoreSplitReads(false, sv.bp2, SVAlignInfo, readMap,
-                            read_stream, sample);
-        }
-
 
         const SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
         BOOST_FOREACH(const SVCandidateSetReadPair& pair, svDataGroup)
@@ -394,41 +522,9 @@ scoreSomaticSV(
         }
     }
 
-    // count the read pairs supporting the refernece allele on each breakend in each sample:
+    // count the read pairs supporting the reference allele on each breakend in each sample:
     //
     getSVRefPairSupport(sv,ssInfo);
-
-    // consider 2-locus events first
-    // TODO: to add local assembly later
-    if ((assemblyData.isSpanning) &&
-        (!sv.isImprecise()))
-    {
-        // root mean square
-        if (ssInfo.tumor.contigSRCount > 0)
-            ssInfo.tumor.contigSRMapQ = sqrt(ssInfo.tumor.contigSRMapQ / (float)ssInfo.tumor.contigSRCount);
-        if (ssInfo.tumor.refSRCount > 0)
-            ssInfo.tumor.refSRMapQ = sqrt(ssInfo.tumor.refSRMapQ / (float)ssInfo.tumor.refSRCount);
-        if (ssInfo.normal.contigSRCount > 0)
-            ssInfo.normal.contigSRMapQ = sqrt(ssInfo.normal.contigSRMapQ / (float)ssInfo.normal.contigSRCount);
-        if (ssInfo.normal.refSRCount > 0)
-            ssInfo.normal.refSRMapQ = sqrt(ssInfo.normal.refSRMapQ / (float)ssInfo.normal.refSRCount);
-
-#ifdef DEBUG_SVS
-        log_os << "tumor contig SP count: " << ssInfo.tumor.contigSRCount << "\n";
-        log_os << "tumor contig SP evidence: " << ssInfo.tumor.contigSREvidence << "\n";
-        log_os << "tumor contig SP_mapQ: " << ssInfo.tumor.contigSRMapQ << "\n";
-        log_os << "normal contig SP count: " << ssInfo.normal.contigSRCount << "\n";
-        log_os << "normal contig SP evidence: " << ssInfo.normal.contigSREvidence << "\n";
-        log_os << "normal contig SP_mapQ: " << ssInfo.normal.contigSRMapQ << "\n";
-
-        log_os << "tumor ref SP count: " << ssInfo.tumor.refSRCount << "\n";
-        log_os << "tumor ref SP evidence: " << ssInfo.tumor.refSREvidence << "\n";
-        log_os << "tumor ref SP_mapQ: " << ssInfo.tumor.refSRMapQ << "\n";
-        log_os << "normal ref SP count: " << ssInfo.normal.refSRCount << "\n";
-        log_os << "normal ref SP evidence: " << ssInfo.normal.refSREvidence << "\n";
-        log_os << "normal ref SP_mapQ: " << ssInfo.normal.refSRMapQ << "\n";
-#endif
-    }
 
 
     //
@@ -445,7 +541,6 @@ scoreSomaticSV(
         {
             ssInfo.filters.insert(_somaticOpt.maxDepthFilterLabel);
         }
-
     }
 
 
