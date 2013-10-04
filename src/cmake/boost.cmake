@@ -68,7 +68,7 @@ macro(static_find_boost boost_version boost_components)
 
     foreach(COMPONENT ${MANTA_BOOST_COMPONENTS})
         STRING(TOUPPER ${COMPONENT} UPPERCOMPONENT)
-        set(HAVE_LIBBOOST_${UPPERCOMPONENT}       ${Boost_${UPPERCOMPONENT}_FOUND})
+        set(HAVE_LIBBOOST_${UPPERCOMPONENT} ${Boost_${UPPERCOMPONENT}_FOUND})
     endforeach()
 endmacro()
 

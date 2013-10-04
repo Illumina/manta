@@ -129,7 +129,7 @@ include ("${CMAKE_SOURCE_DIR}/cmake/boost.cmake")
 # global source QC -- don't allow non-ascii chars in source files:
 add_custom_target(MANTA_SOURCE_CHECK
     ALL
-    COMMAND ${MANTA_SOURCE_QC_DIR}/check_for_nonascii_source.bash
+    COMMAND bash ${MANTA_SOURCE_QC_DIR}/check_for_nonascii_source.bash
     )
 
 # force this to run earlY:
