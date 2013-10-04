@@ -333,7 +333,14 @@ getSVRefPairSupport(
                 fragEnd=fragBegin-bamRead.template_size();
             }
 
-            assert(fragBegin >= fragEnd);
+            if (fragBegin > fragEnd)
+            {
+                using namespace illumina::common;
+
+                std::ostringstream oss;
+                oss << "ERROR: Failed to parse fragment range from bam record. Frag begin,end: " << fragBegin << " " << fragEnd << " bamRecord: " << bamRead << "\n";
+                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            }
 
             const pos_t fragOverlap(std::min((centerPos-fragBegin), (fragEnd-centerPos)));
 
