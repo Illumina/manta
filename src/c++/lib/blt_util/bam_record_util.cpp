@@ -49,10 +49,12 @@ unsigned
 get_avg_quality(
     const bam_record& bam_read)
 {
-    const uint8_t* qual = bam_read.qual();
+    const unsigned len(bam_read.read_size());
+    if (0 == len) return 0;
+
+    const uint8_t* qual(bam_read.qual());
     unsigned sum(0);
-    unsigned len = bam_read.read_size();
-    for (unsigned i=0; i<len; ++i)
+    for (unsigned i(0); i<len; ++i)
     {
         sum+=qual[i];
     }

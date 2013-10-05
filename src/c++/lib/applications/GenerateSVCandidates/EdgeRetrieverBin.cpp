@@ -78,16 +78,9 @@ jumpToFirstEdge()
 
     const bool isFilterNodes(_graphNodeMaxEdgeCount>0);
 
-    bool isLastFiltered(false);
-
     // first catch headCount up to the begin edge if required:
     while (true)
     {
-        if ((isLastFiltered) && (_edge.locusIndex == _set.size()))
-        {
-            _headCount = (_endCount + 1);
-            return;
-        }
         assert(_edge.locusIndex<_set.size());
 
         const SVLocus& locus(_set.getLocus(_edge.locusIndex));
@@ -106,7 +99,6 @@ jumpToFirstEdge()
 
                 for (; edgeIter != edgeiterEnd; ++edgeIter)
                 {
-                    isLastFiltered=false;
                     unsigned edgeCount(edgeIter->second.getCount());
                     const bool isSelfEdge(edgeIter->first == _edge.nodeIndex1);
                     if (! isSelfEdge) edgeCount += locus.getEdge(edgeIter->first,_edge.nodeIndex1).getCount();
@@ -125,7 +117,6 @@ jumpToFirstEdge()
 #ifdef DEBUG_EDGER
                                 log_os << "EDGER: jump filtering @ hc: " << _headCount << "\n";
 #endif
-                                isLastFiltered=true;
                                 continue;
                             }
                         }
@@ -178,7 +169,6 @@ advanceEdge()
 
             for (; edgeIter != edgeIterEnd; ++edgeIter)
             {
-                isLastFiltered=false;
                 unsigned edgeCount(edgeIter->second.getCount());
                 const bool isSelfEdge(edgeIter->first == _edge.nodeIndex1);
                 if (! isSelfEdge) edgeCount += locus.getEdge(edgeIter->first,_edge.nodeIndex1).getCount();

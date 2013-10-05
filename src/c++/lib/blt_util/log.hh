@@ -11,15 +11,12 @@
 // <https://github.com/sequencing/licenses/>
 //
 
-/// \file
-
+///
 /// \author Chris Saunders
 ///
-#ifndef __LOG_HH
-#define __LOG_HH
+
+#pragma once
 
 #include <iosfwd>
 
 extern std::ostream& log_os;
-
-#endif
