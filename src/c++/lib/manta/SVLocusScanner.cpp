@@ -307,9 +307,9 @@ isGoodShadow(const bam_record& bamRead,
 }
 
 
-// CTS make non-static temporarily to prevent compiler warning
 
 /// get SV candidates from semi-aligned reads
+static
 void
 getSVCandidatesFromSemiAligned(
     const ReadScannerOptions& opt,
@@ -608,9 +608,12 @@ getReadBreakendsImpl(
 
     // TODO: add semi-aligned read processing
     //
-    // CTS: temporarily comment out semi-aligned read input pending review of results with corrected qual offset
+    // CTS: temporarily mark out semi-aligned read input pending review of results with corrected qual offset
     //
-    //getSVCandidatesFromSemiAligned(opt, localRead, localAlign, candidates);
+    if (false)
+    {
+        getSVCandidatesFromSemiAligned(opt, localRead, localAlign, candidates);
+    }
 
     // TODO: add SA tag processing
 

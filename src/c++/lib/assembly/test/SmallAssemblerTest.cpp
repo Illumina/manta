@@ -37,9 +37,9 @@ BOOST_AUTO_TEST_CASE( test_SmallAssembler1 )
     AssemblyReadInput reads;
 
     reads.push_back("ACGTGTATTACC");
-    reads.push_back("GTGTATTACCTA");
-    reads.push_back("ATTACCTAGTAC");
-    reads.push_back("TACCTAGTACTC");
+    reads.push_back(  "GTGTATTACCTA");
+    reads.push_back(      "ATTACCTAGTAC");
+    reads.push_back(        "TACCTAGTACTC");
     reads.push_back("123456789123");
 
     AssemblyReadOutput readInfo;
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE( test_SmallAssembler1 )
         BOOST_REQUIRE(readInfo[i].isUsed);
         BOOST_REQUIRE_EQUAL(readInfo[i].contigId,0u);
     }
-    BOOST_REQUIRE(! readInfo[5].isUsed);
+    BOOST_REQUIRE(! readInfo[4].isUsed);
 
 
 }
