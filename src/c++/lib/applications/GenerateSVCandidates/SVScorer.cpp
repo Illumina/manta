@@ -314,24 +314,25 @@ getSVRefPairSupport(
 
             // count only from the down stream read unless the mate-pos goes past center-pos
             const bool isLeftMost(bamRead.pos() < bamRead.mate_pos());
+            const bool isRead1Tie((bamRead.pos() == bamRead.mate_pos()) && bamRead.is_first());
+            const bool isDefaultSelected(isLeftMost || isRead1Tie);
+
             const bool isMateBeforeCenter(bamRead.mate_pos() < centerPos);
 
-            if ( isLeftMost && isMateBeforeCenter ) continue;
-            if ( (!isLeftMost) && (!isMateBeforeCenter) ) continue;
+            if ( isDefaultSelected && isMateBeforeCenter ) continue;
+            if ( (!isDefaultSelected) && (!isMateBeforeCenter) ) continue;
 
             // get fragment range:
             pos_t fragBegin(0);
-            pos_t fragEnd(0);
             if (isLeftMost)
             {
                 fragBegin=bamRead.pos()-1;
-                fragEnd=fragBegin+bamRead.template_size();
             }
             else
             {
                 fragBegin=bamRead.mate_pos()-1;
-                fragEnd=fragBegin-bamRead.template_size();
             }
+            const pos_t fragEnd(fragBegin+std::abs(bamRead.template_size()));
 
             if (fragBegin > fragEnd)
             {
