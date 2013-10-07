@@ -71,9 +71,11 @@ std::ostream&
 operator<<(std::ostream& os, const SVAlignmentInfo& ai)
 {
     os << "Contig seq\n" << ai.contigSeq << "\n";
-    os << "bp1 contig offset = " << ai.bp1ContigOffset << "bp1 contig reversed = " << ai.bp1ContigReversed << "\n";
-    os << "bp2 contig offset = " << ai.bp2ContigOffset << "bp2 contig reversed = " << ai.bp2ContigReversed << "\n";
+    os << "bp1 contig offset = " << ai.bp1ContigOffset << " bp1 contig reversed = " << ai.bp1ContigReversed << "\n";
+    os << "bp2 contig offset = " << ai.bp2ContigOffset << " bp2 contig reversed = " << ai.bp2ContigReversed << "\n";
 
+    os << "bp1 reference offset = " << ai.bp1RefOffset << "\n";
+    os << "bp2 reference offset = " << ai.bp2RefOffset << "\n";
     return os;
 }
 
