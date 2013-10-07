@@ -124,7 +124,7 @@ struct SVLocusScanner
     /// a read is a shadow if it is unaligned but its partner aligns confidently
     bool
     isShadow(
-    	const bam_record& bamRead) const;
+        const bam_record& bamRead) const;
 
 
     bool

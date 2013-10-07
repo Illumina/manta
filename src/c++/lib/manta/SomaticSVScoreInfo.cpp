@@ -35,7 +35,7 @@ SVAlignmentInfo(
         (!sv.isImprecise()))
     {
         //contigSeq = assemblyData.contigs[assemblyData.bestAlignmentIndex].seq;
-    	contigSeq = assemblyData.extendedContigs[assemblyData.bestAlignmentIndex];
+        contigSeq = assemblyData.extendedContigs[assemblyData.bestAlignmentIndex];
         const JumpAlignmentResult<int>& alignment = assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex];
 
         // get offsets of breakpoints in the contig
@@ -47,9 +47,9 @@ SVAlignmentInfo(
         bp2ContigOffset = alignment.align1.beginPos + align1Size + insertSize;
         if (assemblyData.isBp2AlignedFirst)
         {
-        	unsigned temp = bp1ContigOffset;
-        	bp1ContigOffset = bp2ContigOffset;
-        	bp2ContigOffset = temp;
+            unsigned temp = bp1ContigOffset;
+            bp1ContigOffset = bp2ContigOffset;
+            bp2ContigOffset = temp;
         }
 
         bp1ContigReversed = assemblyData.isBp1Reversed;

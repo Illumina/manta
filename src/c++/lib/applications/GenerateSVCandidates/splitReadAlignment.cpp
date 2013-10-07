@@ -20,7 +20,7 @@
 
 #include <cassert>
 
-#define DEBUG_SRA
+//#define DEBUG_SRA
 
 unsigned
 splitReadAlignment::
