@@ -125,6 +125,7 @@ struct SVLocusScanner
 
     /// a read is a shadow if it is unaligned but its partner aligns confidently
     bool
+
     isGoodShadow(
         const bam_record& bamRead, const uint8_t lastMapq, const std::string& lastQname) const;
 

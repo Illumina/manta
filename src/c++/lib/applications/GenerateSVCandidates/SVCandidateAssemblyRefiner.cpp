@@ -503,15 +503,20 @@ getJumpAssembly(
         }
     }
 
+    assemblyData.isBp2AlignedFirst = isBp2AlignedFirst;
+    assemblyData.isBp1Reversed = isBp1Reversed;
+    assemblyData.isBp2Reversed = isBp2Reversed;
+
     // assemble contig spanning the breakend:
     _spanningAssembler.assembleSVBreakends(sv.bp1, sv.bp2, isBp1Reversed, isBp2Reversed, assemblyData.contigs);
 
     getSVReferenceSegments(_opt.referenceFilename, _header, extraRefEdgeSize, sv, assemblyData.bp1ref, assemblyData.bp2ref);
-    const std::string* align1RefStrPtr(&assemblyData.bp1ref.seq());
-    const std::string* align2RefStrPtr(&assemblyData.bp2ref.seq());
-
-    if (isBp1Reversed) reverseCompStr(assemblyData.bp1ref.seq());
-    if (isBp2Reversed) reverseCompStr(assemblyData.bp2ref.seq());
+    std::string bp1refSeq = assemblyData.bp1ref.seq();
+    std::string bp2refSeq = assemblyData.bp2ref.seq();
+    if (isBp1Reversed) reverseCompStr(bp1refSeq);
+    if (isBp2Reversed) reverseCompStr(bp2refSeq);
+    const std::string* align1RefStrPtr(&bp1refSeq);
+    const std::string* align2RefStrPtr(&bp2refSeq);
 
     if (isBp2AlignedFirst) std::swap(align1RefStrPtr, align2RefStrPtr);
 
@@ -553,6 +558,10 @@ getJumpAssembly(
             align2RefStrPtr->begin(), align2RefStrPtr->end(),
             alignment);
 
+        std::string extendedContig;
+        getExtendedContig(alignment, contig.seq, align1RefStrPtr, align2RefStrPtr, extendedContig);
+        assemblyData.extendedContigs.push_back(extendedContig);
+
 #ifdef DEBUG_REFINER
         log_os << logtag << " contigIndex: " << contigIndex << " alignment: " << alignment;
 
@@ -590,7 +599,6 @@ getJumpAssembly(
 
         if (isFilterSpanningAlignment(_spanningAligner, hsAlign.align1.apath, true)) return;
         if (isFilterSpanningAlignment(_spanningAligner, hsAlign.align2.apath, false)) return;
-
     }
 
     // TODO: min context, etc.

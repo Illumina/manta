@@ -278,6 +278,10 @@ scoreSomaticSV(
     // extract SV alignment info for split read evidence
     const SVAlignmentInfo SVAlignInfo(sv, assemblyData);
 
+#ifdef DEBUG_SVS
+    log_os << SVAlignInfo << "\n";
+#endif
+
     // first exercise -- just count the sample assignment of the pairs we already have:
     const unsigned bamCount(_bamStreams.size());
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
