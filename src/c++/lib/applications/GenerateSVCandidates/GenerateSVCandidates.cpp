@@ -36,6 +36,7 @@
 
 #include <iostream>
 #include <memory>
+#include <time.h> 
 
 //#define DEBUG_GSV
 
@@ -235,10 +236,12 @@ runGSC(
     while (edger.next())
     {
         const EdgeInfo& edge(edger.getEdge());
-
+        
 #ifdef DEBUG_GSV
         log_os << logtag << " starting analysis of edge: ";
         dumpEdgeInfo(edge,cset,log_os);
+        // good old stackoverflow :-)
+        clock_t startTime = clock();
 #endif
 
         try
@@ -297,6 +300,9 @@ runGSC(
             dumpEdgeInfo(edge,cset,log_os);
             throw;
         }
+#ifdef DEBUG_GSV
+     log_os << logtag << " Processing this edge took " << double( clock() - startTime ) / (double)CLOCKS_PER_SEC << " seconds.\n";
+#endif
     }
 }
 

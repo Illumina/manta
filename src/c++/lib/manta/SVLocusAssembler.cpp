@@ -120,7 +120,7 @@ getBreakendReads(
 
         static const unsigned MAX_NUM_READS(1000);
         unsigned int shadowCnt(0);
-       // unsigned int semiAlignedCnt(0);
+        //unsigned int semiAlignedCnt(0);
 
         while (bamStream.next() && (reads.size() < MAX_NUM_READS))
         {
