@@ -20,10 +20,9 @@
 #include "boost/program_options.hpp"
 
 
-struct SomaticCallOptions
+struct CallOptionsSomatic
 {
-
-    SomaticCallOptions() :
+    CallOptionsSomatic() :
         maxDepthFactor(3.0),
         maxDepthFilterLabel("MaxDepth"),
         minOutputSomaticScore(10)
@@ -33,10 +32,9 @@ struct SomaticCallOptions
     float maxDepthFactor;
     std::string maxDepthFilterLabel;
 
-    unsigned minOutputSomaticScore;
+    unsigned minOutputSomaticScore; ///< minimum somatic quality to print out a somatic variant
 };
 
 
 boost::program_options::options_description
-getOptionsDescription(SomaticCallOptions& opt);
-
+getOptionsDescription(CallOptionsSomatic& opt);

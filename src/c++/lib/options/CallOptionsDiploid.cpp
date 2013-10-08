@@ -15,19 +15,19 @@
 /// \author Chris Saunders
 ///
 
-#include "options/SomaticCallOptions.hh"
+#include "options/CallOptionsDiploid.hh"
 
 
 boost::program_options::options_description
-getOptionsDescription(SomaticCallOptions& opt)
+getOptionsDescription(CallOptionsDiploid& opt)
 {
     namespace po = boost::program_options;
-    po::options_description desc("somatic-calling");
+    po::options_description desc("germline-variant-calling");
     desc.add_options()
     ("max-depth-factor", po::value(&opt.maxDepthFactor)->default_value(opt.maxDepthFactor),
-     "Variants where the non-tumor depth around the breakpoint is greater than this factor x the chromosomal mean will be filtered out")
-    ("min-somatic-score", po::value(&opt.minOutputSomaticScore)->default_value(opt.minOutputSomaticScore),
-     "minimum somatic score for variants included in the somatic output vcf")
+     "Variants where the depth around the breakpoint is greater than this factor x the chromosomal mean will be filtered out")
+    ("min-qual-score", po::value(&opt.minOutputAltScore)->default_value(opt.minOutputAltScore),
+     "minimum QUAL score for variants included in the germline output vcf")
     ;
 
     return desc;

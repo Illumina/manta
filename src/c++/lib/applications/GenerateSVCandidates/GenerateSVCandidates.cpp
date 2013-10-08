@@ -30,6 +30,7 @@
 #include "manta/SVCandidateAssemblyData.hh"
 #include "manta/SVCandidateUtil.hh"
 #include "format/VcfWriterCandidateSV.hh"
+#include "format/VcfWriterDiploidSV.hh"
 #include "format/VcfWriterSomaticSV.hh"
 
 #include "boost/foreach.hpp"
@@ -92,8 +93,11 @@ struct SVWriter
         isSomatic(! opt.somaticOutputFilename.empty()),
         svScore(opt, cset.header),
         candfs(opt.candidateOutputFilename),
+        dipfs(opt.diploidOutputFilename),
         somfs(opt.somaticOutputFilename),
         candWriter(opt.referenceFilename,cset,candfs.getStream()),
+        diploidWriter(opt.diploidOpt, (! opt.chromDepthFilename.empty()),
+                  opt.referenceFilename,cset,dipfs.getStream()),
         somWriter(opt.somaticOpt, (! opt.chromDepthFilename.empty()),
                   opt.referenceFilename,cset,somfs.getStream())
     {
@@ -125,7 +129,7 @@ struct SVWriter
             if (sv.isImprecise())
             {
 #ifdef DEBUG_GSV
-                log_os << logtag << " rejecting candidate, imprecise self-edge\n";
+                log_os << logtag << " rejecting candidate: imprecise self-edge\n";
 #endif
                 return;
             }
@@ -135,9 +139,8 @@ struct SVWriter
             if (sv.bp1.pairCount < minCandidatePairCount)
             {
 #ifdef DEBUG_GSV
-                log_os << logtag << " rejecting candidate, minCandidatePairCount\n";
+                log_os << logtag << " rejecting candidate: minCandidatePairCount\n";
 #endif
-
                 return;
             }
         }
@@ -162,13 +165,18 @@ struct SVWriter
             return;
         }
 
+        svScore.scoreSV(svData, assemblyData, sv, modelScoreInfo);
+
+        if (modelScoreInfo.diploid.altScore > opt.diploidOpt.minOutputAltScore)
+        {
+            diploidWriter.writeSV(edge, svData, assemblyData, sv, modelScoreInfo);
+        }
+
         if (isSomatic)
         {
-            svScore.scoreSomaticSV(svData, assemblyData, sv, ssInfo);
-
-            if (ssInfo.somaticScore > opt.somaticOpt.minOutputSomaticScore)
+            if (modelScoreInfo.somatic.somaticScore > opt.somaticOpt.minOutputSomaticScore)
             {
-                somWriter.writeSV(edge, svData, assemblyData, sv, ssInfo);
+                somWriter.writeSV(edge, svData, assemblyData, sv, modelScoreInfo);
             }
         }
     }
@@ -178,12 +186,14 @@ struct SVWriter
     const bool isSomatic;
 
     SVScorer svScore;
-    SomaticSVScoreInfo ssInfo;
+    SVModelScoreInfo modelScoreInfo;
 
     OutStream candfs;
+    OutStream dipfs;
     OutStream somfs;
 
     VcfWriterCandidateSV candWriter;
+    VcfWriterDiploidSV diploidWriter;
     VcfWriterSomaticSV somWriter;
 };
 

@@ -25,6 +25,7 @@
 #include <string>
 #include <set>
 
+
 struct SVAlignmentInfo
 {
     SVAlignmentInfo(
@@ -104,36 +105,35 @@ std::ostream&
 operator<<(std::ostream& os, const SVSampleInfo& si);
 
 
-/// consolidate all somatic scoring results applied to an SV candidate
-struct SomaticSVScoreInfo
+
+/// consolidate model-agnostic scoring results applied to an SV candidate
+struct SVScoreInfo
 {
-    SomaticSVScoreInfo() :
+    SVScoreInfo() :
         bp1MaxDepth(0),
-        bp2MaxDepth(0),
-        somaticScore(0)
+        bp2MaxDepth(0)
     {}
 
     void
     clear()
     {
-        tumor.clear();
         normal.clear();
+        tumor.clear();
         filters.clear();
 
         bp1MaxDepth=0;
         bp2MaxDepth=0;
-        somaticScore=0;
     }
 
-    SVSampleInfo tumor;
     SVSampleInfo normal;
+    SVSampleInfo tumor;
 
     std::set<std::string> filters;
 
     unsigned bp1MaxDepth;
     unsigned bp2MaxDepth;
-    unsigned somaticScore;
 };
 
+
 std::ostream&
-operator<<(std::ostream& os, const SomaticSVScoreInfo& ssi);
+operator<<(std::ostream& os, const SVScoreInfo& ssi);

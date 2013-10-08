@@ -20,8 +20,9 @@
 #include "EdgeOptions.hh"
 #include "manta/Program.hh"
 #include "options/AlignmentFileOptions.hh"
+#include "options/CallOptionsDiploid.hh"
+#include "options/CallOptionsSomatic.hh"
 #include "options/ReadScannerOptions.hh"
-#include "options/SomaticCallOptions.hh"
 #include "options/SVRefinerOptions.hh"
 
 #include <string>
@@ -39,7 +40,8 @@ struct GSCOptions
     EdgeOptions edgeOpt;
     ReadScannerOptions scanOpt;
     SVRefinerOptions refineOpt;
-    SomaticCallOptions somaticOpt;
+    CallOptionsDiploid diploidOpt;
+    CallOptionsSomatic somaticOpt;
 
     std::string graphFilename;
     std::string referenceFilename;
@@ -47,6 +49,7 @@ struct GSCOptions
     std::string chromDepthFilename;
 
     std::string candidateOutputFilename;
+    std::string diploidOutputFilename;
     std::string somaticOutputFilename;
 
     bool isSkipAssembly; ///< if true, skip assembly and run a low-resolution, breakdancer-like subset of the workflow
@@ -56,6 +59,7 @@ struct GSCOptions
 
 
 void
-parseGSCOptions(const manta::Program& prog,
-                int argc, char* argv[],
-                GSCOptions& opt);
+parseGSCOptions(
+    const manta::Program& prog,
+    int argc, char* argv[],
+    GSCOptions& opt);
