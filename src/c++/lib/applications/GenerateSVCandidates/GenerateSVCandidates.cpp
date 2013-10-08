@@ -105,6 +105,7 @@ struct SVWriter
         if (0 == opt.edgeOpt.binIndex)
         {
             candWriter.writeHeader(progName, progVersion);
+            diploidWriter.writeHeader(progName, progVersion);
             if (isSomatic) somWriter.writeHeader(progName, progVersion);
         }
     }

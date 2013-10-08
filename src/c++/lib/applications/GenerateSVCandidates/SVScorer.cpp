@@ -584,9 +584,11 @@ static
 void
 scoreDiploidSV(
     const SVScoreInfo& /*baseInfo*/,
-    SVScoreInfoDiploid diploidInfo)
+    SVScoreInfoDiploid& diploidInfo)
 {
     diploidInfo.clear();
+
+    diploidInfo.altScore=60;
 }
 
 
@@ -596,7 +598,7 @@ static
 void
 scoreSomaticSV(
     const SVScoreInfo& baseInfo,
-    SVScoreInfoSomatic somaticInfo)
+    SVScoreInfoSomatic& somaticInfo)
 {
     somaticInfo.clear();
 
