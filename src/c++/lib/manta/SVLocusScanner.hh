@@ -35,14 +35,14 @@
 struct SVObservationWeights
 {
     // input evidence:
-    static const unsigned readPair = 2;
+    static const unsigned readPair = 3;
     static const unsigned closeReadPair = 1;
-    static const unsigned internalReadEvent = 2; ///< indels, soft-clip, etc.
+    static const unsigned internalReadEvent = 3; ///< indels, soft-clip, etc.
 
     static const float closePairFactor; ///< fragments within this factor of the minimum size cutoff are treated as 'close' pairs and receive a modified evidence count
 
     // noise reduction:
-    static const unsigned observation = 2; ///< 'average' observation weight, this is used to scale noise filtration, but not for any evidence type
+    static const unsigned observation = 3; ///< 'average' observation weight, this is used to scale noise filtration, but not for any evidence type
 };
 
 
