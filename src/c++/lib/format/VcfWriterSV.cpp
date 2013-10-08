@@ -147,6 +147,8 @@ makeFormatSampleField(
 {
     static const char sep(':');
 
+    os << '\t';
+
     if (sample.empty())
     {
         os << ".\t.";
