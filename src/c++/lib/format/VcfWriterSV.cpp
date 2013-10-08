@@ -294,12 +294,15 @@ writeTransloc(
         infotags.push_back( str( boost::format("CIPOS=%i,%i") % ((bpArange.begin_pos()+1) - pos) % (bpArange.end_pos() - pos) ));
     }
 
-    if (bpArange.size() > 1)
+    if (! isImprecise)
     {
-        infotags.push_back( str( boost::format("HOMLEN=%i") % (bpArange.size()) ));
-        std::string homref;
-        get_standardized_region_seq(_referenceFilename,chrom,bpArange.begin_pos(),bpArange.end_pos()-1,homref);
-        infotags.push_back( str( boost::format("HOMSEQ=%s") % (homref) ));
+        if (bpArange.size() > 1)
+        {
+            infotags.push_back( str( boost::format("HOMLEN=%i") % (bpArange.size()-1) ));
+            std::string homref;
+            get_standardized_region_seq(_referenceFilename,chrom,bpArange.begin_pos()+1,bpArange.end_pos()-1,homref);
+            infotags.push_back( str( boost::format("HOMSEQ=%s") % (homref) ));
+        }
     }
 
     if (! insertSeq.empty())
@@ -484,12 +487,15 @@ writeInvdel(
         }
     }
 
-    if (bpArange.size() > 1)
+    if (! isImprecise)
     {
-        infotags.push_back( str( boost::format("HOMLEN=%i") % (bpArange.size()) ));
-        std::string homref;
-        get_standardized_region_seq(_referenceFilename,chrom,bpArange.begin_pos(),bpArange.end_pos()-1,homref);
-        infotags.push_back( str( boost::format("HOMSEQ=%s") % (homref) ));
+        if (bpArange.size() > 1)
+        {
+            infotags.push_back( str( boost::format("HOMLEN=%i") % (bpArange.size()-1) ));
+            std::string homref;
+            get_standardized_region_seq(_referenceFilename,chrom,bpArange.begin_pos()+1,bpArange.end_pos()-1,homref);
+            infotags.push_back( str( boost::format("HOMSEQ=%s") % (homref) ));
+        }
     }
 
     if (! isSmallVariant)
