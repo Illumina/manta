@@ -78,6 +78,15 @@ getAlignEndOffset(
 //isConsistentAlignment(const JumpAlignmentResult<int>& res, const unsigned minAlignContext = 0);
 
 
+/// extend the somatic contig by padding the flanking regions of the aligned reference regions on each end
+void
+getExtendedContig(
+    const JumpAlignmentResult<int>& align,
+    const std::string& querySeq,
+    const std::string* ref1Seq,
+    const std::string* ref2Seq,
+    std::string& extendedContig);
+
 /// given a jump alignment and query sequence, return the bp1,insert and bp2 query sequences
 ///
 /// the insert sequence is converted to fwd-strand by assuming it is "attached" to bp1

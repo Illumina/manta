@@ -34,23 +34,26 @@ SVAlignmentInfo(
     if ((assemblyData.isSpanning) &&
         (!sv.isImprecise()))
     {
-        contigSeq = assemblyData.contigs[assemblyData.bestAlignmentIndex].seq;
+        //contigSeq = assemblyData.contigs[assemblyData.bestAlignmentIndex].seq;
+        contigSeq = assemblyData.extendedContigs[assemblyData.bestAlignmentIndex];
         const JumpAlignmentResult<int>& alignment = assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex];
 
         // get offsets of breakpoints in the contig
         const unsigned align1Size(apath_read_length(alignment.align1.apath));
         const unsigned insertSize(alignment.jumpInsertSize);
-        bp1ContigOffset = align1Size - 1;
-        bp2ContigOffset = align1Size + insertSize;
-        bp1ContigReversed = false;
-        bp2ContigReversed = false;
-        if (sv.bp1.state == sv.bp2.state)
+        // the beginPos of align1 is the length of reference padding in the extended contig
+        // |ref padding| + |align1| + |insert| + |align2|
+        bp1ContigOffset = alignment.align1.beginPos + align1Size - 1;
+        bp2ContigOffset = alignment.align1.beginPos + align1Size + insertSize;
+        if (assemblyData.isBp2AlignedFirst)
         {
-            if (sv.bp1.state == SVBreakendState::RIGHT_OPEN)
-                bp2ContigReversed = true;
-            else
-                bp1ContigReversed = true;
+            unsigned temp = bp1ContigOffset;
+            bp1ContigOffset = bp2ContigOffset;
+            bp2ContigOffset = temp;
         }
+
+        bp1ContigReversed = assemblyData.isBp1Reversed;
+        bp2ContigReversed = assemblyData.isBp2Reversed;
 
         // get reference regions
         const reference_contig_segment& bp1Ref = assemblyData.bp1ref;
@@ -61,6 +64,19 @@ SVAlignmentInfo(
         bp1RefOffset = sv.bp1.interval.range.begin_pos() - bp1Ref.get_offset();
         bp2RefOffset = sv.bp2.interval.range.begin_pos() - bp2Ref.get_offset();
     }
+}
+
+
+std::ostream&
+operator<<(std::ostream& os, const SVAlignmentInfo& ai)
+{
+    os << "Contig seq\n" << ai.contigSeq << "\n";
+    os << "bp1 contig offset = " << ai.bp1ContigOffset << " bp1 contig reversed = " << ai.bp1ContigReversed << "\n";
+    os << "bp2 contig offset = " << ai.bp2ContigOffset << " bp2 contig reversed = " << ai.bp2ContigReversed << "\n";
+
+    os << "bp1 reference offset = " << ai.bp1RefOffset << "\n";
+    os << "bp2 reference offset = " << ai.bp2RefOffset << "\n";
+    return os;
 }
 
 

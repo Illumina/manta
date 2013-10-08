@@ -612,7 +612,7 @@ writeSVCore(
     }
     else if (svType == SV_TYPE::INVERSION)
     {
-    	writeInversion(edge, sv, svData, adata);
+        writeInversion(edge, sv, svData, adata);
     }
     else if (svType == SV_TYPE::INDEL)
     {

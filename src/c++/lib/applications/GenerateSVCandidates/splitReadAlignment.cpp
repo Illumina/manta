@@ -16,6 +16,11 @@
 ///
 
 #include "splitReadAlignment.hh"
+#include "blt_util/log.hh"
+
+#include <cassert>
+
+//#define DEBUG_SRA
 
 unsigned
 splitReadAlignment::
@@ -49,11 +54,19 @@ align(const std::string& querySeq,
 {
     SRAlignmentInfo bestAlignInfo;
 
+    assert(bpOffset >= 0);
     const unsigned querySize = querySeq.size();
     const unsigned targetSize = targetSeq.size();
+    assert(querySize < targetSize);
+    
     // set the scanning start & end to make sure the candidate windows overlapping the breakpoint
-    const unsigned scanStart = std::max((unsigned)0, (bpOffset - querySize + 2));
-    const unsigned scanEnd = std::min((bpOffset-1), (targetSize - querySize));
+    const unsigned scanStart = ((bpOffset+2) <= querySize)? 0 : (bpOffset - querySize + 2);
+    const unsigned scanEnd = (bpOffset == 0)? 0 : std::min((bpOffset-1), (targetSize - querySize));
+
+#ifdef DEBUG_SRA
+    log_os << "query size = " << querySize << "target size = " << targetSize << "\n";
+    log_os << "scan start = " << scanStart << " scan end = " << scanEnd << "\n";
+#endif
 
     for (unsigned i = scanStart; i<= scanEnd; i++)
     {
@@ -74,6 +87,10 @@ align(const std::string& querySeq,
     _alignment.update_alignInfo(bestAlignInfo);
     // filtering the alignment and set evidence
     set_evidence();
+
+#ifdef DEBUG_SRA
+    log_os << "final alignment\n" << _alignment << "\n";
+#endif
 }
 
 

@@ -71,10 +71,14 @@ struct SVCandidateAssemblyData
     Assembly contigs; ///< assembled contigs for both breakpoints
 
     bool isSpanning; ///< is this a 2-locus event (spanning), or a local-assembly?
+    bool isBp2AlignedFirst;
+    bool isBp1Reversed;
+    bool isBp2Reversed;
+
+    std::vector<std::string> extendedContigs; ///extended each contig's sequence by padding reference sequences on each end
 
     std::vector<SmallAlignmentResultType> smallSVAlignments; ///< contig smallSV alignments, one per contig, may be empty
     std::vector<JumpAlignmentResultType> spanningAlignments; ///< contig spanning alignments, one per contig, may be empty
-
     std::vector<CandidateSegmentSetType> smallSVSegments; ///< list of indel sets, one per small alignment
 
     unsigned bestAlignmentIndex; ///< if non-empty sv candidate set, which contig/alignment produced them?
