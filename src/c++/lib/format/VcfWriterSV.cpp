@@ -173,7 +173,7 @@ makeFormatSampleField(
         nSamples = std::max(nSamples, ns);
     }
 
-    for(unsigned sampleIndex(0); sampleIndex < nSamples; ++sampleIndex)
+    for (unsigned sampleIndex(0); sampleIndex < nSamples; ++sampleIndex)
     {
         os << '\t';
 
@@ -185,11 +185,11 @@ makeFormatSampleField(
                 if (! isFirst) os << sep;
                 else           isFirst = false;
 
-                if(fs.second.size() <= sampleIndex)
+                if (fs.second.size() <= sampleIndex)
                 {
                     os << '.';
                 }
-                else if(fs.second[sampleIndex].empty())
+                else if (fs.second[sampleIndex].empty())
                 {
                     os << '.';
                 }

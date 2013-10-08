@@ -192,12 +192,12 @@ addCigarToSpanningAlignment(
     const unsigned deleteSize(bpB.interval.range.begin_pos() - bpA.interval.range.begin_pos());
     const unsigned insertSize(sv.insertSeq.size());
 
-    if(insertSize)
+    if (insertSize)
     {
         sv.insertAlignment.push_back(ALIGNPATH::path_segment(ALIGNPATH::INSERT,insertSize));
     }
 
-    if(deleteSize)
+    if (deleteSize)
     {
         sv.insertAlignment.push_back(ALIGNPATH::path_segment(ALIGNPATH::DELETE,deleteSize));
     }

@@ -128,7 +128,7 @@ private:
     /// determine maximum depth in region around breakend
     unsigned
     getBreakendMaxMappedDepth(
-         const SVBreakend& bp);
+        const SVBreakend& bp);
 
 
     /// shared information gathering steps of all scoring models

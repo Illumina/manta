@@ -22,27 +22,30 @@
 
 namespace DIPLOID_GT
 {
-    enum index_t
-    {
-        REF,
-        HET,
-        HOM
-    };
+enum index_t
+{
+    REF,
+    HET,
+    HOM
+};
 
-    inline
-    const char*
-    label(const index_t i)
+inline
+const char*
+label(const index_t i)
+{
+    switch (i)
     {
-        switch(i)
-        {
-        case REF : return "ref";
-        case HET : return "het";
-        case HOM : return "hom";
-        default:
-            assert(false && "Unknown GT state");
-            return NULL;
-        }
+    case REF :
+        return "ref";
+    case HET :
+        return "het";
+    case HOM :
+        return "hom";
+    default:
+        assert(false && "Unknown GT state");
+        return NULL;
     }
+}
 }
 
 

@@ -90,7 +90,7 @@ parseGSCOptions(
     ("candidate-output-file", po::value(&opt.candidateOutputFilename),
      "Write SV candidates to file (required)")
     ("diploid-output-file", po::value(&opt.diploidOutputFilename),
-      "Write germline diploid SVs to file (at least one  non-tumor alignment file must be specified)")
+     "Write germline diploid SVs to file (at least one  non-tumor alignment file must be specified)")
     ("somatic-output-file", po::value(&opt.somaticOutputFilename),
      "Write somatic SVs to file (at least one tumor and non-tumor alignment file must be specified)")
     ("verbose", po::value(&opt.isVerbose)->zero_tokens(),

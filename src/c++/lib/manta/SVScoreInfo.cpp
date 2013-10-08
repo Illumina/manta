@@ -98,7 +98,7 @@ operator<<(
        << indent << " refAlleleBp1SpanPairs: " << si.refAlleleBp1SpanPairs << "\n"
        << indent << " refAlleleBp2SpanPairs: " << si.refAlleleBp2SpanPairs << "\n"
        << indent << " refAlleleSpanPairs: " << si.refAlleleSpanPairs << "\n"
-    ;
+       ;
     return os;
 }
 

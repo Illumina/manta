@@ -98,7 +98,7 @@ struct SVWriter
         somfs(opt.somaticOutputFilename),
         candWriter(opt.referenceFilename,cset,candfs.getStream()),
         diploidWriter(opt.diploidOpt, (! opt.chromDepthFilename.empty()),
-                  opt.referenceFilename,cset,dipfs.getStream()),
+                      opt.referenceFilename,cset,dipfs.getStream()),
         somWriter(opt.somaticOpt, (! opt.chromDepthFilename.empty()),
                   opt.referenceFilename,cset,somfs.getStream())
     {

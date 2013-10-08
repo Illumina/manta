@@ -271,12 +271,12 @@ getSVRefPairSupport(
 
     const pos_t centerPos(bp.interval.range.center_pos());
 
-    
+
     /// we're interested in any fragments which cross center pos with at least N bases of support on each side
     /// (note this definition is certain to overlap the split read definition whenever N is less than the read length
-    
+
     static const pos_t minFragSupport(80);
-    
+
     const unsigned bamCount(_bamStreams.size());
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
@@ -293,7 +293,7 @@ getSVRefPairSupport(
 
         const uint32_t beginPos(centerPos-maxFrag+minFragSupport);
         const uint32_t endPos(centerPos+maxFrag-minFragSupport+1);
-        
+
         if (beginPos >= endPos) continue;
 
         // set bam stream to new search interval:
@@ -379,7 +379,7 @@ SVScorer::
 getSVRefPairSupport(
     const SVCandidate& sv,
     SVScoreInfo& baseInfo)
-{    
+{
     getSVRefPairSupport(sv.bp1, baseInfo, true);
     getSVRefPairSupport(sv.bp2, baseInfo, false);
 
@@ -477,11 +477,11 @@ getSVSplitReadSupport(
     // TODO: to add local assembly later
     //
     const bool isSkipSRSearch(
-            (! assemblyData.isSpanning) ||
-            (sv.isImprecise()) ||
-            (isSkipSRSearchDepth));
+        (! assemblyData.isSpanning) ||
+        (sv.isImprecise()) ||
+        (isSkipSRSearchDepth));
 
-    if(isSkipSRSearch) return;
+    if (isSkipSRSearch) return;
 
     // Get Data on standard read pairs crossing the two breakends,
 
