@@ -19,19 +19,19 @@
 
 #include "manta/SVModelScoreInfo.hh"
 #include "format/VcfWriterSV.hh"
-#include "options/CallOptionsSomatic.hh"
+#include "options/CallOptionsDiploid.hh"
 
 
-struct VcfWriterSomaticSV : public VcfWriterSV
+struct VcfWriterDiploidSV : public VcfWriterSV
 {
-    VcfWriterSomaticSV(
-        const CallOptionsSomatic& somaticOpt,
+    VcfWriterDiploidSV(
+        const CallOptionsDiploid& diploidOpt,
         const bool isMaxDepthFilter,
         const std::string& referenceFilename,
         const SVLocusSet& set,
         std::ostream& os) :
         VcfWriterSV(referenceFilename,set,os),
-        _somaticOpt(somaticOpt),
+        _diploidOpt(diploidOpt),
         _isMaxDepthFilter(isMaxDepthFilter),
         _modelScorePtr(NULL)
     {}
@@ -57,26 +57,26 @@ private:
 
     void
     addSplitReadInfo(
-        std::vector<std::string>& infotags) const;
+        InfoTag_t& infotags) const;
 
     void
     modifyInfo(
-        std::vector<std::string>& infotags) const;
-
-    void
-    modifyTranslocInfo(
-        const bool isFirstOfPair,
-        std::vector<std::string>& infotags) const;
+        InfoTag_t& infotags) const;
 
     void
     modifySample(
         SampleTag_t& sampletags) const;
 
+    void
+    modifyTranslocInfo(
+        const bool isFirstOfPair,
+        InfoTag_t& infotags) const;
+
     std::string
     getFilter() const;
 
-    const CallOptionsSomatic& _somaticOpt;
+
+    const CallOptionsDiploid& _diploidOpt;
     const bool _isMaxDepthFilter;
     const SVModelScoreInfo* _modelScorePtr;
 };
-

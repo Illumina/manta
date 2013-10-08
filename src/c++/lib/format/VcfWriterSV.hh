@@ -22,8 +22,6 @@
 #include "manta/SVCandidateAssemblyData.hh"
 #include "manta/SVCandidateSetData.hh"
 #include "svgraph/SVLocusSet.hh"
-#include "manta/SomaticSVScoreInfo.hh"
-#include "options/SomaticCallOptions.hh"
 #include "boost/format.hpp"
 
 #include <iosfwd>
@@ -45,8 +43,10 @@ struct VcfWriterSV
         const char* progVersion)
     {
         writeHeaderPrefix(progName, progVersion);
-        writeHeaderSuffix();
     }
+
+    typedef std::vector<std::string> InfoTag_t;
+    typedef std::vector<std::pair<std::string,std::vector<std::string> > > SampleTag_t;
 
 protected:
     void
@@ -55,7 +55,7 @@ protected:
         const char* progVersion);
 
     void
-    writeHeaderSuffix();
+    writeHeaderColumnKey();
 
     virtual
     void
@@ -65,6 +65,10 @@ protected:
     void
     addHeaderFilters() const {}
 
+    virtual
+    void
+    addHeaderFormatSampleKey() const {}
+
     void
     writeSVCore(
         const EdgeInfo& edge,
@@ -72,17 +76,17 @@ protected:
         const SVCandidateAssemblyData& adata,
         const SVCandidate& sv);
 
-    virtual
-    void
-    addSplitReadInfo(
-        std::vector<std::string>& /*infotags*/) const
-    {}
-
     /// add info tags which can be customized by sub-class
     virtual
     void
     modifyInfo(
-        std::vector<std::string>& /*infotags*/) const
+        InfoTag_t& /*infotags*/) const
+    {}
+
+    virtual
+    void
+    addSplitReadInfo(
+        InfoTag_t& /*infotags*/) const
     {}
 
     /// add info tags specific to translocations:
@@ -90,7 +94,7 @@ protected:
     void
     modifyTranslocInfo(
         const bool /*isFirstOfPair*/,
-        std::vector<std::string>& /*infotags*/) const
+        InfoTag_t& /*infotags*/) const
     {}
 
     virtual
@@ -99,6 +103,12 @@ protected:
     {
         return ".";
     }
+
+    virtual
+    void
+    modifySample(
+        SampleTag_t& /*sampletags*/) const
+    {}
 
 private:
 

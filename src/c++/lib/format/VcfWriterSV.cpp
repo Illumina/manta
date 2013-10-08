@@ -101,21 +101,30 @@ writeHeaderPrefix(
 }
 
 
+static
+void
+writeHeaderColKeyPrefix(std::ostream& os)
+{
+    os << "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO";
+}
+
+
 
 void
 VcfWriterSV::
-writeHeaderSuffix()
+writeHeaderColumnKey()
 {
-    _os << "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n";
+    writeHeaderColKeyPrefix(_os);
+    addHeaderFormatSampleKey();
+    _os << '\n';
 }
-
 
 
 
 static
 void
 makeInfoField(
-    const std::vector<std::string>& info,
+    const VcfWriterSV::InfoTag_t& info,
     std::ostream& os)
 {
     static const char sep(';');
@@ -129,6 +138,72 @@ makeInfoField(
 }
 
 
+
+static
+void
+makeFormatSampleField(
+    const VcfWriterSV::SampleTag_t& sample,
+    std::ostream& os)
+{
+    static const char sep(':');
+
+    if (sample.empty())
+    {
+        os << ".\t.";
+        return;
+    }
+
+    // first write FORMAT field:
+    {
+        bool isFirst(true);
+        BOOST_FOREACH(const VcfWriterSV::SampleTag_t::value_type& fs, sample)
+        {
+            if (! isFirst) os << sep;
+            else           isFirst = false;
+
+            assert(! fs.first.empty());
+            os << fs.first;
+        }
+    }
+
+    unsigned nSamples(0);
+    BOOST_FOREACH(const VcfWriterSV::SampleTag_t::value_type& fs, sample)
+    {
+        const unsigned ns(fs.second.size());
+        nSamples = std::max(nSamples, ns);
+    }
+
+    for(unsigned sampleIndex(0); sampleIndex < nSamples; ++sampleIndex)
+    {
+        os << '\t';
+
+        // next write SAMPLE field:
+        {
+            bool isFirst(true);
+            BOOST_FOREACH(const VcfWriterSV::SampleTag_t::value_type& fs, sample)
+            {
+                if (! isFirst) os << sep;
+                else           isFirst = false;
+
+                if(fs.second.size() <= sampleIndex)
+                {
+                    os << '.';
+                }
+                else if(fs.second[sampleIndex].empty())
+                {
+                    os << '.';
+                }
+                else
+                {
+                    os << fs.second[sampleIndex];
+                }
+            }
+        }
+    }
+}
+
+
+
 #ifdef DEBUG_VCF
 
 static
@@ -138,7 +213,7 @@ addDebugInfo(
     const SVBreakend& bp2,
     const bool isFirstOfPair,
     const SVCandidateAssemblyData& assemblyData,
-    std::vector<std::string>& infotags)
+    InfoTag_t& infotags)
 {
     if (! isFirstOfPair) return;
 
@@ -189,7 +264,8 @@ writeTransloc(
     const SVBreakend& bpA( isFirstBreakend ? sv.bp1 : sv.bp2);
     const SVBreakend& bpB( isFirstBreakend ? sv.bp2 : sv.bp1);
 
-    std::vector<std::string> infotags;
+    InfoTag_t infotags;
+    SampleTag_t sampletags;
 
     // get CHROM
     const std::string& chrom(_header.chrom_data[bpA.interval.tid].label);
@@ -314,6 +390,8 @@ writeTransloc(
     modifyInfo(infotags);
     modifyTranslocInfo(isFirstBreakend, infotags);
 
+    modifySample(sampletags);
+
 #ifdef DEBUG_VCF
     addDebugInfo(bpA, bpB, isFirstBreakend, adata, infotags);
 #endif
@@ -328,6 +406,7 @@ writeTransloc(
         << '\t' << getFilter() // FILTER
         << '\t';
     makeInfoField(infotags,_os); // INFO
+    makeFormatSampleField(sampletags, _os); // FORMAT + SAMPLE
     _os << '\n';
 }
 
@@ -366,7 +445,8 @@ writeInvdel(
     const SVBreakend& bpA(isBp1First ? sv.bp1 : sv.bp2);
     const SVBreakend& bpB(isBp1First ? sv.bp2 : sv.bp1);
 
-    std::vector<std::string> infotags;
+    InfoTag_t infoTags;
+    SampleTag_t sampleTags;
 
     // get CHROM
     const std::string& chrom(_header.chrom_data[sv.bp1.interval.tid].label);
@@ -445,13 +525,13 @@ writeInvdel(
     split_string(label,':',words);
     if (! isSmallVariant)
     {
-        infotags.push_back( str(boost::format("END=%i") % endPos));
-        infotags.push_back( str(boost::format("SVTYPE=%s") % words[0]));
-        infotags.push_back( str(boost::format("SVLEN=%i") % (-1*(endPos-pos))));
+        infoTags.push_back( str(boost::format("END=%i") % endPos));
+        infoTags.push_back( str(boost::format("SVTYPE=%s") % words[0]));
+        infoTags.push_back( str(boost::format("SVLEN=%i") % (-1*(endPos-pos))));
     }
-    infotags.push_back( str(boost::format("UPSTREAM_PAIR_SUPPORT=%i") % bpA.readCount) );
-    infotags.push_back( str(boost::format("DOWNSTREAM_PAIR_SUPPORT=%i") % bpB.readCount) );
-    infotags.push_back( str(boost::format("PAIR_SUPPORT=%i") % bpA.pairCount) );
+    infoTags.push_back( str(boost::format("UPSTREAM_PAIR_SUPPORT=%i") % bpA.readCount) );
+    infoTags.push_back( str(boost::format("DOWNSTREAM_PAIR_SUPPORT=%i") % bpB.readCount) );
+    infoTags.push_back( str(boost::format("PAIR_SUPPORT=%i") % bpA.pairCount) );
 
     if (isSmallVariant)
     {
@@ -461,29 +541,29 @@ writeInvdel(
             apath_to_cigar(sv.insertAlignment,cigar);
 
             // add the 1M to signify the leading reference base:
-            infotags.push_back( str(boost::format("CIGAR=1M%s") % cigar));
+            infoTags.push_back( str(boost::format("CIGAR=1M%s") % cigar));
         }
     }
 
     if (isImprecise)
     {
-        infotags.push_back("IMPRECISE");
+        infoTags.push_back("IMPRECISE");
     }
     else if (adata.isSpanning)
     {
-        addSplitReadInfo(infotags);
+        addSplitReadInfo(infoTags);
     }
 
     if (bpArange.size() > 1)
     {
-        infotags.push_back( str( boost::format("CIPOS=%i,%i") % ((bpArange.begin_pos()+1) - pos) % (bpArange.end_pos() - pos) ));
+        infoTags.push_back( str( boost::format("CIPOS=%i,%i") % ((bpArange.begin_pos()+1) - pos) % (bpArange.end_pos() - pos) ));
     }
 
     if (! isSmallVariant)
     {
         if (bpBrange.size() > 1)
         {
-            infotags.push_back( str( boost::format("CIEND=%i,%i") % (bpBrange.begin_pos() - endPos) % ((bpBrange.end_pos()-1) - endPos) ));
+            infoTags.push_back( str( boost::format("CIEND=%i,%i") % (bpBrange.begin_pos() - endPos) % ((bpBrange.end_pos()-1) - endPos) ));
         }
     }
 
@@ -491,10 +571,10 @@ writeInvdel(
     {
         if (bpArange.size() > 1)
         {
-            infotags.push_back( str( boost::format("HOMLEN=%i") % (bpArange.size()-1) ));
+            infoTags.push_back( str( boost::format("HOMLEN=%i") % (bpArange.size()-1) ));
             std::string homref;
             get_standardized_region_seq(_referenceFilename,chrom,bpArange.begin_pos()+1,bpArange.end_pos()-1,homref);
-            infotags.push_back( str( boost::format("HOMSEQ=%s") % (homref) ));
+            infoTags.push_back( str( boost::format("HOMSEQ=%s") % (homref) ));
         }
     }
 
@@ -502,19 +582,20 @@ writeInvdel(
     {
         if (! sv.insertSeq.empty())
         {
-            infotags.push_back( str( boost::format("SVINSLEN=%i") % (sv.insertSeq.size()) ));
+            infoTags.push_back( str( boost::format("SVINSLEN=%i") % (sv.insertSeq.size()) ));
             if (isBp1First || (bpA.state != bpB.state))
             {
-                infotags.push_back( str( boost::format("SVINSSEQ=%s") % (sv.insertSeq) ));
+                infoTags.push_back( str( boost::format("SVINSSEQ=%s") % (sv.insertSeq) ));
             }
             else
             {
-                infotags.push_back( str( boost::format("SVINSSEQ=%s") % reverseCompCopyStr(sv.insertSeq) ));
+                infoTags.push_back( str( boost::format("SVINSSEQ=%s") % reverseCompCopyStr(sv.insertSeq) ));
             }
         }
     }
 
-    modifyInfo(infotags);
+    modifyInfo(infoTags);
+    modifySample(sampleTags);
 
     // write out record:
     _os << chrom
@@ -525,7 +606,8 @@ writeInvdel(
         << '\t' << '.' // QUAL
         << '\t' << getFilter() // FILTER
         << '\t';
-    makeInfoField(infotags,_os); // INFO
+    makeInfoField(infoTags,_os); // INFO
+    makeFormatSampleField(sampleTags, _os); // FORMAT + SAMPLE
     _os << '\n';
 
 }

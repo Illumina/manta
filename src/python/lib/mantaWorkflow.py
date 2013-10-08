@@ -209,11 +209,13 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
 
     hygenTasks=set()
     candidateVcfPaths = []
+    diploidVcfPaths = []
     somaticVcfPaths = []
 
     for binId in range(self.params.nonlocalWorkBins) :
         binStr = str(binId).zfill(4)
         candidateVcfPaths.append(self.paths.getHyGenCandidatePath(binStr))
+        diploidVcfPaths.append(self.paths.getHyGenDiploidPath(binStr))
         if isSomatic :
             somaticVcfPaths.append(self.paths.getHyGenSomaticPath(binStr))
 
@@ -226,6 +228,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         hygenCmd.extend(["--min-scored-sv-size", self.params.minScoredVariantSize])
         hygenCmd.extend(["--ref",self.params.referenceFasta])
         hygenCmd.extend(["--candidate-output-file", candidateVcfPaths[-1]])
+        hygenCmd.extend(["--diploid-output-file", diploidVcfPaths[-1]])
         if isSomatic :
             hygenCmd.extend(["--somatic-output-file", somaticVcfPaths[-1]])
 
@@ -250,18 +253,16 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         cmd += " | %s -c > %s && %s -p vcf %s" % (self.params.bgzipBin, outPath, self.params.tabixBin, outPath)
         return cmd
 
-    # consolidate output:
-    if len(candidateVcfPaths) :
-        outPath = self.paths.getSortedCandidatePath()
-        candSortCmd = getVcfSortCmd(candidateVcfPaths,outPath)
-        candSortLabel=preJoin(taskPrefix,"sortCandidateSV")
-        nextStepWait.add(self.addTask(candSortLabel,candSortCmd,dependencies=hygenTasks))
+    def sortVcfs(pathList, outPath, label) :
+        if len(pathList) == 0 : return
 
-    if len(somaticVcfPaths) :
-        outPath = self.paths.getSortedSomaticPath()
-        candSortCmd = getVcfSortCmd(somaticVcfPaths,outPath)
-        candSortLabel=preJoin(taskPrefix,"sortSomaticSV")
-        nextStepWait.add(self.addTask(candSortLabel,candSortCmd,dependencies=hygenTasks))
+        sortCmd = getVcfSortCmd(pathList,outPath)
+        sortLabel=preJoin(taskPrefix,label)
+        nextStepWait.add(self.addTask(sortLabel,sortCmd,dependencies=hygenTasks))
+
+    sortVcfs(candidateVcfPaths, self.paths.getSortedCandidatePath(), "sortCandidateSV")
+    sortVcfs(diploidVcfPaths, self.paths.getSortedDiploidPath(), "sortDiploidSV")
+    sortVcfs(somaticVcfPaths, self.paths.getSortedSomaticPath(), "sortSomaticSV")
 
     return nextStepWait
 
@@ -295,6 +296,12 @@ class PathInfo:
 
     def getSortedCandidatePath(self) :
         return os.path.join(self.params.variantsDir,"candidateSV.vcf.gz")
+
+    def getHyGenDiploidPath(self, binStr) :
+        return os.path.join(self.getHyGenDir(),"diploidSV.%s.vcf" % (binStr))
+
+    def getSortedDiploidPath(self) :
+        return os.path.join(self.params.variantsDir,"diploidSV.vcf.gz")
 
     def getHyGenSomaticPath(self, binStr) :
         return os.path.join(self.getHyGenDir(),"somaticSV.%s.vcf" % (binStr))

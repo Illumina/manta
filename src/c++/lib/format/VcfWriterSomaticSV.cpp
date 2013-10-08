@@ -19,7 +19,16 @@
 
 #include "boost/algorithm/string/join.hpp"
 
-#include "manta/SomaticSVScoreInfo.hh"
+
+
+void
+VcfWriterSomaticSV::
+addHeaderFormatSampleKey() const
+{
+    /// TODO: get sample name from bam header/user
+    _os << "FORMAT\tNORMAL\tTUMOR";
+}
+
 
 
 void
@@ -49,12 +58,12 @@ VcfWriterSomaticSV::
 addSplitReadInfo(
     std::vector<std::string>& infotags) const
 {
-    const SomaticSVScoreInfo& ssInfo(*_ssInfoPtr);
+    const SVScoreInfo& baseInfo(_modelScorePtr->base);
 
-    infotags.push_back( str(boost::format("NORMAL_CONTIG_SPLIT_READ=%i") % ssInfo.normal.contigSRCount));
-    infotags.push_back( str(boost::format("TUMOR_CONTIG_SPLIT_READ=%i") % ssInfo.tumor.contigSRCount));
-    infotags.push_back( str(boost::format("NORMAL_REF_SPLIT_READ=%i") % ssInfo.normal.refSRCount));
-    infotags.push_back( str(boost::format("TUMOR_REF_SPLIT_READ=%i") % ssInfo.tumor.refSRCount));
+    infotags.push_back( str(boost::format("NORMAL_CONTIG_SPLIT_READ=%i") % baseInfo.normal.contigSRCount));
+    infotags.push_back( str(boost::format("TUMOR_CONTIG_SPLIT_READ=%i") % baseInfo.tumor.contigSRCount));
+    infotags.push_back( str(boost::format("NORMAL_REF_SPLIT_READ=%i") % baseInfo.normal.refSRCount));
+    infotags.push_back( str(boost::format("TUMOR_REF_SPLIT_READ=%i") % baseInfo.tumor.refSRCount));
 
 }
 
@@ -65,17 +74,20 @@ VcfWriterSomaticSV::
 modifyInfo(
     std::vector<std::string>& infotags) const
 {
-    assert(_ssInfoPtr != NULL);
-    const SomaticSVScoreInfo& ssInfo(*_ssInfoPtr);
+    assert(_modelScorePtr != NULL);
+    const SVModelScoreInfo& modelScoreInfo(*_modelScorePtr);
 
     infotags.push_back("SOMATIC");
-    infotags.push_back( str(boost::format("SOMATICSCORE=%i") % ssInfo.somaticScore) );
-    infotags.push_back( str(boost::format("NORMAL_PAIR_SUPPORT=%i") % ssInfo.normal.altAlleleSpanPairs) );
-    infotags.push_back( str(boost::format("TUMOR_PAIR_SUPPORT=%i") % ssInfo.tumor.altAlleleSpanPairs) );
+    infotags.push_back( str(boost::format("SOMATICSCORE=%i") % modelScoreInfo.somatic.somaticScore) );
 
-    infotags.push_back( str(boost::format("NORMAL_REF_PAIR_SUPPORT=%i") % ssInfo.normal.refAlleleSpanPairs) );
-    infotags.push_back( str(boost::format("TUMOR_REF_PAIR_SUPPORT=%i") % ssInfo.tumor.refAlleleSpanPairs) );
+    const SVScoreInfo& baseInfo(modelScoreInfo.base);
+    infotags.push_back( str(boost::format("NORMAL_PAIR_SUPPORT=%i") % baseInfo.normal.altAlleleSpanPairs) );
+    infotags.push_back( str(boost::format("TUMOR_PAIR_SUPPORT=%i") % baseInfo.tumor.altAlleleSpanPairs) );
+
+    infotags.push_back( str(boost::format("NORMAL_REF_PAIR_SUPPORT=%i") % baseInfo.normal.refAlleleSpanPairs) );
+    infotags.push_back( str(boost::format("TUMOR_REF_PAIR_SUPPORT=%i") % baseInfo.tumor.refAlleleSpanPairs) );
 }
+
 
 
 void
@@ -84,17 +96,32 @@ modifyTranslocInfo(
     const bool isFirstOfPair,
     std::vector<std::string>& infotags) const
 {
-    assert(_ssInfoPtr != NULL);
-    const SomaticSVScoreInfo& ssInfo(*_ssInfoPtr);
+    assert(_modelScorePtr != NULL);
+    const SVScoreInfo& baseInfo(_modelScorePtr->base);
 
     infotags.push_back( str(boost::format("NORMAL_BND_PAIR_SUPPORT=%i") %
-                            (isFirstOfPair ? ssInfo.normal.altAlleleBp1SpanReads : ssInfo.normal.altAlleleBp2SpanReads) ) );
+                            (isFirstOfPair ? baseInfo.normal.altAlleleBp1SpanReads : baseInfo.normal.altAlleleBp2SpanReads) ) );
     infotags.push_back( str(boost::format("TUMOR_BND_PAIR_SUPPORT=%i") %
-                            (isFirstOfPair ? ssInfo.tumor.altAlleleBp1SpanReads : ssInfo.tumor.altAlleleBp2SpanReads) ) );
+                            (isFirstOfPair ? baseInfo.tumor.altAlleleBp1SpanReads : baseInfo.tumor.altAlleleBp2SpanReads) ) );
     infotags.push_back( str(boost::format("BND_DEPTH=%i") %
-                            (isFirstOfPair ? ssInfo.bp1MaxDepth : ssInfo.bp2MaxDepth) ) );
+                            (isFirstOfPair ? baseInfo.bp1MaxDepth : baseInfo.bp2MaxDepth) ) );
     infotags.push_back( str(boost::format("MATE_BND_DEPTH=%i") %
-                            (isFirstOfPair ? ssInfo.bp2MaxDepth : ssInfo.bp1MaxDepth) ) );
+                            (isFirstOfPair ? baseInfo.bp2MaxDepth : baseInfo.bp1MaxDepth) ) );
+
+}
+
+
+
+void
+VcfWriterSomaticSV::
+modifySample(
+    SampleTag_t& sampletags) const
+{
+    assert(_modelScorePtr != NULL);
+//    const SVModelScoreInfo& modelScoreInfo(*_modelScorePtr);
+
+    std::vector<std::string> values(2);
+    sampletags.push_back(std::make_pair(".",values));
 }
 
 
@@ -103,18 +130,19 @@ std::string
 VcfWriterSomaticSV::
 getFilter() const
 {
-    assert(_ssInfoPtr != NULL);
-    const SomaticSVScoreInfo& ssInfo(*_ssInfoPtr);
+    assert(_modelScorePtr != NULL);
+    const SVScoreInfo& baseInfo(_modelScorePtr->base);
 
-    if (ssInfo.filters.empty())
+    if (baseInfo.filters.empty())
     {
         return "PASS";
     }
     else
     {
-        return boost::algorithm::join(ssInfo.filters, ";");
+        return boost::algorithm::join(baseInfo.filters, ";");
     }
 }
+
 
 
 void
@@ -124,10 +152,10 @@ writeSV(
     const SVCandidateSetData& svData,
     const SVCandidateAssemblyData& adata,
     const SVCandidate& sv,
-    const SomaticSVScoreInfo& ssInfo)
+    const SVModelScoreInfo& modelScore)
 {
     //TODO: this is a lame way to customize subclass behavior:
-    _ssInfoPtr=&ssInfo;
+    _modelScorePtr=&modelScore;
     writeSVCore(edge, svData, adata, sv);
-    _ssInfoPtr=NULL;
+    _modelScorePtr=NULL;
 }

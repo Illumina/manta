@@ -71,9 +71,10 @@ checkStandardizeUsageFile(
 
 
 void
-parseGSCOptions(const manta::Program& prog,
-                int argc, char* argv[],
-                GSCOptions& opt)
+parseGSCOptions(
+    const manta::Program& prog,
+    int argc, char* argv[],
+    GSCOptions& opt)
 {
     namespace po = boost::program_options;
     po::options_description req("configuration");
@@ -88,8 +89,10 @@ parseGSCOptions(const manta::Program& prog,
      "fasta reference sequence (required)")
     ("candidate-output-file", po::value(&opt.candidateOutputFilename),
      "Write SV candidates to file (required)")
+    ("diploid-output-file", po::value(&opt.diploidOutputFilename),
+      "Write germline diploid SVs to file (at least one  non-tumor alignment file must be specified)")
     ("somatic-output-file", po::value(&opt.somaticOutputFilename),
-     "Write somatic SV candidates to file (at least one tumor and non-tumor alignment file must be specified)")
+     "Write somatic SVs to file (at least one tumor and non-tumor alignment file must be specified)")
     ("verbose", po::value(&opt.isVerbose)->zero_tokens(),
      "Turn on low-detail INFO logging.")
     ("skip-assembly", po::value(&opt.isSkipAssembly)->zero_tokens(),
@@ -157,6 +160,11 @@ parseGSCOptions(const manta::Program& prog,
     if (opt.candidateOutputFilename.empty())
     {
         usage(log_os,prog,visible,"Must specify candidate output file");
+    }
+
+    if (opt.diploidOutputFilename.empty())
+    {
+        usage(log_os,prog,visible,"Must specify diploid output file");
     }
 
     if (! opt.somaticOutputFilename.empty())

@@ -12,15 +12,17 @@
 //
 
 ///
-/// \author Chris Saunders
+/// \author Chris Saunders and Xiaoyu Chen
 ///
 
-#include "manta/SomaticSVScoreInfo.hh"
+#include "manta/SVScoreInfo.hh"
 #include "blt_util/log.hh"
 
 #include "boost/foreach.hpp"
 
 #include <iostream>
+
+
 
 SVAlignmentInfo::
 SVAlignmentInfo(
@@ -67,6 +69,7 @@ SVAlignmentInfo(
 }
 
 
+
 std::ostream&
 operator<<(
     std::ostream& os,
@@ -94,6 +97,7 @@ operator<<(
        << indent << " altAlleleSpanPairs: " << si.altAlleleSpanPairs << "\n"
        << indent << " refAlleleBp1SpanPairs: " << si.refAlleleBp1SpanPairs << "\n"
        << indent << " refAlleleBp2SpanPairs: " << si.refAlleleBp2SpanPairs << "\n"
+       << indent << " refAlleleSpanPairs: " << si.refAlleleSpanPairs << "\n"
     ;
     return os;
 }
@@ -103,10 +107,9 @@ operator<<(
 std::ostream&
 operator<<(
     std::ostream& os,
-    const SomaticSVScoreInfo& ssi)
+    const SVScoreInfo& ssi)
 {
-    os << "SomaticSVScoreInfo bp1MaxDepth=" << ssi.bp1MaxDepth << " bp2MaxDepth=" << ssi.bp2MaxDepth << " somaticScore=" << ssi.somaticScore << "\n";
-    os << "Tumor sample info " << ssi.tumor;
+    os << "SVScoreInfo bp1MaxDepth=" << ssi.bp1MaxDepth << " bp2MaxDepth=" << ssi.bp2MaxDepth << "\n";
     os << "Normal sample info " << ssi.normal;
     BOOST_FOREACH(const std::string& filter, ssi.filters)
     {
