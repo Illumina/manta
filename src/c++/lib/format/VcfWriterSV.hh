@@ -43,6 +43,7 @@ struct VcfWriterSV
         const char* progVersion)
     {
         writeHeaderPrefix(progName, progVersion);
+        writeHeaderColumnKey();
     }
 
     typedef std::vector<std::string> InfoTag_t;
