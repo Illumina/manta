@@ -330,7 +330,7 @@ runInternal(int argc, char* argv[]) const
 
     parseGSCOptions(*this,argc,argv,opt);
 #ifdef DEBUG_GSV
-    opt.isVerbase=true
+    opt.isVerbose=true;
 #endif
-                  runGSC(opt, name(), version());
+    runGSC(opt, name(), version());
 }
