@@ -59,8 +59,8 @@ addSplitReadInfo(
 {
     const SVScoreInfo& baseInfo(_modelScorePtr->base);
 
-    infotags.push_back( str(boost::format("CONTIG_SPLIT_READ=%i") % baseInfo.normal.contigSRCount));
-    infotags.push_back( str(boost::format("REF_SPLIT_READ=%i") % baseInfo.normal.refSRCount));
+    infotags.push_back( str(boost::format("ALT_SPLIT_READ=%i") % baseInfo.normal.alt.splitReadCount));
+    infotags.push_back( str(boost::format("REF_SPLIT_READ=%i") % baseInfo.normal.ref.splitReadCount));
 }
 
 
@@ -77,8 +77,8 @@ modifyInfo(
 //    infotags.push_back( str(boost::format("SOMATICSCORE=%i") % modelScoreInfo.somatic.somaticScore) );
 
     const SVScoreInfo& baseInfo(modelScoreInfo.base);
-    infotags.push_back( str(boost::format("PAIR_SUPPORT=%i") % baseInfo.normal.altAlleleSpanPairs) );
-    infotags.push_back( str(boost::format("REF_PAIR_SUPPORT=%i") % baseInfo.normal.refAlleleSpanPairs) );
+    infotags.push_back( str(boost::format("ALT_PAIR_SUPPORT=%i") % baseInfo.normal.alt.spanPairCount) );
+    infotags.push_back( str(boost::format("REF_PAIR_SUPPORT=%i") % baseInfo.normal.ref.spanPairCount) );
 }
 
 
@@ -92,8 +92,8 @@ modifyTranslocInfo(
     assert(_modelScorePtr != NULL);
     const SVScoreInfo& baseInfo(_modelScorePtr->base);
 
-    infotags.push_back( str(boost::format("BND_PAIR_SUPPORT=%i") %
-                            (isFirstOfPair ? baseInfo.normal.altAlleleBp1SpanReads : baseInfo.normal.altAlleleBp2SpanReads) ) );
+    infotags.push_back( str(boost::format("ALT_BND_PAIR_SUPPORT=%i") %
+                            (isFirstOfPair ? baseInfo.normal.alt.bp1SpanReadCount : baseInfo.normal.alt.bp2SpanReadCount) ) );
     infotags.push_back( str(boost::format("BND_DEPTH=%i") %
                             (isFirstOfPair ? baseInfo.bp1MaxDepth : baseInfo.bp2MaxDepth) ) );
     infotags.push_back( str(boost::format("MATE_BND_DEPTH=%i") %

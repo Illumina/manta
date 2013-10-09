@@ -93,6 +93,12 @@ struct SVLocusScanner
     bool
     isReadFiltered(const bam_record& bamRead) const;
 
+    unsigned
+    getMinMapQ() const
+    {
+        return _opt.minMapq;
+    }
+
     /// custom version of proper pair bit test:
     bool
     isProperPair(

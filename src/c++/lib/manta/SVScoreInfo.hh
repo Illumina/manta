@@ -39,69 +39,65 @@ struct SVAlignmentInfo
     unsigned bp2ContigOffset;
     bool bp1ContigReversed;
     bool bp2ContigReversed;
-    unsigned bp1RefOffset;
-    unsigned bp2RefOffset;
+    pos_t bp1RefOffset;
+    pos_t bp2RefOffset;
 };
 
 std::ostream&
 operator<<(std::ostream& os, const SVAlignmentInfo& ai);
 
 
-/// sample-specific evidence info
-struct SVSampleInfo
+
+/// sample-specific and allele-specific evidence info
+struct SVSampleAlleleInfo
 {
-    SVSampleInfo() :
-        altAlleleBp1SpanReads(0),
-        altAlleleBp2SpanReads(0),
-        altAlleleSpanPairs(0),
-        refAlleleBp1SpanPairs(0),
-        refAlleleBp2SpanPairs(0),
-        refAlleleSpanPairs(0),
-        contigSRCount(0),
-        contigSREvidence(0),
-        contigSRMapQ(0),
-        refSRCount(0),
-        refSREvidence(0),
-        refSRMapQ(0)
+    SVSampleAlleleInfo() :
+        bp1SpanReadCount(0),
+        bp2SpanReadCount(0),
+        spanPairCount(0),
+        splitReadCount(0),
+        splitReadEvidence(0),
+        splitReadMapQ(0)
     {}
 
     void
     clear()
     {
-        altAlleleBp1SpanReads=0;
-        altAlleleBp2SpanReads=0;
-        altAlleleSpanPairs=0;
-        refAlleleBp1SpanPairs=0;
-        refAlleleBp2SpanPairs=0;
-        refAlleleSpanPairs=0;
-
-        contigSRCount = 0;
-        contigSREvidence = 0;
-        contigSRMapQ = 0;
-        refSRCount = 0;
-        refSREvidence = 0;
-        refSRMapQ = 0;
+        bp1SpanReadCount = 0;
+        bp2SpanReadCount = 0;
+        spanPairCount = 0;
+        splitReadCount = 0;
+        splitReadEvidence = 0;
+        splitReadMapQ = 0;
     }
 
-    // alt-allele pair support
-    unsigned altAlleleBp1SpanReads;
-    unsigned altAlleleBp2SpanReads;
-    unsigned altAlleleSpanPairs;
+    // allele pair support
+    unsigned bp1SpanReadCount;
+    unsigned bp2SpanReadCount;
+    unsigned spanPairCount;
 
-    // ref-allele pair support
-    unsigned refAlleleBp1SpanPairs;
-    unsigned refAlleleBp2SpanPairs;
-    unsigned refAlleleSpanPairs;
+    // allele split support
+    unsigned splitReadCount;
+    float splitReadEvidence;
+    float splitReadMapQ;
+};
 
-    // alt-allele split support
-    unsigned contigSRCount;
-    float contigSREvidence;
-    float contigSRMapQ;
+std::ostream&
+operator<<(std::ostream& os, const SVSampleAlleleInfo& si);
 
-    // ref-allele split support
-    unsigned refSRCount;
-    float refSREvidence;
-    float refSRMapQ;
+
+/// sample-specific evidence info
+struct SVSampleInfo
+{
+    void
+    clear()
+    {
+        alt.clear();
+        ref.clear();
+    }
+
+    SVSampleAlleleInfo alt;
+    SVSampleAlleleInfo ref;
 };
 
 std::ostream&

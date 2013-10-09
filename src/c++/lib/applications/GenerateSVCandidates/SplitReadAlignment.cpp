@@ -15,7 +15,7 @@
 /// \author Xiaoyu Chen
 ///
 
-#include "splitReadAlignment.hh"
+#include "SplitReadAlignment.hh"
 #include "blt_util/log.hh"
 
 #include <cassert>
@@ -23,7 +23,7 @@
 //#define DEBUG_SRA
 
 unsigned
-splitReadAlignment::
+SplitReadAlignment::
 calculateAlignScore(
     const std::string& querySeq,
     const std::string& scanWindow)
@@ -47,7 +47,7 @@ calculateAlignScore(
 }
 
 void
-splitReadAlignment::
+SplitReadAlignment::
 align(const std::string& querySeq,
       const std::string& targetSeq,
       const unsigned bpOffset)
@@ -95,7 +95,7 @@ align(const std::string& querySeq,
 
 
 void
-splitReadAlignment::
+SplitReadAlignment::
 set_evidence()
 {
     _hasEvidence = false;
@@ -123,7 +123,7 @@ operator<<(std::ostream& os, const SRAlignmentInfo& info)
 }
 
 std::ostream&
-operator<<(std::ostream& os, const splitReadAlignment& srAlign)
+operator<<(std::ostream& os, const SplitReadAlignment& srAlign)
 {
     os << "has_evidence=" << srAlign.has_evidence() << " evidence=" << srAlign.get_evidence() << "\n";
     os << "alignment:\n" << srAlign.get_alignment();

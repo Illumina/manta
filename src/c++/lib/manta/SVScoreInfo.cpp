@@ -36,7 +36,6 @@ SVAlignmentInfo(
     if ((assemblyData.isSpanning) &&
         (!sv.isImprecise()))
     {
-        //contigSeq = assemblyData.contigs[assemblyData.bestAlignmentIndex].seq;
         contigSeq = assemblyData.extendedContigs[assemblyData.bestAlignmentIndex];
         const JumpAlignmentResult<int>& alignment = assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex];
 
@@ -49,9 +48,7 @@ SVAlignmentInfo(
         bp2ContigOffset = alignment.align1.beginPos + align1Size + insertSize;
         if (assemblyData.isBp2AlignedFirst)
         {
-            unsigned temp = bp1ContigOffset;
-            bp1ContigOffset = bp2ContigOffset;
-            bp2ContigOffset = temp;
+            std::swap(bp1ContigOffset, bp2ContigOffset);
         }
 
         bp1ContigReversed = assemblyData.isBp1Reversed;
@@ -85,20 +82,33 @@ operator<<(
 }
 
 
+
+std::ostream&
+operator<<(
+    std::ostream& os,
+    const SVSampleAlleleInfo& sai)
+{
+    static const char indent('\t');
+    os << "SVSampleAlleleInfo:\n"
+       << indent << "bp1SpanReadCount: " << sai.bp1SpanReadCount << "\n"
+       << indent << "bp2SpanReadCount: " << sai.bp2SpanReadCount << "\n"
+       << indent << "spanPairCount: " << sai.spanPairCount << "\n"
+       << indent << "splitReadCount: " << sai.splitReadCount << "\n"
+       ;
+    return os;
+}
+
+
+
 std::ostream&
 operator<<(
     std::ostream& os,
     const SVSampleInfo& si)
 {
-    static const char indent('\t');
     os << "SVSampleInfo:\n"
-       << indent << "altAlleleBp1SpanReads: " << si.altAlleleBp1SpanReads << "\n"
-       << indent << "altAlleleBp2SpanReads: " << si.altAlleleBp2SpanReads << "\n"
-       << indent << " altAlleleSpanPairs: " << si.altAlleleSpanPairs << "\n"
-       << indent << " refAlleleBp1SpanPairs: " << si.refAlleleBp1SpanPairs << "\n"
-       << indent << " refAlleleBp2SpanPairs: " << si.refAlleleBp2SpanPairs << "\n"
-       << indent << " refAlleleSpanPairs: " << si.refAlleleSpanPairs << "\n"
-       ;
+       << "Alt Allele " << si.alt
+       << "Ref Allele " << si.ref
+    ;
     return os;
 }
 

@@ -15,9 +15,11 @@
 /// \author Chris Saunders and Xiaoyu Chen
 ///
 
-#pragma once
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    #pragma once
 
 #include "GSCOptions.hh"
+#include "SplitReadAlignment.hh"
+#include "SVEvidence.hh"
 
 #include "blt_util/bam_streamer.hh"
 #include "blt_util/bam_header_info.hh"
@@ -29,7 +31,6 @@
 #include "manta/SVModelScoreInfo.hh"
 #include "assembly/AssembledContig.hh"
 #include "manta/SVCandidateAssemblyData.hh"
-#include "splitReadAlignment.hh"
 
 #include "boost/shared_ptr.hpp"
 
@@ -55,75 +56,36 @@ struct SVScorer
 
 private:
 
-    /// track all support data from an individual fragment specific to a single allele of an SV hypothesis
-    //
-    struct SVFragmentEvidenceAllele
-    {
-        SVFragmentEvidenceAllele() :
-            isFragmentSupport(false),
-            FragmentSizeProb(0),
-            isRead1SplitSupport(false),
-            isRead2SplitSupport(false)
-        {}
-
-        bool isFragmentSupport; ///< if true, paired-read analysis shows that this read pair fragment supports this allele
-        float FragmentSizeProb; ///< how likely is it to observe this fragment size, when fragment size is computed with this allele
-
-        bool isRead1SplitSupport; ///< if true, read1 has been tested and shows support for this allele
-        bool isRead2SplitSupport; ///< if true, read1 has been tested and shows support for this allele
-    };
-
-    /// track all support data from an individual fragment specific to an SV hypothesis
-    //
-    // this is both to prevent double-counting of evidnce and to consolidate different
-    // sources of information (paired-split, etc).
-    //
-    struct SVFragmentEvidence
-    {
-        SVFragmentEvidenceAllele alt;
-        SVFragmentEvidenceAllele ref;
-    };
-
-    // track all support data for an SV hypothesis
-    //
-    // Note how this object is different than SVScoreInfoSomatic -- it is highly detailed and meant to be processed
-    // to create summary statistics and scores later. Those scores and summary statistics should go into objects like
-    // SomaticSVSCoreInfo to be written out in whichever output format is selected.
-    //
-    struct SVEvidence
-    {
-        typedef std::map<std::string,SVFragmentEvidence> evidenceTrack_t;
-
-        evidenceTrack_t normal;
-        evidenceTrack_t tumor;
-    };
-
     /// find spanning read support for the reference allele in a single breakend
     void
     getSVRefPairSupport(
         const SVBreakend& bp,
         SVScoreInfo& ssInfo,
+        SVEvidence& evidence,
         const bool isBp1);
 
     /// find spanning read support for the reference allele for sv candidate
     void
     getSVRefPairSupport(
         const SVCandidate& sv,
-        SVScoreInfo& ssInfo);
+        SVScoreInfo& ssInfo,
+        SVEvidence& evidence);
 
     /// find paired read support for ref and alt alleles
     void
     getSVPairSupport(
         const SVCandidateSetData& svData,
         const SVCandidate& sv,
-        SVScoreInfo& ssInfo);
+        SVScoreInfo& ssInfo,
+        SVEvidence& evidence);
 
     /// find split read support for ref and alt alleles
     void
     getSVSplitReadSupport(
         const SVCandidateAssemblyData& assemblyData,
         const SVCandidate& sv,
-        SVScoreInfo& ssInfo);
+        SVScoreInfo& ssInfo,
+        SVEvidence& evidence);
 
     /// determine maximum depth in region around breakend
     unsigned

@@ -60,10 +60,10 @@ addSplitReadInfo(
 {
     const SVScoreInfo& baseInfo(_modelScorePtr->base);
 
-    infotags.push_back( str(boost::format("NORMAL_CONTIG_SPLIT_READ=%i") % baseInfo.normal.contigSRCount));
-    infotags.push_back( str(boost::format("TUMOR_CONTIG_SPLIT_READ=%i") % baseInfo.tumor.contigSRCount));
-    infotags.push_back( str(boost::format("NORMAL_REF_SPLIT_READ=%i") % baseInfo.normal.refSRCount));
-    infotags.push_back( str(boost::format("TUMOR_REF_SPLIT_READ=%i") % baseInfo.tumor.refSRCount));
+    infotags.push_back( str(boost::format("NORMAL_ALT_SPLIT_READ=%i") % baseInfo.normal.alt.splitReadCount));
+    infotags.push_back( str(boost::format("TUMOR_ALT_SPLIT_READ=%i") % baseInfo.tumor.alt.splitReadCount));
+    infotags.push_back( str(boost::format("NORMAL_REF_SPLIT_READ=%i") % baseInfo.normal.ref.splitReadCount));
+    infotags.push_back( str(boost::format("TUMOR_REF_SPLIT_READ=%i") % baseInfo.tumor.ref.splitReadCount));
 
 }
 
@@ -81,11 +81,11 @@ modifyInfo(
     infotags.push_back( str(boost::format("SOMATICSCORE=%i") % modelScoreInfo.somatic.somaticScore) );
 
     const SVScoreInfo& baseInfo(modelScoreInfo.base);
-    infotags.push_back( str(boost::format("NORMAL_PAIR_SUPPORT=%i") % baseInfo.normal.altAlleleSpanPairs) );
-    infotags.push_back( str(boost::format("TUMOR_PAIR_SUPPORT=%i") % baseInfo.tumor.altAlleleSpanPairs) );
+    infotags.push_back( str(boost::format("NORMAL_ALT_PAIR_SUPPORT=%i") % baseInfo.normal.alt.spanPairCount) );
+    infotags.push_back( str(boost::format("TUMOR_ALT_PAIR_SUPPORT=%i") % baseInfo.tumor.alt.spanPairCount) );
 
-    infotags.push_back( str(boost::format("NORMAL_REF_PAIR_SUPPORT=%i") % baseInfo.normal.refAlleleSpanPairs) );
-    infotags.push_back( str(boost::format("TUMOR_REF_PAIR_SUPPORT=%i") % baseInfo.tumor.refAlleleSpanPairs) );
+    infotags.push_back( str(boost::format("NORMAL_REF_PAIR_SUPPORT=%i") % baseInfo.normal.ref.spanPairCount) );
+    infotags.push_back( str(boost::format("TUMOR_REF_PAIR_SUPPORT=%i") % baseInfo.tumor.ref.spanPairCount) );
 }
 
 
@@ -99,10 +99,10 @@ modifyTranslocInfo(
     assert(_modelScorePtr != NULL);
     const SVScoreInfo& baseInfo(_modelScorePtr->base);
 
-    infotags.push_back( str(boost::format("NORMAL_BND_PAIR_SUPPORT=%i") %
-                            (isFirstOfPair ? baseInfo.normal.altAlleleBp1SpanReads : baseInfo.normal.altAlleleBp2SpanReads) ) );
-    infotags.push_back( str(boost::format("TUMOR_BND_PAIR_SUPPORT=%i") %
-                            (isFirstOfPair ? baseInfo.tumor.altAlleleBp1SpanReads : baseInfo.tumor.altAlleleBp2SpanReads) ) );
+    infotags.push_back( str(boost::format("NORMAL_ALT_BND_PAIR_SUPPORT=%i") %
+                            (isFirstOfPair ? baseInfo.normal.alt.bp1SpanReadCount : baseInfo.normal.alt.bp2SpanReadCount) ) );
+    infotags.push_back( str(boost::format("TUMOR_ALT_BND_PAIR_SUPPORT=%i") %
+                            (isFirstOfPair ? baseInfo.tumor.alt.bp1SpanReadCount : baseInfo.tumor.alt.bp2SpanReadCount) ) );
     infotags.push_back( str(boost::format("BND_DEPTH=%i") %
                             (isFirstOfPair ? baseInfo.bp1MaxDepth : baseInfo.bp2MaxDepth) ) );
     infotags.push_back( str(boost::format("MATE_BND_DEPTH=%i") %

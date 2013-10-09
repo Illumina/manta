@@ -93,9 +93,9 @@ private:
 };
 
 
-struct splitReadAlignment
+struct SplitReadAlignment
 {
-    splitReadAlignment():
+    SplitReadAlignment():
         _hasEvidence(false),
         _evidence(0)
     {}
@@ -140,4 +140,4 @@ std::ostream&
 operator<<(std::ostream& os, const SRAlignmentInfo& info);
 
 std::ostream&
-operator<<(std::ostream& os, const splitReadAlignment& srAlign);
+operator<<(std::ostream& os, const SplitReadAlignment& srAlign);
