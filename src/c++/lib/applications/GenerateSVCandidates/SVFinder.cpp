@@ -33,7 +33,6 @@ static const bool isExcludeUnpaired(true);
 
 #ifdef DEBUG_SVDATA
 #include "blt_util/log.hh"
-#include <iostream>
 #endif
 
 
@@ -144,11 +143,20 @@ addSVNodeData(
 
     searchInterval.range.merge_range(localNode.getEvidenceRange());
 
-    const bool isExpectRepeat(svData.setNewSearchInterval(searchInterval));
+    bool isExpectRepeat(svData.setNewSearchInterval(searchInterval));
+
+    /// This is a temporary measure to make the qname collision detection much looser
+    /// problems have come up where very large deletions are present in a read, and it is therefore
+    /// detected as a repreat in two differnt regions, even though they are separated by a considerable
+    /// distance. Solution is temporaryily turn off collision detection whenever two regions are on
+    /// the same chrom (ie. almost always)
+    ///
+    /// TODO: restore more precise collision detection
+    if (! isExpectRepeat) isExpectRepeat = (localNode.getInterval().tid == remoteNode.getInterval().tid);
 
 #ifdef DEBUG_SVDATA
-    log_os << "addSVNodeData: bp_interval: " << localNode.interval
-           << " evidenceInterval: " << localNode.evidenceRange
+    log_os << "addSVNodeData: bp_interval: " << localNode.getInterval()
+           << " evidenceInterval: " << localNode.getEvidenceRange()
            << " searchInterval: " << searchInterval
            << " isExpectRepeat: " << isExpectRepeat
            << "\n";

@@ -1,3 +1,5 @@
+MANTA-39 prevent crash on large CIGAR deletions
+MANTA-20 split read evidence counts for all large spanning SVs
 v0.9
 - MANTA-20 preliminary work on this branch allows assembly skip and control of
 min indel candidate size and min indel score size
