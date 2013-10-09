@@ -90,6 +90,8 @@ parseGSCOptions(const manta::Program& prog,
      "Write SV candidates to file (required)")
     ("somatic-output-file", po::value(&opt.somaticOutputFilename),
      "Write somatic SV candidates to file (at least one tumor and non-tumor alignment file must be specified)")
+    ("verbose", po::value(&opt.isVerbose)->zero_tokens(),
+     "Turn on low-detail INFO logging.")
     ("skip-assembly", po::value(&opt.isSkipAssembly)->zero_tokens(),
      "Turn off all breakend and small-variant assembly. Only large, imprecise variants will be reported based on anomalous read pairs.")
     ("min-scored-sv-size", po::value(&opt.minScoredVariantSize)->default_value(opt.minScoredVariantSize),

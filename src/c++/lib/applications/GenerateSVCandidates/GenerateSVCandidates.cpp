@@ -36,7 +36,7 @@
 
 #include <iostream>
 #include <memory>
-#include <time.h> 
+#include <time.h>
 
 //#define DEBUG_GSV
 
@@ -228,50 +228,58 @@ runGSC(
     SVCandidateSetData svData;
     std::vector<SVCandidate> svs;
 
-#ifdef DEBUG_GSV
     static const std::string logtag("runGSC");
+#ifdef DEBUG_GSV
     log_os << logtag << " " << cset.header << "\n";
 #endif
 
     while (edger.next())
     {
         const EdgeInfo& edge(edger.getEdge());
-        
-#ifdef DEBUG_GSV
-        log_os << logtag << " starting analysis of edge: ";
-        dumpEdgeInfo(edge,cset,log_os);
-        // good old stackoverflow :-)
-        clock_t startTime = clock();
-#endif
+
+        clock_t startTime(0);
+        if (opt.isVerbose)
+        {
+            log_os << logtag << " starting analysis of edge: ";
+            dumpEdgeInfo(edge,cset,log_os);
+            startTime = clock();
+        }
 
         try
         {
             // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
             svFind.findCandidateSV(edge, svData, svs);
 
-#ifdef DEBUG_GSV
-            log_os << logtag << " low-res candidate generation complete. candidate count: " << svs.size() << "\n";
-#endif
+            if (opt.isVerbose)
+            {
+                log_os << logtag << " Low-resolution candidate generation complete. Candidate count: " << svs.size() << "\n";
+            }
+
             BOOST_FOREACH(const SVCandidate& candidateSV, svs)
             {
+                if (opt.isVerbose)
+                {
+                    log_os << logtag << " Starting analysis of low-resolution candidate: " << candidateSV.candidateIndex << "\n";
+                }
 #ifdef DEBUG_GSV
-                log_os << logtag << " starting low-res candidate analysis: " << candidateSV << "\n";
+                log_os << logtag << " CandidateSV: " << candidateSV << "\n";
 #endif
                 SVCandidateAssemblyData assemblyData;
 
                 if (! opt.isSkipAssembly)
                 {
                     svRefine.getCandidateAssemblyData(candidateSV, svData, assemblyData);
-                }
 
-#ifdef DEBUG_GSV
-                log_os << logtag << " assembly candidate refinement complete. assembly count: " << assemblyData.svs.size() << "\n";
-#endif
+                    if (opt.isVerbose)
+                    {
+                        log_os << logtag << " Candidate assembly complete. Assembled candidate count: " << assemblyData.svs.size() << "\n";
+                    }
+                }
 
                 if (assemblyData.svs.empty())
                 {
 #ifdef DEBUG_GSV
-                    log_os << logtag << " score and output low-res candidate: " << candidateSV << "\n";
+                    log_os << logtag << " score and output low-res candidate\n";
 #endif
                     svWriter.writeSV(edge, svData, assemblyData, candidateSV);
                 }
@@ -300,9 +308,14 @@ runGSC(
             dumpEdgeInfo(edge,cset,log_os);
             throw;
         }
-#ifdef DEBUG_GSV
-     log_os << logtag << " Processing this edge took " << double( clock() - startTime ) / (double)CLOCKS_PER_SEC << " seconds.\n";
-#endif
+
+        if (opt.isVerbose)
+        {
+            static const double clockFactor(1./static_cast<double>(CLOCKS_PER_SEC));
+
+            const double elapsedSec(( clock() - startTime )*clockFactor);
+            log_os << logtag << " Processing this edge took " << elapsedSec << " seconds.\n";
+        }
     }
 }
 
@@ -315,5 +328,8 @@ runInternal(int argc, char* argv[]) const
     GSCOptions opt;
 
     parseGSCOptions(*this,argc,argv,opt);
-    runGSC(opt, name(), version());
+#ifdef DEBUG_GSV
+    opt.isVerbase=true
+#endif
+                  runGSC(opt, name(), version());
 }

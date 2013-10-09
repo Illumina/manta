@@ -245,7 +245,7 @@ getBreakendReads(
             }
         }
 #ifdef DEBUG_ASBL
-        log_os << "bam " << bamIndex << " semi-aligned " << semiAlignedCnt << " shadow " << shadowCnt << "\n"; 
+        log_os << "bam " << bamIndex << " semi-aligned " << semiAlignedCnt << " shadow " << shadowCnt << "\n";
 #endif
     }
 }

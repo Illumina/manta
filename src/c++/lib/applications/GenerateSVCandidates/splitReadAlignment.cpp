@@ -58,7 +58,7 @@ align(const std::string& querySeq,
     const unsigned querySize = querySeq.size();
     const unsigned targetSize = targetSeq.size();
     assert(querySize < targetSize);
-    
+
     // set the scanning start & end to make sure the candidate windows overlapping the breakpoint
     const unsigned scanStart = ((bpOffset+2) <= querySize)? 0 : (bpOffset - querySize + 2);
     const unsigned scanEnd = (bpOffset == 0)? 0 : std::min((bpOffset-1), (targetSize - querySize));

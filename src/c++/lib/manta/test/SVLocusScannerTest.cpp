@@ -63,7 +63,10 @@ BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromSemiAligned )
     // initialize test qual array to all Q30's:
     static const unsigned seqSize((sizeof(testSeq)-1)/sizeof(char));
     uint8_t qual[seqSize];
-    for(unsigned i(0);i<seqSize;++i) { qual[i] = 30; }
+    for (unsigned i(0); i<seqSize; ++i)
+    {
+        qual[i] = 30;
+    }
 
     edit_bam_read_and_quality(testSeq,qual,*bamDataPtr);
 

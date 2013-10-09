@@ -31,6 +31,7 @@
 struct GSCOptions
 {
     GSCOptions() :
+        isVerbose(false),
         isSkipAssembly(false),
         minScoredVariantSize(51)
     {}
@@ -48,6 +49,8 @@ struct GSCOptions
 
     std::string candidateOutputFilename;
     std::string somaticOutputFilename;
+
+    bool isVerbose; ///< provide some high-level log info to assist in debugging
 
     bool isSkipAssembly; ///< if true, skip assembly and run a low-resolution, breakdancer-like subset of the workflow
 
