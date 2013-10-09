@@ -55,8 +55,13 @@ getBpReferenceInterval(
 {
     const bam_header_info::chrom_info& chromInfo(header.chrom_data[bpInterval.tid]);
 
+    const pos_t chromSize(static_cast<pos_t>(chromInfo.length));
+
+    assert((bpInterval.range.begin_pos() <= chromSize) && "SV range starts after the end of the chromosome");
+    assert((bpInterval.range.end_pos() >= 0) && "SV range ends before the start of the chromosome");
+
     const pos_t beginPos(std::max(0, (bpInterval.range.begin_pos()-extraRefEdgeSize)));
-    const pos_t endPos(std::min(static_cast<pos_t>(chromInfo.length), (bpInterval.range.end_pos()+extraRefEdgeSize)));
+    const pos_t endPos(std::min(chromSize, (bpInterval.range.end_pos()+extraRefEdgeSize)));
 
     refInterval.tid = bpInterval.tid;
     refInterval.range.set_begin_pos(beginPos);
