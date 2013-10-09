@@ -89,6 +89,17 @@ getIntervalReferenceSegment(
     // but the ref function below takes closed-closed endpoints, so we subract one from endPos
     get_standardized_region_seq(referenceFilename, chrom, range.begin_pos(), (range.end_pos()-1), intervalRefSeq.seq());
 
+    if (static_cast<pos_t>(intervalRefSeq.seq().size()) != (static_cast<pos_t>(range.size()))) {
+      std::cerr << "INFO: " << referenceFilename
+                << ", " << chrom 
+                << ", " << range.begin_pos()
+                << ", " << (range.end_pos()-1)
+                << ", " << intervalRefSeq.seq() << std::endl;
+      
+      std::cerr << "VALS: " << static_cast<pos_t>(intervalRefSeq.seq().size())
+                << " != " << (static_cast<pos_t>(range.size())) << std:: endl;
+    }
+
     assert(static_cast<pos_t>(intervalRefSeq.seq().size()) == (static_cast<pos_t>(range.size())));
 }
 
@@ -138,8 +149,11 @@ getSVReferenceSegments(
 {
     GenomeInterval bp1RefInterval;
     GenomeInterval bp2RefInterval;
+    std::cerr << "SV: " << sv << std::endl; 
     getBpReferenceInterval(header,extraRefEdgeSize,sv.bp1.interval,bp1RefInterval);
     getBpReferenceInterval(header,extraRefEdgeSize,sv.bp2.interval,bp2RefInterval);
+    std::cerr << "BP!: " << bp1RefInterval << std::endl;
+    std::cerr << "BP2: " << bp2RefInterval << std::endl;
 
     // allow overlap (best performance in case of breakends in opposite orientations...:
 #if 0

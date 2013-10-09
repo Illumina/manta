@@ -359,7 +359,7 @@ getSVCandidatesFromReadIndels(
                 if (ps.length >= opt.minCandidateVariantSize)
                 {
                     static const bool isComplex(true);
-                    //candidates.push_back(GetSplitSVCandidate(opt,alignTid,refHeadPos,refHeadPos, isComplex));
+                    candidates.push_back(GetSplitSVCandidate(opt,alignTid,refHeadPos,refHeadPos, isComplex));
                     //std::cout << "SV_FRI_EDGE" << std::endl;
                 }
             }
@@ -369,7 +369,7 @@ getSVCandidatesFromReadIndels(
             const swap_info sinfo(align.path,pathIndex);
             if ((sinfo.delete_length >= opt.minCandidateVariantSize) || (sinfo.insert_length >= opt.minCandidateVariantSize))
             {
-                //candidates.push_back(GetSplitSVCandidate(opt,alignTid,refHeadPos,refHeadPos+sinfo.delete_length));
+              candidates.push_back(GetSplitSVCandidate(opt,alignTid,refHeadPos,refHeadPos+sinfo.delete_length));
                 //std::cout << "SV_FRI_SWAP" << std::endl;
             }
 
@@ -383,7 +383,7 @@ getSVCandidatesFromReadIndels(
             {
                 if (ps.length >= opt.minCandidateVariantSize)
                 {
-                    //candidates.push_back(GetSplitSVCandidate(opt,alignTid,refHeadPos,refHeadPos+ps.length));
+                  candidates.push_back(GetSplitSVCandidate(opt,alignTid,refHeadPos,refHeadPos+ps.length));
                     //std::cout << "SV_FRI_DEL" << std::endl;
                 }
             }
@@ -391,7 +391,7 @@ getSVCandidatesFromReadIndels(
             {
                 if (ps.length >= opt.minCandidateVariantSize)
                 {
-                    //candidates.push_back(GetSplitSVCandidate(opt,alignTid,refHeadPos,refHeadPos));
+                  candidates.push_back(GetSplitSVCandidate(opt,alignTid,refHeadPos,refHeadPos));
                     //std::cout << "SV_FRI_INS" << std::endl;
                 }
             }
@@ -560,14 +560,14 @@ getSVCandidatesFromReadClip(
     if (leadingClipLen >= opt.minSoftClipLen)
     {
         const pos_t clipPos(bamAlign.pos);
-        //candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),clipPos,clipPos,isComplex));
+        candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),clipPos,clipPos,isComplex));
         //std::cout << "SV_FRC_LED" << std::endl;
     }
 
     if (trailingClipLen >= opt.minSoftClipLen)
     {
         const pos_t clipPos(bamAlign.pos + apath_ref_length(bamAlign.path));
-        //candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),clipPos,clipPos,isComplex));
+        candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),clipPos,clipPos,isComplex));
         //std::cout << "SV_FRC_END" << std::endl;
     }
 }
@@ -722,7 +722,7 @@ getSVCandidatesFromPair(
         }
     }
 
-    //candidates.push_back(sv);
+    candidates.push_back(sv);
     //std::cout << "SV_FPAIR" << std::endl;
 }
 

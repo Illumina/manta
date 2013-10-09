@@ -92,18 +92,33 @@ add(const bam_record& bamRead,
     }
     if (targetReadPtr->isSet())
     {
-        if (isExpectRepeat)
+        //if (isExpectRepeat)
+        if (isExpectRepeat || bamRead.is_supplement())
         {
             return;
         }
+        /*
+        if (bamRead.is_supplement()) {
+          oss << "Found Supp: " << bamRead << std::endl;
+          BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        }
+        */
 
+        //if (! bamRead.is_supplement())
+        //{
         std::ostringstream oss;
-        oss << "Unexpected read name collision.\n"
-            << "\tExisting read: " << (*targetReadPtr) << "\n"
-            << "\tNew read: " << bamRead << "\n";
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            oss << "Unexpected read name collision.\n"
+                << "\tExisting read: " << (*targetReadPtr) << "\n"
+                << "\tNew read: " << bamRead << "\n";
+            //oss << "\tIs Supp 1: " << targetReadPtr->is_supplement() << std::endl;
+            oss << "\tIs Supp 2: " << bamRead.is_supplement() << std::endl;
+            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            //}
     }
-    targetReadPtr->bamrec = bamRead;
+    if (! bamRead.is_supplement())
+    {
+      targetReadPtr->bamrec = bamRead;
+    }
 }
 
 
