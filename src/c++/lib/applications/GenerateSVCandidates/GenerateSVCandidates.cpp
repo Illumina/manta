@@ -231,8 +231,7 @@ runGSC(
     static const std::string logtag("runGSC");
     if (opt.isVerbose)
     {
-        log_os << logtag << " Chromosome index key:\n"
-               << cset.header << "\n";
+        log_os << logtag << " " << cset.header << "\n";
     }
 
     while (edger.next())
