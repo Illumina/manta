@@ -229,9 +229,11 @@ runGSC(
     std::vector<SVCandidate> svs;
 
     static const std::string logtag("runGSC");
-#ifdef DEBUG_GSV
-    log_os << logtag << " " << cset.header << "\n";
-#endif
+    if (opt.isVerbose)
+    {
+        log_os << logtag << " Chromosome index key:\n"
+               << cset.header << "\n";
+    }
 
     while (edger.next())
     {
