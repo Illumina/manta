@@ -32,13 +32,34 @@ struct SVAlignmentInfo
         const SVCandidate& sv,
         const SVCandidateAssemblyData& assemblyData);
 
+    const std::string&
+    bp1ContigSeq() const
+    {
+        return (bp1ContigReversed ? revContigSeq : contigSeq);
+    }
+
+    const std::string&
+    bp2ContigSeq() const
+    {
+        return (bp2ContigReversed ? revContigSeq : contigSeq);
+    }
+
+    friend
+    std::ostream&
+    operator<<(std::ostream& os, const SVAlignmentInfo& ai);
+
+private:
     std::string contigSeq;
+    std::string revContigSeq;
+public:
     std::string bp1RefSeq;
     std::string bp2RefSeq;
     unsigned bp1ContigOffset;
     unsigned bp2ContigOffset;
+private:
     bool bp1ContigReversed;
     bool bp2ContigReversed;
+public:
     pos_t bp1RefOffset;
     pos_t bp2RefOffset;
 };

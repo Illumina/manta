@@ -19,6 +19,7 @@
 
 #include <map>
 
+
 /// track all support data from an individual read in a fragment specific to an individual breakend of a single allele
 ///
 struct SVFragmentEvidenceAlleleBreakendPerRead
@@ -33,6 +34,7 @@ struct SVFragmentEvidenceAlleleBreakendPerRead
     bool isSplitSupport; ///< if evaluated, does this read support this allele in the bp?
     float splitEvidence;
 };
+
 
 /// track all support data from an individual fragment specific to an individual breakend of a single allele
 ///
@@ -75,20 +77,11 @@ struct SVFragmentEvidenceRead
 //
 struct SVFragmentEvidenceAllele
 {
-    SVFragmentEvidenceRead&
-    getRead(const bool isRead1)
-    {
-        return (isRead1 ? read1 : read2);
-    }
-
     SVFragmentEvidenceAlleleBreakend&
     getBp(const bool isBp1)
     {
         return (isBp1 ? bp1 : bp2 );
     }
-
-    SVFragmentEvidenceRead read1;
-    SVFragmentEvidenceRead read2;
 
     SVFragmentEvidenceAlleleBreakend bp1;
     SVFragmentEvidenceAlleleBreakend bp2;
@@ -102,6 +95,15 @@ struct SVFragmentEvidenceAllele
 //
 struct SVFragmentEvidence
 {
+    SVFragmentEvidenceRead&
+    getRead(const bool isRead1)
+    {
+        return (isRead1 ? read1 : read2);
+    }
+
+    SVFragmentEvidenceRead read1;
+    SVFragmentEvidenceRead read2;
+
     SVFragmentEvidenceAllele alt;
     SVFragmentEvidenceAllele ref;
 };

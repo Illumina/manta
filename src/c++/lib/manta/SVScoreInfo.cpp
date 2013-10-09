@@ -17,6 +17,7 @@
 
 #include "manta/SVScoreInfo.hh"
 #include "blt_util/log.hh"
+#include "blt_util/seq_util.hh"
 
 #include "boost/foreach.hpp"
 
@@ -53,6 +54,11 @@ SVAlignmentInfo(
 
         bp1ContigReversed = assemblyData.isBp1Reversed;
         bp2ContigReversed = assemblyData.isBp2Reversed;
+
+        if (bp1ContigReversed || bp2ContigReversed)
+        {
+            revContigSeq = reverseCompCopyStr(contigSeq);
+        }
 
         // get reference regions
         const reference_contig_segment& bp1Ref = assemblyData.bp1ref;

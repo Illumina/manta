@@ -55,6 +55,10 @@ SVScorer(
 
 
 
+/// add bam alignment to simple short-range vector depth estimate
+///
+/// \param[in] beginPos this is the begin position of the range covered by the depth array
+///
 static
 void
 addReadToDepthEst(
@@ -220,13 +224,11 @@ scoreSplitReads(
     {
         const bam_record& bamRead(*(readStream.get_record_ptr()));
         const std::string readSeq = bamRead.get_bam_read().get_string();
-        const std::string readSeqRC = bamRead.get_bam_read().get_rc_string();
         const unsigned readMapQ = bamRead.map_qual();
 
         SVFragmentEvidence& fragment(sampleEvidence[bamRead.qname()]);
 
-        setReadEvidence(minMapQ, bamRead, fragment.alt.getRead(bamRead.is_first()));
-        setReadEvidence(minMapQ, bamRead, fragment.ref.getRead(bamRead.is_first()));
+        setReadEvidence(minMapQ, bamRead, fragment.getRead(bamRead.is_first()));
 
         SVFragmentEvidenceAlleleBreakendPerRead& altBp1ReadSupport(fragment.alt.bp1.getRead(bamRead.is_first()));
         SVFragmentEvidenceAlleleBreakendPerRead& refBp1ReadSupport(fragment.ref.bp1.getRead(bamRead.is_first()));
@@ -234,8 +236,8 @@ scoreSplitReads(
         SVFragmentEvidenceAlleleBreakendPerRead& refBp2ReadSupport(fragment.ref.bp2.getRead(bamRead.is_first()));
 
         /// in this function we evaluate the hypothesis of both breakends at the same time, the only difference bp1 vs
-        /// bp2 makes is where in the bam we look for reads, therefor if we see split evaluation for bp1 or bp2, we can skip this read:
-        if(altBp1ReadSupport.isSplitEvaluated) continue;
+        /// bp2 makes is where in the bam we look for reads, therefore if we see split evaluation for bp1 or bp2, we can skip this read:
+        if (altBp1ReadSupport.isSplitEvaluated) continue;
 
         altBp1ReadSupport.isSplitEvaluated = true;
         refBp1ReadSupport.isSplitEvaluated = true;
@@ -244,15 +246,9 @@ scoreSplitReads(
 
         // align the read to the somatic contig
         SplitReadAlignment bp1ContigSR;
-        if (svAlignInfo.bp1ContigReversed)
-            bp1ContigSR.align(readSeqRC, svAlignInfo.contigSeq, svAlignInfo.bp1ContigOffset);
-        else
-            bp1ContigSR.align(readSeq, svAlignInfo.contigSeq, svAlignInfo.bp1ContigOffset);
+        bp1ContigSR.align(readSeq, svAlignInfo.bp1ContigSeq(), svAlignInfo.bp1ContigOffset);
         SplitReadAlignment bp2ContigSR;
-        if (svAlignInfo.bp2ContigReversed)
-            bp2ContigSR.align(readSeqRC, svAlignInfo.contigSeq, svAlignInfo.bp2ContigOffset);
-        else
-            bp2ContigSR.align(readSeq, svAlignInfo.contigSeq, svAlignInfo.bp2ContigOffset);
+        bp2ContigSR.align(readSeq, svAlignInfo.bp2ContigSeq(), svAlignInfo.bp2ContigOffset);
 
         // align the read to reference regions
         SplitReadAlignment bp1RefSR;
@@ -262,7 +258,7 @@ scoreSplitReads(
 
         // scoring
         incrementAlleleEvidence(bp1ContigSR, bp2ContigSR, readMapQ, sample.alt, altBp1ReadSupport, altBp2ReadSupport);
-        incrementAlleleEvidence(bp1RefSR, bp2RefSR, readMapQ, sample.ref, refBp1ReadSupport, refBp1ReadSupport);
+        incrementAlleleEvidence(bp1RefSR, bp2RefSR, readMapQ, sample.ref, refBp1ReadSupport, refBp2ReadSupport);
     }
 }
 
@@ -373,10 +369,10 @@ getSVRefPairSupport(
 
             if (fragOverlap < minFragSupport) continue;
 
+            SVFragmentEvidence& fragment(evidence.getSample(isTumor)[bamRead.qname()]);
+            SVFragmentEvidenceAllele& ref(fragment.ref);
 
-            SVFragmentEvidenceAllele& ref(evidence.getSample(isTumor)[bamRead.qname()].ref);
-
-            setReadEvidence(minMapQ, bamRead, ref.getRead(bamRead.is_first()));
+            setReadEvidence(minMapQ, bamRead, fragment.getRead(bamRead.is_first()));
 
             if (isBp1)
             {
@@ -469,7 +465,8 @@ getSVPairSupport(
                 qname = pair.read2.bamrec.qname();
             }
 
-            SVFragmentEvidenceAllele& alt(evidence.getSample(isTumor)[qname].alt);
+            SVFragmentEvidence& fragment(evidence.getSample(isTumor)[qname]);
+            SVFragmentEvidenceAllele& alt(fragment.alt);
 
             // for all large spanning events -- we don't test for pair support of the two breakends separately -- this could be
             // beneficial if there was an unusually large insertion associated with the event. For now we approximate that
@@ -481,13 +478,13 @@ getSVPairSupport(
             if (pair.read1.isSet())
             {
                 sample.alt.bp1SpanReadCount += 1;
-                setReadEvidence(minMapQ, pair.read1.bamrec, alt.read1);
+                setReadEvidence(minMapQ, pair.read1.bamrec, fragment.read1);
             }
 
             if (pair.read2.isSet())
             {
                 sample.alt.bp2SpanReadCount += 1;
-                setReadEvidence(minMapQ, pair.read2.bamrec, alt.read2);
+                setReadEvidence(minMapQ, pair.read2.bamrec, fragment.read2);
             }
 
             if (pair.read1.isSet() && pair.read2.isSet())
