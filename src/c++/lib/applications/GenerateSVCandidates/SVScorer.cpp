@@ -629,8 +629,6 @@ scoreSV(
     SVScoreInfo& baseInfo,
     SVEvidence& evidence)
 {
-    baseInfo.clear();
-
     // get breakend center_pos depth estimate:
     baseInfo.bp1MaxDepth=(getBreakendMaxMappedDepth(sv.bp1));
     baseInfo.bp2MaxDepth=(getBreakendMaxMappedDepth(sv.bp2));
@@ -662,26 +660,29 @@ scoreDiploidSV(
     SVScoreInfo& baseInfo,
     SVScoreInfoDiploid& diploidInfo)
 {
-    diploidInfo.clear();
-
     //
     // compute qualities
     //
-    diploidInfo.altScore=60;
+    {
+        diploidInfo.altScore=60;
+    }
+
 
     //
     // apply filters
     //
-    if (dFilter.isMaxDepthFilter())
     {
-        // apply maxdepth filter if either of the breakpoints exceeds the maximum depth:
-        if (baseInfo.bp1MaxDepth > dFilter.maxDepth(sv.bp1.interval.tid))
+        if (dFilter.isMaxDepthFilter())
         {
-            baseInfo.filters.insert(diploidOpt.maxDepthFilterLabel);
-        }
-        else if (baseInfo.bp2MaxDepth > dFilter.maxDepth(sv.bp2.interval.tid))
-        {
-            baseInfo.filters.insert(diploidOpt.maxDepthFilterLabel);
+            // apply maxdepth filter if either of the breakpoints exceeds the maximum depth:
+            if (baseInfo.bp1MaxDepth > dFilter.maxDepth(sv.bp1.interval.tid))
+            {
+                baseInfo.filters.insert(diploidOpt.maxDepthFilterLabel);
+            }
+            else if (baseInfo.bp2MaxDepth > dFilter.maxDepth(sv.bp2.interval.tid))
+            {
+                baseInfo.filters.insert(diploidOpt.maxDepthFilterLabel);
+            }
         }
     }
 }
@@ -698,70 +699,71 @@ scoreSomaticSV(
     SVScoreInfo& baseInfo,
     SVScoreInfoSomatic& somaticInfo)
 {
-    somaticInfo.clear();
-
     //
     // compute qualities
     //
-    bool isSomatic(true);
-    if (baseInfo.normal.alt.spanPairCount > 1) isSomatic=false;
-
-    if (isSomatic)
     {
-        const bool lowPairSupport(baseInfo.tumor.alt.spanPairCount < 6);
-        const bool lowSingleSupport((baseInfo.tumor.alt.bp1SpanReadCount < 14) || (baseInfo.tumor.alt.bp2SpanReadCount < 14));
-        const bool highSingleContam((baseInfo.normal.alt.bp1SpanReadCount > 1) || (baseInfo.normal.alt.bp2SpanReadCount > 1));
+        bool isNonzeroSomaticQuality(true);
+        if (baseInfo.normal.alt.spanPairCount > 1) isNonzeroSomaticQuality=false;
 
-        /// allow single pair support to rescue an SV only if the evidence looks REALLY good:
-        if (lowPairSupport && (lowSingleSupport || highSingleContam))
-            isSomatic=false;
+        if (isNonzeroSomaticQuality)
+        {
+            const bool lowPairSupport(baseInfo.tumor.alt.spanPairCount < 6);
+            const bool lowSingleSupport((baseInfo.tumor.alt.bp1SpanReadCount < 14) || (baseInfo.tumor.alt.bp2SpanReadCount < 14));
+            const bool highSingleContam((baseInfo.normal.alt.bp1SpanReadCount > 1) || (baseInfo.normal.alt.bp2SpanReadCount > 1));
+
+            /// allow single pair support to rescue an SV only if the evidence looks REALLY good:
+            if (lowPairSupport && (lowSingleSupport || highSingleContam))
+                isNonzeroSomaticQuality=false;
+        }
+
+        if (isNonzeroSomaticQuality)
+        {
+            if (baseInfo.normal.alt.spanPairCount)
+            {
+                const double ratio(static_cast<double>(baseInfo.tumor.alt.spanPairCount)/static_cast<double>(baseInfo.normal.alt.spanPairCount));
+                if (ratio<9)
+                {
+                    isNonzeroSomaticQuality=false;
+                }
+            }
+            if (baseInfo.normal.alt.bp1SpanReadCount)
+            {
+                const double ratio(static_cast<double>(baseInfo.tumor.alt.bp1SpanReadCount)/static_cast<double>(baseInfo.normal.alt.bp1SpanReadCount));
+                if (ratio<9)
+                {
+                    isNonzeroSomaticQuality=false;
+                }
+            }
+            if (baseInfo.normal.alt.bp2SpanReadCount)
+            {
+                const double ratio(static_cast<double>(baseInfo.tumor.alt.bp2SpanReadCount)/static_cast<double>(baseInfo.normal.alt.bp2SpanReadCount));
+                if (ratio<9)
+                {
+                    isNonzeroSomaticQuality=false;
+                }
+            }
+        }
+
+        if (isNonzeroSomaticQuality) somaticInfo.somaticScore=60;
     }
-
-    if (isSomatic)
-    {
-        if (baseInfo.normal.alt.spanPairCount)
-        {
-            const double ratio(static_cast<double>(baseInfo.tumor.alt.spanPairCount)/static_cast<double>(baseInfo.normal.alt.spanPairCount));
-            if (ratio<9)
-            {
-                isSomatic=false;
-            }
-        }
-        if (baseInfo.normal.alt.bp1SpanReadCount)
-        {
-            const double ratio(static_cast<double>(baseInfo.tumor.alt.bp1SpanReadCount)/static_cast<double>(baseInfo.normal.alt.bp1SpanReadCount));
-            if (ratio<9)
-            {
-                isSomatic=false;
-            }
-        }
-        if (baseInfo.normal.alt.bp2SpanReadCount)
-        {
-            const double ratio(static_cast<double>(baseInfo.tumor.alt.bp2SpanReadCount)/static_cast<double>(baseInfo.normal.alt.bp2SpanReadCount));
-            if (ratio<9)
-            {
-                isSomatic=false;
-            }
-        }
-    }
-
-    if (isSomatic) somaticInfo.somaticScore=60;
-
 
 
     //
     // apply filters
     //
-    if (dFilter.isMaxDepthFilter())
     {
-        // apply maxdepth filter if either of the breakpoints exceeds the maximum depth:
-        if (baseInfo.bp1MaxDepth > dFilter.maxDepth(sv.bp1.interval.tid))
+        if (dFilter.isMaxDepthFilter())
         {
-            baseInfo.filters.insert(somaticOpt.maxDepthFilterLabel);
-        }
-        else if (baseInfo.bp2MaxDepth > dFilter.maxDepth(sv.bp2.interval.tid))
-        {
-            baseInfo.filters.insert(somaticOpt.maxDepthFilterLabel);
+            // apply maxdepth filter if either of the breakpoints exceeds the maximum depth:
+            if (baseInfo.bp1MaxDepth > dFilter.maxDepth(sv.bp1.interval.tid))
+            {
+                baseInfo.filters.insert(somaticOpt.maxDepthFilterLabel);
+            }
+            else if (baseInfo.bp2MaxDepth > dFilter.maxDepth(sv.bp2.interval.tid))
+            {
+                baseInfo.filters.insert(somaticOpt.maxDepthFilterLabel);
+            }
         }
     }
 }
@@ -774,8 +776,11 @@ scoreSV(
     const SVCandidateSetData& svData,
     const SVCandidateAssemblyData& assemblyData,
     const SVCandidate& sv,
+    const bool isSomatic,
     SVModelScoreInfo& modelScoreInfo)
 {
+    modelScoreInfo.clear();
+
     // accumulate model-neutral evidence for each candidate (or its corresponding reference allele)
     SVEvidence evidence;
     scoreSV(svData, assemblyData, sv, modelScoreInfo.base, evidence);
@@ -784,7 +789,10 @@ scoreSV(
     scoreDiploidSV(_diploidOpt, sv, _dFilterDiploid, modelScoreInfo.base, modelScoreInfo.diploid);
 
     // score components specific to somatic model:
-    scoreSomaticSV(_somaticOpt, sv, _dFilterSomatic, modelScoreInfo.base, modelScoreInfo.somatic);
+    if (isSomatic)
+    {
+        scoreSomaticSV(_somaticOpt, sv, _dFilterSomatic, modelScoreInfo.base, modelScoreInfo.somatic);
+    }
 }
 
 

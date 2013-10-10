@@ -167,7 +167,7 @@ struct SVWriter
             return;
         }
 
-        svScore.scoreSV(svData, assemblyData, sv, modelScoreInfo);
+        svScore.scoreSV(svData, assemblyData, sv, isSomatic, modelScoreInfo);
 
         if (modelScoreInfo.diploid.altScore > opt.diploidOpt.minOutputAltScore)
         {

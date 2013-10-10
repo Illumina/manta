@@ -27,6 +27,14 @@
 ///
 struct SVModelScoreInfo
 {
+    void
+    clear()
+    {
+        base.clear();
+        diploid.clear();
+        somatic.clear();
+    }
+
     SVScoreInfo base;
     SVScoreInfoDiploid diploid;
     SVScoreInfoSomatic somatic;

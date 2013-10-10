@@ -52,6 +52,7 @@ struct SVScorer
         const SVCandidateSetData& svData,
         const SVCandidateAssemblyData& assemblyData,
         const SVCandidate& sv,
+        const bool isSomatic,
         SVModelScoreInfo& modelScoreInfo);
 
 private:
