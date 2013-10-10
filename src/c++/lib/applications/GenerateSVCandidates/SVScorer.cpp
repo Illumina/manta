@@ -223,6 +223,11 @@ scoreSplitReads(
     while (readStream.next())
     {
         const bam_record& bamRead(*(readStream.get_record_ptr()));
+
+        if (bamRead.is_filter()) continue;
+        if (bamRead.is_dup()) continue;
+        if (bamRead.is_secondary()) continue;
+
         const std::string readSeq = bamRead.get_bam_read().get_string();
         const unsigned readMapQ = bamRead.map_qual();
 
