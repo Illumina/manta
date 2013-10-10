@@ -106,7 +106,8 @@ private:
     const std::vector<bool> _isAlignmentTumor;
     const CallOptionsDiploid _diploidOpt;
     const CallOptionsSomatic _somaticOpt;
-    const ChromDepthFilterUtil _dFilter;
+    const ChromDepthFilterUtil _dFilterDiploid;
+    const ChromDepthFilterUtil _dFilterSomatic;
     SVLocusScanner _readScanner;
 
     typedef boost::shared_ptr<bam_streamer> streamPtr;

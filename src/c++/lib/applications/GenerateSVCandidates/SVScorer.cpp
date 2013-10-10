@@ -40,7 +40,8 @@ SVScorer(
     _isAlignmentTumor(opt.alignFileOpt.isAlignmentTumor),
     _diploidOpt(opt.diploidOpt),
     _somaticOpt(opt.somaticOpt),
-    _dFilter(opt.chromDepthFilename, opt.somaticOpt.maxDepthFactor, header),
+    _dFilterDiploid(opt.chromDepthFilename, _diploidOpt.maxDepthFactor, header),
+    _dFilterSomatic(opt.chromDepthFilename, _somaticOpt.maxDepthFactor, header),
     _readScanner(opt.scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilename)
 {
     // setup regionless bam_streams:
@@ -552,9 +553,13 @@ getSVSplitReadSupport(
     SVEvidence& evidence)
 {
     static const unsigned maxDepthSRFactor(2); ///< at what multiple of the maxDepth do we skip split read analysis?
+
+    const double bp1MaxMaxDepth(std::max(_dFilterDiploid.maxDepth(sv.bp1.interval.tid), _dFilterSomatic.maxDepth(sv.bp1.interval.tid)));
+    const double bp2MaxMaxDepth(std::max(_dFilterDiploid.maxDepth(sv.bp2.interval.tid), _dFilterSomatic.maxDepth(sv.bp2.interval.tid)));
+
     const bool isSkipSRSearchDepth(
-        (baseInfo.bp1MaxDepth > maxDepthSRFactor*_dFilter.maxDepth(sv.bp1.interval.tid)) ||
-        (baseInfo.bp2MaxDepth > maxDepthSRFactor*_dFilter.maxDepth(sv.bp2.interval.tid)));
+        (baseInfo.bp1MaxDepth > (maxDepthSRFactor*bp1MaxMaxDepth)) ||
+        (baseInfo.bp2MaxDepth > (maxDepthSRFactor*bp2MaxMaxDepth)));
 
     // apply the split-read scoring, only when:
     // 1) the SV is precise, i.e. has successful somatic contigs;
@@ -643,25 +648,6 @@ scoreSV(
     // count the split reads supporting the ref and alt alleles in each sample
     //
     getSVSplitReadSupport(assemblyData, sv, baseInfo, evidence);
-
-
-    /// TODO: rig this to have separate filters for somatic and germline:
-
-    //
-    // apply filters
-    //
-    if (_dFilter.isMaxDepthFilter())
-    {
-        // apply maxdepth filter if either of the breakpoints exceeds the maximum depth:
-        if (baseInfo.bp1MaxDepth > _dFilter.maxDepth(sv.bp1.interval.tid))
-        {
-            baseInfo.filters.insert(_somaticOpt.maxDepthFilterLabel);
-        }
-        else if (baseInfo.bp2MaxDepth > _dFilter.maxDepth(sv.bp2.interval.tid))
-        {
-            baseInfo.filters.insert(_somaticOpt.maxDepthFilterLabel);
-        }
-    }
 }
 
 
@@ -670,12 +656,34 @@ scoreSV(
 static
 void
 scoreDiploidSV(
-    const SVScoreInfo& /*baseInfo*/,
+    const CallOptionsDiploid& diploidOpt,
+    const SVCandidate& sv,
+    const ChromDepthFilterUtil& dFilter,
+    SVScoreInfo& baseInfo,
     SVScoreInfoDiploid& diploidInfo)
 {
     diploidInfo.clear();
 
+    //
+    // compute qualities
+    //
     diploidInfo.altScore=60;
+
+    //
+    // apply filters
+    //
+    if (dFilter.isMaxDepthFilter())
+    {
+        // apply maxdepth filter if either of the breakpoints exceeds the maximum depth:
+        if (baseInfo.bp1MaxDepth > dFilter.maxDepth(sv.bp1.interval.tid))
+        {
+            baseInfo.filters.insert(diploidOpt.maxDepthFilterLabel);
+        }
+        else if (baseInfo.bp2MaxDepth > dFilter.maxDepth(sv.bp2.interval.tid))
+        {
+            baseInfo.filters.insert(diploidOpt.maxDepthFilterLabel);
+        }
+    }
 }
 
 
@@ -684,12 +692,17 @@ scoreDiploidSV(
 static
 void
 scoreSomaticSV(
-    const SVScoreInfo& baseInfo,
+    const CallOptionsSomatic& somaticOpt,
+    const SVCandidate& sv,
+    const ChromDepthFilterUtil& dFilter,
+    SVScoreInfo& baseInfo,
     SVScoreInfoSomatic& somaticInfo)
 {
     somaticInfo.clear();
 
-    // assign bogus somatic score just to get started:
+    //
+    // compute qualities
+    //
     bool isSomatic(true);
     if (baseInfo.normal.alt.spanPairCount > 1) isSomatic=false;
 
@@ -733,6 +746,24 @@ scoreSomaticSV(
     }
 
     if (isSomatic) somaticInfo.somaticScore=60;
+
+
+
+    //
+    // apply filters
+    //
+    if (dFilter.isMaxDepthFilter())
+    {
+        // apply maxdepth filter if either of the breakpoints exceeds the maximum depth:
+        if (baseInfo.bp1MaxDepth > dFilter.maxDepth(sv.bp1.interval.tid))
+        {
+            baseInfo.filters.insert(somaticOpt.maxDepthFilterLabel);
+        }
+        else if (baseInfo.bp2MaxDepth > dFilter.maxDepth(sv.bp2.interval.tid))
+        {
+            baseInfo.filters.insert(somaticOpt.maxDepthFilterLabel);
+        }
+    }
 }
 
 
@@ -750,10 +781,10 @@ scoreSV(
     scoreSV(svData, assemblyData, sv, modelScoreInfo.base, evidence);
 
     // score components specific to diploid-germline model:
-    scoreDiploidSV(modelScoreInfo.base, modelScoreInfo.diploid);
+    scoreDiploidSV(_diploidOpt, sv, _dFilterDiploid, modelScoreInfo.base, modelScoreInfo.diploid);
 
     // score components specific to somatic model:
-    scoreSomaticSV(modelScoreInfo.base, modelScoreInfo.somatic);
+    scoreSomaticSV(_somaticOpt, sv, _dFilterSomatic, modelScoreInfo.base, modelScoreInfo.somatic);
 }
 
 
