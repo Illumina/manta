@@ -1,3 +1,6 @@
+MANTA-20 Combined reference spanning read and split read evidence per variant
+MANTA-20 Diploid vcf produce for normal sample, genotype inference score still
+todo
 MANTA-39 prevent crash on large CIGAR deletions
 MANTA-20 split read evidence counts for all large spanning SVs
 v0.9

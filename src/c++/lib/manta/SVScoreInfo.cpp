@@ -114,7 +114,7 @@ operator<<(
     os << "SVSampleInfo:\n"
        << "Alt Allele " << si.alt
        << "Ref Allele " << si.ref
-    ;
+       ;
     return os;
 }
 

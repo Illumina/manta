@@ -15,7 +15,7 @@
 /// \author Chris Saunders and Xiaoyu Chen
 ///
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    #pragma once
+#pragma once
 
 #include "GSCOptions.hh"
 #include "SplitReadAlignment.hh"
@@ -23,7 +23,6 @@
 
 #include "blt_util/bam_streamer.hh"
 #include "blt_util/bam_header_info.hh"
-#include "blt_util/ReadKey.hh"
 #include "manta/ChromDepthFilterUtil.hh"
 #include "manta/SVCandidate.hh"
 #include "manta/SVCandidateSetData.hh"

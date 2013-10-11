@@ -20,6 +20,25 @@
 #include <map>
 
 
+///
+/// \brief classes required to build the SVEvidence object
+///
+/// Note that this object is a kind of mini-database, accumulating all information about the
+/// relationship of each fragment with a specific SV-candidate. This allows us to tie together:
+///
+/// (1) spanning read information from the full fragment
+/// (2) split read information from read1
+/// (3) split read information from read2
+/// (4) fragment mapping properties from read1 & read2
+///
+///
+/// The class structure below represents kind of a crummy db schema -- there's probably a better way to
+/// do this?? Open to suggestions...
+///
+
+
+
+
 /// track all support data from an individual read in a fragment specific to an individual breakend of a single allele
 ///
 struct SVFragmentEvidenceAlleleBreakendPerRead
@@ -32,7 +51,7 @@ struct SVFragmentEvidenceAlleleBreakendPerRead
 
     bool isSplitEvaluated; ///< have we checked this read for split support of this bp?
     bool isSplitSupport; ///< if evaluated, does this read support this allele in the bp?
-    float splitEvidence;
+    float splitEvidence; ///< if evaluated, what is the evidence score
 };
 
 
@@ -51,12 +70,27 @@ struct SVFragmentEvidenceAlleleBreakend
     }
 
     bool isFragmentSupport; ///< if true, paired-read analysis shows that this read pair fragment supports this allele on this breakend
-    SVFragmentEvidenceAlleleBreakendPerRead read1;
-    SVFragmentEvidenceAlleleBreakendPerRead read2;
+    SVFragmentEvidenceAlleleBreakendPerRead read1; // read1 specific evidence
+    SVFragmentEvidenceAlleleBreakendPerRead read2; // read2 specific evidence
 };
 
 
-/// store properties intrinsic to the reads in a fragment
+/// track all support data from an individual fragment specific to a single allele of an SV hypothesis
+///
+struct SVFragmentEvidenceAllele
+{
+    SVFragmentEvidenceAlleleBreakend&
+    getBp(const bool isBp1)
+    {
+        return (isBp1 ? bp1 : bp2 );
+    }
+
+    SVFragmentEvidenceAlleleBreakend bp1;
+    SVFragmentEvidenceAlleleBreakend bp2;
+};
+
+
+/// store properties of the reads in a fragment which are not tightly coupled to any one allele/bp, etc....
 ///
 struct SVFragmentEvidenceRead
 {
@@ -73,26 +107,11 @@ struct SVFragmentEvidenceRead
 };
 
 
-/// track all support data from an individual fragment specific to a single allele of an SV hypothesis
-//
-struct SVFragmentEvidenceAllele
-{
-    SVFragmentEvidenceAlleleBreakend&
-    getBp(const bool isBp1)
-    {
-        return (isBp1 ? bp1 : bp2 );
-    }
-
-    SVFragmentEvidenceAlleleBreakend bp1;
-    SVFragmentEvidenceAlleleBreakend bp2;
-};
-
-
 /// track all support data from an individual fragment specific to an SV hypothesis
-//
-// this is both to prevent double-counting of evidnce and to consolidate different
-// sources of information (paired-split, etc).
-//
+///
+/// this is both to prevent double-counting of evidnce and to consolidate different
+/// sources of information (paired-split, etc).
+///
 struct SVFragmentEvidence
 {
     SVFragmentEvidenceRead&
@@ -109,12 +128,12 @@ struct SVFragmentEvidence
 };
 
 
-// track all support data for an SV hypothesis
-//
-// Note how this object is different than SVScoreInfoSomatic -- it is highly detailed and meant to be processed
-// to create summary statistics and scores later. Those scores and summary statistics should go into objects like
-// SomaticSVSCoreInfo to be written out in whichever output format is selected.
-//
+/// track all support data for an SV hypothesis
+///
+/// Note how this object is different than SVScoreInfoSomatic -- it is highly detailed and meant to be processed
+/// to create summary statistics and scores later. Those scores and summary statistics should go into objects like
+/// SomaticSVSCoreInfo to be written out in whichever output format is selected.
+///
 struct SVEvidence
 {
     typedef std::map<std::string,SVFragmentEvidence> evidenceTrack_t;

@@ -619,7 +619,7 @@ getSVSplitReadSupport(
 }
 
 
-/// shared information gathing steps of all scorign models
+/// shared information gathering steps of all scoring models
 void
 SVScorer::
 scoreSV(
