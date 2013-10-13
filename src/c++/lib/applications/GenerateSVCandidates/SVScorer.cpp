@@ -561,16 +561,20 @@ scoreSomaticSV(
     //
     {
         bool isNonzeroSomaticQuality(true);
+
+        /// first check for substantial support in the normal:
         if (baseInfo.normal.alt.spanPairCount > 1) isNonzeroSomaticQuality=false;
+        if (baseInfo.normal.alt.splitReadEvidence > 2) isNonzeroSomaticQuality=false;
 
         if (isNonzeroSomaticQuality)
         {
             const bool lowPairSupport(baseInfo.tumor.alt.spanPairCount < 6);
+            const bool lowSplitSupport(baseInfo.tumor.alt.splitReadEvidence < 6);
             const bool lowSingleSupport((baseInfo.tumor.alt.bp1SpanReadCount < 14) || (baseInfo.tumor.alt.bp2SpanReadCount < 14));
             const bool highSingleContam((baseInfo.normal.alt.bp1SpanReadCount > 1) || (baseInfo.normal.alt.bp2SpanReadCount > 1));
 
             /// allow single pair support to rescue an SV only if the evidence looks REALLY good:
-            if (lowPairSupport && (lowSingleSupport || highSingleContam))
+            if ((lowPairSupport && lowSplitSupport) && (lowSingleSupport || highSingleContam))
                 isNonzeroSomaticQuality=false;
         }
 
@@ -600,6 +604,14 @@ scoreSomaticSV(
                     isNonzeroSomaticQuality=false;
                 }
             }
+        }
+
+        {
+            // there needs to be some ref support in the normal as well:
+            const bool normRefPairSupport(baseInfo.normal.ref.spanPairCount > 6);
+            const bool normRefSplitSupport(baseInfo.normal.ref.splitReadEvidence > 6);
+
+            if(! (normRefPairSupport || normRefSplitSupport)) isNonzeroSomaticQuality=false;
         }
 
         if (isNonzeroSomaticQuality) somaticInfo.somaticScore=60;
