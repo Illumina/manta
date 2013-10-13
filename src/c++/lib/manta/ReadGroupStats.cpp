@@ -21,11 +21,13 @@
 #include "blt_util/bam_record_util.hh"
 #include "blt_util/bam_streamer.hh"
 #include "blt_util/log.hh"
+#include "blt_util/ReadKey.hh"
 
 #include "boost/foreach.hpp"
 
-#include <vector>
 #include <iostream>
+#include <set>
+#include <vector>
 
 //#define DEBUG_RPS
 
@@ -33,8 +35,9 @@
 
 static
 bool
-isStatSetMatch(const SizeDistribution& pss1,
-               const SizeDistribution& pss2)
+isStatSetMatch(
+    const SizeDistribution& pss1,
+    const SizeDistribution& pss2)
 {
     static const float cdfPrecision(0.001);
 
@@ -63,7 +66,8 @@ isStatSetMatch(const SizeDistribution& pss1,
 /// chromosome.
 static
 ReadPairOrient
-getRelOrient(const bam_record& br)
+getRelOrient(
+    const bam_record& br)
 {
     pos_t pos1 = br.pos();
     bool is_fwd_strand1 = br.is_fwd_strand();
@@ -94,6 +98,8 @@ getRelOrient(const bam_record& br)
 ReadGroupStats::
 ReadGroupStats(const std::string& statsBamFile)
 {
+    typedef std::set<ReadKey> mateMap_t;
+
     static const unsigned statsCheckCnt(100000);
     static const unsigned maxPosCount(1);
 
@@ -108,7 +114,9 @@ ReadGroupStats(const std::string& statsBamFile)
         chromSize[i] = (header.target_len[i]);
     }
 
-    ALIGNPATH::path_t apath; // cache-variable -- this does not need to be stored across loop iterations, we just save sys calls by keeping it here
+    // cache-variables -- these do not need to be stored across loop iterations, we just save sys calls by keeping them here
+    ALIGNPATH::path_t apath;
+    mateMap_t goodMates;
 
     bool isConverged(false);
     bool isStopEstimation(false);
@@ -127,6 +135,8 @@ ReadGroupStats(const std::string& statsBamFile)
         {
             if (isStopEstimation) break;
 
+            goodMates.clear();
+
             const int32_t startPos(chromHighestPos[chromIndex]+1);
 #ifdef DEBUG_RPS
             std::cerr << "INFO: Stats requesting bam region starting from: chrid: " << chromIndex << " start: " << startPos << "\n";
@@ -137,7 +147,7 @@ ReadGroupStats(const std::string& statsBamFile)
                 const bam_record& bamRead(*(read_stream.get_record_ptr()));
                 if (bamRead.pos()<startPos) continue;
 
-                if (bamRead.pos()!=chromHighestPos[chromIndex])
+                if (bamRead.pos() != chromHighestPos[chromIndex])
                 {
                     posCount=0;
                 }
@@ -157,22 +167,10 @@ ReadGroupStats(const std::string& statsBamFile)
                 // aligner specific variation
                 //
                 // TODO: ..note this locks-in standard ilmn orientation -- okay for now but this function needs major re-arrangement for mate-pair support,
-                // we could still keep independence from each aligner's proper pair decisions by estimating a fragement distro for each orientaiton
+                // we could still keep independence from each aligner's proper pair decisions by estimating a fragment distro for each orientation
                 // and only keeping the one with the most samples
                 if (! is_innie_pair(bamRead)) continue;
                 if (bamRead.map_qual()==0) continue;
-
-                // sample each read pair once by sampling stats from
-                // downstream read only
-                if (bamRead.pos() > bamRead.mate_pos()) continue;
-
-                // to sample short read pairs only once, we take read1 only:
-                if ((bamRead.pos() == bamRead.mate_pos()) && bamRead.is_second()) continue;
-
-                // to prevent high-depth pileups from overly biasing the
-                // read stats, we only take maxPosCount read pairs from each start
-                // pos:
-                if (posCount>=maxPosCount) continue;
 
                 // filter any split reads with an SA tag:
                 static const char SAtag[] = {'S','A'};
@@ -186,8 +184,54 @@ ReadGroupStats(const std::string& statsBamFile)
                     if (! ALIGNPATH::is_segment_align_match(ps.type)) continue;
                 }
 
+                // sample each read pair once by sampling stats from
+                // downstream read only, or whichever read is encountered
+                // second if they're at the same position:
+                bool isDownstream(bamRead.pos() > bamRead.mate_pos());
+
+                if (bamRead.pos() == bamRead.mate_pos())
+                {
+                    /// in this case we consider the first read we run into to be "downstream",
+                    /// the first read is determined by looking in the mate set:
+                    const int mateReadNo( bamRead.is_first() ? 2 : 1);
+                    const ReadKey mateKey(bamRead.qname(), mateReadNo);
+
+                    mateMap_t::iterator i(goodMates.find(mateKey));
+
+                    if (i != goodMates.end()) isDownstream = true;
+                }
+
+                if (! isDownstream)
+                {
+                    // to prevent high-depth pileups from overly biasing the
+                    // read stats, we only take maxPosCount read pairs from each start
+                    // pos:
+                    if (posCount>=maxPosCount) continue;
+
+                    /// crude mechanism to manage total set memory
+                    static const unsigned maxMateSetSize(100000);
+                    if (goodMates.size() > maxMateSetSize) goodMates.clear();
+
+                    const ReadKey key(bamRead);
+                    goodMates.insert(key);
+
+                    ++posCount;
+
+                    continue;
+                }
+                else
+                {
+                    const int mateReadNo( bamRead.is_first() ? 2 : 1);
+                    const ReadKey mateKey(bamRead.qname(), mateReadNo);
+
+                    mateMap_t::iterator i(goodMates.find(mateKey));
+
+                    if (i == goodMates.end()) continue;
+
+                    goodMates.erase(i);
+                }
+
                 // made it through all filters!
-                ++posCount;
                 ++recordCount;
 
                 // Assuming only two reads per fragment - based on bamtools.
