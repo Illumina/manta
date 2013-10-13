@@ -645,13 +645,13 @@ getReadBreakendsImpl(
     BOOST_FOREACH(const SVCandidate& sv, candidates)
     {
         bool isInvalidTid(false);
-        if(sv.bp1.interval.tid < 0)
+        if (sv.bp1.interval.tid < 0)
         {
             isInvalidTid=true;
         }
         else if (sv.bp2.state != SVBreakendState::UNKNOWN)
         {
-            if(sv.bp2.interval.tid < 0)
+            if (sv.bp2.interval.tid < 0)
             {
                 isInvalidTid=true;
             }
