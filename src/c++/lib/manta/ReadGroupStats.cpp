@@ -178,10 +178,19 @@ ReadGroupStats(const std::string& statsBamFile)
 
                 bam_cigar_to_apath(bamRead.raw_cigar(), bamRead.n_cigar(), apath);
 
-                // filter reads containing any cigar types besides MATCH:
-                BOOST_FOREACH(const ALIGNPATH::path_segment& ps, apath)
                 {
-                    if (! ALIGNPATH::is_segment_align_match(ps.type)) continue;
+                    // use only the most conservative alignments to generate fragment stats --
+                    // filter reads containing any cigar types besides MATCH:
+                    bool isBadAlign(false);
+                    BOOST_FOREACH(const ALIGNPATH::path_segment& ps, apath)
+                    {
+                        if (! ALIGNPATH::is_segment_align_match(ps.type))
+                        {
+                            isBadAlign=true;
+                            break;
+                        }
+                    }
+                    if (isBadAlign) continue;
                 }
 
                 // sample each read pair once by sampling stats from
