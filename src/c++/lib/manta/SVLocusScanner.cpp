@@ -583,6 +583,8 @@ getReadBreakendsImpl(
     std::vector<SVCandidate>& candidates,
     known_pos_range2& localEvidenceRange)
 {
+    using namespace illumina::common;
+
     /// TODO: can't handle these yet, but plan to soon:
     //if (localRead.is_mate_unmapped()) return;
 
@@ -634,6 +636,45 @@ getReadBreakendsImpl(
     const pos_t endRefPos(startRefPos+localRefLength);
 
     localEvidenceRange.set_range(startRefPos,endRefPos);
+
+
+    /// final chance to QC candidate set:
+    ///
+    BOOST_FOREACH(const SVCandidate& sv, candidates)
+    {
+        bool isInvalidTid(false);
+        if(sv.bp1.interval.tid < 0)
+        {
+            isInvalidTid=true;
+        }
+        else if (sv.bp2.state != SVBreakendState::UNKNOWN)
+        {
+            if(sv.bp1.interval.tid < 0)
+            {
+                isInvalidTid=true;
+            }
+        }
+
+        if (isInvalidTid)
+        {
+            std::ostringstream oss;
+            oss << "SV vreakend has unexpected unknown chromosome id in candidate sv.\n"
+                << "\tlocal_bam_record: " <<  localRead << "\n"
+                << "\tremote_bam record: ";
+            if (NULL==remoteReadPtr)
+            {
+                oss << "NONE";
+            }
+            else
+            {
+                oss << (*remoteReadPtr);
+            }
+            oss << "\n"
+                << "\tSVCandidate: " << sv << "\n";
+            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+
+        }
+    }
 }
 
 

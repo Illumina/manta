@@ -22,6 +22,10 @@
 
 
 typedef unsigned LocusIndexType;
+
+/// move message is composed of a bool, indicating if the node is being added (true) or deleted (false) from the index,
+/// and the id of the node itself.
+///
 typedef std::pair<bool, std::pair<LocusIndexType,NodeIndexType> > SVLocusNodeMoveMessage;
 
 
@@ -101,6 +105,8 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
         const GenomeInterval interval,
         flyweight_observer_t* obs = NULL)
     {
+        assert(interval.tid >= 0);
+
         NodeIndexType nodePtr(newGraphNode());
         SVLocusNode& node(getNode(nodePtr));
         node.setInterval(interval);

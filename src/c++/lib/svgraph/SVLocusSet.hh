@@ -476,6 +476,7 @@ private:
     void
     updateMaxRegionSize(const GenomeInterval& interval)
     {
+        assert(interval.tid>=0);
         const unsigned tid(interval.tid);
         if (tid >= _maxRegionSize.size())
         {
