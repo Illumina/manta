@@ -374,6 +374,8 @@ getSVCandidatesFromPair(
     const bam_record* remoteReadPtr,
     std::vector<SVCandidate>& candidates)
 {
+    if (localRead.is_unmapped() || localRead.is_mate_unmapped()) return;
+
     // update localEvidenceRange:
     const unsigned readSize(apath_read_length(localAlign.path));
     const unsigned localRefLength(apath_ref_length(localAlign.path));
@@ -649,7 +651,7 @@ getReadBreakendsImpl(
         }
         else if (sv.bp2.state != SVBreakendState::UNKNOWN)
         {
-            if(sv.bp1.interval.tid < 0)
+            if(sv.bp2.interval.tid < 0)
             {
                 isInvalidTid=true;
             }
@@ -658,7 +660,7 @@ getReadBreakendsImpl(
         if (isInvalidTid)
         {
             std::ostringstream oss;
-            oss << "SV vreakend has unexpected unknown chromosome id in candidate sv.\n"
+            oss << "SVbreakend has unknown chromosome id in candidate sv.\n"
                 << "\tlocal_bam_record: " <<  localRead << "\n"
                 << "\tremote_bam record: ";
             if (NULL==remoteReadPtr)
