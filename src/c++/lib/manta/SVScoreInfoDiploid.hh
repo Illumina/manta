@@ -26,7 +26,8 @@ enum index_t
 {
     REF,
     HET,
-    HOM
+    HOM,
+    SIZE
 };
 
 inline
@@ -46,6 +47,33 @@ label(const index_t i)
         return NULL;
     }
 }
+
+inline
+float
+altFraction(const index_t i)
+{
+    switch (i)
+    {
+    case REF :
+        return 0;
+    case HET :
+        return 0.5;
+    case HOM :
+        return 1.0;
+    default:
+        assert(false && "Unknown GT state");
+        return 0;
+    }
+
+}
+
+inline
+float
+altFraction(const unsigned i)
+{
+    return altFraction(static_cast<const index_t>(i));
+}
+
 }
 
 

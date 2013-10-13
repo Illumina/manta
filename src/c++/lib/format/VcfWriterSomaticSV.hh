@@ -72,8 +72,8 @@ private:
     modifySample(
         SampleTag_t& sampletags) const;
 
-    std::string
-    getFilter() const;
+    void
+    writeFilter() const;
 
     const CallOptionsSomatic& _somaticOpt;
     const bool _isMaxDepthFilter;

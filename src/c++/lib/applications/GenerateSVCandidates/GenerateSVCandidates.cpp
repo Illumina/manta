@@ -169,7 +169,7 @@ struct SVWriter
 
         svScore.scoreSV(svData, assemblyData, sv, isSomatic, modelScoreInfo);
 
-        if (modelScoreInfo.diploid.altScore > opt.diploidOpt.minOutputAltScore)
+        if (modelScoreInfo.diploid.altScore >= opt.diploidOpt.minOutputAltScore)
         {
             diploidWriter.writeSV(edge, svData, assemblyData, sv, modelScoreInfo);
         }

@@ -62,6 +62,9 @@ protected:
     void
     addHeaderInfo() const {}
 
+    void
+    addHeaderFormat() const {}
+
     virtual
     void
     addHeaderFilters() const {}
@@ -99,10 +102,17 @@ protected:
     {}
 
     virtual
-    std::string
-    getFilter() const
+    void
+    writeQual() const
     {
-        return ".";
+        _os << '.';
+    }
+
+    virtual
+    void
+    writeFilter() const
+    {
+        _os << '.';
     }
 
     virtual
@@ -110,6 +120,10 @@ protected:
     modifySample(
         SampleTag_t& /*sampletags*/) const
     {}
+
+    void
+    writeFilters(
+        const std::set<std::string>& filters) const;
 
 private:
 

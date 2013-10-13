@@ -53,6 +53,9 @@ private:
     addHeaderInfo() const;
 
     void
+    addHeaderFormat() const;
+
+    void
     addHeaderFilters() const;
 
     void
@@ -72,8 +75,11 @@ private:
         const bool isFirstOfPair,
         InfoTag_t& infotags) const;
 
-    std::string
-    getFilter() const;
+    void
+    writeQual() const;
+
+    void
+    writeFilter() const;
 
 
     const CallOptionsDiploid& _diploidOpt;

@@ -48,6 +48,26 @@ struct PairOptions
 };
 
 
+struct CallOptionsDiploidDeriv
+{
+    CallOptionsDiploidDeriv(
+        const CallOptionsDiploid& opt)
+    {
+        using namespace DIPLOID_GT;
+
+        assert(opt.indelPrior < 0.5);
+
+        prior[HET] = opt.indelPrior;
+        prior[HOM] = opt.indelPrior/2;
+        prior[REF] = 1. - (prior[HET] + prior[HOM]);
+    }
+
+    float prior[DIPLOID_GT::SIZE];
+};
+
+
+
+
 struct SVScorer
 {
     SVScorer(
@@ -118,6 +138,7 @@ private:
 
     const std::vector<bool> _isAlignmentTumor;
     const CallOptionsDiploid _diploidOpt;
+    const CallOptionsDiploidDeriv _diploidDopt;
     const CallOptionsSomatic _somaticOpt;
     const ChromDepthFilterUtil _dFilterDiploid;
     const ChromDepthFilterUtil _dFilterSomatic;

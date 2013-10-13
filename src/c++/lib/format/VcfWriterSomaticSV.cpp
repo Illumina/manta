@@ -126,21 +126,14 @@ modifySample(
 
 
 
-std::string
+void
 VcfWriterSomaticSV::
-getFilter() const
+writeFilter() const
 {
     assert(_modelScorePtr != NULL);
     const SVScoreInfo& baseInfo(_modelScorePtr->base);
 
-    if (baseInfo.filters.empty())
-    {
-        return "PASS";
-    }
-    else
-    {
-        return boost::algorithm::join(baseInfo.filters, ";");
-    }
+    writeFilters(baseInfo.filters);
 }
 
 

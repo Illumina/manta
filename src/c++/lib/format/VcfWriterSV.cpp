@@ -90,6 +90,8 @@ writeHeaderPrefix(
 
     addHeaderInfo();
 
+    addHeaderFormat();
+
     addHeaderFilters();
 
     _os << "##ALT=<ID=BND,Description=\"Translocation Breakend\">\n";
@@ -404,9 +406,11 @@ writeTransloc(
         << '\t' << localId // ID
         << '\t' << ref // REF
         << '\t' << str( altFormat ) // ALT
-        << '\t' << '.' // QUAL
-        << '\t' << getFilter() // FILTER
         << '\t';
+    writeQual();
+    _os << '\t';
+    writeFilter();
+    _os << '\t';
     makeInfoField(infotags,_os); // INFO
     makeFormatSampleField(sampletags, _os); // FORMAT + SAMPLE
     _os << '\n';
@@ -605,9 +609,11 @@ writeInvdel(
         << '\t' << vcfId // ID
         << '\t' << ref // REF
         << '\t' << alt // ALT
-        << '\t' << '.' // QUAL
-        << '\t' << getFilter() // FILTER
         << '\t';
+    writeQual();
+    _os << '\t';
+    writeFilter();
+    _os << '\t';
     makeInfoField(infoTags,_os); // INFO
     makeFormatSampleField(sampleTags, _os); // FORMAT + SAMPLE
     _os << '\n';
@@ -730,4 +736,34 @@ writeSVCore(
         BOOST_THROW_EXCEPTION(LogicException(oss.str()));
     }
 }
+
+
+
+void
+VcfWriterSV::
+writeFilters(
+    const std::set<std::string>& filters) const
+{
+    if (filters.empty())
+    {
+        _os << "PASS";
+    }
+    else
+    {
+        bool isFirst(true);
+        BOOST_FOREACH(const std::string& filter, filters)
+        {
+            if (isFirst)
+            {
+                isFirst=true;
+            }
+            else
+            {
+                _os << ';';
+            }
+            _os << filter;
+        }
+    }
+}
+
 

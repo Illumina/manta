@@ -104,6 +104,12 @@ struct SVFragmentEvidenceRead
         mapq(0)
     {}
 
+    bool
+    isObservedAnchor() const
+    {
+        return (isScanned && isAnchored);
+    }
+
     bool isScanned; ///< if true, this read's bam record has been scanned to fill in the remaining values in this object
 
     bool isAnchored; ///< if true, the read is found and known to have a confident mapping wrt fragment support

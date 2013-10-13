@@ -42,12 +42,23 @@ addHeaderInfo() const
 
 void
 VcfWriterDiploidSV::
+addHeaderFormat() const
+{
+    _os << "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n";
+    _os << "##FORMAT=<ID=GQ,Number=1,Type=Float,Description=\"Genotype Quality\">\n";
+}
+
+
+
+void
+VcfWriterDiploidSV::
 addHeaderFilters() const
 {
     if (_isMaxDepthFilter)
     {
         _os << "##FILTER=<ID=" << _diploidOpt.maxDepthFilterLabel << ",Description=\"Sample site depth is greater than " << _diploidOpt.maxDepthFactor << "x the mean chromosome depth near one or both variant breakends\">\n";
     }
+    _os << "##FILTER=<ID=" << _diploidOpt.minGTFilterLabel << ",Description=\"GQ score is less than " << _diploidOpt.minGTScoreFilter << "\">\n";
 }
 
 
@@ -102,20 +113,42 @@ modifyTranslocInfo(
 
 
 
-std::string
+void
 VcfWriterDiploidSV::
-getFilter() const
+writeQual() const
+{
+    assert(_modelScorePtr != NULL);
+    const SVScoreInfoDiploid& diploidInfo(_modelScorePtr->diploid);
+
+    _os << diploidInfo.altScore;
+}
+
+
+
+void
+VcfWriterDiploidSV::
+writeFilter() const
 {
     assert(_modelScorePtr != NULL);
     const SVScoreInfo& baseInfo(_modelScorePtr->base);
 
-    if (baseInfo.filters.empty())
+    writeFilters(baseInfo.filters);
+}
+
+
+
+static
+const char*
+gtLabel(
+    const DIPLOID_GT::index_t id)
+{
+    using namespace DIPLOID_GT;
+    switch (id)
     {
-        return "PASS";
-    }
-    else
-    {
-        return boost::algorithm::join(baseInfo.filters, ";");
+    case REF : return "0/0";
+    case HET : return "0/1";
+    case HOM : return "1/1";
+    default : return "";
     }
 }
 
@@ -127,11 +160,19 @@ modifySample(
     SampleTag_t& sampletags) const
 {
     assert(_modelScorePtr != NULL);
-//    const SVModelScoreInfo& modelScoreInfo(*_modelScorePtr);
+    const SVModelScoreInfo& modelScoreInfo(*_modelScorePtr);
 
     std::vector<std::string> values(1);
-    sampletags.push_back(std::make_pair("GT",values));
+
+    static const std::string gtTag("GT");
+    values[0] = gtLabel(modelScoreInfo.diploid.gt);
+    sampletags.push_back(std::make_pair(gtTag,values));
+
+    static const std::string gqTag("GQ");
+    values[0] = str( boost::format("%s") % modelScoreInfo.diploid.gtScore);
+    sampletags.push_back(std::make_pair(gqTag,values));
 }
+
 
 
 void

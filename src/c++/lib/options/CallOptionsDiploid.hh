@@ -24,16 +24,24 @@ struct CallOptionsDiploid
 {
 
     CallOptionsDiploid() :
+        indelPrior(1e-4),
         maxDepthFactor(3.0),
         maxDepthFilterLabel("MaxDepth"),
-        minOutputAltScore(10)
+        minOutputAltScore(10),
+        minGTScoreFilter(20),
+        minGTFilterLabel("MinGQ")
     {}
+
+    float indelPrior;
 
     // breakpoints where the non-tumor depth is greater than the chromosome average x this factor are filtered out:
     float maxDepthFactor;
     std::string maxDepthFilterLabel;
 
     unsigned minOutputAltScore; ///< minimum QUAL score to print out a diploid variant
+
+    unsigned minGTScoreFilter; ///< below this GQ value, the record is filtered in the diploid output VCF
+    std::string minGTFilterLabel;
 };
 
 
