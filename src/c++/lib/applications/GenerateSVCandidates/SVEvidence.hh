@@ -23,7 +23,7 @@
 ///
 /// \brief classes required to build the SVEvidence object
 ///
-/// Note that this object is a kind of mini-database, accumulating all information about the
+/// Note that the SVEvidence object is a kind of mini-database, accumulating all information about the
 /// relationship of each fragment with a specific SV-candidate. This allows us to tie together:
 ///
 /// (1) spanning read information from the full fragment
@@ -31,6 +31,8 @@
 /// (3) split read information from read2
 /// (4) fragment mapping properties from read1 & read2
 ///
+/// ...for each fragment. The object stores this per-fragment information for all fragments impacting
+/// all alleles at a given locus (But note at present we limit the alternate alleles to one).
 ///
 /// The class structure below represents kind of a crummy db schema -- there's probably a better way to
 /// do this?? Open to suggestions...
@@ -51,7 +53,7 @@ struct SVFragmentEvidenceAlleleBreakendPerRead
 
     bool isSplitEvaluated; ///< have we checked this read for split support of this bp?
     bool isSplitSupport; ///< if evaluated, does this read support this allele in the bp?
-    float splitEvidence; ///< if evaluated, what is the evidence score
+    float splitEvidence; ///< if evaluated, what is the evidence score?
 };
 
 
@@ -60,7 +62,8 @@ struct SVFragmentEvidenceAlleleBreakendPerRead
 struct SVFragmentEvidenceAlleleBreakend
 {
     SVFragmentEvidenceAlleleBreakend() :
-        isFragmentSupport(false)
+        isFragmentSupport(false),
+        fragLengthProb(0)
     {}
 
     SVFragmentEvidenceAlleleBreakendPerRead&
@@ -70,12 +73,13 @@ struct SVFragmentEvidenceAlleleBreakend
     }
 
     bool isFragmentSupport; ///< if true, paired-read analysis shows that this read pair fragment supports this allele on this breakend
+    float fragLengthProb; ///< if isFragmentSupport, what is the prob of the fragment size given this allele?
     SVFragmentEvidenceAlleleBreakendPerRead read1; // read1 specific evidence
     SVFragmentEvidenceAlleleBreakendPerRead read2; // read2 specific evidence
 };
 
 
-/// track all support data from an individual fragment specific to a single allele of an SV hypothesis
+/// track all support data from an individual fragment specific to a single allele of an SV candidate
 ///
 struct SVFragmentEvidenceAllele
 {
@@ -109,7 +113,7 @@ struct SVFragmentEvidenceRead
 
 /// track all support data from an individual fragment specific to an SV hypothesis
 ///
-/// this is both to prevent double-counting of evidnce and to consolidate different
+/// this is both to prevent double-counting of evidence and to consolidate different
 /// sources of information (paired-split, etc).
 ///
 struct SVFragmentEvidence

@@ -173,6 +173,15 @@ struct SVLocusScanner
         const std::map<std::string, int32_t>& chromToIndex,
         std::vector<SVCandidate>& candidates) const;
 
+    /// provide direct access to the frag distro for
+    /// functions which can't be cached
+    ///
+    const SizeDistribution&
+    getFragSizeDistro(
+        const unsigned defaultReadGroupIndex) const
+    {
+        return _rss.getStats(defaultReadGroupIndex).fragStats;
+    }
 
     struct Range
     {

@@ -37,6 +37,17 @@
 #include <string>
 
 
+/// shared options related to read pair support:
+struct PairOptions
+{
+    /// we're interested in any fragments which cross center pos with at least N bases of support on each side
+    /// (note this definition is certain to overlap the split read definition whenever N is less than the read length
+    ///
+    /// for reads shorter than this length, the whole read is required...
+    static const pos_t minFragSupport = 50;
+};
+
+
 struct SVScorer
 {
     SVScorer(
@@ -59,6 +70,7 @@ private:
     /// find spanning read support for the reference allele in a single breakend
     void
     getSVRefPairSupport(
+        const PairOptions& pairOpt,
         const SVBreakend& bp,
         SVScoreInfo& ssInfo,
         SVEvidence& evidence,
@@ -67,6 +79,7 @@ private:
     /// find spanning read support for the reference allele for sv candidate
     void
     getSVRefPairSupport(
+        const PairOptions& pairOpt,
         const SVCandidate& sv,
         SVScoreInfo& ssInfo,
         SVEvidence& evidence);

@@ -228,6 +228,7 @@ scoreSplitReads(
         if (bamRead.is_filter()) continue;
         if (bamRead.is_dup()) continue;
         if (bamRead.is_secondary()) continue;
+        if (bamRead.is_supplement()) continue;
 
         const std::string readSeq = bamRead.get_bam_read().get_string();
         const unsigned readMapQ = bamRead.map_qual();
@@ -275,6 +276,7 @@ scoreSplitReads(
 void
 SVScorer::
 getSVRefPairSupport(
+    const PairOptions& pairOpt,
     const SVBreakend& bp,
     SVScoreInfo& baseInfo,
     SVEvidence& evidence,
@@ -293,10 +295,6 @@ getSVRefPairSupport(
     const pos_t centerPos(bp.interval.range.center_pos());
 
 
-    /// we're interested in any fragments which cross center pos with at least N bases of support on each side
-    /// (note this definition is certain to overlap the split read definition whenever N is less than the read length
-
-    static const pos_t minFragSupport(80);
     const unsigned minMapQ(_readScanner.getMinMapQ());
 
     const unsigned bamCount(_bamStreams.size());
@@ -313,8 +311,10 @@ getSVRefPairSupport(
         const unsigned minFrag(pRange.min);
         const unsigned maxFrag(pRange.max);
 
-        const uint32_t beginPos(centerPos-maxFrag+minFragSupport);
-        const uint32_t endPos(centerPos+maxFrag-minFragSupport+1);
+        const SizeDistribution& fragDistro(_readScanner.getFragSizeDistro(bamIndex));
+
+        const uint32_t beginPos(centerPos-maxFrag+pairOpt.minFragSupport);
+        const uint32_t endPos(centerPos+maxFrag-pairOpt.minFragSupport+1);
 
         if (beginPos >= endPos) continue;
 
@@ -328,6 +328,7 @@ getSVRefPairSupport(
             if (bamRead.is_filter()) continue;
             if (bamRead.is_dup()) continue;
             if (bamRead.is_secondary()) continue;
+            if (bamRead.is_supplement()) continue;
 
             if (bamRead.is_unmapped() || bamRead.is_mate_unmapped()) continue;
 
@@ -360,7 +361,9 @@ getSVRefPairSupport(
             {
                 fragBegin=bamRead.mate_pos()-1;
             }
-            const pos_t fragEnd(fragBegin+std::abs(bamRead.template_size()));
+
+            const unsigned fragLength(std::abs(bamRead.template_size()));
+            const pos_t fragEnd(fragBegin+fragLength);
 
             if (fragBegin > fragEnd)
             {
@@ -371,24 +374,31 @@ getSVRefPairSupport(
                 BOOST_THROW_EXCEPTION(LogicException(oss.str()));
             }
 
-            const pos_t fragOverlap(std::min((centerPos-fragBegin), (fragEnd-centerPos)));
-
-            if (fragOverlap < minFragSupport) continue;
+            {
+                const pos_t fragOverlap(std::min((centerPos-fragBegin), (fragEnd-centerPos)));
+                if (fragOverlap < std::min(static_cast<pos_t>(bamRead.read_size()), pairOpt.minFragSupport)) continue;
+            }
 
             SVFragmentEvidence& fragment(evidence.getSample(isTumor)[bamRead.qname()]);
             SVFragmentEvidenceAllele& ref(fragment.ref);
 
             setReadEvidence(minMapQ, bamRead, fragment.getRead(bamRead.is_first()));
 
-            if (isBp1)
             {
-                ref.bp1.isFragmentSupport = true;
-            }
-            else
-            {
-                ref.bp2.isFragmentSupport = true;
-            }
+                float fragProb(fragDistro.cdf(fragLength));
+                fragProb = std::min(fragProb, (1-fragProb));
 
+                if (isBp1)
+                {
+                    ref.bp1.isFragmentSupport = true;
+                    ref.bp1.fragLengthProb = fragProb;
+                }
+                else
+                {
+                    ref.bp2.isFragmentSupport = true;
+                    ref.bp2.fragLengthProb = fragProb;
+                }
+            }
 
             if (isDoubleCountSkip) continue;
 
@@ -421,16 +431,221 @@ finishSamplePairSupport(
 void
 SVScorer::
 getSVRefPairSupport(
+    const PairOptions& pairOpt,
     const SVCandidate& sv,
     SVScoreInfo& baseInfo,
     SVEvidence& evidence)
 {
-    getSVRefPairSupport(sv.bp1, baseInfo, evidence, true);
-    getSVRefPairSupport(sv.bp2, baseInfo, evidence, false);
+    getSVRefPairSupport(pairOpt, sv.bp1, baseInfo, evidence, true);
+    getSVRefPairSupport(pairOpt, sv.bp2, baseInfo, evidence, false);
 
     finishSamplePairSupport(baseInfo.tumor);
     finishSamplePairSupport(baseInfo.normal);
 }
+
+
+struct SpanReadInfo
+{
+    SpanReadInfo() :
+        isFwdStrand(true),
+        readSize(0)
+    {}
+
+    GenomeInterval interval;
+    bool isFwdStrand;
+    unsigned readSize;
+};
+
+
+
+static
+void
+getFragInfo(
+    const bam_record& localRead,
+    SpanReadInfo& local,
+    SpanReadInfo& remote)
+{
+    using namespace ALIGNPATH;
+
+    // local read:
+    local.isFwdStrand = localRead.is_fwd_strand();
+    local.readSize = localRead.read_size();
+    local.interval.tid = localRead.target_id();
+    const pos_t localBeginPos(localRead.pos()-1);
+
+    // get cigar:
+    path_t localPath;
+    bam_cigar_to_apath(localRead.raw_cigar(), localRead.n_cigar(), localPath);
+
+    const pos_t localEndPos(localBeginPos+apath_ref_length(localPath));
+
+    local.interval.range.set_range(localBeginPos,localEndPos);
+
+    // remote read:
+    remote.isFwdStrand = localRead.is_mate_fwd_strand();
+    remote.readSize = local.readSize;
+    remote.interval.tid = localRead.mate_target_id();
+    const pos_t remoteBeginPos(localRead.mate_pos()-1);
+
+    // approximate end-point of remote read:
+    const pos_t remoteEndPos(remoteBeginPos+localRead.read_size());
+
+    remote.interval.range.set_range(remoteBeginPos,remoteEndPos);
+}
+
+
+
+static
+void
+getFragInfo(
+    const SVCandidateSetReadPair& pair,
+    SpanReadInfo& read1,
+    SpanReadInfo& read2)
+{
+    using namespace ALIGNPATH;
+
+    if (pair.read1.isSet())
+    {
+        getFragInfo(pair.read1.bamrec, read1, read2);
+
+        if (pair.read2.isSet())
+        {
+            const bam_record& bamRead2(pair.read2.bamrec);
+
+            read2.readSize = bamRead2.read_size();
+
+            // get cigar:
+            path_t apath2;
+            bam_cigar_to_apath(bamRead2.raw_cigar(), bamRead2.n_cigar(), apath2);
+
+            read2.interval.range.set_end_pos(read2.interval.range.begin_pos() + apath_ref_length(apath2));
+        }
+    }
+    else if(pair.read2.isSet())
+    {
+        getFragInfo(pair.read2.bamrec, read2, read1);
+    }
+    else
+    {
+        assert(false && "Neither fragment read found");
+    }
+}
+
+
+
+struct SpanTerminal
+{
+    SpanTerminal() :
+        tid(0),
+        pos(0),
+        isFwd(true),
+        readSize(0)
+    {}
+
+    int32_t tid;
+    pos_t pos;
+    bool isFwd;
+    unsigned readSize;
+};
+
+
+
+static
+void
+getTerminal(
+    const SpanReadInfo& rinfo,
+    SpanTerminal& fterm)
+{
+    fterm.tid = rinfo.interval.tid;
+    fterm.isFwd = rinfo.isFwdStrand;
+    fterm.pos = ( fterm.isFwd ? rinfo.interval.range.begin_pos() : rinfo.interval.range.end_pos() );
+    fterm.readSize = rinfo.readSize;
+}
+
+
+
+/// double check that a read-pair supports an sv, and if so what is the fragment length prob?
+static
+void
+getFragProb(
+    const PairOptions& pairOpt,
+    const SVCandidate& sv,
+    const SVCandidateSetReadPair& pair,
+    const SizeDistribution& fragDistro,
+    bool& isFragSupportSV,
+    float& fragProb)
+{
+    isFragSupportSV=false;
+    fragProb=0.;
+
+    SpanReadInfo read1;
+    SpanReadInfo read2;
+    getFragInfo(pair, read1, read2);
+
+    // define the end-points of fragment:
+    SpanTerminal frag1;
+    getTerminal(read1,frag1);
+
+    SpanTerminal frag2;
+    getTerminal(read2,frag2);
+
+    const pos_t bp1pos(sv.bp1.interval.range.center_pos());
+    const pos_t bp2pos(sv.bp2.interval.range.center_pos());
+
+    // match bp to frag
+    bool isBpFragReversed(false);
+
+    if (frag1.tid != sv.bp1.interval.tid)
+    {
+        isBpFragReversed=true;
+    }
+    else if(frag1.isFwd != (sv.bp1.state == SVBreakendState::RIGHT_OPEN) )
+    {
+        isBpFragReversed=true;
+    }
+    else if((frag1.pos < frag2.pos) != (bp1pos < bp2pos))
+    {
+        isBpFragReversed=true;
+    }
+
+    if (isBpFragReversed)
+    {
+        std::swap(frag1,frag2);
+    }
+
+
+    // QC the frag/bp matchup:
+    if (frag1.tid != frag2.tid)
+    {
+        assert(frag1.tid == sv.bp1.interval.tid);
+        assert(frag2.tid == sv.bp2.interval.tid);
+    }
+    else if(frag1.isFwd != frag2.isFwd)
+    {
+        assert ( frag1.isFwd == (sv.bp1.state == SVBreakendState::RIGHT_OPEN) );
+        assert ( frag2.isFwd == (sv.bp2.state == SVBreakendState::RIGHT_OPEN) );
+    }
+    else
+    {
+        assert ( (frag1.pos < frag2.pos) == (bp1pos < bp2pos) );
+    }
+
+
+    pos_t frag1Size(bp1pos-frag1.pos);
+    if (! frag1.isFwd) frag1Size *= -1;
+
+    pos_t frag2Size(bp1pos-frag2.pos);
+    if (! frag2.isFwd) frag2Size *= -1;
+
+    if (frag1Size < std::min(pairOpt.minFragSupport, static_cast<pos_t>(frag1.readSize))) return;
+    if (frag2Size < std::min(pairOpt.minFragSupport, static_cast<pos_t>(frag2.readSize))) return;
+
+    isFragSupportSV = true;
+
+    fragProb=(fragDistro.cdf(frag1Size+frag2Size));
+    fragProb =std::min(fragProb, (1-fragProb));
+}
+
 
 
 
@@ -442,6 +657,8 @@ getSVPairSupport(
     SVScoreInfo& baseInfo,
     SVEvidence& evidence)
 {
+    static PairOptions pairOpt;
+
     const unsigned minMapQ(_readScanner.getMinMapQ());
 
     // count the read pairs supporting the alternate allele in each sample, using data we already produced during candidate generation:
@@ -451,6 +668,8 @@ getSVPairSupport(
     {
         const bool isTumor(_isAlignmentTumor[bamIndex]);
         SVSampleInfo& sample(isTumor ? baseInfo.tumor : baseInfo.normal);
+
+        const SizeDistribution& fragDistro(_readScanner.getFragSizeDistro(bamIndex));
 
         const SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
         BOOST_FOREACH(const SVCandidateSetReadPair& pair, svDataGroup)
@@ -474,12 +693,6 @@ getSVPairSupport(
             SVFragmentEvidence& fragment(evidence.getSample(isTumor)[qname]);
             SVFragmentEvidenceAllele& alt(fragment.alt);
 
-            // for all large spanning events -- we don't test for pair support of the two breakends separately -- this could be
-            // beneficial if there was an unusually large insertion associated with the event. For now we approximate that
-            // these events will mostly not have very large insertions.
-            //
-            alt.bp1.isFragmentSupport = true;
-            alt.bp2.isFragmentSupport = true;
 
             if (pair.read1.isSet())
             {
@@ -498,12 +711,29 @@ getSVPairSupport(
                 sample.alt.spanPairCount += 1;
             }
 
+
+            /// get fragment prob, and possibly withdraw fragment support based on refined sv breakend coordinates:
+            bool isFragSupportSV(false);
+            float fragProb(0);
+            getFragProb(pairOpt, sv, pair, fragDistro, isFragSupportSV, fragProb);
+
+            if (! isFragSupportSV) continue;
+
+            // for all large spanning events -- we don't test for pair support of the two breakends separately -- this could be
+            // beneficial if there was an unusually large insertion associated with the event. For now we approximate that
+            // these events will mostly not have very large insertions.
+            //
+            alt.bp1.isFragmentSupport = true;
+            alt.bp1.fragLengthProb = fragProb;
+
+            alt.bp2.isFragmentSupport = true;
+            alt.bp2.fragLengthProb = fragProb;
         }
     }
 
     // count the read pairs supporting the reference allele on each breakend in each sample:
     //
-    getSVRefPairSupport(sv, baseInfo, evidence);
+    getSVRefPairSupport(pairOpt, sv, baseInfo, evidence);
 }
 
 
@@ -623,6 +853,7 @@ getSVSplitReadSupport(
 }
 
 
+
 /// shared information gathering steps of all scoring models
 void
 SVScorer::
@@ -643,13 +874,17 @@ scoreSV(
     log_os << SVAlignInfo << "\n";
 #endif
 
-    // count the paired read fragments supporting the ref and alt alleles in each sample:
+    // count the paired-read fragments supporting the ref and alt alleles in each sample:
     //
     getSVPairSupport(svData, sv, baseInfo, evidence);
 
     // count the split reads supporting the ref and alt alleles in each sample
     //
     getSVSplitReadSupport(assemblyData, sv, baseInfo, evidence);
+
+    // compute allele likelihoods, and any other summary metric shared between all models:
+    //
+  //  getSVSupportSummary(evidence)
 }
 
 
