@@ -21,6 +21,8 @@
 
 #include <boost/serialization/singleton.hpp>
 
+#include "ChromosomeMetadata.hh"
+
 /*****************************************************************************/
 
 class ContigList : public boost::serialization::singleton<ContigList>

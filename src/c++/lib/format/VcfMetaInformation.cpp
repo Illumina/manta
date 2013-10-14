@@ -17,11 +17,17 @@
 
 /*****************************************************************************/
 
+#include <boost/format.hpp>
+#include <boost/throw_exception.hpp>
+
+#include "common/Exceptions.hh"
+using namespace illumina::common;
+
 #include "VcfMetaInformation.hh"
 
 /*****************************************************************************/
 
-struct Transform
+struct VcfTransform
 {
     static const char* type2string[];
     static const char* XmlFields[];
@@ -42,7 +48,7 @@ struct Transform
             }
             inc(r);
         }
-        BOOST_THROW_EXCEPTION(common::PostConditionException(
+        BOOST_THROW_EXCEPTION(PostConditionException(
                              (boost::format("Inexistent VcfMetainformation type: %s") % s).str() ));
         return r;
     }
@@ -50,10 +56,10 @@ struct Transform
 
 /*****************************************************************************/
 
-const char* Vcf::Transform::type2string[]
+const char* VcfTransform::type2string[]
 = {"UNDEF","Integer","Float","Flag","Character","String","UNDEF"};
 
-const char* Vcf::Transform::XmlFields[]
+const char* VcfTransform::XmlFields[]
 = {"ID","Number","Type","Description"};
 
 
@@ -106,8 +112,8 @@ void VcfMetaInformation::validateDescription(const std::string &desc) const
 
 std::istream &operator>>(std::istream &is, VcfMetaInformation &info)
 {
-//    const unsigned int bufferSize = sizeof(Vcf::Transform::XmlFields) / sizeof(Vcf::Transform::XmlFields[0]);
-    common::SplitString<','> buffer;
+//    const unsigned int bufferSize = sizeof(VcfTransform::XmlFields) / sizeof(VcfTransform::XmlFields[0]);
+    SplitString<','> buffer;
     if ('<' == is.peek())
     {
         is.ignore();
@@ -118,43 +124,43 @@ std::istream &operator>>(std::istream &is, VcfMetaInformation &info)
             BOOST_THROW_EXCEPTION(VcfException( (boost::format("Unrecognized structure in header meta-information. "
                                                                "Did not understand '<%s>'") % buffer.toString()).str() ));
         }
-        common::SplitString<'='> id(buffer[0]);
+        SplitString<'='> id(buffer[0]);
         info.setId( id[1] );
         if( 4 > buffer.size()) {
             buffer.mergeAfter( 2 );
             info.setNumber( "." );
             info.setType( NONE );
-            common::SplitString<'='> desc(buffer[1]);
+            SplitString<'='> desc(buffer[1]);
             desc.mergeAfter( 2 );
             info.setDescription( desc[1] );
         } else {
             buffer.mergeAfter( 4 );
-            common::SplitString<'='> type( buffer[2] );
-            if( 2 != type.size() || strcmp(Vcf::Transform::XmlFields[2], type[0].c_str()) )
+            SplitString<'='> type( buffer[2] );
+            if( 2 != type.size() || strcmp(VcfTransform::XmlFields[2], type[0].c_str()) )
             {
                 info.setNumber( "." );
                 info.setType( NONE );
-                common::SplitString<'='> desc(buffer[1]);
+                SplitString<'='> desc(buffer[1]);
                 info.setDescription( desc[1] + buffer[2] + buffer[3] );
             } else {
-                info.setType( Vcf::Transform::string2type( type[1] ));
-                common::SplitString<'='> number(buffer[1]);
-                if( strcmp(Vcf::Transform::XmlFields[1], number[0].c_str()) )
+                info.setType( VcfTransform::string2type( type[1] ));
+                SplitString<'='> number(buffer[1]);
+                if( strcmp(VcfTransform::XmlFields[1], number[0].c_str()) )
                 {
                     BOOST_THROW_EXCEPTION(VcfException( (boost::format("Unrecognized assignment in '%s'. "
                                                                        "Expecting '%s' as a key.")
                                                          % number.toString()
-                                                         % Vcf::Transform::XmlFields[1]).str() ));
+                                                         % VcfTransform::XmlFields[1]).str() ));
                 }
                 info.setNumber( number[1] );
-                common::SplitString<'='> desc(buffer[3]);
+                SplitString<'='> desc(buffer[3]);
                 desc.mergeAfter( 2 );
-                if( strcmp(Vcf::Transform::XmlFields[3], desc[0].c_str()) )
+                if( strcmp(VcfTransform::XmlFields[3], desc[0].c_str()) )
                 {
                     BOOST_THROW_EXCEPTION(VcfException( (boost::format("Unrecognized assignment in '%s'. "
                                                                        "Expecting '%s' as a key.")
                                                          % desc.toString()
-                                                         % Vcf::Transform::XmlFields[3]).str() ));
+                                                         % VcfTransform::XmlFields[3]).str() ));
                 }
                 info.setDescription( desc[1] );
             }
@@ -168,16 +174,16 @@ std::istream &operator>>(std::istream &is, VcfMetaInformation &info)
 
 std::ostream &operator<<(std::ostream &os, const VcfMetaInformation &info)
 {
-    os << "<" << Vcf::Transform::XmlFields[0] << "=" << info.getId();
+    os << "<" << VcfTransform::XmlFields[0] << "=" << info.getId();
 
     if ( NONE != info.getType() )
     {
-        os << "," << Vcf::Transform::XmlFields[1] << "=" << info.getNumber()
-           << "," << Vcf::Transform::XmlFields[2]
-           << "=" << Vcf::Transform::type2string[ info.getType() ];
+        os << "," << VcfTransform::XmlFields[1] << "=" << info.getNumber()
+           << "," << VcfTransform::XmlFields[2]
+           << "=" << VcfTransform::type2string[ info.getType() ];
     }
 
-    os << "," << Vcf::Transform::XmlFields[3]
+    os << "," << VcfTransform::XmlFields[3]
        << "=" << info.getDescription() << ">";
     return os;
 }

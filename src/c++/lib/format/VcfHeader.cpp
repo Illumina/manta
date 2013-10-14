@@ -42,6 +42,45 @@ void VcfHeader::clear()
 
 /*****************************************************************************/
 
+size_t VcfHeader::getContigIndex(const char *name) const
+{
+    return getIndex<ChromosomeMetadata>("contig", chrList_, name);
+}
+
+/*****************************************************************************/
+
+size_t VcfHeader::getInfoIndex(const char *name) const
+{
+    return getIndex<VcfMetaInformation>( VcfFields::FIXED[7],
+                                         infoList_, name );
+}
+
+/*****************************************************************************/
+
+size_t VcfHeader::getFilterIndex(const char *name) const
+{
+    return getIndex<VcfMetaInformation>( VcfFields::FIXED[6],
+                                             filterList_, name );
+}
+
+/*****************************************************************************/
+
+size_t VcfHeader::getFormatIndex(const char *name) const
+{
+    return getIndex<VcfMetaInformation>( VcfFields::GENOTYPE[0],
+                                         formatList_, name );
+}
+
+/*****************************************************************************/
+
+size_t VcfHeader::getAltIndex(const char *name) const
+{ 
+    return getIndex<VcfMetaInformation>( VcfFields::FIXED[4],
+                                         altList_, name );
+}
+
+/*****************************************************************************/
+
 template< typename T>
 size_t VcfHeader::getIndex(const char *field, const std::vector<T> &idx,
                            const char *name) const
@@ -50,7 +89,11 @@ size_t VcfHeader::getIndex(const char *field, const std::vector<T> &idx,
 
     while (it != idx.end())
     {
-        if( !strcmp(name, it->getKey()) ) return (size_t)(it - idx.begin());
+        if (!strcmp(name, it->getKey()) )
+        {
+            return (size_t)(it - idx.begin());
+        }
+
         ++it;
     }
 
@@ -67,12 +110,60 @@ std::istream &operator>>(std::istream &is, VcfHeader &vcfHeader)
 {
     std::string line("###");
     vcfHeader.clear();
-    while ( is.good() && (2 < line.size()) && ('#' == line[0]) && ('#' == line[1]) )
+    while ( is.good() && (2 < line.size())
+            && ('#' == line[0]) && ('#' == line[1]) )
     {
         do {
             std::getline(is,line);
         } while (is.good() && line.empty());
-        if(!is.good() || 2 > line.size() || '#' != line[1]) break;
+
+        if (!is.good() || 2 > line.size() || '#' != line[0]) break;
+
+        if ('#' != line[1]) {
+            // Should be the #CHROM line.
+            line = line.substr(1); // strip the leading hash.
+            SplitString<'\t'> labels(line);
+            const unsigned int numFixedFields(VcfFields::numFixedFields());
+            const unsigned int numLabels(labels.size());
+
+            if (numLabels < numFixedFields) {
+                BOOST_THROW_EXCEPTION(VcfException((boost::format("Not enough fields in labels line '%s'") % line).str()));
+            }
+
+            for (unsigned int fieldInd(0); fieldInd < numFixedFields;
+                 ++fieldInd) {
+                if (labels[fieldInd]
+                    != std::string(VcfFields::FIXED[fieldInd])) {
+                    BOOST_THROW_EXCEPTION(VcfException((boost::format("In labels line found '%s' when expecting '%s'") % (labels[fieldInd],
+                                                                                                                          VcfFields::FIXED[fieldInd])).str()));
+                }
+            }
+
+            // If have sample(s), must be preceded by format but format
+            // without sample(s) does not make sense.
+            if (numLabels > numFixedFields) {
+                if (labels[numFixedFields]
+                    != std::string(VcfFields::GENOTYPE[0])) {
+                    BOOST_THROW_EXCEPTION(VcfException((boost::format("In labels line found '%s' when expecting '%s'") % (labels[numFixedFields],
+                                                                                                                          VcfFields::GENOTYPE[0])).str()));
+                }
+
+                if (numLabels == (numFixedFields + 1)) {
+                    BOOST_THROW_EXCEPTION(VcfException((boost::format("In labels line found '%s' but no sample names") % VcfFields::GENOTYPE[0]).str()));
+                }
+
+                for (unsigned int fieldInd(numFixedFields + 1);
+                     fieldInd < numLabels; ++fieldInd) {
+                    // DEBUG
+                    // std::cerr << "Sample name `" << labels[fieldInd] << "'"
+                    //           << std::endl;
+                    vcfHeader.sampleNameList_.push_back(labels[fieldInd]);
+                }
+            }
+
+            break;
+        }
+
         size_t equalPos = line.find('=',2);
         if(std::string::npos == equalPos) continue;
         std::string key = line.substr(2,equalPos-2);

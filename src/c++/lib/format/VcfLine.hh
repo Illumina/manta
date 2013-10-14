@@ -68,6 +68,22 @@ protected:
 
 /*****************************************************************************/
 
+class Sample
+{
+public:
+    Sample() { };
+
+    const char* field(size_t fieldInd) const {
+        return fieldVec_.at(fieldInd);
+    }
+
+    std::vector<const char*> fieldVec_;
+};
+
+std::ostream& operator<<(std::ostream& ostrm, const Sample& sample);
+
+/*****************************************************************************/
+
 class VcfLine : public FileElement, public VcfLocus<unsigned int, size_t>
 {
     typedef bool (VcfLine::*ReadField)(std::string::iterator &begin,
@@ -88,7 +104,8 @@ public:
 
 public:
     // default constructor
-    VcfLine() : FileElement(), VcfLocus<unsigned int, size_t>() {}
+    VcfLine()
+        : FileElement(), VcfLocus<unsigned int, size_t>(), vcfHeader_(0) {}
 
     bool strictParsing() const
     {assert(vcfHeader_); return vcfHeader_->isStrict();}
@@ -165,8 +182,8 @@ public:
      ** \return the text of the corresponding SAMPLE, based on the FORMAT field, if present; NULL otherwise.
      ** \throw out_of_range
      **/
-    const char *getSample(size_t i) const
-    {return format_.empty() ? NULL : sample_.at(i);}
+    const char *getSampleField(size_t sampleInd, size_t fieldInd) const
+    {return format_.empty() ? NULL : sampleVec_.at(sampleInd).field(fieldInd);}
 
     /// \return INFO
     const std::string getInfo() const
@@ -183,8 +200,8 @@ public:
     }
 
     /// \return SAMPLE
-    const std::string getSample() const
-    {return cStringJoin(sample_, ":");}
+    const std::string getSample(size_t sampleInd) const
+    {return cStringJoin(sampleVec_.at(sampleInd).fieldVec_, ":");}
 
     // load the raw data from the stream. NOTE: invalidates the VcfLine
     std::istream &read(std::istream &is);
@@ -366,7 +383,7 @@ private:
      ** 
      ** Implementation note: the number of elements in the sample_ is exactly the number of FORMAT fields in the header. Fields that are not present in the current line are NULL.
      **/
-    std::vector<const char *> sample_;
+    std::vector<Sample> sampleVec_;
 
     bool spuriousHeader_;
 
@@ -385,11 +402,18 @@ private:
     //std::istream &readInfo(std::string::const_iterator &begin, const std::string::const_iterator end);
     // first optional column
     bool readFormat(std::string::iterator &begin, const std::string::iterator end);
-    bool readSample(std::string::iterator &begin, const std::string::iterator end);
+    bool readSample(unsigned int sampleInd,
+                    std::string::iterator &begin,
+                    const std::string::iterator end);
+    bool readSamples(std::string::iterator &begin,
+                     const std::string::iterator end);
 
+public:
     // TODO: these should actually belong to Dsv
     // boost::join doesn't support vectors of 'char *'
-    std::string cStringJoin(const std::vector<const char *> &v, const char *separator) const;
+    static std::string cStringJoin(const std::vector<const char *> &v, const char *separator);
+
+private:
     std::string joinByIndex(const std::vector<size_t> &idx,
                             const std::vector<VcfMetaInformation> &v,
                             const char *separator) const;

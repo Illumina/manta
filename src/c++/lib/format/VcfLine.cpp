@@ -59,7 +59,7 @@ bool validateRef(const char *ref)
     while(*ref)
     {
         // if(!genome::Nucleotide::valid( tmp )
-        if (!validReferenceBases[*ref])
+        if (!(validReferenceBases[*ref] || (*ref == '.')))
         {
             return false;
         }
@@ -157,6 +157,15 @@ void genotypeException(VcfLine *vcf, const std::string &field,
 }
 
 /*****************************************************************************/
+
+std::ostream& operator<<(std::ostream& ostrm, const Sample& sample)
+{
+    ostrm << VcfLine::cStringJoin(sample.fieldVec_, ":");
+
+    return ostrm;
+}
+
+/*****************************************************************************/
 // VcfLine
 /*****************************************************************************/
 
@@ -179,7 +188,7 @@ std::istream &VcfLine::read(std::istream &is)
         if (!readPos(is))
         {
             prettyPrint(unparsed_);
-            BOOST_THROW_EXCEPTION(VcfException( (boost::format("Failed to parse VCF position field:%s:%i")
+            BOOST_THROW_EXCEPTION(VcfException( (boost::format("Failed to parse  (read) VCF position field:%s:%i")
                                               % std::string( this->getChrom() ) % position_).str() ));
         }
         unparsed_.clear();
@@ -197,7 +206,7 @@ std::istream &VcfLine::read(std::istream &is)
         filter_.clear();
         info_.clear();
         format_.clear();
-        sample_.clear();
+        sampleVec_.clear();
     }
     return is;
 }
@@ -246,17 +255,17 @@ bool VcfLine::parse()
     if( readInfo(begin,end) )
     {
         assert(vcfHeader_);
-        if (readFormat(begin, end) && !readSample(begin, end))
+        if (readFormat(begin, end) && !readSamples(begin, end))
         {
             prettyPrint(unparsed_);
             BOOST_THROW_EXCEPTION(VcfException( (boost::format( "Failed to parse optional VCF fields: (%s:%i)")
                                               % std::string( this->getChrom() ) % position_ ).str() ));
         }
-        if(vcfHeader_->getFormatCount() != sample_.size())
+        if(vcfHeader_->getFormatCount() != sampleVec_[0].fieldVec_.size())
         {
             prettyPrint(unparsed_);
             BOOST_THROW_EXCEPTION(VcfException( (boost::format( "Number of samples inconsistent with number of formats:%i (expected %i): (%s:%i)")
-                                              % sample_.size() % vcfHeader_->getFormatCount() % std::string( this->getChrom() ) % position_ ).str() ));
+                                              % sampleVec_[0].fieldVec_.size() % vcfHeader_->getFormatCount() % std::string( this->getChrom() ) % position_ ).str() ));
         }
         if (end != begin)
         {
@@ -335,6 +344,11 @@ std::istream &VcfLine::readChrom(std::istream &is)
         chrom.push_back('\0');
 //        size_t len = chrom.size()-1;
         assert(vcfHeader_);
+
+        // DEBUG
+        // std::cerr << "vcfHeader_->hasContigList() : "
+        //           << vcfHeader_->hasContigList() << std::endl;
+
         chromosome_ = vcfHeader_->hasContigList()
                     ? vcfHeader_->getContigIndex( &chrom.front() )
                     : ContigList::get_mutable_instance().getIndex( &chrom.front() );
@@ -372,6 +386,9 @@ std::istream &VcfLine::readPos(std::istream &is)
 bool VcfLine::readId(std::string::iterator &begin,
                      const std::string::iterator end)
 {
+    // DEBUG
+    // std::cerr << "readId" << std::endl;
+
     return vcfString_.readList( begin, end, id_, &VcfLine::direct, ';',
                                 &fixedException< 2 >,
                                 false );
@@ -411,6 +428,9 @@ bool VcfLine::replaceAltIds()
 bool VcfLine::readAlt(std::string::iterator &begin,
                       const std::string::iterator end)
 {
+    // DEBUG
+    // std::cerr << "readAlt" << std::endl;
+
     return vcfString_.readList( begin, end, alt_, &VcfLine::direct, ',',
                                 &fixedException< 4 >,
                                 false );  // && replaceAltIds();
@@ -438,6 +458,10 @@ bool VcfLine::readFilter(std::string::iterator &begin,
         begin += 5;
     } else {
         assert(vcfHeader_);
+
+        // DEBUG
+        // std::cerr << "readFilter" << std::endl;
+
         return vcfBool_.readList(begin, end, filter_, &VcfLine::tautology, ';',
                                  &fixedException< 6 >,
                                  true,
@@ -452,6 +476,11 @@ bool VcfLine::readInfo(std::string::iterator &begin,
                        const std::string::iterator end)
 {
     assert(vcfHeader_);
+
+    // DEBUG
+    // std::cerr << "readInfo : vcfHeader_->getInfoCount() "
+    //           << vcfHeader_->getInfoCount() << std::endl;
+
     return vcfFullString_.readList( begin, end, info_,
                                     &VcfLine::pseudoTautology, ';',
                                     &fixedException< 7 >,
@@ -467,6 +496,7 @@ bool VcfLine::readFormat(std::string::iterator &begin,
                          const std::string::iterator end)
 {
     assert(vcfHeader_);
+
     return vcfLong_.readList( begin, end, format_,
                               &VcfLine::getFormatIndex, ':',
                               &genotypeException< 0 >,
@@ -476,15 +506,20 @@ bool VcfLine::readFormat(std::string::iterator &begin,
 
 /*****************************************************************************/
 
-bool VcfLine::readSample(std::string::iterator &begin,
+bool VcfLine::readSample(unsigned int sampleInd,
+                         std::string::iterator& begin,
                          const std::string::iterator end)
 {
     const char delimiter1 = ':';
-    sample_.clear();
+
+    std::vector<const char*>& fieldVec(sampleVec_.at(sampleInd).fieldVec_);
+    fieldVec.clear();
+
     if (end == begin)
     {
         return false;
     }
+
     const std::string::iterator origin = begin;
     begin = std::find(begin, end, vcfString_.delimiter());
     // TODO: implement proper check for the end
@@ -498,26 +533,55 @@ bool VcfLine::readSample(std::string::iterator &begin,
     else
     {
         assert(vcfHeader_);
-        sample_.resize(vcfHeader_->getFormatCount(), 0);
+        fieldVec.resize(vcfHeader_->getFormatCount(), 0);
         std::string::iterator sampleBegin = origin;
         BOOST_FOREACH(const size_t i, format_)
         {
-            sample_.at(i) = vcfString_.read(sampleBegin, end, delimiter1);
+            fieldVec.at(i) = vcfString_.read(sampleBegin, begin, delimiter1);
+
+            // DEBUG
+            // std::cerr << "readSample : fieldVec.at(" << i << ") : ["
+            //           << fieldVec.at(i) << "]" << std::endl;
+
             // TODO: implement proper check for the end
-            assert(end >= sampleBegin);
+            assert(begin >= sampleBegin);
             //++sampleBegin;
         }
         // TODO: implement proper check for the end
-        assert(end == sampleBegin);
+        assert(begin == sampleBegin);
     }
+
+    return true;
+}
+
+/*****************************************************************************/
+
+bool VcfLine::readSamples(std::string::iterator& begin,
+                          const std::string::iterator end)
+{
+    const unsigned int numSamples(vcfHeader_->numSamples());
+    sampleVec_.resize(numSamples);
+
+    for (unsigned int sampleInd(0); sampleInd < numSamples; ++sampleInd) {
+        // DEBUG
+        // std::cerr << "readSamples : sampleInd " << sampleInd << std::endl;
+
+        readSample(sampleInd, begin, end);
+
+        if (sampleInd < (numSamples - 1)) {
+            ++begin;
+        }
+    }
+
     assert(end == begin);
+
     return true;
 }
 
 /*****************************************************************************/
 
 std::string VcfLine::cStringJoin(const std::vector<const char *> &v,
-                                 const char *separator) const
+                                 const char *separator)
 {
     if (v.empty())
     {
@@ -635,8 +699,13 @@ std::ostream &operator<<(std::ostream &os, const VcfLine &vcfLine)
        << vcfLine.getQual() << "\t"
        << vcfLine.getFilter() << "\t"
        << vcfLine.getInfo() << "\t"
-       << vcfLine.getFormat() << "\t"
-       << vcfLine.getSample();
+       << vcfLine.getFormat();
+
+    BOOST_FOREACH(const Sample& sample, vcfLine.sampleVec_)
+    {
+        os << "\t" << sample;
+    }
+
     return os;
 }
 

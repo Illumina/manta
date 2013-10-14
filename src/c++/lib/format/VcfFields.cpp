@@ -23,4 +23,11 @@ const char * const VcfFields::GENOTYPE[] = {"FORMAT","SAMPLE"};
 
 /*****************************************************************************/
 
+unsigned int VcfFields::numFixedFields()
+{
+    return (sizeof(VcfFields::FIXED) / sizeof(VcfFields::FIXED[0]));
+}
+
+/*****************************************************************************/
+
 

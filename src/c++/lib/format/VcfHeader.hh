@@ -52,46 +52,27 @@ public:
     size_t getFormatCount() const {return formatList_.size();}
     size_t getAltCount() const {return altList_.size();}
 
-    size_t getContigIndex(const char *name) const
-    {
-        return getIndex<ChromosomeMetadata>("contig", chrList_, name);
-    }
+    size_t getContigIndex(const char *name) const;
 
     //size_t getInfoIndex(const std::string &name) const { 
     //    return getInfoIndex(name.c_str());}
 
-    size_t getInfoIndex(const char *name) const
-    { 
-        return getIndex<VcfMetaInformation>( VcfFields::FIXED[7],
-                                             infoList_, name );
-    }
+    size_t getInfoIndex(const char *name) const;
 
     //size_t getFilterIndex(const std::string &name) const {
     //    return getFilterIndex(name.c_str());}
 
-    size_t getFilterIndex(const char *name) const
-    {
-        return getIndex<VcfMetaInformation>( VcfFields::FIXED[6],
-                                             filterList_, name );
-    }
+    size_t getFilterIndex(const char *name) const;
 
     //size_t getFormatIndex(const std::string &name) const {
     //     return getFormatIndex(name.c_str());}
 
-    size_t getFormatIndex(const char *name) const
-    {
-        return getIndex<VcfMetaInformation>( VcfFields::GENOTYPE[0],
-                                             formatList_, name );
-    }
+    size_t getFormatIndex(const char *name) const;
 
     //size_t getAltIndex(const std::string &name) const {
     //   return getAltIndex(name.c_str());}
 
-    size_t getAltIndex(const char *name) const
-    { 
-        return getIndex<VcfMetaInformation>( VcfFields::FIXED[4],
-                                             altList_, name );
-    }
+    size_t getAltIndex(const char *name) const;
 
     const ChromosomeMetadata &getContig(size_t i) const
     { 
@@ -143,6 +124,16 @@ public:
         return altList_;
     }
 
+    const unsigned int numSamples() const
+    {
+        return sampleNameList_.size();
+    }
+
+    const std::vector<std::string> &getSampleNameList() const
+    {
+        return sampleNameList_;
+    }
+
     //size_t addContig(const ChromosomeMetadata &chr);
 
     void clear();
@@ -161,6 +152,8 @@ private:
     std::vector<VcfMetaInformation> filterList_;
     std::vector<VcfMetaInformation> formatList_;
     std::vector<VcfMetaInformation> altList_;
+
+    std::vector<std::string> sampleNameList_;
 
     bool blockCompressed_;
     bool strict_;

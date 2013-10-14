@@ -28,6 +28,7 @@
 #include "common/OutStream.hh"
 #include "manta/ReadGroupStatsSet.hh"
 #include "manta/SVCandidateAssemblyData.hh"
+#include "format/VcfFile.hh"
 #include "format/VcfWriterCandidateSV.hh"
 #include "format/VcfWriterSomaticSV.hh"
 
@@ -177,6 +178,15 @@ runGSC(
     const char* progName,
     const char* progVersion)
 {
+    // DEBUG
+    if (!opt.truthVcfFilename.empty()) {
+        VcfFile vcfFile(opt.truthVcfFilename);
+
+        Variant variant;
+
+        vcfFile.getVariant(variant);
+    }
+
     SVFinder svFind(opt);
     const SVLocusSet& cset(svFind.getSet());
 

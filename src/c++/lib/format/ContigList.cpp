@@ -17,6 +17,8 @@
 
 /*****************************************************************************/
 
+#include "blt_util/log.hh"
+
 #include "ContigList.hh"
 
 /*****************************************************************************/
@@ -25,8 +27,9 @@ inline const size_t &checkSize(const size_t &s)
 {
     if (1440 < s)
     {
-        warnOnce( "More than 1440 chromosomes found, which exceeds the count of the Ophioglossum Reticulatum fern "
-                  "(highest known chromosome number of any life form)" );
+        log_os << ( "More than 1440 chromosomes found, which exceeds the count of the Ophioglossum Reticulatum fern "
+                  "(highest known chromosome number of any life form)" )
+               << std::endl;
     }
     return s;
 }
