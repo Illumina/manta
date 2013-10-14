@@ -149,11 +149,8 @@ getSVReferenceSegments(
 {
     GenomeInterval bp1RefInterval;
     GenomeInterval bp2RefInterval;
-    std::cerr << "SV: " << sv << std::endl; 
     getBpReferenceInterval(header,extraRefEdgeSize,sv.bp1.interval,bp1RefInterval);
     getBpReferenceInterval(header,extraRefEdgeSize,sv.bp2.interval,bp2RefInterval);
-    std::cerr << "BP!: " << bp1RefInterval << std::endl;
-    std::cerr << "BP2: " << bp2RefInterval << std::endl;
 
     // allow overlap (best performance in case of breakends in opposite orientations...:
 #if 0

@@ -20,6 +20,7 @@
 
 #include "boost/serialization/string.hpp"
 #include "boost/serialization/vector.hpp"
+#include "boost/serialization/map.hpp"
 
 #include <iosfwd>
 #include <string>
@@ -59,6 +60,7 @@ struct bam_header_info
     void serialize(Archive& ar, const unsigned /* version */)
     {
         ar& chrom_data;
+        ar& chrom_to_int;
     }
 
     struct chrom_info

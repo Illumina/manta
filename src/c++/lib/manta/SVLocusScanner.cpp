@@ -281,7 +281,55 @@ getSACandidatesFromRead(
       std::vector<std::string> saDat;
       strToVec(sa, saDat, ',');
 
-      //std::cerr << "saChr string: " << saDat[0] << std::endl;
+      /*
+      std::cerr << "saChr string: '" << saDat[0]
+                << "' '" << chromToInt.count(saDat[0])
+                << "' '" << chromToInt[saDat[0]] << "'"
+                << std::endl;
+      std::string tmpChr = "chr1";
+      int32_t tmpSaChr(chromToInt[tmpChr]);
+      std::cerr << "saChr string: '" << tmpChr 
+                << "' '" << chromToInt.count(tmpChr) 
+                << "' '" << tmpSaChr << "'" 
+                << std::endl;
+
+      tmpChr = "chr10";
+      tmpSaChr = chromToInt[tmpChr];
+      std::cerr << "saChr string: '" << tmpChr 
+                << "' '" << chromToInt.count(tmpChr) 
+                << "' '" << tmpSaChr << "'" 
+                << std::endl;
+
+      tmpChr = "chr22";
+      tmpSaChr = chromToInt[tmpChr];
+      std::cerr << "saChr string: '" << tmpChr 
+                << "' '" << chromToInt.count(tmpChr) 
+                << "' '" << tmpSaChr << "'" 
+                << std::endl;
+
+      tmpChr = "chr23";
+      tmpSaChr = chromToInt[tmpChr];
+      std::cerr << "saChr string: '" << tmpChr 
+                << "' '" << chromToInt.count(tmpChr) 
+                << "' '" << tmpSaChr << "'" 
+                << std::endl;
+
+      tmpChr = "chrY";
+      tmpSaChr = chromToInt[tmpChr];
+      std::cerr << "saChr string: '" << tmpChr 
+                << "' '" << chromToInt.count(tmpChr) 
+                << "' '" << tmpSaChr << "'" 
+                << std::endl;
+
+      tmpChr = "chrM";
+      tmpSaChr = chromToInt[tmpChr];
+      std::cerr << "saChr string: '" << tmpChr 
+                << "' '" << chromToInt.count(tmpChr) 
+                << "' '" << tmpSaChr << "'" 
+                << std::endl;
+      */
+
+      assert(chromToInt.count(saDat[0]) != 0);
       int32_t saChr(chromToInt[saDat[0]]); // convert chr to int32_t via new bam header map
       //std::cerr << "saChr int32: "<< saChr << std::endl;
       //std::string saChr(saDat[0]); // convert chr to int32_t via new bam header map
