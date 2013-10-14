@@ -12,6 +12,9 @@
 *.la
 *.a
 
+# emacs
+*~
+
 # Eclipse:
 .project
 .cproject
