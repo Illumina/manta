@@ -1,19 +1,14 @@
-MANTA-41 Fails when chrom name not in [a-zA-z0-9_-]+
-MANTA-25 Partial support for BWA-MEM SA split reads
-MANTA-36 Segfault on RNA-Seq BAM input
-MANTA-20 Combined reference spanning read and split read evidence per variant
-MANTA-20 Diploid vcf produce for normal sample, genotype inference score still
-todo
-MANTA-39 prevent crash on large CIGAR deletions
-MANTA-20 split read evidence counts for all large spanning SVs
+- MANTA-41 Fails when chrom name not in [a-zA-z0-9_-]+
+- MANTA-25 Partial support for BWA-MEM SA split reads
+- MANTA-36 Segfault on RNA-Seq BAM input
+- MANTA-20 Combined reference spanning read and split read evidence per variant
+- MANTA-20 Diploid vcf output for non-tumor sample, diploid genotype inference score still todo
+- MANTA-39 prevent crash on large CIGAR deletions
+- MANTA-20 split read evidence counts for all large spanning SVs
 v0.9
-- MANTA-20 preliminary work on this branch allows assembly skip and control of
-min indel candidate size and min indel score size
-- MANTA-33 reduce SV graph ram requirement to ~1/3 of its previous value, increase all post-merge
-task memory requests.
-- MANTA-17 merged shadow reads into assembly and adjusted assembly
-parameters. Large (50+ base) insertion sensitivity improves by ~.35-.4 as a
-result.
+- MANTA-20 preliminary work on this branch allows assembly skip and control of min indel candidate size and min indel score size
+- MANTA-33 reduce SV graph ram requirement to ~1/3 of its previous value, increase all post-merge task memory requests.
+- MANTA-17 merged shadow reads into assembly and adjusted assembly parameters. Large (50+ base) insertion sensitivity improves by ~.35-.4 as a result.
 - Improvements to vcf output and cmake build.
 v0.8
 - MANTA-28 Add prototype discovery/local-assembly of small events down to 10 bases 
@@ -25,19 +20,17 @@ distribution
 - MANTA-23 enable use of pre-existing depth and stats files (for sparse bams)
 v0.7
 - Add assembly of large-event breakends and basepair resolution SV reporting
-- MANTA-19 Correctly parse large deletion reads from Isaac and incorporate this into
-discovery
+- MANTA-19 Correctly parse large deletion reads from Isaac and incorporate this into discovery
 v0.6
-Fix sensitivity problems caused by unexpected proper pair bit settings, fix
-several self-edge issues. Detect intrachrom variants down to ~2kb.
+- Fix sensitivity problems caused by unexpected proper pair bit settings, fix several self-edge issues. Detect intrachrom variants down to ~2kb.
 v0.5
-Expand POC calls to include intrachromosomal variants down to ~5kb.
-Minor modifications to method based on FFPE testing.
+- Expand POC calls to include intrachromosomal variants down to ~5kb.
+- Minor modifications to method based on FFPE testing.
 v0.4
-POC somatic transloc output
+- POC somatic transloc output
 v0.3
-POC translation of graph into candidate transloc vcf
+- POC translation of graph into candidate transloc vcf
 v0.2
-working proof of concept denoised sv locus graph
+- working proof of concept denoised sv locus graph
 v0.1
-initial prototype code tag
+- initial prototype code tag
