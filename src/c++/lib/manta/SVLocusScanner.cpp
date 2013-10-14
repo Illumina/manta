@@ -261,7 +261,7 @@ getSACandidatesFromRead(
 
     // Now we need to loop over each SA tag and set that as the end position
     static const char satag[] = {'S','A'};
-    std::string saStr(localRead.get_string_tag(satag));
+    const std::string saStr(localRead.get_string_tag(satag));
     std::vector<std::string> saVec;
     strToVec(saStr, saVec, ';');
     // For now we will only handle a single split alignment
@@ -288,44 +288,44 @@ getSACandidatesFromRead(
                 << std::endl;
       std::string tmpChr = "chr1";
       int32_t tmpSaChr(chromToInt[tmpChr]);
-      std::cerr << "saChr string: '" << tmpChr 
-                << "' '" << chromToInt.count(tmpChr) 
-                << "' '" << tmpSaChr << "'" 
+      std::cerr << "saChr string: '" << tmpChr
+                << "' '" << chromToInt.count(tmpChr)
+                << "' '" << tmpSaChr << "'"
                 << std::endl;
 
       tmpChr = "chr10";
       tmpSaChr = chromToInt[tmpChr];
-      std::cerr << "saChr string: '" << tmpChr 
-                << "' '" << chromToInt.count(tmpChr) 
-                << "' '" << tmpSaChr << "'" 
+      std::cerr << "saChr string: '" << tmpChr
+                << "' '" << chromToInt.count(tmpChr)
+                << "' '" << tmpSaChr << "'"
                 << std::endl;
 
       tmpChr = "chr22";
       tmpSaChr = chromToInt[tmpChr];
-      std::cerr << "saChr string: '" << tmpChr 
-                << "' '" << chromToInt.count(tmpChr) 
-                << "' '" << tmpSaChr << "'" 
+      std::cerr << "saChr string: '" << tmpChr
+                << "' '" << chromToInt.count(tmpChr)
+                << "' '" << tmpSaChr << "'"
                 << std::endl;
 
       tmpChr = "chr23";
       tmpSaChr = chromToInt[tmpChr];
-      std::cerr << "saChr string: '" << tmpChr 
-                << "' '" << chromToInt.count(tmpChr) 
-                << "' '" << tmpSaChr << "'" 
+      std::cerr << "saChr string: '" << tmpChr
+                << "' '" << chromToInt.count(tmpChr)
+                << "' '" << tmpSaChr << "'"
                 << std::endl;
 
       tmpChr = "chrY";
       tmpSaChr = chromToInt[tmpChr];
-      std::cerr << "saChr string: '" << tmpChr 
-                << "' '" << chromToInt.count(tmpChr) 
-                << "' '" << tmpSaChr << "'" 
+      std::cerr << "saChr string: '" << tmpChr
+                << "' '" << chromToInt.count(tmpChr)
+                << "' '" << tmpSaChr << "'"
                 << std::endl;
 
       tmpChr = "chrM";
       tmpSaChr = chromToInt[tmpChr];
-      std::cerr << "saChr string: '" << tmpChr 
-                << "' '" << chromToInt.count(tmpChr) 
-                << "' '" << tmpSaChr << "'" 
+      std::cerr << "saChr string: '" << tmpChr
+                << "' '" << chromToInt.count(tmpChr)
+                << "' '" << tmpSaChr << "'"
                 << std::endl;
       */
 
@@ -885,7 +885,7 @@ getReadBreakendsImpl(
     static const char satag[] = {'S','A'};
     if (localRead.get_string_tag(satag) != NULL)
     {
-      std::string saStr(localRead.get_string_tag(satag));
+      //std::string saStr(localRead.get_string_tag(satag));
       getSACandidatesFromRead(opt, localRead, localRead.target_id(), candidates,chromToInt);
       //std::cerr << "Found: '" << saStr << "', '" << localRead << "', UPDN: '" << upCount << ", " << dnCount << "'" << std::endl;
     }

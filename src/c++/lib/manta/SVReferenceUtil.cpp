@@ -91,11 +91,11 @@ getIntervalReferenceSegment(
 
     if (static_cast<pos_t>(intervalRefSeq.seq().size()) != (static_cast<pos_t>(range.size()))) {
       std::cerr << "INFO: " << referenceFilename
-                << ", " << chrom 
+                << ", " << chrom
                 << ", " << range.begin_pos()
                 << ", " << (range.end_pos()-1)
                 << ", " << intervalRefSeq.seq() << std::endl;
-      
+
       std::cerr << "VALS: " << static_cast<pos_t>(intervalRefSeq.seq().size())
                 << " != " << (static_cast<pos_t>(range.size())) << std:: endl;
     }
