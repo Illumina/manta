@@ -1,3 +1,4 @@
+MANTA-41 Fails when chrom name not in [a-zA-z0-9_-]+
 MANTA-36 Segfault on RNA-Seq BAM input
 MANTA-20 Combined reference spanning read and split read evidence per variant
 MANTA-20 Diploid vcf produce for normal sample, genotype inference score still

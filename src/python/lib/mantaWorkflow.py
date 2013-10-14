@@ -44,6 +44,14 @@ __version__ = getVersion()
 
 
 
+def cleanId(input_id) :
+    """
+    filter id so that it's safe to use as a pyflow indentifier
+    """
+    import re
+    return re.sub(r'([^a-zA-Z0-9_\-])', "_", input_id)
+
+
 
 class GenomeSegment(object) :
     """
@@ -58,15 +66,16 @@ class GenomeSegment(object) :
     4. chromosome segment (ie. bin) number (0-indexed)
     """
 
-    def __init__(self,chrom,beginPos,endPos,binId) :
+    def __init__(self,chromIndex,chromLabel,beginPos,endPos,binId) :
         """
         arguments are the 4 genomic interval descriptors detailed in class documentation
         """
-        self.chrom = chrom
-        self.bamRegion = chrom + ':' + str(beginPos) + '-' + str(endPos)
+        self.chromLabel = chromLabel
+        self.bamRegion = chromLabel + ':' + str(beginPos) + '-' + str(endPos)
         self.binId = binId
         self.binStr = str(binId).zfill(4)
-        self.id = chrom + "_" + self.binStr
+        self.id = chromLabel + "_" + self.binStr
+        self.pyflowId = "chromIndex_%s_%s_%s" % (str(chromIndex).zfill(4),cleanId(chromLabel),self.benStr)
 
 
 
@@ -75,8 +84,8 @@ def getNextGenomeSegment(params) :
     generator which iterates through all genomic segments and
     returns a segmentValues object for each one.
     """
-    for (chrom,beginPos,endPos,binId) in getChromIntervals(params.chromOrder,params.chromSizes,params.binSize) :
-        yield GenomeSegment(chrom,beginPos,endPos,binId)
+    for segval in getChromIntervals(params.chromOrder,params.chromSizes,params.binSize) :
+        yield GenomeSegment(*segval)
 
 
 
@@ -161,7 +170,7 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
         for bamPath in self.params.tumorBamList :
             graphCmd.extend(["--tumor-align-file",bamPath])
 
-        graphTaskLabel=preJoin(taskPrefix,"makeLocusGraph_"+gseg.id)
+        graphTaskLabel=preJoin(taskPrefix,"makeLocusGraph_"+gseg.pyflowId)
         graphTasks.add(self.addTask(graphTaskLabel,graphCmd,dependencies=dirTask,memMb=self.params.estimateMemMb))
 
     mergeCmd = [ self.params.mantaGraphMergeBin ]
