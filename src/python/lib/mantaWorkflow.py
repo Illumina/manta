@@ -75,7 +75,7 @@ class GenomeSegment(object) :
         self.binId = binId
         self.binStr = str(binId).zfill(4)
         self.id = chromLabel + "_" + self.binStr
-        self.pyflowId = "chromIndex_%s_%s_%s" % (str(chromIndex).zfill(4),cleanId(chromLabel),self.benStr)
+        self.pyflowId = "chromId_%s_%s_%s" % (str(chromIndex).zfill(3), cleanId(chromLabel), self.binStr)
 
 
 
