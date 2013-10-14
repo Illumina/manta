@@ -960,6 +960,8 @@ SVLocusScanner(
     _opt(opt),
     _dopt(opt)
 {
+    using namespace illumina::common;
+
     // pull in insert stats:
     _rss.load(statsFilename.c_str());
 
@@ -967,7 +969,14 @@ SVLocusScanner(
     BOOST_FOREACH(const std::string& alignFile, alignmentFilename)
     {
         const boost::optional<unsigned> index(_rss.getGroupIndex(alignFile));
-        assert(index);
+        if (! index)
+        {
+            std::ostringstream oss;
+            oss << "Can't find alignment file in pre-computed fragment stats.\n"
+                << "\tstatsFile: " << statsFilename << "\n"
+                << "\talignFile: " << alignFile << "\n";
+            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        }
         const ReadGroupStats rgs(_rss.getStats(*index));
 
         _stats.resize(_stats.size()+1);
