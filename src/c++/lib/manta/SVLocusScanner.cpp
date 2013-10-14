@@ -236,37 +236,37 @@ getSACandidatesFromRead(
     BOOST_FOREACH(const std::string& sa, saVec)
     {
 #ifdef DEBUG_SCANNER
-      log_os << "SA STRING: " << sa << "\n";
+        log_os << "SA STRING: " << sa << "\n";
 #endif
-      std::vector<std::string> saDat;
-      split_string(sa, ',', saDat);
+        std::vector<std::string> saDat;
+        split_string(sa, ',', saDat);
 
-      assert((saDat.size() == 6) && "Unexpected number of SA tag values");
+        assert((saDat.size() == 6) && "Unexpected number of SA tag values");
 
-      const chromMap_t::const_iterator ci(chromToIndex.find(saDat[0]));
-      assert(ci != chromToIndex.end());
+        const chromMap_t::const_iterator ci(chromToIndex.find(saDat[0]));
+        assert(ci != chromToIndex.end());
 
-      remoteAlign.tid=(ci->second); // convert chr to int32_t via new bam header map
+        remoteAlign.tid=(ci->second); // convert chr to int32_t via new bam header map
 
-      remoteAlign.pos = (illumina::blt_util::parse_int_str(saDat[1])-1);
+        remoteAlign.pos = (illumina::blt_util::parse_int_str(saDat[1])-1);
 
-      {
-          const char saStrand(saDat[2][0]); // convert to char
-          assert((saStrand=='-') || (saStrand=='+'));
-          remoteAlign.is_fwd_strand = (saStrand == '+');
-      }
+        {
+            const char saStrand(saDat[2][0]); // convert to char
+            assert((saStrand=='-') || (saStrand=='+'));
+            remoteAlign.is_fwd_strand = (saStrand == '+');
+        }
 
-      cigar_to_apath(saDat[3].c_str(), remoteAlign.path);
+        cigar_to_apath(saDat[3].c_str(), remoteAlign.path);
 
-      /*std::cerr << "SA Values: "
-                << ", " << saChr
-                << ", " << saPos
-                << ", " << saStrand
-                << ", " << remotePath << std::endl;
-      */
+        /*std::cerr << "SA Values: "
+                  << ", " << saChr
+                  << ", " << saPos
+                  << ", " << saStrand
+                  << ", " << remotePath << std::endl;
+        */
 
-      // At this point we don't care about strand
-      candidates.push_back(GetSplitSACandidate(dopt, localAlign, remoteAlign));
+        // At this point we don't care about strand
+        candidates.push_back(GetSplitSACandidate(dopt, localAlign, remoteAlign));
     }
 }
 
@@ -320,7 +320,7 @@ getSVCandidatesFromReadIndels(
             const swap_info sinfo(align.path,pathIndex);
             if ((sinfo.delete_length >= opt.minCandidateVariantSize) || (sinfo.insert_length >= opt.minCandidateVariantSize))
             {
-              candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos+sinfo.delete_length));
+                candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos+sinfo.delete_length));
             }
 
             nPathSegments = sinfo.n_seg;
@@ -333,14 +333,14 @@ getSVCandidatesFromReadIndels(
             {
                 if (ps.length >= opt.minCandidateVariantSize)
                 {
-                  candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos+ps.length));
+                    candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos+ps.length));
                 }
             }
             else if (ps.type == INSERT)
             {
                 if (ps.length >= opt.minCandidateVariantSize)
                 {
-                  candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos));
+                    candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos));
                 }
             }
         }

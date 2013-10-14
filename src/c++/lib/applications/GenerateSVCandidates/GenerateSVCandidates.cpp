@@ -270,7 +270,7 @@ runGSC(
         try
         {
             // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
-          svFind.findCandidateSV(chromToIndex, edge, svData, svs);
+            svFind.findCandidateSV(chromToIndex, edge, svData, svs);
 
             if (opt.isVerbose)
             {

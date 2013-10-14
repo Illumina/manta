@@ -103,7 +103,7 @@ add(const bam_record& bamRead,
 
     if (! bamRead.is_supplement())
     {
-      targetReadPtr->bamrec = bamRead;
+        targetReadPtr->bamrec = bamRead;
     }
 }
 

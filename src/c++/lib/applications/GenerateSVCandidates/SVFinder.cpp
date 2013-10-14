@@ -577,7 +577,7 @@ findCandidateSV(
     addSVNodeData(chromToIndex, locus,edge.nodeIndex1,edge.nodeIndex2,svData);
     if (edge.nodeIndex1 != edge.nodeIndex2)
     {
-      addSVNodeData(chromToIndex, locus,edge.nodeIndex2,edge.nodeIndex1,svData);
+        addSVNodeData(chromToIndex, locus,edge.nodeIndex2,edge.nodeIndex1,svData);
     }
 
     getCandidatesFromData(chromToIndex, svData,svs);
