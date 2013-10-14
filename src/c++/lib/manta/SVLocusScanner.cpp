@@ -13,12 +13,16 @@
 
 ///
 /// \author Chris Saunders
+/// \author Ole Schulz-Trieglaff
+/// \author Bret Barnes
 ///
 
 #include "alignment/ReadScorer.hh"
 #include "blt_util/align_path_bam_util.hh"
 #include "blt_util/align_path_util.hh"
 #include "blt_util/bam_record_util.hh"
+#include "blt_util/parse_util.hh"
+#include "blt_util/string_util.hh"
 #include "common/Exceptions.hh"
 #include "manta/SVLocusScanner.hh"
 
@@ -35,8 +39,6 @@
 #include <iostream>
 #endif
 
-unsigned int upCount = 0;
-unsigned int dnCount = 0;
 
 const float SVObservationWeights::closePairFactor(4);
 
@@ -62,11 +64,26 @@ struct SimpleAlignment
 };
 
 
+struct ChromAlignment : public SimpleAlignment
+{
+    ChromAlignment() :
+        SimpleAlignment(),
+        tid(0)
+    {}
+
+    ChromAlignment(const bam_record& bamRead) :
+        SimpleAlignment(bamRead),
+        tid(bamRead.target_id())
+    {}
+
+    int32_t tid;
+};
+
 
 static
 SVCandidate
 GetSplitSVCandidate(
-    const ReadScannerOptions& opt,
+    const ReadScannerDerivOptions& dopt,
     const int32_t alignTid,
     const pos_t leftPos,
     const pos_t rightPos,
@@ -93,61 +110,44 @@ GetSplitSVCandidate(
         remoteBreakend.state = SVBreakendState::UNKNOWN;
     }
 
-    const pos_t beforeBreakend(opt.minPairBreakendSize/2);
-    const pos_t afterBreakend(opt.minPairBreakendSize-beforeBreakend);
-
-    localBreakend.interval.range.set_begin_pos(std::max(0,leftPos-beforeBreakend));
+    localBreakend.interval.range.set_begin_pos(std::max(0,leftPos-dopt.beforeBreakend));
 
     if (! isComplex)
     {
-        localBreakend.interval.range.set_end_pos(leftPos+afterBreakend);
+        localBreakend.interval.range.set_end_pos(leftPos+dopt.afterBreakend);
     }
     else
     {
-        localBreakend.interval.range.set_end_pos(rightPos+afterBreakend);
+        localBreakend.interval.range.set_end_pos(rightPos+dopt.afterBreakend);
     }
 
-    remoteBreakend.interval.range.set_begin_pos(std::max(0,rightPos-beforeBreakend));
-    remoteBreakend.interval.range.set_end_pos(rightPos+afterBreakend);
+    remoteBreakend.interval.range.set_begin_pos(std::max(0,rightPos-dopt.beforeBreakend));
+    remoteBreakend.interval.range.set_end_pos(rightPos+dopt.afterBreakend);
 
     return sv;
 }
 
-// determine if reads is open ended upstream or down stream
+
+
+/// determine if reads is open ended upstream or down stream
 static
-bool isCigarUpstream(const ALIGNPATH::path_t& align)
+bool
+isCigarUpstream(
+    const ALIGNPATH::path_t& align)
 {
     using namespace ALIGNPATH;
-  if (apath_read_lead_size(align) > apath_read_trail_size(align)) return true;
-  return(false);
+    return (apath_read_lead_size(align) > apath_read_trail_size(align));
 }
 
 
 
-/// get SV candidates from indels in the read alignment
 static
-SVCandidate
-GetSplitSACandidate(
-    const ReadScannerOptions& opt,
-    const int32_t alignTidLocal,
-    const int32_t alignTidRemote,
-    const pos_t leftPos,
-    const pos_t rightPos,
-    const char strandLocal,
-    const char strandRemote,
-    const ALIGNPATH::path_t& localPath,
-    const ALIGNPATH::path_t& remotePath)
+void
+updateSABreakend(
+    const ReadScannerDerivOptions& dopt,
+    const ChromAlignment& align,
+    SVBreakend& breakend)
 {
-  using namespace illumina::common;
-    using namespace ALIGNPATH;
-
-    SVCandidate sv;
-    SVBreakend& localBreakend(sv.bp1);
-    SVBreakend& remoteBreakend(sv.bp2);
-
-    localBreakend.splitCount++;
-    remoteBreakend.splitCount++;
-
     // Need to use the match descriptors to determine if
     //  we are upstream clipped or downstream clipped. We
     //  also then need to use the strand. Below is the logic
@@ -157,113 +157,72 @@ GetSplitSACandidate(
     // DownStream & +  => RIGHT_OPEN
     // DownStream & -  => LEFT_OPEN
     //
-    bool localUpstream(isCigarUpstream(localPath));
-    bool remoteUpstream(isCigarUpstream(remotePath));
-    if (localUpstream && strandLocal == '+') {
-      localBreakend.state = SVBreakendState::LEFT_OPEN;
-      upCount++;
-    } else if (localUpstream && strandLocal == '-') {
-      localBreakend.state = SVBreakendState::RIGHT_OPEN;
-      upCount++;
-    } else if (! localUpstream && strandLocal == '+') {
-      localBreakend.state = SVBreakendState::RIGHT_OPEN;
-      dnCount++;
-    } else if (! localUpstream && strandLocal == '-') {
-      localBreakend.state = SVBreakendState::LEFT_OPEN;
-      dnCount++;
-    } else {
-      std::ostringstream oss;
-      oss << "Unexpected breakend pattern proposed from local bam record.\n"
-          << "\tlocal_breakend: " << localPath << "\n"
-          << "\tlocal strand: " << strandLocal << "\n";
-      BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+
+    const bool isUpstream(isCigarUpstream(align.path));
+
+    if (isUpstream == align.is_fwd_strand)
+    {
+        breakend.state = SVBreakendState::LEFT_OPEN;
+    }
+    else
+    {
+        breakend.state = SVBreakendState::RIGHT_OPEN;
     }
 
-    if (remoteUpstream && strandRemote == '+') {
-      remoteBreakend.state = SVBreakendState::LEFT_OPEN;
-      upCount++;
-    } else if (remoteUpstream && strandRemote == '-') {
-      remoteBreakend.state = SVBreakendState::RIGHT_OPEN;
-      upCount++;
-    } else if (! remoteUpstream && strandRemote == '+') {
-      remoteBreakend.state = SVBreakendState::RIGHT_OPEN;
-      dnCount++;
-    } else if (! remoteUpstream && strandRemote == '-') {
-      remoteBreakend.state = SVBreakendState::LEFT_OPEN;
-      dnCount++;
-    } else {
-      std::ostringstream oss;
-      oss << "Unexpected breakend pattern proposed from remote bam record.\n"
-          << "\tremote_breakend: " << remotePath << "\n"
-          << "\tremote strand: " << strandRemote << "\n";
-      BOOST_THROW_EXCEPTION(LogicException(oss.str()));
-    }
+    breakend.interval.tid = align.tid;
+    breakend.interval.range.set_begin_pos(std::max(0,align.pos-dopt.beforeBreakend));
+    breakend.interval.range.set_end_pos(align.pos+dopt.afterBreakend);
+}
 
-    // Set chromosomes
-    localBreakend.interval.tid = alignTidLocal;
-    remoteBreakend.interval.tid = alignTidRemote;
 
-    const pos_t beforeBreakend(opt.minPairBreakendSize/2);
-    const pos_t afterBreakend(opt.minPairBreakendSize-beforeBreakend);
 
-    localBreakend.interval.range.set_begin_pos(std::max(0,leftPos-beforeBreakend));
-    localBreakend.interval.range.set_end_pos(leftPos+afterBreakend);
+/// get SV candidates from indels in the read alignment
+static
+SVCandidate
+GetSplitSACandidate(
+    const ReadScannerDerivOptions& dopt,
+    const ChromAlignment& localAlign,
+    const ChromAlignment& remoteAlign)
+{
+    SVCandidate sv;
 
-    remoteBreakend.interval.range.set_begin_pos(std::max(0,rightPos-beforeBreakend));
-    remoteBreakend.interval.range.set_end_pos(rightPos+afterBreakend);
+    sv.bp1.splitCount++;
+    sv.bp2.splitCount++;
+
+    updateSABreakend(dopt, localAlign, sv.bp1);
+    updateSABreakend(dopt, remoteAlign, sv.bp2);
 
     return sv;
 }
 
-static
-void strToVec(const std::string& line,
-              std::vector<std::string>& data,
-              char sep = '\t')
-{
-  // Ensure data is clean
-  data.clear();
 
-  std::string::size_type prevIndex = 0;
-  std::string::size_type currIndex = line.find_first_of(sep);
-  int idx = 0;
-  while(currIndex != std::string::npos)
-  {
-    data.push_back(line.substr(prevIndex, currIndex - prevIndex));
 
-    prevIndex = currIndex+1;
-    currIndex = line.find_first_of(sep, prevIndex);
-    idx++;
-  }
-  if (prevIndex > 0 && line.length() - prevIndex > 0) {
-    data.push_back(line.substr(prevIndex, line.length() - prevIndex));
-  }
-}
+typedef std::map<std::string, int32_t> chromMap_t;
+
 
 
 static
 void
 getSACandidatesFromRead(
-    const ReadScannerOptions& opt,
+    const ReadScannerDerivOptions& dopt,
     const bam_record& localRead,
-    const int32_t alignTid,
-    std::vector<SVCandidate>& candidates,
-    std::map<std::string, int32_t>& chromToInt)
+    const ChromAlignment& localAlign,
+    const chromMap_t& chromToIndex,
+    std::vector<SVCandidate>& candidates)
 {
     using namespace ALIGNPATH;
 
-    ALIGNPATH::path_t localPath;
-    bam_cigar_to_apath(localRead.raw_cigar(),localRead.n_cigar(),localPath);
+    std::vector<std::string> saVec;
+    {
+        static const char satag[] = {'S','A'};
+        const char* saStr(localRead.get_string_tag(satag));
+        if (NULL == saStr) return;
 
-    char localStrand('-');
-    if (localRead.is_fwd_strand()) {
-      localStrand = '+';
+        split_string(saStr, ';', saVec);
     }
 
-    // Now we need to loop over each SA tag and set that as the end position
-    static const char satag[] = {'S','A'};
-    const std::string saStr(localRead.get_string_tag(satag));
-    std::vector<std::string> saVec;
-    strToVec(saStr, saVec, ';');
+    ChromAlignment remoteAlign;
+
     // For now we will only handle a single split alignment
     //  In the future we will need to sort the SA tags by order on of segements on
     //   the actual template.
@@ -273,97 +232,42 @@ getSACandidatesFromRead(
     //std::cerr << "Size: " << saVec.size() << std::endl;
 
     if (saVec.size() > 1) return;
-    pos_t refHeadPos(localRead.pos());
 
     BOOST_FOREACH(const std::string& sa, saVec)
     {
-      //std::cerr << "SA STRING: " << sa << std::endl;
+#ifdef DEBUG_SCANNER
+      log_os << "SA STRING: " << sa << "\n";
+#endif
       std::vector<std::string> saDat;
-      strToVec(sa, saDat, ',');
+      split_string(sa, ',', saDat);
 
-      /*
-      std::cerr << "saChr string: '" << saDat[0]
-                << "' '" << chromToInt.count(saDat[0])
-                << "' '" << chromToInt[saDat[0]] << "'"
-                << std::endl;
-      std::string tmpChr = "chr1";
-      int32_t tmpSaChr(chromToInt[tmpChr]);
-      std::cerr << "saChr string: '" << tmpChr
-                << "' '" << chromToInt.count(tmpChr)
-                << "' '" << tmpSaChr << "'"
-                << std::endl;
+      assert((saDat.size() == 6) && "Unexpected number of SA tag values");
 
-      tmpChr = "chr10";
-      tmpSaChr = chromToInt[tmpChr];
-      std::cerr << "saChr string: '" << tmpChr
-                << "' '" << chromToInt.count(tmpChr)
-                << "' '" << tmpSaChr << "'"
-                << std::endl;
+      const chromMap_t::const_iterator ci(chromToIndex.find(saDat[0]));
+      assert(ci != chromToIndex.end());
 
-      tmpChr = "chr22";
-      tmpSaChr = chromToInt[tmpChr];
-      std::cerr << "saChr string: '" << tmpChr
-                << "' '" << chromToInt.count(tmpChr)
-                << "' '" << tmpSaChr << "'"
-                << std::endl;
+      remoteAlign.tid=(ci->second); // convert chr to int32_t via new bam header map
 
-      tmpChr = "chr23";
-      tmpSaChr = chromToInt[tmpChr];
-      std::cerr << "saChr string: '" << tmpChr
-                << "' '" << chromToInt.count(tmpChr)
-                << "' '" << tmpSaChr << "'"
-                << std::endl;
+      remoteAlign.pos = (illumina::blt_util::parse_int_str(saDat[1])-1);
 
-      tmpChr = "chrY";
-      tmpSaChr = chromToInt[tmpChr];
-      std::cerr << "saChr string: '" << tmpChr
-                << "' '" << chromToInt.count(tmpChr)
-                << "' '" << tmpSaChr << "'"
-                << std::endl;
+      {
+          const char saStrand(saDat[2][0]); // convert to char
+          assert((saStrand=='-') || (saStrand=='+'));
+          remoteAlign.is_fwd_strand = (saStrand == '+');
+      }
 
-      tmpChr = "chrM";
-      tmpSaChr = chromToInt[tmpChr];
-      std::cerr << "saChr string: '" << tmpChr
-                << "' '" << chromToInt.count(tmpChr)
-                << "' '" << tmpSaChr << "'"
-                << std::endl;
-      */
-
-      assert(chromToInt.count(saDat[0]) != 0);
-      int32_t saChr(chromToInt[saDat[0]]); // convert chr to int32_t via new bam header map
-      //std::cerr << "saChr int32: "<< saChr << std::endl;
-      //std::string saChr(saDat[0]); // convert chr to int32_t via new bam header map
-      pos_t saPos(atoi(saDat[1].c_str())); // convert to pos_t
-      const char saStrand(saDat[2][0]); // convert to char
-      std::string saMd(saDat[3]);
+      cigar_to_apath(saDat[3].c_str(), remoteAlign.path);
 
       /*std::cerr << "SA Values: "
                 << ", " << saChr
                 << ", " << saPos
                 << ", " << saStrand
-                << ", " << saMd << std::endl;
+                << ", " << remotePath << std::endl;
       */
-      ALIGNPATH::path_t remotePath;
-      cigar_to_apath(saMd.c_str(), remotePath);
 
-      //candidates.push_back(GetSplitSACandidate(opt,alignTid,refHeadPos,refHeadPos+align.path[pathIndex].length));
       // At this point we don't care about strand
-      candidates.push_back(GetSplitSACandidate(opt,alignTid,saChr,refHeadPos,saPos,localStrand,saStrand,
-                                               localPath,remotePath));
-      /*
-      std::cerr << "SA\t"
-                << localRead << ", "
-                << alignTid << ", "
-                << saChr << ", "
-                << refHeadPos << ", "
-                << saPos << ", "
-                << localStrand << ", "
-                << saStrand << ", "
-                << localPath << ", "
-                << remotePath << "." << std::endl;
-      */
+      candidates.push_back(GetSplitSACandidate(dopt, localAlign, remoteAlign));
     }
-    //std::cerr << "Done." << std::endl;
 }
 
 
@@ -372,8 +276,8 @@ static
 void
 getSVCandidatesFromReadIndels(
     const ReadScannerOptions& opt,
-    const SimpleAlignment& align,
-    const int32_t alignTid,
+    const ReadScannerDerivOptions& dopt,
+    const ChromAlignment& align,
     std::vector<SVCandidate>& candidates)
 {
     using namespace ALIGNPATH;
@@ -407,8 +311,7 @@ getSVCandidatesFromReadIndels(
                 if (ps.length >= opt.minCandidateVariantSize)
                 {
                     static const bool isComplex(true);
-                    candidates.push_back(GetSplitSVCandidate(opt,alignTid,refHeadPos,refHeadPos, isComplex));
-                    //std::cout << "SV_FRI_EDGE" << std::endl;
+                    candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos, isComplex));
                 }
             }
         }
@@ -417,8 +320,7 @@ getSVCandidatesFromReadIndels(
             const swap_info sinfo(align.path,pathIndex);
             if ((sinfo.delete_length >= opt.minCandidateVariantSize) || (sinfo.insert_length >= opt.minCandidateVariantSize))
             {
-              candidates.push_back(GetSplitSVCandidate(opt,alignTid,refHeadPos,refHeadPos+sinfo.delete_length));
-                //std::cout << "SV_FRI_SWAP" << std::endl;
+              candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos+sinfo.delete_length));
             }
 
             nPathSegments = sinfo.n_seg;
@@ -431,23 +333,21 @@ getSVCandidatesFromReadIndels(
             {
                 if (ps.length >= opt.minCandidateVariantSize)
                 {
-                  candidates.push_back(GetSplitSVCandidate(opt,alignTid,refHeadPos,refHeadPos+ps.length));
-                    //std::cout << "SV_FRI_DEL" << std::endl;
+                  candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos+ps.length));
                 }
             }
             else if (ps.type == INSERT)
             {
                 if (ps.length >= opt.minCandidateVariantSize)
                 {
-                  candidates.push_back(GetSplitSVCandidate(opt,alignTid,refHeadPos,refHeadPos));
-                    //std::cout << "SV_FRI_INS" << std::endl;
+                  candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos));
                 }
             }
         }
 
         for (unsigned i(0); i<nPathSegments; ++i)
         {
-            increment_path(align.path,pathIndex,readOffset,refHeadPos);
+            increment_path(align.path, pathIndex, readOffset, refHeadPos);
         }
     }
 }
@@ -609,14 +509,12 @@ getSVCandidatesFromReadClip(
     {
         const pos_t clipPos(bamAlign.pos);
         candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),clipPos,clipPos,isComplex));
-        //std::cout << "SV_FRC_LED" << std::endl;
     }
 
     if (trailingClipLen >= opt.minSoftClipLen)
     {
         const pos_t clipPos(bamAlign.pos + apath_ref_length(bamAlign.path));
         candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),clipPos,clipPos,isComplex));
-        //std::cout << "SV_FRC_END" << std::endl;
     }
 }
 
@@ -771,8 +669,9 @@ getSVCandidatesFromPair(
     }
 
     candidates.push_back(sv);
-    //std::cout << "SV_FPAIR" << std::endl;
 }
+
+
 
 /// get SV candidates from shadow/singleton pairs
 /// look for singletons, create candidateSV around conf. interval of shadow position
@@ -831,6 +730,8 @@ getSVCandidatesFromShadow(
 }
 #endif
 
+
+
 /// scan read record (and optionally its mate record) for SV evidence.
 //
 /// note that estimation is improved by the mate record (because we have the mate cigar string in this case)
@@ -839,25 +740,24 @@ static
 void
 getReadBreakendsImpl(
     const ReadScannerOptions& opt,
+    const ReadScannerDerivOptions& dopt,
     const SVLocusScanner::CachedReadGroupStats& rstats,
     const bam_record& localRead,
     const bam_record* remoteReadPtr,
+    const chromMap_t& chromToIndex,
     std::vector<SVCandidate>& candidates,
-    known_pos_range2& localEvidenceRange,
-    std::map<std::string, int32_t>& chromToInt)
+    known_pos_range2& localEvidenceRange)
 {
     using namespace illumina::common;
 
     /// TODO: can't handle these yet, but plan to soon:
     //if (localRead.is_mate_unmapped()) return;
 
-    /// TODO: Add SA read support -- temporarily reject all supplemental reads:
-    //if (localRead.is_supplement()) return;
-
-    const SimpleAlignment localAlign(localRead);
+    /// get soem basic derived information from the bam_record:
+    const ChromAlignment localAlign(localRead);
 
     // - process any large indels in the localRead:
-    getSVCandidatesFromReadIndels(opt, localAlign, localRead.target_id(), candidates);
+    getSVCandidatesFromReadIndels(opt, dopt, localAlign, candidates);
 
 #ifdef DEBUG_SCANNER
     static const std::string logtag("getReadBreakendsImpl");
@@ -880,20 +780,17 @@ getReadBreakendsImpl(
         getSVCandidatesFromSemiAligned(opt, localRead, localAlign, candidates);
     }
 
-    // TODO: add SA tag processing
-    //if (localRead.is_supplement())
-    static const char satag[] = {'S','A'};
-    if (localRead.get_string_tag(satag) != NULL)
-    {
-      //std::string saStr(localRead.get_string_tag(satag));
-      getSACandidatesFromRead(opt, localRead, localRead.target_id(), candidates,chromToInt);
-      //std::cerr << "Found: '" << saStr << "', '" << localRead << "', UPDN: '" << upCount << ", " << dnCount << "'" << std::endl;
-    }
+    /// - process split/SA reads:
+    getSACandidatesFromRead(dopt, localRead, localAlign, chromToIndex, candidates);
+
+#ifdef DEBUG_SCANNER
+    log_os << logtag << " post-split read candidate_size: " << candidates.size() << "\n";
+#endif
 
     // TODO: process shadow reads
     //getSVCandidatesFromShadow(opt, rstats, localRead, localAlign,remoteReadPtr,candidates);
 
-    // - process anomalous read pair relationships:
+    // - process anomalous read pairs:
     getSVCandidatesFromPair(opt, rstats, localRead, localAlign, remoteReadPtr, candidates);
 
 #ifdef DEBUG_SCANNER
@@ -960,10 +857,11 @@ static
 void
 getSVLociImpl(
     const ReadScannerOptions& opt,
+    const ReadScannerDerivOptions& dopt,
     const SVLocusScanner::CachedReadGroupStats& rstats,
     const bam_record& bamRead,
-    std::vector<SVLocus>& loci,
-    std::map<std::string, int32_t>& chromToInt)
+    const chromMap_t& chromToIndex,
+    std::vector<SVLocus>& loci)
 {
     using namespace illumina::common;
 
@@ -971,7 +869,7 @@ getSVLociImpl(
     std::vector<SVCandidate> candidates;
     known_pos_range2 localEvidenceRange;
 
-    getReadBreakendsImpl(opt, rstats, bamRead, NULL, candidates, localEvidenceRange,chromToInt);
+    getReadBreakendsImpl(opt, dopt, rstats, bamRead, NULL, chromToIndex, candidates, localEvidenceRange);
 
 #ifdef DEBUG_SCANNER
     static const std::string logtag("getSVLociImpl");
@@ -1059,7 +957,8 @@ SVLocusScanner(
     const ReadScannerOptions& opt,
     const std::string& statsFilename,
     const std::vector<std::string>& alignmentFilename) :
-    _opt(opt)
+    _opt(opt),
+    _dopt(opt)
 {
     // pull in insert stats:
     _rss.load(statsFilename.c_str());
@@ -1117,23 +1016,6 @@ isReadFiltered(const bam_record& bamRead) const
     return false;
 }
 
-bool
-SVLocusScanner::
-isClipped(const bam_record& bamRead) const
-{
-    ALIGNPATH::path_t apath;
-    bam_cigar_to_apath(bamRead.raw_cigar(),bamRead.n_cigar(),apath);
-    return is_clipped(apath);
-}
-
-unsigned
-SVLocusScanner::
-getClipLength(const bam_record& bamRead) const
-{
-    ALIGNPATH::path_t apath;
-    bam_cigar_to_apath(bamRead.raw_cigar(),bamRead.n_cigar(),apath);
-    return get_clip_len(apath);
-}
 
 
 bool
@@ -1217,13 +1099,13 @@ SVLocusScanner::
 getSVLoci(
     const bam_record& bamRead,
     const unsigned defaultReadGroupIndex,
-    std::vector<SVLocus>& loci,
-    std::map<std::string, int32_t>& chromToInt) const
+    const std::map<std::string, int32_t>& chromToIndex,
+    std::vector<SVLocus>& loci) const
 {
     loci.clear();
 
     const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);
-    getSVLociImpl(_opt, rstats, bamRead, loci, chromToInt);
+    getSVLociImpl(_opt, _dopt, rstats, bamRead, chromToIndex, loci);
 }
 
 
@@ -1234,12 +1116,12 @@ getBreakendPair(
     const bam_record& localRead,
     const bam_record* remoteReadPtr,
     const unsigned defaultReadGroupIndex,
-    std::vector<SVCandidate>& candidates,
-    std::map<std::string, int32_t>& chromToInt) const
+    const  std::map<std::string, int32_t>& chromToIndex,
+    std::vector<SVCandidate>& candidates) const
 {
     const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);
 
     // throw evidence range away in this case
     known_pos_range2 evidenceRange;
-    getReadBreakendsImpl(_opt, rstats, localRead, remoteReadPtr, candidates, evidenceRange,chromToInt);
+    getReadBreakendsImpl(_opt, _dopt, rstats, localRead, remoteReadPtr, chromToIndex, candidates, evidenceRange);
 }

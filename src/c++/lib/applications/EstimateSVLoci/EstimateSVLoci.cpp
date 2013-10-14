@@ -79,7 +79,7 @@ runESL(const ESLOptions& opt)
     const bam_header_info bamHeader(header);
     int32_t tid(0), beginPos(0), endPos(0);
     parse_bam_region(bamHeader,opt.region,tid,beginPos,endPos);
-    std::map<std::string, int32_t> chromToInt(bamHeader.chrom_to_int);
+    const std::map<std::string, int32_t>& chromToIndex(bamHeader.chrom_to_index);
 
     const GenomeInterval scanRegion(tid,beginPos,endPos);
 
@@ -107,7 +107,7 @@ runESL(const ESLOptions& opt)
         const bam_streamer& readStream(*bamStreams[current.sample_no]);
         const bam_record& read(*(readStream.get_record_ptr()));
 
-        locusFinder.update(read,current.sample_no,chromToInt);
+        locusFinder.update(read,current.sample_no,chromToIndex);
     }
 
     // finished updating:

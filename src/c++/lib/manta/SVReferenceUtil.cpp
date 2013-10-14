@@ -15,9 +15,12 @@
 /// \author Chris Saunders
 ///
 
+#include "common/Exceptions.hh"
 #include "manta/SVReferenceUtil.hh"
 
+
 #include "blt_util/samtools_fasta_util.hh"
+
 
 
 
@@ -89,18 +92,23 @@ getIntervalReferenceSegment(
     // but the ref function below takes closed-closed endpoints, so we subract one from endPos
     get_standardized_region_seq(referenceFilename, chrom, range.begin_pos(), (range.end_pos()-1), intervalRefSeq.seq());
 
-    if (static_cast<pos_t>(intervalRefSeq.seq().size()) != (static_cast<pos_t>(range.size()))) {
-      std::cerr << "INFO: " << referenceFilename
-                << ", " << chrom
-                << ", " << range.begin_pos()
-                << ", " << (range.end_pos()-1)
-                << ", " << intervalRefSeq.seq() << std::endl;
+    if (intervalRefSeq.seq().size() != range.size())
+    {
+        using namespace illumina::common;
 
-      std::cerr << "VALS: " << static_cast<pos_t>(intervalRefSeq.seq().size())
-                << " != " << (static_cast<pos_t>(range.size())) << std:: endl;
+        std::ostringstream oss;
+        oss << "getIntervalReferenceSegment: Unexpected reference sequence\n"
+            << "\t" << referenceFilename
+            << "\t" << chrom
+            << "\t" << range
+            << "\n";
+
+        oss << "\texpected_size: " << range.size()
+            << "\treturned_size: " << intervalRefSeq.seq().size()
+            << "\n";
+
+        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
     }
-
-    assert(static_cast<pos_t>(intervalRefSeq.seq().size()) == (static_cast<pos_t>(range.size())));
 }
 
 

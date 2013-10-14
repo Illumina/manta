@@ -253,8 +253,7 @@ runGSC(
         log_os << logtag << " " << cset.header << "\n";
     }
 
-    // NOTE: Need to pass in correct chromToInt (just faking for now)...
-    std::map<std::string, int32_t> chromToInt(cset.header.chrom_to_int);
+    const std::map<std::string, int32_t>& chromToIndex(cset.header.chrom_to_index);
 
     while (edger.next())
     {
@@ -271,7 +270,7 @@ runGSC(
         try
         {
             // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
-          svFind.findCandidateSV(edge, svData, svs,chromToInt);
+          svFind.findCandidateSV(chromToIndex, edge, svData, svs);
 
             if (opt.isVerbose)
             {

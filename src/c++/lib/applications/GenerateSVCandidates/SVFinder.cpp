@@ -60,14 +60,14 @@ SVFinder(const GSCOptions& opt) :
 static
 void
 addSVNodeRead(
+    const std::map<std::string, int32_t>& chromToIndex,
     const SVLocusScanner& scanner,
     const SVLocusNode& localNode,
     const SVLocusNode& remoteNode,
     const bam_record& bamRead,
     const unsigned bamIndex,
     const bool isExpectRepeat,
-    SVCandidateSetReadPairSampleGroup& svDataGroup,
-    std::map<std::string, int32_t>& chromToInt)
+    SVCandidateSetReadPairSampleGroup& svDataGroup)
 {
     if (scanner.isReadFiltered(bamRead)) return;
 
@@ -102,7 +102,7 @@ addSVNodeRead(
 
     typedef std::vector<SVLocus> loci_t;
     loci_t loci;
-    scanner.getSVLoci(bamRead,bamIndex,loci,chromToInt);
+    scanner.getSVLoci(bamRead, bamIndex, chromToIndex, loci);
 
     BOOST_FOREACH(const SVLocus& locus, loci)
     {
@@ -132,11 +132,11 @@ addSVNodeRead(
 void
 SVFinder::
 addSVNodeData(
+    const std::map<std::string, int32_t>& chromToIndex,
     const SVLocus& locus,
     const NodeIndexType localNodeIndex,
     const NodeIndexType remoteNodeIndex,
-    SVCandidateSetData& svData,
-    std::map<std::string, int32_t>& chromToInt)
+    SVCandidateSetData& svData)
 {
     // get full search interval:
     const SVLocusNode& localNode(locus.getNode(localNodeIndex));
@@ -182,7 +182,7 @@ addSVNodeData(
             const bam_record& bamRead(*(read_stream.get_record_ptr()));
 
             // test if read supports an SV on this edge, if so, add to SVData
-            addSVNodeRead(_readScanner,localNode,remoteNode,bamRead, bamIndex,isExpectRepeat,svDataGroup,chromToInt);
+            addSVNodeRead(chromToIndex,_readScanner,localNode,remoteNode,bamRead, bamIndex,isExpectRepeat,svDataGroup);
         }
         bamIndex++;
     }
@@ -384,9 +384,9 @@ consolidateOverlap(
 void
 SVFinder::
 getCandidatesFromData(
+    const std::map<std::string, int32_t>& chromToIndex,
     SVCandidateSetData& svData,
-    std::vector<SVCandidate>& svs,
-    std::map<std::string, int32_t>& chromToInt)
+    std::vector<SVCandidate>& svs)
 {
     std::vector<SVCandidate> readCandidates;
 
@@ -415,7 +415,7 @@ getCandidatesFromData(
             const bam_record* remoteBamRecPtr( remoteReadPtr->isSet() ? &(remoteReadPtr->bamrec) : NULL);
 
             readCandidates.clear();
-            _readScanner.getBreakendPair(localReadPtr->bamrec, remoteBamRecPtr, bamIndex, readCandidates,chromToInt);
+            _readScanner.getBreakendPair(localReadPtr->bamrec, remoteBamRecPtr, bamIndex, chromToIndex, readCandidates);
 
 #ifdef DEBUG_SVDATA
             log_os << "Checking pair: " << pair << "\n";
@@ -499,10 +499,10 @@ getCandidatesFromData(
 void
 SVFinder::
 findCandidateSV(
+    const std::map<std::string, int32_t>& chromToIndex,
     const EdgeInfo& edge,
     SVCandidateSetData& svData,
-    std::vector<SVCandidate>& svs,
-    std::map<std::string, int32_t>& chromToInt)
+    std::vector<SVCandidate>& svs)
 {
     svData.clear();
     svs.clear();
@@ -574,13 +574,13 @@ findCandidateSV(
     // come up with an ultra-simple model-free scoring rule: >10 obs = Q60,k else Q0
     //
 
-    addSVNodeData(locus,edge.nodeIndex1,edge.nodeIndex2,svData,chromToInt);
+    addSVNodeData(chromToIndex, locus,edge.nodeIndex1,edge.nodeIndex2,svData);
     if (edge.nodeIndex1 != edge.nodeIndex2)
     {
-      addSVNodeData(locus,edge.nodeIndex2,edge.nodeIndex1,svData,chromToInt);
+      addSVNodeData(chromToIndex, locus,edge.nodeIndex2,edge.nodeIndex1,svData);
     }
 
-    getCandidatesFromData(svData,svs,chromToInt);
+    getCandidatesFromData(chromToIndex, svData,svs);
 
     /*#ifdef DEBUG_SVDATA
         checkResult(svData,svs);
