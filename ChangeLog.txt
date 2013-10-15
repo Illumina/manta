@@ -1,3 +1,5 @@
+- MANTA-20 Add likelihood based QUAL,GQ scores to diploid output, adjust
+thresholds of somatic output to incorporate ref pairs and split reads.
 - MANTA-41 Fails when chrom name not in [a-zA-z0-9_-]+
 - MANTA-25 Partial support for BWA-MEM SA split reads
 - MANTA-36 Segfault on RNA-Seq BAM input
