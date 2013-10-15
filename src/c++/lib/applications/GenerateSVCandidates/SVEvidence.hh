@@ -17,7 +17,9 @@
 
 #pragma once
 
+#include <iosfwd>
 #include <map>
+#include <string>
 
 
 ///
@@ -56,6 +58,9 @@ struct SVFragmentEvidenceAlleleBreakendPerRead
     float splitEvidence; ///< if evaluated, what is the evidence score?
 };
 
+std::ostream&
+operator<<(std::ostream& os, const SVFragmentEvidenceAlleleBreakendPerRead& svbpr);
+
 
 /// track all support data from an individual fragment specific to an individual breakend of a single allele
 ///
@@ -78,6 +83,9 @@ struct SVFragmentEvidenceAlleleBreakend
     SVFragmentEvidenceAlleleBreakendPerRead read2; // read2 specific evidence
 };
 
+std::ostream&
+operator<<(std::ostream& os, const SVFragmentEvidenceAlleleBreakend& svbp);
+
 
 /// track all support data from an individual fragment specific to a single allele of an SV candidate
 ///
@@ -92,6 +100,10 @@ struct SVFragmentEvidenceAllele
     SVFragmentEvidenceAlleleBreakend bp1;
     SVFragmentEvidenceAlleleBreakend bp2;
 };
+
+std::ostream&
+operator<<(std::ostream& os, const SVFragmentEvidenceAllele& sval);
+
 
 
 /// store properties of the reads in a fragment which are not tightly coupled to any one allele/bp, etc....
@@ -116,6 +128,9 @@ struct SVFragmentEvidenceRead
     unsigned mapq;
 };
 
+std::ostream&
+operator<<(std::ostream& os, const SVFragmentEvidenceRead& svr);
+
 
 /// track all support data from an individual fragment specific to an SV hypothesis
 ///
@@ -136,6 +151,9 @@ struct SVFragmentEvidence
     SVFragmentEvidenceAllele alt;
     SVFragmentEvidenceAllele ref;
 };
+
+std::ostream&
+operator<<(std::ostream& os, const SVFragmentEvidence& sve);
 
 
 /// track all support data for an SV hypothesis

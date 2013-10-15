@@ -49,6 +49,13 @@ label(const index_t i)
 }
 
 inline
+const char*
+label(const unsigned i)
+{
+    return label(static_cast<const index_t>(i));
+}
+
+inline
 float
 altFraction(const index_t i)
 {

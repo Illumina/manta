@@ -37,6 +37,12 @@
 #endif
 
 
+//#define DEBUG_SCORE
+
+#ifdef DEBUG_SCORE
+#include "blt_util/log.hh"
+#endif
+
 
 SVScorer::
 SVScorer(
@@ -482,6 +488,10 @@ scoreDiploidSV(
             float fragRefLhood(1);
             float fragAltLhood(1);
 
+#ifdef DEBUG_SCORE
+            log_os << "ZZZZZZZ qname: " << val.first << " fragev: " << fragev << "\n";
+#endif
+
             /// high-quality spanning support relies on read1 and read mapping well:
             if ( fragev.read1.isObservedAnchor() && fragev.read2.isObservedAnchor())
             {
@@ -499,6 +509,16 @@ scoreDiploidSV(
                 const float reflhood(fragRefLhood * (1.-altFrac));
                 const float altlhood(fragAltLhood * altFrac);
                 loglhood[gt] += std::log(reflhood + altlhood);
+
+#ifdef DEBUG_SCORE
+                log_os << "AAAAAAAA gt/fragref/ref/fragalt/alt: "
+                       << DIPLOID_GT::label(gt)
+                       << " " << fragRefLhood
+                       << " " << reflhood
+                       << " " << fragAltLhood
+                       << " " << altlhood
+                       << "\n";
+#endif
             }
         }
 
@@ -511,11 +531,21 @@ scoreDiploidSV(
         unsigned maxGt(0);
         normalize_ln_distro(pprob, pprob+DIPLOID_GT::SIZE, maxGt);
 
+#ifdef DEBUG_SCORE
+        for(unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
+        {
+            log_os << "BBBBBBBB gt/lhood/prior/pprob: "
+                   << DIPLOID_GT::label(gt)
+                   << " " << loglhood[gt]
+                   << " " << diploidDopt.prior[gt]
+                   << " " << pprob[gt]
+                   << "\n";
+        }
+#endif
+
         diploidInfo.gt=static_cast<DIPLOID_GT::index_t>(maxGt);
         diploidInfo.altScore=error_prob_to_qphred(pprob[DIPLOID_GT::REF]);
         diploidInfo.gtScore=error_prob_to_qphred(prob_comp(pprob,pprob+DIPLOID_GT::SIZE, diploidInfo.gt));
-
-        diploidInfo.altScore=60;
     }
 
 
