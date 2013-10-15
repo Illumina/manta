@@ -177,7 +177,7 @@ modifySample(
     sampletags.push_back(std::make_pair(srTag,values));
 
     static const std::string srevTag("SREV");
-    values[0] = str( boost::format("%.2f,%.2f") % baseInfo.normal.ref.splitReadEvidence % baseInfo.normal.alt.splitReadEvidence);
+    values[0] = str( boost::format("%.1f,%.1f") % baseInfo.normal.ref.splitReadEvidence % baseInfo.normal.alt.splitReadEvidence);
     sampletags.push_back(std::make_pair(srevTag,values));
 }
 

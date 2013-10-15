@@ -472,7 +472,11 @@ scoreDiploidSV(
     SVScoreInfoDiploid& diploidInfo)
 {
     /// TODO: set this from graph data:
-    static const float chimeraRate(1e-6);
+    ///
+    /// put some more thought into this -- is this P (spurious | any old read) or P( spurious | chimera ) ??
+    /// it seems like it should be the later in the usages that really matter.
+    ///
+    static const float chimeraRate(1e-4);
     static const float chimeraComp(1.-chimeraRate);
 
     //
@@ -598,7 +602,7 @@ scoreSomaticSV(
 
         /// first check for substantial support in the normal:
         if (baseInfo.normal.alt.spanPairCount > 1) isNonzeroSomaticQuality=false;
-        if (baseInfo.normal.alt.splitReadEvidence > 2) isNonzeroSomaticQuality=false;
+        if (baseInfo.normal.alt.splitReadEvidence > 10) isNonzeroSomaticQuality=false;
 
         if (isNonzeroSomaticQuality)
         {
