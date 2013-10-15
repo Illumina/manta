@@ -31,8 +31,14 @@
 
 //#define DEBUG_SVS
 
-
 #ifdef DEBUG_SVS
+#include "blt_util/log.hh"
+#endif
+
+
+//#define DEBUG_PAIR
+
+#ifdef DEBUG_PAIR
 #include "blt_util/log.hh"
 #endif
 
@@ -388,6 +394,31 @@ getFragProb(
         std::swap(frag1,frag2);
     }
 
+#ifdef DEBUG_PAIR
+    static const std::string logtag("getFragProb: ");
+    log_os << logtag << "read1: ";
+    if (pair.read1.isSet())
+    {
+        log_os << pair.read1.bamrec << "\n";
+    }
+    else
+    {
+        log_os << "UNKNOWN\n";
+    }
+
+    log_os << logtag << "read2: ";
+    if (pair.read1.isSet())
+    {
+        log_os << pair.read2.bamrec << "\n";
+    }
+    else
+    {
+        log_os << "UNKNOWN\n";
+    }
+    log_os << logtag << "sv: " << sv << "\n";
+    log_os << logtag << "frag1: " << frag1 << "\n";
+    log_os << logtag << "frag2: " << frag2 << "\n";
+#endif
 
     // QC the frag/bp matchup:
     if (frag1.tid != frag2.tid)
@@ -411,16 +442,24 @@ getFragProb(
     pos_t frag1Size(bp1pos-frag1.pos);
     if (! frag1.isFwd) frag1Size *= -1;
 
-    pos_t frag2Size(bp1pos-frag2.pos);
+    pos_t frag2Size(bp2pos-frag2.pos);
     if (! frag2.isFwd) frag2Size *= -1;
+
+#ifdef DEBUG_PAIR
+    log_os << logtag << "frag1size,frag2size: " << frag1Size << " " << frag2Size << "\n";
+#endif
 
     if (frag1Size < std::min(pairOpt.minFragSupport, static_cast<pos_t>(frag1.readSize))) return;
     if (frag2Size < std::min(pairOpt.minFragSupport, static_cast<pos_t>(frag2.readSize))) return;
 
+
     isFragSupportSV = true;
 
-    fragProb=(fragDistro.cdf(frag1Size+frag2Size));
-    fragProb =std::min(fragProb, (1-fragProb));
+    fragProb=fragDistro.cdf(frag1Size+frag2Size);
+#ifdef DEBUG_PAIR
+    log_os << logtag << "cdf: " << fragProb << " final: " << std::min(fragProb, (1-fragProb)) << "\n";
+#endif
+    fragProb = std::min(fragProb, (1-fragProb));
 }
 
 
@@ -466,6 +505,10 @@ getSVPairSupport(
             {
                 qname = pair.read2.bamrec.qname();
             }
+
+#ifdef DEBUG_PAIR
+            log_os << "getSVPairSupport: Finding alt pair evidence for: " << qname << "\n";
+#endif
 
             SVFragmentEvidence& fragment(evidence.getSample(isTumor)[qname]);
             SVFragmentEvidenceAllele& alt(fragment.alt);
