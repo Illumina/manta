@@ -316,6 +316,14 @@ struct SpanTerminal
 };
 
 
+std::ostream&
+operator<<(std::ostream& os, const SpanTerminal& st)
+{
+    os << "tid: " << st.tid << " pos: " << st.pos << " isF: " << st.isFwd << " readSize: " << st.readSize;
+    return os;
+}
+
+
 
 static
 void
@@ -389,8 +397,9 @@ getFragProb(
     }
     else if(frag1.isFwd != frag2.isFwd)
     {
-        assert ( frag1.isFwd == (sv.bp1.state == SVBreakendState::RIGHT_OPEN) );
-        assert ( frag2.isFwd == (sv.bp2.state == SVBreakendState::RIGHT_OPEN) );
+        /// TODO:: we should be able to assert this condition with no return.. there's an occational bad read/sv matchup
+        if ( frag1.isFwd != (sv.bp1.state == SVBreakendState::RIGHT_OPEN) ) return;
+        if ( frag2.isFwd != (sv.bp2.state == SVBreakendState::RIGHT_OPEN) ) return;;
     }
     else
     {
