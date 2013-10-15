@@ -413,7 +413,7 @@ scoreSV(
 
     // compute allele likelihoods, and any other summary metric shared between all models:
     //
-  //  getSVSupportSummary(evidence)
+    //  getSVSupportSummary(evidence)
 }
 
 
@@ -427,12 +427,12 @@ incrementAlleleLhood(
     float& bpLhood)
 {
     float fragProb(0);
-    if(allele.bp1.isFragmentSupport)
+    if (allele.bp1.isFragmentSupport)
     {
         fragProb = allele.bp1.fragLengthProb;
     }
 
-    if(allele.bp2.isFragmentSupport)
+    if (allele.bp2.isFragmentSupport)
     {
         fragProb = std::max(fragProb, allele.bp2.fragLengthProb);
     }
@@ -476,7 +476,7 @@ scoreDiploidSV(
     //
     {
         float loglhood[DIPLOID_GT::SIZE];
-        for(unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
+        for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
         {
             loglhood[gt] = 0.;
         }
@@ -496,14 +496,14 @@ scoreDiploidSV(
             if ( fragev.read1.isObservedAnchor() && fragev.read2.isObservedAnchor())
             {
                 /// only add to the likelihood if the fragment "supports" at least one allele:
-                if( isAnyPairSupport(fragev) )
+                if ( isAnyPairSupport(fragev) )
                 {
                     incrementAlleleLhood(chimeraRate, chimeraComp, fragev.alt, fragAltLhood);
                     incrementAlleleLhood(chimeraRate, chimeraComp, fragev.ref, fragRefLhood);
                 }
             }
 
-            for(unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
+            for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
             {
                 const float altFrac(DIPLOID_GT::altFraction(gt));
                 const float reflhood(fragRefLhood * (1.-altFrac));
@@ -523,7 +523,7 @@ scoreDiploidSV(
         }
 
         float pprob[DIPLOID_GT::SIZE];
-        for(unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
+        for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
         {
             pprob[gt] = loglhood[gt] + diploidDopt.prior[gt];
         }
@@ -532,7 +532,7 @@ scoreDiploidSV(
         normalize_ln_distro(pprob, pprob+DIPLOID_GT::SIZE, maxGt);
 
 #ifdef DEBUG_SCORE
-        for(unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
+        for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
         {
             log_os << "BBBBBBBB gt/lhood/prior/pprob: "
                    << DIPLOID_GT::label(gt)
@@ -641,7 +641,7 @@ scoreSomaticSV(
             const bool normRefPairSupport(baseInfo.normal.ref.spanPairCount > 6);
             const bool normRefSplitSupport(baseInfo.normal.ref.splitReadEvidence > 6);
 
-            if(! (normRefPairSupport || normRefSplitSupport)) isNonzeroSomaticQuality=false;
+            if (! (normRefPairSupport || normRefSplitSupport)) isNonzeroSomaticQuality=false;
         }
 
         if (isNonzeroSomaticQuality) somaticInfo.somaticScore=60;

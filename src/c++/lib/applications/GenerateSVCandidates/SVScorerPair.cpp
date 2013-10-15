@@ -294,7 +294,7 @@ getFragInfo(
             read2.interval.range.set_end_pos(read2.interval.range.begin_pos() + apath_ref_length(apath2));
         }
     }
-    else if(pair.read2.isSet())
+    else if (pair.read2.isSet())
     {
         getFragInfo(pair.read2.bamrec, read2, read1);
     }
@@ -380,11 +380,11 @@ getFragProb(
     {
         isBpFragReversed=true;
     }
-    else if(frag1.isFwd != (sv.bp1.state == SVBreakendState::RIGHT_OPEN) )
+    else if (frag1.isFwd != (sv.bp1.state == SVBreakendState::RIGHT_OPEN) )
     {
         isBpFragReversed=true;
     }
-    else if((frag1.pos < frag2.pos) != (bp1pos < bp2pos))
+    else if ((frag1.pos < frag2.pos) != (bp1pos < bp2pos))
     {
         isBpFragReversed=true;
     }
@@ -427,7 +427,7 @@ getFragProb(
         if (frag1.tid != sv.bp1.interval.tid) return;
         if (frag2.tid != sv.bp2.interval.tid) return;
     }
-    else if(frag1.isFwd != frag2.isFwd)
+    else if (frag1.isFwd != frag2.isFwd)
     {
         /// TODO:: we should be able to assert this condition with no return.. there's an occational bad read/sv matchup
         if ( frag1.isFwd != (sv.bp1.state == SVBreakendState::RIGHT_OPEN) ) return;

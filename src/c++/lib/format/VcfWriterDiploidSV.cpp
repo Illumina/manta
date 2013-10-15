@@ -145,10 +145,14 @@ gtLabel(
     using namespace DIPLOID_GT;
     switch (id)
     {
-    case REF : return "0/0";
-    case HET : return "0/1";
-    case HOM : return "1/1";
-    default : return "";
+    case REF :
+        return "0/0";
+    case HET :
+        return "0/1";
+    case HOM :
+        return "1/1";
+    default :
+        return "";
     }
 }
 
