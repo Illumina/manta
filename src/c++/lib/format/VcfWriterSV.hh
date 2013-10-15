@@ -62,6 +62,7 @@ protected:
     void
     addHeaderInfo() const {}
 
+    virtual
     void
     addHeaderFormat() const {}
 
