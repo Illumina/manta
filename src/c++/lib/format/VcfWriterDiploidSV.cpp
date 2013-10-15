@@ -46,6 +46,7 @@ addHeaderFormat() const
 {
     _os << "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n";
     _os << "##FORMAT=<ID=GQ,Number=1,Type=Float,Description=\"Genotype Quality\">\n";
+    _os << "##FORMAT=<ID=PAIR,Number=.,Type=Integer,Description=\"Spanning paired-read support for the ref and alt alleles in the order listed\">\n";
 }
 
 
@@ -76,6 +77,7 @@ addSplitReadInfo(
 
 
 
+#if 0
 void
 VcfWriterDiploidSV::
 modifyInfo(
@@ -86,11 +88,8 @@ modifyInfo(
 
 //    infotags.push_back("SOMATIC");
 //    infotags.push_back( str(boost::format("SOMATICSCORE=%i") % modelScoreInfo.somatic.somaticScore) );
-
-    const SVScoreInfo& baseInfo(modelScoreInfo.base);
-    infotags.push_back( str(boost::format("ALT_PAIR_SUPPORT=%i") % baseInfo.normal.alt.spanPairCount) );
-    infotags.push_back( str(boost::format("REF_PAIR_SUPPORT=%i") % baseInfo.normal.ref.spanPairCount) );
 }
+#endif
 
 
 
@@ -165,6 +164,7 @@ modifySample(
 {
     assert(_modelScorePtr != NULL);
     const SVModelScoreInfo& modelScoreInfo(*_modelScorePtr);
+    const SVScoreInfo& baseInfo(modelScoreInfo.base);
 
     std::vector<std::string> values(1);
 
@@ -175,6 +175,10 @@ modifySample(
     static const std::string gqTag("GQ");
     values[0] = str( boost::format("%s") % modelScoreInfo.diploid.gtScore);
     sampletags.push_back(std::make_pair(gqTag,values));
+
+    static const std::string pairTag("PAIR");
+    values[0] = str( boost::format("%s,%s") % baseInfo.normal.ref.spanPairCount % baseInfo.normal.alt.spanPairCount);
+    sampletags.push_back(std::make_pair(pairTag,values));
 }
 
 

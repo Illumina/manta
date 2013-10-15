@@ -53,6 +53,9 @@ private:
     addHeaderInfo() const;
 
     void
+    addHeaderFormat() const;
+
+    void
     addHeaderFilters() const;
 
     void

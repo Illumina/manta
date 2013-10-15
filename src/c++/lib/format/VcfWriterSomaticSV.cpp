@@ -43,6 +43,15 @@ addHeaderInfo() const
 
 void
 VcfWriterSomaticSV::
+addHeaderFormat() const
+{
+    _os << "##FORMAT=<ID=PAIR,Number=.,Type=Integer,Description=\"Spanning paired-read support for the ref and alt alleles in the order listed\">\n";
+}
+
+
+
+void
+VcfWriterSomaticSV::
 addHeaderFilters() const
 {
     if (_isMaxDepthFilter)
@@ -79,13 +88,6 @@ modifyInfo(
 
     infotags.push_back("SOMATIC");
     infotags.push_back( str(boost::format("SOMATICSCORE=%i") % modelScoreInfo.somatic.somaticScore) );
-
-    const SVScoreInfo& baseInfo(modelScoreInfo.base);
-    infotags.push_back( str(boost::format("NORMAL_ALT_PAIR_SUPPORT=%i") % baseInfo.normal.alt.spanPairCount) );
-    infotags.push_back( str(boost::format("TUMOR_ALT_PAIR_SUPPORT=%i") % baseInfo.tumor.alt.spanPairCount) );
-
-    infotags.push_back( str(boost::format("NORMAL_REF_PAIR_SUPPORT=%i") % baseInfo.normal.ref.spanPairCount) );
-    infotags.push_back( str(boost::format("TUMOR_REF_PAIR_SUPPORT=%i") % baseInfo.tumor.ref.spanPairCount) );
 }
 
 
@@ -118,10 +120,15 @@ modifySample(
     SampleTag_t& sampletags) const
 {
     assert(_modelScorePtr != NULL);
-//    const SVModelScoreInfo& modelScoreInfo(*_modelScorePtr);
+    const SVModelScoreInfo& modelScoreInfo(*_modelScorePtr);
+    const SVScoreInfo& baseInfo(modelScoreInfo.base);
 
     std::vector<std::string> values(2);
-    sampletags.push_back(std::make_pair(".",values));
+
+    static const std::string pairTag("PAIR");
+    values[0] = str( boost::format("%s,%s") % baseInfo.normal.ref.spanPairCount % baseInfo.normal.alt.spanPairCount);
+    values[1] = str( boost::format("%s,%s") % baseInfo.tumor.ref.spanPairCount % baseInfo.tumor.alt.spanPairCount);
+    sampletags.push_back(std::make_pair(pairTag,values));
 }
 
 

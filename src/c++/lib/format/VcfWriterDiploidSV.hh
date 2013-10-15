@@ -62,9 +62,9 @@ private:
     addSplitReadInfo(
         InfoTag_t& infotags) const;
 
-    void
-    modifyInfo(
-        InfoTag_t& infotags) const;
+//    void
+//    modifyInfo(
+//        InfoTag_t& infotags) const;
 
     void
     modifySample(
