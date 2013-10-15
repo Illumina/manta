@@ -72,3 +72,6 @@ private:
     int _readNo;
 };
 
+std::ostream&
+operator<<(std::ostream& os, const ReadKey& rk);
+

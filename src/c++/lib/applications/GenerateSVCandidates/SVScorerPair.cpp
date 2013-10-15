@@ -322,12 +322,15 @@ struct SpanTerminal
 };
 
 
+#ifdef DEBUG_PAIR
+static
 std::ostream&
 operator<<(std::ostream& os, const SpanTerminal& st)
 {
     os << "tid: " << st.tid << " pos: " << st.pos << " isF: " << st.isFwd << " readSize: " << st.readSize;
     return os;
 }
+#endif
 
 
 

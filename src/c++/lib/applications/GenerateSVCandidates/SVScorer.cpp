@@ -44,6 +44,10 @@
 #endif
 
 
+const pos_t PairOptions::minFragSupport(50);
+
+
+
 SVScorer::
 SVScorer(
     const GSCOptions& opt,

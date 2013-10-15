@@ -44,7 +44,7 @@ struct PairOptions
     /// (note this definition is certain to overlap the split read definition whenever N is less than the read length
     ///
     /// for reads shorter than this length, the whole read is required...
-    static const pos_t minFragSupport = 50;
+    static const pos_t minFragSupport;
 };
 
 
