@@ -260,7 +260,7 @@ writeTransloc(
     const std::string& idPrefix,
     const bool isFirstBreakend,
     const SVCandidateSetData& /*svData*/,
-    const SVCandidateAssemblyData& adata)
+    const SVCandidateAssemblyData& /*adata*/)
 {
     const bool isImprecise(sv.isImprecise());
     const bool isBreakendRangeSameShift(sv.isBreakendRangeSameShift());
@@ -364,10 +364,6 @@ writeTransloc(
     {
         infotags.push_back("IMPRECISE");
     }
-    else if (adata.isSpanning)
-    {
-        addSplitReadInfo(infotags);
-    }
 
     if (bpArange.size() > 1)
     {
@@ -394,7 +390,7 @@ writeTransloc(
     modifyInfo(infotags);
     modifyTranslocInfo(isFirstBreakend, infotags);
 
-    modifySample(sampletags);
+    modifySample(sv, sampletags);
 
 #ifdef DEBUG_VCF
     addDebugInfo(bpA, bpB, isFirstBreakend, adata, infotags);
@@ -438,7 +434,7 @@ void
 VcfWriterSV::
 writeInvdel(
     const SVCandidate& sv,
-    const SVCandidateAssemblyData& adata,
+    const SVCandidateAssemblyData& /*adata*/,
     const std::string& label,
     const std::string& vcfId,
     const bool isIndel)
@@ -555,10 +551,6 @@ writeInvdel(
     {
         infoTags.push_back("IMPRECISE");
     }
-    else if (adata.isSpanning)
-    {
-        addSplitReadInfo(infoTags);
-    }
 
     if (bpArange.size() > 1)
     {
@@ -601,7 +593,7 @@ writeInvdel(
     }
 
     modifyInfo(infoTags);
-    modifySample(sampleTags);
+    modifySample(sv, sampleTags);
 
     // write out record:
     _os << chrom

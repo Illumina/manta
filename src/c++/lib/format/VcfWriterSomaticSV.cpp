@@ -46,6 +46,8 @@ VcfWriterSomaticSV::
 addHeaderFormat() const
 {
     _os << "##FORMAT=<ID=PAIR,Number=.,Type=Integer,Description=\"Spanning paired-read support for the ref and alt alleles in the order listed\">\n";
+    _os << "##FORMAT=<ID=SR,Number=.,Type=Integer,Description=\"Split read counts for the ref and alt alleles in the order listed\">\n";
+    _os << "##FORMAT=<ID=SREV,Number=.,Type=Float,Description=\"Split read evidence for the ref and alt alleles in the order listed\">\n";
 }
 
 
@@ -58,22 +60,6 @@ addHeaderFilters() const
     {
         _os << "##FILTER=<ID=" << _somaticOpt.maxDepthFilterLabel << ",Description=\"Normal sample site depth is greater than " << _somaticOpt.maxDepthFactor << "x the mean chromosome depth near one or both variant breakends\">\n";
     }
-}
-
-
-
-void
-VcfWriterSomaticSV::
-addSplitReadInfo(
-    std::vector<std::string>& infotags) const
-{
-    const SVScoreInfo& baseInfo(_modelScorePtr->base);
-
-    infotags.push_back( str(boost::format("NORMAL_ALT_SPLIT_READ=%i") % baseInfo.normal.alt.splitReadCount));
-    infotags.push_back( str(boost::format("TUMOR_ALT_SPLIT_READ=%i") % baseInfo.tumor.alt.splitReadCount));
-    infotags.push_back( str(boost::format("NORMAL_REF_SPLIT_READ=%i") % baseInfo.normal.ref.splitReadCount));
-    infotags.push_back( str(boost::format("TUMOR_REF_SPLIT_READ=%i") % baseInfo.tumor.ref.splitReadCount));
-
 }
 
 
@@ -117,6 +103,7 @@ modifyTranslocInfo(
 void
 VcfWriterSomaticSV::
 modifySample(
+    const SVCandidate& sv,
     SampleTag_t& sampletags) const
 {
     assert(_modelScorePtr != NULL);
@@ -126,9 +113,21 @@ modifySample(
     std::vector<std::string> values(2);
 
     static const std::string pairTag("PAIR");
-    values[0] = str( boost::format("%s,%s") % baseInfo.normal.ref.spanPairCount % baseInfo.normal.alt.spanPairCount);
-    values[1] = str( boost::format("%s,%s") % baseInfo.tumor.ref.spanPairCount % baseInfo.tumor.alt.spanPairCount);
+    values[0] = str( boost::format("%i,%i") % baseInfo.normal.ref.spanPairCount % baseInfo.normal.alt.spanPairCount);
+    values[1] = str( boost::format("%i,%i") % baseInfo.tumor.ref.spanPairCount % baseInfo.tumor.alt.spanPairCount);
     sampletags.push_back(std::make_pair(pairTag,values));
+
+    if (sv.isImprecise()) return;
+
+    static const std::string srTag("SR");
+    values[0] = str( boost::format("%i,%i") % baseInfo.normal.ref.splitReadCount % baseInfo.normal.alt.splitReadCount);
+    values[1] = str( boost::format("%i,%i") % baseInfo.tumor.ref.splitReadCount % baseInfo.tumor.alt.splitReadCount);
+    sampletags.push_back(std::make_pair(srTag,values));
+
+    static const std::string srevTag("SREV");
+    values[0] = str( boost::format("%.2f,%.2f") % baseInfo.normal.ref.splitReadEvidence % baseInfo.normal.alt.splitReadEvidence);
+    values[1] = str( boost::format("%.2f,%.2f") % baseInfo.tumor.ref.splitReadEvidence % baseInfo.tumor.alt.splitReadEvidence);
+    sampletags.push_back(std::make_pair(srevTag,values));
 }
 
 

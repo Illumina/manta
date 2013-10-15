@@ -59,10 +59,6 @@ private:
     addHeaderFilters() const;
 
     void
-    addSplitReadInfo(
-        std::vector<std::string>& infotags) const;
-
-    void
     modifyInfo(
         std::vector<std::string>& infotags) const;
 
@@ -73,6 +69,7 @@ private:
 
     void
     modifySample(
+        const SVCandidate& sv,
         SampleTag_t& sampletags) const;
 
     void

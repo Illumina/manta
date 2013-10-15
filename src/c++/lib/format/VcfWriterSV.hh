@@ -87,12 +87,6 @@ protected:
         InfoTag_t& /*infotags*/) const
     {}
 
-    virtual
-    void
-    addSplitReadInfo(
-        InfoTag_t& /*infotags*/) const
-    {}
-
     /// add info tags specific to translocations:
     virtual
     void
@@ -118,6 +112,7 @@ protected:
     virtual
     void
     modifySample(
+        const SVCandidate& /*sv*/,
         SampleTag_t& /*sampletags*/) const
     {}
 

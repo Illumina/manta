@@ -17,8 +17,6 @@
 
 #include "format/VcfWriterDiploidSV.hh"
 
-#include "boost/algorithm/string/join.hpp"
-
 
 
 void
@@ -47,6 +45,8 @@ addHeaderFormat() const
     _os << "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n";
     _os << "##FORMAT=<ID=GQ,Number=1,Type=Float,Description=\"Genotype Quality\">\n";
     _os << "##FORMAT=<ID=PAIR,Number=.,Type=Integer,Description=\"Spanning paired-read support for the ref and alt alleles in the order listed\">\n";
+    _os << "##FORMAT=<ID=SR,Number=.,Type=Integer,Description=\"Split read counts for the ref and alt alleles in the order listed\">\n";
+    _os << "##FORMAT=<ID=SREV,Number=.,Type=Float,Description=\"Split read evidence for the ref and alt alleles in the order listed\">\n";
 }
 
 
@@ -60,19 +60,6 @@ addHeaderFilters() const
         _os << "##FILTER=<ID=" << _diploidOpt.maxDepthFilterLabel << ",Description=\"Sample site depth is greater than " << _diploidOpt.maxDepthFactor << "x the mean chromosome depth near one or both variant breakends\">\n";
     }
     _os << "##FILTER=<ID=" << _diploidOpt.minGTFilterLabel << ",Description=\"GQ score is less than " << _diploidOpt.minGTScoreFilter << "\">\n";
-}
-
-
-
-void
-VcfWriterDiploidSV::
-addSplitReadInfo(
-    InfoTag_t& infotags) const
-{
-    const SVScoreInfo& baseInfo(_modelScorePtr->base);
-
-    infotags.push_back( str(boost::format("ALT_SPLIT_READ=%i") % baseInfo.normal.alt.splitReadCount));
-    infotags.push_back( str(boost::format("REF_SPLIT_READ=%i") % baseInfo.normal.ref.splitReadCount));
 }
 
 
@@ -160,6 +147,7 @@ gtLabel(
 void
 VcfWriterDiploidSV::
 modifySample(
+    const SVCandidate& sv,
     SampleTag_t& sampletags) const
 {
     assert(_modelScorePtr != NULL);
@@ -177,8 +165,18 @@ modifySample(
     sampletags.push_back(std::make_pair(gqTag,values));
 
     static const std::string pairTag("PAIR");
-    values[0] = str( boost::format("%s,%s") % baseInfo.normal.ref.spanPairCount % baseInfo.normal.alt.spanPairCount);
+    values[0] = str( boost::format("%i,%i") % baseInfo.normal.ref.spanPairCount % baseInfo.normal.alt.spanPairCount);
     sampletags.push_back(std::make_pair(pairTag,values));
+
+    if (sv.isImprecise()) return;
+
+    static const std::string srTag("SR");
+    values[0] = str( boost::format("%i,%i") % baseInfo.normal.ref.splitReadCount % baseInfo.normal.alt.splitReadCount);
+    sampletags.push_back(std::make_pair(srTag,values));
+
+    static const std::string srevTag("SREV");
+    values[0] = str( boost::format("%.2f,%.2f") % baseInfo.normal.ref.splitReadEvidence % baseInfo.normal.alt.splitReadEvidence);
+    sampletags.push_back(std::make_pair(srevTag,values));
 }
 
 

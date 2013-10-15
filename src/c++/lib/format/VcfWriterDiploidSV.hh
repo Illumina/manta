@@ -58,16 +58,13 @@ private:
     void
     addHeaderFilters() const;
 
-    void
-    addSplitReadInfo(
-        InfoTag_t& infotags) const;
-
 //    void
 //    modifyInfo(
 //        InfoTag_t& infotags) const;
 
     void
     modifySample(
+        const SVCandidate& sv,
         SampleTag_t& sampletags) const;
 
     void
