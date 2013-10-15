@@ -83,10 +83,10 @@ writeHeaderPrefix(
     /// custom INFO tags:
     _os << "##INFO=<ID=SVINSLEN,Number=.,Type=Integer,Description=\"Length of micro-insertion at event breakpoints\">\n";
     _os << "##INFO=<ID=SVINSSEQ,Number=.,Type=String,Description=\"Sequence of micro-insertion at event breakpoints\">\n";
-    _os << "##INFO=<ID=PAIR_SUPPORT,Number=1,Type=Integer,Description=\"Read pairs supporting this variant where both reads are confidently mapped\">\n";
-    _os << "##INFO=<ID=BND_PAIR_SUPPORT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at this breakend (mapping may not be confident at remote breakend)\">\n";
-    _os << "##INFO=<ID=UPSTREAM_PAIR_SUPPORT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at the upstream breakend (mapping may not be confident at downstream breakend)\">\n";
-    _os << "##INFO=<ID=DOWNSTREAM_PAIR_SUPPORT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at this downstream breakend (mapping may not be confident at upstream breakend)\">\n";
+    _os << "##INFO=<ID=PAIR_COUNT,Number=1,Type=Integer,Description=\"Read pairs supporting this variant where both reads are confidently mapped\">\n";
+    _os << "##INFO=<ID=BND_PAIR_COUNT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at this breakend (mapping may not be confident at remote breakend)\">\n";
+    _os << "##INFO=<ID=UPSTREAM_PAIR_COUNT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at the upstream breakend (mapping may not be confident at downstream breakend)\">\n";
+    _os << "##INFO=<ID=DOWNSTREAM_PAIR_COUNT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at this downstream breakend (mapping may not be confident at upstream breakend)\">\n";
 
     addHeaderInfo();
 
@@ -358,8 +358,8 @@ writeTransloc(
     // build INFO field
     infotags.push_back("SVTYPE=BND");
     infotags.push_back("MATEID="+mateId);
-    infotags.push_back( str(boost::format("BND_PAIR_SUPPORT=%i") % bpA.readCount) );
-    infotags.push_back( str(boost::format("PAIR_SUPPORT=%i") % bpA.pairCount) );
+    infotags.push_back( str(boost::format("BND_PAIR_COUNT=%i") % bpA.readCount) );
+    infotags.push_back( str(boost::format("PAIR_COUNT=%i") % bpA.pairCount) );
     if (isImprecise)
     {
         infotags.push_back("IMPRECISE");
@@ -531,9 +531,9 @@ writeInvdel(
         infoTags.push_back( str(boost::format("SVTYPE=%s") % words[0]));
         infoTags.push_back( str(boost::format("SVLEN=%i") % (-1*(endPos-pos))));
     }
-    infoTags.push_back( str(boost::format("UPSTREAM_PAIR_SUPPORT=%i") % bpA.readCount) );
-    infoTags.push_back( str(boost::format("DOWNSTREAM_PAIR_SUPPORT=%i") % bpB.readCount) );
-    infoTags.push_back( str(boost::format("PAIR_SUPPORT=%i") % bpA.pairCount) );
+    infoTags.push_back( str(boost::format("UPSTREAM_PAIR_COUNT=%i") % bpA.readCount) );
+    infoTags.push_back( str(boost::format("DOWNSTREAM_PAIR_COUNT=%i") % bpB.readCount) );
+    infoTags.push_back( str(boost::format("PAIR_COUNT=%i") % bpA.pairCount) );
 
     if (isSmallVariant)
     {
