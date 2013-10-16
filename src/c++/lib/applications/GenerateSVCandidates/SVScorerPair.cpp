@@ -359,6 +359,10 @@ getFragProb(
     bool& isFragSupportSV,
     float& fragProb)
 {
+#ifdef DEBUG_PAIR
+    static const std::string logtag("getFragProb: ");
+#endif
+
     isFragSupportSV=false;
     fragProb=0.;
 
@@ -395,10 +399,12 @@ getFragProb(
     if (isBpFragReversed)
     {
         std::swap(frag1,frag2);
+#ifdef DEBUG_PAIR
+        log_os << logtag << "swapping fragments\n";
+#endif
     }
 
 #ifdef DEBUG_PAIR
-    static const std::string logtag("getFragProb: ");
     log_os << logtag << "read1: ";
     if (pair.read1.isSet())
     {
@@ -438,7 +444,8 @@ getFragProb(
     }
     else
     {
-        assert ( (frag1.pos < frag2.pos) == (bp1pos < bp2pos) );
+        /// TODO:: we should be able to assert this condition with no return.. there's an occational bad read/sv matchup
+        if ( (frag1.pos < frag2.pos) != (bp1pos < bp2pos) ) return;
     }
 
 
