@@ -149,6 +149,24 @@ getExtendedContig(
 
 
 void
+getExtendedContig(
+    const AlignmentResult<int>& alignment,
+    const std::string& querySeq,
+    const std::string* refSeq,
+    std::string& extendedContig)
+{
+    // extend aligned refSeq to the beginning
+    const std::string alignRefSeqExt1 = refSeq->substr(0, alignment.align.beginPos);
+    // extend aligned refSeq to the end
+    const unsigned alignRefEnd = alignment.align.beginPos + apath_ref_length(alignment.align.apath);
+    const std::string alignRefSeqExt2 = refSeq->substr(alignRefEnd, (refSeq->size()-alignRefEnd));
+
+    extendedContig = alignRefSeqExt1 + querySeq + alignRefSeqExt2;
+}
+
+
+
+void
 getFwdStrandInsertSegment(
     const JumpAlignmentResult<int>& align,
     const std::string& querySeq,

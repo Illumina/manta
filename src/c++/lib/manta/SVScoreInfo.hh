@@ -51,15 +51,14 @@ struct SVAlignmentInfo
 private:
     std::string contigSeq;
     std::string revContigSeq;
+    bool bp1ContigReversed;
+    bool bp2ContigReversed;
+
 public:
     std::string bp1RefSeq;
     std::string bp2RefSeq;
     unsigned bp1ContigOffset;
     unsigned bp2ContigOffset;
-private:
-    bool bp1ContigReversed;
-    bool bp2ContigReversed;
-public:
     pos_t bp1RefOffset;
     pos_t bp2RefOffset;
 };

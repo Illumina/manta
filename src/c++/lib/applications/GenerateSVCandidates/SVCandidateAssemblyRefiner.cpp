@@ -750,6 +750,10 @@ getSmallSVAssembly(
             align1RefStrPtr->begin(), align1RefStrPtr->end(),
             alignment);
 
+        std::string extendedContig;
+        getExtendedContig(alignment, contig.seq, align1RefStrPtr, extendedContig);
+        assemblyData.extendedContigs.push_back(extendedContig);
+
         // remove candidate from consideration unless we find a sufficiently large indel with good flanking sequence:
         std::vector<std::pair<unsigned,unsigned> >& candidateSegments(assemblyData.smallSVSegments[contigIndex]);
         const bool isFilterSmallSV( isFilterSmallSVAlignment(_smallSVAligner, alignment.align.apath, _opt.scanOpt.minCandidateVariantSize, candidateSegments));
