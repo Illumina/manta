@@ -30,17 +30,15 @@ SVAlignmentInfo(
     const SVCandidate& sv,
     const SVCandidateAssemblyData& assemblyData)
 {
-    // consider 2-locus events first
-    // TODO: to add local assembly later
-
     // for imprecise SVs, split-read evidence won't be assigned
-    if ((assemblyData.isSpanning) &&
-        (!sv.isImprecise()))
-    {
-        contigSeq = assemblyData.extendedContigs[assemblyData.bestAlignmentIndex];
-        const JumpAlignmentResult<int>& alignment = assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex];
+	if (sv.isImprecise()) return;
 
-        // get offsets of breakpoints in the contig
+    if (assemblyData.isSpanning)
+    {
+        contigSeq = assemblyData.extendedContigs[sv.assemblyAlignIndex];
+        const JumpAlignmentResult<int>& alignment = assemblyData.spanningAlignments[sv.assemblyAlignIndex];
+
+        // get offsets of breakpoints in the extended contig
         const unsigned align1Size(apath_read_length(alignment.align1.apath));
         const unsigned insertSize(alignment.jumpInsertSize);
         // the beginPos of align1 is the length of reference padding in the extended contig
@@ -54,7 +52,6 @@ SVAlignmentInfo(
 
         bp1ContigReversed = assemblyData.isBp1Reversed;
         bp2ContigReversed = assemblyData.isBp2Reversed;
-
         if (bp1ContigReversed || bp2ContigReversed)
         {
             revContigSeq = reverseCompCopyStr(contigSeq);
@@ -69,6 +66,35 @@ SVAlignmentInfo(
         bp1RefOffset = sv.bp1.interval.range.begin_pos() - bp1Ref.get_offset();
         bp2RefOffset = sv.bp2.interval.range.begin_pos() - bp2Ref.get_offset();
     }
+    else
+    {
+    	// get offsets of breakpoints in the extended contig
+    	contigSeq = assemblyData.extendedContigs[assemblyData.bestAlignmentIndex];
+    	const AlignmentResult<int>& alignment = assemblyData.smallSVAlignments[sv.assemblyAlignIndex];
+    	const std::pair<unsigned, unsigned>& alignSegment = assemblyData.smallSVSegments[sv.assemblyAlignIndex][sv.assemblySegmentIndex];
+
+    	const ALIGNPATH::path_t apathTillSvStart(alignment.align.apath[0], alignment.align.apath[alignSegment.first]);
+    	const ALIGNPATH::path_t apathTillSvEnd(alignment.align.apath[0], alignment.align.apath[alignSegment.second+1]);
+
+    	//!!! debug only
+    	log_os <<"alignment path till SV starts: " << apathTillSvStart << "\n";
+    	log_os <<"alignment path till SV ends: " << apathTillSvEnd << "\n";
+
+    	// the beginPos of align is the length of reference padding in the extended contig
+    	// |ref padding| + |alignment segments|
+    	bp1ContigOffset = alignment.align.beginPos + apath_read_length(apathTillSvStart);
+    	bp2ContigOffset = alignment.align.beginPos + apath_read_length(apathTillSvEnd);
+    	bp1ContigReversed = false;
+    	bp2ContigReversed = false;
+
+    	// get reference regions
+    	// only bp1ref is used for small events
+    	const reference_contig_segment& bp1Ref = assemblyData.bp1ref;
+    	bp1RefSeq = bp1Ref.seq();
+    	// get offsets of breakpoints in the reference regions
+    	bp1RefOffset = sv.bp1.interval.range.begin_pos() - bp1Ref.get_offset();
+    	bp2RefOffset = sv.bp2.interval.range.begin_pos() - bp1Ref.get_offset();
+    }
 }
 
 
@@ -81,7 +107,8 @@ operator<<(
     os << "Contig seq\n" << ai.contigSeq << "\n";
     os << "bp1 contig offset = " << ai.bp1ContigOffset << " bp1 contig reversed = " << ai.bp1ContigReversed << "\n";
     os << "bp2 contig offset = " << ai.bp2ContigOffset << " bp2 contig reversed = " << ai.bp2ContigReversed << "\n";
-
+    os << "bp1RefSeq\n" << ai.bp1RefSeq << "\n";
+    os << "bp2RefSeq (null for small SVs)\n" << ai.bp2RefSeq << "\n";
     os << "bp1 reference offset = " << ai.bp1RefOffset << "\n";
     os << "bp2 reference offset = " << ai.bp2RefOffset << "\n";
     return os;

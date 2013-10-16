@@ -661,7 +661,8 @@ getJumpAssembly(
         // summarize usable output information in a second SVBreakend object -- this is the 'refined' sv:
         assemblyData.svs.push_back(sv);
         SVCandidate& newSV(assemblyData.svs.back());
-        newSV.assemblyIndex = 0;
+        newSV.assemblyAlignIndex = 0;
+        newSV.assemblySegmentIndex = 0;
 
         newSV.setPrecise();
 
@@ -792,12 +793,15 @@ getSmallSVAssembly(
         const SVCandidateAssemblyData::SmallAlignmentResultType& bestAlign(assemblyData.smallSVAlignments[assemblyData.bestAlignmentIndex]);
 
         const SVCandidateAssemblyData::CandidateSegmentSetType& candidateSegments(assemblyData.smallSVSegments[assemblyData.bestAlignmentIndex]);
+        unsigned segmentIndex = 0;
         BOOST_FOREACH(const SVCandidateAssemblyData::CandidateSegmentType& segRange, candidateSegments)
         {
             assemblyData.svs.push_back(sv);
             SVCandidate& newSV(assemblyData.svs.back());
-            newSV.assemblyIndex = (assemblyData.svs.size() - 1);
+            newSV.assemblyAlignIndex = assemblyData.bestAlignmentIndex;
+            newSV.assemblySegmentIndex = segmentIndex;
             setSmallCandSV(assemblyData.bp1ref, bestContig.seq, bestAlign.align, segRange, newSV);
+            segmentIndex++;
 
 #ifdef DEBUG_REFINER
             log_os << logtag << "small refined sv: " << newSV;

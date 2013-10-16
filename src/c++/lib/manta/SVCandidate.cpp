@@ -41,7 +41,9 @@ operator<<(std::ostream& os, const SVCandidate& svc)
 {
     os << "SVCandidate:\n"
        << "\tisImprecise?: " << svc.isImprecise() << "\n"
-       << "\tcandidate:assembly index: " << svc.candidateIndex << ":" << svc.assemblyIndex << "\n";
+       << "\tcandidate:assembly index: " << svc.candidateIndex
+       << ":" << svc.assemblyAlignIndex
+       << ":" << svc.assemblySegmentIndex<< "\n";
     if (! svc.isImprecise())
     {
         os << "\tAlignment: " << svc.insertAlignment << "\n"

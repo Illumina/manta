@@ -331,12 +331,7 @@ getSVSplitReadSupport(
     // apply the split-read scoring, only when:
     // 1) the SV is precise, i.e. has successful somatic contigs;
     // 2) the values of max depth are reasonable (otherwise, the read map may blow out).
-    //
-    // consider 2-locus events first
-    // TODO: to add local assembly later
-    //
     const bool isSkipSRSearch(
-        (! assemblyData.isSpanning) ||
         (sv.isImprecise()) ||
         (isSkipSRSearchDepth));
 

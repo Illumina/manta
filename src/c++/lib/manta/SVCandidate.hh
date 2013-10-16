@@ -179,7 +179,8 @@ struct SVCandidate
     SVCandidate() :
         _isImprecise(true),
         candidateIndex(0),
-        assemblyIndex(0)
+        assemblyAlignIndex(0),
+    	assemblySegmentIndex(0)
     {}
 
 #if 0
@@ -233,7 +234,8 @@ struct SVCandidate
         bp2.clear();
         insertSeq.clear();
         candidateIndex=0;
-        assemblyIndex=0;
+        assemblyAlignIndex=0;
+        assemblySegmentIndex=0;
     }
 
     void
@@ -282,7 +284,8 @@ public:
     ALIGNPATH::path_t insertAlignment;
 
     unsigned candidateIndex; // low-res candidate index number, used to generate unique SV id
-    unsigned assemblyIndex; // high-res assembly index number, used to generate unique SV id
+    unsigned assemblyAlignIndex; // high-res assembly index number of alignment, used to generate unique SV id
+    unsigned assemblySegmentIndex; // high-res assembly index number of alignment segment, used to generate unique SV id
 };
 
 
