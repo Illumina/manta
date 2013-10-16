@@ -44,9 +44,8 @@ addHeaderFormat() const
 {
     _os << "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n";
     _os << "##FORMAT=<ID=GQ,Number=1,Type=Float,Description=\"Genotype Quality\">\n";
-    _os << "##FORMAT=<ID=PAIR,Number=.,Type=Integer,Description=\"Spanning paired-read support for the ref and alt alleles in the order listed\">\n";
-    _os << "##FORMAT=<ID=SR,Number=.,Type=Integer,Description=\"Split read counts for the ref and alt alleles in the order listed\">\n";
-    _os << "##FORMAT=<ID=SREV,Number=.,Type=Float,Description=\"Split read evidence for the ref and alt alleles in the order listed\">\n";
+    _os << "##FORMAT=<ID=PR,Number=.,Type=Integer,Description=\"Spanning paired-read support for the ref and alt alleles in the order listed\">\n";
+    _os << "##FORMAT=<ID=SR,Number=.,Type=Integer,Description=\"Split reads for the ref and alt alleles in the order listed, for reads where P(allele|read)>0.999\">\n";
 }
 
 
@@ -166,25 +165,15 @@ modifySample(
     values[0] = str( boost::format("%s") % modelScoreInfo.diploid.gtScore);
     sampletags.push_back(std::make_pair(gqTag,values));
 
-    static const std::string pairTag("PAIR");
+    static const std::string pairTag("PR");
     values[0] = str( boost::format("%i,%i") % baseInfo.normal.ref.spanPairCount % baseInfo.normal.alt.spanPairCount);
     sampletags.push_back(std::make_pair(pairTag,values));
 
     if (sv.isImprecise()) return;
 
     static const std::string srTag("SR");
-    values[0] = str( boost::format("%i,%i") % baseInfo.normal.ref.splitReadCount % baseInfo.normal.alt.splitReadCount);
-    sampletags.push_back(std::make_pair(srTag,values));
-
-    static const std::string sr2Tag("SR2");
     values[0] = str( boost::format("%i,%i") % baseInfo.normal.ref.confidentSplitReadCount % baseInfo.normal.alt.confidentSplitReadCount);
-    sampletags.push_back(std::make_pair(sr2Tag,values));
-
-#if 0
-    static const std::string srevTag("SREV");
-    values[0] = str( boost::format("%.1f,%.1f") % baseInfo.normal.ref.splitReadEvidence % baseInfo.normal.alt.splitReadEvidence);
-    sampletags.push_back(std::make_pair(srevTag,values));
-#endif
+    sampletags.push_back(std::make_pair(srTag,values));
 }
 
 

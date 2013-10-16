@@ -1,3 +1,6 @@
+v0.10
+- MANTA-20 Limit split read counts to those uniquely supporting each allele,
+where P(allele|read)>0.999
 - MANTA-20 Add likelihood based QUAL,GQ scores to diploid output, adjust
 thresholds of somatic output to incorporate ref pairs and split reads.
 - MANTA-41 Fails when chrom name not in [a-zA-z0-9_-]+
