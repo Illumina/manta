@@ -24,6 +24,8 @@
 #include "SVScorer.hh"
 
 #include "blt_util/log.hh"
+#include "blt_util/bam_header_util.hh"
+
 #include "common/Exceptions.hh"
 #include "common/OutStream.hh"
 #include "manta/ReadGroupStatsSet.hh"
@@ -178,17 +180,22 @@ runGSC(
     const char* progName,
     const char* progVersion)
 {
-    // DEBUG
-    if (!opt.truthVcfFilename.empty()) {
-        VcfFile vcfFile(opt.truthVcfFilename);
-
-        Variant variant;
-
-        vcfFile.getVariant(variant);
-    }
-
     SVFinder svFind(opt);
     const SVLocusSet& cset(svFind.getSet());
+
+    if (!opt.truthVcfFilename.empty()) {
+        // FIXME : would seem better to do this before SVFinder runs but
+        // currently using its output to get the chrom name -> tid mapping.
+        std::map<std::string, int32_t> chromNameTidMap;
+        make_chrom_tid_map(cset.header, chromNameTidMap);
+
+        VcfFile vcfFile(opt.truthVcfFilename, chromNameTidMap);
+        VariantVec variantVec;
+        vcfFile.getVariantVec(variantVec);
+
+        // FIXME : implement : find intersections
+    }
+
 
     SVCandidateAssemblyRefiner svRefine(opt, cset.header);
 
