@@ -26,7 +26,11 @@ operator<<(
     std::ostream& os,
     const SVFragmentEvidenceAlleleBreakendPerRead& svbpr)
 {
-    os << "isEval: " << svbpr.isSplitEvaluated << " isSplitSupport: " << svbpr.isSplitSupport << " splitEvidence: " << svbpr.splitEvidence;
+    os << "isEval: " << svbpr.isSplitEvaluated
+       << " isSplitSupport: " << svbpr.isSplitSupport
+       << " splitEvidence: " << svbpr.splitEvidence
+       << " splitLnLhood: " << svbpr.splitLnLhood;
+
     return os;
 }
 

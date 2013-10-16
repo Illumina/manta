@@ -126,10 +126,17 @@ modifySample(
     values[1] = str( boost::format("%i,%i") % baseInfo.tumor.ref.splitReadCount % baseInfo.tumor.alt.splitReadCount);
     sampletags.push_back(std::make_pair(srTag,values));
 
+    static const std::string sr2Tag("SR2");
+    values[0] = str( boost::format("%i,%i") % baseInfo.normal.ref.confidentSplitReadCount % baseInfo.normal.alt.confidentSplitReadCount);
+    values[1] = str( boost::format("%i,%i") % baseInfo.tumor.ref.confidentSplitReadCount % baseInfo.tumor.alt.confidentSplitReadCount);
+    sampletags.push_back(std::make_pair(sr2Tag,values));
+
+#if 0
     static const std::string srevTag("SREV");
     values[0] = str( boost::format("%.1f,%.1f") % baseInfo.normal.ref.splitReadEvidence % baseInfo.normal.alt.splitReadEvidence);
     values[1] = str( boost::format("%.1f,%.1f") % baseInfo.tumor.ref.splitReadEvidence % baseInfo.tumor.alt.splitReadEvidence);
     sampletags.push_back(std::make_pair(srevTag,values));
+#endif
 }
 
 

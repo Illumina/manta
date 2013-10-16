@@ -50,12 +50,14 @@ struct SVFragmentEvidenceAlleleBreakendPerRead
     SVFragmentEvidenceAlleleBreakendPerRead() :
         isSplitEvaluated(false),
         isSplitSupport(false),
-        splitEvidence(0)
+        splitEvidence(0),
+        splitLnLhood(0)
     {}
 
     bool isSplitEvaluated; ///< have we checked this read for split support of this bp?
     bool isSplitSupport; ///< if evaluated, does this read support this allele in the bp?
     float splitEvidence; ///< if evaluated, what is the evidence score?
+    float splitLnLhood; ///< ln likelihood of best split alignment
 };
 
 std::ostream&
@@ -73,6 +75,12 @@ struct SVFragmentEvidenceAlleleBreakend
 
     SVFragmentEvidenceAlleleBreakendPerRead&
     getRead(const bool isRead1)
+    {
+        return (isRead1 ? read1 : read2);
+    }
+
+    const SVFragmentEvidenceAlleleBreakendPerRead&
+    getRead(const bool isRead1) const
     {
         return (isRead1 ? read1 : read2);
     }

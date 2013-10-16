@@ -17,8 +17,11 @@
 
 #include "SplitReadAlignment.hh"
 #include "blt_util/log.hh"
+#include "blt_util/qscore.hh"
 
 #include <cassert>
+#include <cmath>
+
 
 //#define DEBUG_SRA
 
@@ -26,22 +29,44 @@ unsigned
 SplitReadAlignment::
 calculateAlignScore(
     const std::string& querySeq,
-    const std::string& scanWindow)
+    const uint8_t* queryQual,
+    const std::string::const_iterator& scanWindowBegin,
+    const std::string::const_iterator& scanWindowEnd)
 {
+    static const float ln_one_third(std::log(1./3.));
+
     const unsigned leftSize = _alignment.get_leftSize();
     const unsigned querySize = querySeq.size();
     unsigned leftMismatches(0);
     unsigned rightMismatches(0);
 
-    for (unsigned i = 0; i<= leftSize; i++)
-        if (querySeq[i] != scanWindow[i]) leftMismatches += 1;
+    float lnLhood(0);
 
-    for (unsigned i = leftSize+1; i<querySize; i++)
-        if (querySeq[i] != scanWindow[i]) rightMismatches += 1;
+    for (unsigned i(0); i<querySize; i++)
+    {
+        assert((scanWindowBegin+i) != scanWindowEnd);
+        if (querySeq[i] != *(scanWindowBegin+i))
+        {
+            if(i<=leftSize)
+            {
+                leftMismatches += 1;
+            }
+            else
+            {
+                rightMismatches += 1;
+            }
+            lnLhood += qphred_to_ln_error_prob(static_cast<int>(queryQual[i])) + ln_one_third;
+        }
+        else
+        {
+            lnLhood += qphred_to_ln_comp_error_prob(static_cast<int>(queryQual[i]));
+        }
+    }
 
     const unsigned score = querySize - (leftMismatches+rightMismatches);
     _alignment.set_mismatches(leftMismatches, rightMismatches);
     _alignment.set_score(score);
+    _alignment.set_lnLhood(lnLhood);
 
     return (score);
 }
@@ -49,6 +74,7 @@ calculateAlignScore(
 void
 SplitReadAlignment::
 align(const std::string& querySeq,
+      const uint8_t* queryQual,
       const std::string& targetSeq,
       const unsigned bpOffset)
 {
@@ -68,14 +94,16 @@ align(const std::string& querySeq,
     log_os << "scan start = " << scanStart << " scan end = " << scanEnd << "\n";
 #endif
 
+    const std::string::const_iterator scanWindowEnd(targetSeq.end());
+
     for (unsigned i = scanStart; i<= scanEnd; i++)
     {
         const unsigned leftSize = bpOffset - i + 1;
         const unsigned rightSize= querySize - leftSize;
         _alignment.set_sizes(leftSize, rightSize);
 
-        const std::string scanWindow = targetSeq.substr(i, querySize);
-        const unsigned score = calculateAlignScore(querySeq, scanWindow);
+        const std::string::const_iterator scanWindowStart = targetSeq.begin()+i;
+        const unsigned score = calculateAlignScore(querySeq, queryQual, scanWindowStart, scanWindowEnd);
 
         if (score > bestAlignInfo.get_alignScore())
         {

@@ -180,12 +180,17 @@ incrementAlleleEvidence(
         bp1Support.isSplitSupport = true;
         bp1Support.splitEvidence = bp1Evidence;
     }
+
+    bp1Support.splitLnLhood = bp1SR.get_alignment().get_alignLnLhood();
+
     if (bp2SR.has_evidence())
     {
         bp2Evidence = bp2SR.get_evidence();
         bp2Support.isSplitSupport = true;
         bp2Support.splitEvidence = bp2Evidence;
     }
+
+    bp2Support.splitLnLhood = bp2SR.get_alignment().get_alignLnLhood();
 
     const float evidence(std::max(bp1Evidence, bp2Evidence));
 
@@ -231,6 +236,7 @@ scoreSplitReads(
         if (bamRead.is_supplement()) continue;
 
         const std::string readSeq = bamRead.get_bam_read().get_string();
+        const uint8_t* qual(bamRead.qual());
         const unsigned readMapQ = bamRead.map_qual();
 
         SVFragmentEvidence& fragment(sampleEvidence[bamRead.qname()]);
@@ -253,15 +259,15 @@ scoreSplitReads(
 
         // align the read to the somatic contig
         SplitReadAlignment bp1ContigSR;
-        bp1ContigSR.align(readSeq, svAlignInfo.bp1ContigSeq(), svAlignInfo.bp1ContigOffset);
+        bp1ContigSR.align(readSeq, qual, svAlignInfo.bp1ContigSeq(), svAlignInfo.bp1ContigOffset);
         SplitReadAlignment bp2ContigSR;
-        bp2ContigSR.align(readSeq, svAlignInfo.bp2ContigSeq(), svAlignInfo.bp2ContigOffset);
+        bp2ContigSR.align(readSeq, qual, svAlignInfo.bp2ContigSeq(), svAlignInfo.bp2ContigOffset);
 
         // align the read to reference regions
         SplitReadAlignment bp1RefSR;
-        bp1RefSR.align(readSeq, svAlignInfo.bp1RefSeq, svAlignInfo.bp1RefOffset);
+        bp1RefSR.align(readSeq, qual, svAlignInfo.bp1RefSeq, svAlignInfo.bp1RefOffset);
         SplitReadAlignment bp2RefSR;
-        bp2RefSR.align(readSeq, svAlignInfo.bp2RefSeq, svAlignInfo.bp2RefOffset);
+        bp2RefSR.align(readSeq, qual, svAlignInfo.bp2RefSeq, svAlignInfo.bp2RefOffset);
 
         // scoring
         incrementAlleleEvidence(bp1ContigSR, bp2ContigSR, readMapQ, sample.alt, altBp1ReadSupport, altBp2ReadSupport);
@@ -387,6 +393,117 @@ getSVSplitReadSupport(
 
 
 
+static
+bool
+isAlleleReadSupport(
+    const SVFragmentEvidenceAllele& allele,
+    const bool isRead1)
+{
+    return (allele.bp1.getRead(isRead1).isSplitSupport ||
+            allele.bp2.getRead(isRead1).isSplitSupport);
+}
+
+
+
+static
+bool
+isAnyReadSupport(
+    const SVFragmentEvidence& fragev,
+    const bool isRead1)
+{
+    return (isAlleleReadSupport(fragev.alt, isRead1) ||
+            isAlleleReadSupport(fragev.ref, isRead1));
+}
+
+
+
+static
+void
+lnToProb(
+    float& lower,
+    float& higher)
+{
+    lower = std::exp(lower-higher);
+    higher = 1./(lower+1.);
+    lower  = lower/(lower+1.);
+}
+
+
+
+static
+void
+addReadSupport(
+    const SVFragmentEvidence& fragev,
+    const bool isRead1,
+    SVSampleInfo& sampleBaseInfo)
+{
+    static const float supportProb(0.9999);
+
+    // only consider reads where at least one allele and one breakend is confident
+    //
+    // ...note this is done in the absence of having a noise state in the model
+    //
+    if (! isAnyReadSupport(fragev,isRead1)) return;
+
+    float altLhood =
+            std::max(fragev.alt.bp1.getRead(isRead1).splitLnLhood,
+                     fragev.alt.bp2.getRead(isRead1).splitLnLhood);
+
+    float refLhood =
+            std::max(fragev.ref.bp1.getRead(isRead1).splitLnLhood,
+                     fragev.ref.bp2.getRead(isRead1).splitLnLhood);
+
+    // convert to normalized prob:
+    if (altLhood > refLhood)
+    {
+        lnToProb(refLhood, altLhood);
+        if(altLhood>supportProb) sampleBaseInfo.alt.confidentSplitReadCount++;
+    }
+    else
+    {
+        lnToProb(altLhood, refLhood);
+        if (refLhood>supportProb) sampleBaseInfo.ref.confidentSplitReadCount++;
+    }
+
+
+}
+
+
+
+static
+void
+getSampleCounts(
+    const SVEvidence::evidenceTrack_t& sampleEvidence,
+    SVSampleInfo& sampleBaseInfo)
+{
+    BOOST_FOREACH(const SVEvidence::evidenceTrack_t::value_type& val, sampleEvidence)
+    {
+
+        const SVFragmentEvidence& fragev(val.second);
+
+        // evaluate read1 and read2 from this fragment
+        //
+        addReadSupport(fragev,true,sampleBaseInfo);
+        addReadSupport(fragev,false,sampleBaseInfo);
+    }
+}
+
+
+
+static
+void
+getSVSupportSummary(
+    const SVEvidence& evidence,
+    SVScoreInfo& baseInfo)
+{
+    /// get conservative count of reads which support only one allele, ie. P ( allele | read ) is high
+    ///
+    getSampleCounts(evidence.normal, baseInfo.normal);
+    getSampleCounts(evidence.tumor, baseInfo.tumor);
+}
+
+
+
 /// shared information gathering steps of all scoring models
 void
 SVScorer::
@@ -417,7 +534,7 @@ scoreSV(
 
     // compute allele likelihoods, and any other summary metric shared between all models:
     //
-    //  getSVSupportSummary(evidence)
+    getSVSupportSummary(evidence, baseInfo);
 }
 
 
@@ -515,6 +632,9 @@ scoreDiploidSV(
                 }
             }
 
+//            float read1RefLhood(1);
+//            float read1AltLhood(1);
+
             for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
             {
                 const float altFrac(DIPLOID_GT::altFraction(gt));
@@ -606,12 +726,12 @@ scoreSomaticSV(
 
         /// first check for substantial support in the normal:
         if (baseInfo.normal.alt.spanPairCount > 1) isNonzeroSomaticQuality=false;
-       // if (baseInfo.normal.alt.splitReadEvidence > 10) isNonzeroSomaticQuality=false;
+        if (baseInfo.normal.alt.confidentSplitReadCount > 5) isNonzeroSomaticQuality=false;
 
         if (isNonzeroSomaticQuality)
         {
             const bool lowPairSupport(baseInfo.tumor.alt.spanPairCount < 6);
-            const bool lowSplitSupport(baseInfo.tumor.alt.splitReadEvidence < 6);
+            const bool lowSplitSupport(baseInfo.tumor.alt.confidentSplitReadCount < 6);
             const bool lowSingleSupport((baseInfo.tumor.alt.bp1SpanReadCount < 14) || (baseInfo.tumor.alt.bp2SpanReadCount < 14));
             const bool highSingleContam((baseInfo.normal.alt.bp1SpanReadCount > 1) || (baseInfo.normal.alt.bp2SpanReadCount > 1));
 
@@ -651,7 +771,7 @@ scoreSomaticSV(
         {
             // there needs to be some ref support in the normal as well:
             const bool normRefPairSupport(baseInfo.normal.ref.spanPairCount > 6);
-            const bool normRefSplitSupport(baseInfo.normal.ref.splitReadEvidence > 6);
+            const bool normRefSplitSupport(baseInfo.normal.ref.confidentSplitReadCount > 6);
 
             if (! (normRefPairSupport || normRefSplitSupport)) isNonzeroSomaticQuality=false;
         }

@@ -176,9 +176,15 @@ modifySample(
     values[0] = str( boost::format("%i,%i") % baseInfo.normal.ref.splitReadCount % baseInfo.normal.alt.splitReadCount);
     sampletags.push_back(std::make_pair(srTag,values));
 
+    static const std::string sr2Tag("SR2");
+    values[0] = str( boost::format("%i,%i") % baseInfo.normal.ref.confidentSplitReadCount % baseInfo.normal.alt.confidentSplitReadCount);
+    sampletags.push_back(std::make_pair(sr2Tag,values));
+
+#if 0
     static const std::string srevTag("SREV");
     values[0] = str( boost::format("%.1f,%.1f") % baseInfo.normal.ref.splitReadEvidence % baseInfo.normal.alt.splitReadEvidence);
     sampletags.push_back(std::make_pair(srevTag,values));
+#endif
 }
 
 
