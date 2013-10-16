@@ -44,6 +44,18 @@ struct SVAlignmentInfo
         return (bp2ContigReversed ? revContigSeq : contigSeq);
     }
 
+    const std::string&
+    bp1ReferenceSeq() const
+    {
+    	return bp1RefSeq;
+    }
+
+    const std::string&
+    bp2ReferenceSeq() const
+    {
+    	return (isSpanning ? bp2RefSeq : bp1RefSeq);
+    }
+
     friend
     std::ostream&
     operator<<(std::ostream& os, const SVAlignmentInfo& ai);
@@ -51,16 +63,17 @@ struct SVAlignmentInfo
 private:
     std::string contigSeq;
     std::string revContigSeq;
-    bool bp1ContigReversed;
-    bool bp2ContigReversed;
-
-public:
     std::string bp1RefSeq;
     std::string bp2RefSeq;
+    bool bp1ContigReversed;
+    bool bp2ContigReversed;
+    bool isSpanning;
+
+public:
     unsigned bp1ContigOffset;
     unsigned bp2ContigOffset;
-    pos_t bp1RefOffset;
-    pos_t bp2RefOffset;
+    unsigned bp1RefOffset;
+    unsigned bp2RefOffset;
 };
 
 std::ostream&
