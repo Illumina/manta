@@ -471,12 +471,16 @@ scoreDiploidSV(
     SVScoreInfo& baseInfo,
     SVScoreInfoDiploid& diploidInfo)
 {
+#ifdef DEBUG_SCORE
+    static const std::string logtag("scoreDiploidSV: ");
+#endif
+
     /// TODO: set this from graph data:
     ///
     /// put some more thought into this -- is this P (spurious | any old read) or P( spurious | chimera ) ??
     /// it seems like it should be the later in the usages that really matter.
     ///
-    static const float chimeraRate(1e-4);
+    static const float chimeraRate(1e-3);
     static const float chimeraComp(1.-chimeraRate);
 
     //
@@ -497,10 +501,10 @@ scoreDiploidSV(
             float fragAltLhood(1);
 
 #ifdef DEBUG_SCORE
-            log_os << "ZZZZZZZ qname: " << val.first << " fragev: " << fragev << "\n";
+            log_os << logtag << "qname: " << val.first << " fragev: " << fragev << "\n";
 #endif
 
-            /// high-quality spanning support relies on read1 and read mapping well:
+            /// high-quality spanning support relies on read1 and read2 mapping well:
             if ( fragev.read1.isObservedAnchor() && fragev.read2.isObservedAnchor())
             {
                 /// only add to the likelihood if the fragment "supports" at least one allele:
@@ -519,7 +523,7 @@ scoreDiploidSV(
                 loglhood[gt] += std::log(reflhood + altlhood);
 
 #ifdef DEBUG_SCORE
-                log_os << "AAAAAAAA gt/fragref/ref/fragalt/alt: "
+                log_os << logtag << "gt/fragref/ref/fragalt/alt: "
                        << DIPLOID_GT::label(gt)
                        << " " << fragRefLhood
                        << " " << reflhood
@@ -542,7 +546,7 @@ scoreDiploidSV(
 #ifdef DEBUG_SCORE
         for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
         {
-            log_os << "BBBBBBBB gt/lhood/prior/pprob: "
+            log_os << logtag << "gt/lhood/prior/pprob: "
                    << DIPLOID_GT::label(gt)
                    << " " << loglhood[gt]
                    << " " << diploidDopt.prior[gt]
@@ -602,7 +606,7 @@ scoreSomaticSV(
 
         /// first check for substantial support in the normal:
         if (baseInfo.normal.alt.spanPairCount > 1) isNonzeroSomaticQuality=false;
-        if (baseInfo.normal.alt.splitReadEvidence > 10) isNonzeroSomaticQuality=false;
+       // if (baseInfo.normal.alt.splitReadEvidence > 10) isNonzeroSomaticQuality=false;
 
         if (isNonzeroSomaticQuality)
         {

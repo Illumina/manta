@@ -24,7 +24,7 @@ struct CallOptionsDiploid
 {
 
     CallOptionsDiploid() :
-        indelPrior(1e-4),
+        indelPrior(1e-5),
         maxDepthFactor(3.0),
         maxDepthFilterLabel("MaxDepth"),
         minOutputAltScore(10),
