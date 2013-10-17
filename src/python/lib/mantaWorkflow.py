@@ -171,21 +171,21 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
             graphCmd.extend(["--tumor-align-file",bamPath])
 
         graphTaskLabel=preJoin(taskPrefix,"makeLocusGraph_"+gseg.pyflowId)
-        graphTasks.add(self.addTask(graphTaskLabel,graphCmd,dependencies=dirTask,memMb=self.params.estimateMemMb))
+        graphTasks.add(self.addTask(graphTaskLabel,graphCmd,dependencies=dirTask,memMb=self.params.TaskMem.estimateMemMb))
 
     mergeCmd = [ self.params.mantaGraphMergeBin ]
     mergeCmd.extend(["--output-file", graphPath])
     for gfile in tmpGraphFiles :
         mergeCmd.extend(["--graph-file", gfile])
 
-    mergeTask = self.addTask(preJoin(taskPrefix,"mergeLocusGraph"),mergeCmd,dependencies=graphTasks,memMb=self.params.mergeMemMb)
+    mergeTask = self.addTask(preJoin(taskPrefix,"mergeLocusGraph"),mergeCmd,dependencies=graphTasks,memMb=self.params.TaskMem.mergeMemMb)
 
     # Run a separate process to rigorously check that the final graph is valid, the sv candidate generators will check as well, but
     # this makes the check much more clear:
 
     checkCmd = [ self.params.mantaGraphCheckBin ]
     checkCmd.extend(["--graph-file", graphPath])
-    checkTask = self.addTask(preJoin(taskPrefix,"checkLocusGraph"),checkCmd,dependencies=mergeTask,memMb=self.params.mergeMemMb)
+    checkTask = self.addTask(preJoin(taskPrefix,"checkLocusGraph"),checkCmd,dependencies=mergeTask,memMb=self.params.TaskMem.mergeMemMb)
 
     rmGraphTmpCmd = "rm -rf " + tmpGraphDir
     #rmTask=self.addTask(preJoin(taskPrefix,"rmGraphTmp"),rmGraphTmpCmd,dependencies=mergeTask)
@@ -195,7 +195,7 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
     graphStatsCmd += " --graph-file " + graphPath
     graphStatsCmd += " >| " + graphStatsPath
 
-    graphStatsTask = self.addTask(preJoin(taskPrefix,"locusGraphStats"),graphStatsCmd,dependencies=mergeTask,memMb=self.params.mergeMemMb)
+    graphStatsTask = self.addTask(preJoin(taskPrefix,"locusGraphStats"),graphStatsCmd,dependencies=mergeTask,memMb=self.params.TaskMem.mergeMemMb)
 
     nextStepWait = set()
     nextStepWait.add(checkTask)
@@ -215,6 +215,10 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
     dirTask=self.addTask(preJoin(taskPrefix,"makeHyGenDir"), "mkdir -p "+ hygenDir, dependencies=dependencies, isForceLocal=True)
 
     isSomatic = (len(self.params.normalBamList) and len(self.params.tumorBamList))
+
+    hyGenMemMb = self.params.TaskMem.hyGenLocalMemMb
+    if self.getRunMode() == "sge" :
+        hyGenMemMb = self.params.TaskMem.hyGenSGEMemMb
 
     hygenTasks=set()
     candidateVcfPaths = []
@@ -251,7 +255,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
             hygenCmd.extend(["--tumor-align-file", bamPath])
 
         hygenTaskLabel=preJoin(taskPrefix,"generateCandidateSV_"+binStr)
-        hygenTasks.add(self.addTask(hygenTaskLabel,hygenCmd,dependencies=dirTask, memMb=self.params.hyGenMemMb))
+        hygenTasks.add(self.addTask(hygenTaskLabel,hygenCmd,dependencies=dirTask, memMb=hyGenMemMb))
 
     nextStepWait = hygenTasks
 
