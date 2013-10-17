@@ -446,18 +446,18 @@ addReadSupport(
     if (! isAnyReadSupport(fragev,isRead1)) return;
 
     float altLhood =
-            std::max(fragev.alt.bp1.getRead(isRead1).splitLnLhood,
-                     fragev.alt.bp2.getRead(isRead1).splitLnLhood);
+        std::max(fragev.alt.bp1.getRead(isRead1).splitLnLhood,
+                 fragev.alt.bp2.getRead(isRead1).splitLnLhood);
 
     float refLhood =
-            std::max(fragev.ref.bp1.getRead(isRead1).splitLnLhood,
-                     fragev.ref.bp2.getRead(isRead1).splitLnLhood);
+        std::max(fragev.ref.bp1.getRead(isRead1).splitLnLhood,
+                 fragev.ref.bp2.getRead(isRead1).splitLnLhood);
 
     // convert to normalized prob:
     if (altLhood > refLhood)
     {
         lnToProb(refLhood, altLhood);
-        if(altLhood>supportProb) sampleBaseInfo.alt.confidentSplitReadCount++;
+        if (altLhood>supportProb) sampleBaseInfo.alt.confidentSplitReadCount++;
     }
     else
     {

@@ -47,7 +47,7 @@ calculateAlignScore(
         assert((scanWindowBegin+i) != scanWindowEnd);
         if (querySeq[i] != *(scanWindowBegin+i))
         {
-            if(i<=leftSize)
+            if (i<=leftSize)
             {
                 leftMismatches += 1;
             }

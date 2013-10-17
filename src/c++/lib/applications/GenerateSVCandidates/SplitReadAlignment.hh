@@ -88,7 +88,7 @@ struct SRAlignmentInfo
     void update_alignInfo(
         const SRAlignmentInfo& info)
     {
-        if(&info == this) return;
+        if (&info == this) return;
 
         _leftSize = info._leftSize;
         _rightSize = info._rightSize;

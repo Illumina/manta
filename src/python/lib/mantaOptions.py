@@ -74,7 +74,7 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         class TaskMem :
             """
             default memory request per process-type
-            
+
             where different values are provided for SGE and local runs note:
             1. for SGE the memory limits must be greater than the highest memory use ever
                expected in a production run. The consequence of exceeding this limit is a failed
