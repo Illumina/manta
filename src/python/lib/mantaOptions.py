@@ -71,22 +71,20 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         mantaChromDepth=joinFile(libexecDir,"getBamAvgChromDepth.py")
         mantaSortVcf=joinFile(libexecDir,"sortVcf.py")
 
-        class TaskMem :
-            """
-            default memory request per process-type
-
-            where different values are provided for SGE and local runs note:
-            1. for SGE the memory limits must be greater than the highest memory use ever
-               expected in a production run. The consequence of exceeding this limit is a failed
-               run.
-            2. for localhost the memory usage should be at least above the highest mean memory
-                use ever expected in a production run. The consequence of exceeding the mean is
-                a slow run due to swapping.
-            """
-            estimateMemMb=2*1024
-            mergeMemMb=4*1024
-            hyGenSGEMemMb=4*1024
-            hyGenLocalMemMb=2*1024
+        # default memory request per process-type
+        #
+        # where different values are provided for SGE and local runs note:
+        #  1. for SGE the memory limits must be greater than the highest memory use ever
+        #      expected in a production run. The consequence of exceeding this limit is a failed
+        #      run.
+        #   2. for localhost the memory usage should be at least above the highest mean memory
+        #       use ever expected in a production run. The consequence of exceeding the mean is
+        #       a slow run due to swapping.
+        #
+        estimateMemMb=2*1024
+        mergeMemMb=4*1024
+        hyGenSGEMemMb=4*1024
+        hyGenLocalMemMb=2*1024
 
         return cleanLocals(locals())
 
