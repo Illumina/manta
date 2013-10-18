@@ -747,7 +747,7 @@ writeFilters(
         {
             if (isFirst)
             {
-                isFirst=true;
+                isFirst=false;
             }
             else
             {
