@@ -30,7 +30,7 @@
 #include <iostream>
 #include <string>
 
-//#define DEBUG_SVS
+#define DEBUG_SVS
 
 #ifdef DEBUG_SVS
 #include "blt_util/log.hh"
@@ -352,6 +352,9 @@ getSVSplitReadSupport(
 
     // extract SV alignment info for split read evidence
     const SVAlignmentInfo SVAlignInfo(sv, assemblyData);
+#ifdef DEBUG_SVS
+    log_os << SVAlignInfo << "\n";
+#endif
 
     const unsigned minMapQ(_readScanner.getMinMapQ());
 
@@ -375,19 +378,19 @@ getSVSplitReadSupport(
     finishSampleSRData(baseInfo.normal);
 
 #ifdef DEBUG_SVS
-    log_os << "tumor contig SP count: " << baseInfo.tumor.contigSRCount << "\n";
-    log_os << "tumor contig SP evidence: " << baseInfo.tumor.contigSREvidence << "\n";
-    log_os << "tumor contig SP_mapQ: " << baseInfo.tumor.contigSRMapQ << "\n";
-    log_os << "normal contig SP count: " << baseInfo.normal.contigSRCount << "\n";
-    log_os << "normal contig SP evidence: " << baseInfo.normal.contigSREvidence << "\n";
-    log_os << "normal contig SP_mapQ: " << baseInfo.normal.contigSRMapQ << "\n";
+    log_os << "tumor contig SP count: " << baseInfo.tumor.alt.splitReadCount << "\n";
+    log_os << "tumor contig SP evidence: " << baseInfo.tumor.alt.splitReadEvidence << "\n";
+    log_os << "tumor contig SP_mapQ: " << baseInfo.tumor.alt.splitReadMapQ << "\n";
+    log_os << "normal contig SP count: " << baseInfo.normal.alt.splitReadCount << "\n";
+    log_os << "normal contig SP evidence: " << baseInfo.normal.alt.splitReadEvidence << "\n";
+    log_os << "normal contig SP_mapQ: " << baseInfo.normal.alt.splitReadMapQ << "\n";
 
-    log_os << "tumor ref SP count: " << baseInfo.tumor.refSRCount << "\n";
-    log_os << "tumor ref SP evidence: " << baseInfo.tumor.refSREvidence << "\n";
-    log_os << "tumor ref SP_mapQ: " << baseInfo.tumor.refSRMapQ << "\n";
-    log_os << "normal ref SP count: " << baseInfo.normal.refSRCount << "\n";
-    log_os << "normal ref SP evidence: " << baseInfo.normal.refSREvidence << "\n";
-    log_os << "normal ref SP_mapQ: " << baseInfo.normal.refSRMapQ << "\n";
+    log_os << "tumor ref SP count: " << baseInfo.tumor.ref.splitReadCount << "\n";
+    log_os << "tumor ref SP evidence: " << baseInfo.tumor.ref.splitReadEvidence << "\n";
+    log_os << "tumor ref SP_mapQ: " << baseInfo.tumor.ref.splitReadMapQ << "\n";
+    log_os << "normal ref SP count: " << baseInfo.normal.ref.splitReadCount << "\n";
+    log_os << "normal ref SP evidence: " << baseInfo.normal.ref.splitReadEvidence << "\n";
+    log_os << "normal ref SP_mapQ: " << baseInfo.normal.ref.splitReadMapQ << "\n";
 #endif
 }
 
@@ -519,11 +522,6 @@ scoreSV(
     baseInfo.bp2MaxDepth=(getBreakendMaxMappedDepth(sv.bp2));
 
     /// global evidence accumulator for this SV:
-
-#ifdef DEBUG_SVS
-    log_os << SVAlignInfo << "\n";
-#endif
-
     // count the paired-read fragments supporting the ref and alt alleles in each sample:
     //
     getSVPairSupport(svData, sv, baseInfo, evidence);

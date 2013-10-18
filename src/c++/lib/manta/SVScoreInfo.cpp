@@ -58,6 +58,11 @@ SVAlignmentInfo(
         if (bp1ContigReversed || bp2ContigReversed)
         {
             revContigSeq = reverseCompCopyStr(contigSeq);
+            // reset offset w.r.t. the reversed contig
+            if (bp1ContigReversed)
+              bp1ContigOffset = contigSeq.size() - bp1ContigOffset - 1;
+            else
+              bp2ContigOffset = contigSeq.size() - bp2ContigOffset - 1;
         }
 
         // get reference regions
@@ -67,7 +72,10 @@ SVAlignmentInfo(
         bp2RefSeq = bp2Ref.seq();
         // get offsets of breakpoints in the reference regions
         bp1RefOffset = sv.bp1.interval.range.begin_pos() - bp1Ref.get_offset();
-        bp2RefOffset = sv.bp2.interval.range.begin_pos() - bp2Ref.get_offset();
+        const pos_t bp2BeginPos = (sv.isBreakendRangeSameShift() ?
+                                   sv.bp2.interval.range.begin_pos() :
+                                   sv.bp2.interval.range.end_pos()-1);
+        bp2RefOffset = bp2BeginPos - bp2Ref.get_offset();
     }
 }
 
@@ -81,7 +89,8 @@ operator<<(
     os << "Contig seq\n" << ai.contigSeq << "\n";
     os << "bp1 contig offset = " << ai.bp1ContigOffset << " bp1 contig reversed = " << ai.bp1ContigReversed << "\n";
     os << "bp2 contig offset = " << ai.bp2ContigOffset << " bp2 contig reversed = " << ai.bp2ContigReversed << "\n";
-
+    os << "bp1RefSeq\n" << ai.bp1RefSeq << "\n";
+    os << "bp2RefSeq (null for small SVs)\n" << ai.bp2RefSeq << "\n";
     os << "bp1 reference offset = " << ai.bp1RefOffset << "\n";
     os << "bp2 reference offset = " << ai.bp2RefOffset << "\n";
     return os;
