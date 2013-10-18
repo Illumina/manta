@@ -30,7 +30,7 @@
 #include <iostream>
 #include <string>
 
-#define DEBUG_SVS
+//#define DEBUG_SVS
 
 #ifdef DEBUG_SVS
 #include "blt_util/log.hh"
