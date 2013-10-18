@@ -134,7 +134,7 @@ makeInfoField(
     BOOST_FOREACH(const std::string& is, info)
     {
         if (! isFirst) os << sep;
-        else          isFirst = false;
+        else           isFirst = false;
         os << is;
     }
 }
@@ -153,7 +153,6 @@ makeFormatSampleField(
 
     if (sample.empty())
     {
-        os << ".\t.";
         return;
     }
 

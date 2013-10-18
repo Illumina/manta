@@ -1,3 +1,7 @@
+- Adjust all vcf output to pass vcf-validator
+- MANTA-20 fix split read breakpoint location
+v0.10.1
+- Fix low-frequency assertion due to unexpected alignment pattern
 v0.10
 - MANTA-20 Limit split read counts to those uniquely supporting each allele,
 where P(allele|read)>0.999

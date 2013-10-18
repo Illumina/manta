@@ -26,7 +26,7 @@ VcfWriterSomaticSV::
 addHeaderFormatSampleKey() const
 {
     /// TODO: get sample name from bam header/user
-    _os << "FORMAT\tNORMAL\tTUMOR";
+    _os << "\tFORMAT\tNORMAL\tTUMOR";
 }
 
 
@@ -35,6 +35,8 @@ void
 VcfWriterSomaticSV::
 addHeaderInfo() const
 {
+    _os << "##INFO=<ID=BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at local translocation breakend\">\n";
+    _os << "##INFO=<ID=MATE_BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at remote translocation mate breakend\">\n";
     _os << "##INFO=<ID=SOMATIC,Number=0,Type=Flag,Description=\"Somatic mutation\">\n";
     _os << "##INFO=<ID=SOMATICSCORE,Number=1,Type=Integer,Description=\"Somatic variant Quality score\">\n";
 }
@@ -69,10 +71,10 @@ modifyInfo(
     std::vector<std::string>& infotags) const
 {
     assert(_modelScorePtr != NULL);
-    const SVModelScoreInfo& modelScoreInfo(*_modelScorePtr);
+    const SVScoreInfoSomatic& somaticInfo(_modelScorePtr->somatic);
 
     infotags.push_back("SOMATIC");
-    infotags.push_back( str(boost::format("SOMATICSCORE=%i") % modelScoreInfo.somatic.somaticScore) );
+    infotags.push_back( str(boost::format("SOMATICSCORE=%i") % somaticInfo.somaticScore) );
 }
 
 
@@ -108,8 +110,7 @@ modifySample(
     SampleTag_t& sampletags) const
 {
     assert(_modelScorePtr != NULL);
-    const SVModelScoreInfo& modelScoreInfo(*_modelScorePtr);
-    const SVScoreInfo& baseInfo(modelScoreInfo.base);
+    const SVScoreInfo& baseInfo(_modelScorePtr->base);
 
     std::vector<std::string> values(2);
 
@@ -133,9 +134,9 @@ VcfWriterSomaticSV::
 writeFilter() const
 {
     assert(_modelScorePtr != NULL);
-    const SVScoreInfo& baseInfo(_modelScorePtr->base);
+    const SVScoreInfoSomatic& somaticInfo(_modelScorePtr->somatic);
 
-    writeFilters(baseInfo.filters);
+    writeFilters(somaticInfo.filters);
 }
 
 

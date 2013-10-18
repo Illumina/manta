@@ -136,9 +136,5 @@ operator<<(
 {
     os << "SVScoreInfo bp1MaxDepth=" << ssi.bp1MaxDepth << " bp2MaxDepth=" << ssi.bp2MaxDepth << "\n";
     os << "Normal sample info " << ssi.normal;
-    BOOST_FOREACH(const std::string& filter, ssi.filters)
-    {
-        os << " " << filter;
-    }
     return os;
 }

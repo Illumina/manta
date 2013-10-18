@@ -23,7 +23,6 @@
 
 #include <iosfwd>
 #include <string>
-#include <set>
 
 
 struct SVAlignmentInfo
@@ -112,6 +111,7 @@ std::ostream&
 operator<<(std::ostream& os, const SVSampleAlleleInfo& si);
 
 
+
 /// sample-specific evidence info
 struct SVSampleInfo
 {
@@ -144,7 +144,6 @@ struct SVScoreInfo
     {
         normal.clear();
         tumor.clear();
-        filters.clear();
 
         bp1MaxDepth=0;
         bp2MaxDepth=0;
@@ -152,8 +151,6 @@ struct SVScoreInfo
 
     SVSampleInfo normal;
     SVSampleInfo tumor;
-
-    std::set<std::string> filters;
 
     unsigned bp1MaxDepth;
     unsigned bp2MaxDepth;

@@ -19,6 +19,8 @@
 
 #include "manta/SVScoreInfo.hh"
 
+#include <set>
+
 
 /// consolidate all somatic scoring results applied to an SV candidate
 struct SVScoreInfoSomatic : public SVScoreInfo
@@ -34,8 +36,12 @@ struct SVScoreInfoSomatic : public SVScoreInfo
     clear()
     {
         base_t::clear();
+
+        filters.clear();
         somaticScore=0;
     }
+
+    std::set<std::string> filters;
 
     unsigned somaticScore;
 };
@@ -43,3 +49,4 @@ struct SVScoreInfoSomatic : public SVScoreInfo
 
 std::ostream&
 operator<<(std::ostream& os, const SVScoreInfoSomatic& sis);
+

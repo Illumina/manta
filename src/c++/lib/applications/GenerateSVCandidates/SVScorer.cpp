@@ -689,17 +689,17 @@ scoreDiploidSV(
             // apply maxdepth filter if either of the breakpoints exceeds the maximum depth:
             if (baseInfo.bp1MaxDepth > dFilter.maxDepth(sv.bp1.interval.tid))
             {
-                baseInfo.filters.insert(diploidOpt.maxDepthFilterLabel);
+                diploidInfo.filters.insert(diploidOpt.maxDepthFilterLabel);
             }
             else if (baseInfo.bp2MaxDepth > dFilter.maxDepth(sv.bp2.interval.tid))
             {
-                baseInfo.filters.insert(diploidOpt.maxDepthFilterLabel);
+                diploidInfo.filters.insert(diploidOpt.maxDepthFilterLabel);
             }
         }
 
         if ( diploidInfo.gtScore < diploidOpt.minGTScoreFilter)
         {
-            baseInfo.filters.insert(diploidOpt.minGTFilterLabel);
+            diploidInfo.filters.insert(diploidOpt.minGTFilterLabel);
         }
     }
 }
@@ -787,11 +787,11 @@ scoreSomaticSV(
             // apply maxdepth filter if either of the breakpoints exceeds the maximum depth:
             if (baseInfo.bp1MaxDepth > dFilter.maxDepth(sv.bp1.interval.tid))
             {
-                baseInfo.filters.insert(somaticOpt.maxDepthFilterLabel);
+                somaticInfo.filters.insert(somaticOpt.maxDepthFilterLabel);
             }
             else if (baseInfo.bp2MaxDepth > dFilter.maxDepth(sv.bp2.interval.tid))
             {
-                baseInfo.filters.insert(somaticOpt.maxDepthFilterLabel);
+                somaticInfo.filters.insert(somaticOpt.maxDepthFilterLabel);
             }
         }
     }

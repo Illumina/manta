@@ -19,6 +19,8 @@
 
 #include "manta/SVScoreInfo.hh"
 
+#include <set>
+
 
 namespace DIPLOID_GT
 {
@@ -100,8 +102,14 @@ struct SVScoreInfoDiploid : public SVScoreInfo
     clear()
     {
         base_t::clear();
+
+        filters.clear();
+        gt=DIPLOID_GT::REF;
+        altScore=0;
         gtScore=0;
     }
+
+    std::set<std::string> filters;
 
     DIPLOID_GT::index_t gt;
 
