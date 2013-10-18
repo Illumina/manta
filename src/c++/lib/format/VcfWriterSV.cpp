@@ -149,15 +149,12 @@ makeFormatSampleField(
 {
     static const char sep(':');
 
-    os << '\t';
+    if (sample.empty()) return;
 
-    if (sample.empty())
     {
-        return;
-    }
+       // first write FORMAT field:
+        os << '\t';
 
-    // first write FORMAT field:
-    {
         bool isFirst(true);
         BOOST_FOREACH(const VcfWriterSV::SampleTag_t::value_type& fs, sample)
         {
