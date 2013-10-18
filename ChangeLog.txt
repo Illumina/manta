@@ -1,3 +1,4 @@
+v0.11
 - Adjust all vcf output to pass vcf-validator
 - MANTA-20 fix split read breakpoint location
 v0.10.1

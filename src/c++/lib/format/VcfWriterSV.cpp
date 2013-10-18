@@ -152,7 +152,7 @@ makeFormatSampleField(
     if (sample.empty()) return;
 
     {
-       // first write FORMAT field:
+        // first write FORMAT field:
         os << '\t';
 
         bool isFirst(true);

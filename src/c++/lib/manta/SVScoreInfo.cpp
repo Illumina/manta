@@ -60,9 +60,9 @@ SVAlignmentInfo(
             revContigSeq = reverseCompCopyStr(contigSeq);
             // reset offset w.r.t. the reversed contig
             if (bp1ContigReversed)
-              bp1ContigOffset = contigSeq.size() - bp1ContigOffset - 1;
+                bp1ContigOffset = contigSeq.size() - bp1ContigOffset - 1;
             else
-              bp2ContigOffset = contigSeq.size() - bp2ContigOffset - 1;
+                bp2ContigOffset = contigSeq.size() - bp2ContigOffset - 1;
         }
 
         // get reference regions
