@@ -19,6 +19,7 @@
 
 #include "alignment/Alignment.hh"
 #include "alignment/GlobalJumpAligner.hh"
+#include "alignment/GlobalAligner.hh"
 
 
 /// return end position of alignment
@@ -85,6 +86,15 @@ getExtendedContig(
     const std::string& querySeq,
     const std::string* ref1Seq,
     const std::string* ref2Seq,
+    std::string& extendedContig);
+
+
+/// extend the somatic contig by padding the flanking regions of the aligned reference regions on each end
+void
+getExtendedContig(
+    const AlignmentResult<int>& alignment,
+    const std::string& querySeq,
+    const std::string* refSeq,
     std::string& extendedContig);
 
 /// given a jump alignment and query sequence, return the bp1,insert and bp2 query sequences

@@ -55,6 +55,11 @@ SVAlignmentInfo(
         if (bp1ContigReversed || bp2ContigReversed)
         {
             revContigSeq = reverseCompCopyStr(contigSeq);
+            // reset offset w.r.t. the reversed contig
+            if (bp1ContigReversed)
+            	bp1ContigOffset = contigSeq.size() - bp1ContigOffset - 1;
+            else
+            	bp2ContigOffset = contigSeq.size() - bp2ContigOffset - 1;
         }
 
         // get reference regions
@@ -64,7 +69,10 @@ SVAlignmentInfo(
         bp2RefSeq = bp2Ref.seq();
         // get offsets of breakpoints in the reference regions
         bp1RefOffset = sv.bp1.interval.range.begin_pos() - bp1Ref.get_offset();
-        bp2RefOffset = sv.bp2.interval.range.begin_pos() - bp2Ref.get_offset();
+        const pos_t bp2BeginPos = (sv.isBreakendRangeSameShift() ?
+        						   sv.bp2.interval.range.begin_pos() :
+        						   sv.bp2.interval.range.end_pos()-1);
+        bp2RefOffset = bp2BeginPos - bp2Ref.get_offset();
     }
     else
     {
@@ -73,10 +81,11 @@ SVAlignmentInfo(
     	const AlignmentResult<int>& alignment = assemblyData.smallSVAlignments[sv.assemblyAlignIndex];
     	const std::pair<unsigned, unsigned>& alignSegment = assemblyData.smallSVSegments[sv.assemblyAlignIndex][sv.assemblySegmentIndex];
 
-    	const ALIGNPATH::path_t apathTillSvStart(alignment.align.apath[0], alignment.align.apath[alignSegment.first]);
-    	const ALIGNPATH::path_t apathTillSvEnd(alignment.align.apath[0], alignment.align.apath[alignSegment.second+1]);
+    	const ALIGNPATH::path_t apathTillSvStart(&alignment.align.apath[0], &alignment.align.apath[alignSegment.first]);
+    	const ALIGNPATH::path_t apathTillSvEnd(&alignment.align.apath[0], &alignment.align.apath[alignSegment.second+1]);
 
     	//!!! debug only
+    	log_os <<"alignment segment: " << alignSegment << "\n";
     	log_os <<"alignment path till SV starts: " << apathTillSvStart << "\n";
     	log_os <<"alignment path till SV ends: " << apathTillSvEnd << "\n";
 
