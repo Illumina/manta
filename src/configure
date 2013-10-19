@@ -228,21 +228,15 @@ if   [ "deb" == "${manta_package}" ]; then
     CMAKE_OPTIONS="$CMAKE_OPTIONS \
         -DCPACK_GENERATOR:STRING=DEB \
         -DCPACK_SYSTEM_NAME:STRING=${system}-$processor \
-        -DCPACK_PACKAGE_CONTACT:STRING='support@illumina.com' \
         -DCPACK_DEBIAN_PACKAGE_ARCHITECTURE:STRING='`dpkg --print-architecture`'"
 
-    CMAKE_OPTIONS="$CMAKE_OPTIONS -DCPACK_DEBIAN_PACKAGE_DEPENDS:STRING="
-
 elif [ "rpm" == "${manta_package}" ]; then
-    CMAKE_OPTIONS="${CMAKE_OPTIONS} \
+    CMAKE_OPTIONS="$CMAKE_OPTIONS \
         -DCPACK_GENERATOR:STRING=RPM \
-        -DCPACK_SYSTEM_NAME:STRING=${isaac_system}-${isaac_processor} \
-        -DCPACK_PACKAGE_CONTACT:STRING='support@illumina.com'"
-
-    CMAKE_OPTIONS="$CMAKE_OPTIONS -DCPACK_RPM_PACKAGE_REQUIRES:STRING="
+        -DCPACK_SYSTEM_NAME:STRING=${system}-$processor"
 
 elif [ "tgz" == "${manta_package}" ]; then
-    CMAKE_OPTIONS="${CMAKE_OPTIONS} \
+    CMAKE_OPTIONS="$CMAKE_OPTIONS \
         -DCPACK_GENERATOR:STRING=TGZ"
 
 elif [ "none" != "${manta_package}" ]; then
@@ -255,7 +249,7 @@ else
 
 fi
 
-CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX:PATH=${prefix_dir} ${CMAKE_OPTIONS}"
+CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX:PATH=$prefix_dir $CMAKE_OPTIONS"
 
 
 
