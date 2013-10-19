@@ -99,7 +99,6 @@ set(MANTA_LIBEXECDIR "${MANTA_EXEC_PREFIX}/libexec")
 # paths w/o architecture dependency
 set(MANTA_PYTHON_LIBDIR "${CMAKE_INSTALL_PREFIX}/lib/python")
 set(MANTA_DATADIR "${CMAKE_INSTALL_PREFIX}/share")
-set(MANTA_ETCDIR "${CMAKE_INSTALL_PREFIX}/etc")
 set(MANTA_DOCDIR "${CMAKE_INSTALL_PREFIX}/doc")
 
 message (STATUS "install prefix: ${CMAKE_INSTALL_PREFIX}")
