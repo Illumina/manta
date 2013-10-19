@@ -29,7 +29,7 @@ getOptionsDescription(ReadScannerOptions& opt)
     ("min-mapq", po::value(&opt.minMapq)->default_value(opt.minMapq),
      "Reads with MAPQ less than this value will be ignored")
     ("edge-prob", po::value(&opt.breakendEdgeTrimProb)->default_value(opt.breakendEdgeTrimProb),
-     "Breakend range associated with each read will have this probability trimmed from each edge")
+     "Breakend range associated with each read will trimmed to expected fragment quantile range [p,(1-p)], p: edge-prob")
     ;
 
     return desc;
