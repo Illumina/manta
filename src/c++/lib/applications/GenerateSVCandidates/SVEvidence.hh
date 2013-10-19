@@ -105,6 +105,14 @@ struct SVFragmentEvidenceAllele
         return (isBp1 ? bp1 : bp2 );
     }
 
+    bool
+    isAnySplitSupportForRead(
+        const bool isRead1) const
+    {
+        return (bp1.getRead(isRead1).isSplitSupport ||
+                bp2.getRead(isRead1).isSplitSupport);
+    }
+
     SVFragmentEvidenceAlleleBreakend bp1;
     SVFragmentEvidenceAlleleBreakend bp2;
 };
@@ -153,6 +161,25 @@ struct SVFragmentEvidence
     getRead(const bool isRead1)
     {
         return (isRead1 ? read1 : read2);
+    }
+
+    /// does this fragment provide any pair evidence for any allele/bp combination?
+    bool
+    isAnyPairSupport() const
+    {
+        const bool isRefSupport(ref.bp1.isFragmentSupport || ref.bp2.isFragmentSupport);
+        const bool isAltSupport(alt.bp1.isFragmentSupport || alt.bp2.isFragmentSupport);
+
+        return (isRefSupport || isAltSupport);
+    }
+
+    /// does this fragment read provide any split evidence for any allele/bp combination?
+    bool
+    isAnySplitSupportForRead(
+        const bool isRead1) const
+    {
+        return (alt.isAnySplitSupportForRead(isRead1) ||
+                ref.isAnySplitSupportForRead(isRead1));
     }
 
     SVFragmentEvidenceRead read1;

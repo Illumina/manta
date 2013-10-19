@@ -394,42 +394,6 @@ getSVSplitReadSupport(
 
 
 static
-bool
-isAlleleSplitReadSupport(
-    const SVFragmentEvidenceAllele& allele,
-    const bool isRead1)
-{
-    return (allele.bp1.getRead(isRead1).isSplitSupport ||
-            allele.bp2.getRead(isRead1).isSplitSupport);
-}
-
-
-
-static
-bool
-isAnySplitReadSupport(
-    const SVFragmentEvidence& fragev,
-    const bool isRead1)
-{
-    return (isAlleleSplitReadSupport(fragev.alt, isRead1) ||
-            isAlleleSplitReadSupport(fragev.ref, isRead1));
-}
-
-
-static
-bool
-isAnySpanningPairSupport(
-    const SVFragmentEvidence& fragev)
-{
-    const bool isRefSupport(fragev.ref.bp1.isFragmentSupport || fragev.ref.bp2.isFragmentSupport);
-    const bool isAltSupport(fragev.alt.bp1.isFragmentSupport || fragev.alt.bp2.isFragmentSupport);
-
-    return (isRefSupport || isAltSupport);
-}
-
-
-
-static
 void
 lnToProb(
     float& lower,
@@ -455,7 +419,7 @@ addConservativeSplitReadSupport(
     //
     // ...note this is done in the absence of having a noise state in the model
     //
-    if (! isAnySplitReadSupport(fragev,isRead1)) return;
+    if (! fragev.isAnySplitSupportForRead(isRead1)) return;
 
     float altLnLhood =
         std::max(fragev.alt.bp1.getRead(isRead1).splitLnLhood,
@@ -509,7 +473,7 @@ addConservativeSpanningPairSupport(
 {
     static const float pairSupportProb(0.9);
 
-    if (! isAnySpanningPairSupport(fragev)) return;
+    if (! fragev.isAnyPairSupport()) return;
 
     /// high-quality spanning support relies on read1 and read2 mapping well:
     if (! (fragev.read1.isObservedAnchor() && fragev.read2.isObservedAnchor())) return;
@@ -640,6 +604,60 @@ incrementSpanningPairAlleleLhood(
 }
 
 
+#if 0
+static
+void
+incrementAlleleSplitReadLhood(
+    const SVFragmentEvidenceAllele& allele,
+    const bool isRead1,
+    float& refSplitHood)
+{
+    /// use a constant mapping prob for now just to get the zero-th order concept into the model
+    /// that "reads are mismapped at a non-trivial rate"
+    /// TODO: experiment with per-read mapq values here
+    ///
+    static const float mapProb(1e-6);
+    static const float mapComp(1.-mapProb);
+
+    const float alignBp1Lhood(allele.bp1.getRead(isRead1).splitLnLhood);
+    const float alignBp2Lhood(allele.bp1.getRead(isRead1).splitLnLhood);
+    const float alignLhood(std::max(alignBp1Lhood,alignBp1Lhood));
+
+    refSplitHood *= (mapComp*fragProb + mapProb);}
+}
+
+
+
+static
+void
+incrementSplitReadLhood(
+    const SVFragmentEvidence& fragev,
+    const bool isRead1,
+    float& refSplitHood,
+    float& altSplitHood)
+{
+    if (! fragev.isAnySplitSupportForRead(isRead1)) return;
+
+    incrementAlleleSplitReadLhood(fragev.ref, isRead1, refSplitHood);
+    incrementAlleleSplitReadLhood(fragev.alt, isRead1, altSplitHood);
+}
+#endif
+
+
+struct AlleleLhood
+{
+    AlleleLhood() :
+        fragPair(1),
+        read1Split(1),
+        read2Split(1)
+    {}
+
+    float fragPair;
+    float read1Split;
+    float read2Split;
+};
+
+
 
 /// score diploid germline specific components:
 static
@@ -678,32 +696,35 @@ scoreDiploidSV(
         {
             const SVFragmentEvidence& fragev(val.second);
 
-            float fragRefLhood(1);
-            float fragAltLhood(1);
+            AlleleLhood refProbs, altProbs;
 
 #ifdef DEBUG_SCORE
             log_os << logtag << "qname: " << val.first << " fragev: " << fragev << "\n";
 #endif
 
+            /// TODO: add read pairs with one shadow read to the alt read pool
+
             /// high-quality spanning support relies on read1 and read2 mapping well:
             if ( fragev.read1.isObservedAnchor() && fragev.read2.isObservedAnchor())
             {
                 /// only add to the likelihood if the fragment "supports" at least one allele:
-                if ( isAnySpanningPairSupport(fragev) )
+                if ( fragev.isAnyPairSupport() )
                 {
-                    incrementSpanningPairAlleleLhood(chimeraProb, fragev.alt, fragAltLhood);
-                    incrementSpanningPairAlleleLhood(chimeraProb, fragev.ref, fragRefLhood);
+                    incrementSpanningPairAlleleLhood(chimeraProb, fragev.alt, refProbs.fragPair);
+                    incrementSpanningPairAlleleLhood(chimeraProb, fragev.ref, altProbs.fragPair);
                 }
             }
 
-//            float read1RefLhood(1);
-//            float read1AltLhood(1);
+            /// split support is less dependent on mapping quality of the individual read, because
+            /// we're potentially relying on shadow reads recovered from the unmapped state
+      //      incrementSplitReadLhood(fragev, true, refProbs.read1Split, altProbs.read1Split);
+      //      incrementSplitReadLhood(fragev, false, refProbs.read1Split, altProbs.read2Split);
 
             for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
             {
                 const float altFrac(DIPLOID_GT::altFraction(gt));
-                const float reflhood(fragRefLhood * (1.-altFrac));
-                const float altlhood(fragAltLhood * altFrac);
+                const float reflhood(refProbs.fragPair * (1.-altFrac));
+                const float altlhood(altProbs.fragPair * altFrac);
                 loglhood[gt] += std::log(reflhood + altlhood);
 
 #ifdef DEBUG_SCORE
