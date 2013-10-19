@@ -30,4 +30,5 @@ setReadEvidence(
     read.isScanned = true;
     read.mapq = bamRead.map_qual();
     read.isAnchored = (read.mapq >= minMapQ);
+    read.size = bamRead.read_size();
 }

@@ -121,7 +121,8 @@ struct SVFragmentEvidenceRead
     SVFragmentEvidenceRead() :
         isScanned(false),
         isAnchored(false),
-        mapq(0)
+        mapq(0),
+        size(0)
     {}
 
     bool
@@ -134,6 +135,7 @@ struct SVFragmentEvidenceRead
 
     bool isAnchored; ///< if true, the read is found and known to have a confident mapping wrt fragment support
     unsigned mapq;
+    unsigned size;
 };
 
 std::ostream&
