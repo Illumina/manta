@@ -85,13 +85,13 @@ SVAlignmentInfo(
     	const ALIGNPATH::path_t apathTillSvEnd(&alignment.align.apath[0], &alignment.align.apath[alignSegment.second+1]);
 
     	//!!! debug only
-    	log_os <<"alignment segment: " << alignSegment << "\n";
+    	log_os <<"alignment segment: <" << alignSegment.first << "," <<alignSegment.second << ">\n";
     	log_os <<"alignment path till SV starts: " << apathTillSvStart << "\n";
     	log_os <<"alignment path till SV ends: " << apathTillSvEnd << "\n";
 
     	// the beginPos of align is the length of reference padding in the extended contig
     	// |ref padding| + |alignment segments|
-    	bp1ContigOffset = alignment.align.beginPos + apath_read_length(apathTillSvStart);
+    	bp1ContigOffset = alignment.align.beginPos + apath_read_length(apathTillSvStart) - 1;
     	bp2ContigOffset = alignment.align.beginPos + apath_read_length(apathTillSvEnd);
     	bp1ContigReversed = false;
     	bp2ContigReversed = false;
