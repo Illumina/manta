@@ -32,14 +32,14 @@
 #include <iostream>
 #include <string>
 
-//#define DEBUG_SVS
+#define DEBUG_SVS
 
 #ifdef DEBUG_SVS
 #include "blt_util/log.hh"
 #endif
 
 
-#define DEBUG_SCORE
+//#define DEBUG_SCORE
 
 #ifdef DEBUG_SCORE
 #include "blt_util/log.hh"
