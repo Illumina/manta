@@ -24,7 +24,6 @@
 #include "blt_util/qscore.hh"
 #include "common/Exceptions.hh"
 #include "manta/ReadGroupStatsSet.hh"
-#include "blt_util/log.hh"
 
 #include "boost/foreach.hpp"
 
@@ -167,8 +166,6 @@ getBreakendMaxMappedDepth(
 static
 void
 incrementAlleleEvidence(
-		bool debug,
-		const std::string& readSeq,
     const SplitReadAlignment& bp1SR,
     const SplitReadAlignment& bp2SR,
     const unsigned readMapQ,
@@ -199,10 +196,7 @@ incrementAlleleEvidence(
         allele.splitReadEvidence += evidence;
         allele.splitReadMapQ += readMapQ * readMapQ;
 
-//#ifdef DEBUG_SVS
-        if (debug)
-        {
-        log_os << "read sequence: \n" << readSeq << "\n";
+#ifdef DEBUG_SVS
         log_os << "bp1\n";
         log_os << bp1SR;
         log_os << "bp2\n";
@@ -210,8 +204,7 @@ incrementAlleleEvidence(
         log_os << "evidence = " << evidence << "\n";
         log_os << "accumulated evidence = " << allele.splitReadEvidence << "\n";
         log_os << "contigCount = " << allele.splitReadCount << "\n\n";
-        }
-//#endif
+#endif
     }
 }
 
@@ -220,7 +213,6 @@ incrementAlleleEvidence(
 static
 void
 scoreSplitReads(
-		bool debug,
     const SVBreakend& bp,
     const SVAlignmentInfo& svAlignInfo,
     const unsigned minMapQ,
@@ -273,8 +265,8 @@ scoreSplitReads(
         bp2RefSR.align(readSeq, svAlignInfo.bp2ReferenceSeq(), svAlignInfo.bp2RefOffset);
 
         // scoring
-        incrementAlleleEvidence(debug, readSeq, bp1ContigSR, bp2ContigSR, readMapQ, sample.alt, altBp1ReadSupport, altBp2ReadSupport);
-        incrementAlleleEvidence(false, readSeq, bp1RefSR, bp2RefSR, readMapQ, sample.ref, refBp1ReadSupport, refBp2ReadSupport);
+        incrementAlleleEvidence(bp1ContigSR, bp2ContigSR, readMapQ, sample.alt, altBp1ReadSupport, altBp2ReadSupport);
+        incrementAlleleEvidence(bp1RefSR, bp2RefSR, readMapQ, sample.ref, refBp1ReadSupport, refBp2ReadSupport);
     }
 }
 
@@ -368,14 +360,11 @@ getSVSplitReadSupport(
 
         SVEvidence::evidenceTrack_t& sampleEvidence(evidence.getSample(isTumor));
 
-        bool debug(false);
-        if (!isTumor)
-        	debug = true;
         // scoring split reads overlapping bp1
-        scoreSplitReads(debug, sv.bp1, SVAlignInfo, minMapQ, sampleEvidence,
+        scoreSplitReads(sv.bp1, SVAlignInfo, minMapQ, sampleEvidence,
                         bamStream, sample);
         // scoring split reads overlapping bp2
-        scoreSplitReads(debug, sv.bp2, SVAlignInfo, minMapQ, sampleEvidence,
+        scoreSplitReads(sv.bp2, SVAlignInfo, minMapQ, sampleEvidence,
                         bamStream, sample);
     }
 
