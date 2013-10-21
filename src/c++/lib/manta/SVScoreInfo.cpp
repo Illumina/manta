@@ -46,12 +46,8 @@ SVAlignmentInfo(
         // both bp1 and bp2 include the insert and micro-homology,
         // which can avoid false split-read evidence from normal sample when the micorhomology is long
         unsigned homologySize = sv.bp1.interval.range.size() - 1;
-        log_os << "insertSize = " << insertSize << " homSize = " << homologySize << "\n";
-        log_os << "isBp2AlignedFirst = " << assemblyData.isBp2AlignedFirst << "\n";
         bp1ContigOffset = alignment.align1.beginPos + align1Size + insertSize + homologySize - 1;
         bp2ContigOffset = alignment.align1.beginPos + align1Size;
-        log_os << "bp1ContigOffset = " << bp1ContigOffset << "\n";
-        log_os << "bp2ContigOffset = " << bp2ContigOffset << "\n";
         if (assemblyData.isBp2AlignedFirst)
         {
             std::swap(bp1ContigOffset, bp2ContigOffset);
@@ -68,8 +64,6 @@ SVAlignmentInfo(
             else
             	bp2ContigOffset = contigSeq.size() - bp2ContigOffset - 1;
         }
-        log_os << "bp1ContigOffset = " << bp1ContigOffset << " bp1 contig reversed = " << bp1ContigReversed << "\n";
-        log_os << "bp2ContigOffset = " << bp2ContigOffset << " bp2 contig reversed = " << bp2ContigReversed << "\n";
 
         // get reference regions
         const reference_contig_segment& bp1Ref = assemblyData.bp1ref;
@@ -93,11 +87,6 @@ SVAlignmentInfo(
 
     	const ALIGNPATH::path_t apathTillSvStart(&alignment.align.apath[0], &alignment.align.apath[alignSegment.first]);
     	const ALIGNPATH::path_t apathTillSvEnd(&alignment.align.apath[0], &alignment.align.apath[alignSegment.second+1]);
-
-    	//!!! debug only
-    	log_os <<"alignment segment: <" << alignSegment.first << "," <<alignSegment.second << ">\n";
-    	log_os <<"alignment path till SV starts: " << apathTillSvStart << "\n";
-    	log_os <<"alignment path till SV ends: " << apathTillSvEnd << "\n";
 
     	// the beginPos of align is the length of reference padding in the extended contig
     	// |ref padding| + |alignment segments|

@@ -31,7 +31,7 @@
 #include <iostream>
 #include <string>
 
-#define DEBUG_SVS
+//#define DEBUG_SVS
 
 #ifdef DEBUG_SVS
 #include "blt_util/log.hh"
@@ -332,9 +332,6 @@ getSVSplitReadSupport(
     // apply the split-read scoring, only when:
     // 1) the SV is precise, i.e. has successful somatic contigs;
     // 2) the values of max depth are reasonable (otherwise, the read map may blow out).
-    log_os << "isImprecise = " << sv.isImprecise() << "\n";
-    log_os << "isSkipSRSearchDepth = " << isSkipSRSearchDepth << "\n";
-
     const bool isSkipSRSearch(
         (sv.isImprecise()) ||
         (isSkipSRSearchDepth));
