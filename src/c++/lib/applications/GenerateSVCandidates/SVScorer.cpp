@@ -268,7 +268,7 @@ scoreSplitReads(
         SplitReadAlignment bp1RefSR;
         bp1RefSR.align(readSeq, qual, svAlignInfo.bp1ReferenceSeq(), svAlignInfo.bp1RefOffset);
         SplitReadAlignment bp2RefSR;
-        bp2RefSR.align(readSeq, qual, svAlignInfo.bp1ReferenceSeq(), svAlignInfo.bp2RefOffset);
+        bp2RefSR.align(readSeq, qual, svAlignInfo.bp2ReferenceSeq(), svAlignInfo.bp2RefOffset);
 
         // scoring
         incrementAlleleEvidence(bp1ContigSR, bp2ContigSR, readMapQ, sample.alt, altBp1ReadSupport, altBp2ReadSupport);
