@@ -46,7 +46,7 @@ VcfWriterSV(
     _header(set.header),
     _os(os),
     _transLocIdFormatter("MantaBND:%i:%i:%i:%i:"),
-    _otherSVIdFormatter("Manta%s:%i:%i:%i:%i:%i")
+    _otherSVIdFormatter("Manta%s:%i:%i:%i:%i:%i:%i")
 {
 }
 
@@ -429,12 +429,15 @@ writeTranslocPair(
 void
 VcfWriterSV::
 writeInvdel(
+    const EdgeInfo& edge,
     const SVCandidate& sv,
     const SVCandidateAssemblyData& /*adata*/,
     const std::string& label,
-    const std::string& vcfId,
     const bool isIndel)
 {
+    const std::string vcfId( str(_otherSVIdFormatter
+            % label % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex %  sv.assemblyAlignIndex % sv.assemblySegmentIndex ) );
+
     const bool isImprecise(sv.isImprecise());
     const bool isBreakendRangeSameShift(sv.isBreakendRangeSameShift());
 
@@ -618,9 +621,8 @@ writeInversion(
     const SVCandidateSetData& /*svData*/,
     const SVCandidateAssemblyData& adata)
 {
-    const std::string label("INV");
-    const std::string vcfId( str(_otherSVIdFormatter % label % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex % adata.bestAlignmentIndex ) );
-    writeInvdel(sv,adata, label,vcfId);
+    static const std::string label("INV");
+    writeInvdel(edge, sv, adata, label);
 }
 
 
@@ -646,9 +648,8 @@ writeIndel(
     const bool isDelete(deleteSize >= insertSize);
 
     const std::string label(isDelete ? "DEL" : "INS");
-    const std::string vcfId( str(_otherSVIdFormatter % label % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex % adata.bestAlignmentIndex ) );
 
-    writeInvdel(sv, adata, label, vcfId, isIndel);
+    writeInvdel(edge, sv, adata, label, isIndel);
 }
 
 
@@ -660,9 +661,8 @@ writeTanDup(
     const SVCandidateSetData& /*svData*/,
     const SVCandidateAssemblyData& adata)
 {
-    const std::string label("DUP:TANDEM");
-    const std::string vcfId( str(_otherSVIdFormatter % label % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex % adata.bestAlignmentIndex ) );
-    writeInvdel(sv,adata, label, vcfId);
+    static const std::string label("DUP:TANDEM");
+    writeInvdel(edge, sv, adata, label);
 }
 
 
@@ -674,9 +674,8 @@ writeComplex(
     const SVCandidateSetData& /*svData*/,
     const SVCandidateAssemblyData& adata)
 {
-    const std::string label("COMPLEX");
-    const std::string vcfId( str(_otherSVIdFormatter % label % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex % adata.bestAlignmentIndex ) );
-    writeInvdel(sv, adata, label, vcfId);
+    static const std::string label("COMPLEX");
+    writeInvdel(edge, sv, adata, label);
 }
 
 

@@ -66,7 +66,7 @@ if (CPACK_GENERATOR)
     set(CPACK_PACKAGE_VENDOR "Illumina")
     set(CPACK_PACKAGE_VERSION "${MANTA_VERSION}")
     set(CPAKC_PACKAGE_CONTACT "csaunders@illumina.com")
-    
+
     if (CPACK_GENERATOR STREQUAL "RPM")
         set(CPACK_RPM_PACKAGE_RELOCATABLE TRUE)
         set(CPACK_RPM_PACKAGE_LICENSE "Illumina Open Source Software License 1")
@@ -74,7 +74,7 @@ if (CPACK_GENERATOR)
     else ()
         set(CPACK_SET_DESTDIR ON)
     endif ()
-    
+
     INCLUDE(CPack)
 endif ()
 

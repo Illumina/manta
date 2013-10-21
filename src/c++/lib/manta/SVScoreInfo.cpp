@@ -31,7 +31,7 @@ SVAlignmentInfo(
     const SVCandidateAssemblyData& assemblyData)
 {
     // for imprecise SVs, split-read evidence won't be assigned
-	if (sv.isImprecise()) return;
+    if (sv.isImprecise()) return;
 
     if (assemblyData.isSpanning)
     {
@@ -74,38 +74,38 @@ SVAlignmentInfo(
         // again, both bp1 and bp2 include the micro-homology
         bp1RefOffset = sv.bp1.interval.range.end_pos() - bp1Ref.get_offset() - 1;
         const pos_t bp2BeginPos = (sv.isBreakendRangeSameShift() ?
-        		           sv.bp2.interval.range.begin_pos() :
-        		           sv.bp2.interval.range.end_pos()-1);
+                                   sv.bp2.interval.range.begin_pos() :
+                                   sv.bp2.interval.range.end_pos()-1);
         bp2RefOffset = bp2BeginPos - bp2Ref.get_offset();
     }
     else
     {
-    	// get offsets of breakpoints in the extended contig
-    	contigSeq = assemblyData.extendedContigs[assemblyData.bestAlignmentIndex];
-    	const AlignmentResult<int>& alignment = assemblyData.smallSVAlignments[sv.assemblyAlignIndex];
-    	const std::pair<unsigned, unsigned>& alignSegment = assemblyData.smallSVSegments[sv.assemblyAlignIndex][sv.assemblySegmentIndex];
+        // get offsets of breakpoints in the extended contig
+        contigSeq = assemblyData.extendedContigs[assemblyData.bestAlignmentIndex];
+        const AlignmentResult<int>& alignment = assemblyData.smallSVAlignments[sv.assemblyAlignIndex];
+        const std::pair<unsigned, unsigned>& alignSegment = assemblyData.smallSVSegments[sv.assemblyAlignIndex][sv.assemblySegmentIndex];
 
-    	const ALIGNPATH::path_t apathTillSvStart(&alignment.align.apath[0], &alignment.align.apath[alignSegment.first]);
-    	const ALIGNPATH::path_t apathTillSvEnd(&alignment.align.apath[0], &alignment.align.apath[alignSegment.second+1]);
+        const ALIGNPATH::path_t apathTillSvStart(&alignment.align.apath[0], &alignment.align.apath[alignSegment.first]);
+        const ALIGNPATH::path_t apathTillSvEnd(&alignment.align.apath[0], &alignment.align.apath[alignSegment.second+1]);
 
-    	// the beginPos of align is the length of reference padding in the extended contig
-    	// |ref padding| + |alignment segments|
-    	// both bp1 and bp2 include the insert and micro-homology,
-    	// which can avoid false split-read evidence from normal sample when the micorhomology is long
-    	unsigned homologySize = sv.bp1.interval.range.size() - 1;
-    	bp1ContigOffset = alignment.align.beginPos + apath_read_length(apathTillSvStart) + homologySize - 1;
-    	bp2ContigOffset = alignment.align.beginPos + apath_read_length(apathTillSvEnd);
-    	bp1ContigReversed = false;
-    	bp2ContigReversed = false;
+        // the beginPos of align is the length of reference padding in the extended contig
+        // |ref padding| + |alignment segments|
+        // both bp1 and bp2 include the insert and micro-homology,
+        // which can avoid false split-read evidence from normal sample when the micorhomology is long
+        unsigned homologySize = sv.bp1.interval.range.size() - 1;
+        bp1ContigOffset = alignment.align.beginPos + apath_read_length(apathTillSvStart) + homologySize - 1;
+        bp2ContigOffset = alignment.align.beginPos + apath_read_length(apathTillSvEnd);
+        bp1ContigReversed = false;
+        bp2ContigReversed = false;
 
-    	// get reference regions
-    	// only bp1ref is used for small events
-    	const reference_contig_segment& bp1Ref = assemblyData.bp1ref;
-    	bp1RefSeq = bp1Ref.seq();
-    	// get offsets of breakpoints in the reference regions
-    	// again, both bp1 and bp2 include the micro-homology
-    	bp1RefOffset = sv.bp1.interval.range.end_pos() - bp1Ref.get_offset() - 1;
-    	bp2RefOffset = sv.bp2.interval.range.begin_pos() - bp1Ref.get_offset();
+        // get reference regions
+        // only bp1ref is used for small events
+        const reference_contig_segment& bp1Ref = assemblyData.bp1ref;
+        bp1RefSeq = bp1Ref.seq();
+        // get offsets of breakpoints in the reference regions
+        // again, both bp1 and bp2 include the micro-homology
+        bp1RefOffset = sv.bp1.interval.range.end_pos() - bp1Ref.get_offset() - 1;
+        bp2RefOffset = sv.bp2.interval.range.begin_pos() - bp1Ref.get_offset();
     }
 }
 

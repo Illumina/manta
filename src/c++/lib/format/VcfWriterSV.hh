@@ -143,10 +143,10 @@ private:
     /// \param isIndel if true, the variant is a simple right/left breakend insert/delete combination
     void
     writeInvdel(
+        const EdgeInfo& edge,
         const SVCandidate& sv,
         const SVCandidateAssemblyData& adata,
         const std::string& label,
-        const std::string& vcfId,
         const bool isIndel = false);
 
     void

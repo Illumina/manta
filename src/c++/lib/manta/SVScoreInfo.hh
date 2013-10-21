@@ -46,13 +46,13 @@ struct SVAlignmentInfo
     const std::string&
     bp1ReferenceSeq() const
     {
-    	return bp1RefSeq;
+        return bp1RefSeq;
     }
 
     const std::string&
     bp2ReferenceSeq() const
     {
-    	return (isSpanning ? bp2RefSeq : bp1RefSeq);
+        return (isSpanning ? bp2RefSeq : bp1RefSeq);
     }
 
     friend

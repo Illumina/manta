@@ -180,7 +180,7 @@ struct SVCandidate
         _isImprecise(true),
         candidateIndex(0),
         assemblyAlignIndex(0),
-    	assemblySegmentIndex(0)
+        assemblySegmentIndex(0)
     {}
 
 #if 0
