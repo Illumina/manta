@@ -46,6 +46,7 @@ SVAlignmentInfo(
         // both bp1 and bp2 include the insert and micro-homology,
         // which can avoid false split-read evidence from normal sample when the micorhomology is long
         unsigned homologySize = sv.bp1.interval.range.size() - 1;
+        log_os << "insertSize = " << insertSize << " homSize = " << homologySize << "\n";
         bp1ContigOffset = alignment.align1.beginPos + align1Size + insertSize + homologySize - 1;
         bp2ContigOffset = alignment.align1.beginPos + align1Size;
         if (assemblyData.isBp2AlignedFirst)
