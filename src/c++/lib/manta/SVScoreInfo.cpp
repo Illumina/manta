@@ -30,23 +30,24 @@ SVAlignmentInfo(
     const SVCandidate& sv,
     const SVCandidateAssemblyData& assemblyData)
 {
-    // consider 2-locus events first
-    // TODO: to add local assembly later
-
     // for imprecise SVs, split-read evidence won't be assigned
-    if ((assemblyData.isSpanning) &&
-        (!sv.isImprecise()))
-    {
-        contigSeq = assemblyData.extendedContigs[assemblyData.bestAlignmentIndex];
-        const JumpAlignmentResult<int>& alignment = assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex];
+	if (sv.isImprecise()) return;
 
-        // get offsets of breakpoints in the contig
+    if (assemblyData.isSpanning)
+    {
+        contigSeq = assemblyData.extendedContigs[sv.assemblyAlignIndex];
+        const JumpAlignmentResult<int>& alignment = assemblyData.spanningAlignments[sv.assemblyAlignIndex];
+
+        // get offsets of breakpoints in the extended contig
         const unsigned align1Size(apath_read_length(alignment.align1.apath));
         const unsigned insertSize(alignment.jumpInsertSize);
         // the beginPos of align1 is the length of reference padding in the extended contig
         // |ref padding| + |align1| + |insert| + |align2|
-        bp1ContigOffset = alignment.align1.beginPos + align1Size - 1;
-        bp2ContigOffset = alignment.align1.beginPos + align1Size + insertSize;
+        // both bp1 and bp2 include the insert and micro-homology,
+        // which can avoid false split-read evidence from normal sample when the micorhomology is long
+        unsigned homologySize = sv.bp1.interval.range.size() - 1;
+        bp1ContigOffset = alignment.align1.beginPos + align1Size + insertSize + homologySize - 1;
+        bp2ContigOffset = alignment.align1.beginPos + align1Size;
         if (assemblyData.isBp2AlignedFirst)
         {
             std::swap(bp1ContigOffset, bp2ContigOffset);
@@ -54,7 +55,6 @@ SVAlignmentInfo(
 
         bp1ContigReversed = assemblyData.isBp1Reversed;
         bp2ContigReversed = assemblyData.isBp2Reversed;
-
         if (bp1ContigReversed || bp2ContigReversed)
         {
             revContigSeq = reverseCompCopyStr(contigSeq);
@@ -71,11 +71,41 @@ SVAlignmentInfo(
         bp1RefSeq = bp1Ref.seq();
         bp2RefSeq = bp2Ref.seq();
         // get offsets of breakpoints in the reference regions
-        bp1RefOffset = sv.bp1.interval.range.begin_pos() - bp1Ref.get_offset();
+        // again, both bp1 and bp2 include the micro-homology
+        bp1RefOffset = sv.bp1.interval.range.end_pos() - bp1Ref.get_offset() - 1;
         const pos_t bp2BeginPos = (sv.isBreakendRangeSameShift() ?
-                                   sv.bp2.interval.range.begin_pos() :
-                                   sv.bp2.interval.range.end_pos()-1);
+        		           sv.bp2.interval.range.begin_pos() :
+        		           sv.bp2.interval.range.end_pos()-1);
         bp2RefOffset = bp2BeginPos - bp2Ref.get_offset();
+    }
+    else
+    {
+    	// get offsets of breakpoints in the extended contig
+    	contigSeq = assemblyData.extendedContigs[assemblyData.bestAlignmentIndex];
+    	const AlignmentResult<int>& alignment = assemblyData.smallSVAlignments[sv.assemblyAlignIndex];
+    	const std::pair<unsigned, unsigned>& alignSegment = assemblyData.smallSVSegments[sv.assemblyAlignIndex][sv.assemblySegmentIndex];
+
+    	const ALIGNPATH::path_t apathTillSvStart(&alignment.align.apath[0], &alignment.align.apath[alignSegment.first]);
+    	const ALIGNPATH::path_t apathTillSvEnd(&alignment.align.apath[0], &alignment.align.apath[alignSegment.second+1]);
+
+    	// the beginPos of align is the length of reference padding in the extended contig
+    	// |ref padding| + |alignment segments|
+    	// both bp1 and bp2 include the insert and micro-homology,
+    	// which can avoid false split-read evidence from normal sample when the micorhomology is long
+    	unsigned homologySize = sv.bp1.interval.range.size() - 1;
+    	bp1ContigOffset = alignment.align.beginPos + apath_read_length(apathTillSvStart) + homologySize - 1;
+    	bp2ContigOffset = alignment.align.beginPos + apath_read_length(apathTillSvEnd);
+    	bp1ContigReversed = false;
+    	bp2ContigReversed = false;
+
+    	// get reference regions
+    	// only bp1ref is used for small events
+    	const reference_contig_segment& bp1Ref = assemblyData.bp1ref;
+    	bp1RefSeq = bp1Ref.seq();
+    	// get offsets of breakpoints in the reference regions
+    	// again, both bp1 and bp2 include the micro-homology
+    	bp1RefOffset = sv.bp1.interval.range.end_pos() - bp1Ref.get_offset() - 1;
+    	bp2RefOffset = sv.bp2.interval.range.begin_pos() - bp1Ref.get_offset();
     }
 }
 

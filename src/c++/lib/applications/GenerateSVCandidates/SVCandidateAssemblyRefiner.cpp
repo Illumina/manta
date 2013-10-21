@@ -661,7 +661,8 @@ getJumpAssembly(
         // summarize usable output information in a second SVBreakend object -- this is the 'refined' sv:
         assemblyData.svs.push_back(sv);
         SVCandidate& newSV(assemblyData.svs.back());
-        newSV.assemblyIndex = 0;
+        newSV.assemblyAlignIndex = 0;
+        newSV.assemblySegmentIndex = 0;
 
         newSV.setPrecise();
 
@@ -749,6 +750,10 @@ getSmallSVAssembly(
             align1RefStrPtr->begin(), align1RefStrPtr->end(),
             alignment);
 
+        std::string extendedContig;
+        getExtendedContig(alignment, contig.seq, align1RefStrPtr, extendedContig);
+        assemblyData.extendedContigs.push_back(extendedContig);
+
         // remove candidate from consideration unless we find a sufficiently large indel with good flanking sequence:
         std::vector<std::pair<unsigned,unsigned> >& candidateSegments(assemblyData.smallSVSegments[contigIndex]);
         const bool isFilterSmallSV( isFilterSmallSVAlignment(_smallSVAligner, alignment.align.apath, _opt.scanOpt.minCandidateVariantSize, candidateSegments));
@@ -792,12 +797,15 @@ getSmallSVAssembly(
         const SVCandidateAssemblyData::SmallAlignmentResultType& bestAlign(assemblyData.smallSVAlignments[assemblyData.bestAlignmentIndex]);
 
         const SVCandidateAssemblyData::CandidateSegmentSetType& candidateSegments(assemblyData.smallSVSegments[assemblyData.bestAlignmentIndex]);
+        unsigned segmentIndex = 0;
         BOOST_FOREACH(const SVCandidateAssemblyData::CandidateSegmentType& segRange, candidateSegments)
         {
             assemblyData.svs.push_back(sv);
             SVCandidate& newSV(assemblyData.svs.back());
-            newSV.assemblyIndex = (assemblyData.svs.size() - 1);
+            newSV.assemblyAlignIndex = assemblyData.bestAlignmentIndex;
+            newSV.assemblySegmentIndex = segmentIndex;
             setSmallCandSV(assemblyData.bp1ref, bestContig.seq, bestAlign.align, segRange, newSV);
+            segmentIndex++;
 
 #ifdef DEBUG_REFINER
             log_os << logtag << "small refined sv: " << newSV;

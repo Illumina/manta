@@ -24,6 +24,7 @@
 #include "blt_util/qscore.hh"
 #include "common/Exceptions.hh"
 #include "manta/ReadGroupStatsSet.hh"
+
 #include "boost/foreach.hpp"
 
 #include <algorithm>
@@ -337,12 +338,7 @@ getSVSplitReadSupport(
     // apply the split-read scoring, only when:
     // 1) the SV is precise, i.e. has successful somatic contigs;
     // 2) the values of max depth are reasonable (otherwise, the read map may blow out).
-    //
-    // consider 2-locus events first
-    // TODO: to add local assembly later
-    //
     const bool isSkipSRSearch(
-        (! assemblyData.isSpanning) ||
         (sv.isImprecise()) ||
         (isSkipSRSearchDepth));
 
@@ -366,6 +362,7 @@ getSVSplitReadSupport(
         bam_streamer& bamStream(*_bamStreams[bamIndex]);
 
         SVEvidence::evidenceTrack_t& sampleEvidence(evidence.getSample(isTumor));
+
         // scoring split reads overlapping bp1
         scoreSplitReads(sv.bp1, SVAlignInfo, minMapQ, sampleEvidence,
                         bamStream, sample);
@@ -522,6 +519,7 @@ scoreSV(
     baseInfo.bp2MaxDepth=(getBreakendMaxMappedDepth(sv.bp2));
 
     /// global evidence accumulator for this SV:
+
     // count the paired-read fragments supporting the ref and alt alleles in each sample:
     //
     getSVPairSupport(svData, sv, baseInfo, evidence);
