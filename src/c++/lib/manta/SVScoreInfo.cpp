@@ -50,8 +50,8 @@ SVAlignmentInfo(
         log_os << "isBp2AlignedFirst = " << assemblyData.isBp2AlignedFirst << "\n";
         bp1ContigOffset = alignment.align1.beginPos + align1Size + insertSize + homologySize - 1;
         bp2ContigOffset = alignment.align1.beginPos + align1Size;
-        log_os << "bp1ContigOffset = " << bp1ContigOffset << " bp1 contig reversed = " << bp1ContigReversed << "\n";
-        log_os << "bp2ContigOffset = " << bp2ContigOffset << " bp2 contig reversed = " << bp2ContigReversed << "\n";
+        log_os << "bp1ContigOffset = " << bp1ContigOffset << "\n";
+        log_os << "bp2ContigOffset = " << bp2ContigOffset << "\n";
         if (assemblyData.isBp2AlignedFirst)
         {
             std::swap(bp1ContigOffset, bp2ContigOffset);
@@ -68,6 +68,8 @@ SVAlignmentInfo(
             else
             	bp2ContigOffset = contigSeq.size() - bp2ContigOffset - 1;
         }
+        log_os << "bp1ContigOffset = " << bp1ContigOffset << " bp1 contig reversed = " << bp1ContigReversed << "\n";
+        log_os << "bp2ContigOffset = " << bp2ContigOffset << " bp2 contig reversed = " << bp2ContigReversed << "\n";
 
         // get reference regions
         const reference_contig_segment& bp1Ref = assemblyData.bp1ref;
