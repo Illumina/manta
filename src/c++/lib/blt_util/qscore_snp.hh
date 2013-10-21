@@ -20,32 +20,32 @@
 #include "blt_util/qscore_cache.hh"
 
 
-/// this object provides a variation on regular qscores by incorporating SNV probability
+/// this object provides a variation on regular qscores by incorporating SNP probability
 ///
 /// SNV probability limits the error if we have to explain the difference
 /// between a read and the reference, however it should not be used in cases where the
 /// biological variation has already been accounted for in the comparison.
 ///
-struct qscore_snv
+struct qscore_snp
 {
-    qscore_snv(const double snv_prob);
+    qscore_snp(const double snp_prob);
 
     double
-    qphred_to_error_prob(const int qscore)
+    qphred_to_error_prob(const int qscore) const
     {
         qphred_cache::qscore_check(qscore, "basecall quality");
         return _q2p[qscore];
     }
 
     double
-    qphred_to_ln_comp_error_prob(const int qscore)
+    qphred_to_ln_comp_error_prob(const int qscore) const
     {
         qphred_cache::qscore_check(qscore, "basecall quality");
         return _q2lncompe[qscore];
     }
 
     double
-    qphred_to_ln_error_prob(const int qscore)
+    qphred_to_ln_error_prob(const int qscore) const
     {
         qphred_cache::qscore_check(qscore, "basecall quality");
         return _q2lne[qscore];

@@ -17,10 +17,13 @@
 
 #pragma once
 
+#include "blt_util/qscore_snp.hh"
+
 #include <stdint.h>
 
 #include <string>
 #include <iostream>
+
 
 struct SRAlignmentInfo
 {
@@ -133,15 +136,18 @@ struct SplitReadAlignment
     unsigned
     calculateAlignScore(
         const std::string& querySeq,
+        const qscore_snp& qualConvert,
         const uint8_t* queryQual,
         const std::string::const_iterator& scanWindowBegin,
         const std::string::const_iterator& scanWindowEnd);
 
     void
-    align(const std::string& querySeq,
-          const uint8_t* queryQual,
-          const std::string& targetSeq,
-          const unsigned bpOffset);
+    align(
+        const std::string& querySeq,
+        const qscore_snp& qualConvert,
+        const uint8_t* queryQual,
+        const std::string& targetSeq,
+        const unsigned bpOffset);
 
 private:
 

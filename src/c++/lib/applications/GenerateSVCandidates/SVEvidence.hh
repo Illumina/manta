@@ -163,6 +163,12 @@ struct SVFragmentEvidence
         return (isRead1 ? read1 : read2);
     }
 
+    const SVFragmentEvidenceRead&
+    getRead(const bool isRead1) const
+    {
+        return (isRead1 ? read1 : read2);
+    }
+
     /// does this fragment provide any pair evidence for any allele/bp combination?
     bool
     isAnyPairSupport() const

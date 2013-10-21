@@ -23,6 +23,7 @@
 
 #include "blt_util/bam_streamer.hh"
 #include "blt_util/bam_header_info.hh"
+#include "blt_util/qscore_snp.hh"
 #include "manta/ChromDepthFilterUtil.hh"
 #include "manta/SVCandidate.hh"
 #include "manta/SVCandidateSetData.hh"
@@ -45,6 +46,20 @@ struct PairOptions
     ///
     /// for reads shorter than this length, the whole read is required...
     static const pos_t minFragSupport;
+};
+
+
+
+struct CallOptionsSharedDeriv
+{
+    CallOptionsSharedDeriv(
+        const CallOptionsShared& opt) :
+      refQ(opt.snpPrior),
+      altQ(0)
+    {}
+
+    const qscore_snp refQ;
+    const qscore_snp altQ;
 };
 
 
@@ -137,6 +152,8 @@ private:
 
 
     const std::vector<bool> _isAlignmentTumor;
+    const CallOptionsShared _callOpt;
+    const CallOptionsSharedDeriv _callDopt;
     const CallOptionsDiploid _diploidOpt;
     const CallOptionsDiploidDeriv _diploidDopt;
     const CallOptionsSomatic _somaticOpt;

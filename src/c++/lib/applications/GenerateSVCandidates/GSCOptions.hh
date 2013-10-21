@@ -21,6 +21,7 @@
 #include "manta/Program.hh"
 #include "options/AlignmentFileOptions.hh"
 #include "options/CallOptionsDiploid.hh"
+#include "options/CallOptionsShared.hh"
 #include "options/CallOptionsSomatic.hh"
 #include "options/ReadScannerOptions.hh"
 #include "options/SVRefinerOptions.hh"
@@ -41,6 +42,7 @@ struct GSCOptions
     EdgeOptions edgeOpt;
     ReadScannerOptions scanOpt;
     SVRefinerOptions refineOpt;
+    CallOptionsShared callOpt;
     CallOptionsDiploid diploidOpt;
     CallOptionsSomatic somaticOpt;
 

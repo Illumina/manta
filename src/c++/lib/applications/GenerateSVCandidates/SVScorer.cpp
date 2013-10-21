@@ -20,6 +20,7 @@
 
 #include "blt_util/align_path_bam_util.hh"
 #include "blt_util/bam_streamer.hh"
+#include "blt_util/math_util.hh"
 #include "blt_util/prob_util.hh"
 #include "blt_util/qscore.hh"
 #include "common/Exceptions.hh"
@@ -54,6 +55,8 @@ SVScorer(
     const GSCOptions& opt,
     const bam_header_info& header) :
     _isAlignmentTumor(opt.alignFileOpt.isAlignmentTumor),
+    _callOpt(opt.callOpt),
+    _callDopt(_callOpt),
     _diploidOpt(opt.diploidOpt),
     _diploidDopt(_diploidOpt),
     _somaticOpt(opt.somaticOpt),
@@ -97,7 +100,7 @@ addReadToDepthEst(
     {
         if (refPos>=endPos) return;
 
-        if (MATCH == ps.type)
+        if (is_segment_align_match(ps.type))
         {
             for (pos_t pos(refPos); pos < (refPos+static_cast<pos_t>(ps.length)); ++pos)
             {
@@ -218,6 +221,7 @@ incrementAlleleEvidence(
 static
 void
 scoreSplitReads(
+    const CallOptionsSharedDeriv& dopt,
     const SVBreakend& bp,
     const SVAlignmentInfo& svAlignInfo,
     const unsigned minMapQ,
@@ -242,12 +246,13 @@ scoreSplitReads(
 
         SVFragmentEvidence& fragment(sampleEvidence[bamRead.qname()]);
 
-        setReadEvidence(minMapQ, bamRead, fragment.getRead(bamRead.is_first()));
+        const bool isRead1(bamRead.is_first());
+        setReadEvidence(minMapQ, bamRead, fragment.getRead(isRead1));
 
-        SVFragmentEvidenceAlleleBreakendPerRead& altBp1ReadSupport(fragment.alt.bp1.getRead(bamRead.is_first()));
-        SVFragmentEvidenceAlleleBreakendPerRead& refBp1ReadSupport(fragment.ref.bp1.getRead(bamRead.is_first()));
-        SVFragmentEvidenceAlleleBreakendPerRead& altBp2ReadSupport(fragment.alt.bp2.getRead(bamRead.is_first()));
-        SVFragmentEvidenceAlleleBreakendPerRead& refBp2ReadSupport(fragment.ref.bp2.getRead(bamRead.is_first()));
+        SVFragmentEvidenceAlleleBreakendPerRead& altBp1ReadSupport(fragment.alt.bp1.getRead(isRead1));
+        SVFragmentEvidenceAlleleBreakendPerRead& refBp1ReadSupport(fragment.ref.bp1.getRead(isRead1));
+        SVFragmentEvidenceAlleleBreakendPerRead& altBp2ReadSupport(fragment.alt.bp2.getRead(isRead1));
+        SVFragmentEvidenceAlleleBreakendPerRead& refBp2ReadSupport(fragment.ref.bp2.getRead(isRead1));
 
         /// in this function we evaluate the hypothesis of both breakends at the same time, the only difference bp1 vs
         /// bp2 makes is where in the bam we look for reads, therefore if we see split evaluation for bp1 or bp2, we can skip this read:
@@ -260,15 +265,15 @@ scoreSplitReads(
 
         // align the read to the somatic contig
         SplitReadAlignment bp1ContigSR;
-        bp1ContigSR.align(readSeq, qual, svAlignInfo.bp1ContigSeq(), svAlignInfo.bp1ContigOffset);
+        bp1ContigSR.align(readSeq, dopt.altQ, qual, svAlignInfo.bp1ContigSeq(), svAlignInfo.bp1ContigOffset);
         SplitReadAlignment bp2ContigSR;
-        bp2ContigSR.align(readSeq, qual, svAlignInfo.bp2ContigSeq(), svAlignInfo.bp2ContigOffset);
+        bp2ContigSR.align(readSeq, dopt.altQ, qual, svAlignInfo.bp2ContigSeq(), svAlignInfo.bp2ContigOffset);
 
         // align the read to reference regions
         SplitReadAlignment bp1RefSR;
-        bp1RefSR.align(readSeq, qual, svAlignInfo.bp1ReferenceSeq(), svAlignInfo.bp1RefOffset);
+        bp1RefSR.align(readSeq, dopt.refQ, qual, svAlignInfo.bp1ReferenceSeq(), svAlignInfo.bp1RefOffset);
         SplitReadAlignment bp2RefSR;
-        bp2RefSR.align(readSeq, qual, svAlignInfo.bp2ReferenceSeq(), svAlignInfo.bp2RefOffset);
+        bp2RefSR.align(readSeq, dopt.refQ, qual, svAlignInfo.bp2ReferenceSeq(), svAlignInfo.bp2RefOffset);
 
         // scoring
         incrementAlleleEvidence(bp1ContigSR, bp2ContigSR, readMapQ, sample.alt, altBp1ReadSupport, altBp2ReadSupport);
@@ -364,10 +369,10 @@ getSVSplitReadSupport(
         SVEvidence::evidenceTrack_t& sampleEvidence(evidence.getSample(isTumor));
 
         // scoring split reads overlapping bp1
-        scoreSplitReads(sv.bp1, SVAlignInfo, minMapQ, sampleEvidence,
+        scoreSplitReads(_callDopt, sv.bp1, SVAlignInfo, minMapQ, sampleEvidence,
                         bamStream, sample);
         // scoring split reads overlapping bp2
-        scoreSplitReads(sv.bp2, SVAlignInfo, minMapQ, sampleEvidence,
+        scoreSplitReads(_callDopt, sv.bp2, SVAlignInfo, minMapQ, sampleEvidence,
                         bamStream, sample);
     }
 
@@ -594,36 +599,39 @@ struct ProbSet
 
 static
 void
-incrementSpanningPairAlleleLhood(
+incrementSpanningPairAlleleLnLhood(
     const ProbSet& chimeraProb,
     const SVFragmentEvidenceAllele& allele,
-    float& bpLhood)
+    double& bpLnLhood)
 {
     const float fragProb(getSpanningPairAlleleLhood(allele));
-    bpLhood *= (chimeraProb.comp*fragProb + chimeraProb.prob);
+    bpLnLhood += std::log(chimeraProb.comp*fragProb + chimeraProb.prob);
 }
 
 
-#if 0
+
 static
 void
 incrementAlleleSplitReadLhood(
     const SVFragmentEvidenceAllele& allele,
+    const double readLnPrior,
     const bool isRead1,
-    float& refSplitHood)
+    double& refSplitLnLhood)
 {
     /// use a constant mapping prob for now just to get the zero-th order concept into the model
     /// that "reads are mismapped at a non-trivial rate"
     /// TODO: experiment with per-read mapq values here
     ///
-    static const float mapProb(1e-6);
-    static const float mapComp(1.-mapProb);
+    static const double mapProb(1e-6);
+    static const double mapComp(1.-mapProb);
+    static const double mapLnProb(std::log(mapProb));
+    static const double mapLnComp(std::log(mapComp));
 
-    const float alignBp1Lhood(allele.bp1.getRead(isRead1).splitLnLhood);
-    const float alignBp2Lhood(allele.bp1.getRead(isRead1).splitLnLhood);
-    const float alignLhood(std::max(alignBp1Lhood,alignBp1Lhood));
+    const float alignBp1LnLhood(allele.bp1.getRead(isRead1).splitLnLhood);
+    const float alignBp2LnLhood(allele.bp2.getRead(isRead1).splitLnLhood);
+    const float alignLnLhood(std::max(alignBp1LnLhood,alignBp2LnLhood));
 
-    refSplitHood *= (mapComp*fragProb + mapProb);}
+    refSplitLnLhood += log_sum((mapLnComp+alignLnLhood), (mapLnProb+readLnPrior));
 }
 
 
@@ -633,29 +641,44 @@ void
 incrementSplitReadLhood(
     const SVFragmentEvidence& fragev,
     const bool isRead1,
-    float& refSplitHood,
-    float& altSplitHood)
+    double& refSplitLnLhood,
+    double& altSplitLnLhood)
 {
+    static const double baseLnPrior(std::log(0.25));
+
     if (! fragev.isAnySplitSupportForRead(isRead1)) return;
 
-    incrementAlleleSplitReadLhood(fragev.ref, isRead1, refSplitHood);
-    incrementAlleleSplitReadLhood(fragev.alt, isRead1, altSplitHood);
+    const unsigned readSize(fragev.getRead(isRead1).size);
+    const double readLnPrior(baseLnPrior*readSize);
+
+    incrementAlleleSplitReadLhood(fragev.ref, readLnPrior, isRead1, refSplitLnLhood);
+    incrementAlleleSplitReadLhood(fragev.alt, readLnPrior, isRead1, altSplitLnLhood);
 }
-#endif
 
 
-struct AlleleLhood
+
+struct AlleleLnLhood
 {
-    AlleleLhood() :
-        fragPair(1),
-        read1Split(1),
-        read2Split(1)
+    AlleleLnLhood() :
+        fragPair(0),
+        read1Split(0),
+        read2Split(0)
     {}
 
-    float fragPair;
-    float read1Split;
-    float read2Split;
+    double fragPair;
+    double read1Split;
+    double read2Split;
 };
+
+
+
+static
+double
+getFragLnLhood(
+    const AlleleLnLhood& al)
+{
+    return (al.fragPair + al.read1Split + al.read2Split);
+}
 
 
 
@@ -696,7 +719,7 @@ scoreDiploidSV(
         {
             const SVFragmentEvidence& fragev(val.second);
 
-            AlleleLhood refProbs, altProbs;
+            AlleleLnLhood refLnLhoodSet, altLnLhoodSet;
 
 #ifdef DEBUG_SCORE
             log_os << logtag << "qname: " << val.first << " fragev: " << fragev << "\n";
@@ -710,22 +733,25 @@ scoreDiploidSV(
                 /// only add to the likelihood if the fragment "supports" at least one allele:
                 if ( fragev.isAnyPairSupport() )
                 {
-                    incrementSpanningPairAlleleLhood(chimeraProb, fragev.alt, refProbs.fragPair);
-                    incrementSpanningPairAlleleLhood(chimeraProb, fragev.ref, altProbs.fragPair);
+                    incrementSpanningPairAlleleLnLhood(chimeraProb, fragev.ref, refLnLhoodSet.fragPair);
+                    incrementSpanningPairAlleleLnLhood(chimeraProb, fragev.alt, altLnLhoodSet.fragPair);
                 }
             }
 
             /// split support is less dependent on mapping quality of the individual read, because
             /// we're potentially relying on shadow reads recovered from the unmapped state
-      //      incrementSplitReadLhood(fragev, true, refProbs.read1Split, altProbs.read1Split);
-      //      incrementSplitReadLhood(fragev, false, refProbs.read1Split, altProbs.read2Split);
+            incrementSplitReadLhood(fragev, true,  refLnLhoodSet.read1Split, altLnLhoodSet.read1Split);
+            incrementSplitReadLhood(fragev, false, refLnLhoodSet.read2Split, altLnLhoodSet.read2Split);
 
             for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
             {
-                const float altFrac(DIPLOID_GT::altFraction(gt));
-                const float reflhood(refProbs.fragPair * (1.-altFrac));
-                const float altlhood(altProbs.fragPair * altFrac);
-                loglhood[gt] += std::log(reflhood + altlhood);
+                using namespace DIPLOID_GT;
+                const index_t gtid(static_cast<const index_t>(gt));
+                const double refLnFragLhood(getFragLnLhood(refLnLhoodSet));
+                const double altLnFragLhood(getFragLnLhood(altLnLhoodSet));
+                const float refLnLhood(refLnFragLhood + altLnCompFraction(gtid));
+                const float altLnLhood(altLnFragLhood + altLnFraction(gtid));
+                loglhood[gt] += log_sum(refLnLhood, altLnLhood);
 
 #ifdef DEBUG_SCORE
                 log_os << logtag << "gt/fragref/ref/fragalt/alt: "

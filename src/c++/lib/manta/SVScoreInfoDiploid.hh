@@ -19,6 +19,8 @@
 
 #include "manta/SVScoreInfo.hh"
 
+#include <cmath>
+
 #include <set>
 
 
@@ -73,14 +75,32 @@ altFraction(const index_t i)
         assert(false && "Unknown GT state");
         return 0;
     }
-
 }
 
 inline
-float
-altFraction(const unsigned i)
+double
+altLnFraction(const index_t i)
 {
-    return altFraction(static_cast<const index_t>(i));
+    static const double val[] = { std::log(0.), std::log(0.5), std::log(1.) };
+    switch (i)
+    {
+    case REF :
+        return val[0];
+    case HET :
+        return val[1];
+    case HOM :
+        return val[2];
+    default:
+        assert(false && "Unknown GT state");
+        return 0;
+    }
+}
+
+inline
+double
+altLnCompFraction(const index_t i)
+{
+    return altLnFraction(static_cast<index_t>(2-i));
 }
 
 }

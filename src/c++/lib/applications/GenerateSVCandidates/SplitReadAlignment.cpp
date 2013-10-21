@@ -17,7 +17,6 @@
 
 #include "SplitReadAlignment.hh"
 #include "blt_util/log.hh"
-#include "blt_util/qscore.hh"
 
 #include <cassert>
 #include <cmath>
@@ -29,6 +28,7 @@ unsigned
 SplitReadAlignment::
 calculateAlignScore(
     const std::string& querySeq,
+    const qscore_snp& qualConvert,
     const uint8_t* queryQual,
     const std::string::const_iterator& scanWindowBegin,
     const std::string::const_iterator& scanWindowEnd)
@@ -55,11 +55,11 @@ calculateAlignScore(
             {
                 rightMismatches += 1;
             }
-            lnLhood += qphred_to_ln_error_prob(static_cast<int>(queryQual[i])) + ln_one_third;
+            lnLhood += qualConvert.qphred_to_ln_error_prob(static_cast<int>(queryQual[i])) + ln_one_third;
         }
         else
         {
-            lnLhood += qphred_to_ln_comp_error_prob(static_cast<int>(queryQual[i]));
+            lnLhood += qualConvert.qphred_to_ln_comp_error_prob(static_cast<int>(queryQual[i]));
         }
     }
 
@@ -73,10 +73,12 @@ calculateAlignScore(
 
 void
 SplitReadAlignment::
-align(const std::string& querySeq,
-      const uint8_t* queryQual,
-      const std::string& targetSeq,
-      const unsigned bpOffset)
+align(
+    const std::string& querySeq,
+    const qscore_snp& qualConvert,
+    const uint8_t* queryQual,
+    const std::string& targetSeq,
+    const unsigned bpOffset)
 {
     SRAlignmentInfo bestAlignInfo;
 
@@ -102,7 +104,7 @@ align(const std::string& querySeq,
         _alignment.set_sizes(leftSize, rightSize);
 
         const std::string::const_iterator scanWindowStart = targetSeq.begin()+i;
-        const unsigned score = calculateAlignScore(querySeq, queryQual, scanWindowStart, scanWindowEnd);
+        const unsigned score = calculateAlignScore(querySeq, qualConvert, queryQual, scanWindowStart, scanWindowEnd);
 
         if (score > bestAlignInfo.get_alignScore())
         {
