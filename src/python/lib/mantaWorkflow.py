@@ -208,6 +208,8 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
     Run hypothesis generation on each SV locus
     """
 
+    import copy
+
     statsPath=self.paths.getStatsPath()
     graphPath=self.paths.getGraphPath()
     hygenDir=self.paths.getHyGenDir()
@@ -257,8 +259,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         hygenTaskLabel=preJoin(taskPrefix,"generateCandidateSV_"+binStr)
         hygenTasks.add(self.addTask(hygenTaskLabel,hygenCmd,dependencies=dirTask, memMb=hyGenMemMb))
 
-    nextStepWait = hygenTasks
-
+    nextStepWait = copy.deepcopy(hygenTasks)
 
     def getVcfSortCmd(vcfPaths, outPath) :
         cmd  = "%s -E %s " % (sys.executable,self.params.mantaSortVcf)

@@ -436,7 +436,8 @@ writeInvdel(
     const bool isIndel)
 {
     const std::string vcfId( str(_otherSVIdFormatter
-            % label % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex %  sv.assemblyAlignIndex % sv.assemblySegmentIndex ) );
+                                 % label % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2
+                                 % sv.candidateIndex %  sv.assemblyAlignIndex % sv.assemblySegmentIndex ) );
 
     const bool isImprecise(sv.isImprecise());
     const bool isBreakendRangeSameShift(sv.isBreakendRangeSameShift());
