@@ -393,6 +393,16 @@ incrementAlleleSplitReadLhood(
     const float alignLnLhood(std::max(alignBp1LnLhood,alignBp2LnLhood));
 
     refSplitLnLhood += log_sum((mapLnComp+alignLnLhood), (mapLnProb+readLnPrior));
+
+#ifdef DEBUG_SCORE
+    static const std::string logtag("incrementAlleleSplitReadLhood: ");
+    log_os << logtag << "readPrior: " << readLnPrior << " isRead1?: " << isRead1 << "\n";
+    log_os << logtag << "alignBp1LnLhood " << alignBp1LnLhood << "\n";
+    log_os << logtag << "alignBp2LnLhood " << alignBp2LnLhood << "\n";
+    log_os << logtag << "increment " << log_sum((mapLnComp+alignLnLhood), (mapLnProb+readLnPrior)) << "\n";
+    log_os << logtag << "refSplitLnLhood " << refSplitLnLhood << "\n";
+#endif
+
 }
 
 
@@ -407,12 +417,27 @@ incrementSplitReadLhood(
 {
     static const double baseLnPrior(std::log(0.25));
 
+#ifdef DEBUG_SCORE
+    static const std::string logtag("incrementSplitReadLhood: ");
+    log_os << logtag << "pre-support\n";
+#endif
+
     if (! fragev.isAnySplitSupportForRead(isRead1)) return;
+
+#ifdef DEBUG_SCORE
+    log_os << logtag << "post-support\n";
+#endif
 
     const unsigned readSize(fragev.getRead(isRead1).size);
     const double readLnPrior(baseLnPrior*readSize);
 
+#ifdef DEBUG_SCORE
+    log_os << logtag << "starting ref\n";
+#endif
     incrementAlleleSplitReadLhood(fragev.ref, readLnPrior, isRead1, refSplitLnLhood);
+#ifdef DEBUG_SCORE
+    log_os << logtag << "starting alt\n";
+#endif
     incrementAlleleSplitReadLhood(fragev.alt, readLnPrior, isRead1, altSplitLnLhood);
 }
 
@@ -438,6 +463,10 @@ double
 getFragLnLhood(
     const AlleleLnLhood& al)
 {
+#ifdef DEBUG_SCORE
+    log_os << "getFragLnLhood: frag/read1/read2 " << al.fragPair << " " << al.read1Split << " " << al.read2Split << "\n";
+#endif
+
     return (al.fragPair + al.read1Split + al.read2Split);
 }
 
@@ -501,26 +530,43 @@ scoreDiploidSV(
 
             /// split support is less dependent on mapping quality of the individual read, because
             /// we're potentially relying on shadow reads recovered from the unmapped state
+#ifdef DEBUG_SCORE
+            log_os << logtag << "starting read1 split\n";
+#endif
             incrementSplitReadLhood(fragev, true,  refLnLhoodSet.read1Split, altLnLhoodSet.read1Split);
+#ifdef DEBUG_SCORE
+            log_os << logtag << "starting read2 split\n";
+#endif
             incrementSplitReadLhood(fragev, false, refLnLhoodSet.read2Split, altLnLhoodSet.read2Split);
 
             for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
             {
                 using namespace DIPLOID_GT;
+
+#ifdef DEBUG_SCORE
+                log_os << logtag << "starting gt: " << gt << " " << label(gt) << "\n";
+#endif
+
                 const index_t gtid(static_cast<const index_t>(gt));
                 const double refLnFragLhood(getFragLnLhood(refLnLhoodSet));
+#ifdef DEBUG_SCORE
+                log_os << logtag << "refLnFragLhood: " << refLnFragLhood << "\n";
+#endif
                 const double altLnFragLhood(getFragLnLhood(altLnLhoodSet));
+#ifdef DEBUG_SCORE
+                log_os << logtag << "altLnFragLhood: " << altLnFragLhood << "\n";
+#endif
                 const float refLnLhood(refLnFragLhood + altLnCompFraction(gtid));
                 const float altLnLhood(altLnFragLhood + altLnFraction(gtid));
                 loglhood[gt] += log_sum(refLnLhood, altLnLhood);
 
 #ifdef DEBUG_SCORE
                 log_os << logtag << "gt/fragref/ref/fragalt/alt: "
-                       << DIPLOID_GT::label(gt)
-                       << " " << fragRefLhood
-                       << " " << reflhood
-                       << " " << fragAltLhood
-                       << " " << altlhood
+                       << label(gt)
+                       << " " << refLnFragLhood
+                       << " " << refLnLhood
+                       << " " << altLnFragLhood
+                       << " " << altLnLhood
                        << "\n";
 #endif
             }
