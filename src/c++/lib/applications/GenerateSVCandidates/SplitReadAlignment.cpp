@@ -45,7 +45,11 @@ calculateAlignScore(
     for (unsigned i(0); i<querySize; i++)
     {
         assert((scanWindowBegin+i) != scanWindowEnd);
-        if (querySeq[i] != *(scanWindowBegin+i))
+
+        // put a lower-bound on quality values:
+        const int baseQual(std::max(2,static_cast<int>(queryQual[i])));
+
+        if ((querySeq[i] != *(scanWindowBegin+i)) || (querySeq[i] == 'N'))
         {
             if (i<=leftSize)
             {
@@ -55,11 +59,20 @@ calculateAlignScore(
             {
                 rightMismatches += 1;
             }
-            lnLhood += qualConvert.qphred_to_ln_error_prob(static_cast<int>(queryQual[i])) + ln_one_third;
+
+            if ((querySeq[i] == 'N') || (*(scanWindowBegin+i) == 'N'))
+            {
+                static const float lnRandomBase(std::log(0.25));
+                lnLhood += lnRandomBase;
+            }
+            else
+            {
+                lnLhood += qualConvert.qphred_to_ln_error_prob(baseQual) + ln_one_third;
+            }
         }
         else
         {
-            lnLhood += qualConvert.qphred_to_ln_comp_error_prob(static_cast<int>(queryQual[i]));
+            lnLhood += qualConvert.qphred_to_ln_comp_error_prob(baseQual);
         }
     }
 
