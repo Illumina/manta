@@ -28,14 +28,18 @@
 SVAlignmentInfo::
 SVAlignmentInfo(
     const SVCandidate& sv,
-    const SVCandidateAssemblyData& assemblyData)
+    const SVCandidateAssemblyData& assemblyData) :
+    _isSpanning(assemblyData.isSpanning),
+    _bp1ContigReversed(assemblyData.bporient.isBp1Reversed),
+    _bp2ContigReversed(assemblyData.bporient.isBp2Reversed)
 {
     // for imprecise SVs, split-read evidence won't be assigned
     if (sv.isImprecise()) return;
 
-    if (assemblyData.isSpanning)
+    contigSeq = assemblyData.extendedContigs[sv.assemblyAlignIndex];
+
+    if (_isSpanning)
     {
-        contigSeq = assemblyData.extendedContigs[sv.assemblyAlignIndex];
         const JumpAlignmentResult<int>& alignment = assemblyData.spanningAlignments[sv.assemblyAlignIndex];
 
         // get offsets of breakpoints in the extended contig
@@ -48,18 +52,16 @@ SVAlignmentInfo(
         unsigned homologySize = sv.bp1.interval.range.size() - 1;
         bp1ContigOffset = alignment.align1.beginPos + align1Size + insertSize + homologySize - 1;
         bp2ContigOffset = alignment.align1.beginPos + align1Size;
-        if (assemblyData.isBp2AlignedFirst)
+        if (assemblyData.bporient.isBp2AlignedFirst)
         {
             std::swap(bp1ContigOffset, bp2ContigOffset);
         }
 
-        bp1ContigReversed = assemblyData.isBp1Reversed;
-        bp2ContigReversed = assemblyData.isBp2Reversed;
-        if (bp1ContigReversed || bp2ContigReversed)
+        if (_bp1ContigReversed || _bp2ContigReversed)
         {
             revContigSeq = reverseCompCopyStr(contigSeq);
             // reset offset w.r.t. the reversed contig
-            if (bp1ContigReversed)
+            if (_bp1ContigReversed)
                 bp1ContigOffset = contigSeq.size() - bp1ContigOffset - 1;
             else
                 bp2ContigOffset = contigSeq.size() - bp2ContigOffset - 1;
@@ -81,7 +83,6 @@ SVAlignmentInfo(
     else
     {
         // get offsets of breakpoints in the extended contig
-        contigSeq = assemblyData.extendedContigs[assemblyData.bestAlignmentIndex];
         const AlignmentResult<int>& alignment = assemblyData.smallSVAlignments[sv.assemblyAlignIndex];
         const std::pair<unsigned, unsigned>& alignSegment = assemblyData.smallSVSegments[sv.assemblyAlignIndex][sv.assemblySegmentIndex];
 
@@ -95,8 +96,6 @@ SVAlignmentInfo(
         unsigned homologySize = sv.bp1.interval.range.size() - 1;
         bp1ContigOffset = alignment.align.beginPos + apath_read_length(apathTillSvStart) + homologySize - 1;
         bp2ContigOffset = alignment.align.beginPos + apath_read_length(apathTillSvEnd);
-        bp1ContigReversed = false;
-        bp2ContigReversed = false;
 
         // get reference regions
         // only bp1ref is used for small events
@@ -117,8 +116,8 @@ operator<<(
     const SVAlignmentInfo& ai)
 {
     os << "Contig seq\n" << ai.contigSeq << "\n";
-    os << "bp1 contig offset = " << ai.bp1ContigOffset << " bp1 contig reversed = " << ai.bp1ContigReversed << "\n";
-    os << "bp2 contig offset = " << ai.bp2ContigOffset << " bp2 contig reversed = " << ai.bp2ContigReversed << "\n";
+    os << "bp1 contig offset = " << ai.bp1ContigOffset << " bp1 contig reversed = " << ai._bp1ContigReversed << "\n";
+    os << "bp2 contig offset = " << ai.bp2ContigOffset << " bp2 contig reversed = " << ai._bp2ContigReversed << "\n";
     os << "bp1RefSeq\n" << ai.bp1RefSeq << "\n";
     os << "bp2RefSeq (null for small SVs)\n" << ai.bp2RefSeq << "\n";
     os << "bp1 reference offset = " << ai.bp1RefOffset << "\n";

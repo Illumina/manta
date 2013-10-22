@@ -499,15 +499,11 @@ getJumpAssembly(
     }
 
     assemblyData.isSpanning = true;
+    BPOrientation& bporient(assemblyData.bporient);
 
     //
     // based on sv candidate, we classify the expected relationship between the contig and the sv breakends:
     //
-    bool isBp2AlignedFirst(false); ///< should the contig on the fwd strand align bp2->bp1 (true) or bp1->bp2 (false)
-
-    bool isBp1Reversed(false); ///< should all bp1 reads be reversed for the contig to assemble correctly?
-    bool isBp2Reversed(false); ///< should all bp2 reads be reversed for the contig to assemble correctly?
-
     if (sv.bp1.state != sv.bp2.state)
     {
         // if there's one right-open breakend and one left-open breakend, no matter the bp1/bp2 chromosome and
@@ -517,7 +513,7 @@ getJumpAssembly(
         //
         if (sv.bp2.state == SVBreakendState::RIGHT_OPEN)
         {
-            isBp2AlignedFirst = true;
+            bporient.isBp2AlignedFirst = true;
         }
     }
     else
@@ -530,30 +526,26 @@ getJumpAssembly(
         //
         if (sv.bp1.state == SVBreakendState::RIGHT_OPEN)
         {
-            isBp2Reversed = true;
+            bporient.isBp2Reversed = true;
         }
         else
         {
-            isBp1Reversed = true;
+            bporient.isBp1Reversed = true;
         }
     }
 
-    assemblyData.isBp2AlignedFirst = isBp2AlignedFirst;
-    assemblyData.isBp1Reversed = isBp1Reversed;
-    assemblyData.isBp2Reversed = isBp2Reversed;
-
     // assemble contig spanning the breakend:
-    _spanningAssembler.assembleSVBreakends(sv.bp1, sv.bp2, isBp1Reversed, isBp2Reversed, assemblyData.contigs);
+    _spanningAssembler.assembleSVBreakends(sv.bp1, sv.bp2, bporient.isBp1Reversed, bporient.isBp2Reversed, assemblyData.contigs);
 
     getSVReferenceSegments(_opt.referenceFilename, _header, extraRefEdgeSize, sv, assemblyData.bp1ref, assemblyData.bp2ref);
     std::string bp1refSeq = assemblyData.bp1ref.seq();
     std::string bp2refSeq = assemblyData.bp2ref.seq();
-    if (isBp1Reversed) reverseCompStr(bp1refSeq);
-    if (isBp2Reversed) reverseCompStr(bp2refSeq);
+    if (bporient.isBp1Reversed) reverseCompStr(bp1refSeq);
+    if (bporient.isBp2Reversed) reverseCompStr(bp2refSeq);
     const std::string* align1RefStrPtr(&bp1refSeq);
     const std::string* align2RefStrPtr(&bp2refSeq);
 
-    if (isBp2AlignedFirst) std::swap(align1RefStrPtr, align2RefStrPtr);
+    if (bporient.isBp2AlignedFirst) std::swap(align1RefStrPtr, align2RefStrPtr);
 
 #ifdef DEBUG_REFINER
     log_os << logtag << " al1Ref: " << *align1RefStrPtr << "\n";
@@ -656,24 +648,24 @@ getJumpAssembly(
         const Alignment* bp1AlignPtr(&bestAlign.align1);
         const Alignment* bp2AlignPtr(&bestAlign.align2);
 
-        if (isBp2AlignedFirst) std::swap(bp1AlignPtr, bp2AlignPtr);
+        if (bporient.isBp2AlignedFirst) std::swap(bp1AlignPtr, bp2AlignPtr);
 
         // summarize usable output information in a second SVBreakend object -- this is the 'refined' sv:
         assemblyData.svs.push_back(sv);
         SVCandidate& newSV(assemblyData.svs.back());
-        newSV.assemblyAlignIndex = 0;
+        newSV.assemblyAlignIndex = assemblyData.bestAlignmentIndex;
         newSV.assemblySegmentIndex = 0;
 
         newSV.setPrecise();
 
-        adjustAssembledBreakend(*bp1AlignPtr, (! isBp2AlignedFirst), bestAlign.jumpRange, assemblyData.bp1ref, isBp1Reversed, newSV.bp1);
-        adjustAssembledBreakend(*bp2AlignPtr, (isBp2AlignedFirst), bestAlign.jumpRange, assemblyData.bp2ref, isBp2Reversed, newSV.bp2);
+        adjustAssembledBreakend(*bp1AlignPtr, (! bporient.isBp2AlignedFirst), bestAlign.jumpRange, assemblyData.bp1ref, bporient.isBp1Reversed, newSV.bp1);
+        adjustAssembledBreakend(*bp2AlignPtr, (bporient.isBp2AlignedFirst), bestAlign.jumpRange, assemblyData.bp2ref, bporient.isBp2Reversed, newSV.bp2);
 
         // fill in insertSeq:
         newSV.insertSeq.clear();
         if (bestAlign.jumpInsertSize > 0)
         {
-            getFwdStrandInsertSegment(bestAlign, bestContig.seq, isBp1Reversed, newSV.insertSeq);
+            getFwdStrandInsertSegment(bestAlign, bestContig.seq, bporient.isBp1Reversed, newSV.insertSeq);
         }
 
         // add CIGAR for any simple (insert/delete) cases:

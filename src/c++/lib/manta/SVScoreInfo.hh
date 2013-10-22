@@ -19,7 +19,6 @@
 
 #include "manta/SVCandidateAssemblyData.hh"
 #include "manta/SVCandidate.hh"
-#include "blt_util/ReadKey.hh"
 
 #include <iosfwd>
 #include <string>
@@ -34,13 +33,13 @@ struct SVAlignmentInfo
     const std::string&
     bp1ContigSeq() const
     {
-        return (bp1ContigReversed ? revContigSeq : contigSeq);
+        return (_bp1ContigReversed ? revContigSeq : contigSeq);
     }
 
     const std::string&
     bp2ContigSeq() const
     {
-        return (bp2ContigReversed ? revContigSeq : contigSeq);
+        return (_bp2ContigReversed ? revContigSeq : contigSeq);
     }
 
     const std::string&
@@ -52,7 +51,7 @@ struct SVAlignmentInfo
     const std::string&
     bp2ReferenceSeq() const
     {
-        return (isSpanning ? bp2RefSeq : bp1RefSeq);
+        return (_isSpanning ? bp2RefSeq : bp1RefSeq);
     }
 
     friend
@@ -64,9 +63,9 @@ private:
     std::string revContigSeq;
     std::string bp1RefSeq;
     std::string bp2RefSeq;
-    bool bp1ContigReversed;
-    bool bp2ContigReversed;
-    bool isSpanning;
+    const bool _isSpanning;
+    const bool _bp1ContigReversed;
+    const bool _bp2ContigReversed;
 
 public:
     unsigned bp1ContigOffset;

@@ -80,7 +80,6 @@ align(const std::string& querySeq,
 {
     SRAlignmentInfo bestAlignInfo;
 
-    //assert(bpOffset >= 0);
     const unsigned querySize = querySeq.size();
     const unsigned targetSize = targetSeq.size();
     assert(querySize < targetSize);
