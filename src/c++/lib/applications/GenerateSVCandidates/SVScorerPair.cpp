@@ -432,20 +432,17 @@ getFragProb(
     // QC the frag/bp matchup:
     if (frag1.tid != frag2.tid)
     {
-        /// TODO:: we should be able to assert this condition with no return.. there's an occational bad read/sv matchup
-        if (frag1.tid != sv.bp1.interval.tid) return;
-        if (frag2.tid != sv.bp2.interval.tid) return;
+        assert(frag1.tid == sv.bp1.interval.tid);
+        assert(frag2.tid == sv.bp2.interval.tid);
     }
     else if (frag1.isFwd != frag2.isFwd)
     {
-        /// TODO:: we should be able to assert this condition with no return.. there's an occational bad read/sv matchup
-        if ( frag1.isFwd != (sv.bp1.state == SVBreakendState::RIGHT_OPEN) ) return;
-        if ( frag2.isFwd != (sv.bp2.state == SVBreakendState::RIGHT_OPEN) ) return;;
+        assert( frag1.isFwd == (sv.bp1.state == SVBreakendState::RIGHT_OPEN) );
+        assert( frag2.isFwd == (sv.bp2.state == SVBreakendState::RIGHT_OPEN) );
     }
     else
     {
-        /// TODO:: we should be able to assert this condition with no return.. there's an occational bad read/sv matchup
-        if ( (frag1.pos < frag2.pos) != (bp1pos < bp2pos) ) return;
+        assert( (frag1.pos < frag2.pos) == (bp1pos < bp2pos) );
     }
 
 
