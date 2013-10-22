@@ -388,9 +388,9 @@ incrementAlleleSplitReadLhood(
     static const double mapLnProb(std::log(mapProb));
     static const double mapLnComp(std::log(mapComp));
 
-    const float alignBp1LnLhood(allele.bp1.getRead(isRead1).splitLnLhood);
-    const float alignBp2LnLhood(allele.bp2.getRead(isRead1).splitLnLhood);
-    const float alignLnLhood(std::max(alignBp1LnLhood,alignBp2LnLhood));
+    const double alignBp1LnLhood(allele.bp1.getRead(isRead1).splitLnLhood);
+    const double alignBp2LnLhood(allele.bp2.getRead(isRead1).splitLnLhood);
+    const double alignLnLhood(std::max(alignBp1LnLhood,alignBp2LnLhood));
 
     refSplitLnLhood += log_sum((mapLnComp+alignLnLhood), (mapLnProb+readLnPrior));
 
@@ -499,7 +499,7 @@ scoreDiploidSV(
     // compute qualities
     //
     {
-        float loglhood[DIPLOID_GT::SIZE];
+        double loglhood[DIPLOID_GT::SIZE];
         for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
         {
             loglhood[gt] = 0.;
@@ -556,8 +556,8 @@ scoreDiploidSV(
 #ifdef DEBUG_SCORE
                 log_os << logtag << "altLnFragLhood: " << altLnFragLhood << "\n";
 #endif
-                const float refLnLhood(refLnFragLhood + altLnCompFraction(gtid));
-                const float altLnLhood(altLnFragLhood + altLnFraction(gtid));
+                const double refLnLhood(refLnFragLhood + altLnCompFraction(gtid));
+                const double altLnLhood(altLnFragLhood + altLnFraction(gtid));
                 loglhood[gt] += log_sum(refLnLhood, altLnLhood);
 
 #ifdef DEBUG_SCORE
@@ -572,7 +572,7 @@ scoreDiploidSV(
             }
         }
 
-        float pprob[DIPLOID_GT::SIZE];
+        double pprob[DIPLOID_GT::SIZE];
         for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
         {
             pprob[gt] = loglhood[gt] + diploidDopt.prior[gt];
