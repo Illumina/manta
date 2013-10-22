@@ -426,9 +426,6 @@ getCandidatesFromData(
             }
 #endif
 
-            bool isSVFound(false);
-            unsigned svIndex(0);
-
             // temporary hack hypoth gen method assumes that only one SV exists for each overlapping breakpoint range with
             // the same orientation:
             //
@@ -437,6 +434,9 @@ getCandidatesFromData(
             // this can lead to an infinite loop.
             BOOST_FOREACH(const SVCandidate& readCand, readCandidates)
             {
+                bool isSVFound(false);
+                unsigned svIndex(0);
+
                 BOOST_FOREACH(SVCandidate& sv, svs)
                 {
                     if (sv.isIntersect(readCand))
@@ -451,16 +451,15 @@ getCandidatesFromData(
                     }
                     svIndex++;
                 }
+
                 if (isSVFound) continue;
-                //if (! isSVFound)
-                {
+
 #ifdef DEBUG_SVDATA
-                    log_os << "New svIndex: " << svs.size() << "\n";
+                log_os << "New svIndex: " << svs.size() << "\n";
 #endif
-                    pair.svIndex.push_back(svs.size());
-                    svs.push_back(readCand);
-                    svs.back().candidateIndex = pair.svIndex.back();
-                }
+                pair.svIndex.push_back(svs.size());
+                svs.push_back(readCand);
+                svs.back().candidateIndex = pair.svIndex.back();
             }
         }
     }
