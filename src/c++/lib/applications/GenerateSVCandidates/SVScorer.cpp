@@ -377,7 +377,8 @@ incrementAlleleSplitReadLhood(
     const SVFragmentEvidenceAllele& allele,
     const double /*readLnPrior*/,
     const bool isRead1,
-    double& refSplitLnLhood)
+    double& refSplitLnLhood,
+    bool& isReadEvaluated)
 {
     /// use a constant mapping prob for now just to get the zero-th order concept into the model
     /// that "reads are mismapped at a non-trivial rate"
@@ -387,6 +388,12 @@ incrementAlleleSplitReadLhood(
     static const double mapComp(1.-mapProb);
     static const double mapLnProb(std::log(mapProb));
     static const double mapLnComp(std::log(mapComp));
+
+    if(! (allele.bp1.getRead(isRead1).isSplitEvaluated) &&
+         (allele.bp1.getRead(isRead1).isSplitEvaluated))
+    {
+        isReadEvaluated = false;
+    }
 
     const double alignBp1LnLhood(allele.bp1.getRead(isRead1).splitLnLhood);
     const double alignBp2LnLhood(allele.bp2.getRead(isRead1).splitLnLhood);
@@ -413,7 +420,8 @@ incrementSplitReadLhood(
     const SVFragmentEvidence& fragev,
     const bool isRead1,
     double& refSplitLnLhood,
-    double& altSplitLnLhood)
+    double& altSplitLnLhood,
+    bool& isReadEvaluated)
 {
     static const double baseLnPrior(std::log(0.25));
 
@@ -434,11 +442,11 @@ incrementSplitReadLhood(
 #ifdef DEBUG_SCORE
     log_os << logtag << "starting ref\n";
 #endif
-    incrementAlleleSplitReadLhood(fragev.ref, readLnPrior, isRead1, refSplitLnLhood);
+    incrementAlleleSplitReadLhood(fragev.ref, readLnPrior, isRead1, refSplitLnLhood, isReadEvaluated);
 #ifdef DEBUG_SCORE
     log_os << logtag << "starting alt\n";
 #endif
-    incrementAlleleSplitReadLhood(fragev.alt, readLnPrior, isRead1, altSplitLnLhood);
+    incrementAlleleSplitReadLhood(fragev.alt, readLnPrior, isRead1, altSplitLnLhood, isReadEvaluated);
 }
 
 
@@ -461,15 +469,35 @@ struct AlleleLnLhood
 static
 double
 getFragLnLhood(
-    const AlleleLnLhood& al)
+    const AlleleLnLhood& al,
+    const bool isRead1Evaluated,
+    const bool isRead2Evaluated)
 {
 #ifdef DEBUG_SCORE
     log_os << "getFragLnLhood: frag/read1/read2 " << al.fragPair << " " << al.read1Split << " " << al.read2Split << "\n";
 #endif
 
+    double ret(al.fragPair);
+
     // limit split read evidence to only one read, b/c it's only possible for one section
     // of the molecule to independently cross the breakend:
-    return (al.fragPair + std::max(al.read1Split, al.read2Split));
+    if(isRead1Evaluated)
+    {
+        if (isRead2Evaluated)
+        {
+            ret += std::max(al.read1Split, al.read2Split);
+        }
+        else
+        {
+            ret += al.read1Split;
+        }
+    }
+    else if(isRead2Evaluated)
+    {
+        ret += al.read2Split;
+    }
+
+    return ret;
 }
 
 
@@ -532,14 +560,16 @@ scoreDiploidSV(
 
             /// split support is less dependent on mapping quality of the individual read, because
             /// we're potentially relying on shadow reads recovered from the unmapped state
+            bool isRead1Evaluated(true);
+            bool isRead2Evaluated(true);
 #ifdef DEBUG_SCORE
             log_os << logtag << "starting read1 split\n";
 #endif
-            incrementSplitReadLhood(fragev, true,  refLnLhoodSet.read1Split, altLnLhoodSet.read1Split);
+            incrementSplitReadLhood(fragev, true,  refLnLhoodSet.read1Split, altLnLhoodSet.read1Split, isRead1Evaluated);
 #ifdef DEBUG_SCORE
             log_os << logtag << "starting read2 split\n";
 #endif
-            incrementSplitReadLhood(fragev, false, refLnLhoodSet.read2Split, altLnLhoodSet.read2Split);
+            incrementSplitReadLhood(fragev, false, refLnLhoodSet.read2Split, altLnLhoodSet.read2Split, isRead2Evaluated);
 
             for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
             {
@@ -550,11 +580,11 @@ scoreDiploidSV(
 #endif
 
                 const index_t gtid(static_cast<const index_t>(gt));
-                const double refLnFragLhood(getFragLnLhood(refLnLhoodSet));
+                const double refLnFragLhood(getFragLnLhood(refLnLhoodSet, isRead1Evaluated, isRead2Evaluated));
 #ifdef DEBUG_SCORE
                 log_os << logtag << "refLnFragLhood: " << refLnFragLhood << "\n";
 #endif
-                const double altLnFragLhood(getFragLnLhood(altLnLhoodSet));
+                const double altLnFragLhood(getFragLnLhood(altLnLhoodSet, isRead1Evaluated, isRead2Evaluated));
 #ifdef DEBUG_SCORE
                 log_os << logtag << "altLnFragLhood: " << altLnFragLhood << "\n";
 #endif
