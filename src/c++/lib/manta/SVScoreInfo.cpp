@@ -49,9 +49,13 @@ SVAlignmentInfo(
         // |ref padding| + |align1| + |insert| + |align2|
         // both bp1 and bp2 include the insert and micro-homology,
         // which can avoid false split-read evidence from normal sample when the micorhomology is long
-        unsigned homologySize = sv.bp1.interval.range.size() - 1;
-        bp1ContigOffset = alignment.align1.beginPos + align1Size + insertSize + homologySize - 1;
-        bp2ContigOffset = alignment.align1.beginPos + align1Size;
+
+        // csaunders: leave homology size out until we're prepared downstream to
+        // deal with each breakpoint as a range instead of a point value
+
+        //unsigned homologySize = sv.bp1.interval.range.size() - 1;
+        bp1ContigOffset = alignment.align1.beginPos + align1Size;
+        bp2ContigOffset = alignment.align1.beginPos + align1Size + insertSize;
         if (assemblyData.bporient.isBp2AlignedFirst)
         {
             std::swap(bp1ContigOffset, bp2ContigOffset);
@@ -74,7 +78,10 @@ SVAlignmentInfo(
         bp2RefSeq = bp2Ref.seq();
         // get offsets of breakpoints in the reference regions
         // again, both bp1 and bp2 include the micro-homology
-        bp1RefOffset = sv.bp1.interval.range.end_pos() - bp1Ref.get_offset() - 1;
+
+        // csaunders: see above regarding micro-homology handling
+
+        bp1RefOffset = sv.bp1.interval.range.begin_pos() - bp1Ref.get_offset();
         const pos_t bp2BeginPos = (sv.isBreakendRangeSameShift() ?
                                    sv.bp2.interval.range.begin_pos() :
                                    sv.bp2.interval.range.end_pos()-1);
@@ -93,8 +100,11 @@ SVAlignmentInfo(
         // |ref padding| + |alignment segments|
         // both bp1 and bp2 include the insert and micro-homology,
         // which can avoid false split-read evidence from normal sample when the micorhomology is long
-        unsigned homologySize = sv.bp1.interval.range.size() - 1;
-        bp1ContigOffset = alignment.align.beginPos + apath_read_length(apathTillSvStart) + homologySize - 1;
+
+        // csaunders: removing microhomology
+
+//        unsigned homologySize = sv.bp1.interval.range.size() - 1;
+        bp1ContigOffset = alignment.align.beginPos + apath_read_length(apathTillSvStart);
         bp2ContigOffset = alignment.align.beginPos + apath_read_length(apathTillSvEnd);
 
         // get reference regions
@@ -103,7 +113,8 @@ SVAlignmentInfo(
         bp1RefSeq = bp1Ref.seq();
         // get offsets of breakpoints in the reference regions
         // again, both bp1 and bp2 include the micro-homology
-        bp1RefOffset = sv.bp1.interval.range.end_pos() - bp1Ref.get_offset() - 1;
+
+        bp1RefOffset = sv.bp1.interval.range.begin_pos() - bp1Ref.get_offset();
         bp2RefOffset = sv.bp2.interval.range.begin_pos() - bp1Ref.get_offset();
     }
 }

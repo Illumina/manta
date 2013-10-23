@@ -31,8 +31,8 @@
 static
 void
 incrementAlleleEvidence(
-    const SplitReadAlignment& bp1SR,
-    const SplitReadAlignment& bp2SR,
+    const SRAlignmentInfo& bp1SR,
+    const SRAlignmentInfo& bp2SR,
     const unsigned readMapQ,
     SVSampleAlleleInfo& allele,
     SVFragmentEvidenceAlleleBreakendPerRead& bp1Support,
@@ -40,27 +40,27 @@ incrementAlleleEvidence(
 {
     float bp1Evidence(0);
     float bp2Evidence(0);
-    if (bp1SR.has_evidence())
+    if (bp1SR.isEvidence)
     {
-        bp1Evidence = bp1SR.get_evidence();
+        bp1Evidence = bp1SR.evidence;
         bp1Support.isSplitSupport = true;
         bp1Support.splitEvidence = bp1Evidence;
     }
 
-    bp1Support.splitLnLhood = bp1SR.get_alignment().get_alignLnLhood();
+    bp1Support.splitLnLhood = bp1SR.alignLnLhood;
 
-    if (bp2SR.has_evidence())
+    if (bp2SR.isEvidence)
     {
-        bp2Evidence = bp2SR.get_evidence();
+        bp2Evidence = bp2SR.evidence;
         bp2Support.isSplitSupport = true;
         bp2Support.splitEvidence = bp2Evidence;
     }
 
-    bp2Support.splitLnLhood = bp2SR.get_alignment().get_alignLnLhood();
+    bp2Support.splitLnLhood = bp2SR.alignLnLhood;
 
     const float evidence(std::max(bp1Evidence, bp2Evidence));
 
-    if ((bp1SR.has_evidence()) || (bp2SR.has_evidence()))
+    if (bp1SR.isEvidence || bp2SR.isEvidence)
     {
         allele.splitReadCount++;
         allele.splitReadEvidence += evidence;
@@ -126,20 +126,25 @@ scoreSplitReads(
         refBp2ReadSupport.isSplitEvaluated = true;
 
         // align the read to the somatic contig
-        SplitReadAlignment bp1ContigSR;
-        bp1ContigSR.align(readSeq, dopt.altQ, qual, svAlignInfo.bp1ContigSeq(), svAlignInfo.bp1ContigOffset);
-        SplitReadAlignment bp2ContigSR;
-        bp2ContigSR.align(readSeq, dopt.altQ, qual, svAlignInfo.bp2ContigSeq(), svAlignInfo.bp2ContigOffset);
+        {
+            SRAlignmentInfo bp1ContigSR;
+            SRAlignmentInfo bp2ContigSR;
+            splitReadAligner(readSeq, dopt.altQ, qual, svAlignInfo.bp1ContigSeq(), svAlignInfo.bp1ContigOffset, bp1ContigSR);
+            splitReadAligner(readSeq, dopt.altQ, qual, svAlignInfo.bp2ContigSeq(), svAlignInfo.bp2ContigOffset, bp2ContigSR);
+
+            incrementAlleleEvidence(bp1ContigSR, bp2ContigSR, readMapQ, sample.alt, altBp1ReadSupport, altBp2ReadSupport);
+        }
 
         // align the read to reference regions
-        SplitReadAlignment bp1RefSR;
-        bp1RefSR.align(readSeq, dopt.refQ, qual, svAlignInfo.bp1ReferenceSeq(), svAlignInfo.bp1RefOffset);
-        SplitReadAlignment bp2RefSR;
-        bp2RefSR.align(readSeq, dopt.refQ, qual, svAlignInfo.bp2ReferenceSeq(), svAlignInfo.bp2RefOffset);
+        {
+            SRAlignmentInfo bp1RefSR;
+            SRAlignmentInfo bp2RefSR;
+            splitReadAligner(readSeq, dopt.refQ, qual, svAlignInfo.bp1ReferenceSeq(), svAlignInfo.bp1RefOffset, bp1RefSR);
+            splitReadAligner(readSeq, dopt.refQ, qual, svAlignInfo.bp2ReferenceSeq(), svAlignInfo.bp2RefOffset, bp2RefSR);
 
-        // scoring
-        incrementAlleleEvidence(bp1ContigSR, bp2ContigSR, readMapQ, sample.alt, altBp1ReadSupport, altBp2ReadSupport);
-        incrementAlleleEvidence(bp1RefSR, bp2RefSR, readMapQ, sample.ref, refBp1ReadSupport, refBp2ReadSupport);
+            // scoring
+            incrementAlleleEvidence(bp1RefSR, bp2RefSR, readMapQ, sample.ref, refBp1ReadSupport, refBp2ReadSupport);
+        }
     }
 }
 

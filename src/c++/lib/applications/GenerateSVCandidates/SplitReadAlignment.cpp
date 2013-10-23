@@ -17,31 +17,47 @@
 
 #include "SplitReadAlignment.hh"
 #include "blt_util/log.hh"
+#include "blt_util/blt_types.hh"
 
 #include <cassert>
 #include <cmath>
+#include <iostream>
 
 
 //#define DEBUG_SRA
 
+
+
+std::ostream&
+operator<<(std::ostream& os, const SRAlignmentInfo& info)
+{
+    os << "leftSize=" << info.leftSize << " rightSize=" << info.rightSize
+       << " leftMismatches=" << info.leftMismatches << " rightMismatches=" << info.rightMismatches
+       << " alignScore=" << info.alignScore
+       << " isEvidence: " << info.isEvidence
+       << " evidence: " << info.evidence
+       << "\n";
+    return os;
+}
+
+
+
+static
 unsigned
-SplitReadAlignment::
-calculateAlignScore(
+getLnLhood(
     const std::string& querySeq,
     const qscore_snp& qualConvert,
     const uint8_t* queryQual,
     const std::string::const_iterator& scanWindowBegin,
-    const std::string::const_iterator& scanWindowEnd)
+    const std::string::const_iterator& scanWindowEnd,
+    const bool isBest,
+    const float bestLnLhood)
 {
     static const float ln_one_third(std::log(1./3.));
 
-    const unsigned leftSize = _alignment.get_leftSize();
-    const unsigned querySize = querySeq.size();
-    unsigned leftMismatches(0);
-    unsigned rightMismatches(0);
+    const unsigned querySize(querySeq.size());
 
     float lnLhood(0);
-
     for (unsigned i(0); i<querySize; i++)
     {
         assert((scanWindowBegin+i) != scanWindowEnd);
@@ -51,15 +67,6 @@ calculateAlignScore(
 
         if ((querySeq[i] != *(scanWindowBegin+i)) || (querySeq[i] == 'N'))
         {
-            if (i<=leftSize)
-            {
-                leftMismatches += 1;
-            }
-            else
-            {
-                rightMismatches += 1;
-            }
-
             if ((querySeq[i] == 'N') || (*(scanWindowBegin+i) == 'N'))
             {
                 static const float lnRandomBase(std::log(0.25));
@@ -74,100 +81,129 @@ calculateAlignScore(
         {
             lnLhood += qualConvert.qphred_to_ln_comp_error_prob(baseQual);
         }
+
+        if (isBest && (lnLhood < bestLnLhood)) break;
     }
 
-    const unsigned score = querySize - (leftMismatches+rightMismatches);
-    _alignment.set_mismatches(leftMismatches, rightMismatches);
-    _alignment.set_score(score);
-    _alignment.set_lnLhood(lnLhood);
-
-    return (score);
+    return lnLhood;
 }
 
+
+
+static
 void
-SplitReadAlignment::
-align(
+calculateAlignScore(
+    const std::string& querySeq,
+    const std::string::const_iterator& scanWindowBegin,
+    const std::string::const_iterator& scanWindowEnd,
+    SRAlignmentInfo& alignment)
+{
+    const unsigned querySize = querySeq.size();
+    alignment.leftMismatches=0;
+    alignment.rightMismatches=0;
+
+    for (unsigned i(0); i<querySize; i++)
+    {
+        assert((scanWindowBegin+i) != scanWindowEnd);
+
+        if ((querySeq[i] != *(scanWindowBegin+i)) || (querySeq[i] == 'N'))
+        {
+            if (i<=alignment.leftSize)
+            {
+                alignment.leftMismatches += 1;
+            }
+            else
+            {
+                alignment.rightMismatches += 1;
+            }
+        }
+    }
+
+    alignment.alignScore = querySize - (alignment.leftMismatches+ alignment.rightMismatches);
+}
+
+
+
+static
+void
+setEvidence(
+    SRAlignmentInfo& alignment)
+{
+    alignment.isEvidence = false;
+    alignment.evidence = 0;
+
+    const float size(static_cast<float>(alignment.leftSize+alignment.rightSize));
+
+    // filters for a read being counted as evidence
+    if ((alignment.leftMismatches/(float)alignment.leftSize) >= 0.25) return;
+    if ((alignment.rightMismatches/(float)alignment.rightSize) >= 0.25) return;
+    if ((alignment.alignScore/size) >= 0.9) return;
+
+    alignment.isEvidence = true;
+    alignment.evidence = 2 * std::min(alignment.leftSize, alignment.rightSize) / (size);
+}
+
+
+
+void
+splitReadAligner(
     const std::string& querySeq,
     const qscore_snp& qualConvert,
     const uint8_t* queryQual,
     const std::string& targetSeq,
-    const unsigned bpOffset)
+    const unsigned targetBpBeginPos,
+    SRAlignmentInfo& alignment)
 {
-    SRAlignmentInfo bestAlignInfo;
-
     const unsigned querySize = querySeq.size();
     const unsigned targetSize = targetSeq.size();
     assert(querySize < targetSize);
 
+    /// TODO: rerig things to use end_pos() as well
+
     // set the scanning start & end to make sure the candidate windows overlapping the breakpoint
-    const unsigned scanStart = ((bpOffset+2) <= querySize)? 0 : (bpOffset - querySize + 2);
-    const unsigned scanEnd = (bpOffset == 0)? 0 : std::min((bpOffset-1), (targetSize - querySize));
+    const unsigned scanStart(std::max(0, static_cast<pos_t>(targetBpBeginPos) - static_cast<pos_t>(querySize) + 2));
+    const unsigned scanEnd(std::max(0, std::min((static_cast<pos_t>(targetBpBeginPos)-1), static_cast<pos_t>(targetSize - querySize)) ));
 
 #ifdef DEBUG_SRA
     log_os << "query size = " << querySize << "target size = " << targetSize << "\n";
     log_os << "scan start = " << scanStart << " scan end = " << scanEnd << "\n";
 #endif
 
+    const std::string::const_iterator scanWindowBegin(targetSeq.begin());
     const std::string::const_iterator scanWindowEnd(targetSeq.end());
 
-    for (unsigned i = scanStart; i<= scanEnd; i++)
+    // do one high-speed pass to find the optimal alignment (in terms of lhood), then compute all the goodies later:
+    float bestLnLhood(0);
+    unsigned bestPos(0);
     {
-        const unsigned leftSize = bpOffset - i + 1;
-        const unsigned rightSize= querySize - leftSize;
-        _alignment.set_sizes(leftSize, rightSize);
-
-        const std::string::const_iterator scanWindowStart = targetSeq.begin()+i;
-        const unsigned score = calculateAlignScore(querySeq, qualConvert, queryQual, scanWindowStart, scanWindowEnd);
-
-        if (score > bestAlignInfo.get_alignScore())
+        bool isBest(false);
+        for (unsigned i = scanStart; i<= scanEnd; i++)
         {
-            bestAlignInfo.update_alignInfo(_alignment);
+            const unsigned lnLhood(getLnLhood(querySeq, qualConvert, queryQual,
+                    scanWindowBegin+i, scanWindowEnd, isBest, bestLnLhood));
+
+            if ( (! isBest) || (lnLhood < bestLnLhood))
+            {
+                bestLnLhood = lnLhood;
+                bestPos=i;
+                isBest=true;
+            }
         }
     }
 
-    // update the alignment with the best one
-    _alignment.update_alignInfo(bestAlignInfo);
+    assert(bestPos <= (targetBpBeginPos+1));
+    alignment.leftSize = static_cast<pos_t>(targetBpBeginPos+1) - bestPos;
+    assert(alignment.leftSize <= querySize);
+    alignment.rightSize= querySize - alignment.leftSize;
+    alignment.alignLnLhood = bestLnLhood;
+    alignment.alignPos = bestPos;
+
+    calculateAlignScore(querySeq, scanWindowBegin+bestPos, scanWindowEnd, alignment);
+
     // filtering the alignment and set evidence
-    set_evidence();
+    setEvidence(alignment);
 
 #ifdef DEBUG_SRA
-    log_os << "final alignment\n" << _alignment << "\n";
+    log_os << "final alignment\n" << alignment << "\n";
 #endif
-}
-
-
-void
-SplitReadAlignment::
-set_evidence()
-{
-    _hasEvidence = false;
-    const unsigned leftSize = _alignment.get_leftSize();
-    const unsigned rightSize = _alignment.get_rightSize();
-    const unsigned bestScore = leftSize + rightSize;
-
-    // filters for a read being counted as evidence
-    if (((_alignment.get_leftMismatches()/(float)leftSize) < 0.25) &&
-        ((_alignment.get_rightMismatches()/(float)rightSize) < 0.25) &&
-        ((_alignment.get_alignScore()/(float)bestScore) >= 0.9))
-    {
-        _hasEvidence = true;
-        _evidence = 2 * std::min(leftSize, rightSize) / (float)(leftSize + rightSize);
-    }
-}
-
-std::ostream&
-operator<<(std::ostream& os, const SRAlignmentInfo& info)
-{
-    os << "leftSize=" << info.get_leftSize() << " rightSize=" << info.get_rightSize()
-       << " leftMismatches=" << info.get_leftMismatches() << " rightMismatches=" << info.get_rightMismatches()
-       << " alignScore=" << info.get_alignScore() << "\n";
-    return os;
-}
-
-std::ostream&
-operator<<(std::ostream& os, const SplitReadAlignment& srAlign)
-{
-    os << "has_evidence=" << srAlign.has_evidence() << " evidence=" << srAlign.get_evidence() << "\n";
-    os << "alignment:\n" << srAlign.get_alignment();
-    return os;
 }
