@@ -375,7 +375,7 @@ static
 void
 incrementAlleleSplitReadLhood(
     const SVFragmentEvidenceAllele& allele,
-    const double readLnPrior,
+    const double /*readLnPrior*/,
     const bool isRead1,
     double& refSplitLnLhood)
 {
@@ -392,7 +392,7 @@ incrementAlleleSplitReadLhood(
     const double alignBp2LnLhood(allele.bp2.getRead(isRead1).splitLnLhood);
     const double alignLnLhood(std::max(alignBp1LnLhood,alignBp2LnLhood));
 
-    refSplitLnLhood += log_sum((mapLnComp+alignLnLhood), (mapLnProb+readLnPrior));
+    refSplitLnLhood += log_sum((mapLnComp+alignLnLhood), (mapLnProb)); //+readLnPrior));
 
 #ifdef DEBUG_SCORE
     static const std::string logtag("incrementAlleleSplitReadLhood: ");
@@ -467,7 +467,9 @@ getFragLnLhood(
     log_os << "getFragLnLhood: frag/read1/read2 " << al.fragPair << " " << al.read1Split << " " << al.read2Split << "\n";
 #endif
 
-    return (al.fragPair + al.read1Split + al.read2Split);
+    // limit split read evidence to only one read, b/c it's only possible for one section
+    // of the molecule to independently cross the breakend:
+    return (al.fragPair + std::max(al.read1Split, al.read2Split));
 }
 
 
