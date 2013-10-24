@@ -389,8 +389,8 @@ incrementAlleleSplitReadLhood(
     static const double mapLnProb(std::log(mapProb));
     static const double mapLnComp(std::log(mapComp));
 
-    if(! (allele.bp1.getRead(isRead1).isSplitEvaluated) &&
-         (allele.bp1.getRead(isRead1).isSplitEvaluated))
+    if (! (allele.bp1.getRead(isRead1).isSplitEvaluated) &&
+        (allele.bp1.getRead(isRead1).isSplitEvaluated))
     {
         isReadEvaluated = false;
     }
@@ -481,7 +481,7 @@ getFragLnLhood(
 
     // limit split read evidence to only one read, b/c it's only possible for one section
     // of the molecule to independently cross the breakend:
-    if(isRead1Evaluated)
+    if (isRead1Evaluated)
     {
         if (isRead2Evaluated)
         {
@@ -492,7 +492,7 @@ getFragLnLhood(
             ret += al.read1Split;
         }
     }
-    else if(isRead2Evaluated)
+    else if (isRead2Evaluated)
     {
         ret += al.read2Split;
     }

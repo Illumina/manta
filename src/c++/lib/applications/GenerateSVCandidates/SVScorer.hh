@@ -54,8 +54,8 @@ struct CallOptionsSharedDeriv
 {
     CallOptionsSharedDeriv(
         const CallOptionsShared& opt) :
-      refQ(opt.snpPrior),
-      altQ(0)
+        refQ(opt.snpPrior),
+        altQ(0)
     {}
 
     const qscore_snp refQ;

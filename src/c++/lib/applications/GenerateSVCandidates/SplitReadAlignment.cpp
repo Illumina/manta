@@ -180,7 +180,7 @@ splitReadAligner(
         for (unsigned i = scanStart; i<= scanEnd; i++)
         {
             const unsigned lnLhood(getLnLhood(querySeq, qualConvert, queryQual,
-                    scanWindowBegin+i, scanWindowEnd, isBest, bestLnLhood));
+                                              scanWindowBegin+i, scanWindowEnd, isBest, bestLnLhood));
 
             if ( (! isBest) || (lnLhood < bestLnLhood))
             {
