@@ -556,11 +556,13 @@ scoreDiploidSV(
             /// TODO: add read pairs with one shadow read to the alt read pool
 
             /// high-quality spanning support relies on read1 and read2 mapping well:
+            bool isFragEvaluated(false);
             if ( fragev.read1.isObservedAnchor() && fragev.read2.isObservedAnchor())
             {
                 /// only add to the likelihood if the fragment "supports" at least one allele:
                 if ( fragev.isAnyPairSupport() )
                 {
+                    isFragEvaluated=true;
                     incrementSpanningPairAlleleLnLhood(chimeraProb, fragev.ref, refLnLhoodSet.fragPair);
                     incrementSpanningPairAlleleLnLhood(chimeraProb, fragev.alt, altLnLhoodSet.fragPair);
                 }
@@ -578,6 +580,8 @@ scoreDiploidSV(
             log_os << logtag << "starting read2 split\n";
 #endif
             incrementSplitReadLhood(fragev, false, refLnLhoodSet.read2Split, altLnLhoodSet.read2Split, isRead2Evaluated);
+
+            if(! (isFragEvaluated || isRead1Evaluated || isRead2Evaluated) ) continue;
 
             for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
             {
