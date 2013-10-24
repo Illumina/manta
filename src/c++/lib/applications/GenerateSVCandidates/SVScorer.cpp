@@ -280,7 +280,6 @@ getSampleCounts(
 {
     BOOST_FOREACH(const SVEvidence::evidenceTrack_t::value_type& val, sampleEvidence)
     {
-
         const SVFragmentEvidence& fragev(val.second);
 
         // evaluate read1 and read2 from this fragment
@@ -389,8 +388,8 @@ incrementAlleleSplitReadLhood(
     static const double mapLnProb(std::log(mapProb));
     static const double mapLnComp(std::log(mapComp));
 
-    if (! (allele.bp1.getRead(isRead1).isSplitEvaluated) &&
-        (allele.bp1.getRead(isRead1).isSplitEvaluated))
+    if (! (allele.bp1.getRead(isRead1).isSplitEvaluated &&
+           allele.bp2.getRead(isRead1).isSplitEvaluated))
     {
         isReadEvaluated = false;
     }
@@ -399,14 +398,18 @@ incrementAlleleSplitReadLhood(
     const double alignBp2LnLhood(allele.bp2.getRead(isRead1).splitLnLhood);
     const double alignLnLhood(std::max(alignBp1LnLhood,alignBp2LnLhood));
 
-    refSplitLnLhood += log_sum((mapLnComp+alignLnLhood), (mapLnProb)); //+readLnPrior));
+    const double fragLnLhood = log_sum((mapLnComp+alignLnLhood), (mapLnProb)); //+readLnPrior));
+    refSplitLnLhood += fragLnLhood;
 
 #ifdef DEBUG_SCORE
     static const std::string logtag("incrementAlleleSplitReadLhood: ");
-    log_os << logtag << "readPrior: " << readLnPrior << " isRead1?: " << isRead1 << "\n";
+    log_os << logtag //<< "readPrior: " << readLnPrior
+           << " isRead1?: " << isRead1 << "\n";
+    log_os << logtag << "isEval " << isReadEvaluated << "\n";
     log_os << logtag << "alignBp1LnLhood " << alignBp1LnLhood << "\n";
     log_os << logtag << "alignBp2LnLhood " << alignBp2LnLhood << "\n";
-    log_os << logtag << "increment " << log_sum((mapLnComp+alignLnLhood), (mapLnProb+readLnPrior)) << "\n";
+    log_os << logtag << "map " << mapLnProb << "\n";
+    log_os << logtag << "increment " << fragLnLhood << "\n";
     log_os << logtag << "refSplitLnLhood " << refSplitLnLhood << "\n";
 #endif
 
@@ -430,7 +433,11 @@ incrementSplitReadLhood(
     log_os << logtag << "pre-support\n";
 #endif
 
-    if (! fragev.isAnySplitSupportForRead(isRead1)) return;
+    if (! fragev.isAnySplitSupportForRead(isRead1))
+    {
+        isReadEvaluated = false;
+        return;
+    }
 
 #ifdef DEBUG_SCORE
     log_os << logtag << "post-support\n";
@@ -475,6 +482,7 @@ getFragLnLhood(
 {
 #ifdef DEBUG_SCORE
     log_os << "getFragLnLhood: frag/read1/read2 " << al.fragPair << " " << al.read1Split << " " << al.read2Split << "\n";
+    log_os << "getFragLnLhood: isread1/isread2 " << isRead1Evaluated << " " << isRead2Evaluated << "\n";
 #endif
 
     double ret(al.fragPair);
