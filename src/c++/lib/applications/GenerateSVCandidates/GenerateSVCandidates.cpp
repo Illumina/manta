@@ -270,16 +270,16 @@ runGSC(
                     (edge.nodeIndex2 == opt.edgeOpt.nodeIndex1) &&
                     (edge.nodeIndex1 == opt.edgeOpt.nodeIndex2));
 
-                if(! (isMatch || isSwapMatch)) continue;
+                if (! (isMatch || isSwapMatch)) continue;
             }
             else
             {
                 const bool isMatch
-                    (edge.nodeIndex1 == opt.edgeOpt.nodeIndex1);
+                (edge.nodeIndex1 == opt.edgeOpt.nodeIndex1);
                 const bool isSwapMatch
-                    (edge.nodeIndex2 == opt.edgeOpt.nodeIndex1);
+                (edge.nodeIndex2 == opt.edgeOpt.nodeIndex1);
 
-                if(! (isMatch || isSwapMatch)) continue;
+                if (! (isMatch || isSwapMatch)) continue;
             }
         }
 

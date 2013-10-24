@@ -21,7 +21,8 @@
 #include "blt_util/string_util.hh"
 
 
-namespace {
+namespace
+{
 const char locusIndexKey[] = "locus-index";
 }
 
