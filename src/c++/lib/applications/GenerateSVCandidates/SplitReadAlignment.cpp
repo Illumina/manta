@@ -43,7 +43,7 @@ operator<<(std::ostream& os, const SRAlignmentInfo& info)
 
 
 static
-unsigned
+float
 getLnLhood(
     const std::string& querySeq,
     const qscore_snp& qualConvert,
@@ -137,7 +137,7 @@ setEvidence(
     // filters for a read being counted as evidence
     if ((alignment.leftMismatches/(float)alignment.leftSize) >= 0.25) return;
     if ((alignment.rightMismatches/(float)alignment.rightSize) >= 0.25) return;
-    if ((alignment.alignScore/size) >= 0.9) return;
+    if ((alignment.alignScore/size) < 0.9) return;
 
     alignment.isEvidence = true;
     alignment.evidence = 2 * std::min(alignment.leftSize, alignment.rightSize) / (size);
@@ -179,10 +179,10 @@ splitReadAligner(
         bool isBest(false);
         for (unsigned i = scanStart; i<= scanEnd; i++)
         {
-            const unsigned lnLhood(getLnLhood(querySeq, qualConvert, queryQual,
-                                              scanWindowBegin+i, scanWindowEnd, isBest, bestLnLhood));
+            const float lnLhood(getLnLhood(querySeq, qualConvert, queryQual,
+                                           scanWindowBegin+i, scanWindowEnd, isBest, bestLnLhood));
 
-            if ( (! isBest) || (lnLhood < bestLnLhood))
+            if ( (! isBest) || (lnLhood > bestLnLhood))
             {
                 bestLnLhood = lnLhood;
                 bestPos=i;
