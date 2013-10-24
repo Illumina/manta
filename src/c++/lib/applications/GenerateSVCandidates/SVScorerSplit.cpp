@@ -102,28 +102,30 @@ scoreSplitReads(
         if (bamRead.is_secondary()) continue;
         if (bamRead.is_supplement()) continue;
 
-        const std::string readSeq = bamRead.get_bam_read().get_string();
-        const uint8_t* qual(bamRead.qual());
-        const unsigned readMapQ = bamRead.map_qual();
-
         SVFragmentEvidence& fragment(sampleEvidence[bamRead.qname()]);
 
         const bool isRead1(bamRead.is_first());
-        setReadEvidence(minMapQ, bamRead, fragment.getRead(isRead1));
 
         SVFragmentEvidenceAlleleBreakendPerRead& altBp1ReadSupport(fragment.alt.bp1.getRead(isRead1));
-        SVFragmentEvidenceAlleleBreakendPerRead& refBp1ReadSupport(fragment.ref.bp1.getRead(isRead1));
-        SVFragmentEvidenceAlleleBreakendPerRead& altBp2ReadSupport(fragment.alt.bp2.getRead(isRead1));
-        SVFragmentEvidenceAlleleBreakendPerRead& refBp2ReadSupport(fragment.ref.bp2.getRead(isRead1));
 
         /// in this function we evaluate the hypothesis of both breakends at the same time, the only difference bp1 vs
         /// bp2 makes is where in the bam we look for reads, therefore if we see split evaluation for bp1 or bp2, we can skip this read:
         if (altBp1ReadSupport.isSplitEvaluated) continue;
 
+        SVFragmentEvidenceAlleleBreakendPerRead& refBp1ReadSupport(fragment.ref.bp1.getRead(isRead1));
+        SVFragmentEvidenceAlleleBreakendPerRead& altBp2ReadSupport(fragment.alt.bp2.getRead(isRead1));
+        SVFragmentEvidenceAlleleBreakendPerRead& refBp2ReadSupport(fragment.ref.bp2.getRead(isRead1));
+
         altBp1ReadSupport.isSplitEvaluated = true;
         refBp1ReadSupport.isSplitEvaluated = true;
         altBp2ReadSupport.isSplitEvaluated = true;
         refBp2ReadSupport.isSplitEvaluated = true;
+
+        const std::string readSeq = bamRead.get_bam_read().get_string();
+        const uint8_t* qual(bamRead.qual());
+        const unsigned readMapQ = bamRead.map_qual();
+
+        setReadEvidence(minMapQ, bamRead, fragment.getRead(isRead1));
 
         // align the read to the somatic contig
         {
