@@ -80,6 +80,8 @@ parseESLOptions(
     req.add_options()
     ("output-file", po::value(&opt.outputFilename),
      "write SV Locus graph to file (required)")
+    ("ref", po::value(&opt.referenceFilename),
+     "fasta reference sequence (required)")
     ("align-stats", po::value(&opt.statsFilename),
      "pre-computed alignment statistics for the input alignment files (required)")
     ("region", po::value(&opt.region),
@@ -127,8 +129,15 @@ parseESLOptions(
     {
         usage(log_os,prog,visible,"Must specify a graph output file");
     }
+    else if (opt.referenceFilename.empty())
+    {
+        usage(log_os,prog,visible,"Need the FASTA reference file");
+    }
+
 
     checkStandardizeUsageFile(log_os,prog,visible,opt.statsFilename,"alignment statistics");
+    checkStandardizeUsageFile(log_os,prog,visible,opt.referenceFilename,"reference fasta");
+
 
 }
 

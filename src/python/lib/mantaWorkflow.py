@@ -165,6 +165,7 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
         graphCmd.extend(["--align-stats",statsPath])
         graphCmd.extend(["--region",gseg.bamRegion])
         graphCmd.extend(["--min-candidate-sv-size", self.params.minCandidateVariantSize])
+        graphCmd.extend(["--ref",self.params.referenceFasta])
         for bamPath in self.params.normalBamList :
             graphCmd.extend(["--align-file",bamPath])
         for bamPath in self.params.tumorBamList :
