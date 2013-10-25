@@ -173,6 +173,7 @@ def main(iniFile, primaryIniSection, workflowClassName) :
 
     # TODO: we need a more scalable system to deal with non-string options, for now there are individually corrected:
     flowOptions.isExome=argToBool(flowOptions.isExome)
+    flowOptions.isRNA=argToBool(flowOptions.isRNA)
     flowOptions.useExistingAlignStats=argToBool(flowOptions.useExistingAlignStats)
     flowOptions.useExistingChromDepths=argToBool(flowOptions.useExistingChromDepths)
 

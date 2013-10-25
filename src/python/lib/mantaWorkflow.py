@@ -171,6 +171,9 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
         for bamPath in self.params.tumorBamList :
             graphCmd.extend(["--tumor-align-file",bamPath])
 
+        if self.params.isIgnoreAnomProperPair :
+            graphCmd.append("--ignore-anom-proper-pair")
+
         graphTaskLabel=preJoin(taskPrefix,"makeLocusGraph_"+gseg.pyflowId)
         graphTasks.add(self.addTask(graphTaskLabel,graphCmd,dependencies=dirTask,memMb=self.params.estimateMemMb))
 
@@ -189,7 +192,7 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
     checkTask = self.addTask(preJoin(taskPrefix,"checkLocusGraph"),checkCmd,dependencies=mergeTask,memMb=self.params.mergeMemMb)
 
     rmGraphTmpCmd = "rm -rf " + tmpGraphDir
-    #rmTask=self.addTask(preJoin(taskPrefix,"rmGraphTmp"),rmGraphTmpCmd,dependencies=mergeTask)
+    rmTask=self.addTask(preJoin(taskPrefix,"rmGraphTmp"),rmGraphTmpCmd,dependencies=mergeTask)
 
     graphStatsCmd  = self.params.mantaGraphStatsBin
     graphStatsCmd += " --global"
@@ -248,7 +251,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         if isSomatic :
             hygenCmd.extend(["--somatic-output-file", somaticVcfPaths[-1]])
 
-        if not self.params.isExome :
+        if self.params.isHighDepthFilter :
             hygenCmd.extend(["--chrom-depth", self.paths.getChromDepth()])
 
 
@@ -390,6 +393,9 @@ class MantaWorkflow(WorkflowRunner) :
 
         self.paths = PathInfo(self.params)
 
+        self.params.isHighDepthFilter = (not (self.params.isExome or self.params.isRNA))
+        self.params.isIgnoreAnomProperPair = (self.params.isRNA)
+
 
 
     def getSuccessMessage(self) :
@@ -410,14 +416,13 @@ class MantaWorkflow(WorkflowRunner) :
             statsTasks = runStats(self)
             graphTasksDependencies=statsTasks
 
-        if not (self.params.isExome or self.params.useExistingChromDepths) :
+        hygenPrereq = set()
+        if not ((not self.params.isHighDepthFilter) or self.params.useExistingChromDepths) :
             depthTasks = runDepth(self)
+            hygenPrereq |= depthTasks
 
         graphTasks = runLocusGraph(self,dependencies=graphTasksDependencies)
-
-        hygenPrereq = graphTasks
-        if not (self.params.isExome or self.params.useExistingChromDepths) :
-            hygenPrereq |= depthTasks
+        hygenPrereq |= graphTasks
 
         hygenTasks = runHyGen(self,dependencies=hygenPrereq)
 
