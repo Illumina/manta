@@ -17,33 +17,22 @@
 
 #include "manta/SVCandidate.hh"
 
-#include <cassert>
-
 #include <iostream>
 
 
 
 std::ostream&
-operator<<(std::ostream& os, const SVBreakend& svb)
+operator<<(
+    std::ostream& os,
+    const SVCandidate& svc)
 {
-    os << "Breakend:"
-       << " " << svb.interval
-       << " " << SVBreakendState::label(svb.state)
-       << " readCount: " << svb.readCount
-       << " pairCount: " << svb.pairCount;
-    return os;
-}
-
-
-
-std::ostream&
-operator<<(std::ostream& os, const SVCandidate& svc)
-{
+    static const char indent('\t');
     os << "SVCandidate:\n"
-       << "\tisImprecise?: " << svc.isImprecise() << "\n"
-       << "\tcandidate:assembly index: " << svc.candidateIndex
+       << indent << "isImprecise?: " << svc.isImprecise() << "\n"
+       << indent << "index candidate:assemblyAlign:assemblySegment: " << svc.candidateIndex
        << ":" << svc.assemblyAlignIndex
-       << ":" << svc.assemblySegmentIndex<< "\n";
+       << ":" << svc.assemblySegmentIndex
+       << "\n";
     if (! svc.isImprecise())
     {
         os << "\tAlignment: " << svc.insertAlignment << "\n"

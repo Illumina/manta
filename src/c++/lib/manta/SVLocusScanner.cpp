@@ -87,6 +87,7 @@ GetSplitSVCandidate(
     const int32_t alignTid,
     const pos_t leftPos,
     const pos_t rightPos,
+    const SVBreakendLowResEvidence::EvidenceType& svSource,
     const bool isComplex = false)
 {
     SVCandidate sv;
@@ -96,11 +97,11 @@ GetSplitSVCandidate(
     localBreakend.interval.tid = alignTid;
     remoteBreakend.interval.tid = alignTid;
 
-    localBreakend.splitCount++;
+    localBreakend.lowresEvidence.add(svSource);
 
     if (! isComplex)
     {
-        remoteBreakend.splitCount++;
+        remoteBreakend.lowresEvidence.add(svSource);
         localBreakend.state = SVBreakendState::RIGHT_OPEN;
         remoteBreakend.state = SVBreakendState::LEFT_OPEN;
     }
@@ -176,7 +177,7 @@ updateSABreakend(
 
 
 
-/// get SV candidates from indels in the read alignment
+/// get SV candidates from SA-tag split-read alignment
 static
 SVCandidate
 GetSplitSACandidate(
@@ -184,10 +185,12 @@ GetSplitSACandidate(
     const ChromAlignment& localAlign,
     const ChromAlignment& remoteAlign)
 {
+    static const SVBreakendLowResEvidence::EvidenceType svSource(SVBreakendLowResEvidence::SPLIT_ALIGN);
+
     SVCandidate sv;
 
-    sv.bp1.splitCount++;
-    sv.bp2.splitCount++;
+    sv.bp1.lowresEvidence.add(svSource);
+    sv.bp2.lowresEvidence.add(svSource);
 
     updateSABreakend(dopt, localAlign, sv.bp1);
     updateSABreakend(dopt, remoteAlign, sv.bp2);
@@ -224,7 +227,7 @@ getSACandidatesFromRead(
     ChromAlignment remoteAlign;
 
     // For now we will only handle a single split alignment
-    //  In the future we will need to sort the SA tags by order on of segements on
+    //  In the future we will need to sort the SA tags by order on of segments on
     //   the actual template.
     //  We may also have to toss conflicting segments that map to two different areas,
     //   or at least find some way of dealing with them.
@@ -262,7 +265,7 @@ getSACandidatesFromRead(
                   << ", " << saChr
                   << ", " << saPos
                   << ", " << saStrand
-                  << ", " << remotePath << std::endl;
+                  << ", " << remotePath << '\n';
         */
 
         // At this point we don't care about strand
@@ -281,6 +284,8 @@ getSVCandidatesFromReadIndels(
     std::vector<SVCandidate>& candidates)
 {
     using namespace ALIGNPATH;
+
+    static const SVBreakendLowResEvidence::EvidenceType svSource(SVBreakendLowResEvidence::CIGAR);
 
     const std::pair<unsigned,unsigned> ends(get_match_edge_segments(align.path));
 
@@ -311,7 +316,7 @@ getSVCandidatesFromReadIndels(
                 if (ps.length >= opt.minCandidateVariantSize)
                 {
                     static const bool isComplex(true);
-                    candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos, isComplex));
+                    candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos, svSource, isComplex));
                 }
             }
         }
@@ -320,7 +325,7 @@ getSVCandidatesFromReadIndels(
             const swap_info sinfo(align.path,pathIndex);
             if ((sinfo.delete_length >= opt.minCandidateVariantSize) || (sinfo.insert_length >= opt.minCandidateVariantSize))
             {
-                candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos+sinfo.delete_length));
+                candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos+sinfo.delete_length, svSource));
             }
 
             nPathSegments = sinfo.n_seg;
@@ -333,14 +338,14 @@ getSVCandidatesFromReadIndels(
             {
                 if (ps.length >= opt.minCandidateVariantSize)
                 {
-                    candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos+ps.length));
+                    candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos+ps.length, svSource));
                 }
             }
             else if (ps.type == INSERT)
             {
                 if (ps.length >= opt.minCandidateVariantSize)
                 {
-                    candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos));
+                    candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos, svSource));
                 }
             }
         }
@@ -474,6 +479,8 @@ getSVCandidatesFromSemiAligned(
     const SimpleAlignment& bamAlign,
     std::vector<SVCandidate>& candidates)
 {
+    static const SVBreakendLowResEvidence::EvidenceType svSource(SVBreakendLowResEvidence::SEMIALIGN);
+
     // semi-aligned reads don't define a full hypothesis, so they're always evidence for a 'complex' ie. undefined, event
     // in a fashion analogous to clipped reads
     static const bool isComplex(true);
@@ -484,7 +491,7 @@ getSVCandidatesFromSemiAligned(
     if (semiAlignedScore>opt.minSemiAlignedScoreGraph)
     {
         const pos_t pos(bamAlign.pos);
-        candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),pos,pos,isComplex));
+        candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),pos,pos,svSource,isComplex));
     }
 }
 
@@ -499,6 +506,8 @@ getSVCandidatesFromReadClip(
     const SimpleAlignment& bamAlign,
     std::vector<SVCandidate>& candidates)
 {
+    static const SVBreakendLowResEvidence::EvidenceType svSource(SVBreakendLowResEvidence::SOFTCLIP);
+
     unsigned leadingClipLen(0), trailingClipLen(0);
     getSVBreakendCandidateClip(bamRead, bamAlign.path, leadingClipLen, trailingClipLen);
 
@@ -508,13 +517,13 @@ getSVCandidatesFromReadClip(
     if (leadingClipLen >= opt.minSoftClipLen)
     {
         const pos_t clipPos(bamAlign.pos);
-        candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),clipPos,clipPos,isComplex));
+        candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),clipPos,clipPos, svSource, isComplex));
     }
 
     if (trailingClipLen >= opt.minSoftClipLen)
     {
         const pos_t clipPos(bamAlign.pos + apath_ref_length(bamAlign.path));
-        candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),clipPos,clipPos,isComplex));
+        candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),clipPos,clipPos, svSource, isComplex));
     }
 }
 
@@ -531,6 +540,9 @@ getSVCandidatesFromPair(
     const bam_record* remoteReadPtr,
     std::vector<SVCandidate>& candidates)
 {
+    static const SVBreakendLowResEvidence::EvidenceType svLocalPair(SVBreakendLowResEvidence::LOCAL_PAIR);
+    static const SVBreakendLowResEvidence::EvidenceType svPair(SVBreakendLowResEvidence::PAIR);
+
     if (localRead.is_unmapped() || localRead.is_mate_unmapped()) return;
 
     /// special case typically used for RNA-Seq analysis:
@@ -555,7 +567,7 @@ getSVCandidatesFromPair(
     SVBreakend& localBreakend(sv.bp1);
     SVBreakend& remoteBreakend(sv.bp2);
 
-    localBreakend.readCount = 1;
+    localBreakend.lowresEvidence.add(svLocalPair);
 
     // if remoteRead is not available, estimate mate localRead size to be same as local,
     // and assume no clipping on mate localRead:
@@ -582,10 +594,10 @@ getSVCandidatesFromPair(
             remoteReadNoninsertSize=(remoteReadSize-apath_read_lead_size(remoteApath));
         }
 
-        remoteBreakend.readCount = 1;
+        remoteBreakend.lowresEvidence.add(svLocalPair);
 
-        localBreakend.pairCount = 1;
-        remoteBreakend.pairCount = 1;
+        localBreakend.lowresEvidence.add(svPair);
+        remoteBreakend.lowresEvidence.add(svPair);
     }
 
     // this is only designed to be valid when reads are on the same chrom with default orientation:
@@ -691,6 +703,8 @@ getSVCandidatesFromShadow(
     const bam_record* remoteReadPtr,
     std::vector<SVCandidate>& candidates)
 {
+    static const SVBreakendLowResEvidence::EvidenceType svSource(SVBreakendLowResEvidence::SHADOW);
+
     if (NULL == remoteReadPtr)
     {
         // we want info on both reads
@@ -729,7 +743,7 @@ getSVCandidatesFromShadow(
     }
     const pos_t properPairRangeOffset = static_cast<int>(rstats.properPair.min + (rstats.properPair.max-rstats.properPair.min)/2);
     const pos_t shadowGenomePos = singletonGenomePos + properPairRangeOffset;
-    candidates.push_back(GetSplitSVCandidate(opt,targetId,shadowGenomePos,shadowGenomePos,isComplex));
+    candidates.push_back(GetSplitSVCandidate(opt,targetId,shadowGenomePos,shadowGenomePos, svSource, isComplex));
 }
 #endif
 
@@ -904,15 +918,15 @@ getSVLociImpl(
         unsigned localEvidenceWeight(0);
         unsigned remoteEvidenceWeight(0);
 
-        if (localBreakend.splitCount != 0)
+        if (localBreakend.getAnyNonPairCount() != 0)
         {
             localEvidenceWeight = SVObservationWeights::internalReadEvent;
-            if (remoteBreakend.splitCount != 0)
+            if (remoteBreakend.getAnyNonPairCount() != 0)
             {
                 remoteEvidenceWeight = SVObservationWeights::internalReadEvent;
             }
         }
-        else if (localBreakend.readCount != 0)
+        else if (localBreakend.getLocalPairCount() != 0)
         {
             bool isClose(false);
             if (is_innie_pair(bamRead))
@@ -924,7 +938,7 @@ getSVLociImpl(
             if (isClose) thisWeight = SVObservationWeights::closeReadPair;
 
             localEvidenceWeight = thisWeight;
-            if (remoteBreakend.readCount != 0)
+            if (remoteBreakend.getLocalPairCount() != 0)
             {
                 remoteEvidenceWeight = thisWeight;
             }

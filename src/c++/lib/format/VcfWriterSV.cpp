@@ -354,8 +354,8 @@ writeTransloc(
     // build INFO field
     infotags.push_back("SVTYPE=BND");
     infotags.push_back("MATEID="+mateId);
-    infotags.push_back( str(boost::format("BND_PAIR_COUNT=%i") % bpA.readCount) );
-    infotags.push_back( str(boost::format("PAIR_COUNT=%i") % bpA.pairCount) );
+    infotags.push_back( str(boost::format("BND_PAIR_COUNT=%i") % bpA.getLocalPairCount()) );
+    infotags.push_back( str(boost::format("PAIR_COUNT=%i") % bpA.getPairCount()) );
     if (isImprecise)
     {
         infotags.push_back("IMPRECISE");
@@ -531,9 +531,9 @@ writeInvdel(
         infoTags.push_back( str(boost::format("SVTYPE=%s") % words[0]));
         infoTags.push_back( str(boost::format("SVLEN=%i") % (-1*(endPos-pos))));
     }
-    infoTags.push_back( str(boost::format("UPSTREAM_PAIR_COUNT=%i") % bpA.readCount) );
-    infoTags.push_back( str(boost::format("DOWNSTREAM_PAIR_COUNT=%i") % bpB.readCount) );
-    infoTags.push_back( str(boost::format("PAIR_COUNT=%i") % bpA.pairCount) );
+    infoTags.push_back( str(boost::format("UPSTREAM_PAIR_COUNT=%i") % bpA.getLocalPairCount()) );
+    infoTags.push_back( str(boost::format("DOWNSTREAM_PAIR_COUNT=%i") % bpB.getLocalPairCount()) );
+    infoTags.push_back( str(boost::format("PAIR_COUNT=%i") % bpA.getPairCount()) );
 
     if (isSmallVariant)
     {

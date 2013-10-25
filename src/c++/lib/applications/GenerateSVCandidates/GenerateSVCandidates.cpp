@@ -138,7 +138,7 @@ struct SVWriter
         }
         else
         {
-            if (sv.bp1.pairCount < minCandidatePairCount)
+            if (sv.bp1.getPairCount() < minCandidatePairCount)
             {
 #ifdef DEBUG_GSV
                 log_os << logtag << " rejecting candidate: minCandidatePairCount\n";

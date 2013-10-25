@@ -236,9 +236,9 @@ checkResult(
 
     for (unsigned svIndex(0); svIndex<svCount; ++svIndex)
     {
-        const unsigned svObsReadCount(svs[svIndex].bp1.readCount + svs[svIndex].bp2.readCount);
-        const unsigned svObsPairCount(svs[svIndex].bp1.pairCount + svs[svIndex].bp2.pairCount);
-        assert(svs[svIndex].bp1.pairCount == svs[svIndex].bp2.pairCount);
+        const unsigned svObsReadCount(svs[svIndex].bp1.getLocalPairCount() + svs[svIndex].bp2.getLocalPairCount());
+        const unsigned svObsPairCount(svs[svIndex].bp1.getPairCount() + svs[svIndex].bp2.getPairCount());
+        assert(svs[svIndex].bp1.getPairCount() == svs[svIndex].bp2.getPairCount());
 
         const unsigned dataObsReadCount(readCounts[svIndex]);
         const unsigned dataObsPairCount(pairCounts[svIndex]);
@@ -537,7 +537,8 @@ findCandidateSV(
 
         const SVLocusNode& node(locus.getNode(edge.nodeIndex1));
 
-        localBreakend.splitCount = node.getEdge(edge.nodeIndex1).getCount();
+        static const SVBreakendLowResEvidence::EvidenceType svUnknown(SVBreakendLowResEvidence::UNKNOWN);
+        localBreakend.lowresEvidence.add(svUnknown, node.getEdge(edge.nodeIndex1).getCount());
         localBreakend.state = SVBreakendState::COMPLEX;
         localBreakend.interval = node.getInterval();
 
