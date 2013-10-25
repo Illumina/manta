@@ -29,13 +29,6 @@
 #include <string>
 
 
-//#define DEBUG_SVS
-
-#ifdef DEBUG_SVS
-#include "blt_util/log.hh"
-#endif
-
-
 //#define DEBUG_PAIR
 
 #ifdef DEBUG_PAIR
