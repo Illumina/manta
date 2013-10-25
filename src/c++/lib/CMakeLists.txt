@@ -23,7 +23,7 @@
 ##
 ## note that order approximates dependency chain, where libraries are listed
 ## after libraries upon which they depend:
-set (MANTA_ALL_LIBRARIES blt_util common options assembly alignment format svgraph manta)
+set (MANTA_ALL_LIBRARIES blt_util common options assembly alignment format svgraph truth manta)
 
 ##
 ## Build all the libraries for the project

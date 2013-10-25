@@ -30,9 +30,9 @@
 #include "common/OutStream.hh"
 #include "manta/ReadGroupStatsSet.hh"
 #include "manta/SVCandidateAssemblyData.hh"
-#include "format/VcfFile.hh"
 #include "format/VcfWriterCandidateSV.hh"
 #include "format/VcfWriterSomaticSV.hh"
+#include "truth/TruthTracker.hh"
 
 #include "boost/foreach.hpp"
 
@@ -183,24 +183,17 @@ runGSC(
     SVFinder svFind(opt);
     const SVLocusSet& cset(svFind.getSet());
 
-    if (!opt.truthVcfFilename.empty()) {
-        // FIXME : would seem better to do this before SVFinder runs but
-        // currently using its output to get the chrom name -> tid mapping.
-        std::map<std::string, int32_t> chromNameTidMap;
-        make_chrom_tid_map(cset.header, chromNameTidMap);
-
-        VcfFile vcfFile(opt.truthVcfFilename, chromNameTidMap);
-        VariantVec variantVec;
-        vcfFile.getVariantVec(variantVec);
-
-        // FIXME : implement : find intersections
-    }
-
-
     SVCandidateAssemblyRefiner svRefine(opt, cset.header);
 
     std::auto_ptr<EdgeRetriever> edgerPtr(edgeRFactory(cset, opt.edgeOpt));
     EdgeRetriever& edger(*edgerPtr);
+
+    TruthTracker truthTracker;
+
+    if (!opt.truthVcfFilename.empty()) {
+        truthTracker.loadTruth(opt.truthVcfFilename, cset.header);
+        truthTracker.evalLocusSet(cset);
+    }
 
     SVWriter svWriter(opt, cset, progName, progVersion);
 
@@ -215,6 +208,7 @@ runGSC(
     while (edger.next())
     {
         const EdgeInfo& edge(edger.getEdge());
+        truthTracker.addEdge(edge, cset);
 
 #ifdef DEBUG_GSV
         log_os << logtag << " starting analysis of edge: ";
@@ -225,6 +219,10 @@ runGSC(
         {
             // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
             svFind.findCandidateSV(edge, svData, svs);
+
+            if (svs.empty()) {
+                truthTracker.discardEdge(edge, EdgeInfoRecord::NO_DERIVED_SVS);
+            }
 
 #ifdef DEBUG_GSV
             log_os << logtag << " low-res candidate generation complete. candidate count: " << svs.size() << "\n";
@@ -275,6 +273,8 @@ runGSC(
             throw;
         }
     }
+
+    truthTracker.dumpStats();
 }
 
 

@@ -174,6 +174,12 @@ struct SVLocusNode
         return i->second;
     }
 
+    const GenomeInterval& getInterval() const
+    {
+        return interval;
+    }
+
+
     friend std::ostream&
     operator<<(std::ostream& os, const SVLocusNode& node);
 
