@@ -423,21 +423,50 @@ getFragProb(
 #endif
 
     // QC the frag/bp matchup:
-    if (frag1.tid != frag2.tid)
     {
-        assert(frag1.tid == sv.bp1.interval.tid);
-        assert(frag2.tid == sv.bp2.interval.tid);
-    }
-    else if (frag1.isFwd != frag2.isFwd)
-    {
-        assert( frag1.isFwd == (sv.bp1.state == SVBreakendState::RIGHT_OPEN) );
-        assert( frag2.isFwd == (sv.bp2.state == SVBreakendState::RIGHT_OPEN) );
-    }
-    else
-    {
-        assert( (frag1.pos < frag2.pos) == (bp1pos < bp2pos) );
-    }
+        std::string errorMsg;
+        if (frag1.tid != frag2.tid)
+        {
+            if (frag1.tid != sv.bp1.interval.tid)
+            {
+                errorMsg = "Can't match evidence read chrom to sv-candidate bp1.";
+            }
+            if (frag2.tid != sv.bp2.interval.tid)
+            {
+                errorMsg = "Can't match evidence read chrom to sv-candidate bp2.";
+            }
+        }
+        else if (frag1.isFwd != frag2.isFwd)
+        {
+            if ( frag1.isFwd != (sv.bp1.state == SVBreakendState::RIGHT_OPEN) )
+            {
+                errorMsg = "Can't match evidence read strand to sv-candidate bp1";
+            }
+            if ( frag2.isFwd != (sv.bp2.state == SVBreakendState::RIGHT_OPEN) )
+            {
+                errorMsg = "Can't match evidence read strand to sv-candidate bp2";
+            }
+        }
+        else
+        {
+            if ( (frag1.pos < frag2.pos) != (bp1pos < bp2pos) )
+            {
+                errorMsg = "Can't match read pair positions to sv-candidate.";
+            }
+        }
 
+        if (! errorMsg.empty())
+        {
+            using namespace illumina::common;
+
+            std::ostringstream oss;
+            oss << "ERROR: " << errorMsg  << "\n"
+                << "\tcandidate-sv: " << sv
+                << "\tread-pair: " << pair
+                << "\n";
+            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        }
+    }
 
     pos_t frag1Size(bp1pos-frag1.pos);
     if (! frag1.isFwd) frag1Size *= -1;
