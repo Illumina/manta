@@ -269,6 +269,46 @@ checkResult(
 
 
 
+/// local convenience struct, if only I had closures instead... :<
+struct svCandDeleter
+{
+    svCandDeleter(
+        std::vector<SVCandidate>& svs) :
+        _shift(0),
+        _isLastIndex(false),
+        _lastIndex(0),
+        _svs(svs)
+    {}
+
+    void
+    deleteIndex(
+        const unsigned index)
+    {
+        assert(index <= _svs.size());
+
+        if (_isLastIndex)
+        {
+            for (unsigned i(_lastIndex+1); i<index; ++i)
+            {
+                assert(_shift>0);
+                assert(i>=_shift);
+                _svs[(i-_shift)] = _svs[i];
+            }
+        }
+        _lastIndex=index;
+        _isLastIndex=true;
+        _shift++;
+    }
+
+private:
+    unsigned _shift;
+    bool _isLastIndex;
+    unsigned _lastIndex;
+    std::vector<SVCandidate>& _svs;
+};
+
+
+
 // check whether any svs have grown to intersect each other
 //
 // this is also part of the temp hygen hack, so just make this minimally work:
@@ -288,18 +328,27 @@ consolidateOverlap(
     movemap_t moveSVIndex;
     std::set<unsigned> deletedSVIndex;
 
+    std::vector<unsigned> innerIndexShift;
+
     const unsigned svCount(svs.size());
     for (unsigned outerIndex(1); outerIndex<svCount; ++outerIndex)
     {
+        const unsigned prevInnerIndexShift( (outerIndex<=1) ? 0 : innerIndexShift[outerIndex-2]);
+        +deletedSVIndex.count(outerIndex-1);
+        innerIndexShift.push_back(prevInnerIndexShift + deletedSVIndex.count(outerIndex-1));
         for (unsigned innerIndex(0); innerIndex<outerIndex; ++innerIndex)
         {
+            if (deletedSVIndex.count(innerIndex)) continue;
+
             if (svs[innerIndex].isIntersect(svs[outerIndex]))
             {
 #ifdef DEBUG_SVDATA
                 log_os << logtag << "Merging outer:inner: " << outerIndex << " " << innerIndex << "\n";
 #endif
                 svs[innerIndex].merge(svs[outerIndex]);
-                moveSVIndex[outerIndex] = (innerIndex - deletedSVIndex.size());
+                assert(innerIndexShift.size() > innerIndex);
+                assert(innerIndexShift[innerIndex] >= innerIndex);
+                moveSVIndex[outerIndex] = innerIndex - innerIndexShift[innerIndex];
                 deletedSVIndex.insert(outerIndex);
                 break;
             }
@@ -316,35 +365,13 @@ consolidateOverlap(
 #endif
 
         {
-            unsigned shift(0);
-            bool isLastIndex(false);
-            unsigned lastIndex(0);
+            svCandDeleter svDeleter(svs);
+
             BOOST_FOREACH(const unsigned index, deletedSVIndex)
             {
-                if (isLastIndex)
-                {
-                    for (unsigned i(lastIndex+1); i<index; ++i)
-                    {
-                        assert(shift>0);
-                        assert(i>=shift);
-                        moveSVIndex[i] = (i-shift);
-                        svs[(i-shift)] = svs[i];
-                    }
-                }
-                lastIndex=index;
-                isLastIndex=true;
-                shift++;
+                svDeleter.deleteIndex(index);
             }
-            if (isLastIndex)
-            {
-                for (unsigned i(lastIndex+1); i<svCount; ++i)
-                {
-                    assert(shift>0);
-                    assert(i>=shift);
-                    moveSVIndex[i] = (i-shift);
-                    svs[(i-shift)] = svs[i];
-                }
-            }
+            svDeleter.deleteIndex(svCount);
         }
 
         svs.resize(svs.size()-deletedSVIndex.size());
@@ -380,7 +407,6 @@ consolidateOverlap(
             }
         }
     }
-
 }
 
 
