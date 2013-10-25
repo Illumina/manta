@@ -269,15 +269,21 @@ checkResult(
 
 
 
+typedef std::map<unsigned,unsigned> movemap_t;
+
+
+
 /// local convenience struct, if only I had closures instead... :<
 struct svCandDeleter
 {
     svCandDeleter(
-        std::vector<SVCandidate>& svs) :
+        std::vector<SVCandidate>& svs,
+        movemap_t& moveSVIndex) :
         _shift(0),
         _isLastIndex(false),
         _lastIndex(0),
-        _svs(svs)
+        _svs(svs),
+        _moveSVIndex(moveSVIndex)
     {}
 
     void
@@ -292,7 +298,11 @@ struct svCandDeleter
             {
                 assert(_shift>0);
                 assert(i>=_shift);
+
                 _svs[(i-_shift)] = _svs[i];
+                // moveSVIndex has already been set for deleted indices, this sets
+                // the move for non-deleted positions:
+                _moveSVIndex[i] = (i-_shift);
             }
         }
         _lastIndex=index;
@@ -305,6 +315,7 @@ private:
     bool _isLastIndex;
     unsigned _lastIndex;
     std::vector<SVCandidate>& _svs;
+    movemap_t& _moveSVIndex;
 };
 
 
@@ -324,7 +335,6 @@ consolidateOverlap(
     static const std::string logtag("consolidateOverlap: ");
 #endif
 
-    typedef std::map<unsigned,unsigned> movemap_t;
     movemap_t moveSVIndex;
     std::set<unsigned> deletedSVIndex;
 
@@ -347,8 +357,8 @@ consolidateOverlap(
 #endif
                 svs[innerIndex].merge(svs[outerIndex]);
                 assert(innerIndexShift.size() > innerIndex);
-                assert(innerIndexShift[innerIndex] >= innerIndex);
-                moveSVIndex[outerIndex] = innerIndex - innerIndexShift[innerIndex];
+                assert(innerIndexShift[innerIndex] <= innerIndex);
+                moveSVIndex[outerIndex] = (innerIndex - innerIndexShift[innerIndex]);
                 deletedSVIndex.insert(outerIndex);
                 break;
             }
@@ -365,7 +375,7 @@ consolidateOverlap(
 #endif
 
         {
-            svCandDeleter svDeleter(svs);
+            svCandDeleter svDeleter(svs,moveSVIndex);
 
             BOOST_FOREACH(const unsigned index, deletedSVIndex)
             {
