@@ -280,6 +280,10 @@ consolidateOverlap(
     SVCandidateSetData& svData,
     std::vector<SVCandidate>& svs)
 {
+#ifdef DEBUG_SVDATA
+    static const std::string logtag("consolidateOverlap: ");
+#endif
+
     typedef std::map<unsigned,unsigned> movemap_t;
     movemap_t moveSVIndex;
     std::set<unsigned> deletedSVIndex;
@@ -292,7 +296,7 @@ consolidateOverlap(
             if (svs[innerIndex].isIntersect(svs[outerIndex]))
             {
 #ifdef DEBUG_SVDATA
-                log_os << "Merging outer:inner: " << outerIndex << " " << innerIndex << "\n";
+                log_os << logtag << "Merging outer:inner: " << outerIndex << " " << innerIndex << "\n";
 #endif
                 svs[innerIndex].merge(svs[outerIndex]);
                 moveSVIndex[outerIndex] = (innerIndex - deletedSVIndex.size());
@@ -307,7 +311,7 @@ consolidateOverlap(
 #ifdef DEBUG_SVDATA
         BOOST_FOREACH(const unsigned index, deletedSVIndex)
         {
-            log_os << "deleted index: " << index << "\n";
+            log_os << logtag << "deleted index: " << index << "\n";
         }
 #endif
 
@@ -357,7 +361,7 @@ consolidateOverlap(
 #ifdef DEBUG_SVDATA
         BOOST_FOREACH(const movemap_t::value_type& val, moveSVIndex)
         {
-            log_os << "Movemap from: " << val.first << " to: " << val.second << "\n";
+            log_os << logtag << "Movemap from: " << val.first << " to: " << val.second << "\n";
         }
 #endif
 
@@ -388,6 +392,10 @@ getCandidatesFromData(
     SVCandidateSetData& svData,
     std::vector<SVCandidate>& svs)
 {
+#ifdef DEBUG_SVDATA
+    static const std::string logtag("getCandidatesFromData: ");
+#endif
+
     std::vector<SVCandidate> readCandidates;
 
     const unsigned bamCount(_bamStreams.size());
@@ -422,7 +430,7 @@ getCandidatesFromData(
             log_os << "Translated to candidates:\n";
             BOOST_FOREACH(const SVCandidate& cand, readCandidates)
             {
-                log_os << "\tcand: " << cand << "\n";
+                log_os << logtag << "cand: " << cand << "\n";
             }
 #endif
 
@@ -434,6 +442,9 @@ getCandidatesFromData(
             // this can lead to an infinite loop.
             BOOST_FOREACH(const SVCandidate& readCand, readCandidates)
             {
+#ifdef DEBUG_SVDATA
+                log_os << logtag << "Starting assignment for read cand: " << readCand << "\n";
+#endif
                 bool isSVFound(false);
                 unsigned svIndex(0);
 
@@ -442,7 +453,7 @@ getCandidatesFromData(
                     if (sv.isIntersect(readCand))
                     {
 #ifdef DEBUG_SVDATA
-                        log_os << "Adding to svIndex: " << svIndex << "\n";
+                        log_os << logtag << "Adding to svIndex: " << svIndex << " match_sv: " << sv << "\n";
 #endif
                         isSVFound=true;
                         pair.svIndex.push_back(svIndex);
@@ -455,7 +466,7 @@ getCandidatesFromData(
                 if (isSVFound) continue;
 
 #ifdef DEBUG_SVDATA
-                log_os << "New svIndex: " << svs.size() << "\n";
+                log_os << logtag << "New svIndex: " << svs.size() << "\n";
 #endif
                 pair.svIndex.push_back(svs.size());
                 svs.push_back(readCand);
@@ -466,12 +477,12 @@ getCandidatesFromData(
 
 #ifdef DEBUG_SVDATA
     {
-        log_os << "findSVCandidates: precount: " << svs.size() << "\n";
+        log_os << logtag << "precount: " << svs.size() << "\n";
 
         unsigned svIndex(0);
         BOOST_FOREACH(SVCandidate& sv, svs)
         {
-            log_os << "\tPRECOUNT: index: " << svIndex << " " << sv;
+            log_os << logtag << "PRECOUNT: index: " << svIndex << " " << sv;
             svIndex++;
         }
     }
@@ -481,12 +492,12 @@ getCandidatesFromData(
 
 #ifdef DEBUG_SVDATA
     {
-        log_os << "findSVCandidates: postcount: " << svs.size() << "\n";
+        log_os << logtag << "postcount: " << svs.size() << "\n";
 
         unsigned svIndex(0);
         BOOST_FOREACH(SVCandidate& sv, svs)
         {
-            log_os << "\tPOSTCOUNT: index: " << svIndex << " " << sv;
+            log_os << logtag << "POSTCOUNT: index: " << svIndex << " " << sv;
             svIndex++;
         }
     }
@@ -582,9 +593,7 @@ findCandidateSV(
 
     getCandidatesFromData(chromToIndex, svData,svs);
 
-    /*#ifdef DEBUG_SVDATA
-        checkResult(svData,svs);
-    #endif*/
+    //checkResult(svData,svs);
 }
 
 

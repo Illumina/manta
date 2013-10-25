@@ -320,7 +320,7 @@ static
 std::ostream&
 operator<<(std::ostream& os, const SpanTerminal& st)
 {
-    os << "tid: " << st.tid << " pos: " << st.pos << " isF: " << st.isFwd << " readSize: " << st.readSize;
+    os << "tid: " << st.tid << " pos: " << st.pos << " isFwd: " << st.isFwd << " readSize: " << st.readSize;
     return os;
 }
 #endif
@@ -475,6 +475,11 @@ getSVPairSupport(
 {
     static PairOptions pairOpt;
 
+#ifdef DEBUG_PAIR
+    static const std::string logtag("getSVPairSupport: ");
+    log_os << logtag << "starting alt pair search for sv: " << sv << "\n";
+#endif
+
     const unsigned minMapQ(_readScanner.getMinMapQ());
 
     // count the read pairs supporting the alternate allele in each sample, using data we already produced during candidate generation:
@@ -507,7 +512,7 @@ getSVPairSupport(
             }
 
 #ifdef DEBUG_PAIR
-            log_os << "getSVPairSupport: Finding alt pair evidence for: " << qname << "\n";
+            log_os << logtag << "Finding alt pair evidence for svIndex: " << sv.candidateIndex << "  qname: " << qname << "\n";
 #endif
 
             SVFragmentEvidence& fragment(evidence.getSample(isTumor)[qname]);
@@ -555,3 +560,4 @@ getSVPairSupport(
     //
     getSVRefPairSupport(pairOpt, sv, baseInfo, evidence);
 }
+
