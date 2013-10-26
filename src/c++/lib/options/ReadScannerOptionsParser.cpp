@@ -31,10 +31,9 @@ getOptionsDescription(ReadScannerOptions& opt)
     ("edge-prob", po::value(&opt.breakendEdgeTrimProb)->default_value(opt.breakendEdgeTrimProb),
      "Breakend range associated with each read will trimmed to expected fragment quantile range [p,(1-p)], p: edge-prob")
     ("ignore-anom-proper-pair", po::value(&opt.isIgnoreAnomProperPair)->zero_tokens(),
-      "Disregard anomalous fragment sizes if the BAM record has the proper pair bit set. "
-      "This flag is typically set for RNA-SEQ analysis where the proper-pair bit is used to indicate an intron-spanning read pair.")
-
-     ;
+     "Disregard anomalous fragment sizes if the BAM record has the proper pair bit set. "
+     "This flag is typically set for RNA-SEQ analysis where the proper-pair bit is used to indicate an intron-spanning read pair.")
+    ;
 
     return desc;
 }

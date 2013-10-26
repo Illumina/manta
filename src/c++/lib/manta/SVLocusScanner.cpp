@@ -762,17 +762,17 @@ getSingleReadSVCandidates(
     // - process any large indels in the localRead:
     getSVCandidatesFromReadIndels(opt, dopt, bamAlign, candidates);
 
-    #ifdef DEBUG_SCANNER
+#ifdef DEBUG_SCANNER
     static const std::string logtag("getReadBreakendsImpl");
     log_os << logtag << " post-indels candidate_size: " << candidates.size() << "\n";
-    #endif
+#endif
 
     // - process soft-clip in the localRead:
     getSVCandidatesFromReadClip(opt, bamRead, bamAlign, candidates);
 
-    #ifdef DEBUG_SCANNER
+#ifdef DEBUG_SCANNER
     log_os << logtag << " post-clip candidate_size: " << candidates.size() << "\n";
-    #endif
+#endif
 
     // TODO: add semi-aligned read processing
     //
@@ -786,9 +786,9 @@ getSingleReadSVCandidates(
     /// - process split/SA reads:
     getSACandidatesFromRead(dopt, bamRead, bamAlign, chromToIndex, candidates);
 
-    #ifdef DEBUG_SCANNER
+#ifdef DEBUG_SCANNER
     log_os << logtag << " post-split read candidate_size: " << candidates.size() << "\n";
-    #endif
+#endif
 
     // TODO: process shadow reads
     //getSVCandidatesFromShadow(opt, rstats, localRead, localAlign,remoteReadPtr,candidates);
@@ -822,7 +822,7 @@ getReadBreakendsImpl(
 
     getSingleReadSVCandidates(opt, dopt, localRead, localAlign, chromToIndex, candidates);
 
-    if(NULL != remoteReadPtr)
+    if (NULL != remoteReadPtr)
     {
         const bam_record& remoteRead(*remoteReadPtr);
         const ChromAlignment remoteAlign(remoteRead);
