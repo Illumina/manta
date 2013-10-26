@@ -304,13 +304,13 @@ struct SpanTerminal
     SpanTerminal() :
         tid(0),
         pos(0),
-        isFwd(true),
+        isFwdStrand(true),
         readSize(0)
     {}
 
     int32_t tid;
     pos_t pos;
-    bool isFwd;
+    bool isFwdStrand;
     unsigned readSize;
 };
 
@@ -320,7 +320,10 @@ static
 std::ostream&
 operator<<(std::ostream& os, const SpanTerminal& st)
 {
-    os << "tid: " << st.tid << " pos: " << st.pos << " isFwd: " << st.isFwd << " readSize: " << st.readSize;
+    os << "tid: " << st.tid
+       << " pos: "<< st.pos
+       << " isFwdStrand: " << st.isFwdStrand
+       << " readSize: " << st.readSize;
     return os;
 }
 #endif
@@ -334,8 +337,8 @@ getTerminal(
     SpanTerminal& fterm)
 {
     fterm.tid = rinfo.interval.tid;
-    fterm.isFwd = rinfo.isFwdStrand;
-    fterm.pos = ( fterm.isFwd ? rinfo.interval.range.begin_pos() : rinfo.interval.range.end_pos() );
+    fterm.isFwdStrand = rinfo.isFwdStrand;
+    fterm.pos = ( fterm.isFwdStrand ? rinfo.interval.range.begin_pos() : rinfo.interval.range.end_pos() );
     fterm.readSize = rinfo.readSize;
 }
 
@@ -380,13 +383,16 @@ getFragProb(
     {
         isBpFragReversed=true;
     }
-    else if (frag1.isFwd != (sv.bp1.state == SVBreakendState::RIGHT_OPEN) )
+    else if (frag1.isFwdStrand != (sv.bp1.state == SVBreakendState::RIGHT_OPEN) )
     {
         isBpFragReversed=true;
     }
-    else if ((frag1.pos < frag2.pos) != (bp1pos < bp2pos))
+    else if (frag1.isFwdStrand == frag2.isFwdStrand)
     {
-        isBpFragReversed=true;
+        if ((frag1.pos < frag2.pos) != (bp1pos < bp2pos))
+        {
+            isBpFragReversed=true;
+        }
     }
 
     if (isBpFragReversed)
@@ -436,13 +442,13 @@ getFragProb(
                 errorMsg = "Can't match evidence read chrom to sv-candidate bp2.";
             }
         }
-        else if (frag1.isFwd != frag2.isFwd)
+        else if (frag1.isFwdStrand != frag2.isFwdStrand)
         {
-            if ( frag1.isFwd != (sv.bp1.state == SVBreakendState::RIGHT_OPEN) )
+            if ( frag1.isFwdStrand != (sv.bp1.state == SVBreakendState::RIGHT_OPEN) )
             {
                 errorMsg = "Can't match evidence read strand to sv-candidate bp1";
             }
-            if ( frag2.isFwd != (sv.bp2.state == SVBreakendState::RIGHT_OPEN) )
+            if ( frag2.isFwdStrand != (sv.bp2.state == SVBreakendState::RIGHT_OPEN) )
             {
                 errorMsg = "Can't match evidence read strand to sv-candidate bp2";
             }
@@ -469,10 +475,10 @@ getFragProb(
     }
 
     pos_t frag1Size(bp1pos-frag1.pos);
-    if (! frag1.isFwd) frag1Size *= -1;
+    if (! frag1.isFwdStrand) frag1Size *= -1;
 
     pos_t frag2Size(bp2pos-frag2.pos);
-    if (! frag2.isFwd) frag2Size *= -1;
+    if (! frag2.isFwdStrand) frag2Size *= -1;
 
 #ifdef DEBUG_PAIR
     log_os << logtag << "frag1size,frag2size: " << frag1Size << " " << frag2Size << "\n";
@@ -480,7 +486,6 @@ getFragProb(
 
     if (frag1Size < std::min(pairOpt.minFragSupport, static_cast<pos_t>(frag1.readSize))) return;
     if (frag2Size < std::min(pairOpt.minFragSupport, static_cast<pos_t>(frag2.readSize))) return;
-
 
     isFragSupportSV = true;
 
