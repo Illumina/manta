@@ -1,5 +1,5 @@
+- MANTA-40 Don't call splicing-events in RNA-seq as deletions
 - MANTA-20 include split read counts for short reads
-- MANTA-20 account for breakpoint microhomology during split read scoring
 - MANTA-44 Fix Rhodobacter analysis
 v0.11
 - Adjust all vcf output to pass vcf-validator

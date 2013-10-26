@@ -533,6 +533,9 @@ getSVCandidatesFromPair(
 {
     if (localRead.is_unmapped() || localRead.is_mate_unmapped()) return;
 
+    /// special case typically used for RNA-Seq analysis:
+    if (opt.isIgnoreAnomProperPair && localRead.is_proper_pair()) return;
+
     // update localEvidenceRange:
     const unsigned readSize(apath_read_length(localAlign.path));
     const unsigned localRefLength(apath_ref_length(localAlign.path));
