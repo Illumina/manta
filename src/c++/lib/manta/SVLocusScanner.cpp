@@ -749,6 +749,53 @@ getSVCandidatesFromShadow(
 
 
 
+static
+void
+getSingleReadSVCandidates(
+    const ReadScannerOptions& opt,
+    const ReadScannerDerivOptions& dopt,
+    const bam_record& bamRead,
+    const ChromAlignment& bamAlign,
+    const chromMap_t& chromToIndex,
+    std::vector<SVCandidate>& candidates)
+{
+    // - process any large indels in the localRead:
+    getSVCandidatesFromReadIndels(opt, dopt, bamAlign, candidates);
+
+    #ifdef DEBUG_SCANNER
+    static const std::string logtag("getReadBreakendsImpl");
+    log_os << logtag << " post-indels candidate_size: " << candidates.size() << "\n";
+    #endif
+
+    // - process soft-clip in the localRead:
+    getSVCandidatesFromReadClip(opt, bamRead, bamAlign, candidates);
+
+    #ifdef DEBUG_SCANNER
+    log_os << logtag << " post-clip candidate_size: " << candidates.size() << "\n";
+    #endif
+
+    // TODO: add semi-aligned read processing
+    //
+    // CTS: temporarily mark out semi-aligned read input pending review of results with corrected qual offset
+    //
+    if (false)
+    {
+        getSVCandidatesFromSemiAligned(opt, bamRead, bamAlign, candidates);
+    }
+
+    /// - process split/SA reads:
+    getSACandidatesFromRead(dopt, bamRead, bamAlign, chromToIndex, candidates);
+
+    #ifdef DEBUG_SCANNER
+    log_os << logtag << " post-split read candidate_size: " << candidates.size() << "\n";
+    #endif
+
+    // TODO: process shadow reads
+    //getSVCandidatesFromShadow(opt, rstats, localRead, localAlign,remoteReadPtr,candidates);
+}
+
+
+
 /// scan read record (and optionally its mate record) for SV evidence.
 //
 /// note that estimation is improved by the mate record (because we have the mate cigar string in this case)
@@ -770,42 +817,18 @@ getReadBreakendsImpl(
     /// TODO: can't handle these yet, but plan to soon:
     //if (localRead.is_mate_unmapped()) return;
 
-    /// get soem basic derived information from the bam_record:
+    /// get some basic derived information from the bam_record:
     const ChromAlignment localAlign(localRead);
 
-    // - process any large indels in the localRead:
-    getSVCandidatesFromReadIndels(opt, dopt, localAlign, candidates);
+    getSingleReadSVCandidates(opt, dopt, localRead, localAlign, chromToIndex, candidates);
 
-#ifdef DEBUG_SCANNER
-    static const std::string logtag("getReadBreakendsImpl");
-    log_os << logtag << " post-indels candidate_size: " << candidates.size() << "\n";
-#endif
-
-    // - process soft-clip in the localRead:
-    getSVCandidatesFromReadClip(opt, localRead, localAlign, candidates);
-
-#ifdef DEBUG_SCANNER
-    log_os << logtag << " post-clip candidate_size: " << candidates.size() << "\n";
-#endif
-
-    // TODO: add semi-aligned read processing
-    //
-    // CTS: temporarily mark out semi-aligned read input pending review of results with corrected qual offset
-    //
-    if (false)
+    if(NULL != remoteReadPtr)
     {
-        getSVCandidatesFromSemiAligned(opt, localRead, localAlign, candidates);
+        const bam_record& remoteRead(*remoteReadPtr);
+        const ChromAlignment remoteAlign(remoteRead);
+
+        getSingleReadSVCandidates(opt, dopt, remoteRead, remoteAlign, chromToIndex, candidates);
     }
-
-    /// - process split/SA reads:
-    getSACandidatesFromRead(dopt, localRead, localAlign, chromToIndex, candidates);
-
-#ifdef DEBUG_SCANNER
-    log_os << logtag << " post-split read candidate_size: " << candidates.size() << "\n";
-#endif
-
-    // TODO: process shadow reads
-    //getSVCandidatesFromShadow(opt, rstats, localRead, localAlign,remoteReadPtr,candidates);
 
     // - process anomalous read pairs:
     getSVCandidatesFromPair(opt, rstats, localRead, localAlign, remoteReadPtr, candidates);
@@ -815,7 +838,7 @@ getReadBreakendsImpl(
 #endif
 
     // update localEvidence range:
-    // note this is only used if candidates were added, so there's no harm is setting it every time:
+    // note this is only used if candidates were added, so there's no harm in setting it every time:
     const unsigned localRefLength(apath_ref_length(localAlign.path));
     const pos_t startRefPos(localRead.pos()-1);
     const pos_t endRefPos(startRefPos+localRefLength);
@@ -857,7 +880,6 @@ getReadBreakendsImpl(
             oss << "\n"
                 << "\tSVCandidate: " << sv << "\n";
             BOOST_THROW_EXCEPTION(LogicException(oss.str()));
-
         }
     }
 }
