@@ -213,7 +213,7 @@ def main(iniFile, primaryIniSection, workflowClassName) :
                          isForceContinue=True,
                          isDryRun=runOptions.isDryRun,
                          schedulerArgList=runOptions.schedulerArgList,
-                         resetTasks=flowOptions.resetTasks,
+                         resetTasks=runOptions.resetTasks,
                          successMsg=wflow.getSuccessMessage(),
                          warningLogFile=warningpath,
                          errorLogFile=errorpath)
