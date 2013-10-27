@@ -490,13 +490,19 @@ getFragProb(
     if (frag1Size < std::min(pairOpt.minFragSupport, static_cast<pos_t>(frag1.readSize))) return;
     if (frag2Size < std::min(pairOpt.minFragSupport, static_cast<pos_t>(frag2.readSize))) return;
 
-    isFragSupportSV = true;
 
     fragProb=fragDistro.cdf(frag1Size+frag2Size);
 #ifdef DEBUG_PAIR
     log_os << logtag << "cdf: " << fragProb << " final: " << std::min(fragProb, (1-fragProb)) << "\n";
 #endif
     fragProb = std::min(fragProb, (1-fragProb));
+
+    /// TODO: any cases where fragProb is 0 should be some soft of mulit-SV error artifact (like a large CIGAR indel in one of the reads of the pair)
+    ///     try to improve this case -- ideally we can account for such events.
+    if (fragProb > 0.)
+    {
+        isFragSupportSV = true;
+    }
 }
 
 
@@ -597,6 +603,9 @@ getSVPairSupport(
             getFragProb(pairOpt, sv, pair, fragDistro, isStrictMatch, isFragSupportSV, fragProb);
 
             if (! isFragSupportSV) continue;
+
+            /// TODO: if fragProb is zero this should be a bug -- follow-up to see if we can make this an assert(fragProb > 0.) instead
+            if (fragProb <= 0.) continue;
 
             // for all large spanning events -- we don't test for pair support of the two breakends separately -- this could be
             // beneficial if there was an unusually large insertion associated with the event. For now we approximate that
