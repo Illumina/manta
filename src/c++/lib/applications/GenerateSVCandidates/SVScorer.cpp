@@ -457,24 +457,24 @@ addConservativeSplitReadSupport(
     //
     if (! isAnySplitReadSupport(fragev,isRead1)) return;
 
-    float altLhood =
+    float altLnLhood =
         std::max(fragev.alt.bp1.getRead(isRead1).splitLnLhood,
                  fragev.alt.bp2.getRead(isRead1).splitLnLhood);
 
-    float refLhood =
+    float refLnLhood =
         std::max(fragev.ref.bp1.getRead(isRead1).splitLnLhood,
                  fragev.ref.bp2.getRead(isRead1).splitLnLhood);
 
     // convert to normalized prob:
-    if (altLhood > refLhood)
+    if (altLnLhood > refLnLhood)
     {
-        lnToProb(refLhood, altLhood);
-        if (altLhood>splitSupportProb) sampleBaseInfo.alt.confidentSplitReadCount++;
+        lnToProb(refLnLhood, altLnLhood);
+        if (altLnLhood > splitSupportProb) sampleBaseInfo.alt.confidentSplitReadCount++;
     }
     else
     {
-        lnToProb(altLhood, refLhood);
-        if (refLhood>splitSupportProb) sampleBaseInfo.ref.confidentSplitReadCount++;
+        lnToProb(altLnLhood, refLnLhood);
+        if (refLnLhood > splitSupportProb) sampleBaseInfo.ref.confidentSplitReadCount++;
     }
 }
 
@@ -529,15 +529,14 @@ addConservativeSpanningPairSupport(
     }
 
     // convert to normalized prob:
+    const float sum(altLhood+refLhood);
     if (altLhood > refLhood)
     {
-        lnToProb(refLhood, altLhood);
-        if (altLhood>pairSupportProb) sampleBaseInfo.alt.confidentSpanningPairCount++;
+        if ((altLhood/sum) > pairSupportProb) sampleBaseInfo.alt.confidentSpanningPairCount++;
     }
     else
     {
-        lnToProb(altLhood, refLhood);
-        if (refLhood>pairSupportProb) sampleBaseInfo.ref.confidentSpanningPairCount++;
+        if ((refLhood/sum) > pairSupportProb) sampleBaseInfo.ref.confidentSpanningPairCount++;
     }
 }
 
