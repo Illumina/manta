@@ -1,3 +1,4 @@
+- MANTA-53 Enable --rescore option in runWorkflow.py
 - MANTA-40 Don't call splicing-events in RNA-seq as deletions
 - MANTA-20 include split read counts for short reads
 - MANTA-44 Fix Rhodobacter analysis
