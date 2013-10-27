@@ -789,12 +789,12 @@ scoreSomaticSV(
         bool isNonzeroSomaticQuality(true);
 
         /// first check for substantial support in the normal:
-        if (baseInfo.normal.alt.spanPairCount > 1) isNonzeroSomaticQuality=false;
+        if (baseInfo.normal.alt.confidentSpanningPairCount > 1) isNonzeroSomaticQuality=false;
         if (baseInfo.normal.alt.confidentSplitReadCount > 5) isNonzeroSomaticQuality=false;
 
         if (isNonzeroSomaticQuality)
         {
-            const bool lowPairSupport(baseInfo.tumor.alt.spanPairCount < 6);
+            const bool lowPairSupport(baseInfo.tumor.alt.confidentSpanningPairCount < 6);
             const bool lowSplitSupport(baseInfo.tumor.alt.confidentSplitReadCount < 6);
             const bool lowSingleSupport((baseInfo.tumor.alt.bp1SpanReadCount < 14) || (baseInfo.tumor.alt.bp2SpanReadCount < 14));
             const bool highSingleContam((baseInfo.normal.alt.bp1SpanReadCount > 1) || (baseInfo.normal.alt.bp2SpanReadCount > 1));
@@ -806,9 +806,9 @@ scoreSomaticSV(
 
         if (isNonzeroSomaticQuality)
         {
-            if (baseInfo.normal.alt.spanPairCount)
+            if (baseInfo.normal.alt.confidentSpanningPairCount)
             {
-                const double ratio(static_cast<double>(baseInfo.tumor.alt.spanPairCount)/static_cast<double>(baseInfo.normal.alt.spanPairCount));
+                const double ratio(static_cast<double>(baseInfo.tumor.alt.confidentSpanningPairCount)/static_cast<double>(baseInfo.normal.alt.confidentSpanningPairCount));
                 if (ratio<9)
                 {
                     isNonzeroSomaticQuality=false;
@@ -834,7 +834,7 @@ scoreSomaticSV(
 
         {
             // there needs to be some ref support in the normal as well:
-            const bool normRefPairSupport(baseInfo.normal.ref.spanPairCount > 6);
+            const bool normRefPairSupport(baseInfo.normal.ref.confidentSpanningPairCount > 6);
             const bool normRefSplitSupport(baseInfo.normal.ref.confidentSplitReadCount > 6);
 
             if (! (normRefPairSupport || normRefSplitSupport)) isNonzeroSomaticQuality=false;
