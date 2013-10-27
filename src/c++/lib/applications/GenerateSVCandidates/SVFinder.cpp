@@ -647,8 +647,6 @@ findCandidateSV(
 
     getCandidatesFromData(chromToIndex, svData,svs);
 
-    checkResult(svData,svs);
+    //checkResult(svData,svs);
 }
-
-
 
