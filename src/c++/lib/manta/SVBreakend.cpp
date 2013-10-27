@@ -25,10 +25,12 @@ operator<<(
     std::ostream& os,
     const SVBreakendLowResEvidence& sce)
 {
+    using namespace SVEvidenceType;
+
     os << "SVBreakendLowResEvidence:";
-    for (unsigned i(0); i<SVBreakendLowResEvidence::SIZE; ++i)
+    for (int i(0); i<SIZE; ++i)
     {
-        os << " " << SVBreakendLowResEvidence::label(i) << ": " << sce.getVal(i);
+        os << " " << label(i) << ": " << sce.getVal(i);
     }
 
     return os;

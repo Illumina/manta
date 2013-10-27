@@ -18,6 +18,7 @@
 
 #include "blt_util/bam_record.hh"
 #include "svgraph/GenomeInterval.hh"
+#include "manta/SVBreakend.hh"
 
 #include "alignment/Alignment.hh"
 
@@ -53,6 +54,26 @@ std::ostream&
 operator<<(std::ostream& os, const SVCandidateSetRead& svr);
 
 
+/// capture details of the link between a read pair and an SV
+struct SVPairAssociation
+{
+    typedef uint16_t index_t;
+
+    explicit
+    SVPairAssociation(
+        const index_t initIndex = 0,
+        const SVEvidenceType::index_t initEvtype = SVEvidenceType::UNKNOWN) :
+        index(initIndex),
+        evtype(initEvtype)
+    {}
+
+    index_t index;
+    SVEvidenceType::index_t evtype;  // is this association drawn form a read pair or other evidence source? (ie. CIGAR)
+};
+
+std::ostream&
+operator<<(std::ostream& os, const SVPairAssociation& sva);
+
 
 /// A read associated with an SV associated set of regions
 ///
@@ -63,12 +84,10 @@ struct SVCandidateSetReadPair
     SVCandidateSetReadPair()
     {}
 
-    typedef uint16_t index_t;
-    std::vector<index_t> svIndex; ///< which SVs from the set are this molecule associated with?
+    std::vector<SVPairAssociation> svLink; ///< which SVs from the set are this molecule associated with?
     SVCandidateSetRead read1;
     SVCandidateSetRead read2;
 };
-
 
 std::ostream&
 operator<<(std::ostream& os, const SVCandidateSetReadPair& svp);

@@ -202,7 +202,7 @@ checkResult(
     const unsigned svCount(svs.size());
     if (0 == svCount) return;
 
-    // check that the counts totalled up from the data match those in the sv candidates
+    // check that the counts totaled up from the data match those in the sv candidates
     std::map<unsigned,unsigned> readCounts;
     std::map<unsigned,unsigned> pairCounts;
 
@@ -218,18 +218,22 @@ checkResult(
         const SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
         BOOST_FOREACH(const SVCandidateSetReadPair& pair, svDataGroup)
         {
-            BOOST_FOREACH(const SVCandidateSetReadPair::index_t svIndex, pair.svIndex)
+            BOOST_FOREACH(const SVPairAssociation& sva, pair.svLink)
             {
-                if (svIndex>=svCount)
+
+                if (sva.index>=svCount)
                 {
                     std::ostringstream oss;
-                    oss << "Searching for SVIndex: " << svIndex << " with svSize: " << svCount << "\n";
+                    oss << "Searching for SVIndex: " << sva.index << " with svSize: " << svCount << "\n";
                     BOOST_THROW_EXCEPTION(LogicException(oss.str()));
                 }
 
-                if (pair.read1.isSet()) readCounts[svIndex]++;
-                if (pair.read2.isSet()) readCounts[svIndex]++;
-                if (pair.read1.isSet() && pair.read2.isSet()) pairCounts[svIndex] += 2;
+                if (SVEvidenceType::isPairType(sva.evtype))
+                {
+                    if (pair.read1.isSet()) readCounts[sva.index]++;
+                    if (pair.read2.isSet()) readCounts[sva.index]++;
+                    if (pair.read1.isSet() && pair.read2.isSet()) pairCounts[sva.index] += 2;
+                }
             }
         }
     }
@@ -407,11 +411,11 @@ consolidateOverlap(
             SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
             BOOST_FOREACH(SVCandidateSetReadPair& pair, svDataGroup)
             {
-                BOOST_FOREACH(SVCandidateSetReadPair::index_t& svIndex, pair.svIndex)
+                BOOST_FOREACH(SVPairAssociation& sva, pair.svLink)
                 {
-                    if (moveSVIndex.count(svIndex))
+                    if (moveSVIndex.count(sva.index))
                     {
-                        svIndex = moveSVIndex[svIndex];
+                        sva.index = moveSVIndex[sva.index];
                     }
                 }
             }
@@ -442,7 +446,7 @@ getCandidatesFromData(
         {
             SVCandidateSetRead* localReadPtr(&(pair.read1));
             SVCandidateSetRead* remoteReadPtr(&(pair.read2));
-            pair.svIndex.clear();
+            pair.svLink.clear();
 
             if (isExcludeUnpaired)
             {
@@ -492,7 +496,21 @@ getCandidatesFromData(
                         log_os << logtag << "Adding to svIndex: " << svIndex << " match_sv: " << sv << "\n";
 #endif
                         isSVFound=true;
-                        pair.svIndex.push_back(svIndex);
+                        {
+                            using namespace SVEvidenceType;
+
+                            index_t evType(UNKNOWN);
+                            for (int i(0); i<SIZE; ++i)
+                            {
+                                if (readCand.bp1.lowresEvidence.getVal(i) != 0)
+                                {
+                                    evType = static_cast<index_t>(i);
+                                    break;
+                                }
+                            }
+
+                            pair.svLink.push_back(SVPairAssociation(svIndex,evType));
+                        }
                         sv.merge(readCand);
                         break;
                     }
@@ -504,9 +522,9 @@ getCandidatesFromData(
 #ifdef DEBUG_SVDATA
                 log_os << logtag << "New svIndex: " << svs.size() << "\n";
 #endif
-                pair.svIndex.push_back(svs.size());
+                pair.svLink.push_back(SVPairAssociation(svs.size()));
                 svs.push_back(readCand);
-                svs.back().candidateIndex = pair.svIndex.back();
+                svs.back().candidateIndex = pair.svLink.back().index;
             }
         }
     }
@@ -584,7 +602,7 @@ findCandidateSV(
 
         const SVLocusNode& node(locus.getNode(edge.nodeIndex1));
 
-        static const SVBreakendLowResEvidence::EvidenceType svUnknown(SVBreakendLowResEvidence::UNKNOWN);
+        static const SVEvidenceType::index_t svUnknown(SVEvidenceType::UNKNOWN);
         localBreakend.lowresEvidence.add(svUnknown, node.getEdge(edge.nodeIndex1).getCount());
         localBreakend.state = SVBreakendState::COMPLEX;
         localBreakend.interval = node.getInterval();
@@ -629,7 +647,7 @@ findCandidateSV(
 
     getCandidatesFromData(chromToIndex, svData,svs);
 
-    //checkResult(svData,svs);
+    checkResult(svData,svs);
 }
 
 

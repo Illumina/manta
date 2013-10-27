@@ -35,14 +35,22 @@ operator<<(std::ostream& os, const SVCandidateSetRead& svr)
 }
 
 
+std::ostream&
+operator<<(std::ostream& os, const SVPairAssociation& sva)
+{
+    os << " svindex: " << sva.index << " evidenceType: " << SVEvidenceType::label(sva.evtype);
+    return os;
+}
+
+
 
 std::ostream&
 operator<<(std::ostream& os, const SVCandidateSetReadPair& svp)
 {
     os << "SVCandidateReadPair svIndices:";
-    BOOST_FOREACH(const SVCandidateSetReadPair::index_t index, svp.svIndex)
+    BOOST_FOREACH(const SVPairAssociation& sva, svp.svLink)
     {
-        os << " " << index;
+        os << sva << "\n";
     }
     os << "\n";
     os << "\tread1: " << svp.read1;

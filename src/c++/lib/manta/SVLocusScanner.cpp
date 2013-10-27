@@ -87,7 +87,7 @@ GetSplitSVCandidate(
     const int32_t alignTid,
     const pos_t leftPos,
     const pos_t rightPos,
-    const SVBreakendLowResEvidence::EvidenceType& svSource,
+    const SVEvidenceType::index_t& svSource,
     const bool isComplex = false)
 {
     SVCandidate sv;
@@ -185,7 +185,8 @@ GetSplitSACandidate(
     const ChromAlignment& localAlign,
     const ChromAlignment& remoteAlign)
 {
-    static const SVBreakendLowResEvidence::EvidenceType svSource(SVBreakendLowResEvidence::SPLIT_ALIGN);
+    using namespace SVEvidenceType;
+    static const index_t svSource(SPLIT_ALIGN);
 
     SVCandidate sv;
 
@@ -283,10 +284,10 @@ getSVCandidatesFromReadIndels(
     const ChromAlignment& align,
     std::vector<SVCandidate>& candidates)
 {
+    using namespace SVEvidenceType;
+    static const index_t svSource(CIGAR);
+
     using namespace ALIGNPATH;
-
-    static const SVBreakendLowResEvidence::EvidenceType svSource(SVBreakendLowResEvidence::CIGAR);
-
     const std::pair<unsigned,unsigned> ends(get_match_edge_segments(align.path));
 
     unsigned pathIndex(0);
@@ -479,7 +480,8 @@ getSVCandidatesFromSemiAligned(
     const SimpleAlignment& bamAlign,
     std::vector<SVCandidate>& candidates)
 {
-    static const SVBreakendLowResEvidence::EvidenceType svSource(SVBreakendLowResEvidence::SEMIALIGN);
+    using namespace SVEvidenceType;
+    static const index_t svSource(SEMIALIGN);
 
     // semi-aligned reads don't define a full hypothesis, so they're always evidence for a 'complex' ie. undefined, event
     // in a fashion analogous to clipped reads
@@ -506,7 +508,8 @@ getSVCandidatesFromReadClip(
     const SimpleAlignment& bamAlign,
     std::vector<SVCandidate>& candidates)
 {
-    static const SVBreakendLowResEvidence::EvidenceType svSource(SVBreakendLowResEvidence::SOFTCLIP);
+    using namespace SVEvidenceType;
+    static const index_t svSource(SOFTCLIP);
 
     unsigned leadingClipLen(0), trailingClipLen(0);
     getSVBreakendCandidateClip(bamRead, bamAlign.path, leadingClipLen, trailingClipLen);
@@ -540,8 +543,9 @@ getSVCandidatesFromPair(
     const bam_record* remoteReadPtr,
     std::vector<SVCandidate>& candidates)
 {
-    static const SVBreakendLowResEvidence::EvidenceType svLocalPair(SVBreakendLowResEvidence::LOCAL_PAIR);
-    static const SVBreakendLowResEvidence::EvidenceType svPair(SVBreakendLowResEvidence::PAIR);
+    using namespace SVEvidenceType;
+    static const index_t svLocalPair(LOCAL_PAIR);
+    static const index_t svPair(PAIR);
 
     if (localRead.is_unmapped() || localRead.is_mate_unmapped()) return;
 
@@ -703,7 +707,8 @@ getSVCandidatesFromShadow(
     const bam_record* remoteReadPtr,
     std::vector<SVCandidate>& candidates)
 {
-    static const SVBreakendLowResEvidence::EvidenceType svSource(SVBreakendLowResEvidence::SHADOW);
+    using namespace SVEvidenceType;
+    static const index_t svSource(SHADOW);
 
     if (NULL == remoteReadPtr)
     {

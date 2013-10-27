@@ -115,9 +115,14 @@ modifySample(
     std::vector<std::string> values(2);
 
     static const std::string pairTag("PR");
+    values[0] = str( boost::format("%i,%i") % baseInfo.normal.ref.confidentSpanningPairCount % baseInfo.normal.alt.confidentSpanningPairCount);
+    values[1] = str( boost::format("%i,%i") % baseInfo.tumor.ref.confidentSpanningPairCount % baseInfo.tumor.alt.confidentSpanningPairCount);
+    sampletags.push_back(std::make_pair(pairTag,values));
+
+    static const std::string pair2Tag("PR2");
     values[0] = str( boost::format("%i,%i") % baseInfo.normal.ref.spanPairCount % baseInfo.normal.alt.spanPairCount);
     values[1] = str( boost::format("%i,%i") % baseInfo.tumor.ref.spanPairCount % baseInfo.tumor.alt.spanPairCount);
-    sampletags.push_back(std::make_pair(pairTag,values));
+    sampletags.push_back(std::make_pair(pair2Tag,values));
 
     if (sv.isImprecise()) return;
 

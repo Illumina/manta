@@ -352,6 +352,7 @@ getFragProb(
     const SVCandidate& sv,
     const SVCandidateSetReadPair& pair,
     const SizeDistribution& fragDistro,
+    const bool isStrictMatch,
     bool& isFragSupportSV,
     float& fragProb)
 {
@@ -463,6 +464,8 @@ getFragProb(
 
         if (! errorMsg.empty())
         {
+            if (! isStrictMatch) return;
+
             using namespace illumina::common;
 
             std::ostringstream oss;
@@ -530,7 +533,26 @@ getSVPairSupport(
         BOOST_FOREACH(const SVCandidateSetReadPair& pair, svDataGroup)
         {
             // is this read pair associated with this candidateIndex? (each read pair can be associated with multiple candidates)
-            if (0 == std::count(pair.svIndex.begin(),pair.svIndex.end(), sv.candidateIndex)) continue;
+            bool isIndexFound(false);
+            unsigned linkIndex(0);
+            BOOST_FOREACH(const SVPairAssociation& sva, pair.svLink)
+            {
+                if (sv.candidateIndex == sva.index)
+                {
+                    isIndexFound = true;
+                    break;
+                }
+                linkIndex++;
+            }
+
+            if (! isIndexFound) continue;
+
+            /// do we assert (strict) or skip (non-strict) on non-matching pair/sv associations?
+            bool isStrictMatch(true);
+            if (pair.svLink.size() > 1)
+            {
+                if (! SVEvidenceType::isPairType(pair.svLink[linkIndex].evtype)) isStrictMatch=false;
+            }
 
             if (! (pair.read1.isSet() || pair.read2.isSet())) continue;
 
@@ -552,7 +574,6 @@ getSVPairSupport(
             SVFragmentEvidence& fragment(evidence.getSample(isTumor)[qname]);
             SVFragmentEvidenceAllele& alt(fragment.alt);
 
-
             if (pair.read1.isSet())
             {
                 sample.alt.bp1SpanReadCount += 1;
@@ -570,11 +591,10 @@ getSVPairSupport(
                 sample.alt.spanPairCount += 1;
             }
 
-
             /// get fragment prob, and possibly withdraw fragment support based on refined sv breakend coordinates:
             bool isFragSupportSV(false);
             float fragProb(0);
-            getFragProb(pairOpt, sv, pair, fragDistro, isFragSupportSV, fragProb);
+            getFragProb(pairOpt, sv, pair, fragDistro, isStrictMatch, isFragSupportSV, fragProb);
 
             if (! isFragSupportSV) continue;
 

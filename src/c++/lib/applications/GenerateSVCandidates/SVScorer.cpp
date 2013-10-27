@@ -395,7 +395,7 @@ getSVSplitReadSupport(
 
 static
 bool
-isAlleleReadSupport(
+isAlleleSplitReadSupport(
     const SVFragmentEvidenceAllele& allele,
     const bool isRead1)
 {
@@ -407,12 +407,24 @@ isAlleleReadSupport(
 
 static
 bool
-isAnyReadSupport(
+isAnySplitReadSupport(
     const SVFragmentEvidence& fragev,
     const bool isRead1)
 {
-    return (isAlleleReadSupport(fragev.alt, isRead1) ||
-            isAlleleReadSupport(fragev.ref, isRead1));
+    return (isAlleleSplitReadSupport(fragev.alt, isRead1) ||
+            isAlleleSplitReadSupport(fragev.ref, isRead1));
+}
+
+
+static
+bool
+isAnySpanningPairSupport(
+    const SVFragmentEvidence& fragev)
+{
+    const bool isRefSupport(fragev.ref.bp1.isFragmentSupport || fragev.ref.bp2.isFragmentSupport);
+    const bool isAltSupport(fragev.alt.bp1.isFragmentSupport || fragev.alt.bp2.isFragmentSupport);
+
+    return (isRefSupport || isAltSupport);
 }
 
 
@@ -432,18 +444,18 @@ lnToProb(
 
 static
 void
-addReadSupport(
+addConservativeSplitReadSupport(
     const SVFragmentEvidence& fragev,
     const bool isRead1,
     SVSampleInfo& sampleBaseInfo)
 {
-    static const float supportProb(0.9999);
+    static const float splitSupportProb(0.999);
 
     // only consider reads where at least one allele and one breakend is confident
     //
     // ...note this is done in the absence of having a noise state in the model
     //
-    if (! isAnyReadSupport(fragev,isRead1)) return;
+    if (! isAnySplitReadSupport(fragev,isRead1)) return;
 
     float altLhood =
         std::max(fragev.alt.bp1.getRead(isRead1).splitLnLhood,
@@ -457,15 +469,69 @@ addReadSupport(
     if (altLhood > refLhood)
     {
         lnToProb(refLhood, altLhood);
-        if (altLhood>supportProb) sampleBaseInfo.alt.confidentSplitReadCount++;
+        if (altLhood>splitSupportProb) sampleBaseInfo.alt.confidentSplitReadCount++;
     }
     else
     {
         lnToProb(altLhood, refLhood);
-        if (refLhood>supportProb) sampleBaseInfo.ref.confidentSplitReadCount++;
+        if (refLhood>splitSupportProb) sampleBaseInfo.ref.confidentSplitReadCount++;
+    }
+}
+
+
+
+static
+float
+getSpanningPairAlleleLhood(
+    const SVFragmentEvidenceAllele& allele)
+{
+    float fragProb(0);
+    if (allele.bp1.isFragmentSupport)
+    {
+        fragProb = allele.bp1.fragLengthProb;
     }
 
+    if (allele.bp2.isFragmentSupport)
+    {
+        fragProb = std::max(fragProb, allele.bp2.fragLengthProb);
+    }
 
+    return fragProb;
+}
+
+
+
+static
+void
+addConservativeSpanningPairSupport(
+    const SVFragmentEvidence& fragev,
+    SVSampleInfo& sampleBaseInfo)
+{
+    static const float pairSupportProb(0.9);
+
+    if (! isAnySpanningPairSupport(fragev)) return;
+
+    /// high-quality spanning support relies on read1 and read2 mapping well:
+    if (! (fragev.read1.isObservedAnchor() && fragev.read2.isObservedAnchor())) return;
+
+    float altLhood(getSpanningPairAlleleLhood(fragev.alt));
+    float refLhood(getSpanningPairAlleleLhood(fragev.ref));
+
+    assert(altLhood >= 0);
+    assert(refLhood >= 0);
+    assert((altLhood > 0) || (refLhood > 0));
+
+    // convert to normalized prob:
+    if (altLhood > refLhood)
+    {
+        lnToProb(refLhood, altLhood);
+        if (altLhood>pairSupportProb) sampleBaseInfo.alt.confidentSpanningPairCount++;
+    }
+    else
+    {
+        lnToProb(altLhood, refLhood);
+        if (refLhood>pairSupportProb) sampleBaseInfo.ref.confidentSpanningPairCount++;
+    }
 }
 
 
@@ -483,8 +549,10 @@ getSampleCounts(
 
         // evaluate read1 and read2 from this fragment
         //
-        addReadSupport(fragev,true,sampleBaseInfo);
-        addReadSupport(fragev,false,sampleBaseInfo);
+        addConservativeSplitReadSupport(fragev,true,sampleBaseInfo);
+        addConservativeSplitReadSupport(fragev,false,sampleBaseInfo);
+
+        addConservativeSpanningPairSupport(fragev, sampleBaseInfo);
     }
 }
 
@@ -535,39 +603,34 @@ scoreSV(
 
 
 
+/// record a set of convenient companion values for any probability
+///
+struct ProbSet
+{
+    ProbSet(const double initProb) :
+        prob(initProb),
+        comp(1-prob),
+        lnProb(std::log(prob)),
+        lnComp(std::log(comp))
+    {}
+
+    double prob;
+    double comp;
+    double lnProb;
+    double lnComp;
+};
+
+
+
 static
 void
-incrementAlleleLhood(
-    const float chimeraRate,
-    const float chimeraComp,
+incrementSpanningPairAlleleLhood(
+    const ProbSet& chimeraProb,
     const SVFragmentEvidenceAllele& allele,
     float& bpLhood)
 {
-    float fragProb(0);
-    if (allele.bp1.isFragmentSupport)
-    {
-        fragProb = allele.bp1.fragLengthProb;
-    }
-
-    if (allele.bp2.isFragmentSupport)
-    {
-        fragProb = std::max(fragProb, allele.bp2.fragLengthProb);
-    }
-
-    bpLhood *= (chimeraComp*fragProb + chimeraRate);
-}
-
-
-
-static
-bool
-isAnyPairSupport(
-    const SVFragmentEvidence& fragev)
-{
-    const bool isRefSupport(fragev.ref.bp1.isFragmentSupport || fragev.ref.bp2.isFragmentSupport);
-    const bool isAltSupport(fragev.alt.bp1.isFragmentSupport || fragev.alt.bp2.isFragmentSupport);
-
-    return (isRefSupport || isAltSupport);
+    const float fragProb(getSpanningPairAlleleLhood(allele));
+    bpLhood *= (chimeraProb.comp*fragProb + chimeraProb.prob);
 }
 
 
@@ -593,8 +656,7 @@ scoreDiploidSV(
     /// put some more thought into this -- is this P (spurious | any old read) or P( spurious | chimera ) ??
     /// it seems like it should be the later in the usages that really matter.
     ///
-    static const float chimeraRate(1e-3);
-    static const float chimeraComp(1.-chimeraRate);
+    static const ProbSet chimeraProb(1e-3);
 
     //
     // compute qualities
@@ -621,10 +683,10 @@ scoreDiploidSV(
             if ( fragev.read1.isObservedAnchor() && fragev.read2.isObservedAnchor())
             {
                 /// only add to the likelihood if the fragment "supports" at least one allele:
-                if ( isAnyPairSupport(fragev) )
+                if ( isAnySpanningPairSupport(fragev) )
                 {
-                    incrementAlleleLhood(chimeraRate, chimeraComp, fragev.alt, fragAltLhood);
-                    incrementAlleleLhood(chimeraRate, chimeraComp, fragev.ref, fragRefLhood);
+                    incrementSpanningPairAlleleLhood(chimeraProb, fragev.alt, fragAltLhood);
+                    incrementSpanningPairAlleleLhood(chimeraProb, fragev.ref, fragRefLhood);
                 }
             }
 

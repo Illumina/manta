@@ -24,51 +24,69 @@
 
 #include <iosfwd>
 
+namespace SVEvidenceType
+{
+enum index_t
+{
+    PAIR,        /// a pair observation based on both read BAM records
+    LOCAL_PAIR,  /// a pair observation based on one read, htere
+    CIGAR,
+    SOFTCLIP,
+    SEMIALIGN,
+    SHADOW,
+    SPLIT_ALIGN,
+    UNKNOWN,    /// temporary state
+    SIZE
+};
+
+inline
+const char*
+label(const int i)
+{
+    switch (i)
+    {
+    case PAIR:
+        return "pair";
+    case LOCAL_PAIR:
+        return "local_pair";
+    case CIGAR:
+        return "cigar";
+    case SOFTCLIP:
+        return "softclip";
+    case SEMIALIGN:
+        return "semialign";
+    case SHADOW:
+        return "shadow";
+    case SPLIT_ALIGN:
+        return "split_align";
+    case UNKNOWN:
+        return "unknown";
+    default:
+        assert(false && "Unknown SVCandidate evidence type");
+        return NULL;
+    }
+}
+
+inline
+bool
+isPairType(const int i)
+{
+    switch (i)
+    {
+    case PAIR:
+    case LOCAL_PAIR:
+        return true;
+    default:
+        return false;
+    }
+}
+}
+
+
 
 /// enumerate candidate evidence counts:
 struct SVBreakendLowResEvidence
 {
-    enum EvidenceType
-    {
-        PAIR,        /// a pair observation based on both read BAM records
-        LOCAL_PAIR,  /// a pair observation based on one read, htere
-        CIGAR,
-        SOFTCLIP,
-        SEMIALIGN,
-        SHADOW,
-        SPLIT_ALIGN,
-        UNKNOWN,    /// temporary state
-        SIZE
-    };
-
-    static
-    const char*
-    label(const int i)
-    {
-        switch (i)
-        {
-        case PAIR:
-            return "pair";
-        case LOCAL_PAIR:
-            return "local_pair";
-        case CIGAR:
-            return "cigar";
-        case SOFTCLIP:
-            return "softclip";
-        case SEMIALIGN:
-            return "semialign";
-        case SHADOW:
-            return "shadow";
-        case SPLIT_ALIGN:
-            return "split_align";
-        case UNKNOWN:
-            return "unknown";
-        default:
-            assert(false && "Unknown SVCandidate evidence type");
-            return NULL;
-        }
-    }
-
     typedef SVBreakendLowResEvidence self_t;
 
     SVBreakendLowResEvidence()
@@ -96,35 +114,35 @@ struct SVBreakendLowResEvidence
     unsigned
     getVal(const int i) const
     {
-        assert((i>=0) && (i<SIZE));
+        assert((i>=0) && (i<SVEvidenceType::SIZE));
         return _evidence[i];
     }
 
     void
     clear()
     {
-        for (unsigned i(0); i<SIZE; ++i) _evidence[i] = 0;
+        for (int i(0); i<SVEvidenceType::SIZE; ++i) _evidence[i] = 0;
     }
 
     void
     add(const int i,
         const unsigned count = 1)
     {
-        assert((i>=0) && (i<SIZE));
+        assert((i>=0) && (i<SVEvidenceType::SIZE));
         _evidence[i] += count;
     }
 
     void
     merge(const self_t& rhs)
     {
-        for (unsigned i(0); i<SIZE; ++i)
+        for (int i(0); i<SVEvidenceType::SIZE; ++i)
         {
             _evidence[i] += rhs._evidence[i];
         }
     }
 
 private:
-    unsigned short _evidence[SIZE];
+    unsigned short _evidence[SVEvidenceType::SIZE];
 };
 
 std::ostream&
@@ -259,24 +277,24 @@ struct SVBreakend
     unsigned
     getPairCount() const
     {
-        return lowresEvidence.getVal(SVBreakendLowResEvidence::PAIR);
+        return lowresEvidence.getVal(SVEvidenceType::PAIR);
     }
 
     unsigned
     getLocalPairCount() const
     {
-        return lowresEvidence.getVal(SVBreakendLowResEvidence::LOCAL_PAIR);
+        return lowresEvidence.getVal(SVEvidenceType::LOCAL_PAIR);
     }
 
     unsigned
     getAnyNonPairCount() const
     {
         unsigned sum(0);
-        for (int i(0); i<SVBreakendLowResEvidence::SIZE; ++i)
+        for (int i(0); i<SVEvidenceType::SIZE; ++i)
         {
-            if (i == SVBreakendLowResEvidence::PAIR) continue;
-            if (i == SVBreakendLowResEvidence::LOCAL_PAIR) continue;
-            if (i == SVBreakendLowResEvidence::UNKNOWN) continue;
+            if (i == SVEvidenceType::PAIR) continue;
+            if (i == SVEvidenceType::LOCAL_PAIR) continue;
+            if (i == SVEvidenceType::UNKNOWN) continue;
             sum += lowresEvidence.getVal(i);
         }
         return sum;
