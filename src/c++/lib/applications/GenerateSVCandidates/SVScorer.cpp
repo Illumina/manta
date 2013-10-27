@@ -519,7 +519,14 @@ addConservativeSpanningPairSupport(
 
     assert(altLhood >= 0);
     assert(refLhood >= 0);
-    assert((altLhood > 0) || (refLhood > 0));
+    if ((altLhood <= 0) && (refLhood <= 0))
+    {
+        using namespace illumina::common;
+
+        std::ostringstream oss;
+        oss << "ERROR: Spanning likelihood is zero for all alleles. Fragment: " << fragev << "\n";
+        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+    }
 
     // convert to normalized prob:
     if (altLhood > refLhood)
@@ -883,7 +890,4 @@ scoreSV(
         scoreSomaticSV(_somaticOpt, sv, _dFilterSomatic, modelScoreInfo.base, modelScoreInfo.somatic);
     }
 }
-
-
-
 
