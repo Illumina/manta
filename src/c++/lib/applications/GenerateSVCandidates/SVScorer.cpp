@@ -373,21 +373,13 @@ incrementSpanningPairAlleleLnLhood(
 static
 void
 incrementAlleleSplitReadLhood(
+    const ProbSet& mapProb,
     const SVFragmentEvidenceAllele& allele,
     const double /*readLnPrior*/,
     const bool isRead1,
     double& refSplitLnLhood,
     bool& isReadEvaluated)
 {
-    /// use a constant mapping prob for now just to get the zero-th order concept into the model
-    /// that "reads are mismapped at a non-trivial rate"
-    /// TODO: experiment with per-read mapq values here
-    ///
-    static const double mapProb(1e-6);
-    static const double mapComp(1.-mapProb);
-    static const double mapLnProb(std::log(mapProb));
-    static const double mapLnComp(std::log(mapComp));
-
     if (! (allele.bp1.getRead(isRead1).isSplitEvaluated &&
            allele.bp2.getRead(isRead1).isSplitEvaluated))
     {
@@ -398,7 +390,7 @@ incrementAlleleSplitReadLhood(
     const double alignBp2LnLhood(allele.bp2.getRead(isRead1).splitLnLhood);
     const double alignLnLhood(std::max(alignBp1LnLhood,alignBp2LnLhood));
 
-    const double fragLnLhood = log_sum((mapLnComp+alignLnLhood), (mapLnProb)); //+readLnPrior));
+    const double fragLnLhood = log_sum((mapProb.lnComp+alignLnLhood), (mapProb.lnProb)); //+readLnPrior));
     refSplitLnLhood += fragLnLhood;
 
 #ifdef DEBUG_SCORE
@@ -408,7 +400,7 @@ incrementAlleleSplitReadLhood(
     log_os << logtag << "isEval " << isReadEvaluated << "\n";
     log_os << logtag << "alignBp1LnLhood " << alignBp1LnLhood << "\n";
     log_os << logtag << "alignBp2LnLhood " << alignBp2LnLhood << "\n";
-    log_os << logtag << "map " << mapLnProb << "\n";
+    log_os << logtag << "map " << mapProb.lnProb << "\n";
     log_os << logtag << "increment " << fragLnLhood << "\n";
     log_os << logtag << "refSplitLnLhood " << refSplitLnLhood << "\n";
 #endif
@@ -446,14 +438,21 @@ incrementSplitReadLhood(
     const unsigned readSize(fragev.getRead(isRead1).size);
     const double readLnPrior(baseLnPrior*readSize);
 
+    /// use a constant mapping prob for now just to get the zero-th order concept into the model
+    /// that "reads are mismapped at a non-trivial rate"
+    /// TODO: experiment with per-read mapq values
+    ///
+    static const ProbSet refMapProb(1e-6);
+    static const ProbSet altMapProb(1e-4);
+
 #ifdef DEBUG_SCORE
     log_os << logtag << "starting ref\n";
 #endif
-    incrementAlleleSplitReadLhood(fragev.ref, readLnPrior, isRead1, refSplitLnLhood, isReadEvaluated);
+    incrementAlleleSplitReadLhood(refMapProb, fragev.ref, readLnPrior, isRead1, refSplitLnLhood, isReadEvaluated);
 #ifdef DEBUG_SCORE
     log_os << logtag << "starting alt\n";
 #endif
-    incrementAlleleSplitReadLhood(fragev.alt, readLnPrior, isRead1, altSplitLnLhood, isReadEvaluated);
+    incrementAlleleSplitReadLhood(altMapProb, fragev.alt, readLnPrior, isRead1, altSplitLnLhood, isReadEvaluated);
 }
 
 

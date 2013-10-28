@@ -134,7 +134,15 @@ setEvidence(
 
     const float size(static_cast<float>(alignment.leftSize+alignment.rightSize));
 
+    //
     // filters for a read being counted as evidence
+    //
+
+    // adding new flank size threshold -- this might have to be changed based on sv size:
+    static const unsigned minFlankSize(20);
+    if (alignment.leftSize < minFlankSize) return;
+    if (alignment.rightSize < minFlankSize) return;
+
     if ((alignment.leftMismatches/(float)alignment.leftSize) >= 0.25) return;
     if ((alignment.rightMismatches/(float)alignment.rightSize) >= 0.25) return;
     if ((alignment.alignScore/size) < 0.9) return;

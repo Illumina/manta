@@ -348,7 +348,6 @@ consolidateOverlap(
     for (unsigned outerIndex(1); outerIndex<svCount; ++outerIndex)
     {
         const unsigned prevInnerIndexShift( (outerIndex<=1) ? 0 : innerIndexShift[outerIndex-2]);
-        +deletedSVIndex.count(outerIndex-1);
         innerIndexShift.push_back(prevInnerIndexShift + deletedSVIndex.count(outerIndex-1));
         for (unsigned innerIndex(0); innerIndex<outerIndex; ++innerIndex)
         {
