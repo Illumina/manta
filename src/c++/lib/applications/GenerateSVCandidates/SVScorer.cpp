@@ -692,7 +692,8 @@ scoreSomaticSV(
 
         /// first check for substantial support in the normal:
         if (baseInfo.normal.alt.confidentSpanningPairCount > 1) isNonzeroSomaticQuality=false;
-        if (baseInfo.normal.alt.confidentSplitReadCount > 5) isNonzeroSomaticQuality=false;
+        if ((baseInfo.normal.alt.confidentSplitReadCount > 0) &&
+            ((baseInfo.normal.alt.confidentSplitReadCount > 1) || (baseInfo.tumor.alt.confidentSplitReadCount < 10))) isNonzeroSomaticQuality=false;
 
         if (isNonzeroSomaticQuality)
         {

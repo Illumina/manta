@@ -523,6 +523,8 @@ getSVPairSupport(
     log_os << logtag << "starting alt pair search for sv: " << sv << "\n";
 #endif
 
+    if (svData.isSkipped()) return;
+
     const unsigned minMapQ(_readScanner.getMinMapQ());
 
     // count the read pairs supporting the alternate allele in each sample, using data we already produced during candidate generation:

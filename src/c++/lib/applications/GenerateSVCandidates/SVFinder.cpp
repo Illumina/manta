@@ -618,6 +618,8 @@ findCandidateSV(
             svData.getDataGroup(bamIndex);
         }
 
+        svData.setSkipped();
+
         return;
     }
 
