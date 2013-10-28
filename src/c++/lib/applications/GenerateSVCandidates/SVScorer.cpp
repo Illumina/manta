@@ -401,7 +401,8 @@ incrementAlleleSplitReadLhood(
     log_os << logtag << "isEval " << isReadEvaluated << "\n";
     log_os << logtag << "alignBp1LnLhood " << alignBp1LnLhood << "\n";
     log_os << logtag << "alignBp2LnLhood " << alignBp2LnLhood << "\n";
-    log_os << logtag << "map " << mapProb.lnProb << "\n";
+    log_os << logtag << "selfMap " << selfMapProb.lnProb << "\n";
+    log_os << logtag << "otherMap " << otherMapProb.lnProb << "\n";
     log_os << logtag << "increment " << fragLnLhood << "\n";
     log_os << logtag << "refSplitLnLhood " << refSplitLnLhood << "\n";
 #endif
@@ -581,6 +582,9 @@ scoreDiploidSV(
 #endif
             incrementSplitReadLhood(fragev, false, refLnLhoodSet.read2Split, altLnLhoodSet.read2Split, isRead2Evaluated);
 
+#ifdef DEBUG_SCORE
+            log_os << logtag << "iseval frag/read1/read2: " << isFragEvaluated << " " << isRead1Evaluated << " " << isRead1Evaluated << "\n";
+#endif
             if (! (isFragEvaluated || isRead1Evaluated || isRead2Evaluated) ) continue;
 
             for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
