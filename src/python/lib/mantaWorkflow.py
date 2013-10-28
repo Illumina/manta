@@ -269,7 +269,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
     nextStepWait = copy.deepcopy(hygenTasks)
 
     def getVcfSortCmd(vcfPaths, outPath) :
-        cmd  = "%s -E %s " % (sys.executable,self.params.mantaSortVcf)
+        cmd  = "%s -E %s -u " % (sys.executable,self.params.mantaSortVcf)
         cmd += " ".join(vcfPaths)
         cmd += " | %s -c > %s && %s -p vcf %s" % (self.params.bgzipBin, outPath, self.params.tabixBin, outPath)
         return cmd
