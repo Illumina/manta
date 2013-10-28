@@ -106,7 +106,7 @@ struct SVFragmentEvidenceAllele
     }
 
     bool
-    isAnySplitSupportForRead(
+    isAnySplitReadSupport(
         const bool isRead1) const
     {
         return (bp1.getRead(isRead1).isSplitSupport ||
@@ -171,7 +171,7 @@ struct SVFragmentEvidence
 
     /// does this fragment provide any pair evidence for any allele/bp combination?
     bool
-    isAnyPairSupport() const
+    isAnySpanningPairSupport() const
     {
         const bool isRefSupport(ref.bp1.isFragmentSupport || ref.bp2.isFragmentSupport);
         const bool isAltSupport(alt.bp1.isFragmentSupport || alt.bp2.isFragmentSupport);
@@ -181,11 +181,11 @@ struct SVFragmentEvidence
 
     /// does this fragment read provide any split evidence for any allele/bp combination?
     bool
-    isAnySplitSupportForRead(
+    isAnySplitReadSupport(
         const bool isRead1) const
     {
-        return (alt.isAnySplitSupportForRead(isRead1) ||
-                ref.isAnySplitSupportForRead(isRead1));
+        return (alt.isAnySplitReadSupport(isRead1) ||
+                ref.isAnySplitReadSupport(isRead1));
     }
 
     SVFragmentEvidenceRead read1;
@@ -208,7 +208,6 @@ operator<<(std::ostream& os, const SVFragmentEvidence& sve);
 struct SVEvidence
 {
     typedef std::map<std::string,SVFragmentEvidence> evidenceTrack_t;
-
 
     evidenceTrack_t&
     getSample(

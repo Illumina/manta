@@ -185,7 +185,7 @@ addConservativeSplitReadSupport(
     //
     // ...note this is done in the absence of having a noise state in the model
     //
-    if (! fragev.isAnySplitSupportForRead(isRead1)) return;
+    if (! fragev.isAnySplitReadSupport(isRead1)) return;
 
     float altLnLhood =
         std::max(fragev.alt.bp1.getRead(isRead1).splitLnLhood,
@@ -239,7 +239,7 @@ addConservativeSpanningPairSupport(
 {
     static const float pairSupportProb(0.9);
 
-    if (! fragev.isAnyPairSupport()) return;
+    if (! fragev.isAnySpanningPairSupport()) return;
 
     /// high-quality spanning support relies on read1 and read2 mapping well:
     if (! (fragev.read1.isObservedAnchor() && fragev.read2.isObservedAnchor())) return;
@@ -425,7 +425,7 @@ incrementSplitReadLhood(
     log_os << logtag << "pre-support\n";
 #endif
 
-    if (! fragev.isAnySplitSupportForRead(isRead1))
+    if (! fragev.isAnySplitReadSupport(isRead1))
     {
         isReadEvaluated = false;
         return;
@@ -559,7 +559,7 @@ scoreDiploidSV(
             if ( fragev.read1.isObservedAnchor() && fragev.read2.isObservedAnchor())
             {
                 /// only add to the likelihood if the fragment "supports" at least one allele:
-                if ( fragev.isAnyPairSupport() )
+                if ( fragev.isAnySpanningPairSupport() )
                 {
                     isFragEvaluated=true;
                     incrementSpanningPairAlleleLnLhood(chimeraProb, fragev.ref, refLnLhoodSet.fragPair);
