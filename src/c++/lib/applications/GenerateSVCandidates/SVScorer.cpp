@@ -373,7 +373,8 @@ incrementSpanningPairAlleleLnLhood(
 static
 void
 incrementAlleleSplitReadLhood(
-    const ProbSet& mapProb,
+    const ProbSet& selfMapProb,
+    const ProbSet& otherMapProb,
     const SVFragmentEvidenceAllele& allele,
     const double /*readLnPrior*/,
     const bool isRead1,
@@ -390,7 +391,7 @@ incrementAlleleSplitReadLhood(
     const double alignBp2LnLhood(allele.bp2.getRead(isRead1).splitLnLhood);
     const double alignLnLhood(std::max(alignBp1LnLhood,alignBp2LnLhood));
 
-    const double fragLnLhood = log_sum((mapProb.lnComp+alignLnLhood), (mapProb.lnProb)); //+readLnPrior));
+    const double fragLnLhood = log_sum((selfMapProb.lnComp+alignLnLhood), (otherMapProb.lnProb)); //+readLnPrior));
     refSplitLnLhood += fragLnLhood;
 
 #ifdef DEBUG_SCORE
@@ -448,11 +449,11 @@ incrementSplitReadLhood(
 #ifdef DEBUG_SCORE
     log_os << logtag << "starting ref\n";
 #endif
-    incrementAlleleSplitReadLhood(refMapProb, fragev.ref, readLnPrior, isRead1, refSplitLnLhood, isReadEvaluated);
+    incrementAlleleSplitReadLhood(refMapProb, altMapProb, fragev.ref, readLnPrior, isRead1, refSplitLnLhood, isReadEvaluated);
 #ifdef DEBUG_SCORE
     log_os << logtag << "starting alt\n";
 #endif
-    incrementAlleleSplitReadLhood(altMapProb, fragev.alt, readLnPrior, isRead1, altSplitLnLhood, isReadEvaluated);
+    incrementAlleleSplitReadLhood(altMapProb, refMapProb, fragev.alt, readLnPrior, isRead1, altSplitLnLhood, isReadEvaluated);
 }
 
 
