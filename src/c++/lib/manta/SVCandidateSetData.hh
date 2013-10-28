@@ -206,6 +206,8 @@ struct SVCandidateSetData
     clear()
     {
         _data.clear();
+        _searchIntervals.clear();
+        _isSkipped=false;
     }
 
     void
