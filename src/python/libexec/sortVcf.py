@@ -51,12 +51,12 @@ class VcfRecord :
 
 
 
-def processFile(isUnique, file, isFirst, header, recList) :
+def processFile(isUnique, vcfFile, isFirst, header, recList) :
     """
     read in a vcf file
     """
 
-    for line in open(arg) :
+    for line in open(vcfFile) :
         if line[0] == "#" :
             if isFirst : header.append(line)
         else :
@@ -73,6 +73,12 @@ def getOptions() :
 
     parser.add_option("-u", dest="isUnique",action="store_true",default=False,
                       help="filter all but one record with the same {CHR,POS,REF,ALT}")
+
+    (options,args) = parser.parse_args()
+
+    if len(args) == 0 :
+        parser.print_help()
+        sys.exit(2)
 
     # validate input:
     for arg in args :
