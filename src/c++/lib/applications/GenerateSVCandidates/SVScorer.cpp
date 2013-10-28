@@ -580,7 +580,7 @@ scoreDiploidSV(
 #endif
             incrementSplitReadLhood(fragev, false, refLnLhoodSet.read2Split, altLnLhoodSet.read2Split, isRead2Evaluated);
 
-            if(! (isFragEvaluated || isRead1Evaluated || isRead2Evaluated) ) continue;
+            if (! (isFragEvaluated || isRead1Evaluated || isRead2Evaluated) ) continue;
 
             for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
             {
