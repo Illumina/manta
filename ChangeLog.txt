@@ -1,3 +1,4 @@
+v0.12
 - MANTA-20 incorporate split-reads into quality score
 - MANTA-42 SV finder mismatches various read pair / sv-candidate combinations
 - MANTA-53 Enable --rescore option in runWorkflow.py
