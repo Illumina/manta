@@ -29,6 +29,14 @@
 // EdgeInfoRecord
 /*****************************************************************************/
 
+EdgeInfoRecord::EdgeInfoRecord()
+{
+    _edgeInfo = EdgeInfo();
+    _discardReason = KEPT;
+}
+
+/*****************************************************************************/
+
 EdgeInfoRecord::EdgeInfoRecord(const EdgeInfo& edgeInfo)
 {
     _edgeInfo = edgeInfo;
@@ -93,11 +101,312 @@ bool EdgeInfoRecord::operator==(const EdgeInfoRecord& edgeInfoRecordB) const
 }
 
 /*****************************************************************************/
+
+std::ostream& operator<<(std::ostream& ostrm, const EdgeInfoRecord& record)
+{
+    ostrm << "Locus " << record._edgeInfo.locusIndex
+          << " Node " << record._edgeInfo.nodeIndex1
+          << " Node " << record._edgeInfo.nodeIndex2;
+
+    return ostrm;
+}
+
+/*****************************************************************************/
+// SVLog
+/*****************************************************************************/
+
+SVLog::SVLog(unsigned int index)
+    : _ind(index), _outcome(UNKNOWN)
+{
+    ;
+}
+
+/*****************************************************************************/
+
+unsigned int SVLog::ind() const
+{
+    return _ind;
+}
+
+/*****************************************************************************/
+
+void SVLog::reportOutcome(const Outcome outcomeVal)
+{
+    assert(outcomeVal != SVLog::UNKNOWN);
+    assert(outcomeVal != SVLog::SPAWNED);
+
+    assert(_outcome == UNKNOWN);
+    _outcome = outcomeVal;
+}
+
+/*****************************************************************************/
+
+const SVLog::Outcome SVLog::outcome() const
+{
+    return _outcome;
+}
+
+/*****************************************************************************/
+
+std::ostream& operator<<(std::ostream& ostrm, const SVLog::Outcome outcome)
+{
+    switch (outcome)
+    {
+    case SVLog::UNKNOWN: ostrm << "UNKNOWN"; break;
+    case SVLog::WRITTEN: ostrm << "Written"; break;
+    case SVLog::SPAWNED: ostrm << "Spawned"; break;
+    case SVLog::IMPRECISE_SELF_EDGE: ostrm << "Imprecise_SelfEdge"; break;
+    case SVLog::LOW_PAIR_COUNT_SELF_EDGE:
+        ostrm << "LowPairCount_SelfEdge"; break;
+    case SVLog::LOW_SOMATIC_SCORE: ostrm << "LowSomaticScore"; break;
+    }
+
+    return ostrm;
+}
+
+/*****************************************************************************/
+// AssembledSVLog
+/*****************************************************************************/
+
+AssembledSVLog::AssembledSVLog(unsigned int index)
+    : SVLog(index)
+{
+    ;
+}
+
+/*****************************************************************************/
+
+std::ostream& operator<<(std::ostream& ostrm, const AssembledSVLog& log)
+{
+    ostrm << "    assembledSV " << log.ind() << " " << log.outcome();
+    return ostrm;
+}
+
+/*****************************************************************************/
+// CandSVLog
+/*****************************************************************************/
+
+CandSVLog::CandSVLog(unsigned int index)
+    : SVLog(index), _expectedNumAssembled(0), _numWrittenAssembled(0)
+{
+    ;
+}
+
+/*****************************************************************************/
+
+void CandSVLog::reportNumAssembled(unsigned int numAssembled)
+{
+    assert(_expectedNumAssembled == 0);
+    _expectedNumAssembled = numAssembled;
+}
+
+/*****************************************************************************/
+
+void CandSVLog::addAssembledSV()
+{
+    if (_outcome == SVLog::UNKNOWN) {
+        _outcome = SVLog::SPAWNED;
+    }
+
+    assert(_outcome == SVLog::SPAWNED);
+    assert(_assembledSVLogVec.size() < _expectedNumAssembled);
+
+
+    AssembledSVLog assembledSVLog(_assembledSVLogVec.size());
+    _assembledSVLogVec.push_back(assembledSVLog);
+}
+
+/*****************************************************************************/
+
+void CandSVLog::reportOutcome(const SVLog::Outcome outcomeVal)
+{
+    assert(outcomeVal != SVLog::UNKNOWN);
+    assert(outcomeVal != SVLog::SPAWNED);
+
+    if (_assembledSVLogVec.empty())
+    {
+        // No spawned assembled SVs, so outcome is for this candidate SV
+        assert(_outcome == SVLog::UNKNOWN);
+        _outcome = outcomeVal;
+    }
+    else
+    {
+        // Outcome is forwarded to most recently added assembled SV. 
+        assert(_outcome == SVLog::SPAWNED);
+
+        _assembledSVLogVec.back().reportOutcome(outcomeVal);
+
+        if (outcomeVal == SVLog::WRITTEN)
+        {
+            ++_numWrittenAssembled;
+        }
+    }
+}
+
+/*****************************************************************************/
+
+unsigned int CandSVLog::numAssembledSVs() const
+{
+    return _assembledSVLogVec.size();
+}
+
+/*****************************************************************************/
+
+unsigned int CandSVLog::numWrittenAssembledSVs() const
+{
+    return _numWrittenAssembled;
+}
+
+/*****************************************************************************/
+
+std::ostream& operator<<(std::ostream& ostrm, const CandSVLog& log)
+{
+    ostrm << "  candSV " << log.ind()
+          << " : " << log.numAssembledSVs() << " assembled SVs"
+          << " : " << log.outcome() << std::endl;
+
+    BOOST_FOREACH(const AssembledSVLog& assembledLog, log._assembledSVLogVec)
+    {
+        ostrm << assembledLog << std::endl;
+    }
+
+    return ostrm;
+}
+
+/*****************************************************************************/
+// EdgeLog
+/*****************************************************************************/
+
+EdgeLog::EdgeLog(unsigned int index, const EdgeInfo& edgeInfo)
+    : EdgeInfoRecord(edgeInfo), SVLog(index),
+      _expectedNumCands(0), _numWrittenCands(0)
+{
+    ;
+}
+
+/*****************************************************************************/
+
+void EdgeLog::addVariantKey(VariantKey variantKey)
+{
+    _variantKeyVec.push_back(variantKey);
+}
+
+/*****************************************************************************/
+
+const EdgeLog::VariantKeyVec& EdgeLog::variantKeyVec() const
+{
+    return _variantKeyVec;
+}
+
+/*****************************************************************************/
+
+void EdgeLog::reportNumCands(unsigned int numCands)
+{
+    assert(_expectedNumCands == 0);
+    _expectedNumCands = numCands;
+}
+
+/*****************************************************************************/
+
+void EdgeLog::addCandSV()
+{
+    assert(_candSVLogVec.size() < _expectedNumCands);
+
+    CandSVLog candSVLog(_candSVLogVec.size());
+    _candSVLogVec.push_back(candSVLog);
+}
+
+/*****************************************************************************/
+// Just pass request to most recently added CandSVLog
+
+void EdgeLog::reportNumAssembled(unsigned int numAssembled)
+{
+    _candSVLogVec.back().reportNumAssembled(numAssembled);
+}
+
+/*****************************************************************************/
+// Just pass request to most recently added CandSVLog
+
+void EdgeLog::addAssembledSV()
+{
+    _candSVLogVec.back().addAssembledSV();
+}
+
+/*****************************************************************************/
+
+void EdgeLog::reportOutcome(const Outcome outcomeVal)
+{
+    assert(outcomeVal != SVLog::UNKNOWN);
+    assert(outcomeVal != SVLog::SPAWNED);
+
+    assert(!_candSVLogVec.empty());
+
+    _candSVLogVec.back().reportOutcome(outcomeVal);
+}
+
+/*****************************************************************************/
+
+unsigned int EdgeLog::numCandSVs() const
+{
+    return _candSVLogVec.size();
+}
+
+/*****************************************************************************/
+
+unsigned int EdgeLog::numWrittenCandSVs() const
+{
+    unsigned int numWrittenCands(0);
+
+    BOOST_FOREACH(const CandSVLog& candSVLog, _candSVLogVec)
+    {
+        if (candSVLog.numAssembledSVs() > 0)
+        {
+            if (candSVLog.numWrittenAssembledSVs() > 0)
+            {
+                ++numWrittenCands; // assembled SVs from candidate written
+            }
+        }
+        else
+        {
+            if (candSVLog.outcome() == SVLog::WRITTEN)
+            {
+                ++numWrittenCands; // candidate written
+            }
+        }
+    }
+
+    return numWrittenCands;
+}
+
+/*****************************************************************************/
+
+std::ostream& operator<<(std::ostream& ostrm, const EdgeLog& log)
+{
+    ostrm << "Edge " << log.ind() << " : "
+          << *((EdgeInfo*) &log) << " [";
+
+    BOOST_FOREACH(const EdgeLog::VariantKey variantKey,  log._variantKeyVec)
+    {
+        ostrm << " " << variantKey;
+    }
+
+    ostrm << "] numTrueMatched " << log._variantKeyVec.size()
+          << " : " << log._candSVLogVec.size() << " cand SVs" << std::endl;
+
+    BOOST_FOREACH(const CandSVLog& candSVLog, log._candSVLogVec)
+    {
+        ostrm << candSVLog;
+    }
+
+    return ostrm;
+}
+
+/*****************************************************************************/
 // TruthTracker
 /*****************************************************************************/
 
 TruthTracker::TruthTracker()
-    : _hasTruth(false), _numEdgesSeen(0)
+    : _hasTruth(false), _lastAddedEdgeLogMapEleIter(0), _numEdgesSeen(0)
 {
     ;
 }
@@ -329,7 +638,7 @@ bool TruthTracker::evalLocusSet(const SVLocusSet& svLocusSet)
 
     unsigned int numSameNode(0); // Brkpts matched by same Node
 
-    VariantKey variantKey(0);
+    EdgeLog ::VariantKey variantKey(0);
 
     BOOST_FOREACH(const Variant& trueVariant, _trueVariantVec)
     {
@@ -428,35 +737,35 @@ bool TruthTracker::addEdge(const EdgeInfo& edge, const SVLocusSet& cset)
     const SVLocusNode& node1(locus.getNode(edge.nodeIndex1));
     const SVLocusNode& node2(locus.getNode(edge.nodeIndex2));
 
-    // DEBUG
-    std::cerr << "Edge : Locus " << edge.locusIndex
-              << " Node " << edge.nodeIndex1
-              << " Node " << edge.nodeIndex2
-              << " [";
-    unsigned int numTrueMatched(0);
+    EdgeLog::VariantKey variantKey(0);
+    const EdgeInfoRecord edgeInfoRecord(edge);
 
-    VariantKey variantKey(0);
+    // This iter will become valid only if the Edge intersects truth.
+    _lastAddedEdgeLogMapEleIter = _edgeLogMap.end(); // not set
 
     BOOST_FOREACH(const Variant& trueVariant, _trueVariantVec)
     {
         if (bothBrkptIntersect(trueVariant, node1, node2))
         {
-            const EdgeInfoRecord edgeInfoRecord(edge);
 
             _truthEdgeVecMap[variantKey].push_back(edgeInfoRecord);
-            _edgeTruthVecMap[edgeInfoRecord].push_back(variantKey);
 
-            ++numTrueMatched;
-            
-            // DEBUG
-            std::cerr << " " << variantKey;
+            if (_lastAddedEdgeLogMapEleIter == _edgeLogMap.end()) // not set
+            {
+                EdgeLogMapIterBoolPr iterBoolPr
+                    = _edgeLogMap.
+                    insert(EdgeLogMapEle(edgeInfoRecord,
+                                         EdgeLog(_edgeLogMap.size(), edge)));
+                assert(iterBoolPr.second); // edge should be unique -> added
+                _lastAddedEdgeLogMapEleIter = iterBoolPr.first;
+                _edgeLogMapIndexVec.push_back(_lastAddedEdgeLogMapEleIter);
+            }
+
+            _lastAddedEdgeLogMapEleIter->second.addVariantKey(variantKey);
         }
 
         ++variantKey;
     }
-
-    // DEBUG
-    std::cerr << "] numTrueMatched " << numTrueMatched << std::endl;
 
     return true;
 }
@@ -466,19 +775,25 @@ bool TruthTracker::addEdge(const EdgeInfo& edge, const SVLocusSet& cset)
 bool TruthTracker::discardEdge(const EdgeInfo& edge,
                                EdgeInfoRecord::DiscardReason reason)
 {
+    if (!_hasTruth)
+    {
+        return false;
+    }
+
     const EdgeInfoRecord discardedEdgeInfoRecord(edge);
 
-    EdgeTruthVecMapIter
-        edgeTruthVecIter(_edgeTruthVecMap.find(discardedEdgeInfoRecord));
+    EdgeLogMapIter
+        edgeLogIter(_edgeLogMap.find(discardedEdgeInfoRecord));
 
-    if (edgeTruthVecIter != _edgeTruthVecMap.end())
+    if (edgeLogIter != _edgeLogMap.end())
     {
         // First find all the true variants matched by this Edge.
-        const VariantKeyVec& variantKeyVec(edgeTruthVecIter->second);
+        const EdgeLog::VariantKeyVec&
+            variantKeyVec(edgeLogIter->second.variantKeyVec());
 
-        BOOST_FOREACH(const VariantKey variantKey, variantKeyVec)
+        BOOST_FOREACH(const EdgeLog::VariantKey variantKey, variantKeyVec)
         {
-            BOOST_FOREACH(EdgeInfoRecord edgeInfoRecord, 
+            BOOST_FOREACH(EdgeInfoRecord edgeInfoRecord,
                           _truthEdgeVecMap[variantKey])
             {
                 if (edgeInfoRecord == discardedEdgeInfoRecord) {
@@ -486,6 +801,103 @@ bool TruthTracker::discardEdge(const EdgeInfo& edge,
                 }
             }
         }
+    }
+
+    return true;
+}
+
+/*****************************************************************************/
+// Just pass request to most recently added EdgeLog
+
+void TruthTracker::reportNumCands(unsigned int numCands)
+{
+    if (!_hasTruth)
+    {
+        return;
+    }
+
+    if (_lastAddedEdgeLogMapEleIter != _edgeLogMap.end())
+    {
+        _lastAddedEdgeLogMapEleIter->second.reportNumCands(numCands);
+    }
+}
+
+/*****************************************************************************/
+// Just pass request to most recently added EdgeLog
+
+void TruthTracker::addCandSV()
+{
+    if (!_hasTruth)
+    {
+        return;
+    }
+
+    if (_lastAddedEdgeLogMapEleIter != _edgeLogMap.end())
+    {
+        _lastAddedEdgeLogMapEleIter->second.addCandSV();
+    }
+}
+
+/*****************************************************************************/
+// Just pass request to most recently added EdgeLog -> most recent CandSVLog
+
+void TruthTracker::reportNumAssembled(unsigned int numAssembled)
+{
+    if (!_hasTruth)
+    {
+        return;
+    }
+
+    if (_lastAddedEdgeLogMapEleIter != _edgeLogMap.end())
+    {
+        _lastAddedEdgeLogMapEleIter->second.reportNumAssembled(numAssembled);
+    }
+}
+
+/*****************************************************************************/
+// Just pass request to most recently added EdgeLog -> most recent CandSVLog
+
+void TruthTracker::addAssembledSV()
+{
+    if (!_hasTruth)
+    {
+        return;
+    }
+
+    if (_lastAddedEdgeLogMapEleIter != _edgeLogMap.end())
+    {
+        _lastAddedEdgeLogMapEleIter->second.addAssembledSV();
+    }
+}
+
+/*****************************************************************************/
+// Just pass request to most recently added EdgeLog
+
+void TruthTracker::reportOutcome(const SVLog::Outcome outcomeVal)
+{
+    if (!_hasTruth)
+    {
+        return;
+    }
+
+    if (_lastAddedEdgeLogMapEleIter != _edgeLogMap.end())
+    {
+        _lastAddedEdgeLogMapEleIter->second.reportOutcome(outcomeVal);
+    }
+}
+
+/*****************************************************************************/
+
+bool TruthTracker::dumpMatchedEdgeInfo()
+{
+    if (!_hasTruth)
+    {
+        return false;
+    }
+
+    BOOST_FOREACH(const EdgeLogMapIter& edgeLogMapEleIter, _edgeLogMapIndexVec)
+    {
+        std::cerr << edgeLogMapEleIter->second;
     }
 
     return true;
