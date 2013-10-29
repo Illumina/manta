@@ -68,3 +68,12 @@ label(const index_t idx)
 
 SV_TYPE::index_t
 getSVType(const SVCandidate& sv);
+
+
+inline
+bool
+isSpanningSV(const SVCandidate& sv)
+{
+    using namespace SVBreakendState;
+    return (isSimpleBreakend(sv.bp1.state) && isSimpleBreakend(sv.bp2.state));
+}

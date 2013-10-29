@@ -103,21 +103,6 @@ struct SVCandidate
         return (bp1.state != bp2.state);
     }
 
-#if 0
-    std::pair<const SVBreakend&, const SVBreakend&>
-    getOrderedBreakends() const
-    {
-        if (bp2 < bp1)
-        {
-            return std::make_pair(bp2,bp1);
-        }
-        else
-        {
-            return std::make_pair(bp1,bp2);
-        }
-    }
-#endif
-
 private:
     bool _isImprecise;
 
@@ -138,6 +123,25 @@ public:
     unsigned assemblySegmentIndex; // high-res assembly index number of alignment segment, used to generate unique SV id
 };
 
-
 std::ostream&
 operator<<(std::ostream& os, const SVCandidate& svc);
+
+
+// when we extract an SV candidate from a single piece of evidence, it can be treated as a special 'observation' class:
+//
+struct SVObservation : public SVCandidate
+{
+    SVObservation() :
+        SVCandidate(),
+        evtype(SVEvidenceType::UNKNOWN)
+    {}
+
+    void
+    clear()
+    {
+        evtype = SVEvidenceType::UNKNOWN;
+        SVCandidate::clear();
+    }
+
+    SVEvidenceType::index_t evtype;
+};

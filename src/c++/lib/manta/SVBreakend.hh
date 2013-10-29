@@ -243,6 +243,7 @@ struct SVBreakend
     isIntersect(const SVBreakend& rhs) const
     {
         if (state != rhs.state) return false;
+        if (SVBreakendState::UNKNOWN == state) return true;
         return interval.isIntersect(rhs.interval);
     }
 

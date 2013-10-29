@@ -171,7 +171,7 @@ struct SVLocusScanner
         const bam_record* remoteReadPtr,
         const unsigned defaultReadGroupIndex,
         const std::map<std::string, int32_t>& chromToIndex,
-        std::vector<SVCandidate>& candidates) const;
+        std::vector<SVObservation>& candidates) const;
 
     /// provide direct access to the frag distro for
     /// functions which can't be cached

@@ -20,6 +20,7 @@
 #include "blt_util/bam_streamer.hh"
 #include "common/Exceptions.hh"
 #include "manta/ReadGroupStatsSet.hh"
+#include "manta/SVCandidateUtil.hh"
 
 #include "boost/foreach.hpp"
 
@@ -73,24 +74,25 @@ addSVNodeRead(
 
     // don't rely on the properPair bit to be set correctly:
     const bool isAnomalous(! scanner.isProperPair(bamRead, bamIndex));
-
-    if (! isAnomalous) return;
-
     const bool isLargeFragment(scanner.isLargeFragment(bamRead, bamIndex));
 
-    if (! isLargeFragment) return;
+    const bool isLargeAnomalous(isAnomalous && isLargeFragment);
 
-#if 0
-    /// TODO:  move local-assembly and spanning candidate handling together here:
-    const bool isLocalAssemblyEvidence(scanner.isLocalAssemblyEvidence(bamRead));
+    bool isLocalAssemblyEvidence(false);
+    if (! isLargeAnomalous)
+    {
+        isLocalAssemblyEvidence = scanner.isLocalAssemblyEvidence(bamRead);
+    }
 
-    if (! (isAnomalous || isLocalAssemblyEvidence)) return;
-#endif
+    if (! ( isLargeAnomalous || isLocalAssemblyEvidence))
+    {
+        return; // this read isn't interesting wrt SV discovery
+    }
 
     // finally, check to see if the svDataGroup is full... for now, we allow a very large
     // number of reads to be stored in the hope that we never reach this limit, but just in
-    // case we don't want to exaust memory in centromere pileups, etc...
-    static const unsigned maxDataSize(2000);
+    // case we don't want to exhaust memory in centromere pileups, etc...
+    static const unsigned maxDataSize(4000);
     if (svDataGroup.size() >= maxDataSize)
     {
         if (! svDataGroup.isIncomplete())
@@ -106,18 +108,25 @@ addSVNodeRead(
 
     BOOST_FOREACH(const SVLocus& locus, loci)
     {
-        if (locus.empty()) continue;
-        if (2 != locus.size()) continue;
+        const unsigned locusSize(locus.size());
+        assert((locusSize>=1) && (locusSize<=2));
 
         unsigned readLocalIndex(0);
         unsigned readRemoteIndex(1);
-        if (! locus.getNode(readLocalIndex).isOutCount())
+        if (locusSize == 2)
         {
-            std::swap(readLocalIndex,readRemoteIndex);
+            if (! locus.getNode(readLocalIndex).isOutCount())
+            {
+               std::swap(readLocalIndex,readRemoteIndex);
+            }
         }
+        assert(locus.getNode(readLocalIndex).isOutCount());
 
         if (! locus.getNode(readLocalIndex).getInterval().isIntersect(localNode.getInterval())) continue;
-        if (! locus.getNode(readRemoteIndex).getInterval().isIntersect(remoteNode.getInterval())) continue;
+        if (locusSize == 2)
+        {
+            if (! locus.getNode(readRemoteIndex).getInterval().isIntersect(remoteNode.getInterval())) continue;
+        }
 
         svDataGroup.add(bamRead,isExpectRepeat);
 
@@ -149,8 +158,8 @@ addSVNodeData(
 
     /// This is a temporary measure to make the qname collision detection much looser
     /// problems have come up where very large deletions are present in a read, and it is therefore
-    /// detected as a repreat in two differnt regions, even though they are separated by a considerable
-    /// distance. Solution is temporaryily turn off collision detection whenever two regions are on
+    /// detected as a repeat in two different regions, even though they are separated by a considerable
+    /// distance. Solution is to temporarily turn off collision detection whenever two regions are on
     /// the same chrom (ie. almost always)
     ///
     /// TODO: restore more precise collision detection
@@ -424,6 +433,67 @@ consolidateOverlap(
 
 
 
+// temporary hack hypoth gen method assumes that only one SV exists for each overlapping breakpoint range with
+// the same orientation:
+//
+// if isExcludeSpanning, exclude all spanning pair observations
+//
+static
+void
+assignPairObservationsToSVCandidates(
+    const bool isExcludeSpanning,
+    const std::vector<SVObservation>& readCandidates,
+    SVCandidateSetReadPair& pair,
+    std::vector<SVCandidate>& svs)
+{
+#ifdef DEBUG_SVDATA
+    static const std::string logtag("assignPairObservationsToSVCandidates: ");
+#endif
+
+    // we anticipate so few svs from the POC method, that there's no indexing on them
+    // OST 26/09/2013: Be careful when re-arranging or rewriting the code below, under g++ 4.1.2
+    // this can lead to an infinite loop.
+    BOOST_FOREACH(const SVObservation& readCand, readCandidates)
+    {
+#ifdef DEBUG_SVDATA
+        log_os << logtag << "Starting assignment for read cand: " << readCand << "\n";
+#endif
+
+        if (isExcludeSpanning)
+        {
+            if (isSpanningSV(readCand)) continue;
+        }
+
+        unsigned svIndex(0);
+        BOOST_FOREACH(SVCandidate& sv, svs)
+        {
+            if (sv.isIntersect(readCand))
+            {
+#ifdef DEBUG_SVDATA
+                log_os << logtag << "Adding to svIndex: " << svIndex << " match_sv: " << sv << "\n";
+#endif
+                pair.svLink.push_back(SVPairAssociation(svIndex,readCand.evtype));
+
+                sv.merge(readCand);
+                return;
+            }
+            svIndex++;
+        }
+
+#ifdef DEBUG_SVDATA
+        log_os << logtag << "New svIndex: " << svs.size() << "\n";
+#endif
+        {
+            const unsigned newSVIndex(svs.size());
+            pair.svLink.push_back(SVPairAssociation(newSVIndex,readCand.evtype));
+            svs.push_back(readCand);
+            svs.back().candidateIndex = newSVIndex;
+        }
+    }
+}
+
+
+
 void
 SVFinder::
 getCandidatesFromData(
@@ -435,7 +505,7 @@ getCandidatesFromData(
     static const std::string logtag("getCandidatesFromData: ");
 #endif
 
-    std::vector<SVCandidate> readCandidates;
+    std::vector<SVObservation> readCandidates;
 
     const unsigned bamCount(_bamStreams.size());
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
@@ -447,84 +517,32 @@ getCandidatesFromData(
             SVCandidateSetRead* remoteReadPtr(&(pair.read2));
             pair.svLink.clear();
 
-            if (isExcludeUnpaired)
+            if (! localReadPtr->isSet())
             {
-                // in this case both sides of the read pair need to be observed (and not filtered for MAPQ, etc)
-                if ((! localReadPtr->isSet()) || (! remoteReadPtr->isSet())) continue;
+                std::swap(localReadPtr,remoteReadPtr);
             }
-            else
-            {
-                if (! localReadPtr->isSet())
-                {
-                    std::swap(localReadPtr,remoteReadPtr);
-                }
-            }
-            const bam_record* remoteBamRecPtr( remoteReadPtr->isSet() ? &(remoteReadPtr->bamrec) : NULL);
+            assert(localReadPtr->isSet());
 
-            readCandidates.clear();
+            const bam_record* remoteBamRecPtr( remoteReadPtr->isSet() ? &(remoteReadPtr->bamrec) : NULL);
             _readScanner.getBreakendPair(localReadPtr->bamrec, remoteBamRecPtr, bamIndex, chromToIndex, readCandidates);
 
 #ifdef DEBUG_SVDATA
             log_os << "Checking pair: " << pair << "\n";
             log_os << "Translated to candidates:\n";
-            BOOST_FOREACH(const SVCandidate& cand, readCandidates)
+            BOOST_FOREACH(const SVObservvation& cand, readCandidates)
             {
                 log_os << logtag << "cand: " << cand << "\n";
             }
 #endif
 
-            // temporary hack hypoth gen method assumes that only one SV exists for each overlapping breakpoint range with
-            // the same orientation:
-            //
-            // we anticipate so few svs from the POC method, that there's no indexing on them
-            // OST 26/09/2013: Be careful when re-arranging or rewriting the code below, under g++ 4.1.2
-            // this can lead to an infinite loop.
-            BOOST_FOREACH(const SVCandidate& readCand, readCandidates)
+            bool isExcludeSpanning(false);
+            if (isExcludeUnpaired)
             {
-#ifdef DEBUG_SVDATA
-                log_os << logtag << "Starting assignment for read cand: " << readCand << "\n";
-#endif
-                bool isSVFound(false);
-                unsigned svIndex(0);
-
-                BOOST_FOREACH(SVCandidate& sv, svs)
-                {
-                    if (sv.isIntersect(readCand))
-                    {
-#ifdef DEBUG_SVDATA
-                        log_os << logtag << "Adding to svIndex: " << svIndex << " match_sv: " << sv << "\n";
-#endif
-                        isSVFound=true;
-                        {
-                            using namespace SVEvidenceType;
-
-                            index_t evType(UNKNOWN);
-                            for (int i(0); i<SIZE; ++i)
-                            {
-                                if (readCand.bp1.lowresEvidence.getVal(i) != 0)
-                                {
-                                    evType = static_cast<index_t>(i);
-                                    break;
-                                }
-                            }
-
-                            pair.svLink.push_back(SVPairAssociation(svIndex,evType));
-                        }
-                        sv.merge(readCand);
-                        break;
-                    }
-                    svIndex++;
-                }
-
-                if (isSVFound) continue;
-
-#ifdef DEBUG_SVDATA
-                log_os << logtag << "New svIndex: " << svs.size() << "\n";
-#endif
-                pair.svLink.push_back(SVPairAssociation(svs.size()));
-                svs.push_back(readCand);
-                svs.back().candidateIndex = pair.svLink.back().index;
+                // in this case both sides of the read pair need to be observed (and not filtered for MAPQ, etc)
+                if (! remoteReadPtr->isSet()) isExcludeSpanning=true;
             }
+
+            assignPairObservationsToSVCandidates(isExcludeSpanning, readCandidates, pair, svs);
         }
     }
 
@@ -591,6 +609,7 @@ findCandidateSV(
         return;
     }
 
+#if 0
     // if this is a self-edge, then automatically forward it as is to the assembly module:
     /// TODO: move self-edge handling into the regular hygen routine below
     if (edge.nodeIndex1 == edge.nodeIndex2)
@@ -622,22 +641,16 @@ findCandidateSV(
 
         return;
     }
+#endif
 
 
-    // start gathering evidence required for hypothesis generation,
     //
-    // first step is to scan through each region, and identify all reads supporting
-    // some sort of breakend in the target region, then match up pairs so that they
-    // can easily be accessed from each other
+    // 1) scan through each region to identify all reads supporting
+    // some sort of breakend in the target region, then match up read
+    // pairs so that they can easily be accessed from each other
     //
-
-    // steps:
-    // iterate through regions -- for each region walk from evidence range to breakpoint range picking up all reads associated with the breakend
-    // make a common code to determine read breakend association shared with Estimation step
-    // pair reads in data structure
-    // determine the number of breakends from simple orientation and intersecting joint region logic
-    // assign data to each breakend candidates
-    // come up with an ultra-simple model-free scoring rule: >10 obs = Q60,k else Q0
+    // 2) iterate through breakend read pairs to estimate the number, type
+    // and likely breakend interval regions of SVs corresponding to this edge
     //
 
     addSVNodeData(chromToIndex, locus,edge.nodeIndex1,edge.nodeIndex2,svData);

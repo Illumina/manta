@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromReadIndels )
 
     ChromAlignment align(bamRead);
 
-    std::vector<SVCandidate> candidates;
+    std::vector<SVObservation> candidates;
 
     getSVCandidatesFromReadIndels(opt, dopt, align, candidates);
 
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromSemiAligned )
     SimpleAlignment align(bamRead);
     align.pos = 500;
 
-    std::vector<SVCandidate> candidates;
+    std::vector<SVObservation> candidates;
 
     getSVCandidatesFromSemiAligned(opt,bamRead,align,candidates);
 
