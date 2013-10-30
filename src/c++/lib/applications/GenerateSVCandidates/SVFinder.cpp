@@ -70,6 +70,8 @@ addSVNodeRead(
     const bool isExpectRepeat,
     SVCandidateSetReadPairSampleGroup& svDataGroup)
 {
+    using namespace illumina::common;
+
     if (scanner.isReadFiltered(bamRead)) return;
 
     // don't rely on the properPair bit to be set correctly:
@@ -95,10 +97,7 @@ addSVNodeRead(
     static const unsigned maxDataSize(4000);
     if (svDataGroup.size() >= maxDataSize)
     {
-        if (! svDataGroup.isIncomplete())
-        {
-            svDataGroup.setIncomplete();
-        }
+        svDataGroup.setIncomplete();
         return;
     }
 
@@ -120,7 +119,13 @@ addSVNodeRead(
                std::swap(readLocalIndex,readRemoteIndex);
             }
         }
-        assert(locus.getNode(readLocalIndex).isOutCount());
+        if (! locus.getNode(readLocalIndex).isOutCount())
+        {
+            std::ostringstream oss;
+            oss << "Unexpected svlocus counts from bam record: " << bamRead << "\n"
+                << "\tlocus: " << locus << "\n";
+            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        }
 
         if (! locus.getNode(readLocalIndex).getInterval().isIntersect(localNode.getInterval())) continue;
         if (locusSize == 2)
