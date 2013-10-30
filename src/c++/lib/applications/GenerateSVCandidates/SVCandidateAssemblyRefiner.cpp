@@ -594,7 +594,7 @@ getJumpAssembly(
 
         std::string bp1Seq,bp2Seq,insertSeq;
         getFwdStrandQuerySegments(alignment, contig.seq,
-                                  isBp2AlignedFirst, isBp1Reversed, isBp2Reversed,
+                                  bporient.isBp2AlignedFirst, bporient.isBp1Reversed, bporient.isBp2Reversed,
                                   bp1Seq, bp2Seq, insertSeq);
         log_os << logtag << "\tbp1seq_fwd: " << bp1Seq << "\n";
         log_os << logtag << "\tinsseq_fwd: " << insertSeq << "\n";
