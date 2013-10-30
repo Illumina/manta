@@ -122,7 +122,7 @@ void prettyPrint(const std::string& line)
 }
 
 /*****************************************************************************/
-
+namespace {
 template< int N >
 void fixedException(VcfLine* vcf, const std::string& field,
                     const std::string& line)
@@ -139,7 +139,12 @@ void fixedException(VcfLine* vcf, const std::string& field,
     }
     else
     {
-        warnOnce( message );
+        static bool isWarn(true);
+        if (isWarn)
+        {
+            isWarn = false;
+            log_os << "WARNING: " << message << "\n";
+        }
     }
 }
 
@@ -161,9 +166,16 @@ void genotypeException(VcfLine* vcf, const std::string& field,
     }
     else
     {
-        warnOnce( message );
+        static bool isWarn(true);
+        if (isWarn)
+        {
+            isWarn = false;
+            log_os << "WARNING: " << message << "\n";
+        }
     }
 }
+
+} // anom namespace
 
 /*****************************************************************************/
 

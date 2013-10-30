@@ -21,13 +21,3 @@
 
 std::ostream& log_os(std::cerr);
 
-void warnOnce(const std::string& msg)
-{
-    static bool once(false);
-
-    if (!once)
-    {
-        once = true;
-        log_os << msg << std::endl;
-    }
-}
