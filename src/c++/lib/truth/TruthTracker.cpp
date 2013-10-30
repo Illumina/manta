@@ -431,7 +431,7 @@ TruthTracker::TruthTracker()
 bool TruthTracker::loadTruth(const std::string& vcfFilePath,
                              const bam_header_info& bamHeaderInfo)
 {
-    make_chrom_tid_map(bamHeaderInfo, _chromNameTidMap);
+    _chromNameTidMap = bamHeaderInfo.chrom_to_index;
 
     VcfFile vcfFile(vcfFilePath, _chromNameTidMap);
     vcfFile.getVariantVec(_trueVariantVec);

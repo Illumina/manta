@@ -83,19 +83,3 @@ parse_bam_region(
     end_pos = (illumina::blt_util::parse_int_str(words2[1]));
 }
 
-/*****************************************************************************/
-
-void
-make_chrom_tid_map(
-    const bam_header_info& header,
-    std::map<std::string, int32_t>& chromNameTidMap)
-{
-    const unsigned n_chroms(header.chrom_data.size());
-
-    for (unsigned i(0); i<n_chroms; ++i)
-    {
-        chromNameTidMap[header.chrom_data[i].label] = i;
-    }
-}
-
-/*****************************************************************************/
