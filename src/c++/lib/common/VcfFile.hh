@@ -32,7 +32,7 @@
 class VcfFile
 {
 public:
-    VcfFile(const std::string& pathStr, std::map<std::string, int32_t>);
+    VcfFile(const std::string& pathStr, const std::map<std::string, int32_t>&);
     bool getVariant(Variant& variant, bool& wasLast);
     bool getVariantVec(VariantVec& variantVec);
 
@@ -48,7 +48,7 @@ private:
     MateSeenMap myMateSeenMap;
 
     std::string myPathStr;
-    std::map<std::string, int32_t> myChromNameTidMap;
+    const std::map<std::string, int32_t> myChromNameTidMap;
     std::ifstream myStrm;
     bool myVcfHeaderLoadedFlag;
     VcfHeader myVcfHeader;

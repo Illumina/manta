@@ -32,7 +32,7 @@
 /*****************************************************************************/
 
 VcfFile::VcfFile(const std::string& pathStr,
-                 std::map<std::string, int32_t> chromNameTidMap)
+                 const std::map<std::string, int32_t>& chromNameTidMap)
     : myVcfTypeMap(),
       myChromNameTidMap(chromNameTidMap),
       myVcfHeaderLoadedFlag(false),
