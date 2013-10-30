@@ -37,19 +37,19 @@ struct VcfTransform
         m = static_cast<VcfMetaInformation_t>(1 + (int)m);
     }
 
-    static inline VcfMetaInformation_t string2type(const std::string &s)
+    static inline VcfMetaInformation_t string2type(const std::string& s)
     {
         VcfMetaInformation_t r = NONE;
-        while(r != SIZE)
+        while (r != SIZE)
         {
-            if( s == std::string( type2string[r] ) )
+            if ( s == std::string( type2string[r] ) )
             {
                 return r;
             }
             inc(r);
         }
         BOOST_THROW_EXCEPTION(PostConditionException(
-                             (boost::format("Inexistent VcfMetainformation type: %s") % s).str() ));
+                                  (boost::format("Inexistent VcfMetainformation type: %s") % s).str() ));
         return r;
     }
 };
@@ -57,14 +57,22 @@ struct VcfTransform
 /*****************************************************************************/
 
 const char* VcfTransform::type2string[]
-= {"UNDEF","Integer","Float","Flag","Character","String","UNDEF"};
+    = {"UNDEF","Integer","Float","Flag","Character","String","UNDEF"};
 
 const char* VcfTransform::XmlFields[]
-= {"ID","Number","Type","Description"};
+    = {"ID","Number","Type","Description"};
 
 
 /*****************************************************************************/
 // VcfMetaInformation
+/*****************************************************************************/
+
+VcfMetaInformation::VcfMetaInformation()
+    : type_(NONE)
+{
+    ;
+}
+
 /*****************************************************************************/
 
 void VcfMetaInformation::validateFlag() const
@@ -74,13 +82,13 @@ void VcfMetaInformation::validateFlag() const
         BOOST_THROW_EXCEPTION(VcfException( (boost::format("The 'Flag' type indicates that the INFO field does not contain a Value entry, "
                                                            "and hence the Number should be 0 in this case. "
                                                            "Please check the header meta-information (found a 'Flag' with '%s' in the 'Number' field)")
-                                          % number_).str() ));
+                                             % number_).str() ));
     }
 }
 
 /*****************************************************************************/
 
-void VcfMetaInformation::validateNumber(const std::string &num) const
+void VcfMetaInformation::validateNumber(const std::string& num) const
 {
     static const std::string validNumbers("0123456789.AG");
     if (NONE != type_)
@@ -91,26 +99,26 @@ void VcfMetaInformation::validateNumber(const std::string &num) const
             BOOST_THROW_EXCEPTION(VcfException( (boost::format("The 'Number' entry is a pseudo-integer that describes "
                                                                "the number of values that can be included with the INFO field. "
                                                                "Valid values are \"%s\", found '%c'")
-                                              % validNumbers % num[found]).str() ));
+                                                 % validNumbers % num[found]).str() ));
         }
     }
 }
 
 /*****************************************************************************/
 
-void VcfMetaInformation::validateDescription(const std::string &desc) const
+void VcfMetaInformation::validateDescription(const std::string& desc) const
 {
     if ( '"' != *(desc.begin()) || '"' != *(desc.rbegin()) )
     {
         BOOST_THROW_EXCEPTION(VcfException( (boost::format("The Description value must be surrounded by double-quotes. "
                                                            "Please check the header meta-information (Description=%s)")
-                                          % desc).str() ));
+                                             % desc).str() ));
     }
 }
 
 /*****************************************************************************/
 
-std::istream &operator>>(std::istream &is, VcfMetaInformation &info)
+std::istream& operator>>(std::istream& is, VcfMetaInformation& info)
 {
 //    const unsigned int bufferSize = sizeof(VcfTransform::XmlFields) / sizeof(VcfTransform::XmlFields[0]);
     SplitString<','> buffer;
@@ -126,26 +134,31 @@ std::istream &operator>>(std::istream &is, VcfMetaInformation &info)
         }
         SplitString<'='> id(buffer[0]);
         info.setId( id[1] );
-        if( 4 > buffer.size()) {
+        if ( 4 > buffer.size())
+        {
             buffer.mergeAfter( 2 );
             info.setNumber( "." );
             info.setType( NONE );
             SplitString<'='> desc(buffer[1]);
             desc.mergeAfter( 2 );
             info.setDescription( desc[1] );
-        } else {
+        }
+        else
+        {
             buffer.mergeAfter( 4 );
             SplitString<'='> type( buffer[2] );
-            if( 2 != type.size() || strcmp(VcfTransform::XmlFields[2], type[0].c_str()) )
+            if ( 2 != type.size() || strcmp(VcfTransform::XmlFields[2], type[0].c_str()) )
             {
                 info.setNumber( "." );
                 info.setType( NONE );
                 SplitString<'='> desc(buffer[1]);
                 info.setDescription( desc[1] + buffer[2] + buffer[3] );
-            } else {
+            }
+            else
+            {
                 info.setType( VcfTransform::string2type( type[1] ));
                 SplitString<'='> number(buffer[1]);
-                if( strcmp(VcfTransform::XmlFields[1], number[0].c_str()) )
+                if ( strcmp(VcfTransform::XmlFields[1], number[0].c_str()) )
                 {
                     BOOST_THROW_EXCEPTION(VcfException( (boost::format("Unrecognized assignment in '%s'. "
                                                                        "Expecting '%s' as a key.")
@@ -155,7 +168,7 @@ std::istream &operator>>(std::istream &is, VcfMetaInformation &info)
                 info.setNumber( number[1] );
                 SplitString<'='> desc(buffer[3]);
                 desc.mergeAfter( 2 );
-                if( strcmp(VcfTransform::XmlFields[3], desc[0].c_str()) )
+                if ( strcmp(VcfTransform::XmlFields[3], desc[0].c_str()) )
                 {
                     BOOST_THROW_EXCEPTION(VcfException( (boost::format("Unrecognized assignment in '%s'. "
                                                                        "Expecting '%s' as a key.")
@@ -172,7 +185,7 @@ std::istream &operator>>(std::istream &is, VcfMetaInformation &info)
 
 /*****************************************************************************/
 
-std::ostream &operator<<(std::ostream &os, const VcfMetaInformation &info)
+std::ostream& operator<<(std::ostream& os, const VcfMetaInformation& info)
 {
     os << "<" << VcfTransform::XmlFields[0] << "=" << info.getId();
 

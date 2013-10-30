@@ -185,7 +185,7 @@ public:
 class OutOfBoundsException: public std::out_of_range, public ExceptionData
 {
 public:
-    OutOfBoundsException(const std::string &message);
+    OutOfBoundsException(const std::string& message);
 };
 
 /// General purpose exception for all other cases:
@@ -206,7 +206,7 @@ struct LogicException: public std::logic_error, public ExceptionData
 class VcfException: public IoException
 {
 public:
-    VcfException(const std::string &message);
+    VcfException(const std::string& message);
 };
 
 

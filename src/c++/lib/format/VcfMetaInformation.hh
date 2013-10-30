@@ -42,37 +42,59 @@ enum VcfMetaInformation_t
 class VcfMetaInformation
 {
 public:
-    const char *getKey() const
-    { return id_.c_str(); }
+    VcfMetaInformation();
 
-    const std::string &getId() const
-    { return id_.string(); }
+    const char* getKey() const
+    {
+        return id_.c_str();
+    }
 
-    const std::string &getNumber() const
-    { return number_; }
+    const std::string& getId() const
+    {
+        return id_.string();
+    }
 
-    const VcfMetaInformation_t &getType() const
-    { return type_; }
+    const std::string& getNumber() const
+    {
+        return number_;
+    }
 
-    const std::string &getDescription() const
-    { return description_; }
+    const VcfMetaInformation_t& getType() const
+    {
+        return type_;
+    }
 
-    void setId(const std::string &id)
-    { id_ = id; }
+    const std::string& getDescription() const
+    {
+        return description_;
+    }
 
-    void setNumber(const std::string &num)
-    { validateNumber(num); number_ = num; }
+    void setId(const std::string& id)
+    {
+        id_ = id;
+    }
+
+    void setNumber(const std::string& num)
+    {
+        validateNumber(num);
+        number_ = num;
+    }
 
     void setType(VcfMetaInformation_t type)
-    { type_ = type; }
+    {
+        type_ = type;
+    }
 
-    void setDescription(const std::string &desc)
-    { validateDescription(desc); description_ = desc;}
+    void setDescription(const std::string& desc)
+    {
+        validateDescription(desc);
+        description_ = desc;
+    }
 
 private:
     void validateFlag() const;
-    void validateNumber(const std::string &num) const;
-    void validateDescription(const std::string &desc) const;
+    void validateNumber(const std::string& num) const;
+    void validateDescription(const std::string& desc) const;
 
     FastString id_;
     std::string number_;

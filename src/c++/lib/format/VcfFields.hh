@@ -33,8 +33,8 @@ class VcfFields
 public:
     static unsigned int numFixedFields();
 
-    static const char * const FIXED[];
-    static const char * const GENOTYPE[];
+    static const char* const FIXED[];
+    static const char* const GENOTYPE[];
 };
 
 /*****************************************************************************/

@@ -32,7 +32,7 @@
 class VcfFile
 {
 public:
-    VcfFile(const std::string pathStr, std::map<std::string, int32_t>);
+    VcfFile(const std::string& pathStr, std::map<std::string, int32_t>);
     bool getVariant(Variant& variant, bool& wasLast);
     bool getVariantVec(VariantVec& variantVec);
 

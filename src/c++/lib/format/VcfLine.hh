@@ -39,23 +39,41 @@ class FileElement
 public:
     FileElement() : fileId_(0), repeat_(0) {}
 
-    int getFileId() const          {return fileId_;}
-    void setFileId( int fileId)    {fileId_ = fileId;}
-    size_t getRepeat() const       {return repeat_;}
-    void setRepeat( size_t repeat) {repeat_ = repeat;}
-    void incRepeat()               {++repeat_;}
-    void decRepeat()               {--repeat_;}
+    int getFileId() const
+    {
+        return fileId_;
+    }
+    void setFileId( int fileId)
+    {
+        fileId_ = fileId;
+    }
+    size_t getRepeat() const
+    {
+        return repeat_;
+    }
+    void setRepeat( size_t repeat)
+    {
+        repeat_ = repeat;
+    }
+    void incRepeat()
+    {
+        ++repeat_;
+    }
+    void decRepeat()
+    {
+        --repeat_;
+    }
 
     virtual void init() = 0;
     virtual ~FileElement() {}
 
-    void swap(FileElement &rhs)
+    void swap(FileElement& rhs)
     {
         std::swap( fileId_, rhs.fileId_ );
         std::swap( repeat_, rhs.repeat_ );
     }
 
-    FileElement &operator=(const FileElement &rhs)
+    FileElement& operator=(const FileElement& rhs)
     {
         fileId_ = rhs.fileId_;
         repeat_ = rhs.repeat_;
@@ -73,7 +91,8 @@ class Sample
 public:
     Sample() { };
 
-    const char* field(size_t fieldInd) const {
+    const char* field(size_t fieldInd) const
+    {
         return fieldVec_.at(fieldInd);
     }
 
@@ -86,57 +105,80 @@ std::ostream& operator<<(std::ostream& ostrm, const Sample& sample);
 
 class VcfLine : public FileElement, public VcfLocus<unsigned int, size_t>
 {
-    typedef bool (VcfLine::*ReadField)(std::string::iterator &begin,
-                                       const std::string::iterator end);
+    typedef bool (VcfLine::*ReadField)(std::string::iterator& begin,
+                                       const std::string::iterator& end);
     std::vector< ReadField > READ;
 
 public:
-    VcfLine& self(){return *this;}
-    static const char * const MISSING;
+    VcfLine& self()
+    {
+        return *this;
+    }
+    static const char* const MISSING;
 
     // for QUAL
     static const double MISSING_QUAL;
     // for FILTER
-    static const char * const PASS;
-    static const char * const FAIL;
+    static const char* const PASS;
+    static const char* const FAIL;
     // for INFO flags
-    static const char * const TRUE;
+    static const char* const TRUE;
 
 public:
     // default constructor
     VcfLine()
-        : FileElement(), VcfLocus<unsigned int, size_t>(), vcfHeader_(0) {}
+        : FileElement(), VcfLocus<unsigned int, size_t>(), vcfHeader_(0),
+          pos_(0), ref_(0), qual_(0), pass_(false), spuriousHeader_(false)
+    {
+        ;
+    }
 
     bool strictParsing() const
-    {assert(vcfHeader_); return vcfHeader_->isStrict();}
+    {
+        assert(vcfHeader_);
+        return vcfHeader_->isStrict();
+    }
     /// \return CHROM: An identifier (i.e., chromosome name) from the reference genome
-    const char *getChrom() const
-    {   assert(vcfHeader_);
+    const char* getChrom() const
+    {
+        assert(vcfHeader_);
         return vcfHeader_->hasContigList()
-             ? vcfHeader_->getContig( chromosome_ ).getKey()
-             : ContigList::get_const_instance().getContig( chromosome_ ).getKey();
+               ? vcfHeader_->getContig( chromosome_ ).getKey()
+               : ContigList::get_const_instance().getContig( chromosome_ ).getKey();
     }
 
     /// \return POS: The reference position, or MAX_POS if missing. (the 1st base having position 1)
-    unsigned long getPos() const {return VcfLocus<unsigned int, size_t>::getPosition();}
+    unsigned long getPos() const
+    {
+        return VcfLocus<unsigned int, size_t>::getPosition();
+    }
 
 //    /// \return ID: vector of pointers to unique identifiers where available
 //    const void getId(std::vector<const char *> &id) const {id = id_;}
     /// \return ID: Semi-colon separated list of unique identifiers where available
-    const std::string getId() const {return cStringJoin(id_, ";");}
+    const std::string getId() const
+    {
+        return cStringJoin(id_, ";");
+    }
 
     /// \return REF: reference base(s)
-    const std::string getRef() const {return ref_;}
+    const std::string getRef() const
+    {
+        return ref_;
+    }
 
 //    /// \return ALT: vector of pointers to alternate non-reference alleles called on at least one of the samples
 //    const void getAlt(std::vector<const char *> &alt) const {alt = alt_;}
     /// \return ALT: comma separated list of alternate non-reference alleles called on at least one of the samples
-    const std::string getAlt() const {return cStringJoin(alt_, ",");}
+    const std::string getAlt() const
+    {
+        return cStringJoin(alt_, ",");
+    }
 
     /// \return QUAL: phred-scaled quality score for the assertion made in ALT, or -1 if missing
     double getQual() const
     {
-        char * endptr = NULL;
+        char* endptr = NULL;
         errno = 0;
         return (MISSING != qual_) ? strtod(qual_, &endptr) : MISSING_QUAL;
     }
@@ -145,8 +187,8 @@ public:
      ** \brief FILTER: whether a particular filter passes or not
      ** \return Either "." (missing), or "PASS", or "FAIL".
      **/
-    const char *getFilter(size_t i) const
-    { 
+    const char* getFilter(size_t i) const
+    {
         return  ( pass_ ? PASS    :
                   ( filter_.empty() ? MISSING :
                     ( filter_.at(i) ? FAIL : PASS )));
@@ -157,7 +199,7 @@ public:
      ** \return Entire FILTER string
      **/
     const std::string getFilter() const
-    { 
+    {
         assert(vcfHeader_);
         return  ( pass_ ? std::string(PASS,PASS+4)
                   : joinIfTrue( filter_, vcfHeader_->getFilterList(),";") );
@@ -167,23 +209,30 @@ public:
      ** \brief FILTER==PASS
      ** \return Whether the VCF line passes all filters or not
      **/
-    bool pass() const{ return pass_; }
+    bool pass() const
+    {
+        return pass_;
+    }
 
     /**
      ** \brief INFO: additional information
      ** \return the text of the corresponding INFO field, if present; NULL otherwise. Note that for flags, the return value is VcfLine::TRUE.
      ** \throw out_of_range
      **/
-    const char *getInfo(size_t i) const
-    { return info_.empty() ? NULL : info_.at(i); }
+    const char* getInfo(size_t i) const
+    {
+        return info_.empty() ? NULL : info_.at(i);
+    }
 
     /**
      ** \brief FORMAT & SAMPLE
      ** \return the text of the corresponding SAMPLE, based on the FORMAT field, if present; NULL otherwise.
      ** \throw out_of_range
      **/
-    const char *getSampleField(size_t sampleInd, size_t fieldInd) const
-    {return format_.empty() ? NULL : sampleVec_.at(sampleInd).field(fieldInd);}
+    const char* getSampleField(size_t sampleInd, size_t fieldInd) const
+    {
+        return format_.empty() ? NULL : sampleVec_.at(sampleInd).field(fieldInd);
+    }
 
     /// \return INFO
     const std::string getInfo() const
@@ -201,18 +250,20 @@ public:
 
     /// \return SAMPLE
     const std::string getSample(size_t sampleInd) const
-    {return cStringJoin(sampleVec_.at(sampleInd).fieldVec_, ":");}
+    {
+        return cStringJoin(sampleVec_.at(sampleInd).fieldVec_, ":");
+    }
 
     // load the raw data from the stream. NOTE: invalidates the VcfLine
-    std::istream &read(std::istream &is);
+    std::istream& read(std::istream& is);
 
     // copy raw data between lines
-    VcfLine& swapRaw(VcfLine &rhs);
-    VcfLine& copyRaw(const VcfLine &rhs);
+    VcfLine& swapRaw(VcfLine& rhs);
+    VcfLine& copyRaw(const VcfLine& rhs);
 
     // parse the encoded_ data. returns true on success
     bool parse();
-    void validate(std::vector<bool> &warn) const;
+    void validate(std::vector<bool>& warn) const;
 
 //    const std::string getSample(const std::string &format) const;
     //char * const getSample(const std::string &format) const;
@@ -224,14 +275,14 @@ public:
         vcfFullString_.setLine( &(*this) );
         vcfLong_.setLine( &(*this) );
         READ = boost::assign::list_of( &VcfLine::readId )
-                                     ( &VcfLine::readRef )
-                                     ( &VcfLine::readAlt )
-                                     ( &VcfLine::readQual )
-                                     ( &VcfLine::readFilter );
+               ( &VcfLine::readRef )
+               ( &VcfLine::readAlt )
+               ( &VcfLine::readQual )
+               ( &VcfLine::readFilter );
         spuriousHeader_ = false;
     }
 
-    void setHeader(const VcfHeader *vcfHeader)
+    void setHeader(const VcfHeader* vcfHeader)
     {
         assert(vcfHeader);
         vcfHeader_ = vcfHeader;
@@ -250,17 +301,29 @@ public:
 //    }
 
 private:
-    const VcfHeader *vcfHeader_;
-    Dsv< VcfHeader, VcfLine, const char *, '\t' >    vcfString_;
+    const VcfHeader* vcfHeader_;
+    Dsv< VcfHeader, VcfLine, const char*, '\t' >    vcfString_;
     Dsv< VcfHeader, VcfLine, bool,         '\t' >    vcfBool_;
-    Dsv< VcfHeader, VcfLine, const char *, '\t' >    vcfFullString_;
+    Dsv< VcfHeader, VcfLine, const char*, '\t' >    vcfFullString_;
     Dsv< VcfHeader, VcfLine, size_t,       '\t' >    vcfLong_;
 
-    const char *direct(const char * arg) const               {return arg;}
-    bool tautology(const char * /*arg*/) const               {return true;}
-    const char *pseudoTautology(const char * /*arg*/) const  {return TRUE;}
-    size_t getFormatIndex(const char *arg) const
-    {assert(vcfHeader_); return vcfHeader_->getFormatIndex(arg);}
+    const char* direct(const char* arg) const
+    {
+        return arg;
+    }
+    bool tautology(const char* /*arg*/) const
+    {
+        return true;
+    }
+    const char* pseudoTautology(const char* /*arg*/) const
+    {
+        return TRUE;
+    }
+    size_t getFormatIndex(const char* arg) const
+    {
+        assert(vcfHeader_);
+        return vcfHeader_->getFormatIndex(arg);
+    }
 
     std::string unparsed_;
 
@@ -284,7 +347,7 @@ private:
      ** identifier should be present in more than one data record. If there is
      ** no identifier available, then the missing value should be used. (Alphanumeric String)
      */
-    std::vector<const char *> id_;
+    std::vector<const char*> id_;
     /**
      ** \brief 4. REF reference base(s): Each base must be one of A,C,G,T,N.
      ** Bases should be in uppercase. Multiple bases are permitted.
@@ -293,7 +356,7 @@ private:
      ** For InDels, the reference String must include the base before the
      ** event (which must be reflected in the POS field). (String, Required).
      **/
-    char *ref_;
+    char* ref_;
     /**
      ** \brief 5. ALT comma separated list of alternate non-reference alleles called on at least one of the samples.
      ** Options are base Strings made up of the bases A,C,G,T,N, or an
@@ -302,7 +365,7 @@ private:
      ** uppercase. (Alphanumeric String; no whitespace, commas, or
      ** angle-brackets are permitted in the ID String itself)
      **/
-    std::vector<const char *> alt_;
+    std::vector<const char*> alt_;
     /**
      ** \brief replace all ID strings '<ID>' in the list by the corresponding sequence from the VCF header.
      **/
@@ -316,7 +379,7 @@ private:
      ** to enable higher resolution for low confidence calls if desired.
      ** (Numeric)
      **/
-    char *qual_;
+    char* qual_;
     // double qual_; // we'll leave QUAL as string and lazily convert to double on demand, for efficiency reasons
     /**
      ** \brief 7. FILTER filter:
@@ -355,7 +418,7 @@ private:
      **
      ** Implementation note: for FLAGS, 'true' is the pointer "VcfLine::TRUE", 'false' is NULL.
      **/
-    std::vector<const char *> info_;
+    std::vector<const char*> info_;
     /**
      ** \brief FORMAT
      ** If genotype information is present, then the same types of data must be present for all samples. First a FORMAT field is given specifying
@@ -380,7 +443,7 @@ private:
     std::vector<size_t> format_;
     /**
      ** \brief SAMPLE
-     ** 
+     **
      ** Implementation note: the number of elements in the sample_ is exactly the number of FORMAT fields in the header. Fields that are not present in the current line are NULL.
      **/
     std::vector<Sample> sampleVec_;
@@ -388,55 +451,62 @@ private:
     bool spuriousHeader_;
 
     /// skips empty lines and comments and reads the chromosome
-    std::istream &readChrom(std::istream &is);
+    std::istream& readChrom(std::istream& is);
     /// read the position and convert it to an integer
-    std::istream &readPos(std::istream &is);
+    std::istream& readPos(std::istream& is);
 
-    bool readId(std::string::iterator &begin, const std::string::iterator end);
-    bool readRef(std::string::iterator &begin, const std::string::iterator end);
-    bool readAlt(std::string::iterator &begin, const std::string::iterator end);
-    bool readQual(std::string::iterator &begin, const std::string::iterator end);
-    bool readFilter(std::string::iterator &begin, const std::string::iterator end);
+    bool readId(std::string::iterator& begin,
+                const std::string::iterator& end);
+    bool readRef(std::string::iterator& begin,
+                 const std::string::iterator& end);
+    bool readAlt(std::string::iterator& begin,
+                 const std::string::iterator& end);
+    bool readQual(std::string::iterator& begin,
+                  const std::string::iterator& end);
+    bool readFilter(std::string::iterator& begin,
+                    const std::string::iterator& end);
     // last mandatory field, can end with a '\n' or '\t'
-    bool readInfo(std::string::iterator &begin, const std::string::iterator end);
+    bool readInfo(std::string::iterator& begin,
+                  const std::string::iterator& end);
     //std::istream &readInfo(std::string::const_iterator &begin, const std::string::const_iterator end);
     // first optional column
-    bool readFormat(std::string::iterator &begin, const std::string::iterator end);
+    bool readFormat(std::string::iterator& begin,
+                    const std::string::iterator& end);
     bool readSample(unsigned int sampleInd,
-                    std::string::iterator &begin,
-                    const std::string::iterator end);
-    bool readSamples(std::string::iterator &begin,
-                     const std::string::iterator end);
+                    std::string::iterator& begin,
+                    const std::string::iterator& end);
+    bool readSamples(std::string::iterator& begin,
+                     const std::string::iterator& end);
 
 public:
     // TODO: these should actually belong to Dsv
     // boost::join doesn't support vectors of 'char *'
-    static std::string cStringJoin(const std::vector<const char *> &v, const char *separator);
+    static std::string cStringJoin(const std::vector<const char*>& v, const char* separator);
 
 private:
-    std::string joinByIndex(const std::vector<size_t> &idx,
-                            const std::vector<VcfMetaInformation> &v,
-                            const char *separator) const;
-    std::string joinIfTrue( const std::vector<bool> &idx,
-                            const std::vector<VcfMetaInformation> &v,
-                            const char *separator) const;
-    std::string createMap(  const std::vector<const char *> &info,
-                            const std::vector<VcfMetaInformation> &v,
-                            const char *separator) const;
+    std::string joinByIndex(const std::vector<size_t>& idx,
+                            const std::vector<VcfMetaInformation>& v,
+                            const char* separator) const;
+    std::string joinIfTrue( const std::vector<bool>& idx,
+                            const std::vector<VcfMetaInformation>& v,
+                            const char* separator) const;
+    std::string createMap(  const std::vector<const char*>& info,
+                            const std::vector<VcfMetaInformation>& v,
+                            const char* separator) const;
 
 public:
     bool operator<( const VcfLine& rhs ) const
     {
         return VcfLocus<unsigned int, size_t>::operator<( dynamic_cast< const VcfLocus<unsigned int, size_t>& >(rhs) );
     }
-    friend std::istream &operator>>(std::istream &is, VcfLine &vcfLine);
-    friend std::ostream &operator<<(std::ostream &os, const VcfLine &vcfLine);
+    friend std::istream& operator>>(std::istream& is, VcfLine& vcfLine);
+    friend std::ostream& operator<<(std::ostream& os, const VcfLine& vcfLine);
 };
 
 /*****************************************************************************/
 
-std::istream &operator>>(std::istream &is, VcfLine &vcfLine);
-std::ostream &operator<<(std::ostream &os, const VcfLine &vcfLine);
+std::istream& operator>>(std::istream& is, VcfLine& vcfLine);
+std::ostream& operator<<(std::ostream& os, const VcfLine& vcfLine);
 
 /// specialize DualStream for VCF use case
 //typedef PairedStream<boost::iostreams::file_source,VcfLine> AnnotatedVcfLine;

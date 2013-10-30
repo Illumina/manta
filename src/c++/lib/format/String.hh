@@ -56,7 +56,7 @@ public:
         , size_(1)
         , tokenPos_( 2, std::string::npos )
     {
-        if(! LAZY )  nonLazySplit();
+        if (! LAZY )  nonLazySplit();
     }
 
     SplitString& operator=( const std::string& str )
@@ -64,7 +64,7 @@ public:
         str_ = str;
         sizeAlreadyEvaluated_ = false;
         size_ = 1;
-        if(! LAZY )  nonLazySplit();
+        if (! LAZY )  nonLazySplit();
         return *this;
     }
 
@@ -72,9 +72,9 @@ public:
     {
         if ( !sizeAlreadyEvaluated_ )
         {
-            if( LAZY )
+            if ( LAZY )
             {
-                if( str_.empty() )
+                if ( str_.empty() )
                 {
                     return (size_t)0;
                 }
@@ -83,8 +83,10 @@ public:
                 tokenPos_.resize( size_+1, std::string::npos );
                 tokenPos_[0] = 0;
                 tokenPos_[size_] = str_.length()+1;
-            } else {
-                if( tokens_.empty() )
+            }
+            else
+            {
+                if ( tokens_.empty() )
                 {
                     nonLazySplit();
                 }
@@ -95,17 +97,22 @@ public:
         return size_;
     }
 
-    bool empty() {return 0 == this->size(); }
+    bool empty()
+    {
+        return 0 == this->size();
+    }
 
     void mergeAfter(size_t i)
     {
-        if( this->size() > i )
+        if ( this->size() > i )
         {
-            if( LAZY )
+            if ( LAZY )
             {
                 tokenPos_.erase( tokenPos_.begin() + i, tokenPos_.begin() + size_ );
-            } else {
-                while( size_ > i )
+            }
+            else
+            {
+                while ( size_ > i )
                 {
                     tokens_[size_-2] += std::string(1,D) + tokens_[size_-1];
                     tokens_.pop_back();
@@ -117,8 +124,8 @@ public:
 
     std::string operator[]( const size_t index )
     {
-        if( this->empty() )  return std::string("");
-        if( LAZY && tokens_.at(index).empty() )
+        if ( this->empty() )  return std::string("");
+        if ( LAZY && tokens_.at(index).empty() )
         {
             size_t nextTokenPos = getTokenPos(index+1);
             size_t thisTokenPos = getTokenPos(index);
@@ -127,8 +134,14 @@ public:
         return tokens_[index];
     }
 
-    std::string &ref()                  {return str_;}
-    const std::string &toString() const {return str_;}
+    std::string& ref()
+    {
+        return str_;
+    }
+    const std::string& toString() const
+    {
+        return str_;
+    }
 private:
     size_t getTokenPos( size_t index ) const
     {
@@ -186,25 +199,34 @@ private:
 template<typename Head, typename Line, typename T, char D>
 class Dsv
 {
-    typedef T      (Line::*CallBack)(const char *name)const;
-    typedef size_t (Head::*GetIndex)(const char *name)const;
-    typedef void   (*Throw)(Line *vcf, const std::string &field, const std::string &line);
+    typedef T      (Line::*CallBack)(const char* name)const;
+    typedef size_t (Head::*GetIndex)(const char* name)const;
+    typedef void   (*Throw)(Line* vcf, const std::string& field, const std::string& line);
 
 public:
-    typedef T type;
-    char delimiter() const {return D;}
+    Dsv()
+        : header_(0), line_(0), getIndex_(0), missing_(0), missingSize_(0)
+    {
+        ;
+    }
 
-    void setHeader(const Head *head)
+    typedef T type;
+    char delimiter() const
+    {
+        return D;
+    }
+
+    void setHeader(const Head* head)
     {
         header_   = &(*head);
     }
-    void setLine(Line *line)
+    void setLine(Line* line)
     {
         line_        = &(*line);
         missing_     = line_->MISSING;
         missingSize_ = (missing_) ? (sizeof(missing_) / sizeof(missing_[0])) : 0;
     }
-    void setIndex(const GetIndex &getIndex)
+    void setIndex(const GetIndex& getIndex)
     {
         getIndex_ = getIndex;
     }
@@ -215,26 +237,32 @@ public:
      ** Parse the string directly, without using istreams for efficiency.
      ** \return pointer to the sub-string
      **/
-    char *read(std::string::iterator &begin, const std::string::iterator end, char delim = '\0') const
+    char* read(std::string::iterator& begin, const std::string::iterator& end,
+               char delim = '\0') const
     {
         assert( header_ && line_ );
-        if (! delim) { delim = D; }
+        if (! delim)
+        {
+            delim = D;
+        }
         const std::string::iterator origin = begin;
         begin = std::find(begin, end, delim);
         *begin = '\0';
         if ((origin == begin) || isMissing(origin,begin) )
         {
-            if(end != begin) ++begin;
-            return const_cast<char *>(missing_);
-        } else {
-            if(end != begin) ++begin;
+            if (end != begin) ++begin;
+            return const_cast<char*>(missing_);
+        }
+        else
+        {
+            if (end != begin) ++begin;
             return &(*origin);
         }
     }
 
-    bool readList( std::string::iterator &begin,
-                   const std::string::iterator end,
-                   std::vector<T> &tokenList,
+    bool readList( std::string::iterator& begin,
+                   const std::string::iterator& end,
+                   std::vector<T>& tokenList,
                    CallBack callBack,
                    char delimiter1,
                    Throw dsvException,
@@ -254,15 +282,19 @@ public:
         if ((origin == begin) || isMissing(origin,begin) )
         {
             // missing value
-        } else {
+        }
+        else
+        {
             if (fixSize)
             {
                 assert( NULL != getIndex_ );  // TODO: proper exception
                 assert( count );              // TODO: proper exception
                 // vector is initialized with whatever results from type-casting 0
                 tokenList.resize( count, static_cast<T>(0) );
-            } else {
-                if( count )  tokenList.reserve( count );
+            }
+            else
+            {
+                if ( count )  tokenList.reserve( count );
             }
 
             std::string::iterator stringBegin = origin;
@@ -274,7 +306,7 @@ public:
                 if (delimiter2)
                 {
                     // when there is an '=' sign, the elements in vector tokenList need to be 'const char *'
-                    assert( typeid(const char *) == typeid(T) );
+                    assert( typeid(const char*) == typeid(T) );
                     // TODO: check that the ivalue is missing iif the field is expected to be a flag
                     equalSign = std::find(stringBegin, stringEnd, delimiter2);
                     *equalSign = '\0';
@@ -287,17 +319,20 @@ public:
                         const size_t idx  = (header_->*getIndex_)(&(*stringBegin));
                         //const size_t idx = boost::bind(getIndex_, header_, _1)(&(*stringBegin));
                         tokenList.at(idx) = (stringEnd == equalSign) ? value : ((T) &(*(equalSign + 1)));
-                    } else {
+                    }
+                    else
+                    {
                         tokenList.push_back( value );
                     }
                 }
-                catch (illumina::common::OutOfBoundsException &ex)
-                {   // if there isn't any '=', then we are overwriting 0 with 0 at the end
+                catch (illumina::common::OutOfBoundsException& ex)
+                {
+                    // if there isn't any '=', then we are overwriting 0 with 0 at the end
                     (*dsvException)( line_,
                                      std::string(stringBegin,equalSign),
                                      std::string(origin,end) );
                 }
-                catch (std::out_of_range &ex)
+                catch (std::out_of_range& ex)
                 {
                     throw;
                 }
@@ -313,17 +348,18 @@ public:
     }
 
 private:
-    bool isMissing(const std::string::iterator &O, const std::string::iterator &B) const
-    {   // when missing_ is only 1 char we do it more efficiently
+    bool isMissing(const std::string::iterator& O, const std::string::iterator& B) const
+    {
+        // when missing_ is only 1 char we do it more efficiently
         return (1 == missingSize_) ? ((O + 1 == B) && *missing_ == *O)
-                                   : !strcmp(&(*missing_), &(*O));
+               : !strcmp(&(*missing_), &(*O));
     }
 
-    const Head *header_;
-    Line *line_;
+    const Head* header_;
+    Line* line_;
     GetIndex getIndex_;
 //    char delimiter_;
-    const char *missing_;
+    const char* missing_;
     size_t missingSize_;
 };
 
@@ -336,25 +372,57 @@ class FastString
 {
 public:
     FastString() : str_(""), key_(0)   {}
-    FastString(const FastString &rhs)  { this->assign( rhs.string() ); }
-    FastString(const std::string &rhs) { this->assign( rhs ); }
+    FastString(const FastString& rhs)
+    {
+        this->assign( rhs.string() );
+    }
+    FastString(const std::string& rhs)
+    {
+        this->assign( rhs );
+    }
 
-    const std::string &string() const  { return str_; }
-    std::string &string()              { return str_; }
-    const char *c_str() const          { return key_.empty() ? NULL : &key_.front(); }
-    char *c_str()                      { return key_.empty() ? NULL : &key_.front(); }
+    const std::string& string() const
+    {
+        return str_;
+    }
+    std::string& string()
+    {
+        return str_;
+    }
+    const char* c_str() const
+    {
+        return key_.empty() ? NULL : &key_.front();
+    }
+    char* c_str()
+    {
+        return key_.empty() ? NULL : &key_.front();
+    }
 
-    bool empty() const                 { return key_.empty(); }
+    bool empty() const
+    {
+        return key_.empty();
+    }
 
     // not necessary to assert here, as assign() already keeps both in sync
     // size_t size() const                { size_t ret = key_.size() - 1; assert( str_.length() == ret ); return ret; }
-    size_t size() const                { return key_.size() - 1; }
-    FastString &operator=(const FastString &rhs)     {this->assign(rhs.string()); return *this;}
-    FastString &operator=(const std::string &rhs)    {this->assign(rhs); return *this;}
+    size_t size() const
+    {
+        return key_.size() - 1;
+    }
+    FastString& operator=(const FastString& rhs)
+    {
+        this->assign(rhs.string());
+        return *this;
+    }
+    FastString& operator=(const std::string& rhs)
+    {
+        this->assign(rhs);
+        return *this;
+    }
 
 private:
     // TODO check that the id is not empty
-    void assign(const std::string &id)
+    void assign(const std::string& id)
     {
         str_ = id;
         key_.resize( id.size() + 1, '\0' );

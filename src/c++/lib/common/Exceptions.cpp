@@ -93,13 +93,13 @@ PostConditionException::PostConditionException(const std::string& message)
 {
 }
 
-OutOfBoundsException::OutOfBoundsException(const std::string &message)
+OutOfBoundsException::OutOfBoundsException(const std::string& message)
     : std::out_of_range("OutOfBoundsException: " + message)
     , ExceptionData(EINVAL, message)
 {
 }
 
-VcfException::VcfException(const std::string &message)
+VcfException::VcfException(const std::string& message)
     : IoException(EPROTO, std::string("VCF failure: ") + message)
 {
 }

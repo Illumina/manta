@@ -23,12 +23,12 @@
 
 /*****************************************************************************/
 
-inline const size_t &checkSize(const size_t &s)
+inline const size_t& checkSize(const size_t& s)
 {
     if (1440 < s)
     {
         log_os << ( "More than 1440 chromosomes found, which exceeds the count of the Ophioglossum Reticulatum fern "
-                  "(highest known chromosome number of any life form)" )
+                    "(highest known chromosome number of any life form)" )
                << std::endl;
     }
     return s;
@@ -38,15 +38,15 @@ inline const size_t &checkSize(const size_t &s)
 // ContigList
 /*****************************************************************************/
 
-size_t ContigList::getIndex(const char *name)
+size_t ContigList::getIndex(const char* name)
 {
     size_t len = strlen(name);
 
-    if( !chrList_.empty() )
+    if ( !chrList_.empty() )
     {
         // most of the times it will be the last one
-        const char *lastChr = chrList_.back().getKey();
-        if( len == strlen(lastChr) && !strncmp(lastChr, name, len) )
+        const char* lastChr = chrList_.back().getKey();
+        if ( len == strlen(lastChr) && !strncmp(lastChr, name, len) )
         {
             return (chrList_.size() - 1);
         }

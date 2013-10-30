@@ -29,20 +29,65 @@
 class ChromosomeMetadata
 {
 public:
-    const char *getKey() const              { return id_.c_str(); }
-    const std::string &getId() const        { return id_.string(); }
-    size_t getLength() const                { return length_; }
-    const std::string &getAssembly() const  { return assembly_; }
-    const std::string &getMd5() const       { return md5_; }
-    const std::string &getSpecies() const   { return species_; }
-    const std::string &getUrl() const       { return url_; }
+    ChromosomeMetadata()
+        : length_(0)
+    {
+        ;
+    }
 
-    void setId(const std::string &id)                   { id_ = id; }
-    void setLength(size_t length)                       { length_ = length; }
-    void setAssembly(const std::string &assembly)       { assembly_ = assembly; }
-    void setMd5(const std::string &md5)                 { md5_ = md5;}
-    void setSpecies(const std::string &species)         { species_ = species;}
-    void setUrl(const std::string &url)                 { url_ = url;}
+    const char* getKey() const
+    {
+        return id_.c_str();
+    }
+    const std::string& getId() const
+    {
+        return id_.string();
+    }
+    size_t getLength() const
+    {
+        return length_;
+    }
+    const std::string& getAssembly() const
+    {
+        return assembly_;
+    }
+    const std::string& getMd5() const
+    {
+        return md5_;
+    }
+    const std::string& getSpecies() const
+    {
+        return species_;
+    }
+    const std::string& getUrl() const
+    {
+        return url_;
+    }
+
+    void setId(const std::string& id)
+    {
+        id_ = id;
+    }
+    void setLength(size_t length)
+    {
+        length_ = length;
+    }
+    void setAssembly(const std::string& assembly)
+    {
+        assembly_ = assembly;
+    }
+    void setMd5(const std::string& md5)
+    {
+        md5_ = md5;
+    }
+    void setSpecies(const std::string& species)
+    {
+        species_ = species;
+    }
+    void setUrl(const std::string& url)
+    {
+        url_ = url;
+    }
 
 private:
     FastString id_;

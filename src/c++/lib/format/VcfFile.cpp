@@ -31,17 +31,20 @@
 
 /*****************************************************************************/
 
-VcfFile::VcfFile(const std::string pathStr,
+VcfFile::VcfFile(const std::string& pathStr,
                  std::map<std::string, int32_t> chromNameTidMap)
-    : myChromNameTidMap(chromNameTidMap),
+    : myVcfTypeMap(),
+      myChromNameTidMap(chromNameTidMap),
       myVcfHeaderLoadedFlag(false),
       mySvTypeFieldId(-1), mySvLenFieldId(-1), myMateIdFieldId(-1)
 {
-    myVcfTypeMap = boost::assign::map_list_of("BND", Variant::INTERTRANSLOC)("INV", Variant::INVERSION)("INS", Variant::INSERTION)("DEL", Variant::DELETION)("DUP:TANDEM", Variant::TANDUP)("compound", Variant::COMPLEX);
+    myVcfTypeMap.clear(); //cppcheck distraction
+    myVcfTypeMap = boost::assign::map_list_of<std::string, Variant::Type>("BND", Variant::INTERTRANSLOC)("INV", Variant::INVERSION)("INS", Variant::INSERTION)("DEL", Variant::DELETION)("DUP:TANDEM", Variant::TANDUP)("compound", Variant::COMPLEX);
 
     myStrm.open(pathStr.c_str());
 
-    if (!myStrm) {
+    if (!myStrm)
+    {
         BOOST_THROW_EXCEPTION(InvalidOptionException(
                                   std::string("Failed to open `")
                                   + pathStr + "'"));
@@ -56,16 +59,20 @@ bool parseTranslocAltStr(const std::string& altStr,
                          std::string& chromNameB, unsigned long& posB,
                          bool& isFwdA, bool& isFwdB)
 {
-    const char leftBrkt('[');
-    const char rightBrkt(']');
-    const char chromPosSepar(':');
+    // const char leftBrkt('[');
+    // const char rightBrkt(']');
+    // const char chromPosSepar(':');
 
-    SplitString<leftBrkt> leftBrktSplit(altStr);
-    SplitString<rightBrkt> rightBrktSplit(altStr);
+    // Hard-code to keep cppcheck happy.
+    // SplitString<leftBrkt> leftBrktSplit(altStr);
+    // SplitString<rightBrkt> rightBrktSplit(altStr);
+    SplitString<'['> leftBrktSplit(altStr);
+    SplitString<']'> rightBrktSplit(altStr);
 
     const bool brktLnotR(leftBrktSplit.size() == 3);
 
-    if (!(brktLnotR || (rightBrktSplit.size() == 3))) {
+    if (!(brktLnotR || (rightBrktSplit.size() == 3)))
+    {
         return false;
     }
 
@@ -73,11 +80,16 @@ bool parseTranslocAltStr(const std::string& altStr,
                              ? (!leftBrktSplit[0].empty())
                              : (!rightBrktSplit[0].empty()));
 
-    SplitString<chromPosSepar> posParts(brktLnotR
-                                        ? leftBrktSplit[1]
-                                        : rightBrktSplit[1]);
+    // Hard-code to keep cppcheck happy.
+    // SplitString<chromPosSepar> posParts(brktLnotR
+    //                                     ? leftBrktSplit[1]
+    //                                     : rightBrktSplit[1]);
+    SplitString<':'> posParts(brktLnotR
+                              ? leftBrktSplit[1]
+                              : rightBrktSplit[1]);
 
-    if (posParts.size() != 2) {
+    if (posParts.size() != 2)
+    {
         return false;
     }
 
@@ -87,7 +99,8 @@ bool parseTranslocAltStr(const std::string& altStr,
     isFwdA = baseIsAtStart;
     isFwdB = brktLnotR;
 
-    if (brktLnotR && !baseIsAtStart) {
+    if (brktLnotR && !baseIsAtStart)
+    {
         isFwdA = true;
         isFwdB = false;
     }
@@ -108,7 +121,8 @@ void findFlankBounds(const unsigned long pos, const unsigned long flankSize,
 
 bool VcfFile::getVariant(Variant& variant, bool& wasLast)
 {
-    if (!myVcfHeaderLoadedFlag) {
+    if (!myVcfHeaderLoadedFlag)
+    {
         myVcfHeaderLoadedFlag = loadHeader();
         mySvTypeFieldId = myVcfHeader.getInfoIndex("SVTYPE");
         mySvLenFieldId = myVcfHeader.getInfoIndex("SVLEN");
@@ -123,10 +137,12 @@ bool VcfFile::getVariant(Variant& variant, bool& wasLast)
     bool novelVariant(false);
     Variant::Type variantType(Variant::UNKNOWN);
 
-    while (!novelVariant) {
+    while (!novelVariant)
+    {
         myStrm >> vcfLine;
 
-        if (myStrm.fail()) {
+        if (myStrm.fail())
+        {
             return false;
         }
 
@@ -135,7 +151,8 @@ bool VcfFile::getVariant(Variant& variant, bool& wasLast)
         const std::string typeStr(vcfLine.getInfo(mySvTypeFieldId));
         VcfTypeMapCIter vcfTypeCIter = myVcfTypeMap.find(typeStr);
 
-        if (vcfTypeCIter != myVcfTypeMap.end()) {
+        if (vcfTypeCIter != myVcfTypeMap.end())
+        {
             variantType = vcfTypeCIter->second;
         }
 
@@ -152,7 +169,7 @@ bool VcfFile::getVariant(Variant& variant, bool& wasLast)
             {
                 mateSeenIter->second = true;
             }
-        } 
+        }
         else if (Variant::isStdType(variantType))
         {
             novelVariant = true;
@@ -164,7 +181,6 @@ bool VcfFile::getVariant(Variant& variant, bool& wasLast)
     const int32_t chromTidA(myChromNameTidMap.at(chromNameA));
     const unsigned long posA(vcfLine.getPos());
 
-    int svLen(0);
     int32_t chromTidB(chromTidA);
     unsigned long posB(0);
     bool isFwdA(true);
@@ -172,7 +188,7 @@ bool VcfFile::getVariant(Variant& variant, bool& wasLast)
 
     if (Variant::isSingleChromType(variantType))
     {
-        svLen = boost::lexical_cast<int>(vcfLine.getInfo(mySvLenFieldId));
+        int svLen(boost::lexical_cast<int>(vcfLine.getInfo(mySvLenFieldId)));
 
         if (variantType == Variant::DELETION)
         {
@@ -212,7 +228,7 @@ bool VcfFile::getVariant(Variant& variant, bool& wasLast)
     // DEBUG
     // std::cerr << vcfLine << std::endl;
     // std::cerr << variant << std::endl;
-    
+
 
     return true;
 }
@@ -236,8 +252,10 @@ bool VcfFile::getVariantVec(VariantVec& variantVec)
     }
 
     // Check that all transloc line mates found
-    foreach (MateSeenMap::value_type mateSeenMapEle, myMateSeenMap) {
-        if (!mateSeenMapEle.second) {
+    foreach (MateSeenMap::value_type mateSeenMapEle, myMateSeenMap)
+    {
+        if (!mateSeenMapEle.second)
+        {
             std::cerr << "Failed to find mate with ID " << mateSeenMapEle.first
                       << std::endl;
         }

@@ -17,9 +17,9 @@
 
 /*****************************************************************************/
 
-const char * const VcfFields::FIXED[] 
-= {"CHROM","POS","ID","REF","ALT","QUAL","FILTER","INFO"};
-const char * const VcfFields::GENOTYPE[] = {"FORMAT","SAMPLE"};
+const char* const VcfFields::FIXED[]
+    = {"CHROM","POS","ID","REF","ALT","QUAL","FILTER","INFO"};
+const char* const VcfFields::GENOTYPE[] = {"FORMAT","SAMPLE"};
 
 /*****************************************************************************/
 

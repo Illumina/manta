@@ -28,9 +28,11 @@
 class ContigList : public boost::serialization::singleton<ContigList>
 {
 public:
-    size_t getIndex(const char *name);
-    const ChromosomeMetadata &getContig(size_t i) const
-    { return chrList_.at(i); }
+    size_t getIndex(const char* name);
+    const ChromosomeMetadata& getContig(size_t i) const
+    {
+        return chrList_.at(i);
+    }
 
 private:
     std::vector<ChromosomeMetadata> chrList_;

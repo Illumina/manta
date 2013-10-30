@@ -85,7 +85,7 @@ parse_bam_region(
 
 /*****************************************************************************/
 
-void 
+void
 make_chrom_tid_map(
     const bam_header_info& header,
     std::map<std::string, int32_t>& chromNameTidMap)

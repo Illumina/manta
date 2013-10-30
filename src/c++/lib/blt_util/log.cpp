@@ -21,7 +21,7 @@
 
 std::ostream& log_os(std::cerr);
 
-void warnOnce(const std::string &msg)
+void warnOnce(const std::string& msg)
 {
     static bool once(false);
 

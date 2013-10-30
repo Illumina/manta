@@ -65,7 +65,8 @@ class SVLog
 {
 public:
     enum Outcome { UNKNOWN, WRITTEN, SPAWNED, IMPRECISE_SELF_EDGE,
-                   LOW_PAIR_COUNT_SELF_EDGE, LOW_SOMATIC_SCORE };
+                   LOW_PAIR_COUNT_SELF_EDGE, LOW_SOMATIC_SCORE
+                 };
 
     SVLog(unsigned int index);
     unsigned int ind() const;
@@ -142,7 +143,7 @@ private:
 
     unsigned int _expectedNumCands;
 
-    // Num candidate SVs that either were written 
+    // Num candidate SVs that either were written
     // or spawned written assembled SVs
     unsigned int _numWrittenCands;
 

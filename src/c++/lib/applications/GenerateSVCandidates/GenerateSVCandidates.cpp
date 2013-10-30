@@ -187,7 +187,9 @@ struct SVWriter
             {
                 somWriter.writeSV(edge, svData, assemblyData, sv, modelScoreInfo);
                 _truthTracker.reportOutcome(SVLog::WRITTEN);
-            } else {
+            }
+            else
+            {
                 _truthTracker.reportOutcome(SVLog::LOW_SOMATIC_SCORE);
             }
         }
@@ -256,7 +258,8 @@ runGSC(
 
     TruthTracker truthTracker;
 
-    if (!opt.truthVcfFilename.empty()) {
+    if (!opt.truthVcfFilename.empty())
+    {
         truthTracker.loadTruth(opt.truthVcfFilename, cset.header);
 
 #ifdef EASY_ITER_OVER_NODE_EDGES
@@ -319,9 +322,12 @@ runGSC(
             // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
             svFind.findCandidateSV(chromToIndex, edge, svData, svs);
 
-            if (svs.empty()) {
+            if (svs.empty())
+            {
                 truthTracker.discardEdge(edge, EdgeInfoRecord::NO_DERIVED_SVS);
-            } else {
+            }
+            else
+            {
                 truthTracker.reportNumCands(svs.size());
             }
 

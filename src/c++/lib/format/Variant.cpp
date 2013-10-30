@@ -23,14 +23,29 @@
 
 std::ostream& operator<<(std::ostream& ostrm, Variant::Type variantType)
 {
-    switch (variantType) {
-    case Variant::UNKNOWN: ostrm << "Unknown"; break;
-    case Variant::INTERTRANSLOC: ostrm << "translocation"; break;
-    case Variant::INVERSION: ostrm << "inversion"; break;
-    case Variant::INSERTION: ostrm << "insertion"; break;
-    case Variant::DELETION: ostrm << "deletion"; break;
-    case Variant::TANDUP: ostrm << "duplication"; break;
-    case Variant::COMPLEX: ostrm << "compound"; break;
+    switch (variantType)
+    {
+    case Variant::UNKNOWN:
+        ostrm << "Unknown";
+        break;
+    case Variant::INTERTRANSLOC:
+        ostrm << "translocation";
+        break;
+    case Variant::INVERSION:
+        ostrm << "inversion";
+        break;
+    case Variant::INSERTION:
+        ostrm << "insertion";
+        break;
+    case Variant::DELETION:
+        ostrm << "deletion";
+        break;
+    case Variant::TANDUP:
+        ostrm << "duplication";
+        break;
+    case Variant::COMPLEX:
+        ostrm << "compound";
+        break;
     }
 
     return ostrm;

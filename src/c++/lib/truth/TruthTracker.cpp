@@ -75,15 +75,18 @@ bool EdgeInfoRecord::discarded(DiscardReason& discardReason) const
 
 bool EdgeInfoRecord::operator<(const EdgeInfoRecord& edgeInfoRecordB) const
 {
-    if (_edgeInfo.locusIndex < edgeInfoRecordB._edgeInfo.locusIndex) {
+    if (_edgeInfo.locusIndex < edgeInfoRecordB._edgeInfo.locusIndex)
+    {
         return true;
     }
 
-    if (_edgeInfo.nodeIndex1 < edgeInfoRecordB._edgeInfo.nodeIndex1) {
+    if (_edgeInfo.nodeIndex1 < edgeInfoRecordB._edgeInfo.nodeIndex1)
+    {
         return true;
     }
 
-    if (_edgeInfo.nodeIndex2 < edgeInfoRecordB._edgeInfo.nodeIndex2) {
+    if (_edgeInfo.nodeIndex2 < edgeInfoRecordB._edgeInfo.nodeIndex2)
+    {
         return true;
     }
 
@@ -152,13 +155,24 @@ std::ostream& operator<<(std::ostream& ostrm, const SVLog::Outcome outcome)
 {
     switch (outcome)
     {
-    case SVLog::UNKNOWN: ostrm << "UNKNOWN"; break;
-    case SVLog::WRITTEN: ostrm << "Written"; break;
-    case SVLog::SPAWNED: ostrm << "Spawned"; break;
-    case SVLog::IMPRECISE_SELF_EDGE: ostrm << "Imprecise_SelfEdge"; break;
+    case SVLog::UNKNOWN:
+        ostrm << "UNKNOWN";
+        break;
+    case SVLog::WRITTEN:
+        ostrm << "Written";
+        break;
+    case SVLog::SPAWNED:
+        ostrm << "Spawned";
+        break;
+    case SVLog::IMPRECISE_SELF_EDGE:
+        ostrm << "Imprecise_SelfEdge";
+        break;
     case SVLog::LOW_PAIR_COUNT_SELF_EDGE:
-        ostrm << "LowPairCount_SelfEdge"; break;
-    case SVLog::LOW_SOMATIC_SCORE: ostrm << "LowSomaticScore"; break;
+        ostrm << "LowPairCount_SelfEdge";
+        break;
+    case SVLog::LOW_SOMATIC_SCORE:
+        ostrm << "LowSomaticScore";
+        break;
     }
 
     return ostrm;
@@ -204,7 +218,8 @@ void CandSVLog::reportNumAssembled(unsigned int numAssembled)
 
 void CandSVLog::addAssembledSV()
 {
-    if (_outcome == SVLog::UNKNOWN) {
+    if (_outcome == SVLog::UNKNOWN)
+    {
         _outcome = SVLog::SPAWNED;
     }
 
@@ -231,7 +246,7 @@ void CandSVLog::reportOutcome(const SVLog::Outcome outcomeVal)
     }
     else
     {
-        // Outcome is forwarded to most recently added assembled SV. 
+        // Outcome is forwarded to most recently added assembled SV.
         assert(_outcome == SVLog::SPAWNED);
 
         _assembledSVLogVec.back().reportOutcome(outcomeVal);
@@ -450,7 +465,8 @@ void dumpLocusSetStats(const SVLocusSet& svLocusSet)
     {
         const unsigned int numLocusNodes(locus.size());
 
-        if (numLocusNodes >= numLocusNodesFreqs.size()) {
+        if (numLocusNodes >= numLocusNodesFreqs.size())
+        {
             numLocusNodesFreqs.resize(numLocusNodes + 1);
         }
 
@@ -526,7 +542,8 @@ bool getMatchedNodes(const SVLocusSet& svLocusSet,
 
         BOOST_FOREACH(const SVLocusNode& node, locus)
         {
-            if (interval.isIntersect(node.getInterval())) {
+            if (interval.isIntersect(node.getInterval()))
+            {
                 SVLocusSet::NodeAddressType nodeAddr(locus.getIndex(),
                                                      nodeIndex);
                 matchedNodeAddrVec.push_back(nodeAddr);
@@ -605,7 +622,7 @@ bool pairBrkptNodes(const SVLocusSet& svLocusSet,
                                          nodeAddrB.second));
         const bool foundAFromB(hasABLink(svLocus, nodeAddrB.second,
                                          nodeAddrA.second));
-        
+
         if (foundBFromA && foundAFromB)
         {
             ++numTwoNodesSameLocusWithBiEdge;
@@ -640,7 +657,8 @@ bool pairBrkptNodes(const SVLocusSet& svLocusSet,
 
 bool TruthTracker::evalLocusSet(const SVLocusSet& svLocusSet)
 {
-    if (!_hasTruth) {
+    if (!_hasTruth)
+    {
         return false;
     }
 
@@ -651,7 +669,7 @@ bool TruthTracker::evalLocusSet(const SVLocusSet& svLocusSet)
 
     unsigned int numNeither(0); // Neither brkpt matched by Node
     unsigned int numOneBrkpt(0); // Only one brkpt matched by Node
-    unsigned int numMultiNodes(0); // Multiple Nodes for one/both brkpts    
+    unsigned int numMultiNodes(0); // Multiple Nodes for one/both brkpts
     unsigned int numDiffLoci(0); // Brkpts matched by Nodes in different Loci
     unsigned int numTwoNodesSameLocus(0); // " " Nodes in same Locus
 
@@ -752,7 +770,8 @@ bool bothBrkptIntersect(const Variant& variant,
 
 bool TruthTracker::addEdge(const EdgeInfo& edge, const SVLocusSet& cset)
 {
-    if (!_hasTruth) {
+    if (!_hasTruth)
+    {
         return false;
     }
 
@@ -779,8 +798,8 @@ bool TruthTracker::addEdge(const EdgeInfo& edge, const SVLocusSet& cset)
             {
                 EdgeLogMapIterBoolPr iterBoolPr
                     = _edgeLogMap.
-                    insert(EdgeLogMapEle(edgeInfoRecord,
-                                         EdgeLog(_edgeLogMap.size(), edge)));
+                      insert(EdgeLogMapEle(edgeInfoRecord,
+                                           EdgeLog(_edgeLogMap.size(), edge)));
                 assert(iterBoolPr.second); // edge should be unique -> added
                 _lastAddedEdgeLogMapEleIter = iterBoolPr.first;
                 _edgeLogMapIndexVec.push_back(_lastAddedEdgeLogMapEleIter);
@@ -808,20 +827,21 @@ bool TruthTracker::discardEdge(const EdgeInfo& edge,
     const EdgeInfoRecord discardedEdgeInfoRecord(edge);
 
     EdgeLogMapIter
-        edgeLogIter(_edgeLogMap.find(discardedEdgeInfoRecord));
+    edgeLogIter(_edgeLogMap.find(discardedEdgeInfoRecord));
 
     if (edgeLogIter != _edgeLogMap.end())
     {
         // First find all the true variants matched by this Edge.
         const EdgeLog::VariantKeyVec&
-            variantKeyVec(edgeLogIter->second.variantKeyVec());
+        variantKeyVec(edgeLogIter->second.variantKeyVec());
 
         BOOST_FOREACH(const EdgeLog::VariantKey variantKey, variantKeyVec)
         {
             BOOST_FOREACH(EdgeInfoRecord edgeInfoRecord,
                           _truthEdgeVecMap[variantKey])
             {
-                if (edgeInfoRecord == discardedEdgeInfoRecord) {
+                if (edgeInfoRecord == discardedEdgeInfoRecord)
+                {
                     edgeInfoRecord.discard(reason);
                 }
             }
@@ -949,7 +969,8 @@ bool TruthTracker::dumpStats()
         {
             EdgeInfoRecord::DiscardReason discardReason(EdgeInfoRecord::KEPT);
 
-            if (!record.discarded(discardReason)) {
+            if (!record.discarded(discardReason))
+            {
                 detected = true;
                 break;
             }

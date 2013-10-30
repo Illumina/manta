@@ -32,7 +32,8 @@ class Variant
 {
 public:
     enum Type { UNKNOWN, INTERTRANSLOC, INVERSION, INSERTION, DELETION,
-                TANDUP, COMPLEX };
+                TANDUP, COMPLEX
+              };
 
     Variant();
     Variant(const Variant::Type& typeVal,

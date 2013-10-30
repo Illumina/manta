@@ -53,10 +53,10 @@ std::vector<bool> getValidReferenceBases()
 
 /*****************************************************************************/
 
-bool validateRef(const char *ref)
+bool validateRef(const char* ref)
 {
     static const std::vector<bool> validReferenceBases = getValidReferenceBases();
-    while(*ref)
+    while (*ref)
     {
         // if(!genome::Nucleotide::valid( tmp )
         if (!(validReferenceBases[*ref] || (*ref == '.')))
@@ -73,7 +73,7 @@ bool validateRef(const char *ref)
 std::vector<bool> getValidFloatingPointDigits()
 {
     std::vector<bool> validFloat(256, false);
-    for( char c = '0'; c <= '9'; c++ )
+    for ( char c = '0'; c <= '9'; c++ )
     {
         validFloat[c] = true;
     }
@@ -85,12 +85,12 @@ std::vector<bool> getValidFloatingPointDigits()
 
 /*****************************************************************************/
 
-bool validateQual(const char *ref)
+bool validateQual(const char* ref)
 {
     static const std::vector<bool> validFloatingPointDigits
         = getValidFloatingPointDigits();
 
-    while(*ref)
+    while (*ref)
     {
         if (!validFloatingPointDigits[*ref])
         {
@@ -104,11 +104,14 @@ bool validateQual(const char *ref)
 
 /*****************************************************************************/
 
-char null2tab(char c) {return ('\0'==c) ? '\t' : c;}
+char null2tab(char c)
+{
+    return ('\0'==c) ? '\t' : c;
+}
 
 /*****************************************************************************/
 
-void prettyPrint(const std::string &line)
+void prettyPrint(const std::string& line)
 {
     std::string prettyLine;
     prettyLine.resize(line.length(),' ');
@@ -119,19 +122,21 @@ void prettyPrint(const std::string &line)
 /*****************************************************************************/
 
 template< int N >
-void fixedException(VcfLine *vcf, const std::string &field,
-                    const std::string &line)
+void fixedException(VcfLine* vcf, const std::string& field,
+                    const std::string& line)
 {
     std::string message = (boost::format( "Undefined %s key '%s'\t(%s:%i)")
-                                        % std::string( VcfFields::FIXED[N] )
-                                        % field
-                                        % vcf->getChromosome()
-                                        % vcf->getPosition() ).str();
+                           % std::string( VcfFields::FIXED[N] )
+                           % field
+                           % vcf->getChromosome()
+                           % vcf->getPosition() ).str();
     if (vcf->strictParsing())
     {
         prettyPrint(line);
         BOOST_THROW_EXCEPTION(VcfException( message ));
-    } else {
+    }
+    else
+    {
         warnOnce( message );
     }
 }
@@ -139,19 +144,21 @@ void fixedException(VcfLine *vcf, const std::string &field,
 /*****************************************************************************/
 
 template< int N >
-void genotypeException(VcfLine *vcf, const std::string &field,
-                       const std::string &line)
+void genotypeException(VcfLine* vcf, const std::string& field,
+                       const std::string& line)
 {
     std::string message = (boost::format( "Undefined %s key '%s'\t(%s:%i)")
-                                        % std::string( VcfFields::GENOTYPE[N] )
-                                        % field
-                                        % vcf->getChromosome()
-                                        % vcf->getPosition() ).str();
+                           % std::string( VcfFields::GENOTYPE[N] )
+                           % field
+                           % vcf->getChromosome()
+                           % vcf->getPosition() ).str();
     if (vcf->strictParsing())
     {
         prettyPrint(line);
         BOOST_THROW_EXCEPTION(VcfException( message ));
-    } else {
+    }
+    else
+    {
         warnOnce( message );
     }
 }
@@ -181,7 +188,7 @@ const char* const VcfLine::TRUE = "TRUE";
 
 /*****************************************************************************/
 
-std::istream &VcfLine::read(std::istream &is)
+std::istream& VcfLine::read(std::istream& is)
 {
     if (readChrom(is))
     {
@@ -189,14 +196,14 @@ std::istream &VcfLine::read(std::istream &is)
         {
             prettyPrint(unparsed_);
             BOOST_THROW_EXCEPTION(VcfException( (boost::format("Failed to parse  (read) VCF position field:%s:%i")
-                                              % std::string( this->getChrom() ) % position_).str() ));
+                                                 % std::string( this->getChrom() ) % position_).str() ));
         }
         unparsed_.clear();
         if (!getline(is, unparsed_))
         {
             prettyPrint(unparsed_);
             BOOST_THROW_EXCEPTION(VcfException( (boost::format("Failed to read VCF line:%s:%i")
-                                              % std::string( this->getChrom() ) % position_ ).str() ));
+                                                 % std::string( this->getChrom() ) % position_ ).str() ));
         }
         // for consistency in the end of each field
         unparsed_.push_back('\t');
@@ -213,7 +220,7 @@ std::istream &VcfLine::read(std::istream &is)
 
 /*****************************************************************************/
 
-VcfLine &VcfLine::swapRaw(VcfLine &rhs)
+VcfLine& VcfLine::swapRaw(VcfLine& rhs)
 {
     // FileElement::operator=(dynamic_cast<const FileElement&>(rhs));
     VcfLocus<unsigned int, size_t>::operator=( dynamic_cast< const VcfLocus<unsigned int, size_t>& >(rhs) );
@@ -225,7 +232,7 @@ VcfLine &VcfLine::swapRaw(VcfLine &rhs)
 
 /*****************************************************************************/
 
-VcfLine &VcfLine::copyRaw(const VcfLine &rhs)
+VcfLine& VcfLine::copyRaw(const VcfLine& rhs)
 {
     // FileElement::operator=(dynamic_cast<const FileElement&>(rhs));
     VcfLocus<unsigned int, size_t>::operator=( dynamic_cast< const VcfLocus<unsigned int, size_t>& >(rhs) );
@@ -243,50 +250,52 @@ bool VcfLine::parse()
     std::string::iterator begin = unparsed_.begin();
     const std::string::iterator end = unparsed_.end() - 1;
 
-    for( size_t i=0; i < READ.size(); i++ )
+    for ( size_t i=0; i < READ.size(); i++ )
     {
         if (!(this->*READ[i])(begin, end))
         {
             prettyPrint(unparsed_);
             BOOST_THROW_EXCEPTION(VcfException( (boost::format("Failed to parse mandatory %s field: (%s:%i)")
-                                              % VcfFields::FIXED[ i+2 ] % std::string( this->getChrom() ) % position_).str() ));
+                                                 % VcfFields::FIXED[ i+2 ] % std::string( this->getChrom() ) % position_).str() ));
         }
     }
-    if( readInfo(begin,end) )
+    if ( readInfo(begin,end) )
     {
         assert(vcfHeader_);
         if (readFormat(begin, end) && !readSamples(begin, end))
         {
             prettyPrint(unparsed_);
             BOOST_THROW_EXCEPTION(VcfException( (boost::format( "Failed to parse optional VCF fields: (%s:%i)")
-                                              % std::string( this->getChrom() ) % position_ ).str() ));
+                                                 % std::string( this->getChrom() ) % position_ ).str() ));
         }
-        if(vcfHeader_->getFormatCount() != sampleVec_[0].fieldVec_.size())
+        if (vcfHeader_->getFormatCount() != sampleVec_[0].fieldVec_.size())
         {
             prettyPrint(unparsed_);
             BOOST_THROW_EXCEPTION(VcfException( (boost::format( "Number of samples inconsistent with number of formats:%i (expected %i): (%s:%i)")
-                                              % sampleVec_[0].fieldVec_.size() % vcfHeader_->getFormatCount() % std::string( this->getChrom() ) % position_ ).str() ));
+                                                 % sampleVec_[0].fieldVec_.size() % vcfHeader_->getFormatCount() % std::string( this->getChrom() ) % position_ ).str() ));
         }
         if (end != begin)
         {
             prettyPrint(unparsed_);
             BOOST_THROW_EXCEPTION(VcfException( (boost::format( "Spurious VCF fields: Found more than 10 fields in (%s:%i). Multi-sample not implemented yet.")
-                                              % std::string( this->getChrom() ) % position_ ).str() ));
+                                                 % std::string( this->getChrom() ) % position_ ).str() ));
         }
 
-        if( vcfHeader_->isBlockCompressed() )
+        if ( vcfHeader_->isBlockCompressed() )
         {
-            const char *endTag = this->getInfo( vcfHeader_->getInfoIndex("END") );
+            const char* endTag = this->getInfo( vcfHeader_->getInfoIndex("END") );
             if (NULL != endTag)
             {
                 unsigned long endPos = static_cast<unsigned long>( atoi(endTag) );
-                if( this->position_ < endPos )
+                if ( this->position_ < endPos )
                 {
                     this->setRepeat( endPos - this->position_);
-                } else {
+                }
+                else
+                {
                     BOOST_THROW_EXCEPTION(VcfException( (boost::format( "Wrong END value: "
                                                                         "Expected a value greater than POS (%lu), got %lu")
-                                                      % this->position_ % endPos ).str() ));
+                                                         % this->position_ % endPos ).str() ));
                 }
             }
         }
@@ -296,7 +305,7 @@ bool VcfLine::parse()
 
 /*****************************************************************************/
 
-void VcfLine::validate(std::vector<bool> &warn) const
+void VcfLine::validate(std::vector<bool>& warn) const
 {
     warn.at(0) = warn.at(0) || spuriousHeader_;
 }
@@ -304,11 +313,11 @@ void VcfLine::validate(std::vector<bool> &warn) const
 /*****************************************************************************/
 // used by VcfLine::readChrom
 
-static std::istream & skipCommentsAndEmptyLines(std::istream &is, char &c,
-                                                bool &sH)
+static std::istream& skipCommentsAndEmptyLines(std::istream& is, char& c,
+                                               bool& sH)
 {
     sH = false;
-    while(is.get(c)) // exit on break when a non empty line is found
+    while (is.get(c)) // exit on break when a non empty line is found
     {
         if ('#' == c)
         {
@@ -329,13 +338,13 @@ static std::istream & skipCommentsAndEmptyLines(std::istream &is, char &c,
 
 /*****************************************************************************/
 
-std::istream &VcfLine::readChrom(std::istream &is)
+std::istream& VcfLine::readChrom(std::istream& is)
 {
     char c;
     std::vector< char > chrom(0);
     if (skipCommentsAndEmptyLines(is, c, spuriousHeader_))
     {
-        while(is && '\t' != c)
+        while (is && '\t' != c)
         {
             chrom.push_back(c);
             is.get(c);
@@ -350,15 +359,15 @@ std::istream &VcfLine::readChrom(std::istream &is)
         //           << vcfHeader_->hasContigList() << std::endl;
 
         chromosome_ = vcfHeader_->hasContigList()
-                    ? vcfHeader_->getContigIndex( &chrom.front() )
-                    : ContigList::get_mutable_instance().getIndex( &chrom.front() );
+                      ? vcfHeader_->getContigIndex( &chrom.front() )
+                      : ContigList::get_mutable_instance().getIndex( &chrom.front() );
     }
     return is;
 }
 
 /*****************************************************************************/
 
-std::istream &VcfLine::readPos(std::istream &is)
+std::istream& VcfLine::readPos(std::istream& is)
 {
     char c;
     if (is.get(c) && ('.' == c))
@@ -383,8 +392,8 @@ std::istream &VcfLine::readPos(std::istream &is)
 
 /*****************************************************************************/
 
-bool VcfLine::readId(std::string::iterator &begin,
-                     const std::string::iterator end)
+bool VcfLine::readId(std::string::iterator& begin,
+                     const std::string::iterator& end)
 {
     // DEBUG
     // std::cerr << "readId" << std::endl;
@@ -396,8 +405,8 @@ bool VcfLine::readId(std::string::iterator &begin,
 
 /*****************************************************************************/
 
-bool VcfLine::readRef(std::string::iterator &begin,
-                      const std::string::iterator end)
+bool VcfLine::readRef(std::string::iterator& begin,
+                      const std::string::iterator& end)
 {
     ref_ = vcfString_.read(begin, end);
     return ref_ && validateRef(ref_);
@@ -408,7 +417,7 @@ bool VcfLine::readRef(std::string::iterator &begin,
 
 bool VcfLine::replaceAltIds()
 {
-    for(size_t i = 0; alt_.size(); ++i)
+    for (size_t i = 0; alt_.size(); ++i)
     {
         if (!validateRef(alt_[i]))
         {
@@ -425,8 +434,8 @@ bool VcfLine::replaceAltIds()
 
 /*****************************************************************************/
 
-bool VcfLine::readAlt(std::string::iterator &begin,
-                      const std::string::iterator end)
+bool VcfLine::readAlt(std::string::iterator& begin,
+                      const std::string::iterator& end)
 {
     // DEBUG
     // std::cerr << "readAlt" << std::endl;
@@ -438,8 +447,8 @@ bool VcfLine::readAlt(std::string::iterator &begin,
 
 /*****************************************************************************/
 
-bool VcfLine::readQual(std::string::iterator &begin,
-                       const std::string::iterator end)
+bool VcfLine::readQual(std::string::iterator& begin,
+                       const std::string::iterator& end)
 {
     qual_ = vcfString_.read(begin, end);
     return qual_ && validateQual(qual_);
@@ -447,16 +456,18 @@ bool VcfLine::readQual(std::string::iterator &begin,
 
 /*****************************************************************************/
 
-bool VcfLine::readFilter(std::string::iterator &begin,
-                         const std::string::iterator end)
+bool VcfLine::readFilter(std::string::iterator& begin,
+                         const std::string::iterator& end)
 {
     pass_ = (end != begin) && !strncmp(PASS,&(*begin),5);
-    if( pass_ )
+    if ( pass_ )
     {
         filter_.clear();
         *(begin+4) = '\0';
         begin += 5;
-    } else {
+    }
+    else
+    {
         assert(vcfHeader_);
 
         // DEBUG
@@ -472,8 +483,8 @@ bool VcfLine::readFilter(std::string::iterator &begin,
 
 /*****************************************************************************/
 
-bool VcfLine::readInfo(std::string::iterator &begin,
-                       const std::string::iterator end)
+bool VcfLine::readInfo(std::string::iterator& begin,
+                       const std::string::iterator& end)
 {
     assert(vcfHeader_);
 
@@ -492,8 +503,8 @@ bool VcfLine::readInfo(std::string::iterator &begin,
 
 /*****************************************************************************/
 
-bool VcfLine::readFormat(std::string::iterator &begin,
-                         const std::string::iterator end)
+bool VcfLine::readFormat(std::string::iterator& begin,
+                         const std::string::iterator& end)
 {
     assert(vcfHeader_);
 
@@ -508,10 +519,8 @@ bool VcfLine::readFormat(std::string::iterator &begin,
 
 bool VcfLine::readSample(unsigned int sampleInd,
                          std::string::iterator& begin,
-                         const std::string::iterator end)
+                         const std::string::iterator& end)
 {
-    const char delimiter1 = ':';
-
     std::vector<const char*>& fieldVec(sampleVec_.at(sampleInd).fieldVec_);
     fieldVec.clear();
 
@@ -537,6 +546,7 @@ bool VcfLine::readSample(unsigned int sampleInd,
         std::string::iterator sampleBegin = origin;
         BOOST_FOREACH(const size_t i, format_)
         {
+            const char delimiter1(':');
             fieldVec.at(i) = vcfString_.read(sampleBegin, begin, delimiter1);
 
             // DEBUG
@@ -557,18 +567,20 @@ bool VcfLine::readSample(unsigned int sampleInd,
 /*****************************************************************************/
 
 bool VcfLine::readSamples(std::string::iterator& begin,
-                          const std::string::iterator end)
+                          const std::string::iterator& end)
 {
     const unsigned int numSamples(vcfHeader_->numSamples());
     sampleVec_.resize(numSamples);
 
-    for (unsigned int sampleInd(0); sampleInd < numSamples; ++sampleInd) {
+    for (unsigned int sampleInd(0); sampleInd < numSamples; ++sampleInd)
+    {
         // DEBUG
         // std::cerr << "readSamples : sampleInd " << sampleInd << std::endl;
 
         readSample(sampleInd, begin, end);
 
-        if (sampleInd < (numSamples - 1)) {
+        if (sampleInd < (numSamples - 1))
+        {
             ++begin;
         }
     }
@@ -580,14 +592,14 @@ bool VcfLine::readSamples(std::string::iterator& begin,
 
 /*****************************************************************************/
 
-std::string VcfLine::cStringJoin(const std::vector<const char *> &v,
-                                 const char *separator)
+std::string VcfLine::cStringJoin(const std::vector<const char*>& v,
+                                 const char* separator)
 {
     if (v.empty())
     {
         return std::string(MISSING);
     }
-    std::vector<const char *>::const_iterator current = v.begin();
+    std::vector<const char*>::const_iterator current = v.begin();
     std::string result = std::string( *current );
     while (v.end() != ++current)
     {
@@ -598,9 +610,9 @@ std::string VcfLine::cStringJoin(const std::vector<const char *> &v,
 
 /*****************************************************************************/
 
-std::string VcfLine::joinByIndex(const std::vector<size_t> &idx,
-                                 const std::vector<VcfMetaInformation> &v,
-                                 const char *separator) const
+std::string VcfLine::joinByIndex(const std::vector<size_t>& idx,
+                                 const std::vector<VcfMetaInformation>& v,
+                                 const char* separator) const
 {
     if (idx.empty())
     {
@@ -617,9 +629,9 @@ std::string VcfLine::joinByIndex(const std::vector<size_t> &idx,
 
 /*****************************************************************************/
 
-std::string VcfLine::joinIfTrue(const std::vector<bool> &idx,
-                                const std::vector<VcfMetaInformation> &v,
-                                const char *separator) const
+std::string VcfLine::joinIfTrue(const std::vector<bool>& idx,
+                                const std::vector<VcfMetaInformation>& v,
+                                const char* separator) const
 {
     if (idx.empty())
     {
@@ -641,9 +653,9 @@ std::string VcfLine::joinIfTrue(const std::vector<bool> &idx,
 
 /*****************************************************************************/
 
-std::string VcfLine::createMap(const std::vector<const char *> &info,
-                               const std::vector<VcfMetaInformation> &v,
-                               const char *separator) const
+std::string VcfLine::createMap(const std::vector<const char*>& info,
+                               const std::vector<VcfMetaInformation>& v,
+                               const char* separator) const
 {
     if (info.empty())
     {
@@ -661,7 +673,9 @@ std::string VcfLine::createMap(const std::vector<const char *> &info,
         if (first)
         {
             first = false;
-        } else {
+        }
+        else
+        {
             result += std::string(separator);
         }
 
@@ -678,7 +692,7 @@ std::string VcfLine::createMap(const std::vector<const char *> &info,
 
 /*****************************************************************************/
 
-std::istream &operator>>(std::istream &is, VcfLine &vcfLine)
+std::istream& operator>>(std::istream& is, VcfLine& vcfLine)
 {
     if (vcfLine.read(is) && !vcfLine.parse())
     {
@@ -689,7 +703,7 @@ std::istream &operator>>(std::istream &is, VcfLine &vcfLine)
 
 /*****************************************************************************/
 
-std::ostream &operator<<(std::ostream &os, const VcfLine &vcfLine)
+std::ostream& operator<<(std::ostream& os, const VcfLine& vcfLine)
 {
     os << vcfLine.getChrom() << "\t"
        << vcfLine.getPos() << "\t"
