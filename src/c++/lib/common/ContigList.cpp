@@ -17,22 +17,8 @@
 
 /*****************************************************************************/
 
-#include "blt_util/log.hh"
-
 #include "ContigList.hh"
 
-/*****************************************************************************/
-
-inline const size_t& checkSize(const size_t& s)
-{
-    if (1440 < s)
-    {
-        log_os << ( "More than 1440 chromosomes found, which exceeds the count of the Ophioglossum Reticulatum fern "
-                    "(highest known chromosome number of any life form)" )
-               << std::endl;
-    }
-    return s;
-}
 
 /*****************************************************************************/
 // ContigList
@@ -71,7 +57,7 @@ size_t ContigList::getIndex(const char* name)
     ChromosomeMetadata chr;
     chr.setId( std::string( name, name+len ) );
     chrList_.push_back( chr );
-    return (checkSize( chrList_.size() ) - 1);
+    return (chrList_.size() - 1);
 }
 
 /*****************************************************************************/
