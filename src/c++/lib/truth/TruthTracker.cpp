@@ -21,7 +21,7 @@
 
 #include "blt_util/bam_header_util.hh"
 
-#include "format/VcfFile.hh"
+#include "common/VcfFile.hh"
 
 #include "truth/TruthTracker.hh"
 

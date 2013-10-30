@@ -23,10 +23,10 @@
 #include <vector>
 #include <map>
 
+#include "common/Variant.hh"
+
 #include "svgraph/EdgeInfo.hh"
 #include "svgraph/SVLocusSet.hh"
-
-#include "format/Variant.hh"
 
 /*****************************************************************************/
 
