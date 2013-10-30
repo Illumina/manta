@@ -420,10 +420,18 @@ std::ostream& operator<<(std::ostream& ostrm, const EdgeLog& log)
 // TruthTracker
 /*****************************************************************************/
 
-TruthTracker::TruthTracker()
-    : _hasTruth(false), _lastAddedEdgeLogMapEleIter(0), _numEdgesSeen(0)
+TruthTracker::
+TruthTracker(
+    const std::string& vcfFilePath,
+    const SVLocusSet& cset)
+    : _cset(cset), _hasTruth(false), _lastAddedEdgeLogMapEleIter(0), _numEdgesSeen(0)
 {
-    ;
+    if (vcfFilePath.empty()) return;
+
+    loadTruth(vcfFilePath, cset.header);
+#ifdef EASY_ITER_OVER_NODE_EDGES
+    evalLocusSet(cset);
+#endif
 }
 
 /*****************************************************************************/
@@ -437,7 +445,6 @@ bool TruthTracker::loadTruth(const std::string& vcfFilePath,
     vcfFile.getVariantVec(_trueVariantVec);
 
     _hasTruth = true;
-    _vcfFilePath = vcfFilePath;
 
     return true;
 }
@@ -770,7 +777,7 @@ bool bothBrkptIntersect(const Variant& variant,
 
 /*****************************************************************************/
 
-bool TruthTracker::addEdge(const EdgeInfo& edge, const SVLocusSet& cset)
+bool TruthTracker::addEdge(const EdgeInfo& edge)
 {
     if (!_hasTruth)
     {
@@ -779,7 +786,7 @@ bool TruthTracker::addEdge(const EdgeInfo& edge, const SVLocusSet& cset)
 
     ++_numEdgesSeen;
 
-    const SVLocus& locus(cset.getLocus(edge.locusIndex));
+    const SVLocus& locus(_cset.getLocus(edge.locusIndex));
     const SVLocusNode& node1(locus.getNode(edge.nodeIndex1));
     const SVLocusNode& node2(locus.getNode(edge.nodeIndex2));
 

@@ -122,7 +122,8 @@ void prettyPrint(const std::string& line)
 }
 
 /*****************************************************************************/
-namespace {
+namespace
+{
 template< int N >
 void fixedException(VcfLine* vcf, const std::string& field,
                     const std::string& line)

@@ -256,16 +256,7 @@ runGSC(
     std::auto_ptr<EdgeRetriever> edgerPtr(edgeRFactory(cset, opt.edgeOpt));
     EdgeRetriever& edger(*edgerPtr);
 
-    TruthTracker truthTracker;
-
-    if (!opt.truthVcfFilename.empty())
-    {
-        truthTracker.loadTruth(opt.truthVcfFilename, cset.header);
-
-#ifdef EASY_ITER_OVER_NODE_EDGES
-        truthTracker.evalLocusSet(cset);
-#endif
-    }
+    TruthTracker truthTracker(opt.truthVcfFilename, cset);;
 
     SVWriter svWriter(opt, cset, progName, progVersion, truthTracker);
 
@@ -283,7 +274,7 @@ runGSC(
     while (edger.next())
     {
         const EdgeInfo& edge(edger.getEdge());
-        truthTracker.addEdge(edge, cset);
+        truthTracker.addEdge(edge);
 
         if (opt.edgeOpt.isNodeIndex1)
         {
@@ -322,14 +313,7 @@ runGSC(
             // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
             svFind.findCandidateSV(chromToIndex, edge, svData, svs);
 
-            if (svs.empty())
-            {
-                truthTracker.discardEdge(edge, EdgeInfoRecord::NO_DERIVED_SVS);
-            }
-            else
-            {
-                truthTracker.reportNumCands(svs.size());
-            }
+            truthTracker.reportNumCands(svs.size(), edge);
 
             if (opt.isVerbose)
             {
@@ -405,8 +389,7 @@ runGSC(
         }
     }
 
-    truthTracker.dumpMatchedEdgeInfo();
-    truthTracker.dumpStats();
+    truthTracker.dumpAll();
 }
 
 

@@ -1,3 +1,5 @@
+// -*- mode: c++; indent-tabs-mode: nil; -*-
+//
 // Manta
 // Copyright (c) 2013 Illumina, Inc.
 //
@@ -160,7 +162,11 @@ std::ostream& operator<<(std::ostream& ostrm, const EdgeLog& log);
 class TruthTracker
 {
 public:
-    TruthTracker();
+    TruthTracker(
+        const std::string& vcfFilePath,
+        const SVLocusSet& cset);
+
+private:
     bool loadTruth(const std::string& vcfFilePath,
                    const bam_header_info& bamHeaderInfo);
 
@@ -168,11 +174,27 @@ public:
     bool evalLocusSet(const SVLocusSet& svLocusSet);
 #endif
 
-    bool addEdge(const EdgeInfo& edge, const SVLocusSet& cset);
+    void reportNumCands(unsigned int numCands);
+
+public:
+    bool addEdge(const EdgeInfo& edge);
     bool discardEdge(const EdgeInfo& edge,
                      EdgeInfoRecord::DiscardReason reason);
 
-    void reportNumCands(unsigned int numCands);
+    void reportNumCands(
+        const unsigned numCands,
+        const EdgeInfo& edge)
+    {
+        if (0 == numCands)
+        {
+            discardEdge(edge, EdgeInfoRecord::NO_DERIVED_SVS);
+        }
+        else
+        {
+            reportNumCands(numCands);
+        }
+    }
+
     void addCandSV();
     void reportNumAssembled(unsigned int numAssembled);
     void addAssembledSV();
@@ -181,9 +203,15 @@ public:
     bool dumpMatchedEdgeInfo();
     bool dumpStats();
 
+    void dumpAll()
+    {
+        dumpMatchedEdgeInfo();
+        dumpStats();
+    }
+
 private:
+    const SVLocusSet& _cset;
     bool _hasTruth;
-    std::string _vcfFilePath;
     VariantVec _trueVariantVec;
 
     typedef std::map<std::string, int32_t> ChromNameTidMap;
