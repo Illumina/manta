@@ -459,10 +459,8 @@ assignPairObservationsToSVCandidates(
         log_os << logtag << "Starting assignment for read cand: " << readCand << "\n";
 #endif
 
-        if (isExcludeSpanning)
-        {
-            if (isSpanningSV(readCand)) continue;
-        }
+        const bool isSpanning(isSpanningSV(readCand));
+        if (isExcludeSpanning && isSpanning) continue;
 
         unsigned svIndex(0);
         BOOST_FOREACH(SVCandidate& sv, svs)
@@ -472,7 +470,10 @@ assignPairObservationsToSVCandidates(
 #ifdef DEBUG_SVDATA
                 log_os << logtag << "Adding to svIndex: " << svIndex << " match_sv: " << sv << "\n";
 #endif
-                pair.svLink.push_back(SVPairAssociation(svIndex,readCand.evtype));
+                if (isSpanning)
+                {
+                    pair.svLink.push_back(SVPairAssociation(svIndex,readCand.evtype));
+                }
 
                 sv.merge(readCand);
                 return;
@@ -485,7 +486,10 @@ assignPairObservationsToSVCandidates(
 #endif
         {
             const unsigned newSVIndex(svs.size());
-            pair.svLink.push_back(SVPairAssociation(newSVIndex,readCand.evtype));
+            if (isSpanning)
+            {
+                pair.svLink.push_back(SVPairAssociation(newSVIndex,readCand.evtype));
+            }
             svs.push_back(readCand);
             svs.back().candidateIndex = newSVIndex;
         }

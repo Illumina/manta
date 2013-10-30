@@ -523,19 +523,21 @@ getSVPairSupport(
         BOOST_FOREACH(const SVCandidateSetReadPair& pair, svDataGroup)
         {
             // is this read pair associated with this candidateIndex? (each read pair can be associated with multiple candidates)
-            bool isIndexFound(false);
             unsigned linkIndex(0);
-            BOOST_FOREACH(const SVPairAssociation& sva, pair.svLink)
             {
-                if (sv.candidateIndex == sva.index)
+                bool isIndexFound(false);
+                BOOST_FOREACH(const SVPairAssociation& sva, pair.svLink)
                 {
-                    isIndexFound = true;
-                    break;
+                    if (sv.candidateIndex == sva.index)
+                    {
+                        isIndexFound = true;
+                        break;
+                    }
+                    linkIndex++;
                 }
-                linkIndex++;
-            }
 
-            if (! isIndexFound) continue;
+                if (! isIndexFound) continue;
+            }
 
             /// do we assert (strict) or skip (non-strict) on non-matching pair/sv associations?
             bool isStrictMatch(true);
