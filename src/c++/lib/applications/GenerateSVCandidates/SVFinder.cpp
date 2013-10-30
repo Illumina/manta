@@ -111,27 +111,26 @@ addSVNodeRead(
         assert((locusSize>=1) && (locusSize<=2));
 
         unsigned readLocalIndex(0);
-        unsigned readRemoteIndex(1);
         if (locusSize == 2)
         {
+            unsigned readRemoteIndex(1);
             if (! locus.getNode(readLocalIndex).isOutCount())
             {
                std::swap(readLocalIndex,readRemoteIndex);
             }
-        }
-        if (! locus.getNode(readLocalIndex).isOutCount())
-        {
-            std::ostringstream oss;
-            oss << "Unexpected svlocus counts from bam record: " << bamRead << "\n"
-                << "\tlocus: " << locus << "\n";
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+
+            if (! locus.getNode(readLocalIndex).isOutCount())
+            {
+                std::ostringstream oss;
+                oss << "Unexpected svlocus counts from bam record: " << bamRead << "\n"
+                    << "\tlocus: " << locus << "\n";
+                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            }
+
+            if (! locus.getNode(readRemoteIndex).getInterval().isIntersect(remoteNode.getInterval())) continue;
         }
 
         if (! locus.getNode(readLocalIndex).getInterval().isIntersect(localNode.getInterval())) continue;
-        if (locusSize == 2)
-        {
-            if (! locus.getNode(readRemoteIndex).getInterval().isIntersect(remoteNode.getInterval())) continue;
-        }
 
         svDataGroup.add(bamRead,isExpectRepeat);
 
