@@ -24,6 +24,8 @@
 #include "SVScorer.hh"
 
 #include "blt_util/log.hh"
+#include "blt_util/bam_header_util.hh"
+
 #include "common/Exceptions.hh"
 #include "common/OutStream.hh"
 #include "manta/ReadGroupStatsSet.hh"
@@ -32,6 +34,7 @@
 #include "format/VcfWriterCandidateSV.hh"
 #include "format/VcfWriterDiploidSV.hh"
 #include "format/VcfWriterSomaticSV.hh"
+#include "truth/TruthTracker.hh"
 
 #include "boost/foreach.hpp"
 
@@ -89,7 +92,8 @@ struct SVWriter
         const GSCOptions& initOpt,
         const SVLocusSet& cset,
         const char* progName,
-        const char* progVersion) :
+        const char* progVersion,
+        TruthTracker& truthTracker) :
         opt(initOpt),
         isSomatic(! opt.somaticOutputFilename.empty()),
         svScore(opt, cset.header),
@@ -100,7 +104,8 @@ struct SVWriter
         diploidWriter(opt.diploidOpt, (! opt.chromDepthFilename.empty()),
                       opt.referenceFilename,cset,dipfs.getStream()),
         somWriter(opt.somaticOpt, (! opt.chromDepthFilename.empty()),
-                  opt.referenceFilename,cset,somfs.getStream())
+                  opt.referenceFilename,cset,somfs.getStream()),
+        _truthTracker(truthTracker)
     {
         if (0 == opt.edgeOpt.binIndex)
         {
@@ -133,6 +138,7 @@ struct SVWriter
 #ifdef DEBUG_GSV
                 log_os << logtag << " rejecting candidate: imprecise self-edge\n";
 #endif
+                _truthTracker.reportOutcome(SVLog::IMPRECISE_SELF_EDGE);
                 return;
             }
         }
@@ -143,6 +149,7 @@ struct SVWriter
 #ifdef DEBUG_GSV
                 log_os << logtag << " rejecting candidate: minCandidatePairCount\n";
 #endif
+                _truthTracker.reportOutcome(SVLog::LOW_PAIR_COUNT_SELF_EDGE);
                 return;
             }
         }
@@ -179,6 +186,11 @@ struct SVWriter
             if (modelScoreInfo.somatic.somaticScore > opt.somaticOpt.minOutputSomaticScore)
             {
                 somWriter.writeSV(edge, svData, assemblyData, sv, modelScoreInfo);
+                _truthTracker.reportOutcome(SVLog::WRITTEN);
+            }
+            else
+            {
+                _truthTracker.reportOutcome(SVLog::LOW_SOMATIC_SCORE);
             }
         }
     }
@@ -197,6 +209,8 @@ struct SVWriter
     VcfWriterCandidateSV candWriter;
     VcfWriterDiploidSV diploidWriter;
     VcfWriterSomaticSV somWriter;
+
+    TruthTracker& _truthTracker;
 };
 
 
@@ -242,7 +256,18 @@ runGSC(
     std::auto_ptr<EdgeRetriever> edgerPtr(edgeRFactory(cset, opt.edgeOpt));
     EdgeRetriever& edger(*edgerPtr);
 
-    SVWriter svWriter(opt, cset, progName, progVersion);
+    TruthTracker truthTracker;
+
+    if (!opt.truthVcfFilename.empty())
+    {
+        truthTracker.loadTruth(opt.truthVcfFilename, cset.header);
+
+#ifdef EASY_ITER_OVER_NODE_EDGES
+        truthTracker.evalLocusSet(cset);
+#endif
+    }
+
+    SVWriter svWriter(opt, cset, progName, progVersion, truthTracker);
 
     SVCandidateSetData svData;
     std::vector<SVCandidate> svs;
@@ -258,6 +283,7 @@ runGSC(
     while (edger.next())
     {
         const EdgeInfo& edge(edger.getEdge());
+        truthTracker.addEdge(edge, cset);
 
         if (opt.edgeOpt.isNodeIndex1)
         {
@@ -296,6 +322,15 @@ runGSC(
             // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
             svFind.findCandidateSV(chromToIndex, edge, svData, svs);
 
+            if (svs.empty())
+            {
+                truthTracker.discardEdge(edge, EdgeInfoRecord::NO_DERIVED_SVS);
+            }
+            else
+            {
+                truthTracker.reportNumCands(svs.size());
+            }
+
             if (opt.isVerbose)
             {
                 log_os << logtag << " Low-resolution candidate generation complete. Candidate count: " << svs.size() << "\n";
@@ -303,6 +338,8 @@ runGSC(
 
             BOOST_FOREACH(const SVCandidate& candidateSV, svs)
             {
+                truthTracker.addCandSV();
+
                 if (opt.isVerbose)
                 {
                     log_os << logtag << " Starting analysis of low-resolution candidate: " << candidateSV.candidateIndex << "\n";
@@ -328,11 +365,15 @@ runGSC(
                     log_os << logtag << " score and output low-res candidate\n";
 #endif
                     svWriter.writeSV(edge, svData, assemblyData, candidateSV);
+
                 }
                 else
                 {
+                    truthTracker.reportNumAssembled(assemblyData.svs.size());
+
                     BOOST_FOREACH(const SVCandidate& assembledSV, assemblyData.svs)
                     {
+                        truthTracker.addAssembledSV();
 #ifdef DEBUG_GSV
                         log_os << logtag << " score and output assembly candidate: " << assembledSV << "\n";
 #endif
@@ -363,6 +404,9 @@ runGSC(
             log_os << logtag << " Processing this edge took " << elapsedSec << " seconds.\n";
         }
     }
+
+    truthTracker.dumpMatchedEdgeInfo();
+    truthTracker.dumpStats();
 }
 
 

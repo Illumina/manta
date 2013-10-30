@@ -50,6 +50,7 @@ struct GSCOptions
     std::string referenceFilename;
     std::string statsFilename;
     std::string chromDepthFilename;
+    std::string truthVcfFilename;
 
     std::string candidateOutputFilename;
     std::string diploidOutputFilename;

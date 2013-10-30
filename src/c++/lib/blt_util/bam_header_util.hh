@@ -16,6 +16,9 @@
 
 #pragma once
 
+#include <string>
+#include <map>
+
 #include "blt_util/bam_header_info.hh"
 
 void
@@ -25,3 +28,7 @@ parse_bam_region(
     int32_t& tid,
     int32_t& begin_pos,
     int32_t& end_pos);
+
+void make_chrom_tid_map(
+    const bam_header_info& header,
+    std::map<std::string, int32_t>& chromNameTidMap);

@@ -87,6 +87,8 @@ parseGSCOptions(
      "average depth estimate for each chromosome")
     ("ref", po::value(&opt.referenceFilename),
      "fasta reference sequence (required)")
+    ("truth-vcf", po::value(&opt.truthVcfFilename),
+     "optional truth VCF file (for testing)")
     ("candidate-output-file", po::value(&opt.candidateOutputFilename),
      "Write SV candidates to file (required)")
     ("diploid-output-file", po::value(&opt.diploidOutputFilename),
