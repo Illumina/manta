@@ -36,11 +36,14 @@ VCF_INFO = 7
 
 
 class VcfRecord :
-    def __init__(self,line) :
+    def __init__(self, line, isUnique) :
         self.line = line
         w=line.strip().split('\t')
         self.chrom=w[VCF_CHROM]
         self.pos=int(w[VCF_POS])
+        if isUnique :
+            self.ref=w[VCF_REF]
+            self.alt=w[VCF_ALT]
         self.endPos=self.pos+len(w[VCF_REF])-1
         val = getKeyVal(w[VCF_INFO],"END")
         if val is not None :
@@ -48,16 +51,16 @@ class VcfRecord :
 
 
 
-def processFile(arg,isFirst,header,recList) :
+def processFile(isUnique, vcfFile, isFirst, header, recList) :
     """
     read in a vcf file
     """
 
-    for line in open(arg) :
+    for line in open(vcfFile) :
         if line[0] == "#" :
             if isFirst : header.append(line)
         else :
-            recList.append(VcfRecord(line))
+            recList.append(VcfRecord(line, isUnique))
 
 
 
@@ -65,9 +68,11 @@ def getOptions() :
 
     from optparse import OptionParser
 
-    usage = "usage: %prog [vcf [vcf...]] > sorted_vcf"
+    usage = "usage: %prog [options] [vcf [vcf...]] > sorted_vcf"
     parser = OptionParser(usage=usage)
 
+    parser.add_option("-u", dest="isUnique",action="store_true",default=False,
+                      help="filter all but one record with the same {CHR,POS,REF,ALT}")
 
     (options,args) = parser.parse_args()
 
@@ -95,13 +100,23 @@ def main() :
 
     isFirst=True
     for arg in args :
-        processFile(arg,isFirst,header,recList)
+        processFile(options.isUnique, arg, isFirst, header, recList)
         isFirst-False
 
     recList.sort(key = lambda x: (x.chrom, x.pos, x.endPos))
 
     for line in header :
         outfp.write(line)
+
+    if options.isUnique :
+        recList2 = []
+        lastRec = None
+        for vcfrec in recList :
+            rec = (vcfrec.chrom,vcfrec.pos,vcfrec.ref,vcfrec.alt)
+            if rec != lastRec :
+                recList2.append(vcfrec)
+            lastRec = rec
+        recList = recList2
 
     for vcfrec in recList :
         outfp.write(vcfrec.line)

@@ -18,6 +18,7 @@
 #include <vector>
 
 
+/// bam input file object shared by all programs which require these as input
 struct AlignmentFileOptions
 {
     std::vector<std::string> alignmentFilename;

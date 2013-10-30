@@ -12,7 +12,7 @@
 //
 
 ///
-/// \author Chris Saunders
+///
 ///
 
 #include "blt_util/bam_record_util.hh"
@@ -44,4 +44,24 @@ is_innie_pair(
 
     return true;
 }
+
+
+
+unsigned
+get_avg_quality(
+    const bam_record& bam_read)
+{
+    const unsigned len(bam_read.read_size());
+    if (0 == len) return 0;
+
+    const uint8_t* qual(bam_read.qual());
+    unsigned sum(0);
+    for (unsigned i(0); i<len; ++i)
+    {
+        sum+=qual[i];
+    }
+    // this does not capture the decimal remainder but well...
+    return (sum/len);
+}
+
 

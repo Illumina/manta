@@ -21,6 +21,7 @@
 #include "blt_util/log.hh"
 #include "blt_util/samtools_fasta_util.hh"
 #include "blt_util/seq_util.hh"
+#include "manta/SVCandidateUtil.hh"
 #include "manta/SVLocusAssembler.hh"
 #include "manta/SVReferenceUtil.hh"
 
@@ -169,6 +170,41 @@ getLargeIndelSegments(
 
 
 
+/// add simple cigar string to spanning alignments for the subset of cases (insertions and deletions) where this is possible
+///
+/// note that we may not always print this out, even though we compute the cigar here -- this is dependent on the output file
+/// format and conventions related to variant size, precision, etc.
+///
+static
+void
+addCigarToSpanningAlignment(
+    SVCandidate& sv)
+{
+    const SV_TYPE::index_t svType(getSVType(sv));
+
+    if (svType != SV_TYPE::INDEL) return;
+
+    const bool isBp1First(sv.bp1.interval.range.begin_pos()<=sv.bp2.interval.range.begin_pos());
+
+    const SVBreakend& bpA(isBp1First ? sv.bp1 : sv.bp2);
+    const SVBreakend& bpB(isBp1First ? sv.bp2 : sv.bp1);
+
+    const unsigned deleteSize(bpB.interval.range.begin_pos() - bpA.interval.range.begin_pos());
+    const unsigned insertSize(sv.insertSeq.size());
+
+    if (insertSize)
+    {
+        sv.insertAlignment.push_back(ALIGNPATH::path_segment(ALIGNPATH::INSERT,insertSize));
+    }
+
+    if (deleteSize)
+    {
+        sv.insertAlignment.push_back(ALIGNPATH::path_segment(ALIGNPATH::DELETE,deleteSize));
+    }
+}
+
+
+
 static
 bool
 isSmallSVSegmentFilter(
@@ -279,7 +315,6 @@ getVariantRange(
     const std::string& read,
     const known_pos_range2& readRange)
 {
-
     // check how far we can slide to the right:
     const pos_t maxRightOffset(std::min(ref.size()-refRange.end_pos(), read.size()-readRange.end_pos()));
     pos_t rightOffset(0);
@@ -290,6 +325,7 @@ getVariantRange(
         if (refSym != readSym) break;
     }
 
+    // check how far we can slide to the left:
     const pos_t minLeftOffset(std::max(-refRange.begin_pos(), -readRange.begin_pos()));
     pos_t leftOffset(0);
     for (; leftOffset>=minLeftOffset; --leftOffset)
@@ -319,7 +355,7 @@ setSmallCandSV(
     known_pos_range2 readRange;
     known_pos_range2 refRange;
 
-    // by how many positions can the alignmnet position vary with the same alignmnet score?:
+    // by how many positions can the alignment position vary with the same alignment score?:
     known_pos_range2 cipos;
     {
         using namespace ALIGNPATH;
@@ -364,7 +400,7 @@ setSmallCandSV(
 
     sv.insertSeq = contig.substr(readRange.begin_pos(),readRange.size());
 
-    // add CIGAR for all indels indels:
+    // add CIGAR for all indels:
     sv.insertAlignment = ALIGNPATH::path_t(align.apath.begin()+segRange.first, align.apath.begin()+segRange.second+1);
 }
 
@@ -432,7 +468,7 @@ getJumpAssembly(
 
     // how much additional reference sequence should we extract from around
     // each side of the breakend region?
-    static const pos_t extraRefEdgeSize(100);
+    static const pos_t extraRefEdgeSize(200);
 
     // if the breakends have a simple insert/delete orientation and the alignment regions overlap, then handle this case as
     // a local assembly problem:
@@ -463,15 +499,11 @@ getJumpAssembly(
     }
 
     assemblyData.isSpanning = true;
+    BPOrientation& bporient(assemblyData.bporient);
 
     //
     // based on sv candidate, we classify the expected relationship between the contig and the sv breakends:
     //
-    bool isBp2AlignedFirst(false); ///< should the contig on the fwd strand align bp2->bp1 (true) or bp1->bp2 (false)
-
-    bool isBp1Reversed(false); ///< should all bp1 reads be reversed for the contig to assemble correctly?
-    bool isBp2Reversed(false); ///< should all bp2 reads be reversed for the contig to assemble correctly?
-
     if (sv.bp1.state != sv.bp2.state)
     {
         // if there's one right-open breakend and one left-open breakend, no matter the bp1/bp2 chromosome and
@@ -481,7 +513,7 @@ getJumpAssembly(
         //
         if (sv.bp2.state == SVBreakendState::RIGHT_OPEN)
         {
-            isBp2AlignedFirst = true;
+            bporient.isBp2AlignedFirst = true;
         }
     }
     else
@@ -494,28 +526,26 @@ getJumpAssembly(
         //
         if (sv.bp1.state == SVBreakendState::RIGHT_OPEN)
         {
-            isBp2Reversed = true;
+            bporient.isBp2Reversed = true;
         }
         else
         {
-            isBp1Reversed = true;
+            bporient.isBp1Reversed = true;
         }
     }
 
     // assemble contig spanning the breakend:
-    _spanningAssembler.assembleSVBreakends(sv.bp1, sv.bp2, isBp1Reversed, isBp2Reversed, assemblyData.contigs);
-
-    // min alignment context
-    //const unsigned minAlignContext(4);
+    _spanningAssembler.assembleSVBreakends(sv.bp1, sv.bp2, bporient.isBp1Reversed, bporient.isBp2Reversed, assemblyData.contigs);
 
     getSVReferenceSegments(_opt.referenceFilename, _header, extraRefEdgeSize, sv, assemblyData.bp1ref, assemblyData.bp2ref);
-    const std::string* align1RefStrPtr(&assemblyData.bp1ref.seq());
-    const std::string* align2RefStrPtr(&assemblyData.bp2ref.seq());
+    std::string bp1refSeq = assemblyData.bp1ref.seq();
+    std::string bp2refSeq = assemblyData.bp2ref.seq();
+    if (bporient.isBp1Reversed) reverseCompStr(bp1refSeq);
+    if (bporient.isBp2Reversed) reverseCompStr(bp2refSeq);
+    const std::string* align1RefStrPtr(&bp1refSeq);
+    const std::string* align2RefStrPtr(&bp2refSeq);
 
-    if (isBp1Reversed) reverseCompStr(assemblyData.bp1ref.seq());
-    if (isBp2Reversed) reverseCompStr(assemblyData.bp2ref.seq());
-
-    if (isBp2AlignedFirst) std::swap(align1RefStrPtr, align2RefStrPtr);
+    if (bporient.isBp2AlignedFirst) std::swap(align1RefStrPtr, align2RefStrPtr);
 
 #ifdef DEBUG_REFINER
     log_os << logtag << " al1Ref: " << *align1RefStrPtr << "\n";
@@ -555,6 +585,10 @@ getJumpAssembly(
             align2RefStrPtr->begin(), align2RefStrPtr->end(),
             alignment);
 
+        std::string extendedContig;
+        getExtendedContig(alignment, contig.seq, align1RefStrPtr, align2RefStrPtr, extendedContig);
+        assemblyData.extendedContigs.push_back(extendedContig);
+
 #ifdef DEBUG_REFINER
         log_os << logtag << " contigIndex: " << contigIndex << " alignment: " << alignment;
 
@@ -592,7 +626,6 @@ getJumpAssembly(
 
         if (isFilterSpanningAlignment(_spanningAligner, hsAlign.align1.apath, true)) return;
         if (isFilterSpanningAlignment(_spanningAligner, hsAlign.align2.apath, false)) return;
-
     }
 
     // TODO: min context, etc.
@@ -615,24 +648,28 @@ getJumpAssembly(
         const Alignment* bp1AlignPtr(&bestAlign.align1);
         const Alignment* bp2AlignPtr(&bestAlign.align2);
 
-        if (isBp2AlignedFirst) std::swap(bp1AlignPtr, bp2AlignPtr);
+        if (bporient.isBp2AlignedFirst) std::swap(bp1AlignPtr, bp2AlignPtr);
 
         // summarize usable output information in a second SVBreakend object -- this is the 'refined' sv:
         assemblyData.svs.push_back(sv);
         SVCandidate& newSV(assemblyData.svs.back());
-        newSV.assemblyIndex = 0;
+        newSV.assemblyAlignIndex = assemblyData.bestAlignmentIndex;
+        newSV.assemblySegmentIndex = 0;
 
         newSV.setPrecise();
 
-        adjustAssembledBreakend(*bp1AlignPtr, (! isBp2AlignedFirst), bestAlign.jumpRange, assemblyData.bp1ref, isBp1Reversed, newSV.bp1);
-        adjustAssembledBreakend(*bp2AlignPtr, (isBp2AlignedFirst), bestAlign.jumpRange, assemblyData.bp2ref, isBp2Reversed, newSV.bp2);
+        adjustAssembledBreakend(*bp1AlignPtr, (! bporient.isBp2AlignedFirst), bestAlign.jumpRange, assemblyData.bp1ref, bporient.isBp1Reversed, newSV.bp1);
+        adjustAssembledBreakend(*bp2AlignPtr, (bporient.isBp2AlignedFirst), bestAlign.jumpRange, assemblyData.bp2ref, bporient.isBp2Reversed, newSV.bp2);
 
         // fill in insertSeq:
         newSV.insertSeq.clear();
         if (bestAlign.jumpInsertSize > 0)
         {
-            getFwdStrandInsertSegment(bestAlign, bestContig.seq, isBp1Reversed, newSV.insertSeq);
+            getFwdStrandInsertSegment(bestAlign, bestContig.seq, bporient.isBp1Reversed, newSV.insertSeq);
         }
+
+        // add CIGAR for any simple (insert/delete) cases:
+        addCigarToSpanningAlignment(newSV);
 
 #ifdef DEBUG_REFINER
         log_os << logtag << " highscore refined sv: " << newSV;
@@ -660,7 +697,7 @@ getSmallSVAssembly(
 
     // how much additional reference sequence should we extract from around
     // each side of the breakend region?
-    static const pos_t extraRefEdgeSize(100);
+    static const pos_t extraRefEdgeSize(700);
 
     // min alignment context
     //const unsigned minAlignContext(4);
@@ -705,9 +742,13 @@ getSmallSVAssembly(
             align1RefStrPtr->begin(), align1RefStrPtr->end(),
             alignment);
 
-        // remove candidate from consideration unless we rind a sufficiently large indel with good flanking sequence:
+        std::string extendedContig;
+        getExtendedContig(alignment, contig.seq, align1RefStrPtr, extendedContig);
+        assemblyData.extendedContigs.push_back(extendedContig);
+
+        // remove candidate from consideration unless we find a sufficiently large indel with good flanking sequence:
         std::vector<std::pair<unsigned,unsigned> >& candidateSegments(assemblyData.smallSVSegments[contigIndex]);
-        const bool isFilterSmallSV( isFilterSmallSVAlignment(_smallSVAligner, alignment.align.apath, _opt.scanOpt.minCandidateIndelSize, candidateSegments));
+        const bool isFilterSmallSV( isFilterSmallSVAlignment(_smallSVAligner, alignment.align.apath, _opt.scanOpt.minCandidateVariantSize, candidateSegments));
 
 #ifdef DEBUG_REFINER
         log_os << logtag << " contigIndex: " << contigIndex << " isFilter " << isFilterSmallSV << " alignment: " << alignment;
@@ -717,6 +758,7 @@ getSmallSVAssembly(
 
         // keep the highest scoring QC'd candidate:
         // TODO: we should keep all QC'd candidates for the small event case
+        // FIXME : prevents us from finding overlapping events, keep vector of high-scoring contigs?
         if ((! isHighScore) || (alignment.score > assemblyData.smallSVAlignments[highScoreIndex].score))
         {
 #ifdef DEBUG_REFINER
@@ -747,12 +789,15 @@ getSmallSVAssembly(
         const SVCandidateAssemblyData::SmallAlignmentResultType& bestAlign(assemblyData.smallSVAlignments[assemblyData.bestAlignmentIndex]);
 
         const SVCandidateAssemblyData::CandidateSegmentSetType& candidateSegments(assemblyData.smallSVSegments[assemblyData.bestAlignmentIndex]);
+        unsigned segmentIndex = 0;
         BOOST_FOREACH(const SVCandidateAssemblyData::CandidateSegmentType& segRange, candidateSegments)
         {
             assemblyData.svs.push_back(sv);
             SVCandidate& newSV(assemblyData.svs.back());
-            newSV.assemblyIndex = (assemblyData.svs.size() - 1);
+            newSV.assemblyAlignIndex = assemblyData.bestAlignmentIndex;
+            newSV.assemblySegmentIndex = segmentIndex;
             setSmallCandSV(assemblyData.bp1ref, bestContig.seq, bestAlign.align, segRange, newSV);
+            segmentIndex++;
 
 #ifdef DEBUG_REFINER
             log_os << logtag << "small refined sv: " << newSV;

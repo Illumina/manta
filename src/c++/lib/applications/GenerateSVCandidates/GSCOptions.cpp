@@ -20,6 +20,7 @@
 
 #include "blt_util/log.hh"
 #include "options/AlignmentFileOptionsParser.hh"
+#include "options/ReadScannerOptionsParser.hh"
 #include "options/optionsUtil.hh"
 
 #include "boost/foreach.hpp"
@@ -70,9 +71,10 @@ checkStandardizeUsageFile(
 
 
 void
-parseGSCOptions(const manta::Program& prog,
-                int argc, char* argv[],
-                GSCOptions& opt)
+parseGSCOptions(
+    const manta::Program& prog,
+    int argc, char* argv[],
+    GSCOptions& opt)
 {
     namespace po = boost::program_options;
     po::options_description req("configuration");
@@ -89,19 +91,28 @@ parseGSCOptions(const manta::Program& prog,
      "optional truth VCF file (for testing)")
     ("candidate-output-file", po::value(&opt.candidateOutputFilename),
      "Write SV candidates to file (required)")
+    ("diploid-output-file", po::value(&opt.diploidOutputFilename),
+     "Write germline diploid SVs to file (at least one  non-tumor alignment file must be specified)")
     ("somatic-output-file", po::value(&opt.somaticOutputFilename),
-     "Write somatic SV candidates to file (at least one tumor and non-tumor alignment file must be specified)")
+     "Write somatic SVs to file (at least one tumor and non-tumor alignment file must be specified)")
+    ("verbose", po::value(&opt.isVerbose)->zero_tokens(),
+     "Turn on low-detail INFO logging.")
+    ("skip-assembly", po::value(&opt.isSkipAssembly)->zero_tokens(),
+     "Turn off all breakend and small-variant assembly. Only large, imprecise variants will be reported based on anomalous read pairs.")
+    ("min-scored-sv-size", po::value(&opt.minScoredVariantSize)->default_value(opt.minScoredVariantSize),
+     "minimum size for variants which are scored and output following initial candidate generation")
     ;
 
-    po::options_description aligndesc(getOptionsDescription(opt.alignFileOpt));
-    po::options_description edgedesc(getOptionsDescription(opt.edgeOpt));
+    po::options_description alignDesc(getOptionsDescription(opt.alignFileOpt));
+    po::options_description edgeDesc(getOptionsDescription(opt.edgeOpt));
+    po::options_description scanDesc(getOptionsDescription(opt.scanOpt));
 
     po::options_description help("help");
     help.add_options()
     ("help,h","print this message");
 
     po::options_description visible("options");
-    visible.add(aligndesc).add(req).add(edgedesc).add(help);
+    visible.add(alignDesc).add(scanDesc).add(req).add(edgeDesc).add(help);
 
     bool po_parse_fail(false);
     po::variables_map vm;
@@ -124,21 +135,21 @@ parseGSCOptions(const manta::Program& prog,
 
     std::string errorMsg;
     if (parseOptions(vm, opt.edgeOpt, errorMsg))
-    {
-        usage(log_os,prog,visible,errorMsg.c_str());
-    }
+    {}
     else if (parseOptions(vm, opt.alignFileOpt, errorMsg))
-    {
-        usage(log_os,prog,visible,errorMsg.c_str());
-    }
+    {}
+    else if (parseOptions(vm, opt.scanOpt, errorMsg))
+    {}
     else if (opt.statsFilename.empty())
     {
-        usage(log_os,prog,visible,"Need the alignment stats file");
+        errorMsg="Need the alignment stats file";
     }
     else if (opt.referenceFilename.empty())
     {
-        usage(log_os,prog,visible,"Need the FASTA reference file");
+        errorMsg="Need the FASTA reference file";
     }
+
+    if (! errorMsg.empty()) usage(log_os,prog,visible,errorMsg.c_str());
 
     checkStandardizeUsageFile(log_os,prog,visible,opt.graphFilename,"SV locus graph");
     checkStandardizeUsageFile(log_os,prog,visible,opt.referenceFilename,"reference fasta");
@@ -151,6 +162,11 @@ parseGSCOptions(const manta::Program& prog,
     if (opt.candidateOutputFilename.empty())
     {
         usage(log_os,prog,visible,"Must specify candidate output file");
+    }
+
+    if (opt.diploidOutputFilename.empty())
+    {
+        usage(log_os,prog,visible,"Must specify diploid output file");
     }
 
     if (! opt.somaticOutputFilename.empty())

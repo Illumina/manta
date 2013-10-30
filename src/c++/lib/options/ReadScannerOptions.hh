@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "boost/program_options.hpp"
-
 
 struct ReadScannerOptions
 {
@@ -27,12 +25,17 @@ struct ReadScannerOptions
         breakendEdgeTrimProb(0.25),
         properPairTrimProb(0.01),
         evidenceTrimProb(0.15),
-        minCandidateIndelSize(10),
+        minCandidateVariantSize(10),
         minPairBreakendSize(40),
         splitBreakendSizeFraction(0.1),
         maxSplitBreakendSize(100),
         minSplitBreakendSize(10),
-        minSoftClipLen(8)
+        minSoftClipLen(8),
+        minSemiAlignedScoreGraph(50.0),
+        minSemiAlignedScoreCandidates(30.0),
+        minSingletonMapqGraph(40),
+        minSingletonMapqCandidates(20),
+        isIgnoreAnomProperPair(false)
     {}
 
     unsigned minMapq;
@@ -47,7 +50,7 @@ struct ReadScannerOptions
     float evidenceTrimProb;
 
     /// ignore indels smaller than this when building graph:
-    unsigned minCandidateIndelSize;
+    unsigned minCandidateVariantSize;
 
     // whenever a breakend is predicted from a read pair junction, the predicted breakend range should be no
     // smaller than this:
@@ -67,8 +70,14 @@ struct ReadScannerOptions
 
     // Soft clipped read ends must be of at least this length to be entered as small SV evidence
     unsigned minSoftClipLen;
+
+    // Accept semi-aligned reads with at least this hypothesis score, different for graph and candidate generation
+    double minSemiAlignedScoreGraph;
+    double minSemiAlignedScoreCandidates;
+
+    // We want only shadows with a good singleton mapq, but use again different thresholds for graph and candidate generation
+    unsigned minSingletonMapqGraph;
+    unsigned minSingletonMapqCandidates;
+
+    bool isIgnoreAnomProperPair; ///< typically set true for RNA-Seq analysis, where proper-pair is used to signal intron-spanning pairs
 };
-
-
-boost::program_options::options_description
-getOptionsDescription(ReadScannerOptions& opt);

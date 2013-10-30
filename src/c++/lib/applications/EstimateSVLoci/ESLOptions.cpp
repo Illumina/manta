@@ -19,6 +19,7 @@
 
 #include "blt_util/log.hh"
 #include "options/AlignmentFileOptionsParser.hh"
+#include "options/ReadScannerOptionsParser.hh"
 #include "options/optionsUtil.hh"
 
 #include "boost/foreach.hpp"
@@ -79,19 +80,22 @@ parseESLOptions(
     req.add_options()
     ("output-file", po::value(&opt.outputFilename),
      "write SV Locus graph to file (required)")
+    ("ref", po::value(&opt.referenceFilename),
+     "fasta reference sequence (required)")
     ("align-stats", po::value(&opt.statsFilename),
      "pre-computed alignment statistics for the input alignment files (required)")
     ("region", po::value(&opt.region),
      "samtools formatted region, eg. 'chr1:20-30' (optional)");
 
-    po::options_description aligndesc(getOptionsDescription(opt.alignFileOpt));
+    po::options_description alignDesc(getOptionsDescription(opt.alignFileOpt));
+    po::options_description scanDesc(getOptionsDescription(opt.scanOpt));
 
     po::options_description help("help");
     help.add_options()
     ("help,h","print this message");
 
     po::options_description visible("options");
-    visible.add(aligndesc).add(req).add(help);
+    visible.add(alignDesc).add(scanDesc).add(req).add(help);
 
     bool po_parse_fail(false);
     po::variables_map vm;
@@ -117,12 +121,23 @@ parseESLOptions(
     {
         usage(log_os,prog,visible,errorMsg.c_str());
     }
+    else if (parseOptions(vm, opt.scanOpt, errorMsg))
+    {
+        usage(log_os,prog,visible,errorMsg.c_str());
+    }
     else if (opt.outputFilename.empty())
     {
         usage(log_os,prog,visible,"Must specify a graph output file");
     }
+    else if (opt.referenceFilename.empty())
+    {
+        usage(log_os,prog,visible,"Need the FASTA reference file");
+    }
+
 
     checkStandardizeUsageFile(log_os,prog,visible,opt.statsFilename,"alignment statistics");
+    checkStandardizeUsageFile(log_os,prog,visible,opt.referenceFilename,"reference fasta");
+
 
 }
 

@@ -29,7 +29,6 @@ install(CODE "
         set (FULL_PREFIX \"$ENV{DESTDIR}\")
     endif()
 
-    get_filename_component(MANTA_FULL_ETCDIR         \"\${FULL_PREFIX}${MANTA_ETCDIR}\" ABSOLUTE)
     get_filename_component(MANTA_FULL_DATADIR        \"\${FULL_PREFIX}${MANTA_DATADIR}\" ABSOLUTE)
     get_filename_component(MANTA_FULL_BINDIR         \"\${FULL_PREFIX}${MANTA_BINDIR}\" ABSOLUTE)
     get_filename_component(MANTA_FULL_LIBDIR         \"\${FULL_PREFIX}${MANTA_LIBDIR}\" ABSOLUTE)

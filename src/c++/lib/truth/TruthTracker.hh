@@ -162,7 +162,11 @@ public:
     TruthTracker();
     bool loadTruth(const std::string& vcfFilePath,
                    const bam_header_info& bamHeaderInfo);
+
+#ifdef EASY_ITER_OVER_NODE_EDGES
     bool evalLocusSet(const SVLocusSet& svLocusSet);
+#endif
+
     bool addEdge(const EdgeInfo& edge, const SVLocusSet& cset);
     bool discardEdge(const EdgeInfo& edge,
                      EdgeInfoRecord::DiscardReason reason);

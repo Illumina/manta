@@ -34,6 +34,7 @@ struct ESLOptions
     ReadScannerOptions scanOpt;
     SVLocusSetOptions graphOpt;
 
+    std::string referenceFilename;
     std::string outputFilename;
     std::string region;
     std::string statsFilename;

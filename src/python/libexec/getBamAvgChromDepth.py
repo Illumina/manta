@@ -84,32 +84,54 @@ def main() :
             chromData[word[0]] = (int(word[1]),int(word[2]))
             chromList.append(word[0])
 
+    min_count = 100000
 
     length = 0
     count = 0
+    record_count = 0
 
-    if True :
+    # In a first pass, attempt to subsample the genome. If this turns out to be a tiny sample,
+    # then go back and run without subsampling the bam
+    #
+    for type in ('subsample','all') :
         import re, signal
 
-        # match any cigar with a single match sequence:
-        matchRex = re.compile("^([0-9]+)M$")
+        length = 0
+        count = 0
+        record_count = 0
 
-        cmd = samtoolsBin + " view -F 4 -s 0.1 " + options.bamFile
+        # match any cigar with a series of match sequences:
+        matchRex = re.compile("([0-9]+)[M=X]")
+
+        # use "-F 4" to filter out unmapped reads
+        cmd = samtoolsBin + " view -F 4"
+
+        # use "-s 0.1" to subsample the bam records to increaase sampled read diversity
+        if type == 'subsample' :
+            cmd += " -s 0.1"
+
+        cmd += " " + options.bamFile
+
         proc = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE)
         for line in proc.stdout :
+            record_count += 1
             word = line.strip().split('\t',7)
-            mr = matchRex.match(word[5])
-            if mr is None : continue
-            length += int(mr.group(1))
+            isFound = False
+            for mr in re.finditer(matchRex, word[5]) :
+                length += int(mr.group(1))
+                isFound = True
+            if not isFound : continue
             count += 1
-            if count >= 200000 : break
+            if count >= (min_count*2) : break
 
         # done with subprocess:
         os.kill(proc.pid, signal.SIGINT)
 
+        if count > min_count : break
 
-    if count <= 100000 :
-        raise Exception("Unexpected read length approximation results")
+
+    if count <= min_count :
+        raise Exception("Unexpected read length approximation results. Observation count: " + str(count) + " Bam record count: " + str(record_count) )
 
 
     outfp=sys.stdout

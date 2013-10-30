@@ -30,7 +30,9 @@
 #include "common/OutStream.hh"
 #include "manta/ReadGroupStatsSet.hh"
 #include "manta/SVCandidateAssemblyData.hh"
+#include "manta/SVCandidateUtil.hh"
 #include "format/VcfWriterCandidateSV.hh"
+#include "format/VcfWriterDiploidSV.hh"
 #include "format/VcfWriterSomaticSV.hh"
 #include "truth/TruthTracker.hh"
 
@@ -38,6 +40,7 @@
 
 #include <iostream>
 #include <memory>
+#include <time.h>
 
 //#define DEBUG_GSV
 
@@ -71,11 +74,11 @@ edgeRFactory(
 {
     if (opt.isLocusIndex)
     {
-        return new EdgeRetrieverLocus(set, opt.graphNodeMaxEdgeCount, opt.locusIndex);
+        return (new EdgeRetrieverLocus(set, opt.graphNodeMaxEdgeCount, opt.locusIndex));
     }
     else
     {
-        return new EdgeRetrieverBin(set, opt.graphNodeMaxEdgeCount, opt.binCount, opt.binIndex);
+        return (new EdgeRetrieverBin(set, opt.graphNodeMaxEdgeCount, opt.binCount, opt.binIndex));
     }
 }
 
@@ -95,8 +98,11 @@ struct SVWriter
         isSomatic(! opt.somaticOutputFilename.empty()),
         svScore(opt, cset.header),
         candfs(opt.candidateOutputFilename),
+        dipfs(opt.diploidOutputFilename),
         somfs(opt.somaticOutputFilename),
         candWriter(opt.referenceFilename,cset,candfs.getStream()),
+        diploidWriter(opt.diploidOpt, (! opt.chromDepthFilename.empty()),
+                      opt.referenceFilename,cset,dipfs.getStream()),
         somWriter(opt.somaticOpt, (! opt.chromDepthFilename.empty()),
                   opt.referenceFilename,cset,somfs.getStream()),
         _truthTracker(truthTracker)
@@ -104,6 +110,7 @@ struct SVWriter
         if (0 == opt.edgeOpt.binIndex)
         {
             candWriter.writeHeader(progName, progVersion);
+            diploidWriter.writeHeader(progName, progVersion);
             if (isSomatic) somWriter.writeHeader(progName, progVersion);
         }
     }
@@ -129,7 +136,7 @@ struct SVWriter
             if (sv.isImprecise())
             {
 #ifdef DEBUG_GSV
-                log_os << logtag << " rejecting candidate\n";
+                log_os << logtag << " rejecting candidate: imprecise self-edge\n";
 #endif
                 _truthTracker.reportOutcome(SVLog::IMPRECISE_SELF_EDGE);
                 return;
@@ -137,25 +144,48 @@ struct SVWriter
         }
         else
         {
-            if (sv.bp1.pairCount < minCandidatePairCount)
+            if (sv.bp1.getPairCount() < minCandidatePairCount)
             {
 #ifdef DEBUG_GSV
-                log_os << logtag << " rejecting candidate\n";
+                log_os << logtag << " rejecting candidate: minCandidatePairCount\n";
 #endif
                 _truthTracker.reportOutcome(SVLog::LOW_PAIR_COUNT_SELF_EDGE);
                 return;
             }
         }
 
+        // check min size for candidate output:
+        if (isSVBelowMinSize(sv,opt.scanOpt.minCandidateVariantSize))
+        {
+#ifdef DEBUG_GSV
+            log_os << logtag << " filtering out candidate below min size before candidate output stage\n";
+#endif
+            return;
+        }
+
         candWriter.writeSV(edge, svData, assemblyData, sv);
+
+        // check min size for scoring:
+        if (isSVBelowMinSize(sv,opt.minScoredVariantSize))
+        {
+#ifdef DEBUG_GSV
+            log_os << logtag << " filtering out candidate below min size at scoring stage\n";
+#endif
+            return;
+        }
+
+        svScore.scoreSV(svData, assemblyData, sv, isSomatic, modelScoreInfo);
+
+        if (modelScoreInfo.diploid.altScore >= opt.diploidOpt.minOutputAltScore)
+        {
+            diploidWriter.writeSV(edge, svData, assemblyData, sv, modelScoreInfo);
+        }
 
         if (isSomatic)
         {
-            svScore.scoreSomaticSV(svData, sv, ssInfo);
-
-            if (ssInfo.somaticScore > opt.somaticOpt.minOutputSomaticScore)
+            if (modelScoreInfo.somatic.somaticScore > opt.somaticOpt.minOutputSomaticScore)
             {
-                somWriter.writeSV(edge, svData, assemblyData, sv, ssInfo);
+                somWriter.writeSV(edge, svData, assemblyData, sv, modelScoreInfo);
                 _truthTracker.reportOutcome(SVLog::WRITTEN);
             } else {
                 _truthTracker.reportOutcome(SVLog::LOW_SOMATIC_SCORE);
@@ -168,17 +198,39 @@ struct SVWriter
     const bool isSomatic;
 
     SVScorer svScore;
-    SomaticSVScoreInfo ssInfo;
+    SVModelScoreInfo modelScoreInfo;
 
     OutStream candfs;
+    OutStream dipfs;
     OutStream somfs;
 
     VcfWriterCandidateSV candWriter;
+    VcfWriterDiploidSV diploidWriter;
     VcfWriterSomaticSV somWriter;
 
     TruthTracker& _truthTracker;
 };
 
+
+#if 0
+/// edge indices+graph evidence counts and regions:
+///
+/// this is designed to be useful even when the locus graph is not present
+struct EhancedEdgeInfo
+{
+
+};
+
+/// reduce the full (very-large) graph down to just the information we need during SVCandidate generation:
+struct ReducedGraphInfo
+{
+    ReducedGraphInfo(const GSCOptions& opt)
+
+    bam_header_info header;
+
+    std::vector<EnhancedEdgeInfo> edges;
+};
+#endif
 
 
 static
@@ -188,6 +240,12 @@ runGSC(
     const char* progName,
     const char* progVersion)
 {
+#if 0
+    {
+        // to save memory, load the graph and process/store only the information we need from it:
+    }
+#endif
+
     SVFinder svFind(opt);
     const SVLocusSet& cset(svFind.getSet());
 
@@ -200,7 +258,10 @@ runGSC(
 
     if (!opt.truthVcfFilename.empty()) {
         truthTracker.loadTruth(opt.truthVcfFilename, cset.header);
+
+#ifdef EASY_ITER_OVER_NODE_EDGES
         truthTracker.evalLocusSet(cset);
+#endif
     }
 
     SVWriter svWriter(opt, cset, progName, progVersion, truthTracker);
@@ -208,25 +269,55 @@ runGSC(
     SVCandidateSetData svData;
     std::vector<SVCandidate> svs;
 
-#ifdef DEBUG_GSV
     static const std::string logtag("runGSC");
-    log_os << logtag << " " << cset.header << "\n";
-#endif
+    if (opt.isVerbose)
+    {
+        log_os << logtag << " " << cset.header << "\n";
+    }
+
+    const std::map<std::string, int32_t>& chromToIndex(cset.header.chrom_to_index);
 
     while (edger.next())
     {
         const EdgeInfo& edge(edger.getEdge());
         truthTracker.addEdge(edge, cset);
 
-#ifdef DEBUG_GSV
-        log_os << logtag << " starting analysis of edge: ";
-        dumpEdgeInfo(edge,cset,log_os);
-#endif
+        if (opt.edgeOpt.isNodeIndex1)
+        {
+            if (opt.edgeOpt.isNodeIndex2)
+            {
+                const bool isMatch(
+                    (edge.nodeIndex1 == opt.edgeOpt.nodeIndex1) &&
+                    (edge.nodeIndex2 == opt.edgeOpt.nodeIndex2));
+                const bool isSwapMatch(
+                    (edge.nodeIndex2 == opt.edgeOpt.nodeIndex1) &&
+                    (edge.nodeIndex1 == opt.edgeOpt.nodeIndex2));
+
+                if (! (isMatch || isSwapMatch)) continue;
+            }
+            else
+            {
+                const bool isMatch
+                (edge.nodeIndex1 == opt.edgeOpt.nodeIndex1);
+                const bool isSwapMatch
+                (edge.nodeIndex2 == opt.edgeOpt.nodeIndex1);
+
+                if (! (isMatch || isSwapMatch)) continue;
+            }
+        }
+
+        clock_t startTime(0);
+        if (opt.isVerbose)
+        {
+            log_os << logtag << " starting analysis of edge: ";
+            dumpEdgeInfo(edge,cset,log_os);
+            startTime = clock();
+        }
 
         try
         {
             // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
-            svFind.findCandidateSV(edge, svData, svs);
+            svFind.findCandidateSV(chromToIndex, edge, svData, svs);
 
             if (svs.empty()) {
                 truthTracker.discardEdge(edge, EdgeInfoRecord::NO_DERIVED_SVS);
@@ -234,29 +325,38 @@ runGSC(
                 truthTracker.reportNumCands(svs.size());
             }
 
-
-#ifdef DEBUG_GSV
-            log_os << logtag << " low-res candidate generation complete. candidate count: " << svs.size() << "\n";
-#endif
+            if (opt.isVerbose)
+            {
+                log_os << logtag << " Low-resolution candidate generation complete. Candidate count: " << svs.size() << "\n";
+            }
 
             BOOST_FOREACH(const SVCandidate& candidateSV, svs)
             {
                 truthTracker.addCandSV();
 
+                if (opt.isVerbose)
+                {
+                    log_os << logtag << " Starting analysis of low-resolution candidate: " << candidateSV.candidateIndex << "\n";
+                }
 #ifdef DEBUG_GSV
-                log_os << logtag << " starting low-res candidate analysis: " << candidateSV << "\n";
+                log_os << logtag << " CandidateSV: " << candidateSV << "\n";
 #endif
                 SVCandidateAssemblyData assemblyData;
-                svRefine.getCandidateAssemblyData(candidateSV, svData, assemblyData);
 
-#ifdef DEBUG_GSV
-                log_os << logtag << " assembly candidate refinement complete. assembly count: " << assemblyData.svs.size() << "\n";
-#endif
+                if (! opt.isSkipAssembly)
+                {
+                    svRefine.getCandidateAssemblyData(candidateSV, svData, assemblyData);
+
+                    if (opt.isVerbose)
+                    {
+                        log_os << logtag << " Candidate assembly complete. Assembled candidate count: " << assemblyData.svs.size() << "\n";
+                    }
+                }
 
                 if (assemblyData.svs.empty())
                 {
 #ifdef DEBUG_GSV
-                    log_os << logtag << " score and output low-res candidate: " << candidateSV << "\n";
+                    log_os << logtag << " score and output low-res candidate\n";
 #endif
                     svWriter.writeSV(edge, svData, assemblyData, candidateSV);
 
@@ -289,6 +389,14 @@ runGSC(
             dumpEdgeInfo(edge,cset,log_os);
             throw;
         }
+
+        if (opt.isVerbose)
+        {
+            static const double clockFactor(1./static_cast<double>(CLOCKS_PER_SEC));
+
+            const double elapsedSec(( clock() - startTime )*clockFactor);
+            log_os << logtag << " Processing this edge took " << elapsedSec << " seconds.\n";
+        }
     }
 
     truthTracker.dumpMatchedEdgeInfo();
@@ -304,5 +412,8 @@ runInternal(int argc, char* argv[]) const
     GSCOptions opt;
 
     parseGSCOptions(*this,argc,argv,opt);
+#ifdef DEBUG_GSV
+    opt.isVerbose=true;
+#endif
     runGSC(opt, name(), version());
 }

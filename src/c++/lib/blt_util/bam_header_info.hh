@@ -20,11 +20,12 @@
 
 #include "boost/serialization/string.hpp"
 #include "boost/serialization/vector.hpp"
+#include "boost/serialization/map.hpp"
 
 #include <iosfwd>
 #include <string>
 #include <vector>
-
+#include <map>
 
 
 /// minimal c++ bam header info
@@ -59,6 +60,7 @@ struct bam_header_info
     void serialize(Archive& ar, const unsigned /* version */)
     {
         ar& chrom_data;
+        ar& chrom_to_index;
     }
 
     struct chrom_info
@@ -87,6 +89,7 @@ struct bam_header_info
     };
 
     std::vector<chrom_info> chrom_data;
+    std::map<std::string, int32_t> chrom_to_index;
 };
 
 

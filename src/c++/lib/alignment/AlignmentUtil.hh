@@ -19,15 +19,10 @@
 
 #include "alignment/Alignment.hh"
 #include "alignment/GlobalJumpAligner.hh"
-
-#include <cmath>
-
-#include <boost/utility.hpp>
+#include "alignment/GlobalAligner.hh"
 
 
-const double invlog10(1./(std::log(10.)));
-const int phredScoreOffset = 33;
-
+/// return end position of alignment
 inline
 pos_t
 alignEnd(const Alignment& align)
@@ -76,26 +71,31 @@ getAlignEndOffset(
 }
 
 
-/// tests if prefix of aligned sequence matches target, returns length of alignment (zero if no match)
-unsigned
-hasAlignedPrefix(const Alignment& al, const unsigned minAlignContext = 0);
-
-
-/// tests if suffix of aligned sequence matches target, returns length of alignment (zero if no match)
-unsigned
-hasAlignedSuffix(const Alignment& al, const unsigned minAlignContext = 0);
-
-
-bool
-bothEndsAligned(const Alignment& al, const unsigned minAlignContext = 0);
-
 
 /// check a jump alignment for consistency (only one end aligning)
 /// FIXME: not used, need to think what makes an alignment consistent
 /// (how about : total number of matches shouldn't exceed sequence length?)
-bool
-isConsistentAlignment(const JumpAlignmentResult<int>& res, const unsigned minAlignContext = 0);
+//bool
+//isConsistentAlignment(const JumpAlignmentResult<int>& res, const unsigned minAlignContext = 0);
 
+
+/// extend the somatic contig by padding the flanking regions of the aligned reference regions on each end
+void
+getExtendedContig(
+    const JumpAlignmentResult<int>& align,
+    const std::string& querySeq,
+    const std::string* ref1Seq,
+    const std::string* ref2Seq,
+    std::string& extendedContig);
+
+
+/// extend the somatic contig by padding the flanking regions of the aligned reference regions on each end
+void
+getExtendedContig(
+    const AlignmentResult<int>& alignment,
+    const std::string& querySeq,
+    const std::string* refSeq,
+    std::string& extendedContig);
 
 /// given a jump alignment and query sequence, return the bp1,insert and bp2 query sequences
 ///
@@ -126,33 +126,6 @@ getFwdStrandInsertSegment(
     std::string& insertSeq);
 
 
+/// TODO: document this if it serves a general purpose, or make private to AssembleSVBreakend
 int
 estimateBreakPointPos(const Alignment& al, const unsigned refOffset);
-
-
-
-struct ReadScorer : private boost::noncopyable
-{
-
-    /** Instance getter
-     *
-    */
-    static const ReadScorer& get()
-    {
-        static const ReadScorer rs;
-        return rs;
-    }
-
-
-    double
-    getSemiAlignedMetric(const ALIGNPATH::path_t& apath, const uint8_t* qual) const;
-
-private:
-    explicit
-    ReadScorer();
-    ~ReadScorer() {}
-
-    enum { MAX_Q = 128 };
-    const int _qmin;
-    double _logpcorrectratio[MAX_Q];
-};

@@ -63,12 +63,28 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         mantaStatsBin=joinFile(libexecDir,"GetAlignmentStats")
         mantaGraphBin=joinFile(libexecDir,"EstimateSVLoci")
         mantaGraphMergeBin=joinFile(libexecDir,"MergeSVLoci")
+        mantaGraphCheckBin=joinFile(libexecDir,"CheckSVLoci")
         mantaHyGenBin=joinFile(libexecDir,"GenerateSVCandidates")
         mantaGraphStatsBin=joinFile(libexecDir,"SummarizeSVLoci")
         mantaStatsSummaryBin=joinFile(libexecDir,"SummarizeAlignmentStats")
 
         mantaChromDepth=joinFile(libexecDir,"getBamAvgChromDepth.py")
         mantaSortVcf=joinFile(libexecDir,"sortVcf.py")
+
+        # default memory request per process-type
+        #
+        # where different values are provided for SGE and local runs note:
+        #  1. for SGE the memory limits must be greater than the highest memory use ever
+        #      expected in a production run. The consequence of exceeding this limit is a failed
+        #      run.
+        #   2. for localhost the memory usage should be at least above the highest mean memory
+        #       use ever expected in a production run. The consequence of exceeding the mean is
+        #       a slow run due to swapping.
+        #
+        estimateMemMb=2*1024
+        mergeMemMb=4*1024
+        hyGenSGEMemMb=4*1024
+        hyGenLocalMemMb=2*1024
 
         return cleanLocals(locals())
 

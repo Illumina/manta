@@ -20,8 +20,10 @@
 #include "EdgeOptions.hh"
 #include "manta/Program.hh"
 #include "options/AlignmentFileOptions.hh"
+#include "options/CallOptionsDiploid.hh"
+#include "options/CallOptionsShared.hh"
+#include "options/CallOptionsSomatic.hh"
 #include "options/ReadScannerOptions.hh"
-#include "options/SomaticCallOptions.hh"
 #include "options/SVRefinerOptions.hh"
 
 #include <string>
@@ -31,14 +33,18 @@
 struct GSCOptions
 {
     GSCOptions() :
-        isSkipAssembly(false)
+        isVerbose(false),
+        isSkipAssembly(false),
+        minScoredVariantSize(51)
     {}
 
     AlignmentFileOptions alignFileOpt;
     EdgeOptions edgeOpt;
     ReadScannerOptions scanOpt;
     SVRefinerOptions refineOpt;
-    SomaticCallOptions somaticOpt;
+    CallOptionsShared callOpt;
+    CallOptionsDiploid diploidOpt;
+    CallOptionsSomatic somaticOpt;
 
     std::string graphFilename;
     std::string referenceFilename;
@@ -47,13 +53,19 @@ struct GSCOptions
     std::string truthVcfFilename;
 
     std::string candidateOutputFilename;
+    std::string diploidOutputFilename;
     std::string somaticOutputFilename;
 
+    bool isVerbose; ///< provide some high-level log info to assist in debugging
+
     bool isSkipAssembly; ///< if true, skip assembly and run a low-resolution, breakdancer-like subset of the workflow
+
+    unsigned minScoredVariantSize; ///< min size for scoring and scored output following candidate generation
 };
 
 
 void
-parseGSCOptions(const manta::Program& prog,
-                int argc, char* argv[],
-                GSCOptions& opt);
+parseGSCOptions(
+    const manta::Program& prog,
+    int argc, char* argv[],
+    GSCOptions& opt);

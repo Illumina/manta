@@ -31,7 +31,7 @@ include ("${MANTA_CXX_CONFIGURE_CMAKE}")
 
 add_custom_target(MANTA_CPPCHECK
     ALL
-    COMMAND ${MANTA_SOURCE_QC_DIR}/run_cppcheck.bash ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND ${PYTHON_EXECUTABLE} ${MANTA_SOURCE_QC_DIR}/run_cppcheck.py ${CMAKE_CURRENT_SOURCE_DIR}
     )
 
 add_dependencies(MANTA_OPT MANTA_CPPCHECK)

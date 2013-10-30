@@ -69,7 +69,7 @@ def which(searchFile) :
 
     result should be the similar to *nix 'which' utility
     """
-    for searchPath in os.environ["PATH"].split(":"):
+    for searchPath in os.environ["PATH"].split(os.pathsep):
         test=os.path.join(searchPath,searchFile)
         if os.path.isfile(test): return test
 
@@ -141,12 +141,12 @@ def getChromIntervals(chromOrder,chromSizes,segmentSize) :
     chromOrder - iterable object of chromosome names
     chromSizes - a hash of chrom sizes
 
-    return chrom,start,end,chromSegment
+    return chromIndex,chromLabel,start,end,chromSegment
     where start and end are formated for use with samtools
     chromSegment is 0-indexed number of segment along each chromosome
     """
-    for chrom in chromOrder :
-        chromSize=chromSizes[chrom]
+    for (chromIndex, chromLabel) in enumerate(chromOrder) :
+        chromSize=chromSizes[chromLabel]
         chromSegments=1+((chromSize-1)/segmentSize)
         segmentBaseSize=chromSize/chromSegments
         nPlusOne=chromSize%chromSegments
@@ -155,7 +155,7 @@ def getChromIntervals(chromOrder,chromSizes,segmentSize) :
             segSize=segmentBaseSize
             if i<nPlusOne : segSize += 1
             end=min(start+(segSize-1),chromSize)
-            yield (chrom,start,end,i)
+            yield (chromIndex,chromLabel,start,end,i)
             start=end+1
 
 

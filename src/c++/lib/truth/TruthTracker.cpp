@@ -429,6 +429,8 @@ bool TruthTracker::loadTruth(const std::string& vcfFilePath,
 
 /*****************************************************************************/
 
+#ifdef EASY_ITER_OVER_NODE_EDGES
+
 void dumpLocusSetStats(const SVLocusSet& svLocusSet)
 {
     std::cerr << "Locus Set Structure & Stats" << std::endl;
@@ -438,7 +440,7 @@ void dumpLocusSetStats(const SVLocusSet& svLocusSet)
     typedef std::vector<unsigned int> FreqTable;
     typedef FreqTable::value_type FreqTableEle;
 
-    typedef SVLocusNode::edges_type::value_type NodeEdgeEle;
+    typedef SVLocusEdgesType::value_type NodeEdgeEle;
 
     FreqTable numLocusNodesFreqs;
 
@@ -465,6 +467,14 @@ void dumpLocusSetStats(const SVLocusSet& svLocusSet)
                       << node.size() << " Edges [to other Nodes";
             totalNumEdges += node.size();
 
+            // FIXME : Currently Node is no longer iterable and would need
+            //         to use EdgeManager to restore functionality
+            //         but this may be a temporary situation.
+            //         For now commenting out everything that relies directly
+            //         or indirectly on iterable Node with an
+            //         EASY_ITER_OVER_NODE_EDGES ifdef.
+            // const SVLocusEdgeManager nodeManager(node.getEdgeManager());
+            // nodeManager.getMap()
             BOOST_FOREACH(const NodeEdgeEle& nodeEdge, node)
             {
                 std::cerr << " " << nodeEdge.first;
@@ -497,6 +507,8 @@ void dumpLocusSetStats(const SVLocusSet& svLocusSet)
               << std::endl;
 }
 
+#endif
+
 /*****************************************************************************/
 
 typedef std::vector<SVLocusSet::NodeAddressType> NodeAddrVec;
@@ -527,12 +539,15 @@ bool getMatchedNodes(const SVLocusSet& svLocusSet,
     return !matchedNodeAddrVec.empty();
 }
 
+
 /*****************************************************************************/
+
+#ifdef EASY_ITER_OVER_NODE_EDGES
 
 bool hasABLink(const SVLocus& svLocus,
                const NodeIndexType nodeIndA, const NodeIndexType nodeIndB)
 {
-    typedef SVLocusNode::edges_type::value_type NodeEdgeEle;
+    typedef SVLocusEdgesType::value_type NodeEdgeEle;
     const SVLocusNode& nodeA(svLocus.getNode(nodeIndA));
 
     BOOST_FOREACH(const NodeEdgeEle& nodeEdge, nodeA)
@@ -546,7 +561,11 @@ bool hasABLink(const SVLocus& svLocus,
     return false;
 }
 
+#endif
+
 /*****************************************************************************/
+
+#ifdef EASY_ITER_OVER_NODE_EDGES
 
 bool pairBrkptNodes(const SVLocusSet& svLocusSet,
                     const NodeAddrVec& matchedNodeAddrVecA,
@@ -613,7 +632,11 @@ bool pairBrkptNodes(const SVLocusSet& svLocusSet,
     return false;
 }
 
+#endif
+
 /*****************************************************************************/
+
+#ifdef EASY_ITER_OVER_NODE_EDGES
 
 bool TruthTracker::evalLocusSet(const SVLocusSet& svLocusSet)
 {
@@ -710,6 +733,8 @@ bool TruthTracker::evalLocusSet(const SVLocusSet& svLocusSet)
 
     return true;
 }
+
+#endif
 
 /*****************************************************************************/
 

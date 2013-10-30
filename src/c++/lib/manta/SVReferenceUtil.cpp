@@ -15,9 +15,12 @@
 /// \author Chris Saunders
 ///
 
+#include "common/Exceptions.hh"
 #include "manta/SVReferenceUtil.hh"
 
+
 #include "blt_util/samtools_fasta_util.hh"
+
 
 
 
@@ -55,8 +58,13 @@ getBpReferenceInterval(
 {
     const bam_header_info::chrom_info& chromInfo(header.chrom_data[bpInterval.tid]);
 
+    const pos_t chromSize(static_cast<pos_t>(chromInfo.length));
+
+    assert((bpInterval.range.begin_pos() <= chromSize) && "SV range starts after the end of the chromosome");
+    assert((bpInterval.range.end_pos() >= 0) && "SV range ends before the start of the chromosome");
+
     const pos_t beginPos(std::max(0, (bpInterval.range.begin_pos()-extraRefEdgeSize)));
-    const pos_t endPos(std::min(static_cast<pos_t>(chromInfo.length), (bpInterval.range.end_pos()+extraRefEdgeSize)));
+    const pos_t endPos(std::min(chromSize, (bpInterval.range.end_pos()+extraRefEdgeSize)));
 
     refInterval.tid = bpInterval.tid;
     refInterval.range.set_begin_pos(beginPos);
@@ -84,7 +92,23 @@ getIntervalReferenceSegment(
     // but the ref function below takes closed-closed endpoints, so we subract one from endPos
     get_standardized_region_seq(referenceFilename, chrom, range.begin_pos(), (range.end_pos()-1), intervalRefSeq.seq());
 
-    assert(static_cast<pos_t>(intervalRefSeq.seq().size()) == (static_cast<pos_t>(range.size())));
+    if (intervalRefSeq.seq().size() != range.size())
+    {
+        using namespace illumina::common;
+
+        std::ostringstream oss;
+        oss << "getIntervalReferenceSegment: Unexpected reference sequence\n"
+            << "\t" << referenceFilename
+            << "\t" << chrom
+            << "\t" << range
+            << "\n";
+
+        oss << "\texpected_size: " << range.size()
+            << "\treturned_size: " << intervalRefSeq.seq().size()
+            << "\n";
+
+        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+    }
 }
 
 

@@ -74,18 +74,13 @@ void
 EdgeRetrieverBin::
 jumpToFirstEdge()
 {
-    const bool isFilterNodes(_graphNodeMaxEdgeCount>0);
+    typedef SVLocusEdgesType::const_iterator edgeiter_t;
 
-    bool isLastFiltered(false);
+    const bool isFilterNodes(_graphNodeMaxEdgeCount>0);
 
     // first catch headCount up to the begin edge if required:
     while (true)
     {
-        if ((isLastFiltered) && (_edge.locusIndex == _set.size()))
-        {
-            _headCount = (_endCount + 1);
-            return;
-        }
         assert(_edge.locusIndex<_set.size());
 
         const SVLocus& locus(_set.getLocus(_edge.locusIndex));
@@ -96,18 +91,17 @@ jumpToFirstEdge()
             while (true)
             {
                 const SVLocusNode& node1(locus.getNode(_edge.nodeIndex1));
-                const bool isEdgeFilterNode1(isFilterNodes && (node1.edges.size()>_graphNodeMaxEdgeCount));
+                const bool isEdgeFilterNode1(isFilterNodes && (node1.size()>_graphNodeMaxEdgeCount));
 
-                typedef SVLocusNode::edges_type::const_iterator edgeiter_t;
-                edgeiter_t edgeIter(node1.edges.lower_bound(_edge.nodeIndex1));
-                const edgeiter_t edgeiterEnd(node1.edges.end());
+                const SVLocusEdgeManager node1Manager(node1.getEdgeManager());
+                edgeiter_t edgeIter(node1Manager.getMap().lower_bound(_edge.nodeIndex1));
+                const edgeiter_t edgeiterEnd(node1Manager.getMap().end());
 
                 for (; edgeIter != edgeiterEnd; ++edgeIter)
                 {
-                    isLastFiltered=false;
-                    unsigned edgeCount(edgeIter->second.count);
+                    unsigned edgeCount(edgeIter->second.getCount());
                     const bool isSelfEdge(edgeIter->first == _edge.nodeIndex1);
-                    if (! isSelfEdge) edgeCount += locus.getEdge(edgeIter->first,_edge.nodeIndex1).count;
+                    if (! isSelfEdge) edgeCount += locus.getEdge(edgeIter->first,_edge.nodeIndex1).getCount();
                     _headCount += edgeCount;
                     if (_headCount > _beginCount)
                     {
@@ -117,13 +111,12 @@ jumpToFirstEdge()
                         if (isEdgeFilterNode1)
                         {
                             const SVLocusNode& node2(locus.getNode(_edge.nodeIndex2));
-                            const bool isEdgeFilterNode2(node2.edges.size()>_graphNodeMaxEdgeCount);
+                            const bool isEdgeFilterNode2(node2.size()>_graphNodeMaxEdgeCount);
                             if (isEdgeFilterNode2)
                             {
 #ifdef DEBUG_EDGER
                                 log_os << "EDGER: jump filtering @ hc: " << _headCount << "\n";
 #endif
-                                isLastFiltered=true;
                                 continue;
                             }
                         }
@@ -148,7 +141,7 @@ void
 EdgeRetrieverBin::
 advanceEdge()
 {
-    typedef SVLocusNode::edges_type::const_iterator edgeiter_t;
+    typedef SVLocusEdgesType::const_iterator edgeiter_t;
 
     const bool isFilterNodes(_graphNodeMaxEdgeCount>0);
 
@@ -169,17 +162,16 @@ advanceEdge()
         while (_edge.nodeIndex1<locus.size())
         {
             const SVLocusNode& node1(locus.getNode(_edge.nodeIndex1));
-            const bool isEdgeFilterNode1(isFilterNodes && (node1.edges.size()>_graphNodeMaxEdgeCount));
-
-            edgeiter_t edgeIter(node1.edges.lower_bound(_edge.nodeIndex2));
-            const edgeiter_t edgeIterEnd(node1.edges.end());
+            const bool isEdgeFilterNode1(isFilterNodes && (node1.size()>_graphNodeMaxEdgeCount));
+            const SVLocusEdgeManager node1Manager(node1.getEdgeManager());
+            edgeiter_t edgeIter(node1Manager.getMap().lower_bound(_edge.nodeIndex2));
+            const edgeiter_t edgeIterEnd(node1Manager.getMap().end());
 
             for (; edgeIter != edgeIterEnd; ++edgeIter)
             {
-                isLastFiltered=false;
-                unsigned edgeCount(edgeIter->second.count);
+                unsigned edgeCount(edgeIter->second.getCount());
                 const bool isSelfEdge(edgeIter->first == _edge.nodeIndex1);
-                if (! isSelfEdge) edgeCount += locus.getEdge(edgeIter->first,_edge.nodeIndex1).count;
+                if (! isSelfEdge) edgeCount += locus.getEdge(edgeIter->first,_edge.nodeIndex1).getCount();
                 _headCount += edgeCount;
                 _edge.nodeIndex2 = edgeIter->first;
 
@@ -187,7 +179,7 @@ advanceEdge()
                 if (isEdgeFilterNode1)
                 {
                     const SVLocusNode& node2(locus.getNode(_edge.nodeIndex2));
-                    const bool isEdgeFilterNode2(node2.edges.size()>_graphNodeMaxEdgeCount);
+                    const bool isEdgeFilterNode2(node2.size()>_graphNodeMaxEdgeCount);
                     if (isEdgeFilterNode2)
                     {
 #ifdef DEBUG_EDGER

@@ -11,12 +11,11 @@
 // <https://github.com/sequencing/licenses/>
 //
 
-/// \file
-
+///
 /// \author Chris Saunders
 ///
-#ifndef __PROB_UTIL_HH
-#define __PROB_UTIL_HH
+
+#pragma once
 
 #include <cassert>
 #include <cmath>
@@ -33,7 +32,6 @@ prob_comp(It begin,
           const It end,
           const unsigned cgt)
 {
-
     typedef typename std::iterator_traits<It>::value_type float_type;
 
     unsigned i(0);
@@ -53,7 +51,6 @@ normalize_ln_distro(const It pbegin,
                     const It pend,
                     unsigned& max_idx)
 {
-
     typedef typename std::iterator_traits<It>::value_type float_type;
 
     // scale and exp pprob values:
@@ -100,7 +97,6 @@ opt_normalize_ln_distro(const It pbegin,
                         const It2 pred_begin,
                         unsigned& max_idx)
 {
-
     typedef typename std::iterator_traits<It>::value_type float_type;
 
     max_idx=0;
@@ -183,7 +179,6 @@ check_ln_distro(It i,
                 const double tol = 0.00001,
                 const double target = 1)
 {
-
     unsigned n(1);
     double sum(0);
     for (; i!=i_end; ++i,++n)
@@ -201,6 +196,3 @@ check_ln_distro(It i,
     }
     return sum;
 }
-
-
-#endif

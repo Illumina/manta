@@ -31,7 +31,6 @@ source $script_dir/common.bash
 
 BUILD_DIR=${INSTALL_DIR}/build
 BIN_DIR=${INSTALL_DIR}/bin
-LIB_DIR=${INSTALL_DIR}/lib
 INCLUDE_DIR=${INSTALL_DIR}/include
 
 CMAKE_MAJOR=2
@@ -49,7 +48,7 @@ CMAKE_DIR=cmake-$CMAKE_MAJOR.$CMAKE_MINOR
 common_options $@
 
 if [[ $CLEAN ]] ; then
-    echo removing $SOURCE_DIR >&2
+    ilog "removing $SOURCE_DIR"
     rm -rf $SOURCE_DIR
     rm -rf ${INSTALL_DIR}/{doc,share}/$CMAKE_DIR
     rm -f ${BIN_DIR}/{ccmake,cmake,cpack,ctest}
@@ -63,22 +62,22 @@ if [[ "${AVAILABLE_CMAKE_VERSION}" =~ ^cmake\ version\ ([0-9]+)\.([0-9]+)\.([0-9
     MINOR=${BASH_REMATCH[2]}
     PATCH=${BASH_REMATCH[3]}
     if [[ "$MAJOR" -eq "$CMAKE_MAJOR" && ( "$MINOR" -gt "$CMAKE_MINOR" || "$MINOR" -eq "$CMAKE_MINOR" && "$PATCH" -ge "$CMAKE_PATCH_MIN"  ) ]] ; then
-        echo "${BASH_REMATCH[0]} (>= $CMAKE_REQUIRED) is already installed" >&2
-        echo nothing to be done >&2
-        exit 1
+        ilog "${BASH_REMATCH[0]} (>= $CMAKE_REQUIRED) is already installed"
+        echo "cmake"
+        exit 0
     fi
 fi
 
 OLD_CMAKE_VERSION=`${BIN_DIR}/cmake --version 2> /dev/null`;
 if [[ $OLD_CMAKE_VERSION == "cmake version $TARBALL_VERSION" && ! $FORCE ]] ; then
-    echo cmake version \"$TARBALL_VERSION\" is already installed at ${BIN_DIR}/cmake >&2
-    echo nothing to be done >&2
+    ilog "cmake version \"$TARBALL_VERSION\" is already installed at ${BIN_DIR}/cmake"
+    echo "${BIN_DIR}/cmake"
     exit 0
 elif [[ $OLD_CMAKE_VERSION != "" ]] ; then
-    echo unable to install cmake version \"$TARBALL_VERSION\" in ${BIN_DIR} >&2
-    echo cmake version \"$OLD_CMAKE_VERSION\" is in the way. >&2
-    echo Please use an empty location to build the product. >&2
-    exit 2
+    ilog "ERROR: unable to install cmake version \"$TARBALL_VERSION\" in ${BIN_DIR}"
+    ilog "\tcmake version \"$OLD_CMAKE_VERSION\" is in the way."
+    ilog "\tPlease use an empty location to build the product."
+    exit 1
 fi
 
 
@@ -89,14 +88,15 @@ rm -rf $SOURCE_DIR
 
 common_create_source
 
-echo "Extracted cmake version $TARBALL_VERSION source code into $SOURCE_DIR" >&2
-cmd="cd $SOURCE_DIR && ./bootstrap --prefix=\"${INSTALL_DIR}\" --parallel=\"$PARALLEL\" && make -j \"$PARALLEL\" && make install"
-echo "Installing cmake using: '$cmd'" >&2
-eval $cmd
+ilog "Extracted cmake version $TARBALL_VERSION source code into $SOURCE_DIR"
+cmd="cd $SOURCE_DIR && ./bootstrap --prefix=\"${INSTALL_DIR}\" --parallel=$PARALLEL && make -j $PARALLEL && make install"
+ilog "Installing cmake using: '$cmd'"
+eval $cmd 1>&2
 
-if [ $? != 0 ] ; then echo "cmake: build failed: Terminating..." >&2 ; exit 2 ; fi
+if [ $? != 0 ] ; then ilog "ERROR: cmake build failed: Terminating..."; exit 1 ; fi
 
-echo "Cleaning up ${SOURCE_DIR}" >&2
+ilog "Cleaning up ${SOURCE_DIR}"
 rm -rf ${SOURCE_DIR}
 
-echo CMake installed successfully >&2
+ilog "CMake-$TARBALL_VERSION installed successfully"
+echo "${BIN_DIR}/cmake"

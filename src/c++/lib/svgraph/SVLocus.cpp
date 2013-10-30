@@ -27,31 +27,6 @@
 
 
 
-std::ostream&
-operator<<(std::ostream& os, const SVLocusEdge& edge)
-{
-    os << "Edgecount: " << edge.count;
-    return os;
-}
-
-
-
-void
-SVLocusNode::
-getEdgeException(
-    const NodeIndexType toIndex) const
-{
-    using namespace illumina::common;
-
-    std::ostringstream oss;
-    oss << "ERROR: SVLocusNode::getEdge() no edge exists\n";
-    oss << "\tfrom node: " << (*this) << "\n";
-    oss << "\tto_node index: " << toIndex << "\n";
-    BOOST_THROW_EXCEPTION(LogicException(oss.str()));
-}
-
-
-
 void
 SVLocus::
 nodeHurl(const NodeIndexType nodePtr) const
@@ -69,7 +44,8 @@ void
 SVLocus::
 mergeNode(
     const NodeIndexType fromIndex,
-    const NodeIndexType toIndex)
+    const NodeIndexType toIndex,
+    flyweight_observer_t* obs)
 {
     using namespace illumina::common;
 
@@ -88,7 +64,7 @@ mergeNode(
     log_os << logtag << " BEFORE toNode: " << toNode;
 #endif
 
-    if (fromNode.interval.tid != toNode.interval.tid)
+    if (fromNode.getInterval().tid != toNode.getInterval().tid)
     {
         std::ostringstream oss;
         oss << "ERROR: Attempting to merge nodes on different chromosomes\n"
@@ -98,34 +74,36 @@ mergeNode(
     }
 
     // store node relationship before merging regions:
-    const bool isFromRegionRightmost(toNode.interval.range < fromNode.interval.range);
+    const bool isFromRegionRightmost(toNode.getInterval().range < fromNode.getInterval().range);
 
-    notifyDelete(toIndex);
+    notifyDelete(obs,toIndex);
 
-    toNode.interval.range.merge_range(fromNode.interval.range);
-    if     ((toNode.count==0) && (fromNode.count!=0))
+    toNode.setIntervalRange(merge_range(toNode.getInterval().range,fromNode.getInterval().range));
+    const bool isToCount(toNode.isOutCount());
+    const bool isFromCount(fromNode.isOutCount());
+    if     ((! isToCount) && (isFromCount))
     {
-        toNode.evidenceRange = fromNode.evidenceRange;
+        toNode.setEvidenceRange(fromNode.getEvidenceRange());
     }
-    else if ((fromNode.count==0) && (toNode.count!=0))
+    else if ((! isFromCount) && (isToCount))
     {
         // pass (keep toNode value as is
     }
     else
     {
-        toNode.evidenceRange.merge_range(fromNode.evidenceRange);
+        toNode.setEvidenceRange(merge_range(toNode.getEvidenceRange(),fromNode.getEvidenceRange()));
     }
-    toNode.count += fromNode.count;
 
-    notifyAdd(toIndex);
+    notifyAdd(obs,toIndex);
 
     // now take all fromNode edges and 'redirect' them to the toNode index
     //
-    BOOST_FOREACH(edges_type::value_type& fromNodeEdgeIter, fromNode)
+    const SVLocusEdgeManager edgeMap(fromNode.getEdgeManager());
+    BOOST_FOREACH(const SVLocusEdgesType::value_type& fromNodeEdgeIter, edgeMap.getMap())
     {
         // alias value_type components (not required, but makes the logic easier to follow):
         const NodeIndexType& fromNodeEdgeIndex(fromNodeEdgeIter.first);
-        SVLocusEdge& fromNodeEdge(fromNodeEdgeIter.second);
+        const SVLocusEdge* fromNodeEdgePtr(&(fromNodeEdgeIter.second));
 
 #ifdef DEBUG_SVL
         // is this edge between the to and from nodes?
@@ -134,22 +112,21 @@ mergeNode(
         log_os << logtag << " handle fromEdge: " << _index << ":" << fromNodeEdgeIndex << " isToFromEdge: " << isToFromEdge << "\n";
 #endif
 
-
         // is this a self edge of the from node?
-        const bool isSelfFromEdge(fromNodeEdgeIter.first == fromIndex);
+        const bool isSelfFromEdge(fromNodeEdgeIndex == fromIndex);
 
         if (isSelfFromEdge)
         {
             // self-edge needs to be handled as a special case:
-            toNode.mergeEdge(toIndex,fromNodeEdgeIter.second);
+            toNode.mergeEdge(toIndex,*(fromNodeEdgePtr));
             continue;
         }
 
         // Check for the special case when there is an edge between from and to, in this case
         // the counts have to be handled so that counts in each region still approximate
         // fragment support. Normally (the chimera case) -- a single fragment will create
-        // edges and nodes with weight one. If this is a non-chimera and the nodes collide and
-        // merge, we want to prevent the evidence from being doubled when it should not be.
+        // edges and nodes with weight X. If this is a non-chimera and the nodes collide and
+        // merge, we want to prevent the evidence from being doubled to 2X when it should not be.
         //
         // To achieve this, we remove the edge counts from the 'right'-most region of the two nodes being merged. This is an
         // approximate solution, but very simple to add into the graph without blowing up per-node/edge storage.
@@ -159,36 +136,39 @@ mergeNode(
         {
             if (isFromRegionRightmost)
             {
-                toNode.count -= fromNodeEdge.count;
-                fromNodeEdge.count = 0;
+                fromNode.clearEdge(fromNodeEdgeIndex);
+
+                // we've updated the supposedly 'const' edge via a cheat: the clearEdge function
+                // because of this we have to update the edge reference:
+                fromNodeEdgePtr=&(fromNode.getEdge(fromNodeEdgeIndex));
             }
             else
             {
-                edges_type::iterator toNodeEdgeIter(toNode.edges.find(fromIndex));
-                assert(toNodeEdgeIter != toNode.edges.end());
-                toNode.count -= toNodeEdgeIter->second.count;
-                toNodeEdgeIter->second.count = 0;
+                toNode.clearEdge(fromIndex);
             }
         }
 
         // update local edge:
-        toNode.mergeEdge(fromNodeEdgeIndex,fromNodeEdge);
+        toNode.mergeEdge(fromNodeEdgeIndex,*(fromNodeEdgePtr));
 
         // update remote inputNodeEdgeIter
         {
             SVLocusNode& remoteNode(getNode(fromNodeEdgeIndex));
-            edges_type& remoteEdges(remoteNode.edges);
-            edges_type::iterator oldRemoteIter(remoteEdges.find(fromIndex));
-            if (oldRemoteIter == remoteEdges.end())
+            try
             {
+                const SVLocusEdge remoteEdge(remoteNode.getEdge(fromIndex));
+                remoteNode.mergeEdge(toIndex, remoteEdge);
+            }
+            catch (illumina::common::ExceptionData& e)
+            {
+                // decorate an in-flight exception:
                 std::ostringstream oss;
                 oss << "ERROR: Can't find return edge to node index: " << _index << ":" << fromIndex << " in remote node index: " << _index << ":" << fromNodeEdgeIter.first << "\n"
                     << "\tlocal_node: " << fromNode
                     << "\tremote_node: " << remoteNode;
-                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                e << illumina::common::ExceptionMsg(oss.str());
+                throw;
             }
-
-            remoteNode.mergeEdge(toIndex, oldRemoteIter->second);
         }
     }
 
@@ -224,10 +204,11 @@ isNoiseNode(
     const NodeIndexType nodeIndex) const
 {
     const SVLocusNode& node(getNode(nodeIndex));
-    BOOST_FOREACH(const SVLocusNode::edges_type::value_type& edge, node)
+    const SVLocusEdgeManager edgeMap(node.getEdgeManager());
+    BOOST_FOREACH(const SVLocusEdgesType::value_type& edge, edgeMap.getMap())
     {
-        if (edge.second.count >= minMergeEdgeCount) return false;
-        if (getEdge(edge.first,nodeIndex).count >= minMergeEdgeCount) return false;
+        if (edge.second.getCount() >= minMergeEdgeCount) return false;
+        if (getEdge(edge.first,nodeIndex).getCount() >= minMergeEdgeCount) return false;
     }
     return true;
 }
@@ -250,35 +231,38 @@ cleanNodeCore(
     SVLocusNode& queryNode(getNode(nodeIndex));
 
     std::vector<NodeIndexType> eraseEdges;
-    BOOST_FOREACH(edges_type::value_type& edgeIter, queryNode)
+    const SVLocusEdgeManager edgeMap(queryNode.getEdgeManager());
+    BOOST_FOREACH(const SVLocusEdgesType::value_type& edgeIter, edgeMap.getMap())
     {
-        if (0 != edgeIter.second.count)
+        const SVLocusEdge* edgePtr(&(edgeIter.second));
+        if (0 != edgePtr->getCount())
         {
-            if (edgeIter.second.count < minMergeEdgeCount)
+            if (edgePtr->getCount() < minMergeEdgeCount)
             {
                 // clean criteria met -- go ahead and erase edge count:
-                assert(queryNode.count>=edgeIter.second.count);
-                totalCleaned += edgeIter.second.count;
-                queryNode.count -= edgeIter.second.count;
-                edgeIter.second.count = 0;
+                totalCleaned += edgePtr->getCount();
+                queryNode.clearEdge(edgeIter.first);
+
+                // we've just snuck around the const iterator by calling the clearEdge function against this edge, so we have to fix this by hand:
+                edgePtr=&(queryNode.getEdge(edgeIter.first));
             }
         }
 
-        if (0 == edgeIter.second.count)
+        if (0 == edgePtr->getCount())
         {
             // if the out edge count is zero, see if the in-edge count is also zero --
             // if so, erase edge
             //
             const SVLocusEdge& fromRemoteEdge(getEdge(edgeIter.first,nodeIndex));
-            if (0 == fromRemoteEdge.count)
+            if (0 == fromRemoteEdge.getCount())
             {
                 eraseEdges.push_back(edgeIter.first);
 
                 // also check to see if the remote node will be empty after
                 // this edge deletion:
                 const SVLocusNode& remoteNode(getNode(edgeIter.first));
-                if ((0 == remoteNode.count) &&
-                    (1 == remoteNode.edges.size()))
+                if ((! remoteNode.isOutCount()) &&
+                    (1 == remoteNode.size()))
                 {
                     emptyNodes.insert(edgeIter.first);
                 }
@@ -292,11 +276,11 @@ cleanNodeCore(
 #ifdef DEBUG_SVL
         log_os << logtag << " deleting edge: " << _index << ":" << nodeIndex << "->" << _index << ":" << toIndex << "\n";
 #endif
-        clearEdgePair(nodeIndex,toIndex);
+        eraseEdgePair(nodeIndex,toIndex);
     }
 
     // if true add the target node to the erase list:
-    if ((0 == queryNode.edges.size()) && (0 == queryNode.count))
+    if ((queryNode.empty()) && (! queryNode.isOutCount()))
     {
         emptyNodes.insert(nodeIndex);
     }
@@ -326,11 +310,12 @@ unsigned
 SVLocus::
 cleanNode(
     const unsigned minMergeEdgeCount,
-    const NodeIndexType nodeIndex)
+    const NodeIndexType nodeIndex,
+    flyweight_observer_t* obs)
 {
     std::set<NodeIndexType> emptyNodes;
     const unsigned totalCleaned(cleanNodeCore(minMergeEdgeCount,nodeIndex,emptyNodes));
-    eraseNodes(emptyNodes);
+    eraseNodes(emptyNodes, obs);
     return totalCleaned;
 }
 
@@ -338,7 +323,9 @@ cleanNode(
 
 unsigned
 SVLocus::
-clean(const unsigned minMergeEdgeCount)
+clean(
+    const unsigned minMergeEdgeCount,
+    flyweight_observer_t* obs)
 {
     std::set<NodeIndexType> emptyNodes;
     unsigned totalCleaned(0);
@@ -348,7 +335,7 @@ clean(const unsigned minMergeEdgeCount)
     {
         totalCleaned += cleanNodeCore(minMergeEdgeCount,nodeIndex,emptyNodes);
     }
-    eraseNodes(emptyNodes);
+    eraseNodes(emptyNodes, obs);
     return totalCleaned;
 }
 
@@ -361,13 +348,15 @@ clearNodeEdges(NodeIndexType nodePtr)
 {
     using namespace illumina::common;
 
-#ifdef DEBUG_SVL
     static const std::string logtag("SVLocus::clearNodeEdges");
+
+#ifdef DEBUG_SVL
     log_os << logtag << " from nodeIndex: " << nodePtr << "\n";
 #endif
 
     SVLocusNode& node(getNode(nodePtr));
-    BOOST_FOREACH(edges_type::value_type& edgeIter, node)
+    const SVLocusEdgeManager edgeMap(node.getEdgeManager());
+    BOOST_FOREACH(const SVLocusEdgesType::value_type& edgeIter, edgeMap.getMap())
     {
 
 #ifdef DEBUG_SVL
@@ -377,30 +366,31 @@ clearNodeEdges(NodeIndexType nodePtr)
         if (edgeIter.first == nodePtr) continue;
 
         SVLocusNode& remoteNode(getNode(edgeIter.first));
-        edges_type& remoteEdges(remoteNode.edges);
-        edges_type::iterator thisRemoteIter(remoteEdges.find(nodePtr));
-        if (thisRemoteIter == remoteEdges.end())
+        try
+        {
+            remoteNode.eraseEdge(nodePtr);
+        }
+        catch (illumina::common::ExceptionData& e)
         {
             std::ostringstream oss;
-            oss << "ERROR: no return edge on remote node.\n";
-            oss << "\tlocal_node: " << node;
-            oss << "\tremote_node: " << remoteNode;
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            oss << "ERROR: " << logtag << " no return edge on remote node.\n"
+                << "\tlocal_node: " << node
+                << "\tremote_node: " << remoteNode;
+            e << illumina::common::ExceptionMsg(oss.str());
+            throw;
         }
-
-#ifdef DEBUG_SVL
-        log_os << logtag << " remote clearing Index: " << thisRemoteIter->first << "\n";
-#endif
-        remoteEdges.erase(thisRemoteIter);
     }
-    node.edges.clear();
+
+    node.clear();
 }
 
 
 
 void
 SVLocus::
-eraseNode(const NodeIndexType nodePtr)
+eraseNode(
+    const NodeIndexType nodePtr,
+    flyweight_observer_t* obs)
 {
     using namespace illumina::common;
 
@@ -426,46 +416,47 @@ eraseNode(const NodeIndexType nodePtr)
         //
         bool isHandleSelfEdge(false);
         SVLocusNode& fromNode(getNode(fromPtr));
-        BOOST_FOREACH(edges_type::value_type& edgeIter, fromNode)
+        const SVLocusEdgeManager edgeMap(fromNode.getEdgeManager());
+        BOOST_FOREACH(const SVLocusEdgesType::value_type& edgeIter, edgeMap.getMap())
         {
             const bool isSelfEdge(edgeIter.first == fromPtr);
 
             if (isSelfEdge)
             {
+                // have to handle this outside the foreach loop so that we
+                // don't invalidate our iterators:
                 isHandleSelfEdge=true;
                 continue;
             }
 
             SVLocusNode& remoteNode(getNode(edgeIter.first));
-            edges_type& remoteEdges(remoteNode.edges);
-            remoteEdges.insert(std::make_pair(nodePtr,getEdge(edgeIter.first,fromPtr)));
-            remoteEdges.erase(fromPtr);
+            remoteNode.moveEdge(fromPtr,nodePtr);
         }
 
         if (isHandleSelfEdge)
         {
-            fromNode.edges.insert(std::make_pair(nodePtr,getEdge(fromPtr,fromPtr)));
-            fromNode.edges.erase(fromPtr);
+            fromNode.moveEdge(fromPtr,nodePtr);
         }
 
-        notifyDelete(nodePtr);
+        notifyDelete(obs,nodePtr);
         _graph[nodePtr] = _graph[fromPtr];
-        notifyAdd(nodePtr);
+        notifyAdd(obs,nodePtr);
 
 #ifdef DEBUG_SVL
         log_os << logtag << " transfer_in: AFTER: " << getNode(nodePtr) << "\n";
 #endif
     }
-    notifyDelete(fromPtr);
+    notifyDelete(obs,fromPtr);
     _graph.resize(fromPtr);
-
 }
 
 
 
 void
 SVLocus::
-eraseNodes(const std::set<NodeIndexType>& nodes)
+eraseNodes(
+    const std::set<NodeIndexType>& nodes,
+    flyweight_observer_t* obs)
 {
 
     if (nodes.empty()) return;
@@ -473,35 +464,15 @@ eraseNodes(const std::set<NodeIndexType>& nodes)
     if (size() == nodes.size())
     {
         // if the whole locus is being erased, this is more efficient:
-        clear();
+        clear(obs);
         return;
     }
 
     // partial deletion must be done in descending order:
     BOOST_REVERSE_FOREACH(const NodeIndexType nodeIndex, nodes)
     {
-        eraseNode(nodeIndex);
+        eraseNode(nodeIndex, obs);
     }
-}
-
-
-
-std::ostream&
-operator<<(std::ostream& os, const SVLocusNode& node)
-{
-    os << "LocusNode: count: " << node.count << " " << node.interval
-       << " n_edges: " << node.size()
-       << " out_count: " << node.outCount()
-       << " evidence: " << node.evidenceRange
-       << "\n";
-
-    BOOST_FOREACH(const SVLocusNode::edges_type::value_type& edgeIter, node)
-    {
-        os << "\tEdgeTo: " << edgeIter.first
-           << " out_count: " << edgeIter.second.count
-           << "\n";
-    }
-    return os;
 }
 
 
@@ -514,9 +485,10 @@ getNodeInCount(
     const SVLocusNode& node(getNode(nodeIndex));
 
     unsigned sum(0);
-    BOOST_FOREACH(const SVLocusNode::edges_type::value_type& edgeIter, node)
+    const SVLocusEdgeManager edgeMap(node.getEdgeManager());
+    BOOST_FOREACH(const SVLocusEdgesType::value_type& edgeIter, edgeMap.getMap())
     {
-        sum += getEdge(edgeIter.first,nodeIndex).count;
+        sum += getEdge(edgeIter.first,nodeIndex).getCount();
     }
     return sum;
 }
@@ -531,18 +503,19 @@ dumpNode(
     const LocusIndexType nodeIndex) const
 {
     const SVLocusNode& node(getNode(nodeIndex));
-    os << "LocusNode: count: " << node.count << " " << node.interval
+    os << "LocusNode: " << node.getInterval()
        << " n_edges: " << node.size()
        << " out_count: " << node.outCount()
        << " in_count: " << getNodeInCount(nodeIndex)
-       << " evidence: " << node.evidenceRange
+       << " evidence: " << node.getEvidenceRange()
        << "\n";
 
-    BOOST_FOREACH(const SVLocusNode::edges_type::value_type& edgeIter, node)
+    const SVLocusEdgeManager edgeMap(node.getEdgeManager());
+    BOOST_FOREACH(const SVLocusEdgesType::value_type& edgeIter, edgeMap.getMap())
     {
         os << "\tEdgeTo: " << edgeIter.first
-           << " out_count: " << edgeIter.second.count
-           << " in_count: " << getEdge(edgeIter.first,nodeIndex).count << "\n";
+           << " out_count: " << edgeIter.second.getCount()
+           << " in_count: " << getEdge(edgeIter.first,nodeIndex).getCount() << "\n";
     }
 }
 
@@ -564,7 +537,8 @@ findConnected(
         connected.insert(nodeStack.top());
         const SVLocusNode& node(getNode(nodeStack.top()));
         nodeStack.pop();
-        BOOST_FOREACH(const edges_type::value_type& edgeIter, node)
+        const SVLocusEdgeManager edgeMap(node.getEdgeManager());
+        BOOST_FOREACH(const SVLocusEdgesType::value_type& edgeIter, edgeMap.getMap())
         {
             if (! connected.count(edgeIter.first)) nodeStack.push(edgeIter.first);
         }
@@ -588,9 +562,11 @@ mergeSelfOverlap()
             SVLocusNode& node2(getNode(revNodeIndex2));
 
             // test whether 1 and 2 intersect, if they do, merge this into a self-edge node:
-            if (! node2.interval.isIntersect(node1.interval)) continue;
-            mergeNode(revNodeIndex,revNodeIndex2);
-            eraseNode(revNodeIndex);
+            if (! node2.getInterval().isIntersect(node1.getInterval())) continue;
+
+            static flyweight_observer_t* obs(NULL);
+            mergeNode(revNodeIndex, revNodeIndex2, obs);
+            eraseNode(revNodeIndex, obs);
             break;
         }
     }
@@ -612,24 +588,10 @@ checkState(const bool isCheckConnected) const
         const SVLocusNode& node(getNode(nodeIndex));
 
         // check that that every edge has a return path:
-        BOOST_FOREACH(const edges_type::value_type& edgeIter, node)
+        const SVLocusEdgeManager edgeMap(node.getEdgeManager());
+        BOOST_FOREACH(const SVLocusEdgesType::value_type& edgeIter, edgeMap.getMap())
         {
             getEdge(edgeIter.first,nodeIndex);
-        }
-
-        // check that node and edge counts are consistent:
-        unsigned edgeCount(0);
-        BOOST_FOREACH(const edges_type::value_type& edgeIter, node)
-        {
-            edgeCount += edgeIter.second.count;
-        }
-
-        if (edgeCount != node.count)
-        {
-            std::ostringstream oss;
-            oss << "ERROR: SVLocusNode " << _index << ":" << nodeIndex << " has inconsistent counts. NodeCount: " << node.count << " EdgeCount: " << edgeCount << "\n";
-            oss << "\tnode: " << node;
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
         }
     }
 

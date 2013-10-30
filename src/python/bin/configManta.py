@@ -50,27 +50,28 @@ You must specify a BAM file for at least one sample.
     def addWorkflowGroupOptions(self,group) :
         group.add_option("--normalBam", type="string",dest="normalBam",metavar="FILE",
                          help="Normal sample BAM file. [required] (no default)")
-        group.add_option("--tumorBam", type="string",dest="tumorBam",metavar="FILE",
+        group.add_option("--tumorBam","--tumourBam", type="string",dest="tumorBam",metavar="FILE",
                           help="Tumor sample BAM file. [optional] (no default)")
 #         group.add_option("--aligner", type="string",dest="alignerMode",metavar="ALIGNER",
 #                          help="Aligner type. Accepted option are {%s} [required] (no default)" % (",".join(['%s' % (x) for x in self.validAlignerModes])))
         group.add_option("--exome", dest="isExome", action="store_true",
-                         help="Turn off depth filters which don't make sense for exome or other targeted output.")
+                         help="Set options for WES input: turn off depth filters")
+        group.add_option("--rna", dest="isRNA", action="store_true",
+                         help="Set options for RNA-Seq input: turn off depth filters and don't treat anomalous reads as SV evidence when the proper-pair bit is set.")
+        group.add_option("--referenceFasta",type="string",dest="referenceFasta",metavar="FILE",
+                         help="samtools-indexed reference fasta file [required] (default: %default)")
+
+        MantaWorkflowOptionsBase.addWorkflowGroupOptions(self,group)
+
+
+    def addExtendedGroupOptions(self,group) :
         group.add_option("--useExistingAlignStats",
                          dest="useExistingAlignStats", action="store_true",
                          help="Use pre-calculated alignment statistics.")
         group.add_option("--useExistingChromDepths",
                          dest="useExistingChromDepths", action="store_true",
                          help="Use pre-calculated chromosome depths.")
-        # TODO:
-        # need argument to set the workflow to either ISAAC or bwa mode
 
-        MantaWorkflowOptionsBase.addWorkflowGroupOptions(self,group)
-
-
-    def addExtendedGroupOptions(self,group) :
-        group.add_option("--referenceFasta",type="string",dest="referenceFasta",metavar="FILE",
-                         help="samtools-indexed reference fasta file [required] (default: %default)")
         MantaWorkflowOptionsBase.addExtendedGroupOptions(self,group)
 
 
@@ -81,6 +82,7 @@ You must specify a BAM file for at least one sample.
             'alignerMode' : "isaac",
             'runDir' : 'MantaWorkflow',
             'isExome' : False,
+            'isRNA' : False,
             'useExistingAlignStats' : False,
             'useExistingChromDepths' : False,
             'binSize' : 25000000,

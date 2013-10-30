@@ -87,6 +87,8 @@ from %s import %s
 # but will not be called in this module:
 def get_run_options(workflowClassName) :
 
+    from optparse import OptionGroup
+
     from configureUtil import EpilogOptionParser
     from estimateHardware import EstException, getNodeHyperthreadCoreCount, getNodeMemMb
 
@@ -111,6 +113,12 @@ results -- in this case the dry run will not cover the full 'live' run task set.
 	              help="send email notification of job completion status to this address (may be provided multiple times for more than one email address)")
     parser.add_option("-d","--dryRun", dest="isDryRun",action="store_true",default=False,
                       help="dryRun workflow code without actually running command-tasks")
+
+    debug_group = OptionGroup(parser,"development debug options")
+    debug_group.add_option("--rescore", dest="isRescore",action="store_true",default=False,
+                          help="Reset task list to re-run hypothesis generation and scoring without resetting graph generation.")
+
+    parser.add_option_group(debug_group)
 
     (options,args) = parser.parse_args()
 
@@ -158,6 +166,10 @@ results -- in this case the dry run will not cover the full 'live' run task set.
     if options.queue is not None :
         options.schedulerArgList=["-q",options.queue]
 
+    options.resetTasks=[]
+    if options.isRescore :
+        options.resetTasks.append("makeHyGenDir")
+
     return options
 
 
@@ -173,6 +185,7 @@ def main(iniFile, primaryIniSection, workflowClassName) :
 
     # TODO: we need a more scalable system to deal with non-string options, for now there are individually corrected:
     flowOptions.isExome=argToBool(flowOptions.isExome)
+    flowOptions.isRNA=argToBool(flowOptions.isRNA)
     flowOptions.useExistingAlignStats=argToBool(flowOptions.useExistingAlignStats)
     flowOptions.useExistingChromDepths=argToBool(flowOptions.useExistingChromDepths)
 
@@ -200,6 +213,7 @@ def main(iniFile, primaryIniSection, workflowClassName) :
                          isForceContinue=True,
                          isDryRun=runOptions.isDryRun,
                          schedulerArgList=runOptions.schedulerArgList,
+                         resetTasks=runOptions.resetTasks,
                          successMsg=wflow.getSuccessMessage(),
                          warningLogFile=warningpath,
                          errorLogFile=errorpath)

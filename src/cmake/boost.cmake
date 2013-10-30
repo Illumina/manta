@@ -68,7 +68,7 @@ macro(static_find_boost boost_version boost_components)
 
     foreach(COMPONENT ${MANTA_BOOST_COMPONENTS})
         STRING(TOUPPER ${COMPONENT} UPPERCOMPONENT)
-        set(HAVE_LIBBOOST_${UPPERCOMPONENT}       ${Boost_${UPPERCOMPONENT}_FOUND})
+        set(HAVE_LIBBOOST_${UPPERCOMPONENT} ${Boost_${UPPERCOMPONENT}_FOUND})
     endforeach()
 endmacro()
 
@@ -112,7 +112,8 @@ if (NOT Boost_FOUND)
     set(ENV{MANTA_BOOST_BUILD_COMPONENTS} "${MANTA_BOOST_BUILD_COMPONENTS}")
     set(ENV{MANTA_BOOST_VERSION} "${MANTA_BOOST_VERSION}")
 
-    set(BOOST_BUILD_COMMAND bash "${MANTA_BOOTSTRAP_DIR}/installBoost.bash" "${MANTA_REDIST_DIR}" "${MANTA_BOOTSTRAP_DIR}" "${CMAKE_PARALLEL}")
+    set(BOOST_BOOTSTRAP_INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/bootstrap/boost)
+    set(BOOST_BUILD_COMMAND bash "${MANTA_BOOTSTRAP_DIR}/installBoost.bash" "${MANTA_REDIST_DIR}" "${BOOST_BOOTSTRAP_INSTALL_DIR}" "${CMAKE_PARALLEL}")
 
     string(REPLACE ";" " " PRETTY_BOOST_BUILD_COMMAND "${BOOST_BUILD_COMMAND}")
     message(STATUS "${PRETTY_BOOST_BUILD_COMMAND}")
@@ -124,6 +125,6 @@ if (NOT Boost_FOUND)
         message(STATUS "Successfuly built boost ${MANTA_BOOST_VERSION} from the distribution package...")
     endif ()
 
-    set (BOOST_ROOT "${MANTA_BOOTSTRAP_DIR}")
+    set (BOOST_ROOT "${BOOST_BOOTSTRAP_INSTALL_DIR}")
 endif ()
 

@@ -158,6 +158,21 @@ private:
 };
 
 
+
+// return the union of two ranges:
+inline
+known_pos_range2
+merge_range(
+    const known_pos_range2& kpr1,
+    const known_pos_range2& kpr2)
+{
+    known_pos_range2 res;
+    res.set_begin_pos(std::min(kpr1.begin_pos(),kpr2.begin_pos()));
+    res.set_end_pos(std::max(kpr1.end_pos(),kpr2.end_pos()));
+    return res;
+}
+
+
 std::ostream& operator<<(std::ostream& os, const known_pos_range2& pr);
 
 BOOST_CLASS_IMPLEMENTATION(known_pos_range2, boost::serialization::object_serializable)

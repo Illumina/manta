@@ -17,15 +17,15 @@
 
 #pragma once
 
-#include "manta/SomaticSVScoreInfo.hh"
+#include "manta/SVModelScoreInfo.hh"
 #include "format/VcfWriterSV.hh"
-#include "options/SomaticCallOptions.hh"
+#include "options/CallOptionsSomatic.hh"
 
 
 struct VcfWriterSomaticSV : public VcfWriterSV
 {
     VcfWriterSomaticSV(
-        const SomaticCallOptions& somaticOpt,
+        const CallOptionsSomatic& somaticOpt,
         const bool isMaxDepthFilter,
         const std::string& referenceFilename,
         const SVLocusSet& set,
@@ -33,7 +33,7 @@ struct VcfWriterSomaticSV : public VcfWriterSV
         VcfWriterSV(referenceFilename,set,os),
         _somaticOpt(somaticOpt),
         _isMaxDepthFilter(isMaxDepthFilter),
-        _ssInfoPtr(NULL)
+        _modelScorePtr(NULL)
     {}
 
     void
@@ -42,28 +42,41 @@ struct VcfWriterSomaticSV : public VcfWriterSV
         const SVCandidateSetData& svData,
         const SVCandidateAssemblyData& adata,
         const SVCandidate& sv,
-        const SomaticSVScoreInfo& ssInfo);
+        const SVModelScoreInfo& ssInfo);
 
 private:
 
     void
+    addHeaderFormatSampleKey() const;
+
+    void
     addHeaderInfo() const;
+
+    void
+    addHeaderFormat() const;
 
     void
     addHeaderFilters() const;
 
     void
     modifyInfo(
-        const bool isFirstOfPair,
-        const SVCandidateSetData& svData,
-        const SVCandidateAssemblyData& adata,
         std::vector<std::string>& infotags) const;
 
-    std::string
-    getFilter() const;
+    void
+    modifyTranslocInfo(
+        const bool isFirstOfPair,
+        std::vector<std::string>& infotags) const;
 
-    const SomaticCallOptions& _somaticOpt;
+    void
+    modifySample(
+        const SVCandidate& sv,
+        SampleTag_t& sampletags) const;
+
+    void
+    writeFilter() const;
+
+    const CallOptionsSomatic& _somaticOpt;
     const bool _isMaxDepthFilter;
-    const SomaticSVScoreInfo* _ssInfoPtr;
+    const SVModelScoreInfo* _modelScorePtr;
 };
 

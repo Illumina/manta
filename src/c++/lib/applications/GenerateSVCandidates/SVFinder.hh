@@ -44,6 +44,7 @@ struct SVFinder
 
     void
     findCandidateSV(
+        const std::map<std::string, int32_t>& chromToIndex,
         const EdgeInfo& edge,
         SVCandidateSetData& svData,
         std::vector<SVCandidate>& svs);
@@ -57,6 +58,7 @@ private:
 
     void
     addSVNodeData(
+        const std::map<std::string, int32_t>& chromToIndex,
         const SVLocus& locus,
         const NodeIndexType node1,
         const NodeIndexType node2,
@@ -65,6 +67,7 @@ private:
 
     void
     getCandidatesFromData(
+        const std::map<std::string, int32_t>& chromToIndex,
         SVCandidateSetData& svData,
         std::vector<SVCandidate>& svs);
 

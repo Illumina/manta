@@ -17,26 +17,17 @@
 
 #pragma once
 
+#include "options/ReadScannerOptions.hh"
+
 #include "boost/program_options.hpp"
 
 
-struct SomaticCallOptions
-{
-
-    SomaticCallOptions() :
-        maxDepthFactor(3.0),
-        maxDepthFilterLabel("MaxDepth"),
-        minOutputSomaticScore(10)
-    {}
-
-    // breakpoints where the non-tumor depth is greater than the chromosome average x this factor are filtered out:
-    float maxDepthFactor;
-    std::string maxDepthFilterLabel;
-
-    unsigned minOutputSomaticScore;
-};
-
-
 boost::program_options::options_description
-getOptionsDescription(SomaticCallOptions& opt);
+getOptionsDescription(ReadScannerOptions& opt);
 
+
+bool
+parseOptions(
+    const boost::program_options::variables_map& vm,
+    ReadScannerOptions& opt,
+    std::string& errorMsg);

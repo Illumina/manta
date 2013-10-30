@@ -25,6 +25,31 @@
 #include <vector>
 
 
+/// minimum set of information required to describe bp transformations between SVCandidate and its
+/// corresponding contig alignment
+///
+struct BPOrientation
+{
+    BPOrientation() :
+        isBp2AlignedFirst(false),
+        isBp1Reversed(false),
+        isBp2Reversed(false)
+    {}
+
+    void
+    clear()
+    {
+        isBp2AlignedFirst=false;
+        isBp1Reversed=false;
+        isBp2Reversed=false;
+    }
+
+    bool isBp2AlignedFirst; ///< should the contig on the fwd strand align bp2->bp1 (true) or bp1->bp2 (false)
+    bool isBp1Reversed; ///< should all bp1 reads be reversed for the contig to assemble correctly?
+    bool isBp2Reversed; ///< should all bp2 reads be reversed for the contig to assemble correctly?
+};
+
+
 /// \brief Assembly data pertaining to a specific SV candidate
 ///
 /// Assembly starts from a low-resolution SV candidate. This holds
@@ -53,6 +78,7 @@ struct SVCandidateAssemblyData
     {
         contigs.clear();
         isSpanning=false;
+        bporient.clear();
         smallSVAlignments.clear();
         spanningAlignments.clear();
         smallSVSegments.clear();
@@ -72,9 +98,12 @@ struct SVCandidateAssemblyData
 
     bool isSpanning; ///< is this a 2-locus event (spanning), or a local-assembly?
 
+    BPOrientation bporient;
+
+    std::vector<std::string> extendedContigs; ///extended each contig's sequence by padding reference sequences on each end
+
     std::vector<SmallAlignmentResultType> smallSVAlignments; ///< contig smallSV alignments, one per contig, may be empty
     std::vector<JumpAlignmentResultType> spanningAlignments; ///< contig spanning alignments, one per contig, may be empty
-
     std::vector<CandidateSegmentSetType> smallSVSegments; ///< list of indel sets, one per small alignment
 
     unsigned bestAlignmentIndex; ///< if non-empty sv candidate set, which contig/alignment produced them?

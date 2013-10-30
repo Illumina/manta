@@ -12,25 +12,17 @@
 //
 
 ///
-/// \author Ole Schulz-Trieglaff
+/// \author Chris Saunders and Xiaoyu Chen
 ///
 
 #pragma once
 
-#include "manta/Program.hh"
+#include "blt_util/bam_record.hh"
+#include "SVEvidence.hh"
 
 
-/// Command line app to test SmallAssembler
-///
-struct AssembleSVBreakend : public manta::Program
-{
-
-    const char*
-    name() const
-    {
-        return "AssembleSVBreakend";
-    }
-
-    void
-    runInternal(int argc, char* argv[]) const;
-};
+void
+setReadEvidence(
+    const unsigned minMapQ,
+    const bam_record& bamRead,
+    SVFragmentEvidenceRead& read);

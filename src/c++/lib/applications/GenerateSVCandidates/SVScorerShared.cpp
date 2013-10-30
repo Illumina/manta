@@ -11,12 +11,24 @@
 // <https://github.com/sequencing/licenses/>
 //
 
-#include "applications/AssembleSVBreakend/AssembleSVBreakend.hh"
+///
+/// \author Chris Saunders and Xiaoyu Chen
+///
+
+#include "SVScorerShared.hh"
 
 
-int
-main(int argc, char* argv[])
+
+void
+setReadEvidence(
+    const unsigned minMapQ,
+    const bam_record& bamRead,
+    SVFragmentEvidenceRead& read)
 {
-    return AssembleSVBreakend().run(argc,argv);
-    //return 0;
+    if (read.isScanned) return;
+
+    read.isScanned = true;
+    read.mapq = bamRead.map_qual();
+    read.isAnchored = (read.mapq >= minMapQ);
+    read.size = bamRead.read_size();
 }
