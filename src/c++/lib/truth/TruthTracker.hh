@@ -71,7 +71,7 @@ public:
     SVLog(unsigned int index);
     unsigned int ind() const;
     void reportOutcome(const Outcome outcome);
-    const Outcome outcome() const;
+    Outcome outcome() const;
 
 protected:
     unsigned int _ind;

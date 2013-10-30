@@ -325,14 +325,14 @@ public:
                         tokenList.push_back( value );
                     }
                 }
-                catch (illumina::common::OutOfBoundsException& ex)
+                catch (illumina::common::OutOfBoundsException& /*ex*/)
                 {
                     // if there isn't any '=', then we are overwriting 0 with 0 at the end
                     (*dsvException)( line_,
                                      std::string(stringBegin,equalSign),
                                      std::string(origin,end) );
                 }
-                catch (std::out_of_range& ex)
+                catch (std::out_of_range& /*ex*/)
                 {
                     throw;
                 }

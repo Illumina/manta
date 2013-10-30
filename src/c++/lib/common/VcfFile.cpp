@@ -54,7 +54,7 @@ VcfFile::VcfFile(const std::string& pathStr,
 }
 
 /*****************************************************************************/
-
+static
 bool parseTranslocAltStr(const std::string& altStr,
                          std::string& chromNameB, unsigned long& posB,
                          bool& isFwdA, bool& isFwdB)
@@ -109,7 +109,7 @@ bool parseTranslocAltStr(const std::string& altStr,
 }
 
 /*****************************************************************************/
-
+static
 void findFlankBounds(const unsigned long pos, const unsigned long flankSize,
                      pos_t& leftBound, pos_t& rightBound)
 {

@@ -128,7 +128,7 @@ public:
     // default constructor
     VcfLine()
         : FileElement(), VcfLocus<unsigned int, size_t>(), vcfHeader_(0),
-          pos_(0), ref_(0), qual_(0), pass_(false), spuriousHeader_(false)
+          ref_(0), qual_(0), pass_(false), spuriousHeader_(false)
     {
         ;
     }
@@ -143,8 +143,8 @@ public:
     {
         assert(vcfHeader_);
         return vcfHeader_->hasContigList()
-               ? vcfHeader_->getContig( chromosome_ ).getKey()
-               : ContigList::get_const_instance().getContig( chromosome_ ).getKey();
+               ? vcfHeader_->getContig( VcfLocus::getChromosome() ).getKey()
+               : ContigList::get_const_instance().getContig( VcfLocus::getChromosome() ).getKey();
     }
 
     /// \return POS: The reference position, or MAX_POS if missing. (the 1st base having position 1)
@@ -156,13 +156,13 @@ public:
 //    /// \return ID: vector of pointers to unique identifiers where available
 //    const void getId(std::vector<const char *> &id) const {id = id_;}
     /// \return ID: Semi-colon separated list of unique identifiers where available
-    const std::string getId() const
+    std::string getId() const
     {
         return cStringJoin(id_, ";");
     }
 
     /// \return REF: reference base(s)
-    const std::string getRef() const
+    std::string getRef() const
     {
         return ref_;
     }
@@ -170,7 +170,7 @@ public:
 //    /// \return ALT: vector of pointers to alternate non-reference alleles called on at least one of the samples
 //    const void getAlt(std::vector<const char *> &alt) const {alt = alt_;}
     /// \return ALT: comma separated list of alternate non-reference alleles called on at least one of the samples
-    const std::string getAlt() const
+    std::string getAlt() const
     {
         return cStringJoin(alt_, ",");
     }
@@ -198,7 +198,7 @@ public:
      ** \brief FILTER
      ** \return Entire FILTER string
      **/
-    const std::string getFilter() const
+    std::string getFilter() const
     {
         assert(vcfHeader_);
         return  ( pass_ ? std::string(PASS,PASS+4)
@@ -235,21 +235,21 @@ public:
     }
 
     /// \return INFO
-    const std::string getInfo() const
+    std::string getInfo() const
     {
         assert(vcfHeader_);
         return createMap(info_, vcfHeader_->getInfoList(), ";");
     }
 
     /// \return FORMAT
-    const std::string getFormat() const
+    std::string getFormat() const
     {
         assert(vcfHeader_);
         return joinByIndex(format_, vcfHeader_->getFormatList(), ":");
     }
 
     /// \return SAMPLE
-    const std::string getSample(size_t sampleInd) const
+    std::string getSample(size_t sampleInd) const
     {
         return cStringJoin(sampleVec_.at(sampleInd).fieldVec_, ":");
     }
@@ -327,20 +327,6 @@ private:
 
     std::string unparsed_;
 
-// #if WITHOUT_LOCUS
-    /**
-     ** \brief 1. CHROM chromosome: an identifier from the reference genome.
-     **  All entries for a specific CHROM should form a contiguous block within the VCF file.
-     **  (Alphanumeric String, Required)
-     **/
-    std::string chrom_;
-    /**
-     ** \brief 2. POS position: The reference position, with the 1st base having position 1.
-     ** Positions are sorted numerically, in increasing order, within each reference sequence CHROM.
-     ** (Integer, Required)
-     **/
-    unsigned long pos_;
-// #endif
     /**
      ** \brief 3. ID semi-colon separated list of unique identifiers where available.
      ** If this is a dbSNP variant it is encouraged to use the rs number(s). No

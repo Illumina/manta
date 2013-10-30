@@ -144,7 +144,7 @@ void SVLog::reportOutcome(const Outcome outcomeVal)
 
 /*****************************************************************************/
 
-const SVLog::Outcome SVLog::outcome() const
+SVLog::Outcome SVLog::outcome() const
 {
     return _outcome;
 }
@@ -531,7 +531,8 @@ typedef std::vector<SVLocusSet::NodeAddressType> NodeAddrVec;
 typedef NodeAddrVec::const_iterator NodeAddrVecCIter;
 
 /*****************************************************************************/
-
+#ifdef EASY_ITER_OVER_NODE_EDGES
+static
 bool getMatchedNodes(const SVLocusSet& svLocusSet,
                      const GenomeInterval& interval,
                      NodeAddrVec& matchedNodeAddrVec)
@@ -555,6 +556,7 @@ bool getMatchedNodes(const SVLocusSet& svLocusSet,
 
     return !matchedNodeAddrVec.empty();
 }
+#endif
 
 
 /*****************************************************************************/
@@ -755,7 +757,7 @@ bool TruthTracker::evalLocusSet(const SVLocusSet& svLocusSet)
 #endif
 
 /*****************************************************************************/
-
+static
 bool bothBrkptIntersect(const Variant& variant,
                         const SVLocusNode& node1, const SVLocusNode& node2)
 {

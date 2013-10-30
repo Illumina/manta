@@ -157,7 +157,7 @@ public:
         return altList_;
     }
 
-    const unsigned int numSamples() const
+    unsigned numSamples() const
     {
         return sampleNameList_.size();
     }

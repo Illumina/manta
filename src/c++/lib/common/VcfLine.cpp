@@ -35,6 +35,7 @@
  *
  * We use this conversion table rather than the one in Nucleotide.hh to make sure we conform to the VCF standard
  */
+static
 std::vector<bool> getValidReferenceBases()
 {
     std::vector<bool> validReferenceBases(256, false);
@@ -53,6 +54,7 @@ std::vector<bool> getValidReferenceBases()
 
 /*****************************************************************************/
 
+static
 bool validateRef(const char* ref)
 {
     static const std::vector<bool> validReferenceBases = getValidReferenceBases();
@@ -69,7 +71,7 @@ bool validateRef(const char* ref)
 }
 
 /*****************************************************************************/
-
+static
 std::vector<bool> getValidFloatingPointDigits()
 {
     std::vector<bool> validFloat(256, false);
@@ -84,7 +86,7 @@ std::vector<bool> getValidFloatingPointDigits()
 }
 
 /*****************************************************************************/
-
+static
 bool validateQual(const char* ref)
 {
     static const std::vector<bool> validFloatingPointDigits
@@ -103,14 +105,14 @@ bool validateQual(const char* ref)
 }
 
 /*****************************************************************************/
-
+static
 char null2tab(char c)
 {
     return ('\0'==c) ? '\t' : c;
 }
 
 /*****************************************************************************/
-
+static
 void prettyPrint(const std::string& line)
 {
     std::string prettyLine;
