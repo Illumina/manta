@@ -467,8 +467,13 @@ getJumpAssembly(
 #endif
 
     // how much additional reference sequence should we extract from around
-    // each side of the breakend region?
-    static const pos_t extraRefEdgeSize(200);
+    // each side of the breakend region for alignment purposes?
+    static const pos_t extraRefEdgeSize(250);
+
+    // how much reference should we additionally extract for split read alignment, but not for variant-discovery alignment?
+    static const pos_t extraRefSplitSize(100);
+
+    static const pos_t extraRefSize(extraRefEdgeSize+extraRefSplitSize);
 
     // if the breakends have a simple insert/delete orientation and the alignment regions overlap, then handle this case as
     // a local assembly problem:
@@ -479,7 +484,7 @@ getJumpAssembly(
             const SV_TYPE::index_t svType(getSVType(sv));
             if ((svType == SV_TYPE::INDEL) || (svType == SV_TYPE::COMPLEX))
             {
-                if ( isRefRegionOverlap( _header, extraRefEdgeSize, sv) )
+                if ( isRefRegionOverlap( _header, extraRefSize, sv) )
                 {
                     // transform SV into a single region format:
                     SVCandidate singleSV = sv;
@@ -537,15 +542,41 @@ getJumpAssembly(
     // assemble contig spanning the breakend:
     _spanningAssembler.assembleSVBreakends(sv.bp1, sv.bp2, bporient.isBp1Reversed, bporient.isBp2Reversed, assemblyData.contigs);
 
-    getSVReferenceSegments(_opt.referenceFilename, _header, extraRefEdgeSize, sv, assemblyData.bp1ref, assemblyData.bp2ref);
+
+    unsigned bp1LeadingTrim;
+    unsigned bp1TrailingTrim;
+    unsigned bp2LeadingTrim;
+    unsigned bp2TrailingTrim;
+    getSVReferenceSegments(_opt.referenceFilename, _header, extraRefSize, sv, assemblyData.bp1ref, assemblyData.bp2ref,
+        bp1LeadingTrim, bp1TrailingTrim, bp2LeadingTrim, bp2TrailingTrim);
+
+    pos_t align1LeadingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(bp1LeadingTrim)));
+    pos_t align1TrailingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(bp1TrailingTrim)));
+    pos_t align2LeadingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(bp2LeadingTrim)));
+    pos_t align2TrailingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(bp2TrailingTrim)));
+
     std::string bp1refSeq = assemblyData.bp1ref.seq();
     std::string bp2refSeq = assemblyData.bp2ref.seq();
-    if (bporient.isBp1Reversed) reverseCompStr(bp1refSeq);
-    if (bporient.isBp2Reversed) reverseCompStr(bp2refSeq);
+    if (bporient.isBp1Reversed)
+    {
+        reverseCompStr(bp1refSeq);
+        std::swap(align1LeadingCut, align1TrailingCut);
+    }
+    if (bporient.isBp2Reversed)
+    {
+        reverseCompStr(bp2refSeq);
+        std::swap(align2LeadingCut, align2TrailingCut);
+    }
     const std::string* align1RefStrPtr(&bp1refSeq);
     const std::string* align2RefStrPtr(&bp2refSeq);
 
-    if (bporient.isBp2AlignedFirst) std::swap(align1RefStrPtr, align2RefStrPtr);
+    if (bporient.isBp2AlignedFirst)
+    {
+        std::swap(align1RefStrPtr, align2RefStrPtr);
+
+        std::swap(align1LeadingCut, align2LeadingCut);
+        std::swap(align1TrailingCut, align2TrailingCut);
+    }
 
 #ifdef DEBUG_REFINER
     log_os << logtag << "al1RefSize/Seq: " << align1RefStrPtr->size() << ' ' << *align1RefStrPtr << '\n';
@@ -581,12 +612,15 @@ getJumpAssembly(
 
         _spanningAligner.align(
             contig.seq.begin(), contig.seq.end(),
-            align1RefStrPtr->begin(), align1RefStrPtr->end(),
-            align2RefStrPtr->begin(), align2RefStrPtr->end(),
+            align1RefStrPtr->begin() + align1LeadingCut, align1RefStrPtr->end() - align1TrailingCut,
+            align2RefStrPtr->begin() + align2LeadingCut, align2RefStrPtr->end() - align2TrailingCut,
             alignment);
 
+        alignment.align1.beginPos += align1LeadingCut;
+        alignment.align2.beginPos += align2LeadingCut;
+
         std::string extendedContig;
-        getExtendedContig(alignment, contig.seq, align1RefStrPtr, align2RefStrPtr, extendedContig);
+        getExtendedContig(alignment, contig.seq, *align1RefStrPtr, *align2RefStrPtr, extendedContig);
         assemblyData.extendedContigs.push_back(extendedContig);
 
 #ifdef DEBUG_REFINER
@@ -699,14 +733,25 @@ getSmallSVAssembly(
     // each side of the breakend region?
     static const pos_t extraRefEdgeSize(700);
 
+    // how much reference should we additionally extract for split read alignment, but not for variant-discovery alignment?
+    static const pos_t extraRefSplitSize(100);
+
+    static const pos_t extraRefSize(extraRefEdgeSize+extraRefSplitSize);
+
     // min alignment context
     //const unsigned minAlignContext(4);
 
-    getIntervalReferenceSegment(_opt.referenceFilename, _header, extraRefEdgeSize, sv.bp1.interval, assemblyData.bp1ref);
-    const std::string* align1RefStrPtr(&assemblyData.bp1ref.seq());
+    unsigned leadingTrim;
+    unsigned trailingTrim;
+    getIntervalReferenceSegment(_opt.referenceFilename, _header, extraRefSize, sv.bp1.interval, assemblyData.bp1ref, leadingTrim, trailingTrim);
+
+    const pos_t leadingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(leadingTrim)));
+    const pos_t trailingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(trailingTrim)));
+
+    const std::string& align1RefStr(assemblyData.bp1ref.seq());
 
 #ifdef DEBUG_REFINER
-    log_os << logtag << " al1Ref: " << *align1RefStrPtr << "\n";
+    log_os << logtag << " al1Ref: " << align1RefStr << "\n";
 #endif
 
     const unsigned contigCount(assemblyData.contigs.size());
@@ -739,11 +784,13 @@ getSmallSVAssembly(
 
         _smallSVAligner.align(
             contig.seq.begin(), contig.seq.end(),
-            align1RefStrPtr->begin(), align1RefStrPtr->end(),
+            align1RefStr.begin() + leadingCut, align1RefStr.end() - trailingCut,
             alignment);
 
+        alignment.align.beginPos += leadingCut;
+
         std::string extendedContig;
-        getExtendedContig(alignment, contig.seq, align1RefStrPtr, extendedContig);
+        getExtendedContig(alignment, contig.seq, align1RefStr, extendedContig);
         assemblyData.extendedContigs.push_back(extendedContig);
 
         // remove candidate from consideration unless we find a sufficiently large indel with good flanking sequence:

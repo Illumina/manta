@@ -84,8 +84,8 @@ void
 getExtendedContig(
     const JumpAlignmentResult<int>& align,
     const std::string& querySeq,
-    const std::string* ref1Seq,
-    const std::string* ref2Seq,
+    const std::string& ref1Seq,
+    const std::string& ref2Seq,
     std::string& extendedContig);
 
 
@@ -94,7 +94,7 @@ void
 getExtendedContig(
     const AlignmentResult<int>& alignment,
     const std::string& querySeq,
-    const std::string* refSeq,
+    const std::string& refSeq,
     std::string& extendedContig);
 
 /// given a jump alignment and query sequence, return the bp1,insert and bp2 query sequences

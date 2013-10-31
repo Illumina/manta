@@ -133,15 +133,15 @@ void
 getExtendedContig(
     const JumpAlignmentResult<int>& align,
     const std::string& querySeq,
-    const std::string* ref1Seq,
-    const std::string* ref2Seq,
+    const std::string& ref1Seq,
+    const std::string& ref2Seq,
     std::string& extendedContig)
 {
     // extend aligned ref1Seq to the beginning
-    const std::string align1RefSeqExt = ref1Seq->substr(0, align.align1.beginPos);
+    const std::string align1RefSeqExt = ref1Seq.substr(0, align.align1.beginPos);
     // extend aligned ref2Seq to the end
     const unsigned align2RefEnd = align.align2.beginPos + apath_ref_length(align.align2.apath);
-    const std::string align2RefSeqExt = ref2Seq->substr(align2RefEnd, (ref2Seq->size()-align2RefEnd));
+    const std::string align2RefSeqExt = ref2Seq.substr(align2RefEnd, (ref2Seq.size()-align2RefEnd));
 
     extendedContig = align1RefSeqExt + querySeq + align2RefSeqExt;
 }
@@ -152,14 +152,14 @@ void
 getExtendedContig(
     const AlignmentResult<int>& alignment,
     const std::string& querySeq,
-    const std::string* refSeq,
+    const std::string& refSeq,
     std::string& extendedContig)
 {
     // extend aligned refSeq to the beginning
-    const std::string alignRefSeqExt1 = refSeq->substr(0, alignment.align.beginPos);
+    const std::string alignRefSeqExt1 = refSeq.substr(0, alignment.align.beginPos);
     // extend aligned refSeq to the end
     const unsigned alignRefEnd = alignment.align.beginPos + apath_ref_length(alignment.align.apath);
-    const std::string alignRefSeqExt2 = refSeq->substr(alignRefEnd, (refSeq->size()-alignRefEnd));
+    const std::string alignRefSeqExt2 = refSeq.substr(alignRefEnd, (refSeq.size()-alignRefEnd));
 
     extendedContig = alignRefSeqExt1 + querySeq + alignRefSeqExt2;
 }

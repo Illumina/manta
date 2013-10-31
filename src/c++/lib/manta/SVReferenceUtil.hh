@@ -38,7 +38,9 @@ getIntervalReferenceSegment(
     const bam_header_info& header,
     const pos_t extraRefEdgeSize,
     const GenomeInterval& interval,
-    reference_contig_segment& intervalRef);
+    reference_contig_segment& intervalRef,
+    unsigned& leadingTrim,
+    unsigned& trailingTrim);
 
 
 /// extract the reference sequence around each breakend into a reference_contig_segment
@@ -54,4 +56,8 @@ getSVReferenceSegments(
     const pos_t extraRefEdgeSize,
     const SVCandidate& sv,
     reference_contig_segment& bp1ref,
-    reference_contig_segment& bp2ref);
+    reference_contig_segment& bp2ref,
+    unsigned& bp1LeadingTrim,
+    unsigned& bp1TrailingTrim,
+    unsigned& bp2LeadingTrim,
+    unsigned& bp2TrailingTrim);
