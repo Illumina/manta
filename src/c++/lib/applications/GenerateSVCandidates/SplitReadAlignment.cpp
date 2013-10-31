@@ -18,6 +18,7 @@
 #include "SplitReadAlignment.hh"
 #include "blt_util/log.hh"
 #include "blt_util/blt_types.hh"
+#include "common/Exceptions.hh"
 
 #include <cassert>
 #include <cmath>
@@ -162,10 +163,20 @@ splitReadAligner(
     const unsigned targetBpBeginPos,
     SRAlignmentInfo& alignment)
 {
+    using namespace illumina::common;
+
     const unsigned querySize = querySeq.size();
     const unsigned targetSize = targetSeq.size();
-    assert(querySize < targetSize);
+    if (querySize >= targetSize)
+    {
+        std::ostringstream oss;
+        oss << "ERROR: Unexpected split read alignment input."
+            << " querySize: " << querySize << " targetSize: " << targetSize << '\n'
+            << "\tquerySeq: " << querySeq << '\n'
+            << "\ttargetSeq: " << targetSeq << '\n';
+        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
 
+    }
     /// TODO: rerig things to use end_pos() as well
 
     // set the scanning start & end to make sure the candidate windows overlapping the breakpoint
@@ -201,7 +212,15 @@ splitReadAligner(
 
     assert(bestPos <= (targetBpBeginPos+1));
     alignment.leftSize = static_cast<pos_t>(targetBpBeginPos+1) - bestPos;
-    assert(alignment.leftSize <= querySize);
+    if (alignment.leftSize > querySize)
+    {
+        std::ostringstream oss;
+        oss << "ERROR: Unexpected split read alignment outcome. "
+            << " targetBeginPos: " << targetBpBeginPos << " bestPos: " << bestPos << " querySize: " << querySize << '\n'
+            << "\tquerySeq: " << querySeq << '\n'
+            << "\ttargetSeq: " << targetSeq << '\n';
+        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+    }
     alignment.rightSize= querySize - alignment.leftSize;
     alignment.alignLnLhood = bestLnLhood;
     alignment.alignPos = bestPos;
