@@ -530,7 +530,7 @@ scoreDiploidSV(
     /// TODO: set this from graph data:
     ///
     /// put some more thought into this -- is this P (spurious | any old read) or P( spurious | chimera ) ??
-    /// it seems like it should be the later in the usages that really matter.
+    /// it seems like it should be the latter in the usages that really matter.
     ///
     static const ProbSet chimeraProb(1e-3);
 
