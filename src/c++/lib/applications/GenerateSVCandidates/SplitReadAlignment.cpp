@@ -181,7 +181,7 @@ splitReadAligner(
 
     // set the scanning start & end to make sure the candidate windows overlapping the breakpoint
     const unsigned scanStart(std::max(0, static_cast<pos_t>(targetBpBeginPos) - static_cast<pos_t>(querySize) + 2));
-    const unsigned scanEnd(std::max(0, std::min((static_cast<pos_t>(targetBpBeginPos)-1), static_cast<pos_t>(targetSize - querySize)) ));
+    const unsigned scanEnd(std::max(0, std::min((static_cast<pos_t>(targetBpBeginPos)), static_cast<pos_t>(targetSize - querySize))));
 
 #ifdef DEBUG_SRA
     static const std::string logtag("splitReadAligner: ");
@@ -189,6 +189,7 @@ splitReadAligner(
     log_os << logtag << "targetBeginPos = " << targetBpBeginPos << '\n';
     log_os << logtag << "scan start = " << scanStart << " scan end = " << scanEnd << '\n';
 #endif
+    assert(scanEnd>=scanStart);
 
     const std::string::const_iterator scanWindowBegin(targetSeq.begin());
     const std::string::const_iterator scanWindowEnd(targetSeq.end());
@@ -213,6 +214,7 @@ splitReadAligner(
                 isBest=true;
             }
         }
+        assert(isBest);
     }
 
     assert(bestPos <= (targetBpBeginPos+1));

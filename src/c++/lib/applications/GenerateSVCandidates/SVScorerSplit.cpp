@@ -226,7 +226,7 @@ getSVSplitReadSupport(
     // only consider a split alignment with sufficent flanking sequence:
     if (! SVAlignInfo.isMinBpEdge(100)) return;
 
-    #ifdef DEBUG_SVS
+#ifdef DEBUG_SVS
     log_os << SVAlignInfo << "\n";
 #endif
 
