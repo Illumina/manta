@@ -143,8 +143,8 @@ public:
     {
         assert(vcfHeader_);
         return vcfHeader_->hasContigList()
-               ? vcfHeader_->getContig( VcfLocus::getChromosome() ).getKey()
-               : ContigList::get_const_instance().getContig( VcfLocus::getChromosome() ).getKey();
+               ? vcfHeader_->getContig( VcfLocus<unsigned int, size_t>::getChromosome() ).getKey()
+               : ContigList::get_const_instance().getContig( VcfLocus<unsigned int, size_t>::getChromosome() ).getKey();
     }
 
     /// \return POS: The reference position, or MAX_POS if missing. (the 1st base having position 1)
