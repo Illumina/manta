@@ -140,7 +140,7 @@ setEvidence(
     //
 
     // adding new flank size threshold -- this might have to be changed based on sv size:
-    static const unsigned minFlankSize(20);
+    static const unsigned minFlankSize(16);
     if (alignment.leftSize < minFlankSize) return;
     if (alignment.rightSize < minFlankSize) return;
 
