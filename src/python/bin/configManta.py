@@ -21,6 +21,9 @@ scriptDir=os.path.abspath(os.path.dirname(__file__))
 scriptName=os.path.basename(__file__)
 workflowDir="@MANTA_FULL_PYTHON_LIBDIR@"
 
+version="@MANTA_FULL_VERSION@"
+
+
 # quick test to see if 'make' was run
 # if not os.path.exists(os.path.join(scriptDir,'..',"make.complete")) :
 #     sys.stderr.write("Workflow does not appear to be fully installed. Has 'make' been run to compile sox?\n")
@@ -40,9 +43,11 @@ from checkChromSet import checkChromSet
 class MantaWorkflowOptions(MantaWorkflowOptionsBase) :
 
     def workflowDescription(self) :
-        return """This script configures the Manta SV analysis pipeline.
+        return """Version: %s
+
+This script configures the Manta SV analysis pipeline.
 You must specify a BAM file for at least one sample.
-"""
+""" % (version)
 
     validAlignerModes = ["bwa","isaac"]
 
@@ -153,7 +158,7 @@ You must specify a BAM file for at least one sample.
 def main() :
 
     primarySectionName="manta"
-    options,iniSections=MantaWorkflowOptions().getRunOptions(primarySectionName)
+    options,iniSections=MantaWorkflowOptions().getRunOptions(primarySectionName, version=version)
 
     # we don't need to instantiate the workflow object during configuration,
     # but this is done here to trigger additional parameter validation:

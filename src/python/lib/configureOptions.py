@@ -87,7 +87,7 @@ class ConfigureWorkflowOptions(object) :
 
     # public methods:
 
-    def getRunOptions(self,primary_section) :
+    def getRunOptions(self, primary_section, version = None) :
         """
         primary client code interface to the finished product.
         do not override this method
@@ -123,11 +123,11 @@ class ConfigureWorkflowOptions(object) :
         localConfigPath=os.path.join(os.path.abspath('.'),configFileName)
         updateIniSections(iniSections,getIniSections(localConfigPath))
 
-        parser=self._getOptionParser(iniSections[primary_section],configFileName)
+        parser=self._getOptionParser(iniSections[primary_section],configFileName, version=version)
         (options,args) = parser.parse_args()
 
         if options.isAllHelp :
-            parser=self._getOptionParser(iniSections[primary_section],configFileName,True)
+            parser=self._getOptionParser(iniSections[primary_section],configFileName,True, version=version)
             parser.print_help()
             sys.exit(2)
 
@@ -163,13 +163,13 @@ class ConfigureWorkflowOptions(object) :
 
     # private methods:
 
-    def _getOptionParser(self,defaults,configFileName,isAllHelp=False) :
-        from optparse import OptionGroup,SUPPRESS_HELP
+    def _getOptionParser(self,defaults,configFileName,isAllHelp=False, version=None) :
+        from optparse import OptionGroup, SUPPRESS_HELP
 
         description=self.workflowDescription()+"""
-Configuration will produce a workflow run script which can
-execute the workflow on a single node or through sge and resume
-any interrupted execution.
+Configuration will produce a workflow run script which
+can execute the workflow on a single node or through
+sge and resume any interrupted execution.
 """
 
         epilog="""Default parameters are read from global and local '%s'
@@ -181,7 +181,11 @@ entry. All current default and command-line parameters may be written to the
 local ini file location with the --writeConfig option.
 """ % (configFileName)
 
-        parser = EpilogOptionParser(description=description,epilog=epilog)
+        class MyOptionParser(EpilogOptionParser) :
+            def format_description(self, formatter) :
+                 return self.description
+
+        parser = MyOptionParser(description=description,epilog=epilog, version=version)
 
         parser.set_defaults(**defaults)
 
