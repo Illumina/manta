@@ -127,6 +127,7 @@ SVAlignmentInfo(
 }
 
 
+
 bool
 SVAlignmentInfo::
 isMinBpEdge(
@@ -142,11 +143,16 @@ isMinBpEdge(
     if ((contigBpSize - bp1ContigOffset) < iminEdge) return false;
     if ((contigBpSize - bp2ContigOffset) < iminEdge) return false;
 
-    if ((static_cast<pos_t>(bp1RefSeq.size()) - 1 - bp1RefOffset) < iminEdge) return false;
-    if ((static_cast<pos_t>(bp2RefSeq.size()) - 1 - bp2RefOffset) < iminEdge) return false;
+    const pos_t bp1RefSize(bp1ReferenceSeq().size());
+    if ((bp1RefSize - 1 - bp1RefOffset) < iminEdge) return false;
+
+    const pos_t bp2RefSize(bp2ReferenceSeq().size());
+    if ((bp2RefSize - 1 - bp2RefOffset) < iminEdge) return false;
 
     return true;
 }
+
+
 
 std::ostream&
 operator<<(
@@ -156,16 +162,22 @@ operator<<(
     os << "Contig seq\n";
     printSeq(ai.contigSeq,os);
     os << '\n';
-    os << "bp1 contig offset = " << ai.bp1ContigOffset << " bp1 contig reversed = " << ai._bp1ContigReversed << "\n";
-    os << "bp2 contig offset = " << ai.bp2ContigOffset << " bp2 contig reversed = " << ai._bp2ContigReversed << "\n";
+    os << "Rev Contig seq\n";
+    printSeq(ai.revContigSeq,os);
+    os << '\n';
+    os << "bp1 contig offset = " << ai.bp1ContigOffset << " bp1 contig reversed = " << ai._bp1ContigReversed << '\n';
+    os << "bp2 contig offset = " << ai.bp2ContigOffset << " bp2 contig reversed = " << ai._bp2ContigReversed << '\n';
     os << "bp1RefSeq\n";
     printSeq(ai.bp1RefSeq,os);
     os << '\n';
-    os << "bp2RefSeq (null for small SVs)\n";
-    printSeq(ai.bp2RefSeq,os);
-    os << '\n';
-    os << "bp1 reference offset = " << ai.bp1RefOffset << "\n";
-    os << "bp2 reference offset = " << ai.bp2RefOffset << "\n";
+    if (ai.isSpanning())
+    {
+        os << "bp2RefSeq\n";
+        printSeq(ai.bp2RefSeq,os);
+        os << '\n';
+    }
+    os << "bp1 reference offset = " << ai.bp1RefOffset << '\n';
+    os << "bp2 reference offset = " << ai.bp2RefOffset << '\n';
     return os;
 }
 
@@ -178,12 +190,12 @@ operator<<(
 {
     static const char indent('\t');
     os << "SVSampleAlleleInfo:\n"
-       << indent << "bp1SpanReadCount: " << sai.bp1SpanReadCount << "\n"
-       << indent << "bp2SpanReadCount: " << sai.bp2SpanReadCount << "\n"
-       << indent << "spanPairCount: " << sai.spanPairCount << "\n"
-       << indent << "confidentSpanningPairCount: " << sai.confidentSpanningPairCount << "\n"
-       << indent << "splitReadCount: " << sai.splitReadCount << "\n"
-       << indent << "confidentSplitReadCount: " << sai.confidentSplitReadCount << "\n"
+       << indent << "bp1SpanReadCount: " << sai.bp1SpanReadCount << '\n'
+       << indent << "bp2SpanReadCount: " << sai.bp2SpanReadCount << '\n'
+       << indent << "spanPairCount: " << sai.spanPairCount << '\n'
+       << indent << "confidentSpanningPairCount: " << sai.confidentSpanningPairCount << '\n'
+       << indent << "splitReadCount: " << sai.splitReadCount << '\n'
+       << indent << "confidentSplitReadCount: " << sai.confidentSplitReadCount << '\n'
        ;
     return os;
 }
@@ -209,7 +221,8 @@ operator<<(
     std::ostream& os,
     const SVScoreInfo& ssi)
 {
-    os << "SVScoreInfo bp1MaxDepth=" << ssi.bp1MaxDepth << " bp2MaxDepth=" << ssi.bp2MaxDepth << "\n";
+    os << "SVScoreInfo bp1MaxDepth=" << ssi.bp1MaxDepth << " bp2MaxDepth=" << ssi.bp2MaxDepth << '\n';
     os << "Normal sample info " << ssi.normal;
     return os;
 }
+

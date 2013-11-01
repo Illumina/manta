@@ -54,6 +54,12 @@ struct SVAlignmentInfo
         return (_isSpanning ? bp2RefSeq : bp1RefSeq);
     }
 
+    bool
+    isSpanning() const
+    {
+        return _isSpanning;
+    }
+
     /// do we have a enough room on either side of the breakend for
     /// both the ref and contig to make a fair split read evaluation?
     bool
