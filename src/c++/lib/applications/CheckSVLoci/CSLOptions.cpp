@@ -34,7 +34,7 @@ usage(
     const boost::program_options::options_description& visible,
     const char* msg = NULL)
 {
-    os << "\n" << prog.name() << ": load binary sv locus graph, and check validity, including after final cleaning steps\n\n";
+    os << "\n" << prog.name() << ": load binary sv locus graph and check validity, including after final cleaning steps\n\n";
     os << "version: " << prog.version() << "\n\n";
     os << "usage: " << prog.name() << " [options] > graph_dump\n\n";
     os << visible << "\n\n";
