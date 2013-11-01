@@ -33,6 +33,10 @@ outfp=sys.stdout
 
 for line in infp :
     if is_first :
+        if line.find("NOREHEADER") != -1 :
+            outfp.write(line)
+            is_first=False
+            continue
         if line.startswith("#!") :
             outfp.write(line)
             continue

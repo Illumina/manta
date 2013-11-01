@@ -128,6 +128,7 @@ set (MANTA_BOOST_BUILD_COMPONENTS date_time filesystem program_options
 set (Boost_USE_MULTITHREADED OFF)
 set (Boost_USE_STATIC_LIBS ON)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules")
 set (MANTA_GLOBALS_CMAKE "${CMAKE_SOURCE_DIR}/cmake/globals.cmake")
 set (MANTA_MACROS_CMAKE "${CMAKE_SOURCE_DIR}/cmake/macros.cmake")
 
@@ -154,5 +155,6 @@ add_subdirectory (cmake/preInstall)
 add_subdirectory (opt)
 add_subdirectory (c++)
 add_subdirectory (python)
+add_subdirectory (markdown)
 add_subdirectory (cmake/postInstall)
 
