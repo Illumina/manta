@@ -548,7 +548,7 @@ getJumpAssembly(
     unsigned bp2LeadingTrim;
     unsigned bp2TrailingTrim;
     getSVReferenceSegments(_opt.referenceFilename, _header, extraRefSize, sv, assemblyData.bp1ref, assemblyData.bp2ref,
-        bp1LeadingTrim, bp1TrailingTrim, bp2LeadingTrim, bp2TrailingTrim);
+                           bp1LeadingTrim, bp1TrailingTrim, bp2LeadingTrim, bp2TrailingTrim);
 
     pos_t align1LeadingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(bp1LeadingTrim)));
     pos_t align1TrailingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(bp1TrailingTrim)));
