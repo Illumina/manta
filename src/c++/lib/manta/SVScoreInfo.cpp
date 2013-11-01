@@ -66,7 +66,8 @@ SVAlignmentInfo(
         {
             revContigSeq = reverseCompCopyStr(contigSeq);
             // reset offset w.r.t. the reversed contig
-            const pos_t revSize(contigSeq.size()-1);
+            // note this is -2 and not -1 because we're jumping to the other "side" of the breakend:
+            const pos_t revSize(contigSeq.size()-2);
             if (_bp1ContigReversed)
             {
                 bp1ContigOffset = revSize - bp1ContigOffset;
