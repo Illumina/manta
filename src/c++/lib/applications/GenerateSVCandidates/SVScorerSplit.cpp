@@ -222,6 +222,9 @@ getSVSplitReadSupport(
 
     // extract SV alignment info for split read evidence
     const SVAlignmentInfo SVAlignInfo(sv, assemblyData);
+
+    const bool foo(SVAlignInfo.isMinBpEdge(10));
+    std::cerr << "foo: " << foo << "\n";
 #ifdef DEBUG_SVS
     log_os << SVAlignInfo << "\n";
 #endif
