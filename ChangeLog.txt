@@ -1,3 +1,4 @@
+- MANTA-58 fix issue with breakends near contig boundaries
 v0.12
 - MANTA-20 incorporate split-reads into quality score
 - MANTA-42 SV finder mismatches various read pair / sv-candidate combinations
