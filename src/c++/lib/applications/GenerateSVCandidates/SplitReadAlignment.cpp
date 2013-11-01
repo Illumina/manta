@@ -238,6 +238,6 @@ splitReadAligner(
     setEvidence(alignment);
 
 #ifdef DEBUG_SRA
-    log_os << logtag << "final alignment\n" << alignment << "\n";
+    log_os << logtag << "bestpos: " << bestPos << " final alignment\n" << alignment << "\n";
 #endif
 }
