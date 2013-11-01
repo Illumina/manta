@@ -223,7 +223,7 @@ getSVSplitReadSupport(
     // extract SV alignment info for split read evidence
     const SVAlignmentInfo SVAlignInfo(sv, assemblyData);
 
-    // only consider a split alignment with sufficent flanking sequence:
+    // only consider a split alignment with sufficient flanking sequence:
     if (! SVAlignInfo.isMinBpEdge(100)) return;
 
 #ifdef DEBUG_SVS
