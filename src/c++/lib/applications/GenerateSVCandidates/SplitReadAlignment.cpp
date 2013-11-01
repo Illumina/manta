@@ -184,8 +184,10 @@ splitReadAligner(
     const unsigned scanEnd(std::max(0, std::min((static_cast<pos_t>(targetBpBeginPos)-1), static_cast<pos_t>(targetSize - querySize)) ));
 
 #ifdef DEBUG_SRA
-    log_os << "query size = " << querySize << "target size = " << targetSize << "\n";
-    log_os << "scan start = " << scanStart << " scan end = " << scanEnd << "\n";
+    static const std::string logtag("splitReadAligner: ");
+    log_os << logtag << "query size = " << querySize << " target size = " << targetSize << '\n';
+    log_os << logtag << "targetBeginPos = " << targetBpBeginPos << '\n';
+    log_os << logtag << "scan start = " << scanStart << " scan end = " << scanEnd << '\n';
 #endif
 
     const std::string::const_iterator scanWindowBegin(targetSeq.begin());
@@ -201,6 +203,9 @@ splitReadAligner(
             const float lnLhood(getLnLhood(querySeq, qualConvert, queryQual,
                                            scanWindowBegin+i, scanWindowEnd, isBest, bestLnLhood));
 
+#ifdef DEBUG_SRA
+            log_os << logtag << "scanning: " << i << " lhood: " << lnLhood << " bestLnLhood " << bestLnLhood << " isBest " << isBest << " bestPos " << bestPos << '\n';
+#endif
             if ( (! isBest) || (lnLhood > bestLnLhood))
             {
                 bestLnLhood = lnLhood;
@@ -216,7 +221,7 @@ splitReadAligner(
     {
         std::ostringstream oss;
         oss << "ERROR: Unexpected split read alignment outcome. "
-            << " targetBeginPos: " << targetBpBeginPos << " bestPos: " << bestPos << " querySize: " << querySize << '\n'
+            << " targetBeginPos: " << targetBpBeginPos << " bestPos: " << bestPos << " querySize: " << querySize << " targetSize: " << targetSize << '\n'
             << "\tquerySeq: " << querySeq << '\n'
             << "\ttargetSeq: " << targetSeq << '\n';
         BOOST_THROW_EXCEPTION(LogicException(oss.str()));
@@ -231,6 +236,6 @@ splitReadAligner(
     setEvidence(alignment);
 
 #ifdef DEBUG_SRA
-    log_os << "final alignment\n" << alignment << "\n";
+    log_os << logtag << "final alignment\n" << alignment << "\n";
 #endif
 }
