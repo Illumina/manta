@@ -59,6 +59,9 @@ operator<<(std::ostream& os, const SRAlignmentInfo& info);
 ///
 /// \param[in] targetBpOffsetRange this is the range of the breakend (accounting for microhomology) in targetSeq coordinates
 ///
+/// TODO: need to add a query subset/length limit, so that as the query size goes up (ie. 2 x 400) we still consistently
+///       detect split read support without having to add more and more reference to the targetSeq
+///
 void
 splitReadAligner(
     const std::string& querySeq,

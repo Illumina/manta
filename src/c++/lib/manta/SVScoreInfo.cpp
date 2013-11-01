@@ -121,6 +121,26 @@ SVAlignmentInfo(
 }
 
 
+bool
+SVAlignmentInfo::
+isMinBpEdge(
+    const unsigned minEdge) const
+{
+    const unsigned iminEdge(minEdge);
+    if ((bp1ContigOffset+1) < iminEdge) return false;
+    if ((bp2ContigOffset+1) < iminEdge) return false;
+    if ((bp1RefOffset+1) < iminEdge) return false;
+    if ((bp2RefOffset+1) < iminEdge) return false;
+
+    const pos_t contigBpSize(contigSeq.size()-1);
+    if ((contigBpSize - bp1ContigOffset) < iminEdge) return false;
+    if ((contigBpSize - bp2ContigOffset) < iminEdge) return false;
+
+    if ((static_cast<pos_t>(bp1RefSeq.size()) - 1 - bp1RefOffset) < iminEdge) return false;
+    if ((static_cast<pos_t>(bp2RefSeq.size()) - 1 - bp2RefOffset) < iminEdge) return false;
+
+    return true;
+}
 
 std::ostream&
 operator<<(
