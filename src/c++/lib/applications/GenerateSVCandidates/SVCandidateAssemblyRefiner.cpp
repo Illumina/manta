@@ -751,7 +751,7 @@ getSmallSVAssembly(
     const std::string& align1RefStr(assemblyData.bp1ref.seq());
 
 #ifdef DEBUG_REFINER
-    log_os << logtag << " al1Ref: " << align1RefStr << "\n";
+    log_os << logtag << "align1RefSize/Seq: " << align1RefStr.size() << ' ' << align1RefStr << '\n';
 #endif
 
     const unsigned contigCount(assemblyData.contigs.size());
