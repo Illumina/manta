@@ -44,8 +44,8 @@ SVAlignmentInfo(
         const JumpAlignmentResult<int>& alignment = assemblyData.spanningAlignments[sv.assemblyAlignIndex];
 
         // get offsets of breakpoints in the extended contig
-        const unsigned align1Size(apath_read_length(alignment.align1.apath));
-        const unsigned insertSize(alignment.jumpInsertSize);
+        const pos_t align1Size(apath_read_length(alignment.align1.apath));
+
         // the beginPos of align1 is the length of reference padding in the extended contig
         // |ref padding| + |align1| + |insert| + |align2|
         // both bp1 and bp2 include the insert and micro-homology,
@@ -55,8 +55,8 @@ SVAlignmentInfo(
         // deal with each breakpoint as a range instead of a point value
 
         //unsigned homologySize = sv.bp1.interval.range.size() - 1;
-        bp1ContigOffset = alignment.align1.beginPos + align1Size;
-        bp2ContigOffset = alignment.align1.beginPos + align1Size + insertSize;
+        bp1ContigOffset = alignment.align1.beginPos + align1Size -1;
+        bp2ContigOffset = bp1ContigOffset + alignment.jumpInsertSize;
         if (assemblyData.bporient.isBp2AlignedFirst)
         {
             std::swap(bp1ContigOffset, bp2ContigOffset);
@@ -66,10 +66,15 @@ SVAlignmentInfo(
         {
             revContigSeq = reverseCompCopyStr(contigSeq);
             // reset offset w.r.t. the reversed contig
+            const pos_t revSize(contigSeq.size()-1);
             if (_bp1ContigReversed)
-                bp1ContigOffset = contigSeq.size() - bp1ContigOffset - 1;
+            {
+                bp1ContigOffset = revSize - bp1ContigOffset;
+            }
             else
-                bp2ContigOffset = contigSeq.size() - bp2ContigOffset - 1;
+            {
+                bp2ContigOffset = revSize - bp2ContigOffset;
+            }
         }
 
         // get reference regions
@@ -105,8 +110,8 @@ SVAlignmentInfo(
         // csaunders: removing microhomology
 
 //        unsigned homologySize = sv.bp1.interval.range.size() - 1;
-        bp1ContigOffset = alignment.align.beginPos + apath_read_length(apathTillSvStart);
-        bp2ContigOffset = alignment.align.beginPos + apath_read_length(apathTillSvEnd);
+        bp1ContigOffset = alignment.align.beginPos + apath_read_length(apathTillSvStart) - 1;
+        bp2ContigOffset = alignment.align.beginPos + apath_read_length(apathTillSvEnd) - 1;
 
         // get reference regions
         // only bp1ref is used for small events
@@ -126,7 +131,7 @@ SVAlignmentInfo::
 isMinBpEdge(
     const unsigned minEdge) const
 {
-    const unsigned iminEdge(minEdge);
+    const int iminEdge(minEdge);
     if ((bp1ContigOffset+1) < iminEdge) return false;
     if ((bp2ContigOffset+1) < iminEdge) return false;
     if ((bp1RefOffset+1) < iminEdge) return false;
