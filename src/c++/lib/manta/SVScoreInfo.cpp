@@ -18,6 +18,7 @@
 #include "manta/SVScoreInfo.hh"
 #include "blt_util/log.hh"
 #include "blt_util/seq_util.hh"
+#include "blt_util/seq_printer.hh"
 
 #include "boost/foreach.hpp"
 
@@ -126,11 +127,17 @@ operator<<(
     std::ostream& os,
     const SVAlignmentInfo& ai)
 {
-    os << "Contig seq\n" << ai.contigSeq << "\n";
+    os << "Contig seq\n";
+    printSeq(ai.contigSeq,os);
+    os << '\n';
     os << "bp1 contig offset = " << ai.bp1ContigOffset << " bp1 contig reversed = " << ai._bp1ContigReversed << "\n";
     os << "bp2 contig offset = " << ai.bp2ContigOffset << " bp2 contig reversed = " << ai._bp2ContigReversed << "\n";
-    os << "bp1RefSeq\n" << ai.bp1RefSeq << "\n";
-    os << "bp2RefSeq (null for small SVs)\n" << ai.bp2RefSeq << "\n";
+    os << "bp1RefSeq\n";
+    printSeq(ai.bp1RefSeq,os);
+    os << '\n';
+    os << "bp2RefSeq (null for small SVs)\n";
+    printSeq(ai.bp2RefSeq,os);
+    os << '\n';
     os << "bp1 reference offset = " << ai.bp1RefOffset << "\n";
     os << "bp2 reference offset = " << ai.bp2RefOffset << "\n";
     return os;
