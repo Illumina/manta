@@ -10,11 +10,10 @@
 # <https://github.com/sequencing/licenses/>
 #
 
-include ("${MANTA_GLOBALS_CMAKE}")
+include ("${MANTA_MACROS_CMAKE}")
+configure_files ("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}" "*.py")
 
-install(CODE "
-    include (\"${MANTA_MACROS_CMAKE}\")
-    configure_files (\"${CMAKE_CURRENT_SOURCE_DIR}\" \"${CMAKE_CURRENT_BINARY_DIR}\" \"*.py\")
-    install_files (\"${CMAKE_CURRENT_BINARY_DIR}\" \"\${MANTA_FULL_LIBEXECDIR}\" \"*.py\"
-                       \"\${MANTA_EXECUTABLE_PERMISSIONS}\")
-    ")
+include ("${MANTA_GLOBALS_CMAKE}") # get MANTA_EXECUTABLE_PERMISSIONS
+install_files ("${CMAKE_CURRENT_BINARY_DIR}" "${MANTA_LIBEXECDIR}" "*.py"
+               "${MANTA_EXECUTABLE_PERMISSIONS}")
+

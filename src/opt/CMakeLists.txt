@@ -75,10 +75,16 @@ set(PYFLOW_SCRIPT "${PYFLOW_DIR}/src/pyflow.py")
 add_custom_command(OUTPUT ${PYFLOW_SCRIPT}
                    COMMAND rm -rf "${PYFLOW_DIR}"
                    COMMAND tar -xjf "${MANTA_REDIST_DIR}/${PYFLOW_PREFIX}.tar.bz2"
+                   COMMAND rm "${PYFLOW_DIR}/src/__init__.py"
+                   COMMAND ${PYTHON_EXECUTABLE} -m compileall "${PYFLOW_DIR}/src"
                    COMMENT "Extracting pyflow")
+
 add_custom_target(MANTA_PYFLOW DEPENDS "${PYFLOW_SCRIPT}")
 
-install (DIRECTORY ${PYFLOW_DIR}/src/ DESTINATION "${MANTA_PYTHON_LIBDIR}/pyflow" FILES_MATCHING PATTERN "*.py")
+set (PYGLOBS "*.py" "*.pyc")
+foreach (PYGLOB ${PYGLOBS})
+    install (DIRECTORY ${PYFLOW_DIR}/src/ DESTINATION ${MANTA_PYTHON_LIBDIR}/pyflow FILES_MATCHING PATTERN ${PYGLOB})
+endforeach ()
 
 
 # tie results back to parent:

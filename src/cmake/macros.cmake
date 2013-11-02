@@ -21,32 +21,14 @@
 macro(configure_files srcDir destDir pattern)
     file(GLOB templateFiles RELATIVE ${srcDir} ${srcDir}/${pattern})
     foreach(templateFile ${templateFiles})
-        message(STATUS "Configuring file ${srcDir}/${templateFile}")
+        #message(STATUS "Configuring file ${srcDir}/${templateFile}")
         configure_file(${srcDir}/${templateFile} ${destDir}/${templateFile} @ONLY)
     endforeach()
 endmacro()
 
 macro(install_files srcDir destDir pattern perm)
     file(GLOB templateFiles ${srcDir}/${pattern})
-    file(INSTALL DESTINATION ${destDir} TYPE FILE
-         FILES ${templateFiles} PERMISSIONS ${perm})
-endmacro()
-
-macro(configure_files_recursively srcDir destDir pattern)
-    file(GLOB_RECURSE templateFiles RELATIVE ${srcDir} ${srcDir}/${pattern})
-    foreach(templateFile ${templateFiles})
-        message(STATUS "Configuring file ${srcDir}/${templateFile}")
-        configure_file(${srcDir}/${templateFile} ${destDir}/${templateFile} @ONLY)
-    endforeach()
-endmacro()
-
-macro(install_files_recursively srcDir destDir pattern perm)
-    file(GLOB_RECURSE templateFiles RELATIVE ${srcDir} ${srcDir}/${pattern})
-    foreach(templateFile ${templateFiles})
-        get_filename_component(DIRNAME "${templateFile}" PATH)
-        file(INSTALL DESTINATION ${destDir}/${DIRNAME} TYPE FILE
-             FILES ${srcDir}/${templateFile} PERMISSIONS ${perm})
-    endforeach()
+    install(FILES ${templateFiles} DESTINATION ${destDir} PERMISSIONS ${perm})
 endmacro()
 
 #
