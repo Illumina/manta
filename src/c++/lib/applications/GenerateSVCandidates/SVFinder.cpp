@@ -537,7 +537,7 @@ getCandidatesFromData(
 #ifdef DEBUG_SVDATA
             log_os << "Checking pair: " << pair << "\n";
             log_os << "Translated to candidates:\n";
-            BOOST_FOREACH(const SVObservvation& cand, readCandidates)
+            BOOST_FOREACH(const SVObservation& cand, readCandidates)
             {
                 log_os << logtag << "cand: " << cand << "\n";
             }
