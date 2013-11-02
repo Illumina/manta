@@ -20,7 +20,7 @@ add_custom_target(MANTA_PYPILE
 include ("${MANTA_GLOBALS_CMAKE}") # get MANTA_LIBRARY_PERMISSIONS
 set (PYGLOBS "*.py" "*.pyc")
 foreach (PYGLOB ${PYGLOBS})
-    install_files ("${CMAKE_CURRENT_BINARY_DIR}" "${MANTA_PYTHON_LIBDIR}" ${PYGLOB}
+    install_files ("${CMAKE_CURRENT_BINARY_DIR}" "${MANTA_PYTHON_LIBDIR}" "${PYGLOB}"
                    "${MANTA_LIBRARY_PERMISSIONS}")
 endforeach ()
 
