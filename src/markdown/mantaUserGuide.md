@@ -7,9 +7,14 @@ Version: @MANTA_VERSION@
 
 ## Introduction
 
-Manta is a general purpose structural variant caller for short sequencing reads.
+Manta is a general purpose structural variant caller for optimized for short NGS reads.
+It is designed to use reads aligned in BAM format as input. Its output is a set of
+structural variant predictions scored according to either diploid genotype
+probability in a single sample or somatic probability given a tumor and normal sample.
+The structural variant scores incorporate evidence from both fragment spanning and
+split reads.
 
-## Capabilitiies
+## Capabilities
 
 ### Detected variant classes
 

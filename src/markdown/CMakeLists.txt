@@ -28,9 +28,12 @@ include (FindMarkdown)
 include (UseMarkdown)
 message (STATUS "Markdown: ${MARKDOWN_EXECUTABLE}.")
 if (MARKDOWN_FOUND)
+    set (MUG "mantaUserGuide.md")
+    configure_files (${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${MUG})
+
     set(MARKDOWN_PARAMS -x tables -x toc)
-    add_markdown_target(manual ${CMAKE_CURRENT_BINARY_DIR} "mantaUserGuide.md")
-    install_markdown_target(manual DESTINATION ${MANTA_DOCDIR}/html)
+    add_markdown_target(mantaUserGuide ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}/${MUG})
+    install_markdown_target(mantaUserGuide DESTINATION ${MANTA_DOCDIR}/html)
 endif ()
 
 
