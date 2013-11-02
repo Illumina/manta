@@ -19,7 +19,7 @@ import os,sys
 
 scriptDir=os.path.abspath(os.path.dirname(__file__))
 scriptName=os.path.basename(__file__)
-workflowDir="@MANTA_FULL_PYTHON_LIBDIR@"
+workflowDir=os.path.join(scriptDir,"@MANTA_RELATIVE_PYTHON_LIBDIR@")
 
 version="@MANTA_FULL_VERSION@"
 

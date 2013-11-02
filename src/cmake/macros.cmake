@@ -26,10 +26,12 @@ macro(configure_files srcDir destDir pattern)
     endforeach()
 endmacro()
 
-macro(install_files srcDir destDir pattern perm)
+
+macro(install_fileglob srcDir destDir pattern perm)
     file(GLOB templateFiles ${srcDir}/${pattern})
     install(FILES ${templateFiles} DESTINATION ${destDir} PERMISSIONS ${perm})
 endmacro()
+
 
 #
 # Macro to find libraries, with support for static-only search
