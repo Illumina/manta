@@ -52,7 +52,6 @@ cd ..
 git archive --prefix=$pname_root/ HEAD: | tar -x -C $outdir
 
 # make version number substitutions:
-source_dir=$(pwd)/starka
 tmp_file=$(mktemp)
 cml=$pname/src/CMakeLists.txt
 awk -v gver=$gitversion '{if($1=="set\(MANTA_VERSION") printf "set(MANTA_VERSION \"%s\")\n",gver; else print;}' $cml >| $tmp_file
