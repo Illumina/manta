@@ -19,22 +19,21 @@
 ## author Roman Petrovski
 ##
 ################################################################################
-include ("${MANTA_GLOBALS_CMAKE}")
 
 ##
 ## build the documentation when available
 ##
-include (FindMarkdown)
-include (UseMarkdown)
-message (STATUS "Markdown: ${MARKDOWN_EXECUTABLE}.")
-if (MARKDOWN_FOUND)
-    set (MUG "mantaUserGuide.md")
-    configure_files (${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${MUG})
+set (MUP "mantaUserGuide")
+set (MUG "${MUP}.md")
+set (MUL "${CMAKE_CURRENT_BINARY_DIR}/${MUP}.html")
 
-    set(MARKDOWN_PARAMS -x tables -x toc)
-    add_markdown_target(mantaUserGuide ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}/${MUG})
-    install_markdown_target(mantaUserGuide DESTINATION ${MANTA_DOCDIR}/html)
-endif ()
+configure_files (${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${MUG})
 
+add_custom_TARGET(MANTA_USERGUIDE
+                  ALL
+                  COMMAND ${HOEDOWN_PROG} ${CMAKE_CURRENT_BINARY_DIR}/${MUG} > ${MUL}
+                  DEPENDS MANTA_HOEDOWN
+                  COMMENT "Converting user guide to html")
 
+install(FILES ${MUL} DESTINATION ${MANTA_DOCDIR}/html)
 

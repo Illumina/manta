@@ -80,8 +80,23 @@ add_custom_target(MANTA_PYFLOW DEPENDS "${PYFLOW_SCRIPT}")
 
 install (DIRECTORY ${PYFLOW_DIR}/src/ DESTINATION "${MANTA_PYTHON_LIBDIR}/pyflow" FILES_MATCHING PATTERN "*.py")
 
+
 # tie results back to parent:
 #
 add_dependencies(MANTA_OPT MANTA_SAMTOOLS MANTA_TABIX MANTA_PYFLOW)
 
+
+#
+# hoedown 
+#
+set(HOEDOWN_PREFIX "hoedown-1.0.2")
+set(HOEDOWN_DIR "${CMAKE_CURRENT_BINARY_DIR}/${HOEDOWN_PREFIX}")
+superset(HOEDOWN_PROG "${HOEDOWN_DIR}/hoedown")
+
+add_custom_command(OUTPUT ${HOEDOWN_PROG}
+                   COMMAND rm -rf "${HOEDOWN_DIR}"
+                   COMMAND tar -xjf "${MANTA_REDIST_DIR}/${HOEDOWN_PREFIX}.tar.bz2"
+                   COMMAND $(MAKE) -C "${HOEDOWN_DIR}"
+                   COMMENT "Building hoedown markdown parser")
+add_custom_target(MANTA_HOEDOWN DEPENDS "${HOEDOWN_PROG}")
 
