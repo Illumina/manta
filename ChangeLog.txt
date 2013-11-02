@@ -1,3 +1,4 @@
+- MANTA-43 make relocatable installation
 - MANTA-55 compile python code as part of build/install
 v0.12.1
 - MANTA-58 fix issue with breakends near contig boundaries
