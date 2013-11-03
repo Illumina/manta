@@ -29,11 +29,13 @@ set (MUL "${CMAKE_CURRENT_BINARY_DIR}/${MUP}.html")
 
 configure_files (${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${MUG})
 
-add_custom_TARGET(MANTA_USERGUIDE
-                  ALL
-                  COMMAND ${HOEDOWN_PROG} ${CMAKE_CURRENT_BINARY_DIR}/${MUG} > ${MUL}
-                  DEPENDS MANTA_HOEDOWN
-                  COMMENT "Converting user guide to html")
+add_custom_command(
+    OUTPUT ${MUL}
+    COMMAND ${HOEDOWN_PROG} ${CMAKE_CURRENT_BINARY_DIR}/${MUG} > ${MUL}
+    DEPENDS MANTA_MARKDOWN
+    COMMENT "Converting user guide to html")
+
+add_custom_target(MANTA_USERGUIDE ALL DEPENDS ${MUL})
 
 install(FILES ${MUL} DESTINATION ${MANTA_DOCDIR}/html)
 

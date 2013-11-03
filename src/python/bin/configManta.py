@@ -81,9 +81,9 @@ You must specify a BAM file for at least one sample.
 
 
     def getOptionDefaults(self) :
-        
+
         megaBase=1000000
-        
+
         self.configScriptDir=scriptDir
         defaults=MantaWorkflowOptionsBase.getOptionDefaults(self)
         defaults.update({
