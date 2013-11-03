@@ -1,8 +1,9 @@
-- MANTA-43 make relocatable installation
+- MANTA-43 allow manta installation to be relocated
 - MANTA-55 compile python code as part of build/install
 v0.12.1
 - MANTA-58 fix issue with breakends near contig boundaries
 - MANTA-61 add markdown-based user guide to build
+- MANTA-30 initial integration of known variant tracing framework
 v0.12
 - MANTA-20 incorporate split-reads into quality score
 - MANTA-42 SV finder mismatches various read pair / sv-candidate combinations
