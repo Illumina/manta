@@ -19,7 +19,7 @@ configure_files("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/pysta
 
 add_custom_target(MANTA_PYPILE
                   ALL
-                  COMMAND ${PYTHON_EXECUTABLE} -m compileall ${CMAKE_CURRENT_BINARY_DIR}/pystage)
+                  COMMAND ${PYTHON_EXECUTABLE} -m compileall -q ${CMAKE_CURRENT_BINARY_DIR}/pystage)
 
 include("${MANTA_GLOBALS_CMAKE}") # get MANTA_LIBRARY_PERMISSIONS
 set(PYGLOBS "*.py" "*.pyc")

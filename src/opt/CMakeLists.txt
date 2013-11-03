@@ -76,7 +76,7 @@ add_custom_command(OUTPUT ${PYFLOW_SCRIPT}
                    COMMAND rm -rf "${PYFLOW_DIR}"
                    COMMAND tar -xjf "${MANTA_REDIST_DIR}/${PYFLOW_PREFIX}.tar.bz2"
                    COMMAND rm "${PYFLOW_DIR}/src/__init__.py"
-                   COMMAND ${PYTHON_EXECUTABLE} -m compileall "${PYFLOW_DIR}/src"
+                   COMMAND ${PYTHON_EXECUTABLE} -m compileall -q "${PYFLOW_DIR}/src"
                    COMMENT "Extracting pyflow")
 
 add_custom_target(MANTA_PYFLOW DEPENDS "${PYFLOW_SCRIPT}")
