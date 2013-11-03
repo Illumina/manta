@@ -38,4 +38,5 @@ add_custom_command(
 add_custom_target(MANTA_USERGUIDE ALL DEPENDS ${MUL})
 
 install(FILES ${MUL} DESTINATION ${MANTA_DOCDIR}/html)
+install(FILES "userguide.css" DESTINATION ${MANTA_DOCDIR}/html)
 

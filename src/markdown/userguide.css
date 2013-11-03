@@ -1,0 +1,13 @@
+@charset "utf-8";
+
+body {
+font-family: sans-serif;
+max-width:52em;
+margin:auto;
+color: #222222;
+}
+
+h2 {
+border-bottom: 1px solid #DDDDDD;
+}
+
