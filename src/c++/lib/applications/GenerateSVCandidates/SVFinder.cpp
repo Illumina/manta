@@ -666,6 +666,11 @@ findCandidateSV(
     {
         addSVNodeData(chromToIndex, locus,edge.nodeIndex2,edge.nodeIndex1,svData);
     }
+    else
+    {
+/// TMP:
+        svData.setSkipped();
+    }
 
     getCandidatesFromData(chromToIndex, svData,svs);
 
