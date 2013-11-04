@@ -466,6 +466,7 @@ assignPairObservationsToSVCandidates(
         const bool isSpanning(isSpanningSV(readCand));
         if (isExcludeSpanning && isSpanning) continue;
 
+        bool isMatched(false);
         unsigned svIndex(0);
         BOOST_FOREACH(SVCandidate& sv, svs)
         {
@@ -480,16 +481,20 @@ assignPairObservationsToSVCandidates(
                 }
 
                 sv.merge(readCand);
-                return;
+
+                isMatched=true;
+                break;
             }
             svIndex++;
         }
 
-#ifdef DEBUG_SVDATA
-        log_os << logtag << "New svIndex: " << svs.size() << "\n";
-#endif
+        if (! isMatched)
         {
             const unsigned newSVIndex(svs.size());
+
+#ifdef DEBUG_SVDATA
+            log_os << logtag << "New svIndex: " << newSVIndex << "\n";
+#endif
             if (isSpanning)
             {
                 pair.svLink.push_back(SVPairAssociation(newSVIndex,readCand.evtype));
