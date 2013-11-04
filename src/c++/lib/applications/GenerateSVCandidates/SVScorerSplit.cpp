@@ -227,7 +227,8 @@ getSVSplitReadSupport(
     if (! SVAlignInfo.isMinBpEdge(100)) return;
 
 #ifdef DEBUG_SVS
-    log_os << SVAlignInfo << "\n";
+    static const std::string logtag("getSVSplitReadSupport: ");
+    log_os << logtag << SVAlignInfo << '\n';
 #endif
 
     const unsigned minMapQ(_readScanner.getMinMapQ());

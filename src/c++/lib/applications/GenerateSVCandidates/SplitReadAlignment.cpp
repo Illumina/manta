@@ -37,7 +37,8 @@ operator<<(std::ostream& os, const SRAlignmentInfo& info)
        << " alignScore=" << info.alignScore
        << " isEvidence: " << info.isEvidence
        << " evidence: " << info.evidence
-       << "\n";
+       << " alignLnLhood: "  << info.alignLnLhood
+       << '\n';
     return os;
 }
 

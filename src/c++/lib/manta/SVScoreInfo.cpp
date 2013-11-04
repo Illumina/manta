@@ -154,27 +154,34 @@ isMinBpEdge(
 
 
 
+static
+void
+dumpSeq(
+    const char* label,
+    const std::string& seq,
+    std::ostream& os)
+{
+    os << label << " size/seq: " << seq.size() << '\n';
+    printSeq(seq,os);
+    os << '\n';
+}
+
+
+
 std::ostream&
 operator<<(
     std::ostream& os,
     const SVAlignmentInfo& ai)
 {
-    os << "Contig seq\n";
-    printSeq(ai.contigSeq,os);
-    os << '\n';
-    os << "Rev Contig seq\n";
-    printSeq(ai.revContigSeq,os);
-    os << '\n';
+    os << "SVAlignmentInfo: isSpanning: " << ai.isSpanning() << '\n';
+    dumpSeq("Contig",ai.contigSeq,os);
+    dumpSeq("Rev Contig",ai.revContigSeq,os);
     os << "bp1 contig offset = " << ai.bp1ContigOffset << " bp1 contig reversed = " << ai._bp1ContigReversed << '\n';
     os << "bp2 contig offset = " << ai.bp2ContigOffset << " bp2 contig reversed = " << ai._bp2ContigReversed << '\n';
-    os << "bp1RefSeq\n";
-    printSeq(ai.bp1RefSeq,os);
-    os << '\n';
+    dumpSeq("bp1RefSeq",ai.bp1RefSeq,os);
     if (ai.isSpanning())
     {
-        os << "bp2RefSeq\n";
-        printSeq(ai.bp2RefSeq,os);
-        os << '\n';
+        dumpSeq("bp2RefSeq",ai.bp2RefSeq,os);
     }
     os << "bp1 reference offset = " << ai.bp1RefOffset << '\n';
     os << "bp2 reference offset = " << ai.bp2RefOffset << '\n';
