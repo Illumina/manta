@@ -440,12 +440,12 @@ consolidateOverlap(
 // temporary hack hypoth gen method assumes that only one SV exists for each overlapping breakpoint range with
 // the same orientation:
 //
-// if isExcludeSpanning, exclude all spanning pair observations
+// if isExcludePairType, exclude all spanning pair observations
 //
 static
 void
 assignPairObservationsToSVCandidates(
-    const bool isExcludeSpanning,
+    const bool isExcludePairType,
     const std::vector<SVObservation>& readCandidates,
     SVCandidateSetReadPair& pair,
     std::vector<SVCandidate>& svs)
@@ -462,9 +462,18 @@ assignPairObservationsToSVCandidates(
 #ifdef DEBUG_SVDATA
         log_os << logtag << "Starting assignment for read cand: " << readCand << "\n";
 #endif
+        if (isExcludePairType)
+        {
+            if (SVEvidenceType::isPairType(readCand.evtype))
+            {
+#ifdef DEBUG_SVDATA
+                log_os << logtag << "Pair type exclusion\n";
+#endif
+                continue;
+            }
+        }
 
         const bool isSpanning(isSpanningSV(readCand));
-        if (isExcludeSpanning && isSpanning) continue;
 
         bool isMatched(false);
         unsigned svIndex(0);
@@ -548,14 +557,14 @@ getCandidatesFromData(
             }
 #endif
 
-            bool isExcludeSpanning(false);
+            bool isExcludePairType(false);
             if (isExcludeUnpaired)
             {
                 // in this case both sides of the read pair need to be observed (and not filtered for MAPQ, etc)
-                if (! remoteReadPtr->isSet()) isExcludeSpanning=true;
+                if (! remoteReadPtr->isSet()) isExcludePairType=true;
             }
 
-            assignPairObservationsToSVCandidates(isExcludeSpanning, readCandidates, pair, svs);
+            assignPairObservationsToSVCandidates(isExcludePairType, readCandidates, pair, svs);
         }
     }
 
