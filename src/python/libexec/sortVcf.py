@@ -92,7 +92,7 @@ def getOptions() :
 
 
 
-def resolveRec(recEqualSet,recList)
+def resolveRec(recEqualSet,recList) :
     """
     determine which of a set of 'equal' vcf records is the best
     right now best is a record with PASS in the filter field, and secondarily the high quality
@@ -109,17 +109,16 @@ def resolveRec(recEqualSet,recList)
         except ValueError:
             rec.qual = 0.
 
-        assert rec.qaul >= 0.
+        assert rec.qual >= 0.
 
-        isNewPass=((! bestIsPass) && rec.isPass)
-        isHighQual=((bestIsPass == rec.isPass) && (rec.qual > bestQual))
-        if isNewPass || isHighQual :
+        isNewPass=((not bestIsPass) and rec.isPass)
+        isHighQual=((bestIsPass == rec.isPass) and (rec.qual > bestQual))
+        if (isNewPass or isHighQual) :
             bestIndex = index
             bestQual = rec.qual
             bestIsPass = rec.isPass
 
     recList.append(recEqualSet[bestIndex])
-    recEqualSet = []
 
 
 
@@ -150,6 +149,7 @@ def main() :
             rec = (vcfrec.chrom,vcfrec.pos,vcfrec.ref,vcfrec.alt)
             if rec != lastRec :
                 resolveRec(recEqualSet,recList2)
+                recEqualSet = []
             recEqualSet.append(vcfrec)
             lastRec = rec
         resolveRec(recEqualSet,recList2)
