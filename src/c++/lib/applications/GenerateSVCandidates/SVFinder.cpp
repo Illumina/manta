@@ -129,6 +129,10 @@ addSVNodeRead(
 
             if (! locus.getNode(readRemoteIndex).getInterval().isIntersect(remoteNode.getInterval())) continue;
         }
+        else
+        {
+            if (! locus.getNode(readLocalIndex).getInterval().isIntersect(remoteNode.getInterval())) continue;
+        }
 
         if (! locus.getNode(readLocalIndex).getInterval().isIntersect(localNode.getInterval())) continue;
 
@@ -170,7 +174,8 @@ addSVNodeData(
     if (! isExpectRepeat) isExpectRepeat = (localNode.getInterval().tid == remoteNode.getInterval().tid);
 
 #ifdef DEBUG_SVDATA
-    log_os << "addSVNodeData: bp_interval: " << localNode.getInterval()
+    static const std::string logtag("addSVNodeData: ");
+    log_os << logtag << "bp_interval: " << localNode.getInterval()
            << " evidenceInterval: " << localNode.getEvidenceRange()
            << " searchInterval: " << searchInterval
            << " isExpectRepeat: " << isExpectRepeat
@@ -188,7 +193,7 @@ addSVNodeData(
         read_stream.set_new_region(searchInterval.tid,searchInterval.range.begin_pos(),searchInterval.range.end_pos());
 
 #ifdef DEBUG_SVDATA
-        log_os << "addSVNodeData: scanning bamIndex: " << bamIndex << "\n";
+        log_os << logtag << "scanning bamIndex: " << bamIndex << "\n";
 #endif
         while (read_stream.next())
         {

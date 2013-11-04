@@ -145,3 +145,4 @@ struct SVObservation : public SVCandidate
 
     SVEvidenceType::index_t evtype;
 };
+
