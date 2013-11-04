@@ -75,16 +75,16 @@ def main() :
     for stype in suppressList :
         checkCmd.append("--suppress="+stype)
 
-    # xml output is usful for getting a warnings id field, which is what you need to supress it:
+    # xml output is usful for getting a warnings id field, which is what you need to suppress it:
     #checkCmd.append("--xml")
 
-    # additional suppressed checks fraom starka:
+    # additional suppressed checks from starka:
     #--suppress=uninitMemberVar \
     #--suppress=unsignedLessThanZero \
     #--suppress=obsoleteFunctionsasctime \
 
-    # this is more aggresive and includes more FPs
-    # --inconclusive \
+    # this is more aggressive  and includes more FPs
+    #checkCmd.append("--inconclusive")
 
     checkCmd.append(srcRoot)
 

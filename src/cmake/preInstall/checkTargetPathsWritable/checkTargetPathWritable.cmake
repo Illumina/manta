@@ -23,9 +23,9 @@ foreach (MANTA_DIR ${MANTA_TEST_DIRS})
         message (STATUS "ERROR: Directory is not writeable: ${MANTA_DIR}")
         message (STATUS "If you don't have administrator access to the "
                          "target installation location, please use --prefix "
-                         "command-line option when configuring iSAAC. "
-                         "Please use configure --help for all installer "
-                         "command-line options details.")
+                         "command-line option during configuration. "
+                         "Please see 'configure --help' for all installer "
+                         "command-line options.")
         message (FATAL_ERROR "ERROR: installation cannot continue")
     else ()
         message (STATUS "Directory is writeable: ${MANTA_DIR}")
