@@ -32,6 +32,11 @@
 //#define DEBUG_REFINER
 
 
+#ifdef DEBUG_REFINER
+#include "blt_util/seq_printer.hh"
+#endif
+
+
 
 /// process assembly/align info into simple reference coordinates that can be reported in the output vcf:
 ///
@@ -579,8 +584,12 @@ getJumpAssembly(
     }
 
 #ifdef DEBUG_REFINER
-    log_os << logtag << "al1RefSize/Seq: " << align1RefStrPtr->size() << ' ' << *align1RefStrPtr << '\n';
-    log_os << logtag << "al2Refsize/Seq: " << align2RefStrPtr->size() << *align2RefStrPtr << '\n';
+    log_os << logtag << "al1RefSize/Seq: " << align1RefStrPtr->size() << '\n';
+    printSeq(*align1RefStrPtr,log_os);
+    log_os << '\n';
+    log_os << logtag << "al2Refsize/Seq: " << align2RefStrPtr->size() << '\n';
+    printSeq(*align2RefStrPtr,log_os);
+    log_os << '\n';
 #endif
 
     const unsigned contigCount(assemblyData.contigs.size());
@@ -751,7 +760,9 @@ getSmallSVAssembly(
     const std::string& align1RefStr(assemblyData.bp1ref.seq());
 
 #ifdef DEBUG_REFINER
-    log_os << logtag << "align1RefSize/Seq: " << align1RefStr.size() << ' ' << align1RefStr << '\n';
+    log_os << logtag << "align1RefSize/Seq: " << align1RefStr.size() << '\n';
+    printSeq(align1RefStr,log_os);
+    log_os << '\n';
 #endif
 
     const unsigned contigCount(assemblyData.contigs.size());

@@ -16,6 +16,7 @@
 ///
 
 #include "AssembledContig.hh"
+#include "blt_util/seq_printer.hh"
 
 #include <iostream>
 
@@ -26,8 +27,9 @@ operator<<(std::ostream& os, const AssembledContig& contig)
 {
     os << "CONTIG size: " << contig.seq.size()
        << " seedCount: " << contig.seedReadCount
-       << " seq: " << contig.seq
-       << "\n";
+       << " seq:\n";
+    printSeq(contig.seq,os);
+    os << "\n";
 
     return os;
 }
