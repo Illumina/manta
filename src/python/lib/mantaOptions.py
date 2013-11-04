@@ -48,7 +48,7 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
 
         Every local variable in this method becomes part of the default hash
         """
-        libexecDir=os.path.join(scriptDir,"@MANTA_RELATIVE_LIBEXECDIR@")
+        libexecDir=os.path.abspath(os.path.join(scriptDir,"@MANTA_RELATIVE_LIBEXECDIR@"))
         assert os.path.isdir(libexecDir)
 
         def joinFile(*arg) :
