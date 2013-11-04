@@ -7,17 +7,36 @@ Version: @MANTA_VERSION@
 
 ## Introduction
 
-Manta is a structural variant caller for short sequencing reads. It discovers
-structural variants of any size and scores these according to a diploid genotype
-model. It will also score structural variants according to a somatic model when
-separate tumor and normal reads are specified. Both discovery and scoring
-incorporate paired-read fragment spanning and split read evidence.
+Manta is a structural variant caller for short sequencing reads. It is capable
+of discovering structural variants of any size and scoring these using both a
+diploid genotype model and a somatic model (when separate tumor and normal
+samples are specified). Structural variant discovery and scoring incorporate
+both paired-read fragment spanning and split read evidence to improve
+specificity.
 
 ## Capabilities
 
+Primary application is WGS DNA-Seq. Requires mapped short sequencing reads
+provided in the BAM file format. At least one BAM file must be submitted for
+each sample.
+
+Limited testing of WES. Configure with the `--exome` flag.
+
+Limited testing RNA-Seq. Configure with the `--rna` flag.
+
 ### Detected variant classes
 
-Manta should be able to detect simple indels.
+Manta is able to detect all classes of variations which can be explained as
+novel DNA adjacencies in the genome. Simple insertion/deletion events can be
+detected down to a configurable minimum size cutoff (defaulting to 51). All DNA
+adjacencies are classified into the following categories based on the breakend
+pattern:
+
+* Deletions
+* Insertions
+* Inversions
+* Tandem Duplications
+* Interchromosomal Translocations
 
 #### Known Limitations
 
@@ -25,11 +44,11 @@ Manta should not be able to detect the following variant types:
 
 * Non-tandem repeats/amplifications
 * Large insertions
-    *   The maximum detectable size should correspond to approximately the
+    *    The maximum detectable size should correspond to approximately the
   read-pair fragment size, but note that detection power should fall off to
   impractical levels well before this size
 * Small inversions
-    *  The limiting size is not tested, but in theory detection falls off below
+    *   The limiting size is not tested, but in theory detection falls off below
   approx 1kb-500bases. So-called micro-inversions might be detected, but as
   combined insertion/deletion variants.
 
@@ -41,15 +60,23 @@ More general repeat-based limitations exist for all variant types:
   length approaches the fragment size.
 * The method cannot detect non-tandem repeats
 
-Additionally note that manta does not offer high-level classification of SVs
-beyond finding simple DNA-adjacencies.
+Note that while manta classifies novel DNA-adjacencies, it does not infer the
+higher level constructs implied by the classification. For instance, a
+'deletion' detected by manta indicates an intrachromosomal translocation of high
+confidence with a breakend pattern that could be a deletion, however there is no
+higher-order testing of depth and all intersecting adjacencies to make directly
+infer the SV type.
 
 ### Input requirements
 
 Manta requires input sequencing reads to be mapped by an external tool and
 provided as input in BAM format.
 
-## SV Output
+## Outputs
+
+### SV predictions
+
+### Statistics
 
 ## Run configuration and Execution
 
