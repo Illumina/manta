@@ -30,6 +30,7 @@ VCF_CHROM = 0
 VCF_POS = 1
 VCF_REF = 3
 VCF_ALT = 4
+VCF_QUAL = 5
 VCF_FILTER = 6
 VCF_INFO = 7
 
@@ -44,6 +45,8 @@ class VcfRecord :
         if isUnique :
             self.ref=w[VCF_REF]
             self.alt=w[VCF_ALT]
+            self.qual=w[VCF_QUAL]
+            self.isPass=(w[VCF_FILTER] == "FILTER")
         self.endPos=self.pos+len(w[VCF_REF])-1
         val = getKeyVal(w[VCF_INFO],"END")
         if val is not None :
@@ -89,6 +92,37 @@ def getOptions() :
 
 
 
+def resolveRec(recEqualSet,recList)
+    """
+    determine which of a set of 'equal' vcf records is the best
+    right now best is a record with PASS in the filter field, and secondarily the high quality
+    """
+
+    if not recEqualSet: return
+
+    bestIndex=0
+    bestQual=0.
+    bestIsPass=False
+    for (index,rec) in enumerate(recEqualSet) :
+        try:
+            rec.qual = float(rec.qual)
+        except ValueError:
+            rec.qual = 0.
+
+        assert rec.qaul >= 0.
+
+        isNewPass=((! bestIsPass) && rec.isPass)
+        isHighQual=((bestIsPass == rec.isPass) && (rec.qual > bestQual))
+        if isNewPass || isHighQual :
+            bestIndex = index
+            bestQual = rec.qual
+            bestIsPass = rec.isPass
+
+    recList.append(recEqualSet[bestIndex])
+    recEqualSet = []
+
+
+
 def main() :
 
     outfp = sys.stdout
@@ -110,12 +144,15 @@ def main() :
 
     if options.isUnique :
         recList2 = []
+        recEqualSet = []
         lastRec = None
         for vcfrec in recList :
             rec = (vcfrec.chrom,vcfrec.pos,vcfrec.ref,vcfrec.alt)
             if rec != lastRec :
-                recList2.append(vcfrec)
+                resolveRec(recEqualSet,recList2)
+            recEqualSet.append(vcfrec)
             lastRec = rec
+        resolveRec(recEqualSet,recList2)
         recList = recList2
 
     for vcfrec in recList :
