@@ -116,7 +116,7 @@ addSVNodeRead(
             unsigned readRemoteIndex(1);
             if (! locus.getNode(readLocalIndex).isOutCount())
             {
-               std::swap(readLocalIndex,readRemoteIndex);
+                std::swap(readLocalIndex,readRemoteIndex);
             }
 
             if (! locus.getNode(readLocalIndex).isOutCount())
@@ -635,41 +635,6 @@ findCandidateSV(
 #endif
         return;
     }
-
-#if 0
-    // if this is a self-edge, then automatically forward it as is to the assembly module:
-    /// TODO: move self-edge handling into the regular hygen routine below
-    if (edge.nodeIndex1 == edge.nodeIndex2)
-    {
-        SVCandidate sv;
-        SVBreakend& localBreakend(sv.bp1);
-        SVBreakend& remoteBreakend(sv.bp2);
-
-        const SVLocusNode& node(locus.getNode(edge.nodeIndex1));
-
-        static const SVEvidenceType::index_t svUnknown(SVEvidenceType::UNKNOWN);
-        localBreakend.lowresEvidence.add(svUnknown, node.getEdge(edge.nodeIndex1).getCount());
-        localBreakend.state = SVBreakendState::COMPLEX;
-        localBreakend.interval = node.getInterval();
-
-        remoteBreakend.state = SVBreakendState::UNKNOWN;
-
-        sv.candidateIndex=svs.size();
-        svs.push_back(sv);
-
-        // minimal setup for svData:
-        const unsigned bamCount(_bamStreams.size());
-        for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
-        {
-            svData.getDataGroup(bamIndex);
-        }
-
-        svData.setSkipped();
-
-        return;
-    }
-#endif
-
 
     //
     // 1) scan through each region to identify all reads supporting
