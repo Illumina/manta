@@ -17,11 +17,9 @@
 ## author Ole Schulz-Trieglaff
 ##
 ################################################################################
+
+set(IS_QUIET true)
 include(${MANTA_CXX_EXECUTABLE_CMAKE})
-
-get_filename_component(CURRENT_DIR_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
-message (STATUS "Building unit tests for: ${CURRENT_DIR_NAME}")
-
 
 file (GLOB TEST_SOURCE "*.cpp")
 

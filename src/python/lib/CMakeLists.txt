@@ -37,7 +37,6 @@ endforeach()
 file(GLOB STAGED_PYTHON_FILES "${PYSTAGE_DIR}/*.py")
 add_custom_command(
     OUTPUT ${STAGED_PYTHONC_FILES}
-    DEPENDS ${STAGED_PYTHON_FILES}
     COMMAND ${PYTHON_EXECUTABLE} -m compileall -q ${PYSTAGE_DIR}
     COMMENT "Compiling python library source")
 
