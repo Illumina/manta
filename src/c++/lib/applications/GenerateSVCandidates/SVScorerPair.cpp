@@ -586,7 +586,10 @@ getSVPairSupport(
             /// get fragment prob, and possibly withdraw fragment support based on refined sv breakend coordinates:
             bool isFragSupportSV(false);
             float fragProb(0);
-            getFragProb(pairOpt, sv, pair, fragDistro, isStrictMatch, isFragSupportSV, fragProb);
+            if (pair.read1.isSet() && pair.read2.isSet())
+            {
+                getFragProb(pairOpt, sv, pair, fragDistro, isStrictMatch, isFragSupportSV, fragProb);
+            }
 
             if (! isFragSupportSV) continue;
 
