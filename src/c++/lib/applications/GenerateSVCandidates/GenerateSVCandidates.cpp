@@ -122,19 +122,21 @@ struct SVWriter
         const SVCandidateAssemblyData& assemblyData,
         const SVCandidate& sv)
     {
-        static const unsigned minCandidateSpanningCount(2);
+        static const unsigned minCandidateSpanningCount(3);
 
-        const bool isSpanning(isSpanningSV(sv));
+        const bool isCandidateSpanning(assemblyData.isSpanning);
 
 #ifdef DEBUG_GSV
         static const std::string logtag("SVWriter::writeSV: ");
-        log_os << logtag << "isSpanningSV: " <<  isSpanning << "\n";
+        log_os << logtag << "isSpanningSV: " <<  isCandidateSpanning << "\n";
 #endif
 
-        if (! isSpanning)
+        if (! isCandidateSpanning)
         {
             if (sv.isImprecise())
             {
+                // in this case a non-spanning low-res candidate went into assembly but
+                // did not produce a successful contig alignment:
 #ifdef DEBUG_GSV
                 log_os << logtag << "Rejecting candidate: imprecise non-spanning SV\n";
 #endif
