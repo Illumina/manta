@@ -290,15 +290,28 @@ struct SVBreakend
     unsigned
     getAnyNonPairCount() const
     {
+        using namespace SVEvidenceType;
+
         unsigned sum(0);
-        for (int i(0); i<SVEvidenceType::SIZE; ++i)
+        for (int i(0); i<SIZE; ++i)
         {
-            if (i == SVEvidenceType::PAIR) continue;
-            if (i == SVEvidenceType::LOCAL_PAIR) continue;
-            if (i == SVEvidenceType::UNKNOWN) continue;
+            if (i == PAIR) continue;
+            if (i == LOCAL_PAIR) continue;
+            if (i == UNKNOWN) continue;
             sum += lowresEvidence.getVal(i);
         }
         return sum;
+    }
+
+    // include any evidence type with defines a two-region hypothesis
+    unsigned
+    getSpanningCount() const
+    {
+        using namespace SVEvidenceType;
+
+        return (lowresEvidence.getVal(PAIR) +
+                lowresEvidence.getVal(CIGAR) +
+                lowresEvidence.getVal(SPLIT_ALIGN));
     }
 
 public:
