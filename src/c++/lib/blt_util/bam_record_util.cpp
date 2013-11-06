@@ -19,6 +19,9 @@
 
 
 
+// note this is designed to return true for the common case
+// of pos == mate_pos occurring for short FFPE fragments
+//
 bool
 is_innie_pair(
     const bam_record& bam_read)

@@ -74,19 +74,15 @@ addSVNodeRead(
 
     if (scanner.isReadFiltered(bamRead)) return;
 
-    // don't rely on the properPair bit to be set correctly:
-    const bool isAnomalous(! scanner.isProperPair(bamRead, bamIndex));
-    const bool isLargeFragment(scanner.isLargeFragment(bamRead, bamIndex));
-
-    const bool isLargeAnomalous(isAnomalous && isLargeFragment);
+    const bool isNonShortAnomalous(scanner.isNonShortAnomalous(bamRead,bamIndex));
 
     bool isLocalAssemblyEvidence(false);
-    if (! isLargeAnomalous)
+    if (! isNonShortAnomalous)
     {
         isLocalAssemblyEvidence = scanner.isLocalAssemblyEvidence(bamRead);
     }
 
-    if (! ( isLargeAnomalous || isLocalAssemblyEvidence))
+    if (! ( isNonShortAnomalous || isLocalAssemblyEvidence))
     {
         return; // this read isn't interesting wrt SV discovery
     }

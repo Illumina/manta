@@ -1113,6 +1113,23 @@ isLargeFragment(
 }
 
 
+
+bool
+SVLocusScanner::
+isNonShortAnomalous(
+    const bam_record& bamRead,
+    const unsigned defaultReadGroupIndex) const
+{
+    const bool isAnomalous(! isProperPair(bamRead,defaultReadGroupIndex));
+    const bool isInnie(is_innie_pair(bamRead));
+    const bool isLarge(isLargeFragment(bamRead,defaultReadGroupIndex));
+
+    // exclude innie read pairs which are anomalously short:
+    return (isAnomalous && ((! isInnie) || isLarge));
+}
+
+
+
 bool
 SVLocusScanner::
 isLocalAssemblyEvidence(

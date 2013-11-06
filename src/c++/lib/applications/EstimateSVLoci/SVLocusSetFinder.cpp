@@ -179,22 +179,19 @@ update(const bam_record& bamRead,
     // shortcut to speed things up:
     if (_readScanner.isReadFiltered(bamRead)) return;
 
-    // don't rely on the properPair bit to be set correctly:
-    const bool isAnomalous(! _readScanner.isProperPair(bamRead,defaultReadGroupIndex));
-    const bool isLargeFragment(_readScanner.isLargeFragment(bamRead,defaultReadGroupIndex));
+    // exclude innie read pairs which are anomalously short:
+    const bool isNonShortAnomalous(_readScanner.isNonShortAnomalous(bamRead,defaultReadGroupIndex));
 
-    const bool isLargeAnomalous(isAnomalous && isLargeFragment);
-
-    if (isLargeAnomalous) ++_anomCount;
-    else                  ++_nonAnomCount;
+    if (isNonShortAnomalous) ++_anomCount;
+    else                     ++_nonAnomCount;
 
     bool isLocalAssemblyEvidence(false);
-    if (! isLargeAnomalous)
+    if (! isNonShortAnomalous)
     {
         isLocalAssemblyEvidence = _readScanner.isLocalAssemblyEvidence(bamRead);
     }
 
-    if (! ( isLargeAnomalous || isLocalAssemblyEvidence))
+    if (! ( isNonShortAnomalous || isLocalAssemblyEvidence))
     {
         return; // this read isn't interesting wrt SV discovery
     }
