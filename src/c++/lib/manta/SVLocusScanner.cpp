@@ -687,10 +687,6 @@ getSVCandidatesFromPair(
 
             if (! (isLargeFragment || isOuttie)) return;
         }
-        else
-        {
-            if (std::abs(localRead.template_size()) <= (rstats.properPair.max + opt.minCandidateVariantSize)) return;
-        }
     }
 
     candidates.push_back(sv);
@@ -774,7 +770,7 @@ getSingleReadSVCandidates(
     getSVCandidatesFromReadIndels(opt, dopt, bamAlign, candidates);
 
 #ifdef DEBUG_SCANNER
-    static const std::string logtag("getReadBreakendsImpl");
+    static const std::string logtag("getSingleReadSVCandidates");
     log_os << logtag << " post-indels candidate_size: " << candidates.size() << "\n";
 #endif
 
@@ -847,6 +843,7 @@ getReadBreakendsImpl(
     getSVCandidatesFromPair(opt, rstats, localRead, localAlign, remoteReadPtr, candidates);
 
 #ifdef DEBUG_SCANNER
+    static const std::string logtag("getReadBreakendsImpl");
     log_os << logtag << " post-pair candidate_size: " << candidates.size() << "\n";
 #endif
 
