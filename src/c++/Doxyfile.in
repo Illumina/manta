@@ -568,7 +568,10 @@ WARN_LOGFILE           =
 # directories like "/usr/src/myproject". Separate the files or directories
 # with spaces.
 
-INPUT                  = @CMAKE_BINARY_DIR@/c++/common @CMAKE_SOURCE_DIR@/c++
+INPUT                  = @CMAKE_SOURCE_DIR@/c++
+
+# should we both with the config.h? -- if so it is here:
+#INPUT                  = @CMAKE_BINARY_DIR@/c++/lib/common
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding, which is
