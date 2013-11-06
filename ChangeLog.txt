@@ -1,3 +1,5 @@
+- MANTA-69 Update score/write filter to account for CIGAR and SA-read
+candidates, and new uniform candidate scheme for self-edges.
 - MANTA-70 Correct filters to allow for small inversion and tandem dup
 detection 
 - MANTA-68 SVLEN not set correctly for non-deletions
