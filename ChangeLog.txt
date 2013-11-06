@@ -1,3 +1,4 @@
+- MANTA-68 SVLEN not set correctly for non-deletions
 - MANTA-64 Improve candidate generation for small regions
 - MANTA-43 allow manta installation to be relocated
 - MANTA-55 compile python code as part of build/install

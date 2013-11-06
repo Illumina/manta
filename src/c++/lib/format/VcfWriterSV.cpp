@@ -529,7 +529,9 @@ writeInvdel(
     {
         infoTags.push_back( str(boost::format("END=%i") % endPos));
         infoTags.push_back( str(boost::format("SVTYPE=%s") % words[0]));
-        infoTags.push_back( str(boost::format("SVLEN=%i") % (-1*(endPos-pos))));
+        const pos_t refLen(endPos-pos);
+        const pos_t svLen( isIndel ? -refLen : refLen );
+        infoTags.push_back( str(boost::format("SVLEN=%i") % (svLen)));
     }
     infoTags.push_back( str(boost::format("UPSTREAM_PAIR_COUNT=%i") % bpA.getLocalPairCount()) );
     infoTags.push_back( str(boost::format("DOWNSTREAM_PAIR_COUNT=%i") % bpB.getLocalPairCount()) );
