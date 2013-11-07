@@ -23,7 +23,6 @@ BOOST_AUTO_TEST_SUITE( test_id_map )
 
 BOOST_AUTO_TEST_CASE( test_id_set )
 {
-
     id_set<std::string> iset;
 
     iset.insert_key("brown");
@@ -41,7 +40,6 @@ BOOST_AUTO_TEST_CASE( test_id_set )
 
 BOOST_AUTO_TEST_CASE( test_id_map )
 {
-
     id_map<std::string,std::string> imap;
 
     imap.insert("brown","123");
@@ -61,5 +59,5 @@ BOOST_AUTO_TEST_CASE( test_id_map )
     BOOST_REQUIRE_EQUAL(imap.get_value(expect_id),std::string("456"));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
 
+BOOST_AUTO_TEST_SUITE_END()

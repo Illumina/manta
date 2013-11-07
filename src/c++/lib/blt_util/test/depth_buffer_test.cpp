@@ -43,7 +43,6 @@ get_db_test_pattern()
 
 BOOST_AUTO_TEST_CASE( test_depth_buffer_val )
 {
-
     depth_buffer db(get_db_test_pattern());
     BOOST_CHECK_EQUAL(static_cast<int>(db.val(109)),9);
 }
@@ -51,7 +50,6 @@ BOOST_AUTO_TEST_CASE( test_depth_buffer_val )
 
 BOOST_AUTO_TEST_CASE( test_depth_buffer_clear )
 {
-
     depth_buffer db(get_db_test_pattern());
     db.clear_pos(109);
     BOOST_CHECK_EQUAL(static_cast<int>(db.val(109)),0);
@@ -60,7 +58,6 @@ BOOST_AUTO_TEST_CASE( test_depth_buffer_clear )
 
 BOOST_AUTO_TEST_CASE( test_depth_buffer_range )
 {
-
     depth_buffer db(get_db_test_pattern());
     BOOST_CHECK(! db.is_range_ge_than(0,107,8));
     BOOST_CHECK(  db.is_range_ge_than(0,108,8));
