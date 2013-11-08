@@ -243,14 +243,6 @@ apath_read_lead_size(const path_t& apath);
 unsigned
 apath_read_trail_size(const path_t& apath);
 
-/// how much mismatching sequence  occurs before the last aligned base?
-unsigned
-apath_mismatch_lead_size(const path_t& apath);
-
-/// how much mismatching sequence  occurs after the last aligned base?
-unsigned
-apath_mismatch_trail_size(const path_t& apath);
-
 /// how much soft_clip occurs before the first aligned base?
 unsigned
 apath_soft_clip_lead_size(const path_t& apath);
@@ -316,13 +308,13 @@ apath_clean_seqmatch(path_t& apath);
 
 /// convert the input alignpath to use seq match '=' and mismatch 'X' instead of align-match 'M'
 ///
-template <typename symIter>
+template <typename symIter1,typename symIter2>
 void
 apath_add_seqmatch(
-    const symIter queryBegin,
-    const symIter queryEnd,
-    const symIter refBegin,
-    const symIter refEnd,
+    const symIter1 queryBegin,
+    const symIter1 queryEnd,
+    const symIter2 refBegin,
+    const symIter2 refEnd,
     path_t& apath);
 
 
@@ -395,10 +387,6 @@ is_clipped(const path_t& apath);
 /// return length of clipped pre- or postfix
 unsigned
 get_clip_len(const path_t& apath);
-
-/// check if alignment contains large indel ("large" currently hard-coded as 100bp)
-bool
-has_large_indel(const path_t& apath);
 
 /// does either edge of the alignment
 /// contain a segment which impacts read length or reference positions?

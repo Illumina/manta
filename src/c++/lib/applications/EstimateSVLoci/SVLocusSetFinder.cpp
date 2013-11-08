@@ -170,14 +170,14 @@ process_pos(const int stage_no,
 
 void
 SVLocusSetFinder::
-update(const bam_record& bamRead,
-       const unsigned defaultReadGroupIndex,
-       const std::string& bkptRef,
-       const std::map<std::string, int32_t>& chromToIndex)
+update(
+    const bam_record& bamRead,
+    const unsigned defaultReadGroupIndex,
+    const std::map<std::string, int32_t>& chromToIndex,
+    const reference_contig_segment& refSeq)
 {
     _isScanStarted=true;
 
-    // shortcut to speed things up:
     if (_readScanner.isReadFiltered(bamRead)) return;
 
     // exclude innie read pairs which are anomalously short:
@@ -189,9 +189,8 @@ update(const bam_record& bamRead,
     bool isLocalAssemblyEvidence(false);
     if (! isNonShortAnomalous)
     {
-        isLocalAssemblyEvidence = _readScanner.isLocalAssemblyEvidence(bamRead,bkptRef);
+        isLocalAssemblyEvidence = _readScanner.isLocalAssemblyEvidence(bamRead, refSeq);
     }
-    //std::cerr << bamRead.qname() << " isLargeAnomalous=" << isLargeAnomalous << " isLocalAssemblyEvidence=" << isLocalAssemblyEvidence << "\n";
 
     if (! ( isNonShortAnomalous || isLocalAssemblyEvidence))
     {
@@ -209,12 +208,11 @@ update(const bam_record& bamRead,
 
     std::vector<SVLocus> loci;
 
-    _readScanner.getSVLoci(bamRead, defaultReadGroupIndex, bkptRef, chromToIndex, loci);
+    _readScanner.getSVLoci(bamRead, defaultReadGroupIndex, chromToIndex, refSeq, loci);
 
     BOOST_FOREACH(const SVLocus& locus, loci)
     {
         if (locus.empty()) continue;
         _svLoci.merge(locus);
-        //std::cout << "LOCUS\t" << locus << "\n\n" << std::endl;
     }
 }

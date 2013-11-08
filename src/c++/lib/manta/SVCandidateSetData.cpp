@@ -83,7 +83,8 @@ getReadPair(const pindex_t::key_type& key)
 void
 SVCandidateSetReadPairSampleGroup::
 add(const bam_record& bamRead,
-    const bool isExpectRepeat)
+    const bool isExpectRepeat,
+    const bool isNode1)
 {
     using namespace illumina::common;
 
@@ -113,6 +114,8 @@ add(const bam_record& bamRead,
     {
         targetReadPtr->bamrec = bamRead;
     }
+
+    targetReadPtr->isNode1 = isNode1;
 }
 
 

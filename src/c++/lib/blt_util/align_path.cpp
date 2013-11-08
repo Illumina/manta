@@ -191,48 +191,6 @@ apath_read_trail_size(const path_t& apath)
     return val;
 }
 
-unsigned
-apath_mismatch_lead_size(const path_t& apath)
-{
-    unsigned val(0);
-    const unsigned as(apath.size());
-    for (unsigned i(0); i<as; ++i)
-    {
-        const path_segment& ps(apath[i]);
-        assert((ps.type != MATCH) && "Incorrect CIGAR type, matches must be converted to SEQ_MATCH/SEQ_MISMATCH");
-        if (SEQ_MISMATCH == ps.type)
-        {
-            val += ps.length;
-        }
-        else
-        {
-            break;
-        }
-    }
-    return val;
-}
-
-unsigned
-apath_mismatch_trail_size(const path_t& apath)
-{
-    unsigned val(0);
-    const unsigned as(apath.size());
-    for (unsigned i(0); i<as; ++i)
-    {
-        const path_segment& ps(apath[as-i-1]);
-        assert((ps.type != MATCH) && "Incorrect CIGAR type, matches must be converted to SEQ_MATCH/SEQ_MISMATCH");
-        if (SEQ_MISMATCH == ps.type)
-        {
-            val += ps.length;
-        }
-        else
-        {
-            break;
-        }
-    }
-    return val;
-}
-
 
 
 unsigned
@@ -664,18 +622,6 @@ is_clipped(const path_t& apath)
     if (as>1)
     {
         if ((apath[as-1].type == SOFT_CLIP) || (apath[as-1].type == HARD_CLIP)) return true;
-    }
-    return false;
-}
-
-bool
-has_large_indel(const path_t& apath)
-{
-    static const unsigned maxIndelSize(100);
-    BOOST_FOREACH(const path_segment& ps, apath)
-    {
-        if (INSERT == ps.type && ps.length > maxIndelSize) return true;
-        if (DELETE == ps.type && ps.length > maxIndelSize) return true;
     }
     return false;
 }

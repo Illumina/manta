@@ -13,6 +13,7 @@
 
 ///
 /// \author Chris Saunders
+///
 
 #pragma once
 
@@ -40,6 +41,10 @@
 ///
 struct SVCandidateSetRead
 {
+    SVCandidateSetRead() :
+        isNode1(true)
+    {}
+
     bool
     isSet() const
     {
@@ -48,6 +53,7 @@ struct SVCandidateSetRead
 
     //realignment info, etc...
     bam_record bamrec;
+    bool isNode1; ///< used to link this read to node1 or node2 in the original graph ordering, note this is not the same as read1 and read2
 };
 
 std::ostream&
@@ -109,7 +115,8 @@ struct SVCandidateSetReadPairSampleGroup
     /// add a new bam record to the set:
     void
     add(const bam_record& bamRead,
-        const bool isExpectRepeat);
+        const bool isExpectRepeat,
+        const bool isNode1);
 
     iterator
     begin()

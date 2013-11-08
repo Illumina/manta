@@ -77,7 +77,7 @@ align(
 
     // global alignment of query -- disallow start from insertion or deletion
     // state, query can 'fall-off' the end of a short reference, in which case it will
-    // be soft-clipped and each base off the end will count as a mismatch:
+    // be soft-clipped and each base off the end will count as an 'offEdge' state:
     for (unsigned queryIndex(0); queryIndex<=querySize; queryIndex++)
     {
         ScoreVal& val((*thisSV)[queryIndex]);

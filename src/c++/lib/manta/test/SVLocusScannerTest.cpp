@@ -19,6 +19,8 @@
 
 #include "manta/SVLocusScanner.cpp"
 
+#include "boost/scoped_array.hpp"
+
 
 BOOST_AUTO_TEST_SUITE( test_SVLocusScanner )
 
@@ -35,7 +37,7 @@ BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromReadIndels )
     bam1_t* bamDataPtr(bamRead.get_data());
     edit_bam_cigar(inputPath,*bamDataPtr);
 
-    ChromAlignment align(bamRead);
+    SimpleAlignment align(bamRead);
 
     std::vector<SVObservation> candidates;
 
@@ -47,41 +49,141 @@ BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromReadIndels )
 }
 
 
-BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromSemiAligned )
+/// the reference sequence is assumed to be a clip starting at the query alignment start position:
+///
+static
+void
+semiAlignTestCase(
+    const pos_t alignPos,
+    const char* querySeq,
+    const char* refSeq,
+    unsigned& leadingLength,
+    pos_t& leadingRefPos,
+    unsigned& trailingLength,
+    pos_t& trailingRefPos)
 {
-    ReadScannerOptions opt;
+    leadingLength=0;
+    leadingRefPos=0;
+    trailingLength=0;
+    trailingRefPos=0;
+
+    const unsigned querySize(strlen(querySeq));
 
     ALIGNPATH::path_t inputPath;
-    cigar_to_apath("100M",inputPath);
+    inputPath.push_back(ALIGNPATH::path_segment(ALIGNPATH::MATCH,querySize));
 
     bam_record bamRead;
     bam1_t* bamDataPtr(bamRead.get_data());
     edit_bam_cigar(inputPath,*bamDataPtr);
 
-    static const char testSeq[] = "AACCCACAAACATCACACACATACCCGTAATATTTTCATTGACTGCATTAGATTCTTCTACAGTGCGTCTAAGAGTCCAGAGACCGACTTTTTTCTAAAA";
-    static const char testRef[] = "AACCCACAAACATCACACACATACCCGTAATATTTTCATTGACTGCATTAGATTCTTCTACAGTGCGTCTAAGAGTCCAGAGACCGACTTTTGGGGGGGG";
+    reference_contig_segment testRefSeg;
+    testRefSeg.seq() = refSeq;
+    testRefSeg.set_offset(alignPos);
 
     // initialize test qual array to all Q30's:
-    static const unsigned seqSize((sizeof(testSeq)-1)/sizeof(char));
-    uint8_t qual[seqSize];
-    for (unsigned i(0); i<seqSize; ++i)
+    boost::scoped_array<uint8_t> qual(new uint8_t[querySize]);
+    for (unsigned i(0); i<querySize; ++i)
     {
         qual[i] = 30;
     }
 
-    edit_bam_read_and_quality(testSeq,qual,*bamDataPtr);
+    edit_bam_read_and_quality(querySeq, qual.get(), *bamDataPtr);
 
     SimpleAlignment align(bamRead);
-    align.pos = 500;
+    align.pos = alignPos;
 
-    std::vector<SVObservation> candidates;
+    edgeMismatchLength(align, bamRead.get_bam_read(), testRefSeg, 5,
+                       leadingLength, leadingRefPos, trailingLength, trailingRefPos);
+}
 
-    getSVCandidatesFromSemiAligned(opt,bamRead,align,candidates,testRef);
 
-    BOOST_REQUIRE_EQUAL(candidates.size(),1u);
-    BOOST_REQUIRE(candidates[0].bp1.interval.range.is_pos_intersect(600));
-    BOOST_REQUIRE_EQUAL(candidates[0].bp1.interval.range.begin_pos(),580);
-    BOOST_REQUIRE_EQUAL(candidates[0].bp1.interval.range.end_pos(),620);
+BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromSemiAligned_null )
+{
+    static const pos_t alignPos(500);
+    static const char querySeq[] = "AACCCACAAACATCACACACAAGAGTCCAGAGACCGACTTTTTTCTAAAA";
+    static const char refSeq[]   = "AACCCACAAACATCACACACAAGAGTCCAGAGACCGACTTTTTTCTAAAA";
+
+    unsigned leadingLength(0), trailingLength(0);
+    pos_t leadingRefPos(0), trailingRefPos(0);
+
+    semiAlignTestCase(alignPos, querySeq,refSeq,leadingLength,leadingRefPos,trailingLength, trailingRefPos);
+
+    BOOST_REQUIRE_EQUAL(leadingLength,0u);
+    BOOST_REQUIRE_EQUAL(trailingLength,0u);
+    BOOST_REQUIRE_EQUAL(leadingRefPos,alignPos);
+    BOOST_REQUIRE_EQUAL(trailingRefPos,alignPos+50);
+}
+
+
+BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromSemiAligned_leading )
+{
+    static const pos_t alignPos(500);
+    static const char querySeq[] = "AACCCACAAACATCACACACAAGAGTCCAGAGACCGACTTTTTTCTAAAA";
+    static const char refSeq[]   = "AACCTTTTTTCATCACACACAAGAGTCCAGAGACCGACTTTTTTCTAAAA";
+
+    unsigned leadingLength(0), trailingLength(0);
+    pos_t leadingRefPos(0), trailingRefPos(0);
+
+    semiAlignTestCase(alignPos, querySeq,refSeq,leadingLength,leadingRefPos,trailingLength, trailingRefPos);
+
+    BOOST_REQUIRE_EQUAL(leadingLength,10u);
+    BOOST_REQUIRE_EQUAL(trailingLength,0u);
+    BOOST_REQUIRE_EQUAL(leadingRefPos,alignPos+10);
+    BOOST_REQUIRE_EQUAL(trailingRefPos,alignPos+50);
+}
+
+
+BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromSemiAligned_trailing )
+{
+    static const pos_t alignPos(500);
+    static const char querySeq[] = "AACCCACAAACATCACACACAAGAGTCCAGAGACCGACTTTTTTCTAAAA";
+    static const char refSeq[]   = "AACCCACAAACATCACACACAAGAGTCCAGAGACCGACTTCCCCCCAAAA";
+
+    unsigned leadingLength(0), trailingLength(0);
+    pos_t leadingRefPos(0), trailingRefPos(0);
+
+    semiAlignTestCase(alignPos, querySeq,refSeq,leadingLength,leadingRefPos,trailingLength, trailingRefPos);
+
+    BOOST_REQUIRE_EQUAL(leadingLength,0u);
+    BOOST_REQUIRE_EQUAL(trailingLength,10u);
+    BOOST_REQUIRE_EQUAL(leadingRefPos,alignPos);
+    BOOST_REQUIRE_EQUAL(trailingRefPos,alignPos+50-10);
+}
+
+
+BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromSemiAligned_both )
+{
+    static const pos_t alignPos(500);
+    static const char querySeq[] = "AACCCACAAACATCACACACAAGAGTCCAGAGACCGACTTTTTTCTAAAA";
+    static const char refSeq[]   = "AACCTTTTTTCATCACACACAAGAGTCCAGAGACCGACTTCCCCCCAAAA";
+
+    unsigned leadingLength(0), trailingLength(0);
+    pos_t leadingRefPos(0), trailingRefPos(0);
+
+    semiAlignTestCase(alignPos, querySeq,refSeq,leadingLength,leadingRefPos,trailingLength, trailingRefPos);
+
+    BOOST_REQUIRE_EQUAL(leadingLength,10u);
+    BOOST_REQUIRE_EQUAL(trailingLength,10u);
+    BOOST_REQUIRE_EQUAL(leadingRefPos,alignPos+10);
+    BOOST_REQUIRE_EQUAL(trailingRefPos,alignPos+50-10);
+}
+
+
+BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromSemiAligned_mismatch )
+{
+    static const pos_t alignPos(500);
+    static const char querySeq[] = "AACCCACAAACATCACACACAAGAGTCCAGAGACCGACTTTTTTCTAAAA";
+    static const char refSeq[]   = "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG";
+
+    unsigned leadingLength(0), trailingLength(0);
+    pos_t leadingRefPos(0), trailingRefPos(0);
+
+    semiAlignTestCase(alignPos, querySeq,refSeq,leadingLength,leadingRefPos,trailingLength, trailingRefPos);
+
+    BOOST_REQUIRE_EQUAL(leadingLength,50u);
+    BOOST_REQUIRE_EQUAL(trailingLength,50u);
+    BOOST_REQUIRE_EQUAL(leadingRefPos,alignPos+50);
+    BOOST_REQUIRE_EQUAL(trailingRefPos,alignPos+50-50);
 }
 
 

@@ -25,20 +25,21 @@ namespace ALIGNPATH
 
 
 /// convert the input path use seq match '=' and mismatch 'X'
+/// 'N''s always count as mismatch
 ///
-template <typename symIter>
+template <typename symIter1, typename symIter2>
 void
 apath_add_seqmatch(
-    const symIter queryBegin,
-    const symIter queryEnd,
-    const symIter refBegin,
-    const symIter refEnd,
+    const symIter1 queryBegin,
+    const symIter1 queryEnd,
+    const symIter2 refBegin,
+    const symIter2 refEnd,
     path_t& apath)
 {
     path_t apath2;
 
-    symIter queryIndex(queryBegin);
-    symIter refIndex(refBegin);
+    symIter1 queryIndex(queryBegin);
+    symIter2 refIndex(refBegin);
 
     const unsigned as(apath.size());
     for (unsigned segmentIndex(0); segmentIndex<as; ++segmentIndex)
@@ -59,8 +60,7 @@ apath_add_seqmatch(
                 }
 
                 bool isSeqMatch((*queryIndex) == (*refIndex));
-                // N always counts as match
-                if (*queryIndex == 'N') isSeqMatch = true;
+                if ((*queryIndex == 'N') || (*refIndex == 'N')) isSeqMatch = false;
                 apath_append(apath2, ( isSeqMatch ? SEQ_MATCH : SEQ_MISMATCH));
 
                 ++queryIndex;

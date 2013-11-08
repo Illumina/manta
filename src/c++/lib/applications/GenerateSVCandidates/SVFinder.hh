@@ -18,16 +18,12 @@
 #pragma once
 
 #include "GSCOptions.hh"
-#include "svgraph/EdgeInfo.hh"
 
 #include "blt_util/bam_streamer.hh"
-#include "blt_util/align_path_bam_util.hh"
-
 #include "manta/SVCandidate.hh"
 #include "manta/SVCandidateSetData.hh"
 #include "manta/SVLocusScanner.hh"
-#include "manta/SVReferenceUtil.hh"
-
+#include "svgraph/EdgeInfo.hh"
 #include "svgraph/SVLocusSet.hh"
 
 #include "boost/shared_ptr.hpp"
@@ -50,7 +46,6 @@ struct SVFinder
     findCandidateSV(
         const std::map<std::string, int32_t>& chromToIndex,
         const EdgeInfo& edge,
-        const std::string& referenceFilename,
         SVCandidateSetData& svData,
         std::vector<SVCandidate>& svs);
 
@@ -67,13 +62,17 @@ private:
         const SVLocus& locus,
         const NodeIndexType node1,
         const NodeIndexType node2,
-        const std::string& referenceFilename,
+        const GenomeInterval& searchInterval,
+        const reference_contig_segment& refSeq,
+        const bool isNode1,
         SVCandidateSetData& svData);
 
 
     void
     getCandidatesFromData(
         const std::map<std::string, int32_t>& chromToIndex,
+        const reference_contig_segment& refSeq1,
+        const reference_contig_segment& refSeq2,
         SVCandidateSetData& svData,
         std::vector<SVCandidate>& svs);
 
@@ -81,7 +80,7 @@ private:
     SVLocusSet _set;
     SVLocusScanner _readScanner;
 
-    std::string _referenceFilename;
+    const std::string _referenceFilename;
 
     typedef boost::shared_ptr<bam_streamer> streamPtr;
     std::vector<streamPtr> _bamStreams;

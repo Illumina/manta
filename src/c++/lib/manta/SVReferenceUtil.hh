@@ -32,13 +32,19 @@ isRefRegionOverlap(
     const pos_t extraRefEdgeSize,
     const SVCandidate& sv);
 
-void
-getIntervalReferenceSegment(
-    const std::string& referenceFilename,
-    const bam_header_info& header,
-    const GenomeInterval& interval,
-    reference_contig_segment& intervalRef);
 
+/// given a genome interval, attempt to add an extra buffer
+/// to the interval and return the reference sequence corresponding
+/// to this interval
+///
+/// \params[in] extraRefEdgeSize add this value to the ends of each
+///             interval prior to chomosome length clipping and reference
+///             retrieval
+/// \params[out] leadingTrim indicates how much was cut from the
+///              front of the requested interval (with edge buffer)
+/// \params[out] trailingTrim indicates how much was cut from the
+///              end of the requested interval (with edge buffer)
+///
 void
 getIntervalReferenceSegment(
     const std::string& referenceFilename,
@@ -49,20 +55,29 @@ getIntervalReferenceSegment(
     unsigned& leadingTrim,
     unsigned& trailingTrim);
 
+
+/// alternate interface to getIntervalReferenceSegment for applications
+/// where the returned trim value is not needed:
+inline
 void
 getIntervalReferenceSegment(
     const std::string& referenceFilename,
     const bam_header_info& header,
+    const pos_t extraRefEdgeSize,
     const GenomeInterval& interval,
-    reference_contig_segment& intervalRef,
-    unsigned& leadingTrim,
-    unsigned& trailingTrim);
+    reference_contig_segment& intervalRef)
+{
+    unsigned leadingTrim;
+    unsigned trailingTrim;
+    getIntervalReferenceSegment(referenceFilename, header, extraRefEdgeSize, interval, intervalRef,leadingTrim, trailingTrim);
+}
+
 
 /// extract the reference sequence around each breakend into a reference_contig_segment
 /// object
 ///
 /// for each region, we extract the hypothetical breakend region + extraRefEdgeSize bases
-/// on each side
+/// on each side, but limit the region to [0,chrom_size-1]
 ///
 void
 getSVReferenceSegments(
@@ -70,10 +85,6 @@ getSVReferenceSegments(
     const bam_header_info& header,
     const pos_t extraRefEdgeSize,
     const SVCandidate& sv,
-    const pos_t beginPos1,
-    const pos_t endPos1,
-    const pos_t beginPos2,
-    const pos_t endPos2,
     reference_contig_segment& bp1ref,
     reference_contig_segment& bp2ref,
     unsigned& bp1LeadingTrim,

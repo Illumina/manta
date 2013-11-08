@@ -307,14 +307,13 @@ runGSC(
         {
             log_os << logtag << " starting analysis of edge: ";
             dumpEdgeInfo(edge,cset,log_os);
-            // good old stackoverflow :-)
             startTime = clock();
         }
 
         try
         {
             // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
-            svFind.findCandidateSV(chromToIndex, edge, opt.referenceFilename, svData, svs);
+            svFind.findCandidateSV(chromToIndex, edge, svData, svs);
 
             truthTracker.reportNumCands(svs.size(), edge);
 
@@ -382,6 +381,7 @@ runGSC(
             dumpEdgeInfo(edge,cset,log_os);
             throw;
         }
+
         if (opt.isVerbose)
         {
             static const double clockFactor(1./static_cast<double>(CLOCKS_PER_SEC));

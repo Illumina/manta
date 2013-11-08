@@ -544,31 +544,26 @@ getJumpAssembly(
         }
     }
 
-    const bam_header_info::chrom_info& chromInfo1(_header.chrom_data[sv.bp1.interval.tid]);
-    const bam_header_info::chrom_info& chromInfo2(_header.chrom_data[sv.bp2.interval.tid]);
-    const pos_t beginPos1(std::max(0, (sv.bp1.interval.range.begin_pos()-extraRefEdgeSize)));
-    const pos_t endPos1(std::min(static_cast<pos_t>(chromInfo1.length), (sv.bp1.interval.range.end_pos()+extraRefEdgeSize)));
-    const pos_t beginPos2(std::max(0, (sv.bp2.interval.range.begin_pos()-extraRefEdgeSize)));
-    const pos_t endPos2(std::min(static_cast<pos_t>(chromInfo2.length), (sv.bp2.interval.range.end_pos()+extraRefEdgeSize)));
-
-    //std::cout << "chrom length=" << chromInfo1.length << " " << chromInfo2.length << std::endl;
-
-    //getSVReferenceSegments(_opt.referenceFilename, _header, sv, beginPos1, endPos1, beginPos2, endPos2, assemblyData.bp1ref, assemblyData.bp2ref);
-
-    // assemble contig spanning the breakend:
-    _spanningAssembler.assembleSVBreakends(sv.bp1, sv.bp2, bporient.isBp1Reversed, bporient.isBp2Reversed, assemblyData.contigs, assemblyData.bp1ref.seq(), beginPos1, assemblyData.bp2ref.seq(), beginPos2);
-
     unsigned bp1LeadingTrim;
     unsigned bp1TrailingTrim;
     unsigned bp2LeadingTrim;
     unsigned bp2TrailingTrim;
-    getSVReferenceSegments(_opt.referenceFilename, _header, extraRefSize, sv, beginPos1, endPos1, beginPos2, endPos2, assemblyData.bp1ref, assemblyData.bp2ref,
-                           bp1LeadingTrim, bp1TrailingTrim, bp2LeadingTrim, bp2TrailingTrim);
+    getSVReferenceSegments(
+        _opt.referenceFilename, _header, extraRefSize, sv,
+        assemblyData.bp1ref, assemblyData.bp2ref,
+        bp1LeadingTrim, bp1TrailingTrim, bp2LeadingTrim, bp2TrailingTrim);
 
     pos_t align1LeadingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(bp1LeadingTrim)));
     pos_t align1TrailingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(bp1TrailingTrim)));
     pos_t align2LeadingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(bp2LeadingTrim)));
     pos_t align2TrailingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(bp2TrailingTrim)));
+
+    // assemble contig spanning the breakend:
+    _spanningAssembler.assembleSVBreakends(
+        sv.bp1, sv.bp2,
+        bporient.isBp1Reversed, bporient.isBp2Reversed,
+        assemblyData.bp1ref, assemblyData.bp2ref,
+        assemblyData.contigs);
 
     std::string bp1refSeq = assemblyData.bp1ref.seq();
     std::string bp2refSeq = assemblyData.bp2ref.seq();
@@ -582,7 +577,6 @@ getJumpAssembly(
         reverseCompStr(bp2refSeq);
         std::swap(align2LeadingCut, align2TrailingCut);
     }
-//>>>>>>> master
     const std::string* align1RefStrPtr(&bp1refSeq);
     const std::string* align2RefStrPtr(&bp2refSeq);
 
@@ -768,11 +762,7 @@ getSmallSVAssembly(
     const std::string& align1RefStr(assemblyData.bp1ref.seq());
 
     // assemble contigs in the breakend region
-
-    //const bam_header_info::chrom_info& chromInfo(_header.chrom_data[sv.bp1.interval.tid]);
-    const pos_t beginPos(std::max(0, (sv.bp1.interval.range.begin_pos()-extraRefEdgeSize)));
-
-    _smallSVAssembler.assembleSingleSVBreakend(sv.bp1, assemblyData.contigs, assemblyData.bp1ref.seq(), beginPos);
+    _smallSVAssembler.assembleSingleSVBreakend(sv.bp1, assemblyData.bp1ref, assemblyData.contigs);
 
 #ifdef DEBUG_REFINER
     log_os << logtag << "align1RefSize/Seq: " << align1RefStr.size() << '\n';

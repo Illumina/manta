@@ -46,21 +46,19 @@ struct SVLocusAssembler
      * If unused reads remain, the assembly is re-started using this subset.
      */
     void
-    assembleSingleSVBreakend(const SVBreakend& bp,
-                             Assembly& as,
-                             const std::string& bkptRef,
-                             const int bkptOffset) const;
+    assembleSingleSVBreakend(
+        const SVBreakend& bp,
+        const reference_contig_segment& refSeq,
+        Assembly& as) const;
 
     void
     assembleSVBreakends(const SVBreakend& bp1,
                         const SVBreakend& bp2,
                         const bool isBp1Reversed,
                         const bool isBp2Reversed,
-                        Assembly& as,
-                        const std::string& bkptRef1,
-                        const int bkptOffset1,
-                        const std::string& bkptRef2,
-                        const int bkptOffset2) const;
+                        const reference_contig_segment& refSeq1,
+                        const reference_contig_segment& refSeq2,
+                        Assembly& as) const;
 
     const SmallAssemblerOptions&
     getAssembleOpt() const
@@ -80,10 +78,9 @@ private:
     getBreakendReads(
         const SVBreakend& bp,
         const bool isReversed,
+        const reference_contig_segment& refSeq,
         ReadIndexType& readIndex,
-        AssemblyReadInput& reads,
-        const std::string& bkptRef,
-        const int bkptOffset) const;
+        AssemblyReadInput& reads) const;
 
     const ReadScannerOptions _scanOpt;
     const SmallAssemblerOptions _assembleOpt;
