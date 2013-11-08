@@ -49,7 +49,7 @@ Manta should not be able to detect the following variant types:
   impractical levels well before this size
 * Small inversions
     *   The limiting size is not tested, but in theory detection falls off below
-  approx 1kb-500bases. So-called micro-inversions might be detected, but as
+  approx 200bases. So-called micro-inversions might be detected indirectly as
   combined insertion/deletion variants.
 
 More general repeat-based limitations exist for all variant types:
@@ -61,11 +61,11 @@ More general repeat-based limitations exist for all variant types:
 * The method cannot detect non-tandem repeats
 
 Note that while manta classifies novel DNA-adjacencies, it does not infer the
-higher level constructs implied by the classification. For instance, a
-'deletion' detected by manta indicates an intrachromosomal translocation of high
-confidence with a breakend pattern that could be a deletion, however there is no
-higher-order testing of depth and all intersecting adjacencies to make directly
-infer the SV type.
+higher level constructs implied by the classification. For instance, a variant
+marked as a deletion by manta indicates an intrachromosomal translocation of high
+confidence with a breakend pattern which is consistent with a deletion, however
+there is no higher-order testing of depth and all intersecting adjacencies to
+directly infer the SV type.
 
 ### Input requirements
 
@@ -75,6 +75,10 @@ provided as input in BAM format.
 ## Outputs
 
 ### SV predictions
+
+All variants are reported in the vcf using  symbolic alleles unless both of these conditions are met:
+*   The variant can be expressed as a combination of inserted and deleted sequence.
+*   The deletion or insertion length is not 1000 or greater
 
 ### Statistics
 
