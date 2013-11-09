@@ -38,6 +38,7 @@ struct SVLocusAssembler
         const SmallAssemblerOptions& assembleOpt,
         const AlignmentFileOptions& alignFileOpt,
         const std::string& statsFilename);
+
     /**
      * @brief Performs a de-novo assembly of a set of reads crossing a breakpoint.
      *
@@ -89,4 +90,3 @@ private:
     SVLocusScanner _readScanner;
     std::vector<streamPtr> _bamStreams;
 };
-

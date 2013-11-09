@@ -20,6 +20,7 @@
 #include "blt_util/log.hh"
 #include "blt_util/seq_util.hh"
 #include "manta/SVLocusAssembler.hh"
+#include "manta/SVLocusScannerSemiAligned.hh"
 
 #include "boost/foreach.hpp"
 

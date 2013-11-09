@@ -63,44 +63,6 @@ getSVBreakendCandidateClip(
     const uint8_t minQ = 20,
     const float minQFrac = 0.75);
 
-/// analogous to soft-clipping but checks for high-quality mismatches
-///
-/// \param[in] minQ
-/// \param[in] minQFrac this fraction of bases must have qual>=minQ within the clipped region
-///
-void
-getSVBreakendCandidateSemiAligned(
-    const bam_record& bamRead,
-    const SimpleAlignment& bamAlign,
-    const reference_contig_segment& refSeq,
-    unsigned& leadingMismatchLen,
-    unsigned& leadingClipLen,
-    pos_t& leadingRefPos,
-    unsigned& trailingMismatchLen,
-    unsigned& trailingClipLen,
-    pos_t& trailingRefPos,
-    const uint8_t minQ = 20,
-    const float minQFrac = 0.75);
-
-
-/// simplified interface:
-inline
-void
-getSVBreakendCandidateSemiAligned(
-    const bam_record& bamRead,
-    const SimpleAlignment& bamAlign,
-    const reference_contig_segment& refSeq,
-    unsigned& leadingMismatchLen,
-    unsigned& trailingMismatchLen)
-{
-    unsigned leadingClipLen(0), trialingClipLen(0);
-    pos_t leadingRefPos(0), trailingRefPos(0);
-    getSVBreakendCandidateSemiAligned(
-        bamRead, bamAlign, refSeq,
-        leadingMismatchLen, leadingClipLen, leadingRefPos,
-        trailingMismatchLen, trialingClipLen, trailingRefPos);
-}
-
 
 bool
 isGoodShadow(
