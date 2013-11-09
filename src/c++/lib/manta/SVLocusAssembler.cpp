@@ -142,7 +142,7 @@ getBreakendReads(
             if (bamRead.is_filter()) continue;
             if (bamRead.is_dup()) continue;
             if (bamRead.is_secondary()) continue;
-            if (bamRead.is_supplement()) return;
+            if (bamRead.is_supplement()) continue;
 
             if ((bamRead.pos()-1) >= searchRange.end_pos()) break;
 
