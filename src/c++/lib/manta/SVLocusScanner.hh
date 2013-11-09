@@ -63,10 +63,28 @@ getSVBreakendCandidateClip(
     const uint8_t minQ = 20,
     const float minQFrac = 0.75);
 
+/// analogous to soft-clipping but checks for high-quality mismatches
+///
+/// \param[in] minQ
+/// \param[in] minQFrac this fraction of bases must have qual>=minQ within the clipped region
+///
+void
+getSVBreakendCandidateSemiAligned(
+    const bam_record& bamRead,
+    const std::string& refSeq,
+    unsigned& leadingMismatchLen,
+    unsigned& trailingMismatchLen,
+    const uint8_t minQ = 20,
+    const float minQFrac = 0.75);
+
 
 /// check bam record for semi-alignedness (number of mismatches/clipped bases weighted by their q-scores)
 bool
-isSemiAligned(const bam_record& bamRead, const double minSemiAlignedScore);
+isSemiAligned(
+    const bam_record& bamRead,
+    const std::string& refSeq,
+    const double minSemiAlignedScore);
+
 
 bool
 isGoodShadow(const bam_record& bamRead,
@@ -149,7 +167,8 @@ struct SVLocusScanner
     /// interfere with larger event discovery if not kept under control
     bool
     isLocalAssemblyEvidence(
-        const bam_record& bamRead) const;
+        const bam_record& bamRead,
+        const std::string& bkptRef) const;
 
     /// return zero to many SVLocus objects if the read supports any
     /// structural variant(s) (detectable by manta)
@@ -161,6 +180,8 @@ struct SVLocusScanner
     getSVLoci(
         const bam_record& bamRead,
         const unsigned defaultReadGroupIndex,
+        //std::vector<SVLocus>& loci,
+        const std::string& bkptRef,
         const std::map<std::string, int32_t>& chromToIndex,
         std::vector<SVLocus>& loci) const;
 
@@ -177,6 +198,7 @@ struct SVLocusScanner
         const bam_record* remoteReadPtr,
         const unsigned defaultReadGroupIndex,
         const std::map<std::string, int32_t>& chromToIndex,
+        const std::string& bkptRef,
         std::vector<SVObservation>& candidates) const;
 
     /// provide direct access to the frag distro for

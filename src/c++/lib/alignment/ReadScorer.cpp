@@ -38,11 +38,14 @@ ReadScorer()
 #ifdef DEBUG_RS
     log_os << "Filling logpcorrectratio table" << std::endl;
 #endif
-    for (unsigned i(0); i<=MAX_QSCORE; ++i)
+    // below we take log(1+(-i)) so set a dummy value for i = 0
+    assert(MAX_QSCORE>=0);
+    _logpcorrectratio[0] = 0.99;
+    for (unsigned i(1); i<=MAX_QSCORE; ++i)
     {
         const double eprob(qphred_to_error_prob(i));
 #ifdef DEBUG_RS
-        log_os << "i=" << i << " " << log1p_switch(-eprob) << " " << std::log(eprob/3.) << std::endl;
+        log_os << "i=" << i << " " << eprob << " " << (log1p_switch(-eprob) - std::log(eprob/3.)) << std::endl;
 #endif
         _logpcorrectratio[i] = log1p_switch(-eprob) - std::log(eprob/3);
     }

@@ -604,8 +604,8 @@ bool pairBrkptNodes(const SVLocusSet& svLocusSet,
                     unsigned int& numTwoNodesSameLocusWithBAEdgeOnly,
                     unsigned int& numSameNode)
 {
-    assert((matchedNodeAddrVecA.size() > 0)
-           && (matchedNodeAddrVecB.size() > 0));
+    assert((!matchedNodeAddrVecA.empty())
+           && (!matchedNodeAddrVecB.empty()));
 
     if ((matchedNodeAddrVecA.size() > 1) || (matchedNodeAddrVecB.size() > 1))
     {

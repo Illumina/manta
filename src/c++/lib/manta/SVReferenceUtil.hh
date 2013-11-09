@@ -24,13 +24,20 @@
 #include <string>
 
 
-/// test whether the two jump aligner regions will overlap
+/// test whether the two svCandidate breakend regions will overlap
+/// after the extra reference padding has been added
 bool
 isRefRegionOverlap(
     const bam_header_info& header,
     const pos_t extraRefEdgeSize,
     const SVCandidate& sv);
 
+void
+getIntervalReferenceSegment(
+    const std::string& referenceFilename,
+    const bam_header_info& header,
+    const GenomeInterval& interval,
+    reference_contig_segment& intervalRef);
 
 void
 getIntervalReferenceSegment(
@@ -42,6 +49,14 @@ getIntervalReferenceSegment(
     unsigned& leadingTrim,
     unsigned& trailingTrim);
 
+void
+getIntervalReferenceSegment(
+    const std::string& referenceFilename,
+    const bam_header_info& header,
+    const GenomeInterval& interval,
+    reference_contig_segment& intervalRef,
+    unsigned& leadingTrim,
+    unsigned& trailingTrim);
 
 /// extract the reference sequence around each breakend into a reference_contig_segment
 /// object
@@ -55,6 +70,10 @@ getSVReferenceSegments(
     const bam_header_info& header,
     const pos_t extraRefEdgeSize,
     const SVCandidate& sv,
+    const pos_t beginPos1,
+    const pos_t endPos1,
+    const pos_t beginPos2,
+    const pos_t endPos2,
     reference_contig_segment& bp1ref,
     reference_contig_segment& bp2ref,
     unsigned& bp1LeadingTrim,

@@ -39,9 +39,12 @@ BOOST_AUTO_TEST_CASE( test_EdgeRetrieverLocusSimple )
     set1.merge(locus2);
     set1.checkState(true,true);
 
+    std::cout << "set1 size " << set1.size() << std::endl;
+
     BOOST_REQUIRE_EQUAL(set1.size(), 2u);
 
     EdgeRetrieverLocus edger(set1, 0, 0);
+    std::cout << "set1 size " << set1.size() << std::endl;
 
     BOOST_REQUIRE( edger.next() );
 

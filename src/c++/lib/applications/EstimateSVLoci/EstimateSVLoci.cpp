@@ -20,9 +20,13 @@
 #include "SVLocusSetFinder.hh"
 
 #include "blt_util/bam_header_util.hh"
+#include "blt_util/align_path_bam_util.hh"
 #include "blt_util/input_stream_handler.hh"
 #include "blt_util/log.hh"
+
 #include "common/OutStream.hh"
+
+#include "manta/SVReferenceUtil.hh"
 
 #include "boost/foreach.hpp"
 #include "boost/shared_ptr.hpp"
@@ -30,7 +34,7 @@
 #include <iostream>
 #include <vector>
 
-
+//#define DEBUG_ESL
 
 static
 void
@@ -82,6 +86,13 @@ runESL(const ESLOptions& opt)
     const std::map<std::string, int32_t>& chromToIndex(bamHeader.chrom_to_index);
 
     const GenomeInterval scanRegion(tid,beginPos,endPos);
+#ifdef DEBUG_ESL
+    static const std::string log_tag("EstimateSVLoci");
+    log_os << log_tag << " scanRegion= " << scanRegion << "\n";
+#endif
+
+    reference_contig_segment refSegment;
+    getIntervalReferenceSegment(opt.referenceFilename,bamHeader,scanRegion,refSegment);
 
     SVLocusSetFinder locusFinder(opt,scanRegion);
     locusFinder.setBamHeader(header);
@@ -98,7 +109,7 @@ runESL(const ESLOptions& opt)
     {
         const input_record_info current(sinput.get_current());
 
-        if       (current.itype != INPUT_TYPE::READ)
+        if (current.itype != INPUT_TYPE::READ)
         {
             log_os << "ERROR: invalid input condition.\n";
             exit(EXIT_FAILURE);
@@ -107,12 +118,29 @@ runESL(const ESLOptions& opt)
         const bam_streamer& readStream(*bamStreams[current.sample_no]);
         const bam_record& read(*(readStream.get_record_ptr()));
 
-        locusFinder.update(read,current.sample_no,chromToIndex);
+        std::string ref;
+        {
+            ALIGNPATH::path_t apath;
+            bam_cigar_to_apath(read.raw_cigar(), read.n_cigar(), apath);
+            // apparently we need the -1 here
+            const int alPos(read.pos()-scanRegion.range.begin_pos()-1);
+            const int alLen(apath_ref_length(apath));
+            const int refSize(refSegment.seq().size());
+            if (alPos < 0 || (alPos+alLen) > refSize) continue;
+            ref = refSegment.seq().substr(alPos,alLen);
+#ifdef DEBUG_ESL
+            log_os << log_tag << " testing read= " << read.qname() << " apath=" << apath  << "\n";
+#endif
+        }
+
+        locusFinder.update(read,current.sample_no,ref,chromToIndex);
     }
 
     // finished updating:
     locusFinder.flush();
-
+#ifdef DEBUG_ESL
+    log_os << log_tag << " found " << locusFinder.getLocusSet().size() << " loci. \n";
+#endif
     locusFinder.getLocusSet().save(opt.outputFilename.c_str());
 }
 

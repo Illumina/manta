@@ -32,3 +32,8 @@ is_innie_pair(
 unsigned
 get_avg_quality(
     const bam_record& bam_read);
+
+
+bool
+has_large_gap(
+    const bam_record& bam_read);

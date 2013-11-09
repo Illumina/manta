@@ -58,7 +58,9 @@ apath_add_seqmatch(
                     throw blt_exception("apath_add_seqmatch: past end of reference\n");
                 }
 
-                const bool isSeqMatch((*queryIndex) == (*refIndex));
+                bool isSeqMatch((*queryIndex) == (*refIndex));
+                // N always counts as match
+                if (*queryIndex == 'N') isSeqMatch = true;
                 apath_append(apath2, ( isSeqMatch ? SEQ_MATCH : SEQ_MISMATCH));
 
                 ++queryIndex;

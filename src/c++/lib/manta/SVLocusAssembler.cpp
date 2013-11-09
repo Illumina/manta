@@ -58,13 +58,15 @@ getBreakendReads(
     const SVBreakend& bp,
     const bool isReversed,
     ReadIndexType& readIndex,
-    AssemblyReadInput& reads) const
+    AssemblyReadInput& reads,
+    const std::string& bkptRef,
+    const int bkptOffset) const
 {
     // get search range:
     known_pos_range2 searchRange;
     {
         // ideally this should be dependent on the insert size dist
-        static const size_t minIntervalSize(400);
+        static const size_t minIntervalSize(200);
         if (bp.interval.range.size() >= minIntervalSize)
         {
             searchRange = bp.interval.range;
@@ -120,7 +122,9 @@ getBreakendReads(
 
         static const unsigned MAX_NUM_READS(1000);
         unsigned int shadowCnt(0);
-        //unsigned int semiAlignedCnt(0);
+#ifdef DEBUG_ASBL
+        unsigned int semiAlignedCnt(0);
+#endif
 
         while (bamStream.next() && (reads.size() < MAX_NUM_READS))
         {
@@ -183,20 +187,41 @@ getBreakendReads(
                 }
             }
 
-#ifdef DEBUG_ASBL
-            log_os << " cigar: " << apath << " isClipKeeper: " << isClipKeeper << " isIndelKeeper: " << isIndelKeeper << "\n";
-#endif
 
             bool isSemiAlignedKeeper(false);
             {
-                // CTS temp disable this until qual offset can be resolved
-#if 0
-                if (isSemiAligned(bamRead,_scanOpt.minSemiAlignedScoreCandidates))
+                const int alPos(bamRead.pos()-bkptOffset); // -1 ?
+                const int alLen(apath_ref_length(apath));
+                const int refSize = bkptRef.size();
+                if (alPos > 0 && (alPos+alLen) < refSize)
                 {
-                    isSemiAlignedKeeper = true;
-                    ++semiAlignedCnt;
-                }
+                    const std::string ref(bkptRef.substr((alPos-1),alLen));
+
+                    static const unsigned minMismatchLen(4);
+
+                    unsigned leadingMismatchLen(0);
+                    unsigned trailingMismatchLen(0);
+                    getSVBreakendCandidateSemiAligned(bamRead, ref, leadingMismatchLen, trailingMismatchLen);
+
+                    if (isSearchForRightOpen)
+                    {
+                        if (trailingMismatchLen >= minMismatchLen) isSemiAlignedKeeper = true;
+                    }
+
+                    if (isSearchForLeftOpen)
+                    {
+                        if (leadingMismatchLen >= minMismatchLen) isSemiAlignedKeeper = true;
+                    }
+
+                    if (isSemiAligned(bamRead,ref,_scanOpt.minSemiAlignedScoreCandidates))
+                    {
+                        isSemiAlignedKeeper = true;
+#ifdef DEBUG_ASBL
+                        ++semiAlignedCnt;
 #endif
+                    }
+
+                }
             }
 
             bool isShadowKeeper(false);
@@ -212,6 +237,7 @@ getBreakendReads(
                     ++shadowCnt;
                 }
             }
+
 
             lastMapq  = bamRead.map_qual();
             lastQname = bamRead.qname();
@@ -229,6 +255,8 @@ getBreakendReads(
 #ifdef DEBUG_ASBL
             log_os << logtag << " Adding " << readKey << " " << apath << " " << bamRead.pe_map_qual() << " " << bamRead.pos() << "\n"
                    << bamRead.get_bam_read().get_string() << "\n";
+            log_os << " cigar: " << apath << " isClipKeeper: " << isClipKeeper << " isIndelKeeper: " << isIndelKeeper;
+            log_os << " isSemiAlignedKeeper: " << isSemiAlignedKeeper << " isShadowKeeper: " << isShadowKeeper << "\n";
 #endif
 
             if (readIndex.count(readKey) == 0)
@@ -247,6 +275,7 @@ getBreakendReads(
 #ifdef DEBUG_ASBL
         log_os << "bam " << bamIndex << " semi-aligned " << semiAlignedCnt << " shadow " << shadowCnt << "\n";
 #endif
+        //std::cerr << "bam " << bamIndex << " semi-aligned " << semiAlignedCnt << " shadow " << shadowCnt << "\n";
     }
 }
 
@@ -255,12 +284,14 @@ getBreakendReads(
 void
 SVLocusAssembler::
 assembleSingleSVBreakend(const SVBreakend& bp,
-                         Assembly& as) const
+                         Assembly& as,
+                         const std::string& bkptRef,
+                         const int bkptOffset) const
 {
     static const bool isBpReversed(false);
     ReadIndexType readIndex;
     AssemblyReadInput reads;
-    getBreakendReads(bp, isBpReversed, readIndex, reads);
+    getBreakendReads(bp, isBpReversed, readIndex, reads, bkptRef, bkptOffset);
     AssemblyReadOutput readInfo;
     runSmallAssembler(_assembleOpt, reads, readInfo, as);
 }
@@ -273,15 +304,24 @@ assembleSVBreakends(const SVBreakend& bp1,
                     const SVBreakend& bp2,
                     const bool isBp1Reversed,
                     const bool isBp2Reversed,
-                    Assembly& as) const
+                    Assembly& as,
+                    const std::string& bkptRef1,
+                    const int bkptOffset1,
+                    const std::string& bkptRef2,
+                    const int bkptOffset2) const
 {
     ReadIndexType readIndex;
     AssemblyReadInput reads;
-    AssemblyReadReversal readRev;
-    getBreakendReads(bp1, isBp1Reversed, readIndex, reads);
-    readRev.resize(reads.size(),isBp1Reversed);
-    getBreakendReads(bp2, isBp2Reversed, readIndex, reads);
-    readRev.resize(reads.size(),isBp2Reversed);
+    //AssemblyReadReversal readRev;
+    /*std::cout << "getBreakEndReads \n";
+    std::cout << "bp1 = " << bp1 <<  "\n";
+    std::cout << "bp2 = " << bp2 <<  "\n";
+    std::cout << "bkptRef1 = " << bkptRef1 <<  "\n";
+    std::cout << "bkptRef2 = " << bkptRef2 <<  "\n";*/
+    getBreakendReads(bp1, isBp1Reversed, readIndex, reads, bkptRef1, bkptOffset1);
+    //readRev.resize(reads.size(),isBp1Reversed);
+    getBreakendReads(bp2, isBp2Reversed, readIndex, reads, bkptRef2, bkptOffset2);
+    //readRev.resize(reads.size(),isBp2Reversed);
     AssemblyReadOutput readInfo;
     runSmallAssembler(_assembleOpt, reads, readInfo, as);
 }

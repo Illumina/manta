@@ -17,7 +17,11 @@
 
 #include "blt_util/bam_record_util.hh"
 
+#include "blt_util/align_path.hh"
 
+#include "blt_util/align_path_bam_util.hh"
+
+#include <boost/foreach.hpp>
 
 // note this is designed to return true for the common case
 // of pos == mate_pos occurring for short FFPE fragments
@@ -67,4 +71,25 @@ get_avg_quality(
     return (sum/len);
 }
 
+bool
+has_large_gap(
+    const bam_record& bam_read)
+{
+    using namespace ALIGNPATH;
+    ALIGNPATH::path_t path;
+    bam_cigar_to_apath(bam_read.raw_cigar(),bam_read.n_cigar(),path);
+
+    //
+    // large indel already in cigar string
+    //
+    BOOST_FOREACH(const path_segment& ps, path)
+    {
+        if (ps.type == INSERT || ps.type == DELETE)
+        {
+            //if (ps.length>=_opt.minCandidateVariantSize) return true;
+            if (ps.length>=10) return true;
+        }
+    }
+    return false;
+}
 

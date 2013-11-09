@@ -40,7 +40,8 @@ static const bool isExcludeUnpaired(true);
 SVFinder::
 SVFinder(const GSCOptions& opt) :
     _scanOpt(opt.scanOpt),
-    _readScanner(_scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilename)
+    _readScanner(_scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilename),
+    _referenceFilename(opt.referenceFilename)
 {
     // load in set:
     _set.load(opt.graphFilename.c_str(),true);
@@ -68,6 +69,7 @@ addSVNodeRead(
     const bam_record& bamRead,
     const unsigned bamIndex,
     const bool isExpectRepeat,
+    const std::string& bkptRef,
     SVCandidateSetReadPairSampleGroup& svDataGroup)
 {
     using namespace illumina::common;
@@ -79,7 +81,7 @@ addSVNodeRead(
     bool isLocalAssemblyEvidence(false);
     if (! isNonShortAnomalous)
     {
-        isLocalAssemblyEvidence = scanner.isLocalAssemblyEvidence(bamRead);
+        isLocalAssemblyEvidence = scanner.isLocalAssemblyEvidence(bamRead,bkptRef);
     }
 
     if (! ( isNonShortAnomalous || isLocalAssemblyEvidence))
@@ -99,7 +101,7 @@ addSVNodeRead(
 
     typedef std::vector<SVLocus> loci_t;
     loci_t loci;
-    scanner.getSVLoci(bamRead, bamIndex, chromToIndex, loci);
+    scanner.getSVLoci(bamRead,bamIndex,bkptRef,chromToIndex,loci);
 
     BOOST_FOREACH(const SVLocus& locus, loci)
     {
@@ -149,6 +151,7 @@ addSVNodeData(
     const SVLocus& locus,
     const NodeIndexType localNodeIndex,
     const NodeIndexType remoteNodeIndex,
+    const std::string& referenceFilename,
     SVCandidateSetData& svData)
 {
     // get full search interval:
@@ -184,9 +187,14 @@ addSVNodeData(
     {
         SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
         bam_streamer& read_stream(*bamPtr);
+        const bam_header_t& header(*(bamPtr->get_header()));
+        const bam_header_info bamHeader(header);
 
         // set bam stream to new search interval:
         read_stream.set_new_region(searchInterval.tid,searchInterval.range.begin_pos(),searchInterval.range.end_pos());
+
+        reference_contig_segment refSegment;
+        getIntervalReferenceSegment(referenceFilename,bamHeader,searchInterval,refSegment);
 
 #ifdef DEBUG_SVDATA
         log_os << logtag << "scanning bamIndex: " << bamIndex << "\n";
@@ -194,11 +202,22 @@ addSVNodeData(
         while (read_stream.next())
         {
             const bam_record& bamRead(*(read_stream.get_record_ptr()));
+            std::string ref;
+            {
+                ALIGNPATH::path_t apath;
+                bam_cigar_to_apath(bamRead.raw_cigar(), bamRead.n_cigar(), apath);
+                // apparently we need the -1 here
+                const int alPos(bamRead.pos()-searchInterval.range.begin_pos()-1);
+                const int alLen(apath_ref_length(apath));
+                const int refSize(refSegment.seq().size());
+                if (alPos < 0 || (alPos+alLen) > refSize) continue;
+                ref = refSegment.seq().substr(alPos,alLen);
+            }
 
             // test if read supports an SV on this edge, if so, add to SVData
-            addSVNodeRead(chromToIndex,_readScanner,localNode,remoteNode,bamRead, bamIndex,isExpectRepeat,svDataGroup);
+            addSVNodeRead(chromToIndex,_readScanner,localNode,remoteNode,bamRead, bamIndex,isExpectRepeat,ref,svDataGroup);
         }
-        bamIndex++;
+        ++bamIndex;
     }
 }
 
@@ -531,9 +550,19 @@ getCandidatesFromData(
     std::vector<SVObservation> readCandidates;
 
     const unsigned bamCount(_bamStreams.size());
-    for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
+
+    for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
     {
         SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
+
+        // OST: how do I get the reference here??
+        /*bam_streamer& read_stream(*bamPtr);
+        const bam_header_t& header(*(bamPtr->get_header()));
+        const bam_header_info bamHeader(header);
+
+        reference_contig_segment refSegment;
+        getReference(referenceFilename,bamHeader,refSegment);*/
+
         BOOST_FOREACH(SVCandidateSetReadPair& pair, svDataGroup)
         {
             SVCandidateSetRead* localReadPtr(&(pair.read1));
@@ -546,8 +575,13 @@ getCandidatesFromData(
             }
             assert(localReadPtr->isSet());
 
+            /*<<<<<<< HEAD
+                        readCandidates.clear();
+                        _readScanner.getBreakendPair(localReadPtr->bamrec, remoteBamRecPtr, bamIndex, chromToIndex, "NA",readCandidates);
+            =======
+            */
             const bam_record* remoteBamRecPtr( remoteReadPtr->isSet() ? &(remoteReadPtr->bamrec) : NULL);
-            _readScanner.getBreakendPair(localReadPtr->bamrec, remoteBamRecPtr, bamIndex, chromToIndex, readCandidates);
+            _readScanner.getBreakendPair(localReadPtr->bamrec, remoteBamRecPtr, bamIndex, chromToIndex,"NA", readCandidates);
 
 #ifdef DEBUG_SVDATA
             log_os << "Checking pair: " << pair << "\n";
@@ -605,8 +639,10 @@ SVFinder::
 findCandidateSV(
     const std::map<std::string, int32_t>& chromToIndex,
     const EdgeInfo& edge,
+    const std::string& referenceFilename,
     SVCandidateSetData& svData,
-    std::vector<SVCandidate>& svs)
+    std::vector<SVCandidate>& svs
+)
 {
     svData.clear();
     svs.clear();
@@ -641,10 +677,10 @@ findCandidateSV(
     // and likely breakend interval regions of SVs corresponding to this edge
     //
 
-    addSVNodeData(chromToIndex, locus,edge.nodeIndex1,edge.nodeIndex2,svData);
+    addSVNodeData(chromToIndex, locus,edge.nodeIndex1,edge.nodeIndex2,referenceFilename,svData);
     if (edge.nodeIndex1 != edge.nodeIndex2)
     {
-        addSVNodeData(chromToIndex, locus,edge.nodeIndex2,edge.nodeIndex1,svData);
+        addSVNodeData(chromToIndex, locus,edge.nodeIndex2,edge.nodeIndex1,referenceFilename,svData);
     }
     else
     {

@@ -47,14 +47,20 @@ struct SVLocusAssembler
      */
     void
     assembleSingleSVBreakend(const SVBreakend& bp,
-                             Assembly& as) const;
+                             Assembly& as,
+                             const std::string& bkptRef,
+                             const int bkptOffset) const;
 
     void
     assembleSVBreakends(const SVBreakend& bp1,
                         const SVBreakend& bp2,
                         const bool isBp1Reversed,
                         const bool isBp2Reversed,
-                        Assembly& as) const;
+                        Assembly& as,
+                        const std::string& bkptRef1,
+                        const int bkptOffset1,
+                        const std::string& bkptRef2,
+                        const int bkptOffset2) const;
 
     const SmallAssemblerOptions&
     getAssembleOpt() const
@@ -75,7 +81,9 @@ private:
         const SVBreakend& bp,
         const bool isReversed,
         ReadIndexType& readIndex,
-        AssemblyReadInput& reads) const;
+        AssemblyReadInput& reads,
+        const std::string& bkptRef,
+        const int bkptOffset) const;
 
     const ReadScannerOptions _scanOpt;
     const SmallAssemblerOptions _assembleOpt;
