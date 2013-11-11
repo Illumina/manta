@@ -39,9 +39,6 @@
 #endif
 
 
-const pos_t PairOptions::minFragSupport(50);
-
-
 
 SVScorer::
 SVScorer(
@@ -325,7 +322,7 @@ scoreSV(
 
     // count the paired-read fragments supporting the ref and alt alleles in each sample:
     //
-    getSVPairSupport(svData, sv, baseInfo, evidence);
+    getSVPairSupport(svData, assemblyData, sv, baseInfo, evidence);
 
     // count the split reads supporting the ref and alt alleles in each sample
     //

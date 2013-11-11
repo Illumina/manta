@@ -721,11 +721,6 @@ findCandidateSV(
         getNodeRefSeq(bamHeader, locus, edge.nodeIndex2, _referenceFilename, searchInterval, refSeq2);
         addSVNodeData(chromToIndex, locus, edge.nodeIndex2, edge.nodeIndex1, searchInterval, refSeq2, false, svData);
     }
-    else
-    {
-/// TMP:
-        svData.setSkipped();
-    }
 
     const SVLocusNode& node1(locus.getNode(edge.nodeIndex1));
     const SVLocusNode& node2(locus.getNode(edge.nodeIndex2));
