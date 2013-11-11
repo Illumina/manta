@@ -70,6 +70,8 @@ private:
 
     void
     getCandidatesFromData(
+        const SVLocusNode& node1,
+        const SVLocusNode& node2,
         const std::map<std::string, int32_t>& chromToIndex,
         const reference_contig_segment& refSeq1,
         const reference_contig_segment& refSeq2,

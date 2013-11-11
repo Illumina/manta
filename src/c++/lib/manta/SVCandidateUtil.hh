@@ -77,3 +77,13 @@ isSpanningSV(const SVCandidate& sv)
     using namespace SVBreakendState;
     return (isSimpleBreakend(sv.bp1.state) && isSimpleBreakend(sv.bp2.state));
 }
+
+
+inline
+bool
+isComplex(const SVCandidate& sv)
+{
+    using namespace SVBreakendState;
+    return ((sv.bp1.state == COMPLEX) && (sv.bp2.state == UNKNOWN));
+}
+

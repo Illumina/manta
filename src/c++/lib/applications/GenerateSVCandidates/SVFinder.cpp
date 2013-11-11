@@ -126,7 +126,6 @@ addSVNodeRead(
                     << "\tlocus: " << locus << "\n";
                 BOOST_THROW_EXCEPTION(LogicException(oss.str()));
             }
-
             if (! locus.getNode(readRemoteIndex).getInterval().isIntersect(remoteNode.getInterval())) continue;
         }
         else
@@ -474,6 +473,8 @@ consolidateOverlap(
 static
 void
 assignPairObservationsToSVCandidates(
+    const SVLocusNode& /*node1*/,
+    const SVLocusNode& /*node2*/,
     const bool isExcludePairType,
     const std::vector<SVObservation>& readCandidates,
     SVCandidateSetReadPair& pair,
@@ -500,6 +501,27 @@ assignPairObservationsToSVCandidates(
 #endif
                 continue;
             }
+        }
+
+        {
+            /// TODO: enable this filter once there's time to study its impact
+#if 0
+            // remove candidates which don't match the current edge:
+            //
+            if (isComplex(readCand))
+            {
+                if (! readCand.bp1.interval.isIntersect(node1.getInterval())) continue;
+                if (! readCand.bp1.interval.isIntersect(node2.getInterval())) continue;
+            }
+            else
+            {
+                const bool isInter((readCand.bp1.interval.isIntersect(node1.getInterval())) &&
+                                   (readCand.bp2.interval.isIntersect(node2.getInterval())));
+                const bool isSwapInter((readCand.bp1.interval.isIntersect(node2.getInterval())) &&
+                                       (readCand.bp2.interval.isIntersect(node1.getInterval())));
+                if (! (isInter || isSwapInter)) continue;
+            }
+#endif
         }
 
         const bool isSpanning(isSpanningSV(readCand));
@@ -548,6 +570,8 @@ assignPairObservationsToSVCandidates(
 void
 SVFinder::
 getCandidatesFromData(
+    const SVLocusNode& node1,
+    const SVLocusNode& node2,
     const std::map<std::string, int32_t>& chromToIndex,
     const reference_contig_segment& refSeq1,
     const reference_contig_segment& refSeq2,
@@ -604,7 +628,7 @@ getCandidatesFromData(
                 if (! remoteReadPtr->isSet()) isExcludePairType=true;
             }
 
-            assignPairObservationsToSVCandidates(isExcludePairType, readCandidates, pair, svs);
+            assignPairObservationsToSVCandidates(node1,node2,isExcludePairType, readCandidates, pair, svs);
         }
     }
 
@@ -701,7 +725,9 @@ findCandidateSV(
         svData.setSkipped();
     }
 
-    getCandidatesFromData(chromToIndex, refSeq1, refSeq2, svData, svs);
+    const SVLocusNode& node1(locus.getNode(edge.nodeIndex1));
+    const SVLocusNode& node2(locus.getNode(edge.nodeIndex2));
+    getCandidatesFromData(node1,node2,chromToIndex, refSeq1, refSeq2, svData, svs);
 
     //checkResult(svData,svs);
 }
