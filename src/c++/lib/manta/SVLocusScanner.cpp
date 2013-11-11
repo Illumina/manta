@@ -24,6 +24,7 @@
 #include "blt_util/parse_util.hh"
 #include "blt_util/string_util.hh"
 #include "common/Exceptions.hh"
+#include "manta/SVCandidateUtil.hh"
 #include "manta/SVLocusScanner.hh"
 #include "manta/SVLocusScannerSemiAligned.hh"
 
@@ -569,76 +570,31 @@ getSVCandidatesFromPair(
         sv.evtype = svPair;
     }
 
-    // this is only designed to be valid when reads are on the same chrom with default orientation:
+    const pos_t localStartRefPos(localRead.pos()-1);
+    const pos_t localEndRefPos(localStartRefPos+localRefLength);
+    const pos_t remoteStartRefPos(localRead.mate_pos()-1);
+    const pos_t remoteEndRefPos(remoteStartRefPos+remoteRefLength);
+
+    // this is only designed to be valid when reads are on the same chrom with default relative orientation:
     known_pos_range2 insertRange;
+    if (localRead.is_fwd_strand())
+    {
+        insertRange.set_range(localEndRefPos,remoteStartRefPos);
+    }
+    else
+    {
+        insertRange.set_range(remoteEndRefPos,localStartRefPos);
+    }
 
     const pos_t totalNoninsertSize(thisReadNoninsertSize+remoteReadNoninsertSize);
-    const pos_t breakendSize(std::max(
-                                 static_cast<pos_t>(opt.minPairBreakendSize),
-                                 static_cast<pos_t>(rstats.breakendRegion.max-totalNoninsertSize)));
 
-    {
-        localBreakend.interval.tid = (localRead.target_id());
-
-        const pos_t startRefPos(localRead.pos()-1);
-        const pos_t endRefPos(startRefPos+localRefLength);
-        // expected breakpoint range is from the end of the localRead alignment to the (probabilistic) end of the fragment:
-        if (localRead.is_fwd_strand())
-        {
-            localBreakend.state = SVBreakendState::RIGHT_OPEN;
-            localBreakend.interval.range.set_begin_pos(endRefPos);
-            localBreakend.interval.range.set_end_pos(endRefPos + breakendSize);
-
-            insertRange.set_begin_pos(endRefPos);
-        }
-        else
-        {
-            localBreakend.state = SVBreakendState::LEFT_OPEN;
-            localBreakend.interval.range.set_end_pos(startRefPos);
-            localBreakend.interval.range.set_begin_pos(startRefPos - breakendSize);
-
-            insertRange.set_end_pos(startRefPos);
-        }
-    }
-
-    // get remote breakend estimate:
-    {
-        remoteBreakend.interval.tid = (localRead.mate_target_id());
-
-        const pos_t startRefPos(localRead.mate_pos()-1);
-        pos_t endRefPos(startRefPos+remoteRefLength);
-        if (localRead.is_mate_fwd_strand())
-        {
-            remoteBreakend.state = SVBreakendState::RIGHT_OPEN;
-            remoteBreakend.interval.range.set_begin_pos(endRefPos);
-            remoteBreakend.interval.range.set_end_pos(endRefPos + breakendSize);
-
-            insertRange.set_begin_pos(endRefPos);
-        }
-        else
-        {
-            remoteBreakend.state = SVBreakendState::LEFT_OPEN;
-            remoteBreakend.interval.range.set_end_pos(startRefPos);
-            remoteBreakend.interval.range.set_begin_pos(startRefPos - breakendSize);
-
-            insertRange.set_end_pos(startRefPos);
-        }
-    }
-
-#ifdef DEBUG_SCANNER
-    static const std::string logtag("getSVCandidatesFromPair");
-    log_os << logtag << " evaluating pair sv for inclusion: " << sv << "\n";
-#endif
-
-
-    // check if read pair separation is non-anomalous after accounting for read alignments:
+    // check if fragment size is still anomalous after accounting for read alignment patterns:
     if (localRead.target_id() == localRead.mate_target_id())
     {
         if (localRead.is_fwd_strand() != localRead.is_mate_fwd_strand())
         {
             // get length of fragment after accounting for any variants described directly in either read alignment:
             const pos_t cigarAdjustedFragmentSize(totalNoninsertSize + (insertRange.end_pos() - insertRange.begin_pos()));
-
             const bool isLargeFragment(cigarAdjustedFragmentSize > (rstats.properPair.max + opt.minCandidateVariantSize));
 
             // this is an arbitrary point to start officially tagging 'outties' -- for now  we just want to avoid conventional small fragments from FFPE
@@ -647,6 +603,49 @@ getSVCandidatesFromPair(
             if (! (isLargeFragment || isOuttie)) return;
         }
     }
+
+
+    // set state and interval for each breakend:
+    {
+        const pos_t breakendSize(std::max(
+            static_cast<pos_t>(opt.minPairBreakendSize),
+            static_cast<pos_t>(rstats.breakendRegion.max-totalNoninsertSize)));
+
+        localBreakend.interval.tid = (localRead.target_id());
+        // expected breakpoint range is from the end of the localRead alignment to the (probabilistic) end of the fragment:
+        if (localRead.is_fwd_strand())
+        {
+            localBreakend.state = SVBreakendState::RIGHT_OPEN;
+            localBreakend.interval.range.set_begin_pos(localEndRefPos);
+            localBreakend.interval.range.set_end_pos(localEndRefPos + breakendSize);
+        }
+        else
+        {
+            localBreakend.state = SVBreakendState::LEFT_OPEN;
+            localBreakend.interval.range.set_end_pos(localStartRefPos);
+            localBreakend.interval.range.set_begin_pos(localStartRefPos - breakendSize);
+        }
+
+        remoteBreakend.interval.tid = (localRead.mate_target_id());
+
+        if (localRead.is_mate_fwd_strand())
+        {
+            remoteBreakend.state = SVBreakendState::RIGHT_OPEN;
+            remoteBreakend.interval.range.set_begin_pos(remoteEndRefPos);
+            remoteBreakend.interval.range.set_end_pos(remoteEndRefPos + breakendSize);
+        }
+        else
+        {
+            remoteBreakend.state = SVBreakendState::LEFT_OPEN;
+            remoteBreakend.interval.range.set_end_pos(remoteStartRefPos);
+            remoteBreakend.interval.range.set_begin_pos(remoteStartRefPos - breakendSize);
+        }
+    }
+
+#ifdef DEBUG_SCANNER
+    static const std::string logtag("getSVCandidatesFromPair");
+    log_os << logtag << " evaluating pair sv for inclusion: " << sv << "\n";
+#endif
 
     candidates.push_back(sv);
 }
