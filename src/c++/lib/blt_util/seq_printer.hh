@@ -20,7 +20,7 @@
 #include <string>
 
 
-/// pretty print sequence is such a way that it's easy to locate position number
+/// pretty print sequence in such a way that it's easy to locate position number
 ///
 void
 printSeq(

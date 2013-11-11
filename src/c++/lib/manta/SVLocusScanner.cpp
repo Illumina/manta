@@ -746,12 +746,10 @@ getSingleReadSVCandidates(
 
     // - process any large indels in the localRead:
     getSVCandidatesFromReadIndels(opt, dopt, localAlign, candidates);
-
 #ifdef DEBUG_SCANNER
     static const std::string logtag("getSingleReadSVCandidates");
     log_os << logtag << " post-indels candidate_size: " << candidates.size() << "\n";
 #endif
-
 
     // - process soft-clip in the localRead:
     getSVCandidatesFromReadClip(opt, localRead, localAlign, candidates);
@@ -819,8 +817,8 @@ getReadBreakendsImpl(
     getSVCandidatesFromPair(opt, rstats, localRead, localAlign, remoteReadPtr, candidates);
 
 #ifdef DEBUG_SCANNER
-    static const std::string logtag("getReadBreakendsImpl");
-    log_os << logtag << " post-pair candidate_size: " << candidates.size() << "\n";
+    static const std::string logtag("getReadBreakendsImpl: ");
+    log_os << logtag << "post-pair candidate_size: " << candidates.size() << "\n";
 #endif
 
     // update localEvidence range:

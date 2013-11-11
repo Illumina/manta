@@ -127,8 +127,8 @@ std::ostream&
 operator<<(std::ostream& os, const SVCandidate& svc);
 
 
-// when we extract an SV candidate from a single piece of evidence, it can be treated as a special 'observation' class:
-//
+/// when we extract an SV candidate from a single piece of evidence, it can be treated as a special 'observation' class:
+///
 struct SVObservation : public SVCandidate
 {
     SVObservation() :
