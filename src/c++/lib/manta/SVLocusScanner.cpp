@@ -455,6 +455,7 @@ getSVCandidatesFromReadClip(
 
 
 
+static
 void
 getSVCandidatesFromSemiAligned(
     const ReadScannerOptions& opt,
