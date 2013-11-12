@@ -76,6 +76,12 @@ You must specify a BAM file for at least one sample.
         group.add_option("--useExistingChromDepths",
                          dest="useExistingChromDepths", action="store_true",
                          help="Use pre-calculated chromosome depths.")
+        group.add_option("--scanSizeMb",type="int",dest="scanSizeMb",metavar="scanSizeMb",
+                         help="Maximum sequence region size (in Mb) scanned by each task during "
+                         "SV locus graph generation. (default: %default)")
+        group.add_option("--candidateBins",type="int",dest="nonlocalWorkBins",metavar="candidateBins",
+                         help="Provide the total number of tasks which candidate generation "
+                            " will be sub-divided into. (default: %default)")
 
         MantaWorkflowOptionsBase.addExtendedGroupOptions(self,group)
 
@@ -91,7 +97,7 @@ You must specify a BAM file for at least one sample.
             'isRNA' : False,
             'useExistingAlignStats' : False,
             'useExistingChromDepths' : False,
-            'binMbSize' : 12,
+            'scanSizeMb' : 12,
             'nonlocalWorkBins' : 256
                           })
         return defaults

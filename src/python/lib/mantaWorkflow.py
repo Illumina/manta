@@ -84,7 +84,7 @@ def getNextGenomeSegment(params) :
     generator which iterates through all genomic segments and
     returns a segmentValues object for each one.
     """
-    for segval in getChromIntervals(params.chromOrder,params.chromSizes,params.binSize) :
+    for segval in getChromIntervals(params.chromOrder,params.chromSizes,params.scanSize) :
         yield GenomeSegment(*segval)
 
 
@@ -392,7 +392,7 @@ class MantaWorkflow(WorkflowRunner) :
 
         # sanity check some parameter typing:
         MEGABASE = 1000000
-        self.params.binSize = int(self.params.binMbSize) * MEGABASE
+        self.params.scanSize = int(self.params.scanSizeMb) * MEGABASE
         self.params.nonlocalWorkBins = int(self.params.nonlocalWorkBins)
 
         self.paths = PathInfo(self.params)
