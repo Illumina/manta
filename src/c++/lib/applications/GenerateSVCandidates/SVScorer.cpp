@@ -530,8 +530,7 @@ scoreDiploidSV(
     /// put some more thought into this -- is this P (spurious | any old read) or P( spurious | chimera ) ??
     /// it seems like it should be the latter in the usages that really matter.
     ///
-    static const ProbSet altChimeraProb(5e-2);
-    static const ProbSet refChimeraProb(1e-3);
+    static const ProbSet chimeraProb(1e-3);
 
     //
     // compute qualities
@@ -575,8 +574,8 @@ scoreDiploidSV(
                     if (! isSmall)
                     {
                         isFragEvaluated=true;
-                        incrementSpanningPairAlleleLnLhood(altChimeraProb, fragev.ref, refLnLhoodSet.fragPair);
-                        incrementSpanningPairAlleleLnLhood(refChimeraProb, fragev.alt, altLnLhoodSet.fragPair);
+                        incrementSpanningPairAlleleLnLhood(chimeraProb, fragev.ref, refLnLhoodSet.fragPair);
+                        incrementSpanningPairAlleleLnLhood(chimeraProb, fragev.alt, altLnLhoodSet.fragPair);
                     }
                 }
             }
