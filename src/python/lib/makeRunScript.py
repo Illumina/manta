@@ -115,6 +115,8 @@ results -- in this case the dry run will not cover the full 'live' run task set.
 	              help="send email notification of job completion status to this address (may be provided multiple times for more than one email address)")
     parser.add_option("-d","--dryRun", dest="isDryRun",action="store_true",default=False,
                       help="dryRun workflow code without actually running command-tasks")
+    parser.add_option("--quiet", dest="isQuiet",action="store_true",default=False,
+                      help="Don't write any log output to stderr (but still write to workspace/pyflow_log.txt)")
 
     debug_group = OptionGroup(parser,"development debug options")
     debug_group.add_option("--rescore", dest="isRescore",action="store_true",default=False,
@@ -214,6 +216,7 @@ def main(iniFile, primaryIniSection, workflowClassName) :
                          isContinue="Auto",
                          isForceContinue=True,
                          isDryRun=runOptions.isDryRun,
+                         isQuiet=runOptions.isQuiet,
                          schedulerArgList=runOptions.schedulerArgList,
                          resetTasks=runOptions.resetTasks,
                          successMsg=wflow.getSuccessMessage(),
