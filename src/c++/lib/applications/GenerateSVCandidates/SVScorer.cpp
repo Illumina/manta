@@ -515,6 +515,7 @@ scoreDiploidSV(
     const CallOptionsDiploid& diploidOpt,
     const CallOptionsDiploidDeriv& diploidDopt,
     const SVCandidate& sv,
+    const bool isSmallAssembler,
     const ChromDepthFilterUtil& dFilter,
     const SVEvidence& evidence,
     SVScoreInfo& baseInfo,
@@ -529,7 +530,8 @@ scoreDiploidSV(
     /// put some more thought into this -- is this P (spurious | any old read) or P( spurious | chimera ) ??
     /// it seems like it should be the latter in the usages that really matter.
     ///
-    static const ProbSet chimeraProb(1e-3);
+    static const ProbSet altChimeraProb(5e-2);
+    static const ProbSet refChimeraProb(1e-3);
 
     //
     // compute qualities
@@ -560,9 +562,22 @@ scoreDiploidSV(
                 /// only add to the likelihood if the fragment "supports" at least one allele:
                 if ( fragev.isAnySpanningPairSupport() )
                 {
-                    isFragEvaluated=true;
-                    incrementSpanningPairAlleleLnLhood(chimeraProb, fragev.ref, refLnLhoodSet.fragPair);
-                    incrementSpanningPairAlleleLnLhood(chimeraProb, fragev.alt, altLnLhoodSet.fragPair);
+                    /// don't use pairs for small variants (it's not working very well!!)
+                    static const int minPairVariantSize(500);
+
+                    bool isSmall(false);
+                    if (isSmallAssembler)
+                    {
+                        const int svSize(sv.bp2.interval.range.center_pos() - sv.bp1.interval.range.center_pos());
+                        isSmall=(svSize<minPairVariantSize);
+                    }
+
+                    if (! isSmall)
+                    {
+                        isFragEvaluated=true;
+                        incrementSpanningPairAlleleLnLhood(altChimeraProb, fragev.ref, refLnLhoodSet.fragPair);
+                        incrementSpanningPairAlleleLnLhood(refChimeraProb, fragev.alt, altLnLhoodSet.fragPair);
+                    }
                 }
             }
 
@@ -781,7 +796,8 @@ scoreSV(
     scoreSV(svData, assemblyData, sv, modelScoreInfo.base, evidence);
 
     // score components specific to diploid-germline model:
-    scoreDiploidSV(_diploidOpt, _diploidDopt, sv, _dFilterDiploid, evidence, modelScoreInfo.base, modelScoreInfo.diploid);
+    const bool isSmallAssembler(! assemblyData.isSpanning);
+    scoreDiploidSV(_diploidOpt, _diploidDopt, sv, isSmallAssembler, _dFilterDiploid, evidence, modelScoreInfo.base, modelScoreInfo.diploid);
 
     // score components specific to somatic model:
     if (isSomatic)
