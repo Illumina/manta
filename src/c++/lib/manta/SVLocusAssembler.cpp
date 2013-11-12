@@ -203,14 +203,14 @@ getBreakendReads(
                 {
                     if (leadingMismatchLen >= minMismatchLen) isSemiAlignedKeeper = true;
                 }
+#ifdef DEBUG_ASBL
+                    ++semiAlignedCnt;
+#endif
 
 #if 0
                 if (isSemiAligned(bamRead,ref,_scanOpt.minSemiAlignedScoreCandidates))
                 {
                     isSemiAlignedKeeper = true;
-#ifdef DEBUG_ASBL
-                    ++semiAlignedCnt;
-#endif
                 }
 #endif
             }
