@@ -82,8 +82,6 @@ You must specify a BAM file for at least one sample.
 
     def getOptionDefaults(self) :
 
-        megaBase=1000000
-
         self.configScriptDir=scriptDir
         defaults=MantaWorkflowOptionsBase.getOptionDefaults(self)
         defaults.update({
@@ -93,7 +91,7 @@ You must specify a BAM file for at least one sample.
             'isRNA' : False,
             'useExistingAlignStats' : False,
             'useExistingChromDepths' : False,
-            'binSize' : 12*megaBase,
+            'binMbSize' : 12,
             'nonlocalWorkBins' : 256
                           })
         return defaults

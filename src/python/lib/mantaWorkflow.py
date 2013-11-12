@@ -391,7 +391,8 @@ class MantaWorkflow(WorkflowRunner) :
         (self.params.chromOrder,self.params.chromSizes) = getFastaChromOrderSize(indexRefFasta)
 
         # sanity check some parameter typing:
-        self.params.binSize = int(self.params.binSize)
+        MEGABASE = 1000000
+        self.params.binSize = int(self.params.binMbSize) * MEGABASE
         self.params.nonlocalWorkBins = int(self.params.nonlocalWorkBins)
 
         self.paths = PathInfo(self.params)
