@@ -564,7 +564,10 @@ getFragProb(
     {
         if ((frag1.pos < frag2.pos) != (bp1pos < bp2pos))
         {
-            isBpFragReversed=true;
+            if (frag1.pos != frag2.pos)
+            {
+                isBpFragReversed=true;
+            }
         }
     }
 
@@ -612,7 +615,10 @@ getFragProb(
         {
             if ( (frag1.pos < frag2.pos) != (bp1pos < bp2pos) )
             {
-                errorMsg = "Can't match read pair positions to sv-candidate.";
+                if (frag1.pos != frag2.pos)
+                {
+                    errorMsg = "Can't match read pair positions to sv-candidate.";
+                }
             }
         }
 
@@ -723,6 +729,7 @@ processExistingAltPairInfo(
             }
 
 #ifdef DEBUG_PAIR
+            static const std::string logtag("processExistingAltPairInfo: ");
             log_os << logtag << "Finding alt pair evidence for svIndex: " << sv.candidateIndex << "  qname: " << qname << "\n";
 #endif
 
