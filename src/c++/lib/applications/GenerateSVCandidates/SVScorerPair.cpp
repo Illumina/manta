@@ -88,7 +88,7 @@ getSimpleSVAltPairSupport(
         const pos_t maxSupportedFrag(maxFrag-pairOpt.minFragSupport);
 
         const pos_t beginPos(centerPos-maxSupportedFrag);
-        const pos_t endPos(centerPos-pairOpt.minFragSupport+1);
+        const pos_t endPos(centerPos+maxSupportedFrag+1);
 
         /// This could occur if the fragment distribution is incredibly small --
         /// we effectively can't make use of pairs in this case:
@@ -152,7 +152,8 @@ getSimpleSVAltPairSupport(
             SVFragmentEvidence& fragment(evidence.getSample(isTumor)[bamRead.qname()]);
             SVFragmentEvidenceAllele& alt(fragment.alt);
 
-            setReadEvidence(minMapQ, bamRead, fragment.getRead(bamRead.is_first()));
+            SVFragmentEvidenceRead& evRead(fragment.getRead(bamRead.is_first()));
+            setReadEvidence(minMapQ, bamRead, evRead);
 
             {
                 float fragProb(fragDistro.cdf(altTemplateSize));
@@ -171,6 +172,7 @@ getSimpleSVAltPairSupport(
             }
 
             if (! isFirstBamRead) continue;
+            if (! evRead.isAnchored) continue;
 
             /// old tracker:
             if (isBp1)
@@ -229,7 +231,7 @@ getSVRefPairSupport(
         const pos_t maxSupportedFrag(maxFrag-pairOpt.minFragSupport);
 
         const pos_t beginPos(centerPos-maxSupportedFrag);
-        const pos_t endPos(centerPos-pairOpt.minFragSupport+1);
+        const pos_t endPos(centerPos+maxSupportedFrag+1);
 
         /// This could occur if the fragment distribution is incredibly small --
         /// we effectively can't make use of pairs in this case:
@@ -299,7 +301,8 @@ getSVRefPairSupport(
             SVFragmentEvidence& fragment(evidence.getSample(isTumor)[bamRead.qname()]);
             SVFragmentEvidenceAllele& ref(fragment.ref);
 
-            setReadEvidence(minMapQ, bamRead, fragment.getRead(bamRead.is_first()));
+            SVFragmentEvidenceRead& evRead(fragment.getRead(bamRead.is_first()));
+            setReadEvidence(minMapQ, bamRead, evRead);
 
             {
                 float fragProb(fragDistro.cdf(fragLength));
@@ -318,6 +321,7 @@ getSVRefPairSupport(
             }
 
             if (isDoubleCountSkip) continue;
+            if (! evRead.isAnchored) continue;
 
             /// old tracker:
             if (isBp1)
