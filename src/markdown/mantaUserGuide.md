@@ -77,6 +77,7 @@ provided as input in BAM format.
 ### SV predictions
 
 All variants are reported in the vcf using  symbolic alleles unless both of these conditions are met:
+
 *   The variant can be expressed as a combination of inserted and deleted sequence.
 *   The deletion or insertion length is not 1000 or greater
 
