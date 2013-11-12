@@ -1,4 +1,4 @@
-v0.13
+v0.13.0
 - Manta-63 Incorporate read-pair evidence into small SVs/indels
 - MANTA-77 Fix assertion for rna-seq test
 - MANTA-17 Include semi-aligned reads in discovery and scoring
