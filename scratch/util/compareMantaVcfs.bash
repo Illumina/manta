@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #
-# improve comparison of manta output from two runs by stripping out the header and Manta id tags
+# facilitate comparison of manta output from two runs by stripping out the header and Manta id tags
 #
 
 set -o nounset
@@ -14,7 +14,6 @@ scriptName=$(basename $0)
 #
 optionalUngzip() {
     infile=$1
-    echo -e "$scriptName filtered vcf: $1\n\n\n"
     if file -b $infile | grep -q gzip; then
         gzip -dc $infile
     else
@@ -22,21 +21,40 @@ optionalUngzip() {
     fi
 }
 
-
 #
-# unzip, remove header and remove IDs from each vcf
+# optionally ungzip, then remove header and remove IDs from each vcf
 #
 stripVcf() {
-   infile=$1
+    infile=$1
 
-   optionalUngzip $1 |\
-   awk '!/^#/' |\
-   sed "s/Manta.*:[0-9]*:[0-9]*:[0-9]*:[0-9]*:[0-9]*//g" 
+    # print input filename so that it's easy to figure out the diff polarity and see global lineCount diff:
+    echo "$scriptName filteredVcf: $1"
+    lineCount=$(optionalUngzip $1 | wc -l)
+    echo "$scriptName lineCount: $lineCount"
+
+    # extra spaces keep the filename/lineCount diff above from attaching to a change on line 1 of the file:
+    echo -e "\n\n\n"
+
+    optionalUngzip $1 |\
+    awk '!/^#/' |\
+    sed "s/Manta.*:[0-9]*:[0-9]*:[0-9]*:[0-9]*:[0-9]*//g"
 }
 
+#
+# parse cmdline and diff:
+#
+if [ $# != 2 ]; then
+    cat <<END
+usage: $0 file1.vcf[.gz] file2.vcf[.gz]
+
+This script helps to compare two manta vcf files. The vcfs can be
+bgziped, gziped or uncompressed. Each file will be uncomressed and the
+header + all ID Manta* fields will be stripped out.
+END
+    exit 2
+fi
 
 file1=$1
 file2=$2
 
 diff -U 0 <(stripVcf $file1) <(stripVcf $file2)
-
