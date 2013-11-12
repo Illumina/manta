@@ -78,6 +78,8 @@ addSVNodeRead(
 
     if (scanner.isReadFiltered(bamRead)) return;
 
+    if (bamRead.is_supplement()) return;
+
     const bool isNonShortAnomalous(scanner.isNonShortAnomalous(bamRead,bamIndex));
 
     bool isLocalAssemblyEvidence(false);
@@ -600,7 +602,7 @@ getCandidatesFromData(
             {
                 std::swap(localReadPtr,remoteReadPtr);
             }
-            assert(localReadPtr->isSet());
+            assert(localReadPtr->isSet() && "Neither read in pair is set");
 
             const bam_record* remoteBamRecPtr( remoteReadPtr->isSet() ? &(remoteReadPtr->bamrec) : NULL);
 

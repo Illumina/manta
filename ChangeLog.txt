@@ -1,3 +1,4 @@
+- MANTA-77 Fix assertion for rna-seq test
 - MANTA-17 Include semi-aligned reads in discovery and scoring
 - MANTA-69 Update score/write filter to account for CIGAR and SA-read
 candidates, and new uniform candidate scheme for self-edges.
