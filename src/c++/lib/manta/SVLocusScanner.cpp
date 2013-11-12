@@ -473,7 +473,6 @@ getSVCandidatesFromSemiAligned(
 
     if ((leadingMismatchLen+leadingClipLen + trailingMismatchLen+trailingClipLen) >= bamRead.read_size()) return;
 
-    // soft-clipped reads don't define a full hypothesis, so they're always evidence for a 'complex' ie. undefined, event:
     using namespace SVEvidenceType;
     static const index_t svSource(SEMIALIGN);
 
