@@ -77,6 +77,56 @@ def which(searchFile) :
 
 
 
+def parseGenomeRegion(regionStr) :
+    """
+    parse a samtools region string and return a (chrom,start,end) tuple
+
+    missing start and end values will be entered as None
+    """
+
+    assert(regionStr is not None)
+
+    word=regionStr.strip().split(':')
+
+    if (len(word) < 1) or (len(word) > 2) :
+        raise Exception("Unexpected format in genome region string: %s" % (regionStr))
+
+    chrom=word[0]
+    if len(chrom) == 0 :
+        raise Exception("Unexpected format in genome region string: %s" % (regionStr))
+
+    start=None
+    end=None
+
+    if (len(word) > 1) :
+        rangeWord=word[1].split('-')
+        if len(rangeWord) != 2 :
+            raise Exception("Unexpected format in genome region string: %s" % (regionStr))
+        start = int(rangeWord[0])
+        end = int(rangeWord[1])
+
+        if (end < start) or (start < 1) or (end < 1) :
+            raise Exception("Unexpected format in genome region string: %s" % (regionStr))
+
+    return (chrom,start,end)
+
+
+
+class GenomeRegion :
+    """
+    a simple genome segment class
+    """
+
+    def __init__(self, regionStr = None) :
+        if regionStr is None :
+            self.chrom=None
+            self.start=None
+            self.end=None
+        else :
+            (self.chrom,self.start,self.end) = parseGenomeRegion(regionStr)
+
+
+
 def isValidSampleId(sampleId) :
     return re.match("^[A-Za-z0-9_-]+$", sampleId)
 
@@ -134,27 +184,40 @@ def getFastaChromOrderSize(faiFile) :
 
 
 
-def getChromIntervals(chromOrder,chromSizes,segmentSize) :
+def getChromIntervals(chromOrder,chromSizes,segmentSize, genomeRegion = None) :
     """
     generate chromosome intervals no greater than segmentSize
 
     chromOrder - iterable object of chromosome names
     chromSizes - a hash of chrom sizes
+    genomeRegion - optionally restrict chrom intervals to only cover a specified chromosome region
 
     return chromIndex,chromLabel,start,end,chromSegment
     where start and end are formated for use with samtools
     chromSegment is 0-indexed number of segment along each chromosome
     """
     for (chromIndex, chromLabel) in enumerate(chromOrder) :
-        chromSize=chromSizes[chromLabel]
+        chromStart=1
+        chromEnd=chromSizes[chromLabel]
+
+        # adjust for the custom genome subsegment case:
+        if genomeRegion is not None :
+            if genomeRegion.chrom is not None :
+                if genomeRegion.chrom != chromLabel : continue
+                if genomeRegion.start is not None :
+                    chromStart=genomeRegion.start
+                if genomeRegion.end is not None :
+                    chromEnd=genomeRegion.end
+
+        chromSize=(chromEnd-chromStart+1)
         chromSegments=1+((chromSize-1)/segmentSize)
         segmentBaseSize=chromSize/chromSegments
         nPlusOne=chromSize%chromSegments
-        start=1
+        start=chromStart
         for i in xrange(chromSegments) :
             segSize=segmentBaseSize
             if i<nPlusOne : segSize += 1
-            end=min(start+(segSize-1),chromSize)
+            end=min(start+(segSize-1),chromStart+chromSize)
             yield (chromIndex,chromLabel,start,end,i)
             start=end+1
 

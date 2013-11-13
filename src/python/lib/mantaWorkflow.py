@@ -84,7 +84,7 @@ def getNextGenomeSegment(params) :
     generator which iterates through all genomic segments and
     returns a segmentValues object for each one.
     """
-    for segval in getChromIntervals(params.chromOrder,params.chromSizes,params.scanSize) :
+    for segval in getChromIntervals(params.chromOrder,params.chromSizes,params.scanSize, params.genomeRegion) :
         yield GenomeSegment(*segval)
 
 

@@ -35,7 +35,7 @@ from mantaOptions import MantaWorkflowOptionsBase
 from configureUtil import assertOptionExists, OptParseException, validateFixExistingDirArg, validateFixExistingFileArg
 from makeRunScript import makeRunScript
 from mantaWorkflow import MantaWorkflow
-from workflowUtil import ensureDir, isValidSampleId
+from workflowUtil import ensureDir, isValidSampleId, GenomeRegion
 from checkChromSet import checkChromSet
 
 
@@ -83,6 +83,10 @@ You must specify a BAM file for at least one sample.
         group.add_option("--candidateBins",type="int",dest="nonlocalWorkBins",metavar="candidateBins",
                          help="Provide the total number of tasks which candidate generation "
                             " will be sub-divided into. (default: %default)")
+        group.add_option("--region",type="string",dest="regionStr",metavar="samtools_region",
+                         help="Provide a region to configure an analysis limited "
+                              "to a single segment of the full genome for debugging purposes. "
+                              "Examples: '--region chr2:1000-20000', '--region chr20'")
 
         MantaWorkflowOptionsBase.addExtendedGroupOptions(self,group)
 
@@ -136,7 +140,7 @@ You must specify a BAM file for at least one sample.
             if not os.path.isfile(faiFile) :
                 raise OptParseException("Can't find expected fasta index file: '%s'" % (faiFile))
 
-        options.parsedRegion = BamRegion(options.region)
+        options.genomeRegion = GenomeRegion(options.regionStr)
 
         MantaWorkflowOptionsBase.validateAndSanitizeExistingOptions(self,options)
 
