@@ -377,16 +377,6 @@ class MantaWorkflow(WorkflowRunner) :
             checkFile(self.params.referenceFasta,"reference fasta")
             checkFile(indexRefFasta,"reference fasta index")
 
-        self.params.normalBamList = []
-        for bam in (self.params.normalBam,) :
-            if bam is None : continue
-            self.params.normalBamList.append(bam)
-
-        self.params.tumorBamList = []
-        for bam in (self.params.tumorBam,) :
-            if bam is None : continue
-            self.params.tumorBamList.append(bam)
-
         # read fasta index
         (self.params.chromOrder,self.params.chromSizes) = getFastaChromOrderSize(indexRefFasta)
 
