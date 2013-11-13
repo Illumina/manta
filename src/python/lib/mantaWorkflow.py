@@ -351,6 +351,10 @@ class MantaWorkflow(WorkflowRunner) :
         self.params=params
         self.iniSections=iniSections
 
+        # format bam lists:
+        if self.params.normalBamList is None : self.params.normalBamList = []
+        if self.params.tumorBamList is None : self.params.tumorBamList = []
+
         # make sure run directory is setup:
         self.params.runDir=os.path.abspath(self.params.runDir)
         ensureDir(self.params.runDir)
