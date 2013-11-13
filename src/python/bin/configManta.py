@@ -83,7 +83,7 @@ You must specify a BAM file for at least one sample.
         group.add_option("--candidateBins",type="int",dest="nonlocalWorkBins",metavar="candidateBins",
                          help="Provide the total number of tasks which candidate generation "
                             " will be sub-divided into. (default: %default)")
-        group.add_option("--region",type="string",dest="regionStr",metavar="samtools_region",
+        group.add_option("--region",type="string",dest="regionStr",metavar="samtoolsRegion",
                          help="Provide a region to configure an analysis limited "
                               "to a single segment of the full genome for debugging purposes. "
                               "Examples: '--region chr2:1000-20000', '--region chr20'")
@@ -103,7 +103,8 @@ You must specify a BAM file for at least one sample.
             'useExistingAlignStats' : False,
             'useExistingChromDepths' : False,
             'scanSizeMb' : 12,
-            'nonlocalWorkBins' : 256
+            'nonlocalWorkBins' : 256,
+            'regionStr' : "" 
                           })
         return defaults
 
@@ -148,7 +149,7 @@ You must specify a BAM file for at least one sample.
 
     def validateOptionExistence(self,options) :
 
-        if len(options.normalBamList) == 0 :
+        if (options.normalBamList is None) or (len(options.normalBamList) == 0) :
             raise OptParseException("No normal sample BAM files specified")
 
         assertOptionExists(options.alignerMode,"aligner mode")

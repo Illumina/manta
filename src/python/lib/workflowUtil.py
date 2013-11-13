@@ -118,7 +118,7 @@ class GenomeRegion :
     """
 
     def __init__(self, regionStr = None) :
-        if regionStr is None :
+        if (regionStr is None) or (len(regionStr) == 0) :
             self.chrom=None
             self.start=None
             self.end=None
