@@ -108,22 +108,7 @@ def parseGenomeRegion(regionStr) :
         if (end < start) or (start < 1) or (end < 1) :
             raise Exception("Unexpected format in genome region string: %s" % (regionStr))
 
-    return (chrom,start,end)
-
-
-
-class GenomeRegion :
-    """
-    a simple genome segment class
-    """
-
-    def __init__(self, regionStr = None) :
-        if (regionStr is None) or (len(regionStr) == 0) :
-            self.chrom=None
-            self.start=None
-            self.end=None
-        else :
-            (self.chrom,self.start,self.end) = parseGenomeRegion(regionStr)
+    return {"chrom":chrom, "start":start, "end":end}
 
 
 
@@ -202,12 +187,12 @@ def getChromIntervals(chromOrder,chromSizes,segmentSize, genomeRegion = None) :
 
         # adjust for the custom genome subsegment case:
         if genomeRegion is not None :
-            if genomeRegion.chrom is not None :
-                if genomeRegion.chrom != chromLabel : continue
-                if genomeRegion.start is not None :
-                    chromStart=genomeRegion.start
-                if genomeRegion.end is not None :
-                    chromEnd=genomeRegion.end
+            if genomeRegion["chrom"] is not None :
+                if genomeRegion["chrom"] != chromLabel : continue
+                if genomeRegion["start"] is not None :
+                    chromStart=genomeRegion["start"]
+                if genomeRegion["end"] is not None :
+                    chromEnd=genomeRegion["end"]
 
         chromSize=(chromEnd-chromStart+1)
         chromSegments=1+((chromSize-1)/segmentSize)

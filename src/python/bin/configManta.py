@@ -35,7 +35,7 @@ from mantaOptions import MantaWorkflowOptionsBase
 from configureUtil import assertOptionExists, OptParseException, validateFixExistingDirArg, validateFixExistingFileArg
 from makeRunScript import makeRunScript
 from mantaWorkflow import MantaWorkflow
-from workflowUtil import ensureDir, isValidSampleId, GenomeRegion
+from workflowUtil import ensureDir, isValidSampleId, parseGenomeRegion
 from checkChromSet import checkChromSet
 
 
@@ -141,7 +141,10 @@ You must specify a BAM file for at least one sample.
             if not os.path.isfile(faiFile) :
                 raise OptParseException("Can't find expected fasta index file: '%s'" % (faiFile))
 
-        options.genomeRegion = GenomeRegion(options.regionStr)
+        if (options.regionStr is None) or (len(options.regionStr) == 0) :
+            options.genomeRegion = None
+        else :
+            options.genomeRegion = parseGenomeRegion(options.regionStr)
 
         MantaWorkflowOptionsBase.validateAndSanitizeExistingOptions(self,options)
 
