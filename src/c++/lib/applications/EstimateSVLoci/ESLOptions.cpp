@@ -132,9 +132,10 @@ parseESLOptions(
     else if (opt.referenceFilename.empty())
     {
         usage(log_os,prog,visible,"Need the FASTA reference file");
-    } else if (opt.region.empty())
+    }
+    else if (opt.region.empty())
     {
-    	usage(log_os,prog,visible,"Need the samtools formatted region");
+        usage(log_os,prog,visible,"Need the samtools formatted region");
     }
 
 

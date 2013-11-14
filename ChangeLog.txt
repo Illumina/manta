@@ -1,3 +1,5 @@
+- MANTA-81 Fix small indel somatic false negatives introduced
+in MANTA-63
 - MANTA-80 Additional workflow options: run subsections of the
 genome, finer task parallelization control and merge multiple
 input BAMs per sample.

@@ -204,7 +204,7 @@ getBreakendReads(
                     if (leadingMismatchLen >= minMismatchLen) isSemiAlignedKeeper = true;
                 }
 #ifdef DEBUG_ASBL
-                    ++semiAlignedCnt;
+                ++semiAlignedCnt;
 #endif
 
 #if 0

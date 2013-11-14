@@ -104,7 +104,7 @@ You must specify a BAM file for at least one sample.
             'useExistingChromDepths' : False,
             'scanSizeMb' : 12,
             'nonlocalWorkBins' : 256,
-            'regionStr' : "" 
+            'regionStr' : ""
                           })
         return defaults
 
