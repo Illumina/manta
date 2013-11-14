@@ -259,11 +259,17 @@ addConservativeSpanningPairSupport(
     const float sum(altLhood+refLhood);
     if (altLhood > refLhood)
     {
-        if ((altLhood/sum) > pairSupportProb) sampleBaseInfo.alt.confidentSpanningPairCount++;
+        if ((altLhood/sum) > pairSupportProb)
+        {
+            sampleBaseInfo.alt.confidentSpanningPairCount++;
+        }
     }
     else
     {
-        if ((refLhood/sum) > pairSupportProb) sampleBaseInfo.ref.confidentSpanningPairCount++;
+        if ((refLhood/sum) > pairSupportProb)
+        {
+            sampleBaseInfo.ref.confidentSpanningPairCount++;
+        }
     }
 }
 

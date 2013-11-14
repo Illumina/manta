@@ -30,12 +30,36 @@
 #include <sstream>
 #include <string>
 
-
+/// standard debug output for this file:
 //#define DEBUG_PAIR
+
+/// ridiculous debug output for this file:
+//#define DEBUG_MEGAPAIR
 
 #ifdef DEBUG_PAIR
 #include "blt_util/log.hh"
 #endif
+
+
+
+
+
+static
+void
+setAlleleFrag(
+    const SizeDistribution& fragDistro,
+    const int size,
+    SVFragmentEvidenceAlleleBreakend& bp)
+{
+    float fragProb(fragDistro.cdf(size));
+    fragProb = std::min(fragProb, (1-fragProb));
+#ifdef DEBUG_MEGAPAIR
+    log_os << __FUNCTION__ << ": fraglen,prob " << size << " " << fragProb << "\n";
+#endif
+
+    bp.isFragmentSupport = true;
+    bp.fragLengthProb = fragProb;
+}
 
 
 
@@ -57,7 +81,7 @@ getSimpleSVAltPairSupport(
     assert(sv.bp1.interval.tid == sv.bp2.interval.tid);
     assert(getSVType(sv) == SV_TYPE::INDEL);
 
-    /// In case of breakend micorhomology approximate the breakend as a point event at the center of the possible range:
+    /// In case of breakend microhomology approximate the breakend as a point event at the center of the possible range:
     const pos_t centerPos1(sv.bp1.interval.range.center_pos());
     const pos_t centerPos2(sv.bp2.interval.range.center_pos());
     assert(centerPos2>centerPos1);
@@ -89,6 +113,9 @@ getSimpleSVAltPairSupport(
 
         const pos_t beginPos(centerPos-maxSupportedFrag);
         const pos_t endPos(centerPos+maxSupportedFrag+1);
+#ifdef DEBUG_MEGAPAIR
+        log_os << __FUNCTION__ << ": pair scan begin/end: " << beginPos << " " << endPos << "\n";
+#endif
 
         /// This could occur if the fragment distribution is incredibly small --
         /// we effectively can't make use of pairs in this case:
@@ -112,6 +139,10 @@ getSimpleSVAltPairSupport(
 
             /// check for standard innie orientation:
             if (! is_innie_pair(bamRead)) continue;
+
+#ifdef DEBUG_MEGAPAIR
+            log_os << __FUNCTION__ << ": read: " << bamRead << "\n";
+#endif
 
             /// check if fragment is too big or too small:
             const int templateSize(std::abs(bamRead.template_size()));
@@ -145,31 +176,24 @@ getSimpleSVAltPairSupport(
             }
 
             {
-                const pos_t fragOverlap(std::min((centerPos-fragBeginRefPos), (fragEndRefPos-centerPos)));
-                if (fragOverlap < std::min(static_cast<pos_t>(bamRead.read_size()), pairOpt.minFragSupport)) continue;
+                const pos_t fragOverlap(std::min((1+centerPos1-fragBeginRefPos), (fragEndRefPos-centerPos2)));
+#ifdef DEBUG_MEGAPAIR
+                log_os << __FUNCTION__ << ": frag begin/end/overlap: " << fragBeginRefPos << " " << fragEndRefPos << " " << fragOverlap << "\n";
+#endif
+                if (fragOverlap < pairOpt.minFragSupport) continue;
             }
 
             SVFragmentEvidence& fragment(evidence.getSample(isTumor)[bamRead.qname()]);
-            SVFragmentEvidenceAllele& alt(fragment.alt);
 
             SVFragmentEvidenceRead& evRead(fragment.getRead(bamRead.is_first()));
             setReadEvidence(minMapQ, bamRead, evRead);
 
-            {
-                float fragProb(fragDistro.cdf(altTemplateSize));
-                fragProb = std::min(fragProb, (1-fragProb));
+            setAlleleFrag(fragDistro, altTemplateSize, fragment.alt.getBp(isBp1));
 
-                if (isBp1)
-                {
-                    alt.bp1.isFragmentSupport = true;
-                    alt.bp1.fragLengthProb = fragProb;
-                }
-                else
-                {
-                    alt.bp2.isFragmentSupport = true;
-                    alt.bp2.fragLengthProb = fragProb;
-                }
-            }
+            // when an alt entry is made for a fragment, we /*always*/ create correponding ref entry
+            // in theory this will get picked up by the ref scanner anyway, but the cost of missing this
+            // is all sorts of really bad somatic FNs
+            setAlleleFrag(fragDistro, templateSize, fragment.ref.getBp(isBp1));
 
             if (! isFirstBamRead) continue;
             if (! evRead.isAnchored) continue;
@@ -232,6 +256,9 @@ getSVRefPairSupport(
 
         const pos_t beginPos(centerPos-maxSupportedFrag);
         const pos_t endPos(centerPos+maxSupportedFrag+1);
+#ifdef DEBUG_MEGAPAIR
+        log_os << __FUNCTION__ << ": pair scan begin/end: " << beginPos << " " << endPos << "\n";
+#endif
 
         /// This could occur if the fragment distribution is incredibly small --
         /// we effectively can't make use of pairs in this case:
@@ -254,10 +281,14 @@ getSVRefPairSupport(
             /// check for standard innie orientation:
             if (! is_innie_pair(bamRead)) continue;
 
+#ifdef DEBUG_MEGAPAIR
+            log_os << __FUNCTION__ << ": read: " << bamRead << "\n";
+#endif
+
             /// check if fragment is too big or too small:
-            const int tSize(std::abs(bamRead.template_size()));
-            if (tSize < minFrag) continue;
-            if (tSize > maxFrag) continue;
+            const int templateSize(std::abs(bamRead.template_size()));
+            if (templateSize < minFrag) continue;
+            if (templateSize > maxFrag) continue;
 
             // count only from the down stream read unless the mate-pos goes past center-pos
             const bool isLeftMost(bamRead.pos() < bamRead.mate_pos());
@@ -271,54 +302,41 @@ getSVRefPairSupport(
             if ( (!isDefaultSelected) && (!isMateBeforeCenter) ) isDoubleCountSkip=true;
 
             // get fragment range:
-            pos_t fragBegin(0);
+            pos_t fragBeginRefPos(0);
             if (isLeftMost)
             {
-                fragBegin=bamRead.pos()-1;
+                fragBeginRefPos=bamRead.pos()-1;
             }
             else
             {
-                fragBegin=bamRead.mate_pos()-1;
+                fragBeginRefPos=bamRead.mate_pos()-1;
             }
 
-            const unsigned fragLength(std::abs(bamRead.template_size()));
-            const pos_t fragEnd(fragBegin+fragLength);
+            const pos_t fragEndRefPos(fragBeginRefPos+templateSize);
 
-            if (fragBegin > fragEnd)
+            if (fragBeginRefPos > fragEndRefPos)
             {
                 using namespace illumina::common;
 
                 std::ostringstream oss;
-                oss << "ERROR: Failed to parse fragment range from bam record. Frag begin,end: " << fragBegin << " " << fragEnd << " bamRecord: " << bamRead << "\n";
+                oss << "ERROR: Failed to parse fragment range from bam record. Frag begin,end: " << fragBeginRefPos << " " << fragEndRefPos << " bamRecord: " << bamRead << "\n";
                 BOOST_THROW_EXCEPTION(LogicException(oss.str()));
             }
 
             {
-                const pos_t fragOverlap(std::min((centerPos-fragBegin), (fragEnd-centerPos)));
-                if (fragOverlap < std::min(static_cast<pos_t>(bamRead.read_size()), pairOpt.minFragSupport)) continue;
+                const pos_t fragOverlap(std::min((1+centerPos-fragBeginRefPos), (fragEndRefPos-centerPos)));
+#ifdef DEBUG_MEGAPAIR
+                log_os << __FUNCTION__ << ": frag begin/end/overlap: " << fragBeginRefPos << " " << fragEndRefPos << " " << fragOverlap << "\n";
+#endif
+                if (fragOverlap < pairOpt.minFragSupport) continue;
             }
 
             SVFragmentEvidence& fragment(evidence.getSample(isTumor)[bamRead.qname()]);
-            SVFragmentEvidenceAllele& ref(fragment.ref);
 
             SVFragmentEvidenceRead& evRead(fragment.getRead(bamRead.is_first()));
             setReadEvidence(minMapQ, bamRead, evRead);
 
-            {
-                float fragProb(fragDistro.cdf(fragLength));
-                fragProb = std::min(fragProb, (1-fragProb));
-
-                if (isBp1)
-                {
-                    ref.bp1.isFragmentSupport = true;
-                    ref.bp1.fragLengthProb = fragProb;
-                }
-                else
-                {
-                    ref.bp2.isFragmentSupport = true;
-                    ref.bp2.fragLengthProb = fragProb;
-                }
-            }
+            setAlleleFrag(fragDistro, templateSize, fragment.ref.getBp(isBp1));
 
             if (isDoubleCountSkip) continue;
             if (! evRead.isAnchored) continue;
