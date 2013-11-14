@@ -92,7 +92,7 @@ parseMSLOptions(const manta::Program& prog,
     }
 
     // fast check of config state:
-    if (opt.graphFilename.size()<1)
+    if (opt.graphFilename.empty())
     {
         usage(log_os,prog,visible, "Must specify at least 1 input sv locus graph file");
     }
