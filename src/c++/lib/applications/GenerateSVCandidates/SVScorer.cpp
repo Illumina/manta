@@ -712,9 +712,15 @@ scoreSomaticSV(
         bool isSmall(false);
         if (isSmallAssembler)
         {
-            const int svSize(sv.bp2.interval.range.center_pos() - sv.bp1.interval.range.center_pos());
+            const int svSize(std::abs(sv.bp2.interval.range.center_pos() - sv.bp1.interval.range.center_pos()));
             isSmall=(svSize<minPairVariantSize);
         }
+
+#ifdef DEBUG_SCORE
+        log_os << __FUNCTION__ << ": isSmall: " << isSmall << '\n'
+               << __FUNCTION__ << ": normal: " << baseInfo.normal << '\n'
+               << __FUNCTION__ << ": tumor: " << baseInfo.tumor << '\n';
+#endif
 
         bool isNonzeroSomaticQuality(true);
 

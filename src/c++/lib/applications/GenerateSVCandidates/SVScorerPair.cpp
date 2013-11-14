@@ -78,13 +78,20 @@ getSimpleSVAltPairSupport(
     SVScoreInfo& baseInfo,
     SVEvidence& evidence)
 {
+    using namespace illumina::common;
+
     assert(sv.bp1.interval.tid == sv.bp2.interval.tid);
     assert(getSVType(sv) == SV_TYPE::INDEL);
 
     /// In case of breakend microhomology approximate the breakend as a point event at the center of the possible range:
     const pos_t centerPos1(sv.bp1.interval.range.center_pos());
     const pos_t centerPos2(sv.bp2.interval.range.center_pos());
-    assert(centerPos2>centerPos1);
+    if (centerPos2 <= centerPos1)
+    {
+        std::ostringstream oss;
+        oss << "ERROR: Unexpected breakend orientation in pair support routine for sv: " << sv << "\n";
+        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+    }
 
     const pos_t centerPos( isBp1 ? centerPos1 : centerPos2 );
 
@@ -168,8 +175,6 @@ getSimpleSVAltPairSupport(
 
             if (fragBeginRefPos > fragEndRefPos)
             {
-                using namespace illumina::common;
-
                 std::ostringstream oss;
                 oss << "ERROR: Failed to parse fragment range from bam record. Frag begin,end: " << fragBeginRefPos << " " << fragEndRefPos << " bamRecord: " << bamRead << "\n";
                 BOOST_THROW_EXCEPTION(LogicException(oss.str()));
@@ -817,7 +822,7 @@ getSVPairSupport(
 
     if (svData.isSkipped()) return;
 
-    if (assemblyData.isSpanning)
+    if (assemblyData.isCandidateSpanning)
     {
         // count the read pairs supporting the alternate allele in each sample
         // using data we already produced during candidate generation:

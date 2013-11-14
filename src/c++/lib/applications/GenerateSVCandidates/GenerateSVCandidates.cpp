@@ -124,7 +124,7 @@ struct SVWriter
     {
         static const unsigned minCandidateSpanningCount(3);
 
-        const bool isCandidateSpanning(assemblyData.isSpanning);
+        const bool isCandidateSpanning(assemblyData.isCandidateSpanning);
 
 #ifdef DEBUG_GSV
         static const std::string logtag("SVWriter::writeSV: ");

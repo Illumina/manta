@@ -443,11 +443,17 @@ getCandidateAssemblyData(
     //
     if (isSimpleBreakend(sv.bp1.state) && isSimpleBreakend(sv.bp1.state))
     {
+        // record the spanning status of the original low-resolution candidate:
+        assemblyData.isCandidateSpanning=true;
+
         // this case assumes two suspected breakends with a direction to each, most common large scale SV case:
         getJumpAssembly(sv, assemblyData);
     }
     else if ((sv.bp1.state == SVBreakendState::COMPLEX))
     {
+        // record the spanning status of the original low-resolution candidate:
+        assemblyData.isCandidateSpanning=false;
+
         // this case assumes a single-interval local assembly, this is the most common case for small-scale SVs/indels
         getSmallSVAssembly(sv, assemblyData);
     }
