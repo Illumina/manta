@@ -116,7 +116,7 @@ results -- in this case the dry run will not cover the full 'live' run task set.
     parser.add_option("-d","--dryRun", dest="isDryRun",action="store_true",default=False,
                       help="dryRun workflow code without actually running command-tasks")
     parser.add_option("--quiet", dest="isQuiet",action="store_true",default=False,
-                      help="Don't write any log output to stderr (but still write to workspace/pyflow_log.txt)")
+                      help="Don't write any log output to stderr (but still write to workspace/pyflow.data/logs/pyflow_log.txt)")
 
     debug_group = OptionGroup(parser,"development debug options")
     debug_group.add_option("--rescore", dest="isRescore",action="store_true",default=False,
