@@ -575,7 +575,7 @@ scoreDiploidSV(
                     bool isSmall(false);
                     if (isSmallAssembler)
                     {
-                        const int svSize(sv.bp2.interval.range.center_pos() - sv.bp1.interval.range.center_pos());
+                        const int svSize(std::abs(sv.bp2.interval.range.center_pos() - sv.bp1.interval.range.center_pos()));
                         isSmall=(svSize<minPairVariantSize);
                     }
 
