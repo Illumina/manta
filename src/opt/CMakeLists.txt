@@ -98,9 +98,9 @@ add_dependencies(MANTA_OPT MANTA_SAMTOOLS MANTA_TABIX MANTA_PYFLOW)
 #
 # hoedown
 #
-set(HOEDOWN_PREFIX "hoedown-1.0.2")
+set(HOEDOWN_PREFIX "hoedown-1.0.2_with_allext")
 set(HOEDOWN_DIR "${CMAKE_CURRENT_BINARY_DIR}/${HOEDOWN_PREFIX}")
-superset(HOEDOWN_PROG "${HOEDOWN_DIR}/hoedown")
+superset(HOEDOWN_PROG "${HOEDOWN_DIR}/hoedown_allext")
 
 add_custom_command(
     OUTPUT ${HOEDOWN_PROG}
