@@ -57,7 +57,7 @@ message (STATUS "MANTA_VERSION: ${MANTA_VERSION}")
 # setup build type
 #
 if (NOT CMAKE_BUILD_TYPE)
-    set(DEFAULT_CMAKE_BUILD_TYPE RelWithDebInfo)
+    set(DEFAULT_CMAKE_BUILD_TYPE Release)
     set(CMAKE_BUILD_TYPE ${DEFAULT_CMAKE_BUILD_TYPE} CACHE STRING
         "Choose the type of build, options are: Debug Release RelWithDebInfo (default: ${DEFAULT_CMAKE_BUILD_TYPE})" FORCE)
 endif()
