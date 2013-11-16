@@ -25,6 +25,11 @@ message (STATUS "==== Initializing project cmake configuration ====")
 enable_testing()
 
 #
+# if true, build with very strict error checking (disabled in src release tarballs)
+#
+set(DEVELOPER_MODE true)
+
+#
 # setup project/version
 #
 

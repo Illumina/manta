@@ -41,10 +41,11 @@ add_custom_command(
     COMMAND ${PYTHON_EXECUTABLE} ${MANTA_SOURCE_QC_DIR}/run_cppcheck.py ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Running c++ static analyzer")
 
-add_custom_target(MANTA_CPPCHECK ALL DEPENDS cppcheck.done)
+if(${DEVELOPER_MODE})
+    add_custom_target(MANTA_CPPCHECK ALL DEPENDS cppcheck.done)
 
-add_dependencies(MANTA_OPT MANTA_CPPCHECK)
-
+    add_dependencies(MANTA_OPT MANTA_CPPCHECK)
+endif()
 
 ##
 ## Build all the libraries for the project
