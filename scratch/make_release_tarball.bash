@@ -66,7 +66,7 @@ rme=$pname/README.md
 awk -v gver=$gitversion '
 {
     if      ($0~/^Version: NOT RELEASED/) printf "Version: %s\n",gver;
-    else if ($0~/\*NOT\* an end-user/) a=1;
+    else if ($0~/_NOT_ part of an end-user/) a=1;
     else print;
 }' $rme >| $tmp_file
 mv $tmp_file $rme
