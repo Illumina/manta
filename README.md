@@ -1,46 +1,52 @@
-Manta
-=====
+Manta Structural Variant Caller
+===============================
 
 Version: NOT RELEASED
 
-Manta is a software package to call structural variants and indels from short
-paired-end sequencing reads. It combines paired-end and split read evidence to
-provide genotype and quality score for variants in single diploid samples. It
-will also call somatic variants when a matched tumor sample is provided. Manta
-can detect all classes of structural variants which are identifiable in the
-absence of copy number analysis. See the user guide for a full description of
+Manta is a tool to call structural variants and indels from short paired-end
+sequencing reads. It combines paired-end and split read evidence during SV
+discovery and scoring to improve performance, but does not require split reads
+or successful breakpoint assemblies to report a variant in cases where there is
+strong evidence of an imprecise variant. It provides genotypes and quality
+scores for variants in single diploid samples, and will also call somatic
+variants when a matched tumor sample is specified. Manta can detect all classes
+of structural variants which can be identified in the absence of copy number
+analysis and large-scale assembly. See the user guide for a full description of
 capabilities and limitations.
 
-_Note: This software under development and not supported for general use._
+_Note: This software is under development and not supported for general use._
 
 
-End-user build instructions
----------------------------
+Build instructions
+------------------
+
+For Manta users it is strongly recommended to start from one of the release
+distributions of the source code provided on the Manta [releases] page. Acquiring
+the source via a git clone or archive could result in missing version number
+entries, undesirably stringent build requirements, or an unstable development
+intermediate between releases. Additional build notes for developers can be
+found below.
+
+Note that this README is _NOT_ part of an end-user release distribution.
+
+[releases]:https://github.com/StructuralVariants/manta/releases
+
+### Prerequisites
 
 Manta has been built and tested on linux systems only. It is currently
 maintained for Centos5,6 and Ubuntu 12.04.
 
-For Manta end users it is strongly recommended to start from one of the
-release distributions of the source code provided on the Manta [releases]
-page. Acquiring the source via a git clone or archive could result in missing
-version number entries, undesirably stringent build requirements, or an unstable
-development intermediate between releases.
-
-Note that this is _NOT_ an end-user release distribution.
-
-[releases]:https://github.com/StructuralVariants/manta/releases
-
-### Build prerequisites
+#### Compilation prerequisites:
 
 * python 2.4+
 * gcc 4.1+ OR clang 3.2+
 * libz (including headers)
 
-### Runtime prerequisites
+#### Runtime prerequisites
 
 * python 2.4+
 
-### Prerequisite package names (RHEL/Centos)
+#### Prerequisite package names (RHEL/Centos)
 
 * g++
 * make
@@ -68,12 +74,12 @@ Example:
     make install
 
 Note that during the configuration step, Manta will build the following
-compilation dependencies if these are missing:
+compilation dependencies if these are not found:
 
 * cmake 2.8.0+
 * boost 1.49.0
 
-To avoid this extra step, ensure that (1) cmake is in your PATH and (2)
+To optionally avoid this extra step, ensure that (1) cmake is in your PATH and (2)
 BOOST\_ROOT is defined to point to boost 1.49.0 (the boost version is required to
 be an exact match). If either of these dependencies are not found, they will be
 built during the configuration step, To accelerate this process it may be
@@ -95,9 +101,9 @@ To see more configure options, run:
 Data analysis and Interpretation
 --------------------------------
 
-After completing the installation, please see the Manta User Guide for
-instructions on how to use Manta, interpret results, and a high-level overview
-of the method. The user guide can be found in:
+After completing the installation, see the Manta user guide for instructions on
+how to use Manta, interpret results, and a high-level overview of the method.
+The user guide can be found in:
 
     ${MANTA_INSTALL_PATH}/doc/html/mantaUserGuide.html
 
@@ -108,4 +114,3 @@ Developer build configuration
 When the Manta source is cloned from github, it is configured for development
 rather than end-user distribution. As such, all builds include -Werror. If
 cppcheck is found any detected issue is converted to a build error.
-

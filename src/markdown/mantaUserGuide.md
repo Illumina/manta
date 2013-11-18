@@ -1,9 +1,11 @@
-<link rel='stylesheet' href='userguide.css' />
+<link rel='stylesheet' href='userGuide.css' />
 
 Manta User Guide
 ================
 
 Version: @MANTA_VERSION@
+
+<script src="tableOfContents.js"/></script>
 
 ## Introduction
 
@@ -39,13 +41,37 @@ SVs breakends, scoring and filtration of the SV under various biological models
 
 ## Capabilities
 
-Primary application is WGS DNA-Seq. Requires mapped short sequencing reads
-provided in the BAM file format. At least one BAM file must be submitted for
-each sample.
+Manta is capable of detecting all structural variant types which are
+identifiable in the absence of copy number analysis and large-scale de-novo
+assembly. Specific instances types which can and cannot be detected are
+enumerated below.
 
-Limited testing of WES. Configure with the `--exome` flag.
+For each structural variant and indel, Manta attempts to align the breakends to
+basepair resolution and report the left-shifted breakend coordinate (per the VCF
+4.1 SV reporting guidelines), together with the any breakend microhomology
+sequence and inserted seqeunce between the breakends. It is often the case that
+the assembly will fail to provide a confident basepair resolution explaination
+of the data -- in such cases the variant will be reported as `IMPRECISE`, and
+scored according the paired-end read evidence alone.
 
-Limited testing RNA-Seq. Configure with the `--rna` flag.
+The sequencing reads provided as input to Manta are expected to be from a
+paired-end seqeucneing assay which results in an "innie" orientation between the
+two reads of each DNA fragment, each presenting a read from the outer edge of
+the fragment inward.
+
+Manta has primarily be developed and tested for whole genome DNA-Seq
+experiments, targeted towards analysis of single diploid samples or subratctive
+analysis of a matched tumor and normal sample for the identification of somatic
+variants.
+
+Note that there is limited testing and support for other cases:
+
+* For exome or other targeted sequencing experiments, the workflow can be
+configured with the `--exome` flag to set filtration levels more appropriate for
+this case.
+* RNA-Seq analysis can be configured with the `--rna` flag to also adjust filtration
+levels and take some steps to prevent introns from being called as deletions.
+
 
 ### Detected variant classes
 
@@ -61,7 +87,7 @@ pattern:
 * Tandem Duplications
 * Interchromosomal Translocations
 
-#### Known Limitations
+### Known Limitations
 
 Manta should not be able to detect the following variant types:
 
@@ -90,7 +116,15 @@ confidence with a breakend pattern which is consistent with a deletion, however
 there is no higher-order testing of depth and all intersecting adjacencies to
 directly infer the SV type.
 
-### Input requirements
+## Input requirements
+
+The sequencing reads provided as input to Manta are expected to be from a
+paired-end seqeucneing assay which results in an "innie" orientation between the
+two reads of each DNA fragment, each presenting a read from the outer edge of
+the fragment inward.
+
+The performance of Manta on single-ended read input is unknown. On mate-pair
+libraries the method is expected to fail.
 
 Manta requires input sequencing reads to be mapped by an external tool and
 provided as input in BAM format.
@@ -111,44 +145,52 @@ The following limitations exist on the input BAMs provided to Manta:
 
 ## Outputs
 
-### SV predictions
+### Structural Variant predictions
 
 The primary manta outputs are a set of [VCF 4.1][1] files, found in
 `${RUNFOLDER}/results/variants`. Currently there are at least two vcf files
 created for any manta run, and a third somatic vcf is produced when tumor input
 is provided. These files are:
 
-* __candidateSV.vcf.gz__ Unscored SV and indel candidates. Only a minimal
-  amount of supporting evidence is required for a SV to entered as a candidate.
-  An SV or indel must be a candidate to be considered for scoring, therefor if
-  an SV cannot appear in the other VCF outputs if it is not present here. Note
-  that this file includes indels down to a very small size (10 by default)
-  intended to be passed on to a small variant caller without scoring by manta
-  itself (by default manta scoring starts at size 51).
-* __diploidSV.vcf.gz__ SVs and indels scored and genotyped under a diploid
+* __candidateSV.vcf.gz__
+    * Unscored SV and indel candidates. Only a minimal amount of supporting
+  evidence is required for a SV to entered as a candidate. An SV or indel must
+  be a candidate to be considered for scoring, therefor if an SV cannot appear
+  in the other VCF outputs if it is not present here. Note that this file
+  includes indels down to a very small size (10 by default) intended to be
+  passed on to a small variant caller without scoring by manta itself (by
+  default manta scoring starts at size 51).
+* __diploidSV.vcf.gz__
+    * SVs and indels scored and genotyped under a diploid
   model for the normal sample. The scores in this file do not reflect any
   information in the tumour bams
-* __somaticSV.vcf.gz__ SVs and indels scored under a somatic variant model.
+* __somaticSV.vcf.gz__
+    * SVs and indels scored under a somatic variant model.
   This file will only be produced if at least one tumour bam argument is
   supplied during configuration
 
-All variants are reported in the vcf using  symbolic alleles unless both of these conditions are met:
+All variants are reported in the vcf using symbolic alleles unless they are classified 
+as a small indel, in which case full sequences are provided for the vcf `REF` and `ALT`
+allele fields. A variant is classified as a small indel if all of these criteria are met:
 
-* The variant can be expressed as a combination of inserted and deleted sequence.
-* The deletion or insertion length is not 1000 or greater
+* The variant can be entirely expressed as a combination of inserted and deleted sequence.
+* The deletion or insertion length is not 1000 or greater.
+* The variant not imprecise.
 
 ### Statistics
 
 Additional secondary output is provided in `${RUNFOLDER}/results/stats`
 
-* __alignmentStatsSummary.txt__ fragment length quantiles for each input bam
-* __svLocusGraphStats.tsv__ statistics pertaining to the SV locus graph
+* __alignmentStatsSummary.txt__
+    * fragment length quantiles for each input bam
+* __svLocusGraphStats.tsv__
+    * statistics pertaining to the SV locus graph
 
 ## Run configuration and Execution
 
 Manta is run in a two step procedure: (1) configuration and (2) workflow
 execution. The configuration step is used to specify the input data and any
-options pertaining to the variant calling methods themselves  The execution
+options pertaining to the variant calling methods themselves. The execution
 step is used to specify any parameters pertaining to _how_ manta is executed
 (such as the total number of cores or SGE nodes over which the jobs should be
 parallelized). The second execution step can also be interrupted and restarted
@@ -156,7 +198,14 @@ without changing the final result of the workflow.
 
 ### Configuration
 
-Example:
+The workflow is configured with the script: `${MANTA_INSTALL_DIR}/bin/configManta.py`
+. Running this script with no arguments will display all standard configuration
+options to specify input BAM files, the reference sequence and the output run folder.
+Note that all input BAMs and reference sequence must contain the same chromosome names
+in the same order. Manta's default settings assume a whole genome DNA-Seq analysis, but there
+are configuration options for exome/targetting sequencing analysis in addition to RNA-Seq.
+
+Single Sample Analysis -- Example Configuration:
 
 ```
 ${MANTA_INSTALL_DIR}/bin/configManta.py \
@@ -165,7 +214,62 @@ ${MANTA_INSTALL_DIR}/bin/configManta.py \
 --runDir ${ANALYSIS_RUN_DIR}
 ```
 
+Tumor Normal Analysis -- Example Configuration:
+
+```
+${MANTA_INSTALL_DIR}/bin/configManta.py \
+--normalBam HCC1187BL.bam \
+--tumorBam HCC1187C.bam \
+--referenceFasta hg19.fa \
+--runDir ${ANALYSIS_RUN_DIR}
+
+```
+
+After the configuration completes, it will write out workflow run script to `${ANALYSIS_RUN_DIR}/runWorkflow.py`
+This can be used to run the workflow in various parallel compute enivironments
+per the instructions in the [Execution] section below.
+
+#### Advanced configuration options
+
+There are two sources of advanced configuration options:
+
+* Options listed in the file: `${MANTA_INSTALL_DIR}/bin/configManta.py.ini`
+    * These parameters are not expected to change frequently. Changing the file
+  listed above will re-configure all manta runs for the installation. To change
+  parameters for a single run, copy the configManta.py.ini file to the cwd where
+  configuraiton is being run -- any values found in `$(pwd)/configManta.py.ini`
+  will supercede those listed in the installation's ini file.
+* Advanced options listed in: `${MANTA_INSTALL_DIR}/bin/configManta.py --allHelp`
+    * These options are indented primarily for workflow development and
+  debugging, but could be useful for runtime optimization in some speciallized
+  cases.
+
 ### Execution
+
+The configuration steps creates a new workflow run script in the requested run directory:
+
+`{ANALYSIS_RUN_DIR}/runWorkflow.py`
+
+This script is used to control paralellel execution of Manta via the [pyFlow][2]
+parallel task engine. It can be used to parallelize structural variant analysis
+via one of two modes:
+
+1. Parallized across multiple cores on a single node.
+2. Parallized across multiple nodes on an SGE cluster.
+
+A running workflow can be interuptted at any time and resumed where it left
+off. If desired, the resumed analysis can use a different running mode or total
+core count.
+
+For a full list of execution options, see:
+
+`{ANALYSIS_RUN_DIR}/runWorkflow.py -h`
+
+Example execution on a single node:
+
+```
+${ANALYSIS_RUN_DIR}/runWorkflow.py -m local -j 8
+```
 
 Example execution on an SGE cluster:
 
@@ -173,5 +277,15 @@ Example execution on an SGE cluster:
 ${ANALYSIS_RUN_DIR}/runWorkflow.py -m sge -j 36
 ```
 
+#### Advanced execution options
+
+These options are useful for Manta development and debugging:
+
+* Stderr logging can be disabled with `--quiet` argument. Note this log is
+  replicated to `${ANALYSIS_RUN_DIR}/workspace/pyflow.data/logs/pyflow_log.txt`
+  so there is no loss of log information.
+* The `--rescore` option can be provided to force the workflow to re-execute
+  candidates discovery and scoring, but not the inital graph generation steps.
 
 [1]: http://www.1000genomes.org/wiki/Analysis/Variant%20Call%20Format/vcf-variant-call-format-version-41
+[2]: http://ctsa.github.io/pyflow/
