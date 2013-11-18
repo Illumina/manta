@@ -5,7 +5,7 @@ Manta User Guide
 
 Version: @MANTA_VERSION@
 
-<script src="tableOfContents.js"/></script>
+<script src="tableOfContents.js"></script>
 
 ## Introduction
 
@@ -176,6 +176,9 @@ allele fields. A variant is classified as a small indel if all of these criteria
 * The variant can be entirely expressed as a combination of inserted and deleted sequence.
 * The deletion or insertion length is not 1000 or greater.
 * The variant not imprecise.
+
+When vcf records are printed in the small indel format, they will also include
+the `CIGAR` INFO tag describing the combined insertion and deletion event.
 
 ### Statistics
 
