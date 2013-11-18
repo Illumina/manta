@@ -533,8 +533,19 @@ writeInvdel(
         infoTags.push_back( str(boost::format("END=%i") % endPos));
         infoTags.push_back( str(boost::format("SVTYPE=%s") % words[0]));
         const pos_t refLen(endPos-pos);
-        pos_t svLen( isIndel ? -refLen : refLen );
-        svLen = std::max(svLen, static_cast<pos_t>(sv.insertSeq.size()));
+        pos_t svLen(refLen);
+        if (isIndel)
+        {
+            const pos_t insertLen(static_cast<pos_t>(sv.insertSeq.size()));
+            if ( insertLen > refLen )
+            {
+                svLen = insertLen;
+            }
+            else
+            {
+                svLen = -refLen;
+            }
+        }
         infoTags.push_back( str(boost::format("SVLEN=%i") % (svLen)));
     }
     infoTags.push_back( str(boost::format("UPSTREAM_PAIR_COUNT=%i") % bpA.getLocalPairCount()) );
