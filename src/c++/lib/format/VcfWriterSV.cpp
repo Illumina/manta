@@ -525,12 +525,16 @@ writeInvdel(
     // build INFO field
     std::vector<std::string> words;
     split_string(label,':',words);
-    if (! isSmallVariant)
     {
+        // note that there's a reasonable argument for displaying these tags only when a
+        // symbolic allele is used (by a strict reading of the vcf spec) -- we instead
+        // print these fields for all variants for uniformity within the manta vcf:
+        //
         infoTags.push_back( str(boost::format("END=%i") % endPos));
         infoTags.push_back( str(boost::format("SVTYPE=%s") % words[0]));
         const pos_t refLen(endPos-pos);
-        const pos_t svLen( isIndel ? -refLen : refLen );
+        pos_t svLen( isIndel ? -refLen : refLen );
+        svLen = std::max(svLen, static_cast<pos_t>(sv.insertSeq.size()));
         infoTags.push_back( str(boost::format("SVLEN=%i") % (svLen)));
     }
     infoTags.push_back( str(boost::format("UPSTREAM_PAIR_COUNT=%i") % bpA.getLocalPairCount()) );
