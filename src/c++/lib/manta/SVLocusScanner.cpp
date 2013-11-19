@@ -797,7 +797,7 @@ getSingleReadSVCandidates(
     //if (localRead.is_mate_unmapped()) return;
 
     // - process any large indels in the localRead:
-    getSVCandidatesFromReadIndels(opt, dopt, bamAlign, candidates,
+    getSVCandidatesFromReadIndels(opt, dopt, localAlign, candidates,
                                   truthTracker);
 #ifdef DEBUG_SCANNER
     static const std::string logtag("getSingleReadSVCandidates");

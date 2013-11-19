@@ -293,7 +293,7 @@ struct SVBreakend
         using namespace SVEvidenceType;
 
         unsigned sum(0);
-        for (int i(0); i<SIZE; ++i)
+        for (int i(0); i< SVEvidenceType::SIZE; ++i)
         {
             if (i == PAIR) continue;
             if (i == LOCAL_PAIR) continue;
