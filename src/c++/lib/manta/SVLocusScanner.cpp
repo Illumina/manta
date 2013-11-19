@@ -41,7 +41,43 @@
 #endif
 
 
-const float SVObservationWeights::closePairFactor(4);
+/// used for classifying fragments based on size so that they can be treated differently
+///
+namespace FragmentSizeType
+{
+    static const float closePairFactor(4); ///< fragments within this factor of the minimum size cutoff are treated as 'close' pairs and receive a modified evidence count
+    static const float veryClosePairFactor(1.5); ///< fragments within this factor of the minimum size cutoff are treated as 'reallyClose' pairs and receive a modified evidence count
+    static const float maxNormalFactor(1.5);
+
+    index_t
+    classifySize(
+        const SVLocusScanner::CachedReadGroupStats& rgStats,
+        const int fragmentSize)
+    {
+        if (fragmentSize < rgStats.properPair.min) return COMPRESSED;
+        if (fragmentSize > rgStats.properPair.max)
+        {
+            if (fragmentSize < rgStats.minDistantFragmentSize) return CLOSE;
+            return DISTANT;
+        }
+        return NORMAL;
+    }
+
+    bool
+    isLarge(const index_t i)
+    {
+        switch(i)
+        {
+        case NORMAL:
+        case COMPRESSED:
+            return false;
+        default:
+            return true;
+        }
+    }
+}
+
+
 
 
 
@@ -902,14 +938,13 @@ getSVLociImpl(
     // in the SV locus graph:
     BOOST_FOREACH(const SVCandidate& cand, candidates)
     {
+        const bool isCandComplex(isComplex(cand));
+
         const SVBreakend& localBreakend(cand.bp1);
         const SVBreakend& remoteBreakend(cand.bp2);
 
-        const bool isComplex((localBreakend.state == SVBreakendState::COMPLEX) &&
-                             (remoteBreakend.state == SVBreakendState::UNKNOWN));
-
         if ((0==localBreakend.interval.range.size()) ||
-            ((! isComplex) && (0==remoteBreakend.interval.range.size())))
+            ((! isCandComplex) && (0==remoteBreakend.interval.range.size())))
         {
             std::ostringstream oss;
             oss << "Unexpected breakend pattern proposed from bam record.\n"
@@ -936,7 +971,7 @@ getSVLociImpl(
             bool isClose(false);
             if (is_innie_pair(bamRead))
             {
-                isClose = (std::abs(bamRead.template_size()) < rstats.minFarFragmentSize);
+                isClose = (std::abs(bamRead.template_size()) < rstats.minDistantFragmentSize);
             }
 
             unsigned thisWeight(SVObservationWeights::readPair);
@@ -955,7 +990,7 @@ getSVLociImpl(
         const NodeIndexType localBreakendNode(locus.addNode(localBreakend.interval));
         locus.setNodeEvidence(localBreakendNode,localEvidenceRange);
 
-        if (isComplex)
+        if (isCandComplex)
         {
             locus.linkNodes(localBreakendNode,localBreakendNode,localEvidenceWeight);
         }
@@ -1018,12 +1053,12 @@ SVLocusScanner(
         const ReadGroupStats rgs(_rss.getStats(*index));
 
         _stats.resize(_stats.size()+1);
-        CachedReadGroupStats& stat(_stats.back());
-        setRGRange(rgs.fragStats, _opt.breakendEdgeTrimProb, stat.breakendRegion);
-        setRGRange(rgs.fragStats, _opt.properPairTrimProb, stat.properPair);
-        setRGRange(rgs.fragStats, _opt.evidenceTrimProb, stat.evidencePair);
+        CachedReadGroupStats& rgStats(_stats.back());
+        setRGRange(rgs.fragStats, _opt.breakendEdgeTrimProb, rgStats.breakendRegion);
+        setRGRange(rgs.fragStats, _opt.properPairTrimProb, rgStats.properPair);
+        setRGRange(rgs.fragStats, _opt.evidenceTrimProb, rgStats.evidencePair);
 
-        stat.minFarFragmentSize = static_cast<int>(stat.properPair.max*SVObservationWeights::closePairFactor);
+        rgStats.minDistantFragmentSize = static_cast<int>(rgStats.properPair.max*FragmentSizeType::closePairFactor);
     }
 }
 

@@ -192,9 +192,11 @@ update(
         isLocalAssemblyEvidence = _readScanner.isLocalAssemblyEvidence(bamRead, refSeq);
     }
 
-    if (! ( isNonShortAnomalous || isLocalAssemblyEvidence))
+    const bool isRejectRead(! ( isNonShortAnomalous || isLocalAssemblyEvidence));
+
+    if (isRejectRead)
     {
-        return; // this read isn't interesting wrt SV discovery
+        return; // this read isn't interesting (enough) wrt SV discovery
     }
 
 #ifdef DEBUG_SFINDER
