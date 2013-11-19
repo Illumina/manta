@@ -496,6 +496,11 @@ writeInvdel(
             endPos = bpBrange.end_pos()-1;
         }
     }
+    else
+    {
+        /// check against the rare case arising when CIEND is a subset of CIPOS:
+        endPos=std::max(endPos,pos+1);
+    }
 
     if (pos<1) return;
 
@@ -525,11 +530,28 @@ writeInvdel(
     // build INFO field
     std::vector<std::string> words;
     split_string(label,':',words);
-    if (! isSmallVariant)
     {
+        // note that there's a reasonable argument for displaying these tags only when a
+        // symbolic allele is used (by a strict reading of the vcf spec) -- we instead
+        // print these fields for all variants for uniformity within the manta vcf:
+        //
         infoTags.push_back( str(boost::format("END=%i") % endPos));
         infoTags.push_back( str(boost::format("SVTYPE=%s") % words[0]));
-        infoTags.push_back( str(boost::format("SVLEN=%i") % (-1*(endPos-pos))));
+        const pos_t refLen(endPos-pos);
+        pos_t svLen(refLen);
+        if (isIndel)
+        {
+            const pos_t insertLen(static_cast<pos_t>(sv.insertSeq.size()));
+            if ( insertLen > refLen )
+            {
+                svLen = insertLen;
+            }
+            else
+            {
+                svLen = -refLen;
+            }
+        }
+        infoTags.push_back( str(boost::format("SVLEN=%i") % (svLen)));
     }
     infoTags.push_back( str(boost::format("UPSTREAM_PAIR_COUNT=%i") % bpA.getLocalPairCount()) );
     infoTags.push_back( str(boost::format("DOWNSTREAM_PAIR_COUNT=%i") % bpB.getLocalPairCount()) );

@@ -38,6 +38,7 @@ struct SVLocusAssembler
         const SmallAssemblerOptions& assembleOpt,
         const AlignmentFileOptions& alignFileOpt,
         const std::string& statsFilename);
+
     /**
      * @brief Performs a de-novo assembly of a set of reads crossing a breakpoint.
      *
@@ -46,14 +47,18 @@ struct SVLocusAssembler
      * If unused reads remain, the assembly is re-started using this subset.
      */
     void
-    assembleSingleSVBreakend(const SVBreakend& bp,
-                             Assembly& as) const;
+    assembleSingleSVBreakend(
+        const SVBreakend& bp,
+        const reference_contig_segment& refSeq,
+        Assembly& as) const;
 
     void
     assembleSVBreakends(const SVBreakend& bp1,
                         const SVBreakend& bp2,
                         const bool isBp1Reversed,
                         const bool isBp2Reversed,
+                        const reference_contig_segment& refSeq1,
+                        const reference_contig_segment& refSeq2,
                         Assembly& as) const;
 
     const SmallAssemblerOptions&
@@ -74,6 +79,7 @@ private:
     getBreakendReads(
         const SVBreakend& bp,
         const bool isReversed,
+        const reference_contig_segment& refSeq,
         ReadIndexType& readIndex,
         AssemblyReadInput& reads) const;
 
@@ -84,4 +90,3 @@ private:
     SVLocusScanner _readScanner;
     std::vector<streamPtr> _bamStreams;
 };
-

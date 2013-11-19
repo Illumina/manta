@@ -87,7 +87,7 @@ parseESLOptions(
     ("truth-vcf", po::value(&opt.truthVcfFilename),
      "optional truth VCF file (for testing)")
     ("region", po::value(&opt.region),
-     "samtools formatted region, eg. 'chr1:20-30' (optional)");
+     "samtools formatted region, eg. 'chr1:20-30'");
 
     po::options_description alignDesc(getOptionsDescription(opt.alignFileOpt));
     po::options_description scanDesc(getOptionsDescription(opt.scanOpt));
@@ -134,6 +134,10 @@ parseESLOptions(
     else if (opt.referenceFilename.empty())
     {
         usage(log_os,prog,visible,"Need the FASTA reference file");
+    }
+    else if (opt.region.empty())
+    {
+        usage(log_os,prog,visible,"Need the samtools formatted region");
     }
 
 

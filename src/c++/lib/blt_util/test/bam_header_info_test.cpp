@@ -26,7 +26,6 @@ BOOST_AUTO_TEST_SUITE( test_bam_header_info )
 
 BOOST_AUTO_TEST_CASE( test_bam_header_info_serialize)
 {
-
     using namespace boost::archive;
 
     bam_header_info header;
@@ -53,10 +52,7 @@ BOOST_AUTO_TEST_CASE( test_bam_header_info_serialize)
     }
 
     BOOST_REQUIRE_EQUAL(header,header2);
-
-
 }
 
 
 BOOST_AUTO_TEST_SUITE_END()
-

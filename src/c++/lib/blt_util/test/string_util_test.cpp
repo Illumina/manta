@@ -59,5 +59,5 @@ BOOST_AUTO_TEST_CASE( test_split_match )
     BOOST_REQUIRE(! split_match(test,'2',"XX"));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
 
+BOOST_AUTO_TEST_SUITE_END()

@@ -39,6 +39,56 @@ def argToBool(x) :
 
 
 
+def pickleConfigSections(pickleConfigFile, configSections) :
+    """
+    write configSections object, expected to be a hash or hashes, into a pickle file
+    """
+    import pickle
+
+    pickle.dump(configSections, open(pickleConfigFile, "w"))
+
+
+
+def getConfigSections(pickleConfigFile) :
+    """
+    deserialize the config file and return a hash of hashes
+    """
+
+    import pickle
+
+    if not os.path.isfile(pickleConfigFile) : return {}
+
+    return pickle.load(open(pickleConfigFile))
+
+
+
+def getPrimarySectionOptions(configSections,primarySection) :
+
+    class WorkflowOptions(object) :
+        pass
+
+    options=WorkflowOptions()
+    if primarySection not in configSections : return options
+    for (k,v) in configSections[primarySection].items() :
+        setattr(options,k,v)
+
+    return options
+
+
+
+def getConfigWithPrimaryOptions(pickleConfigFile,primarySection) :
+    """
+    Deserialize the config pickle file and return (1) a class representing the
+    options of a section specified as primary (2) a hash of hashes representing
+    all sections
+    """
+    configSections=getConfigSections(pickleConfigFile)
+    options=getPrimarySectionOptions(configSections,primarySection)
+
+    return (options,configSections)
+
+
+
 def dumpIniSections(iniFile,iniSections) :
     """
     convert iniSections object, expected to be a hash or hashes, into an iniFile
@@ -83,33 +133,6 @@ def getIniSections(iniFile) :
             iniSections[section][k] = v
 
     return iniSections
-
-
-
-def getPrimarySectionOptions(iniSections,primary_section) :
-
-    class WorkflowOptions(object) :
-        pass
-
-    options=WorkflowOptions()
-    if primary_section not in iniSections : return options
-    for (k,v) in iniSections[primary_section].items() :
-        setattr(options,k,v)
-
-    return options
-
-
-
-def getIniSectionsWithPrimaryOptions(iniFile,primary_section) :
-    """
-    Parse the iniFile and return (1) a class representing the options of a
-    a section specified as primary (2) a hash of hashes representing all sections
-    """
-    iniSections=getIniSections(iniFile)
-    options=getPrimarySectionOptions(iniSections,primary_section)
-
-    return (options,iniSections)
-
 
 
 

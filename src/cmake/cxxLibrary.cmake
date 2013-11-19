@@ -23,9 +23,8 @@ include_directories (${CMAKE_CURRENT_BINARY_DIR})
 include_directories (${CMAKE_CURRENT_SOURCE_DIR})
 include_directories (${MANTA_CXX_CONFIG_H_DIR})
 
-
-get_filename_component(MANTA_CURRENT_DIR_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
-message (STATUS "Adding the c++    library subdirectory: ${MANTA_CURRENT_DIR_NAME}")
+get_filename_component(CURRENT_DIR_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+message (STATUS "Adding c++ library subdirectory: ${CURRENT_DIR_NAME}")
 
 ##
 ## Some generators (VS) require all targets to be unique across the project.
@@ -48,8 +47,6 @@ foreach (SOURCE_FILE ${MANTA_LIBRARY_SOURCES})
     endif ()
 endforeach ()
 
-get_filename_component(CURRENT_DIR_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
-
 if (MANTA_LIBRARY_SOURCES)
     #include_directories (${MANTA_COMMON_INCLUDE})
     add_library     (manta_${CURRENT_DIR_NAME} STATIC ${MANTA_LIBRARY_SOURCES})
@@ -61,7 +58,7 @@ endif()
 ##
 find_path(${CMAKE_CURRENT_SOURCE_DIR}_TEST_DIR test PATHS ${CMAKE_CURRENT_SOURCE_DIR} NO_DEFAULT_PATH)
 if (${CMAKE_CURRENT_SOURCE_DIR}_TEST_DIR)
-    message (STATUS "Adding the test subdirectory for ${MANTA_LIB_DIR}")
+    message (STATUS "Adding c++ test subdirectory:    ${CURRENT_DIR_NAME}/test")
     add_subdirectory (test)
 endif ()
 

@@ -20,6 +20,7 @@
 #pragma once
 
 #include "blt_util/bam_record.hh"
+#include "blt_util/bam_record_util.hh"
 #include "manta/ReadGroupStatsSet.hh"
 #include "manta/SVCandidate.hh"
 #include "svgraph/SVLocus.hh"
@@ -30,6 +31,19 @@
 #include <vector>
 
 
+namespace FragmentSizeType
+{
+    enum index_t
+    {
+        COMPRESSED,
+        NORMAL,
+        VERYCLOSE,
+        CLOSE,
+        DISTANT
+    };
+}
+
+
 /// The counts in the SVLocus Graph represent an abstract weight of evidence supporting each edge/node.
 ///
 /// To support large and small-scale evidence in a single graph, we need to allow for different weightings
@@ -37,17 +51,15 @@
 ///
 struct SVObservationWeights
 {
-    // input evidence:
-    static const unsigned readPair = 3;
-    static const unsigned closeReadPair = 1;
-    static const unsigned internalReadEvent = 3; ///< indels, soft-clip, etc.
-
-    static const float closePairFactor; ///< fragments within this factor of the minimum size cutoff are treated as 'close' pairs and receive a modified evidence count
-
     // noise reduction:
     static const unsigned observation = 3; ///< 'average' observation weight, this is used to scale noise filtration, but not for any evidence type
-};
 
+    // input evidence:
+    static const unsigned readPair = observation;
+    static const unsigned closeReadPair = 1;
+    static const unsigned veryCloseReadPair = 1;
+    static const unsigned internalReadEvent = observation; ///< indels, soft-clip, etc.
+};
 
 
 /// check bam record for soft-clipping which is interesting enough to be used as SV evidence:
@@ -65,15 +77,12 @@ getSVBreakendCandidateClip(
     const float minQFrac = 0.75);
 
 
-/// check bam record for semi-alignedness (number of mismatches/clipped bases weighted by their q-scores)
 bool
-isSemiAligned(const bam_record& bamRead, const double minSemiAlignedScore);
-
-bool
-isGoodShadow(const bam_record& bamRead,
-             const uint8_t lastMapq,
-             const std::string& lastQname,
-             const double minSingletonMapq);
+isGoodShadow(
+    const bam_record& bamRead,
+    const uint8_t lastMapq,
+    const std::string& lastQname,
+    const double minSingletonMapq);
 
 
 struct ReadScannerDerivOptions
@@ -122,6 +131,12 @@ struct SVLocusScanner
         const bam_record& bamRead,
         const unsigned defaultReadGroupIndex) const;
 
+    /// fragments sizes get thrown is serveral pre-defined categories:
+    FragmentSizeType::index_t
+    getFragmentSizeType(
+        const bam_record& bamRead,
+        const unsigned defaultReadGroupIndex) const;
+
     /// test whether a fragment is significantly larger than expected
     ///
     /// this function is useful to eliminate reads which fail the ProperPair test
@@ -129,6 +144,12 @@ struct SVLocusScanner
     ///
     bool
     isLargeFragment(
+        const bam_record& bamRead,
+        const unsigned defaultReadGroupIndex) const;
+
+    /// return true if the read is anomalous, for any anomaly type besides being a short innie read:
+    bool
+    isNonCompressedAnomalous(
         const bam_record& bamRead,
         const unsigned defaultReadGroupIndex) const;
 
@@ -144,7 +165,8 @@ struct SVLocusScanner
     /// interfere with larger event discovery if not kept under control
     bool
     isLocalAssemblyEvidence(
-        const bam_record& bamRead) const;
+        const bam_record& bamRead,
+        const reference_contig_segment& refSeq) const;
 
     /// return zero to many SVLocus objects if the read supports any
     /// structural variant(s) (detectable by manta)
@@ -157,6 +179,7 @@ struct SVLocusScanner
         const bam_record& bamRead,
         const unsigned defaultReadGroupIndex,
         const std::map<std::string, int32_t>& chromToIndex,
+        const reference_contig_segment& refSeq,
         std::vector<SVLocus>& loci,
         TruthTracker& truthTracker) const;
 
@@ -173,6 +196,8 @@ struct SVLocusScanner
         const bam_record* remoteReadPtr,
         const unsigned defaultReadGroupIndex,
         const std::map<std::string, int32_t>& chromToIndex,
+        const reference_contig_segment& localRefSeq,
+        const reference_contig_segment* remoteRefSeqPtr,
         std::vector<SVObservation>& candidates,
         TruthTracker& truthTracker) const;
 
@@ -206,7 +231,10 @@ struct SVLocusScanner
     struct CachedReadGroupStats
     {
         CachedReadGroupStats() :
-            minFarFragmentSize(0)
+            minDistantFragmentSize(0),
+            minCloseFragmentSize(0),
+            minVeryCloseFragmentSize(0),
+            veryCloseFactor(0)
         {}
 
         /// fragment size range assumed for the purpose of creating SVLocusGraph regions
@@ -217,7 +245,11 @@ struct SVLocusScanner
 
         Range evidencePair;
 
-        int minFarFragmentSize; ///< beyond the properPair anomalous threshold, there is a threshold to distinguish near and far pairs for the purpose of evidence weight
+        int minDistantFragmentSize; ///< beyond the properPair anomalous threshold, there is a threshold to distinguish close and far pairs for the purpose of evidence weight
+        int minCloseFragmentSize; ///< beyond the properPair anomalous threshold, there is a threshold to distinguish 'really-close' and 'close' pairs for the purpose of evidence weight
+        int minVeryCloseFragmentSize;
+
+        float veryCloseFactor; ///< precomputed value used to scale down breakend size as fragments get smaller
     };
 
 private:
@@ -230,5 +262,7 @@ private:
 
     std::vector<CachedReadGroupStats> _stats;
 
+//    std::string lastQname;
+//    uint8_t lastMapq;
 };
 

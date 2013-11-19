@@ -122,34 +122,36 @@ struct SVWriter
         const SVCandidateAssemblyData& assemblyData,
         const SVCandidate& sv)
     {
-        static const unsigned minCandidatePairCount(3);
+        static const unsigned minCandidateSpanningCount(3);
 
-        const bool isSelfEdge(edge.nodeIndex1 == edge.nodeIndex2);
+        const bool isCandidateSpanning(assemblyData.isCandidateSpanning);
 
 #ifdef DEBUG_GSV
-        static const std::string logtag("SVWriter::writeSV");
-        log_os << logtag << " isSelfEdge: " <<  isSelfEdge << "\n";
+        static const std::string logtag("SVWriter::writeSV: ");
+        log_os << logtag << "isSpanningSV: " <<  isCandidateSpanning << "\n";
 #endif
 
-        if (isSelfEdge)
+        if (! isCandidateSpanning)
         {
             if (sv.isImprecise())
             {
+                // in this case a non-spanning low-res candidate went into assembly but
+                // did not produce a successful contig alignment:
 #ifdef DEBUG_GSV
-                log_os << logtag << " rejecting candidate: imprecise self-edge\n";
+                log_os << logtag << "Rejecting candidate: imprecise non-spanning SV\n";
 #endif
-                _truthTracker.reportOutcome(SVLog::IMPRECISE_SELF_EDGE);
+                _truthTracker.reportOutcome(SVLog::IMPRECISE_NON_SPANNING);
                 return;
             }
         }
         else
         {
-            if (sv.bp1.getPairCount() < minCandidatePairCount)
+            if (sv.bp1.getSpanningCount() < minCandidateSpanningCount)
             {
 #ifdef DEBUG_GSV
-                log_os << logtag << " rejecting candidate: minCandidatePairCount\n";
+                log_os << logtag << "Rejecting candidate: minCandidateSpanningCount\n";
 #endif
-                _truthTracker.reportOutcome(SVLog::LOW_PAIR_COUNT_SELF_EDGE);
+                _truthTracker.reportOutcome(SVLog::LOW_SPANNING_COUNT);
                 return;
             }
         }
@@ -158,7 +160,7 @@ struct SVWriter
         if (isSVBelowMinSize(sv,opt.scanOpt.minCandidateVariantSize))
         {
 #ifdef DEBUG_GSV
-            log_os << logtag << " filtering out candidate below min size before candidate output stage\n";
+            log_os << logtag << "Filtering out candidate below min size before candidate output stage\n";
 #endif
             return;
         }
@@ -169,7 +171,7 @@ struct SVWriter
         if (isSVBelowMinSize(sv,opt.minScoredVariantSize))
         {
 #ifdef DEBUG_GSV
-            log_os << logtag << " filtering out candidate below min size at scoring stage\n";
+            log_os << logtag << "Filtering out candidate below min size at scoring stage\n";
 #endif
             return;
         }

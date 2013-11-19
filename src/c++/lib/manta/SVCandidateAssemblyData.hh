@@ -69,6 +69,7 @@ struct BPOrientation
 struct SVCandidateAssemblyData
 {
     SVCandidateAssemblyData() :
+        isCandidateSpanning(false),
         isSpanning(false),
         bestAlignmentIndex(0)
     {}
@@ -77,6 +78,7 @@ struct SVCandidateAssemblyData
     clear()
     {
         contigs.clear();
+        isCandidateSpanning=false;
         isSpanning=false;
         bporient.clear();
         smallSVAlignments.clear();
@@ -96,7 +98,10 @@ struct SVCandidateAssemblyData
 
     Assembly contigs; ///< assembled contigs for both breakpoints
 
-    bool isSpanning; ///< is this a 2-locus event (spanning), or a local-assembly?
+    /// note that isCandidateSpanning can be != isSpanning in cases where the breakends are so close that the assembler decides to fuse
+    /// them and treat a spanning hypothesis as non-spanning:
+    bool isCandidateSpanning; ///< before assembly, was this a 2-locus event (spanning), or a local-assembly?
+    bool isSpanning; ///< at assembly time, was this treated as a 2-locus event (spanning), or a local-assembly?
 
     BPOrientation bporient;
 

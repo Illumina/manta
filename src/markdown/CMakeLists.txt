@@ -32,11 +32,13 @@ configure_files (${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${MUG})
 add_custom_command(
     OUTPUT ${MUL}
     COMMAND ${HOEDOWN_PROG} ${CMAKE_CURRENT_BINARY_DIR}/${MUG} > ${MUL}
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${MUG}
     DEPENDS MANTA_MARKDOWN
     COMMENT "Converting user guide to html")
 
 add_custom_target(MANTA_USERGUIDE ALL DEPENDS ${MUL})
 
 install(FILES ${MUL} DESTINATION ${MANTA_DOCDIR}/html)
-install(FILES "userguide.css" DESTINATION ${MANTA_DOCDIR}/html)
+install(FILES "userGuide.css" DESTINATION ${MANTA_DOCDIR}/html)
+install(FILES "tableOfContents.js" DESTINATION ${MANTA_DOCDIR}/html)
 

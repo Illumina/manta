@@ -213,7 +213,7 @@ local ini file location with the --writeConfig option.
 
 
         secgroup = MaybeHelpOptionGroup(parser,"Extended options",
-                                        "These options are not likely to be reset after initial configuration in a new site, they will not be printed here if a default exists from the configuration file or otherwise, unless --allHelp is specified")
+                                        "These options are either unlikely to be reset after initial site configuration or only of interest for manta development/debugging. They will not be printed here if a default exists unless --allHelp is specified")
 
 
         def hideGroup(group) :

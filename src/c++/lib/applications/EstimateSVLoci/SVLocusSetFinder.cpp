@@ -170,38 +170,37 @@ process_pos(const int stage_no,
 
 void
 SVLocusSetFinder::
-update(const bam_record& bamRead,
-       const unsigned defaultReadGroupIndex,
-       const std::map<std::string, int32_t>& chromToIndex,
-       TruthTracker& truthTracker)
+update(
+    const bam_record& bamRead,
+    const unsigned defaultReadGroupIndex,
+    const std::map<std::string, int32_t>& chromToIndex,
+    const reference_contig_segment& refSeq,
+    TruthTracker& truthTracker)
 {
     _isScanStarted=true;
 
-    // shortcut to speed things up:
     if (_readScanner.isReadFiltered(bamRead)) return;
 
-    // don't rely on the properPair bit to be set correctly:
-    const bool isAnomalous(! _readScanner.isProperPair(bamRead,defaultReadGroupIndex));
-    const bool isLargeFragment(_readScanner.isLargeFragment(bamRead,defaultReadGroupIndex));
+    // exclude innie read pairs which are anomalously short:
+    const bool isNonCompressedAnomalous(_readScanner.isNonCompressedAnomalous(bamRead,defaultReadGroupIndex));
 
-    const bool isLargeAnomalous(isAnomalous && isLargeFragment);
-
-    if (isLargeAnomalous) ++_anomCount;
-    else                  ++_nonAnomCount;
+    if (isNonCompressedAnomalous) ++_anomCount;
+    else                          ++_nonAnomCount;
 
     bool isLocalAssemblyEvidence(false);
-    if (! isLargeAnomalous)
+    if (! isNonCompressedAnomalous)
     {
-        isLocalAssemblyEvidence = _readScanner.isLocalAssemblyEvidence(bamRead);
+        isLocalAssemblyEvidence = _readScanner.isLocalAssemblyEvidence(bamRead, refSeq);
     }
 
-    if (! ( isLargeAnomalous || isLocalAssemblyEvidence))
+    const bool isRejectRead(! ( isNonCompressedAnomalous || isLocalAssemblyEvidence));
+
+    if (isRejectRead)
     {
-        return; // this read isn't interesting wrt SV discovery
+        return; // this read isn't interesting (enough) wrt SV discovery
     }
 
 #ifdef DEBUG_SFINDER
-    isLocalAssemblyEvidence = _readScanner.isLocalAssemblyEvidence(bamRead);
     log_os << "SFinder: Accepted read. isAnomalous "  << isAnomalous << " is Local assm evidence: " << isLocalAssemblyEvidence << " read: " << bamRead << "\n";
 #endif
 
@@ -212,13 +211,12 @@ update(const bam_record& bamRead,
 
     std::vector<SVLocus> loci;
 
-    _readScanner.getSVLoci(bamRead, defaultReadGroupIndex, chromToIndex, loci,
-                           truthTracker);
+    _readScanner.getSVLoci(bamRead, defaultReadGroupIndex, chromToIndex,
+                           refSeq, loci, truthTracker);
 
     BOOST_FOREACH(const SVLocus& locus, loci)
     {
         if (locus.empty()) continue;
         _svLoci.merge(locus);
-        //std::cout << "LOCUS\t" << locus << "\n\n" << std::endl;
     }
 }

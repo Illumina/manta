@@ -41,13 +41,16 @@
 /// shared options related to read pair support:
 struct PairOptions
 {
+    PairOptions() :
+        minFragSupport(50)
+    {}
+
     /// we're interested in any fragments which cross center pos with at least N bases of support on each side
     /// (note this definition is certain to overlap the split read definition whenever N is less than the read length
     ///
     /// for reads shorter than this length, the whole read is required...
-    static const pos_t minFragSupport;
+    const pos_t minFragSupport;
 };
-
 
 
 struct CallOptionsSharedDeriv
@@ -102,14 +105,37 @@ struct SVScorer
 
 private:
 
+    void
+    processExistingAltPairInfo(
+        const PairOptions& pairOpt,
+        const SVCandidateSetData& svData,
+        const SVCandidate& sv,
+        SVScoreInfo& baseInfo,
+        SVEvidence& evidence);
+
+    void
+    getSimpleSVAltPairSupport(
+        const PairOptions& pairOpt,
+        const SVCandidate& svcand,
+        const bool isBp1,
+        SVScoreInfo& baseInfo,
+        SVEvidence& evidence);
+
+    void
+    getSVAltPairSupport(
+        const PairOptions& pairOpt,
+        const SVCandidate& sv,
+        SVScoreInfo& baseInfo,
+        SVEvidence& evidence);
+
     /// find spanning read support for the reference allele in a single breakend
     void
     getSVRefPairSupport(
         const PairOptions& pairOpt,
         const SVBreakend& bp,
+        const bool isBp1,
         SVScoreInfo& ssInfo,
-        SVEvidence& evidence,
-        const bool isBp1);
+        SVEvidence& evidence);
 
     /// find spanning read support for the reference allele for sv candidate
     void
@@ -123,6 +149,7 @@ private:
     void
     getSVPairSupport(
         const SVCandidateSetData& svData,
+        const SVCandidateAssemblyData& assemblyData,
         const SVCandidate& sv,
         SVScoreInfo& ssInfo,
         SVEvidence& evidence);

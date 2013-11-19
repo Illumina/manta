@@ -35,7 +35,7 @@ from mantaOptions import MantaWorkflowOptionsBase
 from configureUtil import assertOptionExists, OptParseException, validateFixExistingDirArg, validateFixExistingFileArg
 from makeRunScript import makeRunScript
 from mantaWorkflow import MantaWorkflow
-from workflowUtil import ensureDir, isValidSampleId
+from workflowUtil import ensureDir, isValidSampleId, parseGenomeRegion
 from checkChromSet import checkChromSet
 
 
@@ -53,16 +53,17 @@ You must specify a BAM file for at least one sample.
 
 
     def addWorkflowGroupOptions(self,group) :
-        group.add_option("--normalBam", type="string",dest="normalBam",metavar="FILE",
-                         help="Normal sample BAM file. [required] (no default)")
-        group.add_option("--tumorBam","--tumourBam", type="string",dest="tumorBam",metavar="FILE",
-                          help="Tumor sample BAM file. [optional] (no default)")
+        group.add_option("--normalBam", type="string",dest="normalBamList",metavar="FILE", action="append",
+                         help="Normal sample BAM file. May be specified more than once, multiple inputs will be merged. [at least one required] (no default)")
+        group.add_option("--tumorBam","--tumourBam", type="string",dest="tumorBamList",metavar="FILE", action="append",
+                          help="Tumor sample BAM file. May be specified more than once, multiple inputs will be merged. [optional] (no default)")
 #         group.add_option("--aligner", type="string",dest="alignerMode",metavar="ALIGNER",
 #                          help="Aligner type. Accepted option are {%s} [required] (no default)" % (",".join(['%s' % (x) for x in self.validAlignerModes])))
         group.add_option("--exome", dest="isExome", action="store_true",
                          help="Set options for WES input: turn off depth filters")
         group.add_option("--rna", dest="isRNA", action="store_true",
-                         help="Set options for RNA-Seq input: turn off depth filters and don't treat anomalous reads as SV evidence when the proper-pair bit is set.")
+                         help="Set options for RNA-Seq input: turn off depth filters and don't treat "
+                              "anomalous reads as SV evidence when the proper-pair bit is set.")
         group.add_option("--referenceFasta",type="string",dest="referenceFasta",metavar="FILE",
                          help="samtools-indexed reference fasta file [required] (default: %default)")
 
@@ -76,13 +77,21 @@ You must specify a BAM file for at least one sample.
         group.add_option("--useExistingChromDepths",
                          dest="useExistingChromDepths", action="store_true",
                          help="Use pre-calculated chromosome depths.")
+        group.add_option("--scanSizeMb",type="int",dest="scanSizeMb",metavar="scanSizeMb",
+                         help="Maximum sequence region size (in Mb) scanned by each task during "
+                         "SV locus graph generation. (default: %default)")
+        group.add_option("--candidateBins",type="int",dest="nonlocalWorkBins",metavar="candidateBins",
+                         help="Provide the total number of tasks which candidate generation "
+                            " will be sub-divided into. (default: %default)")
+        group.add_option("--region",type="string",dest="regionStr",metavar="samtoolsRegion",
+                         help="Provide a region to configure an analysis limited "
+                              "to a single segment of the full genome for debugging purposes. "
+                              "Examples: '--region chr2:1000-20000', '--region chr20'")
 
         MantaWorkflowOptionsBase.addExtendedGroupOptions(self,group)
 
 
     def getOptionDefaults(self) :
-
-        megaBase=1000000
 
         self.configScriptDir=scriptDir
         defaults=MantaWorkflowOptionsBase.getOptionDefaults(self)
@@ -93,23 +102,29 @@ You must specify a BAM file for at least one sample.
             'isRNA' : False,
             'useExistingAlignStats' : False,
             'useExistingChromDepths' : False,
-            'binSize' : 12*megaBase,
-            'nonlocalWorkBins' : 256
+            'scanSizeMb' : 12,
+            'nonlocalWorkBins' : 256,
+            'regionStr' : ""
                           })
         return defaults
 
 
+
     def validateAndSanitizeExistingOptions(self,options) :
 
-        options.normalBam=validateFixExistingFileArg(options.normalBam,"normal sample BAM file")
-        options.tumorBam=validateFixExistingFileArg(options.tumorBam,"tumor sample BAM file")
-
-        # check for bam index files:
-        for bam in (options.tumorBam,options.normalBam) :
-            if bam is None : continue
-            baiFile=bam+".bai"
+        def checkForBamIndex(bamFile):
+            baiFile=bamFile + ".bai"
             if not os.path.isfile(baiFile) :
                 raise OptParseException("Can't find expected BAM index file: '%s'" % (baiFile))
+
+        def groomBamList(bamList, sampleLabel):
+            if bamList is None : return
+            for (index,bamFile) in enumerate(bamList) :
+                bamList[index]=validateFixExistingFileArg(bamFile,"%s BAM file" % (sampleLabel))
+                checkForBamIndex(bamList[index])
+
+        groomBamList(options.normalBamList,"normal sample")
+        groomBamList(options.tumorBamList, "tumor sample")
 
         # check alignerMode:
         if options.alignerMode is not None :
@@ -126,35 +141,52 @@ You must specify a BAM file for at least one sample.
             if not os.path.isfile(faiFile) :
                 raise OptParseException("Can't find expected fasta index file: '%s'" % (faiFile))
 
+        if (options.regionStr is None) or (len(options.regionStr) == 0) :
+            options.genomeRegion = None
+        else :
+            options.genomeRegion = parseGenomeRegion(options.regionStr)
+
         MantaWorkflowOptionsBase.validateAndSanitizeExistingOptions(self,options)
 
 
 
     def validateOptionExistence(self,options) :
 
-        assertOptionExists(options.normalBam,"normal sample BAM file")
-        assertOptionExists(options.alignerMode,"aligner mode")
+        if (options.normalBamList is None) or (len(options.normalBamList) == 0) :
+            raise OptParseException("No normal sample BAM files specified")
 
+        assertOptionExists(options.alignerMode,"aligner mode")
         assertOptionExists(options.referenceFasta,"reference fasta file")
 
         MantaWorkflowOptionsBase.validateOptionExistence(self,options)
 
-        # check that the reference and the two bams are using the same set of chromosomes:
+        # check that the reference and all bams are using the same
+        # set of chromosomes:
         bamList=[]
         bamLabels=[]
-        if options.normalBam is not None :
-            bamList.append(options.normalBam)
-            bamLabels.append("Normal")
 
-        if options.tumorBam is not None :
-            bamList.append(options.tumorBam)
-            bamLabels.append("Tumor")
+        def appendBams(inputBamList,inputLabel) :
+            if inputBamList is None : return
+            for inputBamFile in inputBamList :
+                bamList.append(inputBamFile)
+                bamLabels.append(inputLabel)
+
+        appendBams(options.normalBamList,"Normal")
+        appendBams(options.tumorBamList,"Tumor")
 
         checkChromSet(options.samtoolsBin,
                       options.referenceFasta,
                       bamList,
                       bamLabels,
                       isReferenceLocked=True)
+
+        # check for repeated bam entries:
+        #
+        bamSet=set()
+        for bamFile in bamList :
+            if bamFile in bamSet :
+                raise OptParseException("Repeated input BAM file: %s" % (bamFile))
+            bamSet.add(bamFile)
 
 
 

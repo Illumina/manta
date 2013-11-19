@@ -29,17 +29,29 @@ set (MANTA_CXX_TEST_LIBRARY_CMAKE "${CMAKE_SOURCE_DIR}/cmake/cxxTestLibrary.cmak
 
 include ("${MANTA_CXX_CONFIGURE_CMAKE}")
 
-add_custom_target(MANTA_CPPCHECK
-    ALL
-    COMMAND ${PYTHON_EXECUTABLE} ${MANTA_SOURCE_QC_DIR}/run_cppcheck.py ${CMAKE_CURRENT_SOURCE_DIR}
-    )
 
-add_dependencies(MANTA_OPT MANTA_CPPCHECK)
+##
+## run cppcheck if any cxx source has been updated:
+##
+file(GLOB_RECURSE ALL_CXX_FILES *.cpp *.cc *.hh)
+
+add_custom_command(
+    OUTPUT cppcheck.done
+    DEPENDS ${ALL_CXX_FILES}
+    COMMAND ${PYTHON_EXECUTABLE} ${MANTA_SOURCE_QC_DIR}/run_cppcheck.py ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMENT "Running c++ static analyzer")
+
+if(${DEVELOPER_MODE})
+    add_custom_target(MANTA_CPPCHECK ALL DEPENDS cppcheck.done)
+
+    add_dependencies(MANTA_OPT MANTA_CPPCHECK)
+endif()
 
 ##
 ## Build all the libraries for the project
 ##
 add_subdirectory (lib)
+
 
 ##
 ## build all the applications for the project
@@ -58,3 +70,4 @@ if (DOXYGEN_FOUND)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${DOXYFILE} @ONLY)
     add_custom_target(doc ${DOXYGEN_EXECUTABLE} ${DOXYFILE})
 endif ()
+

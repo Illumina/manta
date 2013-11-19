@@ -252,11 +252,11 @@ std::ostream& operator<<(std::ostream& ostrm, const SVLog::Outcome outcome)
     case SVLog::SPAWNED:
         ostrm << "Spawned";
         break;
-    case SVLog::IMPRECISE_SELF_EDGE:
-        ostrm << "Imprecise_SelfEdge";
+    case SVLog::IMPRECISE_NON_SPANNING:
+        ostrm << "Imprecise_NonSpanning";
         break;
-    case SVLog::LOW_PAIR_COUNT_SELF_EDGE:
-        ostrm << "LowPairCount_SelfEdge";
+    case SVLog::LOW_SPANNING_COUNT:
+        ostrm << "LowSpanningCount";
         break;
     case SVLog::LOW_SOMATIC_SCORE:
         ostrm << "LowSomaticScore";
@@ -771,8 +771,8 @@ bool pairBrkptNodes(const SVLocusSet& svLocusSet,
                     unsigned int& numTwoNodesSameLocusWithBAEdgeOnly,
                     unsigned int& numSameNode)
 {
-    assert((matchedNodeAddrVecA.size() > 0)
-           && (matchedNodeAddrVecB.size() > 0));
+    assert((!matchedNodeAddrVecA.empty())
+           && (!matchedNodeAddrVecB.empty()));
 
     if ((matchedNodeAddrVecA.size() > 1) || (matchedNodeAddrVecB.size() > 1))
     {

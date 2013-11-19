@@ -178,10 +178,6 @@ if (${USE_ADDRESS_SANITIZER})
 endif ()
 
 
-# this should be tied to a 'developer' switch -- for now,
-# anyone touching manta is a developer, so this is true:
-set(DEVELOPER_MODE true)
-
 if (GNU_COMPAT_COMPILER)
 
   if (${DEVELOPER_MODE})

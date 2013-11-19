@@ -39,9 +39,6 @@
 #endif
 
 
-const pos_t PairOptions::minFragSupport(50);
-
-
 
 SVScorer::
 SVScorer(
@@ -262,11 +259,17 @@ addConservativeSpanningPairSupport(
     const float sum(altLhood+refLhood);
     if (altLhood > refLhood)
     {
-        if ((altLhood/sum) > pairSupportProb) sampleBaseInfo.alt.confidentSpanningPairCount++;
+        if ((altLhood/sum) > pairSupportProb)
+        {
+            sampleBaseInfo.alt.confidentSpanningPairCount++;
+        }
     }
     else
     {
-        if ((refLhood/sum) > pairSupportProb) sampleBaseInfo.ref.confidentSpanningPairCount++;
+        if ((refLhood/sum) > pairSupportProb)
+        {
+            sampleBaseInfo.ref.confidentSpanningPairCount++;
+        }
     }
 }
 
@@ -325,7 +328,7 @@ scoreSV(
 
     // count the paired-read fragments supporting the ref and alt alleles in each sample:
     //
-    getSVPairSupport(svData, sv, baseInfo, evidence);
+    getSVPairSupport(svData, assemblyData, sv, baseInfo, evidence);
 
     // count the split reads supporting the ref and alt alleles in each sample
     //
@@ -511,6 +514,11 @@ getFragLnLhood(
 
 
 
+/// don't use pairs for small variants, need to improve the model to take advantage of these first:
+static const int minPairVariantSize(500);
+
+
+
 /// score diploid germline specific components:
 static
 void
@@ -518,6 +526,7 @@ scoreDiploidSV(
     const CallOptionsDiploid& diploidOpt,
     const CallOptionsDiploidDeriv& diploidDopt,
     const SVCandidate& sv,
+    const bool isSmallAssembler,
     const ChromDepthFilterUtil& dFilter,
     const SVEvidence& evidence,
     SVScoreInfo& baseInfo,
@@ -563,9 +572,19 @@ scoreDiploidSV(
                 /// only add to the likelihood if the fragment "supports" at least one allele:
                 if ( fragev.isAnySpanningPairSupport() )
                 {
-                    isFragEvaluated=true;
-                    incrementSpanningPairAlleleLnLhood(chimeraProb, fragev.ref, refLnLhoodSet.fragPair);
-                    incrementSpanningPairAlleleLnLhood(chimeraProb, fragev.alt, altLnLhoodSet.fragPair);
+                    bool isSmall(false);
+                    if (isSmallAssembler)
+                    {
+                        const int svSize(std::abs(sv.bp2.interval.range.center_pos() - sv.bp1.interval.range.center_pos()));
+                        isSmall=(svSize<minPairVariantSize);
+                    }
+
+                    if (! isSmall)
+                    {
+                        isFragEvaluated=true;
+                        incrementSpanningPairAlleleLnLhood(chimeraProb, fragev.ref, refLnLhoodSet.fragPair);
+                        incrementSpanningPairAlleleLnLhood(chimeraProb, fragev.alt, altLnLhoodSet.fragPair);
+                    }
                 }
             }
 
@@ -680,6 +699,7 @@ void
 scoreSomaticSV(
     const CallOptionsSomatic& somaticOpt,
     const SVCandidate& sv,
+    const bool isSmallAssembler,
     const ChromDepthFilterUtil& dFilter,
     SVScoreInfo& baseInfo,
     SVScoreInfoSomatic& somaticInfo)
@@ -688,10 +708,27 @@ scoreSomaticSV(
     // compute qualities
     //
     {
+        // don't use pair evidence for small variants:
+        bool isSmall(false);
+        if (isSmallAssembler)
+        {
+            const int svSize(std::abs(sv.bp2.interval.range.center_pos() - sv.bp1.interval.range.center_pos()));
+            isSmall=(svSize<minPairVariantSize);
+        }
+
+#ifdef DEBUG_SCORE
+        log_os << __FUNCTION__ << ": isSmall: " << isSmall << '\n'
+               << __FUNCTION__ << ": normal: " << baseInfo.normal << '\n'
+               << __FUNCTION__ << ": tumor: " << baseInfo.tumor << '\n';
+#endif
+
         bool isNonzeroSomaticQuality(true);
 
         /// first check for substantial support in the normal:
-        if (baseInfo.normal.alt.confidentSpanningPairCount > 1) isNonzeroSomaticQuality=false;
+        if (! isSmall)
+        {
+            if (baseInfo.normal.alt.confidentSpanningPairCount > 1) isNonzeroSomaticQuality=false;
+        }
         if ((baseInfo.normal.alt.confidentSplitReadCount > 0) &&
             ((baseInfo.normal.alt.confidentSplitReadCount > 1) || (baseInfo.tumor.alt.confidentSplitReadCount < 10))) isNonzeroSomaticQuality=false;
 
@@ -702,12 +739,19 @@ scoreSomaticSV(
             const bool lowSingleSupport((baseInfo.tumor.alt.bp1SpanReadCount < 14) || (baseInfo.tumor.alt.bp2SpanReadCount < 14));
             const bool highSingleContam((baseInfo.normal.alt.bp1SpanReadCount > 1) || (baseInfo.normal.alt.bp2SpanReadCount > 1));
 
-            /// allow single pair support to rescue an SV only if the evidence looks REALLY good:
-            if ((lowPairSupport && lowSplitSupport) && (lowSingleSupport || highSingleContam))
-                isNonzeroSomaticQuality=false;
+            if (isSmall)
+            {
+                if (lowSplitSupport) isNonzeroSomaticQuality=false;
+            }
+            else
+            {
+                /// allow single pair support to rescue an SV only if the evidence looks REALLY good:
+                if ((lowPairSupport && lowSplitSupport) && (lowSingleSupport || highSingleContam))
+                    isNonzeroSomaticQuality=false;
+            }
         }
 
-        if (isNonzeroSomaticQuality)
+        if ((! isSmall) && isNonzeroSomaticQuality)
         {
             if (baseInfo.normal.alt.confidentSpanningPairCount)
             {
@@ -740,7 +784,7 @@ scoreSomaticSV(
             const bool normRefPairSupport(baseInfo.normal.ref.confidentSpanningPairCount > 6);
             const bool normRefSplitSupport(baseInfo.normal.ref.confidentSplitReadCount > 6);
 
-            if (! (normRefPairSupport || normRefSplitSupport)) isNonzeroSomaticQuality=false;
+            if (! (((! isSmall) && normRefPairSupport) || normRefSplitSupport)) isNonzeroSomaticQuality=false;
         }
 
         if (isNonzeroSomaticQuality) somaticInfo.somaticScore=60;
@@ -784,12 +828,13 @@ scoreSV(
     scoreSV(svData, assemblyData, sv, modelScoreInfo.base, evidence);
 
     // score components specific to diploid-germline model:
-    scoreDiploidSV(_diploidOpt, _diploidDopt, sv, _dFilterDiploid, evidence, modelScoreInfo.base, modelScoreInfo.diploid);
+    const bool isSmallAssembler(! assemblyData.isSpanning);
+    scoreDiploidSV(_diploidOpt, _diploidDopt, sv, isSmallAssembler, _dFilterDiploid, evidence, modelScoreInfo.base, modelScoreInfo.diploid);
 
     // score components specific to somatic model:
     if (isSomatic)
     {
-        scoreSomaticSV(_somaticOpt, sv, _dFilterSomatic, modelScoreInfo.base, modelScoreInfo.somatic);
+        scoreSomaticSV(_somaticOpt, sv, isSmallAssembler, _dFilterSomatic, modelScoreInfo.base, modelScoreInfo.somatic);
     }
 }
 

@@ -56,6 +56,7 @@ struct SVLocusSetFinder : public pos_processor_base
     update(const bam_record& bamRead,
            const unsigned defaultReadGroupIndex,
            const std::map<std::string, int32_t>& chromToIndex,
+           const reference_contig_segment& refSeq,
            TruthTracker& truthTracker);
 
     const SVLocusSet&
@@ -84,7 +85,6 @@ struct SVLocusSetFinder : public pos_processor_base
         _nonAnomCount=0;
     }
 
-
 private:
 
     void
@@ -97,7 +97,7 @@ private:
     // TODO -- compute this number from read insert ranges:
     enum hack_t
     {
-        REGION_DENOISE_BORDER = 5000    ///< length in bases on the begining and the end of scan range which is excluded from in-line graph de-noising
+        REGION_DENOISE_BORDER = 5000    ///< length in bases on the beginning and the end of scan range which is excluded from in-line graph de-noising
     };
 
     /////////////////////////////////////////////////

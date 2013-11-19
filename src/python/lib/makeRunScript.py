@@ -16,11 +16,11 @@ This provides a function to auto-generate a workflow run script.
 
 import os, sys
 
-from configureUtil import dumpIniSections
+from configureUtil import pickleConfigSections
 
 
 
-def makeRunScript(scriptFile,workflowModulePath,workflowClassName,primaryIniSection,iniSections, pythonBin=None) :
+def makeRunScript(scriptFile, workflowModulePath, workflowClassName, primaryConfigSection, configSections, pythonBin=None) :
     """
     This function generates the python workflow runscript
 
@@ -31,8 +31,8 @@ def makeRunScript(scriptFile,workflowModulePath,workflowClassName,primaryIniSect
     scriptFile -- file name of the runscript to create
     workflowModulePath -- the python module containing the workflow class
     workflowClassName -- the workflow class name
-    primaryIniSection -- the section used to create the primary workflow parameter object
-    iniSections -- a hash or hashes representing all configuration info
+    primaryConfigSection -- the section used to create the primary workflow parameter object
+    configSections -- a hash or hashes representing all configuration info
     @param pythonBin: optionally specify a custom python interpreter for the script she-bang
     """
     import inspect
@@ -48,8 +48,8 @@ def makeRunScript(scriptFile,workflowModulePath,workflowClassName,primaryIniSect
         workflowModuleName=workflowModuleName[:-len(pyExt)]
 
     # dump inisections to a file
-    iniFile=scriptFile+".ini"
-    dumpIniSections(iniFile,iniSections)
+    pickleConfigFile=scriptFile+".config.pickle"
+    pickleConfigSections(pickleConfigFile,configSections)
 
     sfp=open(scriptFile,"w")
 
@@ -62,7 +62,7 @@ def makeRunScript(scriptFile,workflowModulePath,workflowClassName,primaryIniSect
     sfp.write('\n')
     sfp.write(inspect.getsource(main))
     sfp.write('\n')
-    sfp.write('main("%s","%s",%s)\n' % (iniFile,primaryIniSection,workflowClassName))
+    sfp.write('main("%s","%s",%s)\n' % (pickleConfigFile, primaryConfigSection, workflowClassName))
     sfp.write('\n')
     sfp.close()
     os.chmod(scriptFile,0755)
@@ -115,6 +115,8 @@ results -- in this case the dry run will not cover the full 'live' run task set.
 	              help="send email notification of job completion status to this address (may be provided multiple times for more than one email address)")
     parser.add_option("-d","--dryRun", dest="isDryRun",action="store_true",default=False,
                       help="dryRun workflow code without actually running command-tasks")
+    parser.add_option("--quiet", dest="isQuiet",action="store_true",default=False,
+                      help="Don't write any log output to stderr (but still write to workspace/pyflow.data/logs/pyflow_log.txt)")
 
     debug_group = OptionGroup(parser,"development debug options")
     debug_group.add_option("--rescore", dest="isRescore",action="store_true",default=False,
@@ -178,18 +180,12 @@ results -- in this case the dry run will not cover the full 'live' run task set.
 
 # This code will be reflected in the auto-generated runscript,
 # but will not be called in this module:
-def main(iniFile, primaryIniSection, workflowClassName) :
+def main(pickleConfigFile, primaryConfigSection, workflowClassName) :
 
-    from configureUtil import argToBool, getIniSectionsWithPrimaryOptions
+    from configureUtil import getConfigWithPrimaryOptions
 
     runOptions=get_run_options(workflowClassName)
-    flowOptions,iniSections=getIniSectionsWithPrimaryOptions(iniFile,primaryIniSection)
-
-    # TODO: we need a more scalable system to deal with non-string options, for now there are individually corrected:
-    flowOptions.isExome=argToBool(flowOptions.isExome)
-    flowOptions.isRNA=argToBool(flowOptions.isRNA)
-    flowOptions.useExistingAlignStats=argToBool(flowOptions.useExistingAlignStats)
-    flowOptions.useExistingChromDepths=argToBool(flowOptions.useExistingChromDepths)
+    flowOptions,configSections=getConfigWithPrimaryOptions(pickleConfigFile,primaryConfigSection)
 
     # new logs and marker files to assist automated workflow monitoring:
     warningpath=os.path.join(flowOptions.runDir,"manta.warning.log.txt")
@@ -202,7 +198,7 @@ def main(iniFile, primaryIniSection, workflowClassName) :
             raise Exception("Unexpected filesystem item: '%s'" % (exitpath))
         os.unlink(exitpath)
 
-    wflow = workflowClassName(flowOptions,iniSections)
+    wflow = workflowClassName(flowOptions,configSections)
 
     retval=1
     try:
@@ -214,6 +210,7 @@ def main(iniFile, primaryIniSection, workflowClassName) :
                          isContinue="Auto",
                          isForceContinue=True,
                          isDryRun=runOptions.isDryRun,
+                         isQuiet=runOptions.isQuiet,
                          schedulerArgList=runOptions.schedulerArgList,
                          resetTasks=runOptions.resetTasks,
                          successMsg=wflow.getSuccessMessage(),

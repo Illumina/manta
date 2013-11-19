@@ -308,13 +308,13 @@ apath_clean_seqmatch(path_t& apath);
 
 /// convert the input alignpath to use seq match '=' and mismatch 'X' instead of align-match 'M'
 ///
-template <typename symIter>
+template <typename symIter1,typename symIter2>
 void
 apath_add_seqmatch(
-    const symIter queryBegin,
-    const symIter queryEnd,
-    const symIter refBegin,
-    const symIter refEnd,
+    const symIter1 queryBegin,
+    const symIter1 queryEnd,
+    const symIter2 refBegin,
+    const symIter2 refEnd,
     path_t& apath);
 
 

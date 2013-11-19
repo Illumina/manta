@@ -36,6 +36,13 @@ def cleanLocals(locals_dict) :
 
 
 
+def joinFile(*arg) :
+    filePath = os.path.join(*arg)
+    assert os.path.isfile(filePath)
+    return filePath
+
+
+
 class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
 
     def addWorkflowGroupOptions(self,group) :
@@ -50,11 +57,6 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         """
         libexecDir=os.path.abspath(os.path.join(scriptDir,"@MANTA_RELATIVE_LIBEXECDIR@"))
         assert os.path.isdir(libexecDir)
-
-        def joinFile(*arg) :
-            filePath = os.path.join(*arg)
-            assert os.path.isfile(filePath)
-            return filePath
 
         bgzipBin=joinFile(libexecDir,"bgzip")
         samtoolsBin=joinFile(libexecDir,"samtools")

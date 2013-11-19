@@ -92,4 +92,3 @@ BOOST_AUTO_TEST_CASE( boost_icl_test_map )
 
 
 BOOST_AUTO_TEST_SUITE_END()
-

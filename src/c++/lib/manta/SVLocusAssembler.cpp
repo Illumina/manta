@@ -20,6 +20,7 @@
 #include "blt_util/log.hh"
 #include "blt_util/seq_util.hh"
 #include "manta/SVLocusAssembler.hh"
+#include "manta/SVLocusScannerSemiAligned.hh"
 
 #include "boost/foreach.hpp"
 
@@ -57,6 +58,7 @@ SVLocusAssembler::
 getBreakendReads(
     const SVBreakend& bp,
     const bool isReversed,
+    const reference_contig_segment& refSeq,
     ReadIndexType& readIndex,
     AssemblyReadInput& reads) const
 {
@@ -64,6 +66,7 @@ getBreakendReads(
     known_pos_range2 searchRange;
     {
         // ideally this should be dependent on the insert size dist
+        // TODO: follow-up on trial value of 200 in a separate branch/build
         static const size_t minIntervalSize(400);
         if (bp.interval.range.size() >= minIntervalSize)
         {
@@ -120,7 +123,9 @@ getBreakendReads(
 
         static const unsigned MAX_NUM_READS(1000);
         unsigned int shadowCnt(0);
-        //unsigned int semiAlignedCnt(0);
+#ifdef DEBUG_ASBL
+        unsigned int semiAlignedCnt(0);
+#endif
 
         while (bamStream.next() && (reads.size() < MAX_NUM_READS))
         {
@@ -137,17 +142,14 @@ getBreakendReads(
             if (bamRead.is_filter()) continue;
             if (bamRead.is_dup()) continue;
             if (bamRead.is_secondary()) continue;
-
-            /// TODO: Add SA read support -- temporarily reject all supplemental reads:
-            if (bamRead.is_supplement()) return;
+            if (bamRead.is_supplement()) continue;
 
             if ((bamRead.pos()-1) >= searchRange.end_pos()) break;
 
             // filter reads with "N"
             if (bamRead.get_bam_read().get_string().find('N') != std::string::npos) continue;
 
-            ALIGNPATH::path_t apath;
-            bam_cigar_to_apath(bamRead.raw_cigar(), bamRead.n_cigar(), apath);
+            SimpleAlignment bamAlign(bamRead);
 
             /// check whether we keep this read because of soft clipping:
             bool isClipKeeper(false);
@@ -156,7 +158,7 @@ getBreakendReads(
 
                 unsigned leadingClipLen(0);
                 unsigned trailingClipLen(0);
-                getSVBreakendCandidateClip(bamRead, apath, leadingClipLen, trailingClipLen);
+                getSVBreakendCandidateClip(bamRead, bamAlign.path, leadingClipLen, trailingClipLen);
 
                 if (isSearchForRightOpen)
                 {
@@ -173,7 +175,7 @@ getBreakendReads(
             bool isIndelKeeper(false);
             {
                 using namespace ALIGNPATH;
-                BOOST_FOREACH(const path_segment& ps, apath)
+                BOOST_FOREACH(const path_segment& ps, bamAlign.path)
                 {
                     if (is_segment_type_indel(ps.type))
                     {
@@ -183,18 +185,32 @@ getBreakendReads(
                 }
             }
 
-#ifdef DEBUG_ASBL
-            log_os << " cigar: " << apath << " isClipKeeper: " << isClipKeeper << " isIndelKeeper: " << isIndelKeeper << "\n";
-#endif
 
             bool isSemiAlignedKeeper(false);
             {
-                // CTS temp disable this until qual offset can be resolved
+                static const unsigned minMismatchLen(4);
+
+                unsigned leadingMismatchLen(0);
+                unsigned trailingMismatchLen(0);
+                getSVBreakendCandidateSemiAligned(bamRead, bamAlign, refSeq, leadingMismatchLen, trailingMismatchLen);
+
+                if (isSearchForRightOpen)
+                {
+                    if (trailingMismatchLen >= minMismatchLen) isSemiAlignedKeeper = true;
+                }
+
+                if (isSearchForLeftOpen)
+                {
+                    if (leadingMismatchLen >= minMismatchLen) isSemiAlignedKeeper = true;
+                }
+#ifdef DEBUG_ASBL
+                ++semiAlignedCnt;
+#endif
+
 #if 0
-                if (isSemiAligned(bamRead,_scanOpt.minSemiAlignedScoreCandidates))
+                if (isSemiAligned(bamRead,ref,_scanOpt.minSemiAlignedScoreCandidates))
                 {
                     isSemiAlignedKeeper = true;
-                    ++semiAlignedCnt;
                 }
 #endif
             }
@@ -213,6 +229,7 @@ getBreakendReads(
                 }
             }
 
+
             lastMapq  = bamRead.map_qual();
             lastQname = bamRead.qname();
             isLastSet = true;
@@ -229,6 +246,8 @@ getBreakendReads(
 #ifdef DEBUG_ASBL
             log_os << logtag << " Adding " << readKey << " " << apath << " " << bamRead.pe_map_qual() << " " << bamRead.pos() << "\n"
                    << bamRead.get_bam_read().get_string() << "\n";
+            log_os << " cigar: " << apath << " isClipKeeper: " << isClipKeeper << " isIndelKeeper: " << isIndelKeeper;
+            log_os << " isSemiAlignedKeeper: " << isSemiAlignedKeeper << " isShadowKeeper: " << isShadowKeeper << "\n";
 #endif
 
             if (readIndex.count(readKey) == 0)
@@ -254,13 +273,15 @@ getBreakendReads(
 
 void
 SVLocusAssembler::
-assembleSingleSVBreakend(const SVBreakend& bp,
-                         Assembly& as) const
+assembleSingleSVBreakend(
+    const SVBreakend& bp,
+    const reference_contig_segment& refSeq,
+    Assembly& as) const
 {
     static const bool isBpReversed(false);
     ReadIndexType readIndex;
     AssemblyReadInput reads;
-    getBreakendReads(bp, isBpReversed, readIndex, reads);
+    getBreakendReads(bp, isBpReversed, refSeq, readIndex, reads);
     AssemblyReadOutput readInfo;
     runSmallAssembler(_assembleOpt, reads, readInfo, as);
 }
@@ -273,14 +294,16 @@ assembleSVBreakends(const SVBreakend& bp1,
                     const SVBreakend& bp2,
                     const bool isBp1Reversed,
                     const bool isBp2Reversed,
+                    const reference_contig_segment& refSeq1,
+                    const reference_contig_segment& refSeq2,
                     Assembly& as) const
 {
     ReadIndexType readIndex;
     AssemblyReadInput reads;
     AssemblyReadReversal readRev;
-    getBreakendReads(bp1, isBp1Reversed, readIndex, reads);
+    getBreakendReads(bp1, isBp1Reversed, refSeq1, readIndex, reads);
     readRev.resize(reads.size(),isBp1Reversed);
-    getBreakendReads(bp2, isBp2Reversed, readIndex, reads);
+    getBreakendReads(bp2, isBp2Reversed, refSeq2, readIndex, reads);
     readRev.resize(reads.size(),isBp2Reversed);
     AssemblyReadOutput readInfo;
     runSmallAssembler(_assembleOpt, reads, readInfo, as);

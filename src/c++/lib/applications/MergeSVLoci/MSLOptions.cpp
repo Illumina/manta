@@ -92,9 +92,9 @@ parseMSLOptions(const manta::Program& prog,
     }
 
     // fast check of config state:
-    if (opt.graphFilename.size()<2)
+    if (opt.graphFilename.empty())
     {
-        usage(log_os,prog,visible, "Must specify at least 2 input sv locus graph files");
+        usage(log_os,prog,visible, "Must specify at least 1 input sv locus graph file");
     }
     BOOST_FOREACH(const std::string& graphFilename, opt.graphFilename)
     {

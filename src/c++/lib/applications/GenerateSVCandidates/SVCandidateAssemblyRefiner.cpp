@@ -443,11 +443,17 @@ getCandidateAssemblyData(
     //
     if (isSimpleBreakend(sv.bp1.state) && isSimpleBreakend(sv.bp1.state))
     {
+        // record the spanning status of the original low-resolution candidate:
+        assemblyData.isCandidateSpanning=true;
+
         // this case assumes two suspected breakends with a direction to each, most common large scale SV case:
         getJumpAssembly(sv, assemblyData);
     }
     else if ((sv.bp1.state == SVBreakendState::COMPLEX))
     {
+        // record the spanning status of the original low-resolution candidate:
+        assemblyData.isCandidateSpanning=false;
+
         // this case assumes a single-interval local assembly, this is the most common case for small-scale SVs/indels
         getSmallSVAssembly(sv, assemblyData);
     }
@@ -544,21 +550,26 @@ getJumpAssembly(
         }
     }
 
-    // assemble contig spanning the breakend:
-    _spanningAssembler.assembleSVBreakends(sv.bp1, sv.bp2, bporient.isBp1Reversed, bporient.isBp2Reversed, assemblyData.contigs);
-
-
     unsigned bp1LeadingTrim;
     unsigned bp1TrailingTrim;
     unsigned bp2LeadingTrim;
     unsigned bp2TrailingTrim;
-    getSVReferenceSegments(_opt.referenceFilename, _header, extraRefSize, sv, assemblyData.bp1ref, assemblyData.bp2ref,
-                           bp1LeadingTrim, bp1TrailingTrim, bp2LeadingTrim, bp2TrailingTrim);
+    getSVReferenceSegments(
+        _opt.referenceFilename, _header, extraRefSize, sv,
+        assemblyData.bp1ref, assemblyData.bp2ref,
+        bp1LeadingTrim, bp1TrailingTrim, bp2LeadingTrim, bp2TrailingTrim);
 
     pos_t align1LeadingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(bp1LeadingTrim)));
     pos_t align1TrailingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(bp1TrailingTrim)));
     pos_t align2LeadingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(bp2LeadingTrim)));
     pos_t align2TrailingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(bp2TrailingTrim)));
+
+    // assemble contig spanning the breakend:
+    _spanningAssembler.assembleSVBreakends(
+        sv.bp1, sv.bp2,
+        bporient.isBp1Reversed, bporient.isBp2Reversed,
+        assemblyData.bp1ref, assemblyData.bp2ref,
+        assemblyData.contigs);
 
     std::string bp1refSeq = assemblyData.bp1ref.seq();
     std::string bp2refSeq = assemblyData.bp2ref.seq();
@@ -735,9 +746,6 @@ getSmallSVAssembly(
 
     assemblyData.isSpanning = false;
 
-    // assemble contigs in the breakend region
-    _smallSVAssembler.assembleSingleSVBreakend(sv.bp1, assemblyData.contigs);
-
     // how much additional reference sequence should we extract from around
     // each side of the breakend region?
     static const pos_t extraRefEdgeSize(700);
@@ -758,6 +766,9 @@ getSmallSVAssembly(
     const pos_t trailingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(trailingTrim)));
 
     const std::string& align1RefStr(assemblyData.bp1ref.seq());
+
+    // assemble contigs in the breakend region
+    _smallSVAssembler.assembleSingleSVBreakend(sv.bp1, assemblyData.bp1ref, assemblyData.contigs);
 
 #ifdef DEBUG_REFINER
     log_os << logtag << "align1RefSize/Seq: " << align1RefStr.size() << '\n';

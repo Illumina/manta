@@ -54,8 +54,22 @@ git archive --prefix=$pname_root/ HEAD: | tar -x -C $outdir
 # make version number substitutions:
 tmp_file=$(mktemp)
 cml=$pname/src/CMakeLists.txt
-awk -v gver=$gitversion '{if($1=="set\(MANTA_VERSION") printf "set(MANTA_VERSION \"%s\")\n",gver; else print;}' $cml >| $tmp_file
+awk -v gver=$gitversion '
+{
+    if      ($1=="set\(MANTA_VERSION") printf "set(MANTA_VERSION \"%s\")\n",gver;
+    else if ($1=="set\(DEVELOPER_MODE") printf "set(DEVELOPER_MODE false)\n";
+    else print;
+}' $cml >| $tmp_file
 mv $tmp_file $cml
+
+rme=$pname/README.md
+awk -v gver=$gitversion '
+{
+    if      ($0~/^Version: NOT RELEASED/) printf "Version: %s\n",gver;
+    else if ($0~/_NOT_ part of an end-user/) a=1;
+    else print;
+}' $rme >| $tmp_file
+mv $tmp_file $rme
 
 # tar it up:
 (

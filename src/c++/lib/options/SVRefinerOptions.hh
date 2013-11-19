@@ -23,7 +23,7 @@
 
 /// Options for the SV refiner step
 ///
-/// Note that we have two categories of options for assembly an alignment,
+/// Note that we have two categories of options for assembly and alignment,
 /// one for small events, and one for large events
 ///
 struct SVRefinerOptions

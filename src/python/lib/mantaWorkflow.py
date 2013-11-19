@@ -84,7 +84,7 @@ def getNextGenomeSegment(params) :
     generator which iterates through all genomic segments and
     returns a segmentValues object for each one.
     """
-    for segval in getChromIntervals(params.chromOrder,params.chromSizes,params.binSize) :
+    for segval in getChromIntervals(params.chromOrder,params.chromSizes,params.scanSize, params.genomeRegion) :
         yield GenomeSegment(*segval)
 
 
@@ -351,6 +351,10 @@ class MantaWorkflow(WorkflowRunner) :
         self.params=params
         self.iniSections=iniSections
 
+        # format bam lists:
+        if self.params.normalBamList is None : self.params.normalBamList = []
+        if self.params.tumorBamList is None : self.params.tumorBamList = []
+
         # make sure run directory is setup:
         self.params.runDir=os.path.abspath(self.params.runDir)
         ensureDir(self.params.runDir)
@@ -377,21 +381,12 @@ class MantaWorkflow(WorkflowRunner) :
             checkFile(self.params.referenceFasta,"reference fasta")
             checkFile(indexRefFasta,"reference fasta index")
 
-        self.params.normalBamList = []
-        for bam in (self.params.normalBam,) :
-            if bam is None : continue
-            self.params.normalBamList.append(bam)
-
-        self.params.tumorBamList = []
-        for bam in (self.params.tumorBam,) :
-            if bam is None : continue
-            self.params.tumorBamList.append(bam)
-
         # read fasta index
         (self.params.chromOrder,self.params.chromSizes) = getFastaChromOrderSize(indexRefFasta)
 
         # sanity check some parameter typing:
-        self.params.binSize = int(self.params.binSize)
+        MEGABASE = 1000000
+        self.params.scanSize = int(self.params.scanSizeMb) * MEGABASE
         self.params.nonlocalWorkBins = int(self.params.nonlocalWorkBins)
 
         self.paths = PathInfo(self.params)

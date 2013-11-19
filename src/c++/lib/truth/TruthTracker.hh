@@ -98,8 +98,8 @@ typedef EdgeInfoRecordVec::iterator EdgeInfoRecordVecIter;
 class SVLog
 {
 public:
-    enum Outcome { UNKNOWN, WRITTEN, SPAWNED, IMPRECISE_SELF_EDGE,
-                   LOW_PAIR_COUNT_SELF_EDGE, LOW_SOMATIC_SCORE
+    enum Outcome { UNKNOWN, WRITTEN, SPAWNED, IMPRECISE_NON_SPANNING,
+                   LOW_SPANNING_COUNT, LOW_SOMATIC_SCORE
                  };
 
     SVLog(unsigned int index);

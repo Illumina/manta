@@ -16,9 +16,13 @@
 ///
 
 #include "blt_util/bam_record_util.hh"
+#include "blt_util/align_path_bam_util.hh"
 
 
 
+// note this is designed to return true for the common case
+// of pos == mate_pos occurring for short FFPE fragments
+//
 bool
 is_innie_pair(
     const bam_record& bam_read)
@@ -64,4 +68,14 @@ get_avg_quality(
     return (sum/len);
 }
 
+
+
+SimpleAlignment::
+SimpleAlignment(const bam_record& bamRead) :
+    is_fwd_strand(bamRead.is_fwd_strand()),
+    tid(bamRead.target_id()),
+    pos(bamRead.pos()-1)
+{
+    bam_cigar_to_apath(bamRead.raw_cigar(),bamRead.n_cigar(),path);
+}
 

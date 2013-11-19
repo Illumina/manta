@@ -23,6 +23,7 @@
 #include "blt_util/input_stream_handler.hh"
 #include "blt_util/log.hh"
 #include "common/OutStream.hh"
+#include "manta/SVReferenceUtil.hh"
 #include "truth/TruthTracker.hh"
 
 #include "boost/foreach.hpp"
@@ -30,6 +31,8 @@
 
 #include <iostream>
 #include <vector>
+
+//#define DEBUG_ESL
 
 
 
@@ -88,6 +91,16 @@ runESL(const ESLOptions& opt)
     const std::map<std::string, int32_t>& chromToIndex(bamHeader.chrom_to_index);
 
     const GenomeInterval scanRegion(tid,beginPos,endPos);
+#ifdef DEBUG_ESL
+    static const std::string log_tag("EstimateSVLoci");
+    log_os << log_tag << " scanRegion= " << scanRegion << "\n";
+#endif
+
+    // grab the reference for segment we're estimating plus a buffer around the segment edges:
+    static const unsigned refEdgeBufferSize(500);
+
+    reference_contig_segment refSegment;
+    getIntervalReferenceSegment(opt.referenceFilename, bamHeader, refEdgeBufferSize, scanRegion, refSegment);
 
     SVLocusSetFinder locusFinder(opt,scanRegion);
     locusFinder.setBamHeader(header);
@@ -104,7 +117,7 @@ runESL(const ESLOptions& opt)
     {
         const input_record_info current(sinput.get_current());
 
-        if       (current.itype != INPUT_TYPE::READ)
+        if (current.itype != INPUT_TYPE::READ)
         {
             log_os << "ERROR: invalid input condition.\n";
             exit(EXIT_FAILURE);
@@ -113,12 +126,15 @@ runESL(const ESLOptions& opt)
         const bam_streamer& readStream(*bamStreams[current.sample_no]);
         const bam_record& read(*(readStream.get_record_ptr()));
 
-        locusFinder.update(read,current.sample_no,chromToIndex,truthTracker);
+        locusFinder.update(read, current.sample_no, chromToIndex, refSegment,
+                           truthTracker);
     }
 
     // finished updating:
     locusFinder.flush();
-
+#ifdef DEBUG_ESL
+    log_os << log_tag << " found " << locusFinder.getLocusSet().size() << " loci. \n";
+#endif
     locusFinder.getLocusSet().save(opt.outputFilename.c_str());
 
     truthTracker.dumpAll();
