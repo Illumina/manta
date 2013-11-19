@@ -496,6 +496,11 @@ writeInvdel(
             endPos = bpBrange.end_pos()-1;
         }
     }
+    else
+    {
+        /// check against the rare case arising when CIEND is a subset of CIPOS:
+        endPos=std::max(endPos,pos+1);
+    }
 
     if (pos<1) return;
 

@@ -130,6 +130,12 @@ struct SVLocusScanner
         const bam_record& bamRead,
         const unsigned defaultReadGroupIndex) const;
 
+    /// fragments sizes get thrown is serveral pre-defined categories:
+    FragmentSizeType::index_t
+    getFragmentSizeType(
+        const bam_record& bamRead,
+        const unsigned defaultReadGroupIndex) const;
+
     /// test whether a fragment is significantly larger than expected
     ///
     /// this function is useful to eliminate reads which fail the ProperPair test
@@ -142,7 +148,7 @@ struct SVLocusScanner
 
     /// return true if the read is anomalous, for any anomaly type besides being a short innie read:
     bool
-    isNonShortAnomalous(
+    isNonCompressedAnomalous(
         const bam_record& bamRead,
         const unsigned defaultReadGroupIndex) const;
 
@@ -222,7 +228,10 @@ struct SVLocusScanner
     struct CachedReadGroupStats
     {
         CachedReadGroupStats() :
-            minDistantFragmentSize(0)
+            minDistantFragmentSize(0),
+            minCloseFragmentSize(0),
+            minVeryCloseFragmentSize(0),
+            veryCloseFactor(0)
         {}
 
         /// fragment size range assumed for the purpose of creating SVLocusGraph regions
@@ -233,7 +242,11 @@ struct SVLocusScanner
 
         Range evidencePair;
 
-        int minDistantFragmentSize; ///< beyond the properPair anomalous threshold, there is a threshold to distinguish near and far pairs for the purpose of evidence weight
+        int minDistantFragmentSize; ///< beyond the properPair anomalous threshold, there is a threshold to distinguish close and far pairs for the purpose of evidence weight
+        int minCloseFragmentSize; ///< beyond the properPair anomalous threshold, there is a threshold to distinguish 'really-close' and 'close' pairs for the purpose of evidence weight
+        int minVeryCloseFragmentSize;
+
+        float veryCloseFactor; ///< precomputed value used to scale down breakend size as fragments get smaller
     };
 
 private:

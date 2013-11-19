@@ -49,6 +49,7 @@ namespace FragmentSizeType
     static const float veryClosePairFactor(1.5); ///< fragments within this factor of the minimum size cutoff are treated as 'reallyClose' pairs and receive a modified evidence count
     static const float maxNormalFactor(1.5);
 
+    static
     index_t
     classifySize(
         const SVLocusScanner::CachedReadGroupStats& rgStats,
@@ -63,6 +64,7 @@ namespace FragmentSizeType
         return NORMAL;
     }
 
+    static
     bool
     isLarge(const index_t i)
     {
@@ -1058,7 +1060,12 @@ SVLocusScanner(
         setRGRange(rgs.fragStats, _opt.properPairTrimProb, rgStats.properPair);
         setRGRange(rgs.fragStats, _opt.evidenceTrimProb, rgStats.evidencePair);
 
+        rgStats.minVeryCloseFragmentSize = static_cast<int>(rgStats.properPair.max*FragmentSizeType::maxNormalFactor);
+        rgStats.minCloseFragmentSize = static_cast<int>(rgStats.properPair.max*FragmentSizeType::veryClosePairFactor);
         rgStats.minDistantFragmentSize = static_cast<int>(rgStats.properPair.max*FragmentSizeType::closePairFactor);
+
+        assert(rgStats.minDistantFragmentSize > rgStats.properPair.max);
+        rgStats.veryCloseFactor = (1. / static_cast<float>(rgStats.minCloseFragmentSize - rgStats.minVeryCloseFragmentSize));
     }
 }
 
@@ -1096,6 +1103,18 @@ isProperPair(
 }
 
 
+FragmentSizeType::index_t
+SVLocusScanner::
+getFragmentSizeType(
+    const bam_record& bamRead,
+    const unsigned defaultReadGroupIndex) const
+{
+    using namespace FragmentSizeType;
+    if (bamRead.target_id() != bamRead.mate_target_id()) return DISTANT;
+    const int32_t fragmentSize(std::abs(bamRead.template_size()));
+    return classifySize(_stats[defaultReadGroupIndex], fragmentSize);
+}
+
 
 bool
 SVLocusScanner::
@@ -1103,18 +1122,14 @@ isLargeFragment(
     const bam_record& bamRead,
     const unsigned defaultReadGroupIndex) const
 {
-    if (bamRead.target_id() != bamRead.mate_target_id()) return true;
-
-    const Range& ppr(_stats[defaultReadGroupIndex].properPair);
-    const int32_t fragmentSize(std::abs(bamRead.template_size()));
-    return (fragmentSize > ppr.max);
+    return FragmentSizeType::isLarge(getFragmentSizeType(bamRead,defaultReadGroupIndex));
 }
 
 
 
 bool
 SVLocusScanner::
-isNonShortAnomalous(
+isNonCompressedAnomalous(
     const bam_record& bamRead,
     const unsigned defaultReadGroupIndex) const
 {

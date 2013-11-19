@@ -181,18 +181,18 @@ update(
     if (_readScanner.isReadFiltered(bamRead)) return;
 
     // exclude innie read pairs which are anomalously short:
-    const bool isNonShortAnomalous(_readScanner.isNonShortAnomalous(bamRead,defaultReadGroupIndex));
+    const bool isNonCompressedAnomalous(_readScanner.isNonCompressedAnomalous(bamRead,defaultReadGroupIndex));
 
-    if (isNonShortAnomalous) ++_anomCount;
-    else                     ++_nonAnomCount;
+    if (isNonCompressedAnomalous) ++_anomCount;
+    else                          ++_nonAnomCount;
 
     bool isLocalAssemblyEvidence(false);
-    if (! isNonShortAnomalous)
+    if (! isNonCompressedAnomalous)
     {
         isLocalAssemblyEvidence = _readScanner.isLocalAssemblyEvidence(bamRead, refSeq);
     }
 
-    const bool isRejectRead(! ( isNonShortAnomalous || isLocalAssemblyEvidence));
+    const bool isRejectRead(! ( isNonCompressedAnomalous || isLocalAssemblyEvidence));
 
     if (isRejectRead)
     {
