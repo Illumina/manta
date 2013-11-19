@@ -81,6 +81,36 @@ namespace FragmentSizeType
 
 
 
+/// temporary object used to track the insertion
+/// of SVCandidates into the pool:
+///
+struct TrackedCandidates
+{
+    TrackedCandidates(
+        std::vector<SVObservation>& candidates,
+        TruthTracker& truthTracker) :
+        data(candidates),
+        _truthTracker(truthTracker)
+    {}
+
+    void
+    push_back(const SVObservation& obs)
+    {
+        data.push_back(obs);
+        _truthTracker.addObservation(data.back());
+    }
+
+    unsigned
+    size() const {
+        return data.size();
+    }
+
+    std::vector<SVObservation>& data;
+private:
+    TruthTracker& _truthTracker;
+};
+
+
 
 
 static
@@ -217,8 +247,7 @@ getSACandidatesFromRead(
     const bam_record& localRead,
     const SimpleAlignment& localAlign,
     const chromMap_t& chromToIndex,
-    std::vector<SVObservation>& candidates,
-    TruthTracker& truthTracker)
+    TrackedCandidates& candidates)
 {
     using namespace ALIGNPATH;
 
@@ -277,7 +306,6 @@ getSACandidatesFromRead(
 
         // At this point we don't care about strand
         candidates.push_back(GetSplitSACandidate(dopt, localAlign, remoteAlign));
-        truthTracker.addObservation(candidates.back());
     }
 }
 
@@ -289,8 +317,7 @@ getSVCandidatesFromReadIndels(
     const ReadScannerOptions& opt,
     const ReadScannerDerivOptions& dopt,
     const SimpleAlignment& align,
-    std::vector<SVObservation>& candidates,
-    TruthTracker& truthTracker)
+    TrackedCandidates& candidates)
 {
     using namespace SVEvidenceType;
     static const index_t svSource(CIGAR);
@@ -326,7 +353,6 @@ getSVCandidatesFromReadIndels(
                 {
                     static const bool isComplex(true);
                     candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos, svSource, isComplex));
-                    truthTracker.addObservation(candidates.back());
                 }
             }
         }
@@ -336,7 +362,6 @@ getSVCandidatesFromReadIndels(
             if ((sinfo.delete_length >= opt.minCandidateVariantSize) || (sinfo.insert_length >= opt.minCandidateVariantSize))
             {
                 candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos+sinfo.delete_length, svSource));
-                truthTracker.addObservation(candidates.back());
             }
 
             nPathSegments = sinfo.n_seg;
@@ -350,7 +375,6 @@ getSVCandidatesFromReadIndels(
                 if (ps.length >= opt.minCandidateVariantSize)
                 {
                     candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos+ps.length, svSource));
-                    truthTracker.addObservation(candidates.back());
                 }
             }
             else if (ps.type == INSERT)
@@ -358,7 +382,6 @@ getSVCandidatesFromReadIndels(
                 if (ps.length >= opt.minCandidateVariantSize)
                 {
                     candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos, svSource));
-                    truthTracker.addObservation(candidates.back());
                 }
             }
         }
@@ -475,8 +498,7 @@ getSVCandidatesFromReadClip(
     const ReadScannerOptions& opt,
     const bam_record& bamRead,
     const SimpleAlignment& bamAlign,
-    std::vector<SVObservation>& candidates,
-    TruthTracker& truthTracker)
+    TrackedCandidates& candidates)
 {
     using namespace SVEvidenceType;
     static const index_t svSource(SOFTCLIP);
@@ -497,7 +519,6 @@ getSVCandidatesFromReadClip(
     {
         const pos_t clipPos(bamAlign.pos + apath_ref_length(bamAlign.path));
         candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),clipPos,clipPos, svSource, isComplex));
-        truthTracker.addObservation(candidates.back());
     }
 }
 
@@ -510,8 +531,7 @@ getSVCandidatesFromSemiAligned(
     const bam_record& bamRead,
     const SimpleAlignment& bamAlign,
     const reference_contig_segment& refSeq,
-    std::vector<SVObservation>& candidates,
-    TruthTracker& truthTracker)
+    TrackedCandidates& candidates)
 {
     unsigned leadingMismatchLen(0), leadingClipLen(0);
     unsigned trailingMismatchLen(0), trailingClipLen(0);
@@ -533,14 +553,12 @@ getSVCandidatesFromSemiAligned(
     {
         const pos_t pos(leadingRefPos);
         candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),pos,pos,svSource,isComplex));
-        truthTracker.addObservation(candidates.back());
     }
 
     if (trailingMismatchLen >= opt.minSemiAlignedMismatchLen)
     {
         const pos_t pos(trailingRefPos);
         candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),pos,pos,svSource,isComplex));
-        truthTracker.addObservation(candidates.back());
     }
 }
 
@@ -555,8 +573,7 @@ getSVCandidatesFromPair(
     const bam_record& localRead,
     const SimpleAlignment& localAlign,
     const bam_record* remoteReadPtr,
-    std::vector<SVObservation>& candidates,
-    TruthTracker& truthTracker)
+    TrackedCandidates& candidates)
 {
     using namespace SVEvidenceType;
     static const index_t svLocalPair(LOCAL_PAIR);
@@ -699,7 +716,6 @@ getSVCandidatesFromPair(
 #endif
 
     candidates.push_back(sv);
-    truthTracker.addObservation(candidates.back());
 }
 
 
@@ -716,8 +732,7 @@ getSVCandidatesFromShadow(
     const bam_record& localRead,
     const SimpleAlignment& localAlign,
     const bam_record* remoteReadPtr,
-    std::vector<SVObservation>& candidates,
-    TruthTracker& truthTracker)
+    TrackedCandidates& candidates)
 {
     using namespace SVEvidenceType;
     static const index_t svSource(SHADOW);
@@ -773,7 +788,6 @@ getSVCandidatesFromShadow(
     const pos_t properPairRangeOffset = static_cast<pos_t>(rstats.properPair.min + (rstats.properPair.max-rstats.properPair.min)/2);
     const pos_t shadowGenomePos = singletonGenomePos + properPairRangeOffset;
     candidates.push_back(GetSplitSVCandidate(opt,targetId,shadowGenomePos,shadowGenomePos, svSource, isComplex));
-    truthTracker.addObservation(candidates.back());
 }
 #endif
 
@@ -788,8 +802,7 @@ getSingleReadSVCandidates(
     const SimpleAlignment& localAlign,
     const chromMap_t& chromToIndex,
     const reference_contig_segment& refSeq,
-    std::vector<SVObservation>& candidates,
-    TruthTracker& truthTracker)
+    TrackedCandidates& candidates)
 {
     using namespace illumina::common;
 
@@ -797,29 +810,27 @@ getSingleReadSVCandidates(
     //if (localRead.is_mate_unmapped()) return;
 
     // - process any large indels in the localRead:
-    getSVCandidatesFromReadIndels(opt, dopt, localAlign, candidates,
-                                  truthTracker);
+    getSVCandidatesFromReadIndels(opt, dopt, localAlign, candidates);
 #ifdef DEBUG_SCANNER
     static const std::string logtag("getSingleReadSVCandidates");
     log_os << logtag << " post-indels candidate_size: " << candidates.size() << "\n";
 #endif
 
     // - process soft-clip in the localRead:
-    getSVCandidatesFromReadClip(opt, localRead, localAlign, candidates,
-                                truthTracker);
+    getSVCandidatesFromReadClip(opt, localRead, localAlign, candidates);
 #ifdef DEBUG_SCANNER
     log_os << logtag << " post-clip candidate_size: " << candidates.size() << "\n";
 #endif
 
     getSVCandidatesFromSemiAligned(opt, localRead, localAlign, refSeq,
-                                   candidates, truthTracker);
+                                   candidates);
 #ifdef DEBUG_SCANNER
     log_os << logtag << " post-semialigned candidate_size: " << candidates.size() << "\n";
 #endif
 
     /// - process split/SA reads:
     getSACandidatesFromRead(dopt, localRead, localAlign, chromToIndex,
-                            candidates, truthTracker);
+                            candidates);
 #ifdef DEBUG_SCANNER
     log_os << logtag << " post-split read candidate_size: " << candidates.size() << "\n";
 #endif
@@ -842,13 +853,12 @@ getReadBreakendsImpl(
     const chromMap_t& chromToIndex,
     const reference_contig_segment& localRefSeq,
     const reference_contig_segment* remoteRefSeqPtr,
-    std::vector<SVObservation>& candidates,
-    known_pos_range2& localEvidenceRange,
-    TruthTracker& truthTracker)
+    TrackedCandidates& candidates,
+    known_pos_range2& localEvidenceRange)
 {
     using namespace illumina::common;
 
-    candidates.clear();
+    candidates.data.clear();
 
     /// TODO: can't handle these yet, but plan to soon:
     //if (localRead.is_mate_unmapped()) return;
@@ -857,7 +867,7 @@ getReadBreakendsImpl(
     const SimpleAlignment localAlign(localRead);
 
     getSingleReadSVCandidates(opt, dopt, localRead, localAlign, chromToIndex,
-                              localRefSeq, candidates, truthTracker);
+                              localRefSeq, candidates);
 
     if (NULL != remoteReadPtr)
     {
@@ -867,7 +877,7 @@ getReadBreakendsImpl(
 
         getSingleReadSVCandidates(opt, dopt, remoteRead, remoteAlign,
                                   chromToIndex, (*remoteRefSeqPtr),
-                                  candidates, truthTracker);
+                                  candidates);
     }
 
     // process shadows:
@@ -875,7 +885,7 @@ getReadBreakendsImpl(
 
     // - process anomalous read pairs:
     getSVCandidatesFromPair(opt, rstats, localRead, localAlign, remoteReadPtr,
-                            candidates, truthTracker);
+                            candidates);
 
 #ifdef DEBUG_SCANNER
     static const std::string logtag("getReadBreakendsImpl: ");
@@ -893,7 +903,7 @@ getReadBreakendsImpl(
 
     /// final chance to QC candidate set:
     ///
-    BOOST_FOREACH(const SVCandidate& sv, candidates)
+    BOOST_FOREACH(const SVCandidate& sv, candidates.data)
     {
         bool isInvalidTid(false);
         if (sv.bp1.interval.tid < 0)
@@ -953,11 +963,11 @@ getSVLociImpl(
 
     loci.clear();
     std::vector<SVObservation> candidates;
+    TrackedCandidates trackedCandidates(candidates,truthTracker);
     known_pos_range2 localEvidenceRange;
 
     getReadBreakendsImpl(opt, dopt, rstats, bamRead, NULL, chromToIndex,
-                         refSeq, NULL, candidates, localEvidenceRange,
-                         truthTracker);
+                         refSeq, NULL, trackedCandidates, localEvidenceRange);
 
 #ifdef DEBUG_SCANNER
     static const std::string logtag("getSVLociImpl");
@@ -1258,8 +1268,9 @@ getBreakendPair(
     const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);
 
     // throw evidence range away in this case
+    TrackedCandidates trackedCandidates(candidates, truthTracker);
     known_pos_range2 evidenceRange;
     getReadBreakendsImpl(_opt, _dopt, rstats, localRead, remoteReadPtr,
                          chromToIndex, localRefSeq, remoteRefSeqPtr,
-                         candidates, evidenceRange, truthTracker);
+                         trackedCandidates, evidenceRange);
 }
