@@ -175,7 +175,7 @@ def getChromIntervals(chromOrder,chromSizes,segmentSize, genomeRegion = None) :
 
     chromOrder - iterable object of chromosome names
     chromSizes - a hash of chrom sizes
-    genomeRegion - optionally restrict chrom intervals to only cover a specified chromosome region
+    genomeRegionList - optionally restrict chrom intervals to only cover a list of specified chromosome region
 
     return chromIndex,chromLabel,start,end,chromSegment
     where start and end are formated for use with samtools

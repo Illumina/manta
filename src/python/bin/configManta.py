@@ -83,10 +83,12 @@ You must specify a BAM file for at least one sample.
         group.add_option("--candidateBins",type="int",dest="nonlocalWorkBins",metavar="candidateBins",
                          help="Provide the total number of tasks which candidate generation "
                             " will be sub-divided into. (default: %default)")
-        group.add_option("--region",type="string",dest="regionStr",metavar="samtoolsRegion",
-                         help="Provide a region to configure an analysis limited "
-                              "to a single segment of the full genome for debugging purposes. "
-                              "Examples: '--region chr2:1000-20000', '--region chr20'")
+        group.add_option("--region",type="string",dest="regionStrList",metavar="samtoolsRegion", action="append",
+                         help="Limit the SV analysis to a region of the genome for debugging purposes. "
+                              "If this argument is provided multiple times all specified regions will "
+                              "be analyzed together. All regions must be non-overlapping to get a "
+                              "meaningful result. Examples: '--region chr20' (whole chromosome), "
+                              "'--region chr2:100-2000 --region chr3:2500-3000' (two translocation regions)'")
 
         MantaWorkflowOptionsBase.addExtendedGroupOptions(self,group)
 
@@ -103,8 +105,7 @@ You must specify a BAM file for at least one sample.
             'useExistingAlignStats' : False,
             'useExistingChromDepths' : False,
             'scanSizeMb' : 12,
-            'nonlocalWorkBins' : 256,
-            'regionStr' : ""
+            'nonlocalWorkBins' : 256
                           })
         return defaults
 
@@ -141,10 +142,10 @@ You must specify a BAM file for at least one sample.
             if not os.path.isfile(faiFile) :
                 raise OptParseException("Can't find expected fasta index file: '%s'" % (faiFile))
 
-        if (options.regionStr is None) or (len(options.regionStr) == 0) :
-            options.genomeRegion = None
+        if (options.regionStrList is None) or (len(options.regionStrList) == 0) :
+            options.genomeRegionList = None
         else :
-            options.genomeRegion = parseGenomeRegion(options.regionStr)
+            options.genomeRegionList = [parseGenomeRegion(r) for r in options.regionStrList]
 
         MantaWorkflowOptionsBase.validateAndSanitizeExistingOptions(self,options)
 
