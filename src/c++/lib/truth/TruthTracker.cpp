@@ -26,6 +26,90 @@
 #include "truth/TruthTracker.hh"
 
 /*****************************************************************************/
+// ObsRecord
+/*****************************************************************************/
+
+ObsRecord::ObsRecord()
+{
+    _svObs = SVObservation();
+    _discardReason = KEPT;
+}
+
+/*****************************************************************************/
+
+ObsRecord::ObsRecord(const SVObservation& svObs)
+{
+    _svObs = svObs;
+    _discardReason = KEPT;
+}
+
+/*****************************************************************************/
+
+bool ObsRecord::discard(DiscardReason discardReason)
+{
+    if (_discardReason != KEPT)
+    {
+        return false;
+    }
+
+    _discardReason = discardReason;
+    return true;
+}
+
+/*****************************************************************************/
+
+bool ObsRecord::discarded(DiscardReason& discardReason) const
+{
+    discardReason = _discardReason;
+    return (_discardReason != KEPT);
+}
+
+/*****************************************************************************/
+
+bool ObsRecord::operator<(const ObsRecord& obsRecordB) const
+{
+    if (_svObs.candidateIndex < obsRecordB._svObs.candidateIndex)
+    {
+        return true;
+    }
+
+    if (_svObs.assemblyAlignIndex < obsRecordB._svObs.assemblyAlignIndex)
+    {
+        return true;
+    }
+
+    if (_svObs.assemblySegmentIndex < obsRecordB._svObs.assemblySegmentIndex)
+    {
+        return true;
+    }
+
+
+    return false;
+}
+
+/*****************************************************************************/
+
+bool ObsRecord::operator==(const ObsRecord& obsRecordB) const
+{
+    return ((_svObs.candidateIndex == obsRecordB._svObs.candidateIndex)
+            && (_svObs.assemblyAlignIndex
+                == obsRecordB._svObs.assemblyAlignIndex)
+            && (_svObs.assemblySegmentIndex
+                == obsRecordB._svObs.assemblySegmentIndex));
+}
+
+/*****************************************************************************/
+
+std::ostream& operator<<(std::ostream& ostrm, const ObsRecord& record)
+{
+    ostrm << "Candidate " << record._svObs.candidateIndex
+          << " AsmblAlign " << record._svObs.assemblyAlignIndex
+          << " AsmblSeg " << record._svObs.assemblySegmentIndex;
+
+    return ostrm;
+}
+
+/*****************************************************************************/
 // EdgeInfoRecord
 /*****************************************************************************/
 
@@ -113,6 +197,10 @@ std::ostream& operator<<(std::ostream& ostrm, const EdgeInfoRecord& record)
 
     return ostrm;
 }
+
+/*****************************************************************************/
+
+
 
 /*****************************************************************************/
 // SVLog
@@ -420,11 +508,25 @@ std::ostream& operator<<(std::ostream& ostrm, const EdgeLog& log)
 // TruthTracker
 /*****************************************************************************/
 
+TruthTracker::TruthTracker(const std::string& vcfFilePath,
+                           const bam_header_info& bamHeaderInfo)
+    : _cset(_emptyLocusSet), _hasTruth(false), _numObs(0),
+      _lastAddedEdgeLogMapEleIter(0), _numEdgesSeen(0)
+{
+    if (vcfFilePath.empty()) return;
+
+    loadTruth(vcfFilePath, bamHeaderInfo);
+}
+
+/*****************************************************************************/
+
+
 TruthTracker::
 TruthTracker(
     const std::string& vcfFilePath,
     const SVLocusSet& cset)
-    : _cset(cset), _hasTruth(false), _lastAddedEdgeLogMapEleIter(0), _numEdgesSeen(0)
+    : _cset(cset), _hasTruth(false), _numObs(0),
+      _lastAddedEdgeLogMapEleIter(0), _numEdgesSeen(0)
 {
     if (vcfFilePath.empty()) return;
 
@@ -447,6 +549,71 @@ bool TruthTracker::loadTruth(const std::string& vcfFilePath,
     _hasTruth = true;
 
     return true;
+}
+
+/*****************************************************************************/
+
+static
+bool bothBrkptIntersect(const Variant& variant, const SVObservation& svObs)
+{
+    return ((variant.brkptA().isIntersect(svObs.bp1.interval)
+             && variant.brkptB().isIntersect(svObs.bp2.interval))
+            ||
+            (variant.brkptA().isIntersect(svObs.bp2.interval)
+             && variant.brkptB().isIntersect(svObs.bp1.interval)));
+}
+
+/*****************************************************************************/
+
+void TruthTracker::addObservation(const SVObservation& svObs)
+{
+    if (!_hasTruth)
+    {
+        return;
+    }
+
+    ++_numObs;
+
+    EdgeLog::VariantKey variantKey(0);
+    const ObsRecord obsRecord(svObs);
+
+    // DEBUG
+    // std::cerr << "addObservation : " << svObs << std::endl;
+
+    BOOST_FOREACH(const Variant& trueVariant, _trueVariantVec)
+    {
+        if (bothBrkptIntersect(trueVariant, svObs))
+        {
+            _truthObsVecMap[variantKey].push_back(obsRecord);
+
+            // DEBUG
+            std::cerr << "Variant " << variantKey << " [" << trueVariant
+                      << "] matched by " << obsRecord
+                      << " bp1 " << svObs.bp1.interval
+                      << " bp2 " << svObs.bp2.interval
+                      << std::endl;
+
+
+#if 0
+
+            if (_lastAddedObsLogMapEleIter == _obsLogMap.end()) // not set
+            {
+                ObsLogMapIterBoolPr iterBoolPr
+                    = _obsLogMap.
+                    insert(ObsLogMapEle(edgeInfoRecord,
+                                         EdgeLog(_edgeLogMap.size(), edge)));
+                assert(iterBoolPr.second); // edge should be unique -> added
+                _lastAddedObsLogMapEleIter = iterBoolPr.first;
+                _obsLogMapIndexVec.push_back(_lastAddedObsLogMapEleIter);
+            }
+
+            _lastAddedObsLogMapEleIter->second.addVariantKey(variantKey);
+#endif
+
+        }
+
+        ++variantKey;
+    }
 }
 
 /*****************************************************************************/
@@ -938,6 +1105,21 @@ void TruthTracker::reportOutcome(const SVLog::Outcome outcomeVal)
     {
         _lastAddedEdgeLogMapEleIter->second.reportOutcome(outcomeVal);
     }
+}
+
+/*****************************************************************************/
+
+bool TruthTracker::dumpObs()
+{
+    if (!_hasTruth)
+    {
+        return false;
+    }
+
+    std::cerr << "Num Obs added : " << _numObs << std::endl;
+
+
+    return true;
 }
 
 /*****************************************************************************/

@@ -24,6 +24,7 @@
 #include "manta/SVCandidate.hh"
 #include "svgraph/SVLocus.hh"
 #include "options/ReadScannerOptions.hh"
+#include "truth/TruthTracker.hh"
 
 #include <string>
 #include <vector>
@@ -156,7 +157,8 @@ struct SVLocusScanner
         const bam_record& bamRead,
         const unsigned defaultReadGroupIndex,
         const std::map<std::string, int32_t>& chromToIndex,
-        std::vector<SVLocus>& loci) const;
+        std::vector<SVLocus>& loci,
+        TruthTracker& truthTracker) const;
 
     /// get local and remote breakends for each SV Candidate which can be extracted from a read pair
     ///
@@ -171,7 +173,8 @@ struct SVLocusScanner
         const bam_record* remoteReadPtr,
         const unsigned defaultReadGroupIndex,
         const std::map<std::string, int32_t>& chromToIndex,
-        std::vector<SVObservation>& candidates) const;
+        std::vector<SVObservation>& candidates,
+        TruthTracker& truthTracker) const;
 
     /// provide direct access to the frag distro for
     /// functions which can't be cached

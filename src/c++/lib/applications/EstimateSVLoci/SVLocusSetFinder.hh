@@ -24,6 +24,7 @@
 #include "blt_util/stage_manager.hh"
 #include "manta/SVLocusScanner.hh"
 #include "svgraph/SVLocusSet.hh"
+#include "truth/TruthTracker.hh"
 
 #include <iosfwd>
 #include <string>
@@ -54,7 +55,8 @@ struct SVLocusSetFinder : public pos_processor_base
     void
     update(const bam_record& bamRead,
            const unsigned defaultReadGroupIndex,
-           const std::map<std::string, int32_t>& chromToIndex);
+           const std::map<std::string, int32_t>& chromToIndex,
+           TruthTracker& truthTracker);
 
     const SVLocusSet&
     getLocusSet()

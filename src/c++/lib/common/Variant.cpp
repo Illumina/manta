@@ -62,13 +62,21 @@ Variant::Variant()
 
 /*****************************************************************************/
 
-Variant::Variant(const Variant::Type& typeVal,
+Variant::Variant(const std::string& idStr, const Variant::Type& typeVal,
                  const GenomeInterval& brkptAObj, bool isFwdAFlag,
                  const GenomeInterval& brkptBObj, bool isFwdBFlag)
-    : myType(typeVal), myBrkptA(brkptAObj), myIsFwdAFlag(isFwdAFlag),
+    : myId(idStr), myType(typeVal),
+      myBrkptA(brkptAObj), myIsFwdAFlag(isFwdAFlag),
       myBrkptB(brkptBObj), myIsFwdBFlag(isFwdBFlag)
 {
     ;
+}
+
+/*****************************************************************************/
+
+const std::string& Variant::id() const
+{
+    return myId;
 }
 
 /*****************************************************************************/
@@ -137,7 +145,7 @@ bool Variant::isSingleChromType(const Type variantType)
 
 std::ostream& operator<<(std::ostream& ostrm, Variant variant)
 {
-    ostrm << variant.type()
+    ostrm << variant.id() << ' ' << variant.type()
           << ' ' << variant.brkptA() << ' ' << (variant.isFwdA() ? '+' : '-')
           << ' ' << variant.brkptB() << ' ' << (variant.isFwdB() ? '+' : '-');
 

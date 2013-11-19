@@ -36,10 +36,11 @@ public:
               };
 
     Variant();
-    Variant(const Variant::Type& typeVal,
+    Variant(const std::string& idStr, const Variant::Type& typeVal,
             const GenomeInterval& brkptAObj, bool isFwdAFlag,
             const GenomeInterval& brkptBObj, bool isFwdBFlag);
 
+    const std::string& id() const;
     Type type() const;
     const GenomeInterval& brkptA() const;
     bool isFwdA() const;
@@ -50,6 +51,7 @@ public:
     static bool isSingleChromType(const Type variantType);
 
 private:
+    std::string myId;
     Type myType;
     GenomeInterval myBrkptA;
     bool myIsFwdAFlag;

@@ -84,6 +84,8 @@ parseESLOptions(
      "fasta reference sequence (required)")
     ("align-stats", po::value(&opt.statsFilename),
      "pre-computed alignment statistics for the input alignment files (required)")
+    ("truth-vcf", po::value(&opt.truthVcfFilename),
+     "optional truth VCF file (for testing)")
     ("region", po::value(&opt.region),
      "samtools formatted region, eg. 'chr1:20-30' (optional)");
 

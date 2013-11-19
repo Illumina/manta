@@ -177,6 +177,7 @@ bool VcfFile::getVariant(Variant& variant, bool& wasLast)
         }
     }
 
+    const std::string idStr(vcfLine.getId());
     const std::string chromNameA(vcfLine.getChrom());
     const int32_t chromTidA(myChromNameTidMap.at(chromNameA));
     const unsigned long posA(vcfLine.getPos());
@@ -221,7 +222,7 @@ bool VcfFile::getVariant(Variant& variant, bool& wasLast)
     findFlankBounds(posB, flankSize, leftBoundB, rightBoundB);
 
     variant
-        = Variant(variantType,
+        = Variant(idStr, variantType,
                   GenomeInterval(chromTidA, leftBoundA, rightBoundA), isFwdA,
                   GenomeInterval(chromTidB, leftBoundB, rightBoundB), isFwdB);
 

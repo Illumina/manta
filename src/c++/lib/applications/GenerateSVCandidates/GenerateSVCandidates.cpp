@@ -256,7 +256,7 @@ runGSC(
     std::auto_ptr<EdgeRetriever> edgerPtr(edgeRFactory(cset, opt.edgeOpt));
     EdgeRetriever& edger(*edgerPtr);
 
-    TruthTracker truthTracker(opt.truthVcfFilename, cset);;
+    TruthTracker truthTracker(opt.truthVcfFilename, cset);
 
     SVWriter svWriter(opt, cset, progName, progVersion, truthTracker);
 
@@ -311,7 +311,8 @@ runGSC(
         try
         {
             // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
-            svFind.findCandidateSV(chromToIndex, edge, svData, svs);
+            svFind.findCandidateSV(chromToIndex, edge, svData, svs,
+                                   truthTracker);
 
             truthTracker.reportNumCands(svs.size(), edge);
 

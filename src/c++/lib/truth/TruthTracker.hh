@@ -27,8 +27,40 @@
 
 #include "common/Variant.hh"
 
+#include "manta/SVCandidate.hh"
 #include "svgraph/EdgeInfo.hh"
 #include "svgraph/SVLocusSet.hh"
+
+/*****************************************************************************/
+
+class ObsRecord
+{
+public:
+    ObsRecord();
+    ObsRecord(const SVObservation& svObs);
+    const SVObservation& getObs() const;
+
+    enum DiscardReason { KEPT };
+    bool discard(DiscardReason discardReason);
+    bool discarded(DiscardReason& discardReason) const;
+
+    bool operator<(const ObsRecord& obsRecordB) const;
+    bool operator==(const ObsRecord& obsRecordB) const;
+
+private:
+    SVObservation _svObs;
+    DiscardReason _discardReason;
+
+    friend std::ostream& operator<<(std::ostream& ostrm,
+                                    const ObsRecord& record);
+};
+
+std::ostream& operator<<(std::ostream& ostrm, const ObsRecord& record);
+
+/*****************************************************************************/
+
+typedef std::vector<ObsRecord> ObsRecordVec;
+typedef ObsRecordVec::iterator ObsRecordVecIter;
 
 /*****************************************************************************/
 
@@ -164,6 +196,10 @@ class TruthTracker
 public:
     TruthTracker(
         const std::string& vcfFilePath,
+        const bam_header_info& bamHeaderInfo);
+
+    TruthTracker(
+        const std::string& vcfFilePath,
         const SVLocusSet& cset);
 
 private:
@@ -177,6 +213,10 @@ private:
     void reportNumCands(unsigned int numCands);
 
 public:
+    // For ESL
+    void addObservation(const SVObservation& svObs);
+
+    // For GSC
     bool addEdge(const EdgeInfo& edge);
     bool discardEdge(const EdgeInfo& edge,
                      EdgeInfoRecord::DiscardReason reason);
@@ -200,22 +240,37 @@ public:
     void addAssembledSV();
     void reportOutcome(const SVLog::Outcome outcome);
 
+    bool dumpObs();
     bool dumpMatchedEdgeInfo();
     bool dumpStats();
 
     void dumpAll()
     {
+        dumpObs();
         dumpMatchedEdgeInfo();
         dumpStats();
     }
 
 private:
+    SVLocusSet _emptyLocusSet;
     const SVLocusSet& _cset;
     bool _hasTruth;
     VariantVec _trueVariantVec;
 
     typedef std::map<std::string, int32_t> ChromNameTidMap;
     ChromNameTidMap _chromNameTidMap;
+
+    // SVObservation tracking
+
+    typedef std::map<EdgeLog::VariantKey, ObsRecordVec> TruthObsVecMap;
+    typedef TruthObsVecMap::iterator TruthObsVecMapIter;
+    typedef TruthObsVecMap::value_type TruthObsVecMapEle;
+    TruthObsVecMap _truthObsVecMap;
+
+    unsigned long _numObs;
+
+
+    // Edge tracking
 
     typedef std::map<EdgeLog::VariantKey, EdgeInfoRecordVec> TruthEdgeVecMap;
     typedef TruthEdgeVecMap::iterator TruthEdgeVecMapIter;

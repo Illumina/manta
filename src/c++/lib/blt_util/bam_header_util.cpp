@@ -38,7 +38,7 @@ parse_bam_region(
     if (words.empty() || words[0].empty() || (words.size() > 2))
     {
         std::ostringstream oss;
-        oss << "ERROR: can't parse bam_region " << region << "\n";
+        oss << "ERROR: can't parse bam_region [err 1] " << region << "\n";
         throw blt_exception(oss.str().c_str());
     }
 
@@ -57,7 +57,7 @@ parse_bam_region(
     if (! isFound)
     {
         std::ostringstream oss;
-        oss << "ERROR: can't parse bam_region " << region << "\n"
+        oss << "ERROR: can't parse bam_region [err 2] " << region << "\n"
             << "\tchromosome: '" << words[0] << "' not found in header\n";
         throw blt_exception(oss.str().c_str());
     }
@@ -73,7 +73,7 @@ parse_bam_region(
     if (words2.empty() || (words2.size() > 2))
     {
         std::ostringstream oss;
-        oss << "ERROR: can't parse bam_region " << region << "\n";
+        oss << "ERROR: can't parse bam_region [err 3] " << region << "\n";
         throw blt_exception(oss.str().c_str());
     }
 

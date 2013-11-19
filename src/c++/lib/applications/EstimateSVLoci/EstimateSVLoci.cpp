@@ -23,6 +23,7 @@
 #include "blt_util/input_stream_handler.hh"
 #include "blt_util/log.hh"
 #include "common/OutStream.hh"
+#include "truth/TruthTracker.hh"
 
 #include "boost/foreach.hpp"
 #include "boost/shared_ptr.hpp"
@@ -47,7 +48,10 @@ runESL(const ESLOptions& opt)
     // setup all data for main alignment loop:
     BOOST_FOREACH(const std::string& afile, opt.alignFileOpt.alignmentFilename)
     {
-        stream_ptr tmp(new bam_streamer(afile.c_str(),opt.region.c_str()));
+        stream_ptr tmp(new bam_streamer(afile.c_str(),
+                                        (opt.region.empty()
+                                         ? NULL
+                                         : opt.region.c_str())));
         bamStreams.push_back(tmp);
     }
 
@@ -77,6 +81,8 @@ runESL(const ESLOptions& opt)
 
     const bam_header_t& header(*(bamStreams[0]->get_header()));
     const bam_header_info bamHeader(header);
+    TruthTracker truthTracker(opt.truthVcfFilename, bamHeader);
+
     int32_t tid(0), beginPos(0), endPos(0);
     parse_bam_region(bamHeader,opt.region,tid,beginPos,endPos);
     const std::map<std::string, int32_t>& chromToIndex(bamHeader.chrom_to_index);
@@ -107,13 +113,15 @@ runESL(const ESLOptions& opt)
         const bam_streamer& readStream(*bamStreams[current.sample_no]);
         const bam_record& read(*(readStream.get_record_ptr()));
 
-        locusFinder.update(read,current.sample_no,chromToIndex);
+        locusFinder.update(read,current.sample_no,chromToIndex,truthTracker);
     }
 
     // finished updating:
     locusFinder.flush();
 
     locusFinder.getLocusSet().save(opt.outputFilename.c_str());
+
+    truthTracker.dumpAll();
 }
 
 

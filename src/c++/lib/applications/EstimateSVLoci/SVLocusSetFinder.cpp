@@ -172,7 +172,8 @@ void
 SVLocusSetFinder::
 update(const bam_record& bamRead,
        const unsigned defaultReadGroupIndex,
-       const std::map<std::string, int32_t>& chromToIndex)
+       const std::map<std::string, int32_t>& chromToIndex,
+       TruthTracker& truthTracker)
 {
     _isScanStarted=true;
 
@@ -211,7 +212,8 @@ update(const bam_record& bamRead,
 
     std::vector<SVLocus> loci;
 
-    _readScanner.getSVLoci(bamRead, defaultReadGroupIndex, chromToIndex, loci);
+    _readScanner.getSVLoci(bamRead, defaultReadGroupIndex, chromToIndex, loci,
+                           truthTracker);
 
     BOOST_FOREACH(const SVLocus& locus, loci)
     {

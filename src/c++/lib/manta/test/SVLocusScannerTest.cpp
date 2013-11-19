@@ -17,8 +17,9 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "manta/SVLocusScanner.cpp"
+#include "truth/TruthTracker.hh"
 
+#include "manta/SVLocusScanner.cpp"
 
 BOOST_AUTO_TEST_SUITE( test_SVLocusScanner )
 
@@ -39,7 +40,11 @@ BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromReadIndels )
 
     std::vector<SVObservation> candidates;
 
-    getSVCandidatesFromReadIndels(opt, dopt, align, candidates);
+    const std::string emptyPathStr;
+    bam_header_info hdr_info;
+    TruthTracker truthTracker(emptyPathStr, hdr_info);
+
+    getSVCandidatesFromReadIndels(opt, dopt, align, candidates, truthTracker);
 
     BOOST_REQUIRE_EQUAL(candidates.size(),1u);
     BOOST_REQUIRE(candidates[0].bp1.interval.range.is_pos_intersect(100));
@@ -75,7 +80,11 @@ BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromSemiAligned )
 
     std::vector<SVObservation> candidates;
 
-    getSVCandidatesFromSemiAligned(opt,bamRead,align,candidates);
+    const std::string emptyPathStr;
+    bam_header_info hdr_info;
+    TruthTracker truthTracker(emptyPathStr, hdr_info);
+
+    getSVCandidatesFromSemiAligned(opt,bamRead,align,candidates,truthTracker);
 
     BOOST_REQUIRE_EQUAL(candidates.size(),1u);
     BOOST_REQUIRE(candidates[0].bp1.interval.range.is_pos_intersect(500));

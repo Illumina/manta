@@ -38,6 +38,7 @@ struct ESLOptions
     std::string outputFilename;
     std::string region;
     std::string statsFilename;
+    std::string truthVcfFilename;
 };
 
 
