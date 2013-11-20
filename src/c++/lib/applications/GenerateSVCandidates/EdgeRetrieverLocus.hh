@@ -18,6 +18,7 @@
 #pragma once
 
 #include "EdgeRetriever.hh"
+#include "EdgeOptions.hh"
 
 
 /// provide an iterator over edges in a set of SV locus graphs
@@ -32,7 +33,7 @@ struct EdgeRetrieverLocus : public EdgeRetriever
     EdgeRetrieverLocus(
         const SVLocusSet& set,
         const unsigned graphNodeMaxEdgeCount,
-        const unsigned locusIndex);
+        const LocusEdgeOptions& opt);
 
     bool
     next();
@@ -41,6 +42,6 @@ private:
     void
     advanceEdge();
 
-    unsigned _locusIndex;
+    LocusEdgeOptions _opt;
     bool _isInit;
 };

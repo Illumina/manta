@@ -74,16 +74,19 @@ parseOptions(
 
         assert(! indices.empty());
 
-        opt.locusIndex = parse_unsigned_str(indices[0]);
         opt.isLocusIndex = true;
-        if (indices.size() > 1)
         {
-            opt.nodeIndex1 = parse_unsigned_str(indices[1]);
-            opt.isNodeIndex1 = true;
-            if (indices.size() > 2)
+            LocusEdgeOptions& lopt(opt.locusOpt);
+            lopt.locusIndex = parse_unsigned_str(indices[0]);
+            if (indices.size() > 1)
             {
-                opt.nodeIndex2 = parse_unsigned_str(indices[2]);
-                opt.isNodeIndex2 = true;
+                lopt.isNodeIndex1 = true;
+                lopt.nodeIndex1 = parse_unsigned_str(indices[1]);
+                if (indices.size() > 2)
+                {
+                    lopt.isNodeIndex2 = true;
+                    lopt.nodeIndex2 = parse_unsigned_str(indices[2]);
+                }
             }
         }
     }

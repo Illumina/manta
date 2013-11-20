@@ -35,12 +35,46 @@ EdgeRetrieverLocus::
 EdgeRetrieverLocus(
     const SVLocusSet& set,
     const unsigned graphNodeMaxEdgeCount,
-    const unsigned locusIndex) :
+    const LocusEdgeOptions& opt) :
     EdgeRetriever(set, graphNodeMaxEdgeCount),
-    _locusIndex(locusIndex),
+    _opt(opt),
     _isInit(false)
 {
-    assert(_locusIndex<set.size());
+    assert(_opt.locusIndex<set.size());
+}
+
+
+
+/// this filter enables a special option to filter down to all edges connected to
+/// a single node or only the edge connecting two nodes:
+static
+bool
+isEdgeFiltered(
+    const LocusEdgeOptions& opt,
+    const EdgeInfo& edge)
+{
+    if (! opt.isNodeIndex1) return false;
+    if (opt.isNodeIndex2)
+    {
+        const bool isMatch(
+            (edge.nodeIndex1 == opt.nodeIndex1) &&
+            (edge.nodeIndex2 == opt.nodeIndex2));
+        const bool isSwapMatch(
+            (edge.nodeIndex2 == opt.nodeIndex1) &&
+            (edge.nodeIndex1 == opt.nodeIndex2));
+
+        return (! (isMatch || isSwapMatch));
+    }
+    else
+    {
+        const bool isMatch
+        (edge.nodeIndex1 == opt.nodeIndex1);
+        const bool isSwapMatch
+        (edge.nodeIndex2 == opt.nodeIndex1);
+
+        return (! (isMatch || isSwapMatch));
+    }
+    return false;
 }
 
 
@@ -57,7 +91,7 @@ advanceEdge()
     }
     else
     {
-        _edge.locusIndex=_locusIndex;
+        _edge.locusIndex=_opt.locusIndex;
         _edge.nodeIndex1=0;
         _edge.nodeIndex2=0;
         _isInit=true;
@@ -75,6 +109,9 @@ advanceEdge()
         for (; edgeIter != edgeIterEnd; ++edgeIter)
         {
             _edge.nodeIndex2 = edgeIter->first;
+
+            // check whether this edge is in the requested set:
+            if (isEdgeFiltered(_opt,_edge)) continue;
 
             // check whether this is a noise edge that we skip:
             if (isEdgeFilterNode1)
@@ -102,8 +139,8 @@ next()
     log_os << "EDGERL: start\n";
 #endif
 
-    if (_edge.locusIndex > _locusIndex) return false;
+    if (_edge.locusIndex > _opt.locusIndex) return false;
     advanceEdge();
 
-    return (_edge.locusIndex == _locusIndex);
+    return (_edge.locusIndex == _opt.locusIndex);
 }

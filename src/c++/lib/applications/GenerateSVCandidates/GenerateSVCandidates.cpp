@@ -74,7 +74,7 @@ edgeRFactory(
 {
     if (opt.isLocusIndex)
     {
-        return (new EdgeRetrieverLocus(set, opt.graphNodeMaxEdgeCount, opt.locusIndex));
+        return (new EdgeRetrieverLocus(set, opt.graphNodeMaxEdgeCount, opt.locusOpt));
     }
     else
     {
@@ -277,30 +277,6 @@ runGSC(
     {
         const EdgeInfo& edge(edger.getEdge());
         truthTracker.addEdge(edge);
-
-        if (opt.edgeOpt.isNodeIndex1)
-        {
-            if (opt.edgeOpt.isNodeIndex2)
-            {
-                const bool isMatch(
-                    (edge.nodeIndex1 == opt.edgeOpt.nodeIndex1) &&
-                    (edge.nodeIndex2 == opt.edgeOpt.nodeIndex2));
-                const bool isSwapMatch(
-                    (edge.nodeIndex2 == opt.edgeOpt.nodeIndex1) &&
-                    (edge.nodeIndex1 == opt.edgeOpt.nodeIndex2));
-
-                if (! (isMatch || isSwapMatch)) continue;
-            }
-            else
-            {
-                const bool isMatch
-                (edge.nodeIndex1 == opt.edgeOpt.nodeIndex1);
-                const bool isSwapMatch
-                (edge.nodeIndex2 == opt.edgeOpt.nodeIndex1);
-
-                if (! (isMatch || isSwapMatch)) continue;
-            }
-        }
 
         clock_t startTime(0);
         if (opt.isVerbose)
