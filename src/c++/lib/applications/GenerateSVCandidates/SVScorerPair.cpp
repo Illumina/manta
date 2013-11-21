@@ -678,9 +678,8 @@ getFragProb(
     log_os << logtag << "frag1size,frag2size: " << frag1Size << " " << frag2Size << "\n";
 #endif
 
-    if (frag1Size < std::min(pairOpt.minFragSupport, static_cast<pos_t>(frag1.readSize))) return;
-    if (frag2Size < std::min(pairOpt.minFragSupport, static_cast<pos_t>(frag2.readSize))) return;
-
+    if (frag1Size < pairOpt.minFragSupport) return;
+    if (frag2Size < pairOpt.minFragSupport) return;
 
     fragProb=fragDistro.cdf(frag1Size+frag2Size);
 #ifdef DEBUG_PAIR
@@ -688,9 +687,13 @@ getFragProb(
 #endif
     fragProb = std::min(fragProb, (1-fragProb));
 
-    /// TODO: any cases where fragProb is 0 should be some soft of mulit-SV error artifact (like a large CIGAR indel in one of the reads of the pair)
-    ///     try to improve this case -- ideally we can account for such events.
-    if (fragProb > 0.)
+    /// TODO: any cases where fragProb is 0 or extremely small should be some
+    /// sort of mulit-SV error artifact (like a large CIGAR indel in one of the
+    /// reads of the pair) try to improve this case -- ideally we can account
+    /// for such events.
+    ///
+    static const float minFragProb(0.0001);
+    if (fragProb >= minFragProb)
     {
         isFragSupportSV = true;
     }
