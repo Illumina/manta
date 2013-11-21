@@ -201,6 +201,7 @@ operator<<(
        << indent << "bp2SpanReadCount: " << sai.bp2SpanReadCount << '\n'
        << indent << "spanPairCount: " << sai.spanPairCount << '\n'
        << indent << "confidentSpanningPairCount: " << sai.confidentSpanningPairCount << '\n'
+       << indent << "confidentSemiMappedSpanningPairCount: " << sai.confidentSemiMappedSpanningPairCount << '\n'
        << indent << "splitReadCount: " << sai.splitReadCount << '\n'
        << indent << "confidentSplitReadCount: " << sai.confidentSplitReadCount << '\n'
        ;

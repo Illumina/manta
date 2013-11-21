@@ -238,9 +238,6 @@ addConservativeSpanningPairSupport(
 
     if (! fragev.isAnySpanningPairSupport()) return;
 
-    /// high-quality spanning support relies on read1 and read2 mapping well:
-    if (! (fragev.read1.isObservedAnchor() && fragev.read2.isObservedAnchor())) return;
-
     float altLhood(getSpanningPairAlleleLhood(fragev.alt));
     float refLhood(getSpanningPairAlleleLhood(fragev.ref));
 
@@ -255,20 +252,24 @@ addConservativeSpanningPairSupport(
         BOOST_THROW_EXCEPTION(LogicException(oss.str()));
     }
 
+    const bool isFullyMapped(fragev.read1.isObservedAnchor() && fragev.read2.isObservedAnchor());
+
     // convert to normalized prob:
     const float sum(altLhood+refLhood);
     if (altLhood > refLhood)
     {
         if ((altLhood/sum) > pairSupportProb)
         {
-            sampleBaseInfo.alt.confidentSpanningPairCount++;
+            sampleBaseInfo.alt.confidentSemiMappedSpanningPairCount++;
+            if (isFullyMapped) sampleBaseInfo.alt.confidentSpanningPairCount++;
         }
     }
     else
     {
         if ((refLhood/sum) > pairSupportProb)
         {
-            sampleBaseInfo.ref.confidentSpanningPairCount++;
+            sampleBaseInfo.ref.confidentSemiMappedSpanningPairCount++;
+            if (isFullyMapped) sampleBaseInfo.ref.confidentSpanningPairCount++;
         }
     }
 }

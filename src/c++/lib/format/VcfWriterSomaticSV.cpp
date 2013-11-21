@@ -113,6 +113,11 @@ modifySample(
     values[1] = str( boost::format("%i,%i") % baseInfo.tumor.ref.confidentSpanningPairCount % baseInfo.tumor.alt.confidentSpanningPairCount);
     sampletags.push_back(std::make_pair(pairTag,values));
 
+    static const std::string pairSmTag("PRSM");
+    values[0] = str( boost::format("%i,%i") % baseInfo.normal.ref.confidentSemiMappedSpanningPairCount % baseInfo.normal.alt.confidentSemiMappedSpanningPairCount);
+    values[1] = str( boost::format("%i,%i") % baseInfo.tumor.ref.confidentSemiMappedSpanningPairCount % baseInfo.tumor.alt.confidentSemiMappedSpanningPairCount);
+    sampletags.push_back(std::make_pair(pairSmTag,values));
+
     if (sv.isImprecise()) return;
 
     static const std::string srTag("SR");

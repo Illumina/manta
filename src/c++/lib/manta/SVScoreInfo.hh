@@ -99,6 +99,7 @@ struct SVSampleAlleleInfo
         bp2SpanReadCount(0),
         spanPairCount(0),
         confidentSpanningPairCount(0),
+        confidentSemiMappedSpanningPairCount(0),
         splitReadCount(0),
         splitReadEvidence(0),
         splitReadMapQ(0),
@@ -112,6 +113,7 @@ struct SVSampleAlleleInfo
         bp2SpanReadCount = 0;
         spanPairCount = 0;
         confidentSpanningPairCount = 0;
+        confidentSemiMappedSpanningPairCount = 0;
         splitReadCount = 0;
         splitReadEvidence = 0;
         splitReadMapQ = 0;
@@ -124,6 +126,7 @@ struct SVSampleAlleleInfo
     unsigned spanPairCount;
 
     unsigned confidentSpanningPairCount;  ///< pairs where both reads are mapped and we've successfully looked up a fragment prob of 0.01 or more
+    unsigned confidentSemiMappedSpanningPairCount; ///< pairs where at least one read is mapped and we've successfully looked up a fragment prob of 0.01 or more
 
     // allele split support
     unsigned splitReadCount;

@@ -90,6 +90,14 @@ struct SVCandidateSetReadPair
     SVCandidateSetReadPair()
     {}
 
+    const char*
+    qname() const
+    {
+        if      (read1.isSet()) return read1.bamrec.qname();
+        else if (read2.isSet()) return read2.bamrec.qname();
+        return NULL;
+    }
+
     std::vector<SVPairAssociation> svLink; ///< which SVs from the set are this molecule associated with?
     SVCandidateSetRead read1;
     SVCandidateSetRead read2;

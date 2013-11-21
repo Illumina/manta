@@ -101,7 +101,7 @@ add(const bam_record& bamRead,
     }
     if (targetReadPtr->isSet())
     {
-        if (isExpectRepeat || bamRead.is_supplement()) return;
+        if (isExpectRepeat) return;
 
         std::ostringstream oss;
         oss << "Unexpected read name collision.\n"
