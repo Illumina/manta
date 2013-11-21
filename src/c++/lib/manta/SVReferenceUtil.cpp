@@ -63,8 +63,19 @@ getBpReferenceInterval(
 
     const pos_t chromSize(static_cast<pos_t>(chromInfo.length));
 
-    assert((bpInterval.range.begin_pos() <= chromSize) && "SV range starts after the end of the chromosome");
-    assert((bpInterval.range.end_pos() >= 0) && "SV range ends before the start of the chromosome");
+    assert(range.begin_pos() <= range.end_pos());
+    if((bpInterval.range.begin_pos() >= chromSize) || (bpInterval.range.end_pos() <= 0))
+    {
+        using namespace illumina::common;
+
+        std::ostringstream oss;
+        oss << __FUNCTION__ << ": requested reference range has no overlap with chromosome\n"
+            << "\tinterval: " << bpInterval
+            << "\tchromSize: " << chromSize
+            << "\n";
+
+        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+    }
 
     pos_t beginPos(bpInterval.range.begin_pos()-extraRefEdgeSize);
     if (beginPos < 0)
