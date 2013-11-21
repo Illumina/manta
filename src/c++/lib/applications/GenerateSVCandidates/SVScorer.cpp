@@ -737,8 +737,8 @@ scoreSomaticSV(
         {
             const bool lowPairSupport(baseInfo.tumor.alt.confidentSpanningPairCount < 6);
             const bool lowSplitSupport(baseInfo.tumor.alt.confidentSplitReadCount < 6);
-            const bool lowSingleSupport((baseInfo.tumor.alt.bp1SpanReadCount < 14) || (baseInfo.tumor.alt.bp2SpanReadCount < 14));
-            const bool highSingleContam((baseInfo.normal.alt.bp1SpanReadCount > 1) || (baseInfo.normal.alt.bp2SpanReadCount > 1));
+            const bool lowSingleSupport(baseInfo.tumor.alt.confidentSemiMappedSpanningPairCount < 14);
+            const bool highSingleContam(baseInfo.normal.alt.confidentSemiMappedSpanningPairCount > 1);
 
             if (isSmall)
             {
@@ -762,17 +762,9 @@ scoreSomaticSV(
                     isNonzeroSomaticQuality=false;
                 }
             }
-            if (baseInfo.normal.alt.bp1SpanReadCount)
+            if (baseInfo.normal.alt.confidentSemiMappedSpanningPairCount)
             {
-                const double ratio(static_cast<double>(baseInfo.tumor.alt.bp1SpanReadCount)/static_cast<double>(baseInfo.normal.alt.bp1SpanReadCount));
-                if (ratio<9)
-                {
-                    isNonzeroSomaticQuality=false;
-                }
-            }
-            if (baseInfo.normal.alt.bp2SpanReadCount)
-            {
-                const double ratio(static_cast<double>(baseInfo.tumor.alt.bp2SpanReadCount)/static_cast<double>(baseInfo.normal.alt.bp2SpanReadCount));
+                const double ratio(static_cast<double>(baseInfo.tumor.alt.confidentSemiMappedSpanningPairCount)/static_cast<double>(baseInfo.normal.alt.confidentSemiMappedSpanningPairCount));
                 if (ratio<9)
                 {
                     isNonzeroSomaticQuality=false;
