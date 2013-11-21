@@ -725,6 +725,9 @@ processExistingAltPairInfo(
         const SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
         BOOST_FOREACH(const SVCandidateSetReadPair& pair, svDataGroup)
         {
+            /// at least one read of the pair must have been found:
+            assert(pair.read1.isSet() || pair.read2.isSet());
+
             // is this read pair associated with this candidateIndex? (each read pair can be associated with multiple candidates)
             unsigned linkIndex(0);
             {
@@ -741,26 +744,17 @@ processExistingAltPairInfo(
 
                 if (! isIndexFound) continue;
             }
+            assert(pair.svLink.size() > linkIndex);
 
-            /// do we assert (strict) or skip (non-strict) on non-matching pair/sv associations?
-            bool isStrictMatch(true);
-            if (pair.svLink.size() > 1)
-            {
-                if (! SVEvidenceType::isPairType(pair.svLink[linkIndex].evtype)) isStrictMatch=false;
-            }
+            const bool isPairType(SVEvidenceType::isPairType(pair.svLink[linkIndex].evtype));
 
-            if (! (pair.read1.isSet() || pair.read2.isSet())) continue;
+            /// if the evidence comes from a read pair observation, a very strict matching criteria
+            /// is enforced between this pair and the SV candidate. If the read pair association comes from
+            /// a CIGAR string for instance, the pair will not necessarily support the candidate
+            ///
+            const bool isStrictMatch(isPairType);
 
-            std::string qname;
-
-            if (pair.read1.isSet())
-            {
-                qname = pair.read1.bamrec.qname();
-            }
-            else
-            {
-                qname = pair.read2.bamrec.qname();
-            }
+            const std::string qname(pair.qname());
 
 #ifdef DEBUG_PAIR
             static const std::string logtag("processExistingAltPairInfo: ");
@@ -772,28 +766,25 @@ processExistingAltPairInfo(
 
             if (pair.read1.isSet())
             {
-                sample.alt.bp1SpanReadCount += 1;
+                if (isPairType) sample.alt.bp1SpanReadCount += 1;
                 setReadEvidence(minMapQ, pair.read1.bamrec, fragment.read1);
             }
 
             if (pair.read2.isSet())
             {
-                sample.alt.bp2SpanReadCount += 1;
+                if (isPairType) sample.alt.bp2SpanReadCount += 1;
                 setReadEvidence(minMapQ, pair.read2.bamrec, fragment.read2);
             }
 
             if (pair.read1.isSet() && pair.read2.isSet())
             {
-                sample.alt.spanPairCount += 1;
+                if (isPairType) sample.alt.spanPairCount += 1;
             }
 
             /// get fragment prob, and possibly withdraw fragment support based on refined sv breakend coordinates:
             bool isFragSupportSV(false);
             float fragProb(0);
-            if (pair.read1.isSet() && pair.read2.isSet())
-            {
-                getFragProb(pairOpt, sv, pair, fragDistro, isStrictMatch, isFragSupportSV, fragProb);
-            }
+            getFragProb(pairOpt, sv, pair, fragDistro, isStrictMatch, isFragSupportSV, fragProb);
 
             if (! isFragSupportSV) continue;
 
