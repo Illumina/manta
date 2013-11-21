@@ -28,9 +28,6 @@
 #include <iostream>
 
 
-
-static const bool isExcludeUnpaired(true);
-
 //#define DEBUG_SVDATA
 
 #ifdef DEBUG_SVDATA
@@ -299,15 +296,8 @@ checkResult(
         const unsigned dataObsPairCount(pairCounts[svIndex]);
 
         bool isCountException(false);
-        if (isExcludeUnpaired)
-        {
-            if (svObsReadCount > dataObsReadCount) isCountException=true;
-        }
-        else
-        {
-            if (svObsReadCount != dataObsReadCount) isCountException=true;
-        }
-        if (svObsPairCount != dataObsPairCount) isCountException=true;
+        if      (svObsReadCount != dataObsReadCount) isCountException=true;
+        else if (svObsPairCount != dataObsPairCount) isCountException=true;
 
         if (isCountException)
         {
@@ -488,7 +478,6 @@ void
 assignPairObservationsToSVCandidates(
     const SVLocusNode& node1,
     const SVLocusNode& node2,
-    const bool isExcludePairType,
     const std::vector<SVObservation>& readCandidates,
     SVCandidateSetReadPair& pair,
     std::vector<SVCandidate>& svs)
@@ -505,16 +494,6 @@ assignPairObservationsToSVCandidates(
 #ifdef DEBUG_SVDATA
         log_os << logtag << "Starting assignment for read cand: " << readCand << "\n";
 #endif
-        if (isExcludePairType)
-        {
-            if (SVEvidenceType::isPairType(readCand.evtype))
-            {
-#ifdef DEBUG_SVDATA
-                log_os << logtag << "Pair type exclusion\n";
-#endif
-                continue;
-            }
-        }
 
         {
             // remove candidates which don't match the current edge:
@@ -647,14 +626,7 @@ getCandidatesFromData(
             }
 #endif
 
-            bool isExcludePairType(false);
-            if (isExcludeUnpaired)
-            {
-                // in this case both sides of the read pair need to be observed (and not filtered for MAPQ, etc)
-                if (! remoteReadPtr->isSet()) isExcludePairType=true;
-            }
-
-            assignPairObservationsToSVCandidates(node1,node2,isExcludePairType, readCandidates, pair, svs);
+            assignPairObservationsToSVCandidates(node1, node2, readCandidates, pair, svs);
         }
     }
 
