@@ -456,6 +456,8 @@ getFragInfo(
 
 
 
+/// fill in SpanReadInfo as accurately as possible depending on
+/// whether one or both of the read pair's bam records have been found:
 static
 void
 getFragInfo(
@@ -494,6 +496,11 @@ getFragInfo(
 
 
 
+/// read pairs are abstracted to two terminals for the purpose of
+/// fragment size estimation in the context of the alternate allele:
+/// tid+pos represent one of the two extreme ends of the fragment in
+/// genomic chromosome+position coordinates
+///
 struct SpanTerminal
 {
     SpanTerminal() :
@@ -525,6 +532,7 @@ operator<<(std::ostream& os, const SpanTerminal& st)
 
 
 
+/// convert SpanReadInfo to SpanTerminal
 static
 void
 getTerminal(
@@ -652,10 +660,10 @@ getFragProb(
             using namespace illumina::common;
 
             std::ostringstream oss;
-            oss << "ERROR: " << errorMsg  << "\n"
+            oss << "ERROR: " << errorMsg  << '\n'
                 << "\tcandidate-sv: " << sv
                 << "\tread-pair: " << pair
-                << "\n";
+                << '\n';
             BOOST_THROW_EXCEPTION(LogicException(oss.str()));
         }
     }
