@@ -33,14 +33,14 @@
 
 namespace FragmentSizeType
 {
-    enum index_t
-    {
-        COMPRESSED,
-        NORMAL,
-        VERYCLOSE,
-        CLOSE,
-        DISTANT
-    };
+enum index_t
+{
+    COMPRESSED,
+    NORMAL,
+    VERYCLOSE,
+    CLOSE,
+    DISTANT
+};
 }
 
 

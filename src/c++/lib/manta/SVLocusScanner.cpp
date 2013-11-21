@@ -45,38 +45,38 @@
 ///
 namespace FragmentSizeType
 {
-    static const float closePairFactor(4); ///< fragments within this factor of the minimum size cutoff are treated as 'close' pairs and receive a modified evidence count
-    static const float veryClosePairFactor(1.5); ///< fragments within this factor of the minimum size cutoff are treated as 'reallyClose' pairs and receive a modified evidence count
-    static const float maxNormalFactor(1.5);
+static const float closePairFactor(4); ///< fragments within this factor of the minimum size cutoff are treated as 'close' pairs and receive a modified evidence count
+static const float veryClosePairFactor(1.5); ///< fragments within this factor of the minimum size cutoff are treated as 'reallyClose' pairs and receive a modified evidence count
+static const float maxNormalFactor(1.5);
 
-    static
-    index_t
-    classifySize(
-        const SVLocusScanner::CachedReadGroupStats& rgStats,
-        const int fragmentSize)
+static
+index_t
+classifySize(
+    const SVLocusScanner::CachedReadGroupStats& rgStats,
+    const int fragmentSize)
+{
+    if (fragmentSize < rgStats.properPair.min) return COMPRESSED;
+    if (fragmentSize > rgStats.properPair.max)
     {
-        if (fragmentSize < rgStats.properPair.min) return COMPRESSED;
-        if (fragmentSize > rgStats.properPair.max)
-        {
-            if (fragmentSize < rgStats.minDistantFragmentSize) return CLOSE;
-            return DISTANT;
-        }
-        return NORMAL;
+        if (fragmentSize < rgStats.minDistantFragmentSize) return CLOSE;
+        return DISTANT;
     }
+    return NORMAL;
+}
 
-    static
-    bool
-    isLarge(const index_t i)
+static
+bool
+isLarge(const index_t i)
+{
+    switch (i)
     {
-        switch(i)
-        {
-        case NORMAL:
-        case COMPRESSED:
-            return false;
-        default:
-            return true;
-        }
+    case NORMAL:
+    case COMPRESSED:
+        return false;
+    default:
+        return true;
     }
+}
 }
 
 
@@ -101,7 +101,8 @@ struct TrackedCandidates
     }
 
     unsigned
-    size() const {
+    size() const
+    {
         return data.size();
     }
 
@@ -676,8 +677,8 @@ getSVCandidatesFromPair(
     // set state and interval for each breakend:
     {
         const pos_t breakendSize(std::max(
-            static_cast<pos_t>(opt.minPairBreakendSize),
-            static_cast<pos_t>(rstats.breakendRegion.max-totalNoninsertSize)));
+                                     static_cast<pos_t>(opt.minPairBreakendSize),
+                                     static_cast<pos_t>(rstats.breakendRegion.max-totalNoninsertSize)));
 
         localBreakend.interval.tid = (localRead.target_id());
         // expected breakpoint range is from the end of the localRead alignment to the (probabilistic) end of the fragment:

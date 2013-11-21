@@ -600,8 +600,8 @@ void TruthTracker::addObservation(const SVObservation& svObs)
             {
                 ObsLogMapIterBoolPr iterBoolPr
                     = _obsLogMap.
-                    insert(ObsLogMapEle(edgeInfoRecord,
-                                         EdgeLog(_edgeLogMap.size(), edge)));
+                      insert(ObsLogMapEle(edgeInfoRecord,
+                                          EdgeLog(_edgeLogMap.size(), edge)));
                 assert(iterBoolPr.second); // edge should be unique -> added
                 _lastAddedObsLogMapEleIter = iterBoolPr.first;
                 _obsLogMapIndexVec.push_back(_lastAddedObsLogMapEleIter);
