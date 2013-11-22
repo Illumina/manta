@@ -21,6 +21,15 @@ optionalUngzip() {
     fi
 }
 
+filterHeader() {
+    awk '!/^#/'
+}
+
+stripMantaIds() {
+    sed "s/Manta.*:[0-9]*:[0-9]*:[0-9]*:[0-9]*:[0-9]*//g"
+}
+
+
 #
 # optionally ungzip, then remove header and remove IDs from each vcf
 #
@@ -29,15 +38,15 @@ stripVcf() {
 
     # print input filename so that it's easy to figure out the diff polarity and see global lineCount diff:
     echo "$scriptName filteredVcf: $1"
-    lineCount=$(optionalUngzip $1 | wc -l)
-    echo "$scriptName lineCount: $lineCount"
+    lineCount=$(optionalUngzip $1 | filterHeader | wc -l)
+    echo "$scriptName variantLineCount: $lineCount"
 
     # extra spaces keep the filename/lineCount diff above from attaching to a change on line 1 of the file:
     echo -e "\n\n\n"
 
     optionalUngzip $1 |\
-    awk '!/^#/' |\
-    sed "s/Manta.*:[0-9]*:[0-9]*:[0-9]*:[0-9]*:[0-9]*//g"
+    filterHeader |\
+    stripMantaIds
 }
 
 #
