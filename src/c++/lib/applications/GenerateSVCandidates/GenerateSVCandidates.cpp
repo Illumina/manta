@@ -304,6 +304,9 @@ runGSC(
             {
                 truthTracker.addCandSV();
 
+                /// don't consider candidates created from only semi-mapped read pairs:
+                if (candidateSV.bp1.isLocalOnly() && candidateSV.bp2.isLocalOnly()) continue;
+
                 if (opt.isVerbose)
                 {
                     log_os << logtag << " Starting analysis of low-resolution candidate: " << candidateSV.candidateIndex << "\n";

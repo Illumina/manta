@@ -268,7 +268,6 @@ checkResult(
         {
             BOOST_FOREACH(const SVPairAssociation& sva, pair.svLink)
             {
-
                 if (sva.index>=svCount)
                 {
                     std::ostringstream oss;
@@ -528,22 +527,38 @@ assignPairObservationsToSVCandidates(
         {
             if (sv.isIntersect(readCand))
             {
-#ifdef DEBUG_SVDATA
-                log_os << logtag << "Adding to svIndex: " << svIndex << " match_sv: " << sv << "\n";
+#if 0
+                /// keep candidates formed by semi-mapped reads in separate groups,
+                /// these will only be used to augment the evidence of a candidate created with
+                /// regular pair evidence -- all purely local candidates will be thrown away.
+                ///
+                /// the separation starts early (ie. here) because we might not want to use the local-pair
+                /// regions... this will take some trial and error
+                ///
+                const bool isCandLocalOnly(readCand.evtype == SVEvidenceType::LOCAL_PAIR);
+                const bool isSVLocalOnly(sv.bp1.isLocalPairOnly() && sv.bp2.isLocalPairOnly());
+
+                if (isCandLocalOnly == isSVLocalOnly)
 #endif
-                if (isSpanning)
                 {
-                    // don't store read pairs unless there's a specific hypothesis --
-                    // if there is no hypothesis (small assembly cases), we'll be
-                    // going back through the bam region during assembly anyway:
-                    //
-                    pair.svLink.push_back(SVPairAssociation(svIndex,readCand.evtype));
+
+    #ifdef DEBUG_SVDATA
+                    log_os << logtag << "Adding to svIndex: " << svIndex << " match_sv: " << sv << "\n";
+    #endif
+                    if (isSpanning)
+                    {
+                        // don't store read pairs unless there's a specific hypothesis --
+                        // if there is no hypothesis (small assembly cases (thus "! isSpanning")), we'll be
+                        // going back through the bam region during assembly anyway:
+                        //
+                        pair.svLink.push_back(SVPairAssociation(svIndex,readCand.evtype));
+                    }
+
+                    sv.merge(readCand);
+
+                    isMatched=true;
+                    break;
                 }
-
-                sv.merge(readCand);
-
-                isMatched=true;
-                break;
             }
             svIndex++;
         }

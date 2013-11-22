@@ -118,6 +118,17 @@ struct SVBreakendLowResEvidence
         return _evidence[i];
     }
 
+    unsigned
+    getTotal() const
+    {
+        unsigned sum(0);
+        for (int i(0); i<SVEvidenceType::SIZE; ++i)
+        {
+            sum += _evidence[i];
+        }
+        return sum;
+    }
+
     void
     clear()
     {
@@ -285,6 +296,20 @@ struct SVBreakend
     getLocalPairCount() const
     {
         return lowresEvidence.getVal(SVEvidenceType::LOCAL_PAIR);
+    }
+
+    /// return true if there is pair evidence, but it is only local
+    bool
+    isLocalPairOnly() const
+    {
+        return ((getLocalPairCount() > 0) && (getPairCount() == 0));
+    }
+
+    /// return true if all evidence for this breakend is local
+    bool
+    isLocalOnly() const
+    {
+        return (getLocalPairCount() == lowresEvidence.getTotal());
     }
 
     unsigned
