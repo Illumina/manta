@@ -64,7 +64,7 @@ getBpReferenceInterval(
     const pos_t chromSize(static_cast<pos_t>(chromInfo.length));
 
     assert(bpInterval.range.begin_pos() <= bpInterval.range.end_pos());
-    if((bpInterval.range.begin_pos() >= chromSize) || (bpInterval.range.end_pos() <= 0))
+    if ((bpInterval.range.begin_pos() >= chromSize) || (bpInterval.range.end_pos() <= 0))
     {
         using namespace illumina::common;
 

@@ -542,9 +542,9 @@ assignPairObservationsToSVCandidates(
 #endif
                 {
 
-    #ifdef DEBUG_SVDATA
+#ifdef DEBUG_SVDATA
                     log_os << logtag << "Adding to svIndex: " << svIndex << " match_sv: " << sv << "\n";
-    #endif
+#endif
                     if (isSpanning)
                     {
                         // don't store read pairs unless there's a specific hypothesis --
