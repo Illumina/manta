@@ -21,9 +21,21 @@
 
 
 
+void
+EdgeInfo::
+write(std::ostream& os) const
+{
+    static const char sep(':');
+    os << locusIndex << sep << nodeIndex1 << sep << nodeIndex2;
+}
+
+
+
 std::ostream&
 operator<<(std::ostream& os, const EdgeInfo& ei)
 {
-    os << "edgeinfo locus:node1:node2: " << ei.locusIndex << ':' << ei.nodeIndex1 << ':' << ei.nodeIndex2 << "\n";
+    os << "edgeinfo locus:node1:node2: ";
+    ei.write(os);
+    os << '\n';
     return os;
 }

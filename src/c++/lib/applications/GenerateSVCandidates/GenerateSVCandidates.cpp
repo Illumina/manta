@@ -18,6 +18,7 @@
 #include "GenerateSVCandidates.hh"
 #include "EdgeRetrieverBin.hh"
 #include "EdgeRetrieverLocus.hh"
+#include "EdgeRuntimeTracker.hh"
 #include "GSCOptions.hh"
 #include "SVCandidateAssemblyRefiner.hh"
 #include "SVFinder.hh"
@@ -40,7 +41,6 @@
 
 #include <iostream>
 #include <memory>
-#include <time.h>
 
 //#define DEBUG_GSV
 
@@ -271,19 +271,20 @@ runGSC(
         log_os << logtag << " " << cset.header << "\n";
     }
 
+    EdgeRuntimeTracker edgeTrack(opt.edgeRuntimeFilename);
     const std::map<std::string, int32_t>& chromToIndex(cset.header.chrom_to_index);
 
     while (edger.next())
     {
         const EdgeInfo& edge(edger.getEdge());
-        truthTracker.addEdge(edge);
 
-        clock_t startTime(0);
+        truthTracker.addEdge(edge);
+        edgeTrack.start(edge);
+
         if (opt.isVerbose)
         {
             log_os << logtag << " starting analysis of edge: ";
             dumpEdgeInfo(edge,cset,log_os);
-            startTime = clock();
         }
 
         try
@@ -359,12 +360,10 @@ runGSC(
             throw;
         }
 
+        edgeTrack.stop();
         if (opt.isVerbose)
         {
-            static const double clockFactor(1./static_cast<double>(CLOCKS_PER_SEC));
-
-            const double elapsedSec(( clock() - startTime )*clockFactor);
-            log_os << logtag << " Processing this edge took " << elapsedSec << " seconds.\n";
+            log_os << logtag << " Processing this edge took " << edgeTrack.getLastEdgeTime() << " seconds.\n";
         }
     }
 

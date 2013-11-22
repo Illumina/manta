@@ -30,6 +30,10 @@ struct EdgeInfo
         nodeIndex2(0)
     {}
 
+    /// minimal ascii representation:
+    void
+    write(std::ostream& os) const;
+
     LocusIndexType locusIndex;
     NodeIndexType nodeIndex1;
     NodeIndexType nodeIndex2;

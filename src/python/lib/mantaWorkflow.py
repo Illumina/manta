@@ -235,6 +235,8 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
     candidateVcfPaths = []
     diploidVcfPaths = []
     somaticVcfPaths = []
+    
+    edgeLogPaths = []
 
     for binId in range(self.params.nonlocalWorkBins) :
         binStr = str(binId).zfill(4)
@@ -242,6 +244,8 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         diploidVcfPaths.append(self.paths.getHyGenDiploidPath(binStr))
         if isSomatic :
             somaticVcfPaths.append(self.paths.getHyGenSomaticPath(binStr))
+        
+        edgeLogPaths.append(self.paths.getHyGenEdgeLogPath(binStr))
 
         hygenCmd = [ self.params.mantaHyGenBin ]
         hygenCmd.extend(["--align-stats",statsPath])
@@ -259,6 +263,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         if self.params.isHighDepthFilter :
             hygenCmd.extend(["--chrom-depth", self.paths.getChromDepth()])
 
+        hygenCmd.extend(["--edge-runtime-log", edgeLogPaths[-1]])
 
         for bamPath in self.params.normalBamList :
             hygenCmd.extend(["--align-file", bamPath])
@@ -289,6 +294,11 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
     sortVcfs(candidateVcfPaths, self.paths.getSortedCandidatePath(), "sortCandidateSV")
     sortVcfs(diploidVcfPaths, self.paths.getSortedDiploidPath(), "sortDiploidSV")
     sortVcfs(somaticVcfPaths, self.paths.getSortedSomaticPath(), "sortSomaticSV")
+
+    # sort edge logs:
+    edgeSortLable=preJoin(taskPrefix,"sortEdgeLogs")
+    edgeSortComamnd="sort -nk2 " + " ".join(edgeLogPaths) + " > " + self.paths.getSortedEdgeLogPath()
+    self.addTask(edgeSortLabel, edgeSortCmd, dependencies=hygenTasks, isForceLocal=True)
 
     return nextStepWait
 
@@ -334,6 +344,12 @@ class PathInfo:
 
     def getSortedSomaticPath(self) :
         return os.path.join(self.params.variantsDir,"somaticSV.vcf.gz")
+
+    def getHyGenEdgeLogPath(self, binStr) :
+        return os.path.join(self.getHyGenDir(),"edge.runtime.log.%s.txt" % (binStr))
+
+    def getSortedEdgeLogPath(self) :
+        return os.path.join(self.params.workDir,"edge.runtime.log.txt")
 
     def getGraphStatsPath(self) :
         return os.path.join(self.params.statsDir,"svLocusGraphStats.tsv")

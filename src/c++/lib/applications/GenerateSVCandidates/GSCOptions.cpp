@@ -89,6 +89,8 @@ parseGSCOptions(
      "fasta reference sequence (required)")
     ("truth-vcf", po::value(&opt.truthVcfFilename),
      "optional truth VCF file (for testing)")
+    ("edge-runtime-log", po::value(&opt.edgeRuntimeFilename),
+     "optionally log edge runtime to this file")
     ("candidate-output-file", po::value(&opt.candidateOutputFilename),
      "Write SV candidates to file (required)")
     ("diploid-output-file", po::value(&opt.diploidOutputFilename),
