@@ -33,6 +33,14 @@ isRefRegionOverlap(
     const SVCandidate& sv);
 
 
+/// test whether the interval intersects a reference contig at all
+///
+bool
+isRefRegionValid(
+    const bam_header_info& header,
+    const GenomeInterval& interval);
+
+
 /// given a genome interval, attempt to add an extra buffer
 /// to the interval and return the reference sequence corresponding
 /// to this interval

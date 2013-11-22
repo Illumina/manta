@@ -550,6 +550,12 @@ getJumpAssembly(
         }
     }
 
+    /// there's always a small chance that our region could fall completely off the edge of the reference.
+    /// b/c of circular genomes, this can't be treated as a bug -- it's a legitimate breakend hypothesis
+    /// that we just aren't setup to handle correctly:
+    if(! isRefRegionValid(_header, sv.bp1.interval)) return;
+    if(! isRefRegionValid(_header, sv.bp2.interval)) return;
+
     unsigned bp1LeadingTrim;
     unsigned bp1TrailingTrim;
     unsigned bp2LeadingTrim;
@@ -757,6 +763,11 @@ getSmallSVAssembly(
 
     // min alignment context
     //const unsigned minAlignContext(4);
+
+    /// there's always a small chance that our region could fall completely off the edge of the reference.
+    /// b/c of circular genomes, this can't be treated as a bug -- it's a legitimate breakend hypothesis
+    /// that we just aren't setup to handle correctly:
+    if(! isRefRegionValid(_header, sv.bp1.interval)) return;
 
     unsigned leadingTrim;
     unsigned trailingTrim;

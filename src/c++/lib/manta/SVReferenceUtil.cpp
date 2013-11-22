@@ -63,7 +63,7 @@ getBpReferenceInterval(
 
     const pos_t chromSize(static_cast<pos_t>(chromInfo.length));
 
-    assert(range.begin_pos() <= range.end_pos());
+    assert(bpInterval.range.begin_pos() <= bpInterval.range.end_pos());
     if((bpInterval.range.begin_pos() >= chromSize) || (bpInterval.range.end_pos() <= 0))
     {
         using namespace illumina::common;
@@ -199,6 +199,20 @@ isRefRegionOverlap(
 
 
 
+bool
+isRefRegionValid(
+    const bam_header_info& header,
+    const GenomeInterval& bpInterval)
+{
+    const bam_header_info::chrom_info& chromInfo(header.chrom_data[bpInterval.tid]);
+    const pos_t chromSize(static_cast<pos_t>(chromInfo.length));
+
+    assert(bpInterval.range.begin_pos() <= bpInterval.range.end_pos());
+    return (! ((bpInterval.range.begin_pos() >= chromSize) || (bpInterval.range.end_pos() <= 0)));
+}
+
+
+
 void
 getSVReferenceSegments(
     const std::string& referenceFilename,
@@ -212,21 +226,6 @@ getSVReferenceSegments(
     unsigned& bp2LeadingTrim,
     unsigned& bp2TrailingTrim)
 {
-    GenomeInterval bp1RefInterval;
-    GenomeInterval bp2RefInterval;
-    getBpReferenceInterval(header, extraRefEdgeSize, sv.bp1.interval, bp1RefInterval, bp1LeadingTrim, bp1TrailingTrim);
-    getBpReferenceInterval(header, extraRefEdgeSize, sv.bp2.interval, bp2RefInterval, bp2LeadingTrim, bp2TrailingTrim);
-
-    // allow overlap (best performance in case of breakends in opposite orientations...:
-#if 0
-    // check that the two reference regions do not overlap
-    if (bp1RefInterval.isIntersect(bp2RefInterval))
-    {
-        // rare case, trim intervals so that they become non-overlapping:
-        trimOverlappingRange(bp1RefInterval.range, bp2RefInterval.range);
-    }
-#endif
-
-    getIntervalReferenceSegment(referenceFilename, header, bp1RefInterval, bp1ref);
-    getIntervalReferenceSegment(referenceFilename, header, bp2RefInterval, bp2ref);
+    getIntervalReferenceSegment(referenceFilename, header, extraRefEdgeSize, sv.bp1.interval, bp1ref, bp1LeadingTrim, bp1TrailingTrim);
+    getIntervalReferenceSegment(referenceFilename, header, extraRefEdgeSize, sv.bp2.interval, bp2ref, bp2LeadingTrim, bp2TrailingTrim);
 }
