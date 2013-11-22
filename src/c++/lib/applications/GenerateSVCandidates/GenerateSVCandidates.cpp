@@ -279,7 +279,7 @@ runGSC(
         const EdgeInfo& edge(edger.getEdge());
 
         truthTracker.addEdge(edge);
-        edgeTrack.start(edge);
+        edgeTrack.start();
 
         if (opt.isVerbose)
         {
@@ -360,7 +360,7 @@ runGSC(
             throw;
         }
 
-        edgeTrack.stop();
+        edgeTrack.stop(edge);
         if (opt.isVerbose)
         {
             log_os << logtag << " Processing this edge took " << edgeTrack.getLastEdgeTime() << " seconds.\n";

@@ -296,8 +296,8 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
     sortVcfs(somaticVcfPaths, self.paths.getSortedSomaticPath(), "sortSomaticSV")
 
     # sort edge logs:
-    edgeSortLable=preJoin(taskPrefix,"sortEdgeLogs")
-    edgeSortComamnd="sort -nk2 " + " ".join(edgeLogPaths) + " > " + self.paths.getSortedEdgeLogPath()
+    edgeSortLabel=preJoin(taskPrefix,"sortEdgeLogs")
+    edgeSortCmd="sort -rnk2 " + " ".join(edgeLogPaths) + " >| " + self.paths.getSortedEdgeLogPath()
     self.addTask(edgeSortLabel, edgeSortCmd, dependencies=hygenTasks, isForceLocal=True)
 
     return nextStepWait
@@ -346,10 +346,10 @@ class PathInfo:
         return os.path.join(self.params.variantsDir,"somaticSV.vcf.gz")
 
     def getHyGenEdgeLogPath(self, binStr) :
-        return os.path.join(self.getHyGenDir(),"edge.runtime.log.%s.txt" % (binStr))
+        return os.path.join(self.getHyGenDir(),"edgeRuntimeLog.%s.txt" % (binStr))
 
     def getSortedEdgeLogPath(self) :
-        return os.path.join(self.params.workDir,"edge.runtime.log.txt")
+        return os.path.join(self.params.workDir,"edgeRuntimeLog.txt")
 
     def getGraphStatsPath(self) :
         return os.path.join(self.params.statsDir,"svLocusGraphStats.tsv")

@@ -52,7 +52,6 @@ EdgeRuntimeTracker(const std::string& outputFile) :
 EdgeRuntimeTracker::
 ~EdgeRuntimeTracker()
 {
-    stop();
     if (NULL != _osPtr) delete _osPtr;
 }
 
@@ -60,22 +59,7 @@ EdgeRuntimeTracker::
 
 void
 EdgeRuntimeTracker::
-start(const EdgeInfo& edge)
-{
-    _isStart = true;
-    _startTime = clock();
-
-    if (NULL != _osPtr)
-    {
-        *_osPtr << edge << '\t';
-    }
-}
-
-
-
-void
-EdgeRuntimeTracker::
-stop()
+stop(const EdgeInfo& edge)
 {
     if (! _isStart) return;
 
@@ -83,8 +67,14 @@ stop()
     _lastTime = (( clock() - _startTime )*clockFactor);
     _isStart = false;
 
-    if (NULL != _osPtr)
+    /// the purpose of the log is to identify the most troublesome cases only, so cutoff the output at a minimum time:
+    static const double minLogTime(0.5);
+    if (_lastTime >= minLogTime)
     {
-        *_osPtr << _lastTime << '\n';
+        if (NULL != _osPtr)
+        {
+            edge.write(*_osPtr);
+            *_osPtr << '\t' << _lastTime << '\n';
+        }
     }
 }

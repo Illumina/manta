@@ -34,10 +34,14 @@ struct EdgeRuntimeTracker : private boost::noncopyable
     ~EdgeRuntimeTracker();
 
     void
-    start(const EdgeInfo& edge);
+    start()
+    {
+        _isStart = true;
+        _startTime = clock();
+    }
 
     void
-    stop();
+    stop(const EdgeInfo& edge);
 
     double
     getLastEdgeTime() const
