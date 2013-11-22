@@ -31,6 +31,14 @@ stripMantaIds() {
 
 
 #
+# Additional optional add-on filters
+#
+stripPairCounts() {
+    sed "s/PAIR_COUNT=[0-9]*//g"
+}
+
+
+#
 # optionally ungzip, then remove header and remove IDs from each vcf
 #
 stripVcf() {
