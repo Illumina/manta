@@ -486,8 +486,8 @@ consolidateOverlap(
 static
 void
 assignPairObservationsToSVCandidates(
-    const SVLocusNode& /*node1*/,
-    const SVLocusNode& /*node2*/,
+    const SVLocusNode& node1,
+    const SVLocusNode& node2,
     const bool isExcludePairType,
     const std::vector<SVObservation>& readCandidates,
     SVCandidateSetReadPair& pair,
@@ -517,14 +517,16 @@ assignPairObservationsToSVCandidates(
         }
 
         {
-            /// TODO: enable this filter once there's time to study its impact
-#if 0
             // remove candidates which don't match the current edge:
             //
             if (isComplex(readCand))
             {
+                /// TODO: enable the rest of this filter once there's time to study its impact (MANTA-75)
+                ///
+#if 0
                 if (! readCand.bp1.interval.isIntersect(node1.getInterval())) continue;
                 if (! readCand.bp1.interval.isIntersect(node2.getInterval())) continue;
+#endif
             }
             else
             {
@@ -534,7 +536,6 @@ assignPairObservationsToSVCandidates(
                                        (readCand.bp2.interval.isIntersect(node1.getInterval())));
                 if (! (isInter || isSwapInter)) continue;
             }
-#endif
         }
 
         /// spanning means there's a left and right breakend (in any order) -- note this is not the

@@ -1,3 +1,5 @@
+- MANTA-75 Better match reads to SV candidates to improve
+runtime and lower repeat observations
 - MANTA-85 Increase uniformity of tags in vcf output
 v0.13.2
 - First complete pass at installation and user guide
