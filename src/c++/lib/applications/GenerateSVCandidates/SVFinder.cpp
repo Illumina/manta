@@ -95,11 +95,14 @@ addSVNodeRead(
     // finally, check to see if the svDataGroup is full... for now, we allow a very large
     // number of reads to be stored in the hope that we never reach this limit, but just in
     // case we don't want to exhaust memory in centromere pileups, etc...
+    //
+    // Once svDataGroup is full, we keep scanning but only to find pairs for reads that
+    // have already been entered.
+    //
     static const unsigned maxDataSize(4000);
-    if (svDataGroup.size() >= maxDataSize)
+    if ((! svDataGroup.isFull()) && (svDataGroup.size() >= maxDataSize))
     {
-        svDataGroup.setIncomplete();
-        return;
+        svDataGroup.setFull();
     }
 
     //

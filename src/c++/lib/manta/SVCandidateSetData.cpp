@@ -60,7 +60,7 @@ operator<<(std::ostream& os, const SVCandidateSetReadPair& svp)
 
 
 
-SVCandidateSetReadPair&
+SVCandidateSetReadPair*
 SVCandidateSetReadPairSampleGroup::
 getReadPair(const pindex_t::key_type& key)
 {
@@ -68,13 +68,16 @@ getReadPair(const pindex_t::key_type& key)
 
     if (kiter == _pairIndex.end())
     {
+        /// don't add more pairs to the object once it's full:
+        if (isFull()) return NULL;
+
         _pairIndex[key] = _pairs.size();
         _pairs.push_back(SVCandidateSetReadPair());
-        return _pairs.back();
+        return &(_pairs.back());
     }
     else
     {
-        return _pairs[kiter->second];
+        return &(_pairs[kiter->second]);
     }
 }
 
@@ -92,7 +95,10 @@ add(const bam_record& bamRead,
     log_os << "SVDataGroup adding: " << bamRead << "\n";
 #endif
 
-    SVCandidateSetReadPair& pair(getReadPair(bamRead.qname()));
+    SVCandidateSetReadPair* pairPtr(getReadPair(bamRead.qname()));
+    if (NULL == pairPtr) return;
+
+    SVCandidateSetReadPair& pair(*pairPtr);
 
     SVCandidateSetRead* targetReadPtr(&(pair.read1));
     if (2 == bamRead.read_no())

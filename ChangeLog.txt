@@ -1,3 +1,5 @@
+- MANTA-96 Keep matching read pairs after candidate generation
+read buffer fills
 - MANTA-89 Use semi-mapped read pairs to improve germline/somatic
 classification.
 - MANTA-92 Add edge runtime performance log
