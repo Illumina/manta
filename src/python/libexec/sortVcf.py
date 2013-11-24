@@ -21,7 +21,7 @@ import re
 
 
 def getKeyVal(string,key) :
-    match=re.search("%s=([^;]*);?" % (key) ,string)
+    match=re.search("%s=([^;\t]*);?" % (key) ,string)
     if match is None : return None
     return match.group(1);
 
@@ -146,7 +146,7 @@ def main() :
         recEqualSet = []
         lastRec = None
         for vcfrec in recList :
-            rec = (vcfrec.chrom,vcfrec.pos,vcfrec.ref,vcfrec.alt)
+            rec = (vcfrec.chrom,vcfrec.pos,vcfrec.ref,vcfrec.alt,vcfrec.endPos)
             if rec != lastRec :
                 resolveRec(recEqualSet,recList2)
                 recEqualSet = []
