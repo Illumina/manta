@@ -118,6 +118,8 @@ getBreakendMaxMappedDepth(
     const pos_t centerPos(bp.interval.range.center_pos());
     const known_pos_range2 searchRange(std::max((centerPos-regionSize),0), (centerPos+regionSize));
 
+    if (searchRange.size() == 0) return 0;
+
     std::vector<unsigned> depth(searchRange.size(),0);
 
     bool isNormalFound(false);
