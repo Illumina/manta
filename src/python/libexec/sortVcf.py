@@ -53,15 +53,27 @@ class VcfRecord :
             self.endPos = int(val)
 
 
+class Constants :
+    
+    import re
+    
+    contigpat = re.compile("^##contig=<ID=([^,>]*)[,>]")
 
-def processFile(isUnique, vcfFile, isFirst, header, recList) :
+
+def processFile(isUnique, vcfFile, isFirst, chromOrder, header, recList) :
     """
     read in a vcf file
     """
+    
+    import re
 
     for line in open(vcfFile) :
         if line[0] == "#" :
-            if isFirst : header.append(line)
+            if not isFirst : continue
+            header.append(line)
+            match = re.match(Constants.contigpat,line)
+            if match is not None :
+                chromOrder.append(match.group(1))
         else :
             recList.append(VcfRecord(line, isUnique))
 
@@ -92,7 +104,7 @@ def getOptions() :
 
 
 
-def resolveRec(recEqualSet,recList) :
+def resolveRec(recEqualSet, recList) :
     """
     determine which of a set of 'equal' vcf records is the best
     right now best is a record with PASS in the filter field, and secondarily the high quality
@@ -130,13 +142,31 @@ def main() :
 
     header=[]
     recList=[]
+    chromOrder=[]
 
     isFirst=True
     for arg in args :
-        processFile(options.isUnique, arg, isFirst, header, recList)
+        processFile(options.isUnique, arg, isFirst, chromOrder, header, recList)
         isFirst-False
 
-    recList.sort(key = lambda x: (x.chrom, x.pos, x.endPos))
+    def vcfRecSortKey(x) :
+        """
+        sort vcf records for final output
+        
+        Fancy chromosome sort rules:
+        if contig records are found in the vcf header, then sort chroms in that order
+        for any chrom names not found in the header, sort them in lex order after the
+        found chrom names
+        """
+        
+        try :
+            headerOrder = chromOrder.index(x.chrom)
+        except ValueError :
+            headerOrder = size(chromOrder)
+
+        return (headerOrder, x.chrom, x.pos, x.endPos)
+
+    recList.sort(key = vcfRecSortKey)
 
     for line in header :
         outfp.write(line)
@@ -146,7 +176,7 @@ def main() :
         recEqualSet = []
         lastRec = None
         for vcfrec in recList :
-            rec = (vcfrec.chrom,vcfrec.pos,vcfrec.ref,vcfrec.alt,vcfrec.endPos)
+            rec = (vcfrec.chrom, vcfrec.pos, vcfrec.ref, vcfrec.alt, vcfrec.endPos)
             if rec != lastRec :
                 resolveRec(recEqualSet,recList2)
                 recEqualSet = []
@@ -160,3 +190,4 @@ def main() :
 
 
 main()
+
