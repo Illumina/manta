@@ -235,7 +235,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
     candidateVcfPaths = []
     diploidVcfPaths = []
     somaticVcfPaths = []
-    
+
     edgeLogPaths = []
 
     for binId in range(self.params.nonlocalWorkBins) :
@@ -244,7 +244,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         diploidVcfPaths.append(self.paths.getHyGenDiploidPath(binStr))
         if isSomatic :
             somaticVcfPaths.append(self.paths.getHyGenSomaticPath(binStr))
-        
+
         edgeLogPaths.append(self.paths.getHyGenEdgeLogPath(binStr))
 
         hygenCmd = [ self.params.mantaHyGenBin ]

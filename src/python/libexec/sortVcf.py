@@ -54,9 +54,9 @@ class VcfRecord :
 
 
 class Constants :
-    
+
     import re
-    
+
     contigpat = re.compile("^##contig=<ID=([^,>]*)[,>]")
 
 
@@ -64,7 +64,7 @@ def processFile(isUnique, vcfFile, isFirst, chromOrder, header, recList) :
     """
     read in a vcf file
     """
-    
+
     import re
 
     for line in open(vcfFile) :
@@ -152,13 +152,13 @@ def main() :
     def vcfRecSortKey(x) :
         """
         sort vcf records for final output
-        
+
         Fancy chromosome sort rules:
         if contig records are found in the vcf header, then sort chroms in that order
         for any chrom names not found in the header, sort them in lex order after the
         found chrom names
         """
-        
+
         try :
             headerOrder = chromOrder.index(x.chrom)
         except ValueError :
