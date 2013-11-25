@@ -82,19 +82,27 @@ static
 bool
 isFilterSpanningAlignment(
     const GlobalJumpAligner<int> aligner,
-    const ALIGNPATH::path_t& apath,
-    const bool isFirstRead)
+    const bool isLeadingPath,
+    const ALIGNPATH::path_t& input_apath)
 {
-    // require min length of each contig sub-alignment even after off-reference clipping:
-    static const unsigned minAlignReadLength(30);
+    static const unsigned maxQCRefSpan(80); ///< what is the longest flanking sequence length considered for the high quality qc requirement?
+    static const unsigned minAlignReadLength(30); ///< require min length of each contig sub-alignment even after off-reference clipping:
+    static const float minScoreFrac(0.75); ///< require min fraction of optimal score in each contig sub-alignment
 
-    // require min fraction of optimal score in each contig sub-alignmnet:
-    static const float minScoreFrac(0.75);
+    ALIGNPATH::path_t apath(input_apath);
+
+    /// prepare apath by orienting it always going forward from the breakend and limiting the length to
+    /// the first maxQCRefSpan ref bases covered:
+    ///
+    if (isLeadingPath)
+    {
+        std::reverse(apath.begin(),apath.end());
+    }
+
+    apath_limit_ref_length(maxQCRefSpan,apath);
 
     const unsigned readSize(apath_read_length(apath));
-    const unsigned clipSize(isFirstRead ?
-                            apath_soft_clip_lead_size(apath) :
-                            apath_soft_clip_trail_size(apath));
+    const unsigned clipSize(apath_soft_clip_trail_size(apath));
 
     assert(clipSize <= readSize);
 
@@ -214,25 +222,32 @@ static
 bool
 isSmallSVSegmentFilter(
     const AlignerBase<int>& aligner,
-    const ALIGNPATH::path_t& apath,
-    const bool isLeadingPath)
+    const bool isLeadingPath,
+    ALIGNPATH::path_t& apath)
 {
-    static const unsigned minAlignRefSpan(30); ///< min reference lenght for alignment
+    static const unsigned maxQCRefSpan(80); ///< what is the longest flanking sequence length considered for the high quality qc requirement?
+    static const unsigned minAlignRefSpan(30); ///< min reference length for alignment
     static const unsigned minAlignReadLength(30); ///< min length of alignment after off-reference clipping
     static const float minScoreFrac(0.75); ///< min fraction of optimal score in each contig sub-alignment:
 
+    /// prepare apath by orienting it always going forward from the breakend and limiting the length to
+    /// the first maxQCRefSpan ref bases covered:
+    ///
+    if (isLeadingPath)
+    {
+        std::reverse(apath.begin(),apath.end());
+    }
+
+    apath_limit_ref_length(maxQCRefSpan,apath);
 
     const unsigned refSize(apath_read_length(apath));
-
     if (refSize < minAlignRefSpan)
     {
         return true;
     }
 
     const unsigned pathSize(apath_read_length(apath));
-    const unsigned clipSize(isLeadingPath ?
-                            apath_soft_clip_lead_size(apath) :
-                            apath_soft_clip_trail_size(apath));
+    const unsigned clipSize(apath_soft_clip_trail_size(apath));
 
     assert(clipSize <= pathSize);
 
@@ -246,14 +261,10 @@ isSmallSVSegmentFilter(
         return true;
     }
 
-    int nonClipScore(aligner.getPathScore(apath, false));
+    const int nonClipScore(std::max(0,aligner.getPathScore(apath, false)));
     const int optimalScore(clippedPathSize * aligner.getScores().match);
 
-    assert(optimalScore>0);
-    if (nonClipScore < 0) nonClipScore = 0;
-
     const float scoreFrac(static_cast<float>(nonClipScore)/static_cast<float>(optimalScore));
-
     if (scoreFrac < minScoreFrac)
     {
 #ifdef DEBUG_REFINER
@@ -270,6 +281,8 @@ isSmallSVSegmentFilter(
 /// test whether this single-node assembly is (1) an interesting variant above the minimum size and
 /// (2) passes QC otherwise (appropriate flanking regions, etc)
 ///
+/// \return true if these segments should be filtered out
+///
 static
 bool
 isFilterSmallSVAlignment(
@@ -284,18 +297,49 @@ isFilterSmallSVAlignment(
     //
     getLargeIndelSegments(apath, minCandidateIndelSize, candidateSegments);
 
-    // escape if this is a reference or small indel alignment
+    // escape if there are no indels above the minimum size
     if (candidateSegments.empty()) return true;
 
-    // test quality of alignmnet segments surrounding the variant region:
-    const unsigned firstCandIndelSegment(candidateSegments.front().first);
-    const unsigned lastCandIndelSegment(candidateSegments.back().second);
+    /// loop through possible leading segments until a clean one is found:
+    ///
+    while (true)
+    {
+        // test quality of alignment segments surrounding the variant region:
+        const unsigned firstCandIndelSegment(candidateSegments.front().first);
+        path_t leadingPath(apath.begin(), apath.begin()+firstCandIndelSegment);
 
-    const path_t leadingPath(apath.begin(), apath.begin()+firstCandIndelSegment);
-    const path_t trailingPath(apath.begin()+lastCandIndelSegment+1, apath.end());
+        static const bool isLeadingPath(true);
+        if (! isSmallSVSegmentFilter(aligner, isLeadingPath, leadingPath))
+        {
+            break;
+        }
 
-    if (isSmallSVSegmentFilter(aligner, leadingPath, true)) return true;
-    if (isSmallSVSegmentFilter(aligner, trailingPath, false)) return true;
+        // escape if this was the last segment
+        if (1 == candidateSegments.size()) return true;
+
+        candidateSegments = std::vector<std::pair<unsigned,unsigned> >(candidateSegments.begin()+1,candidateSegments.end());
+    }
+
+    /// loop through possible trailing segments until a clean one is found:
+    ///
+    while (true)
+    {
+        // test quality of alignment segments surrounding the variant region:
+        const unsigned lastCandIndelSegment(candidateSegments.back().second);
+        path_t trailingPath(apath.begin()+lastCandIndelSegment+1, apath.end());
+
+        static const bool isLeadingPath(false);
+        if (! isSmallSVSegmentFilter(aligner, isLeadingPath, trailingPath))
+        {
+            break;
+        }
+
+        // escape if this was the last segment
+        if (1 == candidateSegments.size()) return true;
+
+
+        candidateSegments.pop_back();
+    }
 
     return false;
 }
@@ -684,8 +728,8 @@ getJumpAssembly(
     {
         const SVCandidateAssemblyData::JumpAlignmentResultType& hsAlign(assemblyData.spanningAlignments[highScoreIndex]);
 
-        if (isFilterSpanningAlignment(_spanningAligner, hsAlign.align1.apath, true)) return;
-        if (isFilterSpanningAlignment(_spanningAligner, hsAlign.align2.apath, false)) return;
+        if (isFilterSpanningAlignment(_spanningAligner, true, hsAlign.align1.apath)) return;
+        if (isFilterSpanningAlignment(_spanningAligner, false, hsAlign.align2.apath)) return;
     }
 
     // TODO: min context, etc.

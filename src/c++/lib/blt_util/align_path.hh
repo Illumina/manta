@@ -266,6 +266,15 @@ apath_append(
     const align_t seg_type,
     const unsigned length = 1);
 
+/// trim the end off of the alignment so that the reference span
+/// is no greater than target_ref_length. The edited path could contain
+/// edge deletions
+///
+void
+apath_limit_ref_length(
+    const unsigned target_ref_length,
+    path_t& apath);
+
 /// remove any edge clip from apath and return the amount
 /// removed from each side. if ambiguous, lead is favored over trail
 void

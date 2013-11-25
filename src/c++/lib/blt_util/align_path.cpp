@@ -298,6 +298,34 @@ apath_insert_trail_size(const path_t& apath)
 
 
 void
+apath_limit_ref_length(
+    const unsigned target_ref_length,
+    path_t& apath)
+{
+    unsigned ref_length(0);
+    const unsigned as(apath.size());
+    for (unsigned i(0); i<as; ++i)
+    {
+        path_segment& ps(apath[i]);
+        if (! is_segment_type_ref_length(ps.type)) continue;
+        ref_length += ps.length;
+
+        if (ref_length < target_ref_length) continue;
+
+        if (ref_length > target_ref_length)
+        {
+            const unsigned extra(ref_length - target_ref_length);
+            assert(ps.length > extra);
+            ps.length -= extra;
+        }
+        apath.resize(i+1);
+        break;
+    }
+}
+
+
+
+void
 apath_append(
     path_t& apath,
     const align_t seg_type,

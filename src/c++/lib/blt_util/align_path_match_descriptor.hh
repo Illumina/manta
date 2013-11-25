@@ -16,7 +16,7 @@
 ///
 /// \brief functions to convert alignments to/from the match descriptor (MD) format
 ///
-/// Note MD is an older format which should be considered depricated.
+/// Note MD is an older format which should be considered deprecated.
 ///
 
 #pragma once
