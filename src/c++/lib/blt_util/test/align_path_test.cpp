@@ -49,5 +49,36 @@ BOOST_AUTO_TEST_CASE( test_apath_add_seqmatch )
 }
 
 
+
+static
+std::string
+test_limit_case(
+    const std::string& cigar,
+    const bool isReverse,
+    const unsigned length)
+{
+    ALIGNPATH::path_t path;
+    cigar_to_apath(cigar.c_str(), path);
+    if (isReverse)
+    {
+        std::reverse(path.begin(),path.end());
+    }
+    apath_limit_ref_length(length, path);
+    return apath_to_cigar(path);
+}
+
+
+BOOST_AUTO_TEST_CASE( test_apath_limit_ref_length )
+{
+    static const std::string testCigar("2=1X1=4D3=1X");
+    BOOST_REQUIRE_EQUAL(test_limit_case(testCigar,false,1),"1=");
+    BOOST_REQUIRE_EQUAL(test_limit_case(testCigar,false,5),"2=1X1=1D");
+    BOOST_REQUIRE_EQUAL(test_limit_case(testCigar,false,100),testCigar);
+
+    BOOST_REQUIRE_EQUAL(test_limit_case(testCigar,true,1),"1X");
+    BOOST_REQUIRE_EQUAL(test_limit_case(testCigar,true,5),"1X3=1D");
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
