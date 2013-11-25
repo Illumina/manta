@@ -78,14 +78,15 @@ adjustAssembledBreakend(
 }
 
 
+/// \param[in] maxQCRefSpan what is the longest flanking sequence length considered for the high quality qc requirement?
 static
 bool
 isFilterSpanningAlignment(
+    const unsigned maxQCRefSpan,
     const GlobalJumpAligner<int> aligner,
     const bool isLeadingPath,
     const ALIGNPATH::path_t& input_apath)
 {
-    static const unsigned maxQCRefSpan(80); ///< what is the longest flanking sequence length considered for the high quality qc requirement?
     static const unsigned minAlignReadLength(30); ///< require min length of each contig sub-alignment even after off-reference clipping:
     static const float minScoreFrac(0.75); ///< require min fraction of optimal score in each contig sub-alignment
 
@@ -150,6 +151,8 @@ getLargeIndelSegments(
     bool isInSegment(false);
     bool isCandidate(false);
     unsigned segmentStart(0);
+
+    segments.clear();
 
     const unsigned as(apath.size());
     for (unsigned i(0); i<as; ++i)
@@ -218,14 +221,15 @@ addCigarToSpanningAlignment(
 
 
 
+/// \param[in] maxQCRefSpan what is the longest flanking sequence length considered for the high quality qc requirement?
 static
 bool
 isSmallSVSegmentFilter(
+    const unsigned maxQCRefSpan,
     const AlignerBase<int>& aligner,
     const bool isLeadingPath,
     ALIGNPATH::path_t& apath)
 {
-    static const unsigned maxQCRefSpan(80); ///< what is the longest flanking sequence length considered for the high quality qc requirement?
     static const unsigned minAlignRefSpan(30); ///< min reference length for alignment
     static const unsigned minAlignReadLength(30); ///< min length of alignment after off-reference clipping
     static const float minScoreFrac(0.75); ///< min fraction of optimal score in each contig sub-alignment:
@@ -281,11 +285,14 @@ isSmallSVSegmentFilter(
 /// test whether this single-node assembly is (1) an interesting variant above the minimum size and
 /// (2) passes QC otherwise (appropriate flanking regions, etc)
 ///
+/// \param[in] maxQCRefSpan what is the longest flanking sequence length considered for the high quality qc requirement?
+///
 /// \return true if these segments should be filtered out
 ///
 static
 bool
 isFilterSmallSVAlignment(
+    const unsigned maxQCRefSpan,
     const GlobalAligner<int> aligner,
     const ALIGNPATH::path_t& apath,
     const unsigned minCandidateIndelSize,
@@ -309,7 +316,7 @@ isFilterSmallSVAlignment(
         path_t leadingPath(apath.begin(), apath.begin()+firstCandIndelSegment);
 
         static const bool isLeadingPath(true);
-        if (! isSmallSVSegmentFilter(aligner, isLeadingPath, leadingPath))
+        if (! isSmallSVSegmentFilter(maxQCRefSpan, aligner, isLeadingPath, leadingPath))
         {
             break;
         }
@@ -329,7 +336,7 @@ isFilterSmallSVAlignment(
         path_t trailingPath(apath.begin()+lastCandIndelSegment+1, apath.end());
 
         static const bool isLeadingPath(false);
-        if (! isSmallSVSegmentFilter(aligner, isLeadingPath, trailingPath))
+        if (! isSmallSVSegmentFilter(maxQCRefSpan, aligner, isLeadingPath, trailingPath))
         {
             break;
         }
@@ -728,8 +735,15 @@ getJumpAssembly(
     {
         const SVCandidateAssemblyData::JumpAlignmentResultType& hsAlign(assemblyData.spanningAlignments[highScoreIndex]);
 
-        if (isFilterSpanningAlignment(_spanningAligner, true, hsAlign.align1.apath)) return;
-        if (isFilterSpanningAlignment(_spanningAligner, false, hsAlign.align2.apath)) return;
+        bool isFilter(true);
+        const unsigned maxQCRefSpan[] = {100,200};
+        for (unsigned refSpanIndex(0); refSpanIndex<2; ++refSpanIndex)
+        {
+            if (isFilterSpanningAlignment( maxQCRefSpan[refSpanIndex], _spanningAligner, true, hsAlign.align1.apath)) continue;
+            if (isFilterSpanningAlignment( maxQCRefSpan[refSpanIndex], _spanningAligner, false, hsAlign.align2.apath)) continue;
+            isFilter=false;
+        }
+        if (isFilter) return;
     }
 
     // TODO: min context, etc.
@@ -871,8 +885,28 @@ getSmallSVAssembly(
         assemblyData.extendedContigs.push_back(extendedContig);
 
         // remove candidate from consideration unless we find a sufficiently large indel with good flanking sequence:
+        bool isFilterSmallSV(true);
         std::vector<std::pair<unsigned,unsigned> >& candidateSegments(assemblyData.smallSVSegments[contigIndex]);
-        const bool isFilterSmallSV( isFilterSmallSVAlignment(_smallSVAligner, alignment.align.apath, _opt.scanOpt.minCandidateVariantSize, candidateSegments));
+        candidateSegments.clear();
+
+        const unsigned maxQCRefSpan[] = {100,200};
+        for (unsigned refSpanIndex(0); refSpanIndex<2; ++refSpanIndex)
+        {
+            std::vector<std::pair<unsigned,unsigned> > segments;
+            const bool isFilter( isFilterSmallSVAlignment(maxQCRefSpan[refSpanIndex],
+                                                          _smallSVAligner,
+                                                          alignment.align.apath,
+                                                          _opt.scanOpt.minCandidateVariantSize,
+                                                          segments) );
+            if (! isFilter)
+            {
+                if (segments.size() > candidateSegments.size())
+                {
+                    candidateSegments = segments;
+                }
+                isFilterSmallSV=false;
+            }
+        }
 
 #ifdef DEBUG_REFINER
         log_os << logtag << "contigIndex: " << contigIndex << " isFilter " << isFilterSmallSV << " alignment: " << alignment;
