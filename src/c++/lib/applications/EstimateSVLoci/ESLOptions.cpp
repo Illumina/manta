@@ -84,6 +84,8 @@ parseESLOptions(
      "fasta reference sequence (required)")
     ("align-stats", po::value(&opt.statsFilename),
      "pre-computed alignment statistics for the input alignment files (required)")
+    ("chrom-depth", po::value(&opt.chromDepthFilename),
+      "average depth estimate for each chromosome")
     ("truth-vcf", po::value(&opt.truthVcfFilename),
      "optional truth VCF file (for testing)")
     ("region", po::value(&opt.region),
@@ -140,10 +142,11 @@ parseESLOptions(
         usage(log_os,prog,visible,"Need the samtools formatted region");
     }
 
-
     checkStandardizeUsageFile(log_os,prog,visible,opt.statsFilename,"alignment statistics");
     checkStandardizeUsageFile(log_os,prog,visible,opt.referenceFilename,"reference fasta");
 
-
+    if (! opt.chromDepthFilename.empty())
+    {
+        checkStandardizeUsageFile(log_os,prog,visible,opt.chromDepthFilename,"chromosome depth");
+    }
 }
-
