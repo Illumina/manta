@@ -25,7 +25,10 @@ struct CallOptionsSomatic
     CallOptionsSomatic() :
         maxDepthFactor(3.0),
         maxDepthFilterLabel("MaxDepth"),
-        minOutputSomaticScore(10)
+        minOutputSomaticScore(10),
+        maxMQ0Frac(0.4),
+        maxMQ0FracLabel("MaxMQ0Frac")
+
     {}
 
     // breakpoints where the non-tumor depth is greater than the chromosome average x this factor are filtered out:
@@ -33,6 +36,9 @@ struct CallOptionsSomatic
     std::string maxDepthFilterLabel;
 
     unsigned minOutputSomaticScore; ///< minimum somatic quality to print out a somatic variant
+
+    float maxMQ0Frac;
+    std::string maxMQ0FracLabel;
 };
 
 

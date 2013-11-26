@@ -162,11 +162,12 @@ private:
         SVScoreInfo& ssInfo,
         SVEvidence& evidence);
 
-    /// determine maximum depth in region around breakend
-    unsigned
-    getBreakendMaxMappedDepth(
-        const SVBreakend& bp);
-
+    /// determine maximum depth and MQ0 frac in region around breakend of normal sample
+    void
+    getBreakendMaxMappedDepthAndMQ0(
+        const SVBreakend& bp,
+        unsigned& maxDepth,
+        float& MQ0Frac);
 
     /// shared information gathering steps of all scoring models
     void

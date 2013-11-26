@@ -29,7 +29,9 @@ struct CallOptionsDiploid
         maxDepthFilterLabel("MaxDepth"),
         minOutputAltScore(10),
         minGTScoreFilter(20),
-        minGTFilterLabel("MinGQ")
+        minGTFilterLabel("MinGQ"),
+        maxMQ0Frac(0.4),
+        maxMQ0FracLabel("MaxMQ0Frac")
     {}
 
     float indelPrior;
@@ -42,6 +44,11 @@ struct CallOptionsDiploid
 
     unsigned minGTScoreFilter; ///< below this GQ value, the record is filtered in the diploid output VCF
     std::string minGTFilterLabel;
+
+    // control filtration based on MQ0 fraction:
+    float maxMQ0Frac;
+    std::string maxMQ0FracLabel;
+
 };
 
 

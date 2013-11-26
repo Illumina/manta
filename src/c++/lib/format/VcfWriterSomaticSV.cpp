@@ -61,6 +61,7 @@ addHeaderFilters() const
     {
         _os << "##FILTER=<ID=" << _somaticOpt.maxDepthFilterLabel << ",Description=\"Normal sample site depth is greater than " << _somaticOpt.maxDepthFactor << "x the mean chromosome depth near one or both variant breakends\">\n";
     }
+    _os << "##FILTER=<ID=" << _somaticOpt.maxMQ0FracLabel << ",Description=\"In the normal sample, fraction of reads with MAPQ0 around either breakend exceeds " << _somaticOpt.maxMQ0Frac << "\">\n";
 }
 
 

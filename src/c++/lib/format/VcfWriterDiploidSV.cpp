@@ -60,6 +60,7 @@ addHeaderFilters() const
         _os << "##FILTER=<ID=" << _diploidOpt.maxDepthFilterLabel << ",Description=\"Sample site depth is greater than " << _diploidOpt.maxDepthFactor << "x the mean chromosome depth near one or both variant breakends\">\n";
     }
     _os << "##FILTER=<ID=" << _diploidOpt.minGTFilterLabel << ",Description=\"GQ score is less than " << _diploidOpt.minGTScoreFilter << "\">\n";
+    _os << "##FILTER=<ID=" << _diploidOpt.maxMQ0FracLabel << ",Description=\"Fraction of reads with MAPQ0 around either breakend exceeds " << _diploidOpt.maxMQ0Frac << "\">\n";
 }
 
 

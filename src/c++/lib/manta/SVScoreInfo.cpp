@@ -229,8 +229,9 @@ operator<<(
     std::ostream& os,
     const SVScoreInfo& ssi)
 {
-    os << "SVScoreInfo bp1MaxDepth=" << ssi.bp1MaxDepth << " bp2MaxDepth=" << ssi.bp2MaxDepth << '\n';
-    os << "Normal sample info " << ssi.normal;
+    os << "SVScoreInfo bp1MaxDepth=" << ssi.bp1MaxDepth << " bp2MaxDepth=" << ssi.bp2MaxDepth << '\n'
+       << "SVScoreInfo bp1MQ0Frac=" << ssi.bp1MQ0Frac << " bp2MQ0Frac=" << ssi.bp2MQ0Frac << '\n'
+       << "Normal sample info " << ssi.normal;
     return os;
 }
 

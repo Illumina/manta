@@ -107,18 +107,27 @@ addReadToDepthEst(
 
 
 
-unsigned
+void
 SVScorer::
-getBreakendMaxMappedDepth(
-    const SVBreakend& bp)
+getBreakendMaxMappedDepthAndMQ0(
+    const SVBreakend& bp,
+    unsigned& maxDepth,
+    float& MQ0Frac)
 {
     /// define a new interval -/+ 50 bases around the center pos
     /// of the breakpoint
     static const pos_t regionSize(50);
+
+    maxDepth=0;
+    MQ0Frac=0;
+
+    unsigned totalReads(0);
+    unsigned totalMQ0Reads(0);
+
     const pos_t centerPos(bp.interval.range.center_pos());
     const known_pos_range2 searchRange(std::max((centerPos-regionSize),0), (centerPos+regionSize));
 
-    if (searchRange.size() == 0) return 0;
+    if (searchRange.size() == 0) return;
 
     std::vector<unsigned> depth(searchRange.size(),0);
 
@@ -128,6 +137,7 @@ getBreakendMaxMappedDepth(
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
         if (_isAlignmentTumor[bamIndex]) continue;
+        isNormalFound=true;
 
         bam_streamer& bamStream(*_bamStreams[bamIndex]);
 
@@ -139,21 +149,21 @@ getBreakendMaxMappedDepth(
             const bam_record& bamRead(*(bamStream.get_record_ptr()));
 
             // turn filtration down to mapped only to match depth estimate method:
-            //if (_readScanner.isReadFiltered(bamRead)) continue;
             if (bamRead.is_unmapped()) continue;
 
             if ((bamRead.pos()-1) >= searchRange.end_pos()) break;
 
             addReadToDepthEst(bamRead,searchRange.begin_pos(),depth);
-        }
 
-        isNormalFound=true;
-        break;
+            totalReads++;
+            if (0 == bamRead.map_qual()) totalMQ0Reads++;
+        }
     }
 
     assert(isNormalFound);
 
-    return *(std::max_element(depth.begin(),depth.end()));
+    maxDepth = *(std::max_element(depth.begin(),depth.end()));
+    MQ0Frac = static_cast<float>(totalMQ0Reads)/static_cast<float>(totalReads);
 }
 
 
@@ -324,8 +334,8 @@ scoreSV(
     SVEvidence& evidence)
 {
     // get breakend center_pos depth estimate:
-    baseInfo.bp1MaxDepth=(getBreakendMaxMappedDepth(sv.bp1));
-    baseInfo.bp2MaxDepth=(getBreakendMaxMappedDepth(sv.bp2));
+    getBreakendMaxMappedDepthAndMQ0(sv.bp1, baseInfo.bp1MaxDepth, baseInfo.bp1MQ0Frac);
+    getBreakendMaxMappedDepthAndMQ0(sv.bp2, baseInfo.bp2MaxDepth, baseInfo.bp2MQ0Frac);
 
     /// global evidence accumulator for this SV:
 
@@ -687,9 +697,18 @@ scoreDiploidSV(
             }
         }
 
-        if ( diploidInfo.gtScore < diploidOpt.minGTScoreFilter)
+        if (diploidInfo.gtScore < diploidOpt.minGTScoreFilter)
         {
             diploidInfo.filters.insert(diploidOpt.minGTFilterLabel);
+        }
+
+        if (baseInfo.bp1MQ0Frac > diploidOpt.maxMQ0Frac)
+        {
+            diploidInfo.filters.insert(diploidOpt.maxMQ0FracLabel);
+        }
+        else if (baseInfo.bp2MQ0Frac > diploidOpt.maxMQ0Frac)
+        {
+            diploidInfo.filters.insert(diploidOpt.maxMQ0FracLabel);
         }
     }
 }
@@ -801,6 +820,15 @@ scoreSomaticSV(
             {
                 somaticInfo.filters.insert(somaticOpt.maxDepthFilterLabel);
             }
+        }
+
+        if (baseInfo.bp1MQ0Frac > somaticOpt.maxMQ0Frac)
+        {
+            somaticInfo.filters.insert(somaticOpt.maxMQ0FracLabel);
+        }
+        else if (baseInfo.bp2MQ0Frac > somaticOpt.maxMQ0Frac)
+        {
+            somaticInfo.filters.insert(somaticOpt.maxMQ0FracLabel);
         }
     }
 }
