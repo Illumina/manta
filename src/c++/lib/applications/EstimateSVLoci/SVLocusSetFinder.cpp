@@ -19,6 +19,7 @@
 
 #include "blt_util/align_path_bam_util.hh"
 #include "blt_util/log.hh"
+#include "manta/ChromDepthFilterUtil.hh"
 
 #include "boost/foreach.hpp"
 
@@ -31,17 +32,22 @@ namespace STAGE
 enum index_t
 {
     HEAD,
-    DENOISE
+    DENOISE,
+    CLEAR_DEPTH
 };
 
 
 static
 stage_data
-getStageData(const unsigned denoiseBorderSize)
+getStageData(
+    const unsigned denoiseBorderSize)
 {
+    static const unsigned clearDepthBorderSize(10);
+
     stage_data sd;
     sd.add_stage(HEAD);
     sd.add_stage(DENOISE, HEAD, denoiseBorderSize);
+    sd.add_stage(CLEAR_DEPTH, HEAD, clearDepthBorderSize);
 
     return sd;
 }
@@ -52,7 +58,8 @@ getStageData(const unsigned denoiseBorderSize)
 SVLocusSetFinder::
 SVLocusSetFinder(
     const ESLOptions& opt,
-    const GenomeInterval& scanRegion) :
+    const GenomeInterval& scanRegion,
+    const bam_header_info& bamHeader) :
     _scanRegion(scanRegion),
     _stageman(
         STAGE::getStageData(REGION_DENOISE_BORDER),
@@ -68,6 +75,10 @@ SVLocusSetFinder(
     _anomCount(0),
     _nonAnomCount(0)
 {
+    const ChromDepthFilterUtil dFilter(opt.chromDepthFilename, opt.maxDepthFactor, bamHeader);
+    _isMaxDepth=dFilter.isMaxDepthFilter();
+    _maxDepth=dFilter.maxDepth(scanRegion.tid);
+
     updateDenoiseRegion();
 }
 
@@ -160,12 +171,34 @@ process_pos(const int stage_no,
             }
         }
     }
+    else if (stage_no == STAGE::CLEAR_DEPTH)
+    {
+        _depth.clear_pos(pos);
+    }
     else
     {
         assert(false && "Unexpected stage id");
     }
 }
 
+
+
+void
+SVLocusSetFinder::
+addToDepthBuffer(
+    const bam_record& bamRead)
+{
+    if (! _isMaxDepth) return;
+
+    const pos_t refPos(bamRead.pos()-1);
+
+    /// stick to a simple approximation -- ignore CIGAR string and just look at the read length:
+    const pos_t readSize(bamRead.read_size());
+    for (pos_t readIndex(0); readIndex<readSize; ++readIndex)
+    {
+        _depth.inc(refPos+readIndex);
+    }
+}
 
 
 void
@@ -179,7 +212,19 @@ update(
 {
     _isScanStarted=true;
 
+    // depth estimation relies on a simple filtration criteria to stay in sync with the chromosome mean
+    // depth estimates:
+    if (! bamRead.is_unmapped())
+    {
+        addToDepthBuffer(bamRead);
+    }
+
     if (_readScanner.isReadFiltered(bamRead)) return;
+
+    if (_isMaxDepth)
+    {
+        if (_depth.val(bamRead.pos()-1) > _maxDepth) return;
+    }
 
     // exclude innie read pairs which are anomalously short:
     const bool isNonCompressedAnomalous(_readScanner.isNonCompressedAnomalous(bamRead,defaultReadGroupIndex));

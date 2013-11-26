@@ -138,7 +138,7 @@ getBreakendMaxMappedDepth(
         {
             const bam_record& bamRead(*(bamStream.get_record_ptr()));
 
-            // turn filtration off down to mapped only to match depth estimate method:
+            // turn filtration down to mapped only to match depth estimate method:
             //if (_readScanner.isReadFiltered(bamRead)) continue;
             if (bamRead.is_unmapped()) continue;
 

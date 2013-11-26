@@ -20,6 +20,7 @@
 #include "ESLOptions.hh"
 
 #include "blt_util/bam_record.hh"
+#include "blt_util/depth_buffer.hh"
 #include "blt_util/pos_processor_base.hh"
 #include "blt_util/stage_manager.hh"
 #include "manta/SVLocusScanner.hh"
@@ -35,20 +36,20 @@
 
 
 
-// estimate an SVLocusSet
-//
+/// estimate an SVLocusSet
+///
 struct SVLocusSetFinder : public pos_processor_base
 {
     SVLocusSetFinder(
         const ESLOptions& opt,
-        const GenomeInterval& scanRegion);
+        const GenomeInterval& scanRegion,
+        const bam_header_info& bamHeader);
 
     ~SVLocusSetFinder()
     {
         flush();
     }
 
-    ///
     /// index is the read group index to use by in the absence of an RG tag
     /// (for now RGs are ignored for the purpose of gathering insert stats)
     ///
@@ -94,6 +95,10 @@ private:
     void
     updateDenoiseRegion();
 
+    void
+    addToDepthBuffer(
+        const bam_record& bamRead);
+
     // TODO -- compute this number from read insert ranges:
     enum hack_t
     {
@@ -106,6 +111,7 @@ private:
     GenomeInterval _denoiseRegion;
     stage_manager _stageman;
     SVLocusSet _svLoci;
+    depth_buffer _depth; ///< track depth for the purpose of filtering high-depth regions
 
     bool _isScanStarted;
 
@@ -116,5 +122,8 @@ private:
 
     unsigned _anomCount;
     unsigned _nonAnomCount;
+
+    bool _isMaxDepth;
+    float _maxDepth;
 };
 

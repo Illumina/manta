@@ -28,7 +28,6 @@
 ///
 struct depth_buffer
 {
-
     unsigned
     val(const pos_t pos) const
     {
@@ -71,4 +70,3 @@ private:
 
     count_t _data;
 };
-

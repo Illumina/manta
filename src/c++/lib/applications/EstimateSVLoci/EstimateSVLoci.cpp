@@ -102,7 +102,7 @@ runESL(const ESLOptions& opt)
     reference_contig_segment refSegment;
     getIntervalReferenceSegment(opt.referenceFilename, bamHeader, refEdgeBufferSize, scanRegion, refSegment);
 
-    SVLocusSetFinder locusFinder(opt,scanRegion);
+    SVLocusSetFinder locusFinder(opt, scanRegion, bamHeader);
     locusFinder.setBamHeader(header);
 
     input_stream_data sdata;
