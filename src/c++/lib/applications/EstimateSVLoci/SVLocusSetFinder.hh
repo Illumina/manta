@@ -97,6 +97,7 @@ private:
 
     void
     addToDepthBuffer(
+        const unsigned defaultReadGroupIndex,
         const bam_record& bamRead);
 
     // TODO -- compute this number from read insert ranges:
@@ -107,6 +108,7 @@ private:
 
     /////////////////////////////////////////////////
     // data:
+    const std::vector<bool> _isAlignmentTumor;
     const GenomeInterval _scanRegion;
     GenomeInterval _denoiseRegion;
     stage_manager _stageman;

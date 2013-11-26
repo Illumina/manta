@@ -60,6 +60,7 @@ SVLocusSetFinder(
     const ESLOptions& opt,
     const GenomeInterval& scanRegion,
     const bam_header_info& bamHeader) :
+    _isAlignmentTumor(opt.alignFileOpt.isAlignmentTumor),
     _scanRegion(scanRegion),
     _stageman(
         STAGE::getStageData(REGION_DENOISE_BORDER),
@@ -186,9 +187,17 @@ process_pos(const int stage_no,
 void
 SVLocusSetFinder::
 addToDepthBuffer(
+    const unsigned defaultReadGroupIndex,
     const bam_record& bamRead)
 {
     if (! _isMaxDepth) return;
+
+    /// estimate depth from normal sample only:
+    if (_isAlignmentTumor[defaultReadGroupIndex]) return;
+
+    // depth estimation relies on a simple filtration criteria to stay in sync with the chromosome mean
+    // depth estimates:
+    if (bamRead.is_unmapped()) return;
 
     const pos_t refPos(bamRead.pos()-1);
 
@@ -199,6 +208,7 @@ addToDepthBuffer(
         _depth.inc(refPos+readIndex);
     }
 }
+
 
 
 void
@@ -212,11 +222,14 @@ update(
 {
     _isScanStarted=true;
 
-    // depth estimation relies on a simple filtration criteria to stay in sync with the chromosome mean
-    // depth estimates:
-    if (! bamRead.is_unmapped())
+    if (! _isAlignmentTumor[defaultReadGroupIndex])
     {
-        addToDepthBuffer(bamRead);
+        // depth estimation relies on a simple filtration criteria to stay in sync with the chromosome mean
+        // depth estimates:
+        if (! bamRead.is_unmapped())
+        {
+            addToDepthBuffer(defaultReadGroupIndex, bamRead);
+        }
     }
 
     if (_readScanner.isReadFiltered(bamRead)) return;
