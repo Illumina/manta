@@ -177,7 +177,7 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
             graphCmd.extend(["--tumor-align-file",bamPath])
 
         if self.params.isHighDepthFilter :
-            hygenCmd.extend(["--chrom-depth", self.paths.getChromDepth()])
+            graphCmd.extend(["--chrom-depth", self.paths.getChromDepth()])
 
         if self.params.isIgnoreAnomProperPair :
             graphCmd.append("--ignore-anom-proper-pair")
@@ -442,6 +442,6 @@ class MantaWorkflow(WorkflowRunner) :
             depthTasks = runDepth(self)
             graphTaskDependencies |= depthTasks
 
-        graphTasks = runLocusGraph(self,dependencies=graphTasksDependencies)
+        graphTasks = runLocusGraph(self,dependencies=graphTaskDependencies)
 
         hygenTasks = runHyGen(self,dependencies=graphTasks)
