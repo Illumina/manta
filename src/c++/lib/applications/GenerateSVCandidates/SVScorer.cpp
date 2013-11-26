@@ -24,6 +24,7 @@
 #include "blt_util/qscore.hh"
 #include "common/Exceptions.hh"
 #include "manta/ReadGroupStatsSet.hh"
+#include "manta/SVCandidateUtil.hh"
 
 #include "boost/foreach.hpp"
 
@@ -705,13 +706,14 @@ scoreDiploidSV(
             diploidInfo.filters.insert(diploidOpt.minGTFilterLabel);
         }
 
-        if (baseInfo.bp1MQ0Frac > diploidOpt.maxMQ0Frac)
+        const bool isMQ0FilterSize(isSVBelowMinSize(sv,1000));
+        if (isMQ0FilterSize)
         {
-            diploidInfo.filters.insert(diploidOpt.maxMQ0FracLabel);
-        }
-        else if (baseInfo.bp2MQ0Frac > diploidOpt.maxMQ0Frac)
-        {
-            diploidInfo.filters.insert(diploidOpt.maxMQ0FracLabel);
+            if ((baseInfo.bp1MQ0Frac > diploidOpt.maxMQ0Frac) ||
+                (baseInfo.bp2MQ0Frac > diploidOpt.maxMQ0Frac))
+            {
+                diploidInfo.filters.insert(diploidOpt.maxMQ0FracLabel);
+            }
         }
     }
 }
@@ -825,13 +827,14 @@ scoreSomaticSV(
             }
         }
 
-        if (baseInfo.bp1MQ0Frac > somaticOpt.maxMQ0Frac)
+        const bool isMQ0FilterSize(isSVBelowMinSize(sv,1000));
+        if (isMQ0FilterSize)
         {
-            somaticInfo.filters.insert(somaticOpt.maxMQ0FracLabel);
-        }
-        else if (baseInfo.bp2MQ0Frac > somaticOpt.maxMQ0Frac)
-        {
-            somaticInfo.filters.insert(somaticOpt.maxMQ0FracLabel);
+            if ((baseInfo.bp1MQ0Frac > somaticOpt.maxMQ0Frac) ||
+                (baseInfo.bp2MQ0Frac > somaticOpt.maxMQ0Frac))
+            {
+                somaticInfo.filters.insert(somaticOpt.maxMQ0FracLabel);
+            }
         }
     }
 }
