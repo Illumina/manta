@@ -85,7 +85,7 @@ parseESLOptions(
     ("align-stats", po::value(&opt.statsFilename),
      "pre-computed alignment statistics for the input alignment files (required)")
     ("chrom-depth", po::value(&opt.chromDepthFilename),
-      "average depth estimate for each chromosome")
+     "average depth estimate for each chromosome")
     ("truth-vcf", po::value(&opt.truthVcfFilename),
      "optional truth VCF file (for testing)")
     ("region", po::value(&opt.region),

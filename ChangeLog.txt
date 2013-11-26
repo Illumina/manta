@@ -1,3 +1,4 @@
+v0.14.0
 - MANTA-102 filter calls with high MQ0 fraction
 - MANTA-99 add high-dpeth graph filter to improve FFPE runtime
 - MANTA-100 allow for neighboring variants during assembly
