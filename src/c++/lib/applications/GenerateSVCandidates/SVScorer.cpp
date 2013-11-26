@@ -163,7 +163,10 @@ getBreakendMaxMappedDepthAndMQ0(
     assert(isNormalFound);
 
     maxDepth = *(std::max_element(depth.begin(),depth.end()));
-    MQ0Frac = static_cast<float>(totalMQ0Reads)/static_cast<float>(totalReads);
+    if (totalReads>=10)
+    {
+        MQ0Frac = static_cast<float>(totalMQ0Reads)/static_cast<float>(totalReads);
+    }
 }
 
 
