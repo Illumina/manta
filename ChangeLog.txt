@@ -1,3 +1,4 @@
+- MANTA-102 filter calls with high MQ0 fraction
 - MANTA-99 add high-dpeth graph filter to improve FFPE runtime
 - MANTA-100 allow for neighboring variants during assembly
 - MANTA-83 sort vcfs in bam chrom order
