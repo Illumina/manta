@@ -252,8 +252,8 @@ getSVRefPairSupport(
         /// set the search range around centerPos so that we can get any fragments at the Xth percentile length or smaller which could have
         /// min Fragsupport
         const SVLocusScanner::Range& pRange(_readScanner.getEvidencePairRange(bamIndex));
-        const pos_t minFrag(pRange.min);
-        const pos_t maxFrag(pRange.max);
+        const pos_t minFrag(static_cast<pos_t>(pRange.min));
+        const pos_t maxFrag(static_cast<pos_t>(pRange.max));
 
         const SizeDistribution& fragDistro(_readScanner.getFragSizeDistro(bamIndex));
 
