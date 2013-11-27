@@ -74,11 +74,16 @@ SVLocusSetFinder(
     _denoisePos(0),
     _readScanner(opt.scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilename),
     _anomCount(0),
-    _nonAnomCount(0)
+    _nonAnomCount(0),
+    _isMaxDepth(false),
+    _maxDepth(0)
 {
     const ChromDepthFilterUtil dFilter(opt.chromDepthFilename, opt.maxDepthFactor, bamHeader);
     _isMaxDepth=dFilter.isMaxDepthFilter();
-    _maxDepth=dFilter.maxDepth(scanRegion.tid);
+    if (_isMaxDepth)
+    {
+        _maxDepth=dFilter.maxDepth(scanRegion.tid);
+    }
 
     updateDenoiseRegion();
 }
