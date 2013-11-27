@@ -13,8 +13,7 @@ Manta is a structural variant caller for short sequencing reads. It is capable
 of discovering structural variants of any size and scoring these using both a
 diploid genotype model and a somatic model (when separate tumor and normal
 samples are specified). Structural variant discovery and scoring incorporate
-both paired-read fragment spanning and split read evidence to improve
-specificity.
+both paired-read fragment spanning and split read evidence.
 
 ## Method Overview
 
@@ -28,13 +27,13 @@ into a graph with edges connecting all regions of the genome which have a
 possible SV association. Edges may connect two different regions of the genome
 to represent evidence of a long-range association, or an edge may connect a
 region to itself to capture a local indel/small SV association. Note that these
-associations are more general than a specific SV hypothesis, in that zero to
-many SV candidates may be found on one edge, although we would typically expect
-only one or two candidates per edge.
+associations are more general than a specific SV hypothesis, in that many SV
+candidates may be found on one edge, although typically only one or two
+candidates are found per edge.
 
 2. **Analyze graph edges to find SVs** The second step is to analyze individual
-graph edges or groups of highly connected edges to discover and score any SVs
-associated with the edge(s). This process entails several substeps, including
+graph edges or groups of highly connected edges to discover and score SVs
+associated with the edge(s). This substeps of this process include
 inference of SV candidates associated with the edge, attempted assembly of the
 SVs breakends, scoring and filtration of the SV under various biological models
 (currently diploid germline and somatic), and finally, output to VCF.
@@ -43,28 +42,24 @@ SVs breakends, scoring and filtration of the SV under various biological models
 
 Manta is capable of detecting all structural variant types which are
 identifiable in the absence of copy number analysis and large-scale de-novo
-assembly. Specific instances types which can and cannot be detected are
-enumerated below.
+assembly. Detectable types are enumerated below.
 
 For each structural variant and indel, Manta attempts to align the breakends to
-basepair resolution and report the left-shifted breakend coordinate (per the VCF
-4.1 SV reporting guidelines), together with the any breakend microhomology
-sequence and inserted seqeunce between the breakends. It is often the case that
-the assembly will fail to provide a confident basepair resolution explaination
-of the data -- in such cases the variant will be reported as `IMPRECISE`, and
-scored according the paired-end read evidence alone.
+basepair resolution and report the left-shifted breakend coordinate (per the [VCF 4.1][1]
+SV reporting guidelines), together with the any breakend microhomology sequence
+and inserted sequence between the breakends. It is often the case that the
+assembly will fail to provide a confident explanation of the data -- in such
+cases the variant will be reported as `IMPRECISE` , and scored according the
+paired-end read evidence alone.
 
 The sequencing reads provided as input to Manta are expected to be from a
-paired-end seqeucneing assay which results in an "innie" orientation between the
+paired-end sequencing assay which results in an "innie" orientation between the
 two reads of each DNA fragment, each presenting a read from the outer edge of
-the fragment inward.
+the fragment insert inward.
 
-Manta has primarily be developed and tested for whole genome DNA-Seq
-experiments, targeted towards analysis of single diploid samples or subratctive
-analysis of a matched tumor and normal sample for the identification of somatic
-variants.
-
-Note that there is limited testing and support for other cases:
+Manta is primarily tested for whole genome DNA-Seq experiments of single
+diploid samples or subtractive analysis of a matched tumor/normal sample pair.
+There has been limited testing in support of other cases:
 
 * For exome or other targeted sequencing experiments, the workflow can be
 configured with the `--exome` flag to set filtration levels more appropriate for
@@ -75,7 +70,7 @@ levels and take some steps to prevent introns from being called as deletions.
 
 ### Detected variant classes
 
-Manta is able to detect all classes of variations which can be explained as
+Manta is able to detect all variation classes which can be explained as
 novel DNA adjacencies in the genome. Simple insertion/deletion events can be
 detected down to a configurable minimum size cutoff (defaulting to 51). All DNA
 adjacencies are classified into the following categories based on the breakend
@@ -98,7 +93,7 @@ Manta should not be able to detect the following variant types:
   impractical levels well before this size
 * Small inversions
     *   The limiting size is not tested, but in theory detection falls off below
-  approx 200bases. So-called micro-inversions might be detected indirectly as
+  ~200bases. So-called micro-inversions might be detected indirectly as
   combined insertion/deletion variants.
 
 More general repeat-based limitations exist for all variant types:
@@ -111,17 +106,16 @@ More general repeat-based limitations exist for all variant types:
 
 Note that while manta classifies novel DNA-adjacencies, it does not infer the
 higher level constructs implied by the classification. For instance, a variant
-marked as a deletion by manta indicates an intrachromosomal translocation of high
-confidence with a breakend pattern which is consistent with a deletion, however
-there is no higher-order testing of depth and all intersecting adjacencies to
-directly infer the SV type.
+marked as a deletion by manta indicates an intrachromosomal translocation with a
+deletion-like breakend pattern, however there is no test of depth, b-allele
+frequency or intersecting adjacencies to directly infer the SV type.
 
 ## Input requirements
 
 The sequencing reads provided as input to Manta are expected to be from a
-paired-end seqeucneing assay which results in an "innie" orientation between the
-two reads of each DNA fragment, each presenting a read from the outer edge of
-the fragment inward.
+paired-end sequencing assay with an "innie" orientation between the two reads of
+each DNA fragment, each presenting a read from the outer edge of the fragment
+insert inward.
 
 The performance of Manta on single-ended read input is unknown. On mate-pair
 libraries the method is expected to fail.
@@ -130,14 +124,14 @@ Manta requires input sequencing reads to be mapped by an external tool and
 provided as input in BAM format.
 
 At configuration time, at least one bam file must be provided for the normal
-sample and optionally can also read one or more bam files for a tumor sample.
-If multiple bams are provided for the normal or tumor sample, these are treated
-as a merged single normal or tumor.
+sample. A matched tumor sample can optionally be provided as well. If multiple
+bams are provided for the normal or tumor sample, these are merged and treated
+as a single normal or tumor sample.
 
 The following limitations exist on the input BAMs provided to Manta:
 
 * Alignments cannot contain the "=" character in the SEQ field.
-* Alignments cannot use sequence the match/mismatch ("="/"X") CIGAR notation
+* Alignments cannot use the sequence match/mismatch ("="/"X") CIGAR notation
 * RG (read group) tags in the BAMs are ignored -- each BAM must represent one
   sample.
 * Alignments with basecall quality values greater than 70 are rejected (these
@@ -154,20 +148,20 @@ is provided. These files are:
 
 * __candidateSV.vcf.gz__
     * Unscored SV and indel candidates. Only a minimal amount of supporting
-  evidence is required for a SV to entered as a candidate. An SV or indel must
-  be a candidate to be considered for scoring, therefor if an SV cannot appear
-  in the other VCF outputs if it is not present here. Note that this file
-  includes indels down to a very small size (10 by default) intended to be
-  passed on to a small variant caller without scoring by manta itself (by
-  default manta scoring starts at size 51).
+  evidence is required for a SV to be entered as a candidate. An SV or indel
+  must be a candidate to be considered for scoring, therefore an SV cannot
+  appear in the other VCF outputs if it is not present in this file. Note that
+  by default this file includes indels down to a very small size (>= 10 bases).
+  These are intended to be passed on to a small variant caller without scoring
+  by manta itself (by default manta scoring starts at size 51).
 * __diploidSV.vcf.gz__
-    * SVs and indels scored and genotyped under a diploid
-  model for the normal sample. The scores in this file do not reflect any
-  information in the tumour bams
+    * SVs and indels scored and genotyped under a diploid model for the normal
+  sample. The scores in this file do not reflect any information in the tumor
+  bams
 * __somaticSV.vcf.gz__
-    * SVs and indels scored under a somatic variant model.
-  This file will only be produced if at least one tumour bam argument is
-  supplied during configuration
+    * SVs and indels scored under a somatic variant model. This file
+  will only be produced if at least one tumor bam argument is supplied during
+  configuration
 
 All variants are reported in the vcf using symbolic alleles unless they are classified 
 as a small indel, in which case full sequences are provided for the vcf `REF` and `ALT`
@@ -206,7 +200,7 @@ The workflow is configured with the script: `${MANTA_INSTALL_DIR}/bin/configMant
 options to specify input BAM files, the reference sequence and the output run folder.
 Note that all input BAMs and reference sequence must contain the same chromosome names
 in the same order. Manta's default settings assume a whole genome DNA-Seq analysis, but there
-are configuration options for exome/targetting sequencing analysis in addition to RNA-Seq.
+are configuration options for exome/targeted sequencing analysis in addition to RNA-Seq.
 
 Single Sample Analysis -- Example Configuration:
 
@@ -228,9 +222,9 @@ ${MANTA_INSTALL_DIR}/bin/configManta.py \
 
 ```
 
-After the configuration completes, it will write out workflow run script to `${ANALYSIS_RUN_DIR}/runWorkflow.py`
-This can be used to run the workflow in various parallel compute enivironments
-per the instructions in the [Execution] section below.
+On completion, the configuration script will create the workflow run script `${ANALYSIS_RUN_DIR}/runWorkflow.py`
+. This can be used to run the workflow in various parallel compute modes per the
+instructions in the [Execution] section below.
 
 #### Advanced configuration options
 
@@ -240,27 +234,27 @@ There are two sources of advanced configuration options:
     * These parameters are not expected to change frequently. Changing the file
   listed above will re-configure all manta runs for the installation. To change
   parameters for a single run, copy the configManta.py.ini file to the cwd where
-  configuraiton is being run -- any values found in `$(pwd)/configManta.py.ini`
-  will supercede those listed in the installation's ini file.
+  configuration is being run -- any values found in `$(pwd)/configManta.py.ini`
+  will supersede those listed in the installation's ini file.
 * Advanced options listed in: `${MANTA_INSTALL_DIR}/bin/configManta.py --allHelp`
     * These options are indented primarily for workflow development and
-  debugging, but could be useful for runtime optimization in some speciallized
+  debugging, but could be useful for runtime optimization in some specialized
   cases.
 
 ### Execution
 
-The configuration steps creates a new workflow run script in the requested run directory:
+The configuration step creates a new workflow run script in the requested run directory:
 
 `{ANALYSIS_RUN_DIR}/runWorkflow.py`
 
-This script is used to control paralellel execution of Manta via the [pyFlow][2]
-parallel task engine. It can be used to parallelize structural variant analysis
-via one of two modes:
+This script is used to control parallel execution of Manta via the [pyFlow][2]
+task engine. It can be used to parallelize structural variant analysis via one
+of two modes:
 
-1. Parallized across multiple cores on a single node.
-2. Parallized across multiple nodes on an SGE cluster.
+1. Parallelized across multiple cores on a single node.
+2. Parallelized across multiple nodes on an SGE cluster.
 
-A running workflow can be interuptted at any time and resumed where it left
+A running workflow can be interrupted at any time and resumed where it left
 off. If desired, the resumed analysis can use a different running mode or total
 core count.
 
@@ -288,7 +282,7 @@ These options are useful for Manta development and debugging:
   replicated to `${ANALYSIS_RUN_DIR}/workspace/pyflow.data/logs/pyflow_log.txt`
   so there is no loss of log information.
 * The `--rescore` option can be provided to force the workflow to re-execute
-  candidates discovery and scoring, but not the inital graph generation steps.
+  candidates discovery and scoring, but not the initial graph generation steps.
 
 [1]: http://www.1000genomes.org/wiki/Analysis/Variant%20Call%20Format/vcf-variant-call-format-version-41
 [2]: http://ctsa.github.io/pyflow/

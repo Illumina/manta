@@ -39,7 +39,7 @@ def getOptions() :
 
     from optparse import OptionParser
 
-    usage = "usage: %prog -bam file > depth.txt"
+    usage = "usage: %prog [options] > depth.txt"
     parser = OptionParser(usage=usage)
 
     parser.add_option("--bam", type="string",dest="bamFile",
