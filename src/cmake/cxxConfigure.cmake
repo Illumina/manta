@@ -195,7 +195,7 @@ if (GNU_COMPAT_COMPILER)
     endif ()
 
     if(${IS_WERROR})
-        message (STATUS "building in developer mode: treating compiler errors as warnings")
+        message (STATUS "building in developer mode: treating compiler warnings as errors")
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
     endif ()
   endif ()
