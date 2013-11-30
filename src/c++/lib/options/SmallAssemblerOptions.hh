@@ -26,7 +26,7 @@ struct SmallAssemblerOptions
     SmallAssemblerOptions() :
         alphabet("ACGT"),
         minWordLength(41),
-        maxWordLength(61),
+        maxWordLength(76),
         wordStepSize(5),
         minContigLength(15),
         minCoverage(1),
