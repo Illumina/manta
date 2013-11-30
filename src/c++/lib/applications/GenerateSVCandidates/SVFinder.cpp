@@ -502,12 +502,8 @@ assignPairObservationsToSVCandidates(
             //
             if (isComplexSV(readCand))
             {
-                /// TODO: enable the rest of this filter once there's time to study its impact (MANTA-75)
-                ///
-#if 0
                 if (! readCand.bp1.interval.isIntersect(node1.getInterval())) continue;
                 if (! readCand.bp1.interval.isIntersect(node2.getInterval())) continue;
-#endif
             }
             else
             {
