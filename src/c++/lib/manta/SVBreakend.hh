@@ -17,7 +17,6 @@
 
 #pragma once
 
-//#include "blt_util/align_path.hh"
 #include "svgraph/GenomeInterval.hh"
 
 #include <cassert>
@@ -328,7 +327,7 @@ struct SVBreakend
         return sum;
     }
 
-    // include any evidence type witch defines a two-region hypothesis
+    // include any evidence type which defines a two-region hypothesis
     unsigned
     getSpanningCount() const
     {

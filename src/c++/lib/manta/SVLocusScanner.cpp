@@ -979,7 +979,7 @@ getSVLociImpl(
     // in the SV locus graph:
     BOOST_FOREACH(const SVCandidate& cand, candidates)
     {
-        const bool isCandComplex(isComplex(cand));
+        const bool isCandComplex(isComplexSV(cand));
 
         const SVBreakend& localBreakend(cand.bp1);
         const SVBreakend& remoteBreakend(cand.bp2);

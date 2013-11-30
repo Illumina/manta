@@ -492,7 +492,7 @@ getCandidateAssemblyData(
 
     // separate the problem into different assembly categories:
     //
-    if (isSimpleBreakend(sv.bp1.state) && isSimpleBreakend(sv.bp1.state))
+    if (isSpanningSV(sv))
     {
         // record the spanning status of the original low-resolution candidate:
         assemblyData.isCandidateSpanning=true;
@@ -500,7 +500,7 @@ getCandidateAssemblyData(
         // this case assumes two suspected breakends with a direction to each, most common large scale SV case:
         getJumpAssembly(sv, assemblyData);
     }
-    else if ((sv.bp1.state == SVBreakendState::COMPLEX))
+    else if (isComplexSV(sv))
     {
         // record the spanning status of the original low-resolution candidate:
         assemblyData.isCandidateSpanning=false;

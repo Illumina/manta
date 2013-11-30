@@ -500,7 +500,7 @@ assignPairObservationsToSVCandidates(
         {
             // remove candidates which don't match the current edge:
             //
-            if (isComplex(readCand))
+            if (isComplexSV(readCand))
             {
                 /// TODO: enable the rest of this filter once there's time to study its impact (MANTA-75)
                 ///
@@ -511,11 +511,11 @@ assignPairObservationsToSVCandidates(
             }
             else
             {
-                const bool isInter((readCand.bp1.interval.isIntersect(node1.getInterval())) &&
-                                   (readCand.bp2.interval.isIntersect(node2.getInterval())));
-                const bool isSwapInter((readCand.bp1.interval.isIntersect(node2.getInterval())) &&
-                                       (readCand.bp2.interval.isIntersect(node1.getInterval())));
-                if (! (isInter || isSwapInter)) continue;
+                const bool isIntersect((readCand.bp1.interval.isIntersect(node1.getInterval())) &&
+                                       (readCand.bp2.interval.isIntersect(node2.getInterval())));
+                const bool isSwapIntersect((readCand.bp1.interval.isIntersect(node2.getInterval())) &&
+                                           (readCand.bp2.interval.isIntersect(node1.getInterval())));
+                if (! (isIntersect || isSwapIntersect)) continue;
             }
         }
 
