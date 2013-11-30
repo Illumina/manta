@@ -84,8 +84,8 @@ getBreakendReads(
     }
 
 #ifdef DEBUG_ASBL
-    static const std::string logtag("SVLocusAssembler::getBreakendReads");
-    log_os << logtag << " searchRange " << searchRange << "\n";
+    static const std::string logtag("SVLocusAssembler::getBreakendReads: ");
+    log_os << logtag << "searchRange " << searchRange << "\n";
 #endif
 
     // for assembler reads, look for indels at report size or somewhat smaller
@@ -122,13 +122,24 @@ getBreakendReads(
         std::string lastQname;
 
         static const unsigned MAX_NUM_READS(1000);
-        unsigned int shadowCnt(0);
+
 #ifdef DEBUG_ASBL
-        unsigned int semiAlignedCnt(0);
+        unsigned clipCount(0);
+        unsigned indelCount(0);
+        unsigned semiAlignedCount(0);
+        unsigned shadowCount(0);
 #endif
 
-        while (bamStream.next() && (reads.size() < MAX_NUM_READS))
+        while (bamStream.next())
         {
+            if (reads.size() >= MAX_NUM_READS)
+            {
+#ifdef DEBUG_ASBL
+                log_os << logtag << "WARNING: assembly read buffer full, skipping further input\n";
+#endif
+                break;
+            }
+
             const bam_record& bamRead(*(bamStream.get_record_ptr()));
 
 #if 0
@@ -203,9 +214,6 @@ getBreakendReads(
                 {
                     if (leadingMismatchLen >= minMismatchLen) isSemiAlignedKeeper = true;
                 }
-#ifdef DEBUG_ASBL
-                ++semiAlignedCnt;
-#endif
 
 #if 0
                 if (isSemiAligned(bamRead,ref,_scanOpt.minSemiAlignedScoreCandidates))
@@ -225,7 +233,6 @@ getBreakendReads(
                                  _scanOpt.minSingletonMapqCandidates))
                 {
                     isShadowKeeper = true;
-                    ++shadowCnt;
                 }
             }
 
@@ -239,15 +246,26 @@ getBreakendReads(
                    || isSemiAlignedKeeper
                    || isShadowKeeper
                   )) continue;
+
+#ifdef DEBUG_ASBL
+                if (isClipKeeper) ++clipCount;
+                if (isIndelKeeper) ++indelCount;
+                if (isSemiAlignedKeeper) ++semiAlignedCount;
+                if (isShadowKeeper) ++shadowCount;
+#endif
             //if ( bamRead.pe_map_qual() == 0 ) continue;
             const char flag(bamRead.is_second() ? '2' : '1');
             const std::string readKey = std::string(bamRead.qname()) + "_" + flag + "_" + bamIndexStr;
 
 #ifdef DEBUG_ASBL
-            log_os << logtag << " Adding " << readKey << " " << apath << " " << bamRead.pe_map_qual() << " " << bamRead.pos() << "\n"
-                   << bamRead.get_bam_read().get_string() << "\n";
-            log_os << " cigar: " << apath << " isClipKeeper: " << isClipKeeper << " isIndelKeeper: " << isIndelKeeper;
-            log_os << " isSemiAlignedKeeper: " << isSemiAlignedKeeper << " isShadowKeeper: " << isShadowKeeper << "\n";
+            log_os << logtag << "Adding bamrec: " << bamRead << '\n'
+                   << "\tmapq: " << bamRead.pe_map_qual() << '\n'
+                   << "\tread: " << bamRead.get_bam_read() << '\n';
+            log_os << "isClipKeeper: " << isClipKeeper
+                   << " isIndelKeeper: " << isIndelKeeper
+                   << " isSemiAlignedKeeper: " << isSemiAlignedKeeper
+                   << " isShadowKeeper: " << isShadowKeeper
+                   << '\n';
 #endif
 
             if (readIndex.count(readKey) == 0)
@@ -263,8 +281,14 @@ getBreakendReads(
 #endif
             }
         }
+
 #ifdef DEBUG_ASBL
-        log_os << "bam " << bamIndex << " semi-aligned " << semiAlignedCnt << " shadow " << shadowCnt << "\n";
+        log_os << logtag << "bam " << bamIndex
+               << " clip: " << clipCount
+               << " indel: " << indelCount
+               << " semi-aligned " << semiAlignedCount
+               << " shadow " << shadowCount
+               << '\n';
 #endif
     }
 }

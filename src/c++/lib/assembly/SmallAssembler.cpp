@@ -193,7 +193,8 @@ buildContigs(
     const unsigned readCount(reads.size());
 
 #ifdef DEBUG_ASBL
-    log_os << "In SVLocusAssembler::buildContig. word length=" << wordLength << "\n";
+    static const std::string logtag("buildContigs: ");
+    log_os << logtag << "In SVLocusAssembler::buildContig. word length=" << wordLength << " readCount: " << readCount << "\n";
     for (unsigned readIndex(0); readIndex<readCount; ++readIndex)
     {
         log_os << reads[readIndex] << " used=" << readInfo[readIndex].isUsed << "\n";
@@ -233,7 +234,7 @@ buildContigs(
             {
                 // try again with different k-mer size
 #ifdef DEBUG_ASBL
-                log_os << "word " << word << " repeated in read " << readIndex << "\n";
+                log_os << logtag << "word " << word << " repeated in read " << readIndex << "\n";
 #endif
                 return false;
             }
@@ -256,13 +257,13 @@ buildContigs(
     if (maxWordCount < opt.minCoverage)
     {
 #ifdef DEBUG_ASBL
-        log_os << "Coverage too low : " << maxWordCount << " " << opt.minCoverage << "\n";
+        log_os << logtag << "Coverage too low : " << maxWordCount << " " << opt.minCoverage << "\n";
 #endif
         return false;
     }
 
 #ifdef DEBUG_ASBL
-    log_os << "Seeding kmer : " << maxWord << "\n";
+    log_os << logtag << "Seeding kmer : " << maxWord << "\n";
 #endif
 
     // start initial assembly with most frequent kmer as seed
@@ -275,7 +276,7 @@ buildContigs(
     const unsigned contigSize(contig.seq.size());
 
 #ifdef DEBUG_ASBL
-    log_os << "First pass assembly resulted in "
+    log_os << logtag << "First pass assembly resulted in "
            << contig.seq << "\n"
            << " with length " << contigSize << ". Input consisted of " << readCount << " reads.\n";
 #endif
@@ -288,12 +289,12 @@ buildContigs(
     }
 
 #ifdef DEBUG_ASBL
-    log_os << "final seeding reading count: " << contig.seedReadCount << "\n";
+    log_os << logtag << "final seeding reading count: " << contig.seedReadCount << "\n";
 #endif
     if (contig.seedReadCount < opt.minSeedReads)
     {
 #ifdef DEBUG_ASBL
-        log_os << "which is below minSeedReadCount of " << opt.minSeedReads << " discarding.\n";
+        log_os << "\t...which is below minSeedReadCount of " << opt.minSeedReads << " discarding.\n";
 #endif
         return false;
     }
@@ -342,7 +343,8 @@ runSmallAssembler(
     Assembly& contigs)
 {
 #ifdef DEBUG_ASBL
-    log_os << "SmallAssember: Starting assembly with " << reads.size() << " reads.\n";
+    static const std::string logtag("runSmallAssembler: ");
+    log_os << logtag << "Starting assembly with " << reads.size() << " reads.\n";
 #endif
     assert(opt.alphabet.size()>1);
 
@@ -351,36 +353,34 @@ runSmallAssembler(
 
     assembledReadInfo.resize(reads.size());
 
-    std::vector<unsigned> iterationUnusedReads; ///< track unused reads at each iteration
-
-    unsigned unusedReadsNow(reads.size());
+    unsigned unusedReads(reads.size());
 
     for (unsigned iteration(0); iteration < opt.maxAssemblyIterations; ++iteration)
     {
-        if (unusedReadsNow < opt.minSeedReads) return;
+        if (unusedReads < opt.minSeedReads) return;
 
-        iterationUnusedReads.push_back(unusedReadsNow);
+        const unsigned lastUnusedReads(unusedReads);
         for (unsigned wordLength(opt.minWordLength); wordLength<=opt.maxWordLength; wordLength+=opt.wordStepSize)
         {
-            const bool isAssemblySuccess = buildContigs(opt, reads, assembledReadInfo, wordLength, contigs, unusedReadsNow);
+            const bool isAssemblySuccess = buildContigs(opt, reads, assembledReadInfo, wordLength, contigs, unusedReads);
             if (isAssemblySuccess) break;
         }
+
 #ifdef DEBUG_ASBL
-        log_os << "iter: " << iteration << " unused readMap now: " << unusedReadsNow << "\n";
+        log_os << logtag << "iter: " << iteration << " unused readMap now: " << unusedReads << "\n";
 #endif
 
-        // stop if no change in number of unused reads for last unusedLookback iterations:
-        static const unsigned unusedLookback(4);
-        if ( (iteration>=unusedLookback) && (unusedReadsNow == iterationUnusedReads[(iteration-unusedLookback)]))
+        // stop if no change in number of unused reads
+        if (unusedReads == lastUnusedReads)
         {
 #ifdef DEBUG_ASBL
-            log_os << "Number of unused reads (" << unusedReadsNow << ") did not change for the past " << unusedLookback << " iterations. Stopping.\n";
+            log_os << logtag << "Number of unused reads (" << unusedReads << ") did not change in this iteration. Stopping.\n";
 #endif
-            break;
+            return;
         }
     }
 #ifdef DEBUG_ASBL
-    log_os << "SmallAssembler: Reached max number of assembly iterations: " << opt.maxAssemblyIterations << "\n";
+    log_os << logtag << "Reached max number of assembly iterations: " << opt.maxAssemblyIterations << "\n";
 #endif
 }
 
