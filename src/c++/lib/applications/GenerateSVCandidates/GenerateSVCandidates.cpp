@@ -237,6 +237,39 @@ struct ReducedGraphInfo
 #endif
 
 
+
+/// should we filter out the SVCandidate?
+///
+/// Note this logic belongs in SVFinder and should make it's way there once stable:
+static
+bool
+isFilterCandidate(
+    const SVCandidate& sv)
+{
+    // don't consider candidates created from only semi-mapped read pairs:
+    if (sv.bp1.isLocalOnly() && sv.bp2.isLocalOnly()) return true;
+
+    // candidates must have a minimum amount of evidence:
+    if (isSpanningSV(sv))
+    {
+        static const unsigned minCandidateSpanningCount(3);
+        if (sv.bp1.getSpanningCount() < minCandidateSpanningCount) return true;
+    }
+    else if (isComplexSV(sv))
+    {
+        static const unsigned minCandidateComplexCount(2);
+        if (sv.bp1.lowresEvidence.getTotal() < minCandidateComplexCount) return true;
+    }
+    else
+    {
+        assert(false && "Unknown SV candidate type");
+    }
+
+    return false;
+}
+
+
+
 static
 void
 runGSC(
@@ -304,8 +337,8 @@ runGSC(
             {
                 truthTracker.addCandSV();
 
-                /// don't consider candidates created from only semi-mapped read pairs:
-                if (candidateSV.bp1.isLocalOnly() && candidateSV.bp2.isLocalOnly()) continue;
+                /// Filter various candidates types:
+                if (isFilterCandidate(candidateSV)) continue;
 
                 if (opt.isVerbose)
                 {
