@@ -31,31 +31,51 @@ stripMantaIds() {
 
 
 #
-# Additional optional add-on filters
+# Optional add-on filters
 #
 stripPairCounts() {
     sed "s/PAIR_COUNT=[0-9]*//g"
+}
+
+stripQual() {
+    awk 'BEGIN {FS="\t"; OFS="\t";} {$6=""; print}'
+}
+
+stripSample() {
+    awk 'BEGIN {FS="\t"; OFS="\t";} {for(i=10;i<=NF;++i) { $i=""; } print;}'
 }
 
 
 #
 # optionally ungzip, then remove header and remove IDs from each vcf
 #
+stripVcfCore() {
+    infile=$1
+
+    optionalUngzip $infile |\
+    filterHeader |\
+    stripMantaIds
+}
+
+
+#
+# strip vcf and add additional info to make diff more informative:
+#
 stripVcf() {
     infile=$1
 
     # print input filename so that it's easy to figure out the diff polarity and see global lineCount diff:
-    echo "$scriptName filteredVcf: $1"
-    lineCount=$(optionalUngzip $1 | filterHeader | wc -l)
+    echo "$scriptName filteredVcf: $infile"
+    lineCount=$(stripVcfCore $infile | wc -l)
     echo "$scriptName variantLineCount: $lineCount"
 
     # extra spaces keep the filename/lineCount diff above from attaching to a change on line 1 of the file:
     echo -e "\n\n\n"
 
-    optionalUngzip $1 |\
-    filterHeader |\
-    stripMantaIds
+    stripVcfCore $infile
 }
+
+
 
 #
 # parse cmdline and diff:
