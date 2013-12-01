@@ -26,6 +26,47 @@
 #include <vector>
 
 
+/// enumerate evidence type accumulated for each sample
+struct SampleReadCounts
+{
+    SampleReadCounts() :
+        anom(0),
+        nonAnom(0)
+    {}
+
+    void
+    clear()
+    {
+        anom = 0;
+        nonAnom = 0;
+    }
+
+    void
+    merge(
+        const SampleReadCounts& srs)
+    {
+        anom += srs.anom;
+        nonAnom += srs.nonAnom;
+    }
+
+    void
+    write(
+        std::ostream& os,
+        const char* label) const;
+
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned /* version */)
+    {
+        ar& anom& nonAnom;
+    }
+
+    unsigned long anom; ///< total number of non-filtered anomalous reads scanned but not in graph
+    unsigned long nonAnom; ///< total number of non-filtered non-anomalous reads scanned but not in graph
+};
+
+
+
 /// A set of SVLocus objects comprising a full locus graph
 ///
 /// When finalized, the SVLocusSet contains non-overlapping SVLoci
@@ -42,8 +83,6 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
         _source("UNKNOWN"),
         _isFinalized(false),
         _totalCleaned(0),
-        _totalAnom(0),
-        _totalNonAnom(0),
         _highestSearchCount(0),
         _highestSearchDensity(0),
         _isMaxSearchCount(false),
@@ -107,26 +146,6 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
     void
     merge(const SVLocusSet& set);
 
-    /// indicates the total count of non-filtered
-    /// anomolous reads used to construct the graph
-    ///
-    /// useful for tracking read stats/chimera rates
-    void
-    addAnomCount(const unsigned count = 1)
-    {
-        _totalAnom += count;
-    }
-
-    /// indicates the total count of non-filtered
-    /// non-anomolous reads used to construct the graph
-    ///
-    /// useful for tracking read stats/chimera rates
-    void
-    addNonAnomCount(const unsigned count = 1)
-    {
-        _totalNonAnom += count;
-    }
-
     void
     clear()
     {
@@ -134,8 +153,8 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
         clearIndex();
         _isFinalized=false;
         _totalCleaned=0;
-        _totalAnom=0;
-        _totalNonAnom=0;
+        _normalReads.clear();
+        _tumorReads.clear();
         _highestSearchCount=0;
         _highestSearchDensity=0;
 
@@ -252,6 +271,13 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
         const bool isCheckOverlap = false,
         const bool isCheckLocusConnected = false) const;
 
+    /// updater gets direct access to read counts:
+    SampleReadCounts&
+    getReadCounts(
+        const bool isTumor)
+    {
+        return ( isTumor ? _tumorReads : _normalReads );
+    }
 
     typedef std::pair<LocusIndexType,NodeIndexType> NodeAddressType;
 
@@ -518,7 +544,6 @@ private:
         const std::set<NodeAddressType>& inputIntersectRemotes,
         bool& isIntersectRemotes) const;
 
-
     ///////////////////// data
 
 public:
@@ -543,14 +568,11 @@ private:
     // once complete, overlaps are not present and disallowed:
     bool _isFinalized;
 
+    SampleReadCounts _normalReads;
+    SampleReadCounts _tumorReads;
+
     // total number of observations removed on edges with less than minMergeEdgeCount counts
     unsigned _totalCleaned;
-
-    // total number of non-filtered anomalous reads scanned but not in graph:
-    unsigned long _totalAnom;
-
-    // total number of non-filtered non-anomalous reads scanned but not in graph:
-    unsigned long _totalNonAnom;
 
     mutable unsigned _highestSearchCount; ///< highest search count observed during graph build
     mutable float _highestSearchDensity; ///< highest node density observed during graph build

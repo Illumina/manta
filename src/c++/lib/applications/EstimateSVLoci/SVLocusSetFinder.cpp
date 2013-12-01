@@ -73,8 +73,6 @@ SVLocusSetFinder(
     _isInDenoiseRegion(false),
     _denoisePos(0),
     _readScanner(opt.scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilename),
-    _anomCount(0),
-    _nonAnomCount(0),
     _isMaxDepth(false),
     _maxDepth(0)
 {
@@ -227,7 +225,8 @@ update(
 {
     _isScanStarted=true;
 
-    if (! _isAlignmentTumor[defaultReadGroupIndex])
+    const bool isTumor(_isAlignmentTumor[defaultReadGroupIndex]);
+    if (! isTumor)
     {
         // depth estimation relies on a simple filtration criteria to stay in sync with the chromosome mean
         // depth estimates:
@@ -247,8 +246,8 @@ update(
     // exclude innie read pairs which are anomalously short:
     const bool isNonCompressedAnomalous(_readScanner.isNonCompressedAnomalous(bamRead,defaultReadGroupIndex));
 
-    if (isNonCompressedAnomalous) ++_anomCount;
-    else                          ++_nonAnomCount;
+    if (isNonCompressedAnomalous) _svLoci.getReadCounts(isTumor).anom++;
+    else                          _svLoci.getReadCounts(isTumor).nonAnom++;
 
     bool isLocalAssemblyEvidence(false);
     if (! isNonCompressedAnomalous)

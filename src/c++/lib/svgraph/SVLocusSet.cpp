@@ -29,6 +29,18 @@
 #include <sstream>
 
 
+void
+SampleReadCounts::
+write(
+    std::ostream& os,
+    const char* label) const
+{
+    static const char sep('\t');
+    os << label << "_totalAnomalousConsidered:" << sep << anom << '\n';
+    os << label << "_totalNonAnomalousConsidered:" << sep << nonAnom << '\n';
+}
+
+
 
 std::ostream&
 operator<<(std::ostream& os, const SVLocusSet::NodeAddressType& a)
@@ -267,8 +279,8 @@ merge(const SVLocusSet& inputSet)
     }
 
     _totalCleaned += inputSet._totalCleaned;
-    _totalAnom += inputSet._totalAnom;
-    _totalNonAnom += inputSet._totalNonAnom;
+    _normalReads.merge(inputSet._normalReads);
+    _tumorReads.merge(inputSet._tumorReads);
     _highestSearchCount = std::max(_highestSearchCount, inputSet._highestSearchCount);
     _isMaxSearchCount = (_isMaxSearchCount || inputSet._isMaxSearchCount);
     _highestSearchDensity = std::max(_highestSearchDensity, inputSet._highestSearchDensity);
@@ -925,12 +937,13 @@ dumpStats(std::ostream& os) const
     os << "directedEdges:" << sep << totalEdgeCount() << "\n";
     os << "totalGraphEvidence:" << sep << totalObservationCount() << "\n";
     os << "totalCleaned:" << sep << _totalCleaned << "\n";
-    os << "totalAnomalousConsidered:" << sep << _totalAnom << "\n";
-    os << "totalNonAnomalousConsidered:" << sep << _totalNonAnom << "\n";
     os << "highestSearchCount:" << sep << _highestSearchCount << "\n";
     os << "isMaxSearchCount:" << sep << _isMaxSearchCount << "\n";
     os << "highestSearchDensity:" << sep << _highestSearchDensity << "\n";
     os << "isMaxSearchDensity:" << sep << _isMaxSearchDensity << "\n";
+
+    _normalReads.write(os,"normal");
+    _tumorReads.write(os,"tumor");
 }
 
 
@@ -1012,8 +1025,8 @@ save(const char* filename) const
     oa << _opt;
     oa << _isFinalized;
     oa << _totalCleaned;
-    oa << _totalAnom;
-    oa << _totalNonAnom;
+    oa << _normalReads;
+    oa << _tumorReads;
     oa << _highestSearchCount;
     oa << _highestSearchDensity;
     oa << _isMaxSearchCount;
@@ -1052,8 +1065,8 @@ load(
     ia >> _opt;
     ia >> _isFinalized;
     ia >> _totalCleaned;
-    ia >> _totalAnom;
-    ia >> _totalNonAnom;
+    ia >> _normalReads;
+    ia >> _tumorReads;
     ia >> _highestSearchCount;
     ia >> _highestSearchDensity;
     ia >> _isMaxSearchCount;
