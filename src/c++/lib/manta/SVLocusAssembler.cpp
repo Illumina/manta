@@ -17,7 +17,6 @@
 
 
 #include "blt_util/align_path_bam_util.hh"
-#include "blt_util/depth_buffer.hh"
 #include "blt_util/log.hh"
 #include "blt_util/seq_util.hh"
 #include "manta/SVLocusAssembler.hh"
@@ -58,19 +57,27 @@ SVLocusAssembler(
 
 
 
+/// approximate depth tracking -- don't bother reading the cigar string, just assume a perfect match of
+/// size read_size
 static
 void
-addToDepthBuffer(
+addReadToDepthEst(
     const bam_record& bamRead,
-    depth_buffer& normalDepthBuffer)
+    const pos_t beginPos,
+    std::vector<unsigned>& depth)
 {
-    const pos_t refPos(bamRead.pos()-1);
+    const pos_t endPos(beginPos+depth.size());
+    const pos_t refStart(bamRead.pos()-1);
 
-    /// stick to a simple approximation -- ignore CIGAR string and just look at the read length:
     const pos_t readSize(bamRead.read_size());
-    for (pos_t readIndex(0); readIndex<readSize; ++readIndex)
+    for (pos_t readIndex(std::max(0,(beginPos-refStart))); readIndex<readSize; ++readIndex)
     {
-        normalDepthBuffer.inc(refPos+readIndex);
+        const pos_t refPos(refStart+readIndex);
+        if (refPos>=endPos) return;
+        const pos_t depthIndex(refPos-beginPos);
+        assert(depthIndex>=0);
+
+        depth[depthIndex]++;
     }
 }
 
@@ -129,7 +136,9 @@ getBreakendReads(
 
     const bool isMaxDepth(_dFilter.isMaxDepthFilter());
     const float maxDepth(_dFilter.maxDepth(bp.interval.tid));
-    depth_buffer normalDepthBuffer;
+    const pos_t searchBeginPos(searchRange.begin_pos());
+    const pos_t searchEndPos(searchRange.end_pos());
+    std::vector<unsigned> normalDepthBuffer(searchRange.size(),0);
 
     bool isFirstTumor(false);
 
@@ -147,7 +156,7 @@ getBreakendReads(
         bam_streamer& bamStream(*_bamStreams[bamIndex]);
 
         // set bam stream to new search interval:
-        bamStream.set_new_region(bp.interval.tid, searchRange.begin_pos(), searchRange.end_pos());
+        bamStream.set_new_region(bp.interval.tid, searchBeginPos, searchEndPos);
 
         // Singleton/shadow pairs *should* appear consecutively in the BAM file
         // this keeps track of the mapq score of the singleton read such that
@@ -185,7 +194,7 @@ getBreakendReads(
                     // depth estimates:
                     if (! bamRead.is_unmapped())
                     {
-                        addToDepthBuffer(bamRead, normalDepthBuffer);
+                        addReadToDepthEst(bamRead, searchBeginPos, normalDepthBuffer);
                     }
                 }
             }
@@ -203,11 +212,14 @@ getBreakendReads(
             if (bamRead.is_secondary()) continue;
             if (bamRead.is_supplement()) continue;
 
-            if ((bamRead.pos()-1) >= searchRange.end_pos()) break;
+            const pos_t refPos(bamRead.pos()-1);
+            if (refPos >= searchEndPos) break;
 
             if (isMaxDepth)
             {
-                if (normalDepthBuffer.val(bamRead.pos()-1) > maxDepth) return;
+                assert(refPos<searchEndPos);
+                const pos_t depthOffset(refPos - searchBeginPos);
+                if ((depthOffset >= 0) && (normalDepthBuffer[depthOffset] > maxDepth)) continue;
             }
 
             // filter reads with "N"

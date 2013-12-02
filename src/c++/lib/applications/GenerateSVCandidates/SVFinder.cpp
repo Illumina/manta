@@ -184,19 +184,27 @@ getNodeRefSeq(
 
 
 
+/// approximate depth tracking -- don't bother reading the cigar string, just assume a perfect match of
+/// size read_size
 static
 void
-addToDepthBuffer(
+addReadToDepthEst(
     const bam_record& bamRead,
-    depth_buffer& normalDepthBuffer)
+    const pos_t beginPos,
+    std::vector<unsigned>& depth)
 {
-    const pos_t refPos(bamRead.pos()-1);
+    const pos_t endPos(beginPos+depth.size());
+    const pos_t refStart(bamRead.pos()-1);
 
-    /// stick to a simple approximation -- ignore CIGAR string and just look at the read length:
     const pos_t readSize(bamRead.read_size());
-    for (pos_t readIndex(0); readIndex<readSize; ++readIndex)
+    for (pos_t readIndex(std::max(0,(beginPos-refStart))); readIndex<readSize; ++readIndex)
     {
-        normalDepthBuffer.inc(refPos+readIndex);
+        const pos_t refPos(refStart+readIndex);
+        if (refPos>=endPos) return;
+        const pos_t depthIndex(refPos-beginPos);
+        assert(depthIndex>=0);
+
+        depth[depthIndex]++;
     }
 }
 
@@ -241,7 +249,9 @@ addSVNodeData(
 
     const bool isMaxDepth(dFilter().isMaxDepthFilter());
     const float maxDepth(dFilter().maxDepth(searchInterval.tid));
-    depth_buffer normalDepthBuffer;
+    const pos_t searchBeginPos(searchInterval.range.begin_pos());
+    const pos_t searchEndPos(searchInterval.range.end_pos());
+    std::vector<unsigned> normalDepthBuffer(searchInterval.range.size(),0);
 
     bool isFirstTumor(false);
 
@@ -268,6 +278,9 @@ addSVNodeData(
         {
             const bam_record& bamRead(*(read_stream.get_record_ptr()));
 
+            const pos_t refPos(bamRead.pos()-1);
+            if (refPos >= searchEndPos) break;
+
             if (isMaxDepth)
             {
                 if (! isTumor)
@@ -276,14 +289,13 @@ addSVNodeData(
                     // depth estimates:
                     if (! bamRead.is_unmapped())
                     {
-                        addToDepthBuffer(bamRead, normalDepthBuffer);
+                        addReadToDepthEst(bamRead, searchBeginPos, normalDepthBuffer);
                     }
                 }
-            }
 
-            if (isMaxDepth)
-            {
-                if (normalDepthBuffer.val(bamRead.pos()-1) > maxDepth) continue;
+                assert(refPos<searchEndPos);
+                const pos_t depthOffset(refPos - searchBeginPos);
+                if ((depthOffset>=0) && (normalDepthBuffer[depthOffset] > maxDepth)) continue;
             }
 
             // test if read supports an SV on this edge, if so, add to SVData
