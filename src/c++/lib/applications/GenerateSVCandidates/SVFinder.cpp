@@ -39,11 +39,14 @@
 SVFinder::
 SVFinder(const GSCOptions& opt) :
     _scanOpt(opt.scanOpt),
+    _isAlignmentTumor(opt.alignFileOpt.isAlignmentTumor),
     _readScanner(_scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilename),
     _referenceFilename(opt.referenceFilename)
 {
     // load in set:
     _set.load(opt.graphFilename.c_str(),true);
+
+    _dFilterPtr.reset(new ChromDepthFilterUtil(opt.chromDepthFilename,_scanOpt.maxDepthFactor,_set.header));
 
     // setup regionless bam_streams:
     // setup all data for main analysis loop:
@@ -55,6 +58,12 @@ SVFinder(const GSCOptions& opt) :
     }
 }
 
+
+
+/// making the dtor explicit and in the cpp allows auto_ptr to work reliably:
+SVFinder::
+~SVFinder()
+{}
 
 
 // test if read supports an SV on this edge, if so, add to SVData
@@ -175,6 +184,24 @@ getNodeRefSeq(
 
 
 
+static
+void
+addToDepthBuffer(
+    const bam_record& bamRead,
+    depth_buffer& normalDepthBuffer)
+{
+    const pos_t refPos(bamRead.pos()-1);
+
+    /// stick to a simple approximation -- ignore CIGAR string and just look at the read length:
+    const pos_t readSize(bamRead.read_size());
+    for (pos_t readIndex(0); readIndex<readSize; ++readIndex)
+    {
+        normalDepthBuffer.inc(refPos+readIndex);
+    }
+}
+
+
+
 void
 SVFinder::
 addSVNodeData(
@@ -212,10 +239,22 @@ addSVNodeData(
            << "\n";
 #endif
 
+    const bool isMaxDepth(dFilter().isMaxDepthFilter());
+    const float maxDepth(dFilter().maxDepth(searchInterval.tid));
+    depth_buffer normalDepthBuffer;
+
+    bool isFirstTumor(false);
+
     // iterate through reads, test reads for association and add to svData:
     unsigned bamIndex(0);
     BOOST_FOREACH(streamPtr& bamPtr, _bamStreams)
     {
+        const bool isTumor(_isAlignmentTumor[bamIndex]);
+
+        /// assert expected sample order of all normal, then all tumor:
+        if (isTumor) isFirstTumor=true;
+        assert((! isFirstTumor) || isTumor);
+
         SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
         bam_streamer& read_stream(*bamPtr);
 
@@ -228,6 +267,24 @@ addSVNodeData(
         while (read_stream.next())
         {
             const bam_record& bamRead(*(read_stream.get_record_ptr()));
+
+            if (isMaxDepth)
+            {
+                if (! isTumor)
+                {
+                    // depth estimation relies on a simple filtration criteria to stay in sync with the chromosome mean
+                    // depth estimates:
+                    if (! bamRead.is_unmapped())
+                    {
+                        addToDepthBuffer(bamRead, normalDepthBuffer);
+                    }
+                }
+            }
+
+            if (isMaxDepth)
+            {
+                if (normalDepthBuffer.val(bamRead.pos()-1) > maxDepth) continue;
+            }
 
             // test if read supports an SV on this edge, if so, add to SVData
             addSVNodeRead(

@@ -20,6 +20,8 @@
 #include "GSCOptions.hh"
 
 #include "blt_util/bam_streamer.hh"
+#include "blt_util/depth_buffer.hh"
+#include "manta/ChromDepthFilterUtil.hh"
 #include "manta/SVCandidate.hh"
 #include "manta/SVCandidateSetData.hh"
 #include "manta/SVLocusScanner.hh"
@@ -35,6 +37,8 @@ struct SVFinder
 {
 
     SVFinder(const GSCOptions& opt);
+
+    ~SVFinder();
 
     const SVLocusSet&
     getSet() const
@@ -81,8 +85,16 @@ private:
         std::vector<SVCandidate>& svs,
         TruthTracker& truthTracker);
 
+    const ChromDepthFilterUtil&
+    dFilter() const
+    {
+        return *(_dFilterPtr);
+    }
+
     const ReadScannerOptions _scanOpt;
+    const std::vector<bool> _isAlignmentTumor;
     SVLocusSet _set;
+    std::auto_ptr<ChromDepthFilterUtil> _dFilterPtr;
     SVLocusScanner _readScanner;
 
     const std::string _referenceFilename;
