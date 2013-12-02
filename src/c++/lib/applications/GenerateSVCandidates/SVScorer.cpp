@@ -111,6 +111,7 @@ addReadToDepthEst(
 void
 SVScorer::
 getBreakendMaxMappedDepthAndMQ0(
+    const double cutoffDepth,
     const SVBreakend& bp,
     unsigned& maxDepth,
     float& MQ0Frac)
@@ -132,6 +133,7 @@ getBreakendMaxMappedDepthAndMQ0(
 
     std::vector<unsigned> depth(searchRange.size(),0);
 
+    bool isCutoff(true);
     bool isNormalFound(false);
 
     const unsigned bamCount(_bamStreams.size());
@@ -152,13 +154,25 @@ getBreakendMaxMappedDepthAndMQ0(
             // turn filtration down to mapped only to match depth estimate method:
             if (bamRead.is_unmapped()) continue;
 
-            if ((bamRead.pos()-1) >= searchRange.end_pos()) break;
+            const pos_t refPos(bamRead.pos()-1);
+            if (refPos >= searchRange.end_pos()) break;
 
             addReadToDepthEst(bamRead,searchRange.begin_pos(),depth);
 
             totalReads++;
             if (0 == bamRead.map_qual()) totalMQ0Reads++;
+
+            const pos_t depthOffset(refPos-searchRange.begin_pos());
+            if (depthOffset>=0) {
+                if (depth[depthOffset] > cutoffDepth)
+                {
+                    isCutoff=true;
+                    break;
+                }
+            }
         }
+
+        if (isCutoff) break;
     }
 
     assert(isNormalFound);
@@ -337,19 +351,42 @@ scoreSV(
     SVScoreInfo& baseInfo,
     SVEvidence& evidence)
 {
+    /// at what factor above the maxDepth FILTER criteria do we stop enumerating scoring components?
+    static const unsigned cutoffDepthFactor(2);
+
+    const bool isMaxDepth(_dFilterDiploid.isMaxDepthFilter() && _dFilterSomatic.isMaxDepthFilter());
+    double bp1CutoffDepth(0);
+    double bp2CutoffDepth(0);
+    if (isMaxDepth)
+    {
+        const double bp1MaxMaxDepth(std::max(_dFilterDiploid.maxDepth(sv.bp1.interval.tid), _dFilterSomatic.maxDepth(sv.bp1.interval.tid)));
+        const double bp2MaxMaxDepth(std::max(_dFilterDiploid.maxDepth(sv.bp2.interval.tid), _dFilterSomatic.maxDepth(sv.bp2.interval.tid)));
+
+        bp1CutoffDepth = cutoffDepthFactor*bp1MaxMaxDepth;
+        bp2CutoffDepth = cutoffDepthFactor*bp2MaxMaxDepth;
+    }
+
     // get breakend center_pos depth estimate:
-    getBreakendMaxMappedDepthAndMQ0(sv.bp1, baseInfo.bp1MaxDepth, baseInfo.bp1MQ0Frac);
-    getBreakendMaxMappedDepthAndMQ0(sv.bp2, baseInfo.bp2MaxDepth, baseInfo.bp2MQ0Frac);
+    getBreakendMaxMappedDepthAndMQ0(bp1CutoffDepth, sv.bp1, baseInfo.bp1MaxDepth, baseInfo.bp1MQ0Frac);
+    if (baseInfo.bp1MaxDepth > bp1CutoffDepth)
+    {
+        getBreakendMaxMappedDepthAndMQ0(bp2CutoffDepth, sv.bp2, baseInfo.bp2MaxDepth, baseInfo.bp2MQ0Frac);
+    }
 
     /// global evidence accumulator for this SV:
+    const bool isSkipEvidenceSearch((baseInfo.bp1MaxDepth > bp1CutoffDepth) ||
+                                    (baseInfo.bp2MaxDepth > bp2CutoffDepth));
 
-    // count the paired-read fragments supporting the ref and alt alleles in each sample:
-    //
-    getSVPairSupport(svData, assemblyData, sv, baseInfo, evidence);
+    if (! isSkipEvidenceSearch)
+    {
+        // count the paired-read fragments supporting the ref and alt alleles in each sample:
+        //
+        getSVPairSupport(svData, assemblyData, sv, baseInfo, evidence);
 
-    // count the split reads supporting the ref and alt alleles in each sample
-    //
-    getSVSplitReadSupport(assemblyData, sv, baseInfo, evidence);
+        // count the split reads supporting the ref and alt alleles in each sample
+        //
+        getSVSplitReadSupport(assemblyData, sv, baseInfo, evidence);
+    }
 
     // compute allele likelihoods, and any other summary metric shared between all models:
     //

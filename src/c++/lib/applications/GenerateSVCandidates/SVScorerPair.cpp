@@ -822,22 +822,6 @@ getSVPairSupport(
     log_os << logtag << "starting alt pair search for sv: " << sv << "\n";
 #endif
 
-    static const unsigned maxDepthPairFactor(2); ///< at what multiple of the maxDepth do we skip paired-read analysis?
-
-    bool isSkipPairSearchDepth(false);
-
-    if (_dFilterDiploid.isMaxDepthFilter() && _dFilterSomatic.isMaxDepthFilter())
-    {
-        const double bp1MaxMaxDepth(std::max(_dFilterDiploid.maxDepth(sv.bp1.interval.tid), _dFilterSomatic.maxDepth(sv.bp1.interval.tid)));
-        const double bp2MaxMaxDepth(std::max(_dFilterDiploid.maxDepth(sv.bp2.interval.tid), _dFilterSomatic.maxDepth(sv.bp2.interval.tid)));
-
-        isSkipPairSearchDepth=((baseInfo.bp1MaxDepth > (maxDepthPairFactor*bp1MaxMaxDepth)) ||
-                               (baseInfo.bp2MaxDepth > (maxDepthPairFactor*bp2MaxMaxDepth)));
-    }
-
-    if(isSkipPairSearchDepth) return;
-
-
     if (assemblyData.isCandidateSpanning)
     {
         // count the read pairs supporting the alternate allele in each sample

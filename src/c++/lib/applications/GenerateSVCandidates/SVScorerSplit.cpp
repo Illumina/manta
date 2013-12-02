@@ -196,27 +196,11 @@ getSVSplitReadSupport(
     SVScoreInfo& baseInfo,
     SVEvidence& evidence)
 {
-    static const unsigned maxDepthSRFactor(2); ///< at what multiple of the maxDepth do we skip split read analysis?
-
-    bool isSkipSRSearchDepth(false);
-
-    if (_dFilterDiploid.isMaxDepthFilter() && _dFilterSomatic.isMaxDepthFilter())
-    {
-        const double bp1MaxMaxDepth(std::max(_dFilterDiploid.maxDepth(sv.bp1.interval.tid), _dFilterSomatic.maxDepth(sv.bp1.interval.tid)));
-        const double bp2MaxMaxDepth(std::max(_dFilterDiploid.maxDepth(sv.bp2.interval.tid), _dFilterSomatic.maxDepth(sv.bp2.interval.tid)));
-
-        isSkipSRSearchDepth=((baseInfo.bp1MaxDepth > (maxDepthSRFactor*bp1MaxMaxDepth)) ||
-                             (baseInfo.bp2MaxDepth > (maxDepthSRFactor*bp2MaxMaxDepth)));
-    }
-
     // apply the split-read scoring, only when:
     // 1) the SV is precise, i.e. has successful somatic contigs;
-    // 2) the values of max depth are reasonable (otherwise, the read map may blow out).
-    const bool isSkipSRSearch(
-        (sv.isImprecise()) ||
-        (isSkipSRSearchDepth));
+    // 2) the values of max depth are reasonable (otherwise, the read map may blow out). (filter is run externally)
 
-    if (isSkipSRSearch) return;
+    if (sv.isImprecise()) return;
 
     // Get Data on standard read pairs crossing the two breakends,
 
