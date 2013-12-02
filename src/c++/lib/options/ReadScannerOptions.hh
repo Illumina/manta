@@ -38,7 +38,8 @@ struct ReadScannerOptions
         minSemiAlignedScoreCandidates(180.0),
         minSingletonMapqGraph(30),
         minSingletonMapqCandidates(20),
-        isIgnoreAnomProperPair(false)
+        isIgnoreAnomProperPair(false),
+        maxDepthFactor(12)
     {}
 
     unsigned minMapq;
@@ -86,4 +87,6 @@ struct ReadScannerOptions
     unsigned minSingletonMapqCandidates;
 
     bool isIgnoreAnomProperPair; ///< typically set true for RNA-Seq analysis, where proper-pair is used to signal intron-spanning pairs
+
+    float maxDepthFactor; ///< the maximum depth at which input reads are considered in graph creation/assembly, etc. (when avg chrom depths are provided)
 };

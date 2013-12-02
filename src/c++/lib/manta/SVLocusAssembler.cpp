@@ -17,6 +17,7 @@
 
 
 #include "blt_util/align_path_bam_util.hh"
+#include "blt_util/depth_buffer.hh"
 #include "blt_util/log.hh"
 #include "blt_util/seq_util.hh"
 #include "manta/SVLocusAssembler.hh"
@@ -36,9 +37,13 @@ SVLocusAssembler(
     const ReadScannerOptions& scanOpt,
     const SmallAssemblerOptions& assembleOpt,
     const AlignmentFileOptions& alignFileOpt,
-    const std::string& statsFilename) :
+    const std::string& statsFilename,
+    const std::string& chromDepthFilename,
+    const bam_header_info& bamHeader) :
     _scanOpt(scanOpt),
     _assembleOpt(assembleOpt),
+    _isAlignmentTumor(alignFileOpt.isAlignmentTumor),
+    _dFilter(chromDepthFilename, scanOpt.maxDepthFactor, bamHeader),
     _readScanner(_scanOpt, statsFilename, alignFileOpt.alignmentFilename)
 {
     // setup regionless bam_streams:
@@ -48,6 +53,24 @@ SVLocusAssembler(
         // avoid creating shared_ptr temporaries:
         streamPtr tmp(new bam_streamer(afile.c_str()));
         _bamStreams.push_back(tmp);
+    }
+}
+
+
+
+static
+void
+addToDepthBuffer(
+    const bam_record& bamRead,
+    depth_buffer& normalDepthBuffer)
+{
+    const pos_t refPos(bamRead.pos()-1);
+
+    /// stick to a simple approximation -- ignore CIGAR string and just look at the read length:
+    const pos_t readSize(bamRead.read_size());
+    for (pos_t readIndex(0); readIndex<readSize; ++readIndex)
+    {
+        normalDepthBuffer.inc(refPos+readIndex);
     }
 }
 
@@ -104,9 +127,21 @@ getBreakendReads(
         isSearchForRightOpen = false;
     }
 
+    const bool isMaxDepth(_dFilter.isMaxDepthFilter());
+    const float maxDepth(_dFilter.maxDepth(bp.interval.tid));
+    depth_buffer normalDepthBuffer;
+
+    bool isFirstTumor(false);
+
     const unsigned bamCount(_bamStreams.size());
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
+        const bool isTumor(_isAlignmentTumor[bamIndex]);
+
+        /// assert expected sample order of all normal, then all tumor:
+        if (isTumor) isFirstTumor=true;
+        assert((! isFirstTumor) || isTumor);
+
         const std::string bamIndexStr(boost::lexical_cast<std::string>(bamIndex));
 
         bam_streamer& bamStream(*_bamStreams[bamIndex]);
@@ -142,6 +177,19 @@ getBreakendReads(
 
             const bam_record& bamRead(*(bamStream.get_record_ptr()));
 
+            if (isMaxDepth)
+            {
+                if (! isTumor)
+                {
+                    // depth estimation relies on a simple filtration criteria to stay in sync with the chromosome mean
+                    // depth estimates:
+                    if (! bamRead.is_unmapped())
+                    {
+                        addToDepthBuffer(bamRead, normalDepthBuffer);
+                    }
+                }
+            }
+
 #if 0
             // some conservative filtration criteria (including MAPQ) -- note this
             // means that if we want shadow reads this will have to be changed b/c
@@ -156,6 +204,11 @@ getBreakendReads(
             if (bamRead.is_supplement()) continue;
 
             if ((bamRead.pos()-1) >= searchRange.end_pos()) break;
+
+            if (isMaxDepth)
+            {
+                if (normalDepthBuffer.val(bamRead.pos()-1) > maxDepth) return;
+            }
 
             // filter reads with "N"
             if (bamRead.get_bam_read().get_string().find('N') != std::string::npos) continue;
@@ -248,10 +301,10 @@ getBreakendReads(
                   )) continue;
 
 #ifdef DEBUG_ASBL
-                if (isClipKeeper) ++clipCount;
-                if (isIndelKeeper) ++indelCount;
-                if (isSemiAlignedKeeper) ++semiAlignedCount;
-                if (isShadowKeeper) ++shadowCount;
+            if (isClipKeeper) ++clipCount;
+            if (isIndelKeeper) ++indelCount;
+            if (isSemiAlignedKeeper) ++semiAlignedCount;
+            if (isShadowKeeper) ++shadowCount;
 #endif
             //if ( bamRead.pe_map_qual() == 0 ) continue;
             const char flag(bamRead.is_second() ? '2' : '1');

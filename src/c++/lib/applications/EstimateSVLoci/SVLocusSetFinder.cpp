@@ -76,7 +76,7 @@ SVLocusSetFinder(
     _isMaxDepth(false),
     _maxDepth(0)
 {
-    const ChromDepthFilterUtil dFilter(opt.chromDepthFilename, opt.maxDepthFactor, bamHeader);
+    const ChromDepthFilterUtil dFilter(opt.chromDepthFilename, opt.scanOpt.maxDepthFactor, bamHeader);
     _isMaxDepth=dFilter.isMaxDepthFilter();
     if (_isMaxDepth)
     {

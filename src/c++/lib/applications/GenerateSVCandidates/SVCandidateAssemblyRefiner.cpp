@@ -468,8 +468,8 @@ SVCandidateAssemblyRefiner(
     const bam_header_info& header) :
     _opt(opt),
     _header(header),
-    _smallSVAssembler(opt.scanOpt, opt.refineOpt.smallSVAssembleOpt, opt.alignFileOpt, opt.statsFilename),
-    _spanningAssembler(opt.scanOpt, opt.refineOpt.spanningAssembleOpt, opt.alignFileOpt, opt.statsFilename),
+    _smallSVAssembler(opt.scanOpt, opt.refineOpt.smallSVAssembleOpt, opt.alignFileOpt, opt.statsFilename, opt.chromDepthFilename, header),
+    _spanningAssembler(opt.scanOpt, opt.refineOpt.spanningAssembleOpt, opt.alignFileOpt, opt.statsFilename, opt.chromDepthFilename, header),
     _smallSVAligner(opt.refineOpt.smallSVAlignScores),
     _spanningAligner(opt.refineOpt.spanningAlignScores, opt.refineOpt.jumpScore)
 {}

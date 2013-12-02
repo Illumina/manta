@@ -20,6 +20,7 @@
 #include "applications/GenerateSVCandidates/GSCOptions.hh"
 #include "assembly/SmallAssembler.hh"
 #include "blt_util/bam_streamer.hh"
+#include "manta/ChromDepthFilterUtil.hh"
 #include "manta/SVCandidate.hh"
 #include "manta/SVCandidateSetData.hh"
 #include "manta/SVLocusScanner.hh"
@@ -37,7 +38,9 @@ struct SVLocusAssembler
         const ReadScannerOptions& scanOpt,
         const SmallAssemblerOptions& assembleOpt,
         const AlignmentFileOptions& alignFileOpt,
-        const std::string& statsFilename);
+        const std::string& statsFilename,
+        const std::string& chromDepthFilename,
+        const bam_header_info& bamHeader);
 
     /**
      * @brief Performs a de-novo assembly of a set of reads crossing a breakpoint.
@@ -85,6 +88,8 @@ private:
 
     const ReadScannerOptions _scanOpt;
     const SmallAssemblerOptions _assembleOpt;
+    const std::vector<bool> _isAlignmentTumor;
+    const ChromDepthFilterUtil _dFilter;
 
     // contains functions to detect/classify anomalous reads
     SVLocusScanner _readScanner;

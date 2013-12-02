@@ -27,8 +27,7 @@
 struct ESLOptions
 {
     ESLOptions(const unsigned minMergeEdgeObservations = 3) :
-        graphOpt(minMergeEdgeObservations * SVObservationWeights::observation),   // initialize noise edge filtration parameters
-        maxDepthFactor(12.0)
+        graphOpt(minMergeEdgeObservations * SVObservationWeights::observation)  // initialize noise edge filtration parameters
     {}
 
     AlignmentFileOptions alignFileOpt;
@@ -41,8 +40,6 @@ struct ESLOptions
     std::string statsFilename;
     std::string chromDepthFilename;
     std::string truthVcfFilename;
-
-    float maxDepthFactor; ///< the maximum depth at which information is entered into the graph when avg chrom depth is given
 };
 
 
