@@ -196,10 +196,6 @@ private:
 ///
 struct SVCandidateSetData
 {
-    SVCandidateSetData() :
-        _isSkipped(false)
-    {}
-
     /// get evidence associated with a specific sample group:
     SVCandidateSetReadPairSampleGroup&
     getDataGroup(const unsigned bamIndex)
@@ -225,19 +221,6 @@ struct SVCandidateSetData
     {
         _data.clear();
         _searchIntervals.clear();
-        _isSkipped=false;
-    }
-
-    void
-    setSkipped()
-    {
-        _isSkipped=true;
-    }
-
-    bool
-    isSkipped() const
-    {
-        return _isSkipped;
     }
 
     /// return true if this search interval overlaps with any previous
@@ -253,6 +236,4 @@ private:
     data_t _data;
 
     std::vector<GenomeInterval> _searchIntervals;
-
-    bool _isSkipped; // bam region was never scanned for this variant (b/c of a temporary state during model development, no fundamemntal reason)
 };
