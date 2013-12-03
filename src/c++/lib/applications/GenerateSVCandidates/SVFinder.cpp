@@ -248,7 +248,11 @@ addSVNodeData(
 #endif
 
     const bool isMaxDepth(dFilter().isMaxDepthFilter());
-    const float maxDepth(dFilter().maxDepth(searchInterval.tid));
+    float maxDepth(0);
+    if (isMaxDepth)
+    {
+        maxDepth = dFilter().maxDepth(searchInterval.tid);
+    }
     const pos_t searchBeginPos(searchInterval.range.begin_pos());
     const pos_t searchEndPos(searchInterval.range.end_pos());
     std::vector<unsigned> normalDepthBuffer(searchInterval.range.size(),0);

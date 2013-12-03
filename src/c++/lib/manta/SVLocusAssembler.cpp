@@ -135,7 +135,11 @@ getBreakendReads(
     }
 
     const bool isMaxDepth(_dFilter.isMaxDepthFilter());
-    const float maxDepth(_dFilter.maxDepth(bp.interval.tid));
+    float maxDepth(0);
+    if (isMaxDepth)
+    {
+        maxDepth = _dFilter.maxDepth(bp.interval.tid);
+    }
     const pos_t searchBeginPos(searchRange.begin_pos());
     const pos_t searchEndPos(searchRange.end_pos());
     std::vector<unsigned> normalDepthBuffer(searchRange.size(),0);
