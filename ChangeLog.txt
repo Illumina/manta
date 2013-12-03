@@ -1,3 +1,4 @@
+- MANTA-106 add high dpeth limit to candgen and assmbler
 - MANTA-75 Better match reads to SV candidates to improve
 runtime and lower repeat observations (part 2)
 - MANTA-105 filter poorly supported candidates to reduce per-edge compute time
