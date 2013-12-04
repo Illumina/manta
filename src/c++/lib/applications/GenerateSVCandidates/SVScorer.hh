@@ -97,22 +97,12 @@ private:
         const PairOptions& pairOpt,
         const SVCandidateSetData& svData,
         const SVCandidate& sv,
-        SVScoreInfo& baseInfo,
-        SVEvidence& evidence);
-
-    void
-    getSimpleSVAltPairSupport(
-        const PairOptions& pairOpt,
-        const SVCandidate& svcand,
-        const bool isBp1,
-        SVScoreInfo& baseInfo,
         SVEvidence& evidence);
 
     void
     getSVAltPairSupport(
         const PairOptions& pairOpt,
         const SVCandidate& sv,
-        SVScoreInfo& baseInfo,
         SVEvidence& evidence);
 
     /// find spanning read support for the reference allele in a single breakend
@@ -121,7 +111,6 @@ private:
         const PairOptions& pairOpt,
         const SVBreakend& bp,
         const bool isBp1,
-        SVScoreInfo& ssInfo,
         SVEvidence& evidence);
 
     /// find spanning read support for the reference allele for sv candidate
@@ -129,7 +118,6 @@ private:
     getSVRefPairSupport(
         const PairOptions& pairOpt,
         const SVCandidate& sv,
-        SVScoreInfo& ssInfo,
         SVEvidence& evidence);
 
     /// find paired read support for ref and alt alleles
@@ -138,7 +126,6 @@ private:
         const SVCandidateSetData& svData,
         const SVCandidateAssemblyData& assemblyData,
         const SVCandidate& sv,
-        SVScoreInfo& ssInfo,
         SVEvidence& evidence);
 
     /// find split read support for ref and alt alleles

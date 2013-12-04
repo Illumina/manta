@@ -23,7 +23,6 @@
 #include "manta/SizeDistribution.hh"
 #include "manta/SVCandidate.hh"
 #include "manta/SVLocusScanner.hh"
-#include "manta/SVScoreInfo.hh"
 
 #include <vector>
 
@@ -52,7 +51,6 @@ struct SVScorePairAltBamParams
         isTumor(false),
         minFrag(0),
         maxFrag(0),
-        samplePtr(NULL),
         fragDistroPtr(NULL)
     {}
 
@@ -60,7 +58,6 @@ struct SVScorePairAltBamParams
     bool isTumor;
     pos_t minFrag;
     pos_t maxFrag;
-    SVSampleInfo* samplePtr;
     const SizeDistribution* fragDistroPtr;
     GenomeInterval interval;
 };
@@ -74,7 +71,6 @@ struct SVScorePairAltProcessor : public BamRegionProcessor
         const PairOptions& initPairOpt,
         const SVCandidate& initSv,
         const bool initIsBp1,
-        SVScoreInfo& initBaseInfo,
         SVEvidence& initEvidence);
 
     const GenomeInterval&
@@ -90,7 +86,6 @@ struct SVScorePairAltProcessor : public BamRegionProcessor
     const PairOptions& pairOpt;
     const SVCandidate& sv;
     const bool isBp1;
-    SVScoreInfo& baseInfo;
     SVEvidence& evidence;
 
     const SVScorePairAltInitParams iparams;

@@ -197,9 +197,6 @@ operator<<(
 {
     static const char indent('\t');
     os << "SVSampleAlleleInfo:\n"
-       << indent << "bp1SpanReadCount: " << sai.bp1SpanReadCount << '\n'
-       << indent << "bp2SpanReadCount: " << sai.bp2SpanReadCount << '\n'
-       << indent << "spanPairCount: " << sai.spanPairCount << '\n'
        << indent << "confidentSpanningPairCount: " << sai.confidentSpanningPairCount << '\n'
        << indent << "confidentSemiMappedSpanningPairCount: " << sai.confidentSemiMappedSpanningPairCount << '\n'
        << indent << "splitReadCount: " << sai.splitReadCount << '\n'

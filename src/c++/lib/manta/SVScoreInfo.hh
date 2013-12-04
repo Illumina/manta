@@ -95,9 +95,6 @@ operator<<(std::ostream& os, const SVAlignmentInfo& ai);
 struct SVSampleAlleleInfo
 {
     SVSampleAlleleInfo() :
-        bp1SpanReadCount(0),
-        bp2SpanReadCount(0),
-        spanPairCount(0),
         confidentSpanningPairCount(0),
         confidentSemiMappedSpanningPairCount(0),
         splitReadCount(0),
@@ -109,9 +106,6 @@ struct SVSampleAlleleInfo
     void
     clear()
     {
-        bp1SpanReadCount = 0;
-        bp2SpanReadCount = 0;
-        spanPairCount = 0;
         confidentSpanningPairCount = 0;
         confidentSemiMappedSpanningPairCount = 0;
         splitReadCount = 0;
@@ -121,10 +115,6 @@ struct SVSampleAlleleInfo
     }
 
     // allele pair support
-    unsigned bp1SpanReadCount;
-    unsigned bp2SpanReadCount;
-    unsigned spanPairCount;
-
     unsigned confidentSpanningPairCount;  ///< pairs where both reads are mapped and we've successfully looked up a fragment prob of 0.01 or more
     unsigned confidentSemiMappedSpanningPairCount; ///< pairs where at least one read is mapped and we've successfully looked up a fragment prob of 0.01 or more
 

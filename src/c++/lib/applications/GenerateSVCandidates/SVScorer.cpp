@@ -387,7 +387,7 @@ scoreSV(
     {
         // count the paired-read fragments supporting the ref and alt alleles in each sample:
         //
-        getSVPairSupport(svData, assemblyData, sv, baseInfo, evidence);
+        getSVPairSupport(svData, assemblyData, sv, evidence);
 
         // count the split reads supporting the ref and alt alleles in each sample
         //

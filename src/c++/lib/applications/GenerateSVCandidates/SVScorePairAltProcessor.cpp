@@ -95,14 +95,12 @@ SVScorePairAltProcessor(
     const PairOptions& initPairOpt,
     const SVCandidate& initSv,
     const bool initIsBp1,
-    SVScoreInfo& initBaseInfo,
     SVEvidence& initEvidence) :
     isAlignmentTumor(initIsAlignmentTumor),
     readScanner(initReadScanner),
     pairOpt(initPairOpt),
     sv(initSv),
     isBp1(initIsBp1),
-    baseInfo(initBaseInfo),
     evidence(initEvidence),
     iparams(readScanner,sv,isBp1)
 {
@@ -117,7 +115,6 @@ nextBamIndex(
 {
     bparams.isSet = true;
     bparams.isTumor = (isAlignmentTumor[bamIndex]);
-    bparams.samplePtr = &(bparams.isTumor ? baseInfo.tumor : baseInfo.normal);
 
     /// set the search range around centerPos so that we can get any fragments at the Xth percentile length or smaller which could have
     /// min Fragsupport
@@ -213,17 +210,4 @@ processRecord(
     // in theory this will get picked up by the ref scanner anyway, but the cost of missing this
     // is all sorts of really bad somatic FNs
     setAlleleFrag(*bparams.fragDistroPtr, templateSize, fragment.ref.getBp(isBp1));
-
-    if (! isFirstBamRead) return;
-    if (! evRead.isAnchored) return;
-
-    /// old tracker:
-    if (isBp1)
-    {
-        bparams.samplePtr->alt.bp1SpanReadCount++;
-    }
-    else
-    {
-        bparams.samplePtr->alt.bp2SpanReadCount++;
-    }
 }

@@ -137,7 +137,6 @@ getSVRefPairSupport(
     const PairOptions& pairOpt,
     const SVBreakend& bp,
     const bool isBp1,
-    SVScoreInfo& baseInfo,
     SVEvidence& evidence)
 {
     /// search for all read pairs supporting the reference allele
@@ -156,7 +155,6 @@ getSVRefPairSupport(
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
         const bool isTumor(_isAlignmentTumor[bamIndex]);
-        SVSampleInfo& sample(isTumor ? baseInfo.tumor : baseInfo.normal);
 
         bam_streamer& bamStream(*_bamStreams[bamIndex]);
 
@@ -208,14 +206,6 @@ getSVRefPairSupport(
 
             // count only from the down stream read unless the mate-pos goes past center-pos
             const bool isLeftMost(bamRead.pos() < bamRead.mate_pos());
-            const bool isRead1Tie((bamRead.pos() == bamRead.mate_pos()) && bamRead.is_first());
-            const bool isDefaultSelected(isLeftMost || isRead1Tie);
-
-            const bool isMateBeforeCenter(bamRead.mate_pos() < centerPos);
-
-            bool isDoubleCountSkip(false);
-            if ( isDefaultSelected && isMateBeforeCenter ) isDoubleCountSkip=true;
-            if ( (!isDefaultSelected) && (!isMateBeforeCenter) ) isDoubleCountSkip=true;
 
             // get fragment range:
             pos_t fragBeginRefPos(0);
@@ -253,32 +243,8 @@ getSVRefPairSupport(
             setReadEvidence(minMapQ, bamRead, evRead);
 
             setAlleleFrag(fragDistro, templateSize, fragment.ref.getBp(isBp1));
-
-            if (isDoubleCountSkip) continue;
-            if (! evRead.isAnchored) continue;
-
-            /// old tracker:
-            if (isBp1)
-            {
-                sample.ref.bp1SpanReadCount++;
-            }
-            else
-            {
-                sample.ref.bp2SpanReadCount++;
-            }
         }
     }
-}
-
-
-
-// make final interpretation of reference support as the minimum breakend support:
-static
-void
-finishAllelePairSupport(
-    SVSampleAlleleInfo& allele)
-{
-    allele.spanPairCount = std::min(allele.bp1SpanReadCount, allele.bp2SpanReadCount);
 }
 
 
@@ -288,20 +254,16 @@ SVScorer::
 getSVAltPairSupport(
     const PairOptions& pairOpt,
     const SVCandidate& sv,
-    SVScoreInfo& baseInfo,
     SVEvidence& evidence)
 {
-    bamProcPtr bp1Ptr(new SVScorePairAltProcessor(_isAlignmentTumor, _readScanner, pairOpt, sv, true, baseInfo, evidence));
-    bamProcPtr bp2Ptr(new SVScorePairAltProcessor(_isAlignmentTumor, _readScanner, pairOpt, sv, false, baseInfo, evidence));
+    bamProcPtr bp1Ptr(new SVScorePairAltProcessor(_isAlignmentTumor, _readScanner, pairOpt, sv, true, evidence));
+    bamProcPtr bp2Ptr(new SVScorePairAltProcessor(_isAlignmentTumor, _readScanner, pairOpt, sv, false, evidence));
 
     std::vector<bamProcPtr> bamProcList;
     bamProcList.push_back(bp1Ptr);
     bamProcList.push_back(bp2Ptr);
 
     processBamProcList(_bamStreams, bamProcList);
-
-    finishAllelePairSupport(baseInfo.tumor.alt);
-    finishAllelePairSupport(baseInfo.normal.alt);
 }
 
 
@@ -311,15 +273,12 @@ SVScorer::
 getSVRefPairSupport(
     const PairOptions& pairOpt,
     const SVCandidate& sv,
-    SVScoreInfo& baseInfo,
     SVEvidence& evidence)
 {
-    getSVRefPairSupport(pairOpt, sv.bp1, true, baseInfo, evidence);
-    getSVRefPairSupport(pairOpt, sv.bp2, false, baseInfo, evidence);
-
-    finishAllelePairSupport(baseInfo.tumor.ref);
-    finishAllelePairSupport(baseInfo.normal.ref);
+    getSVRefPairSupport(pairOpt, sv.bp1, true, evidence);
+    getSVRefPairSupport(pairOpt, sv.bp2, false, evidence);
 }
+
 
 
 struct SpanReadInfo
@@ -626,7 +585,6 @@ processExistingAltPairInfo(
     const PairOptions& pairOpt,
     const SVCandidateSetData& svData,
     const SVCandidate& sv,
-    SVScoreInfo& baseInfo,
     SVEvidence& evidence)
 {
     const unsigned minMapQ(_readScanner.getMinMapQ());
@@ -635,7 +593,6 @@ processExistingAltPairInfo(
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
         const bool isTumor(_isAlignmentTumor[bamIndex]);
-        SVSampleInfo& sample(isTumor ? baseInfo.tumor : baseInfo.normal);
 
         const SizeDistribution& fragDistro(_readScanner.getFragSizeDistro(bamIndex));
 
@@ -683,19 +640,12 @@ processExistingAltPairInfo(
 
             if (pair.read1.isSet())
             {
-                if (isPairType) sample.alt.bp1SpanReadCount += 1;
                 setReadEvidence(minMapQ, pair.read1.bamrec, fragment.read1);
             }
 
             if (pair.read2.isSet())
             {
-                if (isPairType) sample.alt.bp2SpanReadCount += 1;
                 setReadEvidence(minMapQ, pair.read2.bamrec, fragment.read2);
-            }
-
-            if (pair.read1.isSet() && pair.read2.isSet())
-            {
-                if (isPairType) sample.alt.spanPairCount += 1;
             }
 
             /// get fragment prob, and possibly withdraw fragment support based on refined sv breakend coordinates:
@@ -729,7 +679,6 @@ getSVPairSupport(
     const SVCandidateSetData& svData,
     const SVCandidateAssemblyData& assemblyData,
     const SVCandidate& sv,
-    SVScoreInfo& baseInfo,
     SVEvidence& evidence)
 {
     static const PairOptions pairOpt;
@@ -744,17 +693,17 @@ getSVPairSupport(
         // count the read pairs supporting the alternate allele in each sample
         // using data we already produced during candidate generation:
         //
-        processExistingAltPairInfo(pairOpt, svData, sv, baseInfo, evidence);
+        processExistingAltPairInfo(pairOpt, svData, sv, evidence);
     }
     else
     {
         // for SVs which were assembled without a pair-driven prior hypothesis,
         // we need to go back to the bam and and find any supporting alt read-pairs
-        getSVAltPairSupport(pairOpt, sv, baseInfo, evidence);
+        getSVAltPairSupport(pairOpt, sv, evidence);
     }
 
     // count the read pairs supporting the reference allele on each breakend in each sample:
     //
-    getSVRefPairSupport(pairOpt, sv, baseInfo, evidence);
+    getSVRefPairSupport(pairOpt, sv, evidence);
 }
 
