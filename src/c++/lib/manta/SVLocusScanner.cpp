@@ -1112,19 +1112,6 @@ SVLocusScanner(
 
 bool
 SVLocusScanner::
-isReadFiltered(const bam_record& bamRead) const
-{
-    if (bamRead.is_filter()) return true;
-    if (bamRead.is_dup()) return true;
-    if (bamRead.is_secondary()) return true;
-    if (bamRead.map_qual() < _opt.minMapq) return true;
-    return false;
-}
-
-
-
-bool
-SVLocusScanner::
 isProperPair(
     const bam_record& bamRead,
     const unsigned defaultReadGroupIndex) const
@@ -1140,6 +1127,7 @@ isProperPair(
 
     return true;
 }
+
 
 
 FragmentSizeType::index_t

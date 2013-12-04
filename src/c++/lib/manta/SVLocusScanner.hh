@@ -113,11 +113,28 @@ struct SVLocusScanner
         const std::string& statsFilename,
         const std::vector<std::string>& alignmentFilename);
 
+    /// this predicate runs isReadFiltered without the mapq components
+    static
+    bool
+    isReadFilteredCore(const bam_record& bamRead)
+    {
+        if      (bamRead.is_filter()) return true;
+        else if (bamRead.is_dup()) return true;
+        else if (bamRead.is_secondary()) return true;
+        else if (bamRead.is_supplement()) return true;
+        return false;
+    }
+
     /// this predicate runs any fast tests on the acceptability of a
     /// read for the SVLocus build
     /// Tests also for low mapq
     bool
-    isReadFiltered(const bam_record& bamRead) const;
+    isReadFiltered(const bam_record& bamRead) const
+    {
+        if      (isReadFilteredCore(bamRead)) return true;
+        else if (bamRead.map_qual() < _opt.minMapq) return true;
+        return false;
+    }
 
     unsigned
     getMinMapQ() const

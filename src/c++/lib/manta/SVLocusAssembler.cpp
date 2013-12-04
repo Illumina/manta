@@ -203,18 +203,8 @@ getBreakendReads(
                 }
             }
 
-#if 0
-            // some conservative filtration criteria (including MAPQ) -- note this
-            // means that if we want shadow reads this will have to be changed b/c
-            // unmapped reads are filtered out here:
-            if (_readScanner.isReadFiltered(bamRead)) continue;
-#endif
-
-            // include MAPQ0 because the split reads tend to have reduced mapping scores:
-            if (bamRead.is_filter()) continue;
-            if (bamRead.is_dup()) continue;
-            if (bamRead.is_secondary()) continue;
-            if (bamRead.is_supplement()) continue;
+            // don't filter out MAPQ0 because the split reads tend to have reduced mapping scores:
+            if (SVLocusScanner::isReadFilteredCore(bamRead)) continue;
 
             const pos_t refPos(bamRead.pos()-1);
             if (refPos >= searchEndPos) break;

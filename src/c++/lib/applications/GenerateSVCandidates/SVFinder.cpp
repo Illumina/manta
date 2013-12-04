@@ -86,8 +86,6 @@ addSVNodeRead(
 
     if (scanner.isReadFiltered(bamRead)) return;
 
-    if (bamRead.is_supplement()) return;
-
     const bool isNonCompressedAnomalous(scanner.isNonCompressedAnomalous(bamRead,bamIndex));
 
     bool isLocalAssemblyEvidence(false);

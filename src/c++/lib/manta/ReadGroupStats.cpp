@@ -22,6 +22,7 @@
 #include "blt_util/bam_streamer.hh"
 #include "blt_util/log.hh"
 #include "blt_util/ReadKey.hh"
+#include "manta/SVLocusScanner.hh"
 
 #include "boost/foreach.hpp"
 
@@ -156,10 +157,7 @@ ReadGroupStats(const std::string& statsBamFile)
                 isActiveChrom=true;
 
                 // filter common categories of undesirable reads:
-                if (bamRead.is_filter()) continue;
-                if (bamRead.is_dup()) continue;
-                if (bamRead.is_secondary()) continue;
-                if (bamRead.is_supplement()) continue;
+                if (SVLocusScanner::isReadFilteredCore(bamRead)) continue;
 
                 // filter mapped innies on the same chrom
                 //

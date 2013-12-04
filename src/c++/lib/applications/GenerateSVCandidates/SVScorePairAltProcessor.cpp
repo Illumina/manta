@@ -149,10 +149,7 @@ processRecord(
 
     assert(bparams.isSet);
 
-    if (bamRead.is_filter()) return;
-    if (bamRead.is_dup()) return;
-    if (bamRead.is_secondary()) return;
-    if (bamRead.is_supplement()) return;
+    if (SVLocusScanner::isReadFilteredCore(bamRead)) return;
 
     if (bamRead.is_unmapped() || bamRead.is_mate_unmapped()) return;
 

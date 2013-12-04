@@ -97,10 +97,7 @@ scoreSplitReads(
     {
         const bam_record& bamRead(*(readStream.get_record_ptr()));
 
-        if (bamRead.is_filter()) continue;
-        if (bamRead.is_dup()) continue;
-        if (bamRead.is_secondary()) continue;
-        if (bamRead.is_supplement()) continue;
+        if (SVLocusScanner::isReadFilteredCore(bamRead)) continue;
 
         SVFragmentEvidence& fragment(sampleEvidence[bamRead.qname()]);
 

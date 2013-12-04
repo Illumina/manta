@@ -185,10 +185,7 @@ getSVRefPairSupport(
         {
             const bam_record& bamRead(*(bamStream.get_record_ptr()));
 
-            if (bamRead.is_filter()) continue;
-            if (bamRead.is_dup()) continue;
-            if (bamRead.is_secondary()) continue;
-            if (bamRead.is_supplement()) continue;
+            if (SVLocusScanner::isReadFilteredCore(bamRead)) continue;
 
             if (bamRead.is_unmapped() || bamRead.is_mate_unmapped()) continue;
 
