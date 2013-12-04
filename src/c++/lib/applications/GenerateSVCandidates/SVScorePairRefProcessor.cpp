@@ -15,7 +15,7 @@
 /// \author Chris Saunders and Xiaoyu Chen
 ///
 
-#include "SVScorePairAltProcessor.hh"
+#include "SVScorePairRefProcessor.hh"
 #include "SVScorerShared.hh"
 #include "blt_util/bam_record_util.hh"
 #include "common/Exceptions.hh"
@@ -37,32 +37,9 @@
 #endif
 
 
-void
-SVScorePairAltProcessor::
-checkInput(
-    const SVCandidate& sv)
-{
-    using namespace illumina::common;
-
-    // this class is designed for simple alts only:
-    assert(sv.bp1.interval.tid == sv.bp2.interval.tid);
-    assert(getSVType(sv) == SV_TYPE::INDEL);
-
-    /// In case of breakend microhomology approximate the breakend as a point event at the center of the possible range:
-    const pos_t centerPos1 = (sv.bp1.interval.range.center_pos());
-    const pos_t centerPos2 = (sv.bp2.interval.range.center_pos());
-    if (centerPos2 <= centerPos1)
-    {
-        std::ostringstream oss;
-        oss << "ERROR: Unexpected breakend orientation in pair support routine for sv: " << sv << "\n";
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
-    }
-}
-
-
 
 void
-SVScorePairAltProcessor::
+SVScorePairRefProcessor::
 processClearedRecord(
     const bam_record& bamRead)
 {
@@ -79,9 +56,8 @@ processClearedRecord(
 
     /// check if fragment is too big or too small:
     const int templateSize(std::abs(bamRead.template_size()));
-    const int altTemplateSize(templateSize-iparams.altShift);
-    if (altTemplateSize < bparams.minFrag) return;
-    if (altTemplateSize > bparams.maxFrag) return;
+    if (templateSize < bparams.minFrag) return;
+    if (templateSize > bparams.maxFrag) return;
 
     // count only from the down stream reads
     const bool isFirstBamRead(isFirstRead(bamRead));
@@ -103,7 +79,7 @@ processClearedRecord(
     }
 
     {
-        const pos_t fragOverlap(std::min((1+iparams.centerPos1-fragBeginRefPos), (fragEndRefPos-iparams.centerPos2)));
+        const pos_t fragOverlap(std::min((1+iparams.centerPos-fragBeginRefPos), (fragEndRefPos-iparams.centerPos)));
 #ifdef DEBUG_MEGAPAIR
         log_os << __FUNCTION__ << ": frag begin/end/overlap: " << fragBeginRefPos << " " << fragEndRefPos << " " << fragOverlap << "\n";
 #endif
@@ -115,10 +91,5 @@ processClearedRecord(
     SVFragmentEvidenceRead& evRead(fragment.getRead(bamRead.is_first()));
     setReadEvidence(iparams.minMapQ, bamRead, evRead);
 
-    setAlleleFrag(*bparams.fragDistroPtr, altTemplateSize, fragment.alt.getBp(isBp1));
-
-    // when an alt entry is made for a fragment, we /*always*/ create corresponding ref entry
-    // in theory this will get picked up by the ref scanner anyway, but the cost of missing this
-    // is all sorts of really bad somatic FNs
     setAlleleFrag(*bparams.fragDistroPtr, templateSize, fragment.ref.getBp(isBp1));
 }

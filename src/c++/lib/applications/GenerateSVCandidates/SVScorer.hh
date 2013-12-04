@@ -21,12 +21,12 @@
 #include "SplitReadAlignment.hh"
 #include "SVEvidence.hh"
 #include "SVScorerPairOptions.hh"
+#include "SVScorePairProcessor.hh"
 
 #include "assembly/AssembledContig.hh"
 #include "blt_util/bam_streamer.hh"
 #include "blt_util/bam_header_info.hh"
 #include "blt_util/qscore_snp.hh"
-#include "manta/BamRegionProcessor.hh"
 #include "manta/ChromDepthFilterUtil.hh"
 #include "manta/SVCandidate.hh"
 #include "manta/SVCandidateSetData.hh"
@@ -90,6 +90,9 @@ struct SVScorer
         const bool isSomatic,
         SVModelScoreInfo& modelScoreInfo);
 
+    typedef boost::shared_ptr<SVScorePairProcessor> pairProcPtr;
+    typedef boost::shared_ptr<bam_streamer> streamPtr;
+
 private:
 
     void
@@ -103,9 +106,9 @@ private:
     getSVAltPairSupport(
         const PairOptions& pairOpt,
         const SVCandidate& sv,
-        SVEvidence& evidence);
+        SVEvidence& evidence,
+        std::vector<pairProcPtr>& pairProcList);
 
-    /// find spanning read support for the reference allele in a single breakend
     void
     getSVRefPairSupport(
         const PairOptions& pairOpt,
@@ -165,10 +168,5 @@ private:
     const ChromDepthFilterUtil _dFilterSomatic;
     SVLocusScanner _readScanner;
 
-public:
-    typedef boost::shared_ptr<BamRegionProcessor> bamProcPtr;
-    typedef boost::shared_ptr<bam_streamer> streamPtr;
-
-private:
     std::vector<streamPtr> _bamStreams;
 };

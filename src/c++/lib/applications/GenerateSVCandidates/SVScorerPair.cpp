@@ -18,6 +18,7 @@
 #include "SVScorer.hh"
 #include "SVScorerShared.hh"
 #include "SVScorePairAltProcessor.hh"
+#include "SVScorePairRefProcessor.hh"
 
 #include "blt_util/align_path_bam_util.hh"
 #include "blt_util/bam_streamer.hh"
@@ -45,8 +46,6 @@
 
 
 
-
-
 static
 void
 setAlleleFrag(
@@ -70,10 +69,10 @@ static
 void
 processBamProcList(
     const std::vector<SVScorer::streamPtr>& bamList,
-    std::vector<SVScorer::bamProcPtr>& bamProcList)
+    std::vector<SVScorer::pairProcPtr>& pairProcList)
 {
     const unsigned bamCount(bamList.size());
-    const unsigned bamProcCount(bamProcList.size());
+    const unsigned bamProcCount(pairProcList.size());
 
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
@@ -81,7 +80,7 @@ processBamProcList(
         std::vector<GenomeInterval> scanIntervals;
         std::vector<unsigned> intervalMap;
         {
-            BOOST_FOREACH(SVScorer::bamProcPtr& bpp, bamProcList)
+            BOOST_FOREACH(SVScorer::pairProcPtr& bpp, pairProcList)
             {
                 const GenomeInterval& interval(bpp->nextBamIndex(bamIndex));
                 if (interval.range.size() < 1) continue;
@@ -117,10 +116,12 @@ processBamProcList(
             {
                 const bam_record& bamRead(*(bamStream.get_record_ptr()));
 
+                if (SVScorer::pairProcPtr::value_type::isSkipRecord(bamRead)) continue;
+
                 BOOST_FOREACH(const unsigned procIndex, targetProcs)
                 {
-                    SVScorer::bamProcPtr& bpp(bamProcList[procIndex]);
-                    bpp->processRecord(bamRead);
+                    SVScorer::pairProcPtr& bpp(pairProcList[procIndex]);
+                    bpp->processClearedRecord(bamRead);
                 }
             }
         }
@@ -246,21 +247,20 @@ getSVRefPairSupport(
 
 
 
+
 void
 SVScorer::
 getSVAltPairSupport(
     const PairOptions& pairOpt,
     const SVCandidate& sv,
-    SVEvidence& evidence)
+    SVEvidence& evidence,
+    std::vector<pairProcPtr>& pairProcList)
 {
-    bamProcPtr bp1Ptr(new SVScorePairAltProcessor(_isAlignmentTumor, _readScanner, pairOpt, sv, true, evidence));
-    bamProcPtr bp2Ptr(new SVScorePairAltProcessor(_isAlignmentTumor, _readScanner, pairOpt, sv, false, evidence));
+    pairProcPtr bp1Ptr(new SVScorePairAltProcessor(_isAlignmentTumor, _readScanner, pairOpt, sv, true, evidence));
+    pairProcPtr bp2Ptr(new SVScorePairAltProcessor(_isAlignmentTumor, _readScanner, pairOpt, sv, false, evidence));
 
-    std::vector<bamProcPtr> bamProcList;
-    bamProcList.push_back(bp1Ptr);
-    bamProcList.push_back(bp2Ptr);
-
-    processBamProcList(_bamStreams, bamProcList);
+    pairProcList.push_back(bp1Ptr);
+    pairProcList.push_back(bp2Ptr);
 }
 
 
@@ -685,6 +685,8 @@ getSVPairSupport(
     log_os << logtag << "starting alt pair search for sv: " << sv << "\n";
 #endif
 
+    std::vector<pairProcPtr> pairProcList;
+
     if (assemblyData.isCandidateSpanning)
     {
         // count the read pairs supporting the alternate allele in each sample
@@ -696,11 +698,14 @@ getSVPairSupport(
     {
         // for SVs which were assembled without a pair-driven prior hypothesis,
         // we need to go back to the bam and and find any supporting alt read-pairs
-        getSVAltPairSupport(pairOpt, sv, evidence);
+        getSVAltPairSupport(pairOpt, sv, evidence, pairProcList);
     }
 
     // count the read pairs supporting the reference allele on each breakend in each sample:
     //
     getSVRefPairSupport(pairOpt, sv, evidence);
+
+
+    processBamProcList(_bamStreams, pairProcList);
 }
 

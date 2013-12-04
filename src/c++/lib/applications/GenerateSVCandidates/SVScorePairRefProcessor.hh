@@ -20,9 +20,9 @@
 #include "SVScorePairProcessor.hh"
 
 
-struct SVScorePairAltProcessor : public SVScorePairProcessor
+struct SVScorePairRefProcessor : public SVScorePairProcessor
 {
-    SVScorePairAltProcessor(
+    SVScorePairRefProcessor(
         const std::vector<bool>& initIsAlignmentTumor,
         const SVLocusScanner& initReadScanner,
         const PairOptions& initPairOpt,
@@ -30,17 +30,9 @@ struct SVScorePairAltProcessor : public SVScorePairProcessor
         const bool initIsBp1,
         SVEvidence& initEvidence) :
         SVScorePairProcessor(initIsAlignmentTumor, initReadScanner, initPairOpt, initSv, initIsBp1, initEvidence)
-    {
-        checkInput(sv);
-    }
+    {}
 
     void
     processClearedRecord(
         const bam_record& bamRead);
-
-private:
-    static
-    void
-    checkInput(
-        const SVCandidate& sv);
 };
