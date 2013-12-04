@@ -20,7 +20,9 @@
 #include "GSCOptions.hh"
 #include "SplitReadAlignment.hh"
 #include "SVEvidence.hh"
+#include "SVScorerPairOptions.hh"
 
+#include "assembly/AssembledContig.hh"
 #include "blt_util/bam_streamer.hh"
 #include "blt_util/bam_header_info.hh"
 #include "blt_util/qscore_snp.hh"
@@ -29,28 +31,12 @@
 #include "manta/SVCandidateSetData.hh"
 #include "manta/SVLocusScanner.hh"
 #include "manta/SVModelScoreInfo.hh"
-#include "assembly/AssembledContig.hh"
 #include "manta/SVCandidateAssemblyData.hh"
 
 #include "boost/shared_ptr.hpp"
 
 #include <vector>
 #include <string>
-
-
-/// shared options related to read pair support:
-struct PairOptions
-{
-    PairOptions() :
-        minFragSupport(50)
-    {}
-
-    /// we're interested in any fragments which cross center pos with at least N bases of support on each side
-    /// (note this definition is certain to overlap the split read definition whenever N is less than the read length
-    ///
-    /// for reads shorter than this length, the whole read is required...
-    const pos_t minFragSupport;
-};
 
 
 struct CallOptionsSharedDeriv
