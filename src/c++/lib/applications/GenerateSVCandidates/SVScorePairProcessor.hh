@@ -120,9 +120,9 @@ protected:
     {
         float fragProb(fragDistro.cdf(size));
         fragProb = std::min(fragProb, (1-fragProb));
-    #ifdef DEBUG_MEGAPAIR
+#ifdef DEBUG_MEGAPAIR
         log_os << __FUNCTION__ << ": fraglen,prob " << size << " " << fragProb << "\n";
-    #endif
+#endif
 
         bp.isFragmentSupport = true;
         bp.fragLengthProb = fragProb;

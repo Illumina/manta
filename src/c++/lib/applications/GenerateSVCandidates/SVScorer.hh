@@ -109,19 +109,13 @@ private:
         SVEvidence& evidence,
         std::vector<pairProcPtr>& pairProcList);
 
-    void
-    getSVRefPairSupport(
-        const PairOptions& pairOpt,
-        const SVBreakend& bp,
-        const bool isBp1,
-        SVEvidence& evidence);
-
     /// find spanning read support for the reference allele for sv candidate
     void
     getSVRefPairSupport(
         const PairOptions& pairOpt,
         const SVCandidate& sv,
-        SVEvidence& evidence);
+        SVEvidence& evidence,
+        std::vector<pairProcPtr>& pairProcList);
 
     /// find paired read support for ref and alt alleles
     void

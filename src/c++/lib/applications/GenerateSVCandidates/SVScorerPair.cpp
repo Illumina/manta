@@ -48,25 +48,6 @@
 
 static
 void
-setAlleleFrag(
-    const SizeDistribution& fragDistro,
-    const int size,
-    SVFragmentEvidenceAlleleBreakend& bp)
-{
-    float fragProb(fragDistro.cdf(size));
-    fragProb = std::min(fragProb, (1-fragProb));
-#ifdef DEBUG_MEGAPAIR
-    log_os << __FUNCTION__ << ": fraglen,prob " << size << " " << fragProb << "\n";
-#endif
-
-    bp.isFragmentSupport = true;
-    bp.fragLengthProb = fragProb;
-}
-
-
-
-static
-void
 processBamProcList(
     const std::vector<SVScorer::streamPtr>& bamList,
     std::vector<SVScorer::pairProcPtr>& pairProcList)
@@ -130,124 +111,6 @@ processBamProcList(
 
 
 
-/// get reference allele pair support at a single breakend:
-///
-void
-SVScorer::
-getSVRefPairSupport(
-    const PairOptions& pairOpt,
-    const SVBreakend& bp,
-    const bool isBp1,
-    SVEvidence& evidence)
-{
-    /// search for all read pairs supporting the reference allele
-    ///
-    /// APPROXIMATION: for imprecise and precise variants treat the breakend locations as the center of the
-    ///  breakend interval.
-    ///
-    /// TODO: improve on the approx above
-    ///
-    const pos_t centerPos(bp.interval.range.center_pos());
-
-
-    const unsigned minMapQ(_readScanner.getMinMapQ());
-
-    const unsigned bamCount(_bamStreams.size());
-    for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
-    {
-        const bool isTumor(_isAlignmentTumor[bamIndex]);
-
-        bam_streamer& bamStream(*_bamStreams[bamIndex]);
-
-        /// set the search range around centerPos so that we can get any fragments at the Xth percentile length or smaller which could have
-        /// min Fragsupport
-        const SVLocusScanner::Range& pRange(_readScanner.getEvidencePairRange(bamIndex));
-        const pos_t minFrag(static_cast<pos_t>(pRange.min));
-        const pos_t maxFrag(static_cast<pos_t>(pRange.max));
-
-        const SizeDistribution& fragDistro(_readScanner.getFragSizeDistro(bamIndex));
-
-        const pos_t maxSupportedFrag(maxFrag-pairOpt.minFragSupport);
-
-        const pos_t beginPos(centerPos-maxSupportedFrag);
-        const pos_t endPos(centerPos+maxSupportedFrag+1);
-#ifdef DEBUG_MEGAPAIR
-        log_os << __FUNCTION__ << ": pair scan begin/end: " << beginPos << " " << endPos << "\n";
-#endif
-
-        /// This could occur if the fragment distribution is incredibly small --
-        /// we effectively can't make use of pairs in this case:
-        if (beginPos >= endPos) continue;
-
-        // set bam stream to new search interval:
-        bamStream.set_new_region(bp.interval.tid, beginPos, endPos);
-
-        while (bamStream.next())
-        {
-            const bam_record& bamRead(*(bamStream.get_record_ptr()));
-
-            if (SVLocusScanner::isReadFilteredCore(bamRead)) continue;
-
-            if (bamRead.is_unmapped() || bamRead.is_mate_unmapped()) continue;
-
-            /// check for standard innie orientation:
-            if (! is_innie_pair(bamRead)) continue;
-
-#ifdef DEBUG_MEGAPAIR
-            log_os << __FUNCTION__ << ": read: " << bamRead << "\n";
-#endif
-
-            /// check if fragment is too big or too small:
-            const int templateSize(std::abs(bamRead.template_size()));
-            if (templateSize < minFrag) continue;
-            if (templateSize > maxFrag) continue;
-
-            // count only from the down stream read unless the mate-pos goes past center-pos
-            const bool isLeftMost(bamRead.pos() < bamRead.mate_pos());
-
-            // get fragment range:
-            pos_t fragBeginRefPos(0);
-            if (isLeftMost)
-            {
-                fragBeginRefPos=bamRead.pos()-1;
-            }
-            else
-            {
-                fragBeginRefPos=bamRead.mate_pos()-1;
-            }
-
-            const pos_t fragEndRefPos(fragBeginRefPos+templateSize);
-
-            if (fragBeginRefPos > fragEndRefPos)
-            {
-                using namespace illumina::common;
-
-                std::ostringstream oss;
-                oss << "ERROR: Failed to parse fragment range from bam record. Frag begin,end: " << fragBeginRefPos << " " << fragEndRefPos << " bamRecord: " << bamRead << "\n";
-                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
-            }
-
-            {
-                const pos_t fragOverlap(std::min((1+centerPos-fragBeginRefPos), (fragEndRefPos-centerPos)));
-#ifdef DEBUG_MEGAPAIR
-                log_os << __FUNCTION__ << ": frag begin/end/overlap: " << fragBeginRefPos << " " << fragEndRefPos << " " << fragOverlap << "\n";
-#endif
-                if (fragOverlap < pairOpt.minFragSupport) continue;
-            }
-
-            SVFragmentEvidence& fragment(evidence.getSample(isTumor)[bamRead.qname()]);
-
-            SVFragmentEvidenceRead& evRead(fragment.getRead(bamRead.is_first()));
-            setReadEvidence(minMapQ, bamRead, evRead);
-
-            setAlleleFrag(fragDistro, templateSize, fragment.ref.getBp(isBp1));
-        }
-    }
-}
-
-
-
-
 void
 SVScorer::
 getSVAltPairSupport(
@@ -270,10 +133,14 @@ SVScorer::
 getSVRefPairSupport(
     const PairOptions& pairOpt,
     const SVCandidate& sv,
-    SVEvidence& evidence)
+    SVEvidence& evidence,
+    std::vector<pairProcPtr>& pairProcList)
 {
-    getSVRefPairSupport(pairOpt, sv.bp1, true, evidence);
-    getSVRefPairSupport(pairOpt, sv.bp2, false, evidence);
+    pairProcPtr bp1Ptr(new SVScorePairRefProcessor(_isAlignmentTumor, _readScanner, pairOpt, sv, true, evidence));
+    pairProcPtr bp2Ptr(new SVScorePairRefProcessor(_isAlignmentTumor, _readScanner, pairOpt, sv, false, evidence));
+
+    pairProcList.push_back(bp1Ptr);
+    pairProcList.push_back(bp2Ptr);
 }
 
 
@@ -703,9 +570,9 @@ getSVPairSupport(
 
     // count the read pairs supporting the reference allele on each breakend in each sample:
     //
-    getSVRefPairSupport(pairOpt, sv, evidence);
+    getSVRefPairSupport(pairOpt, sv, evidence, pairProcList);
 
-
+    // execute bam scanning for all pairs:
+    //
     processBamProcList(_bamStreams, pairProcList);
 }
-
