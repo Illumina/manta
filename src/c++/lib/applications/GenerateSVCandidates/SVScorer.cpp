@@ -111,6 +111,7 @@ addReadToDepthEst(
 void
 SVScorer::
 getBreakendMaxMappedDepthAndMQ0(
+    const bool isMaxDepth,
     const double cutoffDepth,
     const SVBreakend& bp,
     unsigned& maxDepth,
@@ -133,7 +134,7 @@ getBreakendMaxMappedDepthAndMQ0(
 
     std::vector<unsigned> depth(searchRange.size(),0);
 
-    bool isCutoff(true);
+    bool isCutoff(false);
     bool isNormalFound(false);
 
     const unsigned bamCount(_bamStreams.size());
@@ -162,12 +163,16 @@ getBreakendMaxMappedDepthAndMQ0(
             totalReads++;
             if (0 == bamRead.map_qual()) totalMQ0Reads++;
 
-            const pos_t depthOffset(refPos-searchRange.begin_pos());
-            if (depthOffset>=0) {
-                if (depth[depthOffset] > cutoffDepth)
+            if (isMaxDepth)
+            {
+                const pos_t depthOffset(refPos-searchRange.begin_pos());
+                if (depthOffset>=0)
                 {
-                    isCutoff=true;
-                    break;
+                    if (depth[depthOffset] > cutoffDepth)
+                    {
+                        isCutoff=true;
+                        break;
+                    }
                 }
             }
         }
@@ -351,7 +356,7 @@ scoreSV(
     SVScoreInfo& baseInfo,
     SVEvidence& evidence)
 {
-    /// at what factor above the maxDepth FILTER criteria do we stop enumerating scoring components?
+    // at what factor above the maxDepth FILTER criteria do we stop enumerating scoring components?
     static const unsigned cutoffDepthFactor(2);
 
     const bool isMaxDepth(_dFilterDiploid.isMaxDepthFilter() && _dFilterSomatic.isMaxDepthFilter());
@@ -367,15 +372,16 @@ scoreSV(
     }
 
     // get breakend center_pos depth estimate:
-    getBreakendMaxMappedDepthAndMQ0(bp1CutoffDepth, sv.bp1, baseInfo.bp1MaxDepth, baseInfo.bp1MQ0Frac);
-    if (baseInfo.bp1MaxDepth > bp1CutoffDepth)
+    getBreakendMaxMappedDepthAndMQ0(isMaxDepth, bp1CutoffDepth, sv.bp1, baseInfo.bp1MaxDepth, baseInfo.bp1MQ0Frac);
+    const bool isBp1OverDepth(baseInfo.bp1MaxDepth > bp1CutoffDepth);
+    if (! (isMaxDepth && isBp1OverDepth))
     {
-        getBreakendMaxMappedDepthAndMQ0(bp2CutoffDepth, sv.bp2, baseInfo.bp2MaxDepth, baseInfo.bp2MQ0Frac);
+        getBreakendMaxMappedDepthAndMQ0(isMaxDepth, bp2CutoffDepth, sv.bp2, baseInfo.bp2MaxDepth, baseInfo.bp2MQ0Frac);
     }
+    const bool isBp2OverDepth(baseInfo.bp2MaxDepth > bp2CutoffDepth);
 
-    /// global evidence accumulator for this SV:
-    const bool isSkipEvidenceSearch((baseInfo.bp1MaxDepth > bp1CutoffDepth) ||
-                                    (baseInfo.bp2MaxDepth > bp2CutoffDepth));
+    const bool isOverDepth(isBp1OverDepth || isBp2OverDepth);
+    const bool isSkipEvidenceSearch((! isMaxDepth) || isOverDepth);
 
     if (! isSkipEvidenceSearch)
     {
