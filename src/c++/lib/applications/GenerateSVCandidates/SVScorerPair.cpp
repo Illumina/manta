@@ -17,14 +17,17 @@
 
 #include "SVScorer.hh"
 #include "SVScorerShared.hh"
+#include "SVScorePairAltProcessor.hh"
 
 #include "blt_util/align_path_bam_util.hh"
 #include "blt_util/bam_streamer.hh"
 #include "blt_util/bam_record_util.hh"
 #include "common/Exceptions.hh"
 #include "manta/SVCandidateUtil.hh"
+#include "svgraph/GenomeIntervalUtil.hh"
 
 #include "boost/foreach.hpp"
+#include "boost/make_shared.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -63,154 +66,62 @@ setAlleleFrag(
 
 
 
-/// search for all read pairs supporting the alternate allele
-///
-/// SV types are restricted to be simple insert/delete events and precise (ie. they are all outputs of the small-assembler)
-///
-/// TODO: adjust this function to understand multiple indels on one haplotype:
-///
+static
 void
-SVScorer::
-getSimpleSVAltPairSupport(
-    const PairOptions& pairOpt,
-    const SVCandidate& sv,
-    const bool isBp1,
-    SVScoreInfo& baseInfo,
-    SVEvidence& evidence)
+processBamProcList(
+    const std::vector<SVScorer::streamPtr>& bamList,
+    std::vector<SVScorer::bamProcPtr>& bamProcList)
 {
-    using namespace illumina::common;
+    const unsigned bamCount(bamList.size());
+    const unsigned bamProcCount(bamProcList.size());
 
-    assert(sv.bp1.interval.tid == sv.bp2.interval.tid);
-    assert(getSVType(sv) == SV_TYPE::INDEL);
-
-    /// In case of breakend microhomology approximate the breakend as a point event at the center of the possible range:
-    const pos_t centerPos1(sv.bp1.interval.range.center_pos());
-    const pos_t centerPos2(sv.bp2.interval.range.center_pos());
-    if (centerPos2 <= centerPos1)
-    {
-        std::ostringstream oss;
-        oss << "ERROR: Unexpected breakend orientation in pair support routine for sv: " << sv << "\n";
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
-    }
-
-    const pos_t centerPos( isBp1 ? centerPos1 : centerPos2 );
-
-    const pos_t insertSize(sv.insertSeq.size());
-
-    // total impact of the alt allele on template size:
-    const pos_t altShift((centerPos2-centerPos1)-insertSize);
-
-    const unsigned minMapQ(_readScanner.getMinMapQ());
-
-    const unsigned bamCount(_bamStreams.size());
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
-        const bool isTumor(_isAlignmentTumor[bamIndex]);
-        SVSampleInfo& sample(isTumor ? baseInfo.tumor : baseInfo.normal);
-
-        bam_streamer& bamStream(*_bamStreams[bamIndex]);
-
-        /// set the search range around centerPos so that we can get any fragments at the Xth percentile length or smaller which could have
-        /// min Fragsupport
-        const SVLocusScanner::Range& pRange(_readScanner.getEvidencePairRange(bamIndex));
-        const pos_t minFrag(static_cast<pos_t>(pRange.min));
-        const pos_t maxFrag(static_cast<pos_t>(pRange.max));
-
-        const pos_t maxSupportedFrag(maxFrag-pairOpt.minFragSupport);
-
-        const pos_t beginPos(centerPos-maxSupportedFrag);
-        const pos_t endPos(centerPos+maxSupportedFrag+1);
-#ifdef DEBUG_MEGAPAIR
-        log_os << __FUNCTION__ << ": pair scan begin/end: " << beginPos << " " << endPos << "\n";
-#endif
-
-        /// This could occur if the fragment distribution is incredibly small --
-        /// we effectively can't make use of pairs in this case:
-        if (beginPos >= endPos) continue;
-
-        const SizeDistribution& fragDistro(_readScanner.getFragSizeDistro(bamIndex));
-
-        // set bam stream to new search interval:
-        bamStream.set_new_region(sv.bp1.interval.tid, beginPos, endPos);
-
-        while (bamStream.next())
+        // get the minimum set of scan intervals (this should almost always be 1!)
+        std::vector<GenomeInterval> scanIntervals;
+        std::vector<unsigned> intervalMap;
         {
-            const bam_record& bamRead(*(bamStream.get_record_ptr()));
-
-            if (bamRead.is_filter()) continue;
-            if (bamRead.is_dup()) continue;
-            if (bamRead.is_secondary()) continue;
-            if (bamRead.is_supplement()) continue;
-
-            if (bamRead.is_unmapped() || bamRead.is_mate_unmapped()) continue;
-
-            /// check for standard innie orientation:
-            if (! is_innie_pair(bamRead)) continue;
-
-#ifdef DEBUG_MEGAPAIR
-            log_os << __FUNCTION__ << ": read: " << bamRead << "\n";
-#endif
-
-            /// check if fragment is too big or too small:
-            const int templateSize(std::abs(bamRead.template_size()));
-            const int altTemplateSize(templateSize-altShift);
-            if (altTemplateSize < minFrag) continue;
-            if (altTemplateSize > maxFrag) continue;
-
-            // count only from the down stream reads
-            const bool isFirstBamRead(isFirstRead(bamRead));
-
-            // get fragment range:
-            pos_t fragBeginRefPos(0);
-            if (isFirstBamRead)
+            BOOST_FOREACH(SVScorer::bamProcPtr& bpp, bamProcList)
             {
-                fragBeginRefPos=bamRead.pos()-1;
-            }
-            else
-            {
-                fragBeginRefPos=bamRead.mate_pos()-1;
+                const GenomeInterval& interval(bpp->nextBamIndex(bamIndex));
+                if (interval.range.size() < 1) continue;
+
+                scanIntervals.push_back(interval);
             }
 
-            const pos_t fragEndRefPos(fragBeginRefPos+templateSize);
+            intervalMap = intervalCompressor(scanIntervals);
+        }
 
-            if (fragBeginRefPos > fragEndRefPos)
+        bam_streamer& bamStream(*bamList[bamIndex]);
+
+        const unsigned intervalCount(scanIntervals.size());
+        for (unsigned intervalIndex(0); intervalIndex<intervalCount; ++intervalIndex)
+        {
+            const GenomeInterval& scanInterval(scanIntervals[intervalIndex]);
+            if (scanInterval.range.begin_pos() >= scanInterval.range.end_pos()) continue;
+
+            // set bam stream to new search interval:
+            bamStream.set_new_region(scanInterval.tid, scanInterval.range.begin_pos(), scanInterval.range.end_pos());
+
+            /// define the procs where' going to handle in this interval:
+            std::vector<unsigned> targetProcs;
+            for (unsigned procIndex(0); procIndex<bamProcCount; ++procIndex)
             {
-                std::ostringstream oss;
-                oss << "ERROR: Failed to parse fragment range from bam record. Frag begin,end: " << fragBeginRefPos << " " << fragEndRefPos << " bamRecord: " << bamRead << "\n";
-                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                if (intervalMap[procIndex] == intervalIndex)
+                {
+                    targetProcs.push_back(procIndex);
+                }
             }
 
+            while (bamStream.next())
             {
-                const pos_t fragOverlap(std::min((1+centerPos1-fragBeginRefPos), (fragEndRefPos-centerPos2)));
-#ifdef DEBUG_MEGAPAIR
-                log_os << __FUNCTION__ << ": frag begin/end/overlap: " << fragBeginRefPos << " " << fragEndRefPos << " " << fragOverlap << "\n";
-#endif
-                if (fragOverlap < pairOpt.minFragSupport) continue;
-            }
+                const bam_record& bamRead(*(bamStream.get_record_ptr()));
 
-            SVFragmentEvidence& fragment(evidence.getSample(isTumor)[bamRead.qname()]);
-
-            SVFragmentEvidenceRead& evRead(fragment.getRead(bamRead.is_first()));
-            setReadEvidence(minMapQ, bamRead, evRead);
-
-            setAlleleFrag(fragDistro, altTemplateSize, fragment.alt.getBp(isBp1));
-
-            // when an alt entry is made for a fragment, we /*always*/ create correponding ref entry
-            // in theory this will get picked up by the ref scanner anyway, but the cost of missing this
-            // is all sorts of really bad somatic FNs
-            setAlleleFrag(fragDistro, templateSize, fragment.ref.getBp(isBp1));
-
-            if (! isFirstBamRead) continue;
-            if (! evRead.isAnchored) continue;
-
-            /// old tracker:
-            if (isBp1)
-            {
-                sample.alt.bp1SpanReadCount++;
-            }
-            else
-            {
-                sample.alt.bp2SpanReadCount++;
+                BOOST_FOREACH(const unsigned procIndex, targetProcs)
+                {
+                    SVScorer::bamProcPtr& bpp(bamProcList[procIndex]);
+                    bpp->processRecord(bamRead);
+                }
             }
         }
     }
@@ -380,8 +291,14 @@ getSVAltPairSupport(
     SVScoreInfo& baseInfo,
     SVEvidence& evidence)
 {
-    getSimpleSVAltPairSupport(pairOpt, sv, true, baseInfo, evidence);
-    getSimpleSVAltPairSupport(pairOpt, sv, false, baseInfo, evidence);
+    bamProcPtr bp1Ptr(new SVScorePairAltProcessor(_isAlignmentTumor, _readScanner, pairOpt, sv, true, baseInfo, evidence));
+    bamProcPtr bp2Ptr(new SVScorePairAltProcessor(_isAlignmentTumor, _readScanner, pairOpt, sv, false, baseInfo, evidence));
+
+    std::vector<bamProcPtr> bamProcList;
+    bamProcList.push_back(bp1Ptr);
+    bamProcList.push_back(bp2Ptr);
+
+    processBamProcList(_bamStreams, bamProcList);
 
     finishAllelePairSupport(baseInfo.tumor.alt);
     finishAllelePairSupport(baseInfo.normal.alt);

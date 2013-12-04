@@ -26,6 +26,7 @@
 #include "blt_util/bam_streamer.hh"
 #include "blt_util/bam_header_info.hh"
 #include "blt_util/qscore_snp.hh"
+#include "manta/BamRegionProcessor.hh"
 #include "manta/ChromDepthFilterUtil.hh"
 #include "manta/SVCandidate.hh"
 #include "manta/SVCandidateSetData.hh"
@@ -177,6 +178,10 @@ private:
     const ChromDepthFilterUtil _dFilterSomatic;
     SVLocusScanner _readScanner;
 
+public:
+    typedef boost::shared_ptr<BamRegionProcessor> bamProcPtr;
     typedef boost::shared_ptr<bam_streamer> streamPtr;
+
+private:
     std::vector<streamPtr> _bamStreams;
 };
