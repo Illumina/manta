@@ -1,3 +1,4 @@
+- MANTA-98 make fewer bam scans during scoring
 - MANTA-106 add high dpeth limit to candgen and assmbler
 - MANTA-75 Better match reads to SV candidates to improve
 runtime and lower repeat observations (part 2)
