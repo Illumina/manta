@@ -65,4 +65,21 @@ BOOST_AUTO_TEST_CASE( test_known_pos_range2_is_range_intersect )
 }
 
 
+BOOST_AUTO_TEST_CASE( test_known_pos_range2_intersect_window )
+{
+    // this corresponds to zero-index range [9,19] :
+    const known_pos_range2 pr1(9,20);
+    const known_pos_range2 pr2(30,40);
+
+    BOOST_REQUIRE(! is_intersect_window(pr1, pr2));
+    BOOST_REQUIRE(! is_intersect_window(pr2, pr1));
+
+    BOOST_REQUIRE(! is_intersect_window(pr1, pr2, 10));
+    BOOST_REQUIRE(! is_intersect_window(pr2, pr1, 10));
+
+    BOOST_REQUIRE(is_intersect_window(pr1, pr2, 11));
+    BOOST_REQUIRE(is_intersect_window(pr2, pr1, 11));
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()

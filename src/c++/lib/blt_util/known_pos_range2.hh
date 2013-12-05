@@ -159,7 +159,7 @@ private:
 
 
 
-// return the union of two ranges:
+/// return the union of two ranges:
 inline
 known_pos_range2
 merge_range(
@@ -172,6 +172,25 @@ merge_range(
     return res;
 }
 
+
+/// generalized intersection test
+///
+/// this allows a positive or negative window size to be added to the range
+/// intersection test, if windowSize is 0, then this is a regular intersection test
+///
+/// For example, if windowSize is 100 this returns true if the two ranges are within 100
+/// of each other
+inline
+bool
+is_intersect_window(
+    const known_pos_range2& kpr1,
+    const known_pos_range2& kpr2,
+    const pos_t windowSize = 0)
+{
+    return (((kpr1.end_pos()+windowSize) > kpr2.begin_pos()) &&
+            ((kpr2.end_pos()+windowSize) > kpr1.begin_pos()));
+
+}
 
 std::ostream& operator<<(std::ostream& os, const known_pos_range2& pr);
 
