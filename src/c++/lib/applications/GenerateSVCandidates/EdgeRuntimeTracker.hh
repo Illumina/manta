@@ -38,6 +38,10 @@ struct EdgeRuntimeTracker : private boost::noncopyable
     {
         _isStart = true;
         _startTime = clock();
+        _cand = 0;
+        _compCand = 0;
+        _assmCand = 0;
+        _assmCompCand = 0;
     }
 
     void
@@ -49,9 +53,28 @@ struct EdgeRuntimeTracker : private boost::noncopyable
         return _lastTime;
     }
 
+    void
+    addCand(const bool isComplex)
+    {
+        if (isComplex) _compCand++;
+        else           _cand++;
+    }
+
+    void
+    addAssm(const bool isComplex)
+    {
+        if (isComplex) _assmCompCand++;
+        else           _assmCand++;
+    }
+
 private:
     std::ostream* _osPtr;
     bool _isStart;
     clock_t _startTime;
     double _lastTime;
+
+    unsigned _cand;
+    unsigned _compCand;
+    unsigned _assmCand;
+    unsigned _assmCompCand;
 };

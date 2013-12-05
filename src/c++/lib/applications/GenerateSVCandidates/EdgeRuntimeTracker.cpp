@@ -33,7 +33,11 @@ EdgeRuntimeTracker(const std::string& outputFile) :
     _osPtr(NULL),
     _isStart(false),
     _startTime(0),
-    _lastTime(0.)
+    _lastTime(0.),
+    _cand(0),
+    _compCand(0),
+    _assmCand(0),
+    _assmCompCand(0)
 {
     if (outputFile.empty()) return;
     _osPtr = new std::ofstream(outputFile.c_str());
@@ -74,7 +78,12 @@ stop(const EdgeInfo& edge)
         if (NULL != _osPtr)
         {
             edge.write(*_osPtr);
-            *_osPtr << '\t' << _lastTime << '\n';
+            *_osPtr << '\t' << _lastTime
+                    << '\t' << _cand
+                    << '\t' << _compCand
+                    << '\t' << _assmCand
+                    << '\t' << _assmCompCand
+                    << '\n';
         }
     }
 }

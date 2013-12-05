@@ -347,6 +347,10 @@ runGSC(
 #ifdef DEBUG_GSV
                 log_os << logtag << " CandidateSV: " << candidateSV << "\n";
 #endif
+
+                const bool isComplex(isComplexSV(candidateSV));
+                edgeTrack.addCand(isComplex);
+
                 SVCandidateAssemblyData assemblyData;
 
                 if (! opt.isSkipAssembly)
@@ -369,6 +373,8 @@ runGSC(
                 }
                 else
                 {
+                    edgeTrack.addAssm(isComplex);
+
                     truthTracker.reportNumAssembled(assemblyData.svs.size());
 
                     BOOST_FOREACH(const SVCandidate& assembledSV, assemblyData.svs)
