@@ -58,7 +58,7 @@ matchifyEdgeSegmentType(
         const bool isTrailingEdgeSegment(i>ends.second);
         const bool isTargetType(ps.type==segmentType);
         const bool isCandidateEdge((isMatchLeadingEdge && isLeadingEdgeSegment) ||
-                                     (isMatchTrailingEdge && isTrailingEdgeSegment));
+                                   (isMatchTrailingEdge && isTrailingEdgeSegment));
         const bool isEdgeTarget(isCandidateEdge && isTargetType);
         if (isEdgeTarget && isLeadingEdgeSegment) al2.pos-=ps.length;
         if (isEdgeTarget || (ps.type==MATCH))

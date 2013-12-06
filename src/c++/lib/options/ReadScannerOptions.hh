@@ -30,7 +30,7 @@ struct ReadScannerOptions
         splitBreakendSizeFraction(0.1),
         maxSplitBreakendSize(100),
         minSplitBreakendSize(10),
-        minSoftClipLen(8),
+        //    minSoftClipLen(8),
         minSemiAlignedMismatchLen(8),
         // These numbers are based on checking a few dozens reads
         // and might need some fine-tuning
@@ -73,7 +73,7 @@ struct ReadScannerOptions
     unsigned minSplitBreakendSize;
 
     // Soft clipped read ends must be of at least this length to be entered as small SV evidence
-    unsigned minSoftClipLen;
+//    unsigned minSoftClipLen;
 
     // Semi-aligned regions need to be at least this long to be included as SV evidence
     unsigned minSemiAlignedMismatchLen;

@@ -37,7 +37,7 @@
 
 /// In the general case we want 'N''s to be counted as mismatches, but for
 /// the semi-aligned metric, we don't want N's to nominate read segments as
-/// SV-associated because of a string of Ns
+/// SV-associated because of a string of Ns, so we treat these as matches
 ///
 static
 bool
@@ -172,7 +172,12 @@ trailingEdgeMismatchLength(
 
 
 /// report the length from 0 to immediately before the indicated number of
-/// contiguous matches
+/// contiguous matches moving inwards from each end of the read
+///
+/// \param[out] leadingLength semi-aligned length in read coordinates from the start of the read
+/// \param[out] leadingRefPos reference position of read start after removing semi-aligned portion from consideration
+///
+/// ...similar for trailing output params...
 ///
 static
 void
@@ -202,10 +207,8 @@ getSVBreakendCandidateSemiAligned(
     const SimpleAlignment& bamAlign,
     const reference_contig_segment& refSeq,
     unsigned& leadingMismatchLen,
-    unsigned& leadingClipLen,
     pos_t& leadingRefPos,
     unsigned& trailingMismatchLen,
-    unsigned& trailingClipLen,
     pos_t& trailingRefPos,
     const uint8_t minQ,
     const float minQFrac)
@@ -213,11 +216,12 @@ getSVBreakendCandidateSemiAligned(
     static const unsigned contiguousMatchCount(5);
 
     leadingMismatchLen = 0;
-    leadingClipLen = 0;
     leadingRefPos = 0;
     trailingMismatchLen = 0;
-    trailingClipLen = 0;
     trailingRefPos = 0;
+
+    // create a new alignment with all soft-clip sections forced to match:
+    const SimpleAlignment matchedAligned(matchifyEdgeSoftClip(bamAlign));
 
     using namespace ALIGNPATH;
     const bam_seq querySeq(bamRead.get_bam_read());
@@ -227,7 +231,7 @@ getSVBreakendCandidateSemiAligned(
 
     unsigned leadingMismatchLenTmp(0);
     unsigned trailingMismatchLenTmp(0);
-    edgeMismatchLength(bamAlign, querySeq, refSeq, contiguousMatchCount,
+    edgeMismatchLength(matchedAligned, querySeq, refSeq, contiguousMatchCount,
                        leadingMismatchLenTmp, leadingRefPos,
                        trailingMismatchLenTmp, trailingRefPos);
 
@@ -235,39 +239,27 @@ getSVBreakendCandidateSemiAligned(
 
     if (0 != leadingMismatchLenTmp)
     {
-        // check the quality of mismatch region, not including clipped region:
-        const unsigned leadingClipLenTmp(apath_soft_clip_lead_size(bamAlign.path));
-        if (leadingMismatchLenTmp > leadingClipLenTmp)
+        unsigned minQCount(0);
+        for (unsigned pos(0); pos<leadingMismatchLenTmp; ++pos)
         {
-            unsigned minQCount(0);
-            for (unsigned pos(leadingClipLenTmp); pos<leadingMismatchLenTmp; ++pos)
-            {
-                if (qual[pos] >= minQ) ++minQCount;
-            }
-            if ((static_cast<float>(minQCount)/(leadingMismatchLenTmp-leadingClipLenTmp)) >= minQFrac)
-            {
-                leadingMismatchLen = leadingMismatchLenTmp-leadingClipLenTmp;
-                leadingClipLen = leadingClipLenTmp;
-            }
+            if (qual[pos] >= minQ) ++minQCount;
+        }
+        if ((static_cast<float>(minQCount)/(leadingMismatchLenTmp)) >= minQFrac)
+        {
+            leadingMismatchLen = leadingMismatchLenTmp;
         }
     }
 
     if (0 != trailingMismatchLenTmp)
     {
-        // check the quality of trailing mismatch region, not including clipped region:
-        const unsigned trailingClipLenTmp(apath_soft_clip_trail_size(bamAlign.path));
-        if (trailingMismatchLenTmp > trailingClipLenTmp)
+        unsigned minQCount(0);
+        for (unsigned pos(0); pos<trailingMismatchLenTmp; ++pos)
         {
-            unsigned minQCount(0);
-            for (unsigned pos(trailingClipLenTmp); pos<trailingMismatchLenTmp; ++pos)
-            {
-                if (qual[readSize-pos-1] >= minQ) ++minQCount;
-            }
-            if ((static_cast<float>(minQCount)/(trailingMismatchLenTmp-trailingClipLenTmp)) >= minQFrac)
-            {
-                trailingMismatchLen = trailingMismatchLenTmp-trailingClipLenTmp;
-                trailingClipLen = trailingClipLenTmp;
-            }
+            if (qual[readSize-pos-1] >= minQ) ++minQCount;
+        }
+        if ((static_cast<float>(minQCount)/(trailingMismatchLenTmp)) >= minQFrac)
+        {
+            trailingMismatchLen = trailingMismatchLenTmp;
         }
     }
 }

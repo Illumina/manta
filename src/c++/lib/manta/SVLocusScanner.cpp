@@ -261,8 +261,6 @@ getSACandidatesFromRead(
         split_string(saStr, ';', saVec);
     }
 
-    SimpleAlignment remoteAlign;
-
     // For now we will only handle a single split alignment
     //  In the future we will need to sort the SA tags by order on of segments on
     //   the actual template.
@@ -272,6 +270,8 @@ getSACandidatesFromRead(
     //std::cerr << "Size: " << saVec.size() << std::endl;
 
     if (saVec.size() > 1) return;
+
+    SimpleAlignment remoteAlign;
 
     BOOST_FOREACH(const std::string& sa, saVec)
     {
@@ -491,7 +491,7 @@ isGoodShadow(const bam_record& bamRead,
 }
 
 
-
+#if 0
 /// get SV candidates from read clipping
 static
 void
@@ -522,6 +522,7 @@ getSVCandidatesFromReadClip(
         candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),clipPos,clipPos, svSource, isComplex));
     }
 }
+#endif
 
 
 
@@ -534,14 +535,14 @@ getSVCandidatesFromSemiAligned(
     const reference_contig_segment& refSeq,
     TrackedCandidates& candidates)
 {
-    unsigned leadingMismatchLen(0), leadingClipLen(0);
-    unsigned trailingMismatchLen(0), trailingClipLen(0);
+    unsigned leadingMismatchLen(0);
+    unsigned trailingMismatchLen(0);
     pos_t leadingRefPos(0), trailingRefPos(0);
     getSVBreakendCandidateSemiAligned(bamRead, bamAlign, refSeq,
-                                      leadingMismatchLen, leadingClipLen, leadingRefPos,
-                                      trailingMismatchLen, trailingClipLen, trailingRefPos);
+                                      leadingMismatchLen, leadingRefPos,
+                                      trailingMismatchLen, trailingRefPos);
 
-    if ((leadingMismatchLen+leadingClipLen + trailingMismatchLen+trailingClipLen) >= bamRead.read_size()) return;
+    if ((leadingMismatchLen + trailingMismatchLen) >= bamRead.read_size()) return;
 
     using namespace SVEvidenceType;
     static const index_t svSource(SEMIALIGN);
@@ -818,7 +819,10 @@ getSingleReadSVCandidates(
 #endif
 
     // - process soft-clip in the localRead:
-    getSVCandidatesFromReadClip(opt, localRead, localAlign, candidates);
+    //
+    // NOTE : theoretically the semi-aligned function will now pick up all soft-clip cases
+    //
+    // getSVCandidatesFromReadClip(opt, localRead, localAlign, candidates);
 #ifdef DEBUG_SCANNER
     log_os << logtag << " post-clip candidate_size: " << candidates.size() << "\n";
 #endif
@@ -1194,14 +1198,16 @@ isLocalAssemblyEvidence(
     //
     // soft-clipping:
     //
-    {
-        unsigned leadingClipLen(0), trailingClipLen(0);
-        getSVBreakendCandidateClip(bamRead, bamAlign.path, leadingClipLen, trailingClipLen);
-        if ((leadingClipLen >= _opt.minSoftClipLen) || (trailingClipLen >= _opt.minSoftClipLen))
-        {
-            return true;
-        }
-    }
+    // NOTE these cases should be caught be the semi-aligned function now:
+    //
+//    {
+//        unsigned leadingClipLen(0), trailingClipLen(0);
+//        getSVBreakendCandidateClip(bamRead, bamAlign.path, leadingClipLen, trailingClipLen);
+//        if ((leadingClipLen >= _opt.minSoftClipLen) || (trailingClipLen >= _opt.minSoftClipLen))
+//        {
+//            return true;
+//        }
+//    }
 
     //
     // semi-aligned read ends:

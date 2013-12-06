@@ -223,6 +223,8 @@ getBreakendReads(
 
             /// check whether we keep this read because of soft clipping:
             bool isClipKeeper(false);
+            //// these cases should be handled by soft-clip now:
+#if 0
             {
                 static const unsigned minSoftClipLen(4);
 
@@ -240,6 +242,7 @@ getBreakendReads(
                     if (leadingClipLen >= minSoftClipLen) isClipKeeper = true;
                 }
             }
+#endif
 
             /// check for any indels in read:
             bool isIndelKeeper(false);
