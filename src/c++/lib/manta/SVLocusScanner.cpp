@@ -396,54 +396,6 @@ getSVCandidatesFromReadIndels(
 
 
 
-void
-getSVBreakendCandidateClip(
-    const bam_record& bamRead,
-    const ALIGNPATH::path_t& apath,
-    unsigned& leadingClipLen,
-    unsigned& trailingClipLen,
-    const uint8_t minQ,
-    const float minQFrac)
-{
-    leadingClipLen = 0;
-    trailingClipLen = 0;
-
-    const uint8_t* qual(bamRead.qual());
-    const unsigned readSize(bamRead.read_size());
-
-    const unsigned trailingClipLenTmp(apath_soft_clip_trail_size(apath));
-    if (0 != trailingClipLenTmp)
-    {
-        // check the quality of clipped region
-        unsigned minQCount(0);
-        for (unsigned pos(0); pos<trailingClipLenTmp; ++pos)
-        {
-            if (qual[readSize-pos-1] >= minQ) minQCount++;
-        }
-        if ((static_cast<float>(minQCount)/trailingClipLenTmp) >= minQFrac)
-        {
-            trailingClipLen = trailingClipLenTmp;
-        }
-    }
-
-    const unsigned leadingClipLenTmp(apath_soft_clip_lead_size(apath));
-    if (0 != leadingClipLenTmp)
-    {
-        // check the quality of clipped region
-        unsigned minQCount(0);
-        for (unsigned pos(0); pos<leadingClipLenTmp; ++pos)
-        {
-            if (qual[pos] >= minQ) minQCount++;
-        }
-        if ((static_cast<float>(minQCount)/leadingClipLenTmp) >= minQFrac)
-        {
-            leadingClipLen = leadingClipLenTmp;
-        }
-    }
-}
-
-
-
 bool
 isGoodShadow(const bam_record& bamRead,
              const uint8_t lastMapq,
@@ -489,40 +441,6 @@ isGoodShadow(const bam_record& bamRead,
 
     return false;
 }
-
-
-#if 0
-/// get SV candidates from read clipping
-static
-void
-getSVCandidatesFromReadClip(
-    const ReadScannerOptions& opt,
-    const bam_record& bamRead,
-    const SimpleAlignment& bamAlign,
-    TrackedCandidates& candidates)
-{
-    using namespace SVEvidenceType;
-    static const index_t svSource(SOFTCLIP);
-
-    unsigned leadingClipLen(0), trailingClipLen(0);
-    getSVBreakendCandidateClip(bamRead, bamAlign.path, leadingClipLen, trailingClipLen);
-
-    // soft-clipped reads don't define a full hypothesis, so they're always evidence for a 'complex' ie. undefined, event:
-    static const bool isComplex(true);
-
-    if (leadingClipLen >= opt.minSoftClipLen)
-    {
-        const pos_t clipPos(bamAlign.pos);
-        candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),clipPos,clipPos, svSource, isComplex));
-    }
-
-    if (trailingClipLen >= opt.minSoftClipLen)
-    {
-        const pos_t clipPos(bamAlign.pos + apath_ref_length(bamAlign.path));
-        candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),clipPos,clipPos, svSource, isComplex));
-    }
-}
-#endif
 
 
 
@@ -818,15 +736,7 @@ getSingleReadSVCandidates(
     log_os << logtag << " post-indels candidate_size: " << candidates.size() << "\n";
 #endif
 
-    // - process soft-clip in the localRead:
-    //
-    // NOTE : theoretically the semi-aligned function will now pick up all soft-clip cases
-    //
-    // getSVCandidatesFromReadClip(opt, localRead, localAlign, candidates);
-#ifdef DEBUG_SCANNER
-    log_os << logtag << " post-clip candidate_size: " << candidates.size() << "\n";
-#endif
-
+    // this detects semi-aligned AND soft-clip now:
     getSVCandidatesFromSemiAligned(opt, localRead, localAlign, refSeq,
                                    candidates);
 #ifdef DEBUG_SCANNER
@@ -1196,21 +1106,7 @@ isLocalAssemblyEvidence(
     }
 
     //
-    // soft-clipping:
-    //
-    // NOTE these cases should be caught be the semi-aligned function now:
-    //
-//    {
-//        unsigned leadingClipLen(0), trailingClipLen(0);
-//        getSVBreakendCandidateClip(bamRead, bamAlign.path, leadingClipLen, trailingClipLen);
-//        if ((leadingClipLen >= _opt.minSoftClipLen) || (trailingClipLen >= _opt.minSoftClipLen))
-//        {
-//            return true;
-//        }
-//    }
-
-    //
-    // semi-aligned read ends:
+    // semi-aligned AND soft-clipped read ends:
     //
     {
         unsigned leadingMismatchLen(0), trailingMismatchLen(0);

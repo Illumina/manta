@@ -172,7 +172,6 @@ getBreakendReads(
         static const unsigned MAX_NUM_READS(1000);
 
 #ifdef DEBUG_ASBL
-        unsigned clipCount(0);
         unsigned indelCount(0);
         unsigned semiAlignedCount(0);
         unsigned shadowCount(0);
@@ -221,28 +220,6 @@ getBreakendReads(
 
             SimpleAlignment bamAlign(bamRead);
 
-            /// check whether we keep this read because of soft clipping:
-            bool isClipKeeper(false);
-            //// these cases should be handled by soft-clip now:
-#if 0
-            {
-                static const unsigned minSoftClipLen(4);
-
-                unsigned leadingClipLen(0);
-                unsigned trailingClipLen(0);
-                getSVBreakendCandidateClip(bamRead, bamAlign.path, leadingClipLen, trailingClipLen);
-
-                if (isSearchForRightOpen)
-                {
-                    if (trailingClipLen >= minSoftClipLen) isClipKeeper = true;
-                }
-
-                if (isSearchForLeftOpen)
-                {
-                    if (leadingClipLen >= minSoftClipLen) isClipKeeper = true;
-                }
-            }
-#endif
 
             /// check for any indels in read:
             bool isIndelKeeper(false);
@@ -258,7 +235,7 @@ getBreakendReads(
                 }
             }
 
-
+            /// this test covered semi-aligned and soft-clip together
             bool isSemiAlignedKeeper(false);
             {
                 static const unsigned minMismatchLen(4);
@@ -303,14 +280,12 @@ getBreakendReads(
             lastQname = bamRead.qname();
             isLastSet = true;
 
-            if (! (isClipKeeper
-                   || isIndelKeeper
+            if (! (isIndelKeeper
                    || isSemiAlignedKeeper
                    || isShadowKeeper
                   )) continue;
 
 #ifdef DEBUG_ASBL
-            if (isClipKeeper) ++clipCount;
             if (isIndelKeeper) ++indelCount;
             if (isSemiAlignedKeeper) ++semiAlignedCount;
             if (isShadowKeeper) ++shadowCount;
@@ -323,8 +298,7 @@ getBreakendReads(
             log_os << logtag << "Adding bamrec: " << bamRead << '\n'
                    << "\tmapq: " << bamRead.pe_map_qual() << '\n'
                    << "\tread: " << bamRead.get_bam_read() << '\n';
-            log_os << "isClipKeeper: " << isClipKeeper
-                   << " isIndelKeeper: " << isIndelKeeper
+            log_os << "isIndelKeeper: " << isIndelKeeper
                    << " isSemiAlignedKeeper: " << isSemiAlignedKeeper
                    << " isShadowKeeper: " << isShadowKeeper
                    << '\n';
@@ -346,7 +320,6 @@ getBreakendReads(
 
 #ifdef DEBUG_ASBL
         log_os << logtag << "bam " << bamIndex
-               << " clip: " << clipCount
                << " indel: " << indelCount
                << " semi-aligned " << semiAlignedCount
                << " shadow " << shadowCount

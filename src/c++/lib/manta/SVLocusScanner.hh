@@ -62,20 +62,6 @@ struct SVObservationWeights
 };
 
 
-/// check bam record for soft-clipping which is interesting enough to be used as SV evidence:
-///
-/// \param[in] minQ
-/// \param[in] minQFrac this fraction of bases must have qual>=minQ within the clipped region
-///
-void
-getSVBreakendCandidateClip(
-    const bam_record& bamRead,
-    const ALIGNPATH::path_t& apath,
-    unsigned& leadingClipLen,
-    unsigned& trailingClipLen,
-    const uint8_t minQ = 20,
-    const float minQFrac = 0.75);
-
 
 bool
 isGoodShadow(
