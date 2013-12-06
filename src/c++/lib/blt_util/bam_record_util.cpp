@@ -67,15 +67,3 @@ get_avg_quality(
     // this does not capture the decimal remainder but well...
     return (sum/len);
 }
-
-
-
-SimpleAlignment::
-SimpleAlignment(const bam_record& bamRead) :
-    is_fwd_strand(bamRead.is_fwd_strand()),
-    tid(bamRead.target_id()),
-    pos(bamRead.pos()-1)
-{
-    bam_cigar_to_apath(bamRead.raw_cigar(),bamRead.n_cigar(),path);
-}
-

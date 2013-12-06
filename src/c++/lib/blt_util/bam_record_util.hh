@@ -46,23 +46,3 @@ isFirstRead(
     if ((bamRead.pos() == bamRead.mate_pos()) && bamRead.is_first()) return true;
     return false;
 }
-
-
-/// A struct which holds minimal alignment information processed
-// from a BAM record or other source
-struct SimpleAlignment
-{
-    SimpleAlignment() :
-        is_fwd_strand(true),
-        tid(0),
-        pos(0)
-    {}
-
-    SimpleAlignment(const bam_record& bamRead);
-
-    bool is_fwd_strand;
-    int32_t tid;
-    pos_t pos;
-    ALIGNPATH::path_t path;
-};
-
