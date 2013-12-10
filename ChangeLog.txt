@@ -1,7 +1,8 @@
+v0.15.0
 - MANTA-108 combine clip/semi-aligned evidence detection, don't detect
 overlapping reads as assembly evidence
 - MANTA-98 make fewer bam scans during scoring
-- MANTA-106 add high dpeth limit to candgen and assmbler
+- MANTA-106 add high depth limit to candgen and assmbler
 - MANTA-75 Better match reads to SV candidates to improve
 runtime and lower repeat observations (part 2)
 - MANTA-105 filter poorly supported candidates to reduce per-edge compute time
