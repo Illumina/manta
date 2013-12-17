@@ -136,7 +136,7 @@ def runDepth(self,taskPrefix="",dependencies=None) :
 
 
     cmd  = "%s -E %s" % (sys.executable, self.params.mantaChromDepth)
-    cmd += " --bam %s" % (bamFile)
+    cmd += " --bam '%s'" % (bamFile)
     cmd += " > %s" % (self.paths.getChromDepth())
 
     nextStepWait = set()

@@ -76,7 +76,7 @@ def main() :
     chromList = []
 
     if True :
-        cmd = samtoolsBin + " idxstats " + options.bamFile
+        cmd = samtoolsBin + " idxstats '%s'" % (options.bamFile)
         proc = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE)
         for line in proc.stdout :
             word = line.strip().split('\t')
@@ -111,7 +111,7 @@ def main() :
         if type == 'subsample' :
             cmd += " -s 0.1"
 
-        cmd += " " + options.bamFile
+        cmd += " '%s'" % (options.bamFile)
 
         proc = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE)
         for line in proc.stdout :
