@@ -72,13 +72,19 @@ get_source() {
 is_error=false
 for f in $(get_source); do
     #echo "checking: $f"
-    grep --color='auto' -n -H -P "[\x80-\xFF]" $f
+
+    # not portable to OS X:
+    #grep --color='auto' -n -H -P "[\x80-\xFF]" $f
+
+    # note literal space and tab character in match pattern:
+    #
+    LC_ALL=C grep --color='auto' -n -H "[^ -~	]" $f
     if [ $? != 1 ]; then
         is_error=true
     fi
 done
 
 if $is_error; then
-    echo "ERROR: source contains non-ascii characters" 1>&2
+    echo "ERROR: source contains non-ascii or non-printing characters" 1>&2
     exit 1
 fi
