@@ -135,8 +135,8 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     endif ()
 
     if (NOT (${compiler_version} VERSION_LESS "3.4"))
-        # wait for 3.4 to be released before turning these on by default
-        #set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wheader-guard -Wlogical-not-parentheses -Wloop-analysis -Wunique-enum")
+        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wheader-guard -Wlogical-not-parentheses -Wloop-analysis")
+        #set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wunique-enum")
     endif ()
 
     # documentation of other possible warning flags from clang
