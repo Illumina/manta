@@ -259,6 +259,9 @@ getSACandidatesFromRead(
         if (NULL == saStr) return;
 
         split_string(saStr, ';', saVec);
+        if (saVec[saVec.size() - 1].length() == 0) {
+          saVec.pop_back();
+        }
     }
 
     // For now we will only handle a single split alignment
