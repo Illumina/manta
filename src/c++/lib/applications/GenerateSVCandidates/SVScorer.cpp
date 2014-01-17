@@ -39,6 +39,12 @@
 #include "blt_util/log.hh"
 #endif
 
+#define DEBUG_SOMATIC_LLH
+
+#ifdef DEBUG_SOMATIC_LLH
+#include "blt_util/log.hh"
+#endif
+
 
 
 SVScorer::
@@ -787,6 +793,10 @@ computeLikelihood(
 {
 	static const ProbSet chimeraProb(1e-3);
 
+#ifdef DEBUG_SOMATIC_LLH
+    static const std::string logtag("somaticLikelihood: ");
+#endif
+
 	BOOST_FOREACH(const SVEvidence::evidenceTrack_t::value_type& val, evidenceTrack)
 	{
 		const SVFragmentEvidence& fragev(val.second);
@@ -844,11 +854,16 @@ computeLikelihood(
 		{
 			using namespace SOMATIC_GT;
 
-#ifdef DEBUG_SCORE
+#ifdef DEBUG_SOMATIC_LLH
 			log_os << logtag << "starting gt: " << gt << " " << label(gt) << "\n";
 #endif
 
 			const index_t gtid(static_cast<const index_t>(gt));
+#ifdef DEBUG_SOMATIC_LLH
+			log_os << logtag << "gtid: " << gtid << "\n";
+#endif
+
+
 			const double refLnFragLhood(getFragLnLhood(refLnLhoodSet, isRead1Evaluated, isRead2Evaluated));
 #ifdef DEBUG_SCORE
 			log_os << logtag << "refLnFragLhood: " << refLnFragLhood << "\n";
