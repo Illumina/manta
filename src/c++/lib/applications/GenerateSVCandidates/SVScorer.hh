@@ -33,6 +33,7 @@
 #include "manta/SVLocusScanner.hh"
 #include "manta/SVModelScoreInfo.hh"
 #include "manta/SVCandidateAssemblyData.hh"
+#include "manta/SVScoreInfoSomatic.hh"
 
 #include "boost/shared_ptr.hpp"
 
@@ -64,10 +65,40 @@ struct CallOptionsDiploidDeriv
 
         prior[HET] = opt.indelPrior;
         prior[HOM] = opt.indelPrior/2;
-        prior[REF] = 1. - (prior[HET] + prior[HOM]);
+        prior[REF] = 1. - prior[HET] - prior[HOM];
+
+        logPrior[HET] = std::log(prior[HET]);
+        logPrior[HOM] = std::log(prior[HOM]);
+        logPrior[REF] = std::log(prior[REF]);
     }
 
     float prior[DIPLOID_GT::SIZE];
+    float logPrior[DIPLOID_GT::SIZE];
+};
+
+
+struct CallOptionsSomaticDeriv
+{
+    CallOptionsSomaticDeriv(
+        const CallOptionsSomatic& opt)
+    {
+        using namespace SOMATIC_GT;
+
+        assert(opt.indelPrior < 0.5);
+
+        prior[SOM] = opt.svPrior;
+        prior[HET] = opt.indelPrior;
+        prior[HOM] = opt.indelPrior/2;
+        prior[REF] = 1. - prior[SOM] - prior[HET] - prior[HOM];
+
+        logPrior[SOM] = std::log(prior[SOM]);
+        logPrior[HET] = std::log(prior[HET]);
+        logPrior[HOM] = std::log(prior[HOM]);
+        logPrior[REF] = std::log(prior[REF]);
+    }
+
+    float prior[SOMATIC_GT::SIZE];
+    float logPrior[SOMATIC_GT::SIZE];
 };
 
 
@@ -158,6 +189,7 @@ private:
     const CallOptionsDiploid _diploidOpt;
     const CallOptionsDiploidDeriv _diploidDopt;
     const CallOptionsSomatic _somaticOpt;
+    const CallOptionsSomaticDeriv _somaticDopt;
     const ChromDepthFilterUtil _dFilterDiploid;
     const ChromDepthFilterUtil _dFilterSomatic;
     SVLocusScanner _readScanner;

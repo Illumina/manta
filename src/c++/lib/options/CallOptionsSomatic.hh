@@ -23,6 +23,8 @@
 struct CallOptionsSomatic
 {
     CallOptionsSomatic() :
+    	indelPrior(1e-5),
+    	svPrior(1e-7),
         maxDepthFactor(3.0),
         maxDepthFilterLabel("MaxDepth"),
         minOutputSomaticScore(10),
@@ -30,6 +32,9 @@ struct CallOptionsSomatic
         maxMQ0FracLabel("MaxMQ0Frac")
 
     {}
+
+    float indelPrior;
+    float svPrior;
 
     // breakpoints where the non-tumor depth is greater than the chromosome average x this factor are filtered out:
     float maxDepthFactor;
