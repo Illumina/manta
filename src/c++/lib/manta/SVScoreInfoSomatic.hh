@@ -22,6 +22,11 @@
 #include <set>
 #include <cmath>
 
+#define DEBUG_SOMATIC_LLH
+
+#ifdef DEBUG_SOMATIC_LLH
+#include "blt_util/log.hh"
+#endif
 
 namespace SOMATIC_GT
 {
@@ -92,6 +97,9 @@ namespace SOMATIC_GT
 	{
 		//static const double val[] = { std::log(0.), std::log(0.5), std::log(1.), std::log(SOMATIC_MUTATION_FREQ) };
 		static const double val[] = { std::log(0.), std::log(0.5), std::log(1.), std::log(somaticFreq) };
+#ifdef DEBUG_SOMATIC_LLH
+			log_os << "gt in altLnFraction: " << i << " " << label(i) << "\n";
+#endif
 		switch (i)
 		{
 		case REF :
