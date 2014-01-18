@@ -33,17 +33,12 @@
 #include <string>
 
 
-//#define DEBUG_SCORE
+#define DEBUG_SCORE
 
 #ifdef DEBUG_SCORE
 #include "blt_util/log.hh"
 #endif
 
-#define DEBUG_SOMATIC_LLH
-
-#ifdef DEBUG_SOMATIC_LLH
-#include "blt_util/log.hh"
-#endif
 
 
 
@@ -793,7 +788,7 @@ computeLikelihood(
 {
 	static const ProbSet chimeraProb(1e-3);
 
-#ifdef DEBUG_SOMATIC_LLH
+#ifdef DEBUG_SCORE
     static const std::string logtag("somaticLikelihood: ");
 #endif
 
@@ -854,15 +849,11 @@ computeLikelihood(
 		{
 			using namespace SOMATIC_GT;
 
-#ifdef DEBUG_SOMATIC_LLH
+#ifdef DEBUG_SCORE
 			log_os << logtag << "starting gt: " << gt << " " << label(gt) << "\n";
 #endif
 
 			const index_t gtid(static_cast<const index_t>(gt));
-#ifdef DEBUG_SOMATIC_LLH
-			log_os << logtag << "gtid: " << gtid << "\n";
-#endif
-
 
 			const double refLnFragLhood(getFragLnLhood(refLnLhoodSet, isRead1Evaluated, isRead2Evaluated));
 #ifdef DEBUG_SCORE
@@ -908,6 +899,10 @@ scoreSomaticSV(
     SVScoreInfo& baseInfo,
     SVScoreInfoSomatic& somaticInfo)
 {
+#ifdef DEBUG_SCORE
+    static const std::string logtag("somaticLikelihood: ");
+#endif
+
     //
     // compute qualities
     //
@@ -947,6 +942,11 @@ scoreSomaticSV(
 		//somaticInfo.gt=static_cast<SOMATIC_GT::index_t>(maxGt);
 		//somaticInfo.gtScore=error_prob_to_qphred(prob_comp(pprob,pprob+SOMATIC_GT::SIZE, somaticInfo.gt));
 		somaticInfo.somaticScore=error_prob_to_qphred(prob_comp(pprob, pprob+SOMATIC_GT::SIZE, SOMATIC_GT::SOM));
+
+#ifdef DEBUG_SCORE
+	log_os << logtag << "somatic score: " << somaticInfo.somaticScore << "\n";
+#endif
+
 	}
 
     /*
