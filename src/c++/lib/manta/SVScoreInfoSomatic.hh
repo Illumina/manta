@@ -136,6 +136,7 @@ namespace SOMATIC_GT
 				assert(false && "Unknown GT state");
 				return 0;
 		}
+	}
 }
 
 
