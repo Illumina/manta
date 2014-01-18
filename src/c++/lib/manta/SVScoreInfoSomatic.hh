@@ -102,17 +102,17 @@ namespace SOMATIC_GT
 #endif
 		switch (i)
 		{
-		case REF :
-			return val[0];
-		case HET :
-			return val[1];
-		case HOM :
-			return val[2];
-		case SOM:
-			return val[3];
-		default:
-			assert(false && "Unknown GT state");
-			return 0;
+			case REF :
+				return val[0];
+			case HET :
+				return val[1];
+			case HOM :
+				return val[2];
+			case SOM:
+				return val[3];
+			default:
+				assert(false && "Unknown GT state");
+				return 0;
 		}
 	}
 
@@ -120,8 +120,22 @@ namespace SOMATIC_GT
 	double
 	altLnCompFraction(const index_t i, const double somaticFreq)
 	{
-		return altLnFraction(static_cast<index_t>(2-i), somaticFreq);
-	}
+		static const double val[] = { std::log(1.), std::log(0.5), std::log(0.), std::log(1-somaticFreq) };
+
+		switch (i)
+		{
+			case REF :
+				return val[0];
+			case HET :
+				return val[1];
+			case HOM :
+				return val[2];
+			case SOM:
+				return val[3];
+			default:
+				assert(false && "Unknown GT state");
+				return 0;
+		}
 }
 
 
