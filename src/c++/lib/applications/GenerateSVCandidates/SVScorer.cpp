@@ -933,7 +933,7 @@ scoreSomaticSV(
 
     		unsigned maxGt(0);
     		normalize_ln_distro(tumorPostProb, tumorPostProb+SOMATIC_GT::SIZE, maxGt);
-    		normalize_ln_distro(normalPostProb, tumorPostProb+SOMATIC_GT::SIZE, maxGt);
+    		normalize_ln_distro(normalPostProb, normalPostProb+SOMATIC_GT::SIZE, maxGt);
 
     #ifdef DEBUG_SCORE
     		for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
