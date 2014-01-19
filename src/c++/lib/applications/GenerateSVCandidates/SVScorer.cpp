@@ -921,7 +921,8 @@ scoreSomaticSV(
 		double pprob[SOMATIC_GT::SIZE];
 		for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
 		{
-			pprob[gt] = loglhood[gt] + somaticDopt.logPrior[gt];
+			//pprob[gt] = loglhood[gt] + somaticDopt.logPrior[gt];
+			pprob[gt] = loglhood[gt] + somaticDopt.prior[gt];
 		}
 
 		unsigned maxGt(0);
