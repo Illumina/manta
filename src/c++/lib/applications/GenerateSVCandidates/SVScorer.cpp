@@ -914,7 +914,7 @@ scoreSomaticSV(
 		}
 
 		// compute likelihood for the fragments from the normal sample
-		computeLikelihood(sv, isSmallAssembler, true, evidence.normal, baseInfo, loglhood);
+		//computeLikelihood(sv, isSmallAssembler, true, evidence.normal, baseInfo, loglhood);
 		// compute likelihhod for the fragments from the tumor sample
 		computeLikelihood(sv, isSmallAssembler, false, evidence.tumor, baseInfo, loglhood);
 
