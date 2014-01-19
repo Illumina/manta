@@ -865,6 +865,9 @@ computeLikelihood(
 #endif
 			// estimate the somatic mutation rate using alternate allele freq from the tumor sample
 			double somaticFreq = isNormal ? 0 : estimateSomaticMutationFreq(baseInfo);
+#ifdef DEBUG_SCORE
+			log_os << logtag << "somaticMutationFrequency: " << somaticFreq << "\n";
+#endif
 			// update likelihood with Pr[allele | G]
 			const double refLnLhood = refLnFragLhood + altLnCompFraction(gtid, somaticFreq);
 			const double altLnLhood = altLnFragLhood + altLnFraction(gtid, somaticFreq);
@@ -906,6 +909,64 @@ scoreSomaticSV(
     //
     // compute qualities
     //
+    {
+    		double tumorLlh[SOMATIC_GT::SIZE];
+    		double normalLlh[SOMATIC_GT::SIZE];
+    		for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
+    		{
+    			tumorLlh[gt] = 0.;
+    			normalLlh[gt] = 0.;
+    		}
+
+    		// compute likelihhod for the fragments from the tumor sample
+    		computeLikelihood(sv, isSmallAssembler, false, evidence.tumor, baseInfo, tumorLlh);
+    		// compute likelihood for the fragments from the normal sample
+    		computeLikelihood(sv, isSmallAssembler, true, evidence.normal, baseInfo, normalLlh);
+
+    		double tumorPostProb[SOMATIC_GT::SIZE];
+    		double normalPostProb[SOMATIC_GT::SIZE];
+    		for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
+    		{
+    			tumorPostProb[gt] = tumorLlh[gt] + somaticDopt.logPrior[gt];
+    			normalPostProb[gt] = normalLlh[gt] + somaticDopt.logPrior[gt];
+    		}
+
+    		unsigned maxGt(0);
+    		normalize_ln_distro(tumorPostProb, tumorPostProb+SOMATIC_GT::SIZE, maxGt);
+    		normalize_ln_distro(normalPostProb, tumorPostProb+SOMATIC_GT::SIZE, maxGt);
+
+    #ifdef DEBUG_SCORE
+    		for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
+    		{
+    			log_os << logtag << "gt/lhood/prior/pprob for tumor sample: "
+    				   << SOMATIC_GT::label(gt)
+    				   << " " << tumorLlh[gt]
+    				   << " " << somaticDopt.prior[gt]
+    				   << " " << tumorPostProb[gt]
+    				   << "\n";
+    		}
+
+    		for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
+			{
+				log_os << logtag << "gt/lhood/prior/pprob for normal sample: "
+					   << SOMATIC_GT::label(gt)
+					   << " " << normalLlh[gt]
+					   << " " << somaticDopt.prior[gt]
+					   << " " << normalPostProb[gt]
+					   << "\n";
+			}
+    #endif
+
+    		double tumorSomProb = tumorPostProb[SOMATIC_GT::SOM];
+    		double normalRefProb = normalPostProb[SOMATIC_GT::REF];
+    		somaticInfo.somaticScore=error_prob_to_qphred(1. - (normalRefProb * tumorSomProb) );
+
+    #ifdef DEBUG_SCORE
+    	log_os << logtag << "somatic score: " << somaticInfo.somaticScore << "\n";
+    #endif
+    }
+
+    /*
 	{
 		double loglhood[SOMATIC_GT::SIZE];
 		for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
@@ -922,7 +983,6 @@ scoreSomaticSV(
 		for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
 		{
 			pprob[gt] = loglhood[gt] + somaticDopt.logPrior[gt];
-			//pprob[gt] = loglhood[gt] + somaticDopt.prior[gt];
 		}
 
 		unsigned maxGt(0);
@@ -948,7 +1008,7 @@ scoreSomaticSV(
 	log_os << logtag << "somatic score: " << somaticInfo.somaticScore << "\n";
 #endif
 
-	}
+	}*/
 
     /*
     {
