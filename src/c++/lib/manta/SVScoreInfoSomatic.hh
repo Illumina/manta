@@ -90,8 +90,7 @@ inline
 double
 altLnFraction(const index_t i, const double somaticFreq)
 {
-    //static const double val[] = { std::log(0.), std::log(0.5), std::log(1.), std::log(SOMATIC_MUTATION_FREQ) };
-    static double val[] = { std::log(0.), std::log(0.5), std::log(1.), std::log(somaticFreq) };
+    static const double val[] = { std::log(0.), std::log(0.5), std::log(1.) };
 
     switch (i)
     {
@@ -102,7 +101,7 @@ altLnFraction(const index_t i, const double somaticFreq)
     case HOM :
         return val[2];
     case SOM:
-        return val[3];
+        return std::log(somaticFreq);
     default:
         assert(false && "Unknown GT state");
         return 0;
@@ -113,7 +112,7 @@ inline
 double
 altLnCompFraction(const index_t i, const double somaticFreq)
 {
-    static double val[] = { std::log(1.), std::log(0.5), std::log(0.), std::log(1-somaticFreq) };
+    static const double val[] = { std::log(1.), std::log(0.5), std::log(0.) };
 
     switch (i)
     {
@@ -124,7 +123,7 @@ altLnCompFraction(const index_t i, const double somaticFreq)
     case HOM :
         return val[2];
     case SOM:
-        return val[3];
+        return std::log(1-somaticFreq);
     default:
         assert(false && "Unknown GT state");
         return 0;
