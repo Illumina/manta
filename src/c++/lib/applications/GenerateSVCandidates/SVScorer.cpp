@@ -785,7 +785,7 @@ computeLikelihood(
     const bool isSmallAssembler,
     const bool isNormal,
     const SVEvidence::evidenceTrack_t& evidenceTrack,
-    SVScoreInfo& baseInfo,
+    const double somaticMutationFreq,
     double* loglhood)
 {
     static const ProbSet chimeraProb(1e-3);
@@ -875,20 +875,21 @@ computeLikelihood(
 #ifdef DEBUG_SCORE
             log_os << logtag << "altLnFragLhood: " << altLnFragLhood << "\n";
 #endif
-            // estimate the somatic mutation rate using alternate allele freq from the tumor sample
-            double somaticFreq = isNormal ? 0 : estimateSomaticMutationFreq(baseInfo);
-#ifdef DEBUG_SOMATIC_SCORE
-            log_os << logtag << "somaticMutationFrequency: " << somaticFreq << "\n";
-#endif
+
             // update likelihood with Pr[allele | G]
-            const double refLnLhood = refLnFragLhood + altLnCompFraction(gtid, somaticFreq);
-            const double altLnLhood = altLnFragLhood + altLnFraction(gtid, somaticFreq);
+            const double refLnLhood = refLnFragLhood + altLnCompFraction(gtid, somaticMutationFreq);
+            const double altLnLhood = altLnFragLhood + altLnFraction(gtid, somaticMutationFreq);
 
             loglhood[gt] += log_sum(refLnLhood, altLnLhood);
 
 #ifdef DEBUG_SOMATIC_SCORE
             if (pos == 155590849)
             {
+            log_os << logtag << "somaticMutFreq/altLnFraction/altLnCompFraction: "
+            	   << " " << somaticMutationFreq
+            	   << " " << altLnFraction(gtid, somaticMutationFreq)
+            	   << " " << altLnCompFraction(gtid, somaticMutationFreq)
+            	   << "\n";
 
             log_os << logtag << "gt/fragref/ref/fragalt/alt: "
                    << label(gt)
@@ -935,10 +936,16 @@ scoreSomaticSV(
             normalLlh[gt] = 0.;
         }
 
+        // estimate the somatic mutation rate using alternate allele freq from the tumor sample
+        const double somaticMutationFreq = estimateSomaticMutationFreq(baseInfo);
+#ifdef DEBUG_SOMATIC_SCORE
+        log_os << logtag << "somaticMutationFrequency: " << somaticMutationFreq << "\n";
+#endif
+
         // compute likelihhod for the fragments from the tumor sample
-        computeLikelihood(sv, isSmallAssembler, false, evidence.tumor, baseInfo, tumorLlh);
+        computeLikelihood(sv, isSmallAssembler, false, evidence.tumor, somaticMutationFreq, tumorLlh);
         // compute likelihood for the fragments from the normal sample
-        computeLikelihood(sv, isSmallAssembler, true, evidence.normal, baseInfo, normalLlh);
+        computeLikelihood(sv, isSmallAssembler, true, evidence.normal, 0, normalLlh);
 
         double tumorPostProb[SOMATIC_GT::SIZE];
         double normalPostProb[SOMATIC_GT::SIZE];
