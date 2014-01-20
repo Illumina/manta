@@ -91,7 +91,7 @@ double
 altLnFraction(const index_t i, const double somaticFreq)
 {
     //static const double val[] = { std::log(0.), std::log(0.5), std::log(1.), std::log(SOMATIC_MUTATION_FREQ) };
-    static const double val[] = { std::log(0.), std::log(0.5), std::log(1.), std::log(somaticFreq) };
+    static double val[] = { std::log(0.), std::log(0.5), std::log(1.), std::log(somaticFreq) };
 
     switch (i)
     {
@@ -113,7 +113,7 @@ inline
 double
 altLnCompFraction(const index_t i, const double somaticFreq)
 {
-    static const double val[] = { std::log(1.), std::log(0.5), std::log(0.), std::log(1-somaticFreq) };
+    static double val[] = { std::log(1.), std::log(0.5), std::log(0.), std::log(1-somaticFreq) };
 
     switch (i)
     {
