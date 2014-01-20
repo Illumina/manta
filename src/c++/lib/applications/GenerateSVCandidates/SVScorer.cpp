@@ -33,7 +33,7 @@
 #include <string>
 
 
-#define DEBUG_SCORE
+//#define DEBUG_SCORE
 
 #ifdef DEBUG_SCORE
 #include "blt_util/log.hh"
