@@ -34,8 +34,10 @@
 
 
 //#define DEBUG_SCORE
+#define DEBUG_SOMATIC_SCORE
 
-#ifdef DEBUG_SCORE
+//#ifdef DEBUG_SCORE
+#define DEBUG_SOMATIC_SCORE
 #include "blt_util/log.hh"
 #endif
 
@@ -902,7 +904,8 @@ scoreSomaticSV(
     SVScoreInfo& baseInfo,
     SVScoreInfoSomatic& somaticInfo)
 {
-#ifdef DEBUG_SCORE
+//#ifdef DEBUG_SCORE
+#ifdef DEBUG_SOMATIC_SCORE
     static const std::string logtag("somaticLikelihood: ");
 #endif
 
@@ -935,7 +938,9 @@ scoreSomaticSV(
         normalize_ln_distro(tumorPostProb, tumorPostProb+SOMATIC_GT::SIZE, maxGt);
         normalize_ln_distro(normalPostProb, normalPostProb+SOMATIC_GT::SIZE, maxGt);
 
-#ifdef DEBUG_SCORE
+#ifdef DEBUG_SOMATIC_SCORE
+        log_os << logtag << "variant: " << sv.candidateIndex;
+
         for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
         {
             log_os << logtag << "gt/lhood/prior/pprob for tumor sample: "
@@ -961,7 +966,7 @@ scoreSomaticSV(
         double normalRefProb = normalPostProb[SOMATIC_GT::REF];
         somaticInfo.somaticScore=error_prob_to_qphred(1. - (normalRefProb * tumorSomProb) );
 
-#ifdef DEBUG_SCORE
+#ifdef DEBUG_SOMATIC_SCORE
         log_os << logtag << "somatic score: " << somaticInfo.somaticScore << "\n";
 #endif
     }
