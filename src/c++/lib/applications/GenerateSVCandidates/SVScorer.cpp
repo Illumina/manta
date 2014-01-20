@@ -790,7 +790,7 @@ computeLikelihood(
 {
     static const ProbSet chimeraProb(1e-3);
 
-#ifdef DEBUG_SCORE
+#ifdef DEBUG_SOMATIC_SCORE
     static const std::string logtag("somaticLikelihood: ");
 #endif
 
@@ -867,7 +867,7 @@ computeLikelihood(
 #endif
             // estimate the somatic mutation rate using alternate allele freq from the tumor sample
             double somaticFreq = isNormal ? 0 : estimateSomaticMutationFreq(baseInfo);
-#ifdef DEBUG_SCORE
+#ifdef DEBUG_SOMATIC_SCORE
             log_os << logtag << "somaticMutationFrequency: " << somaticFreq << "\n";
 #endif
             // update likelihood with Pr[allele | G]
