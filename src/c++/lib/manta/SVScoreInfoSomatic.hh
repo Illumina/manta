@@ -25,111 +25,111 @@
 
 namespace SOMATIC_GT
 {
-	// TODO: estimated from tumor
-	const double SOMATIC_MUTATION_FREQ = 0.6;
+// TODO: estimated from tumor
+const double SOMATIC_MUTATION_FREQ = 0.6;
 
-	enum index_t
-	{
-		REF,
-		HET,
-		HOM,
-		SOM,
-		SIZE
-	};
+enum index_t
+{
+    REF,
+    HET,
+    HOM,
+    SOM,
+    SIZE
+};
 
-	inline
-	const char*
-	label(const index_t i)
-	{
-		switch (i)
-		{
-		case REF :
-			return "ref";
-		case HET :
-			return "het";
-		case HOM :
-			return "hom";
-		case SOM :
-			return "som";
-		default:
-			assert(false && "Unknown GT state");
-			return NULL;
-		}
-	}
+inline
+const char*
+label(const index_t i)
+{
+    switch (i)
+    {
+    case REF :
+        return "ref";
+    case HET :
+        return "het";
+    case HOM :
+        return "hom";
+    case SOM :
+        return "som";
+    default:
+        assert(false && "Unknown GT state");
+        return NULL;
+    }
+}
 
-	inline
-	const char*
-	label(const unsigned i)
-	{
-		return label(static_cast<const index_t>(i));
-	}
+inline
+const char*
+label(const unsigned i)
+{
+    return label(static_cast<const index_t>(i));
+}
 
-	inline
-	float
-	altFraction(const index_t i, const double somaticFreq)
-	{
-		switch (i)
-		{
-		case REF :
-			return 0;
-		case HET :
-			return 0.5;
-		case HOM :
-			return 1.0;
-		case SOM:
-			//return SOMATIC_MUTATION_FREQ;
-			return somaticFreq;
+inline
+float
+altFraction(const index_t i, const double somaticFreq)
+{
+    switch (i)
+    {
+    case REF :
+        return 0;
+    case HET :
+        return 0.5;
+    case HOM :
+        return 1.0;
+    case SOM:
+        //return SOMATIC_MUTATION_FREQ;
+        return somaticFreq;
 
-		default:
-			assert(false && "Unknown GT state");
-			return 0;
-		}
-	}
+    default:
+        assert(false && "Unknown GT state");
+        return 0;
+    }
+}
 
-	inline
-	double
-	altLnFraction(const index_t i, const double somaticFreq)
-	{
-		//static const double val[] = { std::log(0.), std::log(0.5), std::log(1.), std::log(SOMATIC_MUTATION_FREQ) };
-		static const double val[] = { std::log(0.), std::log(0.5), std::log(1.), std::log(somaticFreq) };
+inline
+double
+altLnFraction(const index_t i, const double somaticFreq)
+{
+    //static const double val[] = { std::log(0.), std::log(0.5), std::log(1.), std::log(SOMATIC_MUTATION_FREQ) };
+    static const double val[] = { std::log(0.), std::log(0.5), std::log(1.), std::log(somaticFreq) };
 
-		switch (i)
-		{
-			case REF :
-				return val[0];
-			case HET :
-				return val[1];
-			case HOM :
-				return val[2];
-			case SOM:
-				return val[3];
-			default:
-				assert(false && "Unknown GT state");
-				return 0;
-		}
-	}
+    switch (i)
+    {
+    case REF :
+        return val[0];
+    case HET :
+        return val[1];
+    case HOM :
+        return val[2];
+    case SOM:
+        return val[3];
+    default:
+        assert(false && "Unknown GT state");
+        return 0;
+    }
+}
 
-	inline
-	double
-	altLnCompFraction(const index_t i, const double somaticFreq)
-	{
-		static const double val[] = { std::log(1.), std::log(0.5), std::log(0.), std::log(1-somaticFreq) };
+inline
+double
+altLnCompFraction(const index_t i, const double somaticFreq)
+{
+    static const double val[] = { std::log(1.), std::log(0.5), std::log(0.), std::log(1-somaticFreq) };
 
-		switch (i)
-		{
-			case REF :
-				return val[0];
-			case HET :
-				return val[1];
-			case HOM :
-				return val[2];
-			case SOM:
-				return val[3];
-			default:
-				assert(false && "Unknown GT state");
-				return 0;
-		}
-	}
+    switch (i)
+    {
+    case REF :
+        return val[0];
+    case HET :
+        return val[1];
+    case HOM :
+        return val[2];
+    case SOM:
+        return val[3];
+    default:
+        assert(false && "Unknown GT state");
+        return 0;
+    }
+}
 }
 
 

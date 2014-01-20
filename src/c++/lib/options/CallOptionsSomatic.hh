@@ -23,8 +23,8 @@
 struct CallOptionsSomatic
 {
     CallOptionsSomatic() :
-    	indelPrior(1e-5),
-    	svPrior(1e-7),
+        indelPrior(1e-5),
+        svPrior(1e-7),
         maxDepthFactor(3.0),
         maxDepthFilterLabel("MaxDepth"),
         minOutputSomaticScore(10),
