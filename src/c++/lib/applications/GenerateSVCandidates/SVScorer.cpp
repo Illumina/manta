@@ -950,7 +950,7 @@ scoreSomaticSV(
         pos_t pos(bpArange.center_pos()+1);
         if (! isImprecise)
         	pos = bpArange.begin_pos()+1;
-        log_os << logtag << "variant pos: " << sv.candidateIndex << "\n";
+        log_os << logtag << "variant pos: " << pos << "\n";
 
         for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
         {
