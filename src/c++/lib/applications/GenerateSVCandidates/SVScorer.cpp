@@ -34,7 +34,7 @@
 
 
 //#define DEBUG_SCORE
-#define DEBUG_SOMATIC_SCORE
+//#define DEBUG_SOMATIC_SCORE
 
 //#ifdef DEBUG_SCORE
 #ifdef DEBUG_SOMATIC_SCORE
