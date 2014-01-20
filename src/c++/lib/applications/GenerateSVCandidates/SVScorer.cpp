@@ -939,7 +939,18 @@ scoreSomaticSV(
         normalize_ln_distro(normalPostProb, normalPostProb+SOMATIC_GT::SIZE, maxGt);
 
 #ifdef DEBUG_SOMATIC_SCORE
-        log_os << logtag << "variant: " << sv.candidateIndex;
+
+        const bool isImprecise(sv.isImprecise());
+        const bool isBp1First(sv.bp1.interval.range.begin_pos()<=sv.bp2.interval.range.begin_pos());
+
+        const SVBreakend& bpA(isBp1First ? sv.bp1 : sv.bp2);
+        const SVBreakend& bpB(isBp1First ? sv.bp2 : sv.bp1);
+
+        const known_pos_range2& bpArange(bpA.interval.range);
+        pos_t pos(bpArange.center_pos()+1);
+        if (! isImprecise)
+        	pos = bpArange.begin_pos()+1;
+        log_os << logtag << "variant pos: " << sv.candidateIndex << "\n";
 
         for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
         {
