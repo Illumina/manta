@@ -792,6 +792,16 @@ computeLikelihood(
 
 #ifdef DEBUG_SOMATIC_SCORE
     static const std::string logtag("somaticLikelihood: ");
+
+    const bool isImprecise(sv.isImprecise());
+    const bool isBp1First(sv.bp1.interval.range.begin_pos()<=sv.bp2.interval.range.begin_pos());
+
+    const SVBreakend& bpA(isBp1First ? sv.bp1 : sv.bp2);
+    const SVBreakend& bpB(isBp1First ? sv.bp2 : sv.bp1);
+    const known_pos_range2& bpArange(bpA.interval.range);
+    pos_t pos(bpArange.center_pos()+1);
+    if (! isImprecise)
+    	pos = bpArange.begin_pos()+1;
 #endif
 
     BOOST_FOREACH(const SVEvidence::evidenceTrack_t::value_type& val, evidenceTrack)
@@ -876,7 +886,10 @@ computeLikelihood(
 
             loglhood[gt] += log_sum(refLnLhood, altLnLhood);
 
-#ifdef DEBUG_SCORE
+#ifdef DEBUG_SOMATIC_SCORE
+            if (pos == 155590849)
+            {
+
             log_os << logtag << "gt/fragref/ref/fragalt/alt: "
                    << label(gt)
                    << " " << refLnFragLhood
@@ -884,6 +897,7 @@ computeLikelihood(
                    << " " << altLnFragLhood
                    << " " << altLnLhood
                    << "\n";
+            }
 #endif
         }
     }
