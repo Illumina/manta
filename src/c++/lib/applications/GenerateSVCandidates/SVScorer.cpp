@@ -36,8 +36,7 @@
 //#define DEBUG_SCORE
 //#define DEBUG_SOMATIC_SCORE
 
-//#ifdef DEBUG_SCORE
-#ifdef DEBUG_SOMATIC_SCORE
+#if defined(DEBUG_SCORE) || defined(DEBUG_SOMATIC_SCORE)
 #include "blt_util/log.hh"
 #endif
 
