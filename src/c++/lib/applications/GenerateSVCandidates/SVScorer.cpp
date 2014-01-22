@@ -782,7 +782,7 @@ void
 computeLikelihood(
     const SVCandidate& sv,
     const bool isSmallAssembler,
-    const bool isNormal,
+    const bool /*isNormal*/,
     const SVEvidence::evidenceTrack_t& evidenceTrack,
     const double somaticMutationFreq,
     double* loglhood)
@@ -796,7 +796,6 @@ computeLikelihood(
     const bool isBp1First(sv.bp1.interval.range.begin_pos()<=sv.bp2.interval.range.begin_pos());
 
     const SVBreakend& bpA(isBp1First ? sv.bp1 : sv.bp2);
-    const SVBreakend& bpB(isBp1First ? sv.bp2 : sv.bp1);
     const known_pos_range2& bpArange(bpA.interval.range);
     pos_t pos(bpArange.center_pos()+1);
     if (! isImprecise)
@@ -964,7 +963,7 @@ scoreSomaticSV(
         const bool isBp1First(sv.bp1.interval.range.begin_pos()<=sv.bp2.interval.range.begin_pos());
 
         const SVBreakend& bpA(isBp1First ? sv.bp1 : sv.bp2);
-        const SVBreakend& bpB(isBp1First ? sv.bp2 : sv.bp1);
+        //const SVBreakend& bpB(isBp1First ? sv.bp2 : sv.bp1);
 
         const known_pos_range2& bpArange(bpA.interval.range);
         pos_t pos(bpArange.center_pos()+1);
