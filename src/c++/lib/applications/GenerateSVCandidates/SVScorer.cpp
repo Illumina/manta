@@ -800,7 +800,7 @@ computeLikelihood(
     const known_pos_range2& bpArange(bpA.interval.range);
     pos_t pos(bpArange.center_pos()+1);
     if (! isImprecise)
-    	pos = bpArange.begin_pos()+1;
+        pos = bpArange.begin_pos()+1;
 #endif
 
     BOOST_FOREACH(const SVEvidence::evidenceTrack_t::value_type& val, evidenceTrack)
@@ -884,19 +884,19 @@ computeLikelihood(
 #ifdef DEBUG_SOMATIC_SCORE
             if (pos == 155590849)
             {
-            log_os << logtag << "somaticMutFreq/altLnFraction/altLnCompFraction: "
-            	   << " " << somaticMutationFreq
-            	   << " " << altLnFraction(gtid, somaticMutationFreq)
-            	   << " " << altLnCompFraction(gtid, somaticMutationFreq)
-            	   << "\n";
+                log_os << logtag << "somaticMutFreq/altLnFraction/altLnCompFraction: "
+                       << " " << somaticMutationFreq
+                       << " " << altLnFraction(gtid, somaticMutationFreq)
+                       << " " << altLnCompFraction(gtid, somaticMutationFreq)
+                       << "\n";
 
-            log_os << logtag << "gt/fragref/ref/fragalt/alt: "
-                   << label(gt)
-                   << " " << refLnFragLhood
-                   << " " << refLnLhood
-                   << " " << altLnFragLhood
-                   << " " << altLnLhood
-                   << "\n";
+                log_os << logtag << "gt/fragref/ref/fragalt/alt: "
+                       << label(gt)
+                       << " " << refLnFragLhood
+                       << " " << refLnLhood
+                       << " " << altLnFragLhood
+                       << " " << altLnLhood
+                       << "\n";
             }
 #endif
         }
@@ -969,7 +969,7 @@ scoreSomaticSV(
         const known_pos_range2& bpArange(bpA.interval.range);
         pos_t pos(bpArange.center_pos()+1);
         if (! isImprecise)
-        	pos = bpArange.begin_pos()+1;
+            pos = bpArange.begin_pos()+1;
         log_os << logtag << "variant pos: " << pos << "\n";
 
         for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)

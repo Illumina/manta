@@ -259,8 +259,9 @@ getSACandidatesFromRead(
         if (NULL == saStr) return;
 
         split_string(saStr, ';', saVec);
-        if (saVec[saVec.size() - 1].length() == 0) {
-          saVec.pop_back();
+        if (saVec[saVec.size() - 1].length() == 0)
+        {
+            saVec.pop_back();
         }
     }
 
