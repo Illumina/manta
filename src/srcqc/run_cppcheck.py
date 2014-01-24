@@ -59,9 +59,13 @@ def main() :
 
     srcRoot=sys.argv[1]
 
-    if which("cppcheck") is None : sys.exit(0)
+    cppcheck_path = which("cppcheck")
+    if cppcheck_path is None : sys.exit(0)
 
-    checkCmd=["cppcheck"]
+    # need to trace real path out of any symlinks so that cppcheck can find its runtime config info:
+    cppcheck_path = os.path.realpath(cppcheck_path)
+
+    checkCmd=[cppcheck_path]
     checkCmd.append("--enable=all")
     checkCmd.append("--std=c++03")
     checkCmd.append("--force")
