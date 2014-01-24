@@ -577,8 +577,81 @@ getFragLnLhood(
 
 
 
-/// don't use pairs for small variants, need to improve the model to take advantage of these first:
-static const int minPairVariantSize(500);
+/// return true if any evidence exists for fragment:
+static
+bool
+getRefAltFromFrag(
+    const SVCandidate& sv,
+    const bool isSmallAssembler,
+    const SVFragmentEvidence& fragev,
+    AlleleLnLhood& refLnLhoodSet,
+    AlleleLnLhood& altLnLhoodSet,
+    bool& isRead1Evaluated,
+    bool& isRead2Evaluated)
+{
+#ifdef DEBUG_SCORE
+    static const std::string logtag("getRefAltFromFrag: ");
+#endif
+
+    /// don't use pairs for small variants, need to improve the model to take advantage of these first:
+    static const int minPairVariantSize(500);
+
+    /// TODO: set this from graph data:
+    ///
+    /// put some more thought into this -- is this P (spurious | any old read) or P( spurious | chimera ) ??
+    /// it seems like it should be the latter in the usages that really matter.
+    ///
+    static const ProbSet chimeraProb(1e-3);
+
+#ifdef DEBUG_SCORE
+    log_os << logtag << "qname: " << /*val.first <<*/ " fragev: " << fragev << "\n";
+#endif
+
+    /// TODO: add read pairs with one shadow read to the alt read pool
+
+    /// high-quality spanning support relies on read1 and read2 mapping well:
+    bool isFragEvaluated(false);
+    if ( fragev.read1.isObservedAnchor() && fragev.read2.isObservedAnchor())
+    {
+        /// only add to the likelihood if the fragment "supports" at least one allele:
+        if ( fragev.isAnySpanningPairSupport() )
+        {
+            bool isSmall(false);
+            if (isSmallAssembler)
+            {
+                const int svSize(std::abs(sv.bp2.interval.range.center_pos() - sv.bp1.interval.range.center_pos()));
+                isSmall=(svSize<minPairVariantSize);
+            }
+
+            if (! isSmall)
+            {
+                isFragEvaluated=true;
+                incrementSpanningPairAlleleLnLhood(chimeraProb, fragev.ref, refLnLhoodSet.fragPair);
+                incrementSpanningPairAlleleLnLhood(chimeraProb, fragev.alt, altLnLhoodSet.fragPair);
+            }
+        }
+    }
+
+    /// split support is less dependent on mapping quality of the individual read, because
+    /// we're potentially relying on shadow reads recovered from the unmapped state
+    isRead1Evaluated = true;
+    isRead2Evaluated = true;
+#ifdef DEBUG_SCORE
+    log_os << logtag << "starting read1 split\n";
+#endif
+    incrementSplitReadLhood(fragev, true,  refLnLhoodSet.read1Split, altLnLhoodSet.read1Split, isRead1Evaluated);
+#ifdef DEBUG_SCORE
+    log_os << logtag << "starting read2 split\n";
+#endif
+    incrementSplitReadLhood(fragev, false, refLnLhoodSet.read2Split, altLnLhoodSet.read2Split, isRead2Evaluated);
+
+#ifdef DEBUG_SCORE
+    log_os << logtag << "iseval frag/read1/read2: " << isFragEvaluated << " " << isRead1Evaluated << " " << isRead1Evaluated << "\n";
+#endif
+    return (isFragEvaluated || isRead1Evaluated || isRead2Evaluated);
+}
+
+
 
 
 
@@ -599,13 +672,6 @@ scoreDiploidSV(
     static const std::string logtag("scoreDiploidSV: ");
 #endif
 
-    /// TODO: set this from graph data:
-    ///
-    /// put some more thought into this -- is this P (spurious | any old read) or P( spurious | chimera ) ??
-    /// it seems like it should be the latter in the usages that really matter.
-    ///
-    static const ProbSet chimeraProb(1e-3);
-
     //
     // compute qualities
     //
@@ -621,53 +687,14 @@ scoreDiploidSV(
             const SVFragmentEvidence& fragev(val.second);
 
             AlleleLnLhood refLnLhoodSet, altLnLhoodSet;
-
-#ifdef DEBUG_SCORE
-            log_os << logtag << "qname: " << val.first << " fragev: " << fragev << "\n";
-#endif
-
-            /// TODO: add read pairs with one shadow read to the alt read pool
-
-            /// high-quality spanning support relies on read1 and read2 mapping well:
-            bool isFragEvaluated(false);
-            if ( fragev.read1.isObservedAnchor() && fragev.read2.isObservedAnchor())
-            {
-                /// only add to the likelihood if the fragment "supports" at least one allele:
-                if ( fragev.isAnySpanningPairSupport() )
-                {
-                    bool isSmall(false);
-                    if (isSmallAssembler)
-                    {
-                        const int svSize(std::abs(sv.bp2.interval.range.center_pos() - sv.bp1.interval.range.center_pos()));
-                        isSmall=(svSize<minPairVariantSize);
-                    }
-
-                    if (! isSmall)
-                    {
-                        isFragEvaluated=true;
-                        incrementSpanningPairAlleleLnLhood(chimeraProb, fragev.ref, refLnLhoodSet.fragPair);
-                        incrementSpanningPairAlleleLnLhood(chimeraProb, fragev.alt, altLnLhoodSet.fragPair);
-                    }
-                }
-            }
-
-            /// split support is less dependent on mapping quality of the individual read, because
-            /// we're potentially relying on shadow reads recovered from the unmapped state
             bool isRead1Evaluated(true);
             bool isRead2Evaluated(true);
-#ifdef DEBUG_SCORE
-            log_os << logtag << "starting read1 split\n";
-#endif
-            incrementSplitReadLhood(fragev, true,  refLnLhoodSet.read1Split, altLnLhoodSet.read1Split, isRead1Evaluated);
-#ifdef DEBUG_SCORE
-            log_os << logtag << "starting read2 split\n";
-#endif
-            incrementSplitReadLhood(fragev, false, refLnLhoodSet.read2Split, altLnLhoodSet.read2Split, isRead2Evaluated);
 
-#ifdef DEBUG_SCORE
-            log_os << logtag << "iseval frag/read1/read2: " << isFragEvaluated << " " << isRead1Evaluated << " " << isRead1Evaluated << "\n";
-#endif
-            if (! (isFragEvaluated || isRead1Evaluated || isRead2Evaluated) ) continue;
+            if(! getRefAltFromFrag(sv, isSmallAssembler, fragev,
+                    refLnLhoodSet, altLnLhoodSet, isRead1Evaluated, isRead2Evaluated))
+            {
+                continue;
+            }
 
             for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
             {
@@ -705,7 +732,12 @@ scoreDiploidSV(
         double pprob[DIPLOID_GT::SIZE];
         for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
         {
-            pprob[gt] = loglhood[gt] + diploidDopt.logPrior[gt];
+            // TODO: fix from xchen to use log prior instead of prior
+            // swap this in once there's time to make any compensatory parameter adjustments
+            //pprob[gt] = loglhood[gt] + diploidDopt.logPrior[gt];
+
+            // this version is wrong, it uses the prior without the log, see above:
+            pprob[gt] = loglhood[gt] + diploidDopt.prior[gt];
         }
 
         unsigned maxGt(0);
@@ -765,16 +797,16 @@ scoreDiploidSV(
 }
 
 
+
 static
 double
 estimateSomaticMutationFreq(SVScoreInfo& baseInfo)
 {
-    const int altCounts = baseInfo.tumor.alt.confidentSplitReadCount + baseInfo.tumor.alt.confidentSpanningPairCount + 1;
-    const int refCounts = baseInfo.tumor.ref.confidentSplitReadCount + baseInfo.tumor.ref.confidentSpanningPairCount + 1;
-    const double somaticFreq = (double)(altCounts) / (altCounts + refCounts);
-
-    return somaticFreq;
+    const unsigned altCounts = baseInfo.tumor.alt.confidentSplitReadCount + baseInfo.tumor.alt.confidentSpanningPairCount + 1;
+    const unsigned refCounts = baseInfo.tumor.ref.confidentSplitReadCount + baseInfo.tumor.ref.confidentSpanningPairCount + 1;
+    return static_cast<double>(altCounts) / static_cast<double>(altCounts + refCounts);
 }
+
 
 
 static
@@ -787,8 +819,6 @@ computeLikelihood(
     const double somaticMutationFreq,
     double* loglhood)
 {
-    static const ProbSet chimeraProb(1e-3);
-
 #ifdef DEBUG_SOMATIC_SCORE
     static const std::string logtag("somaticLikelihood: ");
 
@@ -807,53 +837,14 @@ computeLikelihood(
         const SVFragmentEvidence& fragev(val.second);
 
         AlleleLnLhood refLnLhoodSet, altLnLhoodSet;
-
-#ifdef DEBUG_SCORE
-        log_os << logtag << "qname: " << val.first << " fragev: " << fragev << "\n";
-#endif
-
-        /// TODO: add read pairs with one shadow read to the alt read pool
-
-        /// high-quality spanning support relies on read1 and read2 mapping well:
-        bool isFragEvaluated(false);
-        if ( fragev.read1.isObservedAnchor() && fragev.read2.isObservedAnchor())
-        {
-            /// only add to the likelihood if the fragment "supports" at least one allele:
-            if ( fragev.isAnySpanningPairSupport() )
-            {
-                bool isSmall(false);
-                if (isSmallAssembler)
-                {
-                    const int svSize(std::abs(sv.bp2.interval.range.center_pos() - sv.bp1.interval.range.center_pos()));
-                    isSmall=(svSize<minPairVariantSize);
-                }
-
-                if (! isSmall)
-                {
-                    isFragEvaluated=true;
-                    incrementSpanningPairAlleleLnLhood(chimeraProb, fragev.ref, refLnLhoodSet.fragPair);
-                    incrementSpanningPairAlleleLnLhood(chimeraProb, fragev.alt, altLnLhoodSet.fragPair);
-                }
-            }
-        }
-
-        /// split support is less dependent on mapping quality of the individual read, because
-        /// we're potentially relying on shadow reads recovered from the unmapped state
         bool isRead1Evaluated(true);
         bool isRead2Evaluated(true);
-#ifdef DEBUG_SCORE
-        log_os << logtag << "starting read1 split\n";
-#endif
-        incrementSplitReadLhood(fragev, true,  refLnLhoodSet.read1Split, altLnLhoodSet.read1Split, isRead1Evaluated);
-#ifdef DEBUG_SCORE
-        log_os << logtag << "starting read2 split\n";
-#endif
-        incrementSplitReadLhood(fragev, false, refLnLhoodSet.read2Split, altLnLhoodSet.read2Split, isRead2Evaluated);
 
-#ifdef DEBUG_SCORE
-        log_os << logtag << "iseval frag/read1/read2: " << isFragEvaluated << " " << isRead1Evaluated << " " << isRead1Evaluated << "\n";
-#endif
-        if (! (isFragEvaluated || isRead1Evaluated || isRead2Evaluated) ) continue;
+        if(! getRefAltFromFrag(sv, isSmallAssembler, fragev,
+                refLnLhoodSet, altLnLhoodSet, isRead1Evaluated, isRead2Evaluated))
+        {
+            continue;
+        }
 
         for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
         {
@@ -926,12 +917,10 @@ scoreSomaticSV(
     // compute qualities
     //
     {
-        double tumorLlh[SOMATIC_GT::SIZE];
-        double normalLlh[SOMATIC_GT::SIZE];
+        double loglhood[SOMATIC_GT::SIZE];
         for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
         {
-            tumorLlh[gt] = 0.;
-            normalLlh[gt] = 0.;
+            loglhood[gt] = 0.;
         }
 
         // estimate the somatic mutation rate using alternate allele freq from the tumor sample
@@ -940,17 +929,15 @@ scoreSomaticSV(
         log_os << logtag << "somaticMutationFrequency: " << somaticMutationFreq << "\n";
 #endif
 
-        // compute likelihhod for the fragments from the tumor sample
-        computeLikelihood(sv, isSmallAssembler, false, evidence.tumor, somaticMutationFreq, tumorLlh);
+        // compute likelihood for the fragments from the tumor sample
+        computeLikelihood(sv, isSmallAssembler, false, evidence.tumor, somaticMutationFreq, loglhood);
         // compute likelihood for the fragments from the normal sample
-        computeLikelihood(sv, isSmallAssembler, true, evidence.normal, 0, normalLlh);
+        computeLikelihood(sv, isSmallAssembler, true, evidence.normal, 0, loglhood);
 
-        double tumorPostProb[SOMATIC_GT::SIZE];
-        double normalPostProb[SOMATIC_GT::SIZE];
+        double postProb[SOMATIC_GT::SIZE];
         for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
         {
-            tumorPostProb[gt] = tumorLlh[gt] + somaticDopt.logPrior[gt];
-            normalPostProb[gt] = normalLlh[gt] + somaticDopt.logPrior[gt];
+            postProb[gt] = loglhood[gt] + somaticDopt.logPrior[gt];
         }
 
         unsigned maxGt(0);

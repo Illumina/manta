@@ -67,9 +67,10 @@ struct CallOptionsDiploidDeriv
         prior[HOM] = opt.indelPrior/2;
         prior[REF] = 1. - prior[HET] - prior[HOM];
 
-        logPrior[HET] = std::log(prior[HET]);
-        logPrior[HOM] = std::log(prior[HOM]);
-        logPrior[REF] = std::log(prior[REF]);
+        for (unsigned i(0); i<SIZE; ++i)
+        {
+            logPrior[i] = std::log(prior[i]);
+        }
     }
 
     float prior[DIPLOID_GT::SIZE];
@@ -84,17 +85,17 @@ struct CallOptionsSomaticDeriv
     {
         using namespace SOMATIC_GT;
 
-        assert(opt.indelPrior < 0.5);
+        assert(opt.germlineSVPrior < 0.5);
 
-        prior[SOM] = opt.svPrior;
-        prior[HET] = opt.indelPrior;
-        prior[HOM] = opt.indelPrior/2;
+        prior[SOM] = opt.somaticSVPrior;
+        prior[HET] = opt.germlineSVPrior;
+        prior[HOM] = opt.germlineSVPrior/2;
         prior[REF] = 1. - prior[SOM] - prior[HET] - prior[HOM];
 
-        logPrior[SOM] = std::log(prior[SOM]);
-        logPrior[HET] = std::log(prior[HET]);
-        logPrior[HOM] = std::log(prior[HOM]);
-        logPrior[REF] = std::log(prior[REF]);
+        for (unsigned i(0); i<SIZE; ++i)
+        {
+            logPrior[i] = std::log(prior[i]);
+        }
     }
 
     float prior[SOMATIC_GT::SIZE];

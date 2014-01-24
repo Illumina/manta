@@ -45,6 +45,8 @@ prob_comp(It begin,
 }
 
 
+/// given a log() transformed distribution, transform it to a standard
+/// distro, set max_idx to the index of the most probable component
 template <typename It>
 void
 normalize_ln_distro(const It pbegin,
