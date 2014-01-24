@@ -819,6 +819,7 @@ computeLikelihood(
     const double somaticMutationFreq,
     double* loglhood)
 {
+#if 0
 #ifdef DEBUG_SOMATIC_SCORE
     static const std::string logtag("somaticLikelihood: ");
 
@@ -830,6 +831,7 @@ computeLikelihood(
     pos_t pos(bpArange.center_pos()+1);
     if (! isImprecise)
         pos = bpArange.begin_pos()+1;
+#endif
 #endif
 
     BOOST_FOREACH(const SVEvidence::evidenceTrack_t::value_type& val, evidenceTrack)
@@ -870,25 +872,6 @@ computeLikelihood(
             const double altLnLhood = altLnFragLhood + altLnFraction(gtid, somaticMutationFreq);
 
             loglhood[gt] += log_sum(refLnLhood, altLnLhood);
-
-#ifdef DEBUG_SOMATIC_SCORE
-            if (pos == 155590849)
-            {
-                log_os << logtag << "somaticMutFreq/altLnFraction/altLnCompFraction: "
-                       << " " << somaticMutationFreq
-                       << " " << altLnFraction(gtid, somaticMutationFreq)
-                       << " " << altLnCompFraction(gtid, somaticMutationFreq)
-                       << "\n";
-
-                log_os << logtag << "gt/fragref/ref/fragalt/alt: "
-                       << label(gt)
-                       << " " << refLnFragLhood
-                       << " " << refLnLhood
-                       << " " << altLnFragLhood
-                       << " " << altLnLhood
-                       << "\n";
-            }
-#endif
         }
     }
 }
@@ -908,7 +891,6 @@ scoreSomaticSV(
     SVScoreInfo& baseInfo,
     SVScoreInfoSomatic& somaticInfo)
 {
-//#ifdef DEBUG_SCORE
 #ifdef DEBUG_SOMATIC_SCORE
     static const std::string logtag("somaticLikelihood: ");
 #endif
@@ -934,23 +916,20 @@ scoreSomaticSV(
         // compute likelihood for the fragments from the normal sample
         computeLikelihood(sv, isSmallAssembler, true, evidence.normal, 0, loglhood);
 
-        double postProb[SOMATIC_GT::SIZE];
+        double pprob[SOMATIC_GT::SIZE];
         for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
         {
-            postProb[gt] = loglhood[gt] + somaticDopt.logPrior[gt];
+            pprob[gt] = loglhood[gt] + somaticDopt.logPrior[gt];
         }
 
         unsigned maxGt(0);
-        normalize_ln_distro(tumorPostProb, tumorPostProb+SOMATIC_GT::SIZE, maxGt);
-        normalize_ln_distro(normalPostProb, normalPostProb+SOMATIC_GT::SIZE, maxGt);
+        normalize_ln_distro(pprob, pprob+SOMATIC_GT::SIZE, maxGt);
 
 #ifdef DEBUG_SOMATIC_SCORE
-
         const bool isImprecise(sv.isImprecise());
         const bool isBp1First(sv.bp1.interval.range.begin_pos()<=sv.bp2.interval.range.begin_pos());
 
         const SVBreakend& bpA(isBp1First ? sv.bp1 : sv.bp2);
-        //const SVBreakend& bpB(isBp1First ? sv.bp2 : sv.bp1);
 
         const known_pos_range2& bpArange(bpA.interval.range);
         pos_t pos(bpArange.center_pos()+1);
@@ -962,26 +941,17 @@ scoreSomaticSV(
         {
             log_os << logtag << "gt/lhood/prior/pprob for tumor sample: "
                    << SOMATIC_GT::label(gt)
-                   << " " << tumorLlh[gt]
+                   << " " << loglhood[gt]
                    << " " << somaticDopt.prior[gt]
-                   << " " << tumorPostProb[gt]
-                   << "\n";
-        }
-
-        for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
-        {
-            log_os << logtag << "gt/lhood/prior/pprob for normal sample: "
-                   << SOMATIC_GT::label(gt)
-                   << " " << normalLlh[gt]
-                   << " " << somaticDopt.prior[gt]
-                   << " " << normalPostProb[gt]
+                   << " " << pprob[gt]
                    << "\n";
         }
 #endif
 
-        double tumorSomProb = tumorPostProb[SOMATIC_GT::SOM];
-        double normalRefProb = normalPostProb[SOMATIC_GT::REF];
-        somaticInfo.somaticScore=error_prob_to_qphred(1. - (normalRefProb * tumorSomProb) );
+        //double tumorSomProb = pprob[SOMATIC_GT::SOM];
+        //double normalRefProb = pprob[SOMATIC_GT::REF];
+        //somaticInfo.somaticScore=error_prob_to_qphred(1. - (normalRefProb * tumorSomProb) );
+    	somaticInfo.somaticScore=error_prob_to_qphred(prob_comp(pprob, pprob+SOMATIC_GT::SIZE, SOMATIC_GT::SOM));
 
 #ifdef DEBUG_SOMATIC_SCORE
         log_os << logtag << "somatic score: " << somaticInfo.somaticScore << "\n";
