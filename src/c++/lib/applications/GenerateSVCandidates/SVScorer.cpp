@@ -779,7 +779,7 @@ scoreDiploidSV(
             }
         }
 
-        if (diploidInfo.gtScore < diploidOpt.minGTScoreFilter)
+        if (diploidInfo.gtScore < diploidOpt.minPassGTScore)
         {
             diploidInfo.filters.insert(diploidOpt.minGTFilterLabel);
         }
@@ -958,51 +958,8 @@ scoreSomaticSV(
 #endif
     }
 
-    /*
-    {
-    	double loglhood[SOMATIC_GT::SIZE];
-    	for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
-    	{
-    		loglhood[gt] = 0.;
-    	}
-
-    	// compute likelihood for the fragments from the normal sample
-    	//computeLikelihood(sv, isSmallAssembler, true, evidence.normal, baseInfo, loglhood);
-    	// compute likelihhod for the fragments from the tumor sample
-    	computeLikelihood(sv, isSmallAssembler, false, evidence.tumor, baseInfo, loglhood);
-
-    	double pprob[SOMATIC_GT::SIZE];
-    	for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
-    	{
-    		pprob[gt] = loglhood[gt] + somaticDopt.logPrior[gt];
-    	}
-
-    	unsigned maxGt(0);
-    	normalize_ln_distro(pprob, pprob+SOMATIC_GT::SIZE, maxGt);
-
-    #ifdef DEBUG_SCORE
-    	for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
-    	{
-    		log_os << logtag << "gt/lhood/prior/pprob: "
-    			   << SOMATIC_GT::label(gt)
-    			   << " " << loglhood[gt]
-    			   << " " << somaticDopt.prior[gt]
-    			   << " " << pprob[gt]
-    			   << "\n";
-    	}
-    #endif
-
-    	//somaticInfo.gt=static_cast<SOMATIC_GT::index_t>(maxGt);
-    	//somaticInfo.gtScore=error_prob_to_qphred(prob_comp(pprob,pprob+SOMATIC_GT::SIZE, somaticInfo.gt));
-    	somaticInfo.somaticScore=error_prob_to_qphred(prob_comp(pprob, pprob+SOMATIC_GT::SIZE, SOMATIC_GT::SOM));
-
-    #ifdef DEBUG_SCORE
-    log_os << logtag << "somatic score: " << somaticInfo.somaticScore << "\n";
-    #endif
-
-    }*/
-
-    /*
+    // original threshold-based score logic:
+#ifdef COUNT_SCORE
     {
         // don't use pair evidence for small variants:
         bool isSmall(false);
@@ -1077,7 +1034,7 @@ scoreSomaticSV(
 
         if (isNonzeroSomaticQuality) somaticInfo.somaticScore=60;
     }
-    */
+#endif
 
     //
     // apply filters
@@ -1095,6 +1052,11 @@ scoreSomaticSV(
             {
                 somaticInfo.filters.insert(somaticOpt.maxDepthFilterLabel);
             }
+        }
+
+        if (somaticInfo.somaticScore < somaticOpt.minCallSomaticScore)
+        {
+            somaticInfo.filters.insert(somaticOpt.minSomaticScoreLabel);
         }
 
         const bool isMQ0FilterSize(isSVBelowMinSize(sv,1000));
