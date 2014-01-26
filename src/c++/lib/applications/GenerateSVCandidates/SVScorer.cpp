@@ -1054,7 +1054,7 @@ scoreSomaticSV(
             }
         }
 
-        if (somaticInfo.somaticScore < somaticOpt.minCallSomaticScore)
+        if (somaticInfo.somaticScore < somaticOpt.minPassSomaticScore)
         {
             somaticInfo.filters.insert(somaticOpt.minSomaticScoreLabel);
         }

@@ -108,13 +108,15 @@ parseGSCOptions(
     po::options_description alignDesc(getOptionsDescription(opt.alignFileOpt));
     po::options_description edgeDesc(getOptionsDescription(opt.edgeOpt));
     po::options_description scanDesc(getOptionsDescription(opt.scanOpt));
+    po::options_description diploidCallDesc(getOptionsDescription(opt.diploidOpt));
+    po::options_description somaticCallDesc(getOptionsDescription(opt.somaticOpt));
 
     po::options_description help("help");
     help.add_options()
     ("help,h","print this message");
 
     po::options_description visible("options");
-    visible.add(alignDesc).add(scanDesc).add(req).add(edgeDesc).add(help);
+    visible.add(alignDesc).add(scanDesc).add(req).add(edgeDesc).add(diploidCallDesc).add(somaticCallDesc).add(help);
 
     bool po_parse_fail(false);
     po::variables_map vm;

@@ -24,11 +24,11 @@ getOptionsDescription(CallOptionsSomatic& opt)
     namespace po = boost::program_options;
     po::options_description desc("somatic-variant-calling");
     desc.add_options()
-    ("max-depth-factor", po::value(&opt.maxDepthFactor)->default_value(opt.maxDepthFactor),
+    ("somatic-max-depth-factor", po::value(&opt.maxDepthFactor)->default_value(opt.maxDepthFactor),
      "Variants where the normal-sample depth around the breakpoint is greater than this factor x the chromosomal mean will be filtered out")
     ("min-somatic-score", po::value(&opt.minOutputSomaticScore)->default_value(opt.minOutputSomaticScore),
      "minimum somatic quality score for variants to be included in the somatic output vcf")
-    ("min-call-somatic-score", po::value(&opt.minCallSomaticScore)->default_value(opt.minCallSomaticScore),
+    ("min-pass-somatic-score", po::value(&opt.minPassSomaticScore)->default_value(opt.minPassSomaticScore),
       "minimum somatic quality score below which variants are marked as filtered in the somatic output vcf")
     ;
 

@@ -28,7 +28,7 @@ struct CallOptionsSomatic
         maxDepthFactor(3.0),
         maxDepthFilterLabel("MaxDepth"),
         minOutputSomaticScore(10),
-        minCallSomaticScore(30),
+        minPassSomaticScore(30),
         minSomaticScoreLabel("MinSomaticScore"),
         maxMQ0Frac(0.4),
         maxMQ0FracLabel("MaxMQ0Frac")
@@ -43,7 +43,7 @@ struct CallOptionsSomatic
     std::string maxDepthFilterLabel;
 
     unsigned minOutputSomaticScore; ///< minimum somatic quality to print out a somatic variant
-    unsigned minCallSomaticScore; ///< minimum somatic quality which passes vcf filtration
+    unsigned minPassSomaticScore; ///< minimum somatic quality which passes vcf filtration
     std::string minSomaticScoreLabel;
 
     float maxMQ0Frac;
