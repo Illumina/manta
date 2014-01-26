@@ -88,9 +88,15 @@ struct CallOptionsSomaticDeriv
         assert(opt.germlineSVPrior < 0.5);
 
         prior[SOM] = opt.somaticSVPrior;
+        prior[NOISE] = opt.noiseSVPrior;
+
         prior[HET] = opt.germlineSVPrior;
         prior[HOM] = opt.germlineSVPrior/2;
-        prior[REF] = 1. - prior[SOM] - prior[HET] - prior[HOM];
+
+        // this assumes all states independent, and somatic and noise only occur on germline ref GT background:
+        const float nonref(prior[SOM]+prior[NOISE]+prior[HET]+prior[HOM]);
+        assert(nonref>=0 && nonref<=1);
+        prior[REF] = 1. - nonref;
 
         for (unsigned i(0); i<SIZE; ++i)
         {
@@ -101,7 +107,6 @@ struct CallOptionsSomaticDeriv
     float prior[SOMATIC_GT::SIZE];
     float logPrior[SOMATIC_GT::SIZE];
 };
-
 
 
 

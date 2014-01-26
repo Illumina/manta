@@ -34,6 +34,7 @@ enum index_t
     HET,
     HOM,
     SOM,
+    NOISE,
     SIZE
 };
 
@@ -51,6 +52,8 @@ label(const index_t i)
         return "hom";
     case SOM :
         return "som";
+    case NOISE :
+        return "noise";
     default:
         assert(false && "Unknown GT state");
         return NULL;
@@ -66,7 +69,10 @@ label(const unsigned i)
 
 inline
 float
-altFraction(const index_t i, const double somaticFreq)
+altFraction(
+    const index_t i,
+    const double somaticFreq,
+    const double noiseFreq)
 {
     switch (i)
     {
@@ -77,9 +83,9 @@ altFraction(const index_t i, const double somaticFreq)
     case HOM :
         return 1.0;
     case SOM:
-        //return SOMATIC_MUTATION_FREQ;
         return somaticFreq;
-
+    case NOISE:
+        return noiseFreq;
     default:
         assert(false && "Unknown GT state");
         return 0;
@@ -88,7 +94,10 @@ altFraction(const index_t i, const double somaticFreq)
 
 inline
 double
-altLnFraction(const index_t i, const double somaticFreq)
+altLnFraction(
+    const index_t i,
+    const double somaticFreq,
+    const double noiseFreq)
 {
     static const double val[] = { std::log(0.), std::log(0.5), std::log(1.) };
 
@@ -102,6 +111,8 @@ altLnFraction(const index_t i, const double somaticFreq)
         return val[2];
     case SOM:
         return std::log(somaticFreq);
+    case NOISE:
+        return std::log(noiseFreq);
     default:
         assert(false && "Unknown GT state");
         return 0;
@@ -110,7 +121,10 @@ altLnFraction(const index_t i, const double somaticFreq)
 
 inline
 double
-altLnCompFraction(const index_t i, const double somaticFreq)
+altLnCompFraction(
+    const index_t i,
+    const double somaticFreq,
+    const double noiseFreq)
 {
     static const double val[] = { std::log(1.), std::log(0.5), std::log(0.) };
 
@@ -124,6 +138,8 @@ altLnCompFraction(const index_t i, const double somaticFreq)
         return val[2];
     case SOM:
         return std::log(1-somaticFreq);
+    case NOISE:
+        return std::log(1-noiseFreq);
     default:
         assert(false && "Unknown GT state");
         return 0;

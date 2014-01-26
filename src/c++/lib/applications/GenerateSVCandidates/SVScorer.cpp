@@ -802,8 +802,25 @@ static
 double
 estimateSomaticMutationFreq(SVScoreInfo& baseInfo)
 {
-    const unsigned altCounts = baseInfo.tumor.alt.confidentSplitReadCount + baseInfo.tumor.alt.confidentSpanningPairCount + 1;
-    const unsigned refCounts = baseInfo.tumor.ref.confidentSplitReadCount + baseInfo.tumor.ref.confidentSpanningPairCount + 1;
+    const unsigned altCounts = baseInfo.tumor.alt.confidentSplitReadCount + baseInfo.tumor.alt.confidentSpanningPairCount;
+    const unsigned refCounts = baseInfo.tumor.ref.confidentSplitReadCount + baseInfo.tumor.ref.confidentSpanningPairCount;
+    return static_cast<double>(altCounts + 1) / static_cast<double>(altCounts + refCounts + 2);
+}
+
+
+
+static
+double
+estimateNoiseMutationFreq(SVScoreInfo& baseInfo)
+{
+    const unsigned normalAltCounts = baseInfo.normal.alt.confidentSplitReadCount + baseInfo.normal.alt.confidentSpanningPairCount;
+    const unsigned normalRefCounts = baseInfo.normal.ref.confidentSplitReadCount + baseInfo.normal.ref.confidentSpanningPairCount;
+    const unsigned tumorAltCounts = baseInfo.tumor.alt.confidentSplitReadCount + baseInfo.tumor.alt.confidentSpanningPairCount;
+    const unsigned tumorRefCounts = baseInfo.tumor.ref.confidentSplitReadCount + baseInfo.tumor.ref.confidentSpanningPairCount;
+
+    const unsigned altCounts(normalAltCounts + tumorAltCounts);
+    const unsigned refCounts(normalRefCounts + tumorRefCounts);
+
     return static_cast<double>(altCounts) / static_cast<double>(altCounts + refCounts);
 }
 
@@ -817,6 +834,7 @@ computeLikelihood(
     const bool /*isNormal*/,
     const SVEvidence::evidenceTrack_t& evidenceTrack,
     const double somaticMutationFreq,
+    const double noiseMutationFreq,
     double* loglhood)
 {
 #if 0
@@ -868,8 +886,8 @@ computeLikelihood(
 #endif
 
             // update likelihood with Pr[allele | G]
-            const double refLnLhood = refLnFragLhood + altLnCompFraction(gtid, somaticMutationFreq);
-            const double altLnLhood = altLnFragLhood + altLnFraction(gtid, somaticMutationFreq);
+            const double refLnLhood = refLnFragLhood + altLnCompFraction(gtid, somaticMutationFreq, noiseMutationFreq);
+            const double altLnLhood = altLnFragLhood + altLnFraction(gtid, somaticMutationFreq, noiseMutationFreq);
 
             loglhood[gt] += log_sum(refLnLhood, altLnLhood);
         }
@@ -907,14 +925,18 @@ scoreSomaticSV(
 
         // estimate the somatic mutation rate using alternate allele freq from the tumor sample
         const double somaticMutationFreq = estimateSomaticMutationFreq(baseInfo);
+
+        // estimate the noise mutation rate using alternate allele freq from the tumor and normal samples
+        const double noiseMutationFreq = estimateNoiseMutationFreq(baseInfo);
+
 #ifdef DEBUG_SOMATIC_SCORE
         log_os << logtag << "somaticMutationFrequency: " << somaticMutationFreq << "\n";
 #endif
 
         // compute likelihood for the fragments from the tumor sample
-        computeLikelihood(sv, isSmallAssembler, false, evidence.tumor, somaticMutationFreq, loglhood);
+        computeLikelihood(sv, isSmallAssembler, false, evidence.tumor, somaticMutationFreq, noiseMutationFreq, loglhood);
         // compute likelihood for the fragments from the normal sample
-        computeLikelihood(sv, isSmallAssembler, true, evidence.normal, 0, loglhood);
+        computeLikelihood(sv, isSmallAssembler, true, evidence.normal, 0, noiseMutationFreq, loglhood);
 
         double pprob[SOMATIC_GT::SIZE];
         for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)

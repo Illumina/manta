@@ -30,6 +30,8 @@ getOptionsDescription(CallOptionsSomatic& opt)
      "minimum somatic quality score for variants to be included in the somatic output vcf")
     ("min-pass-somatic-score", po::value(&opt.minPassSomaticScore)->default_value(opt.minPassSomaticScore),
       "minimum somatic quality score below which variants are marked as filtered in the somatic output vcf")
+    ("noise-sv-prior", po::value(&opt.noiseSVPrior)->default_value(opt.noiseSVPrior),
+      "probability of a spurious SV observation shared in the tumor and normal samples")
     ;
 
     return desc;
