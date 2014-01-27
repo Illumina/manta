@@ -155,7 +155,8 @@ struct SVScoreInfoSomatic : public SVScoreInfo
 
     SVScoreInfoSomatic() :
         base_t(),
-        somaticScore(0)
+        somaticScore(0),
+        somaticScoreTier(0)
     {}
 
     void
@@ -165,11 +166,13 @@ struct SVScoreInfoSomatic : public SVScoreInfo
 
         filters.clear();
         somaticScore=0;
+        somaticScoreTier=0;
     }
 
     std::set<std::string> filters;
 
     unsigned somaticScore;
+    unsigned char somaticScoreTier;
 };
 
 
