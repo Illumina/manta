@@ -976,6 +976,7 @@ scoreSomaticSV(
 
 #ifdef DEBUG_SOMATIC_SCORE
         log_os << logtag << "somaticMutationFrequency: " << somaticMutationFreq << "\n";
+        log_os << logtag << "noiseMutationFrequency: " << noiseMutationFreq << "\n";
 #endif
 
         // compute likelihood for the fragments from the tumor sample
@@ -1018,7 +1019,7 @@ scoreSomaticSV(
     	tierScore[tierIndex]=error_prob_to_qphred(prob_comp(pprob, pprob+SOMATIC_GT::SIZE, SOMATIC_GT::SOM));
 
 #ifdef DEBUG_SOMATIC_SCORE
-        log_os << logtag << "somatic score: " << somaticInfo.somaticScore << "\n";
+        log_os << logtag << "tier: " << tierIndex << " somatic score: " << tierScore[tierIndex] << "\n";
 #endif
 
         // don't bother with tier2 if tier1 is too low:
