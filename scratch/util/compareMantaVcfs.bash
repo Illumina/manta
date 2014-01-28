@@ -45,6 +45,11 @@ stripSample() {
     awk 'BEGIN {FS="\t"; OFS="\t";} {for(i=10;i<=NF;++i) { $i=""; } print;}'
 }
 
+stripSomScore() {
+    sed "s/SOMATICSCORE=[0-9]*//"
+}
+
+
 
 #
 # optionally ungzip, then remove header and remove IDs from each vcf
