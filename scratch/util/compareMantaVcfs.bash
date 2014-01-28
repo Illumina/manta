@@ -59,7 +59,7 @@ stripVcfCore() {
 
     optionalUngzip $infile |\
     filterHeader |\
-    stripMantaIds
+    stripMantaIds | stripSomScore
 }
 
 

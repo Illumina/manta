@@ -24,12 +24,12 @@ struct CallOptionsSomatic
 {
     CallOptionsSomatic() :
         germlineSVPrior(1e-5),
-        somaticSVPrior(1e-7),
-        noiseSVPrior(5e-10),
+        somaticSVPrior(1e-6),
+        noiseSVPrior(5e-8),
         maxDepthFactor(3.0),
         maxDepthFilterLabel("MaxDepth"),
         minOutputSomaticScore(10),
-        minPassSomaticScore(20),
+        minPassSomaticScore(30),
         minSomaticScoreLabel("MinSomaticScore"),
         maxMQ0Frac(0.4),
         maxMQ0FracLabel("MaxMQ0Frac")
