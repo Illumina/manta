@@ -26,6 +26,7 @@
 #include "manta/ReadGroupStatsSet.hh"
 #include "manta/SVCandidateUtil.hh"
 
+#include "boost/array.hpp"
 #include "boost/foreach.hpp"
 
 #include <algorithm>
@@ -669,6 +670,72 @@ getRefAltFromFrag(
 
 
 
+/// score diploid germline specific components:
+static
+void
+addDiploidLoglhood(
+    const SVCandidate& sv,
+    const bool isSmallAssembler,
+    const SVEvidence::evidenceTrack_t& sampleEvidence,
+    boost::array<double,DIPLOID_GT::SIZE>& loglhood)
+{
+#ifdef DEBUG_SCORE
+    static const std::string logtag("getDiploidLoglhood: ");
+#endif
+
+    BOOST_FOREACH(const SVEvidence::evidenceTrack_t::value_type& val, sampleEvidence)
+    {
+        const SVFragmentEvidence& fragev(val.second);
+
+        AlleleLnLhood refLnLhoodSet, altLnLhoodSet;
+        bool isRead1Evaluated(true);
+        bool isRead2Evaluated(true);
+
+        /// this option is only used in somatic calling:
+        static const bool isPermissive(false);
+
+        if (! getRefAltFromFrag(sv, isSmallAssembler, isPermissive, fragev,
+                                refLnLhoodSet, altLnLhoodSet, isRead1Evaluated, isRead2Evaluated))
+        {
+            // continue if this fragment was not evaluated for pair or split support for either allele:
+            continue;
+        }
+
+        for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
+        {
+            using namespace DIPLOID_GT;
+
+#ifdef DEBUG_SCORE
+            log_os << logtag << "starting gt: " << gt << " " << label(gt) << "\n";
+#endif
+
+            const index_t gtid(static_cast<const index_t>(gt));
+            const double refLnFragLhood(getFragLnLhood(refLnLhoodSet, isRead1Evaluated, isRead2Evaluated));
+#ifdef DEBUG_SCORE
+            log_os << logtag << "refLnFragLhood: " << refLnFragLhood << "\n";
+#endif
+            const double altLnFragLhood(getFragLnLhood(altLnLhoodSet, isRead1Evaluated, isRead2Evaluated));
+#ifdef DEBUG_SCORE
+            log_os << logtag << "altLnFragLhood: " << altLnFragLhood << "\n";
+#endif
+            const double refLnLhood(refLnFragLhood + altLnCompFraction(gtid));
+            const double altLnLhood(altLnFragLhood + altLnFraction(gtid));
+            loglhood[gt] += log_sum(refLnLhood, altLnLhood);
+
+#ifdef DEBUG_SCORE
+            log_os << logtag << "gt/fragref/ref/fragalt/alt: "
+                   << label(gt)
+                   << " " << refLnFragLhood
+                   << " " << refLnLhood
+                   << " " << altLnFragLhood
+                   << " " << altLnLhood
+                   << "\n";
+#endif
+        }
+    }
+}
+
+
 
 
 /// score diploid germline specific components:
@@ -692,64 +759,11 @@ scoreDiploidSV(
     // compute qualities
     //
     {
-        double loglhood[DIPLOID_GT::SIZE];
-        for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
-        {
-            loglhood[gt] = 0.;
-        }
+        boost::array<double,DIPLOID_GT::SIZE> loglhood;
+        std::fill(loglhood.begin(),loglhood.end(),0);
+        addDiploidLoglhood(sv, isSmallAssembler, evidence.normal, loglhood);
 
-        BOOST_FOREACH(const SVEvidence::evidenceTrack_t::value_type& val, evidence.normal)
-        {
-            const SVFragmentEvidence& fragev(val.second);
-
-            AlleleLnLhood refLnLhoodSet, altLnLhoodSet;
-            bool isRead1Evaluated(true);
-            bool isRead2Evaluated(true);
-
-            /// this option is only used in somatic calling:
-            static const bool isPermissive(false);
-
-            if(! getRefAltFromFrag(sv, isSmallAssembler, isPermissive, fragev,
-                    refLnLhoodSet, altLnLhoodSet, isRead1Evaluated, isRead2Evaluated))
-            {
-                // continue if this fragment was not evaluated for pair or split support for either allele:
-                continue;
-            }
-
-            for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
-            {
-                using namespace DIPLOID_GT;
-
-#ifdef DEBUG_SCORE
-                log_os << logtag << "starting gt: " << gt << " " << label(gt) << "\n";
-#endif
-
-                const index_t gtid(static_cast<const index_t>(gt));
-                const double refLnFragLhood(getFragLnLhood(refLnLhoodSet, isRead1Evaluated, isRead2Evaluated));
-#ifdef DEBUG_SCORE
-                log_os << logtag << "refLnFragLhood: " << refLnFragLhood << "\n";
-#endif
-                const double altLnFragLhood(getFragLnLhood(altLnLhoodSet, isRead1Evaluated, isRead2Evaluated));
-#ifdef DEBUG_SCORE
-                log_os << logtag << "altLnFragLhood: " << altLnFragLhood << "\n";
-#endif
-                const double refLnLhood(refLnFragLhood + altLnCompFraction(gtid));
-                const double altLnLhood(altLnFragLhood + altLnFraction(gtid));
-                loglhood[gt] += log_sum(refLnLhood, altLnLhood);
-
-#ifdef DEBUG_SCORE
-                log_os << logtag << "gt/fragref/ref/fragalt/alt: "
-                       << label(gt)
-                       << " " << refLnFragLhood
-                       << " " << refLnLhood
-                       << " " << altLnFragLhood
-                       << " " << altLnLhood
-                       << "\n";
-#endif
-            }
-        }
-
-        double pprob[DIPLOID_GT::SIZE];
+        boost::array<double,DIPLOID_GT::SIZE> pprob;
         for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
         {
             // TODO: fix from xchen to use log prior instead of prior
@@ -761,7 +775,7 @@ scoreDiploidSV(
         }
 
         unsigned maxGt(0);
-        normalize_ln_distro(pprob, pprob+DIPLOID_GT::SIZE, maxGt);
+        normalize_ln_distro(pprob.begin(), pprob.end(), maxGt);
 
 #ifdef DEBUG_SCORE
         for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
@@ -777,7 +791,7 @@ scoreDiploidSV(
 
         diploidInfo.gt=static_cast<DIPLOID_GT::index_t>(maxGt);
         diploidInfo.altScore=error_prob_to_qphred(pprob[DIPLOID_GT::REF]);
-        diploidInfo.gtScore=error_prob_to_qphred(prob_comp(pprob,pprob+DIPLOID_GT::SIZE, diploidInfo.gt));
+        diploidInfo.gtScore=error_prob_to_qphred(prob_comp(pprob.begin(),pprob.end(), diploidInfo.gt));
     }
 
 
@@ -870,7 +884,7 @@ computeSomaticSampleLoghood(
     const double somaticMutationFreq,
     const double noiseMutationFreq,
     const bool isPermissive,
-    double* loglhood)
+    boost::array<double,SOMATIC_GT::SIZE>& loglhood)
 {
 #if 0
 #ifdef DEBUG_SOMATIC_SCORE
@@ -895,8 +909,8 @@ computeSomaticSampleLoghood(
         bool isRead1Evaluated(true);
         bool isRead2Evaluated(true);
 
-        if(! getRefAltFromFrag(sv, isSmallAssembler, isPermissive, fragev,
-                refLnLhoodSet, altLnLhoodSet, isRead1Evaluated, isRead2Evaluated))
+        if (! getRefAltFromFrag(sv, isSmallAssembler, isPermissive, fragev,
+                                refLnLhoodSet, altLnLhoodSet, isRead1Evaluated, isRead2Evaluated))
         {
             // continue if this fragment was not evaluated for pair or split support for either allele:
             continue;
@@ -958,14 +972,14 @@ scoreSomaticSV(
     static const unsigned tierCount(2);
     double tierScore[tierCount] = { 0. , 0. };
 
-    for(unsigned tierIndex(0);tierIndex<tierCount;++tierIndex)
+    for (unsigned tierIndex(0); tierIndex<tierCount; ++tierIndex)
     {
         const bool isPermissive(tierIndex != 0);
 
-        double loglhood[SOMATIC_GT::SIZE];
+        boost::array<double,SOMATIC_GT::SIZE> somaticLhood;
         for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
         {
-            loglhood[gt] = 0.;
+            somaticLhood[gt] = 0.;
         }
 
         // estimate the somatic mutation rate using alternate allele freq from the tumor sample
@@ -980,43 +994,65 @@ scoreSomaticSV(
 #endif
 
         // compute likelihood for the fragments from the tumor sample
-        computeSomaticSampleLoghood(sv, isSmallAssembler, false, evidence.tumor, somaticMutationFreq, noiseMutationFreq, isPermissive, loglhood);
+        computeSomaticSampleLoghood(sv, isSmallAssembler, false, evidence.tumor, somaticMutationFreq, noiseMutationFreq, isPermissive, somaticLhood);
         // compute likelihood for the fragments from the normal sample
-        computeSomaticSampleLoghood(sv, isSmallAssembler, true, evidence.normal, 0, noiseMutationFreq, isPermissive, loglhood);
+        computeSomaticSampleLoghood(sv, isSmallAssembler, true, evidence.normal, 0, noiseMutationFreq, isPermissive, somaticLhood);
 
-        double pprob[SOMATIC_GT::SIZE];
+        boost::array<double,SOMATIC_GT::SIZE> somaticPprob;
         for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
         {
-            pprob[gt] = loglhood[gt] + somaticDopt.logPrior[gt];
+            somaticPprob[gt] = somaticLhood[gt] + somaticDopt.logPrior[gt];
         }
 
-        unsigned maxGt(0);
-        normalize_ln_distro(pprob, pprob+SOMATIC_GT::SIZE, maxGt);
+        {
+            unsigned maxGt(0);
+            normalize_ln_distro(somaticPprob.begin(), somaticPprob.end(), maxGt);
+        }
+
+        // independently estimate diploid genotype:
+        boost::array<double,DIPLOID_GT::SIZE> normalLhood;
+        std::fill(normalLhood.begin(),normalLhood.end(),0);
+        addDiploidLoglhood(sv, isSmallAssembler, evidence.normal, normalLhood);
+
+        boost::array<double,DIPLOID_GT::SIZE> normalPprob;
+        for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
+        {
+            normalPprob[gt] = normalLhood[gt]; // uniform prior for now....
+        }
+
+        {
+            unsigned maxGt(0);
+            normalize_ln_distro(normalPprob.begin(), normalPprob.end(), maxGt);
+        }
 
 #ifdef DEBUG_SOMATIC_SCORE
-        const bool isImprecise(sv.isImprecise());
-        const bool isBp1First(sv.bp1.interval.range.begin_pos()<=sv.bp2.interval.range.begin_pos());
-
-        const SVBreakend& bpA(isBp1First ? sv.bp1 : sv.bp2);
-
-        const known_pos_range2& bpArange(bpA.interval.range);
-        pos_t pos(bpArange.center_pos()+1);
-        if (! isImprecise)
-            pos = bpArange.begin_pos()+1;
-        log_os << logtag << "variant pos: " << pos << "\n";
-
         for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
         {
-            log_os << logtag << "gt/lhood/prior/pprob for tumor sample: "
+            log_os << logtag << "gt/lhood/prior/somaticPprob for tumor sample: "
                    << SOMATIC_GT::label(gt)
-                   << " " << loglhood[gt]
+                   << " " << somaticLhood[gt]
                    << " " << somaticDopt.prior[gt]
-                   << " " << pprob[gt]
+                   << " " << somaticPprob[gt]
+                   << "\n";
+        }
+
+        for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
+        {
+            log_os << logtag << "diploid gt/lhood: "
+                   << DIPLOID_GT::label(gt)
+                   << " " << normalLhod[gt]
                    << "\n";
         }
 #endif
 
-    	tierScore[tierIndex]=error_prob_to_qphred(prob_comp(pprob, pprob+SOMATIC_GT::SIZE, SOMATIC_GT::SOM));
+        const double nonsomaticProb(prob_comp(somaticPprob.begin(), somaticPprob.end(), SOMATIC_GT::SOM));
+        const double nonrefProb(prob_comp(normalPprob.begin(), normalPprob.end(), DIPLOID_GT::REF));
+
+        // not (somatic AND normal ref):
+        // (1-(1-a)(1-b)) -> a+b-(ab)
+        const double nonsomatic_ref_prob(nonsomaticProb+nonrefProb-(nonsomaticProb*nonrefProb));
+
+        tierScore[tierIndex]=error_prob_to_qphred(nonsomatic_ref_prob);
 
 #ifdef DEBUG_SOMATIC_SCORE
         log_os << logtag << "tier: " << tierIndex << " somatic score: " << tierScore[tierIndex] << "\n";
@@ -1029,7 +1065,7 @@ scoreSomaticSV(
     somaticInfo.somaticScore=std::min(tierScore[0],tierScore[1]);
 
     somaticInfo.somaticScoreTier = 0;
-    if(tierScore[1] > tierScore[0])
+    if (tierScore[1] > tierScore[0])
     {
         somaticInfo.somaticScoreTier = 1;
     }
@@ -1045,11 +1081,11 @@ scoreSomaticSV(
             isSmall=(svSize<minPairVariantSize);
         }
 
-    #ifdef DEBUG_SCORE
+#ifdef DEBUG_SCORE
         log_os << __FUNCTION__ << ": isSmall: " << isSmall << '\n'
                << __FUNCTION__ << ": normal: " << baseInfo.normal << '\n'
                << __FUNCTION__ << ": tumor: " << baseInfo.tumor << '\n';
-    #endif
+#endif
 
         bool isNonzeroSomaticQuality(true);
 
