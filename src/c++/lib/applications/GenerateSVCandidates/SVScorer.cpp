@@ -429,10 +429,11 @@ void
 incrementSpanningPairAlleleLnLhood(
     const ProbSet& chimeraProb,
     const SVFragmentEvidenceAllele& allele,
+    const double power,
     double& bpLnLhood)
 {
     const float fragProb(getSpanningPairAlleleLhood(allele));
-    bpLnLhood += std::log(chimeraProb.comp*fragProb + chimeraProb.prob);
+    bpLnLhood += std::log(chimeraProb.comp*fragProb + chimeraProb.prob)*power;
 }
 
 
@@ -599,13 +600,13 @@ isTreatAsSmallSV(
 
 /// return true if any evidence exists for fragment:
 ///
-/// \param isPermissive if true, include marginal evidence in the computation (ie. potentially mismapped reads)
+/// \param semiMappedPower multiply out semi-mapped reads (in log space) by this value
 ///
 static
 bool
 getRefAltFromFrag(
     const bool isSmallSV,
-    const bool isPermissive,
+    const double semiMappedPower,
     const SVFragmentEvidence& fragev,
     AlleleLnLhood& refLnLhoodSet,
     AlleleLnLhood& altLnLhoodSet,
@@ -632,16 +633,8 @@ getRefAltFromFrag(
     /// high-quality spanning support relies on read1 and read2 mapping well:
     bool isFragEvaluated(false);
 
-    bool isPairUsable(false);
-    if (isPermissive)
-    {
-        isPairUsable = ((fragev.read1.isScanned && fragev.read2.isScanned) &&
-                        (fragev.read1.isAnchored || fragev.read2.isAnchored));
-    }
-    else
-    {
-        isPairUsable = (fragev.read1.isObservedAnchor() && fragev.read2.isObservedAnchor());
-    }
+    const bool isPairUsable = ((fragev.read1.isScanned && fragev.read2.isScanned) &&
+                               (fragev.read1.isAnchored || fragev.read2.isAnchored));
 
     if (isPairUsable)
     {
@@ -650,9 +643,12 @@ getRefAltFromFrag(
         {
             if (! isSmallSV)
             {
+                const bool isSemiMapped(! (fragev.read1.isAnchored && fragev.read2.isAnchored));
+                const double spanPower( isSemiMapped ?  semiMappedPower : 1.);
+
+                incrementSpanningPairAlleleLnLhood(chimeraProb, fragev.ref, spanPower, refLnLhoodSet.fragPair);
+                incrementSpanningPairAlleleLnLhood(chimeraProb, fragev.alt, spanPower, altLnLhoodSet.fragPair);
                 isFragEvaluated=true;
-                incrementSpanningPairAlleleLnLhood(chimeraProb, fragev.ref, refLnLhoodSet.fragPair);
-                incrementSpanningPairAlleleLnLhood(chimeraProb, fragev.alt, altLnLhoodSet.fragPair);
             }
         }
     }
@@ -698,10 +694,11 @@ addDiploidLoglhood(
         bool isRead1Evaluated(true);
         bool isRead2Evaluated(true);
 
-        /// this option is only used in somatic calling:
-        static const bool isPermissive(false);
+        /// don't use semi-mapped reads for germline calling:
+        static const double semiMappedPower(0.);
 
-        if (! getRefAltFromFrag(isSmallSV, isPermissive, fragev,
+
+        if (! getRefAltFromFrag(isSmallSV, semiMappedPower, fragev,
                                 refLnLhoodSet, altLnLhoodSet, isRead1Evaluated, isRead2Evaluated))
         {
             // continue if this fragment was not evaluated for pair or split support for either allele:
@@ -905,7 +902,7 @@ computeSomaticSampleLoghood(
     const SVEvidence::evidenceTrack_t& evidenceTrack,
     const double somaticMutationFreq,
     const double noiseMutationFreq,
-    const bool isPermissive,
+    const double isPermissive,
     boost::array<double,SOMATIC_GT::SIZE>& loglhood)
 {
 #if 0
@@ -923,6 +920,9 @@ computeSomaticSampleLoghood(
 #endif
 #endif
 
+    // semi-mapped reads make a partial contribution in tier1, and a full contribution in tier2:
+    const double semiMappedPower( isPermissive ? 1. : 0.5 );
+
     BOOST_FOREACH(const SVEvidence::evidenceTrack_t::value_type& val, evidenceTrack)
     {
         const SVFragmentEvidence& fragev(val.second);
@@ -931,7 +931,7 @@ computeSomaticSampleLoghood(
         bool isRead1Evaluated(true);
         bool isRead2Evaluated(true);
 
-        if (! getRefAltFromFrag(isSmallSV, isPermissive, fragev,
+        if (! getRefAltFromFrag(isSmallSV, semiMappedPower, fragev,
                                 refLnLhoodSet, altLnLhoodSet, isRead1Evaluated, isRead2Evaluated))
         {
             // continue if this fragment was not evaluated for pair or split support for either allele:
