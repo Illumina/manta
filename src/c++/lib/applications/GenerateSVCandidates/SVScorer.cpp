@@ -607,6 +607,7 @@ bool
 getRefAltFromFrag(
     const bool isSmallSV,
     const double semiMappedPower,
+    const ProbSet& chimeraProb,
     const SVFragmentEvidence& fragev,
     AlleleLnLhood& refLnLhoodSet,
     AlleleLnLhood& altLnLhoodSet,
@@ -615,16 +616,7 @@ getRefAltFromFrag(
 {
 #ifdef DEBUG_SCORE
     static const std::string logtag("getRefAltFromFrag: ");
-#endif
 
-    /// TODO: set this from graph data:
-    ///
-    /// put some more thought into this -- is this P (spurious | any old read) or P( spurious | chimera ) ??
-    /// it seems like it should be the latter in the usages that really matter.
-    ///
-    static const ProbSet chimeraProb(1e-3);
-
-#ifdef DEBUG_SCORE
     log_os << logtag << "qname: " << /*val.first <<*/ " fragev: " << fragev << "\n";
 #endif
 
@@ -694,11 +686,17 @@ addDiploidLoglhood(
         bool isRead1Evaluated(true);
         bool isRead2Evaluated(true);
 
+        /// TODO: set this from graph data:
+        ///
+        /// put some more thought into this -- is this P (spurious | any old read) or P( spurious | chimera ) ??
+        /// it seems like it should be the latter in the usages that really matter.
+        ///
+        static const ProbSet chimeraProb(1e-3);
+
         /// don't use semi-mapped reads for germline calling:
         static const double semiMappedPower(0.);
 
-
-        if (! getRefAltFromFrag(isSmallSV, semiMappedPower, fragev,
+        if (! getRefAltFromFrag(isSmallSV, semiMappedPower, chimeraProb, fragev,
                                 refLnLhoodSet, altLnLhoodSet, isRead1Evaluated, isRead2Evaluated))
         {
             // continue if this fragment was not evaluated for pair or split support for either allele:
@@ -920,6 +918,9 @@ computeSomaticSampleLoghood(
 #endif
 #endif
 
+    /// TODO: find a better way to set this number from training data:
+    static const ProbSet chimeraProb(1e-4);
+
     // semi-mapped reads make a partial contribution in tier1, and a full contribution in tier2:
     const double semiMappedPower( isPermissive ? 1. : 0.5 );
 
@@ -931,7 +932,7 @@ computeSomaticSampleLoghood(
         bool isRead1Evaluated(true);
         bool isRead2Evaluated(true);
 
-        if (! getRefAltFromFrag(isSmallSV, semiMappedPower, fragev,
+        if (! getRefAltFromFrag(isSmallSV, semiMappedPower, chimeraProb, fragev,
                                 refLnLhoodSet, altLnLhoodSet, isRead1Evaluated, isRead2Evaluated))
         {
             // continue if this fragment was not evaluated for pair or split support for either allele:
