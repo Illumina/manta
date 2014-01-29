@@ -889,7 +889,6 @@ static
 void
 computeSomaticSampleLoghood(
     const bool isSmallSV,
-    const bool /*isNormal*/,
     const SVEvidence::evidenceTrack_t& evidenceTrack,
     const double somaticMutationFreq,
     const double noiseMutationFreq,
@@ -984,15 +983,15 @@ scoreSomaticSV(
     static const unsigned tierCount(2);
     double tierScore[tierCount] = { 0. , 0. };
 
+    boost::array<double,SOMATIC_GT::SIZE> normalSomaticLhood;
+    boost::array<double,SOMATIC_GT::SIZE> tumorSomaticLhood;
+
     for (unsigned tierIndex(0); tierIndex<tierCount; ++tierIndex)
     {
         const bool isPermissive(tierIndex != 0);
 
-        boost::array<double,SOMATIC_GT::SIZE> somaticLhood;
-        for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
-        {
-            somaticLhood[gt] = 0.;
-        }
+        std::fill(normalSomaticLhood.begin(),normalSomaticLhood.end(),0);
+        std::fill(tumorSomaticLhood.begin(),tumorSomaticLhood.end(),0);
 
         // estimate the somatic mutation rate using alternate allele freq from the tumor sample
         const double somaticMutationFreq = estimateSomaticMutationFreq(baseInfo, isSmallSV, isPermissive);
@@ -1006,14 +1005,14 @@ scoreSomaticSV(
 #endif
 
         // compute likelihood for the fragments from the tumor sample
-        computeSomaticSampleLoghood(isSmallSV, false, evidence.tumor, somaticMutationFreq, noiseMutationFreq, isPermissive, somaticLhood);
+        computeSomaticSampleLoghood(isSmallSV, evidence.tumor, somaticMutationFreq, noiseMutationFreq, isPermissive, tumorSomaticLhood);
         // compute likelihood for the fragments from the normal sample
-        computeSomaticSampleLoghood(isSmallSV, true, evidence.normal, 0, noiseMutationFreq, isPermissive, somaticLhood);
+        computeSomaticSampleLoghood(isSmallSV, evidence.normal, 0, noiseMutationFreq, isPermissive, normalSomaticLhood);
 
         boost::array<double,SOMATIC_GT::SIZE> somaticPprob;
         for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
         {
-            somaticPprob[gt] = somaticLhood[gt] + somaticDopt.logPrior[gt];
+            somaticPprob[gt] = tumorSomaticLhood[gt] + normalSomaticLhood[gt] + somaticDopt.logPrior[gt];
         }
 
         {
