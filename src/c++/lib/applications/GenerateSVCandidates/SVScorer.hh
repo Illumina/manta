@@ -35,6 +35,7 @@
 #include "manta/SVCandidateAssemblyData.hh"
 #include "manta/SVScoreInfoSomatic.hh"
 
+#include "boost/array.hpp"
 #include "boost/shared_ptr.hpp"
 
 #include <vector>
@@ -54,7 +55,7 @@ struct CallOptionsSharedDeriv
 };
 
 
-struct CallOptionsDiploidDeriv
+struct CallOptionsDiploidDeriv : private boost::noncopyable
 {
     CallOptionsDiploidDeriv(
         const CallOptionsDiploid& opt)
@@ -73,12 +74,12 @@ struct CallOptionsDiploidDeriv
         }
     }
 
-    float prior[DIPLOID_GT::SIZE];
-    float logPrior[DIPLOID_GT::SIZE];
+    boost::array<float,DIPLOID_GT::SIZE> prior;
+    boost::array<float,DIPLOID_GT::SIZE> logPrior;
 };
 
 
-struct CallOptionsSomaticDeriv
+struct CallOptionsSomaticDeriv : private boost::noncopyable
 {
     CallOptionsSomaticDeriv(
         const CallOptionsSomatic& opt)
@@ -104,8 +105,8 @@ struct CallOptionsSomaticDeriv
         }
     }
 
-    float prior[SOMATIC_GT::SIZE];
-    float logPrior[SOMATIC_GT::SIZE];
+    boost::array<float,SOMATIC_GT::SIZE> prior;
+    boost::array<float,SOMATIC_GT::SIZE> logPrior;
 };
 
 
