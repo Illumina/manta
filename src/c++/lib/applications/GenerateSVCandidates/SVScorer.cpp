@@ -491,8 +491,7 @@ incrementSplitReadLhood(
     static const double baseLnPrior(std::log(0.25));
 
 #ifdef DEBUG_SCORE
-    static const std::string logtag("incrementSplitReadLhood: ");
-    log_os << logtag << "pre-support\n";
+    log_os << __FUNCTION__ << ": pre-support\n";
 #endif
 
     if (! fragev.isAnySplitReadSupport(isRead1))
@@ -502,7 +501,7 @@ incrementSplitReadLhood(
     }
 
 #ifdef DEBUG_SCORE
-    log_os << logtag << "post-support\n";
+    log_os << __FUNCTION__ << ": post-support\n";
 #endif
 
     const unsigned readSize(fragev.getRead(isRead1).size);
@@ -516,11 +515,11 @@ incrementSplitReadLhood(
     static const ProbSet altMapProb(1e-4);
 
 #ifdef DEBUG_SCORE
-    log_os << logtag << "starting ref\n";
+    log_os << __FUNCTION__ << ": starting ref\n";
 #endif
     incrementAlleleSplitReadLhood(refMapProb, altMapProb, fragev.ref, readLnPrior, isRead1, refSplitLnLhood, isReadEvaluated);
 #ifdef DEBUG_SCORE
-    log_os << logtag << "starting alt\n";
+    log_os << __FUNCTION__ << ": starting alt\n";
 #endif
     incrementAlleleSplitReadLhood(altMapProb, refMapProb, fragev.alt, readLnPrior, isRead1, altSplitLnLhood, isReadEvaluated);
 }
@@ -615,9 +614,7 @@ getRefAltFromFrag(
     bool& isRead2Evaluated)
 {
 #ifdef DEBUG_SCORE
-    static const std::string logtag("getRefAltFromFrag: ");
-
-    log_os << logtag << "qname: " << /*val.first <<*/ " fragev: " << fragev << "\n";
+    log_os << __FUNCTION__ << ": qname: " << /*val.first <<*/ " fragev: " << fragev << "\n";
 #endif
 
     /// TODO: add read pairs with one shadow read to the alt read pool
@@ -650,16 +647,16 @@ getRefAltFromFrag(
     isRead1Evaluated = true;
     isRead2Evaluated = true;
 #ifdef DEBUG_SCORE
-    log_os << logtag << "starting read1 split\n";
+    log_os << __FUNCTION__ << ": starting read1 split\n";
 #endif
     incrementSplitReadLhood(fragev, true,  refLnLhoodSet.read1Split, altLnLhoodSet.read1Split, isRead1Evaluated);
 #ifdef DEBUG_SCORE
-    log_os << logtag << "starting read2 split\n";
+    log_os << __FUNCTION__ << ": starting read2 split\n";
 #endif
     incrementSplitReadLhood(fragev, false, refLnLhoodSet.read2Split, altLnLhoodSet.read2Split, isRead2Evaluated);
 
 #ifdef DEBUG_SCORE
-    log_os << logtag << "iseval frag/read1/read2: " << isFragEvaluated << " " << isRead1Evaluated << " " << isRead1Evaluated << "\n";
+    log_os << __FUNCTION__ << ": iseval frag/read1/read2: " << isFragEvaluated << " " << isRead1Evaluated << " " << isRead1Evaluated << "\n";
 #endif
     return (isFragEvaluated || isRead1Evaluated || isRead2Evaluated);
 }
@@ -674,10 +671,6 @@ addDiploidLoglhood(
     const SVEvidence::evidenceTrack_t& sampleEvidence,
     boost::array<double,DIPLOID_GT::SIZE>& loglhood)
 {
-#ifdef DEBUG_SCORE
-    static const std::string logtag("getDiploidLoglhood: ");
-#endif
-
     BOOST_FOREACH(const SVEvidence::evidenceTrack_t::value_type& val, sampleEvidence)
     {
         const SVFragmentEvidence& fragev(val.second);
@@ -708,24 +701,24 @@ addDiploidLoglhood(
             using namespace DIPLOID_GT;
 
 #ifdef DEBUG_SCORE
-            log_os << logtag << "starting gt: " << gt << " " << label(gt) << "\n";
+            log_os << __FUNCTION__ << ": starting gt: " << gt << " " << label(gt) << "\n";
 #endif
 
             const index_t gtid(static_cast<const index_t>(gt));
             const double refLnFragLhood(getFragLnLhood(refLnLhoodSet, isRead1Evaluated, isRead2Evaluated));
 #ifdef DEBUG_SCORE
-            log_os << logtag << "refLnFragLhood: " << refLnFragLhood << "\n";
+            log_os << __FUNCTION__ << ": refLnFragLhood: " << refLnFragLhood << "\n";
 #endif
             const double altLnFragLhood(getFragLnLhood(altLnLhoodSet, isRead1Evaluated, isRead2Evaluated));
 #ifdef DEBUG_SCORE
-            log_os << logtag << "altLnFragLhood: " << altLnFragLhood << "\n";
+            log_os << __FUNCTION__ << ": altLnFragLhood: " << altLnFragLhood << "\n";
 #endif
             const double refLnLhood(refLnFragLhood + altLnCompFraction(gtid));
             const double altLnLhood(altLnFragLhood + altLnFraction(gtid));
             loglhood[gt] += log_sum(refLnLhood, altLnLhood);
 
 #ifdef DEBUG_SCORE
-            log_os << logtag << "gt/fragref/ref/fragalt/alt: "
+            log_os << __FUNCTION__ << ": gt/fragref/ref/fragalt/alt: "
                    << label(gt)
                    << " " << refLnFragLhood
                    << " " << refLnLhood
