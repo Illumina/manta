@@ -66,7 +66,7 @@ class GenomeSegment(object) :
     4. chromosome segment (ie. bin) number (0-indexed)
     """
 
-    def __init__(self,chromIndex,chromLabel,beginPos,endPos,binId) :
+    def __init__(self,chromIndex,chromLabel,beginPos,endPos,binId,genomeRegion) :
         """
         arguments are the 4 genomic interval descriptors detailed in class documentation
         """
@@ -75,7 +75,14 @@ class GenomeSegment(object) :
         self.binId = binId
         self.binStr = str(binId).zfill(4)
         self.id = chromLabel + "_" + self.binStr
-        self.pyflowId = "chromId_%s_%s_%s" % (str(chromIndex).zfill(3), cleanId(chromLabel), self.binStr)
+
+        regionId=cleanId(chromLabel)
+        if genomeRegion is not None :
+            if genomeRegion['start'] is not None :
+                regionId += "-"+str(genomeRegion['start'])
+                if genomeRegion['end'] is not None :
+                    regionId += "-"+str(genomeRegion['end'])
+        self.pyflowId = "chromId_%s_%s_%s" % (str(chromIndex).zfill(3), regionId, self.binStr)
 
 
 

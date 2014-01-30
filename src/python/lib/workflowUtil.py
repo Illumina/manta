@@ -181,6 +181,7 @@ def getChromIntervals(chromOrder,chromSizes,segmentSize, genomeRegion = None) :
     where start and end are formated for use with samtools
     chromSegment is 0-indexed number of segment along each chromosome
     """
+
     for (chromIndex, chromLabel) in enumerate(chromOrder) :
         chromStart=1
         chromEnd=chromSizes[chromLabel]
@@ -203,7 +204,7 @@ def getChromIntervals(chromOrder,chromSizes,segmentSize, genomeRegion = None) :
             segSize=segmentBaseSize
             if i<nPlusOne : segSize += 1
             end=min(start+(segSize-1),chromStart+chromSize)
-            yield (chromIndex,chromLabel,start,end,i)
+            yield (chromIndex,chromLabel,start,end,i,genomeRegion)
             start=end+1
 
 
