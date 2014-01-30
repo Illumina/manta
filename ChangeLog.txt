@@ -1,3 +1,5 @@
+- MANTA-117 add somatic quality score
+- fix SA tag parsing
 - MANTA-27 accept bam/fasta filenames with spaces
 v0.15.0
 - MANTA-108 combine clip/semi-aligned evidence detection, don't detect
