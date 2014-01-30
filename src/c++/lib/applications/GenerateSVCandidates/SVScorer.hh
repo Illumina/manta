@@ -119,8 +119,8 @@ struct CallOptionsSomaticDeriv : private boost::noncopyable
 
         if (gt != SOMATIC_GT::NOISE) return _logPrior[gt];
 
-        if(largeNoiseWeight <= 0.) return logSmallNoisePrior;
-        if(largeNoiseWeight >= 1.) return logLargeNoisePrior;
+        if (largeNoiseWeight <= 0.) return logSmallNoisePrior;
+        if (largeNoiseWeight >= 1.) return logLargeNoisePrior;
 
         return std::log((1-largeNoiseWeight)*smallNoisePrior + largeNoiseWeight*largeNoisePrior);
     }
