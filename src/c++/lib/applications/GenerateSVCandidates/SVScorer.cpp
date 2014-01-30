@@ -596,6 +596,19 @@ isTreatAsSmallSV(
 }
 
 
+static
+float
+largeNoiseSVPriorWeight(
+    const SVCandidate& sv)
+{
+    static const int smallSize(5000);
+    static const int largeSize(10000);
+
+    const int svSize(std::abs(sv.bp2.interval.range.center_pos() - sv.bp1.interval.range.center_pos()));
+    return std::min(static_cast<float>(std::max(svSize-smallSize,0))/static_cast<float>(largeSize),1.f);
+}
+
+
 
 /// return true if any evidence exists for fragment:
 ///
@@ -911,10 +924,10 @@ computeSomaticSampleLoghood(
 #endif
 
     /// TODO: find a better way to set this number from training data:
-    static const ProbSet chimeraProb(1e-4);
+    static const ProbSet chimeraProb(5e-3);
 
     // semi-mapped reads make a partial contribution in tier1, and a full contribution in tier2:
-    const double semiMappedPower( isPermissive ? 1. : 0.5 );
+    const double semiMappedPower( isPermissive ? 1. : 0. );
 
     BOOST_FOREACH(const SVEvidence::evidenceTrack_t::value_type& val, evidenceTrack)
     {
@@ -983,13 +996,14 @@ scoreSomaticSV(
     static const unsigned tierCount(2);
     double tierScore[tierCount] = { 0. , 0. };
 
-    boost::array<double,SOMATIC_GT::SIZE> normalSomaticLhood;
-    boost::array<double,SOMATIC_GT::SIZE> tumorSomaticLhood;
+    const float largeNoiseWeight(largeNoiseSVPriorWeight(sv));
 
     for (unsigned tierIndex(0); tierIndex<tierCount; ++tierIndex)
     {
         const bool isPermissive(tierIndex != 0);
 
+        boost::array<double,SOMATIC_GT::SIZE> normalSomaticLhood;
+        boost::array<double,SOMATIC_GT::SIZE> tumorSomaticLhood;
         std::fill(normalSomaticLhood.begin(),normalSomaticLhood.end(),0);
         std::fill(tumorSomaticLhood.begin(),tumorSomaticLhood.end(),0);
 
@@ -1012,7 +1026,7 @@ scoreSomaticSV(
         boost::array<double,SOMATIC_GT::SIZE> somaticPprob;
         for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
         {
-            somaticPprob[gt] = tumorSomaticLhood[gt] + normalSomaticLhood[gt] + somaticDopt.logPrior[gt];
+            somaticPprob[gt] = tumorSomaticLhood[gt] + normalSomaticLhood[gt] + somaticDopt.logPrior(gt,largeNoiseWeight);
         }
 
         {

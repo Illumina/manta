@@ -89,7 +89,7 @@ struct CallOptionsSomaticDeriv : private boost::noncopyable
         assert(opt.germlineSVPrior < 0.5);
 
         prior[SOM] = opt.somaticSVPrior;
-        prior[NOISE] = opt.noiseSVPrior;
+        prior[NOISE] = opt.largeNoiseSVPrior;
 
         prior[HET] = opt.germlineSVPrior;
         prior[HOM] = opt.germlineSVPrior/2;
@@ -101,12 +101,38 @@ struct CallOptionsSomaticDeriv : private boost::noncopyable
 
         for (unsigned i(0); i<SIZE; ++i)
         {
-            logPrior[i] = std::log(prior[i]);
+            _logPrior[i] = std::log(prior[i]);
         }
+
+        smallNoisePrior = opt.smallNoiseSVPrior;
+        largeNoisePrior = opt.largeNoiseSVPrior;
+        logSmallNoisePrior = std::log(opt.smallNoiseSVPrior);
+        logLargeNoisePrior = std::log(opt.largeNoiseSVPrior);
     }
 
+    float
+    logPrior(
+        const unsigned gt,
+        const float largeNoiseWeight) const
+    {
+        assert(largeNoiseWeight >= 0. && largeNoiseWeight <= 1.);
+
+        if (gt != SOMATIC_GT::NOISE) return _logPrior[gt];
+
+        if(largeNoiseWeight <= 0.) return logSmallNoisePrior;
+        if(largeNoiseWeight >= 1.) return logLargeNoisePrior;
+
+        return std::log((1-largeNoiseWeight)*smallNoisePrior + largeNoiseWeight*largeNoisePrior);
+    }
+
+private:
     boost::array<float,SOMATIC_GT::SIZE> prior;
-    boost::array<float,SOMATIC_GT::SIZE> logPrior;
+    boost::array<float,SOMATIC_GT::SIZE> _logPrior;
+
+    float smallNoisePrior;
+    float largeNoisePrior;
+    float logSmallNoisePrior;
+    float logLargeNoisePrior;
 };
 
 
