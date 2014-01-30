@@ -924,7 +924,7 @@ computeSomaticSampleLoghood(
 #endif
 
     /// TODO: find a better way to set this number from training data:
-    static const ProbSet chimeraProb(5e-3);
+    static const ProbSet chimeraProb(1e-4);
 
     // semi-mapped reads make a partial contribution in tier1, and a full contribution in tier2:
     const double semiMappedPower( isPermissive ? 1. : 0. );
