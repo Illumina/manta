@@ -41,10 +41,19 @@ operator<<(std::ostream& os, const bam_record& br)
         bam_cigar_to_apath(br.raw_cigar(),br.n_cigar(),apath);
         os << " cigar: " << apath;
 
+        /// print SAtag if present:
+        static const char satag[] = {'S','A'};
+        const char* saStr(br.get_string_tag(satag));
+        if (NULL != saStr)
+        {
+            os  << " sa: " << saStr;
+        }
+
         if (br.is_paired())
         {
             os  << " mate_tid:pos:strand " << br.mate_target_id() << ":" << (br.mate_pos()-1) << ":" << (br.is_mate_fwd_strand() ? '+' : '-');
         }
+
     }
     return os;
 }
