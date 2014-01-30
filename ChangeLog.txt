@@ -1,3 +1,4 @@
+v0.16.0
 - MANTA-117 add somatic quality score
 - fix SA tag parsing
 - MANTA-27 accept bam/fasta filenames with spaces
