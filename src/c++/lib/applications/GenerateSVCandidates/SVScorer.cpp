@@ -385,7 +385,7 @@ scoreSV(
     const bool isBp2OverDepth(baseInfo.bp2MaxDepth > bp2CutoffDepth);
 
     const bool isOverDepth(isBp1OverDepth || isBp2OverDepth);
-    const bool isSkipEvidenceSearch((! isMaxDepth) || isOverDepth);
+    const bool isSkipEvidenceSearch(isMaxDepth && isOverDepth);
 
     if (! isSkipEvidenceSearch)
     {
