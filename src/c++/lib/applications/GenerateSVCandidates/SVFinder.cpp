@@ -665,10 +665,6 @@ getCandidatesFromData(
     std::vector<SVCandidate>& svs,
     TruthTracker& truthTracker)
 {
-#ifdef DEBUG_SVDATA
-    static const std::string logtag("getCandidatesFromData: ");
-#endif
-
     std::vector<SVObservation> readCandidates;
 
     const unsigned bamCount(_bamStreams.size());
