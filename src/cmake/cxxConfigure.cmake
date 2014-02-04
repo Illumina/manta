@@ -40,19 +40,20 @@ include ("${MANTA_MACROS_CMAKE}")
 # Support for static linking
 # Note that this implies that all libraries must be found with the
 # exact file name (libXXX.a or libXXX.so)
-if    (MANTA_FORCE_STATIC_LINK)
-    message(STATUS "All libraries will be statically linked")
-    set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "-static")
-    set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "-static")
+#if    (MANTA_FORCE_STATIC_LINK)
+#    message(STATUS "All libraries will be statically linked")
+#    set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "-static")
+#    set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "-static")
     # ensure that even if cmake decides to allow for dynamic libs resolution,
     # this gets overriden into static...
-    set(CMAKE_EXE_LINK_DYNAMIC_CXX_FLAGS ${CMAKE_EXE_LINK_STATIC_CXX_FLAGS})
-    set(MANTA_LIBRARY_PREFIX ${CMAKE_STATIC_LIBRARY_PREFIX})
-    set(MANTA_LIBRARY_SUFFIX ${CMAKE_STATIC_LIBRARY_SUFFIX})
-else  ()
-    set(MANTA_LIBRARY_PREFIX "")
-    set(MANTA_LIBRARY_SUFFIX "")
-endif ()
+#    set(CMAKE_EXE_LINK_DYNAMIC_CXX_FLAGS ${CMAKE_EXE_LINK_STATIC_CXX_FLAGS})
+#    set(MANTA_LIBRARY_PREFIX ${CMAKE_STATIC_LIBRARY_PREFIX})
+#    set(MANTA_LIBRARY_SUFFIX ${CMAKE_STATIC_LIBRARY_SUFFIX})
+    # set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
+#else  ()
+#    set(MANTA_LIBRARY_PREFIX "")
+#    set(MANTA_LIBRARY_SUFFIX "")
+#endif ()
 
 # optional support for gzip compression
 static_find_library(ZLIB zlib.h z)
@@ -115,11 +116,16 @@ if (GNU_COMPAT_COMPILER)
 endif ()
 
 #
-# add extra compiler specific warnings:
+# add extra compiler specific flags:
 #
 if     (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if (NOT (${compiler_version} VERSION_LESS "4.2"))
         set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wlogical-op")
+    endif ()
+
+    if (NOT (${compiler_version} VERSION_LESS "4.5"))
+        # Force static linking of standard libraries:
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
     endif ()
 
     if (NOT ((${compiler_version} VERSION_LESS "4.7") OR (${compiler_version} VERSION_GREATER "4.7")))
