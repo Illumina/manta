@@ -24,8 +24,8 @@ namespace ALIGNPATH
 {
 
 
-/// convert the input path use seq match '=' and mismatch 'X'
-/// 'N''s always count as mismatch
+/// convert the input path to use "seq match" state '=' and "seq mismatch" state 'X' instead of "alignment match" state 'M'
+/// 'N''s always count as mismatch to the reference
 ///
 template <typename symIter1, typename symIter2>
 void
