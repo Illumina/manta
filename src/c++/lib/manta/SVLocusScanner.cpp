@@ -185,18 +185,16 @@ updateSABreakend(
     SVBreakend& breakend)
 {
     // Need to use the match descriptors to determine if
-    //  we are upstream clipped or downstream clipped. We
-    //  also then need to use the strand. Below is the logic
+    // we are upstream clipped or downstream clipped.
+    // Below is the logic to convert these  to breakend candidates:
     //
-    // Upstream & +    => LEFT_OPEN
-    // Upstream & -    => RIGHT_OPEN
-    // DownStream & +  => RIGHT_OPEN
-    // DownStream & -  => LEFT_OPEN
+    // Upstream => LEFT_OPEN
+    // DownStream => RIGHT_OPEN
     //
 
     const bool isUpstream(isCigarUpstream(align.path));
 
-    if (isUpstream == align.is_fwd_strand)
+    if (isUpstream)
     {
         breakend.state = SVBreakendState::LEFT_OPEN;
     }

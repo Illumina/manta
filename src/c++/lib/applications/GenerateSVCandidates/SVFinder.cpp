@@ -707,7 +707,7 @@ getCandidatesFromData(
             log_os << "Translated to candidates:\n";
             BOOST_FOREACH(const SVObservation& cand, readCandidates)
             {
-                log_os << logtag << "cand: " << cand << "\n";
+                log_os << __FUNCTION__ << ": cand: " << cand << "\n";
             }
 #endif
 
@@ -717,12 +717,12 @@ getCandidatesFromData(
 
 #ifdef DEBUG_SVDATA
     {
-        log_os << logtag << "precount: " << svs.size() << "\n";
+        log_os << __FUNCTION__ << ": precount: " << svs.size() << "\n";
 
         unsigned svIndex(0);
         BOOST_FOREACH(SVCandidate& sv, svs)
         {
-            log_os << logtag << "PRECOUNT: index: " << svIndex << " " << sv;
+            log_os << __FUNCTION__ << ": PRECOUNT: index: " << svIndex << " " << sv;
             svIndex++;
         }
     }
@@ -732,12 +732,12 @@ getCandidatesFromData(
 
 #ifdef DEBUG_SVDATA
     {
-        log_os << logtag << "postcount: " << svs.size() << "\n";
+        log_os << __FUNCTION__ << ": postcount: " << svs.size() << "\n";
 
         unsigned svIndex(0);
         BOOST_FOREACH(SVCandidate& sv, svs)
         {
-            log_os << logtag << "POSTCOUNT: index: " << svIndex << " " << sv;
+            log_os << __FUNCTION__ << ": POSTCOUNT: index: " << svIndex << " " << sv;
             svIndex++;
         }
     }
