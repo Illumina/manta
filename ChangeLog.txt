@@ -1,3 +1,4 @@
+- MANTA-118 static libstdc++ for gcc 4.5+
 v0.16.0
 - MANTA-117 add somatic quality score
 - fix SA tag parsing
