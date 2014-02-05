@@ -285,6 +285,9 @@ getSACandidatesFromRead(
 
         assert((saDat.size() == 6) && "Unexpected number of SA tag values");
 
+        // Skip split-mapq = 0 reads to remove lots of false positives
+        if (atoi(saDat[4].c_str()) == 0) return;
+
         const chromMap_t::const_iterator ci(chromToIndex.find(saDat[0]));
         assert(ci != chromToIndex.end());
 
