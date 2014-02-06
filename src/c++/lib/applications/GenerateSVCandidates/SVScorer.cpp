@@ -1042,6 +1042,7 @@ scoreSomaticSV(
 #ifdef DEBUG_SOMATIC_SCORE
         log_os << __FUNCTION__ << ": somaticMutationFrequency: " << somaticMutationFreq << "\n";
         log_os << __FUNCTION__ << ": noiseMutationFrequency: " << noiseMutationFreq << "\n";
+        log_os << __FUNCTION__ << ": largeNoiseWeight: " << largeNoiseWeight << "\n";
 #endif
 
         // compute likelihood for the fragments from the tumor sample
@@ -1079,19 +1080,21 @@ scoreSomaticSV(
 #ifdef DEBUG_SOMATIC_SCORE
         for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
         {
-            log_os << __FUNCTION__ << ": gt/lhood/prior/somaticPprob for tumor sample: "
+            log_os << __FUNCTION__ << ": somatic gt/tumor_lhood/normal_lhood/prior/pprob: "
                    << SOMATIC_GT::label(gt)
-                   << " " << somaticLhood[gt]
-                   << " " << somaticDopt.prior[gt]
+                   << " " << tumorSomaticLhood[gt]
+                   << " " << normalSomaticLhood[gt]
+                   << " " << somaticDopt.logPrior(gt,largeNoiseWeight)
                    << " " << somaticPprob[gt]
                    << "\n";
         }
 
         for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
         {
-            log_os << __FUNCTION__ << ": diploid gt/lhood: "
+            log_os << __FUNCTION__ << ": diploid gt/lhood/pprob: "
                    << DIPLOID_GT::label(gt)
-                   << " " << normalLhod[gt]
+                   << " " << normalLhood[gt]
+                   << " " << normalPprob[gt]
                    << "\n";
         }
 #endif
