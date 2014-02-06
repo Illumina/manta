@@ -194,7 +194,7 @@ getSVSplitReadSupport(
     SVEvidence& evidence)
 {
     // apply the split-read scoring, only when:
-    // 1) the SV is precise, i.e. has successful somatic contigs;
+    // 1) the SV is precise, i.e. has successfully aligned contigs;
     // 2) the values of max depth are reasonable (otherwise, the read map may blow out). (filter is run externally)
 
     if (sv.isImprecise()) return;
