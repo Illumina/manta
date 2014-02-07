@@ -44,6 +44,7 @@ operator<<(std::ostream& os, const SRAlignmentInfo& info)
 
 
 
+/// \params[out] return the LnLhood expected from a perfect match to the reference
 static
 float
 getLnLhood(
@@ -217,6 +218,10 @@ splitReadAligner(
         }
         assert(isBest);
     }
+
+    // align query to itself to get the 'perfect' lhood:
+    alignment.perfectLnLhood = (getLnLhood(querySeq, qualConvert, queryQual,
+                                   querySeq.begin(), querySeq.end(), false, 0));
 
     assert(bestPos <= (targetBpBeginPos+1));
     alignment.leftSize = static_cast<pos_t>(targetBpBeginPos+1) - bestPos;

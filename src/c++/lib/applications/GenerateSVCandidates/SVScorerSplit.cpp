@@ -48,6 +48,7 @@ incrementAlleleEvidence(
     }
 
     bp1Support.splitLnLhood = bp1SR.alignLnLhood;
+    bp1Support.perfectSplitLnLhood = bp1SR.perfectLnLhood;
 
     if (bp2SR.isEvidence)
     {
@@ -57,6 +58,7 @@ incrementAlleleEvidence(
     }
 
     bp2Support.splitLnLhood = bp2SR.alignLnLhood;
+    bp2Support.perfectSplitLnLhood = bp2SR.perfectLnLhood;
 
     const float evidence(std::max(bp1Evidence, bp2Evidence));
 
@@ -193,7 +195,7 @@ getSVSplitReadSupport(
     SVScoreInfo& baseInfo,
     SVEvidence& evidence)
 {
-    // apply the split-read scoring, only when:
+    // apply the split-read scoring only when:
     // 1) the SV is precise, i.e. has successfully aligned contigs;
     // 2) the values of max depth are reasonable (otherwise, the read map may blow out). (filter is run externally)
 

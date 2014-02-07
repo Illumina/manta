@@ -457,9 +457,21 @@ incrementAlleleSplitReadLhood(
 
     const double alignBp1LnLhood(allele.bp1.getRead(isRead1).splitLnLhood);
     const double alignBp2LnLhood(allele.bp2.getRead(isRead1).splitLnLhood);
-    const double alignLnLhood(std::max(alignBp1LnLhood,alignBp2LnLhood));
 
-    const double fragLnLhood = log_sum((selfMapProb.lnComp+alignLnLhood), (otherMapProb.lnProb)); //+readLnPrior));
+    double alignLnLhood(0);
+    double perfectLnLhood(0);
+    if (alignBp1LnLhood >= alignBp2LnLhood )
+    {
+        alignLnLhood = alignBp1LnLhood;
+        perfectLnLhood = allele.bp1.getRead(isRead1).perfectSplitLnLhood;
+    }
+    else
+    {
+        alignLnLhood = alignBp2LnLhood;
+        perfectLnLhood = allele.bp2.getRead(isRead1).perfectSplitLnLhood;
+    }
+
+    const double fragLnLhood = log_sum((selfMapProb.lnComp+alignLnLhood), (otherMapProb.lnProb+perfectLnLhood)); //+readLnPrior));
     refSplitLnLhood += fragLnLhood;
 
 #ifdef DEBUG_SCORE
