@@ -495,6 +495,8 @@ static
 void
 incrementSplitReadLhood(
     const SVFragmentEvidence& fragev,
+    const ProbSet& refMapProb,
+    const ProbSet& altMapProb,
     const bool isRead1,
     double& refSplitLnLhood,
     double& altSplitLnLhood,
@@ -518,13 +520,6 @@ incrementSplitReadLhood(
 
     const unsigned readSize(fragev.getRead(isRead1).size);
     const double readLnPrior(baseLnPrior*readSize);
-
-    /// use a constant mapping prob for now just to get the zero-th order concept into the model
-    /// that "reads are mismapped at a non-trivial rate"
-    /// TODO: experiment with per-read mapq values
-    ///
-    static const ProbSet refMapProb(1e-6);
-    static const ProbSet altMapProb(1e-4);
 
 #ifdef DEBUG_SCORE
     log_os << __FUNCTION__ << ": starting ref\n";
@@ -632,6 +627,8 @@ getRefAltFromFrag(
     const bool isSmallSV,
     const double semiMappedPower,
     const ProbSet& chimeraProb,
+    const ProbSet& refSplitMapProb,
+    const ProbSet& altSplitMapProb,
     const SVFragmentEvidence& fragev,
     AlleleLnLhood& refLnLhoodSet,
     AlleleLnLhood& altLnLhoodSet,
@@ -674,11 +671,11 @@ getRefAltFromFrag(
 #ifdef DEBUG_SCORE
     log_os << __FUNCTION__ << ": starting read1 split\n";
 #endif
-    incrementSplitReadLhood(fragev, true,  refLnLhoodSet.read1Split, altLnLhoodSet.read1Split, isRead1Evaluated);
+    incrementSplitReadLhood(fragev, refSplitMapProb, altSplitMapProb, true,  refLnLhoodSet.read1Split, altLnLhoodSet.read1Split, isRead1Evaluated);
 #ifdef DEBUG_SCORE
     log_os << __FUNCTION__ << ": starting read2 split\n";
 #endif
-    incrementSplitReadLhood(fragev, false, refLnLhoodSet.read2Split, altLnLhoodSet.read2Split, isRead2Evaluated);
+    incrementSplitReadLhood(fragev, refSplitMapProb, altSplitMapProb, false, refLnLhoodSet.read2Split, altLnLhoodSet.read2Split, isRead2Evaluated);
 
 #ifdef DEBUG_SCORE
     log_os << __FUNCTION__ << ": iseval frag/read1/read2: " << isFragEvaluated << " " << isRead1Evaluated << " " << isRead1Evaluated << "\n";
@@ -711,10 +708,17 @@ addDiploidLoglhood(
         ///
         static const ProbSet chimeraProb(1e-3);
 
+        /// use a constant mapping prob for now just to get the zero-th order concept into the model
+        /// that "reads are mismapped at a non-trivial rate"
+        /// TODO: experiment with per-read mapq values
+        ///
+        static const ProbSet refSplitMapProb(1e-6);
+        static const ProbSet altSplitMapProb(1e-4);
+
         /// don't use semi-mapped reads for germline calling:
         static const double semiMappedPower(0.);
 
-        if (! getRefAltFromFrag(isSmallSV, semiMappedPower, chimeraProb, fragev,
+        if (! getRefAltFromFrag(isSmallSV, semiMappedPower, chimeraProb, refSplitMapProb, altSplitMapProb, fragev,
                                 refLnLhoodSet, altLnLhoodSet, isRead1Evaluated, isRead2Evaluated))
         {
             // continue if this fragment was not evaluated for pair or split support for either allele:
@@ -938,6 +942,16 @@ computeSomaticSampleLoghood(
     /// TODO: find a better way to set this number from training data:
     static const ProbSet chimeraProb(1e-4);
 
+    /// use a constant mapping prob for now just to get the zero-th order concept into the model
+    /// that "reads are mismapped at a non-trivial rate"
+    /// TODO: experiment with per-read mapq values
+    ///
+    static const ProbSet refSplitMapProb(1e-6);
+
+    static const ProbSet altSplitMapProbDefault(1e-4);
+    static const ProbSet altSplitMapProbPermissive(1e-6);
+    const ProbSet& altSplitMapProb( isPermissive ? altSplitMapProbPermissive : altSplitMapProbDefault );
+
     // semi-mapped reads make a partial contribution in tier1, and a full contribution in tier2:
     const double semiMappedPower( isPermissive ? 1. : 0. );
 
@@ -949,7 +963,7 @@ computeSomaticSampleLoghood(
         bool isRead1Evaluated(true);
         bool isRead2Evaluated(true);
 
-        if (! getRefAltFromFrag(isSmallSV, semiMappedPower, chimeraProb, fragev,
+        if (! getRefAltFromFrag(isSmallSV, semiMappedPower, chimeraProb, refSplitMapProb, altSplitMapProb, fragev,
                                 refLnLhoodSet, altLnLhoodSet, isRead1Evaluated, isRead2Evaluated))
         {
             // continue if this fragment was not evaluated for pair or split support for either allele:
