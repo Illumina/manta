@@ -143,11 +143,11 @@ SVAlignmentInfo(
         // get offsets of breakpoints in the reference regions
         // again, both bp1 and bp2 include the micro-homology
         bp1RefOffset.set_range(
-                sv.bp1.interval.range.begin_pos() - bp1Ref.get_offset(),
-                sv.bp1.interval.range.end_pos() -bp1Ref.get_offset());
+            sv.bp1.interval.range.begin_pos() - bp1Ref.get_offset(),
+            sv.bp1.interval.range.end_pos() -bp1Ref.get_offset());
         bp2RefOffset.set_range(
-                sv.bp2.interval.range.begin_pos() - bp1Ref.get_offset(),
-                sv.bp2.interval.range.end_pos() -bp1Ref.get_offset());
+            sv.bp2.interval.range.begin_pos() - bp1Ref.get_offset(),
+            sv.bp2.interval.range.end_pos() -bp1Ref.get_offset());
     }
 }
 

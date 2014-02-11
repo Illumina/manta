@@ -31,7 +31,7 @@ operator<<(
        << " splitEvidence: " << svbpr.splitEvidence
        << " splitLnLhood: " << svbpr.splitLnLhood
        << " perfectSplitLnLhood: " << svbpr.perfectSplitLnLhood
-    ;
+       ;
 
     return os;
 }

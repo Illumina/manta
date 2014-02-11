@@ -463,12 +463,12 @@ incrementAlleleSplitReadLhood(
     if (alignBp1LnLhood >= alignBp2LnLhood )
     {
         alignLnLhood = alignBp1LnLhood;
-   //     perfectLnLhood = allele.bp1.getRead(isRead1).perfectSplitLnLhood;
+        //     perfectLnLhood = allele.bp1.getRead(isRead1).perfectSplitLnLhood;
     }
     else
     {
         alignLnLhood = alignBp2LnLhood;
-       // perfectLnLhood = allele.bp2.getRead(isRead1).perfectSplitLnLhood;
+        // perfectLnLhood = allele.bp2.getRead(isRead1).perfectSplitLnLhood;
     }
 
 //    const double fragLnLhood = log_sum((selfMapProb.lnComp+alignLnLhood), (otherMapProb.lnProb+perfectLnLhood)); //+readLnPrior));
