@@ -30,7 +30,6 @@ operator<<(
        << " isSplitSupport: " << svbpr.isSplitSupport
        << " splitEvidence: " << svbpr.splitEvidence
        << " splitLnLhood: " << svbpr.splitLnLhood
-       << " perfectSplitLnLhood: " << svbpr.perfectSplitLnLhood
        ;
 
     return os;

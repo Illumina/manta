@@ -48,7 +48,6 @@ incrementAlleleEvidence(
     }
 
     bp1Support.splitLnLhood = bp1SR.alignLnLhood;
-    bp1Support.perfectSplitLnLhood = bp1SR.perfectLnLhood;
 
     if (bp2SR.isEvidence)
     {
@@ -58,7 +57,6 @@ incrementAlleleEvidence(
     }
 
     bp2Support.splitLnLhood = bp2SR.alignLnLhood;
-    bp2Support.perfectSplitLnLhood = bp2SR.perfectLnLhood;
 
     const float evidence(std::max(bp1Evidence, bp2Evidence));
 

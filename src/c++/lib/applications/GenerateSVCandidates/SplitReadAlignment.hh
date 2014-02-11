@@ -38,7 +38,6 @@ struct SRAlignmentInfo
         rightMismatches(0),
         alignScore(0),
         alignLnLhood(0),
-        perfectLnLhood(0),
         isEvidence(false),
         evidence(0)
     {}
@@ -52,7 +51,6 @@ struct SRAlignmentInfo
     unsigned rightMismatches;
     unsigned alignScore;
     float alignLnLhood;
-    float perfectLnLhood;
 
     bool isEvidence;
     float evidence;

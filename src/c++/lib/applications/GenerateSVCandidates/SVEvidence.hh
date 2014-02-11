@@ -51,15 +51,13 @@ struct SVFragmentEvidenceAlleleBreakendPerRead
         isSplitEvaluated(false),
         isSplitSupport(false),
         splitEvidence(0),
-        splitLnLhood(0),
-        perfectSplitLnLhood(0)
+        splitLnLhood(0)
     {}
 
     bool isSplitEvaluated; ///< have we checked this read for split support of this bp?
     bool isSplitSupport; ///< if evaluated, does this read support this allele in the bp?
     float splitEvidence; ///< if evaluated, what is the evidence score?
     float splitLnLhood; ///< ln likelihood of best split alignment
-    float perfectSplitLnLhood; ///< if evaluated, what is the prob this read has no basecalling errors?
 };
 
 std::ostream&

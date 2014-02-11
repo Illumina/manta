@@ -242,10 +242,6 @@ splitReadAligner(
         assert(isBest);
     }
 
-    // align query to itself to get the 'perfect' lhood:
-    //alignment.perfectLnLhood = (getLnLhood(querySeq, qualConvert, queryQual,
-    //                               querySeq.begin(), querySeq.end(), false, 0));
-
     assert(static_cast<pos_t>(bestPos) <= (targetBpOffsetRange.end_pos()+1));
     if (static_cast<pos_t>(bestPos) <= (targetBpOffsetRange.begin_pos()+1))
     {
