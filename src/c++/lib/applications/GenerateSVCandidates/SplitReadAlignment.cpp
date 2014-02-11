@@ -16,8 +16,9 @@
 ///
 
 #include "SplitReadAlignment.hh"
-#include "blt_util/log.hh"
 #include "blt_util/blt_types.hh"
+#include "blt_util/log.hh"
+#include "blt_util/seq_printer.hh"
 #include "common/Exceptions.hh"
 
 #include <cassert>
@@ -186,8 +187,12 @@ splitReadAligner(
         std::ostringstream oss;
         oss << "ERROR: Unexpected split read alignment input."
             << " querySize: " << querySize << " targetSize: " << targetSize << '\n'
-            << "\tquerySeq: " << querySeq << '\n'
-            << "\ttargetSeq: " << targetSeq << '\n';
+            << "querySeq:\n";
+        printSeq(querySeq,oss);
+        oss << '\n'
+            << "targetSeq:\n";
+        printSeq(targetSeq,oss);
+        oss << '\n';
         BOOST_THROW_EXCEPTION(LogicException(oss.str()));
     }
 
@@ -204,7 +209,15 @@ splitReadAligner(
     log_os << logtag << "targetBeginPos = " << targetBpBeginPos << '\n';
     log_os << logtag << "scan start = " << scanStart << " scan end = " << scanEnd << '\n';
 #endif
-    assert(scanEnd>=scanStart);
+    if (scanEnd < scanStart)
+    {
+        std::ostringstream oss;
+        oss << "ERROR: scanEnd < scanStart."
+            << " scanEnd: " << scanEnd << " scanStart: " << scanStart
+            << " querySize: " << querySize << " targetSize: " << targetSize << '\n'
+            << "\ttargetRange: " << targetBpOffsetRange << '\n';
+        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+    }
 
     // do one high-speed pass to find the optimal alignment (in terms of lhood), then compute all the goodies later:
     float bestLnLhood(0);
@@ -233,19 +246,40 @@ splitReadAligner(
     //alignment.perfectLnLhood = (getLnLhood(querySeq, qualConvert, queryQual,
     //                               querySeq.begin(), querySeq.end(), false, 0));
 
-    assert(static_cast<pos_t>(bestPos) <= (targetBpOffsetRange.begin_pos()+1));
-    alignment.leftSize = static_cast<pos_t>(targetBpOffsetRange.begin_pos()+1) - bestPos;
+    assert(static_cast<pos_t>(bestPos) <= (targetBpOffsetRange.end_pos()+1));
+    if (static_cast<pos_t>(bestPos) <= (targetBpOffsetRange.begin_pos()+1))
+    {
+        alignment.leftSize = static_cast<pos_t>(targetBpOffsetRange.begin_pos()+1) - bestPos;
+    }
+    else
+    {
+        alignment.leftSize = 0;
+    }
+
     if (alignment.leftSize > querySize)
     {
         std::ostringstream oss;
         oss << "ERROR: Unexpected split read alignment outcome. "
-            << " targetBeginPos: " << targetBpOffsetRange.begin_pos() << " bestPos: " << bestPos << " querySize: " << querySize << " targetSize: " << targetSize << '\n'
-            << "\tquerySeq: " << querySeq << '\n'
-            << "\ttargetSeq: " << targetSeq << '\n';
+            << " targetRange: " << targetBpOffsetRange << " bestPos: " << bestPos << " bestLnLhood: " << bestLnLhood << " querySize: " << querySize << " targetSize: " << targetSize << '\n'
+            << "alignment: " << alignment << "\n"
+            << "querySeq:\n";
+        printSeq(querySeq,oss);
+        oss << '\n'
+            << "targetSeq:\n";
+        printSeq(targetSeq,oss);
+        oss << '\n';
         BOOST_THROW_EXCEPTION(LogicException(oss.str()));
     }
-    alignment.homSize = std::min(querySize - alignment.leftSize, targetBpOffsetRange.size());
-    alignment.rightSize= querySize - (alignment.leftSize + alignment.homSize);
+    alignment.homSize = std::min(querySize-alignment.leftSize,(static_cast<pos_t>(targetBpOffsetRange.end_pos()+1) - bestPos) - alignment.leftSize);
+
+    if ((alignment.leftSize + alignment.homSize) < querySize)
+    {
+        alignment.rightSize = querySize - (alignment.leftSize + alignment.homSize);
+    }
+    else
+    {
+        alignment.rightSize = 0;
+    }
     alignment.alignLnLhood = bestLnLhood;
     alignment.alignPos = bestPos;
 

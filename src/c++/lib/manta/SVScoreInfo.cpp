@@ -39,6 +39,8 @@ SVAlignmentInfo(
 
     const pos_t bp1HomLength(sv.bp1.interval.range.size()-1);
     const pos_t bp2HomLength(sv.bp2.interval.range.size()-1);
+    assert(bp1HomLength >= 0);
+    assert(bp2HomLength >= 0);
 
     contigSeq = assemblyData.extendedContigs[sv.assemblyAlignIndex];
 
@@ -84,15 +86,19 @@ SVAlignmentInfo(
             const pos_t revSize(contigSeq.size()-2);
             if (_bp1ContigReversed)
             {
-                bp1ContigOffset.set_begin_pos(revSize - bp1ContigOffset.begin_pos());
-                bp1ContigOffset.set_end_pos(revSize - bp1ContigOffset.end_pos());
+                const known_pos_range2 tmpRange(bp1ContigOffset);
+                bp1ContigOffset.set_begin_pos(revSize - tmpRange.end_pos());
+                bp1ContigOffset.set_end_pos(revSize - tmpRange.begin_pos());
             }
             else
             {
-                bp2ContigOffset.set_begin_pos(revSize - bp2ContigOffset.begin_pos());
-                bp2ContigOffset.set_end_pos(revSize - bp2ContigOffset.end_pos());
+                const known_pos_range2 tmpRange(bp2ContigOffset);
+                bp2ContigOffset.set_begin_pos(revSize - tmpRange.end_pos());
+                bp2ContigOffset.set_end_pos(revSize - tmpRange.begin_pos());
             }
         }
+        assert(bp1ContigOffset.begin_pos() <= bp1ContigOffset.end_pos());
+        assert(bp2ContigOffset.begin_pos() <= bp2ContigOffset.end_pos());
 
         // get reference regions
         const reference_contig_segment& bp1Ref = assemblyData.bp1ref;
