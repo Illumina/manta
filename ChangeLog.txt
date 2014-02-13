@@ -1,3 +1,4 @@
+- MANTA-125 modify pair weight for small SVs
 - MANTA-120 Improve stability of SV scoring as a function of read length
 v0.17.0
 - Filter SA split read segments by MAPQ value
