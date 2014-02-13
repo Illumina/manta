@@ -1,3 +1,4 @@
+v0.18.0
 - MANTA-125 modify pair weight for small SVs
 - MANTA-120 Improve stability of SV scoring as a function of read length
 v0.17.0
