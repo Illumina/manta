@@ -46,7 +46,7 @@ class VcfRecord :
             self.ref=w[VCF_REF]
             self.alt=w[VCF_ALT]
             self.qual=w[VCF_QUAL]
-            self.isPass=(w[VCF_FILTER] == "FILTER")
+            self.isPass=(w[VCF_FILTER] == "PASS")
         self.endPos=self.pos+len(w[VCF_REF])-1
         val = getKeyVal(w[VCF_INFO],"END")
         if val is not None :
