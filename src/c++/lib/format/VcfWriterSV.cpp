@@ -87,6 +87,8 @@ writeHeaderPrefix(
     _os << "##INFO=<ID=BND_PAIR_COUNT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at this breakend (mapping may not be confident at remote breakend)\">\n";
     _os << "##INFO=<ID=UPSTREAM_PAIR_COUNT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at the upstream breakend (mapping may not be confident at downstream breakend)\">\n";
     _os << "##INFO=<ID=DOWNSTREAM_PAIR_COUNT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at this downstream breakend (mapping may not be confident at upstream breakend)\">\n";
+    _os << "##INFO=<ID=INV3,Number=0,Type=Flag,Description=\"Inversion breakends open 3' of reported location\">\n";
+    _os << "##INFO=<ID=INV5,Number=0,Type=Flag,Description=\"Inversion breakends open 5' of reported location\">\n";
 
     addHeaderInfo();
 
@@ -611,6 +613,22 @@ writeInvdel(
             {
                 infoTags.push_back( str( boost::format("SVINSSEQ=%s") % reverseCompCopyStr(sv.insertSeq) ));
             }
+        }
+    }
+
+    if (label == "INV")
+    {
+        if (sv.bp1.state == SVBreakendState::RIGHT_OPEN)
+        {
+            infoTags.push_back("INV3");
+        }
+        else if (sv.bp1.state == SVBreakendState::LEFT_OPEN)
+        {
+            infoTags.push_back("INV5");
+        }
+        else
+        {
+            assert(false && "Unexpected inversion configuration");
         }
     }
 
