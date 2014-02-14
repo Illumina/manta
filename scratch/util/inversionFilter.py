@@ -21,8 +21,14 @@ import re
 
 
 
-def getKeyVal(string,key) :
-    match=re.search("%s=([^;\t]*);?" % (key) ,string)
+def isInfoFlag(infoString,key) :
+    word=infoString.split(";")
+    for w in word :
+        if w == key : return True
+    return False
+
+def getKeyVal(infoString,key) :
+    match=re.search("%s=([^;\t]*);?" % (key) ,infoString)
     if match is None : return None
     return match.group(1);
 
@@ -45,6 +51,7 @@ class VcfRecord :
         self.pos=int(w[VCF_POS])
         self.qual=w[VCF_QUAL]
         self.isPass=(w[VCF_FILTER] == "PASS")
+        self.Filter=w[VCF_FILTER]
         self.endPos=self.pos+len(w[VCF_REF])-1
         val = getKeyVal(w[VCF_INFO],"END")
         if val is not None :
@@ -57,6 +64,8 @@ class VcfRecord :
         else :
             self.ss = None
         self.svtype = getKeyVal(w[VCF_INFO],"SVTYPE")
+        self.isInv3 = isInfoFlag(w[VCF_INFO],"INV3")
+        self.isInv5 = isInfoFlag(w[VCF_INFO],"INV5")
 
 
 
@@ -125,6 +134,11 @@ def resolveRec(recEqualSet, recList) :
             bestPos = rec.pos
             bestIsPass = rec.isPass
 
+# potentially could reward two non-pass inversion calls here:
+#    if not bestIsPass and (len(recEqualSet) == 2) :
+#        if (recEqualSet[0].isInv3 and reEqualSet[1].isInv5) or
+#            recEqualSet[1].isInv3 and reEqualSet[0].isInv5)) :
+
     recList.append(recEqualSet[bestIndex])
 
 
@@ -172,8 +186,8 @@ def main() :
           (rec[0] != lastRec[0]) or
           (rec[3] != "INV") or
           (lastRec[3] != "INV") or
-          (abs(rec[1]-lastRec[1]) > 100) or
-          (abs(rec[2]-lastRec[2]) > 100)) :
+          (abs(rec[1]-lastRec[1]) > 250) or
+          (abs(rec[2]-lastRec[2]) > 250)) :
             resolveRec(recEqualSet,recList2)
             recEqualSet = []
    
