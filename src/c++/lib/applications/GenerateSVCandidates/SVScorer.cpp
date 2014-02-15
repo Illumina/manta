@@ -936,7 +936,7 @@ computeSomaticSampleLoghood(
 #endif
 
     /// TODO: find a better way to set this number from training data:
-    static const ProbSet chimeraProbDefault(5e-5);
+    static const ProbSet chimeraProbDefault(1e-4);
     static const ProbSet chimeraProbPermissive(1e-5);
     const ProbSet& chimeraProb( isPermissive ? chimeraProbPermissive : chimeraProbDefault );
 
