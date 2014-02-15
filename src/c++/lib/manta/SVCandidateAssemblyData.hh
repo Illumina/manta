@@ -22,8 +22,8 @@
 #include "blt_util/reference_contig_segment.hh"
 #include "manta/SVCandidate.hh"
 
+#include <iosfwd>
 #include <vector>
-
 
 /// minimum set of information required to describe bp transformations between SVCandidate and its
 /// corresponding contig alignment
@@ -48,6 +48,38 @@ struct BPOrientation
     bool isBp1Reversed; ///< should all bp1 reads be reversed for the contig to assemble correctly?
     bool isBp2Reversed; ///< should all bp2 reads be reversed for the contig to assemble correctly?
 };
+
+
+
+struct LargeInsertionInfo
+{
+    LargeInsertionInfo() :
+        isLeftCandidate(false),
+        isRightCandidate(false),
+        contigOffset(0),
+        refOffset(0),
+        score(0)
+    {}
+
+    void
+    clear()
+    {
+        isLeftCandidate=false;
+        isRightCandidate=false;
+        contigOffset=0;
+        refOffset=0;
+        score=0;
+    }
+
+    bool isLeftCandidate;
+    bool isRightCandidate;
+    unsigned contigOffset; // if candidate, how far into the contig is the breakend?
+    unsigned refOffset; // if candidate, how far from the start of the contig alignment is the breakend on reference?
+    int score; // what is the alignment score of the contig up to the insertion breakpoint?
+};
+
+std::ostream&
+operator<<(std::ostream& os, const LargeInsertionInfo& lii);
 
 
 /// \brief Assembly data pertaining to a specific SV candidate
@@ -84,6 +116,7 @@ struct SVCandidateAssemblyData
         smallSVAlignments.clear();
         spanningAlignments.clear();
         smallSVSegments.clear();
+        largeInsertInfo.clear();
         bestAlignmentIndex=0;
         bp1ref.clear();
         bp2ref.clear();
@@ -110,6 +143,8 @@ struct SVCandidateAssemblyData
     std::vector<SmallAlignmentResultType> smallSVAlignments; ///< contig smallSV alignments, one per contig, may be empty
     std::vector<JumpAlignmentResultType> spanningAlignments; ///< contig spanning alignments, one per contig, may be empty
     std::vector<CandidateSegmentSetType> smallSVSegments; ///< list of indel sets, one per small alignment
+
+    std::vector<LargeInsertionInfo> largeInsertInfo; ///< data specific to searching for a large insertion candidate
 
     unsigned bestAlignmentIndex; ///< if non-empty sv candidate set, which contig/alignment produced them?
 

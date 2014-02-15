@@ -30,7 +30,8 @@ struct SVCandidate
         _isImprecise(true),
         candidateIndex(0),
         assemblyAlignIndex(0),
-        assemblySegmentIndex(0)
+        assemblySegmentIndex(0),
+        isUnknownSizeInsertion(false)
     {}
 
 #if 0
@@ -86,6 +87,7 @@ struct SVCandidate
         candidateIndex=0;
         assemblyAlignIndex=0;
         assemblySegmentIndex=0;
+        isUnknownSizeInsertion = false;
     }
 
     void
@@ -121,6 +123,8 @@ public:
     unsigned candidateIndex; // low-res candidate index number, used to generate unique SV id
     unsigned assemblyAlignIndex; // high-res assembly index number of alignment, used to generate unique SV id
     unsigned assemblySegmentIndex; // high-res assembly index number of alignment segment, used to generate unique SV id
+
+    bool isUnknownSizeInsertion; // these insertions haven't been assembled all the way through
 };
 
 std::ostream&

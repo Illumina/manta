@@ -472,7 +472,7 @@ writeInvdel(
     // complex in/del combinations
     //
     bool isSmallVariant(false);
-    if ((! isImprecise) && isIndel)
+    if ((! isImprecise) && isIndel && (! sv.isUnknownSizeInsertion))
     {
         const unsigned deleteSize(bpBrange.begin_pos() - bpArange.begin_pos());
         const unsigned insertSize(sv.insertSeq.size());
@@ -541,19 +541,23 @@ writeInvdel(
         infoTags.push_back( str(boost::format("SVTYPE=%s") % words[0]));
         const pos_t refLen(endPos-pos);
         pos_t svLen(refLen);
-        if (isIndel)
+
+        if (! sv.isUnknownSizeInsertion)
         {
-            const pos_t insertLen(static_cast<pos_t>(sv.insertSeq.size()));
-            if ( insertLen > refLen )
+            if (isIndel)
             {
-                svLen = insertLen;
+                const pos_t insertLen(static_cast<pos_t>(sv.insertSeq.size()));
+                if ( insertLen > refLen )
+                {
+                    svLen = insertLen;
+                }
+                else
+                {
+                    svLen = -refLen;
+                }
             }
-            else
-            {
-                svLen = -refLen;
-            }
+            infoTags.push_back( str(boost::format("SVLEN=%i") % (svLen)));
         }
-        infoTags.push_back( str(boost::format("SVLEN=%i") % (svLen)));
     }
     infoTags.push_back( str(boost::format("UPSTREAM_PAIR_COUNT=%i") % bpA.getLocalPairCount()) );
     infoTags.push_back( str(boost::format("DOWNSTREAM_PAIR_COUNT=%i") % bpB.getLocalPairCount()) );
@@ -602,7 +606,7 @@ writeInvdel(
 
     if (! isSmallVariant)
     {
-        if (! sv.insertSeq.empty())
+        if (! (sv.insertSeq.empty() || sv.isUnknownSizeInsertion))
         {
             infoTags.push_back( str( boost::format("SVINSLEN=%i") % (sv.insertSeq.size()) ));
             if (isBp1First || (bpA.state != bpB.state))

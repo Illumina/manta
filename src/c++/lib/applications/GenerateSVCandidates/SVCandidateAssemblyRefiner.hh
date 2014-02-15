@@ -50,12 +50,17 @@ private:
     void
     getJumpAssembly(
         const SVCandidate& sv,
+        const bool isFindLargeInsertions,
         SVCandidateAssemblyData& assemblyData) const;
 
     /// small SV/indel assembler
+    ///
+    /// \params[in] isFindLargeInsertions search for insertions which are too large to completely assemble the insert sequence
+    ///
     void
     getSmallSVAssembly(
         const SVCandidate& sv,
+        const bool isFindLargeInsertions,
         SVCandidateAssemblyData& assemblyData) const;
 
     //////////////////////////////// data:
@@ -64,5 +69,6 @@ private:
     const SVLocusAssembler _smallSVAssembler;
     const SVLocusAssembler _spanningAssembler;
     const GlobalAligner<int> _smallSVAligner;
+    const GlobalAligner<int> _largeInsertAligner;
     const GlobalJumpAligner<int> _spanningAligner;
 };

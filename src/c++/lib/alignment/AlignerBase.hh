@@ -86,6 +86,76 @@ struct AlignerBase
         return val;
     }
 
+    /// recover the maximum partial path alignment score (going left->right) without aligning, requires SEQ_MATCH style CIGAR
+    ///
+    ScoreType
+    getMaxPathScore(
+        const ALIGNPATH::path_t& apath,
+        unsigned& maxReadOffset,
+        unsigned& maxRefOffset,
+        const bool isScoreOffEdge = true) const
+    {
+        using namespace ALIGNPATH;
+
+        ScoreType val(0);
+        unsigned readOffset(0);
+        unsigned refOffset(0);
+
+        ScoreType maxVal(0);
+        maxReadOffset=0;
+        maxRefOffset=0;
+
+        BOOST_FOREACH(const path_segment& ps, apath)
+        {
+            bool isIndel(false);
+            switch (ps.type)
+            {
+            case MATCH:
+                assert(false && "Unexpected MATCH segment"); // if MATCH segments exist, then you're using the wrong type of CIGAR for this function
+                break;
+            case SEQ_MATCH:
+                val += (_scores.match * ps.length);
+                readOffset += ps.length;
+                refOffset += ps.length;
+                isIndel = false;
+                break;
+            case SEQ_MISMATCH:
+                val += (_scores.mismatch * ps.length);
+                readOffset += ps.length;
+                refOffset += ps.length;
+                isIndel = false;
+                break;
+            case INSERT:
+                if (! isIndel) val += _scores.open;
+                val += (_scores.extend * ps.length);
+                readOffset += ps.length;
+                isIndel = true;
+                break;
+            case DELETE:
+                if (! isIndel) val += _scores.open;
+                val += (_scores.extend * ps.length);
+                refOffset += ps.length;
+                isIndel = true;
+                break;
+            case SOFT_CLIP:
+                if (isScoreOffEdge) val += (_scores.offEdge * ps.length);
+                readOffset += ps.length;
+                isIndel = false;
+                break;
+            default:
+                break;
+            }
+
+            if (val>maxVal)
+            {
+                maxVal = val;
+                maxReadOffset = readOffset;
+                maxRefOffset = refOffset;
+            }
+        }
+        return maxVal;
+    }
+
 protected:
 
     static
