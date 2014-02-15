@@ -39,6 +39,7 @@ struct SRAlignmentInfo
         alignScore(0),
         alignLnLhood(0),
         isEvidence(false),
+        isTier2Evidence(false),
         evidence(0)
     {}
 
@@ -53,6 +54,7 @@ struct SRAlignmentInfo
     float alignLnLhood;
 
     bool isEvidence;
+    bool isTier2Evidence;
     float evidence;
 };
 

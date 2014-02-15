@@ -37,6 +37,7 @@ operator<<(std::ostream& os, const SRAlignmentInfo& info)
        << " leftMismatches=" << info.leftMismatches << " homMismatches=" << info.homMismatches << " rightMismatches=" << info.rightMismatches
        << " alignScore=" << info.alignScore
        << " isEvidence: " << info.isEvidence
+       << " isT2Evidence: " << info.isTier2Evidence
        << " evidence: " << info.evidence
        << " alignLnLhood: "  << info.alignLnLhood
        << '\n';
@@ -140,29 +141,44 @@ calculateAlignScore(
 
 
 static
+bool
+isEvidenceCheck(
+    const SRAlignmentInfo& alignment,
+    const unsigned minFlankSize)
+{
+    if (alignment.leftSize < minFlankSize) return false;
+    if (alignment.rightSize < minFlankSize) return false;
+
+    if ((alignment.leftMismatches/(float)alignment.leftSize) >= 0.25) return false;
+    if ((alignment.rightMismatches/(float)alignment.rightSize) >= 0.25) return false;
+
+    const float size(static_cast<float>(alignment.leftSize+alignment.rightSize));
+    if ((alignment.alignScore/size) < 0.9) return false;
+
+    return true;
+}
+
+
+
+static
 void
 setEvidence(
     SRAlignmentInfo& alignment)
 {
-    alignment.isEvidence = false;
-    alignment.evidence = 0;
-
-    const float size(static_cast<float>(alignment.leftSize+alignment.rightSize));
-
     //
     // filters for a read being counted as evidence
     //
 
     // adding new flank size threshold -- this might have to be changed based on sv size:
     static const unsigned minFlankSize(16);
-    if (alignment.leftSize < minFlankSize) return;
-    if (alignment.rightSize < minFlankSize) return;
+    static const unsigned minFlankSizeTier2(8);
+    alignment.isEvidence = isEvidenceCheck(alignment,minFlankSize);
+    alignment.isTier2Evidence = isEvidenceCheck(alignment,minFlankSizeTier2);
 
-    if ((alignment.leftMismatches/(float)alignment.leftSize) >= 0.25) return;
-    if ((alignment.rightMismatches/(float)alignment.rightSize) >= 0.25) return;
-    if ((alignment.alignScore/size) < 0.9) return;
+    alignment.evidence = 0;
+    if (! (alignment.isEvidence || alignment.isTier2Evidence)) return;
 
-    alignment.isEvidence = true;
+    const float size(static_cast<float>(alignment.leftSize+alignment.rightSize));
     alignment.evidence = 2 * std::min(alignment.leftSize, alignment.rightSize) / (size);
 }
 

@@ -486,6 +486,7 @@ incrementSplitReadLhood(
     const SVFragmentEvidence& fragev,
     const ProbSet& refMapProb,
     const ProbSet& altMapProb,
+    const bool isPermissive,
     const bool isRead1,
     double& refSplitLnLhood,
     double& altSplitLnLhood,
@@ -497,7 +498,17 @@ incrementSplitReadLhood(
     log_os << __FUNCTION__ << ": pre-support\n";
 #endif
 
-    if (! fragev.isAnySplitReadSupport(isRead1))
+    bool isSupported(false);
+    if (isPermissive)
+    {
+        isSupported=fragev.isAnyTier2SplitReadSupport(isRead1);
+    }
+    else
+    {
+        isSupported=fragev.isAnySplitReadSupport(isRead1);
+    }
+    
+    if (! isSupported)
     {
         isReadEvaluated = false;
         return;
@@ -626,6 +637,7 @@ getRefAltFromFrag(
     const ProbSet& chimeraProb,
     const ProbSet& refSplitMapProb,
     const ProbSet& altSplitMapProb,
+    const bool isPermissive,
     const SVFragmentEvidence& fragev,
     AlleleLnLhood& refLnLhoodSet,
     AlleleLnLhood& altLnLhoodSet,
@@ -668,11 +680,11 @@ getRefAltFromFrag(
 #ifdef DEBUG_SCORE
     log_os << __FUNCTION__ << ": starting read1 split\n";
 #endif
-    incrementSplitReadLhood(fragev, refSplitMapProb, altSplitMapProb, true,  refLnLhoodSet.read1Split, altLnLhoodSet.read1Split, isRead1Evaluated);
+    incrementSplitReadLhood(fragev, refSplitMapProb, altSplitMapProb, isPermissive, true,  refLnLhoodSet.read1Split, altLnLhoodSet.read1Split, isRead1Evaluated);
 #ifdef DEBUG_SCORE
     log_os << __FUNCTION__ << ": starting read2 split\n";
 #endif
-    incrementSplitReadLhood(fragev, refSplitMapProb, altSplitMapProb, false, refLnLhoodSet.read2Split, altLnLhoodSet.read2Split, isRead2Evaluated);
+    incrementSplitReadLhood(fragev, refSplitMapProb, altSplitMapProb, isPermissive, false, refLnLhoodSet.read2Split, altLnLhoodSet.read2Split, isRead2Evaluated);
 
 #ifdef DEBUG_SCORE
     log_os << __FUNCTION__ << ": iseval frag/read1/read2: " << isFragEvaluated << " " << isRead1Evaluated << " " << isRead1Evaluated << "\n";
@@ -715,7 +727,9 @@ addDiploidLoglhood(
         /// don't use semi-mapped reads for germline calling:
         static const double semiMappedPower(0.);
 
-        if (! getRefAltFromFrag(smallSVWeight, semiMappedPower, chimeraProb, refSplitMapProb, altSplitMapProb, fragev,
+        static const bool isPermissive(false);
+
+        if (! getRefAltFromFrag(smallSVWeight, semiMappedPower, chimeraProb, refSplitMapProb, altSplitMapProb, isPermissive, fragev,
                                 refLnLhoodSet, altLnLhoodSet, isRead1Evaluated, isRead2Evaluated))
         {
             // continue if this fragment was not evaluated for pair or split support for either allele:
@@ -961,7 +975,7 @@ computeSomaticSampleLoghood(
         bool isRead1Evaluated(true);
         bool isRead2Evaluated(true);
 
-        if (! getRefAltFromFrag(smallSVWeight, semiMappedPower, chimeraProb, refSplitMapProb, altSplitMapProb, fragev,
+        if (! getRefAltFromFrag(smallSVWeight, semiMappedPower, chimeraProb, refSplitMapProb, altSplitMapProb, isPermissive, fragev,
                                 refLnLhoodSet, altLnLhoodSet, isRead1Evaluated, isRead2Evaluated))
         {
             // continue if this fragment was not evaluated for pair or split support for either allele:
