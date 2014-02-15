@@ -50,12 +50,14 @@ struct SVFragmentEvidenceAlleleBreakendPerRead
     SVFragmentEvidenceAlleleBreakendPerRead() :
         isSplitEvaluated(false),
         isSplitSupport(false),
+        isTier2SplitSupport(false),
         splitEvidence(0),
         splitLnLhood(0)
     {}
 
     bool isSplitEvaluated; ///< have we checked this read for split support of this bp?
     bool isSplitSupport; ///< if evaluated, does this read support this allele in the bp?
+    bool isTier2SplitSupport; ///< if evaluated, does this read support this allele in the bp by permissive criteria?
     float splitEvidence; ///< if evaluated, what is the evidence score?
     float splitLnLhood; ///< ln likelihood of best split alignment
 };
@@ -111,6 +113,14 @@ struct SVFragmentEvidenceAllele
     {
         return (bp1.getRead(isRead1).isSplitSupport ||
                 bp2.getRead(isRead1).isSplitSupport);
+    }
+
+    bool
+    isAnyTier2SplitReadSupport(
+        const bool isRead1) const
+    {
+        return (bp1.getRead(isRead1).isTier2SplitSupport ||
+                bp2.getRead(isRead1).isTier2SplitSupport);
     }
 
     SVFragmentEvidenceAlleleBreakend bp1;
@@ -186,6 +196,15 @@ struct SVFragmentEvidence
     {
         return (alt.isAnySplitReadSupport(isRead1) ||
                 ref.isAnySplitReadSupport(isRead1));
+    }
+
+    /// does this fragment read provide any split evidence for any allele/bp combination?
+    bool
+    isAnyTier2SplitReadSupport(
+        const bool isRead1) const
+    {
+        return (alt.isAnyTier2SplitReadSupport(isRead1) ||
+                ref.isAnyTier2SplitReadSupport(isRead1));
     }
 
     SVFragmentEvidenceRead read1;

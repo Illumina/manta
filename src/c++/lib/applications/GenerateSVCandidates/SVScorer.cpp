@@ -483,9 +483,11 @@ incrementAlleleSplitReadLhood(
 static
 void
 incrementSplitReadLhood(
+    const std::string& /*fragLabel*/,
     const SVFragmentEvidence& fragev,
     const ProbSet& refMapProb,
     const ProbSet& altMapProb,
+    const bool isPermissive,
     const bool isRead1,
     double& refSplitLnLhood,
     double& altSplitLnLhood,
@@ -497,7 +499,17 @@ incrementSplitReadLhood(
     log_os << __FUNCTION__ << ": pre-support\n";
 #endif
 
-    if (! fragev.isAnySplitReadSupport(isRead1))
+    bool isSupported(false);
+    if (isPermissive)
+    {
+        isSupported=fragev.isAnyTier2SplitReadSupport(isRead1);
+    }
+    else
+    {
+        isSupported=fragev.isAnySplitReadSupport(isRead1);
+    }
+    
+    if (! isSupported)
     {
         isReadEvaluated = false;
         return;
@@ -626,6 +638,8 @@ getRefAltFromFrag(
     const ProbSet& chimeraProb,
     const ProbSet& refSplitMapProb,
     const ProbSet& altSplitMapProb,
+    const bool isPermissive,
+    const std::string& fragLabel,
     const SVFragmentEvidence& fragev,
     AlleleLnLhood& refLnLhoodSet,
     AlleleLnLhood& altLnLhoodSet,
@@ -633,7 +647,7 @@ getRefAltFromFrag(
     bool& isRead2Evaluated)
 {
 #ifdef DEBUG_SCORE
-    log_os << __FUNCTION__ << ": qname: " << /*val.first <<*/ " fragev: " << fragev << "\n";
+    log_os << __FUNCTION__ << ": qname: " << fragLabel << " fragev: " << fragev << "\n";
 #endif
 
     /// TODO: add read pairs with one shadow read to the alt read pool
@@ -668,11 +682,11 @@ getRefAltFromFrag(
 #ifdef DEBUG_SCORE
     log_os << __FUNCTION__ << ": starting read1 split\n";
 #endif
-    incrementSplitReadLhood(fragev, refSplitMapProb, altSplitMapProb, true,  refLnLhoodSet.read1Split, altLnLhoodSet.read1Split, isRead1Evaluated);
+    incrementSplitReadLhood(fragLabel, fragev, refSplitMapProb, altSplitMapProb, isPermissive, true,  refLnLhoodSet.read1Split, altLnLhoodSet.read1Split, isRead1Evaluated);
 #ifdef DEBUG_SCORE
     log_os << __FUNCTION__ << ": starting read2 split\n";
 #endif
-    incrementSplitReadLhood(fragev, refSplitMapProb, altSplitMapProb, false, refLnLhoodSet.read2Split, altLnLhoodSet.read2Split, isRead2Evaluated);
+    incrementSplitReadLhood(fragLabel, fragev, refSplitMapProb, altSplitMapProb, isPermissive, false, refLnLhoodSet.read2Split, altLnLhoodSet.read2Split, isRead2Evaluated);
 
 #ifdef DEBUG_SCORE
     log_os << __FUNCTION__ << ": iseval frag/read1/read2: " << isFragEvaluated << " " << isRead1Evaluated << " " << isRead1Evaluated << "\n";
@@ -692,6 +706,7 @@ addDiploidLoglhood(
 {
     BOOST_FOREACH(const SVEvidence::evidenceTrack_t::value_type& val, sampleEvidence)
     {
+        const std::string& fragLabel(val.first);
         const SVFragmentEvidence& fragev(val.second);
 
         AlleleLnLhood refLnLhoodSet, altLnLhoodSet;
@@ -715,7 +730,9 @@ addDiploidLoglhood(
         /// don't use semi-mapped reads for germline calling:
         static const double semiMappedPower(0.);
 
-        if (! getRefAltFromFrag(smallSVWeight, semiMappedPower, chimeraProb, refSplitMapProb, altSplitMapProb, fragev,
+        static const bool isPermissive(false);
+
+        if (! getRefAltFromFrag(smallSVWeight, semiMappedPower, chimeraProb, refSplitMapProb, altSplitMapProb, isPermissive, fragLabel, fragev,
                                 refLnLhoodSet, altLnLhoodSet, isRead1Evaluated, isRead2Evaluated))
         {
             // continue if this fragment was not evaluated for pair or split support for either allele:
@@ -920,21 +937,6 @@ computeSomaticSampleLoghood(
     const double isPermissive,
     boost::array<double,SOMATIC_GT::SIZE>& loglhood)
 {
-#if 0
-#ifdef DEBUG_SOMATIC_SCORE
-    static const std::string logtag("somaticLikelihood: ");
-
-    const bool isImprecise(sv.isImprecise());
-    const bool isBp1First(sv.bp1.interval.range.begin_pos()<=sv.bp2.interval.range.begin_pos());
-
-    const SVBreakend& bpA(isBp1First ? sv.bp1 : sv.bp2);
-    const known_pos_range2& bpArange(bpA.interval.range);
-    pos_t pos(bpArange.center_pos()+1);
-    if (! isImprecise)
-        pos = bpArange.begin_pos()+1;
-#endif
-#endif
-
     /// TODO: find a better way to set this number from training data:
     static const ProbSet chimeraProbDefault(1e-4);
     static const ProbSet chimeraProbPermissive(1e-5);
@@ -955,13 +957,14 @@ computeSomaticSampleLoghood(
 
     BOOST_FOREACH(const SVEvidence::evidenceTrack_t::value_type& val, evidenceTrack)
     {
+        const std::string& fragLabel(val.first);
         const SVFragmentEvidence& fragev(val.second);
 
         AlleleLnLhood refLnLhoodSet, altLnLhoodSet;
         bool isRead1Evaluated(true);
         bool isRead2Evaluated(true);
 
-        if (! getRefAltFromFrag(smallSVWeight, semiMappedPower, chimeraProb, refSplitMapProb, altSplitMapProb, fragev,
+        if (! getRefAltFromFrag(smallSVWeight, semiMappedPower, chimeraProb, refSplitMapProb, altSplitMapProb, isPermissive, fragLabel, fragev,
                                 refLnLhoodSet, altLnLhoodSet, isRead1Evaluated, isRead2Evaluated))
         {
             // continue if this fragment was not evaluated for pair or split support for either allele:
@@ -1045,6 +1048,7 @@ scoreSomaticSV(
 
         // compute likelihood for the fragments from the tumor sample
         computeSomaticSampleLoghood(smallSVWeight, evidence.tumor, somaticMutationFreq, noiseMutationFreq, isPermissive, tumorSomaticLhood);
+
         // compute likelihood for the fragments from the normal sample
         computeSomaticSampleLoghood(smallSVWeight, evidence.normal, 0, noiseMutationFreq, isPermissive, normalSomaticLhood);
 

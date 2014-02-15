@@ -28,6 +28,7 @@ operator<<(
 {
     os << "isEval: " << svbpr.isSplitEvaluated
        << " isSplitSupport: " << svbpr.isSplitSupport
+       << " isTier2SplitSupport: " << svbpr.isTier2SplitSupport
        << " splitEvidence: " << svbpr.splitEvidence
        << " splitLnLhood: " << svbpr.splitLnLhood
        ;

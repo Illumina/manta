@@ -47,6 +47,11 @@ incrementAlleleEvidence(
         bp1Support.splitEvidence = bp1Evidence;
     }
 
+    if (bp1SR.isTier2Evidence)
+    {
+        bp1Support.isTier2SplitSupport = true;
+    }
+
     bp1Support.splitLnLhood = bp1SR.alignLnLhood;
 
     if (bp2SR.isEvidence)
@@ -54,6 +59,11 @@ incrementAlleleEvidence(
         bp2Evidence = bp2SR.evidence;
         bp2Support.isSplitSupport = true;
         bp2Support.splitEvidence = bp2Evidence;
+    }
+
+    if (bp2SR.isTier2Evidence)
+    {
+        bp2Support.isTier2SplitSupport = true;
     }
 
     bp2Support.splitLnLhood = bp2SR.alignLnLhood;
