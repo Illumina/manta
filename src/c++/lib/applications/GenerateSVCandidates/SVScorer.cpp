@@ -508,7 +508,7 @@ incrementSplitReadLhood(
     {
         isSupported=fragev.isAnySplitReadSupport(isRead1);
     }
-    
+
     if (! isSupported)
     {
         isReadEvaluated = false;

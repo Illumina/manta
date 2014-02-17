@@ -1,3 +1,7 @@
+- MANTA-125 add experimental large insertion calling (default off)
+- MANTA-125 add tier2 permissive split score to reduce small somatic
+FP deletions
+- MANTA-125 add tier2 chimera rate to reduce somatic FP calls 
 v0.18.0
 - MANTA-125 modify pair weight for small SVs
 - MANTA-120 Improve stability of SV scoring as a function of read length

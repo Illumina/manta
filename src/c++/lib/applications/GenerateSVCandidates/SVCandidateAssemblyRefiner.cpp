@@ -214,7 +214,7 @@ getLargestInsertSegment(
 
         if ((ps.type == DELETE) || (ps.type == INSERT))
         {
-            if(ps.type == INSERT)
+            if (ps.type == INSERT)
             {
                 if (ps.length>=maxSegmentSize)
                 {
@@ -629,12 +629,12 @@ processLargeInsertion(
     static const int maxBreakDist(20);
 
     const unsigned candCount(largeInsertionCandidateIndex.size());
-    for(unsigned candCount1(0); (candCount1+1)<candCount; ++candCount1)
+    for (unsigned candCount1(0); (candCount1+1)<candCount; ++candCount1)
     {
         const unsigned candIndex1(largeInsertionCandidateIndex[candCount1]);
         const Alignment& align1(assemblyData.smallSVAlignments[candIndex1].align);
         const LargeInsertionInfo& insert1(assemblyData.largeInsertInfo[candIndex1]);
-        for(unsigned candCount2(candCount1+1); candCount2<candCount; ++candCount2)
+        for (unsigned candCount2(candCount1+1); candCount2<candCount; ++candCount2)
         {
             const unsigned candIndex2(largeInsertionCandidateIndex[candCount2]);
             const Alignment& align2(assemblyData.smallSVAlignments[candIndex2].align);
@@ -1161,11 +1161,11 @@ getSmallSVAssembly(
         {
             std::vector<std::pair<unsigned,unsigned> > segments;
             const bool isCandidate( isSmallSVAlignment(
-                    maxQCRefSpan[refSpanIndex],
-                    _smallSVAligner,
-                    alignment.align.apath,
-                    _opt.scanOpt.minCandidateVariantSize,
-                    segments) );
+                                        maxQCRefSpan[refSpanIndex],
+                                        _smallSVAligner,
+                                        alignment.align.apath,
+                                        _opt.scanOpt.minCandidateVariantSize,
+                                        segments) );
 
             if (isCandidate)
             {
@@ -1190,9 +1190,9 @@ getSmallSVAssembly(
 
             LargeInsertionInfo insertInfo;
             const bool isCandidate( isLargeInsertAlignment(
-                    _largeInsertAligner,
-                    alignment.align.apath,
-                    insertInfo));
+                                        _largeInsertAligner,
+                                        alignment.align.apath,
+                                        insertInfo));
 
             if (isCandidate)
             {
