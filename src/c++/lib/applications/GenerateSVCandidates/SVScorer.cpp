@@ -936,18 +936,10 @@ computeSomaticSampleLoghood(
     const double noiseMutationFreq,
     const double isPermissive,
     const ProbSet& chimeraProb,
+    const ProbSet& refSplitMapProb,
+    const ProbSet& altSplitMapProb,
     boost::array<double,SOMATIC_GT::SIZE>& loglhood)
 {
-    /// use a constant mapping prob for now just to get the zero-th order concept into the model
-    /// that "reads are mismapped at a non-trivial rate"
-    /// TODO: experiment with per-read mapq values
-    ///
-    static const ProbSet refSplitMapProb(1e-6);
-
-    static const ProbSet altSplitMapProbDefault(1e-4);
-    static const ProbSet altSplitMapProbPermissive(1e-6);
-    const ProbSet& altSplitMapProb( isPermissive ? altSplitMapProbPermissive : altSplitMapProbDefault );
-
     // semi-mapped reads make a partial contribution in tier1, and a full contribution in tier2:
     const double semiMappedPower( isPermissive ? 1. : 0. );
 
@@ -1047,10 +1039,22 @@ scoreSomaticSV(
         static const ProbSet chimeraProbPermissive(1e-5);
         const ProbSet& chimeraProb( isPermissive ? chimeraProbPermissive : chimeraProbDefault );
 
+        /// use a constant mapping prob for now just to get the zero-th order concept into the model
+        /// that "reads are mismapped at a non-trivial rate"
+        /// TODO: experiment with per-read mapq values
+        ///
+        static const ProbSet refSplitMapProb(1e-6);
+
+        static const ProbSet altSplitMapProbDefault(1e-4);
+        static const ProbSet altSplitMapProbPermissive(1e-6);
+        const ProbSet& altSplitMapProb( isPermissive ? altSplitMapProbPermissive : altSplitMapProbDefault );
+
         // compute likelihood for the fragments from the tumor sample
-        computeSomaticSampleLoghood(smallSVWeight, evidence.tumor, somaticMutationFreq, noiseMutationFreq, isPermissive, chimeraProbDefault, tumorSomaticLhood);
+        computeSomaticSampleLoghood(smallSVWeight, evidence.tumor, somaticMutationFreq, noiseMutationFreq, isPermissive,
+                                    chimeraProbDefault, refSplitMapProb, altSplitMapProbDefault, tumorSomaticLhood);
         // compute likelihood for the fragments from the normal sample
-        computeSomaticSampleLoghood(smallSVWeight, evidence.normal, 0, noiseMutationFreq, isPermissive, chimeraProb, normalSomaticLhood);
+        computeSomaticSampleLoghood(smallSVWeight, evidence.normal, 0, noiseMutationFreq, isPermissive,
+                                    chimeraProb, refSplitMapProb, altSplitMapProb, normalSomaticLhood);
 
         boost::array<double,SOMATIC_GT::SIZE> somaticPprob;
         for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
