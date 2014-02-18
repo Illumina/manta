@@ -935,13 +935,9 @@ computeSomaticSampleLoghood(
     const double somaticMutationFreq,
     const double noiseMutationFreq,
     const double isPermissive,
+    const ProbSet& chimeraProb,
     boost::array<double,SOMATIC_GT::SIZE>& loglhood)
 {
-    /// TODO: find a better way to set this number from training data:
-    static const ProbSet chimeraProbDefault(1e-4);
-    static const ProbSet chimeraProbPermissive(1e-5);
-    const ProbSet& chimeraProb( isPermissive ? chimeraProbPermissive : chimeraProbDefault );
-
     /// use a constant mapping prob for now just to get the zero-th order concept into the model
     /// that "reads are mismapped at a non-trivial rate"
     /// TODO: experiment with per-read mapq values
@@ -1046,11 +1042,15 @@ scoreSomaticSV(
         log_os << __FUNCTION__ << ": largeNoiseWeight: " << largeNoiseWeight << "\n";
 #endif
 
-        // compute likelihood for the fragments from the tumor sample
-        computeSomaticSampleLoghood(smallSVWeight, evidence.tumor, somaticMutationFreq, noiseMutationFreq, isPermissive, tumorSomaticLhood);
+        /// TODO: find a better way to set this number from training data:
+        static const ProbSet chimeraProbDefault(1e-4);
+        static const ProbSet chimeraProbPermissive(1e-5);
+        const ProbSet& chimeraProb( isPermissive ? chimeraProbPermissive : chimeraProbDefault );
 
+        // compute likelihood for the fragments from the tumor sample
+        computeSomaticSampleLoghood(smallSVWeight, evidence.tumor, somaticMutationFreq, noiseMutationFreq, isPermissive, chimeraProbDefault, tumorSomaticLhood);
         // compute likelihood for the fragments from the normal sample
-        computeSomaticSampleLoghood(smallSVWeight, evidence.normal, 0, noiseMutationFreq, isPermissive, normalSomaticLhood);
+        computeSomaticSampleLoghood(smallSVWeight, evidence.normal, 0, noiseMutationFreq, isPermissive, chimeraProb, normalSomaticLhood);
 
         boost::array<double,SOMATIC_GT::SIZE> somaticPprob;
         for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
