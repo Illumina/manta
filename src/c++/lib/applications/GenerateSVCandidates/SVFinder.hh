@@ -72,6 +72,13 @@ private:
         SVCandidateSetData& svData,
         TruthTracker& truthTracker);
 
+    void
+    assignPairObservationsToSVCandidates(
+        const SVLocusNode& node1,
+        const SVLocusNode& node2,
+        const std::vector<SVObservation>& readCandidates,
+        SVCandidateSetReadPair& pair,
+        std::vector<SVCandidate>& svs);
 
     void
     getCandidatesFromData(
@@ -97,6 +104,8 @@ private:
     SVLocusScanner _readScanner;
 
     const std::string _referenceFilename;
+
+    const bool _isRNA;
 
     typedef boost::shared_ptr<bam_streamer> streamPtr;
     std::vector<streamPtr> _bamStreams;

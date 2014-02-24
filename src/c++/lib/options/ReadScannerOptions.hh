@@ -31,6 +31,7 @@ struct ReadScannerOptions
         maxSplitBreakendSize(100),
         minSplitBreakendSize(10),
         minSemiAlignedMismatchLen(8),
+        minRNALength(100000),
         // These numbers are based on checking a few dozens reads
         // and might need some fine-tuning
         minSemiAlignedScoreGraph(180.0),
@@ -66,6 +67,8 @@ struct ReadScannerOptions
 
     // Semi-aligned regions (including soft-clipped) need to be at least this long to be included as SV evidence
     unsigned minSemiAlignedMismatchLen;
+
+    unsigned minRNALength; // Minimal length of a deletion / insertion SV candidate in RNA data
 
     // Accept semi-aligned reads with at least this hypothesis score, different for graph and candidate generation
     double minSemiAlignedScoreGraph;

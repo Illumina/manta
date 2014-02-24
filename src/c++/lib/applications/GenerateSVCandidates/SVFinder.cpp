@@ -41,7 +41,8 @@ SVFinder(const GSCOptions& opt) :
     _scanOpt(opt.scanOpt),
     _isAlignmentTumor(opt.alignFileOpt.isAlignmentTumor),
     _readScanner(_scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilename),
-    _referenceFilename(opt.referenceFilename)
+    _referenceFilename(opt.referenceFilename),
+    _isRNA(opt.isRNA)
 {
     // load in set:
     _set.load(opt.graphFilename.c_str(),true);
@@ -546,9 +547,8 @@ consolidateOverlap(
 /// the longer term we should be able to delinate cluster by a clustering of possible
 /// breakend locations.
 ///
-static
 void
-assignPairObservationsToSVCandidates(
+SVFinder::assignPairObservationsToSVCandidates(
     const SVLocusNode& node1,
     const SVLocusNode& node2,
     const std::vector<SVObservation>& readCandidates,
@@ -567,23 +567,33 @@ assignPairObservationsToSVCandidates(
 #ifdef DEBUG_SVDATA
         log_os << logtag << "Starting assignment for read cand: " << readCand << "\n";
 #endif
-
+        if (_isRNA)
         {
-            // remove candidates which don't match the current edge:
-            //
-            if (isComplexSV(readCand))
+            if ((! SVBreakendState::isSameOrientation(readCand.bp1.state,readCand.bp2.state) ||
+                    (! SVBreakendState::isSimpleBreakend(readCand.bp1.state)) ||
+                    (! SVBreakendState::isSimpleBreakend(readCand.bp2.state))) &&
+                isSVBelowMinSize(readCand, _scanOpt.minRNALength))
             {
-                if (! readCand.bp1.interval.isIntersect(node1.getInterval())) continue;
-                if (! readCand.bp1.interval.isIntersect(node2.getInterval())) continue;
+#ifdef DEBUG_SVDATA
+                log_os << logtag << "Filtered short RNA Candidate\n";
+#endif
+                continue;
             }
-            else
-            {
-                const bool isIntersect((readCand.bp1.interval.isIntersect(node1.getInterval())) &&
-                                       (readCand.bp2.interval.isIntersect(node2.getInterval())));
-                const bool isSwapIntersect((readCand.bp1.interval.isIntersect(node2.getInterval())) &&
-                                           (readCand.bp2.interval.isIntersect(node1.getInterval())));
-                if (! (isIntersect || isSwapIntersect)) continue;
-            }
+        }
+        // remove candidates which don't match the current edge:
+        //
+        if (isComplexSV(readCand))
+        {
+            if (! readCand.bp1.interval.isIntersect(node1.getInterval())) continue;
+            if (! readCand.bp1.interval.isIntersect(node2.getInterval())) continue;
+        }
+        else
+        {
+            const bool isIntersect((readCand.bp1.interval.isIntersect(node1.getInterval())) &&
+                                   (readCand.bp2.interval.isIntersect(node2.getInterval())));
+            const bool isSwapIntersect((readCand.bp1.interval.isIntersect(node2.getInterval())) &&
+                                       (readCand.bp2.interval.isIntersect(node1.getInterval())));
+            if (! (isIntersect || isSwapIntersect)) continue;
         }
 
         /// spanning means there's a left and right breakend (in any order) -- note this is not the
@@ -706,7 +716,6 @@ getCandidatesFromData(
                 log_os << __FUNCTION__ << ": cand: " << cand << "\n";
             }
 #endif
-
             assignPairObservationsToSVCandidates(node1, node2, readCandidates, pair, svs);
         }
     }

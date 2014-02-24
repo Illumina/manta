@@ -282,10 +282,12 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
             hygenCmd.extend(["--align-file", bamPath])
         for bamPath in self.params.tumorBamList :
             hygenCmd.extend(["--tumor-align-file", bamPath])
-
+        
         if self.params.isIgnoreAnomProperPair :
             hygenCmd.append("--ignore-anom-proper-pair")
-
+        if self.params.isRNA :
+            hygenCmd.append("--rna")
+            
         hygenTaskLabel=preJoin(taskPrefix,"generateCandidateSV_"+binStr)
         hygenTasks.add(self.addTask(hygenTaskLabel,hygenCmd,dependencies=dirTask, memMb=hyGenMemMb))
 
