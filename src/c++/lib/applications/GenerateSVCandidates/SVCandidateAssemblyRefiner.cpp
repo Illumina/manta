@@ -642,7 +642,7 @@ processLargeInsertion(
             if (! ((insert1.isLeftCandidate && insert2.isRightCandidate) ||
                    (insert2.isLeftCandidate && insert1.isRightCandidate))) continue;
 
-            const int breakDist(std::abs((align1.beginPos+insert1.refOffset)-(align2.beginPos+insert2.refOffset)));
+            const int breakDist(std::abs((long int)(align1.beginPos+insert1.refOffset)-(long int)(align2.beginPos+insert2.refOffset)));
 
             if (breakDist > maxBreakDist) continue;
 
