@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "Alignment.hh"
 #include "blt_util/align_path.hh"
 
 
