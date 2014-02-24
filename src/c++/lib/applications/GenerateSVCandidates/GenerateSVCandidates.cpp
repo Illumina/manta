@@ -355,7 +355,7 @@ runGSC(
 
                 if (! opt.isSkipAssembly)
                 {
-                    svRefine.getCandidateAssemblyData(candidateSV, svData, assemblyData);
+                    svRefine.getCandidateAssemblyData(candidateSV, svData, assemblyData, opt.isRNA);
 
                     if (opt.isVerbose)
                     {

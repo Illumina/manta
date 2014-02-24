@@ -35,6 +35,7 @@ struct GSCOptions
     GSCOptions() :
         isVerbose(false),
         isSkipAssembly(false),
+        isRNA(false),
         minScoredVariantSize(51)
     {}
 
@@ -60,6 +61,8 @@ struct GSCOptions
     bool isVerbose; ///< provide some high-level log info to assist in debugging
 
     bool isSkipAssembly; ///< if true, skip assembly and run a low-resolution, breakdancer-like subset of the workflow
+
+    bool isRNA; ///< if true, RNA specific filtering on candidates and diploid scoring is used
 
     unsigned minScoredVariantSize; ///< min size for scoring and scored output following candidate generation
 };

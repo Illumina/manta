@@ -42,7 +42,8 @@ struct SVCandidateAssemblyRefiner
     getCandidateAssemblyData(
         const SVCandidate& sv,
         const SVCandidateSetData& svData,
-        SVCandidateAssemblyData& assemblyData) const;
+        SVCandidateAssemblyData& assemblyData,
+        bool isRNA) const;
 
 private:
 
@@ -51,7 +52,8 @@ private:
     getJumpAssembly(
         const SVCandidate& sv,
         const bool isFindLargeInsertions,
-        SVCandidateAssemblyData& assemblyData) const;
+        SVCandidateAssemblyData& assemblyData,
+        bool isRNA) const;
 
     /// small SV/indel assembler
     ///

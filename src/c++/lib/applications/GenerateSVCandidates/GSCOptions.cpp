@@ -101,6 +101,8 @@ parseGSCOptions(
      "Turn on low-detail INFO logging.")
     ("skip-assembly", po::value(&opt.isSkipAssembly)->zero_tokens(),
      "Turn off all breakend and small-variant assembly. Only large, imprecise variants will be reported based on anomalous read pairs.")
+    ("rna", po::value(&opt.isRNA)->zero_tokens(),
+     "For RNA input. Skip small deletions and modify diploid scoring.")
     ("min-scored-sv-size", po::value(&opt.minScoredVariantSize)->default_value(opt.minScoredVariantSize),
      "minimum size for variants which are scored and output following initial candidate generation")
     ;
