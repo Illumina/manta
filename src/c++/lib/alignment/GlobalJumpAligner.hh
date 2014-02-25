@@ -18,6 +18,7 @@
 #pragma once
 
 #include "AlignerBase.hh"
+#include "AlignerUtil.hh"
 #include "Alignment.hh"
 
 #include "blt_util/basic_matrix.hh"
@@ -90,6 +91,17 @@ struct GlobalJumpAligner : public AlignerBase<ScoreType>
     }
 
 protected:
+
+    // backtrace logic shared with the intron jump aligner:
+    template <typename SymIter>
+    void
+    backTraceAlignment(
+        const SymIter queryBegin, const SymIter queryEnd,
+        const SymIter ref1Begin, const SymIter ref1End,
+        const SymIter ref2Begin, const SymIter ref2End,
+        const size_t querySize, const size_t ref1Size, const size_t ref2Size,
+        const BackTrace<ScoreType>& btraceInput,
+        JumpAlignmentResult<ScoreType>& result) const;
 
     static
     uint8_t

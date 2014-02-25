@@ -36,25 +36,6 @@ operator<<(std::ostream& os, AlignmentResult<ScoreType>& alignment)
 }
 
 
-template <typename ScoreType>
-void
-updateBacktrace(
-    const ScoreType thisMax,
-    const unsigned refIndex,
-    const unsigned queryIndex,
-    BackTrace<ScoreType>& btrace)
-{
-    if ( (! btrace.isInit) || (thisMax>btrace.max))
-    {
-        btrace.max=thisMax;
-        btrace.refBegin=refIndex;
-        btrace.queryBegin=queryIndex;
-        btrace.isInit=true;
-    }
-}
-
-
-
 
 // traceback:
 template <typename ScoreType>
