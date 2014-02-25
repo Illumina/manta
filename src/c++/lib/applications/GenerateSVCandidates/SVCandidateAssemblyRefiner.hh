@@ -15,12 +15,13 @@
 /// \author Ole Schulz-Trieglaff
 ///
 
-# pragma once
+#pragma once
 
 #include "GSCOptions.hh"
 
 #include "alignment/GlobalAligner.hh"
 #include "alignment/GlobalJumpAligner.hh"
+#include "alignment/GlobalJumpIntronAligner.hh"
 #include "blt_util/bam_header_info.hh"
 #include "manta/SVCandidateAssemblyData.hh"
 #include "manta/SVCandidate.hh"
@@ -73,4 +74,5 @@ private:
     const GlobalAligner<int> _smallSVAligner;
     const GlobalAligner<int> _largeInsertAligner;
     const GlobalJumpAligner<int> _spanningAligner;
+    const GlobalJumpIntronAligner<int> _RNASpanningAligner;
 };
