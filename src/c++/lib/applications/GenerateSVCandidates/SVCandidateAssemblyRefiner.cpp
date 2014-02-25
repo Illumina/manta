@@ -728,9 +728,12 @@ SVCandidateAssemblyRefiner(
     _spanningAssembler(opt.scanOpt, opt.refineOpt.spanningAssembleOpt, opt.alignFileOpt, opt.statsFilename, opt.chromDepthFilename, header),
     _smallSVAligner(opt.refineOpt.smallSVAlignScores),
     _largeInsertAligner(opt.refineOpt.largeInsertAlignScores),
-    _spanningAligner(!opt.isRNA ? opt.refineOpt.spanningAlignScores
-                                : opt.refineOpt.RNAspanningAlignScores,
-                     opt.refineOpt.jumpScore)
+    _spanningAligner(opt.refineOpt.spanningAlignScores, opt.refineOpt.jumpScore),
+    _RNASpanningAligner(
+        opt.refineOpt.RNAspanningAlignScores,
+        opt.refineOpt.jumpScore,
+        opt.refineOpt.RNAIntronOpenScore,
+        opt.refineOpt.RNAIntronOffEdgeScore)
 {}
 
 
@@ -796,10 +799,10 @@ getJumpAssembly(
 
     // how much additional reference sequence should we extract from around
     // each side of the breakend region for alignment purposes?
-    static const pos_t extraRefEdgeSize(isRNA ? 5000 : 250);
+    const pos_t extraRefEdgeSize(isRNA ? 5000 : 250);
 
     // how much reference should we additionally extract for split read alignment, but not for variant-discovery alignment?
-    static const pos_t extraRefSplitSize(250);
+    const pos_t extraRefSplitSize(isRNA ? 250 : 100); // TODO: is this RNA switch really intentional??
 
     static const pos_t extraRefSize(extraRefEdgeSize+extraRefSplitSize);
 
@@ -953,11 +956,10 @@ getJumpAssembly(
 
         JumpAlignmentResult<int>& alignment(assemblyData.spanningAlignments[contigIndex]);
 
-        _spanningAligner.align(
-            contig.seq.begin(), contig.seq.end(),
-            align1RefStrPtr->begin() + align1LeadingCut, align1RefStrPtr->end() - align1TrailingCut,
-            align2RefStrPtr->begin() + align2LeadingCut, align2RefStrPtr->end() - align2TrailingCut,
-            alignment);
+        jumpAlign( (_opt.isRNA ? _RNASpanningAligner : _spanningAligner), contig.seq.begin(), contig.seq.end(),
+                align1RefStrPtr->begin() + align1LeadingCut, align1RefStrPtr->end() - align1TrailingCut,
+                align2RefStrPtr->begin() + align2LeadingCut, align2RefStrPtr->end() - align2TrailingCut,
+                alignment);
 
         alignment.align1.beginPos += align1LeadingCut;
         alignment.align2.beginPos += align2LeadingCut;

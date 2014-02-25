@@ -29,8 +29,12 @@ struct GlobalJumpIntronAligner : public GlobalJumpAligner<ScoreType>
 {
     GlobalJumpIntronAligner(
         const AlignmentScores<ScoreType>& scores,
-        const ScoreType jumpScore) :
-        GlobalJumpAligner<ScoreType>(scores,jumpScore)
+        const ScoreType jumpScore,
+        const ScoreType intronOpenScore,
+        const ScoreType intronOffEdgeScore) :
+        GlobalJumpAligner<ScoreType>(scores,jumpScore),
+        _intronOpenScore(intronOpenScore),
+        _intronOffEdgeScore(intronOffEdgeScore)
     {}
 
     /// returns alignment path of query to reference
@@ -43,35 +47,6 @@ struct GlobalJumpIntronAligner : public GlobalJumpAligner<ScoreType>
         JumpAlignmentResult<ScoreType>& result) const;
 
 private:
-
-    static
-    uint8_t
-    max4(
-        ScoreType& max,
-        const ScoreType v0,
-        const ScoreType v1,
-        const ScoreType v2,
-        const ScoreType v3)
-    {
-        max=v0;
-        uint8_t ptr=0;
-        if (v1>v0)
-        {
-            max=v1;
-            ptr=1;
-        }
-        if (v2>max)
-        {
-            max=v2;
-            ptr=2;
-        }
-        if (v3>max)
-        {
-            max=v3;
-            ptr=3;
-        }
-        return ptr;
-    }
 
     // insert and delete are for seq1 wrt seq2
     struct ScoreVal
@@ -113,6 +88,9 @@ private:
         uint16_t intron : 3;
     };
 
+    const ScoreType _intronOpenScore; ///< gap open for introns (i.e. deletions starting with splice motif) (should be negative)
+    const ScoreType _intronOffEdgeScore; ///< As offEdge but only of the last aligned bases match a splice motif (should be negative) todo: not implemented
+
     // add the matrices here to reduce allocations over many alignment calls:
     typedef std::vector<ScoreVal> ScoreVec;
     mutable ScoreVec _score1;
@@ -125,4 +103,3 @@ private:
 
 
 #include "alignment/GlobalJumpIntronAlignerImpl.hh"
-

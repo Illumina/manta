@@ -37,9 +37,9 @@ testAlignScores(
     const std::string& ref2,
     int match, int mismatch, int open, int extend, int spliceOpen, int offEdge, int spliceOffEdge)
 {
-    AlignmentScores<score_t> scores(match, mismatch, open, extend, spliceOpen, offEdge, spliceOffEdge);
+    AlignmentScores<score_t> scores(match, mismatch, open, extend, offEdge);
     score_t jumpScore(-3);
-    GlobalJumpIntronAligner<score_t> aligner(scores,jumpScore);
+    GlobalJumpIntronAligner<score_t> aligner(scores,jumpScore,spliceOpen,spliceOffEdge);
     JumpAlignmentResult<score_t> result;
     aligner.align(
         seq.begin(),seq.end(),

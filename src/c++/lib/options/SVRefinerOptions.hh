@@ -32,9 +32,11 @@ struct SVRefinerOptions
     SVRefinerOptions() :
         smallSVAlignScores(2, -8, -12, 0, -1),
         largeInsertAlignScores(2, -8, -12, -1, -1),
-        spanningAlignScores(2, -8, -12, -1, -15, -1, 0),
-        RNAspanningAlignScores(2, -8, -19, -1, -15, -1, 0),
-        jumpScore(-25)
+        spanningAlignScores(2, -8, -12, -1, -1),
+        jumpScore(-25),
+        RNAspanningAlignScores(2, -8, -19, -1, -1),
+        RNAIntronOpenScore(-15),
+        RNAIntronOffEdgeScore(0)
     {
         spanningAssembleOpt.minContigLength=75; ///< For breakend-spanning assemblies we require a larger contig than for small-variant assemblies
     }
@@ -46,7 +48,9 @@ struct SVRefinerOptions
 
     // parameters for large SV assembly/alignment:
     AlignmentScores<int> spanningAlignScores;
-    AlignmentScores<int> RNAspanningAlignScores;
     const int jumpScore;
+    AlignmentScores<int> RNAspanningAlignScores;
+    const int RNAIntronOpenScore;
+    const int RNAIntronOffEdgeScore;
     SmallAssemblerOptions spanningAssembleOpt;
 };

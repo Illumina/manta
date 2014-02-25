@@ -89,7 +89,7 @@ struct GlobalJumpAligner : public AlignerBase<ScoreType>
         return _jumpScore;
     }
 
-private:
+protected:
 
     static
     uint8_t
@@ -120,7 +120,7 @@ private:
         return ptr;
     }
 
-    const ScoreType _jumpScore;
+private:
 
     // insert and delete are for seq1 wrt seq2
     struct ScoreVal
@@ -158,6 +158,8 @@ private:
         uint8_t jump : 2;
     };
 
+    const ScoreType _jumpScore;
+
     // add the matrices here to reduce allocations over many alignment calls:
     typedef std::vector<ScoreVal> ScoreVec;
     mutable ScoreVec _score1;
@@ -170,4 +172,19 @@ private:
 
 
 #include "alignment/GlobalJumpAlignerImpl.hh"
+
+
+/// Convenience func to run alignment from multiple aligner classes:
+template <typename JumpAligner, typename SymIter, typename ScoreType>
+void
+jumpAlign(
+    const JumpAligner& jumpAligner,
+    const SymIter queryBegin, const SymIter queryEnd,
+    const SymIter ref1Begin, const SymIter ref1End,
+    const SymIter ref2Begin, const SymIter ref2End,
+    JumpAlignmentResult<ScoreType>& result)
+{
+    jumpAligner.align(queryBegin,queryEnd,ref1Begin,ref1End,ref2Begin,ref2End,result);
+}
+
 

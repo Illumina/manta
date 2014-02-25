@@ -75,7 +75,7 @@ align(
         val.intron = badVal;
     }
 
-    BackTrace<ScoreType> bt;
+    BackTrace<ScoreType> btrace;
 
     {
         unsigned ref1Index(0);
@@ -154,9 +154,9 @@ align(
                     // bases of the intron match the motif
                     if (*(ref1Iter)=='G' && *(ref1Iter+1)=='T')
                     {
-                        if (sval.match + scores.intronOpen > sval.intron)
+                        if (sval.match + _intronOpenScore > sval.intron)
                         {
-                            headScore.intron = sval.match + scores.intronOpen;
+                            headScore.intron = sval.match + _intronOpenScore;
                             headPtr.intron = AlignState::MATCH;
                         }
                     }
@@ -164,11 +164,11 @@ align(
                 // update jump
                 {
                     const ScoreVal& sval((*prevSV)[queryIndex+1]);
-                    headPtr.jump = max4(
+                    headPtr.jump = this->max4(
                                        headScore.jump,
-                                       headScore.match + _jumpScore,
+                                       headScore.match + this->getJumpScore(),
                                        badVal,
-                                       headScore.ins + _jumpScore,
+                                       headScore.ins + this->getJumpScore(),
                                        sval.jump);
                 }
 
@@ -187,11 +187,11 @@ align(
             {
                 const ScoreVal& sval((*thisSV)[querySize]);
                 const ScoreType thisMax(sval.match);
-                if (bt.isInit && (thisMax<=bt.max)) continue;
-                bt.max=thisMax;
-                bt.refBegin=ref1Index+1;
-                bt.queryBegin=querySize;
-                bt.isInit=true;
+                if (btrace.isInit && (thisMax<=btrace.max)) continue;
+                btrace.max=thisMax;
+                btrace.refBegin=ref1Index+1;
+                btrace.queryBegin=querySize;
+                btrace.isInit=true;
             }
         }
     }
@@ -201,11 +201,11 @@ align(
     {
         const ScoreVal& sval((*thisSV)[queryIndex]);
         const ScoreType thisMax(sval.match + (querySize-queryIndex) * scores.offEdge);
-        if (bt.isInit && (thisMax<=bt.max)) continue;
-        bt.max=thisMax;
-        bt.refBegin=ref1Size;
-        bt.queryBegin=queryIndex;
-        bt.isInit=true;
+        if (btrace.isInit && (thisMax<=btrace.max)) continue;
+        btrace.max=thisMax;
+        btrace.refBegin=ref1Size;
+        btrace.queryBegin=queryIndex;
+        btrace.isInit=true;
     }
 
 
@@ -243,7 +243,7 @@ align(
                 PtrVal& headPtr(_ptrMat2.val(queryIndex+1,ref2Index+1));
                 {
                     const ScoreVal& sval((*prevSV)[queryIndex]);
-                    headPtr.match = max4(
+                    headPtr.match = this->max4(
                                         headScore.match,
                                         sval.match,
                                         sval.del,
@@ -278,7 +278,7 @@ align(
                 // update insert
                 {
                     const ScoreVal& sval((*thisSV)[queryIndex]);
-                    headPtr.ins = max4(
+                    headPtr.ins = this->max4(
                                       headScore.ins,
                                       sval.match + scores.open,
                                       sval.del + scores.open,
@@ -296,9 +296,9 @@ align(
                     // bases of the intron match the motif
                     if (*(ref2Iter)=='G' && *(ref2Iter+1)=='T')
                     {
-                        if (sval.match + scores.intronOpen > sval.intron)
+                        if (sval.match + _intronOpenScore > sval.intron)
                         {
-                            headScore.intron = sval.match + scores.intronOpen;
+                            headScore.intron = sval.match + _intronOpenScore;
                             headPtr.intron = AlignState::MATCH;
                         }
                     }
@@ -324,11 +324,11 @@ align(
             {
                 const ScoreVal& sval((*thisSV)[querySize]);
                 const ScoreType thisMax(sval.match);
-                if (bt.isInit && (thisMax<=bt.max)) continue;
-                bt.max=thisMax;
-                bt.refBegin=ref1Size+ref2Index+1;
-                bt.queryBegin=querySize;
-                bt.isInit=true;
+                if (btrace.isInit && (thisMax<=btrace.max)) continue;
+                btrace.max=thisMax;
+                btrace.refBegin=ref1Size+ref2Index+1;
+                btrace.queryBegin=querySize;
+                btrace.isInit=true;
             }
         }
 
@@ -339,21 +339,21 @@ align(
     {
         const ScoreVal& sval((*thisSV)[queryIndex]);
         const ScoreType thisMax(sval.match + (querySize-queryIndex) * scores.offEdge);
-        if (bt.isInit && (thisMax<=bt.max)) continue;
-        bt.max=thisMax;
-        bt.refBegin=ref1Size+ref2Size;
-        bt.queryBegin=queryIndex;
-        bt.isInit=true;
+        if (btrace.isInit && (thisMax<=btrace.max)) continue;
+        btrace.max=thisMax;
+        btrace.refBegin=ref1Size+ref2Size;
+        btrace.queryBegin=queryIndex;
+        btrace.isInit=true;
     }
 
-    assert(bt.isInit);
-    assert(bt.refBegin <= ref1Size+ref2Size);
-    assert(bt.queryBegin <= querySize);
+    assert(btrace.isInit);
+    assert(btrace.refBegin <= ref1Size+ref2Size);
+    assert(btrace.queryBegin <= querySize);
 
-    result.score = bt.max;
+    result.score = btrace.max;
 
 #ifdef ALN_DEBUG
-    log_os << "bt-start queryIndex: " << bt.queryBegin << " refIndex: " << bt.refBegin << " state: " << AlignState::label(bt.state) << " maxScore: " << bt.max << "\n";
+    log_os << "bt-start queryIndex: " << btrace.queryBegin << " refIndex: " << btrace.refBegin << " state: " << AlignState::label(btrace.state) << " maxScore: " << btrace.max << "\n";
 #endif
 
     // traceback:
@@ -362,61 +362,61 @@ align(
     ALIGNPATH::path_segment ps;
 
     // add any trailing soft-clip if we go off the end of the reference:
-    if (bt.queryBegin < querySize)
+    if (btrace.queryBegin < querySize)
     {
         ps.type = ALIGNPATH::SOFT_CLIP;
-        ps.length = (querySize-bt.queryBegin);
+        ps.length = (querySize-btrace.queryBegin);
     }
 
     bool isRef2End(false);
 
-    while ((bt.queryBegin>0) && (bt.refBegin>0))
+    while ((btrace.queryBegin>0) && (btrace.refBegin>0))
     {
         if (isRef2End) break;
-        const bool isRef1(bt.refBegin<=ref1Size);
+        const bool isRef1(btrace.refBegin<=ref1Size);
         ALIGNPATH::path_t& apath( isRef1 ? apath1 : apath2 );
-        const unsigned refXBegin(bt.refBegin - (isRef1 ? 0 : ref1Size));
+        const unsigned refXBegin(btrace.refBegin - (isRef1 ? 0 : ref1Size));
         const PtrMat* ptrMatX(isRef1 ? &_ptrMat1 : &_ptrMat2 );
-        const AlignState::index_t nextState(static_cast<AlignState::index_t>(ptrMatX->val(bt.queryBegin,refXBegin).get(bt.state)));
+        const AlignState::index_t nextState(static_cast<AlignState::index_t>(ptrMatX->val(btrace.queryBegin,refXBegin).get(btrace.state)));
 
 #ifdef ALN_DEBUG
-        log_os << "bt-iter queryIndex: " << bt.queryBegin
-               << " refIndex: " << bt.refBegin
-               << " state: " << AlignState::label(bt.state)
+        log_os << "bt-iter queryIndex: " << btrace.queryBegin
+               << " refIndex: " << btrace.refBegin
+               << " state: " << AlignState::label(btrace.state)
                << " next: " << AlignState::label(nextState)
                << "\n";
         log_os << "\tisref1: " << isRef1 << " refXBegin: " << refXBegin << "\n";
 #endif
 
-        if      (bt.state==AlignState::MATCH)
+        if      (btrace.state==AlignState::MATCH)
         {
             if ((!isRef1) && (refXBegin==1) && (nextState==AlignState::MATCH)) isRef2End=true;
 
             AlignerUtil::updatePath(apath,ps,ALIGNPATH::MATCH);
-            bt.queryBegin--;
-            bt.refBegin--;
+            btrace.queryBegin--;
+            btrace.refBegin--;
         }
-        else if (bt.state==AlignState::DELETE)
+        else if (btrace.state==AlignState::DELETE)
         {
             AlignerUtil::updatePath(apath,ps,ALIGNPATH::DELETE);
-            bt.refBegin--;
+            btrace.refBegin--;
         }
-        else if (bt.state==AlignState::SPLICE)
+        else if (btrace.state==AlignState::SPLICE)
         {
             AlignerUtil::updatePath(apath,ps,ALIGNPATH::SKIP);
-            bt.refBegin--;
+            btrace.refBegin--;
         }
-        else if (bt.state==AlignState::INSERT)
+        else if (btrace.state==AlignState::INSERT)
         {
             AlignerUtil::updatePath(apath,ps,ALIGNPATH::INSERT);
-            bt.queryBegin--;
+            btrace.queryBegin--;
         }
-        else if (bt.state==AlignState::JUMP)
+        else if (btrace.state==AlignState::JUMP)
         {
             if (ps.type != ALIGNPATH::NONE)
             {
-                assert(bt.refBegin>=ref1Size);
-                result.align2.beginPos = bt.refBegin-ref1Size;
+                assert(btrace.refBegin>=ref1Size);
+                result.align2.beginPos = btrace.refBegin-ref1Size;
                 if (ps.type == ALIGNPATH::INSERT)
                 {
                     result.jumpInsertSize += ps.length;
@@ -430,37 +430,37 @@ align(
             }
             else
             {
-                if (nextState == AlignState::JUMP) bt.refBegin--;
+                if (nextState == AlignState::JUMP) btrace.refBegin--;
             }
         }
         else
         {
             assert(false && "Unknown align state");
         }
-        bt.state=nextState;
+        btrace.state=nextState;
         ps.length++;
     }
 
-    const bool isRef1(bt.refBegin<ref1Size);
+    const bool isRef1(btrace.refBegin<ref1Size);
     ALIGNPATH::path_t& apath( isRef1 ? apath1 : apath2 );
 
     if (ps.type != ALIGNPATH::NONE) apath.push_back(ps);
 
     // soft-clip beginning of read if we fall off the end of the reference
-    if (bt.queryBegin!=0)
+    if (btrace.queryBegin!=0)
     {
         ps.type = ALIGNPATH::SOFT_CLIP;
-        ps.length = bt.queryBegin;
+        ps.length = btrace.queryBegin;
         apath.push_back(ps);
     }
 
     if (isRef1)
     {
-        result.align1.beginPos = bt.refBegin;
+        result.align1.beginPos = btrace.refBegin;
     }
     else
     {
-        result.align2.beginPos = bt.refBegin-ref1Size;
+        result.align2.beginPos = btrace.refBegin-ref1Size;
     }
 
     std::reverse(apath1.begin(),apath1.end());
