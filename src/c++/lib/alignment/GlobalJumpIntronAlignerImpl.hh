@@ -12,7 +12,7 @@
 //
 
 //
-// \author Chris Saunders
+// \author Chris Saunders and Felix Schlesinger
 //
 
 //#define ALN_DEBUG
@@ -52,22 +52,6 @@ isDownstreamSpliceDonor(
     return (*(refIter)=='G' && *(refIter+1)=='T');
 }
 
-
-#if 0
-// Only can leave the intron (splice) state if the last two
-// bases of the intron match the motif
-template <typename SymIter>
-void
-checkCloseIntron
-if (isUpstreamSpliceAcceptor(ref2Begin,ref2Iter))
-{
-    if (headScore.match < sval.intron)
-    {
-        headScore.match = sval.intron;
-        headPtr.match = AlignState::SPLICE;
-    }
-}
-#endif
 
 
 template <typename ScoreType>
@@ -376,6 +360,7 @@ align(
             ref1Begin, ref1End,
             ref2Begin, ref2End,
             querySize, ref1Size, ref2Size,
+            _ptrMat1, _ptrMat2,
             btrace, result);
 }
 

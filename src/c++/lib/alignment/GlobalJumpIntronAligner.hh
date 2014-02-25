@@ -12,12 +12,12 @@
 //
 
 ///
-/// \author Chris Saunders
+/// \author Chris Saunders and Felix Schlesinger
 ///
 
 #pragma once
 
-#include "GlobalJumpAligner.hh"
+#include "JumpAlignerBase.hh"
 
 
 /// \brief a method to align a contig to two references
@@ -25,14 +25,14 @@
 /// the alignment can make a single jump from reference1 to reference2
 ///
 template <typename ScoreType>
-struct GlobalJumpIntronAligner : public GlobalJumpAligner<ScoreType>
+struct GlobalJumpIntronAligner : public JumpAlignerBase<ScoreType>
 {
     GlobalJumpIntronAligner(
         const AlignmentScores<ScoreType>& scores,
         const ScoreType jumpScore,
         const ScoreType intronOpenScore,
         const ScoreType intronOffEdgeScore) :
-        GlobalJumpAligner<ScoreType>(scores,jumpScore),
+        JumpAlignerBase<ScoreType>(scores,jumpScore),
         _intronOpenScore(intronOpenScore),
         _intronOffEdgeScore(intronOffEdgeScore)
     {}
@@ -81,6 +81,7 @@ private:
             }
         }
 
+        /// pack 3x5 bits into a single uint16_t:
         uint16_t match : 3;
         uint16_t ins : 3;
         uint16_t del : 3;

@@ -956,10 +956,20 @@ getJumpAssembly(
 
         JumpAlignmentResult<int>& alignment(assemblyData.spanningAlignments[contigIndex]);
 
-        jumpAlign( (_opt.isRNA ? _RNASpanningAligner : _spanningAligner), contig.seq.begin(), contig.seq.end(),
-                align1RefStrPtr->begin() + align1LeadingCut, align1RefStrPtr->end() - align1TrailingCut,
-                align2RefStrPtr->begin() + align2LeadingCut, align2RefStrPtr->end() - align2TrailingCut,
-                alignment);
+        if (_opt.isRNA)
+        {
+            _RNASpanningAligner.align(contig.seq.begin(), contig.seq.end(),
+                    align1RefStrPtr->begin() + align1LeadingCut, align1RefStrPtr->end() - align1TrailingCut,
+                    align2RefStrPtr->begin() + align2LeadingCut, align2RefStrPtr->end() - align2TrailingCut,
+                    alignment);
+        }
+        else
+        {
+            _spanningAligner.align(contig.seq.begin(), contig.seq.end(),
+                    align1RefStrPtr->begin() + align1LeadingCut, align1RefStrPtr->end() - align1TrailingCut,
+                    align2RefStrPtr->begin() + align2LeadingCut, align2RefStrPtr->end() - align2TrailingCut,
+                    alignment);
+        }
 
         alignment.align1.beginPos += align1LeadingCut;
         alignment.align2.beginPos += align2LeadingCut;

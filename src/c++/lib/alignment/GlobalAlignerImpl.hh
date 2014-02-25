@@ -47,12 +47,12 @@ backTraceAlignment(
     const SymIter refBegin, const SymIter refEnd,
     const size_t querySize,
     const BackTrace<ScoreType>& btraceInput,
-    Alignment& align) const
+    Alignment& alignment) const
 {
     BackTrace<ScoreType> btrace(btraceInput);
 
     // traceback:
-    ALIGNPATH::path_t& apath(align.apath);
+    ALIGNPATH::path_t& apath(alignment.apath);
     ALIGNPATH::path_segment ps;
 
     // add any trailing soft-clip if we go off the end of the reference:
@@ -100,7 +100,7 @@ backTraceAlignment(
         apath.push_back(ps);
     }
 
-    align.beginPos = btrace.refBegin;
+    alignment.beginPos = btrace.refBegin;
     std::reverse(apath.begin(),apath.end());
 
     // if true, output final cigars using seq match '=' and mismatch 'X' symbols:
@@ -108,7 +108,7 @@ backTraceAlignment(
 
     if (isOutputSeqMatch)
     {
-        apath_add_seqmatch(queryBegin, queryEnd, (refBegin+align.beginPos), refEnd, apath);
+        apath_add_seqmatch(queryBegin, queryEnd, (refBegin+alignment.beginPos), refEnd, apath);
     }
 }
 
