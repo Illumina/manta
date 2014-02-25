@@ -15,8 +15,6 @@
 
 //#define ALN_DEBUG
 
-#include "AlignerUtil.hh"
-
 #include <cassert>
 
 #include <iostream>
@@ -35,6 +33,83 @@ operator<<(std::ostream& os, AlignmentResult<ScoreType>& alignment)
     os << "AlignerResult: score: " << alignment.score << "\n"
        << "\talignment: " << alignment.align << "\n";
     return os;
+}
+
+
+
+// traceback:
+template <typename ScoreType>
+template <typename SymIter>
+void
+GlobalAligner<ScoreType>::
+backTraceAlignment(
+    const SymIter queryBegin, const SymIter queryEnd,
+    const SymIter refBegin, const SymIter refEnd,
+    const size_t querySize,
+    const BackTrace<ScoreType>& btraceInput,
+    Alignment& alignment) const
+{
+    BackTrace<ScoreType> btrace(btraceInput);
+
+    // traceback:
+    ALIGNPATH::path_t& apath(alignment.apath);
+    ALIGNPATH::path_segment ps;
+
+    // add any trailing soft-clip if we go off the end of the reference:
+    if (btrace.queryBegin < querySize)
+    {
+        ps.type = ALIGNPATH::SOFT_CLIP;
+        ps.length = (querySize-btrace.queryBegin);
+    }
+
+    while ((btrace.queryBegin>0) && (btrace.refBegin>0))
+    {
+        const AlignState::index_t nextMatrix(static_cast<AlignState::index_t>(_ptrMat.val(btrace.queryBegin,btrace.refBegin).get(btrace.state)));
+
+        if (btrace.state==AlignState::MATCH)
+        {
+            AlignerUtil::updatePath(apath,ps,ALIGNPATH::MATCH);
+            btrace.queryBegin--;
+            btrace.refBegin--;
+        }
+        else if (btrace.state==AlignState::DELETE)
+        {
+            AlignerUtil::updatePath(apath,ps,ALIGNPATH::DELETE);
+            btrace.refBegin--;
+        }
+        else if (btrace.state==AlignState::INSERT)
+        {
+            AlignerUtil::updatePath(apath,ps,ALIGNPATH::INSERT);
+            btrace.queryBegin--;
+        }
+        else
+        {
+            assert(false && "Unknown align state");
+        }
+        btrace.state=nextMatrix;
+        ps.length++;
+    }
+
+    if (ps.type != ALIGNPATH::NONE) apath.push_back(ps);
+
+    // soft-clip beginning of read if we fall off the end of the reference
+    if (btrace.queryBegin!=0)
+    {
+        ps.type = ALIGNPATH::SOFT_CLIP;
+        ps.length = btrace.queryBegin;
+        apath.push_back(ps);
+    }
+
+    alignment.beginPos = btrace.refBegin;
+    std::reverse(apath.begin(),apath.end());
+
+    // if true, output final cigars using seq match '=' and mismatch 'X' symbols:
+    static const bool isOutputSeqMatch(true);
+
+    if (isOutputSeqMatch)
+    {
+        apath_add_seqmatch(queryBegin, queryEnd, (refBegin+alignment.beginPos), refEnd, apath);
+    }
 }
 
 
@@ -78,7 +153,7 @@ align(
         val.ins = badVal;
     }
 
-    BackTrace<ScoreType> bt;
+    BackTrace<ScoreType> btrace;
 
     {
         unsigned refIndex(0);
@@ -151,11 +226,7 @@ align(
             {
                 const ScoreVal& sval((*thisSV)[querySize]);
                 const ScoreType thisMax(sval.match);
-                if (bt.isInit && (thisMax<=bt.max)) continue;
-                bt.max=thisMax;
-                bt.refBegin=refIndex+1;
-                bt.queryBegin=querySize;
-                bt.isInit=true;
+                updateBacktrace(thisMax,refIndex+1,querySize,btrace);
             }
         }
     }
@@ -165,81 +236,20 @@ align(
     {
         const ScoreVal& sval((*thisSV)[queryIndex]);
         const ScoreType thisMax(sval.match + (querySize-queryIndex) * scores.offEdge);
-        if (bt.isInit && (thisMax<=bt.max)) continue;
-        bt.max=thisMax;
-        bt.refBegin=refSize;
-        bt.queryBegin=queryIndex;
-        bt.isInit=true;
+        updateBacktrace(thisMax,refSize,queryIndex,btrace);
     }
 
-    assert(bt.isInit);
-    assert(bt.refBegin <= refSize);
-    assert(bt.queryBegin <= querySize);
+    assert(btrace.isInit);
+    assert(btrace.refBegin <= refSize);
+    assert(btrace.queryBegin <= querySize);
 
-    result.score = bt.max;
 
 #ifdef ALN_DEBUG
-    log_os << "bt-start queryIndex: " << queryBegin << " refIndex: " << refBegin << " state: " << AlignState::label(bt.state) << " maxScore: " << bt.max << "\n";
+    log_os << "btrace-start queryIndex: " << queryBegin << " refIndex: " << refBegin << " state: " << AlignState::label(btrace.state) << " maxScore: " << btrace.max << "\n";
 #endif
 
-    // traceback:
-    ALIGNPATH::path_t& apath(result.align.apath);
-    ALIGNPATH::path_segment ps;
-
-    // add any trailing soft-clip if we go off the end of the reference:
-    if (bt.queryBegin < querySize)
-    {
-        ps.type = ALIGNPATH::SOFT_CLIP;
-        ps.length = (querySize-bt.queryBegin);
-    }
-
-    while ((bt.queryBegin>0) && (bt.refBegin>0))
-    {
-        const AlignState::index_t nextMatrix(static_cast<AlignState::index_t>(_ptrMat.val(bt.queryBegin,bt.refBegin).get(bt.state)));
-
-        if (bt.state==AlignState::MATCH)
-        {
-            AlignerUtil::updatePath(apath,ps,ALIGNPATH::MATCH);
-            bt.queryBegin--;
-            bt.refBegin--;
-        }
-        else if (bt.state==AlignState::DELETE)
-        {
-            AlignerUtil::updatePath(apath,ps,ALIGNPATH::DELETE);
-            bt.refBegin--;
-        }
-        else if (bt.state==AlignState::INSERT)
-        {
-            AlignerUtil::updatePath(apath,ps,ALIGNPATH::INSERT);
-            bt.queryBegin--;
-        }
-        else
-        {
-            assert(false && "Unknown align state");
-        }
-        bt.state=nextMatrix;
-        ps.length++;
-    }
-
-    if (ps.type != ALIGNPATH::NONE) apath.push_back(ps);
-
-    // soft-clip beginning of read if we fall off the end of the reference
-    if (bt.queryBegin!=0)
-    {
-        ps.type = ALIGNPATH::SOFT_CLIP;
-        ps.length = bt.queryBegin;
-        apath.push_back(ps);
-    }
-
-    result.align.beginPos = bt.refBegin;
-    std::reverse(apath.begin(),apath.end());
-
-    // if true, output final cigars using seq match '=' and mismatch 'X' symbols:
-    static const bool isOutputSeqMatch(true);
-
-    if (isOutputSeqMatch)
-    {
-        apath_add_seqmatch(queryBegin, queryEnd, (refBegin+result.align.beginPos), refEnd, apath);
-    }
+    result.score = btrace.max;
+    backTraceAlignment(queryBegin, queryEnd, refBegin, refEnd,
+        querySize, btrace, result.align);
 }
 

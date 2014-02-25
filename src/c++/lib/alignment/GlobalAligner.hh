@@ -16,6 +16,7 @@
 #pragma once
 
 #include "AlignerBase.hh"
+#include "AlignerUtil.hh"
 #include "Alignment.hh"
 
 #include "blt_util/basic_matrix.hh"
@@ -74,6 +75,15 @@ struct GlobalAligner : public AlignerBase<ScoreType>
         AlignmentResult<ScoreType>& result) const;
 
 private:
+
+    template <typename SymIter>
+    void
+    backTraceAlignment(
+        const SymIter queryBegin, const SymIter queryEnd,
+        const SymIter refBegin, const SymIter refEnd,
+        const size_t querySize,
+        const BackTrace<ScoreType>& btraceInput,
+        Alignment& align) const;
 
     // insert and delete are for query wrt reference
     struct ScoreVal
