@@ -570,8 +570,8 @@ SVFinder::assignPairObservationsToSVCandidates(
         if (_isRNA)
         {
             if ((! SVBreakendState::isSameOrientation(readCand.bp1.state,readCand.bp2.state) ||
-                    (! SVBreakendState::isSimpleBreakend(readCand.bp1.state)) ||
-                    (! SVBreakendState::isSimpleBreakend(readCand.bp2.state))) &&
+                 (! SVBreakendState::isSimpleBreakend(readCand.bp1.state)) ||
+                 (! SVBreakendState::isSimpleBreakend(readCand.bp2.state))) &&
                 isSVBelowMinSize(readCand, _scanOpt.minRNALength))
             {
 #ifdef DEBUG_SVDATA

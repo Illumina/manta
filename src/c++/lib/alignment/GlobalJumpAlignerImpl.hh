@@ -276,10 +276,10 @@ align(
 #endif
 
     this->backTraceAlignment(
-            queryBegin, queryEnd,
-            ref1Begin, ref1End,
-            ref2Begin, ref2End,
-            querySize, ref1Size, ref2Size,
-            _ptrMat1, _ptrMat2, btrace, result);
+        queryBegin, queryEnd,
+        ref1Begin, ref1End,
+        ref2Begin, ref2End,
+        querySize, ref1Size, ref2Size,
+        _ptrMat1, _ptrMat2, btrace, result);
 }
 

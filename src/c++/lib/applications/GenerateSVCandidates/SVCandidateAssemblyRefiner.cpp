@@ -794,7 +794,10 @@ getJumpAssembly(
 #ifdef DEBUG_REFINER
     static const std::string logtag("getJumpAssembly: ");
     log_os << logtag << "START\n";
-    if (isRNA) { log_os << logtag << "RNA\n"; }
+    if (isRNA)
+    {
+        log_os << logtag << "RNA\n";
+    }
 #endif
 
     // how much additional reference sequence should we extract from around
@@ -959,16 +962,16 @@ getJumpAssembly(
         if (_opt.isRNA)
         {
             _RNASpanningAligner.align(contig.seq.begin(), contig.seq.end(),
-                    align1RefStrPtr->begin() + align1LeadingCut, align1RefStrPtr->end() - align1TrailingCut,
-                    align2RefStrPtr->begin() + align2LeadingCut, align2RefStrPtr->end() - align2TrailingCut,
-                    alignment);
+                                      align1RefStrPtr->begin() + align1LeadingCut, align1RefStrPtr->end() - align1TrailingCut,
+                                      align2RefStrPtr->begin() + align2LeadingCut, align2RefStrPtr->end() - align2TrailingCut,
+                                      alignment);
         }
         else
         {
             _spanningAligner.align(contig.seq.begin(), contig.seq.end(),
-                    align1RefStrPtr->begin() + align1LeadingCut, align1RefStrPtr->end() - align1TrailingCut,
-                    align2RefStrPtr->begin() + align2LeadingCut, align2RefStrPtr->end() - align2TrailingCut,
-                    alignment);
+                                   align1RefStrPtr->begin() + align1LeadingCut, align1RefStrPtr->end() - align1TrailingCut,
+                                   align2RefStrPtr->begin() + align2LeadingCut, align2RefStrPtr->end() - align2TrailingCut,
+                                   alignment);
         }
 
         alignment.align1.beginPos += align1LeadingCut;
@@ -1011,7 +1014,7 @@ getJumpAssembly(
 
     if (! isHighScore) return;
 #ifdef DEBUG_REFINER
-        log_os << logtag << "high scoring contig: " << highScoreIndex << "\n";
+    log_os << logtag << "high scoring contig: " << highScoreIndex << "\n";
 #endif
 
     // set any additional QC steps before deciding an alignment is usable:

@@ -250,6 +250,6 @@ align(
 
     result.score = btrace.max;
     backTraceAlignment(queryBegin, queryEnd, refBegin, refEnd,
-        querySize, btrace, result.align);
+                       querySize, btrace, result.align);
 }
 
