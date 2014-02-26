@@ -94,7 +94,6 @@ get_index(const char* str)
 /// pair orientation status wrapper:
 struct ReadPairOrient
 {
-
     ReadPairOrient()
         : _val(PAIR_ORIENT::UNKNOWN)
     {}
@@ -106,9 +105,10 @@ struct ReadPairOrient
     }
 
     void
-    setVal(const PAIR_ORIENT::index_t new_val)
+    setVal(const unsigned newVal)
     {
-        _val=new_val;
+        assert(newVal < PAIR_ORIENT::SIZE);
+        _val=static_cast<PAIR_ORIENT::index_t>(newVal);
     }
 
 private:

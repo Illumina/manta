@@ -30,6 +30,8 @@ struct ReadGroupStats
 {
 
     ReadGroupStats() {}
+
+    explicit
     ReadGroupStats(const std::string& statsBamFile);
 
 private:
@@ -41,12 +43,15 @@ private:
     /// 1. only insert stats are computed
     /// 2. return false
     ///
-    bool computePairStats(std::string& statsBamFile,
-                          const bool isForcedConvergence = false);
+    bool computePairStats(
+        std::string& statsBamFile,
+        const bool isForcedConvergence = false);
 
     friend class boost::serialization::access;
     template<class Archive>
-    void serialize(Archive& ar, const unsigned /*version*/)
+    void serialize(
+        Archive& ar,
+        const unsigned /*version*/)
     {
         ar& boost::serialization::make_nvp("fragmentSizeDistribution", fragStats);
         ar& boost::serialization::make_nvp("pairOrientation", relOrients);
@@ -56,8 +61,6 @@ private:
 public:
     SizeDistribution fragStats;
     ReadPairOrient relOrients;
-
 };
 
 BOOST_CLASS_IMPLEMENTATION(ReadGroupStats, boost::serialization::object_serializable)
-
