@@ -21,6 +21,12 @@
 #include "blt_util/bam_record.hh"
 
 
+/// is this read part of a pair where both members are mapped to the same chrom?
+///
+bool
+is_mapped_chrom_pair(
+    const bam_record& bam_read);
+
 /// is this read part of mapped pair with 'Innie' orientation?
 ///
 /// Note this does not test MAPQ or fragment size, but could

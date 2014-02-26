@@ -303,12 +303,6 @@ private:
 
 
 
-/* ----- ----- ----- ----- ----- -----
- *
- * ----- ReadPairStats  -----
- *
- * ----- ----- ----- ----- ----- ----- */
-
 // set read pair statistics from a bam reader object:
 //
 ReadGroupStats::
@@ -363,6 +357,7 @@ ReadGroupStats(
                 // filter common categories of undesirable reads:
                 if (SVLocusScanner::isReadFilteredCore(bamRead)) continue;
 
+                if (! is_mapped_chrom_pair(bamRead)) continue;
                 if (bamRead.map_qual()==0) continue;
 
                 // filter any split reads with an SA tag:

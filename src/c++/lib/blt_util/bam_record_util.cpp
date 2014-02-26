@@ -20,6 +20,18 @@
 
 
 
+bool
+is_mapped_chrom_pair(
+    const bam_record& bam_read)
+{
+    if (! bam_read.is_paired()) return false;
+    if (bam_read.is_unmapped() || bam_read.is_mate_unmapped()) return false;
+    if (bam_read.target_id() != bam_read.mate_target_id()) return false;
+    return true;
+}
+
+
+
 // note this is designed to return true for the common case
 // of pos == mate_pos occurring for short FFPE fragments
 //
@@ -27,9 +39,7 @@ bool
 is_innie_pair(
     const bam_record& bam_read)
 {
-    if (! bam_read.is_paired()) return false;
-    if (bam_read.is_unmapped() || bam_read.is_mate_unmapped()) return false;
-    if (bam_read.target_id() != bam_read.mate_target_id()) return false;
+    if (! is_mapped_chrom_pair(bam_read)) return false;
 
     if     (bam_read.pos() < bam_read.mate_pos())
     {
