@@ -144,7 +144,7 @@ private:
 
         bool isMaxIndex(false);
         unsigned maxIndex(0);
-        for(unsigned i(0);i<_orientCount.size();++i)
+        for (unsigned i(0); i<_orientCount.size(); ++i)
         {
             if ((! isMaxIndex) || (_orientCount[i] > _orientCount[maxIndex]))
             {
@@ -157,7 +157,8 @@ private:
 
         _finalOrient.setVal(maxIndex);
 
-        { // make sure there's a dominant consensus orientation and that we have a minimum number of samples:
+        {
+            // make sure there's a dominant consensus orientation and that we have a minimum number of samples:
             static const unsigned minCount(100);
             static const float minMaxFrac(0.9);
 
@@ -245,7 +246,7 @@ struct ReadPairDepthFilter
             _posCount=0;
             _lastPos = bamRead.pos();
         }
-        else if(bamRead.pos() != _lastPos)
+        else if (bamRead.pos() != _lastPos)
         {
             _posCount=0;
             _lastPos = bamRead.pos();
