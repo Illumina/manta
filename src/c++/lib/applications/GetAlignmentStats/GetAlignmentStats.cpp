@@ -41,8 +41,9 @@ runAlignmentStats(const AlignmentStatsOptions& opt)
     ReadGroupStatsSet rstats;
     BOOST_FOREACH(const std::string& file, opt.alignFileOpt.alignmentFilename)
     {
+        static const std::string defaultReadGroup;
         const ReadGroupStats rgs(file);
-        rstats.setStats(file,rgs);
+        rstats.setStats(file, defaultReadGroup, rgs);
     }
 
     rstats.save(opt.outputFilename.c_str());

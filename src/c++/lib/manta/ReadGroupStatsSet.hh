@@ -26,6 +26,8 @@
 ///
 struct ReadGroupStatsSet
 {
+    typedef std::pair<std::string,std::string> KeyType;
+
     bool
     empty() const
     {
@@ -46,49 +48,51 @@ struct ReadGroupStatsSet
     /// if the group does not exist, the returned value
     /// evaluates to false per boost::optional
     ///
-    /// for now, a "read group" is fixed to the name of
-    /// each bam file
+    /// Each read group is identified as a combination of a bam filename and
+    /// an RG tag label. An empty label refers to the "default" read group
+    /// for the file (all records that had no RG tag).
     boost::optional<unsigned>
-    getGroupIndex(const std::string& bam_file) const
+    getGroupIndex(
+            const std::string& bamFilename,
+            const std::string& readGroup) const
     {
-        return _group.get_optional_id(bam_file);
+        return _group.get_optional_id(std::make_pair(bamFilename,readGroup));
     }
 
     /// get stats associated with index
     const ReadGroupStats&
-    getStats(const unsigned group_index) const
+    getStats(
+        const unsigned groupIndex) const
     {
-        return _group.get_value(group_index);
+        return _group.get_value(groupIndex);
     }
 
-    const std::string&
-    getLabel(const unsigned group_index) const
+    const KeyType&
+    getKey(
+        const unsigned groupIndex) const
     {
-        return _group.get_key(group_index);
+        return _group.get_key(groupIndex);
     }
 
     /// set stats for index
     void
-    setStats(const std::string& bam_file,
-             const ReadGroupStats& rps)
+    setStats(
+        const std::string& bamFilename,
+        const std::string& readGroup,
+        const ReadGroupStats& rps)
     {
-        _group.insert(bam_file,rps);
+        _group.insert(std::make_pair(bamFilename,readGroup),rps);
     }
 
     /// serialize
     void
-    save(const char* filename) const;
+    save(
+        const char* filename) const;
 
-    /// restore from serialization
+    /// deserialize
     void
-    load(const char* filename);
-
-#if 0
-    // write out brief info of the stats class
-    // and some debugging info if under debug mode
-    void
-    write(std::ostream& os) const;
-#endif
+    load(
+        const char* filename);
 
 private:
     void
@@ -97,6 +101,6 @@ private:
         _group.clear();
     }
 
-    id_map<std::string, ReadGroupStats> _group;
+    id_map<KeyType, ReadGroupStats> _group;
 };
 

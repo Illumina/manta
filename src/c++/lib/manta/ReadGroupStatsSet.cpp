@@ -32,15 +32,18 @@
 /// this struct exists for the sole purpose of xml output:
 struct ReadGroupStatsExporter
 {
-
     template<class Archive>
-    void serialize(Archive& ar, const unsigned /*version*/)
+    void serialize(
+        Archive& ar,
+        const unsigned /*version*/)
     {
-        ar& boost::serialization::make_nvp("groupLabel", groupLabel);
+        ar& boost::serialization::make_nvp("bamFile", bamFile);
+        ar& boost::serialization::make_nvp("readGroup", readGroup);
         ar& boost::serialization::make_nvp("groupStats", groupStats);
     }
 
-    std::string groupLabel;
+    std::string bamFile;
+    std::string readGroup;
     ReadGroupStats groupStats;
 };
 
@@ -48,11 +51,11 @@ BOOST_CLASS_IMPLEMENTATION(ReadGroupStatsExporter, boost::serialization::object_
 
 
 
-
-// serialization
+// serialize
 void
 ReadGroupStatsSet::
-save(const char* filename) const
+save(
+    const char* filename) const
 {
     assert(NULL != filename);
     std::ofstream ofs(filename);
@@ -63,7 +66,9 @@ save(const char* filename) const
     ReadGroupStatsExporter se;
     for (unsigned i(0); i<numGroups; ++i)
     {
-        se.groupLabel = _group.get_key(i);
+        const KeyType& key(_group.get_key(i));
+        se.bamFile = key.first;
+        se.readGroup = key.second;
         se.groupStats = getStats(i);
 
         std::ostringstream oss;
@@ -72,10 +77,13 @@ save(const char* filename) const
     }
 }
 
+
+
 // restore from serialization
 void
 ReadGroupStatsSet::
-load(const char* filename)
+load(
+    const char* filename)
 {
     clear();
 
@@ -90,8 +98,6 @@ load(const char* filename)
     {
         ia >> boost::serialization::make_nvp("bogus", se);
 
-        setStats(se.groupLabel, se.groupStats);
+        setStats(se.bamFile, se.readGroup, se.groupStats);
     }
 }
-
-
