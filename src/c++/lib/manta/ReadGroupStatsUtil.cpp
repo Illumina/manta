@@ -87,20 +87,15 @@ getRelOrient(
 }
 
 
-
-/// all data required to build ReadGroupStats during estimation from the bam file
+/// track pair orientation stats for a read group
 ///
-/// ultimately the only information we want to keep is the ReadGroupStats object itself,
-/// which can be exported from this object
-///
-struct ReadGroupTracker
+struct ReadGroupOrientTracker
 {
     explicit
-    ReadGroupTracker(const char* rgLabel = NULL) :
+    ReadGroupOrientTracker(const char* rgLabel = NULL) :
         _isFinalized(false),
         _totalOrientCount(0),
-        _rgLabel(NULL==rgLabel ? "" : rgLabel),
-        _isInsertSizeConverged(false)
+        _rgLabel(NULL==rgLabel ? "" : rgLabel)
     {
         std::fill(_orientCount.begin(),_orientCount.end(),0);
     }
@@ -112,16 +107,10 @@ struct ReadGroupTracker
         if (bamRead.pos() == bamRead.mate_pos()) return;
 
         static const unsigned maxOrientCount(100000);
-        if (getOrientCount() < maxOrientCount)
+        if (_totalOrientCount < maxOrientCount)
         {
             addOrient(getRelOrient(bamRead));
         }
-    }
-
-    unsigned
-    getOrientCount() const
-    {
-        return _totalOrientCount;
     }
 
     const ReadPairOrient&
@@ -129,24 +118,6 @@ struct ReadGroupTracker
     {
         finalize();
         return _finalOrient;
-    }
-
-    bool
-    isInsertSizeConverged() const
-    {
-        return _isInsertSizeConverged;
-    }
-
-    void
-    updateInsertSizeConvergenceTest(
-        const SizeDistribution& currentInsertSize)
-    {
-        // check convergence
-        if (_oldInsertSize.totalObservations() > 0)
-        {
-            _isInsertSizeConverged=isStatSetMatch(_oldInsertSize, currentInsertSize);
-        }
-        _oldInsertSize = currentInsertSize;
     }
 
 private:
@@ -216,11 +187,141 @@ private:
     boost::array<unsigned,PAIR_ORIENT::SIZE> _orientCount;
 
     ReadPairOrient _finalOrient;
+};
+
+
+
+
+/// all data required to build ReadGroupStats during estimation from the bam file
+///
+/// ultimately the only information we want to keep is the ReadGroupStats object itself,
+/// which can be exported from this object
+///
+struct ReadGroupTracker
+{
+    explicit
+    ReadGroupTracker(const char* rgLabel = NULL) :
+        _isFinalized(false),
+        _rgLabel(NULL==rgLabel ? "" : rgLabel),
+        _orientInfo(rgLabel),
+        _isInsertSizeConverged(false)
+    {}
+
+    void
+    addOrient(
+        const bam_record& bamRead)
+    {
+        assert(! _isFinalized);
+
+        _orientInfo.addOrient(bamRead);
+    }
+
+    void
+    addInsertSize(const int size)
+    {
+        assert(! _isFinalized);
+
+        _stats.fragStats.addObservation(size);
+    }
+
+    unsigned
+    insertSizeObservations() const
+    {
+        return _stats.fragStats.totalObservations();
+    }
+
+    bool
+    isInsertSizeCountCheck()
+    {
+        static const unsigned statsCheckCnt(100000);
+        return ((insertSizeObservations() % statsCheckCnt) == 0);
+    }
+
+    bool
+    isInsertSizeConverged() const
+    {
+        return _isInsertSizeConverged;
+    }
+
+    void
+    updateInsertSizeConvergenceTest()
+    {
+        // check convergence
+        if (_oldInsertSize.totalObservations() > 0)
+        {
+            _isInsertSizeConverged=isStatSetMatch(_oldInsertSize, _stats.fragStats);
+        }
+        _oldInsertSize = _stats.fragStats;
+    }
+
+    /// getting a const ref of the stats forces finalization steps:
+    const ReadGroupStats&
+    getStats()
+    {
+        finalize();
+        return _stats;
+    }
+
+private:
+    void
+    finalize()
+    {
+        if (_isFinalized) return;
+
+        // finalize pair orientation:
+        _stats.relOrients = _orientInfo.getConsensusOrient();
+
+        if (_stats.relOrients.val() != PAIR_ORIENT::Rp)
+        {
+            using namespace illumina::common;
+
+            std::ostringstream oss;
+            oss << "ERROR: Unexpected consensus read orientation (" << _stats.relOrients << ") for read group: " << _rgLabel << "\n"
+                << "\tManta currently handles paired-end (FR) reads only.\n";
+            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        }
+
+        // finalize insert size distro:
+        if (! isInsertSizeConverged())
+        {
+            if (_stats.fragStats.totalObservations() <1000)
+            {
+                using namespace illumina::common;
+
+                std::ostringstream oss;
+                oss << "ERROR: Can't generate pair statistics for BAM file " << _rgLabel << "\n"
+                    << "\tTotal observed read pairs: " << insertSizeObservations() << "\n";
+                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            }
+            else if (! isInsertSizeCountCheck())
+            {
+                updateInsertSizeConvergenceTest();
+            }
+
+            if (! isInsertSizeConverged())
+            {
+                log_os << "WARNING: read pair statistics did not converge for read group: " << _rgLabel << "\n";
+            }
+        }
+
+        // final step before saving is to cut-off the extreme end of the fragment size distribution, this
+        // is similar the some aligner's proper-pair bit definition of (3x the standard mean, etc.)
+        static const float filterQuant(0.9995);
+        _stats.fragStats.filterObservationsOverQuantile(filterQuant);
+
+        _isFinalized=true;
+    }
+
+private:
+
+    bool _isFinalized;
+    std::string _rgLabel;
+    ReadGroupOrientTracker _orientInfo;
 
     bool _isInsertSizeConverged;
     SizeDistribution _oldInsertSize; // previous fragment distribution is stored to determine convergence
 
-//    ReadGroupStats stats;
+    ReadGroupStats _stats;
 };
 
 
@@ -427,9 +528,6 @@ extractReadGroupStatsFromBam(
     const std::string& statsBamFile,
     ReadGroupStatsSet& rstats)
 {
-    static const unsigned statsCheckCnt(100000);
-
-
     bam_streamer read_stream(statsBamFile.c_str());
 
     const bam_header_t& header(* read_stream.get_header());
@@ -445,10 +543,8 @@ extractReadGroupStatsFromBam(
 
     ReadAlignFilter alignFilter;
     ReadPairDepthFilter pairFilter;
-    unsigned recordCount(0);
     bool isActiveChrom(true);
 
-    ReadGroupStats defaultReadGroupStats;
     ReadGroupTracker rgInfo(statsBamFile.c_str());
 
     while (isActiveChrom && (!isStopEstimation))
@@ -510,10 +606,6 @@ extractReadGroupStatsFromBam(
                 //
                 if (! is_innie_pair(bamRead)) continue;
 
-                // made it through all filters!
-                ++recordCount;
-
-
                 unsigned currFragSize(std::abs(bamRead.template_size()));
 
                 // reduce fragsize resolution for very large sizes:
@@ -528,22 +620,22 @@ extractReadGroupStatsFromBam(
                     for (unsigned stepIndex(0); stepIndex<steps; ++stepIndex) currFragSize *= 10;
                 }
 
-                defaultReadGroupStats.fragStats.addObservation(currFragSize);
+                rgInfo.addInsertSize(currFragSize);
 
-                if ((recordCount % statsCheckCnt) != 0) continue;
+                if (! rgInfo.isInsertSizeCountCheck()) continue;
 
 #ifdef DEBUG_RPS
-                log_os << "INFO: Checking stats convergence at record count : " << recordCount << "'\n"
+                log_os << "INFO: Checking stats convergence at record count : " << rgInfo.insertSizeObservations() << "'\n"
                        << "INFO: Stats before convergence check: ";
                 //write(log_os);
                 log_os << "\n";
 #endif
 
                 // check convergence
-                rgInfo.updateInsertSizeConvergenceTest(defaultReadGroupStats.fragStats);
+                rgInfo.updateInsertSizeConvergenceTest();
 
                 static const unsigned maxRecordCount(5000000);
-                if (rgInfo.isInsertSizeConverged() || (recordCount>maxRecordCount)) isStopEstimation=true;
+                if (rgInfo.isInsertSizeConverged() || (rgInfo.insertSizeObservations()>maxRecordCount)) isStopEstimation=true;
 
                 // break from reading the current chromosome
                 break;
@@ -551,49 +643,8 @@ extractReadGroupStatsFromBam(
         }
     }
 
-    if (! rgInfo.isInsertSizeConverged())
-    {
-        if (defaultReadGroupStats.fragStats.totalObservations() <1000)
-        {
-            using namespace illumina::common;
-
-            std::ostringstream oss;
-            oss << "ERROR: Can't generate pair statistics for BAM file " << statsBamFile << "\n"
-                << "\tTotal observed read pairs: " << defaultReadGroupStats.fragStats.totalObservations() << "\n";
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
-        }
-        else if ((recordCount % statsCheckCnt) != 0)
-        {
-            rgInfo.updateInsertSizeConvergenceTest(defaultReadGroupStats.fragStats);
-        }
-
-        if (! rgInfo.isInsertSizeConverged())
-        {
-            log_os << "WARNING: read pair statistics did not converge\n";
-        }
-    }
-
-    // finalize pair orientation:
-    defaultReadGroupStats.relOrients = rgInfo.getConsensusOrient();
-
-    if (defaultReadGroupStats.relOrients.val() != PAIR_ORIENT::Rp)
-    {
-        using namespace illumina::common;
-
-        std::ostringstream oss;
-        oss << "ERROR: Unexpected consensus read orientation (" << defaultReadGroupStats.relOrients << ") for read group: " << statsBamFile << "\n"
-            << "\tManta currently handles paired-end (FR) reads only.\n";
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
-    }
-
-    // final step before saving is to cut-off the extreme end of the fragment size distribution, this
-    // is similar the some aligner's proper-pair bit definition of (3x the standard mean, etc.)
-    static const float filterQuant(0.9995);
-    defaultReadGroupStats.fragStats.filterObservationsOverQuantile(filterQuant);
-
-
     static const std::string defaultReadGroup;
-    rstats.setStats(statsBamFile, defaultReadGroup, defaultReadGroupStats);
+    rstats.setStats(statsBamFile, defaultReadGroup, rgInfo.getStats());
 
 
 
