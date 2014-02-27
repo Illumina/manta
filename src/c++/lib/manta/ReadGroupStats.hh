@@ -20,33 +20,13 @@
 #include "common/ReadPairOrient.hh"
 #include "manta/SizeDistribution.hh"
 
-#include <string>
-
 
 /// Read pair insert stats can be computed for each sample or read group, this
 /// class represents the statistics for one group:
 ///
 struct ReadGroupStats
 {
-
-    ReadGroupStats() {}
-
-    explicit
-    ReadGroupStats(const std::string& statsBamFile);
-
 private:
-    /// If PairStats has converged (or if isForcedConvergence is true)
-    /// 1. All stats are computed
-    /// 2. return true
-    ///
-    /// Otherwise:
-    /// 1. only insert stats are computed
-    /// 2. return false
-    ///
-    bool computePairStats(
-        std::string& statsBamFile,
-        const bool isForcedConvergence = false);
-
     friend class boost::serialization::access;
     template<class Archive>
     void serialize(

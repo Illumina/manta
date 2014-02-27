@@ -15,7 +15,7 @@
 /// \author Bret Barnes, Xiaoyu Chen
 ///
 
-#include "ReadGroupStats.hh"
+#include "manta/ReadGroupStatsUtil.hh"
 
 #include "blt_util/align_path_bam_util.hh"
 #include "blt_util/bam_record_util.hh"
@@ -32,10 +32,10 @@
 #include <sstream>
 #include <vector>
 
-//#define DEBUG_RPS
 
 
 
+/// compare distributions to determine stats convergence
 static
 bool
 isStatSetMatch(
@@ -304,13 +304,81 @@ private:
 
 
 
-// set read pair statistics from a bam reader object:
-//
-ReadGroupStats::
-ReadGroupStats(
-    const std::string& statsBamFile)
+#if 0
+/// samples around various short segments of the genome so
+/// that stats generation isn't biased towards a single region
+struct GenomeSampler
+{
+    GenomeSampler(
+        const std::string& bamFile) :
+        _readStream(bamFile.c_str()),
+        _chromCount(0),
+        _isActiveChrom(true),
+        _currentChrom(0)
+    {
+        const bam_header_t& header(*_readStream.get_header());
+
+        _chromCount = (header.n_targets);
+
+        _isActiveChrom = (_chromCount > 0);
+
+        std::vector<int32_t> chromSize(_chromCount,0);
+        std::vector<int32_t> chromHighestPos(_chromCount,-1);
+
+        for (int32_t i(0); i<_chromCount; ++i)
+        {
+            chromSize[i] = (header.target_len[i]);
+        }
+    }
+
+    bool
+    nextRecord()
+    {
+        if (! _isActiveChrom) return false;
+
+
+        return true;
+    }
+
+    const bam_record&
+    getBamRecord()
+    {
+        assert(_isActiveChrom);
+
+        return *(_readStream.get_record_ptr());
+    }
+
+private:
+    void
+    init()
+    {
+        if (! _isActiveChrom) return;
+
+        const int32_t startPos(_chromHighestPos[chromIndex]+1);
+
+        _currentChrom=0;
+    }
+
+    bam_streamer _readStream;
+    int32_t _chromCount;
+    std::vector<int32_t> _chromSize;
+
+    std::vector<int32_t> _chromHighestPos;
+    bool _isActiveChrom; ///< this is used to track whether we've reached the end of all chromosomes
+    int32_t _currentChrom;
+};
+#endif
+
+
+
+void
+extractReadGroupStatsFromBam(
+    const std::string& statsBamFile,
+    ReadGroupStatsSet& rstats)
 {
     static const unsigned statsCheckCnt(100000);
+
+    ReadGroupStats defaultReadGroupStats;
 
     bam_streamer read_stream(statsBamFile.c_str());
 
@@ -412,7 +480,7 @@ ReadGroupStats(
                     for (unsigned stepIndex(0); stepIndex<steps; ++stepIndex) currFragSize *= 10;
                 }
 
-                fragStats.addObservation(currFragSize);
+                defaultReadGroupStats.fragStats.addObservation(currFragSize);
 
                 if ((recordCount % statsCheckCnt) != 0) continue;
 
@@ -430,10 +498,10 @@ ReadGroupStats(
                 }
                 else
                 {
-                    isConverged=isStatSetMatch(oldFragSize, fragStats);
+                    isConverged=isStatSetMatch(oldFragSize, defaultReadGroupStats.fragStats);
                 }
 
-                oldFragSize = fragStats;
+                oldFragSize = defaultReadGroupStats.fragStats;
 
                 static const unsigned maxRecordCount(5000000);
                 if (isConverged || (recordCount>maxRecordCount)) isStopEstimation=true;
@@ -446,20 +514,20 @@ ReadGroupStats(
 
     if (!isConverged)
     {
-        if (fragStats.totalObservations() <1000)
+        if (defaultReadGroupStats.fragStats.totalObservations() <1000)
         {
             using namespace illumina::common;
 
             std::ostringstream oss;
             oss << "ERROR: Can't generate pair statistics for BAM file " << statsBamFile << "\n"
-                << "\tTotal observed read pairs: " << fragStats.totalObservations() << "\n";
+                << "\tTotal observed read pairs: " << defaultReadGroupStats.fragStats.totalObservations() << "\n";
             BOOST_THROW_EXCEPTION(LogicException(oss.str()));
         }
         else if ((recordCount % statsCheckCnt) != 0)
         {
             if (! isFirstEstimation)
             {
-                isConverged=isStatSetMatch(oldFragSize, fragStats);
+                isConverged=isStatSetMatch(oldFragSize, defaultReadGroupStats.fragStats);
             }
         }
 
@@ -470,14 +538,14 @@ ReadGroupStats(
     }
 
     // finalize pair orientation:
-    relOrients = rgInfo.getOrient();
+    defaultReadGroupStats.relOrients = rgInfo.getOrient();
 
-    if (relOrients.val() != PAIR_ORIENT::Rp)
+    if (defaultReadGroupStats.relOrients.val() != PAIR_ORIENT::Rp)
     {
         using namespace illumina::common;
 
         std::ostringstream oss;
-        oss << "ERROR: Unexpected consensus read orientation (" << relOrients << ") for read group: " << statsBamFile << "\n"
+        oss << "ERROR: Unexpected consensus read orientation (" << defaultReadGroupStats.relOrients << ") for read group: " << statsBamFile << "\n"
             << "\tManta currently handles paired-end (FR) reads only.\n";
         BOOST_THROW_EXCEPTION(LogicException(oss.str()));
     }
@@ -485,5 +553,13 @@ ReadGroupStats(
     // final step before saving is to cut-off the extreme end of the fragment size distribution, this
     // is similar the some aligner's proper-pair bit definition of (3x the standard mean, etc.)
     static const float filterQuant(0.9995);
-    fragStats.filterObservationsOverQuantile(filterQuant);
+    defaultReadGroupStats.fragStats.filterObservationsOverQuantile(filterQuant);
+
+
+    static const std::string defaultReadGroup;
+    rstats.setStats(statsBamFile, defaultReadGroup, defaultReadGroupStats);
+
+
+
+
 }
