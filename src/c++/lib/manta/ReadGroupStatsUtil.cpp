@@ -88,13 +88,19 @@ getRelOrient(
 
 
 
-struct ReadGroupTmpInfo
+/// all data required to build ReadGroupStats during estimation from the bam file
+///
+/// ultimately the only information we want to keep is the ReadGroupStats object itself,
+/// which can be exported from this object
+///
+struct ReadGroupTracker
 {
     explicit
-    ReadGroupTmpInfo(const char* rgLabel = NULL) :
+    ReadGroupTracker(const char* rgLabel = NULL) :
         _isFinalized(false),
         _totalOrientCount(0),
-        _rgLabel(NULL==rgLabel ? "" : rgLabel)
+        _rgLabel(NULL==rgLabel ? "" : rgLabel),
+        _isInsertSizeConverged(false)
     {
         std::fill(_orientCount.begin(),_orientCount.end(),0);
     }
@@ -112,6 +118,39 @@ struct ReadGroupTmpInfo
         }
     }
 
+    unsigned
+    getOrientCount() const
+    {
+        return _totalOrientCount;
+    }
+
+    const ReadPairOrient&
+    getConsensusOrient()
+    {
+        finalize();
+        return _finalOrient;
+    }
+
+    bool
+    isInsertSizeConverged() const
+    {
+        return _isInsertSizeConverged;
+    }
+
+    void
+    updateInsertSizeConvergenceTest(
+        const SizeDistribution& currentInsertSize)
+    {
+        // check convergence
+        if (_oldInsertSize.totalObservations() > 0)
+        {
+            _isInsertSizeConverged=isStatSetMatch(_oldInsertSize, currentInsertSize);
+        }
+        _oldInsertSize = currentInsertSize;
+    }
+
+private:
+
     void
     addOrient(
         const PAIR_ORIENT::index_t id)
@@ -123,20 +162,6 @@ struct ReadGroupTmpInfo
         _totalOrientCount++;
     }
 
-    unsigned
-    getOrientCount() const
-    {
-        return _totalOrientCount;
-    }
-
-    const ReadPairOrient&
-    getOrient()
-    {
-        finalize();
-        return _finalOrient;
-    }
-
-private:
     void
     finalize()
     {
@@ -191,6 +216,11 @@ private:
     boost::array<unsigned,PAIR_ORIENT::SIZE> _orientCount;
 
     ReadPairOrient _finalOrient;
+
+    bool _isInsertSizeConverged;
+    SizeDistribution _oldInsertSize; // previous fragment distribution is stored to determine convergence
+
+//    ReadGroupStats stats;
 };
 
 
@@ -303,7 +333,6 @@ private:
 };
 
 
-
 #if 0
 /// samples around various short segments of the genome so
 /// that stats generation isn't biased towards a single region
@@ -313,6 +342,8 @@ struct GenomeSampler
         const std::string& bamFile) :
         _readStream(bamFile.c_str()),
         _chromCount(0),
+        _isInitRegion(false),
+        _isInitRecord(false),
         _isActiveChrom(true),
         _currentChrom(0)
     {
@@ -322,28 +353,46 @@ struct GenomeSampler
 
         _isActiveChrom = (_chromCount > 0);
 
-        std::vector<int32_t> chromSize(_chromCount,0);
-        std::vector<int32_t> chromHighestPos(_chromCount,-1);
+        _chromSize.resize(_chromCount,0);
+        _chromHighestPos.resize(_chromCount,-1);
 
         for (int32_t i(0); i<_chromCount; ++i)
         {
-            chromSize[i] = (header.target_len[i]);
+            _chromSize[i] = (header.target_len[i]);
         }
+
+        init();
     }
 
+    /// advance to next region of the genome, this must be called before using nextRecord():
     bool
-    nextRecord()
+    nextRegion()
     {
         if (! _isActiveChrom) return false;
 
-
+        _isInitRegion=true;
+        _isInitRecord=false;
         return true;
     }
 
+    /// advance to next record in the current region, this must be called before using getBamRecord():
+    bool
+    nextRecord()
+    {
+        assert(_isInitRegion);
+
+        if (! _isActiveChrom) return false;
+
+        _isInitRecord=true;
+        return true;
+    }
+
+    /// access current bam record
     const bam_record&
     getBamRecord()
     {
-        assert(_isActiveChrom);
+        assert(_isInitRegion);
+        assert(_isInitRecord);
 
         return *(_readStream.get_record_ptr());
     }
@@ -364,6 +413,8 @@ private:
     std::vector<int32_t> _chromSize;
 
     std::vector<int32_t> _chromHighestPos;
+    bool _isInitRegion;
+    bool _isInitRecord;
     bool _isActiveChrom; ///< this is used to track whether we've reached the end of all chromosomes
     int32_t _currentChrom;
 };
@@ -378,7 +429,6 @@ extractReadGroupStatsFromBam(
 {
     static const unsigned statsCheckCnt(100000);
 
-    ReadGroupStats defaultReadGroupStats;
 
     bam_streamer read_stream(statsBamFile.c_str());
 
@@ -391,17 +441,15 @@ extractReadGroupStatsFromBam(
         chromSize[i] = (header.target_len[i]);
     }
 
-    bool isConverged(false);
     bool isStopEstimation(false);
-    bool isFirstEstimation(true);
-    SizeDistribution oldFragSize;
 
     ReadAlignFilter alignFilter;
     ReadPairDepthFilter pairFilter;
     unsigned recordCount(0);
     bool isActiveChrom(true);
 
-    ReadGroupTmpInfo rgInfo(statsBamFile.c_str());
+    ReadGroupStats defaultReadGroupStats;
+    ReadGroupTracker rgInfo(statsBamFile.c_str());
 
     while (isActiveChrom && (!isStopEstimation))
     {
@@ -492,19 +540,10 @@ extractReadGroupStatsFromBam(
 #endif
 
                 // check convergence
-                if (isFirstEstimation)
-                {
-                    isFirstEstimation = false;
-                }
-                else
-                {
-                    isConverged=isStatSetMatch(oldFragSize, defaultReadGroupStats.fragStats);
-                }
-
-                oldFragSize = defaultReadGroupStats.fragStats;
+                rgInfo.updateInsertSizeConvergenceTest(defaultReadGroupStats.fragStats);
 
                 static const unsigned maxRecordCount(5000000);
-                if (isConverged || (recordCount>maxRecordCount)) isStopEstimation=true;
+                if (rgInfo.isInsertSizeConverged() || (recordCount>maxRecordCount)) isStopEstimation=true;
 
                 // break from reading the current chromosome
                 break;
@@ -512,7 +551,7 @@ extractReadGroupStatsFromBam(
         }
     }
 
-    if (!isConverged)
+    if (! rgInfo.isInsertSizeConverged())
     {
         if (defaultReadGroupStats.fragStats.totalObservations() <1000)
         {
@@ -525,20 +564,17 @@ extractReadGroupStatsFromBam(
         }
         else if ((recordCount % statsCheckCnt) != 0)
         {
-            if (! isFirstEstimation)
-            {
-                isConverged=isStatSetMatch(oldFragSize, defaultReadGroupStats.fragStats);
-            }
+            rgInfo.updateInsertSizeConvergenceTest(defaultReadGroupStats.fragStats);
         }
 
-        if (!isConverged)
+        if (! rgInfo.isInsertSizeConverged())
         {
             log_os << "WARNING: read pair statistics did not converge\n";
         }
     }
 
     // finalize pair orientation:
-    defaultReadGroupStats.relOrients = rgInfo.getOrient();
+    defaultReadGroupStats.relOrients = rgInfo.getConsensusOrient();
 
     if (defaultReadGroupStats.relOrients.val() != PAIR_ORIENT::Rp)
     {
