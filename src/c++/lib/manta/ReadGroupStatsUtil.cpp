@@ -112,28 +112,68 @@ getSimplifiedFragSize(
 
 struct ReadGroupLabel
 {
+    /// if isCopyPtrs then the strings are copied and alloced/de-alloced by
+    /// the object, if false the client is responsible these pointers over
+    /// the lifetime of the label:
     explicit
     ReadGroupLabel(
-        const char* bamLabelPtr = NULL,
-        const char* rgLabelPtr = NULL) :
-        bamLabel((NULL==bamLabelPtr) ? "" : bamLabelPtr),
-        rgLabel((NULL==rgLabelPtr) ? "" : rgLabelPtr)
+        const char* bamLabelInit = NULL,
+        const char* rgLabelInit = NULL,
+        const bool isCopyPtrsInit = true) :
+        isCopyPtrs(isCopyPtrsInit),
+        bamLabel((isCopyPtrs && (NULL != bamLabelInit)) ? strdup(bamLabelInit) : bamLabelInit),
+        rgLabel((isCopyPtrs && (NULL != rgLabelInit)) ? strdup(rgLabelInit) : rgLabelInit)
     {}
 
+    ReadGroupLabel(const ReadGroupLabel& rhs) :
+        isCopyPtrs(rhs.isCopyPtrs),
+        bamLabel((isCopyPtrs && (NULL != rhs.bamLabel)) ? strdup(rhs.bamLabel) : rhs.bamLabel),
+        rgLabel((isCopyPtrs && (NULL != rhs.rgLabel)) ? strdup(rhs.rgLabel) : rhs.rgLabel)
+    {}
+
+private:
+    ReadGroupLabel&
+    operator=(const ReadGroupLabel& rhs);
+
+public:
+
+    ~ReadGroupLabel()
+    {
+        if (isCopyPtrs)
+        {
+            if(NULL != bamLabel) free(const_cast<char*>(bamLabel));
+            if(NULL != rgLabel) free(const_cast<char*>(rgLabel));
+        }
+    }
+
+    /// sort allowing for NULL string pointers in primary and secondary key:
     bool
     operator<(
         const ReadGroupLabel& rhs) const
     {
-        if (bamLabel < rhs.bamLabel) return true;
-        if (bamLabel == rhs.bamLabel)
+        if ((NULL == bamLabel) || (NULL == rhs.bamLabel))
         {
-            return (rgLabel < rhs.rgLabel);
+            return ((NULL == bamLabel) && (NULL != rhs.bamLabel));
         }
+
+        const int scval(strcmp(bamLabel,rhs.bamLabel));
+        if (scval < 0) return true;
+        if (scval == 0)
+        {
+            if ((NULL == rgLabel) || (NULL == rhs.rgLabel))
+            {
+                return ((NULL == rgLabel) && (NULL != rhs.rgLabel));
+            }
+
+            return (strcmp(rgLabel,rhs.rgLabel) < 0);
+        }
+
         return false;
     }
 
-    const std::string bamLabel;
-    const std::string rgLabel;
+    const bool isCopyPtrs;
+    const char* bamLabel;
+    const char* rgLabel;
 };
 
 
@@ -655,7 +695,8 @@ struct ReadGroupManager
         const bam_record& bamRead)
     {
         const char* readGroup(getReadGroup(bamRead));
-        ReadGroupLabel rgKey(_statsBamFile.c_str(), readGroup);
+
+        ReadGroupLabel rgKey(_statsBamFile.c_str(), readGroup, false);
 
         RGMapType::iterator rgIter(_rgTracker.find(rgKey));
         if (rgIter == _rgTracker.end())
@@ -721,7 +762,7 @@ private:
 
 
     bool _isFinalized;
-    std::string _statsBamFile;
+    const std::string _statsBamFile;
     RGMapType _rgTracker;
 };
 
