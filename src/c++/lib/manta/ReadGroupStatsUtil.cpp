@@ -308,7 +308,7 @@ struct ReadGroupTracker
     bool
     isChecked() const
     {
-        return _isChecked;
+        return (_isChecked || isInsertSizeConverged());
     }
 
     void
@@ -699,7 +699,15 @@ struct ReadGroupManager
         return true;
     }
 
-    /// must call this before getting the final map:
+    const RGMapType&
+    getMap()
+    {
+        finalize();
+        return _rgTracker;
+    }
+
+private:
+
     void
     finalize()
     {
@@ -708,16 +716,10 @@ struct ReadGroupManager
         {
             val.second.finalize();
         }
+        _isFinalized=true;
     }
 
-    const RGMapType&
-    getMap() const
-    {
-        assert(_isFinalized);
-        return _rgTracker;
-    }
 
-private:
     bool _isFinalized;
     std::string _statsBamFile;
     RGMapType _rgTracker;
@@ -771,6 +773,8 @@ extractReadGroupStatsFromBam(
 
                 ReadGroupTracker& rgInfo(rgManager.getTracker(bamRead));
 
+                if (rgInfo.isInsertSizeConverged()) continue;
+
                 // get orientation stats before final filter for innie reads below:
                 //
                 // we won't use anything but innie reads for insert size stats, but sampling
@@ -807,8 +811,6 @@ extractReadGroupStatsFromBam(
             }
         }
     }
-
-    rgManager.finalize();
 
     BOOST_FOREACH(const ReadGroupManager::RGMapType::value_type& val, rgManager.getMap())
     {
