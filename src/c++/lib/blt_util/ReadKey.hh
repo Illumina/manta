@@ -19,6 +19,9 @@
 
 #include "blt_util/bam_record.hh"
 
+#include "boost/utility.hpp"
+
+#include <cstdlib>
 #include <cstring>
 
 #include <iosfwd>
@@ -29,16 +32,45 @@
 ///
 struct ReadKey
 {
-    ReadKey(const bam_record& br)
-        : _qname(br.qname())
+    ReadKey(
+        const bam_record& br,
+        const bool isCopyPtrs = true)
+        : _isCopyPtrs(isCopyPtrs)
+        , _qname((_isCopyPtrs && (NULL != br.qname())) ? strdup(br.qname()) : br.qname())
         , _readNo(br.read_no())
+    {
+        assert(NULL != _qname);
+    }
+
+    ReadKey(
+        const char* initQname,
+        const int initReadNo,
+        const bool isCopyPtrs = true)
+        : _isCopyPtrs(isCopyPtrs)
+        , _qname((_isCopyPtrs && (NULL != initQname)) ? strdup(initQname) : initQname)
+        , _readNo(initReadNo)
+    {
+        assert(NULL != _qname);
+    }
+
+    ReadKey(
+        const ReadKey& rhs)
+        : _isCopyPtrs(rhs._isCopyPtrs)
+        , _qname(_isCopyPtrs ? strdup(rhs._qname) : rhs._qname)
+        , _readNo(rhs._readNo)
     {}
 
-    ReadKey(const std::string& initQname,
-            const int initReadNo)
-        : _qname(initQname)
-        , _readNo(initReadNo)
-    {}
+private:
+    ReadKey& operator=(const ReadKey& rhs);
+
+public:
+    ~ReadKey()
+    {
+        if (_isCopyPtrs)
+        {
+            if (NULL != _qname) free(const_cast<char*>(_qname));
+        }
+    }
 
     int
     readNo() const
@@ -49,10 +81,11 @@ struct ReadKey
     const char*
     qname() const
     {
-        return _qname.c_str();
+        return _qname;
     }
 
-    bool operator<(const ReadKey& rhs) const
+    bool operator<(
+        const ReadKey& rhs) const
     {
         if (readNo() < rhs.readNo()) return true;
         if (readNo() == rhs.readNo())
@@ -62,14 +95,16 @@ struct ReadKey
         return false;
     }
 
-    bool operator==(const ReadKey& rhs) const
+    bool operator==(
+            const ReadKey& rhs) const
     {
         return ((readNo() == rhs.readNo()) && ((0 == strcmp(qname(), rhs.qname()))));
     }
 
 private:
-    std::string _qname;
-    int _readNo;
+    const bool _isCopyPtrs;
+    const char* _qname;
+    const int _readNo;
 };
 
 std::ostream&

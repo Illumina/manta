@@ -23,6 +23,7 @@
 #include "blt_util/log.hh"
 #include "blt_util/ReadKey.hh"
 #include "common/Exceptions.hh"
+#include "manta/ReadGroupLabel.hh"
 #include "manta/SVLocusScanner.hh"
 
 #include "boost/foreach.hpp"
@@ -106,85 +107,6 @@ getSimplifiedFragSize(
     for (unsigned stepIndex(0); stepIndex<steps; ++stepIndex) fragSize *= 10;
 
     return fragSize;
-}
-
-
-
-struct ReadGroupLabel
-{
-    /// if isCopyPtrs then the strings are copied and alloced/de-alloced by
-    /// the object, if false the client is responsible these pointers over
-    /// the lifetime of the label:
-    explicit
-    ReadGroupLabel(
-        const char* bamLabelInit = NULL,
-        const char* rgLabelInit = NULL,
-        const bool isCopyPtrsInit = true) :
-        isCopyPtrs(isCopyPtrsInit),
-        bamLabel((isCopyPtrs && (NULL != bamLabelInit)) ? strdup(bamLabelInit) : bamLabelInit),
-        rgLabel((isCopyPtrs && (NULL != rgLabelInit)) ? strdup(rgLabelInit) : rgLabelInit)
-    {}
-
-    ReadGroupLabel(const ReadGroupLabel& rhs) :
-        isCopyPtrs(rhs.isCopyPtrs),
-        bamLabel((isCopyPtrs && (NULL != rhs.bamLabel)) ? strdup(rhs.bamLabel) : rhs.bamLabel),
-        rgLabel((isCopyPtrs && (NULL != rhs.rgLabel)) ? strdup(rhs.rgLabel) : rhs.rgLabel)
-    {}
-
-private:
-    ReadGroupLabel&
-    operator=(const ReadGroupLabel& rhs);
-
-public:
-
-    ~ReadGroupLabel()
-    {
-        if (isCopyPtrs)
-        {
-            if(NULL != bamLabel) free(const_cast<char*>(bamLabel));
-            if(NULL != rgLabel) free(const_cast<char*>(rgLabel));
-        }
-    }
-
-    /// sort allowing for NULL string pointers in primary and secondary key:
-    bool
-    operator<(
-        const ReadGroupLabel& rhs) const
-    {
-        if ((NULL == bamLabel) || (NULL == rhs.bamLabel))
-        {
-            return ((NULL == bamLabel) && (NULL != rhs.bamLabel));
-        }
-
-        const int scval(strcmp(bamLabel,rhs.bamLabel));
-        if (scval < 0) return true;
-        if (scval == 0)
-        {
-            if ((NULL == rgLabel) || (NULL == rhs.rgLabel))
-            {
-                return ((NULL == rgLabel) && (NULL != rhs.rgLabel));
-            }
-
-            return (strcmp(rgLabel,rhs.rgLabel) < 0);
-        }
-
-        return false;
-    }
-
-    const bool isCopyPtrs;
-    const char* bamLabel;
-    const char* rgLabel;
-};
-
-
-
-std::ostream&
-operator<<(
-    std::ostream& os,
-    const ReadGroupLabel& rgl)
-{
-    os << "read group '" << rgl.rgLabel << "' in bam file '" << rgl.bamLabel;
-    return os;
 }
 
 
@@ -516,7 +438,7 @@ struct ReadPairDepthFilter
         if (isDownstream || isSamePos)
         {
             const int mateReadNo( bamRead.is_first() ? 2 : 1);
-            const ReadKey mateKey(bamRead.qname(), mateReadNo);
+            const ReadKey mateKey(bamRead.qname(), mateReadNo, false);
 
             mateMap_t::iterator i(_goodMates.find(mateKey));
 
@@ -702,7 +624,7 @@ struct ReadGroupManager
         if (rgIter == _rgTracker.end())
         {
             std::pair<RGMapType::iterator,bool> retval;
-            retval = _rgTracker.insert(std::make_pair(rgKey,ReadGroupTracker(_statsBamFile.c_str(),readGroup)));
+            retval = _rgTracker.insert(std::make_pair(ReadGroupLabel(_statsBamFile.c_str(), readGroup), ReadGroupTracker(_statsBamFile.c_str(),readGroup)));
 
             assert(retval.second);
             rgIter = retval.first;
@@ -855,6 +777,6 @@ extractReadGroupStatsFromBam(
 
     BOOST_FOREACH(const ReadGroupManager::RGMapType::value_type& val, rgManager.getMap())
     {
-        rstats.setStats(val.first.bamLabel, val.first.rgLabel, val.second.getStats());
+        rstats.setStats(val.first, val.second.getStats());
     }
 }

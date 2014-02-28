@@ -992,8 +992,9 @@ SVLocusScanner(
     // cache the insert stats we'll be looking up most often:
     BOOST_FOREACH(const std::string& alignFile, alignmentFilename)
     {
-        static const std::string defaultReadGroup;
-        const boost::optional<unsigned> index(_rss.getGroupIndex(alignFile, defaultReadGroup));
+        static const char defaultReadGroup[] = "";
+        const ReadGroupLabel rgLabel(alignFile.c_str(), defaultReadGroup);
+        const boost::optional<unsigned> index(_rss.getGroupIndex(rgLabel));
         if (! index)
         {
             std::ostringstream oss;

@@ -14,6 +14,7 @@
 #pragma once
 
 #include "blt_util/id_map.hh"
+#include "manta/ReadGroupLabel.hh"
 #include "manta/ReadGroupStats.hh"
 
 #include "boost/optional.hpp"
@@ -26,7 +27,7 @@
 ///
 struct ReadGroupStatsSet
 {
-    typedef std::pair<std::string,std::string> KeyType;
+    typedef ReadGroupLabel KeyType;
 
     bool
     empty() const
@@ -53,10 +54,9 @@ struct ReadGroupStatsSet
     /// for the file (all records that had no RG tag).
     boost::optional<unsigned>
     getGroupIndex(
-            const std::string& bamFilename,
-            const std::string& readGroup) const
+            const ReadGroupLabel& rgLabel) const
     {
-        return _group.get_optional_id(std::make_pair(bamFilename,readGroup));
+        return _group.get_optional_id(rgLabel);
     }
 
     /// get stats associated with index
@@ -77,11 +77,10 @@ struct ReadGroupStatsSet
     /// set stats for index
     void
     setStats(
-        const std::string& bamFilename,
-        const std::string& readGroup,
+        const ReadGroupLabel& rgLabel,
         const ReadGroupStats& rps)
     {
-        _group.insert(std::make_pair(bamFilename,readGroup),rps);
+        _group.insert(rgLabel,rps);
     }
 
     /// serialize

@@ -43,8 +43,8 @@ runSAS(const SASOptions& opt)
     for (unsigned i(0); i<groupCount; ++i)
     {
         const ReadGroupStatsSet::KeyType& key(rgss.getKey(i));
-        report_os << "bamFile:\t" << key.first << '\n';
-        report_os << "readGroup:\t" << key.second << '\n';
+        report_os << "bamFile:\t" << key.bamLabel << '\n';
+        report_os << "readGroup:\t" << key.rgLabel << '\n';
 
         const ReadGroupStats& rgs(rgss.getStats(i));
         report_os << "fragment length observations:\t" << rgs.fragStats.totalObservations() << '\n';

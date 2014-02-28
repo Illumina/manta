@@ -67,8 +67,8 @@ save(
     for (unsigned i(0); i<numGroups; ++i)
     {
         const KeyType& key(_group.get_key(i));
-        se.bamFile = key.first;
-        se.readGroup = key.second;
+        se.bamFile = key.bamLabel;
+        se.readGroup = key.rgLabel;
         se.groupStats = getStats(i);
 
         std::ostringstream oss;
@@ -98,6 +98,6 @@ load(
     {
         ia >> boost::serialization::make_nvp("bogus", se);
 
-        setStats(se.bamFile, se.readGroup, se.groupStats);
+        setStats(KeyType(se.bamFile.c_str(), se.readGroup.c_str()), se.groupStats);
     }
 }
