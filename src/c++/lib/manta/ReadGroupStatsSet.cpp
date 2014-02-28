@@ -29,6 +29,7 @@
 #include <sstream>
 
 
+
 /// this struct exists for the sole purpose of xml output:
 struct ReadGroupStatsExporter
 {
@@ -37,8 +38,12 @@ struct ReadGroupStatsExporter
         Archive& ar,
         const unsigned /*version*/)
     {
+#ifdef READ_GROUPS
         ar& boost::serialization::make_nvp("bamFile", bamFile);
         ar& boost::serialization::make_nvp("readGroup", readGroup);
+#else
+        ar& boost::serialization::make_nvp("groupLabel", bamFile);
+#endif
         ar& boost::serialization::make_nvp("groupStats", groupStats);
     }
 
@@ -61,12 +66,12 @@ save(
     std::ofstream ofs(filename);
     boost::archive::xml_oarchive oa(ofs);
 
-    const unsigned numGroups(_group.size());
+    const unsigned numGroups(size());
     oa << boost::serialization::make_nvp("numGroups", numGroups);
     ReadGroupStatsExporter se;
     for (unsigned i(0); i<numGroups; ++i)
     {
-        const KeyType& key(_group.get_key(i));
+        const KeyType& key(getKey(i));
         se.bamFile = key.bamLabel;
         se.readGroup = key.rgLabel;
         se.groupStats = getStats(i);
@@ -101,3 +106,4 @@ load(
         setStats(KeyType(se.bamFile.c_str(), se.readGroup.c_str()), se.groupStats);
     }
 }
+

@@ -989,27 +989,17 @@ SVLocusScanner(
     // pull in insert stats:
     _rss.load(statsFilename.c_str());
 
-    // cache the insert stats we'll be looking up most often:
-    BOOST_FOREACH(const std::string& alignFile, alignmentFilename)
+    // precompute frequently used insert stats for each rg:
+    const unsigned rgCount(_rss.size());
+    for (unsigned rgIndex(0); rgIndex<rgCount; rgIndex++)
     {
-        static const char defaultReadGroup[] = "";
-        const ReadGroupLabel rgLabel(alignFile.c_str(), defaultReadGroup);
-        const boost::optional<unsigned> index(_rss.getGroupIndex(rgLabel));
-        if (! index)
-        {
-            std::ostringstream oss;
-            oss << "Can't find alignment file in pre-computed fragment stats.\n"
-                << "\tstatsFile: " << statsFilename << "\n"
-                << "\talignFile: " << alignFile << "\n";
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
-        }
-        const ReadGroupStats rgs(_rss.getStats(*index));
+        const SizeDistribution& rgDistro(getFragSizeDistro(rgIndex));
 
         _stats.resize(_stats.size()+1);
         CachedReadGroupStats& rgStats(_stats.back());
-        setRGRange(rgs.fragStats, _opt.breakendEdgeTrimProb, rgStats.breakendRegion);
-        setRGRange(rgs.fragStats, _opt.properPairTrimProb, rgStats.properPair);
-        setRGRange(rgs.fragStats, _opt.evidenceTrimProb, rgStats.evidencePair);
+        setRGRange(rgDistro, _opt.breakendEdgeTrimProb, rgStats.breakendRegion);
+        setRGRange(rgDistro, _opt.properPairTrimProb, rgStats.properPair);
+        setRGRange(rgDistro, _opt.evidenceTrimProb, rgStats.evidencePair);
 
         rgStats.minVeryCloseFragmentSize = static_cast<int>(rgStats.properPair.max*FragmentSizeType::maxNormalFactor);
         rgStats.minCloseFragmentSize = static_cast<int>(rgStats.properPair.max*FragmentSizeType::veryClosePairFactor);

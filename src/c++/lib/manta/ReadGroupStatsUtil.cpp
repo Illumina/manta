@@ -618,6 +618,13 @@ struct ReadGroupManager
     {
         const char* readGroup(getReadGroup(bamRead));
 
+        return getTracker(readGroup);
+    }
+
+    ReadGroupTracker&
+    getTracker(
+        const char* readGroup)
+    {
         ReadGroupLabel rgKey(_statsBamFile.c_str(), readGroup, false);
 
         RGMapType::iterator rgIter(_rgTracker.find(rgKey));
@@ -712,6 +719,11 @@ extractReadGroupStatsFromBam(
     CoreInsertStatsReadFilter coreFilter;
     ReadGroupManager rgManager(statsBamFile.c_str());
 
+#ifndef READ_GROUPS
+    static const char defaultReadGroup[] = "";
+    ReadGroupTracker& rgInfo(rgManager.getTracker(defaultReadGroup));
+#endif
+
     while (isActiveChrom && (!isStopEstimation))
     {
         isActiveChrom=false;
@@ -734,7 +746,9 @@ extractReadGroupStatsFromBam(
 
                 if (coreFilter.isFilterRead(bamRead)) continue;
 
+#ifdef READ_GROUPS
                 ReadGroupTracker& rgInfo(rgManager.getTracker(bamRead));
+#endif
 
                 if (rgInfo.isInsertSizeConverged()) continue;
 
