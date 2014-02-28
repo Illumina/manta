@@ -87,15 +87,44 @@ getRelOrient(
 }
 
 
-/// track pair orientation stats for a read group
+
+struct ReadGroupLabel
+{
+    explicit
+    ReadGroupLabel(
+        const char* bamLabelPtr,
+        const char* rgLabelPtr) :
+        bamLabel((NULL==bamLabelPtr) ? "" : bamLabelPtr),
+        rgLabel((NULL==rgLabelPtr) ? "" : rgLabelPtr)
+    {}
+
+    const std::string bamLabel;
+    const std::string rgLabel;
+};
+
+
+
+std::ostream&
+operator<<(
+    std::ostream& os,
+    const ReadGroupLabel& rgl)
+{
+    os << "read group '" << rgl.rgLabel << "' in bam file '" << rgl.bamLabel;
+    return os;
+}
+
+
+
+/// track pair orientation so that a consensus can be found for a read group
 ///
 struct ReadGroupOrientTracker
 {
-    explicit
-    ReadGroupOrientTracker(const char* rgLabel = NULL) :
+    ReadGroupOrientTracker(
+        const char* bamLabel,
+        const char* rgLabel) :
         _isFinalized(false),
         _totalOrientCount(0),
-        _rgLabel(NULL==rgLabel ? "" : rgLabel)
+        _rgLabel(bamLabel,rgLabel)
     {
         std::fill(_orientCount.begin(),_orientCount.end(),0);
     }
@@ -163,7 +192,7 @@ private:
             if (_totalOrientCount < minCount)
             {
                 std::ostringstream oss;
-                oss << "ERROR: Too few observations (" << _totalOrientCount << ") to determine pair orientation for read group '" << _rgLabel << "'\n";
+                oss << "ERROR: Too few observations (" << _totalOrientCount << ") to determine pair orientation for " << _rgLabel << "'\n";
                 BOOST_THROW_EXCEPTION(LogicException(oss.str()));
             }
 
@@ -172,7 +201,7 @@ private:
             {
                 const unsigned maxPercent((_orientCount[maxIndex]*100)/_totalOrientCount);
                 std::ostringstream oss;
-                oss << "ERROR: Can't determine consensus pair orientation of read group '" << _rgLabel << "'.\n"
+                oss << "ERROR: Can't determine consensus pair orientation of " << _rgLabel << ".\n"
                     << "\tMost frequent orientation is '" << _finalOrient << "' (" << maxPercent << "% of " << _totalOrientCount << " total observations)\n";
                 BOOST_THROW_EXCEPTION(LogicException(oss.str()));
             }
@@ -183,7 +212,7 @@ private:
 
     bool _isFinalized;
     unsigned _totalOrientCount;
-    std::string _rgLabel;
+    const ReadGroupLabel _rgLabel;
     boost::array<unsigned,PAIR_ORIENT::SIZE> _orientCount;
 
     ReadPairOrient _finalOrient;
@@ -200,10 +229,12 @@ private:
 struct ReadGroupTracker
 {
     explicit
-    ReadGroupTracker(const char* rgLabel = NULL) :
+    ReadGroupTracker(
+        const char* bamLabel = NULL,
+        const char* rgLabel = NULL) :
         _isFinalized(false),
-        _rgLabel(NULL==rgLabel ? "" : rgLabel),
-        _orientInfo(rgLabel),
+        _rgLabel(bamLabel, rgLabel),
+        _orientInfo(bamLabel, rgLabel),
         _isInsertSizeConverged(false)
     {}
 
@@ -276,7 +307,7 @@ private:
             using namespace illumina::common;
 
             std::ostringstream oss;
-            oss << "ERROR: Unexpected consensus read orientation (" << _stats.relOrients << ") for read group: " << _rgLabel << "\n"
+            oss << "ERROR: Unexpected consensus read orientation (" << _stats.relOrients << ") for " << _rgLabel << "\n"
                 << "\tManta currently handles paired-end (FR) reads only.\n";
             BOOST_THROW_EXCEPTION(LogicException(oss.str()));
         }
@@ -289,7 +320,7 @@ private:
                 using namespace illumina::common;
 
                 std::ostringstream oss;
-                oss << "ERROR: Can't generate pair statistics for BAM file " << _rgLabel << "\n"
+                oss << "ERROR: Can't generate pair statistics for " << _rgLabel << "\n"
                     << "\tTotal observed read pairs: " << insertSizeObservations() << "\n";
                 BOOST_THROW_EXCEPTION(LogicException(oss.str()));
             }
@@ -300,7 +331,7 @@ private:
 
             if (! isInsertSizeConverged())
             {
-                log_os << "WARNING: read pair statistics did not converge for read group: " << _rgLabel << "\n";
+                log_os << "WARNING: read pair statistics did not converge for " << _rgLabel << "\n";
             }
         }
 
@@ -315,7 +346,7 @@ private:
 private:
 
     bool _isFinalized;
-    std::string _rgLabel;
+    const ReadGroupLabel _rgLabel;
     ReadGroupOrientTracker _orientInfo;
 
     bool _isInsertSizeConverged;
@@ -624,13 +655,6 @@ extractReadGroupStatsFromBam(
 
                 if (! rgInfo.isInsertSizeCountCheck()) continue;
 
-#ifdef DEBUG_RPS
-                log_os << "INFO: Checking stats convergence at record count : " << rgInfo.insertSizeObservations() << "'\n"
-                       << "INFO: Stats before convergence check: ";
-                //write(log_os);
-                log_os << "\n";
-#endif
-
                 // check convergence
                 rgInfo.updateInsertSizeConvergenceTest();
 
@@ -645,8 +669,4 @@ extractReadGroupStatsFromBam(
 
     static const std::string defaultReadGroup;
     rstats.setStats(statsBamFile, defaultReadGroup, rgInfo.getStats());
-
-
-
-
 }
