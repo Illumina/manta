@@ -87,8 +87,8 @@ private:
     {
         if (isCopyPtrs)
         {
-            if(NULL != bamLabel) free(const_cast<char*>(bamLabel));
-            if(NULL != rgLabel) free(const_cast<char*>(rgLabel));
+            if (NULL != bamLabel) free(const_cast<char*>(bamLabel));
+            if (NULL != rgLabel) free(const_cast<char*>(rgLabel));
         }
     }
 

@@ -646,7 +646,7 @@ struct ReadGroupManager
     {
         BOOST_FOREACH(RGMapType::value_type& val, _rgTracker)
         {
-            if(! val.second.isChecked()) return false;
+            if (! val.second.isChecked()) return false;
         }
 
         BOOST_FOREACH(RGMapType::value_type& val, _rgTracker)
@@ -664,7 +664,7 @@ struct ReadGroupManager
         static const unsigned maxRecordCount(5000000);
         BOOST_FOREACH(RGMapType::value_type& val, _rgTracker)
         {
-            if(! (val.second.isInsertSizeConverged() || (val.second.insertSizeObservations()>maxRecordCount))) return false;
+            if (! (val.second.isInsertSizeConverged() || (val.second.insertSizeObservations()>maxRecordCount))) return false;
         }
         return true;
     }

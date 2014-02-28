@@ -54,7 +54,7 @@ struct ReadGroupStatsSet
     /// for the file (all records that had no RG tag).
     boost::optional<unsigned>
     getGroupIndex(
-            const ReadGroupLabel& rgLabel) const
+        const ReadGroupLabel& rgLabel) const
     {
         return _group.get_optional_id(rgLabel);
     }

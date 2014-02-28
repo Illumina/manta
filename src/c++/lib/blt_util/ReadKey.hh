@@ -96,7 +96,7 @@ public:
     }
 
     bool operator==(
-            const ReadKey& rhs) const
+        const ReadKey& rhs) const
     {
         return ((readNo() == rhs.readNo()) && ((0 == strcmp(qname(), rhs.qname()))));
     }

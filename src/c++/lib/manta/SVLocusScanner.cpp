@@ -980,7 +980,7 @@ SVLocusScanner::
 SVLocusScanner(
     const ReadScannerOptions& opt,
     const std::string& statsFilename,
-    const std::vector<std::string>& alignmentFilename) :
+    const std::vector<std::string>& /*alignmentFilename*/) :
     _opt(opt),
     _dopt(opt)
 {
@@ -993,6 +993,8 @@ SVLocusScanner(
     const unsigned rgCount(_rss.size());
     for (unsigned rgIndex(0); rgIndex<rgCount; rgIndex++)
     {
+        /// TODO: add check that the filenames in the stats file are a compelte match to alignmentFilename
+
         const SizeDistribution& rgDistro(getFragSizeDistro(rgIndex));
 
         _stats.resize(_stats.size()+1);
