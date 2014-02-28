@@ -52,3 +52,17 @@ isFirstRead(
     if ((bamRead.pos() == bamRead.mate_pos()) && bamRead.is_first()) return true;
     return false;
 }
+
+/// get BAM RG tag, return an empty string "" if no RG tag exists:
+inline
+const char*
+getReadGroup(
+    const bam_record& bamRead)
+{
+    static const char defaultRG[] = "";
+    static const char rgTag[] = {'R','G'};
+
+    const char* rgStr(bamRead.get_string_tag(rgTag));
+
+    return ((NULL == rgStr) ? defaultRG : rgStr);
+}

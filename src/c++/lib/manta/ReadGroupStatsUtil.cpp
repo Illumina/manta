@@ -34,7 +34,6 @@
 
 
 
-
 /// compare distributions to determine stats convergence
 static
 bool
@@ -88,15 +87,50 @@ getRelOrient(
 
 
 
+/// get insert size from bam record but limit the precision to 4 digits
+static
+unsigned
+getSimplifiedFragSize(
+    const bam_record& bamRead)
+{
+    unsigned fragSize(std::abs(bamRead.template_size()));
+
+    // reduce fragsize resolution for very large sizes:
+    // (large sizes are uncommon -- this doesn't need to be efficient, and it's not)
+    unsigned steps(0);
+    while (fragSize>1000)
+    {
+        fragSize /= 10;
+        steps++;
+    }
+    for (unsigned stepIndex(0); stepIndex<steps; ++stepIndex) fragSize *= 10;
+
+    return fragSize;
+}
+
+
+
 struct ReadGroupLabel
 {
     explicit
     ReadGroupLabel(
-        const char* bamLabelPtr,
-        const char* rgLabelPtr) :
+        const char* bamLabelPtr = NULL,
+        const char* rgLabelPtr = NULL) :
         bamLabel((NULL==bamLabelPtr) ? "" : bamLabelPtr),
         rgLabel((NULL==rgLabelPtr) ? "" : rgLabelPtr)
     {}
+
+    bool
+    operator<(
+        const ReadGroupLabel& rhs) const
+    {
+        if (bamLabel < rhs.bamLabel) return true;
+        if (bamLabel == rhs.bamLabel)
+        {
+            return (rgLabel < rhs.rgLabel);
+        }
+        return false;
+    }
 
     const std::string bamLabel;
     const std::string rgLabel;
@@ -235,6 +269,7 @@ struct ReadGroupTracker
         _isFinalized(false),
         _rgLabel(bamLabel, rgLabel),
         _orientInfo(bamLabel, rgLabel),
+        _isChecked(false),
         _isInsertSizeConverged(false)
     {}
 
@@ -265,7 +300,21 @@ struct ReadGroupTracker
     isInsertSizeCountCheck()
     {
         static const unsigned statsCheckCnt(100000);
-        return ((insertSizeObservations() % statsCheckCnt) == 0);
+        const bool isCheck((insertSizeObservations() % statsCheckCnt) == 0);
+        if (isCheck) _isChecked=true;
+        return isCheck;
+    }
+
+    bool
+    isChecked() const
+    {
+        return _isChecked;
+    }
+
+    void
+    clearChecked()
+    {
+        _isChecked=false;
     }
 
     bool
@@ -287,13 +336,12 @@ struct ReadGroupTracker
 
     /// getting a const ref of the stats forces finalization steps:
     const ReadGroupStats&
-    getStats()
+    getStats() const
     {
-        finalize();
+        assert(_isFinalized);
         return _stats;
     }
 
-private:
     void
     finalize()
     {
@@ -349,6 +397,7 @@ private:
     const ReadGroupLabel _rgLabel;
     ReadGroupOrientTracker _orientInfo;
 
+    bool _isChecked;
     bool _isInsertSizeConverged;
     SizeDistribution _oldInsertSize; // previous fragment distribution is stored to determine convergence
 
@@ -414,6 +463,10 @@ struct ReadPairDepthFilter
             _lastPos = bamRead.pos();
         }
 
+        // Assert only two reads per fragment
+        const unsigned readNum(bamRead.is_first() ? 1 : 2);
+        assert(bamRead.is_second() == (readNum == 2));
+
         // sample each read pair once by sampling stats from
         // downstream read only, or whichever read is encountered
         // second if the read and its mate start at the same position:
@@ -463,6 +516,38 @@ private:
     int _lastTargetId;
     int _lastPos;
 };
+
+
+
+struct CoreInsertStatsReadFilter
+{
+    bool
+    isFilterRead(
+        const bam_record& bamRead)
+    {
+        // filter common categories of undesirable reads:
+        if (SVLocusScanner::isReadFilteredCore(bamRead)) return true;
+
+        if (! is_mapped_chrom_pair(bamRead)) return true;
+        if (bamRead.map_qual()==0) return true;
+
+        // filter any split reads with an SA tag:
+        static const char SAtag[] = {'S','A'};
+        if (NULL != bamRead.get_string_tag(SAtag)) return true;
+
+        // remove reads without perfect alignments
+        if (alignFilter.isFilterRead(bamRead)) return true;
+
+        /// filter out upstream reads and high depth regions:
+        if (pairFilter.isFilterRead(bamRead)) return true;
+
+        return false;
+    }
+
+    ReadAlignFilter alignFilter;
+    ReadPairDepthFilter pairFilter;
+};
+
 
 
 #if 0
@@ -554,6 +639,92 @@ private:
 
 
 
+/// manage the info structs for each RG
+struct ReadGroupManager
+{
+    typedef std::map<ReadGroupLabel,ReadGroupTracker> RGMapType;
+
+    ReadGroupManager(
+        const std::string& statsBamFile) :
+        _isFinalized(false),
+        _statsBamFile(statsBamFile)
+    {}
+
+    ReadGroupTracker&
+    getTracker(
+        const bam_record& bamRead)
+    {
+        const char* readGroup(getReadGroup(bamRead));
+        ReadGroupLabel rgKey(_statsBamFile.c_str(), readGroup);
+
+        RGMapType::iterator rgIter(_rgTracker.find(rgKey));
+        if (rgIter == _rgTracker.end())
+        {
+            std::pair<RGMapType::iterator,bool> retval;
+            retval = _rgTracker.insert(std::make_pair(rgKey,ReadGroupTracker(_statsBamFile.c_str(),readGroup)));
+
+            assert(retval.second);
+            rgIter = retval.first;
+        }
+
+        return rgIter->second;
+    }
+
+    // check if all read groups have been sufficiently sampled in this region:
+    bool
+    isFinishedRegion()
+    {
+        BOOST_FOREACH(RGMapType::value_type& val, _rgTracker)
+        {
+            if(! val.second.isChecked()) return false;
+        }
+
+        BOOST_FOREACH(RGMapType::value_type& val, _rgTracker)
+        {
+            val.second.clearChecked();
+        }
+
+        return true;
+    }
+
+    // test if all read groups have converged or hit other stopping conditions
+    bool
+    isStopEstimation()
+    {
+        static const unsigned maxRecordCount(5000000);
+        BOOST_FOREACH(RGMapType::value_type& val, _rgTracker)
+        {
+            if(! (val.second.isInsertSizeConverged() || (val.second.insertSizeObservations()>maxRecordCount))) return false;
+        }
+        return true;
+    }
+
+    /// must call this before getting the final map:
+    void
+    finalize()
+    {
+        if (_isFinalized) return;
+        BOOST_FOREACH(RGMapType::value_type& val, _rgTracker)
+        {
+            val.second.finalize();
+        }
+    }
+
+    const RGMapType&
+    getMap() const
+    {
+        assert(_isFinalized);
+        return _rgTracker;
+    }
+
+private:
+    bool _isFinalized;
+    std::string _statsBamFile;
+    RGMapType _rgTracker;
+};
+
+
+
 void
 extractReadGroupStatsFromBam(
     const std::string& statsBamFile,
@@ -571,12 +742,10 @@ extractReadGroupStatsFromBam(
     }
 
     bool isStopEstimation(false);
-
-    ReadAlignFilter alignFilter;
-    ReadPairDepthFilter pairFilter;
     bool isActiveChrom(true);
 
-    ReadGroupTracker rgInfo(statsBamFile.c_str());
+    CoreInsertStatsReadFilter coreFilter;
+    ReadGroupManager rgManager(statsBamFile.c_str());
 
     while (isActiveChrom && (!isStopEstimation))
     {
@@ -598,37 +767,22 @@ extractReadGroupStatsFromBam(
                 chromHighestPos[chromIndex]=bamRead.pos();
                 isActiveChrom=true;
 
-                // filter common categories of undesirable reads:
-                if (SVLocusScanner::isReadFilteredCore(bamRead)) continue;
+                if (coreFilter.isFilterRead(bamRead)) continue;
 
-                if (! is_mapped_chrom_pair(bamRead)) continue;
-                if (bamRead.map_qual()==0) continue;
-
-                // filter any split reads with an SA tag:
-                static const char SAtag[] = {'S','A'};
-                if (NULL != bamRead.get_string_tag(SAtag)) continue;
-
-                // remove reads without perfect alignments
-                if (alignFilter.isFilterRead(bamRead)) continue;
-
-                /// filter out upstream reads and high depth regions:
-                if (pairFilter.isFilterRead(bamRead)) continue;
-
-                // Assert only two reads per fragment
-                const unsigned readNum(bamRead.is_first() ? 1 : 2);
-                assert(bamRead.is_second() == (readNum == 2));
+                ReadGroupTracker& rgInfo(rgManager.getTracker(bamRead));
 
                 // get orientation stats before final filter for innie reads below:
                 //
-                // we won't use anything but innie reads, but sampling up hear allows us to detect, ie. a mate-pair library
-                // so that we can blow-up with an informative error
+                // we won't use anything but innie reads for insert size stats, but sampling
+                // orientation beforehand allows us to detect, ie. a mate-pair library
+                // so that we can blow-up with an informative error msg
                 //
                 rgInfo.addOrient(bamRead);
 
                 // filter mapped innies on the same chrom
                 //
-                // note we don't rely on the proper pair bit because this already contains an arbitrary length filter
-                // AND subjects the method to aligner specific variation
+                // note we don't rely on the proper pair bit because this already contains an
+                // arbitrary length filter and  subjects the method to aligner specific variation
                 //
                 // TODO: ..note this locks-in standard ilmn orientation -- okay for now but this function needs major
                 // re-arrangement for mate-pair support, we could still keep independence from each aligner's proper
@@ -637,29 +791,16 @@ extractReadGroupStatsFromBam(
                 //
                 if (! is_innie_pair(bamRead)) continue;
 
-                unsigned currFragSize(std::abs(bamRead.template_size()));
-
-                // reduce fragsize resolution for very large sizes:
-                // (large sizes are uncommon -- this doesn't need to be clever/fast)
-                {
-                    unsigned steps(0);
-                    while (currFragSize>1000)
-                    {
-                        currFragSize /= 10;
-                        steps++;
-                    }
-                    for (unsigned stepIndex(0); stepIndex<steps; ++stepIndex) currFragSize *= 10;
-                }
-
-                rgInfo.addInsertSize(currFragSize);
+                rgInfo.addInsertSize(getSimplifiedFragSize(bamRead));
 
                 if (! rgInfo.isInsertSizeCountCheck()) continue;
 
                 // check convergence
                 rgInfo.updateInsertSizeConvergenceTest();
 
-                static const unsigned maxRecordCount(5000000);
-                if (rgInfo.isInsertSizeConverged() || (rgInfo.insertSizeObservations()>maxRecordCount)) isStopEstimation=true;
+                if (! rgManager.isFinishedRegion()) continue;
+
+                isStopEstimation = rgManager.isStopEstimation();
 
                 // break from reading the current chromosome
                 break;
@@ -667,6 +808,10 @@ extractReadGroupStatsFromBam(
         }
     }
 
-    static const std::string defaultReadGroup;
-    rstats.setStats(statsBamFile, defaultReadGroup, rgInfo.getStats());
+    rgManager.finalize();
+
+    BOOST_FOREACH(const ReadGroupManager::RGMapType::value_type& val, rgManager.getMap())
+    {
+        rstats.setStats(val.first.bamLabel, val.first.rgLabel, val.second.getStats());
+    }
 }
