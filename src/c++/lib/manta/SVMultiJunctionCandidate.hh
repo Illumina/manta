@@ -29,9 +29,9 @@
 /// event, and thus be able to call the full event with perhaps less evidence per each single breakend than would be acceptable
 /// during regular calling.
 ///
-struct SVComplexCandidate
+struct SVMultiJunctionCandidate
 {
-    SVComplexCandidate()
+    SVMultiJunctionCandidate()
     {}
 
     std::vector<SVCandidate> junctions;
@@ -41,4 +41,4 @@ struct SVComplexCandidate
 };
 
 std::ostream&
-operator<<(std::ostream& os, const SVComplexCandidate& svc);
+operator<<(std::ostream& os, const SVMultiJunctionCandidate& svc);
