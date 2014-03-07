@@ -84,6 +84,28 @@ edgeRFactory(
 
 
 
+#if 0
+/// edge indices+graph evidence counts and regions:
+///
+/// this is designed to be useful even when the locus graph is not present
+struct EhancedEdgeInfo
+{
+
+};
+
+/// reduce the full (very-large) graph down to just the information we need during SVCandidate generation:
+struct ReducedGraphInfo
+{
+    ReducedGraphInfo(const GSCOptions& opt)
+
+    bam_header_info header;
+
+    std::vector<EnhancedEdgeInfo> edges;
+};
+#endif
+
+
+
 /// hack object setup to allow iteration over multiple sv candidates
 ///
 struct SVWriter
@@ -216,31 +238,91 @@ struct SVWriter
 };
 
 
-#if 0
-/// edge indices+graph evidence counts and regions:
-///
-/// this is designed to be useful even when the locus graph is not present
-struct EhancedEdgeInfo
+
+struct SVCandidateProcessor
 {
+    SVCandidateProcessor(
+        const GSCOptions& opt,
+        const char* progName,
+        const char* progVersion,
+        const SVLocusSet& cset,
+        TruthTracker& truthTracker,
+        EdgeRuntimeTracker& edgeTracker) :
+        _opt(opt),
+        _truthTracker(truthTracker),
+        _edgeTracker(edgeTracker),
+        _svRefine(opt, cset.header),
+        _svWriter(opt, cset, progName, progVersion, truthTracker)
+    {}
 
-};
-
-/// reduce the full (very-large) graph down to just the information we need during SVCandidate generation:
-struct ReducedGraphInfo
-{
-    ReducedGraphInfo(const GSCOptions& opt)
-
-    bam_header_info header;
-
-    std::vector<EnhancedEdgeInfo> edges;
-};
+    void
+    evaluateCandidate(
+        const EdgeInfo& edge,
+        const SVCandidate& candidateSV,
+        const SVCandidateSetData& svData)
+    {
+        if (_opt.isVerbose)
+        {
+            log_os << __FUNCTION__ << ": Starting analysis of low-resolution candidate: " << candidateSV.candidateIndex << "\n";
+        }
+#ifdef DEBUG_GSV
+        log_os << __FUNCTION__ << ": CandidateSV: " << candidateSV << "\n";
 #endif
+
+
+        const bool isComplex(isComplexSV(candidateSV));
+        _edgeTracker.addCand(isComplex);
+
+        SVCandidateAssemblyData assemblyData;
+
+        if (! _opt.isSkipAssembly)
+        {
+            _svRefine.getCandidateAssemblyData(candidateSV, svData, assemblyData, _opt.isRNA);
+
+            if (_opt.isVerbose)
+            {
+                log_os << __FUNCTION__ << ": Candidate assembly complete. Assembled candidate count: " << assemblyData.svs.size() << "\n";
+            }
+        }
+
+        if (assemblyData.svs.empty())
+        {
+#ifdef DEBUG_GSV
+            log_os << __FUNCTION__ << ": score and output low-res candidate\n";
+#endif
+            _svWriter.writeSV(edge, svData, assemblyData, candidateSV);
+
+        }
+        else
+        {
+            _edgeTracker.addAssm(isComplex);
+
+            _truthTracker.reportNumAssembled(assemblyData.svs.size());
+
+            BOOST_FOREACH(const SVCandidate& assembledSV, assemblyData.svs)
+            {
+                _truthTracker.addAssembledSV();
+#ifdef DEBUG_GSV
+                log_os << __FUNCTION__ << ": score and output assembly candidate: " << assembledSV << "\n";
+#endif
+                _svWriter.writeSV(edge, svData, assemblyData, assembledSV);
+            }
+        }
+    }
+
+private:
+    const GSCOptions& _opt;
+    TruthTracker& _truthTracker;
+    EdgeRuntimeTracker& _edgeTracker;
+    SVCandidateAssemblyRefiner _svRefine;
+    SVWriter _svWriter;
+};
 
 
 
 /// should we filter out the SVCandidate?
 ///
-/// Note this logic belongs in SVFinder and should make it's way there once stable:
+/// Note this logic belongs in SVFinder and should make its way there once stable:
 static
 bool
 isFilterCandidate(
@@ -286,17 +368,17 @@ runGSC(
     SVFinder svFind(opt);
     const SVLocusSet& cset(svFind.getSet());
 
-    SVCandidateAssemblyRefiner svRefine(opt, cset.header);
+    TruthTracker truthTracker(opt.truthVcfFilename, cset);
+    EdgeRuntimeTracker edgeTracker(opt.edgeRuntimeFilename);
+
+    SVCandidateProcessor svProcessor(opt, progName, progVersion, cset,  truthTracker, edgeTracker);
 
     std::auto_ptr<EdgeRetriever> edgerPtr(edgeRFactory(cset, opt.edgeOpt));
     EdgeRetriever& edger(*edgerPtr);
 
-    TruthTracker truthTracker(opt.truthVcfFilename, cset);
-
-    SVWriter svWriter(opt, cset, progName, progVersion, truthTracker);
-
     SVCandidateSetData svData;
     std::vector<SVCandidate> svs;
+    std::vector<SVCandidate> reducedSVs;
 
     static const std::string logtag("runGSC");
     if (opt.isVerbose)
@@ -304,24 +386,23 @@ runGSC(
         log_os << logtag << " " << cset.header << "\n";
     }
 
-    EdgeRuntimeTracker edgeTrack(opt.edgeRuntimeFilename);
     const std::map<std::string, int32_t>& chromToIndex(cset.header.chrom_to_index);
 
     while (edger.next())
     {
         const EdgeInfo& edge(edger.getEdge());
 
-        truthTracker.addEdge(edge);
-        edgeTrack.start();
-
-        if (opt.isVerbose)
-        {
-            log_os << logtag << " starting analysis of edge: ";
-            dumpEdgeInfo(edge,cset,log_os);
-        }
-
         try
         {
+            truthTracker.addEdge(edge);
+            edgeTracker.start();
+
+            if (opt.isVerbose)
+            {
+                log_os << logtag << " starting analysis of edge: ";
+                dumpEdgeInfo(edge,cset,log_os);
+            }
+
             // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
             svFind.findCandidateSV(chromToIndex, edge, svData, svs,
                                    truthTracker);
@@ -333,59 +414,21 @@ runGSC(
                 log_os << logtag << " Low-resolution candidate generation complete. Candidate count: " << svs.size() << "\n";
             }
 
+            reducedSVs.clear();
             BOOST_FOREACH(const SVCandidate& candidateSV, svs)
             {
                 truthTracker.addCandSV();
 
                 /// Filter various candidates types:
                 if (isFilterCandidate(candidateSV)) continue;
+                reducedSVs.push_back(candidateSV);
+            }
 
-                if (opt.isVerbose)
-                {
-                    log_os << logtag << " Starting analysis of low-resolution candidate: " << candidateSV.candidateIndex << "\n";
-                }
-#ifdef DEBUG_GSV
-                log_os << logtag << " CandidateSV: " << candidateSV << "\n";
-#endif
+//            findComplexCandidates(reduced)
 
-                const bool isComplex(isComplexSV(candidateSV));
-                edgeTrack.addCand(isComplex);
-
-                SVCandidateAssemblyData assemblyData;
-
-                if (! opt.isSkipAssembly)
-                {
-                    svRefine.getCandidateAssemblyData(candidateSV, svData, assemblyData, opt.isRNA);
-
-                    if (opt.isVerbose)
-                    {
-                        log_os << logtag << " Candidate assembly complete. Assembled candidate count: " << assemblyData.svs.size() << "\n";
-                    }
-                }
-
-                if (assemblyData.svs.empty())
-                {
-#ifdef DEBUG_GSV
-                    log_os << logtag << " score and output low-res candidate\n";
-#endif
-                    svWriter.writeSV(edge, svData, assemblyData, candidateSV);
-
-                }
-                else
-                {
-                    edgeTrack.addAssm(isComplex);
-
-                    truthTracker.reportNumAssembled(assemblyData.svs.size());
-
-                    BOOST_FOREACH(const SVCandidate& assembledSV, assemblyData.svs)
-                    {
-                        truthTracker.addAssembledSV();
-#ifdef DEBUG_GSV
-                        log_os << logtag << " score and output assembly candidate: " << assembledSV << "\n";
-#endif
-                        svWriter.writeSV(edge, svData, assemblyData, assembledSV);
-                    }
-                }
+            BOOST_FOREACH(const SVCandidate& candidateSV, reducedSVs)
+            {
+                svProcessor.evaluateCandidate(edge, candidateSV, svData);
             }
         }
         catch (illumina::common::ExceptionData& e)
@@ -402,10 +445,10 @@ runGSC(
             throw;
         }
 
-        edgeTrack.stop(edge);
+        edgeTracker.stop(edge);
         if (opt.isVerbose)
         {
-            log_os << logtag << " Processing this edge took " << edgeTrack.getLastEdgeTime() << " seconds.\n";
+            log_os << logtag << " Processing this edge took " << edgeTracker.getLastEdgeTime() << " seconds.\n";
         }
     }
 
