@@ -15,7 +15,7 @@
 /// \author Chris Saunders
 ///
 
-#include "manta/SVComplexCandidate.hh"
+#include "manta/SVMultiJunctionCandidate.hh"
 
 #include "boost/foreach.hpp"
 
@@ -26,7 +26,7 @@
 std::ostream&
 operator<<(
     std::ostream& os,
-    const SVComplexCandidate& scc)
+    const SVMultiJunctionCandidate& scc)
 {
     static const char indent('\t');
     os << "SVComplexCandidate:\n"
