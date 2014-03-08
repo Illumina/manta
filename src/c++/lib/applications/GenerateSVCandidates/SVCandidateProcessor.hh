@@ -1,0 +1,97 @@
+// -*- mode: c++; indent-tabs-mode: nil; -*-
+//
+// Manta
+// Copyright (c) 2013-2014 Illumina, Inc.
+//
+// This software is provided under the terms and conditions of the
+// Illumina Open Source Software License 1.
+//
+// You should have received a copy of the Illumina Open Source
+// Software License 1 along with this program. If not, see
+// <https://github.com/sequencing/licenses/>
+//
+
+///
+/// \author Chris Saunders
+///
+
+#pragma once
+
+#include "EdgeRuntimeTracker.hh"
+#include "GSCOptions.hh"
+#include "SVCandidateAssemblyRefiner.hh"
+#include "SVScorer.hh"
+
+#include "common/OutStream.hh"
+#include "manta/SVCandidateAssemblyData.hh"
+#include "manta/SVCandidateUtil.hh"
+#include "manta/SVMultiJunctionCandidate.hh"
+#include "format/VcfWriterCandidateSV.hh"
+#include "format/VcfWriterDiploidSV.hh"
+#include "format/VcfWriterSomaticSV.hh"
+#include "truth/TruthTracker.hh"
+
+#include <memory>
+
+//#define DEBUG_GSV
+
+
+
+struct SVWriter
+{
+    SVWriter(
+        const GSCOptions& initOpt,
+        const SVLocusSet& cset,
+        const char* progName,
+        const char* progVersion,
+        TruthTracker& truthTracker);
+
+    void
+    writeSV(
+        const EdgeInfo& edge,
+        const SVCandidateSetData& svData,
+        const SVCandidateAssemblyData& assemblyData,
+        const SVCandidate& sv);
+
+    ///////////////////////// data:
+    const GSCOptions& opt;
+    const bool isSomatic;
+
+    SVScorer svScore;
+    SVModelScoreInfo modelScoreInfo;
+
+    OutStream candfs;
+    OutStream dipfs;
+    OutStream somfs;
+
+    VcfWriterCandidateSV candWriter;
+    VcfWriterDiploidSV diploidWriter;
+    VcfWriterSomaticSV somWriter;
+
+    TruthTracker& _truthTracker;
+};
+
+
+struct SVCandidateProcessor
+{
+    SVCandidateProcessor(
+        const GSCOptions& opt,
+        const char* progName,
+        const char* progVersion,
+        const SVLocusSet& cset,
+        TruthTracker& truthTracker,
+        EdgeRuntimeTracker& edgeTracker);
+
+    void
+    evaluateCandidate(
+        const EdgeInfo& edge,
+        const SVMultiJunctionCandidate& mjCandidateSV,
+        const SVCandidateSetData& svData);
+
+private:
+    const GSCOptions& _opt;
+    TruthTracker& _truthTracker;
+    EdgeRuntimeTracker& _edgeTracker;
+    SVCandidateAssemblyRefiner _svRefine;
+    SVWriter _svWriter;
+};
