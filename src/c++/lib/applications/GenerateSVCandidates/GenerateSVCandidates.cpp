@@ -20,21 +20,16 @@
 #include "EdgeRetrieverLocus.hh"
 #include "EdgeRuntimeTracker.hh"
 #include "GSCOptions.hh"
-#include "SVCandidateAssemblyRefiner.hh"
+#include "SVCandidateProcessor.hh"
 #include "SVFinder.hh"
-#include "SVScorer.hh"
 
 #include "blt_util/log.hh"
 #include "blt_util/bam_header_util.hh"
 
 #include "common/Exceptions.hh"
-#include "common/OutStream.hh"
 #include "manta/ReadGroupStatsSet.hh"
-#include "manta/SVCandidateAssemblyData.hh"
 #include "manta/SVCandidateUtil.hh"
-#include "format/VcfWriterCandidateSV.hh"
-#include "format/VcfWriterDiploidSV.hh"
-#include "format/VcfWriterSomaticSV.hh"
+#include "manta/SVMultiJunctionCandidate.hh"
 #include "truth/TruthTracker.hh"
 
 #include "boost/foreach.hpp"
@@ -106,220 +101,6 @@ struct ReducedGraphInfo
 
 
 
-/// hack object setup to allow iteration over multiple sv candidates
-///
-struct SVWriter
-{
-    SVWriter(
-        const GSCOptions& initOpt,
-        const SVLocusSet& cset,
-        const char* progName,
-        const char* progVersion,
-        TruthTracker& truthTracker) :
-        opt(initOpt),
-        isSomatic(! opt.somaticOutputFilename.empty()),
-        svScore(opt, cset.header),
-        candfs(opt.candidateOutputFilename),
-        dipfs(opt.diploidOutputFilename),
-        somfs(opt.somaticOutputFilename),
-        candWriter(opt.referenceFilename,cset,candfs.getStream()),
-        diploidWriter(opt.diploidOpt, (! opt.chromDepthFilename.empty()),
-                      opt.referenceFilename,cset,dipfs.getStream()),
-        somWriter(opt.somaticOpt, (! opt.chromDepthFilename.empty()),
-                  opt.referenceFilename,cset,somfs.getStream()),
-        _truthTracker(truthTracker)
-    {
-        if (0 == opt.edgeOpt.binIndex)
-        {
-            candWriter.writeHeader(progName, progVersion);
-            diploidWriter.writeHeader(progName, progVersion);
-            if (isSomatic) somWriter.writeHeader(progName, progVersion);
-        }
-    }
-
-    void
-    writeSV(
-        const EdgeInfo& edge,
-        const SVCandidateSetData& svData,
-        const SVCandidateAssemblyData& assemblyData,
-        const SVCandidate& sv)
-    {
-        static const unsigned minCandidateSpanningCount(3);
-
-        const bool isCandidateSpanning(assemblyData.isCandidateSpanning);
-
-#ifdef DEBUG_GSV
-        static const std::string logtag("SVWriter::writeSV: ");
-        log_os << logtag << "isSpanningSV: " <<  isCandidateSpanning << "\n";
-#endif
-
-        if (! isCandidateSpanning)
-        {
-            if (sv.isImprecise())
-            {
-                // in this case a non-spanning low-res candidate went into assembly but
-                // did not produce a successful contig alignment:
-#ifdef DEBUG_GSV
-                log_os << logtag << "Rejecting candidate: imprecise non-spanning SV\n";
-#endif
-                _truthTracker.reportOutcome(SVLog::IMPRECISE_NON_SPANNING);
-                return;
-            }
-        }
-        else
-        {
-            if (sv.bp1.getSpanningCount() < minCandidateSpanningCount)
-            {
-#ifdef DEBUG_GSV
-                log_os << logtag << "Rejecting candidate: minCandidateSpanningCount\n";
-#endif
-                _truthTracker.reportOutcome(SVLog::LOW_SPANNING_COUNT);
-                return;
-            }
-        }
-
-        // check min size for candidate output:
-        if (isSVBelowMinSize(sv,opt.scanOpt.minCandidateVariantSize))
-        {
-#ifdef DEBUG_GSV
-            log_os << logtag << "Filtering out candidate below min size before candidate output stage\n";
-#endif
-            return;
-        }
-
-        candWriter.writeSV(edge, svData, assemblyData, sv);
-
-        // check min size for scoring:
-        if (isSVBelowMinSize(sv,opt.minScoredVariantSize))
-        {
-#ifdef DEBUG_GSV
-            log_os << logtag << "Filtering out candidate below min size at scoring stage\n";
-#endif
-            return;
-        }
-
-        svScore.scoreSV(svData, assemblyData, sv, isSomatic, modelScoreInfo);
-
-        if (modelScoreInfo.diploid.altScore >= opt.diploidOpt.minOutputAltScore || opt.isRNA) // todo remove after adding RNA scoring
-        {
-            diploidWriter.writeSV(edge, svData, assemblyData, sv, modelScoreInfo);
-        }
-
-        if (isSomatic)
-        {
-            if (modelScoreInfo.somatic.somaticScore > opt.somaticOpt.minOutputSomaticScore)
-            {
-                somWriter.writeSV(edge, svData, assemblyData, sv, modelScoreInfo);
-                _truthTracker.reportOutcome(SVLog::WRITTEN);
-            }
-            else
-            {
-                _truthTracker.reportOutcome(SVLog::LOW_SOMATIC_SCORE);
-            }
-        }
-    }
-
-    ///////////////////////// data:
-    const GSCOptions& opt;
-    const bool isSomatic;
-
-    SVScorer svScore;
-    SVModelScoreInfo modelScoreInfo;
-
-    OutStream candfs;
-    OutStream dipfs;
-    OutStream somfs;
-
-    VcfWriterCandidateSV candWriter;
-    VcfWriterDiploidSV diploidWriter;
-    VcfWriterSomaticSV somWriter;
-
-    TruthTracker& _truthTracker;
-};
-
-
-
-struct SVCandidateProcessor
-{
-    SVCandidateProcessor(
-        const GSCOptions& opt,
-        const char* progName,
-        const char* progVersion,
-        const SVLocusSet& cset,
-        TruthTracker& truthTracker,
-        EdgeRuntimeTracker& edgeTracker) :
-        _opt(opt),
-        _truthTracker(truthTracker),
-        _edgeTracker(edgeTracker),
-        _svRefine(opt, cset.header),
-        _svWriter(opt, cset, progName, progVersion, truthTracker)
-    {}
-
-    void
-    evaluateCandidate(
-        const EdgeInfo& edge,
-        const SVCandidate& candidateSV,
-        const SVCandidateSetData& svData)
-    {
-        if (_opt.isVerbose)
-        {
-            log_os << __FUNCTION__ << ": Starting analysis of low-resolution candidate: " << candidateSV.candidateIndex << "\n";
-        }
-#ifdef DEBUG_GSV
-        log_os << __FUNCTION__ << ": CandidateSV: " << candidateSV << "\n";
-#endif
-
-
-        const bool isComplex(isComplexSV(candidateSV));
-        _edgeTracker.addCand(isComplex);
-
-        SVCandidateAssemblyData assemblyData;
-
-        if (! _opt.isSkipAssembly)
-        {
-            _svRefine.getCandidateAssemblyData(candidateSV, svData, assemblyData, _opt.isRNA);
-
-            if (_opt.isVerbose)
-            {
-                log_os << __FUNCTION__ << ": Candidate assembly complete. Assembled candidate count: " << assemblyData.svs.size() << "\n";
-            }
-        }
-
-        if (assemblyData.svs.empty())
-        {
-#ifdef DEBUG_GSV
-            log_os << __FUNCTION__ << ": score and output low-res candidate\n";
-#endif
-            _svWriter.writeSV(edge, svData, assemblyData, candidateSV);
-
-        }
-        else
-        {
-            _edgeTracker.addAssm(isComplex);
-
-            _truthTracker.reportNumAssembled(assemblyData.svs.size());
-
-            BOOST_FOREACH(const SVCandidate& assembledSV, assemblyData.svs)
-            {
-                _truthTracker.addAssembledSV();
-#ifdef DEBUG_GSV
-                log_os << __FUNCTION__ << ": score and output assembly candidate: " << assembledSV << "\n";
-#endif
-                _svWriter.writeSV(edge, svData, assemblyData, assembledSV);
-            }
-        }
-    }
-
-private:
-    const GSCOptions& _opt;
-    TruthTracker& _truthTracker;
-    EdgeRuntimeTracker& _edgeTracker;
-    SVCandidateAssemblyRefiner _svRefine;
-    SVWriter _svWriter;
-};
-
-
-
 /// should we filter out the SVCandidate?
 ///
 /// Note this logic belongs in SVFinder and should make its way there once stable:
@@ -354,6 +135,26 @@ isFilterCandidate(
 
 static
 void
+findMultiJunctionCandidates(
+    const std::vector<SVCandidate>& svs,
+    std::vector<SVMultiJunctionCandidate>& mjSVs)
+{
+    mjSVs.clear();
+    BOOST_FOREACH(const SVCandidate& candidateSV, svs)
+    {
+        /// Filter various candidates types:
+        if (isFilterCandidate(candidateSV)) continue;
+
+        SVMultiJunctionCandidate mj;
+        mj.junctions.push_back(candidateSV);
+        mjSVs.push_back(mj);
+    }
+}
+
+
+
+static
+void
 runGSC(
     const GSCOptions& opt,
     const char* progName,
@@ -378,7 +179,7 @@ runGSC(
 
     SVCandidateSetData svData;
     std::vector<SVCandidate> svs;
-    std::vector<SVCandidate> reducedSVs;
+    std::vector<SVMultiJunctionCandidate> mjSVs;
 
     static const std::string logtag("runGSC");
     if (opt.isVerbose)
@@ -414,21 +215,17 @@ runGSC(
                 log_os << logtag << " Low-resolution candidate generation complete. Candidate count: " << svs.size() << "\n";
             }
 
-            reducedSVs.clear();
-            BOOST_FOREACH(const SVCandidate& candidateSV, svs)
+            const unsigned svCount(svs.size());
+            for (unsigned i(0);i<svCount;++i)
             {
                 truthTracker.addCandSV();
-
-                /// Filter various candidates types:
-                if (isFilterCandidate(candidateSV)) continue;
-                reducedSVs.push_back(candidateSV);
             }
 
-//            findComplexCandidates(reduced)
+            findMultiJunctionCandidates(svs, mjSVs);
 
-            BOOST_FOREACH(const SVCandidate& candidateSV, reducedSVs)
+            BOOST_FOREACH(const SVMultiJunctionCandidate& mjCandidateSV, mjSVs)
             {
-                svProcessor.evaluateCandidate(edge, candidateSV, svData);
+                svProcessor.evaluateCandidate(edge, mjCandidateSV, svData);
             }
         }
         catch (illumina::common::ExceptionData& e)
