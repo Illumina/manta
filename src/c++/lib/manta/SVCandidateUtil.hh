@@ -79,6 +79,9 @@ isSpanningSV(const SVCandidate& sv)
 }
 
 
+/// complex in this case means that we have no specific hypothesis for the SV --
+/// it is just a single genomic region for which we schedule local assembly
+///
 inline
 bool
 isComplexSV(const SVCandidate& sv)

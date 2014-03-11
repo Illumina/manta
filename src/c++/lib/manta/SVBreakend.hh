@@ -215,6 +215,17 @@ isSameOrientation(
 
 inline
 bool
+isOppositeOrientation(
+    const index_t idx1,
+    const index_t idx2)
+{
+    if (! isSimpleBreakend(idx1)) return false;
+    if (! isSimpleBreakend(idx2)) return false;
+    return (idx1!=idx2);
+}
+
+inline
+bool
 isInnies(
     const bool isIdx1First,
     const index_t idx1,
