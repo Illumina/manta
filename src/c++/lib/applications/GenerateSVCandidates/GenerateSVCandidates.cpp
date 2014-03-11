@@ -133,6 +133,60 @@ isFilterCandidate(
 
 
 
+///
+static
+bool
+isIntervalPairGroupCandidate(
+    const GenomeInterval& intervalA,
+    const GenomeInterval& intervalB,
+    const unsigned groupRange)
+{
+    if (intervalA.tid != intervalB.tid) return false;
+
+    const unsigned abDist(std::abs(intervalA.range.center_pos() - intervalB.range.center_pos()));
+    return (abDist <= groupRange);
+}
+
+
+
+/// are two breakend pairs candidates for a multi-junction analysis?:
+///
+static
+bool
+isBreakendPairGroupCandidate(
+    const SVBreakend& bpA,
+    const SVBreakend& bpB,
+    const unsigned groupRange = 1000)
+{
+    if (! isOppositeOrientation(bpA.state, bpB.state)) return false;
+
+    return isIntervalPairGroupCandidate(bpA.interval, bpB.interval, groupRange);
+}
+
+
+namespace MJ_INTERACTION
+{
+    enum index_t {
+        NONE,
+        SAME,
+        FLIP,
+        CONFLICT
+    };
+
+    struct MJState
+    {
+        MJState() :
+            type(NONE),
+            partnerId(0)
+        {}
+
+        index_t type;
+        unsigned partnerId;
+    };
+}
+
+
+
 static
 void
 findMultiJunctionCandidates(
@@ -140,13 +194,97 @@ findMultiJunctionCandidates(
     std::vector<SVMultiJunctionCandidate>& mjSVs)
 {
     mjSVs.clear();
+
+    std::vector<SVCandidate> complexSVs;
+    std::vector<SVCandidate> spanningSVs;
+
     BOOST_FOREACH(const SVCandidate& candidateSV, svs)
     {
         /// Filter various candidates types:
         if (isFilterCandidate(candidateSV)) continue;
 
+        const bool isComplex(isComplexSV(candidateSV));
+
+        if (isComplex)
+        {
+            complexSVs.push_back(candidateSV);
+        }
+        else
+        {
+            spanningSVs.push_back(candidateSV);
+        }
+    }
+
+    /// do a brute-force intersection test to see if we can associate candidates:
+    ///
+    /// intersection rules : breakend region center must be within distance N
+    /// intersecting breakend orientation makes it possible for these to be a single event -- ie. pointing away or towards each other
+    /// full set of intersections must complete a loop, this is an intentionally conservative requirement to make sure we start into
+    ///    this without getting involved in the really difficult stuff
+    ///
+    /// just for the starting version, the number of SVCandidates which can intersect is limited to 2
+    ///
+
+    const unsigned spanCount(spanningSVs.size());
+    std::vector<MJ_INTERACTION::MJState> spanPartners(spanCount);
+    {
+        using namespace MJ_INTERACTION;
+
+        for (unsigned spanIndexA(0); (spanIndexA+1)<spanCount; ++spanIndexA)
+        {
+            const SVCandidate& spanA(spanningSVs[spanIndexA]);
+            for (unsigned spanIndexB(spanIndexA+1); spanIndexB<spanCount; ++spanIndexB)
+            {
+                const SVCandidate& spanB(spanningSVs[spanIndexB]);
+
+                const bool isSameBpGroup(isBreakendPairGroupCandidate(spanA.bp1,spanB.bp1) && isBreakendPairGroupCandidate(spanA.bp2,spanB.bp2));
+                const bool isFlipBpGroup(isBreakendPairGroupCandidate(spanA.bp1,spanB.bp2) && isBreakendPairGroupCandidate(spanA.bp2,spanB.bp1));
+
+                if (isSameBpGroup || isFlipBpGroup)
+                {
+                    if ((spanPartners[spanIndexA].type == NONE) && (spanPartners[spanIndexB].type == NONE))
+                    {
+                        const index_t newType( isSameBpGroup ? SAME : FLIP );
+                        spanPartners[spanIndexA].type = newType;
+                        spanPartners[spanIndexA].partnerId = spanIndexB;
+                        spanPartners[spanIndexB].type = newType;
+                        spanPartners[spanIndexB].partnerId = spanIndexA;
+                    }
+                    else
+                    {
+                        spanPartners[spanIndexA].type = CONFLICT;
+                        spanPartners[spanIndexB].type = CONFLICT;
+                    }
+                }
+            }
+        }
+    }
+
+    /// complex SVs are translated directly into single partner candidates:
+    BOOST_FOREACH(const SVCandidate& candidateSV, complexSVs)
+    {
         SVMultiJunctionCandidate mj;
         mj.junctions.push_back(candidateSV);
+        mjSVs.push_back(mj);
+    }
+
+    for (unsigned spanIndex(0); spanIndex<spanCount; ++spanIndex)
+    {
+        SVMultiJunctionCandidate mj;
+        mj.junctions.push_back(spanningSVs[spanIndex]);
+
+        using namespace MJ_INTERACTION;
+        if ((spanPartners[spanIndex].type == SAME) ||
+            (spanPartners[spanIndex].type == FLIP))
+        {
+            const unsigned partnerId(spanPartners[spanIndex].partnerId);
+            assert(partnerId < spanCount);
+
+            // only include the connected pair once:
+            if (partnerId < spanIndex) continue;
+
+            mj.junctions.push_back(spanningSVs[partnerId]);
+        }
         mjSVs.push_back(mj);
     }
 }
