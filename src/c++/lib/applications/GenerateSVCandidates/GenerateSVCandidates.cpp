@@ -133,18 +133,51 @@ isFilterCandidate(
 
 
 
+static
+unsigned
+getIntervalDist(
+    const GenomeInterval& intervalA,
+    const GenomeInterval& intervalB)
+{
+    static const unsigned far(std::numeric_limits<unsigned>::max());
+
+    if (intervalA.tid != intervalB.tid) return far;
+
+    return std::abs(intervalA.range.center_pos() - intervalB.range.center_pos());
+}
+
+
+
 ///
 static
 bool
 isIntervalPairGroupCandidate(
     const GenomeInterval& intervalA,
     const GenomeInterval& intervalB,
-    const unsigned groupRange)
+    const unsigned minFilterDist)
 {
-    if (intervalA.tid != intervalB.tid) return false;
+    return (getIntervalDist(intervalA,intervalB) < minFilterDist);
+}
 
-    const unsigned abDist(std::abs(intervalA.range.center_pos() - intervalB.range.center_pos()));
-    return (abDist <= groupRange);
+
+
+/// return  1 if dist(A1,B1) and dist(A2,B2) are both less than dist(A1,B2) and dist(A2,B1)
+/// return -1 if dist(A1,B2) and dist(A2,B1) are both less than dist(A1,B1) and dist(A2,B2)
+/// return 0 for all other cases
+static
+int
+getJunctionBpAlignment(
+    const SVCandidate& svA,
+    const SVCandidate& svB)
+{
+    unsigned dist11(getIntervalDist(svA.bp1.interval,svB.bp1.interval));
+    unsigned dist12(getIntervalDist(svA.bp1.interval,svB.bp2.interval));
+    unsigned dist21(getIntervalDist(svA.bp2.interval,svB.bp1.interval));
+    unsigned dist22(getIntervalDist(svA.bp2.interval,svB.bp2.interval));
+
+    if (((dist11 < dist12) && (dist11 < dist21)) && ((dist22 < dist12) && (dist22 < dist21))) return  1;
+    if (((dist12 < dist11) && (dist12 < dist22)) && ((dist21 < dist11) && (dist21 < dist22))) return -1;
+    return 0;
 }
 
 
@@ -236,11 +269,27 @@ findMultiJunctionCandidates(
             for (unsigned spanIndexB(spanIndexA+1); spanIndexB<spanCount; ++spanIndexB)
             {
                 const SVCandidate& spanB(spanningSVs[spanIndexB]);
-
                 const bool isSameBpGroup(isBreakendPairGroupCandidate(spanA.bp1,spanB.bp1) && isBreakendPairGroupCandidate(spanA.bp2,spanB.bp2));
                 const bool isFlipBpGroup(isBreakendPairGroupCandidate(spanA.bp1,spanB.bp2) && isBreakendPairGroupCandidate(spanA.bp2,spanB.bp1));
 
+                bool isGroup(false);
                 if (isSameBpGroup || isFlipBpGroup)
+                {
+                    isGroup=true;
+
+                    /// check that this isn't a flipped association as breakpoints get near each other,
+                    /// if it is treat the association as independent junctions:
+                    if (isSameBpGroup)
+                    {
+                        if (getJunctionBpAlignment(spanA, spanB) != 1) isGroup=false;
+                    }
+                    else
+                    {
+                        if (getJunctionBpAlignment(spanA, spanB) != -1) isGroup=false;
+                    }
+                }
+
+                if (isGroup)
                 {
                     if ((spanPartners[spanIndexA].type == NONE) && (spanPartners[spanIndexB].type == NONE))
                     {

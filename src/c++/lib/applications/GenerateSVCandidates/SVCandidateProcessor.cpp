@@ -79,12 +79,13 @@ writeSV(
     const EdgeInfo& edge,
     const SVCandidateSetData& svData,
     const std::vector<SVCandidateAssemblyData>& mjAssemblyData,
-    const SVMultiJunctionCandidate& mjSV)
+    const SVMultiJunctionCandidate& mjSV,
+    const std::vector<bool>& isInputJunctionFiltered)
 {
     const unsigned junctionCount(mjSV.junction.size());
 
     // track filtration for each junction:
-    std::vector<bool> isJunctionFiltered(junctionCount,false);
+    std::vector<bool> isJunctionFiltered(isInputJunctionFiltered);
 
     // early SV filtering:
     //
@@ -283,6 +284,7 @@ evaluateCandidate(
     _edgeTracker.addCand(isComplex);
 
     /// assemble each junction independently:
+    bool isAnySmallAssembler(false);
     std::vector<SVCandidateAssemblyData> mjAssemblyData(junctionCount);
 
     if (! _opt.isSkipAssembly)
@@ -302,8 +304,17 @@ evaluateCandidate(
             {
                 const unsigned assemblyCount(assemblyData.svs.size());
 
-                // can't be multi-junction and multi-assembly at the same time:
-                assert(! ((junctionCount>1) && (assemblyCount>1)));
+                const bool isSpanning(assemblyData.isSpanning);
+
+                if (isSpanning)
+                {
+                    // can't be multi-junction and multi-assembly at the same time:
+                    assert(! ((junctionCount>1) && (assemblyCount>1)));
+                }
+                else
+                {
+                    isAnySmallAssembler=true;
+                }
 
                 // fill in assembly tracking data:
                 _edgeTracker.addAssm(isComplex);
@@ -318,10 +329,17 @@ evaluateCandidate(
 
     SVMultiJunctionCandidate mjAssembledCandidateSV;
     mjAssembledCandidateSV.junction.resize(junctionCount);
+    std::vector<bool> isJunctionFiltered(junctionCount,false);
 
     std::vector<unsigned> junctionTracker(junctionCount,0);
     while(true)
     {
+        /// note this loop is stupid -- it was originally written with the intention of
+        /// combinatorically enumerating all possible assembly combinations for the case
+        /// of multiple junctions with multiple assemblies each.
+        /// It doesn't do that -- but the broken thing it does is what we want for the
+        /// isAnySmallAssembler case.
+        ///
         bool isWrite(false);
         for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
         {
@@ -349,6 +367,24 @@ evaluateCandidate(
             isWrite = true;
         }
         if (! isWrite) break;
-        _svWriter.writeSV(edge, svData, mjAssemblyData, mjAssembledCandidateSV);
+
+
+
+        /// if any junctions go into the small assembler (for instance b/c the breakends are too close), then
+        /// treat all junctions as independent:
+        ///
+        if ((junctionCount>1) && isAnySmallAssembler)
+        {
+            for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
+            {
+                std::vector<bool> isJunctionFilteredHack(junctionCount,true);
+                isJunctionFilteredHack[junctionIndex] = false;
+                _svWriter.writeSV(edge, svData, mjAssemblyData, mjAssembledCandidateSV, isJunctionFilteredHack);
+            }
+        }
+        else
+        {
+            _svWriter.writeSV(edge, svData, mjAssemblyData, mjAssembledCandidateSV, isJunctionFiltered);
+        }
     }
 }

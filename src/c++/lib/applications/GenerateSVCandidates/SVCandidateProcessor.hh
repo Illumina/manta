@@ -50,7 +50,8 @@ struct SVWriter
         const EdgeInfo& edge,
         const SVCandidateSetData& svData,
         const std::vector<SVCandidateAssemblyData>& assemblyData,
-        const SVMultiJunctionCandidate& mjSV);
+        const SVMultiJunctionCandidate& mjSV,
+        const std::vector<bool>& isInputJunctionFiltered);
 
     ///////////////////////// data:
     const GSCOptions& opt;
