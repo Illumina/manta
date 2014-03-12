@@ -34,7 +34,7 @@ struct SVMultiJunctionCandidate
     SVMultiJunctionCandidate()
     {}
 
-    std::vector<SVCandidate> junctions;
+    std::vector<SVCandidate> junction;
 
     /// TODO: need to design a quick data structure to iterate through complex event breakend regions and pull out the associated candidate's
     /// breakends -- is this just a mapping from MJ breakend 'groups' to literal junction breakends??

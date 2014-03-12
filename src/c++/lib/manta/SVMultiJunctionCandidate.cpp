@@ -30,9 +30,9 @@ operator<<(
 {
     static const char indent('\t');
     os << "SVComplexCandidate:\n"
-       << indent << "total_breakend_pairs: " << scc.junctions.size() << "\n";
+       << indent << "total_breakend_junctions: " << scc.junction.size() << "\n";
 
-    BOOST_FOREACH(const SVCandidate& sv, scc.junctions)
+    BOOST_FOREACH(const SVCandidate& sv, scc.junction)
     {
         os << sv;
     }

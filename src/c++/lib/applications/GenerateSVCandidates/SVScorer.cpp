@@ -1264,26 +1264,40 @@ void
 SVScorer::
 scoreSV(
     const SVCandidateSetData& svData,
-    const SVCandidateAssemblyData& assemblyData,
-    const SVCandidate& sv,
+    const std::vector<SVCandidateAssemblyData>& mjAssemblyData,
+    const SVMultiJunctionCandidate& mjSV,
+    const std::vector<bool>& isJunctionFiltered,
     const bool isSomatic,
-    SVModelScoreInfo& modelScoreInfo)
+    std::vector<SVModelScoreInfo>& mjModelScoreInfo)
 {
-    modelScoreInfo.clear();
+    // as a transitional step, analyze junctions independently from this point:
+    const unsigned junctionCount(mjSV.junction.size());
+    mjModelScoreInfo.resize(junctionCount);
 
-    // accumulate model-neutral evidence for each candidate (or its corresponding reference allele)
-    SVEvidence evidence;
-    scoreSV(svData, assemblyData, sv, modelScoreInfo.base, evidence);
-
-    // score components specific to diploid-germline model:
-    const bool isSmallAssembler(! assemblyData.isSpanning);
-    const float smallSVWeight(getSmallSVWeight(sv,isSmallAssembler));
-    scoreDiploidSV(_diploidOpt, _diploidDopt, sv, smallSVWeight, _dFilterDiploid, evidence, modelScoreInfo.base, modelScoreInfo.diploid);
-
-    // score components specific to somatic model:
-    if (isSomatic)
+    for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
     {
-        scoreSomaticSV(_somaticOpt, _somaticDopt, sv, smallSVWeight, _dFilterSomatic, evidence, modelScoreInfo.base, modelScoreInfo.somatic);
+        if (isJunctionFiltered[junctionIndex]) continue;
+
+        const SVCandidateAssemblyData& assemblyData(mjAssemblyData[junctionIndex]);
+        const SVCandidate& sv(mjSV.junction[junctionIndex]);
+        SVModelScoreInfo& modelScoreInfo(mjModelScoreInfo[junctionIndex]);
+
+        modelScoreInfo.clear();
+
+        // accumulate model-neutral evidence for each candidate (or its corresponding reference allele)
+        SVEvidence evidence;
+        scoreSV(svData, assemblyData, sv, modelScoreInfo.base, evidence);
+
+        // score components specific to diploid-germline model:
+        const bool isSmallAssembler(! assemblyData.isSpanning);
+        const float smallSVWeight(getSmallSVWeight(sv,isSmallAssembler));
+        scoreDiploidSV(_diploidOpt, _diploidDopt, sv, smallSVWeight, _dFilterDiploid, evidence, modelScoreInfo.base, modelScoreInfo.diploid);
+
+        // score components specific to somatic model:
+        if (isSomatic)
+        {
+            scoreSomaticSV(_somaticOpt, _somaticDopt, sv, smallSVWeight, _dFilterSomatic, evidence, modelScoreInfo.base, modelScoreInfo.somatic);
+        }
     }
 }
 

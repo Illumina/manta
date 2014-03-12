@@ -264,14 +264,14 @@ findMultiJunctionCandidates(
     BOOST_FOREACH(const SVCandidate& candidateSV, complexSVs)
     {
         SVMultiJunctionCandidate mj;
-        mj.junctions.push_back(candidateSV);
+        mj.junction.push_back(candidateSV);
         mjSVs.push_back(mj);
     }
 
     for (unsigned spanIndex(0); spanIndex<spanCount; ++spanIndex)
     {
         SVMultiJunctionCandidate mj;
-        mj.junctions.push_back(spanningSVs[spanIndex]);
+        mj.junction.push_back(spanningSVs[spanIndex]);
 
         using namespace MJ_INTERACTION;
         if ((spanPartners[spanIndex].type == SAME) ||
@@ -283,7 +283,7 @@ findMultiJunctionCandidates(
             // only include the connected pair once:
             if (partnerId < spanIndex) continue;
 
-            mj.junctions.push_back(spanningSVs[partnerId]);
+            mj.junction.push_back(spanningSVs[partnerId]);
         }
         mjSVs.push_back(mj);
     }

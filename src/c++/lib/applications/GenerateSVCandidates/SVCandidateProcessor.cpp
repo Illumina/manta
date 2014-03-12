@@ -16,6 +16,7 @@
 ///
 
 #include "SVCandidateProcessor.hh"
+#include "manta/SVMultiJunctionCandidateUtil.hh"
 
 #include "blt_util/log.hh"
 
@@ -58,85 +59,178 @@ SVWriter(
 
 
 
+static
+bool
+isAnyFalse(
+    const std::vector<bool>& vb)
+{
+    BOOST_FOREACH(const bool val, vb)
+    {
+        if (! val) return true;
+    }
+    return false;
+}
+
+
+
 void
 SVWriter::
 writeSV(
     const EdgeInfo& edge,
     const SVCandidateSetData& svData,
-    const SVCandidateAssemblyData& assemblyData,
-    const SVCandidate& sv)
+    const std::vector<SVCandidateAssemblyData>& mjAssemblyData,
+    const SVMultiJunctionCandidate& mjSV)
 {
-    static const unsigned minCandidateSpanningCount(3);
+    const unsigned junctionCount(mjSV.junction.size());
 
-    const bool isCandidateSpanning(assemblyData.isCandidateSpanning);
+    // track filtration for each junction:
+    std::vector<bool> isJunctionFiltered(junctionCount,false);
 
-#ifdef DEBUG_GSV
-    static const std::string logtag("SVWriter::writeSV: ");
-    log_os << logtag << "isSpanningSV: " <<  isCandidateSpanning << "\n";
-#endif
+    // early SV filtering:
+    //
+    // 2 junction filter types:
+    // 1) tests where the junction can fail independently
+    // 2) tests where all junctions have to fail for the candidate to be filtered:
 
-    if (! isCandidateSpanning)
+    bool isCandidateSpanFail(true);
+
+    for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
     {
-        if (sv.isImprecise())
+        const SVCandidateAssemblyData& assemblyData(mjAssemblyData[junctionIndex]);
+        const SVCandidate& sv(mjSV.junction[junctionIndex]);
+
+        const bool isCandidateSpanning(assemblyData.isCandidateSpanning);
+
+    #ifdef DEBUG_GSV
+        log_os << __FUNCTION__ << ": isSpanningSV junction: " <<  isCandidateSpanning << "\n";
+    #endif
+
+        // junction dependent tests:
+        bool isJunctionSpanFail(false);
+        if (isCandidateSpanning)
         {
-            // in this case a non-spanning low-res candidate went into assembly but
-            // did not produce a successful contig alignment:
-#ifdef DEBUG_GSV
-            log_os << logtag << "Rejecting candidate: imprecise non-spanning SV\n";
-#endif
-            _truthTracker.reportOutcome(SVLog::IMPRECISE_NON_SPANNING);
+            static const unsigned minCandidateSpanningCount(3);
+            if (sv.bp1.getSpanningCount() < minCandidateSpanningCount)
+            {
+                isJunctionSpanFail=true;
+    #ifdef DEBUG_GSV
+                log_os << logtag << "Rejecting candidate: minCandidateSpanningCount\n";
+    #endif
+                _truthTracker.reportOutcome(SVLog::LOW_SPANNING_COUNT);
+                return;
+            }
+        }
+        if (! isJunctionSpanFail) isCandidateSpanFail=false;
+
+        // independent tests -- as soon as one of these fails, we can continue:
+        //
+        if (! isCandidateSpanning)
+        {
+            if (sv.isImprecise())
+            {
+                // in this case a non-spanning low-res candidate went into assembly but
+                // did not produce a successful contig alignment:
+    #ifdef DEBUG_GSV
+                log_os << __FUNCTION__ << ": Rejecting candidate junction: imprecise non-spanning SV\n";
+    #endif
+                _truthTracker.reportOutcome(SVLog::IMPRECISE_NON_SPANNING);
+                isJunctionFiltered[junctionIndex] = true;
+                continue;
+            }
+        }
+
+        // check min size for candidate output:
+        if (isSVBelowMinSize(sv,opt.scanOpt.minCandidateVariantSize))
+        {
+    #ifdef DEBUG_GSV
+            log_os << logtag << "Filtering out candidate below min size before candidate output stage\n";
+    #endif
             return;
         }
     }
-    else
+
+    // revisit dependent tests:
+    //
+    if (isCandidateSpanFail)
     {
-        if (sv.bp1.getSpanningCount() < minCandidateSpanningCount)
+        for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
         {
 #ifdef DEBUG_GSV
-            log_os << logtag << "Rejecting candidate: minCandidateSpanningCount\n";
+            log_os << __FUNCTION__ << ": Rejecting candidate junction: minCandidateSpanningCount\n";
 #endif
             _truthTracker.reportOutcome(SVLog::LOW_SPANNING_COUNT);
-            return;
+            isJunctionFiltered[junctionIndex] = true;
         }
     }
 
-    // check min size for candidate output:
-    if (isSVBelowMinSize(sv,opt.scanOpt.minCandidateVariantSize))
+    // check to see if all junctions are filtered, if so skip the whole candidate:
+    //
+    if (! isAnyFalse(isJunctionFiltered))
     {
 #ifdef DEBUG_GSV
-        log_os << logtag << "Filtering out candidate below min size before candidate output stage\n";
+        log_os << __FUNCTION__ << ": Rejecting candidate, all junctions filtered.\n";
 #endif
         return;
     }
 
-    candWriter.writeSV(edge, svData, assemblyData, sv);
+    // write out candidates for each junction independently:
+    for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
+    {
+        if (isJunctionFiltered[junctionIndex]) continue;
+
+        const SVCandidateAssemblyData& assemblyData(mjAssemblyData[junctionIndex]);
+        const SVCandidate& sv(mjSV.junction[junctionIndex]);
+
+        candWriter.writeSV(edge, svData, assemblyData, sv);
+    }
 
     // check min size for scoring:
-    if (isSVBelowMinSize(sv,opt.minScoredVariantSize))
+    for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
     {
-#ifdef DEBUG_GSV
-        log_os << logtag << "Filtering out candidate below min size at scoring stage\n";
-#endif
-        return;
-    }
+        if (isJunctionFiltered[junctionIndex]) continue;
 
-    svScore.scoreSV(svData, assemblyData, sv, isSomatic, modelScoreInfo);
-
-    if (modelScoreInfo.diploid.altScore >= opt.diploidOpt.minOutputAltScore || opt.isRNA) // todo remove after adding RNA scoring
-    {
-        diploidWriter.writeSV(edge, svData, assemblyData, sv, modelScoreInfo);
-    }
-
-    if (isSomatic)
-    {
-        if (modelScoreInfo.somatic.somaticScore > opt.somaticOpt.minOutputSomaticScore)
+        const SVCandidate& sv(mjSV.junction[junctionIndex]);
+        if (isSVBelowMinSize(sv, opt.minScoredVariantSize))
         {
-            somWriter.writeSV(edge, svData, assemblyData, sv, modelScoreInfo);
-            _truthTracker.reportOutcome(SVLog::WRITTEN);
+    #ifdef DEBUG_GSV
+            log_os << logtag << "Filtering out candidate junction below min size at scoring stage\n";
+    #endif
+            isJunctionFiltered[junctionIndex] = true;
         }
-        else
+    }
+
+    // check to see if all junctions are filtered before scoring:
+    //
+    if (! isAnyFalse(isJunctionFiltered)) return;
+
+    svScore.scoreSV(svData, mjAssemblyData, mjSV, isJunctionFiltered, isSomatic, mjModelScoreInfo);
+
+    // final scored output is treated (mostly) independently for each junction:
+    //
+    for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
+    {
+        if (isJunctionFiltered[junctionIndex]) continue;
+
+        const SVCandidateAssemblyData& assemblyData(mjAssemblyData[junctionIndex]);
+        const SVCandidate& sv(mjSV.junction[junctionIndex]);
+        const SVModelScoreInfo& modelScoreInfo(mjModelScoreInfo[junctionIndex]);
+
+        if (modelScoreInfo.diploid.altScore >= opt.diploidOpt.minOutputAltScore || opt.isRNA) /// TODO remove after adding RNA scoring
         {
-            _truthTracker.reportOutcome(SVLog::LOW_SOMATIC_SCORE);
+            diploidWriter.writeSV(edge, svData, assemblyData, sv, modelScoreInfo);
+        }
+
+        if (isSomatic)
+        {
+            if (modelScoreInfo.somatic.somaticScore > opt.somaticOpt.minOutputSomaticScore)
+            {
+                somWriter.writeSV(edge, svData, assemblyData, sv, modelScoreInfo);
+                _truthTracker.reportOutcome(SVLog::WRITTEN);
+            }
+            else
+            {
+                _truthTracker.reportOutcome(SVLog::LOW_SOMATIC_SCORE);
+            }
         }
     }
 }
@@ -167,54 +261,94 @@ evaluateCandidate(
     const SVMultiJunctionCandidate& mjCandidateSV,
     const SVCandidateSetData& svData)
 {
-    assert(! mjCandidateSV.junctions.empty());
-    const SVCandidate& candidateSV(mjCandidateSV.junctions[0]);
+    assert(! mjCandidateSV.junction.empty());
+
+    const unsigned junctionCount(mjCandidateSV.junction.size());
 
     if (_opt.isVerbose)
     {
-        log_os << __FUNCTION__ << ": Starting analysis of low-resolution candidate: " << candidateSV.candidateIndex << "\n";
+        log_os << __FUNCTION__ << ": Starting analysis for SV candidate containing " << junctionCount << " junctions. Low-resolution junction candidate ids:";
+        BOOST_FOREACH(const SVCandidate& sv, mjCandidateSV.junction)
+        {
+            log_os << " " << sv.candidateIndex;
+        }
+        log_os << "\n";
     }
 #ifdef DEBUG_GSV
-    log_os << __FUNCTION__ << ": CandidateSV: " << candidateSV << "\n";
+    log_os << __FUNCTION__ << ": CandidateSV: " << mjCandidateSV << "\n";
 #endif
 
 
-    const bool isComplex(isComplexSV(candidateSV));
+    const bool isComplex(isComplexSV(mjCandidateSV));
     _edgeTracker.addCand(isComplex);
 
-    SVCandidateAssemblyData assemblyData;
+    /// assemble each junction independently:
+    std::vector<SVCandidateAssemblyData> mjAssemblyData(junctionCount);
 
     if (! _opt.isSkipAssembly)
     {
-        _svRefine.getCandidateAssemblyData(candidateSV, svData, assemblyData, _opt.isRNA);
-
-        if (_opt.isVerbose)
+        for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
         {
-            log_os << __FUNCTION__ << ": Candidate assembly complete. Assembled candidate count: " << assemblyData.svs.size() << "\n";
+            const SVCandidate& candidateSV(mjCandidateSV.junction[junctionIndex]);
+            SVCandidateAssemblyData& assemblyData(mjAssemblyData[junctionIndex]);
+            _svRefine.getCandidateAssemblyData(candidateSV, svData, assemblyData, _opt.isRNA);
+
+            if (_opt.isVerbose)
+            {
+                log_os << __FUNCTION__ << ": Candidate assembly complete for junction " << junctionIndex << "/" << junctionCount << ". Assembled candidate count: " << assemblyData.svs.size() << "\n";
+            }
+
+            if(! assemblyData.svs.empty())
+            {
+                const unsigned assemblyCount(assemblyData.svs.size());
+
+                // can't be multi-junction and multi-assembly at the same time:
+                assert(! ((junctionCount>1) && (assemblyCount>1)));
+
+                // fill in assembly tracking data:
+                _edgeTracker.addAssm(isComplex);
+                _truthTracker.reportNumAssembled(assemblyData.svs.size());
+                for (unsigned assemblyIndex(0); assemblyIndex<assemblyCount; ++assemblyIndex)
+                {
+                    _truthTracker.addAssembledSV();
+                }
+            }
         }
     }
 
-    if (assemblyData.svs.empty())
+    SVMultiJunctionCandidate mjAssembledCandidateSV;
+    mjAssembledCandidateSV.junction.resize(junctionCount);
+
+    std::vector<unsigned> junctionTracker(junctionCount,0);
+    while(true)
     {
-#ifdef DEBUG_GSV
-        log_os << __FUNCTION__ << ": score and output low-res candidate\n";
-#endif
-        _svWriter.writeSV(edge, svData, assemblyData, candidateSV);
-
-    }
-    else
-    {
-        _edgeTracker.addAssm(isComplex);
-
-        _truthTracker.reportNumAssembled(assemblyData.svs.size());
-
-        BOOST_FOREACH(const SVCandidate& assembledSV, assemblyData.svs)
+        bool isWrite(false);
+        for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
         {
-            _truthTracker.addAssembledSV();
+            const SVCandidateAssemblyData& assemblyData(mjAssemblyData[junctionIndex]);
+            unsigned& assemblyIndex(junctionTracker[junctionIndex]);
+
+            if (assemblyData.svs.empty())
+            {
+                if (assemblyIndex != 0) continue;
 #ifdef DEBUG_GSV
-            log_os << __FUNCTION__ << ": score and output assembly candidate: " << assembledSV << "\n";
+                log_os << __FUNCTION__ << ": score and output low-res candidate junction " << junctionIndex << "\n";
 #endif
-            _svWriter.writeSV(edge, svData, assemblyData, assembledSV);
+                mjAssembledCandidateSV.junction[junctionIndex] = mjCandidateSV.junction[junctionIndex];
+            }
+            else
+            {
+                if (assemblyIndex >= assemblyData.svs.size()) continue;
+                const SVCandidate& assembledSV(assemblyData.svs[assemblyIndex]);
+#ifdef DEBUG_GSV
+            log_os << __FUNCTION__ << ": score and output assembly candidate junction " << junctionIndex << ": " << assembledSV << "\n";
+#endif
+                mjAssembledCandidateSV.junction[junctionIndex] = assembledSV;
+            }
+            assemblyIndex++;
+            isWrite = true;
         }
+        if (! isWrite) break;
+        _svWriter.writeSV(edge, svData, mjAssemblyData, mjAssembledCandidateSV);
     }
 }
