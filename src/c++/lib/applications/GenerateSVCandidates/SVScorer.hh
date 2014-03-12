@@ -28,11 +28,11 @@
 #include "blt_util/bam_header_info.hh"
 #include "blt_util/qscore_snp.hh"
 #include "manta/ChromDepthFilterUtil.hh"
-#include "manta/SVCandidate.hh"
+#include "manta/SVCandidateAssemblyData.hh"
 #include "manta/SVCandidateSetData.hh"
 #include "manta/SVLocusScanner.hh"
 #include "manta/SVModelScoreInfo.hh"
-#include "manta/SVCandidateAssemblyData.hh"
+#include "manta/SVMultiJunctionCandidate.hh"
 #include "manta/SVScoreInfoSomatic.hh"
 
 #include "boost/array.hpp"
@@ -149,10 +149,11 @@ struct SVScorer
     void
     scoreSV(
         const SVCandidateSetData& svData,
-        const SVCandidateAssemblyData& assemblyData,
-        const SVCandidate& sv,
+        const std::vector<SVCandidateAssemblyData>& mjAssemblyData,
+        const SVMultiJunctionCandidate& mjSV,
+        const std::vector<bool>& isJunctionFiltered,
         const bool isSomatic,
-        SVModelScoreInfo& modelScoreInfo);
+        std::vector<SVModelScoreInfo>& mjModelScoreInfo);
 
     typedef boost::shared_ptr<SVScorePairProcessor> pairProcPtr;
     typedef boost::shared_ptr<bam_streamer> streamPtr;

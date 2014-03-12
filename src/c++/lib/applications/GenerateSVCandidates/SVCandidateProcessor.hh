@@ -24,7 +24,6 @@
 
 #include "common/OutStream.hh"
 #include "manta/SVCandidateAssemblyData.hh"
-#include "manta/SVCandidateUtil.hh"
 #include "manta/SVMultiJunctionCandidate.hh"
 #include "format/VcfWriterCandidateSV.hh"
 #include "format/VcfWriterDiploidSV.hh"
@@ -50,15 +49,15 @@ struct SVWriter
     writeSV(
         const EdgeInfo& edge,
         const SVCandidateSetData& svData,
-        const SVCandidateAssemblyData& assemblyData,
-        const SVCandidate& sv);
+        const std::vector<SVCandidateAssemblyData>& assemblyData,
+        const SVMultiJunctionCandidate& mjSV);
 
     ///////////////////////// data:
     const GSCOptions& opt;
     const bool isSomatic;
 
     SVScorer svScore;
-    SVModelScoreInfo modelScoreInfo;
+    std::vector<SVModelScoreInfo> mjModelScoreInfo;
 
     OutStream candfs;
     OutStream dipfs;
