@@ -197,6 +197,29 @@ isBreakendPairGroupCandidate(
 }
 
 
+
+/// test to see if a breakend can participate in a multi-junction analysis:
+///
+/// right now our only criteria is to exclude small non-inversions, just because
+/// such pairs can spontaneously occur at relatively high rates:
+static
+bool
+isSVMJExcluded(
+    const SVCandidate& sv)
+{
+    static const unsigned minInnieSVSize(5000);
+
+    {
+        using namespace SV_TYPE;
+        const SV_TYPE::index_t svt(getSVType(sv));
+        if ((svt == INDEL) || (svt == TANDUP)) return false;
+    }
+
+    return (getIntervalDist(sv.bp1.interval, sv.bp2.interval) < minInnieSVSize);
+}
+
+
+
 namespace MJ_INTERACTION
 {
     enum index_t {
@@ -266,44 +289,45 @@ findMultiJunctionCandidates(
         for (unsigned spanIndexA(0); (spanIndexA+1)<spanCount; ++spanIndexA)
         {
             const SVCandidate& spanA(spanningSVs[spanIndexA]);
+            if (isSVMJExcluded(spanA)) continue;
+
             for (unsigned spanIndexB(spanIndexA+1); spanIndexB<spanCount; ++spanIndexB)
             {
                 const SVCandidate& spanB(spanningSVs[spanIndexB]);
+                if (isSVMJExcluded(spanB)) continue;
+
                 const bool isSameBpGroup(isBreakendPairGroupCandidate(spanA.bp1,spanB.bp1) && isBreakendPairGroupCandidate(spanA.bp2,spanB.bp2));
                 const bool isFlipBpGroup(isBreakendPairGroupCandidate(spanA.bp1,spanB.bp2) && isBreakendPairGroupCandidate(spanA.bp2,spanB.bp1));
 
                 bool isGroup(false);
                 if (isSameBpGroup || isFlipBpGroup)
                 {
-                    isGroup=true;
-
                     /// check that this isn't a flipped association as breakpoints get near each other,
                     /// if it is treat the association as independent junctions:
                     if (isSameBpGroup)
                     {
-                        if (getJunctionBpAlignment(spanA, spanB) != 1) isGroup=false;
+                        isGroup = (getJunctionBpAlignment(spanA, spanB) == 1);
                     }
                     else
                     {
-                        if (getJunctionBpAlignment(spanA, spanB) != -1) isGroup=false;
+                        isGroup = (getJunctionBpAlignment(spanA, spanB) == -1);
                     }
                 }
 
-                if (isGroup)
+                if (!isGroup) continue;
+
+                if ((spanPartners[spanIndexA].type == NONE) && (spanPartners[spanIndexB].type == NONE))
                 {
-                    if ((spanPartners[spanIndexA].type == NONE) && (spanPartners[spanIndexB].type == NONE))
-                    {
-                        const index_t newType( isSameBpGroup ? SAME : FLIP );
-                        spanPartners[spanIndexA].type = newType;
-                        spanPartners[spanIndexA].partnerId = spanIndexB;
-                        spanPartners[spanIndexB].type = newType;
-                        spanPartners[spanIndexB].partnerId = spanIndexA;
-                    }
-                    else
-                    {
-                        spanPartners[spanIndexA].type = CONFLICT;
-                        spanPartners[spanIndexB].type = CONFLICT;
-                    }
+                    const index_t newType( isSameBpGroup ? SAME : FLIP );
+                    spanPartners[spanIndexA].type = newType;
+                    spanPartners[spanIndexA].partnerId = spanIndexB;
+                    spanPartners[spanIndexB].type = newType;
+                    spanPartners[spanIndexB].partnerId = spanIndexA;
+                }
+                else
+                {
+                    spanPartners[spanIndexA].type = CONFLICT;
+                    spanPartners[spanIndexB].type = CONFLICT;
                 }
             }
         }
