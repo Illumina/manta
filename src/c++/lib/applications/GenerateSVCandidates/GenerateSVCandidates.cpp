@@ -212,7 +212,7 @@ isSVMJExcluded(
     {
         using namespace SV_TYPE;
         const SV_TYPE::index_t svt(getSVType(sv));
-        if ((svt == INDEL) || (svt == TANDUP)) return false;
+        if ((svt != INDEL) && (svt != TANDUP)) return false;
     }
 
     return (getIntervalDist(sv.bp1.interval, sv.bp2.interval) < minInnieSVSize);
