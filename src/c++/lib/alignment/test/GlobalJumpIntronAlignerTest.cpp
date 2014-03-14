@@ -45,6 +45,7 @@ testAlignScores(
         seq.begin(),seq.end(),
         ref1.begin(),ref1.end(),
         ref2.begin(),ref2.end(),
+        false, false, //todo make tests for all ortientations
         result);
 
     return result;

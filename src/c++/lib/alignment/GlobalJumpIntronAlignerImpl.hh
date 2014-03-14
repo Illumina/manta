@@ -34,10 +34,14 @@ template <typename SymIter>
 bool
 isUpstreamSpliceAcceptor(
     const SymIter refBegin,
-    SymIter refIter)
+    SymIter refIter,
+    bool fwStrand)
 {
     if (std::distance(refBegin,refIter)<2) return false;
-    return (*(refIter-2)=='A' && *(refIter-1)=='G');
+    if (!fwStrand) // Default (Truseq) RNA data is on the opposite strand from the original RNA
+        return (*(refIter-2)=='A' && *(refIter-1)=='G');
+    else
+        return (*(refIter-2)=='A' && *(refIter-1)=='C');
 }
 
 
@@ -46,12 +50,16 @@ template <typename SymIter>
 bool
 isDownstreamSpliceDonor(
     SymIter refIter,
-    const SymIter refEnd)
+    const SymIter refEnd,
+    bool fwStrand)
 {
     if (std::distance(refIter,refEnd)<2) return false;
-    return (*(refIter)=='G' && *(refIter+1)=='T');
-}
+    if (!fwStrand) // Default (Truseq) RNA data is on the opposite strand from the original RNA
+        return (*(refIter)=='G' && *(refIter+1)=='T');
+    else
+        return (*(refIter)=='C' && *(refIter+1)=='T');
 
+}
 
 
 template <typename ScoreType>
@@ -62,6 +70,7 @@ align(
     const SymIter queryBegin, const SymIter queryEnd,
     const SymIter ref1Begin, const SymIter ref1End,
     const SymIter ref2Begin, const SymIter ref2End,
+    bool ref1Fw, bool ref2Fw,
     JumpAlignmentResult<ScoreType>& result) const
 {
     result.clear();
@@ -132,7 +141,7 @@ align(
                                         sval.ins);
                     // Only can leave the intron (splice) state if the last two
                     // bases of the intron match the motif
-                    if (isUpstreamSpliceAcceptor(ref1Begin,ref1Iter))
+                    if (isUpstreamSpliceAcceptor(ref1Begin,ref1Iter, ref1Fw))
                     {
                         if (headScore.match < sval.intron)
                         {
@@ -175,7 +184,7 @@ align(
                     headScore.intron = sval.intron;
                     // Only can enter the intron (splice) state if the first two
                     // bases of the intron match the motif
-                    if (isDownstreamSpliceDonor(ref1Iter,ref1End))
+                    if (isDownstreamSpliceDonor(ref1Iter,ref1End, ref1Fw))
                     {
                         if (sval.match + _intronOpenScore > sval.intron)
                         {
@@ -265,7 +274,7 @@ align(
                                         sval.jump);
                     // Only can leave the intron (splice) state if the last two
                     // bases of the intron match the motif
-                    if (isUpstreamSpliceAcceptor(ref2Begin,ref2Iter))
+                    if (isUpstreamSpliceAcceptor(ref2Begin,ref2Iter, ref2Fw))
                     {
                         if (headScore.match < sval.intron)
                         {
@@ -308,7 +317,7 @@ align(
                     headScore.intron = sval.intron;
                     // Only can enter the intron (splice) state if the first two
                     // bases of the intron match the motif
-                    if (isDownstreamSpliceDonor(ref2Iter,ref2End))
+                    if (isDownstreamSpliceDonor(ref2Iter,ref2End, ref2Fw))
                     {
                         if (sval.match + _intronOpenScore > sval.intron)
                         {

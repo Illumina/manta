@@ -31,7 +31,9 @@ struct SVCandidate
         candidateIndex(0),
         assemblyAlignIndex(0),
         assemblySegmentIndex(0),
-        isUnknownSizeInsertion(false)
+        isUnknownSizeInsertion(false),
+        fwReads(0),
+        rvReads(0)
     {}
 
 #if 0
@@ -96,6 +98,12 @@ struct SVCandidate
         _isImprecise = false;
     }
 
+    bool
+    isForward() const
+    {
+        return (fwReads > rvReads);
+    }
+
     /// if 1 is added to the position of one breakend (within the homologous breakend range), then is 1 also added to the other breakend?
     ///
     /// if false then breakends move in opposite directions;
@@ -125,6 +133,9 @@ public:
     unsigned assemblySegmentIndex; // high-res assembly index number of alignment segment, used to generate unique SV id
 
     bool isUnknownSizeInsertion; // these insertions haven't been assembled all the way through
+
+    unsigned fwReads;
+    unsigned rvReads;
 };
 
 std::ostream&

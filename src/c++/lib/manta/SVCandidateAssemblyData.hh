@@ -33,7 +33,8 @@ struct BPOrientation
     BPOrientation() :
         isBp2AlignedFirst(false),
         isBp1Reversed(false),
-        isBp2Reversed(false)
+        isBp2Reversed(false),
+        isBp1First(true)
     {}
 
     void
@@ -42,11 +43,13 @@ struct BPOrientation
         isBp2AlignedFirst=false;
         isBp1Reversed=false;
         isBp2Reversed=false;
+        isBp1First=true;
     }
 
     bool isBp2AlignedFirst; ///< should the contig on the fwd strand align bp2->bp1 (true) or bp1->bp2 (false)
     bool isBp1Reversed; ///< should all bp1 reads be reversed for the contig to assemble correctly?
     bool isBp2Reversed; ///< should all bp2 reads be reversed for the contig to assemble correctly?
+    bool isBp1First; ///< Is this candidate oriented from bp1 to bp2?
 };
 
 

@@ -31,7 +31,7 @@
 #include "boost/foreach.hpp"
 
 
-//#define DEBUG_SCANNER
+#define DEBUG_SCANNER
 
 //#define DEBUG_IS_SHADOW
 
@@ -514,6 +514,9 @@ getSVCandidatesFromPair(
         thisReadNoninsertSize=(readSize-apath_read_lead_size(localAlign.path));
     }
 
+#ifdef DEBUG_SCANNER
+    log_os << "XXXXX: " << localAlign.tid << " -> " << localRead.mate_target_id() << "\n";
+#endif
     SVObservation sv;
 
     SVBreakend& localBreakend(sv.bp1);

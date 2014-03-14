@@ -28,7 +28,7 @@
 #include <iostream>
 
 
-//#define DEBUG_SVDATA
+#define DEBUG_SVDATA
 
 #ifdef DEBUG_SVDATA
 #include "blt_util/log.hh"
