@@ -35,6 +35,7 @@ operator<<(std::ostream& os, const SVCandidateSetRead& svr)
 }
 
 
+
 std::ostream&
 operator<<(std::ostream& os, const SVPairAssociation& sva)
 {
@@ -122,6 +123,7 @@ add(const bam_record& bamRead,
 }
 
 
+
 bool
 SVCandidateSetData::
 setNewSearchInterval(const GenomeInterval& newSearch)
@@ -138,4 +140,3 @@ setNewSearchInterval(const GenomeInterval& newSearch)
     _searchIntervals.push_back(newSearch);
     return retval;
 }
-

@@ -49,6 +49,10 @@ static const float closePairFactor(4); ///< fragments within this factor of the 
 static const float veryClosePairFactor(1.5); ///< fragments within this factor of the minimum size cutoff are treated as 'reallyClose' pairs and receive a modified evidence count
 static const float maxNormalFactor(1.5);
 
+static const float minLargeEventRegionFactor(10);
+static const float maxLargeEventRegionFactor(20);
+
+
 static
 index_t
 classifySize(
@@ -583,6 +587,11 @@ getSVCandidatesFromPair(
 
     const pos_t totalNoninsertSize(thisReadNoninsertSize+remoteReadNoninsertSize);
 
+    // different breakend sizes are used for long-range pairings vs short-ish range deletions,
+    // because of occasional long-fragment noise. This ramps from 0 to 1 as we go from short to
+    // long deletions sizes:
+    double largeEventRegionScale(1.0);
+
     // check if fragment size is still anomalous after accounting for read alignment patterns:
     if (localRead.target_id() == localRead.mate_target_id())
     {
@@ -596,15 +605,24 @@ getSVCandidatesFromPair(
             const bool isOuttie(cigarAdjustedFragmentSize < 0);
 
             if (! (isLargeFragment || isOuttie)) return;
+
+            if (! isOuttie)
+            {
+                largeEventRegionScale = rstats.largeEventRegionScaler.getScale(cigarAdjustedFragmentSize);
+            }
         }
     }
 
 
     // set state and interval for each breakend:
     {
+        const double breakendRegionMax(
+            (largeEventRegionScale*rstats.largeScaleEventBreakendRegion.max) +
+            ((1.-largeEventRegionScale)*rstats.breakendRegion.max));
+
         const pos_t breakendSize(std::max(
                                      static_cast<pos_t>(opt.minPairBreakendSize),
-                                     static_cast<pos_t>(rstats.breakendRegion.max-totalNoninsertSize)));
+                                     static_cast<pos_t>(breakendRegionMax-totalNoninsertSize)));
 
         localBreakend.interval.tid = (localRead.target_id());
         // expected breakpoint range is from the end of the localRead alignment to the (probabilistic) end of the fragment:
@@ -1004,13 +1022,14 @@ SVLocusScanner(
     const unsigned rgCount(_rss.size());
     for (unsigned rgIndex(0); rgIndex<rgCount; rgIndex++)
     {
-        /// TODO: add check that the filenames in the stats file are a compelte match to alignmentFilename
+        /// TODO: add check that the filenames in the stats file are a complete match to alignmentFilename
 
         const SizeDistribution& rgDistro(getFragSizeDistro(rgIndex));
 
         _stats.resize(_stats.size()+1);
         CachedReadGroupStats& rgStats(_stats.back());
         setRGRange(rgDistro, _opt.breakendEdgeTrimProb, rgStats.breakendRegion);
+        setRGRange(rgDistro, _opt.largeScaleEventBreakendEdgeTrimProb, rgStats.largeScaleEventBreakendRegion);
         setRGRange(rgDistro, _opt.properPairTrimProb, rgStats.properPair);
         setRGRange(rgDistro, _opt.evidenceTrimProb, rgStats.evidencePair);
 
@@ -1019,7 +1038,13 @@ SVLocusScanner(
         rgStats.minDistantFragmentSize = static_cast<int>(rgStats.properPair.max*FragmentSizeType::closePairFactor);
 
         assert(rgStats.minDistantFragmentSize > rgStats.properPair.max);
-        rgStats.veryCloseFactor = (1. / static_cast<float>(rgStats.minCloseFragmentSize - rgStats.minVeryCloseFragmentSize));
+
+        //rgStats.veryCloseEventScaler.init(rgStats.minVeryCloseFragmentSize, rgStats.minCloseFragmentSize);
+
+        const int largeEventRegionMin(rgStats.properPair.max*FragmentSizeType::minLargeEventRegionFactor);
+        const int largeEventRegionMax(rgStats.properPair.max*FragmentSizeType::maxLargeEventRegionFactor);
+
+        rgStats.largeEventRegionScaler.init(largeEventRegionMin, largeEventRegionMax);
     }
 }
 

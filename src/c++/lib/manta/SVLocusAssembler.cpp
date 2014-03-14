@@ -367,4 +367,3 @@ assembleSVBreakends(const SVBreakend& bp1,
     AssemblyReadOutput readInfo;
     runSmallAssembler(_assembleOpt, reads, readInfo, as);
 }
-

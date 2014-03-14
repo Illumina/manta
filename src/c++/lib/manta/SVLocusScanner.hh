@@ -21,6 +21,7 @@
 
 #include "blt_util/bam_record.hh"
 #include "blt_util/bam_record_util.hh"
+#include "blt_util/LinearScaler.hh"
 #include "manta/ReadGroupStatsSet.hh"
 #include "manta/SVCandidate.hh"
 #include "svgraph/SVLocus.hh"
@@ -236,12 +237,15 @@ struct SVLocusScanner
         CachedReadGroupStats() :
             minDistantFragmentSize(0),
             minCloseFragmentSize(0),
-            minVeryCloseFragmentSize(0),
-            veryCloseFactor(0)
+            minVeryCloseFragmentSize(0)
         {}
 
         /// fragment size range assumed for the purpose of creating SVLocusGraph regions
         Range breakendRegion;
+
+        /// fragment size range assumed for the purpose of creating SVLocusGraph regions,
+        /// this range is used exclusively for large scale events (non-deletion or deletion above a threshold size):
+        Range largeScaleEventBreakendRegion;
 
         /// fragment size range used to determine if a read is anomalous
         Range properPair;
@@ -252,7 +256,9 @@ struct SVLocusScanner
         int minCloseFragmentSize; ///< beyond the properPair anomalous threshold, there is a threshold to distinguish 'really-close' and 'close' pairs for the purpose of evidence weight
         int minVeryCloseFragmentSize;
 
-        float veryCloseFactor; ///< precomputed value used to scale down breakend size as fragments get smaller
+        //LinearScaler<int> veryCloseEventScaler; ///< used to scale down breakend size as fragments get smaller
+
+        LinearScaler<int> largeEventRegionScaler; ///< used to set expanded breakend sizes for large events
     };
 
 private:
