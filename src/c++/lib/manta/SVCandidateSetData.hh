@@ -192,8 +192,6 @@ private:
 /// (although we expect any one read to usually be associated with no more
 /// one).
 ///
-///
-///
 struct SVCandidateSetData
 {
     /// get evidence associated with a specific sample group:
