@@ -102,11 +102,12 @@ writeSV(
 
         const bool isCandidateSpanning(assemblyData.isCandidateSpanning);
 
-    #ifdef DEBUG_GSV
+#ifdef DEBUG_GSV
         log_os << __FUNCTION__ << ": isSpanningSV junction: " <<  isCandidateSpanning << "\n";
-    #endif
+#endif
 
         // junction dependent tests:
+        //
         bool isJunctionSpanFail(false);
         if (isCandidateSpanning)
         {
@@ -114,11 +115,6 @@ writeSV(
             if (sv.bp1.getSpanningCount() < minCandidateSpanningCount)
             {
                 isJunctionSpanFail=true;
-    #ifdef DEBUG_GSV
-                log_os << logtag << "Rejecting candidate: minCandidateSpanningCount\n";
-    #endif
-                _truthTracker.reportOutcome(SVLog::LOW_SPANNING_COUNT);
-                return;
             }
         }
         if (! isJunctionSpanFail) isCandidateSpanFail=false;
@@ -131,9 +127,9 @@ writeSV(
             {
                 // in this case a non-spanning low-res candidate went into assembly but
                 // did not produce a successful contig alignment:
-    #ifdef DEBUG_GSV
+#ifdef DEBUG_GSV
                 log_os << __FUNCTION__ << ": Rejecting candidate junction: imprecise non-spanning SV\n";
-    #endif
+#endif
                 _truthTracker.reportOutcome(SVLog::IMPRECISE_NON_SPANNING);
                 isJunctionFiltered[junctionIndex] = true;
                 continue;
@@ -143,9 +139,9 @@ writeSV(
         // check min size for candidate output:
         if (isSVBelowMinSize(sv,opt.scanOpt.minCandidateVariantSize))
         {
-    #ifdef DEBUG_GSV
-            log_os << logtag << "Filtering out candidate below min size before candidate output stage\n";
-    #endif
+#ifdef DEBUG_GSV
+            log_os << __FUNCTION__ << ": Filtering out candidate below min size before candidate output stage\n";
+#endif
             return;
         }
     }
@@ -193,9 +189,9 @@ writeSV(
         const SVCandidate& sv(mjSV.junction[junctionIndex]);
         if (isSVBelowMinSize(sv, opt.minScoredVariantSize))
         {
-    #ifdef DEBUG_GSV
-            log_os << logtag << "Filtering out candidate junction below min size at scoring stage\n";
-    #endif
+#ifdef DEBUG_GSV
+            log_os << __FUNCTION__ << ": Filtering out candidate junction below min size at scoring stage\n";
+#endif
             isJunctionFiltered[junctionIndex] = true;
         }
     }

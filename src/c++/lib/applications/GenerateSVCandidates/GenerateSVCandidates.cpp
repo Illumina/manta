@@ -101,12 +101,15 @@ struct ReducedGraphInfo
 
 
 
-/// should we filter out the SVCandidate?
+/// return true for candidates that should be filtered out, based on
+/// information available in a single junction (as opposed to
+/// requireing multi-junction analysis 
 ///
-/// Note this logic belongs in SVFinder and should make its way there once stable:
+/// Note this logic probably belongs in SVFinder and should make its
+/// way there once stable:
 static
 bool
-isFilterCandidate(
+isFilterSingleJunctionCandidate(
     const SVCandidate& sv)
 {
     // don't consider candidates created from only semi-mapped read pairs:
@@ -115,8 +118,7 @@ isFilterCandidate(
     // candidates must have a minimum amount of evidence:
     if (isSpanningSV(sv))
     {
-        static const unsigned minCandidateSpanningCount(3);
-        if (sv.bp1.getSpanningCount() < minCandidateSpanningCount) return true;
+        // pass
     }
     else if (isComplexSV(sv))
     {
@@ -129,6 +131,35 @@ isFilterCandidate(
     }
 
     return false;
+}
+
+
+
+/// return true for candidates that should be filtered out, based on
+/// information available in a full junction set 
+///
+static
+bool
+isFilterMultiJunctionCandidate(
+    const SVMultiJunctionCandidate& mjSV)
+{
+    // candidates must have a minimum amount of evidence:
+    static const unsigned minCandidateSpanningCount(3);
+
+    bool isAnySpanPass(false);
+    BOOST_FOREACH(const SVCandidate& sv, mjSV.junction)
+    {
+        if (isSpanningSV(sv))
+        {
+            if (sv.bp1.getSpanningCount() >= minCandidateSpanningCount)
+            {
+                isAnySpanPass=true; 
+                break;
+            }
+        }
+    }
+
+    return (! isAnySpanPass);
 }
 
 
@@ -257,7 +288,7 @@ findMultiJunctionCandidates(
     BOOST_FOREACH(const SVCandidate& candidateSV, svs)
     {
         /// Filter various candidates types:
-        if (isFilterCandidate(candidateSV)) continue;
+        if (isFilterSingleJunctionCandidate(candidateSV)) continue;
 
         const bool isComplex(isComplexSV(candidateSV));
 
@@ -358,6 +389,9 @@ findMultiJunctionCandidates(
 
             mj.junction.push_back(spanningSVs[partnerId]);
         }
+
+        if (isFilterMultiJunctionCandidate(mj)) continue;
+
         mjSVs.push_back(mj);
     }
 }
