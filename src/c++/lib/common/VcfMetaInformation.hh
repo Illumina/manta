@@ -26,7 +26,9 @@
 
 /*****************************************************************************/
 
-enum VcfMetaInformation_t
+namespace VCF_VALUE_TYPE
+{
+enum index_t
 {
     NONE=0,
     INTEGER,
@@ -36,6 +38,7 @@ enum VcfMetaInformation_t
     STRING,
     SIZE
 };
+}
 
 /*****************************************************************************/
 
@@ -59,7 +62,7 @@ public:
         return number_;
     }
 
-    const VcfMetaInformation_t& getType() const
+    const VCF_VALUE_TYPE::index_t& getType() const
     {
         return type_;
     }
@@ -80,7 +83,7 @@ public:
         number_ = num;
     }
 
-    void setType(VcfMetaInformation_t type)
+    void setType(VCF_VALUE_TYPE::index_t type)
     {
         type_ = type;
     }
@@ -99,7 +102,7 @@ private:
     FastString id_;
     std::string number_;
     /// when type_ == NONE, it means that only id_ and description_ are valid
-    VcfMetaInformation_t type_;
+    VCF_VALUE_TYPE::index_t type_;
     std::string description_;
 
     friend std::istream& operator>>(std::istream& is,
