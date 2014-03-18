@@ -654,6 +654,15 @@ is_clipped(const path_t& apath)
     return false;
 }
 
+bool
+is_clipped_front(const path_t& apath)
+{
+    const unsigned as(apath.size());
+    if (as==0) return false;
+    if ((apath[0].type == SOFT_CLIP) || (apath[0].type == HARD_CLIP)) return true;
+    return false;
+}
+
 unsigned
 get_clip_len(const path_t& apath)
 {

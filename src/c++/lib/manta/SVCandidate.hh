@@ -67,11 +67,15 @@ struct SVCandidate
         {
             bp1.merge(rhs.bp1);
             bp2.merge(rhs.bp2);
+            fwReads += rhs.fwReads;
+            rvReads += rhs.rvReads;
         }
         else
         {
             bp1.merge(rhs.bp2);
             bp2.merge(rhs.bp1);
+            fwReads += rhs.rvReads;
+            rvReads += rhs.fwReads;
         }
 
         _isImprecise = (isImprecise() || rhs.isImprecise());
@@ -134,8 +138,8 @@ public:
 
     bool isUnknownSizeInsertion; // these insertions haven't been assembled all the way through
 
-    unsigned fwReads;
-    unsigned rvReads;
+    unsigned fwReads; // Number of reads (pairs) supporting a direction from bp1 to bp2 (used for stranded RNA data)
+    unsigned rvReads; // Number of reads (pairs) directed from bp2 to bp1
 };
 
 std::ostream&

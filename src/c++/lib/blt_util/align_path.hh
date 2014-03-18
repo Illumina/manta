@@ -393,6 +393,10 @@ is_soft_clipped(const path_t& apath);
 bool
 is_clipped(const path_t& apath);
 
+/// is the first edge of the alignment soft-clipped or hard-clipped?
+bool
+is_clipped_front(const path_t& apath);
+
 /// return length of clipped pre- or postfix
 unsigned
 get_clip_len(const path_t& apath);

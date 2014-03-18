@@ -31,7 +31,7 @@
 #include "boost/foreach.hpp"
 
 
-#define DEBUG_SCANNER
+// #define DEBUG_SCANNER
 
 //#define DEBUG_IS_SHADOW
 
@@ -215,6 +215,7 @@ static
 SVObservation
 GetSplitSACandidate(
     const ReadScannerDerivOptions& dopt,
+    const bam_record& localRead,
     const SimpleAlignment& localAlign,
     const SimpleAlignment& remoteAlign)
 {
@@ -229,6 +230,17 @@ GetSplitSACandidate(
 
     updateSABreakend(dopt, localAlign, sv.bp1);
     updateSABreakend(dopt, remoteAlign, sv.bp2);
+
+    bool remoteIsSecond = !ALIGNPATH::is_clipped_front(localAlign.path); // todo Need smarter check which partial alignment is first
+    bool isReadFw = (localRead.is_first() == localRead.is_fwd_strand());
+    if (isReadFw == remoteIsSecond)
+    {
+        sv.fwReads += 1;
+    }
+    else
+    {
+        sv.rvReads += 1;
+    }
 
     return sv;
 }
@@ -301,8 +313,7 @@ getSACandidatesFromRead(
 
         cigar_to_apath(saDat[3].c_str(), remoteAlign.path);
 
-        // At this point we don't care about strand
-        candidates.push_back(GetSplitSACandidate(dopt, localAlign, remoteAlign));
+        candidates.push_back(GetSplitSACandidate(dopt, localRead, localAlign, remoteAlign));
     }
 }
 
@@ -514,11 +525,8 @@ getSVCandidatesFromPair(
         thisReadNoninsertSize=(readSize-apath_read_lead_size(localAlign.path));
     }
 
-#ifdef DEBUG_SCANNER
-    log_os << "XXXXX: " << localAlign.tid << " -> " << localRead.mate_target_id() << "\n";
-#endif
     SVObservation sv;
-
+    sv.fwReads = 1; // bp1 is read1, bp2 is read2
     SVBreakend& localBreakend(sv.bp1);
     SVBreakend& remoteBreakend(sv.bp2);
 

@@ -29,7 +29,7 @@
 
 #include <iostream>
 
-#define DEBUG_REFINER
+//#define DEBUG_REFINER
 
 
 #ifdef DEBUG_REFINER
@@ -840,10 +840,8 @@ getJumpAssembly(
     assemblyData.isSpanning = true;
     BPOrientation& bporient(assemblyData.bporient);
 
-    if (sv.isForward())
-    {
-        bporient.isBp1First = true;
-    }
+    bporient.isBp1First = sv.isForward();
+
     //
     // based on sv candidate, we classify the expected relationship between the contig and the sv breakends:
     //
@@ -965,10 +963,12 @@ getJumpAssembly(
 
         if (_opt.isRNA)
         {
-            bool bp1Fw = bporient.isBp1Reversed != bporient.isBp1First;
-            bool bp2Fw = bporient.isBp2Reversed != bporient.isBp1First;
-            bp1Fw = !bp1Fw; // For 2nd-strand orientation simulation
-            bp2Fw = !bp2Fw;
+            bporient.isBp1First = !bporient.isBp1First; // RNA-seq reads generate candidates in the opposite direction of the RNA
+            bool bp1Fw = (bporient.isBp1Reversed != bporient.isBp1First);
+            bool bp2Fw = (bporient.isBp2Reversed != bporient.isBp1First);
+#ifdef DEBUG_REFINER
+            log_os << logtag << "bp1Fw: " << bp1Fw << " ; bp2Fw: " << bp2Fw << '\n';
+#endif
             _RNASpanningAligner.align(contig.seq.begin(), contig.seq.end(),
                                       align1RefStrPtr->begin() + align1LeadingCut, align1RefStrPtr->end() - align1TrailingCut,
                                       align2RefStrPtr->begin() + align2LeadingCut, align2RefStrPtr->end() - align2TrailingCut,

@@ -28,7 +28,7 @@
 #include <iostream>
 
 
-#define DEBUG_SVDATA
+// #define DEBUG_SVDATA
 
 #ifdef DEBUG_SVDATA
 #include "blt_util/log.hh"
@@ -142,14 +142,14 @@ addSVNodeRead(
                     << "\tlocus: " << locus << "\n";
                 BOOST_THROW_EXCEPTION(LogicException(oss.str()));
             }
-            if (! locus.getNode(readRemoteIndex).getInterval().isIntersect(remoteNode.getInterval())) continue;
+            if (! locus.getNode(readRemoteIndex).getInterval().isIntersect(remoteNode.getInterval())) continue; //todo should this intersect be checked in swapped orientation?
         }
         else
         {
             if (! locus.getNode(readLocalIndex).getInterval().isIntersect(remoteNode.getInterval())) continue;
         }
 
-        if (! locus.getNode(readLocalIndex).getInterval().isIntersect(localNode.getInterval())) continue;
+        if (! locus.getNode(readLocalIndex).getInterval().isIntersect(localNode.getInterval())) continue; //todo should this intersect be checked in swapped orientation?
 
         svDataGroup.add(bamRead, isExpectRepeat, isNode1);
 
