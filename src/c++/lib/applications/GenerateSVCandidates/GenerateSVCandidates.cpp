@@ -192,6 +192,33 @@ isIntervalPairGroupCandidate(
 
 
 
+/// return:
+/// max(dist(A1,B1),dist(A2,B2)) if is11 is true
+/// or
+/// max(dist(A1,B2),dist(A2,B1)) if is11 is false
+///
+static
+unsigned
+getMaxIntervalDistance(
+    const SVCandidate& svA,
+    const SVCandidate& svB,
+    const bool is11)
+{
+    if (is11)
+    {
+        const unsigned dist11(getIntervalDist(svA.bp1.interval,svB.bp1.interval));
+        const unsigned dist22(getIntervalDist(svA.bp2.interval,svB.bp2.interval));
+        return std::max(dist11,dist22);
+    }
+    else
+    {
+        const unsigned dist12(getIntervalDist(svA.bp1.interval,svB.bp2.interval));
+        const unsigned dist21(getIntervalDist(svA.bp2.interval,svB.bp1.interval));
+        return std::max(dist12,dist21);
+    }
+}
+
+
 /// return  1 if dist(A1,B1) and dist(A2,B2) are both less than dist(A1,B2) and dist(A2,B1)
 /// return -1 if dist(A1,B2) and dist(A2,B1) are both less than dist(A1,B1) and dist(A2,B2)
 /// return 0 for all other cases
@@ -201,10 +228,10 @@ getJunctionBpAlignment(
     const SVCandidate& svA,
     const SVCandidate& svB)
 {
-    unsigned dist11(getIntervalDist(svA.bp1.interval,svB.bp1.interval));
-    unsigned dist12(getIntervalDist(svA.bp1.interval,svB.bp2.interval));
-    unsigned dist21(getIntervalDist(svA.bp2.interval,svB.bp1.interval));
-    unsigned dist22(getIntervalDist(svA.bp2.interval,svB.bp2.interval));
+    const unsigned dist11(getIntervalDist(svA.bp1.interval,svB.bp1.interval));
+    const unsigned dist12(getIntervalDist(svA.bp1.interval,svB.bp2.interval));
+    const unsigned dist21(getIntervalDist(svA.bp2.interval,svB.bp1.interval));
+    const unsigned dist22(getIntervalDist(svA.bp2.interval,svB.bp2.interval));
 
     if (((dist11 < dist12) && (dist11 < dist21)) && ((dist22 < dist12) && (dist22 < dist21))) return  1;
     if (((dist12 < dist11) && (dist12 < dist22)) && ((dist21 < dist11) && (dist21 < dist22))) return -1;
@@ -264,12 +291,73 @@ namespace MJ_INTERACTION
     {
         MJState() :
             type(NONE),
-            partnerId(0)
+            partnerId(0),
+            maxPartnerDistance(0)
         {}
+
+        void
+        clear()
+        {
+            type = NONE;
+            partnerId = 0;
+            maxPartnerDistance = 0;
+        }
 
         index_t type;
         unsigned partnerId;
+        unsigned maxPartnerDistance;
     };
+}
+
+
+
+static
+void
+setPartner(
+    std::vector<MJ_INTERACTION::MJState>& spanPartners,
+    const MJ_INTERACTION::index_t newType,
+    const unsigned maxPartnerDistance,
+    const unsigned spanIndex1,
+    const unsigned spanIndex2)
+{
+    spanPartners[spanIndex1].type = newType;
+    spanPartners[spanIndex1].partnerId = spanIndex2;
+    spanPartners[spanIndex1].maxPartnerDistance = maxPartnerDistance;
+}
+
+
+
+// 1 is the new partner
+// 2 is the previously connected partner
+static
+void
+resetPartners(
+    std::vector<MJ_INTERACTION::MJState>& spanPartners,
+    const MJ_INTERACTION::index_t newType,
+    const unsigned maxPartnerDistance,
+    const unsigned spanIndex1,
+    const unsigned spanIndex2)
+{
+    using namespace MJ_INTERACTION;
+
+    if (spanPartners[spanIndex2].maxPartnerDistance <= maxPartnerDistance)
+    {
+        // don't reset -- original pairing was better:
+        spanPartners[spanIndex1].type = NONE;
+        return;
+    }
+
+    // do reset, the new pairing is better:
+
+    // undo previous partner (2):
+    const unsigned spanIndexC(spanPartners[spanIndex2].partnerId);
+    assert(spanIndexC != spanIndex1);
+    spanPartners[spanIndexC].clear();
+    spanPartners[spanIndexC].type = CONFLICT;
+
+    // now initialize 1 and "reprogram" 2:
+    setPartner(spanPartners,newType,maxPartnerDistance,spanIndex1,spanIndex2);
+    setPartner(spanPartners,newType,maxPartnerDistance,spanIndex2,spanIndex1);
 }
 
 
@@ -337,26 +425,35 @@ findMultiJunctionCandidates(
                     /// if it is treat the association as independent junctions:
                     if (isSameBpGroup)
                     {
-                        isGroup = (getJunctionBpAlignment(spanA, spanB) == 1);
+                        isGroup = (getJunctionBpAlignment(spanA, spanB) > 0);
                     }
                     else
                     {
-                        isGroup = (getJunctionBpAlignment(spanA, spanB) == -1);
+                        isGroup = (getJunctionBpAlignment(spanA, spanB) < 0);
                     }
                 }
 
                 if (!isGroup) continue;
 
+                const index_t newType( isSameBpGroup ? SAME : FLIP );
+                const unsigned maxPartnerDistance(getMaxIntervalDistance(spanA, spanB, isSameBpGroup));
+
                 if ((spanPartners[spanIndexA].type == NONE) && (spanPartners[spanIndexB].type == NONE))
                 {
-                    const index_t newType( isSameBpGroup ? SAME : FLIP );
-                    spanPartners[spanIndexA].type = newType;
-                    spanPartners[spanIndexA].partnerId = spanIndexB;
-                    spanPartners[spanIndexB].type = newType;
-                    spanPartners[spanIndexB].partnerId = spanIndexA;
+                    setPartner(spanPartners,newType,maxPartnerDistance,spanIndexA,spanIndexB);
+                    setPartner(spanPartners,newType,maxPartnerDistance,spanIndexB,spanIndexA);
+                }
+                else if (spanPartners[spanIndexA].type == NONE)
+                {
+                    resetPartners(spanPartners,newType,maxPartnerDistance,spanIndexA,spanIndexB);
+                }
+                else if (spanPartners[spanIndexB].type == NONE)
+                {
+                    resetPartners(spanPartners,newType,maxPartnerDistance,spanIndexB,spanIndexA);
                 }
                 else
                 {
+                    /// multiple candidates, keep the pair that's closer, and don't tolerate more than one repeat
                     spanPartners[spanIndexA].type = CONFLICT;
                     spanPartners[spanIndexB].type = CONFLICT;
                 }
