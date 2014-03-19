@@ -1,7 +1,8 @@
+- RNA: track candidate orientation
 v0.19.0
 - MANTA-127 RG based insert stats (default off) 
 - MANTA-128 Improved pair orientation estimation and error checks
-- Improve fusion specificity in RNA-Seq mode
+- RNA: Improve fusion specificity
 - MANTA-125 add experimental large insertion calling (default off)
 - MANTA-125 add tier2 permissive split score to reduce small somatic
 FP deletions
