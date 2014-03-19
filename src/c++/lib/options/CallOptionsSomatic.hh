@@ -38,8 +38,8 @@ struct CallOptionsSomatic
 
     float germlineSVPrior;
     float somaticSVPrior;
-    float smallNoiseSVPrior;
-    float largeNoiseSVPrior;
+    float smallNoiseSVPrior; ///< expected shared tumor-normal sample noise rates for "small" SVs, ramp is from 3k->5k for small to large.
+    float largeNoiseSVPrior; ///< expected shared tumor-normal sample noise rates for "large" SVs
 
     // breakpoints where the non-tumor depth is greater than the chromosome average x this factor are filtered out:
     float maxDepthFactor;

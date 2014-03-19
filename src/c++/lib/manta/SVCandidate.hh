@@ -117,6 +117,12 @@ struct SVCandidate
         return (bp1.state != bp2.state);
     }
 
+    int
+    centerSize() const
+    {
+        return std::abs(bp2.interval.range.center_pos() - bp1.interval.range.center_pos());
+    }
+
 private:
     bool _isImprecise;
 

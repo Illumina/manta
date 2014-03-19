@@ -28,9 +28,16 @@ template <typename T>
 struct LinearScaler
 {
     LinearScaler() :
-        _min(0),
+        _min(static_cast<T>(0)),
         _factor(1.)
     {}
+
+    LinearScaler(
+        const T min,
+        const T max)
+    {
+        init(min, max);
+    }
 
     void
     init(

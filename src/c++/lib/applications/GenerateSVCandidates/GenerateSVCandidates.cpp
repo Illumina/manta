@@ -219,6 +219,7 @@ getMaxIntervalDistance(
 }
 
 
+
 /// return  1 if dist(A1,B1) and dist(A2,B2) are both less than dist(A1,B2) and dist(A2,B1)
 /// return -1 if dist(A1,B2) and dist(A2,B1) are both less than dist(A1,B1) and dist(A2,B2)
 /// return 0 for all other cases
