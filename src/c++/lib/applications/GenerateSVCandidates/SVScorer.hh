@@ -153,7 +153,9 @@ struct SVScorer
         const SVMultiJunctionCandidate& mjSV,
         const std::vector<bool>& isJunctionFiltered,
         const bool isSomatic,
-        std::vector<SVModelScoreInfo>& mjModelScoreInfo);
+        std::vector<SVModelScoreInfo>& mjModelScoreInfo,
+        SVModelScoreInfo& mjJointModelScoreInfo,
+        bool& isMJEvent);
 
     typedef boost::shared_ptr<SVScorePairProcessor> pairProcPtr;
     typedef boost::shared_ptr<bam_streamer> streamPtr;

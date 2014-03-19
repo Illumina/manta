@@ -200,7 +200,9 @@ writeSV(
     //
     if (! isAnyFalse(isJunctionFiltered)) return;
 
-    svScore.scoreSV(svData, mjAssemblyData, mjSV, isJunctionFiltered, isSomatic, mjModelScoreInfo);
+    bool isMJEvent(false);
+    SVModelScoreInfo mjJointModelScoreInfo;
+    svScore.scoreSV(svData, mjAssemblyData, mjSV, isJunctionFiltered, isSomatic, mjModelScoreInfo, mjJointModelScoreInfo, isMJEvent);
 
     // final scored output is treated (mostly) independently for each junction:
     //
@@ -331,10 +333,10 @@ evaluateCandidate(
     while(true)
     {
         /// note this loop is stupid -- it was originally written with the intention of
-        /// combinatorically enumerating all possible assembly combinations for the case
+        /// combinatorially enumerating all possible assembly combinations for the case
         /// of multiple junctions with multiple assemblies each.
-        /// It doesn't do that -- but the broken thing it does is what we want for the
-        /// isAnySmallAssembler case.
+        /// It doesn't do that -- but the broken thing it does, in fact, do, is what we want for the
+        /// isAnySmallAssembler case so it's well enough for now.
         ///
         bool isWrite(false);
         for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
