@@ -29,12 +29,11 @@ operator<<(
     std::ostream& os,
     const SVScoreInfoDiploid& sid)
 {
-    os << "DiploidSVScoreInfo bp1MaxDepth=" << sid.bp1MaxDepth << " bp2MaxDepth=" << sid.bp2MaxDepth
+    os << "DiploidSVScoreInfo "
        << " altScore=" << sid.altScore
        << " gtScore=" << sid.gtScore
        << " gt=" << DIPLOID_GT::label(sid.gt)
        << "\n";
-    os << "Normal sample info " << sid.normal;
     BOOST_FOREACH(const std::string& filter, sid.filters)
     {
         os << " " << filter;

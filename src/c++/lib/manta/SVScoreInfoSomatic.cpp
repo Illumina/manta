@@ -29,9 +29,7 @@ operator<<(
     std::ostream& os,
     const SVScoreInfoSomatic& sis)
 {
-    os << "SomaticSVScoreInfo bp1MaxDepth=" << sis.bp1MaxDepth << " bp2MaxDepth=" << sis.bp2MaxDepth << " somaticScore=" << sis.somaticScore << "\n";
-    os << "Tumor sample info " << sis.tumor;
-    os << "Normal sample info " << sis.normal;
+    os << "SomaticSVScoreInfo somaticScore: " << sis.somaticScore << " sstier: " << sis.somaticScoreTier << " filters: ";
     BOOST_FOREACH(const std::string& filter, sis.filters)
     {
         os << " " << filter;
