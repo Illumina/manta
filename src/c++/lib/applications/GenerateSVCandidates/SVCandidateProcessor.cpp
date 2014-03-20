@@ -209,9 +209,18 @@ writeSV(
     SVModelScoreInfo mjJointModelScoreInfo;
     svScore.scoreSV(svData, mjAssemblyData, mjSV, isJunctionFiltered, isSomatic, mjModelScoreInfo, mjJointModelScoreInfo, isMJEvent);
 
+    unsigned unfilteredJunctionCount(0);
+    for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
+    {
+        if (isJunctionFiltered[junctionIndex]) continue;
+        unfilteredJunctionCount++;
+    }
+
     // final scored output is treated (mostly) independently for each junction:
     //
-    std::string eventId;
+    EventInfo event;
+    event.junctionCount=unfilteredJunctionCount;
+
     for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
     {
         if (isJunctionFiltered[junctionIndex]) continue;
@@ -221,21 +230,26 @@ writeSV(
         const SVModelScoreInfo& modelScoreInfo(mjModelScoreInfo[junctionIndex]);
 
         const SVId& svId(junctionSVId[junctionIndex]);
-        if (isMJEvent && eventId.empty())
+        if (isMJEvent && event.label.empty())
         {
-            eventId = svId.localId;
+            event.label = svId.localId;
         }
 
-        if (modelScoreInfo.diploid.altScore >= opt.diploidOpt.minOutputAltScore || opt.isRNA) /// TODO remove after adding RNA scoring
+        const SVScoreInfo& baseInfo(modelScoreInfo.base);
+        const SVModelScoreInfo& scoreInfo(isMJEvent ? mjJointModelScoreInfo : modelScoreInfo);
+        const SVScoreInfoDiploid& diploidInfo(scoreInfo.diploid);
+        const SVScoreInfoSomatic& somaticInfo(scoreInfo.somatic);
+
+        if (diploidInfo.altScore >= opt.diploidOpt.minOutputAltScore || opt.isRNA) /// TODO remove after adding RNA scoring
         {
-            diploidWriter.writeSV(svData, assemblyData, sv, svId, modelScoreInfo.base, modelScoreInfo.diploid);
+            diploidWriter.writeSV(svData, assemblyData, sv, svId, baseInfo, diploidInfo, event);
         }
 
         if (isSomatic)
         {
-            if (modelScoreInfo.somatic.somaticScore > opt.somaticOpt.minOutputSomaticScore)
+            if (somaticInfo.somaticScore > opt.somaticOpt.minOutputSomaticScore)
             {
-                somWriter.writeSV(svData, assemblyData, sv, svId, modelScoreInfo.base, modelScoreInfo.somatic);
+                somWriter.writeSV(svData, assemblyData, sv, svId, baseInfo, somaticInfo, event);
                 _truthTracker.reportOutcome(SVLog::WRITTEN);
             }
             else

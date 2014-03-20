@@ -250,6 +250,19 @@ addDebugInfo(
 
 
 
+static
+void
+addSharedInfo(
+    VcfWriterSV::InfoTag_t& infoTags,
+    const EventInfo& event)
+{
+    if (event.isEvent())
+    {
+        infoTags.push_back( str(boost::format("EVENT=%i") % event.label));
+    }
+}
+
+
 void
 VcfWriterSV::
 writeTransloc(
@@ -257,7 +270,8 @@ writeTransloc(
     const SVId& svId,
     const bool isFirstBreakend,
     const SVCandidateSetData& /*svData*/,
-    const SVCandidateAssemblyData& /*adata*/)
+    const SVCandidateAssemblyData& /*adata*/,
+    const EventInfo& event)
 {
     const bool isImprecise(sv.isImprecise());
     const bool isBreakendRangeSameShift(sv.isBreakendRangeSameShift());
@@ -384,6 +398,8 @@ writeTransloc(
         infotags.push_back( str( boost::format("SVINSSEQ=%s") % (insertSeq) ));
     }
 
+    addSharedInfo(infotags, event);
+
     modifyInfo(infotags);
     modifyTranslocInfo(isFirstBreakend, infotags);
 
@@ -417,10 +433,11 @@ writeTranslocPair(
     const SVCandidate& sv,
     const SVId& svId,
     const SVCandidateSetData& svData,
-    const SVCandidateAssemblyData& adata)
+    const SVCandidateAssemblyData& adata,
+    const EventInfo& event)
 {
-    writeTransloc(sv, svId, true, svData, adata);
-    writeTransloc(sv, svId, false, svData, adata);
+    writeTransloc(sv, svId, true, svData, adata, event);
+    writeTransloc(sv, svId, false, svData, adata, event);
 }
 
 
@@ -431,7 +448,8 @@ writeInvdel(
     const SVCandidate& sv,
     const SVId& svId,
     const SVCandidateAssemblyData& /*adata*/,
-    const bool isIndel)
+    const bool isIndel,
+    const EventInfo& event)
 {
     const bool isImprecise(sv.isImprecise());
     const bool isBreakendRangeSameShift(sv.isBreakendRangeSameShift());
@@ -628,6 +646,8 @@ writeInvdel(
         }
     }
 
+    addSharedInfo(infoTags, event);
+
     modifyInfo(infoTags);
     modifySample(sv, sampleTags);
 
@@ -677,7 +697,8 @@ writeSVCore(
     const SVCandidateSetData& svData,
     const SVCandidateAssemblyData& adata,
     const SVCandidate& sv,
-    const SVId& svId)
+    const SVId& svId,
+    const EventInfo& event)
 {
     const SV_TYPE::index_t svType(getSVType(sv));
 
@@ -696,12 +717,12 @@ writeSVCore(
 
     if      (svType == SV_TYPE::INTERTRANSLOC)
     {
-        writeTranslocPair(sv, svId, svData, adata);
+        writeTranslocPair(sv, svId, svData, adata, event);
     }
     else
     {
         const bool isIndel(svType == SV_TYPE::INDEL);
-        writeInvdel(sv, svId, adata, isIndel);
+        writeInvdel(sv, svId, adata, isIndel, event);
     }
 }
 

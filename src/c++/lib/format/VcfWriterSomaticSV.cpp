@@ -90,7 +90,6 @@ modifyTranslocInfo(
                             (isFirstOfPair ? baseInfo.bp1MaxDepth : baseInfo.bp2MaxDepth) ) );
     infotags.push_back( str(boost::format("MATE_BND_DEPTH=%i") %
                             (isFirstOfPair ? baseInfo.bp2MaxDepth : baseInfo.bp1MaxDepth) ) );
-
 }
 
 
@@ -137,14 +136,15 @@ writeSV(
     const SVCandidate& sv,
     const SVId& svId,
     const SVScoreInfo& baseInfo,
-    const SVScoreInfoSomatic& somaticInfo)
+    const SVScoreInfoSomatic& somaticInfo,
+    const EventInfo& event)
 {
     //TODO: this is a lame way to customize subclass behavior:
-    _baseInfoPtr=&baseInfo;
+    setScoreInfo(baseInfo);
     _somaticInfoPtr=&somaticInfo;
 
-    writeSVCore(svData, adata, sv, svId);
+    writeSVCore(svData, adata, sv, svId, event);
 
-    _baseInfoPtr=NULL;
+    clearScoreInfo();
     _somaticInfoPtr=NULL;
 }
