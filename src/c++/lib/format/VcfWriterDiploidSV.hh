@@ -34,7 +34,8 @@ struct VcfWriterDiploidSV : public VcfWriterSV
         VcfWriterSV(referenceFilename,set,os),
         _diploidOpt(diploidOpt),
         _isMaxDepthFilter(isMaxDepthFilter),
-        _modelScorePtr(NULL)
+        _baseInfoPtr(NULL),
+        _diploidInfoPtr(NULL)
     {}
 
     void
@@ -43,7 +44,8 @@ struct VcfWriterDiploidSV : public VcfWriterSV
         const SVCandidateAssemblyData& adata,
         const SVCandidate& sv,
         const SVId& svId,
-        const SVModelScoreInfo& ssInfo);
+        const SVScoreInfo& baseInfo,
+        const SVScoreInfoDiploid& diploidInfo);
 
 private:
 
@@ -79,8 +81,23 @@ private:
     void
     writeFilter() const;
 
+    const SVScoreInfo&
+    getBaseInfo() const
+    {
+        assert(NULL != _baseInfoPtr);
+        return *_baseInfoPtr;
+    }
+
+    const SVScoreInfoDiploid&
+    getDiploidInfo() const
+    {
+        assert(NULL != _diploidInfoPtr);
+        return *_diploidInfoPtr;
+    }
+
 
     const CallOptionsDiploid& _diploidOpt;
     const bool _isMaxDepthFilter;
-    const SVModelScoreInfo* _modelScorePtr;
+    const SVScoreInfo* _baseInfoPtr;
+    const SVScoreInfoDiploid* _diploidInfoPtr;
 };

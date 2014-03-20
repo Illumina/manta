@@ -33,7 +33,8 @@ struct VcfWriterSomaticSV : public VcfWriterSV
         VcfWriterSV(referenceFilename,set,os),
         _somaticOpt(somaticOpt),
         _isMaxDepthFilter(isMaxDepthFilter),
-        _modelScorePtr(NULL)
+        _baseInfoPtr(NULL),
+        _somaticInfoPtr(NULL)
     {}
 
     void
@@ -42,7 +43,8 @@ struct VcfWriterSomaticSV : public VcfWriterSV
         const SVCandidateAssemblyData& adata,
         const SVCandidate& sv,
         const SVId& svId,
-        const SVModelScoreInfo& ssInfo);
+        const SVScoreInfo& baseInfo,
+        const SVScoreInfoSomatic& somaticInfo);
 
 private:
 
@@ -75,8 +77,24 @@ private:
     void
     writeFilter() const;
 
+    const SVScoreInfo&
+    getBaseInfo() const
+    {
+        assert(NULL != _baseInfoPtr);
+        return *_baseInfoPtr;
+    }
+
+    const SVScoreInfoSomatic&
+    getSomaticInfo() const
+    {
+        assert(NULL != _somaticInfoPtr);
+        return *_somaticInfoPtr;
+    }
+
+
     const CallOptionsSomatic& _somaticOpt;
     const bool _isMaxDepthFilter;
-    const SVModelScoreInfo* _modelScorePtr;
+    const SVScoreInfo* _baseInfoPtr;
+    const SVScoreInfoSomatic* _somaticInfoPtr;
 };
 
