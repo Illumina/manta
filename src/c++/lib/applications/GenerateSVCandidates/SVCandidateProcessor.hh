@@ -23,6 +23,7 @@
 #include "SVScorer.hh"
 
 #include "common/OutStream.hh"
+#include "manta/JunctionIdGenerator.hh"
 #include "manta/SVCandidateAssemblyData.hh"
 #include "manta/SVMultiJunctionCandidate.hh"
 #include "format/VcfWriterCandidateSV.hh"
@@ -69,6 +70,8 @@ struct SVWriter
     VcfWriterSomaticSV somWriter;
 
     TruthTracker& _truthTracker;
+
+    JunctionIdGenerator _idgen;
 };
 
 
