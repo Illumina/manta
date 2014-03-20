@@ -72,11 +72,8 @@ VcfWriterSomaticSV::
 modifyInfo(
     std::vector<std::string>& infotags) const
 {
-    assert(_modelScorePtr != NULL);
-    const SVScoreInfoSomatic& somaticInfo(_modelScorePtr->somatic);
-
     infotags.push_back("SOMATIC");
-    infotags.push_back( str(boost::format("SOMATICSCORE=%i") % somaticInfo.somaticScore) );
+    infotags.push_back( str(boost::format("SOMATICSCORE=%i") % getSomaticInfo().somaticScore) );
 }
 
 
@@ -87,8 +84,7 @@ modifyTranslocInfo(
     const bool isFirstOfPair,
     std::vector<std::string>& infotags) const
 {
-    assert(_modelScorePtr != NULL);
-    const SVScoreInfo& baseInfo(_modelScorePtr->base);
+    const SVScoreInfo& baseInfo(getBaseInfo());
 
     infotags.push_back( str(boost::format("BND_DEPTH=%i") %
                             (isFirstOfPair ? baseInfo.bp1MaxDepth : baseInfo.bp2MaxDepth) ) );
@@ -105,8 +101,7 @@ modifySample(
     const SVCandidate& sv,
     SampleTag_t& sampletags) const
 {
-    assert(_modelScorePtr != NULL);
-    const SVScoreInfo& baseInfo(_modelScorePtr->base);
+    const SVScoreInfo& baseInfo(getBaseInfo());
 
     std::vector<std::string> values(2);
 
@@ -129,10 +124,7 @@ void
 VcfWriterSomaticSV::
 writeFilter() const
 {
-    assert(_modelScorePtr != NULL);
-    const SVScoreInfoSomatic& somaticInfo(_modelScorePtr->somatic);
-
-    writeFilters(somaticInfo.filters);
+    writeFilters(getSomaticInfo().filters);
 }
 
 
@@ -144,10 +136,15 @@ writeSV(
     const SVCandidateAssemblyData& adata,
     const SVCandidate& sv,
     const SVId& svId,
-    const SVModelScoreInfo& modelScore)
+    const SVScoreInfo& baseInfo,
+    const SVScoreInfoSomatic& somaticInfo)
 {
     //TODO: this is a lame way to customize subclass behavior:
-    _modelScorePtr=&modelScore;
+    _baseInfoPtr=&baseInfo;
+    _somaticInfoPtr=&somaticInfo;
+
     writeSVCore(svData, adata, sv, svId);
-    _modelScorePtr=NULL;
+
+    _baseInfoPtr=NULL;
+    _somaticInfoPtr=NULL;
 }

@@ -228,14 +228,14 @@ writeSV(
 
         if (modelScoreInfo.diploid.altScore >= opt.diploidOpt.minOutputAltScore || opt.isRNA) /// TODO remove after adding RNA scoring
         {
-            diploidWriter.writeSV(svData, assemblyData, sv, svId, modelScoreInfo);
+            diploidWriter.writeSV(svData, assemblyData, sv, svId, modelScoreInfo.base, modelScoreInfo.diploid);
         }
 
         if (isSomatic)
         {
             if (modelScoreInfo.somatic.somaticScore > opt.somaticOpt.minOutputSomaticScore)
             {
-                somWriter.writeSV(svData, assemblyData, sv, svId, modelScoreInfo);
+                somWriter.writeSV(svData, assemblyData, sv, svId, modelScoreInfo.base, modelScoreInfo.somatic);
                 _truthTracker.reportOutcome(SVLog::WRITTEN);
             }
             else

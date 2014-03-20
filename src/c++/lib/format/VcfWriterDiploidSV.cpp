@@ -87,8 +87,7 @@ modifyTranslocInfo(
     const bool isFirstOfPair,
     InfoTag_t& infotags) const
 {
-    assert(_modelScorePtr != NULL);
-    const SVScoreInfo& baseInfo(_modelScorePtr->base);
+    const SVScoreInfo& baseInfo(getBaseInfo());
 
     infotags.push_back( str(boost::format("BND_DEPTH=%i") %
                             (isFirstOfPair ? baseInfo.bp1MaxDepth : baseInfo.bp2MaxDepth) ) );
@@ -102,10 +101,7 @@ void
 VcfWriterDiploidSV::
 writeQual() const
 {
-    assert(_modelScorePtr != NULL);
-    const SVScoreInfoDiploid& diploidInfo(_modelScorePtr->diploid);
-
-    _os << diploidInfo.altScore;
+    _os << getDiploidInfo().altScore;
 }
 
 
@@ -114,10 +110,7 @@ void
 VcfWriterDiploidSV::
 writeFilter() const
 {
-    assert(_modelScorePtr != NULL);
-    const SVScoreInfoDiploid& diploidInfo(_modelScorePtr->diploid);
-
-    writeFilters(diploidInfo.filters);
+    writeFilters(getDiploidInfo().filters);
 }
 
 
@@ -149,18 +142,17 @@ modifySample(
     const SVCandidate& sv,
     SampleTag_t& sampletags) const
 {
-    assert(_modelScorePtr != NULL);
-    const SVModelScoreInfo& modelScoreInfo(*_modelScorePtr);
-    const SVScoreInfo& baseInfo(modelScoreInfo.base);
+    const SVScoreInfo& baseInfo(getBaseInfo());
+    const SVScoreInfoDiploid& diploidInfo(getDiploidInfo());
 
     std::vector<std::string> values(1);
 
     static const std::string gtTag("GT");
-    values[0] = gtLabel(modelScoreInfo.diploid.gt);
+    values[0] = gtLabel(diploidInfo.gt);
     sampletags.push_back(std::make_pair(gtTag,values));
 
     static const std::string gqTag("GQ");
-    values[0] = str( boost::format("%s") % modelScoreInfo.diploid.gtScore);
+    values[0] = str( boost::format("%s") % diploidInfo.gtScore);
     sampletags.push_back(std::make_pair(gqTag,values));
 
     static const std::string pairTag("PR");
@@ -183,10 +175,15 @@ writeSV(
     const SVCandidateAssemblyData& adata,
     const SVCandidate& sv,
     const SVId& svId,
-    const SVModelScoreInfo& modelScore)
+    const SVScoreInfo& baseInfo,
+    const SVScoreInfoDiploid& diploidInfo)
 {
     //TODO: this is a lame way to customize subclass behavior:
-    _modelScorePtr=&modelScore;
+    _baseInfoPtr=&baseInfo;
+    _diploidInfoPtr=&diploidInfo;
+
     writeSVCore(svData, adata, sv, svId);
-    _modelScorePtr=NULL;
+
+    _baseInfoPtr=NULL;
+    _diploidInfoPtr=NULL;
 }
