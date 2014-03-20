@@ -27,5 +27,6 @@ writeSV(
     const SVCandidate& sv,
     const SVId& svId)
 {
-    writeSVCore( svData, adata, sv, svId);
+    static const EventInfo event;
+    writeSVCore( svData, adata, sv, svId, event);
 }

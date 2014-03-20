@@ -176,14 +176,15 @@ writeSV(
     const SVCandidate& sv,
     const SVId& svId,
     const SVScoreInfo& baseInfo,
-    const SVScoreInfoDiploid& diploidInfo)
+    const SVScoreInfoDiploid& diploidInfo,
+    const EventInfo& event)
 {
     //TODO: this is a lame way to customize subclass behavior:
-    _baseInfoPtr=&baseInfo;
+    setScoreInfo(baseInfo);
     _diploidInfoPtr=&diploidInfo;
 
-    writeSVCore(svData, adata, sv, svId);
+    writeSVCore(svData, adata, sv, svId, event);
 
-    _baseInfoPtr=NULL;
+    clearScoreInfo();
     _diploidInfoPtr=NULL;
 }

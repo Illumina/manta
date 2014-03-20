@@ -20,10 +20,11 @@
 #include "manta/JunctionIdGenerator.hh"
 #include "manta/SVModelScoreInfo.hh"
 #include "format/VcfWriterSV.hh"
+#include "format/VcfWriterScoredSV.hh"
 #include "options/CallOptionsDiploid.hh"
 
 
-struct VcfWriterDiploidSV : public VcfWriterSV
+struct VcfWriterDiploidSV : public VcfWriterSV, VcfWriterScoredSV
 {
     VcfWriterDiploidSV(
         const CallOptionsDiploid& diploidOpt,
@@ -34,7 +35,6 @@ struct VcfWriterDiploidSV : public VcfWriterSV
         VcfWriterSV(referenceFilename,set,os),
         _diploidOpt(diploidOpt),
         _isMaxDepthFilter(isMaxDepthFilter),
-        _baseInfoPtr(NULL),
         _diploidInfoPtr(NULL)
     {}
 
@@ -45,7 +45,8 @@ struct VcfWriterDiploidSV : public VcfWriterSV
         const SVCandidate& sv,
         const SVId& svId,
         const SVScoreInfo& baseInfo,
-        const SVScoreInfoDiploid& diploidInfo);
+        const SVScoreInfoDiploid& diploidInfo,
+        const EventInfo& event);
 
 private:
 
@@ -81,13 +82,6 @@ private:
     void
     writeFilter() const;
 
-    const SVScoreInfo&
-    getBaseInfo() const
-    {
-        assert(NULL != _baseInfoPtr);
-        return *_baseInfoPtr;
-    }
-
     const SVScoreInfoDiploid&
     getDiploidInfo() const
     {
@@ -98,6 +92,5 @@ private:
 
     const CallOptionsDiploid& _diploidOpt;
     const bool _isMaxDepthFilter;
-    const SVScoreInfo* _baseInfoPtr;
     const SVScoreInfoDiploid* _diploidInfoPtr;
 };

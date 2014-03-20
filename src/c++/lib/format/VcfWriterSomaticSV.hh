@@ -19,10 +19,11 @@
 
 #include "manta/SVModelScoreInfo.hh"
 #include "format/VcfWriterSV.hh"
+#include "format/VcfWriterScoredSV.hh"
 #include "options/CallOptionsSomatic.hh"
 
 
-struct VcfWriterSomaticSV : public VcfWriterSV
+struct VcfWriterSomaticSV : public VcfWriterSV, VcfWriterScoredSV
 {
     VcfWriterSomaticSV(
         const CallOptionsSomatic& somaticOpt,
@@ -33,7 +34,6 @@ struct VcfWriterSomaticSV : public VcfWriterSV
         VcfWriterSV(referenceFilename,set,os),
         _somaticOpt(somaticOpt),
         _isMaxDepthFilter(isMaxDepthFilter),
-        _baseInfoPtr(NULL),
         _somaticInfoPtr(NULL)
     {}
 
@@ -44,7 +44,8 @@ struct VcfWriterSomaticSV : public VcfWriterSV
         const SVCandidate& sv,
         const SVId& svId,
         const SVScoreInfo& baseInfo,
-        const SVScoreInfoSomatic& somaticInfo);
+        const SVScoreInfoSomatic& somaticInfo,
+        const EventInfo& event);
 
 private:
 
@@ -77,13 +78,6 @@ private:
     void
     writeFilter() const;
 
-    const SVScoreInfo&
-    getBaseInfo() const
-    {
-        assert(NULL != _baseInfoPtr);
-        return *_baseInfoPtr;
-    }
-
     const SVScoreInfoSomatic&
     getSomaticInfo() const
     {
@@ -94,7 +88,6 @@ private:
 
     const CallOptionsSomatic& _somaticOpt;
     const bool _isMaxDepthFilter;
-    const SVScoreInfo* _baseInfoPtr;
     const SVScoreInfoSomatic* _somaticInfoPtr;
 };
 

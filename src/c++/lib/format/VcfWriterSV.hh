@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "manta/EventInfo.hh"
 #include "manta/JunctionIdGenerator.hh"
 #include "manta/SVCandidate.hh"
 #include "manta/SVCandidateAssemblyData.hh"
@@ -78,7 +79,8 @@ protected:
         const SVCandidateSetData& svData,
         const SVCandidateAssemblyData& adata,
         const SVCandidate& sv,
-        const SVId& svId);
+        const SVId& svId,
+        const EventInfo& event);
 
     /// add info tags which can be customized by sub-class
     virtual
@@ -129,14 +131,16 @@ private:
         const SVId& svId,
         const bool isFirstBreakend,
         const SVCandidateSetData& svData,
-        const SVCandidateAssemblyData& adata);
+        const SVCandidateAssemblyData& adata,
+        const EventInfo& event);
 
     void
     writeTranslocPair(
         const SVCandidate& sv,
         const SVId& svId,
         const SVCandidateSetData& svData,
-        const SVCandidateAssemblyData& adata);
+        const SVCandidateAssemblyData& adata,
+        const EventInfo& event);
 
     /// \param isIndel if true, the variant is a simple right/left breakend insert/delete combination
     void
@@ -144,7 +148,8 @@ private:
         const SVCandidate& sv,
         const SVId& svId,
         const SVCandidateAssemblyData& adata,
-        const bool isIndel);
+        const bool isIndel,
+        const EventInfo& event);
 
 protected:
     const std::string& _referenceFilename;
