@@ -179,14 +179,14 @@ modifySample(
 void
 VcfWriterDiploidSV::
 writeSV(
-    const EdgeInfo& edge,
     const SVCandidateSetData& svData,
     const SVCandidateAssemblyData& adata,
     const SVCandidate& sv,
+    const SVId& svId,
     const SVModelScoreInfo& modelScore)
 {
     //TODO: this is a lame way to customize subclass behavior:
     _modelScorePtr=&modelScore;
-    writeSVCore(edge, svData, adata, sv);
+    writeSVCore(svData, adata, sv, svId);
     _modelScorePtr=NULL;
 }

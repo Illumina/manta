@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "manta/JunctionIdGenerator.hh"
 #include "manta/SVModelScoreInfo.hh"
 #include "format/VcfWriterSV.hh"
 #include "options/CallOptionsDiploid.hh"
@@ -38,10 +39,10 @@ struct VcfWriterDiploidSV : public VcfWriterSV
 
     void
     writeSV(
-        const EdgeInfo& edge,
         const SVCandidateSetData& svData,
         const SVCandidateAssemblyData& adata,
         const SVCandidate& sv,
+        const SVId& svId,
         const SVModelScoreInfo& ssInfo);
 
 private:

@@ -44,9 +44,7 @@ VcfWriterSV(
     std::ostream& os) :
     _referenceFilename(referenceFilename),
     _header(set.header),
-    _os(os),
-    _transLocIdFormatter("MantaBND:%i:%i:%i:%i:"),
-    _otherSVIdFormatter("Manta%s:%i:%i:%i:%i:%i:%i")
+    _os(os)
 {
 }
 
@@ -256,7 +254,7 @@ void
 VcfWriterSV::
 writeTransloc(
     const SVCandidate& sv,
-    const std::string& idPrefix,
+    const SVId& svId,
     const bool isFirstBreakend,
     const SVCandidateSetData& /*svData*/,
     const SVCandidateAssemblyData& /*adata*/)
@@ -299,8 +297,8 @@ writeTransloc(
     }
 
     // get ID
-    const std::string localId(idPrefix + (isFirstBreakend ? '0' : '1'));
-    const std::string mateId(idPrefix + (isFirstBreakend ? '1' : '0'));
+    const std::string& localId(isFirstBreakend ? svId.localId : svId.mateId);
+    const std::string& mateId(isFirstBreakend ? svId.mateId : svId.localId);
 
     // get REF
     std::string ref;
@@ -416,15 +414,13 @@ writeTransloc(
 void
 VcfWriterSV::
 writeTranslocPair(
-    const EdgeInfo& edge,
     const SVCandidate& sv,
+    const SVId& svId,
     const SVCandidateSetData& svData,
     const SVCandidateAssemblyData& adata)
 {
-    const std::string idPrefix( str(_transLocIdFormatter % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex) );
-
-    writeTransloc(sv, idPrefix, true, svData, adata);
-    writeTransloc(sv, idPrefix, false, svData, adata);
+    writeTransloc(sv, svId, true, svData, adata);
+    writeTransloc(sv, svId, false, svData, adata);
 }
 
 
@@ -432,16 +428,11 @@ writeTranslocPair(
 void
 VcfWriterSV::
 writeInvdel(
-    const EdgeInfo& edge,
     const SVCandidate& sv,
+    const SVId& svId,
     const SVCandidateAssemblyData& /*adata*/,
-    const std::string& label,
     const bool isIndel)
 {
-    const std::string vcfId( str(_otherSVIdFormatter
-                                 % label % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2
-                                 % sv.candidateIndex %  sv.assemblyAlignIndex % sv.assemblySegmentIndex ) );
-
     const bool isImprecise(sv.isImprecise());
     const bool isBreakendRangeSameShift(sv.isBreakendRangeSameShift());
 
@@ -527,12 +518,12 @@ writeInvdel(
     }
     else
     {
-        alt = str( boost::format("<%s>") % label);
+        alt = str( boost::format("<%s>") % svId.getLabel());
     }
 
     // build INFO field
     std::vector<std::string> words;
-    split_string(label,':',words);
+    split_string(svId.getLabel(),':',words);
     {
         // note that there's a reasonable argument for displaying these tags only when a
         // symbolic allele is used (by a strict reading of the vcf spec) -- we instead
@@ -621,7 +612,7 @@ writeInvdel(
         }
     }
 
-    if (label == "INV")
+    if (svId.svType == EXTENDED_SV_TYPE::INVERSION)
     {
         if (sv.bp1.state == SVBreakendState::RIGHT_OPEN)
         {
@@ -643,7 +634,7 @@ writeInvdel(
     // write out record:
     _os << chrom
         << '\t' << pos
-        << '\t' << vcfId // ID
+        << '\t' << svId.localId // ID
         << '\t' << ref // REF
         << '\t' << alt // ALT
         << '\t';
@@ -654,74 +645,28 @@ writeInvdel(
     makeInfoField(infoTags,_os); // INFO
     makeFormatSampleField(sampleTags, _os); // FORMAT + SAMPLE
     _os << '\n';
-
 }
 
 
 
-void
-VcfWriterSV::
-writeInversion(
-    const EdgeInfo& edge,
-    const SVCandidate& sv,
-    const SVCandidateSetData& /*svData*/,
-    const SVCandidateAssemblyData& adata)
+static
+bool
+isAcceptedSVType(
+    const SV_TYPE::index_t svType)
 {
-    static const std::string label("INV");
-    writeInvdel(edge, sv, adata, label);
-}
+    using namespace SV_TYPE;
 
-
-
-void
-VcfWriterSV::
-writeIndel(
-    const EdgeInfo& edge,
-    const SVCandidate& sv,
-    const SVCandidateSetData& /*svData*/,
-    const SVCandidateAssemblyData& adata)
-{
-    static const bool isIndel(true);
-
-    const bool isBp1First(sv.bp1.interval.range.begin_pos()<=sv.bp2.interval.range.begin_pos());
-
-    const SVBreakend& bpA(isBp1First ? sv.bp1 : sv.bp2);
-    const SVBreakend& bpB(isBp1First ? sv.bp2 : sv.bp1);
-
-    const unsigned deleteSize(bpB.interval.range.begin_pos() - bpA.interval.range.begin_pos());
-    const unsigned insertSize(sv.insertSeq.size());
-
-    const bool isDelete(deleteSize >= insertSize);
-
-    const std::string label(isDelete ? "DEL" : "INS");
-
-    writeInvdel(edge, sv, adata, label, isIndel);
-}
-
-
-void
-VcfWriterSV::
-writeTanDup(
-    const EdgeInfo& edge,
-    const SVCandidate& sv,
-    const SVCandidateSetData& /*svData*/,
-    const SVCandidateAssemblyData& adata)
-{
-    static const std::string label("DUP:TANDEM");
-    writeInvdel(edge, sv, adata, label);
-}
-
-
-void
-VcfWriterSV::
-writeComplex(
-    const EdgeInfo& edge,
-    const SVCandidate& sv,
-    const SVCandidateSetData& /*svData*/,
-    const SVCandidateAssemblyData& adata)
-{
-    static const std::string label("COMPLEX");
-    writeInvdel(edge, sv, adata, label);
+    switch(svType)
+    {
+    case INTERTRANSLOC:
+    case INVERSION:
+    case INDEL:
+    case TANDUP:
+    case COMPLEX:
+        return true;
+    default:
+        return false;
+    }
 }
 
 
@@ -729,10 +674,10 @@ writeComplex(
 void
 VcfWriterSV::
 writeSVCore(
-    const EdgeInfo& edge,
     const SVCandidateSetData& svData,
     const SVCandidateAssemblyData& adata,
-    const SVCandidate& sv)
+    const SVCandidate& sv,
+    const SVId& svId)
 {
     const SV_TYPE::index_t svType(getSVType(sv));
 
@@ -740,33 +685,23 @@ writeSVCore(
     log_os << "VcfWriterSV::writeSVCore svType: " << SV_TYPE::label(svType) << "\n";
 #endif
 
-    if      (svType == SV_TYPE::INTERTRANSLOC)
-    {
-        writeTranslocPair(edge, sv, svData, adata);
-    }
-    else if (svType == SV_TYPE::INVERSION)
-    {
-        writeInversion(edge, sv, svData, adata);
-    }
-    else if (svType == SV_TYPE::INDEL)
-    {
-        writeIndel(edge, sv, svData, adata);
-    }
-    else if (svType == SV_TYPE::TANDUP)
-    {
-        writeTanDup(edge, sv, svData, adata);
-    }
-    else if (svType == SV_TYPE::COMPLEX)
-    {
-        writeComplex(edge, sv, svData, adata);
-    }
-    else
+    if (! isAcceptedSVType(svType))
     {
         using namespace illumina::common;
 
         std::ostringstream oss;
         oss << "ERROR: sv candidate cannot be classified: " << sv << "\n";
         BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+    }
+
+    if      (svType == SV_TYPE::INTERTRANSLOC)
+    {
+        writeTranslocPair(sv, svId, svData, adata);
+    }
+    else
+    {
+        const bool isIndel(svType == SV_TYPE::INDEL);
+        writeInvdel(sv, svId, adata, isIndel);
     }
 }
 

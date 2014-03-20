@@ -170,6 +170,8 @@ writeSV(
         return;
     }
 
+    std::vector<SVId> junctionSVId(junctionCount);
+
     // write out candidates for each junction independently:
     for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
     {
@@ -177,8 +179,11 @@ writeSV(
 
         const SVCandidateAssemblyData& assemblyData(mjAssemblyData[junctionIndex]);
         const SVCandidate& sv(mjSV.junction[junctionIndex]);
+        SVId& svId(junctionSVId[junctionIndex]);
 
-        candWriter.writeSV(edge, svData, assemblyData, sv);
+        _idgen.getId(edge, sv, svId);
+
+        candWriter.writeSV(svData, assemblyData, sv, svId);
     }
 
     // check min size for scoring:
@@ -206,6 +211,7 @@ writeSV(
 
     // final scored output is treated (mostly) independently for each junction:
     //
+    std::string eventId;
     for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
     {
         if (isJunctionFiltered[junctionIndex]) continue;
@@ -214,16 +220,22 @@ writeSV(
         const SVCandidate& sv(mjSV.junction[junctionIndex]);
         const SVModelScoreInfo& modelScoreInfo(mjModelScoreInfo[junctionIndex]);
 
+        const SVId& svId(junctionSVId[junctionIndex]);
+        if (isMJEvent && eventId.empty())
+        {
+            eventId = svId.localId;
+        }
+
         if (modelScoreInfo.diploid.altScore >= opt.diploidOpt.minOutputAltScore || opt.isRNA) /// TODO remove after adding RNA scoring
         {
-            diploidWriter.writeSV(edge, svData, assemblyData, sv, modelScoreInfo);
+            diploidWriter.writeSV(svData, assemblyData, sv, svId, modelScoreInfo);
         }
 
         if (isSomatic)
         {
             if (modelScoreInfo.somatic.somaticScore > opt.somaticOpt.minOutputSomaticScore)
             {
-                somWriter.writeSV(edge, svData, assemblyData, sv, modelScoreInfo);
+                somWriter.writeSV(svData, assemblyData, sv, svId, modelScoreInfo);
                 _truthTracker.reportOutcome(SVLog::WRITTEN);
             }
             else
@@ -365,7 +377,6 @@ evaluateCandidate(
             isWrite = true;
         }
         if (! isWrite) break;
-
 
 
         /// if any junctions go into the small assembler (for instance b/c the breakends are too close), then

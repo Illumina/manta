@@ -22,10 +22,10 @@
 void
 VcfWriterCandidateSV::
 writeSV(
-    const EdgeInfo& edge,
     const SVCandidateSetData& svData,
     const SVCandidateAssemblyData& adata,
-    const SVCandidate& sv)
+    const SVCandidate& sv,
+    const SVId& svId)
 {
-    writeSVCore(edge, svData, adata, sv);
+    writeSVCore( svData, adata, sv, svId);
 }
