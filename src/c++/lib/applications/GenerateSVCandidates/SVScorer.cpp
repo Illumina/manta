@@ -39,6 +39,10 @@
 //#define DEBUG_SOMATIC_SCORE
 
 #if defined(DEBUG_SCORE) || defined(DEBUG_SOMATIC_SCORE)
+#define DEBUG_ANY_SCORE
+#endif
+
+#ifdef DEBUG_ANY_SCORE
 #include "blt_util/log.hh"
 #endif
 
@@ -1398,6 +1402,10 @@ scoreSV(
     {
         if (isJunctionFiltered[junctionIndex]) continue;
 
+#ifdef DEBUG_ANY_SCORE
+        log_os << __FUNCTION__ << ": Scoring single junction " << junctionIndex << "/" << junctionCount << "\n";
+#endif
+
         unfilteredJunctionCount++;
 
         const SVCandidateAssemblyData& assemblyData(mjAssemblyData[junctionIndex]);
@@ -1434,6 +1442,9 @@ scoreSV(
     }
     else if (unfilteredJunctionCount == 2)
     {
+#ifdef DEBUG_ANY_SCORE
+        log_os << __FUNCTION__ << ": Scoring multi-junction " << junctionCount << "\n";
+#endif
         isMJEvent=true;
 
         junctionData.resize(unfilteredJunctionCount);

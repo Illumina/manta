@@ -216,11 +216,40 @@ writeSV(
         unfilteredJunctionCount++;
     }
 
+    // setup all event-level info that we need to share across all event junctions:
+    bool isMJDiploidEvent(isMJEvent);
+    EventInfo event;
+    if (isMJEvent)
+    {
+        event.junctionCount=unfilteredJunctionCount;
+        for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
+        {
+            if (isJunctionFiltered[junctionIndex]) continue;
+
+            if (event.label.empty())
+            {
+                 const SVId& svId(junctionSVId[junctionIndex]);
+                 event.label = svId.localId;
+            }
+
+            const SVModelScoreInfo& modelScoreInfo(mjModelScoreInfo[junctionIndex]);
+
+            // for diploid case only we decide to use multi-junction or single junction based on best score:
+            // (for somatic case a lower somatic score could be due to reference evidence in an event member)
+            //
+            if     (mjJointModelScoreInfo.diploid.filters.size() > modelScoreInfo.diploid.filters.size())
+            {
+                isMJDiploidEvent=false;
+            }
+            else if(mjJointModelScoreInfo.diploid.altScore < modelScoreInfo.diploid.altScore)
+            {
+                isMJDiploidEvent=false;
+            }
+        }
+    }
+
     // final scored output is treated (mostly) independently for each junction:
     //
-    EventInfo event;
-    event.junctionCount=unfilteredJunctionCount;
-
     for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
     {
         if (isJunctionFiltered[junctionIndex]) continue;
@@ -230,23 +259,24 @@ writeSV(
         const SVModelScoreInfo& modelScoreInfo(mjModelScoreInfo[junctionIndex]);
 
         const SVId& svId(junctionSVId[junctionIndex]);
-        if (isMJEvent && event.label.empty())
-        {
-            event.label = svId.localId;
-        }
 
         const SVScoreInfo& baseInfo(modelScoreInfo.base);
-        const SVModelScoreInfo& scoreInfo(isMJEvent ? mjJointModelScoreInfo : modelScoreInfo);
-        const SVScoreInfoDiploid& diploidInfo(scoreInfo.diploid);
-        const SVScoreInfoSomatic& somaticInfo(scoreInfo.somatic);
 
-        if (diploidInfo.altScore >= opt.diploidOpt.minOutputAltScore || opt.isRNA) /// TODO remove after adding RNA scoring
         {
-            diploidWriter.writeSV(svData, assemblyData, sv, svId, baseInfo, diploidInfo, event);
+            const SVModelScoreInfo& scoreInfo(isMJDiploidEvent ? mjJointModelScoreInfo : modelScoreInfo);
+            const SVScoreInfoDiploid& diploidInfo(scoreInfo.diploid);
+
+            if (diploidInfo.altScore >= opt.diploidOpt.minOutputAltScore || opt.isRNA) /// TODO remove after adding RNA scoring
+            {
+                diploidWriter.writeSV(svData, assemblyData, sv, svId, baseInfo, diploidInfo, event);
+            }
         }
 
         if (isSomatic)
         {
+            const SVModelScoreInfo& scoreInfo(isMJEvent ? mjJointModelScoreInfo : modelScoreInfo);
+            const SVScoreInfoSomatic& somaticInfo(scoreInfo.somatic);
+
             if (somaticInfo.somaticScore > opt.somaticOpt.minOutputSomaticScore)
             {
                 somWriter.writeSV(svData, assemblyData, sv, svId, baseInfo, somaticInfo, event);
