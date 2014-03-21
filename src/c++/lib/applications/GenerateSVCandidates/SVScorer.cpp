@@ -604,7 +604,7 @@ getSpanningPairWeight(
     static const int maxSmallSize(500);
     static const LinearScaler<int> svSizeRamp(minSmallSize, maxSmallSize);
 
-    if (! isSmallAssembler) return 0.;
+    if (! isSmallAssembler) return 1.f;
     return svSizeRamp.getScale(sv.centerSize());
 }
 
