@@ -29,7 +29,8 @@
 namespace EXTENDED_SV_TYPE
 {
 
-enum index_t {
+enum index_t
+{
     UNKNOWN,
     INTERTRANSLOC,
     INVERSION,

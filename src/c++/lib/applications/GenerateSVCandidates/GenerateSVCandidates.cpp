@@ -103,7 +103,7 @@ struct ReducedGraphInfo
 
 /// return true for candidates that should be filtered out, based on
 /// information available in a single junction (as opposed to
-/// requireing multi-junction analysis 
+/// requireing multi-junction analysis
 ///
 /// Note this logic probably belongs in SVFinder and should make its
 /// way there once stable:
@@ -136,7 +136,7 @@ isFilterSingleJunctionCandidate(
 
 
 /// return true for candidates that should be filtered out, based on
-/// information available in a full junction set 
+/// information available in a full junction set
 ///
 static
 bool
@@ -153,7 +153,7 @@ isFilterMultiJunctionCandidate(
         {
             if (sv.bp1.getSpanningCount() >= minCandidateSpanningCount)
             {
-                isAnySpanPass=true; 
+                isAnySpanPass=true;
                 break;
             }
         }
@@ -281,33 +281,34 @@ isSVMJExcluded(
 
 namespace MJ_INTERACTION
 {
-    enum index_t {
-        NONE,
-        SAME,
-        FLIP,
-        CONFLICT
-    };
+enum index_t
+{
+    NONE,
+    SAME,
+    FLIP,
+    CONFLICT
+};
 
-    struct MJState
+struct MJState
+{
+    MJState() :
+        type(NONE),
+        partnerId(0),
+        maxPartnerDistance(0)
+    {}
+
+    void
+    clear()
     {
-        MJState() :
-            type(NONE),
-            partnerId(0),
-            maxPartnerDistance(0)
-        {}
+        type = NONE;
+        partnerId = 0;
+        maxPartnerDistance = 0;
+    }
 
-        void
-        clear()
-        {
-            type = NONE;
-            partnerId = 0;
-            maxPartnerDistance = 0;
-        }
-
-        index_t type;
-        unsigned partnerId;
-        unsigned maxPartnerDistance;
-    };
+    index_t type;
+    unsigned partnerId;
+    unsigned maxPartnerDistance;
+};
 }
 
 
@@ -559,7 +560,7 @@ runGSC(
             }
 
             const unsigned svCount(svs.size());
-            for (unsigned i(0);i<svCount;++i)
+            for (unsigned i(0); i<svCount; ++i)
             {
                 truthTracker.addCandSV();
             }

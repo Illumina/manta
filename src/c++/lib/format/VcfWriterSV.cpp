@@ -676,7 +676,7 @@ isAcceptedSVType(
 {
     using namespace SV_TYPE;
 
-    switch(svType)
+    switch (svType)
     {
     case INTERTRANSLOC:
     case INVERSION:

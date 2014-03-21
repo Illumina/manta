@@ -47,13 +47,18 @@ getExtendedSVType(
 {
     const SV_TYPE::index_t svType(getSVType(sv));
 
-    switch(svType)
+    switch (svType)
     {
-    case SV_TYPE::INTERTRANSLOC: return INTERTRANSLOC;
-    case SV_TYPE::INVERSION: return INVERSION;
-    case SV_TYPE::TANDUP: return TANDUP;
-    case SV_TYPE::INDEL: return classifyIndel(sv);
-    default: return UNKNOWN;
+    case SV_TYPE::INTERTRANSLOC:
+        return INTERTRANSLOC;
+    case SV_TYPE::INVERSION:
+        return INVERSION;
+    case SV_TYPE::TANDUP:
+        return TANDUP;
+    case SV_TYPE::INDEL:
+        return classifyIndel(sv);
+    default:
+        return UNKNOWN;
     }
 }
 }
@@ -80,7 +85,7 @@ getId(
     else
     {
         svId.localId = str(_otherSVIdFormatter % label(svId.svType) % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2
-                                         % sv.candidateIndex %  sv.assemblyAlignIndex % sv.assemblySegmentIndex );
+                           % sv.candidateIndex %  sv.assemblyAlignIndex % sv.assemblySegmentIndex );
         svId.mateId.clear();
     }
 }
