@@ -18,16 +18,12 @@
 #include "MultiJunctionUtil.hh"
 
 #include "blt_util/log.hh"
-
-#include "common/Exceptions.hh"
 #include "manta/SVCandidateUtil.hh"
 
 #include "boost/foreach.hpp"
 
-#include <iostream>
-#include <memory>
+#include <limits>
 
-//#define DEBUG_GSV
 
 
 /// return true for candidates that should be filtered out, based on

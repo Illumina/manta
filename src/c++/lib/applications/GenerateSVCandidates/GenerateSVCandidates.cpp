@@ -24,17 +24,13 @@
 #include "SVFinder.hh"
 
 #include "blt_util/log.hh"
-#include "blt_util/bam_header_util.hh"
-
 #include "common/Exceptions.hh"
 #include "manta/MultiJunctionUtil.hh"
-#include "manta/ReadGroupStatsSet.hh"
 #include "truth/TruthTracker.hh"
 
 #include "boost/foreach.hpp"
 
 #include <iostream>
-#include <memory>
 
 //#define DEBUG_GSV
 
