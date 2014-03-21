@@ -49,6 +49,14 @@ stripSomScore() {
     sed "s/SOMATICSCORE=[0-9]*//"
 }
 
+stripInvTags() {
+    sed "s/INV5;//" | sed "s/INV3;//" | sed "s/INV5=1;//" | sed "s/INV3=1;//"
+}
+
+stripEvent() {
+    sed "s/;EVENT=//"
+}
+
 
 
 #
