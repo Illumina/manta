@@ -228,8 +228,8 @@ writeSV(
 
             if (event.label.empty())
             {
-                 const SVId& svId(junctionSVId[junctionIndex]);
-                 event.label = svId.localId;
+                const SVId& svId(junctionSVId[junctionIndex]);
+                event.label = svId.localId;
             }
 
             const SVModelScoreInfo& modelScoreInfo(mjModelScoreInfo[junctionIndex]);
@@ -241,7 +241,7 @@ writeSV(
             {
                 isMJDiploidEvent=false;
             }
-            else if(mjJointModelScoreInfo.diploid.altScore < modelScoreInfo.diploid.altScore)
+            else if (mjJointModelScoreInfo.diploid.altScore < modelScoreInfo.diploid.altScore)
             {
                 isMJDiploidEvent=false;
             }
@@ -354,7 +354,7 @@ evaluateCandidate(
                 log_os << __FUNCTION__ << ": Candidate assembly complete for junction " << junctionIndex << "/" << junctionCount << ". Assembled candidate count: " << assemblyData.svs.size() << "\n";
             }
 
-            if(! assemblyData.svs.empty())
+            if (! assemblyData.svs.empty())
             {
                 const unsigned assemblyCount(assemblyData.svs.size());
 
@@ -386,7 +386,7 @@ evaluateCandidate(
     std::vector<bool> isJunctionFiltered(junctionCount,false);
 
     std::vector<unsigned> junctionTracker(junctionCount,0);
-    while(true)
+    while (true)
     {
         /// note this loop is stupid -- it was originally written with the intention of
         /// combinatorially enumerating all possible assembly combinations for the case
@@ -413,7 +413,7 @@ evaluateCandidate(
                 if (assemblyIndex >= assemblyData.svs.size()) continue;
                 const SVCandidate& assembledSV(assemblyData.svs[assemblyIndex]);
 #ifdef DEBUG_GSV
-            log_os << __FUNCTION__ << ": score and output assembly candidate junction " << junctionIndex << ": " << assembledSV << "\n";
+                log_os << __FUNCTION__ << ": score and output assembly candidate junction " << junctionIndex << ": " << assembledSV << "\n";
 #endif
                 mjAssembledCandidateSV.junction[junctionIndex] = assembledSV;
             }

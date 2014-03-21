@@ -1451,10 +1451,10 @@ scoreSV(
         for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
         {
             junctionData[junctionIndex].init(
-                    mjSV.junction[junctionIndex],
-                    junctionEvidence[junctionIndex],
-                    mjModelScoreInfo[junctionIndex].base,
-                    junctionSpanningPairWeight[junctionIndex]);
+                mjSV.junction[junctionIndex],
+                junctionEvidence[junctionIndex],
+                mjModelScoreInfo[junctionIndex].base,
+                junctionSpanningPairWeight[junctionIndex]);
         }
 
         scoreDiploidSV(_diploidOpt, _diploidDopt, _dFilterDiploid, junctionData, mjJointModelScoreInfo.diploid);
