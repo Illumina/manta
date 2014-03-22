@@ -898,7 +898,6 @@ scoreDiploidSV(
     //
     // apply filters
     //
-    if (diploidInfo.altScore >= diploidOpt.minOutputAltScore)
     {
 
         if (diploidInfo.gtScore < diploidOpt.minPassGTScore)
@@ -1299,7 +1298,6 @@ scoreSomaticSV(
     //
     // apply filters
     //
-    if (somaticInfo.somaticScore >= somaticOpt.minOutputSomaticScore)
     {
         const unsigned junctionCount(junctionData.size());
 
