@@ -39,7 +39,7 @@ addHeaderInfo() const
     _os << "##INFO=<ID=MATE_BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at remote translocation mate breakend\">\n";
     _os << "##INFO=<ID=SOMATIC,Number=0,Type=Flag,Description=\"Somatic mutation\">\n";
     _os << "##INFO=<ID=SOMATICSCORE,Number=1,Type=Integer,Description=\"Somatic variant quality score\">\n";
-    _os << "##INFO=<ID=JUNCTION_SOMATICSCORE,Number=1,Type=Integer,Description=\"If the record is part of an EVENT (ie. a multi-adjacency variant), this field provides the SOMATICSCORE for the adjacency in question only\">\n";
+    _os << "##INFO=<ID=JUNCTION_SOMATICSCORE,Number=1,Type=Integer,Description=\"If the SV junctino is part of an EVENT (ie. a multi-adjacency variant), this field provides the SOMATICSCORE value for the adjacency in question only\">\n";
 }
 
 
