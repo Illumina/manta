@@ -269,17 +269,17 @@ addSVNodeData(
         assert((! isFirstTumor) || isTumor);
 
         SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
-        bam_streamer& read_stream(*bamPtr);
+        bam_streamer& readStream(*bamPtr);
 
         // set bam stream to new search interval:
-        read_stream.set_new_region(searchInterval.tid,searchInterval.range.begin_pos(),searchInterval.range.end_pos());
+        readStream.set_new_region(searchInterval.tid,searchInterval.range.begin_pos(),searchInterval.range.end_pos());
 
 #ifdef DEBUG_SVDATA
         log_os << logtag << "scanning bamIndex: " << bamIndex << "\n";
 #endif
-        while (read_stream.next())
+        while (readStream.next())
         {
-            const bam_record& bamRead(*(read_stream.get_record_ptr()));
+            const bam_record& bamRead(*(readStream.get_record_ptr()));
 
             const pos_t refPos(bamRead.pos()-1);
             if (refPos >= searchEndPos) break;

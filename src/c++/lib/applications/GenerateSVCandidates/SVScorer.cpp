@@ -854,6 +854,8 @@ scoreDiploidSV(
     //
     // compute qualities
     //
+    assert(! junctionData.empty());
+
     {
         boost::array<double,DIPLOID_GT::SIZE> loglhood;
         std::fill(loglhood.begin(),loglhood.end(),0);
@@ -1148,6 +1150,8 @@ scoreSomaticSV(
     //
     // compute somatic score
     //
+    assert(! junctionData.empty());
+    const bool isMJEvent(junctionData.size() > 1);
 
     // somatic score is computed at a high stringency date tier (1) and low stringency tier (2), the min value is
     // kept as the final reported quality:
@@ -1185,7 +1189,10 @@ scoreSomaticSV(
 #endif
 
         /// TODO: find a better way to set this number from training data:
-        static const ProbSet chimeraProbDefault(1e-4);
+        static const ProbSet chimeraProbDefaultSingleJunction(1e-4);
+        static const ProbSet chimeraProbDefaultMultiJunction(2e-5);
+        const ProbSet& chimeraProbDefault( isMJEvent ? chimeraProbDefaultMultiJunction : chimeraProbDefaultSingleJunction );
+
         static const ProbSet chimeraProbPermissive(1e-5);
         const ProbSet& chimeraProb( isPermissive ? chimeraProbPermissive : chimeraProbDefault );
 
