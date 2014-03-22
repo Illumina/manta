@@ -34,7 +34,8 @@ struct VcfWriterSomaticSV : public VcfWriterSV, VcfWriterScoredSV
         VcfWriterSV(referenceFilename,set,os),
         _somaticOpt(somaticOpt),
         _isMaxDepthFilter(isMaxDepthFilter),
-        _somaticInfoPtr(NULL)
+        _somaticInfoPtr(NULL),
+        _singleJunctionSomaticInfoPtr(NULL)
     {}
 
     void
@@ -45,7 +46,8 @@ struct VcfWriterSomaticSV : public VcfWriterSV, VcfWriterScoredSV
         const SVId& svId,
         const SVScoreInfo& baseInfo,
         const SVScoreInfoSomatic& somaticInfo,
-        const EventInfo& event);
+        const EventInfo& event,
+        const SVScoreInfoSomatic& singleJunctionSomaticInfo);
 
 private:
 
@@ -63,6 +65,7 @@ private:
 
     void
     modifyInfo(
+        const EventInfo& event,
         std::vector<std::string>& infotags) const;
 
     void
@@ -85,9 +88,17 @@ private:
         return *_somaticInfoPtr;
     }
 
+    const SVScoreInfoSomatic&
+    getSingleJunctionSomaticInfo() const
+    {
+        assert(NULL != _singleJunctionSomaticInfoPtr);
+        return *_singleJunctionSomaticInfoPtr;
+    }
+
 
     const CallOptionsSomatic& _somaticOpt;
     const bool _isMaxDepthFilter;
     const SVScoreInfoSomatic* _somaticInfoPtr;
+    const SVScoreInfoSomatic* _singleJunctionSomaticInfoPtr;
 };
 

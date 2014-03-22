@@ -253,14 +253,15 @@ addDebugInfo(
 static
 void
 addSharedInfo(
-    VcfWriterSV::InfoTag_t& infoTags,
-    const EventInfo& event)
+    const EventInfo& event,
+    VcfWriterSV::InfoTag_t& infoTags)
 {
     if (event.isEvent())
     {
         infoTags.push_back( str(boost::format("EVENT=%i") % event.label));
     }
 }
+
 
 
 void
@@ -398,9 +399,9 @@ writeTransloc(
         infotags.push_back( str( boost::format("SVINSSEQ=%s") % (insertSeq) ));
     }
 
-    addSharedInfo(infotags, event);
+    addSharedInfo(event, infotags);
 
-    modifyInfo(infotags);
+    modifyInfo(event, infotags);
     modifyTranslocInfo(isFirstBreakend, infotags);
 
     modifySample(sv, sampletags);
@@ -646,9 +647,9 @@ writeInvdel(
         }
     }
 
-    addSharedInfo(infoTags, event);
+    addSharedInfo(event, infoTags);
 
-    modifyInfo(infoTags);
+    modifyInfo(event, infoTags);
     modifySample(sv, sampleTags);
 
     // write out record:

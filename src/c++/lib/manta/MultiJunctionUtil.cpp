@@ -191,7 +191,7 @@ bool
 isSVMJExcluded(
     const SVCandidate& sv)
 {
-    static const unsigned minInnieSVSize(5000);
+    static const unsigned minInnieSVSize(100000);
 
     {
         using namespace SV_TYPE;

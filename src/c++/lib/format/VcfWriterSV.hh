@@ -86,6 +86,7 @@ protected:
     virtual
     void
     modifyInfo(
+        const EventInfo& /*event*/,
         InfoTag_t& /*infotags*/) const
     {}
 

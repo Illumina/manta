@@ -35,7 +35,8 @@ struct VcfWriterDiploidSV : public VcfWriterSV, VcfWriterScoredSV
         VcfWriterSV(referenceFilename,set,os),
         _diploidOpt(diploidOpt),
         _isMaxDepthFilter(isMaxDepthFilter),
-        _diploidInfoPtr(NULL)
+        _diploidInfoPtr(NULL),
+        _singleJunctionDiploidInfoPtr(NULL)
     {}
 
     void
@@ -46,7 +47,8 @@ struct VcfWriterDiploidSV : public VcfWriterSV, VcfWriterScoredSV
         const SVId& svId,
         const SVScoreInfo& baseInfo,
         const SVScoreInfoDiploid& diploidInfo,
-        const EventInfo& event);
+        const EventInfo& event,
+        const SVScoreInfoDiploid& singleJunctionDiploidInfo);
 
 private:
 
@@ -62,9 +64,10 @@ private:
     void
     addHeaderFilters() const;
 
-//    void
-//    modifyInfo(
-//        InfoTag_t& infotags) const;
+    void
+    modifyInfo(
+        const EventInfo& event,
+        InfoTag_t& infotags) const;
 
     void
     modifySample(
@@ -89,8 +92,16 @@ private:
         return *_diploidInfoPtr;
     }
 
+    const SVScoreInfoDiploid&
+    getSingleJunctionDiploidInfo() const
+    {
+        assert(NULL != _singleJunctionDiploidInfoPtr);
+        return *_singleJunctionDiploidInfoPtr;
+    }
+
 
     const CallOptionsDiploid& _diploidOpt;
     const bool _isMaxDepthFilter;
     const SVScoreInfoDiploid* _diploidInfoPtr;
+    const SVScoreInfoDiploid* _singleJunctionDiploidInfoPtr;
 };

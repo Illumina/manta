@@ -65,19 +65,17 @@ addHeaderFilters() const
 
 
 
-#if 0
 void
 VcfWriterDiploidSV::
 modifyInfo(
+    const EventInfo& event,
     InfoTag_t& infotags) const
 {
-    assert(_modelScorePtr != NULL);
-    const SVModelScoreInfo& modelScoreInfo(*_modelScorePtr);
-
-//    infotags.push_back("SOMATIC");
-//    infotags.push_back( str(boost::format("SOMATICSCORE=%i") % modelScoreInfo.somatic.somaticScore) );
+    if (event.isEvent())
+    {
+        infotags.push_back( str(boost::format("JUNCTION_QUAL=%i") % getSingleJunctionDiploidInfo().altScore) );
+    }
 }
-#endif
 
 
 
@@ -177,14 +175,17 @@ writeSV(
     const SVId& svId,
     const SVScoreInfo& baseInfo,
     const SVScoreInfoDiploid& diploidInfo,
-    const EventInfo& event)
+    const EventInfo& event,
+    const SVScoreInfoDiploid& singleJunctionDiploidInfo)
 {
     //TODO: this is a lame way to customize subclass behavior:
     setScoreInfo(baseInfo);
     _diploidInfoPtr=&diploidInfo;
+    _singleJunctionDiploidInfoPtr=&singleJunctionDiploidInfo;
 
     writeSVCore(svData, adata, sv, svId, event);
 
     clearScoreInfo();
     _diploidInfoPtr=NULL;
+    _singleJunctionDiploidInfoPtr=NULL;
 }

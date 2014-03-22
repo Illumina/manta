@@ -107,7 +107,7 @@ writeSV(
 #endif
 
         // junction dependent tests:
-        //
+        //   (1) at least one junction in the set must have spanning count of 3 or more
         bool isJunctionSpanFail(false);
         if (isCandidateSpanning)
         {
@@ -120,8 +120,18 @@ writeSV(
         if (! isJunctionSpanFail) isCandidateSpanFail=false;
 
         // independent tests -- as soon as one of these fails, we can continue:
-        //
-        if (! isCandidateSpanning)
+        //   (1) each spanning junction in the set must have spanning count of 2 or more
+        //   (2) no unassembled non-spanning candidates
+        if (isCandidateSpanning)
+        {
+            static const unsigned minCandidateSpanningCount(2);
+            if (sv.bp1.getSpanningCount() < minCandidateSpanningCount)
+            {
+                isJunctionFiltered[junctionIndex] = true;
+                continue;
+            }
+        }
+        else
         {
             if (sv.isImprecise())
             {
@@ -142,7 +152,8 @@ writeSV(
 #ifdef DEBUG_GSV
             log_os << __FUNCTION__ << ": Filtering out candidate below min size before candidate output stage\n";
 #endif
-            return;
+            isJunctionFiltered[junctionIndex] = true;
+            continue;
         }
     }
 
@@ -209,19 +220,14 @@ writeSV(
     SVModelScoreInfo mjJointModelScoreInfo;
     svScore.scoreSV(svData, mjAssemblyData, mjSV, isJunctionFiltered, isSomatic, mjModelScoreInfo, mjJointModelScoreInfo, isMJEvent);
 
-    unsigned unfilteredJunctionCount(0);
-    for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
-    {
-        if (isJunctionFiltered[junctionIndex]) continue;
-        unfilteredJunctionCount++;
-    }
+    const unsigned unfilteredJunctionCount(std::count(isJunctionFiltered.begin(),isJunctionFiltered.end(),true));
 
     // setup all event-level info that we need to share across all event junctions:
     bool isMJDiploidEvent(isMJEvent);
     EventInfo event;
+    event.junctionCount=unfilteredJunctionCount;
     if (isMJEvent)
     {
-        event.junctionCount=unfilteredJunctionCount;
         for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
         {
             if (isJunctionFiltered[junctionIndex]) continue;
@@ -263,12 +269,16 @@ writeSV(
         const SVScoreInfo& baseInfo(modelScoreInfo.base);
 
         {
+            static const EventInfo nonEvent;
+            const EventInfo& diploidEvent( isMJDiploidEvent ? event : nonEvent );
             const SVModelScoreInfo& scoreInfo(isMJDiploidEvent ? mjJointModelScoreInfo : modelScoreInfo);
             const SVScoreInfoDiploid& diploidInfo(scoreInfo.diploid);
 
-            if (diploidInfo.altScore >= opt.diploidOpt.minOutputAltScore || opt.isRNA) /// TODO remove after adding RNA scoring
+            if ((diploidInfo.altScore >= opt.diploidOpt.minOutputAltScore) ||
+                (modelScoreInfo.diploid.altScore >= opt.diploidOpt.minOutputAltScore) ||
+                opt.isRNA) /// TODO remove after adding RNA scoring
             {
-                diploidWriter.writeSV(svData, assemblyData, sv, svId, baseInfo, diploidInfo, event);
+                diploidWriter.writeSV(svData, assemblyData, sv, svId, baseInfo, diploidInfo, diploidEvent, modelScoreInfo.diploid);
             }
         }
 
@@ -277,9 +287,10 @@ writeSV(
             const SVModelScoreInfo& scoreInfo(isMJEvent ? mjJointModelScoreInfo : modelScoreInfo);
             const SVScoreInfoSomatic& somaticInfo(scoreInfo.somatic);
 
-            if (somaticInfo.somaticScore > opt.somaticOpt.minOutputSomaticScore)
+            if ((somaticInfo.somaticScore >= opt.somaticOpt.minOutputSomaticScore) ||
+                (modelScoreInfo.somatic.somaticScore >= opt.somaticOpt.minOutputSomaticScore))
             {
-                somWriter.writeSV(svData, assemblyData, sv, svId, baseInfo, somaticInfo, event);
+                somWriter.writeSV(svData, assemblyData, sv, svId, baseInfo, somaticInfo, event, modelScoreInfo.somatic);
                 _truthTracker.reportOutcome(SVLog::WRITTEN);
             }
             else

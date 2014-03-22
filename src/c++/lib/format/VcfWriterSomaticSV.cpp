@@ -39,6 +39,7 @@ addHeaderInfo() const
     _os << "##INFO=<ID=MATE_BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at remote translocation mate breakend\">\n";
     _os << "##INFO=<ID=SOMATIC,Number=0,Type=Flag,Description=\"Somatic mutation\">\n";
     _os << "##INFO=<ID=SOMATICSCORE,Number=1,Type=Integer,Description=\"Somatic variant quality score\">\n";
+    _os << "##INFO=<ID=JUNCTION_SOMATICSCORE,Number=1,Type=Integer,Description=\"If the record is part of an EVENT (ie. a multi-adjacency variant), this field provides the SOMATICSCORE for the adjacency in question only\">\n";
 }
 
 
@@ -70,10 +71,16 @@ addHeaderFilters() const
 void
 VcfWriterSomaticSV::
 modifyInfo(
+    const EventInfo& event,
     std::vector<std::string>& infotags) const
 {
     infotags.push_back("SOMATIC");
     infotags.push_back( str(boost::format("SOMATICSCORE=%i") % getSomaticInfo().somaticScore) );
+
+    if (event.isEvent())
+    {
+        infotags.push_back( str(boost::format("JUNCTION_SOMATICSCORE=%i") % getSingleJunctionSomaticInfo().somaticScore) );
+    }
 }
 
 
@@ -137,14 +144,17 @@ writeSV(
     const SVId& svId,
     const SVScoreInfo& baseInfo,
     const SVScoreInfoSomatic& somaticInfo,
-    const EventInfo& event)
+    const EventInfo& event,
+    const SVScoreInfoSomatic& singleJunctionSomaticInfo)
 {
     //TODO: this is a lame way to customize subclass behavior:
     setScoreInfo(baseInfo);
     _somaticInfoPtr=&somaticInfo;
+    _singleJunctionSomaticInfoPtr=&singleJunctionSomaticInfo;
 
     writeSVCore(svData, adata, sv, svId, event);
 
     clearScoreInfo();
     _somaticInfoPtr=NULL;
+    _singleJunctionSomaticInfoPtr=NULL;
 }
