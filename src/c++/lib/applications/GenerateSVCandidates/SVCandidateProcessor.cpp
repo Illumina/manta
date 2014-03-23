@@ -112,7 +112,7 @@ writeSV(
         if (isCandidateSpanning)
         {
             static const unsigned minCandidateSpanningCount(3);
-            if (sv.bp1.getSpanningCount() < minCandidateSpanningCount)
+            if (sv.getPostAssemblySpanningCount() < minCandidateSpanningCount)
             {
                 isJunctionSpanFail=true;
             }
@@ -125,7 +125,7 @@ writeSV(
         if (isCandidateSpanning)
         {
             static const unsigned minCandidateSpanningCount(2);
-            if (sv.bp1.getSpanningCount() < minCandidateSpanningCount)
+            if (sv.bp1.getPostAssemblySpanningCount() < minCandidateSpanningCount)
             {
                 isJunctionFiltered[junctionIndex] = true;
                 continue;

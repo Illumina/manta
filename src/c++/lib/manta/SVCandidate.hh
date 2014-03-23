@@ -142,6 +142,22 @@ struct SVCandidate
         return std::abs(bp2.interval.range.center_pos() - bp1.interval.range.center_pos());
     }
 
+    /// for precise SV report the full spanning count
+    /// for imprecise SV report spanning pairs only
+    ///
+    unsigned
+    getPostAssemblySpanningCount() const
+    {
+       if (isImprecise())
+       {
+           return bp1.getPairCount();
+       }
+       else
+       {
+           return bp1.getSpanningCount();
+       }
+    }
+
 private:
     bool _isImprecise;
 
