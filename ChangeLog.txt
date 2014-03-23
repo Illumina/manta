@@ -1,3 +1,4 @@
+- MANTA-136 turn on conservative large insertion calling
 - MANTA-126 multi-junction SV scoring
 - MANTA-131 improve large somatic sv specificity with expanded
 supporting evidence search in the normal sample
