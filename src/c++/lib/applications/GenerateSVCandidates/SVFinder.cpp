@@ -22,6 +22,7 @@
 #include "manta/ReadGroupStatsSet.hh"
 #include "manta/SVCandidateUtil.hh"
 #include "manta/SVReferenceUtil.hh"
+#include "svgraph/EdgeInfoUtil.hh"
 
 #include "boost/foreach.hpp"
 
@@ -764,20 +765,16 @@ findCandidateSV(
     svData.clear();
     svs.clear();
 
-    const SVLocusSet& set(getSet());
-    const unsigned minEdgeCount(set.getMinMergeEdgeCount());
-
 #ifdef DEBUG_SVDATA
     log_os << "SVDATA: Evaluating edge: " << edge << "\n";
 #endif
 
+    const SVLocusSet& cset(getSet());
+
     // first determine if this is an edge we're going to evaluate
     //
     // edge must be bidirectional at the noise threshold of the locus set:
-    const SVLocus& locus(set.getLocus(edge.locusIndex));
-
-    if ((locus.getEdge(edge.nodeIndex1,edge.nodeIndex2).getCount() < minEdgeCount) ||
-        (locus.getEdge(edge.nodeIndex2,edge.nodeIndex1).getCount() < minEdgeCount))
+    if (! isBidirectionalEdge(cset, edge))
     {
 #ifdef DEBUG_SVDATA
         log_os << "SVDATA: Edge failed min edge count.\n";
@@ -793,7 +790,9 @@ findCandidateSV(
     // 2) iterate through breakend read pairs to estimate the number, type
     // and likely breakend interval regions of SVs corresponding to this edge
     //
-    const bam_header_info& bamHeader(set.header);
+    const bam_header_info& bamHeader(cset.header);
+
+    const SVLocus& locus(cset.getLocus(edge.locusIndex));
 
     reference_contig_segment refSeq1;
     reference_contig_segment refSeq2;
