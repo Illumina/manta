@@ -1,3 +1,4 @@
+- MANTA-136 turn on conservative large insertion calling
 - MANTA-126 multi-junction SV scoring
 - RNA: track candidate orientation
 v0.19.0
