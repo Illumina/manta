@@ -26,6 +26,7 @@
 #include "blt_util/log.hh"
 #include "common/Exceptions.hh"
 #include "manta/MultiJunctionUtil.hh"
+#include "svgraph/EdgeInfoUtil.hh"
 #include "truth/TruthTracker.hh"
 
 #include "boost/foreach.hpp"
@@ -138,6 +139,18 @@ runGSC(
 
         try
         {
+            // determine if this is the only edge for this node:
+            const bool isIsolatedEdge(testIsolatedEdge(cset,edge));
+
+            truthTracker.addEdge(edge);
+            edgeTrack.start();
+
+            if (opt.isVerbose)
+            {
+                log_os << logtag << " starting analysis of edge: ";
+                dumpEdgeInfo(edge,cset,log_os);
+            }
+
             truthTracker.addEdge(edge);
             edgeTracker.start();
 
@@ -164,11 +177,13 @@ runGSC(
                 truthTracker.addCandSV();
             }
 
+            bool isFindLargeInsertions(isIsolatedEdge && (svs.size()==1) && isComplexSV(svs[0]));
+
             findMultiJunctionCandidates(svs, mjSVs);
 
             BOOST_FOREACH(const SVMultiJunctionCandidate& mjCandidateSV, mjSVs)
             {
-                svProcessor.evaluateCandidate(edge, mjCandidateSV, svData);
+                svProcessor.evaluateCandidate(edge, mjCandidateSV, svData, isFindLargeInsertions);
             }
         }
         catch (illumina::common::ExceptionData& e)

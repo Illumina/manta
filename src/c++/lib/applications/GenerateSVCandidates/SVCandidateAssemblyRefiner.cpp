@@ -743,8 +743,9 @@ SVCandidateAssemblyRefiner::
 getCandidateAssemblyData(
     const SVCandidate& sv,
     const SVCandidateSetData& /*svData*/,
-    SVCandidateAssemblyData& assemblyData,
-    bool isRNA) const
+    const bool isRNA,
+    const bool isFindLargeInsertions,
+    SVCandidateAssemblyData& assemblyData) const
 {
 #ifdef DEBUG_REFINER
     static const std::string logtag("getCandidateAssemblyData: ");
@@ -752,9 +753,6 @@ getCandidateAssemblyData(
 #endif
 
     assemblyData.clear();
-
-    // this is still an experimental feature, leave off by default:
-    static const bool isFindLargeInsertions(false);
 
     // separate the problem into different assembly categories:
     //
@@ -764,7 +762,7 @@ getCandidateAssemblyData(
         assemblyData.isCandidateSpanning=true;
 
         // this case assumes two suspected breakends with a direction to each, most common large scale SV case:
-        getJumpAssembly(sv, isFindLargeInsertions, assemblyData, isRNA);
+        getJumpAssembly(sv, isRNA, isFindLargeInsertions, assemblyData);
     }
     else if (isComplexSV(sv))
     {
@@ -787,9 +785,9 @@ void
 SVCandidateAssemblyRefiner::
 getJumpAssembly(
     const SVCandidate& sv,
+    const bool isRNA,
     const bool isFindLargeInsertions,
-    SVCandidateAssemblyData& assemblyData,
-    bool isRNA) const
+    SVCandidateAssemblyData& assemblyData) const
 {
 #ifdef DEBUG_REFINER
     static const std::string logtag("getJumpAssembly: ");
