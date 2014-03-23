@@ -89,7 +89,8 @@ struct SVCandidateProcessor
     evaluateCandidate(
         const EdgeInfo& edge,
         const SVMultiJunctionCandidate& mjCandidateSV,
-        const SVCandidateSetData& svData);
+        const SVCandidateSetData& svData,
+        const bool isFindLargeInsertions);
 
 private:
     const GSCOptions& _opt;

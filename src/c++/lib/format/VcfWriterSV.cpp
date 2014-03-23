@@ -76,12 +76,14 @@ writeHeaderPrefix(
     _os << "##INFO=<ID=CIGAR,Number=A,Type=String,Description=\"CIGAR alignment for each alternate indel allele\">\n";
     _os << "##INFO=<ID=MATEID,Number=.,Type=String,Description=\"ID of mate breakend\">\n";
     _os << "##INFO=<ID=EVENT,Number=1,Type=String,Description=\"ID of event associated to breakend\">\n";
-    _os << "##INFO=<ID=HOMLEN,Number=.,Type=Integer,Description=\"Length of base pair identical micro-homology at event breakpoints\">\n";
-    _os << "##INFO=<ID=HOMSEQ,Number=.,Type=String,Description=\"Sequence of base pair identical micro-homology at event breakpoints\">\n";
+    _os << "##INFO=<ID=HOMLEN,Number=.,Type=Integer,Description=\"Length of base pair identical homology at event breakpoints\">\n";
+    _os << "##INFO=<ID=HOMSEQ,Number=.,Type=String,Description=\"Sequence of base pair identical homology at event breakpoints\">\n";
 
     /// custom INFO tags:
-    _os << "##INFO=<ID=SVINSLEN,Number=.,Type=Integer,Description=\"Length of micro-insertion at event breakpoints\">\n";
-    _os << "##INFO=<ID=SVINSSEQ,Number=.,Type=String,Description=\"Sequence of micro-insertion at event breakpoints\">\n";
+    _os << "##INFO=<ID=SVINSLEN,Number=.,Type=Integer,Description=\"Length of insertion at event breakpoints\">\n";
+    _os << "##INFO=<ID=SVINSSEQ,Number=.,Type=String,Description=\"Sequence of insertion at event breakpoints\">\n";
+    _os << "##INFO=<ID=LEFT_SVINSSEQ,Number=.,Type=String,Description=\"Known left side of insertion for an insertion of unknown length\">\n";
+    _os << "##INFO=<ID=RIGHT_SVINSSEQ,Number=.,Type=String,Description=\"Known right side of insertion for an insertion of unknown length\">\n";
     _os << "##INFO=<ID=PAIR_COUNT,Number=1,Type=Integer,Description=\"Read pairs supporting this variant where both reads are confidently mapped\">\n";
     _os << "##INFO=<ID=BND_PAIR_COUNT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at this breakend (mapping may not be confident at remote breakend)\">\n";
     _os << "##INFO=<ID=UPSTREAM_PAIR_COUNT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at the upstream breakend (mapping may not be confident at downstream breakend)\">\n";
@@ -628,6 +630,19 @@ writeInvdel(
             {
                 infoTags.push_back( str( boost::format("SVINSSEQ=%s") % reverseCompCopyStr(sv.insertSeq) ));
             }
+        }
+    }
+
+    if (sv.isUnknownSizeInsertion)
+    {
+        if (! sv.unknownSizeInsertionLeftSeq.empty())
+        {
+            infoTags.push_back( str( boost::format("LEFT_SVINSSEQ=%s") % (sv.unknownSizeInsertionLeftSeq) ));
+        }
+
+        if (! sv.unknownSizeInsertionRightSeq.empty())
+        {
+            infoTags.push_back( str( boost::format("RIGHT_SVINSSEQ=%s") % (sv.unknownSizeInsertionRightSeq) ));
         }
     }
 

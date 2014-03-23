@@ -26,6 +26,7 @@
 #include "blt_util/log.hh"
 #include "common/Exceptions.hh"
 #include "manta/MultiJunctionUtil.hh"
+#include "manta/SVCandidateUtil.hh"
 #include "truth/TruthTracker.hh"
 
 #include "boost/foreach.hpp"
@@ -147,6 +148,9 @@ runGSC(
                 dumpEdgeInfo(edge,cset,log_os);
             }
 
+            // determine if this is the only edge for this node:
+            const bool isIsolatedEdge(testIsolatedEdge(cset,edge));
+
             // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
             svFind.findCandidateSV(chromToIndex, edge, svData, svs,
                                    truthTracker);
@@ -158,6 +162,8 @@ runGSC(
                 log_os << logtag << " Low-resolution candidate generation complete. Candidate count: " << svs.size() << "\n";
             }
 
+            bool isFindLargeInsertions(isIsolatedEdge && (svs.size()==1) && isComplexSV(svs[0]));
+
             const unsigned svCount(svs.size());
             for (unsigned i(0); i<svCount; ++i)
             {
@@ -168,7 +174,7 @@ runGSC(
 
             BOOST_FOREACH(const SVMultiJunctionCandidate& mjCandidateSV, mjSVs)
             {
-                svProcessor.evaluateCandidate(edge, mjCandidateSV, svData);
+                svProcessor.evaluateCandidate(edge, mjCandidateSV, svData, isFindLargeInsertions);
             }
         }
         catch (illumina::common::ExceptionData& e)

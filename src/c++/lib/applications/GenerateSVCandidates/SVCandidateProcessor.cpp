@@ -369,7 +369,8 @@ SVCandidateProcessor::
 evaluateCandidate(
     const EdgeInfo& edge,
     const SVMultiJunctionCandidate& mjCandidateSV,
-    const SVCandidateSetData& svData)
+    const SVCandidateSetData& svData,
+    const bool isFIndLargeInsertions)
 {
     assert(! mjCandidateSV.junction.empty());
 
@@ -402,7 +403,7 @@ evaluateCandidate(
         {
             const SVCandidate& candidateSV(mjCandidateSV.junction[junctionIndex]);
             SVCandidateAssemblyData& assemblyData(mjAssemblyData[junctionIndex]);
-            _svRefine.getCandidateAssemblyData(candidateSV, svData, assemblyData, _opt.isRNA);
+            _svRefine.getCandidateAssemblyData(candidateSV, svData, assemblyData, _opt.isRNA, isFindLargeInsertions);
 
             if (_opt.isVerbose)
             {
