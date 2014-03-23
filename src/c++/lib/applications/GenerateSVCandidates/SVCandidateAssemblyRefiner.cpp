@@ -713,6 +713,8 @@ processLargeInsertion(
         setSmallCandSV(assemblyData.bp1ref, fakeContig.seq, fakeAlignment.align, fakeSegments[0], newSV);
 
         newSV.isUnknownSizeInsertion = true;
+        newSV.unknownSizeInsertionLeftSeq = leftContig.seq;
+        newSV.unknownSizeInsertionRightSeq = rightContig.seq;
     }
 }
 
