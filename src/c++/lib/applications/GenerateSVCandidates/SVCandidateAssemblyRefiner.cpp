@@ -501,14 +501,16 @@ static
 bool
 isFinishedLargeInsertAlignment(
     const GlobalAligner<int> aligner,
-    const ALIGNPATH::path_t& apath)
+    const ALIGNPATH::path_t& apath,
+    const std::pair<unsigned, unsigned>& insertSegment)
 {
     using namespace ALIGNPATH;
 
+    const path_t apath_left(apath.begin(), apath.begin()+insertSegment.second+1);;
     LargeInsertionInfo insertInfo;
-    insertInfo.isLeftCandidate=isLargeInsertSegment(aligner,apath,insertInfo.contigOffset,insertInfo.refOffset,insertInfo.score);
+    insertInfo.isLeftCandidate=isLargeInsertSegment(aligner,apath_left,insertInfo.contigOffset,insertInfo.refOffset,insertInfo.score);
 
-    ALIGNPATH::path_t apath_rev(apath);
+    path_t apath_rev(apath.begin()+insertSegment.first, apath.end());;
     std::reverse(apath_rev.begin(),apath_rev.end());
 
     insertInfo.isRightCandidate=isLargeInsertSegment(aligner,apath_rev,insertInfo.contigOffset,insertInfo.refOffset, insertInfo.score);
@@ -723,17 +725,17 @@ processLargeInsertion(
             align1RefStr.begin() + leadingCut, align1RefStr.end() - trailingCut,
             fakeAlignment);
 
-        // QC the resulting alignment:
-        if (! isFinishedLargeInsertAlignment(largeInsertCompleteAligner,fakeAlignment.align.apath)) return;
-
         fakeAlignment.align.beginPos += leadingCut;
-
-        getExtendedContig(fakeAlignment, fakeContig.seq, align1RefStr, fakeExtendedContig);
 
         fakeSegments.clear();
         getLargestInsertSegment(fakeAlignment.align.apath, middleSize, fakeSegments);
 
-        assert(1 == fakeSegments.size());
+        if(1 != fakeSegments.size()) return;
+
+        // QC the resulting alignment:
+        if (! isFinishedLargeInsertAlignment(largeInsertCompleteAligner,fakeAlignment.align.apath, fakeSegments[0])) return;
+
+        getExtendedContig(fakeAlignment, fakeContig.seq, align1RefStr, fakeExtendedContig);
 
         /// this section mostly imitates the regular SV build below, now that we've constructed our fake contig/alignment
         assemblyData.svs.push_back(sv);
