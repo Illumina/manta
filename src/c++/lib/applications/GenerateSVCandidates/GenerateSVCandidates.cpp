@@ -162,7 +162,18 @@ runGSC(
                 log_os << logtag << " Low-resolution candidate generation complete. Candidate count: " << svs.size() << "\n";
             }
 
-            bool isFindLargeInsertions(isIsolatedEdge && (svs.size()==1) && isComplexSV(svs[0]));
+            bool isFindLargeInsertions(isIsolatedEdge);
+            if (isFindLargeInsertions)
+            {
+                BOOST_FOREACH(const SVCandidate& candidateSV, svs)
+                {
+                    truthTracker.addCandSV();
+
+                    /// Filter various candidates types:
+                    if (isFilterCandidate(candidateSV)) continue;
+                    if(! isComplexSV(candidateSV)) isFindLargeInsertions=false;
+                }
+            }
 
             const unsigned svCount(svs.size());
             for (unsigned i(0); i<svCount; ++i)
