@@ -630,6 +630,44 @@ setSmallCandSV(
 
 
 
+static
+known_pos_range2
+getInsertTrim(
+    const ALIGNPATH::path_t& apath,
+    const std::pair<unsigned,unsigned>& segRange)
+{
+    assert(segRange.first <= segRange.second);
+
+    using namespace ALIGNPATH;
+
+    known_pos_range2 range;
+
+    pos_t readPos(0);
+
+    const unsigned as(apath.size());
+    for (unsigned i(0); i<as; ++i)
+    {
+        const path_segment& ps(apath[i]);
+        if (i == segRange.first)
+        {
+            range.set_begin_pos(readPos);
+        }
+
+        if (is_segment_type_read_length(ps.type)) readPos += ps.length;
+
+        if (i == segRange.second)
+        {
+            range.set_end_pos(readPos);
+            return range;
+        }
+    }
+
+    assert(false && "segRange not found");
+    return range;
+}
+
+
+
 // search for combinations of left and right-side insetion candidates to find a good insertion pair
 static
 void
@@ -730,10 +768,16 @@ processLargeInsertion(
         fakeSegments.clear();
         getLargestInsertSegment(fakeAlignment.align.apath, middleSize, fakeSegments);
 
-        if(1 != fakeSegments.size()) return;
+        if(1 != fakeSegments.size())
+        {
+            return;
+        }
 
         // QC the resulting alignment:
-        if (! isFinishedLargeInsertAlignment(largeInsertCompleteAligner,fakeAlignment.align.apath, fakeSegments[0])) return;
+        if (! isFinishedLargeInsertAlignment(largeInsertCompleteAligner,fakeAlignment.align.apath, fakeSegments[0]))
+        {
+            return;
+        }
 
         getExtendedContig(fakeAlignment, fakeContig.seq, align1RefStr, fakeExtendedContig);
 
@@ -745,8 +789,11 @@ processLargeInsertion(
         setSmallCandSV(assemblyData.bp1ref, fakeContig.seq, fakeAlignment.align, fakeSegments[0], newSV);
 
         newSV.isUnknownSizeInsertion = true;
-        newSV.unknownSizeInsertionLeftSeq = leftContig.seq;
-        newSV.unknownSizeInsertionRightSeq = rightContig.seq;
+
+        const known_pos_range2 insertTrim(getInsertTrim(fakeAlignment.align.apath,fakeSegments[0]));
+
+        newSV.unknownSizeInsertionLeftSeq = fakeContig.seq.substr(0,insertTrim.begin_pos());
+        newSV.unknownSizeInsertionRightSeq = fakeContig.seq.substr(insertTrim.end_pos());
     }
 }
 
