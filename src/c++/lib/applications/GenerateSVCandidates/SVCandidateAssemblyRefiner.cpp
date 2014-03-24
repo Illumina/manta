@@ -495,6 +495,29 @@ isLargeInsertAlignment(
 
 
 
+/// \return true if the alignment represents an acceptable complete insertion:
+///
+static
+bool
+isFinishedLargeInsertAlignment(
+    const GlobalAligner<int> aligner,
+    const ALIGNPATH::path_t& apath)
+{
+    using namespace ALIGNPATH;
+
+    LargeInsertionInfo insertInfo;
+    insertInfo.isLeftCandidate=isLargeInsertSegment(aligner,apath,insertInfo.contigOffset,insertInfo.refOffset,insertInfo.score);
+
+    ALIGNPATH::path_t apath_rev(apath);
+    std::reverse(apath_rev.begin(),apath_rev.end());
+
+    insertInfo.isRightCandidate=isLargeInsertSegment(aligner,apath_rev,insertInfo.contigOffset,insertInfo.refOffset, insertInfo.score);
+
+    return (insertInfo.isLeftCandidate && insertInfo.isRightCandidate);
+}
+
+
+
 /// get the range over which an alignment element can vary with equal edit distance
 ///
 /// \param[in] refRange range of the event (ie indel) of interest in reference coordinates
@@ -550,11 +573,10 @@ setSmallCandSV(
 {
     sv.setPrecise();
 
+    // get readRange and refRange, which are translations of segRange into
+    // read and reference offsets:
     known_pos_range2 readRange;
     known_pos_range2 refRange;
-
-    // by how many positions can the alignment position vary with the same alignment score?:
-    known_pos_range2 cipos;
     {
         using namespace ALIGNPATH;
 
@@ -581,11 +603,13 @@ setSmallCandSV(
                 readRange.set_end_pos(readPos);
             }
         }
-
-        cipos = getVariantRange(ref.seq(),refRange, contig, readRange);
-
-        assert(cipos.begin_pos() == 0);
     }
+
+    // by how many positions can the alignment position vary with the same alignment score?:
+    const known_pos_range2 cipos(getVariantRange(ref.seq(),refRange, contig, readRange));
+
+    // cipos for a precise variant is expected to start from 0 and extend forward zero to many bases
+    assert(cipos.begin_pos() == 0);
 
     sv.bp1.state = SVBreakendState::RIGHT_OPEN;
     const pos_t beginPos(ref.get_offset()+refRange.begin_pos()-1);
@@ -604,13 +628,14 @@ setSmallCandSV(
 
 
 
+// search for combinations of left and right-side insetion candidates to find a good insertion pair
 static
 void
 processLargeInsertion(
     const SVCandidate& sv,
     const pos_t leadingCut,
     const pos_t trailingCut,
-    const GlobalAligner<int>& smallSVAligner,
+    const GlobalAligner<int>& largeInsertCompleteAligner,
     const std::vector<unsigned>& largeInsertionCandidateIndex,
     SVCandidateAssemblyData& assemblyData)
 {
@@ -624,9 +649,9 @@ processLargeInsertion(
 
     // try to pair up a large insertion candidate
     //
-    // just do a dumb, all against all for now, if there's more than one left-right candidate set,
+    // just do a dumb, all against all evaluation for now, if there's more than one left-right candidate set,
     // resolve according to (1) min ref distance and (2) best combined score
-    static const int maxBreakDist(20);
+    static const int maxBreakDist(35);
 
     const unsigned candCount(largeInsertionCandidateIndex.size());
     for (unsigned candCount1(0); (candCount1+1)<candCount; ++candCount1)
@@ -664,7 +689,10 @@ processLargeInsertion(
         }
     }
 
-    if (isLargeInsertionPair)
+    // no large insertion found:
+    if (! isLargeInsertionPair) return;
+
+    // found large insertion, insert this into data structures for downstream scoring/reporting:
     {
         const std::string& align1RefStr(assemblyData.bp1ref.seq());
         const unsigned contigCount(assemblyData.contigs.size());
@@ -690,22 +718,24 @@ processLargeInsertion(
 
         const AssembledContig& constFakeContig(fakeContig);
 
-        smallSVAligner.align(
+        largeInsertCompleteAligner.align(
             constFakeContig.seq.begin(), constFakeContig.seq.end(),
             align1RefStr.begin() + leadingCut, align1RefStr.end() - trailingCut,
             fakeAlignment);
+
+        // QC the resulting alignment:
+        if (! isFinishedLargeInsertAlignment(largeInsertCompleteAligner,fakeAlignment.align.apath)) return;
 
         fakeAlignment.align.beginPos += leadingCut;
 
         getExtendedContig(fakeAlignment, fakeContig.seq, align1RefStr, fakeExtendedContig);
 
         fakeSegments.clear();
-
         getLargestInsertSegment(fakeAlignment.align.apath, middleSize, fakeSegments);
 
         assert(1 == fakeSegments.size());
 
-        /// this section mostly imitates the regular SV build below, now that we've constructued our fake contig/alignment
+        /// this section mostly imitates the regular SV build below, now that we've constructed our fake contig/alignment
         assemblyData.svs.push_back(sv);
         SVCandidate& newSV(assemblyData.svs.back());
         newSV.assemblyAlignIndex = contigCount;
@@ -729,7 +759,8 @@ SVCandidateAssemblyRefiner(
     _smallSVAssembler(opt.scanOpt, opt.refineOpt.smallSVAssembleOpt, opt.alignFileOpt, opt.statsFilename, opt.chromDepthFilename, header),
     _spanningAssembler(opt.scanOpt, opt.refineOpt.spanningAssembleOpt, opt.alignFileOpt, opt.statsFilename, opt.chromDepthFilename, header),
     _smallSVAligner(opt.refineOpt.smallSVAlignScores),
-    _largeInsertAligner(opt.refineOpt.largeInsertAlignScores),
+    _largeInsertEdgeAligner(opt.refineOpt.largeInsertEdgeAlignScores),
+    _largeInsertCompleteAligner(opt.refineOpt.largeInsertCompleteAlignScores),
     _spanningAligner(opt.refineOpt.spanningAlignScores, opt.refineOpt.jumpScore),
     _RNASpanningAligner(
         opt.refineOpt.RNAspanningAlignScores,
@@ -1218,7 +1249,10 @@ getSmallSVAssembly(
         log_os << logtag << "contigIndex: " << contigIndex << " isSmallSVCandidate " << isSmallSVCandidate << " alignment: " << alignment;
 #endif
 
-        /// test each alignment for suitability to be the left or right side of a large insertion:
+        // test each alignment for suitability to be the left or right side of a large insertion:
+        //
+        // all practical combinations of left and right candidates will be enumerated below to see if there's a good fit:
+        //
         if (isFindLargeInsertions)
         {
             LargeInsertionInfo& candidateInsertInfo(assemblyData.largeInsertInfo[contigIndex]);
@@ -1226,7 +1260,7 @@ getSmallSVAssembly(
 
             LargeInsertionInfo insertInfo;
             const bool isCandidate( isLargeInsertAlignment(
-                                        _largeInsertAligner,
+                                        _largeInsertEdgeAligner,
                                         alignment.align.apath,
                                         insertInfo));
 
@@ -1253,10 +1287,12 @@ getSmallSVAssembly(
         }
     }
 
-    // solve for any strong large insertion candidate:
+    // Solve for any strong large insertion candidate
+    //
+    // This is done by searching through combinations of the left and right insertion side candidates found in the primary contig processing loop
     if (isFindLargeInsertions)
     {
-        processLargeInsertion(sv, leadingCut, trailingCut, _smallSVAligner, largeInsertionCandidateIndex, assemblyData);
+        processLargeInsertion(sv, leadingCut, trailingCut, _largeInsertCompleteAligner, largeInsertionCandidateIndex, assemblyData);
     }
 
     // set any additional QC steps before deciding an alignment is usable:
