@@ -75,7 +75,8 @@ private:
     const SVLocusAssembler _smallSVAssembler;
     const SVLocusAssembler _spanningAssembler;
     const GlobalAligner<int> _smallSVAligner;
-    const GlobalAligner<int> _largeInsertAligner;
+    const GlobalAligner<int> _largeInsertEdgeAligner;
+    const GlobalAligner<int> _largeInsertCompleteAligner;
     const GlobalJumpAligner<int> _spanningAligner;
     const GlobalJumpIntronAligner<int> _RNASpanningAligner;
 };

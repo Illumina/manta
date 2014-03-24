@@ -31,7 +31,8 @@ struct SVRefinerOptions
     ///
     SVRefinerOptions() :
         smallSVAlignScores(2, -8, -12, 0, -1),
-        largeInsertAlignScores(2, -8, -12, -1, -1),
+        largeInsertEdgeAlignScores(2, -8, -12, -1, -1),
+        largeInsertCompleteAlignScores(2, -8, -24, 0, -1),
         spanningAlignScores(2, -8, -12, -1, -1),
         jumpScore(-25),
         RNAspanningAlignScores(2, -8, -19, -1, -1),
@@ -43,7 +44,8 @@ struct SVRefinerOptions
 
     /// parameters for small SV assembly/alignment:
     AlignmentScores<int> smallSVAlignScores;
-    AlignmentScores<int> largeInsertAlignScores;
+    AlignmentScores<int> largeInsertEdgeAlignScores;
+    AlignmentScores<int> largeInsertCompleteAlignScores;
     SmallAssemblerOptions smallSVAssembleOpt;
 
     // parameters for large SV assembly/alignment:
