@@ -538,6 +538,13 @@ getVariantRange(
     const std::string& read,
     const known_pos_range2& readRange)
 {
+#ifdef DEBUG_VARR
+    log_os << __FUNCTION__ << ": refRange " << refRange << "\n";
+    log_os << __FUNCTION__ << ": ref:\n";  printSeq(ref, log_os); log_os << "\n";
+    log_os << __FUNCTION__ << ": readRange " << readRange << "\n";
+    log_os << __FUNCTION__ << ": read:\n";  printSeq(read, log_os); log_os << "\n";
+#endif
+
     // check how far we can slide to the right:
     const pos_t maxRightOffset(std::min(ref.size()-refRange.end_pos(), read.size()-readRange.end_pos()));
     pos_t rightOffset(0);
@@ -558,6 +565,10 @@ getVariantRange(
         if (refSym != readSym) break;
     }
 
+#ifdef DEBUG_VARR
+    log_os << __FUNCTION__ << ": left/right offset " << leftOffset << "/" << rightOffset << "\n";
+#endif
+
     return known_pos_range2(leftOffset,rightOffset);
 }
 
@@ -573,6 +584,11 @@ setSmallCandSV(
     const std::pair<unsigned,unsigned>& segRange,
     SVCandidate& sv)
 {
+#ifdef DEBUG_VARR
+    log_os << __FUNCTION__ << ": align " << align << "\n";
+    log_os << __FUNCTION__ << ": segRange [" << segRange.first << "," << segRange.second << "]\n";
+    log_os << __FUNCTION__ << ": inputSV " << sv << "\n";
+#endif
     sv.setPrecise();
 
     // get readRange and refRange, which are translations of segRange into
