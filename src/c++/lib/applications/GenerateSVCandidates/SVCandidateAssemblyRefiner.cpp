@@ -790,10 +790,16 @@ processLargeInsertion(
 
         newSV.isUnknownSizeInsertion = true;
 
+        // final step: get left and right partial insert sequences:
+        //
         const known_pos_range2 insertTrim(getInsertTrim(fakeAlignment.align.apath,fakeSegments[0]));
 
-        newSV.unknownSizeInsertionLeftSeq = fakeContig.seq.substr(0,insertTrim.begin_pos());
-        newSV.unknownSizeInsertionRightSeq = fakeContig.seq.substr(insertTrim.end_pos());
+        newSV.unknownSizeInsertionLeftSeq = leftContig.seq.substr(insertTrim.begin_pos());
+
+        const pos_t rightOffset(leftContig.seq.size()+middle.size());
+        assert(rightOffset < insertTrim.end_pos());
+
+        newSV.unknownSizeInsertionRightSeq = rightContig.seq.substr(0,(insertTrim.end_pos()-rightOffset));
     }
 }
 
