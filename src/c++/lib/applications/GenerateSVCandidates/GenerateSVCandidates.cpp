@@ -26,6 +26,7 @@
 #include "blt_util/log.hh"
 #include "common/Exceptions.hh"
 #include "manta/MultiJunctionUtil.hh"
+#include "manta/SVCandidateUtil.hh"
 #include "svgraph/EdgeInfoUtil.hh"
 #include "truth/TruthTracker.hh"
 
@@ -142,9 +143,6 @@ runGSC(
             // determine if this is the only edge for this node:
             const bool isIsolatedEdge(testIsolatedEdge(cset,edge));
 
-            truthTracker.addEdge(edge);
-            edgeTrack.start();
-
             if (opt.isVerbose)
             {
                 log_os << logtag << " starting analysis of edge: ";
@@ -171,17 +169,6 @@ runGSC(
                 log_os << logtag << " Low-resolution candidate generation complete. Candidate count: " << svs.size() << "\n";
             }
 
-            bool isFindLargeInsertions(isIsolatedEdge);
-            if (isFindLargeInsertions)
-            {
-                BOOST_FOREACH(const SVCandidate& candidateSV, svs)
-                {
-                    /// Filter various candidates types:
-                    if (isFilterCandidate(candidateSV)) continue;
-                    if(! isComplexSV(candidateSV)) isFindLargeInsertions=false;
-                }
-            }
-
             const unsigned svCount(svs.size());
             for (unsigned i(0); i<svCount; ++i)
             {
@@ -189,6 +176,18 @@ runGSC(
             }
 
             findMultiJunctionCandidates(svs, mjSVs);
+
+            bool isFindLargeInsertions(isIsolatedEdge);
+            if (isFindLargeInsertions)
+            {
+                BOOST_FOREACH(const SVMultiJunctionCandidate& mjCandidateSV, mjSVs)
+                {
+                    BOOST_FOREACH(const SVCandidate& candidateSV, mjCandidateSV.junction)
+                    {
+                        if (! isComplexSV(candidateSV)) isFindLargeInsertions=false;
+                    }
+                }
+            }
 
             BOOST_FOREACH(const SVMultiJunctionCandidate& mjCandidateSV, mjSVs)
             {
