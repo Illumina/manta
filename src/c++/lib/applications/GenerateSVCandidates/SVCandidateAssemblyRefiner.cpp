@@ -427,7 +427,8 @@ isLargeInsertSegment(
     const ALIGNPATH::path_t& apath,
     unsigned& contigOffset,
     unsigned& refOffset,
-    int& score)
+    int& score,
+    const unsigned trimInsertLength = 0)
 {
     using namespace ALIGNPATH;
 
@@ -446,7 +447,7 @@ isLargeInsertSegment(
     if (contigOffset < minAlignReadLength) return false;
 
     assert(contigOffset <= pathSize);
-    if ((pathSize-contigOffset) < minExtendedReadLength) return false;
+    if ((pathSize-contigOffset) < (minExtendedReadLength+trimInsertLength)) return false;
 
     const int optimalScore(contigOffset * aligner.getScores().match);
 
@@ -502,18 +503,22 @@ bool
 isFinishedLargeInsertAlignment(
     const GlobalAligner<int> aligner,
     const ALIGNPATH::path_t& apath,
-    const std::pair<unsigned, unsigned>& insertSegment)
+    const std::pair<unsigned, unsigned>& insertSegment,
+    const unsigned middleSize)
 {
     using namespace ALIGNPATH;
 
     const path_t apath_left(apath.begin(), apath.begin()+insertSegment.second+1);;
+
     LargeInsertionInfo insertInfo;
-    insertInfo.isLeftCandidate=isLargeInsertSegment(aligner,apath_left,insertInfo.contigOffset,insertInfo.refOffset,insertInfo.score);
+    insertInfo.isLeftCandidate=isLargeInsertSegment(aligner, apath_left, insertInfo.contigOffset, insertInfo.
+                                                    refOffset, insertInfo.score, middleSize);
 
     path_t apath_rev(apath.begin()+insertSegment.first, apath.end());;
     std::reverse(apath_rev.begin(),apath_rev.end());
 
-    insertInfo.isRightCandidate=isLargeInsertSegment(aligner,apath_rev,insertInfo.contigOffset,insertInfo.refOffset, insertInfo.score);
+    insertInfo.isRightCandidate=isLargeInsertSegment(aligner, apath_rev, insertInfo.contigOffset, insertInfo.
+                                                    refOffset, insertInfo.score, middleSize);
 
     return (insertInfo.isLeftCandidate && insertInfo.isRightCandidate);
 }
@@ -784,13 +789,14 @@ processLargeInsertion(
         fakeSegments.clear();
         getLargestInsertSegment(fakeAlignment.align.apath, middleSize, fakeSegments);
 
-        if(1 != fakeSegments.size())
+        // QC segments
+        if((1 != fakeSegments.size()) || (fakeSegments[0].second < fakeSegments[0].first))
         {
             return;
         }
 
         // QC the resulting alignment:
-        if (! isFinishedLargeInsertAlignment(largeInsertCompleteAligner,fakeAlignment.align.apath, fakeSegments[0]))
+        if (! isFinishedLargeInsertAlignment(largeInsertCompleteAligner,fakeAlignment.align.apath, fakeSegments[0], middleSize))
         {
             return;
         }
@@ -810,6 +816,7 @@ processLargeInsertion(
         //
         const known_pos_range2 insertTrim(getInsertTrim(fakeAlignment.align.apath,fakeSegments[0]));
 
+        assert(insertTrim.begin_pos() < static_cast<pos_t>(leftContig.seq.size()));
         newSV.unknownSizeInsertionLeftSeq = leftContig.seq.substr(insertTrim.begin_pos());
 
         const pos_t rightOffset(leftContig.seq.size()+middle.size());
