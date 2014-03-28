@@ -731,7 +731,9 @@ writeSVCore(
         BOOST_THROW_EXCEPTION(LogicException(oss.str()));
     }
 
-    if      (svType == SV_TYPE::INTERTRANSLOC)
+    static const unsigned intrachromTranslocThreshold(1000000);
+
+    if      ((svType == SV_TYPE::INTERTRANSLOC) || (static_cast<unsigned>(sv.centerSize()) >= intrachromTranslocThreshold))
     {
         writeTranslocPair(sv, svId, svData, adata, event);
     }
