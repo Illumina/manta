@@ -23,6 +23,7 @@
 
 namespace EXTENDED_SV_TYPE
 {
+
 /// is an indel classified as insert or delete?
 static
 index_t
@@ -40,17 +41,30 @@ classifyIndel(
     return ((deleteSize >= insertSize) ? DELETE : INSERT);
 }
 
+
 static
+bool
+isIntrachromBnd(
+    const SVCandidate& sv)
+{
+    static const int intrachromTranslocThreshold(1000000);
+    return (sv.centerSize() >= intrachromTranslocThreshold);
+}
+
+
+
 index_t
 getExtendedSVType(
     const SVCandidate& sv)
 {
     const SV_TYPE::index_t svType(getSVType(sv));
 
+    if (svType == SV_TYPE::INTERTRANSLOC) return INTERTRANSLOC;
+
+    if (isIntrachromBnd(sv)) return INTRATRANSLOC;
+
     switch (svType)
     {
-    case SV_TYPE::INTERTRANSLOC:
-        return INTERTRANSLOC;
     case SV_TYPE::INVERSION:
         return INVERSION;
     case SV_TYPE::TANDUP:
@@ -61,8 +75,8 @@ getExtendedSVType(
         return UNKNOWN;
     }
 }
-}
 
+}
 
 
 void
@@ -76,16 +90,16 @@ getId(
 
     svId.svType=(getExtendedSVType(sv));
 
-    if      (svId.svType == INTERTRANSLOC)
+    svId.localId = str(_SVIdFormatter % label(svId.svType) % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2
+                       % sv.candidateIndex %  sv.assemblyAlignIndex % sv.assemblySegmentIndex );
+
+    if      (isSVTransloc(svId.svType))
     {
-        svId.localId = str(_transLocIdFormatter % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2 % sv.candidateIndex);
-        svId.mateId = svId.localId + '1';
-        svId.localId = svId.localId + '0';
+        svId.mateId = svId.localId + ":1";
+        svId.localId = svId.localId + ":0";
     }
     else
     {
-        svId.localId = str(_otherSVIdFormatter % label(svId.svType) % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2
-                           % sv.candidateIndex %  sv.assemblyAlignIndex % sv.assemblySegmentIndex );
         svId.mateId.clear();
     }
 }
