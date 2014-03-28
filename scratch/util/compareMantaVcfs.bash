@@ -46,7 +46,7 @@ stripSample() {
 }
 
 stripSomScore() {
-    sed "s/SOMATICSCORE=[0-9]*//"
+    sed "s/SOMATICSCORE=[0-9]*//g"
 }
 
 stripInvTags() {

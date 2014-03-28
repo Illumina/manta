@@ -12,8 +12,7 @@
 #
 
 """
-filter vcf to reduce inversions to a single vcf entry for cases where the same inversion is expressed by 
-a left-right inversion combination.
+filter overlapping PASS SVs (except for BNDs)
 """
 
 import os, sys
@@ -56,8 +55,6 @@ class VcfRecord :
         val = getKeyVal(w[VCFID.INFO],"END")
         if val is not None :
             self.endPos = int(val)
-        else :
-            self.endPos = None
         val = getKeyVal(w[VCFID.INFO],"SOMATICSCORE")
         if val is not None :
             self.ss = int(val)
@@ -112,34 +109,31 @@ def getOptions() :
 
 
 
-def resolveRec(recEqualSet, recList) :
+def resolveRec(recOverlapSet, recList) :
     """
-    determine which of a set of vcf records presumed to refer to the same inversion are kept
-    right now best is a record with PASS in the filter field, and secondarily the high quality
+    determine which of a set of overlapping vcf records to keep
     """
 
-    if not recEqualSet: return
+    if not recOverlapSet: return
+    if len(recOverlapSet) == 1:
+        recList.append(recOverlapSet[0])
+        return
 
-    bestIndex=0
-    bestSS=0.
-    bestPos=0
-    bestIsPass=False
-    for (index,rec) in enumerate(recEqualSet) :
+    # dead simple start, kick out the largest variant:
+
+    largestSize=0
+    largestIndex=0
+    for (index,rec) in enumerate(recOverlapSet) :
         assert rec.pos > 0
 
-        isNewPass=((not bestIsPass) and rec.isPass)
-        isHighQual=((bestIsPass == rec.isPass) and (rec.pos < bestPos)) #(rec.ss > bestSS))
-        if (isNewPass or isHighQual) :
-            bestIndex = index
-            bestPos = rec.pos
-            bestIsPass = rec.isPass
+        size=rec.endPos-rec.pos
+        if size > largestSize :
+            largestSize = size
+            largestIndex = index
 
-# potentially could reward two non-pass inversion calls here:
-#    if not bestIsPass and (len(recEqualSet) == 2) :
-#        if (recEqualSet[0].isInv3 and reEqualSet[1].isInv5) or
-#            recEqualSet[1].isInv3 and reEqualSet[0].isInv5)) :
-
-    recList.append(recEqualSet[bestIndex])
+    for (index,rec) in enumerate(recOverlapSet) :
+        if index == largestIndex : continue
+        recList.append(rec)
 
 
 
@@ -178,23 +172,37 @@ def main() :
         outfp.write(line)
 
     recList2 = []
-    recEqualSet = []
+    recOverlapSet = []
     lastRec = None
     for vcfrec in recList :
-        rec = (vcfrec.chrom, vcfrec.pos, vcfrec.endPos, vcfrec.svtype)
+        # shortcut directly to non-filtered set:
+        if (not vcfrec.isPass) or (vcfrec.svtype == "BND") :
+            recList2.append(vcfrec)
+            continue
+
+        rec = [vcfrec.chrom, vcfrec.pos, vcfrec.endPos]
+
+        def isIntersect(rec1,rec2) :
+            return (((rec1[1]+250) < rec2[2])  and ((rec1[2]-250) > rec2[1]))
+
         if ((lastRec is None) or
-          (rec[0] != lastRec[0]) or
-          (rec[3] != "INV") or
-          (lastRec[3] != "INV") or
-          (abs(rec[1]-lastRec[1]) > 250) or
-          (abs(rec[2]-lastRec[2]) > 250)) :
-            resolveRec(recEqualSet,recList2)
-            recEqualSet = []
+            (rec[0] != lastRec[0]) or
+            (not isIntersect(rec,lastRec))) :
+            resolveRec(recOverlapSet,recList2)
+            recOverlapSet = []
+            lastRec = None
    
-        recEqualSet.append(vcfrec)
-        lastRec = rec
-    resolveRec(recEqualSet,recList2)
+        recOverlapSet.append(vcfrec)
+        if lastRec is None :
+            lastRec = rec
+        else :
+            lastRec[1] = min(rec[1],lastRec[1])
+            lastRec[2] = max(rec[2],lastRec[2])
+
+    resolveRec(recOverlapSet,recList2)
+
     recList = recList2
+    recList.sort(key = vcfRecSortKey)
 
     for vcfrec in recList :
         outfp.write(vcfrec.line)
