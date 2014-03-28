@@ -700,6 +700,7 @@ isAcceptedSVType(
     case INSERT:
     case DELETE:
     case TANDUP:
+        return true;
     default:
         return false;
     }
