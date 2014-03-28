@@ -688,18 +688,18 @@ writeInvdel(
 static
 bool
 isAcceptedSVType(
-    const SV_TYPE::index_t svType)
+    const EXTENDED_SV_TYPE::index_t svType)
 {
-    using namespace SV_TYPE;
+    using namespace EXTENDED_SV_TYPE;
 
     switch (svType)
     {
     case INTERTRANSLOC:
+    case INTRATRANSLOC:
     case INVERSION:
-    case INDEL:
+    case INSERT:
+    case DELETE:
     case TANDUP:
-    case COMPLEX:
-        return true;
     default:
         return false;
     }
@@ -716,7 +716,8 @@ writeSVCore(
     const SVId& svId,
     const EventInfo& event)
 {
-    const SV_TYPE::index_t svType(getSVType(sv));
+    using namespace EXTENDED_SV_TYPE;
+    const index_t svType(getExtendedSVType(sv));
 
 #ifdef DEBUG_VCF
     log_os << "VcfWriterSV::writeSVCore svType: " << SV_TYPE::label(svType) << "\n";
@@ -731,15 +732,13 @@ writeSVCore(
         BOOST_THROW_EXCEPTION(LogicException(oss.str()));
     }
 
-    static const unsigned intrachromTranslocThreshold(1000000);
-
-    if      ((svType == SV_TYPE::INTERTRANSLOC) || (static_cast<unsigned>(sv.centerSize()) >= intrachromTranslocThreshold))
+    if      (isSVTransloc(svType))
     {
         writeTranslocPair(sv, svId, svData, adata, event);
     }
     else
     {
-        const bool isIndel(svType == SV_TYPE::INDEL);
+        const bool isIndel(isSVIndel(svType));
         writeInvdel(sv, svId, adata, isIndel, event);
     }
 }

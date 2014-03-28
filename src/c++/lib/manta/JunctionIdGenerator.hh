@@ -33,11 +33,40 @@ enum index_t
 {
     UNKNOWN,
     INTERTRANSLOC,
+    INTRATRANSLOC,
     INVERSION,
     INSERT,
     DELETE,
     TANDUP
 };
+
+inline
+bool
+isSVTransloc(const index_t idx)
+{
+    switch (idx)
+    {
+    case INTERTRANSLOC:
+    case INTRATRANSLOC:
+        return true;
+    default:
+        return false;
+    }
+}
+
+inline
+bool
+isSVIndel(const index_t idx)
+{
+    switch (idx)
+    {
+    case INSERT:
+    case DELETE:
+        return true;
+    default:
+        return false;
+    }
+}
 
 // provide a shortened label (mostly from the VCF spec)
 inline
@@ -47,6 +76,8 @@ label(const index_t idx)
     switch (idx)
     {
     case INTERTRANSLOC:
+        return "BND";
+    case INTRATRANSLOC:
         return "BND";
     case INVERSION:
         return "INV";
@@ -60,6 +91,10 @@ label(const index_t idx)
         return "UNKNOWN";
     }
 }
+
+index_t
+getExtendedSVType(
+    const SVCandidate& sv);
 }
 
 /// A pair of ids for both ends of a single SV junction
@@ -90,8 +125,7 @@ struct SVId
 struct JunctionIdGenerator
 {
     JunctionIdGenerator() :
-        _transLocIdFormatter("MantaBND:%i:%i:%i:%i:"),
-        _otherSVIdFormatter("Manta%s:%i:%i:%i:%i:%i:%i")
+        _SVIdFormatter("Manta%s:%i:%i:%i:%i:%i:%i")
     {}
 
     void
@@ -101,7 +135,6 @@ struct JunctionIdGenerator
         SVId& svId);
 
 private:
-    boost::format _transLocIdFormatter;
-    boost::format _otherSVIdFormatter;
+    boost::format _SVIdFormatter;
 };
 
