@@ -104,7 +104,7 @@ scoreSplitReads(
     SVSampleInfo& sample)
 {
     const bool isBp1SplitLeftOfHomRange(svAlignInfo.isBp1SplitLeftOfHomologyRange());
-    const bool isBp2SplitLeftOfHomRange(svAlignInfo.isBp1SplitLeftOfHomologyRange());
+    const bool isBp2SplitLeftOfHomRange(svAlignInfo.isBp2SplitLeftOfHomologyRange());
 
     // in theory, we shouldn't need to set the search interval larger than the bp range,
     // but some aligners will soft-clip, etc. in such a way that strong split read evidnece
