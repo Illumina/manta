@@ -109,31 +109,71 @@ def getOptions() :
 
 
 
-def resolveRec(recOverlapSet, recList) :
+def resolveRec(recOverlapSet, recListOut) :
     """
     determine which of a set of overlapping vcf records to keep
     """
 
     if not recOverlapSet: return
-    if len(recOverlapSet) == 1:
-        recList.append(recOverlapSet[0])
-        return
+
+    if len(recOverlapSet) == 1 :
+        recListOut.append(recOverlapSet[0])
+        return 
 
     # dead simple start, kick out the largest variant:
+    set2 = recOverlapSet
 
     largestSize=0
+    #largestScore=0
     largestIndex=0
-    for (index,rec) in enumerate(recOverlapSet) :
+    for (index,rec) in enumerate(set2) :
         assert rec.pos > 0
 
         size=rec.endPos-rec.pos
-        if size > largestSize :
-            largestSize = size
-            largestIndex = index
+        if size < largestSize : continue
+        #if size == largestSize :
+        #    if rec.ss > largestScore : continue
 
-    for (index,rec) in enumerate(recOverlapSet) :
-        if index == largestIndex : continue
-        recList.append(rec)
+        largestSize = size
+        #largestScore = rec.ss
+        largestIndex = index
+
+    del set2[largestIndex]
+
+    listResolver(set2, recListOut)
+
+
+
+def listResolver(recListIn, recListOut) :
+
+    recOverlapSet = []
+    lastRec = None
+    for vcfrec in recListIn :
+        # shortcut directly to non-filtered set:
+        if (not vcfrec.isPass) : # or (vcfrec.svtype == "BND") :
+            recListOut.append(vcfrec)
+            continue
+
+        rec = [vcfrec.chrom, vcfrec.pos, vcfrec.endPos]
+
+        def isIntersect(rec1,rec2) :
+            return (((rec1[1]-350) < rec2[2]) and ((rec1[2]+350) > rec2[1]))
+
+        if ((lastRec is None) or
+            (rec[0] != lastRec[0]) or
+            (not isIntersect(rec,lastRec))) :
+            resolveRec(recOverlapSet,recListOut)
+            recOverlapSet = []
+            lastRec = None
+   
+        recOverlapSet.append(vcfrec)
+        if lastRec is None :
+            lastRec = rec
+        else :
+            lastRec[1] = min(rec[1],lastRec[1])
+            lastRec[2] = max(rec[2],lastRec[2])
+
+    resolveRec(recOverlapSet,recListOut)
 
 
 
@@ -172,34 +212,7 @@ def main() :
         outfp.write(line)
 
     recList2 = []
-    recOverlapSet = []
-    lastRec = None
-    for vcfrec in recList :
-        # shortcut directly to non-filtered set:
-        if (not vcfrec.isPass) or (vcfrec.svtype == "BND") :
-            recList2.append(vcfrec)
-            continue
-
-        rec = [vcfrec.chrom, vcfrec.pos, vcfrec.endPos]
-
-        def isIntersect(rec1,rec2) :
-            return (((rec1[1]+250) < rec2[2])  and ((rec1[2]-250) > rec2[1]))
-
-        if ((lastRec is None) or
-            (rec[0] != lastRec[0]) or
-            (not isIntersect(rec,lastRec))) :
-            resolveRec(recOverlapSet,recList2)
-            recOverlapSet = []
-            lastRec = None
-   
-        recOverlapSet.append(vcfrec)
-        if lastRec is None :
-            lastRec = rec
-        else :
-            lastRec[1] = min(rec[1],lastRec[1])
-            lastRec[2] = max(rec[2],lastRec[2])
-
-    resolveRec(recOverlapSet,recList2)
+    listResolver(recList, recList2)
 
     recList = recList2
     recList.sort(key = vcfRecSortKey)
