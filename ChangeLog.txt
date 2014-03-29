@@ -1,3 +1,5 @@
+- MANTA-138 improve handling of split reads for long breakend 
+homology sequences
 - MANTA-136 turn on conservative large insertion calling
 - MANTA-126 multi-junction SV scoring
 - RNA: track candidate orientation
