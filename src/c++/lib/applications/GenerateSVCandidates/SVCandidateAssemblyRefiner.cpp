@@ -432,10 +432,10 @@ isLargeInsertSegment(
 {
     using namespace ALIGNPATH;
 
-    static const unsigned minAlignReadLength(40); ///< min length of aligned portion of contig
-    static const unsigned minExtendedReadLength(40); ///< min length of unaligned portion of contig
+    static const unsigned minAlignReadLength(35); ///< min length of aligned portion of contig
+    static const unsigned minExtendedReadLength(35); ///< min length of unaligned portion of contig
 
-    static const unsigned minAlignRefSpan(40); ///< min reference length for alignment
+    static const unsigned minAlignRefSpan(35); ///< min reference length for alignment
     static const float minScoreFrac(0.75); ///< min fraction of optimal score in each contig sub-alignment:
 
     const unsigned pathSize(apath_read_length(apath));
@@ -712,7 +712,7 @@ processLargeInsertion(
     //
     // just do a dumb, all against all evaluation for now, if there's more than one left-right candidate set,
     // resolve according to (1) min ref distance and (2) best combined score
-    static const int maxBreakDist(35);
+    static const int maxBreakDist(45);
 
     const unsigned candCount(largeInsertionCandidateIndex.size());
     for (unsigned candCount1(0); (candCount1+1)<candCount; ++candCount1)
@@ -801,6 +801,23 @@ processLargeInsertion(
             return;
         }
 
+        // final prep step: get left and right partial insert sequences -- this is also a last chance to QC for anomolies and get out:
+        //
+        const known_pos_range2 insertTrim(getInsertTrim(fakeAlignment.align.apath,fakeSegments[0]));
+        {
+            static const int minFlankSize(35);
+            if ((insertTrim.begin_pos()+minFlankSize) > static_cast<pos_t>(leftContig.seq.size()))
+            {
+                return;
+            }
+
+            const pos_t rightOffset(leftContig.seq.size()+middle.size());
+            if ((rightOffset+minFlankSize) > insertTrim.end_pos())
+            {
+                return;
+            }
+        }
+
         getExtendedContig(fakeAlignment, fakeContig.seq, align1RefStr, fakeExtendedContig);
 
         /// this section mostly imitates the regular SV build below, now that we've constructed our fake contig/alignment
@@ -812,16 +829,11 @@ processLargeInsertion(
 
         newSV.isUnknownSizeInsertion = true;
 
-        // final step: get left and right partial insert sequences:
-        //
-        const known_pos_range2 insertTrim(getInsertTrim(fakeAlignment.align.apath,fakeSegments[0]));
-
         assert(insertTrim.begin_pos() < static_cast<pos_t>(leftContig.seq.size()));
         newSV.unknownSizeInsertionLeftSeq = leftContig.seq.substr(insertTrim.begin_pos());
 
         const pos_t rightOffset(leftContig.seq.size()+middle.size());
         assert(rightOffset < insertTrim.end_pos());
-
         newSV.unknownSizeInsertionRightSeq = rightContig.seq.substr(0,(insertTrim.end_pos()-rightOffset));
     }
 }
