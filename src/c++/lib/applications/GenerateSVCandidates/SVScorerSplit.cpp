@@ -102,6 +102,9 @@ scoreSplitReads(
     bam_streamer& readStream,
     SVSampleInfo& sample)
 {
+    const bool isBp1SplitLeftOfHomRange(svAlignInfo.isBp1SplitLeftOfHomologyRange());
+    const bool isBp2SplitLeftOfHomRange(svAlignInfo.isBp1SplitLeftOfHomologyRange());
+
     // extract reads overlapping the break point
     readStream.set_new_region(bp.interval.tid, bp.interval.range.begin_pos(), bp.interval.range.end_pos());
     while (readStream.next())
@@ -111,6 +114,8 @@ scoreSplitReads(
         if (SVLocusScanner::isReadFilteredCore(bamRead)) continue;
 
         SVFragmentEvidence& fragment(sampleEvidence[bamRead.qname()]);
+
+        // check to see if read is capable of touching the breakend after un-softlcipping
 
         const bool isRead1(bamRead.is_first());
 
@@ -139,8 +144,10 @@ scoreSplitReads(
         {
             SRAlignmentInfo bp1ContigSR;
             SRAlignmentInfo bp2ContigSR;
-            splitReadAligner(flankScoreSize, readSeq, dopt.altQ, qual, svAlignInfo.bp1ContigSeq(), svAlignInfo.bp1ContigOffset, bp1ContigSR);
-            splitReadAligner(flankScoreSize, readSeq, dopt.altQ, qual, svAlignInfo.bp2ContigSeq(), svAlignInfo.bp2ContigOffset, bp2ContigSR);
+            splitReadAligner(flankScoreSize, readSeq, dopt.altQ, qual, svAlignInfo.bp1ContigSeq(),
+                svAlignInfo.bp1ContigOffset, isBp1SplitLeftOfHomRange, bp1ContigSR);
+            splitReadAligner(flankScoreSize, readSeq, dopt.altQ, qual, svAlignInfo.bp2ContigSeq(),
+                svAlignInfo.bp2ContigOffset, isBp2SplitLeftOfHomRange, bp2ContigSR);
 
             incrementAlleleEvidence(bp1ContigSR, bp2ContigSR, readMapQ, sample.alt, altBp1ReadSupport, altBp2ReadSupport);
         }
@@ -149,8 +156,10 @@ scoreSplitReads(
         {
             SRAlignmentInfo bp1RefSR;
             SRAlignmentInfo bp2RefSR;
-            splitReadAligner(flankScoreSize, readSeq, dopt.refQ, qual, svAlignInfo.bp1ReferenceSeq(), svAlignInfo.bp1RefOffset, bp1RefSR);
-            splitReadAligner(flankScoreSize, readSeq, dopt.refQ, qual, svAlignInfo.bp2ReferenceSeq(), svAlignInfo.bp2RefOffset, bp2RefSR);
+            splitReadAligner(flankScoreSize, readSeq, dopt.refQ, qual, svAlignInfo.bp1ReferenceSeq(),
+                svAlignInfo.bp1RefOffset, isBp1SplitLeftOfHomRange, bp1RefSR);
+            splitReadAligner(flankScoreSize, readSeq, dopt.refQ, qual, svAlignInfo.bp2ReferenceSeq(),
+                svAlignInfo.bp2RefOffset, isBp2SplitLeftOfHomRange, bp2RefSR);
 
             // scoring
             incrementAlleleEvidence(bp1RefSR, bp2RefSR, readMapQ, sample.ref, refBp1ReadSupport, refBp2ReadSupport);

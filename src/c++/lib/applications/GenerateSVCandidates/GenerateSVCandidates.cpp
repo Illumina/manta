@@ -152,12 +152,6 @@ runGSC(
             truthTracker.addEdge(edge);
             edgeTracker.start();
 
-            if (opt.isVerbose)
-            {
-                log_os << logtag << " starting analysis of edge: ";
-                dumpEdgeInfo(edge,cset,log_os);
-            }
-
             // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
             svFind.findCandidateSV(chromToIndex, edge, svData, svs,
                                    truthTracker);
