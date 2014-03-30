@@ -18,6 +18,7 @@
 #pragma once
 
 #include "GSCOptions.hh"
+#include "JunctionCallInfo.hh"
 #include "SplitReadAlignment.hh"
 #include "SVEvidence.hh"
 #include "SVScorerPairOptions.hh"
@@ -208,6 +209,13 @@ private:
         const SVBreakend& bp,
         unsigned& maxDepth,
         float& MQ0Frac);
+
+    /// apply all scoring models relevent to this event:
+    void
+    computeAllScoreModels(
+        const bool isSomatic,
+        const std::vector<JunctionCallInfo>& junctionData,
+        SVModelScoreInfo& modelScoreInfo);
 
     /// shared information gathering steps of all scoring models
     void

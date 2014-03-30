@@ -781,69 +781,6 @@ addDiploidLoglhood(
 
 
 
-/// manage all per-junction information consumed by an SV calling model
-///
-/// using this object facilities multi-breakend event scoring, but clearly
-/// separating out per-junction input info from junction-independent info
-///
-struct JunctionCallInfo
-{
-    JunctionCallInfo() :
-        _sv(NULL),
-        _evidence(NULL),
-        _baseInfo(NULL),
-        _spanningPairWeight(0)
-    {}
-
-    const SVCandidate&
-    getSV() const
-    {
-        assert(NULL != _sv);
-        return *_sv;
-    }
-
-    const SVEvidence&
-    getEvidence() const
-    {
-        assert(NULL != _evidence);
-        return *_evidence;
-    }
-
-    const SVScoreInfo&
-    getBaseInfo() const
-    {
-        assert(NULL != _baseInfo);
-        return *_baseInfo;
-    }
-
-    float
-    getSpanningWeight() const
-    {
-        return _spanningPairWeight;
-    }
-
-    void
-    init(
-        const SVCandidate& sv,
-        const SVEvidence& evidence,
-        const SVScoreInfo& baseInfo,
-        const float spanningPairWeight)
-    {
-        _sv=&sv;
-        _evidence=&evidence;
-        _baseInfo=&baseInfo;
-        _spanningPairWeight=spanningPairWeight;
-    }
-
-private:
-    const SVCandidate* _sv;
-    const SVEvidence* _evidence;
-    const SVScoreInfo* _baseInfo;
-    float _spanningPairWeight;
-};
-
-
-
 /// score diploid germline specific components:
 static
 void
@@ -1380,6 +1317,24 @@ scoreSomaticSV(
 
 void
 SVScorer::
+computeAllScoreModels(
+    const bool isSomatic,
+    const std::vector<JunctionCallInfo>& junctionData,
+    SVModelScoreInfo& modelScoreInfo)
+{
+    scoreDiploidSV(_diploidOpt, _diploidDopt, _dFilterDiploid, junctionData, modelScoreInfo.diploid);
+
+    // score components specific to somatic model:
+    if (isSomatic)
+    {
+        scoreSomaticSV(_somaticOpt, _somaticDopt, _dFilterSomatic, junctionData, modelScoreInfo.somatic);
+    }
+}
+
+
+
+void
+SVScorer::
 scoreSV(
     const SVCandidateSetData& svData,
     const std::vector<SVCandidateAssemblyData>& mjAssemblyData,
@@ -1390,7 +1345,10 @@ scoreSV(
     SVModelScoreInfo& mjJointModelScoreInfo,
     bool& isMJEvent)
 {
-    // as a transitional step, analyze junctions independently from this point:
+    // scoring is roughly divided into two parts -- treating individual dna-junctions
+    // independently (the simpler call mechanism used the great majority of the time) and
+    // joint junction analysis for larger scale events
+    //
     const unsigned junctionCount(mjSV.junction.size());
     mjModelScoreInfo.resize(junctionCount);
 
@@ -1431,16 +1389,12 @@ scoreSV(
         junctionData.resize(1);
         junctionData[0].init(sv, evidence, modelScoreInfo.base, spanningPairWeight);
 
-        scoreDiploidSV(_diploidOpt, _diploidDopt, _dFilterDiploid, junctionData, modelScoreInfo.diploid);
-
-        // score components specific to somatic model:
-        if (isSomatic)
-        {
-            scoreSomaticSV(_somaticOpt, _somaticDopt, _dFilterSomatic, junctionData, modelScoreInfo.somatic);
-        }
+        computeAllScoreModels(isSomatic, junctionData, modelScoreInfo);
     }
 
+    //
     // handle multi-junction case:
+    //
     if (unfilteredJunctionCount == 1)
     {
         isMJEvent=false;
@@ -1462,13 +1416,7 @@ scoreSV(
                 junctionSpanningPairWeight[junctionIndex]);
         }
 
-        scoreDiploidSV(_diploidOpt, _diploidDopt, _dFilterDiploid, junctionData, mjJointModelScoreInfo.diploid);
-
-        // score components specific to somatic model:
-        if (isSomatic)
-        {
-            scoreSomaticSV(_somaticOpt, _somaticDopt, _dFilterSomatic, junctionData, mjJointModelScoreInfo.somatic);
-        }
+        computeAllScoreModels(isSomatic, junctionData, mjJointModelScoreInfo);
     }
     else
     {
