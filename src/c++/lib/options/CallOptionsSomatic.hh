@@ -25,7 +25,7 @@ struct CallOptionsSomatic
     CallOptionsSomatic() :
         germlineSVPrior(1e-5),
         somaticSVPrior(1e-7),
-        smallNoiseSVPrior(1e-9),
+        smallNoiseSVPrior(1e-9), ///< parameters reflect our expectation that there is more shared small event noise in small events
         largeNoiseSVPrior(1e-10),
         maxDepthFactor(3.0),
         maxDepthFilterLabel("MaxDepth"),
