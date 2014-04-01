@@ -658,8 +658,8 @@ getRefAltFromFrag(
     /// high-quality spanning support relies on read1 and read2 mapping well:
     bool isFragEvaluated(false);
 
-    const bool isPairUsable = ((fragev.read1.isScanned && fragev.read2.isScanned) &&
-                               (fragev.read1.isAnchored(isPermissive) || fragev.read2.isAnchored(isPermissive)));
+    const bool isPairUsable((fragev.read1.isScanned && fragev.read2.isScanned) &&
+                            (fragev.read1.isAnchored(isPermissive) || fragev.read2.isAnchored(isPermissive)));
 
     if (isPairUsable)
     {
