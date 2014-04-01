@@ -55,7 +55,7 @@ struct SVCandidateSetRead
     bool
     isAnchored() const
     {
-        return (isSet() && isSubMapped);
+        return (isSet() && (!isSubMapped));
     }
 
     //realignment info, etc...
