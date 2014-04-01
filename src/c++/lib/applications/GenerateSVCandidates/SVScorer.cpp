@@ -427,13 +427,14 @@ struct ProbSet
 static
 void
 incrementSpanningPairAlleleLnLhood(
-    const ProbSet& chimeraProb,
+    const ProbSet& selfChimeraProb,
+    const ProbSet& otherChimeraProb,
     const SVFragmentEvidenceAllele& allele,
     const double power,
     double& bpLnLhood)
 {
     const float fragProb(getSpanningPairAlleleLhood(allele));
-    bpLnLhood += std::log(chimeraProb.comp*fragProb + chimeraProb.prob)*power;
+    bpLnLhood += std::log(selfChimeraProb.comp*fragProb + otherChimeraProb.prob)*power;
 }
 
 
@@ -635,7 +636,8 @@ bool
 getRefAltFromFrag(
     const float smallSVWeight,
     const double semiMappedPower,
-    const ProbSet& chimeraProb,
+    const ProbSet& refChimeraProb,
+    const ProbSet& altChimeraProb,
     const ProbSet& refSplitMapProb,
     const ProbSet& altSplitMapProb,
     const bool isPermissive,
@@ -665,11 +667,12 @@ getRefAltFromFrag(
         {
             {
                 const bool isSemiMapped(! (fragev.read1.isAnchored && fragev.read2.isAnchored));
-                double spanPower( isSemiMapped ?  semiMappedPower : 1.);
-                spanPower *= (1.-smallSVWeight);
+                const double weight(1.-smallSVWeight);
+                const double altSpanPower((isSemiMapped ?  semiMappedPower : 1.) * weight);
+                const double refSpanPower((isSemiMapped ?  0 : 1.) * weight);
 
-                incrementSpanningPairAlleleLnLhood(chimeraProb, fragev.ref, spanPower, refLnLhoodSet.fragPair);
-                incrementSpanningPairAlleleLnLhood(chimeraProb, fragev.alt, spanPower, altLnLhoodSet.fragPair);
+                incrementSpanningPairAlleleLnLhood(refChimeraProb, altChimeraProb, fragev.ref, refSpanPower, refLnLhoodSet.fragPair);
+                incrementSpanningPairAlleleLnLhood(altChimeraProb, refChimeraProb, fragev.alt, altSpanPower, altLnLhoodSet.fragPair);
                 isFragEvaluated=true;
             }
         }
@@ -732,7 +735,8 @@ addDiploidLoglhood(
 
         static const bool isPermissive(false);
 
-        if (! getRefAltFromFrag(smallSVWeight, semiMappedPower, chimeraProb, refSplitMapProb, altSplitMapProb, isPermissive, fragLabel, fragev,
+        if (! getRefAltFromFrag(smallSVWeight, semiMappedPower, chimeraProb, chimeraProb,
+                                refSplitMapProb, altSplitMapProb, isPermissive, fragLabel, fragev,
                                 refLnLhoodSet, altLnLhoodSet, isRead1Evaluated, isRead2Evaluated))
         {
             // continue if this fragment was not evaluated for pair or split support for either allele:
@@ -896,8 +900,9 @@ double
 estimateSomaticMutationFreq(
     const SVScoreInfo& baseInfo,
     const float smallSVWeight,
-    const bool isPermissive)
+    const bool /*isPermissive*/)
 {
+    static const bool isPermissive(false);
     const unsigned altCounts = getSupportCount(baseInfo.tumor.alt, smallSVWeight, isPermissive);
     const unsigned refCounts = getSupportCount(baseInfo.tumor.ref, smallSVWeight, isPermissive);
     if ((altCounts + refCounts) == 0) return 0;
@@ -911,8 +916,9 @@ double
 estimateNoiseMutationFreq(
     const SVScoreInfo& baseInfo,
     const float smallSVWeight,
-    const bool isPermissive)
+    const bool /*isPermissive*/)
 {
+    static const bool isPermissive(false);
     const unsigned normalAltCounts = getSupportCount(baseInfo.normal.alt, smallSVWeight, isPermissive);
     const unsigned normalRefCounts = getSupportCount(baseInfo.normal.ref, smallSVWeight, isPermissive);
     const unsigned tumorAltCounts = getSupportCount(baseInfo.tumor.alt, smallSVWeight, isPermissive);
@@ -934,14 +940,16 @@ computeSomaticSampleLoghood(
     const SVEvidence::evidenceTrack_t& evidenceTrack,
     const double somaticMutationFreq,
     const double noiseMutationFreq,
-    const double isPermissive,
-    const ProbSet& chimeraProb,
+    const bool isPermissive,
+    const bool isTumor,
+    const ProbSet& refChimeraProb,
+    const ProbSet& altChimeraProb,
     const ProbSet& refSplitMapProb,
     const ProbSet& altSplitMapProb,
     boost::array<double,SOMATIC_GT::SIZE>& loglhood)
 {
-    // semi-mapped reads make a partial contribution in tier1, and a full contribution in tier2:
-    const double semiMappedPower( isPermissive ? 1. : 0. );
+    // semi-mapped alt reads make a partial contribution in tier1, and a full contribution in tier2:
+    const double semiMappedPower( (isPermissive && (! isTumor)) ? 1. : 0. );
 
     BOOST_FOREACH(const SVEvidence::evidenceTrack_t::value_type& val, evidenceTrack)
     {
@@ -952,7 +960,8 @@ computeSomaticSampleLoghood(
         bool isRead1Evaluated(true);
         bool isRead2Evaluated(true);
 
-        if (! getRefAltFromFrag(smallSVWeight, semiMappedPower, chimeraProb, refSplitMapProb, altSplitMapProb, isPermissive, fragLabel, fragev,
+        if (! getRefAltFromFrag(smallSVWeight, semiMappedPower, refChimeraProb, altChimeraProb,
+                                refSplitMapProb, altSplitMapProb, isPermissive, fragLabel, fragev,
                                 refLnLhoodSet, altLnLhoodSet, isRead1Evaluated, isRead2Evaluated))
         {
             // continue if this fragment was not evaluated for pair or split support for either allele:
@@ -1036,7 +1045,7 @@ scoreSomaticSV(
 
         /// TODO: find a better way to set this number from training data:
         static const ProbSet chimeraProbDefault(1e-4);
-        static const ProbSet chimeraProbPermissive(1e-5);
+        static const ProbSet chimeraProbPermissive(5e-6);
         const ProbSet& chimeraProb( isPermissive ? chimeraProbPermissive : chimeraProbDefault );
 
         /// use a constant mapping prob for now just to get the zero-th order concept into the model
@@ -1050,11 +1059,16 @@ scoreSomaticSV(
         const ProbSet& altSplitMapProb( isPermissive ? altSplitMapProbPermissive : altSplitMapProbDefault );
 
         // compute likelihood for the fragments from the tumor sample
-        computeSomaticSampleLoghood(smallSVWeight, evidence.tumor, somaticMutationFreq, noiseMutationFreq, isPermissive,
-                                    chimeraProbDefault, refSplitMapProb, altSplitMapProbDefault, tumorSomaticLhood);
+        computeSomaticSampleLoghood(smallSVWeight, evidence.tumor, somaticMutationFreq, noiseMutationFreq,
+                                    isPermissive, true,
+                                    chimeraProbDefault, chimeraProbDefault,
+                                    refSplitMapProb, altSplitMapProbDefault, tumorSomaticLhood);
+
         // compute likelihood for the fragments from the normal sample
-        computeSomaticSampleLoghood(smallSVWeight, evidence.normal, 0, noiseMutationFreq, isPermissive,
-                                    chimeraProb, refSplitMapProb, altSplitMapProb, normalSomaticLhood);
+        computeSomaticSampleLoghood(smallSVWeight, evidence.normal, 0, noiseMutationFreq,
+                                    isPermissive, false,
+                                    chimeraProbDefault, chimeraProb,
+                                    refSplitMapProb, altSplitMapProb, normalSomaticLhood);
 
         boost::array<double,SOMATIC_GT::SIZE> somaticPprob;
         for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
