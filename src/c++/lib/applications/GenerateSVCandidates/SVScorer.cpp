@@ -291,7 +291,8 @@ addConservativeSpanningPairSupport(
         BOOST_THROW_EXCEPTION(LogicException(oss.str()));
     }
 
-    const bool isFullyMapped(fragev.read1.isObservedAnchor() && fragev.read2.isObservedAnchor());
+    static const bool isTier2(false);
+    const bool isFullyMapped(fragev.read1.isObservedAnchor(isTier2) && fragev.read2.isObservedAnchor(isTier2));
 
     // convert to normalized prob:
     const float sum(altLhood+refLhood);
@@ -658,7 +659,7 @@ getRefAltFromFrag(
     bool isFragEvaluated(false);
 
     const bool isPairUsable = ((fragev.read1.isScanned && fragev.read2.isScanned) &&
-                               (fragev.read1.isAnchored || fragev.read2.isAnchored));
+                               (fragev.read1.isAnchored(isPermissive) || fragev.read2.isAnchored(isPermissive)));
 
     if (isPairUsable)
     {
@@ -666,7 +667,7 @@ getRefAltFromFrag(
         if ( fragev.isAnySpanningPairSupport() )
         {
             {
-                const bool isSemiMapped(! (fragev.read1.isAnchored && fragev.read2.isAnchored));
+                const bool isSemiMapped(! (fragev.read1.isAnchored(isPermissive) && fragev.read2.isAnchored(isPermissive)));
                 const double weight(1.-smallSVWeight);
                 const double altSpanPower((isSemiMapped ?  semiMappedPower : 1.) * weight);
                 const double refSpanPower((isSemiMapped ?  0 : 1.) * weight);

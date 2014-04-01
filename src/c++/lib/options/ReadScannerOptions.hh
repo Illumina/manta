@@ -22,6 +22,7 @@ struct ReadScannerOptions
 {
     ReadScannerOptions() :
         minMapq(15),
+        minTier2Mapq(5),
         breakendEdgeTrimProb(0.25),
         largeScaleEventBreakendEdgeTrimProb(0.1),
         properPairTrimProb(0.01),
@@ -44,6 +45,7 @@ struct ReadScannerOptions
     {}
 
     unsigned minMapq;
+    unsigned minTier2Mapq; ///< a second, lower mapq threshold used only during somatic calling to disprove a somatic candidate using weak normal sample evidence
 
     float breakendEdgeTrimProb; ///< report breakend regions with x prob regions removed from each edge
     float largeScaleEventBreakendEdgeTrimProb; ///< report breakend regions with x prob regions removed from each edge, used only for 'large-scale' events.

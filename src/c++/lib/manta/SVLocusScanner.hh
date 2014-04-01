@@ -129,6 +129,12 @@ struct SVLocusScanner
         return _opt.minMapq;
     }
 
+    unsigned
+    getMinTier2MapQ() const
+    {
+        return _opt.minTier2Mapq;
+    }
+
     /// custom version of proper pair bit test:
     bool
     isProperPair(

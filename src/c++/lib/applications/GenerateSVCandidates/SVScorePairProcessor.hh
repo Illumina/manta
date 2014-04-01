@@ -39,6 +39,7 @@ struct SVScorePairInitParams
     // total impact of the alt allele on template size:
     pos_t altShift;
     unsigned minMapQ;
+    unsigned minTier2MapQ; // a second, lower mapq threshold used to disprove a somatic allele during tumor/normal calling
 };
 
 

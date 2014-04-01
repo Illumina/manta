@@ -69,7 +69,7 @@ operator<<(
     std::ostream& os,
     const SVFragmentEvidenceRead& svr)
 {
-    os << "readinfo isScanned: " << svr.isScanned << " isAnchored: " << svr.isAnchored << " isTier2Anchored: " << svr.isTier2Anchored << " mapq: " << svr.mapq << " size: " << svr.size;
+    os << "readinfo isScanned: " << svr.isScanned << " isAnchored: " << svr.isAnchored(false) << " isTier2Anchored: " << svr.isAnchored(true) << " mapq: " << svr.mapq << " size: " << svr.size;
     return os;
 }
 

@@ -138,30 +138,48 @@ struct SVFragmentEvidenceRead
 {
     SVFragmentEvidenceRead() :
         isScanned(false),
-        isAnchored(false),
-        isTier2Anchored(false),
         mapq(0),
-        size(0)
+        size(0),
+        _isAnchored(false),
+        _isTier2Anchored(false)
     {}
 
     bool
-    isObservedAnchor() const
+    isAnchored(
+        const bool isTier2) const
     {
-        return (isScanned && isAnchored);
+        return (isTier2 ? _isTier2Anchored : _isAnchored);
     }
 
     bool
-    isObservedTier2Anchor() const
+    isObservedAnchor(
+        const bool isTier2) const
     {
-        return (isScanned && isTier2Anchored);
+        return (isScanned && isAnchored(isTier2));
+    }
+
+    void
+    setAnchored(
+        const bool val)
+    {
+        _isAnchored=val;
+    }
+
+    void
+    setTier2Anchored(
+        const bool val)
+    {
+        _isTier2Anchored=val;
     }
 
     bool isScanned; ///< if true, this read's bam record has been scanned to fill in the remaining values in this object
 
-    bool isAnchored; ///< if true, the read is found and known to have a confident mapping wrt fragment support
-    bool isTier2Anchored; ///< if true, the read is found and known to have a confident mapping wrt fragment support at tier2
     unsigned mapq;
     unsigned size;
+
+private:
+    bool _isAnchored; ///< if true, the read is found and known to have a confident mapping wrt fragment support
+    bool _isTier2Anchored; ///< if true, the read is found and known to have a confident mapping wrt fragment support at tier2
 };
 
 std::ostream&

@@ -98,6 +98,7 @@ scoreSplitReads(
     const SVBreakend& bp,
     const SVAlignmentInfo& svAlignInfo,
     const unsigned minMapQ,
+    const unsigned minTier2MapQ,
     SVEvidence::evidenceTrack_t& sampleEvidence,
     bam_streamer& readStream,
     SVSampleInfo& sample)
@@ -133,7 +134,7 @@ scoreSplitReads(
         const uint8_t* qual(bamRead.qual());
         const unsigned readMapQ = bamRead.map_qual();
 
-        setReadEvidence(minMapQ, bamRead, fragment.getRead(isRead1));
+        setReadEvidence(minMapQ, minTier2MapQ, bamRead, fragment.getRead(isRead1));
 
         // align the read to the somatic contig
         {
@@ -227,6 +228,7 @@ getSVSplitReadSupport(
 #endif
 
     const unsigned minMapQ(_readScanner.getMinMapQ());
+    const unsigned minTier2MapQ(_readScanner.getMinTier2MapQ());
 
     const unsigned bamCount(_bamStreams.size());
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
@@ -238,10 +240,10 @@ getSVSplitReadSupport(
         SVEvidence::evidenceTrack_t& sampleEvidence(evidence.getSample(isTumor));
 
         // scoring split reads overlapping bp1
-        scoreSplitReads(_callDopt, flankScoreSize, sv.bp1, SVAlignInfo, minMapQ, sampleEvidence,
+        scoreSplitReads(_callDopt, flankScoreSize, sv.bp1, SVAlignInfo, minMapQ, minTier2MapQ, sampleEvidence,
                         bamStream, sample);
         // scoring split reads overlapping bp2
-        scoreSplitReads(_callDopt, flankScoreSize, sv.bp2, SVAlignInfo, minMapQ, sampleEvidence,
+        scoreSplitReads(_callDopt, flankScoreSize, sv.bp2, SVAlignInfo, minMapQ, minTier2MapQ, sampleEvidence,
                         bamStream, sample);
     }
 
