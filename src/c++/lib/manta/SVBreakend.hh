@@ -277,6 +277,14 @@ struct SVBreakend
         return true;
     }
 
+    bool
+    evidenceMerge(const SVBreakend& rhs)
+    {
+        if (! isIntersect(rhs)) return false;
+        lowresEvidence.merge(rhs.lowresEvidence);
+        return true;
+    }
+
     void
     clear()
     {

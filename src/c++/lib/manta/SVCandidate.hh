@@ -83,6 +83,25 @@ struct SVCandidate
         return true;
     }
 
+    bool
+    evidenceMerge(const SVCandidate& rhs)
+    {
+        if (! isIntersect(rhs)) return false;
+
+        if (bp1.isIntersect(rhs.bp1))
+        {
+            bp1.evidenceMerge(rhs.bp1);
+            bp2.evidenceMerge(rhs.bp2);
+        }
+        else
+        {
+            bp1.evidenceMerge(rhs.bp2);
+            bp2.evidenceMerge(rhs.bp1);
+        }
+
+        return true;
+    }
+
     void
     clear()
     {

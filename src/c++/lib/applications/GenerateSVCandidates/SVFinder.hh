@@ -77,8 +77,25 @@ private:
         const SVLocusNode& node1,
         const SVLocusNode& node2,
         const std::vector<SVObservation>& readCandidates,
+        const bool isExpandSVCandidateSet,
         SVCandidateSetReadPair& pair,
         std::vector<SVCandidate>& svs);
+
+    /// we either process the pair to discover new SVs and expand existing SVs,
+    /// or we go through and add pairs to existing SVs without expansion
+    ///
+    void
+    processReadPair(
+        const SVLocusNode& node1,
+        const SVLocusNode& node2,
+        const std::map<std::string, int32_t>& chromToIndex,
+        const reference_contig_segment& refSeq1,
+        const reference_contig_segment& refSeq2,
+        const unsigned bamIndex,
+        const bool isExpandSVCandidateSet,
+        std::vector<SVCandidate>& svs,
+        TruthTracker& truthTracker,
+        SVCandidateSetReadPair& pair);
 
     void
     getCandidatesFromData(
@@ -109,4 +126,7 @@ private:
 
     typedef boost::shared_ptr<bam_streamer> streamPtr;
     std::vector<streamPtr> _bamStreams;
+
+    /// this is only here as syscall cache:
+    std::vector<SVObservation> _readCandidates;
 };

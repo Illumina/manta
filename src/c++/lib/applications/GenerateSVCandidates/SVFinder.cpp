@@ -85,7 +85,8 @@ addSVNodeRead(
 {
     using namespace illumina::common;
 
-    if (scanner.isReadFiltered(bamRead)) return;
+    if (scanner.isReadFilteredCore(bamRead)) return;
+    if (bamRead.map_qual() < scanner.getMinTier2MapQ()) return;
 
     const bool isNonCompressedAnomalous(scanner.isNonCompressedAnomalous(bamRead,bamIndex));
 
@@ -151,7 +152,8 @@ addSVNodeRead(
 
         if (! locus.getNode(readLocalIndex).getInterval().isIntersect(localNode.getInterval())) continue; //todo should this intersect be checked in swapped orientation?
 
-        svDataGroup.add(bamRead, isExpectRepeat, isNode1);
+        const bool isSubMapped(bamRead.map_qual() < scanner.getMinMapQ());
+        svDataGroup.add(bamRead, isExpectRepeat, isNode1, isSubMapped);
 
         // once any loci has achieved the local/remote overlap criteria, there's no reason to keep scanning loci
         // of the same bam record:
@@ -547,12 +549,15 @@ consolidateOverlap(
 /// the longer term we should be able to delineate cluster by a clustering of possible
 /// breakend locations.
 ///
+/// isExpandSVCandidateSet if false, don't add new SVs or expand existing SVs
+///
 void
 SVFinder::
 assignPairObservationsToSVCandidates(
     const SVLocusNode& node1,
     const SVLocusNode& node2,
     const std::vector<SVObservation>& readCandidates,
+    const bool isExpandSVCandidateSet,
     SVCandidateSetReadPair& pair,
     std::vector<SVCandidate>& svs)
 {
@@ -581,6 +586,7 @@ assignPairObservationsToSVCandidates(
                 continue;
             }
         }
+
         // remove candidates which don't match the current edge:
         //
         if (isComplexSV(readCand))
@@ -635,7 +641,15 @@ assignPairObservationsToSVCandidates(
                         pair.svLink.push_back(SVPairAssociation(svIndex,readCand.evtype));
                     }
 
-                    sv.merge(readCand);
+                    if (isExpandSVCandidateSet)
+                    {
+                        sv.merge(readCand);
+                    }
+                    else
+                    {
+                        // add submapped read pair evidence -- but don't allow these reads to expand the current candidate size:
+                        sv.evidenceMerge(readCand);
+                    }
 
                     isMatched=true;
                     break;
@@ -644,7 +658,8 @@ assignPairObservationsToSVCandidates(
             svIndex++;
         }
 
-        if (! isMatched)
+        const bool createNewCandidate(isExpandSVCandidateSet && (! isMatched));
+        if (createNewCandidate)
         {
             const unsigned newSVIndex(svs.size());
 
@@ -664,6 +679,58 @@ assignPairObservationsToSVCandidates(
 
 
 
+/// we either process the pair to discover new SVs and expand existing SVs,
+/// or we go through and add pairs to existing SVs without expansion
+///
+void
+SVFinder::
+processReadPair(
+    const SVLocusNode& node1,
+    const SVLocusNode& node2,
+    const std::map<std::string, int32_t>& chromToIndex,
+    const reference_contig_segment& refSeq1,
+    const reference_contig_segment& refSeq2,
+    const unsigned bamIndex,
+    const bool isExpandSVCandidateSet,
+    std::vector<SVCandidate>& svs,
+    TruthTracker& truthTracker,
+    SVCandidateSetReadPair& pair)
+{
+     SVCandidateSetRead* localReadPtr(&(pair.read1));
+     SVCandidateSetRead* remoteReadPtr(&(pair.read2));
+     pair.svLink.clear();
+
+     if (! localReadPtr->isSet())
+     {
+         std::swap(localReadPtr,remoteReadPtr);
+     }
+     assert(localReadPtr->isSet() && "Neither read in pair is set");
+
+     const bam_record* remoteBamRecPtr( remoteReadPtr->isSet() ? &(remoteReadPtr->bamrec) : NULL);
+
+     const reference_contig_segment& localRef( localReadPtr->isNode1 ? refSeq1 : refSeq2 );
+     const reference_contig_segment* remoteRefPtr(NULL);
+     if (remoteReadPtr->isSet())
+     {
+         remoteRefPtr = (remoteReadPtr->isNode1 ?  &refSeq1 : &refSeq2 );
+     }
+     _readScanner.getBreakendPair(localReadPtr->bamrec, remoteBamRecPtr,
+                                  bamIndex, chromToIndex, localRef,
+                                  remoteRefPtr, _readCandidates,
+                                  truthTracker);
+
+#ifdef DEBUG_SVDATA
+     log_os << __FUNCTION__ << ": Checking pair: " << pair << "\n";
+     log_os << __FUNCTION__ << ": Translated to candidates:\n";
+     BOOST_FOREACH(const SVObservation& cand, readCandidates)
+     {
+         log_os << __FUNCTION__ << ": cand: " << cand << "\n";
+     }
+#endif
+     assignPairObservationsToSVCandidates(node1, node2, _readCandidates, isExpandSVCandidateSet, pair, svs);
+}
+
+
 void
 SVFinder::
 getCandidatesFromData(
@@ -676,48 +743,33 @@ getCandidatesFromData(
     std::vector<SVCandidate>& svs,
     TruthTracker& truthTracker)
 {
-    std::vector<SVObservation> readCandidates;
-
     const unsigned bamCount(_bamStreams.size());
 
     for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
     {
         SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
-
         BOOST_FOREACH(SVCandidateSetReadPair& pair, svDataGroup)
         {
-            SVCandidateSetRead* localReadPtr(&(pair.read1));
-            SVCandidateSetRead* remoteReadPtr(&(pair.read2));
-            pair.svLink.clear();
+            if (! pair.isAnchored()) continue;
 
-            if (! localReadPtr->isSet())
-            {
-                std::swap(localReadPtr,remoteReadPtr);
-            }
-            assert(localReadPtr->isSet() && "Neither read in pair is set");
+            static const bool isAnchored(true);
+            processReadPair(
+                node1, node2, chromToIndex, refSeq1, refSeq2, bamIndex, isAnchored,
+                svs, truthTracker, pair);
+        }
+    }
 
-            const bam_record* remoteBamRecPtr( remoteReadPtr->isSet() ? &(remoteReadPtr->bamrec) : NULL);
+    for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
+    {
+        SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
+        BOOST_FOREACH(SVCandidateSetReadPair& pair, svDataGroup)
+        {
+            if (pair.isAnchored()) continue;
 
-            const reference_contig_segment& localRef( localReadPtr->isNode1 ? refSeq1 : refSeq2 );
-            const reference_contig_segment* remoteRefPtr(NULL);
-            if (remoteReadPtr->isSet())
-            {
-                remoteRefPtr = (remoteReadPtr->isNode1 ?  &refSeq1 : &refSeq2 );
-            }
-            _readScanner.getBreakendPair(localReadPtr->bamrec, remoteBamRecPtr,
-                                         bamIndex, chromToIndex, localRef,
-                                         remoteRefPtr, readCandidates,
-                                         truthTracker);
-
-#ifdef DEBUG_SVDATA
-            log_os << "Checking pair: " << pair << "\n";
-            log_os << "Translated to candidates:\n";
-            BOOST_FOREACH(const SVObservation& cand, readCandidates)
-            {
-                log_os << __FUNCTION__ << ": cand: " << cand << "\n";
-            }
-#endif
-            assignPairObservationsToSVCandidates(node1, node2, readCandidates, pair, svs);
+            static const bool isAnchored(false);
+            processReadPair(
+                node1, node2, chromToIndex, refSeq1, refSeq2, bamIndex, isAnchored,
+                svs, truthTracker, pair);
         }
     }
 
