@@ -139,6 +139,7 @@ struct SVFragmentEvidenceRead
     SVFragmentEvidenceRead() :
         isScanned(false),
         isAnchored(false),
+        isTier2Anchored(false),
         mapq(0),
         size(0)
     {}
@@ -149,9 +150,16 @@ struct SVFragmentEvidenceRead
         return (isScanned && isAnchored);
     }
 
+    bool
+    isObservedTier2Anchor() const
+    {
+        return (isScanned && isTier2Anchored);
+    }
+
     bool isScanned; ///< if true, this read's bam record has been scanned to fill in the remaining values in this object
 
     bool isAnchored; ///< if true, the read is found and known to have a confident mapping wrt fragment support
+    bool isTier2Anchored; ///< if true, the read is found and known to have a confident mapping wrt fragment support at tier2
     unsigned mapq;
     unsigned size;
 };
