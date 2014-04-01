@@ -1,3 +1,5 @@
+- MANTA-131 improve large somatic sv specificity with expanded
+supporting evidence search in the normal sample
 - RNA: track candidate orientation
 v0.19.0
 - MANTA-127 RG based insert stats (default off) 
