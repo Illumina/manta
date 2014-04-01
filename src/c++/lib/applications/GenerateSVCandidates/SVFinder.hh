@@ -69,6 +69,7 @@ private:
         const GenomeInterval& searchInterval,
         const reference_contig_segment& refSeq,
         const bool isNode1,
+        const bool isSomatic,
         SVCandidateSetData& svData,
         TruthTracker& truthTracker);
 
@@ -104,6 +105,7 @@ private:
         const std::map<std::string, int32_t>& chromToIndex,
         const reference_contig_segment& refSeq1,
         const reference_contig_segment& refSeq2,
+        const bool isSomatic,
         SVCandidateSetData& svData,
         std::vector<SVCandidate>& svs,
         TruthTracker& truthTracker);
