@@ -80,7 +80,7 @@ addSVNodeRead(
     const bool isExpectRepeat,
     const reference_contig_segment& refSeq,
     const bool isNode1,
-    const bool isSomatic,
+    const bool isGatherSubmapped,
     SVCandidateSetReadPairSampleGroup& svDataGroup,
     TruthTracker& truthTracker)
 {
@@ -92,7 +92,7 @@ addSVNodeRead(
     if (bamRead.map_qual() < scanner.getMinTier2MapQ()) return;
 
     const bool isSubMapped(bamRead.map_qual() < scanner.getMinMapQ());
-    if ((!isSomatic) && isSubMapped) return;
+    if ((!isGatherSubmapped) && isSubMapped) return;
 
     const bool isNonCompressedAnomalous(scanner.isNonCompressedAnomalous(bamRead,bamIndex));
 
@@ -270,6 +270,8 @@ addSVNodeData(
     {
         const bool isTumor(_isAlignmentTumor[bamIndex]);
 
+        const bool isGatherSubmapped(isSomatic && (! isTumor));
+
         SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
         bam_streamer& read_stream(*bamPtr);
 
@@ -307,7 +309,7 @@ addSVNodeData(
             addSVNodeRead(
                 chromToIndex,_readScanner, localNode, remoteNode,
                 bamRead, bamIndex, isExpectRepeat, refSeq, isNode1,
-                isSomatic, svDataGroup, truthTracker);
+                isGatherSubmapped, svDataGroup, truthTracker);
         }
         ++bamIndex;
     }
@@ -764,6 +766,10 @@ getCandidatesFromData(
     {
         for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
         {
+            // for somatic calling we're only interested in submapped read processing for the normal sample:
+            const bool isTumor(_isAlignmentTumor[bamIndex]);
+            if (isTumor) continue;
+
             SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
             BOOST_FOREACH(SVCandidateSetReadPair& pair, svDataGroup)
             {
@@ -850,8 +856,8 @@ findCandidateSV(
         bool isFirstTumor(false);
 
         // iterate through reads, test reads for association and add to svData:
-        unsigned bamIndex(0);
-        BOOST_FOREACH(streamPtr& bamPtr, _bamStreams)
+        const unsigned bamCount(_bamStreams.size());
+        for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
         {
             const bool isTumor(_isAlignmentTumor[bamIndex]);
 
