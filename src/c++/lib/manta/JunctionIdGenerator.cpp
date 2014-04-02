@@ -45,7 +45,7 @@ classifyIndel(
 static
 bool
 isIntrachromBnd(
-    const SVCandidate& sv)
+    const SVCandidate& /*sv*/)
 {
     /// TODO turn this feature back on when fewer pieces are in motion
 #if 0
