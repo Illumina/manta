@@ -47,8 +47,12 @@ bool
 isIntrachromBnd(
     const SVCandidate& sv)
 {
+    /// TODO turn this feature back on when fewer pieces are in motion
+#if 0
     static const int intrachromTranslocThreshold(1000000);
     return (sv.centerSize() >= intrachromTranslocThreshold);
+#endif
+    return false;
 }
 
 
