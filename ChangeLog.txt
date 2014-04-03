@@ -1,7 +1,8 @@
+v0.20.0
 - MANTA-136 turn on conservative large insertion calling
 - MANTA-126 multi-junction SV scoring
 - MANTA-131 improve large somatic sv specificity with expanded
-supporting evidence search in the normal sample
+supporting evidence search
 - RNA: track candidate orientation
 v0.19.0
 - MANTA-127 RG based insert stats (default off) 
