@@ -226,15 +226,30 @@ addConservativeSplitReadSupport(
     //
     // ...note this is done in the absence of having a noise state in the model
     //
-    if (! fragev.isAnySplitReadSupport(isRead1)) return;
+    const std::pair<bool,bool> isBpSupport(fragev.isAnySplitReadSupport(isRead1));
+    if (! (isBpSupport.first || isBpSupport.second)) return;
+
+    bool isUseBp1Score(isBpSupport.first);
+
+    if (isBpSupport.first && isBpSupport.second)
+    {
+        isUseBp1Score = (fragev.alt.bp1.getRead(isRead1).splitLnLhood >= fragev.alt.bp2.getRead(isRead1).splitLnLhood);
+    }
 
     float altLnLhood =
-        std::max(fragev.alt.bp1.getRead(isRead1).splitLnLhood,
-                 fragev.alt.bp2.getRead(isRead1).splitLnLhood);
+            ( isUseBp1Score ?
+                fragev.alt.bp1.getRead(isRead1).splitLnLhood :
+                fragev.alt.bp2.getRead(isRead1).splitLnLhood);
+
+    if (isBpSupport.first && isBpSupport.second)
+    {
+        isUseBp1Score = (fragev.ref.bp1.getRead(isRead1).splitLnLhood >= fragev.ref.bp2.getRead(isRead1).splitLnLhood);
+    }
 
     float refLnLhood =
-        std::max(fragev.ref.bp1.getRead(isRead1).splitLnLhood,
-                 fragev.ref.bp2.getRead(isRead1).splitLnLhood);
+            ( isUseBp1Score ?
+                fragev.ref.bp1.getRead(isRead1).splitLnLhood :
+                fragev.ref.bp2.getRead(isRead1).splitLnLhood);
 
     // convert to normalized prob:
     if (altLnLhood > refLnLhood)
@@ -452,6 +467,7 @@ incrementAlleleSplitReadLhood(
     const ProbSet& otherMapProb,
     const SVFragmentEvidenceAllele& allele,
     const double /*readLnPrior*/,
+    const std::pair<bool,bool>& isSupported,
     const bool isRead1,
     double& refSplitLnLhood,
     bool& isReadEvaluated)
@@ -465,7 +481,13 @@ incrementAlleleSplitReadLhood(
     const double alignBp1LnLhood(allele.bp1.getRead(isRead1).splitLnLhood);
     const double alignBp2LnLhood(allele.bp2.getRead(isRead1).splitLnLhood);
 
-    const double alignLnLhood(std::max(alignBp1LnLhood,alignBp2LnLhood));
+    bool isUseBp1Lhood(isSupported.first);
+    if (isSupported.first && isSupported.second)
+    {
+        isUseBp1Lhood=(alignBp1LnLhood >= alignBp2LnLhood);
+    }
+
+    const double alignLnLhood( isUseBp1Lhood ? alignBp1LnLhood : alignBp2LnLhood );
 
     const double fragLnLhood = log_sum((selfMapProb.lnComp+alignLnLhood), (otherMapProb.lnProb)); //+readLnPrior));
     refSplitLnLhood += fragLnLhood;
@@ -506,7 +528,7 @@ incrementSplitReadLhood(
     log_os << __FUNCTION__ << ": pre-support\n";
 #endif
 
-    bool isSupported(false);
+    std::pair<bool,bool> isSupported;
     if (isPermissive)
     {
         isSupported=fragev.isAnyTier2SplitReadSupport(isRead1);
@@ -516,7 +538,7 @@ incrementSplitReadLhood(
         isSupported=fragev.isAnySplitReadSupport(isRead1);
     }
 
-    if (! isSupported)
+    if (! (isSupported.first || isSupported.second))
     {
         isReadEvaluated = false;
         return;
@@ -532,11 +554,11 @@ incrementSplitReadLhood(
 #ifdef DEBUG_SCORE
     log_os << __FUNCTION__ << ": starting ref\n";
 #endif
-    incrementAlleleSplitReadLhood(refMapProb, altMapProb, fragev.ref, readLnPrior, isRead1, refSplitLnLhood, isReadEvaluated);
+    incrementAlleleSplitReadLhood(refMapProb, altMapProb, fragev.ref, readLnPrior, isSupported, isRead1, refSplitLnLhood, isReadEvaluated);
 #ifdef DEBUG_SCORE
     log_os << __FUNCTION__ << ": starting alt\n";
 #endif
-    incrementAlleleSplitReadLhood(altMapProb, refMapProb, fragev.alt, readLnPrior, isRead1, altSplitLnLhood, isReadEvaluated);
+    incrementAlleleSplitReadLhood(altMapProb, refMapProb, fragev.alt, readLnPrior, isSupported, isRead1, altSplitLnLhood, isReadEvaluated);
 }
 
 

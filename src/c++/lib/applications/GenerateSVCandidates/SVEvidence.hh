@@ -107,20 +107,22 @@ struct SVFragmentEvidenceAllele
         return (isBp1 ? bp1 : bp2 );
     }
 
-    bool
+    std::pair<bool,bool>
     isAnySplitReadSupport(
         const bool isRead1) const
     {
-        return (bp1.getRead(isRead1).isSplitSupport ||
-                bp2.getRead(isRead1).isSplitSupport);
+        return std::make_pair(
+            bp1.getRead(isRead1).isSplitSupport,
+            bp2.getRead(isRead1).isSplitSupport);
     }
 
-    bool
+    std::pair<bool,bool>
     isAnyTier2SplitReadSupport(
         const bool isRead1) const
     {
-        return (bp1.getRead(isRead1).isTier2SplitSupport ||
-                bp2.getRead(isRead1).isTier2SplitSupport);
+        return std::make_pair(
+            bp1.getRead(isRead1).isTier2SplitSupport,
+            bp2.getRead(isRead1).isTier2SplitSupport);
     }
 
     SVFragmentEvidenceAlleleBreakend bp1;
@@ -216,21 +218,25 @@ struct SVFragmentEvidence
     }
 
     /// does this fragment read provide any split evidence for any allele/bp combination?
-    bool
+    std::pair<bool,bool>
     isAnySplitReadSupport(
         const bool isRead1) const
     {
-        return (alt.isAnySplitReadSupport(isRead1) ||
-                ref.isAnySplitReadSupport(isRead1));
+        const std::pair<bool,bool> isAlt(alt.isAnySplitReadSupport(isRead1));
+        const std::pair<bool,bool> isRef(ref.isAnySplitReadSupport(isRead1));
+
+        return std::make_pair((isAlt.first || isRef.first), (isAlt.second || isRef.second));
     }
 
     /// does this fragment read provide any split evidence for any allele/bp combination?
-    bool
+    std::pair<bool,bool>
     isAnyTier2SplitReadSupport(
         const bool isRead1) const
     {
-        return (alt.isAnyTier2SplitReadSupport(isRead1) ||
-                ref.isAnyTier2SplitReadSupport(isRead1));
+        const std::pair<bool,bool> isAlt(alt.isAnyTier2SplitReadSupport(isRead1));
+        const std::pair<bool,bool> isRef(ref.isAnyTier2SplitReadSupport(isRead1));
+
+        return std::make_pair((isAlt.first || isRef.first), (isAlt.second || isRef.second));
     }
 
     SVFragmentEvidenceRead read1;

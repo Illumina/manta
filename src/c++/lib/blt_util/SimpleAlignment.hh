@@ -19,6 +19,7 @@
 
 #include "blt_util/align_path.hh"
 #include "blt_util/bam_record.hh"
+#include "blt_util/known_pos_range2.hh"
 
 
 /// A struct which holds minimal alignment information processed
@@ -61,3 +62,8 @@ matchifyEdgeSoftClip(const SimpleAlignment& al)
 {
     return matchifyEdgeSegmentType(al, ALIGNPATH::SOFT_CLIP);
 }
+
+
+/// get the range in reference coordinates if you did run matchifyEdgeSoftClip on an alignment:
+known_pos_range2
+matchifyEdgeSoftClipRefRange(const SimpleAlignment& al);

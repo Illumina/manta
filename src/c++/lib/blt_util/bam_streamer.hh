@@ -52,7 +52,8 @@ struct bam_streamer : public boost::noncopyable
     /// \param beg zero-indexed start pos
     /// \param end zero-indexed end pos
     void
-    set_new_region(int reg, int beg, int end);
+    set_new_region(
+        int reg, int beg, int end);
 
     bool next();
 
