@@ -78,8 +78,8 @@ pattern:
 
 * Deletions
 * Insertions
-** Fully-assembled insertions
-** Partially-assembled 'inferred' insertions
+    * Fully-assembled insertions
+    * Partially-assembled 'inferred' insertions
 * Inversions
 * Tandem Duplications
 * Interchromosomal Translocations
