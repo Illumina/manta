@@ -42,19 +42,19 @@ SVs breakends, scoring and filtration of the SV under various biological models
 
 Manta is capable of detecting all structural variant types which are
 identifiable in the absence of copy number analysis and large-scale de-novo
-assembly. Detectable types are enumerated below.
+assembly. Detectable types are enumerated further below.
 
 For each structural variant and indel, Manta attempts to align the breakends to
 basepair resolution and report the left-shifted breakend coordinate (per the [VCF 4.1][1]
-SV reporting guidelines), together with the any breakend microhomology sequence
-and inserted sequence between the breakends. It is often the case that the
+SV reporting guidelines), together with the any breakend homology sequence
+and/or inserted sequence between the breakends. It is often the case that the
 assembly will fail to provide a confident explanation of the data -- in such
-cases the variant will be reported as `IMPRECISE` , and scored according the
+cases the variant will be reported as `IMPRECISE`, and scored according the
 paired-end read evidence alone.
 
 The sequencing reads provided as input to Manta are expected to be from a
 paired-end sequencing assay which results in an "innie" orientation between the
-two reads of each DNA fragment, each presenting a read from the outer edge of
+two reads of each sequence fragment, each presenting a read from the outer edge of
 the fragment insert inward.
 
 Manta is primarily tested for whole genome DNA-Seq experiments of single
@@ -65,19 +65,21 @@ There has been limited testing in support of other cases:
 configured with the `--exome` flag to set filtration levels more appropriate for
 this case.
 * RNA-Seq analysis can be configured with the `--rna` flag to also adjust filtration
-levels and take some steps to prevent introns from being called as deletions.
+levels and take other RNA-specific filtration and intron handling steps.
 
 
 ### Detected variant classes
 
 Manta is able to detect all variation classes which can be explained as
 novel DNA adjacencies in the genome. Simple insertion/deletion events can be
-detected down to a configurable minimum size cutoff (defaulting to 51). All DNA
+detected down to a configurable minimum size cutoff (defaulting to 10). All DNA
 adjacencies are classified into the following categories based on the breakend
 pattern:
 
 * Deletions
 * Insertions
+** Fully-assembled insertions
+** Partially-assembled 'inferred' insertions
 * Inversions
 * Tandem Duplications
 * Interchromosomal Translocations
@@ -86,15 +88,20 @@ pattern:
 
 Manta should not be able to detect the following variant types:
 
-* Non-tandem repeats/amplifications
-* Large insertions
-    *    The maximum detectable size should correspond to approximately the
-  read-pair fragment size, but note that detection power should fall off to
-  impractical levels well before this size
+* Dispersed duplications
+* Most expansion/contraction variants of a reference tandem repeat
 * Small inversions
-    *   The limiting size is not tested, but in theory detection falls off below
-  ~200bases. So-called micro-inversions might be detected indirectly as
+    * The limiting size is not tested, but in theory detection falls off
+  below ~200bases. So-called micro-inversions might be detected indirectly as
   combined insertion/deletion variants.
+* Fully-assembled large insertions
+    * The maximum fully-assembled insertions size should correspond to
+  approximately the read-pair fragment size, but note that power to fully
+  assemble the insertion should fall off to impractical levels well before this
+  size
+    * Note that manta does detect and report large insertions where the breakend
+  signature of such an event is found, even though the inserted sequence cannot
+  be fully assembled.  
 
 More general repeat-based limitations exist for all variant types:
 
@@ -102,7 +109,6 @@ More general repeat-based limitations exist for all variant types:
   repeat length approaches the read size.
 * Power to detect any breakend falls to (nearly) zero as the breakend repeat
   length approaches the fragment size.
-* The method cannot detect non-tandem repeats
 
 Note that while manta classifies novel DNA-adjacencies, it does not infer the
 higher level constructs implied by the classification. For instance, a variant
@@ -169,7 +175,7 @@ allele fields. A variant is classified as a small indel if all of these criteria
 
 * The variant can be entirely expressed as a combination of inserted and deleted sequence.
 * The deletion or insertion length is not 1000 or greater.
-* The variant not imprecise.
+* The variant breakends and/or the inserted sequence are not imprecise.
 
 When vcf records are printed in the small indel format, they will also include
 the `CIGAR` INFO tag describing the combined insertion and deletion event.
