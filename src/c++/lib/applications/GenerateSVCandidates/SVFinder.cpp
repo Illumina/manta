@@ -699,38 +699,38 @@ processReadPair(
     TruthTracker& truthTracker,
     SVCandidateSetReadPair& pair)
 {
-     SVCandidateSetRead* localReadPtr(&(pair.read1));
-     SVCandidateSetRead* remoteReadPtr(&(pair.read2));
-     pair.svLink.clear();
+    SVCandidateSetRead* localReadPtr(&(pair.read1));
+    SVCandidateSetRead* remoteReadPtr(&(pair.read2));
+    pair.svLink.clear();
 
-     if (! localReadPtr->isSet())
-     {
-         std::swap(localReadPtr,remoteReadPtr);
-     }
-     assert(localReadPtr->isSet() && "Neither read in pair is set");
+    if (! localReadPtr->isSet())
+    {
+        std::swap(localReadPtr,remoteReadPtr);
+    }
+    assert(localReadPtr->isSet() && "Neither read in pair is set");
 
-     const bam_record* remoteBamRecPtr( remoteReadPtr->isSet() ? &(remoteReadPtr->bamrec) : NULL);
+    const bam_record* remoteBamRecPtr( remoteReadPtr->isSet() ? &(remoteReadPtr->bamrec) : NULL);
 
-     const reference_contig_segment& localRef( localReadPtr->isNode1 ? refSeq1 : refSeq2 );
-     const reference_contig_segment* remoteRefPtr(NULL);
-     if (remoteReadPtr->isSet())
-     {
-         remoteRefPtr = (remoteReadPtr->isNode1 ?  &refSeq1 : &refSeq2 );
-     }
-     _readScanner.getBreakendPair(localReadPtr->bamrec, remoteBamRecPtr,
-                                  bamIndex, chromToIndex, localRef,
-                                  remoteRefPtr, _readCandidates,
-                                  truthTracker);
+    const reference_contig_segment& localRef( localReadPtr->isNode1 ? refSeq1 : refSeq2 );
+    const reference_contig_segment* remoteRefPtr(NULL);
+    if (remoteReadPtr->isSet())
+    {
+        remoteRefPtr = (remoteReadPtr->isNode1 ?  &refSeq1 : &refSeq2 );
+    }
+    _readScanner.getBreakendPair(localReadPtr->bamrec, remoteBamRecPtr,
+                                 bamIndex, chromToIndex, localRef,
+                                 remoteRefPtr, _readCandidates,
+                                 truthTracker);
 
 #ifdef DEBUG_SVDATA
-     log_os << __FUNCTION__ << ": Checking pair: " << pair << "\n";
-     log_os << __FUNCTION__ << ": Translated to candidates:\n";
-     BOOST_FOREACH(const SVObservation& cand, readCandidates)
-     {
-         log_os << __FUNCTION__ << ": cand: " << cand << "\n";
-     }
+    log_os << __FUNCTION__ << ": Checking pair: " << pair << "\n";
+    log_os << __FUNCTION__ << ": Translated to candidates:\n";
+    BOOST_FOREACH(const SVObservation& cand, readCandidates)
+    {
+        log_os << __FUNCTION__ << ": cand: " << cand << "\n";
+    }
 #endif
-     assignPairObservationsToSVCandidates(node1, node2, _readCandidates, isExpandSVCandidateSet, pair, svs);
+    assignPairObservationsToSVCandidates(node1, node2, _readCandidates, isExpandSVCandidateSet, pair, svs);
 }
 
 

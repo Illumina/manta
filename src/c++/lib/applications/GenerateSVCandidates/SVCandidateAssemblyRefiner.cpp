@@ -525,7 +525,7 @@ isFinishedLargeInsertAlignment(
     std::reverse(apath_rev.begin(),apath_rev.end());
 
     insertInfo.isRightCandidate=isLargeInsertSegment(aligner, apath_rev, insertInfo.contigOffset, insertInfo.
-                                                    refOffset, insertInfo.score, middleSize);
+                                                     refOffset, insertInfo.score, middleSize);
 
     return (insertInfo.isLeftCandidate && insertInfo.isRightCandidate);
 }
@@ -552,9 +552,13 @@ getVariantRange(
 {
 #ifdef DEBUG_VARR
     log_os << __FUNCTION__ << ": refRange " << refRange << "\n";
-    log_os << __FUNCTION__ << ": ref:\n";  printSeq(ref, log_os); log_os << "\n";
+    log_os << __FUNCTION__ << ": ref:\n";
+    printSeq(ref, log_os);
+    log_os << "\n";
     log_os << __FUNCTION__ << ": readRange " << readRange << "\n";
-    log_os << __FUNCTION__ << ": read:\n";  printSeq(read, log_os); log_os << "\n";
+    log_os << __FUNCTION__ << ": read:\n";
+    printSeq(read, log_os);
+    log_os << "\n";
 #endif
 
     // check how far we can slide to the right:
@@ -797,7 +801,7 @@ processLargeInsertion(
         getLargestInsertSegment(fakeAlignment.align.apath, middleSize, fakeSegments);
 
         // QC segments
-        if((1 != fakeSegments.size()) || (fakeSegments[0].second < fakeSegments[0].first))
+        if ((1 != fakeSegments.size()) || (fakeSegments[0].second < fakeSegments[0].first))
         {
             return;
         }

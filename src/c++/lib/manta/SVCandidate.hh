@@ -150,14 +150,14 @@ struct SVCandidate
     unsigned
     getPostAssemblySpanningCount() const
     {
-       if (isImprecise())
-       {
-           return bp1.getPairCount();
-       }
-       else
-       {
-           return bp1.getSpanningCount();
-       }
+        if (isImprecise())
+        {
+            return bp1.getPairCount();
+        }
+        else
+        {
+            return bp1.getSpanningCount();
+        }
     }
 
 private:
