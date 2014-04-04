@@ -14,8 +14,6 @@ of structural variants which can be identified in the absence of copy number
 analysis and large-scale assembly. See the user guide for a full description of
 capabilities and limitations.
 
-_Note: This software is under development and not supported for general use._
-
 
 Build instructions
 ------------------
