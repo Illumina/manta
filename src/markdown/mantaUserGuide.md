@@ -72,7 +72,7 @@ levels and take other RNA-specific filtration and intron handling steps.
 
 Manta is able to detect all variation classes which can be explained as
 novel DNA adjacencies in the genome. Simple insertion/deletion events can be
-detected down to a configurable minimum size cutoff (defaulting to 10). All DNA
+detected down to a configurable minimum size cutoff (defaulting to 8). All DNA
 adjacencies are classified into the following categories based on the breakend
 pattern:
 
@@ -157,7 +157,7 @@ is provided. These files are:
   evidence is required for a SV to be entered as a candidate. An SV or indel
   must be a candidate to be considered for scoring, therefore an SV cannot
   appear in the other VCF outputs if it is not present in this file. Note that
-  by default this file includes indels down to a very small size (>= 10 bases).
+  by default this file includes indels down to a very small size (>= 8 bases).
   These are intended to be passed on to a small variant caller without scoring
   by manta itself (by default manta scoring starts at size 51).
 * __diploidSV.vcf.gz__

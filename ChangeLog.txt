@@ -1,3 +1,5 @@
+v0.20.1
+- Lower default min candidate size to 8
 v0.20.0
 - MANTA-136 turn on conservative large insertion calling
 - MANTA-126 multi-junction SV scoring
