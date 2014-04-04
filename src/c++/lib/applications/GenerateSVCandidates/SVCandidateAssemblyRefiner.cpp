@@ -87,7 +87,7 @@ isFilterSpanningAlignment(
     const bool isLeadingPath,
     const ALIGNPATH::path_t& input_apath)
 {
-    static const unsigned minAlignReadLength(30); ///< require min length of each contig sub-alignment even after off-reference clipping:
+    static const unsigned minAlignReadLength(20); ///< require min length of each contig sub-alignment even after off-reference clipping:
     static const float minScoreFrac(0.75); ///< require min fraction of optimal score in each contig sub-alignment
 
     ALIGNPATH::path_t apath(input_apath);

@@ -180,9 +180,27 @@ struct SVWriter
 
         if (modelScoreInfo.diploid.altScore >= opt.diploidOpt.minOutputAltScore || opt.isRNA) // todo remove after adding RNA scoring
         {
-            diploidWriter.writeSV(edge, svData, assemblyData, sv, modelScoreInfo);
+            if (modelScoreInfo.base.normal.alt.splitReadCount > 0)
+            {
+                if (modelScoreInfo.base.normal.alt.confidentSpanningPairCount > 0)
+                {
+                    diploidWriter.writeSV(edge, svData, assemblyData, sv, modelScoreInfo);
+                }
+                else
+                {
+#ifdef DEBUG_GSV
+                    log_os << logtag << "Filtering out RNA cand. no PRs\n";
+#endif
+                }
+            }
+            else
+            {
+#ifdef DEBUG_GSV
+                log_os << logtag << "Filtering out RNA cand. no SRs\n";
+                log_os << logtag << modelScoreInfo.base.normal << "\n";
+#endif
+            }
         }
-
         if (isSomatic)
         {
             if (modelScoreInfo.somatic.somaticScore > opt.somaticOpt.minOutputSomaticScore)

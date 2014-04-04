@@ -34,7 +34,7 @@
 #include <string>
 
 
-//#define DEBUG_SCORE
+#define DEBUG_SCORE
 //#define DEBUG_SOMATIC_SCORE
 
 #if defined(DEBUG_SCORE) || defined(DEBUG_SOMATIC_SCORE)
@@ -295,17 +295,21 @@ addConservativeSpanningPairSupport(
 
     // convert to normalized prob:
     const float sum(altLhood+refLhood);
+
     if (altLhood > refLhood)
     {
-        if ((altLhood/sum) > pairSupportProb)
+        if ((altLhood/sum) > pairSupportProb || true)
         {
             sampleBaseInfo.alt.confidentSemiMappedSpanningPairCount++;
-            if (isFullyMapped) sampleBaseInfo.alt.confidentSpanningPairCount++;
+            if (isFullyMapped || true)
+            {
+                sampleBaseInfo.alt.confidentSpanningPairCount++;
+            }
         }
     }
     else
     {
-        if ((refLhood/sum) > pairSupportProb)
+        if ((refLhood/sum) > pairSupportProb || true)
         {
             sampleBaseInfo.ref.confidentSemiMappedSpanningPairCount++;
             if (isFullyMapped) sampleBaseInfo.ref.confidentSpanningPairCount++;
@@ -329,7 +333,9 @@ getSampleCounts(
         //
         addConservativeSplitReadSupport(fragev,true,sampleBaseInfo);
         addConservativeSplitReadSupport(fragev,false,sampleBaseInfo);
-
+#ifdef DEBUG_SCORE
+            log_os << __FUNCTION__ << "Counting read: " << val.first;
+#endif
         addConservativeSpanningPairSupport(fragev, sampleBaseInfo);
     }
 }

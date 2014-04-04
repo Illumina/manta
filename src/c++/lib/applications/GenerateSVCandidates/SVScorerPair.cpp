@@ -35,7 +35,7 @@
 #include <string>
 
 /// standard debug output for this file:
-//#define DEBUG_PAIR
+#define DEBUG_PAIR
 
 /// ridiculous debug output for this file:
 //#define DEBUG_MEGAPAIR
@@ -433,7 +433,7 @@ getFragProb(
     /// for such events.
     ///
     static const float minFragProb(0.0001);
-    if (fragProb >= minFragProb)
+    if (fragProb >= minFragProb || true)
     {
         isFragSupportSV = true;
     }
@@ -520,7 +520,7 @@ processExistingAltPairInfo(
             if (! isFragSupportSV) continue;
 
             /// TODO: if fragProb is zero this should be a bug -- follow-up to see if we can make this an assert(fragProb > 0.) instead
-            if (fragProb <= 0.) continue;
+            if (fragProb <= 0. && false) continue;
 
             // for all large spanning events -- we don't test for pair support of the two breakends separately -- this could be
             // beneficial if there was an unusually large insertion associated with the event. For now we approximate that

@@ -172,6 +172,9 @@ modifySample(
     static const std::string srTag("SR");
     values[0] = str( boost::format("%i,%i") % baseInfo.normal.ref.confidentSplitReadCount % baseInfo.normal.alt.confidentSplitReadCount);
     sampletags.push_back(std::make_pair(srTag,values));
+    static const std::string fsTag("FS");
+    values[0] = str( boost::format("%i,%i") % baseInfo.normal.ref.splitReadCount % baseInfo.normal.alt.splitReadCount);
+    sampletags.push_back(std::make_pair(fsTag,values));
 }
 
 
