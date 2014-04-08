@@ -22,7 +22,9 @@ struct ReadScannerOptions
 {
     ReadScannerOptions() :
         minMapq(15),
+        minTier2Mapq(5),
         breakendEdgeTrimProb(0.25),
+        largeScaleEventBreakendEdgeTrimProb(0.1),
         properPairTrimProb(0.01),
         evidenceTrimProb(0.15),
         minCandidateVariantSize(10),
@@ -43,8 +45,10 @@ struct ReadScannerOptions
     {}
 
     unsigned minMapq;
+    unsigned minTier2Mapq; ///< a second, lower mapq threshold used only during somatic calling to disprove a somatic candidate using weak normal sample evidence
 
     float breakendEdgeTrimProb; ///< report breakend regions with x prob regions removed from each edge
+    float largeScaleEventBreakendEdgeTrimProb; ///< report breakend regions with x prob regions removed from each edge, used only for 'large-scale' events.
     float properPairTrimProb; ///< report a pair as "proper pair" if fragment size is within x prob region removed from each edge
     float evidenceTrimProb; ///< add a pair to the evidence pool if frag size is within x prob region removed from each edge
     unsigned minCandidateVariantSize; ///< ignore indels smaller than this when building graph:

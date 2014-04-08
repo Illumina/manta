@@ -15,18 +15,15 @@
 /// \author Chris Saunders
 ///
 
-#include "format/VcfWriterCandidateSV.hh"
+#pragma once
 
+#include "manta/SVCandidate.hh"
+#include "manta/SVMultiJunctionCandidate.hh"
+
+#include <vector>
 
 
 void
-VcfWriterCandidateSV::
-writeSV(
-    const SVCandidateSetData& svData,
-    const SVCandidateAssemblyData& adata,
-    const SVCandidate& sv,
-    const SVId& svId)
-{
-    static const EventInfo event;
-    writeSVCore( svData, adata, sv, svId, event);
-}
+findMultiJunctionCandidates(
+    const std::vector<SVCandidate>& svs,
+    std::vector<SVMultiJunctionCandidate>& mjSVs);

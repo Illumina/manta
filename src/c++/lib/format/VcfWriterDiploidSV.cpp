@@ -35,6 +35,7 @@ addHeaderInfo() const
 {
     _os << "##INFO=<ID=BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at local translocation breakend\">\n";
     _os << "##INFO=<ID=MATE_BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at remote translocation mate breakend\">\n";
+    _os << "##INFO=<ID=JUNCTION_QUAL,Number=1,Type=Integer,Description=\"If the SV junction is part of an EVENT (ie. a multi-adjacency variant), this field provides the QUAL value for the adjacency in question only\">\n";
 }
 
 
@@ -65,19 +66,17 @@ addHeaderFilters() const
 
 
 
-#if 0
 void
 VcfWriterDiploidSV::
 modifyInfo(
+    const EventInfo& event,
     InfoTag_t& infotags) const
 {
-    assert(_modelScorePtr != NULL);
-    const SVModelScoreInfo& modelScoreInfo(*_modelScorePtr);
-
-//    infotags.push_back("SOMATIC");
-//    infotags.push_back( str(boost::format("SOMATICSCORE=%i") % modelScoreInfo.somatic.somaticScore) );
+    if (event.isEvent())
+    {
+        infotags.push_back( str(boost::format("JUNCTION_QUAL=%i") % getSingleJunctionDiploidInfo().altScore) );
+    }
 }
-#endif
 
 
 
@@ -87,8 +86,7 @@ modifyTranslocInfo(
     const bool isFirstOfPair,
     InfoTag_t& infotags) const
 {
-    assert(_modelScorePtr != NULL);
-    const SVScoreInfo& baseInfo(_modelScorePtr->base);
+    const SVScoreInfo& baseInfo(getBaseInfo());
 
     infotags.push_back( str(boost::format("BND_DEPTH=%i") %
                             (isFirstOfPair ? baseInfo.bp1MaxDepth : baseInfo.bp2MaxDepth) ) );
@@ -102,10 +100,7 @@ void
 VcfWriterDiploidSV::
 writeQual() const
 {
-    assert(_modelScorePtr != NULL);
-    const SVScoreInfoDiploid& diploidInfo(_modelScorePtr->diploid);
-
-    _os << diploidInfo.altScore;
+    _os << getDiploidInfo().altScore;
 }
 
 
@@ -114,10 +109,7 @@ void
 VcfWriterDiploidSV::
 writeFilter() const
 {
-    assert(_modelScorePtr != NULL);
-    const SVScoreInfoDiploid& diploidInfo(_modelScorePtr->diploid);
-
-    writeFilters(diploidInfo.filters);
+    writeFilters(getDiploidInfo().filters);
 }
 
 
@@ -149,18 +141,17 @@ modifySample(
     const SVCandidate& sv,
     SampleTag_t& sampletags) const
 {
-    assert(_modelScorePtr != NULL);
-    const SVModelScoreInfo& modelScoreInfo(*_modelScorePtr);
-    const SVScoreInfo& baseInfo(modelScoreInfo.base);
+    const SVScoreInfo& baseInfo(getBaseInfo());
+    const SVScoreInfoDiploid& diploidInfo(getDiploidInfo());
 
     std::vector<std::string> values(1);
 
     static const std::string gtTag("GT");
-    values[0] = gtLabel(modelScoreInfo.diploid.gt);
+    values[0] = gtLabel(diploidInfo.gt);
     sampletags.push_back(std::make_pair(gtTag,values));
 
     static const std::string gqTag("GQ");
-    values[0] = str( boost::format("%s") % modelScoreInfo.diploid.gtScore);
+    values[0] = str( boost::format("%s") % diploidInfo.gtScore);
     sampletags.push_back(std::make_pair(gqTag,values));
 
     static const std::string pairTag("PR");
@@ -188,14 +179,23 @@ modifySample(
 void
 VcfWriterDiploidSV::
 writeSV(
-    const EdgeInfo& edge,
     const SVCandidateSetData& svData,
     const SVCandidateAssemblyData& adata,
     const SVCandidate& sv,
-    const SVModelScoreInfo& modelScore)
+    const SVId& svId,
+    const SVScoreInfo& baseInfo,
+    const SVScoreInfoDiploid& diploidInfo,
+    const EventInfo& event,
+    const SVScoreInfoDiploid& singleJunctionDiploidInfo)
 {
     //TODO: this is a lame way to customize subclass behavior:
-    _modelScorePtr=&modelScore;
-    writeSVCore(edge, svData, adata, sv);
-    _modelScorePtr=NULL;
+    setScoreInfo(baseInfo);
+    _diploidInfoPtr=&diploidInfo;
+    _singleJunctionDiploidInfoPtr=&singleJunctionDiploidInfo;
+
+    writeSVCore(svData, adata, sv, svId, event);
+
+    clearScoreInfo();
+    _diploidInfoPtr=NULL;
+    _singleJunctionDiploidInfoPtr=NULL;
 }

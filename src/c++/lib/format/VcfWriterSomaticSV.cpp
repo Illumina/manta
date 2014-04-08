@@ -39,6 +39,7 @@ addHeaderInfo() const
     _os << "##INFO=<ID=MATE_BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at remote translocation mate breakend\">\n";
     _os << "##INFO=<ID=SOMATIC,Number=0,Type=Flag,Description=\"Somatic mutation\">\n";
     _os << "##INFO=<ID=SOMATICSCORE,Number=1,Type=Integer,Description=\"Somatic variant quality score\">\n";
+    _os << "##INFO=<ID=JUNCTION_SOMATICSCORE,Number=1,Type=Integer,Description=\"If the SV junctino is part of an EVENT (ie. a multi-adjacency variant), this field provides the SOMATICSCORE value for the adjacency in question only\">\n";
 }
 
 
@@ -70,13 +71,16 @@ addHeaderFilters() const
 void
 VcfWriterSomaticSV::
 modifyInfo(
+    const EventInfo& event,
     std::vector<std::string>& infotags) const
 {
-    assert(_modelScorePtr != NULL);
-    const SVScoreInfoSomatic& somaticInfo(_modelScorePtr->somatic);
-
     infotags.push_back("SOMATIC");
-    infotags.push_back( str(boost::format("SOMATICSCORE=%i") % somaticInfo.somaticScore) );
+    infotags.push_back( str(boost::format("SOMATICSCORE=%i") % getSomaticInfo().somaticScore) );
+
+    if (event.isEvent())
+    {
+        infotags.push_back( str(boost::format("JUNCTION_SOMATICSCORE=%i") % getSingleJunctionSomaticInfo().somaticScore) );
+    }
 }
 
 
@@ -87,14 +91,12 @@ modifyTranslocInfo(
     const bool isFirstOfPair,
     std::vector<std::string>& infotags) const
 {
-    assert(_modelScorePtr != NULL);
-    const SVScoreInfo& baseInfo(_modelScorePtr->base);
+    const SVScoreInfo& baseInfo(getBaseInfo());
 
     infotags.push_back( str(boost::format("BND_DEPTH=%i") %
                             (isFirstOfPair ? baseInfo.bp1MaxDepth : baseInfo.bp2MaxDepth) ) );
     infotags.push_back( str(boost::format("MATE_BND_DEPTH=%i") %
                             (isFirstOfPair ? baseInfo.bp2MaxDepth : baseInfo.bp1MaxDepth) ) );
-
 }
 
 
@@ -105,8 +107,7 @@ modifySample(
     const SVCandidate& sv,
     SampleTag_t& sampletags) const
 {
-    assert(_modelScorePtr != NULL);
-    const SVScoreInfo& baseInfo(_modelScorePtr->base);
+    const SVScoreInfo& baseInfo(getBaseInfo());
 
     std::vector<std::string> values(2);
 
@@ -129,10 +130,7 @@ void
 VcfWriterSomaticSV::
 writeFilter() const
 {
-    assert(_modelScorePtr != NULL);
-    const SVScoreInfoSomatic& somaticInfo(_modelScorePtr->somatic);
-
-    writeFilters(somaticInfo.filters);
+    writeFilters(getSomaticInfo().filters);
 }
 
 
@@ -140,14 +138,23 @@ writeFilter() const
 void
 VcfWriterSomaticSV::
 writeSV(
-    const EdgeInfo& edge,
     const SVCandidateSetData& svData,
     const SVCandidateAssemblyData& adata,
     const SVCandidate& sv,
-    const SVModelScoreInfo& modelScore)
+    const SVId& svId,
+    const SVScoreInfo& baseInfo,
+    const SVScoreInfoSomatic& somaticInfo,
+    const EventInfo& event,
+    const SVScoreInfoSomatic& singleJunctionSomaticInfo)
 {
     //TODO: this is a lame way to customize subclass behavior:
-    _modelScorePtr=&modelScore;
-    writeSVCore(edge, svData, adata, sv);
-    _modelScorePtr=NULL;
+    setScoreInfo(baseInfo);
+    _somaticInfoPtr=&somaticInfo;
+    _singleJunctionSomaticInfoPtr=&singleJunctionSomaticInfo;
+
+    writeSVCore(svData, adata, sv, svId, event);
+
+    clearScoreInfo();
+    _somaticInfoPtr=NULL;
+    _singleJunctionSomaticInfoPtr=NULL;
 }

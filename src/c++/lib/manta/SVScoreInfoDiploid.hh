@@ -17,11 +17,13 @@
 
 #pragma once
 
-#include "manta/SVScoreInfo.hh"
-
+#include <cassert>
 #include <cmath>
+#include <cstdlib>
 
+#include <iosfwd>
 #include <set>
+#include <string>
 
 
 namespace DIPLOID_GT
@@ -107,12 +109,9 @@ altLnCompFraction(const index_t i)
 
 
 /// consolidate all germline scoring results applied to an SV candidate
-struct SVScoreInfoDiploid : public SVScoreInfo
+struct SVScoreInfoDiploid
 {
-    typedef SVScoreInfo base_t;
-
     SVScoreInfoDiploid() :
-        base_t(),
         gt(DIPLOID_GT::REF),
         altScore(0),
         gtScore(0)
@@ -121,8 +120,6 @@ struct SVScoreInfoDiploid : public SVScoreInfo
     void
     clear()
     {
-        base_t::clear();
-
         filters.clear();
         gt=DIPLOID_GT::REF;
         altScore=0;
@@ -138,4 +135,6 @@ struct SVScoreInfoDiploid : public SVScoreInfo
 };
 
 std::ostream&
-operator<<(std::ostream& os, const SVScoreInfoDiploid& sid);
+operator<<(
+    std::ostream& os,
+    const SVScoreInfoDiploid& sid);

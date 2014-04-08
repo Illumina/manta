@@ -42,7 +42,8 @@
 struct SVCandidateSetRead
 {
     SVCandidateSetRead() :
-        isNode1(true)
+        isNode1(true),
+        isSubMapped(false)
     {}
 
     bool
@@ -51,9 +52,16 @@ struct SVCandidateSetRead
         return (! bamrec.empty());
     }
 
+    bool
+    isAnchored() const
+    {
+        return (isSet() && (!isSubMapped));
+    }
+
     //realignment info, etc...
     bam_record bamrec;
     bool isNode1; ///< used to link this read to node1 or node2 in the original graph ordering, note this is not the same as read1 and read2
+    bool isSubMapped; ///< is mapq below the minimum normally required to use this read
 };
 
 std::ostream&
@@ -98,6 +106,12 @@ struct SVCandidateSetReadPair
         return NULL;
     }
 
+    bool
+    isAnchored() const
+    {
+        return (read1.isAnchored() || read2.isAnchored());
+    }
+
     std::vector<SVPairAssociation> svLink; ///< which SVs from the set are this molecule associated with?
     SVCandidateSetRead read1;
     SVCandidateSetRead read2;
@@ -124,7 +138,8 @@ struct SVCandidateSetReadPairSampleGroup
     void
     add(const bam_record& bamRead,
         const bool isExpectRepeat,
-        const bool isNode1);
+        const bool isNode1,
+        const bool isSubMapped);
 
     iterator
     begin()
@@ -191,8 +206,6 @@ private:
 /// reads are potentially associated with zero to many specific SV candidates
 /// (although we expect any one read to usually be associated with no more
 /// one).
-///
-///
 ///
 struct SVCandidateSetData
 {

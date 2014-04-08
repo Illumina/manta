@@ -663,6 +663,8 @@ is_clipped_front(const path_t& apath)
     return false;
 }
 
+
+
 unsigned
 get_clip_len(const path_t& apath)
 {

@@ -107,20 +107,22 @@ struct SVFragmentEvidenceAllele
         return (isBp1 ? bp1 : bp2 );
     }
 
-    bool
+    std::pair<bool,bool>
     isAnySplitReadSupport(
         const bool isRead1) const
     {
-        return (bp1.getRead(isRead1).isSplitSupport ||
-                bp2.getRead(isRead1).isSplitSupport);
+        return std::make_pair(
+            bp1.getRead(isRead1).isSplitSupport,
+            bp2.getRead(isRead1).isSplitSupport);
     }
 
-    bool
+    std::pair<bool,bool>
     isAnyTier2SplitReadSupport(
         const bool isRead1) const
     {
-        return (bp1.getRead(isRead1).isTier2SplitSupport ||
-                bp2.getRead(isRead1).isTier2SplitSupport);
+        return std::make_pair(
+            bp1.getRead(isRead1).isTier2SplitSupport,
+            bp2.getRead(isRead1).isTier2SplitSupport);
     }
 
     SVFragmentEvidenceAlleleBreakend bp1;
@@ -138,22 +140,48 @@ struct SVFragmentEvidenceRead
 {
     SVFragmentEvidenceRead() :
         isScanned(false),
-        isAnchored(false),
         mapq(0),
-        size(0)
+        size(0),
+        _isAnchored(false),
+        _isTier2Anchored(false)
     {}
 
     bool
-    isObservedAnchor() const
+    isAnchored(
+        const bool isTier2) const
     {
-        return (isScanned && isAnchored);
+        return (isTier2 ? _isTier2Anchored : _isAnchored);
+    }
+
+    bool
+    isObservedAnchor(
+        const bool isTier2) const
+    {
+        return (isScanned && isAnchored(isTier2));
+    }
+
+    void
+    setAnchored(
+        const bool val)
+    {
+        _isAnchored=val;
+    }
+
+    void
+    setTier2Anchored(
+        const bool val)
+    {
+        _isTier2Anchored=val;
     }
 
     bool isScanned; ///< if true, this read's bam record has been scanned to fill in the remaining values in this object
 
-    bool isAnchored; ///< if true, the read is found and known to have a confident mapping wrt fragment support
     unsigned mapq;
     unsigned size;
+
+private:
+    bool _isAnchored; ///< if true, the read is found and known to have a confident mapping wrt fragment support
+    bool _isTier2Anchored; ///< if true, the read is found and known to have a confident mapping wrt fragment support at tier2
 };
 
 std::ostream&
@@ -190,21 +218,25 @@ struct SVFragmentEvidence
     }
 
     /// does this fragment read provide any split evidence for any allele/bp combination?
-    bool
+    std::pair<bool,bool>
     isAnySplitReadSupport(
         const bool isRead1) const
     {
-        return (alt.isAnySplitReadSupport(isRead1) ||
-                ref.isAnySplitReadSupport(isRead1));
+        const std::pair<bool,bool> isAlt(alt.isAnySplitReadSupport(isRead1));
+        const std::pair<bool,bool> isRef(ref.isAnySplitReadSupport(isRead1));
+
+        return std::make_pair((isAlt.first || isRef.first), (isAlt.second || isRef.second));
     }
 
     /// does this fragment read provide any split evidence for any allele/bp combination?
-    bool
+    std::pair<bool,bool>
     isAnyTier2SplitReadSupport(
         const bool isRead1) const
     {
-        return (alt.isAnyTier2SplitReadSupport(isRead1) ||
-                ref.isAnyTier2SplitReadSupport(isRead1));
+        const std::pair<bool,bool> isAlt(alt.isAnyTier2SplitReadSupport(isRead1));
+        const std::pair<bool,bool> isRef(ref.isAnyTier2SplitReadSupport(isRead1));
+
+        return std::make_pair((isAlt.first || isRef.first), (isAlt.second || isRef.second));
     }
 
     SVFragmentEvidenceRead read1;

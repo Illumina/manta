@@ -19,10 +19,11 @@
 
 #include "manta/SVModelScoreInfo.hh"
 #include "format/VcfWriterSV.hh"
+#include "format/VcfWriterScoredSV.hh"
 #include "options/CallOptionsSomatic.hh"
 
 
-struct VcfWriterSomaticSV : public VcfWriterSV
+struct VcfWriterSomaticSV : public VcfWriterSV, VcfWriterScoredSV
 {
     VcfWriterSomaticSV(
         const CallOptionsSomatic& somaticOpt,
@@ -33,16 +34,20 @@ struct VcfWriterSomaticSV : public VcfWriterSV
         VcfWriterSV(referenceFilename,set,os),
         _somaticOpt(somaticOpt),
         _isMaxDepthFilter(isMaxDepthFilter),
-        _modelScorePtr(NULL)
+        _somaticInfoPtr(NULL),
+        _singleJunctionSomaticInfoPtr(NULL)
     {}
 
     void
     writeSV(
-        const EdgeInfo& edge,
         const SVCandidateSetData& svData,
         const SVCandidateAssemblyData& adata,
         const SVCandidate& sv,
-        const SVModelScoreInfo& ssInfo);
+        const SVId& svId,
+        const SVScoreInfo& baseInfo,
+        const SVScoreInfoSomatic& somaticInfo,
+        const EventInfo& event,
+        const SVScoreInfoSomatic& singleJunctionSomaticInfo);
 
 private:
 
@@ -60,6 +65,7 @@ private:
 
     void
     modifyInfo(
+        const EventInfo& event,
         std::vector<std::string>& infotags) const;
 
     void
@@ -75,8 +81,24 @@ private:
     void
     writeFilter() const;
 
+    const SVScoreInfoSomatic&
+    getSomaticInfo() const
+    {
+        assert(NULL != _somaticInfoPtr);
+        return *_somaticInfoPtr;
+    }
+
+    const SVScoreInfoSomatic&
+    getSingleJunctionSomaticInfo() const
+    {
+        assert(NULL != _singleJunctionSomaticInfoPtr);
+        return *_singleJunctionSomaticInfoPtr;
+    }
+
+
     const CallOptionsSomatic& _somaticOpt;
     const bool _isMaxDepthFilter;
-    const SVModelScoreInfo* _modelScorePtr;
+    const SVScoreInfoSomatic* _somaticInfoPtr;
+    const SVScoreInfoSomatic* _singleJunctionSomaticInfoPtr;
 };
 

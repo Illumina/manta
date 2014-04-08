@@ -25,7 +25,7 @@ struct CallOptionsSomatic
     CallOptionsSomatic() :
         germlineSVPrior(1e-5),
         somaticSVPrior(1e-7),
-        smallNoiseSVPrior(1e-9),
+        smallNoiseSVPrior(1e-9), ///< parameters reflect our expectation that there is more shared small event noise in small events
         largeNoiseSVPrior(1e-10),
         maxDepthFactor(3.0),
         maxDepthFilterLabel("MaxDepth"),
@@ -38,8 +38,8 @@ struct CallOptionsSomatic
 
     float germlineSVPrior;
     float somaticSVPrior;
-    float smallNoiseSVPrior;
-    float largeNoiseSVPrior;
+    float smallNoiseSVPrior; ///< expected shared tumor-normal sample noise rates for "small" SVs, ramp is from 3k->5k for small to large.
+    float largeNoiseSVPrior; ///< expected shared tumor-normal sample noise rates for "large" SVs
 
     // breakpoints where the non-tumor depth is greater than the chromosome average x this factor are filtered out:
     float maxDepthFactor;

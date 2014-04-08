@@ -15,18 +15,25 @@
 /// \author Chris Saunders
 ///
 
-#include "format/VcfWriterCandidateSV.hh"
+#pragma once
+
+#include <string>
 
 
-
-void
-VcfWriterCandidateSV::
-writeSV(
-    const SVCandidateSetData& svData,
-    const SVCandidateAssemblyData& adata,
-    const SVCandidate& sv,
-    const SVId& svId)
+/// data related to a multi-junction event
+///
+struct EventInfo
 {
-    static const EventInfo event;
-    writeSVCore( svData, adata, sv, svId, event);
-}
+    EventInfo() :
+        junctionCount(1)
+    {}
+
+    bool
+    isEvent() const
+    {
+        return (! label.empty());
+    }
+
+    unsigned junctionCount;
+    std::string label;
+};

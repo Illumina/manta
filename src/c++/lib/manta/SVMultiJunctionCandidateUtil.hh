@@ -15,18 +15,19 @@
 /// \author Chris Saunders
 ///
 
-#include "format/VcfWriterCandidateSV.hh"
+#pragma once
 
+#include "manta/SVMultiJunctionCandidate.hh"
+#include "manta/SVCandidateUtil.hh"
 
-
-void
-VcfWriterCandidateSV::
-writeSV(
-    const SVCandidateSetData& svData,
-    const SVCandidateAssemblyData& adata,
-    const SVCandidate& sv,
-    const SVId& svId)
+/// complex in this case means that we have no specific hypothesis for the SV --
+/// it is just a single genomic region for which we schedule local assembly
+///
+inline
+bool
+isComplexSV(const SVMultiJunctionCandidate& mjSV)
 {
-    static const EventInfo event;
-    writeSVCore( svData, adata, sv, svId, event);
+    if (mjSV.junction.size() != 1) return false;
+
+    return isComplexSV(mjSV.junction[0]);
 }

@@ -83,6 +83,25 @@ struct SVCandidate
         return true;
     }
 
+    bool
+    evidenceMerge(const SVCandidate& rhs)
+    {
+        if (! isIntersect(rhs)) return false;
+
+        if (bp1.isIntersect(rhs.bp1))
+        {
+            bp1.evidenceMerge(rhs.bp1);
+            bp2.evidenceMerge(rhs.bp2);
+        }
+        else
+        {
+            bp1.evidenceMerge(rhs.bp2);
+            bp2.evidenceMerge(rhs.bp1);
+        }
+
+        return true;
+    }
+
     void
     clear()
     {
@@ -94,6 +113,8 @@ struct SVCandidate
         assemblyAlignIndex=0;
         assemblySegmentIndex=0;
         isUnknownSizeInsertion = false;
+        unknownSizeInsertionLeftSeq.clear();
+        unknownSizeInsertionRightSeq.clear();
     }
 
     void
@@ -117,6 +138,28 @@ struct SVCandidate
         return (bp1.state != bp2.state);
     }
 
+    int
+    centerSize() const
+    {
+        return std::abs(bp2.interval.range.center_pos() - bp1.interval.range.center_pos());
+    }
+
+    /// for precise SV report the full spanning count
+    /// for imprecise SV report spanning pairs only
+    ///
+    unsigned
+    getPostAssemblySpanningCount() const
+    {
+        if (isImprecise())
+        {
+            return bp1.getPairCount();
+        }
+        else
+        {
+            return bp1.getSpanningCount();
+        }
+    }
+
 private:
     bool _isImprecise;
 
@@ -132,14 +175,17 @@ public:
     // (this is provided for any small SV which is more complicated than a simple insert or deletion)
     ALIGNPATH::path_t insertAlignment;
 
-    unsigned candidateIndex; // low-res candidate index number, used to generate unique SV id
-    unsigned assemblyAlignIndex; // high-res assembly index number of alignment, used to generate unique SV id
-    unsigned assemblySegmentIndex; // high-res assembly index number of alignment segment, used to generate unique SV id
+    unsigned candidateIndex; ///< low-res candidate index number, used to generate unique SV id
+    unsigned assemblyAlignIndex; ///< high-res assembly index number of alignment, used to generate unique SV id
+    unsigned assemblySegmentIndex; ///< high-res assembly index number of alignment segment, used to generate unique SV id
 
-    bool isUnknownSizeInsertion; // these insertions haven't been assembled all the way through
+    bool isUnknownSizeInsertion; ///< these insertions haven't been assembled all the way through
 
-    unsigned fwReads; // Number of reads (pairs) supporting a direction from bp1 to bp2 (used for stranded RNA data)
-    unsigned rvReads; // Number of reads (pairs) directed from bp2 to bp1
+    std::string unknownSizeInsertionLeftSeq; ///< for an incomplete insertion, this is the known left side of the insert sequence
+    std::string unknownSizeInsertionRightSeq; ///< for an incomplete insertion, this is the known right side of the insert sequence
+
+    unsigned fwReads; ///< Number of reads (pairs) supporting a direction from bp1 to bp2 (used for stranded RNA data)
+    unsigned rvReads; ///< Number of reads (pairs) directed from bp2 to bp1
 };
 
 std::ostream&

@@ -17,9 +17,12 @@
 
 #pragma once
 
-#include "manta/SVScoreInfo.hh"
+#include <cassert>
+#include <cstdlib>
 
+#include <iosfwd>
 #include <set>
+#include <string>
 #include <cmath>
 
 
@@ -149,12 +152,9 @@ altLnCompFraction(
 
 
 /// consolidate all somatic scoring results applied to an SV candidate
-struct SVScoreInfoSomatic : public SVScoreInfo
+struct SVScoreInfoSomatic
 {
-    typedef SVScoreInfo base_t;
-
     SVScoreInfoSomatic() :
-        base_t(),
         somaticScore(0),
         somaticScoreTier(0)
     {}
@@ -162,8 +162,6 @@ struct SVScoreInfoSomatic : public SVScoreInfo
     void
     clear()
     {
-        base_t::clear();
-
         filters.clear();
         somaticScore=0;
         somaticScoreTier=0;

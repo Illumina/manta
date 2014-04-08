@@ -24,5 +24,6 @@
 void
 setReadEvidence(
     const unsigned minMapQ,
+    const unsigned minTier2MapQ,
     const bam_record& bamRead,
     SVFragmentEvidenceRead& read);

@@ -35,6 +35,7 @@ operator<<(std::ostream& os, const SVCandidateSetRead& svr)
 }
 
 
+
 std::ostream&
 operator<<(std::ostream& os, const SVPairAssociation& sva)
 {
@@ -87,7 +88,8 @@ void
 SVCandidateSetReadPairSampleGroup::
 add(const bam_record& bamRead,
     const bool isExpectRepeat,
-    const bool isNode1)
+    const bool isNode1,
+    const bool isSubMapped)
 {
     using namespace illumina::common;
 
@@ -117,9 +119,10 @@ add(const bam_record& bamRead,
     }
 
     targetReadPtr->bamrec = bamRead;
-
     targetReadPtr->isNode1 = isNode1;
+    targetReadPtr->isSubMapped = isSubMapped;
 }
+
 
 
 bool
@@ -138,4 +141,3 @@ setNewSearchInterval(const GenomeInterval& newSearch)
     _searchIntervals.push_back(newSearch);
     return retval;
 }
-

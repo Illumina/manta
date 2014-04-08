@@ -17,12 +17,12 @@
 
 #pragma once
 
-#include "svgraph/EdgeInfo.hh"
+#include "manta/EventInfo.hh"
+#include "manta/JunctionIdGenerator.hh"
 #include "manta/SVCandidate.hh"
 #include "manta/SVCandidateAssemblyData.hh"
 #include "manta/SVCandidateSetData.hh"
 #include "svgraph/SVLocusSet.hh"
-#include "boost/format.hpp"
 
 #include <iosfwd>
 
@@ -76,15 +76,17 @@ protected:
 
     void
     writeSVCore(
-        const EdgeInfo& edge,
         const SVCandidateSetData& svData,
         const SVCandidateAssemblyData& adata,
-        const SVCandidate& sv);
+        const SVCandidate& sv,
+        const SVId& svId,
+        const EventInfo& event);
 
     /// add info tags which can be customized by sub-class
     virtual
     void
     modifyInfo(
+        const EventInfo& /*event*/,
         InfoTag_t& /*infotags*/) const
     {}
 
@@ -123,59 +125,32 @@ protected:
 
 private:
 
-    /// \param[in] idPrefix prefix used for ID/MATEID tags in the vcf ID fields
     /// \param[in] isFirstBreakend if true report bp1, else report bp2
     void
     writeTransloc(
         const SVCandidate& sv,
-        const std::string& idPrefix,
+        const SVId& svId,
         const bool isFirstBreakend,
         const SVCandidateSetData& svData,
-        const SVCandidateAssemblyData& adata);
+        const SVCandidateAssemblyData& adata,
+        const EventInfo& event);
 
     void
     writeTranslocPair(
-        const EdgeInfo& edge,
         const SVCandidate& sv,
+        const SVId& svId,
         const SVCandidateSetData& svData,
-        const SVCandidateAssemblyData& adata);
+        const SVCandidateAssemblyData& adata,
+        const EventInfo& event);
 
     /// \param isIndel if true, the variant is a simple right/left breakend insert/delete combination
     void
     writeInvdel(
-        const EdgeInfo& edge,
         const SVCandidate& sv,
+        const SVId& svId,
         const SVCandidateAssemblyData& adata,
-        const std::string& label,
-        const bool isIndel = false);
-
-    void
-    writeInversion(
-        const EdgeInfo& edge,
-        const SVCandidate& sv,
-        const SVCandidateSetData& svData,
-        const SVCandidateAssemblyData& adata);
-
-    void
-    writeIndel(
-        const EdgeInfo& edge,
-        const SVCandidate& sv,
-        const SVCandidateSetData& svData,
-        const SVCandidateAssemblyData& adata);
-
-    void
-    writeTanDup(
-        const EdgeInfo& edge,
-        const SVCandidate& sv,
-        const SVCandidateSetData& svData,
-        const SVCandidateAssemblyData& adata);
-
-    void
-    writeComplex(
-        const EdgeInfo& edge,
-        const SVCandidate& sv,
-        const SVCandidateSetData& svData,
-        const SVCandidateAssemblyData& adata);
+        const bool isIndel,
+        const EventInfo& event);
 
 protected:
     const std::string& _referenceFilename;
@@ -184,8 +159,5 @@ private:
     const bam_header_info& _header;
 protected:
     std::ostream& _os;
-private:
-    boost::format _transLocIdFormatter;
-    boost::format _otherSVIdFormatter;
 };
 

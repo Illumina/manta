@@ -12,8 +12,7 @@
 #
 
 """
-filter vcf to reduce inversions to a single vcf entry for cases where the same inversion is expressed by 
-a left-right inversion combination.
+filter overlapping PASS SVs (except for BNDs)
 """
 
 import os, sys
@@ -56,8 +55,6 @@ class VcfRecord :
         val = getKeyVal(w[VCFID.INFO],"END")
         if val is not None :
             self.endPos = int(val)
-        else :
-            self.endPos = None
         val = getKeyVal(w[VCFID.INFO],"SOMATICSCORE")
         if val is not None :
             self.ss = int(val)
@@ -112,34 +109,71 @@ def getOptions() :
 
 
 
-def resolveRec(recEqualSet, recList) :
+def resolveRec(recOverlapSet, recListOut) :
     """
-    determine which of a set of vcf records presumed to refer to the same inversion are kept
-    right now best is a record with PASS in the filter field, and secondarily the high quality
+    determine which of a set of overlapping vcf records to keep
     """
 
-    if not recEqualSet: return
+    if not recOverlapSet: return
 
-    bestIndex=0
-    bestSS=0.
-    bestPos=0
-    bestIsPass=False
-    for (index,rec) in enumerate(recEqualSet) :
+    if len(recOverlapSet) == 1 :
+        recListOut.append(recOverlapSet[0])
+        return 
+
+    # dead simple start, kick out the largest variant:
+    set2 = recOverlapSet
+
+    largestSize=0
+    #largestScore=0
+    largestIndex=0
+    for (index,rec) in enumerate(set2) :
         assert rec.pos > 0
 
-        isNewPass=((not bestIsPass) and rec.isPass)
-        isHighQual=((bestIsPass == rec.isPass) and (rec.pos < bestPos)) #(rec.ss > bestSS))
-        if (isNewPass or isHighQual) :
-            bestIndex = index
-            bestPos = rec.pos
-            bestIsPass = rec.isPass
+        size=rec.endPos-rec.pos
+        if size < largestSize : continue
+        #if size == largestSize :
+        #    if rec.ss > largestScore : continue
 
-# potentially could reward two non-pass inversion calls here:
-#    if not bestIsPass and (len(recEqualSet) == 2) :
-#        if (recEqualSet[0].isInv3 and reEqualSet[1].isInv5) or
-#            recEqualSet[1].isInv3 and reEqualSet[0].isInv5)) :
+        largestSize = size
+        #largestScore = rec.ss
+        largestIndex = index
 
-    recList.append(recEqualSet[bestIndex])
+    del set2[largestIndex]
+
+    listResolver(set2, recListOut)
+
+
+
+def listResolver(recListIn, recListOut) :
+
+    recOverlapSet = []
+    lastRec = None
+    for vcfrec in recListIn :
+        # shortcut directly to non-filtered set:
+        if (not vcfrec.isPass) : # or (vcfrec.svtype == "BND") :
+            recListOut.append(vcfrec)
+            continue
+
+        rec = [vcfrec.chrom, vcfrec.pos, vcfrec.endPos]
+
+        def isIntersect(rec1,rec2) :
+            return (((rec1[1]-350) < rec2[2]) and ((rec1[2]+350) > rec2[1]))
+
+        if ((lastRec is None) or
+            (rec[0] != lastRec[0]) or
+            (not isIntersect(rec,lastRec))) :
+            resolveRec(recOverlapSet,recListOut)
+            recOverlapSet = []
+            lastRec = None
+   
+        recOverlapSet.append(vcfrec)
+        if lastRec is None :
+            lastRec = rec
+        else :
+            lastRec[1] = min(rec[1],lastRec[1])
+            lastRec[2] = max(rec[2],lastRec[2])
+
+    resolveRec(recOverlapSet,recListOut)
 
 
 
@@ -178,23 +212,10 @@ def main() :
         outfp.write(line)
 
     recList2 = []
-    recEqualSet = []
-    lastRec = None
-    for vcfrec in recList :
-        rec = (vcfrec.chrom, vcfrec.pos, vcfrec.endPos, vcfrec.svtype)
-        if ((lastRec is None) or
-          (rec[0] != lastRec[0]) or
-          (rec[3] != "INV") or
-          (lastRec[3] != "INV") or
-          (abs(rec[1]-lastRec[1]) > 250) or
-          (abs(rec[2]-lastRec[2]) > 250)) :
-            resolveRec(recEqualSet,recList2)
-            recEqualSet = []
-   
-        recEqualSet.append(vcfrec)
-        lastRec = rec
-    resolveRec(recEqualSet,recList2)
+    listResolver(recList, recList2)
+
     recList = recList2
+    recList.sort(key = vcfRecSortKey)
 
     for vcfrec in recList :
         outfp.write(vcfrec.line)

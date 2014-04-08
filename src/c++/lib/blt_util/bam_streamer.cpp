@@ -120,7 +120,8 @@ set_new_region(const char* region)
 
 void
 bam_streamer::
-set_new_region(const int ref, const int beg, const int end)
+set_new_region(
+    int ref, int beg, int end)
 {
 
     if (NULL != _biter) bam_iter_destroy(_biter);

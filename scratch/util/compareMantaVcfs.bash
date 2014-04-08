@@ -26,7 +26,7 @@ filterHeader() {
 }
 
 stripMantaIds() {
-    sed "s/Manta[^0-9]*:[0-9]*:[0-9]*:[0-9]*:[0-9]*:[0-9]*\(:[0-9]*\)\?//g"
+    sed "s/Manta[^0-9]*\(:[0-9]*\)\{5,7\}//g"
 }
 
 
@@ -46,7 +46,15 @@ stripSample() {
 }
 
 stripSomScore() {
-    sed "s/SOMATICSCORE=[0-9]*//"
+    sed "s/SOMATICSCORE=[0-9]*//g"
+}
+
+stripInvTags() {
+    sed "s/INV5;//" | sed "s/INV3;//" | sed "s/INV5=1;//" | sed "s/INV3=1;//"
+}
+
+stripEvent() {
+    sed "s/;EVENT=//"
 }
 
 

@@ -424,7 +424,14 @@ isSmallSVAlignment(
 
 
 
+static const unsigned minSemiLargeInsertionLength(40); // if a large insertion is not complete assembled, it must be assembled at least this far into either side
+
+
+/// \params[in] trimInsertLength remove extra length from the end of the contig
+/// for the purpose of determining if the "unaligned" end is long enough
+///
 /// \return true if this is a left->right insert candidate
+///
 static
 bool
 isLargeInsertSegment(
@@ -432,12 +439,13 @@ isLargeInsertSegment(
     const ALIGNPATH::path_t& apath,
     unsigned& contigOffset,
     unsigned& refOffset,
-    int& score)
+    int& score,
+    const unsigned trimInsertLength = 0)
 {
     using namespace ALIGNPATH;
 
     static const unsigned minAlignReadLength(40); ///< min length of aligned portion of contig
-    static const unsigned minExtendedReadLength(40); ///< min length of unaligned portion of contig
+    static const unsigned minExtendedReadLength(minSemiLargeInsertionLength); ///< min length of unaligned portion of contig
 
     static const unsigned minAlignRefSpan(40); ///< min reference length for alignment
     static const float minScoreFrac(0.75); ///< min fraction of optimal score in each contig sub-alignment:
@@ -451,7 +459,7 @@ isLargeInsertSegment(
     if (contigOffset < minAlignReadLength) return false;
 
     assert(contigOffset <= pathSize);
-    if ((pathSize-contigOffset) < minExtendedReadLength) return false;
+    if ((pathSize-contigOffset) < (minExtendedReadLength+trimInsertLength)) return false;
 
     const int optimalScore(contigOffset * aligner.getScores().match);
 
@@ -500,6 +508,35 @@ isLargeInsertAlignment(
 
 
 
+/// \return true if the alignment represents an acceptable complete insertion:
+///
+static
+bool
+isFinishedLargeInsertAlignment(
+    const GlobalAligner<int> aligner,
+    const ALIGNPATH::path_t& apath,
+    const std::pair<unsigned, unsigned>& insertSegment,
+    const unsigned middleSize)
+{
+    using namespace ALIGNPATH;
+
+    const path_t apath_left(apath.begin(), apath.begin()+insertSegment.second+1);;
+
+    LargeInsertionInfo insertInfo;
+    insertInfo.isLeftCandidate=isLargeInsertSegment(aligner, apath_left, insertInfo.contigOffset, insertInfo.
+                                                    refOffset, insertInfo.score, middleSize);
+
+    path_t apath_rev(apath.begin()+insertSegment.first, apath.end());;
+    std::reverse(apath_rev.begin(),apath_rev.end());
+
+    insertInfo.isRightCandidate=isLargeInsertSegment(aligner, apath_rev, insertInfo.contigOffset, insertInfo.
+                                                     refOffset, insertInfo.score, middleSize);
+
+    return (insertInfo.isLeftCandidate && insertInfo.isRightCandidate);
+}
+
+
+
 /// get the range over which an alignment element can vary with equal edit distance
 ///
 /// \param[in] refRange range of the event (ie indel) of interest in reference coordinates
@@ -518,6 +555,17 @@ getVariantRange(
     const std::string& read,
     const known_pos_range2& readRange)
 {
+#ifdef DEBUG_VARR
+    log_os << __FUNCTION__ << ": refRange " << refRange << "\n";
+    log_os << __FUNCTION__ << ": ref:\n";
+    printSeq(ref, log_os);
+    log_os << "\n";
+    log_os << __FUNCTION__ << ": readRange " << readRange << "\n";
+    log_os << __FUNCTION__ << ": read:\n";
+    printSeq(read, log_os);
+    log_os << "\n";
+#endif
+
     // check how far we can slide to the right:
     const pos_t maxRightOffset(std::min(ref.size()-refRange.end_pos(), read.size()-readRange.end_pos()));
     pos_t rightOffset(0);
@@ -538,6 +586,10 @@ getVariantRange(
         if (refSym != readSym) break;
     }
 
+#ifdef DEBUG_VARR
+    log_os << __FUNCTION__ << ": left/right offset " << leftOffset << "/" << rightOffset << "\n";
+#endif
+
     return known_pos_range2(leftOffset,rightOffset);
 }
 
@@ -553,13 +605,17 @@ setSmallCandSV(
     const std::pair<unsigned,unsigned>& segRange,
     SVCandidate& sv)
 {
+#ifdef DEBUG_VARR
+    log_os << __FUNCTION__ << ": align " << align << "\n";
+    log_os << __FUNCTION__ << ": segRange [" << segRange.first << "," << segRange.second << "]\n";
+    log_os << __FUNCTION__ << ": inputSV " << sv << "\n";
+#endif
     sv.setPrecise();
 
+    // get readRange and refRange, which are translations of segRange into
+    // read and reference offsets:
     known_pos_range2 readRange;
     known_pos_range2 refRange;
-
-    // by how many positions can the alignment position vary with the same alignment score?:
-    known_pos_range2 cipos;
     {
         using namespace ALIGNPATH;
 
@@ -586,11 +642,13 @@ setSmallCandSV(
                 readRange.set_end_pos(readPos);
             }
         }
-
-        cipos = getVariantRange(ref.seq(),refRange, contig, readRange);
-
-        assert(cipos.begin_pos() == 0);
     }
+
+    // by how many positions can the alignment position vary with the same alignment score?:
+    const known_pos_range2 cipos(getVariantRange(ref.seq(),refRange, contig, readRange));
+
+    // cipos for a precise variant is expected to start from 0 and extend forward zero to many bases
+    assert(cipos.begin_pos() == 0);
 
     sv.bp1.state = SVBreakendState::RIGHT_OPEN;
     const pos_t beginPos(ref.get_offset()+refRange.begin_pos()-1);
@@ -610,12 +668,51 @@ setSmallCandSV(
 
 
 static
+known_pos_range2
+getInsertTrim(
+    const ALIGNPATH::path_t& apath,
+    const std::pair<unsigned,unsigned>& segRange)
+{
+    assert(segRange.first <= segRange.second);
+
+    using namespace ALIGNPATH;
+
+    known_pos_range2 range;
+
+    pos_t readPos(0);
+
+    const unsigned as(apath.size());
+    for (unsigned i(0); i<as; ++i)
+    {
+        const path_segment& ps(apath[i]);
+        if (i == segRange.first)
+        {
+            range.set_begin_pos(readPos);
+        }
+
+        if (is_segment_type_read_length(ps.type)) readPos += ps.length;
+
+        if (i == segRange.second)
+        {
+            range.set_end_pos(readPos);
+            return range;
+        }
+    }
+
+    assert(false && "segRange not found");
+    return range;
+}
+
+
+
+// search for combinations of left and right-side insetion candidates to find a good insertion pair
+static
 void
 processLargeInsertion(
     const SVCandidate& sv,
     const pos_t leadingCut,
     const pos_t trailingCut,
-    const GlobalAligner<int>& smallSVAligner,
+    const GlobalAligner<int>& largeInsertCompleteAligner,
     const std::vector<unsigned>& largeInsertionCandidateIndex,
     SVCandidateAssemblyData& assemblyData)
 {
@@ -629,9 +726,9 @@ processLargeInsertion(
 
     // try to pair up a large insertion candidate
     //
-    // just do a dumb, all against all for now, if there's more than one left-right candidate set,
+    // just do a dumb, all against all evaluation for now, if there's more than one left-right candidate set,
     // resolve according to (1) min ref distance and (2) best combined score
-    static const int maxBreakDist(20);
+    static const int maxBreakDist(35);
 
     const unsigned candCount(largeInsertionCandidateIndex.size());
     for (unsigned candCount1(0); (candCount1+1)<candCount; ++candCount1)
@@ -669,7 +766,10 @@ processLargeInsertion(
         }
     }
 
-    if (isLargeInsertionPair)
+    // no large insertion found:
+    if (! isLargeInsertionPair) return;
+
+    // found large insertion, insert this into data structures for downstream scoring/reporting:
     {
         const std::string& align1RefStr(assemblyData.bp1ref.seq());
         const unsigned contigCount(assemblyData.contigs.size());
@@ -695,22 +795,48 @@ processLargeInsertion(
 
         const AssembledContig& constFakeContig(fakeContig);
 
-        smallSVAligner.align(
+        largeInsertCompleteAligner.align(
             constFakeContig.seq.begin(), constFakeContig.seq.end(),
             align1RefStr.begin() + leadingCut, align1RefStr.end() - trailingCut,
             fakeAlignment);
 
         fakeAlignment.align.beginPos += leadingCut;
 
-        getExtendedContig(fakeAlignment, fakeContig.seq, align1RefStr, fakeExtendedContig);
-
         fakeSegments.clear();
-
         getLargestInsertSegment(fakeAlignment.align.apath, middleSize, fakeSegments);
 
-        assert(1 == fakeSegments.size());
+        // QC segments
+        if ((1 != fakeSegments.size()) || (fakeSegments[0].second < fakeSegments[0].first))
+        {
+            return;
+        }
 
-        /// this section mostly imitates the regular SV build below, now that we've constructued our fake contig/alignment
+        // QC the resulting alignment:
+        if (! isFinishedLargeInsertAlignment(largeInsertCompleteAligner,fakeAlignment.align.apath, fakeSegments[0], middleSize))
+        {
+            return;
+        }
+
+        // final prep step: check left and right partial insert sequences -- this is a last chance to QC for anomalies and get out:
+        //
+        const known_pos_range2 insertTrim(getInsertTrim(fakeAlignment.align.apath,fakeSegments[0]));
+        {
+            static const int minFlankSize(minSemiLargeInsertionLength);
+            if ((insertTrim.begin_pos()+minFlankSize) > static_cast<pos_t>(leftContig.seq.size()))
+            {
+                return;
+            }
+
+            const pos_t rightOffset(leftContig.seq.size()+middle.size());
+            if ((rightOffset+minFlankSize) > insertTrim.end_pos())
+            {
+                return;
+            }
+        }
+
+        getExtendedContig(fakeAlignment, fakeContig.seq, align1RefStr, fakeExtendedContig);
+
+        /// this section mostly imitates the regular SV build below, now that we've constructed our fake contig/alignment
         assemblyData.svs.push_back(sv);
         SVCandidate& newSV(assemblyData.svs.back());
         newSV.assemblyAlignIndex = contigCount;
@@ -718,6 +844,16 @@ processLargeInsertion(
         setSmallCandSV(assemblyData.bp1ref, fakeContig.seq, fakeAlignment.align, fakeSegments[0], newSV);
 
         newSV.isUnknownSizeInsertion = true;
+
+        // final step: get left and right partial insert sequences:
+        //
+        assert(insertTrim.begin_pos() < static_cast<pos_t>(leftContig.seq.size()));
+        newSV.unknownSizeInsertionLeftSeq = leftContig.seq.substr(insertTrim.begin_pos());
+
+        const pos_t rightOffset(leftContig.seq.size()+middle.size());
+        assert(rightOffset < insertTrim.end_pos());
+
+        newSV.unknownSizeInsertionRightSeq = rightContig.seq.substr(0,(insertTrim.end_pos()-rightOffset));
     }
 }
 
@@ -732,7 +868,8 @@ SVCandidateAssemblyRefiner(
     _smallSVAssembler(opt.scanOpt, opt.refineOpt.smallSVAssembleOpt, opt.alignFileOpt, opt.statsFilename, opt.chromDepthFilename, header),
     _spanningAssembler(opt.scanOpt, opt.refineOpt.spanningAssembleOpt, opt.alignFileOpt, opt.statsFilename, opt.chromDepthFilename, header),
     _smallSVAligner(opt.refineOpt.smallSVAlignScores),
-    _largeInsertAligner(opt.refineOpt.largeInsertAlignScores),
+    _largeInsertEdgeAligner(opt.refineOpt.largeInsertEdgeAlignScores),
+    _largeInsertCompleteAligner(opt.refineOpt.largeInsertCompleteAlignScores),
     _spanningAligner(opt.refineOpt.spanningAlignScores, opt.refineOpt.jumpScore),
     _RNASpanningAligner(
         opt.refineOpt.RNAspanningAlignScores,
@@ -748,8 +885,9 @@ SVCandidateAssemblyRefiner::
 getCandidateAssemblyData(
     const SVCandidate& sv,
     const SVCandidateSetData& /*svData*/,
-    SVCandidateAssemblyData& assemblyData,
-    bool isRNA) const
+    const bool isRNA,
+    const bool isFindLargeInsertions,
+    SVCandidateAssemblyData& assemblyData) const
 {
 #ifdef DEBUG_REFINER
     static const std::string logtag("getCandidateAssemblyData: ");
@@ -757,9 +895,6 @@ getCandidateAssemblyData(
 #endif
 
     assemblyData.clear();
-
-    // this is still an experimental feature, leave off by default:
-    static const bool isFindLargeInsertions(false);
 
     // separate the problem into different assembly categories:
     //
@@ -769,7 +904,7 @@ getCandidateAssemblyData(
         assemblyData.isCandidateSpanning=true;
 
         // this case assumes two suspected breakends with a direction to each, most common large scale SV case:
-        getJumpAssembly(sv, isFindLargeInsertions, assemblyData, isRNA);
+        getJumpAssembly(sv, isRNA, isFindLargeInsertions, assemblyData);
     }
     else if (isComplexSV(sv))
     {
@@ -792,9 +927,9 @@ void
 SVCandidateAssemblyRefiner::
 getJumpAssembly(
     const SVCandidate& sv,
+    const bool isRNA,
     const bool isFindLargeInsertions,
-    SVCandidateAssemblyData& assemblyData,
-    bool isRNA) const
+    SVCandidateAssemblyData& assemblyData) const
 {
 #ifdef DEBUG_REFINER
     static const std::string logtag("getJumpAssembly: ");
@@ -1223,7 +1358,10 @@ getSmallSVAssembly(
         log_os << logtag << "contigIndex: " << contigIndex << " isSmallSVCandidate " << isSmallSVCandidate << " alignment: " << alignment;
 #endif
 
-        /// test each alignment for suitability to be the left or right side of a large insertion:
+        // test each alignment for suitability to be the left or right side of a large insertion:
+        //
+        // all practical combinations of left and right candidates will be enumerated below to see if there's a good fit:
+        //
         if (isFindLargeInsertions)
         {
             LargeInsertionInfo& candidateInsertInfo(assemblyData.largeInsertInfo[contigIndex]);
@@ -1231,7 +1369,7 @@ getSmallSVAssembly(
 
             LargeInsertionInfo insertInfo;
             const bool isCandidate( isLargeInsertAlignment(
-                                        _largeInsertAligner,
+                                        _largeInsertEdgeAligner,
                                         alignment.align.apath,
                                         insertInfo));
 
@@ -1258,10 +1396,12 @@ getSmallSVAssembly(
         }
     }
 
-    // solve for any strong large insertion candidate:
+    // Solve for any strong large insertion candidate
+    //
+    // This is done by searching through combinations of the left and right insertion side candidates found in the primary contig processing loop
     if (isFindLargeInsertions)
     {
-        processLargeInsertion(sv, leadingCut, trailingCut, _smallSVAligner, largeInsertionCandidateIndex, assemblyData);
+        processLargeInsertion(sv, leadingCut, trailingCut, _largeInsertCompleteAligner, largeInsertionCandidateIndex, assemblyData);
     }
 
     // set any additional QC steps before deciding an alignment is usable:

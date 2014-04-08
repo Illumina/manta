@@ -31,9 +31,9 @@ struct VcfWriterCandidateSV : public VcfWriterSV
 
     void
     writeSV(
-        const EdgeInfo& edge,
         const SVCandidateSetData& svData,
         const SVCandidateAssemblyData& adata,
-        const SVCandidate& sv);
+        const SVCandidate& sv,
+        const SVId& svId);
 };
 

@@ -12,8 +12,7 @@
 #
 
 """
-filter vcf to reduce inversions to a single vcf entry for cases where the same inversion is expressed by 
-a left-right inversion combination.
+remove intrachomosomal events above a specified size
 """
 
 import os, sys
@@ -27,10 +26,12 @@ def isInfoFlag(infoString,key) :
         if w == key : return True
     return False
 
+
 def getKeyVal(infoString,key) :
     match=re.search("%s=([^;\t]*);?" % (key) ,infoString)
     if match is None : return None
     return match.group(1);
+
 
 class VCFID :
     CHROM = 0
@@ -40,7 +41,6 @@ class VCFID :
     QUAL = 5
     FILTER = 6
     INFO = 7
-
 
 
 class VcfRecord :
@@ -56,8 +56,6 @@ class VcfRecord :
         val = getKeyVal(w[VCFID.INFO],"END")
         if val is not None :
             self.endPos = int(val)
-        else :
-            self.endPos = None
         val = getKeyVal(w[VCFID.INFO],"SOMATICSCORE")
         if val is not None :
             self.ss = int(val)
@@ -99,16 +97,23 @@ def getOptions() :
 
     from optparse import OptionParser
 
-    usage = "usage: %prog < vcf > sorted_unique_inv_vcf"
+    usage = "usage: %prog [options] < vcf > filtered_vcf"
     parser = OptionParser(usage=usage)
+    
+    parser.add_option("--maxSize", type="int",dest="maxSize",
+                      help="maximum intrachrom event size [required] (no default)")
 
-    (options,args) = parser.parse_args()
+    (opt,args) = parser.parse_args()
 
     if len(args) != 0 :
         parser.print_help()
         sys.exit(2)
 
-    return (options,args)
+    if opt.maxSize is None :
+        parser.print_help()
+        sys.exit(2)
+
+    return (opt,args)
 
 
 
@@ -147,7 +152,7 @@ def main() :
 
     outfp = sys.stdout
 
-    (options,args) = getOptions()
+    (opt,args) = getOptions()
 
     header=[]
     recList=[]
@@ -155,49 +160,13 @@ def main() :
 
     processStream(sys.stdin, chromOrder, header, recList)
 
-    def vcfRecSortKey(x) :
-        """
-        sort vcf records for final output
-
-        Fancy chromosome sort rules:
-        if contig records are found in the vcf header, then sort chroms in that order
-        for any chrom names not found in the header, sort them in lex order after the
-        found chrom names
-        """
-
-        try :
-            headerOrder = chromOrder.index(x.chrom)
-        except ValueError :
-            headerOrder = size(chromOrder)
-
-        return (headerOrder, x.chrom, x.pos, x.endPos)
-
-    recList.sort(key = vcfRecSortKey)
-
     for line in header :
         outfp.write(line)
 
-    recList2 = []
-    recEqualSet = []
-    lastRec = None
     for vcfrec in recList :
-        rec = (vcfrec.chrom, vcfrec.pos, vcfrec.endPos, vcfrec.svtype)
-        if ((lastRec is None) or
-          (rec[0] != lastRec[0]) or
-          (rec[3] != "INV") or
-          (lastRec[3] != "INV") or
-          (abs(rec[1]-lastRec[1]) > 250) or
-          (abs(rec[2]-lastRec[2]) > 250)) :
-            resolveRec(recEqualSet,recList2)
-            recEqualSet = []
-   
-        recEqualSet.append(vcfrec)
-        lastRec = rec
-    resolveRec(recEqualSet,recList2)
-    recList = recList2
-
-    for vcfrec in recList :
+        if (vcfrec.endPos-vcfrec.pos) > opt.maxSize : continue
         outfp.write(vcfrec.line)
+
 
 
 main()

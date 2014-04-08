@@ -18,6 +18,7 @@
 #pragma once
 
 #include "GSCOptions.hh"
+#include "JunctionCallInfo.hh"
 #include "SplitReadAlignment.hh"
 #include "SVEvidence.hh"
 #include "SVScorerPairOptions.hh"
@@ -28,11 +29,11 @@
 #include "blt_util/bam_header_info.hh"
 #include "blt_util/qscore_snp.hh"
 #include "manta/ChromDepthFilterUtil.hh"
-#include "manta/SVCandidate.hh"
+#include "manta/SVCandidateAssemblyData.hh"
 #include "manta/SVCandidateSetData.hh"
 #include "manta/SVLocusScanner.hh"
 #include "manta/SVModelScoreInfo.hh"
-#include "manta/SVCandidateAssemblyData.hh"
+#include "manta/SVMultiJunctionCandidate.hh"
 #include "manta/SVScoreInfoSomatic.hh"
 
 #include "boost/array.hpp"
@@ -149,10 +150,13 @@ struct SVScorer
     void
     scoreSV(
         const SVCandidateSetData& svData,
-        const SVCandidateAssemblyData& assemblyData,
-        const SVCandidate& sv,
+        const std::vector<SVCandidateAssemblyData>& mjAssemblyData,
+        const SVMultiJunctionCandidate& mjSV,
+        const std::vector<bool>& isJunctionFiltered,
         const bool isSomatic,
-        SVModelScoreInfo& modelScoreInfo);
+        std::vector<SVModelScoreInfo>& mjModelScoreInfo,
+        SVModelScoreInfo& mjJointModelScoreInfo,
+        bool& isMJEvent);
 
     typedef boost::shared_ptr<SVScorePairProcessor> pairProcPtr;
     typedef boost::shared_ptr<bam_streamer> streamPtr;
@@ -205,6 +209,13 @@ private:
         const SVBreakend& bp,
         unsigned& maxDepth,
         float& MQ0Frac);
+
+    /// apply all scoring models relevent to this event:
+    void
+    computeAllScoreModels(
+        const bool isSomatic,
+        const std::vector<JunctionCallInfo>& junctionData,
+        SVModelScoreInfo& modelScoreInfo);
 
     /// shared information gathering steps of all scoring models
     void

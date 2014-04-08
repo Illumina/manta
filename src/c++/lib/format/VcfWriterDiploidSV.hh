@@ -17,12 +17,14 @@
 
 #pragma once
 
+#include "manta/JunctionIdGenerator.hh"
 #include "manta/SVModelScoreInfo.hh"
 #include "format/VcfWriterSV.hh"
+#include "format/VcfWriterScoredSV.hh"
 #include "options/CallOptionsDiploid.hh"
 
 
-struct VcfWriterDiploidSV : public VcfWriterSV
+struct VcfWriterDiploidSV : public VcfWriterSV, VcfWriterScoredSV
 {
     VcfWriterDiploidSV(
         const CallOptionsDiploid& diploidOpt,
@@ -35,16 +37,20 @@ struct VcfWriterDiploidSV : public VcfWriterSV
         _diploidOpt(diploidOpt),
         _isRNA(isRNA),
         _isMaxDepthFilter(isMaxDepthFilter),
-        _modelScorePtr(NULL)
+        _diploidInfoPtr(NULL),
+        _singleJunctionDiploidInfoPtr(NULL)
     {}
 
     void
     writeSV(
-        const EdgeInfo& edge,
         const SVCandidateSetData& svData,
         const SVCandidateAssemblyData& adata,
         const SVCandidate& sv,
-        const SVModelScoreInfo& ssInfo);
+        const SVId& svId,
+        const SVScoreInfo& baseInfo,
+        const SVScoreInfoDiploid& diploidInfo,
+        const EventInfo& event,
+        const SVScoreInfoDiploid& singleJunctionDiploidInfo);
 
 private:
 
@@ -60,9 +66,10 @@ private:
     void
     addHeaderFilters() const;
 
-//    void
-//    modifyInfo(
-//        InfoTag_t& infotags) const;
+    void
+    modifyInfo(
+        const EventInfo& event,
+        InfoTag_t& infotags) const;
 
     void
     modifySample(
@@ -80,9 +87,24 @@ private:
     void
     writeFilter() const;
 
+    const SVScoreInfoDiploid&
+    getDiploidInfo() const
+    {
+        assert(NULL != _diploidInfoPtr);
+        return *_diploidInfoPtr;
+    }
+
+    const SVScoreInfoDiploid&
+    getSingleJunctionDiploidInfo() const
+    {
+        assert(NULL != _singleJunctionDiploidInfoPtr);
+        return *_singleJunctionDiploidInfoPtr;
+    }
+
 
     const CallOptionsDiploid& _diploidOpt;
     const bool _isRNA;
     const bool _isMaxDepthFilter;
-    const SVModelScoreInfo* _modelScorePtr;
+    const SVScoreInfoDiploid* _diploidInfoPtr;
+    const SVScoreInfoDiploid* _singleJunctionDiploidInfoPtr;
 };

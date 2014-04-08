@@ -22,6 +22,7 @@
 #include "manta/ReadGroupStatsSet.hh"
 #include "manta/SVCandidateUtil.hh"
 #include "manta/SVReferenceUtil.hh"
+#include "svgraph/EdgeInfoUtil.hh"
 
 #include "boost/foreach.hpp"
 
@@ -80,12 +81,19 @@ addSVNodeRead(
     const bool isExpectRepeat,
     const reference_contig_segment& refSeq,
     const bool isNode1,
+    const bool isGatherSubmapped,
     SVCandidateSetReadPairSampleGroup& svDataGroup,
     TruthTracker& truthTracker)
 {
     using namespace illumina::common;
 
-    if (scanner.isReadFiltered(bamRead)) return;
+    if (scanner.isReadFilteredCore(bamRead)) return;
+    else if (bamRead.is_unmapped() || bamRead.is_mate_unmapped()) return;
+
+    if (bamRead.map_qual() < scanner.getMinTier2MapQ()) return;
+
+    const bool isSubMapped(bamRead.map_qual() < scanner.getMinMapQ());
+    if ((!isGatherSubmapped) && isSubMapped) return;
 
     const bool isNonCompressedAnomalous(scanner.isNonCompressedAnomalous(bamRead,bamIndex));
 
@@ -151,7 +159,7 @@ addSVNodeRead(
 
         if (! locus.getNode(readLocalIndex).getInterval().isIntersect(localNode.getInterval())) continue; //todo should this intersect be checked in swapped orientation?
 
-        svDataGroup.add(bamRead, isExpectRepeat, isNode1);
+        svDataGroup.add(bamRead, isExpectRepeat, isNode1, isSubMapped);
 
         // once any loci has achieved the local/remote overlap criteria, there's no reason to keep scanning loci
         // of the same bam record:
@@ -219,6 +227,7 @@ addSVNodeData(
     const GenomeInterval& searchInterval,
     const reference_contig_segment& refSeq,
     const bool isNode1,
+    const bool isSomatic,
     SVCandidateSetData& svData,
     TruthTracker& truthTracker)
 {
@@ -256,30 +265,26 @@ addSVNodeData(
     const pos_t searchEndPos(searchInterval.range.end_pos());
     std::vector<unsigned> normalDepthBuffer(searchInterval.range.size(),0);
 
-    bool isFirstTumor(false);
-
     // iterate through reads, test reads for association and add to svData:
     unsigned bamIndex(0);
     BOOST_FOREACH(streamPtr& bamPtr, _bamStreams)
     {
         const bool isTumor(_isAlignmentTumor[bamIndex]);
 
-        /// assert expected sample order of all normal, then all tumor:
-        if (isTumor) isFirstTumor=true;
-        assert((! isFirstTumor) || isTumor);
+        const bool isGatherSubmapped(isSomatic && (! isTumor));
 
         SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
-        bam_streamer& read_stream(*bamPtr);
+        bam_streamer& readStream(*bamPtr);
 
         // set bam stream to new search interval:
-        read_stream.set_new_region(searchInterval.tid,searchInterval.range.begin_pos(),searchInterval.range.end_pos());
+        readStream.set_new_region(searchInterval.tid,searchInterval.range.begin_pos(),searchInterval.range.end_pos());
 
 #ifdef DEBUG_SVDATA
         log_os << logtag << "scanning bamIndex: " << bamIndex << "\n";
 #endif
-        while (read_stream.next())
+        while (readStream.next())
         {
-            const bam_record& bamRead(*(read_stream.get_record_ptr()));
+            const bam_record& bamRead(*(readStream.get_record_ptr()));
 
             const pos_t refPos(bamRead.pos()-1);
             if (refPos >= searchEndPos) break;
@@ -305,7 +310,7 @@ addSVNodeData(
             addSVNodeRead(
                 chromToIndex,_readScanner, localNode, remoteNode,
                 bamRead, bamIndex, isExpectRepeat, refSeq, isNode1,
-                svDataGroup, truthTracker);
+                isGatherSubmapped, svDataGroup, truthTracker);
         }
         ++bamIndex;
     }
@@ -547,12 +552,15 @@ consolidateOverlap(
 /// the longer term we should be able to delineate cluster by a clustering of possible
 /// breakend locations.
 ///
+/// isExpandSVCandidateSet if false, don't add new SVs or expand existing SVs
+///
 void
 SVFinder::
 assignPairObservationsToSVCandidates(
     const SVLocusNode& node1,
     const SVLocusNode& node2,
     const std::vector<SVObservation>& readCandidates,
+    const bool isExpandSVCandidateSet,
     SVCandidateSetReadPair& pair,
     std::vector<SVCandidate>& svs)
 {
@@ -581,6 +589,7 @@ assignPairObservationsToSVCandidates(
                 continue;
             }
         }
+
         // remove candidates which don't match the current edge:
         //
         if (isComplexSV(readCand))
@@ -635,7 +644,15 @@ assignPairObservationsToSVCandidates(
                         pair.svLink.push_back(SVPairAssociation(svIndex,readCand.evtype));
                     }
 
-                    sv.merge(readCand);
+                    if (isExpandSVCandidateSet)
+                    {
+                        sv.merge(readCand);
+                    }
+                    else
+                    {
+                        // add submapped read pair evidence -- but don't allow these reads to expand the current candidate size:
+                        sv.evidenceMerge(readCand);
+                    }
 
                     isMatched=true;
                     break;
@@ -644,7 +661,8 @@ assignPairObservationsToSVCandidates(
             svIndex++;
         }
 
-        if (! isMatched)
+        const bool createNewCandidate(isExpandSVCandidateSet && (! isMatched));
+        if (createNewCandidate)
         {
             const unsigned newSVIndex(svs.size());
 
@@ -664,6 +682,58 @@ assignPairObservationsToSVCandidates(
 
 
 
+/// we either process the pair to discover new SVs and expand existing SVs,
+/// or we go through and add pairs to existing SVs without expansion
+///
+void
+SVFinder::
+processReadPair(
+    const SVLocusNode& node1,
+    const SVLocusNode& node2,
+    const std::map<std::string, int32_t>& chromToIndex,
+    const reference_contig_segment& refSeq1,
+    const reference_contig_segment& refSeq2,
+    const unsigned bamIndex,
+    const bool isExpandSVCandidateSet,
+    std::vector<SVCandidate>& svs,
+    TruthTracker& truthTracker,
+    SVCandidateSetReadPair& pair)
+{
+    SVCandidateSetRead* localReadPtr(&(pair.read1));
+    SVCandidateSetRead* remoteReadPtr(&(pair.read2));
+    pair.svLink.clear();
+
+    if (! localReadPtr->isSet())
+    {
+        std::swap(localReadPtr,remoteReadPtr);
+    }
+    assert(localReadPtr->isSet() && "Neither read in pair is set");
+
+    const bam_record* remoteBamRecPtr( remoteReadPtr->isSet() ? &(remoteReadPtr->bamrec) : NULL);
+
+    const reference_contig_segment& localRef( localReadPtr->isNode1 ? refSeq1 : refSeq2 );
+    const reference_contig_segment* remoteRefPtr(NULL);
+    if (remoteReadPtr->isSet())
+    {
+        remoteRefPtr = (remoteReadPtr->isNode1 ?  &refSeq1 : &refSeq2 );
+    }
+    _readScanner.getBreakendPair(localReadPtr->bamrec, remoteBamRecPtr,
+                                 bamIndex, chromToIndex, localRef,
+                                 remoteRefPtr, _readCandidates,
+                                 truthTracker);
+
+#ifdef DEBUG_SVDATA
+    log_os << __FUNCTION__ << ": Checking pair: " << pair << "\n";
+    log_os << __FUNCTION__ << ": Translated to candidates:\n";
+    BOOST_FOREACH(const SVObservation& cand, readCandidates)
+    {
+        log_os << __FUNCTION__ << ": cand: " << cand << "\n";
+    }
+#endif
+    assignPairObservationsToSVCandidates(node1, node2, _readCandidates, isExpandSVCandidateSet, pair, svs);
+}
+
+
 void
 SVFinder::
 getCandidatesFromData(
@@ -672,52 +742,45 @@ getCandidatesFromData(
     const std::map<std::string, int32_t>& chromToIndex,
     const reference_contig_segment& refSeq1,
     const reference_contig_segment& refSeq2,
+    const bool isSomatic,
     SVCandidateSetData& svData,
     std::vector<SVCandidate>& svs,
     TruthTracker& truthTracker)
 {
-    std::vector<SVObservation> readCandidates;
-
     const unsigned bamCount(_bamStreams.size());
 
     for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
     {
         SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
-
         BOOST_FOREACH(SVCandidateSetReadPair& pair, svDataGroup)
         {
-            SVCandidateSetRead* localReadPtr(&(pair.read1));
-            SVCandidateSetRead* remoteReadPtr(&(pair.read2));
-            pair.svLink.clear();
+            if (! pair.isAnchored()) continue;
 
-            if (! localReadPtr->isSet())
+            static const bool isAnchored(true);
+            processReadPair(
+                node1, node2, chromToIndex, refSeq1, refSeq2, bamIndex, isAnchored,
+                svs, truthTracker, pair);
+        }
+    }
+
+    if (isSomatic)
+    {
+        for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
+        {
+            // for somatic calling we're only interested in submapped read processing for the normal sample:
+            const bool isTumor(_isAlignmentTumor[bamIndex]);
+            if (isTumor) continue;
+
+            SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
+            BOOST_FOREACH(SVCandidateSetReadPair& pair, svDataGroup)
             {
-                std::swap(localReadPtr,remoteReadPtr);
-            }
-            assert(localReadPtr->isSet() && "Neither read in pair is set");
+                if (pair.isAnchored()) continue;
 
-            const bam_record* remoteBamRecPtr( remoteReadPtr->isSet() ? &(remoteReadPtr->bamrec) : NULL);
-
-            const reference_contig_segment& localRef( localReadPtr->isNode1 ? refSeq1 : refSeq2 );
-            const reference_contig_segment* remoteRefPtr(NULL);
-            if (remoteReadPtr->isSet())
-            {
-                remoteRefPtr = (remoteReadPtr->isNode1 ?  &refSeq1 : &refSeq2 );
+                static const bool isAnchored(false);
+                processReadPair(
+                    node1, node2, chromToIndex, refSeq1, refSeq2, bamIndex, isAnchored,
+                    svs, truthTracker, pair);
             }
-            _readScanner.getBreakendPair(localReadPtr->bamrec, remoteBamRecPtr,
-                                         bamIndex, chromToIndex, localRef,
-                                         remoteRefPtr, readCandidates,
-                                         truthTracker);
-
-#ifdef DEBUG_SVDATA
-            log_os << "Checking pair: " << pair << "\n";
-            log_os << "Translated to candidates:\n";
-            BOOST_FOREACH(const SVObservation& cand, readCandidates)
-            {
-                log_os << __FUNCTION__ << ": cand: " << cand << "\n";
-            }
-#endif
-            assignPairObservationsToSVCandidates(node1, node2, readCandidates, pair, svs);
         }
     }
 
@@ -764,25 +827,44 @@ findCandidateSV(
     svData.clear();
     svs.clear();
 
-    const SVLocusSet& set(getSet());
-    const unsigned minEdgeCount(set.getMinMergeEdgeCount());
-
 #ifdef DEBUG_SVDATA
     log_os << "SVDATA: Evaluating edge: " << edge << "\n";
 #endif
 
+    const SVLocusSet& cset(getSet());
+
     // first determine if this is an edge we're going to evaluate
     //
     // edge must be bidirectional at the noise threshold of the locus set:
-    const SVLocus& locus(set.getLocus(edge.locusIndex));
-
-    if ((locus.getEdge(edge.nodeIndex1,edge.nodeIndex2).getCount() < minEdgeCount) ||
-        (locus.getEdge(edge.nodeIndex2,edge.nodeIndex1).getCount() < minEdgeCount))
+    if (! isBidirectionalEdge(cset, edge))
     {
 #ifdef DEBUG_SVDATA
         log_os << "SVDATA: Edge failed min edge count.\n";
 #endif
         return;
+    }
+
+    bool isSomatic(false);
+    {
+        /// assert expected bam order of all normal, then all tumor,
+        ///
+        /// also, determine if this is a somatic run:
+        ///
+        bool isFirstTumor(false);
+
+        // iterate through reads, test reads for association and add to svData:
+        const unsigned bamCount(_bamStreams.size());
+        for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
+        {
+            const bool isTumor(_isAlignmentTumor[bamIndex]);
+
+            if (isTumor)
+            {
+                isFirstTumor=true;
+                isSomatic=true;
+            }
+            assert((! isFirstTumor) || isTumor);
+        }
     }
 
     //
@@ -793,7 +875,9 @@ findCandidateSV(
     // 2) iterate through breakend read pairs to estimate the number, type
     // and likely breakend interval regions of SVs corresponding to this edge
     //
-    const bam_header_info& bamHeader(set.header);
+    const bam_header_info& bamHeader(cset.header);
+
+    const SVLocus& locus(cset.getLocus(edge.locusIndex));
 
     reference_contig_segment refSeq1;
     reference_contig_segment refSeq2;
@@ -801,7 +885,7 @@ findCandidateSV(
         GenomeInterval searchInterval;
         getNodeRefSeq(bamHeader, locus, edge.nodeIndex1, _referenceFilename, searchInterval, refSeq1);
         addSVNodeData(chromToIndex, locus, edge.nodeIndex1, edge.nodeIndex2,
-                      searchInterval, refSeq1, true, svData, truthTracker);
+                      searchInterval, refSeq1, true, isSomatic, svData, truthTracker);
     }
 
     if (edge.nodeIndex1 != edge.nodeIndex2)
@@ -809,13 +893,13 @@ findCandidateSV(
         GenomeInterval searchInterval;
         getNodeRefSeq(bamHeader, locus, edge.nodeIndex2, _referenceFilename, searchInterval, refSeq2);
         addSVNodeData(chromToIndex, locus, edge.nodeIndex2, edge.nodeIndex1,
-                      searchInterval, refSeq2, false, svData, truthTracker);
+                      searchInterval, refSeq2, false, isSomatic, svData, truthTracker);
     }
 
     const SVLocusNode& node1(locus.getNode(edge.nodeIndex1));
     const SVLocusNode& node2(locus.getNode(edge.nodeIndex2));
-    getCandidatesFromData(node1,node2,chromToIndex, refSeq1, refSeq2, svData,
-                          svs, truthTracker);
+    getCandidatesFromData(node1,node2,chromToIndex, refSeq1, refSeq2, isSomatic,
+                          svData, svs, truthTracker);
 
     //checkResult(svData,svs);
 }

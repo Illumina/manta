@@ -81,3 +81,49 @@ matchifyEdgeSegmentType(
 
     return al2;
 }
+
+
+/// get the range in reference coordinates if you did run matchifyEdgeSoftClip on an alignment:
+known_pos_range2
+matchifyEdgeSoftClipRefRange(const SimpleAlignment& al)
+{
+    using namespace ALIGNPATH;
+
+    pos_t beginPos(al.pos);
+    pos_t endPos(beginPos);
+
+    const std::pair<unsigned,unsigned> ends(get_match_edge_segments(al.path));
+    const unsigned as(al.path.size());
+    for (unsigned i(0); i<as; ++i)
+    {
+        const path_segment& ps(al.path[i]);
+        const bool isLeadingEdgeSegment(i<ends.first);
+        const bool isTrailingEdgeSegment(i>ends.second);
+        const bool isEdgeTarget(isLeadingEdgeSegment || isTrailingEdgeSegment);
+
+        if (isEdgeTarget)
+        {
+            if (is_segment_type_read_length(ps.type))
+            {
+                if (isLeadingEdgeSegment)
+                {
+                    beginPos -= ps.length;
+                }
+                else
+                {
+                    endPos += ps.length;
+                }
+            }
+
+        }
+        else
+        {
+            if (is_segment_type_ref_length(ps.type))
+            {
+                endPos += ps.length;
+            }
+        }
+    }
+
+    return known_pos_range2(beginPos, endPos);
+}

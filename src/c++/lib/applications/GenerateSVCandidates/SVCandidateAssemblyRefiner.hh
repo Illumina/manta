@@ -39,12 +39,15 @@ struct SVCandidateAssemblyRefiner
 
     /// \brief add assembly and assembly post-processing data to SV candidate
     ///
+    /// \param isRNA[in] if true add intron logic to the contig jump aligner
+    /// \param isRNA[in] if true search for insertions which can't be completely assembled
     void
     getCandidateAssemblyData(
         const SVCandidate& sv,
         const SVCandidateSetData& svData,
-        SVCandidateAssemblyData& assemblyData,
-        bool isRNA) const;
+        const bool isRNA,
+        const bool isFindLargeInsertions,
+        SVCandidateAssemblyData& assemblyData) const;
 
 private:
 
@@ -52,9 +55,9 @@ private:
     void
     getJumpAssembly(
         const SVCandidate& sv,
+        const bool isRNA,
         const bool isFindLargeInsertions,
-        SVCandidateAssemblyData& assemblyData,
-        bool isRNA) const;
+        SVCandidateAssemblyData& assemblyData) const;
 
     /// small SV/indel assembler
     ///
@@ -72,7 +75,8 @@ private:
     const SVLocusAssembler _smallSVAssembler;
     const SVLocusAssembler _spanningAssembler;
     const GlobalAligner<int> _smallSVAligner;
-    const GlobalAligner<int> _largeInsertAligner;
+    const GlobalAligner<int> _largeInsertEdgeAligner;
+    const GlobalAligner<int> _largeInsertCompleteAligner;
     const GlobalJumpAligner<int> _spanningAligner;
     const GlobalJumpIntronAligner<int> _RNASpanningAligner;
 };

@@ -107,7 +107,8 @@ def getOptions() :
 def resolveRec(recEqualSet, recList) :
     """
     determine which of a set of 'equal' vcf records is the best
-    right now best is a record with PASS in the filter field, and secondarily the high quality
+    right now best is a record with PASS in the filter field, and
+    secondarily having the highest quality
     """
 
     if not recEqualSet: return
@@ -115,6 +116,7 @@ def resolveRec(recEqualSet, recList) :
     bestIndex=0
     bestQual=0.
     bestIsPass=False
+    bestIsAssembled=False
     for (index,rec) in enumerate(recEqualSet) :
         try:
             rec.qual = float(rec.qual)
@@ -125,10 +127,12 @@ def resolveRec(recEqualSet, recList) :
 
         isNewPass=((not bestIsPass) and rec.isPass)
         isHighQual=((bestIsPass == rec.isPass) and (rec.qual > bestQual))
-        if (isNewPass or isHighQual) :
+        isNewAssembled=((not bestIsAssembled) and (rec.alt[0] != '<'))
+        if (isNewPass or isHighQual or isNewAssembled) :
             bestIndex = index
             bestQual = rec.qual
             bestIsPass = rec.isPass
+            bestIsAssembled = (rec.alt[0] != '<')
 
     recList.append(recEqualSet[bestIndex])
 
@@ -171,13 +175,38 @@ def main() :
     for line in header :
         outfp.write(line)
 
+    def isEqualRec(rec1,rec2) :
+        if (rec1 is None) or (rec2 is None) : return False
+
+        if rec1[0] != rec2[0]: return False
+        if rec1[1] != rec2[1]: return False
+        if rec1[2] != rec2[2]: return False
+        if rec1[4] != rec2[4]: return False
+
+        if rec1[3] != rec2[3]:
+            if rec1[3] != "<INS>" and rec2[3] != "<INS>":
+                return False
+
+            def matchTest(rec) :
+                if rec[0] == "<" : return False
+                if len(rec) < 80 : return False
+                return True
+
+            if rec1[3] == "<INS>" :
+                return matchTest(rec2[3])
+            if rec2[3] == "<INS>" :
+                return matchTest(rec1[3])
+
+        return True
+
+
     if options.isUnique :
         recList2 = []
         recEqualSet = []
         lastRec = None
         for vcfrec in recList :
             rec = (vcfrec.chrom, vcfrec.pos, vcfrec.ref, vcfrec.alt, vcfrec.endPos)
-            if rec != lastRec :
+            if not isEqualRec(rec,lastRec) :
                 resolveRec(recEqualSet,recList2)
                 recEqualSet = []
             recEqualSet.append(vcfrec)

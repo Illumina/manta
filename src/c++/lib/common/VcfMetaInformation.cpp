@@ -32,14 +32,16 @@ struct VcfTransform
     static const char* type2string[];
     static const char* XmlFields[];
 
-    static inline void inc(VcfMetaInformation_t& m)
+    static inline void inc(VCF_VALUE_TYPE::index_t& m)
     {
-        m = static_cast<VcfMetaInformation_t>(1 + (int)m);
+        m = static_cast<VCF_VALUE_TYPE::index_t>(1 + (int)m);
     }
 
-    static inline VcfMetaInformation_t string2type(const std::string& s)
+    static inline VCF_VALUE_TYPE::index_t string2type(const std::string& s)
     {
-        VcfMetaInformation_t r = NONE;
+        using namespace VCF_VALUE_TYPE;
+
+        index_t r = NONE;
         while (r != SIZE)
         {
             if ( s == std::string( type2string[r] ) )
@@ -68,7 +70,7 @@ const char* VcfTransform::XmlFields[]
 /*****************************************************************************/
 
 VcfMetaInformation::VcfMetaInformation()
-    : type_(NONE)
+    : type_(VCF_VALUE_TYPE::NONE)
 {
     ;
 }
@@ -77,7 +79,7 @@ VcfMetaInformation::VcfMetaInformation()
 
 void VcfMetaInformation::validateFlag() const
 {
-    if ( FLAG == type_ && "0" != number_ )
+    if ( VCF_VALUE_TYPE::FLAG == type_ && "0" != number_ )
     {
         BOOST_THROW_EXCEPTION(VcfException( (boost::format("The 'Flag' type indicates that the INFO field does not contain a Value entry, "
                                                            "and hence the Number should be 0 in this case. "
@@ -91,7 +93,7 @@ void VcfMetaInformation::validateFlag() const
 void VcfMetaInformation::validateNumber(const std::string& num) const
 {
     static const std::string validNumbers("0123456789.AG");
-    if (NONE != type_)
+    if (VCF_VALUE_TYPE::NONE != type_)
     {
         size_t found = num.find_first_not_of( validNumbers );
         if ( std::string::npos != found )
@@ -120,6 +122,8 @@ void VcfMetaInformation::validateDescription(const std::string& desc) const
 
 std::istream& operator>>(std::istream& is, VcfMetaInformation& info)
 {
+    using namespace VCF_VALUE_TYPE;
+
 //    const unsigned int bufferSize = sizeof(VcfTransform::XmlFields) / sizeof(VcfTransform::XmlFields[0]);
     SplitString<','> buffer;
     if ('<' == is.peek())
@@ -187,6 +191,7 @@ std::istream& operator>>(std::istream& is, VcfMetaInformation& info)
 
 std::ostream& operator<<(std::ostream& os, const VcfMetaInformation& info)
 {
+    using namespace VCF_VALUE_TYPE;
     os << "<" << VcfTransform::XmlFields[0] << "=" << info.getId();
 
     if ( NONE != info.getType() )

@@ -15,8 +15,7 @@
 /// \author Chris Saunders
 ///
 
-#include "manta/SVScoreInfoSomatic.hh"
-#include "blt_util/log.hh"
+#include "manta/SVMultiJunctionCandidate.hh"
 
 #include "boost/foreach.hpp"
 
@@ -27,12 +26,16 @@
 std::ostream&
 operator<<(
     std::ostream& os,
-    const SVScoreInfoSomatic& sis)
+    const SVMultiJunctionCandidate& scc)
 {
-    os << "SomaticSVScoreInfo somaticScore: " << sis.somaticScore << " sstier: " << sis.somaticScoreTier << " filters: ";
-    BOOST_FOREACH(const std::string& filter, sis.filters)
+    static const char indent('\t');
+    os << "SVComplexCandidate:\n"
+       << indent << "total_breakend_junctions: " << scc.junction.size() << "\n";
+
+    BOOST_FOREACH(const SVCandidate& sv, scc.junction)
     {
-        os << " " << filter;
+        os << sv;
     }
+
     return os;
 }

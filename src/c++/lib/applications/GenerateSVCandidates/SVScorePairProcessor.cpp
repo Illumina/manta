@@ -35,6 +35,7 @@ SVScorePairInitParams(
     altShift = ((centerPos2-centerPos1)-sv.insertSeq.size());
 
     minMapQ = (readScanner.getMinMapQ());
+    minTier2MapQ = (readScanner.getMinTier2MapQ());
 }
 
 
