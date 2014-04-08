@@ -85,10 +85,15 @@ isFilterSpanningAlignment(
     const unsigned maxQCRefSpan,
     const GlobalJumpAligner<int> aligner,
     const bool isLeadingPath,
+    const bool isRNA,
     const ALIGNPATH::path_t& input_apath)
 {
-    static const unsigned minAlignReadLength(20); ///< require min length of each contig sub-alignment even after off-reference clipping:
+    unsigned minAlignReadLength(30); ///< require min length of each contig sub-alignment even after off-reference clipping:
     static const float minScoreFrac(0.75); ///< require min fraction of optimal score in each contig sub-alignment
+    if (isRNA)
+    {
+        minAlignReadLength = 20;
+    }
 
     ALIGNPATH::path_t apath(input_apath);
 
@@ -1036,8 +1041,8 @@ getJumpAssembly(
         const unsigned maxQCRefSpan[] = {100,200};
         for (unsigned refSpanIndex(0); refSpanIndex<2; ++refSpanIndex)
         {
-            if (isFilterSpanningAlignment( maxQCRefSpan[refSpanIndex], _spanningAligner, true, hsAlign.align1.apath)) continue;
-            if (isFilterSpanningAlignment( maxQCRefSpan[refSpanIndex], _spanningAligner, false, hsAlign.align2.apath)) continue;
+            if (isFilterSpanningAlignment( maxQCRefSpan[refSpanIndex], _spanningAligner, true, isRNA, hsAlign.align1.apath)) continue;
+            if (isFilterSpanningAlignment( maxQCRefSpan[refSpanIndex], _spanningAligner, false, isRNA, hsAlign.align2.apath)) continue;
             isFilter=false;
         }
         if (isFilter) return;

@@ -26,12 +26,14 @@ struct VcfWriterDiploidSV : public VcfWriterSV
 {
     VcfWriterDiploidSV(
         const CallOptionsDiploid& diploidOpt,
+        const bool isRNA,
         const bool isMaxDepthFilter,
         const std::string& referenceFilename,
         const SVLocusSet& set,
         std::ostream& os) :
         VcfWriterSV(referenceFilename,set,os),
         _diploidOpt(diploidOpt),
+        _isRNA(isRNA),
         _isMaxDepthFilter(isMaxDepthFilter),
         _modelScorePtr(NULL)
     {}
@@ -80,6 +82,7 @@ private:
 
 
     const CallOptionsDiploid& _diploidOpt;
+    const bool _isRNA;
     const bool _isMaxDepthFilter;
     const SVModelScoreInfo* _modelScorePtr;
 };

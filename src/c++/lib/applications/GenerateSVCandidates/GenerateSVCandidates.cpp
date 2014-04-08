@@ -101,7 +101,7 @@ struct SVWriter
         dipfs(opt.diploidOutputFilename),
         somfs(opt.somaticOutputFilename),
         candWriter(opt.referenceFilename,cset,candfs.getStream()),
-        diploidWriter(opt.diploidOpt, (! opt.chromDepthFilename.empty()),
+        diploidWriter(opt.diploidOpt, opt.isRNA, (! opt.chromDepthFilename.empty()),
                       opt.referenceFilename,cset,dipfs.getStream()),
         somWriter(opt.somaticOpt, (! opt.chromDepthFilename.empty()),
                   opt.referenceFilename,cset,somfs.getStream()),
@@ -178,29 +178,11 @@ struct SVWriter
 
         svScore.scoreSV(svData, assemblyData, sv, isSomatic, modelScoreInfo);
 
-        if (modelScoreInfo.diploid.altScore >= opt.diploidOpt.minOutputAltScore || opt.isRNA) // todo remove after adding RNA scoring
+        if (modelScoreInfo.diploid.altScore >= opt.diploidOpt.minOutputAltScore)
         {
-            if (modelScoreInfo.base.normal.alt.splitReadCount > 0)
-            {
-                if (modelScoreInfo.base.normal.alt.confidentSpanningPairCount > 0)
-                {
-                    diploidWriter.writeSV(edge, svData, assemblyData, sv, modelScoreInfo);
-                }
-                else
-                {
-#ifdef DEBUG_GSV
-                    log_os << logtag << "Filtering out RNA cand. no PRs\n";
-#endif
-                }
-            }
-            else
-            {
-#ifdef DEBUG_GSV
-                log_os << logtag << "Filtering out RNA cand. no SRs\n";
-                log_os << logtag << modelScoreInfo.base.normal << "\n";
-#endif
-            }
+            diploidWriter.writeSV(edge, svData, assemblyData, sv, modelScoreInfo);
         }
+
         if (isSomatic)
         {
             if (modelScoreInfo.somatic.somaticScore > opt.somaticOpt.minOutputSomaticScore)

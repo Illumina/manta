@@ -31,7 +31,8 @@ struct CallOptionsDiploid
         minPassGTScore(20),
         minGTFilterLabel("MinGQ"),
         maxMQ0Frac(0.4),
-        maxMQ0FracLabel("MaxMQ0Frac")
+        maxMQ0FracLabel("MaxMQ0Frac"),
+        rnaFilterLabel("RNAFail")
     {}
 
     float indelPrior;
@@ -49,6 +50,7 @@ struct CallOptionsDiploid
     float maxMQ0Frac;
     std::string maxMQ0FracLabel;
 
+    std::string rnaFilterLabel;
 };
 
 

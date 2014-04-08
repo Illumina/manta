@@ -594,15 +594,7 @@ assignPairObservationsToSVCandidates(
                                    (readCand.bp2.interval.isIntersect(node2.getInterval())));
             const bool isSwapIntersect((readCand.bp1.interval.isIntersect(node2.getInterval())) &&
                                        (readCand.bp2.interval.isIntersect(node1.getInterval())));
-            if (! (isIntersect || isSwapIntersect))
-                {
-#ifdef DEBUG_SVDATA
-                log_os << logtag << "Filtered due to orientation\n";
-                log_os << logtag << "Node1: " << node1 << "\n";
-                log_os << logtag << "Node2: " << node2 << "\n";
-#endif
-                continue;
-                }
+            if (! (isIntersect || isSwapIntersect)) continue;
         }
 
         /// spanning means there's a left|right and left|right breakend pair (in any order) -- note this is not the

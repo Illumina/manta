@@ -35,7 +35,7 @@
 #include <string>
 
 /// standard debug output for this file:
-#define DEBUG_PAIR
+//#define DEBUG_PAIR
 
 /// ridiculous debug output for this file:
 //#define DEBUG_MEGAPAIR
@@ -431,9 +431,7 @@ getFragProb(
     /// sort of mulit-SV error artifact (like a large CIGAR indel in one of the
     /// reads of the pair) try to improve this case -- ideally we can account
     /// for such events.
-    ///
-    static const float minFragProb(0.0001);
-    if (fragProb >= minFragProb || true)
+    if (fragProb >= pairOpt.minFragProb)
     {
         isFragSupportSV = true;
     }
@@ -520,7 +518,13 @@ processExistingAltPairInfo(
             if (! isFragSupportSV) continue;
 
             /// TODO: if fragProb is zero this should be a bug -- follow-up to see if we can make this an assert(fragProb > 0.) instead
-            if (fragProb <= 0. && false) continue;
+            if (fragProb <= 0.)
+            {
+#ifdef DEBUG_PAIR
+            log_os << logtag << "Fragment with fragProb=0! " << sv.candidateIndex << "  qname: " << qname << "\n";
+#endif
+                continue;
+            }
 
             // for all large spanning events -- we don't test for pair support of the two breakends separately -- this could be
             // beneficial if there was an unusually large insertion associated with the event. For now we approximate that
@@ -545,7 +549,7 @@ getSVPairSupport(
     const SVCandidate& sv,
     SVEvidence& evidence)
 {
-    static const PairOptions pairOpt;
+    static const PairOptions pairOpt(_isRNA);
 
 #ifdef DEBUG_PAIR
     static const std::string logtag("getSVPairSupport: ");

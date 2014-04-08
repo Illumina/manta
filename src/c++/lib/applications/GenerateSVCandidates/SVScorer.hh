@@ -217,6 +217,7 @@ private:
 
 
     const std::vector<bool> _isAlignmentTumor;
+    const bool _isRNA;
     const CallOptionsShared _callOpt;
     const CallOptionsSharedDeriv _callDopt;
     const CallOptionsDiploid _diploidOpt;

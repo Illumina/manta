@@ -34,7 +34,7 @@
 #include <string>
 
 
-#define DEBUG_SCORE
+//#define DEBUG_SCORE
 //#define DEBUG_SOMATIC_SCORE
 
 #if defined(DEBUG_SCORE) || defined(DEBUG_SOMATIC_SCORE)
@@ -49,6 +49,7 @@ SVScorer(
     const GSCOptions& opt,
     const bam_header_info& header) :
     _isAlignmentTumor(opt.alignFileOpt.isAlignmentTumor),
+    _isRNA(opt.isRNA),
     _callOpt(opt.callOpt),
     _callDopt(_callOpt),
     _diploidOpt(opt.diploidOpt),
@@ -265,7 +266,21 @@ getSpanningPairAlleleLhood(
     return fragProb;
 }
 
-
+static
+void
+addSpanningPairSupport(
+    const SVFragmentEvidence& fragev,
+    SVSampleInfo& sampleBaseInfo)
+{
+    if (fragev.alt.bp1.isFragmentSupport || fragev.alt.bp2.isFragmentSupport)
+    {
+        sampleBaseInfo.alt.spanningPairCount++;
+    }
+    if (fragev.ref.bp1.isFragmentSupport || fragev.ref.bp2.isFragmentSupport)
+    {
+        sampleBaseInfo.ref.spanningPairCount++;
+    }
+}
 
 static
 void
@@ -295,21 +310,17 @@ addConservativeSpanningPairSupport(
 
     // convert to normalized prob:
     const float sum(altLhood+refLhood);
-
     if (altLhood > refLhood)
     {
-        if ((altLhood/sum) > pairSupportProb || true)
+        if ((altLhood/sum) > pairSupportProb)
         {
             sampleBaseInfo.alt.confidentSemiMappedSpanningPairCount++;
-            if (isFullyMapped || true)
-            {
-                sampleBaseInfo.alt.confidentSpanningPairCount++;
-            }
+            if (isFullyMapped) sampleBaseInfo.alt.confidentSpanningPairCount++;
         }
     }
     else
     {
-        if ((refLhood/sum) > pairSupportProb || true)
+        if ((refLhood/sum) > pairSupportProb)
         {
             sampleBaseInfo.ref.confidentSemiMappedSpanningPairCount++;
             if (isFullyMapped) sampleBaseInfo.ref.confidentSpanningPairCount++;
@@ -336,6 +347,7 @@ getSampleCounts(
 #ifdef DEBUG_SCORE
             log_os << __FUNCTION__ << "Counting read: " << val.first;
 #endif
+        addSpanningPairSupport(fragev, sampleBaseInfo);
         addConservativeSpanningPairSupport(fragev, sampleBaseInfo);
     }
 }
@@ -870,7 +882,35 @@ scoreDiploidSV(
     }
 }
 
-
+//todo This is mostly a placeholder. Add real RNA scoring model
+static
+void
+scoreRNASV(
+    const CallOptionsDiploid& diploidOpt,
+    const SVCandidate& sv,
+    SVScoreInfo& baseInfo,
+    SVScoreInfoDiploid& diploidInfo)
+{
+#ifdef DEBUG_SCORE
+    log_os << __FUNCTION__ << "Scoring RNA candidate " << sv << "\n";
+#endif
+    diploidInfo.gtScore=0;
+    diploidInfo.altScore=42;
+    if (baseInfo.normal.alt.splitReadCount == 0)
+    {
+        diploidInfo.filters.insert(diploidOpt.rnaFilterLabel);
+#ifdef DEBUG_SCORE
+        log_os << __FUNCTION__ << "Failed. No spanning pair " << "\n";
+#endif
+    }
+    if (baseInfo.normal.alt.confidentSpanningPairCount == 0)
+    {
+        diploidInfo.filters.insert(diploidOpt.rnaFilterLabel);
+#ifdef DEBUG_SCORE
+        log_os << __FUNCTION__ << "Failed. No split read " << "\n";
+#endif
+    }
+}
 
 static
 unsigned
@@ -1275,6 +1315,11 @@ scoreSV(
     if (isSomatic)
     {
         scoreSomaticSV(_somaticOpt, _somaticDopt, sv, smallSVWeight, _dFilterSomatic, evidence, modelScoreInfo.base, modelScoreInfo.somatic);
+    }
+
+    if (_isRNA)
+    {
+        scoreRNASV(_diploidOpt, sv, modelScoreInfo.base, modelScoreInfo.diploid);
     }
 }
 
