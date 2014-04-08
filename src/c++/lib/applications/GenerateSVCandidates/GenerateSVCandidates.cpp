@@ -132,8 +132,6 @@ runGSC(
         log_os << logtag << " " << cset.header << "\n";
     }
 
-    const std::map<std::string, int32_t>& chromToIndex(cset.header.chrom_to_index);
-
     while (edger.next())
     {
         const EdgeInfo& edge(edger.getEdge());
@@ -153,8 +151,7 @@ runGSC(
             const bool isIsolatedEdge(testIsolatedEdge(cset,edge));
 
             // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
-            svFind.findCandidateSV(chromToIndex, edge, svData, svs,
-                                   truthTracker);
+            svFind.findCandidateSV(edge, svData, svs, truthTracker);
 
             truthTracker.reportNumCands(svs.size(), edge);
 

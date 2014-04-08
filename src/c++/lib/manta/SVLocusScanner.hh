@@ -103,7 +103,8 @@ struct SVLocusScanner
     /// this predicate runs isReadFiltered without the mapq components
     static
     bool
-    isReadFilteredCore(const bam_record& bamRead)
+    isReadFilteredCore(
+        const bam_record& bamRead)
     {
         if      (bamRead.is_filter()) return true;
         else if (bamRead.is_dup()) return true;
@@ -116,7 +117,8 @@ struct SVLocusScanner
     /// read for the SVLocus build
     /// Tests also for low mapq
     bool
-    isReadFiltered(const bam_record& bamRead) const
+    isReadFiltered(
+        const bam_record& bamRead) const
     {
         if      (isReadFilteredCore(bamRead)) return true;
         else if (bamRead.map_qual() < _opt.minMapq) return true;
@@ -188,7 +190,7 @@ struct SVLocusScanner
     getSVLoci(
         const bam_record& bamRead,
         const unsigned defaultReadGroupIndex,
-        const std::map<std::string, int32_t>& chromToIndex,
+        const bam_header_info& bamHeader,
         const reference_contig_segment& refSeq,
         std::vector<SVLocus>& loci,
         TruthTracker& truthTracker) const;
@@ -205,7 +207,7 @@ struct SVLocusScanner
         const bam_record& localRead,
         const bam_record* remoteReadPtr,
         const unsigned defaultReadGroupIndex,
-        const std::map<std::string, int32_t>& chromToIndex,
+        const bam_header_info& bamHeader,
         const reference_contig_segment& localRefSeq,
         const reference_contig_segment* remoteRefSeqPtr,
         std::vector<SVObservation>& candidates,
@@ -233,7 +235,8 @@ struct SVLocusScanner
     };
 
     const Range&
-    getEvidencePairRange(const unsigned readGroupIndex) const
+    getEvidencePairRange(
+        const unsigned readGroupIndex) const
     {
         return _stats[readGroupIndex].evidencePair;
     }

@@ -790,13 +790,15 @@ getReadBreakendsImpl(
     const SVLocusScanner::CachedReadGroupStats& rstats,
     const bam_record& localRead,
     const bam_record* remoteReadPtr,
-    const chromMap_t& chromToIndex,
+    const bam_header_info& bamHeader,
     const reference_contig_segment& localRefSeq,
     const reference_contig_segment* remoteRefSeqPtr,
     TrackedCandidates& candidates,
     known_pos_range2& localEvidenceRange)
 {
     using namespace illumina::common;
+
+    const chromMap_t& chromToIndex(bamHeader.chrom_to_index);
 
     candidates.data.clear();
 
@@ -811,6 +813,7 @@ getReadBreakendsImpl(
 
     if (NULL != remoteReadPtr)
     {
+        // run the same check on the read's mate if we have access to it
         assert(NULL != remoteRefSeqPtr);
         const bam_record& remoteRead(*remoteReadPtr);
         const SimpleAlignment remoteAlign(remoteRead);
@@ -840,29 +843,60 @@ getReadBreakendsImpl(
 
     localEvidenceRange.set_range(startRefPos,endRefPos);
 
+    const int maxTid(chromToIndex.size());
 
     /// final chance to QC candidate set:
     ///
     BOOST_FOREACH(const SVCandidate& sv, candidates.data)
     {
         bool isInvalidTid(false);
-        if (sv.bp1.interval.tid < 0)
+        if ((sv.bp1.interval.tid < 0) || (sv.bp1.interval.tid >= maxTid))
         {
             isInvalidTid=true;
         }
         else if (sv.bp2.state != SVBreakendState::UNKNOWN)
         {
-            if (sv.bp2.interval.tid < 0)
+            if ((sv.bp2.interval.tid < 0) || (sv.bp2.interval.tid >= maxTid))
             {
                 isInvalidTid=true;
             }
         }
 
-        if (isInvalidTid)
+        bool isInvalidPos(false);
+        if (! isInvalidTid)
+        {
+            // note in the 'off-chromosome edge' test below we check for cases which are obviously way off
+            // the edge, but allow for a bit of over-edge mistakes to occur for the circular chromosomes
+            //
+            static const int offEdgePad(500);
+            const pos_t tid1Length(bamHeader.chrom_data[sv.bp1.interval.tid].length);
+            if ((sv.bp1.interval.range.end_pos() <= -offEdgePad) || (sv.bp1.interval.range.begin_pos() >= (tid1Length+offEdgePad)))
+            {
+                isInvalidPos=true;
+            }
+            else if (sv.bp2.state != SVBreakendState::UNKNOWN)
+            {
+                const pos_t tid2Length(bamHeader.chrom_data[sv.bp2.interval.tid].length);
+                if ((sv.bp2.interval.range.end_pos() <= -offEdgePad) || (sv.bp2.interval.range.begin_pos() >= (tid2Length+offEdgePad)))
+                {
+                    isInvalidPos=true;
+                }
+            }
+        }
+
+        if (isInvalidTid || isInvalidPos)
         {
             std::ostringstream oss;
-            oss << "SVbreakend has unknown chromosome id in candidate sv.\n"
-                << "\tlocal_bam_record: " <<  localRead << "\n"
+            if (isInvalidTid)
+            {
+                oss << "SVbreakend has unknown or invalid chromosome id in candidate sv.\n";
+            }
+            else
+            {
+                oss << "Cannot interpret BAM record: candidate SV breakend from BAM record is off chromosome edge.\n";
+            }
+
+            oss << "\tlocal_bam_record: " <<  localRead << "\n"
                 << "\tremote_bam record: ";
             if (NULL==remoteReadPtr)
             {
@@ -894,7 +928,7 @@ getSVLociImpl(
     const ReadScannerDerivOptions& dopt,
     const SVLocusScanner::CachedReadGroupStats& rstats,
     const bam_record& bamRead,
-    const chromMap_t& chromToIndex,
+    const bam_header_info& bamHeader,
     const reference_contig_segment& refSeq,
     std::vector<SVLocus>& loci,
     TruthTracker& truthTracker)
@@ -906,7 +940,7 @@ getSVLociImpl(
     TrackedCandidates trackedCandidates(candidates,truthTracker);
     known_pos_range2 localEvidenceRange;
 
-    getReadBreakendsImpl(opt, dopt, rstats, bamRead, NULL, chromToIndex,
+    getReadBreakendsImpl(opt, dopt, rstats, bamRead, NULL, bamHeader,
                          refSeq, NULL, trackedCandidates, localEvidenceRange);
 
 #ifdef DEBUG_SCANNER
@@ -1154,7 +1188,7 @@ SVLocusScanner::
 getSVLoci(
     const bam_record& bamRead,
     const unsigned defaultReadGroupIndex,
-    const std::map<std::string, int32_t>& chromToIndex,
+    const bam_header_info& bamHeader,
     const reference_contig_segment& refSeq,
     std::vector<SVLocus>& loci,
     TruthTracker& truthTracker) const
@@ -1162,7 +1196,7 @@ getSVLoci(
     loci.clear();
 
     const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);
-    getSVLociImpl(_opt, _dopt, rstats, bamRead, chromToIndex, refSeq, loci,
+    getSVLociImpl(_opt, _dopt, rstats, bamRead, bamHeader, refSeq, loci,
                   truthTracker);
     //lastQname = bamRead.qname();
     //lastMapq  = bamRead.map_qual();
@@ -1176,7 +1210,7 @@ getBreakendPair(
     const bam_record& localRead,
     const bam_record* remoteReadPtr,
     const unsigned defaultReadGroupIndex,
-    const std::map<std::string, int32_t>& chromToIndex,
+    const bam_header_info& bamHeader,
     const reference_contig_segment& localRefSeq,
     const reference_contig_segment* remoteRefSeqPtr,
     std::vector<SVObservation>& candidates,
@@ -1188,6 +1222,6 @@ getBreakendPair(
     TrackedCandidates trackedCandidates(candidates, truthTracker);
     known_pos_range2 evidenceRange;
     getReadBreakendsImpl(_opt, _dopt, rstats, localRead, remoteReadPtr,
-                         chromToIndex, localRefSeq, remoteRefSeqPtr,
+                         bamHeader, localRefSeq, remoteRefSeqPtr,
                          trackedCandidates, evidenceRange);
 }

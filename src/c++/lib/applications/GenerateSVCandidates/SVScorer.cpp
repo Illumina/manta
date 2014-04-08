@@ -237,9 +237,9 @@ addConservativeSplitReadSupport(
     }
 
     float altLnLhood =
-            ( isUseBp1Score ?
-                fragev.alt.bp1.getRead(isRead1).splitLnLhood :
-                fragev.alt.bp2.getRead(isRead1).splitLnLhood);
+        ( isUseBp1Score ?
+          fragev.alt.bp1.getRead(isRead1).splitLnLhood :
+          fragev.alt.bp2.getRead(isRead1).splitLnLhood);
 
     if (isBpSupport.first && isBpSupport.second)
     {
@@ -247,9 +247,9 @@ addConservativeSplitReadSupport(
     }
 
     float refLnLhood =
-            ( isUseBp1Score ?
-                fragev.ref.bp1.getRead(isRead1).splitLnLhood :
-                fragev.ref.bp2.getRead(isRead1).splitLnLhood);
+        ( isUseBp1Score ?
+          fragev.ref.bp1.getRead(isRead1).splitLnLhood :
+          fragev.ref.bp2.getRead(isRead1).splitLnLhood);
 
     // convert to normalized prob:
     if (altLnLhood > refLnLhood)

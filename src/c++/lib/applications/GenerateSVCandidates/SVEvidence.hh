@@ -112,8 +112,8 @@ struct SVFragmentEvidenceAllele
         const bool isRead1) const
     {
         return std::make_pair(
-            bp1.getRead(isRead1).isSplitSupport,
-            bp2.getRead(isRead1).isSplitSupport);
+                   bp1.getRead(isRead1).isSplitSupport,
+                   bp2.getRead(isRead1).isSplitSupport);
     }
 
     std::pair<bool,bool>
@@ -121,8 +121,8 @@ struct SVFragmentEvidenceAllele
         const bool isRead1) const
     {
         return std::make_pair(
-            bp1.getRead(isRead1).isTier2SplitSupport,
-            bp2.getRead(isRead1).isTier2SplitSupport);
+                   bp1.getRead(isRead1).isTier2SplitSupport,
+                   bp2.getRead(isRead1).isTier2SplitSupport);
     }
 
     SVFragmentEvidenceAlleleBreakend bp1;

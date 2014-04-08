@@ -72,7 +72,7 @@ SVFinder::
 static
 void
 addSVNodeRead(
-    const std::map<std::string, int32_t>& chromToIndex,
+    const bam_header_info& bamHeader,
     const SVLocusScanner& scanner,
     const SVLocusNode& localNode,
     const SVLocusNode& remoteNode,
@@ -126,7 +126,7 @@ addSVNodeRead(
     //
     typedef std::vector<SVLocus> loci_t;
     loci_t loci;
-    scanner.getSVLoci(bamRead, bamIndex, chromToIndex, refSeq, loci,
+    scanner.getSVLoci(bamRead, bamIndex, bamHeader, refSeq, loci,
                       truthTracker);
 
     BOOST_FOREACH(const SVLocus& locus, loci)
@@ -220,7 +220,7 @@ addReadToDepthEst(
 void
 SVFinder::
 addSVNodeData(
-    const std::map<std::string, int32_t>& chromToIndex,
+    const bam_header_info& bamHeader,
     const SVLocus& locus,
     const NodeIndexType localNodeIndex,
     const NodeIndexType remoteNodeIndex,
@@ -308,7 +308,7 @@ addSVNodeData(
 
             // test if read supports an SV on this edge, if so, add to SVData
             addSVNodeRead(
-                chromToIndex,_readScanner, localNode, remoteNode,
+                bamHeader,_readScanner, localNode, remoteNode,
                 bamRead, bamIndex, isExpectRepeat, refSeq, isNode1,
                 isGatherSubmapped, svDataGroup, truthTracker);
         }
@@ -690,7 +690,7 @@ SVFinder::
 processReadPair(
     const SVLocusNode& node1,
     const SVLocusNode& node2,
-    const std::map<std::string, int32_t>& chromToIndex,
+    const bam_header_info& bamHeader,
     const reference_contig_segment& refSeq1,
     const reference_contig_segment& refSeq2,
     const unsigned bamIndex,
@@ -718,7 +718,7 @@ processReadPair(
         remoteRefPtr = (remoteReadPtr->isNode1 ?  &refSeq1 : &refSeq2 );
     }
     _readScanner.getBreakendPair(localReadPtr->bamrec, remoteBamRecPtr,
-                                 bamIndex, chromToIndex, localRef,
+                                 bamIndex, bamHeader, localRef,
                                  remoteRefPtr, _readCandidates,
                                  truthTracker);
 
@@ -739,7 +739,7 @@ SVFinder::
 getCandidatesFromData(
     const SVLocusNode& node1,
     const SVLocusNode& node2,
-    const std::map<std::string, int32_t>& chromToIndex,
+    const bam_header_info& bamHeader,
     const reference_contig_segment& refSeq1,
     const reference_contig_segment& refSeq2,
     const bool isSomatic,
@@ -758,7 +758,7 @@ getCandidatesFromData(
 
             static const bool isAnchored(true);
             processReadPair(
-                node1, node2, chromToIndex, refSeq1, refSeq2, bamIndex, isAnchored,
+                node1, node2, bamHeader, refSeq1, refSeq2, bamIndex, isAnchored,
                 svs, truthTracker, pair);
         }
     }
@@ -778,7 +778,7 @@ getCandidatesFromData(
 
                 static const bool isAnchored(false);
                 processReadPair(
-                    node1, node2, chromToIndex, refSeq1, refSeq2, bamIndex, isAnchored,
+                    node1, node2, bamHeader, refSeq1, refSeq2, bamIndex, isAnchored,
                     svs, truthTracker, pair);
             }
         }
@@ -818,7 +818,6 @@ getCandidatesFromData(
 void
 SVFinder::
 findCandidateSV(
-    const std::map<std::string, int32_t>& chromToIndex,
     const EdgeInfo& edge,
     SVCandidateSetData& svData,
     std::vector<SVCandidate>& svs,
@@ -884,7 +883,7 @@ findCandidateSV(
     {
         GenomeInterval searchInterval;
         getNodeRefSeq(bamHeader, locus, edge.nodeIndex1, _referenceFilename, searchInterval, refSeq1);
-        addSVNodeData(chromToIndex, locus, edge.nodeIndex1, edge.nodeIndex2,
+        addSVNodeData(bamHeader, locus, edge.nodeIndex1, edge.nodeIndex2,
                       searchInterval, refSeq1, true, isSomatic, svData, truthTracker);
     }
 
@@ -892,13 +891,13 @@ findCandidateSV(
     {
         GenomeInterval searchInterval;
         getNodeRefSeq(bamHeader, locus, edge.nodeIndex2, _referenceFilename, searchInterval, refSeq2);
-        addSVNodeData(chromToIndex, locus, edge.nodeIndex2, edge.nodeIndex1,
+        addSVNodeData(bamHeader, locus, edge.nodeIndex2, edge.nodeIndex1,
                       searchInterval, refSeq2, false, isSomatic, svData, truthTracker);
     }
 
     const SVLocusNode& node1(locus.getNode(edge.nodeIndex1));
     const SVLocusNode& node2(locus.getNode(edge.nodeIndex2));
-    getCandidatesFromData(node1,node2,chromToIndex, refSeq1, refSeq2, isSomatic,
+    getCandidatesFromData(node1, node2, bamHeader, refSeq1, refSeq2, isSomatic,
                           svData, svs, truthTracker);
 
     //checkResult(svData,svs);

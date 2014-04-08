@@ -47,7 +47,6 @@ struct SVFinder
 
     void
     findCandidateSV(
-        const std::map<std::string, int32_t>& chromToIndex,
         const EdgeInfo& edge,
         SVCandidateSetData& svData,
         std::vector<SVCandidate>& svs,
@@ -62,7 +61,7 @@ private:
 
     void
     addSVNodeData(
-        const std::map<std::string, int32_t>& chromToIndex,
+        const bam_header_info& bamHeader,
         const SVLocus& locus,
         const NodeIndexType node1,
         const NodeIndexType node2,
@@ -89,7 +88,7 @@ private:
     processReadPair(
         const SVLocusNode& node1,
         const SVLocusNode& node2,
-        const std::map<std::string, int32_t>& chromToIndex,
+        const bam_header_info& bamHeader,
         const reference_contig_segment& refSeq1,
         const reference_contig_segment& refSeq2,
         const unsigned bamIndex,
@@ -102,7 +101,7 @@ private:
     getCandidatesFromData(
         const SVLocusNode& node1,
         const SVLocusNode& node2,
-        const std::map<std::string, int32_t>& chromToIndex,
+        const bam_header_info& bamHeader,
         const reference_contig_segment& refSeq1,
         const reference_contig_segment& refSeq2,
         const bool isSomatic,
