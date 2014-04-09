@@ -54,6 +54,7 @@ SVScorer(
     const GSCOptions& opt,
     const bam_header_info& header) :
     _isAlignmentTumor(opt.alignFileOpt.isAlignmentTumor),
+    _isRNA(opt.isRNA),
     _callOpt(opt.callOpt),
     _callDopt(_callOpt),
     _diploidOpt(opt.diploidOpt),
@@ -285,7 +286,21 @@ getSpanningPairAlleleLhood(
     return fragProb;
 }
 
-
+static
+void
+addSpanningPairSupport(
+    const SVFragmentEvidence& fragev,
+    SVSampleInfo& sampleBaseInfo)
+{
+    if (fragev.alt.bp1.isFragmentSupport || fragev.alt.bp2.isFragmentSupport)
+    {
+        sampleBaseInfo.alt.spanningPairCount++;
+    }
+    if (fragev.ref.bp1.isFragmentSupport || fragev.ref.bp2.isFragmentSupport)
+    {
+        sampleBaseInfo.ref.spanningPairCount++;
+    }
+}
 
 static
 void
@@ -350,7 +365,10 @@ getSampleCounts(
         //
         addConservativeSplitReadSupport(fragev,true,sampleBaseInfo);
         addConservativeSplitReadSupport(fragev,false,sampleBaseInfo);
-
+#ifdef DEBUG_SCORE
+            log_os << __FUNCTION__ << "Counting read: " << val.first;
+#endif
+        addSpanningPairSupport(fragev, sampleBaseInfo);
         addConservativeSpanningPairSupport(fragev, sampleBaseInfo);
     }
 }
@@ -922,7 +940,34 @@ scoreDiploidSV(
     }
 }
 
-
+//todo This is mostly a placeholder. Add real RNA scoring model
+static
+void
+scoreRNASV(
+    const CallOptionsDiploid& diploidOpt,
+    SVScoreInfo& baseInfo,
+    SVScoreInfoDiploid& diploidInfo)
+{
+#ifdef DEBUG_SCORE
+    log_os << __FUNCTION__ << "Scoring RNA candidate " << sv << "\n";
+#endif
+    diploidInfo.gtScore=0;
+    diploidInfo.altScore=42;
+    if (baseInfo.normal.alt.splitReadCount == 0)
+    {
+        diploidInfo.filters.insert(diploidOpt.rnaFilterLabel);
+#ifdef DEBUG_SCORE
+        log_os << __FUNCTION__ << "Failed. No spanning pair " << "\n";
+#endif
+    }
+    if (baseInfo.normal.alt.confidentSpanningPairCount == 0)
+    {
+        diploidInfo.filters.insert(diploidOpt.rnaFilterLabel);
+#ifdef DEBUG_SCORE
+        log_os << __FUNCTION__ << "Failed. No split read " << "\n";
+#endif
+    }
+}
 
 static
 unsigned
@@ -1350,6 +1395,10 @@ computeAllScoreModels(
     if (isSomatic)
     {
         scoreSomaticSV(_somaticOpt, _somaticDopt, _dFilterSomatic, junctionData, modelScoreInfo.somatic);
+    }
+    if (_isRNA)
+    {
+        scoreRNASV(_diploidOpt, modelScoreInfo.base, modelScoreInfo.diploid);
     }
 }
 
