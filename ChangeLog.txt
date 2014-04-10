@@ -1,3 +1,6 @@
+- MANTA-150 fix SV scoring size cutoff
+- MANTA-148 check bam records for region errors
+- RNA: rna-scoring
 v0.20.1
 - Lower default min candidate size to 8
 v0.20.0
