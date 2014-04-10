@@ -26,7 +26,7 @@ isSVBelowMinSize(
 {
     if (sv.bp1.interval.tid != sv.bp2.interval.tid) return false;
 
-    const unsigned bpSize(std::abs(sv.bp1.interval.range.begin_pos() - sv.bp2.interval.range.begin_pos()));
+    const unsigned bpSize(std::abs(sv.bp1.interval.range.center_pos() - sv.bp2.interval.range.center_pos())-1);
     const unsigned insertSize(sv.insertSeq.size());
 
     return (std::max(bpSize,insertSize) < minSize);
