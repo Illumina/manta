@@ -1015,9 +1015,9 @@ getJumpAssembly(
         }
     }
 
-    /// there's always a small chance that our region could fall completely off the edge of the reference.
-    /// b/c of circular genomes, this can't be treated as a bug -- it's a legitimate breakend hypothesis
-    /// that we just aren't setup to handle correctly:
+    /// there's always a small chance that our region could fall completely off the edge of the reference
+    /// b/c of circular chromosomes, this can't be treated as a bug -- it's a legitimate breakend hypothesis
+    /// that we just aren't setup to handle correctly, so we punt this case:
     if (! isRefRegionValid(_header, sv.bp1.interval)) return;
     if (! isRefRegionValid(_header, sv.bp2.interval)) return;
 

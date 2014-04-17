@@ -41,6 +41,6 @@ struct SVLocusSetOptions
 
     unsigned minMergeEdgeCount; ///< to reduce noise in the graph, we only merge once shared edges reach this count
     unsigned maxSearchCount; ///< the search for intersecting regions in the graph stops once this number is reached
-    float maxSearchDensity; ///< the search for intersecing regionss in the graph stops once this many regions/base are found
+    float maxSearchDensity; ///< the search for intersecting regions in the graph stops once this many regions/base are found
 };
 

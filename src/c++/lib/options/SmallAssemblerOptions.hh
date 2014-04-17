@@ -45,4 +45,3 @@ struct SmallAssemblerOptions
     unsigned minSeedReads; ///< min. number of reads required to start assembly
     unsigned maxAssemblyIterations; ///< Max. number of assembly iterations for a cluster before we give up
 };
-

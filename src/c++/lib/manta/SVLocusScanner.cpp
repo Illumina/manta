@@ -512,12 +512,13 @@ getSVCandidatesFromPair(
 
     if (localRead.is_unmapped() || localRead.is_mate_unmapped()) return;
 
-    /// special case typically used for RNA-Seq analysis:
+    // special case typically used for RNA-Seq analysis:
     if (opt.isIgnoreAnomProperPair && localRead.is_proper_pair()) return;
 
     // update localEvidenceRange:
     const unsigned readSize(apath_read_length(localAlign.path));
     const unsigned localRefLength(apath_ref_length(localAlign.path));
+
 
     unsigned thisReadNoninsertSize(0);
     if (localAlign.is_fwd_strand)
@@ -585,6 +586,9 @@ getSVCandidatesFromPair(
         insertRange.set_range(remoteEndRefPos,localStartRefPos);
     }
 
+    // total the reference span or read1 and read2 (ie. the elements of the
+    // fragment that are not part of the insert between the reads)
+    //
     const pos_t totalNoninsertSize(thisReadNoninsertSize+remoteReadNoninsertSize);
 
     // different breakend sizes are used for long-range pairings vs short-ish range deletions,

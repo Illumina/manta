@@ -243,7 +243,8 @@ cleanNodeCore(
                 totalCleaned += edgePtr->getCount();
                 queryNode.clearEdge(edgeIter.first);
 
-                // we've just snuck around the const iterator by calling the clearEdge function against this edge, so we have to fix this by hand:
+                // we've just snuck around the const iterator by calling the clearEdge function against this edge,
+                // so we have to fix this by hand:
                 edgePtr=&(queryNode.getEdge(edgeIter.first));
             }
         }

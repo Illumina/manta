@@ -508,11 +508,14 @@ getNodeMergeableIntersect(
     //
     // There are two ways sets of mergeable nodes can occur:
     //
-    // (1) There is a set of nodes which overlap with both input node and one of the remote nodes that the input points to (ie they have a shared edge).
-    // When totaled together, the edge count of this set + the inputNode edge exceeds minMergeEdgeCount.
+    // (1) There is a set of nodes which overlap with both input node and one
+    // of the remote nodes that the input points to (ie they have a shared edge).
+    // When totaled together, the edge count of this set + the inputNode edge
+    // exceeds minMergeEdgeCount.
     //
-    // (2) The input node either contains an edge which is greater than minMergeEdgeCount or will contain such an edge due to (1),
-    // in this case the input node can be merged with a locally overlapping node which also contains an edge which is greater than
+    // (2) The input node either contains an edge which is greater than minMergeEdgeCount
+    // or will contain such an edge due to (1), in this case the input node can be merged
+    // with a locally overlapping node which also contains an edge which is greater than
     // minMergeEdgeCount. Note that in case (2) remote node intersection is not required.
     //
 
@@ -655,7 +658,8 @@ getNodeMergeableIntersect(
 
         /// for each type1 node, add any new intersections to the signal node set:
         ///
-        /// this is not very efficient for now -- each type1 edge added in potentially expands the current node to intersect new signal nodes
+        /// this is not very efficient for now -- each type1 edge added in potentially
+        /// expands the current node to intersect new signal nodes
         /// -- this loop looks for those new signal nodes
         ///
 
