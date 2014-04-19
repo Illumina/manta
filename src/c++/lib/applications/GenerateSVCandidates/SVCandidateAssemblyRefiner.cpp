@@ -97,9 +97,9 @@ isFilterSpanningAlignment(
 
     ALIGNPATH::path_t apath(input_apath);
 
-    /// prepare apath by orienting it always going forward from the breakend and limiting the length to
-    /// the first maxQCRefSpan ref bases covered:
-    ///
+    // prepare apath by orienting it always going forward from the breakend and limiting the length to
+    // the first maxQCRefSpan ref bases covered:
+    //
     if (isLeadingPath)
     {
         std::reverse(apath.begin(),apath.end());
