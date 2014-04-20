@@ -770,7 +770,7 @@ addDiploidLoglhood(
         /// TODO: experiment with per-read mapq values
         ///
         static const ProbSet refSplitMapProb(1e-6);
-        static const ProbSet altSplitMapProb(1e-4);
+        static const ProbSet altSplitMapProb(1e-5);
 
         /// don't use semi-mapped reads for germline calling:
         static const double semiMappedPower(0.);
@@ -846,12 +846,7 @@ scoreDiploidSV(
         boost::array<double,DIPLOID_GT::SIZE> pprob;
         for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
         {
-            // TODO: fix from xchen to use log prior instead of prior
-            // swap this in once there's time to make any compensatory parameter adjustments
-            //pprob[gt] = loglhood[gt] + diploidDopt.logPrior[gt];
-
-            // this version is wrong, it uses the prior without the log, see above:
-            pprob[gt] = loglhood[gt] + diploidDopt.prior[gt];
+            pprob[gt] = loglhood[gt] + diploidDopt.logPrior[gt];
         }
 
         unsigned maxGt(0);
