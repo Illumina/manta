@@ -16,6 +16,7 @@
 ///
 
 #include "boost/test/unit_test.hpp"
+#include "boost/test/floating_point_comparison.hpp"
 
 #include "manta/SizeDistribution.cpp"
 
@@ -77,6 +78,33 @@ BOOST_AUTO_TEST_CASE( test_SizeDistributionFilter )
     BOOST_REQUIRE_EQUAL(sd.quantile(0.75),2);
     BOOST_REQUIRE_EQUAL(sd.quantile(1.0),2);
 }
+
+
+BOOST_AUTO_TEST_CASE( test_SizeDistributionPdf )
+{
+    SizeDistribution sd;
+
+    sd.addObservation(1);
+    sd.addObservation(2);
+    sd.addObservation(3);
+    sd.addObservation(4);
+    sd.addObservation(5);
+    sd.addObservation(6);
+    sd.addObservation(7);
+    sd.addObservation(8);
+    sd.addObservation(9);
+    sd.addObservation(10);
+
+    static const float tol(0.0001);
+    BOOST_REQUIRE_CLOSE(sd.pdf(1),0.1f, tol);
+    BOOST_REQUIRE_CLOSE(sd.pdf(5),0.1f, tol);
+    BOOST_REQUIRE_CLOSE(sd.pdf(10),0.1f, tol);
+
+    static const float expect2(0.1*5./6.);
+    BOOST_REQUIRE_CLOSE(sd.pdf(0), expect2, tol);
+    BOOST_REQUIRE_CLOSE(sd.pdf(11), expect2, tol);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

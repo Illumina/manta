@@ -98,9 +98,96 @@ cdf(const int size) const
 {
     if (! _isStatsComputed) calcStats();
 
+    // map uses greater<int> for comp, so lower bound is "first element not greater than" size, from a list sorted high->low
     const map_type::const_iterator sizeIter(_sizeMap.lower_bound(size));
     if (sizeIter == _sizeMap.end()) return 0;
     return sizeIter->second.cprob;
+}
+
+
+
+float
+SizeDistribution::
+pdf(const int size) const
+{
+    if (! _isStatsComputed) calcStats();
+
+    static const unsigned targetSampleSize(5);
+
+    unsigned count(0);
+    int minSize(size);
+    int maxSize(size);
+
+    bool isMinBound(false);
+    bool isMaxBound(false);
+
+    /// scheme: get the five closest (in bin space) samples and sum them divided by the range required to find them
+
+    // map uses greater<int> for comp, so lower bound is "first element not greater than" size, from a list sorted high->low
+    map_type::const_iterator lowIter(_sizeMap.lower_bound(size));
+
+    if (lowIter == _sizeMap.end())
+    {
+        isMinBound=true;
+    }
+
+    map_type::const_iterator highIter(lowIter);
+
+    if (highIter == _sizeMap.begin())
+    {
+        isMaxBound=true;
+    }
+    else
+    {
+        --highIter;
+    }
+
+
+    for (unsigned sampleIndex(0); sampleIndex<targetSampleSize; ++sampleIndex)
+    {
+        // determine whether fwd or rev pointer is closer to size:
+        if (isMinBound && isMaxBound) break;
+
+        bool isChooseLow(true);
+        if (isMinBound)
+        {
+            isChooseLow=false;
+        }
+        else if(isMaxBound)
+        {
+            isChooseLow=true;
+        }
+        else
+        {
+            isChooseLow=(std::abs(lowIter->first-size) <= std::abs(highIter->first-size));
+        }
+
+        if (isChooseLow)
+        {
+            minSize = lowIter->first;
+            count += lowIter->second.count;
+            ++lowIter;
+
+            if (lowIter == _sizeMap.end()) isMinBound=true;
+        }
+        else
+        {
+            maxSize = highIter->first;
+            count += highIter->second.count;
+            if (highIter == _sizeMap.begin())
+            {
+                isMaxBound=true;
+            }
+            else
+            {
+                --highIter;
+            }
+        }
+    }
+
+    assert(maxSize >= minSize);
+
+    return count/(static_cast<float>(_totalCount)*static_cast<float>(1+maxSize-minSize));
 }
 
 

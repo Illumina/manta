@@ -61,7 +61,7 @@ BOOST_CLASS_IMPLEMENTATION(SizeMapXmlElement, boost::serialization::object_seria
 
 
 
-/// accumulate size observations and provide cdf/quantile for the distribution
+/// accumulate size observations and provide cdf/quantile/smoothed-pdf for the distribution
 ///
 struct SizeDistribution
 {
@@ -71,13 +71,17 @@ struct SizeDistribution
         _quantiles(_quantileNum,0)
     {}
 
-    /// return value for which we observe value or less with prob p
+    /// return size value for which we observe size value or less with prob p
     int
     quantile(const float prob) const;
 
-    /// prob of observing this size or less
+    /// return prob of observing this size or less
     float
     cdf(const int x) const;
+
+    /// provide smoothed prob of observing this size
+    float
+    pdf(const int x) const;
 
     unsigned
     totalObservations() const
