@@ -665,6 +665,8 @@ largeNoiseSVPriorWeight(
     static const int largeSize(10000);
     static const LinearScaler<int> svSizeRamp(smallSize, largeSize);
 
+    if (sv.bp1.interval.tid != sv.bp2.interval.tid) return 1.f;
+
     return svSizeRamp.getScale(sv.centerSize());
 }
 
