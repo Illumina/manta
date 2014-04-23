@@ -42,7 +42,7 @@ static const std::string logtag("DEBUG CONTIG: ");
 
 /// process assembly/align info into simple reference coordinates that can be reported in the output vcf:
 ///
-/// \param[in] isAlign1 if true, this breakend was aligned first by the jump alinger, and therefore left-aligned (if fwd) or right-aligned (if rev)
+/// \param[in] isAlign1 if true, this breakend was aligned first by the jump aligner, and therefore left-aligned (if fwd) or right-aligned (if rev)
 /// \param[in] jumpRange homologous range across the breakend
 ///
 static
@@ -399,7 +399,7 @@ static
 bool
 isSmallSVAlignment(
     const unsigned maxQCRefSpan,
-    const GlobalAligner<int> aligner,
+    const AlignerBase<int> aligner,
     const Alignment& align,
     const std::string& contigSeq,
     const std::string& refSeq,
@@ -969,7 +969,7 @@ SVCandidateAssemblyRefiner(
     _header(header),
     _smallSVAssembler(opt.scanOpt, opt.refineOpt.smallSVAssembleOpt, opt.alignFileOpt, opt.statsFilename, opt.chromDepthFilename, header),
     _spanningAssembler(opt.scanOpt, opt.refineOpt.spanningAssembleOpt, opt.alignFileOpt, opt.statsFilename, opt.chromDepthFilename, header),
-    _smallSVAligner(opt.refineOpt.smallSVAlignScores),
+    _smallSVAligner(opt.refineOpt.smallSVAlignScores,opt.refineOpt.jumpScore),
     _largeInsertEdgeAligner(opt.refineOpt.largeInsertEdgeAlignScores),
     _largeInsertCompleteAligner(opt.refineOpt.largeInsertCompleteAlignScores),
     _spanningAligner(opt.refineOpt.spanningAlignScores, opt.refineOpt.jumpScore),

@@ -20,6 +20,7 @@
 #include "GSCOptions.hh"
 
 #include "alignment/GlobalAligner.hh"
+#include "alignment/GlobalLargeIndelAligner.hh"
 #include "alignment/GlobalJumpAligner.hh"
 #include "alignment/GlobalJumpIntronAligner.hh"
 #include "blt_util/bam_header_info.hh"
@@ -74,7 +75,7 @@ private:
     const bam_header_info& _header;
     const SVCandidateAssembler _smallSVAssembler;
     const SVCandidateAssembler _spanningAssembler;
-    const GlobalAligner<int> _smallSVAligner;
+    const GlobalLargeIndelAligner<int> _smallSVAligner;
     const GlobalAligner<int> _largeInsertEdgeAligner;
     const GlobalAligner<int> _largeInsertCompleteAligner;
     const GlobalJumpAligner<int> _spanningAligner;

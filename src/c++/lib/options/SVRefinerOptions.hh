@@ -30,7 +30,7 @@ struct SVRefinerOptions
     /// match, mismatch, open score ratios taken from bwa defaults (but not extend!) :
     ///
     SVRefinerOptions() :
-        smallSVAlignScores(2, -8, -12, 0, -1),
+        smallSVAlignScores(2, -8, -12, -1, -1),
         largeInsertEdgeAlignScores(2, -8, -18, -1, -1),
         largeInsertCompleteAlignScores(2, -8, -24, 0, -1),
         spanningAlignScores(2, -8, -12, -1, -1),
