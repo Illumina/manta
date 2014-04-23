@@ -26,6 +26,10 @@
 /// indels and a non-affine gap state for large indels, the open cost for large indels
 /// is (typically) much higher but the extension cost is zero.
 ///
+/// transition from insert to delete is free and allowed
+/// transition from jumpDel to insert is free and allowed
+/// transition from jumpIns to delete is free and allowed
+///
 template <typename ScoreType>
 struct GlobalLargeIndelAligner : public SingleRefAlignerBase<ScoreType>
 {

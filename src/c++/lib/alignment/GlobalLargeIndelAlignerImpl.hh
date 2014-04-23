@@ -113,7 +113,7 @@ align(
                                       sval.del,
                                       sval.ins,
                                       badVal,
-                                      badVal);
+                                      sval.jumpIns);
 
                     headScore.del += scores.extend;
                     if (0==queryIndex) headScore.del += badVal;
@@ -125,9 +125,9 @@ align(
                     headPtr.ins = this->max5(
                                       headScore.ins,
                                       sval.match + scores.open,
-                                      sval.del,
-                                      sval.ins,
                                       badVal,
+                                      sval.ins,
+                                      sval.jumpDel,
                                       badVal);
 
                     headScore.ins += scores.extend;
@@ -143,7 +143,7 @@ align(
                                       badVal,
                                       badVal,
                                       sval.jumpDel,
-                                      sval.jumpIns);
+                                      badVal);
 
                     if (0==queryIndex) headScore.jumpDel += badVal;
                 }
@@ -156,7 +156,7 @@ align(
                                       sval.match + _largeIndelScore,
                                       badVal,
                                       badVal,
-                                      sval.jumpDel,
+                                      badVal,
                                       sval.jumpIns);
 
                     if (0==queryIndex) headScore.jumpIns += badVal;
