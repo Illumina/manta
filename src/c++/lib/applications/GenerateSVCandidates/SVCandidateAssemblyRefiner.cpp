@@ -30,7 +30,7 @@
 #include <iostream>
 
 //#define DEBUG_REFINER
-
+#define DEBUG_CONTIG
 
 #ifdef DEBUG_REFINER
 #include "blt_util/seq_printer.hh"
@@ -1437,6 +1437,20 @@ getSmallSVAssembly(
 
 #ifdef DEBUG_REFINER
             log_os << logtag << "small refined sv: " << newSV;
+#endif
+
+#ifdef DEBUG_CONTIG
+            const int contigSize = bestContig.seq.length();
+            const ALIGNPATH::path_t apathTillSvStart(&bestAlign.align.apath[0], &bestAlign.align.apath[segRange.first]);
+            const ALIGNPATH::path_t apathTillSvEnd(&bestAlign.align.apath[0], &bestAlign.align.apath[segRange.second+1]);
+            const int leftSize = apath_read_length(apathTillSvStart);
+            const int endPos = apath_read_length(apathTillSvEnd);
+            const int rightSize = contigSize - apath_read_length(apathTillSvEnd);
+            static const std::string logtag("SVCandidateAssemblyRefiner: ");
+
+            log_os << logtag << "contig has size " << contigSize << ": " << bestContig.seq;
+            log_os << logtag << "left part has size " << leftSize << ": " << bestContig.seq.substr(0, leftSize);
+            log_os << logtag << "right part has size " << rightSize << ": " << bestContig.seq.substr(endPos, rightSize);
 #endif
         }
     }
