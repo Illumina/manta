@@ -18,7 +18,8 @@
 #include <iosfwd>
 
 /// minimal summary of a query sequence aligned to a reference, roughly
-/// following bam conventions
+/// following bam conventions for describing the alignment (apath trivially
+/// maps to CIGAR string segments)
 struct Alignment
 {
     void
@@ -46,13 +47,16 @@ operator<<(std::ostream& os, const Alignment& align);
 
 struct AlignState
 {
+    // note the order of this enumerator is important for bit packing in client code, in particular
+    // we rely on fitting the [MATCH->JUMP] states in 2 bits for the standard jump aligner
     enum index_t
     {
         MATCH,
         DELETE,
         INSERT,
-        JUMP,
+        JUMP, // allows for an arbitrarily large hop between two reference regions
         SPLICE,
+        JUMPINS = SPLICE, // analogous to jump state, but for very large insertions, reuse SPLICE state, in current applications we don't need both states in the same model.
         SIZE
     };
 
@@ -71,7 +75,7 @@ struct AlignState
         case JUMP:
             return "JUMP";
         case SPLICE:
-            return "SPLICE";
+            return "SPLICE/JUMPINS";
         default:
             return "UNKNOWN";
         }

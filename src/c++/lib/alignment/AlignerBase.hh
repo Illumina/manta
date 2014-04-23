@@ -53,9 +53,16 @@ struct AlignerBase
 
         ScoreType val(0);
 
+        // note that the intent of this function was to replicate the underling aligner and thus
+        // not penalize insert-delete transitions, however as written the open score is added twice for
+        // such an event. This turns out to perform much better for the performance of this tool as
+        // a variant 'arm' validator. so the unintended code is staying in place for now.
+        //
+        /// TODO: reevaluate policy for insertion-deletion state transition score
+
         BOOST_FOREACH(const path_segment& ps, apath)
         {
-            bool isIndel(false);
+            bool isIndel(false); // placement of isIndel inside of this loop is the 'bug'
             switch (ps.type)
             {
             case MATCH:
@@ -107,7 +114,7 @@ struct AlignerBase
 
         BOOST_FOREACH(const path_segment& ps, apath)
         {
-            bool isIndel(false);
+            bool isIndel(false); // unintended 'bug' with positive results, see TODO note above
             switch (ps.type)
             {
             case MATCH:

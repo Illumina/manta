@@ -15,39 +15,7 @@
 
 #pragma once
 
-#include "AlignerBase.hh"
-#include "AlignerUtil.hh"
-#include "Alignment.hh"
-
-#include "blt_util/basic_matrix.hh"
-
-#include <iosfwd>
-
-
-template <typename ScoreType>
-struct AlignmentResult
-{
-    AlignmentResult()
-    {
-        clear();
-    }
-
-    void
-    clear()
-    {
-        score=0;
-        align.clear();
-    }
-
-    ScoreType score;
-    Alignment align;
-};
-
-
-template <typename ScoreType>
-std::ostream&
-operator<<(std::ostream& os, AlignmentResult<ScoreType>& alignment);
-
+#include "SingleRefAlignerShared.hh"
 
 
 /// \brief Implementation of global alignment with affine gap costs
@@ -59,11 +27,11 @@ operator<<(std::ostream& os, AlignmentResult<ScoreType>& alignment);
 /// the base is soft-clipped in the alignment
 ///
 template <typename ScoreType>
-struct GlobalAligner : public AlignerBase<ScoreType>
+struct GlobalAligner : public SingleRefAlignerBase<ScoreType>
 {
     GlobalAligner(
         const AlignmentScores<ScoreType>& scores) :
-        AlignerBase<ScoreType>(scores)
+        SingleRefAlignerBase<ScoreType>(scores)
     {}
 
     /// returns alignment path of query to reference
@@ -76,15 +44,6 @@ struct GlobalAligner : public AlignerBase<ScoreType>
 
 private:
 
-    template <typename SymIter>
-    void
-    backTraceAlignment(
-        const SymIter queryBegin, const SymIter queryEnd,
-        const SymIter refBegin, const SymIter refEnd,
-        const size_t querySize,
-        const BackTrace<ScoreType>& btraceInput,
-        Alignment& align) const;
-
     // insert and delete are for query wrt reference
     struct ScoreVal
     {
@@ -96,7 +55,7 @@ private:
     struct PtrVal
     {
         uint8_t
-        get(const AlignState::index_t i)
+        get(const AlignState::index_t i) const
         {
             switch (i)
             {

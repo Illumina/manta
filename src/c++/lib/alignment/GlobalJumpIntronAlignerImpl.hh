@@ -21,8 +21,6 @@
 
 #include <cassert>
 
-#include <iostream>
-
 #ifdef ALN_DEBUG
 #include "blt_util/log.hh"
 #include <iostream>

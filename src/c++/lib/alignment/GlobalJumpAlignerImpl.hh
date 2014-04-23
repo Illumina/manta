@@ -19,8 +19,6 @@
 
 #include <cassert>
 
-#include <iostream>
-
 #ifdef ALN_DEBUG
 #include "blt_util/log.hh"
 #include <iostream>
@@ -232,7 +230,7 @@ align(
                                       sval.match + scores.open,
                                       sval.del,
                                       sval.ins,
-                                      sval.jump); // jump->ins moves get a pass on the gap-open penalty, to support mirco-insertions
+                                      sval.jump); // jump->ins moves get a pass on the gap-open penalty, to support breakend insertions
 
                     headScore.ins += scores.extend;
                 }
