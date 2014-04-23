@@ -25,6 +25,9 @@
 ///
 /// the alignment can make a single jump from reference1 to reference2
 ///
+/// transition from insert to delete is free and allowed, but not reverse
+/// transition from/to jump to insert is free and allowed TODO: more restrictive
+///
 template <typename ScoreType>
 struct GlobalJumpAligner : public JumpAlignerBase<ScoreType>
 {

@@ -123,7 +123,7 @@ align(
                     headPtr.ins = this->max3(
                                       headScore.ins,
                                       sval.match + scores.open,
-                                      sval.del,
+                                      badVal,
                                       sval.ins);
 
                     headScore.ins += scores.extend;
@@ -228,7 +228,7 @@ align(
                     headPtr.ins = this->max4(
                                       headScore.ins,
                                       sval.match + scores.open,
-                                      sval.del,
+                                      badVal,
                                       sval.ins,
                                       sval.jump); // jump->ins moves get a pass on the gap-open penalty, to support breakend insertions
 

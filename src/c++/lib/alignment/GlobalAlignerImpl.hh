@@ -115,7 +115,7 @@ align(
                     headPtr.ins = this->max3(
                                       headScore.ins,
                                       sval.match + scores.open,
-                                      sval.del,
+                                      badVal,
                                       sval.ins);
 
                     headScore.ins += scores.extend;

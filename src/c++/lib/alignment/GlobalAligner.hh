@@ -26,6 +26,8 @@
 /// in this case, each unaligned position is given an "off-edge" score and
 /// the base is soft-clipped in the alignment
 ///
+/// transition from insert to delete is free and allowed, but not reverse
+///
 template <typename ScoreType>
 struct GlobalAligner : public SingleRefAlignerBase<ScoreType>
 {
