@@ -101,7 +101,7 @@ align(
                                         sval.jumpDel,
                                         sval.jumpIns);
 
-                    headScore.match += ((*queryIter==*ref1Iter) ? scores.match : scores.mismatch);
+                    headScore.match += ((*queryIter==*refIter) ? scores.match : scores.mismatch);
                 }
 
                 // update delete
