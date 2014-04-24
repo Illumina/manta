@@ -39,7 +39,7 @@ struct ReadScannerOptions
         minSemiAlignedScoreGraph(180.0),
         minSemiAlignedScoreCandidates(180.0),
         minSingletonMapqGraph(30),
-        minSingletonMapqCandidates(20),
+        minSingletonMapqCandidates(15),
         isIgnoreAnomProperPair(false),
         maxDepthFactor(12)
     {}

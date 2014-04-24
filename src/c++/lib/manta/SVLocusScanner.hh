@@ -64,14 +64,6 @@ struct SVObservationWeights
 
 
 
-bool
-isGoodShadow(
-    const bam_record& bamRead,
-    const uint8_t lastMapq,
-    const std::string& lastQname,
-    const double minSingletonMapq);
-
-
 struct ReadScannerDerivOptions
 {
     ReadScannerDerivOptions(const ReadScannerOptions& opt) :

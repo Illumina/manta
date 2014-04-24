@@ -19,6 +19,7 @@
 #include "blt_util/align_path_bam_util.hh"
 #include "blt_util/log.hh"
 #include "blt_util/seq_util.hh"
+#include "manta/ShadowReadFinder.hh"
 #include "manta/SVLocusAssembler.hh"
 #include "manta/SVLocusScannerSemiAligned.hh"
 
@@ -87,7 +88,7 @@ void
 SVLocusAssembler::
 getBreakendReads(
     const SVBreakend& bp,
-    const bool isReversed,
+    const bool isLocusReversed,
     const reference_contig_segment& refSeq,
     ReadIndexType& readIndex,
     AssemblyReadInput& reads) const
@@ -151,7 +152,8 @@ getBreakendReads(
     {
         const bool isTumor(_isAlignmentTumor[bamIndex]);
 
-        /// assert expected sample order of all normal, then all tumor:
+        // assert that the expected sample order is all normal samples first,
+        // followed by all tumor samples
         if (isTumor) isFirstTumor=true;
         assert((! isFirstTumor) || isTumor);
 
@@ -162,12 +164,7 @@ getBreakendReads(
         // set bam stream to new search interval:
         bamStream.set_new_region(bp.interval.tid, searchBeginPos, searchEndPos);
 
-        // Singleton/shadow pairs *should* appear consecutively in the BAM file
-        // this keeps track of the mapq score of the singleton read such that
-        // we can access it when we look at the shadow
-        bool isLastSet(false);
-        uint8_t lastMapq(0);
-        std::string lastQname;
+        ShadowReadFinder shadow(_scanOpt.minSingletonMapqCandidates, isSearchForLeftOpen, isSearchForRightOpen);
 
         static const unsigned MAX_NUM_READS(1000);
 
@@ -223,6 +220,7 @@ getBreakendReads(
 
             /// check for any indels in read:
             bool isIndelKeeper(false);
+            if (! bamRead.is_unmapped())
             {
                 using namespace ALIGNPATH;
                 BOOST_FOREACH(const path_segment& ps, bamAlign.path)
@@ -235,8 +233,9 @@ getBreakendReads(
                 }
             }
 
-            /// this test covered semi-aligned and soft-clip together
+            /// this test covered semi-aligned and soft-clip and split reads together
             bool isSemiAlignedKeeper(false);
+            if (! bamRead.is_unmapped())
             {
                 static const unsigned minMismatchLen(4);
 
@@ -262,23 +261,7 @@ getBreakendReads(
 #endif
             }
 
-            bool isShadowKeeper(false);
-
-            if (isLastSet)
-            {
-                if (isGoodShadow(bamRead,
-                                 lastMapq,
-                                 lastQname,
-                                 _scanOpt.minSingletonMapqCandidates))
-                {
-                    isShadowKeeper = true;
-                }
-            }
-
-
-            lastMapq  = bamRead.map_qual();
-            lastQname = bamRead.qname();
-            isLastSet = true;
+            const bool isShadowKeeper(shadow.check(bamRead));
 
             if (! (isIndelKeeper
                    || isSemiAlignedKeeper
@@ -308,6 +291,18 @@ getBreakendReads(
             {
                 readIndex.insert(std::make_pair(readKey,reads.size()));
                 reads.push_back(bamRead.get_bam_read().get_string());
+
+                bool isReversed(isLocusReversed);
+
+                // if shadow read, determine if we need to reverse:
+                if (isShadowKeeper)
+                {
+                    if (bamRead.is_mate_fwd_strand())
+                    {
+                        isReversed = (! isReversed);
+                    }
+                }
+
                 if (isReversed) reverseCompStr(reads.back());
             }
             else
