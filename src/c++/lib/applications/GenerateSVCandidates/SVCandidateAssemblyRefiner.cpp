@@ -384,7 +384,7 @@ searchContig(
 		if (float(mismatches)/float(querySize) <= mismatchRate)
 			numOccur++;
 
-		log_os << "mismacthes=" << mismatches << " rate=" << (float(mismatches)/float(querySize)) << "\n";
+		//log_os << "mismacthes=" << mismatches << " rate=" << (float(mismatches)/float(querySize)) << "\n";
 	}
 
 
@@ -474,9 +474,8 @@ isSmallSVAlignment(
     	const std::string leftContig = contigSeq.substr(0, leftSize);
     	const std::string rightContig = contigSeq.substr(endPos, rightSize);
 
-    	const int searchWindow = 500;
-    	// allow mismatches?
-    	const float mismatchRate(0.1);
+    	const int searchWindow = 1000;
+    	const float mismatchRate(0.05);
     	const int refAlignStart = align.beginPos;
     	const int refAlignEnd = align.beginPos + apath_ref_length(apath);
 
