@@ -474,7 +474,7 @@ isSmallSVAlignment(
     	const std::string leftContig = contigSeq.substr(0, leftSize);
     	const std::string rightContig = contigSeq.substr(endPos, rightSize);
 
-    	const int searchWindow = 1000;
+    	const int searchWindow = 500;
     	const float mismatchRate(0.05);
     	const int refAlignStart = align.beginPos;
     	const int refAlignEnd = align.beginPos + apath_ref_length(apath);
