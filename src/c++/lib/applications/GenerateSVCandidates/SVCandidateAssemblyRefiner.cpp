@@ -367,7 +367,7 @@ searchContig(
 	const unsigned querySize = querySeq.size();
 	const unsigned targetSize = targetSeq.size();
 	//assert(querySize < targetSize);
-	if (querySize < targetSize) return numOccur;
+	if (querySize > targetSize) return numOccur;
 
 	// set the scanning start & end to make sure the candidate windows overlapping the breakpoint
 	const unsigned scanStart = 0;
@@ -476,18 +476,17 @@ isSmallSVAlignment(
     	const std::string rightContig = contigSeq.substr(endPos, rightSize);
 
     	const int searchWindow = 500;
-    	//const float mismatchRate(0.05);
+    	const float mismatchRate(0.05);
     	const int refAlignStart = align.beginPos;
     	const int refAlignEnd = align.beginPos + apath_ref_length(apath);
 
     	// search leftContig in the downstream of refStart
     	const int leftSearchStart = std::max(0, refAlignEnd-searchWindow);
     	const std::string refSeq4LeftSearch = refSeq.substr(leftSearchStart, (refAlignEnd-leftSearchStart));
-    	unsigned occurrences = 0;
-    	//unsigned occurrences = searchContig(refSeq4LeftSearch, leftContig, mismatchRate);
+    	unsigned occurrences = searchContig(refSeq4LeftSearch, leftContig, mismatchRate);
 
 #ifdef DEBUG_CONTIG
-    	log_os << "refSeq4LeftSearch" << refSeq4LeftSearch;
+    	log_os << "refSeq4LeftSearch: \n" << refSeq4LeftSearch << "\n";
     	log_os << logtag << "left contig has size " << leftSize << ":\n" << leftContig << "\n";
     	log_os << logtag << "left contig occurrences " << occurrences << "\n";
 #endif
@@ -496,9 +495,9 @@ isSmallSVAlignment(
     	// search rightContig in the upstream of refEnd
     	const int rightSearchSize = std::min(searchWindow, int(refSeq.length()-refAlignStart));
     	const std::string refSeq4RightSearch = refSeq.substr(refAlignStart, rightSearchSize);
-    	//occurrences = searchContig(refSeq4RightSearch, rightContig, mismatchRate);
+    	occurrences = searchContig(refSeq4RightSearch, rightContig, mismatchRate);
 #ifdef DEBUG_CONTIG
-    	log_os << "refSeq4RightSearch" << refSeq4RightSearch;
+    	log_os << "refSeq4RightSearch: \n" << refSeq4RightSearch << "\n";
     	log_os << logtag << "right contig has size " << rightSize << ":\n" << rightContig << "\n";
     	log_os << logtag << "right contig occurrences " << occurrences << "\n";
 #endif
