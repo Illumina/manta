@@ -32,7 +32,7 @@
 //#define DEBUG_REFINER
 #define DEBUG_CONTIG
 #ifdef DEBUG_CONTIG
-static const std::string logtag("DEBUG CONFIG: ");
+static const std::string logtag("DEBUG CONTIG: ");
 #endif
 
 #ifdef DEBUG_REFINER
@@ -381,7 +381,7 @@ searchContig(
 				mismatches ++;
 		}
 
-		if (mismatches/querySize <= mismatchRate)
+		if (float(mismatches)/float(querySize) <= mismatchRate)
 			numOccur++;
 
 	}
@@ -483,7 +483,7 @@ isSmallSVAlignment(
     	const std::string refSeq4LeftSearch = refSeq.substr(leftSearchStart, (refAlignEnd-leftSearchStart));
     	unsigned occurrences = searchContig(refSeq4LeftSearch, leftContig, mismatchRate);
 #ifdef DEBUG_CONTIG
-    	log_os << logtag << "left contig has size " << leftSize << "\n: " << leftContig << "\n";
+    	log_os << logtag << "left contig has size " << leftSize << ":\n" << leftContig << "\n";
     	log_os << logtag << "left contig occurrences " << occurrences << "\n";
 #endif
     	if (occurrences > 1) return false;
@@ -493,7 +493,7 @@ isSmallSVAlignment(
     	const std::string refSeq4RightSearch = refSeq.substr(refAlignStart, rightSearchSize);
     	occurrences = searchContig(refSeq4RightSearch, rightContig, mismatchRate);
 #ifdef DEBUG_CONTIG
-    	log_os << logtag << "right contig has size " << rightSize << "\n: " << rightContig << "\n";
+    	log_os << logtag << "right contig has size " << rightSize << ":\n" << rightContig << "\n";
     	log_os << logtag << "right contig occurrences " << occurrences << "\n";
 #endif
     	if (occurrences > 1) return false;
