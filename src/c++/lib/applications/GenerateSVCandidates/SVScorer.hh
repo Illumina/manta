@@ -233,6 +233,7 @@ private:
     const CallOptionsSharedDeriv _callDopt;
     const CallOptionsDiploid _diploidOpt;
     const CallOptionsDiploidDeriv _diploidDopt;
+    const ReadScannerOptions _scanOpt;
     const CallOptionsSomatic _somaticOpt;
     const CallOptionsSomaticDeriv _somaticDopt;
     const ChromDepthFilterUtil _dFilterDiploid;

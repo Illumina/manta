@@ -501,14 +501,15 @@ processExistingAltPairInfo(
             SVFragmentEvidence& fragment(evidence.getSample(isTumor)[qname]);
             SVFragmentEvidenceAllele& alt(fragment.alt);
 
+            static const bool isShadow(false);
             if (pair.read1.isSet())
             {
-                setReadEvidence(minMapQ, minTier2MapQ, pair.read1.bamrec, fragment.read1);
+                setReadEvidence(minMapQ, minTier2MapQ, pair.read1.bamrec, isShadow, fragment.read1);
             }
 
             if (pair.read2.isSet())
             {
-                setReadEvidence(minMapQ, minTier2MapQ, pair.read2.bamrec, fragment.read2);
+                setReadEvidence(minMapQ, minTier2MapQ, pair.read2.bamrec, isShadow, fragment.read2);
             }
 
             /// get fragment prob, and possibly withdraw fragment support based on refined sv breakend coordinates:

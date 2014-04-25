@@ -27,6 +27,8 @@ struct ReadScannerOptions
         largeScaleEventBreakendEdgeTrimProb(0.1),
         properPairTrimProb(0.01),
         evidenceTrimProb(0.15),
+        shadowSearchRangeProb(0.05),
+        shadowSearchRangeFactor(1.2),
         minCandidateVariantSize(10),
         minPairBreakendSize(40),
         splitBreakendSizeFraction(0.1),
@@ -45,44 +47,58 @@ struct ReadScannerOptions
     {}
 
     unsigned minMapq;
-    unsigned minTier2Mapq; ///< a second, lower mapq threshold used only during somatic calling to disprove a somatic candidate using weak normal sample evidence
+
+    /// a second, lower mapq threshold used only during somatic calling to disprove a
+    /// somatic candidate using weak normal sample evidence
+    unsigned minTier2Mapq;
 
     float breakendEdgeTrimProb; ///< report breakend regions with x prob regions removed from each edge
-    float largeScaleEventBreakendEdgeTrimProb; ///< report breakend regions with x prob regions removed from each edge, used only for 'large-scale' events.
+
+    /// report breakend regions with x prob regions removed from each edge
+    /// used only for 'large-scale' events.
+    float largeScaleEventBreakendEdgeTrimProb;
+
     float properPairTrimProb; ///< report a pair as "proper pair" if fragment size is within x prob region removed from each edge
     float evidenceTrimProb; ///< add a pair to the evidence pool if frag size is within x prob region removed from each edge
+    float shadowSearchRangeProb; ///< fragment length to search upstream of a breakend for shadow read support
+    float shadowSearchRangeFactor; ///< multiplier for fragment length
     unsigned minCandidateVariantSize; ///< ignore indels smaller than this when building graph:
 
-    // whenever a breakend is predicted from a read pair junction, the predicted breakend range should be no
-    // smaller than this:
+    /// whenever a breakend is predicted from a read pair junction, the predicted breakend
+    /// range should be no smaller than this:
     unsigned minPairBreakendSize;
 
-    // whenever a breakend is predicted from an individual read split (ie. non-assembled), set the predicted breakend size to this fraction of the
-    // event size (modified by the min and max limits below)
+    /// whenever a breakend is predicted from an individual read split (ie. non-assembled),
+    /// set the predicted breakend size to this fraction of the
+    /// event size (modified by the min and max limits below)
     float splitBreakendSizeFraction;
 
-    // whenever a breakend is predicted from an individual read split (ie. non-assembled), the predicted breakend range should be no
-    // larger than this:
+    /// whenever a breakend is predicted from an individual read split (ie. non-assembled),
+    /// the predicted breakend range should be no larger than this:
     unsigned maxSplitBreakendSize;
 
-    // whenever a breakend is predicted from an individual read split (ie. non-assembled), the predicted breakend range should be no
-    // smaller than this:
+    /// whenever a breakend is predicted from an individual read split (ie. non-assembled),
+    /// the predicted breakend range should be no smaller than this:
     unsigned minSplitBreakendSize;
 
-    // Semi-aligned regions (including soft-clipped) need to be at least this long to be included as SV evidence
+    /// Semi-aligned regions (including soft-clipped) need to be at least this long to be included as SV evidence
+    ///
     unsigned minSemiAlignedMismatchLen;
 
-    unsigned minRNALength; // Minimal length of a deletion / insertion SV candidate in RNA data
+    unsigned minRNALength; ///< Minimal length of a deletion / insertion SV candidate in RNA data
 
-    // Accept semi-aligned reads with at least this hypothesis score, different for graph and candidate generation
+    /// Accept semi-aligned reads with at least this hypothesis score
+    /// different for graph and candidate generation
     double minSemiAlignedScoreGraph;
     double minSemiAlignedScoreCandidates;
 
-    // We want only shadows with a good singleton mapq, but use again different thresholds for graph and candidate generation
-    unsigned minSingletonMapqGraph;
-    unsigned minSingletonMapqCandidates;
+    unsigned minSingletonMapqGraph; ///< min MAPQ for shadow mate used to build SV adjacency graph
+    unsigned minSingletonMapqCandidates; ///< min MAPQ for shadow mate used for candidate assembly and scoring
 
     bool isIgnoreAnomProperPair; ///< typically set true for RNA-Seq analysis, where proper-pair is used to signal intron-spanning pairs
-    float maxDepthFactor; ///< the maximum depth at which input reads are considered in graph creation/assembly, etc. (when avg chrom depths are provided)
+
+    /// the maximum depth at which input reads are considered in graph creation/assembly, etc.
+    /// (when avg chrom depths are provided)
+    float maxDepthFactor;
 };
 

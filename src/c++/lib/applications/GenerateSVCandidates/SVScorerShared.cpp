@@ -24,12 +24,14 @@ setReadEvidence(
     const unsigned minMapQ,
     const unsigned minTier2MapQ,
     const bam_record& bamRead,
+    const bool isShadow,
     SVFragmentEvidenceRead& read)
 {
     if (read.isScanned) return;
 
     read.isScanned = true;
     read.mapq = bamRead.map_qual();
+    read.isShadow = isShadow;
     read.setAnchored(read.mapq >= minMapQ);
     read.setTier2Anchored(read.mapq >= minTier2MapQ);
     read.size = bamRead.read_size();

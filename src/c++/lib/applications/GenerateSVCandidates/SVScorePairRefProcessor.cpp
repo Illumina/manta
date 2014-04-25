@@ -88,8 +88,10 @@ processClearedRecord(
 
     SVFragmentEvidence& fragment(evidence.getSample(bparams.isTumor)[bamRead.qname()]);
 
+    static const bool isShadow(false);
+
     SVFragmentEvidenceRead& evRead(fragment.getRead(bamRead.is_first()));
-    setReadEvidence(iparams.minMapQ, iparams.minTier2MapQ, bamRead, evRead);
+    setReadEvidence(iparams.minMapQ, iparams.minTier2MapQ, bamRead, isShadow, evRead);
 
     setAlleleFrag(*bparams.fragDistroPtr, templateSize, fragment.ref.getBp(isBp1));
 }

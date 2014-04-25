@@ -140,12 +140,14 @@ struct SVFragmentEvidenceRead
 {
     SVFragmentEvidenceRead() :
         isScanned(false),
+        isShadow(false),
         mapq(0),
         size(0),
         _isAnchored(false),
         _isTier2Anchored(false)
     {}
 
+    /// TODO set anchor policy wrt shadow state!!!
     bool
     isAnchored(
         const bool isTier2) const
@@ -175,6 +177,7 @@ struct SVFragmentEvidenceRead
     }
 
     bool isScanned; ///< if true, this read's bam record has been scanned to fill in the remaining values in this object
+    bool isShadow; ///< read was originally unmapped but had a mapped mate read, mapq is MAPQ of the mate in this case
 
     unsigned mapq;
     unsigned size;

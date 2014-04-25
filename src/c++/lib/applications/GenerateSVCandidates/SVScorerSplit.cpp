@@ -17,7 +17,7 @@
 
 #include "SVScorer.hh"
 #include "SVScorerShared.hh"
-
+#include "manta/ShadowReadFinder.hh"
 
 //#define DEBUG_SVS
 
@@ -89,6 +89,67 @@ incrementAlleleEvidence(
 }
 
 
+static
+void
+getReadSplitScore(
+    const bam_record& bamRead,
+    const CallOptionsSharedDeriv& dopt,
+    const unsigned flankScoreSize,
+    const SVAlignmentInfo& svAlignInfo,
+    const unsigned minMapQ,
+    const unsigned minTier2MapQ,
+    const bool isShadow,
+    SVEvidence::evidenceTrack_t& sampleEvidence,
+    SVSampleInfo& sample)
+{
+    SVFragmentEvidence& fragment(sampleEvidence[bamRead.qname()]);
+
+    const bool isRead1(bamRead.is_first());
+
+    SVFragmentEvidenceAlleleBreakendPerRead& altBp1ReadSupport(fragment.alt.bp1.getRead(isRead1));
+
+    /// in this function we evaluate the hypothesis of both breakends at the same time, the only difference bp1 vs
+    /// bp2 makes is where in the bam we look for reads, therefore if we see split evaluation for bp1 or bp2, we can skip this read:
+    if (altBp1ReadSupport.isSplitEvaluated) return;
+
+    SVFragmentEvidenceAlleleBreakendPerRead& refBp1ReadSupport(fragment.ref.bp1.getRead(isRead1));
+    SVFragmentEvidenceAlleleBreakendPerRead& altBp2ReadSupport(fragment.alt.bp2.getRead(isRead1));
+    SVFragmentEvidenceAlleleBreakendPerRead& refBp2ReadSupport(fragment.ref.bp2.getRead(isRead1));
+
+    altBp1ReadSupport.isSplitEvaluated = true;
+    refBp1ReadSupport.isSplitEvaluated = true;
+    altBp2ReadSupport.isSplitEvaluated = true;
+    refBp2ReadSupport.isSplitEvaluated = true;
+
+    const std::string readSeq = bamRead.get_bam_read().get_string();
+    const uint8_t* qual(bamRead.qual());
+    const unsigned readMapQ = bamRead.map_qual();
+
+    setReadEvidence(minMapQ, minTier2MapQ, bamRead, isShadow, fragment.getRead(isRead1));
+
+    // align the read to the somatic contig
+    {
+        SRAlignmentInfo bp1ContigSR;
+        SRAlignmentInfo bp2ContigSR;
+        splitReadAligner(flankScoreSize, readSeq, dopt.altQ, qual, svAlignInfo.bp1ContigSeq(), svAlignInfo.bp1ContigOffset, bp1ContigSR);
+        splitReadAligner(flankScoreSize, readSeq, dopt.altQ, qual, svAlignInfo.bp2ContigSeq(), svAlignInfo.bp2ContigOffset, bp2ContigSR);
+
+        incrementAlleleEvidence(bp1ContigSR, bp2ContigSR, readMapQ, sample.alt, altBp1ReadSupport, altBp2ReadSupport);
+    }
+
+    // align the read to reference regions
+    {
+        SRAlignmentInfo bp1RefSR;
+        SRAlignmentInfo bp2RefSR;
+        splitReadAligner(flankScoreSize, readSeq, dopt.refQ, qual, svAlignInfo.bp1ReferenceSeq(), svAlignInfo.bp1RefOffset, bp1RefSR);
+        splitReadAligner(flankScoreSize, readSeq, dopt.refQ, qual, svAlignInfo.bp2ReferenceSeq(), svAlignInfo.bp2RefOffset, bp2RefSR);
+
+        // scoring
+        incrementAlleleEvidence(bp1RefSR, bp2RefSR, readMapQ, sample.ref, refBp1ReadSupport, refBp2ReadSupport);
+    }
+}
+
+
 
 static
 void
@@ -99,6 +160,8 @@ scoreSplitReads(
     const SVAlignmentInfo& svAlignInfo,
     const unsigned minMapQ,
     const unsigned minTier2MapQ,
+    const int bamShadowRange,
+    const unsigned shadowMinMapq,
     SVEvidence::evidenceTrack_t& sampleEvidence,
     bam_streamer& readStream,
     SVSampleInfo& sample)
@@ -110,51 +173,60 @@ scoreSplitReads(
         const bam_record& bamRead(*(readStream.get_record_ptr()));
 
         if (SVLocusScanner::isReadFilteredCore(bamRead)) continue;
+        if (bamRead.is_unmapped()) continue;
 
-        SVFragmentEvidence& fragment(sampleEvidence[bamRead.qname()]);
+        static const bool isShadow(false);
 
-        const bool isRead1(bamRead.is_first());
+        //const uint8_t mapq(bamRead.map_qual());
+        getReadSplitScore(bamRead, dopt, flankScoreSize, svAlignInfo, minMapQ, minTier2MapQ,
+            isShadow, sampleEvidence, sample);
+    }
 
-        SVFragmentEvidenceAlleleBreakendPerRead& altBp1ReadSupport(fragment.alt.bp1.getRead(isRead1));
+    static const bool isIncludeShadowReads(true);
 
-        /// in this function we evaluate the hypothesis of both breakends at the same time, the only difference bp1 vs
-        /// bp2 makes is where in the bam we look for reads, therefore if we see split evaluation for bp1 or bp2, we can skip this read:
-        if (altBp1ReadSupport.isSplitEvaluated) continue;
-
-        SVFragmentEvidenceAlleleBreakendPerRead& refBp1ReadSupport(fragment.ref.bp1.getRead(isRead1));
-        SVFragmentEvidenceAlleleBreakendPerRead& altBp2ReadSupport(fragment.alt.bp2.getRead(isRead1));
-        SVFragmentEvidenceAlleleBreakendPerRead& refBp2ReadSupport(fragment.ref.bp2.getRead(isRead1));
-
-        altBp1ReadSupport.isSplitEvaluated = true;
-        refBp1ReadSupport.isSplitEvaluated = true;
-        altBp2ReadSupport.isSplitEvaluated = true;
-        refBp2ReadSupport.isSplitEvaluated = true;
-
-        const std::string readSeq = bamRead.get_bam_read().get_string();
-        const uint8_t* qual(bamRead.qual());
-        const unsigned readMapQ = bamRead.map_qual();
-
-        setReadEvidence(minMapQ, minTier2MapQ, bamRead, fragment.getRead(isRead1));
-
-        // align the read to the somatic contig
+    // search for appropriate shadow reads to add to the split read pool
+    //
+    if (isIncludeShadowReads)
+    {
+        // depending on breakend type we may only be looking for candidates in one direction:
+        bool isSearchForLeftOpen(true);
+        bool isSearchForRightOpen(true);
+        known_pos_range2 shadowRange;
+        if (bp.state == SVBreakendState::RIGHT_OPEN)
         {
-            SRAlignmentInfo bp1ContigSR;
-            SRAlignmentInfo bp2ContigSR;
-            splitReadAligner(flankScoreSize, readSeq, dopt.altQ, qual, svAlignInfo.bp1ContigSeq(), svAlignInfo.bp1ContigOffset, bp1ContigSR);
-            splitReadAligner(flankScoreSize, readSeq, dopt.altQ, qual, svAlignInfo.bp2ContigSeq(), svAlignInfo.bp2ContigOffset, bp2ContigSR);
+            isSearchForLeftOpen = false;
 
-            incrementAlleleEvidence(bp1ContigSR, bp2ContigSR, readMapQ, sample.alt, altBp1ReadSupport, altBp2ReadSupport);
+            shadowRange.set_begin_pos(std::max(0,bp.interval.range.begin_pos()-bamShadowRange));
+            shadowRange.set_end_pos(bp.interval.range.begin_pos());
+        }
+        else if(bp.state == SVBreakendState::LEFT_OPEN)
+        {
+            isSearchForRightOpen = false;
+
+            shadowRange.set_begin_pos(bp.interval.range.end_pos());
+            shadowRange.set_end_pos(bp.interval.range.end_pos()+bamShadowRange);
+        }
+        else
+        {
+            assert(false && "Invalid bp state");
         }
 
-        // align the read to reference regions
-        {
-            SRAlignmentInfo bp1RefSR;
-            SRAlignmentInfo bp2RefSR;
-            splitReadAligner(flankScoreSize, readSeq, dopt.refQ, qual, svAlignInfo.bp1ReferenceSeq(), svAlignInfo.bp1RefOffset, bp1RefSR);
-            splitReadAligner(flankScoreSize, readSeq, dopt.refQ, qual, svAlignInfo.bp2ReferenceSeq(), svAlignInfo.bp2RefOffset, bp2RefSR);
+        readStream.set_new_region(bp.interval.tid, shadowRange.begin_pos(), shadowRange.end_pos());
 
-            // scoring
-            incrementAlleleEvidence(bp1RefSR, bp2RefSR, readMapQ, sample.ref, refBp1ReadSupport, refBp2ReadSupport);
+        ShadowReadFinder shadow(shadowMinMapq,isSearchForLeftOpen,isSearchForRightOpen);
+
+        while (readStream.next())
+        {
+            const bam_record& bamRead(*(readStream.get_record_ptr()));
+
+            if (SVLocusScanner::isReadFilteredCore(bamRead)) continue;
+            if (! shadow.check(bamRead)) continue;
+
+            static const bool isShadow(true);
+
+            //const uint8_t mapq(shadow.getMateMapq());
+            getReadSplitScore(bamRead, dopt, flankScoreSize, svAlignInfo, minMapQ, minTier2MapQ,
+                isShadow, sampleEvidence, sample);
         }
     }
 }
@@ -239,12 +311,16 @@ getSVSplitReadSupport(
 
         SVEvidence::evidenceTrack_t& sampleEvidence(evidence.getSample(isTumor));
 
+        const int bamShadowRange(_readScanner.getShadowSearchRange(bamIndex));
+
         // scoring split reads overlapping bp1
-        scoreSplitReads(_callDopt, flankScoreSize, sv.bp1, SVAlignInfo, minMapQ, minTier2MapQ, sampleEvidence,
-                        bamStream, sample);
+        scoreSplitReads(_callDopt, flankScoreSize, sv.bp1, SVAlignInfo, minMapQ, minTier2MapQ,
+            bamShadowRange, _scanOpt.minSingletonMapqCandidates,
+            sampleEvidence, bamStream, sample);
         // scoring split reads overlapping bp2
-        scoreSplitReads(_callDopt, flankScoreSize, sv.bp2, SVAlignInfo, minMapQ, minTier2MapQ, sampleEvidence,
-                        bamStream, sample);
+        scoreSplitReads(_callDopt, flankScoreSize, sv.bp2, SVAlignInfo, minMapQ, minTier2MapQ,
+            bamShadowRange, _scanOpt.minSingletonMapqCandidates,
+            sampleEvidence, bamStream, sample);
     }
 
     finishSampleSRData(baseInfo.tumor);

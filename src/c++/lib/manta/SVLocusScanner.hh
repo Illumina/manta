@@ -205,6 +205,14 @@ struct SVLocusScanner
         std::vector<SVObservation>& candidates,
         TruthTracker& truthTracker) const;
 
+    /// this information is needed for the whole bam, not just one read group:
+    int
+    getShadowSearchRange(
+        const unsigned defaultReadGroupIndex) const
+    {
+        return _stats[defaultReadGroupIndex].shadowSearchRange;
+    }
+
     /// provide direct access to the frag distro for
     /// functions which can't be cached
     ///
@@ -252,6 +260,8 @@ struct SVLocusScanner
         Range properPair;
 
         Range evidencePair;
+
+        int shadowSearchRange;
 
         int minDistantFragmentSize; ///< beyond the properPair anomalous threshold, there is a threshold to distinguish close and far pairs for the purpose of evidence weight
         int minCloseFragmentSize; ///< beyond the properPair anomalous threshold, there is a threshold to distinguish 'really-close' and 'close' pairs for the purpose of evidence weight

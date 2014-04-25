@@ -1023,6 +1023,10 @@ SVLocusScanner(
         setRGRange(rgDistro, _opt.properPairTrimProb, rgStats.properPair);
         setRGRange(rgDistro, _opt.evidenceTrimProb, rgStats.evidencePair);
 
+        rgStats.shadowSearchRange = rgDistro.quantile(1-(_opt.shadowSearchRangeProb))*_opt.shadowSearchRangeFactor;
+
+        assert(rgStats.shadowSearchRange > 0);
+
         rgStats.minVeryCloseFragmentSize = static_cast<int>(rgStats.properPair.max*FragmentSizeType::maxNormalFactor);
         rgStats.minCloseFragmentSize = static_cast<int>(rgStats.properPair.max*FragmentSizeType::veryClosePairFactor);
         rgStats.minDistantFragmentSize = static_cast<int>(rgStats.properPair.max*FragmentSizeType::closePairFactor);

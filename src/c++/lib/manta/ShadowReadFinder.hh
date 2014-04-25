@@ -56,6 +56,13 @@ struct ShadowReadFinder
     bool
     check(const bam_record& bamRead);
 
+    /// only valid after check() is true
+    unsigned
+    getMateMapq() const
+    {
+        return _lastMapq;
+    }
+
 private:
 
     const unsigned _minMapq;
