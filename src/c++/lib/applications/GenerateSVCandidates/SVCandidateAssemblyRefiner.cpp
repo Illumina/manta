@@ -372,6 +372,8 @@ searchContig(
 	const unsigned scanStart = 0;
 	const unsigned scanEnd = targetSize - querySize;
 
+	unsigned minMismatches = 1000000;
+
 	for (unsigned i(scanStart); i<= scanEnd; i++)
 	{
 		unsigned mismatches = 0;
@@ -384,7 +386,10 @@ searchContig(
 		if (float(mismatches)/float(querySize) <= mismatchRate)
 			numOccur++;
 
+		if (mismatches < minMismatches) minMismatches = mismatches;
 	}
+
+	log_os << "min mismacthes=" << minMismatches << " rate=" << (float(minMismatches)/float(querySize)) << "\n";
 
 	return numOccur;
 }
