@@ -366,7 +366,8 @@ searchContig(
 	unsigned numOccur = 0;
 	const unsigned querySize = querySeq.size();
 	const unsigned targetSize = targetSeq.size();
-	assert(querySize < targetSize);
+	//assert(querySize < targetSize);
+	if (querySize < targetSize) return numOccur;
 
 	// set the scanning start & end to make sure the candidate windows overlapping the breakpoint
 	const unsigned scanStart = 0;
