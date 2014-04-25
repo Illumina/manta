@@ -30,7 +30,7 @@
 #include <iostream>
 
 //#define DEBUG_REFINER
-#define DEBUG_CONTIG
+//#define DEBUG_CONTIG
 #ifdef DEBUG_CONTIG
 static const std::string logtag("DEBUG CONTIG: ");
 #endif
@@ -367,13 +367,11 @@ searchContig(
 	const unsigned querySize = querySeq.size();
 	const unsigned targetSize = targetSeq.size();
 	//assert(querySize < targetSize);
-	if (querySize < targetSize) return numOccur;
+	if (querySize > targetSize) return numOccur;
 
 	// set the scanning start & end to make sure the candidate windows overlapping the breakpoint
 	const unsigned scanStart = 0;
 	const unsigned scanEnd = targetSize - querySize;
-
-	log_os << "scanStart=" << scanStart << " scanEnd=" << scanEnd << "\n";
 
 	for (unsigned i(scanStart); i<= scanEnd; i++)
 	{
@@ -386,8 +384,6 @@ searchContig(
 
 		if (float(mismatches)/float(querySize) <= mismatchRate)
 			numOccur++;
-
-		//log_os << "mismacthes=" << mismatches << " rate=" << (float(mismatches)/float(querySize)) << "\n";
 	}
 
 
