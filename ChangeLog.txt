@@ -1,3 +1,4 @@
+- MANTA-157 improve shadow read filter
 - MANTA-153 fix diploid prior
 - MANTA-150 fix SV scoring size cutoff
 - MANTA-148 check bam records for region errors
