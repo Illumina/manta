@@ -17,7 +17,10 @@
 
 #include "SVScorer.hh"
 #include "SVScorerShared.hh"
+#include "blt_util/seq_util.hh"
 #include "manta/ShadowReadFinder.hh"
+
+#include "boost/scoped_array.hpp"
 
 //#define DEBUG_SVS
 
@@ -89,6 +92,7 @@ incrementAlleleEvidence(
 }
 
 
+
 static
 void
 getReadSplitScore(
@@ -99,6 +103,7 @@ getReadSplitScore(
     const unsigned minMapQ,
     const unsigned minTier2MapQ,
     const bool isShadow,
+    const bool isReversedShadow,
     SVEvidence::evidenceTrack_t& sampleEvidence,
     SVSampleInfo& sample)
 {
@@ -121,8 +126,19 @@ getReadSplitScore(
     altBp2ReadSupport.isSplitEvaluated = true;
     refBp2ReadSupport.isSplitEvaluated = true;
 
-    const std::string readSeq = bamRead.get_bam_read().get_string();
+    std::string readSeq = bamRead.get_bam_read().get_string();
     const uint8_t* qual(bamRead.qual());
+
+    boost::scoped_array<uint8_t> qualcpy;
+    if (isShadow && isReversedShadow)
+    {
+        reverseCompStr(readSeq);
+
+        qualcpy.reset(new uint8_t[readSeq.size()]);
+        std::reverse_copy(qual,qual+readSeq.size(),qualcpy.get());
+        qual = qualcpy.get();
+    }
+
     const unsigned readMapQ = bamRead.map_qual();
 
     setReadEvidence(minMapQ, minTier2MapQ, bamRead, isShadow, fragment.getRead(isRead1));
@@ -176,10 +192,11 @@ scoreSplitReads(
         if (bamRead.is_unmapped()) continue;
 
         static const bool isShadow(false);
+        static const bool isReversedShadow(false);
 
         //const uint8_t mapq(bamRead.map_qual());
         getReadSplitScore(bamRead, dopt, flankScoreSize, svAlignInfo, minMapQ, minTier2MapQ,
-            isShadow, sampleEvidence, sample);
+            isShadow, isReversedShadow, sampleEvidence, sample);
     }
 
     static const bool isIncludeShadowReads(true);
@@ -223,10 +240,11 @@ scoreSplitReads(
             if (! shadow.check(bamRead)) continue;
 
             static const bool isShadow(true);
+            const bool isReversedShadow(bamRead.is_mate_fwd_strand());
 
             //const uint8_t mapq(shadow.getMateMapq());
             getReadSplitScore(bamRead, dopt, flankScoreSize, svAlignInfo, minMapQ, minTier2MapQ,
-                isShadow, sampleEvidence, sample);
+                isShadow, isReversedShadow, sampleEvidence, sample);
         }
     }
 }
