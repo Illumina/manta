@@ -96,14 +96,14 @@ isMateInsertionEvidence(
 
     if (bamRead.map_qual() < minMapq) return false;
 
-    if (isSearchForLeftOpen && bamRead.is_fwd_strand()) return false;
-    if (isSearchForRightOpen && (! bamRead.is_fwd_strand())) return false;
+    if ((! isSearchForLeftOpen) && (! bamRead.is_fwd_strand())) return false;
+    if ((! isSearchForRightOpen) && bamRead.is_fwd_strand()) return false;
 
     if (bamRead.target_id() != bamRead.mate_target_id()) return true;
 
     /// TODO: better candidate definition based on fragment size distro:
     static const int minSize(10000);
-    return (std::abs(bamRead.pos()-bamRead.mate_pos()) >- minSize);
+    return (std::abs(bamRead.pos()-bamRead.mate_pos()) >= minSize);
 }
 
 
@@ -391,7 +391,7 @@ getBreakendReads(
         BOOST_FOREACH(const RemoteReadInfo& remote, bamRemotes)
         {
             // set bam stream to new search interval:
-            bamStream.set_new_region(remote.tid, remote.pos, remote.pos);
+            bamStream.set_new_region(remote.tid, remote.pos-1, remote.pos+1);
 
             while (bamStream.next())
             {
