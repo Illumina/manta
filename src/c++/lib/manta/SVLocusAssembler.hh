@@ -53,6 +53,7 @@ struct SVLocusAssembler
     assembleSingleSVBreakend(
         const SVBreakend& bp,
         const reference_contig_segment& refSeq,
+        const bool isSearchRemoteInsertionReads,
         Assembly& as) const;
 
     void
@@ -78,11 +79,13 @@ private:
     /// Collects the reads crossing an SV breakpoint and adds them to reads
     ///
     /// \param[in] isReversed if true revcomp all reads on input
+    /// \param[in] isSearchRemoteInsertionReads if true search the remote end of chimeric pairs for MAPQ0 insertion support
     void
     getBreakendReads(
         const SVBreakend& bp,
         const bool isReversed,
         const reference_contig_segment& refSeq,
+        const bool isSearchRemoteInsertionReads,
         ReadIndexType& readIndex,
         AssemblyReadInput& reads) const;
 

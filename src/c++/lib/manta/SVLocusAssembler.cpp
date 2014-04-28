@@ -84,12 +84,55 @@ addReadToDepthEst(
 
 
 
+static
+bool
+isMateInsertionEvidence(
+    const bam_record& bamRead,
+    const unsigned minMapq,
+    const bool isSearchForLeftOpen,
+    const bool isSearchForRightOpen)
+{
+    if (bamRead.is_unmapped() || bamRead.is_mate_unmapped()) return false;
+
+    if (bamRead.map_qual() < minMapq) return false;
+
+    if (isSearchForLeftOpen && bamRead.is_fwd_strand()) return false;
+    if (isSearchForRightOpen && (! bamRead.is_fwd_strand())) return false;
+
+    if (bamRead.target_id() != bamRead.mate_target_id()) return true;
+
+    /// TODO: better candidate definition based on fragment size distro:
+    static const int minSize(10000);
+    return (std::abs(bamRead.pos()-bamRead.mate_pos()) >- minSize);
+}
+
+
+
+struct RemoteReadInfo
+{
+    RemoteReadInfo(
+        const bam_record& bamRead)
+      : qname(bamRead.qname()),
+        readNo(bamRead.read_no()==1 ? 2 : 1),
+        tid(bamRead.mate_target_id()),
+        pos(bamRead.mate_pos() - 1)
+    {}
+
+    std::string qname;
+    int readNo; // this is read number of the target
+    int tid;
+    int pos;
+};
+
+
+
 void
 SVLocusAssembler::
 getBreakendReads(
     const SVBreakend& bp,
     const bool isLocusReversed,
     const reference_contig_segment& refSeq,
+    const bool isSearchRemoteInsertionReads,
     ReadIndexType& readIndex,
     AssemblyReadInput& reads) const
 {
@@ -98,6 +141,7 @@ getBreakendReads(
     {
         // ideally this should be dependent on the insert size dist
         // TODO: follow-up on trial value of 200 in a separate branch/build
+        // TODO: there should be a core search range and and expanded range for shadow/MAPQ0 only, shadow ranges should be left/right constrained to be consistent with center
         static const size_t minIntervalSize(400);
         if (bp.interval.range.size() >= minIntervalSize)
         {
@@ -147,7 +191,11 @@ getBreakendReads(
 
     bool isFirstTumor(false);
 
+    static const unsigned MAX_NUM_READS(1000);
+
     const unsigned bamCount(_bamStreams.size());
+    std::vector<std::vector<RemoteReadInfo> > remoteReads(bamCount);
+
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
         const bool isTumor(_isAlignmentTumor[bamIndex]);
@@ -166,13 +214,12 @@ getBreakendReads(
 
         ShadowReadFinder shadow(_scanOpt.minSingletonMapqCandidates, isSearchForLeftOpen, isSearchForRightOpen);
 
-        static const unsigned MAX_NUM_READS(1000);
-
 #ifdef DEBUG_ASBL
         unsigned indelCount(0);
         unsigned semiAlignedCount(0);
         unsigned shadowCount(0);
 #endif
+
 
         while (bamStream.next())
         {
@@ -210,6 +257,16 @@ getBreakendReads(
                 assert(refPos<searchEndPos);
                 const pos_t depthOffset(refPos - searchBeginPos);
                 if ((depthOffset >= 0) && (normalDepthBuffer[depthOffset] > maxDepth)) continue;
+            }
+
+
+            // check whether we do a separate search for the mate read
+            if (isSearchRemoteInsertionReads)
+            {
+                if (isMateInsertionEvidence(bamRead, _scanOpt.minMapq, isSearchForLeftOpen, isSearchForRightOpen))
+                {
+                    remoteReads[bamIndex].push_back(RemoteReadInfo(bamRead));
+                }
             }
 
             // filter reads with "N"
@@ -287,30 +344,29 @@ getBreakendReads(
                    << '\n';
 #endif
 
-            if (readIndex.count(readKey) == 0)
-            {
-                readIndex.insert(std::make_pair(readKey,reads.size()));
-                reads.push_back(bamRead.get_bam_read().get_string());
-
-                bool isReversed(isLocusReversed);
-
-                // if shadow read, determine if we need to reverse:
-                if (isShadowKeeper)
-                {
-                    if (bamRead.is_mate_fwd_strand())
-                    {
-                        isReversed = (! isReversed);
-                    }
-                }
-
-                if (isReversed) reverseCompStr(reads.back());
-            }
-            else
+            if (readIndex.count(readKey) != 0)
             {
 #ifdef DEBUG_ASBL
                 log_os << logtag << "WARNING: SmallAssembler read name collision : " << readKey << "\n";
 #endif
+                continue;
             }
+
+            readIndex.insert(std::make_pair(readKey,reads.size()));
+            reads.push_back(bamRead.get_bam_read().get_string());
+
+            bool isReversed(isLocusReversed);
+
+            // if shadow read, determine if we need to reverse:
+            if (isShadowKeeper)
+            {
+                if (bamRead.is_mate_fwd_strand())
+                {
+                    isReversed = (! isReversed);
+                }
+            }
+
+            if (isReversed) reverseCompStr(reads.back());
         }
 
 #ifdef DEBUG_ASBL
@@ -321,6 +377,65 @@ getBreakendReads(
                << '\n';
 #endif
     }
+
+
+    /// recover any remote reads:
+    for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
+    {
+        const std::string bamIndexStr(boost::lexical_cast<std::string>(bamIndex));
+
+        bam_streamer& bamStream(*_bamStreams[bamIndex]);
+
+        const std::vector<RemoteReadInfo>& bamRemotes(remoteReads[bamIndex]);
+
+        BOOST_FOREACH(const RemoteReadInfo& remote, bamRemotes)
+        {
+            // set bam stream to new search interval:
+            bamStream.set_new_region(remote.tid, remote.pos, remote.pos);
+
+            while (bamStream.next())
+            {
+                if (reads.size() >= MAX_NUM_READS)
+                {
+    #ifdef DEBUG_ASBL
+                    log_os << logtag << "WARNING: assembly read buffer full, skipping further input\n";
+    #endif
+                    break;
+                }
+
+                const bam_record& bamRead(*(bamStream.get_record_ptr()));
+
+                if (bamRead.qname() != remote.qname) continue;
+                if (bamRead.read_no() != remote.readNo) continue;
+                if (bamRead.map_qual() != 0) break;
+
+                const char flag(bamRead.is_second() ? '2' : '1');
+                const std::string readKey = remote.qname + "_" + flag + "_" + bamIndexStr;
+
+                if (readIndex.count(readKey) != 0)
+                {
+    #ifdef DEBUG_ASBL
+                    log_os << logtag << "WARNING: SmallAssembler read name collision : " << readKey << "\n";
+    #endif
+                    continue;
+                }
+
+                readIndex.insert(std::make_pair(readKey,reads.size()));
+                reads.push_back(bamRead.get_bam_read().get_string());
+
+                bool isReversed(isLocusReversed);
+
+                // determine if we need to reverse:
+                if (bamRead.is_fwd_strand() == bamRead.is_mate_fwd_strand())
+                {
+                    isReversed = (! isReversed);
+                }
+
+                if (isReversed) reverseCompStr(reads.back());
+                break;
+            }
+        }
+    }
 }
 
 
@@ -330,12 +445,13 @@ SVLocusAssembler::
 assembleSingleSVBreakend(
     const SVBreakend& bp,
     const reference_contig_segment& refSeq,
+    const bool isSearchRemoteInsertionReads,
     Assembly& as) const
 {
     static const bool isBpReversed(false);
     ReadIndexType readIndex;
     AssemblyReadInput reads;
-    getBreakendReads(bp, isBpReversed, refSeq, readIndex, reads);
+    getBreakendReads(bp, isBpReversed, refSeq, isSearchRemoteInsertionReads, readIndex, reads);
     AssemblyReadOutput readInfo;
     runSmallAssembler(_assembleOpt, reads, readInfo, as);
 }
@@ -352,12 +468,13 @@ assembleSVBreakends(const SVBreakend& bp1,
                     const reference_contig_segment& refSeq2,
                     Assembly& as) const
 {
+    static const bool isSearchRemoteInsertionReads(false);
     ReadIndexType readIndex;
     AssemblyReadInput reads;
     AssemblyReadReversal readRev;
-    getBreakendReads(bp1, isBp1Reversed, refSeq1, readIndex, reads);
+    getBreakendReads(bp1, isBp1Reversed, refSeq1, isSearchRemoteInsertionReads, readIndex, reads);
     readRev.resize(reads.size(),isBp1Reversed);
-    getBreakendReads(bp2, isBp2Reversed, refSeq2, readIndex, reads);
+    getBreakendReads(bp2, isBp2Reversed, refSeq2, isSearchRemoteInsertionReads, readIndex, reads);
     readRev.resize(reads.size(),isBp2Reversed);
     AssemblyReadOutput readInfo;
     runSmallAssembler(_assembleOpt, reads, readInfo, as);

@@ -39,8 +39,8 @@ struct SVCandidateAssemblyRefiner
 
     /// \brief add assembly and assembly post-processing data to SV candidate
     ///
-    /// \param isRNA[in] if true add intron logic to the contig jump aligner
-    /// \param isRNA[in] if true search for insertions which can't be completely assembled
+    /// \param[in] isRNA if true add intron logic to the contig jump aligner
+    /// \param[in] isFindLargeInsertions if true search for insertions which can't be completely assembled, and conduct more expensive search for assembly insertion evidence
     void
     getCandidateAssemblyData(
         const SVCandidate& sv,
@@ -61,7 +61,7 @@ private:
 
     /// small SV/indel assembler
     ///
-    /// \params[in] isFindLargeInsertions search for insertions which are too large to completely assemble the insert sequence
+    /// \param[in] isFindLargeInsertions if true search for insertions which can't be completely assembled, and conduct more expensive search for assembly insertion evidence
     ///
     void
     getSmallSVAssembly(
