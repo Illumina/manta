@@ -30,7 +30,7 @@
 #include <iostream>
 
 //#define DEBUG_REFINER
-//#define DEBUG_CONTIG
+#define DEBUG_CONTIG
 #ifdef DEBUG_CONTIG
 static const std::string logtag("DEBUG CONTIG: ");
 #endif
