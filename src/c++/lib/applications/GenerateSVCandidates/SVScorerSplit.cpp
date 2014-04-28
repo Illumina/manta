@@ -199,7 +199,7 @@ scoreSplitReads(
             isShadow, isReversedShadow, sampleEvidence, sample);
     }
 
-    static const bool isIncludeShadowReads(true);
+    static const bool isIncludeShadowReads(false);
 
     // search for appropriate shadow reads to add to the split read pool
     //
