@@ -30,7 +30,10 @@
 #include <iostream>
 
 //#define DEBUG_REFINER
-
+//#define DEBUG_CONTIG
+#ifdef DEBUG_CONTIG
+static const std::string logtag("DEBUG CONTIG: ");
+#endif
 
 #ifdef DEBUG_REFINER
 #include "blt_util/seq_printer.hh"
@@ -352,6 +355,39 @@ isSmallSVSegmentFilter(
 }
 
 
+static
+int
+searchContig(
+    const std::string& targetSeq,
+    const std::string& querySeq,
+    const float mismatchRate)
+{
+    unsigned numOccur = 0;
+    const unsigned querySize = querySeq.size();
+    const unsigned targetSize = targetSeq.size();
+
+    if (querySize > targetSize) return numOccur;
+
+    // set the scanning start & end to make sure the candidate windows overlapping the breakpoint
+    const unsigned scanStart = 0;
+    const unsigned scanEnd = targetSize - querySize;
+
+    for (unsigned i(scanStart); i<= scanEnd; i++)
+    {
+        unsigned mismatches = 0;
+        for (unsigned j(0); j < querySize; j++)
+        {
+            if ((querySeq[j] != targetSeq[i+j]) || (querySeq[j] == 'N'))
+                mismatches ++;
+        }
+
+        if (float(mismatches)/float(querySize) <= mismatchRate)
+            numOccur++;
+    }
+
+    return numOccur;
+}
+
 
 /// test whether this single-node assembly is (1) an interesting variant above the minimum size and
 /// (2) passes QC otherwise (appropriate flanking regions, etc)
@@ -365,11 +401,15 @@ bool
 isSmallSVAlignment(
     const unsigned maxQCRefSpan,
     const GlobalAligner<int> aligner,
-    const ALIGNPATH::path_t& apath,
+    const Alignment& align,
+    const std::string& contigSeq,
+    const std::string& refSeq,
     const unsigned minCandidateIndelSize,
     std::vector<std::pair<unsigned,unsigned> >& candidateSegments)
 {
     using namespace ALIGNPATH;
+
+    const path_t& apath(align.apath);
 
     // (1) identify all indels above minimum size:
     //
@@ -415,8 +455,49 @@ isSmallSVAlignment(
         // escape if this was the last segment
         if (1 == candidateSegments.size()) return false;
 
-
         candidateSegments.pop_back();
+    }
+
+
+    {
+        // TODO: iterate on all segments
+        const path_t apathTillSvStart(&apath[0], &apath[candidateSegments[0].first]);
+        const path_t apathTillSvEnd(&apath[0], &apath[candidateSegments[0].second+1]);
+
+        const int leftSize = apath_read_length(apathTillSvStart);
+        const int endPos = apath_read_length(apathTillSvEnd);
+        const int rightSize = contigSeq.length() - endPos;
+        const std::string leftContig = contigSeq.substr(0, leftSize);
+        const std::string rightContig = contigSeq.substr(endPos, rightSize);
+
+        const int searchWindow(500);
+        const float mismatchRate(0.05);
+        const int refAlignStart = align.beginPos;
+        const int refAlignEnd = align.beginPos + apath_ref_length(apath);
+
+        // search leftContig in the downstream of refStart
+        const int leftSearchStart = std::max(0, refAlignEnd-searchWindow);
+        const std::string refSeq4LeftSearch = refSeq.substr(leftSearchStart, (refAlignEnd-leftSearchStart));
+        unsigned occurrences = searchContig(refSeq4LeftSearch, leftContig, mismatchRate);
+
+#ifdef DEBUG_CONTIG
+        log_os << logtag << "refSeq4LeftSearch: \n" << refSeq4LeftSearch << "\n";
+        log_os << logtag << "left contig has size " << leftSize << ":\n" << leftContig << "\n";
+        log_os << logtag << "left contig occurrences " << occurrences << "\n";
+#endif
+        if (occurrences > 1) return false;
+
+        // search rightContig in the upstream of refEnd
+        const int rightSearchSize = std::min(searchWindow, int(refSeq.length()-refAlignStart));
+        const std::string refSeq4RightSearch = refSeq.substr(refAlignStart, rightSearchSize);
+        occurrences = searchContig(refSeq4RightSearch, rightContig, mismatchRate);
+
+#ifdef DEBUG_CONTIG
+        log_os << logtag << "refSeq4RightSearch: \n" << refSeq4RightSearch << "\n";
+        log_os << logtag << "right contig has size " << rightSize << ":\n" << rightContig << "\n";
+        log_os << logtag << "right contig occurrences " << occurrences << "\n";
+#endif
+        if (occurrences > 1) return false;
     }
 
     return true;
@@ -1341,7 +1422,9 @@ getSmallSVAssembly(
             const bool isCandidate( isSmallSVAlignment(
                                         maxQCRefSpan[refSpanIndex],
                                         _smallSVAligner,
-                                        alignment.align.apath,
+                                        alignment.align,
+                                        contig.seq,
+                                        align1RefStr,
                                         _opt.scanOpt.minCandidateVariantSize,
                                         segments) );
 
@@ -1439,6 +1522,19 @@ getSmallSVAssembly(
 
 #ifdef DEBUG_REFINER
             log_os << logtag << "small refined sv: " << newSV;
+#endif
+
+#ifdef DEBUG_CONTIG
+            const int contigSize = bestContig.seq.length();
+            const ALIGNPATH::path_t apathTillSvStart(&bestAlign.align.apath[0], &bestAlign.align.apath[segRange.first]);
+            const ALIGNPATH::path_t apathTillSvEnd(&bestAlign.align.apath[0], &bestAlign.align.apath[segRange.second+1]);
+            const int leftSize = apath_read_length(apathTillSvStart);
+            const int endPos = apath_read_length(apathTillSvEnd);
+            const int rightSize = contigSize - apath_read_length(apathTillSvEnd);
+
+            log_os << logtag << "contig has size " << contigSize << ": " << bestContig.seq << "\n";
+            log_os << logtag << "left part has size " << leftSize << ": " << bestContig.seq.substr(0, leftSize) << "\n";
+            log_os << logtag << "right part has size " << rightSize << ": " << bestContig.seq.substr(endPos, rightSize) << "\n";
 #endif
         }
     }

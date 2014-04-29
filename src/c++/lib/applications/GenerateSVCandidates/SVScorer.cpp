@@ -367,7 +367,7 @@ getSampleCounts(
         addConservativeSplitReadSupport(fragev,true,sampleBaseInfo);
         addConservativeSplitReadSupport(fragev,false,sampleBaseInfo);
 #ifdef DEBUG_SCORE
-            log_os << __FUNCTION__ << "Counting read: " << val.first;
+        log_os << __FUNCTION__ << "Counting read: " << val.first;
 #endif
         addSpanningPairSupport(fragev, sampleBaseInfo);
         addConservativeSpanningPairSupport(fragev, sampleBaseInfo);
