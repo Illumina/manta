@@ -522,7 +522,7 @@ processExistingAltPairInfo(
             if (fragProb <= 0.)
             {
 #ifdef DEBUG_PAIR
-            log_os << logtag << "Fragment with fragProb=0! " << sv.candidateIndex << "  qname: " << qname << "\n";
+                log_os << logtag << "Fragment with fragProb=0! " << sv.candidateIndex << "  qname: " << qname << "\n";
 #endif
                 continue;
             }

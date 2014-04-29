@@ -30,7 +30,7 @@
 #include <iostream>
 
 //#define DEBUG_REFINER
-#define DEBUG_CONTIG
+//#define DEBUG_CONTIG
 #ifdef DEBUG_CONTIG
 static const std::string logtag("DEBUG CONTIG: ");
 #endif
@@ -358,37 +358,34 @@ isSmallSVSegmentFilter(
 static
 int
 searchContig(
-		const std::string& targetSeq,
-		const std::string& querySeq,
-		const float mismatchRate
-		)
+    const std::string& targetSeq,
+    const std::string& querySeq,
+    const float mismatchRate)
 {
-	unsigned numOccur = 0;
-	const unsigned querySize = querySeq.size();
-	const unsigned targetSize = targetSeq.size();
-	//assert(querySize < targetSize);
-	if (querySize > targetSize) return numOccur;
+    unsigned numOccur = 0;
+    const unsigned querySize = querySeq.size();
+    const unsigned targetSize = targetSeq.size();
 
-	// set the scanning start & end to make sure the candidate windows overlapping the breakpoint
-	const unsigned scanStart = 0;
-	const unsigned scanEnd = targetSize - querySize;
+    if (querySize > targetSize) return numOccur;
 
-	for (unsigned i(scanStart); i<= scanEnd; i++)
-	{
-		unsigned mismatches = 0;
-		for (unsigned j(0); j < querySize; j++)
-		{
-			if ((querySeq[j] != targetSeq[i+j]) || (querySeq[j] == 'N'))
-				mismatches ++;
-		}
+    // set the scanning start & end to make sure the candidate windows overlapping the breakpoint
+    const unsigned scanStart = 0;
+    const unsigned scanEnd = targetSize - querySize;
 
-		if (float(mismatches)/float(querySize) <= mismatchRate)
-			numOccur++;
-	}
+    for (unsigned i(scanStart); i<= scanEnd; i++)
+    {
+        unsigned mismatches = 0;
+        for (unsigned j(0); j < querySize; j++)
+        {
+            if ((querySeq[j] != targetSeq[i+j]) || (querySeq[j] == 'N'))
+                mismatches ++;
+        }
 
+        if (float(mismatches)/float(querySize) <= mismatchRate)
+            numOccur++;
+    }
 
-
-	return numOccur;
+    return numOccur;
 }
 
 
@@ -463,43 +460,44 @@ isSmallSVAlignment(
 
 
     {
-    	// TODO: iterate on all segments
-    	const path_t apathTillSvStart(&apath[0], &apath[candidateSegments[0].first]);
-    	const path_t apathTillSvEnd(&apath[0], &apath[candidateSegments[0].second+1]);
+        // TODO: iterate on all segments
+        const path_t apathTillSvStart(&apath[0], &apath[candidateSegments[0].first]);
+        const path_t apathTillSvEnd(&apath[0], &apath[candidateSegments[0].second+1]);
 
-     	const int leftSize = apath_read_length(apathTillSvStart);
-    	const int endPos = apath_read_length(apathTillSvEnd);
-    	const int rightSize = contigSeq.length() - endPos;
-    	const std::string leftContig = contigSeq.substr(0, leftSize);
-    	const std::string rightContig = contigSeq.substr(endPos, rightSize);
+        const int leftSize = apath_read_length(apathTillSvStart);
+        const int endPos = apath_read_length(apathTillSvEnd);
+        const int rightSize = contigSeq.length() - endPos;
+        const std::string leftContig = contigSeq.substr(0, leftSize);
+        const std::string rightContig = contigSeq.substr(endPos, rightSize);
 
-    	const int searchWindow = 500;
-    	const float mismatchRate(0.05);
-    	const int refAlignStart = align.beginPos;
-    	const int refAlignEnd = align.beginPos + apath_ref_length(apath);
+        const int searchWindow(500);
+        const float mismatchRate(0.05);
+        const int refAlignStart = align.beginPos;
+        const int refAlignEnd = align.beginPos + apath_ref_length(apath);
 
-    	// search leftContig in the downstream of refStart
-    	const int leftSearchStart = std::max(0, refAlignEnd-searchWindow);
-    	const std::string refSeq4LeftSearch = refSeq.substr(leftSearchStart, (refAlignEnd-leftSearchStart));
-    	unsigned occurrences = searchContig(refSeq4LeftSearch, leftContig, mismatchRate);
+        // search leftContig in the downstream of refStart
+        const int leftSearchStart = std::max(0, refAlignEnd-searchWindow);
+        const std::string refSeq4LeftSearch = refSeq.substr(leftSearchStart, (refAlignEnd-leftSearchStart));
+        unsigned occurrences = searchContig(refSeq4LeftSearch, leftContig, mismatchRate);
 
 #ifdef DEBUG_CONTIG
-    	log_os << "refSeq4LeftSearch: \n" << refSeq4LeftSearch << "\n";
-    	log_os << logtag << "left contig has size " << leftSize << ":\n" << leftContig << "\n";
-    	log_os << logtag << "left contig occurrences " << occurrences << "\n";
+        log_os << logtag << "refSeq4LeftSearch: \n" << refSeq4LeftSearch << "\n";
+        log_os << logtag << "left contig has size " << leftSize << ":\n" << leftContig << "\n";
+        log_os << logtag << "left contig occurrences " << occurrences << "\n";
 #endif
-    	if (occurrences > 1) return false;
+        if (occurrences > 1) return false;
 
-    	// search rightContig in the upstream of refEnd
-    	const int rightSearchSize = std::min(searchWindow, int(refSeq.length()-refAlignStart));
-    	const std::string refSeq4RightSearch = refSeq.substr(refAlignStart, rightSearchSize);
-    	occurrences = searchContig(refSeq4RightSearch, rightContig, mismatchRate);
+        // search rightContig in the upstream of refEnd
+        const int rightSearchSize = std::min(searchWindow, int(refSeq.length()-refAlignStart));
+        const std::string refSeq4RightSearch = refSeq.substr(refAlignStart, rightSearchSize);
+        occurrences = searchContig(refSeq4RightSearch, rightContig, mismatchRate);
+
 #ifdef DEBUG_CONTIG
-    	log_os << "refSeq4RightSearch: \n" << refSeq4RightSearch << "\n";
-    	log_os << logtag << "right contig has size " << rightSize << ":\n" << rightContig << "\n";
-    	log_os << logtag << "right contig occurrences " << occurrences << "\n";
+        log_os << logtag << "refSeq4RightSearch: \n" << refSeq4RightSearch << "\n";
+        log_os << logtag << "right contig has size " << rightSize << ":\n" << rightContig << "\n";
+        log_os << logtag << "right contig occurrences " << occurrences << "\n";
 #endif
-    	if (occurrences > 1) return false;
+        if (occurrences > 1) return false;
     }
 
     return true;
