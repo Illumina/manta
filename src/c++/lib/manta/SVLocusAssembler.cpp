@@ -115,14 +115,143 @@ struct RemoteReadInfo
       : qname(bamRead.qname()),
         readNo(bamRead.read_no()==1 ? 2 : 1),
         tid(bamRead.mate_target_id()),
-        pos(bamRead.mate_pos() - 1)
+        pos(bamRead.mate_pos() - 1),
+        readSize(bamRead.read_size()),
+        isFound(false),
+        isUsed(false)
     {}
+
+    bool
+    operator<(
+        const RemoteReadInfo& rhs) const
+    {
+        if (tid < rhs.tid) return true;
+        if (tid == rhs.tid)
+        {
+            return (pos < rhs.pos);
+        }
+        return false;
+    }
 
     std::string qname;
     int readNo; // this is read number of the target
     int tid;
     int pos;
+    int readSize;
+    bool isFound;
+    bool isUsed;
 };
+
+
+
+static
+void
+recoverRemoteReads(
+    const unsigned maxNumReads,
+    const bool isLocusReversed,
+    const std::string& bamIndexStr,
+    bam_streamer& bamStream,
+    std::vector<RemoteReadInfo>& bamRemotes,
+    SVLocusAssembler::ReadIndexType& readIndex,
+    AssemblyReadInput& reads)
+{
+    // figure out what we can handle in a single region query:
+    std::sort(bamRemotes.begin(),bamRemotes.end());
+
+    typedef std::pair<GenomeInterval, std::vector<RemoteReadInfo> > BamRegionInfo_t;
+    std::vector<BamRegionInfo_t> bamRegions;
+
+    int last_tid=-1;
+    int last_pos=-1;
+    BOOST_FOREACH(const RemoteReadInfo& remote, bamRemotes)
+    {
+        if ((last_tid == remote.tid) && (last_pos+remote.readSize >= remote.pos))
+        {
+            GenomeInterval& interval(bamRegions.back().first);
+            interval.range.set_end_pos(remote.pos);
+
+            std::vector<RemoteReadInfo>& remotes(bamRegions.back().second);
+            remotes.push_back(remote);
+        }
+        else
+        {
+            std::vector<RemoteReadInfo> remotes;
+            remotes.push_back(remote);
+            bamRegions.push_back(std::make_pair(GenomeInterval(remote.tid,remote.pos,remote.pos),remotes));
+        }
+
+        last_tid=remote.tid;
+        last_pos=remote.pos;
+    }
+
+
+    BOOST_FOREACH(BamRegionInfo_t& bregion, bamRegions)
+    {
+        const GenomeInterval& interval(bregion.first);
+        std::vector<RemoteReadInfo>& remotes(bregion.second);
+
+
+        // set bam stream to new search interval:
+        bamStream.set_new_region(
+                interval.tid,
+                interval.range.begin_pos(),
+                interval.range.end_pos()+1);
+
+        while (bamStream.next())
+        {
+            if (reads.size() >= maxNumReads)
+            {
+#ifdef DEBUG_ASBL
+                log_os << logtag << "WARNING: assembly read buffer full, skipping further input\n";
+#endif
+                break;
+            }
+
+            const bam_record& bamRead(*(bamStream.get_record_ptr()));
+
+            // we've gone past the last case:
+            if (bamRead.pos() > (remotes.back().pos+1)) break;
+
+            BOOST_FOREACH(RemoteReadInfo& remote, remotes)
+            {
+                if (remote.isFound) continue;
+                if (bamRead.read_no() != remote.readNo) continue;
+                if (bamRead.qname() != remote.qname) continue;
+
+                remote.isFound = true;
+
+                if (bamRead.map_qual() != 0) break;
+
+                const char flag(bamRead.is_second() ? '2' : '1');
+                const std::string readKey = remote.qname + "_" + flag + "_" + bamIndexStr;
+
+                if (readIndex.count(readKey) != 0)
+                {
+    #ifdef DEBUG_ASBL
+                    log_os << logtag << "WARNING: SmallAssembler read name collision : " << readKey << "\n";
+    #endif
+                    break;
+                }
+
+                readIndex.insert(std::make_pair(readKey,reads.size()));
+                reads.push_back(bamRead.get_bam_read().get_string());
+
+                bool isReversed(isLocusReversed);
+
+                // determine if we need to reverse:
+                if (bamRead.is_fwd_strand() == bamRead.is_mate_fwd_strand())
+                {
+                    isReversed = (! isReversed);
+                }
+
+                if (isReversed) reverseCompStr(reads.back());
+
+                remote.isUsed = true;
+                break;
+            }
+        }
+    }
+}
 
 
 
@@ -191,7 +320,7 @@ getBreakendReads(
 
     bool isFirstTumor(false);
 
-    static const unsigned MAX_NUM_READS(1000);
+    static const unsigned maxNumReads(1000);
 
     const unsigned bamCount(_bamStreams.size());
     std::vector<std::vector<RemoteReadInfo> > remoteReads(bamCount);
@@ -223,7 +352,7 @@ getBreakendReads(
 
         while (bamStream.next())
         {
-            if (reads.size() >= MAX_NUM_READS)
+            if (reads.size() >= maxNumReads)
             {
 #ifdef DEBUG_ASBL
                 log_os << logtag << "WARNING: assembly read buffer full, skipping further input\n";
@@ -378,7 +507,6 @@ getBreakendReads(
 #endif
     }
 
-
     /// recover any remote reads:
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
@@ -386,55 +514,8 @@ getBreakendReads(
 
         bam_streamer& bamStream(*_bamStreams[bamIndex]);
 
-        const std::vector<RemoteReadInfo>& bamRemotes(remoteReads[bamIndex]);
-
-        BOOST_FOREACH(const RemoteReadInfo& remote, bamRemotes)
-        {
-            // set bam stream to new search interval:
-            bamStream.set_new_region(remote.tid, remote.pos-1, remote.pos+1);
-
-            while (bamStream.next())
-            {
-                if (reads.size() >= MAX_NUM_READS)
-                {
-    #ifdef DEBUG_ASBL
-                    log_os << logtag << "WARNING: assembly read buffer full, skipping further input\n";
-    #endif
-                    break;
-                }
-
-                const bam_record& bamRead(*(bamStream.get_record_ptr()));
-
-                if (bamRead.qname() != remote.qname) continue;
-                if (bamRead.read_no() != remote.readNo) continue;
-                if (bamRead.map_qual() != 0) break;
-
-                const char flag(bamRead.is_second() ? '2' : '1');
-                const std::string readKey = remote.qname + "_" + flag + "_" + bamIndexStr;
-
-                if (readIndex.count(readKey) != 0)
-                {
-    #ifdef DEBUG_ASBL
-                    log_os << logtag << "WARNING: SmallAssembler read name collision : " << readKey << "\n";
-    #endif
-                    continue;
-                }
-
-                readIndex.insert(std::make_pair(readKey,reads.size()));
-                reads.push_back(bamRead.get_bam_read().get_string());
-
-                bool isReversed(isLocusReversed);
-
-                // determine if we need to reverse:
-                if (bamRead.is_fwd_strand() == bamRead.is_mate_fwd_strand())
-                {
-                    isReversed = (! isReversed);
-                }
-
-                if (isReversed) reverseCompStr(reads.back());
-                break;
-            }
-        }
+        std::vector<RemoteReadInfo>& bamRemotes(remoteReads[bamIndex]);
+        recoverRemoteReads(maxNumReads, isLocusReversed, bamIndexStr, bamStream, bamRemotes, readIndex, reads);
     }
 }
 

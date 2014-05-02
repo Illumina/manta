@@ -71,10 +71,11 @@ struct SVLocusAssembler
         return _assembleOpt;
     }
 
-private:
-    typedef boost::shared_ptr<bam_streamer> streamPtr;
 
     typedef std::map<std::string,unsigned> ReadIndexType;
+
+private:
+    typedef boost::shared_ptr<bam_streamer> streamPtr;
 
     /// Collects the reads crossing an SV breakpoint and adds them to reads
     ///
