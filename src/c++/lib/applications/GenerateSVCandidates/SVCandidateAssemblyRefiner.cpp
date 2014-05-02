@@ -535,6 +535,11 @@ isLargeInsertSegment(
     /// first evaluate in the forward direction
     score=(std::max(0,aligner.getMaxPathScore(apath, contigOffset, refOffset)));
 
+#ifdef DEBUG_REFINER
+    log_os << __FUNCTION__ << ": apath " << apath << "\n";
+    log_os << __FUNCTION__ << ": score/ref/contig " << score << " " << refOffset << " " << contigOffset << "\n";
+#endif
+
     if (refOffset < minAlignRefSpan) return false;
     if (contigOffset < minAlignReadLength) return false;
 

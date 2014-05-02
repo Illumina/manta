@@ -31,7 +31,7 @@ struct SVRefinerOptions
     ///
     SVRefinerOptions() :
         smallSVAlignScores(2, -8, -12, 0, -1),
-        largeInsertEdgeAlignScores(2, -8, -12, -1, -1),
+        largeInsertEdgeAlignScores(2, -8, -18, -1, -1),
         largeInsertCompleteAlignScores(2, -8, -24, 0, -1),
         spanningAlignScores(2, -8, -12, -1, -1),
         jumpScore(-25),
