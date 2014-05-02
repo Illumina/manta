@@ -17,6 +17,7 @@
 
 
 #include "assembly/SmallAssembler.hh"
+#include "blt_util/set_util.hh"
 
 #include "boost/foreach.hpp"
 #include "boost/unordered_map.hpp"
@@ -50,9 +51,10 @@ typedef boost::unordered_map<std::string,unsigned> str_uint_map_t;
  */
 static
 std::string
-addBase(const std::string& contig,
-        const char base,
-        const bool isEnd)
+addBase(
+    const std::string& contig,
+    const char base,
+    const bool isEnd)
 {
     if (isEnd) return contig + base;
     else       return base + contig;
@@ -67,9 +69,10 @@ addBase(const std::string& contig,
  */
 static
 std::string
-getEnd(const std::string& contig,
-       const unsigned length,
-       const bool isEnd)
+getEnd(
+    const std::string& contig,
+    const unsigned length,
+    const bool isEnd)
 {
 
     const unsigned csize(contig.size());
@@ -80,6 +83,54 @@ getEnd(const std::string& contig,
 }
 
 
+#if 0
+/// adapt Ole's function to represent word hash as a graph:
+///
+void
+wordHashToDot(
+    const str_uint_map_t& wordCount,
+    std::ostream& os)
+{
+    static const unsigned MIN_KMER_FREQ(1);
+
+    // kmer nodes with coverage higher than this get a different color
+    //static const int lowCovGraphVisThreshold(3);
+    static const unsigned lowCovGraphVisThreshold(MIN_KMER_FREQ);
+    static const std::string lowCovNodeColor("red");
+    static const std::string highCovNodeColor("green");
+
+    os << "graph {\n";
+    os << "node [ style = filled ];\n";
+    str_uint_map_t aliasH;
+    unsigned n(0);
+    BOOST_FOREACH(const str_uint_map_t::value_type& val, wordCount)
+    {
+        const std::string& word(val.first);
+        const unsigned cov(val.second);
+        aliasH[word] = n++;
+        const std::string& color(cov>lowCovGraphVisThreshold ? highCovNodeColor : lowCovNodeColor);
+        os << word << "[label=\"cov" << cov << "\" color=" << color << "]\n";
+    }
+
+    // need to add edges here
+    static const bool isEnd(true);
+    BOOST_FOREACH(const str_uint_map_t::value_type& val, wordCount)
+    {
+        const std::string& word(val.first);
+        const std::string tmp(getEnd(word,word.size()-1,isEnd));
+        BOOST_FOREACH(const char symbol, alphabet)
+        {
+            const std::string newKey(addBase(tmp,symbol,isEnd));
+            if (wordCount.find(newKey) != wordCount.end()) {
+                os << aliasH[word] << " -- " << aliasH[newKey] << ";\n";
+            }
+        }
+    }
+    os << "}\n";
+}
+#endif
+
+
 
 /**
  * Extends the seed contig (aka most frequent k-mer)
@@ -87,17 +138,19 @@ getEnd(const std::string& contig,
  */
 static
 void
-walk(const SmallAssemblerOptions& opt,
-     const std::string& seed,
-     const unsigned wordLength,
-     const str_uint_map_t& wordCount,
-     std::string& contig)
+walk(
+    const SmallAssemblerOptions& opt,
+    const std::string& seed,
+    const unsigned wordLength,
+    const str_uint_map_t& wordCount,
+    std::set<std::string>& seenBefore,
+    std::string& contig)
 {
     // we start with the seed
     contig = seed;
 
-    std::set<std::string> seenBefore;	// records k-mers already encountered during extension
-    seenBefore.insert(contig);
+    seenBefore.clear();
+    seenBefore.insert(seed);
 
     const str_uint_map_t::const_iterator wordCountEnd(wordCount.end());
 
@@ -182,34 +235,16 @@ walk(const SmallAssemblerOptions& opt,
 
 static
 bool
-buildContigs(
-    const SmallAssemblerOptions& opt,
+getKmerCounts(
     const AssemblyReadInput& reads,
-    AssemblyReadOutput& readInfo,
+    const AssemblyReadOutput& readInfo,
     const unsigned wordLength,
-    Assembly& contigs,
-    unsigned& unusedReads)
+    str_uint_map_t& wordCount,
+    std::vector<str_uint_map_t>& readWordOffsets)
 {
     const unsigned readCount(reads.size());
 
-#ifdef DEBUG_ASBL
-    static const std::string logtag("buildContigs: ");
-    log_os << logtag << "In SVLocusAssembler::buildContig. word length=" << wordLength << " readCount: " << readCount << "\n";
-    for (unsigned readIndex(0); readIndex<readCount; ++readIndex)
-    {
-        log_os << reads[readIndex] << " used=" << readInfo[readIndex].isUsed << "\n";
-    }
-#endif
-
-    // a set of read hashes; each read hash stores the starting positions of all kmers in the read
-    std::vector<str_uint_map_t> readWordOffsets(readCount);
-
-    // counts the number of occurrences for each kmer in all reads
-    str_uint_map_t wordCount;
-
-    // most frequent kmer and its number of occurrences
-    unsigned maxWordCount(0);
-    std::string maxWord;
+    readWordOffsets.resize(readCount);
 
     for (unsigned readIndex(0); readIndex<readCount; ++readIndex)
     {
@@ -242,36 +277,107 @@ buildContigs(
             // record (0-indexed) start point for word in read
             //cout << "Recording " << word << " at " << j << "\n";
             readWordOffset[word]=j;
+        }
 
-            // count occurrences
-            ++wordCount[word];
-            if (wordCount[word]>maxWordCount)
-            {
-                //cout << "Setting max word to " << maxWord << " " << maxOcc << "\n";
-                maxWordCount  = wordCount[word];
-                maxWord = word;
-            }
+        // total occurrences from this read:
+        BOOST_FOREACH(const str_uint_map_t::value_type& offset, readWordOffset)
+        {
+            wordCount[offset.first]++;
         }
     }
 
-    if (maxWordCount < opt.minCoverage)
-    {
+    return true;
+}
+
+
+
+static
+bool
+buildContigs(
+    const SmallAssemblerOptions& opt,
+    const AssemblyReadInput& reads,
+    AssemblyReadOutput& readInfo,
+    const unsigned wordLength,
+    Assembly& contigs,
+    unsigned& unusedReads)
+{
+    const unsigned readCount(reads.size());
+
 #ifdef DEBUG_ASBL
-        log_os << logtag << "Coverage too low : " << maxWordCount << " " << opt.minCoverage << "\n";
+    static const std::string logtag("buildContigs: ");
+    log_os << logtag << "In SVLocusAssembler::buildContig. word length=" << wordLength << " readCount: " << readCount << "\n";
+    for (unsigned readIndex(0); readIndex<readCount; ++readIndex)
+    {
+        log_os << reads[readIndex] << " used=" << readInfo[readIndex].isUsed << "\n";
+    }
 #endif
-        return false;
+
+    // a set of read hashes; each read hash stores the starting positions of all kmers in the read
+    std::vector<str_uint_map_t> readWordOffsets(readCount);
+
+    // counts the number of occurrences for each kmer in all reads
+    str_uint_map_t wordCount;
+
+    const bool isGoodKmerCount(getKmerCounts(reads, readInfo, wordLength, wordCount, readWordOffsets));
+    if (! isGoodKmerCount) return false;
+
+    // get the kmers corresponding the highest count
+    std::set<std::string> maxWords;
+    {
+        unsigned maxWordCount(0);
+        BOOST_FOREACH(const str_uint_map_t::value_type& val, wordCount)
+        {
+            if (val.second < maxWordCount) continue;
+            if (val.second > maxWordCount)
+            {
+                maxWords.clear();
+                maxWordCount = val.second;
+            }
+
+            maxWords.insert(val.first);
+        }
+
+        if (maxWordCount < opt.minCoverage)
+        {
+#ifdef DEBUG_ASBL
+            log_os << logtag << "Coverage too low : " << maxWordCount << " " << opt.minCoverage << "\n";
+#endif
+            return false;
+        }
     }
 
-#ifdef DEBUG_ASBL
-    log_os << logtag << "Seeding kmer : " << maxWord << "\n";
-#endif
-
-    // start initial assembly with most frequent kmer as seed
+    /// solve for a best contig in the graph by a heuristic greedy maxflow-ish criteria
     AssembledContig contig;
-    walk(opt,maxWord,wordLength,wordCount,contig.seq);
+    std::string maxWord;
+    {
+        // consider multiple possible most frequent seeding k-mers to find the one associated with the longest contig:
+        //
+        std::set<std::string> seenBefore;   // records k-mers already encountered during extension
 
-    // done with this now:
-    wordCount.clear();
+        while(! maxWords.empty())
+        {
+    #ifdef DEBUG_ASBL
+            log_os << logtag << "Seeding kmer : " << maxWord << "\n";
+    #endif
+
+            maxWord=(*maxWords.begin());
+            maxWords.erase(maxWords.begin());
+
+            std::string contigseq;
+            walk(opt, maxWord, wordLength, wordCount, seenBefore, contigseq);
+
+            if (contigseq.size() > contig.seq.size())
+            {
+                contig.seq = contigseq;
+            }
+
+            // subtract seenBefore from maxWords
+            inplaceSetSubtract(seenBefore,maxWords);
+        }
+
+        // done with this now:
+        wordCount.clear();
+    }
 
     const unsigned contigSize(contig.seq.size());
 
@@ -282,6 +388,8 @@ buildContigs(
 #endif
 
     // increment number of reads containing the seeding kmer
+    //
+    // TODO isn't this equal to maxWordCount? Do we need to sum it here?
     for (unsigned readIndex(0); readIndex<readCount; ++readIndex)
     {
         const str_uint_map_t& readWordOffset(readWordOffsets[readIndex]);
