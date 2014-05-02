@@ -190,6 +190,13 @@ recoverRemoteReads(
         const GenomeInterval& interval(bregion.first);
         std::vector<RemoteReadInfo>& remotes(bregion.second);
 
+#ifdef DEBUG_REMOTES
+        log_os << __FUNCTION__ << ": begion interval " << interval << "\n";
+        BOOST_FOREACH(const RemoteReadInfo& remote, remotes)
+        {
+            log_os << " remote: " << remote.tid << " " << remote.pos << "\n";
+        }
+#endif
 
         // set bam stream to new search interval:
         bamStream.set_new_region(
@@ -218,6 +225,9 @@ recoverRemoteReads(
                 if (bamRead.read_no() != remote.readNo) continue;
                 if (bamRead.qname() != remote.qname) continue;
 
+#ifdef DEBUG_REMOTES
+                log_os << __FUNCTION__ << ": found remote: " << remote.tid << " " << remote.pos << "\n";
+#endif
                 remote.isFound = true;
 
                 if (bamRead.map_qual() != 0) break;
@@ -227,9 +237,9 @@ recoverRemoteReads(
 
                 if (readIndex.count(readKey) != 0)
                 {
-    #ifdef DEBUG_ASBL
+#ifdef DEBUG_ASBL
                     log_os << logtag << "WARNING: SmallAssembler read name collision : " << readKey << "\n";
-    #endif
+#endif
                     break;
                 }
 
