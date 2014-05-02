@@ -798,6 +798,11 @@ processLargeInsertion(
 {
     if (largeInsertionCandidateIndex.empty()) return;
 
+#ifdef DEBUG_REFINER
+    static const std::string logtag("processLargeInsertion: ");
+    log_os << logtag << "starting large insertion search\n"; 
+#endif
+
     bool isLargeInsertionPair(false);
     unsigned largeInsertionLeftIndex(0);
     unsigned largeInsertionRightIndex(0);
@@ -842,6 +847,10 @@ processLargeInsertion(
                 }
                 bestBreakDist=breakDist;
                 bestBreakScore=breakScore;
+
+#ifdef DEBUG_REFINER
+                log_os << logtag << "setting new large insertion candidate. Score: " << breakScore << "\n"; 
+#endif
             }
         }
     }
@@ -882,6 +891,10 @@ processLargeInsertion(
 
         fakeAlignment.align.beginPos += leadingCut;
 
+#ifdef DEBUG_REFINER
+        log_os << logtag << "large insertion fake alignment: " << fakeAlignment << "\n"; 
+#endif
+
         fakeSegments.clear();
         getLargestInsertSegment(fakeAlignment.align.apath, middleSize, fakeSegments);
 
@@ -913,6 +926,10 @@ processLargeInsertion(
                 return;
             }
         }
+
+#ifdef DEBUG_REFINER
+        log_os << logtag << "large insertion passed QC\n"; 
+#endif
 
         getExtendedContig(fakeAlignment, fakeContig.seq, align1RefStr, fakeExtendedContig);
 
@@ -1460,6 +1477,9 @@ getSmallSVAssembly(
             if (isCandidate)
             {
                 candidateInsertInfo=insertInfo;
+#ifdef DEBUG_REFINER
+                log_os << logtag << "inserting large insertion candidation: " << candidateInsertInfo << "\n";
+#endif
                 largeInsertionCandidateIndex.push_back(contigIndex);
             }
         }
