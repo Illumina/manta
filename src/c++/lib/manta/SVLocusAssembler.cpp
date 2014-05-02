@@ -117,6 +117,7 @@ struct RemoteReadInfo
         tid(bamRead.mate_target_id()),
         pos(bamRead.mate_pos() - 1),
         readSize(bamRead.read_size()),
+        isLocalFwd(bamRead.is_fwd_strand()),
         isFound(false),
         isUsed(false)
     {}
@@ -138,6 +139,7 @@ struct RemoteReadInfo
     int tid;
     int pos;
     int readSize;
+    bool isLocalFwd;
     bool isFound;
     bool isUsed;
 };
@@ -184,6 +186,9 @@ recoverRemoteReads(
         last_pos=remote.pos;
     }
 
+#ifdef DEBUG_REMOTES
+        log_os << __FUNCTION__ << ": totalregions: " << bamRegions.size() << "\n";
+#endif
 
     BOOST_FOREACH(BamRegionInfo_t& bregion, bamRegions)
     {
@@ -196,6 +201,8 @@ recoverRemoteReads(
         {
             log_os << " remote: " << remote.tid << " " << remote.pos << "\n";
         }
+
+        unsigned readCount(0);
 #endif
 
         // set bam stream to new search interval:
@@ -221,6 +228,10 @@ recoverRemoteReads(
 
             BOOST_FOREACH(RemoteReadInfo& remote, remotes)
             {
+#ifdef DEBUG_REMOTES
+                readCount++;
+                if ((readCount%1000000) == 0) log_os << " counts: " << readCount << "\n";
+#endif
                 if (remote.isFound) continue;
                 if (bamRead.read_no() != remote.readNo) continue;
                 if (bamRead.qname() != remote.qname) continue;
@@ -260,6 +271,9 @@ recoverRemoteReads(
                 break;
             }
         }
+#ifdef DEBUG_REMOTES
+        log_os << __FUNCTION__ << ": total reads traversed in region: " << readCount << "\n";
+#endif
     }
 }
 
@@ -517,9 +531,24 @@ getBreakendReads(
 #endif
     }
 
+#ifdef DEBUG_REMOTES
+    for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
+    {
+        unsigned fwdStrandRemotes(0);
+        const std::vector<RemoteReadInfo>& bamRemotes(remoteReads[bamIndex]);
+        BOOST_FOREACH(const RemoteReadInfo& remote, bamRemotes)
+        {
+            if (remote.isLocalFwd) fwdStrandRemotes++;
+        }
+        log_os << __FUNCTION__ << ": remotes for bamIndex " << bamIndex << " total: " << bamRemotes.size() << " fwd: " << fwdStrandRemotes << "\n";
+    }
+#endif
     /// recover any remote reads:
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
+#ifdef DEBUG_REMOTES
+        log_os << __FUNCTION__ << ": starting remotes for bamindex: " << bamIndex << "\n";
+#endif
         const std::string bamIndexStr(boost::lexical_cast<std::string>(bamIndex));
 
         bam_streamer& bamStream(*_bamStreams[bamIndex]);
