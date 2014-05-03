@@ -22,7 +22,6 @@
 #include "blt_util/samtools_fasta_util.hh"
 #include "blt_util/seq_util.hh"
 #include "manta/SVCandidateUtil.hh"
-#include "manta/SVLocusAssembler.hh"
 #include "manta/SVReferenceUtil.hh"
 
 #include "boost/foreach.hpp"

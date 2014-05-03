@@ -58,8 +58,8 @@ isGoodShadow(
 
 #ifdef DEBUG_IS_SHADOW
     log_os << logtag << " Found shadow!\n";
-           << logtag << " this mapq  = " << ((unsigned int)bamRead.map_qual()) << std::endl;
-           << logtag << " last qname = " << lastQname << std::endl;
+            << logtag << " this mapq  = " << ((unsigned int)bamRead.map_qual()) << std::endl;
+            << logtag << " last qname = " << lastQname << std::endl;
 #endif
 
     return true;
@@ -77,7 +77,7 @@ check(
         _isLastSet = false;
         if (isGoodShadow(bamRead, _lastQname)) return true;
     }
-    else if((! bamRead.is_unmapped()) && (bamRead.is_mate_unmapped()))
+    else if ((! bamRead.is_unmapped()) && (bamRead.is_mate_unmapped()))
     {
 
         if ((! _isLeft) && bamRead.is_fwd_strand()) return false;

@@ -32,9 +32,9 @@
 
 /// Assembles SV-candidate reads for single and paired SVBreakend objects
 ///
-struct SVLocusAssembler
+struct SVCandidateAssembler
 {
-    SVLocusAssembler(
+    SVCandidateAssembler(
         const ReadScannerOptions& scanOpt,
         const SmallAssemblerOptions& assembleOpt,
         const AlignmentFileOptions& alignFileOpt,
@@ -94,6 +94,7 @@ private:
     const SmallAssemblerOptions _assembleOpt;
     const std::vector<bool> _isAlignmentTumor;
     const ChromDepthFilterUtil _dFilter;
+    const ChromDepthFilterUtil _dFilterRemoteReads;
 
     // contains functions to detect/classify anomalous reads
     SVLocusScanner _readScanner;

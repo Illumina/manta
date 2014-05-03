@@ -43,9 +43,11 @@ struct ReadScannerOptions
         minSingletonMapqGraph(30),
         minSingletonMapqCandidates(15),
         isIgnoreAnomProperPair(false),
-        maxDepthFactor(12)
+        maxDepthFactor(12),
+        maxDepthFactorRemoteReads(7)
     {}
 
+    /// standard MAPQ filter applied during locus generation and some/not all subsequent steps
     unsigned minMapq;
 
     /// a second, lower mapq threshold used only during somatic calling to disprove a
@@ -100,5 +102,8 @@ struct ReadScannerOptions
     /// the maximum depth at which input reads are considered in graph creation/assembly, etc.
     /// (when avg chrom depths are provided)
     float maxDepthFactor;
+
+    /// the maximum depth for a whole locus for remote read retrieval (ie. MAPQ0 chimera mates retrieved for large insertion assembly)
+    float maxDepthFactorRemoteReads;
 };
 

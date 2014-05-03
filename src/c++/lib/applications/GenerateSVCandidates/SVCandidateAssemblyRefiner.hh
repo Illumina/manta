@@ -25,7 +25,7 @@
 #include "blt_util/bam_header_info.hh"
 #include "manta/SVCandidateAssemblyData.hh"
 #include "manta/SVCandidate.hh"
-#include "manta/SVLocusAssembler.hh"
+#include "manta/SVCandidateAssembler.hh"
 #include "options/SmallAssemblerOptions.hh"
 
 
@@ -72,8 +72,8 @@ private:
     //////////////////////////////// data:
     const GSCOptions& _opt;
     const bam_header_info& _header;
-    const SVLocusAssembler _smallSVAssembler;
-    const SVLocusAssembler _spanningAssembler;
+    const SVCandidateAssembler _smallSVAssembler;
+    const SVCandidateAssembler _spanningAssembler;
     const GlobalAligner<int> _smallSVAligner;
     const GlobalAligner<int> _largeInsertEdgeAligner;
     const GlobalAligner<int> _largeInsertCompleteAligner;

@@ -20,20 +20,20 @@
 #include "blt_util/log.hh"
 #include "blt_util/seq_util.hh"
 #include "manta/ShadowReadFinder.hh"
-#include "manta/SVLocusAssembler.hh"
+#include "manta/SVCandidateAssembler.hh"
 #include "manta/SVLocusScannerSemiAligned.hh"
 
 #include "boost/foreach.hpp"
 
 #include <iostream>
 
-
+//#define DEBUG_REMOTES
 //#define DEBUG_ASBL
 
 
 
-SVLocusAssembler::
-SVLocusAssembler(
+SVCandidateAssembler::
+SVCandidateAssembler(
     const ReadScannerOptions& scanOpt,
     const SmallAssemblerOptions& assembleOpt,
     const AlignmentFileOptions& alignFileOpt,
@@ -44,6 +44,7 @@ SVLocusAssembler(
     _assembleOpt(assembleOpt),
     _isAlignmentTumor(alignFileOpt.isAlignmentTumor),
     _dFilter(chromDepthFilename, scanOpt.maxDepthFactor, bamHeader),
+    _dFilterRemoteReads(chromDepthFilename, scanOpt.maxDepthFactorRemoteReads, bamHeader),
     _readScanner(_scanOpt, statsFilename, alignFileOpt.alignmentFilename)
 {
     // setup regionless bam_streams:
@@ -108,18 +109,23 @@ isMateInsertionEvidence(
 
 
 
+/// information recorded for reads where we need to grab the mate from a remote locus
+///
+/// typically these are chimeras with a MAPQ0 mate used ot assemble a large insertion
+///
 struct RemoteReadInfo
 {
     RemoteReadInfo(
         const bam_record& bamRead)
-      : qname(bamRead.qname()),
-        readNo(bamRead.read_no()==1 ? 2 : 1),
-        tid(bamRead.mate_target_id()),
-        pos(bamRead.mate_pos() - 1),
-        readSize(bamRead.read_size()),
-        isLocalFwd(bamRead.is_fwd_strand()),
-        isFound(false),
-        isUsed(false)
+        : qname(bamRead.qname()),
+          readNo(bamRead.read_no()==1 ? 2 : 1),
+          tid(bamRead.mate_target_id()),
+          pos(bamRead.mate_pos() - 1),
+          localPos(bamRead.pos() - 1),
+          readSize(bamRead.read_size()),
+          isLocalFwd(bamRead.is_fwd_strand()),
+          isFound(false),
+          isUsed(false)
     {}
 
     bool
@@ -138,6 +144,7 @@ struct RemoteReadInfo
     int readNo; // this is read number of the target
     int tid;
     int pos;
+    int localPos;
     int readSize;
     bool isLocalFwd;
     bool isFound;
@@ -146,6 +153,7 @@ struct RemoteReadInfo
 
 
 
+/// retrieve remote reads from a list of target loci in the bam
 static
 void
 recoverRemoteReads(
@@ -154,7 +162,7 @@ recoverRemoteReads(
     const std::string& bamIndexStr,
     bam_streamer& bamStream,
     std::vector<RemoteReadInfo>& bamRemotes,
-    SVLocusAssembler::ReadIndexType& readIndex,
+    SVCandidateAssembler::ReadIndexType& readIndex,
     AssemblyReadInput& reads)
 {
     // figure out what we can handle in a single region query:
@@ -187,7 +195,7 @@ recoverRemoteReads(
     }
 
 #ifdef DEBUG_REMOTES
-        log_os << __FUNCTION__ << ": totalregions: " << bamRegions.size() << "\n";
+    log_os << __FUNCTION__ << ": totalregions: " << bamRegions.size() << "\n";
 #endif
 
     BOOST_FOREACH(BamRegionInfo_t& bregion, bamRegions)
@@ -207,9 +215,9 @@ recoverRemoteReads(
 
         // set bam stream to new search interval:
         bamStream.set_new_region(
-                interval.tid,
-                interval.range.begin_pos(),
-                interval.range.end_pos()+1);
+            interval.tid,
+            interval.range.begin_pos(),
+            interval.range.end_pos()+1);
 
         while (bamStream.next())
         {
@@ -280,7 +288,7 @@ recoverRemoteReads(
 
 
 void
-SVLocusAssembler::
+SVCandidateAssembler::
 getBreakendReads(
     const SVBreakend& bp,
     const bool isLocusReversed,
@@ -334,9 +342,11 @@ getBreakendReads(
 
     const bool isMaxDepth(_dFilter.isMaxDepthFilter());
     float maxDepth(0);
+    float maxDepthRemoteReads(0);
     if (isMaxDepth)
     {
         maxDepth = _dFilter.maxDepth(bp.interval.tid);
+        maxDepthRemoteReads = _dFilterRemoteReads.maxDepth(bp.interval.tid);
     }
     const pos_t searchBeginPos(searchRange.begin_pos());
     const pos_t searchEndPos(searchRange.end_pos());
@@ -348,6 +358,13 @@ getBreakendReads(
 
     const unsigned bamCount(_bamStreams.size());
     std::vector<std::vector<RemoteReadInfo> > remoteReads(bamCount);
+
+    bool isMaxDepthRemoteReadsTriggered(false);
+#ifdef FWDREV_CHECK
+    /// sanity check that remote and shadow reads suggeset an insertion pattern before doing an expensive remote recovery:
+    std::vector<int> fwdSemiReadPos;
+    std::vector<int> revSemiReadPos;
+#endif
 
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
@@ -409,7 +426,14 @@ getBreakendReads(
             {
                 assert(refPos<searchEndPos);
                 const pos_t depthOffset(refPos - searchBeginPos);
-                if ((depthOffset >= 0) && (normalDepthBuffer[depthOffset] > maxDepth)) continue;
+                if ((depthOffset >= 0) && (normalDepthBuffer[depthOffset] > maxDepthRemoteReads))
+                {
+                    isMaxDepthRemoteReadsTriggered=true;
+                }
+                if ((depthOffset >= 0) && (normalDepthBuffer[depthOffset] > maxDepth))
+                {
+                    continue;
+                }
             }
 
 
@@ -419,6 +443,17 @@ getBreakendReads(
                 if (isMateInsertionEvidence(bamRead, _scanOpt.minMapq, isSearchForLeftOpen, isSearchForRightOpen))
                 {
                     remoteReads[bamIndex].push_back(RemoteReadInfo(bamRead));
+
+#ifdef FWDREV_CHECK
+                    if (bamRead.is_fwd_strand())
+                    {
+                        fwdSemiReadPos.push_back(bamRead.pos()-1);
+                    }
+                    else
+                    {
+                        revSemiReadPos.push_back(bamRead.pos()-1);
+                    }
+#endif
                 }
             }
 
@@ -472,6 +507,20 @@ getBreakendReads(
             }
 
             const bool isShadowKeeper(shadow.check(bamRead));
+
+#ifdef FWDREV_CHECK
+            if (isShadowKeeper)
+            {
+                if (bamRead.is_mate_fwd_strand())
+                {
+                    fwdSemiReadPos.push_back(bamRead.mate_pos()-1);
+                }
+                else
+                {
+                    revSemiReadPos.push_back(bamRead.mate_pos()-1);
+                }
+            }
+#endif
 
             if (! (isIndelKeeper
                    || isSemiAlignedKeeper
@@ -531,37 +580,89 @@ getBreakendReads(
 #endif
     }
 
-#ifdef DEBUG_REMOTES
-    for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
+
+    /// sanity check the remote reads to see if we're going to recover them:
+    bool isRecoverRemotes(!isMaxDepthRemoteReadsTriggered);
+
+#ifdef FWDREV_CHECK
+    if (isRecoverRemotes)
     {
-        unsigned fwdStrandRemotes(0);
-        const std::vector<RemoteReadInfo>& bamRemotes(remoteReads[bamIndex]);
-        BOOST_FOREACH(const RemoteReadInfo& remote, bamRemotes)
+#ifdef DEBUG_REMOTES
+        for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
         {
-            if (remote.isLocalFwd) fwdStrandRemotes++;
+            unsigned fwdStrandRemotes(0);
+            const std::vector<RemoteReadInfo>& bamRemotes(remoteReads[bamIndex]);
+            BOOST_FOREACH(const RemoteReadInfo& remote, bamRemotes)
+            {
+                if (remote.isLocalFwd)
+                {
+                    fwdStrandRemotes++;
+                }
+            }
+            log_os << __FUNCTION__ << ": remotes for bamIndex " << bamIndex << " total: " << bamRemotes.size() << " fwd: " << fwdStrandRemotes << "\n";
         }
-        log_os << __FUNCTION__ << ": remotes for bamIndex " << bamIndex << " total: " << bamRemotes.size() << " fwd: " << fwdStrandRemotes << "\n";
+#endif
+
+        // get a hack median and IQ for the remotes:
+        int fwdMedian(0);
+        int fwdRange(0);
+        if (! fwdSemiReadPos.empty())
+        {
+            std::sort(fwdSemiReadPos.begin(),fwdSemiReadPos.end());
+            fwdMedian=(fwdSemiReadPos[fwdSemiReadPos.size()/2]);
+            fwdRange=(fwdSemiReadPos[(fwdSemiReadPos.size()*3)/4]-fwdSemiReadPos[(fwdSemiReadPos.size()*1)/4]);
+        }
+
+        int revMedian(0);
+        int revRange(0);
+        if (! revSemiReadPos.empty())
+        {
+            std::sort(revSemiReadPos.begin(),revSemiReadPos.end());
+            revMedian=(revSemiReadPos[revSemiReadPos.size()/2]);
+            revRange=(revSemiReadPos[(revSemiReadPos.size()*3)/4]-revSemiReadPos[(revSemiReadPos.size()*1)/4]);
+        }
+
+        if ((fwdSemiReadPos.size() <= 2) || (revSemiReadPos.size() <= 2))
+        {
+            isRecoverRemotes=false;
+        }
+        else
+        {
+            const int diff(revMedian-fwdMedian);
+            if ((diff >= 2000) || (diff < 0))
+            {
+                isRecoverRemotes=false;
+            }
+            else if ((fwdRange >= 400) || (revRange >= 400))
+            {
+                isRecoverRemotes=false;
+            }
+        }
     }
 #endif
+
     /// recover any remote reads:
-    for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
+    if (isRecoverRemotes)
     {
+        for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
+        {
 #ifdef DEBUG_REMOTES
-        log_os << __FUNCTION__ << ": starting remotes for bamindex: " << bamIndex << "\n";
+            log_os << __FUNCTION__ << ": starting remotes for bamindex: " << bamIndex << "\n";
 #endif
-        const std::string bamIndexStr(boost::lexical_cast<std::string>(bamIndex));
+            const std::string bamIndexStr(boost::lexical_cast<std::string>(bamIndex));
 
-        bam_streamer& bamStream(*_bamStreams[bamIndex]);
+            bam_streamer& bamStream(*_bamStreams[bamIndex]);
 
-        std::vector<RemoteReadInfo>& bamRemotes(remoteReads[bamIndex]);
-        recoverRemoteReads(maxNumReads, isLocusReversed, bamIndexStr, bamStream, bamRemotes, readIndex, reads);
+            std::vector<RemoteReadInfo>& bamRemotes(remoteReads[bamIndex]);
+            recoverRemoteReads(maxNumReads, isLocusReversed, bamIndexStr, bamStream, bamRemotes, readIndex, reads);
+        }
     }
 }
 
 
 
 void
-SVLocusAssembler::
+SVCandidateAssembler::
 assembleSingleSVBreakend(
     const SVBreakend& bp,
     const reference_contig_segment& refSeq,
@@ -579,7 +680,7 @@ assembleSingleSVBreakend(
 
 
 void
-SVLocusAssembler::
+SVCandidateAssembler::
 assembleSVBreakends(const SVBreakend& bp1,
                     const SVBreakend& bp2,
                     const bool isBp1Reversed,
