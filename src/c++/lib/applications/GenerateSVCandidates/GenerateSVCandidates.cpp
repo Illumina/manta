@@ -16,7 +16,7 @@
 ///
 
 #include "GenerateSVCandidates.hh"
-#include "EdgeRetrieverBin.hh"
+#include "EdgeRetrieverJumpBin.hh"
 #include "EdgeRetrieverLocus.hh"
 #include "EdgeRuntimeTracker.hh"
 #include "GSCOptions.hh"
@@ -70,7 +70,7 @@ edgeRFactory(
     }
     else
     {
-        return (new EdgeRetrieverBin(set, opt.graphNodeMaxEdgeCount, opt.binCount, opt.binIndex));
+        return (new EdgeRetrieverJumpBin(set, opt.graphNodeMaxEdgeCount, opt.binCount, opt.binIndex));
     }
 }
 
