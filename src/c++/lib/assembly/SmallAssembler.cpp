@@ -233,18 +233,24 @@ walk(
 
 
 
+/// \params isFindRepeatReads if true record all reads with repeated words
+///
 static
 bool
 getKmerCounts(
     const AssemblyReadInput& reads,
     const AssemblyReadOutput& readInfo,
     const unsigned wordLength,
+    const bool isFindRepeatReads,
+    std::vector<int>& repeatReads,
     str_uint_map_t& wordCount,
     std::vector<str_uint_map_t>& readWordOffsets)
 {
     const unsigned readCount(reads.size());
 
     readWordOffsets.resize(readCount);
+
+    repeatReads.clear();
 
     for (unsigned readIndex(0); readIndex<readCount; ++readIndex)
     {
@@ -267,11 +273,19 @@ getKmerCounts(
             const std::string word(seq.substr(j,wordLength));
             if (readWordOffset.find(word) != readWordOffset.end())
             {
-                // try again with different k-mer size
 #ifdef DEBUG_ASBL
-                log_os << logtag << "word " << word << " repeated in read " << readIndex << "\n";
+                    log_os << logtag << "word " << word << " repeated in read " << readIndex << "\n";
 #endif
-                return false;
+                if (isFindRepeatReads)
+                {
+                    repeatReads.push_back(readIndex);
+                    break;
+                }
+                else
+                {
+                    // try again with different k-mer size
+                    return false;
+                }
             }
 
             // record (0-indexed) start point for word in read
@@ -286,7 +300,7 @@ getKmerCounts(
         }
     }
 
-    return true;
+    return (repeatReads.empty());
 }
 
 
@@ -295,6 +309,7 @@ static
 bool
 buildContigs(
     const SmallAssemblerOptions& opt,
+    const bool isLastWord,
     const AssemblyReadInput& reads,
     AssemblyReadOutput& readInfo,
     const unsigned wordLength,
@@ -318,8 +333,21 @@ buildContigs(
     // counts the number of occurrences for each kmer in all reads
     str_uint_map_t wordCount;
 
-    const bool isGoodKmerCount(getKmerCounts(reads, readInfo, wordLength, wordCount, readWordOffsets));
-    if (! isGoodKmerCount) return false;
+    std::vector<int> repeatReads;
+    const bool isGoodKmerCount(getKmerCounts(reads, readInfo, wordLength, isLastWord, repeatReads, wordCount, readWordOffsets));
+    if (! isGoodKmerCount)
+    {
+        if (isLastWord)
+        {
+            BOOST_FOREACH(const int readIndex, repeatReads)
+            {
+                readInfo[readIndex].isUsed = true;
+                readInfo[readIndex].isFiltered = true;
+                unusedReads--;
+            }
+        }
+        return false;
+    }
 
     // get the kmers corresponding the highest count
     std::set<std::string> maxWords;
@@ -471,7 +499,8 @@ runSmallAssembler(
         const unsigned lastUnusedReads(unusedReads);
         for (; wordLength<=opt.maxWordLength; wordLength+=opt.wordStepSize)
         {
-            const bool isAssemblySuccess = buildContigs(opt, reads, assembledReadInfo, wordLength, contigs, unusedReads);
+            const bool isLastWord(wordLength+opt.wordStepSize > opt.maxWordLength);
+            const bool isAssemblySuccess = buildContigs(opt, isLastWord, reads, assembledReadInfo, wordLength, contigs, unusedReads);
             if (isAssemblySuccess) break;
         }
 

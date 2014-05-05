@@ -27,10 +27,12 @@ struct AssemblyReadInfo
 {
     AssemblyReadInfo() :
         isUsed(false),
+        isFiltered(false),
         contigId(0)
     {}
 
     bool isUsed;
+    bool isFiltered; ///< if true, the read was 'used' but filtered out, so there is no meaningful contig id association
     unsigned contigId; ///< index of the contig that this read is used in
 };
 
