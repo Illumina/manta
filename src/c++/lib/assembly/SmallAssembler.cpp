@@ -489,7 +489,6 @@ runSmallAssembler(
 
     assembledReadInfo.resize(reads.size());
 
-    unsigned wordLength(opt.minWordLength);
     unsigned unusedReads(reads.size());
 
     for (unsigned iteration(0); iteration < opt.maxAssemblyIterations; ++iteration)
@@ -497,7 +496,7 @@ runSmallAssembler(
         if (unusedReads < opt.minSeedReads) return;
 
         const unsigned lastUnusedReads(unusedReads);
-        for (; wordLength<=opt.maxWordLength; wordLength+=opt.wordStepSize)
+        for (unsigned wordLength(opt.minWordLength); wordLength<=opt.maxWordLength; wordLength+=opt.wordStepSize)
         {
             const bool isLastWord(wordLength+opt.wordStepSize > opt.maxWordLength);
             const bool isAssemblySuccess = buildContigs(opt, isLastWord, reads, assembledReadInfo, wordLength, contigs, unusedReads);
