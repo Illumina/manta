@@ -1371,6 +1371,7 @@ getSmallSVAssembly(
     unsigned trailingTrim;
     getIntervalReferenceSegment(_opt.referenceFilename, _header, extraRefSize, sv.bp1.interval, assemblyData.bp1ref, leadingTrim, trailingTrim);
 
+    /// in most cases, these values should equal extraRefSplitSize, sometimes they're forced to be shorter:
     const pos_t leadingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(leadingTrim)));
     const pos_t trailingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(trailingTrim)));
 

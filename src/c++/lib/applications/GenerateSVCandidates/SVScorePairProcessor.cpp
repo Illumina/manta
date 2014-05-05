@@ -45,28 +45,28 @@ SVScorePairProcessor::
 nextBamIndex(
     const unsigned bamIndex)
 {
-    bparams.isSet = true;
-    bparams.isTumor = (isAlignmentTumor[bamIndex]);
+    bamParams.isSet = true;
+    bamParams.isTumor = (isAlignmentTumor[bamIndex]);
 
     /// set the search range around centerPos so that we can get any fragments at the Xth percentile length or smaller which could have
     /// min Fragsupport
     const SVLocusScanner::Range& pRange(readScanner.getEvidencePairRange(bamIndex));
-    bparams.minFrag = (static_cast<pos_t>(pRange.min));
-    bparams.maxFrag = (static_cast<pos_t>(pRange.max));
+    bamParams.minFrag = (static_cast<pos_t>(pRange.min));
+    bamParams.maxFrag = (static_cast<pos_t>(pRange.max));
 
-    const pos_t maxSupportedFrag(bparams.maxFrag-pairOpt.minFragSupport);
+    const pos_t maxSupportedFrag(bamParams.maxFrag-pairOpt.minFragSupport);
 
-    const pos_t beginPos(iparams.centerPos-maxSupportedFrag);
-    const pos_t endPos(iparams.centerPos+maxSupportedFrag+1);
+    const pos_t beginPos(svParams.centerPos-maxSupportedFrag);
+    const pos_t endPos(svParams.centerPos+maxSupportedFrag+1);
 #ifdef DEBUG_MEGAPAIR
     log_os << __FUNCTION__ << ": pair scan begin/end: " << beginPos << " " << endPos << "\n";
 #endif
 
-    bparams.fragDistroPtr = &(readScanner.getFragSizeDistro(bamIndex));
+    bamParams.fragDistroPtr = &(readScanner.getFragSizeDistro(bamIndex));
 
     // set bam stream to new search interval:
     const SVBreakend bp( isBp1 ? sv.bp1 : sv.bp2 );
-    bparams.interval = GenomeInterval(bp.interval.tid, beginPos, endPos);
+    bamParams.interval = GenomeInterval(bp.interval.tid, beginPos, endPos);
 
-    return bparams.interval;
+    return bamParams.interval;
 }

@@ -97,11 +97,14 @@ processBamProcList(
             {
                 const bam_record& bamRead(*(bamStream.get_record_ptr()));
 
-                if (SVScorer::pairProcPtr::value_type::isSkipRecord(bamRead)) continue;
+                /// this filter is common to all targetProcs:
+                if (SVScorer::pairProcPtr::value_type::isSkipRecordCore(bamRead)) continue;
 
                 BOOST_FOREACH(const unsigned procIndex, targetProcs)
                 {
                     SVScorer::pairProcPtr& bpp(pairProcList[procIndex]);
+
+                    if (bpp->isSkipRecord(bamRead)) continue;
                     bpp->processClearedRecord(bamRead);
                 }
             }
@@ -115,12 +118,13 @@ void
 SVScorer::
 getSVAltPairSupport(
     const PairOptions& pairOpt,
+    const SVCandidateAssemblyData& assemblyData,
     const SVCandidate& sv,
     SVEvidence& evidence,
     std::vector<pairProcPtr>& pairProcList)
 {
-    pairProcPtr bp1Ptr(new SVScorePairAltProcessor(_isAlignmentTumor, _readScanner, pairOpt, sv, true, evidence));
-    pairProcPtr bp2Ptr(new SVScorePairAltProcessor(_isAlignmentTumor, _readScanner, pairOpt, sv, false, evidence));
+    pairProcPtr bp1Ptr(new SVScorePairAltProcessor(_scanOpt, _refineOpt, _isAlignmentTumor, _readScanner, pairOpt, assemblyData, sv, true, evidence));
+    pairProcPtr bp2Ptr(new SVScorePairAltProcessor(_scanOpt, _refineOpt, _isAlignmentTumor, _readScanner, pairOpt, assemblyData, sv, false, evidence));
 
     pairProcList.push_back(bp1Ptr);
     pairProcList.push_back(bp2Ptr);
@@ -575,7 +579,7 @@ getSVPairSupport(
     {
         // for SVs which were assembled without a pair-driven prior hypothesis,
         // we need to go back to the bam and and find any supporting alt read-pairs
-        getSVAltPairSupport(pairOpt, sv, evidence, pairProcList);
+        getSVAltPairSupport(pairOpt, assemblyData, sv, evidence, pairProcList);
     }
 
     // count the read pairs supporting the reference allele on each breakend in each sample:

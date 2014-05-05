@@ -173,6 +173,7 @@ private:
     void
     getSVAltPairSupport(
         const PairOptions& pairOpt,
+        const SVCandidateAssemblyData& assemblyData,
         const SVCandidate& sv,
         SVEvidence& evidence,
         std::vector<pairProcPtr>& pairProcList);
@@ -210,7 +211,7 @@ private:
         unsigned& maxDepth,
         float& MQ0Frac);
 
-    /// apply all scoring models relevent to this event:
+    /// apply all scoring models relevant to this event:
     void
     computeAllScoreModels(
         const bool isSomatic,
@@ -234,6 +235,7 @@ private:
     const CallOptionsDiploid _diploidOpt;
     const CallOptionsDiploidDeriv _diploidDopt;
     const ReadScannerOptions _scanOpt;
+    const SVRefinerOptions _refineOpt;
     const CallOptionsSomatic _somaticOpt;
     const CallOptionsSomaticDeriv _somaticDopt;
     const ChromDepthFilterUtil _dFilterDiploid;

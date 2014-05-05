@@ -148,6 +148,7 @@ getExtendedContig(
 
 
 
+/// extend the assembly contig to cover the whole target reference region after alignment
 void
 getExtendedContig(
     const AlignmentResult<int>& alignment,

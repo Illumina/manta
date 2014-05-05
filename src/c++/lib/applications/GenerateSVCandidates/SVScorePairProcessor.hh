@@ -77,7 +77,7 @@ struct SVScorePairProcessor : public BamRegionProcessor
         sv(initSv),
         isBp1(initIsBp1),
         evidence(initEvidence),
-        iparams(readScanner, sv, isBp1)
+        svParams(readScanner, sv, isBp1)
     {}
 
     const GenomeInterval&
@@ -88,6 +88,7 @@ struct SVScorePairProcessor : public BamRegionProcessor
     processRecord(
         const bam_record& bamRead)
     {
+        if (isSkipRecordCore(bamRead)) return;
         if (isSkipRecord(bamRead)) return;
         processClearedRecord(bamRead);
     }
@@ -95,11 +96,19 @@ struct SVScorePairProcessor : public BamRegionProcessor
     // alternate interface
     static
     bool
+    isSkipRecordCore(
+        const bam_record& bamRead)
+    {
+        return (SVLocusScanner::isReadFilteredCore(bamRead));
+    }
+
+    /// what to skip in addition to the core skip test?
+    virtual
+    bool
     isSkipRecord(
         const bam_record& bamRead)
     {
-        if (SVLocusScanner::isReadFilteredCore(bamRead)) return true;
-        else if (bamRead.is_unmapped() || bamRead.is_mate_unmapped()) return true;
+        if (bamRead.is_unmapped() || bamRead.is_mate_unmapped()) return true;
         else if (! is_innie_pair(bamRead)) return true;
         return false;
     }
@@ -136,6 +145,6 @@ protected:
     const bool isBp1;
     SVEvidence& evidence;
 
-    const SVScorePairInitParams iparams;
-    SVScorePairBamParams bparams;
+    const SVScorePairInitParams svParams;
+    SVScorePairBamParams bamParams;
 };

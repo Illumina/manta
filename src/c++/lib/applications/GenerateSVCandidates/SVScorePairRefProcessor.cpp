@@ -45,10 +45,10 @@ processClearedRecord(
 {
     using namespace illumina::common;
 
-    assert(bparams.isSet);
+    assert(bamParams.isSet);
 
     const pos_t refPos(bamRead.pos()-1);
-    if (! bparams.interval.range.is_pos_intersect(refPos)) return;
+    if (! bamParams.interval.range.is_pos_intersect(refPos)) return;
 
 #ifdef DEBUG_MEGAPAIR
     log_os << __FUNCTION__ << ": read: " << bamRead << "\n";
@@ -56,8 +56,8 @@ processClearedRecord(
 
     /// check if fragment is too big or too small:
     const int templateSize(std::abs(bamRead.template_size()));
-    if (templateSize < bparams.minFrag) return;
-    if (templateSize > bparams.maxFrag) return;
+    if (templateSize < bamParams.minFrag) return;
+    if (templateSize > bamParams.maxFrag) return;
 
     // count only from the down stream reads
     const bool isFirstBamRead(isFirstRead(bamRead));
@@ -79,19 +79,19 @@ processClearedRecord(
     }
 
     {
-        const pos_t fragOverlap(std::min((1+iparams.centerPos-fragBeginRefPos), (fragEndRefPos-iparams.centerPos)));
+        const pos_t fragOverlap(std::min((1+svParams.centerPos-fragBeginRefPos), (fragEndRefPos-svParams.centerPos)));
 #ifdef DEBUG_MEGAPAIR
         log_os << __FUNCTION__ << ": frag begin/end/overlap: " << fragBeginRefPos << " " << fragEndRefPos << " " << fragOverlap << "\n";
 #endif
         if (fragOverlap < pairOpt.minFragSupport) return;
     }
 
-    SVFragmentEvidence& fragment(evidence.getSample(bparams.isTumor)[bamRead.qname()]);
+    SVFragmentEvidence& fragment(evidence.getSample(bamParams.isTumor)[bamRead.qname()]);
 
     static const bool isShadow(false);
 
     SVFragmentEvidenceRead& evRead(fragment.getRead(bamRead.is_first()));
-    setReadEvidence(iparams.minMapQ, iparams.minTier2MapQ, bamRead, isShadow, evRead);
+    setReadEvidence(svParams.minMapQ, svParams.minTier2MapQ, bamRead, isShadow, evRead);
 
-    setAlleleFrag(*bparams.fragDistroPtr, templateSize, fragment.ref.getBp(isBp1));
+    setAlleleFrag(*bamParams.fragDistroPtr, templateSize, fragment.ref.getBp(isBp1));
 }

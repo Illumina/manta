@@ -60,6 +60,7 @@ SVScorer(
     _diploidOpt(opt.diploidOpt),
     _diploidDopt(_diploidOpt),
     _scanOpt(opt.scanOpt),
+    _refineOpt(opt.refineOpt),
     _somaticOpt(opt.somaticOpt),
     _somaticDopt(_somaticOpt),
     _dFilterDiploid(opt.chromDepthFilename, _diploidOpt.maxDepthFactor, header),
