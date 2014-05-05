@@ -722,11 +722,23 @@ getRefAltFromFrag(
             // reduce the impact of spanning reads to zero as svs become small, this is because of complex signal/noise
             // which the scoring models haven't (yet) been designed to handle.
             const bool isSemiMapped(! (fragev.read1.isAnchored(isPermissive) && fragev.read2.isAnchored(isPermissive)));
-            const double altSpanPower((isSemiMapped ?  semiMappedPower : 1.) * spanningPairWeight);
-            const double refSpanPower((isSemiMapped ?  0 : 1.) * spanningPairWeight);
+            double spanPower(spanningPairWeight);
 
-            incrementSpanningPairAlleleLnLhood(refChimeraProb, altChimeraProb, fragev.ref, refSpanPower, refLnLhoodSet.fragPair);
-            incrementSpanningPairAlleleLnLhood(altChimeraProb, refChimeraProb, fragev.alt, altSpanPower, altLnLhoodSet.fragPair);
+            if (isSemiMapped)
+            {
+                // only count semi-mapped reads for the alt allele
+                if (getSpanningPairAlleleLhood(fragev.alt) > getSpanningPairAlleleLhood(fragev.ref))
+                {
+                    spanPower *= semiMappedPower;
+                }
+                else
+                {
+                    spanPower = 0.;
+                }
+            }
+
+            incrementSpanningPairAlleleLnLhood(refChimeraProb, altChimeraProb, fragev.ref, spanPower, refLnLhoodSet.fragPair);
+            incrementSpanningPairAlleleLnLhood(altChimeraProb, refChimeraProb, fragev.alt, spanPower, altLnLhoodSet.fragPair);
             isFragEvaluated=true;
         }
     }
@@ -955,7 +967,7 @@ scoreRNASV(
     SVScoreInfoDiploid& diploidInfo)
 {
 #ifdef DEBUG_SCORE
-    log_os << __FUNCTION__ << "Scoring RNA candidate " << sv << "\n";
+    //log_os << __FUNCTION__ << "Scoring RNA candidate " << sv << "\n";
 #endif
     diploidInfo.gtScore=0;
     diploidInfo.altScore=42;
@@ -1149,7 +1161,7 @@ computeSomaticSampleLoghood(
             log_os << __FUNCTION__ << ": altLnFragLhood: " << altLnFragLhood << "\n";
             log_os << __FUNCTION__ << ": refLnLhood: " << refLnLhood << "\n";
             log_os << __FUNCTION__ << ": altLnLhood: " << altLnLhood << "\n";
-            log_os << __FUNCTION__ << ": loghood delta: " << log_sum(refLnLhood, altLnLhood); << "\n";
+            log_os << __FUNCTION__ << ": loghood delta: " << log_sum(refLnLhood, altLnLhood) << "\n";
 #endif
 
             loglhood[gt] += log_sum(refLnLhood, altLnLhood);
