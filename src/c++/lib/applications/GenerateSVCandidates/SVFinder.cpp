@@ -725,7 +725,7 @@ processReadPair(
 #ifdef DEBUG_SVDATA
     log_os << __FUNCTION__ << ": Checking pair: " << pair << "\n";
     log_os << __FUNCTION__ << ": Translated to candidates:\n";
-    BOOST_FOREACH(const SVObservation& cand, readCandidates)
+    BOOST_FOREACH(const SVObservation& cand, _readCandidates)
     {
         log_os << __FUNCTION__ << ": cand: " << cand << "\n";
     }

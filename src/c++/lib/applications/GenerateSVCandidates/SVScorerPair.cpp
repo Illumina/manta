@@ -435,6 +435,10 @@ getFragProb(
     {
         isFragSupportSV = true;
     }
+
+#ifdef DEBUG_PAIR
+    log_os << logtag << "isSupportSV: " << isFragSupportSV << "\n";
+#endif
 }
 
 

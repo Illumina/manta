@@ -367,7 +367,7 @@ getSampleCounts(
         addConservativeSplitReadSupport(fragev,true,sampleBaseInfo);
         addConservativeSplitReadSupport(fragev,false,sampleBaseInfo);
 #ifdef DEBUG_SCORE
-        log_os << __FUNCTION__ << "Counting read: " << val.first;
+        log_os << __FUNCTION__ << "Counting read: " << val.first << "\n";
 #endif
         addSpanningPairSupport(fragev, sampleBaseInfo);
         addConservativeSpanningPairSupport(fragev, sampleBaseInfo);
@@ -703,8 +703,16 @@ getRefAltFromFrag(
     bool isFragEvaluated(false);
 
     // high-quality spanning support relies on read1 and read2 mapping well:
-    const bool isPairUsable((fragev.read1.isScanned && fragev.read2.isScanned) &&
-                            (fragev.read1.isAnchored(isPermissive) || fragev.read2.isAnchored(isPermissive)));
+    bool isPairUsable;
+    if (isPermissive)
+    {
+        isPairUsable = (fragev.read1.isObservedAnchor(isPermissive) || fragev.read2.isObservedAnchor(isPermissive));
+    }
+    else
+    {
+        isPairUsable = ((fragev.read1.isScanned && fragev.read2.isScanned) &&
+                (fragev.read1.isAnchored(isPermissive) || fragev.read2.isAnchored(isPermissive)));
+    }
 
     if (isPairUsable)
     {
@@ -1130,17 +1138,19 @@ computeSomaticSampleLoghood(
             const index_t gtid(static_cast<const index_t>(gt));
 
             const double refLnFragLhood(getFragLnLhood(refLnLhoodSet, isRead1Evaluated, isRead2Evaluated));
-#ifdef DEBUG_SCORE
-            log_os << __FUNCTION__ << ": refLnFragLhood: " << refLnFragLhood << "\n";
-#endif
             const double altLnFragLhood(getFragLnLhood(altLnLhoodSet, isRead1Evaluated, isRead2Evaluated));
-#ifdef DEBUG_SCORE
-            log_os << __FUNCTION__ << ": altLnFragLhood: " << altLnFragLhood << "\n";
-#endif
 
             // update likelihood with Pr[allele | G]
             const double refLnLhood = refLnFragLhood + altLnCompFraction(gtid, somaticMutationFreq, noiseMutationFreq);
             const double altLnLhood = altLnFragLhood + altLnFraction(gtid, somaticMutationFreq, noiseMutationFreq);
+
+#ifdef DEBUG_SCORE
+            log_os << __FUNCTION__ << ": refLnFragLhood: " << refLnFragLhood << "\n";
+            log_os << __FUNCTION__ << ": altLnFragLhood: " << altLnFragLhood << "\n";
+            log_os << __FUNCTION__ << ": refLnLhood: " << refLnLhood << "\n";
+            log_os << __FUNCTION__ << ": altLnLhood: " << altLnLhood << "\n";
+            log_os << __FUNCTION__ << ": loghood delta: " << log_sum(refLnLhood, altLnLhood); << "\n";
+#endif
 
             loglhood[gt] += log_sum(refLnLhood, altLnLhood);
         }
