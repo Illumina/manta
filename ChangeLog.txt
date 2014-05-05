@@ -1,3 +1,4 @@
+- MANTA-161 make assembly robust to seed k-mer selection
 - MANTA-164 batch retrieve assembly mate reads
 - MANTA-158 improve small indel contig alignment specificity
 - MANTA-146 use MAPQ0 mate reads in assembly

@@ -805,7 +805,7 @@ processLargeInsertion(
 
 #ifdef DEBUG_REFINER
     static const std::string logtag("processLargeInsertion: ");
-    log_os << logtag << "starting large insertion search\n"; 
+    log_os << logtag << "starting large insertion search\n";
 #endif
 
     bool isLargeInsertionPair(false);
@@ -854,7 +854,7 @@ processLargeInsertion(
                 bestBreakScore=breakScore;
 
 #ifdef DEBUG_REFINER
-                log_os << logtag << "setting new large insertion candidate. Score: " << breakScore << "\n"; 
+                log_os << logtag << "setting new large insertion candidate. Score: " << breakScore << "\n";
 #endif
             }
         }
@@ -897,7 +897,7 @@ processLargeInsertion(
         fakeAlignment.align.beginPos += leadingCut;
 
 #ifdef DEBUG_REFINER
-        log_os << logtag << "large insertion fake alignment: " << fakeAlignment << "\n"; 
+        log_os << logtag << "large insertion fake alignment: " << fakeAlignment << "\n";
 #endif
 
         fakeSegments.clear();
@@ -933,7 +933,7 @@ processLargeInsertion(
         }
 
 #ifdef DEBUG_REFINER
-        log_os << logtag << "large insertion passed QC\n"; 
+        log_os << logtag << "large insertion passed QC\n";
 #endif
 
         getExtendedContig(fakeAlignment, fakeContig.seq, align1RefStr, fakeExtendedContig);
