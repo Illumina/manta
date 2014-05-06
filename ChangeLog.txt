@@ -1,3 +1,5 @@
+- MANTA-167 semi-mapped som pair correction
+- MANTA-156 filter out assm poison reads
 - MANTA-161 make assembly robust to seed k-mer selection
 - MANTA-164 batch retrieve assembly mate reads
 - MANTA-158 improve small indel contig alignment specificity
