@@ -18,84 +18,11 @@
 #pragma once
 
 #include "svgraph/EdgeInfo.hh"
-#include "manta/SVCandidate.hh"
+#include "manta/SVCandidateUtil.hh"
 #include "boost/format.hpp"
 
 #include <string>
 
-
-
-/// extended SV_TYPE is like SV_TYPE but separates INDEL into INSERT and DELETE states
-namespace EXTENDED_SV_TYPE
-{
-
-enum index_t
-{
-    UNKNOWN,
-    INTERTRANSLOC,
-    INTRATRANSLOC,
-    INVERSION,
-    INSERT,
-    DELETE,
-    TANDUP
-};
-
-inline
-bool
-isSVTransloc(const index_t idx)
-{
-    switch (idx)
-    {
-    case INTERTRANSLOC:
-    case INTRATRANSLOC:
-        return true;
-    default:
-        return false;
-    }
-}
-
-inline
-bool
-isSVIndel(const index_t idx)
-{
-    switch (idx)
-    {
-    case INSERT:
-    case DELETE:
-        return true;
-    default:
-        return false;
-    }
-}
-
-// provide a shortened label (mostly from the VCF spec)
-inline
-const char*
-label(const index_t idx)
-{
-    switch (idx)
-    {
-    case INTERTRANSLOC:
-        return "BND";
-    case INTRATRANSLOC:
-        return "BND";
-    case INVERSION:
-        return "INV";
-    case INSERT:
-        return "INS";
-    case DELETE:
-        return "DEL";
-    case TANDUP:
-        return "DUP:TANDEM";
-    default:
-        return "UNKNOWN";
-    }
-}
-
-index_t
-getExtendedSVType(
-    const SVCandidate& sv);
-}
 
 /// A pair of ids for both ends of a single SV junction
 ///
@@ -137,4 +64,3 @@ struct JunctionIdGenerator
 private:
     boost::format _SVIdFormatter;
 };
-

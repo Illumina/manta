@@ -70,3 +70,67 @@ getSVType(const SVCandidate& sv)
 
     return UNKNOWN;
 }
+
+
+
+namespace EXTENDED_SV_TYPE
+{
+
+/// is an indel classified as insert or delete?
+static
+index_t
+classifyIndel(
+    const SVCandidate& sv)
+{
+    const bool isBp1First(sv.bp1.interval.range.begin_pos()<=sv.bp2.interval.range.begin_pos());
+
+    const SVBreakend& bpA(isBp1First ? sv.bp1 : sv.bp2);
+    const SVBreakend& bpB(isBp1First ? sv.bp2 : sv.bp1);
+
+    const unsigned deleteSize(bpB.interval.range.begin_pos() - bpA.interval.range.begin_pos());
+    const unsigned insertSize(sv.insertSeq.size());
+
+    return ((deleteSize >= insertSize) ? DELETE : INSERT);
+}
+
+
+static
+bool
+isIntrachromBnd(
+    const SVCandidate& /*sv*/)
+{
+    /// TODO turn this feature back on when fewer pieces are in motion
+#if 0
+    static const int intrachromTranslocThreshold(1000000);
+    return (sv.centerSize() >= intrachromTranslocThreshold);
+#endif
+    return false;
+}
+}
+
+
+
+EXTENDED_SV_TYPE::index_t
+getExtendedSVType(
+    const SVCandidate& sv)
+{
+    using namespace EXTENDED_SV_TYPE;
+
+    const SV_TYPE::index_t svType(getSVType(sv));
+
+    if (svType == SV_TYPE::INTERTRANSLOC) return INTERTRANSLOC;
+
+    if (isIntrachromBnd(sv)) return INTRATRANSLOC;
+
+    switch (svType)
+    {
+    case SV_TYPE::INVERSION:
+        return INVERSION;
+    case SV_TYPE::TANDUP:
+        return TANDUP;
+    case SV_TYPE::INDEL:
+        return classifyIndel(sv);
+    default:
+        return UNKNOWN;
+    }
+}

@@ -77,7 +77,7 @@ struct SVScorePairAltProcessor : public SVScorePairProcessor
     isSkipRecord(
         const bam_record& bamRead)
     {
-        if (! isLargeInsertSV()) return SVScorePairProcessor::isSkipRecord(bamRead);
+        if (! isLargeInsertSV(sv)) return SVScorePairProcessor::isSkipRecord(bamRead);
 
         if (! bamRead.is_paired()) return true;
         else if (bamRead.is_unmapped() && bamRead.is_mate_unmapped()) return true;
@@ -88,17 +88,20 @@ struct SVScorePairAltProcessor : public SVScorePairProcessor
     processClearedRecord(
         const bam_record& bamRead);
 
+    static
+    bool
+    isLargeInsertSV(
+        const SVCandidate& sv)
+    {
+        return (sv.insertSeq.size() >= 100 );
+    }
+
 private:
     static
     void
     checkInput(
         const SVCandidateAssemblyData& assemblyData,
         const SVCandidate& sv);
-
-    static unsigned largeInsertSize() { return 100; }
-
-    bool isLargeInsertSV() { return (sv.insertSeq.size() >= largeInsertSize() ); }
-
 
     bool
     alignShadowRead(

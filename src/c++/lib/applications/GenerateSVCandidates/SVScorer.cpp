@@ -17,6 +17,8 @@
 
 #include "SVScorer.hh"
 
+#include "SVScorePairAltProcessor.hh"
+
 #include "blt_util/align_path_bam_util.hh"
 #include "blt_util/bam_streamer.hh"
 #include "blt_util/LinearScaler.hh"
@@ -666,12 +668,25 @@ getSpanningPairWeight(
     const SVCandidate& sv,
     const bool isSmallAssembler)
 {
-    static const int minSmallSize(300);
-    static const int maxSmallSize(500);
-    static const LinearScaler<int> svSizeRamp(minSmallSize, maxSmallSize);
-
     if (! isSmallAssembler) return 1.f;
-    return svSizeRamp.getScale(sv.centerSize());
+
+    if ((getExtendedSVType(sv) == EXTENDED_SV_TYPE::INSERT) &&
+        SVScorePairAltProcessor::isLargeInsertSV(sv))
+    {
+        static const int minInsertSmallSize(100);
+        static const int maxInsertSmallSize(150);
+        static const LinearScaler<int> insertSizeRamp(minInsertSmallSize, maxInsertSmallSize);
+
+        return insertSizeRamp.getScale(sv.insertSeq.size());
+    }
+    else
+    {
+        static const int minSmallSize(300);
+        static const int maxSmallSize(500);
+        static const LinearScaler<int> svSizeRamp(minSmallSize, maxSmallSize);
+
+        return svSizeRamp.getScale(sv.centerSize());
+    }
 }
 
 

@@ -40,8 +40,6 @@
 
 
 
-
-
 ContigParams::
 ContigParams(
     const SVCandidateAssemblyData& assemblyData,
@@ -284,7 +282,7 @@ processClearedRecord(
     if (! bamParams.interval.range.is_pos_intersect(refPos)) return;
 
     // many special rules applied for large insertions:
-    const bool isLargeInsert(isLargeInsertSV());
+    const bool isLargeInsert(isLargeInsertSV(sv));
 
     bool isShadowAlignment(false);
 
@@ -386,7 +384,7 @@ processClearedRecord(
 
     if (! isRealignedTemplate)
     {
-        // when an alt entry is made for a fragment, we /*always*/ create corresponding ref entry
+        // when an alt entry is made for a fragment, we try to always create corresponding ref entry
         // in theory this will get picked up by the ref scanner anyway, but the cost of missing this
         // is all sorts of really bad somatic FNs
         setAlleleFrag(*bamParams.fragDistroPtr, templateSize, fragment.ref.getBp(isBp1));
