@@ -34,7 +34,13 @@
 /// ridiculous debug output for this file:
 //#define DEBUG_MEGAPAIR
 
-#ifdef DEBUG_PAIR
+//#define DEBUG_SHADOW
+
+#if defined(DEBUG_PAIR) || defined(DEBUG_MEGAPAIR) || defined(DEBUG_SHADOW)
+#define ANY_DEBUG_PAIR
+#endif
+
+#ifdef ANY_DEBUG_PAIR
 #include "blt_util/log.hh"
 #endif
 
@@ -65,15 +71,26 @@ ContigParams(
     // both bp1 and bp2 include the insert and homology,
     // which can avoid false split-read evidence from normal sample when the homology is long
 
-    /// all offset range 'begin' values correspond to the zero-indexed base immediately before the breakend on the fwd-strand,
-    /// and 'end' values correspond to the zero-indexed base immediately before the breakend on the forward strand+homology range
-    /// In the absence of homology, begin and end should be equal.
+    // all offset range 'begin' values correspond to the zero-indexed base immediately before the breakend on the fwd-strand,
+    // and 'end' values correspond to the zero-indexed base immediately before the breakend on the forward strand+homology range
+    // In the absence of homology, begin and end should be equal.
 
-    /// note that we add align.beginPos here to reflect coordinates in the extended Contig, in the regular contig we wouldn't add this
+    // note that we add align.beginPos here to reflect coordinates in the extended Contig, in the regular contig we wouldn't add this
     bp1Offset.set_begin_pos(alignment.align.beginPos + apath_read_length(apathTillSvStart) - 1);
     bp1Offset.set_end_pos(bp1Offset.begin_pos() + bp1HomLength);
     bp2Offset.set_begin_pos(alignment.align.beginPos + apath_read_length(apathTillSvEnd) - 1);
     bp2Offset.set_end_pos(bp2Offset.begin_pos() + bp2HomLength);
+
+#ifdef DEBUG_SHADOW
+        log_os << __FUNCTION__ << ": contigSize: " << extSeq.size()
+                << " contigBegin: " << beginPos
+                << " contigEnd: " << endPos
+                << " alignment: " << alignment.align
+                << " alignSegment: " << alignSegment
+                << " bp1Offset: " << bp1Offset
+                << " bp2Offset: " << bp2Offset
+                << "\n";
+#endif
 }
 
 
@@ -94,7 +111,7 @@ checkInput(
     assert(sv.bp1.interval.tid == sv.bp2.interval.tid);
     assert(getSVType(sv) == SV_TYPE::INDEL);
 
-    /// In case of breakend microhomology approximate the breakend as a point event at the center of the possible range:
+    /// In case of breakend homology approximate the breakend as a point event at the center of the possible range:
     const pos_t centerPos1(sv.bp1.interval.range.center_pos());
     const pos_t centerPos2(sv.bp2.interval.range.center_pos());
     if (centerPos2 <= centerPos1)
@@ -133,6 +150,9 @@ alignShadowRead(
 
     // does the shadow occur to the left or right of the insertion?
     const bool isLeftOfInsert(bamRead.is_mate_fwd_strand());
+#ifdef DEBUG_SHADOW
+    log_os << __FUNCTION__ << ": isLeftOfInsert: " << isLeftOfInsert << "\n";
+#endif
 
     // do we need to revcomp the sequence?
     std::string read(bamRead.get_bam_read().get_string());
@@ -197,6 +217,10 @@ alignShadowRead(
             }
         }
 
+#ifdef DEBUG_SHADOW
+        log_os << __FUNCTION__ << ": alignment: " << readPath << " clipSize: " << clipSize << "\n";
+#endif
+
         assert(clipSize <= readSize);
 
         const unsigned clippedReadSize(readSize-clipSize);
@@ -214,6 +238,12 @@ alignShadowRead(
 
         const float scoreFrac(static_cast<float>(nonClipScore)/static_cast<float>(optimalScore));
 
+#ifdef DEBUG_SHADOW
+        log_os << __FUNCTION__ << ": optScore: " << optimalScore
+                << " nonClipScore: " << nonClipScore
+                << " scoreFrac: " << scoreFrac << "\n";
+#endif
+
         if (scoreFrac < minScoreFrac)
         {
             return false;
@@ -225,25 +255,38 @@ alignShadowRead(
     //
 
     known_pos_range2 fakeRefSpan;
-    if (isLeftOfInsert)
     {
-        fakeRefSpan.set_begin_pos(bamRead.mate_pos()-1);
+        const unsigned shadowRefSpan(apath_ref_length(readAlignment.align.apath));
+        if (isLeftOfInsert)
+        {
+            fakeRefSpan.set_begin_pos(bamRead.mate_pos()-1);
 
-        /// set fake end as if the insert allele continued in reference coordinates
-        fakeRefSpan.set_end_pos(_contig.beginPos + contigBeginOffset + readAlignment.align.beginPos);
-    }
-    else
-    {
-        using namespace ALIGNPATH;
-        SimpleAlignment bamAlign(bamRead);
-        fakeRefSpan.set_end_pos(bamRead.mate_pos()-1 + apath_ref_length(bamAlign.path));
+            /// set fake end as if the insert allele continued in reference coordinates
+            fakeRefSpan.set_end_pos(_contig.beginPos + contigBeginOffset + readAlignment.align.beginPos + shadowRefSpan);
 
-        /// set fake begin as if the insert allele continued TO THE LEFT in reference coordinates:
-        const int readContigBeginOffset(contigBeginOffset + static_cast<int>(readAlignment.align.beginPos));
-        const int readContigEndOffset(static_cast<int>(_contig.extSeq.size()) - readContigBeginOffset);
-        assert(readContigEndOffset >= 0);
+#ifdef DEBUG_SHADOW
+        log_os << __FUNCTION__ << ": fakeRefSpan: " << fakeRefSpan
+                << " contigBeginPos: " << _contig.beginPos
+                << " contigBeginOffset: " << contigBeginOffset
+                << " alignBeginPos: " << readAlignment.align.beginPos
+                << " refLength: " << shadowRefSpan
+                << "\n";
+#endif
 
-        fakeRefSpan.set_begin_pos(_contig.endPos - readContigEndOffset);
+        }
+        else
+        {
+            // approximate mate as having conventional alignment -- we could fix
+            // this with some buffering in ShadowReadFinder
+            fakeRefSpan.set_end_pos(bamRead.mate_pos()-1 + read.size());
+
+            /// set fake begin as if the insert allele continued TO THE LEFT in reference coordinates:
+            const int readContigBeginOffset(contigBeginOffset + static_cast<int>(readAlignment.align.beginPos));
+            const int readContigEndOffset(static_cast<int>(_contig.extSeq.size()) - readContigBeginOffset);
+            assert(readContigEndOffset >= 0);
+
+            fakeRefSpan.set_begin_pos(_contig.endPos - readContigEndOffset);
+        }
     }
 
     if (fakeRefSpan.begin_pos() > fakeRefSpan.end_pos())
