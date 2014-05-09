@@ -67,9 +67,10 @@ ContigParams(
     ALIGNPATH::path_t apathTillSvStart(&alignment.align.apath[0], &alignment.align.apath[alignSegment.first]);
     ALIGNPATH::path_t apathTillSvEnd(&alignment.align.apath[0], &alignment.align.apath[alignSegment.second+1]);
 
+    const pos_t contigRefBeginPos(refSpan.begin_pos() + alignment.align.beginPos);
     segmentSpan.set_range(
-            (refSpan.begin_pos() + apath_ref_length(apathTillSvStart)),
-            (refSpan.begin_pos() + apath_ref_length(apathTillSvEnd)));
+            (contigRefBeginPos + apath_ref_length(apathTillSvStart)),
+            (contigRefBeginPos + apath_ref_length(apathTillSvEnd)));
 
 
     // the beginPos of align is the length of reference padding in the extended contig
