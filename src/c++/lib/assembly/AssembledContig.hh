@@ -20,6 +20,7 @@
 #include <iosfwd>
 #include <string>
 #include <vector>
+#include <set>
 
 
 /// \brief data pertaining to a de-novo assembly contig
@@ -37,6 +38,9 @@ struct AssembledContig
     //std::map<std::string,int> contigReads;
 
     unsigned seedReadCount; ///< no of reads containing the seeding kmer
+
+    std::set<unsigned> supportReads;
+    std::set<unsigned> rejectReads;
 };
 
 
