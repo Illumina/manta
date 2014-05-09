@@ -121,7 +121,8 @@ wordHashToDot(
         BOOST_FOREACH(const char symbol, alphabet)
         {
             const std::string newKey(addBase(tmp,symbol,isEnd));
-            if (wordCount.find(newKey) != wordCount.end()) {
+            if (wordCount.find(newKey) != wordCount.end())
+            {
                 os << aliasH[word] << " -- " << aliasH[newKey] << ";\n";
             }
         }
@@ -274,7 +275,7 @@ getKmerCounts(
             if (readWordOffset.find(word) != readWordOffset.end())
             {
 #ifdef DEBUG_ASBL
-                    log_os << logtag << "word " << word << " repeated in read " << readIndex << "\n";
+                log_os << logtag << "word " << word << " repeated in read " << readIndex << "\n";
 #endif
                 if (isFindRepeatReads)
                 {
@@ -382,11 +383,11 @@ buildContigs(
         //
         std::set<std::string> seenBefore;   // records k-mers already encountered during extension
 
-        while(! maxWords.empty())
+        while (! maxWords.empty())
         {
-    #ifdef DEBUG_ASBL
+#ifdef DEBUG_ASBL
             log_os << logtag << "Seeding kmer : " << maxWord << "\n";
-    #endif
+#endif
 
             maxWord=(*maxWords.begin());
             maxWords.erase(maxWords.begin());

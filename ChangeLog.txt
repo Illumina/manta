@@ -1,3 +1,4 @@
+v0.21.0
 - MANTA-167 semi-mapped som pair correction
 - MANTA-156 filter out assm poison reads
 - MANTA-161 make assembly robust to seed k-mer selection

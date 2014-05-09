@@ -59,5 +59,5 @@ private:
     // additional 'load balancing' structures:
     count_t _avgBinTotalCount;
 
-   std::vector<count_t> _binTotalCount;
+    std::vector<count_t> _binTotalCount;
 };

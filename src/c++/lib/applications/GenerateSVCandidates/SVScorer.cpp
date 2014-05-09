@@ -711,7 +711,7 @@ getRefAltFromFrag(
     else
     {
         isPairUsable = ((fragev.read1.isScanned && fragev.read2.isScanned) &&
-                (fragev.read1.isAnchored(isPermissive) || fragev.read2.isAnchored(isPermissive)));
+                        (fragev.read1.isAnchored(isPermissive) || fragev.read2.isAnchored(isPermissive)));
     }
 
     if (isPairUsable)
