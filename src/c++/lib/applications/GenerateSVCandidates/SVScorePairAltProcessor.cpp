@@ -337,6 +337,9 @@ alignShadowRead(
     if (! testFragOverlap(fakeRefSpan.begin_pos(), fakeRefSpan.end_pos())) return false;
 
     // made it!
+#ifdef DEBUG_SHADOW
+    log_os << __FUNCTION__ << ": shadow passed pair tests\n";
+#endif
 
     return true;
 }
