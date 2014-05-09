@@ -90,8 +90,8 @@ ContigParams(
 
 #ifdef DEBUG_SHADOW
         log_os << __FUNCTION__ << ": contigSize: " << extSeq.size()
-                << " contigBegin: " << beginPos
-                << " contigEnd: " << endPos
+                << " refSpan: " << refSpan
+                << " segmentSpan: " << segmentSpan
                 << " alignment: " << alignment.align
                 << " alignSegment: " << alignSegment
                 << " bp1Offset: " << bp1Offset
@@ -283,10 +283,10 @@ alignShadowRead(
 
 #ifdef DEBUG_SHADOW
         log_os << __FUNCTION__ << ": fakeRefSpan: " << fakeRefSpan
-                << " contigBeginPos: " << _contig.beginPos
+                << " shadowRefSpan: " << shadowRefSpan
                 << " contigBeginOffset: " << contigBeginOffset
                 << " alignBeginPos: " << readAlignment.align.beginPos
-                << " refLength: " << shadowRefSpan
+                << " readContigEndOffset: " << readContigEndOffset
                 << "\n";
 #endif
     }
@@ -311,6 +311,13 @@ alignShadowRead(
         const int readContigBeginRefOffset(_contig.segmentSpan.end_pos()-(_contig.bp2Offset.begin_pos()-readContigBeginOffset));
 
         fakeRefSpan.set_begin_pos(readContigBeginRefOffset);
+#ifdef DEBUG_SHADOW
+        log_os << __FUNCTION__ << ": fakeRefSpan: " << fakeRefSpan
+                << " contigBeginOffset: " << contigBeginOffset
+                << " alignBeginPos: " << readAlignment.align.beginPos
+                << " readContigBeginOffset: " << readContigBeginOffset
+                << "\n";
+#endif
     }
 
     if (fakeRefSpan.begin_pos() > fakeRefSpan.end_pos())
