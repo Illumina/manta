@@ -63,6 +63,12 @@ struct ShadowReadFinder
         return _lastMapq;
     }
 
+    bool
+    isShadowMate() const
+    {
+        return _isLastSet;
+    }
+
 private:
 
     const unsigned _minMapq;

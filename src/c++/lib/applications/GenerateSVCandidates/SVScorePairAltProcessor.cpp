@@ -385,7 +385,15 @@ processClearedRecord(
         }
         else
         {
-            // ok, not a shadow read, kick it out:
+            // record the mapq value of the shadow mate:
+            if (_shadow.isShadowMate())
+            {
+                SVFragmentEvidence& fragment(evidence.getSample(bamParams.isTumor)[bamRead.qname()]);
+                SVFragmentEvidenceRead& evRead(fragment.getRead(bamRead.is_first()));
+                setReadEvidence(svParams.minMapQ, svParams.minTier2MapQ, bamRead, isShadowAlignment, evRead);
+            }
+
+            // ok, not a shadow read, kick the read out if it fits shadow or shadow-mate criteria:
             if (bamRead.is_unmapped() || bamRead.is_mate_unmapped()) return;
         }
 
@@ -455,7 +463,13 @@ processClearedRecord(
 
     SVFragmentEvidenceRead& evRead(fragment.getRead(bamRead.is_first()));
 
-    setReadEvidence(svParams.minMapQ, svParams.minTier2MapQ, bamRead, isShadowAlignment, evRead);
+    const unsigned readSize(bamRead.read_size());
+    unsigned mapq(bamRead.map_qual());
+    if (isShadowAlignment)
+    {
+        mapq=_shadow.getMateMapq();
+    }
+    setReadEvidence(svParams.minMapQ, svParams.minTier2MapQ, mapq, readSize, isShadowAlignment, evRead);
 
     setAlleleFrag(*bamParams.fragDistroPtr, altTemplateSize, fragment.alt.getBp(isBp1));
 

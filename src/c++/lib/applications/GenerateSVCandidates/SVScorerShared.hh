@@ -25,6 +25,22 @@ void
 setReadEvidence(
     const unsigned minMapQ,
     const unsigned minTier2MapQ,
-    const bam_record& bamRead,
+    const unsigned mapq,
+    const unsigned readSize,
     const bool isShadow,
     SVFragmentEvidenceRead& read);
+
+
+inline
+void
+setReadEvidence(
+    const unsigned minMapQ,
+    const unsigned minTier2MapQ,
+    const bam_record& bamRead,
+    const bool isShadow,
+    SVFragmentEvidenceRead& read)
+{
+    setReadEvidence(minMapQ, minTier2MapQ,
+            bamRead.map_qual(), bamRead.read_size(),
+            isShadow, read);
+}

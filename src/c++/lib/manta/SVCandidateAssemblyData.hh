@@ -147,6 +147,7 @@ struct SVCandidateAssemblyData
         spanningAlignments.clear();
         smallSVSegments.clear();
         largeInsertInfo.clear();
+        remoteReads.clear();
         bestAlignmentIndex=0;
         bp1ref.clear();
         bp2ref.clear();
