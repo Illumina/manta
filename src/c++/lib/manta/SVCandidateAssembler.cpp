@@ -163,7 +163,8 @@ recoverRemoteReads(
     bam_streamer& bamStream,
     std::vector<RemoteReadInfo>& bamRemotes,
     SVCandidateAssembler::ReadIndexType& readIndex,
-    AssemblyReadInput& reads)
+    AssemblyReadInput& reads,
+    RemoteReadCache& remoteReadsCache)
 {
     // figure out what we can handle in a single region query:
     std::sort(bamRemotes.begin(),bamRemotes.end());
@@ -275,6 +276,9 @@ recoverRemoteReads(
 
                 if (isReversed) reverseCompStr(reads.back());
 
+                /// add to the remote read cache used during PE scoring:
+                remoteReadsCache[remote.qname] = RemoteReadPayload(bamRead.read_no(), reads.back());
+
                 remote.isUsed = true;
                 break;
             }
@@ -294,6 +298,7 @@ getBreakendReads(
     const bool isLocusReversed,
     const reference_contig_segment& refSeq,
     const bool isSearchRemoteInsertionReads,
+    RemoteReadCache& remoteReadsCache,
     ReadIndexType& readIndex,
     AssemblyReadInput& reads) const
 {
@@ -654,7 +659,9 @@ getBreakendReads(
             bam_streamer& bamStream(*_bamStreams[bamIndex]);
 
             std::vector<RemoteReadInfo>& bamRemotes(remoteReads[bamIndex]);
-            recoverRemoteReads(maxNumReads, isLocusReversed, bamIndexStr, bamStream, bamRemotes, readIndex, reads);
+            recoverRemoteReads(
+                maxNumReads, isLocusReversed, bamIndexStr, bamStream,
+                bamRemotes, readIndex, reads, remoteReadsCache);
         }
     }
 }
@@ -667,12 +674,13 @@ assembleSingleSVBreakend(
     const SVBreakend& bp,
     const reference_contig_segment& refSeq,
     const bool isSearchRemoteInsertionReads,
+    RemoteReadCache& remoteReads,
     Assembly& as) const
 {
     static const bool isBpReversed(false);
     ReadIndexType readIndex;
     AssemblyReadInput reads;
-    getBreakendReads(bp, isBpReversed, refSeq, isSearchRemoteInsertionReads, readIndex, reads);
+    getBreakendReads(bp, isBpReversed, refSeq, isSearchRemoteInsertionReads, remoteReads, readIndex, reads);
     AssemblyReadOutput readInfo;
     runSmallAssembler(_assembleOpt, reads, readInfo, as);
 }
@@ -681,21 +689,23 @@ assembleSingleSVBreakend(
 
 void
 SVCandidateAssembler::
-assembleSVBreakends(const SVBreakend& bp1,
-                    const SVBreakend& bp2,
-                    const bool isBp1Reversed,
-                    const bool isBp2Reversed,
-                    const reference_contig_segment& refSeq1,
-                    const reference_contig_segment& refSeq2,
-                    Assembly& as) const
+assembleSVBreakends(
+    const SVBreakend& bp1,
+    const SVBreakend& bp2,
+    const bool isBp1Reversed,
+    const bool isBp2Reversed,
+    const reference_contig_segment& refSeq1,
+    const reference_contig_segment& refSeq2,
+    Assembly& as) const
 {
     static const bool isSearchRemoteInsertionReads(false);
+    RemoteReadCache remoteReads;
     ReadIndexType readIndex;
     AssemblyReadInput reads;
     AssemblyReadReversal readRev;
-    getBreakendReads(bp1, isBp1Reversed, refSeq1, isSearchRemoteInsertionReads, readIndex, reads);
+    getBreakendReads(bp1, isBp1Reversed, refSeq1, isSearchRemoteInsertionReads, remoteReads, readIndex, reads);
     readRev.resize(reads.size(),isBp1Reversed);
-    getBreakendReads(bp2, isBp2Reversed, refSeq2, isSearchRemoteInsertionReads, readIndex, reads);
+    getBreakendReads(bp2, isBp2Reversed, refSeq2, isSearchRemoteInsertionReads, remoteReads, readIndex, reads);
     readRev.resize(reads.size(),isBp2Reversed);
     AssemblyReadOutput readInfo;
     runSmallAssembler(_assembleOpt, reads, readInfo, as);

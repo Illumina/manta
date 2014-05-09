@@ -22,8 +22,11 @@
 #include "blt_util/reference_contig_segment.hh"
 #include "manta/SVCandidate.hh"
 
+#include "boost/unordered_map.hpp"
+
 #include <iosfwd>
 #include <vector>
+
 
 /// minimum set of information required to describe bp transformations between SVCandidate and its
 /// corresponding contig alignment
@@ -83,6 +86,30 @@ struct LargeInsertionInfo
 
 std::ostream&
 operator<<(std::ostream& os, const LargeInsertionInfo& lii);
+
+
+
+struct RemoteReadPayload
+{
+    RemoteReadPayload() :
+        readNo(0)
+    {}
+
+    RemoteReadPayload(
+        const int initReadNo,
+        const std::string& initReadSeq) :
+      readNo(initReadNo),
+      readSeq(initReadSeq)
+    {}
+
+    uint8_t readNo;
+    std::string readSeq;
+};
+
+
+
+typedef boost::unordered_map<std::string,RemoteReadPayload> RemoteReadCache;
+
 
 
 /// \brief Assembly data pertaining to a specific SV candidate
@@ -148,6 +175,8 @@ struct SVCandidateAssemblyData
     std::vector<CandidateSegmentSetType> smallSVSegments; ///< list of indel sets, one per small alignment
 
     std::vector<LargeInsertionInfo> largeInsertInfo; ///< data specific to searching for a large insertion candidate
+
+    RemoteReadCache remoteReads; ///< remote reads retrieved to improve assembly and scoring for this locus
 
     unsigned bestAlignmentIndex; ///< if non-empty sv candidate set, which contig/alignment produced them?
 

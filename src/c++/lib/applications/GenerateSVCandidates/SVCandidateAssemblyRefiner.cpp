@@ -1380,7 +1380,7 @@ getSmallSVAssembly(
     const bool isSearchRemoteInsertionReads(isFindLargeInsertions);
 
     // assemble contigs in the breakend region
-    _smallSVAssembler.assembleSingleSVBreakend(sv.bp1, assemblyData.bp1ref, isSearchRemoteInsertionReads, assemblyData.contigs);
+    _smallSVAssembler.assembleSingleSVBreakend(sv.bp1, assemblyData.bp1ref, isSearchRemoteInsertionReads, assemblyData.remoteReads, assemblyData.contigs);
 
 #ifdef DEBUG_REFINER
     log_os << logtag << "align1RefSize/Seq: " << align1RefStr.size() << '\n';

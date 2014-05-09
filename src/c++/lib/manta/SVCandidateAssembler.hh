@@ -22,6 +22,7 @@
 #include "blt_util/bam_streamer.hh"
 #include "manta/ChromDepthFilterUtil.hh"
 #include "manta/SVCandidate.hh"
+#include "manta/SVCandidateAssemblyData.hh"
 #include "manta/SVCandidateSetData.hh"
 #include "manta/SVLocusScanner.hh"
 
@@ -54,16 +55,18 @@ struct SVCandidateAssembler
         const SVBreakend& bp,
         const reference_contig_segment& refSeq,
         const bool isSearchRemoteInsertionReads,
+        RemoteReadCache& remoteReads,
         Assembly& as) const;
 
     void
-    assembleSVBreakends(const SVBreakend& bp1,
-                        const SVBreakend& bp2,
-                        const bool isBp1Reversed,
-                        const bool isBp2Reversed,
-                        const reference_contig_segment& refSeq1,
-                        const reference_contig_segment& refSeq2,
-                        Assembly& as) const;
+    assembleSVBreakends(
+        const SVBreakend& bp1,
+        const SVBreakend& bp2,
+        const bool isBp1Reversed,
+        const bool isBp2Reversed,
+        const reference_contig_segment& refSeq1,
+        const reference_contig_segment& refSeq2,
+        Assembly& as) const;
 
     const SmallAssemblerOptions&
     getAssembleOpt() const
@@ -81,12 +84,14 @@ private:
     ///
     /// \param[in] isReversed if true revcomp all reads on input
     /// \param[in] isSearchRemoteInsertionReads if true search the remote end of chimeric pairs for MAPQ0 insertion support
+    /// \param[out] remoteReadsCache stores any discovered remote reads so that these can be reused during scoring
     void
     getBreakendReads(
         const SVBreakend& bp,
         const bool isReversed,
         const reference_contig_segment& refSeq,
         const bool isSearchRemoteInsertionReads,
+        RemoteReadCache& remoteReadsCache,
         ReadIndexType& readIndex,
         AssemblyReadInput& reads) const;
 
