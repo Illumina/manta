@@ -51,8 +51,9 @@ ContigParams(
     const SVCandidateAssemblyData& assemblyData,
     const SVCandidate& sv) :
     extSeq(assemblyData.extendedContigs[sv.assemblyAlignIndex]),
-    beginPos(assemblyData.bp1ref.get_offset()),
-    endPos(beginPos + assemblyData.bp1ref.seq().size())
+    refSpan(
+        assemblyData.bp1ref.get_offset(),
+        assemblyData.bp1ref.get_offset() + assemblyData.bp1ref.seq().size())
 {
     // get offsets of breakpoints in the extended contig
     const AlignmentResult<int>& alignment(assemblyData.smallSVAlignments[sv.assemblyAlignIndex]);
@@ -65,6 +66,11 @@ ContigParams(
 
     ALIGNPATH::path_t apathTillSvStart(&alignment.align.apath[0], &alignment.align.apath[alignSegment.first]);
     ALIGNPATH::path_t apathTillSvEnd(&alignment.align.apath[0], &alignment.align.apath[alignSegment.second+1]);
+
+    segmentSpan.set_range(
+            (refSpan.begin_pos() + apath_ref_length(apathTillSvStart)),
+            (refSpan.begin_pos() + apath_ref_length(apathTillSvEnd)));
+
 
     // the beginPos of align is the length of reference padding in the extended contig
     // |ref padding| + |alignment segments|
@@ -255,14 +261,24 @@ alignShadowRead(
     //
 
     known_pos_range2 fakeRefSpan;
+    if (isLeftOfInsert)
     {
-        const unsigned shadowRefSpan(apath_ref_length(readAlignment.align.apath));
-        if (isLeftOfInsert)
-        {
-            fakeRefSpan.set_begin_pos(bamRead.mate_pos()-1);
+        fakeRefSpan.set_begin_pos(bamRead.mate_pos()-1);
 
-            /// set fake end as if the insert allele continued in reference coordinates
-            fakeRefSpan.set_end_pos(_contig.beginPos + contigBeginOffset + readAlignment.align.beginPos + shadowRefSpan);
+        // offset of read end on the contig, in contig coordinates
+        const unsigned shadowRefSpan(apath_ref_length(readAlignment.align.apath));
+        const int readContigEndOffset(contigBeginOffset + readAlignment.align.beginPos + shadowRefSpan);
+
+        // translate contig coordinates to fake reference coordinates:
+        if (readContigEndOffset < _contig.bp1Offset.begin_pos())
+        {
+            // definitely does not meet the breakend overlap criteria:
+            return false;
+        }
+
+        /// set fake end as if the insert allele continued in reference coordinates
+        const int readContigEndRefOffset(_contig.segmentSpan.begin_pos() + (readContigEndOffset - _contig.bp1Offset.begin_pos()));
+        fakeRefSpan.set_end_pos(readContigEndRefOffset);
 
 #ifdef DEBUG_SHADOW
         log_os << __FUNCTION__ << ": fakeRefSpan: " << fakeRefSpan
@@ -272,21 +288,28 @@ alignShadowRead(
                 << " refLength: " << shadowRefSpan
                 << "\n";
 #endif
+    }
+    else
+    {
+        // approximate mate as having conventional alignment -- we could fix
+        // this with some buffering in ShadowReadFinder
+        fakeRefSpan.set_end_pos(bamRead.mate_pos()-1 + read.size());
 
-        }
-        else
+        // set fake begin as if the insert allele continued TO THE LEFT in reference coordinates:
+
+        // offset of read begin on the contig, in contig coordinates:
+        const int readContigBeginOffset(contigBeginOffset + readAlignment.align.beginPos);
+
+        // translate contig coordinates to fake reference coordinates:
+        if (readContigBeginOffset > _contig.bp2Offset.begin_pos())
         {
-            // approximate mate as having conventional alignment -- we could fix
-            // this with some buffering in ShadowReadFinder
-            fakeRefSpan.set_end_pos(bamRead.mate_pos()-1 + read.size());
-
-            /// set fake begin as if the insert allele continued TO THE LEFT in reference coordinates:
-            const int readContigBeginOffset(contigBeginOffset + static_cast<int>(readAlignment.align.beginPos));
-            const int readContigEndOffset(static_cast<int>(_contig.extSeq.size()) - readContigBeginOffset);
-            assert(readContigEndOffset >= 0);
-
-            fakeRefSpan.set_begin_pos(_contig.endPos - readContigEndOffset);
+            // definitely does not meet the breakend overlap criteria:
+            return false;
         }
+
+        const int readContigBeginRefOffset(_contig.segmentSpan.end_pos()-(_contig.bp2Offset.begin_pos()-readContigBeginOffset));
+
+        fakeRefSpan.set_begin_pos(readContigBeginRefOffset);
     }
 
     if (fakeRefSpan.begin_pos() > fakeRefSpan.end_pos())

@@ -34,11 +34,11 @@ struct ContigParams
     // extended contig:
     const std::string& extSeq;
 
-    /// where does the extended contig begin in reference coordinates:
-    const int beginPos;
+    /// where does the extended contig begin,end in reference coordinates:
+    const known_pos_range2 refSpan;
 
-    /// where does the extended contig end in reference coordinates:
-    const int endPos;
+    /// where does the sv segment begin,end in reference coordinates?:
+    known_pos_range2 segmentSpan;
 
     known_pos_range2 bp1Offset;
     known_pos_range2 bp2Offset;
