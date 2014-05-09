@@ -382,6 +382,9 @@ processClearedRecord(
             isShadowAlignment=alignShadowRead(bamRead,altTemplateSize);
 
             if (! isShadowAlignment) return;
+#ifdef DEBUG_SHADOW
+            log_os << "read passed shadow test altsize/record: "  << altTemplateSize << "/" << bamRead << "\n";
+#endif
         }
         else
         {
@@ -398,6 +401,7 @@ processClearedRecord(
         }
 
         // test for MAPQ0 pair
+#if 0
         const bool isRepeatChimera(false);
         if (isRepeatChimera)
         {
@@ -411,6 +415,7 @@ processClearedRecord(
                 if (! is_innie_pair(bamRead)) return;
             }
         }
+#endif
     }
 
     const bool isRealignedTemplate(isLargeInsert && isShadowAlignment);
@@ -432,8 +437,20 @@ processClearedRecord(
         templateSize=(std::abs(bamRead.template_size()));
         altTemplateSize=(templateSize-svParams.altShift);
     }
-    if (altTemplateSize < bamParams.minFrag) return;
-    if (altTemplateSize > bamParams.maxFrag) return;
+    if (altTemplateSize < bamParams.minFrag)
+    {
+#ifdef DEBUG_MEGAPAIR
+        log_os << __FUNCTION__ << ": altsize below min\n";
+#endif
+        return;
+    }
+    if (altTemplateSize > bamParams.maxFrag)
+    {
+#ifdef DEBUG_MEGAPAIR
+        log_os << __FUNCTION__ << ": altsize above max\n";
+#endif
+        return;
+    }
 
     // get fragment range and check overlap with breakend:
     if (! isRealignedTemplate)
@@ -472,6 +489,9 @@ processClearedRecord(
     setReadEvidence(svParams.minMapQ, svParams.minTier2MapQ, mapq, readSize, isShadowAlignment, evRead);
 
     setAlleleFrag(*bamParams.fragDistroPtr, altTemplateSize, fragment.alt.getBp(isBp1));
+#ifdef DEBUG_MEGAPAIR
+    log_os << __FUNCTION__ << ": altset: " << fragment.alt.getBp(isBp1) << "\n";
+#endif
 
     if (! isRealignedTemplate)
     {
