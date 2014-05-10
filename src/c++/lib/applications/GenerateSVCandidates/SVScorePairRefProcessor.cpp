@@ -50,6 +50,8 @@ processClearedRecord(
     const pos_t refPos(bamRead.pos()-1);
     if (! bamParams.interval.range.is_pos_intersect(refPos)) return;
 
+    const bool isLargeInsert(isLargeInsertSV(sv));
+
 #ifdef DEBUG_MEGAPAIR
     log_os << __FUNCTION__ << ": read: " << bamRead << "\n";
 #endif
@@ -93,5 +95,5 @@ processClearedRecord(
     SVFragmentEvidenceRead& evRead(fragment.getRead(bamRead.is_first()));
     setReadEvidence(svParams.minMapQ, svParams.minTier2MapQ, bamRead, isShadow, evRead);
 
-    setAlleleFrag(*bamParams.fragDistroPtr, templateSize, fragment.ref.getBp(isBp1));
+    setAlleleFrag(*bamParams.fragDistroPtr, templateSize, fragment.ref.getBp(isBp1),isLargeInsert);
 }

@@ -119,6 +119,14 @@ struct SVScorePairProcessor : public BamRegionProcessor
     processClearedRecord(
         const bam_record& bamRead) = 0;
 
+    static
+    bool
+    isLargeInsertSV(
+        const SVCandidate& sv)
+    {
+        return (sv.insertSeq.size() >= 100 );
+    }
+
 protected:
 
     static
@@ -126,10 +134,21 @@ protected:
     setAlleleFrag(
         const SizeDistribution& fragDistro,
         const int size,
-        SVFragmentEvidenceAlleleBreakend& bp)
+        SVFragmentEvidenceAlleleBreakend& bp,
+        const bool /*isPdf*/ = false)
     {
-        float fragProb(fragDistro.cdf(size));
-        fragProb = std::min(fragProb, (1-fragProb));
+        float fragProb(0);
+#if 0
+        if (isPdf)
+        {
+            fragProb = fragDistro.pdf(size);
+        }
+        else
+#endif
+        {
+            fragProb = fragDistro.cdf(size);
+            fragProb = std::min(fragProb, (1-fragProb));
+        }
 #ifdef DEBUG_MEGAPAIR
         log_os << __FUNCTION__ << ": fraglen,prob " << size << " " << fragProb << "\n";
 #endif

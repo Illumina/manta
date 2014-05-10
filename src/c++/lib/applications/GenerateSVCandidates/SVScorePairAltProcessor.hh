@@ -88,14 +88,6 @@ struct SVScorePairAltProcessor : public SVScorePairProcessor
     processClearedRecord(
         const bam_record& bamRead);
 
-    static
-    bool
-    isLargeInsertSV(
-        const SVCandidate& sv)
-    {
-        return (sv.insertSeq.size() >= 100 );
-    }
-
 private:
     static
     void

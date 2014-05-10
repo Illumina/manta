@@ -401,7 +401,7 @@ processClearedRecord(
         }
 
         // test for MAPQ0 pair
-#if 0
+#if 1
         const bool isRepeatChimera(false);
         if (isRepeatChimera)
         {
@@ -420,36 +420,47 @@ processClearedRecord(
 
     const bool isRealignedTemplate(isLargeInsert && isShadowAlignment);
 
-
     // for now, we allow alt evidence that aligns within the insert only, any
     // fragments that align to the reference on both sides and are simply "short"
     // due to the insertion are not considered
     /// TODO: re-evaluate this filter after shadow scoring is mature
-    if (isLargeInsert && (! isShadowAlignment)) return;
+//    if (isLargeInsert && (! isShadowAlignment)) return;
 
 #ifdef DEBUG_MEGAPAIR
     log_os << __FUNCTION__ << ": read: " << bamRead << "\n";
 #endif
 
     /// check if fragment is too big or too small:
+    bool isAnomTemplate(true);
     if (! isRealignedTemplate)
     {
         templateSize=(std::abs(bamRead.template_size()));
         altTemplateSize=(templateSize-svParams.altShift);
+
+        isAnomTemplate=((templateSize < bamParams.minFrag) || (templateSize > bamParams.maxFrag));
     }
-    if (altTemplateSize < bamParams.minFrag)
-    {
+
 #ifdef DEBUG_MEGAPAIR
-        log_os << __FUNCTION__ << ": altsize below min\n";
+    log_os << __FUNCTION__ << ": tSize/aSize: " << templateSize << " " << altTemplateSize << "\n";
 #endif
-        return;
-    }
-    if (altTemplateSize > bamParams.maxFrag)
+
+    // only filter out anomolous fragments for alt if the ref is also being filtered out:
+    if (isAnomTemplate)
     {
+        if (altTemplateSize < bamParams.minFrag)
+        {
 #ifdef DEBUG_MEGAPAIR
-        log_os << __FUNCTION__ << ": altsize above max\n";
+            log_os << __FUNCTION__ << ": altsize below min\n";
 #endif
-        return;
+            return;
+        }
+        if (altTemplateSize > bamParams.maxFrag)
+        {
+#ifdef DEBUG_MEGAPAIR
+            log_os << __FUNCTION__ << ": altsize above max\n";
+#endif
+            return;
+        }
     }
 
     // get fragment range and check overlap with breakend:
@@ -488,7 +499,7 @@ processClearedRecord(
     }
     setReadEvidence(svParams.minMapQ, svParams.minTier2MapQ, mapq, readSize, isShadowAlignment, evRead);
 
-    setAlleleFrag(*bamParams.fragDistroPtr, altTemplateSize, fragment.alt.getBp(isBp1));
+    setAlleleFrag(*bamParams.fragDistroPtr, altTemplateSize, fragment.alt.getBp(isBp1), isLargeInsert);
 #ifdef DEBUG_MEGAPAIR
     log_os << __FUNCTION__ << ": altset: " << fragment.alt.getBp(isBp1) << "\n";
 #endif
@@ -498,6 +509,6 @@ processClearedRecord(
         // when an alt entry is made for a fragment, we try to always create corresponding ref entry
         // in theory this will get picked up by the ref scanner anyway, but the cost of missing this
         // is all sorts of really bad somatic FNs
-        setAlleleFrag(*bamParams.fragDistroPtr, templateSize, fragment.ref.getBp(isBp1));
+        setAlleleFrag(*bamParams.fragDistroPtr, templateSize, fragment.ref.getBp(isBp1),isLargeInsert);
     }
 }
