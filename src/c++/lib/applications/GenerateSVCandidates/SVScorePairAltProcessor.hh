@@ -95,6 +95,18 @@ private:
         const SVCandidateAssemblyData& assemblyData,
         const SVCandidate& sv);
 
+    /// \param[in] bam record used for debug printout only
+    /// \param[in] isLeftOfInsert is the anchor on the left or right side of the insertion
+    /// \param[in] floatRead the read to be realigned, already revcomped to expected orientation
+    /// \param[in] anchorPos the alignment position of the anchoring (ie. non-relaigned) read of the pair
+    bool
+    realignPairedRead(
+        const bam_record& bamRead,
+        const bool isLeftOfInsert,
+        const std::string& floatRead,
+        const pos_t anchorPos,
+        int& altTemplateSize);
+
     bool
     alignShadowRead(
         const bam_record& bamRead,

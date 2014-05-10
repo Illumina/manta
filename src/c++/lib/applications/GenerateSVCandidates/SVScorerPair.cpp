@@ -559,7 +559,7 @@ getSVPairSupport(
     const SVCandidate& sv,
     SVEvidence& evidence)
 {
-    static const PairOptions pairOpt(_isRNA);
+    const PairOptions pairOpt(_isRNA);
 
 #ifdef DEBUG_PAIR
     static const std::string logtag("getSVPairSupport: ");

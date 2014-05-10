@@ -149,31 +149,20 @@ testFragOverlap(
 
 bool
 SVScorePairAltProcessor::
-alignShadowRead(
+realignPairedRead(
     const bam_record& bamRead,
+    const bool isLeftOfInsert,
+    const std::string& floatRead,
+    const pos_t anchorPos,
     int& altTemplateSize)
 {
     // TODO: basecall qualities??
 
-    // does the shadow occur to the left or right of the insertion?
-    const bool isLeftOfInsert(bamRead.is_mate_fwd_strand());
-#ifdef DEBUG_SHADOW
-    log_os << __FUNCTION__ << ": isLeftOfInsert: " << isLeftOfInsert << "\n";
-#endif
-
-    // do we need to revcomp the sequence?
-    std::string read(bamRead.get_bam_read().get_string());
-    if (isLeftOfInsert)
-    {
-        reverseCompStr(read);
-    }
-
-    // TODO: break the contig into two parts for incomplete insertions
     AlignmentResult<int> readAlignment;
 
     typedef std::string::const_iterator siter;
-    const siter readBegin(read.begin());
-    const siter readEnd(read.end());
+    const siter readBegin(floatRead.begin());
+    const siter readEnd(floatRead.end());
     siter contigBegin(_contig.extSeq.begin());
     siter contigEnd(_contig.extSeq.end());
 
@@ -209,7 +198,7 @@ alignShadowRead(
 
         const path_t readPath(readAlignment.align.apath);
 
-        const unsigned readSize(read.size());
+        const unsigned readSize(floatRead.size());
         unsigned clipSize(0);
 
         if (sv.isUnknownSizeInsertion)
@@ -264,7 +253,7 @@ alignShadowRead(
     known_pos_range2 fakeRefSpan;
     if (isLeftOfInsert)
     {
-        fakeRefSpan.set_begin_pos(bamRead.mate_pos()-1);
+        fakeRefSpan.set_begin_pos(anchorPos);
 
         // offset of read end on the contig, in contig coordinates
         const unsigned shadowRefSpan(apath_ref_length(readAlignment.align.apath));
@@ -294,7 +283,7 @@ alignShadowRead(
     {
         // approximate mate as having conventional alignment -- we could fix
         // this with some buffering in ShadowReadFinder
-        fakeRefSpan.set_end_pos(bamRead.mate_pos()-1 + read.size());
+        fakeRefSpan.set_end_pos(anchorPos + floatRead.size());
 
         // set fake begin as if the insert allele continued TO THE LEFT in reference coordinates:
 
@@ -346,6 +335,34 @@ alignShadowRead(
 
 
 
+bool
+SVScorePairAltProcessor::
+alignShadowRead(
+    const bam_record& bamRead,
+    int& altTemplateSize)
+{
+    // TODO: basecall qualities??
+
+    // does the shadow occur to the left or right of the insertion?
+    const bool isLeftOfInsert(bamRead.is_mate_fwd_strand());
+#ifdef DEBUG_SHADOW
+    log_os << __FUNCTION__ << ": isLeftOfInsert: " << isLeftOfInsert << "\n";
+#endif
+
+    // do we need to revcomp the sequence?
+    std::string shadowRead(bamRead.get_bam_read().get_string());
+    if (isLeftOfInsert)
+    {
+        reverseCompStr(shadowRead);
+    }
+
+    const pos_t matePos(bamRead.mate_pos() -1);
+
+    return realignPairedRead(bamRead, isLeftOfInsert, shadowRead, matePos, altTemplateSize);
+}
+
+
+
 void
 SVScorePairAltProcessor::
 processClearedRecord(
@@ -362,69 +379,78 @@ processClearedRecord(
     const bool isLargeInsert(isLargeInsertSV(sv));
 
     bool isShadowAlignment(false);
+    bool isRepeatChimeraAlignment(false);
 
     int templateSize(0);
     int altTemplateSize(0);
 
     if (isLargeInsert)
     {
+        /// TODO: add an earlier check to see if we've handled this qname already so we don't align everything twice:
+
         // test for shadow
-        const bool isShadowRead(_shadow.check(bamRead));
-
-        if (isShadowRead)
         {
-            // no need to check if we've encountered the shadow before b/c of left/right orientation restriction
+            const bool isShadowRead(_shadow.check(bamRead));
 
-            // don't forget to revcomp!
-            /// what information do we need back form this function?
-            /// 1) bool -- did the read align within the bounds of the insert region and meet some alignment quality threshold
-            /// 2) if (1) provide the template size estimate:
-            isShadowAlignment=alignShadowRead(bamRead,altTemplateSize);
-
-            if (! isShadowAlignment) return;
-#ifdef DEBUG_SHADOW
-            log_os << "read passed shadow test altsize/record: "  << altTemplateSize << "/" << bamRead << "\n";
-#endif
-        }
-        else
-        {
-            // record the mapq value of the shadow mate:
-            if (_shadow.isShadowMate())
+            if (isShadowRead)
             {
-                SVFragmentEvidence& fragment(evidence.getSample(bamParams.isTumor)[bamRead.qname()]);
-                SVFragmentEvidenceRead& evRead(fragment.getRead(bamRead.is_first()));
-                setReadEvidence(svParams.minMapQ, svParams.minTier2MapQ, bamRead, isShadowAlignment, evRead);
-            }
+                // no need to check if we've encountered the shadow before b/c of left/right orientation restriction
 
-            // ok, not a shadow read, kick the read out if it fits shadow or shadow-mate criteria:
-            if (bamRead.is_unmapped() || bamRead.is_mate_unmapped()) return;
+                // don't forget to revcomp!
+                /// what information do we need back form this function?
+                /// 1) bool -- did the read align within the bounds of the insert region and meet some alignment quality threshold
+                /// 2) if (1) provide the template size estimate:
+                isShadowAlignment=alignShadowRead(bamRead,altTemplateSize);
+
+                if (! isShadowAlignment) return;
+    #ifdef DEBUG_SHADOW
+                log_os << "read passed shadow test altsize/record: "  << altTemplateSize << "/" << bamRead << "\n";
+    #endif
+            }
+            else
+            {
+                // record the mapq value of the shadow mate:
+                if (_shadow.isShadowMate())
+                {
+                    SVFragmentEvidence& fragment(evidence.getSample(bamParams.isTumor)[bamRead.qname()]);
+                    SVFragmentEvidenceRead& evRead(fragment.getRead(bamRead.is_first()));
+                    setReadEvidence(svParams.minMapQ, svParams.minTier2MapQ, bamRead, isShadowAlignment, evRead);
+                }
+
+                // ok, not a shadow read, kick the read out if it fits shadow or shadow-mate criteria:
+                if (bamRead.is_unmapped() || bamRead.is_mate_unmapped()) return;
+            }
         }
 
         // test for MAPQ0 pair
-#if 1
-        const bool isRepeatChimera(false);
-        if (isRepeatChimera)
         {
+            typedef RemoteReadCache::const_iterator riter;
+            const RemoteReadCache& remotes(assemblyData.remoteReads);
+            riter remoteIter(remotes.find(bamRead.qname()));
 
-        }
-        else
-        {
-            /// if we establish it's not a repeat chimera, then kick the candidate out:
-            if (! (bamRead.is_unmapped() || bamRead.is_mate_unmapped()))
+            if (remoteIter != remotes.end())
             {
-                if (! is_innie_pair(bamRead)) return;
+                if (remoteIter->second.readNo != ( (bamRead.read_no() == 1) ? 2 : 1 )) return;
+
+                const bool isLeftOfInsert(bamRead.is_fwd_strand());
+                const pos_t anchorPos(bamRead.pos()-1);
+                const std::string& remoteRead(remoteIter->second.readSeq); /// read is already revcomped as required when stored in cache
+                isRepeatChimeraAlignment=realignPairedRead(bamRead, isLeftOfInsert, remoteRead, anchorPos, altTemplateSize);
+
+                if (! isRepeatChimeraAlignment) return;
+            }
+            else
+            {
+                /// if we establish it's not a repeat chimera, then filter back down to the usual pair candidates:
+                if (! (bamRead.is_unmapped() || bamRead.is_mate_unmapped()))
+                {
+                    if (! is_innie_pair(bamRead)) return;
+                }
             }
         }
-#endif
     }
 
-    const bool isRealignedTemplate(isLargeInsert && isShadowAlignment);
-
-    // for now, we allow alt evidence that aligns within the insert only, any
-    // fragments that align to the reference on both sides and are simply "short"
-    // due to the insertion are not considered
-    /// TODO: re-evaluate this filter after shadow scoring is mature
-//    if (isLargeInsert && (! isShadowAlignment)) return;
+    const bool isRealignedTemplate(isLargeInsert && (isShadowAlignment || isRepeatChimeraAlignment));
 
 #ifdef DEBUG_MEGAPAIR
     log_os << __FUNCTION__ << ": read: " << bamRead << "\n";
@@ -444,7 +470,7 @@ processClearedRecord(
     log_os << __FUNCTION__ << ": tSize/aSize: " << templateSize << " " << altTemplateSize << "\n";
 #endif
 
-    // only filter out anomolous fragments for alt if the ref is also being filtered out:
+    // only filter out anomalous fragments for alt if the ref is also being filtered out:
     if (isAnomTemplate)
     {
         if (altTemplateSize < bamParams.minFrag)
@@ -497,7 +523,14 @@ processClearedRecord(
     {
         mapq=_shadow.getMateMapq();
     }
-    setReadEvidence(svParams.minMapQ, svParams.minTier2MapQ, mapq, readSize, isShadowAlignment, evRead);
+    setReadEvidence(svParams.minMapQ, svParams.minTier2MapQ, mapq, readSize, isRealignedTemplate, evRead);
+
+    if (isRepeatChimeraAlignment)
+    {
+        //enter the mate read:
+        SVFragmentEvidenceRead& evMateRead(fragment.getRead(! bamRead.is_first()));
+        setReadEvidence(svParams.minMapQ, svParams.minTier2MapQ, mapq, readSize, isRealignedTemplate, evMateRead);
+    }
 
     setAlleleFrag(*bamParams.fragDistroPtr, altTemplateSize, fragment.alt.getBp(isBp1), isLargeInsert);
 #ifdef DEBUG_MEGAPAIR
@@ -509,6 +542,6 @@ processClearedRecord(
         // when an alt entry is made for a fragment, we try to always create corresponding ref entry
         // in theory this will get picked up by the ref scanner anyway, but the cost of missing this
         // is all sorts of really bad somatic FNs
-        setAlleleFrag(*bamParams.fragDistroPtr, templateSize, fragment.ref.getBp(isBp1),isLargeInsert);
+        setAlleleFrag(*bamParams.fragDistroPtr, templateSize, fragment.ref.getBp(isBp1), isLargeInsert);
     }
 }
