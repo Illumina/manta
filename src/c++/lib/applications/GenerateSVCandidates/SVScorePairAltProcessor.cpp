@@ -386,20 +386,19 @@ processClearedRecord(
 
     if (isLargeInsert)
     {
-        /// TODO: add an earlier check to see if we've handled this qname already so we don't align everything twice:
-
         // test for shadow
         {
             const bool isShadowRead(_shadow.check(bamRead));
 
             if (isShadowRead)
             {
-                // no need to check if we've encountered the shadow before b/c of left/right orientation restriction
 
-                // don't forget to revcomp!
-                /// what information do we need back form this function?
-                /// 1) bool -- did the read align within the bounds of the insert region and meet some alignment quality threshold
-                /// 2) if (1) provide the template size estimate:
+                // does the shadow occur to the left or right of the insertion?
+                const bool isLeftOfInsert(bamRead.is_mate_fwd_strand());
+
+                // eval left of insert for Bp1 and right of insert for Bp2:
+                if (isLeftOfInsert != isBp1) return;
+
                 isShadowAlignment=alignShadowRead(bamRead,altTemplateSize);
 
                 if (! isShadowAlignment) return;
@@ -433,6 +432,10 @@ processClearedRecord(
                 if (remoteIter->second.readNo != ( (bamRead.read_no() == 1) ? 2 : 1 )) return;
 
                 const bool isLeftOfInsert(bamRead.is_fwd_strand());
+
+                // eval left of insert for Bp1 and right of insert for Bp2:
+                if (isLeftOfInsert != isBp1) return;
+
                 const pos_t anchorPos(bamRead.pos()-1);
                 const std::string& remoteRead(remoteIter->second.readSeq); /// read is already revcomped as required when stored in cache
                 isRepeatChimeraAlignment=realignPairedRead(bamRead, isLeftOfInsert, remoteRead, anchorPos, altTemplateSize);
@@ -471,6 +474,7 @@ processClearedRecord(
 #endif
 
     // only filter out anomalous fragments for alt if the ref is also being filtered out:
+    //  (if we don't do this there will be a frag prob for ref and a zero for alt, leading to skewed results)
     if (isAnomTemplate)
     {
         if (altTemplateSize < bamParams.minFrag)

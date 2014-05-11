@@ -25,7 +25,7 @@ SVScorePairInitParams(
     const SVCandidate& sv,
     const bool isBp1)
 {
-    /// In case of breakend microhomology approximate the breakend as a point event at the center of the possible range:
+    /// In case of breakend homology approximate the breakend as a point event at the center of the possible range:
     centerPos1 = (sv.bp1.interval.range.center_pos());
     centerPos2 = (sv.bp2.interval.range.center_pos());
 
