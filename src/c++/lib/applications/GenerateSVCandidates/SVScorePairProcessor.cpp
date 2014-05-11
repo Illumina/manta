@@ -32,7 +32,13 @@ SVScorePairInitParams(
     centerPos = ( isBp1 ? centerPos1 : centerPos2 );
 
     // total impact of the alt allele on template size, assuming a simple indel:
-    altShift = ((centerPos2-centerPos1)-sv.insertSeq.size());
+    int altInsSize(sv.insertSeq.size());
+    if (sv.isUnknownSizeInsertion)
+    {
+        altInsSize = (sv.unknownSizeInsertionLeftSeq.size() + sv.unknownSizeInsertionRightSeq.size());
+    }
+
+    altShift = ((centerPos2-centerPos1)-altInsSize);
 
     minMapQ = (readScanner.getMinMapQ());
     minTier2MapQ = (readScanner.getMinTier2MapQ());
