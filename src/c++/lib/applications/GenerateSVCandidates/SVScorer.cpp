@@ -336,16 +336,34 @@ addConservativeSpanningPairSupport(
     {
         if ((altLhood/sum) > pairSupportProb)
         {
+#ifdef DEBUG_SCORE
+            log_os << __FUNCTION__ << " semi-mapped alt pair support\n";
+#endif
             sampleBaseInfo.alt.confidentSemiMappedSpanningPairCount++;
-            if (isFullyMapped) sampleBaseInfo.alt.confidentSpanningPairCount++;
+            if (isFullyMapped)
+            {
+#ifdef DEBUG_SCORE
+                log_os << __FUNCTION__ << " fully-mapped alt pair support\n";
+#endif
+                sampleBaseInfo.alt.confidentSpanningPairCount++;
+            }
         }
     }
     else
     {
         if ((refLhood/sum) > pairSupportProb)
         {
+#ifdef DEBUG_SCORE
+            log_os << __FUNCTION__ << " semi-mapped ref pair support\n";
+#endif
             sampleBaseInfo.ref.confidentSemiMappedSpanningPairCount++;
-            if (isFullyMapped) sampleBaseInfo.ref.confidentSpanningPairCount++;
+            if (isFullyMapped)
+            {
+#ifdef DEBUG_SCORE
+                log_os << __FUNCTION__ << " fully-mapped ref pair support\n";
+#endif
+                sampleBaseInfo.ref.confidentSpanningPairCount++;
+            }
         }
     }
 }
