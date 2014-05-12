@@ -87,6 +87,13 @@ struct SVFragmentEvidenceAlleleBreakend
         return (isRead1 ? read1 : read2);
     }
 
+    void
+    clearPairSupport()
+    {
+        isFragmentSupport=false;
+        fragLengthProb = 0;
+    }
+
     bool isFragmentSupport; ///< if true, paired-read analysis shows that this read pair fragment supports this allele on this breakend
     float fragLengthProb; ///< if isFragmentSupport, what is the prob of the fragment size given this allele?
     SVFragmentEvidenceAlleleBreakendPerRead read1; // read1 specific evidence
@@ -123,6 +130,13 @@ struct SVFragmentEvidenceAllele
         return std::make_pair(
                    bp1.getRead(isRead1).isTier2SplitSupport,
                    bp2.getRead(isRead1).isTier2SplitSupport);
+    }
+
+    void
+    clearPairSupport()
+    {
+        bp1.clearPairSupport();
+        bp2.clearPairSupport();
     }
 
     SVFragmentEvidenceAlleleBreakend bp1;
@@ -240,6 +254,13 @@ struct SVFragmentEvidence
         const std::pair<bool,bool> isRef(ref.isAnyTier2SplitReadSupport(isRead1));
 
         return std::make_pair((isAlt.first || isRef.first), (isAlt.second || isRef.second));
+    }
+
+    void
+    clearPairSupport()
+    {
+        ref.clearPairSupport();
+        alt.clearPairSupport();
     }
 
     SVFragmentEvidenceRead read1;

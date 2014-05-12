@@ -218,6 +218,49 @@ lnToProb(
 
 
 
+/// return false if no split read support
+static
+bool
+getSampleSplitReadLnLhood(
+    const SVFragmentEvidence& fragev,
+    const bool isRead1,
+    float& refLnLhood,
+    float& altLnLhood)
+{
+    refLnLhood = 1.;
+    altLnLhood = 1.;
+
+    const std::pair<bool,bool> isBpSupport(fragev.isAnySplitReadSupport(isRead1));
+    if (! (isBpSupport.first || isBpSupport.second)) return false;
+
+    bool isUseBp1Score(isBpSupport.first);
+
+    if (isBpSupport.first && isBpSupport.second)
+    {
+        isUseBp1Score = (fragev.alt.bp1.getRead(isRead1).splitLnLhood >= fragev.alt.bp2.getRead(isRead1).splitLnLhood);
+    }
+
+    altLnLhood =
+        ( isUseBp1Score ?
+          fragev.alt.bp1.getRead(isRead1).splitLnLhood :
+          fragev.alt.bp2.getRead(isRead1).splitLnLhood);
+
+    if (isBpSupport.first && isBpSupport.second)
+    {
+        isUseBp1Score = (fragev.ref.bp1.getRead(isRead1).splitLnLhood >= fragev.ref.bp2.getRead(isRead1).splitLnLhood);
+    }
+
+    refLnLhood =
+        ( isUseBp1Score ?
+          fragev.ref.bp1.getRead(isRead1).splitLnLhood :
+          fragev.ref.bp2.getRead(isRead1).splitLnLhood);
+
+    return true;
+}
+
+
+
+
 static
 void
 addConservativeSplitReadSupport(
@@ -231,30 +274,9 @@ addConservativeSplitReadSupport(
     //
     // ...note this is done in the absence of having a noise state in the model
     //
-    const std::pair<bool,bool> isBpSupport(fragev.isAnySplitReadSupport(isRead1));
-    if (! (isBpSupport.first || isBpSupport.second)) return;
-
-    bool isUseBp1Score(isBpSupport.first);
-
-    if (isBpSupport.first && isBpSupport.second)
-    {
-        isUseBp1Score = (fragev.alt.bp1.getRead(isRead1).splitLnLhood >= fragev.alt.bp2.getRead(isRead1).splitLnLhood);
-    }
-
-    float altLnLhood =
-        ( isUseBp1Score ?
-          fragev.alt.bp1.getRead(isRead1).splitLnLhood :
-          fragev.alt.bp2.getRead(isRead1).splitLnLhood);
-
-    if (isBpSupport.first && isBpSupport.second)
-    {
-        isUseBp1Score = (fragev.ref.bp1.getRead(isRead1).splitLnLhood >= fragev.ref.bp2.getRead(isRead1).splitLnLhood);
-    }
-
-    float refLnLhood =
-        ( isUseBp1Score ?
-          fragev.ref.bp1.getRead(isRead1).splitLnLhood :
-          fragev.ref.bp2.getRead(isRead1).splitLnLhood);
+    float refLnLhood;
+    float altLnLhood;
+    if (! getSampleSplitReadLnLhood(fragev, isRead1, refLnLhood, altLnLhood)) return;
 
     // convert to normalized prob:
     if (altLnLhood > refLnLhood)
@@ -411,6 +433,83 @@ getSVSupportSummary(
 
 
 
+static
+void
+resolvePairSplitConflictsSample(
+    SVEvidence::evidenceTrack_t& sampleEvidence)
+{
+    BOOST_FOREACH(SVEvidence::evidenceTrack_t::value_type& val, sampleEvidence)
+    {
+        SVFragmentEvidence& fragev(val.second);
+
+        /// filtration scheme only works if there's pair and split support for the same fragment:
+        if (! fragev.isAnySpanningPairSupport()) continue;
+    //    if (! (fragev.isAnySplitReadSupport(true) || fragev.isAnySplitReadSupport(false))) continue;
+
+        // if there's a difference in fragment support for one "frag-favored" allele, then
+        // there must also be either neutral split support or split support in favor of the same allele
+
+        const float refPairLhood(getSpanningPairAlleleLhood(fragev.ref));
+        const float altPairLhood(getSpanningPairAlleleLhood(fragev.alt));
+
+        float refSplitLnLhoodRead1;
+        float altSplitLnLhoodRead1;
+        const bool isRead1Split(getSampleSplitReadLnLhood(fragev, true, refSplitLnLhoodRead1, altSplitLnLhoodRead1));
+
+        float refSplitLnLhoodRead2;
+        float altSplitLnLhoodRead2;
+        const bool isRead2Split(getSampleSplitReadLnLhood(fragev, false, refSplitLnLhoodRead2, altSplitLnLhoodRead2));
+
+        const bool isRefPair(refPairLhood > altPairLhood);
+        const bool isAltPair(altPairLhood > refPairLhood);
+
+        if (isRead1Split)
+        {
+            if (altSplitLnLhoodRead1 > refSplitLnLhoodRead1)
+            {
+                if (isRefPair) fragev.clearPairSupport();
+            }
+            if (refSplitLnLhoodRead1 > altSplitLnLhoodRead1)
+            {
+                if (isAltPair) fragev.clearPairSupport();
+            }
+        }
+
+        if (isRead2Split)
+        {
+            if (altSplitLnLhoodRead2 > refSplitLnLhoodRead2)
+            {
+                if (isRefPair) fragev.clearPairSupport();
+            }
+            if (refSplitLnLhoodRead2 > altSplitLnLhoodRead2)
+            {
+                if (isAltPair) fragev.clearPairSupport();
+            }
+        }
+    }
+}
+
+
+
+/// check for cases where pair support was added in error, the fragment does span the breakpoint, but the
+/// alignment past the breakpoint is poor, and is better in the alt allele.
+///
+/// note this might be done more naturally during the pair computation, but all the info we need is added
+/// during the split routine, so it's at least checked here as well:
+static
+void
+resolvePairSplitConflicts(
+    const SVCandidate& sv,
+    SVEvidence& evidence)
+{
+    if (sv.isImprecise()) return;
+
+    resolvePairSplitConflictsSample(evidence.normal);
+    resolvePairSplitConflictsSample(evidence.tumor);
+}
+
+
+
 /// shared information gathering steps of all scoring models
 void
 SVScorer::
@@ -457,6 +556,9 @@ scoreSV(
         // count the split reads supporting the ref and alt alleles in each sample
         //
         getSVSplitReadSupport(assemblyData, sv, baseInfo, evidence);
+
+        // fix erroneous pair support based on split evidence:
+        resolvePairSplitConflicts(sv, evidence);
     }
 
     // compute allele likelihoods, and any other summary metric shared between all models:
