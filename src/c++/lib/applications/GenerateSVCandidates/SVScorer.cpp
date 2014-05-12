@@ -239,7 +239,7 @@ getSampleSplitReadLnLhood(
 
     bool isUseBp1Score(isBpSupport.first);
 
-    if (isBpSupport.first == isBpSupport.second)
+    if (isForcedSupport || (isBpSupport.first == isBpSupport.second))
     {
         isUseBp1Score = (fragev.alt.bp1.getRead(isRead1).splitLnLhood >= fragev.alt.bp2.getRead(isRead1).splitLnLhood);
     }
