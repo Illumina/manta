@@ -639,7 +639,7 @@ incrementSpanningPairAlleleLnLhood(
 
 
 static
-void
+double
 incrementAlleleSplitReadLhood(
     const ProbSet& selfMapProb,
     const ProbSet& otherMapProb,
@@ -647,7 +647,6 @@ incrementAlleleSplitReadLhood(
     const double /*readLnPrior*/,
     const std::pair<bool,bool>& isSupported,
     const bool isRead1,
-    double& refSplitLnLhood,
     bool& isReadEvaluated)
 {
     if (! (allele.bp1.getRead(isRead1).isSplitEvaluated &&
@@ -668,7 +667,6 @@ incrementAlleleSplitReadLhood(
     const double alignLnLhood( isUseBp1Lhood ? alignBp1LnLhood : alignBp2LnLhood );
 
     const double fragLnLhood = log_sum((selfMapProb.lnComp+alignLnLhood), (otherMapProb.lnProb)); //+readLnPrior));
-    refSplitLnLhood += fragLnLhood;
 
 #ifdef DEBUG_SCORE
     static const std::string logtag("incrementAlleleSplitReadLhood: ");
@@ -680,9 +678,9 @@ incrementAlleleSplitReadLhood(
     log_os << logtag << "selfMap " << selfMapProb.lnProb << "\n";
     log_os << logtag << "otherMap " << otherMapProb.lnProb << "\n";
     log_os << logtag << "increment " << fragLnLhood << "\n";
-    log_os << logtag << "refSplitLnLhood " << refSplitLnLhood << "\n";
 #endif
 
+    return fragLnLhood;
 }
 
 
@@ -732,11 +730,15 @@ incrementSplitReadLhood(
 #ifdef DEBUG_SCORE
     log_os << __FUNCTION__ << ": starting ref\n";
 #endif
-    incrementAlleleSplitReadLhood(refMapProb, altMapProb, fragev.ref, readLnPrior, isSupported, isRead1, refSplitLnLhood, isReadEvaluated);
+    const double refSplit = incrementAlleleSplitReadLhood(refMapProb, altMapProb, fragev.ref, readLnPrior, isSupported, isRead1, isReadEvaluated);
 #ifdef DEBUG_SCORE
     log_os << __FUNCTION__ << ": starting alt\n";
 #endif
-    incrementAlleleSplitReadLhood(altMapProb, refMapProb, fragev.alt, readLnPrior, isSupported, isRead1, altSplitLnLhood, isReadEvaluated);
+    const double altSplit = incrementAlleleSplitReadLhood(altMapProb, refMapProb, fragev.alt, readLnPrior, isSupported, isRead1, isReadEvaluated);
+
+    if ((refSplit < (altMapProb.lnProb+1)) && (altSplit < (refMapProb.lnProb+1))) return;
+    refSplitLnLhood += refSplit;
+    altSplitLnLhood += altSplit;
 }
 
 
