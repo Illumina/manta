@@ -225,17 +225,21 @@ getSampleSplitReadLnLhood(
     const SVFragmentEvidence& fragev,
     const bool isRead1,
     float& refLnLhood,
-    float& altLnLhood)
+    float& altLnLhood,
+    const bool isForcedSupport = false)
 {
     refLnLhood = 1.;
     altLnLhood = 1.;
 
     const std::pair<bool,bool> isBpSupport(fragev.isAnySplitReadSupport(isRead1));
-    if (! (isBpSupport.first || isBpSupport.second)) return false;
+    if (! isForcedSupport)
+    {
+        if (! (isBpSupport.first || isBpSupport.second)) return false;
+    }
 
     bool isUseBp1Score(isBpSupport.first);
 
-    if (isBpSupport.first && isBpSupport.second)
+    if (isBpSupport.first == isBpSupport.second)
     {
         isUseBp1Score = (fragev.alt.bp1.getRead(isRead1).splitLnLhood >= fragev.alt.bp2.getRead(isRead1).splitLnLhood);
     }
@@ -440,6 +444,9 @@ resolvePairSplitConflictsSample(
 {
     BOOST_FOREACH(SVEvidence::evidenceTrack_t::value_type& val, sampleEvidence)
     {
+#ifdef DEBUG_SCORE
+        log_os << __FUNCTION__ << ": conflict check for " << val.first << "\n";
+#endif
         SVFragmentEvidence& fragev(val.second);
 
         /// filtration scheme only works if there's pair and split support for the same fragment:
@@ -452,14 +459,19 @@ resolvePairSplitConflictsSample(
         const float refPairLhood(getSpanningPairAlleleLhood(fragev.ref));
         const float altPairLhood(getSpanningPairAlleleLhood(fragev.alt));
 
+        static const bool isForcedSupport(true);
         float refSplitLnLhoodRead1;
         float altSplitLnLhoodRead1;
-        const bool isRead1Split(getSampleSplitReadLnLhood(fragev, true, refSplitLnLhoodRead1, altSplitLnLhoodRead1));
+        const bool isRead1Split(getSampleSplitReadLnLhood(fragev, true, refSplitLnLhoodRead1, altSplitLnLhoodRead1, isForcedSupport));
 
         float refSplitLnLhoodRead2;
         float altSplitLnLhoodRead2;
-        const bool isRead2Split(getSampleSplitReadLnLhood(fragev, false, refSplitLnLhoodRead2, altSplitLnLhoodRead2));
+        const bool isRead2Split(getSampleSplitReadLnLhood(fragev, false, refSplitLnLhoodRead2, altSplitLnLhoodRead2, isForcedSupport));
 
+#ifdef DEBUG_SCORE
+        log_os << __FUNCTION__ << ": fragev " << fragev << "\n";
+        log_os << __FUNCTION__ << ": r1/r2 " << isRead1Split << " " << isRead2Split << "\n";
+#endif
         const bool isRefPair(refPairLhood > altPairLhood);
         const bool isAltPair(altPairLhood > refPairLhood);
 
@@ -467,11 +479,23 @@ resolvePairSplitConflictsSample(
         {
             if (altSplitLnLhoodRead1 > refSplitLnLhoodRead1)
             {
-                if (isRefPair) fragev.clearPairSupport();
+                if (isRefPair)
+                {
+#ifdef DEBUG_SCORE
+                    log_os << __FUNCTION__ << ": clearing alt1/ref\n";
+#endif
+                    fragev.clearPairSupport();
+                }
             }
             if (refSplitLnLhoodRead1 > altSplitLnLhoodRead1)
             {
-                if (isAltPair) fragev.clearPairSupport();
+                if (isAltPair)
+                {
+#ifdef DEBUG_SCORE
+                    log_os << __FUNCTION__ << ": clearing ref1/alt\n";
+#endif
+                    fragev.clearPairSupport();
+                }
             }
         }
 
@@ -479,11 +503,23 @@ resolvePairSplitConflictsSample(
         {
             if (altSplitLnLhoodRead2 > refSplitLnLhoodRead2)
             {
-                if (isRefPair) fragev.clearPairSupport();
+                if (isRefPair)
+                {
+#ifdef DEBUG_SCORE
+                    log_os << __FUNCTION__ << ": clearing alt2/ref\n";
+#endif
+                    fragev.clearPairSupport();
+                }
             }
             if (refSplitLnLhoodRead2 > altSplitLnLhoodRead2)
             {
-                if (isAltPair) fragev.clearPairSupport();
+                if (isAltPair) 
+                {
+#ifdef DEBUG_SCORE
+                    log_os << __FUNCTION__ << ": clearing ref2/alt\n";
+#endif
+                    fragev.clearPairSupport();
+                }
             }
         }
     }
@@ -966,12 +1002,13 @@ addDiploidLoglhood(
             loglhood[gt] += log_sum(refLnLhood, altLnLhood);
 
 #ifdef DEBUG_SCORE
-            log_os << __FUNCTION__ << ": gt/fragref/ref/fragalt/alt: "
+            log_os << __FUNCTION__ << ": gt/fragref/ref/fragalt/alt/loglhood: "
                    << label(gt)
                    << " " << refLnFragLhood
                    << " " << refLnLhood
                    << " " << altLnFragLhood
                    << " " << altLnLhood
+                   << " " << loglhood[gt]
                    << "\n";
 #endif
         }
