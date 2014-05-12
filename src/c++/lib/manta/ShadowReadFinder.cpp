@@ -80,8 +80,8 @@ check(
     else if ((! bamRead.is_unmapped()) && (bamRead.is_mate_unmapped()))
     {
 
-        if ((! _isLeft) && bamRead.is_fwd_strand()) return false;
-        if ((! _isRight) && (! bamRead.is_fwd_strand())) return false;
+        if ((! _isLeft) && (! bamRead.is_fwd_strand())) return false;
+        if ((! _isRight) && bamRead.is_fwd_strand()) return false;
 
         _lastMapq  = bamRead.map_qual();
         if (_lastMapq < _minMapq) return false;
