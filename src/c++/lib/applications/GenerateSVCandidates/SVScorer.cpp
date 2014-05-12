@@ -736,7 +736,10 @@ incrementSplitReadLhood(
 #endif
     const double altSplit = incrementAlleleSplitReadLhood(altMapProb, refMapProb, fragev.alt, readLnPrior, isSupported, isRead1, isReadEvaluated);
 
+    // filter out split read evidence with a poor alignment to both alleles:
+    /// TODO: fraction of these noise reads could be informative for filtration
     if ((refSplit < (altMapProb.lnProb+1)) && (altSplit < (refMapProb.lnProb+1))) return;
+
     refSplitLnLhood += refSplit;
     altSplitLnLhood += altSplit;
 }
