@@ -38,7 +38,7 @@ stripPairCounts() {
 }
 
 stripQual() {
-    awk 'BEGIN {FS="\t"; OFS="\t";} {$6=""; print}'
+    awk 'BEGIN {FS="\t"; OFS="\t";} {$6=""; print}' | sed "s/JUNCTION_QUAL=[0-9]*//g" 
 }
 
 stripSample() {
