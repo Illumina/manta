@@ -158,6 +158,18 @@ realignPairedRead(
 {
     // TODO: basecall qualities??
 
+    // sanity check whether we should even start alingment -- check 'left of insert' consistency
+    //
+    if (isLeftOfInsert)
+    {
+        if (anchorPos >= _contig.segmentSpan.begin_pos()) return false;
+    }
+    else
+    {
+        const pos_t endPos(anchorPos + floatRead.size());
+        if (endPos <= _contig.segmentSpan.end_pos()) return false;
+    }
+
     AlignmentResult<int> readAlignment;
 
     typedef std::string::const_iterator siter;

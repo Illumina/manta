@@ -99,6 +99,8 @@ private:
     /// \param[in] isLeftOfInsert is the anchor on the left or right side of the insertion
     /// \param[in] floatRead the read to be realigned, already revcomped to expected orientation
     /// \param[in] anchorPos the alignment position of the anchoring (ie. non-relaigned) read of the pair
+    ///
+    /// \return true for usable alignment
     bool
     realignPairedRead(
         const bam_record& bamRead,
