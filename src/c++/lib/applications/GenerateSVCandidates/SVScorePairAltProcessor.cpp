@@ -397,14 +397,20 @@ processClearedRecord(
                 const bool isLeftOfInsert(bamRead.is_mate_fwd_strand());
 
                 // eval left of insert for Bp1 and right of insert for Bp2:
-                if (isLeftOfInsert != isBp1) return;
+                if (isLeftOfInsert != isBp1)
+                {
+#ifdef DEBUG_SHADOW
+                    log_os << __FUNCTION__ << ": shadow WEREWOLF isLeft: "  << isLeftOfInsert << " " << isBp1 << "\n";
+#endif
+                    return;
+                }
 
                 isShadowAlignment=alignShadowRead(bamRead,altTemplateSize);
 
                 if (! isShadowAlignment) return;
-    #ifdef DEBUG_SHADOW
-                log_os << "read passed shadow test altsize/record: "  << altTemplateSize << "/" << bamRead << "\n";
-    #endif
+#ifdef DEBUG_SHADOW
+                log_os << __FUNCTION__ << ": read passed shadow test altsize/record: "  << altTemplateSize << "/" << bamRead << "\n";
+#endif
             }
             else
             {
@@ -434,7 +440,13 @@ processClearedRecord(
                 const bool isLeftOfInsert(bamRead.is_fwd_strand());
 
                 // eval left of insert for Bp1 and right of insert for Bp2:
-                if (isLeftOfInsert != isBp1) return;
+                if (isLeftOfInsert != isBp1)
+                {
+#ifdef DEBUG_SHADOW
+                    log_os << __FUNCTION__ << ": chimera WEREWOLF isLeft: "  << isLeftOfInsert << " " << isBp1 << "\n";
+#endif
+                    return;
+                }
 
                 const pos_t anchorPos(bamRead.pos()-1);
                 const std::string& remoteRead(remoteIter->second.readSeq); /// read is already revcomped as required when stored in cache
