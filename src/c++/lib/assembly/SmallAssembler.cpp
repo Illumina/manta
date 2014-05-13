@@ -397,9 +397,14 @@ buildContigs(
 #ifdef DEBUG_ASBL
     log_os << logtag << "First pass assembly resulted in "
            << contig.seq << "\n"
-           << " with length " << contigSize << ". Input consisted of " << readCount << " reads.\n";
+           << " with length " << contigSize << ". Input consisted of " << readCount << " reads.\n"
+           << "Final supporting reads: ";
+    print_readSet(contig.supportReads);
+    log_os << "Final rejecting reads: ";
+    print_readSet(contig.rejectReads);
 #endif
 
+    // WHY CHECK THIS AFTER WALK???
     // increment number of reads containing the seeding kmer
     for (unsigned readIndex(0); readIndex<readCount; ++readIndex)
     {
