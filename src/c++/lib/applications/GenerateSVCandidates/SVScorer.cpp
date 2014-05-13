@@ -747,7 +747,7 @@ incrementSplitReadLhood(
 
     // filter out split read evidence with a poor alignment to both alleles:
     /// TODO: fraction of these noise reads could be informative for filtration
-    if ((refSplit < (altMapProb.lnProb+1)) && (altSplit < (refMapProb.lnProb+1))) return;
+    // if ((refSplit < (altMapProb.lnProb+1)) && (altSplit < (refMapProb.lnProb+1))) return;
 
     refSplitLnLhood += refSplit;
     altSplitLnLhood += altSplit;
