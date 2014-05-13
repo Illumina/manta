@@ -440,6 +440,7 @@ getSVSupportSummary(
 static
 void
 resolvePairSplitConflictsSample(
+    const bool isFindAltPairConflict,
     SVEvidence::evidenceTrack_t& sampleEvidence)
 {
     BOOST_FOREACH(SVEvidence::evidenceTrack_t::value_type& val, sampleEvidence)
@@ -474,6 +475,11 @@ resolvePairSplitConflictsSample(
 #endif
         const bool isRefPair(refPairLhood > altPairLhood);
         const bool isAltPair(altPairLhood > refPairLhood);
+
+        if (isAltPair)
+        {
+            if(! isFindAltPairConflict) continue;
+        }
 
         if (isRead1Split)
         {
@@ -540,8 +546,11 @@ resolvePairSplitConflicts(
 {
     if (sv.isImprecise()) return;
 
-    resolvePairSplitConflictsSample(evidence.normal);
-    resolvePairSplitConflictsSample(evidence.tumor);
+    static const pos_t maxAltPairConflictSearch(1000);
+    const bool isFindAltPairConflict(sv.centerSize() <= maxAltPairConflictSearch);
+
+    resolvePairSplitConflictsSample(isFindAltPairConflict, evidence.normal);
+    resolvePairSplitConflictsSample(isFindAltPairConflict, evidence.tumor);
 }
 
 

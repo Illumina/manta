@@ -447,8 +447,8 @@ getFragProb(
 
 
 
-// count the read pairs supporting the alternate allele in each sample, using data we already produced during candidate generation:
-//
+/// count the read pairs supporting the alternate allele in each sample, using data we already produced during candidate generation:
+///
 void
 SVScorer::
 processExistingAltPairInfo(
@@ -499,11 +499,10 @@ processExistingAltPairInfo(
             ///
             const bool isStrictMatch(isPairType);
 
-            const std::string qname(pair.qname());
+            const std::string& qname(pair.qname());
 
 #ifdef DEBUG_PAIR
-            static const std::string logtag("processExistingAltPairInfo: ");
-            log_os << logtag << "Finding alt pair evidence for svIndex: " << sv.candidateIndex << "  qname: " << qname << "\n";
+            log_os << __FUNCTION__ << ": Finding alt pair evidence for svIndex: " << sv.candidateIndex << "  isTumor: " << isTumor << " bam-pair: " << pair << "\n";
 #endif
 
             SVFragmentEvidence& fragment(evidence.getSample(isTumor)[qname]);
@@ -525,13 +524,19 @@ processExistingAltPairInfo(
             float fragProb(0);
             getFragProb(pairOpt, sv, pair, fragDistro, isStrictMatch, isFragSupportSV, fragProb);
 
-            if (! isFragSupportSV) continue;
+            if (! isFragSupportSV)
+            {
+#ifdef DEBUG_PAIR
+                log_os << __FUNCTION__ << ": no frag support!\n";
+#endif
+                continue;
+            }
 
             /// TODO: if fragProb is zero this should be a bug -- follow-up to see if we can make this an assert(fragProb > 0.) instead
             if (fragProb <= 0.)
             {
 #ifdef DEBUG_PAIR
-                log_os << logtag << "Fragment with fragProb=0! " << sv.candidateIndex << "  qname: " << qname << "\n";
+                log_os << __FUNCTION__ << ": Fragment with fragProb=0! " << sv.candidateIndex << "  bam-pair: " << pair << "\n";
 #endif
                 continue;
             }
