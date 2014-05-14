@@ -98,8 +98,8 @@ struct RemoteReadPayload
     RemoteReadPayload(
         const int initReadNo,
         const std::string& initReadSeq) :
-      readNo(initReadNo),
-      readSeq(initReadSeq)
+        readNo(initReadNo),
+        readSeq(initReadSeq)
     {}
 
     uint8_t readNo; // read no of the remote read, ie. the readno matching readSeq

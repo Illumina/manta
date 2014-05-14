@@ -69,8 +69,8 @@ ContigParams(
 
     const pos_t contigRefBeginPos(refSpan.begin_pos() + alignment.align.beginPos);
     segmentSpan.set_range(
-            (contigRefBeginPos + apath_ref_length(apathTillSvStart)),
-            (contigRefBeginPos + apath_ref_length(apathTillSvEnd)));
+        (contigRefBeginPos + apath_ref_length(apathTillSvStart)),
+        (contigRefBeginPos + apath_ref_length(apathTillSvEnd)));
 
 
     // the beginPos of align is the length of reference padding in the extended contig
@@ -89,14 +89,14 @@ ContigParams(
     bp2Offset.set_end_pos(bp2Offset.begin_pos() + bp2HomLength);
 
 #ifdef DEBUG_SHADOW
-        log_os << __FUNCTION__ << ": contigSize: " << extSeq.size()
-                << " refSpan: " << refSpan
-                << " segmentSpan: " << segmentSpan
-                << " alignment: " << alignment.align
-                << " alignSegment: " << alignSegment
-                << " bp1Offset: " << bp1Offset
-                << " bp2Offset: " << bp2Offset
-                << "\n";
+    log_os << __FUNCTION__ << ": contigSize: " << extSeq.size()
+           << " refSpan: " << refSpan
+           << " segmentSpan: " << segmentSpan
+           << " alignment: " << alignment.align
+           << " alignSegment: " << alignSegment
+           << " bp1Offset: " << bp1Offset
+           << " bp2Offset: " << bp2Offset
+           << "\n";
 #endif
 }
 
@@ -248,8 +248,8 @@ realignPairedRead(
 
 #ifdef DEBUG_SHADOW
         log_os << __FUNCTION__ << ": optScore: " << optimalScore
-                << " nonClipScore: " << nonClipScore
-                << " scoreFrac: " << scoreFrac << "\n";
+               << " nonClipScore: " << nonClipScore
+               << " scoreFrac: " << scoreFrac << "\n";
 #endif
 
         if (scoreFrac < minScoreFrac)
@@ -284,11 +284,11 @@ realignPairedRead(
 
 #ifdef DEBUG_SHADOW
         log_os << __FUNCTION__ << ": fakeRefSpan: " << fakeRefSpan
-                << " shadowRefSpan: " << shadowRefSpan
-                << " contigBeginOffset: " << contigBeginOffset
-                << " alignBeginPos: " << readAlignment.align.beginPos
-                << " readContigEndOffset: " << readContigEndOffset
-                << "\n";
+               << " shadowRefSpan: " << shadowRefSpan
+               << " contigBeginOffset: " << contigBeginOffset
+               << " alignBeginPos: " << readAlignment.align.beginPos
+               << " readContigEndOffset: " << readContigEndOffset
+               << "\n";
 #endif
     }
     else
@@ -314,10 +314,10 @@ realignPairedRead(
         fakeRefSpan.set_begin_pos(readContigBeginRefOffset);
 #ifdef DEBUG_SHADOW
         log_os << __FUNCTION__ << ": fakeRefSpan: " << fakeRefSpan
-                << " contigBeginOffset: " << contigBeginOffset
-                << " alignBeginPos: " << readAlignment.align.beginPos
-                << " readContigBeginOffset: " << readContigBeginOffset
-                << "\n";
+               << " contigBeginOffset: " << contigBeginOffset
+               << " alignBeginPos: " << readAlignment.align.beginPos
+               << " readContigBeginOffset: " << readContigBeginOffset
+               << "\n";
 #endif
     }
 

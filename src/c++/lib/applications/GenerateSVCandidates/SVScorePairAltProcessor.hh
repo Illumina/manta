@@ -61,8 +61,8 @@ struct SVScorePairAltProcessor : public SVScorePairProcessor
         assemblyData(initAssemblyData),
         _shadowAligner(refineOpt.spanningAlignScores),
         _shadow(scanOpt.minSingletonMapqCandidates,
-            (! initIsBp1), /// search for left-open shadows
-            (  initIsBp1)), /// search for right-open shadows
+                (! initIsBp1), /// search for left-open shadows
+                (  initIsBp1)), /// search for right-open shadows
         _contig(initAssemblyData,initSv)
     {
         checkInput(assemblyData,sv);

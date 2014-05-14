@@ -41,6 +41,6 @@ setReadEvidence(
     SVFragmentEvidenceRead& read)
 {
     setReadEvidence(minMapQ, minTier2MapQ,
-            bamRead.map_qual(), bamRead.read_size(),
-            isShadow, read);
+                    bamRead.map_qual(), bamRead.read_size(),
+                    isShadow, read);
 }

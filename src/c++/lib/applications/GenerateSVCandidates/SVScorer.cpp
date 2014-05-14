@@ -452,7 +452,7 @@ resolvePairSplitConflictsSample(
 
         /// filtration scheme only works if there's pair and split support for the same fragment:
         if (! fragev.isAnySpanningPairSupport()) continue;
-    //    if (! (fragev.isAnySplitReadSupport(true) || fragev.isAnySplitReadSupport(false))) continue;
+        //    if (! (fragev.isAnySplitReadSupport(true) || fragev.isAnySplitReadSupport(false))) continue;
 
         // if there's a difference in fragment support for one "frag-favored" allele, then
         // there must also be either neutral split support or split support in favor of the same allele
@@ -478,7 +478,7 @@ resolvePairSplitConflictsSample(
 
         if (isAltPair)
         {
-            if(! isFindAltPairConflict) continue;
+            if (! isFindAltPairConflict) continue;
         }
 
         if (isRead1Split)
@@ -519,7 +519,7 @@ resolvePairSplitConflictsSample(
             }
             if (refSplitLnLhoodRead2 > altSplitLnLhoodRead2)
             {
-                if (isAltPair) 
+                if (isAltPair)
                 {
 #ifdef DEBUG_SCORE
                     log_os << __FUNCTION__ << ": clearing ref2/alt\n";
