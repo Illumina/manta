@@ -27,7 +27,7 @@
 
 
 // compile with this macro to get verbose output:
-//#define DEBUG_ASBL
+#define DEBUG_ASBL
 
 
 // stream used by DEBUG_ASBL:
