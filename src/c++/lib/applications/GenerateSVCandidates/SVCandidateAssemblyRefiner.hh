@@ -75,7 +75,8 @@ private:
     const bam_header_info& _header;
     const SVCandidateAssembler _smallSVAssembler;
     const SVCandidateAssembler _spanningAssembler;
-    const GlobalLargeIndelAligner<int> _smallSVAligner;
+    const GlobalAligner<int> _smallSVAligner;
+    const GlobalLargeIndelAligner<int> _largeSVAligner;
     const GlobalAligner<int> _largeInsertEdgeAligner;
     const GlobalAligner<int> _largeInsertCompleteAligner;
     const GlobalJumpAligner<int> _spanningAligner;

@@ -20,6 +20,13 @@
 #include "alignment/AlignmentScores.hh"
 #include "options/SmallAssemblerOptions.hh"
 
+
+namespace SUPERTMP
+{
+static const int largeGapOpenScore(-24);
+}
+
+
 /// Options for the SV refiner step
 ///
 /// Note that we have two categories of options for assembly and alignment,
@@ -30,10 +37,12 @@ struct SVRefinerOptions
     /// match, mismatch, open score ratios taken from bwa defaults (but not extend!) :
     ///
     SVRefinerOptions() :
-        smallSVAlignScores(2, -8, -12, -1, -1),
+        smallSVAlignScores(2, -8, -12, 0, -1),
+        largeSVAlignScores(2, -8, -18, -1, -1),
         largeInsertEdgeAlignScores(2, -8, -18, -1, -1),
-        largeInsertCompleteAlignScores(2, -8, -24, 0, -1),
+        largeInsertCompleteAlignScores(2, -8,  SUPERTMP::largeGapOpenScore, 0, -1),
         spanningAlignScores(2, -8, -12, -1, -1),
+        largeGapOpenScore(SUPERTMP::largeGapOpenScore),
         jumpScore(-25),
         RNAspanningAlignScores(2, -8, -19, -1, -1),
         RNAIntronOpenScore(-15),
@@ -44,12 +53,14 @@ struct SVRefinerOptions
 
     /// parameters for small SV assembly/alignment:
     AlignmentScores<int> smallSVAlignScores;
+    AlignmentScores<int> largeSVAlignScores; // large SV but at a single assembly locus
     AlignmentScores<int> largeInsertEdgeAlignScores;
     AlignmentScores<int> largeInsertCompleteAlignScores;
     SmallAssemblerOptions smallSVAssembleOpt;
 
     // parameters for large SV assembly/alignment:
     AlignmentScores<int> spanningAlignScores;
+    const int largeGapOpenScore;
     const int jumpScore;
     AlignmentScores<int> RNAspanningAlignScores;
     const int RNAIntronOpenScore;

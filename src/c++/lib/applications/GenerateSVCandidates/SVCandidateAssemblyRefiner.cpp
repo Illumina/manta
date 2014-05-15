@@ -969,7 +969,8 @@ SVCandidateAssemblyRefiner(
     _header(header),
     _smallSVAssembler(opt.scanOpt, opt.refineOpt.smallSVAssembleOpt, opt.alignFileOpt, opt.statsFilename, opt.chromDepthFilename, header),
     _spanningAssembler(opt.scanOpt, opt.refineOpt.spanningAssembleOpt, opt.alignFileOpt, opt.statsFilename, opt.chromDepthFilename, header),
-    _smallSVAligner(opt.refineOpt.smallSVAlignScores,opt.refineOpt.jumpScore),
+    _smallSVAligner(opt.refineOpt.smallSVAlignScores),
+    _largeSVAligner(opt.refineOpt.largeSVAlignScores,opt.refineOpt.largeGapOpenScore),
     _largeInsertEdgeAligner(opt.refineOpt.largeInsertEdgeAlignScores),
     _largeInsertCompleteAligner(opt.refineOpt.largeInsertCompleteAlignScores),
     _spanningAligner(opt.refineOpt.spanningAlignScores, opt.refineOpt.jumpScore),
@@ -1403,6 +1404,7 @@ getSmallSVAssembly(
     assemblyData.smallSVAlignments.resize(contigCount);
     assemblyData.smallSVSegments.resize(contigCount);
     assemblyData.largeInsertInfo.resize(contigCount);
+    assemblyData.extendedContigs.resize(contigCount);
 
     bool isHighScore(false);
     unsigned highScoreIndex(0);
@@ -1417,47 +1419,92 @@ getSmallSVAssembly(
         log_os << logtag << "start aligning contigIndex: " << contigIndex << '\n';
 #endif
 
+
+        // try out two different aligners, one optimized to find large events and one optimized to find
+        // smaller events, only look for small events if the large event search fails:
         SVCandidateAssemblyData::SmallAlignmentResultType& alignment(assemblyData.smallSVAlignments[contigIndex]);
-
-        _smallSVAligner.align(
-            contig.seq.begin(), contig.seq.end(),
-            align1RefStr.begin() + leadingCut, align1RefStr.end() - trailingCut,
-            alignment);
-
-        alignment.align.beginPos += leadingCut;
-
-        std::string extendedContig;
-        getExtendedContig(alignment, contig.seq, align1RefStr, extendedContig);
-        assemblyData.extendedContigs.push_back(extendedContig);
-
-        // remove candidate from consideration unless we find a sufficiently large indel with good flanking sequence:
-        bool isSmallSVCandidate(false);
+        std::string& extendedContig(assemblyData.extendedContigs[contigIndex]);
         std::vector<std::pair<unsigned,unsigned> >& candidateSegments(assemblyData.smallSVSegments[contigIndex]);
         candidateSegments.clear();
 
-        // trial two different flanking test sizes, this way we account for multiple neighboring noise scenarios
-        //
-        const unsigned maxQCRefSpan[] = {100,200};
-        for (unsigned refSpanIndex(0); refSpanIndex<2; ++refSpanIndex)
-        {
-            std::vector<std::pair<unsigned,unsigned> > segments;
-            const bool isCandidate( isSmallSVAlignment(
-                                        maxQCRefSpan[refSpanIndex],
-                                        _smallSVAligner,
-                                        alignment.align,
-                                        contig.seq,
-                                        align1RefStr,
-                                        _opt.scanOpt.minCandidateVariantSize,
-                                        segments) );
+        // remove candidate from consideration unless we find a sufficiently large indel with good flanking sequence:
+        bool isSmallSVCandidate(false);
 
-            if (isCandidate)
+        /// start with largeSV aligner:
+        {
+            _largeSVAligner.align(
+                contig.seq.begin(), contig.seq.end(),
+                align1RefStr.begin() + leadingCut, align1RefStr.end() - trailingCut,
+                alignment);
+
+            alignment.align.beginPos += leadingCut;
+            getExtendedContig(alignment, contig.seq, align1RefStr, extendedContig);
+
+
+            // trial two different flanking test sizes, this way we account for multiple neighboring noise scenarios
+            //
+            const unsigned maxQCRefSpan[] = {100,200};
+            for (unsigned refSpanIndex(0); refSpanIndex<2; ++refSpanIndex)
             {
-                // in case both ref spans are accepted take the one with the larger segment count:
-                if (segments.size() > candidateSegments.size())
+                std::vector<std::pair<unsigned,unsigned> > segments;
+                const bool isCandidate( isSmallSVAlignment(
+                                            maxQCRefSpan[refSpanIndex],
+                                            _largeSVAligner,
+                                            alignment.align,
+                                            contig.seq,
+                                            align1RefStr,
+                                            _opt.scanOpt.minCandidateVariantSize,
+                                            segments) );
+
+                if (isCandidate)
                 {
-                    candidateSegments = segments;
+                    // in case both ref spans are accepted take the one with the larger segment count:
+                    if (segments.size() > candidateSegments.size())
+                    {
+                        candidateSegments = segments;
+                    }
+                    isSmallSVCandidate=true;
                 }
-                isSmallSVCandidate=true;
+            }
+
+        }
+
+        // didn't find anything? try again focused on smaller events:
+        /// TODO: get rid of this step
+        if (! isSmallSVCandidate)
+        {
+            _smallSVAligner.align(
+                contig.seq.begin(), contig.seq.end(),
+                align1RefStr.begin() + leadingCut, align1RefStr.end() - trailingCut,
+                alignment);
+
+            alignment.align.beginPos += leadingCut;
+            getExtendedContig(alignment, contig.seq, align1RefStr, extendedContig);
+
+            // trial two different flanking test sizes, this way we account for multiple neighboring noise scenarios
+            //
+            const unsigned maxQCRefSpan[] = {100,200};
+            for (unsigned refSpanIndex(0); refSpanIndex<2; ++refSpanIndex)
+            {
+                std::vector<std::pair<unsigned,unsigned> > segments;
+                const bool isCandidate( isSmallSVAlignment(
+                                            maxQCRefSpan[refSpanIndex],
+                                            _smallSVAligner,
+                                            alignment.align,
+                                            contig.seq,
+                                            align1RefStr,
+                                            _opt.scanOpt.minCandidateVariantSize,
+                                            segments) );
+
+                if (isCandidate)
+                {
+                    // in case both ref spans are accepted take the one with the larger segment count:
+                    if (segments.size() > candidateSegments.size())
+                    {
+                        candidateSegments = segments;
+                    }
+                    isSmallSVCandidate=true;
+                }
             }
         }
 
