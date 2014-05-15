@@ -219,7 +219,7 @@ walk(const SmallAssemblerOptions& opt,
 
                 wordReadsIter= wordReads.find(newKey);
                 if (wordReadsIter == wordReadsEnd) continue;
-                const std::set<unsigned> currWordReads(wordReadsIter->second);
+                const std::set<unsigned>& currWordReads(wordReadsIter->second);
 
                 // get the shared supporting reads between the contig and the current word
                 std::set<unsigned> sharedReads;
