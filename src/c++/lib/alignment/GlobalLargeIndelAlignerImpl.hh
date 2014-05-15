@@ -141,12 +141,12 @@ align(
                     //
                     const ScoreVal& sval((*prevSV)[queryIndex+1]);
                     headPtr.jumpDel = this->max5(
-                                      headScore.jumpDel,
-                                      sval.match + _largeIndelScore,
-                                      badVal,
-                                      badVal,
-                                      sval.jumpDel,
-                                      sval.jumpIns + _largeIndelScore);
+                                          headScore.jumpDel,
+                                          sval.match + _largeIndelScore,
+                                          badVal,
+                                          badVal,
+                                          sval.jumpDel,
+                                          sval.jumpIns + _largeIndelScore);
 
                     if (0==queryIndex) headScore.jumpDel += badVal;
                 }
@@ -155,12 +155,12 @@ align(
                 {
                     const ScoreVal& sval((*thisSV)[queryIndex]);
                     headPtr.jumpIns = this->max5(
-                                      headScore.jumpIns,
-                                      sval.match + _largeIndelScore,
-                                      badVal,
-                                      badVal,
-                                      badVal,
-                                      sval.jumpIns);
+                                          headScore.jumpIns,
+                                          sval.match + _largeIndelScore,
+                                          badVal,
+                                          badVal,
+                                          badVal,
+                                          sval.jumpIns);
 
                     if (0==queryIndex) headScore.jumpIns += badVal;
                 }
@@ -205,10 +205,10 @@ align(
 #endif
 
     this->backTraceAlignment(
-            queryBegin, queryEnd,
-            refBegin, refEnd,
-            querySize, refSize,
-            _ptrMat,
-            btrace, result);
+        queryBegin, queryEnd,
+        refBegin, refEnd,
+        querySize, refSize,
+        _ptrMat,
+        btrace, result);
 }
 

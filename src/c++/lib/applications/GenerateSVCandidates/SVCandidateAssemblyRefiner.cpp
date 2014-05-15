@@ -737,15 +737,15 @@ setSmallCandSV(
     {
         using namespace illumina::common;
 
-         std::ostringstream oss;
-         oss << "ERROR: Attempting to convert alignment to sv candidate."
-             << " contigSize: " << contig.size()
-             << " alignment: " << align
-             << " segments: [" << segRange.first << "," << segRange.second << "]\n"
-             << "\treadRange: " << readRange << "\n"
-             << "\trefRange: " << refRange << "\n"
-             << "\tcipos: " << cipos << "\n";
-         BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        std::ostringstream oss;
+        oss << "ERROR: Attempting to convert alignment to sv candidate."
+            << " contigSize: " << contig.size()
+            << " alignment: " << align
+            << " segments: [" << segRange.first << "," << segRange.second << "]\n"
+            << "\treadRange: " << readRange << "\n"
+            << "\trefRange: " << refRange << "\n"
+            << "\tcipos: " << cipos << "\n";
+        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
     }
 
     sv.bp1.state = SVBreakendState::RIGHT_OPEN;
@@ -1482,8 +1482,8 @@ getSmallSVAssembly(
 
 #ifdef DEBUG_REFINER
             log_os << logtag << "finished largeAligner. contigIndex: " << contigIndex
-                             << " isSmallSVCandidate " << isSmallSVCandidate
-                             << " alignment: " << alignment;
+                   << " isSmallSVCandidate " << isSmallSVCandidate
+                   << " alignment: " << alignment;
 #endif
         }
 
@@ -1528,8 +1528,8 @@ getSmallSVAssembly(
 
 #ifdef DEBUG_REFINER
             log_os << logtag << "finished smallAligner. contigIndex: " << contigIndex
-                             << " isSmallSVCandidate " << isSmallSVCandidate
-                             << " alignment: " << alignment;
+                   << " isSmallSVCandidate " << isSmallSVCandidate
+                   << " alignment: " << alignment;
 #endif
         }
 
