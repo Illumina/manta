@@ -12,7 +12,7 @@
 //
 
 ///
-/// \author Ole Schulz-Trieglaff
+/// \author Ole Schulz-Trieglaff and Xiaoyu Chen
 ///
 
 
@@ -362,7 +362,6 @@ getKmerCounts(
     std::vector<str_uint_map_t>& readWordOffsets)
 {
     const unsigned readCount(reads.size());
-    readWordOffsets.resize(readCount);
     repeatReads.clear();
 
     for (unsigned readIndex(0); readIndex<readCount; ++readIndex)
