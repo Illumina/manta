@@ -300,15 +300,30 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         return cmd
 
     def sortVcfs(pathList, outPath, label) :
-        if len(pathList) == 0 : return
+        if len(pathList) == 0 : return set()
 
         sortCmd = getVcfSortCmd(pathList,outPath)
         sortLabel=preJoin(taskPrefix,label)
-        nextStepWait.add(self.addTask(sortLabel,sortCmd,dependencies=hygenTasks))
+        return nextStepWait.add(self.addTask(sortLabel,sortCmd,dependencies=hygenTasks))
 
-    sortVcfs(candidateVcfPaths, self.paths.getSortedCandidatePath(), "sortCandidateSV")
+    candSortTask = sortVcfs(candidateVcfPaths, self.paths.getSortedCandidatePath(), "sortCandidateSV")
     sortVcfs(diploidVcfPaths, self.paths.getSortedDiploidPath(), "sortDiploidSV")
     sortVcfs(somaticVcfPaths, self.paths.getSortedSomaticPath(), "sortSomaticSV")
+
+    def getExtractSmallCmd(maxSize, inPath, outPath) :
+        cmd  = "%s -E %s --maxSize %i < %s" % (sys.executable, self.params.mantaExtraSmallVcf, inPath)
+        cmd += " | %s -c > %s" % (self.params.bgzipBin, outPath)
+        cmd += " && %s -p vcf %s" % (self.params.tabixBin, outPath)
+
+    def extractSmall(inPath, outPath) :
+        maxSize = int(self.params.minCandidateVariantSize) - 1
+        if maxSize < 1 : return
+
+        smallCmd = getExtractSmallCmd(maxSize, inPath, outPath)
+        smallLabel=preJoin(taskPrefix,"extractSmallIndels")
+        nextStepWait.add(self.addTask(smallLabel, smallCmd, dependencies=candSortTask, isForceLocal=True))
+
+    extractSmall(self.paths.getSortedCandidatePath(), self.paths.getSortedCandidateSmallIndelsPath())
 
     # sort edge logs:
     edgeSortLabel=preJoin(taskPrefix,"sortEdgeLogs")
@@ -347,6 +362,9 @@ class PathInfo:
 
     def getSortedCandidatePath(self) :
         return os.path.join(self.params.variantsDir,"candidateSV.vcf.gz")
+
+    def getSortedCandidateSmallIndelsPath(self) :
+        return os.path.join(self.params.variantsDir,"candidateSmallIndels.vcf.gz")
 
     def getHyGenDiploidPath(self, binStr) :
         return os.path.join(self.getHyGenDir(),"diploidSV.%s.vcf" % (binStr))
