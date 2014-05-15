@@ -47,10 +47,10 @@ class VcfRecord :
     def __init__(self, line) :
         self.line = line
         w=line.strip().split('\t')
-        self.chrom=w[VCF_CHROM]
-        self.pos=int(w[VCF_POS])
-        self.ref=w[VCF_REF]
-        self.alt=w[VCF_ALT]
+        self.chrom=w[VCFID.CHROM]
+        self.pos=int(w[VCFID.POS])
+        self.ref=w[VCFID.REF]
+        self.alt=w[VCFID.ALT]
 
 
 
@@ -61,7 +61,7 @@ def getOptions() :
     usage = "usage: %prog [options] < candidate.vcf > smallIndel.vcf"
     parser = OptionParser(usage=usage)
 
-    parser.add_option("--maxSize", dest="maxSize", type="integer",
+    parser.add_option("--maxSize", dest="maxSize", type="int",
                       help="maximum indel size, no default (required)")
 
     (opt,args) = parser.parse_args()
@@ -94,6 +94,11 @@ def main() :
         
         # remove symbolic alleles:
         if rec.alt.find("<") != -1 : continue
+
+        # remove translocations
+        if rec.alt.find("[") != -1 : continue
+        if rec.alt.find("]") != -1 : continue
+        if rec.alt.find(":") != -1 : continue
 
         # we're assume there are no multiple alts in the candidate records
         assert( rec.alt.find(",") == -1 )

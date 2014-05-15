@@ -304,19 +304,22 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
 
         sortCmd = getVcfSortCmd(pathList,outPath)
         sortLabel=preJoin(taskPrefix,label)
-        return nextStepWait.add(self.addTask(sortLabel,sortCmd,dependencies=hygenTasks))
+        nextStepWait.add(self.addTask(sortLabel,sortCmd,dependencies=hygenTasks))
+        return sortLabel
 
     candSortTask = sortVcfs(candidateVcfPaths, self.paths.getSortedCandidatePath(), "sortCandidateSV")
     sortVcfs(diploidVcfPaths, self.paths.getSortedDiploidPath(), "sortDiploidSV")
     sortVcfs(somaticVcfPaths, self.paths.getSortedSomaticPath(), "sortSomaticSV")
 
     def getExtractSmallCmd(maxSize, inPath, outPath) :
-        cmd  = "%s -E %s --maxSize %i < %s" % (sys.executable, self.params.mantaExtraSmallVcf, inPath)
+        cmd  = "%s -dc %s" % (self.params.bgzipBin, inPath)
+        cmd += " | %s -E %s --maxSize %i" % (sys.executable, self.params.mantaExtraSmallVcf, maxSize)
         cmd += " | %s -c > %s" % (self.params.bgzipBin, outPath)
         cmd += " && %s -p vcf %s" % (self.params.tabixBin, outPath)
+        return cmd
 
     def extractSmall(inPath, outPath) :
-        maxSize = int(self.params.minCandidateVariantSize) - 1
+        maxSize = int(self.params.minScoredVariantSize) - 1
         if maxSize < 1 : return
 
         smallCmd = getExtractSmallCmd(maxSize, inPath, outPath)
