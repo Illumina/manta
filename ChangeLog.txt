@@ -1,3 +1,4 @@
+- MANTA-142 improve contig alignment for large events
 - MANTA-170 improve pair allele support accuracy
 - MANTA-139 add shadow and chimera reads into pair counts
 v0.21.0

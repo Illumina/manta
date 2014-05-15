@@ -13,6 +13,7 @@
 
 ///
 /// \author Ole Schulz-Trieglaff
+/// \author Chris Saunders
 ///
 
 #include "SVCandidateAssemblyRefiner.hh"
@@ -30,9 +31,6 @@
 
 //#define DEBUG_REFINER
 //#define DEBUG_CONTIG
-#ifdef DEBUG_CONTIG
-static const std::string logtag("DEBUG CONTIG: ");
-#endif
 
 #ifdef DEBUG_REFINER
 #include "blt_util/seq_printer.hh"
@@ -480,9 +478,9 @@ isSmallSVAlignment(
         unsigned occurrences = searchContig(refSeq4LeftSearch, leftContig, mismatchRate);
 
 #ifdef DEBUG_CONTIG
-        log_os << logtag << "refSeq4LeftSearch: \n" << refSeq4LeftSearch << "\n";
-        log_os << logtag << "left contig has size " << leftSize << ":\n" << leftContig << "\n";
-        log_os << logtag << "left contig occurrences " << occurrences << "\n";
+        log_os << __FUNCTION__ << ": refSeq4LeftSearch: \n" << refSeq4LeftSearch << "\n";
+        log_os << __FUNCTION__ << ": left contig has size " << leftSize << ":\n" << leftContig << "\n";
+        log_os << __FUNCTION__ << ": left contig occurrences " << occurrences << "\n";
 #endif
         if (occurrences > 1) return false;
 
@@ -492,9 +490,9 @@ isSmallSVAlignment(
         occurrences = searchContig(refSeq4RightSearch, rightContig, mismatchRate);
 
 #ifdef DEBUG_CONTIG
-        log_os << logtag << "refSeq4RightSearch: \n" << refSeq4RightSearch << "\n";
-        log_os << logtag << "right contig has size " << rightSize << ":\n" << rightContig << "\n";
-        log_os << logtag << "right contig occurrences " << occurrences << "\n";
+        log_os << __FUNCTION__ << ": refSeq4RightSearch: \n" << refSeq4RightSearch << "\n";
+        log_os << __FUNCTION__ << ": right contig has size " << rightSize << ":\n" << rightContig << "\n";
+        log_os << __FUNCTION__ << ": right contig occurrences " << occurrences << "\n";
 #endif
         if (occurrences > 1) return false;
     }
@@ -1467,7 +1465,13 @@ getSmallSVAssembly(
                 }
             }
 
+#ifdef DEBUG_REFINER
+            log_os << logtag << "finished largeAligner. contigIndex: " << contigIndex
+                             << " isSmallSVCandidate " << isSmallSVCandidate
+                             << " alignment: " << alignment;
+#endif
         }
+
 
         // didn't find anything? try again focused on smaller events:
         /// TODO: get rid of this step
@@ -1506,11 +1510,14 @@ getSmallSVAssembly(
                     isSmallSVCandidate=true;
                 }
             }
-        }
 
 #ifdef DEBUG_REFINER
-        log_os << logtag << "contigIndex: " << contigIndex << " isSmallSVCandidate " << isSmallSVCandidate << " alignment: " << alignment;
+            log_os << logtag << "finished smallAligner. contigIndex: " << contigIndex
+                             << " isSmallSVCandidate " << isSmallSVCandidate
+                             << " alignment: " << alignment;
 #endif
+        }
+
 
         // test each alignment for suitability to be the left or right side of a large insertion:
         //
@@ -1604,9 +1611,9 @@ getSmallSVAssembly(
             const int endPos = apath_read_length(apathTillSvEnd);
             const int rightSize = contigSize - apath_read_length(apathTillSvEnd);
 
-            log_os << logtag << "contig has size " << contigSize << ": " << bestContig.seq << "\n";
-            log_os << logtag << "left part has size " << leftSize << ": " << bestContig.seq.substr(0, leftSize) << "\n";
-            log_os << logtag << "right part has size " << rightSize << ": " << bestContig.seq.substr(endPos, rightSize) << "\n";
+            log_os << __FUNCTION__ << ": contig has size " << contigSize << ": " << bestContig.seq << "\n";
+            log_os << __FUNCTION__ << ": left part has size " << leftSize << ": " << bestContig.seq.substr(0, leftSize) << "\n";
+            log_os << __FUNCTION__ << ": right part has size " << rightSize << ": " << bestContig.seq.substr(endPos, rightSize) << "\n";
 #endif
         }
     }

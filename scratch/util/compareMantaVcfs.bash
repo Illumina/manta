@@ -37,6 +37,10 @@ stripPairCounts() {
     sed "s/PAIR_COUNT=[0-9]*//g"
 }
 
+stripCigar() {
+    sed "s/CIGAR=.*;\?//g"
+}
+
 stripQual() {
     awk 'BEGIN {FS="\t"; OFS="\t";} {$6=""; print}' | sed "s/JUNCTION_QUAL=[0-9]*//g" 
 }
