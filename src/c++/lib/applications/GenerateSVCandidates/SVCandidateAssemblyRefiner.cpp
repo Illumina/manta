@@ -22,6 +22,7 @@
 #include "blt_util/log.hh"
 #include "blt_util/samtools_fasta_util.hh"
 #include "blt_util/seq_util.hh"
+#include "common/Exceptions.hh"
 #include "manta/SVCandidateUtil.hh"
 #include "manta/SVReferenceUtil.hh"
 
@@ -40,7 +41,8 @@
 
 /// process assembly/align info into simple reference coordinates that can be reported in the output vcf:
 ///
-/// \param[in] isAlign1 if true, this breakend was aligned first by the jump aligner, and therefore left-aligned (if fwd) or right-aligned (if rev)
+/// \param[in] isAlign1 if true, this breakend was aligned first by the jump aligner, and therefore left-aligned (if fwd)
+///                     or right-aligned (if rev)
 /// \param[in] jumpRange homologous range across the breakend
 ///
 static
@@ -731,7 +733,20 @@ setSmallCandSV(
     const known_pos_range2 cipos(getVariantRange(ref.seq(),refRange, contig, readRange));
 
     // cipos for a precise variant is expected to start from 0 and extend forward zero to many bases
-    assert(cipos.begin_pos() == 0);
+    if (cipos.begin_pos() != 0)
+    {
+        using namespace illumina::common;
+
+         std::ostringstream oss;
+         oss << "ERROR: Attempting to convert alignment to sv candidate."
+             << " contigSize: " << contig.size()
+             << " alignment: " << align
+             << " segments: [" << segRange.first << "," << segRange.second << "]\n"
+             << "\treadRange: " << readRange << "\n"
+             << "\trefRange: " << refRange << "\n"
+             << "\tcipos: " << cipos << "\n";
+         BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+    }
 
     sv.bp1.state = SVBreakendState::RIGHT_OPEN;
     const pos_t beginPos(ref.get_offset()+refRange.begin_pos()-1);

@@ -136,6 +136,9 @@ align(
 
                 // update jumpDel
                 {
+                    // you can switch between long ins and delete but only
+                    // by paying the full open penalty again
+                    //
                     const ScoreVal& sval((*prevSV)[queryIndex+1]);
                     headPtr.jumpDel = this->max5(
                                       headScore.jumpDel,
@@ -143,7 +146,7 @@ align(
                                       badVal,
                                       badVal,
                                       sval.jumpDel,
-                                      badVal);
+                                      sval.jumpIns + _largeIndelScore);
 
                     if (0==queryIndex) headScore.jumpDel += badVal;
                 }
