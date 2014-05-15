@@ -38,12 +38,12 @@
 static
 void print_readSet(const std::set<unsigned>& readSet)
 {
-	log_os << "[";
-	BOOST_FOREACH(const unsigned rd, readSet)
-	{
-		log_os << rd << ",";
-	}
-	log_os << "]\n";
+    log_os << "[";
+    BOOST_FOREACH(const unsigned rd, readSet)
+    {
+        log_os << rd << ",";
+    }
+    log_os << "]\n";
 }
 #endif
 
@@ -106,10 +106,10 @@ walk(const SmallAssemblerOptions& opt,
      const str_set_uint_map_t& wordReads,
      AssembledContig& contig)
 {
-	const str_uint_map_t::const_iterator wordCountEnd(wordCount.end());
-	const str_set_uint_map_t::const_iterator wordReadsEnd(wordReads.end());
+    const str_uint_map_t::const_iterator wordCountEnd(wordCount.end());
+    const str_set_uint_map_t::const_iterator wordReadsEnd(wordReads.end());
 
-	// we start with the seed
+    // we start with the seed
     str_set_uint_map_t::const_iterator wordReadsIter(wordReads.find(seed));
     assert(wordReadsIter != wordReadsEnd);
     contig.supportReads = wordReadsIter->second;
@@ -171,8 +171,8 @@ walk(const SmallAssemblerOptions& opt,
                 // get the shared supporting reads between the contig and the current word
                 std::set<unsigned> sharedReads;
                 std::set_intersection(contig.supportReads.begin(), contig.supportReads.end(),
-                		              currWordReads.begin(), currWordReads.end(),
-                		              std::inserter(sharedReads, sharedReads.begin()));
+                                      currWordReads.begin(), currWordReads.end(),
+                                      std::inserter(sharedReads, sharedReads.begin()));
 #ifdef DEBUG_ASBL
                 log_os << "Word supporting reads : ";
                 print_readSet(currWordReads);
@@ -185,26 +185,26 @@ walk(const SmallAssemblerOptions& opt,
                 const unsigned sharedReadCount(sharedReads.size());
                 if (sharedReadCount > maxSharedReadCount)
                 {
-                	// the old shared reads support an unselected allele
-                	// remove them from the contig's supporting reads
-                	if (!maxSharedReads.empty())
-                		supportReads2Remove.insert(maxSharedReads.begin(), maxSharedReads.end());
-                	// the old supporting reads is for an unselected allele
-                	// they become rejecting reads for the currently selected allele
-                	if (!supportReads2Add.empty())
-                		rejectReads2Add.insert(supportReads2Add.begin(), supportReads2Add.end());
-                	// new supporting reads for the currently selected allele
-                	supportReads2Add = currWordReads;
+                    // the old shared reads support an unselected allele
+                    // remove them from the contig's supporting reads
+                    if (!maxSharedReads.empty())
+                        supportReads2Remove.insert(maxSharedReads.begin(), maxSharedReads.end());
+                    // the old supporting reads is for an unselected allele
+                    // they become rejecting reads for the currently selected allele
+                    if (!supportReads2Add.empty())
+                        rejectReads2Add.insert(supportReads2Add.begin(), supportReads2Add.end());
+                    // new supporting reads for the currently selected allele
+                    supportReads2Add = currWordReads;
 
-                	maxSharedReadCount = sharedReadCount;
-                	maxSharedReads = sharedReads;
-                	maxBaseCount = currWordCount;
-                	maxBase = symbol;
+                    maxSharedReadCount = sharedReadCount;
+                    maxSharedReads = sharedReads;
+                    maxBaseCount = currWordCount;
+                    maxBase = symbol;
                 }
                 else
                 {
-                	supportReads2Remove.insert(sharedReads.begin(), sharedReads.end());
-                	rejectReads2Add.insert(currWordReads.begin(), currWordReads.end());
+                    supportReads2Remove.insert(sharedReads.begin(), sharedReads.end());
+                    rejectReads2Add.insert(currWordReads.begin(), currWordReads.end());
                 }
             }
 #ifdef DEBUG_ASBL
@@ -236,17 +236,17 @@ walk(const SmallAssemblerOptions& opt,
             {
 #ifdef DEBUG_ASBL
                 log_os << "Adding rejecting reads " << "\n"
-                	   << " Old : ";
+                       << " Old : ";
                 print_readSet(contig.rejectReads);
                 log_os << " To be added : ";
                 print_readSet(rejectReads2Add);
 #endif
-            	// update rejecting reads
-            	// add reads that support the unselected allele
-            	BOOST_FOREACH(const unsigned rd, rejectReads2Add)
-            	{
-            		contig.rejectReads.insert(rd);
-            	}
+                // update rejecting reads
+                // add reads that support the unselected allele
+                BOOST_FOREACH(const unsigned rd, rejectReads2Add)
+                {
+                    contig.rejectReads.insert(rd);
+                }
 #ifdef DEBUG_ASBL
                 log_os << " New : ";
                 print_readSet(contig.rejectReads);
@@ -254,32 +254,32 @@ walk(const SmallAssemblerOptions& opt,
 
 #ifdef DEBUG_ASBL
                 log_os << "Updating supporting reads " << "\n"
-                	   << " Old : ";
+                       << " Old : ";
                 print_readSet(contig.supportReads);
                 log_os << " To be added : ";
                 print_readSet(supportReads2Add);
 #endif
                 // update supporting reads
-            	// add reads that support the selected allel
-            	BOOST_FOREACH(const unsigned rd, supportReads2Add)
-            	{
-            		if (contig.rejectReads.find(rd) == contig.rejectReads.end())
-            			contig.supportReads.insert(rd);
+                // add reads that support the selected allel
+                BOOST_FOREACH(const unsigned rd, supportReads2Add)
+                {
+                    if (contig.rejectReads.find(rd) == contig.rejectReads.end())
+                        contig.supportReads.insert(rd);
 #ifdef DEBUG_ASBL
-            		if (contig.rejectReads.find(rd) != contig.rejectReads.end())
-            			log_os << "  Excluding rejected " << rd << "\n";
+                    if (contig.rejectReads.find(rd) != contig.rejectReads.end())
+                        log_os << "  Excluding rejected " << rd << "\n";
 #endif
-            	}
+                }
 
 #ifdef DEBUG_ASBL
-            	log_os << " To be removed : ";
-            	print_readSet(supportReads2Remove);
+                log_os << " To be removed : ";
+                print_readSet(supportReads2Remove);
 #endif
-            	// remove reads that do NOT support the selected allel anymore
-            	BOOST_FOREACH(const unsigned rd, supportReads2Remove)
-            	{
-            		contig.supportReads.erase(rd);
-            	}
+                // remove reads that do NOT support the selected allel anymore
+                BOOST_FOREACH(const unsigned rd, supportReads2Remove)
+                {
+                    contig.supportReads.erase(rd);
+                }
 #ifdef DEBUG_ASBL
                 log_os << " New : ";
                 print_readSet(contig.supportReads);
@@ -392,12 +392,10 @@ buildContigs(
     // done with this now:
     wordCount.clear();
 
-    const unsigned contigSize(contig.seq.size());
-
 #ifdef DEBUG_ASBL
     log_os << logtag << "First pass assembly resulted in "
            << contig.seq << "\n"
-           << " with length " << contigSize << ". Input consisted of " << readCount << " reads.\n"
+           << " with length " << contig.seq.size() << ". Input consisted of " << readCount << " reads.\n"
            << "Final supporting reads: ";
     print_readSet(contig.supportReads);
     log_os << "Final rejecting reads: ";
@@ -426,17 +424,17 @@ buildContigs(
     // finally -- set isUsed and decrement unusedReads
     for (unsigned readIndex(0); readIndex<readCount; ++readIndex)
     {
-    	AssemblyReadInfo& rinfo(readInfo[readIndex]);
-    	if (rinfo.isUsed) continue;
+        AssemblyReadInfo& rinfo(readInfo[readIndex]);
+        if (rinfo.isUsed) continue;
 
-    	if (contig.supportReads.find(readIndex) != contig.supportReads.end())
-    	{
-    		rinfo.isUsed = true;
-    		rinfo.contigId = contigs.size();
+        if (contig.supportReads.find(readIndex) != contig.supportReads.end())
+        {
+            rinfo.isUsed = true;
+            rinfo.contigId = contigs.size();
 
-    		assert(unusedReads != 0);
-    		--unusedReads;
-    	}
+            assert(unusedReads != 0);
+            --unusedReads;
+        }
     }
 
     // don't need this anymore:

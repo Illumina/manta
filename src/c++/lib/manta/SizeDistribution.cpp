@@ -153,7 +153,7 @@ pdf(const int size) const
         {
             isChooseLow=false;
         }
-        else if(isMaxBound)
+        else if (isMaxBound)
         {
             isChooseLow=true;
         }

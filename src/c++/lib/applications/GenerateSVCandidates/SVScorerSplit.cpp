@@ -196,7 +196,7 @@ scoreSplitReads(
 
         //const uint8_t mapq(bamRead.map_qual());
         getReadSplitScore(bamRead, dopt, flankScoreSize, svAlignInfo, minMapQ, minTier2MapQ,
-            isShadow, isReversedShadow, sampleEvidence, sample);
+                          isShadow, isReversedShadow, sampleEvidence, sample);
     }
 
     static const bool isIncludeShadowReads(false);
@@ -216,7 +216,7 @@ scoreSplitReads(
             shadowRange.set_begin_pos(std::max(0,bp.interval.range.begin_pos()-bamShadowRange));
             shadowRange.set_end_pos(bp.interval.range.begin_pos());
         }
-        else if(bp.state == SVBreakendState::LEFT_OPEN)
+        else if (bp.state == SVBreakendState::LEFT_OPEN)
         {
             isSearchForRightOpen = false;
 
@@ -244,7 +244,7 @@ scoreSplitReads(
 
             //const uint8_t mapq(shadow.getMateMapq());
             getReadSplitScore(bamRead, dopt, flankScoreSize, svAlignInfo, minMapQ, minTier2MapQ,
-                isShadow, isReversedShadow, sampleEvidence, sample);
+                              isShadow, isReversedShadow, sampleEvidence, sample);
         }
     }
 }
@@ -333,12 +333,12 @@ getSVSplitReadSupport(
 
         // scoring split reads overlapping bp1
         scoreSplitReads(_callDopt, flankScoreSize, sv.bp1, SVAlignInfo, minMapQ, minTier2MapQ,
-            bamShadowRange, _scanOpt.minSingletonMapqCandidates,
-            sampleEvidence, bamStream, sample);
+                        bamShadowRange, _scanOpt.minSingletonMapqCandidates,
+                        sampleEvidence, bamStream, sample);
         // scoring split reads overlapping bp2
         scoreSplitReads(_callDopt, flankScoreSize, sv.bp2, SVAlignInfo, minMapQ, minTier2MapQ,
-            bamShadowRange, _scanOpt.minSingletonMapqCandidates,
-            sampleEvidence, bamStream, sample);
+                        bamShadowRange, _scanOpt.minSingletonMapqCandidates,
+                        sampleEvidence, bamStream, sample);
     }
 
     finishSampleSRData(baseInfo.tumor);

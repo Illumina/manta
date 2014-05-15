@@ -112,10 +112,10 @@ struct RemoteReadInfo
 {
     RemoteReadInfo(
         const bam_record& bamRead)
-      : qname(bamRead.qname()),
-        readNo(bamRead.read_no()==1 ? 2 : 1),
-        tid(bamRead.mate_target_id()),
-        pos(bamRead.mate_pos() - 1)
+        : qname(bamRead.qname()),
+          readNo(bamRead.read_no()==1 ? 2 : 1),
+          tid(bamRead.mate_target_id()),
+          pos(bamRead.mate_pos() - 1)
     {}
 
     std::string qname;
@@ -397,9 +397,9 @@ getBreakendReads(
             {
                 if (reads.size() >= MAX_NUM_READS)
                 {
-    #ifdef DEBUG_ASBL
+#ifdef DEBUG_ASBL
                     log_os << logtag << "WARNING: assembly read buffer full, skipping further input\n";
-    #endif
+#endif
                     break;
                 }
 
@@ -414,9 +414,9 @@ getBreakendReads(
 
                 if (readIndex.count(readKey) != 0)
                 {
-    #ifdef DEBUG_ASBL
+#ifdef DEBUG_ASBL
                     log_os << logtag << "WARNING: SmallAssembler read name collision : " << readKey << "\n";
-    #endif
+#endif
                     continue;
                 }
 
