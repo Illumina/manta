@@ -225,7 +225,7 @@ recoverRemoteReads(
             if (reads.size() >= maxNumReads)
             {
 #ifdef DEBUG_ASBL
-                log_os << logtag << "WARNING: assembly read buffer full, skipping further input\n";
+                log_os << __FUNCTION__ << ": WARNING: assembly read buffer full, skipping further input\n";
 #endif
                 break;
             }
@@ -258,7 +258,7 @@ recoverRemoteReads(
                 if (readIndex.count(readKey) != 0)
                 {
 #ifdef DEBUG_ASBL
-                    log_os << logtag << "WARNING: SmallAssembler read name collision : " << readKey << "\n";
+                    log_os << __FUNCTION__ << ": WARNING: SmallAssembler read name collision : " << readKey << "\n";
 #endif
                     break;
                 }
@@ -647,6 +647,10 @@ getBreakendReads(
 #endif
 
     /// recover any remote reads:
+#ifdef DEBUG_REMOTES
+    log_os << __FUNCTION__ << ": isRecoverRemotes: " << isRecoverRemotes << "\n";
+#endif
+
     if (isRecoverRemotes)
     {
         for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
