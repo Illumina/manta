@@ -1235,7 +1235,12 @@ estimateSomaticMutationFreq(
         refCounts += getSupportCount(baseInfo.tumor.ref, spanningPairWeight, isPermissive);
     }
     if ((altCounts + refCounts) == 0) return 0;
-    return static_cast<double>(altCounts) / static_cast<double>(altCounts + refCounts);
+
+    // don't let frequency go all the way to 0 or 1, bad things happen...
+    double freq = static_cast<double>(altCounts) / static_cast<double>(altCounts + refCounts);
+    freq = std::max(0.05,freq);
+    freq = std::min(0.95,freq);
+    return freq;
 }
 
 
