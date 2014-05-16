@@ -363,7 +363,17 @@ alignShadowRead(
 
     // do we need to revcomp the sequence?
     std::string shadowRead(bamRead.get_bam_read().get_string());
-    if (isLeftOfInsert)
+
+    bool isReversed(isLeftOfInsert);
+
+#ifdef BAMSURGEON_BUG_WORKAROUND
+    if (! bamRead.is_fwd_strand())
+    {
+        isReversed = (! isReversed);
+    }
+#endif
+
+    if (isReversed)
     {
         reverseCompStr(shadowRead);
     }

@@ -571,6 +571,13 @@ getBreakendReads(
                 {
                     isReversed = (! isReversed);
                 }
+
+#ifdef BAMSURGEON_BUG_WORKAROUND
+                if (! bamRead.is_fwd_strand())
+                {
+                    isReversed = (! isReversed);
+                }
+#endif
             }
 
             if (isReversed) reverseCompStr(reads.back());

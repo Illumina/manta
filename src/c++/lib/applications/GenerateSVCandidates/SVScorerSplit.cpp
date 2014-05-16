@@ -250,8 +250,14 @@ scoreSplitReads(
             if (! shadow.check(bamRead)) continue;
 
             static const bool isShadow(true);
-            const bool isReversedShadow(bamRead.is_mate_fwd_strand());
+            bool isReversedShadow(bamRead.is_mate_fwd_strand());
 
+#ifdef BAMSURGEON_BUG_WORKAROUND
+            if (! bamRead.is_fwd_strand())
+            {
+                isReversedShadow = (! isReversedShadow);
+            }
+#endif
             //const uint8_t mapq(shadow.getMateMapq());
             getReadSplitScore(bamRead, dopt, flankScoreSize, svAlignInfo, minMapQ, minTier2MapQ,
                               isShadow, isReversedShadow, sampleEvidence, sample);

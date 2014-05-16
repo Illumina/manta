@@ -21,6 +21,8 @@
 
 #include <string>
 
+#define BAMSURGEON_BUG_WORKAROUND
+
 
 /// encapsulates the logic of checking for shadow reads assuming that they've been placed
 /// consecutively after their mapped mate read
