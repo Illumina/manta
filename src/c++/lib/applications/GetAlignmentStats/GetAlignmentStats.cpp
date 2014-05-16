@@ -38,10 +38,15 @@ runAlignmentStats(const AlignmentStatsOptions& opt)
         exit(EXIT_FAILURE);
     }
 
+    const std::vector<bool>& isAlignmentTumor(opt.alignFileOpt.isAlignmentTumor);
+
     ReadGroupStatsSet rstats;
-    BOOST_FOREACH(const std::string& file, opt.alignFileOpt.alignmentFilename)
+    const unsigned bamCount(opt.alignFileOpt.alignmentFilename.size());
+    for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
     {
-        extractReadGroupStatsFromBam(file,rstats);
+        const std::string& bamFile(opt.alignFileOpt.alignmentFilename[bamIndex]);
+        const bool isTumor(isAlignmentTumor[bamIndex]);
+        extractReadGroupStatsFromBam(bamFile, rstats, isTumor);
     }
 
     rstats.save(opt.outputFilename.c_str());

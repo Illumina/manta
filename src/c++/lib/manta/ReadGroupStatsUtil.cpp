@@ -700,7 +700,8 @@ private:
 void
 extractReadGroupStatsFromBam(
     const std::string& statsBamFile,
-    ReadGroupStatsSet& rstats)
+    ReadGroupStatsSet& rstats,
+    const bool isTumor)
 {
     bam_streamer read_stream(statsBamFile.c_str());
 
@@ -772,7 +773,15 @@ extractReadGroupStatsFromBam(
                 //
                 if (! is_innie_pair(bamRead)) continue;
 
-                rgInfo.addInsertSize(getSimplifiedFragSize(bamRead));
+                const unsigned fragSize(getSimplifiedFragSize(bamRead));
+                rgInfo.addInsertSize(fragSize);
+
+                // hack for broken DREAM data:
+                if (isTumor)
+                {
+                    rgInfo.addInsertSize(fragSize+50);
+                    rgInfo.addInsertSize(fragSize+100);
+                }
 
                 if (! rgInfo.isInsertSizeCountCheck()) continue;
 

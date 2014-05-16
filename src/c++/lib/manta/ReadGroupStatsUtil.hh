@@ -25,4 +25,5 @@
 void
 extractReadGroupStatsFromBam(
     const std::string& statsBamFile,
-    ReadGroupStatsSet& rstats);
+    ReadGroupStatsSet& rstats,
+    const bool isTumor = false);
