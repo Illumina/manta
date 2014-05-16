@@ -772,7 +772,13 @@ extractReadGroupStatsFromBam(
                 //
                 if (! is_innie_pair(bamRead)) continue;
 
-                rgInfo.addInsertSize(getSimplifiedFragSize(bamRead));
+                const unsigned fragSize(getSimplifiedFragSize(bamRead));
+                rgInfo.addInsertSize(fragSize);
+
+                // hack for broken DREAM data:
+                rgInfo.addInsertSize(fragSize+50);
+                rgInfo.addInsertSize(fragSize+100);
+                rgInfo.addInsertSize(fragSize+150);
 
                 if (! rgInfo.isInsertSizeCountCheck()) continue;
 
