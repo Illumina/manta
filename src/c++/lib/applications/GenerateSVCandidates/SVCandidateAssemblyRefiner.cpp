@@ -504,7 +504,7 @@ isSmallSVAlignment(
 
 
 
-static const unsigned minSemiLargeInsertionLength(40); // if a large insertion is not complete assembled, it must be assembled at least this far into either side
+static const unsigned minSemiLargeInsertionLength(35); // if a large insertion is not complete assembled, it must be assembled at least this far into either side
 
 
 /// \params[in] trimInsertLength remove extra length from the end of the contig
@@ -524,10 +524,10 @@ isLargeInsertSegment(
 {
     using namespace ALIGNPATH;
 
-    static const unsigned minAlignReadLength(40); ///< min length of aligned portion of contig
+    static const unsigned minAlignReadLength(35); ///< min length of aligned portion of contig
     static const unsigned minExtendedReadLength(minSemiLargeInsertionLength); ///< min length of unaligned portion of contig
 
-    static const unsigned minAlignRefSpan(40); ///< min reference length for alignment
+    static const unsigned minAlignRefSpan(35); ///< min reference length for alignment
     static const float minScoreFrac(0.75); ///< min fraction of optimal score in each contig sub-alignment:
 
     const unsigned pathSize(apath_read_length(apath));
