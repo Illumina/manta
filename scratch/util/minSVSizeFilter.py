@@ -68,6 +68,10 @@ def main() :
             outfp.write(line)
             continue
 
+        if w[VCFID.ALT] == "<INS>" :
+            outfp.write(line)
+            continue
+
         svlen = getKeyVal(w[VCFID.INFO],"SVLEN")
         if svlen is None :
             ref=w[VCFID.REF]
