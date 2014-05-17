@@ -18,6 +18,7 @@
 #include "SVScorer.hh"
 #include "SVScorerShared.hh"
 #include "blt_util/seq_util.hh"
+#include "blt_util/SimpleAlignment.hh"
 #include "manta/ShadowReadFinder.hh"
 
 #include "boost/scoped_array.hpp"
@@ -182,14 +183,30 @@ scoreSplitReads(
     bam_streamer& readStream,
     SVSampleInfo& sample)
 {
+    // in theory, we shouldn't need to set the search interval larger than the bp range,
+    // but some aligners will soft-clip, etc. in such a way that strong split read evidnece
+    // is present just outside of the bp range:
+    static const int splitSearchPad(40);
+
     // extract reads overlapping the break point
-    readStream.set_new_region(bp.interval.tid, bp.interval.range.begin_pos(), bp.interval.range.end_pos());
+    readStream.set_new_region(
+            bp.interval.tid,
+            std::max(0, (bp.interval.range.begin_pos()-splitSearchPad)),
+            (bp.interval.range.end_pos()+splitSearchPad));
+
     while (readStream.next())
     {
         const bam_record& bamRead(*(readStream.get_record_ptr()));
 
         if (SVLocusScanner::isReadFilteredCore(bamRead)) continue;
         if (bamRead.is_unmapped()) continue;
+
+        {
+            // check to see if read is even capable of touching the breakend after un-softlcipping
+            const SimpleAlignment bamAlign(bamRead);
+            const known_pos_range2 bamRange(matchifyEdgeSoftClipRefRange(bamAlign));
+            if (! bp.interval.range.is_range_intersect(bamRange)) continue;
+        }
 
         static const bool isShadow(false);
         static const bool isReversedShadow(false);
