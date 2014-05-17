@@ -16,9 +16,11 @@
 ///
 
 #include "manta/SVScoreInfo.hh"
+
 #include "blt_util/log.hh"
 #include "blt_util/seq_util.hh"
 #include "blt_util/seq_printer.hh"
+#include "manta/SVCandidateUtil.hh"
 
 #include "boost/foreach.hpp"
 
@@ -31,16 +33,27 @@ SVAlignmentInfo(
     const SVCandidate& sv,
     const SVCandidateAssemblyData& assemblyData) :
     _isSpanning(assemblyData.isSpanning),
-    _bp1ContigReversed(assemblyData.bporient.isBp1Reversed),
-    _bp2ContigReversed(assemblyData.bporient.isBp2Reversed)
+    _isBp1ContigReversed(assemblyData.bporient.isBp1Reversed),
+    _isBp2ContigReversed(assemblyData.bporient.isBp2Reversed),
+    _isBp1LeftOpen(sv.bp1.state==SVBreakendState::LEFT_OPEN),
+    _isBp2LeftOpen(sv.bp2.state==SVBreakendState::LEFT_OPEN)
 {
     // for imprecise SVs, split-read evidence won't be assigned
     if (sv.isImprecise()) return;
 
+    // note how this assertion differs from the "_isSpanning: flag -- this asserts that the assembled
+    // candidate is spanning post-assembly, whereas isSpanning refers to the state of the variant
+    // prior to assembly.
+    assert(isSpanningSV(sv));
+
+    /// why would these be different? shouldn't this be one number?
     const pos_t bp1HomLength(sv.bp1.interval.range.size()-1);
     const pos_t bp2HomLength(sv.bp2.interval.range.size()-1);
     assert(bp1HomLength >= 0);
     assert(bp2HomLength >= 0);
+
+    _isRefAlleleSpecificSequence=(sv.centerSize() > bp1HomLength);
+    _isAltAlleleSpecificSequence=(static_cast<int>(sv.insertSeq.size()) > bp1HomLength);
 
     contigSeq = assemblyData.extendedContigs[sv.assemblyAlignIndex];
 
@@ -53,12 +66,8 @@ SVAlignmentInfo(
 
         // the beginPos of align1 is the length of reference padding in the extended contig
         // |ref padding| + |align1| + |insert| + |align2|
-        // both bp1 and bp2 include the insert and micro-homology,
-        // which can avoid false split-read evidence from normal sample when the micorhomology is long
-
-        // csaunders: leave homology size out until we're prepared downstream to
-        // deal with each breakpoint as a range instead of a point value
-
+        // both bp1 and bp2 include the insert and homology,
+        // which can avoid false split-read evidence from normal sample when the homology is long
         const pos_t bp1ContigBeginPos(alignment.align1.beginPos + align1Size -1);
         const pos_t bp2ContigBeginPos(bp1ContigBeginPos + alignment.jumpInsertSize);
 
@@ -72,19 +81,19 @@ SVAlignmentInfo(
             std::swap(bp1ContigOffset, bp2ContigOffset);
         }
 
-        /// add micro-homology after swapping so that we can extract information from sv
+        /// add homology after swapping so that we can extract information from sv
         bp1ContigOffset.set_end_pos(bp1ContigOffset.begin_pos() + bp1HomLength);
         bp2ContigOffset.set_end_pos(bp2ContigOffset.begin_pos() + bp2HomLength);
 
-        if (_bp1ContigReversed || _bp2ContigReversed)
+        if (_isBp1ContigReversed || _isBp2ContigReversed)
         {
-            assert(! (_bp1ContigReversed && _bp2ContigReversed));
+            assert(! (_isBp1ContigReversed && _isBp2ContigReversed));
 
             revContigSeq = reverseCompCopyStr(contigSeq);
             // reset offset w.r.t. the reversed contig
             // note this is -2 and not -1 because we're jumping to the other "side" of the breakend:
             const pos_t revSize(contigSeq.size()-2);
-            if (_bp1ContigReversed)
+            if (_isBp1ContigReversed)
             {
                 const known_pos_range2 tmpRange(bp1ContigOffset);
                 bp1ContigOffset.set_begin_pos(revSize - tmpRange.end_pos());
@@ -101,15 +110,13 @@ SVAlignmentInfo(
         assert(bp2ContigOffset.begin_pos() <= bp2ContigOffset.end_pos());
 
         // get reference regions
-        const reference_contig_segment& bp1Ref = assemblyData.bp1ref;
-        const reference_contig_segment& bp2Ref = assemblyData.bp2ref;
+        const reference_contig_segment& bp1Ref(assemblyData.bp1ref);
+        const reference_contig_segment& bp2Ref(assemblyData.bp2ref);
         bp1RefSeq = bp1Ref.seq();
         bp2RefSeq = bp2Ref.seq();
+
         // get offsets of breakpoints in the reference regions
-        // again, both bp1 and bp2 include the micro-homology
-
-        // csaunders: see above regarding micro-homology handling
-
+        // again, both bp1 and bp2 include breakpoint homology
         bp1RefOffset.set_begin_pos(sv.bp1.interval.range.begin_pos() - bp1Ref.get_offset());
         bp1RefOffset.set_end_pos(bp1RefOffset.begin_pos() + bp1HomLength);
 
@@ -127,8 +134,8 @@ SVAlignmentInfo(
 
         // the beginPos of align is the length of reference padding in the extended contig
         // |ref padding| + |alignment segments|
-        // both bp1 and bp2 include the insert and micro-homology,
-        // which can avoid false split-read evidence from normal sample when the micorhomology is long
+        // both bp1 and bp2 include the insert and homology,
+        // which can avoid false split-read evidence from normal sample when the homology is long
 
         bp1ContigOffset.set_begin_pos(alignment.align.beginPos + apath_read_length(apathTillSvStart) - 1);
         bp1ContigOffset.set_end_pos(bp1ContigOffset.begin_pos() + bp1HomLength);
@@ -137,11 +144,11 @@ SVAlignmentInfo(
 
         // get reference regions
         // only bp1ref is used for small events
-        const reference_contig_segment& bp1Ref = assemblyData.bp1ref;
+        const reference_contig_segment& bp1Ref(assemblyData.bp1ref);
         bp1RefSeq = bp1Ref.seq();
 
         // get offsets of breakpoints in the reference regions
-        // again, both bp1 and bp2 include the micro-homology
+        // again, both bp1 and bp2 include the homology
         bp1RefOffset.set_range(
             sv.bp1.interval.range.begin_pos() - bp1Ref.get_offset(),
             sv.bp1.interval.range.end_pos() -bp1Ref.get_offset());
@@ -201,8 +208,8 @@ operator<<(
     os << "SVAlignmentInfo: isSpanning: " << ai.isSpanning() << '\n';
     dumpSeq("Contig",ai.contigSeq,os);
     dumpSeq("Rev Contig",ai.revContigSeq,os);
-    os << "bp1 contig offset = " << ai.bp1ContigOffset << " bp1 contig reversed = " << ai._bp1ContigReversed << '\n';
-    os << "bp2 contig offset = " << ai.bp2ContigOffset << " bp2 contig reversed = " << ai._bp2ContigReversed << '\n';
+    os << "bp1 contig offset = " << ai.bp1ContigOffset << " bp1 contig reversed = " << ai._isBp1ContigReversed << '\n';
+    os << "bp2 contig offset = " << ai.bp2ContigOffset << " bp2 contig reversed = " << ai._isBp2ContigReversed << '\n';
     dumpSeq("bp1RefSeq",ai.bp1RefSeq,os);
     if (ai.isSpanning())
     {

@@ -30,16 +30,40 @@ struct SVAlignmentInfo
         const SVCandidate& sv,
         const SVCandidateAssemblyData& assemblyData);
 
+    bool
+    isBp1SplitLeftOfHomologyRange() const
+    {
+        return _isBp1LeftOpen;
+    }
+
+    bool
+    isBp2SplitLeftOfHomologyRange() const
+    {
+        return _isBp2LeftOpen;
+    }
+
+    bool
+    isAltAlleleSpecificSequence() const
+    {
+        return _isAltAlleleSpecificSequence;
+    }
+
+    bool
+    isRefAlleleSpecificSequence() const
+    {
+        return _isRefAlleleSpecificSequence;
+    }
+
     const std::string&
     bp1ContigSeq() const
     {
-        return (_bp1ContigReversed ? revContigSeq : contigSeq);
+        return (_isBp1ContigReversed ? revContigSeq : contigSeq);
     }
 
     const std::string&
     bp2ContigSeq() const
     {
-        return (_bp2ContigReversed ? revContigSeq : contigSeq);
+        return (_isBp2ContigReversed ? revContigSeq : contigSeq);
     }
 
     const std::string&
@@ -75,8 +99,24 @@ private:
     std::string bp1RefSeq;
     std::string bp2RefSeq;
     const bool _isSpanning;
-    const bool _bp1ContigReversed;
-    const bool _bp2ContigReversed;
+    const bool _isBp1ContigReversed;
+    const bool _isBp2ContigReversed;
+
+    // breakpoints going through split read evaluation must be classified as left-open
+    // or right-open only, so it's safe to capture only one bit for each breakend,
+    // example of a deletion with bp1 occurring first in reference coordinate is
+    // (right-open, left-open):
+    const bool _isBp1LeftOpen;
+    const bool _isBp2LeftOpen;
+
+    // the presence of allele specific sequence (such as the deleted sequence in the
+    // reference allele of a deletion) affects how we handle breakend homology for
+    // that allele.
+    //
+    // note there are two bits here because in a complex indel both alleles can contain allele-specific sequence.
+    //
+    bool _isRefAlleleSpecificSequence;
+    bool _isAltAlleleSpecificSequence;
 
 public:
     /// all offset range 'begin' values correspond to the zero-indexed base immediately before the breakend on the fwd-strand,

@@ -140,29 +140,49 @@ calculateAlignScore(
 
 
 
+/// isLeft = isSplitLeftOfHomologyRange
+/// isSpecific = isAlleleSpecificSequence
+/// ..these are just shortened to make the
+/// function readable
+///
 static
 bool
 isEvidenceCheck(
+    const bool isLeft,
+    const bool isSpecific,
     const SRAlignmentInfo& alignment,
     const unsigned minFlankSize)
 {
-    if (alignment.leftSize < minFlankSize) return false;
-    if (alignment.rightSize < minFlankSize) return false;
+    static const float maxFlankMismatchRate(0.25);
+    static const float minAlignMatchRate(0.9);
 
-    if ((alignment.leftMismatches/(float)alignment.leftSize) >= 0.25) return false;
-    if ((alignment.rightMismatches/(float)alignment.rightSize) >= 0.25) return false;
+    const unsigned leftSize(alignment.leftSplitSize(isLeft,isSpecific));
+    if (leftSize < minFlankSize) return false;
 
-    const float size(static_cast<float>(alignment.leftSize+alignment.rightSize));
-    if ((alignment.alignScore/size) < 0.9) return false;
+    const unsigned rightSize(alignment.rightSplitSize(isLeft,isSpecific));
+    if (rightSize < minFlankSize) return false;
+
+    if ((alignment.leftSplitMismatches(isLeft,isSpecific)/static_cast<float>(leftSize)) >= maxFlankMismatchRate) return false;
+    if ((alignment.rightSplitMismatches(isLeft,isSpecific)/static_cast<float>(rightSize)) >= maxFlankMismatchRate) return false;
+
+    const float size(static_cast<float>(alignment.leftSize+alignment.homSize+alignment.rightSize));
+    if ((alignment.alignScore/size) < minAlignMatchRate) return false;
 
     return true;
 }
 
 
 
+/// isLeft = isSplitLeftOfHomologyRange
+/// isSpecific = isAlleleSpecificSequence
+/// ..these are just shortened to make the
+/// function readable
+///
 static
 void
 setEvidence(
+    const bool isLeft,
+    const bool isSpecific,
     SRAlignmentInfo& alignment)
 {
     //
@@ -172,14 +192,15 @@ setEvidence(
     // adding new flank size threshold -- this might have to be changed based on sv size:
     static const unsigned minFlankSize(16);
     static const unsigned minFlankSizeTier2(8);
-    alignment.isEvidence = isEvidenceCheck(alignment,minFlankSize);
-    alignment.isTier2Evidence = isEvidenceCheck(alignment,minFlankSizeTier2);
+    alignment.isEvidence = isEvidenceCheck(isLeft, isSpecific, alignment, minFlankSize);
+    alignment.isTier2Evidence = isEvidenceCheck(isLeft, isSpecific, alignment, minFlankSizeTier2);
 
     alignment.evidence = 0;
     if (! (alignment.isEvidence || alignment.isTier2Evidence)) return;
 
-    const float size(static_cast<float>(alignment.leftSize+alignment.rightSize));
-    alignment.evidence = 2 * std::min(alignment.leftSize, alignment.rightSize) / (size);
+    const unsigned minSideSize(std::min(alignment.leftSplitSize(isLeft, isSpecific), alignment.rightSplitSize(isLeft, isSpecific)));
+    const float size(static_cast<float>(alignment.leftSize+alignment.homSize+alignment.rightSize));
+    alignment.evidence = ((2. * minSideSize)/(size));
 }
 
 
@@ -192,6 +213,8 @@ splitReadAligner(
     const uint8_t* queryQual,
     const std::string& targetSeq,
     const known_pos_range2& targetBpOffsetRange,
+    const bool isSplitLeftOfHomologyRange,
+    const bool isAlleleSpecificSequence,
     SRAlignmentInfo& alignment)
 {
     using namespace illumina::common;
@@ -298,7 +321,7 @@ splitReadAligner(
     calculateAlignScore(querySeq, targetSeq, bestPos, alignment);
 
     // filtering the alignment and set evidence
-    setEvidence(alignment);
+    setEvidence(isSplitLeftOfHomologyRange, isAlleleSpecificSequence, alignment);
 
 #ifdef DEBUG_SRA
     log_os << logtag << "bestpos: " << bestPos << " final alignment\n" << alignment << "\n";

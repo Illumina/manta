@@ -43,6 +43,42 @@ struct SRAlignmentInfo
         evidence(0)
     {}
 
+    unsigned
+    leftSplitSize(
+        const bool isSplitLeftOfHomologyRange,
+        const bool isAlleleSpecificSequence) const
+    {
+        const bool isMinSize(isSplitLeftOfHomologyRange || (! isAlleleSpecificSequence));
+        return (leftSize + (isMinSize ? 0 : homSize));
+    }
+
+    unsigned
+    rightSplitSize(
+        const bool isSplitLeftOfHomologyRange,
+        const bool isAlleleSpecificSequence) const
+    {
+        const bool isMinSize((!isSplitLeftOfHomologyRange) || (! isAlleleSpecificSequence));
+        return (rightSize + (isMinSize ? 0 : homSize));
+    }
+
+    unsigned
+    leftSplitMismatches(
+        const bool isSplitLeftOfHomologyRange,
+        const bool isAlleleSpecificSequence) const
+    {
+        const bool isMinSize(isSplitLeftOfHomologyRange || (! isAlleleSpecificSequence));
+        return (leftMismatches + (isMinSize ? 0 : homMismatches));
+    }
+
+    unsigned
+    rightSplitMismatches(
+        const bool isSplitLeftOfHomologyRange,
+        const bool isAlleleSpecificSequence) const
+    {
+        const bool isMinSize((!isSplitLeftOfHomologyRange) || (! isAlleleSpecificSequence));
+        return (rightMismatches + (isMinSize ? 0 : homMismatches));
+    }
+
     unsigned alignPos;
     unsigned leftSize;
     unsigned homSize;
@@ -63,9 +99,12 @@ operator<<(std::ostream& os, const SRAlignmentInfo& info);
 
 
 ///
-/// \param[in] flankScoreSize the number of bases to score past the end of microhomology range
+/// \param[in] flankScoreSize the number of bases to score past the end of homology range
 ///
-/// \param[in] targetBpOffsetRange this is the range of the breakend (accounting for microhomology) in targetSeq coordinates
+/// \param[in] targetBpOffsetRange this is the range of the breakend (accounting for homology) in targetSeq coordinates
+///
+/// \param[in] isSplitLeftOfHomologyRange for each split problem we need to split to either the left or the right end of the
+///            breakend homology range
 ///
 /// TODO: need to add a query subset/length limit, so that as the query size goes up (ie. 2 x 400) we still consistently
 ///       detect split read support without having to add more and more reference to the targetSeq
@@ -78,4 +117,6 @@ splitReadAligner(
     const uint8_t* queryQual,
     const std::string& targetSeq,
     const known_pos_range2& targetBpOffsetRange,
+    const bool isSplitLeftOfHomologyRange,
+    const bool isAlleleSpecificSequence,
     SRAlignmentInfo& alignment);
