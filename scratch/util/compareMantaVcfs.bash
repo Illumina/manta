@@ -102,7 +102,7 @@ if [ $# != 2 ]; then
 usage: $0 file1.vcf[.gz] file2.vcf[.gz]
 
 This script helps to compare two manta vcf files. The vcfs can be
-bgziped, gziped or uncompressed. Each file will be uncomressed and the
+bgziped, gziped or uncompressed. Each file will be uncompressed and the
 header + all ID Manta* fields will be stripped out.
 END
     exit 2
