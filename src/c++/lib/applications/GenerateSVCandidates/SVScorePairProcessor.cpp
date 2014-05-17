@@ -35,7 +35,7 @@ SVScorePairInitParams(
     int altInsSize(sv.insertSeq.size());
     if (sv.isUnknownSizeInsertion)
     {
-        altInsSize = (sv.unknownSizeInsertionLeftSeq.size() + sv.unknownSizeInsertionRightSeq.size());
+        altInsSize = std::max(100,static_cast<int>(sv.unknownSizeInsertionLeftSeq.size() + sv.unknownSizeInsertionRightSeq.size()));
     }
 
     altShift = ((centerPos2-centerPos1)-altInsSize);
