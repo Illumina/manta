@@ -6,14 +6,6 @@
 import sys
 import re
 
-VCF_CHROM = 0
-VCF_POS = 1
-VCF_REF = 3
-VCF_ALT = 4
-VCF_QUAL = 5
-VCF_FILTER = 6
-VCF_INFO = 7
-
 
 def getKeyVal(string,key) :
     match=re.search("%s=([^;\t]*);?" % (key) ,string)
@@ -21,12 +13,81 @@ def getKeyVal(string,key) :
     return match.group(1);
 
 
-for line in sys.stdin :
-    w=line.strip().split('\t')
-    if len(w) > VCF_FILTER and w[VCF_FILTER] == "MinSomaticScore" :
-        val = getKeyVal(w[VCF_INFO],"SOMATICSCORE")
-        if val is not None :    
-            if val > 25 :
-                w[VCF_FILTER] = "PASS"
-    sys.stdout.write('\t'.join(w) + '\n')
+class VCFID :
+    CHROM = 0
+    POS = 1
+    REF = 3
+    ALT = 4
+    QUAL = 5
+    FILTER = 6
+    INFO = 7
 
+
+def getOptions() :
+
+    from optparse import OptionParser
+
+    usage = "usage: %prog [options] < in.vcf > out.vcf"
+    description="""
+reset SOMATICSCORE filter to a new value
+"""
+    parser = OptionParser(usage=usage)
+
+    parser.add_option("--minSS", dest="minSS", type="int",
+                      help="minimum somatic score, no default (required)")
+
+    (opt,args) = parser.parse_args()
+
+    if (opt.minSS is None) or (len(args) != 0) :
+        parser.print_help()
+        sys.exit(2)
+
+    # validate input:
+    if opt.minSS < 1:
+        raise Exception("Invalid minSize value: %i" % (opt.minSS))
+
+    return (opt,args)
+
+
+def main() :
+
+    (opt,args) = getOptions()
+
+    msstag = "MinSomaticScore"
+
+    infp = sys.stdin
+    outfp = sys.stdout
+
+    for line in infp :
+        if line[0] == "#" :
+            outfp.write(line)
+            continue
+
+        w=line.strip().split('\t')
+        assert(len(w) > VCFID.INFO)
+
+        
+        val = getKeyVal(w[VCFID.INFO],"SOMATICSCORE")
+        if val is None :    
+            outfp.write(line)
+            continue
+
+        isPass = (int(val) >= opt.minSS)
+
+        filters = set(w[VCFID.FILTER].split(';'))
+
+        if len(filters) == 1 and ("PASS" in filters or "." in filters) : filters = set() 
+
+        if isPass :
+            if msstag in filters : filters.remove(msstag)
+        else      : filters.add(msstag)
+        
+        if len(filters) == 0 :
+            w[VCFID.FILTER] = "PASS"
+        else :
+            w[VCFID.FILTER] = ';'.join(filters) 
+
+        sys.stdout.write('\t'.join(w) + '\n')
+
+
+main()
