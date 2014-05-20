@@ -71,7 +71,7 @@ stripVcfCore() {
 
     optionalUngzip $infile |\
     filterHeader |\
-    stripMantaIds | stripSomScore
+    stripMantaIds | stripSomScore | stripSample | grep PASS
 }
 
 
