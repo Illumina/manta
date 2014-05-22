@@ -803,7 +803,7 @@ getInsertTrim(
 
 
 
-// search for combinations of left and right-side insetion candidates to find a good insertion pair
+// search for combinations of left and right-side insertion candidates to find a good insertion pair
 static
 void
 processLargeInsertion(
@@ -1538,7 +1538,7 @@ getSmallSVAssembly(
         //
         // all practical combinations of left and right candidates will be enumerated below to see if there's a good fit:
         //
-        if (isFindLargeInsertions)
+        if ((! isSmallSVCandidate) && isFindLargeInsertions)
         {
             LargeInsertionInfo& candidateInsertInfo(assemblyData.largeInsertInfo[contigIndex]);
             candidateInsertInfo.clear();
@@ -1575,20 +1575,23 @@ getSmallSVAssembly(
         }
     }
 
-    // Solve for any strong large insertion candidate
-    //
-    // This is done by searching through combinations of the left and right insertion side candidates found in the primary contig processing loop
-    if (isFindLargeInsertions)
-    {
-        processLargeInsertion(sv, leadingCut, trailingCut, _largeInsertCompleteAligner, largeInsertionCandidateIndex, assemblyData);
-    }
-
     // set any additional QC steps before deciding an alignment is usable:
     // TODO:
 
-    if (! isHighScore) return;
+    // finished QC, filter out if no small candidates have appeared:
+    if (! isHighScore)
+    {
+        // In case of no fully-assembled candidate, solve for any strong large insertion candidate
+        //
+        // This is done by searching through combinations of the left and right insertion side candidates found in the primary contig processing loop
+        if (isFindLargeInsertions)
+        {
+            processLargeInsertion(sv, leadingCut, trailingCut, _largeInsertCompleteAligner, largeInsertionCandidateIndex, assemblyData);
+        }
 
-    // ok, passed QC -- mark the high-scoring alignment as usable for hypothesis refinement:
+        return;
+    }
+
     {
         assemblyData.bestAlignmentIndex = highScoreIndex;
 #ifdef DEBUG_REFINER
