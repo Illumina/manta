@@ -812,6 +812,7 @@ processLargeInsertion(
     const pos_t trailingCut,
     const GlobalAligner<int>& largeInsertCompleteAligner,
     const std::vector<unsigned>& largeInsertionCandidateIndex,
+    const std::set<pos_t>& excludedPos,
     SVCandidateAssemblyData& assemblyData)
 {
     if (largeInsertionCandidateIndex.empty()) return;
@@ -952,11 +953,14 @@ processLargeInsertion(
         getExtendedContig(fakeAlignment, fakeContig.seq, align1RefStr, fakeExtendedContig);
 
         /// this section mostly imitates the regular SV build below, now that we've constructed our fake contig/alignment
-        assemblyData.svs.push_back(sv);
-        SVCandidate& newSV(assemblyData.svs.back());
+        SVCandidate newSV(sv);
         newSV.assemblyAlignIndex = contigCount;
         newSV.assemblySegmentIndex = 0;
         setSmallCandSV(assemblyData.bp1ref, fakeContig.seq, fakeAlignment.align, fakeSegments[0], newSV);
+
+        /// check if this matches a fully assembled insertion:
+        const pos_t startPos(newSV.bp1.interval.range.begin_pos());
+        if (excludedPos.count(startPos)) return;
 
         newSV.isUnknownSizeInsertion = true;
 
@@ -969,6 +973,8 @@ processLargeInsertion(
         assert(rightOffset < insertTrim.end_pos());
 
         newSV.unknownSizeInsertionRightSeq = rightContig.seq.substr(0,(insertTrim.end_pos()-rightOffset));
+
+        assemblyData.svs.push_back(newSV);
     }
 }
 
@@ -1538,7 +1544,7 @@ getSmallSVAssembly(
         //
         // all practical combinations of left and right candidates will be enumerated below to see if there's a good fit:
         //
-        if ((! isSmallSVCandidate) && isFindLargeInsertions)
+        if (isFindLargeInsertions)
         {
             LargeInsertionInfo& candidateInsertInfo(assemblyData.largeInsertInfo[contigIndex]);
             candidateInsertInfo.clear();
@@ -1577,21 +1583,10 @@ getSmallSVAssembly(
 
     // set any additional QC steps before deciding an alignment is usable:
     // TODO:
+    std::set<pos_t> insPos;
 
-    // finished QC, filter out if no small candidates have appeared:
-    if (! isHighScore)
-    {
-        // In case of no fully-assembled candidate, solve for any strong large insertion candidate
-        //
-        // This is done by searching through combinations of the left and right insertion side candidates found in the primary contig processing loop
-        if (isFindLargeInsertions)
-        {
-            processLargeInsertion(sv, leadingCut, trailingCut, _largeInsertCompleteAligner, largeInsertionCandidateIndex, assemblyData);
-        }
-
-        return;
-    }
-
+    // finished QC, skip small deletions if no candidates have appeared:
+    if (isHighScore)
     {
         assemblyData.bestAlignmentIndex = highScoreIndex;
 #ifdef DEBUG_REFINER
@@ -1617,6 +1612,12 @@ getSmallSVAssembly(
             setSmallCandSV(assemblyData.bp1ref, bestContig.seq, bestAlign.align, segRange, newSV);
             segmentIndex++;
 
+            // provide a weak filter to keep fully and partially assembled duplicates of the same event from occurring:
+            if (getExtendedSVType(newSV) == EXTENDED_SV_TYPE::INSERT)
+            {
+                insPos.insert(newSV.bp1.interval.range.begin_pos());
+            }
+
 #ifdef DEBUG_REFINER
             log_os << logtag << "small refined sv: " << newSV;
 #endif
@@ -1635,4 +1636,18 @@ getSmallSVAssembly(
 #endif
         }
     }
+
+    /// search for large deletions with incomplete insertion sequence assembly:
+    {
+        // In case of no fully-assembled candidate, solve for any strong large insertion candidate
+        //
+        // This is done by searching through combinations of the left and right insertion side candidates found in the primary contig processing loop
+        if (isFindLargeInsertions)
+        {
+            processLargeInsertion(sv, leadingCut, trailingCut, _largeInsertCompleteAligner, largeInsertionCandidateIndex, insPos, assemblyData);
+        }
+
+        return;
+    }
+
 }
