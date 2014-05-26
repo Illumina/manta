@@ -301,11 +301,17 @@ isSmallSVSegmentFilter(
     const unsigned maxQCRefSpan,
     const AlignerBase<int>& aligner,
     const bool isLeadingPath,
+    const bool isComplex,
     ALIGNPATH::path_t& apath)
 {
-    static const unsigned minAlignRefSpan(30); ///< min reference length for alignment
-    static const unsigned minAlignReadLength(30); ///< min length of alignment after off-reference clipping
+    static const unsigned minAlignRefSpanSimple(30); ///< min reference length for alignment
+    static const unsigned minAlignReadLengthSimple(30); ///< min length of alignment after off-reference clipping
+    static const unsigned minAlignRefSpanComplex(35); ///< min reference length for alignment
+    static const unsigned minAlignReadLengthComplex(35); ///< min length of alignment after off-reference clipping
     static const float minScoreFrac(0.75); ///< min fraction of optimal score in each contig sub-alignment:
+
+    const unsigned minAlignRefSpan(isComplex ? minAlignRefSpanComplex : minAlignRefSpanSimple);
+    const unsigned minAlignReadLength(isComplex ? minAlignReadLengthComplex : minAlignReadLengthSimple);
 
     /// prepare apath by orienting it always going forward from the breakend and limiting the length to
     /// the first maxQCRefSpan ref bases covered:
@@ -399,12 +405,13 @@ static
 bool
 isSmallSVAlignment(
     const unsigned maxQCRefSpan,
-    const AlignerBase<int> aligner,
+    const AlignerBase<int>& aligner,
     const Alignment& align,
     const std::string& contigSeq,
     const std::string& refSeq,
     const unsigned minCandidateIndelSize,
-    std::vector<std::pair<unsigned,unsigned> >& candidateSegments)
+    std::vector<std::pair<unsigned,unsigned> >& candidateSegments,
+    const bool isLargeOnly = false)
 {
     using namespace ALIGNPATH;
 
@@ -417,6 +424,8 @@ isSmallSVAlignment(
     // escape if there are no indels above the minimum size
     if (candidateSegments.empty()) return false;
 
+    const bool isComplex((candidateSegments.size() > 1) || (candidateSegments[0].first != candidateSegments[0].second));
+
     /// loop through possible leading segments until a clean one is found:
     ///
     while (true)
@@ -426,7 +435,7 @@ isSmallSVAlignment(
         path_t leadingPath(apath.begin(), apath.begin()+firstCandIndelSegment);
 
         static const bool isLeadingPath(true);
-        if (! isSmallSVSegmentFilter(maxQCRefSpan, aligner, isLeadingPath, leadingPath))
+        if (! isSmallSVSegmentFilter(maxQCRefSpan, aligner, isLeadingPath, isComplex, leadingPath))
         {
             break;
         }
@@ -446,7 +455,7 @@ isSmallSVAlignment(
         path_t trailingPath(apath.begin()+lastCandIndelSegment+1, apath.end());
 
         static const bool isLeadingPath(false);
-        if (! isSmallSVSegmentFilter(maxQCRefSpan, aligner, isLeadingPath, trailingPath))
+        if (! isSmallSVSegmentFilter(maxQCRefSpan, aligner, isLeadingPath, isComplex, trailingPath))
         {
             break;
         }
@@ -460,8 +469,8 @@ isSmallSVAlignment(
 
     {
         // TODO: iterate on all segments
-        const path_t apathTillSvStart(&apath[0], &apath[candidateSegments[0].first]);
-        const path_t apathTillSvEnd(&apath[0], &apath[candidateSegments[0].second+1]);
+        const path_t apathTillSvStart(apath.begin(), apath.begin() + candidateSegments.front().first);
+        const path_t apathTillSvEnd(apath.begin(), apath.begin() + candidateSegments.back().second+1);
 
         const int leftSize = apath_read_length(apathTillSvStart);
         const int endPos = apath_read_length(apathTillSvEnd);
@@ -499,7 +508,27 @@ isSmallSVAlignment(
         if (occurrences > 1) return false;
     }
 
-    return true;
+    if (isLargeOnly)
+    {
+        // only accept large indels in this case
+        typedef std::pair<unsigned,unsigned> segment_t;
+        std::vector<segment_t> tmpseg(candidateSegments);
+        candidateSegments.clear();
+        BOOST_FOREACH(const segment_t& segment, tmpseg)
+        {
+            for(unsigned i(segment.first);i<=segment.second;++i)
+            {
+                if (((apath[i].type == INSERT) && (apath[i].length >= 80)) ||
+                    ((apath[i].type == DELETE) && (apath[i].length >= 200)))
+                {
+                    candidateSegments.push_back(segment);
+                    break;
+                }
+            }        
+        }
+    }
+
+    return (! candidateSegments.empty());
 }
 
 
@@ -1449,7 +1478,7 @@ getSmallSVAssembly(
         // remove candidate from consideration unless we find a sufficiently large indel with good flanking sequence:
         bool isSmallSVCandidate(false);
 
-        /// start with largeSV aligner:
+        /// start with largeSV aligner (currently restricted to insertion only:
         {
             _largeSVAligner.align(
                 contig.seq.begin(), contig.seq.end(),
@@ -1465,6 +1494,8 @@ getSmallSVAssembly(
             const unsigned maxQCRefSpan[] = {100,200};
             for (unsigned refSpanIndex(0); refSpanIndex<2; ++refSpanIndex)
             {
+                static const bool isInsertionOnly(true);
+
                 std::vector<std::pair<unsigned,unsigned> > segments;
                 const bool isCandidate( isSmallSVAlignment(
                                             maxQCRefSpan[refSpanIndex],
@@ -1473,7 +1504,8 @@ getSmallSVAssembly(
                                             contig.seq,
                                             align1RefStr,
                                             _opt.scanOpt.minCandidateVariantSize,
-                                            segments) );
+                                            segments,
+                                            isInsertionOnly) );
 
                 if (isCandidate)
                 {
