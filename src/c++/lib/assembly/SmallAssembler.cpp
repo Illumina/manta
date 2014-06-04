@@ -38,12 +38,18 @@
 #include <iostream>
 
 static
-void print_readSet(const std::set<unsigned>& readSet)
+void
+print_readSet(
+    const std::set<unsigned>& readSet)
 {
+    bool isFirst(true);
+
     log_os << "[";
     BOOST_FOREACH(const unsigned rd, readSet)
     {
-        log_os << rd << ",";
+        if(! isFirst) log_os << ",";
+        log_os << rd ;
+        isFirst=false;
     }
     log_os << "]\n";
 }
@@ -178,6 +184,8 @@ walk(const SmallAssemblerOptions& opt,
     // 0 => walk to the right, 1 => walk to the left
     for (unsigned mode(0); mode<2; ++mode)
     {
+        unsigned conservativeEndOffset(0);
+
         const bool isEnd(mode==0);
 
         while (true)
@@ -290,6 +298,12 @@ walk(const SmallAssemblerOptions& opt,
             log_os << "Adding base " << contig.seq << " " << maxBase << " " << mode << "\n";
 #endif
             contig.seq = addBase(contig.seq, maxBase, isEnd);
+
+            if ((conservativeEndOffset != 0) || (maxBaseCount < opt.minConservativeCoverage))
+            {
+                conservativeEndOffset += 1;
+            }
+
 #ifdef DEBUG_ASBL
             log_os << "New contig : " << contig.seq << "\n";
 #endif
@@ -348,10 +362,22 @@ walk(const SmallAssemblerOptions& opt,
 #endif
             }
         }
+
+        if (mode == 0)
+        {
+            contig.conservativeRange.set_end_pos(conservativeEndOffset);
+        }
+        else
+        {
+            contig.conservativeRange.set_begin_pos(conservativeEndOffset);
+        }
+
 #ifdef DEBUG_ASBL
         log_os << "mode change. Current mode " << mode << "\n";
 #endif
     }
+
+    contig.conservativeRange.set_end_pos(contig.seq.size()-contig.conservativeRange.end_pos());
 }
 
 

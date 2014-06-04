@@ -85,7 +85,7 @@ static
 bool
 isFilterSpanningAlignment(
     const unsigned maxQCRefSpan,
-    const GlobalJumpAligner<int> aligner,
+    const GlobalJumpAligner<int>& aligner,
     const bool isLeadingPath,
     const bool isRNA,
     const ALIGNPATH::path_t& input_apath)
@@ -373,7 +373,7 @@ searchContig(
 
     if (querySize > targetSize) return numOccur;
 
-    // set the scanning start & end to make sure the candidate windows overlapping the breakpoint
+    // set the scanning start & end to make sure the candidate window is overlapping the breakpoint
     const unsigned scanStart = 0;
     const unsigned scanEnd = targetSize - querySize;
 
@@ -596,7 +596,7 @@ isLargeInsertAlignment(
 {
     using namespace ALIGNPATH;
 
-    insertInfo.isLeftCandidate=isLargeInsertSegment(aligner,apath,insertInfo.contigOffset,insertInfo.refOffset,insertInfo.score);
+    insertInfo.isLeftCandidate=isLargeInsertSegment(aligner, apath, insertInfo.contigOffset, insertInfo.refOffset, insertInfo.score);
 
     if (insertInfo.isLeftCandidate)
     {
@@ -1582,10 +1582,33 @@ getSmallSVAssembly(
             candidateInsertInfo.clear();
 
             LargeInsertionInfo insertInfo;
-            const bool isCandidate( isLargeInsertAlignment(
+
+            ALIGNPATH::path_t apath_conservative(alignment.align.apath);
+            apath_limit_read_length(contig.conservativeRange,apath_conservative);
+
+            bool isCandidate( isLargeInsertAlignment(
                                         _largeInsertEdgeAligner,
-                                        alignment.align.apath,
+                                        apath_conservative,
                                         insertInfo));
+
+            if (isCandidate)
+            {
+                // if passed, then get corrected insertInfo without using conservativeRange:
+                LargeInsertionInfo insertInfo2;
+                isCandidate = isLargeInsertAlignment(
+                        _largeInsertEdgeAligner,
+                        alignment.align.apath,
+                        insertInfo2);
+
+                if ((insertInfo.isLeftCandidate != insertInfo2.isLeftCandidate)
+                        || (insertInfo.isRightCandidate != insertInfo2.isRightCandidate))
+                {
+                    isCandidate = false;
+                }
+
+                insertInfo.contigOffset = insertInfo2.contigOffset;
+                insertInfo.refOffset = insertInfo2.refOffset;
+            }
 
             if (isCandidate)
             {

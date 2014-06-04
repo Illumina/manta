@@ -324,6 +324,50 @@ apath_limit_ref_length(
 }
 
 
+void
+apath_limit_read_length(
+    const unsigned target_read_start,
+    const unsigned target_read_end,
+    path_t& apath)
+{
+    bool isStartSet(false);
+
+    unsigned read_length(0);
+    const unsigned as(apath.size());
+    unsigned startSegment(0);
+    unsigned endSegment(as);
+    for (unsigned i(0); i<as; ++i)
+    {
+        path_segment& ps(apath[i]);
+        if (! is_segment_type_read_length(ps.type)) continue;
+        read_length += ps.length;
+
+        if ((! isStartSet) && (read_length > target_read_start))
+        {
+            {
+                const unsigned extra(ps.length - (read_length - target_read_start));
+                assert(ps.length > extra);
+                ps.length -= extra;
+            }
+            startSegment=i;
+            isStartSet=true;
+        }
+
+        if (read_length >= target_read_end)
+        {
+            if (read_length > target_read_end)
+            {
+                const unsigned extra(read_length - target_read_end);
+                assert(ps.length > extra);
+                ps.length -= extra;
+            }
+            endSegment=i+1;
+            break;
+        }
+    }
+    apath = path_t(apath.begin()+startSegment,apath.begin()+endSegment);
+}
+
 
 void
 apath_append(

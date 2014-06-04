@@ -80,5 +80,36 @@ BOOST_AUTO_TEST_CASE( test_apath_limit_ref_length )
 }
 
 
+static
+std::string
+test_read_limit_case(
+    const std::string& cigar,
+    const bool isReverse,
+    const unsigned start,
+    const unsigned end)
+{
+    ALIGNPATH::path_t path;
+    cigar_to_apath(cigar.c_str(), path);
+    if (isReverse)
+    {
+        std::reverse(path.begin(),path.end());
+    }
+    apath_limit_read_length(start, end, path);
+    return apath_to_cigar(path);
+}
+
+
+BOOST_AUTO_TEST_CASE( test_apath_limit_read_length )
+{
+    static const std::string testCigar("2=1X1=4I3=1X");
+    BOOST_REQUIRE_EQUAL(test_read_limit_case(testCigar,false,0,1),"1=");
+    BOOST_REQUIRE_EQUAL(test_read_limit_case(testCigar,false,0,5),"2=1X1=1I");
+    BOOST_REQUIRE_EQUAL(test_read_limit_case(testCigar,false,0,100),testCigar);
+    BOOST_REQUIRE_EQUAL(test_read_limit_case(testCigar,false,1,5),"1=1X1=1I");
+    BOOST_REQUIRE_EQUAL(test_read_limit_case(testCigar,false,2,5),"1X1=1I");
+    BOOST_REQUIRE_EQUAL(test_read_limit_case(testCigar,false,5,10),"3I2=");
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
