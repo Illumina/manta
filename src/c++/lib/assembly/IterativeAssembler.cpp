@@ -573,7 +573,7 @@ buildContigs(
     	print_readSet(contig.supportReads);
     	log_os << ", with rejecting reads: ";
     	print_readSet(contig.rejectReads);
-    	log_os << ". Contig seq: \n" << contig.seq << "\n"
+    	log_os << ". Contig seq: \n" << contig.seq << "\n";
 #endif
 
     	// update read info
@@ -610,6 +610,7 @@ selectContigs(
 		Assembly& finalContigs)
 {
 #ifdef DEBUG_ASBL
+	static const std::string logtag("selectContigs: ");
     log_os << logtag << "Start selecting contigs to be returned.\n";
 #endif
 
@@ -786,15 +787,15 @@ runIterativeAssembler(
     selectContigs(opt, readInfo, normalReadCount, iterativeContigs, contigs);
 
 #ifdef DEBUG_ASBL
-    log_os << logtag << "Selected " << contigCount << "contigs.\n";
+    log_os << logtag << "Selected " << contigs.size() << "contigs.\n";
     unsigned index(1);
     BOOST_REVERSE_FOREACH(const AssembledContig& ctg, contigs)
     {
     	log_os << logtag <<"Selected contig # " << index << ": " << ctg.seq << "\n";
         log_os << logtag << "Contig supporting reads: ";
-        print_readSet(contig.supportReads);
+        print_readSet(ctg.supportReads);
         log_os << logtag << "Contig rejecting reads: ";
-        print_readSet(contig.rejectReads);
+        print_readSet(ctg.rejectReads);
     	index++;
     }
 #endif
