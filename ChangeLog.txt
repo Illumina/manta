@@ -1,3 +1,4 @@
+v0.22.0
 - MANTA-181 fix assembler path and coverage issues
 - MANTA-177 filter redundant partial insertions
 - MANTA-142 improve contig alignment for large events
