@@ -35,7 +35,7 @@
 SVCandidateAssembler::
 SVCandidateAssembler(
     const ReadScannerOptions& scanOpt,
-    const SmallAssemblerOptions& assembleOpt,
+    const IterativeAssemblerOptions& assembleOpt,
     const AlignmentFileOptions& alignFileOpt,
     const std::string& statsFilename,
     const std::string& chromDepthFilename,
@@ -686,7 +686,8 @@ assembleSingleSVBreakend(
     AssemblyReadInput reads;
     getBreakendReads(bp, isBpReversed, refSeq, isSearchRemoteInsertionReads, remoteReads, readIndex, reads);
     AssemblyReadOutput readInfo;
-    runSmallAssembler(_assembleOpt, reads, readInfo, as);
+    //runSmallAssembler(_assembleOpt, reads, readInfo, as);
+    runIterativeAssembler(_assembleOpt, reads, readInfo, as);
 }
 
 
@@ -712,5 +713,27 @@ assembleSVBreakends(
     getBreakendReads(bp2, isBp2Reversed, refSeq2, isSearchRemoteInsertionReads, remoteReads, readIndex, reads);
     readRev.resize(reads.size(),isBp2Reversed);
     AssemblyReadOutput readInfo;
-    runSmallAssembler(_assembleOpt, reads, readInfo, as);
+    runIterativeAssembler(_assembleOpt, reads, readInfo, as);
+
+    // for debugging only
+    {
+    	IterativeAssemblerOptions testOpt;
+
+    	testOpt.minWordLength = 3;
+    	testOpt.maxWordLength = 3;
+    	//testOpt.maxWordLength = 7;
+    	testOpt.wordStepSize = 4;
+    	testOpt.minCoverage = 1;
+
+    	AssemblyReadInput testReads;
+
+    	testReads.push_back("ACACACGCCT");
+    	testReads.push_back(      "GCCTTCTCTC");
+    	testReads.push_back("123456789123");
+
+    	AssemblyReadOutput testReadInfo;
+    	Assembly testContigs;
+
+    	runIterativeAssembler(testOpt, testReads, testReadInfo, testContigs);
+    }
 }

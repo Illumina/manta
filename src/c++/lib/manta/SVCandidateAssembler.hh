@@ -18,7 +18,7 @@
 #pragma once
 
 #include "applications/GenerateSVCandidates/GSCOptions.hh"
-#include "assembly/SmallAssembler.hh"
+#include "assembly/IterativeAssembler.hh"
 #include "blt_util/bam_streamer.hh"
 #include "manta/ChromDepthFilterUtil.hh"
 #include "manta/SVCandidate.hh"
@@ -37,7 +37,7 @@ struct SVCandidateAssembler
 {
     SVCandidateAssembler(
         const ReadScannerOptions& scanOpt,
-        const SmallAssemblerOptions& assembleOpt,
+        const IterativeAssemblerOptions& assembleOpt,
         const AlignmentFileOptions& alignFileOpt,
         const std::string& statsFilename,
         const std::string& chromDepthFilename,
@@ -68,7 +68,7 @@ struct SVCandidateAssembler
         const reference_contig_segment& refSeq2,
         Assembly& as) const;
 
-    const SmallAssemblerOptions&
+    const IterativeAssemblerOptions&
     getAssembleOpt() const
     {
         return _assembleOpt;
@@ -96,7 +96,7 @@ private:
         AssemblyReadInput& reads) const;
 
     const ReadScannerOptions _scanOpt;
-    const SmallAssemblerOptions _assembleOpt;
+    const IterativeAssemblerOptions _assembleOpt;
     const std::vector<bool> _isAlignmentTumor;
     const ChromDepthFilterUtil _dFilter;
     const ChromDepthFilterUtil _dFilterRemoteReads;
