@@ -45,7 +45,7 @@ void print_readSet(const std::set<unsigned>& readSet)
     {
         log_os << rd << ",";
     }
-    log_os << "]";
+    log_os << "]\n";
 }
 #endif
 

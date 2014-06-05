@@ -22,7 +22,7 @@
 
 BOOST_AUTO_TEST_SUITE( test_IterativeAssembler )
 
-
+/*
 BOOST_AUTO_TEST_CASE( test_CircleDetector )
 {
 	IterativeAssemblerOptions assembleOpt;
@@ -86,20 +86,20 @@ BOOST_AUTO_TEST_CASE( test_BasicAssembler )
         BOOST_REQUIRE_EQUAL(readInfo[i].contigId,0u);
     }
     BOOST_REQUIRE(! readInfo[4].isUsed);
-}
+}*/
 
 
-/*
 BOOST_AUTO_TEST_CASE( test_IterativeKmer )
 {
 	// test simple assembly functions at a single word size:
 	IterativeAssemblerOptions assembleOpt;
 
 	assembleOpt.minWordLength = 3;
-	assembleOpt.maxWordLength = 3;
-	//assembleOpt.maxWordLength = 7;
+	//assembleOpt.maxWordLength = 3;
+	assembleOpt.maxWordLength = 7;
 	assembleOpt.wordStepSize = 4;
 	assembleOpt.minCoverage = 1;
+	assembleOpt.minSupportReads = 1;
 
 	AssemblyReadInput reads;
 
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE( test_IterativeKmer )
 	}
 	BOOST_REQUIRE(! readInfo[3].isUsed);
 }
-*/
+
 
 BOOST_AUTO_TEST_SUITE_END()
 
