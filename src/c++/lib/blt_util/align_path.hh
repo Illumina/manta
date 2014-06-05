@@ -293,9 +293,9 @@ apath_limit_read_length(
     path_t& apath)
 {
     apath_limit_read_length(
-            static_cast<unsigned>(std::max(target_read_range.begin_pos(),0)),
-            static_cast<unsigned>(std::max(target_read_range.end_pos(),0)),
-            apath);
+        static_cast<unsigned>(std::max(target_read_range.begin_pos(),0)),
+        static_cast<unsigned>(std::max(target_read_range.end_pos(),0)),
+        apath);
 }
 
 /// remove any edge clip from apath and return the amount

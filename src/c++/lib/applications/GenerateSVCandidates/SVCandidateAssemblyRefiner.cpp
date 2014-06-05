@@ -516,7 +516,7 @@ isSmallSVAlignment(
         candidateSegments.clear();
         BOOST_FOREACH(const segment_t& segment, tmpseg)
         {
-            for(unsigned i(segment.first);i<=segment.second;++i)
+            for (unsigned i(segment.first); i<=segment.second; ++i)
             {
                 if (((apath[i].type == INSERT) && (apath[i].length >= 80)) ||
                     ((apath[i].type == DELETE) && (apath[i].length >= 200)))
@@ -524,7 +524,7 @@ isSmallSVAlignment(
                     candidateSegments.push_back(segment);
                     break;
                 }
-            }        
+            }
         }
     }
 
@@ -1587,21 +1587,21 @@ getSmallSVAssembly(
             apath_limit_read_length(contig.conservativeRange,apath_conservative);
 
             bool isCandidate( isLargeInsertAlignment(
-                                        _largeInsertEdgeAligner,
-                                        apath_conservative,
-                                        insertInfo));
+                                  _largeInsertEdgeAligner,
+                                  apath_conservative,
+                                  insertInfo));
 
             if (isCandidate)
             {
                 // if passed, then get corrected insertInfo without using conservativeRange:
                 LargeInsertionInfo insertInfo2;
                 isCandidate = isLargeInsertAlignment(
-                        _largeInsertEdgeAligner,
-                        alignment.align.apath,
-                        insertInfo2);
+                                  _largeInsertEdgeAligner,
+                                  alignment.align.apath,
+                                  insertInfo2);
 
                 if ((insertInfo.isLeftCandidate != insertInfo2.isLeftCandidate)
-                        || (insertInfo.isRightCandidate != insertInfo2.isRightCandidate))
+                    || (insertInfo.isRightCandidate != insertInfo2.isRightCandidate))
                 {
                     isCandidate = false;
                 }

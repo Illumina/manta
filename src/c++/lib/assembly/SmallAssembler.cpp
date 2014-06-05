@@ -47,7 +47,7 @@ print_readSet(
     log_os << "[";
     BOOST_FOREACH(const unsigned rd, readSet)
     {
-        if(! isFirst) log_os << ",";
+        if (! isFirst) log_os << ",";
         log_os << rd ;
         isFirst=false;
     }
