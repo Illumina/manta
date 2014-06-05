@@ -688,6 +688,28 @@ assembleSingleSVBreakend(
     AssemblyReadOutput readInfo;
     //runSmallAssembler(_assembleOpt, reads, readInfo, as);
     runIterativeAssembler(_assembleOpt, reads, readInfo, as);
+
+    // for debugging only
+    {
+    	IterativeAssemblerOptions testOpt;
+
+    	testOpt.minWordLength = 3;
+    	testOpt.maxWordLength = 3;
+    	//testOpt.maxWordLength = 7;
+    	testOpt.wordStepSize = 4;
+    	testOpt.minCoverage = 1;
+
+    	AssemblyReadInput testReads;
+
+    	testReads.push_back("ACACACGCCT");
+    	testReads.push_back(      "GCCTTCTCTC");
+    	testReads.push_back("123456789123");
+
+    	AssemblyReadOutput testReadInfo;
+    	Assembly testContigs;
+
+    	runIterativeAssembler(testOpt, testReads, testReadInfo, testContigs);
+    }
 }
 
 
