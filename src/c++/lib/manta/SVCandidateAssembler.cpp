@@ -686,7 +686,6 @@ assembleSingleSVBreakend(
     AssemblyReadInput reads;
     getBreakendReads(bp, isBpReversed, refSeq, isSearchRemoteInsertionReads, remoteReads, readIndex, reads);
     AssemblyReadOutput readInfo;
-    //runSmallAssembler(_assembleOpt, reads, readInfo, as);
     runIterativeAssembler(_assembleOpt, reads, readInfo, as);
 }
 
