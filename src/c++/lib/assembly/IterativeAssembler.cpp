@@ -38,12 +38,12 @@
 #include <iostream>
 
 static
-void print_readSet(const std::set<unsigned>& readSet)
+void print_unsignSet(const std::set<unsigned>& unsignSet)
 {
     log_os << "[";
-    BOOST_FOREACH(const unsigned rd, readSet)
+    BOOST_FOREACH(const unsigned us, unsignSet)
     {
-        log_os << rd << ",";
+        log_os << us << ",";
     }
     log_os << "]\n";
 }
@@ -207,9 +207,9 @@ walk(const IterativeAssemblerOptions& opt,
             log_os << "# current contig : " << contig.seq << " size : " << contig.seq.size() << "\n"
                    << " getEnd : " << tmp << "\n";
             log_os << "contig rejecting reads : ";
-            print_readSet(contig.rejectReads);
+            print_unsignSet(contig.rejectReads);
             log_os << "contig supporting reads : ";
-            print_readSet(contig.supportReads);
+            print_unsignSet(contig.supportReads);
 #endif
 
             unsigned maxBaseCount(0);
@@ -241,9 +241,9 @@ walk(const IterativeAssemblerOptions& opt,
                                       std::inserter(sharedReads, sharedReads.begin()));
 #ifdef DEBUG_ASBL
                 log_os << "Word supporting reads : ";
-                print_readSet(currWordReads);
+                print_unsignSet(currWordReads);
                 log_os << "Contig-word shared reads : ";
-                print_readSet(sharedReads);
+                print_unsignSet(sharedReads);
 #endif
 
                 if (sharedReads.empty()) continue;
@@ -300,9 +300,9 @@ walk(const IterativeAssemblerOptions& opt,
 #ifdef DEBUG_ASBL
                 log_os << "Adding rejecting reads " << "\n"
                        << " Old : ";
-                print_readSet(contig.rejectReads);
+                print_unsignSet(contig.rejectReads);
                 log_os << " To be added : ";
-                print_readSet(rejectReads2Add);
+                print_unsignSet(rejectReads2Add);
 #endif
                 // update rejecting reads
                 // add reads that support the unselected allele
@@ -312,15 +312,15 @@ walk(const IterativeAssemblerOptions& opt,
                 }
 #ifdef DEBUG_ASBL
                 log_os << " New : ";
-                print_readSet(contig.rejectReads);
+                print_unsignSet(contig.rejectReads);
 #endif
 
 #ifdef DEBUG_ASBL
                 log_os << "Updating supporting reads " << "\n"
                        << " Old : ";
-                print_readSet(contig.supportReads);
+                print_unsignSet(contig.supportReads);
                 log_os << " To be added : ";
-                print_readSet(supportReads2Add);
+                print_unsignSet(supportReads2Add);
 #endif
                 // update supporting reads
                 // add reads that support the selected allel
@@ -336,7 +336,7 @@ walk(const IterativeAssemblerOptions& opt,
 
 #ifdef DEBUG_ASBL
                 log_os << " To be removed : ";
-                print_readSet(supportReads2Remove);
+                print_unsignSet(supportReads2Remove);
 #endif
                 // remove reads that do NOT support the selected allel anymore
                 BOOST_FOREACH(const unsigned rd, supportReads2Remove)
@@ -345,7 +345,7 @@ walk(const IterativeAssemblerOptions& opt,
                 }
 #ifdef DEBUG_ASBL
                 log_os << " New : ";
-                print_readSet(contig.supportReads);
+                print_unsignSet(contig.supportReads);
 #endif
             }
 
@@ -584,9 +584,9 @@ buildContigs(
 #ifdef DEBUG_ASBL
     	log_os << logtag << "Found one contig of length " << contig.seq.size()
     		   << ", with supporting reads: ";
-    	print_readSet(contig.supportReads);
+    	print_unsignSet(contig.supportReads);
     	log_os << ", with rejecting reads: ";
-    	print_readSet(contig.rejectReads);
+    	print_unsignSet(contig.rejectReads);
     	log_os << ". Contig seq: \n" << contig.seq << "\n";
 #endif
 
@@ -628,6 +628,7 @@ selectContigs(
     	const unsigned usedNormalReads = usedReads.size() - usedPseudoReads.size();
     	const unsigned unusedNormalReads = normalReadCount - usedNormalReads;
 #ifdef DEBUG_ASBL
+    	log_os << logtag << "# of candidateContigs: " << candidateContigs.size() << "\n";
     	log_os << logtag << "# of unused normal reads: " << unusedNormalReads << "\n";
 #endif
         if (unusedNormalReads < opt.minUnusedReads) return;
@@ -646,6 +647,10 @@ selectContigs(
         	std::set_difference(contig.supportReads.begin(), contig.supportReads.end(),
         			            usedReads.begin(), usedReads.end(),
         			            std::inserter(newSupportReads, newSupportReads.end()));
+#ifdef DEBUG_ASBL
+        	log_os << logtag << "Contig #" << contigIndex << " newSupportReads=";
+        	print_unsignSet(newSupportReads);
+#endif
 
         	// count the number of new support reads that are not pseudo reads
         	unsigned newNormalSupport(0);
@@ -712,7 +717,7 @@ selectContigs(
         }
 #ifdef DEBUG_ASBL
     	log_os << logtag << "Updated used reads: \n";
-    	print_readSet(usedReads);
+    	print_unsignSet(usedReads);
 #endif
 
     	finalContigCount++;
@@ -804,9 +809,9 @@ runIterativeAssembler(
     {
     	log_os << logtag <<"Selected contig # " << index << ": " << ctg.seq << "\n";
         log_os << logtag << "Contig supporting reads: ";
-        print_readSet(ctg.supportReads);
+        print_unsignSet(ctg.supportReads);
         log_os << logtag << "Contig rejecting reads: ";
-        print_readSet(ctg.rejectReads);
+        print_unsignSet(ctg.rejectReads);
     	index++;
     }
 #endif
