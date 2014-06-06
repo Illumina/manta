@@ -64,6 +64,7 @@ BOOST_AUTO_TEST_CASE( test_BasicAssembler )
 
     assembleOpt.minWordLength = 6;
     assembleOpt.maxWordLength = 6;
+    assembleOpt.minCoverage = 2;
 
     AssemblyReadInput reads;
 
