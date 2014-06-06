@@ -47,6 +47,17 @@ void print_readSet(const std::set<unsigned>& readSet)
     }
     log_os << "]\n";
 }
+
+static
+void print_stringSet(const std::set<std::string>& strSet)
+{
+    log_os << "[";
+    BOOST_FOREACH(const std::string& str, strSet)
+    {
+        log_os << str << ",";
+    }
+    log_os << "]\n";
+}
 #endif
 
 
@@ -162,8 +173,6 @@ walk(const IterativeAssemblerOptions& opt,
      std::set<std::string>& unusedWords,
      AssembledContig& contig)
 {
-    bool isRepeatFound(false);
-
 	const str_uint_map_t::const_iterator wordCountEnd(wordCount.end());
     const str_set_uint_map_t::const_iterator wordReadsEnd(wordReads.end());
 
@@ -174,6 +183,16 @@ walk(const IterativeAssemblerOptions& opt,
     contig.seq = seed;
 
     unusedWords.erase(seed);
+
+    if (repeatWords.find(seed) != repeatWords.end())
+    {
+    #ifdef DEBUG_ASBL
+    	log_os << "The seed is a repeat word " << seed << ". Stop walk.\n";
+    #endif
+    	return true;
+    }
+
+    bool isRepeatFound(false);
 
     // 0 => walk to the right, 1 => walk to the left
     for (unsigned mode(0); mode<2; ++mode)
@@ -360,7 +379,6 @@ static
 void
 getKmerCounts(
     const AssemblyReadInput& reads,
-    const AssemblyReadOutput& readInfo,
     const unsigned wordLength,
     str_uint_map_t& wordCount,
     str_set_uint_map_t& wordSupportReads)
@@ -369,11 +387,6 @@ getKmerCounts(
 
     for (unsigned readIndex(0); readIndex<readCount; ++readIndex)
     {
-        const AssemblyReadInfo& rinfo(readInfo[readIndex]);
-
-        // skip reads used in a previous iteration
-        if (rinfo.isUsed) continue;
-
         // stores the index of a kmer in a read sequence
         const std::string& seq(reads[readIndex]);
         const unsigned readLen(seq.size());
@@ -512,29 +525,30 @@ bool
 buildContigs(
     const IterativeAssemblerOptions& opt,
     const AssemblyReadInput& reads,
-    AssemblyReadOutput& readInfo,
     const unsigned wordLength,
     Assembly& contigs)
 {
 #ifdef DEBUG_ASBL
     static const std::string logtag("buildContigs: ");
+    log_os << logtag << "Building contigs with " << reads.size() << " reads.\n";
 #endif
 
+    contigs.clear();
     bool isAssemblySuccess(true);
-    const unsigned readCount(reads.size());
 
     // counts the number of occurrences for each kmer in all reads
     str_uint_map_t wordCount;
     // records the supporting reads for each kmer
     str_set_uint_map_t wordSupportReads;
     // get counts and supporting reads for each kmer
-    getKmerCounts(reads, readInfo, wordLength, wordCount, wordSupportReads);
+    getKmerCounts(reads, wordLength, wordCount, wordSupportReads);
 
     // identify repeat kmers (i.e. circles from the de bruijn graph)
     std::set<std::string> repeatWords;
     getRepeatKmers(opt, wordCount, repeatWords);
 #ifdef DEBUG_ASBL
     log_os << logtag << "Identified " << repeatWords.size() << " repeat words.\n";
+    print_stringSet(repeatWords);
 #endif
 
     // track kmers can be used as seeds for searching for the next contig
@@ -576,19 +590,6 @@ buildContigs(
     	log_os << ". Contig seq: \n" << contig.seq << "\n";
 #endif
 
-    	// update read info
-    	for (unsigned readIndex(0); readIndex<readCount; ++readIndex)
-    	{
-    		AssemblyReadInfo& rinfo(readInfo[readIndex]);
-    		if (rinfo.isUsed) continue;
-
-    		if (contig.supportReads.find(readIndex) != contig.supportReads.end())
-    		{
-    			rinfo.isUsed = true;
-    			rinfo.contigId = contigs.size();
-    		}
-    	}
-
     	contigs.push_back(contig);
     }
 
@@ -604,7 +605,7 @@ static
 void
 selectContigs(
 		const IterativeAssemblerOptions& opt,
-		const AssemblyReadOutput& readInfo,
+		AssemblyReadOutput& readInfo,
 		const unsigned normalReadCount,
 		Assembly candidateContigs,
 		Assembly& finalContigs)
@@ -616,7 +617,9 @@ selectContigs(
 
     finalContigs.clear();
     unsigned finalContigCount(0);
+    // a set of reads that has been used to construct contigs, including pseudo ones.
     std::set<unsigned> usedReads;
+    // a set of pseudo reads that has been used to construct contigs
     std::set<unsigned> usedPseudoReads;
 
     while ((candidateContigs.size() > 0) && (finalContigCount < opt.maxAssemblyCount))
@@ -684,27 +687,35 @@ selectContigs(
 #endif
     	// select one contig
     	finalContigs.push_back(selectedContig);
-        contigs2Remove.insert(selectedContigIndex);
-        finalContigCount++;
 
-#ifdef DEBUG_ASBL
-    	log_os << logtag << "Removed " << contigs2Remove.size() << "contigs.\n";
-#endif
+        contigs2Remove.insert(selectedContigIndex);
         // remove selected & failed contigs
         BOOST_REVERSE_FOREACH(const unsigned cix, contigs2Remove)
         	candidateContigs.erase(candidateContigs.begin()+cix);
+#ifdef DEBUG_ASBL
+    	log_os << logtag << "Removed " << contigs2Remove.size() << " contigs.\n";
+#endif
 
         // update the info about used reads
         BOOST_FOREACH(const unsigned rd, selectedContig.supportReads)
         {
         	usedReads.insert(rd);
-        	const AssemblyReadInfo& rinfo(readInfo[rd]);
+        	AssemblyReadInfo& rinfo(readInfo[rd]);
+        	// read info record the ID of the very first contig that the read supports
+        	// TODO: may need to record the IDs of all contigs that the read supports?
+        	if (!rinfo.isUsed)
+        	{
+        		rinfo.isUsed = true;
+        		rinfo.contigId = finalContigCount;
+        	}
         	if (rinfo.isPseudo) usedPseudoReads.insert(rd);
         }
 #ifdef DEBUG_ASBL
     	log_os << logtag << "Updated used reads: \n";
     	print_readSet(usedReads);
 #endif
+
+    	finalContigCount++;
     }
 }
 
@@ -732,7 +743,7 @@ runIterativeAssembler(
 #ifdef DEBUG_ASBL
     	log_os << logtag << "Try " << wordLength << "-mer.\n";
 #endif
-    	const bool isAssemblySuccess = buildContigs(opt, reads, readInfo, wordLength, iterativeContigs);
+    	const bool isAssemblySuccess = buildContigs(opt, reads, wordLength, iterativeContigs);
     	if (isAssemblySuccess)
     	{
 #ifdef DEBUG_ASBL
@@ -754,7 +765,7 @@ runIterativeAssembler(
     			reads.erase(reads.begin()+readIndex, reads.end());
     			readInfo.erase(readInfo.begin()+readIndex, readInfo.end());
 #ifdef DEBUG_ASBL
-    			log_os << logtag << "Removed " << (reads.size() - readIndex) << " pseudo reads (from the previous iteration).\n";
+    			log_os << logtag << "Removed " << (readCount - readIndex) << " pseudo reads (from the previous iteration).\n";
 #endif
     			break;
     		}

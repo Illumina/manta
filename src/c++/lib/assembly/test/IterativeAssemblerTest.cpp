@@ -22,7 +22,7 @@
 
 BOOST_AUTO_TEST_SUITE( test_IterativeAssembler )
 
-/*
+
 BOOST_AUTO_TEST_CASE( test_CircleDetector )
 {
 	IterativeAssemblerOptions assembleOpt;
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE( test_BasicAssembler )
         BOOST_REQUIRE_EQUAL(readInfo[i].contigId,0u);
     }
     BOOST_REQUIRE(! readInfo[4].isUsed);
-}*/
+}
 
 
 BOOST_AUTO_TEST_CASE( test_IterativeKmer )
@@ -95,16 +95,14 @@ BOOST_AUTO_TEST_CASE( test_IterativeKmer )
 	IterativeAssemblerOptions assembleOpt;
 
 	assembleOpt.minWordLength = 3;
-	//assembleOpt.maxWordLength = 3;
-	assembleOpt.maxWordLength = 7;
-	assembleOpt.wordStepSize = 4;
+	assembleOpt.maxWordLength = 9;
+	assembleOpt.wordStepSize = 2;
 	assembleOpt.minCoverage = 1;
-	assembleOpt.minSupportReads = 1;
 
 	AssemblyReadInput reads;
 
-	reads.push_back("ACACACGCCT");
-	reads.push_back(      "GCCTTCTCTC");
+	reads.push_back("ACACACACGATG");
+	reads.push_back(        "GATGTCTCTCTC");
 	reads.push_back("123456789123");
 
 	AssemblyReadOutput readInfo;
@@ -113,13 +111,13 @@ BOOST_AUTO_TEST_CASE( test_IterativeKmer )
 	runIterativeAssembler(assembleOpt, reads, readInfo, contigs);
 
 	BOOST_REQUIRE_EQUAL(contigs.size(),1u);
-	BOOST_REQUIRE_EQUAL(contigs[0].seq,"ACACACGCCTTCTCTC");
+	BOOST_REQUIRE_EQUAL(contigs[0].seq,"ACACACACGATGTCTCTCTC");
 	for (unsigned i(0); i<2; ++i)
 	{
 		BOOST_REQUIRE(readInfo[i].isUsed);
 		BOOST_REQUIRE_EQUAL(readInfo[i].contigId,0u);
 	}
-	BOOST_REQUIRE(! readInfo[3].isUsed);
+	BOOST_REQUIRE(! readInfo[2].isUsed);
 }
 
 
