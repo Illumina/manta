@@ -686,6 +686,8 @@ selectContigs(
         	contigIndex++;
         }
 
+        // no more contigs selected, selection is done.
+        if (maxSupport == 0) break;
 
 #ifdef DEBUG_ASBL
         log_os << logtag << "Contig #" << selectedContigIndex << " selected.\n";
