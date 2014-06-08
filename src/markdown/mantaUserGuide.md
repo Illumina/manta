@@ -96,10 +96,10 @@ Manta should not be able to detect the following variant types:
   combined insertion/deletion variants.
 * Fully-assembled large insertions
     * The maximum fully-assembled insertions size should correspond to
-  approximately the read-pair fragment size, but note that power to fully
-  assemble the insertion should fall off to impractical levels well before this
+  approximately twice the read-pair fragment size, but note that power to fully
+  assemble the insertion should fall off to impractical levels before this
   size
-    * Note that manta does detect and report large insertions where the breakend
+    * Note that manta does detect and report very large insertions when the breakend
   signature of such an event is found, even though the inserted sequence cannot
   be fully assembled.  
 
@@ -152,14 +152,6 @@ The primary manta outputs are a set of [VCF 4.1][1] files, found in
 created for any manta run, and a third somatic vcf is produced when tumor input
 is provided. These files are:
 
-* __candidateSV.vcf.gz__
-    * Unscored SV and indel candidates. Only a minimal amount of supporting
-  evidence is required for a SV to be entered as a candidate. An SV or indel
-  must be a candidate to be considered for scoring, therefore an SV cannot
-  appear in the other VCF outputs if it is not present in this file. Note that
-  by default this file includes indels down to a very small size (>= 8 bases).
-  These are intended to be passed on to a small variant caller without scoring
-  by manta itself (by default manta scoring starts at size 51).
 * __diploidSV.vcf.gz__
     * SVs and indels scored and genotyped under a diploid model for the normal
   sample. The scores in this file do not reflect any information in the tumor
@@ -168,6 +160,21 @@ is provided. These files are:
     * SVs and indels scored under a somatic variant model. This file
   will only be produced if at least one tumor bam argument is supplied during
   configuration
+* __candidateSV.vcf.gz__
+    * Unscored SV and indel candidates. Only a minimal amount of supporting
+  evidence is required for an SV to be entered as a candidate. An SV or indel
+  must be a candidate to be considered for scoring, therefore an SV cannot
+  appear in the other VCF outputs if it is not present in this file. Note that
+  by default this file includes indels down to a very small size (>= 8 bases).
+  These are intended to be passed on to a small variant caller without scoring
+  by manta itself (by default manta scoring starts at size 51).
+* __candidateSmallIndels.vcf.gz__
+    * Subset of the candidateSV.vcf.gz file containing only simple insertion and
+  deletion variants of size 50 or less. Passing this file to a small variant caller
+  like strelka or starling (Isaac Variant Caller) will provide continuous
+  coverage over all indel sizes when the small variant caller and manta outputs are
+  evaluated together. Alternate small indel candidate sets can be parted out of the
+  candidateSV.vcf.gz file if this candidate set is not appropriate.
 
 All variants are reported in the vcf using symbolic alleles unless they are classified 
 as a small indel, in which case full sequences are provided for the vcf `REF` and `ALT`
