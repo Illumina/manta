@@ -246,9 +246,9 @@ There are two sources of advanced configuration options:
 * Options listed in the file: `${MANTA_INSTALL_DIR}/bin/configManta.py.ini`
     * These parameters are not expected to change frequently. Changing the file
   listed above will re-configure all manta runs for the installation. To change
-  parameters for a single run, copy the configManta.py.ini file to the cwd where
-  configuration is being run -- any values found in `$(pwd)/configManta.py.ini`
-  will supersede those listed in the installation's ini file.
+  parameters for a single run, copy the configManta.py.ini file to another location,
+  change the desired parameter values and supply the new file using the configuration
+  script's `--config FILE` option.
 * Advanced options listed in: `${MANTA_INSTALL_DIR}/bin/configManta.py --allHelp`
     * These options are indented primarily for workflow development and
   debugging, but could be useful for runtime optimization in some specialized
