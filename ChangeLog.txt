@@ -1,3 +1,4 @@
+- MANTA-183 handle paired/single read mixture in input alignments
 - MANTA-182 submit config on cmdline
 v0.22.0
 - MANTA-181 fix assembler path and coverage issues

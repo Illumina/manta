@@ -462,6 +462,8 @@ getSVCandidatesFromPair(
     static const index_t svLocalPair(LOCAL_PAIR);
     static const index_t svPair(PAIR);
 
+    if (! localRead.is_paired()) return;
+
     if (localRead.is_unmapped() || localRead.is_mate_unmapped()) return;
 
     // special case typically used for RNA-Seq analysis:

@@ -123,8 +123,11 @@ paired-end sequencing assay with an "innie" orientation between the two reads of
 each DNA fragment, each presenting a read from the outer edge of the fragment
 insert inward.
 
-The performance of Manta on single-ended read input is unknown. On mate-pair
-libraries the method is expected to fail.
+Manta can tolerate non-paired reads in the input, so long as sufficient paired-end
+reads exist to estimate the paired fragment size distribution. Non-paired reads
+will still be used in discovery, assembly and split-read scoring if their alignment
+(or SA tag split alignments) support a large indel or SV, or mismatch/clipping 
+suggests a possible breakend location.
 
 Manta requires input sequencing reads to be mapped by an external tool and
 provided as input in BAM format.
