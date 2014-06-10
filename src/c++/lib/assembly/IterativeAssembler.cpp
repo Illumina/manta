@@ -281,7 +281,7 @@ walk(const IterativeAssemblerOptions& opt,
             {
 #ifdef DEBUG_ASBL
                 log_os << "Coverage or error rate below threshold.\n"
-                       << "maxBaseCount : " << maxBaseCount << " minCverage: " << opt.minCoverage << "\n";
+                       << "maxBaseCount : " << maxBaseCount << " minCoverage: " << opt.minCoverage << "\n";
 #endif
                 break;
             }
@@ -378,7 +378,9 @@ walk(const IterativeAssemblerOptions& opt,
 static
 void
 getKmerCounts(
+	const IterativeAssemblerOptions& opt,
     const AssemblyReadInput& reads,
+    AssemblyReadOutput& readInfo,
     const unsigned wordLength,
     str_uint_map_t& wordCount,
     str_set_uint_map_t& wordSupportReads)
@@ -402,10 +404,16 @@ getKmerCounts(
             readWords.insert(word);
         }
 
+        AssemblyReadInfo& rinfo(readInfo[readIndex]);
+        unsigned wordCountAdd = 1;
+        // pseudo reads must have passed coverage check with smaller kmers
+        if (rinfo.isPseudo)
+        	wordCountAdd = opt.minCoverage;
+
         // total occurrences from this read
         BOOST_FOREACH(const std::string& word, readWords)
         {
-            wordCount[word]++;
+            wordCount[word] += wordCountAdd;
             // record the supporting read
             wordSupportReads[word].insert(readIndex);
         }
@@ -525,6 +533,7 @@ bool
 buildContigs(
     const IterativeAssemblerOptions& opt,
     const AssemblyReadInput& reads,
+    AssemblyReadOutput& readInfo,
     const unsigned wordLength,
     Assembly& contigs)
 {
@@ -541,7 +550,7 @@ buildContigs(
     // records the supporting reads for each kmer
     str_set_uint_map_t wordSupportReads;
     // get counts and supporting reads for each kmer
-    getKmerCounts(reads, wordLength, wordCount, wordSupportReads);
+    getKmerCounts(opt, reads, readInfo, wordLength, wordCount, wordSupportReads);
 
     // identify repeat kmers (i.e. circles from the de bruijn graph)
     std::set<std::string> repeatWords;
@@ -750,7 +759,7 @@ runIterativeAssembler(
 #ifdef DEBUG_ASBL
     	log_os << logtag << "Try " << wordLength << "-mer.\n";
 #endif
-    	const bool isAssemblySuccess = buildContigs(opt, reads, wordLength, iterativeContigs);
+    	const bool isAssemblySuccess = buildContigs(opt, reads, readInfo, wordLength, iterativeContigs);
     	if (isAssemblySuccess)
     	{
 #ifdef DEBUG_ASBL
