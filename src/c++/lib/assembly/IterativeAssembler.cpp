@@ -312,10 +312,21 @@ walk(const IterativeAssemblerOptions& opt,
 
             			// add rejecting reads from an unselected branch
             			const std::string newKey(addBase(tmpBack, symbol, !isEnd));
+#ifdef DEBUG_ASBL
+            			log_os << "Extending end : base " << symbol << " " << newKey << "\n";
+#endif
             			wordReadsIter= wordReads.find(newKey);
             			if (wordReadsIter == wordReadsEnd) continue;
             			const std::set<unsigned>& backWordReads(wordReadsIter->second);
+#ifdef DEBUG_ASBL
+            			log_os << "Supporting reads for the backwards word : ";
+            			print_unsignSet(backWordReads);
+#endif
             			rejectReads2Add.insert(backWordReads.begin(), backWordReads.end());
+#ifdef DEBUG_ASBL
+            			log_os << "rejectReads2Add upated : ";
+            			print_unsignSet(rejectReads2Add);
+#endif
             		}
             	}
             	previousWordReads = maxWordReads;
