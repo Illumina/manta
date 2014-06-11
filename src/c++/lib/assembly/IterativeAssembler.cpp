@@ -303,7 +303,7 @@ walk(const IterativeAssemblerOptions& opt,
             	// walk backwards for one step at a branching point
             	if (maxWordReads != previousWordReads)
             	{
-            		const std::string tmpBack(getEnd(maxWord, wordLength-1, !isEnd));
+            		const std::string tmpBack(getEnd(maxWord, wordLength-1, isEnd));
             		const char tmpSymbol = (isEnd? maxWord[0] : maxWord[wordLength-1]);
             		BOOST_FOREACH(const char symbol, opt.alphabet)
             		{
@@ -313,7 +313,7 @@ walk(const IterativeAssemblerOptions& opt,
             			// add rejecting reads from an unselected branch
             			const std::string newKey(addBase(tmpBack, symbol, !isEnd));
 #ifdef DEBUG_ASBL
-            			log_os << "Extending end : base " << symbol << " " << newKey << "\n";
+            			log_os << "Extending end backwords: base " << symbol << " " << newKey << "\n";
 #endif
             			wordReadsIter= wordReads.find(newKey);
             			if (wordReadsIter == wordReadsEnd) continue;
