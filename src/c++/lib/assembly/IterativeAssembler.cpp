@@ -29,7 +29,7 @@
 
 
 // compile with this macro to get verbose output:
-//#define DEBUG_ASBL
+#define DEBUG_ASBL
 
 
 // stream used by DEBUG_ASBL:
@@ -215,9 +215,11 @@ walk(const IterativeAssemblerOptions& opt,
             unsigned maxBaseCount(0);
             unsigned maxSharedReadCount(0);
             char maxBase(opt.alphabet[0]);
+            std::string maxWord;
+            std::set<unsigned> maxWordReads;
             std::set<unsigned> maxSharedReads;
+            std::set<unsigned> previousWordReads;
             std::set<unsigned> supportReads2Remove;
-            std::set<unsigned> supportReads2Add;
             std::set<unsigned> rejectReads2Add;
 
             BOOST_FOREACH(const char symbol, opt.alphabet)
@@ -257,15 +259,16 @@ walk(const IterativeAssemblerOptions& opt,
                         supportReads2Remove.insert(maxSharedReads.begin(), maxSharedReads.end());
                     // the old supporting reads is for an unselected allele
                     // they become rejecting reads for the currently selected allele
-                    if (!supportReads2Add.empty())
-                        rejectReads2Add.insert(supportReads2Add.begin(), supportReads2Add.end());
+                    if (!maxWordReads.empty())
+                        rejectReads2Add.insert(maxWordReads.begin(), maxWordReads.end());
                     // new supporting reads for the currently selected allele
-                    supportReads2Add = currWordReads;
+                    maxWordReads = currWordReads;
 
                     maxSharedReadCount = sharedReadCount;
                     maxSharedReads = sharedReads;
                     maxBaseCount = currWordCount;
                     maxBase = symbol;
+                    maxWord = newKey;
                 }
                 else
                 {
@@ -297,6 +300,26 @@ walk(const IterativeAssemblerOptions& opt,
 
             // TODO: can add threshold for the count or percentage of shared reads
             {
+            	// walk backwards for one step at a branching point
+            	if (maxWordReads != previousWordReads)
+            	{
+            		const std::string tmpBack(getEnd(maxWord, wordLength-1, !isEnd));
+            		const char tmpSymbol = (isEnd? maxWord[0] : maxWord[wordLength-1]);
+            		BOOST_FOREACH(const char symbol, opt.alphabet)
+            		{
+            			// the selected branch
+            			if (symbol == tmpSymbol) continue;
+
+            			// add rejecting reads from an unselected branch
+            			const std::string newKey(addBase(tmpBack, symbol, !isEnd));
+            			wordReadsIter= wordReads.find(newKey);
+            			if (wordReadsIter == wordReadsEnd) continue;
+            			const std::set<unsigned>& backWordReads(wordReadsIter->second);
+            			rejectReads2Add.insert(backWordReads.begin(), backWordReads.end());
+            		}
+            	}
+            	previousWordReads = maxWordReads;
+
 #ifdef DEBUG_ASBL
                 log_os << "Adding rejecting reads " << "\n"
                        << " Old : ";
@@ -320,11 +343,11 @@ walk(const IterativeAssemblerOptions& opt,
                        << " Old : ";
                 print_unsignSet(contig.supportReads);
                 log_os << " To be added : ";
-                print_unsignSet(supportReads2Add);
+                print_unsignSet(maxWordReads);
 #endif
                 // update supporting reads
                 // add reads that support the selected allel
-                BOOST_FOREACH(const unsigned rd, supportReads2Add)
+                BOOST_FOREACH(const unsigned rd, maxWordReads)
                 {
                     if (contig.rejectReads.find(rd) == contig.rejectReads.end())
                         contig.supportReads.insert(rd);
@@ -350,13 +373,12 @@ walk(const IterativeAssemblerOptions& opt,
             }
 
             // remove the last word from the unused list, so it cannot be used as the seed in finding the next contig
-            const std::string lastWord(addBase(tmp, maxBase, isEnd));
-            unusedWords.erase(lastWord);
+            unusedWords.erase(maxWord);
             // stop walk in the current mode after seeing one repeat word
-            if (repeatWords.find(lastWord) != repeatWords.end())
+            if (repeatWords.find(maxWord) != repeatWords.end())
             {
 #ifdef DEBUG_ASBL
-                log_os << "Seen a repeat word " << lastWord << ". Stop walk in the current mode " << mode << "\n";
+                log_os << "Seen a repeat word " << maxWord << ". Stop walk in the current mode " << mode << "\n";
 #endif
                 isRepeatFound = true;
                 break;
