@@ -89,9 +89,9 @@ def main() :
         if line[0] == '#' :
             outfp.write(line)
             continue
-        
+
         rec = VcfRecord(line)
-        
+
         # remove symbolic alleles:
         if rec.alt.find("<") != -1 : continue
 
@@ -102,12 +102,12 @@ def main() :
 
         # we're assume there are no multiple alts in the candidate records
         assert( rec.alt.find(",") == -1 )
-        
+
         if len(rec.ref) > (options.maxSize+1) : continue
         if len(rec.alt) > (options.maxSize+1) : continue
 
         outfp.write(line)
-        
+
 
 
 main()
