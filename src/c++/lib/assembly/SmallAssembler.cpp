@@ -421,7 +421,7 @@ getKmerCounts(
             if (readWordOffset.find(word) != readWordOffset.end())
             {
 #ifdef DEBUG_ASBL
-                log_os << logtag << "word " << word << " repeated in read " << readIndex << "\n";
+                log_os << __FUNCTION__ << ": word " << word << " repeated in read " << readIndex << "\n";
 #endif
                 if (isFindRepeatReads)
                 {
