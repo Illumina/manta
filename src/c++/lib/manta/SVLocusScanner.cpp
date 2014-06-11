@@ -208,8 +208,14 @@ updateSABreakend(
     }
 
     breakend.interval.tid = align.tid;
-    breakend.interval.range.set_begin_pos(std::max(0,align.pos-dopt.beforeBreakend));
-    breakend.interval.range.set_end_pos(align.pos+dopt.afterBreakend);
+    int pos = align.pos;
+    if (!isUpstream)
+    {
+        using namespace ALIGNPATH;
+        pos += apath_ref_length(align.path);
+    }
+    breakend.interval.range.set_begin_pos(std::max(0,pos-dopt.beforeBreakend));
+    breakend.interval.range.set_end_pos(pos+dopt.afterBreakend);
 }
 
 
@@ -235,9 +241,9 @@ GetSplitSACandidate(
     updateSABreakend(dopt, localAlign, sv.bp1);
     updateSABreakend(dopt, remoteAlign, sv.bp2);
 
-    bool remoteIsSecond = !ALIGNPATH::is_clipped_front(localAlign.path); // todo Need smarter check which partial alignment is first
+    const bool isUpstream(isCigarUpstream(localAlign.path));
     bool isReadFw = (localRead.is_first() == localRead.is_fwd_strand());
-    if (isReadFw == remoteIsSecond)
+    if (isReadFw == isUpstream)
     {
         sv.fwReads += 1;
     }
@@ -317,7 +323,12 @@ getSACandidatesFromRead(
 
         cigar_to_apath(saDat[3].c_str(), remoteAlign.path);
 
-        candidates.push_back(GetSplitSACandidate(dopt, localRead, localAlign, remoteAlign));
+        SVObservation sv = GetSplitSACandidate(dopt, localRead, localAlign, remoteAlign);
+#ifdef DEBUG_SCANNER
+        static const std::string logtag("getSACandidatesFromRead");
+        log_os << logtag << " evaluating SA sv for inclusion: " << sv << "\n";
+#endif
+        candidates.push_back(sv);
     }
 }
 
@@ -975,6 +986,9 @@ getSVLociImpl(
             locus.mergeSelfOverlap();
         }
 
+#ifdef DEBUG_SCANNER
+        log_os << logtag << " adding Locus: " << locus << "\n";
+#endif
         loci.push_back(locus);
     }
 }
