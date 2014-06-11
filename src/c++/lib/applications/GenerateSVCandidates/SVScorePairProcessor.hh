@@ -108,7 +108,7 @@ struct SVScorePairProcessor : public BamRegionProcessor
     isSkipRecord(
         const bam_record& bamRead)
     {
-        if (bamRead.is_unmapped() || bamRead.is_mate_unmapped()) return true;
+        if (bamRead.is_unmapped() || (bamRead.is_paired() && bamRead.is_mate_unmapped())) return true;
         else if (! is_innie_pair(bamRead)) return true;
         return false;
     }

@@ -36,6 +36,8 @@ isGoodShadow(
     static const std::string logtag("isGoodShadow");
 #endif
 
+    if (! bamRead.is_paired()) return false;
+
     // sanity check that this is a shadow read:
     if (!bamRead.is_unmapped()) return false;
     if (bamRead.is_mate_unmapped()) return false;
@@ -79,7 +81,7 @@ check(
     }
     else if ((! bamRead.is_unmapped()) && (bamRead.is_mate_unmapped()))
     {
-
+        if (! bamRead.is_paired()) return false;
         if ((! _isLeft) && (! bamRead.is_fwd_strand())) return false;
         if ((! _isRight) && bamRead.is_fwd_strand()) return false;
 

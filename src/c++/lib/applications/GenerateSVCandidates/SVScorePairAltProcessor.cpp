@@ -435,7 +435,7 @@ processClearedRecord(
                 }
 
                 // ok, not a shadow read, kick the read out if it fits shadow or shadow-mate criteria:
-                if (bamRead.is_unmapped() || bamRead.is_mate_unmapped()) return;
+                if (bamRead.is_unmapped() || (bamRead.is_paired() && bamRead.is_mate_unmapped())) return;
             }
         }
 

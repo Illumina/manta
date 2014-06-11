@@ -1085,6 +1085,7 @@ isLargeFragment(
     const bam_record& bamRead,
     const unsigned defaultReadGroupIndex) const
 {
+    if (! bamRead.is_paired()) return false;
     return FragmentSizeType::isLarge(getFragmentSizeType(bamRead,defaultReadGroupIndex));
 }
 
