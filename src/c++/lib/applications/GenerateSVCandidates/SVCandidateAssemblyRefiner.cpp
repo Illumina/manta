@@ -85,7 +85,7 @@ static
 bool
 isFilterSpanningAlignment(
     const unsigned maxQCRefSpan,
-    const GlobalJumpAligner<int> aligner,
+    const GlobalJumpAligner<int>& aligner,
     const bool isLeadingPath,
     const bool isRNA,
     const ALIGNPATH::path_t& input_apath)
@@ -301,11 +301,17 @@ isSmallSVSegmentFilter(
     const unsigned maxQCRefSpan,
     const AlignerBase<int>& aligner,
     const bool isLeadingPath,
+    const bool isComplex,
     ALIGNPATH::path_t& apath)
 {
-    static const unsigned minAlignRefSpan(30); ///< min reference length for alignment
-    static const unsigned minAlignReadLength(30); ///< min length of alignment after off-reference clipping
+    static const unsigned minAlignRefSpanSimple(30); ///< min reference length for alignment
+    static const unsigned minAlignReadLengthSimple(30); ///< min length of alignment after off-reference clipping
+    static const unsigned minAlignRefSpanComplex(35); ///< min reference length for alignment
+    static const unsigned minAlignReadLengthComplex(35); ///< min length of alignment after off-reference clipping
     static const float minScoreFrac(0.75); ///< min fraction of optimal score in each contig sub-alignment:
+
+    const unsigned minAlignRefSpan(isComplex ? minAlignRefSpanComplex : minAlignRefSpanSimple);
+    const unsigned minAlignReadLength(isComplex ? minAlignReadLengthComplex : minAlignReadLengthSimple);
 
     /// prepare apath by orienting it always going forward from the breakend and limiting the length to
     /// the first maxQCRefSpan ref bases covered:
@@ -367,7 +373,7 @@ searchContig(
 
     if (querySize > targetSize) return numOccur;
 
-    // set the scanning start & end to make sure the candidate windows overlapping the breakpoint
+    // set the scanning start & end to make sure the candidate window is overlapping the breakpoint
     const unsigned scanStart = 0;
     const unsigned scanEnd = targetSize - querySize;
 
@@ -399,12 +405,13 @@ static
 bool
 isSmallSVAlignment(
     const unsigned maxQCRefSpan,
-    const AlignerBase<int> aligner,
+    const AlignerBase<int>& aligner,
     const Alignment& align,
     const std::string& contigSeq,
     const std::string& refSeq,
     const unsigned minCandidateIndelSize,
-    std::vector<std::pair<unsigned,unsigned> >& candidateSegments)
+    std::vector<std::pair<unsigned,unsigned> >& candidateSegments,
+    const bool isLargeOnly = false)
 {
     using namespace ALIGNPATH;
 
@@ -417,6 +424,8 @@ isSmallSVAlignment(
     // escape if there are no indels above the minimum size
     if (candidateSegments.empty()) return false;
 
+    const bool isComplex((candidateSegments.size() > 1) || (candidateSegments[0].first != candidateSegments[0].second));
+
     /// loop through possible leading segments until a clean one is found:
     ///
     while (true)
@@ -426,7 +435,7 @@ isSmallSVAlignment(
         path_t leadingPath(apath.begin(), apath.begin()+firstCandIndelSegment);
 
         static const bool isLeadingPath(true);
-        if (! isSmallSVSegmentFilter(maxQCRefSpan, aligner, isLeadingPath, leadingPath))
+        if (! isSmallSVSegmentFilter(maxQCRefSpan, aligner, isLeadingPath, isComplex, leadingPath))
         {
             break;
         }
@@ -446,7 +455,7 @@ isSmallSVAlignment(
         path_t trailingPath(apath.begin()+lastCandIndelSegment+1, apath.end());
 
         static const bool isLeadingPath(false);
-        if (! isSmallSVSegmentFilter(maxQCRefSpan, aligner, isLeadingPath, trailingPath))
+        if (! isSmallSVSegmentFilter(maxQCRefSpan, aligner, isLeadingPath, isComplex, trailingPath))
         {
             break;
         }
@@ -460,8 +469,8 @@ isSmallSVAlignment(
 
     {
         // TODO: iterate on all segments
-        const path_t apathTillSvStart(&apath[0], &apath[candidateSegments[0].first]);
-        const path_t apathTillSvEnd(&apath[0], &apath[candidateSegments[0].second+1]);
+        const path_t apathTillSvStart(apath.begin(), apath.begin() + candidateSegments.front().first);
+        const path_t apathTillSvEnd(apath.begin(), apath.begin() + candidateSegments.back().second+1);
 
         const int leftSize = apath_read_length(apathTillSvStart);
         const int endPos = apath_read_length(apathTillSvEnd);
@@ -499,7 +508,27 @@ isSmallSVAlignment(
         if (occurrences > 1) return false;
     }
 
-    return true;
+    if (isLargeOnly)
+    {
+        // only accept large indels in this case
+        typedef std::pair<unsigned,unsigned> segment_t;
+        std::vector<segment_t> tmpseg(candidateSegments);
+        candidateSegments.clear();
+        BOOST_FOREACH(const segment_t& segment, tmpseg)
+        {
+            for (unsigned i(segment.first); i<=segment.second; ++i)
+            {
+                if (((apath[i].type == INSERT) && (apath[i].length >= 80)) ||
+                    ((apath[i].type == DELETE) && (apath[i].length >= 200)))
+                {
+                    candidateSegments.push_back(segment);
+                    break;
+                }
+            }
+        }
+    }
+
+    return (! candidateSegments.empty());
 }
 
 
@@ -567,7 +596,7 @@ isLargeInsertAlignment(
 {
     using namespace ALIGNPATH;
 
-    insertInfo.isLeftCandidate=isLargeInsertSegment(aligner,apath,insertInfo.contigOffset,insertInfo.refOffset,insertInfo.score);
+    insertInfo.isLeftCandidate=isLargeInsertSegment(aligner, apath, insertInfo.contigOffset, insertInfo.refOffset, insertInfo.score);
 
     if (insertInfo.isLeftCandidate)
     {
@@ -803,7 +832,7 @@ getInsertTrim(
 
 
 
-// search for combinations of left and right-side insetion candidates to find a good insertion pair
+// search for combinations of left and right-side insertion candidates to find a good insertion pair
 static
 void
 processLargeInsertion(
@@ -812,6 +841,7 @@ processLargeInsertion(
     const pos_t trailingCut,
     const GlobalAligner<int>& largeInsertCompleteAligner,
     const std::vector<unsigned>& largeInsertionCandidateIndex,
+    const std::set<pos_t>& excludedPos,
     SVCandidateAssemblyData& assemblyData)
 {
     if (largeInsertionCandidateIndex.empty()) return;
@@ -952,11 +982,14 @@ processLargeInsertion(
         getExtendedContig(fakeAlignment, fakeContig.seq, align1RefStr, fakeExtendedContig);
 
         /// this section mostly imitates the regular SV build below, now that we've constructed our fake contig/alignment
-        assemblyData.svs.push_back(sv);
-        SVCandidate& newSV(assemblyData.svs.back());
+        SVCandidate newSV(sv);
         newSV.assemblyAlignIndex = contigCount;
         newSV.assemblySegmentIndex = 0;
         setSmallCandSV(assemblyData.bp1ref, fakeContig.seq, fakeAlignment.align, fakeSegments[0], newSV);
+
+        /// check if this matches a fully assembled insertion:
+        const pos_t startPos(newSV.bp1.interval.range.begin_pos());
+        if (excludedPos.count(startPos)) return;
 
         newSV.isUnknownSizeInsertion = true;
 
@@ -969,6 +1002,8 @@ processLargeInsertion(
         assert(rightOffset < insertTrim.end_pos());
 
         newSV.unknownSizeInsertionRightSeq = rightContig.seq.substr(0,(insertTrim.end_pos()-rightOffset));
+
+        assemblyData.svs.push_back(newSV);
     }
 }
 
@@ -1443,7 +1478,7 @@ getSmallSVAssembly(
         // remove candidate from consideration unless we find a sufficiently large indel with good flanking sequence:
         bool isSmallSVCandidate(false);
 
-        /// start with largeSV aligner:
+        /// start with largeSV aligner (currently restricted to insertion only:
         {
             _largeSVAligner.align(
                 contig.seq.begin(), contig.seq.end(),
@@ -1459,6 +1494,8 @@ getSmallSVAssembly(
             const unsigned maxQCRefSpan[] = {100,200};
             for (unsigned refSpanIndex(0); refSpanIndex<2; ++refSpanIndex)
             {
+                static const bool isInsertionOnly(true);
+
                 std::vector<std::pair<unsigned,unsigned> > segments;
                 const bool isCandidate( isSmallSVAlignment(
                                             maxQCRefSpan[refSpanIndex],
@@ -1467,7 +1504,8 @@ getSmallSVAssembly(
                                             contig.seq,
                                             align1RefStr,
                                             _opt.scanOpt.minCandidateVariantSize,
-                                            segments) );
+                                            segments,
+                                            isInsertionOnly) );
 
                 if (isCandidate)
                 {
@@ -1544,10 +1582,33 @@ getSmallSVAssembly(
             candidateInsertInfo.clear();
 
             LargeInsertionInfo insertInfo;
-            const bool isCandidate( isLargeInsertAlignment(
-                                        _largeInsertEdgeAligner,
-                                        alignment.align.apath,
-                                        insertInfo));
+
+            ALIGNPATH::path_t apath_conservative(alignment.align.apath);
+            apath_limit_read_length(contig.conservativeRange,apath_conservative);
+
+            bool isCandidate( isLargeInsertAlignment(
+                                  _largeInsertEdgeAligner,
+                                  apath_conservative,
+                                  insertInfo));
+
+            if (isCandidate)
+            {
+                // if passed, then get corrected insertInfo without using conservativeRange:
+                LargeInsertionInfo insertInfo2;
+                isCandidate = isLargeInsertAlignment(
+                                  _largeInsertEdgeAligner,
+                                  alignment.align.apath,
+                                  insertInfo2);
+
+                if ((insertInfo.isLeftCandidate != insertInfo2.isLeftCandidate)
+                    || (insertInfo.isRightCandidate != insertInfo2.isRightCandidate))
+                {
+                    isCandidate = false;
+                }
+
+                insertInfo.contigOffset = insertInfo2.contigOffset;
+                insertInfo.refOffset = insertInfo2.refOffset;
+            }
 
             if (isCandidate)
             {
@@ -1575,20 +1636,12 @@ getSmallSVAssembly(
         }
     }
 
-    // Solve for any strong large insertion candidate
-    //
-    // This is done by searching through combinations of the left and right insertion side candidates found in the primary contig processing loop
-    if (isFindLargeInsertions)
-    {
-        processLargeInsertion(sv, leadingCut, trailingCut, _largeInsertCompleteAligner, largeInsertionCandidateIndex, assemblyData);
-    }
-
     // set any additional QC steps before deciding an alignment is usable:
     // TODO:
+    std::set<pos_t> insPos;
 
-    if (! isHighScore) return;
-
-    // ok, passed QC -- mark the high-scoring alignment as usable for hypothesis refinement:
+    // finished QC, skip small deletions if no candidates have appeared:
+    if (isHighScore)
     {
         assemblyData.bestAlignmentIndex = highScoreIndex;
 #ifdef DEBUG_REFINER
@@ -1614,6 +1667,12 @@ getSmallSVAssembly(
             setSmallCandSV(assemblyData.bp1ref, bestContig.seq, bestAlign.align, segRange, newSV);
             segmentIndex++;
 
+            // provide a weak filter to keep fully and partially assembled duplicates of the same event from occurring:
+            if (getExtendedSVType(newSV) == EXTENDED_SV_TYPE::INSERT)
+            {
+                insPos.insert(newSV.bp1.interval.range.begin_pos());
+            }
+
 #ifdef DEBUG_REFINER
             log_os << logtag << "small refined sv: " << newSV;
 #endif
@@ -1632,4 +1691,18 @@ getSmallSVAssembly(
 #endif
         }
     }
+
+    /// search for large deletions with incomplete insertion sequence assembly:
+    {
+        // In case of no fully-assembled candidate, solve for any strong large insertion candidate
+        //
+        // This is done by searching through combinations of the left and right insertion side candidates found in the primary contig processing loop
+        if (isFindLargeInsertions)
+        {
+            processLargeInsertion(sv, leadingCut, trailingCut, _largeInsertCompleteAligner, largeInsertionCandidateIndex, insPos, assemblyData);
+        }
+
+        return;
+    }
+
 }

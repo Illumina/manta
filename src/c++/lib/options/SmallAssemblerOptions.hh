@@ -30,6 +30,7 @@ struct SmallAssemblerOptions
         wordStepSize(5),
         minContigLength(15),
         minCoverage(1),
+        minConservativeCoverage(2),
         maxError(0.35),
         minSeedReads(3),
         maxAssemblyIterations(10)
@@ -41,6 +42,7 @@ struct SmallAssemblerOptions
     unsigned wordStepSize;
     unsigned minContigLength; ///< min contig size
     unsigned minCoverage; ///< min. coverage required for contig extension
+    unsigned minConservativeCoverage; ///< coverage required for conservative contig sub-range
     double maxError; ///< max error rates allowed during contig extension
     unsigned minSeedReads; ///< min. number of reads required to start assembly
     unsigned maxAssemblyIterations; ///< Max. number of assembly iterations for a cluster before we give up

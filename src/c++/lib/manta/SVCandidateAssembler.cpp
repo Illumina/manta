@@ -13,6 +13,7 @@
 
 ///
 /// \author Ole Schulz-Trieglaff
+/// \author Chris Saunders
 ///
 
 
@@ -93,12 +94,16 @@ isMateInsertionEvidence(
     const bool isSearchForLeftOpen,
     const bool isSearchForRightOpen)
 {
+    if (! bamRead.is_paired()) return false;
     if (bamRead.is_unmapped() || bamRead.is_mate_unmapped()) return false;
 
     if (bamRead.map_qual() < minMapq) return false;
 
     if ((! isSearchForLeftOpen) && (! bamRead.is_fwd_strand())) return false;
     if ((! isSearchForRightOpen) && bamRead.is_fwd_strand()) return false;
+
+    if (bamRead.target_id() < 0) return false;
+    if (bamRead.mate_target_id() < 0) return false;
 
     if (bamRead.target_id() != bamRead.mate_target_id()) return true;
 
@@ -152,6 +157,24 @@ struct RemoteReadInfo
 };
 
 
+std::ostream&
+operator<<(
+    std::ostream& os,
+    const RemoteReadInfo& rri)
+{
+    os << "RRI qname: " << rri.qname
+       << " readNo:" << rri.readNo
+       << " tid:" << rri.tid
+       << " pos:" << rri.pos
+       << " localPos:" << rri.localPos
+       << " readSize:" << rri.readSize
+       << " isLocalFwd:" << rri.isLocalFwd
+       << " isFound:" << rri.isFound
+       << " isUsed:" << rri.isUsed;
+    return os;
+}
+
+
 
 /// retrieve remote reads from a list of target loci in the bam
 static
@@ -172,12 +195,19 @@ recoverRemoteReads(
     typedef std::pair<GenomeInterval, std::vector<RemoteReadInfo> > BamRegionInfo_t;
     std::vector<BamRegionInfo_t> bamRegions;
 
+#ifdef DEBUG_REMOTES
+    log_os << __FUNCTION__ << ": totalRemotes: " << bamRemotes.size() << "\n";
+#endif
+
     int last_tid=-1;
     int last_pos=-1;
     BOOST_FOREACH(const RemoteReadInfo& remote, bamRemotes)
     {
+        assert(remote.tid >= 0);
+
         if ((last_tid == remote.tid) && (last_pos+remote.readSize >= remote.pos))
         {
+            assert(! bamRegions.empty());
             GenomeInterval& interval(bamRegions.back().first);
             interval.range.set_end_pos(remote.pos);
 
@@ -366,7 +396,7 @@ getBreakendReads(
 
     bool isMaxDepthRemoteReadsTriggered(false);
 #ifdef FWDREV_CHECK
-    /// sanity check that remote and shadow reads suggeset an insertion pattern before doing an expensive remote recovery:
+    /// sanity check that remote and shadow reads suggest an insertion pattern before doing an expensive remote recovery:
     std::vector<int> fwdSemiReadPos;
     std::vector<int> revSemiReadPos;
 #endif
@@ -394,7 +424,6 @@ getBreakendReads(
         unsigned semiAlignedCount(0);
         unsigned shadowCount(0);
 #endif
-
 
         while (bamStream.next())
         {

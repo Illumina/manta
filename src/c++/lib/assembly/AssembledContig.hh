@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "blt_util/known_pos_range2.hh"
+
 #include <iosfwd>
 #include <string>
 #include <vector>
@@ -41,6 +43,8 @@ struct AssembledContig
 
     std::set<unsigned> supportReads;
     std::set<unsigned> rejectReads;
+
+    known_pos_range2 conservativeRange; ///< subsection of the contig with conservative coverage
 };
 
 

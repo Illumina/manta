@@ -18,6 +18,7 @@
 #pragma once
 
 #include "blt_util/pos_range.hh"
+#include "blt_util/known_pos_range2.hh"
 
 #include <iosfwd>
 #include <stdint.h>
@@ -274,6 +275,28 @@ void
 apath_limit_ref_length(
     const unsigned target_ref_length,
     path_t& apath);
+
+/// trim the start and end off of the alignment so that the read span
+/// is no greater than target_read_length. The edited path could contain
+/// edge insertions
+///
+void
+apath_limit_read_length(
+    const unsigned target_read_start,
+    const unsigned target_read_end,
+    path_t& apath);
+
+inline
+void
+apath_limit_read_length(
+    const known_pos_range2& target_read_range,
+    path_t& apath)
+{
+    apath_limit_read_length(
+        static_cast<unsigned>(std::max(target_read_range.begin_pos(),0)),
+        static_cast<unsigned>(std::max(target_read_range.end_pos(),0)),
+        apath);
+}
 
 /// remove any edge clip from apath and return the amount
 /// removed from each side. if ambiguous, lead is favored over trail

@@ -21,6 +21,7 @@
 
 #include "boost/foreach.hpp"
 #include "boost/unordered_map.hpp"
+#include "boost/unordered_set.hpp"
 
 #include <cassert>
 
@@ -37,12 +38,18 @@
 #include <iostream>
 
 static
-void print_readSet(const std::set<unsigned>& readSet)
+void
+print_readSet(
+    const std::set<unsigned>& readSet)
 {
+    bool isFirst(true);
+
     log_os << "[";
     BOOST_FOREACH(const unsigned rd, readSet)
     {
-        log_os << rd << ",";
+        if (! isFirst) log_os << ",";
+        log_os << rd ;
+        isFirst=false;
     }
     log_os << "]\n";
 }
@@ -54,6 +61,7 @@ typedef boost::unordered_map<std::string,unsigned> str_uint_map_t;
 // maps kmers to support reads
 typedef boost::unordered_map<std::string,std::set<unsigned> > str_set_uint_map_t;
 
+typedef boost::unordered_set<std::string> str_set_t;
 
 
 /**
@@ -156,7 +164,7 @@ walk(const SmallAssemblerOptions& opt,
      const unsigned wordLength,
      const str_uint_map_t& wordCount,
      const str_set_uint_map_t& wordReads,
-     std::set<std::string>& seenBefore,
+     std::set<std::string>& seenEdgeBefore,
      AssembledContig& contig)
 {
     const str_uint_map_t::const_iterator wordCountEnd(wordCount.end());
@@ -168,12 +176,16 @@ walk(const SmallAssemblerOptions& opt,
     contig.supportReads = wordReadsIter->second;
     contig.seq = seed;
 
-    seenBefore.clear();
-    seenBefore.insert(seed);
+    seenEdgeBefore.clear();
+    seenEdgeBefore.insert(seed);
+
+    str_set_t seenVertexBefore;
 
     // 0 => walk to the right, 1 => walk to the left
     for (unsigned mode(0); mode<2; ++mode)
     {
+        unsigned conservativeEndOffset(0);
+
         const bool isEnd(mode==0);
 
         while (true)
@@ -189,7 +201,7 @@ walk(const SmallAssemblerOptions& opt,
             print_readSet(contig.supportReads);
 #endif
 
-            if (seenBefore.count(tmp))
+            if (seenVertexBefore.count(tmp))
             {
 #ifdef DEBUG_ASBL
                 log_os << "Seen word " << tmp << " before on this walk, terminating" << "\n";
@@ -197,7 +209,7 @@ walk(const SmallAssemblerOptions& opt,
                 break;
             }
 
-            seenBefore.insert(tmp);
+            seenVertexBefore.insert(tmp);
 
             unsigned maxBaseCount(0);
             unsigned maxSharedReadCount(0);
@@ -260,6 +272,7 @@ walk(const SmallAssemblerOptions& opt,
                     rejectReads2Add.insert(currWordReads.begin(), currWordReads.end());
                 }
             }
+
 #ifdef DEBUG_ASBL
             log_os << "Winner is : " << maxBase << " with " << maxBaseCount << " occurrences." << "\n";
 #endif
@@ -276,11 +289,21 @@ walk(const SmallAssemblerOptions& opt,
             /// double check that word exists in reads at least once:
             if (maxBaseCount == 0) break;
 
+            {
+                const std::string newEdge(addBase(tmp, maxBase, isEnd));
+                seenEdgeBefore.insert(newEdge);
+            }
 
 #ifdef DEBUG_ASBL
             log_os << "Adding base " << contig.seq << " " << maxBase << " " << mode << "\n";
 #endif
             contig.seq = addBase(contig.seq, maxBase, isEnd);
+
+            if ((conservativeEndOffset != 0) || (maxBaseCount < opt.minConservativeCoverage))
+            {
+                conservativeEndOffset += 1;
+            }
+
 #ifdef DEBUG_ASBL
             log_os << "New contig : " << contig.seq << "\n";
 #endif
@@ -339,10 +362,22 @@ walk(const SmallAssemblerOptions& opt,
 #endif
             }
         }
+
+        if (mode == 0)
+        {
+            contig.conservativeRange.set_end_pos(conservativeEndOffset);
+        }
+        else
+        {
+            contig.conservativeRange.set_begin_pos(conservativeEndOffset);
+        }
+
 #ifdef DEBUG_ASBL
         log_os << "mode change. Current mode " << mode << "\n";
 #endif
     }
+
+    contig.conservativeRange.set_end_pos(contig.seq.size()-contig.conservativeRange.end_pos());
 }
 
 
@@ -386,7 +421,7 @@ getKmerCounts(
             if (readWordOffset.find(word) != readWordOffset.end())
             {
 #ifdef DEBUG_ASBL
-                log_os << logtag << "word " << word << " repeated in read " << readIndex << "\n";
+                log_os << __FUNCTION__ << ": word " << word << " repeated in read " << readIndex << "\n";
 #endif
                 if (isFindRepeatReads)
                 {
@@ -495,7 +530,7 @@ buildContigs(
     {
         // consider multiple possible most frequent seeding k-mers to find the one associated with the longest contig:
         //
-        std::set<std::string> seenBefore;   // records k-mers already encountered during extension
+        std::set<std::string> seenEdgeBefore;   // records k-mers already encountered during extension
 
         while (! maxWords.empty())
         {
@@ -507,7 +542,7 @@ buildContigs(
             maxWords.erase(maxWords.begin());
 
             AssembledContig newContig;
-            walk(opt, maxWord, wordLength, wordCount, wordSupportReads, seenBefore, newContig);
+            walk(opt, maxWord, wordLength, wordCount, wordSupportReads, seenEdgeBefore, newContig);
 
             if (newContig.seq.size() > contig.seq.size())
             {
@@ -515,7 +550,7 @@ buildContigs(
             }
 
             // subtract seenBefore from maxWords
-            inplaceSetSubtract(seenBefore,maxWords);
+            inplaceSetSubtract(seenEdgeBefore,maxWords);
         }
 
         // done with this now

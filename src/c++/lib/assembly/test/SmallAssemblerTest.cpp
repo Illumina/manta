@@ -55,8 +55,43 @@ BOOST_AUTO_TEST_CASE( test_SmallAssembler1 )
         BOOST_REQUIRE_EQUAL(readInfo[i].contigId,0u);
     }
     BOOST_REQUIRE(! readInfo[4].isUsed);
+}
 
 
+
+BOOST_AUTO_TEST_CASE( test_PoisonRead )
+{
+    // test against observed case where a single bad read could kill the whole assembly
+
+    SmallAssemblerOptions assembleOpt;
+
+    assembleOpt.minWordLength = 6;
+    assembleOpt.maxWordLength = 6;
+    assembleOpt.minCoverage = 2;
+    assembleOpt.minSeedReads = 3;
+
+    AssemblyReadInput reads;
+
+    reads.push_back("ACGTGTATTACC");
+    reads.push_back(  "GTGTATTACCTA");
+    reads.push_back(      "ATTACCTAGTAC");
+    reads.push_back(        "TACCTAGTACTC");
+    reads.push_back("AAAAAAAAAAAAAAAAAAAA");
+
+    AssemblyReadOutput readInfo;
+    Assembly contigs;
+
+    runSmallAssembler(assembleOpt, reads, readInfo, contigs);
+
+    BOOST_REQUIRE_EQUAL(contigs.size(),1u);
+    BOOST_REQUIRE_EQUAL(contigs[0].seq,"GTGTATTACCTAGTAC");
+    for (unsigned i(0); i<4; ++i)
+    {
+        BOOST_REQUIRE(readInfo[i].isUsed);
+        BOOST_REQUIRE_EQUAL(readInfo[i].contigId,0u);
+    }
+    BOOST_REQUIRE(readInfo[4].isUsed);
+    BOOST_REQUIRE_EQUAL(readInfo[4].contigId,0u);
 }
 
 

@@ -88,7 +88,7 @@ addSVNodeRead(
     using namespace illumina::common;
 
     if (scanner.isReadFilteredCore(bamRead)) return;
-    else if (bamRead.is_unmapped() || bamRead.is_mate_unmapped()) return;
+    else if (bamRead.is_unmapped() || (bamRead.is_paired() && bamRead.is_mate_unmapped())) return;
 
     if (bamRead.map_qual() < scanner.getMinTier2MapQ()) return;
 

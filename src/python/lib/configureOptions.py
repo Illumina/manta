@@ -15,7 +15,7 @@ import os,sys
 scriptDir=os.path.abspath(os.path.dirname(__file__))
 scriptName=os.path.basename(__file__)
 
-from configureUtil import EpilogOptionParser, dumpIniSections, getIniSections, OptParseException
+from configureUtil import dumpIniSections, getIniSections, OptParseException
 
 
 
@@ -120,14 +120,25 @@ class ConfigureWorkflowOptions(object) :
         updateIniSections(iniSections,getIniSections(globalConfigPath))
 
         # finally there is the local ini path:
-        localConfigPath=os.path.join(os.path.abspath('.'),configFileName)
-        updateIniSections(iniSections,getIniSections(localConfigPath))
+        #localConfigPath=os.path.join(os.path.abspath('.'),configFileName)
+        #updateIniSections(iniSections,getIniSections(localConfigPath))
 
-        parser=self._getOptionParser(iniSections[primary_section],configFileName, version=version)
+        parser=self._getOptionParser(iniSections[primary_section],configFileName, cmdlineScriptDir, version=version)
         (options,args) = parser.parse_args()
 
+        if options.userConfigPath :
+            if not os.path.isfile(options.userConfigPath) :
+                raise OptParseException("Can't find config file: '%s'" % (options.userConfigPath))
+
+            updateIniSections(iniSections,getIniSections(options.userConfigPath))
+
+            # reparse with updated default values:
+            parser=self._getOptionParser(iniSections[primary_section],configFileName, cmdlineScriptDir, version=version)
+            (options,args) = parser.parse_args()
+
         if options.isAllHelp :
-            parser=self._getOptionParser(iniSections[primary_section],configFileName,True, version=version)
+            # this second call to getOptionParser is only here to provide the extended help option:
+            parser=self._getOptionParser(iniSections[primary_section],configFileName, cmdlineScriptDir, True, version=version)
             parser.print_help()
             sys.exit(2)
 
@@ -144,13 +155,7 @@ class ConfigureWorkflowOptions(object) :
             #
             for k,v in vars(options).iteritems() :
                 if k == "isAllHelp" : continue
-                if k == "isWriteConfig" : continue
                 iniSections[primary_section][k] = v
-
-            # write ini file back out if required:
-            if options.isWriteConfig == True :
-                dumpIniSections(configFileName,iniSections)
-                sys.exit(0)
 
             self.validateOptionExistence(options)
 
@@ -163,8 +168,8 @@ class ConfigureWorkflowOptions(object) :
 
     # private methods:
 
-    def _getOptionParser(self,defaults,configFileName,isAllHelp=False, version=None) :
-        from optparse import OptionGroup, SUPPRESS_HELP
+    def _getOptionParser(self, defaults,configFileName, globalConfigDir,isAllHelp=False, version=None) :
+        from optparse import OptionGroup, OptionParser, SUPPRESS_HELP
 
         description=self.workflowDescription()+"""
 Configuration will produce a workflow run script which
@@ -172,22 +177,26 @@ can execute the workflow on a single node or through
 sge and resume any interrupted execution.
 """
 
-        epilog="""Default parameters are read from global and local '%s'
-files if they exist. The global ini file is searched for in the
-directory containing this configuration script. The local ini files is
-searched for in the current working directory. Any settings in the local
-file update and take precedence over global settings in case of a repeated
-entry. All current default and command-line parameters may be written to the
-local ini file location with the --writeConfig option.
-""" % (configFileName)
+        globalConfigFile=os.path.join(globalConfigDir,configFileName)
 
-        class MyOptionParser(EpilogOptionParser) :
+#        epilog="""Default parameters are read from the global config file '%s'
+#. Any values in the global config file can be overridden by submitting a
+#config file as a configuration argument (see --config flag). Any settings in
+#the config argument file update and take precedence over global config settings
+#in case of a repeated entry.
+#""" % (globalConfigFile)
+
+        # TODO: document why we need this format_description override?
+        class MyOptionParser(OptionParser) :
             def format_description(self, formatter) :
                  return self.description
 
-        parser = MyOptionParser(description=description,epilog=epilog, version=version)
+        parser = MyOptionParser(description=description, version=version)
 
         parser.set_defaults(**defaults)
+
+        parser.add_option("--config", dest="userConfigPath",type="string",
+                          help="provide a configuration file to override defaults in global config file (%s)" % (globalConfigFile))
 
         parser.add_option("--allHelp", action="store_true",dest="isAllHelp",
                           help="show all extended/hidden options")
@@ -223,16 +232,6 @@ local ini file location with the --writeConfig option.
         self.addExtendedGroupOptions(secgroup)
         if not Hack.isAnyHelp: hideGroup(secgroup)
         parser.add_option_group(secgroup)
-
-        def maybeHelp(key,msg) :
-            if isAllHelp : return msg
-            return SUPPRESS_HELP
-
-        configgroup = OptionGroup(parser,"Config options")
-        configgroup.add_option("--writeConfig", action="store_true",dest="isWriteConfig",
-                               help=maybeHelp("writeConfig","Write new default configuration file based on current defaults and agruments. Defaults written to: '%s'" % (configFileName)))
-        if not isAllHelp : hideGroup(configgroup)
-        parser.add_option_group(configgroup)
 
         return parser
 
