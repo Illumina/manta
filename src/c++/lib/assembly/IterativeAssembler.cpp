@@ -411,6 +411,8 @@ walk(const IterativeAssemblerOptions& opt,
 #endif
     }
 
+    contig.conservativeRange.set_end_pos(contig.seq.size()-contig.conservativeRange.end_pos());
+
     return isRepeatFound;
 }
 
