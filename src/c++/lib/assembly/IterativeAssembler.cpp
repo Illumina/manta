@@ -198,6 +198,7 @@ walk(const IterativeAssemblerOptions& opt,
     for (unsigned mode(0); mode<2; ++mode)
     {
         const bool isEnd(mode==0);
+        unsigned conservativeEndOffset(0);
 
         while (true)
         {
@@ -298,6 +299,9 @@ walk(const IterativeAssemblerOptions& opt,
             log_os << "New contig : " << contig.seq << "\n";
 #endif
 
+            if ((conservativeEndOffset != 0) || (maxBaseCount < opt.minConservativeCoverage))
+            	conservativeEndOffset += 1;
+
             // TODO: can add threshold for the count or percentage of shared reads
             {
                 // walk backwards for one step at a branching point
@@ -395,6 +399,12 @@ walk(const IterativeAssemblerOptions& opt,
                 break;
             }
         }
+
+        // set conservative coverage range for the contig
+        if (mode == 0)
+        	contig.conservativeRange.set_end_pos(conservativeEndOffset);
+        else
+        	contig.conservativeRange.set_begin_pos(conservativeEndOffset);
 
 #ifdef DEBUG_ASBL
         log_os << "mode change. Current mode " << mode << "\n";

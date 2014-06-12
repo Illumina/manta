@@ -31,6 +31,7 @@ struct IterativeAssemblerOptions
         minContigLength(15),
         //minCoverage(2),
         minCoverage(1),
+        minConservativeCoverage(2),
         maxError(0.35),
         minUnusedReads(3),
         minSupportReads(2),
@@ -43,6 +44,7 @@ struct IterativeAssemblerOptions
     unsigned wordStepSize;
     unsigned minContigLength; ///< min contig size
     unsigned minCoverage; ///< min. coverage required for contig extension
+    unsigned minConservativeCoverage; ///< coverage required for conservative contig sub-range
     double maxError; ///< max error rates allowed during contig extension
     unsigned minUnusedReads; ///< min. number of unused reads to enable search for more contigs
     unsigned minSupportReads; ///< min. number of reads required to start assembly
