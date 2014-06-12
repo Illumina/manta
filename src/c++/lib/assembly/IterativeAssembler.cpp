@@ -411,6 +411,7 @@ walk(const IterativeAssemblerOptions& opt,
 #endif
     }
 
+    assert(contig.seq.size() > contig.conservativeRange.end_pos());
     contig.conservativeRange.set_end_pos(contig.seq.size()-contig.conservativeRange.end_pos());
 
     return isRepeatFound;

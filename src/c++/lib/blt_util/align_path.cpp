@@ -358,6 +358,16 @@ apath_limit_read_length(
             if (read_length > target_read_end)
             {
                 const unsigned extra(read_length - target_read_end);
+
+                if (ps.length <= extra)
+                {
+                	std::ostringstream oss;
+                	oss << "read length=" << read_length << "\n"
+                		<< "target read end='" << target_read_end << "\n"
+                		<< "extra=" << extra << "\n";
+                	throw blt_exception(oss.str().c_str());
+                }
+
                 assert(ps.length > extra);
                 ps.length -= extra;
             }
