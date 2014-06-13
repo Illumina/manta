@@ -29,7 +29,7 @@
 
 
 // compile with this macro to get verbose output:
-//#define DEBUG_ASBL
+#define DEBUG_ASBL
 
 
 // stream used by DEBUG_ASBL:
@@ -301,6 +301,9 @@ walk(const IterativeAssemblerOptions& opt,
 
             if ((conservativeEndOffset != 0) || (maxBaseCount < opt.minConservativeCoverage))
             	conservativeEndOffset += 1;
+#ifdef DEBUG_ASBL
+            log_os << "conservative end offset : " << conservativeEndOffset << "\n";
+#endif
 
             // TODO: can add threshold for the count or percentage of shared reads
             {
@@ -407,12 +410,18 @@ walk(const IterativeAssemblerOptions& opt,
         	contig.conservativeRange.set_begin_pos(conservativeEndOffset);
 
 #ifdef DEBUG_ASBL
+        log_os << "conservative end offset : " << conservativeEndOffset << "\n";
         log_os << "mode change. Current mode " << mode << "\n";
 #endif
     }
 
-    assert(contig.seq.size() > contig.conservativeRange.end_pos());
     contig.conservativeRange.set_end_pos(contig.seq.size()-contig.conservativeRange.end_pos());
+#ifdef DEBUG_ASBL
+    log_os << "contig size: " << contig.seq.size() << "\n";
+    log_os << "conservative start offset : " << contig.conservativeRange.begin_pos() << "\n";
+    log_os << "conservative end offset : " << contig.conservativeRange.end_pos() << "\n";
+#endif
+    assert(contig.conservativeRange.end_pos()>0);
 
     return isRepeatFound;
 }
