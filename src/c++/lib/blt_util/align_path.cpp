@@ -364,7 +364,8 @@ apath_limit_read_length(
                 	std::ostringstream oss;
                 	oss << "read length=" << read_length << "\n"
                 		<< "target read end='" << target_read_end << "\n"
-                		<< "extra=" << extra << "\n";
+                		<< "extra=" << extra << "\n"
+                		<< "ps.length=" << ps.length << "\n";
                 	throw blt_exception(oss.str().c_str());
                 }
 
