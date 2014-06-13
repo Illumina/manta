@@ -418,8 +418,8 @@ walk(const IterativeAssemblerOptions& opt,
     contig.conservativeRange.set_end_pos(contig.seq.size()-contig.conservativeRange.end_pos());
 #ifdef DEBUG_ASBL
     log_os << "contig size: " << contig.seq.size() << "\n";
-    log_os << "conservative start offset : " << contig.conservativeRange.begin_pos() << "\n";
-    log_os << "conservative end offset : " << contig.conservativeRange.end_pos() << "\n";
+    log_os << "contig conservative start offset : " << contig.conservativeRange.begin_pos() << "\n";
+    log_os << "contig conservative end offset : " << contig.conservativeRange.end_pos() << "\n";
 #endif
     assert(contig.conservativeRange.end_pos()>0);
 
