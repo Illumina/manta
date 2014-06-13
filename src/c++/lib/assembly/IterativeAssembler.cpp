@@ -29,7 +29,7 @@
 
 
 // compile with this macro to get verbose output:
-#define DEBUG_ASBL
+//#define DEBUG_ASBL
 
 
 // stream used by DEBUG_ASBL:
@@ -189,6 +189,8 @@ walk(const IterativeAssemblerOptions& opt,
 #ifdef DEBUG_ASBL
         log_os << "The seed is a repeat word " << seed << ". Stop walk.\n";
 #endif
+        contig.conservativeRange.set_begin_pos(0);
+        contig.conservativeRange.set_end_pos(wordLength);
         return true;
     }
 
@@ -410,18 +412,11 @@ walk(const IterativeAssemblerOptions& opt,
         	contig.conservativeRange.set_begin_pos(conservativeEndOffset);
 
 #ifdef DEBUG_ASBL
-        log_os << "conservative end offset : " << conservativeEndOffset << "\n";
         log_os << "mode change. Current mode " << mode << "\n";
 #endif
     }
 
     contig.conservativeRange.set_end_pos(contig.seq.size()-contig.conservativeRange.end_pos());
-#ifdef DEBUG_ASBL
-    log_os << "contig size: " << contig.seq.size() << "\n";
-    log_os << "contig conservative start offset : " << contig.conservativeRange.begin_pos() << "\n";
-    log_os << "contig conservative end offset : " << contig.conservativeRange.end_pos() << "\n";
-#endif
-    assert(contig.conservativeRange.end_pos()>0);
 
     return isRepeatFound;
 }
