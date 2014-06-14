@@ -75,10 +75,10 @@ Note that during the configuration step, Manta will build the following
 compilation dependencies if these are not found:
 
 * cmake 2.8.0+
-* boost 1.49.0
+* boost 1.53.0
 
 To optionally avoid this extra step, ensure that (1) cmake is in your PATH and (2)
-BOOST\_ROOT is defined to point to boost 1.49.0 (the boost version is required to
+BOOST\_ROOT is defined to point to boost 1.53.0 (the boost version is required to
 be an exact match). If either of these dependencies are not found, they will be
 built during the configuration step, To accelerate this process it may be
 desirable to parallelize the configure step over multiple cores. To do so

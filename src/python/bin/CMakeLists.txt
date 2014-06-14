@@ -22,7 +22,7 @@ configure_files("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}" "*.i
 include("${MANTA_GLOBALS_CMAKE}") # required for *_PERMISSIONS values
 
 install_fileglob("${CMAKE_CURRENT_BINARY_DIR}" "${INSTALL_TO_DIR}" "*.py"
-                 "${MANTA_EXECUTABLE_PERMISSIONS}")
+                 "${THIS_EXECUTABLE_PERMISSIONS}")
 install_fileglob("${CMAKE_CURRENT_BINARY_DIR}" "${INSTALL_TO_DIR}" "*.ini"
-                 "${MANTA_LIBRARY_PERMISSIONS}")
+                 "${THIS_LIBRARY_PERMISSIONS}")
 

@@ -10,7 +10,7 @@
 set -o nounset
 
 
-boost_name=boost_1_49_0
+boost_name=boost_1_53_0
 subset_name=${boost_name}_subset
 
 

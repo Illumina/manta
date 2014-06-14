@@ -40,7 +40,7 @@ include ("${MANTA_MACROS_CMAKE}")
 # Support for static linking
 # Note that this implies that all libraries must be found with the
 # exact file name (libXXX.a or libXXX.so)
-#if    (MANTA_FORCE_STATIC_LINK)
+#if    (THIS_FORCE_STATIC_LINK)
 #    message(STATUS "All libraries will be statically linked")
 #    set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "-static")
 #    set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "-static")
@@ -64,7 +64,7 @@ else  ()
     message(FATAL_ERROR "No support for gzip compression")
 endif ()
 
-static_find_boost(${MANTA_BOOST_VERSION} "${MANTA_BOOST_COMPONENTS}")
+static_find_boost(${THIS_BOOST_VERSION} "${THIS_BOOST_COMPONENTS}")
 
 # Force static linking
 set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
@@ -76,7 +76,8 @@ endmacro()
 
 # clang doesn't make finding the version easy for us...
 macro(get_clang_version compiler_version)
-    execute_process(COMMAND bash -c "${CMAKE_CXX_COMPILER} -v 2>&1 | awk '{printf $3; exit}'" OUTPUT_VARIABLE ${compiler_version})
+#    execute_process(COMMAND bash -c "${CMAKE_CXX_COMPILER} -v 2>&1 | awk '{printf $3; exit}'" OUTPUT_VARIABLE ${compiler_version})
+    execute_process(COMMAND bash -c "echo | ${CMAKE_CXX_COMPILER} -dM -E - | awk '/__clang_version__/ {printf $3; exit}' | tr -d '\"'" OUTPUT_VARIABLE ${compiler_version})
 endmacro()
 
 macro(test_min_compiler compiler_version min_compiler_version compiler_label)

@@ -35,7 +35,7 @@ macro (resetFindBoost)
 
     unset (ENV{BOOST_LIBRARYDIR})
 
-    foreach (COMPONENT ${MANTA_BOOST_COMPONENTS})
+    foreach (COMPONENT ${THIS_BOOST_COMPONENTS})
         STRING(TOUPPER ${COMPONENT} UPPERCOMPONENT)
         unsetall (Boost_${UPPERCOMPONENT}_FOUND)
         unsetall (Boost_${UPPERCOMPONENT}_LIBRARY)
@@ -64,20 +64,35 @@ macro(static_find_boost boost_version boost_components)
 #        message(FATAL_ERROR "pthread library is required to build")
 #    endif ()
 
-    find_package(Boost ${boost_version} REQUIRED ${boost_components})
+    if (NOT Boost_FOUND)
+        find_package(Boost ${boost_version} REQUIRED ${boost_components})
+    endif()
 
-    foreach(COMPONENT ${MANTA_BOOST_COMPONENTS})
+    foreach(COMPONENT ${THIS_BOOST_COMPONENTS})
         STRING(TOUPPER ${COMPONENT} UPPERCOMPONENT)
         set(HAVE_LIBBOOST_${UPPERCOMPONENT} ${Boost_${UPPERCOMPONENT}_FOUND})
     endforeach()
 endmacro()
 
 
-if (MANTA_FORCE_STATIC_LINK)
+if (THIS_FORCE_STATIC_LINK)
     set(Boost_USE_STATIC_LIBS ON)
 endif ()
 
-find_package(Boost ${MANTA_BOOST_VERSION} COMPONENTS ${MANTA_BOOST_COMPONENTS})
+find_package(Boost ${THIS_BOOST_VERSION} COMPONENTS ${THIS_BOOST_COMPONENTS})
+
+set(BOOST_BOOTSTRAP_INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/bootstrap/boost)
+if (NOT Boost_FOUND)
+    # try again to see if we've already bootstrapped boost for this installation:
+    resetFindBoost()
+    set (ENV{BOOST_ROOT} "${BOOST_BOOTSTRAP_INSTALL_DIR}")
+    message(STATUS "Boost not found in system installation, looking for existing boostrap installation in: ${BOOST_BOOTSTRAP_INSTALL_DIR}")
+    find_package(Boost ${THIS_BOOST_VERSION} COMPONENTS ${THIS_BOOST_COMPONENTS})
+
+    if (Boost_FOUND)
+        set (BOOST_ROOT "${BOOST_BOOTSTRAP_INSTALL_DIR}")
+    endif()
+endif()
 
 
 # CMAKE_PARALLEL is only used if boost is found, but moving the setting here (outside of the if below) supresses a cmake warning:
@@ -90,7 +105,7 @@ endif ()
 #
 if (NOT Boost_FOUND)
 
-    foreach(COMPONENT ${MANTA_BOOST_COMPONENTS})
+    foreach(COMPONENT ${THIS_BOOST_COMPONENTS})
         STRING(TOUPPER ${COMPONENT} UPPERCOMPONENT)
         if (${Boost_${UPPERCOMPONENT}_FOUND})
             set(FOUND_STATUS "found")
@@ -101,18 +116,17 @@ if (NOT Boost_FOUND)
     endforeach()
 
     if (BOOST_ROOT)
-        message (STATUS "BOOST_ROOT is set to ${BOOST_ROOT} but boost ${MANTA_BOOST_VERSION} or one of its components was not found.")
-        message (FATAL_ERROR "Unset BOOST_ROOT or set it to the root location of boost ${MANTA_BOOST_VERSION}.")
+        message (STATUS "BOOST_ROOT is set to ${BOOST_ROOT} but boost ${THIS_BOOST_VERSION} or one of its components was not found.")
+        message (FATAL_ERROR "Unset BOOST_ROOT or set it to the root location of boost ${THIS_BOOST_VERSION}.")
     endif()
 
     # Try to find it in target installation location
     resetFindBoost()
-    message(STATUS "Boost ${MANTA_BOOST_VERSION} not found. Boost will be built from the distribution...")
+    message(STATUS "Boost ${THIS_BOOST_VERSION} not found. Boost will be built from the distribution...")
 
-    set(ENV{MANTA_BOOST_BUILD_COMPONENTS} "${MANTA_BOOST_BUILD_COMPONENTS}")
-    set(ENV{MANTA_BOOST_VERSION} "${MANTA_BOOST_VERSION}")
+    set(ENV{THIS_BOOST_BUILD_COMPONENTS} "${THIS_BOOST_BUILD_COMPONENTS}")
+    set(ENV{THIS_BOOST_VERSION} "${THIS_BOOST_VERSION}")
 
-    set(BOOST_BOOTSTRAP_INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/bootstrap/boost)
     set(BOOST_BUILD_COMMAND bash "${MANTA_BOOTSTRAP_DIR}/installBoost.bash" "${MANTA_REDIST_DIR}" "${BOOST_BOOTSTRAP_INSTALL_DIR}" "${CMAKE_PARALLEL}")
 
     string(REPLACE ";" " " PRETTY_BOOST_BUILD_COMMAND "${BOOST_BUILD_COMMAND}")
@@ -120,9 +134,9 @@ if (NOT Boost_FOUND)
     execute_process(COMMAND ${BOOST_BUILD_COMMAND} RESULT_VARIABLE TMP_RESULT)
 
     if (TMP_RESULT)
-        message (FATAL_ERROR "Failed to build boost ${MANTA_BOOST_VERSION}")
+        message (FATAL_ERROR "Failed to build boost ${THIS_BOOST_VERSION}")
     else ()
-        message(STATUS "Successfuly built boost ${MANTA_BOOST_VERSION} from the distribution package...")
+        message(STATUS "Successfuly built boost ${THIS_BOOST_VERSION} from the distribution package...")
     endif ()
 
     set (BOOST_ROOT "${BOOST_BOOTSTRAP_INSTALL_DIR}")

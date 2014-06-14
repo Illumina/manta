@@ -47,8 +47,8 @@ endif()
 set(MANTA_BOOTSTRAP_DIR "${CMAKE_SOURCE_DIR}/cmake/bootstrap")
 set(MANTA_SOURCE_QC_DIR "${CMAKE_SOURCE_DIR}/srcqc")
 
-execute_process(COMMAND bash ${MANTA_BOOTSTRAP_DIR}/getVersion.bash OUTPUT_VARIABLE MANTA_GIT_VERSION)
-set(MANTA_VERSION "${MANTA_GIT_VERSION}")
+execute_process(COMMAND bash ${MANTA_BOOTSTRAP_DIR}/getVersion.bash OUTPUT_VARIABLE THIS_GIT_VERSION)
+set(MANTA_VERSION "${THIS_GIT_VERSION}")
 set(MANTA_FULL_VERSION "${MANTA_PROJECT_NAME}-${MANTA_VERSION}")
 message (STATUS "MANTA_VERSION: ${MANTA_VERSION}")
 
@@ -105,10 +105,10 @@ endfunction()
 check_prefix()
 
 # paths for binary components -- we don't currently change this from the non-binary components
-set(MANTA_EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
-set(MANTA_BINDIR "${MANTA_EXEC_PREFIX}/bin")
-set(MANTA_LIBDIR "${MANTA_EXEC_PREFIX}/lib")
-set(MANTA_LIBEXECDIR "${MANTA_EXEC_PREFIX}/libexec")
+set(THIS_EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
+set(MANTA_BINDIR "${THIS_EXEC_PREFIX}/bin")
+set(MANTA_LIBDIR "${THIS_EXEC_PREFIX}/lib")
+set(MANTA_LIBEXECDIR "${THIS_EXEC_PREFIX}/libexec")
 
 # paths w/o architecture dependency
 set(MANTA_PYTHON_LIBDIR "${CMAKE_INSTALL_PREFIX}/lib/python")
@@ -122,13 +122,13 @@ add_custom_target(MANTA_OPT ALL)
 set(MANTA_REDIST_DIR "${CMAKE_SOURCE_DIR}/../redist")
 
 # required boost libraries
-set (MANTA_BOOST_VERSION 1.49.0)
-set (MANTA_BOOST_COMPONENTS date_time filesystem program_options
+set (THIS_BOOST_VERSION 1.53.0)
+set (THIS_BOOST_COMPONENTS date_time filesystem program_options
                             regex serialization system unit_test_framework)
 
 # the name given to boost.build and the library name are the same for all libraries, except
 # for test, so we need two lists now:
-set (MANTA_BOOST_BUILD_COMPONENTS date_time filesystem program_options
+set (THIS_BOOST_BUILD_COMPONENTS date_time filesystem program_options
                                  regex serialization system test)
 set (Boost_USE_MULTITHREADED OFF)
 set (Boost_USE_STATIC_LIBS ON)
