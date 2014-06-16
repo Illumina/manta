@@ -157,6 +157,8 @@ struct RemoteReadInfo
 };
 
 
+#ifdef DEBUG_REMOTES
+static
 std::ostream&
 operator<<(
     std::ostream& os,
@@ -173,6 +175,7 @@ operator<<(
        << " isUsed:" << rri.isUsed;
     return os;
 }
+#endif
 
 
 
