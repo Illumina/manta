@@ -166,7 +166,7 @@ runGSC(
                 truthTracker.addCandSV();
             }
 
-            findMultiJunctionCandidates(svs, mjSVs);
+            findMultiJunctionCandidates(svs, opt.minCandidateSpanningCount, mjSVs);
 
             bool isFindLargeInsertions(isIsolatedEdge);
             if (isFindLargeInsertions)

@@ -85,7 +85,9 @@ BOOST_AUTO_TEST_CASE( test_SVLocusCombine )
     SVLocus locus3;
     locusAddPair(locus3,5,10,20,6,30,40);
 
-    SVLocusSet set1(1);
+    SVLocusSetOptions sopt;
+    sopt.minMergeEdgeObservations = 1;
+    SVLocusSet set1(sopt);
     set1.merge(locus1);
     set1.merge(locus2);
     set1.merge(locus3);

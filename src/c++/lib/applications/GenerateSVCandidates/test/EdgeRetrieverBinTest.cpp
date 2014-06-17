@@ -36,7 +36,9 @@ BOOST_AUTO_TEST_CASE( test_EdgeRetrieverOneBin )
     SVLocus locus2;
     locusAddPair(locus2,3,10,20,4,30,40);
 
-    SVLocusSet set1(1);
+    SVLocusSetOptions sopt;
+    sopt.minMergeEdgeObservations = 1;
+    SVLocusSet set1(sopt);
     set1.merge(locus1);
     set1.merge(locus2);
     set1.checkState(true,true);
@@ -75,7 +77,9 @@ BOOST_AUTO_TEST_CASE( test_EdgeRetrieverManyBin )
     SVLocus locus4;
     locusAddPair(locus4,7,10,20,8,30,40);
 
-    SVLocusSet set1(1);
+    SVLocusSetOptions sopt;
+    sopt.minMergeEdgeObservations = 1;
+    SVLocusSet set1(sopt);
     set1.merge(locus1);
     set1.merge(locus4);
     set1.checkState(true,true);
@@ -137,7 +141,9 @@ BOOST_AUTO_TEST_CASE( test_EdgeRetrieverManyBin2 )
     SVLocus locus6;
     locusAddPair(locus6,11,10,20,12,30,40);
 
-    SVLocusSet set1(1);
+    SVLocusSetOptions sopt;
+    sopt.minMergeEdgeObservations = 1;
+    SVLocusSet set1(sopt);
     set1.merge(locus1);
     set1.merge(locus2);
     set1.merge(locus3);
@@ -187,7 +193,9 @@ BOOST_AUTO_TEST_CASE( test_EdgeRetrieverOddBin )
     SVLocus locus7;
     locusAddPair(locus7,13,10,20,14,30,40);
 
-    SVLocusSet set1(1);
+    SVLocusSetOptions sopt;
+    sopt.minMergeEdgeObservations = 1;
+    SVLocusSet set1(sopt);
     set1.merge(locus1);
     set1.merge(locus2);
     set1.merge(locus3);
@@ -235,7 +243,9 @@ BOOST_AUTO_TEST_CASE( test_EdgeRetrieverOddBinSelfEdge )
     locus3.mergeSelfOverlap();
     locus5.mergeSelfOverlap();
 
-    SVLocusSet set1(1);
+    SVLocusSetOptions sopt;
+    sopt.minMergeEdgeObservations = 1;
+    SVLocusSet set1(sopt);
     set1.merge(locus1);
     set1.merge(locus2);
     set1.merge(locus3);

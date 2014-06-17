@@ -17,14 +17,17 @@
 
 #pragma once
 
-#include "manta/SVCandidate.hh"
-#include "manta/SVMultiJunctionCandidate.hh"
+#include "options/SVLocusSetOptions.hh"
 
-#include <vector>
+#include "boost/program_options.hpp"
 
 
-void
-findMultiJunctionCandidates(
-    const std::vector<SVCandidate>& svs,
-    const unsigned minCandidateSpanningCount,
-    std::vector<SVMultiJunctionCandidate>& mjSVs);
+boost::program_options::options_description
+getOptionsDescription(SVLocusSetOptions& opt);
+
+
+bool
+parseOptions(
+    const boost::program_options::variables_map& vm,
+    SVLocusSetOptions& opt,
+    std::string& errorMsg);

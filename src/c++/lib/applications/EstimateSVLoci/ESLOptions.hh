@@ -26,8 +26,8 @@
 
 struct ESLOptions
 {
-    ESLOptions(const unsigned minMergeEdgeObservations = 3) :
-        graphOpt(minMergeEdgeObservations * SVObservationWeights::observation)  // initialize noise edge filtration parameters
+    ESLOptions() :
+        graphOpt(SVObservationWeights::observation)  // initialize noise edge filtration parameters
     {}
 
     AlignmentFileOptions alignFileOpt;

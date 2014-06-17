@@ -22,24 +22,32 @@
 ///
 struct SVLocusSetOptions
 {
+    explicit
     SVLocusSetOptions(
-        const unsigned initMinMergeEdgeCount = 2,
-        const unsigned initMaxSearchCount = 500,
-        const float initMaxSearchDensity = 0.5) :
-        minMergeEdgeCount(initMinMergeEdgeCount),
-        maxSearchCount(initMaxSearchCount),
-        maxSearchDensity(initMaxSearchDensity)
+        const unsigned initObservationWeight = 1) :
+        observationWeight(initObservationWeight),
+        minMergeEdgeObservations(3),
+        maxSearchCount(500),
+        maxSearchDensity(0.5)
     {}
+
+    unsigned
+    getMinMergeEdgeCount() const
+    {
+        return (observationWeight*minMergeEdgeObservations);
+    }
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {
-        ar& minMergeEdgeCount;
+        ar& observationWeight;
+        ar& minMergeEdgeObservations;
         ar& maxSearchCount;
         ar& maxSearchDensity;
     }
 
-    unsigned minMergeEdgeCount; ///< to reduce noise in the graph, we only merge once shared edges reach this count
+    unsigned observationWeight; ///< used to translate graph edges counts to observations
+    unsigned minMergeEdgeObservations; ///< to reduce noise in the graph, we only merge once shared edges reach this number of observations
     unsigned maxSearchCount; ///< the search for intersecting regions in the graph stops once this number is reached
     float maxSearchDensity; ///< the search for intersecting regions in the graph stops once this many regions/base are found
 };

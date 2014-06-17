@@ -43,7 +43,7 @@ isFilterSingleJunctionCandidate(
     // candidates must have a minimum amount of evidence:
     if (isSpanningSV(sv))
     {
-        // pass
+        // pass -- this is checked later in the pipeline...
     }
     else if (isComplexSV(sv))
     {
@@ -66,11 +66,10 @@ isFilterSingleJunctionCandidate(
 static
 bool
 isFilterMultiJunctionCandidate(
+    const unsigned minCandidateSpanningCount,
     const SVMultiJunctionCandidate& mjSV)
 {
     // candidates must have a minimum amount of evidence:
-    static const unsigned minCandidateSpanningCount(3);
-
     bool isAnySpanPass(false);
     BOOST_FOREACH(const SVCandidate& sv, mjSV.junction)
     {
@@ -292,6 +291,7 @@ resetPartners(
 void
 findMultiJunctionCandidates(
     const std::vector<SVCandidate>& svs,
+    const unsigned minCandidateSpanningCount,
     std::vector<SVMultiJunctionCandidate>& mjSVs)
 {
     mjSVs.clear();
@@ -413,7 +413,7 @@ findMultiJunctionCandidates(
             mj.junction.push_back(spanningSVs[partnerId]);
         }
 
-        if (isFilterMultiJunctionCandidate(mj)) continue;
+        if (isFilterMultiJunctionCandidate(minCandidateSpanningCount, mj)) continue;
 
         mjSVs.push_back(mj);
     }

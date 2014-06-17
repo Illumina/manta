@@ -103,6 +103,8 @@ parseGSCOptions(
      "Turn off all breakend and small-variant assembly. Only large, imprecise variants will be reported based on anomalous read pairs.")
     ("rna", po::value(&opt.isRNA)->zero_tokens(),
      "For RNA input. Skip small deletions and modify diploid scoring.")
+    ("min-candidate-spanning-count", po::value(&opt.minCandidateSpanningCount)->default_value(opt.minCandidateSpanningCount),
+      "minimum number of supporting spanning observations required to become an SV candidate")
     ("min-scored-sv-size", po::value(&opt.minScoredVariantSize)->default_value(opt.minScoredVariantSize),
      "minimum size for variants which are scored and output following initial candidate generation")
     ;

@@ -36,6 +36,7 @@ struct GSCOptions
         isVerbose(false),
         isSkipAssembly(false),
         isRNA(false),
+        minCandidateSpanningCount(3),
         minScoredVariantSize(51)
     {}
 
@@ -63,6 +64,8 @@ struct GSCOptions
     bool isSkipAssembly; ///< if true, skip assembly and run a low-resolution, breakdancer-like subset of the workflow
 
     bool isRNA; ///< if true, RNA specific filtering on candidates and diploid scoring is used
+
+    unsigned minCandidateSpanningCount; ///< how many spanning evidence observations are required to become a candidate?
 
     unsigned minScoredVariantSize; ///< min size for scoring and scored output following candidate generation
 };

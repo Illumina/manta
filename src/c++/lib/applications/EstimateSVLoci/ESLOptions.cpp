@@ -20,6 +20,7 @@
 #include "blt_util/log.hh"
 #include "options/AlignmentFileOptionsParser.hh"
 #include "options/ReadScannerOptionsParser.hh"
+#include "options/SVLocusSetOptionsParser.hh"
 #include "options/optionsUtil.hh"
 
 #include "boost/foreach.hpp"
@@ -93,13 +94,14 @@ parseESLOptions(
 
     po::options_description alignDesc(getOptionsDescription(opt.alignFileOpt));
     po::options_description scanDesc(getOptionsDescription(opt.scanOpt));
+    po::options_description graphDesc(getOptionsDescription(opt.graphOpt));
 
     po::options_description help("help");
     help.add_options()
     ("help,h","print this message");
 
     po::options_description visible("options");
-    visible.add(alignDesc).add(scanDesc).add(req).add(help);
+    visible.add(alignDesc).add(scanDesc).add(graphDesc).add(req).add(help);
 
     bool po_parse_fail(false);
     po::variables_map vm;
