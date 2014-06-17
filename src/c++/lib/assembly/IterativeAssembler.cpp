@@ -181,29 +181,28 @@ walk(const IterativeAssemblerOptions& opt,
     assert(wordReadsIter != wordReadsEnd);
     contig.supportReads = wordReadsIter->second;
     contig.seq = seed;
-    // walk backwards for one step looking for rejecting reads
-    // in case the seed is at a branching point
+    // collecting rejecting reads for the seed from the unselected branches
     BOOST_FOREACH(const char symbol, opt.alphabet)
     {
     	// the seed itself
-    	if (symbol == seed[0]) continue;
+    	if (symbol == seed[wordLength-1]) continue;
 
     	// add rejecting reads from an unselected word/branch
-    	const std::string tmpBack = getEnd(seed, wordLength-1, true);
-    	const std::string newKey(addBase(tmpBack, symbol, false));
+    	const std::string tmpBack = getEnd(seed, wordLength-1, false);
+    	const std::string newKey(addBase(tmpBack, symbol, true));
 #ifdef DEBUG_ASBL
         log_os << "Extending end backwords: base " << symbol << " " << newKey << "\n";
 #endif
 
     	wordReadsIter= wordReads.find(newKey);
     	if (wordReadsIter == wordReadsEnd) continue;
-    	const std::set<unsigned>& backWordReads(wordReadsIter->second);
+    	const std::set<unsigned>& unselectedReads(wordReadsIter->second);
 #ifdef DEBUG_ASBL
         log_os << "Supporting reads for the backwards word : ";
-        print_unsignSet(backWordReads);
+        print_unsignSet(unselectedReads);
 #endif
 
-    	contig.rejectReads.insert(backWordReads.begin(), backWordReads.end());
+    	contig.rejectReads.insert(unselectedReads.begin(), unselectedReads.end());
 #ifdef DEBUG_ASBL
         log_os << "seed's rejecting reads : ";
         print_unsignSet(contig.rejectReads);
@@ -232,11 +231,12 @@ walk(const IterativeAssemblerOptions& opt,
 
         while (true)
         {
-            const std::string tmp(getEnd(contig.seq, wordLength-1, isEnd));
+        	const std::string previousWord = getEnd(contig.seq, wordLength, isEnd);
+        	const std::string trunk(getEnd(contig.seq, wordLength-1, isEnd));
 
 #ifdef DEBUG_ASBL
             log_os << "# current contig : " << contig.seq << " size : " << contig.seq.size() << "\n"
-                   << " getEnd : " << tmp << "\n";
+                   << " getEnd : " << trunk << "\n";
             log_os << "contig rejecting reads : ";
             print_unsignSet(contig.rejectReads);
             log_os << "contig supporting reads : ";
@@ -255,7 +255,7 @@ walk(const IterativeAssemblerOptions& opt,
 
             BOOST_FOREACH(const char symbol, opt.alphabet)
             {
-                const std::string newKey(addBase(tmp, symbol, isEnd));
+                const std::string newKey(addBase(trunk, symbol, isEnd));
 #ifdef DEBUG_ASBL
                 log_os << "Extending end : base " << symbol << " " << newKey << "\n";
 #endif
@@ -340,15 +340,14 @@ walk(const IterativeAssemblerOptions& opt,
                 // walk backwards for one step at a branching point
                 if (maxWordReads != previousWordReads)
                 {
-                    const std::string tmpBack(getEnd(maxWord, wordLength-1, isEnd));
-                    const char tmpSymbol = (isEnd? maxWord[0] : maxWord[wordLength-1]);
+                    const char tmpSymbol = (isEnd? previousWord[0] : previousWord[wordLength-1]);
                     BOOST_FOREACH(const char symbol, opt.alphabet)
                     {
                         // the selected branch
                         if (symbol == tmpSymbol) continue;
 
                         // add rejecting reads from an unselected branch
-                        const std::string newKey(addBase(tmpBack, symbol, !isEnd));
+                        const std::string newKey(addBase(trunk, symbol, !isEnd));
 #ifdef DEBUG_ASBL
                         log_os << "Extending end backwords: base " << symbol << " " << newKey << "\n";
 #endif
