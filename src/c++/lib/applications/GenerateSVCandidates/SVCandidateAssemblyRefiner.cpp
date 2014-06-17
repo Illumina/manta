@@ -30,8 +30,8 @@
 
 #include <iostream>
 
-#define DEBUG_REFINER
-#define DEBUG_CONTIG
+//#define DEBUG_REFINER
+//#define DEBUG_CONTIG
 
 #ifdef DEBUG_REFINER
 #include "blt_util/seq_printer.hh"
