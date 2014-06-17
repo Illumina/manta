@@ -181,6 +181,23 @@ walk(const IterativeAssemblerOptions& opt,
     assert(wordReadsIter != wordReadsEnd);
     contig.supportReads = wordReadsIter->second;
     contig.seq = seed;
+    // walk backwards for one step looking for rejecting reads
+    // in case the seed is at a branching point
+    BOOST_FOREACH(const char symbol, opt.alphabet)
+    {
+    	// the seed itself
+    	if (symbol == seed[0]) continue;
+
+    	// add rejecting reads from an unselected word/branch
+    	const std::string tmpBack = getEnd(seed, wordLength-1, true);
+    	const std::string newKey(addBase(tmpBack, symbol, false));
+
+    	wordReadsIter= wordReads.find(newKey);
+    	if (wordReadsIter == wordReadsEnd) continue;
+
+    	const std::set<unsigned>& backWordReads(wordReadsIter->second);
+    	contig.rejectReads.insert(backWordReads.begin(), backWordReads.end());
+    }
 
     unusedWords.erase(seed);
 

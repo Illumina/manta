@@ -30,8 +30,8 @@
 
 #include <iostream>
 
-//#define DEBUG_REFINER
-//#define DEBUG_CONTIG
+#define DEBUG_REFINER
+#define DEBUG_CONTIG
 
 #ifdef DEBUG_REFINER
 #include "blt_util/seq_printer.hh"
@@ -1583,10 +1583,10 @@ getSmallSVAssembly(
 
             LargeInsertionInfo insertInfo;
 #ifdef DEBUG_CONTIG
-            log_os << "contig length: " << contig.seq.size() << "\n"
-            	   << "contig seq: " << contig.seq << "\n"
-            	   << "trim contig start offset: " << contig.conservativeRange.begin_pos() << "\n"
-            	   << "trim contig end offset: " << contig.conservativeRange.end_pos() << "\n";
+            log_os << __FUNCTION__ << ": contig length: " << contig.seq.size() << "\n"
+            	   << __FUNCTION__ << ": contig seq: " << contig.seq << "\n"
+            	   << __FUNCTION__ << ": trim contig start offset: " << contig.conservativeRange.begin_pos() << "\n"
+            	   << __FUNCTION__ << ": trim contig end offset: " << contig.conservativeRange.end_pos() << "\n";
 #endif
             ALIGNPATH::path_t apath_conservative(alignment.align.apath);
             apath_limit_read_length(contig.conservativeRange,apath_conservative);
