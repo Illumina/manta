@@ -823,6 +823,17 @@ processReadPair(
         cand.bp1.interval.range.merge_range(cand.bp2.interval.range);
     }
 
+    // hack split read observations to be symmetrically supported, even though we're only
+    // reading in one side:
+    for (SVObservation& readCand : _readCandidates)
+    {
+        using namespace SVEvidenceType;
+        if( readCand.evtype != SPLIT_ALIGN ) continue;
+
+        if (readCand.bp1.lowresEvidence.getVal(SPLIT_ALIGN) == 0) readCand.bp1.lowresEvidence.add(SPLIT_ALIGN);
+        if (readCand.bp2.lowresEvidence.getVal(SPLIT_ALIGN) == 0) readCand.bp2.lowresEvidence.add(SPLIT_ALIGN);
+    }
+
 #ifdef DEBUG_SVDATA
     log_os << __FUNCTION__ << ": Checking pair: " << pair << "\n";
     log_os << __FUNCTION__ << ": Translated to candidates:\n";
