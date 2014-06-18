@@ -18,11 +18,18 @@
 ##
 ################################################################################
 
+# set to TRUE to see more detailed information about the boost find/build procedure:
+set (DEBUG_FINDBOOST FALSE)
+if (${DEBUG_FINDBOOST})
+    set (Boost_DEBUG "ON")
+    set (Boost_DETAILED_FAILURE_MSG "ON")
+endif ()
+
 # simple helper for resetFindBoost
-function(unsetall name)
+macro(unsetall name)
     unset (${name} CACHE)
     unset (${name})
-endfunction()
+endmacro()
 
 
 macro (resetFindBoost)
