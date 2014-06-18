@@ -64,8 +64,6 @@ else  ()
     message(FATAL_ERROR "No support for gzip compression")
 endif ()
 
-static_find_boost(${THIS_BOOST_VERSION} "${THIS_BOOST_COMPONENTS}")
-
 # Force static linking
 set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 

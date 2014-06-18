@@ -25,6 +25,20 @@ if (${DEBUG_FINDBOOST})
     set (Boost_DETAILED_FAILURE_MSG "ON")
 endif ()
 
+macro (initBoostParams)
+    # required boost libraries
+    set (THIS_BOOST_VERSION 1.53.0)
+    set (THIS_BOOST_COMPONENTS date_time filesystem program_options
+                                regex serialization system unit_test_framework)
+
+    # the name given to boost.build and the library name are the same for all libraries, except
+    # for test, so we need two lists now:
+    set (THIS_BOOST_BUILD_COMPONENTS date_time filesystem program_options
+                                     regex serialization system test)
+    set (Boost_USE_MULTITHREADED OFF)
+    set (Boost_USE_STATIC_LIBS ON)
+endmacro()
+
 # simple helper for resetFindBoost
 macro(unsetall name)
     unset (${name} CACHE)
@@ -50,57 +64,22 @@ macro (resetFindBoost)
         unsetall (Boost_${UPPERCOMPONENT}_LIBRARY_DEBUG)
     endforeach ()
 
+    initBoostParams()
 endmacro ()
 
-#
-# finds boost and sets variables so that
-# it is being used for include and linking
-#
-macro(static_find_boost boost_version boost_components)
 
-    # MANTA uses the static boost build... assuming pthread is not required in this case, but keeping check code around in case:
-    #
-    # pthread library required by boost
-#    static_find_library(PTHREAD "pthread.h" pthread)
-#    if    (HAVE_PTHREAD)
-#        set  (MANTA_ADDITIONAL_LIB ${MANTA_ADDITIONAL_LIB} pthread)
-#        message(STATUS "pthread supported")
-#    else  ()
-#        message(STATUS "pthread headers: ${PTHREAD_INCLUDE_DIR}")
-#        message(STATUS "pthread library: ${PTHREAD_LIBRARY}")
-#        message(FATAL_ERROR "pthread library is required to build")
-#    endif ()
-
-    if (NOT Boost_FOUND)
-        find_package(Boost ${boost_version} REQUIRED ${boost_components})
-    endif()
-
-    foreach(COMPONENT ${THIS_BOOST_COMPONENTS})
-        STRING(TOUPPER ${COMPONENT} UPPERCOMPONENT)
-        set(HAVE_LIBBOOST_${UPPERCOMPONENT} ${Boost_${UPPERCOMPONENT}_FOUND})
-    endforeach()
-endmacro()
-
+initBoostParams()
 
 if (THIS_FORCE_STATIC_LINK)
     set(Boost_USE_STATIC_LIBS ON)
 endif ()
 
-find_package(Boost ${THIS_BOOST_VERSION} COMPONENTS ${THIS_BOOST_COMPONENTS})
-
 set(BOOST_BOOTSTRAP_INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/bootstrap/boost)
-if (NOT Boost_FOUND)
-    # try again to see if we've already bootstrapped boost for this installation:
-    resetFindBoost()
-    set (ENV{BOOST_ROOT} "${BOOST_BOOTSTRAP_INSTALL_DIR}")
-    message(STATUS "Boost not found in system installation, looking for existing boostrap installation in: ${BOOST_BOOTSTRAP_INSTALL_DIR}")
-    find_package(Boost ${THIS_BOOST_VERSION} COMPONENTS ${THIS_BOOST_COMPONENTS})
+if (EXISTS "${BOOST_BOOTSTRAP_INSTALL_DIR}/boost_install_complete")
+    set (BOOST_ROOT "${BOOST_BOOTSTRAP_INSTALL_DIR}")
+endif ()
 
-    if (Boost_FOUND)
-        set (BOOST_ROOT "${BOOST_BOOTSTRAP_INSTALL_DIR}")
-    endif()
-endif()
-
+find_package(Boost ${THIS_BOOST_VERSION} COMPONENTS ${THIS_BOOST_COMPONENTS})
 
 # CMAKE_PARALLEL is only used if boost is found, but moving the setting here (outside of the if below) supresses a cmake warning:
 if (NOT CMAKE_PARALLEL)
@@ -147,5 +126,10 @@ if (NOT Boost_FOUND)
     endif ()
 
     set (BOOST_ROOT "${BOOST_BOOTSTRAP_INSTALL_DIR}")
+    find_package(Boost ${THIS_BOOST_VERSION} COMPONENTS ${THIS_BOOST_COMPONENTS})
 endif ()
 
+foreach(COMPONENT ${THIS_BOOST_COMPONENTS})
+    STRING(TOUPPER ${COMPONENT} UPPERCOMPONENT)
+    set(HAVE_LIBBOOST_${UPPERCOMPONENT} ${Boost_${UPPERCOMPONENT}_FOUND})
+endforeach()

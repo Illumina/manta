@@ -121,18 +121,6 @@ add_custom_target(MANTA_OPT ALL)
 
 set(MANTA_REDIST_DIR "${CMAKE_SOURCE_DIR}/../redist")
 
-# required boost libraries
-set (THIS_BOOST_VERSION 1.53.0)
-set (THIS_BOOST_COMPONENTS date_time filesystem program_options
-                            regex serialization system unit_test_framework)
-
-# the name given to boost.build and the library name are the same for all libraries, except
-# for test, so we need two lists now:
-set (THIS_BOOST_BUILD_COMPONENTS date_time filesystem program_options
-                                 regex serialization system test)
-set (Boost_USE_MULTITHREADED OFF)
-set (Boost_USE_STATIC_LIBS ON)
-
 set (MANTA_GLOBALS_CMAKE "${CMAKE_SOURCE_DIR}/cmake/globals.cmake")
 set (MANTA_MACROS_CMAKE "${CMAKE_SOURCE_DIR}/cmake/macros.cmake")
 
@@ -161,4 +149,3 @@ add_subdirectory (c++)
 add_subdirectory (python)
 add_subdirectory (markdown)
 add_subdirectory (cmake/postInstall)
-

@@ -64,7 +64,8 @@ common_create_source
 
 cd ${SOURCE_DIR} \
     && ./bootstrap.sh ${BOOTSTRAP_OPTIONS} --prefix=${INSTALL_DIR} --with-libraries=$BOOST_LIBRARY_LIST \
-    && ./bjam -j$PARALLEL ${BJAM_OPTIONS} --libdir=${INSTALL_DIR}/lib --layout=system link=static threading=single install
+    && ./bjam -j$PARALLEL ${BJAM_OPTIONS} --libdir=${INSTALL_DIR}/lib --layout=system link=static threading=single install \
+    && touch ${INSTALL_DIR}/boost_install_complete
 
 if [ $? != 0 ] ; then ilog "$SCRIPT: build failed: Terminating..."; exit 1 ; fi
 
