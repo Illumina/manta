@@ -30,8 +30,8 @@
 
 #include <iostream>
 
-//#define DEBUG_REFINER
-//#define DEBUG_CONTIG
+#define DEBUG_REFINER
+#define DEBUG_CONTIG
 
 #ifdef DEBUG_REFINER
 #include "blt_util/seq_printer.hh"
@@ -191,6 +191,24 @@ getLargeIndelSegments(
     }
 }
 
+static
+unsigned
+getLargestIndelSize(const ALIGNPATH::path_t& apath)
+{
+	unsigned largestSize(0);
+	const unsigned as(apath.size());
+
+	for (unsigned i(0); i<as; i++)
+	{
+		const ALIGNPATH::path_segment& ps(apath[i]);
+		if ((ps.type == ALIGNPATH::DELETE) || (ps.type == ALIGNPATH::INSERT))
+		{
+			if (ps.length > largestSize) largestSize = ps.length;
+		}
+	}
+
+	return largestSize;
+}
 
 
 /// identify the single largest insert segment, if one exists above minSize:
@@ -1455,7 +1473,9 @@ getSmallSVAssembly(
     assemblyData.extendedContigs.resize(contigCount);
 
     bool isHighScore(false);
+    bool isSecHighScore(false);
     unsigned highScoreIndex(0);
+    unsigned secHighScoreIndex(0);
 
     std::vector<unsigned> largeInsertionCandidateIndex;
 
@@ -1627,10 +1647,10 @@ getSmallSVAssembly(
 
         if (isSmallSVCandidate)
         {
-            // keep the highest scoring QC'd candidate:
+            // keep the top two highest scoring QC'd candidate:
             // TODO: we should keep all QC'd candidates for the small event case
             // FIXME : prevents us from finding overlapping events, keep vector of high-scoring contigs?
-            if ((! isHighScore) || (alignment.score > assemblyData.smallSVAlignments[highScoreIndex].score))
+            if (! isHighScore)
             {
 #ifdef DEBUG_REFINER
                 log_os << logtag << "contigIndex: " << contigIndex << " is high score\n";
@@ -1638,8 +1658,38 @@ getSmallSVAssembly(
                 isHighScore = true;
                 highScoreIndex=contigIndex;
             }
+            else if (alignment.score > assemblyData.smallSVAlignments[highScoreIndex].score)
+            {
+            	isSecHighScore = true;
+            	secHighScoreIndex = highScoreIndex;
+            	highScoreIndex = contigIndex;
+#ifdef DEBUG_REFINER
+                log_os << logtag << "contigIndex: " << highScoreIndex << " is high score\n";
+                log_os << logtag << "contigIndex: " << secHighScoreIndex << " is the second high score\n";
+#endif
+            }
+            else if (alignment.score > assemblyData.smallSVAlignments[secHighScoreIndex].score)
+            {
+            	isSecHighScore = true;
+            	secHighScoreIndex = contigIndex;
+#ifdef DEBUG_REFINER
+                log_os << logtag << "contigIndex: " << secHighScoreIndex << " is the second high score\n";
+#endif
+            }
         }
     }
+
+    // select the contig with the larger indel size between the two highest-scoring contigs
+    if (isSecHighScore)
+    {
+    	const unsigned highScoreVarSize = getLargestIndelSize(assemblyData.smallSVAlignments[highScoreIndex].align.apath);
+    	const unsigned secHighScoreVarSize = getLargestIndelSize(assemblyData.smallSVAlignments[secHighScoreIndex].align.apath);
+    	if (secHighScoreVarSize > highScoreVarSize) highScoreIndex = secHighScoreIndex;
+#ifdef DEBUG_REFINER
+        log_os << logtag << "contigIndex: " << highScoreIndex << " is selected due to larger variant size.\n";
+#endif
+    }
+
 
     // set any additional QC steps before deciding an alignment is usable:
     // TODO:
