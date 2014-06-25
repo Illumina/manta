@@ -1668,7 +1668,7 @@ getSmallSVAssembly(
                 log_os << logtag << "contigIndex: " << secHighScoreIndex << " is the second high score\n";
 #endif
             }
-            else if (alignment.score > assemblyData.smallSVAlignments[secHighScoreIndex].score)
+            else if ((! isSecHighScore) || (alignment.score > assemblyData.smallSVAlignments[secHighScoreIndex].score))
             {
             	isSecHighScore = true;
             	secHighScoreIndex = contigIndex;
