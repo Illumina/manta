@@ -34,7 +34,9 @@ BOOST_AUTO_TEST_CASE( test_EdgeRetrieverLocusSimple )
     SVLocus locus2;
     locusAddPair(locus2,3,10,20,4,30,40);
 
-    SVLocusSet set1(1);
+    SVLocusSetOptions sopt;
+    sopt.minMergeEdgeObservations = 1;
+    SVLocusSet set1(sopt);
     set1.merge(locus1);
     set1.merge(locus2);
     set1.checkState(true,true);

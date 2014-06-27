@@ -26,4 +26,5 @@
 void
 findMultiJunctionCandidates(
     const std::vector<SVCandidate>& svs,
+    const unsigned minCandidateSpanningCount,
     std::vector<SVMultiJunctionCandidate>& mjSVs);

@@ -83,6 +83,7 @@ writeSV(
     const std::vector<bool>& isInputJunctionFiltered)
 {
     const unsigned junctionCount(mjSV.junction.size());
+    const unsigned minJunctionCandidateSpanningCount(std::min(2u,opt.minCandidateSpanningCount));
 
     // track filtration for each junction:
     std::vector<bool> isJunctionFiltered(isInputJunctionFiltered);
@@ -111,8 +112,7 @@ writeSV(
         bool isJunctionSpanFail(false);
         if (isCandidateSpanning)
         {
-            static const unsigned minCandidateSpanningCount(3);
-            if (sv.getPostAssemblySpanningCount() < minCandidateSpanningCount)
+            if (sv.getPostAssemblySpanningCount() < opt.minCandidateSpanningCount)
             {
                 isJunctionSpanFail=true;
             }
@@ -120,12 +120,12 @@ writeSV(
         if (! isJunctionSpanFail) isCandidateSpanFail=false;
 
         // independent tests -- as soon as one of these fails, we can continue:
-        //   (1) each spanning junction in the set must have spanning count of 2 or more
+        //   (1) each spanning junction in the set must have spanning count of
+        //      minJunctionCandidateSpanningCount or more
         //   (2) no unassembled non-spanning candidates
         if (isCandidateSpanning)
         {
-            static const unsigned minCandidateSpanningCount(2);
-            if (sv.getPostAssemblySpanningCount() < minCandidateSpanningCount)
+            if (sv.getPostAssemblySpanningCount() < minJunctionCandidateSpanningCount)
             {
                 isJunctionFiltered[junctionIndex] = true;
                 continue;

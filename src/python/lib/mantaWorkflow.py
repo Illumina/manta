@@ -176,6 +176,7 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
         graphCmd.extend(["--align-stats",statsPath])
         graphCmd.extend(["--region",gseg.bamRegion])
         graphCmd.extend(["--min-candidate-sv-size", self.params.minCandidateVariantSize])
+        graphCmd.extend(["--min-edge-observations", self.params.minEdgeObservations])
         graphCmd.extend(["--ref",self.params.referenceFasta])
         for bamPath in self.params.normalBamList :
             graphCmd.extend(["--align-file",bamPath])
@@ -262,6 +263,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         hygenCmd.extend(["--bin-index", str(binId)])
         hygenCmd.extend(["--bin-count", str(self.params.nonlocalWorkBins)])
         hygenCmd.extend(["--min-candidate-sv-size", self.params.minCandidateVariantSize])
+        hygenCmd.extend(["--min-candidate-spanning-count", self.params.minCandidateSpanningCount])
         hygenCmd.extend(["--min-scored-sv-size", self.params.minScoredVariantSize])
         hygenCmd.extend(["--ref",self.params.referenceFasta])
         hygenCmd.extend(["--candidate-output-file", candidateVcfPaths[-1]])

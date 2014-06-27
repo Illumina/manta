@@ -263,7 +263,7 @@ update(
     }
 
 #ifdef DEBUG_SFINDER
-    log_os << "SFinder: Accepted read. isAnomalous "  << isAnomalous << " is Local assm evidence: " << isLocalAssemblyEvidence << " read: " << bamRead << "\n";
+    log_os << "SFinder: Accepted read. isNonCompressedAnomalous "  << isNonCompressedAnomalous << " is Local assm evidence: " << isLocalAssemblyEvidence << " read: " << bamRead << "\n";
 #endif
 
     // check that this read starts in our scan region:

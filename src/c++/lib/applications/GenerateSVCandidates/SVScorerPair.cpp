@@ -98,7 +98,7 @@ processBamProcList(
                 const bam_record& bamRead(*(bamStream.get_record_ptr()));
 
                 /// this filter is common to all targetProcs:
-                if (SVScorer::pairProcPtr::value_type::isSkipRecordCore(bamRead)) continue;
+                if (SVScorer::pairProcPtr::element_type::isSkipRecordCore(bamRead)) continue;
 
                 BOOST_FOREACH(const unsigned procIndex, targetProcs)
                 {

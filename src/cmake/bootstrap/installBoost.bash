@@ -28,8 +28,8 @@ INSTALL_DIR=$2
 if [[ $# -ge 3 ]] ; then PARALLEL=$3 ; else PARALLEL=1 ; fi
 
 # test that these values are defined:
-test=${MANTA_BOOST_VERSION}
-test=${MANTA_BOOST_BUILD_COMPONENTS}
+test=${THIS_BOOST_VERSION}
+test=${THIS_BOOST_BUILD_COMPONENTS}
 
 script_dir="$(dirname "$0")"
 source $script_dir/common.bash
@@ -40,12 +40,13 @@ LIB_DIR=${INSTALL_DIR}/lib
 INCLUDE_DIR=${INSTALL_DIR}/include
 
 SCRIPT=`basename "$0"`
-VERSION=`echo ${MANTA_BOOST_VERSION} | sed "s/\./_/g"`
-SOURCE_TARBALL=${REDIST_DIR}/boost_${VERSION}.tar.bz2
+VERSION=`echo ${THIS_BOOST_VERSION} | sed "s/\./_/g"`
+SOURCE_PREFIX=boost_${VERSION}
+SOURCE_TARBALL=${REDIST_DIR}/${SOURCE_PREFIX}.tar.bz2
 TARBALL_COMPRESSION=j
-SOURCE_DIR=${BUILD_DIR}/boost_${VERSION}
+SOURCE_DIR=${BUILD_DIR}/${SOURCE_PREFIX}
 
-BOOST_LIBRARY_LIST=$(echo ${MANTA_BOOST_BUILD_COMPONENTS} | sed "s/;/,/g")
+BOOST_LIBRARY_LIST=$(echo ${THIS_BOOST_BUILD_COMPONENTS} | sed "s/;/,/g")
 
 if [ -z "${BOOTSTRAP_OPTIONS+xxx}" ]; then BOOTSTRAP_OPTIONS=""; fi
 if [ -z "${BJAM_OPTIONS+xxx}" ]; then BJAM_OPTIONS=""; fi
@@ -63,7 +64,8 @@ common_create_source
 
 cd ${SOURCE_DIR} \
     && ./bootstrap.sh ${BOOTSTRAP_OPTIONS} --prefix=${INSTALL_DIR} --with-libraries=$BOOST_LIBRARY_LIST \
-    && ./bjam -j$PARALLEL ${BJAM_OPTIONS} --libdir=${INSTALL_DIR}/lib --layout=system link=static threading=single install
+    && ./bjam -j$PARALLEL ${BJAM_OPTIONS} --libdir=${INSTALL_DIR}/lib --layout=system link=static threading=single install \
+    && touch ${INSTALL_DIR}/boost_install_complete
 
 if [ $? != 0 ] ; then ilog "$SCRIPT: build failed: Terminating..."; exit 1 ; fi
 

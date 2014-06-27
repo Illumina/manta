@@ -76,6 +76,7 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
     typedef std::vector<SVLocus> locusset_type;
     typedef locusset_type::const_iterator const_iterator;
 
+    explicit
     SVLocusSet(
         const SVLocusSetOptions& opt = SVLocusSetOptions()) :
         _opt(opt),
@@ -225,7 +226,7 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
     unsigned
     getMinMergeEdgeCount() const
     {
-        return _opt.minMergeEdgeCount;
+        return _opt.getMinMergeEdgeCount();
     }
 
     // total number of reads used as supporting evidence in the graph
