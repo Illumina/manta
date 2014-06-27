@@ -26,12 +26,12 @@ struct IterativeAssemblerOptions
     /// sets reasonable default values for 30x DNA-seq, 100bp reads
     IterativeAssemblerOptions() :
         alphabet("ACGT"),
-        //minWordLength(41),
-        minWordLength(21),
-        //maxWordLength(76),
-        maxWordLength(91),
-        //wordStepSize(5),
-        wordStepSize(10),
+        minWordLength(41),
+        //minWordLength(21),
+        maxWordLength(76),
+        //maxWordLength(91),
+        wordStepSize(5),
+        //wordStepSize(10),
         minContigLength(15),
         //minCoverage(2),
         minCoverage(1),
