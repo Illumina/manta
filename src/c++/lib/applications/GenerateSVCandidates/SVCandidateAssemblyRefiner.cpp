@@ -143,7 +143,6 @@ isFilterSpanningAlignment(
 }
 
 
-
 /// identify path indel sequences with an insert or delete segment greater than minSize
 ///
 static
@@ -191,6 +190,7 @@ getLargeIndelSegments(
     }
 }
 
+/*
 static
 unsigned
 getLargestIndelSize(const ALIGNPATH::path_t& apath)
@@ -208,7 +208,7 @@ getLargestIndelSize(const ALIGNPATH::path_t& apath)
 	}
 
 	return largestSize;
-}
+}*/
 
 
 /// identify the single largest insert segment, if one exists above minSize:
@@ -1682,11 +1682,15 @@ getSmallSVAssembly(
     // select the contig with the larger indel size between the two highest-scoring contigs
     if (isSecHighScore)
     {
-    	const unsigned highScoreVarSize = getLargestIndelSize(assemblyData.smallSVAlignments[highScoreIndex].align.apath);
-    	const unsigned secHighScoreVarSize = getLargestIndelSize(assemblyData.smallSVAlignments[secHighScoreIndex].align.apath);
-    	if (secHighScoreVarSize > highScoreVarSize) highScoreIndex = secHighScoreIndex;
+    	//const unsigned highScoreVarSize = getLargestIndelSize(assemblyData.smallSVAlignments[highScoreIndex].align.apath);
+    	//const unsigned secHighScoreVarSize = getLargestIndelSize(assemblyData.smallSVAlignments[secHighScoreIndex].align.apath);
+    	//if (secHighScoreVarSize > highScoreVarSize) highScoreIndex = secHighScoreIndex;
+    	const unsigned highScoreSuppReads = assemblyData.contigs[highScoreIndex].supportReads.size();
+    	const unsigned secHighScoreSuppReads = assemblyData.contigs[secHighScoreIndex].supportReads.size();
+    	if (secHighScoreSuppReads > highScoreSuppReads) highScoreIndex = secHighScoreIndex;
+
 #ifdef DEBUG_REFINER
-        log_os << logtag << "contigIndex: " << highScoreIndex << " is selected due to larger variant size.\n";
+        log_os << logtag << "contigIndex: " << highScoreIndex << " is selected due to more supporting reads.\n";
 #endif
     }
 

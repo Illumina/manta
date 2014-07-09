@@ -785,7 +785,9 @@ selectContigs(
         contigs2Remove.insert(selectedContigIndex);
         // remove selected & failed contigs
         BOOST_REVERSE_FOREACH(const unsigned cix, contigs2Remove)
-        candidateContigs.erase(candidateContigs.begin()+cix);
+        {
+        	candidateContigs.erase(candidateContigs.begin()+cix);
+        }
 #ifdef DEBUG_ASBL
         log_os << logtag << "Removed " << contigs2Remove.size() << " contigs.\n";
 #endif
@@ -894,7 +896,7 @@ runIterativeAssembler(
 #ifdef DEBUG_ASBL
     log_os << logtag << "Selected " << contigs.size() << "contigs.\n";
     unsigned index(1);
-    BOOST_REVERSE_FOREACH(const AssembledContig& ctg, contigs)
+    BOOST_FOREACH(const AssembledContig& ctg, contigs)
     {
         log_os << logtag <<"Selected contig # " << index << ": " << ctg.seq << "\n";
         log_os << logtag << "Contig supporting reads: ";
