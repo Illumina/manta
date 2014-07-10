@@ -1677,6 +1677,8 @@ getSmallSVAssembly(
 #endif
             }
         }
+
+        // ??? get the largest indel size from the candidateSegments?
     }
 
     // select the contig with the larger indel size between the two highest-scoring contigs
@@ -1685,6 +1687,7 @@ getSmallSVAssembly(
     	//const unsigned highScoreVarSize = getLargestIndelSize(assemblyData.smallSVAlignments[highScoreIndex].align.apath);
     	//const unsigned secHighScoreVarSize = getLargestIndelSize(assemblyData.smallSVAlignments[secHighScoreIndex].align.apath);
     	//if (secHighScoreVarSize > highScoreVarSize) highScoreIndex = secHighScoreIndex;
+
     	const unsigned highScoreSuppReads = assemblyData.contigs[highScoreIndex].supportReads.size();
     	const unsigned secHighScoreSuppReads = assemblyData.contigs[secHighScoreIndex].supportReads.size();
     	if (secHighScoreSuppReads > highScoreSuppReads) highScoreIndex = secHighScoreIndex;

@@ -30,7 +30,8 @@
 
 
 // compile with this macro to get verbose output:
-//#define DEBUG_ASBL
+#define DEBUG_ASBL
+//#define DEBUG_WALK
 
 
 // stream used by DEBUG_ASBL:
@@ -191,20 +192,20 @@ walk(const IterativeAssemblerOptions& opt,
     	// add rejecting reads from an unselected word/branch
     	const std::string tmpBack = getEnd(seed, wordLength-1, false);
     	const std::string newKey(addBase(tmpBack, symbol, true));
-#ifdef DEBUG_ASBL
+#ifdef DEBUG_WALK
         log_os << "Extending end backwords: base " << symbol << " " << newKey << "\n";
 #endif
 
     	wordReadsIter= wordReads.find(newKey);
     	if (wordReadsIter == wordReadsEnd) continue;
     	const std::set<unsigned>& unselectedReads(wordReadsIter->second);
-#ifdef DEBUG_ASBL
+#ifdef DEBUG_WALK
         log_os << "Supporting reads for the backwards word : ";
         print_unsignSet(unselectedReads);
 #endif
 
     	contig.rejectReads.insert(unselectedReads.begin(), unselectedReads.end());
-#ifdef DEBUG_ASBL
+#ifdef DEBUG_WALK
         log_os << "seed's rejecting reads : ";
         print_unsignSet(contig.rejectReads);
 #endif
@@ -214,7 +215,7 @@ walk(const IterativeAssemblerOptions& opt,
 
     if (repeatWords.find(seed) != repeatWords.end())
     {
-#ifdef DEBUG_ASBL
+#ifdef DEBUG_WALK
         log_os << "The seed is a repeat word " << seed << ". Stop walk.\n";
 #endif
         contig.conservativeRange.set_begin_pos(0);
@@ -234,8 +235,7 @@ walk(const IterativeAssemblerOptions& opt,
         {
         	const std::string previousWord = getEnd(contig.seq, wordLength, isEnd);
         	const std::string trunk(getEnd(contig.seq, wordLength-1, isEnd));
-
-#ifdef DEBUG_ASBL
+#ifdef DEBUG_WALK
             log_os << "# current contig : " << contig.seq << " size : " << contig.seq.size() << "\n"
                    << " getEnd : " << trunk << "\n";
             log_os << "contig rejecting reads : ";
@@ -257,7 +257,7 @@ walk(const IterativeAssemblerOptions& opt,
             BOOST_FOREACH(const char symbol, opt.alphabet)
             {
                 const std::string newKey(addBase(trunk, symbol, isEnd));
-#ifdef DEBUG_ASBL
+#ifdef DEBUG_WALK
                 log_os << "Extending end : base " << symbol << " " << newKey << "\n";
 #endif
                 const str_uint_map_t::const_iterator wordCountIter(wordCount.find(newKey));
@@ -273,7 +273,7 @@ walk(const IterativeAssemblerOptions& opt,
                 std::set_intersection(contig.supportReads.begin(), contig.supportReads.end(),
                                       currWordReads.begin(), currWordReads.end(),
                                       std::inserter(sharedReads, sharedReads.begin()));
-#ifdef DEBUG_ASBL
+#ifdef DEBUG_WALK
                 log_os << "Word supporting reads : ";
                 print_unsignSet(currWordReads);
                 log_os << "Contig-word shared reads : ";
@@ -308,31 +308,36 @@ walk(const IterativeAssemblerOptions& opt,
                     rejectReads2Add.insert(currWordReads.begin(), currWordReads.end());
                 }
             }
-#ifdef DEBUG_ASBL
+
+#ifdef DEBUG_WALK
             log_os << "Winner is : " << maxBase << " with " << maxBaseCount << " occurrences." << "\n";
 #endif
 
+
             if (maxBaseCount < opt.minCoverage)
             {
-#ifdef DEBUG_ASBL
+
+#ifdef DEBUG_WALK
                 log_os << "Coverage or error rate below threshold.\n"
                        << "maxBaseCount : " << maxBaseCount << " minCoverage: " << opt.minCoverage << "\n";
 #endif
+
                 break;
             }
 
 
-#ifdef DEBUG_ASBL
+#ifdef DEBUG_WALK
             log_os << "Adding base " << contig.seq << " " << maxBase << " " << mode << "\n";
 #endif
+
             contig.seq = addBase(contig.seq, maxBase, isEnd);
-#ifdef DEBUG_ASBL
+#ifdef DEBUG_WALK
             log_os << "New contig : " << contig.seq << "\n";
 #endif
 
             if ((conservativeEndOffset != 0) || (maxBaseCount < opt.minConservativeCoverage))
             	conservativeEndOffset += 1;
-#ifdef DEBUG_ASBL
+#ifdef DEBUG_WALK
             log_os << "conservative end offset : " << conservativeEndOffset << "\n";
 #endif
 
@@ -349,18 +354,18 @@ walk(const IterativeAssemblerOptions& opt,
 
                         // add rejecting reads from an unselected branch
                         const std::string newKey(addBase(trunk, symbol, !isEnd));
-#ifdef DEBUG_ASBL
+#ifdef DEBUG_WALK
                         log_os << "Extending end backwords: base " << symbol << " " << newKey << "\n";
 #endif
                         wordReadsIter= wordReads.find(newKey);
                         if (wordReadsIter == wordReadsEnd) continue;
                         const std::set<unsigned>& backWordReads(wordReadsIter->second);
-#ifdef DEBUG_ASBL
+#ifdef DEBUG_WALK
                         log_os << "Supporting reads for the backwards word : ";
                         print_unsignSet(backWordReads);
 #endif
                         rejectReads2Add.insert(backWordReads.begin(), backWordReads.end());
-#ifdef DEBUG_ASBL
+#ifdef DEBUG_WALK
                         log_os << "rejectReads2Add upated : ";
                         print_unsignSet(rejectReads2Add);
 #endif
@@ -368,7 +373,7 @@ walk(const IterativeAssemblerOptions& opt,
                 }
                 previousWordReads = maxWordReads;
 
-#ifdef DEBUG_ASBL
+#ifdef DEBUG_WALK
                 log_os << "Adding rejecting reads " << "\n"
                        << " Old : ";
                 print_unsignSet(contig.rejectReads);
@@ -381,12 +386,12 @@ walk(const IterativeAssemblerOptions& opt,
                 {
                     contig.rejectReads.insert(rd);
                 }
-#ifdef DEBUG_ASBL
+#ifdef DEBUG_WALK
                 log_os << " New : ";
                 print_unsignSet(contig.rejectReads);
 #endif
 
-#ifdef DEBUG_ASBL
+#ifdef DEBUG_WALK
                 log_os << "Updating supporting reads " << "\n"
                        << " Old : ";
                 print_unsignSet(contig.supportReads);
@@ -399,13 +404,13 @@ walk(const IterativeAssemblerOptions& opt,
                 {
                     if (contig.rejectReads.find(rd) == contig.rejectReads.end())
                         contig.supportReads.insert(rd);
-#ifdef DEBUG_ASBL
+#ifdef DEBUG_WALK
                     if (contig.rejectReads.find(rd) != contig.rejectReads.end())
                         log_os << "  Excluding rejected " << rd << "\n";
 #endif
                 }
 
-#ifdef DEBUG_ASBL
+#ifdef DEBUG_WALK
                 log_os << " To be removed : ";
                 print_unsignSet(supportReads2Remove);
 #endif
@@ -414,7 +419,7 @@ walk(const IterativeAssemblerOptions& opt,
                 {
                     contig.supportReads.erase(rd);
                 }
-#ifdef DEBUG_ASBL
+#ifdef DEBUG_WALK
                 log_os << " New : ";
                 print_unsignSet(contig.supportReads);
 #endif
@@ -425,7 +430,7 @@ walk(const IterativeAssemblerOptions& opt,
             // stop walk in the current mode after seeing one repeat word
             if (repeatWords.find(maxWord) != repeatWords.end())
             {
-#ifdef DEBUG_ASBL
+#ifdef DEBUG_WALK
                 log_os << "Seen a repeat word " << maxWord << ". Stop walk in the current mode " << mode << "\n";
 #endif
                 isRepeatFound = true;
@@ -439,7 +444,7 @@ walk(const IterativeAssemblerOptions& opt,
         else
         	contig.conservativeRange.set_begin_pos(conservativeEndOffset);
 
-#ifdef DEBUG_ASBL
+#ifdef DEBUG_WALK
         log_os << "mode change. Current mode " << mode << "\n";
 #endif
     }
