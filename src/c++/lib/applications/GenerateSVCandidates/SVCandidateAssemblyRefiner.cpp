@@ -190,25 +190,30 @@ getLargeIndelSegments(
     }
 }
 
-/*
+
 static
 unsigned
-getLargestIndelSize(const ALIGNPATH::path_t& apath)
+getLargestIndelSize(
+		const ALIGNPATH::path_t& apath,
+		const std::vector<std::pair<unsigned,unsigned> >& segments)
 {
 	unsigned largestSize(0);
-	const unsigned as(apath.size());
 
-	for (unsigned i(0); i<as; i++)
+	typedef std::pair<unsigned,unsigned> segment_t;
+	BOOST_FOREACH(const segment_t& seg, segments)
 	{
-		const ALIGNPATH::path_segment& ps(apath[i]);
-		if ((ps.type == ALIGNPATH::DELETE) || (ps.type == ALIGNPATH::INSERT))
+		for (unsigned i(seg.first); i<=seg.second; i++)
 		{
-			if (ps.length > largestSize) largestSize = ps.length;
+			const ALIGNPATH::path_segment& ps(apath[i]);
+			if ((ps.type == ALIGNPATH::DELETE) || (ps.type == ALIGNPATH::INSERT))
+			{
+				if (ps.length > largestSize) largestSize = ps.length;
+			}
 		}
 	}
 
 	return largestSize;
-}*/
+}
 
 
 /// identify the single largest insert segment, if one exists above minSize:
@@ -1476,6 +1481,8 @@ getSmallSVAssembly(
     bool isSecHighScore(false);
     unsigned highScoreIndex(0);
     unsigned secHighScoreIndex(0);
+    unsigned highScoreVarSize(0);
+    unsigned secHighScoreVarSize(0);
 
     std::vector<unsigned> largeInsertionCandidateIndex;
 
@@ -1657,12 +1664,15 @@ getSmallSVAssembly(
 #endif
                 isHighScore = true;
                 highScoreIndex=contigIndex;
+                highScoreVarSize = getLargestIndelSize(alignment.align.apath, candidateSegments);
             }
             else if (alignment.score > assemblyData.smallSVAlignments[highScoreIndex].score)
             {
             	isSecHighScore = true;
             	secHighScoreIndex = highScoreIndex;
+            	secHighScoreVarSize = highScoreVarSize;
             	highScoreIndex = contigIndex;
+            	highScoreVarSize = getLargestIndelSize(alignment.align.apath, candidateSegments);
 #ifdef DEBUG_REFINER
                 log_os << logtag << "contigIndex: " << highScoreIndex << " is high score\n";
                 log_os << logtag << "contigIndex: " << secHighScoreIndex << " is the second high score\n";
@@ -1672,28 +1682,24 @@ getSmallSVAssembly(
             {
             	isSecHighScore = true;
             	secHighScoreIndex = contigIndex;
+            	secHighScoreVarSize = getLargestIndelSize(alignment.align.apath, candidateSegments);
 #ifdef DEBUG_REFINER
                 log_os << logtag << "contigIndex: " << secHighScoreIndex << " is the second high score\n";
 #endif
             }
         }
-
-        // ??? get the largest indel size from the candidateSegments?
     }
 
     // select the contig with the larger indel size between the two highest-scoring contigs
     if (isSecHighScore)
     {
-    	//const unsigned highScoreVarSize = getLargestIndelSize(assemblyData.smallSVAlignments[highScoreIndex].align.apath);
-    	//const unsigned secHighScoreVarSize = getLargestIndelSize(assemblyData.smallSVAlignments[secHighScoreIndex].align.apath);
-    	//if (secHighScoreVarSize > highScoreVarSize) highScoreIndex = secHighScoreIndex;
-
     	const unsigned highScoreSuppReads = assemblyData.contigs[highScoreIndex].supportReads.size();
     	const unsigned secHighScoreSuppReads = assemblyData.contigs[secHighScoreIndex].supportReads.size();
-    	if (secHighScoreSuppReads > highScoreSuppReads) highScoreIndex = secHighScoreIndex;
-
+    	const bool secondIsBest((secHighScoreSuppReads > highScoreSuppReads * 1.2) ||
+    			                (secHighScoreVarSize > secHighScoreVarSize * 1.1));
+    	if (secondIsBest) highScoreIndex = secHighScoreIndex;
 #ifdef DEBUG_REFINER
-        log_os << logtag << "contigIndex: " << highScoreIndex << " is selected due to more supporting reads.\n";
+        log_os << logtag << "contigIndex: " << highScoreIndex << " is finally selected.\n";
 #endif
     }
 
