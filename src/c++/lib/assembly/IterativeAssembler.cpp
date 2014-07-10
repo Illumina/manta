@@ -30,7 +30,7 @@
 
 
 // compile with this macro to get verbose output:
-#define DEBUG_ASBL
+//#define DEBUG_ASBL
 //#define DEBUG_WALK
 
 
