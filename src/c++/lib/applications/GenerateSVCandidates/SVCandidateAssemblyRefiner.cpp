@@ -1695,8 +1695,15 @@ getSmallSVAssembly(
     {
     	const unsigned highScoreSuppReads = assemblyData.contigs[highScoreIndex].supportReads.size();
     	const unsigned secHighScoreSuppReads = assemblyData.contigs[secHighScoreIndex].supportReads.size();
+#ifdef DEBUG_REFINER
+    	log_os << logtag << "contig #" << highScoreIndex << "has " << highScoreSuppReads
+    		   <<" support reads, with max variant size " << highScoreVarSize;
+    	log_os << logtag << "contig #" << secHighScoreIndex << "has " << secHighScoreSuppReads
+    		   <<" support reads, with max variant size " << secHighScoreVarSize;
+#endif
+
     	const bool secondIsBest((secHighScoreSuppReads > highScoreSuppReads * 1.2) ||
-    			                (secHighScoreVarSize > secHighScoreVarSize * 1.1));
+    			                (secHighScoreVarSize > highScoreVarSize * 1.1));
     	if (secondIsBest) highScoreIndex = secHighScoreIndex;
 #ifdef DEBUG_REFINER
         log_os << logtag << "contigIndex: " << highScoreIndex << " is finally selected.\n";
