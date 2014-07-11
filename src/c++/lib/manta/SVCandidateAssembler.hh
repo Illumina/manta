@@ -19,6 +19,7 @@
 
 #include "applications/GenerateSVCandidates/GSCOptions.hh"
 #include "assembly/IterativeAssembler.hh"
+#include "assembly/SmallAssembler.hh"
 #include "blt_util/bam_streamer.hh"
 #include "manta/ChromDepthFilterUtil.hh"
 #include "manta/SVCandidate.hh"
@@ -31,13 +32,20 @@
 #include <vector>
 
 
+#define ITERATIVE_ASSEMBLER
+#ifdef ITERATIVE_ASSEMBLER
+	typedef IterativeAssemblerOptions AssemblerOptions;
+#else
+	typedef SmallAssemblerOptions AssemblerOptions;
+#endif
+
 /// Assembles SV-candidate reads for single and paired SVBreakend objects
 ///
 struct SVCandidateAssembler
 {
     SVCandidateAssembler(
         const ReadScannerOptions& scanOpt,
-        const IterativeAssemblerOptions& assembleOpt,
+        const AssemblerOptions& assembleOpt,
         const AlignmentFileOptions& alignFileOpt,
         const std::string& statsFilename,
         const std::string& chromDepthFilename,
@@ -68,7 +76,7 @@ struct SVCandidateAssembler
         const reference_contig_segment& refSeq2,
         Assembly& as) const;
 
-    const IterativeAssemblerOptions&
+    const AssemblerOptions&
     getAssembleOpt() const
     {
         return _assembleOpt;
@@ -96,7 +104,7 @@ private:
         AssemblyReadInput& reads) const;
 
     const ReadScannerOptions _scanOpt;
-    const IterativeAssemblerOptions _assembleOpt;
+    const AssemblerOptions _assembleOpt;
     const std::vector<bool> _isAlignmentTumor;
     const ChromDepthFilterUtil _dFilter;
     const ChromDepthFilterUtil _dFilterRemoteReads;

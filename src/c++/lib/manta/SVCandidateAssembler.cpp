@@ -31,12 +31,10 @@
 //#define DEBUG_REMOTES
 //#define DEBUG_ASBL
 
-
-
 SVCandidateAssembler::
 SVCandidateAssembler(
     const ReadScannerOptions& scanOpt,
-    const IterativeAssemblerOptions& assembleOpt,
+    const AssemblerOptions& assembleOpt,
     const AlignmentFileOptions& alignFileOpt,
     const std::string& statsFilename,
     const std::string& chromDepthFilename,
@@ -718,7 +716,15 @@ assembleSingleSVBreakend(
     AssemblyReadInput reads;
     getBreakendReads(bp, isBpReversed, refSeq, isSearchRemoteInsertionReads, remoteReads, readIndex, reads);
     AssemblyReadOutput readInfo;
+
+#ifdef ITERATIVE_ASSEMBLER
+    log_os << "This is the iterative assembler!\n";
     runIterativeAssembler(_assembleOpt, reads, readInfo, as);
+#else
+    log_os << "This is the small assembler!\n";
+    runSmallAssembler(_assembleOpt, reads, readInfo, as);
+#endif
+
 }
 
 
@@ -744,5 +750,12 @@ assembleSVBreakends(
     getBreakendReads(bp2, isBp2Reversed, refSeq2, isSearchRemoteInsertionReads, remoteReads, readIndex, reads);
     readRev.resize(reads.size(),isBp2Reversed);
     AssemblyReadOutput readInfo;
+
+#ifdef ITERATIVE_ASSEMBLER
+    log_os << "This is the iterative assembler!\n";
     runIterativeAssembler(_assembleOpt, reads, readInfo, as);
+#else
+    log_os << "This is the small assembler!\n";
+    runSmallAssembler(_assembleOpt, reads, readInfo, as);
+#endif
 }

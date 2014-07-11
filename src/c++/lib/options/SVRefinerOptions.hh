@@ -19,7 +19,14 @@
 
 #include "alignment/AlignmentScores.hh"
 #include "options/IterativeAssemblerOptions.hh"
+#include "options/SmallAssemblerOptions.hh"
 
+#define ITERATIVE_ASSEMBLER
+#ifdef ITERATIVE_ASSEMBLER
+	typedef IterativeAssemblerOptions AssemblerOptions;
+#else
+	typedef SmallAssemblerOptions AssemblerOptions;
+#endif
 
 namespace SUPERTMP
 {
@@ -56,7 +63,7 @@ struct SVRefinerOptions
     AlignmentScores<int> largeSVAlignScores; // large SV but at a single assembly locus
     AlignmentScores<int> largeInsertEdgeAlignScores;
     AlignmentScores<int> largeInsertCompleteAlignScores;
-    IterativeAssemblerOptions smallSVAssembleOpt;
+    AssemblerOptions smallSVAssembleOpt;
 
     // parameters for large SV assembly/alignment:
     AlignmentScores<int> spanningAlignScores;
@@ -65,5 +72,5 @@ struct SVRefinerOptions
     AlignmentScores<int> RNAspanningAlignScores;
     const int RNAIntronOpenScore;
     const int RNAIntronOffEdgeScore;
-    IterativeAssemblerOptions spanningAssembleOpt;
+    AssemblerOptions spanningAssembleOpt;
 };
