@@ -194,25 +194,25 @@ getLargeIndelSegments(
 static
 unsigned
 getLargestIndelSize(
-		const ALIGNPATH::path_t& apath,
-		const std::vector<std::pair<unsigned,unsigned> >& segments)
+    const ALIGNPATH::path_t& apath,
+    const std::vector<std::pair<unsigned,unsigned> >& segments)
 {
-	unsigned largestSize(0);
+    unsigned largestSize(0);
 
-	typedef std::pair<unsigned,unsigned> segment_t;
-	BOOST_FOREACH(const segment_t& seg, segments)
-	{
-		for (unsigned i(seg.first); i<=seg.second; i++)
-		{
-			const ALIGNPATH::path_segment& ps(apath[i]);
-			if ((ps.type == ALIGNPATH::DELETE) || (ps.type == ALIGNPATH::INSERT))
-			{
-				if (ps.length > largestSize) largestSize = ps.length;
-			}
-		}
-	}
+    typedef std::pair<unsigned,unsigned> segment_t;
+    BOOST_FOREACH(const segment_t& seg, segments)
+    {
+        for (unsigned i(seg.first); i<=seg.second; i++)
+        {
+            const ALIGNPATH::path_segment& ps(apath[i]);
+            if ((ps.type == ALIGNPATH::DELETE) || (ps.type == ALIGNPATH::INSERT))
+            {
+                if (ps.length > largestSize) largestSize = ps.length;
+            }
+        }
+    }
 
-	return largestSize;
+    return largestSize;
 }
 
 
@@ -1431,6 +1431,9 @@ getSmallSVAssembly(
 
     static const pos_t extraRefSize(extraRefEdgeSize+extraRefSplitSize);
 
+    static const float extraVarSizePerc(0.1f);
+    static const float extraSuppReadPerc(0.2f);
+
     // min alignment context
     //const unsigned minAlignContext(4);
 
@@ -1611,9 +1614,9 @@ getSmallSVAssembly(
             LargeInsertionInfo insertInfo;
 #ifdef DEBUG_CONTIG
             log_os << __FUNCTION__ << ": contig length: " << contig.seq.size() << "\n"
-            	   << __FUNCTION__ << ": contig seq: " << contig.seq << "\n"
-            	   << __FUNCTION__ << ": trim contig start offset: " << contig.conservativeRange.begin_pos() << "\n"
-            	   << __FUNCTION__ << ": trim contig end offset: " << contig.conservativeRange.end_pos() << "\n";
+                   << __FUNCTION__ << ": contig seq: " << contig.seq << "\n"
+                   << __FUNCTION__ << ": trim contig start offset: " << contig.conservativeRange.begin_pos() << "\n"
+                   << __FUNCTION__ << ": trim contig end offset: " << contig.conservativeRange.end_pos() << "\n";
 #endif
             ALIGNPATH::path_t apath_conservative(alignment.align.apath);
             apath_limit_read_length(contig.conservativeRange,apath_conservative);
@@ -1668,11 +1671,11 @@ getSmallSVAssembly(
             }
             else if (alignment.score > assemblyData.smallSVAlignments[highScoreIndex].score)
             {
-            	isSecHighScore = true;
-            	secHighScoreIndex = highScoreIndex;
-            	secHighScoreVarSize = highScoreVarSize;
-            	highScoreIndex = contigIndex;
-            	highScoreVarSize = getLargestIndelSize(alignment.align.apath, candidateSegments);
+                isSecHighScore = true;
+                secHighScoreIndex = highScoreIndex;
+                secHighScoreVarSize = highScoreVarSize;
+                highScoreIndex = contigIndex;
+                highScoreVarSize = getLargestIndelSize(alignment.align.apath, candidateSegments);
 #ifdef DEBUG_REFINER
                 log_os << logtag << "contigIndex: " << highScoreIndex << " is high score\n";
                 log_os << logtag << "contigIndex: " << secHighScoreIndex << " is the second high score\n";
@@ -1680,9 +1683,9 @@ getSmallSVAssembly(
             }
             else if ((! isSecHighScore) || (alignment.score > assemblyData.smallSVAlignments[secHighScoreIndex].score))
             {
-            	isSecHighScore = true;
-            	secHighScoreIndex = contigIndex;
-            	secHighScoreVarSize = getLargestIndelSize(alignment.align.apath, candidateSegments);
+                isSecHighScore = true;
+                secHighScoreIndex = contigIndex;
+                secHighScoreVarSize = getLargestIndelSize(alignment.align.apath, candidateSegments);
 #ifdef DEBUG_REFINER
                 log_os << logtag << "contigIndex: " << secHighScoreIndex << " is the second high score\n";
 #endif
@@ -1693,18 +1696,18 @@ getSmallSVAssembly(
     // select the contig with the larger indel size between the two highest-scoring contigs
     if (isSecHighScore)
     {
-    	const unsigned highScoreSuppReads = assemblyData.contigs[highScoreIndex].supportReads.size();
-    	const unsigned secHighScoreSuppReads = assemblyData.contigs[secHighScoreIndex].supportReads.size();
+        const unsigned highScoreSuppReads = assemblyData.contigs[highScoreIndex].supportReads.size();
+        const unsigned secHighScoreSuppReads = assemblyData.contigs[secHighScoreIndex].supportReads.size();
 #ifdef DEBUG_REFINER
-    	log_os << logtag << "contig #" << highScoreIndex << "has " << highScoreSuppReads
-    		   <<" support reads, with max variant size " << highScoreVarSize;
-    	log_os << logtag << "contig #" << secHighScoreIndex << "has " << secHighScoreSuppReads
-    		   <<" support reads, with max variant size " << secHighScoreVarSize;
+        log_os << logtag << "contig #" << highScoreIndex << "has " << highScoreSuppReads
+               <<" support reads, with max variant size " << highScoreVarSize;
+        log_os << logtag << "contig #" << secHighScoreIndex << "has " << secHighScoreSuppReads
+               <<" support reads, with max variant size " << secHighScoreVarSize;
 #endif
 
-    	const bool secondIsBest((secHighScoreSuppReads > highScoreSuppReads * 1.2) ||
-    			                (secHighScoreVarSize > highScoreVarSize * 1.1));
-    	if (secondIsBest) highScoreIndex = secHighScoreIndex;
+        const bool secondIsBest((secHighScoreSuppReads > highScoreSuppReads *(1+extraSuppReadPerc)) ||
+                                (secHighScoreVarSize > highScoreVarSize * (1+extraVarSizePerc)));
+        if (secondIsBest) highScoreIndex = secHighScoreIndex;
 #ifdef DEBUG_REFINER
         log_os << logtag << "contigIndex: " << highScoreIndex << " is finally selected.\n";
 #endif

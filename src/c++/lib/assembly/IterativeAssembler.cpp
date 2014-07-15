@@ -186,25 +186,25 @@ walk(const IterativeAssemblerOptions& opt,
     // collecting rejecting reads for the seed from the unselected branches
     BOOST_FOREACH(const char symbol, opt.alphabet)
     {
-    	// the seed itself
-    	if (symbol == seed[wordLength-1]) continue;
+        // the seed itself
+        if (symbol == seed[wordLength-1]) continue;
 
-    	// add rejecting reads from an unselected word/branch
-    	const std::string tmpBack = getEnd(seed, wordLength-1, false);
-    	const std::string newKey(addBase(tmpBack, symbol, true));
+        // add rejecting reads from an unselected word/branch
+        const std::string tmpBack = getEnd(seed, wordLength-1, false);
+        const std::string newKey(addBase(tmpBack, symbol, true));
 #ifdef DEBUG_WALK
         log_os << "Extending end backwords: base " << symbol << " " << newKey << "\n";
 #endif
 
-    	wordReadsIter= wordReads.find(newKey);
-    	if (wordReadsIter == wordReadsEnd) continue;
-    	const std::set<unsigned>& unselectedReads(wordReadsIter->second);
+        wordReadsIter= wordReads.find(newKey);
+        if (wordReadsIter == wordReadsEnd) continue;
+        const std::set<unsigned>& unselectedReads(wordReadsIter->second);
 #ifdef DEBUG_WALK
         log_os << "Supporting reads for the backwards word : ";
         print_unsignSet(unselectedReads);
 #endif
 
-    	contig.rejectReads.insert(unselectedReads.begin(), unselectedReads.end());
+        contig.rejectReads.insert(unselectedReads.begin(), unselectedReads.end());
 #ifdef DEBUG_WALK
         log_os << "seed's rejecting reads : ";
         print_unsignSet(contig.rejectReads);
@@ -233,8 +233,8 @@ walk(const IterativeAssemblerOptions& opt,
 
         while (true)
         {
-        	const std::string previousWord = getEnd(contig.seq, wordLength, isEnd);
-        	const std::string trunk(getEnd(contig.seq, wordLength-1, isEnd));
+            const std::string previousWord = getEnd(contig.seq, wordLength, isEnd);
+            const std::string trunk(getEnd(contig.seq, wordLength-1, isEnd));
 #ifdef DEBUG_WALK
             log_os << "# current contig : " << contig.seq << " size : " << contig.seq.size() << "\n"
                    << " getEnd : " << trunk << "\n";
@@ -336,7 +336,7 @@ walk(const IterativeAssemblerOptions& opt,
 #endif
 
             if ((conservativeEndOffset != 0) || (maxBaseCount < opt.minConservativeCoverage))
-            	conservativeEndOffset += 1;
+                conservativeEndOffset += 1;
 #ifdef DEBUG_WALK
             log_os << "conservative end offset : " << conservativeEndOffset << "\n";
 #endif
@@ -440,9 +440,9 @@ walk(const IterativeAssemblerOptions& opt,
 
         // set conservative coverage range for the contig
         if (mode == 0)
-        	contig.conservativeRange.set_end_pos(conservativeEndOffset);
+            contig.conservativeRange.set_end_pos(conservativeEndOffset);
         else
-        	contig.conservativeRange.set_begin_pos(conservativeEndOffset);
+            contig.conservativeRange.set_begin_pos(conservativeEndOffset);
 
 #ifdef DEBUG_WALK
         log_os << "mode change. Current mode " << mode << "\n";
@@ -791,7 +791,7 @@ selectContigs(
         // remove selected & failed contigs
         BOOST_REVERSE_FOREACH(const unsigned cix, contigs2Remove)
         {
-        	candidateContigs.erase(candidateContigs.begin()+cix);
+            candidateContigs.erase(candidateContigs.begin()+cix);
         }
 #ifdef DEBUG_ASBL
         log_os << logtag << "Removed " << contigs2Remove.size() << " contigs.\n";
