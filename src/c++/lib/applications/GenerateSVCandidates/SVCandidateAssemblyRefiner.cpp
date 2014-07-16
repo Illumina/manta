@@ -30,7 +30,6 @@
 
 #include <iostream>
 
-//#define ITERATIVE_ASSEMBLER
 //#define DEBUG_REFINER
 //#define DEBUG_CONTIG
 
