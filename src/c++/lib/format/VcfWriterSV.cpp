@@ -313,6 +313,9 @@ writeTransloc(
         }
     }
 
+    // TODO: improve circular genome handler:
+    if ((pos<1) || (matePos<1)) return;
+
     // get ID
     const std::string& localId(isFirstBreakend ? svId.localId : svId.mateId);
     const std::string& mateId(isFirstBreakend ? svId.mateId : svId.localId);

@@ -1,3 +1,4 @@
+- MANTA-185 remove transloc calls with neg position (from circular genome)
 - [mantadev] #1 Fix SA split read breakpoint position
 - MANTA-183 handle paired/single read mixture in input alignments
 - MANTA-182 submit config on cmdline
