@@ -11,9 +11,8 @@
 // <https://github.com/sequencing/licenses/>
 //
 
-/// \file
 /// random vcf utilities
-
+///
 /// \author Chris Saunders
 ///
 
@@ -57,6 +56,12 @@ std::ostream&
 vcf_fileDate(std::ostream& os);
 
 
+void
+write_vcf_filter(
+    std::ostream& os,
+    const char* id,
+    const char* desc);
+
 
 // look for 'key' in vcf FORMAT field, provide index of key or return
 // false
@@ -87,7 +92,6 @@ const char*
 get_format_string_nocopy(const char* const* word,
                          const char* key)
 {
-
     unsigned keynum(0);
     if (! get_format_key_index(word[VCFID::FORMAT],key,keynum)) return NULL;
 

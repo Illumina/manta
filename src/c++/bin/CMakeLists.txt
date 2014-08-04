@@ -30,7 +30,7 @@ foreach(MANTA_PROGRAM_SOURCE ${MANTA_PROGRAM_SOURCE_LIST})
     set(MANTA_APPLICATION_LIB manta_${MANTA_PROGRAM})
     add_executable        (${MANTA_PROGRAM} ${MANTA_PROGRAM_SOURCE})
     target_link_libraries (${MANTA_PROGRAM}  ${MANTA_APPLICATION_LIB} ${MANTA_AVAILABLE_LIBRARIES}
-                           ${SAMTOOLS_LIBRARY} ${TABIX_LIBRARY} ${Boost_LIBRARIES}
+                           ${TABIX_LIBRARY} ${SAMTOOLS_LIBRARY} ${Boost_LIBRARIES}
                            ${MANTA_ADDITIONAL_LIB})
     install(TARGETS ${MANTA_PROGRAM} RUNTIME DESTINATION ${MANTA_LIBEXECDIR})
 endforeach()

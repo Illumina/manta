@@ -11,7 +11,8 @@
 // <https://github.com/sequencing/licenses/>
 //
 
-///
+/// \file
+
 /// \author Chris Saunders
 ///
 
@@ -146,6 +147,10 @@ next(const bool is_indel_only)
         _is_stream_end=(NULL == vcf_record_string);
         _is_record_set=(! _is_stream_end);
         if (! _is_record_set) break;
+
+        // filter out header for whole file access case:
+        if (vcf_record_string[0] == '#') continue;
+
         _record_no++;
 
         if (! _vcfrec.set(vcf_record_string))

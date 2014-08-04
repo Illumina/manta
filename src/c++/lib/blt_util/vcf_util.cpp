@@ -11,6 +11,7 @@
 // <https://github.com/sequencing/licenses/>
 //
 
+///
 /// \author Chris Saunders
 ///
 
@@ -42,9 +43,19 @@ vcf_fileDate(std::ostream& os)
 
 
 
+void
+write_vcf_filter(
+    std::ostream& os,
+    const char* id,
+    const char* desc)
+{
+    os << "##FILTER=<ID=" << id << ",Description=\"" << desc << "\">\n";
+}
+
+
+
 struct gt_parse_helper
 {
-
     // return is_valid_genotype
     static
     bool
@@ -132,13 +143,11 @@ private:
 
 
 
-
 void
 parse_gt(const char* gt,
          std::vector<int>& gti,
          const bool is_allow_bad_end_char)
 {
-
     if (! gt_parse_helper::start(gt,gti,is_allow_bad_end_char))
     {
         std::ostringstream oss;
@@ -146,3 +155,4 @@ parse_gt(const char* gt,
         throw blt_exception(oss.str().c_str());
     }
 }
+

@@ -11,8 +11,7 @@
 // <https://github.com/sequencing/licenses/>
 //
 
-/// \file
-
+///
 /// \author Chris Saunders
 ///
 
@@ -26,7 +25,6 @@
 
 struct bam_record
 {
-
     bam_record()
         : _bp(bam_init1()) {}
 
@@ -346,5 +344,4 @@ private:
 
 std::ostream&
 operator<<(std::ostream& os, const bam_record& br);
-
 

@@ -11,27 +11,30 @@
 // <https://github.com/sequencing/licenses/>
 //
 
-///
+/// \file
+
 /// \author Chris Saunders
 ///
 
-#pragma once
+#include "blt_util/bam_dumper.hh"
+#include "blt_util/log.hh"
 
-#include <exception>
-#include <string>
+#include <cstdlib>
 
-/// \brief a minimal exception class
-struct blt_exception : public std::exception
+#include <iostream>
+
+
+
+bam_dumper::
+bam_dumper(const char* filename,
+           const bam_header_t* header)
 {
-    blt_exception(const char* s);
 
-    ~blt_exception() throw() {}
+    _bfp = samopen(filename, "wb", header);
 
-    const char* what() const throw()
+    if (NULL == _bfp)
     {
-        return message.c_str();
+        log_os << "ERROR: Failed to open output BAM file: " << filename << "\n";
+        exit(EXIT_FAILURE);
     }
-
-    std::string message;
-};
-
+}

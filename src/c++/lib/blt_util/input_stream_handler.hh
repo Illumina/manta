@@ -42,7 +42,6 @@ struct input_stream_hander;
 /// this object first
 struct input_stream_data
 {
-
     void
     register_reads(bam_streamer& bs,
                    const int sample_no = 0)
@@ -69,7 +68,6 @@ private:
 
 struct input_record_info
 {
-
     input_record_info(const pos_t p = 0,
                       const INPUT_TYPE::index_t t = INPUT_TYPE::NONE,
                       const int i = 0,
@@ -123,7 +121,6 @@ private:
 //
 struct input_stream_handler
 {
-
     input_stream_handler(
         const input_stream_data& data);
 
@@ -162,3 +159,4 @@ private:
 
     std::priority_queue<input_record_info> _stream_queue;
 };
+

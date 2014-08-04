@@ -64,5 +64,26 @@ BOOST_AUTO_TEST_CASE( test_pos_range_is_range_intersect )
     BOOST_REQUIRE(  pr.is_range_intersect(pos_range(12,15)));
 }
 
+BOOST_AUTO_TEST_CASE( test_pos_range_is_superset_of )
+{
+    // this corresponds to zero-index range [9,19] :
+    const known_pos_range pr(9,20);
+
+    // non subset tests:
+    BOOST_REQUIRE(! pr.is_superset_of(pos_range(7,8)));
+    BOOST_REQUIRE(! pr.is_superset_of(pos_range(8,10)));
+    BOOST_REQUIRE(! pr.is_superset_of(pos_range(8,20)));
+    BOOST_REQUIRE(! pr.is_superset_of(pos_range(9,21)));
+    BOOST_REQUIRE(! pr.is_superset_of(pos_range(8,21)));
+    BOOST_REQUIRE(! pr.is_superset_of(pos_range(25,30)));
+
+    // subset tests:
+    BOOST_REQUIRE(pr.is_superset_of(pos_range(9,20)));
+    BOOST_REQUIRE(pr.is_superset_of(pos_range(11,20)));
+    BOOST_REQUIRE(pr.is_superset_of(pos_range(9,17)));
+    BOOST_REQUIRE(pr.is_superset_of(pos_range(11,17)));
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
+

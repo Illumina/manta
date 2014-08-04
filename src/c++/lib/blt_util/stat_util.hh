@@ -17,21 +17,13 @@
 
 #pragma once
 
-#include <exception>
-#include <string>
+bool
+is_chi_sqr_reject(const double xsq,
+                  const unsigned df,
+                  const double alpha);
 
-/// \brief a minimal exception class
-struct blt_exception : public std::exception
-{
-    blt_exception(const char* s);
-
-    ~blt_exception() throw() {}
-
-    const char* what() const throw()
-    {
-        return message.c_str();
-    }
-
-    std::string message;
-};
-
+bool
+is_lrt_reject_null(const double null_loghood,
+                   const double alt_loghood,
+                   const unsigned df,
+                   const double alpha);

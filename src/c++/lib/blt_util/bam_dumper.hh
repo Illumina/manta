@@ -11,27 +11,33 @@
 // <https://github.com/sequencing/licenses/>
 //
 
-///
 /// \author Chris Saunders
 ///
 
 #pragma once
 
-#include <exception>
-#include <string>
+extern "C" {
+#include "sam.h"
+}
 
-/// \brief a minimal exception class
-struct blt_exception : public std::exception
+
+struct bam_dumper
 {
-    blt_exception(const char* s);
 
-    ~blt_exception() throw() {}
+    bam_dumper(const char* filename,
+               const bam_header_t* header);
 
-    const char* what() const throw()
+    ~bam_dumper()
     {
-        return message.c_str();
+        if (NULL != _bfp) samclose(_bfp);
     }
 
-    std::string message;
-};
+    void
+    put_record(const bam1_t* brec)
+    {
+        samwrite(_bfp,brec);
+    }
 
+private:
+    samfile_t* _bfp;
+};
