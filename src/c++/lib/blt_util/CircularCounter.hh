@@ -26,9 +26,9 @@
 /// false pushed into it and the total true count
 /// queried at any point
 ///
-struct circularCounter
+struct CircularCounter
 {
-    circularCounter(
+    CircularCounter(
         const unsigned initSize) :
         _count(0),
         _headPos(0),

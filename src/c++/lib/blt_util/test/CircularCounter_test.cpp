@@ -13,15 +13,15 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "circularCounter.hh"
+#include "CircularCounter.hh"
 
 
-BOOST_AUTO_TEST_SUITE( test_circularCounter )
+BOOST_AUTO_TEST_SUITE( test_CircularCounter )
 
 
-BOOST_AUTO_TEST_CASE( test_circularCounter1 )
+BOOST_AUTO_TEST_CASE( test_CircularCounter1 )
 {
-    circularCounter cc(3);
+    CircularCounter cc(3);
 
     BOOST_CHECK_EQUAL(cc.count(),0);
 
