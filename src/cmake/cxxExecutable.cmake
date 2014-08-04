@@ -18,7 +18,7 @@
 ##
 ################################################################################
 
-include (${MANTA_GLOBALS_CMAKE})
+include (${THIS_GLOBALS_CMAKE})
 
 if(NOT DEFINED IS_QUIET)
     get_filename_component(CURRENT_DIR_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)

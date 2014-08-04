@@ -15,14 +15,14 @@
 #
 
 # final installation path:
-set(INSTALL_TO_DIR "${MANTA_PYTHON_LIBDIR}")
+set(INSTALL_TO_DIR "${THIS_PYTHON_LIBDIR}")
 
 # clean staging area for all py and pyc files:
 set(PYSTAGE_DIR "${CMAKE_CURRENT_BINARY_DIR}/pystage")
 
-file(RELATIVE_PATH MANTA_RELATIVE_LIBEXECDIR "${INSTALL_TO_DIR}" "${MANTA_LIBEXECDIR}")
+file(RELATIVE_PATH THIS_RELATIVE_LIBEXECDIR "${INSTALL_TO_DIR}" "${THIS_LIBEXECDIR}")
 
-include("${MANTA_MACROS_CMAKE}")
+include("${THIS_MACROS_CMAKE}")
 configure_files("${CMAKE_CURRENT_SOURCE_DIR}" "${PYSTAGE_DIR}" "*.py")
 
 
@@ -46,7 +46,7 @@ add_custom_target(MANTA_PYTHONLIB_COMPILE ALL DEPENDS ${STAGED_PYTHONC_FILES})
 #
 # install
 #
-include("${MANTA_GLOBALS_CMAKE}") # get THIS_LIBRARY_PERMISSIONS
+include("${THIS_GLOBALS_CMAKE}") # get THIS_LIBRARY_PERMISSIONS
 set(PYGLOBS "*.py" "*.pyc")
 foreach(PYGLOB ${PYGLOBS})
     # Note the trialing slash in DIRECTORY argument is required:

@@ -22,8 +22,8 @@ __author__ = "Chris Saunders"
 import os,sys
 
 scriptDir=os.path.abspath(os.path.dirname(__file__))
-libexecDir=os.path.abspath(os.path.join(scriptDir,"@MANTA_RELATIVE_LIBEXECDIR@"))
-pythonLibDir=os.path.abspath(os.path.join(scriptDir,"@MANTA_RELATIVE_PYTHON_LIBDIR@"))
+libexecDir=os.path.abspath(os.path.join(scriptDir,"@THIS_RELATIVE_LIBEXECDIR@"))
+pythonLibDir=os.path.abspath(os.path.join(scriptDir,"@THIS_RELATIVE_PYTHON_LIBDIR@"))
 sys.path.append(pythonLibDir)
 
 from workflowUtil import checkDir, checkFile

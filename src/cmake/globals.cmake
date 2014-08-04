@@ -31,10 +31,10 @@ install(CODE "
         set (FULL_PREFIX \"$ENV{DESTDIR}\")
     endif()
 
-    get_filename_component(MANTA_FULL_DATADIR        \"\${FULL_PREFIX}${MANTA_DATADIR}\" ABSOLUTE)
-    get_filename_component(MANTA_FULL_BINDIR         \"\${FULL_PREFIX}${MANTA_BINDIR}\" ABSOLUTE)
-    get_filename_component(MANTA_FULL_LIBDIR         \"\${FULL_PREFIX}${MANTA_LIBDIR}\" ABSOLUTE)
-    get_filename_component(MANTA_FULL_LIBEXECDIR     \"\${FULL_PREFIX}${MANTA_LIBEXECDIR}\" ABSOLUTE)
-    get_filename_component(MANTA_FULL_PYTHON_LIBDIR  \"\${FULL_PREFIX}${MANTA_PYTHON_LIBDIR}\" ABSOLUTE)
+    get_filename_component(THIS_FULL_DATADIR        \"\${FULL_PREFIX}${THIS_DATADIR}\" ABSOLUTE)
+    get_filename_component(THIS_FULL_BINDIR         \"\${FULL_PREFIX}${THIS_BINDIR}\" ABSOLUTE)
+    get_filename_component(THIS_FULL_LIBDIR         \"\${FULL_PREFIX}${THIS_LIBDIR}\" ABSOLUTE)
+    get_filename_component(THIS_FULL_LIBEXECDIR     \"\${FULL_PREFIX}${THIS_LIBEXECDIR}\" ABSOLUTE)
+    get_filename_component(THIS_FULL_PYTHON_LIBDIR  \"\${FULL_PREFIX}${THIS_PYTHON_LIBDIR}\" ABSOLUTE)
     ")
 

@@ -33,23 +33,23 @@ message (STATUS "Adding c++ library subdirectory: ${CURRENT_DIR_NAME}")
 ##
 
 string(REGEX REPLACE ${CMAKE_SOURCE_DIR}/c[+][+]/ "" TMP1 ${CMAKE_CURRENT_SOURCE_DIR}/)
-string(REGEX REPLACE "/" "_" MANTA_UNIQUE_PREFIX ${TMP1})
+string(REGEX REPLACE "/" "_" THIS_UNIQUE_PREFIX ${TMP1})
 
 ##
 ## build the library
 ##
 
-file(GLOB MANTA_LIBRARY_SOURCES *.cpp *.c)
-foreach (SOURCE_FILE ${MANTA_LIBRARY_SOURCES})
+file(GLOB THIS_LIBRARY_SOURCES *.cpp *.c)
+foreach (SOURCE_FILE ${THIS_LIBRARY_SOURCES})
     get_filename_component(SOURCE_NAME ${SOURCE_FILE} NAME_WE)
     if (${SOURCE_NAME}_COMPILE_FLAGS)
         set_source_files_properties(${SOURCE_FILE} PROPERTIES COMPILE_FLAGS ${${SOURCE_NAME}_COMPILE_FLAGS})
     endif ()
 endforeach ()
 
-if (MANTA_LIBRARY_SOURCES)
-    #include_directories (${MANTA_COMMON_INCLUDE})
-    add_library     (manta_${CURRENT_DIR_NAME} STATIC ${MANTA_LIBRARY_SOURCES})
+if (THIS_LIBRARY_SOURCES)
+    #include_directories (${THIS_COMMON_INCLUDE})
+    add_library     (manta_${CURRENT_DIR_NAME} STATIC ${THIS_LIBRARY_SOURCES})
     add_dependencies(manta_${CURRENT_DIR_NAME} MANTA_OPT)
 endif()
 

@@ -23,20 +23,20 @@
 ##
 ## note that order approximates dependency chain, where libraries are listed
 ## after libraries upon which they depend:
-set (MANTA_ALL_LIBRARIES blt_util common options assembly alignment format svgraph truth manta)
+set (THIS_ALL_LIBRARIES blt_util common options assembly alignment format svgraph truth manta)
 
 ##
 ## Build all the libraries for the project
-## MANTA_AVAILABLE_LIBRARIES is incrementally updated
+## THIS_AVAILABLE_LIBRARIES is incrementally updated
 ##
-set (MANTA_AVAILABLE_LIBRARIES "")
-foreach (MANTA_LIB_DIR ${MANTA_ALL_LIBRARIES})
-    add_subdirectory(${MANTA_LIB_DIR})
+set (THIS_AVAILABLE_LIBRARIES "")
+foreach (THIS_LIB_DIR ${THIS_ALL_LIBRARIES})
+    add_subdirectory(${THIS_LIB_DIR})
 
-    set(MANTA_AVAILABLE_LIBRARIES manta_${MANTA_LIB_DIR} ${MANTA_AVAILABLE_LIBRARIES})
+    set(THIS_AVAILABLE_LIBRARIES manta_${THIS_LIB_DIR} ${THIS_AVAILABLE_LIBRARIES})
 endforeach ()
 
-set (MANTA_AVAILABLE_LIBRARIES ${MANTA_AVAILABLE_LIBRARIES} PARENT_SCOPE)
+set (THIS_AVAILABLE_LIBRARIES ${THIS_AVAILABLE_LIBRARIES} PARENT_SCOPE)
 
 
 #

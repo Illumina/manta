@@ -38,7 +38,7 @@ file(GLOB_RECURSE ALL_CXX_FILES *.cpp *.cc *.hh)
 add_custom_command(
     OUTPUT cppcheck.done
     DEPENDS ${ALL_CXX_FILES}
-    COMMAND ${PYTHON_EXECUTABLE} ${MANTA_SOURCE_QC_DIR}/run_cppcheck.py ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND ${PYTHON_EXECUTABLE} ${THIS_SOURCE_QC_DIR}/run_cppcheck.py ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Running c++ static analyzer")
 
 if(${DEVELOPER_MODE})

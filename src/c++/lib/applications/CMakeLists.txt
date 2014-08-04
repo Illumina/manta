@@ -12,6 +12,6 @@
 
 subdirlist(subdirs ${CMAKE_CURRENT_SOURCE_DIR})
 
-foreach(MANTA_LIB_DIR ${subdirs})
-    add_subdirectory(${MANTA_LIB_DIR})
+foreach(THIS_LIB_DIR ${subdirs})
+    add_subdirectory(${THIS_LIB_DIR})
 endforeach()

@@ -38,7 +38,7 @@ add_custom_command(
 
 add_custom_target(MANTA_USERGUIDE ALL DEPENDS ${MUL})
 
-install(FILES ${MUL} DESTINATION ${MANTA_DOCDIR}/html)
-install(FILES "userGuide.css" DESTINATION ${MANTA_DOCDIR}/html)
-install(FILES "tableOfContents.js" DESTINATION ${MANTA_DOCDIR}/html)
+install(FILES ${MUL} DESTINATION ${THIS_DOCDIR}/html)
+install(FILES "userGuide.css" DESTINATION ${THIS_DOCDIR}/html)
+install(FILES "tableOfContents.js" DESTINATION ${THIS_DOCDIR}/html)
 

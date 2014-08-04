@@ -16,11 +16,11 @@
 ##
 ################################################################################
 
-foreach (MANTA_DIR ${MANTA_TEST_DIRS})
-    message (STATUS "Testing access to ${MANTA_DIR}...")
-    execute_process(COMMAND bash -c "mkdir -p ${MANTA_DIR}/test && rmdir ${MANTA_DIR}/test" RESULT_VARIABLE TMP_RESULT )
+foreach (THIS_DIR ${THIS_TEST_DIRS})
+    message (STATUS "Testing access to ${THIS_DIR}...")
+    execute_process(COMMAND bash -c "mkdir -p ${THIS_DIR}/test && rmdir ${THIS_DIR}/test" RESULT_VARIABLE TMP_RESULT )
     if (TMP_RESULT)
-        message (STATUS "ERROR: Directory is not writeable: ${MANTA_DIR}")
+        message (STATUS "ERROR: Directory is not writeable: ${THIS_DIR}")
         message (STATUS "If you don't have administrator access to the "
                          "target installation location, please use --prefix "
                          "command-line option during configuration. "
@@ -28,6 +28,6 @@ foreach (MANTA_DIR ${MANTA_TEST_DIRS})
                          "command-line options.")
         message (FATAL_ERROR "ERROR: installation cannot continue")
     else ()
-        message (STATUS "Directory is writeable: ${MANTA_DIR}")
+        message (STATUS "Directory is writeable: ${THIS_DIR}")
     endif ()
 endforeach ()

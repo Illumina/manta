@@ -34,7 +34,7 @@ set(DEVELOPER_MODE true)
 #
 
 project (manta)
-set(MANTA_PROJECT_NAME "manta")
+set(THIS_PROJECT_NAME "manta")
 
 # find interpreters
 find_package(PythonInterp)
@@ -44,12 +44,12 @@ endif()
 
 
 # get version
-set(MANTA_BOOTSTRAP_DIR "${CMAKE_SOURCE_DIR}/cmake/bootstrap")
-set(MANTA_SOURCE_QC_DIR "${CMAKE_SOURCE_DIR}/srcqc")
+set(THIS_BOOTSTRAP_DIR "${CMAKE_SOURCE_DIR}/cmake/bootstrap")
+set(THIS_SOURCE_QC_DIR "${CMAKE_SOURCE_DIR}/srcqc")
 
-execute_process(COMMAND bash ${MANTA_BOOTSTRAP_DIR}/getVersion.bash OUTPUT_VARIABLE THIS_GIT_VERSION)
+execute_process(COMMAND bash ${THIS_BOOTSTRAP_DIR}/getVersion.bash OUTPUT_VARIABLE THIS_GIT_VERSION)
 set(MANTA_VERSION "${THIS_GIT_VERSION}")
-set(MANTA_FULL_VERSION "${MANTA_PROJECT_NAME}-${MANTA_VERSION}")
+set(MANTA_FULL_VERSION "${THIS_PROJECT_NAME}-${MANTA_VERSION}")
 message (STATUS "MANTA_VERSION: ${MANTA_VERSION}")
 
 
@@ -106,23 +106,23 @@ check_prefix()
 
 # paths for binary components -- we don't currently change this from the non-binary components
 set(THIS_EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
-set(MANTA_BINDIR "${THIS_EXEC_PREFIX}/bin")
-set(MANTA_LIBDIR "${THIS_EXEC_PREFIX}/lib")
-set(MANTA_LIBEXECDIR "${THIS_EXEC_PREFIX}/libexec")
+set(THIS_BINDIR "${THIS_EXEC_PREFIX}/bin")
+set(THIS_LIBDIR "${THIS_EXEC_PREFIX}/lib")
+set(THIS_LIBEXECDIR "${THIS_EXEC_PREFIX}/libexec")
 
 # paths w/o architecture dependency
-set(MANTA_PYTHON_LIBDIR "${CMAKE_INSTALL_PREFIX}/lib/python")
-set(MANTA_DATADIR "${CMAKE_INSTALL_PREFIX}/share")
-set(MANTA_DOCDIR "${CMAKE_INSTALL_PREFIX}/doc")
+set(THIS_PYTHON_LIBDIR "${CMAKE_INSTALL_PREFIX}/lib/python")
+set(THIS_DATADIR "${CMAKE_INSTALL_PREFIX}/share")
+set(THIS_DOCDIR "${CMAKE_INSTALL_PREFIX}/doc")
 
 message (STATUS "install prefix: ${CMAKE_INSTALL_PREFIX}")
 
 add_custom_target(MANTA_OPT ALL)
 
-set(MANTA_REDIST_DIR "${CMAKE_SOURCE_DIR}/../redist")
+set(THIS_REDIST_DIR "${CMAKE_SOURCE_DIR}/../redist")
 
-set (MANTA_GLOBALS_CMAKE "${CMAKE_SOURCE_DIR}/cmake/globals.cmake")
-set (MANTA_MACROS_CMAKE "${CMAKE_SOURCE_DIR}/cmake/macros.cmake")
+set (THIS_GLOBALS_CMAKE "${CMAKE_SOURCE_DIR}/cmake/globals.cmake")
+set (THIS_MACROS_CMAKE "${CMAKE_SOURCE_DIR}/cmake/macros.cmake")
 
 # redist includes
 include ("${CMAKE_SOURCE_DIR}/cmake/boost.cmake")
@@ -130,7 +130,7 @@ include ("${CMAKE_SOURCE_DIR}/cmake/boost.cmake")
 # global source QC -- don't allow non-ascii chars in source files:
 add_custom_target(MANTA_SOURCE_CHECK
     ALL
-    COMMAND bash ${MANTA_SOURCE_QC_DIR}/check_for_nonascii_source.bash
+    COMMAND bash ${THIS_SOURCE_QC_DIR}/check_for_nonascii_source.bash
     )
 
 # force this to run earlY:

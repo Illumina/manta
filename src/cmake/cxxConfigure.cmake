@@ -35,7 +35,7 @@ check_function_exists(round  HAVE_ROUND)
 check_function_exists(roundf HAVE_ROUNDF)
 check_function_exists(powf HAVE_POWF)
 
-include ("${MANTA_MACROS_CMAKE}")
+include ("${THIS_MACROS_CMAKE}")
 
 # Support for static linking
 # Note that this implies that all libraries must be found with the
@@ -47,18 +47,18 @@ include ("${MANTA_MACROS_CMAKE}")
     # ensure that even if cmake decides to allow for dynamic libs resolution,
     # this gets overriden into static...
 #    set(CMAKE_EXE_LINK_DYNAMIC_CXX_FLAGS ${CMAKE_EXE_LINK_STATIC_CXX_FLAGS})
-#    set(MANTA_LIBRARY_PREFIX ${CMAKE_STATIC_LIBRARY_PREFIX})
-#    set(MANTA_LIBRARY_SUFFIX ${CMAKE_STATIC_LIBRARY_SUFFIX})
+#    set(THIS_LIBRARY_PREFIX ${CMAKE_STATIC_LIBRARY_PREFIX})
+#    set(THIS_LIBRARY_SUFFIX ${CMAKE_STATIC_LIBRARY_SUFFIX})
     # set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
 #else  ()
-#    set(MANTA_LIBRARY_PREFIX "")
-#    set(MANTA_LIBRARY_SUFFIX "")
+#    set(THIS_LIBRARY_PREFIX "")
+#    set(THIS_LIBRARY_SUFFIX "")
 #endif ()
 
 # optional support for gzip compression
 static_find_library(ZLIB zlib.h z)
 if    (HAVE_ZLIB)
-    set  (MANTA_ADDITIONAL_LIB ${MANTA_ADDITIONAL_LIB} z)
+    set  (THIS_ADDITIONAL_LIB ${THIS_ADDITIONAL_LIB} z)
     message(STATUS "gzip compression supported")
 else  ()
     message(FATAL_ERROR "No support for gzip compression")

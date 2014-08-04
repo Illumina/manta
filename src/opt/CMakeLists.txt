@@ -20,7 +20,7 @@
 
 message(STATUS "Creating external tools in subdirectory opt")
 
-include ("${MANTA_GLOBALS_CMAKE}")
+include ("${THIS_GLOBALS_CMAKE}")
 
 # convenience macro to set in both current and parent scope:
 macro(superset symbol value)
@@ -38,13 +38,13 @@ superset(SAMTOOLS_LIBRARY "${SAMTOOLS_DIR}/libbam.a")
 add_custom_command(
     OUTPUT ${SAMTOOLS_LIBRARY}
     COMMAND ${CMAKE_COMMAND} -E remove_directory "${SAMTOOLS_DIR}"
-    COMMAND ${CMAKE_COMMAND} -E tar xjf "${MANTA_REDIST_DIR}/${SAMTOOLS_PREFIX}.tar.bz2"
+    COMMAND ${CMAKE_COMMAND} -E tar xjf "${THIS_REDIST_DIR}/${SAMTOOLS_PREFIX}.tar.bz2"
     COMMAND $(MAKE) -C "${SAMTOOLS_DIR}" all bgzip 2>| samtools.build.log
     COMMENT "Building the SAM/BAM library and tools")
 add_custom_target(MANTA_SAMTOOLS DEPENDS "${SAMTOOLS_LIBRARY}")
 
-install(PROGRAMS "${SAMTOOLS_DIR}/samtools" DESTINATION "${MANTA_LIBEXECDIR}")
-install(PROGRAMS "${SAMTOOLS_DIR}/bgzip"    DESTINATION "${MANTA_LIBEXECDIR}")
+install(PROGRAMS "${SAMTOOLS_DIR}/samtools" DESTINATION "${THIS_LIBEXECDIR}")
+install(PROGRAMS "${SAMTOOLS_DIR}/bgzip"    DESTINATION "${THIS_LIBEXECDIR}")
 
 #
 # tabix
@@ -57,12 +57,12 @@ superset(TABIX_LIBRARY "${TABIX_DIR}/libtabix.a")
 add_custom_command(
     OUTPUT ${TABIX_PROG}
     COMMAND ${CMAKE_COMMAND} -E remove_directory "${TABIX_DIR}"
-    COMMAND ${CMAKE_COMMAND} -E tar xjf "${MANTA_REDIST_DIR}/${TABIX_PREFIX}.tar.bz2"
+    COMMAND ${CMAKE_COMMAND} -E tar xjf "${THIS_REDIST_DIR}/${TABIX_PREFIX}.tar.bz2"
     COMMAND $(MAKE) -C "${TABIX_DIR}" all 2>| tabix.build.log
     COMMENT "Building tabix")
 add_custom_target(MANTA_TABIX DEPENDS "${TABIX_PROG}")
 
-install(PROGRAMS "${TABIX_PROG}" DESTINATION "${MANTA_LIBEXECDIR}")
+install(PROGRAMS "${TABIX_PROG}" DESTINATION "${THIS_LIBEXECDIR}")
 
 
 #
@@ -77,7 +77,7 @@ set(PYFLOW_SCRIPT "${PYFLOW_DIR}/src/pyflow.py")
 add_custom_command(
     OUTPUT ${PYFLOW_SCRIPT}
     COMMAND ${CMAKE_COMMAND} -E remove_directory "${PYFLOW_DIR}"
-    COMMAND ${CMAKE_COMMAND} -E tar xjf "${MANTA_REDIST_DIR}/${PYFLOW_PREFIX}.tar.bz2"
+    COMMAND ${CMAKE_COMMAND} -E tar xjf "${THIS_REDIST_DIR}/${PYFLOW_PREFIX}.tar.bz2"
     COMMAND ${CMAKE_COMMAND} -E remove -f "${PYFLOW_DIR}/src/__init__.py"
     COMMAND ${PYTHON_EXECUTABLE} -m compileall -q "${PYFLOW_DIR}/src"
     COMMENT "Extracting pyflow")
@@ -86,7 +86,7 @@ add_custom_target(MANTA_PYFLOW DEPENDS "${PYFLOW_SCRIPT}")
 
 set (PYGLOBS "*.py" "*.pyc")
 foreach (PYGLOB ${PYGLOBS})
-    install (DIRECTORY ${PYFLOW_DIR}/src/ DESTINATION ${MANTA_PYTHON_LIBDIR}/pyflow FILES_MATCHING PATTERN ${PYGLOB})
+    install (DIRECTORY ${PYFLOW_DIR}/src/ DESTINATION ${THIS_PYTHON_LIBDIR}/pyflow FILES_MATCHING PATTERN ${PYGLOB})
 endforeach ()
 
 
@@ -105,7 +105,7 @@ superset(HOEDOWN_PROG "${HOEDOWN_DIR}/hoedown_allext")
 add_custom_command(
     OUTPUT ${HOEDOWN_PROG}
     COMMAND ${CMAKE_COMMAND} -E remove_directory "${HOEDOWN_DIR}"
-    COMMAND ${CMAKE_COMMAND} -E tar xjf "${MANTA_REDIST_DIR}/${HOEDOWN_PREFIX}.tar.bz2"
+    COMMAND ${CMAKE_COMMAND} -E tar xjf "${THIS_REDIST_DIR}/${HOEDOWN_PREFIX}.tar.bz2"
     COMMAND $(MAKE) -C "${HOEDOWN_DIR}"
     COMMENT "Building hoedown markdown parser")
 add_custom_target(MANTA_MARKDOWN DEPENDS "${HOEDOWN_PROG}")

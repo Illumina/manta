@@ -19,10 +19,10 @@
 
 message (STATUS "Verifying target directories access")
 
-include ("${MANTA_GLOBALS_CMAKE}")
+include ("${THIS_GLOBALS_CMAKE}")
 install(
-    CODE "set(MANTA_TEST_DIRS \"\${MANTA_FULL_DATADIR}\"
-                               \"\${MANTA_FULL_BINDIR}\" \"\${MANTA_FULL_LIBDIR}\"
-                               \"\${MANTA_FULL_LIBEXECDIR}\")"
+    CODE "set(THIS_TEST_DIRS \"\${THIS_FULL_DATADIR}\"
+                               \"\${THIS_FULL_BINDIR}\" \"\${THIS_FULL_LIBDIR}\"
+                               \"\${THIS_FULL_LIBEXECDIR}\")"
     SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/checkTargetPathWritable.cmake"
 )

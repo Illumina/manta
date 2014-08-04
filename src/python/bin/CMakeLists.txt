@@ -10,16 +10,16 @@
 # <https://github.com/sequencing/licenses/>
 #
 
-set(INSTALL_TO_DIR "${MANTA_BINDIR}")
+set(INSTALL_TO_DIR "${THIS_BINDIR}")
 
-file(RELATIVE_PATH MANTA_RELATIVE_PYTHON_LIBDIR "${INSTALL_TO_DIR}" "${MANTA_PYTHON_LIBDIR}")
+file(RELATIVE_PATH THIS_RELATIVE_PYTHON_LIBDIR "${INSTALL_TO_DIR}" "${THIS_PYTHON_LIBDIR}")
 
-include ("${MANTA_MACROS_CMAKE}")
+include ("${THIS_MACROS_CMAKE}")
 
 configure_files("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}" "*.py")
 configure_files("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}" "*.ini")
 
-include("${MANTA_GLOBALS_CMAKE}") # required for *_PERMISSIONS values
+include("${THIS_GLOBALS_CMAKE}") # required for *_PERMISSIONS values
 
 install_fileglob("${CMAKE_CURRENT_BINARY_DIR}" "${INSTALL_TO_DIR}" "*.py"
                  "${THIS_EXECUTABLE_PERMISSIONS}")

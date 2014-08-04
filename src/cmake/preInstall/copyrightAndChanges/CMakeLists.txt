@@ -18,5 +18,5 @@
 
 # Installing top level components
 foreach(topfile ChangeLog.txt COPYRIGHT.txt Illumina_Open_Source_License_1.pdf)
-    install(FILES "${CMAKE_SOURCE_DIR}/../${topfile}" DESTINATION "${MANTA_DATADIR}")
+    install(FILES "${CMAKE_SOURCE_DIR}/../${topfile}" DESTINATION "${THIS_DATADIR}")
 endforeach()
