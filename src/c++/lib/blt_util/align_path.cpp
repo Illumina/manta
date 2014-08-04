@@ -38,7 +38,6 @@ void
 unknown_cigar_error(const char* const cigar,
                     const char* const cptr)
 {
-
     std::ostringstream oss;
     oss << "ERROR: can't parse cigar string: " << cigar << "\n"
         << "\tunexpected character: '" << *cptr << "' at position: " << (cptr-cigar+1) << "\n";
@@ -49,7 +48,6 @@ unknown_cigar_error(const char* const cigar,
 
 namespace ALIGNPATH
 {
-
 
 
 void
@@ -197,10 +195,8 @@ unsigned
 apath_soft_clip_lead_size(const path_t& apath)
 {
     unsigned val(0);
-    const unsigned as(apath.size());
-    for (unsigned i(0); i<as; ++i)
+    BOOST_FOREACH(const path_segment& ps, apath)
     {
-        const path_segment& ps(apath[i]);
         if       (HARD_CLIP == ps.type)
         {
             // do nothing:
@@ -249,10 +245,8 @@ unsigned
 apath_insert_lead_size(const path_t& apath)
 {
     unsigned val(0);
-    const unsigned as(apath.size());
-    for (unsigned i(0); i<as; ++i)
+    BOOST_FOREACH(const path_segment& ps, apath)
     {
-        const path_segment& ps(apath[i]);
         if ((HARD_CLIP == ps.type) || (SOFT_CLIP == ps.type))
         {
             // do nothing:
@@ -401,10 +395,8 @@ apath_clip_clipper(path_t& apath,
 
     bool is_lead(true);
     path_t apath2;
-    const unsigned as(apath.size());
-    for (unsigned i(0); i<as; ++i)
+    BOOST_FOREACH(const path_segment& ps, apath)
     {
-        const path_segment& ps(apath[i]);
         if       (HARD_CLIP == ps.type)
         {
             if (is_lead)
@@ -483,6 +475,7 @@ apath_clip_adder(path_t& apath,
 // 2. remove pads
 // 3. condense repeated segment types
 // 4. reduce adjacent insertion/deletion tags to a single pair
+// 5. replace NDN pattern with single SKIP segment
 //
 // return true if path has been altered
 //
@@ -552,6 +545,28 @@ apath_cleaner(path_t& apath)
             }
         }
     }
+
+    // convert NDN to single N:
+    for (unsigned i(0); i<as; ++i)
+    {
+        path_segment& ps(apath[i]);
+        if (ps.type == SKIP)
+        {
+            if ( (i+2)<as)
+            {
+                if ((apath[i+1].type == DELETE) && (apath[i+2].type == SKIP))
+                {
+                    for (unsigned j(1); j<3; ++j)
+                    {
+                        ps.length += apath[i+j].length;
+                        apath[i+j].length = 0;
+                    }
+                    is_cleaned = true;
+                }
+            }
+        }
+    }
+
     if (is_cleaned)
     {
         path_t apath2;

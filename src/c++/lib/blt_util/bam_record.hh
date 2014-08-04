@@ -65,6 +65,11 @@ struct bam_record
         return (*this);
     }
 
+private:
+    const bam_record&
+    operator==(const bam_record& rhs);
+public:
+
     const char*
     qname() const
     {

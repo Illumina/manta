@@ -25,7 +25,6 @@
 #include <string>
 #include <vector>
 
-
 /// process export MD and output the alignment information in a format
 /// which will not need to change significantly for SAM/BAM (by
 /// providing essentially a parsed forward strand CIGAR string)
@@ -527,7 +526,6 @@ is_apath_starling_invalid(const path_t& apath);
 #if 0
 normalize_path();
 #endif
-
 }
 
 
