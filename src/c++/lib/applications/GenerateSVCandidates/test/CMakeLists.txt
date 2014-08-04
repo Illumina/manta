@@ -19,4 +19,4 @@
 ################################################################################
 
 #set(ADDITIONAL_UNITTEST_LIB manta_manta)
-include(${MANTA_CXX_TEST_LIBRARY_CMAKE})
+include(${THIS_CXX_TEST_LIBRARY_CMAKE})

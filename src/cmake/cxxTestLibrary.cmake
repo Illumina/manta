@@ -19,7 +19,7 @@
 ################################################################################
 
 set(IS_QUIET true)
-include(${MANTA_CXX_EXECUTABLE_CMAKE})
+include(${THIS_CXX_EXECUTABLE_CMAKE})
 
 configure_files("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}" "*.cpp")
 

@@ -18,7 +18,7 @@
 ##
 ################################################################################
 
-include(${MANTA_CXX_EXECUTABLE_CMAKE})
+include(${THIS_CXX_EXECUTABLE_CMAKE})
 
 file (GLOB MANTA_PROGRAM_SOURCE_LIST [a-zA-Z0-9]*.cpp)
 

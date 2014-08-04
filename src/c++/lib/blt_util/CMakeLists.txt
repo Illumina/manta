@@ -18,4 +18,4 @@
 ##
 ################################################################################
 
-include(${MANTA_CXX_LIBRARY_CMAKE})
+include(${THIS_CXX_LIBRARY_CMAKE})

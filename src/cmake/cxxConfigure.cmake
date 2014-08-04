@@ -220,12 +220,12 @@ if (GNU_COMPAT_COMPILER)
 
 endif()
 
-set(MANTA_CXX_CONFIG_H_DIR ${CMAKE_CURRENT_BINARY_DIR}/lib/common)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/lib/common/config.h.in ${MANTA_CXX_CONFIG_H_DIR}/config.h @ONLY)
+set(THIS_CXX_CONFIG_H_DIR ${CMAKE_CURRENT_BINARY_DIR}/lib/common)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/lib/common/config.h.in ${THIS_CXX_CONFIG_H_DIR}/config.h @ONLY)
 
 
 #
 # include dirs:
 #
-set (MANTA_CXX_BEFORE_SYSTEM_INCLUDES "${Boost_INCLUDE_DIRS}" "${SAMTOOLS_DIR}" "${TABIX_DIR}")
-set (MANTA_CXX_ALL_INCLUDES "${CMAKE_SOURCE_DIR}/c++/lib")
+set (THIS_CXX_BEFORE_SYSTEM_INCLUDES "${Boost_INCLUDE_DIRS}" "${SAMTOOLS_DIR}" "${TABIX_DIR}")
+set (THIS_CXX_ALL_INCLUDES "${CMAKE_SOURCE_DIR}/c++/lib")
