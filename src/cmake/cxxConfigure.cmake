@@ -88,7 +88,7 @@ endmacro()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     get_compiler_version(compiler_version)
-    test_min_compiler(${compiler_version} "4.1.2" "g++")
+    test_min_compiler(${compiler_version} "4.7" "g++")
     message (STATUS "using compiler: g++ version ${compiler_version}")
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -155,6 +155,7 @@ endif()
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX_WARN_FLAGS}")
 
 if (GNU_COMPAT_COMPILER)
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
     set (CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
     set (CMAKE_CXX_FLAGS_RELEASE "-O3 -fomit-frame-pointer")
     set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")

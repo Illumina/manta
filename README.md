@@ -32,12 +32,15 @@ Note that this README is _NOT_ part of an end-user release distribution.
 ### Prerequisites
 
 Manta has been built and tested on linux systems only. It is currently
-maintained for Centos5,6 and Ubuntu 12.04.
+maintained for Centos5,6 and Ubuntu 12.04 (all with updated gcc).
 
 #### Compilation prerequisites:
 
+Starka requires a compiler supporting most of the C++11 standard. These are the
+current minimum versions enforced by the build system:
+
 * python 2.4+
-* gcc 4.1+ OR clang 3.2+
+* gcc 4.7+ OR clang 3.2+
 * libz (including headers)
 
 #### Runtime prerequisites

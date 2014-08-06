@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # Manta
-# Copyright (c) 2013 Illumina, Inc.
+# Copyright (c) 2013-2014 Illumina, Inc.
 #
 # This software is provided under the terms and conditions of the
 # Illumina Open Source Software License 1.
@@ -41,7 +41,7 @@ def usage() :
 
     usage: %s cxx_root_directory
 
-    run cppcheck on manta c++ source code, return error for any unsupressed cppcheck issue
+    run cppcheck on project c++ source code, return error for any unsupressed cppcheck issue
 
 """ % (scriptName)
 
@@ -67,7 +67,7 @@ def main() :
 
     checkCmd=[cppcheck_path]
     checkCmd.append("--enable=all")
-    checkCmd.append("--std=c++03")
+    checkCmd.append("--std=c++11")
     checkCmd.append("--force")
     checkCmd.append("--verbose")
     checkCmd.append("--quiet")

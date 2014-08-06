@@ -73,7 +73,7 @@ reheader_file() {
 
 project_base_dir=$(rel2abs $thisdir/../../..)
 cxx_base_dir=$project_base_dir/src/c++
-python_base_dir=$project_base_dir/src/python
+python_base_dir=$project_base_dir/src
 cmake_base_dir=$project_base_dir/src
 shell_base_dir=$project_base_dir/src
 
