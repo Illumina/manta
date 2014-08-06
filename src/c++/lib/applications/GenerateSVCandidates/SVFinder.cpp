@@ -24,8 +24,6 @@
 #include "manta/SVReferenceUtil.hh"
 #include "svgraph/EdgeInfoUtil.hh"
 
-#include "boost/foreach.hpp"
-
 #include <iostream>
 
 
@@ -52,7 +50,7 @@ SVFinder(const GSCOptions& opt) :
 
     // setup regionless bam_streams:
     // setup all data for main analysis loop:
-    BOOST_FOREACH(const std::string& afile, opt.alignFileOpt.alignmentFilename)
+    for (const std::string& afile : opt.alignFileOpt.alignmentFilename)
     {
         // avoid creating shared_ptr temporaries:
         streamPtr tmp(new bam_streamer(afile.c_str()));
@@ -129,7 +127,7 @@ addSVNodeRead(
     scanner.getSVLoci(bamRead, bamIndex, bamHeader, refSeq, loci,
                       truthTracker);
 
-    BOOST_FOREACH(const SVLocus& locus, loci)
+    for (const SVLocus& locus : loci)
     {
         const unsigned locusSize(locus.size());
         assert((locusSize>=1) && (locusSize<=2));
@@ -267,7 +265,7 @@ addSVNodeData(
 
     // iterate through reads, test reads for association and add to svData:
     unsigned bamIndex(0);
-    BOOST_FOREACH(streamPtr& bamPtr, _bamStreams)
+    for (streamPtr& bamPtr : _bamStreams)
     {
         const bool isTumor(_isAlignmentTumor[bamIndex]);
 
@@ -344,9 +342,9 @@ checkResult(
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
         const SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
-        BOOST_FOREACH(const SVCandidateSetReadPair& pair, svDataGroup)
+        for (const SVCandidateSetReadPair& pair : svDataGroup)
         {
-            BOOST_FOREACH(const SVPairAssociation& sva, pair.svLink)
+            for (const SVPairAssociation& sva : pair.svLink)
             {
                 if (sva.index>=svCount)
                 {
@@ -491,7 +489,7 @@ consolidateOverlap(
     if (! deletedSVIndex.empty())
     {
 #ifdef DEBUG_SVDATA
-        BOOST_FOREACH(const unsigned index, deletedSVIndex)
+        for (const unsigned index, deletedSVIndex)
         {
             log_os << logtag << "deleted index: " << index << "\n";
         }
@@ -500,7 +498,7 @@ consolidateOverlap(
         {
             svCandDeleter svDeleter(svs,moveSVIndex);
 
-            BOOST_FOREACH(const unsigned index, deletedSVIndex)
+            for (const unsigned index : deletedSVIndex)
             {
                 svDeleter.deleteIndex(index);
             }
@@ -519,7 +517,7 @@ consolidateOverlap(
     if (! moveSVIndex.empty())
     {
 #ifdef DEBUG_SVDATA
-        BOOST_FOREACH(const movemap_t::value_type& val, moveSVIndex)
+        for (const movemap_t::value_type& val, moveSVIndex)
         {
             log_os << logtag << "Movemap from: " << val.first << " to: " << val.second << "\n";
         }
@@ -528,9 +526,9 @@ consolidateOverlap(
         for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
         {
             SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
-            BOOST_FOREACH(SVCandidateSetReadPair& pair, svDataGroup)
+            for (SVCandidateSetReadPair& pair : svDataGroup)
             {
-                BOOST_FOREACH(SVPairAssociation& sva, pair.svLink)
+                for (SVPairAssociation& sva : pair.svLink)
                 {
                     if (moveSVIndex.count(sva.index))
                     {
@@ -571,7 +569,7 @@ assignPairObservationsToSVCandidates(
     // we anticipate so few svs from the POC method, that there's no indexing on them
     // OST 26/09/2013: Be careful when re-arranging or rewriting the code below, under g++ 4.1.2
     // this can lead to an infinite loop.
-    BOOST_FOREACH(const SVObservation& readCand, readCandidates)
+    for (const SVObservation& readCand : readCandidates)
     {
 #ifdef DEBUG_SVDATA
         log_os << logtag << "Starting assignment for read cand: " << readCand << "\n";
@@ -613,7 +611,7 @@ assignPairObservationsToSVCandidates(
 
         bool isMatched(false);
         unsigned svIndex(0);
-        BOOST_FOREACH(SVCandidate& sv, svs)
+        for (SVCandidate& sv : svs)
         {
             if (sv.isIntersect(readCand))
             {
@@ -725,7 +723,7 @@ processReadPair(
 #ifdef DEBUG_SVDATA
     log_os << __FUNCTION__ << ": Checking pair: " << pair << "\n";
     log_os << __FUNCTION__ << ": Translated to candidates:\n";
-    BOOST_FOREACH(const SVObservation& cand, _readCandidates)
+    for (const SVObservation& cand, _readCandidates)
     {
         log_os << __FUNCTION__ << ": cand: " << cand << "\n";
     }
@@ -752,7 +750,7 @@ getCandidatesFromData(
     for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
     {
         SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
-        BOOST_FOREACH(SVCandidateSetReadPair& pair, svDataGroup)
+        for (SVCandidateSetReadPair& pair : svDataGroup)
         {
             if (! pair.isAnchored()) continue;
 
@@ -772,7 +770,7 @@ getCandidatesFromData(
             if (isTumor) continue;
 
             SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
-            BOOST_FOREACH(SVCandidateSetReadPair& pair, svDataGroup)
+            for (SVCandidateSetReadPair& pair : svDataGroup)
             {
                 if (pair.isAnchored()) continue;
 
@@ -789,7 +787,7 @@ getCandidatesFromData(
         log_os << __FUNCTION__ << ": precount: " << svs.size() << "\n";
 
         unsigned svIndex(0);
-        BOOST_FOREACH(SVCandidate& sv, svs)
+        for (SVCandidate& sv : svs)
         {
             log_os << __FUNCTION__ << ": PRECOUNT: index: " << svIndex << " " << sv;
             svIndex++;
@@ -804,7 +802,7 @@ getCandidatesFromData(
         log_os << __FUNCTION__ << ": postcount: " << svs.size() << "\n";
 
         unsigned svIndex(0);
-        BOOST_FOREACH(SVCandidate& sv, svs)
+        for (SVCandidate& sv : svs)
         {
             log_os << __FUNCTION__ << ": POSTCOUNT: index: " << svIndex << " " << sv;
             svIndex++;

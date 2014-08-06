@@ -26,8 +26,6 @@
 #include "manta/SVCandidateUtil.hh"
 #include "manta/SVReferenceUtil.hh"
 
-#include "boost/foreach.hpp"
-
 #include <iostream>
 
 //#define DEBUG_REFINER
@@ -201,7 +199,7 @@ getLargestIndelSize(
     unsigned largestSize(0);
 
     typedef std::pair<unsigned,unsigned> segment_t;
-    BOOST_FOREACH(const segment_t& seg, segments)
+    for (const segment_t& seg : segments)
     {
         for (unsigned i(seg.first); i<=seg.second; i++)
         {
@@ -539,7 +537,7 @@ isSmallSVAlignment(
         typedef std::pair<unsigned,unsigned> segment_t;
         std::vector<segment_t> tmpseg(candidateSegments);
         candidateSegments.clear();
-        BOOST_FOREACH(const segment_t& segment, tmpseg)
+        for (const segment_t& segment : tmpseg)
         {
             for (unsigned i(segment.first); i<=segment.second; ++i)
             {
@@ -1750,7 +1748,7 @@ getSmallSVAssembly(
 
         const SVCandidateAssemblyData::CandidateSegmentSetType& candidateSegments(assemblyData.smallSVSegments[assemblyData.bestAlignmentIndex]);
         unsigned segmentIndex = 0;
-        BOOST_FOREACH(const SVCandidateAssemblyData::CandidateSegmentType& segRange, candidateSegments)
+        for (const SVCandidateAssemblyData::CandidateSegmentType& segRange : candidateSegments)
         {
             // copy the low-res candidate sv and start customizing:
             assemblyData.svs.push_back(sv);

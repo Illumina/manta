@@ -18,8 +18,6 @@
 #include "common/Exceptions.hh"
 #include "manta/ChromDepthFilterUtil.hh"
 
-#include "boost/foreach.hpp"
-
 #include <sstream>
 
 
@@ -41,7 +39,7 @@ ChromDepthFilterUtil(
 
     // translate string chrom labels into tid values in lookup vector:
     //
-    BOOST_FOREACH(const bam_header_info::chrom_info& cdata, header.chrom_data)
+    for (const bam_header_info::chrom_info& cdata : header.chrom_data)
     {
         cdmap_t::const_iterator cdi(chromDepth.find(cdata.label));
         if (cdi == chromDepth.end())

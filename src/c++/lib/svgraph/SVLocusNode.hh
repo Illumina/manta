@@ -19,7 +19,6 @@
 
 #include "svgraph/GenomeInterval.hh"
 
-#include "boost/foreach.hpp"
 #include "boost/serialization/map.hpp"
 #include "boost/serialization/vector.hpp"
 #include "boost/serialization/split_member.hpp"
@@ -237,7 +236,7 @@ struct SVLocusNode
         else
         {
             _edges.multiPtr = new SVLocusEdgesType;
-            BOOST_FOREACH(const SVLocusEdgesType::value_type& val, in.getMap())
+            for (const SVLocusEdgesType::value_type& val : in.getMap())
             {
                 getMap().insert(std::make_pair(val.first+offset, val.second));
             }
@@ -331,7 +330,7 @@ struct SVLocusNode
         }
         else
         {
-            BOOST_FOREACH(const SVLocusEdgesType::value_type& edgeIter, getMap())
+            for (const SVLocusEdgesType::value_type& edgeIter : getMap())
             {
                 if (edgeIter.second.getCount() > 0) return true;
             }
@@ -350,7 +349,7 @@ struct SVLocusNode
         else
         {
             unsigned sum(0);
-            BOOST_FOREACH(const SVLocusEdgesType::value_type& edgeIter, getMap())
+            for (const SVLocusEdgesType::value_type& edgeIter : getMap())
             {
                 sum += edgeIter.second.getCount();
             }

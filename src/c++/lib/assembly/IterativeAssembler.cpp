@@ -43,7 +43,7 @@ static
 void print_unsignSet(const std::set<unsigned>& unsignSet)
 {
     log_os << "[";
-    BOOST_FOREACH(const unsigned us, unsignSet)
+    for (const unsigned us : unsignSet)
     {
         log_os << us << ",";
     }
@@ -54,7 +54,7 @@ static
 void print_stringSet(const std::set<std::string>& strSet)
 {
     log_os << "[";
-    BOOST_FOREACH(const std::string& str, strSet)
+    for (const std::string& str, strSet)
     {
         log_os << str << ",";
     }
@@ -130,7 +130,7 @@ wordHashToDot(
     os << "node [ style = filled ];\n";
     str_uint_map_t aliasH;
     unsigned n(0);
-    BOOST_FOREACH(const str_uint_map_t::value_type& val, wordCount)
+    for (const str_uint_map_t::value_type& val : wordCount)
     {
         const std::string& word(val.first);
         const unsigned cov(val.second);
@@ -141,11 +141,11 @@ wordHashToDot(
 
     // need to add edges here
     static const bool isEnd(true);
-    BOOST_FOREACH(const str_uint_map_t::value_type& val, wordCount)
+    for (const str_uint_map_t::value_type& val : wordCount)
     {
         const std::string& word(val.first);
         const std::string tmp(getEnd(word,word.size()-1,isEnd));
-        BOOST_FOREACH(const char symbol, alphabet)
+        for (const char symbol : alphabet)
         {
             const std::string newKey(addBase(tmp,symbol,isEnd));
             if (wordCount.find(newKey) != wordCount.end())
@@ -184,7 +184,7 @@ walk(const IterativeAssemblerOptions& opt,
     contig.supportReads = wordReadsIter->second;
     contig.seq = seed;
     // collecting rejecting reads for the seed from the unselected branches
-    BOOST_FOREACH(const char symbol, opt.alphabet)
+    for (const char symbol : opt.alphabet)
     {
         // the seed itself
         if (symbol == seed[wordLength-1]) continue;
@@ -254,7 +254,7 @@ walk(const IterativeAssemblerOptions& opt,
             std::set<unsigned> supportReads2Remove;
             std::set<unsigned> rejectReads2Add;
 
-            BOOST_FOREACH(const char symbol, opt.alphabet)
+            for (const char symbol : opt.alphabet)
             {
                 const std::string newKey(addBase(trunk, symbol, isEnd));
 #ifdef DEBUG_WALK
@@ -347,7 +347,7 @@ walk(const IterativeAssemblerOptions& opt,
                 if (maxWordReads != previousWordReads)
                 {
                     const char tmpSymbol = (isEnd? previousWord[0] : previousWord[wordLength-1]);
-                    BOOST_FOREACH(const char symbol, opt.alphabet)
+                    for (const char symbol : opt.alphabet)
                     {
                         // the selected branch
                         if (symbol == tmpSymbol) continue;
@@ -382,7 +382,7 @@ walk(const IterativeAssemblerOptions& opt,
 #endif
                 // update rejecting reads
                 // add reads that support the unselected allele
-                BOOST_FOREACH(const unsigned rd, rejectReads2Add)
+                for (const unsigned rd : rejectReads2Add)
                 {
                     contig.rejectReads.insert(rd);
                 }
@@ -400,7 +400,7 @@ walk(const IterativeAssemblerOptions& opt,
 #endif
                 // update supporting reads
                 // add reads that support the selected allel
-                BOOST_FOREACH(const unsigned rd, maxWordReads)
+                for (const unsigned rd : maxWordReads)
                 {
                     if (contig.rejectReads.find(rd) == contig.rejectReads.end())
                         contig.supportReads.insert(rd);
@@ -415,7 +415,7 @@ walk(const IterativeAssemblerOptions& opt,
                 print_unsignSet(supportReads2Remove);
 #endif
                 // remove reads that do NOT support the selected allel anymore
-                BOOST_FOREACH(const unsigned rd, supportReads2Remove)
+                for (const unsigned rd : supportReads2Remove)
                 {
                     contig.supportReads.erase(rd);
                 }
@@ -494,7 +494,7 @@ getKmerCounts(
             wordCountAdd = opt.minCoverage;
 
         // total occurrences from this read
-        BOOST_FOREACH(const std::string& word, readWords)
+        for (const std::string& word : readWords)
         {
             wordCount[word] += wordCountAdd;
             // record the supporting read
@@ -520,7 +520,7 @@ searchRepeats(
     wordStack.push_back(word);
 
     const std::string tmp(getEnd(word, word.size()-1, true));
-    BOOST_FOREACH(const char symbol, opt.alphabet)
+    for (const char symbol : opt.alphabet)
     {
         // candidate successor of the current word
         const std::string nextWord(addBase(tmp, symbol, true));
@@ -594,14 +594,14 @@ getRepeatKmers(
     std::set<std::string>& repeatWords)
 {
     str_pair_uint_map_t wordIndices;
-    BOOST_FOREACH(const str_uint_map_t::value_type& wdct, wordCount)
+    for (const str_uint_map_t::value_type& wdct : wordCount)
     {
         wordIndices[wdct.first] = std::pair<unsigned,unsigned>(0, 0);
     }
 
     unsigned index = 1;
     std::vector<std::string> wordStack;
-    BOOST_FOREACH(const str_pair_uint_map_t::value_type& wdidx, wordIndices)
+    for (const str_pair_uint_map_t::value_type& wdidx : wordIndices)
     {
         const std::string word = wdidx.first;
         const unsigned wordIdx = wdidx.second.first;
@@ -645,7 +645,7 @@ buildContigs(
 
     // track kmers can be used as seeds for searching for the next contig
     std::set<std::string> unusedWords;
-    BOOST_FOREACH(const str_uint_map_t::value_type& wdct, wordCount)
+    for (const str_uint_map_t::value_type& wdct : wordCount)
     {
         // filter out kmers with too few coverage
         if (wdct.second >= opt.minCoverage)
@@ -657,7 +657,7 @@ buildContigs(
         std::string maxWord;
         unsigned maxWordCount(0);
         // get the kmers corresponding the highest count
-        BOOST_FOREACH(const std::string& word, unusedWords)
+        for (const std::string& word : unusedWords)
         {
             assert (wordCount.count(word) > 0);
             const unsigned currWordCount = wordCount.at(word);
@@ -732,7 +732,7 @@ selectContigs(
         unsigned selectedContigIndex;
         unsigned maxSupport(0);
         unsigned maxLength(0);
-        BOOST_FOREACH(const AssembledContig& contig, candidateContigs)
+        for (const AssembledContig& contig : candidateContigs)
         {
             // identify new support reads that were not used for the previously identified contigs
             std::set<unsigned> newSupportReads;
@@ -746,7 +746,7 @@ selectContigs(
 
             // count the number of new support reads that are not pseudo reads
             unsigned newNormalSupport(0);
-            BOOST_FOREACH(const unsigned rd, newSupportReads)
+            for (const unsigned rd : newSupportReads)
             {
                 const AssemblyReadInfo& rinfo(readInfo[rd]);
                 if (!rinfo.isPseudo) newNormalSupport++;
@@ -798,7 +798,7 @@ selectContigs(
 #endif
 
         // update the info about used reads
-        BOOST_FOREACH(const unsigned rd, selectedContig.supportReads)
+        for (const unsigned rd : selectedContig.supportReads)
         {
             usedReads.insert(rd);
             AssemblyReadInfo& rinfo(readInfo[rd]);
@@ -874,7 +874,7 @@ runIterativeAssembler(
 
         unsigned addedCount(0);
         //  Add contigs from the current iteration as pseudo reads
-        BOOST_FOREACH(const AssembledContig& contig, iterativeContigs)
+        for (const AssembledContig& contig : iterativeContigs)
         {
             if (contig.seq.size() > (wordLength+opt.wordStepSize))
             {
@@ -901,7 +901,7 @@ runIterativeAssembler(
 #ifdef DEBUG_ASBL
     log_os << logtag << "Selected " << contigs.size() << "contigs.\n";
     unsigned index(1);
-    BOOST_FOREACH(const AssembledContig& ctg, contigs)
+    for (const AssembledContig& ctg : contigs)
     {
         log_os << logtag <<"Selected contig # " << index << ": " << ctg.seq << "\n";
         log_os << logtag << "Contig supporting reads: ";

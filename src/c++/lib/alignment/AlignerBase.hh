@@ -20,8 +20,6 @@
 #include "alignment/AlignmentScores.hh"
 #include "blt_util/align_path.hh"
 
-#include "boost/foreach.hpp"
-
 #include <cassert>
 
 
@@ -60,7 +58,7 @@ struct AlignerBase
         //
         /// TODO: reevaluate policy for insertion-deletion state transition score
 
-        BOOST_FOREACH(const path_segment& ps, apath)
+        for (const path_segment& ps : apath)
         {
             bool isIndel(false); // placement of isIndel inside of this loop is the 'bug'
             switch (ps.type)
@@ -112,7 +110,7 @@ struct AlignerBase
         maxReadOffset=0;
         maxRefOffset=0;
 
-        BOOST_FOREACH(const path_segment& ps, apath)
+        for (const path_segment& ps : apath)
         {
             bool isIndel(false); // unintended 'bug' with positive results, see TODO note above
             switch (ps.type)

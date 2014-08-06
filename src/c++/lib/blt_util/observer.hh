@@ -23,8 +23,6 @@
 
 #pragma once
 
-#include "boost/foreach.hpp"
-
 #include <set>
 
 
@@ -46,7 +44,7 @@ struct observer
 
     virtual ~observer()
     {
-        BOOST_FOREACH(typename nots_t::value_type val, _nots)
+        for (typename nots_t::value_type val : _nots)
         {
             val->unregister_observer(this);
         }
@@ -98,7 +96,7 @@ struct notifier
     notifier(const self_t& rhs) :
         _obss(rhs._obss)
     {
-        BOOST_FOREACH(typename obss_t::value_type val, _obss)
+        for (typename obss_t::value_type val : _obss)
         {
             val->register_notifier(this);
         }
@@ -110,7 +108,7 @@ struct notifier
         if (this == &rhs) return *this;
         self_unregister();
         _obss=rhs._obss;
-        BOOST_FOREACH(typename obss_t::value_type val, _obss)
+        for (typename obss_t::value_type val : _obss)
         {
             val->register_notifier(this);
         }
@@ -126,7 +124,7 @@ protected:
     void
     notify_observers(const T& msg) const
     {
-        BOOST_FOREACH(typename obss_t::value_type val, _obss)
+        for (typename obss_t::value_type val : _obss)
         {
             val->recieve_notification(*this, msg);
         }
@@ -137,7 +135,7 @@ private:
     void
     self_unregister() const
     {
-        BOOST_FOREACH(typename obss_t::value_type val, _obss)
+        for (typename obss_t::value_type val : _obss)
         {
             val->unregister_notifier(this);
         }

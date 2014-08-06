@@ -20,7 +20,6 @@
 #include "boost/archive/text_oarchive.hpp"
 #include "boost/archive/binary_iarchive.hpp"
 #include "boost/archive/binary_oarchive.hpp"
-#include "boost/foreach.hpp"
 #include "boost/test/unit_test.hpp"
 
 #include "svgraph/SVLocus.hh"
@@ -155,7 +154,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSerialze )
     const SVLocus& clocus1_copy(locus1_copy);
 
     bool isMatchFound(false);
-    BOOST_FOREACH(const SVLocusNode& node, clocus1_copy)
+    for (const SVLocusNode& node : clocus1_copy)
     {
         if (node.getInterval() == (clocus1.begin())->getInterval()) isMatchFound=true;
     }

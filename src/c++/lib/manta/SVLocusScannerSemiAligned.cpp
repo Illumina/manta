@@ -25,7 +25,6 @@
 #include "boost/foreach.hpp"
 
 
-
 //#define DEBUG_SEMI_ALIGNED
 
 #ifdef DEBUG_SEMI_ALIGNED
@@ -75,7 +74,7 @@ leadingEdgeMismatchLength(
     leadingRefPos=refIndex;
 
     unsigned matchLength(0);
-    BOOST_FOREACH(const path_segment& ps, bamAlign.path)
+    for (const path_segment& ps : bamAlign.path)
     {
         if (is_segment_align_match(ps.type))
         {

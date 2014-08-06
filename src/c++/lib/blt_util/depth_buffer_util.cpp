@@ -18,8 +18,6 @@
 
 #include "depth_buffer_util.hh"
 
-#include "boost/foreach.hpp"
-
 
 
 void
@@ -32,7 +30,7 @@ add_alignment_to_depth_buffer(
 
     pos_t ref_head_pos(pos);
 
-    BOOST_FOREACH(const path_segment& ps, apath)
+    for (const path_segment& ps : apath)
     {
         if ( is_segment_align_match(ps.type) )
         {

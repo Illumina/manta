@@ -159,7 +159,7 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
     totalObservationCount() const
     {
         unsigned sum(0);
-        BOOST_FOREACH(const SVLocusNode& node, *this)
+        for (const SVLocusNode& node : *this)
         {
             sum += node.outCount();
         }
@@ -171,7 +171,7 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
     totalEdgeCount() const
     {
         unsigned sum(0);
-        BOOST_FOREACH(const SVLocusNode& node, *this)
+        for (const SVLocusNode& node : *this)
         {
             sum += node.size();
         }
@@ -340,7 +340,7 @@ private:
 
         // simple method -- copy everything in with an offset in all index numbers:
         const unsigned offset(_graph.size());
-        BOOST_FOREACH(const SVLocusNode& fromNode, fromLocus)
+        for (const SVLocusNode& fromNode : fromLocus)
         {
             const NodeIndexType nodeIndex(newGraphNode());
             getNode(nodeIndex) = SVLocusNode(fromNode, offset);

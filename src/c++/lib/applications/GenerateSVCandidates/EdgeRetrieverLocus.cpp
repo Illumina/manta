@@ -17,8 +17,6 @@
 
 #include "EdgeRetrieverLocus.hh"
 
-#include "boost/foreach.hpp"
-
 #include <cassert>
 
 #include <iostream>

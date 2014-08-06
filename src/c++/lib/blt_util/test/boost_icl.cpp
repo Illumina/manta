@@ -13,7 +13,6 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "boost/foreach.hpp"
 #include "boost/icl/discrete_interval.hpp"
 #include "boost/icl/interval_map.hpp"
 
@@ -65,7 +64,7 @@ BOOST_AUTO_TEST_CASE( boost_icl_test_map )
         for (; begin!=end; ++begin)
         {
             std::cerr << "CCC" << begin->first;
-            BOOST_FOREACH(const std::string& s, begin->second)
+            for (const std::string& s : begin->second)
             {
                 std::cerr << " " << s;
             }
@@ -80,7 +79,7 @@ BOOST_AUTO_TEST_CASE( boost_icl_test_map )
         for (; begin!=end; ++begin)
         {
             std::cerr << "CCC" << begin->first;
-            BOOST_FOREACH(const std::string& s, begin->second)
+            for (const std::string& s : begin->second)
             {
                 std::cerr << " " << s;
             }

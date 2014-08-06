@@ -23,7 +23,6 @@
 #include "options/ReadScannerOptionsParser.hh"
 #include "options/optionsUtil.hh"
 
-#include "boost/foreach.hpp"
 #include "boost/program_options.hpp"
 
 #include <iostream>
@@ -181,7 +180,7 @@ parseGSCOptions(
     {
         unsigned normalCount(0);
         unsigned tumorCount(0);
-        BOOST_FOREACH(const bool value, opt.alignFileOpt.isAlignmentTumor)
+        for (const bool value : opt.alignFileOpt.isAlignmentTumor)
         {
             if (value) tumorCount++;
             else      normalCount++;

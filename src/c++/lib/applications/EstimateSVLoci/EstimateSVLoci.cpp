@@ -26,7 +26,6 @@
 #include "manta/SVReferenceUtil.hh"
 #include "truth/TruthTracker.hh"
 
-#include "boost/foreach.hpp"
 #include "boost/shared_ptr.hpp"
 
 #include <iostream>
@@ -49,7 +48,7 @@ runESL(const ESLOptions& opt)
     std::vector<stream_ptr> bamStreams;
 
     // setup all data for main alignment loop:
-    BOOST_FOREACH(const std::string& afile, opt.alignFileOpt.alignmentFilename)
+    for (const std::string& afile : opt.alignFileOpt.alignmentFilename)
     {
         stream_ptr tmp(new bam_streamer(afile.c_str(),
                                         (opt.region.empty()

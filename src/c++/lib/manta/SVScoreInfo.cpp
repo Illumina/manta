@@ -20,8 +20,6 @@
 #include "blt_util/seq_util.hh"
 #include "blt_util/seq_printer.hh"
 
-#include "boost/foreach.hpp"
-
 #include <iostream>
 
 

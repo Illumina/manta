@@ -21,8 +21,6 @@
 #include "blt_util/log.hh"
 #include "manta/ReadGroupStatsSet.hh"
 
-#include "boost/foreach.hpp"
-
 #include <iostream>
 
 

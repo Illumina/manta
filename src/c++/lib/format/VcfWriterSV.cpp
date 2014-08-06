@@ -61,7 +61,7 @@ writeHeaderPrefix(
     _os << "##source=" << progName << " " << progVersion << "\n";
     _os << "##reference=file://" << _referenceFilename << "\n";
 
-    BOOST_FOREACH(const bam_header_info::chrom_info& cdata, _header.chrom_data)
+    for (const bam_header_info::chrom_info& cdata : _header.chrom_data)
     {
         _os << "##contig=<ID=" << cdata.label << ",length=" << cdata.length << ">\n";
     }
@@ -134,7 +134,7 @@ makeInfoField(
 {
     static const char sep(';');
     bool isFirst(true);
-    BOOST_FOREACH(const std::string& is, info)
+    for (const std::string& is : info)
     {
         if (! isFirst) os << sep;
         else           isFirst = false;
@@ -159,7 +159,7 @@ makeFormatSampleField(
         os << '\t';
 
         bool isFirst(true);
-        BOOST_FOREACH(const VcfWriterSV::SampleTag_t::value_type& fs, sample)
+        for (const VcfWriterSV::SampleTag_t::value_type& fs : sample)
         {
             if (! isFirst) os << sep;
             else           isFirst = false;
@@ -170,7 +170,7 @@ makeFormatSampleField(
     }
 
     unsigned nSamples(0);
-    BOOST_FOREACH(const VcfWriterSV::SampleTag_t::value_type& fs, sample)
+    for (const VcfWriterSV::SampleTag_t::value_type& fs : sample)
     {
         const unsigned ns(fs.second.size());
         nSamples = std::max(nSamples, ns);
@@ -183,7 +183,7 @@ makeFormatSampleField(
         // next write SAMPLE field:
         {
             bool isFirst(true);
-            BOOST_FOREACH(const VcfWriterSV::SampleTag_t::value_type& fs, sample)
+            for (const VcfWriterSV::SampleTag_t::value_type& fs : sample)
             {
                 if (! isFirst) os << sep;
                 else           isFirst = false;
@@ -761,7 +761,7 @@ writeFilters(
     else
     {
         bool isFirst(true);
-        BOOST_FOREACH(const std::string& filter, filters)
+        for (const std::string& filter : filters)
         {
             if (isFirst)
             {

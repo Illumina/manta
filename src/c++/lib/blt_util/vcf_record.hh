@@ -19,8 +19,6 @@
 
 #include "blt_util/seq_util.hh"
 
-#include "boost/foreach.hpp"
-
 #include <iosfwd>
 #include <string>
 #include <vector>
@@ -28,7 +26,6 @@
 
 struct vcf_record
 {
-
     vcf_record() : pos(0)
     {
         clear();
@@ -49,7 +46,7 @@ struct vcf_record
     is_valid() const
     {
         if (! is_valid_seq(ref.c_str())) return false;
-        BOOST_FOREACH(const std::string& alt_allele, alt)
+        for (const std::string& alt_allele : alt)
         {
             if (! is_valid_seq(alt_allele.c_str())) return false;
         }
@@ -61,7 +58,7 @@ struct vcf_record
     {
         if (! is_valid()) return false;
         if ((ref.size()>1) && (alt.size()>0)) return true;
-        BOOST_FOREACH(const std::string& alt_allele, alt)
+        for (const std::string& alt_allele : alt)
         {
             if (alt_allele.size()>1) return true;
         }
@@ -73,7 +70,7 @@ struct vcf_record
     {
         if (! is_valid()) return false;
         if (1 != ref.size()) return false;
-        BOOST_FOREACH(const std::string& alt_allele, alt)
+        for (const std::string& alt_allele : alt)
         {
             if (1 != alt_allele.size()) return false;
         }

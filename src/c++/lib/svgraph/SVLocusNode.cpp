@@ -62,7 +62,7 @@ operator<<(std::ostream& os, const SVLocusNode& node)
        << "\n";
 
     const SVLocusEdgeManager edgeMap(node.getEdgeManager());
-    BOOST_FOREACH(const SVLocusEdgesType::value_type& edgeIter, edgeMap.getMap())
+    for (const SVLocusEdgesType::value_type& edgeIter : edgeMap.getMap())
     {
         os << "\tEdgeTo: " << edgeIter.first
            << " out_count: " << edgeIter.second.getCount()

@@ -110,6 +110,14 @@ BOOST_AUTO_TEST_CASE( test_apath_limit_read_length )
     BOOST_REQUIRE_EQUAL(test_read_limit_case(testCigar,false,5,10),"3I2=");
 }
 
+BOOST_AUTO_TEST_CASE( test_apath_clip_trail )
+{
+    static const std::string testCigar("2S20M3S4H");
+    ALIGNPATH::path_t path;
+    cigar_to_apath(testCigar.c_str(), path);
+
+    BOOST_REQUIRE_EQUAL(apath_soft_clip_trail_size(path),3u);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

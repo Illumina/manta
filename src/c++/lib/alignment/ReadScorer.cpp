@@ -18,8 +18,6 @@
 #include "ReadScorer.hh"
 #include "blt_util/math_util.hh"
 
-#include "boost/foreach.hpp"
-
 #include <cassert>
 
 //#define DEBUG_RS
@@ -65,7 +63,7 @@ getSemiAlignedMetricImpl(
     unsigned posInRead = 0;
     double score(0.);
 
-    BOOST_FOREACH(const path_segment& ps, apath)
+    for (const path_segment& ps : apath)
     {
         assert((ps.type != MATCH) && "Incorrect CIGAR type, matches must be converted to SEQ_MATCH/SEQ_MISMATCH");
 

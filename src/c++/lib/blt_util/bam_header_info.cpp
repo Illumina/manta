@@ -16,8 +16,6 @@
 
 #include "blt_util/bam_header_info.hh"
 
-#include "boost/foreach.hpp"
-
 #include <iostream>
 
 
@@ -39,7 +37,7 @@ operator<<(std::ostream& os, const bam_header_info& bhi)
     unsigned index(0);
 
     os << "chomosome_id_map:\n";
-    BOOST_FOREACH(const bam_header_info::chrom_info& info, bhi.chrom_data)
+    for (const bam_header_info::chrom_info& info : bhi.chrom_data)
     {
         os << "index: " << index << " label: " << info.label << " length: " << info.length << '\n';
         index++;

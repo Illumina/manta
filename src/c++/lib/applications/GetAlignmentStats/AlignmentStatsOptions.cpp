@@ -20,7 +20,6 @@
 #include "options/optionsUtil.hh"
 
 #include "boost/filesystem.hpp"
-#include "boost/foreach.hpp"
 #include "boost/program_options.hpp"
 
 #include <iostream>

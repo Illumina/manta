@@ -35,7 +35,7 @@ runMSL(const MSLOptions& opt)
 
     SVLocusSet mergedSet;
 
-    BOOST_FOREACH(const std::string& graphFile, opt.graphFilename)
+    for (const std::string& graphFile : opt.graphFilename)
     {
         if (opt.isVerbose)
         {

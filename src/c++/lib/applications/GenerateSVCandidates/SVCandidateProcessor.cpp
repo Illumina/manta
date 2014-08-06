@@ -20,8 +20,6 @@
 
 #include "blt_util/log.hh"
 
-#include "boost/foreach.hpp"
-
 #include <iostream>
 
 
@@ -64,7 +62,7 @@ bool
 isAnyFalse(
     const std::vector<bool>& vb)
 {
-    BOOST_FOREACH(const bool val, vb)
+    for (const bool val : vb)
     {
         if (! val) return true;
     }
@@ -379,7 +377,7 @@ evaluateCandidate(
     if (_opt.isVerbose)
     {
         log_os << __FUNCTION__ << ": Starting analysis for SV candidate containing " << junctionCount << " junctions. Low-resolution junction candidate ids:";
-        BOOST_FOREACH(const SVCandidate& sv, mjCandidateSV.junction)
+        for (const SVCandidate& sv : mjCandidateSV.junction)
         {
             log_os << " " << sv.candidateIndex;
         }

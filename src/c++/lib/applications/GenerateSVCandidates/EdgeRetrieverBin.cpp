@@ -17,8 +17,6 @@
 
 #include "EdgeRetrieverBin.hh"
 
-#include "boost/foreach.hpp"
-
 #include <cassert>
 
 #include <iostream>

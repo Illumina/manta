@@ -30,8 +30,6 @@
 #include "svgraph/EdgeInfoUtil.hh"
 #include "truth/TruthTracker.hh"
 
-#include "boost/foreach.hpp"
-
 #include <iostream>
 
 //#define DEBUG_GSV
@@ -171,16 +169,16 @@ runGSC(
             bool isFindLargeInsertions(isIsolatedEdge);
             if (isFindLargeInsertions)
             {
-                BOOST_FOREACH(const SVMultiJunctionCandidate& mjCandidateSV, mjSVs)
+                for (const SVMultiJunctionCandidate& mjCandidateSV : mjSVs)
                 {
-                    BOOST_FOREACH(const SVCandidate& candidateSV, mjCandidateSV.junction)
+                    for (const SVCandidate& candidateSV : mjCandidateSV.junction)
                     {
                         if (! isComplexSV(candidateSV)) isFindLargeInsertions=false;
                     }
                 }
             }
 
-            BOOST_FOREACH(const SVMultiJunctionCandidate& mjCandidateSV, mjSVs)
+            for (const SVMultiJunctionCandidate& mjCandidateSV : mjSVs)
             {
                 svProcessor.evaluateCandidate(edge, mjCandidateSV, svData, isFindLargeInsertions);
             }

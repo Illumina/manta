@@ -26,8 +26,6 @@
 #include "manta/ReadGroupLabel.hh"
 #include "manta/SVLocusScanner.hh"
 
-#include "boost/foreach.hpp"
-
 #include <iostream>
 #include <set>
 #include <sstream>
@@ -380,7 +378,7 @@ struct ReadAlignFilter
 
         bam_cigar_to_apath(bamRead.raw_cigar(), bamRead.n_cigar(), _apath);
 
-        BOOST_FOREACH(const path_segment& ps, _apath)
+        for (const path_segment& ps : _apath)
         {
             if (! is_segment_align_match(ps.type)) return true;
         }
@@ -644,12 +642,12 @@ struct ReadGroupManager
     bool
     isFinishedRegion()
     {
-        BOOST_FOREACH(RGMapType::value_type& val, _rgTracker)
+        for (RGMapType::value_type& val : _rgTracker)
         {
             if (! val.second.isChecked()) return false;
         }
 
-        BOOST_FOREACH(RGMapType::value_type& val, _rgTracker)
+        for (RGMapType::value_type& val : _rgTracker)
         {
             val.second.clearChecked();
         }
@@ -662,7 +660,7 @@ struct ReadGroupManager
     isStopEstimation()
     {
         static const unsigned maxRecordCount(5000000);
-        BOOST_FOREACH(RGMapType::value_type& val, _rgTracker)
+        for (RGMapType::value_type& val : _rgTracker)
         {
             if (! (val.second.isInsertSizeConverged() || (val.second.insertSizeObservations()>maxRecordCount))) return false;
         }
@@ -682,7 +680,7 @@ private:
     finalize()
     {
         if (_isFinalized) return;
-        BOOST_FOREACH(RGMapType::value_type& val, _rgTracker)
+        for (RGMapType::value_type& val : _rgTracker)
         {
             val.second.finalize();
         }
@@ -789,7 +787,7 @@ extractReadGroupStatsFromBam(
         }
     }
 
-    BOOST_FOREACH(const ReadGroupManager::RGMapType::value_type& val, rgManager.getMap())
+    for (const ReadGroupManager::RGMapType::value_type& val : rgManager.getMap())
     {
         rstats.setStats(val.first, val.second.getStats());
     }

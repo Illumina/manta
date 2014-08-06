@@ -18,8 +18,6 @@
 #include "manta/SVScoreInfoSomatic.hh"
 #include "blt_util/log.hh"
 
-#include "boost/foreach.hpp"
-
 #include <iostream>
 
 
@@ -30,7 +28,7 @@ operator<<(
     const SVScoreInfoSomatic& sis)
 {
     os << "SomaticSVScoreInfo somaticScore: " << sis.somaticScore << " sstier: " << sis.somaticScoreTier << " filters: ";
-    BOOST_FOREACH(const std::string& filter, sis.filters)
+    for (const std::string& filter : sis.filters)
     {
         os << " " << filter;
     }

@@ -30,7 +30,6 @@
 #include "manta/SVCandidateUtil.hh"
 
 #include "boost/array.hpp"
-#include "boost/foreach.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -71,7 +70,7 @@ SVScorer(
 {
     // setup regionless bam_streams:
     // setup all data for main analysis loop:
-    BOOST_FOREACH(const std::string& afile, opt.alignFileOpt.alignmentFilename)
+    for (const std::string& afile : opt.alignFileOpt.alignmentFilename)
     {
         // avoid creating shared_ptr temporaries:
         streamPtr tmp(new bam_streamer(afile.c_str()));
@@ -101,7 +100,7 @@ addReadToDepthEst(
     bam_cigar_to_apath(bamRead.raw_cigar(), bamRead.n_cigar(), apath);
 
     pos_t refPos(bamRead.pos()-1);
-    BOOST_FOREACH(const path_segment& ps, apath)
+    for (const path_segment& ps : apath)
     {
         if (refPos>=endPos) return;
 
@@ -264,7 +263,6 @@ getSampleSplitReadLnLhood(
 
 
 
-
 static
 void
 addConservativeSplitReadSupport(
@@ -405,7 +403,7 @@ getSampleCounts(
     const SVEvidence::evidenceTrack_t& sampleEvidence,
     SVSampleInfo& sampleBaseInfo)
 {
-    BOOST_FOREACH(const SVEvidence::evidenceTrack_t::value_type& val, sampleEvidence)
+    for (const SVEvidence::evidenceTrack_t::value_type& val : sampleEvidence)
     {
         const SVFragmentEvidence& fragev(val.second);
 
@@ -443,7 +441,7 @@ resolvePairSplitConflictsSample(
     const bool isFindAltPairConflict,
     SVEvidence::evidenceTrack_t& sampleEvidence)
 {
-    BOOST_FOREACH(SVEvidence::evidenceTrack_t::value_type& val, sampleEvidence)
+    for (SVEvidence::evidenceTrack_t::value_type& val : sampleEvidence)
     {
 #ifdef DEBUG_SCORE
         log_os << __FUNCTION__ << ": conflict check for " << val.first << "\n";
@@ -757,15 +755,9 @@ incrementSplitReadLhood(
 
 struct AlleleLnLhood
 {
-    AlleleLnLhood() :
-        fragPair(0),
-        read1Split(0),
-        read2Split(0)
-    {}
-
-    double fragPair;
-    double read1Split;
-    double read2Split;
+    double fragPair = 0.;
+    double read1Split = 0.;
+    double read2Split = 0.;
 };
 
 
@@ -958,7 +950,7 @@ addDiploidLoglhood(
     const SVEvidence::evidenceTrack_t& sampleEvidence,
     boost::array<double,DIPLOID_GT::SIZE>& loglhood)
 {
-    BOOST_FOREACH(const SVEvidence::evidenceTrack_t::value_type& val, sampleEvidence)
+    for (const SVEvidence::evidenceTrack_t::value_type& val : sampleEvidence)
     {
         const std::string& fragLabel(val.first);
         const SVFragmentEvidence& fragev(val.second);
@@ -1049,7 +1041,7 @@ scoreDiploidSV(
     {
         boost::array<double,DIPLOID_GT::SIZE> loglhood;
         std::fill(loglhood.begin(),loglhood.end(),0);
-        BOOST_FOREACH(const JunctionCallInfo& junction, junctionData)
+        for (const JunctionCallInfo& junction : junctionData)
         {
             addDiploidLoglhood(junction.getSpanningWeight(), junction.getEvidence().normal, loglhood);
         }
@@ -1097,7 +1089,7 @@ scoreDiploidSV(
         if (dFilter.isMaxDepthFilter())
         {
             unsigned filteredJunctionCount(0);
-            BOOST_FOREACH(const JunctionCallInfo& junction, junctionData)
+            for (const JunctionCallInfo& junction : junctionData)
             {
                 const SVScoreInfo& baseInfo(junction.getBaseInfo());
                 const SVCandidate& sv(junction.getSV());
@@ -1119,7 +1111,7 @@ scoreDiploidSV(
         // apply MQ0 filter
         {
             unsigned filteredJunctionCount(0);
-            BOOST_FOREACH(const JunctionCallInfo& junction, junctionData)
+            for (const JunctionCallInfo& junction : junctionData)
             {
                 const SVScoreInfo& baseInfo(junction.getBaseInfo());
                 const SVCandidate& sv(junction.getSV());
@@ -1227,7 +1219,7 @@ estimateSomaticMutationFreq(
 
     unsigned altCounts(0);
     unsigned refCounts(0);
-    BOOST_FOREACH(const JunctionCallInfo& junction, junctionData)
+    for (const JunctionCallInfo& junction : junctionData)
     {
         const SVScoreInfo& baseInfo(junction.getBaseInfo());
         const float& spanningPairWeight(junction.getSpanningWeight());
@@ -1273,7 +1265,7 @@ estimateNoiseMutationFreq(
     static const bool isPermissive(false);
     unsigned altCounts(0);
     unsigned refCounts(0);
-    BOOST_FOREACH(const JunctionCallInfo& junction, junctionData)
+    for (const JunctionCallInfo& junction : junctionData)
     {
         const SVScoreInfo& baseInfo(junction.getBaseInfo());
         const float& spanningPairWeight(junction.getSpanningWeight());
@@ -1309,7 +1301,7 @@ computeSomaticSampleLoghood(
     // semi-mapped alt reads make a partial contribution in tier1, and a full contribution in tier2:
     const double semiMappedPower( (isPermissive && (! isTumor)) ? 1. : 0. );
 
-    BOOST_FOREACH(const SVEvidence::evidenceTrack_t::value_type& val, evidenceTrack)
+    for (const SVEvidence::evidenceTrack_t::value_type& val : evidenceTrack)
     {
         const std::string& fragLabel(val.first);
         const SVFragmentEvidence& fragev(val.second);
@@ -1381,7 +1373,7 @@ scoreSomaticSV(
 
     /// for multi-junction events, we use the prior noise weight associated with the largest event:
     float largeNoiseWeight(0.f);
-    BOOST_FOREACH(const JunctionCallInfo& junction, junctionData)
+    for (const JunctionCallInfo& junction : junctionData)
     {
         const SVCandidate& sv(junction.getSV());
         const float weight(largeNoiseSVPriorWeight(sv));
@@ -1427,7 +1419,7 @@ scoreSomaticSV(
         static const ProbSet altSplitMapProbPermissive(1e-6);
         const ProbSet& altSplitMapProb( isPermissive ? altSplitMapProbPermissive : altSplitMapProbDefault );
 
-        BOOST_FOREACH(const JunctionCallInfo& junction, junctionData)
+        for (const JunctionCallInfo& junction : junctionData)
         {
             const SVEvidence& evidence(junction.getEvidence());
             const float& spanningPairWeight(junction.getSpanningWeight());
@@ -1459,7 +1451,7 @@ scoreSomaticSV(
         // independently estimate diploid genotype:
         boost::array<double,DIPLOID_GT::SIZE> normalLhood;
         std::fill(normalLhood.begin(),normalLhood.end(),0);
-        BOOST_FOREACH(const JunctionCallInfo& junction, junctionData)
+        for (const JunctionCallInfo& junction : junctionData)
         {
             addDiploidLoglhood(junction.getSpanningWeight(), junction.getEvidence().normal, normalLhood);
         }
@@ -1533,7 +1525,7 @@ scoreSomaticSV(
         if (dFilter.isMaxDepthFilter())
         {
             unsigned filteredJunctionCount(0);
-            BOOST_FOREACH(const JunctionCallInfo& junction, junctionData)
+            for (const JunctionCallInfo& junction : junctionData)
             {
                 const SVScoreInfo& baseInfo(junction.getBaseInfo());
                 const SVCandidate& sv(junction.getSV());
@@ -1561,7 +1553,7 @@ scoreSomaticSV(
         // apply MQ0 filter
         {
             unsigned filteredJunctionCount(0);
-            BOOST_FOREACH(const JunctionCallInfo& junction, junctionData)
+            for (const JunctionCallInfo& junction : junctionData)
             {
                 const SVScoreInfo& baseInfo(junction.getBaseInfo());
                 const SVCandidate& sv(junction.getSV());

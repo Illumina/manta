@@ -24,8 +24,6 @@
 
 #pragma once
 
-#include "boost/foreach.hpp"
-
 template <typename T>
 struct flyweight_notifier;
 

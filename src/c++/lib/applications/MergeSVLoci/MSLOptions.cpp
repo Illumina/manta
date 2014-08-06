@@ -20,7 +20,6 @@
 #include "blt_util/log.hh"
 
 #include "boost/filesystem.hpp"
-#include "boost/foreach.hpp"
 #include "boost/program_options.hpp"
 
 #include <iostream>
@@ -96,7 +95,7 @@ parseMSLOptions(const manta::Program& prog,
     {
         usage(log_os,prog,visible, "Must specify at least 1 input sv locus graph file");
     }
-    BOOST_FOREACH(const std::string& graphFilename, opt.graphFilename)
+    for (const std::string& graphFilename : opt.graphFilename)
     {
         if (! boost::filesystem::exists(graphFilename))
         {

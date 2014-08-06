@@ -18,8 +18,6 @@
 #include "common/Exceptions.hh"
 #include "manta/SVCandidateSetData.hh"
 
-#include "boost/foreach.hpp"
-
 #include <cassert>
 
 #include <iostream>
@@ -49,7 +47,7 @@ std::ostream&
 operator<<(std::ostream& os, const SVCandidateSetReadPair& svp)
 {
     os << "SVCandidateReadPair svIndices:";
-    BOOST_FOREACH(const SVPairAssociation& sva, svp.svLink)
+    for (const SVPairAssociation& sva : svp.svLink)
     {
         os << sva << "\n";
     }
@@ -130,7 +128,7 @@ SVCandidateSetData::
 setNewSearchInterval(const GenomeInterval& newSearch)
 {
     bool retval(false);
-    BOOST_FOREACH(const GenomeInterval& oldSearch, _searchIntervals)
+    for (const GenomeInterval& oldSearch : _searchIntervals)
     {
         if (oldSearch.isIntersect(newSearch))
         {

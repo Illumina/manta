@@ -19,8 +19,6 @@
 
 #include "common/Exceptions.hh"
 
-#include "boost/foreach.hpp"
-
 #include <fstream>
 #include <iomanip>
 #include <iostream>

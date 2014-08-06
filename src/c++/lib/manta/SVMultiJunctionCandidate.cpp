@@ -17,8 +17,6 @@
 
 #include "manta/SVMultiJunctionCandidate.hh"
 
-#include "boost/foreach.hpp"
-
 #include <iostream>
 
 
@@ -32,7 +30,7 @@ operator<<(
     os << "SVComplexCandidate:\n"
        << indent << "total_breakend_junctions: " << scc.junction.size() << "\n";
 
-    BOOST_FOREACH(const SVCandidate& sv, scc.junction)
+    for (const SVCandidate& sv : scc.junction)
     {
         os << sv;
     }

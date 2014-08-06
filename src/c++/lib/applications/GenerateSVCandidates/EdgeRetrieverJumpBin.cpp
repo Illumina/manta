@@ -17,8 +17,6 @@
 
 #include "EdgeRetrieverJumpBin.hh"
 
-#include "boost/foreach.hpp"
-
 #include <cassert>
 
 //#define DEBUG_EDGER

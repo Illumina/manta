@@ -24,8 +24,6 @@
 #include "manta/SVCandidateAssembler.hh"
 #include "manta/SVLocusScannerSemiAligned.hh"
 
-#include "boost/foreach.hpp"
-
 #include <iostream>
 
 //#define DEBUG_REMOTES
@@ -48,7 +46,7 @@ SVCandidateAssembler(
 {
     // setup regionless bam_streams:
     // setup all data for main analysis loop:
-    BOOST_FOREACH(const std::string& afile, alignFileOpt.alignmentFilename)
+    for (const std::string& afile : alignFileOpt.alignmentFilename)
     {
         // avoid creating shared_ptr temporaries:
         streamPtr tmp(new bam_streamer(afile.c_str()));
@@ -202,7 +200,7 @@ recoverRemoteReads(
 
     int last_tid=-1;
     int last_pos=-1;
-    BOOST_FOREACH(const RemoteReadInfo& remote, bamRemotes)
+    for (const RemoteReadInfo& remote : bamRemotes)
     {
         assert(remote.tid >= 0);
 
@@ -230,14 +228,14 @@ recoverRemoteReads(
     log_os << __FUNCTION__ << ": totalregions: " << bamRegions.size() << "\n";
 #endif
 
-    BOOST_FOREACH(BamRegionInfo_t& bregion, bamRegions)
+    for (BamRegionInfo_t& bregion : bamRegions)
     {
         const GenomeInterval& interval(bregion.first);
         std::vector<RemoteReadInfo>& remotes(bregion.second);
 
 #ifdef DEBUG_REMOTES
         log_os << __FUNCTION__ << ": begion interval " << interval << "\n";
-        BOOST_FOREACH(const RemoteReadInfo& remote, remotes)
+        for (const RemoteReadInfo& remote : remotes)
         {
             log_os << " remote: " << remote.tid << " " << remote.pos << "\n";
         }
@@ -266,7 +264,7 @@ recoverRemoteReads(
             // we've gone past the last case:
             if (bamRead.pos() > (remotes.back().pos+1)) break;
 
-            BOOST_FOREACH(RemoteReadInfo& remote, remotes)
+            for (RemoteReadInfo& remote : remotes)
             {
 #ifdef DEBUG_REMOTES
                 readCount++;
@@ -503,7 +501,7 @@ getBreakendReads(
             if (! bamRead.is_unmapped())
             {
                 using namespace ALIGNPATH;
-                BOOST_FOREACH(const path_segment& ps, bamAlign.path)
+                for (const path_segment& ps : bamAlign.path)
                 {
                     if (is_segment_type_indel(ps.type))
                     {
@@ -627,7 +625,7 @@ getBreakendReads(
         {
             unsigned fwdStrandRemotes(0);
             const std::vector<RemoteReadInfo>& bamRemotes(remoteReads[bamIndex]);
-            BOOST_FOREACH(const RemoteReadInfo& remote, bamRemotes)
+            for (const RemoteReadInfo& remote : bamRemotes)
             {
                 if (remote.isLocalFwd)
                 {

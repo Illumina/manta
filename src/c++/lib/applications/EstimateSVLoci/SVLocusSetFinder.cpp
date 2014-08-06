@@ -21,8 +21,6 @@
 #include "blt_util/log.hh"
 #include "manta/ChromDepthFilterUtil.hh"
 
-#include "boost/foreach.hpp"
-
 #include <iostream>
 
 
@@ -276,7 +274,7 @@ update(
     _readScanner.getSVLoci(bamRead, defaultReadGroupIndex, bamHeader,
                            refSeq, loci, truthTracker);
 
-    BOOST_FOREACH(const SVLocus& locus, loci)
+    for (const SVLocus& locus : loci)
     {
         if (locus.empty()) continue;
         _svLoci.merge(locus);

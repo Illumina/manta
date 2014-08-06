@@ -71,7 +71,7 @@ isMultiLocus(
     const LocusIndexType locusIndex,
     const std::set<SVLocusSet::NodeAddressType>& nodes)
 {
-    BOOST_FOREACH(const SVLocusSet::NodeAddressType& addy, nodes)
+    for (const SVLocusSet::NodeAddressType& addy : nodes)
     {
         if (addy.first != locusIndex) return true;
     }
@@ -133,7 +133,7 @@ merge(const SVLocus& inputLocus)
     std::set<NodeAddressType> intersectNodes;
 
     // test if the graph has grown too complex in these regions. If so, abort the insertion of this locus:
-    BOOST_FOREACH(const nodeMap_t::value_type& nodeVal, nodeMap)
+    for (const nodeMap_t::value_type& nodeVal : nodeMap)
     {
         static const bool isTestUsability(true);
 
@@ -150,7 +150,7 @@ merge(const SVLocus& inputLocus)
         }
     }
 
-    BOOST_FOREACH(const nodeMap_t::value_type& nodeVal, nodeMap)
+    for (const nodeMap_t::value_type& nodeVal : nodeMap)
     {
         if (isAbortMerge) break;
 
@@ -164,7 +164,7 @@ merge(const SVLocus& inputLocus)
 
 #ifdef DEBUG_SVL
         log_os << logtag << " insersect_size: " << intersectNodes.size() << "\n";
-        BOOST_FOREACH(const NodeAddressType& val, intersectNodes)
+        for (const NodeAddressType& val : intersectNodes)
         {
             log_os << logtag << " intersect address: " << val << " node: " <<  getNode(val) << "\n";
         }
@@ -192,7 +192,7 @@ merge(const SVLocus& inputLocus)
 
 #ifdef DEBUG_SVL
         log_os << logtag << " intersect2_size: " << intersectNodes.size() << "\n";
-        BOOST_FOREACH(const NodeAddressType& val, intersectNodes)
+        for (const NodeAddressType& val : intersectNodes)
         {
             log_os << logtag << " intersect2 address: " << val << " node: " <<  getNode(val) << "\n";
         }
@@ -208,7 +208,7 @@ merge(const SVLocus& inputLocus)
             bool isInputSuperFound(false);
             const known_pos_range2& inputRange(getLocus(startLocusIndex).getNode(nodeIndex).getInterval().range);
 
-            BOOST_FOREACH(const NodeAddressType& val, intersectNodes)
+            for (const NodeAddressType& val : intersectNodes)
             {
                 assert(val.first == headLocusIndex);
 
@@ -263,7 +263,7 @@ merge(const SVLocusSet& inputSet)
 
     assert(getMinMergeEdgeCount() == inputSet.getMinMergeEdgeCount());
 
-    BOOST_FOREACH(const SVLocus& locus, inputSet._loci)
+    for (const SVLocus& locus : inputSet._loci)
     {
         try
         {
@@ -430,7 +430,7 @@ getIntersectingEdgeNodes(
     std::set<NodeAddressType> edgeIntersectRemoteTemp;
     getNodeIntersectCore(inputLocusIndex,inputRemoteNodeIndex,remoteIntersect,inputLocusIndex,edgeIntersectRemoteTemp);
 
-    BOOST_FOREACH(const NodeAddressType remoteIsectAddy, edgeIntersectRemoteTemp)
+    for (const NodeAddressType remoteIsectAddy : edgeIntersectRemoteTemp)
     {
         // find what local nodes the remote notes trace back to:
         const rlmap_range_t remoteIsectRange(remoteToLocal.equal_range(remoteIsectAddy));
@@ -461,7 +461,7 @@ findSignalNodes(
     // get a standard intersection of the input node:
     std::set<NodeAddressType> intersectNodes;
     getNodeIntersectCore(findSignalAddy.first, findSignalAddy.second, _inodes, inputLocusIndex, intersectNodes);
-    BOOST_FOREACH(const NodeAddressType intersectAddy, intersectNodes)
+    for (const NodeAddressType intersectAddy : intersectNodes)
     {
 #ifdef DEBUG_SVL
         log_os << logtag << "\tsignal_boost: intersectAddy: " << intersectAddy << "\n";
@@ -544,14 +544,14 @@ getNodeMergeableIntersect(
         // get a standard intersection of the input node:
         getNodeIntersect(inputLocusIndex, inputNodeIndex, intersectNodes);
 
-        BOOST_FOREACH(const NodeAddressType& intersectAddy, intersectNodes)
+        for (const NodeAddressType& intersectAddy : intersectNodes)
         {
             const SVLocusNode& intersectNode(getNode(intersectAddy));
 
             // get the remotes of each node which intersect with the query node,
             // place these in remoteIntersect
             const SVLocusEdgeManager edgeMap(intersectNode.getEdgeManager());
-            BOOST_FOREACH(const SVLocusEdgesType::value_type& intersectEdge, edgeMap.getMap())
+            for (const SVLocusEdgesType::value_type& intersectEdge : edgeMap.getMap())
             {
                 // 1. build remote <-> local indexing structures:
                 NodeAddressType remoteAddy(std::make_pair(intersectAddy.first,intersectEdge.first));
@@ -567,13 +567,13 @@ getNodeMergeableIntersect(
 
 #ifdef DEBUG_SVL
         log_os << logtag << " remoteIntersect.size(): " << remoteIntersect.size() << "\n";
-        BOOST_FOREACH(const NodeAddressType& addy, remoteIntersect)
+        for (const NodeAddressType& addy : remoteIntersect)
         {
             log_os << logtag << "\tremoteIsect node: " << addy << " " << getNode(addy);
         }
 
         log_os << logtag << " signalIntersect.size(): " << signalIntersectNodes.size() << "\n";
-        BOOST_FOREACH(const NodeAddressType& addy, signalIntersectNodes)
+        for (const NodeAddressType& addy : signalIntersectNodes)
         {
             log_os << logtag << "\tsignalIsect node: " << addy << " " << getNode(addy);
         }
@@ -587,7 +587,7 @@ getNodeMergeableIntersect(
 
     // for each edge from the input node, get all intersecting edges
     const SVLocusEdgeManager edgeMap(inputNode.getEdgeManager());
-    BOOST_FOREACH(const SVLocusEdgesType::value_type& inputEdge, edgeMap.getMap())
+    for (const SVLocusEdgesType::value_type& inputEdge : edgeMap.getMap())
     {
 #ifdef DEBUG_SVL
         log_os << logtag << " processing edge: " << inputAddy << "->" << inputLocusIndex << ":" << inputEdge.first << "\n";
@@ -601,7 +601,7 @@ getNodeMergeableIntersect(
         // total counts for this edge:
         unsigned mergedRemoteEdgeCount(0);
         unsigned mergedLocalEdgeCount(0);
-        BOOST_FOREACH(const EdgeInfoType edgeInfo, inputIntersectEdges)
+        for (const EdgeInfoType edgeInfo : inputIntersectEdges)
         {
             const SVLocus& edgeLocus(getLocus(edgeInfo.first.first));
             const NodeIndexType localNodeIndex(edgeInfo.first.second);
@@ -651,7 +651,7 @@ getNodeMergeableIntersect(
         //
         // Add type1 mergeable nodes:
         //
-        BOOST_FOREACH(const EdgeInfoType edgeInfo, inputIntersectEdges)
+        for (const EdgeInfoType edgeInfo : inputIntersectEdges)
         {
             mergeIntersectNodes.insert(edgeInfo.first);
         }
@@ -666,7 +666,7 @@ getNodeMergeableIntersect(
         {
             /// this is used to search for the (rare) case where the intersection set locals overlap with the intersection set remotes
             std::set<NodeAddressType> inputIntersectRemotes;
-            BOOST_FOREACH(const EdgeInfoType edgeInfo, inputIntersectEdges)
+            for (const EdgeInfoType edgeInfo : inputIntersectEdges)
             {
                 inputIntersectRemotes.insert(std::make_pair(edgeInfo.first.first,edgeInfo.second));
             }
@@ -675,14 +675,14 @@ getNodeMergeableIntersect(
 
             // check both the original node and intersected nodes for intersection to any of the group's remotes, and for new type2 signal intersect:
             findSignalNodes(inputLocusIndex, inputAddy, signalIntersectNodes, inputIntersectRemotes, isIntersectRemotes);
-            BOOST_FOREACH(const EdgeInfoType edgeInfo, inputIntersectEdges)
+            for (const EdgeInfoType edgeInfo : inputIntersectEdges)
             {
                 findSignalNodes(inputLocusIndex, edgeInfo.first, signalIntersectNodes, inputIntersectRemotes, isIntersectRemotes);
             }
 
             if (isIntersectRemotes)
             {
-                BOOST_FOREACH(const NodeAddressType intersectAddy, inputIntersectRemotes)
+                for (const NodeAddressType intersectAddy : inputIntersectRemotes)
                 {
 #ifdef DEBUG_SVL
                     log_os << logtag << " adding ownRemote: " << intersectAddy << "\n";
@@ -697,7 +697,7 @@ getNodeMergeableIntersect(
         //
         // Add type2 mergeable nodes:
         //
-        BOOST_FOREACH(const NodeAddressType signalAddy, signalIntersectNodes)
+        for (const NodeAddressType signalAddy : signalIntersectNodes)
         {
             mergeIntersectNodes.insert(signalAddy);
         }
@@ -705,7 +705,7 @@ getNodeMergeableIntersect(
 
 #ifdef DEBUG_SVL
     log_os << logtag << " END. IntersectNodeSize: " << mergeIntersectNodes.size() << " Nodes:\n";
-    BOOST_FOREACH(const NodeAddressType addy, mergeIntersectNodes)
+    for (const NodeAddressType addy : mergeIntersectNodes)
     {
         log_os << logtag << "\tInode: " << addy << "\n";
     }
@@ -744,7 +744,7 @@ moveIntersectToLowIndex(
 
     // get lowest index number that is not startLocusIndex:
     bool isFirst(true);
-    BOOST_FOREACH(const LocusSetIndexerType::value_type& val, intersectNodes)
+    for (const LocusSetIndexerType::value_type& val : intersectNodes)
     {
         if ((!isFirst) && (val.first >= locusIndex)) continue;
         locusIndex = val.first;
@@ -752,7 +752,7 @@ moveIntersectToLowIndex(
     }
 
     combineLoci(startHeadLocusIndex,locusIndex,isClearSource);
-    BOOST_FOREACH(const LocusSetIndexerType::value_type& val, intersectNodes)
+    for (const LocusSetIndexerType::value_type& val : intersectNodes)
     {
         combineLoci(val.first,locusIndex);
     }
@@ -846,7 +846,7 @@ void
 SVLocusSet::
 clean()
 {
-    BOOST_FOREACH(SVLocus& locus, _loci)
+    for (SVLocus& locus : _loci)
     {
         if (locus.empty()) continue;
         _totalCleaned += locus.clean(getMinMergeEdgeCount(), this);
@@ -897,7 +897,7 @@ SVLocusSet::
 dump(std::ostream& os) const
 {
     os << "LOCUSSET_START\n";
-    BOOST_FOREACH(const SVLocus& locus, _loci)
+    for (const SVLocus& locus : _loci)
     {
         os << locus;
     }
@@ -915,12 +915,12 @@ dumpRegion(std::ostream& os,
     getRegionIntersect(interval,intersectNodes);
 
     LocusSetIndexerType sortedNodes(*this);
-    BOOST_FOREACH(const NodeAddressType& val, intersectNodes)
+    for (const NodeAddressType& val : intersectNodes)
     {
         sortedNodes.insert(val);
     }
 
-    BOOST_FOREACH(const NodeAddressType& val, sortedNodes)
+    for (const NodeAddressType& val : sortedNodes)
     {
         os << "SVNode LocusIndex:NodeIndex : " << val << "\n";
         os << getNode(val);
@@ -970,12 +970,12 @@ dumpLocusStats(std::ostream& os) const
        << '\n';
 
     LocusIndexType locusIndex(0);
-    BOOST_FOREACH(const SVLocus& locus, _loci)
+    for (const SVLocus& locus : _loci)
     {
         unsigned locusNodeObsCount(0), maxNodeObsCount(0);
         unsigned locusRegionSize(0), maxRegionSize(0);
         unsigned locusEdgeCount(0), maxEdgeCount(0), locusEdgeObsCount(0), maxEdgeObsCount(0);
-        BOOST_FOREACH(const SVLocusNode& node, locus)
+        for (const SVLocusNode& node : locus)
         {
             // nodes:
             const unsigned nodeObsCount(node.outCount());
@@ -991,7 +991,7 @@ dumpLocusStats(std::ostream& os) const
             maxEdgeCount = std::max(maxEdgeCount,node.size());
             locusEdgeCount += node.size();
             const SVLocusEdgeManager edgeMap(node.getEdgeManager());
-            BOOST_FOREACH(const SVLocusEdgesType::value_type& edge, edgeMap.getMap())
+            for (const SVLocusEdgesType::value_type& edge : edgeMap.getMap())
             {
                 const unsigned edgeObsCount(edge.second.getCount());
                 maxEdgeObsCount = std::max(maxEdgeObsCount,edgeObsCount);
@@ -1036,7 +1036,7 @@ save(const char* filename) const
     oa << _isMaxSearchCount;
     oa << _isMaxSearchDensity;
 
-    BOOST_FOREACH(const SVLocus& locus, _loci)
+    for (const SVLocus& locus : _loci)
     {
         if (locus.empty()) continue;
         oa << locus;
@@ -1119,7 +1119,7 @@ reconstructIndex()
 #endif
 
     LocusIndexType locusIndex(0);
-    BOOST_FOREACH(SVLocus& locus, _loci)
+    for (SVLocus& locus : _loci)
     {
         const unsigned nodeCount(locus.size());
         for (NodeIndexType nodeIndex(0); nodeIndex<nodeCount; ++nodeIndex)
@@ -1148,7 +1148,7 @@ dumpIndex(std::ostream& os) const
     assert(_isIndexed);
 
     os << "SVLocusSet Index START\n";
-    BOOST_FOREACH(const NodeAddressType& in, _inodes)
+    for (const NodeAddressType& in : _inodes)
     {
         os << "SVNodeIndex: " << in << "\n";
     }
@@ -1169,7 +1169,7 @@ checkState(
 
     unsigned locusIndex(0);
     unsigned checkStateTotalNodeCount(0);
-    BOOST_FOREACH(const SVLocus& locus, _loci)
+    for (const SVLocus& locus : _loci)
     {
         locus.checkState(isCheckLocusConnected);
 
@@ -1235,7 +1235,7 @@ checkForOverlapNodes(
     bool isFirst(true);
     GenomeInterval lastInterval;
     NodeAddressType lastAddy;
-    BOOST_FOREACH(const NodeAddressType& addy, _inodes)
+    for (const NodeAddressType& addy : _inodes)
     {
         if (isFilterNoise)
         {

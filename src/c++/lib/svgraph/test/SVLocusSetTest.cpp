@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge )
     BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),4u);
 
     bool isFound(false);
-    BOOST_FOREACH(const SVLocusNode& node, cset1.getLocus(0))
+    for (const SVLocusNode& node : cset1.getLocus(0))
     {
         if (node.getInterval() == testInterval) isFound=true;
     }
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge2 )
     BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),2u);
 
     bool isFound(false);
-    BOOST_FOREACH(const SVLocusNode& node, cset1.getLocus(0))
+    for (const SVLocusNode& node : cset1.getLocus(0))
     {
         if (node.getInterval() == testInterval) isFound=true;
     }
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge3 )
     BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),4u);
 
     bool isFound(false);
-    BOOST_FOREACH(const SVLocusNode& node, cset1.getLocus(0))
+    for (const SVLocusNode& node : cset1.getLocus(0))
     {
         if (node.getInterval() == testInterval) isFound=true;
     }
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusMultiOverlapMerge4 )
     BOOST_REQUIRE_EQUAL(cset1.getLocus(0).size(),2u);
 
     bool isFound(false);
-    BOOST_FOREACH(const SVLocusNode& node, cset1.getLocus(0))
+    for (const SVLocusNode& node : cset1.getLocus(0))
     {
         if (node.getInterval() == testInterval) isFound=true;
     }

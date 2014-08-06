@@ -234,7 +234,7 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
     totalObservationCount() const
     {
         unsigned sum(0);
-        BOOST_FOREACH(const SVLocus& locus, *this)
+        for (const SVLocus& locus : *this)
         {
             sum += locus.totalObservationCount();
         }
@@ -246,7 +246,7 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
     totalNodeCount() const
     {
         unsigned sum(0);
-        BOOST_FOREACH(const SVLocus& locus, *this)
+        for (const SVLocus& locus : *this)
         {
             sum += locus.size();
         }
@@ -258,7 +258,7 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
     totalEdgeCount() const
     {
         unsigned sum(0);
-        BOOST_FOREACH(const SVLocus& locus, *this)
+        for (const SVLocus& locus : *this)
         {
             sum += locus.totalEdgeCount();
         }

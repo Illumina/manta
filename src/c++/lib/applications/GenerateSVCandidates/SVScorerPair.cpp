@@ -27,7 +27,6 @@
 #include "manta/SVCandidateUtil.hh"
 #include "svgraph/GenomeIntervalUtil.hh"
 
-#include "boost/foreach.hpp"
 #include "boost/make_shared.hpp"
 
 #include <iostream>
@@ -61,7 +60,7 @@ processBamProcList(
         std::vector<GenomeInterval> scanIntervals;
         std::vector<unsigned> intervalMap;
         {
-            BOOST_FOREACH(SVScorer::pairProcPtr& bpp, pairProcList)
+            for (SVScorer::pairProcPtr& bpp : pairProcList)
             {
                 const GenomeInterval& interval(bpp->nextBamIndex(bamIndex));
                 if (interval.range.size() < 1) continue;
@@ -100,7 +99,7 @@ processBamProcList(
                 /// this filter is common to all targetProcs:
                 if (SVScorer::pairProcPtr::element_type::isSkipRecordCore(bamRead)) continue;
 
-                BOOST_FOREACH(const unsigned procIndex, targetProcs)
+                for (const unsigned procIndex : targetProcs)
                 {
                     SVScorer::pairProcPtr& bpp(pairProcList[procIndex]);
 
@@ -468,7 +467,7 @@ processExistingAltPairInfo(
         const SizeDistribution& fragDistro(_readScanner.getFragSizeDistro(bamIndex));
 
         const SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
-        BOOST_FOREACH(const SVCandidateSetReadPair& pair, svDataGroup)
+        for (const SVCandidateSetReadPair& pair : svDataGroup)
         {
             /// at least one read of the pair must have been found:
             assert(pair.read1.isSet() || pair.read2.isSet());
@@ -477,7 +476,7 @@ processExistingAltPairInfo(
             unsigned linkIndex(0);
             {
                 bool isIndexFound(false);
-                BOOST_FOREACH(const SVPairAssociation& sva, pair.svLink)
+                for (const SVPairAssociation& sva : pair.svLink)
                 {
                     if (sv.candidateIndex == sva.index)
                     {

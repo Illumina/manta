@@ -19,8 +19,6 @@
 #include "common/OutStream.hh"
 #include "manta/ReadGroupStatsUtil.hh"
 
-#include "boost/foreach.hpp"
-
 #include <cstdlib>
 
 
@@ -39,7 +37,7 @@ runAlignmentStats(const AlignmentStatsOptions& opt)
     }
 
     ReadGroupStatsSet rstats;
-    BOOST_FOREACH(const std::string& file, opt.alignFileOpt.alignmentFilename)
+    for (const std::string& file : opt.alignFileOpt.alignmentFilename)
     {
         extractReadGroupStatsFromBam(file,rstats);
     }

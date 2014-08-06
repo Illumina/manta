@@ -18,8 +18,6 @@
 #include "manta/SVScoreInfoDiploid.hh"
 #include "blt_util/log.hh"
 
-#include "boost/foreach.hpp"
-
 #include <iostream>
 
 
@@ -34,7 +32,7 @@ operator<<(
        << " gtScore=" << sid.gtScore
        << " gt=" << DIPLOID_GT::label(sid.gt)
        << "\n";
-    BOOST_FOREACH(const std::string& filter, sid.filters)
+    for (const std::string& filter : sid.filters)
     {
         os << " " << filter;
     }

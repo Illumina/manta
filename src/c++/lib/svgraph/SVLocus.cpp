@@ -18,6 +18,8 @@
 #include "common/Exceptions.hh"
 #include "svgraph/SVLocus.hh"
 
+#include "boost/foreach.hpp"
+
 #include <iostream>
 #include <stack>
 
@@ -99,7 +101,7 @@ mergeNode(
     // now take all fromNode edges and 'redirect' them to the toNode index
     //
     const SVLocusEdgeManager edgeMap(fromNode.getEdgeManager());
-    BOOST_FOREACH(const SVLocusEdgesType::value_type& fromNodeEdgeIter, edgeMap.getMap())
+    for (const SVLocusEdgesType::value_type& fromNodeEdgeIter : edgeMap.getMap())
     {
         // alias value_type components (not required, but makes the logic easier to follow):
         const NodeIndexType& fromNodeEdgeIndex(fromNodeEdgeIter.first);
@@ -205,7 +207,7 @@ isNoiseNode(
 {
     const SVLocusNode& node(getNode(nodeIndex));
     const SVLocusEdgeManager edgeMap(node.getEdgeManager());
-    BOOST_FOREACH(const SVLocusEdgesType::value_type& edge, edgeMap.getMap())
+    for (const SVLocusEdgesType::value_type& edge : edgeMap.getMap())
     {
         if (edge.second.getCount() >= minMergeEdgeCount) return false;
         if (getEdge(edge.first,nodeIndex).getCount() >= minMergeEdgeCount) return false;
@@ -232,7 +234,7 @@ cleanNodeCore(
 
     std::vector<NodeIndexType> eraseEdges;
     const SVLocusEdgeManager edgeMap(queryNode.getEdgeManager());
-    BOOST_FOREACH(const SVLocusEdgesType::value_type& edgeIter, edgeMap.getMap())
+    for (const SVLocusEdgesType::value_type& edgeIter : edgeMap.getMap())
     {
         const SVLocusEdge* edgePtr(&(edgeIter.second));
         if (0 != edgePtr->getCount())
@@ -272,7 +274,7 @@ cleanNodeCore(
     }
 
     // delete empty edges:
-    BOOST_FOREACH(const NodeIndexType toIndex, eraseEdges)
+    for (const NodeIndexType toIndex : eraseEdges)
     {
 #ifdef DEBUG_SVL
         log_os << logtag << " deleting edge: " << _index << ":" << nodeIndex << "->" << _index << ":" << toIndex << "\n";
@@ -288,13 +290,13 @@ cleanNodeCore(
 
 #ifdef DEBUG_SVL
     log_os << logtag << " emptyEdges:\n";
-    BOOST_FOREACH(const NodeIndexType toIndex, eraseEdges)
+    for (const NodeIndexType toIndex : eraseEdges)
     {
         log_os << logtag << "\tedge: " << _index << ":" << nodeIndex << "->" << _index << ":" << toIndex << "\n";
     }
 
     log_os << "cleanNodeCore emptyNodes\n";
-    BOOST_FOREACH(const NodeIndexType nodeIndex2, emptyNodes)
+    for (const NodeIndexType nodeIndex2 : emptyNodes)
     {
         log_os << logtag << "\tnodeAddy: " << _index << ":" << nodeIndex2 << "\n";
     }
@@ -357,7 +359,7 @@ clearNodeEdges(NodeIndexType nodePtr)
 
     SVLocusNode& node(getNode(nodePtr));
     const SVLocusEdgeManager edgeMap(node.getEdgeManager());
-    BOOST_FOREACH(const SVLocusEdgesType::value_type& edgeIter, edgeMap.getMap())
+    for (const SVLocusEdgesType::value_type& edgeIter : edgeMap.getMap())
     {
 
 #ifdef DEBUG_SVL
@@ -418,7 +420,7 @@ eraseNode(
         bool isHandleSelfEdge(false);
         SVLocusNode& fromNode(getNode(fromPtr));
         const SVLocusEdgeManager edgeMap(fromNode.getEdgeManager());
-        BOOST_FOREACH(const SVLocusEdgesType::value_type& edgeIter, edgeMap.getMap())
+        for (const SVLocusEdgesType::value_type& edgeIter : edgeMap.getMap())
         {
             const bool isSelfEdge(edgeIter.first == fromPtr);
 
@@ -487,7 +489,7 @@ getNodeInCount(
 
     unsigned sum(0);
     const SVLocusEdgeManager edgeMap(node.getEdgeManager());
-    BOOST_FOREACH(const SVLocusEdgesType::value_type& edgeIter, edgeMap.getMap())
+    for (const SVLocusEdgesType::value_type& edgeIter : edgeMap.getMap())
     {
         sum += getEdge(edgeIter.first,nodeIndex).getCount();
     }
@@ -512,7 +514,7 @@ dumpNode(
        << "\n";
 
     const SVLocusEdgeManager edgeMap(node.getEdgeManager());
-    BOOST_FOREACH(const SVLocusEdgesType::value_type& edgeIter, edgeMap.getMap())
+    for (const SVLocusEdgesType::value_type& edgeIter : edgeMap.getMap())
     {
         os << "\tEdgeTo: " << edgeIter.first
            << " out_count: " << edgeIter.second.getCount()
@@ -539,7 +541,7 @@ findConnected(
         const SVLocusNode& node(getNode(nodeStack.top()));
         nodeStack.pop();
         const SVLocusEdgeManager edgeMap(node.getEdgeManager());
-        BOOST_FOREACH(const SVLocusEdgesType::value_type& edgeIter, edgeMap.getMap())
+        for (const SVLocusEdgesType::value_type& edgeIter : edgeMap.getMap())
         {
             if (! connected.count(edgeIter.first)) nodeStack.push(edgeIter.first);
         }
@@ -590,7 +592,7 @@ checkState(const bool isCheckConnected) const
 
         // check that that every edge has a return path:
         const SVLocusEdgeManager edgeMap(node.getEdgeManager());
-        BOOST_FOREACH(const SVLocusEdgesType::value_type& edgeIter, edgeMap.getMap())
+        for (const SVLocusEdgesType::value_type& edgeIter : edgeMap.getMap())
         {
             getEdge(edgeIter.first,nodeIndex);
         }

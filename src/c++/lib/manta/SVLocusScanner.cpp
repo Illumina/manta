@@ -28,9 +28,6 @@
 #include "manta/SVLocusScanner.hh"
 #include "manta/SVLocusScannerSemiAligned.hh"
 
-#include "boost/foreach.hpp"
-
-
 // #define DEBUG_SCANNER
 
 //#define DEBUG_IS_SHADOW
@@ -294,7 +291,7 @@ getSACandidatesFromRead(
 
     SimpleAlignment remoteAlign;
 
-    BOOST_FOREACH(const std::string& sa, saVec)
+    for (const std::string& sa : saVec)
     {
 #ifdef DEBUG_SCANNER
         log_os << "SA STRING: " << sa << "\n";
@@ -816,7 +813,7 @@ getReadBreakendsImpl(
 
     /// final chance to QC candidate set:
     ///
-    BOOST_FOREACH(const SVCandidate& sv, candidates.data)
+    for (const SVCandidate& sv : candidates.data)
     {
         bool isInvalidTid(false);
         if ((sv.bp1.interval.tid < 0) || (sv.bp1.interval.tid >= maxTid))
@@ -919,7 +916,7 @@ getSVLociImpl(
 
     // translate SVCandidate to a simpler form for use
     // in the SV locus graph:
-    BOOST_FOREACH(const SVCandidate& cand, candidates)
+    for (const SVCandidate& cand : candidates)
     {
         const bool isCandComplex(isComplexSV(cand));
 
@@ -1134,7 +1131,7 @@ isLocalAssemblyEvidence(
     //
     // large indel already in cigar string
     //
-    BOOST_FOREACH(const path_segment& ps, bamAlign.path)
+    for (const path_segment& ps : bamAlign.path)
     {
         if (ps.type == INSERT || ps.type == DELETE)
         {

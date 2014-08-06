@@ -20,8 +20,6 @@
 #include "blt_util/log.hh"
 #include "manta/SVCandidateUtil.hh"
 
-#include "boost/foreach.hpp"
-
 #include <limits>
 
 
@@ -71,7 +69,7 @@ isFilterMultiJunctionCandidate(
 {
     // candidates must have a minimum amount of evidence:
     bool isAnySpanPass(false);
-    BOOST_FOREACH(const SVCandidate& sv, mjSV.junction)
+    for (const SVCandidate& sv : mjSV.junction)
     {
         if (isSpanningSV(sv))
         {
@@ -299,7 +297,7 @@ findMultiJunctionCandidates(
     std::vector<SVCandidate> complexSVs;
     std::vector<SVCandidate> spanningSVs;
 
-    BOOST_FOREACH(const SVCandidate& candidateSV, svs)
+    for (const SVCandidate& candidateSV : svs)
     {
         /// Filter various candidates types:
         if (isFilterSingleJunctionCandidate(candidateSV)) continue;
@@ -388,7 +386,7 @@ findMultiJunctionCandidates(
     }
 
     /// complex SVs are translated directly into single partner candidates:
-    BOOST_FOREACH(const SVCandidate& candidateSV, complexSVs)
+    for (const SVCandidate& candidateSV : complexSVs)
     {
         SVMultiJunctionCandidate mj;
         mj.junction.push_back(candidateSV);

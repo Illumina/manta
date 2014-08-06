@@ -19,7 +19,6 @@
 #include "assembly/SmallAssembler.hh"
 #include "blt_util/set_util.hh"
 
-#include "boost/foreach.hpp"
 #include "boost/unordered_map.hpp"
 #include "boost/unordered_set.hpp"
 
@@ -45,7 +44,7 @@ print_readSet(
     bool isFirst(true);
 
     log_os << "[";
-    BOOST_FOREACH(const unsigned rd, readSet)
+    for (const unsigned rd : readSet)
     {
         if (! isFirst) log_os << ",";
         log_os << rd ;
@@ -123,7 +122,7 @@ wordHashToDot(
     os << "node [ style = filled ];\n";
     str_uint_map_t aliasH;
     unsigned n(0);
-    BOOST_FOREACH(const str_uint_map_t::value_type& val, wordCount)
+    for (const str_uint_map_t::value_type& val : wordCount)
     {
         const std::string& word(val.first);
         const unsigned cov(val.second);
@@ -134,11 +133,11 @@ wordHashToDot(
 
     // need to add edges here
     static const bool isEnd(true);
-    BOOST_FOREACH(const str_uint_map_t::value_type& val, wordCount)
+    for (const str_uint_map_t::value_type& val : wordCount)
     {
         const std::string& word(val.first);
         const std::string tmp(getEnd(word,word.size()-1,isEnd));
-        BOOST_FOREACH(const char symbol, alphabet)
+        for (const char symbol : alphabet)
         {
             const std::string newKey(addBase(tmp,symbol,isEnd));
             if (wordCount.find(newKey) != wordCount.end())
@@ -219,7 +218,7 @@ walk(const SmallAssemblerOptions& opt,
             std::set<unsigned> supportReads2Add;
             std::set<unsigned> rejectReads2Add;
 
-            BOOST_FOREACH(const char symbol, opt.alphabet)
+            for (const char symbol : opt.alphabet)
             {
                 const std::string newKey(addBase(tmp, symbol, isEnd));
 #ifdef DEBUG_ASBL
@@ -319,7 +318,7 @@ walk(const SmallAssemblerOptions& opt,
 #endif
                 // update rejecting reads
                 // add reads that support the unselected allele
-                BOOST_FOREACH(const unsigned rd, rejectReads2Add)
+                for (const unsigned rd : rejectReads2Add)
                 {
                     contig.rejectReads.insert(rd);
                 }
@@ -337,7 +336,7 @@ walk(const SmallAssemblerOptions& opt,
 #endif
                 // update supporting reads
                 // add reads that support the selected allel
-                BOOST_FOREACH(const unsigned rd, supportReads2Add)
+                for (const unsigned rd : supportReads2Add)
                 {
                     if (contig.rejectReads.find(rd) == contig.rejectReads.end())
                         contig.supportReads.insert(rd);
@@ -352,7 +351,7 @@ walk(const SmallAssemblerOptions& opt,
                 print_readSet(supportReads2Remove);
 #endif
                 // remove reads that do NOT support the selected allel anymore
-                BOOST_FOREACH(const unsigned rd, supportReads2Remove)
+                for (const unsigned rd : supportReads2Remove)
                 {
                     contig.supportReads.erase(rd);
                 }
@@ -441,7 +440,7 @@ getKmerCounts(
         }
 
         // total occurrences from this read:
-        BOOST_FOREACH(const str_uint_map_t::value_type& offset, readWordOffset)
+        for (const str_uint_map_t::value_type& offset : readWordOffset)
         {
             wordCount[offset.first]++;
             // record the supporting read
@@ -489,7 +488,7 @@ buildContigs(
     {
         if (isLastWord)
         {
-            BOOST_FOREACH(const int readIndex, repeatReads)
+            for (const int readIndex : repeatReads)
             {
                 readInfo[readIndex].isUsed = true;
                 readInfo[readIndex].isFiltered = true;
@@ -503,7 +502,7 @@ buildContigs(
     std::set<std::string> maxWords;
     {
         unsigned maxWordCount(0);
-        BOOST_FOREACH(const str_uint_map_t::value_type& val, wordCount)
+        for (const str_uint_map_t::value_type& val : wordCount)
         {
             if (val.second < maxWordCount) continue;
             if (val.second > maxWordCount)

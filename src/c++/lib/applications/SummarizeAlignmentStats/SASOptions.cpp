@@ -20,7 +20,6 @@
 #include "blt_util/log.hh"
 #include "options/optionsUtil.hh"
 
-#include "boost/foreach.hpp"
 #include "boost/program_options.hpp"
 
 #include <iostream>

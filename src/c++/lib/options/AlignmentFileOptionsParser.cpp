@@ -18,8 +18,6 @@
 #include "options/optionsUtil.hh"
 #include "options/AlignmentFileOptionsParser.hh"
 
-#include "boost/foreach.hpp"
-
 #include <set>
 
 
@@ -79,7 +77,7 @@ parseOptions(
     {
         // check that alignment files exist, and names do not repeat
         std::set<std::string> nameCheck;
-        BOOST_FOREACH(std::string& afile, opt.alignmentFilename)
+        for (std::string& afile : opt.alignmentFilename)
         {
             if (checkStandardizeInputFile(afile,"alignment file",errorMsg)) break;
             if (nameCheck.count(afile))
