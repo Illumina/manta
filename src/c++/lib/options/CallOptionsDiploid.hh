@@ -22,35 +22,24 @@
 
 struct CallOptionsDiploid
 {
+    float indelPrior = 1e-5;
 
-    CallOptionsDiploid() :
-        indelPrior(1e-5),
-        maxDepthFactor(3.0),
-        maxDepthFilterLabel("MaxDepth"),
-        minOutputAltScore(10),
-        minPassGTScore(20),
-        minGTFilterLabel("MinGQ"),
-        maxMQ0Frac(0.4),
-        maxMQ0FracLabel("MaxMQ0Frac"),
-        rnaFilterLabel("RNAFail")
-    {}
+    /// breakpoints where the non-tumor depth is greater than the chromosome average x this factor are filtered out:
+    float maxDepthFactor = 3.0;
+    std::string maxDepthFilterLabel = "MaxDepth";
 
-    float indelPrior;
+    /// minimum QUAL score to print out a diploid variant
+    unsigned minOutputAltScore = 10;
 
-    // breakpoints where the non-tumor depth is greater than the chromosome average x this factor are filtered out:
-    float maxDepthFactor;
-    std::string maxDepthFilterLabel;
-
-    unsigned minOutputAltScore; ///< minimum QUAL score to print out a diploid variant
-
-    unsigned minPassGTScore; ///< below this GQ value, the record is filtered in the diploid output VCF
-    std::string minGTFilterLabel;
+    /// below this GQ value, the record is filtered in the diploid output VCF
+    unsigned minPassGTScore = 20;
+    std::string minGTFilterLabel = "MinGQ";
 
     // control filtration based on MQ0 fraction:
-    float maxMQ0Frac;
-    std::string maxMQ0FracLabel;
+    float maxMQ0Frac = 0.4;
+    std::string maxMQ0FracLabel = "MaxMQ0Frac";
 
-    std::string rnaFilterLabel;
+    std::string rnaFilterLabel = "RNAFail";
 };
 
 

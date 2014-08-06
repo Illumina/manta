@@ -11,14 +11,11 @@
 // <https://github.com/sequencing/licenses/>
 //
 
-/// \file
-
+///
 /// \author Chris Saunders
 ///
 
 #pragma once
-
-#include "boost/static_assert.hpp"
 
 #include <string>
 
@@ -68,8 +65,7 @@ template <typename T>
 T
 parse_type(const char*&)
 {
-    // no scan_string available for type:
-    BOOST_STATIC_ASSERT(sizeof(T)==0);
+    static_assert(sizeof(T)==0, "no parse specialization available for type T");
     return T();
 }
 

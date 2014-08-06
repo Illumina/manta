@@ -225,13 +225,8 @@ struct SVLocusScanner
 
     struct Range
     {
-        Range() :
-            min(0),
-            max(0)
-        {}
-
-        double min;
-        double max;
+        double min = 0;
+        double max = 0;
     };
 
     const Range&

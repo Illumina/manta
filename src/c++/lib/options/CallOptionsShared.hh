@@ -26,9 +26,6 @@
 ///
 struct CallOptionsShared
 {
-    CallOptionsShared() :
-        snpPrior(1e-3)
-    {}
-
-    float snpPrior; ///< This influences alignments to the ref allele when comparing ref vs alt align quality
+    /// This influences alignments to the ref allele when comparing ref vs alt align quality
+    float snpPrior = 1e-3;
 };

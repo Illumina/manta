@@ -22,28 +22,27 @@
 ///
 struct SmallAssemblerOptions
 {
-    /// sets reasonable default values for 30x DNA-seq, 100bp reads
-    SmallAssemblerOptions() :
-        alphabet("ACGT"),
-        minWordLength(41),
-        maxWordLength(76),
-        wordStepSize(5),
-        minContigLength(15),
-        minCoverage(1),
-        minConservativeCoverage(2),
-        maxError(0.35),
-        minSeedReads(3),
-        maxAssemblyIterations(10)
-    {}
+    /// the symbol set used during assembly
+    std::string alphabet = "ACGT";
 
-    std::string alphabet; ///< the symbol set used during assembly
-    unsigned minWordLength; ///< initial word (kmer) length
-    unsigned maxWordLength; ///< max word length
-    unsigned wordStepSize;
-    unsigned minContigLength; ///< min contig size
-    unsigned minCoverage; ///< min. coverage required for contig extension
-    unsigned minConservativeCoverage; ///< coverage required for conservative contig sub-range
-    double maxError; ///< max error rates allowed during contig extension
-    unsigned minSeedReads; ///< min. number of reads required to start assembly
-    unsigned maxAssemblyIterations; ///< Max. number of assembly iterations for a cluster before we give up
+    /// initial word (kmer) length
+    unsigned minWordLength = 41;
+    unsigned maxWordLength = 76;
+    unsigned wordStepSize = 5;
+    unsigned minContigLength = 15;
+
+    /// min. coverage required for contig extension
+    unsigned minCoverage = 1;
+
+    /// coverage required for conservative contig sub-range
+    unsigned minConservativeCoverage = 2;
+
+    /// max error rates allowed during contig extension
+    double maxError = 0.35;
+
+    /// min. number of reads required to start assembly
+    unsigned minSeedReads = 3;
+
+    /// Max. number of assembly iterations for a cluster before we give up
+    unsigned maxAssemblyIterations = 10;
 };

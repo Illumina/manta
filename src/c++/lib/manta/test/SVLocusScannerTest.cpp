@@ -21,8 +21,6 @@
 
 #include "manta/SVLocusScanner.cpp"
 
-#include "boost/scoped_array.hpp"
-
 
 BOOST_AUTO_TEST_SUITE( test_SVLocusScanner )
 

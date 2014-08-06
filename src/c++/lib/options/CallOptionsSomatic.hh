@@ -22,35 +22,29 @@
 
 struct CallOptionsSomatic
 {
-    CallOptionsSomatic() :
-        germlineSVPrior(1e-5),
-        somaticSVPrior(1e-7),
-        smallNoiseSVPrior(1e-9), ///< parameters reflect our expectation that there is more shared small event noise in small events
-        largeNoiseSVPrior(1e-10),
-        maxDepthFactor(3.0),
-        maxDepthFilterLabel("MaxDepth"),
-        minOutputSomaticScore(10),
-        minPassSomaticScore(30),
-        minSomaticScoreLabel("MinSomaticScore"),
-        maxMQ0Frac(0.4),
-        maxMQ0FracLabel("MaxMQ0Frac")
-    {}
+    float germlineSVPrior = 1e-5;
+    float somaticSVPrior = 1e-7;
 
-    float germlineSVPrior;
-    float somaticSVPrior;
-    float smallNoiseSVPrior; ///< expected shared tumor-normal sample noise rates for "small" SVs, ramp is from 3k->5k for small to large.
-    float largeNoiseSVPrior; ///< expected shared tumor-normal sample noise rates for "large" SVs
+    /// small/large values below reflect our expectation that there is more shared small event noise in small events
+    ///
+    /// expected shared tumor-normal sample noise rates for "small" SVs, ramp is from 3k->5k for small to large.
+    float smallNoiseSVPrior = 1e-9;
+    /// expected shared tumor-normal sample noise rates for "large" SVs
+    float largeNoiseSVPrior = 1e-10;
 
-    // breakpoints where the non-tumor depth is greater than the chromosome average x this factor are filtered out:
-    float maxDepthFactor;
-    std::string maxDepthFilterLabel;
+    /// breakpoints where the non-tumor depth is greater than the chromosome average x this factor
+    /// are filtered out:
+    float maxDepthFactor = 3.0;
+    std::string maxDepthFilterLabel = "MaxDepth";
 
-    unsigned minOutputSomaticScore; ///< minimum somatic quality to print out a somatic variant
-    unsigned minPassSomaticScore; ///< minimum somatic quality which passes vcf filtration
-    std::string minSomaticScoreLabel;
+    /// minimum somatic quality to print out a somatic variant
+    unsigned minOutputSomaticScore = 10;
+    /// minimum somatic quality which passes vcf filtration
+    unsigned minPassSomaticScore = 30;
+    std::string minSomaticScoreLabel = "MinSomaticScore";
 
-    float maxMQ0Frac;
-    std::string maxMQ0FracLabel;
+    float maxMQ0Frac = 0.4;
+    std::string maxMQ0FracLabel = "MaxMQ0Frac";
 };
 
 

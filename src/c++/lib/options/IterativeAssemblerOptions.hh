@@ -19,38 +19,35 @@
 #pragma once
 
 
-/// Input parameters for SmallAssembler, a simple local de-bruijn graph assembler
+/// Input parameters for IterativeAssembler
 ///
 struct IterativeAssemblerOptions
 {
-    /// sets reasonable default values for 30x DNA-seq, 100bp reads
-    IterativeAssemblerOptions() :
-        alphabet("ACGT"),
-        minWordLength(41),
-        //minWordLength(21),
-        maxWordLength(76),
-        //maxWordLength(91),
-        wordStepSize(5),
-        //wordStepSize(10),
-        minContigLength(15),
-        //minCoverage(2),
-        minCoverage(1),
-        minConservativeCoverage(2),
-        maxError(0.35),
-        minUnusedReads(3),
-        minSupportReads(2),
-        maxAssemblyCount(10)
-    {}
+    /// the symbol set used during assembly
+    std::string alphabet = "ACGT";
 
-    std::string alphabet; ///< the symbol set used during assembly
-    unsigned minWordLength; ///< initial word (kmer) length
-    unsigned maxWordLength; ///< max word length
-    unsigned wordStepSize;
-    unsigned minContigLength; ///< min contig size
-    unsigned minCoverage; ///< min. coverage required for contig extension
-    unsigned minConservativeCoverage; ///< coverage required for conservative contig sub-range
-    double maxError; ///< max error rates allowed during contig extension
-    unsigned minUnusedReads; ///< min. number of unused reads to enable search for more contigs
-    unsigned minSupportReads; ///< min. number of reads required to start assembly
-    unsigned maxAssemblyCount; ///< Max. number of assembly returned for a given set of reads
+    /// initial word (kmer) length
+    unsigned minWordLength = 41;
+
+    unsigned maxWordLength = 76;
+    unsigned wordStepSize = 5;
+    unsigned minContigLength = 15;
+
+    /// min. coverage required for contig extension
+    unsigned minCoverage = 1;
+
+    /// coverage required for conservative contig sub-range
+    unsigned minConservativeCoverage = 2;
+
+    /// max error rates allowed during contig extension
+    double maxError = 0.35;
+
+    /// min. number of unused reads to enable search for more contigs
+    unsigned minUnusedReads = 3;
+
+    /// min. number of reads required to start assembly
+    unsigned minSupportReads = 2;
+
+    /// Max. number of assembly returned for a given set of reads
+    unsigned maxAssemblyCount = 10;
 };
