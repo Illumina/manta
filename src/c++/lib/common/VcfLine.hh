@@ -273,10 +273,11 @@ public:
         vcfFullString_.setLine( &(*this) );
         vcfLong_.setLine( &(*this) );
         READ = { &VcfLine::readId,
-               &VcfLine::readRef,
-               &VcfLine::readAlt,
-               &VcfLine::readQual,
-               &VcfLine::readFilter};
+                 &VcfLine::readRef,
+                 &VcfLine::readAlt,
+                 &VcfLine::readQual,
+                 &VcfLine::readFilter
+               };
         spuriousHeader_ = false;
     }
 

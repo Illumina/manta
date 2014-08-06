@@ -32,16 +32,11 @@
 
 VcfFile::VcfFile(const std::string& pathStr,
                  const std::map<std::string, int32_t>& chromNameTidMap)
-    : myVcfTypeMap({{"BND", Variant::INTERTRANSLOC},
-                    {"INV", Variant::INVERSION},
-                    {"INS", Variant::INSERTION},
-                    {"DEL", Variant::DELETION},
-                    {"DUP:TANDEM", Variant::TANDUP},
-                    {"compound", Variant::COMPLEX}}),
-      myPathStr(pathStr),
-      myChromNameTidMap(chromNameTidMap),
-      myVcfHeaderLoadedFlag(false),
-      mySvTypeFieldId(-1), mySvLenFieldId(-1), myMateIdFieldId(-1)
+    : myVcfTypeMap({{"BND", Variant::INTERTRANSLOC}, {"INV", Variant::INVERSION}, {"INS", Variant::INSERTION}, {"DEL", Variant::DELETION}, {"DUP:TANDEM", Variant::TANDUP}, {"compound", Variant::COMPLEX} }),
+myPathStr(pathStr),
+          myChromNameTidMap(chromNameTidMap),
+          myVcfHeaderLoadedFlag(false),
+          mySvTypeFieldId(-1), mySvLenFieldId(-1), myMateIdFieldId(-1)
 {
     myStrm.open(pathStr.c_str());
 
