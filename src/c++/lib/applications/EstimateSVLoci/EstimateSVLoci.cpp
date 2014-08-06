@@ -26,8 +26,6 @@
 #include "manta/SVReferenceUtil.hh"
 #include "truth/TruthTracker.hh"
 
-#include "boost/shared_ptr.hpp"
-
 #include <iostream>
 #include <vector>
 
@@ -44,7 +42,7 @@ runESL(const ESLOptions& opt)
         OutStream outs(opt.outputFilename);
     }
 
-    typedef boost::shared_ptr<bam_streamer> stream_ptr;
+    typedef std::shared_ptr<bam_streamer> stream_ptr;
     std::vector<stream_ptr> bamStreams;
 
     // setup all data for main alignment loop:

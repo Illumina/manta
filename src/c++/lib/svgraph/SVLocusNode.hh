@@ -22,7 +22,6 @@
 #include "boost/serialization/map.hpp"
 #include "boost/serialization/vector.hpp"
 #include "boost/serialization/split_member.hpp"
-#include "boost/shared_ptr.hpp"
 
 #include <iosfwd>
 #include <limits>
@@ -201,7 +200,7 @@ struct SVLocusEdgeManager
 
 private:
     const SVLocusEdgesType* mapPtr;
-    boost::shared_ptr<SVLocusEdgesType> sharedMapPtr;
+    std::shared_ptr<SVLocusEdgesType> sharedMapPtr;
 
     static const SVLocusEdgesType staticMap;
 };

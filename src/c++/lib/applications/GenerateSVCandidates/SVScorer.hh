@@ -36,9 +36,6 @@
 #include "manta/SVMultiJunctionCandidate.hh"
 #include "manta/SVScoreInfoSomatic.hh"
 
-#include "boost/array.hpp"
-#include "boost/shared_ptr.hpp"
-
 #include <vector>
 #include <string>
 
@@ -75,8 +72,8 @@ struct CallOptionsDiploidDeriv : private boost::noncopyable
         }
     }
 
-    boost::array<float,DIPLOID_GT::SIZE> prior;
-    boost::array<float,DIPLOID_GT::SIZE> logPrior;
+    std::array<float,DIPLOID_GT::SIZE> prior;
+    std::array<float,DIPLOID_GT::SIZE> logPrior;
 };
 
 
@@ -127,8 +124,8 @@ struct CallOptionsSomaticDeriv : private boost::noncopyable
     }
 
 private:
-    boost::array<float,SOMATIC_GT::SIZE> prior;
-    boost::array<float,SOMATIC_GT::SIZE> _logPrior;
+    std::array<float,SOMATIC_GT::SIZE> prior;
+    std::array<float,SOMATIC_GT::SIZE> _logPrior;
 
     float smallNoisePrior;
     float largeNoisePrior;
@@ -158,8 +155,8 @@ struct SVScorer
         SVModelScoreInfo& mjJointModelScoreInfo,
         bool& isMJEvent);
 
-    typedef boost::shared_ptr<SVScorePairProcessor> pairProcPtr;
-    typedef boost::shared_ptr<bam_streamer> streamPtr;
+    typedef std::shared_ptr<SVScorePairProcessor> pairProcPtr;
+    typedef std::shared_ptr<bam_streamer> streamPtr;
 
 private:
 

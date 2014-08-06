@@ -207,7 +207,7 @@ private:
     bool _isFinalized;
     unsigned _totalOrientCount;
     const ReadGroupLabel _rgLabel;
-    boost::array<unsigned,PAIR_ORIENT::SIZE> _orientCount;
+    std::array<unsigned,PAIR_ORIENT::SIZE> _orientCount;
 
     ReadPairOrient _finalOrient;
 };

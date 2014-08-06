@@ -29,8 +29,6 @@
 #include "manta/ReadGroupStatsSet.hh"
 #include "manta/SVCandidateUtil.hh"
 
-#include "boost/array.hpp"
-
 #include <algorithm>
 #include <iostream>
 #include <string>
@@ -948,7 +946,7 @@ void
 addDiploidLoglhood(
     const float spanningPairWeight,
     const SVEvidence::evidenceTrack_t& sampleEvidence,
-    boost::array<double,DIPLOID_GT::SIZE>& loglhood)
+    std::array<double,DIPLOID_GT::SIZE>& loglhood)
 {
     for (const SVEvidence::evidenceTrack_t::value_type& val : sampleEvidence)
     {
@@ -1039,13 +1037,13 @@ scoreDiploidSV(
     assert(! junctionData.empty());
 
     {
-        boost::array<double,DIPLOID_GT::SIZE> loglhood;
+        std::array<double,DIPLOID_GT::SIZE> loglhood;
         std::fill(loglhood.begin(),loglhood.end(),0);
         for (const JunctionCallInfo& junction : junctionData)
         {
             addDiploidLoglhood(junction.getSpanningWeight(), junction.getEvidence().normal, loglhood);
         }
-        boost::array<double,DIPLOID_GT::SIZE> pprob;
+        std::array<double,DIPLOID_GT::SIZE> pprob;
         for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
         {
             pprob[gt] = loglhood[gt] + diploidDopt.logPrior[gt];
@@ -1296,7 +1294,7 @@ computeSomaticSampleLoghood(
     const ProbSet& altChimeraProb,
     const ProbSet& refSplitMapProb,
     const ProbSet& altSplitMapProb,
-    boost::array<double,SOMATIC_GT::SIZE>& loglhood)
+    std::array<double,SOMATIC_GT::SIZE>& loglhood)
 {
     // semi-mapped alt reads make a partial contribution in tier1, and a full contribution in tier2:
     const double semiMappedPower( (isPermissive && (! isTumor)) ? 1. : 0. );
@@ -1384,8 +1382,8 @@ scoreSomaticSV(
     {
         const bool isPermissive(tierIndex != 0);
 
-        boost::array<double,SOMATIC_GT::SIZE> normalSomaticLhood;
-        boost::array<double,SOMATIC_GT::SIZE> tumorSomaticLhood;
+        std::array<double,SOMATIC_GT::SIZE> normalSomaticLhood;
+        std::array<double,SOMATIC_GT::SIZE> tumorSomaticLhood;
         std::fill(normalSomaticLhood.begin(),normalSomaticLhood.end(),0);
         std::fill(tumorSomaticLhood.begin(),tumorSomaticLhood.end(),0);
 
@@ -1437,7 +1435,7 @@ scoreSomaticSV(
                                         refSplitMapProb, altSplitMapProb, normalSomaticLhood);
         }
 
-        boost::array<double,SOMATIC_GT::SIZE> somaticPprob;
+        std::array<double,SOMATIC_GT::SIZE> somaticPprob;
         for (unsigned gt(0); gt<SOMATIC_GT::SIZE; ++gt)
         {
             somaticPprob[gt] = tumorSomaticLhood[gt] + normalSomaticLhood[gt] + somaticDopt.logPrior(gt,largeNoiseWeight);
@@ -1449,14 +1447,14 @@ scoreSomaticSV(
         }
 
         // independently estimate diploid genotype:
-        boost::array<double,DIPLOID_GT::SIZE> normalLhood;
+        std::array<double,DIPLOID_GT::SIZE> normalLhood;
         std::fill(normalLhood.begin(),normalLhood.end(),0);
         for (const JunctionCallInfo& junction : junctionData)
         {
             addDiploidLoglhood(junction.getSpanningWeight(), junction.getEvidence().normal, normalLhood);
         }
 
-        boost::array<double,DIPLOID_GT::SIZE> normalPprob;
+        std::array<double,DIPLOID_GT::SIZE> normalPprob;
         for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
         {
             normalPprob[gt] = normalLhood[gt]; // uniform prior for now....

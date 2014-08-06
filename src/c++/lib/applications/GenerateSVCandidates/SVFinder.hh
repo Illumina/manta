@@ -27,8 +27,6 @@
 #include "svgraph/EdgeInfo.hh"
 #include "svgraph/SVLocusSet.hh"
 
-#include "boost/shared_ptr.hpp"
-
 #include <vector>
 
 
@@ -125,7 +123,7 @@ private:
 
     const bool _isRNA;
 
-    typedef boost::shared_ptr<bam_streamer> streamPtr;
+    typedef std::shared_ptr<bam_streamer> streamPtr;
     std::vector<streamPtr> _bamStreams;
 
     /// this is only here as syscall cache:
