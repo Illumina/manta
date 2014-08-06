@@ -26,6 +26,7 @@
 #include <iosfwd>
 #include <limits>
 #include <map>
+#include <memory>
 #include <set>
 #include <vector>
 

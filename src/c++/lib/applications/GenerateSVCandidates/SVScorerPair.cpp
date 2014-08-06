@@ -27,8 +27,6 @@
 #include "manta/SVCandidateUtil.hh"
 #include "svgraph/GenomeIntervalUtil.hh"
 
-#include "boost/make_shared.hpp"
-
 #include <iostream>
 #include <sstream>
 #include <string>
