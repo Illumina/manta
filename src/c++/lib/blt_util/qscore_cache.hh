@@ -11,8 +11,7 @@
 // <https://github.com/sequencing/licenses/>
 //
 
-/// \file
-
+///
 /// \author Chris Saunders
 ///
 
@@ -23,7 +22,10 @@
 #include <cassert>
 #include <ciso646>
 
+#include <array>
 
+
+/// singleton helper class for qscore.hh
 struct qphred_cache
 {
     static
@@ -125,37 +127,9 @@ private:
         return mappedq[mapping_qscore][basecall_qscore];
     }
 
-    double q2p[MAX_QSCORE+1];
-    double q2lncompe[MAX_QSCORE+1];
-    double q2lne[MAX_QSCORE+1];
+    std::array<double,MAX_QSCORE+1> q2p;
+    std::array<double,MAX_QSCORE+1> q2lncompe;
+    std::array<double,MAX_QSCORE+1> q2lne;
     uint8_t mappedq[MAX_MAP+1][MAX_QSCORE+1];
 };
 
-
-struct qlogodds_cache
-{
-    static
-    double
-    get_error_prob(const int qscore)
-    {
-        static const qlogodds_cache qc;
-        return qc.get_error_prob_imp(qscore);
-    }
-
-private:
-    qlogodds_cache();
-
-    void qscore_error(const int qscore) const;
-
-    double
-    get_error_prob_imp(const int qscore) const
-    {
-        if ((qscore < MIN_QSCORE) || (qscore > MAX_QSCORE)) qscore_error(qscore);
-        return q2p[qscore];
-    }
-
-    enum { MIN_QSCORE = -40, MAX_QSCORE = 70 };
-
-    double q2p_base[MAX_QSCORE+1-MIN_QSCORE];
-    double* const q2p;
-};

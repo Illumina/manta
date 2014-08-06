@@ -11,8 +11,7 @@
 // <https://github.com/sequencing/licenses/>
 //
 
-/// \file
-
+///
 /// \author Chris Saunders
 ///
 
@@ -26,7 +25,7 @@
 /// Manages a partial reference sequence segment
 ///
 /// This object holds the reference sequence specified by the current
-/// runs begin and end range, plus some padding on each side. To get
+/// run's begin and end range, plus some padding on each side. To get
 /// this integrated into the current code as quickly as possible it
 /// currently exposes the internal string object holding the sequence
 /// data. When time allows this will be restricted so that a compressed

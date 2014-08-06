@@ -67,24 +67,3 @@ high_qscore_error(const int qscore,
     throw blt_exception(oss.str().c_str());
 }
 
-
-
-qlogodds_cache::
-qlogodds_cache() : q2p(q2p_base-MIN_QSCORE)
-{
-    for (int i(MIN_QSCORE); i<=MAX_QSCORE; ++i)
-    {
-        q2p[i] = logodds_to_error_prob(static_cast<double>(i));
-    }
-}
-
-
-
-void
-qlogodds_cache::
-qscore_error(const int qscore) const
-{
-    log_os << "ERROR:: invalid logodds qscore: " << qscore << "\n";
-    exit(EXIT_FAILURE);
-}
-
