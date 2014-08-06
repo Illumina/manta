@@ -19,7 +19,6 @@
 
 #include <boost/format.hpp>
 #include <boost/throw_exception.hpp>
-#include <boost/assign/list_of.hpp>
 
 #include <boost/foreach.hpp>
 #define foreach BOOST_FOREACH
@@ -33,14 +32,17 @@
 
 VcfFile::VcfFile(const std::string& pathStr,
                  const std::map<std::string, int32_t>& chromNameTidMap)
-    : myVcfTypeMap(),
+    : myVcfTypeMap({{"BND", Variant::INTERTRANSLOC},
+                    {"INV", Variant::INVERSION},
+                    {"INS", Variant::INSERTION},
+                    {"DEL", Variant::DELETION},
+                    {"DUP:TANDEM", Variant::TANDUP},
+                    {"compound", Variant::COMPLEX}}),
+      myPathStr(pathStr),
       myChromNameTidMap(chromNameTidMap),
       myVcfHeaderLoadedFlag(false),
       mySvTypeFieldId(-1), mySvLenFieldId(-1), myMateIdFieldId(-1)
 {
-    myVcfTypeMap.clear(); //cppcheck distraction
-    myVcfTypeMap = boost::assign::map_list_of<std::string, Variant::Type>("BND", Variant::INTERTRANSLOC)("INV", Variant::INVERSION)("INS", Variant::INSERTION)("DEL", Variant::DELETION)("DUP:TANDEM", Variant::TANDUP)("compound", Variant::COMPLEX);
-
     myStrm.open(pathStr.c_str());
 
     if (!myStrm)
@@ -49,8 +51,6 @@ VcfFile::VcfFile(const std::string& pathStr,
                                   std::string("Failed to open `")
                                   + pathStr + "'"));
     }
-
-    myPathStr = pathStr;
 }
 
 /*****************************************************************************/

@@ -22,8 +22,6 @@
 #include <string>
 #include <vector>
 
-#include <boost/assign/list_of.hpp>
-
 #include "VcfLocus.hh"
 #include "VcfHeader.hh"
 #include "VcfMetaInformation.hh"
@@ -274,11 +272,11 @@ public:
         vcfBool_.setLine( &(*this) );
         vcfFullString_.setLine( &(*this) );
         vcfLong_.setLine( &(*this) );
-        READ = boost::assign::list_of( &VcfLine::readId )
-               ( &VcfLine::readRef )
-               ( &VcfLine::readAlt )
-               ( &VcfLine::readQual )
-               ( &VcfLine::readFilter );
+        READ = { &VcfLine::readId,
+               &VcfLine::readRef,
+               &VcfLine::readAlt,
+               &VcfLine::readQual,
+               &VcfLine::readFilter};
         spuriousHeader_ = false;
     }
 
