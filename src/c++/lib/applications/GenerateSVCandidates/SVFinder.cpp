@@ -60,7 +60,7 @@ SVFinder(const GSCOptions& opt) :
 
 
 
-/// making the dtor explicit and in the cpp allows auto_ptr to work reliably:
+/// making the dtor explicit and in the cpp allows unique_ptr to work reliably:
 SVFinder::
 ~SVFinder()
 {}

@@ -118,7 +118,7 @@ private:
     const ReadScannerOptions _scanOpt;
     const std::vector<bool> _isAlignmentTumor;
     SVLocusSet _set;
-    std::auto_ptr<ChromDepthFilterUtil> _dFilterPtr;
+    std::unique_ptr<ChromDepthFilterUtil> _dFilterPtr;
     SVLocusScanner _readScanner;
 
     const std::string _referenceFilename;

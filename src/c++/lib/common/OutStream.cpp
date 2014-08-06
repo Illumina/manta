@@ -39,7 +39,7 @@ OutStream(const std::string& fileName) :
 
 
 
-// required for auto_ptr:
+// required for unique_ptr:
 OutStream::
 ~OutStream() {}
 

@@ -52,5 +52,5 @@ private:
     bool _isInit;
     std::string _fileName;
     std::ostream* _osptr;
-    std::auto_ptr<std::ofstream> _ofsptr;
+    std::unique_ptr<std::ofstream> _ofsptr;
 };
