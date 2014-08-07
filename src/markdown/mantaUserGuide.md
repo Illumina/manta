@@ -130,19 +130,19 @@ will still be used in discovery, assembly and split-read scoring if their alignm
 suggests a possible breakend location.
 
 Manta requires input sequencing reads to be mapped by an external tool and
-provided as input in BAM format.
+provided as input in BAM or CRAM format.
 
-At configuration time, at least one bam file must be provided for the normal
+At configuration time, at least one bam/cram file must be provided for the normal
 sample. A matched tumor sample can optionally be provided as well. If multiple
-bams are provided for the normal or tumor sample, these are merged and treated
+input files are provided for the normal or tumor sample, these are merged and treated
 as a single normal or tumor sample.
 
-The following limitations exist on the input BAMs provided to Manta:
+The following limitations exist on the input BAM or CRAM files provided to Manta:
 
 * Alignments cannot contain the "=" character in the SEQ field.
 * Alignments cannot use the sequence match/mismatch ("="/"X") CIGAR notation
-* RG (read group) tags in the BAMs are ignored -- each BAM must represent one
-  sample.
+* RG (read group) tags in the alignment records are ignored -- each file will be
+treated as representing one sample.
 * Alignments with basecall quality values greater than 70 are rejected (these
   are not supported on the assumption that this indicates an offset error)
 
@@ -213,8 +213,8 @@ without changing the final result of the workflow.
 
 The workflow is configured with the script: `${MANTA_INSTALL_DIR}/bin/configManta.py`
 . Running this script with no arguments will display all standard configuration
-options to specify input BAM files, the reference sequence and the output run folder.
-Note that all input BAMs and reference sequence must contain the same chromosome names
+options to specify input BAM or CRAM files, the reference sequence and the output run folder.
+Note that all input BAM or CRAM files and reference sequence must contain the same chromosome names
 in the same order. Manta's default settings assume a whole genome DNA-Seq analysis, but there
 are configuration options for exome/targeted sequencing analysis in addition to RNA-Seq.
 

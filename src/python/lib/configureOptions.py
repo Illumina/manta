@@ -222,7 +222,7 @@ sge and resume any interrupted execution.
 
 
         secgroup = MaybeHelpOptionGroup(parser,"Extended options",
-                                        "These options are either unlikely to be reset after initial site configuration or only of interest for manta development/debugging. They will not be printed here if a default exists unless --allHelp is specified")
+                                        "These options are either unlikely to be reset after initial site configuration or only of interest for workflow development/debugging. They will not be printed here if a default exists unless --allHelp is specified")
 
 
         def hideGroup(group) :

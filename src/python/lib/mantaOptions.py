@@ -23,8 +23,8 @@ scriptName=os.path.basename(__file__)
 sys.path.append(scriptDir)
 
 from configureOptions import ConfigureWorkflowOptions
-from configureUtil import assertOptionExists
-
+from configureUtil import assertOptionExists, joinFile, OptParseException, validateFixExistingDirArg, validateFixExistingFileArg
+from workflowUtil import parseGenomeRegion
 
 
 def cleanLocals(locals_dict) :
@@ -36,18 +36,29 @@ def cleanLocals(locals_dict) :
 
 
 
-def joinFile(*arg) :
-    filePath = os.path.join(*arg)
-    assert os.path.isfile(filePath)
-    return filePath
-
-
-
 class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
 
+    validAlignerModes = ["bwa","isaac"]
+
     def addWorkflowGroupOptions(self,group) :
-        group.add_option("--runDir", type="string",dest="runDir",
+        group.add_option("--referenceFasta",type="string",metavar="FILE",
+                         help="samtools-indexed reference fasta file [required]")
+        group.add_option("--runDir", type="string",
                          help="Run script and run output will be written to this directory [required] (default: %default)")
+
+    def addExtendedGroupOptions(self,group) :
+        group.add_option("--scanSizeMb", type="int", metavar="scanSizeMb",
+                         help="Maximum sequence region size (in Mb) scanned by each task during "
+                         "SV Locus graph generation. (default: %default)")
+        group.add_option("--region", type="string",dest="regionStrList",metavar="samtoolsRegion", action="append",
+                         help="Limit the analysis to a region of the genome for debugging purposes. "
+                              "If this argument is provided multiple times all specified regions will "
+                              "be analyzed together. All regions must be non-overlapping to get a "
+                              "meaningful result. Examples: '--region chr20' (whole chromosome), "
+                              "'--region chr2:100-2000 --region chr3:2500-3000' (two regions)'")
+
+        ConfigureWorkflowOptions.addExtendedGroupOptions(self,group)
+
 
     def getOptionDefaults(self) :
         """
@@ -55,6 +66,9 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
 
         Every local variable in this method becomes part of the default hash
         """
+
+        alignerMode = "isaac"
+
         libexecDir=os.path.abspath(os.path.join(scriptDir,"@THIS_RELATIVE_LIBEXECDIR@"))
         assert os.path.isdir(libexecDir)
 
@@ -70,7 +84,7 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         mantaGraphStatsBin=joinFile(libexecDir,"SummarizeSVLoci")
         mantaStatsSummaryBin=joinFile(libexecDir,"SummarizeAlignmentStats")
 
-        mantaChromDepth=joinFile(libexecDir,"getBamAvgChromDepth.py")
+        getChromDepth=joinFile(libexecDir,"getBamAvgChromDepth.py")
         mantaSortVcf=joinFile(libexecDir,"sortVcf.py")
         mantaExtraSmallVcf=joinFile(libexecDir,"extractSmallIndelCandidates.py")
 
@@ -89,6 +103,8 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         hyGenSGEMemMb=4*1024
         hyGenLocalMemMb=2*1024
 
+        scanSizeMb = 12
+
         return cleanLocals(locals())
 
 
@@ -97,7 +113,31 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
 
         options.runDir=os.path.abspath(options.runDir)
 
+        # check alignerMode:
+        if options.alignerMode is not None :
+            options.alignerMode = options.alignerMode.lower()
+            if options.alignerMode not in self.validAlignerModes :
+                raise OptParseException("Invalid aligner mode: '%s'" % options.alignerMode)
+
+        options.referenceFasta=validateFixExistingFileArg(options.referenceFasta,"reference")
+
+        # check for reference fasta index file:
+        if options.referenceFasta is not None :
+            faiFile=options.referenceFasta + ".fai"
+            if not os.path.isfile(faiFile) :
+                raise OptParseException("Can't find expected fasta index file: '%s'" % (faiFile))
+
+        if (options.regionStrList is None) or (len(options.regionStrList) == 0) :
+            options.genomeRegionList = None
+        else :
+            options.genomeRegionList = [parseGenomeRegion(r) for r in options.regionStrList]
+
 
     def validateOptionExistence(self,options) :
 
         assertOptionExists(options.runDir,"run directory")
+
+        assertOptionExists(options.alignerMode,"aligner mode")
+        assertOptionExists(options.referenceFasta,"reference fasta file")
+
+

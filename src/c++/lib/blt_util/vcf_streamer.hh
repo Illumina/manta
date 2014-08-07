@@ -29,9 +29,10 @@ struct vcf_streamer : private boost::noncopyable
     // optionally provide a BAM header to validate vcf chromosome names against
     //
     explicit
-    vcf_streamer(const char* filename,
-                 const char* region = NULL,
-                 const bam_header_t* bh = NULL);
+    vcf_streamer(
+        const char* filename,
+        const char* region,
+        const bam_header_t* bh = nullptr);
 
     ~vcf_streamer();
 
@@ -41,10 +42,11 @@ struct vcf_streamer : private boost::noncopyable
     //
     bool next(const bool is_indel_only=false);
 
-    const vcf_record* get_record_ptr() const
+    const vcf_record*
+    get_record_ptr() const
     {
         if (_is_record_set) return &_vcfrec;
-        else               return NULL;
+        else                return nullptr;
     }
 
     const char* name() const
@@ -59,17 +61,17 @@ struct vcf_streamer : private boost::noncopyable
 
     void report_state(std::ostream& os) const;
 
-    //const bam_header_t*
-    //get_header() const { return _bfp->header; }
-
 private:
     bool _is_record_set;
     bool _is_stream_end;
     unsigned _record_no;
     std::string _stream_name;
 
-    tabix_t* _tfp;
-    ti_iter_t _titer;
+    htsFile* _hfp;
+    bcf_hdr_t* _hdr;
+    tbx_t* _tidx;
+    hts_itr_t* _titr;
+    kstring_t _kstr;
 
     vcf_record _vcfrec;
 };

@@ -64,6 +64,10 @@ else  ()
     message(FATAL_ERROR "No support for gzip compression")
 endif ()
 
+# samtools 0.2.x forces pthreads in link:
+find_package( Threads )
+
+
 # Force static linking
 set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 
@@ -214,7 +218,7 @@ if (GNU_COMPAT_COMPILER)
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse -mfpmath=sse")
   elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "^i[345]86$")
     ##
-    ## Prevent using 80bits registers (more consistent rounding)
+    ## Prevent using 80bit registers (more consistent rounding)
     ##
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffloat-store")
   endif ()
@@ -228,5 +232,5 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/lib/common/config.h.in ${THIS_CXX_CON
 #
 # include dirs:
 #
-set (THIS_CXX_BEFORE_SYSTEM_INCLUDES "${Boost_INCLUDE_DIRS}" "${SAMTOOLS_DIR}" "${TABIX_DIR}")
+set (THIS_CXX_BEFORE_SYSTEM_INCLUDES "${Boost_INCLUDE_DIRS}" "${HTSLIB_DIR}" "${SAMTOOLS_DIR}")
 set (THIS_CXX_ALL_INCLUDES "${CMAKE_SOURCE_DIR}/c++/lib")

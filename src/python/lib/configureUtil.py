@@ -18,6 +18,7 @@ util -- simple utilities shared by workflow configurations
 import os.path
 
 from optparse import OptionParser
+from checkChromSet import checkChromSet
 
 
 
@@ -178,6 +179,61 @@ def validateFixExistingFileArg(argFile,label) :
 
 
 
+def checkForBamIndex(bamFile):
+    """
+    make sure bam file has an index
+    """
+    for ext in (".bai", ".csi", ".crai") :
+        indexFile=bamFile + ext
+        if os.path.isfile(indexFile) : return
+    raise OptParseException("Can't find any expected BAM/CRAM index files for: '%s'" % (bamFile))
+
+
+def groomBamList(bamList, sampleLabel):
+    """
+    check that bam/cram files exist and have an index, convert ot abs path if they check out
+    """
+    if bamList is None : return
+    for (index,bamFile) in enumerate(bamList) :
+        bamList[index]=validateFixExistingFileArg(bamFile,"%s BAM/CRAM file" % (sampleLabel))
+        checkForBamIndex(bamList[index])
+
+
+class BamSetChecker(object):
+    """
+    check properties of the input bams as an aggregate set
+
+    for instance, same chrom order, no repeated files, etc...
+    """
+
+    def  __init__(self) :
+        self.bamList=[]
+        self.bamLabels=[]
+
+    def appendBams(self,inputBamList,inputLabel) :
+
+        if inputBamList is None : return
+        for inputBamFile in inputBamList :
+            self.bamList.append(inputBamFile)
+            self.bamLabels.append(inputLabel)
+
+    def check(self, samtoolsBin, referenceFasta) :
+
+        checkChromSet(samtoolsBin,
+                      referenceFasta,
+                      self.bamList,
+                      self.bamLabels,
+                      isReferenceLocked=True)
+
+        # check for repeated bam entries:
+        #
+        bamSet=set()
+        for bamFile in self.bamList :
+            if bamFile in bamSet :
+                raise OptParseException("Repeated input BAM/CRAM file: %s" % (bamFile))
+            bamSet.add(bamFile)
+
+
 def checkListArgRepeats(listName,itemLabel) :
     """
     screen a list argument for repeated entries
@@ -191,3 +247,10 @@ def checkListArgRepeats(listName,itemLabel) :
 def assertOptionExists(arg,label) :
     if arg is None:
         raise OptParseException("No %s specified" % (label))
+
+
+
+def joinFile(*arg) :
+    filePath = os.path.join(*arg)
+    assert os.path.isfile(filePath)
+    return filePath

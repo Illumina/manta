@@ -33,9 +33,9 @@ getOptionsDescription(
     po::options_description desc("alignment-files");
     desc.add_options()
     ("align-file", po::value<files_t>(),
-     "alignment file in bam format (may be specified multiple times, assumed to be non-tumor if tumor file(s) provided)")
+     "alignment file in BAM or CRAM format (may be specified multiple times, assumed to be non-tumor if tumor file(s) provided)")
     ("tumor-align-file", po::value<files_t>(),
-     "tumor sample alignment file in bam format (may be specified multiple times)")
+     "tumor sample alignment file in BAM or CRAM format (may be specified multiple times)")
     ;
     return desc;
 }

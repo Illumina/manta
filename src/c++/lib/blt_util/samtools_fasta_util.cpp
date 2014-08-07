@@ -24,7 +24,7 @@
 
 extern "C"
 {
-#include "faidx.h"
+#include "htslib/faidx.h"
 }
 
 #include <cassert>
@@ -33,7 +33,6 @@ extern "C"
 #include <iostream>
 #include <sstream>
 #include <vector>
-
 
 
 

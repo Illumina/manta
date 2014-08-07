@@ -11,8 +11,7 @@
 // <https://github.com/sequencing/licenses/>
 //
 
-/// \file
-
+///
 /// \author Chris Saunders
 ///
 
@@ -31,92 +30,106 @@
 
 
 
-// return true only if all chromosomes in the vcf exist in the
+// return true only if all chromosomes in the bcf/vcf exist in the
 // bam header
 static
 void
-check_vcf_header_compatability(const char* vcf_filename,
-                               const ti_index_t* vh,
-                               const bam_header_t* bh)
+check_bam_bcf_header_compatability(
+    const char* bcf_filename,
+    const bcf_hdr_t* bcfh,
+    const bam_header_t* bamh)
 {
-
-    assert(NULL != bh);
-    assert(NULL != vh);
+    assert(nullptr != bamh);
+    assert(nullptr != bcfh);
 
     // build set of chrom labels from BAM:
     std::set<std::string> bamlabels;
-    for (int32_t i(0); i<bh->n_targets; ++i)
+    for (int32_t i(0); i<bamh->n_targets; ++i)
     {
-        bamlabels.insert(std::string(bh->target_name[i]));
+        bamlabels.insert(std::string(bamh->target_name[i]));
     }
-    int n_vcf_labels(0);
-    const char** vcf_labels = ti_seqname(vh, &n_vcf_labels);
+    int n_labels(0);
 
-    for (int i(0); i<n_vcf_labels; ++i)
+    const char** bcf_labels = bcf_hdr_seqnames(bcfh, &n_labels);
+
+    for (int i(0); i<n_labels; ++i)
     {
-        if (bamlabels.find(std::string(vcf_labels[i])) == bamlabels.end())
-        {
-            log_os << "ERROR: Chromosome label '" << vcf_labels[i] << "' in VCF file '" << vcf_filename << "' does not exist in the BAM header\n";
-            exit(EXIT_FAILURE);
-        }
+        if (bamlabels.find(std::string(bcf_labels[i])) != bamlabels.end()) continue;
+        log_os << "ERROR: Chromosome label '" << bcf_labels[i] << "' in BCF/VCF file '" << bcf_filename << "' does not exist in the BAM header\n";
+        exit(EXIT_FAILURE);
     }
 
-    free(vcf_labels);
+    free(bcf_labels);
 }
 
 
 
 vcf_streamer::
-vcf_streamer(const char* filename,
-             const char* region,
-             const bam_header_t* bh)
-    : _is_record_set(false), _is_stream_end(false), _record_no(0), _stream_name(filename),
-      _tfp(NULL), _titer(NULL)
+vcf_streamer(
+    const char* filename,
+    const char* region,
+    const bam_header_t* bh) :
+    _is_record_set(false),
+    _is_stream_end(false),
+    _record_no(0),
+    _stream_name(filename),
+    _hfp(nullptr),
+    _hdr(nullptr),
+    _tidx(nullptr),
+    _titr(nullptr),
+    _kstr({0,0,0})
 {
+    //
+    // note with the switch to samtools 0.2.X vcf/bcf still involve predominantly separate
+    // apis -- no bcf support added here, but a shared function has been chosen where possible
+    // ... for_instance hts_open/bcf_hdr_read should work with both vcf and bcf
+    //
 
-    if (NULL == filename)
+    if (nullptr == filename)
     {
-        throw blt_exception("vcf filename is null ptr");
+        throw blt_exception("VCF filename is null ptr");
+    }
+
+    if (nullptr == region)
+    {
+        throw blt_exception("VCF region is null ptr");
     }
 
     if ('\0' == *filename)
     {
-        throw blt_exception("vcf filename is empty string");
+        throw blt_exception("VCF filename is empty string");
     }
 
-    _tfp = ti_open(filename, 0);
-
-    if (NULL == _tfp)
+    _hfp = hts_open(filename, "r");
+    if (nullptr == _hfp)
     {
         log_os << "ERROR: Failed to open VCF file: '" << filename << "'\n";
         exit(EXIT_FAILURE);
     }
 
+    _hdr = bcf_hdr_read(_hfp);
+    if (nullptr == _hdr)
+    {
+        log_os << "ERROR: Failed to load header for VCF file: '" << filename << "'\n";
+        exit(EXIT_FAILURE);
+    }
+
     // read from a specific region:
-    if (ti_lazy_index_load(_tfp) < 0)
+    _tidx = tbx_index_load(filename);
+    if (nullptr == _tidx)
     {
         log_os << "ERROR: Failed to load index for VCF file: '" << filename << "'\n";
         exit(EXIT_FAILURE);
     }
 
-    if (NULL != bh)
+    if (nullptr != bh)
     {
-        check_vcf_header_compatability(filename,_tfp->idx,bh);
+        check_bam_bcf_header_compatability(filename, _hdr, bh);
     }
 
-    if (NULL == region)
-    {
-        // read the whole VCF file:
-        _titer = ti_query(_tfp, 0, 0, 0);
-        return;
-    }
-
-    int tid,beg,end;
-    if (ti_parse_region(_tfp->idx, region, &tid, &beg, &end) == 0)
-    {
-        _titer = ti_queryi(_tfp, tid, beg, end);
-    }
-    else
+    // read only a region of VCF file:
+    _titr = tbx_itr_querys(_tidx, region);
+    if (nullptr == _titr)
     {
         _is_stream_end=true;
     }
@@ -127,8 +140,10 @@ vcf_streamer(const char* filename,
 vcf_streamer::
 ~vcf_streamer()
 {
-    if (NULL != _titer) ti_iter_destroy(_titer);
-    if (NULL != _tfp) ti_close(_tfp);
+    if (nullptr != _titr) tbx_itr_destroy(_titr);
+    if (nullptr != _tidx) tbx_destroy(_tidx);
+    if (nullptr != _hdr) bcf_hdr_destroy(_hdr);
+    if (nullptr != _hfp) hts_close(_hfp);
 }
 
 
@@ -137,14 +152,19 @@ bool
 vcf_streamer::
 next(const bool is_indel_only)
 {
-    if (_is_stream_end || (NULL==_tfp) || (NULL==_titer)) return false;
+    if (_is_stream_end || (nullptr==_hfp) || (nullptr==_titr)) return false;
 
+    char*& vcf_record_string(_kstr.s);
     while (true)
     {
-        int len;
-        const char* vcf_record_string(ti_read(_tfp, _titer, &len));
-
-        _is_stream_end=(NULL == vcf_record_string);
+        if (tbx_itr_next(_hfp, _tidx, _titr, &_kstr) < 0)
+        {
+            _is_stream_end=true;
+        }
+        else
+        {
+            _is_stream_end=(nullptr == vcf_record_string);
+        }
         _is_record_set=(! _is_stream_end);
         if (! _is_record_set) break;
 
@@ -173,11 +193,10 @@ void
 vcf_streamer::
 report_state(std::ostream& os) const
 {
-
     const vcf_record* vcfp(get_record_ptr());
 
     os << "\tvcf_stream_label: " << name() << "\n";
-    if (NULL != vcfp)
+    if (nullptr != vcfp)
     {
         os << "\tvcf_stream_record_no: " << record_no() << "\n"
            << "\tvcf_record: " << *(vcfp) << "\n";

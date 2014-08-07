@@ -18,14 +18,15 @@
 #pragma once
 
 #include "blt_util/bam_record.hh"
+#include "blt_util/sam_util.hh"
 
 #include "boost/utility.hpp"
 
 #include <string>
 
 
-
-/// convenient bam record iterator for whole genome or chromosome segments
+/// Stream bam records from CRAM/BAM/SAM files. For CRAM/BAM
+/// files you can run an indexed stream from a specific genome region.
 ///
 //
 // Example use:
@@ -36,14 +37,19 @@
 //
 struct bam_streamer : public boost::noncopyable
 {
-
+    /// \param filename CRAM/BAM/SAM input file
+    /// \param region if filename is indexed CRAM or BAM, you can
+    ///        restrict the stream to a specific region
     explicit
     bam_streamer(const char* filename,
-                 const char* region = NULL);
+                 const char* region = nullptr);
 
     ~bam_streamer();
 
     /// \brief set new or first region for file:
+    ///
+    /// \param region if ctor filename is indexed CRAM or BAM, you can
+    ///        restrict the stream to a specific region
     void
     set_new_region(const char* region);
 
@@ -60,7 +66,7 @@ struct bam_streamer : public boost::noncopyable
     const bam_record* get_record_ptr() const
     {
         if (_is_record_set) return &_brec;
-        else               return NULL;
+        else                return nullptr;
     }
 
     const char* name() const
@@ -92,8 +98,8 @@ private:
 
     bool _is_record_set;
     samfile_t* _bfp;
-    bam_index_t* _bidx;
-    bam_iter_t _biter;
+    hts_idx_t* _hidx;
+    hts_itr_t* _hitr;
     bam_record _brec;
 
     // track for debug only:
@@ -102,4 +108,3 @@ private:
     bool _is_region;
     std::string _region;
 };
-

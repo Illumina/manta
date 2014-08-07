@@ -31,11 +31,11 @@ BOOST_AUTO_TEST_CASE( test_vcf_streamer_region )
 {
     vcf_streamer vcfs(getTestpath(),"chr1:750000-822000");
 
-    const vcf_record* vptr(NULL);
+    const vcf_record* vptr(nullptr);
 
     BOOST_REQUIRE( vcfs.next() );
     vptr = vcfs.get_record_ptr();
-    assert(vptr != NULL);
+    assert(vptr != nullptr);
 
     BOOST_REQUIRE( vptr->is_valid() );
     BOOST_REQUIRE( vptr->is_indel() );
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE( test_vcf_streamer_region )
 
     BOOST_REQUIRE( vcfs.next() );
     vptr = vcfs.get_record_ptr();
-    assert(vptr != NULL);
+    assert(vptr != nullptr);
 
     BOOST_REQUIRE( vptr->is_valid() );
     BOOST_REQUIRE( ! vptr->is_indel() );
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE( test_vcf_streamer_region )
 
     BOOST_REQUIRE( vcfs.next() );
     vptr = vcfs.get_record_ptr();
-    assert(vptr != NULL);
+    assert(vptr != nullptr);
 
     BOOST_REQUIRE( vptr->is_valid() );
     BOOST_REQUIRE( vptr->is_indel() );
@@ -68,19 +68,19 @@ BOOST_AUTO_TEST_CASE( test_vcf_streamer_region )
 
     BOOST_REQUIRE( ! vcfs.next() );
     vptr = vcfs.get_record_ptr();
-    assert(vptr == NULL);
+    assert(vptr == nullptr);
 }
 
-
+#if 0
 BOOST_AUTO_TEST_CASE( test_vcf_streamer_noregion )
 {
     vcf_streamer vcfs(getTestpath());
 
-    const vcf_record* vptr(NULL);
+    const vcf_record* vptr(nullptr);
 
     BOOST_REQUIRE( vcfs.next() );
     vptr = vcfs.get_record_ptr();
-    assert(vptr != NULL);
+    assert(vptr != nullptr);
 
     BOOST_REQUIRE( vptr->is_valid() );
     BOOST_REQUIRE( vptr->is_indel() );
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE( test_vcf_streamer_noregion )
 
     BOOST_REQUIRE( vcfs.next() );
 }
-
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()
 

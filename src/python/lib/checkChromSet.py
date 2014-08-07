@@ -53,7 +53,7 @@ def getFastaInfo(fasta) :
 
 def getBamChromInfo(samtoolsBin,bam) :
     """
-    Get chromosome information from bam header
+    Get chromosome information from bam/cram header
 
     return a map of [chrom_name]=(chrom_size,chrom_order)
     """
@@ -70,7 +70,7 @@ def getBamChromInfo(samtoolsBin,bam) :
         if not line.startswith("@SQ") : continue
         w = line.strip().split('\t')
         if len(w) < 3 :
-            chromError("Unexpected bam header for file '%s'" % (bam))
+            chromError("Unexpected bam/cram header for file '%s'" % (bam))
 
         h = {}
         for word in w[1:] :
@@ -80,7 +80,7 @@ def getBamChromInfo(samtoolsBin,bam) :
         key = h["SN"]
         size = int(h["LN"])
         if size <= 0 :
-            chromError("Unexpected chromosome size '%i' in bam header for file '%s'" % (size,bam))
+            chromError("Unexpected chromosome size '%i' in bam/cram header for file '%s'" % (size,bam))
 
         info[key] = (size,chromIndex)
         chromIndex += 1
@@ -95,12 +95,12 @@ def getBamChromInfo(samtoolsBin,bam) :
 
 def checkChromSet(samtoolsBin,referenceFasta,bamList,bamLabel=None,isReferenceLocked=False) :
     """
-    Check that chromosomes in reference and input bams are consistent
+    Check that chromosomes in reference and input bam/cram(s) are consistent
 
     @param samtoolsBin - samtools binary
     @param referenceFasta - samtools indexed fasta file
-    @param bamList - a container of indexed bams to check for consistency
-    @param bamLabel - a container of labels for each bam (default is to label BAMs by index number)
+    @param bamList - a container of indexed bam/cram(s) to check for consistency
+    @param bamLabel - a container of labels for each bam/cram file (default is to label files by index number)
     @param isReferenceLocked - if true, then the input BAMs must contain all of the chromosomes in the reference fasta
 
     This function closely follows the strelka input configuration step validator
@@ -129,13 +129,13 @@ def checkChromSet(samtoolsBin,referenceFasta,bamList,bamLabel=None,isReferenceLo
                 isError = True
 
         if isError :
-            chromError("Reference fasta and '%s' BAM file conflict on chromosome: '%s'" % (bamLabel[0],chrom))
+            chromError("Reference fasta and '%s' BAM/CRAM file conflict on chromosome: '%s'" % (bamLabel[0],chrom))
 
     # optionally check that BAM contains all chromosomes in reference:
     if isReferenceLocked :
         for refChrom in refChromInfo.keys() :
             if refChrom not in chroms :
-                chromError("'%s' BAM file is missing reference fasta chromosome: '%s'" % (bamLabel[0],refChrom))
+                chromError("'%s' BAM/CRAM file is missing reference fasta chromosome: '%s'" % (bamLabel[0],refChrom))
 
     # check that other bams are compatible with first bam:
     for index in range(1,len(bamList)) :
@@ -150,10 +150,10 @@ def checkChromSet(samtoolsBin,referenceFasta,bamList,bamLabel=None,isReferenceLo
                 if ln != tln or order != torder : isError=True
 
             if isError :
-                chromError("'%s' and '%s' BAM files have a conflict on chromosome: '%s'" % (bamLabel[0],bamLabel[index],chrom))
+                chromError("'%s' and '%s' BAM/CRAM files have a conflict on chromosome: '%s'" % (bamLabel[0],bamLabel[index],chrom))
 
             del compareChromInfo[chrom]
 
         # check that no chromosomes are unique to the tumor:
         for chrom in compareChromInfo.keys() :
-            chromError("'%s' and '%s' BAM files have a conflict on chromosome: '%s'" % (bamLabel[0],bamLabel[index],chrom))
+            chromError("'%s' and '%s' BAM/CRAM files have a conflict on chromosome: '%s'" % (bamLabel[0],bamLabel[index],chrom))

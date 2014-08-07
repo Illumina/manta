@@ -20,6 +20,8 @@
 
 struct ReadScannerOptions
 {
+    ReadScannerOptions() {}
+
     /// standard MAPQ filter applied during locus generation and some/not all subsequent steps
     unsigned minMapq = 15;
 
