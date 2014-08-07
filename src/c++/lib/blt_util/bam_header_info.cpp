@@ -25,7 +25,7 @@ bam_header_info(const bam_header_t& header)
 {
     for (int i(0); i<header.n_targets; ++i)
     {
-        chrom_data.push_back(chrom_info(header.target_name[i],header.target_len[i]));
+        chrom_data.emplace_back(header.target_name[i],header.target_len[i]);
         chrom_to_index[header.target_name[i]] = (int32_t)i;
     }
 }

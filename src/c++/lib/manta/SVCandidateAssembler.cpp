@@ -475,7 +475,7 @@ getBreakendReads(
             {
                 if (isMateInsertionEvidence(bamRead, _scanOpt.minMapq, isSearchForLeftOpen, isSearchForRightOpen))
                 {
-                    remoteReads[bamIndex].push_back(RemoteReadInfo(bamRead));
+                    remoteReads[bamIndex].emplace_back(bamRead);
 
 #ifdef FWDREV_CHECK
                     if (bamRead.is_fwd_strand())

@@ -639,7 +639,7 @@ assignPairObservationsToSVCandidates(
                         // if there is no hypothesis (small assembly cases (thus "! isSpanning")), we'll be
                         // going back through the bam region during assembly anyway:
                         //
-                        pair.svLink.push_back(SVPairAssociation(svIndex,readCand.evtype));
+                        pair.svLink.emplace_back(svIndex,readCand.evtype);
                     }
 
                     if (isExpandSVCandidateSet)
@@ -670,7 +670,7 @@ assignPairObservationsToSVCandidates(
             if (isSpanning)
             {
                 // ditto note above, store read pairs only when there's an SV hypothesis:
-                pair.svLink.push_back(SVPairAssociation(newSVIndex,readCand.evtype));
+                pair.svLink.emplace_back(newSVIndex,readCand.evtype);
             }
             svs.push_back(readCand);
             svs.back().candidateIndex = newSVIndex;

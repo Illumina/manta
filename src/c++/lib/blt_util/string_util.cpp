@@ -37,10 +37,10 @@ split_string(const char* str,
         const char* next(strchr(str,delimiter));
         if ((NULL == next) || (delimiter == '\0'))
         {
-            v.push_back(std::string(str));
+            v.emplace_back(str);
             return;
         }
-        v.push_back(std::string(str,next-str));
+        v.emplace_back(str,next-str);
         str = next+1;
     }
 }
@@ -59,7 +59,7 @@ split_string(const std::string& str,
     while (true)
     {
         size_t next(str.find(delimiter,start));
-        v.push_back(std::string(str.substr(start,next-start)));
+        v.emplace_back(str.substr(start,next-start));
         if (next == std::string::npos) return;
         start = next+1;
     }
@@ -72,7 +72,6 @@ split_match(const std::string& str,
             const char delimiter,
             const char* needle)
 {
-
     size_t start(0);
     while (true)
     {

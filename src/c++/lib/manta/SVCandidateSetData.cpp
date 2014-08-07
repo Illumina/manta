@@ -71,7 +71,7 @@ getReadPair(const pindex_t::key_type& key)
         if (isFull()) return NULL;
 
         _pairIndex[key] = _pairs.size();
-        _pairs.push_back(SVCandidateSetReadPair());
+        _pairs.emplace_back();
         return &(_pairs.back());
     }
     else

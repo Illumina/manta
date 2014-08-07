@@ -48,7 +48,6 @@ bool
 vcf_record::
 set(const char* s)
 {
-
     static const char sep('\t');
     static const unsigned maxword(5);
 
@@ -87,7 +86,7 @@ set(const char* s)
                 {
                     if ((*p2==',') || (p2==p))
                     {
-                        alt.push_back(std::string(start,p2-start));
+                        alt.emplace_back(start,p2-start);
                         stoupper(alt.back());
                         start=p2+1;
                     }
@@ -113,7 +112,6 @@ set(const char* s)
 
 std::ostream& operator<<(std::ostream& os, const vcf_record& vcfr)
 {
-
     os << vcfr.chrom << '\t'
        << vcfr.pos << '\t'
        << '.' << '\t'

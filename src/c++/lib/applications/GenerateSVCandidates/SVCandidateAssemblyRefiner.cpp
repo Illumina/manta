@@ -306,12 +306,12 @@ addCigarToSpanningAlignment(
 
     if (insertSize)
     {
-        sv.insertAlignment.push_back(ALIGNPATH::path_segment(ALIGNPATH::INSERT,insertSize));
+        sv.insertAlignment.emplace_back(ALIGNPATH::INSERT,insertSize);
     }
 
     if (deleteSize)
     {
-        sv.insertAlignment.push_back(ALIGNPATH::path_segment(ALIGNPATH::DELETE,deleteSize));
+        sv.insertAlignment.emplace_back(ALIGNPATH::DELETE,deleteSize);
     }
 }
 

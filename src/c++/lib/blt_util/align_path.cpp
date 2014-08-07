@@ -370,7 +370,7 @@ apath_append(
     }
     else
     {
-        apath.push_back(path_segment(seg_type,length));
+        apath.emplace_back(seg_type,length);
     }
 }
 
@@ -592,7 +592,7 @@ apath_clean_seqmatch(path_t& apath)
             }
             else
             {
-                apath2.push_back(path_segment(MATCH,ps.length));
+                apath2.emplace_back(MATCH,ps.length);
             }
             is_match=true;
         }
