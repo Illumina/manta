@@ -33,7 +33,7 @@ candidates are found per edge.
 
 2. **Analyze graph edges to find SVs** The second step is to analyze individual
 graph edges or groups of highly connected edges to discover and score SVs
-associated with the edge(s). This substeps of this process include
+associated with the edge(s). The substeps of this process include
 inference of SV candidates associated with the edge, attempted assembly of the
 SVs breakends, scoring and filtration of the SV under various biological models
 (currently diploid germline and somatic), and finally, output to VCF.
