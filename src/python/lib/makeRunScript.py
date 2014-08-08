@@ -188,9 +188,9 @@ def main(pickleConfigFile, primaryConfigSection, workflowClassName) :
     flowOptions,configSections=getConfigWithPrimaryOptions(pickleConfigFile,primaryConfigSection)
 
     # new logs and marker files to assist automated workflow monitoring:
-    warningpath=os.path.join(flowOptions.runDir,"manta.warning.log.txt")
-    errorpath=os.path.join(flowOptions.runDir,"manta.error.log.txt")
-    exitpath=os.path.join(flowOptions.runDir,"manta.workflow.exitcode.txt")
+    warningpath=os.path.join(flowOptions.runDir,"workflow.warning.log.txt")
+    errorpath=os.path.join(flowOptions.runDir,"workflow.error.log.txt")
+    exitpath=os.path.join(flowOptions.runDir,"workflow.exitcode.txt")
 
     # the exit path should only exist once the workflow completes:
     if os.path.exists(exitpath) :
