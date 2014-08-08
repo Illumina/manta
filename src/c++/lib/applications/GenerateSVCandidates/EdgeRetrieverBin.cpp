@@ -93,7 +93,7 @@ jumpToFirstEdge()
 
                 const SVLocusEdgeManager node1Manager(node1.getEdgeManager());
                 edgeiter_t edgeIter(node1Manager.getMap().lower_bound(_edge.nodeIndex1));
-                const edgeiter_t edgeiterEnd(node1Manager.getMap().end());
+                const edgeiter_t edgeiterEnd(node1Manager.getMap().cend());
 
                 for (; edgeIter != edgeiterEnd; ++edgeIter)
                 {
@@ -163,7 +163,7 @@ advanceEdge()
             const bool isEdgeFilterNode1(isFilterNodes && (node1.size()>_graphNodeMaxEdgeCount));
             const SVLocusEdgeManager node1Manager(node1.getEdgeManager());
             edgeiter_t edgeIter(node1Manager.getMap().lower_bound(_edge.nodeIndex2));
-            const edgeiter_t edgeIterEnd(node1Manager.getMap().end());
+            const edgeiter_t edgeIterEnd(node1Manager.getMap().cend());
 
             for (; edgeIter != edgeIterEnd; ++edgeIter)
             {

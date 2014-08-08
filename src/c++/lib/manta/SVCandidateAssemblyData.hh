@@ -22,9 +22,8 @@
 #include "blt_util/reference_contig_segment.hh"
 #include "manta/SVCandidate.hh"
 
-#include "boost/unordered_map.hpp"
-
 #include <iosfwd>
+#include <unordered_map>
 #include <vector>
 
 
@@ -108,7 +107,7 @@ struct RemoteReadPayload
 
 
 
-typedef boost::unordered_map<std::string,RemoteReadPayload> RemoteReadCache;
+typedef std::unordered_map<std::string,RemoteReadPayload> RemoteReadCache;
 
 
 

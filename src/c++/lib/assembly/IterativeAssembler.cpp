@@ -21,12 +21,12 @@
 #include "blt_util/set_util.hh"
 
 #include "boost/foreach.hpp"
-#include "boost/unordered_map.hpp"
 
 #include <cassert>
 
-#include <vector>
 #include <algorithm>
+#include <unordered_map>
+#include <vector>
 
 
 // compile with this macro to get verbose output:
@@ -64,10 +64,10 @@ void print_stringSet(const std::set<std::string>& strSet)
 
 
 // maps kmers to positions in read
-typedef boost::unordered_map<std::string,unsigned> str_uint_map_t;
+typedef std::unordered_map<std::string,unsigned> str_uint_map_t;
 // maps kmers to support reads
-typedef boost::unordered_map<std::string,std::set<unsigned> > str_set_uint_map_t;
-typedef boost::unordered_map<std::string, std::pair<unsigned,unsigned> > str_pair_uint_map_t;
+typedef std::unordered_map<std::string,std::set<unsigned> > str_set_uint_map_t;
+typedef std::unordered_map<std::string, std::pair<unsigned,unsigned> > str_pair_uint_map_t;
 
 
 
@@ -175,8 +175,8 @@ walk(const IterativeAssemblerOptions& opt,
      std::set<std::string>& unusedWords,
      AssembledContig& contig)
 {
-    const str_uint_map_t::const_iterator wordCountEnd(wordCount.end());
-    const str_set_uint_map_t::const_iterator wordReadsEnd(wordReads.end());
+    const str_uint_map_t::const_iterator wordCountEnd(wordCount.cend());
+    const str_set_uint_map_t::const_iterator wordReadsEnd(wordReads.cend());
 
     // we start with the seed
     str_set_uint_map_t::const_iterator wordReadsIter(wordReads.find(seed));

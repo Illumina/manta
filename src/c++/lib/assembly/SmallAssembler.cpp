@@ -19,11 +19,10 @@
 #include "assembly/SmallAssembler.hh"
 #include "blt_util/set_util.hh"
 
-#include "boost/unordered_map.hpp"
-#include "boost/unordered_set.hpp"
-
 #include <cassert>
 
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 
@@ -56,11 +55,11 @@ print_readSet(
 
 
 // maps kmers to positions in read
-typedef boost::unordered_map<std::string,unsigned> str_uint_map_t;
+typedef std::unordered_map<std::string,unsigned> str_uint_map_t;
 // maps kmers to support reads
-typedef boost::unordered_map<std::string,std::set<unsigned> > str_set_uint_map_t;
+typedef std::unordered_map<std::string,std::set<unsigned> > str_set_uint_map_t;
 
-typedef boost::unordered_set<std::string> str_set_t;
+typedef std::unordered_set<std::string> str_set_t;
 
 
 /**
@@ -502,7 +501,7 @@ buildContigs(
     std::set<std::string> maxWords;
     {
         unsigned maxWordCount(0);
-        for (const str_uint_map_t::value_type& val : wordCount)
+        for (const auto& val : wordCount)
         {
             if (val.second < maxWordCount) continue;
             if (val.second > maxWordCount)
