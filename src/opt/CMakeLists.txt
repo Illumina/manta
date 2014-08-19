@@ -31,7 +31,7 @@ endmacro()
 #
 # htslib
 #
-set(HTSLIB_PREFIX "htslib-0.2.0-rc12")
+set(HTSLIB_PREFIX "htslib-1.0")
 superset(HTSLIB_DIR "${CMAKE_CURRENT_BINARY_DIR}/${HTSLIB_PREFIX}")
 superset(HTSLIB_LIBRARY "${HTSLIB_DIR}/libhts.a")
 
@@ -49,7 +49,7 @@ install(PROGRAMS "${HTSLIB_DIR}/bgzip" DESTINATION "${THIS_LIBEXECDIR}")
 #
 # samtools
 #
-set(SAMTOOLS_PREFIX "samtools-0.2.0-rc12")
+set(SAMTOOLS_PREFIX "samtools-1.0")
 superset(SAMTOOLS_DIR "${CMAKE_CURRENT_BINARY_DIR}/${SAMTOOLS_PREFIX}")
 superset(SAMTOOLS_LIBRARY "${SAMTOOLS_DIR}/libbam.a")
 superset(SAMTOOLS_PROG "${SAMTOOLS_DIR}/samtools")
