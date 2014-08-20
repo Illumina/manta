@@ -21,7 +21,6 @@
 #include "blt_util/known_pos_range2.hh"
 
 #include <iosfwd>
-#include <stdint.h>
 #include <string>
 #include <vector>
 

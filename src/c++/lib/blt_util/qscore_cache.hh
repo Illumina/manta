@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include <stdint.h>
 
 #include <cassert>
 #include <ciso646>
+#include <cstdint>
 
 #include <array>
 

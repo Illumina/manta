@@ -18,7 +18,7 @@
 #pragma once
 
 extern "C" {
-#include "htslib/hts.h"
 #include "htslib/vcf.h"
 #include "htslib/tbx.h"
 }
+

@@ -20,7 +20,7 @@
 #include "blt_util/known_pos_range2.hh"
 #include "blt_util/qscore_snp.hh"
 
-#include <stdint.h>
+#include <cstdint>
 
 #include <string>
 #include <iosfwd>

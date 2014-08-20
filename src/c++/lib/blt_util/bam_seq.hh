@@ -20,8 +20,6 @@
 #include "blt_util/blt_types.hh"
 #include "blt_util/reference_contig_segment.hh"
 
-#include <stdint.h>
-
 #include <cassert>
 #include <ciso646>
 #include <iosfwd>
