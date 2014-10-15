@@ -131,17 +131,20 @@ def main() :
         if count > min_count : break
 
 
-    if count <= min_count :
-        raise Exception("Unexpected read length approximation results. Observation count: " + str(count) + " Bam record count: " + str(record_count) )
+    #if count <= min_count :
+    #    raise Exception("Unexpected read length approximation results. Observation count: " + str(count) + " Bam record count: " + str(record_count) )
 
 
     outfp=sys.stdout
 
-    avg_length = float(length)/float(count)
+    avg_length = 0
+    if count != 0 :
+        avg_length = float(length)/float(count)
 
     for chrom in chromList :
-        if chromData[chrom][0] < avg_length : continue
-        depth = chromData[chrom][1]*avg_length / float(chromData[chrom][0])
+        depth = 0
+        if (chromData[chrom][0] >= avg_length) and (chromData[chrom][0] != 0) :
+            depth = chromData[chrom][1]*avg_length / float(chromData[chrom][0])
         outfp.write("%s\t%.3f\t%s\t%.3f\n" % (chrom, depth, count, avg_length))
 
 
