@@ -40,8 +40,11 @@ Configuration:
                           allow version control within eclipse
   --build-type=TYPE       specify the build type for CMake (affects compiler
                           options). Allowed values are "Debug", "Release",
-                          "RelWithDebInfo" [$build_type]
-  --static                forces library static linking
+                          "RelWithDebInfo", "ASan" [$build_type]
+                            Debug: No optimization and all debug symbols
+                            Release: All portable optimization
+                            RelWithDebInfo: Most optimizations, try to keep stack trace info
+                            ASan: Light optimization with google addresss sanitizer on
   --package-type=type     enables generation of deployment package target (make package)
                           Valid types are: rpm, deb, tgz
 
@@ -151,9 +154,8 @@ build_type=Release
 cmake=
 parallel_jobs=1
 cmake_generator="Unix Makefiles"
-is_static=false
 is_verbose=false
-manta_package=none
+package_type=none
 if [ -z "${CMAKE_OPTIONS+xxx}" ]; then CMAKE_OPTIONS=""; fi
 
 # Parse arguments
@@ -176,10 +178,8 @@ for a in "$@"; do
         CMAKE_OPTIONS="$CMAKE_OPTIONS -DECLIPSE_CDT4_GENERATE_SOURCE_PROJECT=TRUE"
     elif echo $a | grep "^--verbose" > /dev/null 2> /dev/null; then
         is_verbose=true
-    elif echo $a | grep "^--static" > /dev/null 2> /dev/null; then
-        is_static=true
     elif echo $a | grep "^--package-type=" > /dev/null 2> /dev/null; then
-        manta_package=`echo $a | sed "s/^--package-type=//"`
+        package_type=`echo $a | sed "s/^--package-type=//"`
     elif echo $a | grep "^--jobs=" > /dev/null 2> /dev/null; then
         parallel_jobs=`echo $a | sed "s/^--jobs=//"`
     else
@@ -214,33 +214,29 @@ fi
 CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_BUILD_TYPE:STRING=${build_type}"
 CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_PARALLEL:STRING=${parallel_jobs}"
 
-if $is_static; then
-    CMAKE_OPTIONS="$CMAKE_OPTIONS -DFORCE_STATIC_LINK:BOOL=ON"
-fi
-
 if $is_verbose; then
     CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -DBoost_DEBUG:BOOL=ON"
 fi
 
 
 is_package=true
-if   [ "deb" == "${manta_package}" ]; then
+if   [ "deb" == "${package_type}" ]; then
     CMAKE_OPTIONS="$CMAKE_OPTIONS \
         -DCPACK_GENERATOR:STRING=DEB \
         -DCPACK_SYSTEM_NAME:STRING=${system}-$processor \
         -DCPACK_DEBIAN_PACKAGE_ARCHITECTURE:STRING='`dpkg --print-architecture`'"
 
-elif [ "rpm" == "${manta_package}" ]; then
+elif [ "rpm" == "${package_type}" ]; then
     CMAKE_OPTIONS="$CMAKE_OPTIONS \
         -DCPACK_GENERATOR:STRING=RPM \
         -DCPACK_SYSTEM_NAME:STRING=${system}-$processor"
 
-elif [ "tgz" == "${manta_package}" ]; then
+elif [ "tgz" == "${package_type}" ]; then
     CMAKE_OPTIONS="$CMAKE_OPTIONS \
         -DCPACK_GENERATOR:STRING=TGZ"
 
-elif [ "none" != "${manta_package}" ]; then
-	clog "ERROR: unrecognized package option: $manta_package"
+elif [ "none" != "${package_type}" ]; then
+	clog "ERROR: unrecognized package option: $package_type"
 	exit 1
 
 else

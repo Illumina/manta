@@ -68,3 +68,19 @@ function(subdirlist result curdir)
     endforeach()
     set(${result} ${dirlist} PARENT_SCOPE)
 endfunction()
+
+
+#
+# standard join(list) -> string function
+#
+function(join list sep output)
+    set(tmp "")
+    foreach(val ${${list}})
+        if (tmp STREQUAL "")
+            set(tmp ${val})
+        else()
+            set(tmp "${tmp}${sep}${val}")
+        endif()
+    endforeach()
+    set(${output} ${tmp} PARENT_SCOPE)
+endfunction()

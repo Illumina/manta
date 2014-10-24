@@ -201,27 +201,25 @@ if (GNU_COMPAT_COMPILER)
     set (CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
     set (CMAKE_CXX_FLAGS_RELEASE "-O3 -fomit-frame-pointer")
     set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
+    set (CMAKE_CXX_FLAGS_ASAN "-O1 -g -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls")
     #set (CMAKE_CXX_FLAGS_PROFILE "-O0 -g -pg -fprofile-arcs -ftest-coverage")
 endif()
 
-
-# add address sanitizer to debug mode:
-set (USE_ADDRESS_SANITIZER false) # if true, turn on Address Sanitizer in debug for compilers which support this:
-
-if (${USE_ADDRESS_SANITIZER})
-    set (IS_ASAN false)
+# if ASan build type is requested, check that the compiler supports it:
+if (CMAKE_BUILD_TYPE STREQUAL "ASan")
+    set (IS_ASAN_SUPPORTED false)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         if (NOT (${compiler_version} VERSION_LESS "4.8"))
-            set (IS_ASAN true)
+            set (IS_ASAN_SUPPORTED true)
         endif ()
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         if (NOT (${compiler_version} VERSION_LESS "3.1"))
-            set (IS_ASAN true)
+            set (IS_ASAN_SUPPORTED true)
         endif ()
     endif ()
 
-    if (${IS_ASAN})
-        set (CMAKE_CXX_FLAGS_DEBUG "-fsanitize=address -fno-omit-frame-pointer ${CMAKE_CXX_FLAGS_DEBUG}")
+    if (NOT ${IS_ASAN_SUPPORTED})
+        message(FATAL_ERROR "Address sanitizer build type requested, but this is not supported by compiler.")
     endif ()
 endif ()
 

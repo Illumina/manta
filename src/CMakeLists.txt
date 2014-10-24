@@ -53,14 +53,27 @@ set(MANTA_FULL_VERSION "${THIS_PROJECT_NAME}-${MANTA_VERSION}")
 message (STATUS "MANTA_VERSION: ${MANTA_VERSION}")
 
 
+# add custom functions:
+include ("${CMAKE_SOURCE_DIR}/cmake/macros.cmake")
+
 #
 # setup build type
 #
+set(CMAKE_BUILD_TYPES Debug Release RelWithDebInfo ASan)
+join(CMAKE_BUILD_TYPES ", " CMAKE_BUILD_TYPES_STRING)
+
 if (NOT CMAKE_BUILD_TYPE)
     set(DEFAULT_CMAKE_BUILD_TYPE Release)
     set(CMAKE_BUILD_TYPE ${DEFAULT_CMAKE_BUILD_TYPE} CACHE STRING
-        "Choose the type of build, options are: Debug Release RelWithDebInfo (default: ${DEFAULT_CMAKE_BUILD_TYPE})" FORCE)
+        "Choose the type of build, options are: {${CMAKE_BUILD_TYPES_STRING}} (default: ${DEFAULT_CMAKE_BUILD_TYPE})" FORCE)
 endif()
+
+# check that a valid build type has been selected:
+list(FIND CMAKE_BUILD_TYPES ${CMAKE_BUILD_TYPE} TINDEX)
+if(TINDEX EQUAL -1)
+    message (FATAL_ERROR "Selected build type, '${CMAKE_BUILD_TYPE}', is not in the set of available types: {${CMAKE_BUILD_TYPES_STRING}}")
+endif()
+
 message (STATUS "BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
 #
@@ -149,3 +162,4 @@ add_subdirectory (c++)
 add_subdirectory (python)
 add_subdirectory (markdown)
 add_subdirectory (cmake/postInstall)
+
