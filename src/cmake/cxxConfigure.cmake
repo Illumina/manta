@@ -71,9 +71,14 @@ find_package( Threads )
 # Force static linking
 set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 
+function(get_compiler_name_version compiler_name compiler_version)
+    execute_process(COMMAND ${compiler_name} -dumpversion OUTPUT_VARIABLE this_version)
+    STRING(REGEX REPLACE "(\r?\n)+$" "" this_version "${this_version}")
+    set(${compiler_version} ${this_version} PARENT_SCOPE)
+endfunction()
+
 macro(get_compiler_version compiler_version)
-    execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE ${compiler_version})
-    STRING(REGEX REPLACE "(\r?\n)+$" "" ${compiler_version} "${${compiler_version}}")
+    get_compiler_name_version(${CMAKE_CXX_COMPILER} compiler_version)
 endmacro()
 
 # clang doesn't make finding the version easy for us...
@@ -84,21 +89,37 @@ endmacro()
 
 macro(test_min_compiler compiler_version min_compiler_version compiler_label)
     if (${compiler_version} VERSION_LESS ${min_compiler_version})
-        message (FATAL_ERROR "Unsupported ${compiler_label} version: ${compiler_version}: "
+        message (FATAL_ERROR "Unsupported version for ${compiler_label}: ${compiler_version}: "
                              "only versions >= ${min_compiler_version} are supported")
     endif ()
 endmacro()
 
 
+set(min_gxx_version "4.7")
+set(min_clang_version "3.2")
+set(min_intel_version "12.0") # guestimate based on intel support documentation
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     get_compiler_version(compiler_version)
-    test_min_compiler(${compiler_version} "4.7" "g++")
+    test_min_compiler(${compiler_version} "${min_gxx_version}" "g++")
     message (STATUS "using compiler: g++ version ${compiler_version}")
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     get_clang_version(compiler_version)
-    test_min_compiler(${compiler_version} "3.2" "clang++")
+    test_min_compiler(${compiler_version} "${min_clang_version}" "clang++")
     message (STATUS "using compiler: clang++ version ${compiler_version}")
+
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+    get_compiler_version(compiler_version)
+    test_min_compiler(${compiler_version} "${min_intel_version}" "icpc") 
+    message (STATUS "using compiler: Intel version ${compiler_version}")
+
+    # for intel we also need to test the minimum version of g++ currently
+    # in the path (because this is the stdc++ library that # intel will use):
+    get_compiler_name_version("g++" gxx_compiler_version)
+    test_min_compiler(${gxx_compiler_version} "${min_gxx_version}" "g++ libstdc++ (library used by icpc)")
+    message (STATUS "using libstdc++: gnu version ${gxx_compiler_version}")
+
 else ()
     message (STATUS "using compiler: ${CMAKE_CXX_COMPILER_ID}")
 endif ()
@@ -107,11 +128,14 @@ endif ()
 #
 # set compile flags, and modify by compiler/version:
 #
-set (GNU_COMPAT_COMPILER ( (CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang") ))
+set (GNU_COMPAT_COMPILER ( (CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")))
 
 # start with warning flags:
 if (GNU_COMPAT_COMPILER)
-    set (CXX_WARN_FLAGS "-Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -Wredundant-decls -pedantic -Wunused-parameter -Wundef -Wdisabled-optimization")
+    set (CXX_WARN_FLAGS "-Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -pedantic -Wunused-parameter -Wundef -Wdisabled-optimization")
+    if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+        set (CXX_WARN_FLAGS "-Wredundant-decls")
+    endif ()
 
     if (NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
         set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wuninitialized")
@@ -155,6 +179,15 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     # set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Weverything -Wno-sign-conversion -Wno-weak-vtables -Wno-conversion -Wno-cast-align -Wno-padded -Wno-switch-enum -Wno-missing-noreturn -Wno-covered-switch-default -Wno-unreachable-code -Wno-global-constructors -Wno-exit-time-destructors")
     ### new disabled everything-warnings in clang 3.5 (or these might be c++11 warnings):
     # set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-c++98-compat -Wno-documentation-unknown-command -Wno-old-style-cast -Wno-unused-member-function -Wno-documentation -Wno-float-equal")
+
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+    # suppress errors in boost headers:
+    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -diag-disable 177,193,869,1599,3280")
+
+    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wunused-variable -Wpointer-arith -Wuninitialized")
+
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
+    #set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wmissing-prototypes -Wmissing-declarations -Wunused-variable -Wpointer-arith -Wuninitialized")
 endif()
 
 
@@ -230,8 +263,8 @@ if (GNU_COMPAT_COMPILER)
 
 endif()
 
-set(THIS_CXX_CONFIG_H_DIR ${CMAKE_CURRENT_BINARY_DIR}/lib/common)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/lib/common/config.h.in ${THIS_CXX_CONFIG_H_DIR}/config.h @ONLY)
+set(THIS_CXX_CONFIG_H_DIR ${CMAKE_CURRENT_BINARY_DIR}/lib)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/lib/common/config.h.in ${THIS_CXX_CONFIG_H_DIR}/common/config.h @ONLY)
 
 
 #
