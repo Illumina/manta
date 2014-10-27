@@ -26,16 +26,6 @@
 
 struct SVCandidate
 {
-    SVCandidate() :
-        _isImprecise(true),
-        candidateIndex(0),
-        assemblyAlignIndex(0),
-        assemblySegmentIndex(0),
-        isUnknownSizeInsertion(false),
-        fwReads(0),
-        rvReads(0)
-    {}
-
 #if 0
     double
     breakpointProb(pos_t x, pos_t y) const;
@@ -161,7 +151,7 @@ struct SVCandidate
     }
 
 private:
-    bool _isImprecise;
+    bool _isImprecise = true;
 
 public:
     SVBreakend bp1;
@@ -175,17 +165,17 @@ public:
     // (this is provided for any small SV which is more complicated than a simple insert or deletion)
     ALIGNPATH::path_t insertAlignment;
 
-    unsigned candidateIndex; ///< low-res candidate index number, used to generate unique SV id
-    unsigned assemblyAlignIndex; ///< high-res assembly index number of alignment, used to generate unique SV id
-    unsigned assemblySegmentIndex; ///< high-res assembly index number of alignment segment, used to generate unique SV id
+    unsigned candidateIndex = 0; ///< low-res candidate index number, used to generate unique SV id
+    unsigned assemblyAlignIndex = 0; ///< high-res assembly index number of alignment, used to generate unique SV id
+    unsigned assemblySegmentIndex = 0; ///< high-res assembly index number of alignment segment, used to generate unique SV id
 
-    bool isUnknownSizeInsertion; ///< these insertions haven't been assembled all the way through
+    bool isUnknownSizeInsertion = false; ///< these insertions haven't been assembled all the way through
 
     std::string unknownSizeInsertionLeftSeq; ///< for an incomplete insertion, this is the known left side of the insert sequence
     std::string unknownSizeInsertionRightSeq; ///< for an incomplete insertion, this is the known right side of the insert sequence
 
-    unsigned fwReads; ///< Number of reads (pairs) supporting a direction from bp1 to bp2 (used for stranded RNA data)
-    unsigned rvReads; ///< Number of reads (pairs) directed from bp2 to bp1
+    unsigned fwReads = 0; ///< Number of reads (pairs) supporting a direction from bp1 to bp2 (used for stranded RNA data)
+    unsigned rvReads = 0; ///< Number of reads (pairs) directed from bp2 to bp1
 };
 
 std::ostream&

@@ -24,19 +24,13 @@
 
 struct EdgeInfo
 {
-    EdgeInfo() :
-        locusIndex(0),
-        nodeIndex1(0),
-        nodeIndex2(0)
-    {}
-
     /// minimal ascii representation:
     void
     write(std::ostream& os) const;
 
-    LocusIndexType locusIndex;
-    NodeIndexType nodeIndex1;
-    NodeIndexType nodeIndex2;
+    LocusIndexType locusIndex = 0;
+    NodeIndexType nodeIndex1 = 0;
+    NodeIndexType nodeIndex2 = 0;
 };
 
 std::ostream&

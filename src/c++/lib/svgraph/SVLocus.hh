@@ -55,11 +55,6 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
 
     friend struct SVLocusSet;
 
-
-    SVLocus() :
-        _index(0)
-    {}
-
     bool
     empty() const
     {
@@ -407,7 +402,7 @@ private:
     }
 
     graph_type _graph;
-    LocusIndexType _index;
+    LocusIndexType _index = 0;
 };
 
 

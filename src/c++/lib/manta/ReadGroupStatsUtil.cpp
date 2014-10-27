@@ -398,12 +398,6 @@ private:
 ///
 struct ReadPairDepthFilter
 {
-    ReadPairDepthFilter() :
-        _posCount(0),
-        _lastTargetId(0),
-        _lastPos(0)
-    {}
-
     bool
     isFilterRead(
         const bam_record& bamRead)
@@ -470,11 +464,11 @@ struct ReadPairDepthFilter
 private:
     typedef std::set<ReadKey> mateMap_t;
 
-    unsigned _posCount;
+    unsigned _posCount = 0;
     mateMap_t _goodMates;
 
-    int _lastTargetId;
-    int _lastPos;
+    int _lastTargetId = 0;
+    int _lastPos = 0;
 };
 
 

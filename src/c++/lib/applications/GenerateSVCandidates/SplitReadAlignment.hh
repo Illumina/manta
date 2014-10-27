@@ -28,34 +28,19 @@
 
 struct SRAlignmentInfo
 {
-    SRAlignmentInfo():
-        alignPos(0),
-        leftSize(0),
-        homSize(0),
-        rightSize(0),
-        leftMismatches(0),
-        homMismatches(0),
-        rightMismatches(0),
-        alignScore(0),
-        alignLnLhood(0),
-        isEvidence(false),
-        isTier2Evidence(false),
-        evidence(0)
-    {}
+    unsigned alignPos = 0;
+    unsigned leftSize = 0;
+    unsigned homSize = 0;
+    unsigned rightSize = 0;
+    unsigned leftMismatches = 0;
+    unsigned homMismatches = 0;
+    unsigned rightMismatches = 0;
+    unsigned alignScore = 0;
+    float alignLnLhood = 0;
 
-    unsigned alignPos;
-    unsigned leftSize;
-    unsigned homSize;
-    unsigned rightSize;
-    unsigned leftMismatches;
-    unsigned homMismatches;
-    unsigned rightMismatches;
-    unsigned alignScore;
-    float alignLnLhood;
-
-    bool isEvidence;
-    bool isTier2Evidence;
-    float evidence;
+    bool isEvidence = false;
+    bool isTier2Evidence = false;
+    float evidence = 0;
 };
 
 std::ostream&

@@ -24,10 +24,6 @@
 
 struct VcfWriterScoredSV
 {
-    VcfWriterScoredSV() :
-        _baseInfoPtr(NULL)
-    {}
-
 protected:
 
     void
@@ -40,16 +36,16 @@ protected:
     void
     clearScoreInfo()
     {
-        _baseInfoPtr=NULL;
+        _baseInfoPtr=nullptr;
     }
 
     const SVScoreInfo&
     getBaseInfo() const
     {
-        assert(NULL != _baseInfoPtr);
+        assert(nullptr != _baseInfoPtr);
         return *_baseInfoPtr;
     }
 
 private:
-    const SVScoreInfo* _baseInfoPtr;
+    const SVScoreInfo* _baseInfoPtr = nullptr;
 };

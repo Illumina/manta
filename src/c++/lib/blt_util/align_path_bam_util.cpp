@@ -29,7 +29,6 @@ bam_cigar_to_apath(const uint32_t* bam_cigar,
                    const unsigned n_cigar,
                    path_t& apath)
 {
-
     // this assertion isn't really required...
     //    assert(n_cigar>0);
     apath.resize(n_cigar);
@@ -46,7 +45,6 @@ void
 apath_to_bam_cigar(const path_t& apath,
                    uint32_t* bam_cigar)
 {
-
     const unsigned as(apath.size());
     for (unsigned i(0); i<as; ++i)
     {
@@ -62,7 +60,6 @@ void
 edit_bam_cigar(const path_t& apath,
                bam1_t& br)
 {
-
     bam1_core_t& bc(br.core);
 
     const int old_n_cigar(bc.n_cigar);

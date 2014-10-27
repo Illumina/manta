@@ -244,17 +244,10 @@ getFragInfo(
 ///
 struct SpanTerminal
 {
-    SpanTerminal() :
-        tid(0),
-        pos(0),
-        isFwdStrand(true),
-        readSize(0)
-    {}
-
-    int32_t tid;
-    pos_t pos;
-    bool isFwdStrand;
-    unsigned readSize;
+    int32_t tid = 0;
+    pos_t pos = 0;
+    bool isFwdStrand = true;
+    unsigned readSize = 0;
 };
 
 

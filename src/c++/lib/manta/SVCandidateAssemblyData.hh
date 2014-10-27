@@ -32,13 +32,6 @@
 ///
 struct BPOrientation
 {
-    BPOrientation() :
-        isBp2AlignedFirst(false),
-        isBp1Reversed(false),
-        isBp2Reversed(false),
-        isBp1First(true)
-    {}
-
     void
     clear()
     {
@@ -48,24 +41,16 @@ struct BPOrientation
         isBp1First=true;
     }
 
-    bool isBp2AlignedFirst; ///< should the contig on the fwd strand align bp2->bp1 (true) or bp1->bp2 (false)
-    bool isBp1Reversed; ///< should all bp1 reads be reversed for the contig to assemble correctly?
-    bool isBp2Reversed; ///< should all bp2 reads be reversed for the contig to assemble correctly?
-    bool isBp1First; ///< Is this candidate oriented from bp1 to bp2?
+    bool isBp2AlignedFirst = false; ///< should the contig on the fwd strand align bp2->bp1 (true) or bp1->bp2 (false)
+    bool isBp1Reversed = false; ///< should all bp1 reads be reversed for the contig to assemble correctly?
+    bool isBp2Reversed = false; ///< should all bp2 reads be reversed for the contig to assemble correctly?
+    bool isBp1First = true; ///< Is this candidate oriented from bp1 to bp2?
 };
 
 
 
 struct LargeInsertionInfo
 {
-    LargeInsertionInfo() :
-        isLeftCandidate(false),
-        isRightCandidate(false),
-        contigOffset(0),
-        refOffset(0),
-        score(0)
-    {}
-
     void
     clear()
     {
@@ -76,11 +61,11 @@ struct LargeInsertionInfo
         score=0;
     }
 
-    bool isLeftCandidate;
-    bool isRightCandidate;
-    unsigned contigOffset; // if candidate, how far into the contig is the breakend?
-    unsigned refOffset; // if candidate, how far from the start of the contig alignment is the breakend on reference?
-    int score; // what is the alignment score of the contig up to the insertion breakpoint?
+    bool isLeftCandidate = false;
+    bool isRightCandidate = false;
+    unsigned contigOffset = 0; // if candidate, how far into the contig is the breakend?
+    unsigned refOffset = 0; // if candidate, how far from the start of the contig alignment is the breakend on reference?
+    int score = 0; // what is the alignment score of the contig up to the insertion breakpoint?
 };
 
 std::ostream&
@@ -129,12 +114,6 @@ typedef std::unordered_map<std::string,RemoteReadPayload> RemoteReadCache;
 ///
 struct SVCandidateAssemblyData
 {
-    SVCandidateAssemblyData() :
-        isCandidateSpanning(false),
-        isSpanning(false),
-        bestAlignmentIndex(0)
-    {}
-
     void
     clear()
     {
@@ -163,8 +142,8 @@ struct SVCandidateAssemblyData
 
     /// note that isCandidateSpanning can be != isSpanning in cases where the breakends are so close that the assembler decides to fuse
     /// them and treat a spanning hypothesis as non-spanning:
-    bool isCandidateSpanning; ///< before assembly, was this a 2-locus event (spanning), or a local-assembly?
-    bool isSpanning; ///< at assembly time, was this treated as a 2-locus event (spanning), or a local-assembly?
+    bool isCandidateSpanning = false; ///< before assembly, was this a 2-locus event (spanning), or a local-assembly?
+    bool isSpanning = false; ///< at assembly time, was this treated as a 2-locus event (spanning), or a local-assembly?
 
     BPOrientation bporient;
 
@@ -178,7 +157,7 @@ struct SVCandidateAssemblyData
 
     RemoteReadCache remoteReads; ///< remote reads retrieved to improve assembly and scoring for this locus
 
-    unsigned bestAlignmentIndex; ///< if non-empty sv candidate set, which contig/alignment produced them?
+    unsigned bestAlignmentIndex = 0; ///< if non-empty sv candidate set, which contig/alignment produced them?
 
     // expanded reference regions around the candidate SV breakend regions, for small events we use only bp1ref:
     reference_contig_segment bp1ref;

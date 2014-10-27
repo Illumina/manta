@@ -22,17 +22,15 @@
 #include <string>
 
 
-
 struct DSLOptions
 {
-
     DSLOptions() :
         isLocusIndex(false),
         locusIndex(0)
     {}
 
-    bool isLocusIndex;
-    unsigned locusIndex;
+    bool isLocusIndex = false;
+    unsigned locusIndex = 0;
     std::string graphFilename;
     std::string locusFilename;
     std::string region;

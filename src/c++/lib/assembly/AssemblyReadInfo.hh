@@ -25,17 +25,10 @@
 ///
 struct AssemblyReadInfo
 {
-    AssemblyReadInfo() :
-        isUsed(false),
-        isFiltered(false),
-        isPseudo(false),
-        contigId(0)
-    {}
-
-    bool isUsed;
-    bool isFiltered; ///< if true, the read was 'used' but filtered out, so there is no meaningful contig id association
-    bool isPseudo; ///< if true, the read was an assembled contig
-    unsigned contigId; ///< index of the contig that this read is used in
+    bool isUsed = false;
+    bool isFiltered = false; ///< if true, the read was 'used' but filtered out, so there is no meaningful contig id association
+    bool isPseudo = false; ///< if true, the read was an assembled contig
+    unsigned contigId = 0; ///< index of the contig that this read is used in
 };
 
 

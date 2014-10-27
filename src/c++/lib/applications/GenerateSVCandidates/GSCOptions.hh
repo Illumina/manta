@@ -32,14 +32,6 @@
 
 struct GSCOptions
 {
-    GSCOptions() :
-        isVerbose(false),
-        isSkipAssembly(false),
-        isRNA(false),
-        minCandidateSpanningCount(3),
-        minScoredVariantSize(51)
-    {}
-
     AlignmentFileOptions alignFileOpt;
     EdgeOptions edgeOpt;
     ReadScannerOptions scanOpt;
@@ -59,15 +51,15 @@ struct GSCOptions
     std::string diploidOutputFilename;
     std::string somaticOutputFilename;
 
-    bool isVerbose; ///< provide some high-level log info to assist in debugging
+    bool isVerbose = false; ///< provide some high-level log info to assist in debugging
 
-    bool isSkipAssembly; ///< if true, skip assembly and run a low-resolution, breakdancer-like subset of the workflow
+    bool isSkipAssembly = false; ///< if true, skip assembly and run a low-resolution, breakdancer-like subset of the workflow
 
-    bool isRNA; ///< if true, RNA specific filtering on candidates and diploid scoring is used
+    bool isRNA = false; ///< if true, RNA specific filtering on candidates and diploid scoring is used
 
-    unsigned minCandidateSpanningCount; ///< how many spanning evidence observations are required to become a candidate?
+    unsigned minCandidateSpanningCount = 3; ///< how many spanning evidence observations are required to become a candidate?
 
-    unsigned minScoredVariantSize; ///< min size for scoring and scored output following candidate generation
+    unsigned minScoredVariantSize = 51; ///< min size for scoring and scored output following candidate generation
 };
 
 

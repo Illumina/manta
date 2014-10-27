@@ -24,16 +24,12 @@
 ///
 struct EventInfo
 {
-    EventInfo() :
-        junctionCount(1)
-    {}
-
     bool
     isEvent() const
     {
         return (! label.empty());
     }
 
-    unsigned junctionCount;
+    unsigned junctionCount = 1;
     std::string label;
 };

@@ -30,17 +30,13 @@
 ///
 struct SVId
 {
-    SVId() :
-        svType(EXTENDED_SV_TYPE::UNKNOWN)
-    {}
-
     const char*
     getLabel() const
     {
         return EXTENDED_SV_TYPE::label(svType);
     }
 
-    EXTENDED_SV_TYPE::index_t svType;
+    EXTENDED_SV_TYPE::index_t svType = EXTENDED_SV_TYPE::UNKNOWN;
     std::string localId;
     std::string mateId;
 };

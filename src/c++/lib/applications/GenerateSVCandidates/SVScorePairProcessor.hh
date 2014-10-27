@@ -45,19 +45,11 @@ struct SVScorePairInitParams
 
 struct SVScorePairBamParams
 {
-    SVScorePairBamParams() :
-        isSet(false),
-        isTumor(false),
-        minFrag(0),
-        maxFrag(0),
-        fragDistroPtr(NULL)
-    {}
-
-    bool isSet;
-    bool isTumor;
-    pos_t minFrag;
-    pos_t maxFrag;
-    const SizeDistribution* fragDistroPtr;
+    bool isSet = false;
+    bool isTumor = false;
+    pos_t minFrag = 0;
+    pos_t maxFrag = 0;
+    const SizeDistribution* fragDistroPtr = nullptr;
     GenomeInterval interval;
 };
 
@@ -77,7 +69,8 @@ struct SVScorePairProcessor : public BamRegionProcessor
         sv(initSv),
         isBp1(initIsBp1),
         evidence(initEvidence),
-        svParams(readScanner, sv, isBp1)
+        svParams(readScanner, sv, isBp1),
+        bamParams()
     {}
 
     const GenomeInterval&

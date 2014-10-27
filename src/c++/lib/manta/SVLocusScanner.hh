@@ -238,12 +238,6 @@ struct SVLocusScanner
 
     struct CachedReadGroupStats
     {
-        CachedReadGroupStats() :
-            minDistantFragmentSize(0),
-            minCloseFragmentSize(0),
-            minVeryCloseFragmentSize(0)
-        {}
-
         /// fragment size range assumed for the purpose of creating SVLocusGraph regions
         Range breakendRegion;
 
@@ -256,11 +250,11 @@ struct SVLocusScanner
 
         Range evidencePair;
 
-        int shadowSearchRange;
+        int shadowSearchRange = 0;
 
-        int minDistantFragmentSize; ///< beyond the properPair anomalous threshold, there is a threshold to distinguish close and far pairs for the purpose of evidence weight
-        int minCloseFragmentSize; ///< beyond the properPair anomalous threshold, there is a threshold to distinguish 'really-close' and 'close' pairs for the purpose of evidence weight
-        int minVeryCloseFragmentSize;
+        int minDistantFragmentSize = 0; ///< beyond the properPair anomalous threshold, there is a threshold to distinguish close and far pairs for the purpose of evidence weight
+        int minCloseFragmentSize = 0; ///< beyond the properPair anomalous threshold, there is a threshold to distinguish 'really-close' and 'close' pairs for the purpose of evidence weight
+        int minVeryCloseFragmentSize = 0;
 
         //LinearScaler<int> veryCloseEventScaler; ///< used to scale down breakend size as fragments get smaller
 

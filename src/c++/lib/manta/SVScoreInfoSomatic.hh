@@ -154,10 +154,6 @@ altLnCompFraction(
 /// consolidate all somatic scoring results applied to an SV candidate
 struct SVScoreInfoSomatic
 {
-    SVScoreInfoSomatic() :
-        somaticScore(0),
-        somaticScoreTier(0)
-    {}
 
     void
     clear()
@@ -169,8 +165,8 @@ struct SVScoreInfoSomatic
 
     std::set<std::string> filters;
 
-    unsigned somaticScore;
-    unsigned char somaticScoreTier;
+    unsigned somaticScore = 0;
+    unsigned char somaticScoreTier = 0;
 };
 
 

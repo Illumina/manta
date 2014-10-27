@@ -29,11 +29,6 @@
 /// enumerate evidence type accumulated for each sample
 struct SampleReadCounts
 {
-    SampleReadCounts() :
-        anom(0),
-        nonAnom(0)
-    {}
-
     void
     clear()
     {
@@ -61,8 +56,8 @@ struct SampleReadCounts
         ar& anom& nonAnom;
     }
 
-    unsigned long anom; ///< total number of non-filtered anomalous reads scanned but not in graph
-    unsigned long nonAnom; ///< total number of non-filtered non-anomalous reads scanned but not in graph
+    unsigned long anom = 0; ///< total number of non-filtered anomalous reads scanned but not in graph
+    unsigned long nonAnom = 0; ///< total number of non-filtered non-anomalous reads scanned but not in graph
 };
 
 

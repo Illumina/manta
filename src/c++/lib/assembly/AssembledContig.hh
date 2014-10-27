@@ -32,14 +32,12 @@
 ///
 struct AssembledContig
 {
-    AssembledContig() : seedReadCount(0) {}
-
     std::string seq; ///< contigsequence
 
     // reads used for assembly of contig <read_no,mapping position to contig>
     //std::map<std::string,int> contigReads;
 
-    unsigned seedReadCount; ///< no of reads containing the seeding kmer
+    unsigned seedReadCount = 0; ///< no of reads containing the seeding kmer
 
     std::set<unsigned> supportReads;
     std::set<unsigned> rejectReads;

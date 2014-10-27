@@ -111,12 +111,6 @@ altLnCompFraction(const index_t i)
 /// consolidate all germline scoring results applied to an SV candidate
 struct SVScoreInfoDiploid
 {
-    SVScoreInfoDiploid() :
-        gt(DIPLOID_GT::REF),
-        altScore(0),
-        gtScore(0)
-    {}
-
     void
     clear()
     {
@@ -128,10 +122,10 @@ struct SVScoreInfoDiploid
 
     std::set<std::string> filters;
 
-    DIPLOID_GT::index_t gt;
+    DIPLOID_GT::index_t gt = DIPLOID_GT::REF;
 
-    unsigned altScore; ///< quality score indicating any non-reference state (regardless of specific genotype)
-    unsigned gtScore; ///< quality score of genotype
+    unsigned altScore = 0; ///< quality score indicating any non-reference state (regardless of specific genotype)
+    unsigned gtScore = 0; ///< quality score of genotype
 };
 
 std::ostream&

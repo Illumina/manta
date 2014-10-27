@@ -46,18 +46,11 @@ struct AlignerUtil
 template <typename ScoreType>
 struct BackTrace
 {
-    BackTrace() :
-        max(0),
-        state(AlignState::MATCH),
-        queryBegin(0),
-        refBegin(0),
-        isInit(false)
-    {}
-
-    ScoreType max;
-    AlignState::index_t state;
-    unsigned queryBegin,refBegin;
-    bool isInit;
+    ScoreType max = 0;
+    AlignState::index_t state = AlignState::MATCH;
+    unsigned queryBegin = 0;
+    unsigned refBegin = 0;
+    bool isInit = false;
 };
 
 

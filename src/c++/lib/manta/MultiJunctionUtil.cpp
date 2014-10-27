@@ -213,12 +213,6 @@ enum index_t
 
 struct MJState
 {
-    MJState() :
-        type(NONE),
-        partnerId(0),
-        maxPartnerDistance(0)
-    {}
-
     void
     clear()
     {
@@ -227,9 +221,9 @@ struct MJState
         maxPartnerDistance = 0;
     }
 
-    index_t type;
-    unsigned partnerId;
-    unsigned maxPartnerDistance;
+    index_t type = NONE;
+    unsigned partnerId = 0;
+    unsigned maxPartnerDistance = 0;
 };
 }
 

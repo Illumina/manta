@@ -41,11 +41,6 @@
 ///
 struct SVCandidateSetRead
 {
-    SVCandidateSetRead() :
-        isNode1(true),
-        isSubMapped(false)
-    {}
-
     bool
     isSet() const
     {
@@ -60,8 +55,8 @@ struct SVCandidateSetRead
 
     //realignment info, etc...
     bam_record bamrec;
-    bool isNode1; ///< used to link this read to node1 or node2 in the original graph ordering, note this is not the same as read1 and read2
-    bool isSubMapped; ///< is mapq below the minimum normally required to use this read
+    bool isNode1 = true; ///< used to link this read to node1 or node2 in the original graph ordering, note this is not the same as read1 and read2
+    bool isSubMapped = false; ///< is mapq below the minimum normally required to use this read
 };
 
 std::ostream&
@@ -95,9 +90,6 @@ operator<<(std::ostream& os, const SVPairAssociation& sva);
 ///
 struct SVCandidateSetReadPair
 {
-    SVCandidateSetReadPair()
-    {}
-
     const char*
     qname() const
     {
@@ -129,10 +121,6 @@ struct SVCandidateSetReadPairSampleGroup
     typedef std::vector<SVCandidateSetReadPair> pair_t;
     typedef pair_t::iterator iterator;
     typedef pair_t::const_iterator const_iterator;
-
-    SVCandidateSetReadPairSampleGroup() :
-        _isFull(false)
-    {}
 
     /// add a new bam record to the set:
     void
@@ -196,7 +184,7 @@ private:
     pair_t _pairs;
     pindex_t _pairIndex;
 
-    bool _isFull; ///< this flag can be set if the object grows too large to insert more data into it
+    bool _isFull = false; ///< this flag can be set if the object grows too large to insert more data into it
 };
 
 

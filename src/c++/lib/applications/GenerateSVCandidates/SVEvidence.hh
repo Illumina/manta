@@ -47,19 +47,11 @@
 ///
 struct SVFragmentEvidenceAlleleBreakendPerRead
 {
-    SVFragmentEvidenceAlleleBreakendPerRead() :
-        isSplitEvaluated(false),
-        isSplitSupport(false),
-        isTier2SplitSupport(false),
-        splitEvidence(0),
-        splitLnLhood(0)
-    {}
-
-    bool isSplitEvaluated; ///< have we checked this read for split support of this bp?
-    bool isSplitSupport; ///< if evaluated, does this read support this allele in the bp?
-    bool isTier2SplitSupport; ///< if evaluated, does this read support this allele in the bp by permissive criteria?
-    float splitEvidence; ///< if evaluated, what is the evidence score?
-    float splitLnLhood; ///< ln likelihood of best split alignment
+    bool isSplitEvaluated = false; ///< have we checked this read for split support of this bp?
+    bool isSplitSupport = false; ///< if evaluated, does this read support this allele in the bp?
+    bool isTier2SplitSupport = false; ///< if evaluated, does this read support this allele in the bp by permissive criteria?
+    float splitEvidence = 0; ///< if evaluated, what is the evidence score?
+    float splitLnLhood = 0; ///< ln likelihood of best split alignment
 };
 
 std::ostream&
@@ -70,11 +62,6 @@ operator<<(std::ostream& os, const SVFragmentEvidenceAlleleBreakendPerRead& svbp
 ///
 struct SVFragmentEvidenceAlleleBreakend
 {
-    SVFragmentEvidenceAlleleBreakend() :
-        isFragmentSupport(false),
-        fragLengthProb(0)
-    {}
-
     SVFragmentEvidenceAlleleBreakendPerRead&
     getRead(const bool isRead1)
     {
@@ -94,8 +81,8 @@ struct SVFragmentEvidenceAlleleBreakend
         fragLengthProb = 0;
     }
 
-    bool isFragmentSupport; ///< if true, paired-read analysis shows that this read pair fragment supports this allele on this breakend
-    float fragLengthProb; ///< if isFragmentSupport, what is the prob of the fragment size given this allele?
+    bool isFragmentSupport = false; ///< if true, paired-read analysis shows that this read pair fragment supports this allele on this breakend
+    float fragLengthProb = 0; ///< if isFragmentSupport, what is the prob of the fragment size given this allele?
     SVFragmentEvidenceAlleleBreakendPerRead read1; // read1 specific evidence
     SVFragmentEvidenceAlleleBreakendPerRead read2; // read2 specific evidence
 };
@@ -152,15 +139,6 @@ operator<<(std::ostream& os, const SVFragmentEvidenceAllele& sval);
 ///
 struct SVFragmentEvidenceRead
 {
-    SVFragmentEvidenceRead() :
-        isScanned(false),
-        isShadow(false),
-        mapq(0),
-        size(0),
-        _isAnchored(false),
-        _isTier2Anchored(false)
-    {}
-
     /// TODO set anchor policy wrt shadow state!!!
     bool
     isAnchored(
@@ -190,15 +168,15 @@ struct SVFragmentEvidenceRead
         _isTier2Anchored=val;
     }
 
-    bool isScanned; ///< if true, this read's bam record has been scanned to fill in the remaining values in this object
-    bool isShadow; ///< read was originally unmapped but had a mapped mate read, mapq is MAPQ of the mate in this case
+    bool isScanned = false; ///< if true, this read's bam record has been scanned to fill in the remaining values in this object
+    bool isShadow = false; ///< read was originally unmapped but had a mapped mate read, mapq is MAPQ of the mate in this case
 
-    unsigned mapq;
-    unsigned size;
+    unsigned mapq = 0;
+    unsigned size = 0;
 
 private:
-    bool _isAnchored; ///< if true, the read is found and known to have a confident mapping wrt fragment support
-    bool _isTier2Anchored; ///< if true, the read is found and known to have a confident mapping wrt fragment support at tier2
+    bool _isAnchored = false; ///< if true, the read is found and known to have a confident mapping wrt fragment support
+    bool _isTier2Anchored = false; ///< if true, the read is found and known to have a confident mapping wrt fragment support at tier2
 };
 
 std::ostream&
