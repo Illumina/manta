@@ -939,6 +939,7 @@ dumpStats(std::ostream& os) const
     os << "disjointSubgraphs:" << sep << nonEmptySize() << "\n";
     os << "nodes:" << sep << totalNodeCount() << "\n";
     os << "directedEdges:" << sep << totalEdgeCount() << "\n";
+    os << "selfEdges:" << sep << selfEdgeCount() << "\n";
     os << "totalGraphEvidence:" << sep << totalObservationCount() << "\n";
     os << "totalCleaned:" << sep << _totalCleaned << "\n";
     os << "highestSearchCount:" << sep << _highestSearchCount << "\n";
@@ -948,6 +949,14 @@ dumpStats(std::ostream& os) const
 
     _normalReads.write(os,"normal");
     _tumorReads.write(os,"tumor");
+
+    // add pseudo-distributions to better characterize difficult samples:
+
+    // self-edge count
+
+    // node obs distro: 3,4,5,6,7+
+
+    // region size distro 100,1000,10000
 }
 
 

@@ -173,6 +173,19 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
         return sum;
     }
 
+    // the total number of self edges in the locus
+    unsigned
+    selfEdgeCount() const
+    {
+        unsigned sum(0);
+        const unsigned nodeSize(size());
+        for (unsigned nodeIndex(0); nodeIndex<nodeSize; ++nodeIndex)
+        {
+            if (getNode(nodeIndex).isEdge(nodeIndex)) sum++;
+        }
+        return sum;
+    }
+
     /// return from->to edge
     const SVLocusEdge&
     getEdge(

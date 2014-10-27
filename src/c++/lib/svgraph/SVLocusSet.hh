@@ -260,6 +260,18 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
         return sum;
     }
 
+    /// get total number of self-edges in the graph
+    unsigned
+    selfEdgeCount() const
+    {
+        unsigned sum(0);
+        for (const SVLocus& locus : *this)
+        {
+            sum += locus.selfEdgeCount();
+        }
+        return sum;
+    }
+
     /// check that internal data-structures are in
     /// a consistent state, throw on error
     void
