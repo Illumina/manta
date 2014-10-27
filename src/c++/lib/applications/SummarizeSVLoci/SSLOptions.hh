@@ -22,20 +22,15 @@
 #include <string>
 
 
-
 struct SSLOptions
 {
-
-    SSLOptions() :
-        isGlobalStats(false)
-    {}
-
     std::string graphFilename;
-    bool isGlobalStats;
+    bool isGlobalStats = false;
 };
 
 
 void
-parseSSLOptions(const manta::Program& prog,
-                int argc, char* argv[],
-                SSLOptions& opt);
+parseSSLOptions(
+    const manta::Program& prog,
+    int argc, char* argv[],
+    SSLOptions& opt);

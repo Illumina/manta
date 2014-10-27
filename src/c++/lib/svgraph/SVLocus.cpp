@@ -461,7 +461,6 @@ eraseNodes(
     const std::set<NodeIndexType>& nodes,
     flyweight_observer_t* obs)
 {
-
     if (nodes.empty()) return;
 
     if (size() == nodes.size())

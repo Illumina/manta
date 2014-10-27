@@ -36,11 +36,11 @@ struct SVLocusSet;
 
 /// \brief a set of regions containing dependent SV evidence
 ///
-/// An SV locus is a region hypothetically containing the breakends of 1 to many
+/// An SV locus is a region set hypothetically containing the breakends of 1 to many
 /// SVs.
 ///
-/// The locus is composed of a set of non-overlapping contiguous genomic regions and links between them.
-/// Each link has an associated evidence count.
+/// The locus is composed of a set of non-overlapping contiguous genomic regions and
+/// the links (edges) between them. Each link has an associated evidence count.
 ///
 /// This class internally manages the node shared pointers in a synced data structure,
 /// there's probably a better way to do this with transform_iterator, but I've always
@@ -235,7 +235,7 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
     template<class Archive>
     void load(Archive& ar, const unsigned /* version */)
     {
-        clear(NULL);
+        clear(nullptr);
         ar >> _graph;
     }
 

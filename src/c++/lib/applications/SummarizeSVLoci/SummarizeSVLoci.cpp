@@ -28,7 +28,6 @@ static
 void
 runSSL(const SSLOptions& opt)
 {
-
     SVLocusSet set;
 
     set.load(opt.graphFilename.c_str());
@@ -51,7 +50,6 @@ void
 SummarizeSVLoci::
 runInternal(int argc, char* argv[]) const
 {
-
     SSLOptions opt;
 
     parseSSLOptions(*this,argc,argv,opt);

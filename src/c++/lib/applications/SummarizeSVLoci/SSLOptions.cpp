@@ -32,7 +32,7 @@ usage(
     std::ostream& os,
     const manta::Program& prog,
     const boost::program_options::options_description& visible,
-    const char* msg = NULL)
+    const char* msg = nullptr)
 {
     os << "\n" << prog.name() << ": write graph summary stats to stdout (tsv format)\n\n";
     os << "version: " << prog.version() << "\n\n";
@@ -47,10 +47,12 @@ usage(
 }
 
 
+
 void
-parseSSLOptions(const manta::Program& prog,
-                int argc, char* argv[],
-                SSLOptions& opt)
+parseSSLOptions(
+    const manta::Program& prog,
+    int argc, char* argv[],
+    SSLOptions& opt)
 {
     namespace po = boost::program_options;
     po::options_description req("configuration");

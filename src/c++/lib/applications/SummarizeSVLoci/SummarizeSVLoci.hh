@@ -24,7 +24,6 @@
 ///
 struct SummarizeSVLoci : public manta::Program
 {
-
     const char*
     name() const
     {

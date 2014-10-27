@@ -29,7 +29,8 @@ struct SASOptions
 
 
 void
-parseSASOptions(const manta::Program& prog,
-                int argc, char* argv[],
-                SASOptions& opt);
+parseSASOptions(
+    const manta::Program& prog,
+    int argc, char* argv[],
+    SASOptions& opt);
 

@@ -32,7 +32,7 @@ usage(
     std::ostream& os,
     const manta::Program& prog,
     const boost::program_options::options_description& visible,
-    const char* msg = NULL)
+    const char* msg = nullptr)
 {
     os << "\n" << prog.name() << ": summarize fragment size stats\n\n";
     os << "version: " << prog.version() << "\n\n";
