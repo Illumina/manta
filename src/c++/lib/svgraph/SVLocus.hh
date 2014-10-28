@@ -186,6 +186,30 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
         return sum;
     }
 
+    /// fill edge count histogram up to edgeCount.size()
+    void
+    getNodeEdgeCountDistro(std::vector<unsigned>& edgeCount) const
+    {
+        if(edgeCount.empty()) return;
+        const unsigned maxEdge(edgeCount.size()-1);
+        for (const SVLocusNode& node : *this)
+        {
+            edgeCount[std::min(node.size(),maxEdge)]++;
+        }
+    }
+
+    /// fill obs count histogram up to obsCount.size()
+    void
+    getNodeObsCountDistro(std::vector<unsigned>& obsCount) const
+    {
+        if(obsCount.empty()) return;
+        const unsigned maxObs(obsCount.size()-1);
+        for (const SVLocusNode& node : *this)
+        {
+            obsCount[std::min(node.outCount(),maxObs)]++;
+        }
+    }
+
     /// return from->to edge
     const SVLocusEdge&
     getEdge(

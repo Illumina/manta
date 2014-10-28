@@ -272,6 +272,26 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
         return sum;
     }
 
+    /// fill node edge count histogram up to edgeCount.size()
+    void
+    getNodeEdgeCountDistro(std::vector<unsigned>& edgeCount) const
+    {
+        for (const SVLocus& locus : *this)
+        {
+            locus.getNodeEdgeCountDistro(edgeCount);
+        }
+    }
+
+    /// fill node observation count histogram up to obsCount.size()
+    void
+    getNodeObsCountDistro(std::vector<unsigned>& obsCount) const
+    {
+        for (const SVLocus& locus : *this)
+        {
+            locus.getNodeObsCountDistro(obsCount);
+        }
+    }
+
     /// check that internal data-structures are in
     /// a consistent state, throw on error
     void
@@ -478,8 +498,9 @@ private:
     }
 
     void
-    mergeNodePtr(NodeAddressType fromPtr,
-                 NodeAddressType toPtr);
+    mergeNodePtr(
+        NodeAddressType fromPtr,
+        NodeAddressType toPtr);
 
     /// update index when nodes are moved:
     void

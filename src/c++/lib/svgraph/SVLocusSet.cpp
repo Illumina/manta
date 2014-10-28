@@ -16,6 +16,7 @@
 ///
 
 #include "blt_util/log.hh"
+#include "blt_util/SizeDistribution.hh"
 #include "common/Exceptions.hh"
 #include "svgraph/SVLocusSet.hh"
 
@@ -850,6 +851,8 @@ clean()
     {
         if (locus.empty()) continue;
         _totalCleaned += locus.clean(getMinMergeEdgeCount(), this);
+
+        // if true, this locus is newly empty after cleaning:
         if (locus.empty()) _emptyLoci.insert(locus.getIndex());
     }
 #ifdef DEBUG_SVL
@@ -950,13 +953,53 @@ dumpStats(std::ostream& os) const
     _normalReads.write(os,"normal");
     _tumorReads.write(os,"tumor");
 
-    // add pseudo-distributions to better characterize difficult samples:
+    // node region size quantiles
+    {
+        SizeDistribution nodeSize;
+        for (const SVLocus& locus : *this)
+        {
+            for (const SVLocusNode& node : locus)
+            {
+                const unsigned regionSize(node.getInterval().range.size());
+                nodeSize.addObservation(regionSize);
+            }
+        }
 
-    // self-edge count
+        static const float quantLevel[] = { 0.25, 0.5, 0.75, 0.9, 0.95, 0.99 };
+        static const unsigned quantLevelCount(sizeof(quantLevel)/sizeof(float));
+        for (unsigned i(0);i<quantLevelCount;++i)
+        {
+            os << "nodeRegionSizequantile:" << sep
+               << quantLevel[i] << sep
+               << nodeSize.quantile(quantLevel[i]) << "\n";
+        }
+    }
 
-    // node obs distro: 3,4,5,6,7+
+    {
+        // node edge count distro: 0.1,2,3... X+
+        static const unsigned maxEdgeCount(10);
+        std::vector<unsigned> edgeCount(maxEdgeCount);
+        getNodeEdgeCountDistro(edgeCount);
+        for (unsigned i(0); i<maxEdgeCount; ++i)
+        {
+            os << "NodeEdgeCount" << sep << i;
+            if ((i+1) == maxEdgeCount) os << '+';
+            os << sep << edgeCount[i] << "\n";
+        }
+    }
 
-    // region size distro 100,1000,10000
+    {
+        // node obs distro: 0,1,2,3... X+
+        static const unsigned maxObsCount(30);
+        std::vector<unsigned> obsCount(maxObsCount);
+        getNodeObsCountDistro(obsCount);
+        for (unsigned i(0); i<maxObsCount; ++i)
+        {
+            os << "NodeObservationCount" << sep << i;
+            if ((i+1) == maxObsCount) os << '+';
+            os << sep << obsCount[i] << "\n";
+        }
+    }
 }
 
 

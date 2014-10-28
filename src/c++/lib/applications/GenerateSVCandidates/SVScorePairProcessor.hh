@@ -19,8 +19,8 @@
 
 #include "SVEvidence.hh"
 #include "SVScorerPairOptions.hh"
+#include "blt_util/SizeDistribution.hh"
 #include "manta/BamRegionProcessor.hh"
-#include "manta/SizeDistribution.hh"
 #include "manta/SVCandidate.hh"
 #include "manta/SVLocusScanner.hh"
 

@@ -18,7 +18,7 @@
 #include "boost/test/unit_test.hpp"
 #include "boost/test/floating_point_comparison.hpp"
 
-#include "manta/SizeDistribution.cpp"
+#include "blt_util/SizeDistribution.cpp"
 
 
 
