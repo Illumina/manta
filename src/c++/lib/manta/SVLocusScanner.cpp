@@ -1172,8 +1172,6 @@ getSVLoci(
     const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);
     getSVLociImpl(_opt, _dopt, rstats, bamRead, bamHeader, refSeq, loci,
                   truthTracker);
-    //lastQname = bamRead.qname();
-    //lastMapq  = bamRead.map_qual();
 }
 
 

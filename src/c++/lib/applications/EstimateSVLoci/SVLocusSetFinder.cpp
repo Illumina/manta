@@ -193,7 +193,7 @@ addToDepthBuffer(
 {
     if (! _isMaxDepth) return;
 
-    /// estimate depth from normal sample only:
+    // estimate depth from normal sample only:
     if (_isAlignmentTumor[defaultReadGroupIndex]) return;
 
     // depth estimation relies on a simple filtration criteria to stay in sync with the chromosome mean

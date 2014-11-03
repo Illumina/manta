@@ -28,7 +28,7 @@
 
 EdgeRuntimeTracker::
 EdgeRuntimeTracker(const std::string& outputFile) :
-    _osPtr(NULL),
+    _osPtr(nullptr),
     _isStart(false),
     _startTime(0),
     _lastTime(0.),
@@ -54,7 +54,7 @@ EdgeRuntimeTracker(const std::string& outputFile) :
 EdgeRuntimeTracker::
 ~EdgeRuntimeTracker()
 {
-    if (NULL != _osPtr) delete _osPtr;
+    if (nullptr != _osPtr) delete _osPtr;
 }
 
 
