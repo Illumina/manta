@@ -31,14 +31,40 @@
 
 
 void
-SampleReadCounts::
+SampleReadInputCounts::
 write(
     std::ostream& os,
     const char* label) const
 {
     static const char sep('\t');
-    os << label << "_totalAnomalousConsidered:" << sep << anom << '\n';
-    os << label << "_totalNonAnomalousConsidered:" << sep << nonAnom << '\n';
+
+    const double total(anom+assm+nonAnom);
+    os << label << "_Anomalous:" << sep << anom << sep << anom/total << '\n';
+    os << label << "_AssemblyEvidence:" << sep << assm << sep << assm/total << '\n';
+    os << label << "_Ignored:" << sep << nonAnom << sep << nonAnom/total << '\n';
+}
+
+
+
+void
+SampleEvidenceCounts::
+write(
+    std::ostream& os,
+    const char* label) const
+{
+    static const char sep('\t');
+
+    double total(0);
+    for (unsigned i(0);i<SVEvidenceType::SIZE;++i)
+    {
+        total += eType[i];
+    }
+
+    for (unsigned i(0);i<SVEvidenceType::SIZE;++i)
+    {
+        os << label << "_EvidenceType_" << SVEvidenceType::label(i) << ':' << sep << eType[i] << sep << eType[i]/total << '\n';
+    }
+    os << label << "_closePairs:" << sep << closeCount << '\n';
 }
 
 

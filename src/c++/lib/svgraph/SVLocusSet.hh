@@ -18,29 +18,33 @@
 #pragma once
 
 #include "blt_util/bam_header_info.hh"
+#include "manta/SVBreakend.hh"
 #include "options/SVLocusSetOptions.hh"
 #include "svgraph/SVLocus.hh"
 
+#include <algorithm>
 #include <iosfwd>
 #include <string>
 #include <vector>
 
 
-/// enumerate evidence type accumulated for each sample
-struct SampleReadCounts
+/// enumerate evidence type estimated on input for each sample
+struct SampleReadInputCounts
 {
     void
     clear()
     {
         anom = 0;
+        assm = 0;
         nonAnom = 0;
     }
 
     void
     merge(
-        const SampleReadCounts& srs)
+        const SampleReadInputCounts& srs)
     {
         anom += srs.anom;
+        assm += srs.assm;
         nonAnom += srs.nonAnom;
     }
 
@@ -53,13 +57,97 @@ struct SampleReadCounts
     template<class Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {
-        ar& anom& nonAnom;
+        ar& anom& assm& nonAnom;
     }
 
-    unsigned long anom = 0; ///< total number of non-filtered anomalous reads scanned but not in graph
-    unsigned long nonAnom = 0; ///< total number of non-filtered non-anomalous reads scanned but not in graph
+    ///< total number of non-filtered anomalous reads scanned
+    unsigned long anom = 0;
+
+    ///< total number of non-filtered non-anomolous assembly reads scanned
+    unsigned long assm = 0;
+
+    ///< total number of non-filtered non-anomalous reads scanned
+    unsigned long nonAnom = 0;
 };
 
+
+
+/// enumerate detailed evidence type counts for each sample
+struct SampleEvidenceCounts
+{
+    void
+    clear()
+    {
+        std::fill(eType.begin(),eType.end(),0);
+        closeCount = 0;
+    }
+
+    void
+    merge(
+        const SampleEvidenceCounts& srs)
+    {
+        for (unsigned i(0); i< SVEvidenceType::SIZE; ++i)
+        {
+            eType[i] += srs.eType[i];
+        }
+    }
+
+    void
+    write(
+        std::ostream& os,
+        const char* label) const;
+
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned /* version */)
+    {
+        ar& eType& closeCount;
+    }
+
+    // (don't want to bother with std::array even thought size is known at compile-time:
+    std::vector<unsigned long> eType = std::vector<unsigned long>(SVEvidenceType::SIZE,0);
+    unsigned long closeCount = 0;
+};
+
+
+
+/// total statistics for each sample
+struct SampleCounts
+{
+    void
+    clear()
+    {
+        input.clear();
+        evidence.clear();
+    }
+
+    void
+    merge(
+        const SampleCounts& srs)
+    {
+        input.merge(srs.input);
+        evidence.merge(srs.evidence);
+    }
+
+    void
+    write(
+        std::ostream& os,
+        const char* label) const
+    {
+        input.write(os, label);
+        evidence.write(os, label);
+    }
+
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned /* version */)
+    {
+        ar& input& evidence;
+    }
+
+    SampleReadInputCounts input;
+    SampleEvidenceCounts evidence;
+};
 
 
 /// A set of SVLocus objects comprising a full locus graph
@@ -300,7 +388,7 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
         const bool isCheckLocusConnected = false) const;
 
     /// updater gets direct access to read counts:
-    SampleReadCounts&
+    SampleCounts&
     getReadCounts(
         const bool isTumor)
     {
@@ -597,8 +685,8 @@ private:
     // once complete, overlaps are not present and disallowed:
     bool _isFinalized;
 
-    SampleReadCounts _normalReads;
-    SampleReadCounts _tumorReads;
+    SampleCounts _normalReads;
+    SampleCounts _tumorReads;
 
     // total number of observations removed on edges with less than minMergeEdgeCount counts
     unsigned _totalCleaned;

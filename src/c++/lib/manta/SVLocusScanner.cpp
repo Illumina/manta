@@ -897,6 +897,7 @@ getSVLociImpl(
     const bam_header_info& bamHeader,
     const reference_contig_segment& refSeq,
     std::vector<SVLocus>& loci,
+    SampleEvidenceCounts& eCounts,
     TruthTracker& truthTracker)
 {
     using namespace illumina::common;
@@ -934,6 +935,12 @@ getSVLociImpl(
             BOOST_THROW_EXCEPTION(LogicException(oss.str()));
         }
 
+        // update evidence stats:
+        for (int i(0); i< SVEvidenceType::SIZE; ++i)
+        {
+            eCounts.eType[i] += localBreakend.lowresEvidence.getVal(i);
+        }
+
         // determine the evidence weight of this candidate:
         unsigned localEvidenceWeight(0);
         unsigned remoteEvidenceWeight(0);
@@ -952,6 +959,7 @@ getSVLociImpl(
             if (is_innie_pair(bamRead))
             {
                 isClose = (std::abs(bamRead.template_size()) < rstats.minDistantFragmentSize);
+                eCounts.closeCount += 1;
             }
 
             unsigned thisWeight(SVObservationWeights::readPair);
@@ -1165,13 +1173,14 @@ getSVLoci(
     const bam_header_info& bamHeader,
     const reference_contig_segment& refSeq,
     std::vector<SVLocus>& loci,
+    SampleEvidenceCounts& eCounts,
     TruthTracker& truthTracker) const
 {
     loci.clear();
 
     const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);
     getSVLociImpl(_opt, _dopt, rstats, bamRead, bamHeader, refSeq, loci,
-                  truthTracker);
+                  eCounts, truthTracker);
 }
 
 

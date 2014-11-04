@@ -81,6 +81,7 @@ addSVNodeRead(
     const bool isNode1,
     const bool isGatherSubmapped,
     SVCandidateSetReadPairSampleGroup& svDataGroup,
+    SampleEvidenceCounts& eCounts,
     TruthTracker& truthTracker)
 {
     using namespace illumina::common;
@@ -125,7 +126,7 @@ addSVNodeRead(
     typedef std::vector<SVLocus> loci_t;
     loci_t loci;
     scanner.getSVLoci(bamRead, bamIndex, bamHeader, refSeq, loci,
-                      truthTracker);
+                      eCounts, truthTracker);
 
     for (const SVLocus& locus : loci)
     {
@@ -308,7 +309,7 @@ addSVNodeData(
             addSVNodeRead(
                 bamHeader,_readScanner, localNode, remoteNode,
                 bamRead, bamIndex, isExpectRepeat, refSeq, isNode1,
-                isGatherSubmapped, svDataGroup, truthTracker);
+                isGatherSubmapped, svDataGroup, _eCounts, truthTracker);
         }
         ++bamIndex;
     }

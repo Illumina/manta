@@ -185,6 +185,7 @@ struct SVLocusScanner
         const bam_header_info& bamHeader,
         const reference_contig_segment& refSeq,
         std::vector<SVLocus>& loci,
+        SampleEvidenceCounts& eCounts,
         TruthTracker& truthTracker) const;
 
     /// get local and remote breakends for each SV Candidate which can be extracted from a read pair

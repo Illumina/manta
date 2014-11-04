@@ -244,13 +244,17 @@ update(
     // exclude innie read pairs which are anomalously short:
     const bool isNonCompressedAnomalous(_readScanner.isNonCompressedAnomalous(bamRead,defaultReadGroupIndex));
 
-    if (isNonCompressedAnomalous) _svLoci.getReadCounts(isTumor).anom++;
-    else                          _svLoci.getReadCounts(isTumor).nonAnom++;
-
     bool isLocalAssemblyEvidence(false);
     if (! isNonCompressedAnomalous)
     {
         isLocalAssemblyEvidence = _readScanner.isLocalAssemblyEvidence(bamRead, refSeq);
+    }
+
+    {
+        SampleReadInputCounts& counts(_svLoci.getReadCounts(isTumor).input);
+        if      (isNonCompressedAnomalous) counts.anom++;
+        else if (isLocalAssemblyEvidence)  counts.assm++;
+        else                               counts.nonAnom++;
     }
 
     const bool isRejectRead(! ( isNonCompressedAnomalous || isLocalAssemblyEvidence));
@@ -271,8 +275,10 @@ update(
 
     std::vector<SVLocus> loci;
 
+    SampleEvidenceCounts& eCounts(_svLoci.getReadCounts(isTumor).evidence);
+
     _readScanner.getSVLoci(bamRead, defaultReadGroupIndex, bamHeader,
-                           refSeq, loci, truthTracker);
+                           refSeq, loci, eCounts, truthTracker);
 
     for (const SVLocus& locus : loci)
     {

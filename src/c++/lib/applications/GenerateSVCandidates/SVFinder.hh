@@ -32,7 +32,6 @@
 
 struct SVFinder
 {
-
     SVFinder(const GSCOptions& opt);
 
     ~SVFinder();
@@ -128,4 +127,7 @@ private:
 
     /// this is only here as syscall cache:
     std::vector<SVObservation> _readCandidates;
+
+    /// throwaway stats tracker...
+    SampleEvidenceCounts _eCounts;
 };
