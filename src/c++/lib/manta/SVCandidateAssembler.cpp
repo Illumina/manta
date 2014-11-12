@@ -716,10 +716,8 @@ assembleSingleSVBreakend(
     AssemblyReadOutput readInfo;
 
 #ifdef ITERATIVE_ASSEMBLER
-    log_os << "This is the iterative assembler!\n";
     runIterativeAssembler(_assembleOpt, reads, readInfo, as);
 #else
-    log_os << "This is the small assembler!\n";
     runSmallAssembler(_assembleOpt, reads, readInfo, as);
 #endif
 
