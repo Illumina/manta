@@ -288,7 +288,28 @@ getTerminal(
 
 
 
+static
+void
+pairError(
+    const SVCandidate& sv,
+    const SVCandidateSetReadPair& pair,
+    const char* errorMsg)
+{
+    using namespace illumina::common;
+
+    std::ostringstream oss;
+    oss << "ERROR: " << errorMsg << '\n'
+        << "\tcandidate-sv: " << sv
+        << "\tread-pair: " << pair
+        << '\n';
+    BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+}
+
+
+
 /// double check that a read-pair supports an sv, and if so what is the fragment length prob?
+///
+/// note this operation includes matching fragment r1/r2 to sv bp1/bp2, if applicable
 static
 void
 getFragProb(
@@ -318,6 +339,17 @@ getFragProb(
     SpanTerminal frag2;
     getTerminal(read2,frag2);
 
+    const bool isSameFragTid(frag1.tid == frag2.tid);
+    const bool isSameBpTid(sv.bp1.interval.tid == sv.bp2.interval.tid);
+
+    // for strictMatch this must be true (usually this means anom read pairs)
+    // but this assertion won't necessarily hold of split reads, etc...
+    if (isSameFragTid != isSameBpTid)
+    {
+        if (! isStrictMatch) return;
+        pairError(sv,pair,"Can't resolve fragment/sv chromosome pair(s)");
+    }
+
     const pos_t bp1pos(sv.bp1.interval.range.center_pos());
     const pos_t bp2pos(sv.bp2.interval.range.center_pos());
 
@@ -334,11 +366,15 @@ getFragProb(
     }
     else if (frag1.isFwdStrand == frag2.isFwdStrand)
     {
-        if ((frag1.pos < frag2.pos) != (bp1pos < bp2pos))
+        // order inversion/complex SV breakends
+        if (isSameFragTid)
         {
-            if (frag1.pos != frag2.pos)
+            if ((frag1.pos < frag2.pos) != (bp1pos < bp2pos))
             {
-                isBpFragReversed=true;
+                if (frag1.pos != frag2.pos)
+                {
+                    isBpFragReversed=true;
+                }
             }
         }
     }
@@ -385,11 +421,14 @@ getFragProb(
         }
         else
         {
-            if ( (frag1.pos < frag2.pos) != (bp1pos < bp2pos) )
+            if (isSameFragTid)
             {
-                if (frag1.pos != frag2.pos)
+                if ( (frag1.pos < frag2.pos) != (bp1pos < bp2pos) )
                 {
-                    errorMsg = "Can't match read pair positions to sv-candidate.";
+                    if (frag1.pos != frag2.pos)
+                    {
+                        errorMsg = "Can't match read pair positions to sv-candidate.";
+                    }
                 }
             }
         }
@@ -397,15 +436,7 @@ getFragProb(
         if (! errorMsg.empty())
         {
             if (! isStrictMatch) return;
-
-            using namespace illumina::common;
-
-            std::ostringstream oss;
-            oss << "ERROR: " << errorMsg  << '\n'
-                << "\tcandidate-sv: " << sv
-                << "\tread-pair: " << pair
-                << '\n';
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            pairError(sv,pair,errorMsg.c_str());
         }
     }
 
