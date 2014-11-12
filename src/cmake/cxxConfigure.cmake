@@ -111,7 +111,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
     get_compiler_version(compiler_version)
-    test_min_compiler(${compiler_version} "${min_intel_version}" "icpc") 
+    test_min_compiler(${compiler_version} "${min_intel_version}" "icpc")
     message (STATUS "using compiler: Intel version ${compiler_version}")
 
     # for intel we also need to test the minimum version of g++ currently

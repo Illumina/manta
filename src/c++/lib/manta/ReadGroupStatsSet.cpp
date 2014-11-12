@@ -21,15 +21,15 @@
 // workaround intel compiler boost warnings:
 #include "boost/config.hpp"
 #ifdef BOOST_INTEL_CXX_VERSION
-    #pragma warning push
-    #pragma warning(disable:1944)
+#pragma warning push
+#pragma warning(disable:1944)
 #endif
 
 #include "boost/archive/xml_oarchive.hpp"
 #include "boost/archive/xml_iarchive.hpp"
 
 #ifdef BOOST_INTEL_CXX_VERSION
-    #pragma warning pop
+#pragma warning pop
 #endif
 
 #include "boost/serialization/map.hpp"

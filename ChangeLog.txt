@@ -1,4 +1,7 @@
-- add CRAM input support
+- MANTA-199 Fix low-frequency fragment/breakpoint mismatch (primarily
+an issue when large numbers of short ref contigs were used)
+- Add CRAM support for individual tools - still need a quick chrom depth estimator
+for full workflow CRAM support
 - c++11 update
 - MANTA-185 remove transloc calls with neg position (from circular genome)
 - [mantadev] #1 Fix SA split read breakpoint position
