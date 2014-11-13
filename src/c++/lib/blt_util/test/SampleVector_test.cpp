@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE( test_SampleVector1 )
     std::mt19937 rngEngine(0);
     SampleVector<int,std::mt19937> sv(2,rngEngine);
 
-    for (unsigned i(0);i<100;++i)
+    for (unsigned i(0); i<100; ++i)
     {
         sv.push(i);
     }

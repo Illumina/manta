@@ -55,12 +55,12 @@ write(
     static const char sep('\t');
 
     double total(0);
-    for (unsigned i(0);i<SVEvidenceType::SIZE;++i)
+    for (unsigned i(0); i<SVEvidenceType::SIZE; ++i)
     {
         total += eType[i];
     }
 
-    for (unsigned i(0);i<SVEvidenceType::SIZE;++i)
+    for (unsigned i(0); i<SVEvidenceType::SIZE; ++i)
     {
         os << label << "_EvidenceType_" << SVEvidenceType::label(i) << ':' << sep << eType[i] << sep << eType[i]/total << '\n';
     }
@@ -993,7 +993,7 @@ dumpStats(std::ostream& os) const
 
         static const float quantLevel[] = { 0.25, 0.5, 0.75, 0.9, 0.95, 0.99 };
         static const unsigned quantLevelCount(sizeof(quantLevel)/sizeof(float));
-        for (unsigned i(0);i<quantLevelCount;++i)
+        for (unsigned i(0); i<quantLevelCount; ++i)
         {
             os << "nodeRegionSizequantile:" << sep
                << quantLevel[i] << sep

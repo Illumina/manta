@@ -190,7 +190,7 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
     void
     getNodeEdgeCountDistro(std::vector<unsigned>& edgeCount) const
     {
-        if(edgeCount.empty()) return;
+        if (edgeCount.empty()) return;
         const unsigned maxEdge(edgeCount.size()-1);
         for (const SVLocusNode& node : *this)
         {
@@ -202,7 +202,7 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
     void
     getNodeObsCountDistro(std::vector<unsigned>& obsCount) const
     {
-        if(obsCount.empty()) return;
+        if (obsCount.empty()) return;
         const unsigned maxObs(obsCount.size()-1);
         for (const SVLocusNode& node : *this)
         {

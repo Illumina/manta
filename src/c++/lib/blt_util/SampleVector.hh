@@ -35,9 +35,9 @@ struct SampleVector
     SampleVector(
         const unsigned initSize,
         RNG& initRng)
-    : _inputCount(0),
-      _data(initSize,0),
-      _rng(initRng)
+        : _inputCount(0),
+          _data(initSize,0),
+          _rng(initRng)
     {}
 
     void
