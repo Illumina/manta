@@ -20,7 +20,7 @@
 #include "applications/GenerateSVCandidates/GSCOptions.hh"
 #include "assembly/IterativeAssembler.hh"
 #include "assembly/SmallAssembler.hh"
-#include "blt_util/bam_streamer.hh"
+#include "htsapi/bam_streamer.hh"
 #include "manta/ChromDepthFilterUtil.hh"
 #include "manta/SVCandidate.hh"
 #include "manta/SVCandidateAssemblyData.hh"

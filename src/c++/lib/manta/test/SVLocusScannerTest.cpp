@@ -17,9 +17,9 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "truth/TruthTracker.hh"
-
+#include "htsapi/SimpleAlignment_bam_util.hh"
 #include "manta/SVLocusScanner.cpp"
+#include "truth/TruthTracker.hh"
 
 
 BOOST_AUTO_TEST_SUITE( test_SVLocusScanner )
@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromReadIndels )
     bam1_t* bamDataPtr(bamRead.get_data());
     edit_bam_cigar(inputPath,*bamDataPtr);
 
-    SimpleAlignment align(bamRead);
+    SimpleAlignment align(getAlignment(bamRead));
 
     std::vector<SVObservation> candidates;
 

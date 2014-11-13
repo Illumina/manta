@@ -19,10 +19,10 @@
 
 #pragma once
 
-#include "blt_util/bam_record_util.hh"
 #include "blt_util/blt_types.hh"
 #include "blt_util/reference_contig_segment.hh"
 #include "blt_util/SimpleAlignment.hh"
+#include "htsapi/bam_record_util.hh"
 
 
 /// analogous to soft-clipping but checks for high-quality mismatches, any soft-clipped sections

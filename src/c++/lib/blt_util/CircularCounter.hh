@@ -22,9 +22,11 @@
 #include <vector>
 
 
-/// a fixed size circular buffer which can have true or
-/// false pushed into it and the total true count
-/// queried at any point
+/// A circular buffer of fixed size, S
+///
+/// - true/false values can be pushed in
+/// - total true count among the last S pushes can be queried at any point
+///    - count() is O(1) operation
 ///
 struct CircularCounter
 {
@@ -40,10 +42,16 @@ struct CircularCounter
     {
         if (_data[_headPos])
         {
-            assert(_count>0);
-            _count--;
+            if (!val)
+            {
+                assert(_count>0);
+                _count--;
+            }
         }
-        if (val) _count++;
+        else
+        {
+            if (val) _count++;
+        }
         _data[_headPos] = val;
         _headPos = nextPos();
     }

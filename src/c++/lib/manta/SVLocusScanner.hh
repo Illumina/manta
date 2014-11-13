@@ -19,9 +19,9 @@
 
 #pragma once
 
-#include "blt_util/bam_record.hh"
-#include "blt_util/bam_record_util.hh"
 #include "blt_util/LinearScaler.hh"
+#include "htsapi/bam_record.hh"
+#include "htsapi/bam_record_util.hh"
 #include "manta/ReadGroupStatsSet.hh"
 #include "manta/SVCandidate.hh"
 #include "svgraph/SVLocus.hh"

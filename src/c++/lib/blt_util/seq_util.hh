@@ -11,22 +11,21 @@
 // <https://github.com/sequencing/licenses/>
 //
 
-/// \file
-
+///
 /// \author Chris Saunders
 ///
 
 #pragma once
 
-#include "blt_util/bam_seq.hh"
 #include "blt_util/blt_types.hh"
 #include "blt_util/pos_range.hh"
 #include "blt_util/reference_contig_segment.hh"
 
 #include <cstring>
-#include <string>
 
 #include <iterator>
+#include <string>
+
 
 namespace BASE_ID
 {
@@ -65,34 +64,6 @@ base_to_id(const char a)
         return ANY;
     default:
         base_error("base_to_id",a);
-        return 4;
-    }
-}
-
-inline
-uint8_t
-bam_seq_code_to_id(const uint8_t a,
-                   const uint8_t ref = BAM_BASE::ANY)
-{
-
-    using namespace BAM_BASE;
-
-    switch (a)
-    {
-    case REF:
-        return bam_seq_code_to_id(ref);
-    case A:
-        return 0;
-    case C:
-        return 1;
-    case G:
-        return 2;
-    case T:
-        return 3;
-    case ANY:
-        return 4;
-    default:
-        base_error("bam_seq_code_to_id",a);
         return 4;
     }
 }
@@ -227,7 +198,6 @@ get_seq_base(const char* seq,
              const pos_t size,
              const pos_t pos)
 {
-
     if ((pos<0) || (pos>=size))
     {
         return 'N';
@@ -243,7 +213,6 @@ char
 get_seq_base(const std::string& seq,
              const pos_t pos)
 {
-
     return get_seq_base(seq.c_str(),seq.size(),pos);
 }
 

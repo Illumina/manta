@@ -19,7 +19,7 @@
 
 #include "boost/foreach.hpp"
 
-#include "blt_util/bam_header_util.hh"
+#include "htsapi/bam_header_util.hh"
 
 #include "common/VcfFile.hh"
 

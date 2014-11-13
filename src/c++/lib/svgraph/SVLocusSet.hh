@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "blt_util/bam_header_info.hh"
+#include "htsapi/bam_header_info.hh"
 #include "manta/SVBreakend.hh"
 #include "options/SVLocusSetOptions.hh"
 #include "svgraph/SVLocus.hh"

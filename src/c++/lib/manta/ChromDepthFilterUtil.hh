@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "blt_util/bam_header_info.hh"
 #include "blt_util/chrom_depth_map.hh"
+#include "htsapi/bam_header_info.hh"
 
 #include <cassert>
 

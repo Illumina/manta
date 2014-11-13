@@ -23,11 +23,10 @@
 /// \brief base for objects designed to perform work in a single pass over a position range
 ///
 /// Work progress is communicated via the process_pos() method. This base class is designed to
-/// link the worker with the stage_manager
+/// link the worker object with the stage_manager object
 ///
 struct pos_processor_base
 {
-
     pos_processor_base()
         : _is_skip_process_pos(false) {}
 

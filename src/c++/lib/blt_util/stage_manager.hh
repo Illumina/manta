@@ -37,7 +37,7 @@
 /// defined first, all following stages must have a parent stage and
 /// a distance to the parent.
 ///
-/// Example: as used by the stage_manager, a simple two-stage tree
+/// \example As used by the stage_manager, a simple two-stage tree
 /// where the stages are separated by 100 cycles would mean that the
 /// root stage is executed at the reference position pointer (as
 /// always), but the second stage is executed at positions 100 bases
@@ -45,7 +45,6 @@
 ///
 struct stage_data
 {
-
     // position,stage_id pair, where position is total distance of this stage from the root stage:
     typedef std::pair<unsigned,int> pos_stage_id;
     // pos_stage_ids, sorted by increasing position and stage id:
@@ -105,7 +104,9 @@ private:
 
 
 
-/// \brief help to manage approximately sequential data in stages
+/// \brief help to manage information which is being gathered in an
+/// approximately sequential fashion and processed in sequence in
+/// multiple stages.
 ///
 /// assumes that information related to each position will be
 /// available in an approximately sequential fashion, where all
@@ -124,7 +125,6 @@ private:
 ///
 struct stage_manager
 {
-
     // stage_data structure is described above
     //
     // report_range is what is sounds like
@@ -143,7 +143,7 @@ struct stage_manager
     // Handle new pos value is used to indicate a possible advance of
     // the head position -- this represents the position of the input
     // information. Note that you must explicitly check whether pos is
-    // too low for nay particular stage using the methods further
+    // too low for any particular stage using the methods further
     // below, handle_new_pos_value does not do this for you.
     //
     // When the head position is advanced, it triggers a series of

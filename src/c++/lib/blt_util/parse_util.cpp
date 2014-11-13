@@ -11,8 +11,7 @@
 // <https://github.com/sequencing/licenses/>
 //
 
-/// \file
-
+///
 /// \author Chris Saunders
 ///
 
@@ -33,7 +32,6 @@ void
 parse_exception(const char* type_label,
                 const char* parse_str)
 {
-
     std::ostringstream oss;
     oss << "ERROR: Can't parse " << type_label << " from string: '" << parse_str << "'";
     throw blt_exception(oss.str().c_str());
@@ -48,7 +46,6 @@ namespace blt_util
 unsigned
 parse_unsigned(const char*& s)
 {
-
     static const int base(10);
 
     errno = 0;
@@ -90,7 +87,6 @@ parse_unsigned_str(const std::string& s)
 int
 parse_int(const char*& s)
 {
-
     const char* endptr(s);
     const long val(parse_long(endptr));
 
@@ -123,7 +119,6 @@ parse_int_str(const std::string& s)
 long
 parse_long(const char*& s)
 {
-
     static const int base(10);
 
     errno = 0;
@@ -160,7 +155,6 @@ parse_long_str(const std::string& s)
 double
 parse_double(const char*& s)
 {
-
     errno = 0;
 
     char* endptr;

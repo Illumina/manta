@@ -19,13 +19,13 @@
 
 #include "SVScorePairAltProcessor.hh"
 
-#include "blt_util/align_path_bam_util.hh"
-#include "blt_util/bam_streamer.hh"
 #include "blt_util/LinearScaler.hh"
 #include "blt_util/math_util.hh"
 #include "blt_util/prob_util.hh"
 #include "blt_util/qscore.hh"
 #include "common/Exceptions.hh"
+#include "htsapi/align_path_bam_util.hh"
+#include "htsapi/bam_streamer.hh"
 #include "manta/ReadGroupStatsSet.hh"
 #include "manta/SVCandidateUtil.hh"
 

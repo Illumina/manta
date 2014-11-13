@@ -17,11 +17,10 @@
 
 #pragma once
 
-#include "blt_util/bam_record.hh"
-#include "svgraph/GenomeInterval.hh"
-#include "manta/SVBreakend.hh"
-
 #include "alignment/Alignment.hh"
+#include "htsapi/bam_record.hh"
+#include "manta/SVBreakend.hh"
+#include "svgraph/GenomeInterval.hh"
 
 #include <iosfwd>
 #include <map>

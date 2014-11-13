@@ -48,10 +48,10 @@ struct istream_line_splitter
 
     ~istream_line_splitter()
     {
-        if (NULL!=_buf)
+        if (nullptr != _buf)
         {
             delete [] _buf;
-            _buf=NULL;
+            _buf=nullptr;
         }
     }
 

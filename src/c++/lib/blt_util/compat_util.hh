@@ -11,10 +11,10 @@
 // <https://github.com/sequencing/licenses/>
 //
 
-/// \file
-
+///
 /// \author Chris Saunders
 ///
+
 // take care of some (mostly C99) functions not available in VS C++
 //
 

@@ -167,3 +167,4 @@ BOOST_AUTO_TEST_CASE( test_stage_manager_reset )
 
 
 BOOST_AUTO_TEST_SUITE_END()
+

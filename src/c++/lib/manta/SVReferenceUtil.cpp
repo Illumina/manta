@@ -15,8 +15,8 @@
 /// \author Chris Saunders
 ///
 
-#include "blt_util/samtools_fasta_util.hh"
 #include "common/Exceptions.hh"
+#include "htsapi/samtools_fasta_util.hh"
 #include "manta/SVReferenceUtil.hh"
 
 

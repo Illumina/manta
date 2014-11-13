@@ -13,6 +13,11 @@ general utility functions from CASAVA/Grouper/Isaac
 format:
 conversion of data into external formats
 
+htsapi:
+various c++ wrapper objects built on top of samtools/htslib
+and other utilities for standard genomic indexed file formats
+like bam/cram,bed,vcf, etc...
+
 manta:
 common code to the manta project (ie. too specific for general utility
 libraries but does not fit the category of another library). This is also

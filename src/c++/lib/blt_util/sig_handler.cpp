@@ -11,6 +11,7 @@
 // <https://github.com/sequencing/licenses/>
 //
 
+///
 /// \author Chris Saunders
 ///
 
@@ -28,11 +29,11 @@ static std::string _progname;
 static std::string _cmdline;
 
 
+
 static
 void
 blt_sig_handler (int sig)
 {
-
     switch (sig)
     {
     case SIGTERM:
@@ -55,7 +56,6 @@ void
 initialize_blt_signals(const char* progname,
                        const char* cmdline)
 {
-
     _progname=progname;
     _cmdline=cmdline;
 

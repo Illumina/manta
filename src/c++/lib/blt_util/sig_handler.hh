@@ -11,8 +11,10 @@
 // <https://github.com/sequencing/licenses/>
 //
 
+///
 /// \author Chris Saunders
 ///
+
 #pragma once
 
 /// \brief logs sigint/sigterm events (with cmdline):
@@ -20,4 +22,3 @@
 void
 initialize_blt_signals(const char* progname,
                        const char* cmdline);
-

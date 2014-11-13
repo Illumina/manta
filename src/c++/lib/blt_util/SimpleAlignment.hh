@@ -18,25 +18,16 @@
 #pragma once
 
 #include "blt_util/align_path.hh"
-#include "blt_util/bam_record.hh"
 #include "blt_util/known_pos_range2.hh"
 
 
-/// A struct which holds minimal alignment information processed
-// from a BAM record or other source
+/// holds minimal alignment information processed
+/// from a BAM record or other source
 struct SimpleAlignment
 {
-    SimpleAlignment() :
-        is_fwd_strand(true),
-        tid(0),
-        pos(0)
-    {}
-
-    SimpleAlignment(const bam_record& bamRead);
-
-    bool is_fwd_strand;
-    int32_t tid;
-    pos_t pos;
+    bool is_fwd_strand = true;
+    int32_t tid = 0;
+    pos_t pos = 0;
     ALIGNPATH::path_t path;
 };
 

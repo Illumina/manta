@@ -18,7 +18,6 @@
 #pragma once
 
 #include "blt_util/align_path.hh"
-
 #include "blt_util/blt_types.hh"
 
 
@@ -100,5 +99,3 @@ struct swap_info
     unsigned delete_length;
 };
 }
-
-

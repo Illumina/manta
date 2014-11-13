@@ -17,7 +17,7 @@
 
 #include "ShadowReadFinder.hh"
 
-#include "blt_util/bam_record_util.hh"
+#include "htsapi/bam_record_util.hh"
 
 
 #ifdef DEBUG_IS_SHADOW

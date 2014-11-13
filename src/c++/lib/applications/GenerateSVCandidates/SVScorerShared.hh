@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "blt_util/bam_record.hh"
+#include "htsapi/bam_record.hh"
 #include "SVEvidence.hh"
 
 

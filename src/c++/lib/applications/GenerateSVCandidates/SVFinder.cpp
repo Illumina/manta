@@ -17,8 +17,8 @@
 
 #include "SVFinder.hh"
 
-#include "blt_util/bam_streamer.hh"
 #include "common/Exceptions.hh"
+#include "htsapi/bam_streamer.hh"
 #include "manta/ReadGroupStatsSet.hh"
 #include "manta/SVCandidateUtil.hh"
 #include "manta/SVReferenceUtil.hh"

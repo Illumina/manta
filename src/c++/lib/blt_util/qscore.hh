@@ -11,8 +11,7 @@
 // <https://github.com/sequencing/licenses/>
 //
 
-/// \file
-
+///
 /// \author Chris Saunders
 ///
 
@@ -25,6 +24,14 @@
 #include <algorithm>
 #include <limits>
 
+
+//
+inline
+int
+char_to_qval(const char c)
+{
+    return (static_cast<int>(c)-64);
+}
 
 template <typename FloatType>
 int

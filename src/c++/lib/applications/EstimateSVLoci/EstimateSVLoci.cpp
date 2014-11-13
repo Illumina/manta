@@ -19,10 +19,10 @@
 #include "ESLOptions.hh"
 #include "SVLocusSetFinder.hh"
 
-#include "blt_util/bam_header_util.hh"
 #include "blt_util/input_stream_handler.hh"
 #include "blt_util/log.hh"
 #include "common/OutStream.hh"
+#include "htsapi/bam_header_util.hh"
 #include "manta/SVReferenceUtil.hh"
 #include "truth/TruthTracker.hh"
 

@@ -24,7 +24,7 @@
 
 
 #include "blt_util/id_map.hh"
-#include "blt_util/bam_streamer.hh"
+#include "htsapi/bam_streamer.hh"
 
 #include <map>
 #include <queue>

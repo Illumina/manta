@@ -25,9 +25,9 @@
 #include "SVScorePairProcessor.hh"
 
 #include "assembly/AssembledContig.hh"
-#include "blt_util/bam_streamer.hh"
-#include "blt_util/bam_header_info.hh"
 #include "blt_util/qscore_snp.hh"
+#include "htsapi/bam_streamer.hh"
+#include "htsapi/bam_header_info.hh"
 #include "manta/ChromDepthFilterUtil.hh"
 #include "manta/SVCandidateAssemblyData.hh"
 #include "manta/SVCandidateSetData.hh"

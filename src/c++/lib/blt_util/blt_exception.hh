@@ -25,13 +25,10 @@ struct blt_exception : public std::exception
 {
     blt_exception(const char* s);
 
-    ~blt_exception() throw() {}
-
-    const char* what() const throw()
+    const char* what() const noexcept
     {
         return message.c_str();
     }
 
     std::string message;
 };
-

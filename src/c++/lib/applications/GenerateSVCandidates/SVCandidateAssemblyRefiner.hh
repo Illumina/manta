@@ -23,7 +23,7 @@
 #include "alignment/GlobalLargeIndelAligner.hh"
 #include "alignment/GlobalJumpAligner.hh"
 #include "alignment/GlobalJumpIntronAligner.hh"
-#include "blt_util/bam_header_info.hh"
+#include "htsapi/bam_header_info.hh"
 #include "manta/SVCandidateAssemblyData.hh"
 #include "manta/SVCandidate.hh"
 #include "manta/SVCandidateAssembler.hh"

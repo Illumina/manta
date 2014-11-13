@@ -35,8 +35,7 @@
 struct known_pos_range2
 {
     known_pos_range2() :
-        _begin_pos(0),
-        _end_pos(0)
+        known_pos_range2(0,0)
     {}
 
     known_pos_range2(

@@ -59,7 +59,6 @@ void
 istream_line_splitter::
 increase_buffer_size()
 {
-
     assert(_buf_size>1);
     const unsigned old_buf_size(_buf_size);
     const char* old_buf(_buf);
@@ -76,7 +75,6 @@ bool
 check_istream(std::istream& is,
               unsigned& line_no)
 {
-
     if (is)
     {
         line_no++;
@@ -132,7 +130,7 @@ parse_line()
         throw blt_exception(oss.str().c_str());
     }
 
-    if (NULL == _buf) return false;
+    if (nullptr == _buf) return false;
     assert(buflen);
 
     // do a low-level separator parse:

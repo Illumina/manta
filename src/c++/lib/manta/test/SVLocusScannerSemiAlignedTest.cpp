@@ -17,7 +17,8 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "blt_util/align_path_bam_util.hh"
+#include "htsapi/align_path_bam_util.hh"
+#include "htsapi/SimpleAlignment_bam_util.hh"
 #include "manta/SVLocusScannerSemiAligned.cpp"
 
 #include "boost/scoped_array.hpp"
@@ -66,7 +67,7 @@ semiAlignTestCase(
 
     edit_bam_read_and_quality(querySeq, qual.get(), *bamDataPtr);
 
-    SimpleAlignment align(bamRead);
+    SimpleAlignment align(getAlignment(bamRead));
     align.pos = alignPos;
 
     edgeMismatchLength(align, bamRead.get_bam_read(), testRefSeg, 5,

@@ -17,8 +17,8 @@
 
 #include "SVScorePairRefProcessor.hh"
 #include "SVScorerShared.hh"
-#include "blt_util/bam_record_util.hh"
 #include "common/Exceptions.hh"
+#include "htsapi/bam_record_util.hh"
 #include "manta/SVCandidateUtil.hh"
 
 #include <cassert>

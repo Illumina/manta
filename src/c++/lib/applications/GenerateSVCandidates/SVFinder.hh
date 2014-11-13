@@ -19,7 +19,7 @@
 
 #include "GSCOptions.hh"
 
-#include "blt_util/bam_streamer.hh"
+#include "htsapi/bam_streamer.hh"
 #include "manta/ChromDepthFilterUtil.hh"
 #include "manta/SVCandidate.hh"
 #include "manta/SVCandidateSetData.hh"

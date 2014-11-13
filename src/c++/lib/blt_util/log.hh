@@ -20,4 +20,3 @@
 #include <iosfwd>
 
 extern std::ostream& log_os;
-

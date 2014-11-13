@@ -11,6 +11,7 @@
 // <https://github.com/sequencing/licenses/>
 //
 
+///
 /// \author Chris Saunders
 ///
 
@@ -18,8 +19,9 @@
 
 #include <cstdint>
 
+#include <ciso646>
 
-// OST: should this be unsigned?
+
 typedef int32_t pos_t;
 
 typedef float blt_float_t;

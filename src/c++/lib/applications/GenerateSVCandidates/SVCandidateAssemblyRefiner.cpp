@@ -20,8 +20,8 @@
 
 #include "alignment/AlignmentUtil.hh"
 #include "blt_util/log.hh"
-#include "blt_util/samtools_fasta_util.hh"
 #include "blt_util/seq_util.hh"
+#include "htsapi/samtools_fasta_util.hh"
 #include "common/Exceptions.hh"
 #include "manta/SVCandidateUtil.hh"
 #include "manta/SVReferenceUtil.hh"

@@ -17,12 +17,12 @@
 
 #include "manta/ReadGroupStatsUtil.hh"
 
-#include "blt_util/align_path_bam_util.hh"
-#include "blt_util/bam_record_util.hh"
-#include "blt_util/bam_streamer.hh"
 #include "blt_util/log.hh"
 #include "blt_util/ReadKey.hh"
 #include "common/Exceptions.hh"
+#include "htsapi/align_path_bam_util.hh"
+#include "htsapi/bam_record_util.hh"
+#include "htsapi/bam_streamer.hh"
 #include "manta/ReadGroupLabel.hh"
 #include "manta/SVLocusScanner.hh"
 

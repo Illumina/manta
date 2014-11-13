@@ -17,10 +17,10 @@
 
 #include "format/VcfWriterSV.hh"
 
-#include "blt_util/samtools_fasta_util.hh"
 #include "blt_util/string_util.hh"
 #include "blt_util/seq_util.hh"
-#include "blt_util/vcf_util.hh"
+#include "htsapi/samtools_fasta_util.hh"
+#include "htsapi/vcf_util.hh"
 #include "common/Exceptions.hh"
 #include "manta/SVCandidateUtil.hh"
 

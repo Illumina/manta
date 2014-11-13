@@ -17,13 +17,13 @@
 /// \author Bret Barnes
 ///
 
-#include "blt_util/align_path_bam_util.hh"
 #include "blt_util/align_path_util.hh"
-#include "blt_util/bam_record_util.hh"
-
 #include "blt_util/parse_util.hh"
 #include "blt_util/string_util.hh"
 #include "common/Exceptions.hh"
+#include "htsapi/align_path_bam_util.hh"
+#include "htsapi/bam_record_util.hh"
+#include "htsapi/SimpleAlignment_bam_util.hh"
 #include "manta/SVCandidateUtil.hh"
 #include "manta/SVLocusScanner.hh"
 #include "manta/SVLocusScannerSemiAligned.hh"
@@ -772,17 +772,17 @@ getReadBreakendsImpl(
     //if (localRead.is_mate_unmapped()) return;
 
     /// get some basic derived information from the bam_record:
-    const SimpleAlignment localAlign(localRead);
+    const SimpleAlignment localAlign(getAlignment(localRead));
 
     getSingleReadSVCandidates(opt, dopt, localRead, localAlign, chromToIndex,
                               localRefSeq, candidates);
 
-    if (NULL != remoteReadPtr)
+    if (nullptr != remoteReadPtr)
     {
         // run the same check on the read's mate if we have access to it
         assert(NULL != remoteRefSeqPtr);
         const bam_record& remoteRead(*remoteReadPtr);
-        const SimpleAlignment remoteAlign(remoteRead);
+        const SimpleAlignment remoteAlign(getAlignment(remoteRead));
 
         getSingleReadSVCandidates(opt, dopt, remoteRead, remoteAlign,
                                   chromToIndex, (*remoteRefSeqPtr),
@@ -1134,7 +1134,7 @@ isLocalAssemblyEvidence(
 {
     using namespace ALIGNPATH;
 
-    const SimpleAlignment bamAlign(bamRead);
+    const SimpleAlignment bamAlign(getAlignment(bamRead));
 
     //
     // large indel already in cigar string

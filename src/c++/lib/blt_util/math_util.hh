@@ -53,3 +53,18 @@ log_sum(FloatType x1, FloatType x2)
     if (x1<x2) std::swap(x1,x2);
     return x1 + log1p_switch(std::exp(x2-x1));
 }
+
+
+/// returns median, partially reorders elements in specified range
+///
+template <typename Iter>
+typename std::iterator_traits<Iter>::value_type
+median(
+    Iter begin,
+    Iter end)
+{
+    assert(begin != end);
+    const auto size(std::distance(begin,end));
+    std::nth_element(begin,begin+size/2, end);
+    return *(begin+size/2);
+}

@@ -38,7 +38,6 @@
 ///
 struct pos_range
 {
-
     pos_range() : is_begin_pos(false), is_end_pos(false), begin_pos(0), end_pos(0) {}
 
     pos_range(const pos_t bp,const pos_t ep)
@@ -91,7 +90,6 @@ struct pos_range
     bool
     is_pos_intersect(const pos_t pos) const
     {
-
         return (((! is_begin_pos) || (pos >= begin_pos)) &&
                 ((! is_end_pos) || (pos < end_pos)));
     }

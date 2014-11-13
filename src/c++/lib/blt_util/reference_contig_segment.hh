@@ -33,7 +33,6 @@
 ///
 struct reference_contig_segment
 {
-
     reference_contig_segment()
         : _offset(0)
     {}

@@ -18,7 +18,7 @@
 #include "DumpSVLoci.hh"
 #include "DSLOptions.hh"
 
-#include "blt_util/bam_header_util.hh"
+#include "htsapi/bam_header_util.hh"
 #include "svgraph/SVLocusSet.hh"
 
 #include "boost/archive/binary_oarchive.hpp"

@@ -17,8 +17,8 @@
 
 #include "SVLocusSetFinder.hh"
 
-#include "blt_util/align_path_bam_util.hh"
 #include "blt_util/log.hh"
+#include "htsapi/align_path_bam_util.hh"
 #include "manta/ChromDepthFilterUtil.hh"
 
 #include <iostream>

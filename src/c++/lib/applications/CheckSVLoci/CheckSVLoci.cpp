@@ -18,8 +18,8 @@
 #include "CheckSVLoci.hh"
 #include "CSLOptions.hh"
 
-#include "blt_util/bam_header_util.hh"
 #include "blt_util/log.hh"
+#include "htsapi/bam_header_util.hh"
 #include "svgraph/SVLocusSet.hh"
 
 #include "boost/archive/binary_oarchive.hpp"

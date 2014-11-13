@@ -19,10 +19,10 @@
 
 #include "ESLOptions.hh"
 
-#include "blt_util/bam_record.hh"
 #include "blt_util/depth_buffer.hh"
 #include "blt_util/pos_processor_base.hh"
 #include "blt_util/stage_manager.hh"
+#include "htsapi/bam_record.hh"
 #include "manta/SVLocusScanner.hh"
 #include "svgraph/SVLocusSet.hh"
 #include "truth/TruthTracker.hh"

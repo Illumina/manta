@@ -50,7 +50,6 @@ id_to_base_error(const uint8_t i)
 bool
 is_valid_seq(const char* seq)
 {
-
     assert(NULL != seq);
 
     while (*seq !=  '\0')
@@ -68,7 +67,6 @@ get_ref_seq(const char* ref_seq_file,
             std::string& ref_seq,
             const pos_range ref_segment)
 {
-
     static const unsigned buff_size(50000);
     char buff[buff_size];
 
@@ -167,7 +165,6 @@ standardize_ref_seq(const char* ref_seq_file,
                     std::string& ref_seq,
                     const pos_t offset)
 {
-
     const std::string::size_type ref_size(ref_seq.size());
     for (std::string::size_type i(0); i<ref_size; ++i)
     {
@@ -236,7 +233,6 @@ get_seq_repeat_unit(const std::string& seq,
                     std::string& repeat_unit,
                     unsigned& repeat_count)
 {
-
     const std::string::size_type sg(seq.find('-'));
     const unsigned seq_size((sg!=std::string::npos) ? sg : seq.size());
 

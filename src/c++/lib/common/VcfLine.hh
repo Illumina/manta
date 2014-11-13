@@ -87,8 +87,6 @@ protected:
 class Sample
 {
 public:
-    Sample() { };
-
     const char* field(size_t fieldInd) const
     {
         return fieldVec_.at(fieldInd);

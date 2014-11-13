@@ -17,9 +17,10 @@
 ///
 
 
-#include "blt_util/align_path_bam_util.hh"
 #include "blt_util/log.hh"
 #include "blt_util/seq_util.hh"
+#include "htsapi/align_path_bam_util.hh"
+#include "htsapi/SimpleAlignment_bam_util.hh"
 #include "manta/ShadowReadFinder.hh"
 #include "manta/SVCandidateAssembler.hh"
 #include "manta/SVLocusScannerSemiAligned.hh"
@@ -493,7 +494,7 @@ getBreakendReads(
             // filter reads with "N"
             if (bamRead.get_bam_read().get_string().find('N') != std::string::npos) continue;
 
-            SimpleAlignment bamAlign(bamRead);
+            SimpleAlignment bamAlign(getAlignment(bamRead));
 
 
             /// check for any indels in read:

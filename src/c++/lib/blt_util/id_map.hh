@@ -32,7 +32,6 @@
 template <typename K>
 struct id_set
 {
-
     /// \brief Add object to set if not present, and return id
     /// number in either case
     unsigned insert_key(const K& key)
@@ -127,7 +126,6 @@ private:
 template <typename K, typename V>
 struct id_map
 {
-
     /// \brief Update map with (key,value) and return id
     ///
     unsigned insert(const K& key, const V& value)
@@ -219,6 +217,5 @@ private:
     typedef std::map<K,unsigned> k2id_t;
 
     k2id_t _k2id;
-    std::vector<std::pair<K,V> > _id2kv;
+    std::vector<std::pair<K,V>> _id2kv;
 };
-

@@ -11,6 +11,7 @@
 // <https://github.com/sequencing/licenses/>
 //
 
+///
 /// \author Chris Saunders
 ///
 
@@ -30,7 +31,6 @@ void
 open_ifstream(std::ifstream& ifs,
               const char* filename)
 {
-
     ifs.open(filename);
     if (! ifs)
     {
