@@ -87,6 +87,7 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         getChromDepth=joinFile(libexecDir,"getBamAvgChromDepth.py")
         mantaSortVcf=joinFile(libexecDir,"sortVcf.py")
         mantaExtraSmallVcf=joinFile(libexecDir,"extractSmallIndelCandidates.py")
+        mantaPloidyFilter=joinFile(libexecDir,"ploidyFilter.py")
 
         # default memory request per process-type
         #
