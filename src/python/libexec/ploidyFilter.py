@@ -11,6 +11,9 @@
 # <https://github.com/sequencing/licenses/>
 #
 
+"""
+filter vcf to remove overlapping diploid calls which can't be resolved to two haplotypes
+"""
 
 import sys
 import re
@@ -66,13 +69,13 @@ def getOptions():
     parser = OptionParser(usage=usage)
     (options,args) = parser.parse_args()
 
-    if len(args) == 0 :
+    if len(args) != 1 :
         parser.print_help()
         sys.exit(2)
 
     # validate input:
     if not isfile(args[0]) :
-        raise Exception("Can't find input vcf file: " +arg)
+        raise Exception("Can't find input vcf file: " + args[0])
 
     return (options,args)
 
@@ -143,49 +146,48 @@ def find_stacked_variants(vcfFile):
     maxEnd = -1
     count = 0
 
-    vcfIn = open(vcfFile)
-    for line in vcfIn:
-        if line[0] <> "#":
-            record = VcfRecord(line)
+    for line in open(vcfFile):
+        if line[0] == "#": continue
+        record = VcfRecord(line)
 
-            chrm = record.chrom
-            pos = record.pos
-            svType = record.svType
-            count += 1
+        chrm = record.chrom
+        pos = record.pos
+        svType = record.svType
+        count += 1
 
-            # ignore filtered records
-            isPassed = record.isPass
-            if not(isPassed):
-                continue
+        # ignore filtered records
+        isPassed = record.isPass
+        if not(isPassed):
+            continue
 
-            # consider DEL & DUP only
-            if (svType == "DEL") or (svType == "DUP"):
-                end = record.end
+        # consider DEL & DUP only
+        if (svType != "DEL") and (svType != "DUP"): continue
+        end = record.end
 
-                # set up the first target site
-                if (len(recordBlock) == 0):
-                    targetChrm = chrm
-                    targetEnd = end
-                else:
-                    targetChrm = recordBlock[0].chrom
-                    targetEnd = recordBlock[0].end
+        # set up the first target site
+        if (len(recordBlock) == 0):
+            targetChrm = chrm
+            targetEnd = end
+        else:
+            targetChrm = recordBlock[0].chrom
+            targetEnd = recordBlock[0].end
 
-                # keep reading into the block until exceeding the target's end
-                if (chrm == targetChrm) and (pos < targetEnd):
-                    recordBlock.append(record)
-                    maxEnd = max(maxEnd, end)
-                else:
-                    nextPos = pos
-                    if (chrm != targetChrm):
-                        nextPos = maxEnd + 1
-                        maxEnd = -1
+        # keep reading into the block until exceeding the target's end
+        if (chrm == targetChrm) and (pos < targetEnd):
+            recordBlock.append(record)
+            maxEnd = max(maxEnd, end)
+        else:
+            nextPos = pos
+            if (chrm != targetChrm):
+                nextPos = maxEnd + 1
+                maxEnd = -1
 
-                    # process the block until pos < the new target's end
-                    process_block(recordBlock, nextPos, filteredSites)
+            # process the block until pos < the new target's end
+            process_block(recordBlock, nextPos, filteredSites)
 
-                    recordBlock.append(record)
-                    maxEnd = max(maxEnd, end)
-    vcfIn.close()
+            recordBlock.append(record)
+            maxEnd = max(maxEnd, end)
+
     # process the last block
     process_block(recordBlock, maxEnd+1, filteredSites)
 
@@ -204,22 +206,18 @@ def check_filtered_sites(site, filteredSites):
     pos = site.pos
     end = site.end
 
-    if (chrm in filteredSites) and ((pos, end) in filteredSites[chrm]):
-        return True
-    else:
-        return False
+    return ((chrm in filteredSites) and ((pos, end) in filteredSites[chrm]))
 
 
 def filter_variants(vcfFile, filteredSites):
 
     isHeaderAdded = False
-    filterHeadline = "##FILTER=<ID=Ploidy,Description=\"For DEL & DUP variants, the genotypes of overlapping variants (with similar size) leads to a ploidy larger than 2.\">\n"
+    filterHeadline = "##FILTER=<ID=Ploidy,Description=\"For DEL & DUP variants, the genotypes of overlapping variants (with similar size) are inconsistent with diploid expectation\">\n"
 
-    vcfIn = open(vcfFile)
     vcfOut = sys.stdout
 
-    for line in vcfIn:
-        if line[0] <> '#':
+    for line in open(vcfFile):
+        if line[0] != '#':
             site = VcfRecord(line)
             # only filter on DEL & DUP for now
             if (site.isPass and
@@ -230,16 +228,12 @@ def filter_variants(vcfFile, filteredSites):
                     w = line.strip().split('\t')
                     # add the "Ploidy" filter
                     w[VCF_FILTER] = "Ploidy"
-                    line = w[0]
-                    for i in xrange(1, len(w)):
-                        line += "\t"+w[i]
-                    line += "\n"
+                    line = "\t".join(w)+"\n"
         elif not(isHeaderAdded) and (line[:8] == "##FILTER"):
             vcfOut.write(filterHeadline)
             isHeaderAdded = True
 
         vcfOut.write(line)
-    vcfIn.close()
 
 
 if __name__=='__main__':

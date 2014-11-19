@@ -238,11 +238,10 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
 
     nextStepWait = copy.deepcopy(hygenTasks)
 
-    def getVcfSortCmd(isDiploid, vcfPaths, outPath) :
+    def getVcfSortCmd(vcfPaths, outPath, isDiploid) :
         cmd  = "%s -E %s -u " % (sys.executable,self.params.mantaSortVcf)
         cmd += " ".join(vcfPaths)
 
-        tempVcf = ""
         # apply the ploidy filter to diploid variants
         if isDiploid:
             tempVcf = self.paths.getTempDiploidPath()
@@ -251,25 +250,27 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
 
         cmd += " | %s -c > %s && %s -p vcf %s" % (self.params.bgzipBin, outPath, self.params.tabixBin, outPath)
 
-        if tempVcf:
-            cmd += " && rm -f %s" % (tempVcf)
+        if isDiploid:
+            cmd += " && rm -f %s" % (self.paths.getTempDiploidPath())
         return cmd
 
-    def sortVcfs(isDiploid, pathList, outPath, label) :
+    def sortVcfs(pathList, outPath, label, isDiploid=False) :
         if len(pathList) == 0 : return set()
-
-        sortCmd = getVcfSortCmd(isDiploid, pathList, outPath)
+        sortCmd = getVcfSortCmd(pathList, outPath, isDiploid)
         sortLabel=preJoin(taskPrefix,label)
         nextStepWait.add(self.addTask(sortLabel,sortCmd,dependencies=hygenTasks))
         return sortLabel
 
-    candSortTask = sortVcfs(False, candidateVcfPaths,
+    candSortTask = sortVcfs(candidateVcfPaths,
                             self.paths.getSortedCandidatePath(),
                             "sortCandidateSV")
-    sortVcfs(True, diploidVcfPaths,
-             self.paths.getSortedDiploidPath(), "sortDiploidSV")
-    sortVcfs(False, somaticVcfPaths,
-             self.paths.getSortedSomaticPath(), "sortSomaticSV")
+    sortVcfs(diploidVcfPaths,
+             self.paths.getSortedDiploidPath(),
+             "sortDiploidSV",
+             isDiploid=True)
+    sortVcfs(somaticVcfPaths,
+             self.paths.getSortedSomaticPath(),
+             "sortSomaticSV")
 
     def getExtractSmallCmd(maxSize, inPath, outPath) :
         cmd  = "%s -dc %s" % (self.params.bgzipBin, inPath)
@@ -333,7 +334,7 @@ class PathInfo:
         return os.path.join(self.getHyGenDir(),"diploidSV.%s.vcf" % (binStr))
 
     def getTempDiploidPath(self) :
-        return os.path.join(self.params.variantsDir,"diploidSV.temp.vcf")
+        return os.path.join(self.getHyGenDir(),"diploidSV.vcf.temp")
 
     def getSortedDiploidPath(self) :
         return os.path.join(self.params.variantsDir,"diploidSV.vcf.gz")
