@@ -248,7 +248,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
             tempVcf = self.paths.getTempDiploidPath()
             cmd += " > %s" % (tempVcf)
             cmd += " && %s %s" % (self.params.mantaPloidyFilter, tempVcf)
-        
+
         cmd += " | %s -c > %s && %s -p vcf %s" % (self.params.bgzipBin, outPath, self.params.tabixBin, outPath)
 
         if tempVcf:
@@ -266,7 +266,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
     candSortTask = sortVcfs(False, candidateVcfPaths,
                             self.paths.getSortedCandidatePath(),
                             "sortCandidateSV")
-    sortVcfs(True, diploidVcfPaths, 
+    sortVcfs(True, diploidVcfPaths,
              self.paths.getSortedDiploidPath(), "sortDiploidSV")
     sortVcfs(False, somaticVcfPaths,
              self.paths.getSortedSomaticPath(), "sortSomaticSV")

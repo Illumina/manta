@@ -52,7 +52,7 @@ class VcfRecord :
             self.svLen = int(val)
 
         self.svType = getKeyVal(w[VCF_INFO],"SVTYPE")
-        
+
         fmt = w[VCF_FORMAT]
         sample = w[VCF_SAMPLE]
         gtIx = fmt.split(':').index("GT")
@@ -89,7 +89,7 @@ def process_block(recordBlock, nextPos, filteredSites):
         # we need to read in more sites
         if targetEnd > nextPos:
             break
-        
+
         targetLen = -1
         if target.svLen is not None:
             targetLen = abs(target.svLen)
@@ -97,7 +97,7 @@ def process_block(recordBlock, nextPos, filteredSites):
 
         ploidySum = target.gtType
         overlapIds = [0]
-    
+
         for ix in xrange(1, len(recordBlock)):
             record = recordBlock[ix]
             pos = record.pos
@@ -115,7 +115,7 @@ def process_block(recordBlock, nextPos, filteredSites):
                     (svLen < 2*targetLen) and
                     (svLen > 0.5*targetLen)):
                     ploidySum += ploidy
-                    overlapIds.append(ix)                    
+                    overlapIds.append(ix)
             else:
                 break
 
@@ -127,7 +127,7 @@ def process_block(recordBlock, nextPos, filteredSites):
                 chrm = site.chrom
                 pos = site.pos
                 end = site.end
-                
+
                 if not(chrm in filteredSites):
                     filteredSites[chrm] = {}
                 filteredSites[chrm][(pos, end)] = True
@@ -135,8 +135,8 @@ def process_block(recordBlock, nextPos, filteredSites):
             # sites to be kept
             for i in overlapIds:
                 recordBlock.pop(i)
-    
-    
+
+
 def find_stacked_variants(vcfFile):
     filteredSites = {}
     recordBlock = []
@@ -157,11 +157,11 @@ def find_stacked_variants(vcfFile):
             isPassed = record.isPass
             if not(isPassed):
                 continue
-        
+
             # consider DEL & DUP only
             if (svType == "DEL") or (svType == "DUP"):
                 end = record.end
-            
+
                 # set up the first target site
                 if (len(recordBlock) == 0):
                     targetChrm = chrm
@@ -179,7 +179,7 @@ def find_stacked_variants(vcfFile):
                     if (chrm != targetChrm):
                         nextPos = maxEnd + 1
                         maxEnd = -1
-                
+
                     # process the block until pos < the new target's end
                     process_block(recordBlock, nextPos, filteredSites)
 
@@ -195,7 +195,7 @@ def find_stacked_variants(vcfFile):
         numFiltered += len(filteredSites[c])
     sys.stderr.write("Filtered %s sites due to ploidy.\n" % numFiltered)
     sys.stderr.write("Filtered sites: %s\n" % filteredSites)
-    
+
     return filteredSites
 
 
@@ -211,7 +211,7 @@ def check_filtered_sites(site, filteredSites):
 
 
 def filter_variants(vcfFile, filteredSites):
-    
+
     isHeaderAdded = False
     filterHeadline = "##FILTER=<ID=Ploidy,Description=\"For DEL & DUP variants, the genotypes of overlapping variants (with similar size) leads to a ploidy larger than 2.\">\n"
 
@@ -237,10 +237,10 @@ def filter_variants(vcfFile, filteredSites):
         elif not(isHeaderAdded) and (line[:8] == "##FILTER"):
             vcfOut.write(filterHeadline)
             isHeaderAdded = True
-            
+
         vcfOut.write(line)
     vcfIn.close()
-        
+
 
 if __name__=='__main__':
 
