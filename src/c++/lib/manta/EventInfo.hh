@@ -24,6 +24,8 @@
 ///
 struct EventInfo
 {
+    EventInfo() {}
+
     bool
     isEvent() const
     {
