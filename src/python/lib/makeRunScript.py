@@ -110,7 +110,7 @@ results -- in this case the dry run will not cover the full 'live' run task set.
     parser.add_option("-j", "--jobs", type="string",dest="jobs",
                   help="number of jobs, must be an integer or 'unlimited' (default: Estimate total cores on this node for local mode, %s for sge mode)" % (sgeDefaultCores))
     parser.add_option("-g","--memGb", type="string",dest="memGb",
-                  help="gigabytes of memory available to run workflow -- only meaningful in local mode, must be an integer  (default: Estimate the total memory for this node for local mode, 'unlimited' for sge mode)")
+                  help="gigabytes of memory available to run workflow -- only meaningful in local mode, must be an integer (default: Estimate the total memory for this node for local mode, 'unlimited' for sge mode)")
     parser.add_option("-e","--mailTo", type="string",dest="mailTo",action="append",
 	              help="send email notification of job completion status to this address (may be provided multiple times for more than one email address)")
     parser.add_option("-d","--dryRun", dest="isDryRun",action="store_true",default=False,

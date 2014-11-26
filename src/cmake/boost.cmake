@@ -90,7 +90,6 @@ endif ()
 # If the right version of boost is not found, it will be built from the distribution
 #
 if (NOT Boost_FOUND)
-
     foreach(COMPONENT ${THIS_BOOST_COMPONENTS})
         STRING(TOUPPER ${COMPONENT} UPPERCOMPONENT)
         if (${Boost_${UPPERCOMPONENT}_FOUND})

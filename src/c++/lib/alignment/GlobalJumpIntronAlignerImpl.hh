@@ -347,7 +347,6 @@ align(
                 updateBacktrace(sval.match, ref1Size+ref2Index+1, querySize, btrace);
             }
         }
-
     }
 
     // in the backtrace start search, also allow for the case where the query falls-off the end of the reference:

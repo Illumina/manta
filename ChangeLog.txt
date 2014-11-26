@@ -1,5 +1,5 @@
 v0.23.0
-- MANTA-200 Add filter for overlaping diploid calls which can't be explained
+- MANTA-200 Add filter for overlapping diploid calls which can't be explained
 as two haplotypes.
 - MANTA-199 Fix low-frequency fragment/breakpoint mismatch (primarily
 an issue when large numbers of short ref contigs were used)
