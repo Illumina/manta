@@ -178,6 +178,12 @@ def validateFixExistingFileArg(argFile,label) :
     return _validateFixArgHelper(argFile,label,os.path.isfile)
 
 
+def checkOptionalTabixIndexedFile(iname,desc) :
+    if iname is None : return
+    tabixFile = iname + ".tbi"
+    if os.path.isfile(tabixFile) : return
+    raise OptParseException("Can't find expected %s index file: '%s'" % (desc,tabixFile))
+
 
 def checkForBamIndex(bamFile):
     """
