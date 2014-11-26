@@ -21,6 +21,7 @@
 message(STATUS "Creating external tools in subdirectory opt")
 
 include ("${THIS_GLOBALS_CMAKE}")
+include ("${THIS_MACROS_CMAKE}")
 
 # convenience macro to set in both current and parent scope:
 macro(superset symbol value)
@@ -84,12 +85,9 @@ add_custom_command(
     COMMAND ${PYTHON_EXECUTABLE} -m compileall -q "${PYFLOW_DIR}/src"
     COMMENT "Extracting pyflow")
 
-add_custom_target(MANTA_PYFLOW DEPENDS "${PYFLOW_SCRIPT}")
+install_python_lib_dir("${PYFLOW_DIR}/src" "${THIS_PYTHON_LIBDIR}/pyflow")
 
-set (PYGLOBS "*.py" "*.pyc")
-foreach (PYGLOB ${PYGLOBS})
-    install (DIRECTORY ${PYFLOW_DIR}/src/ DESTINATION ${THIS_PYTHON_LIBDIR}/pyflow FILES_MATCHING PATTERN ${PYGLOB})
-endforeach ()
+add_custom_target(STARKA_PYFLOW DEPENDS "${PYFLOW_SCRIPT}")
 
 
 # tie results back to parent:

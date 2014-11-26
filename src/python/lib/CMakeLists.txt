@@ -46,10 +46,6 @@ add_custom_target(MANTA_PYTHONLIB_COMPILE ALL DEPENDS ${STAGED_PYTHONC_FILES})
 #
 # install
 #
-include("${THIS_GLOBALS_CMAKE}") # get THIS_LIBRARY_PERMISSIONS
-set(PYGLOBS "*.py" "*.pyc")
-foreach(PYGLOB ${PYGLOBS})
-    # Note the trialing slash in DIRECTORY argument is required:
-    install (DIRECTORY "${PYSTAGE_DIR}/" DESTINATION "${INSTALL_TO_DIR}" FILE_PERMISSIONS ${THIS_LIBRARY_PERMISSIONS} FILES_MATCHING PATTERN ${PYGLOB})
-endforeach()
+include("${THIS_MACROS_CMAKE}")
+install_python_lib_dir("${PYSTAGE_DIR}" "${INSTALL_TO_DIR}")
 
