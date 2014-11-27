@@ -49,8 +49,8 @@ endforeach ()
 
 if (THIS_LIBRARY_SOURCES)
     #include_directories (${THIS_COMMON_INCLUDE})
-    add_library     (manta_${CURRENT_DIR_NAME} STATIC ${THIS_LIBRARY_SOURCES})
-    add_dependencies(manta_${CURRENT_DIR_NAME} MANTA_OPT)
+    add_library     (${THIS_PROJECT_NAME}_${CURRENT_DIR_NAME} STATIC ${THIS_LIBRARY_SOURCES})
+    add_dependencies(${THIS_PROJECT_NAME}_${CURRENT_DIR_NAME} THIS_OPT)
 endif()
 
 ##

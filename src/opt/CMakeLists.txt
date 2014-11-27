@@ -63,7 +63,7 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E chdir "${SAMTOOLS_DIR}" $(MAKE) all 2>| samtools.build.log
     DEPENDS "${HTSLIB_LIBRARY}"
     COMMENT "Building samtools package")
-add_custom_target(MANTA_SAMTOOLS DEPENDS "${SAMTOOLS_PROG}")
+add_custom_target(THIS_SAMTOOLS DEPENDS "${SAMTOOLS_PROG}")
 
 install(PROGRAMS "${SAMTOOLS_PROG}" DESTINATION "${THIS_LIBEXECDIR}")
 
@@ -87,12 +87,12 @@ add_custom_command(
 
 install_python_lib_dir("${PYFLOW_DIR}/src" "${THIS_PYTHON_LIBDIR}/pyflow")
 
-add_custom_target(STARKA_PYFLOW DEPENDS "${PYFLOW_SCRIPT}")
+add_custom_target(THIS_PYFLOW DEPENDS "${PYFLOW_SCRIPT}")
 
 
 # tie results back to parent:
 #
-add_dependencies(MANTA_OPT MANTA_SAMTOOLS MANTA_TABIX MANTA_PYFLOW)
+add_dependencies(THIS_OPT THIS_SAMTOOLS THIS_PYFLOW)
 
 
 #
