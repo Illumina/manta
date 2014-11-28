@@ -59,12 +59,12 @@ include ("${THIS_MACROS_CMAKE}")
 static_find_library(ZLIB zlib.h z)
 if    (HAVE_ZLIB)
     set  (THIS_ADDITIONAL_LIB ${THIS_ADDITIONAL_LIB} z)
-    message(STATUS "gzip compression supported")
+    message(STATUS "Gzip compression supported")
 else  ()
     message(FATAL_ERROR "No support for gzip compression")
 endif ()
 
-# samtools 0.2.x forces pthreads in link:
+# samtools 1.x forces pthreads in link:
 find_package( Threads )
 
 
@@ -102,26 +102,26 @@ set(min_intel_version "12.0") # guestimate based on intel support documentation
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     get_compiler_version(compiler_version)
     test_min_compiler(${compiler_version} "${min_gxx_version}" "g++")
-    message (STATUS "using compiler: g++ version ${compiler_version}")
+    message (STATUS "Using compiler: g++ version ${compiler_version}")
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     get_clang_version(compiler_version)
     test_min_compiler(${compiler_version} "${min_clang_version}" "clang++")
-    message (STATUS "using compiler: clang++ version ${compiler_version}")
+    message (STATUS "Using compiler: clang++ version ${compiler_version}")
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
     get_compiler_version(compiler_version)
     test_min_compiler(${compiler_version} "${min_intel_version}" "icpc")
-    message (STATUS "using compiler: Intel version ${compiler_version}")
+    message (STATUS "Using compiler: Intel version ${compiler_version}")
 
     # for intel we also need to test the minimum version of g++ currently
     # in the path (because this is the stdc++ library that # intel will use):
     get_compiler_name_version("g++" gxx_compiler_version)
     test_min_compiler(${gxx_compiler_version} "${min_gxx_version}" "g++ libstdc++ (library used by icpc)")
-    message (STATUS "using libstdc++: gnu version ${gxx_compiler_version}")
+    message (STATUS "Using libstdc++: gnu version ${gxx_compiler_version}")
 
 else ()
-    message (STATUS "using compiler: ${CMAKE_CXX_COMPILER_ID}")
+    message (STATUS "Using compiler: ${CMAKE_CXX_COMPILER_ID}")
 endif ()
 
 
@@ -241,7 +241,7 @@ if (GNU_COMPAT_COMPILER)
     endif ()
 
     if(${IS_WERROR})
-        message (STATUS "building in developer mode: treating compiler warnings as errors")
+        message (STATUS "Building in developer mode: treating compiler warnings as errors")
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
     endif ()
   endif ()
