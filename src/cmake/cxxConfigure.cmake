@@ -67,6 +67,31 @@ endif ()
 # samtools 1.x forces pthreads in link:
 find_package( Threads )
 
+# setup ccache if found in path
+find_program(CCACHE_PATH ccache)
+set (IS_CCACHE TRUE)
+if (CCACHE_PATH STREQUAL "CCACHE_PATH-NOTFOUND")
+    set (IS_CCACHE FALSE)
+endif()
+
+if (${IS_CCACHE})
+    message (STATUS "Found ccache: ${CCACHE_PATH}")
+    SET_PROPERTY(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ${CCACHE_PATH})
+    SET_PROPERTY(GLOBAL PROPERTY RULE_LAUNCH_LINK ${CCACHE_PATH})
+
+    # special logic to get clang and ccache working together (suggestion from http://petereisentraut.blogspot.com/2011/09/ccache-and-clang-part-2.html):
+    set(ENV{CCACHE_CPP2} "yes")
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Qunused-arguments")
+    endif()
+    if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
+        set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Qunused-arguments")
+    endif()
+
+else()
+    message (STATUS "No ccache found")
+endif()
+
 
 # Force static linking
 set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
