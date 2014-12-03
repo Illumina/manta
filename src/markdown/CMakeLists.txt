@@ -33,7 +33,7 @@ add_custom_command(
     OUTPUT ${MUL}
     COMMAND ${HOEDOWN_PROG} ${CMAKE_CURRENT_BINARY_DIR}/${MUG} > ${MUL}
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${MUG}
-    DEPENDS MANTA_MARKDOWN
+    DEPENDS THIS_MARKDOWN
     COMMENT "Converting user guide to html")
 
 add_custom_target(MANTA_USERGUIDE ALL DEPENDS ${MUL})

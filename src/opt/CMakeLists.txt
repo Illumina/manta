@@ -108,5 +108,5 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E tar xjf "${THIS_REDIST_DIR}/${HOEDOWN_PREFIX}.tar.bz2"
     COMMAND $(MAKE) -C "${HOEDOWN_DIR}"
     COMMENT "Building hoedown markdown parser")
-add_custom_target(MANTA_MARKDOWN DEPENDS "${HOEDOWN_PROG}")
+add_custom_target(THIS_MARKDOWN DEPENDS "${HOEDOWN_PROG}")
 
