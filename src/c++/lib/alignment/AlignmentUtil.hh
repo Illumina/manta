@@ -79,7 +79,7 @@ getAlignEndOffset(
 //isConsistentAlignment(const JumpAlignmentResult<int>& res, const unsigned minAlignContext = 0);
 
 
-/// extend the somatic contig by padding the flanking regions of the aligned reference regions on each end
+/// extend the contig by padding the flanking regions of the aligned reference regions on each end
 void
 getExtendedContig(
     const JumpAlignmentResult<int>& align,

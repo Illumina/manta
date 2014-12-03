@@ -391,7 +391,7 @@ evaluateCandidate(
     const bool isComplex(isComplexSV(mjCandidateSV));
     _edgeTracker.addCand(isComplex);
 
-    /// assemble each junction independently:
+    // assemble each junction independently:
     bool isAnySmallAssembler(false);
     std::vector<SVCandidateAssemblyData> mjAssemblyData(junctionCount);
 

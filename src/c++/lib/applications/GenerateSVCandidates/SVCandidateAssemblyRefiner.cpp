@@ -1114,17 +1114,42 @@ getJumpAssembly(
     }
 #endif
 
-    // how much additional reference sequence should we extract from around
-    // each side of the breakend region for alignment purposes?
+    // This determines by how much we extend the reference sequence
+    // around the breakend region for all discovery and scoring
+    // operations. It is possible to discover breakends and small
+    // indels in this expanded region.
+    //
     const pos_t extraRefEdgeSize(isRNA ? 5000 : 250);
 
-    // how much reference should we additionally extract for split read alignment, but not for variant-discovery alignment?
+    // This determines by how much we extend the reference sequence
+    // around the breakend region for all operations except alignment
+    // of the contig back to the reference.
+    //
+    // The primary motivation for this value is to improve our ability
+    // to find reads which support the breakend when quality scoring
+    // takes place (a subsequent step outside of this function), but
+    // without expanding the regions where a breakend can possibly be
+    // found (ie. without the risk of additional false positives)
+    //
+    // The extra reference sequence is used for:
+    // - Extraction of breakend associated reads (reference sequence
+    // used to find reads which poorly match the reference in this
+    // case)
+    // - Contig extension after alignment, this means that the
+    // extended region will be used for read support scoring (later
+    // during Q-value generation)
+    //
+    // The extra reference sequence is removed for:
+    // - contig alignment, this means that actual breakpoint discovery
+    // - will not occur in the extended region
+    //
     const pos_t extraRefSplitSize(isRNA ? 250 : 100); // TODO: is this RNA switch really intentional??
 
-    static const pos_t extraRefSize(extraRefEdgeSize+extraRefSplitSize);
+    const pos_t extraRefSize(extraRefEdgeSize+extraRefSplitSize);
 
-    // if the breakends have a simple insert/delete orientation and the alignment regions overlap, then handle this case as
-    // a local assembly problem:
+    // if the breakends have a simple insert/delete orientation and
+    // the alignment regions overlap, then handle this case as a local
+    // assembly problem:
     if (sv.bp1.interval.tid == sv.bp2.interval.tid)
     {
         if (! SVBreakendState::isSameOrientation(sv.bp1.state,sv.bp2.state))
@@ -1157,7 +1182,8 @@ getJumpAssembly(
     bporient.isBp1First = sv.isForward();
 
     //
-    // based on sv candidate, we classify the expected relationship between the contig and the sv breakends:
+    // based on sv candidate, we classify the expected relationship
+    // between the contig and the sv breakends:
     //
     if (sv.bp1.state != sv.bp2.state)
     {
@@ -1189,12 +1215,21 @@ getJumpAssembly(
         }
     }
 
-    /// there's always a small chance that our region could fall completely off the edge of the reference
-    /// b/c of circular chromosomes, this can't be treated as a bug -- it's a legitimate breakend hypothesis
-    /// that we just aren't setup to handle correctly, so we punt this case:
+    // there's always a small chance that our region could fall
+    // completely off the edge of the reference b/c of circular
+    // chromosomes, this can't be treated as a bug -- it's a
+    // legitimate breakend hypothesis that we just aren't setup to
+    // handle correctly, so we punt this case:
     if (! isRefRegionValid(_header, sv.bp1.interval)) return;
     if (! isRefRegionValid(_header, sv.bp2.interval)) return;
 
+    // next we extract the reference sequence around both breakends
+    //
+    // the 'trim' values below refer to the difference between the
+    // breakend reference region requested and the region returned
+    // after accounting for chromosome edges. The trim values will
+    // almost always be zero for large chromosomes.
+    //
     unsigned bp1LeadingTrim;
     unsigned bp1TrailingTrim;
     unsigned bp2LeadingTrim;
@@ -1204,12 +1239,14 @@ getJumpAssembly(
         assemblyData.bp1ref, assemblyData.bp2ref,
         bp1LeadingTrim, bp1TrailingTrim, bp2LeadingTrim, bp2TrailingTrim);
 
+    // the 'cut' values below represent sequence which will be removed
+    // from the edges of the reference region for each breakend.
     pos_t align1LeadingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(bp1LeadingTrim)));
     pos_t align1TrailingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(bp1TrailingTrim)));
     pos_t align2LeadingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(bp2LeadingTrim)));
     pos_t align2TrailingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(bp2TrailingTrim)));
 
-    // assemble contig spanning the breakend:
+    // assemble contig(s) spanning the breakend:
     _spanningAssembler.assembleSVBreakends(
         sv.bp1, sv.bp2,
         bporient.isBp1Reversed, bporient.isBp2Reversed,
@@ -1259,7 +1296,8 @@ getJumpAssembly(
     }
 #endif
 
-    // make sure an alignment object exists for every contig, even if it's empty:
+    // make sure an alignment object exists for every contig, even if
+    // it's empty:
     assemblyData.spanningAlignments.resize(contigCount);
 
     bool isHighScore(false);
@@ -1278,8 +1316,8 @@ getJumpAssembly(
         if (_opt.isRNA)
         {
             bporient.isBp1First = !bporient.isBp1First; // RNA-seq reads generate candidates in the opposite direction of the RNA
-            bool bp1Fw = (bporient.isBp1Reversed != bporient.isBp1First);
-            bool bp2Fw = (bporient.isBp2Reversed != bporient.isBp1First);
+            const bool bp1Fw = (bporient.isBp1Reversed != bporient.isBp1First);
+            const bool bp2Fw = (bporient.isBp2Reversed != bporient.isBp1First);
 #ifdef DEBUG_REFINER
             log_os << logtag << "bp1Fw: " << bp1Fw << " ; bp2Fw: " << bp2Fw << '\n';
 #endif
@@ -1340,35 +1378,44 @@ getJumpAssembly(
     log_os << logtag << "high scoring contig: " << highScoreIndex << "\n";
 #endif
 
-    // set any additional QC steps before deciding an alignment is usable:
+    // set any additional QC steps before deciding an alignment is
+    // usable:
 
-    // check the min size and fraction of optimal score for each sub-alignment:
     {
+        // check the min size and fraction of optimal alignment score
+        // for each of the two sub-alignments on each side of the bp
+        //
+        // note this is done for multiple values -- the lower value is
+        // motivated by cases where a second breakpoint exists near to
+        // the target breakpoint -- the higher value is motivated by
+        // cases with some alignment 'messiness' near the breakpoint
+        // that stabilizes as we move farther away
+        //
+        /// TODO change iterative refspan to a single consistent alignment criteria
+        //
         const SVCandidateAssemblyData::JumpAlignmentResultType& hsAlign(assemblyData.spanningAlignments[highScoreIndex]);
 
         bool isFilter(true);
-        const unsigned maxQCRefSpan[] = {100,200};
-        for (unsigned refSpanIndex(0); refSpanIndex<2; ++refSpanIndex)
+        for (const unsigned maxQCRefSpan : {100,200})
         {
-            if (isFilterSpanningAlignment( maxQCRefSpan[refSpanIndex], _spanningAligner, true, isRNA, hsAlign.align1.apath)) continue;
-            if (isFilterSpanningAlignment( maxQCRefSpan[refSpanIndex], _spanningAligner, false, isRNA, hsAlign.align2.apath)) continue;
+            if (isFilterSpanningAlignment( maxQCRefSpan, _spanningAligner, true, isRNA, hsAlign.align1.apath)) continue;
+            if (isFilterSpanningAlignment( maxQCRefSpan, _spanningAligner, false, isRNA, hsAlign.align2.apath)) continue;
             isFilter=false;
         }
         if (isFilter) return;
     }
 
-    // TODO: min context, etc.
 
-
-    // ok, passed QC -- mark the high-scoring alignment as usable for hypothesis refinement:
+    // ok, passed QC -- mark the high-scoring alignment as usable for
+    // hypothesis refinement:
     {
         assemblyData.bestAlignmentIndex = highScoreIndex;
 #ifdef DEBUG_REFINER
         log_os << logtag << "highscoreid: " << highScoreIndex << " alignment: " << assemblyData.spanningAlignments[highScoreIndex];
 #endif
 
-        // process the alignment into information that's easily usable in the vcf output
-        // (ie. breakends in reference coordinates)
+        // process the alignment into information that's easily usable
+        // in the vcf output (ie. breakends in reference coordinates)
 
         const AssembledContig& bestContig(assemblyData.contigs[assemblyData.bestAlignmentIndex]);
         const SVCandidateAssemblyData::JumpAlignmentResultType& bestAlign(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex]);
@@ -1379,7 +1426,8 @@ getJumpAssembly(
 
         if (bporient.isBp2AlignedFirst) std::swap(bp1AlignPtr, bp2AlignPtr);
 
-        // summarize usable output information in a second SVBreakend object -- this is the 'refined' sv:
+        // summarize usable output information in a second SVBreakend
+        // object -- this is the 'refined' sv:
         assemblyData.svs.push_back(sv);
         SVCandidate& newSV(assemblyData.svs.back());
         newSV.assemblyAlignIndex = assemblyData.bestAlignmentIndex;
@@ -1422,11 +1470,16 @@ getSmallSVAssembly(
 
     assemblyData.isSpanning = false;
 
-    // how much additional reference sequence should we extract from around
-    // each side of the breakend region?
+    // how much additional reference sequence should we extract from
+    // around each side of the breakend region?
+    //
+    // see extended description in getJumpAssembly
     static const pos_t extraRefEdgeSize(700);
 
-    // how much reference should we additionally extract for split read alignment, but not for variant-discovery alignment?
+    // how much reference should we additionally extract for split
+    // read alignment, but not for variant-discovery alignment?
+    //
+    // see extended description in getJumpAssembly
     static const pos_t extraRefSplitSize(100);
 
     static const pos_t extraRefSize(extraRefEdgeSize+extraRefSplitSize);
@@ -1439,16 +1492,19 @@ getSmallSVAssembly(
     // min alignment context
     //const unsigned minAlignContext(4);
 
-    /// there's always a small chance that our region could fall completely off the edge of the reference.
-    /// b/c of circular genomes, this can't be treated as a bug -- it's a legitimate breakend hypothesis
-    /// that we just aren't setup to handle correctly:
+    // there's always a small chance that our region could fall
+    // completely off the edge of the reference.  b/c of circular
+    // genomes, this can't be treated as a bug -- it's a legitimate
+    // breakend hypothesis that we just aren't setup to handle
+    // correctly:
     if (! isRefRegionValid(_header, sv.bp1.interval)) return;
 
     unsigned leadingTrim;
     unsigned trailingTrim;
     getIntervalReferenceSegment(_opt.referenceFilename, _header, extraRefSize, sv.bp1.interval, assemblyData.bp1ref, leadingTrim, trailingTrim);
 
-    /// in most cases, these values should equal extraRefSplitSize, sometimes they're forced to be shorter:
+    // in most cases, these values should equal extraRefSplitSize,
+    // sometimes they're forced to be shorter:
     const pos_t leadingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(leadingTrim)));
     const pos_t trailingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(trailingTrim)));
 
@@ -1476,7 +1532,8 @@ getSmallSVAssembly(
     }
 #endif
 
-    // make sure an alignment object exists for every contig, even if it's empty:
+    // make sure an alignment object exists for every contig, even if
+    // it's empty:
     assemblyData.smallSVAlignments.resize(contigCount);
     assemblyData.smallSVSegments.resize(contigCount);
     assemblyData.largeInsertInfo.resize(contigCount);
@@ -1503,17 +1560,20 @@ getSmallSVAssembly(
 #endif
 
 
-        // try out two different aligners, one optimized to find large events and one optimized to find
-        // smaller events, only look for small events if the large event search fails:
+        // try out two different aligners, one optimized to find large
+        // events and one optimized to find smaller events, only look
+        // for small events if the large event search fails:
         SVCandidateAssemblyData::SmallAlignmentResultType& alignment(assemblyData.smallSVAlignments[contigIndex]);
         std::string& extendedContig(assemblyData.extendedContigs[contigIndex]);
         std::vector<std::pair<unsigned,unsigned> >& candidateSegments(assemblyData.smallSVSegments[contigIndex]);
         candidateSegments.clear();
 
-        // remove candidate from consideration unless we find a sufficiently large indel with good flanking sequence:
+        // remove candidate from consideration unless we find a
+        // sufficiently large indel with good flanking sequence:
         bool isSmallSVCandidate(false);
 
-        /// start with largeSV aligner (currently restricted to insertion only:
+        /// start with largeSV aligner (currently restricted to
+        /// insertion only:
         {
             _largeSVAligner.align(
                 contig.seq.begin(), contig.seq.end(),
@@ -1524,16 +1584,16 @@ getSmallSVAssembly(
             getExtendedContig(alignment, contig.seq, align1RefStr, extendedContig);
 
 
-            // trial two different flanking test sizes, this way we account for multiple neighboring noise scenarios
+            // trial two different flanking test sizes, this way we
+            // account for multiple neighboring noise scenarios
             //
-            const unsigned maxQCRefSpan[] = {100,200};
-            for (unsigned refSpanIndex(0); refSpanIndex<2; ++refSpanIndex)
+            for (const unsigned maxQCRefSpan : {100,200})
             {
                 static const bool isInsertionOnly(true);
 
                 std::vector<std::pair<unsigned,unsigned> > segments;
                 const bool isCandidate( isSmallSVAlignment(
-                                            maxQCRefSpan[refSpanIndex],
+                                            maxQCRefSpan,
                                             _largeSVAligner,
                                             alignment.align,
                                             contig.seq,
@@ -1573,14 +1633,14 @@ getSmallSVAssembly(
             alignment.align.beginPos += leadingCut;
             getExtendedContig(alignment, contig.seq, align1RefStr, extendedContig);
 
-            // trial two different flanking test sizes, this way we account for multiple neighboring noise scenarios
+            // trial two different flanking test sizes, this way we
+            // account for multiple neighboring noise scenarios
             //
-            const unsigned maxQCRefSpan[] = {100,200};
-            for (unsigned refSpanIndex(0); refSpanIndex<2; ++refSpanIndex)
+            for (const unsigned maxQCRefSpan : {100,200})
             {
                 std::vector<std::pair<unsigned,unsigned> > segments;
                 const bool isCandidate( isSmallSVAlignment(
-                                            maxQCRefSpan[refSpanIndex],
+                                            maxQCRefSpan,
                                             _smallSVAligner,
                                             alignment.align,
                                             contig.seq,
@@ -1590,7 +1650,8 @@ getSmallSVAssembly(
 
                 if (isCandidate)
                 {
-                    // in case both ref spans are accepted take the one with the larger segment count:
+                    // in case both ref spans are accepted take the
+                    // one with the larger segment count:
                     if (segments.size() > candidateSegments.size())
                     {
                         candidateSegments = segments;
@@ -1607,9 +1668,11 @@ getSmallSVAssembly(
         }
 
 
-        // test each alignment for suitability to be the left or right side of a large insertion:
+        // test each alignment for suitability to be the left or right
+        // side of a large insertion:
         //
-        // all practical combinations of left and right candidates will be enumerated below to see if there's a good fit:
+        // all practical combinations of left and right candidates
+        // will be enumerated below to see if there's a good fit:
         //
         if (isFindLargeInsertions)
         {
@@ -1633,7 +1696,8 @@ getSmallSVAssembly(
 
             if (isCandidate)
             {
-                // if passed, then get corrected insertInfo without using conservativeRange:
+                // if passed, then get corrected insertInfo without
+                // using conservativeRange:
                 LargeInsertionInfo insertInfo2;
                 isCandidate = isLargeInsertAlignment(
                                   _largeInsertEdgeAligner,
@@ -1706,7 +1770,8 @@ getSmallSVAssembly(
     }
 
 #ifdef ITERATIVE_ASSEMBLER
-    // select the contig with the larger indel size between the two highest-scoring contigs
+    // select the contig with the larger indel size between the two
+    // highest-scoring contigs
     if (isSecHighScore)
     {
         const unsigned highScoreSuppReads = assemblyData.contigs[highScoreIndex].supportReads.size();
@@ -1740,8 +1805,8 @@ getSmallSVAssembly(
         log_os << logtag << "highscoreid: " << highScoreIndex << " alignment: " << assemblyData.smallSVAlignments[highScoreIndex];
 #endif
 
-        // process the alignment into information that's easily usable in the vcf output
-        // (ie. breakends in reference coordinates)
+        // process the alignment into information that's easily usable
+        // in the vcf output (ie. breakends in reference coordinates)
 
         const AssembledContig& bestContig(assemblyData.contigs[assemblyData.bestAlignmentIndex]);
         const SVCandidateAssemblyData::SmallAlignmentResultType& bestAlign(assemblyData.smallSVAlignments[assemblyData.bestAlignmentIndex]);
@@ -1759,7 +1824,8 @@ getSmallSVAssembly(
             setSmallCandSV(assemblyData.bp1ref, bestContig.seq, bestAlign.align, segRange, newSV);
             segmentIndex++;
 
-            // provide a weak filter to keep fully and partially assembled duplicates of the same event from occurring:
+            // provide a weak filter to keep fully and partially
+            // assembled duplicates of the same event from occurring:
             if (getExtendedSVType(newSV) == EXTENDED_SV_TYPE::INSERT)
             {
                 insPos.insert(newSV.bp1.interval.range.begin_pos());
@@ -1784,11 +1850,15 @@ getSmallSVAssembly(
         }
     }
 
-    /// search for large deletions with incomplete insertion sequence assembly:
+    /// search for large deletions with incomplete insertion sequence
+    /// assembly:
     {
-        // In case of no fully-assembled candidate, solve for any strong large insertion candidate
+        // In case of no fully-assembled candidate, solve for any
+        // strong large insertion candidate
         //
-        // This is done by searching through combinations of the left and right insertion side candidates found in the primary contig processing loop
+        // This is done by searching through combinations of the left
+        // and right insertion side candidates found in the primary
+        // contig processing loop
         if (isFindLargeInsertions)
         {
             processLargeInsertion(sv, leadingCut, trailingCut, _largeInsertCompleteAligner, largeInsertionCandidateIndex, insPos, assemblyData);

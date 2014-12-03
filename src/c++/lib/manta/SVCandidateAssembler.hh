@@ -86,11 +86,13 @@ struct SVCandidateAssembler
 private:
     typedef std::shared_ptr<bam_streamer> streamPtr;
 
-    /// Collects the reads crossing an SV breakpoint and adds them to reads
+    /// Collect reads crossing an SV breakpoint and add them to 'reads'
     ///
     /// \param[in] isReversed if true revcomp all reads on input
+    /// \param[in] refSeq this is used to find reads which have poorly aligned ends, such reads are added to the breakend assembly pool
     /// \param[in] isSearchRemoteInsertionReads if true search the remote end of chimeric pairs for MAPQ0 insertion support
     /// \param[out] remoteReadsCache stores any discovered remote reads so that these can be reused during scoring
+    /// \param[out] reads collected breakend assembly candidate reads
     void
     getBreakendReads(
         const SVBreakend& bp,
