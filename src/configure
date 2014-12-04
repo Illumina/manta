@@ -56,18 +56,21 @@ Some influential environment variables:
   BOOST_ROOT       root location of the boost library and headers
   CC               C compiler command
   CXX              C++ compiler command
-  CXXFLAGS         C++ compiler flags
-  LDFLAGS          linker flags, e.g. -L<lib dir> if you have libraries in a
-                   nonstandard directory <lib dir>
-  CPPFLAGS         C/C++ preprocessor flags, e.g. -I<include dir> if you have
-                   headers in a nonstandard directory <include dir>
-  CMAKE_OPTIONS    CMake command line options
 
 Use these variables to override the choices made by 'configure' or to help
-it to find libraries and programs with nonstandard names/locations.
+it to find libraries and programs with nonstandard names/locations. Typically
+CC and CXX must be provided together to refer to the c and c++ front-ends of
+the same compiler to ensure a successful build.
 
 EOF
     exit 2
+
+#  CXXFLAGS         C++ compiler flags
+#  LDFLAGS          linker flags, e.g. -L<lib dir> if you have libraries in a
+#                   nonstandard directory <lib dir>
+#  CPPFLAGS         C/C++ preprocessor flags, e.g. -I<include dir> if you have
+#                   headers in a nonstandard directory <include dir>
+#  CMAKE_OPTIONS    CMake command line options
 }
 
 

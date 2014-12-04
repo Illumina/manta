@@ -23,22 +23,27 @@
 ##
 ## build the documentation when available
 ##
-set (MUP "mantaUserGuide")
-set (MUG "${MUP}.md")
-set (MUL "${CMAKE_CURRENT_BINARY_DIR}/${MUP}.html")
 
-configure_files (${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${MUG})
+function(process_user_guide name)
+    set (UG "${name}.md")
+    set (UL "${CMAKE_CURRENT_BINARY_DIR}/${name}.html")
 
-add_custom_command(
-    OUTPUT ${MUL}
-    COMMAND ${HOEDOWN_PROG} ${CMAKE_CURRENT_BINARY_DIR}/${MUG} > ${MUL}
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${MUG}
-    DEPENDS THIS_MARKDOWN
-    COMMENT "Converting user guide to html")
+    configure_files (${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${UG})
 
-add_custom_target(MANTA_USERGUIDE ALL DEPENDS ${MUL})
+    add_custom_command(
+        OUTPUT ${UL}
+        COMMAND ${HOEDOWN_PROG} ${CMAKE_CURRENT_BINARY_DIR}/${UG} > ${UL}
+        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${UG}
+        DEPENDS ${THIS_MARKDOWN}
+        COMMENT "Converting ${name} to html")
 
-install(FILES ${MUL} DESTINATION ${THIS_DOCDIR}/html)
+    add_custom_target(${THIS_PROJECT_NAME}_${name} ALL DEPENDS ${UL})
+
+    install(FILES ${UL} DESTINATION ${THIS_DOCDIR}/html)
+endfunction()
+
+process_user_guide("mantaUserGuide")
+
 install(FILES "userGuide.css" DESTINATION ${THIS_DOCDIR}/html)
 install(FILES "tableOfContents.js" DESTINATION ${THIS_DOCDIR}/html)
 

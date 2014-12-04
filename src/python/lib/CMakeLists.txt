@@ -40,7 +40,8 @@ add_custom_command(
     COMMAND ${PYTHON_EXECUTABLE} -m compileall -q ${PYSTAGE_DIR}
     COMMENT "Compiling python library source")
 
-add_custom_target(MANTA_PYTHONLIB_COMPILE ALL DEPENDS ${STAGED_PYTHONC_FILES})
+set(THIS_PYTHONLIB_COMPILE "${THIS_PROJECT_NAME}_pythonlib_compile")
+add_custom_target(${THIS_PYTHONLIB_COMPILE} ALL DEPENDS ${STAGED_PYTHONC_FILES})
 
 
 #

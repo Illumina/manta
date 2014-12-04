@@ -42,9 +42,10 @@ add_custom_command(
     COMMENT "Running c++ static analyzer")
 
 if(${DEVELOPER_MODE})
-    add_custom_target(THIS_CPPCHECK ALL DEPENDS cppcheck.done)
+    set(THIS_CPPCHECK "${THIS_PROJECT_NAME}_cppcheck")
+    add_custom_target(${THIS_CPPCHECK} ALL DEPENDS cppcheck.done)
 
-    add_dependencies(THIS_OPT THIS_CPPCHECK)
+    add_dependencies(${THIS_OPT} ${THIS_CPPCHECK})
 endif()
 
 ##
