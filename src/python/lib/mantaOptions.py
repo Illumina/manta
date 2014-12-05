@@ -43,14 +43,14 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
     def addWorkflowGroupOptions(self,group) :
         group.add_option("--referenceFasta",type="string",metavar="FILE",
                          help="samtools-indexed reference fasta file [required]")
-        group.add_option("--runDir", type="string",
+        group.add_option("--runDir", type="string",metavar="DIR",
                          help="Run script and run output will be written to this directory [required] (default: %default)")
 
     def addExtendedGroupOptions(self,group) :
-        group.add_option("--scanSizeMb", type="int", metavar="scanSizeMb",
-                         help="Maximum sequence region size (in Mb) scanned by each task during "
+        group.add_option("--scanSizeMb", type="int", metavar="INT",
+                         help="Maximum sequence region size (in megabases) scanned by each task during "
                          "SV Locus graph generation. (default: %default)")
-        group.add_option("--region", type="string",dest="regionStrList",metavar="samtoolsRegion", action="append",
+        group.add_option("--region", type="string",dest="regionStrList",metavar="REGION", action="append",
                          help="Limit the analysis to a region of the genome for debugging purposes. "
                               "If this argument is provided multiple times all specified regions will "
                               "be analyzed together. All regions must be non-overlapping to get a "

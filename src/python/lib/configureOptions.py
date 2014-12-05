@@ -87,7 +87,7 @@ class ConfigureWorkflowOptions(object) :
 
     # public methods:
 
-    def getRunOptions(self, primary_section, version = None) :
+    def getRunOptions(self, primary_section, version = None, configHelp=None) :
         """
         primary client code interface to the finished product.
         do not override this method
@@ -123,7 +123,8 @@ class ConfigureWorkflowOptions(object) :
         #localConfigPath=os.path.join(os.path.abspath('.'),configFileName)
         #updateIniSections(iniSections,getIniSections(localConfigPath))
 
-        parser=self._getOptionParser(iniSections[primary_section],configFileName, cmdlineScriptDir, version=version)
+        parser=self._getOptionParser(iniSections[primary_section],configFileName, cmdlineScriptDir,
+                                     version=version, configHelp=configHelp)
         (options,args) = parser.parse_args()
 
         if options.userConfigPath :
@@ -133,12 +134,14 @@ class ConfigureWorkflowOptions(object) :
             updateIniSections(iniSections,getIniSections(options.userConfigPath))
 
             # reparse with updated default values:
-            parser=self._getOptionParser(iniSections[primary_section],configFileName, cmdlineScriptDir, version=version)
+            parser=self._getOptionParser(iniSections[primary_section],configFileName, cmdlineScriptDir,
+                                         version=version, configHelp=configHelp)
             (options,args) = parser.parse_args()
 
         if options.isAllHelp :
             # this second call to getOptionParser is only here to provide the extended help option:
-            parser=self._getOptionParser(iniSections[primary_section],configFileName, cmdlineScriptDir, True, version=version)
+            parser=self._getOptionParser(iniSections[primary_section],configFileName, cmdlineScriptDir, True,
+                                         version=version, configHelp=configHelp)
             parser.print_help()
             sys.exit(2)
 
@@ -168,7 +171,7 @@ class ConfigureWorkflowOptions(object) :
 
     # private methods:
 
-    def _getOptionParser(self, defaults,configFileName, globalConfigDir,isAllHelp=False, version=None) :
+    def _getOptionParser(self, defaults,configFileName, globalConfigDir, isAllHelp=False, version=None, configHelp=None) :
         from optparse import OptionGroup, OptionParser, SUPPRESS_HELP
 
         description=self.workflowDescription()+"""
@@ -195,9 +198,12 @@ sge and resume any interrupted execution.
 
         parser.set_defaults(**defaults)
 
-        parser.add_option("--config", dest="userConfigPath",type="string",
-                          help="provide a configuration file to override defaults in global config file (%s)" % (globalConfigFile))
+        defaultConfigHelp="provide a configuration file to override defaults in global config file (%s)" % (globalConfigFile)
+        if configHelp is None :
+            configHelp = defaultConfigHelp
 
+        parser.add_option("--config", dest="userConfigPath",type="string",
+                          help=configHelp)
         parser.add_option("--allHelp", action="store_true",dest="isAllHelp",
                           help="show all extended/hidden options")
 
