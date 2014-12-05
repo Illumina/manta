@@ -301,10 +301,24 @@ def getNextGenomeSegment(params) :
     generator which iterates through all genomic segments and
     returns a segmentValues object for each one.
     """
+    MEGABASE = 1000000
+    scanSize = params.scanSizeMb * MEGABASE
+
     if params.genomeRegionList is None :
-        for segval in getChromIntervals(params.chromOrder,params.chromSizes,params.scanSize) :
+        for segval in getChromIntervals(params.chromOrder,params.chromSizes, scanSize) :
             yield GenomeSegment(*segval)
     else :
         for genomeRegion in params.genomeRegionList :
-            for segval in getChromIntervals(params.chromOrder,params.chromSizes,params.scanSize, genomeRegion) :
+            for segval in getChromIntervals(params.chromOrder,params.chromSizes, scanSize, genomeRegion) :
                 yield GenomeSegment(*segval)
+
+
+
+def cleanPyEnv() :
+    """
+    clear out some potentially destabilizing env variables:
+    """
+    clearList = [ "PYTHONPATH", "PYTHONHOME"]
+    for key in clearList :
+        if key in os.environ :
+            del os.environ[key]

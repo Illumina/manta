@@ -40,6 +40,17 @@ def argToBool(x) :
 
 
 
+def safeSetBool(obj,dataname) :
+    """
+    translate ojb.dataname to a bool, or set to false if it doesn't exist
+    """
+    if hasattr(obj, dataname) :
+        setattr(obj, dataname, argToBool(getattr(obj, dataname)))
+    else :
+        setattr(obj, dataname, False)
+
+
+
 def pickleConfigSections(pickleConfigFile, configSections) :
     """
     write configSections object, expected to be a hash or hashes, into a pickle file

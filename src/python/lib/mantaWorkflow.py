@@ -30,7 +30,7 @@ sys.path.append(os.path.abspath(pyflowDir))
 
 from pyflow import WorkflowRunner
 from workflowUtil import checkFile, ensureDir, preJoin, which, \
-                         getNextGenomeSegment, getFastaChromOrderSize
+                         getNextGenomeSegment, getFastaChromOrderSize, cleanPyEnv
 
 from configureUtil import getIniSections,dumpIniSections
 
@@ -363,11 +363,7 @@ class MantaWorkflow(WorkflowRunner) :
 
     def __init__(self,params,iniSections) :
 
-        # clear out some potentially destabilizing env variables:
-        clearList = [ "PYTHONPATH", "PYTHONHOME"]
-        for key in clearList :
-            if key in os.environ :
-                del os.environ[key]
+        cleanPyEnv()
 
         self.params=params
         self.iniSections=iniSections
@@ -404,11 +400,6 @@ class MantaWorkflow(WorkflowRunner) :
 
         # read fasta index
         (self.params.chromOrder,self.params.chromSizes) = getFastaChromOrderSize(indexRefFasta)
-
-        # sanity check some parameter typing:
-        MEGABASE = 1000000
-        self.params.scanSize = int(self.params.scanSizeMb) * MEGABASE
-        self.params.nonlocalWorkBins = int(self.params.nonlocalWorkBins)
 
         self.paths = PathInfo(self.params)
 
