@@ -778,7 +778,7 @@ extractReadGroupStatsFromBam(
 
                 // hack for broken DREAM data:
                 //if (isTumor)
-#if 0
+#if 1
                 {
                     rgInfo.addInsertSize(fragSize+50);
                     rgInfo.addInsertSize(fragSize+100);
