@@ -36,7 +36,7 @@ increment_path(const path_t& path,
 {
     const path_segment& ps(path[path_index]);
 
-    if       ((ps.type == MATCH) || (ps.type == SEQ_MATCH) || (ps.type == SEQ_MISMATCH))
+    if       (is_segment_align_match(ps.type))
     {
         read_offset += ps.length;
         ref_offset += ps.length;

@@ -25,37 +25,51 @@ namespace illumina
 namespace blt_util
 {
 
-/// parse TYPE from char* with several error checks, and advance
-/// pointer to end of TYPE input
+/// parse c-string to TYPE
+///
+/// tolerates a non-TYPE suffix, but a non-empty prefix must be parsable as a TYPE,
+/// on completion the value of s will reflect the extent of the parse
+///
+/// if available, specify s_end for minor performance improvement (in case of extremely large string)
 ///
 unsigned
-parse_unsigned(const char*& s);
+parse_unsigned(
+    const char*& s);
 
 int
-parse_int(const char*& s);
+parse_int(
+    const char*& s);
 
 long
-parse_long(const char*& s);
+parse_long(
+    const char*& s);
 
 double
-parse_double(const char*& s);
+parse_double(
+    const char*& s,
+    const char* s_end = nullptr);
 
 
 
-/// std::string version of above, no ptr advance obviously. explicit rename
-/// of functions guards against unexpected std::string temporaries
+/// parse std::string to TYPE
+///
+/// entire string must be convertible, no trailing suffix is allowed
 ///
 unsigned
-parse_unsigned_str(const std::string& s);
+parse_unsigned_str(
+    const std::string& s);
 
 int
-parse_int_str(const std::string& s);
+parse_int_str(
+    const std::string& s);
 
 long
-parse_long_str(const std::string& s);
+parse_long_str(
+    const std::string& s);
 
 double
-parse_double_str(const std::string& s);
+parse_double_str(
+    const std::string& s);
 
 
 

@@ -236,7 +236,7 @@ fwd_apath_to_export_md(path_t& apath,
             md.push_back('$');
 
         }
-        else if (pCIter->type == MATCH)
+        else if (is_segment_align_match(pCIter->type))
         {
 
             // handle match/mismatch
@@ -304,10 +304,8 @@ rev_apath_to_export_md(path_t& apath,
     path_t::const_reverse_iterator pCRIter;
     for (pCRIter = apath.rbegin(); pCRIter != apath.rend(); ++pCRIter)
     {
-
         if (pCRIter->type == DELETE)
         {
-
             // handle deletion
             md.push_back('^');
             for (uint32_t i = 0; i < pCRIter->length; ++i, --ref_bases)
@@ -319,7 +317,6 @@ rev_apath_to_export_md(path_t& apath,
         }
         else if (pCRIter->type == INSERT)
         {
-
             // handle insertion
             md.push_back('^');
             md += boost::lexical_cast<std::string>(pCRIter->length);
@@ -327,14 +324,12 @@ rev_apath_to_export_md(path_t& apath,
             md.push_back('$');
 
         }
-        else if (pCRIter->type == MATCH)
+        else if (is_segment_align_match(pCRIter->type))
         {
-
             // recreate the the match descriptor for this non-INDEL region
             uint32_t numMatchingBases = 0;
             for (uint32_t i = 0; i < pCRIter->length; ++i, --ref_bases, ++read_bases)
             {
-
                 // handle circular genome
                 if ((ref_bases < ref_begin) || (ref_bases > ref_end))
                 {
@@ -366,11 +361,9 @@ rev_apath_to_export_md(path_t& apath,
             {
                 md += boost::lexical_cast<std::string>(numMatchingBases);
             }
-
         }
         else
         {
-
             // handle unsupported CIGAR operation
             foundUnsupportedCigar = true;
             break;
@@ -391,12 +384,10 @@ apath_to_export_md(path_t& apath,
                    const bool is_fwd_strand,
                    std::string& md)
 {
-
     md.clear();
 
     if (is_fwd_strand)
     {
-
         const char* pRead      = read_bases.c_str();
         const char* pReference = ref_seq + ref_pos - 1;
         fwd_apath_to_export_md(apath, ref_seq, pReference, ref_end, pRead, md);
@@ -404,14 +395,12 @@ apath_to_export_md(path_t& apath,
     }
     else
     {
-
         uint32_t numRefBases = 0;
-        path_t::const_iterator pCIter;
-        for (pCIter = apath.begin(); pCIter != apath.end(); ++pCIter)
+        for (const auto& ps : apath)
         {
-            if ((pCIter->type == MATCH) || (pCIter->type == DELETE))
+            if (is_segment_align_match(ps.type) || (ps.type == DELETE))
             {
-                numRefBases += pCIter->length;
+                numRefBases += ps.length;
             }
         }
 

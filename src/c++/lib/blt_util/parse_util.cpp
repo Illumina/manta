@@ -18,6 +18,8 @@
 #include "blt_util/blt_exception.hh"
 #include "blt_util/parse_util.hh"
 
+#include "boost/spirit/include/qi.hpp"
+
 #include <cerrno>
 #include <climits>
 #include <cstdlib>
@@ -44,7 +46,8 @@ namespace blt_util
 {
 
 unsigned
-parse_unsigned(const char*& s)
+parse_unsigned(
+    const char*& s)
 {
     static const int base(10);
 
@@ -71,11 +74,13 @@ parse_unsigned(const char*& s)
 
 
 unsigned
-parse_unsigned_str(const std::string& s)
+parse_unsigned_str(
+    const std::string& s)
 {
     const char* s2(s.c_str());
+    const char* const s2_end(s2+s.size());
     const unsigned val(parse_unsigned(s2));
-    if ((s2-s.c_str())!=static_cast<int>(s.length()))
+    if (s2 != s2_end)
     {
         parse_exception("unsigned",s.c_str());
     }
@@ -85,12 +90,14 @@ parse_unsigned_str(const std::string& s)
 
 
 int
-parse_int(const char*& s)
+parse_int(
+    const char*& s)
 {
     const char* endptr(s);
     const long val(parse_long(endptr));
 
-    if (val > std::numeric_limits<int>::max())
+    if ((val > std::numeric_limits<int>::max()) ||
+        (val < std::numeric_limits<int>::min()))
     {
         parse_exception("int",s);
     }
@@ -103,11 +110,13 @@ parse_int(const char*& s)
 
 
 int
-parse_int_str(const std::string& s)
+parse_int_str(
+    const std::string& s)
 {
     const char* s2(s.c_str());
+    const char* const s2_end(s2+s.size());
     const int val(parse_int(s2));
-    if ((s2-s.c_str())!=static_cast<int>(s.length()))
+    if (s2 != s2_end)
     {
         parse_exception("int",s.c_str());
     }
@@ -117,7 +126,8 @@ parse_int_str(const std::string& s)
 
 
 long
-parse_long(const char*& s)
+parse_long(
+    const char*& s)
 {
     static const int base(10);
 
@@ -139,11 +149,13 @@ parse_long(const char*& s)
 
 
 long
-parse_long_str(const std::string& s)
+parse_long_str(
+    const std::string& s)
 {
     const char* s2(s.c_str());
+    const char* const s2_end(s2+s.size());
     const long val(parse_long(s2));
-    if ((s2-s.c_str())!=static_cast<int>(s.length()))
+    if (s2 != s2_end)
     {
         parse_exception("long int",s.c_str());
     }
@@ -153,29 +165,35 @@ parse_long_str(const std::string& s)
 
 
 double
-parse_double(const char*& s)
+parse_double(
+    const char*& s,
+    const char* s_end)
 {
-    errno = 0;
-
-    char* endptr;
-    const double val(strtod(s, &endptr));
-    if ((errno == ERANGE) || (endptr == s))
+    double val;
+    const char* s_start(s);
+    if (s_end == nullptr) s_end=s+strlen(s);
+    bool isPass(boost::spirit::qi::parse(s, s_end, boost::spirit::double_, val));
+    if (isPass)
     {
-        parse_exception("double",s);
+        isPass = (s_start != s);
     }
-
-    s = endptr;
+    if (! isPass)
+    {
+        parse_exception("double",s_start);
+    }
     return val;
 }
 
 
 
 double
-parse_double_str(const std::string& s)
+parse_double_str(
+    const std::string& s)
 {
     const char* s2(s.c_str());
-    const double val(parse_double(s2));
-    if ((s2-s.c_str())!=static_cast<int>(s.length()))
+    const char* const s2_end(s2+s.size());
+    const double val(parse_double(s2,s2_end));
+    if (s2 != s2_end)
     {
         parse_exception("double",s.c_str());
     }

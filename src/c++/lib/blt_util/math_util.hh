@@ -55,6 +55,33 @@ log_sum(FloatType x1, FloatType x2)
 }
 
 
+// helper for median() below
+template <typename Iter>
+typename std::iterator_traits<Iter>::value_type
+_ne_median(
+    Iter begin,
+    Iter end)
+{
+    assert(begin != end);
+    const auto size(std::distance(begin,end));
+    std::nth_element(begin,begin+size/2, end);
+    return *(begin+size/2);
+}
+
+// helper for median() below
+template <typename Iter>
+typename std::iterator_traits<Iter>::value_type
+_ps_median(
+    Iter begin,
+    Iter end)
+{
+    assert(begin != end);
+    const auto size(std::distance(begin,end));
+    std::partial_sort(begin,begin+size/2+1, end);
+    return *(begin+size/2);
+}
+
+
 /// returns median, partially reorders elements in specified range
 ///
 template <typename Iter>
@@ -63,8 +90,13 @@ median(
     Iter begin,
     Iter end)
 {
-    assert(begin != end);
-    const auto size(std::distance(begin,end));
-    std::nth_element(begin,begin+size/2, end);
-    return *(begin+size/2);
+    // Dispatch median call so as to avoid common broken libstdc++ impl
+
+#ifndef BROKEN_NTH_ELEMENT
+    // this is the preferred way to do it, it is optionally disabled because of common gcc bug:
+    // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=58800
+    return _ne_median(begin,end);
+#else
+    return _ps_median(begin,end);
+#endif
 }

@@ -12,16 +12,18 @@
 //
 
 /// \file
-
 /// \author Chris Saunders
 ///
+
 #include "blt_util/binomial_test.hh"
 #include "blt_util/stat_util.hh"
 
 #include <boost/math/distributions/binomial.hpp>
+#include <boost/math/distributions/complement.hpp>
 
 using boost::math::binomial;
 using boost::math::cdf;
+using boost::math::complement;
 
 #include <algorithm>
 
@@ -73,6 +75,35 @@ is_reject_binomial_p_chi_sqr(const double alpha,
     return is_chi_sqr_reject(xsq,1,alpha);
 }
 
+bool
+is_reject_binomial_pval(const double threshold,
+                        const double p,
+                        const unsigned n_success,
+                        const unsigned n_trials)
+{
+    assert(threshold >= 0);
+
+    double observed_pval = get_binomial_pval(p, n_success, n_trials);
+
+    return (observed_pval <= threshold);
+}
+
+
+
+double
+get_binomial_pval(const double p,
+                  const unsigned n_success,
+                  const unsigned n_trials)
+{
+    //although technically binomial probabilities of
+    // 0 or 1 are possible, they don't have much meaning
+    assert((p >= 0.) && (p <= 1.));
+    assert(n_success <= n_trials);
+    if (n_success==0) return 1;
+
+    return cdf(complement(binomial(n_trials, p), n_success - 1));
+}
+
 
 
 bool
@@ -81,7 +112,6 @@ is_reject_binomial_p(const double alpha,
                      const unsigned n_success,
                      const unsigned n_failure)
 {
-
     static const unsigned exact_test_threshold(250);
 
     const unsigned n_trial(n_success+n_failure);

@@ -28,8 +28,9 @@
 
 
 void
-open_ifstream(std::ifstream& ifs,
-              const char* filename)
+open_ifstream(
+    std::ifstream& ifs,
+    const char* filename)
 {
     ifs.open(filename);
     if (! ifs)
@@ -38,4 +39,22 @@ open_ifstream(std::ifstream& ifs,
         oss << "ERROR: Can't open file: " << filename << "\n";
         throw blt_exception(oss.str().c_str());
     }
+}
+
+
+
+StreamScoper::
+StreamScoper(
+    std::ostream& os)
+    : _os(os), _tmp_os(new std::ofstream)
+{
+    _tmp_os->copyfmt(_os);
+}
+
+
+
+StreamScoper::
+~StreamScoper()
+{
+    _os.copyfmt(*_tmp_os);
 }
