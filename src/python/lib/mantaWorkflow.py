@@ -136,7 +136,7 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
         graphTasks.add(self.addTask(graphTaskLabel,graphCmd,dependencies=dirTask,memMb=self.params.estimateMemMb))
 
     if len(tmpGraphFiles) == 0 :
-        raise Exception("No SV Locus graphs created. Possible target region parse error.")
+        raise Exception("No SV Locus graphs to create. Possible target region parse error.")
 
     mergeCmd = [ self.params.mantaGraphMergeBin ]
     mergeCmd.extend(["--output-file", graphPath])
