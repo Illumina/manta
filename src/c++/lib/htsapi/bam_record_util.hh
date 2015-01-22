@@ -35,6 +35,15 @@ bool
 is_innie_pair(
     const bam_record& bam_read);
 
+/// detect cases where the dna fragment is likely to be shorter than read length
+///
+/// note this is an approximation because it's based on a single bam record, an
+/// exact answer would require both records in the pair. In practice, this should
+/// be good enough.
+bool
+is_possible_adapter_pair(
+    const bam_record& bam_read);
+
 /// return average basecall qscore for this read
 unsigned
 get_avg_quality(

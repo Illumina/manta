@@ -61,6 +61,23 @@ is_innie_pair(
 
 
 
+// detect cases where the dna fragment size is likely to be less
+// than the read length (likely here because without access to local
+// and remote records we can't say with complete certainty.
+//
+bool
+is_possible_adapter_pair(
+    const bam_record& bam_read)
+{
+    if (! is_mapped_chrom_pair(bam_read)) return false;
+    if (bam_read.is_fwd_strand() == bam_read.is_mate_fwd_strand()) return false;
+
+    // the threshold of 5 here allows for a few bases of spurious adapter-reference match:
+    return (std::abs(bam_read.pos()-bam_read.mate_pos()) < 5);
+}
+
+
+
 unsigned
 get_avg_quality(
     const bam_record& bam_read)

@@ -219,6 +219,11 @@ getSVBreakendCandidateSemiAligned(
     trailingMismatchLen = 0;
     trailingRefPos = 0;
 
+    // check whether this is a fragment shorter than read length. if so
+    // any semi-aligned observation is likely to be adapter sequence:
+    if (is_possible_adapter_pair(bamRead)) return;
+
+
     // create a new alignment with all soft-clip sections forced to match:
     const SimpleAlignment matchedAligned(matchifyEdgeSoftClip(bamAlign));
 
