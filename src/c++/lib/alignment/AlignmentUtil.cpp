@@ -31,45 +31,24 @@
 
 
 
-/// tests if prefix of aligned sequence matches target, returns length of alignment (zero if no match)
+/// tests if prefix of sequence is aligned
 static
-unsigned
-hasAlignedPrefix(const Alignment& al, const unsigned minAlignContext)
-{
-    if (al.apath.empty()) return false;
-    unsigned alignLen(0);
-    if (al.apath[0].type == ALIGNPATH::MATCH && al.apath[0].length >= minAlignContext)
-    {
-        alignLen = al.apath[0].length;
-    }
-    return alignLen;
-}
-
-
-
-// tests if suffix of aligned sequence matches target, returns length of alignment (zero if no match)
-static
-unsigned
-hasAlignedSuffix(const Alignment& al, const unsigned minAlignContext)
-{
-    if (al.apath.empty()) return false;
-    size_t apLen = al.apath.size();
-    unsigned alignLen(0);
-    if (al.apath[apLen-1].type == ALIGNPATH::MATCH && al.apath[apLen-1].length >= minAlignContext)
-    {
-        alignLen = al.apath[apLen-1].length;
-    }
-    return alignLen;
-}
-
-
-#if 0
 bool
-bothEndsAligned(const Alignment& al, const unsigned minAlignContext)
+hasAlignedPrefix(const Alignment& al)
 {
-    return (hasAlignedPrefix(al,minAlignContext) && hasAlignedSuffix(al,minAlignContext));
+    if (al.apath.empty()) return false;
+    return (is_segment_align_match(al.apath[0].type));
 }
-#endif
+
+
+/// tests if suffix of sequence is aligned
+static
+bool
+hasAlignedSuffix(const Alignment& al)
+{
+    if (al.apath.empty()) return false;
+    return (is_segment_align_match(al.apath.back().type));
+}
 
 
 
@@ -190,21 +169,21 @@ estimateBreakPointPos(const Alignment& al, const unsigned refOffset)
     // -1 means no breakpoint found
     int breakPointPosEstimate(-1);
 
-    const unsigned prefAlLen = hasAlignedPrefix(al, 0);
-    const unsigned suffAlLen = hasAlignedSuffix(al, 0);
+    const bool isPrefix = hasAlignedPrefix(al);
+    const bool isSuffix = hasAlignedSuffix(al);
 
-    if (! (prefAlLen || suffAlLen) )
+    if (! (isPrefix || isSuffix) )
     {
         return breakPointPosEstimate;
     }
 
-    if (prefAlLen)
+    if (isPrefix)
     {
-        breakPointPosEstimate = refOffset + al.beginPos /*+ prefAlLen*/;
+        breakPointPosEstimate = refOffset + al.beginPos /*+ isPrefix*/;
     }
-    else if (suffAlLen)
+    else if (isSuffix)
     {
-        breakPointPosEstimate = refOffset + alignEnd(al) /*- suffAlLen*/;
+        breakPointPosEstimate = refOffset + alignEnd(al) /*- isSuffix*/;
     }
 
     assert(breakPointPosEstimate>0);
