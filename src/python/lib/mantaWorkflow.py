@@ -135,6 +135,9 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
         graphTaskLabel=preJoin(taskPrefix,"makeLocusGraph_"+gseg.pyflowId)
         graphTasks.add(self.addTask(graphTaskLabel,graphCmd,dependencies=dirTask,memMb=self.params.estimateMemMb))
 
+    if len(tmpGraphFiles) == 0 :
+        raise Exception("No SV Locus graphs created. Possible target region parse error.")
+
     mergeCmd = [ self.params.mantaGraphMergeBin ]
     mergeCmd.extend(["--output-file", graphPath])
     for gfile in tmpGraphFiles :
