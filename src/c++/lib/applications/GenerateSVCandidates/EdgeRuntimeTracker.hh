@@ -17,13 +17,14 @@
 
 #pragma once
 
+#include "blt_util/time_util.hh"
 #include "svgraph/EdgeInfo.hh"
 
 #include "boost/utility.hpp"
 
-#include <ctime>
 
 #include <iosfwd>
+
 
 
 /// simple edge time tracker and reporter
@@ -36,8 +37,10 @@ struct EdgeRuntimeTracker : private boost::noncopyable
     void
     start()
     {
-        _isStart = true;
-        _startTime = clock();
+        edgeTime.reset();
+        assmTime.reset();
+        scoreTime.reset();
+        edgeTime.start();
         _cand = 0;
         _compCand = 0;
         _assmCand = 0;
@@ -50,7 +53,7 @@ struct EdgeRuntimeTracker : private boost::noncopyable
     double
     getLastEdgeTime() const
     {
-        return _lastTime;
+        return edgeTime.getSeconds();
     }
 
     void
@@ -67,11 +70,11 @@ struct EdgeRuntimeTracker : private boost::noncopyable
         else           _assmCand++;
     }
 
+    TimeTracker assmTime;
+    TimeTracker scoreTime;
 private:
     std::ostream* _osPtr;
-    bool _isStart;
-    clock_t _startTime;
-    double _lastTime;
+    TimeTracker edgeTime;
 
     unsigned _cand;
     unsigned _compCand;

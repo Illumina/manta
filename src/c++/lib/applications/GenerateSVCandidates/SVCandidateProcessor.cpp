@@ -399,6 +399,7 @@ evaluateCandidate(
 
     if (! _opt.isSkipAssembly)
     {
+        TimeScoper assmTime(_edgeTracker.assmTime);
         for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
         {
             const SVCandidate& candidateSV(mjCandidateSV.junction[junctionIndex]);
@@ -482,6 +483,7 @@ evaluateCandidate(
         /// if any junctions go into the small assembler (for instance b/c the breakends are too close), then
         /// treat all junctions as independent:
         ///
+        TimeScoper scoreTime(_edgeTracker.scoreTime);
         if ((junctionCount>1) && isAnySmallAssembler)
         {
             for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
