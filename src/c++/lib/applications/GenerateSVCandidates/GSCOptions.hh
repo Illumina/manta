@@ -55,6 +55,8 @@ struct GSCOptions
 
     bool isSkipAssembly = false; ///< if true, skip assembly and run a low-resolution, breakdancer-like subset of the workflow
 
+    bool isSkipScoring = false; ///< if true, skip quality scoring and output candidates only
+
     bool isRNA = false; ///< if true, RNA specific filtering on candidates and diploid scoring is used
 
     unsigned minCandidateSpanningCount = 3; ///< how many spanning evidence observations are required to become a candidate?

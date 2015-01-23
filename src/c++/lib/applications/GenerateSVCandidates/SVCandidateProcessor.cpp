@@ -195,6 +195,8 @@ writeSV(
         candWriter.writeSV(svData, assemblyData, sv, svId);
     }
 
+    if (opt.isSkipScoring) return;
+
     // check min size for scoring:
     for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
     {
