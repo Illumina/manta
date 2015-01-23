@@ -959,11 +959,14 @@ getSVLociImpl(
             if (is_innie_pair(bamRead))
             {
                 isClose = (std::abs(bamRead.template_size()) < rstats.minDistantFragmentSize);
-                eCounts.closeCount += 1;
             }
 
             unsigned thisWeight(SVObservationWeights::readPair);
-            if (isClose) thisWeight = SVObservationWeights::closeReadPair;
+            if (isClose)
+            {
+                thisWeight = SVObservationWeights::closeReadPair;
+                eCounts.closeCount += 1;
+            }
 
             localEvidenceWeight = thisWeight;
             if (remoteBreakend.getLocalPairCount() != 0)

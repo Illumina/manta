@@ -90,6 +90,7 @@ struct SampleEvidenceCounts
         {
             eType[i] += srs.eType[i];
         }
+        closeCount += srs.closeCount;
     }
 
     void
@@ -106,6 +107,8 @@ struct SampleEvidenceCounts
 
     // (don't want to bother with std::array even thought size is known at compile-time:
     std::vector<unsigned long> eType = std::vector<unsigned long>(SVEvidenceType::SIZE,0);
+
+    /// these are anomalous pairs which still are close to the proper pair threshold, thus downweighted
     unsigned long closeCount = 0;
 };
 
