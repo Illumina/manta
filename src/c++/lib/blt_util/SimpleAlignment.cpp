@@ -19,6 +19,19 @@
 
 #include <cassert>
 
+#include <iostream>
+
+
+
+std::ostream&
+operator<<(
+    std::ostream& os,
+    const SimpleAlignment& sa)
+{
+    os << "alignment: " << sa.tid << ':' << sa.pos << (sa.is_fwd_strand ? '+' : '-') << ' ' << sa.path;
+    return os;
+}
+
 
 
 /// convert segment_type to match if the segment exists before or after all match segments currently in the alignment

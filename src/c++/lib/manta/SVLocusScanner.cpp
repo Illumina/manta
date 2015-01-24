@@ -360,7 +360,14 @@ getSVCandidatesFromReadIndels(
         // in this case, swap means combined insertion/deletion
         const bool isSwapStart(is_segment_swap_start(align.path,pathIndex));
 
-        assert(! (isEdgeSegment && isSwapStart));
+        if (isEdgeSegment && isSwapStart)
+        {
+            using namespace illumina::common;
+
+            std::ostringstream oss;
+            oss << "Can't process unexpected alignment pattern: " << align << "\n";
+            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        }
 
         unsigned nPathSegments(1); // number of path segments consumed
         if (isEdgeSegment)

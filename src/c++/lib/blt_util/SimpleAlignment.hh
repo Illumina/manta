@@ -20,6 +20,8 @@
 #include "blt_util/align_path.hh"
 #include "blt_util/known_pos_range2.hh"
 
+#include <iosfwd>
+
 
 /// holds minimal alignment information processed
 /// from a BAM record or other source
@@ -30,6 +32,12 @@ struct SimpleAlignment
     pos_t pos = 0;
     ALIGNPATH::path_t path;
 };
+
+
+std::ostream&
+operator<<(
+    std::ostream& os,
+    const SimpleAlignment& sa);
 
 
 /// convert segment_type to match if the segment exists before or after all match segments currently in the alignment
