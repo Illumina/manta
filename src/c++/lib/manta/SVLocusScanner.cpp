@@ -775,33 +775,49 @@ getReadBreakendsImpl(
 
     candidates.data.clear();
 
-    /// TODO: can't handle these yet, but plan to soon:
-    //if (localRead.is_mate_unmapped()) return;
-
     /// get some basic derived information from the bam_record:
     const SimpleAlignment localAlign(getAlignment(localRead));
 
-    getSingleReadSVCandidates(opt, dopt, localRead, localAlign, chromToIndex,
-                              localRefSeq, candidates);
-
-    if (nullptr != remoteReadPtr)
+    try
     {
-        // run the same check on the read's mate if we have access to it
-        assert(NULL != remoteRefSeqPtr);
-        const bam_record& remoteRead(*remoteReadPtr);
-        const SimpleAlignment remoteAlign(getAlignment(remoteRead));
+        getSingleReadSVCandidates(opt, dopt, localRead, localAlign, chromToIndex,
+                                  localRefSeq, candidates);
 
-        getSingleReadSVCandidates(opt, dopt, remoteRead, remoteAlign,
-                                  chromToIndex, (*remoteRefSeqPtr),
-                                  candidates);
+        if (nullptr != remoteReadPtr)
+        {
+            // run the same check on the read's mate if we have access to it
+            assert(nullptr != remoteRefSeqPtr);
+            const bam_record& remoteRead(*remoteReadPtr);
+            const SimpleAlignment remoteAlign(getAlignment(remoteRead));
+
+            getSingleReadSVCandidates(opt, dopt, remoteRead, remoteAlign,
+                                      chromToIndex, (*remoteRefSeqPtr),
+                                      candidates);
+        }
+
+        // process shadows:
+        //getSVCandidatesFromShadow(opt, rstats, localRead, localAlign,remoteReadPtr,candidates);
+
+        // - process anomalous read pairs:
+        getSVCandidatesFromPair(opt, rstats, localRead, localAlign, remoteReadPtr,
+                                candidates);
     }
-
-    // process shadows:
-    //getSVCandidatesFromShadow(opt, rstats, localRead, localAlign,remoteReadPtr,candidates);
-
-    // - process anomalous read pairs:
-    getSVCandidatesFromPair(opt, rstats, localRead, localAlign, remoteReadPtr,
-                            candidates);
+    catch (...)
+    {
+        std::cerr << "ERROR: Exception caught while processing ";
+        if (nullptr == remoteReadPtr)
+        {
+            std::cerr << "single read record:\n"
+                      << '\t' << localRead << "\n";
+        }
+        else
+        {
+            std::cerr << " read pair records:\n"
+                      << '\t'  << localRead << "\n"
+                      << '\t' << (*remoteReadPtr) << "\n";
+        }
+        throw;
+    }
 
 #ifdef DEBUG_SCANNER
     static const std::string logtag("getReadBreakendsImpl: ");
