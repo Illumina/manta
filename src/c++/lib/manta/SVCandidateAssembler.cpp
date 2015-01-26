@@ -479,7 +479,7 @@ getBreakendReads(
                 if (isMateInsertionEvidence(bamRead, _scanOpt.minMapq, isSearchForLeftOpen, isSearchForRightOpen))
                 {
 #ifdef DEBUG_ASBL
-                    log_os << logtag << "Adding remote bamrec: " << bamRead << '\n'
+                    log_os << logtag << "Adding remote bamrec. idx: " << bamIndex << " rec: " << bamRead << '\n'
                            << "\tmapq: " << bamRead.pe_map_qual() << '\n'
                            << "\tread: " << bamRead.get_bam_read() << '\n';
 #endif
@@ -579,7 +579,7 @@ getBreakendReads(
             const std::string readKey = std::string(bamRead.qname()) + "_" + flag + "_" + bamIndexStr;
 
 #ifdef DEBUG_ASBL
-            log_os << logtag << "Adding bamrec: " << bamRead << '\n'
+            log_os << logtag << "Adding bamrec. idx: " << bamIndex << " rec: " << bamRead << '\n'
                    << "\tmapq: " << bamRead.pe_map_qual() << '\n'
                    << "\tread: " << bamRead.get_bam_read() << '\n';
             log_os << "isIndelKeeper: " << isIndelKeeper
