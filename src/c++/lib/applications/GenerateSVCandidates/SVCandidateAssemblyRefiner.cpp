@@ -1742,17 +1742,21 @@ getSmallSVAssembly(
             }
             else if (alignment.score > assemblyData.smallSVAlignments[highScoreIndex].score)
             {
+                highScoreIndex = contigIndex;
+
+#ifdef DEBUG_REFINER
+                log_os << logtag << "contigIndex: " << highScoreIndex << " is high score\n";
+#endif
+
 #ifdef ITERATIVE_ASSEMBLER
                 isSecHighScore = true;
                 secHighScoreIndex = highScoreIndex;
                 secHighScoreVarSize = highScoreVarSize;
                 highScoreVarSize = getLargestIndelSize(alignment.align.apath, candidateSegments);
-#endif
-                highScoreIndex = contigIndex;
 
 #ifdef DEBUG_REFINER
-                log_os << logtag << "contigIndex: " << highScoreIndex << " is high score\n";
                 log_os << logtag << "contigIndex: " << secHighScoreIndex << " is the second high score\n";
+#endif
 #endif
             }
 #ifdef ITERATIVE_ASSEMBLER
