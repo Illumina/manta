@@ -37,13 +37,15 @@ SVCandidateAssembler(
     const AlignmentFileOptions& alignFileOpt,
     const std::string& statsFilename,
     const std::string& chromDepthFilename,
-    const bam_header_info& bamHeader) :
+    const bam_header_info& bamHeader,
+    TimeTracker& remoteTime) :
     _scanOpt(scanOpt),
     _assembleOpt(assembleOpt),
     _isAlignmentTumor(alignFileOpt.isAlignmentTumor),
     _dFilter(chromDepthFilename, scanOpt.maxDepthFactor, bamHeader),
     _dFilterRemoteReads(chromDepthFilename, scanOpt.maxDepthFactorRemoteReads, bamHeader),
-    _readScanner(_scanOpt, statsFilename, alignFileOpt.alignmentFilename)
+    _readScanner(_scanOpt, statsFilename, alignFileOpt.alignmentFilename),
+    _remoteTime(remoteTime)
 {
     // setup regionless bam_streams:
     // setup all data for main analysis loop:
@@ -337,7 +339,7 @@ getBreakendReads(
     {
         // ideally this should be dependent on the insert size dist
         // TODO: follow-up on trial value of 200 in a separate branch/build
-        // TODO: there should be a core search range and and expanded range for shadow/MAPQ0 only, shadow ranges should be left/right constrained to be consistent with center
+        // TODO: there should be a core search range and an expanded range for shadow/MAPQ0 only, shadow ranges should be left/right constrained to be consistent with center
         static const size_t minIntervalSize(400);
         if (bp.interval.range.size() >= minIntervalSize)
         {
@@ -476,6 +478,12 @@ getBreakendReads(
             {
                 if (isMateInsertionEvidence(bamRead, _scanOpt.minMapq, isSearchForLeftOpen, isSearchForRightOpen))
                 {
+#ifdef DEBUG_ASBL
+                    log_os << logtag << "Adding remote bamrec: " << bamRead << '\n'
+                           << "\tmapq: " << bamRead.pe_map_qual() << '\n'
+                           << "\tread: " << bamRead.get_bam_read() << '\n';
+#endif
+
                     remoteReads[bamIndex].emplace_back(bamRead);
 
 #ifdef FWDREV_CHECK
@@ -682,6 +690,7 @@ getBreakendReads(
 
     if (isRecoverRemotes)
     {
+        const TimeScoper remoteTIme(_remoteTime);
         for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
         {
 #ifdef DEBUG_REMOTES

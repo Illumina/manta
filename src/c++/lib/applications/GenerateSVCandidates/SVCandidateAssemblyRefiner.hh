@@ -18,6 +18,7 @@
 #pragma once
 
 #include "GSCOptions.hh"
+#include "EdgeRuntimeTracker.hh"
 
 #include "alignment/GlobalAligner.hh"
 #include "alignment/GlobalLargeIndelAligner.hh"
@@ -36,7 +37,8 @@ struct SVCandidateAssemblyRefiner
 {
     SVCandidateAssemblyRefiner(
         const GSCOptions& opt,
-        const bam_header_info& header);
+        const bam_header_info& header,
+        EdgeRuntimeTracker& edgeTracker);
 
     /// \brief add assembly and assembly post-processing data to SV candidate
     ///

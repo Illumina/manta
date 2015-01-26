@@ -20,6 +20,7 @@
 #include "applications/GenerateSVCandidates/GSCOptions.hh"
 #include "assembly/IterativeAssembler.hh"
 #include "assembly/SmallAssembler.hh"
+#include "blt_util/time_util.hh"
 #include "htsapi/bam_streamer.hh"
 #include "manta/ChromDepthFilterUtil.hh"
 #include "manta/SVCandidate.hh"
@@ -47,7 +48,8 @@ struct SVCandidateAssembler
         const AlignmentFileOptions& alignFileOpt,
         const std::string& statsFilename,
         const std::string& chromDepthFilename,
-        const bam_header_info& bamHeader);
+        const bam_header_info& bamHeader,
+        TimeTracker& remoteTIme);
 
     /**
      * @brief Performs a de-novo assembly of a set of reads crossing a breakpoint.
@@ -112,4 +114,5 @@ private:
     // contains functions to detect/classify anomalous reads
     SVLocusScanner _readScanner;
     std::vector<streamPtr> _bamStreams;
+    TimeTracker& _remoteTime;
 };

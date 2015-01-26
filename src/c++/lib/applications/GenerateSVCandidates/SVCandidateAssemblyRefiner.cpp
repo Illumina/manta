@@ -1035,11 +1035,14 @@ processLargeInsertion(
 SVCandidateAssemblyRefiner::
 SVCandidateAssemblyRefiner(
     const GSCOptions& opt,
-    const bam_header_info& header) :
+    const bam_header_info& header,
+    EdgeRuntimeTracker& edgeTracker) :
     _opt(opt),
     _header(header),
-    _smallSVAssembler(opt.scanOpt, opt.refineOpt.smallSVAssembleOpt, opt.alignFileOpt, opt.statsFilename, opt.chromDepthFilename, header),
-    _spanningAssembler(opt.scanOpt, opt.refineOpt.spanningAssembleOpt, opt.alignFileOpt, opt.statsFilename, opt.chromDepthFilename, header),
+    _smallSVAssembler(opt.scanOpt, opt.refineOpt.smallSVAssembleOpt, opt.alignFileOpt,
+        opt.statsFilename, opt.chromDepthFilename, header, edgeTracker.remoteTime),
+    _spanningAssembler(opt.scanOpt, opt.refineOpt.spanningAssembleOpt, opt.alignFileOpt,
+        opt.statsFilename, opt.chromDepthFilename, header, edgeTracker.remoteTime),
     _smallSVAligner(opt.refineOpt.smallSVAlignScores),
     _largeSVAligner(opt.refineOpt.largeSVAlignScores,opt.refineOpt.largeGapOpenScore),
     _largeInsertEdgeAligner(opt.refineOpt.largeInsertEdgeAlignScores),
