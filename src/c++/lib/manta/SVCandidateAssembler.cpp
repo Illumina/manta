@@ -87,19 +87,14 @@ addReadToDepthEst(
 
 static
 bool
-isMateInsertionEvidence(
+isMateInsertionEvidenceCandidate(
     const bam_record& bamRead,
-    const unsigned minMapq,
-    const bool isSearchForLeftOpen,
-    const bool isSearchForRightOpen)
+    const unsigned minMapq)
 {
     if (! bamRead.is_paired()) return false;
     if (bamRead.is_unmapped() || bamRead.is_mate_unmapped()) return false;
 
     if (bamRead.map_qual() < minMapq) return false;
-
-    if ((! isSearchForLeftOpen) && (! bamRead.is_fwd_strand())) return false;
-    if ((! isSearchForRightOpen) && bamRead.is_fwd_strand()) return false;
 
     if (bamRead.target_id() < 0) return false;
     if (bamRead.mate_target_id() < 0) return false;
@@ -113,9 +108,23 @@ isMateInsertionEvidence(
 
 
 
+static
+bool
+isMateInsertionEvidenceCandidate2(
+    const bam_record& bamRead,
+    const bool isSearchForLeftOpen,
+    const bool isSearchForRightOpen)
+{
+    if ((! isSearchForLeftOpen) && (! bamRead.is_fwd_strand())) return false;
+    if ((! isSearchForRightOpen) && bamRead.is_fwd_strand()) return false;
+    return true;
+}
+
+
+
 /// information recorded for reads where we need to grab the mate from a remote locus
 ///
-/// typically these are chimeras with a MAPQ0 mate used ot assemble a large insertion
+/// typically these are chimeras with a MAPQ0 mate used to assemble a large insertion
 ///
 struct RemoteReadInfo
 {
@@ -336,6 +345,9 @@ getBreakendReads(
 {
     // get search range:
     known_pos_range2 searchRange;
+
+    // flanking regions specify areas where remote reads and shadows must have the right orientation
+    known_pos_range2 leftFlank,rightFlank;
     {
         // ideally this should be dependent on the insert size dist
         // TODO: follow-up on trial value of 200 in a separate branch/build
@@ -354,6 +366,8 @@ getBreakendReads(
             static const size_t zero(0);
             searchRange.set_range(std::max((bp.interval.range.begin_pos()-wobble),zero),(bp.interval.range.end_pos()+wobble));
         }
+        leftFlank.set_range(searchRange.begin_pos(), bp.interval.range.begin_pos());
+        rightFlank.set_range(bp.interval.range.end_pos(), searchRange.end_pos());
     }
 
 #ifdef DEBUG_ASBL
@@ -472,19 +486,26 @@ getBreakendReads(
                 }
             }
 
+            SimpleAlignment bamAlign(getAlignment(bamRead));
 
             // check whether we do a separate search for the mate read
             if (isSearchRemoteInsertionReads)
             {
-                if (isMateInsertionEvidence(bamRead, _scanOpt.minMapq, isSearchForLeftOpen, isSearchForRightOpen))
+                if (isMateInsertionEvidenceCandidate(bamRead, _scanOpt.minMapq))
                 {
+                    const known_pos_range2 bamRange(matchifyEdgeSoftClipRefRange(bamAlign));
+                    const bool isSearchForLeftOpenMate(isSearchForLeftOpen && (! leftFlank.is_range_intersect(bamRange)));
+                    const bool isSearchForRightOpenMate(isSearchForRightOpen && (! rightFlank.is_range_intersect(bamRange)));
+                    if (isMateInsertionEvidenceCandidate2(bamRead, isSearchForLeftOpenMate, isSearchForRightOpenMate))
+                    {
 #ifdef DEBUG_ASBL
-                    log_os << logtag << "Adding remote bamrec. idx: " << bamIndex << " rec: " << bamRead << '\n'
-                           << "\tmapq: " << bamRead.pe_map_qual() << '\n'
-                           << "\tread: " << bamRead.get_bam_read() << '\n';
+                        log_os << logtag << "Adding remote bamrec. idx: " << bamIndex << " rec: " << bamRead << '\n'
+                               << "\tmapq: " << bamRead.pe_map_qual() << '\n'
+                               << "\tread: " << bamRead.get_bam_read() << '\n';
 #endif
 
-                    remoteReads[bamIndex].emplace_back(bamRead);
+                        remoteReads[bamIndex].emplace_back(bamRead);
+                    }
 
 #ifdef FWDREV_CHECK
                     if (bamRead.is_fwd_strand())
@@ -502,7 +523,6 @@ getBreakendReads(
             // filter reads with "N"
             if (bamRead.get_bam_read().get_string().find('N') != std::string::npos) continue;
 
-            SimpleAlignment bamAlign(getAlignment(bamRead));
 
 
             /// check for any indels in read:
