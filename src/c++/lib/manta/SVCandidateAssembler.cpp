@@ -284,7 +284,7 @@ recoverRemoteReads(
 #endif
                 if (remote.isFound) continue;
                 if (bamRead.read_no() != remote.readNo) continue;
-                if (bamRead.qname() != remote.qname) continue;
+                if (strcmp(bamRead.qname(),remote.qname.c_str()) != 0) continue;
 
 #ifdef DEBUG_REMOTES
                 log_os << __FUNCTION__ << ": found remote: " << remote.tid << " " << remote.pos << "\n";
