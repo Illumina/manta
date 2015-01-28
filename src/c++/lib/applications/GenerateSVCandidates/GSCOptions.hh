@@ -57,6 +57,8 @@ struct GSCOptions
 
     bool isSkipScoring = false; ///< if true, skip quality scoring and output candidates only
 
+    bool isSkipRemoteReads = false; ///< if false, don't search for non-local mapq0 mate pairs for assembly
+
     bool isRNA = false; ///< if true, RNA specific filtering on candidates and diploid scoring is used
 
     unsigned minCandidateSpanningCount = 3; ///< how many spanning evidence observations are required to become a candidate?

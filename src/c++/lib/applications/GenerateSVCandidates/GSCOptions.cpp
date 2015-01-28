@@ -93,7 +93,7 @@ parseGSCOptions(
     ("candidate-output-file", po::value(&opt.candidateOutputFilename),
      "Write SV candidates to file (required)")
     ("diploid-output-file", po::value(&opt.diploidOutputFilename),
-     "Write germline diploid SVs to file (at least one  non-tumor alignment file must be specified)")
+     "Write germline diploid SVs to file (at least one non-tumor alignment file must be specified)")
     ("somatic-output-file", po::value(&opt.somaticOutputFilename),
      "Write somatic SVs to file (at least one tumor and non-tumor alignment file must be specified)")
     ("verbose", po::value(&opt.isVerbose)->zero_tokens(),
@@ -102,6 +102,8 @@ parseGSCOptions(
      "Turn off all breakend and small-variant assembly. Only large, imprecise variants will be reported based on anomalous read pairs.")
     ("skip-scoring", po::value(&opt.isSkipScoring)->zero_tokens(),
      "Turn off all scoring models and output candidates only.")
+    ("skip-remote-reads", po::value(&opt.isSkipRemoteReads)->zero_tokens(),
+     "Turn off remote mapq0 read search for assembly (reduces assembly success for insertions/mobile elements).")
     ("rna", po::value(&opt.isRNA)->zero_tokens(),
      "For RNA input. Skip small deletions and modify diploid scoring.")
     ("min-candidate-spanning-count", po::value(&opt.minCandidateSpanningCount)->default_value(opt.minCandidateSpanningCount),

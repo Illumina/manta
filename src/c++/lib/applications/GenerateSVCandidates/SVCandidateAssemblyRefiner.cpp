@@ -1513,7 +1513,7 @@ getSmallSVAssembly(
 
     const std::string& align1RefStr(assemblyData.bp1ref.seq());
 
-    const bool isSearchRemoteInsertionReads(isFindLargeInsertions);
+    const bool isSearchRemoteInsertionReads((! _opt.isSkipRemoteReads) && isFindLargeInsertions);
 
     // assemble contigs in the breakend region
     _smallSVAssembler.assembleSingleSVBreakend(sv.bp1, assemblyData.bp1ref, isSearchRemoteInsertionReads, assemblyData.remoteReads, assemblyData.contigs);
