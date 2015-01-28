@@ -221,6 +221,9 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
             hygenCmd.extend(["--min-somatic-score", self.params.minSomaticScore])
             hygenCmd.extend(["--min-pass-somatic-score", self.params.minPassSomaticScore])
 
+            # temporary fix for FFPE:
+            hygenCmd.append("--skip-remote-reads")
+
         if self.params.isHighDepthFilter :
             hygenCmd.extend(["--chrom-depth", self.paths.getChromDepth()])
 
