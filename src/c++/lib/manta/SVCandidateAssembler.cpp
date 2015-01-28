@@ -21,6 +21,7 @@
 #include "blt_util/seq_util.hh"
 #include "htsapi/align_path_bam_util.hh"
 #include "htsapi/SimpleAlignment_bam_util.hh"
+#include "manta/RemoteMateReadUtil.hh"
 #include "manta/ShadowReadFinder.hh"
 #include "manta/SVCandidateAssembler.hh"
 #include "manta/SVLocusScannerSemiAligned.hh"
@@ -82,108 +83,6 @@ addReadToDepthEst(
         depth[depthIndex]++;
     }
 }
-
-
-
-static
-bool
-isMateInsertionEvidenceCandidate(
-    const bam_record& bamRead,
-    const unsigned minMapq)
-{
-    if (! bamRead.is_paired()) return false;
-    if (bamRead.is_unmapped() || bamRead.is_mate_unmapped()) return false;
-
-    if (bamRead.map_qual() < minMapq) return false;
-
-    if (bamRead.target_id() < 0) return false;
-    if (bamRead.mate_target_id() < 0) return false;
-
-    if (bamRead.target_id() != bamRead.mate_target_id()) return true;
-
-    /// TODO: better candidate definition based on fragment size distro:
-    static const int minSize(10000);
-    return (std::abs(bamRead.pos()-bamRead.mate_pos()) >= minSize);
-}
-
-
-
-static
-bool
-isMateInsertionEvidenceCandidate2(
-    const bam_record& bamRead,
-    const bool isSearchForLeftOpen,
-    const bool isSearchForRightOpen)
-{
-    if ((! isSearchForLeftOpen) && (! bamRead.is_fwd_strand())) return false;
-    if ((! isSearchForRightOpen) && bamRead.is_fwd_strand()) return false;
-    return true;
-}
-
-
-
-/// information recorded for reads where we need to grab the mate from a remote locus
-///
-/// typically these are chimeras with a MAPQ0 mate used to assemble a large insertion
-///
-struct RemoteReadInfo
-{
-    RemoteReadInfo(
-        const bam_record& bamRead)
-        : qname(bamRead.qname()),
-          readNo(bamRead.read_no()==1 ? 2 : 1),
-          tid(bamRead.mate_target_id()),
-          pos(bamRead.mate_pos() - 1),
-          localPos(bamRead.pos() - 1),
-          readSize(bamRead.read_size()),
-          isLocalFwd(bamRead.is_fwd_strand()),
-          isFound(false),
-          isUsed(false)
-    {}
-
-    bool
-    operator<(
-        const RemoteReadInfo& rhs) const
-    {
-        if (tid < rhs.tid) return true;
-        if (tid == rhs.tid)
-        {
-            return (pos < rhs.pos);
-        }
-        return false;
-    }
-
-    std::string qname;
-    int readNo; // this is read number of the target
-    int tid;
-    int pos;
-    int localPos;
-    int readSize;
-    bool isLocalFwd;
-    bool isFound;
-    bool isUsed;
-};
-
-
-#ifdef DEBUG_REMOTES
-static
-std::ostream&
-operator<<(
-    std::ostream& os,
-    const RemoteReadInfo& rri)
-{
-    os << "RRI qname: " << rri.qname
-       << " readNo:" << rri.readNo
-       << " tid:" << rri.tid
-       << " pos:" << rri.pos
-       << " localPos:" << rri.localPos
-       << " readSize:" << rri.readSize
-       << " isLocalFwd:" << rri.isLocalFwd
-       << " isFound:" << rri.isFound
-       << " isUsed:" << rri.isUsed;
-    return os;
-}
-#endif
 
 
 

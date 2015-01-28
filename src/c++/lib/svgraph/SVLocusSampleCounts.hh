@@ -32,6 +32,8 @@ struct SampleReadInputCounts
         anom = 0;
         assm = 0;
         nonAnom = 0;
+
+        remoteRecoveryCandidates = 0;
     }
 
     unsigned long
@@ -47,6 +49,7 @@ struct SampleReadInputCounts
         anom += srs.anom;
         assm += srs.assm;
         nonAnom += srs.nonAnom;
+        remoteRecoveryCandidates += srs.remoteRecoveryCandidates;
     }
 
     void
@@ -58,7 +61,7 @@ struct SampleReadInputCounts
     template<class Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {
-        ar& anom& assm& nonAnom;
+        ar& anom& assm& nonAnom & remoteRecoveryCandidates;
     }
 
     ///< total number of non-filtered anomalous reads scanned
@@ -69,6 +72,9 @@ struct SampleReadInputCounts
 
     ///< total number of non-filtered non-anomalous reads scanned
     unsigned long nonAnom = 0;
+
+    ///< subset of anom. these are reads which qualify as candidates for remote recovery
+    unsigned long remoteRecoveryCandidates = 0;
 };
 
 

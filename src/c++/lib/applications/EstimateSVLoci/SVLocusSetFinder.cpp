@@ -20,6 +20,7 @@
 #include "blt_util/log.hh"
 #include "htsapi/align_path_bam_util.hh"
 #include "manta/ChromDepthFilterUtil.hh"
+#include "manta/RemoteMateReadUtil.hh"
 
 #include <iostream>
 
@@ -255,6 +256,14 @@ update(
         if      (isNonCompressedAnomalous) counts.anom++;
         else if (isLocalAssemblyEvidence)  counts.assm++;
         else                               counts.nonAnom++;
+
+        if (isNonCompressedAnomalous)
+        {
+            if (isMateInsertionEvidenceCandidate(bamRead, _readScanner.getMinMapQ()))
+            {
+                counts.remoteRecoveryCandidates++;
+            }
+        }
     }
 
     const bool isRejectRead(! ( isNonCompressedAnomalous || isLocalAssemblyEvidence));

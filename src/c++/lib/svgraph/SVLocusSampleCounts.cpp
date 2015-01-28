@@ -32,6 +32,7 @@ write(
     os << label << "_Anomalous:" << sep << anom << sep << anom/dtotal << '\n';
     os << label << "_AssemblyEvidence:" << sep << assm << sep << assm/dtotal << '\n';
     os << label << "_Ignored:" << sep << nonAnom << sep << nonAnom/dtotal << '\n';
+    os << label << "_AnomalousRemotes:" << sep << remoteRecoveryCandidates << sep << remoteRecoveryCandidates/dtotal << '\n';
 }
 
 
