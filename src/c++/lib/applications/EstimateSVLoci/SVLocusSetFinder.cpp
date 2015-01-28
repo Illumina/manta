@@ -235,11 +235,18 @@ update(
         }
     }
 
-    if (_readScanner.isReadFiltered(bamRead)) return;
+    if (SVLocusScanner::isReadFilteredCore(bamRead)) return;
 
     if (_isMaxDepth)
     {
         if (_depth.val(bamRead.pos()-1) > _maxDepth) return;
+    }
+
+    SampleReadInputCounts& counts(_svLoci.getReadCounts(isTumor).input);
+    if (bamRead.map_qual() < _readScanner.getMinMapQ())
+    {
+        counts.minMapq++;
+        return;
     }
 
     // exclude innie read pairs which are anomalously short:
@@ -252,7 +259,6 @@ update(
     }
 
     {
-        SampleReadInputCounts& counts(_svLoci.getReadCounts(isTumor).input);
         if      (isNonCompressedAnomalous) counts.anom++;
         else if (isLocalAssemblyEvidence)  counts.assm++;
         else                               counts.nonAnom++;

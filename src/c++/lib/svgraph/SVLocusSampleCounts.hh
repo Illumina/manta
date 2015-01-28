@@ -29,6 +29,7 @@ struct SampleReadInputCounts
     void
     clear()
     {
+        minMapq = 0;
         anom = 0;
         assm = 0;
         nonAnom = 0;
@@ -36,16 +37,17 @@ struct SampleReadInputCounts
         remoteRecoveryCandidates = 0;
     }
 
-    unsigned long
+    double
     total() const
     {
-        return (anom+assm+nonAnom);
+        return (minMapq+anom+assm+nonAnom);
     }
 
     void
     merge(
         const SampleReadInputCounts& srs)
     {
+        minMapq =+ srs.minMapq;
         anom += srs.anom;
         assm += srs.assm;
         nonAnom += srs.nonAnom;
@@ -61,20 +63,26 @@ struct SampleReadInputCounts
     template<class Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {
-        ar& anom& assm& nonAnom & remoteRecoveryCandidates;
+        ar& minMapq& anom& assm& nonAnom & remoteRecoveryCandidates;
     }
 
+    /// using doubles for integral counts here because (1) counts are potentially very high and (2) exact counts don't matter
+    ///
+
+    ///< total number of reads filtered for mapq before any classification step
+    double minMapq = 0;
+
     ///< total number of non-filtered anomalous reads scanned
-    unsigned long anom = 0;
+    double anom = 0;
 
     ///< total number of non-filtered non-anomolous assembly reads scanned
-    unsigned long assm = 0;
+    double assm = 0;
 
     ///< total number of non-filtered non-anomalous reads scanned
-    unsigned long nonAnom = 0;
+    double nonAnom = 0;
 
     ///< subset of anom. these are reads which qualify as candidates for remote recovery
-    unsigned long remoteRecoveryCandidates = 0;
+    double remoteRecoveryCandidates = 0;
 };
 
 

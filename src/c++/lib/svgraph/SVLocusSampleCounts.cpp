@@ -15,9 +15,33 @@
 /// \author Chris Saunders
 ///
 
+#include "blt_util/io_util.hh"
 #include "svgraph/SVLocusSampleCounts.hh"
 
+#include <iomanip>
 #include <iostream>
+
+
+
+static
+void
+writeLine(
+    std::ostream& os,
+    const char* label1,
+    const char* label2,
+    const double val,
+    const double total)
+{
+    static const char sep('\t');
+
+    os << std::fixed;
+    os << label1 << '_' << label2 << ':' << sep;
+    os << std::setprecision(0);
+    os << val << sep;
+    os << std::setprecision(4);
+    os << val/total << '\n';
+}
+
 
 
 void
@@ -26,13 +50,13 @@ write(
     std::ostream& os,
     const char* label) const
 {
-    static const char sep('\t');
-
     const double dtotal(total());
-    os << label << "_Anomalous:" << sep << anom << sep << anom/dtotal << '\n';
-    os << label << "_AssemblyEvidence:" << sep << assm << sep << assm/dtotal << '\n';
-    os << label << "_Ignored:" << sep << nonAnom << sep << nonAnom/dtotal << '\n';
-    os << label << "_AnomalousRemotes:" << sep << remoteRecoveryCandidates << sep << remoteRecoveryCandidates/dtotal << '\n';
+    StreamScoper ss(os);
+    writeLine(os,label,"minMapq",minMapq,dtotal);
+    writeLine(os,label,"Anomalous",anom,dtotal);
+    writeLine(os,label,"AssemblyEvidence",assm,dtotal);
+    writeLine(os,label,"Ignored",nonAnom,dtotal);
+    writeLine(os,label,"AnomalousRemotes",remoteRecoveryCandidates,dtotal);
 }
 
 
@@ -51,6 +75,8 @@ write(
         total += eType[i];
     }
 
+    StreamScoper ss(os);
+    os << std::fixed << std::setprecision(4);
     for (unsigned i(0); i<SVEvidenceType::SIZE; ++i)
     {
         os << label << "_EvidenceType_" << SVEvidenceType::label(i) << ':' << sep << eType[i] << sep << eType[i]/total << '\n';
