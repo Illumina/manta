@@ -208,18 +208,25 @@ makeFormatSampleField(
 
 void addRNAInfo(
     const bool isFirstOfPair,
+    const SVCandidate& sv,
     const SVCandidateAssemblyData& assemblyData,
     VcfWriterSV::InfoTag_t& infotags)
 {
-    if (! isFirstOfPair) return;
-
-    // there can be several contigs per breakend, so we iterate over all of them.
-    // only the first breakpoint gets the alignments attached to its VCF entry
-
     if (assemblyData.isSpanning)
     {
-        const unsigned numContigs(assemblyData.contigs.size());
 
+        bool isFirst = (assemblyData.bporient.isBp1First == isFirstOfPair);
+        infotags.push_back(str(boost::format("RNA_FIRST=%1%") % isFirst));
+        bool isRightOpen = (isFirstOfPair ? sv.bp1.state : sv.bp2.state) == SVBreakendState::RIGHT_OPEN;
+        infotags.push_back(str(boost::format("FOOBAR_FW=%1%") % (isFirst == isRightOpen)));
+
+        if (!isFirst) return; // only the first breakpoint gets the alignments attached to its VCF entry
+
+        infotags.push_back(str(boost::format("RNA_FwRvReads=%i;%i") % sv.fwReads % sv.rvReads));
+        infotags.push_back(str(boost::format("FOOBAR_bp1=%i;bp2=%i") % sv.bp1.interval.tid % sv.bp2.interval.tid));
+
+        // there can be several contigs per breakend, so we iterate over all of them.
+        const unsigned numContigs(assemblyData.contigs.size());
         infotags.push_back(str(boost::format("FOOBAR_NCONTIGS=%i") % numContigs));
         if (numContigs > 0)
         {
@@ -229,11 +236,11 @@ void addRNAInfo(
                 infotags.push_back(str(boost::format("ERROR2=%i;%i") % numContigs % assemblyData.bestAlignmentIndex));
 
             infotags.push_back(str(boost::format("FOOBAR_BEST=%i") % assemblyData.bestAlignmentIndex));
-            infotags.push_back(str(boost::format("FOOBAR_CONTIG=%s") % assemblyData.contigs[assemblyData.bestAlignmentIndex].seq));
+            infotags.push_back(str(boost::format("RNA_CONTIG=%s") % assemblyData.contigs[assemblyData.bestAlignmentIndex].seq));
             //infotags.push_back(str(boost::format("FOOBAR_EXTCONTIG=%s") % assemblyData.extendedContigs[assemblyData.bestAlignmentIndex]));
             infotags.push_back(str(boost::format("FOOBAR_CONTIGcount=%i") % assemblyData.contigs[assemblyData.bestAlignmentIndex].supportReads.size()));
-            infotags.push_back(str(boost::format("FOOBAR_CONTIGLeftAln=%i") % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align1.apath)));
-            infotags.push_back(str(boost::format("FOOBAR_CONTIGRightAln=%i") % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align2.apath)));
+            infotags.push_back(str(boost::format("RNA_CONTIGLeftAln=%i") % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align1.apath)));
+            infotags.push_back(str(boost::format("RNA_CONTIGRightAln=%i") % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align2.apath)));
         }
     }
 }
@@ -459,7 +466,7 @@ writeTransloc(
     addDebugInfo(bpA, bpB, isFirstBreakend, adata, infotags);
 #endif
 
-    addRNAInfo(isFirstBreakend, adata, infotags);
+    addRNAInfo(isFirstBreakend, sv, adata, infotags);
 
     // write out record:
     _os << chrom
