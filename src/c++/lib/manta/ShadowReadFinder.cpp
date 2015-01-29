@@ -48,7 +48,7 @@ isGoodShadow(
         return false;
     }
 
-    if (bamRead.qname() != lastQname)
+    if (strcmp(bamRead.qname(),lastQname.c_str()) != 0)
     {
         // something went wrong here, shadows should have their singleton partner
         // preceding them in the BAM file.
@@ -68,29 +68,44 @@ isGoodShadow(
 }
 
 
+/// check for shadow anchor status
+///
+bool
+ShadowReadFinder::
+isShadowAnchor(
+    const bam_record& bamRead,
+    const bool isSearchForLeftOpen,
+    const bool isSearchForRightOpen) const
+{
+    if (! bamRead.is_paired()) return false;
+    if (bamRead.is_unmapped()) return false;
+    if (! bamRead.is_mate_unmapped()) return false;
+    if ((! isSearchForLeftOpen) && (! bamRead.is_fwd_strand())) return false;
+    if ((! isSearchForRightOpen) && bamRead.is_fwd_strand()) return false;
+    if (bamRead.map_qual() < _minMapq) return false;
+    return true;
+}
+
+
+
+void
+ShadowReadFinder::
+setAnchor(
+    const bam_record& bamRead)
+{
+    _lastMapq  = bamRead.map_qual();
+    _lastQname = bamRead.qname();
+    _isLastSet = true;
+}
+
+
 
 bool
 ShadowReadFinder::
-check(
+isShadow(
     const bam_record& bamRead)
 {
-    if (_isLastSet)
-    {
-        _isLastSet = false;
-        if (isGoodShadow(bamRead, _lastQname)) return true;
-    }
-    else if ((! bamRead.is_unmapped()) && (bamRead.is_mate_unmapped()))
-    {
-        if (! bamRead.is_paired()) return false;
-        if ((! _isLeft) && (! bamRead.is_fwd_strand())) return false;
-        if ((! _isRight) && bamRead.is_fwd_strand()) return false;
-
-        _lastMapq  = bamRead.map_qual();
-        if (_lastMapq < _minMapq) return false;
-
-        _lastQname = bamRead.qname();
-        _isLastSet = true;
-    }
-
-    return false;
+    if (! _isLastSet) return false;
+    _isLastSet = false;
+    return isGoodShadow(bamRead, _lastQname);
 }

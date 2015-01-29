@@ -488,7 +488,21 @@ getBreakendReads(
 #endif
             }
 
-            const bool isShadowKeeper(shadow.check(bamRead));
+            bool isShadowKeeper(false);
+            if (shadow.isShadowAnchor(bamRead))
+            {
+                const known_pos_range2 bamRange(matchifyEdgeSoftClipRefRange(bamAlign));
+                const bool isSearchForLeftOpenShadow(isSearchForLeftOpen && (! leftFlank.is_range_intersect(bamRange)));
+                const bool isSearchForRightOpenShadow(isSearchForRightOpen && (! rightFlank.is_range_intersect(bamRange)));
+                if (shadow.isShadowAnchor(bamRead,isSearchForLeftOpenShadow,isSearchForRightOpenShadow))
+                {
+                    shadow.setAnchor(bamRead);
+                }
+            }
+            else
+            {
+                isShadowKeeper = shadow.isShadow(bamRead);
+            }
 
 #ifdef FWDREV_CHECK
             if (isShadowKeeper)

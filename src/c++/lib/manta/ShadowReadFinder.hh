@@ -25,7 +25,7 @@
 /// encapsulates the logic of checking for shadow reads assuming that they've been placed
 /// consecutively after their mapped mate read
 ///
-/// usage:
+/// basic usage:
 ///
 /// ShadowReadFinder checker(blah)
 /// for bam_region in regions :
@@ -40,8 +40,8 @@ struct ShadowReadFinder
         const bool isSearchForLeftOpen = true,
         const bool isSearchForRightOpen = true) :
         _minMapq(minMapq),
-        _isLeft(isSearchForLeftOpen),
-        _isRight(isSearchForRightOpen),
+        _isLeftDefault(isSearchForLeftOpen),
+        _isRightDefault(isSearchForRightOpen),
         _isLastSet(false),
         _lastMapq(0)
     {}
@@ -53,8 +53,19 @@ struct ShadowReadFinder
         _isLastSet=false;
     }
 
+    /// all in one single method interface to shadow finder
+    ///
+    /// if this is called only once for each read it will return
+    /// true for any unmapped shadow read, assuming the common convention
+    /// that unmapped shadows follow their anchor.
+    ///
     bool
-    check(const bam_record& bamRead);
+    check(const bam_record& bamRead)
+    {
+        if (isShadow(bamRead)) return true;
+        if (isShadowAnchor(bamRead)) setAnchor(bamRead);
+        return false;
+    }
 
     /// only valid after check() is true
     unsigned
@@ -69,11 +80,41 @@ struct ShadowReadFinder
         return _isLastSet;
     }
 
+    /// the following methods are subcomponents of the check() system above --
+    /// you probably only want to use one or the other
+
+    /// check for shadow anchor status
+    ///
+    /// uses default left-open, right-open values
+    bool
+    isShadowAnchor(
+        const bam_record& bamRead) const
+    {
+        return isShadowAnchor(bamRead,_isLeftDefault,_isRightDefault);
+    }
+
+    /// check for shadow anchor status
+    ///
+    bool
+    isShadowAnchor(
+        const bam_record& bamRead,
+        const bool isSearchForLeftOpen,
+        const bool isSearchForRightOpen) const;
+
+    void
+    setAnchor(
+        const bam_record& bamRead);
+
+    bool
+    isShadow(
+        const bam_record& bamRead);
+
+
 private:
 
     const unsigned _minMapq;
-    const bool _isLeft;
-    const bool _isRight;
+    const bool _isLeftDefault;
+    const bool _isRightDefault;
     bool _isLastSet;
     uint8_t _lastMapq;
     std::string _lastQname;
