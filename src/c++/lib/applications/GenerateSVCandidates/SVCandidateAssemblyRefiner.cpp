@@ -1036,13 +1036,14 @@ SVCandidateAssemblyRefiner::
 SVCandidateAssemblyRefiner(
     const GSCOptions& opt,
     const bam_header_info& header,
+    const AllCounts& counts,
     EdgeRuntimeTracker& edgeTracker) :
     _opt(opt),
     _header(header),
     _smallSVAssembler(opt.scanOpt, opt.refineOpt.smallSVAssembleOpt, opt.alignFileOpt,
-        opt.statsFilename, opt.chromDepthFilename, header, edgeTracker.remoteTime),
+        opt.statsFilename, opt.chromDepthFilename, header, counts, edgeTracker.remoteTime),
     _spanningAssembler(opt.scanOpt, opt.refineOpt.spanningAssembleOpt, opt.alignFileOpt,
-        opt.statsFilename, opt.chromDepthFilename, header, edgeTracker.remoteTime),
+        opt.statsFilename, opt.chromDepthFilename, header, counts, edgeTracker.remoteTime),
     _smallSVAligner(opt.refineOpt.smallSVAlignScores),
     _largeSVAligner(opt.refineOpt.largeSVAlignScores,opt.refineOpt.largeGapOpenScore),
     _largeInsertEdgeAligner(opt.refineOpt.largeInsertEdgeAlignScores),

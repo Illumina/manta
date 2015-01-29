@@ -120,7 +120,7 @@ struct SampleEvidenceCounts
         ar& eType& closeCount;
     }
 
-    // (don't want to bother with std::array even thought size is known at compile-time:
+    // (don't want to bother with std::array even though size is known at compile-time:
     std::vector<unsigned long> eType = std::vector<unsigned long>(SVEvidenceType::SIZE,0);
 
     /// these are anomalous pairs which still are close to the proper pair threshold, thus downweighted
@@ -156,7 +156,6 @@ struct SampleCounts
         evidence.write(os, label);
     }
 
-
     template<class Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {
@@ -165,4 +164,33 @@ struct SampleCounts
 
     SampleReadInputCounts input;
     SampleEvidenceCounts evidence;
+};
+
+
+
+struct AllCounts
+{
+    void
+    clear()
+    {
+        tumor.clear();
+        normal.clear();
+    }
+
+    SampleCounts&
+    getSample(
+        const bool isTumor)
+    {
+        return ( isTumor ? tumor : normal );
+    }
+
+    const SampleCounts&
+    getSample(
+        const bool isTumor) const
+    {
+        return ( isTumor ? tumor : normal );
+    }
+
+    SampleCounts normal;
+    SampleCounts tumor;
 };

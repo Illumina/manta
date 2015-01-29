@@ -38,6 +38,7 @@ struct SVCandidateAssemblyRefiner
     SVCandidateAssemblyRefiner(
         const GSCOptions& opt,
         const bam_header_info& header,
+        const AllCounts& counts,
         EdgeRuntimeTracker& edgeTracker);
 
     /// \brief add assembly and assembly post-processing data to SV candidate

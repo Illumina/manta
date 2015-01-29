@@ -358,7 +358,7 @@ SVCandidateProcessor(
     _opt(opt),
     _truthTracker(truthTracker),
     _edgeTracker(edgeTracker),
-    _svRefine(opt, cset.header, _edgeTracker),
+    _svRefine(opt, cset.header, cset.getCounts(), _edgeTracker),
     _svWriter(opt, cset, progName, progVersion, truthTracker)
 {}
 

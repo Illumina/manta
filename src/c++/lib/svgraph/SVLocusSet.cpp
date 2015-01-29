@@ -268,8 +268,8 @@ merge(const SVLocusSet& inputSet)
     }
 
     _totalCleaned += inputSet._totalCleaned;
-    _normalReads.merge(inputSet._normalReads);
-    _tumorReads.merge(inputSet._tumorReads);
+    _counts.normal.merge(inputSet._counts.normal);
+    _counts.tumor.merge(inputSet._counts.tumor);
     _highestSearchCount = std::max(_highestSearchCount, inputSet._highestSearchCount);
     _isMaxSearchCount = (_isMaxSearchCount || inputSet._isMaxSearchCount);
     _highestSearchDensity = std::max(_highestSearchDensity, inputSet._highestSearchDensity);
@@ -938,8 +938,8 @@ dumpStats(std::ostream& os) const
     os << "highestSearchDensity:" << sep << _highestSearchDensity << "\n";
     os << "isMaxSearchDensity:" << sep << _isMaxSearchDensity << "\n";
 
-    _normalReads.write(os,"normal");
-    _tumorReads.write(os,"tumor");
+    _counts.normal.write(os,"normal");
+    _counts.tumor.write(os,"tumor");
 
     // node region size quantiles
     {
@@ -1069,8 +1069,8 @@ save(const char* filename) const
     oa << _opt;
     oa << _isFinalized;
     oa << _totalCleaned;
-    oa << _normalReads;
-    oa << _tumorReads;
+    oa << _counts.normal;
+    oa << _counts.tumor;
     oa << _highestSearchCount;
     oa << _highestSearchDensity;
     oa << _isMaxSearchCount;
@@ -1109,8 +1109,8 @@ load(
     ia >> _opt;
     ia >> _isFinalized;
     ia >> _totalCleaned;
-    ia >> _normalReads;
-    ia >> _tumorReads;
+    ia >> _counts.normal;
+    ia >> _counts.tumor;
     ia >> _highestSearchCount;
     ia >> _highestSearchDensity;
     ia >> _isMaxSearchCount;

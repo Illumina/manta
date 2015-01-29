@@ -124,7 +124,6 @@ SVLocusSetFinder::
 process_pos(const int stage_no,
             const pos_t pos)
 {
-
 #ifdef DEBUG_SFINDER
     log_os << "SFinder::process_pos stage_no: " << stage_no << " pos: " << pos << "\n";
 #endif
@@ -242,10 +241,11 @@ update(
         if (_depth.val(bamRead.pos()-1) > _maxDepth) return;
     }
 
-    SampleReadInputCounts& counts(_svLoci.getReadCounts(isTumor).input);
+    SampleCounts& counts(_svLoci.getCounts().getSample(isTumor));
+    SampleReadInputCounts& incounts(counts.input);
     if (bamRead.map_qual() < _readScanner.getMinMapQ())
     {
-        counts.minMapq++;
+        incounts.minMapq++;
         return;
     }
 
@@ -259,15 +259,15 @@ update(
     }
 
     {
-        if      (isNonCompressedAnomalous) counts.anom++;
-        else if (isLocalAssemblyEvidence)  counts.assm++;
-        else                               counts.nonAnom++;
+        if      (isNonCompressedAnomalous) incounts.anom++;
+        else if (isLocalAssemblyEvidence)  incounts.assm++;
+        else                               incounts.nonAnom++;
 
         if (isNonCompressedAnomalous)
         {
             if (isMateInsertionEvidenceCandidate(bamRead, _readScanner.getMinMapQ()))
             {
-                counts.remoteRecoveryCandidates++;
+                incounts.remoteRecoveryCandidates++;
             }
         }
     }
@@ -290,7 +290,7 @@ update(
 
     std::vector<SVLocus> loci;
 
-    SampleEvidenceCounts& eCounts(_svLoci.getReadCounts(isTumor).evidence);
+    SampleEvidenceCounts& eCounts(counts.evidence);
 
     _readScanner.getSVLoci(bamRead, defaultReadGroupIndex, bamHeader,
                            refSeq, loci, eCounts, truthTracker);

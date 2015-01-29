@@ -116,8 +116,7 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
         clearIndex();
         _isFinalized=false;
         _totalCleaned=0;
-        _normalReads.clear();
-        _tumorReads.clear();
+        _counts.clear();
         _highestSearchCount=0;
         _highestSearchDensity=0;
 
@@ -267,11 +266,16 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
         const bool isCheckLocusConnected = false) const;
 
     /// updater gets direct access to read counts:
-    SampleCounts&
-    getReadCounts(
-        const bool isTumor)
+    AllCounts&
+    getCounts()
     {
-        return ( isTumor ? _tumorReads : _normalReads );
+        return _counts;
+    }
+
+    const AllCounts&
+    getCounts() const
+    {
+        return _counts;
     }
 
     typedef std::pair<LocusIndexType,NodeIndexType> NodeAddressType;
@@ -564,8 +568,7 @@ private:
     // once complete, overlaps are not present and disallowed:
     bool _isFinalized;
 
-    SampleCounts _normalReads;
-    SampleCounts _tumorReads;
+    AllCounts _counts;
 
     // total number of observations removed on edges with less than minMergeEdgeCount counts
     unsigned _totalCleaned;

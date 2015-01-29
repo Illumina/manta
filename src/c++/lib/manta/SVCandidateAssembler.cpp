@@ -31,6 +31,23 @@
 //#define DEBUG_REMOTES
 //#define DEBUG_ASBL
 
+
+
+static
+double
+getRemoteRate(
+    const AllCounts& counts,
+    const bool isTumor)
+{
+    static const double pseudoTotal(10000.);
+    static const double pseudoRemote(100.);
+
+    const SampleReadInputCounts& input(counts.getSample(isTumor).input);
+    return (input.remoteRecoveryCandidates+pseudoRemote)/(input.total()+pseudoTotal);
+}
+
+
+
 SVCandidateAssembler::
 SVCandidateAssembler(
     const ReadScannerOptions& scanOpt,
@@ -39,6 +56,7 @@ SVCandidateAssembler(
     const std::string& statsFilename,
     const std::string& chromDepthFilename,
     const bam_header_info& bamHeader,
+    const AllCounts& counts,
     TimeTracker& remoteTime) :
     _scanOpt(scanOpt),
     _assembleOpt(assembleOpt),
@@ -56,6 +74,9 @@ SVCandidateAssembler(
         streamPtr tmp(new bam_streamer(afile.c_str()));
         _bamStreams.push_back(tmp);
     }
+
+    _normalBackgroundRemoteRate=getRemoteRate(counts,false);
+    _tumorBackgroundRemoteRate=getRemoteRate(counts,true);
 }
 
 

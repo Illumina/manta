@@ -24,7 +24,7 @@
 #include <vector>
 
 
-/// two predefined options for ValClear type below:
+/// two predefined options for the ValClear type parameter to RangeMap:
 template <typename T>
 struct ZeroT
 {
@@ -170,7 +170,11 @@ struct RangeMap
         // special cases:
         if (_isEmpty) return;
         if (_minKey > k) return;
-        if (_maxKey <= k) clear();
+        if (_maxKey <= k)
+        {
+            clear();
+            return;
+        }
 
         // clear _occup values up to k:
         const unsigned kindex(getKeyIndex(k));
