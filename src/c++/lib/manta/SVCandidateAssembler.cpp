@@ -488,6 +488,9 @@ getBreakendReads(
 #endif
             }
 
+            const bool isShadowKeeper(shadow.check(bamRead));
+
+#if 0
             bool isShadowKeeper(false);
             if (shadow.isShadowAnchor(bamRead))
             {
@@ -503,6 +506,7 @@ getBreakendReads(
             {
                 isShadowKeeper = shadow.isShadow(bamRead);
             }
+#endif
 
 #ifdef FWDREV_CHECK
             if (isShadowKeeper)
