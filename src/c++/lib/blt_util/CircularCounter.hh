@@ -34,8 +34,10 @@ struct CircularCounter
         const unsigned initSize) :
         _count(0),
         _headPos(0),
+        _dataSize(0),
+        _maxCount(0),
         _data(initSize,false)
-    {}
+    { assert(initSize>0); }
 
     void
     push(const bool val)
@@ -51,9 +53,21 @@ struct CircularCounter
         else
         {
             if (val) _count++;
+            if (_count > _maxCount) _maxCount = _count;
         }
         _data[_headPos] = val;
         _headPos = nextPos();
+        if(_dataSize < size()) _dataSize++;
+    }
+
+    // change the value on the head of the buffer
+    void
+    replace(const bool val)
+    {
+        assert(_dataSize>0);
+        _headPos=lastPos();
+        _dataSize--;
+        push(val);
     }
 
     unsigned
@@ -63,12 +77,32 @@ struct CircularCounter
     }
 
     unsigned
+    maxCount() const
+    {
+        return _maxCount;
+    }
+
+    /// less than or equal to size(), according to the number
+    /// of observations pushed
+    unsigned
+    dataSize() const
+    {
+        return _dataSize;
+    }
+
+    unsigned
     size() const
     {
         return _data.size();
     }
 
 private:
+    unsigned
+    lastPos() const
+    {
+        if (_headPos==0) return (size()-1);
+        return _headPos-1;
+    }
 
     unsigned
     nextPos() const
@@ -80,5 +114,7 @@ private:
 
     unsigned _count;
     unsigned _headPos;
+    unsigned _dataSize;
+    unsigned _maxCount;
     std::vector<bool> _data;
 };
