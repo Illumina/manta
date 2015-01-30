@@ -17,6 +17,7 @@
 ///
 
 
+#include "blt_util/CircularCounter.hh"
 #include "blt_util/log.hh"
 #include "blt_util/seq_util.hh"
 #include "htsapi/align_path_bam_util.hh"
@@ -251,6 +252,22 @@ recoverRemoteReads(
 }
 
 
+static
+bool
+isSampleSignal(
+    const CircularCounter& rate,
+    const double background)
+{
+    if (rate.dataSize() < 20) return false;
+    if (rate.maxCount() < 2) return false;
+
+    const bool regionRate(static_cast<double>(rate.maxCount())/rate.dataSize());
+
+    static const double fudge(2.0);
+    return (regionRate > (fudge*background));
+}
+
+
 
 void
 SVCandidateAssembler::
@@ -337,6 +354,10 @@ getBreakendReads(
     std::vector<int> revSemiReadPos;
 #endif
 
+    static const unsigned countWindow(1000);
+    CircularCounter normalRemoteRate(countWindow);
+    CircularCounter tumorRemoteRate(countWindow);
+
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
         const bool isTumor(_isAlignmentTumor[bamIndex]);
@@ -360,6 +381,8 @@ getBreakendReads(
         unsigned semiAlignedCount(0);
         unsigned shadowCount(0);
 #endif
+
+        CircularCounter& remoteRate(isTumor ? tumorRemoteRate : normalRemoteRate);
 
         while (bamStream.next())
         {
@@ -388,6 +411,8 @@ getBreakendReads(
 
             // don't filter out MAPQ0 because the split reads tend to have reduced mapping scores:
             if (SVLocusScanner::isReadFilteredCore(bamRead)) continue;
+
+            remoteRate.push(false);
 
             const pos_t refPos(bamRead.pos()-1);
             if (refPos >= searchEndPos) break;
@@ -425,6 +450,7 @@ getBreakendReads(
 #endif
 
                         remoteReads[bamIndex].emplace_back(bamRead);
+                        remoteRate.replace(true);
                     }
 
 #ifdef FWDREV_CHECK
@@ -583,6 +609,17 @@ getBreakendReads(
 
     /// sanity check the remote reads to see if we're going to recover them:
     bool isRecoverRemotes(!isMaxDepthRemoteReadsTriggered);
+
+    // check if peak rate for both samples is not above expectation
+    {
+        const bool isNormalSignal(isSampleSignal(normalRemoteRate,_normalBackgroundRemoteRate));
+        const bool isTumorSignal(isSampleSignal(tumorRemoteRate,_tumorBackgroundRemoteRate));
+        if (! (isNormalSignal || isTumorSignal))
+        {
+            isRecoverRemotes = false;
+        }
+    }
+
 
 #ifdef FWDREV_CHECK
     if (isRecoverRemotes)
