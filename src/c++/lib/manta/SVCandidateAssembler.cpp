@@ -259,11 +259,11 @@ isSampleSignal(
     const double background)
 {
     if (rate.dataSize() < 20) return false;
-    if (rate.maxCount() < 2) return false;
+    if (rate.maxCount() < 3) return false;
 
     const bool regionRate(static_cast<double>(rate.maxCount())/rate.dataSize());
 
-    static const double fudge(2.0);
+    static const double fudge(3.0);
     return (regionRate > (fudge*background));
 }
 
@@ -354,7 +354,7 @@ getBreakendReads(
     std::vector<int> revSemiReadPos;
 #endif
 
-    static const unsigned countWindow(1000);
+    static const unsigned countWindow(200);
     CircularCounter normalRemoteRate(countWindow);
     CircularCounter tumorRemoteRate(countWindow);
 
