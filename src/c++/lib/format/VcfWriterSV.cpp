@@ -283,22 +283,11 @@ addDebugInfo(
         }
         const unsigned numContigs(assemblyData.contigs.size());
 
-        infotags.push_back(str(boost::format("FOOBAR_NCONTIGS=%i") % numContigs));
-        infotags.push_back(str(boost::format("FOOBAR_BEST=%i") % assemblyData.bestAlignmentIndex));
-        infotags.push_back(str(boost::format("FOOBAR_CONTIG=%s") % assemblyData.contigs[assemblyData.bestAlignmentIndex].seq));
-        //infotags.push_back(str(boost::format("FOOBAR_EXTCONTIG=%s") % assemblyData.extendedContigs[assemblyData.bestAlignmentIndex]));
-        infotags.push_back(str(boost::format("FOOBAR_CONTIGcount=%i") % assemblyData.contigs[assemblyData.bestAlignmentIndex].supportReads.size()));
-        infotags.push_back(str(boost::format("FOOBAR_CONTIGLeftAln=%i") % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align1.apath)));
-        infotags.push_back(str(boost::format("FOOBAR_CONTIGRightAln=%i") % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align2.apath)));
-
-
-        /*for (unsigned contigIndex(0); contigIndex<numContigs; ++contigIndex)
-        {
-            infotags.push_back(str(boost::format("FOOBAR_%i_CONTIG=%s") % contigIndex % assemblyData.contigs[contigIndex].seq));
-            infotags.push_back(str(boost::format("FOOBAR_%i_EXTCONTIG=%s") % contigIndex % assemblyData.extendedContigs[contigIndex]));
-            infotags.push_back(str(boost::format("FOOBAR_%i_CONTIGcount=%i") % contigIndex % assemblyData.contigs[contigIndex].supportReads.size()));
-            assemblyData.spanningAlignments
-        }*/
+        infotags.push_back(str(boost::format("DEBUG_NCONTIGS=%i") % numContigs));
+        infotags.push_back(str(boost::format("DEBUG_BESTContig=%s") % assemblyData.contigs[assemblyData.bestAlignmentIndex].seq));
+        infotags.push_back(str(boost::format("DEBUG_CONTIGReads=%i") % assemblyData.contigs[assemblyData.bestAlignmentIndex].supportReads.size()));
+        infotags.push_back(str(boost::format("DEBUG_CONTIGLeftAln=%i") % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align1.apath)));
+        infotags.push_back(str(boost::format("DEBUG_CONTIGRightAln=%i") % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align2.apath)));
     }
 }
 #endif
