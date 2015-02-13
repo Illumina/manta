@@ -33,7 +33,6 @@
 //#define DEBUG_ASBL
 
 
-
 static
 double
 getRemoteRate(
@@ -354,9 +353,11 @@ getBreakendReads(
     std::vector<int> revSemiReadPos;
 #endif
 
+#ifdef REMOTE_NOISE_RATE
     static const unsigned countWindow(200);
     CircularCounter normalRemoteRate(countWindow);
     CircularCounter tumorRemoteRate(countWindow);
+#endif
 
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
@@ -382,7 +383,9 @@ getBreakendReads(
         unsigned shadowCount(0);
 #endif
 
+#ifdef REMOTE_NOISE_RATE
         CircularCounter& remoteRate(isTumor ? tumorRemoteRate : normalRemoteRate);
+#endif
 
         while (bamStream.next())
         {
@@ -412,7 +415,9 @@ getBreakendReads(
             // don't filter out MAPQ0 because the split reads tend to have reduced mapping scores:
             if (SVLocusScanner::isReadFilteredCore(bamRead)) continue;
 
+#ifdef REMOTE_NOISE_RATE
             remoteRate.push(false);
+#endif
 
             const pos_t refPos(bamRead.pos()-1);
             if (refPos >= searchEndPos) break;
@@ -450,7 +455,9 @@ getBreakendReads(
 #endif
 
                         remoteReads[bamIndex].emplace_back(bamRead);
+#ifdef REMOTE_NOISE_RATE
                         remoteRate.replace(true);
+#endif
                     }
 
 #ifdef FWDREV_CHECK
@@ -610,6 +617,7 @@ getBreakendReads(
     /// sanity check the remote reads to see if we're going to recover them:
     bool isRecoverRemotes(!isMaxDepthRemoteReadsTriggered);
 
+#ifdef REMOTE_NOISE_RATE
     // check if peak rate for both samples is not above expectation
     {
         const bool isNormalSignal(isSampleSignal(normalRemoteRate,_normalBackgroundRemoteRate));
@@ -619,6 +627,7 @@ getBreakendReads(
             isRecoverRemotes = false;
         }
     }
+#endif
 
 
 #ifdef FWDREV_CHECK
