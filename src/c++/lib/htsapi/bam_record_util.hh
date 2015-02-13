@@ -18,6 +18,7 @@
 #pragma once
 
 #include "blt_util/align_path.hh"
+#include "blt_util/SimpleAlignment.hh"
 #include "htsapi/bam_record.hh"
 
 
@@ -42,7 +43,8 @@ is_innie_pair(
 /// be good enough.
 bool
 is_possible_adapter_pair(
-    const bam_record& bam_read);
+    const bam_record& bam_read,
+    const SimpleAlignment& matchedAlignment);
 
 /// return average basecall qscore for this read
 unsigned

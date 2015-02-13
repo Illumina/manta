@@ -61,19 +61,25 @@ is_innie_pair(
 
 
 
-// detect cases where the dna fragment size is likely to be less
-// than the read length (likely here because without access to local
-// and remote records we can't say with complete certainty.
-//
 bool
 is_possible_adapter_pair(
-    const bam_record& bam_read)
+    const bam_record& bamRead,
+    const SimpleAlignment& matchedAlignment)
 {
-    if (! is_mapped_chrom_pair(bam_read)) return false;
-    if (bam_read.is_fwd_strand() == bam_read.is_mate_fwd_strand()) return false;
+    if (! is_mapped_chrom_pair(bamRead)) return false;
+    if (bamRead.is_fwd_strand() == bamRead.is_mate_fwd_strand()) return false;
 
-    // the threshold of 5 here allows for a few bases of spurious adapter-reference match:
-    return (std::abs(bam_read.pos()-bam_read.mate_pos()) < 5);
+    // get range of alignment after matching all softclip:
+    if (bamRead.is_fwd_strand())
+    {
+        const pos_t matchedEnd(matchedAlignment.pos + apath_ref_length(matchedAlignment.path));
+        return (matchedEnd >= bamRead.mate_pos());
+    }
+    else
+    {
+        const pos_t matchedBegin(matchedAlignment.pos);
+        return (matchedBegin <= bamRead.mate_pos());
+    }
 }
 
 

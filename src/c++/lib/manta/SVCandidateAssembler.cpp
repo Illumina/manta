@@ -477,8 +477,14 @@ getBreakendReads(
             if (bamRead.get_bam_read().get_string().find('N') != std::string::npos) continue;
 
 
+            // TODO: if a dna fragment is shorter than the read length it can include adaptor sequence, there are no protections
+            // in hear preventing this adaptor sequence from entering the assembly pool (CheckSemiAligned will reject any such pair
+            // as assembly evidence, but another test might pull the read in -- if this happens any soft-clipped read segments are
+            // dragged in as well.
+            //
 
-            /// check for any indels in read:
+
+            // check for any indels in read:
             bool isIndelKeeper(false);
             if (! bamRead.is_unmapped())
             {
@@ -493,7 +499,7 @@ getBreakendReads(
                 }
             }
 
-            /// this test covered semi-aligned and soft-clip and split reads together
+            // this test covered semi-aligned and soft-clip and split reads together
             bool isSemiAlignedKeeper(false);
             if (! bamRead.is_unmapped())
             {
