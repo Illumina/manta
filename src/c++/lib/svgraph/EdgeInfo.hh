@@ -28,6 +28,12 @@ struct EdgeInfo
     void
     write(std::ostream& os) const;
 
+    bool
+    isSelfEdge() const
+    {
+        return (nodeIndex1 == nodeIndex2);
+    }
+
     LocusIndexType locusIndex = 0;
     NodeIndexType nodeIndex1 = 0;
     NodeIndexType nodeIndex2 = 0;
