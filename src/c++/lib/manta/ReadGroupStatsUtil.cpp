@@ -369,7 +369,7 @@ private:
 struct ReadAlignFilter
 {
     /// use only the most conservative alignments to generate fragment stats --
-    /// filter reads containing any cigar types besides MATCH:
+    /// filter reads containing any cigar types besides MATCH with optional trailing soft-clip
     bool
     isFilterRead(
         const bam_record& bamRead)
@@ -378,11 +378,27 @@ struct ReadAlignFilter
 
         bam_cigar_to_apath(bamRead.raw_cigar(), bamRead.n_cigar(), _apath);
 
+        if (! bamRead.is_fwd_strand()) std::reverse(_apath.begin(),_apath.end());
+
+        bool isMatched(false);
+        bool isClipped(false);
         for (const path_segment& ps : _apath)
         {
-            if (! is_segment_align_match(ps.type)) return true;
+            if (is_segment_align_match(ps.type))
+            {
+                if (isClipped) return true;
+                isMatched = true;
+            }
+            else if(ps.type == SOFT_CLIP)
+            {
+                isClipped = true;
+            }
+            else
+            {
+                return true;
+            }
         }
-        return false;
+        return (! isMatched);
     }
 
 private:
@@ -489,7 +505,7 @@ struct CoreInsertStatsReadFilter
         static const char SAtag[] = {'S','A'};
         if (NULL != bamRead.get_string_tag(SAtag)) return true;
 
-        // remove reads without perfect alignments
+        // remove with alignments other than {X}M({Y}S)? (or reverse for reverse strand)
         if (alignFilter.isFilterRead(bamRead)) return true;
 
         /// filter out upstream reads and high depth regions:
