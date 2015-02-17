@@ -44,7 +44,7 @@ struct GSCEdgeStatsManager : private boost::noncopyable
         if (_osPtr == nullptr) return;
 
         GSCEdgeGroupStats& gStats(getStatsGroup(edge));
-        gStats.total += 1;
+        gStats.totalEdgeCount += 1;
         gStats.totalTime += edgeTracker.getLastEdgeTime();
         gStats.assemblyTime += edgeTracker.assmTime.getSeconds();
         gStats.scoringTime += edgeTracker.scoreTime.getSeconds();
@@ -61,7 +61,7 @@ private:
     getStatsGroup(
         const EdgeInfo& edge)
     {
-        return (edge.isSelfEdge() ? edgeStats.local : edgeStats.remote);
+        return (edge.isSelfEdge() ? edgeStats.selfEdges : edgeStats.remoteEdges);
     }
 
     std::ostream* _osPtr;

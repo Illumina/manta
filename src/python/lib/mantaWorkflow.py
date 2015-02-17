@@ -229,7 +229,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         edgeRuntimeLogPaths.append(self.paths.getHyGenEdgeRuntimeLogPath(binStr))
         hygenCmd.extend(["--edge-runtime-log", edgeRuntimeLogPaths[-1]])
 
-        edgeStatsLogPaths.append(self.paths.getHyGenEdgeStatsLogPath(binStr))
+        edgeStatsLogPaths.append(self.paths.getHyGenEdgeStatsPath(binStr))
         hygenCmd.extend(["--edge-stats-log", edgeStatsLogPaths[-1]])
 
         for bamPath in self.params.normalBamList :
@@ -304,8 +304,8 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
     self.addTask(edgeSortLabel, edgeSortCmd, dependencies=hygenTasks, isForceLocal=True)
 
     # merge edge stats:
-    edgeStatsMergeLabel=preJoin(taskPrefix,"mergeEdgeStatsLogs")
-#    edgeSortCmd="sort -rnk2 " + " ".join(edgeRuntimeLogPaths) + " >| " + self.paths.getSortedEdgeRuntimeLogPath()
+    edgeStatsMergeLabel=preJoin(taskPrefix,"mergeEdgeStats")
+#    edgeSortCmd="sort -rnk2 " + " ".join(edgeRuntimeLogPaths) + " >| " + self.paths.getFinalEdgeStatsPath()
 #    self.addTask(edgeSortLabel, edgeSortCmd, dependencies=hygenTasks, isForceLocal=True)
 
     return nextStepWait
@@ -362,14 +362,14 @@ class PathInfo:
     def getHyGenEdgeRuntimeLogPath(self, binStr) :
         return os.path.join(self.getHyGenDir(),"edgeRuntimeLog.%s.txt" % (binStr))
 
-    def getHyGenEdgeStatsLogPath(self, binStr) :
-        return os.path.join(self.getHyGenDir(),"edgeStatsLog.%s.txt" % (binStr))
+    def getHyGenEdgeStatsPath(self, binStr) :
+        return os.path.join(self.getHyGenDir(),"edgeStats.%s.xml" % (binStr))
 
-    def getSortedEdgeLogPath(self) :
+    def getSortedEdgeRuntimeLogPath(self) :
         return os.path.join(self.params.workDir,"edgeRuntimeLog.txt")
 
-    def getFinalEdgeStatsLogPath(self) :
-        return os.path.join(self.params.workDir,"edgeStatsLog.txt")
+    def getFinalEdgeStatsPath(self) :
+        return os.path.join(self.params.workDir,"edgeStats.xml")
 
     def getGraphStatsPath(self) :
         return os.path.join(self.params.statsDir,"svLocusGraphStats.tsv")

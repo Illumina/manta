@@ -115,7 +115,7 @@ runGSC(
 
     TruthTracker truthTracker(opt.truthVcfFilename, cset);
     EdgeRuntimeTracker edgeTracker(opt.edgeRuntimeFilename);
-    GSCEdgeStatsManager edgeStatMan(opt.edgeRuntimeFilename);
+    GSCEdgeStatsManager edgeStatMan(opt.edgeStatsFilename);
 
     SVCandidateProcessor svProcessor(opt, progName, progVersion, cset,  truthTracker, edgeTracker);
 

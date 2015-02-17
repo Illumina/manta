@@ -33,20 +33,22 @@ struct GSCEdgeGroupStats
         totalTime += rhs.totalTime;
         assemblyTime += rhs.assemblyTime;
         scoringTime += rhs.scoringTime;
-        total += rhs.total;
+        totalEdgeCount += rhs.totalEdgeCount;
     }
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {
-        ar& BOOST_SERIALIZATION_NVP(totalTime)& BOOST_SERIALIZATION_NVP(assemblyTime)& BOOST_SERIALIZATION_NVP(scoringTime)& BOOST_SERIALIZATION_NVP(total);
+        ar& BOOST_SERIALIZATION_NVP(totalTime)& BOOST_SERIALIZATION_NVP(assemblyTime)& BOOST_SERIALIZATION_NVP(scoringTime)& BOOST_SERIALIZATION_NVP(totalEdgeCount);
     }
 
     double totalTime = 0;
     double assemblyTime = 0;
     double scoringTime = 0;
-    uint64_t total = 0;
+    uint64_t totalEdgeCount = 0;
 };
+
+BOOST_CLASS_IMPLEMENTATION(GSCEdgeGroupStats, boost::serialization::object_serializable)
 
 
 struct GSCEdgeStats
@@ -56,16 +58,20 @@ struct GSCEdgeStats
     void
     merge(const GSCEdgeStats& rhs)
     {
-        local.merge(rhs.local);
-        remote.merge(rhs.remote);
+        selfEdges.merge(rhs.selfEdges);
+        remoteEdges.merge(rhs.remoteEdges);
     }
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {
-        ar& BOOST_SERIALIZATION_NVP(local) & BOOST_SERIALIZATION_NVP(remote);
+        ar& BOOST_SERIALIZATION_NVP(selfEdges) & BOOST_SERIALIZATION_NVP(remoteEdges);
     }
 
-    GSCEdgeGroupStats local;
-    GSCEdgeGroupStats remote;
+    GSCEdgeGroupStats selfEdges;
+    GSCEdgeGroupStats remoteEdges;
 };
+
+BOOST_CLASS_IMPLEMENTATION(GSCEdgeStats, boost::serialization::object_serializable)
+
+
