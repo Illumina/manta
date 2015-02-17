@@ -19,6 +19,7 @@
 
 #include "boost/serialization/nvp.hpp"
 
+#include <iosfwd>
 #include <cstdint>
 
 
@@ -36,6 +37,9 @@ struct GSCEdgeGroupStats
         totalEdgeCount += rhs.totalEdgeCount;
     }
 
+    void
+    report(std::ostream& os) const;
+
     template<class Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {
@@ -51,16 +55,19 @@ struct GSCEdgeGroupStats
 BOOST_CLASS_IMPLEMENTATION(GSCEdgeGroupStats, boost::serialization::object_serializable)
 
 
-struct GSCEdgeStats
+struct GSCEdgeStatsData
 {
-    GSCEdgeStats() {}
+    GSCEdgeStatsData() {}
 
     void
-    merge(const GSCEdgeStats& rhs)
+    merge(const GSCEdgeStatsData& rhs)
     {
         selfEdges.merge(rhs.selfEdges);
         remoteEdges.merge(rhs.remoteEdges);
     }
+
+    void
+    report(std::ostream& os) const;
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned /* version */)
@@ -72,6 +79,31 @@ struct GSCEdgeStats
     GSCEdgeGroupStats remoteEdges;
 };
 
+BOOST_CLASS_IMPLEMENTATION(GSCEdgeStatsData, boost::serialization::object_serializable)
+
+
+
+struct GSCEdgeStats
+{
+    void
+    load(const char* filename);
+
+    void
+    save(std::ostream& os) const;
+
+    void
+    save(const char* filename) const;
+
+    void
+    report(const char* filename) const;
+
+    void
+    merge(const GSCEdgeStats& rhs)
+    {
+        data.merge(rhs.data);
+    }
+
+    GSCEdgeStatsData data;
+};
+
 BOOST_CLASS_IMPLEMENTATION(GSCEdgeStats, boost::serialization::object_serializable)
-
-

@@ -18,7 +18,7 @@
 #pragma once
 
 #include "EdgeRuntimeTracker.hh"
-#include "GSCEdgeStats.hh"
+#include "svgraph/GSCEdgeStats.hh"
 #include "svgraph/EdgeInfo.hh"
 
 #include "boost/utility.hpp"
@@ -27,7 +27,8 @@
 #include <string>
 
 
-/// handles all messy real world interaction for the stats module, stats module itself just accumulates data
+/// handles all messy real world interaction for the stats module,
+/// stats module itself just accumulates data and
 ///
 struct GSCEdgeStatsManager : private boost::noncopyable
 {
@@ -50,18 +51,12 @@ struct GSCEdgeStatsManager : private boost::noncopyable
         gStats.scoringTime += edgeTracker.scoreTime.getSeconds();
     }
 
-    void
-    load(std::istream& is);
-
-    void
-    save(std::ostream& os) const;
-
 private:
     GSCEdgeGroupStats&
     getStatsGroup(
         const EdgeInfo& edge)
     {
-        return (edge.isSelfEdge() ? edgeStats.selfEdges : edgeStats.remoteEdges);
+        return (edge.isSelfEdge() ? edgeStats.data.selfEdges : edgeStats.data.remoteEdges);
     }
 
     std::ostream* _osPtr;

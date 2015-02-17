@@ -18,9 +18,6 @@
 #include "GSCEdgeStatsManager.hh"
 #include "common/Exceptions.hh"
 
-#include "boost/archive/xml_iarchive.hpp"
-#include "boost/archive/xml_oarchive.hpp"
-
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -49,26 +46,6 @@ GSCEdgeStatsManager::
 {
     if (_osPtr != nullptr)
     {
-        save(*_osPtr);
+        edgeStats.save(*_osPtr);
     }
-}
-
-
-
-void
-GSCEdgeStatsManager::
-load(std::istream& is)
-{
-    boost::archive::xml_iarchive ia(is);
-    ia >> BOOST_SERIALIZATION_NVP(edgeStats);
-}
-
-
-
-void
-GSCEdgeStatsManager::
-save(std::ostream& os) const
-{
-    boost::archive::xml_oarchive oa(os);
-    oa << BOOST_SERIALIZATION_NVP(edgeStats);
 }

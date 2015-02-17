@@ -1099,7 +1099,7 @@ load(
 
     clear();
 
-    assert(NULL != filename);
+    assert(nullptr != filename);
     std::ifstream ifs(filename, std::ios::binary);
     binary_iarchive ia(ifs);
 
