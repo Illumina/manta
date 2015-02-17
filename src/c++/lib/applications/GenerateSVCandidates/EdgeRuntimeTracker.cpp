@@ -76,6 +76,7 @@ stop(const EdgeInfo& edge)
                     << '\t' << _compCand
                     << '\t' << _assmCand
                     << '\t' << _assmCompCand
+                    << '\t' << candTime.getSeconds()
                     << '\t' << assmTime.getSeconds()
                     << '\t' << remoteTime.getSeconds()
                     << '\t' << scoreTime.getSeconds()

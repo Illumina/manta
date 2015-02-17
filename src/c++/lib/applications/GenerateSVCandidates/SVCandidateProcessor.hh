@@ -18,6 +18,7 @@
 #pragma once
 
 #include "EdgeRuntimeTracker.hh"
+#include "GSCEdgeStatsManager.hh"
 #include "GSCOptions.hh"
 #include "SVCandidateAssemblyRefiner.hh"
 #include "SVScorer.hh"
@@ -83,7 +84,8 @@ struct SVCandidateProcessor
         const char* progVersion,
         const SVLocusSet& cset,
         TruthTracker& truthTracker,
-        EdgeRuntimeTracker& edgeTracker);
+        EdgeRuntimeTracker& edgeTracker,
+        GSCEdgeStatsManager& _edgeStatMan);
 
     void
     evaluateCandidate(
@@ -96,6 +98,7 @@ private:
     const GSCOptions& _opt;
     TruthTracker& _truthTracker;
     EdgeRuntimeTracker& _edgeTracker;
+    GSCEdgeStatsManager& _edgeStatMan;
     SVCandidateAssemblyRefiner _svRefine;
     SVWriter _svWriter;
 };

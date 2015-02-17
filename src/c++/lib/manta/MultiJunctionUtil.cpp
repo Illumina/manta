@@ -284,6 +284,7 @@ void
 findMultiJunctionCandidates(
     const std::vector<SVCandidate>& svs,
     const unsigned minCandidateSpanningCount,
+    unsigned& mjFilterCount,
     std::vector<SVMultiJunctionCandidate>& mjSVs)
 {
     mjSVs.clear();
@@ -405,7 +406,11 @@ findMultiJunctionCandidates(
             mj.junction.push_back(spanningSVs[partnerId]);
         }
 
-        if (isFilterMultiJunctionCandidate(minCandidateSpanningCount, mj)) continue;
+        if (isFilterMultiJunctionCandidate(minCandidateSpanningCount, mj))
+        {
+            mjFilterCount++;
+            continue;
+        }
 
         mjSVs.push_back(mj);
     }

@@ -18,6 +18,7 @@
 #pragma once
 
 #include "EdgeRuntimeTracker.hh"
+#include "blt_util/time_util.hh"
 #include "svgraph/GSCEdgeStats.hh"
 #include "svgraph/EdgeInfo.hh"
 
@@ -38,15 +39,68 @@ struct GSCEdgeStatsManager : private boost::noncopyable
     ~GSCEdgeStatsManager();
 
     void
-    update(
+    updateEdgeCandidates(
+        const EdgeInfo& edge,
+        const unsigned candCount)
+    {
+        if (_osPtr == nullptr) return;
+
+        GSCEdgeGroupStats& gStats(getStatsGroup(edge));
+        gStats.totalInputEdgeCount++;
+        gStats.totalCandidateCount+=candCount;
+        gStats.candidatesPerEdge.increment(candCount);
+    }
+
+    void
+    updateMJFilter(
+        const EdgeInfo& edge,
+        const unsigned mjFilterCount)
+    {
+        if (_osPtr == nullptr) return;
+
+        GSCEdgeGroupStats& gStats(getStatsGroup(edge));
+        gStats.totalMultiJunctionFilter++;
+    }
+
+    void
+    updateJunctionCandidates(
+        const EdgeInfo& edge,
+        const unsigned junctionCount,
+        const bool isComplex)
+    {
+        if (_osPtr == nullptr) return;
+
+        GSCEdgeGroupStats& gStats(getStatsGroup(edge));
+        gStats.totalJunctionCount+=junctionCount;
+        if (isComplex) gStats.totalComplexJunctionCount+=junctionCount;
+        gStats.breaksPerJunction.increment(junctionCount);
+    }
+
+    void
+    updateAssemblyCount(
+        const EdgeInfo& edge,
+        const unsigned assemblyCount = 0,
+        const bool isSpanning = false)
+    {
+        if (_osPtr == nullptr) return;
+
+        GSCEdgeGroupStats& gStats(getStatsGroup(edge));
+        gStats.totalAssemblyCandidates += assemblyCount;
+        if (isSpanning) gStats.totalSpanningAssemblyCandidates += assemblyCount;
+        gStats.assemblyCandidatesPerJunction.increment(assemblyCount);
+    }
+
+
+    void
+    updateScoredEdgeTime(
         const EdgeInfo& edge,
         const EdgeRuntimeTracker& edgeTracker)
     {
         if (_osPtr == nullptr) return;
 
         GSCEdgeGroupStats& gStats(getStatsGroup(edge));
-        gStats.totalEdgeCount += 1;
         gStats.totalTime += edgeTracker.getLastEdgeTime();
+        gStats.candTime += edgeTracker.candTime.getSeconds();
         gStats.assemblyTime += edgeTracker.assmTime.getSeconds();
         gStats.scoringTime += edgeTracker.scoreTime.getSeconds();
     }
@@ -60,5 +114,6 @@ private:
     }
 
     std::ostream* _osPtr;
+    TimeTracker lifeTime;
     GSCEdgeStats edgeStats;
 };

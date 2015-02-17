@@ -110,14 +110,15 @@ runGSC(
     }
 #endif
 
+    GSCEdgeStatsManager edgeStatMan(opt.edgeStatsFilename);
+
     SVFinder svFind(opt);
     const SVLocusSet& cset(svFind.getSet());
 
     TruthTracker truthTracker(opt.truthVcfFilename, cset);
     EdgeRuntimeTracker edgeTracker(opt.edgeRuntimeFilename);
-    GSCEdgeStatsManager edgeStatMan(opt.edgeStatsFilename);
 
-    SVCandidateProcessor svProcessor(opt, progName, progVersion, cset,  truthTracker, edgeTracker);
+    SVCandidateProcessor svProcessor(opt, progName, progVersion, cset,  truthTracker, edgeTracker, edgeStatMan);
 
     std::unique_ptr<EdgeRetriever> edgerPtr(edgeRFactory(cset, opt.edgeOpt));
     EdgeRetriever& edger(*edgerPtr);
@@ -151,9 +152,13 @@ runGSC(
             const bool isIsolatedEdge(testIsolatedEdge(cset,edge));
 
             // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
-            svFind.findCandidateSV(edge, svData, svs, truthTracker);
+            {
+                const TimeScoper candTime(edgeTracker.candTime);
+                svFind.findCandidateSV(edge, svData, svs, truthTracker);
+            }
 
             truthTracker.reportNumCands(svs.size(), edge);
+            edgeStatMan.updateEdgeCandidates(edge, svs.size());
 
             if (opt.isVerbose)
             {
@@ -166,7 +171,9 @@ runGSC(
                 truthTracker.addCandSV();
             }
 
-            findMultiJunctionCandidates(svs, opt.minCandidateSpanningCount, mjSVs);
+            unsigned mjFilterCount(0);
+            findMultiJunctionCandidates(svs, opt.minCandidateSpanningCount, mjFilterCount, mjSVs);
+            edgeStatMan.updateMJFilter(edge, mjFilterCount);
 
             bool isFindLargeInsertions(isIsolatedEdge);
             if (isFindLargeInsertions)
@@ -205,7 +212,7 @@ runGSC(
             log_os << logtag << " Processing this edge took " << edgeTracker.getLastEdgeTime() << " seconds.\n";
         }
 
-        edgeStatMan.update(edge,edgeTracker);
+        edgeStatMan.updateScoredEdgeTime(edge, edgeTracker);
     }
 
     truthTracker.dumpAll();

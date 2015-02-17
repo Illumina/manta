@@ -38,6 +38,7 @@ struct EdgeRuntimeTracker : private boost::noncopyable
     start()
     {
         edgeTime.reset();
+        candTime.reset();
         assmTime.reset();
         scoreTime.reset();
         remoteTime.reset();
@@ -72,6 +73,7 @@ struct EdgeRuntimeTracker : private boost::noncopyable
         else           _assmCand++;
     }
 
+    TimeTracker candTime;
     TimeTracker assmTime;
     TimeTracker scoreTime;
     TimeTracker remoteTime;

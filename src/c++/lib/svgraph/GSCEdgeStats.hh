@@ -18,23 +18,44 @@
 #pragma once
 
 #include "boost/serialization/nvp.hpp"
+#include "boost/serialization/vector.hpp"
 
-#include <iosfwd>
+#include <cassert>
 #include <cstdint>
 
+#include <iosfwd>
+#include <vector>
 
-/// aggregate statistics over a group of GSV edges
-struct GSCEdgeGroupStats
+
+struct SimpleHist
 {
-    GSCEdgeGroupStats() {}
+    SimpleHist(
+        const unsigned size)
+    : histdata(size,0)
+    {
+        assert (size!=0);
+    }
 
     void
-    merge(const GSCEdgeGroupStats& rhs)
+    increment(
+        const unsigned val)
     {
-        totalTime += rhs.totalTime;
-        assemblyTime += rhs.assemblyTime;
-        scoringTime += rhs.scoringTime;
-        totalEdgeCount += rhs.totalEdgeCount;
+        if (val >= histdata.size())
+        {
+            histdata.back()++;
+            return;
+        }
+        histdata[val]++;
+    }
+
+    void
+    merge(const SimpleHist& rhs)
+    {
+        assert(histdata.size() == rhs.histdata.size());
+        for (unsigned i(0);i<histdata.size();i++)
+        {
+            histdata[i] += rhs.histdata[i];
+        }
     }
 
     void
@@ -43,13 +64,81 @@ struct GSCEdgeGroupStats
     template<class Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {
-        ar& BOOST_SERIALIZATION_NVP(totalTime)& BOOST_SERIALIZATION_NVP(assemblyTime)& BOOST_SERIALIZATION_NVP(scoringTime)& BOOST_SERIALIZATION_NVP(totalEdgeCount);
+        ar& BOOST_SERIALIZATION_NVP(histdata)
+        ;
+    }
+    std::vector<uint64_t> histdata;
+};
+
+BOOST_CLASS_IMPLEMENTATION(SimpleHist, boost::serialization::object_serializable)
+
+
+/// aggregate statistics over a group of GSV edges
+struct GSCEdgeGroupStats
+{
+    GSCEdgeGroupStats()
+        : candidatesPerEdge(6),
+          assemblyCandidatesPerJunction(6),
+          breaksPerJunction(4)
+    {}
+
+    void
+    merge(const GSCEdgeGroupStats& rhs)
+    {
+        totalTime += rhs.totalTime;
+        candTime += rhs.candTime;
+        assemblyTime += rhs.assemblyTime;
+        scoringTime += rhs.scoringTime;
+        totalInputEdgeCount += rhs.totalInputEdgeCount;
+        totalCandidateCount += rhs.totalCandidateCount;
+        totalMultiJunctionFilter += rhs.totalMultiJunctionFilter;
+        totalJunctionCount += rhs.totalJunctionCount;
+        totalComplexJunctionCount += rhs.totalComplexJunctionCount;
+        totalAssemblyCandidates += rhs.totalAssemblyCandidates;
+        totalSpanningAssemblyCandidates += rhs.totalSpanningAssemblyCandidates;
+        candidatesPerEdge.merge(rhs.candidatesPerEdge);
+        assemblyCandidatesPerJunction.merge(rhs.assemblyCandidatesPerJunction);
+        breaksPerJunction.merge(rhs.breaksPerJunction);
+    }
+
+    void
+    report(std::ostream& os) const;
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned /* version */)
+    {
+        ar& BOOST_SERIALIZATION_NVP(totalTime)
+        & BOOST_SERIALIZATION_NVP(candTime)
+        & BOOST_SERIALIZATION_NVP(assemblyTime)
+        & BOOST_SERIALIZATION_NVP(scoringTime)
+        & BOOST_SERIALIZATION_NVP(totalInputEdgeCount)
+        & BOOST_SERIALIZATION_NVP(totalCandidateCount)
+        & BOOST_SERIALIZATION_NVP(totalMultiJunctionFilter)
+        & BOOST_SERIALIZATION_NVP(totalJunctionCount)
+        & BOOST_SERIALIZATION_NVP(totalComplexJunctionCount)
+        & BOOST_SERIALIZATION_NVP(totalAssemblyCandidates)
+        & BOOST_SERIALIZATION_NVP(totalSpanningAssemblyCandidates)
+        & BOOST_SERIALIZATION_NVP(candidatesPerEdge)
+        & BOOST_SERIALIZATION_NVP(assemblyCandidatesPerJunction)
+        & BOOST_SERIALIZATION_NVP(breaksPerJunction)
+        ;
     }
 
     double totalTime = 0;
+    double candTime = 0;
     double assemblyTime = 0;
     double scoringTime = 0;
-    uint64_t totalEdgeCount = 0;
+    uint64_t totalInputEdgeCount = 0;
+    uint64_t totalCandidateCount = 0;
+    uint64_t totalMultiJunctionFilter = 0;
+    uint64_t totalJunctionCount = 0;
+    uint64_t totalComplexJunctionCount = 0;
+    uint64_t totalAssemblyCandidates = 0;
+    uint64_t totalSpanningAssemblyCandidates = 0;
+
+    SimpleHist candidatesPerEdge;
+    SimpleHist assemblyCandidatesPerJunction;
+    SimpleHist breaksPerJunction;
 };
 
 BOOST_CLASS_IMPLEMENTATION(GSCEdgeGroupStats, boost::serialization::object_serializable)
@@ -62,6 +151,7 @@ struct GSCEdgeStatsData
     void
     merge(const GSCEdgeStatsData& rhs)
     {
+        lifeTime += rhs.lifeTime;
         selfEdges.merge(rhs.selfEdges);
         remoteEdges.merge(rhs.remoteEdges);
     }
@@ -72,9 +162,12 @@ struct GSCEdgeStatsData
     template<class Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {
-        ar& BOOST_SERIALIZATION_NVP(selfEdges) & BOOST_SERIALIZATION_NVP(remoteEdges);
+        ar & BOOST_SERIALIZATION_NVP(lifeTime)
+        & BOOST_SERIALIZATION_NVP(selfEdges)
+        & BOOST_SERIALIZATION_NVP(remoteEdges);
     }
 
+    double lifeTime = 0.;
     GSCEdgeGroupStats selfEdges;
     GSCEdgeGroupStats remoteEdges;
 };

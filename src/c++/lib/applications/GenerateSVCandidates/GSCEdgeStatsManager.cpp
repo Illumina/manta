@@ -37,6 +37,8 @@ GSCEdgeStatsManager(
         oss << "ERROR: Can't open output file: " << outputFile << '\n';
         BOOST_THROW_EXCEPTION(illumina::common::LogicException(oss.str()));
     }
+
+    lifeTime.start();
 }
 
 
@@ -46,6 +48,8 @@ GSCEdgeStatsManager::
 {
     if (_osPtr != nullptr)
     {
+        lifeTime.stop();
+        edgeStats.edgeData.lifeTime=lifeTime.getSeconds();
         edgeStats.save(*_osPtr);
     }
 }

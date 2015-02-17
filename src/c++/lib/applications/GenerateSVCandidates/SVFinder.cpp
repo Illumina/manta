@@ -605,9 +605,9 @@ assignPairObservationsToSVCandidates(
             if (! (isIntersect || isSwapIntersect)) continue;
         }
 
-        /// spanning means there's a left|right and left|right breakend pair (in any order) -- note this is not the
-        /// same as asking if the evidence comes from a read pair. For instance, a CIGAR string can
-        /// provide a spanning, non-read-pair candidate
+        // spanning means there's a left|right and left|right breakend pair (in any order) -- note this is not the
+        // same as asking if the evidence comes from a read pair. For instance, a CIGAR string can
+        // provide a spanning, non-read-pair candidate
         const bool isSpanning(isSpanningSV(readCand));
 
         bool isMatched(false);
@@ -844,13 +844,9 @@ findCandidateSV(
 
     bool isSomatic(false);
     {
-        /// assert expected bam order of all normal, then all tumor,
-        ///
-        /// also, determine if this is a somatic run:
-        ///
+        // assert expected bam order of all normal samples followed by all tumor samples,
+        // also, determine if this is a somatic run:
         bool isFirstTumor(false);
-
-        // iterate through reads, test reads for association and add to svData:
         const unsigned bamCount(_bamStreams.size());
         for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
         {
