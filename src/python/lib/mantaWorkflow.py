@@ -192,7 +192,8 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
     diploidVcfPaths = []
     somaticVcfPaths = []
 
-    edgeLogPaths = []
+    edgeRuntimeLogPaths = []
+    edgeStatsLogPaths = []
 
     for binId in range(self.params.nonlocalWorkBins) :
         binStr = str(binId).zfill(4)
@@ -200,8 +201,6 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         diploidVcfPaths.append(self.paths.getHyGenDiploidPath(binStr))
         if isSomatic :
             somaticVcfPaths.append(self.paths.getHyGenSomaticPath(binStr))
-
-        edgeLogPaths.append(self.paths.getHyGenEdgeLogPath(binStr))
 
         hygenCmd = [ self.params.mantaHyGenBin ]
         hygenCmd.extend(["--align-stats",statsPath])
@@ -227,7 +226,11 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         if self.params.isHighDepthFilter :
             hygenCmd.extend(["--chrom-depth", self.paths.getChromDepth()])
 
-        hygenCmd.extend(["--edge-runtime-log", edgeLogPaths[-1]])
+        edgeRuntimeLogPaths.append(self.paths.getHyGenEdgeRuntimeLogPath(binStr))
+        hygenCmd.extend(["--edge-runtime-log", edgeRuntimeLogPaths[-1]])
+
+        edgeStatsLogPaths.append(self.paths.getHyGenEdgeStatsLogPath(binStr))
+        hygenCmd.extend(["--edge-stats-log", edgeStatsLogPaths[-1]])
 
         for bamPath in self.params.normalBamList :
             hygenCmd.extend(["--align-file", bamPath])
@@ -296,9 +299,14 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
     extractSmall(self.paths.getSortedCandidatePath(), self.paths.getSortedCandidateSmallIndelsPath())
 
     # sort edge logs:
-    edgeSortLabel=preJoin(taskPrefix,"sortEdgeLogs")
-    edgeSortCmd="sort -rnk2 " + " ".join(edgeLogPaths) + " >| " + self.paths.getSortedEdgeLogPath()
+    edgeSortLabel=preJoin(taskPrefix,"sortEdgeRuntimeLogs")
+    edgeSortCmd="sort -rnk2 " + " ".join(edgeRuntimeLogPaths) + " >| " + self.paths.getSortedEdgeRuntimeLogPath()
     self.addTask(edgeSortLabel, edgeSortCmd, dependencies=hygenTasks, isForceLocal=True)
+
+    # merge edge stats:
+    edgeStatsMergeLabel=preJoin(taskPrefix,"mergeEdgeStatsLogs")
+#    edgeSortCmd="sort -rnk2 " + " ".join(edgeRuntimeLogPaths) + " >| " + self.paths.getSortedEdgeRuntimeLogPath()
+#    self.addTask(edgeSortLabel, edgeSortCmd, dependencies=hygenTasks, isForceLocal=True)
 
     return nextStepWait
 
@@ -351,11 +359,17 @@ class PathInfo:
     def getSortedSomaticPath(self) :
         return os.path.join(self.params.variantsDir,"somaticSV.vcf.gz")
 
-    def getHyGenEdgeLogPath(self, binStr) :
+    def getHyGenEdgeRuntimeLogPath(self, binStr) :
         return os.path.join(self.getHyGenDir(),"edgeRuntimeLog.%s.txt" % (binStr))
+
+    def getHyGenEdgeStatsLogPath(self, binStr) :
+        return os.path.join(self.getHyGenDir(),"edgeStatsLog.%s.txt" % (binStr))
 
     def getSortedEdgeLogPath(self) :
         return os.path.join(self.params.workDir,"edgeRuntimeLog.txt")
+
+    def getFinalEdgeStatsLogPath(self) :
+        return os.path.join(self.params.workDir,"edgeStatsLog.txt")
 
     def getGraphStatsPath(self) :
         return os.path.join(self.params.statsDir,"svLocusGraphStats.tsv")

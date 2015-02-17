@@ -20,7 +20,7 @@
 #include "EdgeRetrieverLocus.hh"
 #include "EdgeRuntimeTracker.hh"
 #include "GSCOptions.hh"
-#include "GSCEdgeStats.hh"
+#include "GSCEdgeStatsManager.hh"
 #include "SVCandidateProcessor.hh"
 #include "SVFinder.hh"
 
@@ -115,7 +115,7 @@ runGSC(
 
     TruthTracker truthTracker(opt.truthVcfFilename, cset);
     EdgeRuntimeTracker edgeTracker(opt.edgeRuntimeFilename);
-    GSCEdgeStats edgeStats;
+    GSCEdgeStatsManager edgeStatMan(opt.edgeRuntimeFilename);
 
     SVCandidateProcessor svProcessor(opt, progName, progVersion, cset,  truthTracker, edgeTracker);
 
@@ -205,7 +205,7 @@ runGSC(
             log_os << logtag << " Processing this edge took " << edgeTracker.getLastEdgeTime() << " seconds.\n";
         }
 
-        edgeStats.update(edge,edgeTracker);
+        edgeStatMan.update(edge,edgeTracker);
     }
 
     truthTracker.dumpAll();

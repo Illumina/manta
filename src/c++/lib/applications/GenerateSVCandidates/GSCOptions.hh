@@ -46,6 +46,7 @@ struct GSCOptions
     std::string chromDepthFilename;
     std::string truthVcfFilename;
     std::string edgeRuntimeFilename;
+    std::string edgeStatsFilename;
 
     std::string candidateOutputFilename;
     std::string diploidOutputFilename;

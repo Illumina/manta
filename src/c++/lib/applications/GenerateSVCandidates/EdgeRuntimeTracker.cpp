@@ -27,7 +27,8 @@
 
 
 EdgeRuntimeTracker::
-EdgeRuntimeTracker(const std::string& outputFile) :
+EdgeRuntimeTracker(
+    const std::string& outputFile) :
     _osPtr(nullptr),
     _cand(0),
     _compCand(0),

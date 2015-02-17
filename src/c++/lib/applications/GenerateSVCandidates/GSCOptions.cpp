@@ -35,14 +35,14 @@ usage(
     std::ostream& os,
     const manta::Program& prog,
     const boost::program_options::options_description& visible,
-    const char* msg = NULL)
+    const char* msg = nullptr)
 {
     os << "\n" << prog.name() << ": call candidates from an SV Locus graph\n\n";
     os << "version: " << prog.version() << "\n\n";
     os << "usage: " << prog.name() << " [options]\n\n";
     os << visible << "\n\n";
 
-    if (NULL != msg)
+    if (nullptr != msg)
     {
         os << msg << "\n\n";
     }
@@ -89,7 +89,9 @@ parseGSCOptions(
     ("truth-vcf", po::value(&opt.truthVcfFilename),
      "optional truth VCF file (for testing)")
     ("edge-runtime-log", po::value(&opt.edgeRuntimeFilename),
-     "optionally log edge runtime to this file")
+     "optionally log time for long-running edges to this file")
+    ("edge-stats-log", po::value(&opt.edgeStatsFilename),
+      "optionally log aggregate edge statistics to this file")
     ("candidate-output-file", po::value(&opt.candidateOutputFilename),
      "Write SV candidates to file (required)")
     ("diploid-output-file", po::value(&opt.diploidOutputFilename),

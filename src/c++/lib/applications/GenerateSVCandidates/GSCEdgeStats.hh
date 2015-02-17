@@ -17,8 +17,7 @@
 
 #pragma once
 
-#include "EdgeRuntimeTracker.hh"
-#include "svgraph/EdgeInfo.hh"
+#include "boost/serialization/nvp.hpp"
 
 #include <cstdint>
 
@@ -26,6 +25,8 @@
 /// aggregate statistics over a group of GSV edges
 struct GSCEdgeGroupStats
 {
+    GSCEdgeGroupStats() {}
+
     void
     merge(const GSCEdgeGroupStats& rhs)
     {
@@ -38,7 +39,7 @@ struct GSCEdgeGroupStats
     template<class Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {
-        ar& totalTime& assemblyTime& scoringTime& total;
+        ar& BOOST_SERIALIZATION_NVP(totalTime)& BOOST_SERIALIZATION_NVP(assemblyTime)& BOOST_SERIALIZATION_NVP(scoringTime)& BOOST_SERIALIZATION_NVP(total);
     }
 
     double totalTime = 0;
@@ -50,6 +51,8 @@ struct GSCEdgeGroupStats
 
 struct GSCEdgeStats
 {
+    GSCEdgeStats() {}
+
     void
     merge(const GSCEdgeStats& rhs)
     {
@@ -57,35 +60,12 @@ struct GSCEdgeStats
         remote.merge(rhs.remote);
     }
 
-    void
-    update(
-        const EdgeInfo& edge,
-        const EdgeRuntimeTracker& edgeTracker)
-    {
-        GSCEdgeGroupStats& gStats(getStatsGroup(edge));
-        gStats.total += 1;
-        gStats.totalTime += edgeTracker.getLastEdgeTime();
-        gStats.assemblyTime += edgeTracker.assmTime.getSeconds();
-        gStats.scoringTime += edgeTracker.scoreTime.getSeconds();
-    }
-
     template<class Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {
-        ar& local& remote;
+        ar& BOOST_SERIALIZATION_NVP(local) & BOOST_SERIALIZATION_NVP(remote);
     }
 
-private:
-    GSCEdgeGroupStats&
-    getStatsGroup(const EdgeInfo& edge)
-    {
-        return (edge.isSelfEdge() ? local : remote);
-    }
-
-public:
     GSCEdgeGroupStats local;
     GSCEdgeGroupStats remote;
 };
-
-
-
