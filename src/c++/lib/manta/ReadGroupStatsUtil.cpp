@@ -323,7 +323,7 @@ struct ReadGroupTracker
         // finalize insert size distro:
         if (! isInsertSizeConverged())
         {
-            if (_stats.fragStats.totalObservations() <1000)
+            if (_stats.fragStats.totalObservations() < 100)
             {
                 using namespace illumina::common;
 

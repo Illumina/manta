@@ -131,6 +131,7 @@ set(THIS_LIBEXECDIR "${THIS_EXEC_PREFIX}/libexec")
 set(THIS_PYTHON_LIBDIR "${CMAKE_INSTALL_PREFIX}/lib/python")
 set(THIS_DATADIR "${CMAKE_INSTALL_PREFIX}/share")
 set(THIS_DOCDIR "${CMAKE_INSTALL_PREFIX}/doc")
+set(THIS_DEMODIR "${THIS_DATADIR}/demo")
 
 message (STATUS "install prefix: ${CMAKE_INSTALL_PREFIX}")
 
@@ -163,6 +164,7 @@ add_custom_target(${THIS_UNITTESTS}
 add_subdirectory (cmake/preInstall)
 add_subdirectory (opt)
 add_subdirectory (c++)
+add_subdirectory (demo)
 add_subdirectory (python)
 add_subdirectory (markdown)
 add_subdirectory (cmake/postInstall)
