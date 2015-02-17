@@ -305,8 +305,12 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
 
     # merge edge stats:
     edgeStatsMergeLabel=preJoin(taskPrefix,"mergeEdgeStats")
-#    edgeSortCmd="sort -rnk2 " + " ".join(edgeRuntimeLogPaths) + " >| " + self.paths.getFinalEdgeStatsPath()
-#    self.addTask(edgeSortLabel, edgeSortCmd, dependencies=hygenTasks, isForceLocal=True)
+    edgeStatsMergeCmd=[self.params.mantaStatsMergeBin]
+    for statsFile in edgeStatsLogPaths :
+        edgeStatsMergeCmd.extend(["--stats-file",statsFile])
+    edgeStatsMergeCmd.extend(["--output-file",self.paths.getFinalEdgeStatsPath()])
+    edgeStatsMergeCmd.extend(["--report-file",self.paths.getFinalEdgeStatsReportPath()])
+    self.addTask(edgeStatsMergeLabel, edgeStatsMergeCmd, dependencies=hygenTasks, isForceLocal=True)
 
     return nextStepWait
 
@@ -369,7 +373,10 @@ class PathInfo:
         return os.path.join(self.params.workDir,"edgeRuntimeLog.txt")
 
     def getFinalEdgeStatsPath(self) :
-        return os.path.join(self.params.workDir,"edgeStats.xml")
+        return os.path.join(self.params.statsDir,"svCandidateGenerationStats.xml")
+
+    def getFinalEdgeStatsReportPath(self) :
+        return os.path.join(self.params.statsDir,"svCandidateGenerationStats.tsv")
 
     def getGraphStatsPath(self) :
         return os.path.join(self.params.statsDir,"svLocusGraphStats.tsv")

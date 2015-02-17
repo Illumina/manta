@@ -77,7 +77,7 @@ load(const char* filename)
     assert(nullptr != filename);
     std::ifstream ifs(filename);
     boost::archive::xml_iarchive ia(ifs);
-    ia >> BOOST_SERIALIZATION_NVP(data);
+    ia >> BOOST_SERIALIZATION_NVP(edgeData);
 }
 
 
@@ -87,7 +87,7 @@ GSCEdgeStats::
 save(std::ostream& os) const
 {
     boost::archive::xml_oarchive oa(os);
-    oa << BOOST_SERIALIZATION_NVP(data);
+    oa << BOOST_SERIALIZATION_NVP(edgeData);
 }
 
 
@@ -110,5 +110,5 @@ report(const char* filename) const
     assert(nullptr != filename);
     std::ofstream ofs(filename);
     ofs << "EdgeStatsReport:";
-    data.report(ofs);
+    edgeData.report(ofs);
 }

@@ -79,6 +79,7 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         mantaStatsBin=joinFile(libexecDir,"GetAlignmentStats")
         mantaGraphBin=joinFile(libexecDir,"EstimateSVLoci")
         mantaGraphMergeBin=joinFile(libexecDir,"MergeSVLoci")
+        mantaStatsMergeBin=joinFile(libexecDir,"MergeEdgeStats")
         mantaGraphCheckBin=joinFile(libexecDir,"CheckSVLoci")
         mantaHyGenBin=joinFile(libexecDir,"GenerateSVCandidates")
         mantaGraphStatsBin=joinFile(libexecDir,"SummarizeSVLoci")

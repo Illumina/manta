@@ -100,10 +100,10 @@ struct GSCEdgeStats
     void
     merge(const GSCEdgeStats& rhs)
     {
-        data.merge(rhs.data);
+        edgeData.merge(rhs.edgeData);
     }
 
-    GSCEdgeStatsData data;
+    GSCEdgeStatsData edgeData;
 };
 
 BOOST_CLASS_IMPLEMENTATION(GSCEdgeStats, boost::serialization::object_serializable)

@@ -56,7 +56,7 @@ private:
     getStatsGroup(
         const EdgeInfo& edge)
     {
-        return (edge.isSelfEdge() ? edgeStats.data.selfEdges : edgeStats.data.remoteEdges);
+        return (edge.isSelfEdge() ? edgeStats.edgeData.selfEdges : edgeStats.edgeData.remoteEdges);
     }
 
     std::ostream* _osPtr;
