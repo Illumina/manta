@@ -1478,13 +1478,13 @@ getSmallSVAssembly(
     // around each side of the breakend region?
     //
     // see extended description in getJumpAssembly
-    static const pos_t extraRefEdgeSize(700);
+    static const pos_t extraRefEdgeSize(250);
 
     // how much reference should we additionally extract for split
     // read alignment, but not for variant-discovery alignment?
     //
     // see extended description in getJumpAssembly
-    static const pos_t extraRefSplitSize(100);
+    static const pos_t extraRefSplitSize(550);
 
     static const pos_t extraRefSize(extraRefEdgeSize+extraRefSplitSize);
 

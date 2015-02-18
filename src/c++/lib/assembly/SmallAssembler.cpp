@@ -522,7 +522,7 @@ buildContigs(
         }
     }
 
-    /// solve for a best contig in the graph by a heuristic greedy maxflow-ish criteria
+    // solve for a best contig in the graph by a heuristic greedy maxflow-ish criteria
     AssembledContig contig;
     std::string maxWord;
     {
