@@ -443,10 +443,10 @@ private:
 
 
 
-// check whether any svs have grown to intersect each other
-//
-// this is also part of the temp hygen hack, so just make this minimally work:
-//
+/// check whether any svs have grown to intersect each other
+///
+/// this is also part of the temp hygen hack, so just make this minimally work:
+///
 static
 void
 consolidateOverlap(
@@ -733,6 +733,63 @@ processReadPair(
 }
 
 
+
+/// return true for candidates that should be filtered out, based on
+/// information available in a single junction (as opposed to
+/// requiring multi-junction analysis
+///
+static
+bool
+isFilterSingleJunctionCandidate(
+    const SVCandidate& sv)
+{
+    // don't consider candidates created from only
+    // semi-mapped read pairs (ie. one read of the pair is MAPQ0 or MAPQsmall)
+    if (sv.bp1.isLocalOnly() && sv.bp2.isLocalOnly()) return true;
+
+    // candidates must have a minimum amount of evidence:
+    if (isSpanningSV(sv))
+    {
+        // pass -- this is checked later in the pipeline...
+    }
+    else if (isComplexSV(sv))
+    {
+        static const unsigned minCandidateComplexCount(2);
+        if (sv.bp1.lowresEvidence.getTotal() < minCandidateComplexCount) return true;
+    }
+    else
+    {
+        assert(false && "Unknown SV candidate type");
+    }
+
+    return false;
+}
+
+
+
+static
+void
+filterCandidates(
+    std::vector<SVCandidate>& svs)
+{
+    unsigned svCount(svs.size());
+    unsigned index(0);
+    while(index<svCount)
+    {
+        if (isFilterSingleJunctionCandidate(svs[index]))
+        {
+            if ((index+1) < svCount) svs[index] = svs.back();
+            svs.resize(--svCount);
+        }
+        else
+        {
+            index++;
+        }
+    }
+}
+
+
+
 void
 SVFinder::
 getCandidatesFromData(
@@ -810,6 +867,8 @@ getCandidatesFromData(
         }
     }
 #endif
+
+    filterCandidates(svs);
 }
 
 
