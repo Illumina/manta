@@ -234,7 +234,7 @@ update(
         }
     }
 
-    if (SVLocusScanner::isReadFilteredCore(bamRead)) return;
+    if (SVLocusScanner::isFullyMappedFragReadFilteredCore(bamRead)) return;
 
     if (_isMaxDepth)
     {
