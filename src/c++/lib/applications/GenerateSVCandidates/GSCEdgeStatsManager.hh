@@ -54,12 +54,14 @@ struct GSCEdgeStatsManager : private boost::noncopyable
     void
     updateMJFilter(
         const EdgeInfo& edge,
-        const unsigned mjFilterCount)
+        const unsigned mjComplexCount,
+        const unsigned mjSpanningFilterCount)
     {
         if (_osPtr == nullptr) return;
 
         GSCEdgeGroupStats& gStats(getStatsGroup(edge));
-        gStats.totalMultiJunctionFilter++;
+        gStats.totalComplexCandidate += mjComplexCount;
+        gStats.totalSpanningCandidateFilter += mjSpanningFilterCount;
     }
 
     void

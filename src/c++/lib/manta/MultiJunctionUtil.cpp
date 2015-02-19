@@ -250,7 +250,8 @@ void
 findMultiJunctionCandidates(
     const std::vector<SVCandidate>& svs,
     const unsigned minCandidateSpanningCount,
-    unsigned& mjFilterCount,
+    unsigned& mjComplexCount,
+    unsigned& mjSpanningFilterCount,
     std::vector<SVMultiJunctionCandidate>& mjSVs)
 {
     mjSVs.clear();
@@ -271,6 +272,8 @@ findMultiJunctionCandidates(
             spanningSVs.push_back(candidateSV);
         }
     }
+
+    mjComplexCount = complexSVs.size();
 
     /// do a brute-force intersection test to see if we can associate candidates:
     ///
@@ -371,7 +374,7 @@ findMultiJunctionCandidates(
 
         if (isFilterMultiJunctionCandidate(minCandidateSpanningCount, mj))
         {
-            mjFilterCount++;
+            mjSpanningFilterCount++;
             continue;
         }
 

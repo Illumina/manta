@@ -91,7 +91,8 @@ struct GSCEdgeGroupStats
         scoringTime += rhs.scoringTime;
         totalInputEdgeCount += rhs.totalInputEdgeCount;
         totalCandidateCount += rhs.totalCandidateCount;
-        totalMultiJunctionFilter += rhs.totalMultiJunctionFilter;
+        totalComplexCandidate += rhs.totalComplexCandidate;
+        totalSpanningCandidateFilter += rhs.totalSpanningCandidateFilter;
         totalJunctionCount += rhs.totalJunctionCount;
         totalComplexJunctionCount += rhs.totalComplexJunctionCount;
         totalAssemblyCandidates += rhs.totalAssemblyCandidates;
@@ -113,7 +114,8 @@ struct GSCEdgeGroupStats
         & BOOST_SERIALIZATION_NVP(scoringTime)
         & BOOST_SERIALIZATION_NVP(totalInputEdgeCount)
         & BOOST_SERIALIZATION_NVP(totalCandidateCount)
-        & BOOST_SERIALIZATION_NVP(totalMultiJunctionFilter)
+        & BOOST_SERIALIZATION_NVP(totalComplexCandidate)
+        & BOOST_SERIALIZATION_NVP(totalSpanningCandidateFilter)
         & BOOST_SERIALIZATION_NVP(totalJunctionCount)
         & BOOST_SERIALIZATION_NVP(totalComplexJunctionCount)
         & BOOST_SERIALIZATION_NVP(totalAssemblyCandidates)
@@ -130,7 +132,8 @@ struct GSCEdgeGroupStats
     double scoringTime = 0;
     uint64_t totalInputEdgeCount = 0;
     uint64_t totalCandidateCount = 0;
-    uint64_t totalMultiJunctionFilter = 0;
+    uint64_t totalComplexCandidate = 0;
+    uint64_t totalSpanningCandidateFilter = 0;
     uint64_t totalJunctionCount = 0;
     uint64_t totalComplexJunctionCount = 0;
     uint64_t totalAssemblyCandidates = 0;

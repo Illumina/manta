@@ -171,9 +171,12 @@ runGSC(
                 truthTracker.addCandSV();
             }
 
-            unsigned mjFilterCount(0);
-            findMultiJunctionCandidates(svs, opt.minCandidateSpanningCount, mjFilterCount, mjSVs);
-            edgeStatMan.updateMJFilter(edge, mjFilterCount);
+            {
+                unsigned mjComplexCount(0);
+                unsigned mjSpanningFilterCount(0);
+                findMultiJunctionCandidates(svs, opt.minCandidateSpanningCount, mjComplexCount, mjSpanningFilterCount, mjSVs);
+                edgeStatMan.updateMJFilter(edge, mjComplexCount, mjSpanningFilterCount);
+            }
 
             bool isFindLargeInsertions(isIsolatedEdge);
             if (isFindLargeInsertions)

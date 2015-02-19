@@ -78,7 +78,8 @@ report(std::ostream& os) const
     os << "InputEdgeCandidatesPerEdge:\n";
     candidatesPerEdge.report(os);
     os << "CandidateCount\t" << totalCandidateCount << "\n";
-    os << "MultiJunctionFilterCount\t" << totalMultiJunctionFilter << "\n";
+    os << "ComplexCandidateCount\t" << totalComplexCandidate << "\n";
+    os << "SpanningComplexCandidateFiltered\t" << totalSpanningCandidateFilter << "\n";
     os << "JunctionCount\t" << totalJunctionCount << "\n";
     os << "ComplexJunctionCount\t" << totalComplexJunctionCount << "\n";
     os << "BreaksPerJunction:\n";
