@@ -105,6 +105,16 @@ struct SVLocusScanner
         return false;
     }
 
+    static
+    bool
+    isFullyMappedFragReadFilteredCore(
+        const bam_record& bamRead)
+    {
+        if (isReadFilteredCore(bamRead)) return true;
+        return (bamRead.is_unmapped() || (bamRead.is_paired() && bamRead.is_mate_unmapped()));
+    }
+
+
     /// this predicate runs any fast tests on the acceptability of a
     /// read for the SVLocus build
     /// Tests also for low mapq

@@ -60,7 +60,7 @@ SVFinder(const GSCOptions& opt) :
 
 
 
-/// making the dtor explicit and in the cpp allows unique_ptr to work reliably:
+// making the dtor explicit and in the cpp allows unique_ptr to work reliably:
 SVFinder::
 ~SVFinder()
 {}
@@ -86,8 +86,7 @@ addSVNodeRead(
 {
     using namespace illumina::common;
 
-    if (scanner.isReadFilteredCore(bamRead)) return;
-    else if (bamRead.is_unmapped() || (bamRead.is_paired() && bamRead.is_mate_unmapped())) return;
+    if (scanner.isFullyMappedFragReadFilteredCore(bamRead)) return;
 
     if (bamRead.map_qual() < scanner.getMinTier2MapQ()) return;
 
