@@ -22,6 +22,12 @@
 #include "htsapi/bam_record.hh"
 
 
+/// is this read part of a pair where both members are mapped?
+bool
+is_mapped_pair(
+    const bam_record& bam_read);
+
+
 /// is this read part of a pair where both members are mapped to the same chrom?
 ///
 bool

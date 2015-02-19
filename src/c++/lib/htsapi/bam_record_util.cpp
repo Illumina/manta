@@ -19,13 +19,22 @@
 #include "align_path_bam_util.hh"
 
 
+bool
+is_mapped_pair(
+    const bam_record& bam_read)
+{
+    if (! bam_read.is_paired()) return false;
+    if (bam_read.is_unmapped() || bam_read.is_mate_unmapped()) return false;
+    return true;
+}
+
+
 
 bool
 is_mapped_chrom_pair(
     const bam_record& bam_read)
 {
-    if (! bam_read.is_paired()) return false;
-    if (bam_read.is_unmapped() || bam_read.is_mate_unmapped()) return false;
+    if (! is_mapped_pair(bam_read)) return false;
     if (bam_read.target_id() != bam_read.mate_target_id()) return false;
     return true;
 }

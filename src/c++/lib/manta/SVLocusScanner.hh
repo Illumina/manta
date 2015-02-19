@@ -107,11 +107,11 @@ struct SVLocusScanner
 
     static
     bool
-    isFullyMappedFragReadFilteredCore(
+    isMappedReadFilteredCore(
         const bam_record& bamRead)
     {
         if (isReadFilteredCore(bamRead)) return true;
-        return (bamRead.is_unmapped() || (bamRead.is_paired() && bamRead.is_mate_unmapped()));
+        return (bamRead.is_unmapped());
     }
 
 
@@ -145,23 +145,10 @@ struct SVLocusScanner
         const bam_record& bamRead,
         const unsigned defaultReadGroupIndex) const;
 
-    /// fragments sizes get thrown is serveral pre-defined categories:
-    FragmentSizeType::index_t
-    getFragmentSizeType(
-        const bam_record& bamRead,
-        const unsigned defaultReadGroupIndex) const;
-
-    /// test whether a fragment is significantly larger than expected
+    /// return true if the read pair is anomalous, for any anomaly type besides being a short innie read:
     ///
-    /// this function is useful to eliminate reads which fail the ProperPair test
-    /// but are still very small
-    ///
-    bool
-    isLargeFragment(
-        const bam_record& bamRead,
-        const unsigned defaultReadGroupIndex) const;
-
-    /// return true if the read is anomalous, for any anomaly type besides being a short innie read:
+    /// according to this method nothing besides mapped read pairs can be anomalous, so all single read
+    /// anomalies (SA tags, CIGAR, semi-aligned) have to be detected elsewhere
     bool
     isNonCompressedAnomalous(
         const bam_record& bamRead,
@@ -273,6 +260,25 @@ struct SVLocusScanner
     };
 
 private:
+
+    /// fragments sizes get thrown is serveral pre-defined categories:
+    ///
+    /// assumes a mapped read pair -- check this in code if making this method non-private
+    FragmentSizeType::index_t
+    _getFragmentSizeType(
+        const bam_record& bamRead,
+        const unsigned defaultReadGroupIndex) const;
+
+    /// test whether a fragment is significantly larger than expected
+    ///
+    /// this function is useful to eliminate reads which fail the ProperPair test
+    /// but are still very small
+    ///
+    /// assumes a mapped read pair -- check this in code if making this method non-private
+    bool
+    _isLargeFragment(
+        const bam_record& bamRead,
+        const unsigned defaultReadGroupIndex) const;
 
     /////////////////////////////////////////////////
     // data:

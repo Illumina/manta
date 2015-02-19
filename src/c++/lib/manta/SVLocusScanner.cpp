@@ -724,9 +724,6 @@ getSingleReadSVCandidates(
 {
     using namespace illumina::common;
 
-    /// TODO: can't handle these yet, but plan to soon:
-    //if (localRead.is_mate_unmapped()) return;
-
     // - process any large indels in the localRead:
     getSVCandidatesFromReadIndels(opt, dopt, localAlign, candidates);
 #ifdef DEBUG_SCANNER
@@ -1113,7 +1110,7 @@ isProperPair(
 
 FragmentSizeType::index_t
 SVLocusScanner::
-getFragmentSizeType(
+_getFragmentSizeType(
     const bam_record& bamRead,
     const unsigned defaultReadGroupIndex) const
 {
@@ -1126,12 +1123,11 @@ getFragmentSizeType(
 
 bool
 SVLocusScanner::
-isLargeFragment(
+_isLargeFragment(
     const bam_record& bamRead,
     const unsigned defaultReadGroupIndex) const
 {
-    if (! bamRead.is_paired()) return false;
-    return FragmentSizeType::isLarge(getFragmentSizeType(bamRead,defaultReadGroupIndex));
+    return FragmentSizeType::isLarge(_getFragmentSizeType(bamRead,defaultReadGroupIndex));
 }
 
 
@@ -1142,9 +1138,10 @@ isNonCompressedAnomalous(
     const bam_record& bamRead,
     const unsigned defaultReadGroupIndex) const
 {
+    if (! is_mapped_pair(bamRead)) return false;
     const bool isAnomalous(! isProperPair(bamRead,defaultReadGroupIndex));
     const bool isInnie(is_innie_pair(bamRead));
-    const bool isLarge(isLargeFragment(bamRead,defaultReadGroupIndex));
+    const bool isLarge(_isLargeFragment(bamRead,defaultReadGroupIndex));
 
     // exclude innie read pairs which are anomalously short:
     return (isAnomalous && ((! isInnie) || isLarge));
@@ -1184,6 +1181,9 @@ isLocalAssemblyEvidence(
             return true;
         }
     }
+
+    /// TODO Add shadow evidence -- complexity here is keeping locus merging under control due to the large breakend location variance
+    /// suggested by shadows
 
     return false;
 }

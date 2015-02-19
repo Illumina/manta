@@ -227,14 +227,16 @@ update(
     if (! isTumor)
     {
         // depth estimation relies on a simple filtration criteria to stay in sync with the chromosome mean
-        // depth estimates:
+        // depth estimates using samtools idxstats:
         if (! bamRead.is_unmapped())
         {
             addToDepthBuffer(defaultReadGroupIndex, bamRead);
         }
     }
 
-    if (SVLocusScanner::isFullyMappedFragReadFilteredCore(bamRead)) return;
+    // note we currently filter unmapped but allow unpaired/unmapped mate to come through this screen
+    // these reads can still show an assembly signal as individual reads, or by contributing shadows
+    if (SVLocusScanner::isMappedReadFilteredCore(bamRead)) return;
 
     if (_isMaxDepth)
     {
@@ -267,6 +269,7 @@ update(
         {
             if (isMateInsertionEvidenceCandidate(bamRead, _readScanner.getMinMapQ()))
             {
+                // these counts are used to generate background noise rates in later candidate generation stages:
                 incounts.remoteRecoveryCandidates++;
             }
         }

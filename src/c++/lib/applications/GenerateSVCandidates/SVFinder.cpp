@@ -86,7 +86,7 @@ addSVNodeRead(
 {
     using namespace illumina::common;
 
-    if (scanner.isFullyMappedFragReadFilteredCore(bamRead)) return;
+    if (scanner.isMappedReadFilteredCore(bamRead)) return;
 
     if (bamRead.map_qual() < scanner.getMinTier2MapQ()) return;
 
@@ -552,7 +552,7 @@ consolidateOverlap(
 /// the longer term we should be able to delineate cluster by a clustering of possible
 /// breakend locations.
 ///
-/// isExpandSVCandidateSet if false, don't add new SVs or expand existing SVs
+/// \param isExpandSVCandidateSet if false, don't add new SVs or expand existing SVs
 ///
 void
 SVFinder::
@@ -709,10 +709,10 @@ processReadPair(
     }
     assert(localReadPtr->isSet() && "Neither read in pair is set");
 
-    const bam_record* remoteBamRecPtr( remoteReadPtr->isSet() ? &(remoteReadPtr->bamrec) : NULL);
+    const bam_record* remoteBamRecPtr( remoteReadPtr->isSet() ? &(remoteReadPtr->bamrec) : nullptr);
 
     const reference_contig_segment& localRef( localReadPtr->isNode1 ? refSeq1 : refSeq2 );
-    const reference_contig_segment* remoteRefPtr(NULL);
+    const reference_contig_segment* remoteRefPtr(nullptr);
     if (remoteReadPtr->isSet())
     {
         remoteRefPtr = (remoteReadPtr->isNode1 ?  &refSeq1 : &refSeq2 );
