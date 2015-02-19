@@ -27,6 +27,7 @@
 #include "manta/SVReferenceUtil.hh"
 
 #include <iostream>
+#include <unordered_set>
 
 //#define DEBUG_REFINER
 //#define DEBUG_CONTIG
@@ -1478,13 +1479,13 @@ getSmallSVAssembly(
     // around each side of the breakend region?
     //
     // see extended description in getJumpAssembly
-    static const pos_t extraRefEdgeSize(250);
+    static const pos_t extraRefEdgeSize(700);
 
     // how much reference should we additionally extract for split
     // read alignment, but not for variant-discovery alignment?
     //
     // see extended description in getJumpAssembly
-    static const pos_t extraRefSplitSize(550);
+    static const pos_t extraRefSplitSize(100);
 
     static const pos_t extraRefSize(extraRefEdgeSize+extraRefSplitSize);
 
@@ -1508,9 +1509,11 @@ getSmallSVAssembly(
     getIntervalReferenceSegment(_opt.referenceFilename, _header, extraRefSize, sv.bp1.interval, assemblyData.bp1ref, leadingTrim, trailingTrim);
 
     // in most cases, these values should equal extraRefSplitSize,
-    // sometimes they're forced to be shorter:
-    const pos_t leadingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(leadingTrim)));
-    const pos_t trailingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(trailingTrim)));
+    // sometimes they're forced to be shorter b/c we didn't retreieve as much reference sequence as targeted:
+    const pos_t maxLeadingCut(std::max(0, extraRefSize - static_cast<pos_t>(leadingTrim)));
+    const pos_t maxTrailingCut(std::max(0, extraRefSize - static_cast<pos_t>(trailingTrim)));
+    const pos_t leadingCut(std::max(0, maxLeadingCut - extraRefEdgeSize));
+    const pos_t trailingCut(std::max(0, maxTrailingCut - extraRefEdgeSize));
 
     const std::string& align1RefStr(assemblyData.bp1ref.seq());
 
@@ -1575,16 +1578,51 @@ getSmallSVAssembly(
         // remove candidate from consideration unless we find a
         // sufficiently large indel with good flanking sequence:
         bool isSmallSVCandidate(false);
+        
+        // come up with a more intelligent reference span limit:
+        pos_t adjustedLeadingCut(leadingCut);
+        pos_t adjustedTrailingCut(trailingCut);
+        {
+            // for all 16mers in the contig, find the earliest and
+            // latest kmer match in the reference, limit reference
+            // to these points (but not less than the original breakend region)
+            static const int merSize(16);
+            std::unordered_set<std::string> contigHash;
+            const unsigned contigSize(contig.seq.size());
+            for (unsigned contigIndex(0);contigIndex<(contigSize-(merSize-1));++contigIndex)
+            {
+                contigHash.insert(contig.seq.substr(contigIndex,merSize));
+            }
+            
+            const pos_t refSize(align1RefStr.size());
+            const pos_t minRefIndex(leadingCut);
+            const pos_t maxRefIndex(refSize-(trailingCut+merSize));
+
+            const pos_t maxFwdRefIndex(std::min(maxLeadingCut, maxRefIndex));
+            pos_t refIndex=minRefIndex;
+            for (refIndex=minRefIndex; refIndex<=maxFwdRefIndex; refIndex++)
+            {
+                if (contigHash.count(align1RefStr.substr(refIndex,merSize)) != 0) break;
+            }
+            adjustedLeadingCut=refIndex;
+
+            const pos_t minRevRefIndex(std::max(minRefIndex,refSize-maxTrailingCut));
+            for (refIndex=(maxRefIndex); refIndex>=minRevRefIndex; refIndex--)
+            {
+                if (contigHash.count(align1RefStr.substr(refIndex,merSize)) != 0) break;
+            }
+            adjustedTrailingCut=(refSize-(refIndex+merSize));
+        }
 
         /// start with largeSV aligner (currently restricted to
         /// insertion only:
         {
             _largeSVAligner.align(
                 contig.seq.begin(), contig.seq.end(),
-                align1RefStr.begin() + leadingCut, align1RefStr.end() - trailingCut,
+                align1RefStr.begin() + adjustedLeadingCut, align1RefStr.end() - adjustedTrailingCut,
                 alignment);
 
-            alignment.align.beginPos += leadingCut;
+            alignment.align.beginPos += adjustedLeadingCut;
             getExtendedContig(alignment, contig.seq, align1RefStr, extendedContig);
 
 
@@ -1631,10 +1669,10 @@ getSmallSVAssembly(
         {
             _smallSVAligner.align(
                 contig.seq.begin(), contig.seq.end(),
-                align1RefStr.begin() + leadingCut, align1RefStr.end() - trailingCut,
+                align1RefStr.begin() + adjustedLeadingCut, align1RefStr.end() - adjustedTrailingCut,
                 alignment);
 
-            alignment.align.beginPos += leadingCut;
+            alignment.align.beginPos += adjustedLeadingCut;
             getExtendedContig(alignment, contig.seq, align1RefStr, extendedContig);
 
             // trial two different flanking test sizes, this way we
