@@ -56,6 +56,8 @@ struct SVCandidateSetRead
     bam_record bamrec;
     bool isNode1 = true; ///< used to link this read to node1 or node2 in the original graph ordering, note this is not the same as read1 and read2
     bool isSubMapped = false; ///< is mapq below the minimum normally required to use this read
+    double mappedReadCount = 0;
+    double subMappedReadCount = 0;
 };
 
 std::ostream&
@@ -121,6 +123,26 @@ struct SVCandidateSetReadPairSampleGroup
     typedef pair_t::iterator iterator;
     typedef pair_t::const_iterator const_iterator;
 
+    /// increment once for each eligible read considered
+    ///
+    /// this information is used to determine signal rate
+    /// so that it can be compared to sample specific noise
+    /// levels
+    void
+    increment(
+        const bool /*isNode1*/,
+        const bool isSubMapped)
+    {
+        if (isSubMapped)
+        {
+            _subMappedReadCount++;
+        }
+        else
+        {
+            _mappedReadCount++;
+        }
+    }
+
     /// add a new bam record to the set:
     void
     add(const bam_record& bamRead,
@@ -184,6 +206,9 @@ private:
     pindex_t _pairIndex;
 
     bool _isFull = false; ///< this flag can be set if the object grows too large to insert more data into it
+
+    double _mappedReadCount = 0;
+    double _subMappedReadCount = 0;
 };
 
 

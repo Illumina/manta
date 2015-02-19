@@ -93,6 +93,8 @@ addSVNodeRead(
     const bool isSubMapped(bamRead.map_qual() < scanner.getMinMapQ());
     if ((!isGatherSubmapped) && isSubMapped) return;
 
+    svDataGroup.increment(isNode1,isSubMapped);
+
     const bool isNonCompressedAnomalous(scanner.isNonCompressedAnomalous(bamRead,bamIndex));
 
     bool isLocalAssemblyEvidence(false);

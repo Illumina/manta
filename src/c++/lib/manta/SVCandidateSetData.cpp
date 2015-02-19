@@ -96,7 +96,7 @@ add(const bam_record& bamRead,
 #endif
 
     SVCandidateSetReadPair* pairPtr(getReadPair(bamRead.qname()));
-    if (NULL == pairPtr) return;
+    if (nullptr == pairPtr) return;
 
     SVCandidateSetReadPair& pair(*pairPtr);
 
@@ -105,20 +105,25 @@ add(const bam_record& bamRead,
     {
         targetReadPtr = (&(pair.read2));
     }
-    if (targetReadPtr->isSet())
+
+    SVCandidateSetRead& targetRead(*targetReadPtr);
+    if (targetRead.isSet())
     {
         if (isExpectRepeat) return;
 
         std::ostringstream oss;
         oss << "Unexpected read name collision.\n"
-            << "\tExisting read: " << (*targetReadPtr) << "\n"
+            << "\tExisting read: " << targetRead << "\n"
             << "\tNew read: " << bamRead << "\n";
         BOOST_THROW_EXCEPTION(LogicException(oss.str()));
     }
 
-    targetReadPtr->bamrec = bamRead;
-    targetReadPtr->isNode1 = isNode1;
-    targetReadPtr->isSubMapped = isSubMapped;
+
+    targetRead.bamrec = bamRead;
+    targetRead.isNode1 = isNode1;
+    targetRead.isSubMapped = isSubMapped;
+    targetRead.mappedReadCount = _mappedReadCount;
+    targetRead.subMappedReadCount = _subMappedReadCount;
 }
 
 
