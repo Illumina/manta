@@ -1583,10 +1583,12 @@ getSmallSVAssembly(
         pos_t adjustedLeadingCut(leadingCut);
         pos_t adjustedTrailingCut(trailingCut);
         {
-            // for all 16mers in the contig, find the earliest and
+            // for all kmers in the contig, find the earliest and
             // latest kmer match in the reference, limit reference
             // to these points (but not less than the original breakend region)
-            static const int merSize(16);
+            //
+            // pick low k because this is just a simple runtime optimization
+            static const int merSize(10);
             std::unordered_set<std::string> contigHash;
             const unsigned contigSize(contig.seq.size());
             for (unsigned contigIndex(0);contigIndex<(contigSize-(merSize-1));++contigIndex)
