@@ -401,7 +401,7 @@ typedef std::map<unsigned,unsigned> movemap_t;
 struct svCandDeleter
 {
     svCandDeleter(
-        std::vector<SVCandidate>& svs,
+        std::vector<FatSVCandidate>& svs,
         movemap_t& moveSVIndex) :
         _shift(0),
         _isLastIndex(false),
@@ -438,7 +438,7 @@ private:
     unsigned _shift;
     bool _isLastIndex;
     unsigned _lastIndex;
-    std::vector<SVCandidate>& _svs;
+    std::vector<FatSVCandidate>& _svs;
     movemap_t& _moveSVIndex;
 };
 
@@ -453,7 +453,7 @@ void
 consolidateOverlap(
     const unsigned bamCount,
     SVCandidateSetData& svData,
-    std::vector<SVCandidate>& svs)
+    std::vector<FatSVCandidate>& svs)
 {
 #ifdef DEBUG_SVDATA
     static const std::string logtag("consolidateOverlap: ");
@@ -562,7 +562,7 @@ assignPairObservationsToSVCandidates(
     const std::vector<SVObservation>& readCandidates,
     const bool isExpandSVCandidateSet,
     SVCandidateSetReadPair& pair,
-    std::vector<SVCandidate>& svs)
+    std::vector<FatSVCandidate>& svs)
 {
 #ifdef DEBUG_SVDATA
     static const std::string logtag("assignPairObservationsToSVCandidates: ");
@@ -613,7 +613,7 @@ assignPairObservationsToSVCandidates(
 
         bool isMatched(false);
         unsigned svIndex(0);
-        for (SVCandidate& sv : svs)
+        for (FatSVCandidate& sv : svs)
         {
             if (sv.isIntersect(readCand))
             {
@@ -695,7 +695,7 @@ processReadPair(
     const reference_contig_segment& refSeq2,
     const unsigned bamIndex,
     const bool isExpandSVCandidateSet,
-    std::vector<SVCandidate>& svs,
+    std::vector<FatSVCandidate>& svs,
     TruthTracker& truthTracker,
     SVCandidateSetReadPair& pair)
 {
@@ -771,7 +771,7 @@ isFilterSingleJunctionCandidate(
 static
 void
 filterCandidates(
-    std::vector<SVCandidate>& svs)
+    std::vector<FatSVCandidate>& svs)
 {
     unsigned svCount(svs.size());
     unsigned index(0);
@@ -801,10 +801,14 @@ getCandidatesFromData(
     const reference_contig_segment& refSeq2,
     const bool isSomatic,
     SVCandidateSetData& svData,
-    std::vector<SVCandidate>& svs,
+    std::vector<SVCandidate>& output_svs,
     TruthTracker& truthTracker)
 {
     const unsigned bamCount(_bamStreams.size());
+
+    // track a richer candidates data structure internally, then slice the info down to the
+    // regular sv candidate as a last step:
+    std::vector<FatSVCandidate> svs;
 
     for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
     {
@@ -870,6 +874,8 @@ getCandidatesFromData(
 #endif
 
     filterCandidates(svs);
+
+    std::copy(svs.begin(),svs.end(),std::back_inserter(output_svs));
 }
 
 

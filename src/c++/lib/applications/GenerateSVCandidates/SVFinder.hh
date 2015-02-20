@@ -18,10 +18,9 @@
 #pragma once
 
 #include "GSCOptions.hh"
-
+#include "FatSVCandidate.hh"
 #include "htsapi/bam_streamer.hh"
 #include "manta/ChromDepthFilterUtil.hh"
-#include "manta/SVCandidate.hh"
 #include "manta/SVCandidateSetData.hh"
 #include "manta/SVLocusScanner.hh"
 #include "svgraph/EdgeInfo.hh"
@@ -76,7 +75,7 @@ private:
         const std::vector<SVObservation>& readCandidates,
         const bool isExpandSVCandidateSet,
         SVCandidateSetReadPair& pair,
-        std::vector<SVCandidate>& svs);
+        std::vector<FatSVCandidate>& svs);
 
     /// we either process the pair to discover new SVs and expand existing SVs,
     /// or we go through and add pairs to existing SVs without expansion
@@ -90,7 +89,7 @@ private:
         const reference_contig_segment& refSeq2,
         const unsigned bamIndex,
         const bool isExpandSVCandidateSet,
-        std::vector<SVCandidate>& svs,
+        std::vector<FatSVCandidate>& svs,
         TruthTracker& truthTracker,
         SVCandidateSetReadPair& pair);
 
