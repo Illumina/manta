@@ -182,22 +182,49 @@ std::ostream&
 operator<<(std::ostream& os, const SVCandidate& svc);
 
 
+namespace FRAGSOURCE
+{
+enum index_t
+{
+    UNKNOWN,
+    READ1,
+    READ2,
+    PAIR
+};
+}
+
 /// when we extract an SV candidate from a single piece of evidence, it can be treated as a special 'observation' class:
 ///
 struct SVObservation : public SVCandidate
 {
     SVObservation() :
         SVCandidate(),
-        evtype(SVEvidenceType::UNKNOWN)
+        evtype(SVEvidenceType::UNKNOWN),
+        fragSource(FRAGSOURCE::UNKNOWN)
     {}
 
     void
     clear()
     {
         evtype = SVEvidenceType::UNKNOWN;
+        fragSource = FRAGSOURCE::UNKNOWN;
         SVCandidate::clear();
     }
 
-    SVEvidenceType::index_t evtype;
-};
+    bool
+    isSingleReadSource() const
+    {
+        using namespace FRAGSOURCE;
+        return ((fragSource == READ1) || (fragSource == READ2));
+    }
 
+    bool
+    isRead1Source() const
+    {
+        using namespace FRAGSOURCE;
+        return (fragSource == READ1);
+    }
+
+    SVEvidenceType::index_t evtype;
+    FRAGSOURCE::index_t fragSource;
+};

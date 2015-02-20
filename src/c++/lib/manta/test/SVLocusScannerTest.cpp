@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromReadIndels )
     TruthTracker truthTracker(emptyPathStr, hdr_info);
     TrackedCandidates trackedCandidates(candidates,truthTracker);
 
-    getSVCandidatesFromReadIndels(opt, dopt, align, trackedCandidates);
+    getSVCandidatesFromReadIndels(opt, dopt, align, FRAGSOURCE::UNKNOWN, trackedCandidates);
 
     BOOST_REQUIRE_EQUAL(candidates.size(),1u);
     BOOST_REQUIRE(candidates[0].bp1.interval.range.is_pos_intersect(100));

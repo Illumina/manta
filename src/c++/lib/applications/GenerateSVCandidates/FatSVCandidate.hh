@@ -22,6 +22,18 @@
 #include <array>
 
 
+
+template <typename Vec>
+void
+appendVec(
+    Vec& A,
+    const Vec& B)
+{
+    A.insert( A.end(), B.begin(), B.end() );
+}
+
+
+
 /// an SV candidate with additional details pertaining to input read evidence which is useful for filtration
 ///
 struct FatSVCandidate : public SVCandidate
@@ -42,7 +54,11 @@ struct FatSVCandidate : public SVCandidate
     merge(const FatSVCandidate& rhs)
     {
         if (! base_t::merge(rhs)) return false;
-
+        for (unsigned i(0);i<SVEvidenceType::SIZE;++i)
+        {
+            appendVec(bp1EvidenceIndex[i],rhs.bp1EvidenceIndex[i]);
+            appendVec(bp2EvidenceIndex[i],rhs.bp2EvidenceIndex[i]);
+        }
         return true;
     }
 
@@ -60,7 +76,6 @@ struct FatSVCandidate : public SVCandidate
     evidenceMerge(const FatSVCandidate& rhs)
     {
         if (! base_t::evidenceMerge(rhs)) return false;
-
         return true;
     }
 

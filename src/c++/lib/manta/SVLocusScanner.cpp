@@ -123,6 +123,7 @@ GetSplitSVCandidate(
     const pos_t leftPos,
     const pos_t rightPos,
     const SVEvidenceType::index_t& svSource,
+    const FRAGSOURCE::index_t& fragSource,
     const bool isComplex = false)
 {
     SVObservation sv;
@@ -134,6 +135,7 @@ GetSplitSVCandidate(
 
     localBreakend.lowresEvidence.add(svSource);
     sv.evtype = svSource;
+    sv.fragSource = fragSource;
 
     if (! isComplex)
     {
@@ -224,7 +226,8 @@ GetSplitSACandidate(
     const ReadScannerDerivOptions& dopt,
     const bam_record& localRead,
     const SimpleAlignment& localAlign,
-    const SimpleAlignment& remoteAlign)
+    const SimpleAlignment& remoteAlign,
+    const FRAGSOURCE::index_t fragSource)
 {
     using namespace SVEvidenceType;
     static const index_t svSource(SPLIT_ALIGN);
@@ -234,6 +237,7 @@ GetSplitSACandidate(
     sv.bp1.lowresEvidence.add(svSource);
     sv.bp2.lowresEvidence.add(svSource);
     sv.evtype = svSource;
+    sv.fragSource = fragSource;
 
     updateSABreakend(dopt, localAlign, sv.bp1);
     updateSABreakend(dopt, remoteAlign, sv.bp2);
@@ -265,6 +269,7 @@ getSACandidatesFromRead(
     const ReadScannerDerivOptions& dopt,
     const bam_record& localRead,
     const SimpleAlignment& localAlign,
+    const FRAGSOURCE::index_t fragSource,
     const chromMap_t& chromToIndex,
     TrackedCandidates& candidates)
 {
@@ -320,7 +325,7 @@ getSACandidatesFromRead(
 
         cigar_to_apath(saDat[3].c_str(), remoteAlign.path);
 
-        SVObservation sv = GetSplitSACandidate(dopt, localRead, localAlign, remoteAlign);
+        SVObservation sv = GetSplitSACandidate(dopt, localRead, localAlign, remoteAlign, fragSource);
 #ifdef DEBUG_SCANNER
         static const std::string logtag("getSACandidatesFromRead");
         log_os << logtag << " evaluating SA sv for inclusion: " << sv << "\n";
@@ -337,6 +342,7 @@ getSVCandidatesFromReadIndels(
     const ReadScannerOptions& opt,
     const ReadScannerDerivOptions& dopt,
     const SimpleAlignment& align,
+    const FRAGSOURCE::index_t fragSource,
     TrackedCandidates& candidates)
 {
     using namespace SVEvidenceType;
@@ -379,7 +385,7 @@ getSVCandidatesFromReadIndels(
                 if (ps.length >= opt.minCandidateVariantSize)
                 {
                     static const bool isComplex(true);
-                    candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos, svSource, isComplex));
+                    candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos, svSource, fragSource, isComplex));
                 }
             }
         }
@@ -388,7 +394,7 @@ getSVCandidatesFromReadIndels(
             const swap_info sinfo(align.path,pathIndex);
             if ((sinfo.delete_length >= opt.minCandidateVariantSize) || (sinfo.insert_length >= opt.minCandidateVariantSize))
             {
-                candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos+sinfo.delete_length, svSource));
+                candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos+sinfo.delete_length, svSource, fragSource));
             }
 
             nPathSegments = sinfo.n_seg;
@@ -401,14 +407,14 @@ getSVCandidatesFromReadIndels(
             {
                 if (ps.length >= opt.minCandidateVariantSize)
                 {
-                    candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos+ps.length, svSource));
+                    candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos+ps.length, svSource, fragSource));
                 }
             }
             else if (ps.type == INSERT)
             {
                 if (ps.length >= opt.minCandidateVariantSize)
                 {
-                    candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos, svSource));
+                    candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos, svSource, fragSource));
                 }
             }
         }
@@ -428,6 +434,7 @@ getSVCandidatesFromSemiAligned(
     const ReadScannerOptions& opt,
     const bam_record& bamRead,
     const SimpleAlignment& bamAlign,
+    const FRAGSOURCE::index_t fragSource,
     const reference_contig_segment& refSeq,
     TrackedCandidates& candidates)
 {
@@ -450,13 +457,13 @@ getSVCandidatesFromSemiAligned(
     if (leadingMismatchLen >= opt.minSemiAlignedMismatchLen)
     {
         const pos_t pos(leadingRefPos);
-        candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),pos,pos,svSource,isComplex));
+        candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),pos,pos,svSource, fragSource,isComplex));
     }
 
     if (trailingMismatchLen >= opt.minSemiAlignedMismatchLen)
     {
         const pos_t pos(trailingRefPos);
-        candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),pos,pos,svSource,isComplex));
+        candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),pos,pos,svSource, fragSource,isComplex));
     }
 }
 
@@ -506,6 +513,7 @@ getSVCandidatesFromPair(
 
     localBreakend.lowresEvidence.add(svLocalPair);
     sv.evtype = svLocalPair;
+    sv.fragSource = FRAGSOURCE::PAIR;
 
     // if remoteRead is not available, estimate mate localRead size to be same as local,
     // and assume no clipping on mate localRead:
@@ -724,22 +732,25 @@ getSingleReadSVCandidates(
 {
     using namespace illumina::common;
 
+    const bool isRead2(localRead.is_paired() && (localRead.read_no() == 2));
+    const FRAGSOURCE::index_t fragSource(isRead2 ? FRAGSOURCE::READ2 : FRAGSOURCE::READ1);
+
     // - process any large indels in the localRead:
-    getSVCandidatesFromReadIndels(opt, dopt, localAlign, candidates);
+    getSVCandidatesFromReadIndels(opt, dopt, localAlign, fragSource, candidates);
 #ifdef DEBUG_SCANNER
     static const std::string logtag("getSingleReadSVCandidates");
     log_os << logtag << " post-indels candidate_size: " << candidates.size() << "\n";
 #endif
 
     // this detects semi-aligned AND soft-clip now:
-    getSVCandidatesFromSemiAligned(opt, localRead, localAlign, refSeq,
+    getSVCandidatesFromSemiAligned(opt, localRead, localAlign, fragSource, refSeq,
                                    candidates);
 #ifdef DEBUG_SCANNER
     log_os << logtag << " post-semialigned candidate_size: " << candidates.size() << "\n";
 #endif
 
     /// - process split/SA reads:
-    getSACandidatesFromRead(opt, dopt, localRead, localAlign, chromToIndex,
+    getSACandidatesFromRead(opt, dopt, localRead, localAlign, fragSource, chromToIndex,
                             candidates);
 #ifdef DEBUG_SCANNER
     log_os << logtag << " post-split read candidate_size: " << candidates.size() << "\n";
