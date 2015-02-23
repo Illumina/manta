@@ -1,7 +1,7 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Manta
-// Copyright (c) 2013-2014 Illumina, Inc.
+// Starka
+// Copyright (c) 2009-2014 Illumina, Inc.
 //
 // This software is provided under the terms and conditions of the
 // Illumina Open Source Software License 1.
@@ -11,8 +11,8 @@
 // <https://github.com/sequencing/licenses/>
 //
 
-/// \file
 /// \author Chris Saunders
+/// \author Mitch Bekritsky
 ///
 
 #include "blt_util/binomial_test.hh"
@@ -29,43 +29,58 @@ using boost::math::complement;
 
 
 
-bool
-is_reject_binomial_p_exact(const double alpha,
-                           const double p,
-                           const unsigned n_success,
-                           const unsigned n_failure)
+double
+get_binomial_twosided_exact_pval(
+    const double p,
+    const unsigned n_success,
+    const unsigned n_trials)
 {
+    assert((p>0.) && (p<1.));
+    assert(n_success <= n_trials);
 
-    const unsigned n_trial(n_success+n_failure);
-    const double obs_p((double)n_success/(double)n_trial);
+    const unsigned n_failure(n_trials-n_success);
+    const double obs_p((double)n_success/(double)n_trials);
 
     double exact_prob;
     if (obs_p <= p)
     {
-        exact_prob=cdf(binomial(n_trial,p),n_success);
+        exact_prob=cdf(binomial(n_trials,p),n_success);
     }
     else
     {
-        exact_prob=cdf(binomial(n_trial,1.-p),n_failure);
+        exact_prob=cdf(binomial(n_trials,1.-p),n_failure);
     }
 
-    return ((2.*exact_prob)<alpha);
+    return (2.*exact_prob);
 }
 
 
 
 bool
-is_reject_binomial_p_chi_sqr(const double alpha,
-                             const double p,
-                             const unsigned n_success,
-                             const unsigned n_failure)
+is_reject_binomial_twosided_exact(
+    const double alpha,
+    const double p,
+    const unsigned n_success,
+    const unsigned n_trials)
 {
+    return (get_binomial_twosided_exact_pval(p,n_success,n_trials)<alpha);
+}
 
+
+
+bool
+is_reject_binomial_twosided_chi_sqr(
+    const double alpha,
+    const double p,
+    const unsigned n_success,
+    const unsigned n_trials)
+{
     assert((p>0.) && (p<1.));
+    assert(n_success <= n_trials);
 
-    const unsigned n_trial(n_success+n_failure);
-    const double e_success(p*n_trial);
-    const double e_failure(((double)n_trial)-e_success);
+    const unsigned n_failure(n_trials-n_success);
+    const double e_success(p*n_trials);
+    const double e_failure(((double)n_trials)-e_success);
 
     const double d_success(n_success-e_success);
     const double d_failure(n_failure-e_failure);
@@ -75,27 +90,36 @@ is_reject_binomial_p_chi_sqr(const double alpha,
     return is_chi_sqr_reject(xsq,1,alpha);
 }
 
+
+
 bool
-is_reject_binomial_pval(const double threshold,
-                        const double p,
-                        const unsigned n_success,
-                        const unsigned n_trials)
+is_reject_binomial_twosided(
+    const double alpha,
+    const double p,
+    const unsigned n_success,
+    const unsigned n_trials)
 {
-    assert(threshold >= 0);
+    static const unsigned exact_test_threshold(250);
 
-    double observed_pval = get_binomial_pval(p, n_success, n_trials);
-
-    return (observed_pval <= threshold);
+    if (n_trials > exact_test_threshold)
+    {
+        return is_reject_binomial_twosided_chi_sqr(alpha,p,n_success,n_trials);
+    }
+    else
+    {
+        return is_reject_binomial_twosided_exact(alpha,p,n_success,n_trials);
+    }
 }
 
 
 
 double
-get_binomial_pval(const double p,
-                  const unsigned n_success,
-                  const unsigned n_trials)
+get_binomial_gte_n_success_exact_pval(
+    const double p,
+    const unsigned n_success,
+    const unsigned n_trials)
 {
-    //although technically binomial probabilities of
+    //although binomial probabilities of
     // 0 or 1 are possible, they don't have much meaning
     assert((p >= 0.) && (p <= 1.));
     assert(n_success <= n_trials);
@@ -107,21 +131,15 @@ get_binomial_pval(const double p,
 
 
 bool
-is_reject_binomial_p(const double alpha,
-                     const double p,
-                     const unsigned n_success,
-                     const unsigned n_failure)
+is_reject_binomial_gte_n_success_exact(
+    const double threshold,
+    const double p,
+    const unsigned n_success,
+    const unsigned n_trials)
 {
-    static const unsigned exact_test_threshold(250);
+    assert(threshold >= 0);
 
-    const unsigned n_trial(n_success+n_failure);
+    const double observed_pval = get_binomial_gte_n_success_exact_pval(p, n_success, n_trials);
 
-    if (n_trial > exact_test_threshold)
-    {
-        return is_reject_binomial_p_chi_sqr(alpha,p,n_success,n_failure);
-    }
-    else
-    {
-        return is_reject_binomial_p_exact(alpha,p,n_success,n_failure);
-    }
+    return (observed_pval <= threshold);
 }
