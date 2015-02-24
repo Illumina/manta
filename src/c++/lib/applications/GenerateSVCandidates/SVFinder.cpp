@@ -875,10 +875,11 @@ isCandidateSignalSignificant(
     // take up to the top N observations to make sure we focus on peak density:
     // this becomes N observations in
 
-    // we're filtering for runtime so a high fp rate on significance is fine:
-    const double alpha(0.10);
+    const double alpha(0.005);
     return is_reject_binomial_gte_n_success_exact(alpha, noiseRate,signalCount,(backgroundCount+signalCount));
 }
+
+
 
 namespace SINGLE_FILTER
 {
