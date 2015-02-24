@@ -18,8 +18,8 @@
 #pragma once
 
 #include "EdgeRuntimeTracker.hh"
+#include "appstats/GSCEdgeStats.hh"
 #include "blt_util/time_util.hh"
-#include "svgraph/GSCEdgeStats.hh"
 #include "svgraph/EdgeInfo.hh"
 
 #include "boost/utility.hpp"
@@ -41,7 +41,8 @@ struct GSCEdgeStatsManager : private boost::noncopyable
     void
     updateEdgeCandidates(
         const EdgeInfo& edge,
-        const unsigned candCount)
+        const unsigned candCount,
+        const SVFinderStats& finderStats)
     {
         if (_osPtr == nullptr) return;
 
@@ -49,6 +50,7 @@ struct GSCEdgeStatsManager : private boost::noncopyable
         gStats.totalInputEdgeCount++;
         gStats.totalCandidateCount+=candCount;
         gStats.candidatesPerEdge.increment(candCount);
+        gStats.finderStats.merge(finderStats);
     }
 
     void

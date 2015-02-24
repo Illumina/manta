@@ -4,6 +4,9 @@ sequence alignment utilities
 applications/X:
 code specific to command-line application X
 
+appstats:
+shared performance tracking code between applications
+
 blt_util:
 general utility functions from starling/strelka/gvcftools
 

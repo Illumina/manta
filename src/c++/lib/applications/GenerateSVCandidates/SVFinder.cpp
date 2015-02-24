@@ -880,6 +880,17 @@ isCandidateSignalSignificant(
     return is_reject_binomial_gte_n_success_exact(alpha, noiseRate,signalCount,(backgroundCount+signalCount));
 }
 
+namespace SINGLE_FILTER
+{
+    enum index_t
+    {
+        NONE,
+        SEMIMAPPED,
+        COMPLEXLOWCOUNT,
+        COMPLEXLOWSIGNAL
+    };
+}
+
 
 
 /// return true for candidates that should be filtered out, based on
@@ -887,14 +898,15 @@ isCandidateSignalSignificant(
 /// requiring multi-junction analysis
 ///
 static
-bool
+SINGLE_FILTER::index_t
 isFilterSingleJunctionCandidate(
     const double assemblyNoiseRate,
     const FatSVCandidate& sv)
 {
+    using namespace SINGLE_FILTER;
     // don't consider candidates created from only
     // semi-mapped read pairs (ie. one read of the pair is MAPQ0 or MAPQsmall)
-    if (sv.bp1.isLocalOnly() && sv.bp2.isLocalOnly()) return true;
+    if (sv.bp1.isLocalOnly() && sv.bp2.isLocalOnly()) return SEMIMAPPED;
 
     // candidates must have a minimum amount of evidence:
     if (isSpanningSV(sv))
@@ -904,15 +916,15 @@ isFilterSingleJunctionCandidate(
     else if (isComplexSV(sv))
     {
         static const unsigned minCandidateComplexCount(2);
-        if (sv.bp1.lowresEvidence.getTotal() < minCandidateComplexCount) return true;
-        if (! isCandidateSignalSignificant(assemblyNoiseRate,sv)) return true;
+        if (sv.bp1.lowresEvidence.getTotal() < minCandidateComplexCount) return COMPLEXLOWCOUNT;
+        if (! isCandidateSignalSignificant(assemblyNoiseRate,sv)) return COMPLEXLOWSIGNAL;
     }
     else
     {
         assert(false && "Unknown SV candidate type");
     }
 
-    return false;
+    return NONE;
 }
 
 
@@ -921,13 +933,31 @@ static
 void
 filterCandidates(
     const double assemblyNoiseRate,
-    std::vector<FatSVCandidate>& svs)
+    std::vector<FatSVCandidate>& svs,
+    SVFinderStats& stats)
 {
     unsigned svCount(svs.size());
     unsigned index(0);
     while(index<svCount)
     {
-        if (isFilterSingleJunctionCandidate(assemblyNoiseRate,svs[index]))
+        using namespace SINGLE_FILTER;
+        const index_t filt(isFilterSingleJunctionCandidate(assemblyNoiseRate,svs[index]));
+
+        switch (filt)
+        {
+        case SEMIMAPPED:
+            stats.semiMappedFilter++;
+            break;
+        case COMPLEXLOWCOUNT:
+            stats.ComplexLowCountFilter++;
+            break;
+        case COMPLEXLOWSIGNAL:
+            stats.ComplexLowSignalFilter++;
+            break;
+        default:
+            break;
+        }
+        if (filt != NONE)
         {
             if ((index+1) < svCount) svs[index] = svs.back();
             svs.resize(--svCount);
@@ -951,6 +981,7 @@ getCandidatesFromData(
     const reference_contig_segment& refSeq2,
     SVCandidateSetData& svData,
     std::vector<SVCandidate>& output_svs,
+    SVFinderStats& stats,
     TruthTracker& truthTracker)
 {
     const unsigned bamCount(_bamStreams.size());
@@ -1022,7 +1053,7 @@ getCandidatesFromData(
     }
 #endif
 
-    filterCandidates(_assemblyNoiseRate,svs);
+    filterCandidates(_assemblyNoiseRate,svs,stats);
 
     std::copy(svs.begin(),svs.end(),std::back_inserter(output_svs));
 }
@@ -1035,6 +1066,7 @@ findCandidateSV(
     const EdgeInfo& edge,
     SVCandidateSetData& svData,
     std::vector<SVCandidate>& svs,
+    SVFinderStats& stats,
     TruthTracker& truthTracker)
 {
     svData.clear();
@@ -1054,6 +1086,7 @@ findCandidateSV(
 #ifdef DEBUG_SVDATA
         log_os << "SVDATA: Edge failed min edge count.\n";
 #endif
+        stats.edgeFilter++;
         return;
     }
 
@@ -1089,7 +1122,7 @@ findCandidateSV(
     const SVLocusNode& node1(locus.getNode(edge.nodeIndex1));
     const SVLocusNode& node2(locus.getNode(edge.nodeIndex2));
     getCandidatesFromData(node1, node2, bamHeader, refSeq1, refSeq2,
-                          svData, svs, truthTracker);
+                          svData, svs, stats, truthTracker);
 
     //checkResult(svData,svs);
 }

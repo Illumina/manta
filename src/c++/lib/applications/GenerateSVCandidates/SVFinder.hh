@@ -19,6 +19,7 @@
 
 #include "GSCOptions.hh"
 #include "FatSVCandidate.hh"
+#include "appstats/SVFinderStats.hh"
 #include "htsapi/bam_streamer.hh"
 #include "manta/ChromDepthFilterUtil.hh"
 #include "manta/SVCandidateSetData.hh"
@@ -47,6 +48,7 @@ struct SVFinder
         const EdgeInfo& edge,
         SVCandidateSetData& svData,
         std::vector<SVCandidate>& svs,
+        SVFinderStats& stats,
         TruthTracker& truthTracker);
 
     void
@@ -102,6 +104,7 @@ private:
         const reference_contig_segment& refSeq2,
         SVCandidateSetData& svData,
         std::vector<SVCandidate>& svs,
+        SVFinderStats& stats,
         TruthTracker& truthTracker);
 
     const ChromDepthFilterUtil&

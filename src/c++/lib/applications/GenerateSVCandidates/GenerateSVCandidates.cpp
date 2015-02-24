@@ -154,11 +154,12 @@ runGSC(
             // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
             {
                 const TimeScoper candTime(edgeTracker.candTime);
-                svFind.findCandidateSV(edge, svData, svs, truthTracker);
+                SVFinderStats stats;
+                svFind.findCandidateSV(edge, svData, svs, stats, truthTracker);
+                edgeStatMan.updateEdgeCandidates(edge, svs.size(), stats);
             }
 
             truthTracker.reportNumCands(svs.size(), edge);
-            edgeStatMan.updateEdgeCandidates(edge, svs.size());
 
             if (opt.isVerbose)
             {

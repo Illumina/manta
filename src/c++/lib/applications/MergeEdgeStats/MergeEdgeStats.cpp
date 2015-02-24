@@ -17,8 +17,8 @@
 
 #include "MergeEdgeStats.hh"
 #include "MESOptions.hh"
+#include "appstats/GSCEdgeStats.hh"
 #include "common/OutStream.hh"
-#include "svgraph/GSCEdgeStats.hh"
 
 #include "blt_util/log.hh"
 

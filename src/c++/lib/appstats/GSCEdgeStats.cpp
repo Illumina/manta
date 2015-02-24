@@ -79,6 +79,7 @@ report(std::ostream& os) const
     candidatesPerEdge.report(os);
     os << "CandidateCount\t" << totalCandidateCount << "\n";
     os << "ComplexCandidateCount\t" << totalComplexCandidate << "\n";
+    finderStats.report(os);
     os << "SpanningComplexCandidateFiltered\t" << totalSpanningCandidateFilter << "\n";
     os << "JunctionCount\t" << totalJunctionCount << "\n";
     os << "ComplexJunctionCount\t" << totalComplexJunctionCount << "\n";

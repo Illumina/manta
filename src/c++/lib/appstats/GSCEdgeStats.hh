@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "SVFinderStats.hh"
+
 #include "boost/serialization/nvp.hpp"
 #include "boost/serialization/vector.hpp"
 
@@ -100,6 +102,7 @@ struct GSCEdgeGroupStats
         candidatesPerEdge.merge(rhs.candidatesPerEdge);
         assemblyCandidatesPerJunction.merge(rhs.assemblyCandidatesPerJunction);
         breaksPerJunction.merge(rhs.breaksPerJunction);
+        finderStats.merge(rhs.finderStats);
     }
 
     void
@@ -123,6 +126,7 @@ struct GSCEdgeGroupStats
         & BOOST_SERIALIZATION_NVP(candidatesPerEdge)
         & BOOST_SERIALIZATION_NVP(assemblyCandidatesPerJunction)
         & BOOST_SERIALIZATION_NVP(breaksPerJunction)
+        & BOOST_SERIALIZATION_NVP(finderStats)
         ;
     }
 
@@ -142,6 +146,8 @@ struct GSCEdgeGroupStats
     SimpleHist candidatesPerEdge;
     SimpleHist assemblyCandidatesPerJunction;
     SimpleHist breaksPerJunction;
+
+    SVFinderStats finderStats;
 };
 
 BOOST_CLASS_IMPLEMENTATION(GSCEdgeGroupStats, boost::serialization::object_serializable)
