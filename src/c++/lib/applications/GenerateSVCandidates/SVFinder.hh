@@ -31,7 +31,8 @@
 
 struct SVFinder
 {
-    SVFinder(const GSCOptions& opt);
+    SVFinder(
+        const GSCOptions& opt);
 
     ~SVFinder();
 
@@ -64,7 +65,6 @@ private:
         const GenomeInterval& searchInterval,
         const reference_contig_segment& refSeq,
         const bool isNode1,
-        const bool isSomatic,
         SVCandidateSetData& svData,
         TruthTracker& truthTracker);
 
@@ -100,7 +100,6 @@ private:
         const bam_header_info& bamHeader,
         const reference_contig_segment& refSeq1,
         const reference_contig_segment& refSeq2,
-        const bool isSomatic,
         SVCandidateSetData& svData,
         std::vector<SVCandidate>& svs,
         TruthTracker& truthTracker);
@@ -120,6 +119,7 @@ private:
     const std::string _referenceFilename;
 
     const bool _isRNA;
+    bool _isSomatic;
 
     typedef std::shared_ptr<bam_streamer> streamPtr;
     std::vector<streamPtr> _bamStreams;
@@ -129,4 +129,6 @@ private:
 
     /// throwaway stats tracker...
     SampleEvidenceCounts _eCounts;
+
+    double _assemblyNoiseRate;
 };

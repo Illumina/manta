@@ -83,10 +83,10 @@ get_binomial_gte_n_success_exact_pval(
 /// tests whether n_success or greater can be rejected under
 /// a null hypothesis of B(n_trials,p)
 ///
-/// matches R code: binom.test(n_success, n_trials, p, "greater")$p.value <= threshold
+/// matches R code: binom.test(n_success, n_trials, p, "greater")$p.value <= alpha
 bool
 is_reject_binomial_gte_n_success_exact(
-    const double threshold,
+    const double alpha,
     const double p,
     const unsigned n_success,
     const unsigned n_trials);

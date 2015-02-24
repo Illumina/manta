@@ -132,14 +132,14 @@ get_binomial_gte_n_success_exact_pval(
 
 bool
 is_reject_binomial_gte_n_success_exact(
-    const double threshold,
+    const double alpha,
     const double p,
     const unsigned n_success,
     const unsigned n_trials)
 {
-    assert(threshold >= 0);
+    assert(alpha >= 0);
 
     const double observed_pval = get_binomial_gte_n_success_exact_pval(p, n_success, n_trials);
 
-    return (observed_pval <= threshold);
+    return (observed_pval <= alpha);
 }
