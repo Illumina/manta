@@ -17,35 +17,97 @@
 
 #pragma once
 
+#include "boost/timer/timer.hpp"
 #include "boost/utility.hpp"
 
-#include <ctime>
 
+/// helper functions for boost::timer::cpu_times
+inline
+void
+merge(
+    boost::timer::cpu_times& lhs,
+    const boost::timer::cpu_times& rhs)
+{
+    lhs.wall += rhs.wall;
+    lhs.user += lhs.user;
+    lhs.system += lhs.system;
+}
+
+inline
+void
+difference(
+    boost::timer::cpu_times& lhs,
+    const boost::timer::cpu_times& rhs)
+{
+    lhs.wall -= rhs.wall;
+    lhs.user -= lhs.user;
+    lhs.system -= lhs.system;
+}
+
+
+namespace boost {
+namespace serialization {
+
+template<class Archive>
+void serialize(Archive & ar, boost::timer::cpu_times & t, const unsigned /*version*/)
+{
+    ar & t.wall & t.user & t.system;
+}
+
+}
+}
 
 
 /// simple time track utility
 struct TimeTracker
 {
-    void reset()
+    TimeTracker() { _timer.stop(); }
+
+    void
+    clear()
     {
-        _isStart = false;
-        _startTime = 0;
-        _totalSecs = 0;
+        _isReset = true;
     }
 
-    void start();
+    /// starts clock without reset to accumulate total time
+    void
+    resume()
+    {
+        //assert((! _isStart) && "clock is running");
+        if (_isReset)
+        {
+            _timer.start();
+            _isReset = false;
+        }
+        else _timer.resume();
+    }
 
-    void stop();
+    /// stop clock
+    void
+    stop()
+    {
+        _timer.stop();
+    }
 
-    /// get total time in seconds
+    boost::timer::cpu_times
+    getTimes() const
+    {
+        return _timer.elapsed();
+    }
+
+    /// DEPRECATED get user cpu time in seconds
     ///
     /// timer must be stopped
-    double getSeconds() const;
+    double
+    getSeconds() const
+    {
+        using namespace boost::chrono;
+        return static_cast<double>(duration_cast<milliseconds>(nanoseconds(getTimes().user)).count())/1000.;
+    }
 
 private:
-    bool _isStart = false;
-    clock_t _startTime = 0;
-    double _totalSecs = 0;
+    bool _isReset = true;
+    boost::timer::cpu_timer _timer;
 };
 
 
@@ -54,7 +116,7 @@ struct TimeScoper : private boost::noncopyable
 {
     TimeScoper(TimeTracker& t) : _t(t)
     {
-        _t.start();
+        _t.resume();
     }
 
     ~TimeScoper()

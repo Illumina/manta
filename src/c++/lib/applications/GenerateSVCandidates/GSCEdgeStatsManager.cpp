@@ -38,7 +38,7 @@ GSCEdgeStatsManager(
         BOOST_THROW_EXCEPTION(illumina::common::LogicException(oss.str()));
     }
 
-    lifeTime.start();
+    lifeTime.resume();
 }
 
 

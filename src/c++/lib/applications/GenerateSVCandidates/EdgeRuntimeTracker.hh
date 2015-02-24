@@ -37,13 +37,13 @@ struct EdgeRuntimeTracker : private boost::noncopyable
     void
     start()
     {
-        edgeTime.reset();
-        candTime.reset();
-        assmTime.reset();
-        scoreTime.reset();
-        remoteTime.reset();
+        edgeTime.clear();
+        candTime.clear();
+        assmTime.clear();
+        scoreTime.clear();
+        remoteTime.clear();
 
-        edgeTime.start();
+        edgeTime.resume();
         _cand = 0;
         _compCand = 0;
         _assmCand = 0;

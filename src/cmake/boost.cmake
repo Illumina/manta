@@ -28,13 +28,15 @@ endif ()
 macro (initBoostParams)
     # required boost libraries
     set (THIS_BOOST_VERSION 1.53.0)
+    # note we default to alphabetical order here, except where boost libraries depend on
+    # each other (timer->chrono)
     set (THIS_BOOST_COMPONENTS date_time filesystem program_options
-                                regex serialization system unit_test_framework)
+                                regex serialization system timer chrono unit_test_framework)
 
     # the name given to boost.build and the library name are the same for all libraries, except
     # for test, so we need two lists now:
     set (THIS_BOOST_BUILD_COMPONENTS date_time filesystem program_options
-                                     regex serialization system test)
+                                     regex serialization system timer chrono test)
     set (Boost_USE_MULTITHREADED OFF)
     set (Boost_USE_STATIC_LIBS ON)
 endmacro()

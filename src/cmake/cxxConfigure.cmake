@@ -55,13 +55,18 @@ include ("${THIS_MACROS_CMAKE}")
 #    set(THIS_LIBRARY_SUFFIX "")
 #endif ()
 
-# optional support for gzip compression
+# required support for gzip compression
 static_find_library(ZLIB zlib.h z)
 if    (HAVE_ZLIB)
     set  (THIS_ADDITIONAL_LIB ${THIS_ADDITIONAL_LIB} z)
     message(STATUS "Gzip compression supported")
 else  ()
     message(FATAL_ERROR "No support for gzip compression")
+endif ()
+
+# required support for librt to allow boost chrono
+if (UNIX AND NOT APPLE)
+    set  (THIS_ADDITIONAL_LIB ${THIS_ADDITIONAL_LIB} rt)
 endif ()
 
 # samtools 1.x forces pthreads in link:
