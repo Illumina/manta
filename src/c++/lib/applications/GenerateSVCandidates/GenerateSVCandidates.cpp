@@ -213,7 +213,9 @@ runGSC(
         edgeTracker.stop(edge);
         if (opt.isVerbose)
         {
-            log_os << logtag << " Processing this edge took " << edgeTracker.getLastEdgeTime() << " seconds.\n";
+            log_os << logtag << " Time to process last edge: ";
+            edgeTracker.getLastEdgeTime().reportSec(log_os);
+            log_os << "\n";
         }
 
         edgeStatMan.updateScoredEdgeTime(edge, edgeTracker);

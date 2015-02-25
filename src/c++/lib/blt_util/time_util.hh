@@ -17,45 +17,96 @@
 
 #pragma once
 
+#include "boost/serialization/nvp.hpp"
 #include "boost/timer/timer.hpp"
 #include "boost/utility.hpp"
 
+#include <iosfwd>
 
-/// helper functions for boost::timer::cpu_times
+
+namespace BOOST_TIMER_HELPER
+{
 inline
-void
-merge(
-    boost::timer::cpu_times& lhs,
-    const boost::timer::cpu_times& rhs)
+double
+getTimerSeconds(
+    const boost::timer::nanosecond_type& ns)
 {
-    lhs.wall += rhs.wall;
-    lhs.user += lhs.user;
-    lhs.system += lhs.system;
+    using namespace boost::chrono;
+    return static_cast<double>(duration_cast<microseconds>(nanoseconds(ns)).count())/1000000.;
+}
 }
 
-inline
-void
-difference(
-    boost::timer::cpu_times& lhs,
-    const boost::timer::cpu_times& rhs)
+/// this is a replacement for boost::timer cpu_times
+/// with serialization/merge, etc...
+struct CpuTimes
 {
-    lhs.wall -= rhs.wall;
-    lhs.user -= lhs.user;
-    lhs.system -= lhs.system;
-}
+    CpuTimes() {}
 
+    CpuTimes(
+        const boost::timer::cpu_times& t)
+    : wall(BOOST_TIMER_HELPER::getTimerSeconds(t.wall)),
+      user(BOOST_TIMER_HELPER::getTimerSeconds(t.user)),
+      system(BOOST_TIMER_HELPER::getTimerSeconds(t.system))
+    {}
 
-namespace boost {
-namespace serialization {
+    void
+    merge(
+        const CpuTimes& rhs)
+    {
+        wall += rhs.wall;
+        user += rhs.user;
+        system += rhs.system;
+    }
 
-template<class Archive>
-void serialize(Archive & ar, boost::timer::cpu_times & t, const unsigned /*version*/)
-{
-    ar & t.wall & t.user & t.system;
-}
+    void
+    difference(
+        const CpuTimes& rhs)
+    {
+        wall -= rhs.wall;
+        user -= rhs.user;
+        system -= rhs.system;
+    }
 
-}
-}
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned /*version*/)
+    {
+        ar & BOOST_SERIALIZATION_NVP(wall)
+        & BOOST_SERIALIZATION_NVP(user)
+        & BOOST_SERIALIZATION_NVP(system)
+        ;
+    }
+
+    void
+    reportSec(
+        std::ostream& os) const
+    {
+        static const char tlabel('s');
+        static const double factor(1.);
+        report(factor,&tlabel,os);
+    }
+
+    void
+    reportHr(
+        std::ostream& os) const
+    {
+        static const char tlabel('h');
+        static const double factor(1./3600.);
+        report(factor,&tlabel,os);
+    }
+
+    void
+    report(
+        const double factor,
+        const char* tlabel,
+        std::ostream& os) const;
+
+    double wall = 0.;
+    double user = 0.;
+    double system = 0.;
+};
+
+BOOST_CLASS_IMPLEMENTATION(CpuTimes, boost::serialization::object_serializable)
+
 
 
 /// simple time track utility
@@ -89,10 +140,10 @@ struct TimeTracker
         _timer.stop();
     }
 
-    boost::timer::cpu_times
+    CpuTimes
     getTimes() const
     {
-        return _timer.elapsed();
+        return CpuTimes(_timer.elapsed());
     }
 
     /// DEPRECATED get user cpu time in seconds
@@ -101,8 +152,8 @@ struct TimeTracker
     double
     getSeconds() const
     {
-        using namespace boost::chrono;
-        return static_cast<double>(duration_cast<milliseconds>(nanoseconds(getTimes().user)).count())/1000.;
+        using namespace BOOST_TIMER_HELPER;
+        return getTimerSeconds(getTimes().user);
     }
 
 private:

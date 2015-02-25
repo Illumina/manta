@@ -18,6 +18,7 @@
 #pragma once
 
 #include "SVFinderStats.hh"
+#include "blt_util/time_util.hh"
 
 #include "boost/serialization/nvp.hpp"
 #include "boost/serialization/vector.hpp"
@@ -87,10 +88,10 @@ struct GSCEdgeGroupStats
     void
     merge(const GSCEdgeGroupStats& rhs)
     {
-        totalTime += rhs.totalTime;
-        candTime += rhs.candTime;
-        assemblyTime += rhs.assemblyTime;
-        scoringTime += rhs.scoringTime;
+        totalTime.merge(rhs.totalTime);
+        candTime.merge(rhs.candTime);
+        assemblyTime.merge(rhs.assemblyTime);
+        scoringTime.merge(rhs.scoringTime);
         totalInputEdgeCount += rhs.totalInputEdgeCount;
         totalCandidateCount += rhs.totalCandidateCount;
         totalComplexCandidate += rhs.totalComplexCandidate;
@@ -130,10 +131,10 @@ struct GSCEdgeGroupStats
         ;
     }
 
-    double totalTime = 0;
-    double candTime = 0;
-    double assemblyTime = 0;
-    double scoringTime = 0;
+    CpuTimes totalTime;
+    CpuTimes candTime;
+    CpuTimes assemblyTime;
+    CpuTimes scoringTime;
     uint64_t totalInputEdgeCount = 0;
     uint64_t totalCandidateCount = 0;
     uint64_t totalComplexCandidate = 0;
@@ -160,7 +161,7 @@ struct GSCEdgeStatsData
     void
     merge(const GSCEdgeStatsData& rhs)
     {
-        lifeTime += rhs.lifeTime;
+        lifeTime.merge(rhs.lifeTime);
         selfEdges.merge(rhs.selfEdges);
         remoteEdges.merge(rhs.remoteEdges);
     }
@@ -176,7 +177,7 @@ struct GSCEdgeStatsData
         & BOOST_SERIALIZATION_NVP(remoteEdges);
     }
 
-    double lifeTime = 0.;
+    CpuTimes lifeTime;
     GSCEdgeGroupStats selfEdges;
     GSCEdgeGroupStats remoteEdges;
 };

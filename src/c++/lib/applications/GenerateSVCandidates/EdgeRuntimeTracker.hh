@@ -53,10 +53,10 @@ struct EdgeRuntimeTracker : private boost::noncopyable
     void
     stop(const EdgeInfo& edge);
 
-    double
+    CpuTimes
     getLastEdgeTime() const
     {
-        return edgeTime.getSeconds();
+        return edgeTime.getTimes();
     }
 
     void

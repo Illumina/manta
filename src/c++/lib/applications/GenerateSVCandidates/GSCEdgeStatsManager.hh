@@ -103,10 +103,10 @@ struct GSCEdgeStatsManager : private boost::noncopyable
         if (_osPtr == nullptr) return;
 
         GSCEdgeGroupStats& gStats(getStatsGroup(edge));
-        gStats.totalTime += edgeTracker.getLastEdgeTime();
-        gStats.candTime += edgeTracker.candTime.getSeconds();
-        gStats.assemblyTime += edgeTracker.assmTime.getSeconds();
-        gStats.scoringTime += edgeTracker.scoreTime.getSeconds();
+        gStats.totalTime.merge(edgeTracker.getLastEdgeTime());
+        gStats.candTime.merge(edgeTracker.candTime.getTimes());
+        gStats.assemblyTime.merge(edgeTracker.assmTime.getTimes());
+        gStats.scoringTime.merge(edgeTracker.scoreTime.getTimes());
     }
 
 private:

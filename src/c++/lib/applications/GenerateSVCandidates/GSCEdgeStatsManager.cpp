@@ -49,7 +49,7 @@ GSCEdgeStatsManager::
     if (_osPtr != nullptr)
     {
         lifeTime.stop();
-        edgeStats.edgeData.lifeTime=lifeTime.getSeconds();
+        edgeStats.edgeData.lifeTime=lifeTime.getTimes();
         edgeStats.save(*_osPtr);
     }
 }

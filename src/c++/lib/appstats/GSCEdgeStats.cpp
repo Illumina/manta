@@ -54,6 +54,27 @@ report(std::ostream& os) const
 void
 reportTime(
     const char* label,
+    const CpuTimes ltime,
+    const uint64_t edgeCount,
+    const uint64_t candCount,
+    std::ostream& os)
+{
+    os << label << "Hours\t";
+    ltime.reportHr(os);
+    os << "\n";
+    os << label << "SecsPerEdge\t";
+    ltime.report(safeFrac(1,edgeCount),"s",os);
+    os << "\n";
+    os << label << "SecsPerCand\t";
+    ltime.report(safeFrac(1,candCount),"s",os);
+    os << "\n";
+}
+
+
+#if 0
+void
+reportTime(
+    const char* label,
     const double ltime,
     const uint64_t edgeCount,
     const uint64_t candCount,
@@ -65,6 +86,7 @@ reportTime(
         << "\t" << safeFrac(ltime,candCount)
         << "\n";
 }
+#endif
 
 
 
@@ -72,7 +94,11 @@ void
 GSCEdgeGroupStats::
 report(std::ostream& os) const
 {
-    const double nocatTime(totalTime-(candTime+assemblyTime+scoringTime));
+    CpuTimes catTime(candTime);
+    catTime.merge(assemblyTime);
+    catTime.merge(scoringTime);
+    CpuTimes nocatTime(totalTime);
+    nocatTime.difference(catTime);
 
     os << "InputEdgeCount\t" << totalInputEdgeCount << "\n";
     os << "InputEdgeCandidatesPerEdge:\n";
@@ -102,10 +128,17 @@ void
 GSCEdgeStatsData::
 report(std::ostream& os) const
 {
+    using namespace BOOST_TIMER_HELPER;
     GSCEdgeGroupStats all(remoteEdges);
     all.merge(selfEdges);
-    os << "SVGenTotalHours\t" << lifeTime/3600 << "\n";
-    os << "NonEdgeHours\t" << (lifeTime-all.totalTime)/3600 << "\n";
+    os << "SVGenTotalHours\t";
+    lifeTime.reportHr(os);
+    os << "\n";
+    CpuTimes nonEdge(lifeTime);
+    nonEdge.difference(all.totalTime);
+    os << "NonEdgeHours\t";
+    nonEdge.reportHr(os);
+    os << "\n";
     os << "\n[AllEdges]\n";
     all.report(os);
     os << "\n[RemoteEdges]\n";
