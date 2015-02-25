@@ -832,6 +832,23 @@ isLocalEvidence(
 
 static
 bool
+isCandidateCountSufficient(
+    const SVCandidate& sv)
+{
+    static const unsigned minCandidateComplexCount(2);
+    const SVBreakendLowResEvidence& evidence(sv.bp1.lowresEvidence);
+    for (unsigned i(0);i<SVEvidenceType::SIZE;++i)
+    {
+        if (SVEvidenceType::isPairType(i)) continue;
+        if (evidence.getVal(i) >= minCandidateComplexCount) return true;
+    }
+    return false;
+}
+
+
+
+static
+bool
 isCandidateSignalSignificant(
     const double noiseRate,
     const FatSVCandidate& sv)
@@ -916,8 +933,7 @@ isFilterSingleJunctionCandidate(
     }
     else if (isComplexSV(sv))
     {
-        static const unsigned minCandidateComplexCount(2);
-        if (sv.bp1.lowresEvidence.getTotal() < minCandidateComplexCount) return COMPLEXLOWCOUNT;
+        if (! isCandidateCountSufficient(sv)) return COMPLEXLOWCOUNT;
         if (! isCandidateSignalSignificant(assemblyNoiseRate,sv)) return COMPLEXLOWSIGNAL;
     }
     else
