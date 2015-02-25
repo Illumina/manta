@@ -90,4 +90,39 @@ BOOST_AUTO_TEST_CASE( boost_icl_test_map )
 }
 
 
+
+BOOST_AUTO_TEST_CASE( boost_icl_test_map2 )
+{
+    typedef interval_map<int,unsigned> map_t;
+    map_t test_map;
+
+    test_map.add(std::make_pair(interval<int>::right_open(3,7),1u));
+    test_map.add(std::make_pair(interval<int>::right_open(4,5),2u));
+    test_map.add(std::make_pair(interval<int>::right_open(6,8),1u));
+
+    BOOST_REQUIRE_EQUAL(test_map.size(),5u);
+
+    auto b(test_map.begin());
+    BOOST_REQUIRE_EQUAL(b->first.lower(),3);
+    BOOST_REQUIRE_EQUAL(b->first.upper(),4);
+    BOOST_REQUIRE_EQUAL(b->second,1u);
+    ++b;
+    BOOST_REQUIRE_EQUAL(b->first.lower(),4);
+    BOOST_REQUIRE_EQUAL(b->first.upper(),5);
+    BOOST_REQUIRE_EQUAL(b->second,3u);
+    ++b;
+    BOOST_REQUIRE_EQUAL(b->first.lower(),5);
+    BOOST_REQUIRE_EQUAL(b->first.upper(),6);
+    BOOST_REQUIRE_EQUAL(b->second,1u);
+    ++b;
+    BOOST_REQUIRE_EQUAL(b->first.lower(),6);
+    BOOST_REQUIRE_EQUAL(b->first.upper(),7);
+    BOOST_REQUIRE_EQUAL(b->second,2u);
+    ++b;
+    BOOST_REQUIRE_EQUAL(b->first.lower(),7);
+    BOOST_REQUIRE_EQUAL(b->first.upper(),8);
+    BOOST_REQUIRE_EQUAL(b->second,1u);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
