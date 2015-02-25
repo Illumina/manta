@@ -143,6 +143,8 @@ struct TimeTracker
     CpuTimes
     getTimes() const
     {
+        static const CpuTimes zero;
+        if (_isReset) return zero;
         return CpuTimes(_timer.elapsed());
     }
 

@@ -922,6 +922,7 @@ isFilterSingleJunctionCandidate(
     const FatSVCandidate& sv)
 {
     using namespace SINGLE_FILTER;
+
     // don't consider candidates created from only
     // semi-mapped read pairs (ie. one read of the pair is MAPQ0 or MAPQsmall)
     if (sv.bp1.isLocalOnly() && sv.bp2.isLocalOnly()) return SEMIMAPPED;
