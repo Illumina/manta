@@ -227,7 +227,7 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
             getEdgeException(fromIndex,toIndex);
         }
 
-        // handle return warning:
+        // handle compiler warning for return val, this code should never run:
         static SVLocusEdge bogusWarning;
         return bogusWarning;
     }
