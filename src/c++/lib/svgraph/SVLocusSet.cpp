@@ -587,20 +587,49 @@ getNodeMergeableIntersect(
         std::vector<EdgeInfoType> inputIntersectEdges;
         getIntersectingEdgeNodes(inputLocusIndex, inputEdge.first, remoteToLocal, remoteIntersect, inputIntersectEdges);
 
-        // total counts for this edge:
-        unsigned mergedRemoteEdgeCount(0);
+        unsigned intersectCount(inputIntersectEdges.size());
+        if (! isInputLocusMoved)
+        {
+            intersectCount++;
+        }
+
+        const bool isRegionCheck(intersectCount>2);
+
+        if (isRegionCheck)
+        {
+            _mergeRegions.clear();
+        }
+
         unsigned mergedLocalEdgeCount(0);
+        unsigned mergedRemoteEdgeCount(0);
+
         for (const EdgeInfoType edgeInfo : inputIntersectEdges)
         {
             const SVLocus& edgeLocus(getLocus(edgeInfo.first.first));
             const NodeIndexType localNodeIndex(edgeInfo.first.second);
             const NodeIndexType remoteNodeIndex(edgeInfo.second);
 
+            const known_pos_range2& localRange(edgeLocus.getNode(localNodeIndex).getInterval().range);
+            const known_pos_range2& remoteRange(edgeLocus.getNode(remoteNodeIndex).getInterval().range);
+
             // total edge counts on the remote->local edge:
-            mergedRemoteEdgeCount += edgeLocus.getEdge(remoteNodeIndex,localNodeIndex).getCount();
+            const unsigned remoteEdgeCount = edgeLocus.getEdge(remoteNodeIndex,localNodeIndex).getCount();
 
             // total edge counts on the local->remote edge:
-            mergedLocalEdgeCount += edgeLocus.getEdge(localNodeIndex,remoteNodeIndex).getCount();
+            const unsigned localEdgeCount = edgeLocus.getEdge(localNodeIndex,remoteNodeIndex).getCount();
+
+            if (isRegionCheck)
+            {
+                _mergeRegions.localNodeOutbound.add(localRange,localEdgeCount);
+                _mergeRegions.localNodeInbound.add(localRange,remoteEdgeCount);
+                _mergeRegions.remoteNodeOutbound.add(remoteRange,remoteEdgeCount);
+                _mergeRegions.remoteNodeInbound.add(remoteRange,localEdgeCount);
+            }
+            else
+            {
+                mergedLocalEdgeCount += localEdgeCount;
+                mergedRemoteEdgeCount += remoteEdgeCount;
+            }
         }
 
 #ifdef DEBUG_SVL
@@ -615,16 +644,36 @@ getNodeMergeableIntersect(
         {
             // if the input hasn't been moved into the primary locus graph yet, then we need to include the inputLocus
             // in order to get an accurate edge intersection count:
-            {
-                // total edge counts on the input remote->local edge
-                const SVLocus& inputLocus(getLocus(inputAddy.first));
-                mergedRemoteEdgeCount += inputLocus.getEdge(inputEdge.first,inputNodeIndex).getCount();
-            }
+
+            const SVLocus& inputLocus(getLocus(inputAddy.first));
+            const known_pos_range2& localRange(inputLocus.getNode(inputNodeIndex).getInterval().range);
+            const known_pos_range2& remoteRange(inputLocus.getNode(inputEdge.first).getInterval().range);
+
+            // total edge counts on the input remote->local edge
+            const unsigned remoteEdgeCount = inputLocus.getEdge(inputEdge.first,inputNodeIndex).getCount();
 
             // total edge counts on the input local->remote edge
-            mergedLocalEdgeCount += inputEdge.second.getCount();
+            const unsigned localEdgeCount = inputEdge.second.getCount();
+
+            if (isRegionCheck)
+            {
+                _mergeRegions.localNodeOutbound.add(localRange,localEdgeCount);
+                _mergeRegions.localNodeInbound.add(localRange,remoteEdgeCount);
+                _mergeRegions.remoteNodeOutbound.add(remoteRange,remoteEdgeCount);
+                _mergeRegions.remoteNodeInbound.add(remoteRange,localEdgeCount);
+            }
+            else
+            {
+                mergedLocalEdgeCount += localEdgeCount;
+                mergedRemoteEdgeCount += remoteEdgeCount;
+            }
         }
 
+        if (isRegionCheck)
+        {
+            mergedLocalEdgeCount=(std::min(_mergeRegions.localNodeOutbound.maxVal(),_mergeRegions.remoteNodeInbound.maxVal()));
+            mergedRemoteEdgeCount=(std::min(_mergeRegions.localNodeInbound.maxVal(),_mergeRegions.remoteNodeOutbound.maxVal()));
+        }
 
 #ifdef DEBUG_SVL
         log_os << logtag << " final merge counts"
@@ -633,6 +682,7 @@ getNodeMergeableIntersect(
                << "\n";
         checkState();
 #endif
+
 
         if ((mergedLocalEdgeCount < getMinMergeEdgeCount()) &&
             (mergedRemoteEdgeCount < getMinMergeEdgeCount())) continue;

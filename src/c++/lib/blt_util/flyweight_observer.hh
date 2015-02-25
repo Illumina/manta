@@ -19,7 +19,7 @@
 /// \brief extremely minimal observer pattern
 ///
 /// this class is designed to assist setting up an observer pattern which has zero memory overhead, but
-/// has extremely limited abilities, see blt_util/observer.hh for more general observer pattern support
+/// has extremely limited abilities, see blt_util/observer.hh for a more general observer pattern support
 ///
 
 #pragma once

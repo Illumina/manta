@@ -29,6 +29,12 @@ template <typename T>
 struct RegionSum
 {
     void
+    clear()
+    {
+        _map.clear();
+    }
+
+    void
     add(
         const known_pos_range2 pr,
         const T val)

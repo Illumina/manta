@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "blt_util/RegionSum.hh"
 #include "htsapi/bam_header_info.hh"
 #include "manta/SVBreakend.hh"
 #include "svgraph/SVLocusSampleCounts.hh"
@@ -549,6 +550,26 @@ private:
 public:
     bam_header_info header;
 private:
+
+
+    struct MergeRegionSumData
+    {
+        void
+        clear()
+        {
+            localNodeOutbound.clear();
+            localNodeInbound.clear();
+            remoteNodeOutbound.clear();
+            remoteNodeInbound.clear();
+        }
+
+        // total counts for this edge:
+        using rsum_t = RegionSum<unsigned>;
+        rsum_t localNodeOutbound;
+        rsum_t localNodeInbound;
+        rsum_t remoteNodeOutbound;
+        rsum_t remoteNodeInbound;
+    };
     SVLocusSetOptions _opt;
 
     // contains the full set of loci
@@ -580,6 +601,8 @@ private:
     mutable bool _isMaxSearchDensity; ///< has input been filtered because we hit the maximum node density
 
     bool _isIndexed;
+
+    mutable MergeRegionSumData _mergeRegions;
 };
 
 
