@@ -152,10 +152,20 @@ struct TimeTracker
     ///
     /// timer must be stopped
     double
-    getSeconds() const
+    getUserSeconds() const
     {
         using namespace BOOST_TIMER_HELPER;
         return getTimerSeconds(getTimes().user);
+    }
+
+    /// DEPRECATED get user cpu time in seconds
+    ///
+    /// timer must be stopped
+    double
+    getWallSeconds() const
+    {
+        using namespace BOOST_TIMER_HELPER;
+        return getTimerSeconds(getTimes().wall);
     }
 
 private:

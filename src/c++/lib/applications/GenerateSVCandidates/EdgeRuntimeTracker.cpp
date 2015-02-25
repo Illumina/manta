@@ -62,7 +62,7 @@ EdgeRuntimeTracker::
 stop(const EdgeInfo& edge)
 {
     edgeTime.stop();
-    const double lastTime(edgeTime.getSeconds());
+    const double lastTime(edgeTime.getWallSeconds());
 
     /// the purpose of the log is to identify the most troublesome cases only, so cutoff the output at a minimum time:
     static const double minLogTime(0.5);
@@ -76,10 +76,10 @@ stop(const EdgeInfo& edge)
                     << '\t' << _compCand
                     << '\t' << _assmCand
                     << '\t' << _assmCompCand
-                    << '\t' << candTime.getSeconds()
-                    << '\t' << assmTime.getSeconds()
-                    << '\t' << remoteTime.getSeconds()
-                    << '\t' << scoreTime.getSeconds()
+                    << '\t' << candTime.getWallSeconds()
+                    << '\t' << assmTime.getWallSeconds()
+                    << '\t' << remoteTime.getWallSeconds()
+                    << '\t' << scoreTime.getWallSeconds()
                     << '\n';
         }
     }
