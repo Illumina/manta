@@ -40,5 +40,6 @@ report(
     os << fwall << tlabel << " wall, "
        << fuser << tlabel << " user + "
        << fsystem << tlabel << " system = "
-       << total << tlabel << " CPU (" << perc << "%)";
+       << total << tlabel
+       << " CPU (" << std::setprecision(2) << perc << "%)";
 }
