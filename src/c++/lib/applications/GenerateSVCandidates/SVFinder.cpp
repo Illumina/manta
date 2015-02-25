@@ -536,7 +536,7 @@ consolidateOverlap(
     if (! deletedSVIndex.empty())
     {
 #ifdef DEBUG_SVDATA
-        for (const unsigned index, deletedSVIndex)
+        for (const unsigned index : deletedSVIndex)
         {
             log_os << logtag << "deleted index: " << index << "\n";
         }
@@ -564,7 +564,7 @@ consolidateOverlap(
     if (! moveSVIndex.empty())
     {
 #ifdef DEBUG_SVDATA
-        for (const movemap_t::value_type& val, moveSVIndex)
+        for (const movemap_t::value_type& val : moveSVIndex)
         {
             log_os << logtag << "Movemap from: " << val.first << " to: " << val.second << "\n";
         }
@@ -801,7 +801,7 @@ processReadPair(
 #ifdef DEBUG_SVDATA
     log_os << __FUNCTION__ << ": Checking pair: " << pair << "\n";
     log_os << __FUNCTION__ << ": Translated to candidates:\n";
-    for (const SVObservation& cand, _readCandidates)
+    for (const SVObservation& cand : _readCandidates)
     {
         log_os << __FUNCTION__ << ": cand: " << cand << "\n";
     }
