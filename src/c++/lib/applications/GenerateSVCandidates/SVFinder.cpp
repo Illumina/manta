@@ -802,6 +802,26 @@ processReadPair(
                                  remoteRefPtr, _readCandidates,
                                  truthTracker);
 
+    // collapse close spanning sv candidates into complex candidates -- this reflects the fact that the
+    // assembler will collapse them anyway, so reduces duplidated work in the assembler;
+    for (SVObservation& cand : _readCandidates)
+    {
+        if (getSVType(cand) != SV_TYPE::INDEL) continue;
+        known_pos_range2 r1(cand.bp1.interval.range);
+        known_pos_range2 r2(cand.bp2.interval.range);
+        static const pos_t window(30);
+        r1.set_begin_pos(r1.begin_pos()-window);
+        r2.set_begin_pos(r2.begin_pos()-window);
+        r1.set_end_pos(r1.end_pos()+window);
+        r2.set_end_pos(r2.end_pos()+window);
+        if (! r1.is_range_intersect(r2)) continue;
+
+        // collapse this case:
+        cand.bp1.state = SVBreakendState::COMPLEX;
+        cand.bp2.state = SVBreakendState::UNKNOWN;
+        cand.bp1.interval.range.merge_range(cand.bp2.interval.range);
+    }
+
 #ifdef DEBUG_SVDATA
     log_os << __FUNCTION__ << ": Checking pair: " << pair << "\n";
     log_os << __FUNCTION__ << ": Translated to candidates:\n";
@@ -1166,6 +1186,7 @@ findCandidateSV(
 
     findCandidateSVImpl(edge,svData,svs,stats, truthTracker);
 
+    // time/stats tracking finish:
     _edgeStatMan.updateEdgeCandidates(edge, svs.size(), stats);
     truthTracker.reportNumCands(svs.size(), edge);
 }
