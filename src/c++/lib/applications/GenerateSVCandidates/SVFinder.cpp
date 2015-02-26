@@ -53,13 +53,17 @@ getAssemblyNoiseRate(
 
 SVFinder::
 SVFinder(
-    const GSCOptions& opt) :
+    const GSCOptions& opt,
+    EdgeRuntimeTracker& edgeTracker,
+    GSCEdgeStatsManager& edgeStatMan) :
     _scanOpt(opt.scanOpt),
     _isAlignmentTumor(opt.alignFileOpt.isAlignmentTumor),
     _readScanner(_scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilename),
     _referenceFilename(opt.referenceFilename),
     _isRNA(opt.isRNA),
-    _isSomatic(false)
+    _isSomatic(false),
+    _edgeTracker(edgeTracker),
+    _edgeStatMan(edgeStatMan)
 {
     // load in set:
     _set.load(opt.graphFilename.c_str(),true);
@@ -1080,7 +1084,7 @@ getCandidatesFromData(
 
 void
 SVFinder::
-findCandidateSV(
+findCandidateSVImpl(
     const EdgeInfo& edge,
     SVCandidateSetData& svData,
     std::vector<SVCandidate>& svs,
@@ -1143,5 +1147,26 @@ findCandidateSV(
                           svData, svs, stats, truthTracker);
 
     //checkResult(svData,svs);
+}
+
+
+
+
+void
+SVFinder::
+findCandidateSV(
+    const EdgeInfo& edge,
+    SVCandidateSetData& svData,
+    std::vector<SVCandidate>& svs,
+    TruthTracker& truthTracker)
+{
+    // time/stats tracking setup:
+    const TimeScoper candTime(_edgeTracker.candTime);
+    SVFinderStats stats;
+
+    findCandidateSVImpl(edge,svData,svs,stats, truthTracker);
+
+    _edgeStatMan.updateEdgeCandidates(edge, svs.size(), stats);
+    truthTracker.reportNumCands(svs.size(), edge);
 }
 

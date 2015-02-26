@@ -17,8 +17,10 @@
 
 #pragma once
 
-#include "GSCOptions.hh"
+#include "EdgeRuntimeTracker.hh"
 #include "FatSVCandidate.hh"
+#include "GSCOptions.hh"
+#include "GSCEdgeStatsManager.hh"
 #include "appstats/SVFinderStats.hh"
 #include "htsapi/bam_streamer.hh"
 #include "manta/ChromDepthFilterUtil.hh"
@@ -33,7 +35,9 @@
 struct SVFinder
 {
     SVFinder(
-        const GSCOptions& opt);
+        const GSCOptions& opt,
+        EdgeRuntimeTracker& edgeTracker,
+        GSCEdgeStatsManager& edgeStatMan);
 
     ~SVFinder();
 
@@ -48,7 +52,6 @@ struct SVFinder
         const EdgeInfo& edge,
         SVCandidateSetData& svData,
         std::vector<SVCandidate>& svs,
-        SVFinderStats& stats,
         TruthTracker& truthTracker);
 
     void
@@ -107,6 +110,14 @@ private:
         SVFinderStats& stats,
         TruthTracker& truthTracker);
 
+    void
+    findCandidateSVImpl(
+        const EdgeInfo& edge,
+        SVCandidateSetData& svData,
+        std::vector<SVCandidate>& svs,
+        SVFinderStats& stats,
+        TruthTracker& truthTracker);
+
     const ChromDepthFilterUtil&
     dFilter() const
     {
@@ -134,4 +145,7 @@ private:
     SampleEvidenceCounts _eCounts;
 
     double _assemblyNoiseRate;
+
+    EdgeRuntimeTracker& _edgeTracker;
+    GSCEdgeStatsManager& _edgeStatMan;
 };

@@ -18,9 +18,7 @@
 #include "GenerateSVCandidates.hh"
 #include "EdgeRetrieverBin.hh"
 #include "EdgeRetrieverLocus.hh"
-#include "EdgeRuntimeTracker.hh"
 #include "GSCOptions.hh"
-#include "GSCEdgeStatsManager.hh"
 #include "SVCandidateProcessor.hh"
 #include "SVFinder.hh"
 
@@ -110,13 +108,13 @@ runGSC(
     }
 #endif
 
+    EdgeRuntimeTracker edgeTracker(opt.edgeRuntimeFilename);
     GSCEdgeStatsManager edgeStatMan(opt.edgeStatsFilename);
 
-    SVFinder svFind(opt);
+    SVFinder svFind(opt,edgeTracker,edgeStatMan);
     const SVLocusSet& cset(svFind.getSet());
 
     TruthTracker truthTracker(opt.truthVcfFilename, cset);
-    EdgeRuntimeTracker edgeTracker(opt.edgeRuntimeFilename);
 
     SVCandidateProcessor svProcessor(opt, progName, progVersion, cset,  truthTracker, edgeTracker, edgeStatMan);
 
@@ -152,14 +150,7 @@ runGSC(
             const bool isIsolatedEdge(testIsolatedEdge(cset,edge));
 
             // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
-            {
-                const TimeScoper candTime(edgeTracker.candTime);
-                SVFinderStats stats;
-                svFind.findCandidateSV(edge, svData, svs, stats, truthTracker);
-                edgeStatMan.updateEdgeCandidates(edge, svs.size(), stats);
-            }
-
-            truthTracker.reportNumCands(svs.size(), edge);
+            svFind.findCandidateSV(edge, svData, svs, truthTracker);
 
             if (opt.isVerbose)
             {
