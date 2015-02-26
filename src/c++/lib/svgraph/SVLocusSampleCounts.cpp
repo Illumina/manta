@@ -27,15 +27,14 @@ static
 void
 writeLine(
     std::ostream& os,
-    const char* label1,
-    const char* label2,
+    const char* label,
     const double val,
     const double total)
 {
     static const char sep('\t');
 
     os << std::fixed;
-    os << label1 << '_' << label2 << ':' << sep;
+    os << label << sep;
     os << std::setprecision(0);
     os << val << sep;
     os << std::setprecision(4);
@@ -47,16 +46,15 @@ writeLine(
 void
 SampleReadInputCounts::
 write(
-    std::ostream& os,
-    const char* label) const
+    std::ostream& os) const
 {
     const double dtotal(total());
     StreamScoper ss(os);
-    writeLine(os,label,"minMapq",minMapq,dtotal);
-    writeLine(os,label,"Anomalous",anom,dtotal);
-    writeLine(os,label,"AssemblyEvidence",assm,dtotal);
-    writeLine(os,label,"Ignored",nonAnom,dtotal);
-    writeLine(os,label,"AnomalousRemotes",remoteRecoveryCandidates,dtotal);
+    writeLine(os,"MinMapq",minMapq,dtotal);
+    writeLine(os,"Anomalous",anom,dtotal);
+    writeLine(os,"AssemblyEvidence",assm,dtotal);
+    writeLine(os,"Ignored",nonAnom,dtotal);
+    writeLine(os,"AnomalousRemotes",remoteRecoveryCandidates,dtotal);
 }
 
 
@@ -64,8 +62,7 @@ write(
 void
 SampleEvidenceCounts::
 write(
-    std::ostream& os,
-    const char* label) const
+    std::ostream& os) const
 {
     static const char sep('\t');
 
@@ -79,7 +76,20 @@ write(
     os << std::fixed << std::setprecision(4);
     for (unsigned i(0); i<SVEvidenceType::SIZE; ++i)
     {
-        os << label << "_EvidenceType_" << SVEvidenceType::label(i) << ':' << sep << eType[i] << sep << eType[i]/total << '\n';
+        os << "EvidenceType_" << SVEvidenceType::label(i) << sep << eType[i] << sep << eType[i]/total << '\n';
     }
-    os << label << "_closePairs:" << sep << closeCount << '\n';
+    os << "ClosePairs" << sep << closeCount << '\n';
 }
+
+
+void
+SampleCounts::
+write(
+    std::ostream& os,
+    const char* label) const
+{
+    os << "\n[" << label << "]\n";
+    input.write(os);
+    evidence.write(os);
+}
+

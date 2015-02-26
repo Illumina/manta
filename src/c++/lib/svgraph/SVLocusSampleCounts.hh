@@ -56,8 +56,7 @@ struct SampleReadInputCounts
 
     void
     write(
-        std::ostream& os,
-        const char* label) const;
+        std::ostream& os) const;
 
 
     template<class Archive>
@@ -110,8 +109,7 @@ struct SampleEvidenceCounts
 
     void
     write(
-        std::ostream& os,
-        const char* label) const;
+        std::ostream& os) const;
 
 
     template<class Archive>
@@ -150,11 +148,7 @@ struct SampleCounts
     void
     write(
         std::ostream& os,
-        const char* label) const
-    {
-        input.write(os, label);
-        evidence.write(os, label);
-    }
+        const char* label) const;
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned /* version */)

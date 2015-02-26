@@ -977,19 +977,20 @@ dumpStats(std::ostream& os) const
 {
     static const char sep('\t');
 
-    os << "disjointSubgraphs:" << sep << nonEmptySize() << "\n";
-    os << "nodes:" << sep << totalNodeCount() << "\n";
-    os << "directedEdges:" << sep << totalEdgeCount() << "\n";
-    os << "selfEdges:" << sep << selfEdgeCount() << "\n";
-    os << "totalGraphEvidence:" << sep << totalObservationCount() << "\n";
-    os << "totalCleaned:" << sep << _totalCleaned << "\n";
-    os << "highestSearchCount:" << sep << _highestSearchCount << "\n";
-    os << "isMaxSearchCount:" << sep << _isMaxSearchCount << "\n";
-    os << "highestSearchDensity:" << sep << _highestSearchDensity << "\n";
-    os << "isMaxSearchDensity:" << sep << _isMaxSearchDensity << "\n";
+    os << "disjointSubgraphs" << sep << nonEmptySize() << "\n";
+    os << "nodes" << sep << totalNodeCount() << "\n";
+    os << "directedEdges" << sep << totalEdgeCount() << "\n";
+    os << "selfEdges" << sep << selfEdgeCount() << "\n";
+    os << "totalGraphEvidence" << sep << totalObservationCount() << "\n";
+    os << "totalCleaned" << sep << _totalCleaned << "\n";
+    os << "highestSearchCount" << sep << _highestSearchCount << "\n";
+    os << "isMaxSearchCount" << sep << _isMaxSearchCount << "\n";
+    os << "highestSearchDensity" << sep << _highestSearchDensity << "\n";
+    os << "isMaxSearchDensity" << sep << _isMaxSearchDensity << "\n";
 
-    _counts.normal.write(os,"normal");
-    _counts.tumor.write(os,"tumor");
+    _counts.normal.write(os,"NormalSample");
+    _counts.tumor.write(os,"TumorSample");
+    os << "\n";
 
     // node region size quantiles
     {
@@ -1005,10 +1006,10 @@ dumpStats(std::ostream& os) const
 
         static const float quantLevel[] = { 0.25, 0.5, 0.75, 0.9, 0.95, 0.99 };
         static const unsigned quantLevelCount(sizeof(quantLevel)/sizeof(float));
+        os << "NodeRegionSizequantile:\n";
         for (unsigned i(0); i<quantLevelCount; ++i)
         {
-            os << "nodeRegionSizequantile:" << sep
-               << quantLevel[i] << sep
+            os << quantLevel[i] << sep
                << nodeSize.quantile(quantLevel[i]) << "\n";
         }
     }
@@ -1018,9 +1019,10 @@ dumpStats(std::ostream& os) const
         static const unsigned maxEdgeCount(10);
         std::vector<unsigned> edgeCount(maxEdgeCount);
         getNodeEdgeCountDistro(edgeCount);
+        os << "NodeEdgeCount:\n";
         for (unsigned i(0); i<maxEdgeCount; ++i)
         {
-            os << "NodeEdgeCount" << sep << i;
+            os << i;
             if ((i+1) == maxEdgeCount) os << '+';
             os << sep << edgeCount[i] << "\n";
         }
@@ -1031,9 +1033,10 @@ dumpStats(std::ostream& os) const
         static const unsigned maxObsCount(30);
         std::vector<unsigned> obsCount(maxObsCount);
         getNodeObsCountDistro(obsCount);
+        os << "NodeObservationCount:\n";
         for (unsigned i(0); i<maxObsCount; ++i)
         {
-            os << "NodeObservationCount" << sep << i;
+            os << i;
             if ((i+1) == maxObsCount) os << '+';
             os << sep << obsCount[i] << "\n";
         }
