@@ -121,6 +121,7 @@ struct SVCandidateAssemblyData
         isCandidateSpanning=false;
         isSpanning=false;
         bporient.clear();
+        extendedContigs.clear();
         smallSVAlignments.clear();
         spanningAlignments.clear();
         smallSVSegments.clear();

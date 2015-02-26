@@ -29,6 +29,7 @@
 #include "manta/SVCandidate.hh"
 #include "manta/SVCandidateAssembler.hh"
 #include "options/SmallAssemblerOptions.hh"
+#include "svgraph/GenomeIntervalTracker.hh"
 
 
 /// \brief methods to improve low-resolution SVCandidates via assembly and contig alignment
@@ -52,6 +53,12 @@ struct SVCandidateAssemblyRefiner
         const bool isRNA,
         const bool isFindLargeInsertions,
         SVCandidateAssemblyData& assemblyData) const;
+
+    void
+    clearEdgeData()
+    {
+        _spanToComplexAssmRegions.clear();
+    }
 
 private:
 
@@ -84,4 +91,5 @@ private:
     const GlobalAligner<int> _largeInsertCompleteAligner;
     const GlobalJumpAligner<int> _spanningAligner;
     const GlobalJumpIntronAligner<int> _RNASpanningAligner;
+    mutable GenomeIntervalTracker _spanToComplexAssmRegions;
 };

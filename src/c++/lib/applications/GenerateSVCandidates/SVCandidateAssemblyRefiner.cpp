@@ -1475,6 +1475,19 @@ getSmallSVAssembly(
 
     assemblyData.isSpanning = false;
 
+    if (assemblyData.isCandidateSpanning)
+    {
+        _spanToComplexAssmRegions.addInterval(sv.bp1.interval);
+    }
+    else
+    {
+        /// check if we've already assembled this region?
+        if (_spanToComplexAssmRegions.isSubsetOfRegion(sv.bp1.interval))
+        {
+            return;
+        }
+    }
+
     // how much additional reference sequence should we extract from
     // around each side of the breakend region?
     //

@@ -594,7 +594,7 @@ getSVPairSupport(
 
     std::vector<pairProcPtr> pairProcList;
 
-    if (assemblyData.isCandidateSpanning)
+    if (assemblyData.isCandidateSpanning && (sv.isImprecise() || assemblyData.isSpanning))
     {
         // count the read pairs supporting the alternate allele in each sample
         // using data we already produced during candidate generation:

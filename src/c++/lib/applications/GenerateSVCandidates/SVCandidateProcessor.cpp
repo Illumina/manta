@@ -389,7 +389,7 @@ evaluateCandidates(
         }
     }
 
-    //_svRefine.clearEdgeData();
+    _svRefine.clearEdgeData();
     for (const auto& cand : mjSVs)
     {
         evaluateCandidate(edge,cand,svData,isFindLargeInsertions);
