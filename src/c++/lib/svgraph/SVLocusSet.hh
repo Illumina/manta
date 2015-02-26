@@ -18,6 +18,7 @@
 #pragma once
 
 #include "blt_util/RegionSum.hh"
+#include "blt_util/time_util.hh"
 #include "htsapi/bam_header_info.hh"
 #include "manta/SVBreakend.hh"
 #include "svgraph/SVLocusSampleCounts.hh"
@@ -277,6 +278,20 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
     getCounts() const
     {
         return _counts;
+    }
+
+    void
+    setBuildTime(
+        const CpuTimes& t)
+    {
+        _buildTime = t;
+    }
+
+    void
+    setMergeTime(
+        const CpuTimes& t)
+    {
+        _mergeTime = t;
     }
 
     typedef std::pair<LocusIndexType,NodeIndexType> NodeAddressType;
@@ -601,6 +616,9 @@ private:
     mutable bool _isMaxSearchDensity; ///< has input been filtered because we hit the maximum node density
 
     bool _isIndexed;
+
+    CpuTimes _buildTime;
+    CpuTimes _mergeTime;
 
     mutable MergeRegionSumData _mergeRegions;
 };

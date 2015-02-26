@@ -37,6 +37,8 @@ static
 void
 runESL(const ESLOptions& opt)
 {
+    TimeTracker timer;
+    timer.resume();
     {
         // early test that we have permission to write to output file
         OutStream outs(opt.outputFilename);
@@ -128,9 +130,13 @@ runESL(const ESLOptions& opt)
 
     // finished updating:
     locusFinder.flush();
+    timer.stop();
+    const CpuTimes totalTimes(timer.getTimes());
 #ifdef DEBUG_ESL
     log_os << log_tag << " found " << locusFinder.getLocusSet().size() << " loci. \n";
+    log_os << log_tag << " totalTime: "; totalTimes.reportHr(log_os); log_os << "\n";
 #endif
+    locusFinder.setBuildTime(totalTimes);
     locusFinder.getLocusSet().save(opt.outputFilename.c_str());
 
     truthTracker.dumpAll();

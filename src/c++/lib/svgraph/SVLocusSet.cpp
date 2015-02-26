@@ -246,7 +246,8 @@ merge(const SVLocus& inputLocus)
 
 void
 SVLocusSet::
-merge(const SVLocusSet& inputSet)
+merge(
+    const SVLocusSet& inputSet)
 {
     // TODO: check for compatible bam headers between inputSet and this
 
@@ -274,7 +275,8 @@ merge(const SVLocusSet& inputSet)
     _isMaxSearchCount = (_isMaxSearchCount || inputSet._isMaxSearchCount);
     _highestSearchDensity = std::max(_highestSearchDensity, inputSet._highestSearchDensity);
     _isMaxSearchDensity = (_isMaxSearchDensity || inputSet._isMaxSearchDensity);
-
+    _buildTime.merge(inputSet._buildTime);
+    _mergeTime.merge(inputSet._mergeTime); // this one is more of a formality...
 }
 
 
@@ -977,6 +979,8 @@ dumpStats(std::ostream& os) const
 {
     static const char sep('\t');
 
+    os << "GraphBuildTime" << sep; _buildTime.reportHr(os); os << "\n";
+    os << "GraphMergeTime" << sep; _mergeTime.reportHr(os); os << "\n";
     os << "disjointSubgraphs" << sep << nonEmptySize() << "\n";
     os << "nodes" << sep << totalNodeCount() << "\n";
     os << "directedEdges" << sep << totalEdgeCount() << "\n";
@@ -1128,6 +1132,8 @@ save(const char* filename) const
     oa << _highestSearchDensity;
     oa << _isMaxSearchCount;
     oa << _isMaxSearchDensity;
+    oa << _buildTime;
+    oa << _mergeTime;
 
     for (const SVLocus& locus : _loci)
     {
@@ -1168,6 +1174,8 @@ load(
     ia >> _highestSearchDensity;
     ia >> _isMaxSearchCount;
     ia >> _isMaxSearchDensity;
+    ia >> _buildTime;
+    ia >> _mergeTime;
 
     SVLocus locus;
     while (ifs.peek() != EOF)

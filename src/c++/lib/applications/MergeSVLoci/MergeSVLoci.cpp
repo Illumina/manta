@@ -28,6 +28,8 @@ static
 void
 runMSL(const MSLOptions& opt)
 {
+    TimeTracker timer;
+    timer.resume();
     {
         // early test that we have permission to write to output file
         OutStream outs(opt.outputFilename);
@@ -60,6 +62,8 @@ runMSL(const MSLOptions& opt)
     }
 
     mergedSet.finalize();
+    timer.stop();
+    mergedSet.setMergeTime(timer.getTimes());
     mergedSet.save(opt.outputFilename.c_str());
 }
 

@@ -82,6 +82,12 @@ struct SVLocusSetFinder : public pos_processor_base
         _stageman.reset();
     }
 
+    void
+    setBuildTime(const CpuTimes& t)
+    {
+        _svLoci.setBuildTime(t);
+    }
+
 private:
 
     void
