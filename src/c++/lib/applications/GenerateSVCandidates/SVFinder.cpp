@@ -1189,5 +1189,9 @@ findCandidateSV(
     // time/stats tracking finish:
     _edgeStatMan.updateEdgeCandidates(edge, svs.size(), stats);
     truthTracker.reportNumCands(svs.size(), edge);
+    const unsigned svCount(svs.size());
+    for (unsigned i(0); i<svCount; ++i)
+    {
+        truthTracker.addCandSV();
+    }
 }
-

@@ -26,7 +26,6 @@
 #include "common/Exceptions.hh"
 #include "manta/MultiJunctionUtil.hh"
 #include "manta/SVCandidateUtil.hh"
-#include "svgraph/EdgeInfoUtil.hh"
 #include "truth/TruthTracker.hh"
 
 #include <iostream>
@@ -146,21 +145,12 @@ runGSC(
                 dumpEdgeInfo(edge,cset,log_os);
             }
 
-            // determine if this is the only edge for this node:
-            const bool isIsolatedEdge(testIsolatedEdge(cset,edge));
-
             // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
             svFind.findCandidateSV(edge, svData, svs, truthTracker);
 
             if (opt.isVerbose)
             {
                 log_os << logtag << " Low-resolution candidate generation complete. Candidate count: " << svs.size() << "\n";
-            }
-
-            const unsigned svCount(svs.size());
-            for (unsigned i(0); i<svCount; ++i)
-            {
-                truthTracker.addCandSV();
             }
 
             {
@@ -170,22 +160,8 @@ runGSC(
                 edgeStatMan.updateMJFilter(edge, mjComplexCount, mjSpanningFilterCount);
             }
 
-            bool isFindLargeInsertions(isIsolatedEdge);
-            if (isFindLargeInsertions)
-            {
-                for (const SVMultiJunctionCandidate& mjCandidateSV : mjSVs)
-                {
-                    for (const SVCandidate& candidateSV : mjCandidateSV.junction)
-                    {
-                        if (! isComplexSV(candidateSV)) isFindLargeInsertions=false;
-                    }
-                }
-            }
-
-            for (const SVMultiJunctionCandidate& mjCandidateSV : mjSVs)
-            {
-                svProcessor.evaluateCandidate(edge, mjCandidateSV, svData, isFindLargeInsertions);
-            }
+            // determine if this is the only edge for this node:
+            svProcessor.evaluateCandidates(edge, mjSVs, svData);
         }
         catch (illumina::common::ExceptionData& e)
         {

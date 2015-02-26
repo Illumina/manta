@@ -88,14 +88,22 @@ struct SVCandidateProcessor
         GSCEdgeStatsManager& _edgeStatMan);
 
     void
+    evaluateCandidates(
+        const EdgeInfo& edge,
+        const std::vector<SVMultiJunctionCandidate>& mjSVs,
+        const SVCandidateSetData& svData);
+
+private:
+
+    void
     evaluateCandidate(
         const EdgeInfo& edge,
         const SVMultiJunctionCandidate& mjCandidateSV,
         const SVCandidateSetData& svData,
         const bool isFindLargeInsertions);
 
-private:
     const GSCOptions& _opt;
+    const SVLocusSet& _cset;
     TruthTracker& _truthTracker;
     EdgeRuntimeTracker& _edgeTracker;
     GSCEdgeStatsManager& _edgeStatMan;

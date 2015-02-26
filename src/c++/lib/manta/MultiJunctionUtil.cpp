@@ -346,14 +346,10 @@ findMultiJunctionCandidates(
         }
     }
 
-    /// complex SVs are translated directly into single partner candidates:
-    for (const SVCandidate& candidateSV : complexSVs)
-    {
-        SVMultiJunctionCandidate mj;
-        mj.junction.push_back(candidateSV);
-        mjSVs.push_back(mj);
-    }
-
+    // spanning SVs are checked for groupings, and filtered
+    //
+    // spanning SVs should come first in order so that overlap checks can
+    // be used to reduce work in the assembler
     for (unsigned spanIndex(0); spanIndex<spanCount; ++spanIndex)
     {
         SVMultiJunctionCandidate mj;
@@ -380,4 +376,14 @@ findMultiJunctionCandidates(
 
         mjSVs.push_back(mj);
     }
+
+    // complex SVs are translated directly into single partner candidates:
+    for (const SVCandidate& candidateSV : complexSVs)
+    {
+        SVMultiJunctionCandidate mj;
+        mj.junction.push_back(candidateSV);
+        mjSVs.push_back(mj);
+    }
+
+
 }

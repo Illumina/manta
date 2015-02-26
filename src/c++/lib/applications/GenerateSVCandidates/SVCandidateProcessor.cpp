@@ -17,6 +17,7 @@
 
 #include "SVCandidateProcessor.hh"
 #include "manta/SVMultiJunctionCandidateUtil.hh"
+#include "svgraph/EdgeInfoUtil.hh"
 
 #include "blt_util/log.hh"
 
@@ -357,12 +358,43 @@ SVCandidateProcessor(
     EdgeRuntimeTracker& edgeTracker,
     GSCEdgeStatsManager& edgeStatMan) :
     _opt(opt),
+    _cset(cset),
     _truthTracker(truthTracker),
     _edgeTracker(edgeTracker),
     _edgeStatMan(edgeStatMan),
     _svRefine(opt, cset.header, cset.getCounts(), _edgeTracker),
     _svWriter(opt, cset, progName, progVersion, truthTracker)
 {}
+
+
+
+void
+SVCandidateProcessor::
+evaluateCandidates(
+    const EdgeInfo& edge,
+    const std::vector<SVMultiJunctionCandidate>& mjSVs,
+    const SVCandidateSetData& svData)
+{
+    const bool isIsolatedEdge(testIsolatedEdge(_cset,edge));
+
+    bool isFindLargeInsertions(isIsolatedEdge);
+    if (isFindLargeInsertions)
+    {
+        for (const SVMultiJunctionCandidate& mjCandidateSV : mjSVs)
+        {
+            for (const SVCandidate& candidateSV : mjCandidateSV.junction)
+            {
+                if (! isComplexSV(candidateSV)) isFindLargeInsertions=false;
+            }
+        }
+    }
+
+    //_svRefine.clearEdgeData();
+    for (const auto& cand : mjSVs)
+    {
+        evaluateCandidate(edge,cand,svData,isFindLargeInsertions);
+    }
+}
 
 
 
