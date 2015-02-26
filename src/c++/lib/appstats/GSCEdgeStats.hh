@@ -96,6 +96,7 @@ struct GSCEdgeGroupStats
         totalCandidateCount += rhs.totalCandidateCount;
         totalComplexCandidate += rhs.totalComplexCandidate;
         totalSpanningCandidateFilter += rhs.totalSpanningCandidateFilter;
+        totalSpanningCandidateFilter += rhs.totalJunctionAssemblyOverlapSkips;
         totalJunctionCount += rhs.totalJunctionCount;
         totalComplexJunctionCount += rhs.totalComplexJunctionCount;
         totalAssemblyCandidates += rhs.totalAssemblyCandidates;
@@ -120,6 +121,7 @@ struct GSCEdgeGroupStats
         & BOOST_SERIALIZATION_NVP(totalCandidateCount)
         & BOOST_SERIALIZATION_NVP(totalComplexCandidate)
         & BOOST_SERIALIZATION_NVP(totalSpanningCandidateFilter)
+        & BOOST_SERIALIZATION_NVP(totalJunctionAssemblyOverlapSkips)
         & BOOST_SERIALIZATION_NVP(totalJunctionCount)
         & BOOST_SERIALIZATION_NVP(totalComplexJunctionCount)
         & BOOST_SERIALIZATION_NVP(totalAssemblyCandidates)
@@ -139,6 +141,7 @@ struct GSCEdgeGroupStats
     uint64_t totalCandidateCount = 0;
     uint64_t totalComplexCandidate = 0;
     uint64_t totalSpanningCandidateFilter = 0;
+    uint64_t totalJunctionAssemblyOverlapSkips = 0;
     uint64_t totalJunctionCount = 0;
     uint64_t totalComplexJunctionCount = 0;
     uint64_t totalAssemblyCandidates = 0;

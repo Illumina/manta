@@ -65,6 +65,20 @@ struct known_pos_range2
         set_end_pos(end);
     }
 
+    /// expand (or contract) range
+    void
+    expandBy(
+        const pos_t size)
+    {
+        _begin_pos-=size;
+        _end_pos+=size;
+        if ((size<0) && (_end_pos < _begin_pos))
+        {
+            _begin_pos = (_begin_pos+_end_pos)/2;
+            _end_pos = _begin_pos;
+        }
+    }
+
     pos_t
     begin_pos() const
     {

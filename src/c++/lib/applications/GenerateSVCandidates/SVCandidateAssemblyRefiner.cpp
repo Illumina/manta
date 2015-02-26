@@ -1484,6 +1484,7 @@ getSmallSVAssembly(
         /// check if we've already assembled this region?
         if (_spanToComplexAssmRegions.isSubsetOfRegion(sv.bp1.interval))
         {
+            assemblyData.isOverlapSkip = true;
             return;
         }
     }

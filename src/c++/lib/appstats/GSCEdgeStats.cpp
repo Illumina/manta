@@ -107,6 +107,7 @@ report(std::ostream& os) const
     os << "ComplexCandidateCount\t" << totalComplexCandidate << "\n";
     finderStats.report(os);
     os << "SpanningComplexCandidateFiltered\t" << totalSpanningCandidateFilter << "\n";
+    os << "JunctionAssemblyOverlapSkipped\t" << totalJunctionAssemblyOverlapSkips << "\n";
     os << "JunctionCount\t" << totalJunctionCount << "\n";
     os << "ComplexJunctionCount\t" << totalComplexJunctionCount << "\n";
     os << "BreaksPerJunction:\n";

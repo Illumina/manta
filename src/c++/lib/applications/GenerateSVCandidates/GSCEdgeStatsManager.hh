@@ -83,15 +83,23 @@ struct GSCEdgeStatsManager : private boost::noncopyable
     void
     updateAssemblyCount(
         const EdgeInfo& edge,
-        const unsigned assemblyCount = 0,
-        const bool isSpanning = false)
+        const unsigned assemblyCount,
+        const bool isSpanning,
+        const bool isOverlapSkip = false)
     {
         if (_osPtr == nullptr) return;
 
         GSCEdgeGroupStats& gStats(getStatsGroup(edge));
         gStats.totalAssemblyCandidates += assemblyCount;
         if (isSpanning) gStats.totalSpanningAssemblyCandidates += assemblyCount;
-        gStats.assemblyCandidatesPerJunction.increment(assemblyCount);
+        if (isOverlapSkip)
+        {
+            gStats.totalJunctionAssemblyOverlapSkips++;
+        }
+        else
+        {
+            gStats.assemblyCandidatesPerJunction.increment(assemblyCount);
+        }
     }
 
 

@@ -810,10 +810,8 @@ processReadPair(
         known_pos_range2 r1(cand.bp1.interval.range);
         known_pos_range2 r2(cand.bp2.interval.range);
         static const pos_t window(30);
-        r1.set_begin_pos(r1.begin_pos()-window);
-        r2.set_begin_pos(r2.begin_pos()-window);
-        r1.set_end_pos(r1.end_pos()+window);
-        r2.set_end_pos(r2.end_pos()+window);
+        r1.expandBy(window);
+        r2.expandBy(window);
         if (! r1.is_range_intersect(r2)) continue;
 
         // collapse this case:

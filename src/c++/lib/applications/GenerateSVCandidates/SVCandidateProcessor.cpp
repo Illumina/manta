@@ -475,7 +475,7 @@ evaluateCandidate(
             }
             else
             {
-                _edgeStatMan.updateAssemblyCount(edge);
+                _edgeStatMan.updateAssemblyCount(edge, 0, assemblyData.isSpanning, assemblyData.isOverlapSkip);
             }
 
         }

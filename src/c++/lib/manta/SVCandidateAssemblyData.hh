@@ -131,6 +131,7 @@ struct SVCandidateAssemblyData
         bp1ref.clear();
         bp2ref.clear();
         svs.clear();
+        isOverlapSkip=false;
     }
 
     typedef AlignmentResult<int> SmallAlignmentResultType;
@@ -165,4 +166,7 @@ struct SVCandidateAssemblyData
     reference_contig_segment bp2ref;
 
     std::vector<SVCandidate> svs; ///< summarize candidate refined sv candidates
+
+    /// if true, assembly was skipped for this case because of an overlapping assembly
+    bool isOverlapSkip = false;
 };
