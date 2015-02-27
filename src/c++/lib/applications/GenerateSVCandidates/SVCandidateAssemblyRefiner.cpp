@@ -1042,9 +1042,9 @@ SVCandidateAssemblyRefiner(
     _opt(opt),
     _header(header),
     _smallSVAssembler(opt.scanOpt, opt.refineOpt.smallSVAssembleOpt, opt.alignFileOpt,
-        opt.statsFilename, opt.chromDepthFilename, header, counts, edgeTracker.remoteTime),
+                      opt.statsFilename, opt.chromDepthFilename, header, counts, edgeTracker.remoteTime),
     _spanningAssembler(opt.scanOpt, opt.refineOpt.spanningAssembleOpt, opt.alignFileOpt,
-        opt.statsFilename, opt.chromDepthFilename, header, counts, edgeTracker.remoteTime),
+                       opt.statsFilename, opt.chromDepthFilename, header, counts, edgeTracker.remoteTime),
     _smallSVAligner(opt.refineOpt.smallSVAlignScores),
     _largeSVAligner(opt.refineOpt.largeSVAlignScores,opt.refineOpt.largeGapOpenScore),
     _largeInsertEdgeAligner(opt.refineOpt.largeInsertEdgeAlignScores),
@@ -1401,7 +1401,8 @@ getJumpAssembly(
         const SVCandidateAssemblyData::JumpAlignmentResultType& hsAlign(assemblyData.spanningAlignments[highScoreIndex]);
 
         bool isFilter(true);
-        for (const unsigned maxQCRefSpan : {100,200})
+        static const unsigned spanSet[] = {100,200};
+        for (const unsigned maxQCRefSpan : spanSet)
         {
             if (isFilterSpanningAlignment( maxQCRefSpan, _spanningAligner, true, isRNA, hsAlign.align1.apath)) continue;
             if (isFilterSpanningAlignment( maxQCRefSpan, _spanningAligner, false, isRNA, hsAlign.align2.apath)) continue;
@@ -1592,7 +1593,7 @@ getSmallSVAssembly(
         // remove candidate from consideration unless we find a
         // sufficiently large indel with good flanking sequence:
         bool isSmallSVCandidate(false);
-        
+
         // come up with a more intelligent reference span limit:
         pos_t adjustedLeadingCut(leadingCut);
         pos_t adjustedTrailingCut(trailingCut);
@@ -1605,11 +1606,11 @@ getSmallSVAssembly(
             static const int merSize(10);
             std::unordered_set<std::string> contigHash;
             const unsigned contigSize(contig.seq.size());
-            for (unsigned contigIndex(0);contigIndex<(contigSize-(merSize-1));++contigIndex)
+            for (unsigned contigIndex(0); contigIndex<(contigSize-(merSize-1)); ++contigIndex)
             {
                 contigHash.insert(contig.seq.substr(contigIndex,merSize));
             }
-            
+
             const pos_t refSize(align1RefStr.size());
             const pos_t minRefIndex(leadingCut);
             const pos_t maxRefIndex(refSize-(trailingCut+merSize));
@@ -1645,7 +1646,8 @@ getSmallSVAssembly(
             // trial two different flanking test sizes, this way we
             // account for multiple neighboring noise scenarios
             //
-            for (const unsigned maxQCRefSpan : {100,200})
+            static const unsigned spanSet[] = {100,200};
+            for (const unsigned maxQCRefSpan : spanSet)
             {
                 static const bool isInsertionOnly(true);
 
@@ -1694,7 +1696,8 @@ getSmallSVAssembly(
             // trial two different flanking test sizes, this way we
             // account for multiple neighboring noise scenarios
             //
-            for (const unsigned maxQCRefSpan : {100,200})
+            static const unsigned spanSet[] = {100,200};
+            for (const unsigned maxQCRefSpan : spanSet)
             {
                 std::vector<std::pair<unsigned,unsigned> > segments;
                 const bool isCandidate( isSmallSVAlignment(

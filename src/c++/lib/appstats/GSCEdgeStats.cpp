@@ -41,7 +41,7 @@ void
 SimpleHist::
 report(std::ostream& os) const
 {
-    for (unsigned i(0);i<histdata.size();++i)
+    for (unsigned i(0); i<histdata.size(); ++i)
     {
         os << i;
         if (i+1 == histdata.size()) os << "+";
@@ -82,9 +82,9 @@ reportTime(
 {
     static const double secPerHour(3600);
     os << label << "Hours_SecsPerEdge_SecsPerCand\t" << ltime/secPerHour
-        << "\t" << safeFrac(ltime,edgeCount)
-        << "\t" << safeFrac(ltime,candCount)
-        << "\n";
+       << "\t" << safeFrac(ltime,edgeCount)
+       << "\t" << safeFrac(ltime,candCount)
+       << "\n";
 }
 #endif
 

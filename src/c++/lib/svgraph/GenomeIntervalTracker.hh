@@ -28,7 +28,10 @@ struct GenomeIntervalTracker
     void
     clear()
     {
-        for (auto& r : _regions) { r.clear(); }
+        for (auto& r : _regions)
+        {
+            r.clear();
+        }
     }
 
     void

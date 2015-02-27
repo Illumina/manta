@@ -44,9 +44,9 @@ struct CpuTimes
 
     CpuTimes(
         const boost::timer::cpu_times& t)
-    : wall(BOOST_TIMER_HELPER::getTimerSeconds(t.wall)),
-      user(BOOST_TIMER_HELPER::getTimerSeconds(t.user)),
-      system(BOOST_TIMER_HELPER::getTimerSeconds(t.system))
+        : wall(BOOST_TIMER_HELPER::getTimerSeconds(t.wall)),
+          user(BOOST_TIMER_HELPER::getTimerSeconds(t.user)),
+          system(BOOST_TIMER_HELPER::getTimerSeconds(t.system))
     {}
 
     void
@@ -68,9 +68,9 @@ struct CpuTimes
     }
 
     template<class Archive>
-    void serialize(Archive & ar, const unsigned /*version*/)
+    void serialize(Archive& ar, const unsigned /*version*/)
     {
-        ar & BOOST_SERIALIZATION_NVP(wall)
+        ar& BOOST_SERIALIZATION_NVP(wall)
         & BOOST_SERIALIZATION_NVP(user)
         & BOOST_SERIALIZATION_NVP(system)
         ;
@@ -112,7 +112,10 @@ BOOST_CLASS_IMPLEMENTATION(CpuTimes, boost::serialization::object_serializable)
 /// simple time track utility
 struct TimeTracker
 {
-    TimeTracker() { _timer.stop(); }
+    TimeTracker()
+    {
+        _timer.stop();
+    }
 
     void
     clear()

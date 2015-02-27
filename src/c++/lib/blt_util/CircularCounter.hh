@@ -37,7 +37,9 @@ struct CircularCounter
         _dataSize(0),
         _maxCount(0),
         _data(initSize,false)
-    { assert(initSize>0); }
+    {
+        assert(initSize>0);
+    }
 
     void
     push(const bool val)
@@ -57,7 +59,7 @@ struct CircularCounter
         }
         _data[_headPos] = val;
         _headPos = nextPos();
-        if(_dataSize < size()) _dataSize++;
+        if (_dataSize < size()) _dataSize++;
     }
 
     // change the value on the head of the buffer

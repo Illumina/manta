@@ -300,27 +300,27 @@ std::ostream& operator<<(std::ostream& os, const VcfHeader& vcfHeader)
     buffer = vcfHeader.getPhasing();
     if (!buffer.empty())  os << "##phasing=" << buffer << std::endl;
 
-    for (const ChromosomeMetadata &chr :
+    for (const ChromosomeMetadata& chr :
          vcfHeader.getContigList())
     {
         os << "##contig=<ID=" << chr.getId() << ",length=" << chr.getLength()
            << ">" << std::endl;
     }
-    for (const VcfMetaInformation &info : vcfHeader.getInfoList())
+    for (const VcfMetaInformation& info : vcfHeader.getInfoList())
     {
         os << "##INFO=" << info << std::endl;
     }
-    for (const VcfMetaInformation &filter :
+    for (const VcfMetaInformation& filter :
          vcfHeader.getFilterList())
     {
         os << "##FILTER=" << filter << std::endl;
     }
-    for (const VcfMetaInformation &format :
+    for (const VcfMetaInformation& format :
          vcfHeader.getFormatList())
     {
         os << "##FORMAT=" << format << std::endl;
     }
-    for (const VcfMetaInformation &alt : vcfHeader.getAltList())
+    for (const VcfMetaInformation& alt : vcfHeader.getAltList())
     {
         os << "##ALT=" << alt << std::endl;
     }

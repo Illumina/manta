@@ -24,6 +24,8 @@
 #include <iostream>
 
 
+static const kstring_t kinit = {0,0,0};
+
 
 hts_streamer::
 hts_streamer(
@@ -36,7 +38,7 @@ hts_streamer(
     _hfp(nullptr),
     _tidx(nullptr),
     _titr(nullptr),
-    _kstr({0,0,0})
+    _kstr(kinit)
 {
     if (nullptr == filename)
     {

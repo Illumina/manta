@@ -979,8 +979,12 @@ dumpStats(std::ostream& os) const
 {
     static const char sep('\t');
 
-    os << "GraphBuildTime" << sep; _buildTime.reportHr(os); os << "\n";
-    os << "GraphMergeTime" << sep; _mergeTime.reportHr(os); os << "\n";
+    os << "GraphBuildTime" << sep;
+    _buildTime.reportHr(os);
+    os << "\n";
+    os << "GraphMergeTime" << sep;
+    _mergeTime.reportHr(os);
+    os << "\n";
     os << "disjointSubgraphs" << sep << nonEmptySize() << "\n";
     os << "nodes" << sep << totalNodeCount() << "\n";
     os << "directedEdges" << sep << totalEdgeCount() << "\n";

@@ -62,7 +62,7 @@ struct SampleReadInputCounts
     template<class Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {
-        ar& minMapq& anom& assm& nonAnom & remoteRecoveryCandidates;
+        ar& minMapq& anom& assm& nonAnom& remoteRecoveryCandidates;
     }
 
     /// using doubles for integral counts here because (1) counts are potentially very high and (2) exact counts don't matter

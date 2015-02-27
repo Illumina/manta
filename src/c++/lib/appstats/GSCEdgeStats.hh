@@ -34,7 +34,7 @@ struct SimpleHist
 {
     SimpleHist(
         const unsigned size)
-    : histdata(size,0)
+        : histdata(size,0)
     {
         assert (size!=0);
     }
@@ -55,7 +55,7 @@ struct SimpleHist
     merge(const SimpleHist& rhs)
     {
         assert(histdata.size() == rhs.histdata.size());
-        for (unsigned i(0);i<histdata.size();i++)
+        for (unsigned i(0); i<histdata.size(); i++)
         {
             histdata[i] += rhs.histdata[i];
         }
@@ -175,7 +175,7 @@ struct GSCEdgeStatsData
     template<class Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {
-        ar & BOOST_SERIALIZATION_NVP(lifeTime)
+        ar& BOOST_SERIALIZATION_NVP(lifeTime)
         & BOOST_SERIALIZATION_NVP(selfEdges)
         & BOOST_SERIALIZATION_NVP(remoteEdges);
     }

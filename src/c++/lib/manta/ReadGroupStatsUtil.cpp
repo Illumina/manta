@@ -389,7 +389,7 @@ struct ReadAlignFilter
                 if (isClipped) return true;
                 isMatched = true;
             }
-            else if(ps.type == SOFT_CLIP)
+            else if (ps.type == SOFT_CLIP)
             {
                 isClipped = true;
             }

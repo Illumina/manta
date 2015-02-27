@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# Starka
-# Copyright (c) 2009-2014 Illumina, Inc.
+# Manta
+# Copyright (c) 2013-2014 Illumina, Inc.
 #
 # This software is provided under the terms and conditions of the
 # Illumina Open Source Software License 1.

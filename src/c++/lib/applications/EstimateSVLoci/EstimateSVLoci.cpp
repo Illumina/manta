@@ -134,7 +134,9 @@ runESL(const ESLOptions& opt)
     const CpuTimes totalTimes(timer.getTimes());
 #ifdef DEBUG_ESL
     log_os << log_tag << " found " << locusFinder.getLocusSet().size() << " loci. \n";
-    log_os << log_tag << " totalTime: "; totalTimes.reportHr(log_os); log_os << "\n";
+    log_os << log_tag << " totalTime: ";
+    totalTimes.reportHr(log_os);
+    log_os << "\n";
 #endif
     locusFinder.setBuildTime(totalTimes);
     locusFinder.getLocusSet().save(opt.outputFilename.c_str());

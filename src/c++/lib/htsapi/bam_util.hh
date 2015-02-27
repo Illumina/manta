@@ -29,7 +29,8 @@ extern "C" {
 
 namespace BAM_FLAG
 {
-enum index_t {
+enum index_t
+{
     PAIRED        = 0x001,
     PROPER_PAIR   = 0x002,
     UNMAPPED      = 0x004,

@@ -839,7 +839,7 @@ isLocalEvidence(
 {
     using namespace SVEvidenceType;
 
-    switch(idx)
+    switch (idx)
     {
     case CIGAR:
     case SOFTCLIP:
@@ -859,7 +859,7 @@ isCandidateCountSufficient(
 {
     static const unsigned minCandidateComplexCount(2);
     const SVBreakendLowResEvidence& evidence(sv.bp1.lowresEvidence);
-    for (unsigned i(0);i<SVEvidenceType::SIZE;++i)
+    for (unsigned i(0); i<SVEvidenceType::SIZE; ++i)
     {
         if (SVEvidenceType::isPairType(i)) continue;
         if (evidence.getVal(i) >= minCandidateComplexCount) return true;
@@ -876,14 +876,14 @@ isCandidateSignalSignificant(
     const FatSVCandidate& sv)
 {
     std::vector<double> evidence;
-    for (unsigned i(0);i<SVEvidenceType::SIZE;++i)
+    for (unsigned i(0); i<SVEvidenceType::SIZE; ++i)
     {
         //if (! isLocalEvidence(i)) continue;
         appendVec(evidence,sv.bp1EvidenceIndex[i]);
     }
     std::sort(evidence.begin(),evidence.end());
 
-    for (unsigned i(0);(i+1)<evidence.size();++i)
+    for (unsigned i(0); (i+1)<evidence.size(); ++i)
     {
         evidence[i] = (evidence[i+1] - evidence[i]);
     }
@@ -893,13 +893,13 @@ isCandidateSignalSignificant(
     double minWinVal(0);
     const unsigned signalCount(std::min(winMax,static_cast<unsigned>(evidence.size())));
 
-    for (unsigned i(0);i<signalCount; ++i)
+    for (unsigned i(0); i<signalCount; ++i)
     {
         minWinVal += evidence[i];
     }
 
     double winVal(minWinVal);
-    for (unsigned i(1);(i+(winMax-1))<evidence.size();++i)
+    for (unsigned i(1); (i+(winMax-1))<evidence.size(); ++i)
     {
         winVal -= evidence[i-1];
         winVal += evidence[i+(winMax-1)];
@@ -922,13 +922,13 @@ isCandidateSignalSignificant(
 
 namespace SINGLE_FILTER
 {
-    enum index_t
-    {
-        NONE,
-        SEMIMAPPED,
-        COMPLEXLOWCOUNT,
-        COMPLEXLOWSIGNAL
-    };
+enum index_t
+{
+    NONE,
+    SEMIMAPPED,
+    COMPLEXLOWCOUNT,
+    COMPLEXLOWSIGNAL
+};
 }
 
 
@@ -978,7 +978,7 @@ filterCandidates(
 {
     unsigned svCount(svs.size());
     unsigned index(0);
-    while(index<svCount)
+    while (index<svCount)
     {
         using namespace SINGLE_FILTER;
         const index_t filt(isFilterSingleJunctionCandidate(assemblyNoiseRate,svs[index]));
