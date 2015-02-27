@@ -1326,6 +1326,55 @@ checkState(
 
 
 
+#if 0
+void
+SVLocusSet::
+compressSingletonNodes() const
+{
+    using namespace illumina::common;
+
+    bool isFirst(true);
+    GenomeInterval lastInterval;
+    NodeAddressType lastAddy;
+    for (const NodeAddressType& addy : _inodes)
+    {
+        if (isNoiseNode(addy)) continue;
+
+        if (! isSingletonNode(addy)) continue;
+
+        const GenomeInterval& interval(getNode(addy).getInterval());
+
+        // don't allow zero-length or negative intervals:
+        assert(interval.range.begin_pos() < interval.range.end_pos());
+
+        // compress nearby singleton nodes into one:
+        if (isFirst)
+        {
+            isFirst=false;
+        }
+        else if (interval.tid == lastInterval.tid)
+        {
+            if (lastInterval.range.end_pos() > interval.range.begin_pos())
+            {
+                std::ostringstream oss;
+                oss << "ERROR: Overlapping nodes in graph\n"
+                    << "\tlast_index: " << lastAddy << " interval: " << lastInterval << "\n"
+                    << "\tthis_index: " << addy << " interval: " << interval << "\n"
+                    << "\tlast_node: " << lastAddy << " "<< getNode(lastAddy) << "\n"
+                    << "\tthis_node: " << addy << " "<< getNode(addy) << "\n"
+                    << "\n"
+                    << header << "\n";
+                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            }
+        }
+        lastAddy = addy;
+        lastInterval = interval;
+    }
+}
+#endif
+
+
+
 void
 SVLocusSet::
 checkForOverlapNodes(

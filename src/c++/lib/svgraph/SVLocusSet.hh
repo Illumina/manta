@@ -478,6 +478,14 @@ private:
         return getLocus(inputAddy.first).isNoiseNode(getMinMergeEdgeCount(),inputAddy.second);
     }
 
+    /// node with a self edge only:
+    bool
+    isSingletonNode(const NodeAddressType inputAddy) const
+    {
+        const SVLocusNode& inputNode(getNode(inputAddy));
+        return ((inputNode.size() == 1) && inputNode.isEdge(inputAddy.second));
+    }
+
     bool
     isOverlapAllowed() const
     {
