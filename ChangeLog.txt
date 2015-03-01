@@ -1,16 +1,16 @@
 v0.24.0
-- MANTA-213 FFPE runtime opimization:
+-MANTA-213 FFPE runtime optimization:
 -- Recognize new BAM format for fragments shorter than read length,
 prevent these reads from triggering assembly.
--- Improve insert size distribution estimation by including fragements shorter
+-- Improve insert size distribution estimation by including fragments shorter
 than read length.
 -- Add new runtime instrumentation report for candidate generation
 -- Add runtime summary to existing graph report
 -- Reduce SW edit matrix size with short k-mer match bounds on ref seq
 -- Improve graph noise filtration by testing specific region for evidence
 signal threshold
--- Use adaptive noise rates in hypoth gen step: background read anomoly rate
-is used to determien if signal is significant. Currently applies to small
+-- Use adaptive noise rates in hypoth gen step: background read anamoly rate
+is used to determine if signal is significant. Currently applies to small
 assembly candidates only.
 -- Collapse redundant assembly candidates for small indels to single copy
 v0.23.1
