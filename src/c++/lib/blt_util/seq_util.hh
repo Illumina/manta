@@ -35,7 +35,8 @@ enum index_t
     C,
     G,
     T,
-    ANY
+    ANY,
+    SIZE
 };
 }
 

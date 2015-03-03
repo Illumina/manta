@@ -34,11 +34,18 @@ char_to_qval(const char c)
 }
 
 template <typename FloatType>
+FloatType
+error_prob_to_phred(const FloatType prob)
+{
+    static const FloatType minlog10(static_cast<FloatType>(std::numeric_limits<FloatType>::min_exponent10));
+    return -10.*std::max(minlog10,std::log10(prob));
+}
+
+template <typename FloatType>
 int
 error_prob_to_qphred(const FloatType prob)
 {
-    static const FloatType minlog10(static_cast<FloatType>(std::numeric_limits<FloatType>::min_exponent10));
-    return static_cast<int>(std::floor(-10.*std::max(minlog10,std::log10(prob))+0.5));
+    return static_cast<int>(std::floor(error_prob_to_phred(prob)+0.5));
 }
 
 inline
