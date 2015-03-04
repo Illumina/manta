@@ -35,7 +35,7 @@ struct PosRangeEndSort
         const known_pos_range2& rhs) const
     {
         if (lhs.end_pos() < rhs.end_pos()) return true;
-        if (lhs.end_pos() != rhs.end_pos())
+        if (lhs.end_pos() == rhs.end_pos())
         {
             if (lhs.begin_pos() < rhs.begin_pos()) return true;
         }
