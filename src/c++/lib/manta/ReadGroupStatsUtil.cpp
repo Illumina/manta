@@ -498,6 +498,8 @@ struct CoreInsertStatsReadFilter
         // filter common categories of undesirable reads:
         if (SVLocusScanner::isReadFilteredCore(bamRead)) return true;
 
+        if (bamRead.is_supplement()) return true;
+
         if (! is_mapped_chrom_pair(bamRead)) return true;
         if (bamRead.map_qual()==0) return true;
 

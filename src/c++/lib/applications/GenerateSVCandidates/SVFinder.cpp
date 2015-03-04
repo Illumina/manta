@@ -138,6 +138,9 @@ addSVNodeRead(
 
     if (scanner.isMappedReadFilteredCore(bamRead)) return;
 
+    /// TODO: remove this restriction
+    if (bamRead.is_supplement()) return;
+
     if (bamRead.map_qual() < scanner.getMinTier2MapQ()) return;
 
     const bool isSubMapped(bamRead.map_qual() < scanner.getMinMapQ());

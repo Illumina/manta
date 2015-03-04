@@ -191,6 +191,9 @@ scoreSplitReads(
         if (SVLocusScanner::isReadFilteredCore(bamRead)) continue;
         if (bamRead.is_unmapped()) continue;
 
+        /// TODO: remove this filter
+        if (bamRead.is_supplement()) continue;
+
         static const bool isShadow(false);
         static const bool isReversedShadow(false);
 
