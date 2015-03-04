@@ -1185,7 +1185,10 @@ getJumpAssembly(
     BPOrientation& bporient(assemblyData.bporient);
 
     bporient.isBp1First = sv.isForward();
-
+    if (_opt.isRNA)
+    {
+        bporient.isBp1First = !sv.isForward(); // RNA-seq reads generate candidates in the opposite direction of the RNA
+    }
     //
     // based on sv candidate, we classify the expected relationship
     // between the contig and the sv breakends:
@@ -1320,7 +1323,6 @@ getJumpAssembly(
 
         if (_opt.isRNA)
         {
-            bporient.isBp1First = !bporient.isBp1First; // RNA-seq reads generate candidates in the opposite direction of the RNA
             const bool bp1Fw = (bporient.isBp1Reversed != bporient.isBp1First);
             const bool bp2Fw = (bporient.isBp2Reversed != bporient.isBp1First);
 #ifdef DEBUG_REFINER
