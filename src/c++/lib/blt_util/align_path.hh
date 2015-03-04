@@ -234,6 +234,10 @@ apath_read_length(const path_t& apath);
 unsigned
 apath_ref_length(const path_t& apath);
 
+/// \return the number of aligned (matched or mismatched) bases in the path
+unsigned
+apath_matched_length(const path_t& apath);
+
 /// how much unaligned sequence (soft_clip or insert) occurs before the first aligned base?
 unsigned
 apath_read_lead_size(const path_t& apath);

@@ -127,7 +127,17 @@ apath_read_length(const path_t& apath)
     return val;
 }
 
-
+unsigned
+apath_matched_length(const path_t& apath)
+{
+    unsigned val(0);
+    for (const path_segment& ps : apath)
+    {
+        if (! is_segment_align_match(ps.type)) continue;
+        val += ps.length;
+    }
+    return val;
+}
 
 unsigned
 apath_ref_length(const path_t& apath)

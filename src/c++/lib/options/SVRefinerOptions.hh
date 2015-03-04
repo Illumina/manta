@@ -53,7 +53,7 @@ struct SVRefinerOptions
         jumpScore(-25),
         RNAspanningAlignScores(2, -8, -19, -1, -1),
         RNAIntronOpenScore(-15),
-        RNAIntronOffEdgeScore(0)
+        RNAIntronOffEdgeScore(-1)
     {
         spanningAssembleOpt.minContigLength=75; ///< For breakend-spanning assemblies we require a larger contig than for small-variant assemblies
     }

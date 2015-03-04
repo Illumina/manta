@@ -1124,7 +1124,7 @@ getJumpAssembly(
     // operations. It is possible to discover breakends and small
     // indels in this expanded region.
     //
-    const pos_t extraRefEdgeSize(isRNA ? 5000 : 250);
+    const pos_t extraRefEdgeSize(isRNA ? 25000 : 250);
 
     // This determines by how much we extend the reference sequence
     // around the breakend region for all operations except alignment
@@ -1148,7 +1148,7 @@ getJumpAssembly(
     // - contig alignment, this means that actual breakpoint discovery
     // - will not occur in the extended region
     //
-    const pos_t extraRefSplitSize(isRNA ? 250 : 100); // TODO: is this RNA switch really intentional??
+    const pos_t extraRefSplitSize(100);
 
     const pos_t extraRefSize(extraRefEdgeSize+extraRefSplitSize);
 
