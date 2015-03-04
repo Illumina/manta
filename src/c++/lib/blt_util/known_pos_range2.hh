@@ -68,11 +68,11 @@ struct known_pos_range2
     /// expand (or contract) range
     void
     expandBy(
-        const pos_t size)
+        const pos_t expandSize)
     {
-        _begin_pos-=size;
-        _end_pos+=size;
-        if ((size<0) && (_end_pos < _begin_pos))
+        _begin_pos-=expandSize;
+        _end_pos+=expandSize;
+        if ((expandSize<0) && (_end_pos < _begin_pos))
         {
             _begin_pos = (_begin_pos+_end_pos)/2;
             _end_pos = _begin_pos;

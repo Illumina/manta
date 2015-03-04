@@ -1606,9 +1606,9 @@ getSmallSVAssembly(
             static const int merSize(10);
             std::unordered_set<std::string> contigHash;
             const unsigned contigSize(contig.seq.size());
-            for (unsigned contigIndex(0); contigIndex<(contigSize-(merSize-1)); ++contigIndex)
+            for (unsigned contigMerIndex(0); contigMerIndex<(contigSize-(merSize-1)); ++contigMerIndex)
             {
-                contigHash.insert(contig.seq.substr(contigIndex,merSize));
+                contigHash.insert(contig.seq.substr(contigMerIndex,merSize));
             }
 
             const pos_t refSize(align1RefStr.size());

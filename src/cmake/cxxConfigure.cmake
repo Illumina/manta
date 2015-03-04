@@ -164,7 +164,7 @@ set (GNU_COMPAT_COMPILER ( (CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR (CMAKE_CXX_
 if (GNU_COMPAT_COMPILER)
     set (CXX_WARN_FLAGS "-Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -pedantic -Wunused-parameter -Wundef -Wdisabled-optimization")
     if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
-        set (CXX_WARN_FLAGS "-Wredundant-decls")
+        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wredundant-decls")
     endif ()
 
     if (NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")

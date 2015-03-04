@@ -83,7 +83,8 @@ addRegion(known_pos_range2 range)
 
 void
 RegionTracker::
-removeToPos(const unsigned pos)
+removeToPos(
+    const pos_t pos)
 {
     for (auto iter(_regions.begin()) ; iter != _regions.end() ; ++iter)
     {

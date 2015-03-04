@@ -833,6 +833,7 @@ processReadPair(
 
 
 
+#if 0
 static
 bool
 isLocalEvidence(
@@ -850,6 +851,7 @@ isLocalEvidence(
         return false;
     }
 }
+#endif
 
 
 

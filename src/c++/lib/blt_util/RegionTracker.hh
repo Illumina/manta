@@ -63,7 +63,7 @@ struct RegionTracker
     /// is single position in a tracked region?
     bool
     isIntersectRegion(
-        const unsigned pos) const
+        const pos_t pos) const
     {
         return isIntersectRegionImpl(pos,pos+1);
     }
@@ -94,7 +94,7 @@ struct RegionTracker
     /// remove all regions which end (inclusive) before pos+1
     void
     removeToPos(
-        const unsigned pos);
+        const pos_t pos);
 
     // debug util
     void

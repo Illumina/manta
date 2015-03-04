@@ -39,7 +39,7 @@ struct GenomeIntervalTracker
         const GenomeInterval& gi)
     {
         assert(gi.tid >= 0);
-        if (gi.tid >= _regions.size()) _regions.resize(gi.tid+1);
+        if (static_cast<unsigned>(gi.tid) >= _regions.size()) _regions.resize(gi.tid+1);
         _regions[gi.tid].addRegion(gi.range);
     }
 
@@ -48,7 +48,7 @@ struct GenomeIntervalTracker
         const GenomeInterval& gi) const
     {
         assert(gi.tid >= 0);
-        if (gi.tid >= _regions.size()) return false;
+        if (static_cast<unsigned>(gi.tid) >= _regions.size()) return false;
         return _regions[gi.tid].isSubsetOfRegion(gi.range);
     }
 

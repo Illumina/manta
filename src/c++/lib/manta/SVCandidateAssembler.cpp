@@ -251,6 +251,8 @@ recoverRemoteReads(
 }
 
 
+
+#ifdef REMOTE_NOISE_RATE
 static
 bool
 isSampleSignal(
@@ -265,6 +267,7 @@ isSampleSignal(
     static const double fudge(3.0);
     return (regionRate > (fudge*background));
 }
+#endif
 
 
 
