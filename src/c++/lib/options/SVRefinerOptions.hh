@@ -52,6 +52,7 @@ struct SVRefinerOptions
         largeGapOpenScore(SUPERTMP::largeGapOpenScore),
         jumpScore(-25),
         RNAspanningAlignScores(2, -8, -19, -1, -1),
+        RNAJumpScore(-60),
         RNAIntronOpenScore(-15),
         RNAIntronOffEdgeScore(-1)
     {
@@ -70,6 +71,7 @@ struct SVRefinerOptions
     const int largeGapOpenScore;
     const int jumpScore;
     AlignmentScores<int> RNAspanningAlignScores;
+    const int RNAJumpScore;
     const int RNAIntronOpenScore;
     const int RNAIntronOffEdgeScore;
     AssemblerOptions spanningAssembleOpt;

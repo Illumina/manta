@@ -13,6 +13,7 @@
 
 ///
 /// \author Chris Saunders
+/// \author Felix Schlesinger
 ///
 
 #include "format/VcfWriterSV.hh"
@@ -205,10 +206,38 @@ makeFormatSampleField(
     }
 }
 
+void addRNAInfo(
+    const bool isFirstOfPair,
+    const SVCandidateAssemblyData& assemblyData,
+    VcfWriterSV::InfoTag_t& infotags)
+{
+    if (! isFirstOfPair) return;
 
+    // there can be several contigs per breakend, so we iterate over all of them.
+    // only the first breakpoint gets the alignments attached to its VCF entry
 
+    if (assemblyData.isSpanning)
+    {
+        const unsigned numContigs(assemblyData.contigs.size());
+
+        infotags.push_back(str(boost::format("FOOBAR_NCONTIGS=%i") % numContigs));
+        if (numContigs > 0)
+        {
+            if (numContigs != assemblyData.spanningAlignments.size())
+                infotags.push_back(str(boost::format("ERROR=%i;%i") % numContigs % assemblyData.spanningAlignments.size()));
+            if (numContigs <= assemblyData.bestAlignmentIndex)
+                infotags.push_back(str(boost::format("ERROR2=%i;%i") % numContigs % assemblyData.bestAlignmentIndex));
+
+            infotags.push_back(str(boost::format("FOOBAR_BEST=%i") % assemblyData.bestAlignmentIndex));
+            infotags.push_back(str(boost::format("FOOBAR_CONTIG=%s") % assemblyData.contigs[assemblyData.bestAlignmentIndex].seq));
+            //infotags.push_back(str(boost::format("FOOBAR_EXTCONTIG=%s") % assemblyData.extendedContigs[assemblyData.bestAlignmentIndex]));
+            infotags.push_back(str(boost::format("FOOBAR_CONTIGcount=%i") % assemblyData.contigs[assemblyData.bestAlignmentIndex].supportReads.size()));
+            infotags.push_back(str(boost::format("FOOBAR_CONTIGLeftAln=%i") % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align1.apath)));
+            infotags.push_back(str(boost::format("FOOBAR_CONTIGRightAln=%i") % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align2.apath)));
+        }
+    }
+}
 #ifdef DEBUG_VCF
-
 static
 void
 addDebugInfo(
@@ -216,7 +245,7 @@ addDebugInfo(
     const SVBreakend& bp2,
     const bool isFirstOfPair,
     const SVCandidateAssemblyData& assemblyData,
-    InfoTag_t& infotags)
+    VcfWriterSV::InfoTag_t& infotags)
 {
     if (! isFirstOfPair) return;
 
@@ -245,11 +274,27 @@ addDebugInfo(
             infotags.push_back( str(boost::format("CTG_JALIGN_%i_CIGAR_A=%s") % alignIndex % cigar1) );
             infotags.push_back( str(boost::format("CTG_JALIGN_%i_CIGAR_B=%s") % alignIndex % cigar2) );
         }
+        const unsigned numContigs(assemblyData.contigs.size());
+
+        infotags.push_back(str(boost::format("FOOBAR_NCONTIGS=%i") % numContigs));
+        infotags.push_back(str(boost::format("FOOBAR_BEST=%i") % assemblyData.bestAlignmentIndex));
+        infotags.push_back(str(boost::format("FOOBAR_CONTIG=%s") % assemblyData.contigs[assemblyData.bestAlignmentIndex].seq));
+        //infotags.push_back(str(boost::format("FOOBAR_EXTCONTIG=%s") % assemblyData.extendedContigs[assemblyData.bestAlignmentIndex]));
+        infotags.push_back(str(boost::format("FOOBAR_CONTIGcount=%i") % assemblyData.contigs[assemblyData.bestAlignmentIndex].supportReads.size()));
+        infotags.push_back(str(boost::format("FOOBAR_CONTIGLeftAln=%i") % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align1.apath)));
+        infotags.push_back(str(boost::format("FOOBAR_CONTIGRightAln=%i") % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align2.apath)));
+
+
+        /*for (unsigned contigIndex(0); contigIndex<numContigs; ++contigIndex)
+        {
+            infotags.push_back(str(boost::format("FOOBAR_%i_CONTIG=%s") % contigIndex % assemblyData.contigs[contigIndex].seq));
+            infotags.push_back(str(boost::format("FOOBAR_%i_EXTCONTIG=%s") % contigIndex % assemblyData.extendedContigs[contigIndex]));
+            infotags.push_back(str(boost::format("FOOBAR_%i_CONTIGcount=%i") % contigIndex % assemblyData.contigs[contigIndex].supportReads.size()));
+            assemblyData.spanningAlignments
+        }*/
     }
 }
-
 #endif
-
 
 
 static
@@ -273,7 +318,7 @@ writeTransloc(
     const SVId& svId,
     const bool isFirstBreakend,
     const SVCandidateSetData& /*svData*/,
-    const SVCandidateAssemblyData& /*adata*/,
+    const SVCandidateAssemblyData& adata,
     const EventInfo& event)
 {
     const bool isImprecise(sv.isImprecise());
@@ -410,10 +455,11 @@ writeTransloc(
     modifyTranslocInfo(isFirstBreakend, infotags);
 
     modifySample(sv, sampletags);
-
 #ifdef DEBUG_VCF
     addDebugInfo(bpA, bpB, isFirstBreakend, adata, infotags);
 #endif
+
+    addRNAInfo(isFirstBreakend, adata, infotags);
 
     // write out record:
     _os << chrom

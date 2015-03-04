@@ -1052,7 +1052,7 @@ SVCandidateAssemblyRefiner(
     _spanningAligner(opt.refineOpt.spanningAlignScores, opt.refineOpt.jumpScore),
     _RNASpanningAligner(
         opt.refineOpt.RNAspanningAlignScores,
-        opt.refineOpt.jumpScore,
+        opt.refineOpt.RNAJumpScore,
         opt.refineOpt.RNAIntronOpenScore,
         opt.refineOpt.RNAIntronOffEdgeScore)
 {}
