@@ -833,6 +833,7 @@ processReadPair(
 
 
 
+static
 bool
 isLocalEvidence(
     const SVEvidenceType::index_t idx)

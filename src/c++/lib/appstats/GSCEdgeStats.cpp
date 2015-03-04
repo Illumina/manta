@@ -51,6 +51,7 @@ report(std::ostream& os) const
 
 
 
+static
 void
 reportTime(
     const char* label,

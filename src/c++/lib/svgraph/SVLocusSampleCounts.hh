@@ -47,7 +47,7 @@ struct SampleReadInputCounts
     merge(
         const SampleReadInputCounts& srs)
     {
-        minMapq =+ srs.minMapq;
+        minMapq += srs.minMapq;
         anom += srs.anom;
         assm += srs.assm;
         nonAnom += srs.nonAnom;

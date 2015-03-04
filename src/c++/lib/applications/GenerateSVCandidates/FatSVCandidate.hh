@@ -44,11 +44,13 @@ struct FatSVCandidate : public SVCandidate
         : base_t()
     {}
 
-    FatSVCandidate(const FatSVCandidate& copy) = default;
-
     FatSVCandidate(const SVCandidate& copy)
         : base_t(copy)
     {}
+
+    FatSVCandidate(const FatSVCandidate&) = default;
+    FatSVCandidate& operator=(const FatSVCandidate&) = default;
+
 
     bool
     merge(const FatSVCandidate& rhs)
