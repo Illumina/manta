@@ -24,9 +24,10 @@ struct VcfWriterCandidateSV : public VcfWriterSV
 {
     VcfWriterCandidateSV(
         const std::string& referenceFilename,
+        const bool isRNA,
         const SVLocusSet& set,
         std::ostream& os) :
-        VcfWriterSV(referenceFilename,set,os)
+        VcfWriterSV(referenceFilename, isRNA, set, os)
     {}
 
     void

@@ -25,17 +25,19 @@
 
 struct VcfWriterSomaticSV : public VcfWriterSV, VcfWriterScoredSV
 {
+    static const bool isRNA = false;
+
     VcfWriterSomaticSV(
         const CallOptionsSomatic& somaticOpt,
         const bool isMaxDepthFilter,
         const std::string& referenceFilename,
         const SVLocusSet& set,
         std::ostream& os) :
-        VcfWriterSV(referenceFilename,set,os),
+        VcfWriterSV(referenceFilename, isRNA, set,os),
         _somaticOpt(somaticOpt),
         _isMaxDepthFilter(isMaxDepthFilter),
-        _somaticInfoPtr(NULL),
-        _singleJunctionSomaticInfoPtr(NULL)
+        _somaticInfoPtr(nullptr),
+        _singleJunctionSomaticInfoPtr(nullptr)
     {}
 
     void

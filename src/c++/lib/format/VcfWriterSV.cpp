@@ -41,9 +41,11 @@
 VcfWriterSV::
 VcfWriterSV(
     const std::string& referenceFilename,
+    const bool isRNA,
     const SVLocusSet& set,
     std::ostream& os) :
     _referenceFilename(referenceFilename),
+    _isRNA(isRNA),
     _header(set.header),
     _os(os)
 {
@@ -462,7 +464,10 @@ writeTransloc(
     addDebugInfo(bpA, bpB, isFirstBreakend, adata, infotags);
 #endif
 
-    addRNAInfo(isFirstBreakend, sv, adata, infotags);
+    if (_isRNA)
+    {
+        addRNAInfo(isFirstBreakend, sv, adata, infotags);
+    }
 
     // write out record:
     _os << chrom

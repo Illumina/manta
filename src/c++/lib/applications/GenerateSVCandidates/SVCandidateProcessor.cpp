@@ -41,9 +41,9 @@ SVWriter(
     candfs(opt.candidateOutputFilename),
     dipfs(opt.diploidOutputFilename),
     somfs(opt.somaticOutputFilename),
-    candWriter(opt.referenceFilename,cset,candfs.getStream()),
-    diploidWriter(opt.diploidOpt, opt.isRNA, (! opt.chromDepthFilename.empty()),
-                  opt.referenceFilename,cset,dipfs.getStream()),
+    candWriter(opt.referenceFilename, opt.isRNA, cset,candfs.getStream()),
+    diploidWriter(opt.diploidOpt, (! opt.chromDepthFilename.empty()),
+                  opt.referenceFilename,  opt.isRNA, cset,dipfs.getStream()),
     somWriter(opt.somaticOpt, (! opt.chromDepthFilename.empty()),
               opt.referenceFilename,cset,somfs.getStream()),
     _truthTracker(truthTracker)

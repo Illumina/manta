@@ -31,6 +31,7 @@ struct VcfWriterSV
 {
     VcfWriterSV(
         const std::string& referenceFilename,
+        const bool isRNA,
         const SVLocusSet& set,
         std::ostream& os);
 
@@ -154,6 +155,7 @@ private:
 
 protected:
     const std::string& _referenceFilename;
+    const bool _isRNA;
 
 private:
     const bam_header_info& _header;
