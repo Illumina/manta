@@ -35,7 +35,7 @@ struct PosRangeEndSort
         const known_pos_range2& rhs) const
     {
         if (lhs.end_pos() < rhs.end_pos()) return true;
-        if (lhs.end_pos() == rhs.end_pos())
+        if (lhs.end_pos() != rhs.end_pos())
         {
             if (lhs.begin_pos() < rhs.begin_pos()) return true;
         }
@@ -98,7 +98,8 @@ struct RegionTracker
 
     // debug util
     void
-    dump(std::ostream& os) const;
+    dump(
+        std::ostream& os) const;
 
     typedef std::set<known_pos_range2,PosRangeEndSort>  region_t;
 
@@ -132,7 +133,8 @@ struct RegionPayloadTracker
     }
 
     boost::optional<T>
-    isPayloadInRegion(const unsigned pos) const;
+    isPayloadInRegion(
+            const pos_t pos) const;
 
     /// add region
     ///
@@ -147,11 +149,12 @@ struct RegionPayloadTracker
     /// remove all regions which end (inclusive) before pos+1
     void
     removeToPos(
-        const unsigned pos);
+        const pos_t pos);
 
     // debug util
     void
-    dump(std::ostream& os) const;
+    dump(
+        std::ostream& os) const;
 
     typedef typename std::map<known_pos_range2,T,PosRangeEndSort> region_t;
 

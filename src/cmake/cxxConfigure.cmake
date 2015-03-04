@@ -210,11 +210,17 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     if (NOT (${compiler_version} VERSION_LESS "3.5"))
         set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wextra-semi -Wdeprecated -Wmissing-variable-declarations")
     endif ()
+    
+    if (NOT (${compiler_version} VERSION_LESS "3.6"))
+        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wheader-hygiene -Wunreachable-code-return -Wkeyword-macro")
+    endif ()
 
     #### documentation of other possible warning flags from clang
-    # set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Weverything -Wno-sign-conversion -Wno-weak-vtables -Wno-conversion -Wno-cast-align -Wno-padded -Wno-switch-enum -Wno-missing-noreturn -Wno-covered-switch-default -Wno-unreachable-code -Wno-global-constructors -Wno-exit-time-destructors")
+    #set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Weverything -Wno-sign-conversion -Wno-weak-vtables -Wno-conversion -Wno-cast-align -Wno-padded -Wno-switch-enum -Wno-missing-noreturn -Wno-covered-switch-default -Wno-unreachable-code -Wno-global-constructors -Wno-exit-time-destructors")
     ### new disabled everything-warnings in clang 3.5 (or these might be c++11 warnings):
-    # set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-c++98-compat -Wno-documentation-unknown-command -Wno-old-style-cast -Wno-unused-member-function -Wno-documentation -Wno-float-equal")
+    #set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-c++98-compat -Wno-documentation-unknown-command -Wno-old-style-cast -Wno-unused-member-function -Wno-documentation -Wno-float-equal")
+    ### new disabled everything-warnings in clang 3.6:
+    #set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-reserved-id-macro")
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
     # suppress errors in boost headers:

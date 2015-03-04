@@ -52,7 +52,6 @@ struct VcfTransform
         }
         BOOST_THROW_EXCEPTION(PostConditionException(
                                   (boost::format("Inexistent VcfMetainformation type: %s") % s).str() ));
-        return r;
     }
 };
 

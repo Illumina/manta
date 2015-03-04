@@ -13,6 +13,7 @@
 
 #include "boost/test/unit_test.hpp"
 
+#pragma clang diagnostic ignored "-Wkeyword-macro"
 #define private public
 
 #include "RegionTracker.hh"

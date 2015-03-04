@@ -18,15 +18,14 @@
 /*****************************************************************************/
 
 #include <boost/format.hpp>
-#include <boost/throw_exception.hpp>
-
-#include <boost/foreach.hpp>
-#define foreach BOOST_FOREACH
 
 #include "common/Exceptions.hh"
 #include "String.hh"
 
 #include "VcfFile.hh"
+
+using namespace illumina::common;
+
 
 /*****************************************************************************/
 
@@ -250,7 +249,7 @@ bool VcfFile::getVariantVec(VariantVec& variantVec)
     }
 
     // Check that all transloc line mates found
-    foreach (MateSeenMap::value_type mateSeenMapEle, myMateSeenMap)
+    for (MateSeenMap::value_type mateSeenMapEle : myMateSeenMap)
     {
         if (!mateSeenMapEle.second)
         {

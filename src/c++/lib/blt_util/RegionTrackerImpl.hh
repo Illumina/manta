@@ -22,7 +22,8 @@
 template <typename T>
 boost::optional<T>
 RegionPayloadTracker<T>::
-isPayloadInRegion(const unsigned pos) const
+isPayloadInRegion(
+        const pos_t pos) const
 {
     boost::optional<T> result;
     if (_regions.empty()) return result;
@@ -108,7 +109,8 @@ addRegion(
 template <typename T>
 void
 RegionPayloadTracker<T>::
-removeToPos(const unsigned pos)
+removeToPos(
+        const pos_t pos)
 {
     for (auto iter(_regions.begin()) ; iter != _regions.end() ; ++iter)
     {
@@ -122,7 +124,8 @@ removeToPos(const unsigned pos)
 template <typename T>
 void
 RegionPayloadTracker<T>::
-dump(std::ostream& os) const
+dump(
+        std::ostream& os) const
 {
     os << "RegionPayloadTracker\n";
     for (const auto& val : _regions)

@@ -72,7 +72,6 @@ isEdgeFiltered(
 
         return (! (isMatch || isSwapMatch));
     }
-    return false;
 }
 
 

@@ -28,8 +28,6 @@
 
 #include "common/Exceptions.hh"
 
-using namespace illumina::common;
-
 /*****************************************************************************/
 
 /**
@@ -106,12 +104,12 @@ public:
     {
         if (!chrDefined())
         {
-            BOOST_THROW_EXCEPTION( PreConditionException(
+            BOOST_THROW_EXCEPTION( illumina::common::PreConditionException(
                                        "Undefined CHROMOSOME reference: Could not compare Genomic coordinates." ));
         }
         if (!posDefined())
         {
-            BOOST_THROW_EXCEPTION( PreConditionException(
+            BOOST_THROW_EXCEPTION( illumina::common::PreConditionException(
                                        "Undefined POSITION: Could not compare Genomic coordinates." ));
         }
         return this->chromosome_ < rhs.chromosome_  ||

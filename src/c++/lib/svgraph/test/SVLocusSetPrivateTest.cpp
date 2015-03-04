@@ -18,7 +18,9 @@
 #include "boost/test/unit_test.hpp"
 
 // hack to call private methods of SVLocusSet:
+#pragma clang diagnostic ignored "-Wkeyword-macro"
 #define private public
+
 #include "svgraph/SVLocusSet.hh"
 
 #include "SVLocusTestUtil.hh"
