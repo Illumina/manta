@@ -200,26 +200,25 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wmissing-prototypes -Wunused-exception-parameter -Wbool-conversion -Wempty-body -Wimplicit-fallthrough -Wsizeof-array-argument -Wstring-conversion")
 
     if (NOT (${compiler_version} VERSION_LESS "3.3"))
-        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Woverloaded-shift-op-parentheses")
+        # many of these may be valid earlier than v3.3 - limited access to earlier clang versions prevents testing
+        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Woverloaded-shift-op-parentheses -Wloop-analysis -Wno-missing-braces")
+        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wextra-semi -Wdeprecated -Wmissing-variable-declarations -Wheader-hygiene -Wmismatched-tags -Wunused-private-field")
     endif ()
 
     if (NOT (${compiler_version} VERSION_LESS "3.4"))
-        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wheader-guard -Wlogical-not-parentheses -Wloop-analysis")
+        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wheader-guard -Wlogical-not-parentheses")
     endif ()
 
-    if (NOT (${compiler_version} VERSION_LESS "3.5"))
-        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wextra-semi -Wdeprecated -Wmissing-variable-declarations")
-    endif ()
-    
     if (NOT (${compiler_version} VERSION_LESS "3.6"))
-        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wheader-hygiene -Wunreachable-code-return -Wkeyword-macro")
+        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wunreachable-code-return -Wkeyword-macro -Winconsistent-missing-override")
     endif ()
 
     #### documentation of other possible warning flags from clang
-    #set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Weverything -Wno-sign-conversion -Wno-weak-vtables -Wno-conversion -Wno-cast-align -Wno-padded -Wno-switch-enum -Wno-missing-noreturn -Wno-covered-switch-default -Wno-unreachable-code -Wno-global-constructors -Wno-exit-time-destructors")
-    ### new disabled everything-warnings in clang 3.5 (or these might be c++11 warnings):
+    #set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Weverything")
+    ### disabled as of clang 3.3 (or earlier -- limited access to earlier versions for testing):
+    #set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-sign-conversion -Wno-weak-vtables -Wno-conversion -Wno-cast-align -Wno-padded -Wno-switch-enum -Wno-missing-noreturn -Wno-covered-switch-default -Wno-unreachable-code -Wno-global-constructors -Wno-exit-time-destructors -Wno-missing-braces")
     #set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-c++98-compat -Wno-documentation-unknown-command -Wno-old-style-cast -Wno-unused-member-function -Wno-documentation -Wno-float-equal")
-    ### new disabled everything-warnings in clang 3.6:
+    ### disabled as of clang 3.6:
     #set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-reserved-id-macro")
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
