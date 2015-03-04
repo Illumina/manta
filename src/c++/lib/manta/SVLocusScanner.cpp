@@ -175,7 +175,7 @@ isCigarUpstream(
     const ALIGNPATH::path_t& align)
 {
     using namespace ALIGNPATH;
-    return (apath_read_lead_size(align) > apath_read_trail_size(align));
+    return (apath_read_lead_size(align) < apath_read_trail_size(align));
 }
 
 
@@ -197,7 +197,7 @@ updateSABreakend(
 
     const bool isUpstream(isCigarUpstream(align.path));
 
-    if (isUpstream)
+    if (!isUpstream)
     {
         breakend.state = SVBreakendState::LEFT_OPEN;
     }
