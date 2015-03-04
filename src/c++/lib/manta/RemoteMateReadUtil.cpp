@@ -26,6 +26,7 @@ isMateInsertionEvidenceCandidate(
     const unsigned minMapq)
 {
     if (! bamRead.is_paired()) return false;
+    if (bamRead.is_supplement()) return false;
     if (bamRead.is_unmapped() || bamRead.is_mate_unmapped()) return false;
 
     if (bamRead.map_qual() < minMapq) return false;

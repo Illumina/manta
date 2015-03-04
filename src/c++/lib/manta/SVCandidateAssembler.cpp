@@ -196,6 +196,8 @@ recoverRemoteReads(
             // we've gone past the last case:
             if (bamRead.pos() > (remotes.back().pos+1)) break;
 
+            if (bamRead.is_supplement()) continue;
+
             for (RemoteReadInfo& remote : remotes)
             {
 #ifdef DEBUG_REMOTES

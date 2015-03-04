@@ -299,7 +299,7 @@ getSACandidatesFromRead(
     for (const std::string& sa : saVec)
     {
 #ifdef DEBUG_SCANNER
-        log_os << "SA STRING: " << sa << "\n";
+        log_os << __FUNCTION__ << ": SA STRING: " << sa << "\n";
 #endif
         std::vector<std::string> saDat;
         split_string(sa, ',', saDat);
@@ -325,12 +325,10 @@ getSACandidatesFromRead(
 
         cigar_to_apath(saDat[3].c_str(), remoteAlign.path);
 
-        SVObservation sv = GetSplitSACandidate(dopt, localRead, localAlign, remoteAlign, fragSource);
+        candidates.push_back(GetSplitSACandidate(dopt, localRead, localAlign, remoteAlign, fragSource));
 #ifdef DEBUG_SCANNER
-        static const std::string logtag("getSACandidatesFromRead");
-        log_os << logtag << " evaluating SA sv for inclusion: " << sv << "\n";
+        log_os << __FUNCTION__ << ": evaluating SA sv for inclusion: " << candidates.back() << "\n";
 #endif
-        candidates.push_back(sv);
     }
 }
 
@@ -485,6 +483,9 @@ getSVCandidatesFromPair(
     static const index_t svPair(PAIR);
 
     if (! localRead.is_paired()) return;
+
+    // don't count paired end evidence from SA-split reads twice:
+    if (localRead.is_supplement()) return;
 
     if (localRead.is_unmapped() || localRead.is_mate_unmapped()) return;
 
@@ -779,6 +780,10 @@ getReadBreakendsImpl(
 {
     using namespace illumina::common;
 
+#ifdef DEBUG_SCANNER
+    log_os << __FUNCTION__ << ": Starting read: " << localRead.qname() << "\n";
+#endif
+
     const chromMap_t& chromToIndex(bamHeader.chrom_to_index);
 
     candidates.data.clear();
@@ -828,8 +833,7 @@ getReadBreakendsImpl(
     }
 
 #ifdef DEBUG_SCANNER
-    static const std::string logtag("getReadBreakendsImpl: ");
-    log_os << logtag << "post-pair candidate_size: " << candidates.size() << "\n";
+    log_os << __FUNCTION__ << ": post-pair candidate_size: " << candidates.size() << "\n";
 #endif
 
     // update localEvidence range:
@@ -942,8 +946,7 @@ getSVLociImpl(
                          refSeq, NULL, trackedCandidates, localEvidenceRange);
 
 #ifdef DEBUG_SCANNER
-    static const std::string logtag("getSVLociImpl");
-    log_os << logtag << " candidate_size: " << candidates.size() << "\n";
+    log_os << __FUNCTION__ << ": candidate_size: " << candidates.size() << "\n";
 #endif
 
     // translate SVCandidate to a simpler form for use
@@ -1026,7 +1029,7 @@ getSVLociImpl(
         }
 
 #ifdef DEBUG_SCANNER
-        log_os << logtag << " adding Locus: " << locus << "\n";
+        log_os << __FUNCTION__ << ": adding Locus: " << locus << "\n";
 #endif
         loci.push_back(locus);
     }

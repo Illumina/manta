@@ -38,6 +38,8 @@ isGoodShadow(
 
     if (! bamRead.is_paired()) return false;
 
+    if (bamRead.is_supplement()) return false;
+
     // sanity check that this is a shadow read:
     if (!bamRead.is_unmapped()) return false;
     if (bamRead.is_mate_unmapped()) return false;
