@@ -101,7 +101,7 @@ struct SVLocusScanner
         if      (bamRead.is_filter()) return true;
         else if (bamRead.is_dup()) return true;
         else if (bamRead.is_secondary()) return true;
-        else if (bamRead.is_supplement()) return true;
+//        else if (bamRead.is_supplement()) return true;
         return false;
     }
 

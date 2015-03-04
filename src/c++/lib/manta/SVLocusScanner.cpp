@@ -235,7 +235,6 @@ GetSplitSACandidate(
     SVObservation sv;
 
     sv.bp1.lowresEvidence.add(svSource);
-    sv.bp2.lowresEvidence.add(svSource);
     sv.evtype = svSource;
     sv.fragSource = fragSource;
 
