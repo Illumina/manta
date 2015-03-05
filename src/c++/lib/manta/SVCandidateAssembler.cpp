@@ -417,6 +417,8 @@ getBreakendReads(
                 }
             }
 
+            if (bamRead.is_supplement()) continue;
+
             // don't filter out MAPQ0 because the split reads tend to have reduced mapping scores:
             if (SVLocusScanner::isReadFilteredCore(bamRead)) continue;
 
