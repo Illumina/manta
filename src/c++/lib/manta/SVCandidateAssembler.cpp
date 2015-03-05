@@ -404,6 +404,11 @@ getBreakendReads(
 
             const bam_record& bamRead(*(bamStream.get_record_ptr()));
 
+            const pos_t refPos(bamRead.pos()-1);
+            if (refPos >= searchEndPos) break;
+
+            // Filter reads which won't be used in assembly:
+            //
             if (isMaxDepth)
             {
                 if (! isTumor)
@@ -417,17 +422,10 @@ getBreakendReads(
                 }
             }
 
-            if (bamRead.is_supplement()) continue;
-
             // don't filter out MAPQ0 because the split reads tend to have reduced mapping scores:
             if (SVLocusScanner::isReadFilteredCore(bamRead)) continue;
 
-#ifdef REMOTE_NOISE_RATE
-            remoteRate.push(false);
-#endif
-
-            const pos_t refPos(bamRead.pos()-1);
-            if (refPos >= searchEndPos) break;
+            if (bamRead.is_supplement()) continue;
 
             if (isMaxDepth)
             {
@@ -442,6 +440,24 @@ getBreakendReads(
                     continue;
                 }
             }
+
+            // filter reads with "N"
+            if (bamRead.get_bam_read().get_string().find('N') != std::string::npos) continue;
+
+
+            // Finished filtering reads, now test reads for assm evidence:
+            //
+            //
+            // TODO: if a dna fragment is shorter than the read length it can include adaptor sequence, there are no protections
+            // in here preventing this adaptor sequence from entering the assembly pool (CheckSemiAligned will reject any such pair
+            // as assembly evidence, but another test might pull the read in -- if this happens any soft-clipped read segments are
+            // dragged in as well.
+            //
+
+
+#ifdef REMOTE_NOISE_RATE
+            remoteRate.push(false);
+#endif
 
             SimpleAlignment bamAlign(getAlignment(bamRead));
 
@@ -479,16 +495,6 @@ getBreakendReads(
 #endif
                 }
             }
-
-            // filter reads with "N"
-            if (bamRead.get_bam_read().get_string().find('N') != std::string::npos) continue;
-
-
-            // TODO: if a dna fragment is shorter than the read length it can include adaptor sequence, there are no protections
-            // in hear preventing this adaptor sequence from entering the assembly pool (CheckSemiAligned will reject any such pair
-            // as assembly evidence, but another test might pull the read in -- if this happens any soft-clipped read segments are
-            // dragged in as well.
-            //
 
 
             // check for any indels in read:
@@ -627,7 +633,7 @@ getBreakendReads(
     }
 
 
-    /// sanity check the remote reads to see if we're going to recover them:
+    // sanity check the remote reads to see if we're going to recover them:
     bool isRecoverRemotes(!isMaxDepthRemoteReadsTriggered);
 
 #ifdef REMOTE_NOISE_RATE
