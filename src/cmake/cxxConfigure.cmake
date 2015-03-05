@@ -162,7 +162,7 @@ set (GNU_COMPAT_COMPILER ( (CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR (CMAKE_CXX_
 
 # start with warning flags:
 if (GNU_COMPAT_COMPILER)
-    set (CXX_WARN_FLAGS "-Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -pedantic -Wunused-parameter -Wundef -Wdisabled-optimization")
+    set (CXX_WARN_FLAGS "-Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -pedantic -Wunused-parameter -Wundef -Wdisabled-optimization -Wno-unknown-pragmas")
     if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
         set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wredundant-decls")
     endif ()
