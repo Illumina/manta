@@ -43,7 +43,7 @@ getRemoteRate(
     static const double pseudoRemote(100.);
 
     const SampleReadInputCounts& input(counts.getSample(isTumor).input);
-    return (input.remoteRecoveryCandidates+pseudoRemote)/(input.total()+pseudoTotal);
+    return (input.evidenceCount.remoteRecoveryCandidates+pseudoRemote)/(input.total()+pseudoTotal);
 }
 
 

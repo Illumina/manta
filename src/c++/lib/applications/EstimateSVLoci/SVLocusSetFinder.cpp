@@ -20,7 +20,6 @@
 #include "blt_util/log.hh"
 #include "htsapi/align_path_bam_util.hh"
 #include "manta/ChromDepthFilterUtil.hh"
-#include "manta/RemoteMateReadUtil.hh"
 
 #include <iostream>
 
@@ -251,36 +250,7 @@ update(
         return;
     }
 
-    // exclude innie read pairs which are anomalously short:
-    const bool isNonCompressedAnomalous(_readScanner.isNonCompressedAnomalous(bamRead,defaultReadGroupIndex));
-
-    bool isLocalAssemblyEvidence(false);
-    if (! isNonCompressedAnomalous)
-    {
-        isLocalAssemblyEvidence = _readScanner.isLocalAssemblyEvidence(bamRead, refSeq);
-    }
-
-    {
-        if      (isNonCompressedAnomalous) incounts.anom++;
-        else if (isLocalAssemblyEvidence)  incounts.assm++;
-        else                               incounts.nonAnom++;
-
-        if (isNonCompressedAnomalous)
-        {
-            if (isMateInsertionEvidenceCandidate(bamRead, _readScanner.getMinMapQ()))
-            {
-                // these counts are used to generate background noise rates in later candidate generation stages:
-                incounts.remoteRecoveryCandidates++;
-            }
-        }
-    }
-
-    const bool isRejectRead(! ( isNonCompressedAnomalous || isLocalAssemblyEvidence));
-
-    if (isRejectRead)
-    {
-        return; // this read isn't interesting (enough) wrt SV discovery
-    }
+    if (! _readScanner.isSVEvidence(bamRead,defaultReadGroupIndex,refSeq,&(incounts.evidenceCount))) return;
 
 #ifdef DEBUG_SFINDER
     log_os << "SFinder: Accepted read. isNonCompressedAnomalous "  << isNonCompressedAnomalous << " is Local assm evidence: " << isLocalAssemblyEvidence << " read: " << bamRead << "\n";

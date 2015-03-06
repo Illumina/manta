@@ -50,11 +50,14 @@ write(
 {
     const double dtotal(total());
     StreamScoper ss(os);
-    writeLine(os,"MinMapq",minMapq,dtotal);
-    writeLine(os,"Anomalous",anom,dtotal);
-    writeLine(os,"AssemblyEvidence",assm,dtotal);
-    writeLine(os,"Ignored",nonAnom,dtotal);
-    writeLine(os,"AnomalousRemotes",remoteRecoveryCandidates,dtotal);
+    writeLine(os,"MinMapqFiltered",minMapq,dtotal);
+    writeLine(os,"NotFiltered",evidenceCount.total,dtotal);
+    writeLine(os,"NotFilteredAndIgnored",evidenceCount.ignored,dtotal);
+    writeLine(os,"NotFilteredAndAnomalousPair",evidenceCount.anom,dtotal);
+    writeLine(os,"NotFilteredAndAnomalousPairRemotes",evidenceCount.remoteRecoveryCandidates,dtotal);
+    writeLine(os,"NotFilteredAndSplitRead",evidenceCount.split,dtotal);
+    writeLine(os,"NotFilteredAndLargeIndel",evidenceCount.indel,dtotal);
+    writeLine(os,"NotFilteredAndSemiAligned",evidenceCount.assm,dtotal);
 }
 
 

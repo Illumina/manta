@@ -24,6 +24,7 @@
 #include "htsapi/align_path_bam_util.hh"
 #include "htsapi/bam_record_util.hh"
 #include "htsapi/SimpleAlignment_bam_util.hh"
+#include "manta/RemoteMateReadUtil.hh"
 #include "manta/SVCandidateUtil.hh"
 #include "manta/SVLocusScanner.hh"
 #include "manta/SVLocusScannerSemiAligned.hh"
@@ -1291,17 +1292,10 @@ isNonCompressedAnomalous(
 
 bool
 SVLocusScanner::
-isLocalAssemblyEvidence(
-    const bam_record& bamRead,
-    const reference_contig_segment& refSeq) const
+isLocalIndelEvidence(
+    const SimpleAlignment& bamAlign) const
 {
     using namespace ALIGNPATH;
-
-    const SimpleAlignment bamAlign(getAlignment(bamRead));
-
-    //
-    // large indel already in cigar string
-    //
     for (const path_segment& ps : bamAlign.path)
     {
         if (ps.type == INSERT || ps.type == DELETE)
@@ -1309,25 +1303,82 @@ isLocalAssemblyEvidence(
             if (ps.length>=_opt.minCandidateVariantSize) return true;
         }
     }
+    return false;
+}
 
-    //
-    // semi-aligned AND soft-clipped read ends:
-    //
-    {
-        unsigned leadingMismatchLen(0), trailingMismatchLen(0);
-        getSVBreakendCandidateSemiAligned(bamRead, bamAlign, refSeq, leadingMismatchLen, trailingMismatchLen);
-        if ((leadingMismatchLen >= _opt.minSemiAlignedMismatchLen) || (trailingMismatchLen >= _opt.minSemiAlignedMismatchLen))
-        {
-            return true;
-        }
-    }
 
+
+bool
+SVLocusScanner::
+isSemiAlignedEvidence(
+    const bam_record& bamRead,
+    const SimpleAlignment& bamAlign,
+    const reference_contig_segment& refSeq) const
+{
+    unsigned leadingMismatchLen(0), trailingMismatchLen(0);
+    getSVBreakendCandidateSemiAligned(bamRead, bamAlign, refSeq, leadingMismatchLen, trailingMismatchLen);
+    return ((leadingMismatchLen >= _opt.minSemiAlignedMismatchLen) || (trailingMismatchLen >= _opt.minSemiAlignedMismatchLen));
+}
+
+
+
+bool
+SVLocusScanner::
+isLocalAssemblyEvidence(
+    const bam_record& bamRead,
+    const reference_contig_segment& refSeq) const
+{
+    const SimpleAlignment bamAlign(getAlignment(bamRead));
+    if (isLocalIndelEvidence(bamAlign)) return true;
+    if (isSemiAlignedEvidence(bamRead, bamAlign, refSeq)) return true;
     /// TODO Add shadow evidence -- complexity here is keeping locus merging under control due to the large breakend location variance
     /// suggested by shadows
 
     return false;
 }
 
+
+
+bool
+SVLocusScanner::
+isSVEvidence(
+    const bam_record& bamRead,
+    const unsigned defaultReadGroupIndex,
+    const reference_contig_segment& refSeq,
+    SVLocusEvidenceCount* incountsPtr) const
+{
+    // exclude innie read pairs which are anomalously short:
+    const bool isAnom(isNonCompressedAnomalous(bamRead,defaultReadGroupIndex));
+    const bool isSplit(SVLocusScanner::isSASplitRead(bamRead));
+    const SimpleAlignment bamAlign(getAlignment(bamRead));
+    const bool isIndel(isLocalIndelEvidence(bamAlign));
+    const bool isAssm((!isSplit) && isSemiAlignedEvidence(bamRead, bamAlign, refSeq));
+
+    const bool isEvidence(isAnom || isSplit || isIndel || isAssm);
+
+    if (nullptr != incountsPtr)
+    {
+        SVLocusEvidenceCount& incounts(*incountsPtr);
+        incounts.total++;
+        if (isAnom) incounts.anom++;
+        if (isSplit) incounts.split++;
+        if (isIndel) incounts.indel++;
+        if (isAssm) incounts.assm++;
+
+        if (! isEvidence) incounts.ignored++;
+
+        if (isAnom)
+        {
+            if (isMateInsertionEvidenceCandidate(bamRead, getMinMapQ()))
+            {
+                // these counts are used to generate background noise rates in later candidate generation stages:
+                incounts.remoteRecoveryCandidates++;
+            }
+        }
+    }
+
+    return isEvidence;
+}
 
 
 

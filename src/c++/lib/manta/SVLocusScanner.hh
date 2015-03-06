@@ -24,6 +24,7 @@
 #include "htsapi/bam_record_util.hh"
 #include "manta/ReadGroupStatsSet.hh"
 #include "manta/SVCandidate.hh"
+#include "manta/SVLocusEvidenceCount.hh"
 #include "svgraph/SVLocus.hh"
 #include "options/ReadScannerOptions.hh"
 #include "truth/TruthTracker.hh"
@@ -161,6 +162,18 @@ struct SVLocusScanner
         const bam_record& bamRead,
         const unsigned defaultReadGroupIndex) const;
 
+    /// large indels in CIGAR string
+    bool
+    isLocalIndelEvidence(
+        const SimpleAlignment& bamAlign) const;
+
+    /// semi-aligned and soft-clipped edges
+    bool
+    isSemiAlignedEvidence(
+        const bam_record& bamRead,
+        const SimpleAlignment& bamAlign,
+        const reference_contig_segment& refSeq) const;
+
     /// \brief is the read likely to indicate the presence of a small SV?
     ///
     /// this function flags reads which could contribute to a local small-variant assembly
@@ -175,6 +188,13 @@ struct SVLocusScanner
     isLocalAssemblyEvidence(
         const bam_record& bamRead,
         const reference_contig_segment& refSeq) const;
+
+    bool
+    isSVEvidence(
+        const bam_record& bamRead,
+        const unsigned defaultReadGroupIndex,
+        const reference_contig_segment& refSeq,
+        SVLocusEvidenceCount* incountsPtr = nullptr) const;
 
     /// return zero to many SVLocus objects if the read supports any
     /// structural variant(s) (detectable by manta)

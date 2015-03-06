@@ -18,6 +18,7 @@
 #pragma once
 
 #include "manta/SVBreakend.hh"
+#include "manta/SVLocusEvidenceCount.hh"
 
 #include <algorithm>
 #include <iosfwd>
@@ -30,28 +31,21 @@ struct SampleReadInputCounts
     clear()
     {
         minMapq = 0;
-        anom = 0;
-        assm = 0;
-        nonAnom = 0;
-
-        remoteRecoveryCandidates = 0;
+        evidenceCount.clear();
     }
 
     double
     total() const
     {
-        return (minMapq+anom+assm+nonAnom);
+        return (minMapq+evidenceCount.total);
     }
 
     void
     merge(
-        const SampleReadInputCounts& srs)
+        const SampleReadInputCounts& rhs)
     {
-        minMapq += srs.minMapq;
-        anom += srs.anom;
-        assm += srs.assm;
-        nonAnom += srs.nonAnom;
-        remoteRecoveryCandidates += srs.remoteRecoveryCandidates;
+        minMapq += rhs.minMapq;
+        evidenceCount.merge(rhs.evidenceCount);
     }
 
     void
@@ -62,26 +56,15 @@ struct SampleReadInputCounts
     template<class Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {
-        ar& minMapq& anom& assm& nonAnom& remoteRecoveryCandidates;
+        ar& minMapq& evidenceCount;
     }
 
-    /// using doubles for integral counts here because (1) counts are potentially very high and (2) exact counts don't matter
-    ///
+    // using doubles for integral counts here because (1) counts are potentially very high and (2) exact counts don't matter
 
     ///< total number of reads filtered for mapq before any classification step
     double minMapq = 0;
 
-    ///< total number of non-filtered anomalous reads scanned
-    double anom = 0;
-
-    ///< total number of non-filtered non-anomolous assembly reads scanned
-    double assm = 0;
-
-    ///< total number of non-filtered non-anomalous reads scanned
-    double nonAnom = 0;
-
-    ///< subset of anom. these are reads which qualify as candidates for remote recovery
-    double remoteRecoveryCandidates = 0;
+    SVLocusEvidenceCount evidenceCount;
 };
 
 

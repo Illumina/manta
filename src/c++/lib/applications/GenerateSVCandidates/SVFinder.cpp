@@ -46,7 +46,7 @@ getAssemblyNoiseRate(
     static const double pseudoAssm(10.);
 
     const SampleReadInputCounts& input(counts.getSample(isTumor).input);
-    return (input.assm+pseudoAssm)/(input.total()+pseudoTotal);
+    return (input.evidenceCount.assm+pseudoAssm)/(input.total()+pseudoTotal);
 }
 
 
@@ -148,18 +148,7 @@ addSVNodeRead(
 
     svDataGroup.increment(isNode1,isSubMapped);
 
-    const bool isNonCompressedAnomalous(scanner.isNonCompressedAnomalous(bamRead,bamIndex));
-
-    bool isLocalAssemblyEvidence(false);
-    if (! isNonCompressedAnomalous)
-    {
-        isLocalAssemblyEvidence = scanner.isLocalAssemblyEvidence(bamRead,refSeq);
-    }
-
-    if (! ( isNonCompressedAnomalous || isLocalAssemblyEvidence))
-    {
-        return; // this read isn't interesting wrt SV discovery
-    }
+    if (! scanner.isSVEvidence(bamRead, bamIndex, refSeq)) return;
 
     // finally, check to see if the svDataGroup is full... for now, we allow a very large
     // number of reads to be stored in the hope that we never reach this limit, but just in
