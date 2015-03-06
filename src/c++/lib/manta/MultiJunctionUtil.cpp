@@ -33,21 +33,18 @@ isFilterMultiJunctionCandidate(
     const unsigned minCandidateSpanningCount,
     const SVMultiJunctionCandidate& mjSV)
 {
-    // candidates must have a minimum amount of evidence:
-    bool isAnySpanPass(false);
+    // one breakend out of the junction set must have the minimum level of evidence:
     for (const SVCandidate& sv : mjSV.junction)
     {
         if (isSpanningSV(sv))
         {
             if (sv.bp1.getSpanningCount() >= minCandidateSpanningCount)
             {
-                isAnySpanPass=true;
-                break;
+                return false;
             }
         }
     }
-
-    return (! isAnySpanPass);
+    return true;
 }
 
 

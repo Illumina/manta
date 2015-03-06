@@ -299,8 +299,7 @@ addSVNodeData(
     if (! isExpectRepeat) isExpectRepeat = (localNode.getInterval().tid == remoteNode.getInterval().tid);
 
 #ifdef DEBUG_SVDATA
-    static const std::string logtag("addSVNodeData: ");
-    log_os << logtag << "bp_interval: " << localNode.getInterval()
+    log_os << __FUNCTION__ << ": bp_interval: " << localNode.getInterval()
            << " evidenceInterval: " << localNode.getEvidenceRange()
            << " searchInterval: " << searchInterval
            << " isExpectRepeat: " << isExpectRepeat
@@ -332,7 +331,7 @@ addSVNodeData(
         readStream.set_new_region(searchInterval.tid,searchInterval.range.begin_pos(),searchInterval.range.end_pos());
 
 #ifdef DEBUG_SVDATA
-        log_os << logtag << "scanning bamIndex: " << bamIndex << "\n";
+        log_os << __FUNCTION__ << ": scanning bamIndex: " << bamIndex << "\n";
 #endif
         while (readStream.next())
         {
@@ -507,10 +506,6 @@ consolidateOverlap(
     SVCandidateSetData& svData,
     std::vector<FatSVCandidate>& svs)
 {
-#ifdef DEBUG_SVDATA
-    static const std::string logtag("consolidateOverlap: ");
-#endif
-
     movemap_t moveSVIndex;
     std::set<unsigned> deletedSVIndex;
 
@@ -528,7 +523,7 @@ consolidateOverlap(
             if (svs[innerIndex].isIntersect(svs[outerIndex]))
             {
 #ifdef DEBUG_SVDATA
-                log_os << logtag << "Merging outer:inner: " << outerIndex << " " << innerIndex << "\n";
+                log_os << __FUNCTION__ << ": Merging outer:inner: " << outerIndex << " " << innerIndex << "\n";
 #endif
                 svs[innerIndex].merge(svs[outerIndex]);
                 assert(innerIndexShift.size() > innerIndex);
@@ -545,7 +540,7 @@ consolidateOverlap(
 #ifdef DEBUG_SVDATA
         for (const unsigned index : deletedSVIndex)
         {
-            log_os << logtag << "deleted index: " << index << "\n";
+            log_os << __FUNCTION__ << ": deleted index: " << index << "\n";
         }
 #endif
 
@@ -573,7 +568,7 @@ consolidateOverlap(
 #ifdef DEBUG_SVDATA
         for (const movemap_t::value_type& val : moveSVIndex)
         {
-            log_os << logtag << "Movemap from: " << val.first << " to: " << val.second << "\n";
+            log_os << __FUNCTION__ << ": Movemap from: " << val.first << " to: " << val.second << "\n";
         }
 #endif
 
@@ -636,17 +631,13 @@ assignPairObservationsToSVCandidates(
     SVCandidateSetReadPair& pair,
     std::vector<FatSVCandidate>& svs)
 {
-#ifdef DEBUG_SVDATA
-    static const std::string logtag("assignPairObservationsToSVCandidates: ");
-#endif
-
     // we anticipate so few svs from the POC method, that there's no indexing on them
     // OST 26/09/2013: Be careful when re-arranging or rewriting the code below, under g++ 4.1.2
     // this can lead to an infinite loop.
     for (const SVObservation& readCand : readCandidates)
     {
 #ifdef DEBUG_SVDATA
-        log_os << logtag << "Starting assignment for read cand: " << readCand << "\n";
+        log_os << __FUNCTION__ << ": Starting assignment for read cand: " << readCand << "\n";
 #endif
         if (_isRNA)
         {
@@ -656,7 +647,7 @@ assignPairObservationsToSVCandidates(
                 isSVBelowMinSize(readCand, _scanOpt.minRNALength))
             {
 #ifdef DEBUG_SVDATA
-                log_os << logtag << "Filtered short RNA Candidate\n";
+                log_os << __FUNCTION__ << ": Filtered short RNA Candidate\n";
 #endif
                 continue;
             }
@@ -706,7 +697,7 @@ assignPairObservationsToSVCandidates(
                 {
 
 #ifdef DEBUG_SVDATA
-                    log_os << logtag << "Adding to svIndex: " << svIndex << " match_sv: " << sv << "\n";
+                    log_os << __FUNCTION__ << ": Adding to svIndex: " << svIndex << " match_sv: " << sv << "\n";
 #endif
                     if (isSpanningCand)
                     {
@@ -744,7 +735,7 @@ assignPairObservationsToSVCandidates(
             const unsigned newSVIndex(svs.size());
 
 #ifdef DEBUG_SVDATA
-            log_os << logtag << "New svIndex: " << newSVIndex << "\n";
+            log_os << __FUNCTION__ << ": New svIndex: " << newSVIndex << "\n";
 #endif
 
             svs.push_back(readCand);

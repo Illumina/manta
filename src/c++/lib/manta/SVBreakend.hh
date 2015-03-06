@@ -21,6 +21,7 @@
 
 #include <cassert>
 
+#include <array>
 #include <iosfwd>
 
 namespace SVEvidenceType
@@ -152,7 +153,7 @@ struct SVBreakendLowResEvidence
     }
 
 private:
-    unsigned short _evidence[SVEvidenceType::SIZE];
+    std::array<unsigned short, SVEvidenceType::SIZE> _evidence;
 };
 
 std::ostream&
@@ -256,12 +257,14 @@ isOutties(
 
 struct SVBreakend
 {
+    typedef SVBreakend self_t;
+
     SVBreakend() :
         state(SVBreakendState::UNKNOWN)
     {}
 
     bool
-    isIntersect(const SVBreakend& rhs) const
+    isIntersect(const self_t& rhs) const
     {
         if (state != rhs.state) return false;
         if (SVBreakendState::UNKNOWN == state) return true;
@@ -269,7 +272,7 @@ struct SVBreakend
     }
 
     bool
-    operator<(const SVBreakend& rhs) const
+    operator<(const self_t& rhs) const
     {
         if (state < rhs.state) return true;
         if (state == rhs.state)

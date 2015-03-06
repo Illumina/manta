@@ -238,18 +238,23 @@ GetSplitSACandidate(
     static const index_t svSource(SPLIT_ALIGN);
 
     SVObservation sv;
-
-    sv.bp1.lowresEvidence.add(svSource);
     sv.evtype = svSource;
     sv.fragSource = fragSource;
 
-    updateSABreakend(dopt, localAlign, sv.bp1);
-    updateSABreakend(dopt, remoteAlign, sv.bp2);
+    SVBreakend& localBreakend(sv.bp1);
+    SVBreakend& remoteBreakend(sv.bp2);
+
+    // use single-side evidence, have to read the supp read to get the
+    // reverse edge. this protects against double-count:
+    localBreakend.lowresEvidence.add(svSource);
+
+    updateSABreakend(dopt, localAlign, localBreakend);
+    updateSABreakend(dopt, remoteAlign, remoteBreakend);
 
     // If the local (bp1) alignment is split downstream (on the right side) then this read goes from bp1 -> bp2.
     // If it is a forward read (e.g. read1 on + strand), this means it's a forward read for this event.
     const bool isSplitDownstream(isSplitOpenDownstream(localAlign.path));
-    bool isReadFw = (localRead.is_first() == localRead.is_fwd_strand());
+    const bool isReadFw = (localRead.is_first() == localRead.is_fwd_strand());
     if (isReadFw == isSplitDownstream)
     {
         sv.fwReads += 1;
@@ -285,7 +290,7 @@ getSACandidatesFromRead(
     {
         static const char satag[] = {'S','A'};
         const char* saStr(localRead.get_string_tag(satag));
-        if (NULL == saStr) return;
+        if (nullptr == saStr) return;
 
         split_string(saStr, ';', saVec);
         if ( (! saVec.empty()) && saVec.back().empty())
@@ -527,7 +532,7 @@ getSVCandidatesFromPair(
     unsigned remoteReadNoninsertSize(readSize);
     unsigned remoteRefLength(readSize);
 
-    if (NULL != remoteReadPtr)
+    if (nullptr != remoteReadPtr)
     {
         // if remoteRead is available, we can more accurately determine the size:
         const bam_record& remoteRead(*remoteReadPtr);
@@ -948,8 +953,8 @@ getSVLociImpl(
     TrackedCandidates trackedCandidates(candidates,truthTracker);
     known_pos_range2 localEvidenceRange;
 
-    getReadBreakendsImpl(opt, dopt, rstats, bamRead, NULL, bamHeader,
-                         refSeq, NULL, trackedCandidates, localEvidenceRange);
+    getReadBreakendsImpl(opt, dopt, rstats, bamRead, nullptr, bamHeader,
+                         refSeq, nullptr, trackedCandidates, localEvidenceRange);
 
 #ifdef DEBUG_SCANNER
     log_os << __FUNCTION__ << ": candidate_size: " << candidates.size() << "\n";

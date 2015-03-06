@@ -11,8 +11,7 @@
 // <https://github.com/sequencing/licenses/>
 //
 
-/// \file
-
+///
 /// \author Chris Saunders
 ///
 
@@ -89,13 +88,12 @@ const char*
 bam_record::
 get_string_tag(const char* tag) const
 {
-
     // retrieve the BAM tag
     uint8_t* pTag = bam_aux_get(_bp, tag);
-    if (!pTag) return NULL;
+    if (!pTag) return nullptr;
 
     // skip tags that are not encoded as a null-terminated string
-    if (pTag[0] != 'Z') return NULL;
+    if (pTag[0] != 'Z') return nullptr;
     ++pTag;
 
     return (const char*)pTag;
@@ -107,7 +105,6 @@ bool
 bam_record::
 get_num_tag(const char* tag, int32_t& num) const
 {
-
     // retrieve the BAM tag
     uint8_t* pTag = bam_aux_get(_bp, tag);
     if (!pTag) return false;
