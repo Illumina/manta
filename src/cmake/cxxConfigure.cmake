@@ -283,9 +283,10 @@ if (GNU_COMPAT_COMPILER)
     set (CMAKE_CXX_FLAGS_ASAN "-O1 -g -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls")
     #set (CMAKE_CXX_FLAGS_PROFILE "-O0 -g -pg -fprofile-arcs -ftest-coverage")
     
-    if     (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto")
-    endif ()
+    # this doesn't seem to impact performance, taking out for now:
+    #if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    #    set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto")
+    #endif ()
 endif()
 
 # if ASan build type is requested, check that the compiler supports it:
