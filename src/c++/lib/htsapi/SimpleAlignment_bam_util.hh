@@ -22,4 +22,12 @@
 
 
 SimpleAlignment
-getAlignment(const bam_record& bamRead);
+getAlignment(
+    const bam_record& bamRead);
+
+/// generate a mate alignment, assuming same read length and perfect alignment
+SimpleAlignment
+getFakeMateAlignment(
+    const bam_record& bamRead);
+
+

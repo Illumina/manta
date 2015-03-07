@@ -21,7 +21,8 @@
 
 
 SimpleAlignment
-getAlignment(const bam_record& bamRead)
+getAlignment(
+    const bam_record& bamRead)
 {
     SimpleAlignment al;
     al.is_fwd_strand=bamRead.is_fwd_strand();
@@ -29,5 +30,19 @@ getAlignment(const bam_record& bamRead)
     al.pos=(bamRead.pos()-1);
 
     bam_cigar_to_apath(bamRead.raw_cigar(),bamRead.n_cigar(),al.path);
+    return al;
+}
+
+
+SimpleAlignment
+getFakeMateAlignment(
+    const bam_record& bamRead)
+{
+    SimpleAlignment al;
+    assert(! bamRead.is_mate_unmapped());
+    al.is_fwd_strand=bamRead.is_mate_fwd_strand();
+    al.tid=bamRead.mate_target_id();
+    al.pos=(bamRead.mate_pos()-1);
+    al.path.emplace_back(ALIGNPATH::MATCH, bamRead.read_size());
     return al;
 }
