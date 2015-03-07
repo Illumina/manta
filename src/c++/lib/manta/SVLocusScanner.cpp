@@ -275,21 +275,20 @@ typedef std::map<std::string, int32_t> chromMap_t;
 
 static
 void
-getSACandidatesFromRead(
+parseSACandidatesFromRead(
     const ReadScannerOptions& opt,
-    const ReadScannerDerivOptions& dopt,
-    const bam_record& localRead,
-    const SimpleAlignment& localAlign,
-    const FRAGSOURCE::index_t fragSource,
+    const bam_record& bamRead,
     const chromMap_t& chromToIndex,
-    TrackedCandidates& candidates)
+    std::vector<SimpleAlignment>& splitAlign)
 {
     using namespace ALIGNPATH;
+
+    splitAlign.clear();
 
     std::vector<std::string> saVec;
     {
         static const char satag[] = {'S','A'};
-        const char* saStr(localRead.get_string_tag(satag));
+        const char* saStr(bamRead.get_string_tag(satag));
         if (nullptr == saStr) return;
 
         split_string(saStr, ';', saVec);
@@ -304,8 +303,6 @@ getSACandidatesFromRead(
     // also removing segments that map to two different areas,
 
     if (saVec.size() > 1) return;
-
-    SimpleAlignment remoteAlign;
 
     for (const std::string& sa : saVec)
     {
@@ -324,19 +321,48 @@ getSACandidatesFromRead(
         const chromMap_t::const_iterator ci(chromToIndex.find(saDat[0]));
         assert(ci != chromToIndex.end());
 
-        remoteAlign.tid=(ci->second); // convert chr to int32_t via new bam header map
-
-        remoteAlign.pos = (illumina::blt_util::parse_int_str(saDat[1])-1);
-
+        splitAlign.emplace_back();
+        SimpleAlignment& sal(splitAlign.back());
+        sal.tid=(ci->second); // convert chr to int32_t via new bam header map
+        sal.pos = (illumina::blt_util::parse_int_str(saDat[1])-1);
         {
             const char saStrand(saDat[2][0]); // convert to char
             assert((saStrand=='-') || (saStrand=='+'));
-            remoteAlign.is_fwd_strand = (saStrand == '+');
+            sal.is_fwd_strand = (saStrand == '+');
         }
 
-        cigar_to_apath(saDat[3].c_str(), remoteAlign.path);
+        cigar_to_apath(saDat[3].c_str(), sal.path);
+    }
+}
 
-        candidates.push_back(GetSplitSACandidate(dopt, localRead, localAlign, remoteAlign, fragSource));
+
+
+static
+void
+getSACandidatesFromRead(
+    const ReadScannerOptions& opt,
+    const ReadScannerDerivOptions& dopt,
+    const bam_record& localRead,
+    const SimpleAlignment& localAlign,
+    const FRAGSOURCE::index_t fragSource,
+    const chromMap_t& chromToIndex,
+    TrackedCandidates& candidates)
+{
+    using namespace ALIGNPATH;
+
+    std::vector<SimpleAlignment> remoteAlign;
+    parseSACandidatesFromRead(opt, localRead, chromToIndex, remoteAlign);
+
+    if (remoteAlign.empty()) return;
+
+    // Only handle a single split alignment right now.
+    // In the future we could sort the SA tags by order on the template, possibly
+    // also removing segments that map to two different areas,
+    if (remoteAlign.size() > 1) return;
+
+    for (const auto& ral : remoteAlign)
+    {
+        candidates.push_back(GetSplitSACandidate(dopt, localRead, localAlign, ral, fragSource));
 #ifdef DEBUG_SCANNER
         log_os << __FUNCTION__ << ": evaluating SA sv for inclusion: " << candidates.back() << "\n";
 #endif
@@ -345,6 +371,7 @@ getSACandidatesFromRead(
 
 
 
+/// extract large indels in alignment cigar string to internal candidate format
 static
 void
 getSVCandidatesFromReadIndels(
@@ -437,6 +464,7 @@ getSVCandidatesFromReadIndels(
 
 
 
+/// extract poorly aligned read ends (included soft-clipped) to internal candidate format
 static
 void
 getSVCandidatesFromSemiAligned(
