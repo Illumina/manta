@@ -870,19 +870,27 @@ getSingleReadSVCandidates(
     log_os << logtag << " post-indels candidate_size: " << candidates.size() << "\n";
 #endif
 
-    // this detects semi-aligned AND soft-clip now:
-    getSVCandidatesFromSemiAligned(opt, localRead, localAlign, fragSource, refSeq,
-                                   candidates);
+    // a read can provide SA split evidence or semi-aligned/soft-clip, but not both.
+    // this prevents split reads from triggering spurious local assembles. It is
+    // possible for a read to genuinely contain evidence of both, but this should
+    // be very rare.
+    if (SVLocusScanner::isSASplitRead(localRead))
+    {
+        getSACandidatesFromRead(opt, dopt, localRead, localAlign, fragSource, chromToIndex,
+                                candidates);
 #ifdef DEBUG_SCANNER
-    log_os << logtag << " post-semialigned candidate_size: " << candidates.size() << "\n";
+        log_os << logtag << " post-split read candidate_size: " << candidates.size() << "\n";
 #endif
-
-    /// - process split/SA reads:
-    getSACandidatesFromRead(opt, dopt, localRead, localAlign, fragSource, chromToIndex,
-                            candidates);
+    }
+    else
+    {
+        // this detects semi-aligned AND soft-clip:
+        getSVCandidatesFromSemiAligned(opt, localRead, localAlign, fragSource, refSeq,
+                                       candidates);
 #ifdef DEBUG_SCANNER
-    log_os << logtag << " post-split read candidate_size: " << candidates.size() << "\n";
+        log_os << logtag << " post-semialigned candidate_size: " << candidates.size() << "\n";
 #endif
+    }
 }
 
 
