@@ -113,6 +113,14 @@ struct SVLocusScanner
         return (bamRead.is_unmapped());
     }
 
+    static
+    bool
+    isSASplitRead(
+        const bam_record& bamRead)
+    {
+        static const char satag[] = {'S','A'};
+        return (nullptr != (bamRead.get_string_tag(satag)));
+    }
 
     /// this predicate runs any fast tests on the acceptability of a
     /// read for the SVLocus build
