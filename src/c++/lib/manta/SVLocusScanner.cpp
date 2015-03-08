@@ -506,6 +506,231 @@ getSVCandidatesFromSemiAligned(
 
 
 
+/// local utility class to analyze read pair relationship as lazily as possible
+struct AlignmentPairAnalyzer
+{
+    AlignmentPairAnalyzer(
+        const ReadScannerOptions& opt,
+        const SVLocusScanner::CachedReadGroupStats& rstats)
+        : _opt(opt),
+          _rstats(rstats)
+    {}
+
+    void
+    reset(
+        const SimpleAlignment& local,
+        const SimpleAlignment& remote,
+        const bool isRemoteObserved)
+    {
+        _local= &local;
+        _remote= &remote;
+        _isRemote = isRemoteObserved;
+        _isScale = false;
+        _scale = 0;
+        _totalNonInsertSize = 0;
+        _localEndRefPos = 0;
+        _remoteEndRefPos = 0;
+    }
+
+    /// returns true if scale is valid (ie. the pair is anomalous)
+    bool
+    computeLargeEventRegionScale()
+    {
+        assert(isInit());
+        if (! _isScale) setLargeEventRegionScale();
+        return (_scale >= 0.);
+    }
+
+    void
+    getSVObservation(
+        SVObservation& sv)
+    {
+        assert(_isScale);
+        assert((_scale >= 0.) && (_scale <= 1.));
+
+        using namespace SVEvidenceType;
+        static const index_t svLocalPair(LOCAL_PAIR);
+        static const index_t svPair(PAIR);
+
+        sv.fwReads = 1; // bp1 is read1, bp2 is read2
+        sv.evtype = svLocalPair;
+        sv.fragSource = FRAGSOURCE::PAIR;
+
+        SVBreakend& localBreakend(sv.bp1);
+        SVBreakend& remoteBreakend(sv.bp2);
+
+        localBreakend.lowresEvidence.add(svLocalPair);
+
+        if (_isRemote)
+        {
+            remoteBreakend.lowresEvidence.add(svLocalPair);
+            localBreakend.lowresEvidence.add(svPair);
+            remoteBreakend.lowresEvidence.add(svPair);
+            sv.evtype = svPair;
+        }
+
+        // set state and interval for each breakend:
+        const double breakendRegionMax(
+            (_scale*_rstats.largeScaleEventBreakendRegion.max) +
+            ((1.-_scale)*_rstats.breakendRegion.max));
+
+        const pos_t breakendSize(std::max(
+                                     static_cast<pos_t>(_opt.minPairBreakendSize),
+                                     static_cast<pos_t>(breakendRegionMax-_totalNonInsertSize)));
+
+        const pos_t localStartRefPos(localAlign().pos);
+        const pos_t remoteStartRefPos(remoteAlign().pos);
+
+        localBreakend.interval.tid = localAlign().tid;
+        // expected breakpoint range is from the end of the localRead alignment to the (probabilistic) end of the fragment:
+        if (localAlign().is_fwd_strand)
+        {
+            localBreakend.state = SVBreakendState::RIGHT_OPEN;
+            localBreakend.interval.range.set_begin_pos(_localEndRefPos);
+            localBreakend.interval.range.set_end_pos(_localEndRefPos + breakendSize);
+        }
+        else
+        {
+            localBreakend.state = SVBreakendState::LEFT_OPEN;
+            localBreakend.interval.range.set_end_pos(localStartRefPos);
+            localBreakend.interval.range.set_begin_pos(localStartRefPos - breakendSize);
+        }
+
+        remoteBreakend.interval.tid = remoteAlign().tid;
+        if (remoteAlign().is_fwd_strand)
+        {
+            remoteBreakend.state = SVBreakendState::RIGHT_OPEN;
+            remoteBreakend.interval.range.set_begin_pos(_remoteEndRefPos);
+            remoteBreakend.interval.range.set_end_pos(_remoteEndRefPos + breakendSize);
+        }
+        else
+        {
+            remoteBreakend.state = SVBreakendState::LEFT_OPEN;
+            remoteBreakend.interval.range.set_end_pos(remoteStartRefPos);
+            remoteBreakend.interval.range.set_begin_pos(remoteStartRefPos - breakendSize);
+        }
+    }
+
+    /// return the amount of unaligned sequence proceding the pair insert:
+    static
+    unsigned
+    distanceFromInsert(
+        const SimpleAlignment& al)
+    {
+        if (al.is_fwd_strand) return apath_read_trail_size(al.path);
+        else                  return apath_read_lead_size(al.path);
+    }
+
+private:
+
+    static
+    unsigned
+    getNonInsertSize(
+        const SimpleAlignment& al)
+    {
+        const unsigned readSize(apath_read_length(al.path));
+        return readSize - distanceFromInsert(al);
+    }
+
+    static
+    pos_t
+    getEndPos(
+        const SimpleAlignment& al)
+    {
+        return (al.pos + apath_ref_length(al.path));
+    }
+
+
+    void
+    setLargeEventRegionScale()
+    {
+        // different breakend sizes are used for long-range pairings vs short-ish range deletions,
+        // because of occasional long-fragment noise. This ramps from 0 to 1 as we go from short to
+        // long deletions sizes:
+        _isScale = true;
+        _scale = 1.0;
+
+        // find the read size excluding soft-clip/edge-insert on the 'inside' of the fragment
+        const unsigned localNoninsertSize(getNonInsertSize(localAlign()));
+        const unsigned remoteNoninsertSize(getNonInsertSize(remoteAlign()));
+
+        // total the 'used' read span of read1 and read2 (ie. the elements of the
+        // fragment that are not part of the insert between the reads)
+        //
+        _totalNonInsertSize = (localNoninsertSize+remoteNoninsertSize);
+
+        const pos_t localStartRefPos(localAlign().pos);
+        const pos_t remoteStartRefPos(remoteAlign().pos);
+        _localEndRefPos=getEndPos(localAlign());
+        _remoteEndRefPos=getEndPos(remoteAlign());
+
+        // check if fragment size is still anomalous after accounting for read alignment patterns:
+        if ((localAlign().tid != remoteAlign().tid) ||
+            (localAlign().is_fwd_strand == remoteAlign().is_fwd_strand)) return;
+
+        known_pos_range2 insertRange;
+        if (localAlign().is_fwd_strand)
+        {
+            insertRange.set_range(_localEndRefPos, remoteStartRefPos);
+        }
+        else
+        {
+            insertRange.set_range(_remoteEndRefPos, localStartRefPos);
+        }
+
+        // get length of fragment after accounting for any variants described directly in either read alignment:
+        // note insertRange can be negative, so don't use insertRange.size()
+        const pos_t cigarAdjustedFragmentSize(_totalNonInsertSize + (insertRange.end_pos() - insertRange.begin_pos()));
+
+        // this is an arbitrary point to start officially tagging 'outties' -- for now  we just want to avoid conventional small fragments from FFPE
+        const bool isOuttie(cigarAdjustedFragmentSize < 0);
+
+        if (isOuttie) return;
+
+        const bool isLargeFragment(cigarAdjustedFragmentSize > (_rstats.properPair.max + _opt.minCandidateVariantSize));
+
+        if (isLargeFragment)
+        {
+            _scale = _rstats.largeEventRegionScaler.getScale(cigarAdjustedFragmentSize);
+        }
+        else
+        {
+            _scale = -1.;
+        }
+    }
+
+    bool
+    isInit() const
+    {
+        return (_local != nullptr);
+    }
+
+    const SimpleAlignment&
+    localAlign() const
+    {
+        return *_local;
+    }
+
+    const SimpleAlignment&
+    remoteAlign() const
+    {
+        return *_remote;
+    }
+
+    const ReadScannerOptions& _opt;
+    const SVLocusScanner::CachedReadGroupStats& _rstats;
+    const SimpleAlignment* _local = nullptr;
+    const SimpleAlignment* _remote = nullptr;
+    bool _isRemote = false;
+    bool _isScale = false;
+    double _scale = 0.;
+    unsigned _totalNonInsertSize = 0;
+    pos_t _localEndRefPos = 0;
+    pos_t _remoteEndRefPos = 0;
+};
+
+
+
 /// get SV candidates from anomalous read pairs
 static
 void
@@ -515,12 +740,8 @@ getSVCandidatesFromPair(
     const bam_record& localRead,
     const SimpleAlignment& localAlign,
     const bam_record* remoteReadPtr,
-    TrackedCandidates& candidates)
+    std::vector<SVObservation>& candidates)
 {
-    using namespace SVEvidenceType;
-    static const index_t svLocalPair(LOCAL_PAIR);
-    static const index_t svPair(PAIR);
-
     if (! localRead.is_paired()) return;
 
     // don't count paired end evidence from SA-split reads twice:
@@ -531,158 +752,24 @@ getSVCandidatesFromPair(
     // special case typically used for RNA-Seq analysis:
     if (opt.isIgnoreAnomProperPair && localRead.is_proper_pair()) return;
 
-    // update localEvidenceRange:
-    const unsigned readSize(apath_read_length(localAlign.path));
-    const unsigned localRefLength(apath_ref_length(localAlign.path));
+    // abstract remote alignment to SimpleAlignment object:
+    const bool isRemote(nullptr != remoteReadPtr);
+    const SimpleAlignment remoteAlign(isRemote ? getAlignment(*remoteReadPtr) : getFakeMateAlignment(localRead));
 
+    AlignmentPairAnalyzer pairInspector(opt,rstats);
 
-    unsigned thisReadNoninsertSize(0);
-    if (localAlign.is_fwd_strand)
-    {
-        thisReadNoninsertSize=(readSize-apath_read_trail_size(localAlign.path));
-    }
-    else
-    {
-        thisReadNoninsertSize=(readSize-apath_read_lead_size(localAlign.path));
-    }
+    pairInspector.reset(localAlign, remoteAlign, isRemote);
 
-    SVObservation sv;
-    sv.fwReads = 1; // bp1 is read1, bp2 is read2
-    SVBreakend& localBreakend(sv.bp1);
-    SVBreakend& remoteBreakend(sv.bp2);
+    if (! pairInspector.computeLargeEventRegionScale()) return;
 
-    localBreakend.lowresEvidence.add(svLocalPair);
-    sv.evtype = svLocalPair;
-    sv.fragSource = FRAGSOURCE::PAIR;
-
-    // if remoteRead is not available, estimate mate localRead size to be same as local,
-    // and assume no clipping on mate localRead:
-    unsigned remoteReadNoninsertSize(readSize);
-    unsigned remoteRefLength(readSize);
-
-    if (nullptr != remoteReadPtr)
-    {
-        // if remoteRead is available, we can more accurately determine the size:
-        const bam_record& remoteRead(*remoteReadPtr);
-
-        ALIGNPATH::path_t remoteApath;
-        bam_cigar_to_apath(remoteRead.raw_cigar(),remoteRead.n_cigar(),remoteApath);
-
-        const unsigned remoteReadSize(apath_read_length(remoteApath));
-        remoteRefLength = (apath_ref_length(remoteApath));
-
-        if (remoteRead.is_fwd_strand())
-        {
-            remoteReadNoninsertSize=(remoteReadSize-apath_read_trail_size(remoteApath));
-        }
-        else
-        {
-            remoteReadNoninsertSize=(remoteReadSize-apath_read_lead_size(remoteApath));
-        }
-
-        remoteBreakend.lowresEvidence.add(svLocalPair);
-
-        localBreakend.lowresEvidence.add(svPair);
-        remoteBreakend.lowresEvidence.add(svPair);
-        sv.evtype = svPair;
-    }
-
-    const pos_t localStartRefPos(localRead.pos()-1);
-    const pos_t localEndRefPos(localStartRefPos+localRefLength);
-    const pos_t remoteStartRefPos(localRead.mate_pos()-1);
-    const pos_t remoteEndRefPos(remoteStartRefPos+remoteRefLength);
-
-    // this is only designed to be valid when reads are on the same chrom with default relative orientation:
-    known_pos_range2 insertRange;
-    if (localRead.is_fwd_strand())
-    {
-        insertRange.set_range(localEndRefPos,remoteStartRefPos);
-    }
-    else
-    {
-        insertRange.set_range(remoteEndRefPos,localStartRefPos);
-    }
-
-    // total the reference span or read1 and read2 (ie. the elements of the
-    // fragment that are not part of the insert between the reads)
-    //
-    const pos_t totalNoninsertSize(thisReadNoninsertSize+remoteReadNoninsertSize);
-
-    // different breakend sizes are used for long-range pairings vs short-ish range deletions,
-    // because of occasional long-fragment noise. This ramps from 0 to 1 as we go from short to
-    // long deletions sizes:
-    double largeEventRegionScale(1.0);
-
-    // check if fragment size is still anomalous after accounting for read alignment patterns:
-    if (localRead.target_id() == localRead.mate_target_id())
-    {
-        if (localRead.is_fwd_strand() != localRead.is_mate_fwd_strand())
-        {
-            // get length of fragment after accounting for any variants described directly in either read alignment:
-            const pos_t cigarAdjustedFragmentSize(totalNoninsertSize + (insertRange.end_pos() - insertRange.begin_pos()));
-            const bool isLargeFragment(cigarAdjustedFragmentSize > (rstats.properPair.max + opt.minCandidateVariantSize));
-
-            // this is an arbitrary point to start officially tagging 'outties' -- for now  we just want to avoid conventional small fragments from FFPE
-            const bool isOuttie(cigarAdjustedFragmentSize < 0);
-
-            if (! (isLargeFragment || isOuttie)) return;
-
-            if (! isOuttie)
-            {
-                largeEventRegionScale = rstats.largeEventRegionScaler.getScale(cigarAdjustedFragmentSize);
-            }
-        }
-    }
-
-
-    // set state and interval for each breakend:
-    {
-        const double breakendRegionMax(
-            (largeEventRegionScale*rstats.largeScaleEventBreakendRegion.max) +
-            ((1.-largeEventRegionScale)*rstats.breakendRegion.max));
-
-        const pos_t breakendSize(std::max(
-                                     static_cast<pos_t>(opt.minPairBreakendSize),
-                                     static_cast<pos_t>(breakendRegionMax-totalNoninsertSize)));
-
-        localBreakend.interval.tid = (localRead.target_id());
-        // expected breakpoint range is from the end of the localRead alignment to the (probabilistic) end of the fragment:
-        if (localRead.is_fwd_strand())
-        {
-            localBreakend.state = SVBreakendState::RIGHT_OPEN;
-            localBreakend.interval.range.set_begin_pos(localEndRefPos);
-            localBreakend.interval.range.set_end_pos(localEndRefPos + breakendSize);
-        }
-        else
-        {
-            localBreakend.state = SVBreakendState::LEFT_OPEN;
-            localBreakend.interval.range.set_end_pos(localStartRefPos);
-            localBreakend.interval.range.set_begin_pos(localStartRefPos - breakendSize);
-        }
-
-        remoteBreakend.interval.tid = (localRead.mate_target_id());
-
-        if (localRead.is_mate_fwd_strand())
-        {
-            remoteBreakend.state = SVBreakendState::RIGHT_OPEN;
-            remoteBreakend.interval.range.set_begin_pos(remoteEndRefPos);
-            remoteBreakend.interval.range.set_end_pos(remoteEndRefPos + breakendSize);
-        }
-        else
-        {
-            remoteBreakend.state = SVBreakendState::LEFT_OPEN;
-            remoteBreakend.interval.range.set_end_pos(remoteStartRefPos);
-            remoteBreakend.interval.range.set_begin_pos(remoteStartRefPos - breakendSize);
-        }
-    }
+    candidates.emplace_back();
+    pairInspector.getSVObservation(candidates.back());
 
 #ifdef DEBUG_SCANNER
-    static const std::string logtag("getSVCandidatesFromPair");
-    log_os << logtag << " evaluating pair sv for inclusion: " << sv << "\n";
+    log_os << __FUNCTION__ << " evaluating pair sv for inclusion: " << candidates.back() << "\n";
 #endif
-
-    candidates.push_back(sv);
 }
+
 
 
 #if 0
@@ -852,7 +939,7 @@ getReadBreakendsImpl(
 
         // - process anomalous read pairs:
         getSVCandidatesFromPair(opt, rstats, localRead, localAlign, remoteReadPtr,
-                                candidates);
+                                candidates.data);
     }
     catch (...)
     {
