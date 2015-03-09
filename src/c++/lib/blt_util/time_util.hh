@@ -157,8 +157,7 @@ struct TimeTracker
     double
     getUserSeconds() const
     {
-        using namespace BOOST_TIMER_HELPER;
-        return getTimerSeconds(getTimes().user);
+        return getTimes().user;
     }
 
     /// DEPRECATED get user cpu time in seconds
@@ -167,8 +166,7 @@ struct TimeTracker
     double
     getWallSeconds() const
     {
-        using namespace BOOST_TIMER_HELPER;
-        return getTimerSeconds(getTimes().wall);
+        return getTimes().wall;
     }
 
 private:

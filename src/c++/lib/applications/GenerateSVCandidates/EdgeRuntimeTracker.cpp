@@ -68,7 +68,7 @@ stop(const EdgeInfo& edge)
     static const double minLogTime(0.5);
     if (lastTime >= minLogTime)
     {
-        if (NULL != _osPtr)
+        if (nullptr != _osPtr)
         {
             edge.write(*_osPtr);
             *_osPtr << '\t' << lastTime
