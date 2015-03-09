@@ -168,14 +168,15 @@ GetSplitSVCandidate(
 
 
 
-/// determine if reads is open ended upstream or down stream
+/// determine, based on clipping in the cigar string, if this split alignment has it's breakpoint on the downstream (right) end
+/// or the upstream (left) end
 static
 bool
-isCigarUpstream(
+isSplitOpenDownstream(
     const ALIGNPATH::path_t& align)
 {
     using namespace ALIGNPATH;
-    return (apath_read_lead_size(align) < apath_read_trail_size(align));
+    return (apath_read_lead_size(align) < apath_read_trail_size(align)); //todo replace this heuristic with a better check (looking at the actual sequence and SA tag information)
 }
 
 
@@ -187,17 +188,17 @@ updateSABreakend(
     const SimpleAlignment& align,
     SVBreakend& breakend)
 {
-    // Need to use the match descriptors to determine if
-    // we are upstream clipped or downstream clipped.
-    // Below is the logic to convert these  to breakend candidates:
+    // Need to use the match descriptors to determine if the split is upstream
+    // of the current alignment (i.e. we are clipped on the left side) or downstream
+    // Below is the logic to convert these  to breakend candidates (everything is relative to the forward strand):
     //
     // Upstream => LEFT_OPEN
     // DownStream => RIGHT_OPEN
     //
 
-    const bool isUpstream(isCigarUpstream(align.path));
+    const bool isSplitDownstream(isSplitOpenDownstream(align.path));
 
-    if (!isUpstream)
+    if (!isSplitDownstream)
     {
         breakend.state = SVBreakendState::LEFT_OPEN;
     }
@@ -208,7 +209,7 @@ updateSABreakend(
 
     breakend.interval.tid = align.tid;
     int pos = align.pos;
-    if (!isUpstream)
+    if (isSplitDownstream)
     {
         using namespace ALIGNPATH;
         pos += apath_ref_length(align.path);
@@ -241,9 +242,11 @@ GetSplitSACandidate(
     updateSABreakend(dopt, localAlign, sv.bp1);
     updateSABreakend(dopt, remoteAlign, sv.bp2);
 
-    const bool isUpstream(isCigarUpstream(localAlign.path));
+    // If the local (bp1) alignment is split downstream (on the right side) then this read goes from bp1 -> bp2.
+    // If it is a forward read (e.g. read1 on + strand), this means it's a forward read for this event.
+    const bool isSplitDownstream(isSplitOpenDownstream(localAlign.path));
     bool isReadFw = (localRead.is_first() == localRead.is_fwd_strand());
-    if (isReadFw == isUpstream)
+    if (isReadFw == isSplitDownstream)
     {
         sv.fwReads += 1;
     }
