@@ -168,15 +168,16 @@ GetSplitSVCandidate(
 
 
 
-/// determine, based on clipping in the cigar string, if this split alignment has it's breakpoint on the downstream (right) end
-/// or the upstream (left) end
+/// determine, based on clipping in the cigar string, if this split alignment
+/// has its breakpoint on the downstream (right) end or the upstream (left) end
 static
 bool
 isSplitOpenDownstream(
     const ALIGNPATH::path_t& align)
 {
     using namespace ALIGNPATH;
-    return (apath_read_lead_size(align) < apath_read_trail_size(align)); //todo replace this heuristic with a better check (looking at the actual sequence and SA tag information)
+    ///TODO replace this heuristic with a better check (looking at the actual sequence and SA tag information)
+    return (apath_read_lead_size(align) < apath_read_trail_size(align));
 }
 
 
@@ -188,26 +189,29 @@ updateSABreakend(
     const SimpleAlignment& align,
     SVBreakend& breakend)
 {
-    // Need to use the match descriptors to determine if the split is upstream
+    // Need to use the match descriptors to determine if the split is upstream (i.e. 5' assuming fwd strand)
     // of the current alignment (i.e. we are clipped on the left side) or downstream
     // Below is the logic to convert these  to breakend candidates (everything is relative to the forward strand):
     //
-    // Upstream => LEFT_OPEN
     // DownStream => RIGHT_OPEN
+    // Upstream => LEFT_OPEN
     //
 
     const bool isSplitDownstream(isSplitOpenDownstream(align.path));
 
-    if (!isSplitDownstream)
-    {
-        breakend.state = SVBreakendState::LEFT_OPEN;
-    }
-    else
+    if (isSplitDownstream)
     {
         breakend.state = SVBreakendState::RIGHT_OPEN;
     }
+    else
+    {
+        breakend.state = SVBreakendState::LEFT_OPEN;
+    }
 
     breakend.interval.tid = align.tid;
+    // get the position of the breakend implied by the split, if split
+    // is downstream (see above) the split position is the end of this split
+    // read segment
     int pos = align.pos;
     if (isSplitDownstream)
     {
