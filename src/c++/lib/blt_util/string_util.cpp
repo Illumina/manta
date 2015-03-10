@@ -26,16 +26,16 @@
 
 
 void
-split_string(const char* str,
-             const char delimiter,
-             std::vector<std::string>& v)
+split_string(
+    const char* str,
+    const char delimiter,
+    std::vector<std::string>& v)
 {
-
     v.clear();
     while (true)
     {
         const char* next(strchr(str,delimiter));
-        if ((NULL == next) || (delimiter == '\0'))
+        if ((nullptr == next) || (delimiter == '\0'))
         {
             v.emplace_back(str);
             return;
@@ -48,18 +48,41 @@ split_string(const char* str,
 
 
 void
-split_string(const std::string& str,
-             const char delimiter,
-             std::vector<std::string>& v)
+destructive_split_string(
+    char* str,
+    const char delimiter,
+    std::vector<const char*>& v)
 {
+    v.clear();
+    while (true)
+    {
+        char* next(strchr(str,delimiter));
+        v.push_back(str);
+        if ((nullptr == next) || (delimiter == '\0')) return;
+        *next = '\0';
+        str = next+1;
+    }
+}
 
+
+
+void
+split_string(
+    const std::string& str,
+    const char delimiter,
+    std::vector<std::string>& v,
+    const bool isSkipEmpty)
+{
     v.clear();
 
     size_t start(0);
     while (true)
     {
         size_t next(str.find(delimiter,start));
-        v.emplace_back(str.substr(start,next-start));
+        if (! (isSkipEmpty && ((next==start) || (next==std::string::npos))))
+        {
+            v.emplace_back(str.substr(start,next-start));
+        }
         if (next == std::string::npos) return;
         start = next+1;
     }
