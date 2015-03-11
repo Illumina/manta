@@ -1,5 +1,9 @@
+- RNA - parameter adjustments, additional vcf output, orientation fixes
+- MANTA-187 treat split reads symmetrically to improve RNA fusion detection
+-- detect split reads directly rather than via associated soft-clip sequence
+-- exclude split reads from contributing to local assembly evidence
 v0.24.0
--MANTA-213 FFPE runtime optimization:
+- MANTA-213 FFPE runtime optimization:
 -- Recognize new BAM format for fragments shorter than read length,
 prevent these reads from triggering assembly.
 -- Improve insert size distribution estimation by including fragments shorter
@@ -9,7 +13,7 @@ than read length.
 -- Reduce SW edit matrix size with short k-mer match bounds on ref seq
 -- Improve graph noise filtration by testing specific region for evidence
 signal threshold
--- Use adaptive noise rates in hypoth gen step: background read anamoly rate
+-- Use adaptive noise rates in hypoth gen step: background read anomaly rate
 is used to determine if signal is significant. Currently applies to small
 assembly candidates only.
 -- Collapse redundant assembly candidates for small indels to single copy
@@ -32,7 +36,7 @@ v0.22.0
 - MANTA-181 fix assembler path and coverage issues
 - MANTA-177 filter redundant partial insertions
 - MANTA-142 improve contig alignment for large events
-- MANTA-160 add pseudo-coloring to assmembly, and improve multi-pass
+- MANTA-160 add pseudo-coloring to assembly, and improve multi-pass
 read/contig association
 - MANTA-170 improve pair allele support accuracy
 - MANTA-139 add shadow and chimera reads into pair counts
@@ -80,7 +84,7 @@ v0.15.0
 - MANTA-108 combine clip/semi-aligned evidence detection, don't detect
 overlapping reads as assembly evidence
 - MANTA-98 make fewer bam scans during scoring
-- MANTA-106 add high depth limit to candgen and assmbler
+- MANTA-106 add high depth limit to candgen and assembler
 - MANTA-75 Better match reads to SV candidates to improve
 runtime and lower repeat observations (part 2)
 - MANTA-105 filter poorly supported candidates to reduce per-edge compute time

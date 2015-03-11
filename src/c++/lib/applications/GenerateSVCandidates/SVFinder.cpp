@@ -808,7 +808,7 @@ processReadPair(
     for (SVObservation& readCand : _readCandidates)
     {
         using namespace SVEvidenceType;
-        if( readCand.evtype != SPLIT_ALIGN ) continue;
+        if ( readCand.evtype != SPLIT_ALIGN ) continue;
 
         if (readCand.bp1.lowresEvidence.getVal(SPLIT_ALIGN) == 0) readCand.bp1.lowresEvidence.add(SPLIT_ALIGN);
         if (readCand.bp2.lowresEvidence.getVal(SPLIT_ALIGN) == 0) readCand.bp2.lowresEvidence.add(SPLIT_ALIGN);

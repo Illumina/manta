@@ -134,7 +134,7 @@ struct RegionPayloadTracker
 
     boost::optional<T>
     isPayloadInRegion(
-            const pos_t pos) const;
+        const pos_t pos) const;
 
     /// add region
     ///
