@@ -1,3 +1,4 @@
+v0.25.0
 - RNA - parameter adjustments, additional vcf output, orientation fixes
 - MANTA-187 treat split reads symmetrically to improve RNA fusion detection
 -- detect split reads directly rather than via associated soft-clip sequence
