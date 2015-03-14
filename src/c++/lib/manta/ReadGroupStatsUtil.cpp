@@ -224,8 +224,8 @@ struct ReadGroupTracker
 {
     explicit
     ReadGroupTracker(
-        const char* bamLabel = NULL,
-        const char* rgLabel = NULL) :
+        const char* bamLabel = nullptr,
+        const char* rgLabel = nullptr) :
         _isFinalized(false),
         _rgLabel(bamLabel, rgLabel),
         _orientInfo(bamLabel, rgLabel),
@@ -468,7 +468,7 @@ struct ReadPairDepthFilter
         if (_posCount>=maxPosCount) return true;
         ++_posCount;
 
-        /// crude mechanism to manage total set memory
+        // crude mechanism to manage total set memory
         static const unsigned maxMateSetSize(100000);
         if (_goodMates.size() > maxMateSetSize) _goodMates.clear();
 
@@ -504,13 +504,12 @@ struct CoreInsertStatsReadFilter
         if (bamRead.map_qual()==0) return true;
 
         // filter any split reads with an SA tag:
-        static const char SAtag[] = {'S','A'};
-        if (NULL != bamRead.get_string_tag(SAtag)) return true;
+        if (SVLocusScanner::isSASplitRead(bamRead)) return true;
 
-        // remove with alignments other than {X}M({Y}S)? (or reverse for reverse strand)
+        // remove alignments other than {X}M({Y}S)? (or reverse for reverse strand)
         if (alignFilter.isFilterRead(bamRead)) return true;
 
-        /// filter out upstream reads and high depth regions:
+        // filter out upstream reads and high depth regions:
         if (pairFilter.isFilterRead(bamRead)) return true;
 
         return false;
