@@ -79,7 +79,7 @@ pattern:
 * Deletions
 * Insertions
     * Fully-assembled insertions
-    * Partially-assembled 'inferred' insertions
+    * Partially-assembled (ie. inferred) insertions
 * Inversions
 * Tandem Duplications
 * Interchromosomal Translocations
@@ -101,7 +101,7 @@ Manta should not be able to detect the following variant types:
   size
     * Note that manta does detect and report very large insertions when the breakend
   signature of such an event is found, even though the inserted sequence cannot
-  be fully assembled.  
+  be fully assembled.
 
 More general repeat-based limitations exist for all variant types:
 
@@ -197,7 +197,12 @@ Additional secondary output is provided in `${RUNFOLDER}/results/stats`
 * __alignmentStatsSummary.txt__
     * fragment length quantiles for each input bam
 * __svLocusGraphStats.tsv__
-    * statistics pertaining to the SV locus graph
+    * statistics and runtime information pertaining to the SV locus graph
+* __svCandidateGenerationStats.tsv__
+    * statistics and runtime information pertaining to the SV candidate generation
+* __svCandidateGenerationStats.xml__
+    * xml data backing the svCandidateGenerationStats.tsv report 
+    
 
 ## Run configuration and Execution
 
@@ -235,7 +240,6 @@ ${MANTA_INSTALL_DIR}/bin/configManta.py \
 --tumorBam HCC1187C.bam \
 --referenceFasta hg19.fa \
 --runDir ${ANALYSIS_RUN_DIR}
-
 ```
 
 On completion, the configuration script will create the workflow run script `${ANALYSIS_RUN_DIR}/runWorkflow.py`
@@ -300,5 +304,52 @@ These options are useful for Manta development and debugging:
 * The `--rescore` option can be provided to force the workflow to re-execute
   candidates discovery and scoring, but not the initial graph generation steps.
 
+### Use cases
+
+#### Exome/Targeted
+
+Supplying the '--exome' flag at configuration time will provide appropriate settings for
+WES and other regional enrichment analyses. At present this flag disables all high depth filters,
+which are designed to exclude pericentromeric reference compressions in the WGS case but cannot
+be applied correctly to a targeted analysis.
+
+For small targeted regions, it may also be helpful to consider the high sensitivity calling
+documentation below.
+
+### RNA-Seq
+
+Supplying the '--rna' flag at configuration time will provide experimental settings for RNA-Seq
+Fusion calling. At present this flag disables all high depth filters which are designed to exclude
+pericentromeric reference compressions in the WGS case but cannot be applied correctly to RNA-Seq analysis.
+In addition many custom RNA read processing and alignment steps are invoked. This mode is designed to
+function as part of larger workflow with additional steps to reduce overall false positive rate which
+take place downstream from Manta's fusion calling step.
+
+It may also be helpful to consider the high sensitivity calling documentation below for this mode.
+
+#### Extended use case 1: High sensitivity calling
+
+Manta is configured with a discovery sensitivity appropriate for general  WGS applications.
+In targeted or other specialized contexts the candidate sensitivity can be increased. A
+recommended general high sensitivity mode can be obtained by changing the two values 'minEdgeObservations'
+and 'minCandidateSpanningCount' in the manta configuration file (see 'Advanced configuration options' above) to 2 observations per candidate (the default is 3):
+
+```
+# Remove all edges from the graph unless they're supported by this many 'observations'.
+# Note that one supporting read pair or split read usually equals one observation, but evidence is sometimes downweighted.
+minEdgeObservations = 2
+
+# Run discovery and candidate reporting for all SVs/indels with at least this
+# many spanning support observations
+minCandidateSpanningCount = 2
+```
+
+#### Extended use case 2: Unpaired tumor sample
+
+Manta does not yet provide a scoring model for unpaired tumor samples. The candidate SV output file should provide an appropriate approximation for this case until one is available.
+
+
+
 [1]: http://www.1000genomes.org/wiki/Analysis/Variant%20Call%20Format/vcf-variant-call-format-version-41
 [2]: http://ctsa.github.io/pyflow/
+
