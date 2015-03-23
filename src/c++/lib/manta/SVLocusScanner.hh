@@ -68,10 +68,12 @@ struct SVObservationWeights
 struct ReadScannerDerivOptions
 {
     ReadScannerDerivOptions(const ReadScannerOptions& opt) :
+        isSmallCandidates(opt.minCandidateVariantSize<=opt.maxCandidateSizeForLocalAssmEvidence),
         beforeBreakend(opt.minPairBreakendSize/2),
         afterBreakend(opt.minPairBreakendSize-beforeBreakend)
     {}
 
+    const bool isSmallCandidates;
     const pos_t beforeBreakend;
     const pos_t afterBreakend;
 };

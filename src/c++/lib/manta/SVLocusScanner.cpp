@@ -885,8 +885,11 @@ getSingleReadSVCandidates(
     else
     {
         // this detects semi-aligned AND soft-clip:
-        getSVCandidatesFromSemiAligned(opt, localRead, localAlign, fragSource, refSeq,
-                                       candidates);
+        if (dopt.isSmallCandidates)
+        {
+            getSVCandidatesFromSemiAligned(opt, localRead, localAlign, fragSource, refSeq,
+                                           candidates);
+        }
 #ifdef DEBUG_SCANNER
         log_os << logtag << " post-semialigned candidate_size: " << candidates.size() << "\n";
 #endif
@@ -1360,7 +1363,7 @@ isSVEvidence(
     const bool isSplit(SVLocusScanner::isSASplitRead(bamRead));
     const SimpleAlignment bamAlign(getAlignment(bamRead));
     const bool isIndel(isLocalIndelEvidence(bamAlign));
-    const bool isAssm((!isSplit) && isSemiAlignedEvidence(bamRead, bamAlign, refSeq));
+    const bool isAssm((_dopt.isSmallCandidates) && ((!isSplit) && isSemiAlignedEvidence(bamRead, bamAlign, refSeq)));
 
     const bool isEvidence(isAnom || isSplit || isIndel || isAssm);
 

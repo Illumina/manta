@@ -48,8 +48,12 @@ struct ReadScannerOptions
     /// multiplier for fragment length
     float shadowSearchRangeFactor = 1.2;
 
-    ///< ignore indels smaller than this when building graph:
+    /// ignore indels smaller than this when building graph, constructing candidates and scoring output:
     unsigned minCandidateVariantSize = 10;
+
+    /// if minCandidateVariantSize is set higher than this value, then we ignore non-specific assembly evidence
+    /// (like soft-clip and poor alignment) during candidate generation
+    unsigned maxCandidateSizeForLocalAssmEvidence = 100;
 
     /// whenever a breakend is predicted from a read pair junction, the predicted breakend
     /// range should be no smaller than this:
@@ -80,7 +84,7 @@ struct ReadScannerOptions
     double minSemiAlignedScoreGraph = 180.0;
     double minSemiAlignedScoreCandidates = 180.0;
 
-    ///< min MAPQ for shadow mate used to build SV adjacency graph
+    /// min MAPQ for shadow mate used to build SV adjacency graph
     unsigned minSingletonMapqGraph = 30;
 
     /// min MAPQ for shadow mate used for candidate assembly and scoring
