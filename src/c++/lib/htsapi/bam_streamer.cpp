@@ -164,7 +164,7 @@ set_new_region(const int ref, const int beg, const int end)
 
     if (ref < 0)
     {
-        log_os << "ERROR: Invalid region specified for BAM file: " << name() << "\n";
+        log_os << "ERROR: Invalid region specified for BAM/CRAM file: " << name() << "\n";
         exit(EXIT_FAILURE);
     }
 

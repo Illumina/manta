@@ -31,7 +31,22 @@ struct hts_streamer : private boost::noncopyable
 
     ~hts_streamer();
 
+    const char*
+    name() const
+    {
+        return _stream_name.c_str();
+    }
+
+    unsigned
+    record_no() const
+    {
+        return _record_no;
+    }
+
 protected:
+    void
+    _load_index();
+
     bool _is_record_set;
     bool _is_stream_end;
     unsigned _record_no;

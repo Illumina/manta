@@ -152,12 +152,10 @@ struct pos_range
 };
 
 
-
 /// \brief pos_range for bounded intervals only
 ///
 struct known_pos_range : public pos_range
 {
-
     known_pos_range(const pos_t bp,const pos_t ep) : pos_range(bp,ep) {}
 
     bool

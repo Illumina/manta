@@ -63,13 +63,7 @@ hts_streamer(
         exit(EXIT_FAILURE);
     }
 
-    // read from a specific region:
-    _tidx = tbx_index_load(filename);
-    if (nullptr == _tidx)
-    {
-        log_os << "ERROR: Failed to load index for hts file: '" << filename << "'\n";
-        exit(EXIT_FAILURE);
-    }
+    _load_index();
 
     // read only a region of HTS file:
     _titr = tbx_itr_querys(_tidx, region);
@@ -87,4 +81,21 @@ hts_streamer::
     if (nullptr != _titr) tbx_itr_destroy(_titr);
     if (nullptr != _tidx) tbx_destroy(_tidx);
     if (nullptr != _hfp) hts_close(_hfp);
+}
+
+
+
+// load index if it hasn't been set already:
+void
+hts_streamer::
+_load_index()
+{
+    if (nullptr != _tidx) return;
+
+    _tidx = tbx_index_load(name());
+    if (nullptr == _tidx)
+    {
+        log_os << "ERROR: Failed to load index for hts file: '" << name() << "'\n";
+        exit(EXIT_FAILURE);
+    }
 }

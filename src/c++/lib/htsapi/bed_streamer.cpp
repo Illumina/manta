@@ -17,16 +17,9 @@
 
 #include "bed_streamer.hh"
 #include "blt_util/blt_exception.hh"
-#include "blt_util/log.hh"
-#include "blt_util/seq_util.hh"
-#include <cassert>
-#include <cstdlib>
-#include <sys/stat.h>
 
 #include <iostream>
-#include <set>
-#include <string>
-
+#include <sstream>
 
 
 bool
@@ -56,8 +49,9 @@ next()
 
         if (! _bedrec.set(record_string))
         {
-            log_os << "ERROR: Can't parse BED record: '" << record_string << "'\n";
-            exit(EXIT_FAILURE);
+            std::ostringstream oss;
+            oss << "ERROR: Can't parse BED record: '" << record_string << "'\n";
+            throw blt_exception(oss.str().c_str());
         }
         if (! _bedrec.is_valid()) continue;
         break;
@@ -74,7 +68,7 @@ report_state(std::ostream& os) const
 {
     const bed_record* bedp(get_record_ptr());
 
-    os << "\tvcf_stream_label: " << name() << "\n";
+    os << "\tbed_stream_label: " << name() << "\n";
     if (nullptr != bedp)
     {
         os << "\tbed_stream_record_no: " << record_no() << "\n"

@@ -40,16 +40,6 @@ struct bed_streamer : private hts_streamer
         else                return nullptr;
     }
 
-    const char* name() const
-    {
-        return _stream_name.c_str();
-    }
-
-    unsigned record_no() const
-    {
-        return _record_no;
-    }
-
     void report_state(std::ostream& os) const;
 
 private:

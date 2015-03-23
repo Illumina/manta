@@ -25,7 +25,6 @@ struct vcf_streamer : private hts_streamer
 {
     // optionally provide a BAM header to validate vcf chromosome names against
     //
-    explicit
     vcf_streamer(
         const char* filename,
         const char* region,
@@ -44,16 +43,6 @@ struct vcf_streamer : private hts_streamer
     {
         if (_is_record_set) return &_vcfrec;
         else                return nullptr;
-    }
-
-    const char* name() const
-    {
-        return _stream_name.c_str();
-    }
-
-    unsigned record_no() const
-    {
-        return _record_no;
     }
 
     void report_state(std::ostream& os) const;

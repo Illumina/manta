@@ -152,8 +152,8 @@ struct RangeMap
         const unsigned dataSize(_data.size());
         for (unsigned offset(1); offset<=keySize; ++offset)
         {
-            if (! _occup[(kindex+offset) % dataSize]) continue;
-            _minKeyIndex=(kindex+offset) % dataSize;
+            if (! _occup[(_minKeyIndex+offset) % dataSize]) continue;
+            _minKeyIndex=(_minKeyIndex+offset) % dataSize;
             _minKey += offset;
             return;
         }
@@ -161,8 +161,7 @@ struct RangeMap
         _isEmpty=true;
     }
 
-#if 0
-    /// erase all data with keys sorting less than or equal to k
+    /// erase all contents with keys sorting less than or equal to k
     void
     eraseTo(
         const KeyType& k)
@@ -194,15 +193,13 @@ struct RangeMap
         const unsigned dataSize(_data.size());
         for (unsigned offset(1); offset<=keySize; ++offset)
         {
-            if (! _occup[(kindex+offset) % dataSize]) continue;
-            _minKeyIndex=(kindex+offset) % dataSize;
+            if (! _occup[(_minKeyIndex+offset) % dataSize]) continue;
+            _minKeyIndex=(_minKeyIndex+offset) % dataSize;
             _minKey += offset;
             return;
         }
-
         _isEmpty=true;
     }
-#endif
 
 #ifdef DEBUG_RMAP
     /// debug dumper:

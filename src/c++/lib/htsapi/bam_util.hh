@@ -47,45 +47,45 @@ enum index_t
 }
 
 
-// insert new qname
-//
+/// insert new qname
+///
 void
 edit_bam_qname(const char* name,
                bam1_t& br);
 
-// Read length is taken from the read string. Assumes offset has
-// already been removed from qual
+/// Read length is taken from the read string. Assumes offset has
+/// already been removed from qual
 void
 edit_bam_read_and_quality(const char* read,
                           const uint8_t* qual,
                           bam1_t& br);
 
-// remove all copies of optional field "tag"
-//
+/// remove all copies of optional field "tag"
+///
 void
 nuke_bam_aux_field(bam1_t& br,
                    const char* tag);
 
 
-// store an unsigned int to optional field "tag", optimize storage
-// based on size of x
+/// store an unsigned int to optional field "tag", optimize storage
+/// based on size of x
 void
 bam_aux_append_unsigned(bam1_t& br,
                         const char* tag,
                         uint32_t x);
 
-// change the size of a subsegment of the bam data, 'end' identifies
-// the byte offset of the end of the segment and 'delta' is the change
-// to the segment size
-//
+/// change the size of a subsegment of the bam data, 'end' identifies
+/// the byte offset of the end of the segment and 'delta' is the change
+/// to the segment size
+///
 void
 change_bam_data_segment_len(const int end,
                             const int delta,
                             bam1_t& br);
 
-// Update bam record bin value -- call after updating pos and/or
-// cigar fields.
-//
+/// Update bam record bin value -- call after updating pos and/or
+/// cigar fields.
+///
 inline
 void
 bam_update_bin(bam1_t& br)

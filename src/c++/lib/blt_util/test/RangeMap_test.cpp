@@ -75,5 +75,41 @@ BOOST_AUTO_TEST_CASE( test_rangeMap3 )
     BOOST_REQUIRE_EQUAL(rm.getConstRef(21), 1);
 }
 
+BOOST_AUTO_TEST_CASE( test_rangeMap_eraseTo )
+{
+    RangeMap<int,int> rm;
+
+    rm.getRef(5) += 1;
+    rm.getRef(20) += 1;
+    rm.getRef(21) += 1;
+
+    rm.eraseTo(0);
+    BOOST_REQUIRE_EQUAL(rm.getConstRef(5), 1);
+    BOOST_REQUIRE_EQUAL(rm.getConstRef(21), 1);
+
+    rm.eraseTo(30);
+    BOOST_REQUIRE(rm.empty());
+
+    rm.getRef(5) += 1;
+    rm.getRef(20) += 1;
+    rm.getRef(21) += 1;
+
+    rm.eraseTo(20);
+    BOOST_REQUIRE_EQUAL(rm.getConstRef(21), 1);
+
+    rm.getRef(10030) += 1;
+    rm.getRef(10032) += 1;
+    rm.getRef(10034) += 1;
+
+    rm.eraseTo(10030);
+    BOOST_REQUIRE_EQUAL(rm.getConstRef(10032), 1);
+    BOOST_REQUIRE_EQUAL(rm.getConstRef(10034), 1);
+
+    rm.erase(10034);
+    BOOST_REQUIRE(!rm.empty());
+    rm.erase(10032);
+    BOOST_REQUIRE(rm.empty());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
