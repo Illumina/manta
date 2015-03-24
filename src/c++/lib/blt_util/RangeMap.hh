@@ -147,18 +147,7 @@ struct RangeMap
 
         if (k != _minKey) return;
 
-        // we have to shift minKey up to the next valid value:
-        const unsigned keySize(_maxKey-_minKey);
-        const unsigned dataSize(_data.size());
-        for (unsigned offset(1); offset<=keySize; ++offset)
-        {
-            if (! _occup[(_minKeyIndex+offset) % dataSize]) continue;
-            _minKeyIndex=(_minKeyIndex+offset) % dataSize;
-            _minKey += offset;
-            return;
-        }
-
-        _isEmpty=true;
+        resetMinKey();
     }
 
     /// erase all contents with keys sorting less than or equal to k
@@ -183,22 +172,12 @@ struct RangeMap
         }
         else
         {
-            std::fill(_occup.begin(),_occup.begin()+kindex+1,false);
+            //  clear range 'wraps' around the end of the array:
             std::fill(_occup.begin()+_minKeyIndex,_occup.end(),false);
+            std::fill(_occup.begin(),_occup.begin()+kindex+1,false);
         }
 
-
-        // we have to shift minKey up to the next valid value:
-        const unsigned keySize(_maxKey-_minKey);
-        const unsigned dataSize(_data.size());
-        for (unsigned offset(1); offset<=keySize; ++offset)
-        {
-            if (! _occup[(_minKeyIndex+offset) % dataSize]) continue;
-            _minKeyIndex=(_minKeyIndex+offset) % dataSize;
-            _minKey += offset;
-            return;
-        }
-        _isEmpty=true;
+        resetMinKey();
     }
 
 #ifdef DEBUG_RMAP
@@ -216,18 +195,50 @@ struct RangeMap
 #endif
 
 private:
+    /// update minKey based on new occupy values:
+    void
+    resetMinKey()
+    {
+        // we have to shift minKey up to the next valid value:
+        const unsigned keySize(_maxKey-_minKey);
+        for (unsigned offset(1); offset<=keySize; ++offset)
+        {
+            const unsigned testIndex(getKeyIndexOffset(offset));
+            if (! _occup[testIndex]) continue;
+            _minKeyIndex = testIndex;
+            _minKey += offset;
+            return;
+        }
+
+        _isEmpty=true;
+    }
+
+    /// assumes offset has already been validated!
+    unsigned
+    getKeyIndexOffset(
+        const unsigned offset) const
+    {
+        // the following should be faster than a modulus but
+        // still handle all cases:
+        const unsigned i(_minKeyIndex + offset);
+        const unsigned d(_data.size());
+        if (i < d) return i;
+        return (i-d);
+    }
+
     /// assumes key has already been validated!
     unsigned
     getKeyIndex(
         const KeyType& k) const
     {
-        return ((_minKeyIndex + (k-_minKey)) % _data.size());
+        return getKeyIndexOffset(k-_minKey);
     }
 
     /// rotate data so that minKeyIndex is 0
     void
     normRotate()
     {
+        if (_minKeyIndex==0) return;
         std::rotate(_data.begin(),_data.begin()+_minKeyIndex,_data.end());
         std::rotate(_occup.begin(),_occup.begin()+_minKeyIndex,_occup.end());
         _minKeyIndex=0;
