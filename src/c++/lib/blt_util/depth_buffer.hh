@@ -22,30 +22,59 @@
 
 #include <cassert>
 
+/// base object for depth_buffers, do not call this directly
+struct depth_buffer_base
+{
+protected:
+    unsigned
+    _val(const pos_t pos) const
+    {
+        return _data.getConstRefDefault(pos,0);
+    }
+
+    /// increment range [pos,pos+range) by one
+    void
+    _inc(const pos_t pos,
+         const unsigned incVal)
+    {
+        _data.getRef(pos) += incVal;
+    }
+
+    void
+    _clear(const pos_t pos)
+    {
+        if (_data.isKeyPresent(pos)) _data.erase(pos);
+    }
+
+private:
+    typedef RangeMap<pos_t,unsigned> count_t;
+    count_t _data;
+};
+
 
 /// simple map of position to depth
 ///
 /// assumes that a narrow list of positions is maintained so that
 /// array based lookup optimizations can be used
 ///
-struct depth_buffer
+struct depth_buffer : public depth_buffer_base
 {
     unsigned
     val(const pos_t pos) const
     {
-        return _data.getConstRefDefault(pos,0);
+        return _val(pos);
     }
 
     void
     inc(const pos_t pos)
     {
-        _data.getRef(pos) += 1;
+        _inc(pos,1);
     }
 
     void
     clear_pos(const pos_t pos)
     {
-        if (_data.isKeyPresent(pos)) _data.erase(pos);
+        _clear(pos);
     }
 
     /// return true if buffered depth exceeds depth in [begin,end]
@@ -61,8 +90,65 @@ struct depth_buffer
         }
         return false;
     }
+};
+
+
+
+/// simple map of position to depth
+///
+/// assumes that a narrow list of positions is maintained so that
+/// array based lookup optimizations can be used
+///
+/// optionally "compresses" depth buffer so that multiple positions
+/// are binned together.
+///
+struct depth_buffer_compressible : public depth_buffer_base
+{
+    depth_buffer_compressible(
+        const unsigned compressionFactor=1)
+        : _csize(compressionFactor),
+          _halfcsize(_csize/2)
+    {
+        assert(_csize>=1);
+    }
+
+    unsigned
+    val(const pos_t pos) const
+    {
+        return ((_val(pos/_csize)+_halfcsize)/_csize);
+    }
+
+    /// increment range [pos,pos+range) by one
+    void
+    inc(pos_t pos,
+        const unsigned posRange = 1)
+    {
+        assert(posRange>=1);
+        const pos_t endPos(pos+posRange);
+        pos_t dataPos(pos/_csize);
+        while (true)
+        {
+            const pos_t blockEndPos(std::min(((dataPos+1)*static_cast<pos_t>(_csize)), endPos));
+            _inc(dataPos,(blockEndPos-pos));
+
+            if (blockEndPos==endPos) return;
+            pos = blockEndPos;
+            dataPos++;
+        }
+    }
+
+    /// if compressionFactor is gt 1, pos arguments must be ordered to prevent surprising behavior
+    void
+    clear_pos(const pos_t pos)
+    {
+        // compression factor only works here by assuming clear_pos is being called in order
+        if ((pos % _csize) != (_csize-1)) return;
+        const pos_t dataPos(pos/_csize);
+        _clear(dataPos);
+    }
 
 private:
-    typedef RangeMap<pos_t,unsigned> count_t;
-    count_t _data;
+    const unsigned _csize;
+    const unsigned _halfcsize;
 };
+

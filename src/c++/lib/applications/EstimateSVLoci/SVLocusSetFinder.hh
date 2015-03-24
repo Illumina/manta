@@ -115,7 +115,8 @@ private:
     GenomeInterval _denoiseRegion;
     stage_manager _stageman;
     SVLocusSet _svLoci;
-    depth_buffer _depth; ///< track depth for the purpose of filtering high-depth regions
+
+    depth_buffer_compressible _depth; ///< track depth for the purpose of filtering high-depth regions
 
     bool _isScanStarted;
 

@@ -41,6 +41,26 @@ get_db_test_pattern()
 }
 
 
+/// return buffer loaded with simple test pattern
+///
+/// at pos Y, depth is Y-100 before compression
+///
+static
+depth_buffer_compressible
+get_db_compressible_test_pattern(
+    const unsigned compressionLevel)
+{
+    depth_buffer_compressible db(compressionLevel);
+
+    // load a depth pattern in:
+    for (unsigned i(101); i<200; ++i)
+    {
+        db.inc(i,200-i);
+    }
+    return db;
+}
+
+
 BOOST_AUTO_TEST_CASE( test_depth_buffer_val )
 {
     depth_buffer db(get_db_test_pattern());
@@ -61,6 +81,29 @@ BOOST_AUTO_TEST_CASE( test_depth_buffer_range )
     depth_buffer db(get_db_test_pattern());
     BOOST_CHECK(! db.is_range_ge_than(0,107,8));
     BOOST_CHECK(  db.is_range_ge_than(0,108,8));
+}
+
+BOOST_AUTO_TEST_CASE( test_depth_buffer_compressible_val )
+{
+    depth_buffer_compressible db(get_db_compressible_test_pattern(8));
+    BOOST_CHECK_EQUAL(static_cast<int>(db.val(107)),8);
+    BOOST_CHECK_EQUAL(static_cast<int>(db.val(110)),8);
+    BOOST_CHECK_EQUAL(static_cast<int>(db.val(150)),48);
+    BOOST_CHECK_EQUAL(static_cast<int>(db.val(199)),96);
+}
+
+
+BOOST_AUTO_TEST_CASE( test_depth_buffer_compressible_clear )
+{
+    depth_buffer_compressible db(get_db_compressible_test_pattern(8));
+    for (unsigned i(100);i<120;++i)
+    {
+        db.clear_pos(i);
+    }
+    BOOST_CHECK_EQUAL(static_cast<int>(db.val(110)),0);
+    BOOST_CHECK_EQUAL(static_cast<int>(db.val(150)),48);
+    BOOST_CHECK_EQUAL(static_cast<int>(db.val(199)),96);
+    BOOST_CHECK_EQUAL(static_cast<int>(db.val(109)),0);
 }
 
 

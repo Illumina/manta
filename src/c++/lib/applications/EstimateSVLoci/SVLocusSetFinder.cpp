@@ -53,6 +53,10 @@ getStageData(
 
 
 
+static const unsigned depthBufferCompression = 16;
+
+
+
 SVLocusSetFinder::
 SVLocusSetFinder(
     const ESLOptions& opt,
@@ -67,6 +71,7 @@ SVLocusSetFinder(
             scanRegion.range.end_pos()),
         *this),
     _svLoci(opt.graphOpt),
+    _depth(depthBufferCompression),
     _isScanStarted(false),
     _isInDenoiseRegion(false),
     _denoisePos(0),
@@ -203,10 +208,7 @@ addToDepthBuffer(
 
     /// stick to a simple approximation -- ignore CIGAR string and just look at the read length:
     const pos_t readSize(bamRead.read_size());
-    for (pos_t readIndex(0); readIndex<readSize; ++readIndex)
-    {
-        _depth.inc(refPos+readIndex);
-    }
+    _depth.inc(refPos,readSize);
 }
 
 
