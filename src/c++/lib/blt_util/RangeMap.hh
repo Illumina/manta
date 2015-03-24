@@ -88,6 +88,9 @@ struct RangeMap
         return (! ((_isEmpty) || (k < _minKey) || (k > _maxKey) || (! _occup.test(getKeyIndex(k)))));
     }
 
+    /// get a mutable reference for the value associated with key k
+    ///
+    /// if k does not exist then it is initialized according to ValClear type parameter
     ValType&
     getRef(
         const KeyType& k)
@@ -122,6 +125,9 @@ struct RangeMap
         return _data[kindex];
     }
 
+    /// get a const reference to key's associated value
+    ///
+    /// exception thrown in key is absent
     const ValType&
     getConstRef(
         const KeyType& k) const
@@ -130,6 +136,7 @@ struct RangeMap
         return _data[getKeyIndex(k)];
     }
 
+    /// get a const reference to key's associated value, or provide reference to specified default
     const ValType&
     getConstRefDefault(
         const KeyType& k,
@@ -166,12 +173,21 @@ struct RangeMap
             return;
         }
 
-        boost::dynamic_bitset<>& mask(_occup_mask_helper);
-        mask.resize(1+k-_minKey);
-        mask.reset();
-        mask.resize(_occup.size(),true);
-        rotateLeft(mask,_minKeyIndex);
-        _occup &= mask;
+        if (_minKey == k)
+        {
+            /// accelerate/simplify _occup setting for common use case of erasing
+            /// a single position off the end of contiguous key block
+            _occup.reset(_minKeyIndex);
+        }
+        else
+        {
+            boost::dynamic_bitset<>& mask(_occup_mask_helper);
+            mask.resize(1+k-_minKey);
+            mask.reset();
+            mask.resize(_occup.size(),true);
+            rotateLeft(mask,_minKeyIndex);
+            _occup &= mask;
+        }
 
         resetMinKey();
     }
