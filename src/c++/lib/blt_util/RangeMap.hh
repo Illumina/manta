@@ -19,6 +19,8 @@
 
 #include "blt_util/blt_exception.hh"
 
+#include "boost/dynamic_bitset.hpp"
+
 #include <algorithm>
 #include <sstream>
 #include <vector>
@@ -62,7 +64,7 @@ struct RangeMap
         _isEmpty(true),
         _minKeyIndex(0),
         _data(_minChunk),
-        _occup(_minChunk,false)
+        _occup(_minChunk)
     {}
 
     void
@@ -70,7 +72,7 @@ struct RangeMap
     {
         _isEmpty=true;
         _minKeyIndex=0;
-        std::fill(_occup.begin(),_occup.end(),false);
+        _occup.reset();
     }
 
     bool
@@ -83,7 +85,7 @@ struct RangeMap
     isKeyPresent(
         const KeyType& k) const
     {
-        return (! ((_isEmpty) || (k < _minKey) || (k > _maxKey) || (! _occup[getKeyIndex(k)])));
+        return (! ((_isEmpty) || (k < _minKey) || (k > _maxKey) || (! _occup.test(getKeyIndex(k)))));
     }
 
     ValType&
@@ -111,10 +113,10 @@ struct RangeMap
 
 
         const unsigned kindex(getKeyIndex(k));
-        if (! _occup[kindex])
+        if (! _occup.test(kindex))
         {
             _clearFunc(_data[kindex]);
-            _occup[kindex]=true;
+            _occup.set(kindex);
         }
 
         return _data[kindex];
@@ -143,7 +145,7 @@ struct RangeMap
     {
         enforceKeyPresent(k);
         const unsigned kindex(getKeyIndex(k));
-        _occup[kindex]=false;
+        _occup.reset(kindex);
 
         if (k != _minKey) return;
 
@@ -164,18 +166,12 @@ struct RangeMap
             return;
         }
 
-        // clear _occup values up to k:
-        const unsigned kindex(getKeyIndex(k));
-        if (_minKeyIndex<=kindex)
-        {
-            std::fill(_occup.begin()+_minKeyIndex,_occup.begin()+kindex+1,false);
-        }
-        else
-        {
-            //  clear range 'wraps' around the end of the array:
-            std::fill(_occup.begin()+_minKeyIndex,_occup.end(),false);
-            std::fill(_occup.begin(),_occup.begin()+kindex+1,false);
-        }
+        boost::dynamic_bitset<>& mask(_occup_mask_helper);
+        mask.resize(1+k-_minKey);
+        mask.reset();
+        mask.resize(_occup.size(),true);
+        rotateLeft(mask,_minKeyIndex);
+        _occup &= mask;
 
         resetMinKey();
     }
@@ -204,7 +200,7 @@ private:
         for (unsigned offset(1); offset<=keySize; ++offset)
         {
             const unsigned testIndex(getKeyIndexOffset(offset));
-            if (! _occup[testIndex]) continue;
+            if (! _occup.test(testIndex)) continue;
             _minKeyIndex = testIndex;
             _minKey += offset;
             return;
@@ -240,7 +236,7 @@ private:
     {
         if (_minKeyIndex==0) return;
         std::rotate(_data.begin(),_data.begin()+_minKeyIndex,_data.end());
-        std::rotate(_occup.begin(),_occup.begin()+_minKeyIndex,_occup.end());
+        rotateRight(_occup,_minKeyIndex);
         _minKeyIndex=0;
     }
 
@@ -253,7 +249,7 @@ private:
         const unsigned newSize(std::max(static_cast<unsigned>(2*_data.size()),minSize+_minChunk));
         normRotate();
         _data.resize(newSize);
-        _occup.resize(newSize,false);
+        _occup.resize(newSize);
     }
 
     void
@@ -266,6 +262,32 @@ private:
         throw blt_exception(oss.str().c_str());
     }
 
+    void
+    rotateLeft(
+        boost::dynamic_bitset<>& a,
+        unsigned n)
+    {
+        if (n==0) return;
+        const unsigned s(a.size());
+        assert(n<s);
+        boost::dynamic_bitset<>& b(_occup_rotate_helper);
+        b = a;
+        b >>= (s-n);
+        a <<= n;
+        a |= b;
+    }
+
+    void
+    rotateRight(
+        boost::dynamic_bitset<>& a,
+        unsigned n)
+    {
+        if (n==0) return;
+        const unsigned s(a.size());
+        assert(n<s);
+        rotateLeft(a, (s-n));
+    }
+
     static constexpr unsigned _minChunk = 1024;
 
     bool _isEmpty;
@@ -273,6 +295,13 @@ private:
     KeyType _minKey;
     KeyType _maxKey;
     std::vector<ValType> _data;
-    std::vector<bool> _occup;
+    boost::dynamic_bitset<> _occup;
+
+    ///< used to cache the copy needed for masking:
+    boost::dynamic_bitset<> _occup_mask_helper;
+
+    ///< used to cache the copy needed for rotate:
+    boost::dynamic_bitset<> _occup_rotate_helper;
+
     ValClear _clearFunc;
 };
