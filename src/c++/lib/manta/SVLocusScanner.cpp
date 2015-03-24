@@ -1361,9 +1361,9 @@ isSVEvidence(
     // exclude innie read pairs which are anomalously short:
     const bool isAnom(isNonCompressedAnomalous(bamRead,defaultReadGroupIndex));
     const bool isSplit(SVLocusScanner::isSASplitRead(bamRead));
-    const SimpleAlignment bamAlign(getAlignment(bamRead));
-    const bool isIndel(isLocalIndelEvidence(bamAlign));
-    const bool isAssm((_dopt.isSmallCandidates) && ((!isSplit) && isSemiAlignedEvidence(bamRead, bamAlign, refSeq)));
+    getAlignment(bamRead,_bamAlign);
+    const bool isIndel(isLocalIndelEvidence(_bamAlign));
+    const bool isAssm((_dopt.isSmallCandidates) && ((!isSplit) && isSemiAlignedEvidence(bamRead, _bamAlign, refSeq)));
 
     const bool isEvidence(isAnom || isSplit || isIndel || isAssm);
 

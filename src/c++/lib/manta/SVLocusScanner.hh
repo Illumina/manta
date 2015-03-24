@@ -317,6 +317,9 @@ private:
 
     std::vector<CachedReadGroupStats> _stats;
 
+    // cached temporary to reduce syscalls:
+    mutable SimpleAlignment _bamAlign;
+
 //    std::string lastQname;
 //    uint8_t lastMapq;
 };

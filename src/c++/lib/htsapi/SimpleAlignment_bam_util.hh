@@ -21,6 +21,11 @@
 #include "htsapi/bam_record.hh"
 
 
+void
+getAlignment(
+    const bam_record& bamRead,
+    SimpleAlignment& al);
+
 SimpleAlignment
 getAlignment(
     const bam_record& bamRead);

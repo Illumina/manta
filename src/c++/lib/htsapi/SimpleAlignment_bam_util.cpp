@@ -20,16 +20,26 @@
 
 
 
-SimpleAlignment
+void
 getAlignment(
-    const bam_record& bamRead)
+    const bam_record& bamRead,
+    SimpleAlignment& al)
 {
-    SimpleAlignment al;
     al.is_fwd_strand=bamRead.is_fwd_strand();
     al.tid=bamRead.target_id();
     al.pos=(bamRead.pos()-1);
 
     bam_cigar_to_apath(bamRead.raw_cigar(),bamRead.n_cigar(),al.path);
+}
+
+
+
+SimpleAlignment
+getAlignment(
+    const bam_record& bamRead)
+{
+    SimpleAlignment al;
+    getAlignment(bamRead,al);
     return al;
 }
 
