@@ -1,3 +1,5 @@
+- MANTA-217 Improve runtime for large min candidate size settings, creating
+a high speed large-event mode.
 v0.25.0
 - RNA - parameter adjustments, additional vcf output, orientation fixes
 - MANTA-187 treat split reads symmetrically to improve RNA fusion detection
