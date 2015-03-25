@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE( test_depth_buffer_compressible_val )
 BOOST_AUTO_TEST_CASE( test_depth_buffer_compressible_clear )
 {
     depth_buffer_compressible db(get_db_compressible_test_pattern(8));
-    for (unsigned i(100);i<120;++i)
+    for (unsigned i(100); i<120; ++i)
     {
         db.clear_pos(i);
     }
