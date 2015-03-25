@@ -71,6 +71,63 @@ edgeRFactory(
 }
 
 
+/// TODO temporarily shoved here, needs a better home:
+struct MultiJunctionFilter
+{
+    MultiJunctionFilter(
+        const GSCOptions& opt,
+        GSCEdgeStatsManager& edgeStatMan)
+        : _opt(opt),
+          _edgeStatMan(edgeStatMan)
+    {}
+
+    void
+    filterGroupCandidateSV(
+        const EdgeInfo& edge,
+        const std::vector<SVCandidate>& svs,
+        std::vector<SVMultiJunctionCandidate>& mjSVs)
+    {
+        unsigned mjComplexCount(0);
+        unsigned mjSpanningFilterCount(0);
+        findMultiJunctionCandidates(svs, _opt.minCandidateSpanningCount, mjComplexCount, mjSpanningFilterCount, mjSVs);
+        _edgeStatMan.updateMJFilter(edge, mjComplexCount, mjSpanningFilterCount);
+
+        if (_opt.isVerbose)
+        {
+            unsigned junctionCount(mjSVs.size());
+            unsigned candidateCount(0);
+            for (const SVMultiJunctionCandidate& mj : mjSVs)
+            {
+                candidateCount += mj.junction.size();
+            }
+            log_os << __FUNCTION__ << ": Low-resolution candidate filtration complete. "
+                  << "candidates: " << candidateCount << " "
+                  << "junctions: " << junctionCount << " "
+                  << "complex: " << mjComplexCount << " "
+                  << "spanningfilt: " << mjSpanningFilterCount << "\n";
+        }
+#ifdef DEBUG_GSV
+        log_os << __FUNCTION__ << ": final candidate list";
+        const unsigned junctionCount(mjSVs.size());
+        for (unsigned junctionIndex(0); junctionIndex< junctionCount; ++junctionIndex)
+        {
+            const auto& mj(mjSVs[junctionIndex]);
+            const unsigned junctionCandCount(mj.junction.size());
+            log_os << __FUNCTION__ << ": JUNCTION " << junctionIndex << " with " << junctionCandCount << " candidates\n";
+            for (unsigned junctionCandIndex(0); junctionCandIndex< junctionCandCount; ++junctionCandIndex)
+            {
+                log_os << __FUNCTION__ << ":  JUNCTION " << junctionIndex << " Candidate "
+                       << junctionCandIndex << " " << mj.junction[junctionCandIndex] << "\n";
+            }
+        }
+#endif
+    }
+
+private:
+    const GSCOptions& _opt;
+    GSCEdgeStatsManager& _edgeStatMan;
+};
+
 
 #if 0
 /// edge indices+graph evidence counts and regions:
@@ -111,6 +168,7 @@ runGSC(
     GSCEdgeStatsManager edgeStatMan(opt.edgeStatsFilename);
 
     SVFinder svFind(opt,edgeTracker,edgeStatMan);
+    MultiJunctionFilter svMJFilter(opt,edgeStatMan);
     const SVLocusSet& cset(svFind.getSet());
 
     TruthTracker truthTracker(opt.truthVcfFilename, cset);
@@ -124,10 +182,9 @@ runGSC(
     std::vector<SVCandidate> svs;
     std::vector<SVMultiJunctionCandidate> mjSVs;
 
-    static const std::string logtag("runGSC");
     if (opt.isVerbose)
     {
-        log_os << logtag << " " << cset.header << "\n";
+        log_os << __FUNCTION__ << ": " << cset.header << "\n";
     }
 
     while (edger.next())
@@ -141,24 +198,16 @@ runGSC(
 
             if (opt.isVerbose)
             {
-                log_os << logtag << " starting analysis of edge: ";
+                log_os << __FUNCTION__ << ": starting analysis of edge: ";
                 dumpEdgeInfo(edge,cset,log_os);
             }
 
             // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
             svFind.findCandidateSV(edge, svData, svs, truthTracker);
 
-            if (opt.isVerbose)
-            {
-                log_os << logtag << " Low-resolution candidate generation complete. Candidate count: " << svs.size() << "\n";
-            }
-
-            {
-                unsigned mjComplexCount(0);
-                unsigned mjSpanningFilterCount(0);
-                findMultiJunctionCandidates(svs, opt.minCandidateSpanningCount, mjComplexCount, mjSpanningFilterCount, mjSVs);
-                edgeStatMan.updateMJFilter(edge, mjComplexCount, mjSpanningFilterCount);
-            }
+            // filter long-range junctions outside of the candidate finder so that we can evaluate
+            // junctions which are part of a larger event (like a reciprocal translocation)
+            svMJFilter.filterGroupCandidateSV(edge, svs, mjSVs);
 
             // determine if this is the only edge for this node:
             svProcessor.evaluateCandidates(edge, mjSVs, svData);
@@ -180,7 +229,7 @@ runGSC(
         edgeTracker.stop(edge);
         if (opt.isVerbose)
         {
-            log_os << logtag << " Time to process last edge: ";
+            log_os << __FUNCTION__ << ": Time to process last edge: ";
             edgeTracker.getLastEdgeTime().reportSec(log_os);
             log_os << "\n";
         }

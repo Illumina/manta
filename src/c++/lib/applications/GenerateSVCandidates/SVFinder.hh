@@ -133,6 +133,7 @@ private:
     const std::string _referenceFilename;
 
     const bool _isRNA;
+    const bool _isVerbose;
     bool _isSomatic;
 
     typedef std::shared_ptr<bam_streamer> streamPtr;

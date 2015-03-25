@@ -18,6 +18,7 @@
 #include "SVFinder.hh"
 
 #include "blt_util/binomial_test.hh"
+#include "blt_util/log.hh"
 #include "common/Exceptions.hh"
 #include "htsapi/bam_streamer.hh"
 #include "manta/ReadGroupStatsSet.hh"
@@ -61,6 +62,7 @@ SVFinder(
     _readScanner(_scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilename),
     _referenceFilename(opt.referenceFilename),
     _isRNA(opt.isRNA),
+    _isVerbose(opt.isVerbose),
     _isSomatic(false),
     _edgeTracker(edgeTracker),
     _edgeStatMan(edgeStatMan)
@@ -1189,4 +1191,10 @@ findCandidateSV(
     {
         truthTracker.addCandSV();
     }
+
+    if (_isVerbose)
+    {
+        log_os << __FUNCTION__ << ": Low-resolution candidate generation complete. Candidate count: " << svs.size() << "\n";
+    }
+
 }
