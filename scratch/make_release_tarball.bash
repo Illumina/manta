@@ -30,7 +30,7 @@ thisdir=$(rel2abs $(dirname $0))
 outdir=$(pwd)
 
 cd $thisdir
-gitversion=$(git describe | sed "s/^v//")
+gitversion=$(git describe --dirty --match "v[0-9]*" | sed "s/^v//")
 if [ $? != 0 ]; then
     echo "ERROR: 'git describe' failed" 1>&2
     exit 1

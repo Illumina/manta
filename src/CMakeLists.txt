@@ -43,16 +43,21 @@ if (NOT PYTHONINTERP_FOUND)
     message (FATAL_ERROR "No python interpreter found")
 endif()
 
-
-# get version
+# paths:
+set(THIS_REDIST_DIR "${CMAKE_SOURCE_DIR}/../redist")
 set(THIS_BOOTSTRAP_DIR "${CMAKE_SOURCE_DIR}/cmake/bootstrap")
 set(THIS_SOURCE_QC_DIR "${CMAKE_SOURCE_DIR}/srcqc")
 
-execute_process(COMMAND bash ${THIS_BOOTSTRAP_DIR}/getVersion.bash OUTPUT_VARIABLE THIS_GIT_VERSION)
+# get version
+set (THIS_GETGIT_CMAKE "${THIS_REDIST_DIR}/cmake-modules-c99fd3/GetGitRevisionDescription.cmake")
+include ("${THIS_GETGIT_CMAKE}")
+git_describe(THIS_GIT_VERSION --match "v[0-9]*")
+if (NOT THIS_GIT_VERSION)
+    set(THIS_GIT_VERSION "UNKNOWN")
+endif ()
 set(MANTA_VERSION "${THIS_GIT_VERSION}")
 set(MANTA_FULL_VERSION "${THIS_PROJECT_NAME}-${MANTA_VERSION}")
 message (STATUS "MANTA_VERSION: ${MANTA_VERSION}")
-
 
 set (THIS_GLOBALS_CMAKE "${CMAKE_SOURCE_DIR}/cmake/globals.cmake")
 set (THIS_MACROS_CMAKE "${CMAKE_SOURCE_DIR}/cmake/macros.cmake")
