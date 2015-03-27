@@ -223,12 +223,43 @@ addRNAInfo(
     const bool isFirst = (assemblyData.bporient.isBp1First == isFirstOfPair);
     // cppcheck-suppress zerodivcond
     infotags.push_back(str(boost::format("RNA_FIRST=%1%") % isFirst));
+
+    if (!isFirstOfPair) return; // only the first breakpoint gets the additional RNA info attached to its VCF entry
+
+    infotags.push_back(str(boost::format("RNA_FwRvReads=%i:%i") % sv.fwReads % sv.rvReads));
+
+    const unsigned numContigs(assemblyData.contigs.size());
+    // cppcheck-suppress zerodivcond
+    if (numContigs > 0)
+    {
+        if (numContigs != assemblyData.spanningAlignments.size())
+            infotags.push_back(str(boost::format("ERROR=%i;%i") % numContigs % assemblyData.spanningAlignments.size()));
+        if (numContigs <= assemblyData.bestAlignmentIndex)
+            infotags.push_back(str(boost::format("ERROR2=%i;%i") % numContigs % assemblyData.bestAlignmentIndex));
+        infotags.push_back(str(boost::format("RNA_CONTIG=%s") % assemblyData.contigs[assemblyData.bestAlignmentIndex].seq));
+        infotags.push_back(str(boost::format("RNA_CONTIGLeftAln=%i") % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align1.apath)));
+        infotags.push_back(str(boost::format("RNA_CONTIGRightAln=%i") % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align2.apath)));
+    }
+}
+
+#ifdef DEBUG_VCF
+static
+void
+addRNADebugInfo(
+    const bool isFirstOfPair,
+    const SVCandidate& sv,
+    const SVCandidateAssemblyData& assemblyData,
+    VcfWriterSV::InfoTag_t& infotags)
+{
+    if (! assemblyData.isSpanning) return;
+
+    const bool isFirst = (assemblyData.bporient.isBp1First == isFirstOfPair);
+    // cppcheck-suppress zerodivcond
     const bool isRightOpen = (isFirstOfPair ? sv.bp1.state : sv.bp2.state) == SVBreakendState::RIGHT_OPEN;
     infotags.push_back(str(boost::format("FOOBAR_FW=%1%") % (isFirst == isRightOpen)));
 
     if (!isFirst) return; // only the first breakpoint gets the alignments attached to its VCF entry
 
-    infotags.push_back(str(boost::format("RNA_FwRvReads=%i;%i") % sv.fwReads % sv.rvReads));
     infotags.push_back(str(boost::format("FOOBAR_bp1=%i;bp2=%i") % sv.bp1.interval.tid % sv.bp2.interval.tid));
 
     // there can be several contigs per breakend, so we iterate over all of them.
@@ -238,20 +269,16 @@ addRNAInfo(
     if (numContigs > 0)
     {
         if (numContigs != assemblyData.spanningAlignments.size())
-            infotags.push_back(str(boost::format("ERROR=%i;%i") % numContigs % assemblyData.spanningAlignments.size()));
+            infotags.push_back(str(boost::format("FOOBAR_ERROR=%i;%i") % numContigs % assemblyData.spanningAlignments.size()));
         if (numContigs <= assemblyData.bestAlignmentIndex)
-            infotags.push_back(str(boost::format("ERROR2=%i;%i") % numContigs % assemblyData.bestAlignmentIndex));
+            infotags.push_back(str(boost::format("FOOBAR_ERROR2=%i;%i") % numContigs % assemblyData.bestAlignmentIndex));
 
         infotags.push_back(str(boost::format("FOOBAR_BEST=%i") % assemblyData.bestAlignmentIndex));
-        infotags.push_back(str(boost::format("RNA_CONTIG=%s") % assemblyData.contigs[assemblyData.bestAlignmentIndex].seq));
         //infotags.push_back(str(boost::format("FOOBAR_EXTCONTIG=%s") % assemblyData.extendedContigs[assemblyData.bestAlignmentIndex]));
         infotags.push_back(str(boost::format("FOOBAR_CONTIGcount=%i") % assemblyData.contigs[assemblyData.bestAlignmentIndex].supportReads.size()));
-        infotags.push_back(str(boost::format("RNA_CONTIGLeftAln=%i") % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align1.apath)));
-        infotags.push_back(str(boost::format("RNA_CONTIGRightAln=%i") % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align2.apath)));
     }
 }
-
-
+#endif
 
 #ifdef DEBUG_VCF
 static
@@ -467,6 +494,9 @@ writeTransloc(
     if (_isRNA)
     {
         addRNAInfo(isFirstBreakend, sv, adata, infotags);
+#ifdef DEBUG_VCF
+        addRNADebugInfo(isFirstBreakend, sv, adata, infotags);
+#endif
     }
 
     // write out record:
