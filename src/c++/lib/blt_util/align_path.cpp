@@ -245,7 +245,41 @@ apath_soft_clip_trail_size(const path_t& apath)
     return val;
 }
 
+unsigned
+apath_clip_lead_size(const path_t& apath)
+{
+    unsigned val(0);
+    for (const path_segment& ps : apath)
+    {
+        if ((HARD_CLIP == ps.type) || (SOFT_CLIP == ps.type))
+        {
+            val += ps.length;
+        }
+        else
+        {
+            break;
+        }
+    }
+    return val;
+}
 
+unsigned
+apath_clip_trail_size(const path_t& apath)
+{
+    unsigned val(0);
+    BOOST_REVERSE_FOREACH(const path_segment& ps, apath)
+    {
+        if  ((HARD_CLIP == ps.type) || (SOFT_CLIP == ps.type))
+        {
+            val += ps.length;
+        }
+        else
+        {
+            break;
+        }
+    }
+    return val;
+}
 
 unsigned
 apath_insert_lead_size(const path_t& apath)

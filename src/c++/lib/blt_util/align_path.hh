@@ -254,6 +254,15 @@ apath_soft_clip_lead_size(const path_t& apath);
 unsigned
 apath_soft_clip_trail_size(const path_t& apath);
 
+/// how much clip (soft or hard) occurs before the first aligned base?
+unsigned
+apath_clip_lead_size(const path_t& apath);
+
+/// how much clip (soft or hard) occurs after the last aligned base?
+unsigned
+apath_clip_trail_size(const path_t& apath);
+
+
 /// how much insert occurs before the first aligned base?
 unsigned
 apath_insert_lead_size(const path_t& apath);

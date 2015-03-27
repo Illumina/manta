@@ -177,8 +177,8 @@ isSplitOpenDownstream(
     const ALIGNPATH::path_t& align)
 {
     using namespace ALIGNPATH;
-    ///TODO replace this heuristic with a better check (looking at the actual sequence and SA tag information)
-    return (apath_read_lead_size(align) < apath_read_trail_size(align));
+    ///TODO replace this heuristic with a better check (looking at all SA alignments at once)
+    return (apath_clip_lead_size(align) < apath_clip_trail_size(align));
 }
 
 
