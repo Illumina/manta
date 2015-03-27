@@ -537,7 +537,7 @@ VcfWriterSV::
 writeInvdel(
     const SVCandidate& sv,
     const SVId& svId,
-    const SVCandidateAssemblyData& /*adata*/,
+    const SVCandidateAssemblyData& adata,
     const bool isIndel,
     const EventInfo& event)
 {
@@ -691,6 +691,14 @@ writeInvdel(
         {
             infoTags.push_back( str( boost::format("CIEND=%i,%i") % (bpBrange.begin_pos() - endPos) % ((bpBrange.end_pos()-1) - endPos) ));
         }
+    }
+
+    if ((! isSmallVariant) && _isRNA)
+    {
+        addRNAInfo(true, sv, adata, infoTags);
+#ifdef DEBUG_VCF
+        addRNADebugInfo(isFirstBreakend, sv, adata, infotags);
+#endif
     }
 
     if (! isImprecise)
