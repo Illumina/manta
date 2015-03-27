@@ -521,11 +521,13 @@ struct AlignmentPairAnalyzer
     reset(
         const SimpleAlignment& local,
         const SimpleAlignment& remote,
-        const bool isRemoteObserved)
+        const bool isRemoteObserved,
+        const bool isForward) //Is the local read 1st in pair
     {
         _local= &local;
         _remote= &remote;
         _isRemote = isRemoteObserved;
+        _isForward = isForward;
         _isScale = false;
         _scale = 0;
         _totalNonInsertSize = 0;
@@ -553,7 +555,6 @@ struct AlignmentPairAnalyzer
         static const index_t svLocalPair(LOCAL_PAIR);
         static const index_t svPair(PAIR);
 
-        sv.fwReads = 1; // bp1 is read1, bp2 is read2
         sv.evtype = svLocalPair;
         sv.fragSource = FRAGSOURCE::PAIR;
 
@@ -561,6 +562,16 @@ struct AlignmentPairAnalyzer
         SVBreakend& remoteBreakend(sv.bp2);
 
         localBreakend.lowresEvidence.add(svLocalPair);
+
+
+        if (_isForward)
+        {
+            sv.fwReads++;
+        }
+        else
+        {
+            sv.rvReads++;
+        }
 
         if (_isRemote)
         {
@@ -723,6 +734,7 @@ private:
     const SimpleAlignment* _local = nullptr;
     const SimpleAlignment* _remote = nullptr;
     bool _isRemote = false;
+    bool _isForward = false;
     bool _isScale = false;
     double _scale = 0.;
     unsigned _totalNonInsertSize = 0;
@@ -758,8 +770,7 @@ getSVCandidatesFromPair(
     const SimpleAlignment remoteAlign(isRemote ? getAlignment(*remoteReadPtr) : getFakeMateAlignment(localRead));
 
     AlignmentPairAnalyzer pairInspector(opt,rstats);
-
-    pairInspector.reset(localAlign, remoteAlign, isRemote);
+    pairInspector.reset(localAlign, remoteAlign, isRemote, localRead.is_first());
 
     if (! pairInspector.computeLargeEventRegionScale()) return;
 
