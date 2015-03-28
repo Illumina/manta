@@ -16,9 +16,16 @@
 ##
 ################################################################################
 
+
 foreach (THIS_DIR ${THIS_TEST_DIRS})
     message (STATUS "Testing access to ${THIS_DIR}...")
-    execute_process(COMMAND bash -c "mkdir -p ${THIS_DIR}/test && rmdir ${THIS_DIR}/test" RESULT_VARIABLE TMP_RESULT )
+    set (TEST_DIR "${THIS_DIR}/test")
+    execute_process(
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${TEST_DIR}"
+        RESULT_VARIABLE TMP_RESULT )
+    execute_process(
+        COMMAND ${CMAKE_COMMAND} -E remove_directory "${TEST_DIR}")
+        
     if (TMP_RESULT)
         message (STATUS "ERROR: Directory is not writeable: ${THIS_DIR}")
         message (STATUS "If you don't have administrator access to the "
