@@ -61,8 +61,9 @@ add_subdirectory (lib)
 ##
 ## build all the applications for the project
 ##
-add_subdirectory (bin)
-
+if (NOT WIN32)
+    add_subdirectory (bin)
+endif ()
 
 ##
 ## build the documentation when available
