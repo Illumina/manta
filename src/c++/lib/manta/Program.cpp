@@ -82,7 +82,7 @@ const char*
 Program::
 buildTime() const
 {
-    return buildTime();
+    return getBuildTime();
 }
 
 

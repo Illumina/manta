@@ -29,7 +29,7 @@ getVersion()
 
 inline
 const char*
-buildTime()
+getBuildTime()
 {
     return BUILD_TIME;
 }

@@ -30,8 +30,8 @@ usage(
     const char* msg)
 {
     os << "\n" << prog.name() << ": " << desc << "\n\n";
-    os << "version: " << prog.version() << "\n\n";
-    os << "compiler: " << prog.compiler() << "\n\n";
+    os << "version: " << prog.version() << "\n";
+    os << "compiler: " << prog.compiler() << "\n";
     os << "build-time: " << prog.buildTime() << "\n\n";
     os << "usage: " << prog.name() << " [options]" << afteropts << "\n\n";
     os << visible << "\n\n";
