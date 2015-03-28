@@ -143,8 +143,6 @@ message (STATUS "install prefix: ${CMAKE_INSTALL_PREFIX}")
 set(THIS_OPT "${THIS_PROJECT_NAME}_opt")
 add_custom_target(${THIS_OPT} ALL)
 
-set(THIS_REDIST_DIR "${CMAKE_SOURCE_DIR}/../redist")
-
 # redist includes
 include ("${CMAKE_SOURCE_DIR}/cmake/boost.cmake")
 
@@ -169,7 +167,7 @@ add_custom_target(${THIS_UNITTESTS}
 add_subdirectory (cmake/preInstall)
 add_subdirectory (opt)
 add_subdirectory (c++)
-add_subdirectory (demo)
 add_subdirectory (python)
+add_subdirectory (demo)
 add_subdirectory (markdown)
 add_subdirectory (cmake/postInstall)

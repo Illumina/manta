@@ -16,7 +16,7 @@ if [ $# != 1 ] || [ "$1" != "-imeanit" ]; then
 
 usage: $0 -imeanit
 
-Cleanup whitespace in all manta code
+Cleanup whitespace in all project code
 This is a slightly dangerous script, make sure your work is committed before running it
 
 EOF

@@ -12,7 +12,7 @@ if [ $# -gt 1 ]; then
     cat <<END
 usage: $0 [tarball_rootname]
 
-This script makes the manta source tarball
+This script makes the $package_name source tarball
 
 - script assumes that it is located in the release checkout version
 - the tarball is written to the caller's working directory
