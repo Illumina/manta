@@ -11,41 +11,23 @@
 // <https://github.com/sequencing/licenses/>
 //
 
-/// \brief provide access to cmake project version numbers
+/// \author Chris Saunders
+///
 
 #pragma once
 
-#include "common/config.h"
+#include "Program.hh"
 
-namespace manta
-{
+#include "boost/program_options.hpp"
 
-inline
-const char*
-getVersion()
-{
-    return WORKFLOW_VERSION;
-}
+#include <iosfwd>
 
-inline
-const char*
-buildTime()
-{
-    return BUILD_TIME;
-}
 
-inline
-const char*
-cxxCompilerName()
-{
-    return CXX_COMPILER_NAME;
-}
-
-inline
-const char*
-compilerVersion()
-{
-    return COMPILER_VERSION;
-}
-
-}
+void
+usage(
+    std::ostream& os,
+    const manta::Program& prog,
+    const boost::program_options::options_description& visible,
+    const char* desc,
+    const char* afteropts,
+    const char* msg);

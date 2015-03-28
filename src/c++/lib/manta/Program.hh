@@ -16,8 +16,6 @@
 
 #pragma once
 
-#include "manta/version.hh"
-
 namespace manta
 {
 
@@ -37,10 +35,13 @@ struct Program
     name() const = 0;
 
     const char*
-    version() const
-    {
-        return manta::getFullVersion();
-    }
+    version() const;
+
+    const char*
+    compiler() const;
+
+    const char*
+    buildTime() const;
 
 protected:
     virtual

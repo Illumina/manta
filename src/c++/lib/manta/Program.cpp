@@ -19,6 +19,7 @@
 #include "blt_util/sig_handler.hh"
 #include "common/Exceptions.hh"
 #include "manta/Program.hh"
+#include "manta/version.hh"
 
 #include <cstdlib>
 
@@ -31,7 +32,6 @@ dump_cl(int argc,
         char* argv[],
         std::ostream& os)
 {
-
     os << "cmdline:";
     for (int i(0); i<argc; ++i)
     {
@@ -48,7 +48,6 @@ post_catch(int argc,
            char* argv[],
            std::ostream& os)
 {
-
     os << "...caught in program.run()\n";
     dump_cl(argc,argv,log_os);
     exit(EXIT_FAILURE);
@@ -60,11 +59,37 @@ namespace manta
 
 
 
+const char*
+Program::
+version() const
+{
+    return getVersion();
+}
+
+const char*
+Program::
+compiler() const
+{
+    static const std::string _str(
+        cxxCompilerName() +
+        std::string("-") +
+        compilerVersion());
+    return _str.c_str();
+
+}
+
+const char*
+Program::
+buildTime() const
+{
+    return buildTime();
+}
+
+
 int
 Program::
 run(int argc, char* argv[]) const
 {
-
     try
     {
         std::ios_base::sync_with_stdio(false);
