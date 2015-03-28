@@ -79,18 +79,27 @@ set(PYFLOW_PREFIX "pyflow-1.1.3")
 set(PYFLOW_DIR "${CMAKE_CURRENT_BINARY_DIR}/${PYFLOW_PREFIX}")
 set(PYFLOW_SCRIPT "${PYFLOW_DIR}/src/pyflow.py")
 
+set (PYFLOW_DEPENDS "${PYFLOW_SCRIPT}")
 add_custom_command(
     OUTPUT ${PYFLOW_SCRIPT}
     COMMAND ${CMAKE_COMMAND} -E remove_directory "${PYFLOW_DIR}"
     COMMAND ${CMAKE_COMMAND} -E tar xjf "${THIS_REDIST_DIR}/${PYFLOW_PREFIX}.tar.bz2"
     COMMAND ${CMAKE_COMMAND} -E remove -f "${PYFLOW_DIR}/src/__init__.py"
-    COMMAND ${PYTHON_EXECUTABLE} -m compileall -q "${PYFLOW_DIR}/src"
     COMMENT "Extracting pyflow")
+
+if (PYTHONINTERP_FOUND)
+    set (PYFLOW_DEPENDS "${PYFLOW_SCRIPT}c")
+    add_custom_command(
+        OUTPUT ${PYFLOW_SCRIPT}c
+        COMMAND ${PYTHON_EXECUTABLE} -m compileall -q "${PYFLOW_DIR}/src"
+        DEPENDS ${PYFLOW_SCRIPT}
+        COMMENT "Compiling pyflow")
+endif()
 
 install_python_lib_dir("${PYFLOW_DIR}/src" "${THIS_PYTHON_LIBDIR}/pyflow")
 
 set (THIS_PYFLOW "${THIS_PROJECT_NAME}_pyflow")
-add_custom_target(${THIS_PYFLOW} DEPENDS "${PYFLOW_SCRIPT}")
+add_custom_target(${THIS_PYFLOW} DEPENDS "${PYFLOW_DEPENDS}")
 
 
 # tie results back to parent:
@@ -105,13 +114,14 @@ set(HOEDOWN_PREFIX "hoedown-1.0.2_with_allext")
 set(HOEDOWN_DIR "${CMAKE_CURRENT_BINARY_DIR}/${HOEDOWN_PREFIX}")
 superset(HOEDOWN_PROG "${HOEDOWN_DIR}/hoedown_allext")
 
-add_custom_command(
-    OUTPUT ${HOEDOWN_PROG}
-    COMMAND ${CMAKE_COMMAND} -E remove_directory "${HOEDOWN_DIR}"
-    COMMAND ${CMAKE_COMMAND} -E tar xjf "${THIS_REDIST_DIR}/${HOEDOWN_PREFIX}.tar.bz2"
-    COMMAND $(MAKE) -C "${HOEDOWN_DIR}"
-    COMMENT "Building hoedown markdown parser")
-
-superset(THIS_MARKDOWN "${THIS_PROJECT_NAME}_markdown")
-add_custom_target(${THIS_MARKDOWN} DEPENDS "${HOEDOWN_PROG}")
-
+if (NOT WIN32)
+    add_custom_command(
+        OUTPUT ${HOEDOWN_PROG}
+        COMMAND ${CMAKE_COMMAND} -E remove_directory "${HOEDOWN_DIR}"
+        COMMAND ${CMAKE_COMMAND} -E tar xjf "${THIS_REDIST_DIR}/${HOEDOWN_PREFIX}.tar.bz2"
+        COMMAND $(MAKE) -C "${HOEDOWN_DIR}"
+        COMMENT "Building hoedown markdown parser")
+    
+    superset(THIS_MARKDOWN "${THIS_PROJECT_NAME}_markdown")
+    add_custom_target(${THIS_MARKDOWN} DEPENDS "${HOEDOWN_PROG}")
+endif ()

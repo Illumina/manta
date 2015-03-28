@@ -40,7 +40,7 @@ project (${THIS_PROJECT_NAME})
 # find interpreters
 find_package(PythonInterp)
 if (NOT PYTHONINTERP_FOUND)
-    message (FATAL_ERROR "No python interpreter found")
+    message (WARNING "No python interpreter found, disabling optional python build and installation components. Installed workflow requires python interpreter to run")
 endif()
 
 # paths:
