@@ -18,6 +18,7 @@
 #include "SASOptions.hh"
 
 #include "blt_util/log.hh"
+#include "manta/ProgramUtil.hh"
 #include "options/optionsUtil.hh"
 
 #include "boost/program_options.hpp"
@@ -34,16 +35,7 @@ usage(
     const boost::program_options::options_description& visible,
     const char* msg = nullptr)
 {
-    os << "\n" << prog.name() << ": summarize fragment size stats\n\n";
-    os << "version: " << prog.version() << "\n\n";
-    os << "usage: " << prog.name() << " [options]\n\n";
-    os << visible << "\n\n";
-
-    if (NULL != msg)
-    {
-        os << msg << "\n\n";
-    }
-    exit(2);
+    usage(os, prog, visible, "summarize fragment size stats", "", msg);
 }
 
 

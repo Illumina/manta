@@ -16,10 +16,10 @@
 #include "AlignmentStatsOptions.hh"
 
 #include "blt_util/log.hh"
+#include "manta/ProgramUtil.hh"
 #include "options/AlignmentFileOptionsParser.hh"
 #include "options/optionsUtil.hh"
 
-#include "boost/filesystem.hpp"
 #include "boost/program_options.hpp"
 
 #include <iostream>
@@ -32,18 +32,9 @@ usage(
     std::ostream& os,
     const manta::Program& prog,
     const boost::program_options::options_description& visible,
-    const char* msg = NULL)
+    const char* msg = nullptr)
 {
-    os << "\n" << prog.name() << ": get statistics for SV-calling from alignment files\n\n";
-    os << "version: " << prog.version() << "\n\n";
-    os << "usage: " << prog.name() << " [options] > stats\n\n";
-    os << visible << "\n\n";
-
-    if (NULL != msg)
-    {
-        os << msg << "\n\n";
-    }
-    exit(2);
+    usage(os, prog, visible, "get statistics for SV-calling from alignment files", " > stats", msg);
 }
 
 

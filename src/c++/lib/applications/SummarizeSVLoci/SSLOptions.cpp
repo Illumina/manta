@@ -18,6 +18,7 @@
 #include "SSLOptions.hh"
 
 #include "blt_util/log.hh"
+#include "manta/ProgramUtil.hh"
 
 #include "boost/filesystem.hpp"
 #include "boost/program_options.hpp"
@@ -34,16 +35,7 @@ usage(
     const boost::program_options::options_description& visible,
     const char* msg = nullptr)
 {
-    os << "\n" << prog.name() << ": write graph summary stats to stdout (tsv format)\n\n";
-    os << "version: " << prog.version() << "\n\n";
-    os << "usage: " << prog.name() << " [options] > graph_summary\n\n";
-    os << visible << "\n\n";
-
-    if (NULL != msg)
-    {
-        os << msg << "\n\n";
-    }
-    exit(2);
+    usage(os, prog, visible, "write graph summary stats to stdout (tsv format)", " > graph summary", msg);
 }
 
 

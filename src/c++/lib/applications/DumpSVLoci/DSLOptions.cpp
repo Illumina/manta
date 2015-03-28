@@ -18,11 +18,10 @@
 #include "DSLOptions.hh"
 
 #include "blt_util/log.hh"
+#include "manta/ProgramUtil.hh"
 
 #include "boost/filesystem.hpp"
 #include "boost/program_options.hpp"
-
-#include <iostream>
 
 
 
@@ -32,19 +31,11 @@ usage(
     std::ostream& os,
     const manta::Program& prog,
     const boost::program_options::options_description& visible,
-    const char* msg = NULL)
+    const char* msg = nullptr)
 {
-    os << "\n" << prog.name() << ": write binary sv locus graph to stdout\n\n";
-    os << "version: " << prog.version() << "\n\n";
-    os << "usage: " << prog.name() << " [options] > graph_dump\n\n";
-    os << visible << "\n\n";
-
-    if (NULL != msg)
-    {
-        os << msg << "\n\n";
-    }
-    exit(2);
+    usage(os, prog, visible, "write binary sv locus graph to stdout", " > graph_dump", msg);
 }
+
 
 
 void

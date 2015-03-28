@@ -18,6 +18,7 @@
 #include "ESLOptions.hh"
 
 #include "blt_util/log.hh"
+#include "manta/ProgramUtil.hh"
 #include "options/AlignmentFileOptionsParser.hh"
 #include "options/ReadScannerOptionsParser.hh"
 #include "options/SVLocusSetOptionsParser.hh"
@@ -35,18 +36,9 @@ usage(
     std::ostream& os,
     const manta::Program& prog,
     const boost::program_options::options_description& visible,
-    const char* msg = NULL)
+    const char* msg = nullptr)
 {
-    os << "\n" << prog.name() << ": partition sv evidence regions\n\n";
-    os << "version: " << prog.version() << "\n\n";
-    os << "usage: " << prog.name() << " [options]\n\n";
-    os << visible << "\n\n";
-
-    if (NULL != msg)
-    {
-        os << msg << "\n\n";
-    }
-    exit(2);
+    usage(os, prog, visible, "partition sv evidence regions", "", msg);
 }
 
 

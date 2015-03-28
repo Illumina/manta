@@ -17,6 +17,7 @@
 
 #include "MESOptions.hh"
 #include "blt_util/log.hh"
+#include "manta/ProgramUtil.hh"
 
 #include "boost/filesystem.hpp"
 #include "boost/program_options.hpp"
@@ -34,17 +35,9 @@ usage(
     const boost::program_options::options_description& visible,
     const char* msg = nullptr)
 {
-    os << "\n" << prog.name() << ": merge sv locus edge stats\n\n";
-    os << "version: " << prog.version() << "\n\n";
-    os << "usage: " << prog.name() << " [options]\n\n";
-    os << visible << "\n\n";
-
-    if (nullptr != msg)
-    {
-        os << msg << "\n\n";
-    }
-    exit(2);
+    usage(os, prog, visible, "merge sv locus edge stats", "", msg);
 }
+
 
 
 void

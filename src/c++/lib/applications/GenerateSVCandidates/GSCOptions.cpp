@@ -19,13 +19,12 @@
 #include "EdgeOptionsParser.hh"
 
 #include "blt_util/log.hh"
+#include "manta/ProgramUtil.hh"
 #include "options/AlignmentFileOptionsParser.hh"
 #include "options/ReadScannerOptionsParser.hh"
 #include "options/optionsUtil.hh"
 
 #include "boost/program_options.hpp"
-
-#include <iostream>
 
 
 
@@ -37,18 +36,8 @@ usage(
     const boost::program_options::options_description& visible,
     const char* msg = nullptr)
 {
-    os << "\n" << prog.name() << ": call candidates from an SV Locus graph\n\n";
-    os << "version: " << prog.version() << "\n\n";
-    os << "usage: " << prog.name() << " [options]\n\n";
-    os << visible << "\n\n";
-
-    if (nullptr != msg)
-    {
-        os << msg << "\n\n";
-    }
-    exit(2);
+    usage(os, prog, visible, "call candidates from an SV Locus graph", "", msg);
 }
-
 
 
 static
