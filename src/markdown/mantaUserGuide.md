@@ -3,7 +3,7 @@
 Manta User Guide
 ================
 
-Version: @MANTA_VERSION@
+Version: @WORKFLOW_VERSION@
 
 <script src="tableOfContents.js"></script>
 

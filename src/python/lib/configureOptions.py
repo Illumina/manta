@@ -119,10 +119,6 @@ class ConfigureWorkflowOptions(object) :
         globalConfigPath=os.path.join(cmdlineScriptDir,configFileName)
         updateIniSections(iniSections,getIniSections(globalConfigPath))
 
-        # finally there is the local ini path:
-        #localConfigPath=os.path.join(os.path.abspath('.'),configFileName)
-        #updateIniSections(iniSections,getIniSections(localConfigPath))
-
         parser=self._getOptionParser(iniSections[primary_section],configFileName, cmdlineScriptDir,
                                      version=version, configHelp=configHelp)
         (options,args) = parser.parse_args()
@@ -202,7 +198,7 @@ sge and resume any interrupted execution.
         if configHelp is None :
             configHelp = defaultConfigHelp
 
-        parser.add_option("--config", dest="userConfigPath",type="string",
+        parser.add_option("--config", dest="userConfigPath",type="string", metavar="FILE",
                           help=configHelp)
         parser.add_option("--allHelp", action="store_true",dest="isAllHelp",
                           help="show all extended/hidden options")

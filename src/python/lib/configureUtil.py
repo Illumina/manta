@@ -208,7 +208,7 @@ def checkForBamIndex(bamFile):
 
 def groomBamList(bamList, sampleLabel):
     """
-    check that bam/cram files exist and have an index, convert ot abs path if they check out
+    check that bam/cram files exist and have an index, convert to abs path if they check out
     """
     if bamList is None : return
     for (index,bamFile) in enumerate(bamList) :

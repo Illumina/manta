@@ -28,11 +28,22 @@ function(process_user_guide name)
     set (UG "${name}.md")
     set (UL "${CMAKE_CURRENT_BINARY_DIR}/${name}.html")
 
-    configure_files (${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${UG})
+    # build-time configuration:
+    set (UG_TARGET "${THIS_PROJECT_NAME}_${name}_config")
+
+    add_custom_target(
+        ${UG_TARGET}
+        DEPENDS ${THIS_BUILDTIME_CONFIG_TARGET}
+        COMMAND ${CMAKE_COMMAND}
+        -D CONFIG_FILE=${THIS_BUILDTIME_CONFIG_FILE}
+        -D SOURCE_FILE=${CMAKE_CURRENT_SOURCE_DIR}/${UG}
+        -D DEST_FILE=${CMAKE_CURRENT_BINARY_DIR}/${UG}
+        -P ${THIS_MODULE_DIR}/buildTimeConfigure.cmake)
 
     add_custom_command(
         OUTPUT ${UL}
         COMMAND ${HOEDOWN_PROG} ${CMAKE_CURRENT_BINARY_DIR}/${UG} > ${UL}
+        DEPENDS ${UG_TARGET}
         DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${UG}
         DEPENDS ${THIS_MARKDOWN}
         COMMENT "Converting ${name} to html")

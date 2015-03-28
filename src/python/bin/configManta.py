@@ -21,11 +21,9 @@ scriptDir=os.path.abspath(os.path.dirname(__file__))
 scriptName=os.path.basename(__file__)
 workflowDir=os.path.abspath(os.path.join(scriptDir,"@THIS_RELATIVE_PYTHON_LIBDIR@"))
 
-version="@MANTA_FULL_VERSION@"
-
-
 sys.path.append(workflowDir)
 
+from configBuildTimeInfo import workflowVersion
 from mantaOptions import MantaWorkflowOptionsBase
 from configureUtil import BamSetChecker, groomBamList, OptParseException
 from makeRunScript import makeRunScript
@@ -41,7 +39,7 @@ class MantaWorkflowOptions(MantaWorkflowOptionsBase) :
 
 This script configures the Manta SV analysis pipeline.
 You must specify a BAM or CRAM file for at least one sample.
-""" % (version)
+""" % (workflowVersion)
 
 
     def addWorkflowGroupOptions(self,group) :
@@ -116,7 +114,7 @@ You must specify a BAM or CRAM file for at least one sample.
 def main() :
 
     primarySectionName="manta"
-    options,iniSections=MantaWorkflowOptions().getRunOptions(primarySectionName, version=version)
+    options,iniSections=MantaWorkflowOptions().getRunOptions(primarySectionName, version=workflowVersion)
 
     # we don't need to instantiate the workflow object during configuration,
     # but this is done here to trigger additional parameter validation:

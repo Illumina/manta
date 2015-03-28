@@ -28,6 +28,7 @@ sys.path.append(os.path.abspath(scriptDir))
 pyflowDir=os.path.join(scriptDir,"pyflow")
 sys.path.append(os.path.abspath(pyflowDir))
 
+from configBuildTimeInfo import workflowVersion
 from pyflow import WorkflowRunner
 from workflowUtil import checkFile, ensureDir, preJoin, which, \
                          getNextGenomeSegment, getFastaChromOrderSize, cleanPyEnv
@@ -36,11 +37,7 @@ from configureUtil import getIniSections,dumpIniSections
 
 
 
-def getVersion() :
-    return "@MANTA_VERSION@"
-
-
-__version__ = getVersion()
+__version__ = workflowVersion
 
 
 

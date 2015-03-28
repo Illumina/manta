@@ -89,10 +89,9 @@ def get_run_options(workflowClassName) :
 
     from optparse import OptionGroup
 
+    from configBuildTimeInfo import workflowVersion
     from configureUtil import EpilogOptionParser
     from estimateHardware import EstException, getNodeHyperthreadCoreCount, getNodeMemMb
-
-    version="@MANTA_FULL_VERSION@"
 
     sgeDefaultCores=workflowClassName.runModeDefaultCores('sge')
 
@@ -100,7 +99,7 @@ def get_run_options(workflowClassName) :
 Also note that dryRun option has limited utility when task definition depends on upstream task
 results -- in this case the dry run will not cover the full 'live' run task set."""
 
-    parser = EpilogOptionParser(description="Version: %s" % (version), epilog=epilog, version=version)
+    parser = EpilogOptionParser(description="Version: %s" % (workflowVersion), epilog=epilog, version=workflowVersion)
 
 
     parser.add_option("-m", "--mode", type="string",dest="mode",

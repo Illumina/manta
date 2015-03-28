@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+set -o errexit
 set -o nounset
 set -o pipefail
 set -o xtrace
@@ -23,14 +24,17 @@ elif [ $# == 1 ]; then
 fi
 
 rel2abs() {
-    (cd $1; pwd -P)
+    cd $1; pwd -P
 }
 
 thisdir=$(rel2abs $(dirname $0))
 outdir=$(pwd)
 
 cd $thisdir
-gitversion=$(git describe --dirty --match "v[0-9]*" | sed "s/^v//")
+# don't bother passing --dirty to git describe, the
+# archive step below will remove any changes from
+# HEAD anyway:
+gitversion=$(git describe --match "v[0-9]*" | sed "s/^v//")
 if [ $? != 0 ]; then
     echo "ERROR: 'git describe' failed" 1>&2
     exit 1
@@ -51,13 +55,21 @@ mkdir -p $pname
 cd ..
 git archive --prefix=$pname_root/ HEAD: | tar -x -C $outdir
 
-# make version number substitutions:
+# substitute certain build values for distribution:
 tmp_file=$(mktemp)
 cml=$pname/src/CMakeLists.txt
+awk '
+{
+    if (/^set *\(DEVELOPER_MODE/) printf "set (DEVELOPER_MODE false)\n";
+    else print;
+}' $cml >| $tmp_file
+mv $tmp_file $cml
+
+cml=$pname/src/cmake/getBuildTimeConfigInfo.cmake
 awk -v gver=$gitversion '
 {
-    if      ($1=="set\(MANTA_VERSION") printf "set(MANTA_VERSION \"%s\")\n",gver;
-    else if ($1=="set\(DEVELOPER_MODE") printf "set(DEVELOPER_MODE false)\n";
+    if      (/^set *\(WORKFLOW_VERSION/) printf "set (WORKFLOW_VERSION \"%s\")\n",gver;
+    else if (/Detected workflow version/) printf "";
     else print;
 }' $cml >| $tmp_file
 mv $tmp_file $cml

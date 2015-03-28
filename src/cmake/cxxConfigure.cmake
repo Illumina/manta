@@ -107,9 +107,10 @@ function(get_compiler_name_version compiler_name compiler_version)
     set(${compiler_version} ${this_version} PARENT_SCOPE)
 endfunction()
 
-macro(get_compiler_version compiler_version)
-    get_compiler_name_version(${CMAKE_CXX_COMPILER} compiler_version)
-endmacro()
+function(get_compiler_version compiler_version)
+    get_compiler_name_version(${CMAKE_CXX_COMPILER} this_version)
+    set(${compiler_version} ${this_version} PARENT_SCOPE)
+endfunction()
 
 # clang doesn't make finding the version easy for us...
 macro(get_clang_version compiler_version)
@@ -129,31 +130,32 @@ set(min_gxx_version "4.7")
 set(min_clang_version "3.2")
 set(min_intel_version "12.0") # guestimate based on intel support documentation
 
+set (CXX_COMPILER_NAME "${CMAKE_CXX_COMPILER_ID}")
+set (COMPILER_VERSION "UNKNOWN")
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    get_compiler_version(compiler_version)
-    test_min_compiler(${compiler_version} "${min_gxx_version}" "g++")
-    message (STATUS "Using compiler: g++ version ${compiler_version}")
-
+    get_compiler_version(COMPILER_VERSION)
+    set (CXX_COMPILER_NAME "g++")
+    test_min_compiler(${COMPILER_VERSION} "${min_gxx_version}" "${CXX_COMPILER_NAME}")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    get_clang_version(compiler_version)
-    test_min_compiler(${compiler_version} "${min_clang_version}" "clang++")
-    message (STATUS "Using compiler: clang++ version ${compiler_version}")
-
+    get_clang_version(COMPILER_VERSION)
+    set (CXX_COMPILER_NAME "clang++")
+    test_min_compiler(${COMPILER_VERSION} "${min_clang_version}" "${CXX_COMPILER_NAME}")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
-    get_compiler_version(compiler_version)
-    test_min_compiler(${compiler_version} "${min_intel_version}" "icpc")
-    message (STATUS "Using compiler: Intel version ${compiler_version}")
+    get_compiler_version(COMPILER_VERSION)
+    set (CXX_COMPILER_NAME "icpc")
+    test_min_compiler(${COMPILER_VERSION} "${min_intel_version}" "${CXX_COMPILER_NAME}")
+endif ()
 
+message (STATUS "Using compiler: ${CXX_COMPILER_NAME} version ${COMPILER_VERSION}")
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
     # for intel we also need to test the minimum version of g++ currently
-    # in the path (because this is the stdc++ library that # intel will use):
+    # in the path (because this is the stdc++ library that intel will use):
     get_compiler_name_version("g++" gxx_compiler_version)
     test_min_compiler(${gxx_compiler_version} "${min_gxx_version}" "g++ libstdc++ (library used by icpc)")
     message (STATUS "Using libstdc++: gnu version ${gxx_compiler_version}")
-
-else ()
-    message (STATUS "Using compiler: ${CMAKE_CXX_COMPILER_ID}")
 endif ()
-
 
 
 #
@@ -166,7 +168,7 @@ endif ()
 ##
 set (IS_STANDARD_STATIC FALSE)
 if     (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    if (NOT (${compiler_version} VERSION_LESS "4.5"))
+    if (NOT (${COMPILER_VERSION} VERSION_LESS "4.5"))
         set (IS_STANDARD_STATIC TRUE)
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
     endif ()
@@ -184,8 +186,8 @@ endif ()
 ## set bug workarounds:
 ##
 if     (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    if (((${compiler_version} VERSION_EQUAL "4.7") OR (${compiler_version} VERSION_EQUAL "4.7.3")) OR
-        ((${compiler_version} VERSION_EQUAL "4.8") OR (${compiler_version} VERSION_EQUAL "4.8.2")))
+    if (((${COMPILER_VERSION} VERSION_EQUAL "4.7") OR (${COMPILER_VERSION} VERSION_EQUAL "4.7.3")) OR
+        ((${COMPILER_VERSION} VERSION_EQUAL "4.8") OR (${COMPILER_VERSION} VERSION_EQUAL "4.8.2")))
         # workaround for: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=58800
         add_definitions( -DBROKEN_NTH_ELEMENT )
     endif ()
@@ -210,11 +212,11 @@ if (GNU_COMPAT_COMPILER)
 endif ()
 
 if     (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    if (NOT (${compiler_version} VERSION_LESS "4.2"))
+    if (NOT (${COMPILER_VERSION} VERSION_LESS "4.2"))
         set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wlogical-op")
     endif ()
 
-    if ((${compiler_version} VERSION_LESS "4.8") AND (NOT (${compiler_version} VERSION_LESS "4.7")))
+    if ((${COMPILER_VERSION} VERSION_LESS "4.8") AND (NOT (${COMPILER_VERSION} VERSION_LESS "4.7")))
         # switching off warning about unused function because otherwise compilation will fail with g++ 4.7.3 in Ubuntu,
         # don't know which patch levels are affected, so marking out all gcc 4.7.X
         set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-unused-function")
@@ -239,7 +241,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-documentation -Wno-float-equal")
     endif ()
 
-    if (NOT (${compiler_version} VERSION_LESS "3.3"))
+    if (NOT (${COMPILER_VERSION} VERSION_LESS "3.3"))
         set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Woverloaded-shift-op-parentheses")
 
         if (${IS_WARN_EVERYTHING})
@@ -247,11 +249,11 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         endif ()
     endif ()
 
-    if (NOT (${compiler_version} VERSION_LESS "3.4"))
+    if (NOT (${COMPILER_VERSION} VERSION_LESS "3.4"))
         set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wheader-guard -Wlogical-not-parentheses")
     endif ()
 
-    if (NOT (${compiler_version} VERSION_LESS "3.6"))
+    if (NOT (${COMPILER_VERSION} VERSION_LESS "3.6"))
         set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wunreachable-code-return -Wkeyword-macro -Winconsistent-missing-override")
 
         if (${IS_WARN_EVERYTHING})
@@ -293,11 +295,11 @@ endif()
 if (CMAKE_BUILD_TYPE STREQUAL "ASan")
     set (IS_ASAN_SUPPORTED false)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        if (NOT (${compiler_version} VERSION_LESS "4.8"))
+        if (NOT (${COMPILER_VERSION} VERSION_LESS "4.8"))
             set (IS_ASAN_SUPPORTED true)
         endif ()
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        if (NOT (${compiler_version} VERSION_LESS "3.1"))
+        if (NOT (${COMPILER_VERSION} VERSION_LESS "3.1"))
             set (IS_ASAN_SUPPORTED true)
         endif ()
     endif ()
@@ -319,7 +321,7 @@ if (GNU_COMPAT_COMPILER)
     #
     set(IS_WERROR true)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        if (${compiler_version} VERSION_LESS "4.2")
+        if (${COMPILER_VERSION} VERSION_LESS "4.2")
             set(IS_WERROR false)
         endif ()
     endif ()
@@ -345,9 +347,25 @@ if (GNU_COMPAT_COMPILER)
 
 endif()
 
+# cmake configure-time c++ configuration:
 set(THIS_CXX_CONFIG_H_DIR ${CMAKE_CURRENT_BINARY_DIR}/lib)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/lib/common/config.h.in ${THIS_CXX_CONFIG_H_DIR}/common/config.h @ONLY)
+set (CONFIG_DEST_FILE ${THIS_CXX_CONFIG_H_DIR}/common/config.h)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/lib/common/config.h.in ${CONFIG_DEST_FILE} @ONLY)
 
+# build-time c++ configuration:
+# note: (csaunders) tried to do this as add_custom_command every which way, can't get cmake to figure out
+#       dependency chain in this case
+set (CXX_BUILDTIME_CONFIG_BASENAME "configBuildTimeInfo.h")
+set (CXX_BUILDTIME_CONFIG_SOURCE_FILE ${CMAKE_CURRENT_SOURCE_DIR}/lib/common/${CXX_BUILDTIME_CONFIG_BASENAME}.in)
+set (CXX_BUILDTIME_CONFIG_DEST_FILE ${THIS_CXX_CONFIG_H_DIR}/common/${CXX_BUILDTIME_CONFIG_BASENAME})
+set (CXX_BUILDTIME_CONFIG_TARGET "${THIS_PROJECT_NAME}_cxx_buildtime_config")
+add_custom_target(${CXX_BUILDTIME_CONFIG_TARGET}
+    DEPENDS ${THIS_BUILDTIME_CONFIG_TARGET}
+    COMMAND ${CMAKE_COMMAND}
+    -D CONFIG_FILE=${THIS_BUILDTIME_CONFIG_FILE}
+    -D SOURCE_FILE=${CXX_BUILDTIME_CONFIG_SOURCE_FILE}
+    -D DEST_FILE=${CXX_BUILDTIME_CONFIG_DEST_FILE}
+    -P ${THIS_MODULE_DIR}/buildTimeConfigure.cmake)
 
 #
 # include dirs:

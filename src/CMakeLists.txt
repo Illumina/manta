@@ -45,22 +45,24 @@ endif()
 
 # paths:
 set(THIS_REDIST_DIR "${CMAKE_SOURCE_DIR}/../redist")
-set(THIS_BOOTSTRAP_DIR "${CMAKE_SOURCE_DIR}/cmake/bootstrap")
+set(THIS_MODULE_DIR "${CMAKE_SOURCE_DIR}/cmake")
 set(THIS_SOURCE_QC_DIR "${CMAKE_SOURCE_DIR}/srcqc")
 
-# get version
-set (THIS_GETGIT_CMAKE "${THIS_REDIST_DIR}/cmake-modules-c99fd3/GetGitRevisionDescription.cmake")
-include ("${THIS_GETGIT_CMAKE}")
-git_describe(THIS_GIT_VERSION --match "v[0-9]*")
-if (NOT THIS_GIT_VERSION)
-    set(THIS_GIT_VERSION "UNKNOWN")
-endif ()
-set(MANTA_VERSION "${THIS_GIT_VERSION}")
-set(MANTA_FULL_VERSION "${THIS_PROJECT_NAME}-${MANTA_VERSION}")
-message (STATUS "MANTA_VERSION: ${MANTA_VERSION}")
+# Create package versioning target - version derived from git describe except for
+# release tarballs. Version file is treated as always out of date.
+set(THIS_BUILDTIME_CONFIG_FILE "${CMAKE_CURRENT_BINARY_DIR}/buildTimeConfigInfo.txt")
+set(THIS_BUILDTIME_CONFIG_TARGET "${THIS_PROJECT_NAME}_buildtime_config")
+add_custom_target(
+    ${THIS_BUILDTIME_CONFIG_TARGET}
+    ALL
+    COMMAND ${CMAKE_COMMAND}
+    -D REDIST_DIR=${THIS_REDIST_DIR}
+    -D CONFIG_FILE=${THIS_BUILDTIME_CONFIG_FILE}
+    -P ${THIS_MODULE_DIR}/getBuildTimeConfigInfo.cmake
+    COMMENT "Updating buildtime config info")
 
-set (THIS_GLOBALS_CMAKE "${CMAKE_SOURCE_DIR}/cmake/globals.cmake")
-set (THIS_MACROS_CMAKE "${CMAKE_SOURCE_DIR}/cmake/macros.cmake")
+set (THIS_GLOBALS_CMAKE "${THIS_MODULE_DIR}/globals.cmake")
+set (THIS_MACROS_CMAKE "${THIS_MODULE_DIR}/macros.cmake")
 
 # add custom functions:
 include ("${THIS_MACROS_CMAKE}")
@@ -91,7 +93,7 @@ message (STATUS "BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 if (CPACK_GENERATOR)
     message (STATUS "Configuring to produce the following package types: ${CPACK_GENERATOR}")
     set(CPACK_PACKAGE_VENDOR "Illumina")
-    set(CPACK_PACKAGE_VERSION "${MANTA_VERSION}")
+    #set(CPACK_PACKAGE_VERSION "${WORKFLOW_VERSION}")
     set(CPAKC_PACKAGE_CONTACT "csaunders@illumina.com")
 
     if (CPACK_GENERATOR STREQUAL "RPM")
@@ -144,7 +146,7 @@ set(THIS_OPT "${THIS_PROJECT_NAME}_opt")
 add_custom_target(${THIS_OPT} ALL)
 
 # redist includes
-include ("${CMAKE_SOURCE_DIR}/cmake/boost.cmake")
+include ("${THIS_MODULE_DIR}/boost.cmake")
 
 # global source QC -- don't allow non-ascii chars in source files:
 set(THIS_SOURCE_CHECK "${THIS_PROJECT_NAME}_source_check")
