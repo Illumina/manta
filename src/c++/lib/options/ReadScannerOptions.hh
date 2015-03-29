@@ -30,23 +30,23 @@ struct ReadScannerOptions
     unsigned minTier2Mapq = 5;
 
     /// report breakend regions with x prob regions removed from each edge
-    float breakendEdgeTrimProb = 0.25;
+    float breakendEdgeTrimProb = 0.25f;
 
     /// report breakend regions with x prob regions removed from each edge
     /// used only for 'large-scale' events.
-    float largeScaleEventBreakendEdgeTrimProb = 0.1;
+    float largeScaleEventBreakendEdgeTrimProb = 0.1f;
 
     /// report a pair as "proper pair" if fragment size is within x prob region removed from each edge
-    float properPairTrimProb = 0.01;
+    float properPairTrimProb = 0.01f;
 
     /// add a pair to the evidence pool if frag size is within x prob region removed from each edge
-    float evidenceTrimProb = 0.15;
+    float evidenceTrimProb = 0.15f;
 
     /// fragment length to search upstream of a breakend for shadow read support
-    float shadowSearchRangeProb = 0.05;
+    float shadowSearchRangeProb = 0.05f;
 
     /// multiplier for fragment length
-    float shadowSearchRangeFactor = 1.2;
+    float shadowSearchRangeFactor = 1.2f;
 
     /// ignore indels smaller than this when building graph, constructing candidates and scoring output:
     unsigned minCandidateVariantSize = 10;
@@ -62,7 +62,7 @@ struct ReadScannerOptions
     /// whenever a breakend is predicted from an individual read split (ie. non-assembled),
     /// set the predicted breakend size to this fraction of the
     /// event size (modified by the min and max limits below)
-    float splitBreakendSizeFraction = 0.1;
+    float splitBreakendSizeFraction = 0.1f;
 
     /// whenever a breakend is predicted from an individual read split (ie. non-assembled),
     /// the predicted breakend range should be no larger than this:
@@ -100,4 +100,3 @@ struct ReadScannerOptions
     /// the maximum depth for a whole locus for remote read retrieval (ie. MAPQ0 chimera mates retrieved for large insertion assembly)
     float maxDepthFactorRemoteReads = 7;
 };
-

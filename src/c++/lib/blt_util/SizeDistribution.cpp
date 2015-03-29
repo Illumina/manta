@@ -36,7 +36,7 @@ populateCdfQuantiles(
     std::vector<int>& quantiles)
 {
     const unsigned quantileNum(quantiles.size());
-    const float pFactor(1./static_cast<float>(totalCount));
+    const float pFactor(1/static_cast<float>(totalCount));
 
     unsigned fillBase(0);
     unsigned cumulativeCount(0);

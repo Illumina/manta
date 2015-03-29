@@ -47,19 +47,31 @@ foreach (SOURCE_FILE ${THIS_LIBRARY_SOURCES})
     endif ()
 endforeach ()
 
+# we don't need to add headers to the library for the build to work, but to
+# make the solution easier to work with on windows, we add headers to each
+# library target:
+if (WIN32)
+    file(GLOB THIS_LIBRARY_HEADERS *.hh)
+    set (THIS_LIBRARY_SOURCES ${THIS_LIBRARY_SOURCES} ${THIS_LIBRARY_HEADERS})
+endif ()
+
 if (THIS_LIBRARY_SOURCES)
     #include_directories (${THIS_COMMON_INCLUDE})
     set (LIB_TARGET_NAME "${THIS_PROJECT_NAME}_${CURRENT_DIR_NAME}")
     add_library     (${LIB_TARGET_NAME} STATIC ${THIS_LIBRARY_SOURCES})
     add_dependencies(${LIB_TARGET_NAME} ${THIS_OPT})
+
+    file(RELATIVE_PATH THIS_RELATIVE_LIBDIR "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}")
+    set_property(TARGET ${LIB_TARGET_NAME} PROPERTY FOLDER "${THIS_RELATIVE_LIBDIR}")
 endif()
 
-##
-## build the unit tests if a "test" subdirectory is found:
-##
-find_path(${CMAKE_CURRENT_SOURCE_DIR}_TEST_DIR test PATHS ${CMAKE_CURRENT_SOURCE_DIR} NO_DEFAULT_PATH)
-if (${CMAKE_CURRENT_SOURCE_DIR}_TEST_DIR)
-    message (STATUS "Adding c++ test subdirectory:    ${CURRENT_DIR_NAME}/test")
-    add_subdirectory (test)
+if (NOT WIN32)
+    ##
+    ## build the unit tests if a "test" subdirectory is found:
+    ##
+    find_path(${CMAKE_CURRENT_SOURCE_DIR}_TEST_DIR test PATHS ${CMAKE_CURRENT_SOURCE_DIR} NO_DEFAULT_PATH)
+    if (${CMAKE_CURRENT_SOURCE_DIR}_TEST_DIR)
+        message (STATUS "Adding c++ test subdirectory:    ${CURRENT_DIR_NAME}/test")
+        add_subdirectory (test)
+    endif ()
 endif ()
-

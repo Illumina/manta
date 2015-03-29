@@ -23,13 +23,19 @@
 
 #pragma once
 
-#include <string>
-#include <stdexcept>
+
+#include "blt_util/thirdparty_push.h"
+
+#include "boost/cerrno.hpp"
+#include "boost/lexical_cast.hpp"
+#include "boost/exception/all.hpp"
+#include "boost/throw_exception.hpp"
+
+#include "blt_util/thirdparty_pop.h"
+
 #include <ios>
-#include <boost/cerrno.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/exception/all.hpp>
-#include <boost/throw_exception.hpp>
+#include <stdexcept>
+#include <string>
 
 namespace illumina
 {

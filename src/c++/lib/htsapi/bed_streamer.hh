@@ -21,7 +21,7 @@
 #include "hts_streamer.hh"
 
 
-struct bed_streamer : private hts_streamer
+struct bed_streamer : public hts_streamer
 {
     bed_streamer(
         const char* filename,

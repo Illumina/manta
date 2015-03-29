@@ -28,7 +28,6 @@ next()
 {
     if (_is_stream_end || (nullptr==_hfp) || (nullptr==_titr)) return false;
 
-    char*& record_string(_kstr.s);
     while (true)
     {
         if (tbx_itr_next(_hfp, _tidx, _titr, &_kstr) < 0)
@@ -37,20 +36,20 @@ next()
         }
         else
         {
-            _is_stream_end=(nullptr == record_string);
+            _is_stream_end=(nullptr == _kstr.s);
         }
         _is_record_set=(! _is_stream_end);
         if (! _is_record_set) break;
 
         // filter out header for whole file access case:
-        if (record_string[0] == '#') continue;
+        if (_kstr.s[0] == '#') continue;
 
         _record_no++;
 
-        if (! _bedrec.set(record_string))
+        if (! _bedrec.set(_kstr.s))
         {
             std::ostringstream oss;
-            oss << "ERROR: Can't parse BED record: '" << record_string << "'\n";
+            oss << "ERROR: Can't parse BED record: '" << _kstr.s << "'\n";
             throw blt_exception(oss.str().c_str());
         }
         if (! _bedrec.is_valid()) continue;

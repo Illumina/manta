@@ -64,7 +64,7 @@ struct CallOptionsDiploidDeriv : private boost::noncopyable
 
         prior[HET] = opt.indelPrior;
         prior[HOM] = opt.indelPrior/2;
-        prior[REF] = 1. - prior[HET] - prior[HOM];
+        prior[REF] = 1 - prior[HET] - prior[HOM];
 
         for (unsigned i(0); i<SIZE; ++i)
         {
@@ -95,7 +95,7 @@ struct CallOptionsSomaticDeriv : private boost::noncopyable
         // this assumes all states independent, and somatic and noise only occur on germline ref GT background:
         const float nonref(prior[SOM]+prior[NOISE]+prior[HET]+prior[HOM]);
         assert(nonref>=0 && nonref<=1);
-        prior[REF] = 1. - nonref;
+        prior[REF] = 1 - nonref;
 
         for (unsigned i(0); i<SIZE; ++i)
         {

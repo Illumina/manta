@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "blt_util/compat_util.hh"
 #include "htsapi/bam_record.hh"
 
 #include "boost/utility.hpp"

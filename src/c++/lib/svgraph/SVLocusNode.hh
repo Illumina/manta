@@ -19,9 +19,13 @@
 
 #include "svgraph/GenomeInterval.hh"
 
+#include "blt_util/thirdparty_push.h"
+
 #include "boost/serialization/map.hpp"
 #include "boost/serialization/vector.hpp"
 #include "boost/serialization/split_member.hpp"
+
+#include "blt_util/thirdparty_pop.h"
 
 #include <iosfwd>
 #include <limits>

@@ -25,7 +25,7 @@ struct PairOptions
 {
     PairOptions(const bool isRNA) :
         minFragSupport(50),
-        minFragProb(! isRNA ? 0.0001 : 0.0)
+        minFragProb(! isRNA ? 0.0001f : 0.0f)
     {}
 
     /// we're interested in any fragments which cross center pos with at least N bases of support on each side

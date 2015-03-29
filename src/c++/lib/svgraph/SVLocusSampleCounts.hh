@@ -22,6 +22,7 @@
 
 #include <algorithm>
 #include <iosfwd>
+#include <vector>
 
 
 /// enumerate evidence type estimated on input for each sample

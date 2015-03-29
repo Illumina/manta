@@ -59,7 +59,7 @@ getLnLhood(
     const bool isBest,
     const float bestLnLhood)
 {
-    static const float ln_one_third(std::log(1./3.));
+    static const float ln_one_third(std::log(1/3.f));
 
     const unsigned querySize(querySeq.size());
 
@@ -80,7 +80,7 @@ getLnLhood(
         {
             if ((querySeq[i] == 'N') || (targetBase == 'N'))
             {
-                static const float lnRandomBase(std::log(0.25));
+                static const float lnRandomBase(-std::log(4.f));
                 lnLhood += lnRandomBase;
             }
             else

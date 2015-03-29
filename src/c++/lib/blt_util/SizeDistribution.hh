@@ -22,6 +22,7 @@
 #include "boost/serialization/nvp.hpp"
 #include "boost/serialization/split_member.hpp"
 
+#include <functional>
 #include <iosfwd>
 #include <map>
 #include <vector>
@@ -45,7 +46,6 @@ struct SizeData
 /// it is not used outside of serialize/deserialize steps
 struct SizeMapXmlElement
 {
-    friend class boost::serialization::access;
     template<class Archive>
     void serialize(Archive& ar, const unsigned /*version*/)
     {
@@ -57,8 +57,7 @@ struct SizeMapXmlElement
     unsigned count;
 };
 
-BOOST_CLASS_IMPLEMENTATION(SizeMapXmlElement, boost::serialization::object_serializable)
-
+BOOST_CLASS_IMPLEMENTATION(SizeMapXmlElement, object_serializable)
 
 
 /// accumulate size observations and provide cdf/quantile/smoothed-pdf for the distribution
@@ -154,7 +153,7 @@ private:
     mutable map_type _sizeMap;
 };
 
-BOOST_CLASS_IMPLEMENTATION(SizeDistribution, boost::serialization::object_serializable)
+BOOST_CLASS_IMPLEMENTATION(SizeDistribution, object_serializable)
 
 
 std::ostream&

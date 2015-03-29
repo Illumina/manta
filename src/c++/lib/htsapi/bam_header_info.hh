@@ -18,9 +18,13 @@
 
 #include "bam_util.hh"
 
+#include "blt_util/thirdparty_push.h"
+
 #include "boost/serialization/string.hpp"
 #include "boost/serialization/vector.hpp"
 #include "boost/serialization/map.hpp"
+
+#include "blt_util/thirdparty_pop.h"
 
 #include <iosfwd>
 #include <string>

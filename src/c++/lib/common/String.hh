@@ -25,7 +25,7 @@
 
 #include "common/Exceptions.hh"
 
-#include <boost/algorithm/string.hpp>
+#include "boost/algorithm/string.hpp"
 
 
 /*****************************************************************************/

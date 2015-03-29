@@ -25,7 +25,7 @@
 #include <iostream>
 
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 #include "compat_util_win32_realpath.c"
 #endif
 
@@ -66,7 +66,7 @@ compat_round(const double x)
 const char*
 compat_basename(const char* str)
 {
-#ifdef _WIN32
+#ifdef _MSC_VER
     static const char pathsep('\\');
 #else
     static const char pathsep('/');

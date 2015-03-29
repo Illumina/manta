@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "blt_util/compat_util.hh"
+
 #include <exception>
 #include <string>
 
@@ -25,7 +27,7 @@ struct blt_exception : public std::exception
 {
     blt_exception(const char* s);
 
-    const char* what() const noexcept
+    const char* what() const COMPAT_NOEXCEPT
     {
         return message.c_str();
     }

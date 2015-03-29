@@ -304,7 +304,7 @@ private:
         rotateLeft(a, (s-n));
     }
 
-    static constexpr unsigned _minChunk = 1024;
+    static const unsigned _minChunk = 1024;
 
     bool _isEmpty;
     unsigned _minKeyIndex;

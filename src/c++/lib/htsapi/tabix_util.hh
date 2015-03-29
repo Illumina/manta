@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "blt_util/thirdparty_push.h"
 
 extern "C" {
 #define __STDC_LIMIT_MACROS
@@ -24,3 +25,4 @@ extern "C" {
 #include "htslib/tbx.h"
 }
 
+#include "blt_util/thirdparty_pop.h"

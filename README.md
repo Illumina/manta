@@ -41,7 +41,7 @@ Manta requires a compiler supporting most of the C++11 standard. These are the
 current minimum versions enforced by the build system:
 
 * python 2.4+
-* gcc 4.7+ OR clang 3.2+
+* gcc 4.7+ OR clang 3.2+ (OR Visual Studio 2013+, see windev note below)
 * libz (including headers)
 
 #### Runtime prerequisites
@@ -56,9 +56,7 @@ current minimum versions enforced by the build system:
 
 ### Build procedure
 
-After acquiring a release distribution of the source code, the build procedure is:
-
-* Unpack the source code
+After acquiring a release distribution of the source code, the build procedure is: * Unpack the source code
 * Create a separate `build` directory (note an out-of-source build is
   required.)
 * Configure the build
@@ -116,3 +114,20 @@ Developer build configuration
 When the Manta source is cloned from github, it is configured for development
 rather than end-user distribution. As such, all builds include -Werror. If
 cppcheck is found any detected issue is converted to a build error.
+
+
+Windows developer support
+-------------------------
+
+Manta does not link or run on windows. The build system does however
+facilitate developers preferring to use Visual Studio. During
+windows cmake configuration all final library linking is disabled and all
+third party libraries are unpacked such that their headers can be
+included, but the libraries are not compiled. Cmake generated VS solutions allow
+manta c++ code to be browsed, analyzed and compiled to the library level.
+Note that unit tests can not be run under this scheme -- just like the other
+manta executables, they can't be linked without 3rd party libraries.
+
+Note that the c++11 features used by manta require at least Visual Studio
+2013.
+

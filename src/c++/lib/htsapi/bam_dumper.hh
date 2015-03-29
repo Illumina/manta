@@ -16,9 +16,7 @@
 
 #pragma once
 
-extern "C" {
-#include "sam.h"
-}
+#include "sam_util.hh"
 
 
 struct bam_dumper

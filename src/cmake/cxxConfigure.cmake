@@ -56,12 +56,18 @@ include ("${THIS_MACROS_CMAKE}")
 #endif ()
 
 # required support for gzip compression
-static_find_library(ZLIB zlib.h z)
-if    (HAVE_ZLIB)
+find_package(ZLIB)
+#static_find_library(ZLIB zlib.h z)
+if    (ZLIB_FOUND)
+    include_directories(${ZLIB_INCLUDE_DIRS})
     set  (THIS_ADDITIONAL_LIB ${THIS_ADDITIONAL_LIB} z)
-    message(STATUS "Gzip compression supported")
+    message(STATUS "zlib found")
 else  ()
-    message(FATAL_ERROR "No support for gzip compression")
+    set(TMP_MSG "zlib library not found")
+    if (WIN32)
+        set (TMP_MSG "${TMP_MSG}. On win32 this can be installed as part of GnuWin32: http://gnuwin32.sourceforge.net/downlinks/zlib.php")
+    endif ()
+    message(FATAL_ERROR "${TMP_MSG}")
 endif ()
 
 # required support for librt to allow boost chrono
@@ -73,11 +79,13 @@ endif ()
 find_package( Threads )
 
 # setup ccache if found in path
-find_program(CCACHE_PATH ccache)
-set (IS_CCACHE TRUE)
-if (CCACHE_PATH STREQUAL "CCACHE_PATH-NOTFOUND")
-    set (IS_CCACHE FALSE)
-endif()
+if (NOT WIN32)
+    find_program(CCACHE_PATH ccache)
+    set (IS_CCACHE TRUE)
+    if (CCACHE_PATH STREQUAL "CCACHE_PATH-NOTFOUND")
+        set (IS_CCACHE FALSE)
+    endif()
+endif ()
 
 if (${IS_CCACHE})
     message (STATUS "Found ccache: ${CCACHE_PATH}")
@@ -126,9 +134,10 @@ macro(test_min_compiler compiler_version min_compiler_version compiler_label)
 endmacro()
 
 
-set(min_gxx_version "4.7")
-set(min_clang_version "3.2")
-set(min_intel_version "12.0") # guestimate based on intel support documentation
+set (min_gxx_version "4.7")
+set (min_clang_version "3.2")
+set (min_intel_version "12.0") # guestimate based on intel support documentation
+set (min_msvc_version "1800") # cl.exe 18, as shipped in Visual Studio 12 2013
 
 set (CXX_COMPILER_NAME "${CMAKE_CXX_COMPILER_ID}")
 set (COMPILER_VERSION "UNKNOWN")
@@ -145,6 +154,10 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
     get_compiler_version(COMPILER_VERSION)
     set (CXX_COMPILER_NAME "icpc")
     test_min_compiler(${COMPILER_VERSION} "${min_intel_version}" "${CXX_COMPILER_NAME}")
+elseif (MSVC)
+    set (COMPILER_VERSION ${MSVC_VERSION})
+    set (CXX_COMPILER_NAME "msvc")
+    test_min_compiler(${COMPILER_VERSION} "${min_msvc_version}" "${CXX_COMPILER_NAME}")
 endif ()
 
 message (STATUS "Using compiler: ${CXX_COMPILER_NAME} version ${COMPILER_VERSION}")
@@ -197,9 +210,11 @@ endif ()
 ##
 ## set warning flags:
 ##
+
+
 set (GNU_COMPAT_COMPILER ( (CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")))
-if (GNU_COMPAT_COMPILER)
-    set (CXX_WARN_FLAGS "-Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -pedantic -Wunused-parameter")
+if (${GNU_COMPAT_COMPILER})
+    set (CXX_WARN_FLAGS "-Wall -Wextra -Wshadow -Wunused -Wshadow -Wunused -Wpointer-arith -Winit-self -pedantic -Wunused-parameter")
     set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wundef -Wdisabled-optimization -Wno-unknown-pragmas")
     set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wempty-body -Wdeprecated -Wno-missing-braces")
     if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
@@ -209,6 +224,8 @@ if (GNU_COMPAT_COMPILER)
     if (NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
         set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wuninitialized")
     endif ()
+elseif (MSVC)
+    set (CXX_WARN_FLAGS "/W3")
 endif ()
 
 if     (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -274,7 +291,7 @@ endif()
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX_WARN_FLAGS}")
 
 
-if (GNU_COMPAT_COMPILER)
+if (${GNU_COMPAT_COMPILER})
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
     set (CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 
@@ -309,8 +326,17 @@ if (CMAKE_BUILD_TYPE STREQUAL "ASan")
     endif ()
 endif ()
 
+#
+# take advantage of analyze on VS
+#
+if (MSVC)
+    if (IS_MSVC_ANALYZE)
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /analyze")
+    endif ()
+endif ()
 
-if (GNU_COMPAT_COMPILER)
+
+if (${GNU_COMPAT_COMPILER})
 
   if (${DEVELOPER_MODE})
     # some compiler versions will produce warnings with no reasonable workaround,
@@ -366,6 +392,12 @@ add_custom_target(${CXX_BUILDTIME_CONFIG_TARGET}
     -D SOURCE_FILE=${CXX_BUILDTIME_CONFIG_SOURCE_FILE}
     -D DEST_FILE=${CXX_BUILDTIME_CONFIG_DEST_FILE}
     -P ${THIS_MODULE_DIR}/buildTimeConfigure.cmake)
+
+# special config hack for windows
+if (WIN32)
+    set (UNSTD_DEST_FILE ${THIS_CXX_CONFIG_H_DIR}/unistd.h)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/lib/blt_util/compat_unistd.h ${UNSTD_DEST_FILE} COPYONLY)
+endif ()
 
 #
 # include dirs:

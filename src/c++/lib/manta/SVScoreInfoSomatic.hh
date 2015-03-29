@@ -74,8 +74,8 @@ inline
 float
 altFraction(
     const index_t i,
-    const double somaticFreq,
-    const double noiseFreq)
+    const float somaticFreq,
+    const float noiseFreq)
 {
     switch (i)
     {

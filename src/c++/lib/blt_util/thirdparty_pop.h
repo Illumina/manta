@@ -11,16 +11,11 @@
 // <https://github.com/sequencing/licenses/>
 //
 
-///
-/// \author Chris Saunders
-///
+// special header to 'wrap' third-party libraries with common alt compiler settings
 
-#pragma once
+#ifdef _MSC_VER
 
-#include "blt_util/thirdparty_push.h"
+#pragma warning( pop )
 
-extern "C" {
-#include "sam.h"
-}
+#endif
 
-#include "blt_util/thirdparty_pop.h"

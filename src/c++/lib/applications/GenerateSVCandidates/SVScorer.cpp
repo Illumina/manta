@@ -209,8 +209,8 @@ lnToProb(
     float& higher)
 {
     lower = std::exp(lower-higher);
-    higher = 1./(lower+1.);
-    lower  = lower/(lower+1.);
+    higher = 1/(lower+1);
+    lower  = lower/(lower+1);
 }
 
 
@@ -268,7 +268,7 @@ addConservativeSplitReadSupport(
     const bool isRead1,
     SVSampleInfo& sampleBaseInfo)
 {
-    static const float splitSupportProb(0.999);
+    static const float splitSupportProb(0.999f);
 
     // only consider reads where at least one allele and one breakend is confident
     //
@@ -334,7 +334,7 @@ addConservativeSpanningPairSupport(
     const SVFragmentEvidence& fragev,
     SVSampleInfo& sampleBaseInfo)
 {
-    static const float pairSupportProb(0.9);
+    static const float pairSupportProb(0.9f);
 
     if (! fragev.isAnySpanningPairSupport()) return;
 
@@ -1367,7 +1367,7 @@ scoreSomaticSV(
     // somatic score is computed at a high stringency date tier (1) and low stringency tier (2), the min value is
     // kept as the final reported quality:
     static const unsigned tierCount(2);
-    double tierScore[tierCount] = { 0. , 0. };
+    int tierScore[tierCount] = { 0 , 0 };
 
     /// for multi-junction events, we use the prior noise weight associated with the largest event:
     float largeNoiseWeight(0.f);
@@ -1501,7 +1501,7 @@ scoreSomaticSV(
 #endif
 
         // don't bother with tier2 if tier1 is too low:
-        if (tierScore[tierIndex] <= 0.) break;
+        if (tierScore[tierIndex] <= 0) break;
     }
 
     somaticInfo.somaticScore=std::min(tierScore[0],tierScore[1]);

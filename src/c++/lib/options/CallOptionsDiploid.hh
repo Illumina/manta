@@ -22,10 +22,10 @@
 
 struct CallOptionsDiploid
 {
-    float indelPrior = 1e-5;
+    float indelPrior = 1e-5f;
 
     /// breakpoints where the non-tumor depth is greater than the chromosome average x this factor are filtered out:
-    float maxDepthFactor = 3.0;
+    float maxDepthFactor = 3.0f;
     std::string maxDepthFilterLabel = "MaxDepth";
 
     /// minimum QUAL score to print out a diploid variant
@@ -36,7 +36,7 @@ struct CallOptionsDiploid
     std::string minGTFilterLabel = "MinGQ";
 
     // control filtration based on MQ0 fraction:
-    float maxMQ0Frac = 0.4;
+    float maxMQ0Frac = 0.4f;
     std::string maxMQ0FracLabel = "MaxMQ0Frac";
 
     std::string rnaFilterLabel = "RNAFail";

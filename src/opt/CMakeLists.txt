@@ -37,15 +37,29 @@ superset(HTSLIB_DIR "${CMAKE_CURRENT_BINARY_DIR}/${HTSLIB_PREFIX}")
 superset(HTSLIB_LIBRARY "${HTSLIB_DIR}/libhts.a")
 
 add_custom_command(
-    OUTPUT ${HTSLIB_LIBRARY}
+    OUTPUT ${HTSLIB_DIR}
     COMMAND ${CMAKE_COMMAND} -E remove_directory "${HTSLIB_DIR}"
     COMMAND ${CMAKE_COMMAND} -E tar xjf "${THIS_REDIST_DIR}/${HTSLIB_PREFIX}.tar.bz2"
-    COMMAND $(MAKE) -C "${HTSLIB_DIR}" lib-static tabix bgzip 2>| htslib.build.log
-    COMMENT "Building htslib library")
-add_custom_target(STARKA_HTSLIB DEPENDS "${HTSLIB_LIBRARY}")
+    COMMENT "Unpacking htslib library")
 
-install(PROGRAMS "${HTSLIB_DIR}/tabix" DESTINATION "${THIS_LIBEXECDIR}")
-install(PROGRAMS "${HTSLIB_DIR}/bgzip" DESTINATION "${THIS_LIBEXECDIR}")
+set (HTSLIB_FINAL_TASK ${HTSLIB_DIR})
+
+if (NOT WIN32)
+    add_custom_command(
+        OUTPUT ${HTSLIB_LIBRARY}
+        COMMAND $(MAKE) -C "${HTSLIB_DIR}" lib-static tabix bgzip 2>| htslib.build.log
+        DEPENDS ${HTSLIB_DIR}
+        COMMENT "Building htslib library")
+
+    set (HTSLIB_FINAL_TASK ${HTSLIB_LIBRARY})
+endif ()
+
+#add_custom_target(${THIS_PROJECT_NAME}_htslib DEPENDS "${HTSLIB_FINAL_TASK}")
+
+if (NOT WIN32)
+    install(PROGRAMS "${HTSLIB_DIR}/tabix" DESTINATION "${THIS_LIBEXECDIR}")
+    install(PROGRAMS "${HTSLIB_DIR}/bgzip" DESTINATION "${THIS_LIBEXECDIR}")
+endif ()
 
 #
 # samtools
@@ -55,20 +69,35 @@ superset(SAMTOOLS_DIR "${CMAKE_CURRENT_BINARY_DIR}/${SAMTOOLS_PREFIX}")
 superset(SAMTOOLS_LIBRARY "${SAMTOOLS_DIR}/libbam.a")
 superset(SAMTOOLS_PROG "${SAMTOOLS_DIR}/samtools")
 
+# final directory copy below would ideally be a soft-link, copy is for windows build
 add_custom_command(
-    OUTPUT ${SAMTOOLS_PROG}
+    OUTPUT ${SAMTOOLS_DIR}
     COMMAND ${CMAKE_COMMAND} -E remove_directory "${SAMTOOLS_DIR}"
     COMMAND ${CMAKE_COMMAND} -E tar xjf "${THIS_REDIST_DIR}/${SAMTOOLS_PREFIX}.tar.bz2"
-    COMMAND ${CMAKE_COMMAND} -E chdir "${CMAKE_CURRENT_BINARY_DIR}" ln -sf "${HTSLIB_PREFIX}" htslib
-    COMMAND ${CMAKE_COMMAND} -E chdir "${SAMTOOLS_DIR}" $(MAKE) all 2>| samtools.build.log
-    DEPENDS "${HTSLIB_LIBRARY}"
-    COMMENT "Building samtools package")
+    COMMAND ${CMAKE_COMMAND} -E remove_directory "${CMAKE_CURRENT_BINARY_DIR}/htslib"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${HTSLIB_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/htslib"
+    DEPENDS ${HTSLIB_FINAL_TASK}
+    COMMENT "Unpacking samtools package")
+
+set (SAMTOOLS_FINAL_TASK ${SAMTOOLS_DIR})
+
+if (NOT WIN32)
+    add_custom_command(
+        OUTPUT ${SAMTOOLS_PROG}
+        COMMAND ${CMAKE_COMMAND} -E chdir "${SAMTOOLS_DIR}" $(MAKE) all 2>| samtools.build.log
+        DEPENDS ${HTSLIB_LIBRARY}
+        DEPENDS ${SAMTOOLS_DIR}
+        COMMENT "Building samtools package")
+
+    set (SAMTOOLS_FINAL_TASK ${SAMTOOLS_PROG})
+endif ()
 
 set(THIS_SAMTOOLS "${THIS_PROJECT_NAME}_samtools")
-add_custom_target(${THIS_SAMTOOLS} DEPENDS "${SAMTOOLS_PROG}")
+add_custom_target(${THIS_SAMTOOLS} DEPENDS "${SAMTOOLS_FINAL_TASK}")
 
-install(PROGRAMS "${SAMTOOLS_PROG}" DESTINATION "${THIS_LIBEXECDIR}")
-
+if (NOT WIN32)
+    install(PROGRAMS "${SAMTOOLS_PROG}" DESTINATION "${THIS_LIBEXECDIR}")
+endif ()
 
 #
 # pyflow

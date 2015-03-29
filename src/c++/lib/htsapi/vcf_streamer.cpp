@@ -109,7 +109,6 @@ next(
 {
     if (_is_stream_end || (nullptr==_hfp) || (nullptr==_titr)) return false;
 
-    char*& vcf_record_string(_kstr.s);
     while (true)
     {
         if (tbx_itr_next(_hfp, _tidx, _titr, &_kstr) < 0)
@@ -118,19 +117,19 @@ next(
         }
         else
         {
-            _is_stream_end=(nullptr == vcf_record_string);
+            _is_stream_end=(nullptr == _kstr.s);
         }
         _is_record_set=(! _is_stream_end);
         if (! _is_record_set) break;
 
         // filter out header for whole file access case:
-        if (vcf_record_string[0] == '#') continue;
+        if (_kstr.s[0] == '#') continue;
 
         _record_no++;
 
-        if (! _vcfrec.set(vcf_record_string))
+        if (! _vcfrec.set(_kstr.s))
         {
-            log_os << "ERROR: Can't parse vcf record: '" << vcf_record_string << "'\n";
+            log_os << "ERROR: Can't parse vcf record: '" << _kstr.s << "'\n";
             exit(EXIT_FAILURE);
         }
         if (! _vcfrec.is_valid()) continue;

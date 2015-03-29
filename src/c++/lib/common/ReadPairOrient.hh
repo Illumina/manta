@@ -23,12 +23,19 @@
 
 #include "blt_util/blt_types.hh"
 
+#include "blt_util/thirdparty_push.h"
+
+#include "boost/serialization/access.hpp"
+#include "boost/serialization/level.hpp"
+#include "boost/serialization/nvp.hpp"
+
+#include "blt_util/thirdparty_pop.h"
+
 #include <cassert>
 #include <cstring>
 #include <iosfwd>
+#include <string>
 
-#include "boost/archive/text_oarchive.hpp"
-#include "boost/archive/text_iarchive.hpp"
 
 namespace PAIR_ORIENT
 {
@@ -129,4 +136,3 @@ BOOST_CLASS_IMPLEMENTATION(ReadPairOrient, boost::serialization::object_serializ
 
 std::ostream&
 operator<<(std::ostream& os, const ReadPairOrient& rpo);
-

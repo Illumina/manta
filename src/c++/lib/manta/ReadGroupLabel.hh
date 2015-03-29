@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "blt_util/compat_util.hh"
+
 #include <cassert>
 #include <cstdlib>
 #include <cstring>

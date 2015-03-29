@@ -20,9 +20,13 @@
 #include "common/Exceptions.hh"
 #include "svgraph/SVLocusSet.hh"
 
+#include "blt_util/thirdparty_push.h"
+
 #include "boost/archive/binary_iarchive.hpp"
 #include "boost/archive/binary_oarchive.hpp"
 #include "boost/foreach.hpp"
+
+#include "blt_util/thirdparty_pop.h"
 
 #include <algorithm>
 #include <fstream>
@@ -1012,7 +1016,7 @@ dumpStats(std::ostream& os) const
             }
         }
 
-        static const float quantLevel[] = { 0.25, 0.5, 0.75, 0.9, 0.95, 0.99 };
+        static const float quantLevel[] = { 0.25f, 0.5f, 0.75f, 0.9f, 0.95f, 0.99f };
         static const unsigned quantLevelCount(sizeof(quantLevel)/sizeof(float));
         os << "NodeRegionSizequantile:\n";
         for (unsigned i(0); i<quantLevelCount; ++i)

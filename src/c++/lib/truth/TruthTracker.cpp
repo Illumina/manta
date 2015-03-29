@@ -511,7 +511,7 @@ std::ostream& operator<<(std::ostream& ostrm, const EdgeLog& log)
 TruthTracker::TruthTracker(const std::string& vcfFilePath,
                            const bam_header_info& bamHeaderInfo)
     : _cset(_emptyLocusSet), _hasTruth(false), _numObs(0),
-      _lastAddedEdgeLogMapEleIter(0), _numEdgesSeen(0)
+      _lastAddedEdgeLogMapEleIter(), _numEdgesSeen(0)
 {
     if (vcfFilePath.empty()) return;
 
@@ -526,7 +526,7 @@ TruthTracker(
     const std::string& vcfFilePath,
     const SVLocusSet& cset)
     : _cset(cset), _hasTruth(false), _numObs(0),
-      _lastAddedEdgeLogMapEleIter(0), _numEdgesSeen(0)
+      _lastAddedEdgeLogMapEleIter(), _numEdgesSeen(0)
 {
     if (vcfFilePath.empty()) return;
 

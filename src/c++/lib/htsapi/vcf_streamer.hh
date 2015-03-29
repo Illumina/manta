@@ -21,7 +21,7 @@
 #include "vcf_record.hh"
 
 
-struct vcf_streamer : private hts_streamer
+struct vcf_streamer : public hts_streamer
 {
     // optionally provide a BAM header to validate vcf chromosome names against
     //

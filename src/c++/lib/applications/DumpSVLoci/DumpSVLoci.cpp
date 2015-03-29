@@ -21,7 +21,11 @@
 #include "htsapi/bam_header_util.hh"
 #include "svgraph/SVLocusSet.hh"
 
+#include "blt_util/thirdparty_push.h"
+
 #include "boost/archive/binary_oarchive.hpp"
+
+#include "blt_util/thirdparty_pop.h"
 
 #include <fstream>
 #include <iostream>

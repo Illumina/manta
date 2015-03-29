@@ -23,10 +23,16 @@
 #include <string>
 
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 #define snprintf _snprintf
+#define strdup _strdup
 #endif
 
+#ifndef _MSC_VER
+#define COMPAT_NOEXCEPT noexcept
+#else
+#define COMPAT_NOEXCEPT
+#endif
 
 double
 compat_round(const double x);

@@ -20,11 +20,14 @@
 
 #pragma once
 
+#include "blt_util/thirdparty_push.h"
 
 extern "C" {
 #define __STDC_LIMIT_MACROS
 #include "bam.h"
 }
+
+#include "blt_util/thirdparty_pop.h"
 
 
 namespace BAM_FLAG

@@ -19,7 +19,11 @@
 
 #pragma once
 
-#include <boost/serialization/singleton.hpp>
+#include "blt_util/thirdparty_push.h"
+
+#include "boost/serialization/singleton.hpp"
+
+#include "blt_util/thirdparty_pop.h"
 
 #include "ChromosomeMetadata.hh"
 

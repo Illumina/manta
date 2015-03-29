@@ -40,9 +40,9 @@ isStatSetMatch(
     const SizeDistribution& pss1,
     const SizeDistribution& pss2)
 {
-    static const float cdfPrecision(0.001);
+    static const float cdfPrecision(0.001f);
 
-    for (float prob(0.05); prob < 1; prob += 0.1)
+    for (float prob(0.05f); prob < 1; prob += 0.1f)
     {
         // check if percentile values equal
         if (std::abs(pss1.quantile(prob) - pss2.quantile(prob)) >= 1)
@@ -179,7 +179,7 @@ private:
         {
             // make sure there's a dominant consensus orientation and that we have a minimum number of samples:
             static const unsigned minCount(100);
-            static const float minMaxFrac(0.9);
+            static const float minMaxFrac(0.9f);
 
             using namespace illumina::common;
 
@@ -190,7 +190,7 @@ private:
                 BOOST_THROW_EXCEPTION(LogicException(oss.str()));
             }
 
-            const unsigned minMaxCount(minMaxFrac*_totalOrientCount);
+            const unsigned minMaxCount(static_cast<unsigned>(minMaxFrac*_totalOrientCount));
             if (_orientCount[maxIndex] < minMaxCount)
             {
                 const unsigned maxPercent((_orientCount[maxIndex]*100)/_totalOrientCount);
@@ -345,7 +345,7 @@ struct ReadGroupTracker
 
         // final step before saving is to cut-off the extreme end of the fragment size distribution, this
         // is similar the some aligner's proper-pair bit definition of (3x the standard mean, etc.)
-        static const float filterQuant(0.9995);
+        static const float filterQuant(0.9995f);
         _stats.fragStats.filterObservationsOverQuantile(filterQuant);
 
         _isFinalized=true;

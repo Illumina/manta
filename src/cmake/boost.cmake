@@ -37,8 +37,11 @@ macro (initBoostParams)
     # for test, so we need two lists now:
     set (THIS_BOOST_BUILD_COMPONENTS date_time filesystem program_options
                                      regex serialization system timer chrono test)
-    set (Boost_USE_MULTITHREADED OFF)
     set (Boost_USE_STATIC_LIBS ON)
+    if (NOT WIN32)
+        # bjam on windows ignores this setting so skip for win32:
+        set (Boost_USE_MULTITHREADED OFF)
+    endif ()
 endmacro()
 
 # simple helper for resetFindBoost
@@ -46,6 +49,13 @@ macro(unsetall name)
     unset (${name} CACHE)
     unset (${name})
 endmacro()
+
+
+function(makedir path)
+    if(NOT EXISTS "${path}")
+        file(MAKE_DIRECTORY "${path}")
+    endif()
+endfunction()
 
 
 macro (resetFindBoost)
@@ -121,45 +131,90 @@ if (NOT Boost_FOUND)
     set (BOOST_INSTALL_DIR "${BOOST_BOOTSTRAP_INSTALL_DIR}")
     set (BOOST_BUILD_DIR "${BOOST_INSTALL_DIR}/build")
     set (BOOST_SRC_DIR "${BOOST_BUILD_DIR}/${BOOST_SOURCE_PREFIX}")
-    if(NOT EXISTS "${BOOST_BUILD_DIR}")
-        file(MAKE_DIRECTORY "${BOOST_BUILD_DIR}")
-    endif()
+    makedir("${BOOST_BUILD_DIR}")
 
-    message(STATUS "Unpacking boost library source")
-    execute_process(
-        COMMAND ${CMAKE_COMMAND} -E tar xjf "${THIS_REDIST_DIR}/${BOOST_SOURCE_PREFIX}.tar.bz2"
-        WORKING_DIRECTORY "${BOOST_BUILD_DIR}")
+    if (NOT EXISTS "${BOOST_BUILD_DIR}/boost_unpack_complete")
+        message(STATUS "Unpacking boost library source")
+        execute_process(
+            COMMAND ${CMAKE_COMMAND} -E tar xjf "${THIS_REDIST_DIR}/${BOOST_SOURCE_PREFIX}.tar.bz2"
+            WORKING_DIRECTORY "${BOOST_BUILD_DIR}"
+            RESULT_VARIABLE TMP_RESULT)
 
-    set (BOOST_BOOTSTRAP "bootstrap.sh")
+        if (TMP_RESULT)
+            message (FATAL_ERROR "Failed to unpack boost library ${THIS_BOOST_VERSION}")
+        endif ()
+        execute_process(
+            COMMAND ${CMAKE_COMMAND} -E touch "${BOOST_BUILD_DIR}/boost_unpack_complete")
+    endif ()
+
+    set (BOOST_BOOTSTRAP sh "bootstrap.sh")
     if (WIN32)
-        set (BOOST_BOOTSTRAP "bootstrap")
+        set (BOOST_BOOTSTRAP "bootstrap.bat")
     endif ()
 
-    message(STATUS "Configuring boost library")
-    execute_process(
-        COMMAND ${BOOST_BOOTSTRAP}
-        WORKING_DIRECTORY "${BOOST_SRC_DIR}"
-        OUTPUT_QUIET)
+    if (NOT WIN32)
+        # boost compile works in windows, but we aren't going to link anyway, so we're
+        # skipping to save time:
+        message(STATUS "Configuring boost library")
+        execute_process(
+            COMMAND ${BOOST_BOOTSTRAP}
+            WORKING_DIRECTORY "${BOOST_SRC_DIR}"
+            RESULT_VARIABLE TMP_RESULT
+            OUTPUT_QUIET)
 
-    foreach (BOOST_LIBRARY ${THIS_BOOST_BUILD_COMPONENTS})
-        list (APPEND BOOST_BJAM_LIBRARY_SELECTION "--with-${BOOST_LIBRARY}")
-    endforeach ()
+        if (TMP_RESULT)
+            message (FATAL_ERROR "Failed to configure boost library ${THIS_BOOST_VERSION}")
+        endif ()
 
-    message(STATUS "Building boost library")
-    execute_process(
-        COMMAND bjam --prefix=${BOOST_INSTALL_DIR} ${BOOST_BJAM_LIBRARY_SELECTION} -j${CMAKE_PARALLEL} --libdir=${BOOST_INSTALL_DIR}/lib --layout=system link=static threading=single install
-        WORKING_DIRECTORY "${BOOST_SRC_DIR}"
-        RESULT_VARIABLE TMP_RESULT
-        OUTPUT_QUIET)
+        foreach (BOOST_LIBRARY ${THIS_BOOST_BUILD_COMPONENTS})
+            list (APPEND BOOST_BJAM_LIBRARY_SELECTION "--with-${BOOST_LIBRARY}")
+        endforeach ()
 
-    if (TMP_RESULT)
-        message (FATAL_ERROR "Failed to build boost ${THIS_BOOST_VERSION} Error: ${BOOST_BUILD_ERROR}")
+        # Include full path for bjam so that we don't depend on cwd in build user's PATH
+        set (BOOST_BJAM "${BOOST_SRC_DIR}/bjam")
+
+        set (BJAM_OPTIONS "link=static")
+        if (WIN32)
+            if (MSVC)
+                math (EXPR VS_VERSION "(${MSVC_VERSION}/100) - 6")
+                set(TOOLSET "toolset=msvc-${VS_VERSION}.0")
+            endif ()
+
+            # windows bjam ignores single/static so don't even try:
+            set (BJAM_OPTIONS ${BJAM_OPTIONS} "${TOOLSET}")
+        else ()
+            set (BJAM_OPTIONS ${BJAM_OPTIONS} "threading=single")
+        endif ()
+        
+        set (BOOST_BUILD_CMD ${BOOST_BJAM} --prefix=${BOOST_INSTALL_DIR} ${BOOST_BJAM_LIBRARY_SELECTION} -j${CMAKE_PARALLEL} --libdir=${BOOST_INSTALL_DIR}/lib ${BJAM_OPTIONS} install)
+        set (BOOST_BUILD_ERROR_LOG "${BOOST_INSTALL_DIR}/boost.build.error.txt")
+        message(STATUS "Building boost library")
+        execute_process(
+            COMMAND ${BOOST_BUILD_CMD}
+            WORKING_DIRECTORY "${BOOST_SRC_DIR}"
+            RESULT_VARIABLE TMP_RESULT
+            OUTPUT_FILE ${BOOST_BUILD_ERROR_LOG}
+            ERROR_FILE ${BOOST_BUILD_ERROR_LOG})
+
+        if (TMP_RESULT)
+            string (REPLACE ";" " " BOOST_PRETTY_BUILD_CMD "${BOOST_BUILD_CMD}")
+            message (STATUS "Boost build command: 'cd ${BOOST_SRC_DIR} && ${BOOST_PRETTY_BUILD_CMD}'")
+            message (FATAL_ERROR "Failed to build boost library ${THIS_BOOST_VERSION}. See build log: ${BOOST_BUILD_ERROR_LOG}")
+        endif ()
+
+        message (STATUS "Successfuly built boost ${THIS_BOOST_VERSION}")
+        execute_process(
+            COMMAND ${CMAKE_COMMAND} -E touch "${BOOST_INSTALL_DIR}/boost_install_complete"
+            WORKING_DIRECTORY "${BOOST_SRC_DIR}")
+    else ()
+        # for the time being on windows the goal is only to enable dev and library level compilation, not linking, so we don't need the libraries
+        # do a quick copy instead to get the headers in place only:
+        message(STATUS "WIN32 - skipping to header only boost instation for non-linked development")
+        makedir("${BOOST_INSTALL_DIR}/include")
+        makedir("${BOOST_INSTALL_DIR}/lib")
+        file(COPY "${BOOST_SRC_DIR}/boost"
+            DESTINATION "${BOOST_INSTALL_DIR}/include")
     endif ()
-
-    message (STATUS "Successfuly built boost ${THIS_BOOST_VERSION} from the distribution package...")
-    execute_process(
-        COMMAND ${CMAKE_COMMAND} -E touch "${BOOST_INSTALL_DIR}/boost_install_complete"
-        WORKING_DIRECTORY "${BOOST_SRC_DIR}")
 
     set (BOOST_ROOT "${BOOST_BOOTSTRAP_INSTALL_DIR}")
     find_package(Boost ${THIS_BOOST_VERSION} COMPONENTS ${THIS_BOOST_COMPONENTS})
