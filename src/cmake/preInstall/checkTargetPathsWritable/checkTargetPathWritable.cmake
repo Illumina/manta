@@ -25,7 +25,7 @@ foreach (THIS_DIR ${THIS_TEST_DIRS})
         RESULT_VARIABLE TMP_RESULT )
     execute_process(
         COMMAND ${CMAKE_COMMAND} -E remove_directory "${TEST_DIR}")
-        
+
     if (TMP_RESULT)
         message (STATUS "ERROR: Directory is not writeable: ${THIS_DIR}")
         message (STATUS "If you don't have administrator access to the "

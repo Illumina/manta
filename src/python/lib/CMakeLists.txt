@@ -55,7 +55,7 @@ if (PYTHONINTERP_FOUND)
     foreach(PYFILE ${STAGED_PYTHON_FILES})
         list(APPEND STAGED_PYTHONC_FILES "${PYFILE}c")
     endforeach()
-    
+
     add_custom_command(
         OUTPUT ${STAGED_PYTHONC_FILES}
         COMMAND ${PYTHON_EXECUTABLE} -m compileall -q ${PYSTAGE_DIR}

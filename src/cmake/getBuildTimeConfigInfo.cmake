@@ -1,6 +1,6 @@
 #
-# Starka
-# Copyright (c) 2009-2014 Illumina, Inc.
+# Manta
+# Copyright (c) 2013-2015 Illumina, Inc.
 #
 # This software is provided under the terms and conditions of the
 # Illumina Open Source Software License 1.
@@ -43,7 +43,7 @@ if (PYTHONINTERP_FOUND)
         COMMAND ${PYTHON_EXECUTABLE} -c "import datetime;print(datetime.datetime.utcnow().isoformat())"
         OUTPUT_VARIABLE BUILD_TIME
         OUTPUT_STRIP_TRAILING_WHITESPACE)
-    
+
     set (BUILD_TIME "${BUILD_TIME}Z")
 else ()
     set (BUILD_TIME "UNKNOWN")

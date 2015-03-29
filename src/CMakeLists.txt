@@ -155,7 +155,7 @@ if (NOT WIN32)
         ALL
         COMMAND bash ${THIS_SOURCE_QC_DIR}/check_for_nonascii_source.bash
         )
-    
+
     # force this to run early:
     add_dependencies(${THIS_OPT} ${THIS_SOURCE_CHECK})
 endif ()

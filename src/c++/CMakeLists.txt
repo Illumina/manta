@@ -39,17 +39,17 @@ add_dependencies(${THIS_OPT} ${CXX_BUILDTIME_CONFIG_TARGET})
 ##
 if (PYTHONINTERP_FOUND)
     file(GLOB_RECURSE ALL_CXX_FILES *.cpp *.cc *.hh)
-    
+
     add_custom_command(
         OUTPUT cppcheck.done
         DEPENDS ${ALL_CXX_FILES}
         COMMAND ${PYTHON_EXECUTABLE} ${THIS_SOURCE_QC_DIR}/run_cppcheck.py ${CMAKE_CURRENT_SOURCE_DIR}
         COMMENT "Running c++ static analyzer")
-    
+
     if(${DEVELOPER_MODE})
         set(THIS_CPPCHECK "${THIS_PROJECT_NAME}_cppcheck")
         add_custom_target(${THIS_CPPCHECK} ALL DEPENDS cppcheck.done)
-    
+
         add_dependencies(${THIS_OPT} ${THIS_CPPCHECK})
     endif()
 endif ()

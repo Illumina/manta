@@ -121,7 +121,7 @@ if (NOT WIN32)
         COMMAND ${CMAKE_COMMAND} -E tar xjf "${THIS_REDIST_DIR}/${HOEDOWN_PREFIX}.tar.bz2"
         COMMAND $(MAKE) -C "${HOEDOWN_DIR}"
         COMMENT "Building hoedown markdown parser")
-    
+
     superset(THIS_MARKDOWN "${THIS_PROJECT_NAME}_markdown")
     add_custom_target(${THIS_MARKDOWN} DEPENDS "${HOEDOWN_PROG}")
 endif ()
