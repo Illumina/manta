@@ -115,17 +115,51 @@ if (NOT Boost_FOUND)
     set(ENV{THIS_BOOST_VERSION} "${THIS_BOOST_VERSION}")
 
     set(THIS_BOOTSTRAP_DIR "${THIS_MODULE_DIR}/bootstrap")
-    set(BOOST_BUILD_COMMAND bash "${THIS_BOOTSTRAP_DIR}/installBoost.bash" "${THIS_REDIST_DIR}" "${BOOST_BOOTSTRAP_INSTALL_DIR}" "${CMAKE_PARALLEL}")
 
-    string(REPLACE ";" " " PRETTY_BOOST_BUILD_COMMAND "${BOOST_BUILD_COMMAND}")
-    message(STATUS "${PRETTY_BOOST_BUILD_COMMAND}")
-    execute_process(COMMAND ${BOOST_BUILD_COMMAND} RESULT_VARIABLE TMP_RESULT)
+    string (REPLACE "." "_" BOOST_FILENAME_VERSION "${THIS_BOOST_VERSION}")
+    set (BOOST_SOURCE_PREFIX "boost_${BOOST_FILENAME_VERSION}")
+    set (BOOST_INSTALL_DIR "${BOOST_BOOTSTRAP_INSTALL_DIR}")
+    set (BOOST_BUILD_DIR "${BOOST_INSTALL_DIR}/build")
+    set (BOOST_SRC_DIR "${BOOST_BUILD_DIR}/${BOOST_SOURCE_PREFIX}")
+    if(NOT EXISTS "${BOOST_BUILD_DIR}")
+        file(MAKE_DIRECTORY "${BOOST_BUILD_DIR}")
+    endif()
+
+    message(STATUS "Unpacking boost library source")
+    execute_process(
+        COMMAND ${CMAKE_COMMAND} -E tar xjf "${THIS_REDIST_DIR}/${BOOST_SOURCE_PREFIX}.tar.bz2"
+        WORKING_DIRECTORY "${BOOST_BUILD_DIR}")
+
+    set (BOOST_BOOTSTRAP "bootstrap.sh")
+    if (WIN32)
+        set (BOOST_BOOTSTRAP "bootstrap")
+    endif ()
+
+    message(STATUS "Configuring boost library")
+    execute_process(
+        COMMAND ${BOOST_BOOTSTRAP}
+        WORKING_DIRECTORY "${BOOST_SRC_DIR}"
+        OUTPUT_QUIET)
+
+    foreach (BOOST_LIBRARY ${THIS_BOOST_BUILD_COMPONENTS})
+        list (APPEND BOOST_BJAM_LIBRARY_SELECTION "--with-${BOOST_LIBRARY}")
+    endforeach ()
+
+    message(STATUS "Building boost library")
+    execute_process(
+        COMMAND bjam --prefix=${BOOST_INSTALL_DIR} ${BOOST_BJAM_LIBRARY_SELECTION} -j${CMAKE_PARALLEL} --libdir=${BOOST_INSTALL_DIR}/lib --layout=system link=static threading=single install
+        WORKING_DIRECTORY "${BOOST_SRC_DIR}"
+        RESULT_VARIABLE TMP_RESULT
+        OUTPUT_QUIET)
 
     if (TMP_RESULT)
-        message (FATAL_ERROR "Failed to build boost ${THIS_BOOST_VERSION}")
-    else ()
-        message(STATUS "Successfuly built boost ${THIS_BOOST_VERSION} from the distribution package...")
+        message (FATAL_ERROR "Failed to build boost ${THIS_BOOST_VERSION} Error: ${BOOST_BUILD_ERROR}")
     endif ()
+
+    message (STATUS "Successfuly built boost ${THIS_BOOST_VERSION} from the distribution package...")
+    execute_process(
+        COMMAND ${CMAKE_COMMAND} -E touch "${BOOST_INSTALL_DIR}/boost_install_complete"
+        WORKING_DIRECTORY "${BOOST_SRC_DIR}")
 
     set (BOOST_ROOT "${BOOST_BOOTSTRAP_INSTALL_DIR}")
     find_package(Boost ${THIS_BOOST_VERSION} COMPONENTS ${THIS_BOOST_COMPONENTS})
