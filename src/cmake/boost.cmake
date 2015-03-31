@@ -185,7 +185,7 @@ if (NOT Boost_FOUND)
         else ()
             set (BJAM_OPTIONS ${BJAM_OPTIONS} "threading=single")
         endif ()
-        
+
         set (BOOST_BUILD_CMD ${BOOST_BJAM} --prefix=${BOOST_INSTALL_DIR} ${BOOST_BJAM_LIBRARY_SELECTION} -j${CMAKE_PARALLEL} --libdir=${BOOST_INSTALL_DIR}/lib ${BJAM_OPTIONS} install)
         set (BOOST_BUILD_ERROR_LOG "${BOOST_INSTALL_DIR}/boost.build.error.txt")
         message(STATUS "Building boost library")
