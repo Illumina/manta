@@ -484,6 +484,11 @@ getKmerCounts(
         for (unsigned j(0); j<=(readLen-wordLength); ++j)
         {
             const std::string word(seq.substr(j,wordLength));
+
+            // filter words with "N" (either directly from input alignment
+            // or marked due to low basecall quality:
+            if (word.find('N') != std::string::npos) continue;
+
             readWords.insert(word);
         }
 

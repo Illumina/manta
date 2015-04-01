@@ -224,7 +224,6 @@ getSVBreakendCandidateSemiAligned(
 
     if (is_possible_adapter_pair(bamRead, matchedAlignment)) return;
 
-
     using namespace ALIGNPATH;
     const bam_seq querySeq(bamRead.get_bam_read());
 

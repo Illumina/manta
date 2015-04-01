@@ -107,10 +107,37 @@ addReadToDepthEst(
 
 
 
+/// insert assembly reads after modifying for minimum basecall quality
+static
+void
+insertAssemblyRead(
+    const uint8_t minQval,
+    const bam_record& bamRead,
+    const bool isReversed,
+    AssemblyReadInput& reads)
+{
+    reads.push_back(bamRead.get_bam_read().get_string());
+
+    std::string& nread(reads.back());
+
+    const unsigned size(nread.size());
+    const uint8_t* qual(bamRead.qual());
+
+    for (unsigned i(0); i<size; ++i)
+    {
+        if (qual[i] < minQval) nread[i] = 'N';
+    }
+
+    if (isReversed) reverseCompStr(reads.back());
+}
+
+
+
 /// retrieve remote reads from a list of target loci in the bam
 static
 void
 recoverRemoteReads(
+    const AssemblerOptions& assembleOpt,
     const unsigned maxNumReads,
     const bool isLocusReversed,
     const std::string& bamIndexStr,
@@ -226,9 +253,6 @@ recoverRemoteReads(
                     break;
                 }
 
-                readIndex.insert(std::make_pair(readKey,reads.size()));
-                reads.push_back(bamRead.get_bam_read().get_string());
-
                 bool isReversed(isLocusReversed);
 
                 // determine if we need to reverse:
@@ -237,7 +261,8 @@ recoverRemoteReads(
                     isReversed = (! isReversed);
                 }
 
-                if (isReversed) reverseCompStr(reads.back());
+                readIndex.insert(std::make_pair(readKey,reads.size()));
+                insertAssemblyRead(assembleOpt.minQval, bamRead, isReversed, reads);
 
                 /// add to the remote read cache used during PE scoring:
                 remoteReadsCache[remote.qname] = RemoteReadPayload(bamRead.read_no(), reads.back());
@@ -441,10 +466,6 @@ getBreakendReads(
                 }
             }
 
-            // filter reads with "N"
-            if (bamRead.get_bam_read().get_string().find('N') != std::string::npos) continue;
-
-
             // Finished filtering reads, now test reads for assm evidence:
             //
             //
@@ -606,9 +627,6 @@ getBreakendReads(
                 continue;
             }
 
-            readIndex.insert(std::make_pair(readKey,reads.size()));
-            reads.push_back(bamRead.get_bam_read().get_string());
-
             bool isReversed(isLocusReversed);
 
             // if shadow read, determine if we need to reverse:
@@ -620,7 +638,8 @@ getBreakendReads(
                 }
             }
 
-            if (isReversed) reverseCompStr(reads.back());
+            readIndex.insert(std::make_pair(readKey,reads.size()));
+            insertAssemblyRead(getAssembleOpt().minQval, bamRead, isReversed, reads);
         }
 
 #ifdef DEBUG_ASBL
@@ -725,6 +744,7 @@ getBreakendReads(
 
             std::vector<RemoteReadInfo>& bamRemotes(remoteReads[bamIndex]);
             recoverRemoteReads(
+                getAssembleOpt(),
                 maxNumReads, isLocusReversed, bamIndexStr, bamStream,
                 bamRemotes, readIndex, reads, remoteReadsCache);
         }

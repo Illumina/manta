@@ -25,6 +25,9 @@ struct SmallAssemblerOptions
     /// the symbol set used during assembly
     std::string alphabet = "ACGT";
 
+    /// minimum basecall quality for assembly input
+    uint8_t minQval = 5;
+
     /// initial word (kmer) length
     unsigned minWordLength = 41;
     unsigned maxWordLength = 76;

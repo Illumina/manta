@@ -26,6 +26,9 @@ struct IterativeAssemblerOptions
     /// the symbol set used during assembly
     std::string alphabet = "ACGT";
 
+    /// minimum basecall quality for assembly input
+    int minQval = 5;
+
     /// initial word (kmer) length
     unsigned minWordLength = 41;
 
