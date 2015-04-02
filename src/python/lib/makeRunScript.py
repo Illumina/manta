@@ -58,10 +58,19 @@ def makeRunScript(scriptFile, workflowModulePath, workflowClassName, primaryConf
 
     sfp.write(runScript1 % (pythonBin, " ".join(sys.argv),workflowModuleDir,workflowModuleName,workflowClassName))
 
-    sfp.write(inspect.getsource(get_run_options))
-    sfp.write('\n')
-    sfp.write(inspect.getsource(main))
-    sfp.write('\n')
+    def inspectObject(objectName) :
+        sfp.write("#\n# inspecting '%s' from " % (str(objectName)))
+        sfp.write(inspect.getsourcefile(objectName))
+        sfp.write('\n#\n')
+        sfp.write(inspect.getsource(objectName))
+        sfp.write('\n')
+
+    # make sure we're inspectnig from the current module
+    # (motivated by a rare cross-inspection bug)
+    current_module = sys.modules[__name__]
+
+    inspectObject(current_module.get_run_options)
+    inspectObject(current_module.main)
     sfp.write('main("%s","%s",%s)\n' % (pickleConfigFile, primaryConfigSection, workflowClassName))
     sfp.write('\n')
     sfp.close()
