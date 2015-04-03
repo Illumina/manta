@@ -28,10 +28,9 @@
 #define strdup _strdup
 #endif
 
-#ifndef _MSC_VER
-#define COMPAT_NOEXCEPT noexcept
-#else
-#define COMPAT_NOEXCEPT
+#if ((defined(_MSC_VER)) && (_MSC_VER <= 1800))
+#undef noexcept
+#define noexcept
 #endif
 
 double

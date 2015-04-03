@@ -153,7 +153,7 @@ struct bam_seq_base
     bam_seq_base(const bam_seq_base&) = default; // support copying
     bam_seq_base& operator=(const bam_seq_base&) = default;
 
-#ifndef _MSC_VER
+#if ((!defined(_MSC_VER)) || (_MSC_VER > 1800))
     bam_seq_base(bam_seq_base&&) = default; // support moving
     bam_seq_base& operator=(bam_seq_base&&) = default;
 #endif

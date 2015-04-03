@@ -8,7 +8,7 @@ appstats:
 shared performance tracking code between applications
 
 blt_util:
-general utility functions from starling/strelka/gvcftools
+general utility functions from manta/starling/strelka/gvcftools
 
 common:
 general utility functions from CASAVA/Grouper/Isaac

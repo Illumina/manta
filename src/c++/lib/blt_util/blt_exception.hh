@@ -27,7 +27,7 @@ struct blt_exception : public std::exception
 {
     blt_exception(const char* s);
 
-    const char* what() const COMPAT_NOEXCEPT
+    const char* what() const noexcept
     {
         return message.c_str();
     }
