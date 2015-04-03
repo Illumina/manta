@@ -129,7 +129,7 @@ revise_stage_data(const stage_data& sdata)
     for (unsigned i(0); i<sps; ++i)
     {
         const int old_id(_stage_pos_ptr->operator[](i).second);
-        old_minpos[old_id] = std::make_pair(_is_minpos[i],_minpos[i]);
+        old_minpos[old_id] = std::make_pair((_is_minpos[i] != 0),_minpos[i]);
     }
 
     // create new minimum values:
@@ -289,7 +289,7 @@ process_pos(const pos_t pos)
             {
                 const pos_t stage_pos(p-static_cast<pos_t>(_stage_pos_ptr->operator[](s).first));
                 if (stage_pos<_min_pos) break;
-                if (_is_minpos[s])
+                if (_is_minpos[s] != 0)
                 {
                     if (stage_pos<_minpos[s]) continue;
                     _is_minpos[s]=0;
@@ -333,7 +333,7 @@ finish_process_pos()
                 stage_pos=(p-static_cast<pos_t>(_stage_pos_ptr->operator[](s).first));
                 if (stage_pos>=_head_pos) continue;
                 if (stage_pos<_min_pos) break;
-                if (_is_minpos[s])
+                if (_is_minpos[s] != 0)
                 {
                     if (stage_pos<_minpos[s]) continue;
                     _is_minpos[s]=0;

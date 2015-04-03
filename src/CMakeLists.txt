@@ -73,6 +73,10 @@ endif ()
 #
 # other cache variables
 #
+
+# remove this setting if win build needs to rebuild boost:
+set (CMAKE_PARALLEL "1")
+
 if (NOT CMAKE_PARALLEL)
     set(CMAKE_PARALLEL "0" CACHE STRING
         "Choose the number of cores used by cmake during configuration (no default)")

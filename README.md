@@ -56,7 +56,9 @@ current minimum versions enforced by the build system:
 
 ### Build procedure
 
-After acquiring a release distribution of the source code, the build procedure is: * Unpack the source code
+After acquiring a release distribution of the source code, the build procedure is:
+
+* Unpack the source code
 * Create a separate `build` directory (note an out-of-source build is
   required.)
 * Configure the build
@@ -73,8 +75,8 @@ Example:
     make
     make install
 
-Note that during the configuration step, Manta will build the following
-compilation dependencies if these are not found:
+Note that during the configuration step, the following compilation
+dependencies will be built if these are not found:
 
 * cmake 2.8.0+
 * boost 1.53.0
@@ -124,10 +126,15 @@ facilitate developers preferring to use Visual Studio. During
 windows cmake configuration all final library linking is disabled and all
 third party libraries are unpacked such that their headers can be
 included, but the libraries are not compiled. Cmake generated VS solutions allow
-manta c++ code to be browsed, analyzed and compiled to the library level.
+the c++ code to be browsed, analyzed and compiled to the library level.
 Note that unit tests can not be run under this scheme -- just like the other
-manta executables, they can't be linked without 3rd party libraries.
+runtime binaries, they can't be linked without building 3rd party libraries.
 
 Note that the c++11 features used by manta require at least Visual Studio
-2013.
+2013. In addition to VS2013 and cmake, a zlib installation is required. The
+simplist way to do this may be to use the gnuwin32 pacakge here:
+
+http://gnuwin32.sourceforge.net/packages/zlib.htm
+
+This library will enable building for 32 bit only.
 
