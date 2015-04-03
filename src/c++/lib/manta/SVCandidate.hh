@@ -92,6 +92,7 @@ struct SVCandidate
         return true;
     }
 
+#if 0
     void
     clear()
     {
@@ -105,7 +106,10 @@ struct SVCandidate
         isUnknownSizeInsertion = false;
         unknownSizeInsertionLeftSeq.clear();
         unknownSizeInsertionRightSeq.clear();
+        fwReads = 0;
+        rvReads = 0;
     }
+#endif
 
     void
     setPrecise()
@@ -203,6 +207,7 @@ struct SVObservation : public SVCandidate
         fragSource(FRAGSOURCE::UNKNOWN)
     {}
 
+#if 0
     void
     clear()
     {
@@ -210,6 +215,7 @@ struct SVObservation : public SVCandidate
         fragSource = FRAGSOURCE::UNKNOWN;
         SVCandidate::clear();
     }
+#endif
 
     bool
     isSingleReadSource() const

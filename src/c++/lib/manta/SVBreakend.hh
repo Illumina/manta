@@ -291,6 +291,7 @@ struct SVBreakend
         return true;
     }
 
+    /// subset of merge excluding breakend range:
     bool
     evidenceMerge(const SVBreakend& rhs)
     {

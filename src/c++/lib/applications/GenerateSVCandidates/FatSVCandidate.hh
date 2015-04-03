@@ -81,6 +81,7 @@ struct FatSVCandidate : public SVCandidate
         return true;
     }
 
+#if 0
     void
     clear()
     {
@@ -88,6 +89,7 @@ struct FatSVCandidate : public SVCandidate
         for (auto& evi : bp1EvidenceIndex) evi.clear();
         for (auto& evi : bp2EvidenceIndex) evi.clear();
     }
+#endif
 
     typedef std::array<std::vector<double>,SVEvidenceType::SIZE> evidenceIndex_t;
 
