@@ -1,3 +1,4 @@
+- MANTA-155 handle N's and lowqual bases during assembly
 - MANTA-219 Build system improvements for auditing, visual studio support
 - MANTA-217 Improve runtime for large min candidate size settings, creating
 a high speed large-event mode.
