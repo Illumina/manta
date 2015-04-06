@@ -623,8 +623,6 @@ assignPairObservationsToSVCandidates(
     std::vector<FatSVCandidate>& svs)
 {
     // we anticipate so few svs from the POC method, that there's no indexing on them
-    // OST 26/09/2013: Be careful when re-arranging or rewriting the code below, under g++ 4.1.2
-    // this can lead to an infinite loop.
     for (const SVObservation& readCand : readCandidates)
     {
 #ifdef DEBUG_SVDATA
@@ -703,15 +701,7 @@ assignPairObservationsToSVCandidates(
                         updateEvidenceIndex(pair,readCand,sv);
                     }
 
-                    if (isExpandSVCandidateSet)
-                    {
-                        sv.merge(readCand);
-                    }
-                    else
-                    {
-                        // add submapped read pair evidence -- but don't allow these reads to expand the current candidate size:
-                        sv.evidenceMerge(readCand);
-                    }
+                    sv.merge(readCand, isExpandSVCandidateSet);
 
                     isMatched=true;
                     break;
@@ -788,7 +778,7 @@ processReadPair(
                                  truthTracker);
 
     // collapse close spanning sv candidates into complex candidates -- this reflects the fact that the
-    // assembler will collapse them anyway, so reduces duplidated work in the assembler;
+    // assembler will collapse them anyway, so reduces duplicated work in the assembler;
     for (SVObservation& cand : _readCandidates)
     {
         if (getSVType(cand) != SV_TYPE::INDEL) continue;
@@ -1165,7 +1155,6 @@ findCandidateSVImpl(
 
     //checkResult(svData,svs);
 }
-
 
 
 

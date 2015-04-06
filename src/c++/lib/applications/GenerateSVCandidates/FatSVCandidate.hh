@@ -53,9 +53,11 @@ struct FatSVCandidate : public SVCandidate
 
 
     bool
-    merge(const FatSVCandidate& rhs)
+    merge(
+        const FatSVCandidate& rhs,
+        const bool isExpandRegion = true)
     {
-        if (! base_t::merge(rhs)) return false;
+        if (! base_t::merge(rhs, isExpandRegion)) return false;
         for (unsigned i(0); i<SVEvidenceType::SIZE; ++i)
         {
             appendVec(bp1EvidenceIndex[i],rhs.bp1EvidenceIndex[i]);
@@ -73,13 +75,6 @@ struct FatSVCandidate : public SVCandidate
         return true;
     }
 #endif
-
-    bool
-    evidenceMerge(const FatSVCandidate& rhs)
-    {
-        if (! base_t::evidenceMerge(rhs)) return false;
-        return true;
-    }
 
 #if 0
     void

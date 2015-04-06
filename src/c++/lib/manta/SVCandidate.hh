@@ -49,45 +49,28 @@ struct SVCandidate
     }
 
     bool
-    merge(const SVCandidate& rhs)
+    merge(
+        const SVCandidate& rhs,
+        const bool isExpandRegion = true)
     {
         if (! isIntersect(rhs)) return false;
 
         if (bp1.isIntersect(rhs.bp1))
         {
-            bp1.merge(rhs.bp1);
-            bp2.merge(rhs.bp2);
+            bp1.merge(rhs.bp1, isExpandRegion);
+            bp2.merge(rhs.bp2, isExpandRegion);
             fwReads += rhs.fwReads;
             rvReads += rhs.rvReads;
         }
         else
         {
-            bp1.merge(rhs.bp2);
-            bp2.merge(rhs.bp1);
+            bp1.merge(rhs.bp2, isExpandRegion);
+            bp2.merge(rhs.bp1, isExpandRegion);
             fwReads += rhs.rvReads;
             rvReads += rhs.fwReads;
         }
 
         _isImprecise = (isImprecise() || rhs.isImprecise());
-
-        return true;
-    }
-
-    bool
-    evidenceMerge(const SVCandidate& rhs)
-    {
-        if (! isIntersect(rhs)) return false;
-
-        if (bp1.isIntersect(rhs.bp1))
-        {
-            bp1.evidenceMerge(rhs.bp1);
-            bp2.evidenceMerge(rhs.bp2);
-        }
-        else
-        {
-            bp1.evidenceMerge(rhs.bp2);
-            bp2.evidenceMerge(rhs.bp1);
-        }
 
         return true;
     }

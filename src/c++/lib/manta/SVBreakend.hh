@@ -283,19 +283,15 @@ struct SVBreakend
     }
 
     bool
-    merge(const SVBreakend& rhs)
+    merge(
+        const SVBreakend& rhs,
+        const bool isExpandRegion)
     {
         if (! isIntersect(rhs)) return false;
-        interval.range.merge_range(rhs.interval.range);
-        lowresEvidence.merge(rhs.lowresEvidence);
-        return true;
-    }
-
-    /// subset of merge excluding breakend range:
-    bool
-    evidenceMerge(const SVBreakend& rhs)
-    {
-        if (! isIntersect(rhs)) return false;
+        if (isExpandRegion)
+        {
+            interval.range.merge_range(rhs.interval.range);
+        }
         lowresEvidence.merge(rhs.lowresEvidence);
         return true;
     }
