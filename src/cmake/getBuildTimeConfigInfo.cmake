@@ -23,7 +23,12 @@
 
 set (GETGIT_CMAKE "${REDIST_DIR}/cmake-modules-c99fd3/GetGitRevisionDescription.cmake")
 include ("${GETGIT_CMAKE}")
-git_describe(GIT_VERSION --match "v[0-9]*")
+git_describe(GIT_VERSION --dirty --match "v[0-9]*")
+if (NOT GIT_VERSION)
+    # try again without the --dirty flag, might be an older git:
+    git_describe(GIT_VERSION --match "v[0-9]*")
+endif()
+
 if (NOT GIT_VERSION)
     set(GIT_VERSION "UNKNOWN")
 endif ()

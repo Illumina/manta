@@ -107,16 +107,10 @@ function(git_describe _var)
     # csaunders: Modified to leave off explicit ${head} specification so that the --dirty flag
     # can be added in. This probably breaks various submodule/etc, usages, but I can't document which
 	execute_process(COMMAND
-		"${GIT_EXECUTABLE}"
-		describe
-        --dirty
-		${ARGN}
-		WORKING_DIRECTORY
-		"${CMAKE_SOURCE_DIR}"
-		RESULT_VARIABLE
-		res
-		OUTPUT_VARIABLE
-		out
+		"${GIT_EXECUTABLE}" describe ${ARGN}
+		WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+		RESULT_VARIABLE res
+		OUTPUT_VARIABLE out
 		ERROR_QUIET
 		OUTPUT_STRIP_TRAILING_WHITESPACE)
 	if(NOT res EQUAL 0)
