@@ -97,6 +97,7 @@ struct SVCandidate
         unknownSizeInsertionRightSeq.clear();
         fwReads = 0;
         rvReads = 0;
+        isSingleJunctionFilter = false;
     }
 #endif
 
@@ -169,6 +170,9 @@ public:
 
     unsigned fwReads = 0; ///< Number of reads (pairs) supporting a direction from bp1 to bp2 (used for stranded RNA data)
     unsigned rvReads = 0; ///< Number of reads (pairs) directed from bp2 to bp1
+
+    /// filter out this sv candidate unless it's rescued by a multi-junction event:
+    bool isSingleJunctionFilter = false;
 };
 
 std::ostream&

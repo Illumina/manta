@@ -145,6 +145,7 @@ private:
     /// throwaway stats tracker...
     SampleEvidenceCounts _eCounts;
 
+    double _spanningNoiseRate;
     double _assemblyNoiseRate;
 
     EdgeRuntimeTracker& _edgeTracker;

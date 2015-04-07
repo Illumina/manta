@@ -43,10 +43,11 @@ operator<<(std::ostream& os, const bam_record& br)
         /// print SAtag if present:
         static const char satag[] = {'S','A'};
         const char* saStr(br.get_string_tag(satag));
-        if (NULL != saStr)
+        if (nullptr != saStr)
         {
             os  << " sa: " << saStr;
         }
+        if (br.is_supplement()) { os << " issupp"; }
 
         if (br.is_paired())
         {

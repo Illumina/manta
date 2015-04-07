@@ -39,6 +39,21 @@
 
 static
 double
+getSpanningNoiseRate(
+    const AllCounts& counts,
+    const bool isTumor)
+{
+    static const double pseudoTotal(1000.);
+    static const double pseudoSpan(10.);
+
+    const SampleReadInputCounts& input(counts.getSample(isTumor).input);
+    return ((input.evidenceCount.anom+input.evidenceCount.split)+pseudoSpan)/(input.total()+pseudoTotal);
+}
+
+
+
+static
+double
 getAssemblyNoiseRate(
     const AllCounts& counts,
     const bool isTumor)
@@ -101,11 +116,14 @@ SVFinder(
     }
 
     const AllCounts& counts(getSet().getCounts());
+    _spanningNoiseRate=getSpanningNoiseRate(counts,false);
     _assemblyNoiseRate=getAssemblyNoiseRate(counts,false);
     if (_isSomatic)
     {
+        const double spanningNoiseRateTumor=getSpanningNoiseRate(counts,true);
         const double assemblyNoiseRateTumor=getAssemblyNoiseRate(counts,true);
         // for now just use a hack over samples:
+        _spanningNoiseRate=std::max(_spanningNoiseRate,spanningNoiseRateTumor);
         _assemblyNoiseRate=std::max(_assemblyNoiseRate,assemblyNoiseRateTumor);
     }
 }
@@ -602,21 +620,16 @@ updateEvidenceIndex(
         {
             // account for bp1 and bp2 mapping to non-supp and supplemental reads
             const bool is1to1(sv.isIntersect1to1(obs));
-            if (obs.isRead1Source())
+            const bool isBp1toRead(is1to1 == obs.isRead1Source());
+            auto& readBp(isBp1toRead ? sv.bp1EvidenceIndex : sv.bp2EvidenceIndex);
+            auto& readSuppBp(isBp1toRead ? sv.bp2EvidenceIndex : sv.bp1EvidenceIndex);
+            const auto& read(obs.isRead1Source() ? fragment.read1 : fragment.read2);
+            const auto& readSupp(obs.isRead1Source() ? fragment.read1Supplemental : fragment.read2Supplemental);
+
+            readBp[obs.evtype].push_back(read.mappedReadCount);
+            if (readSupp.size() == 1)
             {
-                if (fragment.read1Supplemental.size() != 1) return;
-                const SVCandidateSetRead& bp1Read(is1to1 ? fragment.read1 : fragment.read1Supplemental.front());
-                const SVCandidateSetRead& bp2Read(is1to1 ? fragment.read1Supplemental.front() : fragment.read1);
-                sv.bp1EvidenceIndex[obs.evtype].push_back(bp1Read.mappedReadCount);
-                sv.bp2EvidenceIndex[obs.evtype].push_back(bp2Read.mappedReadCount);
-            }
-            else
-            {
-                if (fragment.read2Supplemental.size() != 1) return;
-                const SVCandidateSetRead& bp1Read(is1to1 ? fragment.read2 : fragment.read2Supplemental.front());
-                const SVCandidateSetRead& bp2Read(is1to1 ? fragment.read2Supplemental.front() : fragment.read2);
-                sv.bp1EvidenceIndex[obs.evtype].push_back(bp1Read.mappedReadCount);
-                sv.bp2EvidenceIndex[obs.evtype].push_back(bp2Read.mappedReadCount);
+                readSuppBp[obs.evtype].push_back(readSupp.front().mappedReadCount);
             }
         }
     }
@@ -731,6 +744,7 @@ assignFragmentObservationsToSVCandidates(
 
                     updateEvidenceIndex(fragment,readCand,sv);
 
+                    /// check evidence distance:
                     sv.merge(readCand, isExpandSVCandidateSet);
 
                     isMatched=true;
@@ -889,7 +903,73 @@ isCandidateCountSufficient(
 
 static
 bool
-isCandidateSignalSignificant(
+isBreakPointSignificant(
+    const double alpha,
+    const double noiseRate,
+    std::vector<double>& v)
+{
+    if (v.size() < 2) return false;
+    std::sort(v.begin(),v.end());
+    const unsigned vso(v.size());
+    for (unsigned i(0); (i+1)<vso; ++i)
+    {
+        v[i] = (v[i+1] - v[i]);
+    }
+    const unsigned vs(vso-1);
+    v.resize(vs);
+
+    // take up to the top winMax observations to make sure we focus on peak density only:
+    static const unsigned winMax(4);
+    double minWinVal(0);
+    const unsigned signalCount(std::min(winMax,vs));
+    for (unsigned i(0); i<signalCount; ++i)
+    {
+        minWinVal += v[i];
+    }
+
+    double winVal(minWinVal);
+    for (unsigned i(1); (i+(winMax-1))<vs; ++i)
+    {
+        winVal -= v[i-1];
+        winVal += v[i+(winMax-1)];
+        if (winVal < minWinVal)
+        {
+            minWinVal=winVal;
+        }
+    }
+
+    const unsigned backgroundCount(static_cast<unsigned>(minWinVal));
+    return is_reject_binomial_gte_n_success_exact(alpha, noiseRate,signalCount,(backgroundCount+signalCount));
+}
+
+
+
+static
+bool
+isSpanningCandidateSignalSignificant(
+    const double noiseRate,
+    const FatSVCandidate& sv)
+{
+    std::vector<double> evidence_bp1;
+    std::vector<double> evidence_bp2;
+    for (unsigned i(0); i<SVEvidenceType::SIZE; ++i)
+    {
+        appendVec(evidence_bp1,sv.bp1EvidenceIndex[i]);
+        appendVec(evidence_bp2,sv.bp2EvidenceIndex[i]);
+    }
+
+    static const double alpha(0.05);
+    const bool isBp1(isBreakPointSignificant(alpha, noiseRate, evidence_bp1));
+    const bool isBp2(isBreakPointSignificant(alpha, noiseRate, evidence_bp2));
+
+    return (isBp1 || isBp2);
+}
+
+
+
+static
+bool
+isComplexCandidateSignalSignificant(
     const double noiseRate,
     const FatSVCandidate& sv)
 {
@@ -899,41 +979,8 @@ isCandidateSignalSignificant(
         //if (! isLocalEvidence(i)) continue;
         appendVec(evidence,sv.bp1EvidenceIndex[i]);
     }
-    std::sort(evidence.begin(),evidence.end());
-
-    for (unsigned i(0); (i+1)<evidence.size(); ++i)
-    {
-        evidence[i] = (evidence[i+1] - evidence[i]);
-    }
-    evidence.resize(evidence.size()-1);
-
-    static const unsigned winMax(4);
-    double minWinVal(0);
-    const unsigned signalCount(std::min(winMax,static_cast<unsigned>(evidence.size())));
-
-    for (unsigned i(0); i<signalCount; ++i)
-    {
-        minWinVal += evidence[i];
-    }
-
-    double winVal(minWinVal);
-    for (unsigned i(1); (i+(winMax-1))<evidence.size(); ++i)
-    {
-        winVal -= evidence[i-1];
-        winVal += evidence[i+(winMax-1)];
-        if (winVal < minWinVal)
-        {
-            minWinVal=winVal;
-        }
-    }
-
-    const unsigned backgroundCount(static_cast<unsigned>(minWinVal));
-
-    // take up to the top N observations to make sure we focus on peak density:
-    // this becomes N observations in
-
-    const double alpha(0.005);
-    return is_reject_binomial_gte_n_success_exact(alpha, noiseRate,signalCount,(backgroundCount+signalCount));
+    static const double alpha(0.005);
+    return (isBreakPointSignificant(alpha, noiseRate,evidence));
 }
 
 
@@ -945,7 +992,8 @@ enum index_t
     NONE,
     SEMIMAPPED,
     COMPLEXLOWCOUNT,
-    COMPLEXLOWSIGNAL
+    COMPLEXLOWSIGNAL,
+    SPANNINGLOWSIGNAL
 };
 }
 
@@ -958,6 +1006,7 @@ enum index_t
 static
 SINGLE_FILTER::index_t
 isFilterSingleJunctionCandidate(
+    const double spanningNoiseRate,
     const double assemblyNoiseRate,
     const FatSVCandidate& sv)
 {
@@ -970,12 +1019,12 @@ isFilterSingleJunctionCandidate(
     // candidates must have a minimum amount of evidence:
     if (isSpanningSV(sv))
     {
-        // pass -- this is checked later in the pipeline...
+        if (! isSpanningCandidateSignalSignificant(spanningNoiseRate, sv)) return SPANNINGLOWSIGNAL;
     }
     else if (isComplexSV(sv))
     {
         if (! isCandidateCountSufficient(sv)) return COMPLEXLOWCOUNT;
-        if (! isCandidateSignalSignificant(assemblyNoiseRate,sv)) return COMPLEXLOWSIGNAL;
+        if (! isComplexCandidateSignalSignificant(assemblyNoiseRate, sv)) return COMPLEXLOWSIGNAL;
     }
     else
     {
@@ -990,6 +1039,7 @@ isFilterSingleJunctionCandidate(
 static
 void
 filterCandidates(
+    const double spanningNoiseRate,
     const double assemblyNoiseRate,
     std::vector<FatSVCandidate>& svs,
     SVFinderStats& stats)
@@ -999,23 +1049,31 @@ filterCandidates(
     while (index<svCount)
     {
         using namespace SINGLE_FILTER;
-        const index_t filt(isFilterSingleJunctionCandidate(assemblyNoiseRate,svs[index]));
+        const index_t filt(isFilterSingleJunctionCandidate(spanningNoiseRate,assemblyNoiseRate,svs[index]));
 
+        bool isFilter(false);
         switch (filt)
         {
         case SEMIMAPPED:
             stats.semiMappedFilter++;
+            isFilter = true;
             break;
         case COMPLEXLOWCOUNT:
             stats.ComplexLowCountFilter++;
+            isFilter = true;
             break;
         case COMPLEXLOWSIGNAL:
             stats.ComplexLowSignalFilter++;
+            isFilter = true;
+            break;
+        case SPANNINGLOWSIGNAL:
+            svs[index].isSingleJunctionFilter = true;
             break;
         default:
             break;
         }
-        if (filt != NONE)
+
+        if (isFilter)
         {
             if ((index+1) < svCount) svs[index] = svs.back();
             svs.resize(--svCount);
@@ -1112,7 +1170,7 @@ getCandidatesFromData(
     }
 #endif
 
-    filterCandidates(_assemblyNoiseRate,svs,stats);
+    filterCandidates(_spanningNoiseRate, _assemblyNoiseRate,svs,stats);
 
     std::copy(svs.begin(),svs.end(),std::back_inserter(output_svs));
 }
