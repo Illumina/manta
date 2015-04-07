@@ -49,6 +49,12 @@ struct SVCandidate
     }
 
     bool
+    isIntersect1to1(const SVCandidate& rhs) const
+    {
+        return (bp1.isIntersect(rhs.bp1) && bp2.isIntersect(rhs.bp2));
+    }
+
+    bool
     merge(
         const SVCandidate& rhs,
         const bool isExpandRegion = true)

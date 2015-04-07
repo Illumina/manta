@@ -202,7 +202,7 @@ getFragInfo(
 static
 void
 getFragInfo(
-    const SVCandidateSetReadPair& pair,
+    const SVCandidateSetSequenceFragment& pair,
     SpanReadInfo& read1,
     SpanReadInfo& read2)
 {
@@ -285,7 +285,7 @@ static
 void
 pairError(
     const SVCandidate& sv,
-    const SVCandidateSetReadPair& pair,
+    const SVCandidateSetSequenceFragment& pair,
     const char* errorMsg)
 {
     using namespace illumina::common;
@@ -308,7 +308,7 @@ void
 getFragProb(
     const PairOptions& pairOpt,
     const SVCandidate& sv,
-    const SVCandidateSetReadPair& pair,
+    const SVCandidateSetSequenceFragment& pair,
     const SizeDistribution& fragDistro,
     const bool isStrictMatch,
     bool& isFragSupportSV,
@@ -488,17 +488,17 @@ processExistingAltPairInfo(
 
         const SizeDistribution& fragDistro(_readScanner.getFragSizeDistro(bamIndex));
 
-        const SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
-        for (const SVCandidateSetReadPair& pair : svDataGroup)
+        const SVCandidateSetSequenceFragmentSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
+        for (const SVCandidateSetSequenceFragment& fragment : svDataGroup)
         {
-            /// at least one read of the pair must have been found:
-            assert(pair.read1.isSet() || pair.read2.isSet());
+            // at least one non-supplemental read of the pair must have been found to use this pipeline:
+            if (! (fragment.read1.isSet() || fragment.read2.isSet())) continue;
 
-            // is this read pair associated with this candidateIndex? (each read pair can be associated with multiple candidates)
+            // is this read pair associated with this candidateIndex? (each read fragment can be associated with multiple candidates)
             unsigned linkIndex(0);
             {
                 bool isIndexFound(false);
-                for (const SVPairAssociation& sva : pair.svLink)
+                for (const SVSequenceFragmentAssociation& sva : fragment.svLink)
                 {
                     if (sv.candidateIndex == sva.index)
                     {
@@ -510,40 +510,40 @@ processExistingAltPairInfo(
 
                 if (! isIndexFound) continue;
             }
-            assert(pair.svLink.size() > linkIndex);
+            assert(fragment.svLink.size() > linkIndex);
 
-            const bool isPairType(SVEvidenceType::isPairType(pair.svLink[linkIndex].evtype));
+            const bool isPairType(SVEvidenceType::isPairType(fragment.svLink[linkIndex].evtype));
 
-            /// if the evidence comes from a read pair observation, a very strict matching criteria
+            /// if the evidence comes from a read fragment observation, a very strict matching criteria
             /// is enforced between this pair and the SV candidate. If the read pair association comes from
-            /// a CIGAR string for instance, the pair will not necessarily support the candidate
+            /// a CIGAR string for instance, the fragment will not necessarily support the candidate
             ///
             const bool isStrictMatch(isPairType);
 
-            const std::string& qname(pair.qname());
+            const std::string& qname(fragment.qname());
 
 #ifdef DEBUG_PAIR
-            log_os << __FUNCTION__ << ": Finding alt pair evidence for svIndex: " << sv.candidateIndex << "  isTumor: " << isTumor << " bam-pair: " << pair << "\n";
+            log_os << __FUNCTION__ << ": Finding alt fragment evidence for svIndex: " << sv.candidateIndex << "  isTumor: " << isTumor << " bam-fragment: " << fragment << "\n";
 #endif
 
-            SVFragmentEvidence& fragment(evidence.getSample(isTumor)[qname]);
-            SVFragmentEvidenceAllele& alt(fragment.alt);
+            SVFragmentEvidence& fragEvidence(evidence.getSample(isTumor)[qname]);
+            SVFragmentEvidenceAllele& alt(fragEvidence.alt);
 
             static const bool isShadow(false);
-            if (pair.read1.isSet())
+            if (fragment.read1.isSet())
             {
-                setReadEvidence(minMapQ, minTier2MapQ, pair.read1.bamrec, isShadow, fragment.read1);
+                setReadEvidence(minMapQ, minTier2MapQ, fragment.read1.bamrec, isShadow, fragEvidence.read1);
             }
 
-            if (pair.read2.isSet())
+            if (fragment.read2.isSet())
             {
-                setReadEvidence(minMapQ, minTier2MapQ, pair.read2.bamrec, isShadow, fragment.read2);
+                setReadEvidence(minMapQ, minTier2MapQ, fragment.read2.bamrec, isShadow, fragEvidence.read2);
             }
 
             /// get fragment prob, and possibly withdraw fragment support based on refined sv breakend coordinates:
             bool isFragSupportSV(false);
             float fragProb(0);
-            getFragProb(pairOpt, sv, pair, fragDistro, isStrictMatch, isFragSupportSV, fragProb);
+            getFragProb(pairOpt, sv, fragment, fragDistro, isStrictMatch, isFragSupportSV, fragProb);
 
             if (! isFragSupportSV)
             {
@@ -557,7 +557,7 @@ processExistingAltPairInfo(
             if (fragProb <= 0.)
             {
 #ifdef DEBUG_PAIR
-                log_os << __FUNCTION__ << ": Fragment with fragProb=0! " << sv.candidateIndex << "  bam-pair: " << pair << "\n";
+                log_os << __FUNCTION__ << ": Fragment with fragProb=0! " << sv.candidateIndex << "  bam-fragment: " << fragment << "\n";
 #endif
                 continue;
             }

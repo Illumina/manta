@@ -35,7 +35,7 @@ operator<<(std::ostream& os, const SVCandidateSetRead& svr)
 
 
 std::ostream&
-operator<<(std::ostream& os, const SVPairAssociation& sva)
+operator<<(std::ostream& os, const SVSequenceFragmentAssociation& sva)
 {
     os << " svindex: " << sva.index << " evidenceType: " << SVEvidenceType::label(sva.evtype);
     return os;
@@ -44,10 +44,10 @@ operator<<(std::ostream& os, const SVPairAssociation& sva)
 
 
 std::ostream&
-operator<<(std::ostream& os, const SVCandidateSetReadPair& svp)
+operator<<(std::ostream& os, const SVCandidateSetSequenceFragment& svp)
 {
     os << "SVCandidateReadPair svIndices:";
-    for (const SVPairAssociation& sva : svp.svLink)
+    for (const SVSequenceFragmentAssociation& sva : svp.svLink)
     {
         os << sva << "\n";
     }
@@ -59,16 +59,17 @@ operator<<(std::ostream& os, const SVCandidateSetReadPair& svp)
 
 
 
-SVCandidateSetReadPair*
-SVCandidateSetReadPairSampleGroup::
-getReadPair(const pindex_t::key_type& key)
+SVCandidateSetSequenceFragment*
+SVCandidateSetSequenceFragmentSampleGroup::
+getSequenceFragment(
+    const pindex_t::key_type& key)
 {
     const pindex_t::const_iterator kiter(_pairIndex.find(key));
 
     if (kiter == _pairIndex.end())
     {
         /// don't add more pairs to the object once it's full:
-        if (isFull()) return NULL;
+        if (isFull()) return nullptr;
 
         _pairIndex[key] = _pairs.size();
         _pairs.emplace_back();
@@ -83,7 +84,7 @@ getReadPair(const pindex_t::key_type& key)
 
 
 void
-SVCandidateSetReadPairSampleGroup::
+SVCandidateSetSequenceFragmentSampleGroup::
 add(const bam_record& bamRead,
     const bool isExpectRepeat,
     const bool isNode1,
@@ -95,15 +96,35 @@ add(const bam_record& bamRead,
     log_os << "SVDataGroup adding: " << bamRead << "\n";
 #endif
 
-    SVCandidateSetReadPair* pairPtr(getReadPair(bamRead.qname()));
-    if (nullptr == pairPtr) return;
+    SVCandidateSetSequenceFragment* fragPtr(getSequenceFragment(bamRead.qname()));
+    if (nullptr == fragPtr) return;
 
-    SVCandidateSetReadPair& pair(*pairPtr);
+    SVCandidateSetSequenceFragment& fragment(*fragPtr);
 
-    SVCandidateSetRead* targetReadPtr(&(pair.read1));
+    SVCandidateSetRead* targetReadPtr(nullptr);
     if (2 == bamRead.read_no())
     {
-        targetReadPtr = (&(pair.read2));
+        if (bamRead.is_supplement())
+        {
+            fragment.read2Supplemental.emplace_back();
+            targetReadPtr = (&(fragment.read2Supplemental.back()));
+        }
+        else
+        {
+            targetReadPtr = (&(fragment.read2));
+        }
+    }
+    else
+    {
+        if (bamRead.is_supplement())
+        {
+            fragment.read1Supplemental.emplace_back();
+            targetReadPtr = (&(fragment.read1Supplemental.back()));
+        }
+        else
+        {
+            targetReadPtr = (&(fragment.read1));
+        }
     }
 
     SVCandidateSetRead& targetRead(*targetReadPtr);

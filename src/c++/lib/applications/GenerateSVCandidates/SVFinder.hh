@@ -74,19 +74,19 @@ private:
         TruthTracker& truthTracker);
 
     void
-    assignPairObservationsToSVCandidates(
+    assignFragmentObservationsToSVCandidates(
         const SVLocusNode& node1,
         const SVLocusNode& node2,
         const std::vector<SVObservation>& readCandidates,
         const bool isExpandSVCandidateSet,
-        SVCandidateSetReadPair& pair,
+        SVCandidateSetSequenceFragment& fragment,
         std::vector<FatSVCandidate>& svs);
 
-    /// we either process the pair to discover new SVs and expand existing SVs,
+    /// we either process the fragment to discover new SVs and expand existing SVs,
     /// or we go through and add pairs to existing SVs without expansion
     ///
     void
-    processReadPair(
+    processSequenceFragment(
         const SVLocusNode& node1,
         const SVLocusNode& node2,
         const bam_header_info& bamHeader,
@@ -96,7 +96,7 @@ private:
         const bool isExpandSVCandidateSet,
         std::vector<FatSVCandidate>& svs,
         TruthTracker& truthTracker,
-        SVCandidateSetReadPair& pair);
+        SVCandidateSetSequenceFragment& fragment);
 
     void
     getCandidatesFromData(

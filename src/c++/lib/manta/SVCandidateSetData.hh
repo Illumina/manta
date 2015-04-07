@@ -64,13 +64,13 @@ std::ostream&
 operator<<(std::ostream& os, const SVCandidateSetRead& svr);
 
 
-/// capture details of the link between a read pair and an SV
-struct SVPairAssociation
+/// capture details of the link between a sequence fragment and an SV
+struct SVSequenceFragmentAssociation
 {
     typedef uint16_t index_t;
 
     explicit
-    SVPairAssociation(
+    SVSequenceFragmentAssociation(
         const index_t initIndex = 0,
         const SVEvidenceType::index_t initEvtype = SVEvidenceType::UNKNOWN) :
         index(initIndex),
@@ -78,25 +78,35 @@ struct SVPairAssociation
     {}
 
     index_t index;
-    SVEvidenceType::index_t evtype;  // is this association drawn form a read pair or other evidence source? (ie. CIGAR)
+
+    /// is the association from anom read pair, split read, CIGAR, etc?
+    SVEvidenceType::index_t evtype;
 };
 
 std::ostream&
-operator<<(std::ostream& os, const SVPairAssociation& sva);
+operator<<(std::ostream& os, const SVSequenceFragmentAssociation& sva);
 
 
-/// A read associated with an SV associated set of regions
+/// A DNA/RNA fragment associated with an SV-associated set of regions
 ///
 /// note this read could be linked with zero to many specific SVCandidates
 ///
-struct SVCandidateSetReadPair
+struct SVCandidateSetSequenceFragment
 {
     const char*
     qname() const
     {
         if      (read1.isSet()) return read1.bamrec.qname();
         else if (read2.isSet()) return read2.bamrec.qname();
-        return NULL;
+        else if ((! read1Supplemental.empty()) && read1Supplemental.front().isSet())
+        {
+            return read1Supplemental.front().bamrec.qname();
+        }
+        else if ((! read2Supplemental.empty()) && read2Supplemental.front().isSet())
+        {
+            return read2Supplemental.front().bamrec.qname();
+        }
+        return nullptr;
     }
 
     bool
@@ -105,21 +115,23 @@ struct SVCandidateSetReadPair
         return (read1.isAnchored() || read2.isAnchored());
     }
 
-    std::vector<SVPairAssociation> svLink; ///< which SVs from the set are this molecule associated with?
+    std::vector<SVSequenceFragmentAssociation> svLink; ///< which SVs from the set are this molecule associated with?
     SVCandidateSetRead read1;
+    std::vector<SVCandidateSetRead> read1Supplemental;
     SVCandidateSetRead read2;
+    std::vector<SVCandidateSetRead> read2Supplemental;
 };
 
 std::ostream&
-operator<<(std::ostream& os, const SVCandidateSetReadPair& svp);
+operator<<(std::ostream& os, const SVCandidateSetSequenceFragment& svp);
 
 
 
 /// SVCandidateSet data associated with a specific bam-file/read-group
 ///
-struct SVCandidateSetReadPairSampleGroup
+struct SVCandidateSetSequenceFragmentSampleGroup
 {
-    typedef std::vector<SVCandidateSetReadPair> pair_t;
+    typedef std::vector<SVCandidateSetSequenceFragment> pair_t;
     typedef pair_t::iterator iterator;
     typedef pair_t::const_iterator const_iterator;
 
@@ -196,11 +208,12 @@ private:
     typedef std::string bamqname_t;
     typedef std::map<bamqname_t,unsigned> pindex_t;
 
-    /// this will return null for new read pairs when isFull() is true
+    /// get existing fragment or return pointer for a new fragment
     ///
+    /// this will return null for new fragments when isFull() is true
     ///
-    SVCandidateSetReadPair*
-    getReadPair(const pindex_t::key_type& key);
+    SVCandidateSetSequenceFragment*
+    getSequenceFragment(const pindex_t::key_type& key);
 
     pair_t _pairs;
     pindex_t _pairIndex;
@@ -222,18 +235,18 @@ private:
 struct SVCandidateSetData
 {
     /// get evidence associated with a specific sample group:
-    SVCandidateSetReadPairSampleGroup&
+    SVCandidateSetSequenceFragmentSampleGroup&
     getDataGroup(const unsigned bamIndex)
     {
         data_t::iterator diter(_data.find(bamIndex));
         if (diter != _data.end()) return diter->second;
 
-        std::pair<data_t::iterator,bool> diter2 = _data.insert(std::make_pair(bamIndex,SVCandidateSetReadPairSampleGroup()));
+        std::pair<data_t::iterator,bool> diter2 = _data.insert(std::make_pair(bamIndex,SVCandidateSetSequenceFragmentSampleGroup()));
         return diter2.first->second;
     }
 
     /// get evidence associated with a specific sample group:
-    const SVCandidateSetReadPairSampleGroup&
+    const SVCandidateSetSequenceFragmentSampleGroup&
     getDataGroup(const unsigned bamIndex) const
     {
         data_t::const_iterator diter(_data.find(bamIndex));
@@ -257,7 +270,7 @@ struct SVCandidateSetData
     setNewSearchInterval(const GenomeInterval& newSearch);
 
 private:
-    typedef std::map<unsigned,SVCandidateSetReadPairSampleGroup> data_t;
+    typedef std::map<unsigned,SVCandidateSetSequenceFragmentSampleGroup> data_t;
     data_t _data;
 
     std::vector<GenomeInterval> _searchIntervals;

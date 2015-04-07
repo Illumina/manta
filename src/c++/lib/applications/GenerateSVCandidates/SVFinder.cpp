@@ -132,16 +132,13 @@ addSVNodeRead(
     const reference_contig_segment& refSeq,
     const bool isNode1,
     const bool isGatherSubmapped,
-    SVCandidateSetReadPairSampleGroup& svDataGroup,
+    SVCandidateSetSequenceFragmentSampleGroup& svDataGroup,
     SampleEvidenceCounts& eCounts,
     TruthTracker& truthTracker)
 {
     using namespace illumina::common;
 
     if (scanner.isMappedReadFilteredCore(bamRead)) return;
-
-    /// TODO: remove this restriction
-    if (bamRead.is_supplement()) return;
 
     if (bamRead.map_qual() < scanner.getMinTier2MapQ()) return;
 
@@ -280,13 +277,13 @@ addSVNodeData(
 
     bool isExpectRepeat(svData.setNewSearchInterval(searchInterval));
 
-    /// This is a temporary measure to make the qname collision detection much looser
-    /// problems have come up where very large deletions are present in a read, and it is therefore
-    /// detected as a repeat in two different regions, even though they are separated by a considerable
-    /// distance. Solution is to temporarily turn off collision detection whenever two regions are on
-    /// the same chrom (ie. almost always)
-    ///
-    /// TODO: restore more precise collision detection
+    // This is a temporary measure to make the qname collision detection much looser
+    // problems have come up where very large deletions are present in a read, and it is therefore
+    // detected as a repeat in two different regions, even though they are separated by a considerable
+    // distance. Solution is to temporarily turn off collision detection whenever two regions are on
+    // the same chrom (ie. almost always)
+    //
+    // TODO: restore more precise collision detection
     if (! isExpectRepeat) isExpectRepeat = (localNode.getInterval().tid == remoteNode.getInterval().tid);
 
 #ifdef DEBUG_SVDATA
@@ -315,7 +312,7 @@ addSVNodeData(
 
         const bool isGatherSubmapped(_isSomatic && (! isTumor));
 
-        SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
+        SVCandidateSetSequenceFragmentSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
         bam_streamer& readStream(*bamPtr);
 
         // set bam stream to new search interval:
@@ -385,10 +382,10 @@ checkResult(
     const unsigned bamCount(_bamStreams.size());
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
-        const SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
-        for (const SVCandidateSetReadPair& pair : svDataGroup)
+        const SVCandidateSetSequenceFragmentSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
+        for (const SVCandidateSetSequenceFragment& fragment : svDataGroup)
         {
-            for (const SVPairAssociation& sva : pair.svLink)
+            for (const SVSequenceFragmentAssociation& sva : fragment.svLink)
             {
                 if (sva.index>=svCount)
                 {
@@ -399,9 +396,9 @@ checkResult(
 
                 if (SVEvidenceType::isPairType(sva.evtype))
                 {
-                    if (pair.read1.isSet()) readCounts[sva.index]++;
-                    if (pair.read2.isSet()) readCounts[sva.index]++;
-                    if (pair.read1.isSet() && pair.read2.isSet()) pairCounts[sva.index] += 2;
+                    if (fragment.read1.isSet()) readCounts[sva.index]++;
+                    if (fragment.read2.isSet()) readCounts[sva.index]++;
+                    if (fragment.read1.isSet() && fragment.read2.isSet()) pairCounts[sva.index] += 2;
                 }
             }
         }
@@ -565,10 +562,10 @@ consolidateOverlap(
 
         for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
         {
-            SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
-            for (SVCandidateSetReadPair& pair : svDataGroup)
+            SVCandidateSetSequenceFragmentSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
+            for (SVCandidateSetSequenceFragment& fragment : svDataGroup)
             {
-                for (SVPairAssociation& sva : pair.svLink)
+                for (SVSequenceFragmentAssociation& sva : fragment.svLink)
                 {
                     if (moveSVIndex.count(sva.index))
                     {
@@ -590,13 +587,48 @@ consolidateOverlap(
 static
 void
 updateEvidenceIndex(
-    const SVCandidateSetReadPair& pair,
+    const SVCandidateSetSequenceFragment& fragment,
     const SVObservation& obs,
     FatSVCandidate& sv)
 {
-    if (! obs.isSingleReadSource()) return;
-    const SVCandidateSetRead& candRead(obs.isRead1Source() ? pair.read1 : pair.read2);
-    sv.bp1EvidenceIndex[obs.evtype].push_back(candRead.mappedReadCount);
+    if (obs.isSingleReadSource())
+    {
+        const SVCandidateSetRead& candRead(obs.isRead1Source() ? fragment.read1 : fragment.read2);
+        if (obs.evtype != SVEvidenceType::SPLIT_ALIGN)
+        {
+            sv.bp1EvidenceIndex[obs.evtype].push_back(candRead.mappedReadCount);
+        }
+        else
+        {
+            // account for bp1 and bp2 mapping to non-supp and supplemental reads
+            const bool is1to1(sv.isIntersect1to1(obs));
+            if (obs.isRead1Source())
+            {
+                if (fragment.read1Supplemental.size() != 1) return;
+                const SVCandidateSetRead& bp1Read(is1to1 ? fragment.read1 : fragment.read1Supplemental.front());
+                const SVCandidateSetRead& bp2Read(is1to1 ? fragment.read1Supplemental.front() : fragment.read1);
+                sv.bp1EvidenceIndex[obs.evtype].push_back(bp1Read.mappedReadCount);
+                sv.bp2EvidenceIndex[obs.evtype].push_back(bp2Read.mappedReadCount);
+            }
+            else
+            {
+                if (fragment.read2Supplemental.size() != 1) return;
+                const SVCandidateSetRead& bp1Read(is1to1 ? fragment.read2 : fragment.read2Supplemental.front());
+                const SVCandidateSetRead& bp2Read(is1to1 ? fragment.read2Supplemental.front() : fragment.read2);
+                sv.bp1EvidenceIndex[obs.evtype].push_back(bp1Read.mappedReadCount);
+                sv.bp2EvidenceIndex[obs.evtype].push_back(bp2Read.mappedReadCount);
+            }
+        }
+    }
+    else
+    {
+        // account for bp1 and bp2 mapping to read1 and read2:
+        const bool is1to1(sv.isIntersect1to1(obs));
+        const SVCandidateSetRead& bp1Read(is1to1 ? fragment.read1 : fragment.read2);
+        const SVCandidateSetRead& bp2Read(is1to1 ? fragment.read2 : fragment.read1);
+        sv.bp1EvidenceIndex[obs.evtype].push_back(bp1Read.mappedReadCount);
+        sv.bp2EvidenceIndex[obs.evtype].push_back(bp2Read.mappedReadCount);
+    }
 }
 
 
@@ -614,12 +646,12 @@ updateEvidenceIndex(
 ///
 void
 SVFinder::
-assignPairObservationsToSVCandidates(
+assignFragmentObservationsToSVCandidates(
     const SVLocusNode& node1,
     const SVLocusNode& node2,
     const std::vector<SVObservation>& readCandidates,
     const bool isExpandSVCandidateSet,
-    SVCandidateSetReadPair& pair,
+    SVCandidateSetSequenceFragment& fragment,
     std::vector<FatSVCandidate>& svs)
 {
     // we anticipate so few svs from the POC method, that there's no indexing on them
@@ -690,16 +722,14 @@ assignPairObservationsToSVCandidates(
 #endif
                     if (isSpanningCand)
                     {
-                        // don't store read pairs unless there's a specific hypothesis --
+                        // don't store fragment association unless there's a specific hypothesis --
                         // if there is no hypothesis (small assembly cases (thus "! isSpanning")), we'll be
                         // going back through the bam region during assembly anyway:
                         //
-                        pair.svLink.emplace_back(svIndex,readCand.evtype);
+                        fragment.svLink.emplace_back(svIndex,readCand.evtype);
                     }
-                    else
-                    {
-                        updateEvidenceIndex(pair,readCand,sv);
-                    }
+
+                    updateEvidenceIndex(fragment,readCand,sv);
 
                     sv.merge(readCand, isExpandSVCandidateSet);
 
@@ -724,25 +754,19 @@ assignPairObservationsToSVCandidates(
 
             if (isSpanningCand)
             {
-                // ditto note above, store read pairs only when there's an SV hypothesis:
-                pair.svLink.emplace_back(newSVIndex,readCand.evtype);
+                // ditto note above, store fragment association only when there's an SV hypothesis:
+                fragment.svLink.emplace_back(newSVIndex,readCand.evtype);
             }
-            else
-            {
-                updateEvidenceIndex(pair,readCand,svs.back());
-            }
+            updateEvidenceIndex(fragment,readCand,svs.back());
         }
     }
 }
 
 
 
-/// we either process the pair to discover new SVs and expand existing SVs,
-/// or we go through and add pairs to existing SVs without expansion
-///
 void
 SVFinder::
-processReadPair(
+processSequenceFragment(
     const SVLocusNode& node1,
     const SVLocusNode& node2,
     const bam_header_info& bamHeader,
@@ -752,18 +776,23 @@ processReadPair(
     const bool isExpandSVCandidateSet,
     std::vector<FatSVCandidate>& svs,
     TruthTracker& truthTracker,
-    SVCandidateSetReadPair& pair)
+    SVCandidateSetSequenceFragment& fragment)
 {
-    SVCandidateSetRead* localReadPtr(&(pair.read1));
-    SVCandidateSetRead* remoteReadPtr(&(pair.read2));
-    pair.svLink.clear();
+    SVCandidateSetRead* localReadPtr(&(fragment.read1));
+    SVCandidateSetRead* remoteReadPtr(&(fragment.read2));
+    fragment.svLink.clear();
 
     if (! localReadPtr->isSet())
     {
         std::swap(localReadPtr,remoteReadPtr);
     }
-    assert(localReadPtr->isSet() && "Neither read in pair is set");
 
+    if (! localReadPtr->isSet())
+    {
+        // this could occur when a supplemental read only is found:
+        return;
+        //assert(localReadPtr->isSet() && "Neither read in pair is set");
+    }
     const bam_record* remoteBamRecPtr( remoteReadPtr->isSet() ? &(remoteReadPtr->bamrec) : nullptr);
 
     const reference_contig_segment& localRef( localReadPtr->isNode1 ? refSeq1 : refSeq2 );
@@ -807,14 +836,14 @@ processReadPair(
     }
 
 #ifdef DEBUG_SVDATA
-    log_os << __FUNCTION__ << ": Checking pair: " << pair << "\n";
+    log_os << __FUNCTION__ << ": Checking pair: " << fragment << "\n";
     log_os << __FUNCTION__ << ": Translated to candidates:\n";
     for (const SVObservation& cand : _readCandidates)
     {
         log_os << __FUNCTION__ << ": cand: " << cand << "\n";
     }
 #endif
-    assignPairObservationsToSVCandidates(node1, node2, _readCandidates, isExpandSVCandidateSet, pair, svs);
+    assignFragmentObservationsToSVCandidates(node1, node2, _readCandidates, isExpandSVCandidateSet, fragment, svs);
 }
 
 
@@ -1021,15 +1050,16 @@ getCandidatesFromData(
 
     for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
     {
-        SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
-        for (SVCandidateSetReadPair& pair : svDataGroup)
+        SVCandidateSetSequenceFragmentSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
+        for (SVCandidateSetSequenceFragment& fragment : svDataGroup)
         {
-            if (! pair.isAnchored()) continue;
+            /// TODO update this test to generalize from read pair to split reads:
+            if (! fragment.isAnchored()) continue;
 
             static const bool isAnchored(true);
-            processReadPair(
+            processSequenceFragment(
                 node1, node2, bamHeader, refSeq1, refSeq2, bamIndex, isAnchored,
-                svs, truthTracker, pair);
+                svs, truthTracker, fragment);
         }
     }
 
@@ -1041,13 +1071,13 @@ getCandidatesFromData(
             const bool isTumor(_isAlignmentTumor[bamIndex]);
             if (isTumor) continue;
 
-            SVCandidateSetReadPairSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
-            for (SVCandidateSetReadPair& pair : svDataGroup)
+            SVCandidateSetSequenceFragmentSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
+            for (SVCandidateSetSequenceFragment& pair : svDataGroup)
             {
                 if (pair.isAnchored()) continue;
 
                 static const bool isAnchored(false);
-                processReadPair(
+                processSequenceFragment(
                     node1, node2, bamHeader, refSeq1, refSeq2, bamIndex, isAnchored,
                     svs, truthTracker, pair);
             }
