@@ -184,6 +184,20 @@ enum index_t
     READ2,
     PAIR
 };
+
+inline
+const char*
+label(const index_t i)
+{
+    switch(i)
+    {
+    case UNKNOWN: return "unknown";
+    case READ1: return "read1";
+    case READ2: return "read2";
+    case PAIR: return "pair";
+    default: return "";
+    }
+}
 }
 
 /// when we extract an SV candidate from a single piece of evidence, it can be treated as a special 'observation' class:
@@ -223,3 +237,8 @@ struct SVObservation : public SVCandidate
     SVEvidenceType::index_t evtype;
     FRAGSOURCE::index_t fragSource;
 };
+
+
+std::ostream&
+operator<<(std::ostream& os, const SVObservation& svc);
+

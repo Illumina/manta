@@ -43,3 +43,16 @@ operator<<(
        << "\t" << svc.bp2 << "\n";
     return os;
 }
+
+
+
+std::ostream&
+operator<<(
+    std::ostream& os,
+    const SVObservation& svc)
+{
+    os << static_cast<SVCandidate>(svc);
+    os << "SVObservation etype: " << SVEvidenceType::label(svc.evtype)
+       << " fragtype: " << FRAGSOURCE::label(svc.fragSource) << "\n";
+    return os;
+}

@@ -20,7 +20,7 @@
 #include "manta/SVCandidate.hh"
 
 #include <array>
-
+#include <iosfwd>
 
 
 template <typename Vec>
@@ -91,3 +91,7 @@ struct FatSVCandidate : public SVCandidate
     evidenceIndex_t bp1EvidenceIndex;
     evidenceIndex_t bp2EvidenceIndex;
 };
+
+
+std::ostream&
+operator<<(std::ostream& os, const FatSVCandidate& svc);
