@@ -43,7 +43,9 @@ struct SVLocusSetFinder : public pos_processor_base
     SVLocusSetFinder(
         const ESLOptions& opt,
         const GenomeInterval& scanRegion,
-        const bam_header_info& bamHeader);
+        const bam_header_info& bamHeader,
+        const reference_contig_segment& refSeq,
+        TruthTracker& truthTracker);
 
     ~SVLocusSetFinder()
     {
@@ -56,23 +58,12 @@ struct SVLocusSetFinder : public pos_processor_base
     void
     update(
         const bam_record& bamRead,
-        const unsigned defaultReadGroupIndex,
-        const bam_header_info& bamHeader,
-        const reference_contig_segment& refSeq,
-        TruthTracker& truthTracker);
+        const unsigned defaultReadGroupIndex);
 
     const SVLocusSet&
     getLocusSet()
     {
         return _svLoci;
-    }
-
-    void
-    setBamHeader(const bam_header_t& header)
-    {
-        assert(! _isScanStarted);
-        _svLoci.header = bam_header_info(header);
-        updateDenoiseRegion();
     }
 
     // flush any cached values built up during the update process
@@ -127,5 +118,9 @@ private:
 
     bool _isMaxDepth;
     float _maxDepth;
+
+    const bam_header_info& _bamHeader;
+    const reference_contig_segment& _refSeq;
+    TruthTracker& _truthTracker;
 };
 

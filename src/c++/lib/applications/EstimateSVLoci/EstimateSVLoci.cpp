@@ -100,8 +100,7 @@ runESL(const ESLOptions& opt)
     reference_contig_segment refSegment;
     getIntervalReferenceSegment(opt.referenceFilename, bamHeader, refEdgeBufferSize, scanRegion, refSegment);
 
-    SVLocusSetFinder locusFinder(opt, scanRegion, bamHeader);
-    locusFinder.setBamHeader(header);
+    SVLocusSetFinder locusFinder(opt, scanRegion, bamHeader, refSegment, truthTracker);
 
     input_stream_data sdata;
     for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
@@ -124,8 +123,7 @@ runESL(const ESLOptions& opt)
         const bam_streamer& readStream(*bamStreams[current.sample_no]);
         const bam_record& read(*(readStream.get_record_ptr()));
 
-        locusFinder.update(read, current.sample_no, bamHeader, refSegment,
-                           truthTracker);
+        locusFinder.update(read, current.sample_no);
     }
 
     // finished updating:

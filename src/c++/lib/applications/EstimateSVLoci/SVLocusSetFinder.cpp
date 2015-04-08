@@ -61,7 +61,9 @@ SVLocusSetFinder::
 SVLocusSetFinder(
     const ESLOptions& opt,
     const GenomeInterval& scanRegion,
-    const bam_header_info& bamHeader) :
+    const bam_header_info& bamHeader,
+    const reference_contig_segment& refSeq,
+    TruthTracker& truthTracker) :
     _isAlignmentTumor(opt.alignFileOpt.isAlignmentTumor),
     _scanRegion(scanRegion),
     _stageman(
@@ -77,7 +79,10 @@ SVLocusSetFinder(
     _denoisePos(0),
     _readScanner(opt.scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilename),
     _isMaxDepth(false),
-    _maxDepth(0)
+    _maxDepth(0),
+    _bamHeader(bamHeader),
+    _refSeq(refSeq),
+    _truthTracker(truthTracker)
 {
     const ChromDepthFilterUtil dFilter(opt.chromDepthFilename, opt.scanOpt.maxDepthFactor, bamHeader);
     _isMaxDepth=dFilter.isMaxDepthFilter();
@@ -86,6 +91,7 @@ SVLocusSetFinder(
         _maxDepth=dFilter.maxDepth(scanRegion.tid);
     }
 
+    _svLoci.header = _bamHeader;
     updateDenoiseRegion();
 }
 
@@ -116,7 +122,7 @@ updateDenoiseRegion()
     }
 
 #ifdef DEBUG_SFINDER
-    log_os << "SFinder::updateDenoiseRegion " << _denoiseRegion << "\n";
+    log_os << __FUNCTION__ << ": " << _denoiseRegion << "\n";
 #endif
 
 }
@@ -129,7 +135,7 @@ process_pos(const int stage_no,
             const pos_t pos)
 {
 #ifdef DEBUG_SFINDER
-    log_os << "SFinder::process_pos stage_no: " << stage_no << " pos: " << pos << "\n";
+    log_os << __FUNCTION__ << ": stage_no: " << stage_no << " pos: " << pos << "\n";
 #endif
 
     if     (stage_no == STAGE::HEAD)
@@ -144,7 +150,7 @@ process_pos(const int stage_no,
         {
 
 #ifdef DEBUG_SFINDER
-            log_os << "SFinder::process_pos pos intersect. pos: " << pos << " dnRegion: " << _denoiseRegion << " is in region: " << _isInDenoiseRegion << "\n";
+            log_os << __FUNCTION__ << ": pos intersect. pos: " << pos << " dnRegion: " << _denoiseRegion << " is in region: " << _isInDenoiseRegion << "\n";
 #endif
 
             if (! _isInDenoiseRegion)
@@ -163,7 +169,7 @@ process_pos(const int stage_no,
         {
 
 #ifdef DEBUG_SFINDER
-            log_os << "SFinder::process_pos no pos intersect. pos: " << pos << " dnRegion: " << _denoiseRegion << " is in region: " << _isInDenoiseRegion << "\n";
+            log_os << __FUNCTION__ << ": no pos intersect. pos: " << pos << " dnRegion: " << _denoiseRegion << " is in region: " << _isInDenoiseRegion << "\n";
 #endif
 
             if (_isInDenoiseRegion)
@@ -217,10 +223,7 @@ void
 SVLocusSetFinder::
 update(
     const bam_record& bamRead,
-    const unsigned defaultReadGroupIndex,
-    const bam_header_info& bamHeader,
-    const reference_contig_segment& refSeq,
-    TruthTracker& truthTracker)
+    const unsigned defaultReadGroupIndex)
 {
     _isScanStarted=true;
 
@@ -252,10 +255,10 @@ update(
         return;
     }
 
-    if (! _readScanner.isSVEvidence(bamRead,defaultReadGroupIndex,refSeq,&(incounts.evidenceCount))) return;
+    if (! _readScanner.isSVEvidence(bamRead,defaultReadGroupIndex,_refSeq,&(incounts.evidenceCount))) return;
 
 #ifdef DEBUG_SFINDER
-    log_os << "SFinder: Accepted read. isNonCompressedAnomalous "  << isNonCompressedAnomalous << " is Local assm evidence: " << isLocalAssemblyEvidence << " read: " << bamRead << "\n";
+    log_os << __FUNCTION__ << ": Accepted read. isNonCompressedAnomalous "  << isNonCompressedAnomalous << " is Local assm evidence: " << isLocalAssemblyEvidence << " read: " << bamRead << "\n";
 #endif
 
     // check that this read starts in our scan region:
@@ -267,8 +270,8 @@ update(
 
     SampleEvidenceCounts& eCounts(counts.evidence);
 
-    _readScanner.getSVLoci(bamRead, defaultReadGroupIndex, bamHeader,
-                           refSeq, loci, eCounts, truthTracker);
+    _readScanner.getSVLoci(bamRead, defaultReadGroupIndex, _bamHeader,
+                           _refSeq, loci, eCounts, _truthTracker);
 
     for (const SVLocus& locus : loci)
     {
