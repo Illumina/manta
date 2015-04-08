@@ -109,13 +109,28 @@ addReadToDepthEst(
 
 /// insert assembly reads after modifying for minimum basecall quality
 static
-void
+bool
 insertAssemblyRead(
     const uint8_t minQval,
+    const std::string& bamIndexStr,
     const bam_record& bamRead,
     const bool isReversed,
+    SVCandidateAssembler::ReadIndexType& readIndex,
     AssemblyReadInput& reads)
 {
+    const char flag(bamRead.is_second() ? '2' : '1');
+    const std::string readKey = std::string(bamRead.qname()) + "_" + flag + "_" + bamIndexStr;
+
+    if (readIndex.count(readKey) != 0)
+    {
+#ifdef DEBUG_ASBL
+        log_os << __FUNCTION__ << ": WARNING: SmallAssembler read name collision : " << readKey << "\n";
+#endif
+        return false;
+    }
+
+    readIndex.insert(std::make_pair(readKey,reads.size()));
+
     reads.push_back(bamRead.get_bam_read().get_string());
 
     std::string& nread(reads.back());
@@ -129,6 +144,7 @@ insertAssemblyRead(
     }
 
     if (isReversed) reverseCompStr(reads.back());
+    return true;
 }
 
 
@@ -242,27 +258,15 @@ recoverRemoteReads(
 
                 if (bamRead.map_qual() != 0) break;
 
-                const char flag(bamRead.is_second() ? '2' : '1');
-                const std::string readKey = remote.qname + "_" + flag + "_" + bamIndexStr;
-
-                if (readIndex.count(readKey) != 0)
-                {
-#ifdef DEBUG_ASBL
-                    log_os << __FUNCTION__ << ": WARNING: SmallAssembler read name collision : " << readKey << "\n";
-#endif
-                    break;
-                }
-
-                bool isReversed(isLocusReversed);
-
                 // determine if we need to reverse:
+                bool isReversed(isLocusReversed);
                 if (bamRead.is_fwd_strand() == bamRead.is_mate_fwd_strand())
                 {
                     isReversed = (! isReversed);
                 }
 
-                readIndex.insert(std::make_pair(readKey,reads.size()));
-                insertAssemblyRead(assembleOpt.minQval, bamRead, isReversed, reads);
+                const bool isInserted = insertAssemblyRead(assembleOpt.minQval, bamIndexStr, bamRead, isReversed, readIndex, reads);
+                if (! isInserted) break;
 
                 /// add to the remote read cache used during PE scoring:
                 remoteReadsCache[remote.qname] = RemoteReadPayload(bamRead.read_no(), reads.back());
@@ -604,12 +608,7 @@ getBreakendReads(
             if (isIndelKeeper) ++indelCount;
             if (isSemiAlignedKeeper) ++semiAlignedCount;
             if (isShadowKeeper) ++shadowCount;
-#endif
-            //if ( bamRead.pe_map_qual() == 0 ) continue;
-            const char flag(bamRead.is_second() ? '2' : '1');
-            const std::string readKey = std::string(bamRead.qname()) + "_" + flag + "_" + bamIndexStr;
 
-#ifdef DEBUG_ASBL
             log_os << logtag << "Adding bamrec. idx: " << bamIndex << " rec: " << bamRead << '\n'
                    << "\tmapq: " << bamRead.pe_map_qual() << '\n'
                    << "\tread: " << bamRead.get_bam_read() << '\n';
@@ -619,16 +618,7 @@ getBreakendReads(
                    << '\n';
 #endif
 
-            if (readIndex.count(readKey) != 0)
-            {
-#ifdef DEBUG_ASBL
-                log_os << logtag << "WARNING: SmallAssembler read name collision : " << readKey << "\n";
-#endif
-                continue;
-            }
-
             bool isReversed(isLocusReversed);
-
             // if shadow read, determine if we need to reverse:
             if (isShadowKeeper)
             {
@@ -638,8 +628,7 @@ getBreakendReads(
                 }
             }
 
-            readIndex.insert(std::make_pair(readKey,reads.size()));
-            insertAssemblyRead(getAssembleOpt().minQval, bamRead, isReversed, reads);
+            insertAssemblyRead(getAssembleOpt().minQval, bamIndexStr, bamRead, isReversed, readIndex, reads);
         }
 
 #ifdef DEBUG_ASBL
