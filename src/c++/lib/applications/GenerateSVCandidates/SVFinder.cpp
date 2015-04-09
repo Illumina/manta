@@ -1006,6 +1006,7 @@ enum index_t
 static
 SINGLE_FILTER::index_t
 isFilterSingleJunctionCandidate(
+    const bool isRNA,
     const double spanningNoiseRate,
     const double assemblyNoiseRate,
     const FatSVCandidate& sv)
@@ -1019,7 +1020,11 @@ isFilterSingleJunctionCandidate(
     // candidates must have a minimum amount of evidence:
     if (isSpanningSV(sv))
     {
-        if (! isSpanningCandidateSignalSignificant(spanningNoiseRate, sv)) return SPANNINGLOWSIGNAL;
+        /// TODO make sensitivity adjustments for RNA here:
+        if (! isRNA)
+        {
+            if (! isSpanningCandidateSignalSignificant(spanningNoiseRate, sv)) return SPANNINGLOWSIGNAL;
+        }
     }
     else if (isComplexSV(sv))
     {
@@ -1039,6 +1044,7 @@ isFilterSingleJunctionCandidate(
 static
 void
 filterCandidates(
+    const bool isRNA,
     const double spanningNoiseRate,
     const double assemblyNoiseRate,
     std::vector<FatSVCandidate>& svs,
@@ -1049,7 +1055,7 @@ filterCandidates(
     while (index<svCount)
     {
         using namespace SINGLE_FILTER;
-        const index_t filt(isFilterSingleJunctionCandidate(spanningNoiseRate,assemblyNoiseRate,svs[index]));
+        const index_t filt(isFilterSingleJunctionCandidate(isRNA, spanningNoiseRate,assemblyNoiseRate,svs[index]));
 
         bool isFilter(false);
         switch (filt)
@@ -1170,7 +1176,7 @@ getCandidatesFromData(
     }
 #endif
 
-    filterCandidates(_spanningNoiseRate, _assemblyNoiseRate,svs,stats);
+    filterCandidates(_isRNA, _spanningNoiseRate, _assemblyNoiseRate,svs,stats);
 
     std::copy(svs.begin(),svs.end(),std::back_inserter(output_svs));
 }
