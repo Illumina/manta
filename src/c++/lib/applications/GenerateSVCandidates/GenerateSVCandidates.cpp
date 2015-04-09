@@ -101,10 +101,10 @@ struct MultiJunctionFilter
                 candidateCount += mj.junction.size();
             }
             log_os << __FUNCTION__ << ": Low-resolution candidate filtration complete. "
-                  << "candidates: " << candidateCount << " "
-                  << "junctions: " << junctionCount << " "
-                  << "complex: " << mjComplexCount << " "
-                  << "spanningfilt: " << mjSpanningFilterCount << "\n";
+                   << "candidates: " << candidateCount << " "
+                   << "junctions: " << junctionCount << " "
+                   << "complex: " << mjComplexCount << " "
+                   << "spanningfilt: " << mjSpanningFilterCount << "\n";
         }
 #ifdef DEBUG_GSV
         log_os << __FUNCTION__ << ": final candidate list";

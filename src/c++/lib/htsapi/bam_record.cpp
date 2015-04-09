@@ -47,7 +47,10 @@ operator<<(std::ostream& os, const bam_record& br)
         {
             os  << " sa: " << saStr;
         }
-        if (br.is_supplement()) { os << " issupp"; }
+        if (br.is_supplement())
+        {
+            os << " issupp";
+        }
 
         if (br.is_paired())
         {

@@ -193,13 +193,18 @@ inline
 const char*
 label(const index_t i)
 {
-    switch(i)
+    switch (i)
     {
-    case UNKNOWN: return "unknown";
-    case READ1: return "read1";
-    case READ2: return "read2";
-    case PAIR: return "pair";
-    default: return "";
+    case UNKNOWN:
+        return "unknown";
+    case READ1:
+        return "read1";
+    case READ2:
+        return "read2";
+    case PAIR:
+        return "pair";
+    default:
+        return "";
     }
 }
 }

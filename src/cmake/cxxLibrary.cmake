@@ -47,9 +47,8 @@ foreach (SOURCE_FILE ${THIS_LIBRARY_SOURCES})
     endif ()
 endforeach ()
 
-# we don't need to add headers to the library for the build to work, but to
-# make the solution easier to work with on windows, we add headers to each
-# library target:
+# we don't need to add headers to the library for the build to work, but we
+# add headers on win32 to make the Visual Studio solution easier to work with:
 if (WIN32)
     file(GLOB THIS_LIBRARY_HEADERS *.hh)
     set (THIS_LIBRARY_SOURCES ${THIS_LIBRARY_SOURCES} ${THIS_LIBRARY_HEADERS})
