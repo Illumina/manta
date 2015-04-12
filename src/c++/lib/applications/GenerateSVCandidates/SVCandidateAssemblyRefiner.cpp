@@ -21,6 +21,7 @@
 #include "alignment/AlignmentUtil.hh"
 #include "blt_util/log.hh"
 #include "blt_util/seq_util.hh"
+#include "blt_util/align_path.hh"
 #include "htsapi/samtools_fasta_util.hh"
 #include "common/Exceptions.hh"
 #include "manta/SVCandidateUtil.hh"
@@ -31,6 +32,7 @@
 
 //#define DEBUG_REFINER
 //#define DEBUG_CONTIG
+//#define DEBUG_KMER
 
 #ifdef DEBUG_REFINER
 #include "blt_util/seq_printer.hh"
@@ -1105,6 +1107,125 @@ getCandidateAssemblyData(
     }
 }
 
+/// Represents a strech of reference sequence exlcuded from alignment by the kmer matcher.
+struct exclusion_block
+{
+    exclusion_block(const unsigned s, const unsigned l, const unsigned sp)
+        : start(s), length(l), nSpacer(sp) {}
+    unsigned start; // Start of excluded region
+    unsigned length; // Nunmber of bp excluded
+    unsigned nSpacer; // Number of 'N' added in place of excluded sequence
+};
+
+/// Translate a reduced reference position to the original reference coordinates
+unsigned translateMaskedPos(
+    const std::vector<exclusion_block>& exclBlocks,
+    const unsigned maskedPos)
+{
+    int offset = 0;
+    for (const auto cblock : exclBlocks)
+    {
+        if (cblock.start > (offset + maskedPos)) break;
+        offset += cblock.length - cblock.nSpacer;
+    }
+    return offset + maskedPos;
+}
+
+/// Translate an alignment made against a reduced reference to the original reference coordinates
+bool translateMaskedAlignment(
+    Alignment& align,
+    const std::vector<exclusion_block>& exclBlocks)
+{
+    using namespace ALIGNPATH;
+#ifdef DEBUG_KMER
+    log_os << __FUNCTION__ << " original: " << align << "\n";
+#endif
+    path_t newPath;
+    pos_t cpos = align.beginPos;
+    for (const path_segment seg : align.apath)
+    {
+        if (!is_segment_type_ref_length(seg.type))
+        {
+            newPath.push_back(seg);
+        }
+        else
+        {
+            const unsigned length = translateMaskedPos(exclBlocks, cpos + seg.length) -
+                    translateMaskedPos(exclBlocks, cpos);
+            if (is_segment_align_match(seg.type) && (length != seg.length)) return false;
+#ifdef DEBUG_KMER
+            log_os << __FUNCTION__ << " SEGMENT " << seg.type << " " << seg.length << "\n";
+            log_os << "\tlength " << length << "\n";
+            log_os << "\tcpos " << cpos << "\n";
+#endif
+            cpos += seg.length;
+            newPath.emplace_back(seg.type, length);
+        }
+    }
+    if (align.apath.size() > 0)
+    {
+        align.beginPos = translateMaskedPos(exclBlocks, align.beginPos);
+        align.apath = newPath;
+    }
+#ifdef DEBUG_KMER
+    log_os << __FUNCTION__ << " final: " << align << "\n";
+#endif
+    return true;
+}
+
+/// Returns a reduced reference sequence where long stretches without kmer matches to the contig are removed
+template <typename SymIter>
+std::string kmerMaskReference(
+               const SymIter refSeqStart, 
+               const SymIter refSeqEnd,
+               const std::string& contig,
+               const int nSpacer,
+               std::vector<exclusion_block>& exclBlocks)
+{
+    // Hash all kmers in the contig
+    static const int merSize(10);
+    std::unordered_set<std::string> contigHash;
+    for (unsigned contigMerIndex(0); contigMerIndex<(contig.size() - (merSize - 1)); ++contigMerIndex)
+    {
+        contigHash.insert(contig.substr(contigMerIndex,merSize));
+    }
+    // Mask the reference (and keep track of excluded regions for coordinate translation later)
+    static const int minExclusion(1000);
+    static const int padding(50); // Amount of sequence included around each kmer hit.
+    std::string maskedRef;
+    const SymIter maxRef = refSeqEnd - (merSize - 1);
+    SymIter potExclStart = refSeqStart;
+    SymIter inclStart = refSeqStart;
+    for (SymIter refIt = refSeqStart; refIt != maxRef; refIt++)
+    {
+        if (contigHash.count(std::string(refIt, refIt + merSize)) != 0)
+        {
+            if ((refIt - potExclStart) > (minExclusion + padding))
+            {
+                unsigned spacer(0);
+                if (potExclStart > refSeqStart)
+                {
+                    maskedRef.append(std::string(inclStart, potExclStart));
+                    maskedRef.append(nSpacer, 'N');
+                    spacer = nSpacer;
+                }
+                inclStart = refIt - padding;
+                exclBlocks.emplace_back(potExclStart - refSeqStart, inclStart - potExclStart, spacer);
+            }
+            potExclStart = refIt + padding;
+        }
+    }
+    maskedRef.append(std::string(inclStart, std::min(maxRef, potExclStart)));
+#ifdef DEBUG_KMER
+    log_os << __FUNCTION__ << "Reduced to " << maskedRef << '\n';
+    log_os << __FUNCTION__ << " exclBlocks\n\t";
+    for (const auto block : exclBlocks)
+        log_os << " " << block.start << ":" << block.length << ":" << block.nSpacer;
+    log_os << "\n";
+#endif
+    if (maskedRef.empty()) maskedRef.append(nSpacer, 'N');
+    return maskedRef;
+}
 
 
 /// convert jump alignment results into an SVCandidate
@@ -1387,16 +1508,51 @@ getJumpAssembly(
 
         if (_opt.isRNA)
         {
+#ifdef DEBUG_REFINER
+            log_os << __FUNCTION__ << " RNA alignment\n";
+#endif           
+            static const int nSpacer(25);
+            std::vector<exclusion_block> exclBlocks1;
+            const std::string cutRef1 = kmerMaskReference(align1RefStrPtr->begin() + align1LeadingCut,
+                    align1RefStrPtr->end() - align1TrailingCut, 
+                    contig.seq, nSpacer, exclBlocks1);
+            std::vector<exclusion_block> exclBlocks2;
+            const std::string cutRef2 = kmerMaskReference(align2RefStrPtr->begin() + align2LeadingCut,
+                    align2RefStrPtr->end() - align2TrailingCut,
+                    contig.seq, nSpacer, exclBlocks2);
+#ifdef DEBUG_REFINER
+            log_os << __FUNCTION__ << " Kmer-masked references\n";
+            log_os << "\t ref Lengths " << align1RefStrPtr->size() << " " << align2RefStrPtr->size() << "\n";
+            log_os << "\t cutref Lengths " << cutRef1.size() << " " << cutRef2.size() << "\n";
+#endif
+
             const bool bp1Fw = (bporient.isBp1Reversed != bporient.isBp1First);
             const bool bp2Fw = (bporient.isBp2Reversed != bporient.isBp1First);
 #ifdef DEBUG_REFINER
             log_os << __FUNCTION__ << ": bp1Fw: " << bp1Fw << " ; bp2Fw: " << bp2Fw << '\n';
 #endif
             _RNASpanningAligner.align(contig.seq.begin(), contig.seq.end(),
-                                      align1RefStrPtr->begin() + align1LeadingCut, align1RefStrPtr->end() - align1TrailingCut,
-                                      align2RefStrPtr->begin() + align2LeadingCut, align2RefStrPtr->end() - align2TrailingCut,
-                                      bp1Fw, bp2Fw,
-                                      alignment);
+                    cutRef1.begin(), cutRef1.end(), cutRef2.begin(), cutRef2.end(),
+                    bp1Fw, bp2Fw,
+                    alignment);
+            
+#ifdef DEBUG_REFINER
+            log_os << __FUNCTION__ << " Masked 1: " << alignment.align1 << '\n';
+            log_os << __FUNCTION__ << " Masked 2: " << alignment.align2 << '\n';
+#endif
+            if (!(translateMaskedAlignment(alignment.align1, exclBlocks1) &&
+                translateMaskedAlignment(alignment.align2, exclBlocks2)))
+            {
+#ifdef DEBUG_REFINER
+                log_os << __FUNCTION__ << " Failed to fix kmer-masked alignment\n";
+#endif
+                alignment.align1.clear();
+                alignment.align2.clear();
+            }
+#ifdef DEBUG_REFINER
+            log_os << __FUNCTION__ << " Fixed 1: " << alignment.align1 << '\n';
+            log_os << __FUNCTION__ << " Fixed 2: " << alignment.align2 << '\n';
+#endif
         }
         else
         {
