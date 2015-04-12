@@ -31,6 +31,8 @@ endif()
 
 if (NOT GIT_VERSION)
     set(GIT_VERSION "UNKNOWN")
+else ()
+    STRING(REGEX REPLACE "^v" "" GIT_VERSION ${GIT_VERSION})
 endif ()
 set(WORKFLOW_VERSION ${GIT_VERSION})
 message(STATUS "Detected workflow version: ${WORKFLOW_VERSION}")
