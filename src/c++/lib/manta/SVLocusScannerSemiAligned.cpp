@@ -224,8 +224,6 @@ getSVBreakendCandidateSemiAligned(
     // create a new alignment with all soft-clip sections forced to match:
     const SimpleAlignment matchedAlignment(matchifyEdgeSoftClip(bamAlign));
 
-    if (is_overlapping_pair(bamRead, matchedAlignment)) return;
-
     using namespace ALIGNPATH;
     const bam_seq querySeq(bamRead.get_bam_read());
 
@@ -242,28 +240,42 @@ getSVBreakendCandidateSemiAligned(
 
     if (0 != leadingMismatchLenTmp)
     {
-        unsigned minQCount(0);
-        for (unsigned pos(0); pos<leadingMismatchLenTmp; ++pos)
+        if (bamRead.is_fwd_strand() || !is_overlapping_pair(bamRead, matchedAlignment))
         {
-            if (qual[pos] >= minQ) ++minQCount;
+            unsigned minQCount(0);
+            for (unsigned pos(0); pos<leadingMismatchLenTmp; ++pos)
+            {
+                if (qual[pos] >= minQ) ++minQCount;
+            }
+            if ((static_cast<float>(minQCount)/(leadingMismatchLenTmp)) >= minQFrac)
+            {
+                leadingMismatchLen = leadingMismatchLenTmp;
+            }
         }
-        if ((static_cast<float>(minQCount)/(leadingMismatchLenTmp)) >= minQFrac)
-        {
-            leadingMismatchLen = leadingMismatchLenTmp;
-        }
+#ifdef DEBUG_SEMI_ALIGNED
+        else
+            log_os << " Overlapping_pair leading" << " read qname=" << bamRead.qname() << std::endl;
+#endif
     }
 
     if (0 != trailingMismatchLenTmp)
     {
-        unsigned minQCount(0);
-        for (unsigned pos(0); pos<trailingMismatchLenTmp; ++pos)
+        if (!bamRead.is_fwd_strand() || !is_overlapping_pair(bamRead, matchedAlignment))
         {
-            if (qual[readSize-pos-1] >= minQ) ++minQCount;
+            unsigned minQCount(0);
+            for (unsigned pos(0); pos<trailingMismatchLenTmp; ++pos)
+            {
+                if (qual[readSize-pos-1] >= minQ) ++minQCount;
+            }
+            if ((static_cast<float>(minQCount)/(trailingMismatchLenTmp)) >= minQFrac)
+            {
+                trailingMismatchLen = trailingMismatchLenTmp;
+            }
         }
-        if ((static_cast<float>(minQCount)/(trailingMismatchLenTmp)) >= minQFrac)
-        {
-            trailingMismatchLen = trailingMismatchLenTmp;
-        }
+#ifdef DEBUG_SEMI_ALIGNED
+        else
+            log_os << "Overlapping_pair trailing" << " read qname=" << bamRead.qname() << std::endl;
+#endif
     }
 }
 
