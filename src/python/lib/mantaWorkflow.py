@@ -128,6 +128,8 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
 
         if self.params.isIgnoreAnomProperPair :
             graphCmd.append("--ignore-anom-proper-pair")
+        if self.params.isRNA :
+            graphCmd.append("--rna")
 
         graphTaskLabel=preJoin(taskPrefix,"makeLocusGraph_"+gseg.pyflowId)
         graphTasks.add(self.addTask(graphTaskLabel,graphCmd,dependencies=dirTask,memMb=self.params.estimateMemMb))

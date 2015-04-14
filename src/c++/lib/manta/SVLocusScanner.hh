@@ -67,15 +67,22 @@ struct SVObservationWeights
 
 struct ReadScannerDerivOptions
 {
-    ReadScannerDerivOptions(const ReadScannerOptions& opt) :
+    ReadScannerDerivOptions(
+        const ReadScannerOptions& opt,
+        const bool isRNA) :
         isSmallCandidates(opt.minCandidateVariantSize<=opt.maxCandidateSizeForLocalAssmEvidence),
         beforeBreakend(opt.minPairBreakendSize/2),
-        afterBreakend(opt.minPairBreakendSize-beforeBreakend)
+        afterBreakend(opt.minPairBreakendSize-beforeBreakend),
+        isUseOverlappingPairs(isRNA)
     {}
 
     const bool isSmallCandidates;
     const pos_t beforeBreakend;
     const pos_t afterBreakend;
+
+    /// TODO standardize the overlapping pair treatment to be the same for DNA/RNA modes, then
+    /// remove this bit:
+    const bool isUseOverlappingPairs;
 };
 
 
@@ -93,7 +100,8 @@ struct SVLocusScanner
     SVLocusScanner(
         const ReadScannerOptions& opt,
         const std::string& statsFilename,
-        const std::vector<std::string>& alignmentFilename);
+        const std::vector<std::string>& alignmentFilename,
+        const bool isRNA);
 
     /// this predicate runs isReadFiltered without the mapq components
     static
@@ -294,6 +302,12 @@ struct SVLocusScanner
 
         LinearScaler<int> largeEventRegionScaler; ///< used to set expanded breakend sizes for large events
     };
+
+    bool
+    isUseOverlappingPairs() const
+    {
+        return _dopt.isUseOverlappingPairs;
+    }
 
 private:
 

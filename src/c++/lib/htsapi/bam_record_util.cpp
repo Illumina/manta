@@ -91,14 +91,24 @@ is_overlapping_pair(
     if (! is_mapped_chrom_pair(bamRead)) return false;
     if (bamRead.is_fwd_strand() == bamRead.is_mate_fwd_strand()) return false;
 
+    // we want a substantial gap between pos and mate-pos before we switch from
+    // treating the read pair as an overlapping standard mate pair to a duplicate pair.
+    //static const int dupDist(50);
+
     // get range of alignment after matching all softclip:
     if (bamRead.is_fwd_strand())
     {
+        // is this likely to be a duplication read pair?:
+        //if (((matchedAlignment.pos+1)-bamRead.mate_pos()) >= dupDist) return false;
+
         const pos_t matchedEnd(matchedAlignment.pos + apath_ref_length(matchedAlignment.path));
         return (matchedEnd >= bamRead.mate_pos());
     }
     else
     {
+        // is this likely to be a duplication read pair?:
+        //if ((bamRead.mate_pos()-(matchedAlignment.pos+1)) >= dupDist) return false;
+
         const pos_t matchedBegin(matchedAlignment.pos);
         return (matchedBegin <= bamRead.mate_pos());
     }

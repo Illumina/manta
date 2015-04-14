@@ -50,6 +50,7 @@ struct SVCandidateAssembler
         const std::string& chromDepthFilename,
         const bam_header_info& bamHeader,
         const AllCounts& counts,
+        const bool isRNA,
         TimeTracker& remoteTIme);
 
     /**

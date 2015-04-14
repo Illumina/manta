@@ -57,13 +57,14 @@ SVCandidateAssembler(
     const std::string& chromDepthFilename,
     const bam_header_info& bamHeader,
     const AllCounts& counts,
+    const bool isRNA,
     TimeTracker& remoteTime) :
     _scanOpt(scanOpt),
     _assembleOpt(assembleOpt),
     _isAlignmentTumor(alignFileOpt.isAlignmentTumor),
     _dFilter(chromDepthFilename, scanOpt.maxDepthFactor, bamHeader),
     _dFilterRemoteReads(chromDepthFilename, scanOpt.maxDepthFactorRemoteReads, bamHeader),
-    _readScanner(_scanOpt, statsFilename, alignFileOpt.alignmentFilename),
+    _readScanner(_scanOpt, statsFilename, alignFileOpt.alignmentFilename, isRNA),
     _remoteTime(remoteTime)
 {
     // setup regionless bam_streams:
@@ -546,7 +547,7 @@ getBreakendReads(
 
                 unsigned leadingMismatchLen(0);
                 unsigned trailingMismatchLen(0);
-                getSVBreakendCandidateSemiAlignedSimple(bamRead, bamAlign, refSeq, leadingMismatchLen, trailingMismatchLen);
+                getSVBreakendCandidateSemiAlignedSimple(bamRead, bamAlign, refSeq, _readScanner.isUseOverlappingPairs(), leadingMismatchLen, trailingMismatchLen);
 
                 if (isSearchForRightOpen)
                 {

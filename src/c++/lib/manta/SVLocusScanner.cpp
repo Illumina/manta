@@ -471,6 +471,7 @@ static
 void
 getSVCandidatesFromSemiAligned(
     const ReadScannerOptions& opt,
+    const ReadScannerDerivOptions& dopt,
     const bam_record& bamRead,
     const SimpleAlignment& bamAlign,
     const FRAGSOURCE::index_t fragSource,
@@ -481,6 +482,7 @@ getSVCandidatesFromSemiAligned(
     unsigned trailingMismatchLen(0);
     pos_t leadingRefPos(0), trailingRefPos(0);
     getSVBreakendCandidateSemiAligned(bamRead, bamAlign, refSeq,
+                                      dopt.isUseOverlappingPairs,
                                       leadingMismatchLen, leadingRefPos,
                                       trailingMismatchLen, trailingRefPos);
 
@@ -496,13 +498,13 @@ getSVCandidatesFromSemiAligned(
     if (leadingMismatchLen >= opt.minSemiAlignedMismatchLen)
     {
         const pos_t pos(leadingRefPos);
-        candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),pos,pos,svSource, fragSource,isComplex));
+        candidates.push_back(GetSplitSVCandidate(dopt,bamRead.target_id(),pos,pos,svSource, fragSource,isComplex));
     }
 
     if (trailingMismatchLen >= opt.minSemiAlignedMismatchLen)
     {
         const pos_t pos(trailingRefPos);
-        candidates.push_back(GetSplitSVCandidate(opt,bamRead.target_id(),pos,pos,svSource, fragSource,isComplex));
+        candidates.push_back(GetSplitSVCandidate(dopt,bamRead.target_id(),pos,pos,svSource, fragSource,isComplex));
     }
 }
 
@@ -878,8 +880,7 @@ getSingleReadSVCandidates(
     // - process any large indels in the localRead:
     getSVCandidatesFromReadIndels(opt, dopt, localAlign, fragSource, candidates);
 #ifdef DEBUG_SCANNER
-    static const std::string logtag("getSingleReadSVCandidates");
-    log_os << logtag << " post-indels candidate_size: " << candidates.size() << "\n";
+    log_os << __FUNCTION__ << ": post-indels candidate_size: " << candidates.size() << "\n";
 #endif
 
     // a read can provide SA split evidence or semi-aligned/soft-clip, but not both.
@@ -891,18 +892,18 @@ getSingleReadSVCandidates(
         getSACandidatesFromRead(opt, dopt, localRead, localAlign, fragSource, chromToIndex,
                                 candidates);
 #ifdef DEBUG_SCANNER
-        log_os << logtag << " post-split read candidate_size: " << candidates.size() << "\n";
+        log_os << __FUNCTION__ << ": post-split read candidate_size: " << candidates.size() << "\n";
 #endif
     }
     else
     {
         if (dopt.isSmallCandidates)
         {
-            getSVCandidatesFromSemiAligned(opt, localRead, localAlign, fragSource, refSeq,
+            getSVCandidatesFromSemiAligned(opt, dopt, localRead, localAlign, fragSource, refSeq,
                                            candidates);
         }
 #ifdef DEBUG_SCANNER
-        log_os << logtag << " post-semialigned candidate_size: " << candidates.size() << "\n";
+        log_os << __FUNCTION__ << ": post-semialigned candidate_size: " << candidates.size() << "\n";
 #endif
     }
 }
@@ -1206,9 +1207,10 @@ SVLocusScanner::
 SVLocusScanner(
     const ReadScannerOptions& opt,
     const std::string& statsFilename,
-    const std::vector<std::string>& /*alignmentFilename*/) :
+    const std::vector<std::string>& /*alignmentFilename*/,
+    const bool isRNA) :
     _opt(opt),
-    _dopt(opt)
+    _dopt(opt, isRNA)
 {
     using namespace illumina::common;
 
@@ -1350,7 +1352,8 @@ isSemiAlignedEvidence(
     const reference_contig_segment& refSeq) const
 {
     unsigned leadingMismatchLen(0), trailingMismatchLen(0);
-    getSVBreakendCandidateSemiAlignedSimple(bamRead, bamAlign, refSeq, leadingMismatchLen, trailingMismatchLen);
+    getSVBreakendCandidateSemiAlignedSimple(bamRead, bamAlign, refSeq, _dopt.isUseOverlappingPairs,
+                                      leadingMismatchLen, trailingMismatchLen);
     return ((leadingMismatchLen >= _opt.minSemiAlignedMismatchLen) || (trailingMismatchLen >= _opt.minSemiAlignedMismatchLen));
 }
 

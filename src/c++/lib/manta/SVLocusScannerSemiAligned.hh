@@ -15,6 +15,7 @@
 /// \author Chris Saunders
 /// \author Ole Schulz-Trieglaff
 /// \author Bret Barnes
+/// \author Felix Schlesinger
 ///
 
 #pragma once
@@ -38,6 +39,7 @@ getSVBreakendCandidateSemiAligned(
     const bam_record& bamRead,
     const SimpleAlignment& bamAlign,
     const reference_contig_segment& refSeq,
+    const bool isUseOverlappingPairs,
     unsigned& leadingMismatchLen,
     pos_t& leadingRefPos,
     unsigned& trailingMismatchLen,
@@ -53,12 +55,14 @@ getSVBreakendCandidateSemiAlignedSimple(
     const bam_record& bamRead,
     const SimpleAlignment& bamAlign,
     const reference_contig_segment& refSeq,
+    const bool isUseOverlappingPairs,
     unsigned& leadingMismatchLen,
     unsigned& trailingMismatchLen)
 {
     pos_t leadingRefPos(0), trailingRefPos(0);
     getSVBreakendCandidateSemiAligned(
         bamRead, bamAlign, refSeq,
+        isUseOverlappingPairs,
         leadingMismatchLen, leadingRefPos,
         trailingMismatchLen, trailingRefPos);
 }

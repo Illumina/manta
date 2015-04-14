@@ -77,7 +77,7 @@ SVLocusSetFinder(
     _isScanStarted(false),
     _isInDenoiseRegion(false),
     _denoisePos(0),
-    _readScanner(opt.scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilename),
+    _readScanner(opt.scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilename, opt.isRNA),
     _isMaxDepth(false),
     _maxDepth(0),
     _bamHeader(bamHeader),

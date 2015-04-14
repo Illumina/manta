@@ -15,6 +15,7 @@
 /// \author Chris Saunders
 /// \author Ole Schulz-Trieglaff
 /// \author Bret Barnes
+/// \author Felix Schlesinger
 ///
 
 #include "alignment/ReadScorer.hh"
@@ -205,6 +206,7 @@ getSVBreakendCandidateSemiAligned(
     const bam_record& bamRead,
     const SimpleAlignment& bamAlign,
     const reference_contig_segment& refSeq,
+    const bool isUseOverlappingPairs,
     unsigned& leadingMismatchLen,
     pos_t& leadingRefPos,
     unsigned& trailingMismatchLen,
@@ -224,6 +226,11 @@ getSVBreakendCandidateSemiAligned(
     // create a new alignment with all soft-clip sections forced to match:
     const SimpleAlignment matchedAlignment(matchifyEdgeSoftClip(bamAlign));
 
+    if (! isUseOverlappingPairs)
+    {
+        if (is_overlapping_pair(bamRead, matchedAlignment)) return;
+    }
+
     using namespace ALIGNPATH;
     const bam_seq querySeq(bamRead.get_bam_read());
 
@@ -240,7 +247,7 @@ getSVBreakendCandidateSemiAligned(
 
     if (0 != leadingMismatchLenTmp)
     {
-        if (bamRead.is_fwd_strand() || !is_overlapping_pair(bamRead, matchedAlignment))
+        if (bamRead.is_fwd_strand() || (!is_overlapping_pair(bamRead, matchedAlignment)))
         {
             unsigned minQCount(0);
             for (unsigned pos(0); pos<leadingMismatchLenTmp; ++pos)
@@ -260,7 +267,7 @@ getSVBreakendCandidateSemiAligned(
 
     if (0 != trailingMismatchLenTmp)
     {
-        if (!bamRead.is_fwd_strand() || !is_overlapping_pair(bamRead, matchedAlignment))
+        if ((!bamRead.is_fwd_strand()) || (!is_overlapping_pair(bamRead, matchedAlignment)))
         {
             unsigned minQCount(0);
             for (unsigned pos(0); pos<trailingMismatchLenTmp; ++pos)

@@ -81,7 +81,10 @@ parseESLOptions(
     ("truth-vcf", po::value(&opt.truthVcfFilename),
      "optional truth VCF file (for testing)")
     ("region", po::value(&opt.region),
-     "samtools formatted region, eg. 'chr1:20-30'");
+     "samtools formatted region, eg. 'chr1:20-30'")
+    ("rna", po::value(&opt.isRNA)->zero_tokens(),
+     "For RNA input. Changes small fragment handling.")
+     ;
 
     po::options_description alignDesc(getOptionsDescription(opt.alignFileOpt));
     po::options_description scanDesc(getOptionsDescription(opt.scanOpt));
