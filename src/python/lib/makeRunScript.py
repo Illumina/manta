@@ -58,16 +58,28 @@ def makeRunScript(scriptFile, workflowModulePath, workflowClassName, primaryConf
 
     sfp.write(runScript1 % (pythonBin, " ".join(sys.argv),workflowModuleDir,workflowModuleName,workflowClassName))
 
-    def inspectObject(objectName) :
-        sfp.write("#\n# inspecting '%s' from " % (str(objectName)))
+    def auditInspection(label,objectName) :
+        assert(objectName is not None)
+        sfp.write("# inspecting from %s '%s' in file " % (label,str(objectName)))
         sfp.write(inspect.getsourcefile(objectName))
-        sfp.write('\n#\n')
+        sfp.write('\n')
+
+
+    def inspectObject(objectName) :
+        assert(objectName is not None)
+        sfp.write('#\n')
+        auditInspection('object',objectName)
+        sfp.write('#\n')
         sfp.write(inspect.getsource(objectName))
         sfp.write('\n')
 
     # make sure we're inspectnig from the current module
     # (motivated by a rare cross-inspection bug)
     current_module = sys.modules[__name__]
+    sfp.write('#\n')
+    auditInspection('module',current_module)
+    sfp.write('#\n')
+    sfp.write('\n')
 
     inspectObject(current_module.get_run_options)
     inspectObject(current_module.main)
