@@ -199,14 +199,37 @@ public:
         return _bp->core.qual;
     }
 
-    // attempt to recover the single read mapping score if it exists,
-    // else return MAPQ:
+    /// does read contain the new SA split-read tag?
+    bool
+    isSASplit() const
+    {
+        static const char satag[] = {'S','A'};
+        return (nullptr != get_string_tag(satag));
+    }
+
+    /// test if the read is supplemental by more liberal criteria
+    ///
+    /// this generalizes the bam flag for supplemental to work
+    /// correctly with the workaround typified by the bwamem '-M'
+    /// option, which uses the 'secondary' flag
+    bool
+    isNonStrictSupplement() const
+    {
+        if (is_supplement()) return true;
+        if (! is_secondary()) return false;
+        return isSASplit();
+    }
+
+
+    /// return single read mapping score if it exists,
+    /// else return MAPQ:
     unsigned se_map_qual() const
     {
         static const char smtag[] = {'S','M'};
         return alt_map_qual(smtag);
     }
 
+#if 0
     // attempt to recover the ELAND paired-end mapping score if it
     // exists, else return MAPQ:
     unsigned pe_map_qual() const
@@ -214,6 +237,7 @@ public:
         static const char astag[] = {'A','S'};
         return alt_map_qual(astag);
     }
+#endif
 
     int32_t template_size() const
     {
@@ -221,9 +245,9 @@ public:
     }
 
 
-    // Test if SM and AM fields both exist and are equal to zero. Any
-    // other result returns false:
-    //
+    /// Test if SM and AM fields both exist and are equal to zero. Any
+    /// other result returns false:
+    ///
     bool
     is_unanchored() const
     {

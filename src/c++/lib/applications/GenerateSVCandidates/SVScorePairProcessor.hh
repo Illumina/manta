@@ -92,7 +92,7 @@ struct SVScorePairProcessor : public BamRegionProcessor
     isSkipRecordCore(
         const bam_record& bamRead)
     {
-        return (SVLocusScanner::isReadFilteredCore(bamRead) || bamRead.is_supplement());
+        return (SVLocusScanner::isReadFilteredCore(bamRead) || bamRead.isNonStrictSupplement());
     }
 
     /// what to skip in addition to the core skip test?

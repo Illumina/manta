@@ -47,6 +47,10 @@ operator<<(std::ostream& os, const bam_record& br)
         {
             os  << " sa: " << saStr;
         }
+        if (br.is_secondary())
+        {
+            os << " issec";
+        }
         if (br.is_supplement())
         {
             os << " issupp";
@@ -56,7 +60,6 @@ operator<<(std::ostream& os, const bam_record& br)
         {
             os  << " mate_tid:pos:strand " << br.mate_target_id() << ":" << (br.mate_pos()-1) << ":" << (br.is_mate_fwd_strand() ? '+' : '-');
         }
-
     }
     return os;
 }

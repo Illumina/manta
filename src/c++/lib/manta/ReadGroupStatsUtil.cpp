@@ -498,13 +498,13 @@ struct CoreInsertStatsReadFilter
         // filter common categories of undesirable reads:
         if (SVLocusScanner::isReadFilteredCore(bamRead)) return true;
 
-        if (bamRead.is_supplement()) return true;
+        if (bamRead.isNonStrictSupplement()) return true;
 
         if (! is_mapped_chrom_pair(bamRead)) return true;
         if (bamRead.map_qual()==0) return true;
 
         // filter any split reads with an SA tag:
-        if (SVLocusScanner::isSASplitRead(bamRead)) return true;
+        if (bamRead.isSASplit()) return true;
 
         // remove alignments other than {X}M({Y}S)? (or reverse for reverse strand)
         if (alignFilter.isFilterRead(bamRead)) return true;

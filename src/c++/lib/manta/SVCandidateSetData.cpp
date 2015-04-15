@@ -14,7 +14,6 @@
 ///
 /// \author Chris Saunders
 
-//#include "blt_util/log.hh"
 #include "common/Exceptions.hh"
 #include "manta/SVCandidateSetData.hh"
 
@@ -22,6 +21,11 @@
 
 #include <iostream>
 #include <sstream>
+
+
+#ifdef DEBUG_SVDATA
+#include "blt_util/log.hh"
+#endif
 
 
 
@@ -104,7 +108,7 @@ add(const bam_record& bamRead,
     SVCandidateSetRead* targetReadPtr(nullptr);
     if (2 == bamRead.read_no())
     {
-        if (bamRead.is_supplement())
+        if (bamRead.isNonStrictSupplement())
         {
             fragment.read2Supplemental.emplace_back();
             targetReadPtr = (&(fragment.read2Supplemental.back()));
@@ -116,7 +120,7 @@ add(const bam_record& bamRead,
     }
     else
     {
-        if (bamRead.is_supplement())
+        if (bamRead.isNonStrictSupplement())
         {
             fragment.read1Supplemental.emplace_back();
             targetReadPtr = (&(fragment.read1Supplemental.back()));

@@ -465,7 +465,8 @@ getSVCandidatesFromReadIndels(
 
 
 
-/// extract poorly aligned read ends (included soft-clipped) to internal candidate format
+/// extract poorly aligned read ends (semi-aligned and/or soft-clipped)
+/// to internal candidate format
 static
 void
 getSVCandidatesFromSemiAligned(
@@ -758,7 +759,7 @@ getSVCandidatesFromPair(
     if (! localRead.is_paired()) return;
 
     // don't count paired end evidence from SA-split reads twice:
-    if (localRead.is_supplement()) return;
+    if (localRead.isNonStrictSupplement()) return;
 
     if (localRead.is_unmapped() || localRead.is_mate_unmapped()) return;
 
@@ -885,7 +886,7 @@ getSingleReadSVCandidates(
     // this prevents split reads from triggering spurious local assembles. It is
     // possible for a read to genuinely contain evidence of both, but this should
     // be very rare.
-    if (SVLocusScanner::isSASplitRead(localRead))
+    if (localRead.isSASplit())
     {
         getSACandidatesFromRead(opt, dopt, localRead, localAlign, fragSource, chromToIndex,
                                 candidates);
@@ -895,7 +896,6 @@ getSingleReadSVCandidates(
     }
     else
     {
-        // this detects semi-aligned AND soft-clip:
         if (dopt.isSmallCandidates)
         {
             getSVCandidatesFromSemiAligned(opt, localRead, localAlign, fragSource, refSeq,
@@ -1371,7 +1371,7 @@ isSVEvidence(
 {
     // exclude innie read pairs which are anomalously short:
     const bool isAnom(isNonCompressedAnomalous(bamRead,defaultReadGroupIndex));
-    const bool isSplit(SVLocusScanner::isSASplitRead(bamRead));
+    const bool isSplit(bamRead.isSASplit());
     getAlignment(bamRead,_bamAlign);
     const bool isIndel(isLocalIndelEvidence(_bamAlign));
     const bool isAssm((_dopt.isSmallCandidates) && ((!isSplit) && isSemiAlignedEvidence(bamRead, _bamAlign, refSeq)));

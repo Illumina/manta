@@ -103,7 +103,14 @@ struct SVLocusScanner
     {
         if      (bamRead.is_filter()) return true;
         else if (bamRead.is_dup()) return true;
-        else if (bamRead.is_secondary()) return true;
+        else {
+            // hack to work with bwamem '-M' formatting,
+            // keep secondary reads when they contain an SA tag
+            if (bamRead.is_secondary())
+            {
+                if (! bamRead.isSASplit()) return true;
+            }
+        }
         return false;
     }
 
@@ -114,15 +121,6 @@ struct SVLocusScanner
     {
         if (isReadFilteredCore(bamRead)) return true;
         return (bamRead.is_unmapped());
-    }
-
-    static
-    bool
-    isSASplitRead(
-        const bam_record& bamRead)
-    {
-        static const char satag[] = {'S','A'};
-        return (nullptr != (bamRead.get_string_tag(satag)));
     }
 
     /// this predicate runs any fast tests on the acceptability of a

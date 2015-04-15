@@ -17,7 +17,10 @@
 
 #include <string>
 
-
+/// this is the first of 2 components to determine mate
+/// insert candidacy. Note that we assume base filtration
+/// (PCR dups, etc.) has already occurred.
+///
 bool
 isMateInsertionEvidenceCandidate(
     const bam_record& bamRead,

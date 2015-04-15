@@ -239,7 +239,7 @@ recoverRemoteReads(
             // we've gone past the last case:
             if (bamRead.pos() > (remotes.back().pos+1)) break;
 
-            if (bamRead.is_supplement()) continue;
+            if (bamRead.isNonStrictSupplement()) continue;
 
             for (RemoteReadInfo& remote : remotes)
             {
@@ -454,7 +454,7 @@ getBreakendReads(
             // don't filter out MAPQ0 because the split reads tend to have reduced mapping scores:
             if (SVLocusScanner::isReadFilteredCore(bamRead)) continue;
 
-            if (bamRead.is_supplement()) continue;
+            if (bamRead.isNonStrictSupplement()) continue;
 
             if (isMaxDepth)
             {
