@@ -110,10 +110,10 @@ add_custom_target(
     ${THIS_BUILDTIME_CONFIG_TARGET}
     ALL
     COMMAND ${CMAKE_COMMAND}
-    -D REDIST_DIR=${THIS_REDIST_DIR}
-    -D CONFIG_FILE=${THIS_BUILDTIME_CONFIG_FILE}
-    -P ${THIS_MODULE_DIR}/getBuildTimeConfigInfo.cmake
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    -D REDIST_DIR="${THIS_REDIST_DIR}"
+    -D CONFIG_FILE="${THIS_BUILDTIME_CONFIG_FILE}"
+    -D SRC_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+    -P "${THIS_MODULE_DIR}/getBuildTimeConfigInfo.cmake"
     COMMENT "Updating buildtime config info")
 
 #

@@ -39,8 +39,9 @@ set(__get_git_revision_description YES)
 # to find the path to this module rather than the path to a calling list file
 get_filename_component(_gitdescmoddir ${CMAKE_CURRENT_LIST_FILE} PATH)
 
-function(get_git_head_revision _refspecvar _hashvar)
-	set(GIT_PARENT_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+# csaunders: modify to take srcdir as an argument instead of using CMAKE(_CURRENT|)_SOURCE_DIR
+function(get_git_head_revision _refspecvar _hashvar _srcdir)
+	set(GIT_PARENT_DIR "${_srcdir}")
 	set(GIT_DIR "${GIT_PARENT_DIR}/.git")
 	while(NOT EXISTS "${GIT_DIR}")	# .git dir not found, search parent directories
 		set(GIT_PREVIOUS_PARENT "${GIT_PARENT_DIR}")
@@ -80,11 +81,12 @@ function(get_git_head_revision _refspecvar _hashvar)
 	set(${_hashvar} "${HEAD_HASH}" PARENT_SCOPE)
 endfunction()
 
-function(git_describe _var)
+# csaunders: modify to take srcdir as an argument instead of using CMAKE(_CURRENT|)_SOURCE_DIR
+function(git_describe _var _srcdir)
 	if(NOT GIT_FOUND)
 		find_package(Git QUIET)
 	endif()
-	get_git_head_revision(refspec hash)
+	get_git_head_revision(refspec hash ${_srcdir})
 	if(NOT GIT_FOUND)
 		set(${_var} "GIT-NOTFOUND" PARENT_SCOPE)
 		return()
@@ -108,7 +110,7 @@ function(git_describe _var)
     # can be added in. This probably breaks various submodule/etc, usages, but I can't document which
 	execute_process(COMMAND
 		"${GIT_EXECUTABLE}" describe ${ARGN}
-		WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+		WORKING_DIRECTORY ${_srcdir}
 		RESULT_VARIABLE res
 		OUTPUT_VARIABLE out
 		ERROR_QUIET

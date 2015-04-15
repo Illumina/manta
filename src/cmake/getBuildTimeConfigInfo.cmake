@@ -16,17 +16,17 @@
 # get various build-time configuration values -- this is information not available
 # at cmake configuration time
 #
-# requires REDIST_DIR and CONFIG_FILE
+# requires SRC_DIR, REDIST_DIR and CONFIG_FILE
 #
 
 # generate git describe tag
 
 set (GETGIT_CMAKE "${REDIST_DIR}/cmake-modules-c99fd3/GetGitRevisionDescription.cmake")
 include ("${GETGIT_CMAKE}")
-git_describe(GIT_VERSION --dirty --match "v[0-9]*")
+git_describe(GIT_VERSION "${SRC_DIR}" --match "v[0-9]*" --dirty)
 if (NOT GIT_VERSION)
     # try again without the --dirty flag, might be an older git:
-    git_describe(GIT_VERSION --match "v[0-9]*")
+    git_describe(GIT_VERSION "${SRC_DIR}" --match "v[0-9]*")
 endif()
 
 if (NOT GIT_VERSION)
