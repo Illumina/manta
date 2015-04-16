@@ -362,13 +362,13 @@ addConservativeSpanningPairSupport(
         if ((altLhood/sum) > pairSupportProb)
         {
 #ifdef DEBUG_SCORE
-            log_os << __FUNCTION__ << " semi-mapped alt pair support\n";
+            log_os << __FUNCTION__ << ": semi-mapped alt pair support\n";
 #endif
             sampleBaseInfo.alt.confidentSemiMappedSpanningPairCount++;
             if (isFullyMapped)
             {
 #ifdef DEBUG_SCORE
-                log_os << __FUNCTION__ << " fully-mapped alt pair support\n";
+                log_os << __FUNCTION__ << ": fully-mapped alt pair support\n";
 #endif
                 sampleBaseInfo.alt.confidentSpanningPairCount++;
             }
@@ -379,13 +379,13 @@ addConservativeSpanningPairSupport(
         if ((refLhood/sum) > pairSupportProb)
         {
 #ifdef DEBUG_SCORE
-            log_os << __FUNCTION__ << " semi-mapped ref pair support\n";
+            log_os << __FUNCTION__ << ": semi-mapped ref pair support\n";
 #endif
             sampleBaseInfo.ref.confidentSemiMappedSpanningPairCount++;
             if (isFullyMapped)
             {
 #ifdef DEBUG_SCORE
-                log_os << __FUNCTION__ << " fully-mapped ref pair support\n";
+                log_os << __FUNCTION__ << ": fully-mapped ref pair support\n";
 #endif
                 sampleBaseInfo.ref.confidentSpanningPairCount++;
             }
@@ -410,7 +410,7 @@ getSampleCounts(
         addConservativeSplitReadSupport(fragev,true,sampleBaseInfo);
         addConservativeSplitReadSupport(fragev,false,sampleBaseInfo);
 #ifdef DEBUG_SCORE
-        log_os << __FUNCTION__ << "Counting read: " << val.first << "\n";
+        log_os << __FUNCTION__ << ": Counting read: " << val.first << "\n";
 #endif
         addSpanningPairSupport(fragev, sampleBaseInfo);
         addConservativeSpanningPairSupport(fragev, sampleBaseInfo);

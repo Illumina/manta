@@ -190,6 +190,7 @@ getLargeIndelSegments(
 }
 
 
+
 #ifdef ITERATIVE_ASSEMBLER
 static
 unsigned
@@ -451,10 +452,11 @@ isSmallSVAlignment(
     // escape if there are no indels above the minimum size
     if (candidateSegments.empty()) return false;
 
+    // complex is anything besides a simple single indel -- more than one indel or an insert/delete combination:
     const bool isComplex((candidateSegments.size() > 1) || (candidateSegments[0].first != candidateSegments[0].second));
 
-    /// loop through possible leading segments until a clean one is found:
-    ///
+    // loop through possible leading segments until a clean one is found:
+    //
     while (true)
     {
         // test quality of alignment segments surrounding the variant region:
@@ -1114,11 +1116,10 @@ getJumpAssembly(
     SVCandidateAssemblyData& assemblyData) const
 {
 #ifdef DEBUG_REFINER
-    static const std::string logtag("getJumpAssembly: ");
-    log_os << logtag << "START\n";
+    log_os << __FUNCTION__ << ": START\n";
     if (isRNA)
     {
-        log_os << logtag << "RNA\n";
+        log_os << __FUNCTION__ << ": RNA\n";
     }
 #endif
 
@@ -1174,7 +1175,7 @@ getJumpAssembly(
                     singleSV.bp1.interval.range.merge_range(sv.bp2.interval.range);
 
 #ifdef DEBUG_REFINER
-                    log_os << logtag << "Candidate breakends regions are too close, transferring problem to local assembler\n";
+                    log_os << __FUNCTION__ << ": Candidate breakends regions are too close, transferring problem to local assembler\n";
 #endif
 
                     getSmallSVAssembly(singleSV, isFindLargeInsertions, assemblyData);
@@ -1288,10 +1289,10 @@ getJumpAssembly(
     }
 
 #ifdef DEBUG_REFINER
-    log_os << logtag << "al1RefSize/Seq: " << align1RefStrPtr->size() << '\n';
+    log_os << __FUNCTION__ << ": al1RefSize/Seq: " << align1RefStrPtr->size() << '\n';
     printSeq(*align1RefStrPtr,log_os);
     log_os << '\n';
-    log_os << logtag << "al2Refsize/Seq: " << align2RefStrPtr->size() << '\n';
+    log_os << __FUNCTION__ << ": al2Refsize/Seq: " << align2RefStrPtr->size() << '\n';
     printSeq(*align2RefStrPtr,log_os);
     log_os << '\n';
 #endif
@@ -1299,11 +1300,11 @@ getJumpAssembly(
     const unsigned contigCount(assemblyData.contigs.size());
 
 #ifdef DEBUG_REFINER
-    log_os << logtag << "contigCount: " << contigCount << "\n";
+    log_os << __FUNCTION__ << ": contigCount: " << contigCount << "\n";
     for (unsigned contigIndex(0); contigIndex<contigCount; ++contigIndex)
     {
         const AssembledContig& contig(assemblyData.contigs[contigIndex]);
-        log_os << logtag << "contigIndex: " << contigIndex << " contig: " << contig;
+        log_os << __FUNCTION__ << ": contigIndex: " << contigIndex << " contig: " << contig;
     }
 #endif
 
@@ -1319,7 +1320,7 @@ getJumpAssembly(
         const AssembledContig& contig(assemblyData.contigs[contigIndex]);
 
 #ifdef DEBUG_REFINER
-        log_os << logtag << "start aligning contigIndex: " << contigIndex << "\n";
+        log_os << __FUNCTION__ << ": start aligning contigIndex: " << contigIndex << "\n";
 #endif
 
         JumpAlignmentResult<int>& alignment(assemblyData.spanningAlignments[contigIndex]);
@@ -1329,7 +1330,7 @@ getJumpAssembly(
             const bool bp1Fw = (bporient.isBp1Reversed != bporient.isBp1First);
             const bool bp2Fw = (bporient.isBp2Reversed != bporient.isBp1First);
 #ifdef DEBUG_REFINER
-            log_os << logtag << "bp1Fw: " << bp1Fw << " ; bp2Fw: " << bp2Fw << '\n';
+            log_os << __FUNCTION__ << ": bp1Fw: " << bp1Fw << " ; bp2Fw: " << bp2Fw << '\n';
 #endif
             _RNASpanningAligner.align(contig.seq.begin(), contig.seq.end(),
                                       align1RefStrPtr->begin() + align1LeadingCut, align1RefStrPtr->end() - align1TrailingCut,
@@ -1353,15 +1354,15 @@ getJumpAssembly(
         assemblyData.extendedContigs.push_back(extendedContig);
 
 #ifdef DEBUG_REFINER
-        log_os << logtag << "contigIndex: " << contigIndex << " alignment: " << alignment;
+        log_os << __FUNCTION__ << ": contigIndex: " << contigIndex << " alignment: " << alignment;
 
         std::string bp1Seq,bp2Seq,insertSeq;
         getFwdStrandQuerySegments(alignment, contig.seq,
                                   bporient.isBp2AlignedFirst, bporient.isBp1Reversed, bporient.isBp2Reversed,
                                   bp1Seq, bp2Seq, insertSeq);
-        log_os << logtag << "\tbp1seq_fwd: " << bp1Seq << "\n";
-        log_os << logtag << "\tinsseq_fwd: " << insertSeq << "\n";
-        log_os << logtag << "\tbp2seq_fwd: " << bp2Seq << "\n";
+        log_os << __FUNCTION__ << "\tbp1seq_fwd: " << bp1Seq << "\n";
+        log_os << __FUNCTION__ << "\tinsseq_fwd: " << insertSeq << "\n";
+        log_os << __FUNCTION__ << "\tbp2seq_fwd: " << bp2Seq << "\n";
 #endif
 
         // QC the alignment to make sure it spans the two breakend locations:
@@ -1370,11 +1371,11 @@ getJumpAssembly(
         const bool isAlignment2Good(alignment.align2.isAligned() && (apath_ref_length(alignment.align2.apath) >= minAlignRefSpan));
         const bool isAlignmentGood(isAlignment1Good && isAlignment2Good);
 #ifdef DEBUG_REFINER
-        log_os << logtag << "Checking contig aln: " << contigIndex << "\n";
+        log_os << __FUNCTION__ << ": Checking contig aln: " << contigIndex << "\n";
 #endif
         if (! isAlignmentGood) continue;
 #ifdef DEBUG_REFINER
-        log_os << logtag << "contig okay: " << contigIndex << "\n";
+        log_os << __FUNCTION__ << ": contig okay: " << contigIndex << "\n";
 #endif
         if ((! isHighScore) || (alignment.score > assemblyData.spanningAlignments[highScoreIndex].score))
         {
@@ -1385,7 +1386,7 @@ getJumpAssembly(
 
     if (! isHighScore) return;
 #ifdef DEBUG_REFINER
-    log_os << logtag << "high scoring contig: " << highScoreIndex << "\n";
+    log_os << __FUNCTION__ << ": high scoring contig: " << highScoreIndex << "\n";
 #endif
 
     // set any additional QC steps before deciding an alignment is
@@ -1422,7 +1423,7 @@ getJumpAssembly(
     {
         assemblyData.bestAlignmentIndex = highScoreIndex;
 #ifdef DEBUG_REFINER
-        log_os << logtag << "highscoreid: " << highScoreIndex << " alignment: " << assemblyData.spanningAlignments[highScoreIndex];
+        log_os << __FUNCTION__ << ": highscoreid: " << highScoreIndex << " alignment: " << assemblyData.spanningAlignments[highScoreIndex];
 #endif
 
         // process the alignment into information that's easily usable
@@ -1460,7 +1461,7 @@ getJumpAssembly(
         addCigarToSpanningAlignment(newSV);
 
 #ifdef DEBUG_REFINER
-        log_os << logtag << "highscore refined sv: " << newSV;
+        log_os << __FUNCTION__ << ": highscore refined sv: " << newSV;
 #endif
     }
 }
@@ -1475,8 +1476,7 @@ getSmallSVAssembly(
     SVCandidateAssemblyData& assemblyData) const
 {
 #ifdef DEBUG_REFINER
-    static const std::string logtag("getSmallSVAssembly: ");
-    log_os << logtag << "START\n";
+    log_os << __FUNCTION__ << ": START\n";
 #endif
 
     assemblyData.isSpanning = false;
@@ -1543,7 +1543,7 @@ getSmallSVAssembly(
     _smallSVAssembler.assembleSingleSVBreakend(sv.bp1, assemblyData.bp1ref, isSearchRemoteInsertionReads, assemblyData.remoteReads, assemblyData.contigs);
 
 #ifdef DEBUG_REFINER
-    log_os << logtag << "align1RefSize/Seq: " << align1RefStr.size() << '\n';
+    log_os << __FUNCTION__ << ": align1RefSize/Seq: " << align1RefStr.size() << '\n';
     printSeq(align1RefStr,log_os);
     log_os << '\n';
 #endif
@@ -1551,11 +1551,11 @@ getSmallSVAssembly(
     const unsigned contigCount(assemblyData.contigs.size());
 
 #ifdef DEBUG_REFINER
-    log_os << logtag << "contigCount: " << contigCount << '\n';
+    log_os << __FUNCTION__ << ": contigCount: " << contigCount << '\n';
     for (unsigned contigIndex(0); contigIndex<contigCount; ++contigIndex)
     {
         const AssembledContig& contig(assemblyData.contigs[contigIndex]);
-        log_os << logtag << "contigIndex: " << contigIndex << " contig: " << contig;
+        log_os << __FUNCTION__ << ": contigIndex: " << contigIndex << " contig: " << contig;
     }
 #endif
 
@@ -1583,7 +1583,7 @@ getSmallSVAssembly(
         const AssembledContig& contig(assemblyData.contigs[contigIndex]);
 
 #ifdef DEBUG_REFINER
-        log_os << logtag << "start aligning contigIndex: " << contigIndex << '\n';
+        log_os << __FUNCTION__ << ": start aligning contigIndex: " << contigIndex << '\n';
 #endif
 
 
@@ -1636,8 +1636,8 @@ getSmallSVAssembly(
             adjustedTrailingCut=(refSize-(refIndex+merSize));
         }
 
-        /// start with largeSV aligner (currently restricted to
-        /// insertion only:
+        // start with largeSV aligner (currently restricted to
+        // insertion only:
         {
             _largeSVAligner.align(
                 contig.seq.begin(), contig.seq.end(),
@@ -1679,7 +1679,7 @@ getSmallSVAssembly(
             }
 
 #ifdef DEBUG_REFINER
-            log_os << logtag << "finished largeAligner. contigIndex: " << contigIndex
+            log_os << __FUNCTION__ << ": finished largeAligner. contigIndex: " << contigIndex
                    << " isSmallSVCandidate " << isSmallSVCandidate
                    << " alignment: " << alignment;
 #endif
@@ -1727,7 +1727,7 @@ getSmallSVAssembly(
             }
 
 #ifdef DEBUG_REFINER
-            log_os << logtag << "finished smallAligner. contigIndex: " << contigIndex
+            log_os << __FUNCTION__ << ": finished smallAligner. contigIndex: " << contigIndex
                    << " isSmallSVCandidate " << isSmallSVCandidate
                    << " alignment: " << alignment;
 #endif
@@ -1784,7 +1784,7 @@ getSmallSVAssembly(
             {
                 candidateInsertInfo=insertInfo;
 #ifdef DEBUG_REFINER
-                log_os << logtag << "inserting large insertion candidation: " << candidateInsertInfo << "\n";
+                log_os << __FUNCTION__ << ": inserting large insertion candidation: " << candidateInsertInfo << "\n";
 #endif
                 largeInsertionCandidateIndex.push_back(contigIndex);
             }
@@ -1798,7 +1798,7 @@ getSmallSVAssembly(
             if (! isHighScore)
             {
 #ifdef DEBUG_REFINER
-                log_os << logtag << "contigIndex: " << contigIndex << " is high score\n";
+                log_os << __FUNCTION__ << ": contigIndex: " << contigIndex << " is high score\n";
 #endif
                 isHighScore = true;
                 highScoreIndex=contigIndex;
@@ -1811,7 +1811,7 @@ getSmallSVAssembly(
                 highScoreIndex = contigIndex;
 
 #ifdef DEBUG_REFINER
-                log_os << logtag << "contigIndex: " << highScoreIndex << " is high score\n";
+                log_os << __FUNCTION__ << ": contigIndex: " << highScoreIndex << " is high score\n";
 #endif
 
 #ifdef ITERATIVE_ASSEMBLER
@@ -1821,7 +1821,7 @@ getSmallSVAssembly(
                 highScoreVarSize = getLargestIndelSize(alignment.align.apath, candidateSegments);
 
 #ifdef DEBUG_REFINER
-                log_os << logtag << "contigIndex: " << secHighScoreIndex << " is the second high score\n";
+                log_os << __FUNCTION__ << ": contigIndex: " << secHighScoreIndex << " is the second high score\n";
 #endif
 #endif
             }
@@ -1832,7 +1832,7 @@ getSmallSVAssembly(
                 secHighScoreIndex = contigIndex;
                 secHighScoreVarSize = getLargestIndelSize(alignment.align.apath, candidateSegments);
 #ifdef DEBUG_REFINER
-                log_os << logtag << "contigIndex: " << secHighScoreIndex << " is the second high score\n";
+                log_os << __FUNCTION__ << ": contigIndex: " << secHighScoreIndex << " is the second high score\n";
 #endif
             }
 #endif
@@ -1847,9 +1847,9 @@ getSmallSVAssembly(
         const unsigned highScoreSuppReads = assemblyData.contigs[highScoreIndex].supportReads.size();
         const unsigned secHighScoreSuppReads = assemblyData.contigs[secHighScoreIndex].supportReads.size();
 #ifdef DEBUG_REFINER
-        log_os << logtag << "contig #" << highScoreIndex << "has " << highScoreSuppReads
+        log_os << __FUNCTION__ << ": contig #" << highScoreIndex << "has " << highScoreSuppReads
                <<" support reads, with max variant size " << highScoreVarSize;
-        log_os << logtag << "contig #" << secHighScoreIndex << "has " << secHighScoreSuppReads
+        log_os << __FUNCTION__ << ": contig #" << secHighScoreIndex << "has " << secHighScoreSuppReads
                <<" support reads, with max variant size " << secHighScoreVarSize;
 #endif
 
@@ -1857,7 +1857,7 @@ getSmallSVAssembly(
                                 (secHighScoreVarSize > highScoreVarSize * (1+extraVarSizePerc)));
         if (secondIsBest) highScoreIndex = secHighScoreIndex;
 #ifdef DEBUG_REFINER
-        log_os << logtag << "contigIndex: " << highScoreIndex << " is finally selected.\n";
+        log_os << __FUNCTION__ << ": contigIndex: " << highScoreIndex << " is finally selected.\n";
 #endif
     }
 #endif
@@ -1872,7 +1872,7 @@ getSmallSVAssembly(
     {
         assemblyData.bestAlignmentIndex = highScoreIndex;
 #ifdef DEBUG_REFINER
-        log_os << logtag << "highscoreid: " << highScoreIndex << " alignment: " << assemblyData.smallSVAlignments[highScoreIndex];
+        log_os << __FUNCTION__ << ": highscoreid: " << highScoreIndex << " alignment: " << assemblyData.smallSVAlignments[highScoreIndex];
 #endif
 
         // process the alignment into information that's easily usable
@@ -1902,7 +1902,7 @@ getSmallSVAssembly(
             }
 
 #ifdef DEBUG_REFINER
-            log_os << logtag << "small refined sv: " << newSV;
+            log_os << __FUNCTION__ << ": small refined sv: " << newSV;
 #endif
 
 #ifdef DEBUG_CONTIG
@@ -1920,8 +1920,8 @@ getSmallSVAssembly(
         }
     }
 
-    /// search for large deletions with incomplete insertion sequence
-    /// assembly:
+    // search for large deletions with incomplete insertion sequence
+    // assembly:
     {
         // In case of no fully-assembled candidate, solve for any
         // strong large insertion candidate
@@ -1933,8 +1933,5 @@ getSmallSVAssembly(
         {
             processLargeInsertion(sv, leadingCut, trailingCut, _largeInsertCompleteAligner, largeInsertionCandidateIndex, insPos, assemblyData);
         }
-
-        return;
     }
-
 }

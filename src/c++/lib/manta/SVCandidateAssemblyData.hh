@@ -44,7 +44,7 @@ struct BPOrientation
     bool isBp2AlignedFirst = false; ///< should the contig on the fwd strand align bp2->bp1 (true) or bp1->bp2 (false)
     bool isBp1Reversed = false; ///< should all bp1 reads be reversed for the contig to assemble correctly?
     bool isBp2Reversed = false; ///< should all bp2 reads be reversed for the contig to assemble correctly?
-    bool isBp1First = true; ///< Is this candidate oriented from bp1 to bp2?
+    bool isBp1First = true; ///< Is this candidate oriented from bp1 to bp2? (used in RNA)
 };
 
 
