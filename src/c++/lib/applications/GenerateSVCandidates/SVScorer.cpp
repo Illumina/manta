@@ -419,14 +419,14 @@ getSampleCounts(
 
 
 
+/// get conservative count of reads which support only one allele, ie. P ( allele | read ) is high
+///
 static
 void
 getSVSupportSummary(
     const SVEvidence& evidence,
     SVScoreInfo& baseInfo)
 {
-    /// get conservative count of reads which support only one allele, ie. P ( allele | read ) is high
-    ///
     getSampleCounts(evidence.normal, baseInfo.normal);
     getSampleCounts(evidence.tumor, baseInfo.tumor);
 }
@@ -807,12 +807,12 @@ getFragLnLhood(
 static
 float
 getSpanningPairWeight(
-    const SVCandidate& sv,
-    const bool isSmallAssembler)
+    const SVCandidate& sv)
 {
-    if (! isSmallAssembler) return 1.f;
+    const auto svType(getExtendedSVType(sv));
+    if (! ((svType == EXTENDED_SV_TYPE::INSERT) || (svType == EXTENDED_SV_TYPE::DELETE))) return 1.f;
 
-    if ((getExtendedSVType(sv) == EXTENDED_SV_TYPE::INSERT) &&
+    if ((svType == EXTENDED_SV_TYPE::INSERT) &&
         SVScorePairAltProcessor::isLargeInsertSV(sv))
     {
         static const int minInsertSmallSize(100);
@@ -823,6 +823,7 @@ getSpanningPairWeight(
     }
     else
     {
+        /// TODO set these numbers from insert size:
         static const int minSmallSize(300);
         static const int maxSmallSize(500);
         static const LinearScaler<int> svSizeRamp(minSmallSize, maxSmallSize);
@@ -1650,9 +1651,8 @@ scoreSV(
         scoreSV(svData, assemblyData, sv, modelScoreInfo.base, evidence);
 
         // score components specific to diploid-germline model:
-        const bool isSmallAssembler(! assemblyData.isSpanning);
         float& spanningPairWeight(junctionSpanningPairWeight[junctionIndex]);;
-        spanningPairWeight=(getSpanningPairWeight(sv, isSmallAssembler));
+        spanningPairWeight=(getSpanningPairWeight(sv));
 
         junctionData.resize(1);
         junctionData[0].init(sv, evidence, modelScoreInfo.base, spanningPairWeight);
