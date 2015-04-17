@@ -32,8 +32,8 @@ struct SVScorePairInitParams
         const SVCandidate& sv,
         const bool isBp1);
 
-    pos_t centerPos1;
-    pos_t centerPos2;
+    pos_t centerPosA;
+    pos_t centerPosB;
     pos_t centerPos;
 
     // total impact of the alt allele on template size:

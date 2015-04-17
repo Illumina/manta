@@ -26,10 +26,15 @@ SVScorePairInitParams(
     const bool isBp1)
 {
     /// In case of breakend homology approximate the breakend as a point event at the center of the possible range:
-    centerPos1 = (sv.bp1.interval.range.center_pos());
-    centerPos2 = (sv.bp2.interval.range.center_pos());
+    pos_t centerPos1 = (sv.bp1.interval.range.center_pos());
+    pos_t centerPos2 = (sv.bp2.interval.range.center_pos());
 
     centerPos = ( isBp1 ? centerPos1 : centerPos2 );
+
+    const bool isBp1Lower(centerPos1 <= centerPos2);
+
+    centerPosA = (isBp1Lower ? centerPos1 : centerPos2);
+    centerPosB = (isBp1Lower ? centerPos2 : centerPos1);
 
     // total impact of the alt allele on template size, assuming a simple indel:
     int altInsSize(sv.insertSeq.size());
@@ -38,7 +43,7 @@ SVScorePairInitParams(
         altInsSize = (sv.unknownSizeInsertionLeftSeq.size() + sv.unknownSizeInsertionRightSeq.size());
     }
 
-    altShift = ((centerPos2-centerPos1)-altInsSize);
+    altShift = ((centerPosB-centerPosA)-altInsSize);
 
     minMapQ = (readScanner.getMinMapQ());
     minTier2MapQ = (readScanner.getMinTier2MapQ());

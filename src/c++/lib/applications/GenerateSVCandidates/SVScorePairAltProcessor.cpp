@@ -50,28 +50,29 @@ ContigParams::
 ContigParams(
     const SVCandidateAssemblyData& assemblyData,
     const SVCandidate& sv) :
-    extSeq(assemblyData.extendedContigs[sv.assemblyAlignIndex]),
-    refSpan(
-        assemblyData.bp1ref.get_offset(),
-        assemblyData.bp1ref.get_offset() + assemblyData.bp1ref.seq().size())
+    extSeq(assemblyData.extendedContigs[sv.assemblyAlignIndex])
 {
-    // get offsets of breakpoints in the extended contig
-    const AlignmentResult<int>& alignment(assemblyData.smallSVAlignments[sv.assemblyAlignIndex]);
-    const std::pair<unsigned, unsigned>& alignSegment(assemblyData.smallSVSegments[sv.assemblyAlignIndex][sv.assemblySegmentIndex]);
+    // this class is designed for simple alts only:
+    assert(sv.bp1.interval.tid == sv.bp2.interval.tid);
+    assert(getSVType(sv) == SV_TYPE::INDEL);
+    assert(! sv.isImprecise());
 
-    const pos_t bp1HomLength(sv.bp1.interval.range.size()-1);
-    const pos_t bp2HomLength(sv.bp2.interval.range.size()-1);
-    assert(bp1HomLength >= 0);
-    assert(bp2HomLength >= 0);
+    const bool isBp1First(sv.bp1.interval.range.begin_pos()<=sv.bp2.interval.range.begin_pos());
 
-    ALIGNPATH::path_t apathTillSvStart(&alignment.align.apath[0], &alignment.align.apath[alignSegment.first]);
-    ALIGNPATH::path_t apathTillSvEnd(&alignment.align.apath[0], &alignment.align.apath[alignSegment.second+1]);
+    const SVBreakend& bpA(isBp1First ? sv.bp1 : sv.bp2);
+    const SVBreakend& bpB(isBp1First ? sv.bp2 : sv.bp1);
 
-    const pos_t contigRefBeginPos(refSpan.begin_pos() + alignment.align.beginPos);
-    segmentSpan.set_range(
-        (contigRefBeginPos + apath_ref_length(apathTillSvStart)),
-        (contigRefBeginPos + apath_ref_length(apathTillSvEnd)));
+    const pos_t bpAHomLength(static_cast<pos_t>(bpA.interval.range.size())-1);
+    const pos_t bpBHomLength(static_cast<pos_t>(bpB.interval.range.size())-1);
+    assert(bpAHomLength >= 0);
+    assert(bpBHomLength >= 0);
 
+    const bool isSpanning(assemblyData.isSpanning);
+
+    // the begin_pos off by one here is inherited from a more complex previous computation, the code
+    // which uses this value has already been debugged and is functioning, so no reason to fix it, but
+    // note this range doesn't follow the manta convention (probably by accident)
+    segmentSpan.set_range(bpA.interval.range.begin_pos()+1,bpB.interval.range.begin_pos());
 
     // the beginPos of align is the length of reference padding in the extended contig
     // |ref padding| + |alignment segments|
@@ -83,19 +84,33 @@ ContigParams(
     // In the absence of homology, begin and end should be equal.
 
     // note that we add align.beginPos here to reflect coordinates in the extended Contig, in the regular contig we wouldn't add this
-    bp1Offset.set_begin_pos(alignment.align.beginPos + apath_read_length(apathTillSvStart) - 1);
-    bp1Offset.set_end_pos(bp1Offset.begin_pos() + bp1HomLength);
-    bp2Offset.set_begin_pos(alignment.align.beginPos + apath_read_length(apathTillSvEnd) - 1);
-    bp2Offset.set_end_pos(bp2Offset.begin_pos() + bp2HomLength);
+    pos_t alignBeginPos(0);
+    pos_t readStartPos(0);
+    if (isSpanning)
+    {
+        const SVCandidateAssemblyData::JumpAlignmentResultType& alignment(assemblyData.spanningAlignments[sv.assemblyAlignIndex]);
+        alignBeginPos = alignment.align1.beginPos;
+        readStartPos = apath_read_length(alignment.align1.apath);
+    }
+    else
+    {
+        const AlignmentResult<int>& alignment(assemblyData.smallSVAlignments[sv.assemblyAlignIndex]);
+        const std::pair<unsigned, unsigned>& alignSegment(assemblyData.smallSVSegments[sv.assemblyAlignIndex][sv.assemblySegmentIndex]);
+        ALIGNPATH::path_t apathTillSvStart(&alignment.align.apath[0], &alignment.align.apath[alignSegment.first]);
+
+        alignBeginPos = alignment.align.beginPos;
+        readStartPos = apath_read_length(apathTillSvStart);
+    }
+    bpAOffset.set_begin_pos(alignBeginPos + readStartPos - 1);
+    bpAOffset.set_end_pos(bpAOffset.begin_pos() + bpAHomLength);
+    bpBOffset.set_begin_pos(bpAOffset.begin_pos() + sv.insertSeq.size());
+    bpBOffset.set_end_pos(bpBOffset.begin_pos() + bpBHomLength);
 
 #ifdef DEBUG_SHADOW
     log_os << __FUNCTION__ << ": contigSize: " << extSeq.size()
-           << " refSpan: " << refSpan
            << " segmentSpan: " << segmentSpan
-           << " alignment: " << alignment.align
-           << " alignSegment: " << alignSegment
-           << " bp1Offset: " << bp1Offset
-           << " bp2Offset: " << bp2Offset
+           << " bpAOffset: " << bpAOffset
+           << " bpBOffset: " << bpBOffset
            << "\n";
 #endif
 }
@@ -105,28 +120,13 @@ ContigParams(
 void
 SVScorePairAltProcessor::
 checkInput(
-    const SVCandidateAssemblyData& assemblyData,
     const SVCandidate& sv)
 {
     using namespace illumina::common;
 
-    // this test is a bit redundant with those below, but an ounce of prevention...
-    const bool isSpanning(assemblyData.isSpanning);
-    assert(! isSpanning);
-
     // this class is designed for simple alts only:
     assert(sv.bp1.interval.tid == sv.bp2.interval.tid);
     assert(getSVType(sv) == SV_TYPE::INDEL);
-
-    /// In case of breakend homology approximate the breakend as a point event at the center of the possible range:
-    const pos_t centerPos1(sv.bp1.interval.range.center_pos());
-    const pos_t centerPos2(sv.bp2.interval.range.center_pos());
-    if (centerPos2 <= centerPos1)
-    {
-        std::ostringstream oss;
-        oss << "ERROR: Unexpected breakend orientation in pair support routine for sv: " << sv << "\n";
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
-    }
 }
 
 
@@ -138,7 +138,7 @@ testFragOverlap(
     const int fragBeginRefPos,
     const int fragEndRefPos) const
 {
-    const pos_t fragOverlap(std::min((1+svParams.centerPos1-fragBeginRefPos), (fragEndRefPos-svParams.centerPos2)));
+    const pos_t fragOverlap(std::min((1+svParams.centerPosA-fragBeginRefPos), (fragEndRefPos-svParams.centerPosB)));
 #ifdef DEBUG_MEGAPAIR
     log_os << __FUNCTION__ << ": frag begin/end/overlap: " << fragBeginRefPos << " " << fragEndRefPos << " " << fragOverlap << "\n";
 #endif
@@ -158,7 +158,7 @@ realignPairedRead(
 {
     // TODO: basecall qualities??
 
-    // sanity check whether we should even start alingment -- check 'left of insert' consistency
+    // sanity check whether we should even start alignment -- check 'left of insert' consistency
     //
     if (isLeftOfInsert)
     {
@@ -185,11 +185,11 @@ realignPairedRead(
         // TODO check these results in test case:
         if (isLeftOfInsert)
         {
-            contigEnd = contigBegin + _contig.bp1Offset.begin_pos() + sv.unknownSizeInsertionLeftSeq.size();
+            contigEnd = contigBegin + _contig.bpAOffset.begin_pos() + sv.unknownSizeInsertionLeftSeq.size();
         }
         else
         {
-            contigBeginOffset = static_cast<int>(_contig.bp2Offset.begin_pos()) - sv.unknownSizeInsertionRightSeq.size();
+            contigBeginOffset = static_cast<int>(_contig.bpBOffset.begin_pos()) - sv.unknownSizeInsertionRightSeq.size();
             assert(contigBeginOffset>=0);
             contigBegin = contigBegin + contigBeginOffset;
         }
@@ -272,14 +272,14 @@ realignPairedRead(
         const int readContigEndOffset(contigBeginOffset + readAlignment.align.beginPos + shadowRefSpan);
 
         // translate contig coordinates to fake reference coordinates:
-        if (readContigEndOffset < _contig.bp1Offset.begin_pos())
+        if (readContigEndOffset < _contig.bpAOffset.begin_pos())
         {
             // definitely does not meet the breakend overlap criteria:
             return false;
         }
 
         /// set fake end as if the insert allele continued in reference coordinates
-        const int readContigEndRefOffset(_contig.segmentSpan.begin_pos() + (readContigEndOffset - _contig.bp1Offset.begin_pos()));
+        const int readContigEndRefOffset(_contig.segmentSpan.begin_pos() + (readContigEndOffset - _contig.bpAOffset.begin_pos()));
         fakeRefSpan.set_end_pos(readContigEndRefOffset);
 
 #ifdef DEBUG_SHADOW
@@ -303,13 +303,13 @@ realignPairedRead(
         const int readContigBeginOffset(contigBeginOffset + readAlignment.align.beginPos);
 
         // translate contig coordinates to fake reference coordinates:
-        if (readContigBeginOffset > _contig.bp2Offset.begin_pos())
+        if (readContigBeginOffset > _contig.bpBOffset.begin_pos())
         {
             // definitely does not meet the breakend overlap criteria:
             return false;
         }
 
-        const int readContigBeginRefOffset(_contig.segmentSpan.end_pos()-(_contig.bp2Offset.begin_pos()-readContigBeginOffset));
+        const int readContigBeginRefOffset(_contig.segmentSpan.end_pos()-(_contig.bpBOffset.begin_pos()-readContigBeginOffset));
 
         fakeRefSpan.set_begin_pos(readContigBeginRefOffset);
 #ifdef DEBUG_SHADOW

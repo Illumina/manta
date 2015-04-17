@@ -79,6 +79,15 @@ struct known_pos_range2
         }
     }
 
+    /// shift range position
+    void
+    offsetBy(
+        const pos_t offsetSize)
+    {
+        _begin_pos += offsetSize;
+        _end_pos += offsetSize;
+    }
+
     pos_t
     begin_pos() const
     {

@@ -31,17 +31,14 @@ struct ContigParams
         const SVCandidateAssemblyData& assemblyData,
         const SVCandidate& sv);
 
-    // extended contig:
+    /// extended contig:
     const std::string& extSeq;
-
-    /// where does the extended contig begin,end in reference coordinates:
-    const known_pos_range2 refSpan;
 
     /// where does the sv segment begin,end in reference coordinates?:
     known_pos_range2 segmentSpan;
 
-    known_pos_range2 bp1Offset;
-    known_pos_range2 bp2Offset;
+    known_pos_range2 bpAOffset;
+    known_pos_range2 bpBOffset;
 };
 
 
@@ -67,7 +64,7 @@ struct SVScorePairAltProcessor : public SVScorePairProcessor
                 (  initIsBp1)), /// search for right-open shadows
         _contig(initAssemblyData,initSv)
     {
-        checkInput(assemblyData,sv);
+        checkInput(sv);
     }
 
     /// what to skip in addition to the core skip test?
@@ -94,7 +91,6 @@ private:
     static
     void
     checkInput(
-        const SVCandidateAssemblyData& assemblyData,
         const SVCandidate& sv);
 
     /// \param[in] bam record used for debug printout only
