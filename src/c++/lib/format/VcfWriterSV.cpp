@@ -18,8 +18,9 @@
 
 #include "format/VcfWriterSV.hh"
 
-#include "blt_util/string_util.hh"
+#include "blt_util/log.hh"
 #include "blt_util/seq_util.hh"
+#include "blt_util/string_util.hh"
 #include "htsapi/samtools_fasta_util.hh"
 #include "htsapi/vcf_util.hh"
 #include "common/Exceptions.hh"
@@ -622,7 +623,7 @@ writeInvdel(
             std::ostringstream oss;
             oss << "ERROR: Unexpected reference allele size: " << ref.size() << "\n";
             oss << "\tExpected: " << (1+endRefPos-beginRefPos) << "\n";
-            oss << "\tbeginRefPos: " << beginRefPos << " endRefPos: " << endRefPos << " isSmallVariant " << isSmallVariant << "\n";
+            oss << "\tbeginRefPos: " << beginRefPos << " endRefPos: " << endRefPos << " isSmallVariant: " << isSmallVariant << "\n";
             BOOST_THROW_EXCEPTION(LogicException(oss.str()));
         }
     }
@@ -825,7 +826,7 @@ writeSVCore(
     const index_t svType(getExtendedSVType(sv));
 
 #ifdef DEBUG_VCF
-    log_os << "VcfWriterSV::writeSVCore svType: " << SV_TYPE::label(svType) << "\n";
+    log_os << "VcfWriterSV::writeSVCore svType: " << EXTENDED_SV_TYPE::label(svType) << "\n";
 #endif
 
     if (! isAcceptedSVType(svType))
@@ -837,14 +838,22 @@ writeSVCore(
         BOOST_THROW_EXCEPTION(LogicException(oss.str()));
     }
 
-    if      (isSVTransloc(svType))
-    {
-        writeTranslocPair(sv, svId, svData, adata, event);
+    try {
+        if      (isSVTransloc(svType))
+        {
+            writeTranslocPair(sv, svId, svData, adata, event);
+        }
+        else
+        {
+            const bool isIndel(isSVIndel(svType));
+            writeInvdel(sv, svId, adata, isIndel, event);
+        }
     }
-    else
+    catch (...)
     {
-        const bool isIndel(isSVIndel(svType));
-        writeInvdel(sv, svId, adata, isIndel, event);
+        log_os << "Exception caught while attempting to write sv candidate to vcf: " << sv << "\n";
+        log_os << "\tsvId: " << svId.getLabel() << " ext-svType: " << EXTENDED_SV_TYPE::label(svType) << "\n";
+        throw;
     }
 }
 
