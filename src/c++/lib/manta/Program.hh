@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <iosfwd>
+
 namespace manta
 {
 
@@ -47,6 +49,13 @@ protected:
     virtual
     void
     runInternal(int argc, char* argv[]) const = 0;
+
+private:
+    void
+    post_catch(
+        int argc,
+        char* argv[],
+        std::ostream& os) const;
 };
 
 }

@@ -37,26 +37,12 @@ dump_cl(int argc,
     {
         os << ' ' << argv[i];
     }
-    os << std::endl;
-}
-
-
-
-static
-void
-post_catch(int argc,
-           char* argv[],
-           std::ostream& os)
-{
-    os << "...caught in program.run()\n";
-    dump_cl(argc,argv,log_os);
-    exit(EXIT_FAILURE);
+    os << "\n";
 }
 
 
 namespace manta
 {
-
 
 
 const char*
@@ -83,6 +69,23 @@ Program::
 buildTime() const
 {
     return getBuildTime();
+}
+
+
+void
+Program::
+post_catch(
+    int argc,
+    char* argv[],
+    std::ostream& os) const
+{
+    os << "...caught in program.run()\n";
+    dump_cl(argc,argv,log_os);
+    os << "version:\t" << version() << "\n";
+    os << "buildTime:\t" << buildTime() << "\n";
+    os << "compiler:\t" << compiler() << "\n";
+    os << std::flush;
+    exit(EXIT_FAILURE);
 }
 
 
