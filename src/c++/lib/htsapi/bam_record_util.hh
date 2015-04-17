@@ -42,13 +42,13 @@ bool
 is_innie_pair(
     const bam_record& bam_read);
 
-/// detect cases where the dna fragment is likely to be shorter than read length
+/// detect cases where paired-end reads overlap (i.e. a fragment shorter than the combined read-length).
 ///
 /// note this is an approximation because it's based on a single bam record, an
 /// exact answer would require both records in the pair. In practice, this should
 /// be good enough.
 bool
-is_possible_adapter_pair(
+is_overlapping_pair(
     const bam_record& bam_read,
     const SimpleAlignment& matchedAlignment);
 

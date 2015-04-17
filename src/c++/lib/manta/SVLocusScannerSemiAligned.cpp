@@ -222,7 +222,7 @@ getSVBreakendCandidateSemiAligned(
     // create a new alignment with all soft-clip sections forced to match:
     const SimpleAlignment matchedAlignment(matchifyEdgeSoftClip(bamAlign));
 
-    if (is_possible_adapter_pair(bamRead, matchedAlignment)) return;
+    if (is_overlapping_pair(bamRead, matchedAlignment)) return;
 
     using namespace ALIGNPATH;
     const bam_seq querySeq(bamRead.get_bam_read());

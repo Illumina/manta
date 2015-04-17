@@ -71,7 +71,7 @@ is_innie_pair(
 
 
 bool
-is_possible_adapter_pair(
+is_overlapping_pair(
     const bam_record& bamRead,
     const SimpleAlignment& matchedAlignment)
 {
