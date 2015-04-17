@@ -615,7 +615,16 @@ writeInvdel(
 
         get_standardized_region_seq(_referenceFilename, chrom, beginRefPos, endRefPos, ref);
 
-        assert(static_cast<unsigned>(1+endRefPos-beginRefPos) == ref.size());
+        if (static_cast<unsigned>(1+endRefPos-beginRefPos) != ref.size())
+        {
+            using namespace illumina::common;
+
+            std::ostringstream oss;
+            oss << "ERROR: Unexpected reference allele size: " << ref.size() << "\n";
+            oss << "\tExpected: " << (1+endRefPos-beginRefPos) << "\n";
+            oss << "\tbeginRefPos: " << beginRefPos << " endRefPos: " << endRefPos << " isSmallVariant " << isSmallVariant << "\n";
+            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        }
     }
 
     // build alt:
