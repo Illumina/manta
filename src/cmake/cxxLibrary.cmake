@@ -60,11 +60,11 @@ if (THIS_LIBRARY_SOURCES)
     add_library     (${LIB_TARGET_NAME} STATIC ${THIS_LIBRARY_SOURCES})
     add_dependencies(${LIB_TARGET_NAME} ${THIS_OPT})
 
+    # make the target project use folders when applying cmake IDE generators like Visual Studio
     file(RELATIVE_PATH THIS_RELATIVE_LIBDIR "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}")
     set_property(TARGET ${LIB_TARGET_NAME} PROPERTY FOLDER "${THIS_RELATIVE_LIBDIR}")
 endif()
 
-if (NOT WIN32)
     ##
     ## build the unit tests if a "test" subdirectory is found:
     ##
@@ -73,4 +73,3 @@ if (NOT WIN32)
         message (STATUS "Adding c++ test subdirectory:    ${CURRENT_DIR_NAME}/test")
         add_subdirectory (test)
     endif ()
-endif ()

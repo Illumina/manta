@@ -11,6 +11,8 @@
 // <https://github.com/sequencing/licenses/>
 //
 
+#include "test_config.h"
+
 #include "htsapi/bed_streamer.hh"
 
 #include "boost/test/unit_test.hpp"
@@ -23,7 +25,7 @@ static
 const char*
 getTestpath()
 {
-    static const std::string testPath("@CMAKE_CURRENT_SOURCE_DIR@/bed_streamer_test.bed.gz");
+    static const std::string testPath(std::string(TEST_DATA_PATH) + "/bed_streamer_test.bed.gz");
     return testPath.c_str();
 }
 

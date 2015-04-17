@@ -11,6 +11,8 @@
 // <https://github.com/sequencing/licenses/>
 //
 
+#include "test_config.h"
+
 #include "htsapi/vcf_streamer.hh"
 
 #include "boost/test/unit_test.hpp"
@@ -23,7 +25,7 @@ static
 const char*
 getTestpath()
 {
-    static const std::string testPath("@CMAKE_CURRENT_SOURCE_DIR@/vcf_streamer_test.vcf.gz");
+    static const std::string testPath(std::string(TEST_DATA_PATH) + "/vcf_streamer_test.vcf.gz");
     return testPath.c_str();
 }
 

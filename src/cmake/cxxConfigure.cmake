@@ -223,7 +223,7 @@ if (${GNU_COMPAT_COMPILER})
         set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wuninitialized")
     endif ()
 elseif (MSVC)
-    set (CXX_WARN_FLAGS "/W3 /wd4305 /wd4244")
+    set (CXX_WARN_FLAGS "/W3 /wd4305 /wd4244 /wd4068")
     add_definitions(/D_CRT_SECURE_NO_WARNINGS)
 endif ()
 
