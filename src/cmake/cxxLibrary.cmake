@@ -55,7 +55,6 @@ if (WIN32)
 endif ()
 
 if (THIS_LIBRARY_SOURCES)
-    #include_directories (${THIS_COMMON_INCLUDE})
     set (LIB_TARGET_NAME "${THIS_PROJECT_NAME}_${CURRENT_DIR_NAME}")
     add_library     (${LIB_TARGET_NAME} STATIC ${THIS_LIBRARY_SOURCES})
     add_dependencies(${LIB_TARGET_NAME} ${THIS_OPT})
@@ -65,11 +64,10 @@ if (THIS_LIBRARY_SOURCES)
     set_property(TARGET ${LIB_TARGET_NAME} PROPERTY FOLDER "${THIS_RELATIVE_LIBDIR}")
 endif()
 
-    ##
-    ## build the unit tests if a "test" subdirectory is found:
-    ##
-    find_path(${CMAKE_CURRENT_SOURCE_DIR}_TEST_DIR test PATHS ${CMAKE_CURRENT_SOURCE_DIR} NO_DEFAULT_PATH)
-    if (${CMAKE_CURRENT_SOURCE_DIR}_TEST_DIR)
-        message (STATUS "Adding c++ test subdirectory:    ${CURRENT_DIR_NAME}/test")
-        add_subdirectory (test)
-    endif ()
+##
+## build the unit tests if a "test" subdirectory is found:
+##
+if (IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/test")
+    message (STATUS "Adding c++ test subdirectory:    ${CURRENT_DIR_NAME}/test")
+    add_subdirectory (test)
+endif ()
