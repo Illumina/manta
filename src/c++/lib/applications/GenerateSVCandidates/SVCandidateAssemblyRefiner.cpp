@@ -1467,15 +1467,21 @@ getJumpAssembly(
         //
         const SVCandidateAssemblyData::JumpAlignmentResultType& hsAlign(assemblyData.spanningAlignments[highScoreIndex]);
 
-        bool isFilter(true);
-        static const unsigned spanSet[] = {100,200};
+        bool isFilterAlign1(true);
+        bool isFilterAlign2(true);
+        static const unsigned spanSet[] = {75, 100, 200};
         for (const unsigned maxQCRefSpan : spanSet)
         {
-            if (isFilterSpanningAlignment( maxQCRefSpan, _spanningAligner, true, isRNA, hsAlign.align1.apath)) continue;
-            if (isFilterSpanningAlignment( maxQCRefSpan, _spanningAligner, false, isRNA, hsAlign.align2.apath)) continue;
-            isFilter=false;
+            if (! isFilterSpanningAlignment( maxQCRefSpan, _spanningAligner, true, isRNA, hsAlign.align1.apath))
+            {
+                isFilterAlign1 = false;
+            }
+            if (! isFilterSpanningAlignment( maxQCRefSpan, _spanningAligner, false, isRNA, hsAlign.align2.apath))
+            {
+                isFilterAlign2 = false;
+            }
         }
-        if (isFilter) return;
+        if (isFilterAlign1 || isFilterAlign2) return;
     }
 
 
