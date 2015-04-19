@@ -302,14 +302,17 @@ addCigarToSpanningAlignment(
     const SVBreakend& bpA(isBp1First ? sv.bp1 : sv.bp2);
     const SVBreakend& bpB(isBp1First ? sv.bp2 : sv.bp1);
 
-    const unsigned deleteSize(bpB.interval.range.begin_pos() - bpA.interval.range.begin_pos());
-    const unsigned insertSize(sv.insertSeq.size());
+    const pos_t deleteSize((bpB.interval.range.begin_pos() - bpA.interval.range.begin_pos()) -1);
+    const pos_t insertSize(sv.insertSeq.size());
 
+    assert(deleteSize >= 0);
+    assert(insertSize || deleteSize);
+
+    // follow convention from non-spanning alignments of xIyD in case of complex variant:
     if (insertSize)
     {
         sv.insertAlignment.emplace_back(ALIGNPATH::INSERT,insertSize);
     }
-
     if (deleteSize)
     {
         sv.insertAlignment.emplace_back(ALIGNPATH::DELETE,deleteSize);
