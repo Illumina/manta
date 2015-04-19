@@ -182,6 +182,17 @@ BOOST_AUTO_TEST_CASE( test_GlobalLargeIndelAlignerBigDelete )
     BOOST_REQUIRE_EQUAL(result.score,10);
 }
 
+BOOST_AUTO_TEST_CASE( test_GlobalLargeIndelAlignerBigDeleteSmallInsert )
+{
+    static const std::string seq("BCDEFXHIKLM");
+    static const std::string ref("ABCDEFGGGGGGGGGGGGGGGGGGGGGGGGGGHIKLMN");
+
+    AlignmentResult<score_t> result = testAlign(seq,ref);
+
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align.apath),"5=1I26D5=");
+    BOOST_REQUIRE_EQUAL(result.align.beginPos,1);
+    BOOST_REQUIRE_EQUAL(result.score,9);
+}
 
 BOOST_AUTO_TEST_CASE( test_GlobalLargeIndelAlignerBigInsert )
 {
@@ -192,6 +203,28 @@ BOOST_AUTO_TEST_CASE( test_GlobalLargeIndelAlignerBigInsert )
 
     BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align.apath),"6=24I5=");
     BOOST_REQUIRE_EQUAL(result.score,12);
+}
+
+BOOST_AUTO_TEST_CASE( test_GlobalLargeIndelAlignerBigInsertSmallDelete )
+{
+    static const std::string seq("BCDEFGXXXXXXXXXXXXXXXXXXXXXXXXIKLM");
+    static const std::string ref("ABCDEFGHIKLMN");
+
+    AlignmentResult<score_t> result = testAlign(seq,ref);
+
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align.apath),"6=24I1D4=");
+    BOOST_REQUIRE_EQUAL(result.score,9);
+}
+
+BOOST_AUTO_TEST_CASE( test_GlobalLargeIndelAlignerBigInsertSmallDelete2 )
+{
+    static const std::string seq("BCDEFXXXXXXXXXXXXXXXXXXXXXXXXHIKLM");
+    static const std::string ref("ABCDEFGHIKLMN");
+
+    AlignmentResult<score_t> result = testAlign(seq,ref);
+
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align.apath),"5=24I1D5=");
+    BOOST_REQUIRE_EQUAL(result.score,9);
 }
 
 

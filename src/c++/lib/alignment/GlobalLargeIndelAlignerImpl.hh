@@ -127,7 +127,7 @@ align(
                                       sval.match + scores.open,
                                       badVal,
                                       sval.ins,
-                                      sval.jumpDel,
+                                      badVal,
                                       badVal);
 
                     headScore.ins += scores.extend;
@@ -139,12 +139,15 @@ align(
                     // you can switch between long ins and delete but only
                     // by paying the full open penalty again
                     //
+                    // the switch from short ins to jump del is meant to simulate
+                    // a free transition from jump del to short ins, but makes
+                    // the cigar I->D order come out the same as other aligners in this library
                     const ScoreVal& sval((*prevSV)[queryIndex+1]);
                     headPtr.jumpDel = this->max5(
                                           headScore.jumpDel,
                                           sval.match + _largeIndelScore,
                                           badVal,
-                                          badVal,
+                                          sval.ins + _largeIndelScore - scores.open,
                                           sval.jumpDel,
                                           sval.jumpIns + _largeIndelScore);
 
