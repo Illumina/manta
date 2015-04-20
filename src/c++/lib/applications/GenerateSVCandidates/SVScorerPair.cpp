@@ -594,14 +594,33 @@ getSVPairSupport(
 
     std::vector<pairProcPtr> pairProcList;
 
+    bool isAltPairFound(false);
     if (assemblyData.isCandidateSpanning && (sv.isImprecise() || assemblyData.isSpanning))
     {
-        // count the read pairs supporting the alternate allele in each sample
-        // using data we already produced during candidate generation:
-        //
-        processExistingAltPairInfo(pairOpt, svData, sv, evidence);
+        bool isIncompleteAltPairInfo = false;
+        if (! sv.isImprecise())
+        {
+            const unsigned deleteSize(getDeleteSize(sv));
+
+            // this size represents the outer edge of variant size above which we expect pair
+            // discovery to suffer no dropouts due to normal pair distro sizes
+            static const double insertSizeFactor(2);
+            const unsigned maxClosePairSize(_readScanner.getExtremeFifthRange().max * insertSizeFactor);
+            isIncompleteAltPairInfo = ((deleteSize>0) && (deleteSize<=maxClosePairSize));
+        }
+
+        if (! isIncompleteAltPairInfo)
+        {
+            // count the read pairs supporting the alternate allele in each sample
+            // using data we already produced during candidate generation:
+            //
+            processExistingAltPairInfo(pairOpt, svData, sv, evidence);
+            isAltPairFound = true;
+        }
     }
-    else
+
+
+    if (! isAltPairFound)
     {
         // for SVs which were assembled without a pair-driven prior hypothesis,
         // we need to go back to the bam and and find any supporting alt read-pairs
