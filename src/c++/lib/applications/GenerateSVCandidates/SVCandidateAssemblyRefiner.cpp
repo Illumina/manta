@@ -431,7 +431,7 @@ searchContig(
 ///
 static
 bool
-isSmallSVAlignment(
+isSmallAssemblerSVAlignment(
     const unsigned maxQCRefSpan,
     const AlignerBase<int>& aligner,
     const Alignment& align,
@@ -475,8 +475,8 @@ isSmallSVAlignment(
         candidateSegments = std::vector<std::pair<unsigned,unsigned> >(candidateSegments.begin()+1,candidateSegments.end());
     }
 
-    /// loop through possible trailing segments until a clean one is found:
-    ///
+    // loop through possible trailing segments until a clean one is found:
+    //
     while (true)
     {
         // test quality of alignment segments surrounding the variant region:
@@ -1107,6 +1107,66 @@ getCandidateAssemblyData(
 
 
 
+/// convert jump alignment results into an SVCandidate
+///
+static
+void
+generateRefinedSVCandidateFromJumpAlignment(
+    const BPOrientation& bporient,
+    const SVCandidateAssemblyData& assemblyData,
+    const unsigned contigIndex,
+    SVCandidate& sv)
+{
+    const SVCandidateAssemblyData::JumpAlignmentResultType& align(assemblyData.spanningAlignments[contigIndex]);
+
+    // first get each alignment associated with the correct breakend:
+    const Alignment* bp1AlignPtr(&align.align1);
+    const Alignment* bp2AlignPtr(&align.align2);
+
+    if (bporient.isBp2AlignedFirst) std::swap(bp1AlignPtr, bp2AlignPtr);
+
+    // summarize usable output information in a second SVBreakend
+    // object -- this is the 'refined' sv:
+    sv.assemblyAlignIndex = contigIndex;
+    sv.assemblySegmentIndex = 0;
+
+    sv.setPrecise();
+
+    adjustAssembledBreakend(*bp1AlignPtr, (! bporient.isBp2AlignedFirst), align.jumpRange, assemblyData.bp1ref, bporient.isBp1Reversed, sv.bp1);
+    adjustAssembledBreakend(*bp2AlignPtr, (bporient.isBp2AlignedFirst), align.jumpRange, assemblyData.bp2ref, bporient.isBp2Reversed, sv.bp2);
+}
+
+
+
+/// convert jump alignment results into an SVCandidate and add all
+/// extra data required for VCF output
+///
+static
+void
+generateRefinedVCFSVCandidateFromJumpAlignment(
+    const BPOrientation& bporient,
+    const SVCandidateAssemblyData& assemblyData,
+    const unsigned contigIndex,
+    SVCandidate& sv)
+{
+    generateRefinedSVCandidateFromJumpAlignment(bporient, assemblyData, contigIndex, sv);
+
+    const AssembledContig& contig(assemblyData.contigs[contigIndex]);
+    const SVCandidateAssemblyData::JumpAlignmentResultType& align(assemblyData.spanningAlignments[contigIndex]);
+
+    // fill in insertSeq:
+    sv.insertSeq.clear();
+    if (align.jumpInsertSize > 0)
+    {
+        getFwdStrandInsertSegment(align, contig.seq, bporient.isBp1Reversed, sv.insertSeq);
+    }
+
+    // add CIGAR for any simple (insert/delete) cases:
+    addCigarToSpanningAlignment(sv);
+}
+
+
+
 void
 SVCandidateAssemblyRefiner::
 getJumpAssembly(
@@ -1403,6 +1463,7 @@ getJumpAssembly(
         // that stabilizes as we move farther away
         //
         /// TODO change iterative refspan to a single consistent alignment criteria
+        /// TODO should this be moved into the candidate selection loop?
         //
         const SVCandidateAssemblyData::JumpAlignmentResultType& hsAlign(assemblyData.spanningAlignments[highScoreIndex]);
 
@@ -1429,36 +1490,12 @@ getJumpAssembly(
         // process the alignment into information that's easily usable
         // in the vcf output (ie. breakends in reference coordinates)
 
-        const AssembledContig& bestContig(assemblyData.contigs[assemblyData.bestAlignmentIndex]);
-        const SVCandidateAssemblyData::JumpAlignmentResultType& bestAlign(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex]);
-
-        // first get each alignment associated with the correct breakend:
-        const Alignment* bp1AlignPtr(&bestAlign.align1);
-        const Alignment* bp2AlignPtr(&bestAlign.align2);
-
-        if (bporient.isBp2AlignedFirst) std::swap(bp1AlignPtr, bp2AlignPtr);
-
         // summarize usable output information in a second SVBreakend
         // object -- this is the 'refined' sv:
         assemblyData.svs.push_back(sv);
         SVCandidate& newSV(assemblyData.svs.back());
-        newSV.assemblyAlignIndex = assemblyData.bestAlignmentIndex;
-        newSV.assemblySegmentIndex = 0;
 
-        newSV.setPrecise();
-
-        adjustAssembledBreakend(*bp1AlignPtr, (! bporient.isBp2AlignedFirst), bestAlign.jumpRange, assemblyData.bp1ref, bporient.isBp1Reversed, newSV.bp1);
-        adjustAssembledBreakend(*bp2AlignPtr, (bporient.isBp2AlignedFirst), bestAlign.jumpRange, assemblyData.bp2ref, bporient.isBp2Reversed, newSV.bp2);
-
-        // fill in insertSeq:
-        newSV.insertSeq.clear();
-        if (bestAlign.jumpInsertSize > 0)
-        {
-            getFwdStrandInsertSegment(bestAlign, bestContig.seq, bporient.isBp1Reversed, newSV.insertSeq);
-        }
-
-        // add CIGAR for any simple (insert/delete) cases:
-        addCigarToSpanningAlignment(newSV);
+        generateRefinedVCFSVCandidateFromJumpAlignment(bporient, assemblyData, highScoreIndex, newSV);
 
 #ifdef DEBUG_REFINER
         log_os << __FUNCTION__ << ": highscore refined sv: " << newSV;
@@ -1654,10 +1691,10 @@ getSmallSVAssembly(
             static const unsigned spanSet[] = {100,200};
             for (const unsigned maxQCRefSpan : spanSet)
             {
-                static const bool isInsertionOnly(true);
+                static const bool isLargeOnly(true);
 
                 std::vector<std::pair<unsigned,unsigned> > segments;
-                const bool isCandidate( isSmallSVAlignment(
+                const bool isCandidate( isSmallAssemblerSVAlignment(
                                             maxQCRefSpan,
                                             _largeSVAligner,
                                             alignment.align,
@@ -1665,7 +1702,7 @@ getSmallSVAssembly(
                                             align1RefStr,
                                             _opt.scanOpt.minCandidateVariantSize,
                                             segments,
-                                            isInsertionOnly) );
+                                            isLargeOnly) );
 
                 if (isCandidate)
                 {
@@ -1705,7 +1742,7 @@ getSmallSVAssembly(
             for (const unsigned maxQCRefSpan : spanSet)
             {
                 std::vector<std::pair<unsigned,unsigned> > segments;
-                const bool isCandidate( isSmallSVAlignment(
+                const bool isCandidate( isSmallAssemblerSVAlignment(
                                             maxQCRefSpan,
                                             _smallSVAligner,
                                             alignment.align,

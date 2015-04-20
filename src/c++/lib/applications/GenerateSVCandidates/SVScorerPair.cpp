@@ -514,10 +514,10 @@ processExistingAltPairInfo(
 
             const bool isPairType(SVEvidenceType::isPairType(fragment.svLink[linkIndex].evtype));
 
-            /// if the evidence comes from a read fragment observation, a very strict matching criteria
-            /// is enforced between this pair and the SV candidate. If the read pair association comes from
-            /// a CIGAR string for instance, the fragment will not necessarily support the candidate
-            ///
+            // if the evidence comes from a read fragment observation, a very strict matching criteria
+            // is enforced between this pair and the SV candidate. If the read pair association comes from
+            // a CIGAR string for instance, the fragment will not necessarily support the candidate
+            //
             const bool isStrictMatch(isPairType);
 
             const std::string& qname(fragment.qname());

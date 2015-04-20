@@ -45,6 +45,8 @@ struct ContigParams
 };
 
 
+/// estimate pair support for an sv candidate
+/// restricted to simple indel style svs
 struct SVScorePairAltProcessor : public SVScorePairProcessor
 {
     SVScorePairAltProcessor(

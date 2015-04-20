@@ -165,3 +165,14 @@ isComplexSV(const SVCandidate& sv)
     return ((sv.bp1.state == COMPLEX) && (sv.bp2.state == UNKNOWN));
 }
 
+/// returns 0 if not a deletion
+inline
+unsigned
+getDeleteSize(
+    const SVCandidate& sv)
+{
+    const EXTENDED_SV_TYPE::index_t svType(getExtendedSVType(sv));
+    if (svType != EXTENDED_SV_TYPE::DELETE) return 0;
+    return std::abs(sv.bp1.interval.range.begin_pos() - sv.bp2.interval.range.begin_pos());
+}
+

@@ -167,6 +167,8 @@ private:
         const SVCandidate& sv,
         SVEvidence& evidence);
 
+    /// estimate pair support for an sv candidate
+    /// restricted to simple indel style svs
     void
     getSVAltPairSupport(
         const PairOptions& pairOpt,

@@ -121,8 +121,9 @@ insertAssemblyRead(
     const char flag(bamRead.is_second() ? '2' : '1');
     const std::string readKey = std::string(bamRead.qname()) + "_" + flag + "_" + bamIndexStr;
 
-    if (readIndex.count(readKey) != 0)
+    if (readIndex.find(readKey) != readIndex.end())
     {
+        // this can be a normal case when for instance, spanning breakends overlap by a small amount
 #ifdef DEBUG_ASBL
         log_os << __FUNCTION__ << ": WARNING: SmallAssembler read name collision : " << readKey << "\n";
 #endif
