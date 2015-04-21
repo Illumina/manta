@@ -19,6 +19,7 @@
 #include "SVScorerShared.hh"
 #include "blt_util/seq_util.hh"
 #include "manta/ShadowReadFinder.hh"
+#include "htsapi/SimpleAlignment_bam_util.hh"
 
 #include "boost/scoped_array.hpp"
 
@@ -182,8 +183,13 @@ scoreSplitReads(
     bam_streamer& readStream,
     SVSampleInfo& sample)
 {
+    static const int extendedSearchRange(200); // Window to look for alignments that may (if unclipped) overlap the breakpoint
     // extract reads overlapping the break point
-    readStream.set_new_region(bp.interval.tid, bp.interval.range.begin_pos(), bp.interval.range.end_pos());
+    // We are not looking for remote reads, (semialigned-) reads mapping near this breakpoint, but not across it
+    // or any other kind of additional reads used for assembly.
+    readStream.set_new_region(bp.interval.tid,
+        std::max(0, bp.interval.range.begin_pos() - extendedSearchRange),
+        bp.interval.range.end_pos() + extendedSearchRange);
     while (readStream.next())
     {
         const bam_record& bamRead(*(readStream.get_record_ptr()));
@@ -191,8 +197,13 @@ scoreSplitReads(
         if (SVLocusScanner::isReadFilteredCore(bamRead)) continue;
         if (bamRead.is_unmapped()) continue;
 
-        /// TODO: remove this filter
+        /// TODO: remove this filter?
+        /// The supplemental alignment is likely to be hard-clipped
         if (bamRead.isNonStrictSupplement()) continue;
+
+        // Skip reads that do not overlap the entire homology range of this breakpoint.
+        const known_pos_range2 bamRange(matchifyEdgeSoftClipRefRange(getAlignment(bamRead)));
+        if (!bamRange.is_superset_of(bp.interval.range)) continue;
 
         static const bool isShadow(false);
         static const bool isReversedShadow(false);
