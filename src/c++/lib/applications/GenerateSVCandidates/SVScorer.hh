@@ -139,6 +139,7 @@ struct SVScorer
 {
     SVScorer(
         const GSCOptions& opt,
+        const SVLocusScanner& readScanner,
         const bam_header_info& header);
 
     /// gather supporting evidence and generate:
@@ -226,7 +227,6 @@ private:
         SVScoreInfo& ssInfo,
         SVEvidence& evidence);
 
-
     const std::vector<bool> _isAlignmentTumor;
     const bool _isRNA;
     const CallOptionsShared _callOpt;
@@ -239,7 +239,7 @@ private:
     const CallOptionsSomaticDeriv _somaticDopt;
     const ChromDepthFilterUtil _dFilterDiploid;
     const ChromDepthFilterUtil _dFilterSomatic;
-    SVLocusScanner _readScanner;
+    const SVLocusScanner& _readScanner;
 
     std::vector<streamPtr> _bamStreams;
 };

@@ -36,6 +36,7 @@ struct SVFinder
 {
     SVFinder(
         const GSCOptions& opt,
+        const SVLocusScanner& readScanner,
         EdgeRuntimeTracker& edgeTracker,
         GSCEdgeStatsManager& edgeStatMan);
 
@@ -128,7 +129,7 @@ private:
     const std::vector<bool> _isAlignmentTumor;
     SVLocusSet _set;
     std::unique_ptr<ChromDepthFilterUtil> _dFilterPtr;
-    SVLocusScanner _readScanner;
+    const SVLocusScanner& _readScanner;
 
     const std::string _referenceFilename;
 

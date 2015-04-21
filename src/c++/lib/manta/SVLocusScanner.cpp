@@ -1229,6 +1229,16 @@ SVLocusScanner(
         setRGRange(rgDistro, _opt.largeScaleEventBreakendEdgeTrimProb, rgStats.largeScaleEventBreakendRegion);
         setRGRange(rgDistro, _opt.properPairTrimProb, rgStats.properPair);
         setRGRange(rgDistro, _opt.evidenceTrimProb, rgStats.evidencePair);
+        setRGRange(rgDistro, 0.05f, rgStats.fifthPerc);
+
+        if ((rgIndex==0) || (rgStats.fifthPerc.min < _fifthPerc.min))
+        {
+            _fifthPerc.min = rgStats.fifthPerc.min;
+        }
+        if ((rgIndex==0) || (rgStats.fifthPerc.max > _fifthPerc.max))
+        {
+            _fifthPerc.max = rgStats.fifthPerc.max;
+        }
 
         rgStats.shadowSearchRange = rgDistro.quantile(1-(_opt.shadowSearchRangeProb))*_opt.shadowSearchRangeFactor;
 
@@ -1262,9 +1272,11 @@ isProperPair(
     const Range& ppr(_stats[defaultReadGroupIndex].properPair);
     const int32_t fragmentSize(std::abs(bamRead.template_size()));
 
-    /// we're seeing way to much large fragment garbage in cancers to use the normal proper pair criteria, push the max fragment size out a bit for now:
+    // we're seeing way to much large fragment garbage in cancers to use
+    // vanilla proper pair criteria, push the max fragment size out a bit for now:
     static const float maxAnomFactor(1.5);
-    if ((fragmentSize > static_cast<int32_t>(maxAnomFactor*ppr.max)) || (fragmentSize < ppr.min)) return false;
+    if (fragmentSize > static_cast<int32_t>(maxAnomFactor*ppr.max)) return false;
+    if (fragmentSize < ppr.min) return false;
 
     return true;
 }

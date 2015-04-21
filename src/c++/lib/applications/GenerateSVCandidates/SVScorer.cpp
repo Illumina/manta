@@ -51,6 +51,7 @@
 SVScorer::
 SVScorer(
     const GSCOptions& opt,
+    const SVLocusScanner& readScanner,
     const bam_header_info& header) :
     _isAlignmentTumor(opt.alignFileOpt.isAlignmentTumor),
     _isRNA(opt.isRNA),
@@ -64,7 +65,7 @@ SVScorer(
     _somaticDopt(_somaticOpt),
     _dFilterDiploid(opt.chromDepthFilename, _diploidOpt.maxDepthFactor, header),
     _dFilterSomatic(opt.chromDepthFilename, _somaticOpt.maxDepthFactor, header),
-    _readScanner(opt.scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilename)
+    _readScanner(readScanner)
 {
     // setup regionless bam_streams:
     // setup all data for main analysis loop:

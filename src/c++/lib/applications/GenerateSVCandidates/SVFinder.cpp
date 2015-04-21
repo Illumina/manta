@@ -70,11 +70,12 @@ getAssemblyNoiseRate(
 SVFinder::
 SVFinder(
     const GSCOptions& opt,
+    const SVLocusScanner& readScanner,
     EdgeRuntimeTracker& edgeTracker,
     GSCEdgeStatsManager& edgeStatMan) :
     _scanOpt(opt.scanOpt),
     _isAlignmentTumor(opt.alignFileOpt.isAlignmentTumor),
-    _readScanner(_scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilename),
+    _readScanner(readScanner),
     _referenceFilename(opt.referenceFilename),
     _isRNA(opt.isRNA),
     _isVerbose(opt.isVerbose),

@@ -261,6 +261,12 @@ struct SVLocusScanner
         return _stats[readGroupIndex].evidencePair;
     }
 
+    const Range&
+    getExtremeFifthRange() const
+    {
+        return _fifthPerc;
+    }
+
     struct CachedReadGroupStats
     {
         /// fragment size range assumed for the purpose of creating SVLocusGraph regions
@@ -274,6 +280,9 @@ struct SVLocusScanner
         Range properPair;
 
         Range evidencePair;
+
+        /// range fixed the 5th and 95th percentiles:
+        Range fifthPerc;
 
         int shadowSearchRange = 0;
 
@@ -314,6 +323,9 @@ private:
     ReadGroupStatsSet _rss;
 
     std::vector<CachedReadGroupStats> _stats;
+
+    /// extreme 5th-95th percentiles over all read groups:
+    Range _fifthPerc;
 
     // cached temporary to reduce syscalls:
     mutable SimpleAlignment _bamAlign;

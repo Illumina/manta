@@ -31,13 +31,14 @@
 SVWriter::
 SVWriter(
     const GSCOptions& initOpt,
+    const SVLocusScanner& readScanner,
     const SVLocusSet& cset,
     const char* progName,
     const char* progVersion,
     TruthTracker& truthTracker) :
     opt(initOpt),
     isSomatic(! opt.somaticOutputFilename.empty()),
-    svScore(opt, cset.header),
+    svScore(opt, readScanner, cset.header),
     candfs(opt.candidateOutputFilename),
     dipfs(opt.diploidOutputFilename),
     somfs(opt.somaticOutputFilename),
@@ -351,6 +352,7 @@ writeSV(
 SVCandidateProcessor::
 SVCandidateProcessor(
     const GSCOptions& opt,
+    const SVLocusScanner& readScanner,
     const char* progName,
     const char* progVersion,
     const SVLocusSet& cset,
@@ -363,7 +365,7 @@ SVCandidateProcessor(
     _edgeTracker(edgeTracker),
     _edgeStatMan(edgeStatMan),
     _svRefine(opt, cset.header, cset.getCounts(), _edgeTracker),
-    _svWriter(opt, cset, progName, progVersion, truthTracker)
+    _svWriter(opt, readScanner, cset, progName, progVersion, truthTracker)
 {}
 
 

@@ -42,6 +42,7 @@ struct SVWriter
 {
     SVWriter(
         const GSCOptions& initOpt,
+        const SVLocusScanner& readScanner,
         const SVLocusSet& cset,
         const char* progName,
         const char* progVersion,
@@ -80,6 +81,7 @@ struct SVCandidateProcessor
 {
     SVCandidateProcessor(
         const GSCOptions& opt,
+        const SVLocusScanner& readScanner,
         const char* progName,
         const char* progVersion,
         const SVLocusSet& cset,

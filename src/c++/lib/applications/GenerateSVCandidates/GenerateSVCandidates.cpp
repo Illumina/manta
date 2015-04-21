@@ -167,13 +167,15 @@ runGSC(
     EdgeRuntimeTracker edgeTracker(opt.edgeRuntimeFilename);
     GSCEdgeStatsManager edgeStatMan(opt.edgeStatsFilename);
 
-    SVFinder svFind(opt,edgeTracker,edgeStatMan);
+    const SVLocusScanner readScanner(opt.scanOpt, opt.statsFilename, opt.alignFileOpt.alignmentFilename);
+
+    SVFinder svFind(opt, readScanner, edgeTracker,edgeStatMan);
     MultiJunctionFilter svMJFilter(opt,edgeStatMan);
     const SVLocusSet& cset(svFind.getSet());
 
     TruthTracker truthTracker(opt.truthVcfFilename, cset);
 
-    SVCandidateProcessor svProcessor(opt, progName, progVersion, cset,  truthTracker, edgeTracker, edgeStatMan);
+    SVCandidateProcessor svProcessor(opt, readScanner, progName, progVersion, cset,  truthTracker, edgeTracker, edgeStatMan);
 
     std::unique_ptr<EdgeRetriever> edgerPtr(edgeRFactory(cset, opt.edgeOpt));
     EdgeRetriever& edger(*edgerPtr);
