@@ -54,37 +54,38 @@ struct VcfWriterDiploidSV : public VcfWriterSV, VcfWriterScoredSV
 private:
 
     void
-    addHeaderFormatSampleKey() const;
+    addHeaderFormatSampleKey() const override;
 
     void
-    addHeaderInfo() const;
+    addHeaderInfo() const override;
 
     void
-    addHeaderFormat() const;
+    addHeaderFormat() const override;
 
     void
-    addHeaderFilters() const;
+    addHeaderFilters() const override;
 
     void
     modifyInfo(
         const EventInfo& event,
-        InfoTag_t& infotags) const;
+        InfoTag_t& infotags) const override;
 
     void
     modifySample(
         const SVCandidate& sv,
-        SampleTag_t& sampletags) const;
+        SampleTag_t& sampletags) const override;
 
     void
     modifyTranslocInfo(
+        const SVCandidate& sv,
         const bool isFirstOfPair,
-        InfoTag_t& infotags) const;
+        InfoTag_t& infotags) const override;
 
     void
-    writeQual() const;
+    writeQual() const override;
 
     void
-    writeFilter() const;
+    writeFilter() const override;
 
     const SVScoreInfoDiploid&
     getDiploidInfo() const

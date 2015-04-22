@@ -83,6 +83,7 @@ modifyInfo(
 void
 VcfWriterDiploidSV::
 modifyTranslocInfo(
+    const SVCandidate& /*sv*/,
     const bool isFirstOfPair,
     InfoTag_t& infotags) const
 {
@@ -196,6 +197,6 @@ writeSV(
     writeSVCore(svData, adata, sv, svId, event);
 
     clearScoreInfo();
-    _diploidInfoPtr=NULL;
-    _singleJunctionDiploidInfoPtr=NULL;
+    _diploidInfoPtr=nullptr;
+    _singleJunctionDiploidInfoPtr=nullptr;
 }

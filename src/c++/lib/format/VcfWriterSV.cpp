@@ -88,10 +88,6 @@ writeHeaderPrefix(
     _os << "##INFO=<ID=SVINSSEQ,Number=.,Type=String,Description=\"Sequence of insertion\">\n";
     _os << "##INFO=<ID=LEFT_SVINSSEQ,Number=.,Type=String,Description=\"Known left side of insertion for an insertion of unknown length\">\n";
     _os << "##INFO=<ID=RIGHT_SVINSSEQ,Number=.,Type=String,Description=\"Known right side of insertion for an insertion of unknown length\">\n";
-    _os << "##INFO=<ID=PAIR_COUNT,Number=1,Type=Integer,Description=\"Read pairs supporting this variant where both reads are confidently mapped\">\n";
-    _os << "##INFO=<ID=BND_PAIR_COUNT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at this breakend (mapping may not be confident at remote breakend)\">\n";
-    _os << "##INFO=<ID=UPSTREAM_PAIR_COUNT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at the upstream breakend (mapping may not be confident at downstream breakend)\">\n";
-    _os << "##INFO=<ID=DOWNSTREAM_PAIR_COUNT,Number=1,Type=Integer,Description=\"Confidently mapped reads supporting this variant at this downstream breakend (mapping may not be confident at upstream breakend)\">\n";
     _os << "##INFO=<ID=INV3,Number=0,Type=Flag,Description=\"Inversion breakends open 3' of reported location\">\n";
     _os << "##INFO=<ID=INV5,Number=0,Type=Flag,Description=\"Inversion breakends open 5' of reported location\">\n";
 
@@ -453,8 +449,6 @@ writeTransloc(
     // build INFO field
     infotags.push_back("SVTYPE=BND");
     infotags.push_back("MATEID="+mateId);
-    infotags.push_back( str(boost::format("BND_PAIR_COUNT=%i") % bpA.getLocalPairCount()) );
-    infotags.push_back( str(boost::format("PAIR_COUNT=%i") % bpA.getPairCount()) );
     if (isImprecise)
     {
         infotags.push_back("IMPRECISE");
@@ -485,7 +479,7 @@ writeTransloc(
     addSharedInfo(event, infotags);
 
     modifyInfo(event, infotags);
-    modifyTranslocInfo(isFirstBreakend, infotags);
+    modifyTranslocInfo(sv, isFirstBreakend, infotags);
 
     modifySample(sv, sampletags);
 #ifdef DEBUG_VCF
@@ -669,9 +663,6 @@ writeInvdel(
             infoTags.push_back( str(boost::format("SVLEN=%i") % (svLen)));
         }
     }
-    infoTags.push_back( str(boost::format("UPSTREAM_PAIR_COUNT=%i") % bpA.getLocalPairCount()) );
-    infoTags.push_back( str(boost::format("DOWNSTREAM_PAIR_COUNT=%i") % bpB.getLocalPairCount()) );
-    infoTags.push_back( str(boost::format("PAIR_COUNT=%i") % bpA.getPairCount()) );
 
     if (isSmallVariant)
     {
@@ -770,6 +761,8 @@ writeInvdel(
     addSharedInfo(event, infoTags);
 
     modifyInfo(event, infoTags);
+    modifyInvdelInfo(sv, isBp1First, infoTags);
+
     modifySample(sv, sampleTags);
 
     // write out record:

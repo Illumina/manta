@@ -602,8 +602,9 @@ getSVPairSupport(
         {
             const unsigned deleteSize(getDeleteSize(sv));
 
-            // this size represents the outer edge of variant size above which we expect pair
-            // discovery to suffer no dropouts due to normal pair distro sizes
+            // this size represents the outer edge of variant size above which we expect
+            // that the previous candidate generation pair discovery did not suffer dropouts
+            // due to normal pair distro sizes
             static const double insertSizeFactor(2);
             const unsigned maxClosePairSize(_readScanner.getExtremeFifthRange().max * insertSizeFactor);
             isIncompleteAltPairInfo = ((deleteSize>0) && (deleteSize<=maxClosePairSize));

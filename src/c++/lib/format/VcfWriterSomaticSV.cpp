@@ -88,6 +88,7 @@ modifyInfo(
 void
 VcfWriterSomaticSV::
 modifyTranslocInfo(
+    const SVCandidate& /*sv*/,
     const bool isFirstOfPair,
     std::vector<std::string>& infotags) const
 {

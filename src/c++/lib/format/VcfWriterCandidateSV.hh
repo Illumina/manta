@@ -31,6 +31,21 @@ struct VcfWriterCandidateSV : public VcfWriterSV
     {}
 
     void
+    addHeaderInfo() const override;
+
+    void
+    modifyTranslocInfo(
+        const SVCandidate& sv,
+        const bool isFirstOfPair,
+        InfoTag_t& infoTags) const override;
+
+    void
+    modifyInvdelInfo(
+        const SVCandidate& sv,
+        const bool isBp1First,
+        InfoTag_t& infoTags) const override;
+
+    void
     writeSV(
         const SVCandidateSetData& svData,
         const SVCandidateAssemblyData& adata,

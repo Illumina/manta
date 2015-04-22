@@ -1076,12 +1076,10 @@ scoreDiploidSV(
     // apply filters
     //
     {
-
         if (diploidInfo.gtScore < diploidOpt.minPassGTScore)
         {
             diploidInfo.filters.insert(diploidOpt.minGTFilterLabel);
         }
-
 
         const unsigned junctionCount(junctionData.size());
 

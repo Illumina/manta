@@ -54,34 +54,35 @@ struct VcfWriterSomaticSV : public VcfWriterSV, VcfWriterScoredSV
 private:
 
     void
-    addHeaderFormatSampleKey() const;
+    addHeaderFormatSampleKey() const override;
 
     void
-    addHeaderInfo() const;
+    addHeaderInfo() const override;
 
     void
-    addHeaderFormat() const;
+    addHeaderFormat() const override;
 
     void
-    addHeaderFilters() const;
+    addHeaderFilters() const override;
 
     void
     modifyInfo(
         const EventInfo& event,
-        std::vector<std::string>& infotags) const;
+        std::vector<std::string>& infotags) const override;
 
     void
     modifyTranslocInfo(
+        const SVCandidate& sv,
         const bool isFirstOfPair,
-        std::vector<std::string>& infotags) const;
+        std::vector<std::string>& infotags) const override;
 
     void
     modifySample(
         const SVCandidate& sv,
-        SampleTag_t& sampletags) const;
+        SampleTag_t& sampletags) const override;
 
     void
-    writeFilter() const;
+    writeFilter() const override;
 
     const SVScoreInfoSomatic&
     getSomaticInfo() const

@@ -95,8 +95,18 @@ protected:
     virtual
     void
     modifyTranslocInfo(
+        const SVCandidate& /*sv*/,
         const bool /*isFirstOfPair*/,
-        InfoTag_t& /*infotags*/) const
+        InfoTag_t& /*infoTags*/) const
+    {}
+
+    /// add info tags specific to non-translocations:
+    virtual
+    void
+    modifyInvdelInfo(
+        const SVCandidate& /*sv*/,
+        const bool /*isBp1First*/,
+        InfoTag_t& /*infoTags*/) const
     {}
 
     virtual
