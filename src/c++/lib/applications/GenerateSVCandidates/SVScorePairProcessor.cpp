@@ -59,8 +59,8 @@ nextBamIndex(
     bamParams.isSet = true;
     bamParams.isTumor = (isAlignmentTumor[bamIndex]);
 
-    /// set the search range around centerPos so that we can get any fragments at the Xth percentile length or smaller which could have
-    /// min Fragsupport
+    // set the search range around centerPos so that we can get any fragments at the Xth percentile length or smaller which could have
+    // min Fragsupport
     const SVLocusScanner::Range& pRange(readScanner.getEvidencePairRange(bamIndex));
     bamParams.minFrag = (static_cast<pos_t>(pRange.min));
     bamParams.maxFrag = (static_cast<pos_t>(pRange.max));

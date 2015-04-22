@@ -203,7 +203,7 @@ scoreSplitReads(
 
         // Skip reads that do not overlap the entire homology range of this breakpoint.
         const known_pos_range2 bamRange(matchifyEdgeSoftClipRefRange(getAlignment(bamRead)));
-        if (!bamRange.is_superset_of(bp.interval.range)) continue;
+        if (!bamRange.is_range_intersect(bp.interval.range)) continue;
 
         static const bool isShadow(false);
         static const bool isReversedShadow(false);
