@@ -39,6 +39,9 @@ struct CallOptionsDiploid
     float maxMQ0Frac = 0.4f;
     std::string maxMQ0FracLabel = "MaxMQ0Frac";
 
+    /// filter for large SVs with no pair support
+    std::string noPairSupportLabel = "NoPairSupport";
+
     std::string rnaFilterLabel = "RNAFail";
 };
 

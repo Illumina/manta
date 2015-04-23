@@ -114,8 +114,8 @@ getReadSplitScore(
 
     SVFragmentEvidenceAlleleBreakendPerRead& altBp1ReadSupport(fragment.alt.bp1.getRead(isRead1));
 
-    /// in this function we evaluate the hypothesis of both breakends at the same time, the only difference bp1 vs
-    /// bp2 makes is where in the bam we look for reads, therefore if we see split evaluation for bp1 or bp2, we can skip this read:
+    // in this function we evaluate the hypothesis of both breakends at the same time, the only difference bp1 vs
+    // bp2 makes is where in the bam we look for reads, therefore if we see split evaluation for bp1 or bp2, we can skip this read:
     if (altBp1ReadSupport.isSplitEvaluated) return;
 
     SVFragmentEvidenceAlleleBreakendPerRead& refBp1ReadSupport(fragment.ref.bp1.getRead(isRead1));

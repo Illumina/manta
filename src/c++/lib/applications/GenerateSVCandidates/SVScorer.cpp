@@ -1028,6 +1028,7 @@ static
 void
 scoreDiploidSV(
     const CallOptionsDiploid& diploidOpt,
+    const SVLocusScanner& readScanner,
     const CallOptionsDiploidDeriv& diploidDopt,
     const ChromDepthFilterUtil& dFilter,
     const std::vector<JunctionCallInfo>& junctionData,
@@ -1114,7 +1115,6 @@ scoreDiploidSV(
                 const SVScoreInfo& baseInfo(junction.getBaseInfo());
                 const SVCandidate& sv(junction.getSV());
 
-
                 const bool isMQ0FilterSize(isSVBelowMinSize(sv,1000));
                 if (isMQ0FilterSize)
                 {
@@ -1130,6 +1130,38 @@ scoreDiploidSV(
             if ((filteredJunctionCount*2) > junctionCount)
             {
                 diploidInfo.filters.insert(diploidOpt.maxMQ0FracLabel);
+            }
+        }
+
+        // apply zero pair filter
+        {
+            // this size represents the outer edge of variant size above which we expect pair
+            // discovery to suffer no dropouts due to normal pair distro sizes
+            static const double insertSizeFactor(1);
+            const unsigned maxClosePairSize(readScanner.getExtremeFifthRange().max * insertSizeFactor);
+
+            unsigned filteredJunctionCount(0);
+            for (const JunctionCallInfo& junction : junctionData)
+            {
+                const SVScoreInfo& baseInfo(junction.getBaseInfo());
+                const SVCandidate& sv(junction.getSV());
+
+                // only apply the zero pair filter to variants that should definitely have located supporting pairs:
+                const EXTENDED_SV_TYPE::index_t svType(getExtendedSVType(sv));
+                const bool isZeroPairFilterSize((svType != EXTENDED_SV_TYPE::INSERT) && (! isSVBelowMinSize(sv, maxClosePairSize)));
+
+                if (isZeroPairFilterSize)
+                {
+                    if (baseInfo.normal.alt.confidentSpanningPairCount == 0)
+                    {
+                        filteredJunctionCount++;
+                    }
+                }
+            }
+
+            if ((filteredJunctionCount*2) > junctionCount)
+            {
+                diploidInfo.filters.insert(diploidOpt.noPairSupportLabel);
             }
         }
     }
@@ -1586,7 +1618,7 @@ computeAllScoreModels(
     const std::vector<JunctionCallInfo>& junctionData,
     SVModelScoreInfo& modelScoreInfo)
 {
-    scoreDiploidSV(_diploidOpt, _diploidDopt, _dFilterDiploid, junctionData, modelScoreInfo.diploid);
+    scoreDiploidSV(_diploidOpt, _readScanner, _diploidDopt, _dFilterDiploid, junctionData, modelScoreInfo.diploid);
 
     // score components specific to somatic model:
     if (isSomatic)
