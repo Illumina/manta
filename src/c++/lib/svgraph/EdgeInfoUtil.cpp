@@ -42,12 +42,17 @@ testIsolatedEdge(
 
     EdgeInfo testEdge(edge);
 
+    unsigned edgeCount(0);
+    unsigned biEdgeCount(0);
     for (; edgeIter != edgeIterEnd; ++edgeIter)
     {
         testEdge.nodeIndex2 = (edgeIter->first);
         if (testEdge.nodeIndex1 == testEdge.nodeIndex2) continue;
-        if (isBidirectionalEdge(cset, testEdge)) return false;
+        edgeCount++;
+        if (isBidirectionalEdge(cset, testEdge)) biEdgeCount++;
     }
 
-    return true;
+    const bool isLowBiEdge((biEdgeCount >= 1) && (biEdgeCount <= 2));
+    const bool isLowTotalEdge(edgeCount <= 4);
+    return (! (isLowBiEdge && isLowTotalEdge));
 }
