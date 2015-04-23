@@ -1,3 +1,5 @@
+- MANTA-236 expand conditions for large insertion search to normalize
+BWA-mem/Isaac performance
 - MANTA-231 expand scoring phase split read search around breakends to
 find soft clipped ref and alt support.
 - MANTA-234 remove discovery pair counts from scored output files
