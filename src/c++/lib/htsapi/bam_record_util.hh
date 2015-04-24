@@ -42,6 +42,12 @@ bool
 is_innie_pair(
     const bam_record& bam_read);
 
+/// detect cases where paired-end reads overlap in such a way as to suggest a possible unfiltered
+/// read into adapter sequence (assuming innie pairs)
+bool
+is_possible_adapter_pair(
+    const bam_record& bamRead);
+
 /// detect cases where paired-end reads overlap (i.e. a fragment shorter than the combined read-length).
 ///
 /// note this is an approximation because it's based on a single bam record, an

@@ -49,23 +49,36 @@ is_innie_pair(
     const bam_record& bam_read)
 {
     if (! is_mapped_chrom_pair(bam_read)) return false;
+    if (bam_read.is_fwd_strand() == bam_read.is_mate_fwd_strand()) return false;
 
     if     (bam_read.pos() < bam_read.mate_pos())
     {
         if (! bam_read.is_fwd_strand()) return false;
-        if (  bam_read.is_mate_fwd_strand()) return false;
     }
     else if (bam_read.pos() > bam_read.mate_pos())
     {
         if (  bam_read.is_fwd_strand()) return false;
-        if (! bam_read.is_mate_fwd_strand()) return false;
-    }
-    else
-    {
-        if (bam_read.is_fwd_strand() == bam_read.is_mate_fwd_strand()) return false;
     }
 
     return true;
+}
+
+
+
+bool
+is_possible_adapter_pair(
+    const bam_record& bamRead)
+{
+    if (! is_mapped_chrom_pair(bamRead)) return false;
+    if (bamRead.is_fwd_strand() == bamRead.is_mate_fwd_strand()) return false;
+
+    // get range of alignment before matching softclip:
+    int posDiff(bamRead.mate_pos()-bamRead.pos());
+    if (! bamRead.is_fwd_strand())
+    {
+        posDiff *= -1;
+    }
+    return ((posDiff < 20) && (posDiff > -100));
 }
 
 

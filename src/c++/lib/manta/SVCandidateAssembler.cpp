@@ -546,7 +546,7 @@ getBreakendReads(
 
                 unsigned leadingMismatchLen(0);
                 unsigned trailingMismatchLen(0);
-                getSVBreakendCandidateSemiAligned(bamRead, bamAlign, refSeq, leadingMismatchLen, trailingMismatchLen);
+                getSVBreakendCandidateSemiAlignedSimple(bamRead, bamAlign, refSeq, leadingMismatchLen, trailingMismatchLen);
 
                 if (isSearchForRightOpen)
                 {

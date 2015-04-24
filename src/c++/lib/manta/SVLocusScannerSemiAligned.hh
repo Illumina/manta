@@ -25,7 +25,9 @@
 #include "htsapi/bam_record_util.hh"
 
 
-/// analogous to soft-clipping but checks for high-quality mismatches, any soft-clipped sections
+/// searches for poorly aligned read ends
+///
+/// search is based on high-quality mismatches, any soft-clipped sections
 /// will be realigned before searching for semi-aligned sections
 ///
 /// \param[in] minQ
@@ -47,7 +49,7 @@ getSVBreakendCandidateSemiAligned(
 /// simplified interface to the full function above:
 inline
 void
-getSVBreakendCandidateSemiAligned(
+getSVBreakendCandidateSemiAlignedSimple(
     const bam_record& bamRead,
     const SimpleAlignment& bamAlign,
     const reference_contig_segment& refSeq,

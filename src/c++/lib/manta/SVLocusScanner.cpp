@@ -1350,7 +1350,7 @@ isSemiAlignedEvidence(
     const reference_contig_segment& refSeq) const
 {
     unsigned leadingMismatchLen(0), trailingMismatchLen(0);
-    getSVBreakendCandidateSemiAligned(bamRead, bamAlign, refSeq, leadingMismatchLen, trailingMismatchLen);
+    getSVBreakendCandidateSemiAlignedSimple(bamRead, bamAlign, refSeq, leadingMismatchLen, trailingMismatchLen);
     return ((leadingMismatchLen >= _opt.minSemiAlignedMismatchLen) || (trailingMismatchLen >= _opt.minSemiAlignedMismatchLen));
 }
 
