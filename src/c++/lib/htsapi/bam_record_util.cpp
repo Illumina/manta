@@ -78,7 +78,7 @@ is_possible_adapter_pair(
     {
         posDiff *= -1;
     }
-    return ((posDiff < 20) && (posDiff > -100));
+    return ((posDiff < 10) && (posDiff > -50));
 }
 
 
