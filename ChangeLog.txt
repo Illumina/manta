@@ -1,3 +1,4 @@
+- MANTA-235 kmer refernce mask to accelerate RNA contig alignments
 - MANTA-232 filter large SVs with no read pair support
 - MANTA-236 expand conditions for large insertion search to normalize
 BWA-mem/Isaac performance
