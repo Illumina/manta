@@ -1353,7 +1353,7 @@ isSemiAlignedEvidence(
 {
     unsigned leadingMismatchLen(0), trailingMismatchLen(0);
     getSVBreakendCandidateSemiAlignedSimple(bamRead, bamAlign, refSeq, _dopt.isUseOverlappingPairs,
-                                      leadingMismatchLen, trailingMismatchLen);
+                                            leadingMismatchLen, trailingMismatchLen);
     return ((leadingMismatchLen >= _opt.minSemiAlignedMismatchLen) || (trailingMismatchLen >= _opt.minSemiAlignedMismatchLen));
 }
 

@@ -39,7 +39,7 @@ endif ()
 if (WIN32)
     # create a fake library target on win32 instead of linking and running the unit test
     # this creates a project in VS that allows for interaction with the unit test code
-    
+
     # add all files to TEST_SOURCE to make the IDE project more usable:
     file(GLOB TMP_TARGET_FILES *)
 

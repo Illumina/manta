@@ -1,4 +1,5 @@
-- MANTA-224 improve short-fragment handling for RNA 
+v0.26.0
+- MANTA-224 improve short-fragment handling for RNA
 - MANTA-235 kmer refernce mask to accelerate RNA contig alignments
 - MANTA-232 filter large SVs with no read pair support
 - MANTA-236 expand conditions for large insertion search to normalize

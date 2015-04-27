@@ -831,7 +831,8 @@ writeSVCore(
         BOOST_THROW_EXCEPTION(LogicException(oss.str()));
     }
 
-    try {
+    try
+    {
         if      (isSVTransloc(svType))
         {
             writeTranslocPair(sv, svId, svData, adata, event);

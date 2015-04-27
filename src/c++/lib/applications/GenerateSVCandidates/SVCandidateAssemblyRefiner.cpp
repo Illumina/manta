@@ -1151,7 +1151,7 @@ bool translateMaskedAlignment(
         else
         {
             const unsigned length = translateMaskedPos(exclBlocks, cpos + seg.length) -
-                    translateMaskedPos(exclBlocks, cpos);
+                                    translateMaskedPos(exclBlocks, cpos);
             if (is_segment_align_match(seg.type) && (length != seg.length)) return false;
 #ifdef DEBUG_KMER
             log_os << __FUNCTION__ << " SEGMENT " << seg.type << " " << seg.length << "\n";
@@ -1176,11 +1176,11 @@ bool translateMaskedAlignment(
 /// Returns a reduced reference sequence where long stretches without kmer matches to the contig are removed
 template <typename SymIter>
 std::string kmerMaskReference(
-               const SymIter refSeqStart, 
-               const SymIter refSeqEnd,
-               const std::string& contig,
-               const int nSpacer,
-               std::vector<exclusion_block>& exclBlocks)
+    const SymIter refSeqStart,
+    const SymIter refSeqEnd,
+    const std::string& contig,
+    const int nSpacer,
+    std::vector<exclusion_block>& exclBlocks)
 {
     // Hash all kmers in the contig
     static const int merSize(10);
@@ -1510,16 +1510,16 @@ getJumpAssembly(
         {
 #ifdef DEBUG_REFINER
             log_os << __FUNCTION__ << " RNA alignment\n";
-#endif           
+#endif
             static const int nSpacer(25);
             std::vector<exclusion_block> exclBlocks1;
             const std::string cutRef1 = kmerMaskReference(align1RefStrPtr->begin() + align1LeadingCut,
-                    align1RefStrPtr->end() - align1TrailingCut, 
-                    contig.seq, nSpacer, exclBlocks1);
+                                                          align1RefStrPtr->end() - align1TrailingCut,
+                                                          contig.seq, nSpacer, exclBlocks1);
             std::vector<exclusion_block> exclBlocks2;
             const std::string cutRef2 = kmerMaskReference(align2RefStrPtr->begin() + align2LeadingCut,
-                    align2RefStrPtr->end() - align2TrailingCut,
-                    contig.seq, nSpacer, exclBlocks2);
+                                                          align2RefStrPtr->end() - align2TrailingCut,
+                                                          contig.seq, nSpacer, exclBlocks2);
 #ifdef DEBUG_REFINER
             log_os << __FUNCTION__ << " Kmer-masked references\n";
             log_os << "\t ref Lengths " << align1RefStrPtr->size() << " " << align2RefStrPtr->size() << "\n";
@@ -1532,16 +1532,16 @@ getJumpAssembly(
             log_os << __FUNCTION__ << ": bp1Fw: " << bp1Fw << " ; bp2Fw: " << bp2Fw << '\n';
 #endif
             _RNASpanningAligner.align(contig.seq.begin(), contig.seq.end(),
-                    cutRef1.begin(), cutRef1.end(), cutRef2.begin(), cutRef2.end(),
-                    bp1Fw, bp2Fw,
-                    alignment);
-            
+                                      cutRef1.begin(), cutRef1.end(), cutRef2.begin(), cutRef2.end(),
+                                      bp1Fw, bp2Fw,
+                                      alignment);
+
 #ifdef DEBUG_REFINER
             log_os << __FUNCTION__ << " Masked 1: " << alignment.align1 << '\n';
             log_os << __FUNCTION__ << " Masked 2: " << alignment.align2 << '\n';
 #endif
             if (!(translateMaskedAlignment(alignment.align1, exclBlocks1) &&
-                translateMaskedAlignment(alignment.align2, exclBlocks2)))
+                  translateMaskedAlignment(alignment.align2, exclBlocks2)))
             {
 #ifdef DEBUG_REFINER
                 log_os << __FUNCTION__ << " Failed to fix kmer-masked alignment\n";

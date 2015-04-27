@@ -111,7 +111,8 @@ struct SVLocusScanner
     {
         if      (bamRead.is_filter()) return true;
         else if (bamRead.is_dup()) return true;
-        else {
+        else
+        {
             // hack to work with bwamem '-M' formatting,
             // keep secondary reads when they contain an SA tag
             if (bamRead.is_secondary())
