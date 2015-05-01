@@ -106,6 +106,8 @@ struct SVSampleAlleleInfo
         splitReadEvidence = 0;
         splitReadMapQ = 0;
         confidentSplitReadCount = 0;
+        confidentSplitReadCountBp1 = 0;
+        confidentSplitReadCountBp2 = 0;
     }
 
     // allele pair support
@@ -119,6 +121,10 @@ struct SVSampleAlleleInfo
     float splitReadMapQ = 0;
 
     unsigned confidentSplitReadCount = 0; ///< count by comparing alignment quality vs the other allele
+
+    unsigned confidentSplitReadCountBp1 = 0; ///< For 'ref' alleles, the support at bp1
+    unsigned confidentSplitReadCountBp2 = 0; ///< For 'ref' alleles, the support at bp2
+
 };
 
 std::ostream&

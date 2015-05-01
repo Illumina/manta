@@ -94,6 +94,13 @@ modifyTranslocInfo(
                             (isFirstOfPair ? baseInfo.bp1MaxDepth : baseInfo.bp2MaxDepth) ) );
     infotags.push_back( str(boost::format("MATE_BND_DEPTH=%i") %
                             (isFirstOfPair ? baseInfo.bp2MaxDepth : baseInfo.bp1MaxDepth) ) );
+    if (_isRNA)
+    {
+        infotags.push_back(str(boost::format("REF_COUNT=%i") %
+            (isFirstOfPair ? baseInfo.normal.ref.confidentSplitReadCountBp1 : baseInfo.normal.ref.confidentSplitReadCountBp2)));
+        infotags.push_back(str(boost::format("MATE_REF_COUNT=%i") %
+            (isFirstOfPair ? baseInfo.normal.ref.confidentSplitReadCountBp2 : baseInfo.normal.ref.confidentSplitReadCountBp1)));
+    }
 }
 
 

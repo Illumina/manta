@@ -288,7 +288,12 @@ addConservativeSplitReadSupport(
     else
     {
         lnToProb(altLnLhood, refLnLhood);
-        if (refLnLhood > splitSupportProb) sampleBaseInfo.ref.confidentSplitReadCount++;
+        if (refLnLhood > splitSupportProb)
+        {
+            sampleBaseInfo.ref.confidentSplitReadCount++;
+            if (fragev.ref.bp1.getRead(isRead1).isSplitSupport) sampleBaseInfo.ref.confidentSplitReadCountBp1++;
+            if (fragev.ref.bp2.getRead(isRead1).isSplitSupport) sampleBaseInfo.ref.confidentSplitReadCountBp2++;
+        }
     }
 }
 
