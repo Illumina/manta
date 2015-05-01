@@ -34,8 +34,7 @@ SVWriter(
     const SVLocusScanner& readScanner,
     const SVLocusSet& cset,
     const char* progName,
-    const char* progVersion,
-    TruthTracker& truthTracker) :
+    const char* progVersion) :
     opt(initOpt),
     isSomatic(! opt.somaticOutputFilename.empty()),
     svScore(opt, readScanner, cset.header),
@@ -46,8 +45,7 @@ SVWriter(
     diploidWriter(opt.diploidOpt, (! opt.chromDepthFilename.empty()),
                   opt.referenceFilename,  opt.isRNA, cset,dipfs.getStream()),
     somWriter(opt.somaticOpt, (! opt.chromDepthFilename.empty()),
-              opt.referenceFilename,cset,somfs.getStream()),
-    _truthTracker(truthTracker)
+              opt.referenceFilename,cset,somfs.getStream())
 {
     if (0 == opt.edgeOpt.binIndex)
     {
@@ -140,7 +138,6 @@ writeSV(
 #ifdef DEBUG_GSV
                 log_os << __FUNCTION__ << ": Rejecting candidate junction: imprecise non-spanning SV\n";
 #endif
-                _truthTracker.reportOutcome(SVLog::IMPRECISE_NON_SPANNING);
                 isJunctionFiltered[junctionIndex] = true;
                 continue;
             }
@@ -166,7 +163,6 @@ writeSV(
 #ifdef DEBUG_GSV
             log_os << __FUNCTION__ << ": Rejecting candidate junction: minCandidateSpanningCount\n";
 #endif
-            _truthTracker.reportOutcome(SVLog::LOW_SPANNING_COUNT);
             isJunctionFiltered[junctionIndex] = true;
         }
     }
@@ -337,11 +333,6 @@ writeSV(
             if (isWriteSomatic)
             {
                 somWriter.writeSV(svData, assemblyData, sv, svId, baseInfo, somaticInfo, event, modelScoreInfo.somatic);
-                _truthTracker.reportOutcome(SVLog::WRITTEN);
-            }
-            else
-            {
-                _truthTracker.reportOutcome(SVLog::LOW_SOMATIC_SCORE);
             }
         }
     }
@@ -356,16 +347,14 @@ SVCandidateProcessor(
     const char* progName,
     const char* progVersion,
     const SVLocusSet& cset,
-    TruthTracker& truthTracker,
     EdgeRuntimeTracker& edgeTracker,
     GSCEdgeStatsManager& edgeStatMan) :
     _opt(opt),
     _cset(cset),
-    _truthTracker(truthTracker),
     _edgeTracker(edgeTracker),
     _edgeStatMan(edgeStatMan),
     _svRefine(opt, cset.header, cset.getCounts(), _edgeTracker),
-    _svWriter(opt, readScanner, cset, progName, progVersion, truthTracker)
+    _svWriter(opt, readScanner, cset, progName, progVersion)
 {}
 
 
@@ -469,17 +458,11 @@ evaluateCandidate(
 
                 // fill in assembly tracking data:
                 _edgeTracker.addAssm(isComplex);
-                _truthTracker.reportNumAssembled(assemblyData.svs.size());
-                for (unsigned assemblyIndex(0); assemblyIndex<assemblyCount; ++assemblyIndex)
-                {
-                    _truthTracker.addAssembledSV();
-                }
             }
             else
             {
                 _edgeStatMan.updateAssemblyCount(edge, 0, assemblyData.isSpanning, assemblyData.isOverlapSkip);
             }
-
         }
     }
 

@@ -24,7 +24,6 @@
 #include "common/OutStream.hh"
 #include "htsapi/bam_header_util.hh"
 #include "manta/SVReferenceUtil.hh"
-#include "truth/TruthTracker.hh"
 
 #include <iostream>
 #include <vector>
@@ -83,7 +82,6 @@ runESL(const ESLOptions& opt)
 
     const bam_header_t& header(*(bamStreams[0]->get_header()));
     const bam_header_info bamHeader(header);
-    TruthTracker truthTracker(opt.truthVcfFilename, bamHeader);
 
     int32_t tid(0), beginPos(0), endPos(0);
     parse_bam_region(bamHeader,opt.region,tid,beginPos,endPos);
@@ -100,7 +98,7 @@ runESL(const ESLOptions& opt)
     reference_contig_segment refSegment;
     getIntervalReferenceSegment(opt.referenceFilename, bamHeader, refEdgeBufferSize, scanRegion, refSegment);
 
-    SVLocusSetFinder locusFinder(opt, scanRegion, bamHeader, refSegment, truthTracker);
+    SVLocusSetFinder locusFinder(opt, scanRegion, bamHeader, refSegment);
 
     input_stream_data sdata;
     for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
@@ -138,8 +136,6 @@ runESL(const ESLOptions& opt)
 #endif
     locusFinder.setBuildTime(totalTimes);
     locusFinder.getLocusSet().save(opt.outputFilename.c_str());
-
-    truthTracker.dumpAll();
 }
 
 

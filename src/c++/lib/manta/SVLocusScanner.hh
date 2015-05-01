@@ -22,12 +22,13 @@
 #include "blt_util/LinearScaler.hh"
 #include "htsapi/bam_record.hh"
 #include "htsapi/bam_record_util.hh"
+#include "htsapi/bam_header_info.hh"
 #include "manta/ReadGroupStatsSet.hh"
 #include "manta/SVCandidate.hh"
 #include "manta/SVLocusEvidenceCount.hh"
 #include "svgraph/SVLocus.hh"
+#include "svgraph/SVLocusSampleCounts.hh"
 #include "options/ReadScannerOptions.hh"
-#include "truth/TruthTracker.hh"
 
 #include <string>
 #include <vector>
@@ -218,8 +219,7 @@ struct SVLocusScanner
         const bam_header_info& bamHeader,
         const reference_contig_segment& refSeq,
         std::vector<SVLocus>& loci,
-        SampleEvidenceCounts& eCounts,
-        TruthTracker& truthTracker) const;
+        SampleEvidenceCounts& eCounts) const;
 
     /// get local and remote breakends for each SV Candidate which can be extracted from a read pair
     ///
@@ -236,8 +236,7 @@ struct SVLocusScanner
         const bam_header_info& bamHeader,
         const reference_contig_segment& localRefSeq,
         const reference_contig_segment* remoteRefSeqPtr,
-        std::vector<SVObservation>& candidates,
-        TruthTracker& truthTracker) const;
+        std::vector<SVObservation>& candidates) const;
 
     /// this information is needed for the whole bam, not just one read group:
     int

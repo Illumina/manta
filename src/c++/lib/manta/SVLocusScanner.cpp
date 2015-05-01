@@ -83,39 +83,6 @@ isLarge(const index_t i)
 
 
 
-/// temporary object used to track the insertion
-/// of SVCandidates into the pool:
-///
-struct TrackedCandidates
-{
-    TrackedCandidates(
-        std::vector<SVObservation>& candidates,
-        TruthTracker& truthTracker) :
-        data(candidates),
-        _truthTracker(truthTracker)
-    {}
-
-    void
-    push_back(const SVObservation& obs)
-    {
-        data.push_back(obs);
-        _truthTracker.addObservation(data.back());
-    }
-
-    unsigned
-    size() const
-    {
-        return data.size();
-    }
-
-    std::vector<SVObservation>& data;
-private:
-    TruthTracker& _truthTracker;
-};
-
-
-
-
 static
 SVObservation
 GetSplitSVCandidate(
@@ -347,7 +314,7 @@ getSACandidatesFromRead(
     const SimpleAlignment& localAlign,
     const FRAGSOURCE::index_t fragSource,
     const chromMap_t& chromToIndex,
-    TrackedCandidates& candidates)
+    std::vector<SVObservation>& candidates)
 {
     using namespace ALIGNPATH;
 
@@ -380,7 +347,7 @@ getSVCandidatesFromReadIndels(
     const ReadScannerDerivOptions& dopt,
     const SimpleAlignment& align,
     const FRAGSOURCE::index_t fragSource,
-    TrackedCandidates& candidates)
+    std::vector<SVObservation>& candidates)
 {
     using namespace SVEvidenceType;
     static const index_t svSource(CIGAR);
@@ -476,7 +443,7 @@ getSVCandidatesFromSemiAligned(
     const SimpleAlignment& bamAlign,
     const FRAGSOURCE::index_t fragSource,
     const reference_contig_segment& refSeq,
-    TrackedCandidates& candidates)
+    std::vector<SVObservation>& candidates)
 {
     unsigned leadingMismatchLen(0);
     unsigned trailingMismatchLen(0);
@@ -870,7 +837,7 @@ getSingleReadSVCandidates(
     const SimpleAlignment& localAlign,
     const chromMap_t& chromToIndex,
     const reference_contig_segment& refSeq,
-    TrackedCandidates& candidates)
+    std::vector<SVObservation>& candidates)
 {
     using namespace illumina::common;
 
@@ -925,7 +892,7 @@ getReadBreakendsImpl(
     const bam_header_info& bamHeader,
     const reference_contig_segment& localRefSeq,
     const reference_contig_segment* remoteRefSeqPtr,
-    TrackedCandidates& candidates,
+    std::vector<SVObservation>& candidates,
     known_pos_range2& localEvidenceRange)
 {
     using namespace illumina::common;
@@ -936,7 +903,7 @@ getReadBreakendsImpl(
 
     const chromMap_t& chromToIndex(bamHeader.chrom_to_index);
 
-    candidates.data.clear();
+    candidates.clear();
 
     /// get some basic derived information from the bam_record:
     const SimpleAlignment localAlign(getAlignment(localRead));
@@ -963,7 +930,7 @@ getReadBreakendsImpl(
 
         // - process anomalous read pairs:
         getSVCandidatesFromPair(opt, rstats, localRead, localAlign, remoteReadPtr,
-                                candidates.data);
+                                candidates);
     }
     catch (...)
     {
@@ -998,7 +965,7 @@ getReadBreakendsImpl(
 
     /// final chance to QC candidate set:
     ///
-    for (const SVCandidate& sv : candidates.data)
+    for (const SVCandidate& sv : candidates)
     {
         bool isInvalidTid(false);
         if ((sv.bp1.interval.tid < 0) || (sv.bp1.interval.tid >= maxTid))
@@ -1082,18 +1049,16 @@ getSVLociImpl(
     const bam_header_info& bamHeader,
     const reference_contig_segment& refSeq,
     std::vector<SVLocus>& loci,
-    SampleEvidenceCounts& eCounts,
-    TruthTracker& truthTracker)
+    SampleEvidenceCounts& eCounts)
 {
     using namespace illumina::common;
 
     loci.clear();
     std::vector<SVObservation> candidates;
-    TrackedCandidates trackedCandidates(candidates,truthTracker);
     known_pos_range2 localEvidenceRange;
 
     getReadBreakendsImpl(opt, dopt, rstats, bamRead, nullptr, bamHeader,
-                         refSeq, nullptr, trackedCandidates, localEvidenceRange);
+                         refSeq, nullptr, candidates, localEvidenceRange);
 
 #ifdef DEBUG_SCANNER
     log_os << __FUNCTION__ << ": candidate_size: " << candidates.size() << "\n";
@@ -1427,14 +1392,13 @@ getSVLoci(
     const bam_header_info& bamHeader,
     const reference_contig_segment& refSeq,
     std::vector<SVLocus>& loci,
-    SampleEvidenceCounts& eCounts,
-    TruthTracker& truthTracker) const
+    SampleEvidenceCounts& eCounts) const
 {
     loci.clear();
 
     const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);
     getSVLociImpl(_opt, _dopt, rstats, bamRead, bamHeader, refSeq, loci,
-                  eCounts, truthTracker);
+                  eCounts);
 }
 
 
@@ -1448,15 +1412,13 @@ getBreakendPair(
     const bam_header_info& bamHeader,
     const reference_contig_segment& localRefSeq,
     const reference_contig_segment* remoteRefSeqPtr,
-    std::vector<SVObservation>& candidates,
-    TruthTracker& truthTracker) const
+    std::vector<SVObservation>& candidates) const
 {
     const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);
 
     // throw evidence range away in this case
-    TrackedCandidates trackedCandidates(candidates, truthTracker);
     known_pos_range2 evidenceRange;
     getReadBreakendsImpl(_opt, _dopt, rstats, localRead, remoteReadPtr,
                          bamHeader, localRefSeq, remoteRefSeqPtr,
-                         trackedCandidates, evidenceRange);
+                         candidates, evidenceRange);
 }

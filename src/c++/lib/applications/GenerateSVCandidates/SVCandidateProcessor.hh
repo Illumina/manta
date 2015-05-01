@@ -30,7 +30,6 @@
 #include "format/VcfWriterCandidateSV.hh"
 #include "format/VcfWriterDiploidSV.hh"
 #include "format/VcfWriterSomaticSV.hh"
-#include "truth/TruthTracker.hh"
 
 #include <memory>
 
@@ -45,8 +44,7 @@ struct SVWriter
         const SVLocusScanner& readScanner,
         const SVLocusSet& cset,
         const char* progName,
-        const char* progVersion,
-        TruthTracker& truthTracker);
+        const char* progVersion);
 
     void
     writeSV(
@@ -71,8 +69,6 @@ struct SVWriter
     VcfWriterDiploidSV diploidWriter;
     VcfWriterSomaticSV somWriter;
 
-    TruthTracker& _truthTracker;
-
     JunctionIdGenerator _idgen;
 };
 
@@ -85,7 +81,6 @@ struct SVCandidateProcessor
         const char* progName,
         const char* progVersion,
         const SVLocusSet& cset,
-        TruthTracker& truthTracker,
         EdgeRuntimeTracker& edgeTracker,
         GSCEdgeStatsManager& _edgeStatMan);
 
@@ -106,7 +101,6 @@ private:
 
     const GSCOptions& _opt;
     const SVLocusSet& _cset;
-    TruthTracker& _truthTracker;
     EdgeRuntimeTracker& _edgeTracker;
     GSCEdgeStatsManager& _edgeStatMan;
     SVCandidateAssemblyRefiner _svRefine;

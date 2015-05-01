@@ -52,8 +52,7 @@ struct SVFinder
     findCandidateSV(
         const EdgeInfo& edge,
         SVCandidateSetData& svData,
-        std::vector<SVCandidate>& svs,
-        TruthTracker& truthTracker);
+        std::vector<SVCandidate>& svs);
 
     void
     checkResult(
@@ -71,8 +70,7 @@ private:
         const GenomeInterval& searchInterval,
         const reference_contig_segment& refSeq,
         const bool isNode1,
-        SVCandidateSetData& svData,
-        TruthTracker& truthTracker);
+        SVCandidateSetData& svData);
 
     void
     assignFragmentObservationsToSVCandidates(
@@ -96,7 +94,6 @@ private:
         const unsigned bamIndex,
         const bool isExpandSVCandidateSet,
         std::vector<FatSVCandidate>& svs,
-        TruthTracker& truthTracker,
         SVCandidateSetSequenceFragment& fragment);
 
     void
@@ -108,16 +105,14 @@ private:
         const reference_contig_segment& refSeq2,
         SVCandidateSetData& svData,
         std::vector<SVCandidate>& svs,
-        SVFinderStats& stats,
-        TruthTracker& truthTracker);
+        SVFinderStats& stats);
 
     void
     findCandidateSVImpl(
         const EdgeInfo& edge,
         SVCandidateSetData& svData,
         std::vector<SVCandidate>& svs,
-        SVFinderStats& stats,
-        TruthTracker& truthTracker);
+        SVFinderStats& stats);
 
     const ChromDepthFilterUtil&
     dFilter() const

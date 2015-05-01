@@ -25,7 +25,6 @@
 #include "htsapi/bam_record.hh"
 #include "manta/SVLocusScanner.hh"
 #include "svgraph/SVLocusSet.hh"
-#include "truth/TruthTracker.hh"
 
 #include <iosfwd>
 #include <string>
@@ -44,8 +43,7 @@ struct SVLocusSetFinder : public pos_processor_base
         const ESLOptions& opt,
         const GenomeInterval& scanRegion,
         const bam_header_info& bamHeader,
-        const reference_contig_segment& refSeq,
-        TruthTracker& truthTracker);
+        const reference_contig_segment& refSeq);
 
     ~SVLocusSetFinder()
     {
@@ -121,6 +119,5 @@ private:
 
     const bam_header_info& _bamHeader;
     const reference_contig_segment& _refSeq;
-    TruthTracker& _truthTracker;
 };
 

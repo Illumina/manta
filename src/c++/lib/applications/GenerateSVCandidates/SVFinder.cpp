@@ -152,8 +152,7 @@ addSVNodeRead(
     const bool isNode1,
     const bool isGatherSubmapped,
     SVCandidateSetSequenceFragmentSampleGroup& svDataGroup,
-    SampleEvidenceCounts& eCounts,
-    TruthTracker& truthTracker)
+    SampleEvidenceCounts& eCounts)
 {
     using namespace illumina::common;
 
@@ -187,7 +186,7 @@ addSVNodeRead(
     typedef std::vector<SVLocus> loci_t;
     loci_t loci;
     scanner.getSVLoci(bamRead, bamIndex, bamHeader, refSeq, loci,
-                      eCounts, truthTracker);
+                      eCounts);
 
     for (const SVLocus& locus : loci)
     {
@@ -287,8 +286,7 @@ addSVNodeData(
     const GenomeInterval& searchInterval,
     const reference_contig_segment& refSeq,
     const bool isNode1,
-    SVCandidateSetData& svData,
-    TruthTracker& truthTracker)
+    SVCandidateSetData& svData)
 {
     // get full search interval:
     const SVLocusNode& localNode(locus.getNode(localNodeIndex));
@@ -368,7 +366,7 @@ addSVNodeData(
             addSVNodeRead(
                 bamHeader,_readScanner, localNode, remoteNode,
                 bamRead, bamIndex, isExpectRepeat, refSeq, isNode1,
-                isGatherSubmapped, svDataGroup, _eCounts, truthTracker);
+                isGatherSubmapped, svDataGroup, _eCounts);
         }
         ++bamIndex;
     }
@@ -790,7 +788,6 @@ processSequenceFragment(
     const unsigned bamIndex,
     const bool isExpandSVCandidateSet,
     std::vector<FatSVCandidate>& svs,
-    TruthTracker& truthTracker,
     SVCandidateSetSequenceFragment& fragment)
 {
     SVCandidateSetRead* localReadPtr(&(fragment.read1));
@@ -818,8 +815,7 @@ processSequenceFragment(
     }
     _readScanner.getBreakendPair(localReadPtr->bamrec, remoteBamRecPtr,
                                  bamIndex, bamHeader, localRef,
-                                 remoteRefPtr, _readCandidates,
-                                 truthTracker);
+                                 remoteRefPtr, _readCandidates);
 
     // collapse close spanning sv candidates into complex candidates -- this reflects the fact that the
     // assembler will collapse them anyway, so reduces duplicated work in the assembler;
@@ -1104,8 +1100,7 @@ getCandidatesFromData(
     const reference_contig_segment& refSeq2,
     SVCandidateSetData& svData,
     std::vector<SVCandidate>& output_svs,
-    SVFinderStats& stats,
-    TruthTracker& truthTracker)
+    SVFinderStats& stats)
 {
     const unsigned bamCount(_bamStreams.size());
 
@@ -1124,7 +1119,7 @@ getCandidatesFromData(
             static const bool isAnchored(true);
             processSequenceFragment(
                 node1, node2, bamHeader, refSeq1, refSeq2, bamIndex, isAnchored,
-                svs, truthTracker, fragment);
+                svs, fragment);
         }
     }
 
@@ -1144,7 +1139,7 @@ getCandidatesFromData(
                 static const bool isAnchored(false);
                 processSequenceFragment(
                     node1, node2, bamHeader, refSeq1, refSeq2, bamIndex, isAnchored,
-                    svs, truthTracker, pair);
+                    svs, pair);
             }
         }
     }
@@ -1190,8 +1185,7 @@ findCandidateSVImpl(
     const EdgeInfo& edge,
     SVCandidateSetData& svData,
     std::vector<SVCandidate>& svs,
-    SVFinderStats& stats,
-    TruthTracker& truthTracker)
+    SVFinderStats& stats)
 {
     svData.clear();
     svs.clear();
@@ -1232,7 +1226,7 @@ findCandidateSVImpl(
         GenomeInterval searchInterval;
         getNodeRefSeq(bamHeader, locus, edge.nodeIndex1, _referenceFilename, searchInterval, refSeq1);
         addSVNodeData(bamHeader, locus, edge.nodeIndex1, edge.nodeIndex2,
-                      searchInterval, refSeq1, true, svData, truthTracker);
+                      searchInterval, refSeq1, true, svData);
     }
 
     if (edge.nodeIndex1 != edge.nodeIndex2)
@@ -1240,13 +1234,13 @@ findCandidateSVImpl(
         GenomeInterval searchInterval;
         getNodeRefSeq(bamHeader, locus, edge.nodeIndex2, _referenceFilename, searchInterval, refSeq2);
         addSVNodeData(bamHeader, locus, edge.nodeIndex2, edge.nodeIndex1,
-                      searchInterval, refSeq2, false, svData, truthTracker);
+                      searchInterval, refSeq2, false, svData);
     }
 
     const SVLocusNode& node1(locus.getNode(edge.nodeIndex1));
     const SVLocusNode& node2(locus.getNode(edge.nodeIndex2));
     getCandidatesFromData(node1, node2, bamHeader, refSeq1, refSeq2,
-                          svData, svs, stats, truthTracker);
+                          svData, svs, stats);
 
     //checkResult(svData,svs);
 }
@@ -1258,23 +1252,16 @@ SVFinder::
 findCandidateSV(
     const EdgeInfo& edge,
     SVCandidateSetData& svData,
-    std::vector<SVCandidate>& svs,
-    TruthTracker& truthTracker)
+    std::vector<SVCandidate>& svs)
 {
     // time/stats tracking setup:
     const TimeScoper candTime(_edgeTracker.candTime);
     SVFinderStats stats;
 
-    findCandidateSVImpl(edge,svData,svs,stats, truthTracker);
+    findCandidateSVImpl(edge,svData,svs,stats);
 
     // time/stats tracking finish:
     _edgeStatMan.updateEdgeCandidates(edge, svs.size(), stats);
-    truthTracker.reportNumCands(svs.size(), edge);
-    const unsigned svCount(svs.size());
-    for (unsigned i(0); i<svCount; ++i)
-    {
-        truthTracker.addCandSV();
-    }
 
     if (_isVerbose)
     {

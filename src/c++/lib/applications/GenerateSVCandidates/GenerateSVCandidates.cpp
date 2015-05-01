@@ -26,7 +26,6 @@
 #include "common/Exceptions.hh"
 #include "manta/MultiJunctionUtil.hh"
 #include "manta/SVCandidateUtil.hh"
-#include "truth/TruthTracker.hh"
 
 #include <iostream>
 
@@ -173,9 +172,7 @@ runGSC(
     MultiJunctionFilter svMJFilter(opt,edgeStatMan);
     const SVLocusSet& cset(svFind.getSet());
 
-    TruthTracker truthTracker(opt.truthVcfFilename, cset);
-
-    SVCandidateProcessor svProcessor(opt, readScanner, progName, progVersion, cset,  truthTracker, edgeTracker, edgeStatMan);
+    SVCandidateProcessor svProcessor(opt, readScanner, progName, progVersion, cset, edgeTracker, edgeStatMan);
 
     std::unique_ptr<EdgeRetriever> edgerPtr(edgeRFactory(cset, opt.edgeOpt));
     EdgeRetriever& edger(*edgerPtr);
@@ -195,7 +192,6 @@ runGSC(
 
         try
         {
-            truthTracker.addEdge(edge);
             edgeTracker.start();
 
             if (opt.isVerbose)
@@ -205,7 +201,7 @@ runGSC(
             }
 
             // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
-            svFind.findCandidateSV(edge, svData, svs, truthTracker);
+            svFind.findCandidateSV(edge, svData, svs);
 
             // filter long-range junctions outside of the candidate finder so that we can evaluate
             // junctions which are part of a larger event (like a reciprocal translocation)
@@ -238,8 +234,6 @@ runGSC(
 
         edgeStatMan.updateScoredEdgeTime(edge, edgeTracker);
     }
-
-    truthTracker.dumpAll();
 }
 
 

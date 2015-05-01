@@ -19,7 +19,6 @@
 
 #include "htsapi/SimpleAlignment_bam_util.hh"
 #include "manta/SVLocusScanner.cpp"
-#include "truth/TruthTracker.hh"
 
 
 BOOST_AUTO_TEST_SUITE( test_SVLocusScanner )
@@ -44,10 +43,8 @@ BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromReadIndels )
 
     const std::string emptyPathStr;
     bam_header_info hdr_info;
-    TruthTracker truthTracker(emptyPathStr, hdr_info);
-    TrackedCandidates trackedCandidates(candidates,truthTracker);
 
-    getSVCandidatesFromReadIndels(opt, dopt, align, FRAGSOURCE::UNKNOWN, trackedCandidates);
+    getSVCandidatesFromReadIndels(opt, dopt, align, FRAGSOURCE::UNKNOWN, candidates);
 
     BOOST_REQUIRE_EQUAL(candidates.size(),1u);
     BOOST_REQUIRE(candidates[0].bp1.interval.range.is_pos_intersect(100));

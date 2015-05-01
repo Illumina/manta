@@ -62,8 +62,7 @@ SVLocusSetFinder(
     const ESLOptions& opt,
     const GenomeInterval& scanRegion,
     const bam_header_info& bamHeader,
-    const reference_contig_segment& refSeq,
-    TruthTracker& truthTracker) :
+    const reference_contig_segment& refSeq) :
     _isAlignmentTumor(opt.alignFileOpt.isAlignmentTumor),
     _scanRegion(scanRegion),
     _stageman(
@@ -81,8 +80,7 @@ SVLocusSetFinder(
     _isMaxDepth(false),
     _maxDepth(0),
     _bamHeader(bamHeader),
-    _refSeq(refSeq),
-    _truthTracker(truthTracker)
+    _refSeq(refSeq)
 {
     const ChromDepthFilterUtil dFilter(opt.chromDepthFilename, opt.scanOpt.maxDepthFactor, bamHeader);
     _isMaxDepth=dFilter.isMaxDepthFilter();
@@ -271,7 +269,7 @@ update(
     SampleEvidenceCounts& eCounts(counts.evidence);
 
     _readScanner.getSVLoci(bamRead, defaultReadGroupIndex, _bamHeader,
-                           _refSeq, loci, eCounts, _truthTracker);
+                           _refSeq, loci, eCounts);
 
     for (const SVLocus& locus : loci)
     {
