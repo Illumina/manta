@@ -44,6 +44,7 @@ struct FatSVCandidate : public SVCandidate
         : base_t()
     {}
 
+    explicit
     FatSVCandidate(const SVCandidate& copy)
         : base_t(copy)
     {}

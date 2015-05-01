@@ -45,6 +45,7 @@ struct bam_header_info
     bam_header_info()
     {}
 
+    explicit
     bam_header_info(const bam_header_t& header);
 
     bool

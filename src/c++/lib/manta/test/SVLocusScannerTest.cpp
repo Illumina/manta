@@ -41,7 +41,6 @@ BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromReadIndels )
 
     std::vector<SVObservation> candidates;
 
-    const std::string emptyPathStr;
     bam_header_info hdr_info;
 
     getSVCandidatesFromReadIndels(opt, dopt, align, FRAGSOURCE::UNKNOWN, candidates);

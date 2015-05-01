@@ -614,6 +614,7 @@ scoreSV(
 ///
 struct ProbSet
 {
+    explicit
     ProbSet(const double initProb) :
         prob(initProb),
         comp(1-prob),

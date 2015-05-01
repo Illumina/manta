@@ -76,7 +76,7 @@ def main() :
     # manipulate the warning messages so that they look like gcc errors -- this enables IDE parsing of error location:
     checkCmd.append("--template={file}:{line}:1: error: {severity}:{message}")
 
-    suppressList=["unusedFunction", "unmatchedSuppression", "missingInclude"]
+    suppressList=["unusedFunction", "unmatchedSuppression", "missingInclude", "purgedConfiguration"]
     for stype in suppressList :
         checkCmd.append("--suppress="+stype)
 

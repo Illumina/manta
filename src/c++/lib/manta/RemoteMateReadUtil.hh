@@ -40,6 +40,7 @@ isMateInsertionEvidenceCandidate2(
 ///
 struct RemoteReadInfo
 {
+    explicit
     RemoteReadInfo(
         const bam_record& bamRead)
         : qname(bamRead.qname()),

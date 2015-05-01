@@ -150,10 +150,12 @@ struct bam_seq_base
     bam_seq_base() = default;
     virtual ~bam_seq_base() = default;
 
+    explicit
     bam_seq_base(const bam_seq_base&) = default; // support copying
     bam_seq_base& operator=(const bam_seq_base&) = default;
 
 #if ((!defined(_MSC_VER)) || (_MSC_VER > 1800))
+    explicit
     bam_seq_base(bam_seq_base&&) = default; // support moving
     bam_seq_base& operator=(bam_seq_base&&) = default;
 #endif
@@ -254,6 +256,7 @@ private:
 //
 struct string_bam_seq : public bam_seq_base
 {
+    explicit
     string_bam_seq(const std::string& s)
         : _s(s.c_str()), _size(s.size()) {}
 
@@ -289,6 +292,7 @@ private:
 //
 struct rc_segment_bam_seq : public bam_seq_base
 {
+    explicit
     rc_segment_bam_seq(const reference_contig_segment& r)
         : _r(r)
     {}

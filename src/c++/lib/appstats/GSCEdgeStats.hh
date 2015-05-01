@@ -32,6 +32,7 @@
 
 struct SimpleHist
 {
+    explicit
     SimpleHist(
         const unsigned size)
         : histdata(size,0)

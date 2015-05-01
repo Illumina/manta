@@ -615,6 +615,7 @@ struct ReadGroupManager
 {
     typedef std::map<ReadGroupLabel,ReadGroupTracker> RGMapType;
 
+    explicit
     ReadGroupManager(
         const std::string& statsBamFile) :
         _isFinalized(false),

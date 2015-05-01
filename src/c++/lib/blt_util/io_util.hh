@@ -33,6 +33,7 @@ open_ifstream(
 ///
 struct StreamScoper
 {
+    explicit
     StreamScoper(
         std::ostream& os);
 

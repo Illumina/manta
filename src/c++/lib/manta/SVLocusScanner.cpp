@@ -913,16 +913,20 @@ getReadBreakendsImpl(
         getSingleReadSVCandidates(opt, dopt, localRead, localAlign, chromToIndex,
                                   localRefSeq, candidates);
 
+        // run the same check on the read's mate if we have access to it
         if (nullptr != remoteReadPtr)
         {
-            // run the same check on the read's mate if we have access to it
-            assert(nullptr != remoteRefSeqPtr);
             const bam_record& remoteRead(*remoteReadPtr);
             const SimpleAlignment remoteAlign(getAlignment(remoteRead));
 
+            if (nullptr == remoteRefSeqPtr)
+            {
+                static const char msg[] = "ERROR: remoteRefSeqPtr cannot be null";
+                BOOST_THROW_EXCEPTION(LogicException(msg));
+            }
             getSingleReadSVCandidates(opt, dopt, remoteRead, remoteAlign,
-                                      chromToIndex, (*remoteRefSeqPtr),
-                                      candidates);
+                    chromToIndex, (*remoteRefSeqPtr),
+                    candidates);
         }
 
         // process shadows:

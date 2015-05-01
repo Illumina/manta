@@ -23,6 +23,7 @@
 /// shared options related to read pair support:
 struct PairOptions
 {
+    explicit
     PairOptions(const bool isRNA) :
         minFragSupport(50),
         minFragProb(! isRNA ? 0.0001f : 0.0f)

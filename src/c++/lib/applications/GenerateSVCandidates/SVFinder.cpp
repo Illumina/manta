@@ -743,8 +743,8 @@ assignFragmentObservationsToSVCandidates(
 
                     updateEvidenceIndex(fragment,readCand,sv);
 
-                    /// check evidence distance:
-                    sv.merge(readCand, isExpandSVCandidateSet);
+                    // check evidence distance:
+                    sv.merge(FatSVCandidate(readCand), isExpandSVCandidateSet);
 
                     isMatched=true;
                     break;
@@ -762,7 +762,7 @@ assignFragmentObservationsToSVCandidates(
             log_os << __FUNCTION__ << ": New svIndex: " << newSVIndex << "\n";
 #endif
 
-            svs.push_back(readCand);
+            svs.push_back(FatSVCandidate(readCand));
             svs.back().candidateIndex = newSVIndex;
 
             if (isSpanningCand)

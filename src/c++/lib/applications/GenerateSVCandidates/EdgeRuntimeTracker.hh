@@ -30,6 +30,7 @@
 /// simple edge time tracker and reporter
 struct EdgeRuntimeTracker : private boost::noncopyable
 {
+    explicit
     EdgeRuntimeTracker(const std::string& outputFile);
 
     ~EdgeRuntimeTracker();

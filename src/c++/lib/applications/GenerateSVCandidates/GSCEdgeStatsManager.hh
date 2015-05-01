@@ -33,6 +33,7 @@
 ///
 struct GSCEdgeStatsManager : private boost::noncopyable
 {
+    explicit
     GSCEdgeStatsManager(
         const std::string& outputFile);
 

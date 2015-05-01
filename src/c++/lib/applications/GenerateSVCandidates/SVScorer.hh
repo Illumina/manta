@@ -42,6 +42,7 @@
 
 struct CallOptionsSharedDeriv
 {
+    explicit
     CallOptionsSharedDeriv(
         const CallOptionsShared& opt) :
         refQ(opt.snpPrior),
@@ -55,6 +56,7 @@ struct CallOptionsSharedDeriv
 
 struct CallOptionsDiploidDeriv : private boost::noncopyable
 {
+    explicit
     CallOptionsDiploidDeriv(
         const CallOptionsDiploid& opt)
     {
@@ -79,6 +81,7 @@ struct CallOptionsDiploidDeriv : private boost::noncopyable
 
 struct CallOptionsSomaticDeriv : private boost::noncopyable
 {
+    explicit
     CallOptionsSomaticDeriv(
         const CallOptionsSomatic& opt)
     {

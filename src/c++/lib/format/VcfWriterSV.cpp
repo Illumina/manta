@@ -218,7 +218,6 @@ addRNAInfo(
     if (! assemblyData.isSpanning) return;
 
     const bool isFirst = (assemblyData.bporient.isBp1First == isFirstOfPair);
-    // cppcheck-suppress zerodivcond
     infotags.push_back(str(boost::format("RNA_FIRST=%1%") % isFirst));
 
     if (!isFirstOfPair) return; // only the first breakpoint gets the additional RNA info attached to its VCF entry
@@ -226,7 +225,6 @@ addRNAInfo(
     infotags.push_back(str(boost::format("RNA_FwRvReads=%i:%i") % sv.fwReads % sv.rvReads));
 
     const unsigned numContigs(assemblyData.contigs.size());
-    // cppcheck-suppress zerodivcond
     if (numContigs > 0)
     {
         if (numContigs != assemblyData.spanningAlignments.size())
@@ -251,7 +249,6 @@ addRNADebugInfo(
     if (! assemblyData.isSpanning) return;
 
     const bool isFirst = (assemblyData.bporient.isBp1First == isFirstOfPair);
-    // cppcheck-suppress zerodivcond
     const bool isRightOpen = (isFirstOfPair ? sv.bp1.state : sv.bp2.state) == SVBreakendState::RIGHT_OPEN;
     infotags.push_back(str(boost::format("FOOBAR_FW=%1%") % (isFirst == isRightOpen)));
 

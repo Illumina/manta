@@ -42,6 +42,7 @@ struct CpuTimes
 {
     CpuTimes() {}
 
+    explicit
     CpuTimes(
         const boost::timer::cpu_times& t)
         : wall(BOOST_TIMER_HELPER::getTimerSeconds(t.wall)),
@@ -178,6 +179,7 @@ private:
 /// utility for timetracker for scope based start-stop scenarios:
 struct TimeScoper : private boost::noncopyable
 {
+    explicit
     TimeScoper(TimeTracker& t) : _t(t)
     {
         _t.resume();
