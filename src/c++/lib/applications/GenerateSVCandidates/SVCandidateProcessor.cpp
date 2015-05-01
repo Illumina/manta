@@ -188,7 +188,7 @@ writeSV(
         const SVCandidate& sv(mjSV.junction[junctionIndex]);
         SVId& svId(junctionSVId[junctionIndex]);
 
-        _idgen.getId(edge, sv, svId);
+        _idgen.getId(edge, sv, opt.isRNA, svId);
 
         candWriter.writeSV(svData, assemblyData, sv, svId);
     }

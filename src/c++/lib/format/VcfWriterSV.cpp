@@ -574,7 +574,7 @@ writeInvdel(
 
         isSmallVariant = (isSmallDelete && isSmallInsert);
     }
-
+    if (isSmallVariant && _isRNA) return;
     // get POS and endPos
     pos_t pos(bpArange.center_pos()+1);
     pos_t endPos(bpBrange.center_pos());
@@ -813,7 +813,7 @@ writeSVCore(
     const EventInfo& event)
 {
     using namespace EXTENDED_SV_TYPE;
-    const index_t svType(getExtendedSVType(sv));
+    const index_t svType(getExtendedSVType(sv, _isRNA));
 
 #ifdef DEBUG_VCF
     log_os << "VcfWriterSV::writeSVCore svType: " << EXTENDED_SV_TYPE::label(svType) << "\n";

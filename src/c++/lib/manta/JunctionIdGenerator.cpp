@@ -24,11 +24,12 @@ JunctionIdGenerator::
 getId(
     const EdgeInfo& edge,
     const SVCandidate& sv,
+    const bool isRNA,
     SVId& svId)
 {
     using namespace EXTENDED_SV_TYPE;
 
-    svId.svType=(getExtendedSVType(sv));
+    svId.svType=(getExtendedSVType(sv, isRNA));
 
     svId.localId = str(_SVIdFormatter % label(svId.svType) % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2
                        % sv.candidateIndex %  sv.assemblyAlignIndex % sv.assemblySegmentIndex );

@@ -55,6 +55,7 @@ struct JunctionIdGenerator
     getId(
         const EdgeInfo& edge,
         const SVCandidate& sv,
+        const bool isRNA,
         SVId& svId);
 
 private:

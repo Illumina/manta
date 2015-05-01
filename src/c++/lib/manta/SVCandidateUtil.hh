@@ -142,7 +142,8 @@ label(const index_t idx)
 
 EXTENDED_SV_TYPE::index_t
 getExtendedSVType(
-    const SVCandidate& sv);
+    const SVCandidate& sv,
+    const bool isForceIntraChromBnd = false);
 
 
 inline

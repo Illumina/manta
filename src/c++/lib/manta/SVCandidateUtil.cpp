@@ -95,8 +95,8 @@ classifyIndel(
 
 
 static
-bool
-isIntrachromBnd(
+    bool
+    isIntrachromBnd(
     const SVCandidate& /*sv*/)
 {
     /// TODO turn this feature back on when fewer pieces are in motion
@@ -108,11 +108,10 @@ isIntrachromBnd(
 }
 }
 
-
-
 EXTENDED_SV_TYPE::index_t
 getExtendedSVType(
-    const SVCandidate& sv)
+    const SVCandidate& sv,
+    const bool isForceIntraChromBnd)
 {
     using namespace EXTENDED_SV_TYPE;
 
@@ -120,7 +119,7 @@ getExtendedSVType(
 
     if (svType == SV_TYPE::INTERTRANSLOC) return INTERTRANSLOC;
 
-    if (isIntrachromBnd(sv)) return INTRATRANSLOC;
+    if (isForceIntraChromBnd || isIntrachromBnd(sv)) return INTRATRANSLOC;
 
     switch (svType)
     {
