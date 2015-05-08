@@ -580,11 +580,11 @@ scoreSV(
     }
 
     // get breakend center_pos depth estimate:
-    getBreakendMaxMappedDepthAndMQ0(isMaxDepth, isTumorOnly, bp1CutoffDepth, sv.bp1, baseInfo.bp1MaxDepth, baseInfo.bp1MQ0Frac);
+    getBreakendMaxMappedDepthAndMQ0(isTumorOnly, isMaxDepth, bp1CutoffDepth, sv.bp1, baseInfo.bp1MaxDepth, baseInfo.bp1MQ0Frac);
     const bool isBp1OverDepth(baseInfo.bp1MaxDepth > bp1CutoffDepth);
     if (! (isMaxDepth && isBp1OverDepth))
     {
-        getBreakendMaxMappedDepthAndMQ0(isMaxDepth, isTumorOnly, bp2CutoffDepth, sv.bp2, baseInfo.bp2MaxDepth, baseInfo.bp2MQ0Frac);
+        getBreakendMaxMappedDepthAndMQ0(isTumorOnly, isMaxDepth, bp2CutoffDepth, sv.bp2, baseInfo.bp2MaxDepth, baseInfo.bp2MQ0Frac);
     }
     const bool isBp2OverDepth(baseInfo.bp2MaxDepth > bp2CutoffDepth);
 
