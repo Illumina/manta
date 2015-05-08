@@ -207,6 +207,7 @@ private:
     void
     getBreakendMaxMappedDepthAndMQ0(
         const bool isMaxDepth,
+        const bool isTumorOnly,
         const double cutoffDepth,
         const SVBreakend& bp,
         unsigned& maxDepth,
@@ -224,6 +225,7 @@ private:
     scoreSV(
         const SVCandidateSetData& svData,
         const SVCandidateAssemblyData& assemblyData,
+        const bool isTumorOnly,
         const SVCandidate& sv,
         SVScoreInfo& ssInfo,
         SVEvidence& evidence);

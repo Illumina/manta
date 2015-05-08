@@ -559,6 +559,7 @@ SVScorer::
 scoreSV(
     const SVCandidateSetData& svData,
     const SVCandidateAssemblyData& assemblyData,
+    const bool isTumorOnly,
     const SVCandidate& sv,
     SVScoreInfo& baseInfo,
     SVEvidence& evidence)
@@ -579,11 +580,11 @@ scoreSV(
     }
 
     // get breakend center_pos depth estimate:
-    getBreakendMaxMappedDepthAndMQ0(isMaxDepth, bp1CutoffDepth, sv.bp1, baseInfo.bp1MaxDepth, baseInfo.bp1MQ0Frac);
+    getBreakendMaxMappedDepthAndMQ0(isMaxDepth, isTumorOnly, bp1CutoffDepth, sv.bp1, baseInfo.bp1MaxDepth, baseInfo.bp1MQ0Frac);
     const bool isBp1OverDepth(baseInfo.bp1MaxDepth > bp1CutoffDepth);
     if (! (isMaxDepth && isBp1OverDepth))
     {
-        getBreakendMaxMappedDepthAndMQ0(isMaxDepth, bp2CutoffDepth, sv.bp2, baseInfo.bp2MaxDepth, baseInfo.bp2MQ0Frac);
+        getBreakendMaxMappedDepthAndMQ0(isMaxDepth, isTumorOnly, bp2CutoffDepth, sv.bp2, baseInfo.bp2MaxDepth, baseInfo.bp2MQ0Frac);
     }
     const bool isBp2OverDepth(baseInfo.bp2MaxDepth > bp2CutoffDepth);
 
@@ -1727,7 +1728,7 @@ scoreSV(
 
         // accumulate model-neutral evidence for each candidate (or its corresponding reference allele)
         SVEvidence& evidence(junctionEvidence[junctionIndex]);
-        scoreSV(svData, assemblyData, sv, modelScoreInfo.base, evidence);
+        scoreSV(svData, assemblyData, isTumorOnly, sv, modelScoreInfo.base, evidence);
 
         // score components specific to diploid-germline model:
         float& spanningPairWeight(junctionSpanningPairWeight[junctionIndex]);;
