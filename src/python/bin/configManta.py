@@ -97,8 +97,9 @@ You must specify a BAM or CRAM file for at least one sample.
 
     def validateOptionExistence(self,options) :
 
-        if (options.normalBamList is None) or (len(options.normalBamList) == 0) :
-            raise OptParseException("No normal sample BAM files specified")
+        if (((options.normalBamList is None) or (len(options.normalBamList) == 0)) and 
+            ((options.tumorBamList is None) or (len(options.tumorBamList) == 0))) :
+            raise OptParseException("No normal & tumor sample BAM files specified")
 
         bcheck = BamSetChecker()
         bcheck.appendBams(options.normalBamList,"Normal")

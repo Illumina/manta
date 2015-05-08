@@ -1135,6 +1135,84 @@ scoreDiploidSV(
     }
 }
 
+
+/// score diploid tumor specific components (under tumor-only mode):
+static
+void
+scoreTumorSV(
+    const CallOptionsTumor& tumorOpt,
+    const ChromDepthFilterUtil& dFilter,
+    const std::vector<JunctionCallInfo>& junctionData,
+    SVScoreInfoTumor& tumorInfo)
+{
+    //
+    // compute qualities
+    //
+    assert(! junctionData.empty());
+
+    //TODO: scoring tumor-only variants
+
+    //
+    // apply filters
+    //
+    {
+        //TODO: add score filter
+
+        const unsigned junctionCount(junctionData.size());
+
+        // apply high depth filter:
+        if (dFilter.isMaxDepthFilter())
+        {
+            unsigned filteredJunctionCount(0);
+            for (const JunctionCallInfo& junction : junctionData)
+            {
+                const SVScoreInfo& baseInfo(junction.getBaseInfo());
+                const SVCandidate& sv(junction.getSV());
+
+                // apply maxdepth filter if either of the breakpoints exceeds the maximum depth:
+                if ((baseInfo.bp1MaxDepth > dFilter.maxDepth(sv.bp1.interval.tid)) ||
+                    (baseInfo.bp2MaxDepth > dFilter.maxDepth(sv.bp2.interval.tid)))
+                {
+                    filteredJunctionCount++;
+                }
+            }
+
+            if ((filteredJunctionCount*2) > junctionCount)
+            {
+                tumorInfo.filters.insert(tumorOpt.maxDepthFilterLabel);
+            }
+        }
+
+        // apply MQ0 filter
+        {
+            unsigned filteredJunctionCount(0);
+            for (const JunctionCallInfo& junction : junctionData)
+            {
+                const SVScoreInfo& baseInfo(junction.getBaseInfo());
+                const SVCandidate& sv(junction.getSV());
+
+
+                const bool isMQ0FilterSize(isSVBelowMinSize(sv,1000));
+                if (isMQ0FilterSize)
+                {
+                    // apply MQ0 filter for one junction if either breakend meets the filter criteria:
+                    if ((baseInfo.bp1MQ0Frac > tumorOpt.maxMQ0Frac) ||
+                        (baseInfo.bp2MQ0Frac > tumorOpt.maxMQ0Frac))
+                    {
+                        filteredJunctionCount++;
+                    }
+                }
+            }
+
+            if ((filteredJunctionCount*2) > junctionCount)
+            {
+                tumorInfo.filters.insert(tumorOpt.maxMQ0FracLabel);
+            }
+        }
+    }
+}
+
+
 //todo This is mostly a placeholder. Add real RNA scoring model
 static
 void

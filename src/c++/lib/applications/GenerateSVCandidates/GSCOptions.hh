@@ -23,6 +23,7 @@
 #include "options/CallOptionsDiploid.hh"
 #include "options/CallOptionsShared.hh"
 #include "options/CallOptionsSomatic.hh"
+#include "options/CallOptionsTumor.hh"
 #include "options/ReadScannerOptions.hh"
 #include "options/SVRefinerOptions.hh"
 
@@ -39,6 +40,7 @@ struct GSCOptions
     CallOptionsShared callOpt;
     CallOptionsDiploid diploidOpt;
     CallOptionsSomatic somaticOpt;
+    CallOptionsTumor tumorOpt;
 
     std::string graphFilename;
     std::string referenceFilename;
@@ -51,6 +53,7 @@ struct GSCOptions
     std::string candidateOutputFilename;
     std::string diploidOutputFilename;
     std::string somaticOutputFilename;
+    std::string tumorOutputFilename;
 
     bool isVerbose = false; ///< provide some high-level log info to assist in debugging
 

@@ -87,6 +87,8 @@ parseGSCOptions(
      "Write germline diploid SVs to file (at least one non-tumor alignment file must be specified)")
     ("somatic-output-file", po::value(&opt.somaticOutputFilename),
      "Write somatic SVs to file (at least one tumor and non-tumor alignment file must be specified)")
+    ("tumor-output-file", po::value(&opt.tumorOutputFilename),
+     "Write tumor SVs to file (at least one tumor alignment file must be specified)")
     ("verbose", po::value(&opt.isVerbose)->zero_tokens(),
      "Turn on low-detail INFO logging.")
     ("skip-assembly", po::value(&opt.isSkipAssembly)->zero_tokens(),
@@ -108,13 +110,14 @@ parseGSCOptions(
     po::options_description scanDesc(getOptionsDescription(opt.scanOpt));
     po::options_description diploidCallDesc(getOptionsDescription(opt.diploidOpt));
     po::options_description somaticCallDesc(getOptionsDescription(opt.somaticOpt));
+    po::options_description tumorCallDesc(getOptionsDescription(opt.tumorOpt));
 
     po::options_description help("help");
     help.add_options()
     ("help,h","print this message");
 
     po::options_description visible("options");
-    visible.add(alignDesc).add(scanDesc).add(req).add(edgeDesc).add(diploidCallDesc).add(somaticCallDesc).add(help);
+    visible.add(alignDesc).add(scanDesc).add(req).add(edgeDesc).add(diploidCallDesc).add(somaticCallDesc).add(tumorCallDesc).add(help);
 
     bool po_parse_fail(false);
     po::variables_map vm;
@@ -166,23 +169,42 @@ parseGSCOptions(
         usage(log_os,prog,visible,"Must specify candidate output file");
     }
 
-    if (opt.diploidOutputFilename.empty())
     {
-        usage(log_os,prog,visible,"Must specify diploid output file");
-    }
-
-    if (! opt.somaticOutputFilename.empty())
-    {
-        unsigned normalCount(0);
+    	unsigned normalCount(0);
         unsigned tumorCount(0);
         for (const bool value : opt.alignFileOpt.isAlignmentTumor)
         {
             if (value) tumorCount++;
             else      normalCount++;
         }
-        if ((normalCount==0) || (tumorCount==0))
+
+        /*if (opt.diploidOutputFilename.empty())
         {
-            usage(log_os,prog,visible,"Must specify at least one tumor and non-tumor alignment file for somatic output");
+        	usage(log_os,prog,visible,"Must specify diploid output file");
+        }*/
+
+        if (! opt.diploidOutputFilename.empty())
+        {
+        	if (normalCount==0)
+        	{
+        		usage(log_os,prog,visible,"Must specify at least one non-tumor alignment file for diploid output");
+        	}
+        }
+
+        if (! opt.somaticOutputFilename.empty())
+        {
+        	if ((normalCount==0) || (tumorCount==0))
+        	{
+        		usage(log_os,prog,visible,"Must specify at least one tumor and non-tumor alignment file for somatic output");
+        	}
+        }
+
+        if (! opt.tumorOutputFilename.empty())
+        {
+        	if (tumorCount==0)
+        	{
+        		usage(log_os,prog,visible,"Must specify at least one tumor alignment file for tumor output");
+        	}
         }
     }
 }

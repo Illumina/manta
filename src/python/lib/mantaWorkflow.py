@@ -179,6 +179,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
     dirTask=self.addTask(preJoin(taskPrefix,"makeHyGenDir"), "mkdir -p "+ hygenDir, dependencies=dependencies, isForceLocal=True)
 
     isSomatic = (len(self.params.normalBamList) and len(self.params.tumorBamList))
+    isTumorOnly = ((not isSomatic) and len(self.params.tumorBamList))
 
     hyGenMemMb = self.params.hyGenLocalMemMb
     if self.getRunMode() == "sge" :
@@ -188,16 +189,20 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
     candidateVcfPaths = []
     diploidVcfPaths = []
     somaticVcfPaths = []
+    tumorVcfPaths = []
 
     edgeRuntimeLogPaths = []
     edgeStatsLogPaths = []
 
     for binId in range(self.params.nonlocalWorkBins) :
         binStr = str(binId).zfill(4)
-        candidateVcfPaths.append(self.paths.getHyGenCandidatePath(binStr))
-        diploidVcfPaths.append(self.paths.getHyGenDiploidPath(binStr))
-        if isSomatic :
-            somaticVcfPaths.append(self.paths.getHyGenSomaticPath(binStr))
+        candidateVcfPaths.append(self.paths.getHyGenCandidatePath(binStr))       
+        if isTumorOnly :
+            tumorVcfPaths.append(self.paths.getHyGenTumorPath(binStr))
+	else:
+	    diploidVcfPaths.append(self.paths.getHyGenDiploidPath(binStr))
+	    if isSomatic :
+                somaticVcfPaths.append(self.paths.getHyGenSomaticPath(binStr))
 
         hygenCmd = [ self.params.mantaHyGenBin ]
         hygenCmd.extend(["--align-stats",statsPath])
@@ -209,17 +214,23 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         hygenCmd.extend(["--min-scored-sv-size", self.params.minScoredVariantSize])
         hygenCmd.extend(["--ref",self.params.referenceFasta])
         hygenCmd.extend(["--candidate-output-file", candidateVcfPaths[-1]])
-        hygenCmd.extend(["--diploid-output-file", diploidVcfPaths[-1]])
-        hygenCmd.extend(["--min-qual-score", self.params.minDiploidVariantScore])
-        hygenCmd.extend(["--min-pass-gt-score", self.params.minPassGTScore])
-        if isSomatic :
-            hygenCmd.extend(["--somatic-output-file", somaticVcfPaths[-1]])
-            hygenCmd.extend(["--min-somatic-score", self.params.minSomaticScore])
-            hygenCmd.extend(["--min-pass-somatic-score", self.params.minPassSomaticScore])
 
-            # temporary fix for FFPE:
-            hygenCmd.append("--skip-remote-reads")
-
+	# tumor-only mode
+        if isTumorOnly :
+            hygenCmd.extend(["--tumor-output-file", tumorVcfPaths[-1]])
+	else:
+            hygenCmd.extend(["--diploid-output-file", diploidVcfPaths[-1]])
+            hygenCmd.extend(["--min-qual-score", self.params.minDiploidVariantScore])
+            hygenCmd.extend(["--min-pass-gt-score", self.params.minPassGTScore])
+	    # tumor/normal mode
+	    if isSomatic :
+       	        hygenCmd.extend(["--somatic-output-file", somaticVcfPaths[-1]])
+                hygenCmd.extend(["--min-somatic-score", self.params.minSomaticScore])
+                hygenCmd.extend(["--min-pass-somatic-score", self.params.minPassSomaticScore])
+        
+                # temporary fix for FFPE:
+                hygenCmd.append("--skip-remote-reads")
+        
         if self.params.isHighDepthFilter :
             hygenCmd.extend(["--chrom-depth", self.paths.getChromDepth()])
 
@@ -277,6 +288,9 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
     sortVcfs(somaticVcfPaths,
              self.paths.getSortedSomaticPath(),
              "sortSomaticSV")
+    sortVcfs(tumorVcfPaths,
+             self.paths.getSortedTumorPath(),
+             "sortTumorSV")
 
     def getExtractSmallCmd(maxSize, inPath, outPath) :
         cmd  = "%s -dc %s" % (self.params.bgzipBin, inPath)
@@ -357,8 +371,14 @@ class PathInfo:
     def getHyGenSomaticPath(self, binStr) :
         return os.path.join(self.getHyGenDir(),"somaticSV.%s.vcf" % (binStr))
 
+    def getHyGenTumorPath(self, binStr) :
+        return os.path.join(self.getHyGenDir(),"tumorSV.%s.vcf" % (binStr))
+
     def getSortedSomaticPath(self) :
         return os.path.join(self.params.variantsDir,"somaticSV.vcf.gz")
+   
+    def getSortedTumorPath(self) :
+        return os.path.join(self.params.variantsDir,"tumorSV.vcf.gz")
 
     def getHyGenEdgeRuntimeLogPath(self, binStr) :
         return os.path.join(self.getHyGenDir(),"edgeRuntimeLog.%s.txt" % (binStr))

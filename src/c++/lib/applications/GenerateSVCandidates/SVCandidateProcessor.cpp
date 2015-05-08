@@ -38,22 +38,33 @@ SVWriter(
     TruthTracker& truthTracker) :
     opt(initOpt),
     isSomatic(! opt.somaticOutputFilename.empty()),
+    isTumorOnly(! opt.tumorOutputFilename.empty()),
     svScore(opt, readScanner, cset.header),
     candfs(opt.candidateOutputFilename),
     dipfs(opt.diploidOutputFilename),
     somfs(opt.somaticOutputFilename),
+    tumfs(opt.tumorOutputFilename),
     candWriter(opt.referenceFilename, opt.isRNA, cset,candfs.getStream()),
     diploidWriter(opt.diploidOpt, (! opt.chromDepthFilename.empty()),
                   opt.referenceFilename,  opt.isRNA, cset,dipfs.getStream()),
     somWriter(opt.somaticOpt, (! opt.chromDepthFilename.empty()),
-              opt.referenceFilename,cset,somfs.getStream()),
+              opt.referenceFilename, cset,somfs.getStream()),
+    tumorWriter(opt.tumorOpt, (! opt.chromDepthFilename.empty()),
+                opt.referenceFilename, cset,tumfs.getStream()),
     _truthTracker(truthTracker)
 {
     if (0 == opt.edgeOpt.binIndex)
     {
         candWriter.writeHeader(progName, progVersion);
-        diploidWriter.writeHeader(progName, progVersion);
-        if (isSomatic) somWriter.writeHeader(progName, progVersion);
+        if (isTumorOnly)
+        {
+        	tumorWriter.writeHeader(progName, progVersion);
+        }
+        else
+        {
+            diploidWriter.writeHeader(progName, progVersion);
+            if (isSomatic) somWriter.writeHeader(progName, progVersion);
+        }
     }
 }
 
@@ -230,6 +241,7 @@ writeSV(
     event.junctionCount=unfilteredJunctionCount;
     bool isMJEventWriteDiploid(false);
     bool isMJEventWriteSomatic(false);
+
     if (isMJEvent)
     {
         for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
@@ -247,7 +259,7 @@ writeSV(
             // for diploid case only we decide to use multi-junction or single junction based on best score:
             // (for somatic case a lower somatic score could be due to reference evidence in an event member)
             //
-            if     (mjJointModelScoreInfo.diploid.filters.size() > modelScoreInfo.diploid.filters.size())
+            if (mjJointModelScoreInfo.diploid.filters.size() > modelScoreInfo.diploid.filters.size())
             {
                 isMJDiploidEvent=false;
             }
@@ -277,6 +289,8 @@ writeSV(
             {
                 isMJEventWriteSomatic = true;
             }
+
+            //TODO: set up criteria for isMJEventWriteTumor
         }
     }
 
@@ -291,58 +305,67 @@ writeSV(
         const SVModelScoreInfo& modelScoreInfo(mjModelScoreInfo[junctionIndex]);
 
         const SVId& svId(junctionSVId[junctionIndex]);
-
         const SVScoreInfo& baseInfo(modelScoreInfo.base);
+        static const EventInfo nonEvent;
 
+        if (isTumorOnly)
         {
-            static const EventInfo nonEvent;
-            const EventInfo& diploidEvent( isMJDiploidEvent ? event : nonEvent );
-            const SVModelScoreInfo& scoreInfo(isMJDiploidEvent ? mjJointModelScoreInfo : modelScoreInfo);
-            const SVScoreInfoDiploid& diploidInfo(scoreInfo.diploid);
+        	//TODO: add logic for MJEvent
 
-            bool isWriteDiploid(false);
-            if (isMJDiploidEvent)
-            {
-                isWriteDiploid = isMJEventWriteDiploid;
-            }
-            else
-            {
-                isWriteDiploid = (modelScoreInfo.diploid.altScore >= opt.diploidOpt.minOutputAltScore);
-            }
-
-            if (opt.isRNA) isWriteDiploid = true; /// TODO remove after adding RNA scoring
-
-            if (isWriteDiploid)
-            {
-                diploidWriter.writeSV(svData, assemblyData, sv, svId, baseInfo, diploidInfo, diploidEvent, modelScoreInfo.diploid);
-            }
+        	const SVScoreInfoTumor& tumorInfo(modelScoreInfo.tumor);
+        	tumorWriter.writeSV(svData, assemblyData, sv, svId, baseInfo, tumorInfo, nonEvent);
         }
-
-        if (isSomatic)
+        else
         {
-            const SVModelScoreInfo& scoreInfo(isMJEvent ? mjJointModelScoreInfo : modelScoreInfo);
-            const SVScoreInfoSomatic& somaticInfo(scoreInfo.somatic);
+        	{
+        		const EventInfo& diploidEvent( isMJDiploidEvent ? event : nonEvent );
+				const SVModelScoreInfo& scoreInfo(isMJDiploidEvent ? mjJointModelScoreInfo : modelScoreInfo);
+				const SVScoreInfoDiploid& diploidInfo(scoreInfo.diploid);
 
-            bool isWriteSomatic(false);
+				bool isWriteDiploid(false);
+				if (isMJDiploidEvent)
+				{
+					isWriteDiploid = isMJEventWriteDiploid;
+				}
+				else
+				{
+					isWriteDiploid = (modelScoreInfo.diploid.altScore >= opt.diploidOpt.minOutputAltScore);
+				}
 
-            if (isMJEvent)
-            {
-                isWriteSomatic = isMJEventWriteSomatic;
-            }
-            else
-            {
-                isWriteSomatic = (modelScoreInfo.somatic.somaticScore >= opt.somaticOpt.minOutputSomaticScore);
-            }
+				if (opt.isRNA) isWriteDiploid = true; /// TODO remove after adding RNA scoring
 
-            if (isWriteSomatic)
-            {
-                somWriter.writeSV(svData, assemblyData, sv, svId, baseInfo, somaticInfo, event, modelScoreInfo.somatic);
-                _truthTracker.reportOutcome(SVLog::WRITTEN);
-            }
-            else
-            {
-                _truthTracker.reportOutcome(SVLog::LOW_SOMATIC_SCORE);
-            }
+				if (isWriteDiploid)
+				{
+					diploidWriter.writeSV(svData, assemblyData, sv, svId, baseInfo, diploidInfo, diploidEvent, modelScoreInfo.diploid);
+				}
+			}
+
+			if (isSomatic)
+			{
+				const SVModelScoreInfo& scoreInfo(isMJEvent ? mjJointModelScoreInfo : modelScoreInfo);
+				const SVScoreInfoSomatic& somaticInfo(scoreInfo.somatic);
+
+				bool isWriteSomatic(false);
+
+				if (isMJEvent)
+				{
+					isWriteSomatic = isMJEventWriteSomatic;
+				}
+				else
+				{
+					isWriteSomatic = (modelScoreInfo.somatic.somaticScore >= opt.somaticOpt.minOutputSomaticScore);
+				}
+
+				if (isWriteSomatic)
+				{
+					somWriter.writeSV(svData, assemblyData, sv, svId, baseInfo, somaticInfo, event, modelScoreInfo.somatic);
+					_truthTracker.reportOutcome(SVLog::WRITTEN);
+				}
+				else
+				{
+					_truthTracker.reportOutcome(SVLog::LOW_SOMATIC_SCORE);
+				}
+			}
         }
     }
 }

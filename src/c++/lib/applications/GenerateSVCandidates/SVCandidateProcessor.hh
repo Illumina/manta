@@ -30,6 +30,7 @@
 #include "format/VcfWriterCandidateSV.hh"
 #include "format/VcfWriterDiploidSV.hh"
 #include "format/VcfWriterSomaticSV.hh"
+#include "format/VcfWriterTumorSV.hh"
 #include "truth/TruthTracker.hh"
 
 #include <memory>
@@ -59,6 +60,7 @@ struct SVWriter
     ///////////////////////// data:
     const GSCOptions& opt;
     const bool isSomatic;
+    const bool isTumorOnly;
 
     SVScorer svScore;
     std::vector<SVModelScoreInfo> mjModelScoreInfo;
@@ -66,10 +68,12 @@ struct SVWriter
     OutStream candfs;
     OutStream dipfs;
     OutStream somfs;
+    OutStream tumfs;
 
     VcfWriterCandidateSV candWriter;
     VcfWriterDiploidSV diploidWriter;
     VcfWriterSomaticSV somWriter;
+    VcfWriterTumorSV tumorWriter;
 
     TruthTracker& _truthTracker;
 
