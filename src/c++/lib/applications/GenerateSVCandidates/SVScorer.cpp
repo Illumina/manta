@@ -123,6 +123,7 @@ addReadToDepthEst(
 void
 SVScorer::
 getBreakendMaxMappedDepthAndMQ0(
+	const bool isTumorOnly,
     const bool isMaxDepth,
     const double cutoffDepth,
     const SVBreakend& bp,
@@ -147,13 +148,13 @@ getBreakendMaxMappedDepthAndMQ0(
     std::vector<unsigned> depth(searchRange.size(),0);
 
     bool isCutoff(false);
-    bool isNormalFound(false);
+    bool isBamFound(false);
 
     const unsigned bamCount(_bamStreams.size());
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
-        if (_isAlignmentTumor[bamIndex]) continue;
-        isNormalFound=true;
+        if ((!isTumorOnly) && (_isAlignmentTumor[bamIndex])) continue;
+        isBamFound=true;
 
         bam_streamer& bamStream(*_bamStreams[bamIndex]);
 
@@ -192,7 +193,7 @@ getBreakendMaxMappedDepthAndMQ0(
         if (isCutoff) break;
     }
 
-    assert(isNormalFound);
+    assert(isBamFound);
 
     maxDepth = *(std::max_element(depth.begin(),depth.end()));
     if (totalReads>=10)
@@ -1687,6 +1688,7 @@ scoreSV(
     const SVMultiJunctionCandidate& mjSV,
     const std::vector<bool>& isJunctionFiltered,
     const bool isSomatic,
+    const bool isTumorOnly,
     std::vector<SVModelScoreInfo>& mjModelScoreInfo,
     SVModelScoreInfo& mjJointModelScoreInfo,
     bool& isMJEvent)

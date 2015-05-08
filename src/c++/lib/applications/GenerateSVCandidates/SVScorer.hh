@@ -152,6 +152,7 @@ struct SVScorer
         const SVMultiJunctionCandidate& mjSV,
         const std::vector<bool>& isJunctionFiltered,
         const bool isSomatic,
+        const bool isTumorOnly,
         std::vector<SVModelScoreInfo>& mjModelScoreInfo,
         SVModelScoreInfo& mjJointModelScoreInfo,
         bool& isMJEvent);
