@@ -612,6 +612,13 @@ scoreSV(
     // compute allele likelihoods, and any other summary metric shared between all models:
     //
     getSVSupportSummary(evidence, baseInfo);
+
+    std::cerr << __FUNCTION__ << "Xiaoyu: PR="
+    		<< str( boost::format("%i,%i") % baseInfo.normal.ref.confidentSpanningPairCount % baseInfo.normal.alt.confidentSpanningPairCount)
+    		<< "\n";
+    std::cerr << __FUNCTION__ << "Xiaoyu: SP="
+    		<< str( boost::format("%i,%i") % baseInfo.normal.ref.confidentSplitReadCount % baseInfo.normal.alt.confidentSplitReadCount)
+    		<< "\n";
 }
 
 
@@ -1667,19 +1674,28 @@ void
 SVScorer::
 computeAllScoreModels(
     const bool isSomatic,
+    const bool isTumorOnly,
     const std::vector<JunctionCallInfo>& junctionData,
     SVModelScoreInfo& modelScoreInfo)
 {
-    scoreDiploidSV(_diploidOpt, _diploidDopt, _dFilterDiploid, junctionData, modelScoreInfo.diploid);
-
-    // score components specific to somatic model:
-    if (isSomatic)
+    if (isTumorOnly)
     {
-        scoreSomaticSV(_somaticOpt, _somaticDopt, _dFilterSomatic, junctionData, modelScoreInfo.somatic);
+    	scoreTumorSV(_tumorOpt, _dFilterDiploid, junctionData, modelScoreInfo.tumor);
     }
+    else
+    {
+		scoreDiploidSV(_diploidOpt, _diploidDopt, _dFilterDiploid, junctionData, modelScoreInfo.diploid);
+
+		// score components specific to somatic model:
+		if (isSomatic)
+		{
+			scoreSomaticSV(_somaticOpt, _somaticDopt, _dFilterSomatic, junctionData, modelScoreInfo.somatic);
+		}
+    }
+
     if (_isRNA)
     {
-        scoreRNASV(_diploidOpt, modelScoreInfo.base, modelScoreInfo.diploid);
+    	scoreRNASV(_diploidOpt, modelScoreInfo.base, modelScoreInfo.diploid);
     }
 }
 
@@ -1741,7 +1757,7 @@ scoreSV(
         junctionData.resize(1);
         junctionData[0].init(sv, evidence, modelScoreInfo.base, spanningPairWeight);
 
-        computeAllScoreModels(isSomatic, junctionData, modelScoreInfo);
+        computeAllScoreModels(isSomatic, isTumorOnly, junctionData, modelScoreInfo);
     }
 
     //
@@ -1768,7 +1784,7 @@ scoreSV(
                 junctionSpanningPairWeight[junctionIndex]);
         }
 
-        computeAllScoreModels(isSomatic, junctionData, mjJointModelScoreInfo);
+        computeAllScoreModels(isSomatic, isTumorOnly, junctionData, mjJointModelScoreInfo);
     }
     else
     {

@@ -217,6 +217,7 @@ private:
     void
     computeAllScoreModels(
         const bool isSomatic,
+        const bool isTumorOnly,
         const std::vector<JunctionCallInfo>& junctionData,
         SVModelScoreInfo& modelScoreInfo);
 
@@ -240,6 +241,7 @@ private:
     const SVRefinerOptions _refineOpt;
     const CallOptionsSomatic _somaticOpt;
     const CallOptionsSomaticDeriv _somaticDopt;
+    const CallOptionsTumor _tumorOpt;
     const ChromDepthFilterUtil _dFilterDiploid;
     const ChromDepthFilterUtil _dFilterSomatic;
     const SVLocusScanner& _readScanner;
