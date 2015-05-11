@@ -81,15 +81,6 @@ modifySample(
     static const std::string srTag("SR");
     values[0] = str( boost::format("%i,%i") % baseInfo.normal.ref.confidentSplitReadCount % baseInfo.normal.alt.confidentSplitReadCount);
     sampletags.push_back(std::make_pair(srTag,values));
-    if (_isRNA)
-    {
-        static const std::string fsTag("FS");
-        values[0] = str( boost::format("%i,%i") % baseInfo.normal.ref.splitReadCount % baseInfo.normal.alt.splitReadCount);
-        sampletags.push_back(std::make_pair(fsTag,values));
-        static const std::string fpTag("FP");
-        values[0] = str( boost::format("%i,%i") % baseInfo.normal.ref.spanningPairCount % baseInfo.normal.alt.spanningPairCount);
-        sampletags.push_back(std::make_pair(fpTag,values));
-    }
 }
 
 void

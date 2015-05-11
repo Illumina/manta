@@ -579,6 +579,8 @@ scoreSV(
         bp2CutoffDepth = cutoffDepthFactor*bp2MaxMaxDepth;
     }
 
+    std::cerr << __FUNCTION__ << "Xiaoyu: isMaxDepth=" << isMaxDepth << "!!!\n";
+
     // get breakend center_pos depth estimate:
     getBreakendMaxMappedDepthAndMQ0(isTumorOnly, isMaxDepth, bp1CutoffDepth, sv.bp1, baseInfo.bp1MaxDepth, baseInfo.bp1MQ0Frac);
     const bool isBp1OverDepth(baseInfo.bp1MaxDepth > bp1CutoffDepth);
@@ -593,7 +595,9 @@ scoreSV(
 
     if (! isSkipEvidenceSearch)
     {
-        // count the paired-read fragments supporting the ref and alt alleles in each sample:
+    	std::cerr << __FUNCTION__ << "Xiaoyu: computing evidence!!!\n";
+
+    	// count the paired-read fragments supporting the ref and alt alleles in each sample:
         //
         getSVPairSupport(svData, assemblyData, sv, evidence);
 
