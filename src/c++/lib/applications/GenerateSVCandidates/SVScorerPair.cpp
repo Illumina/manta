@@ -32,7 +32,7 @@
 #include <string>
 
 /// standard debug output for this file:
-//#define DEBUG_PAIR
+#define DEBUG_PAIR
 
 /// ridiculous debug output for this file:
 //#define DEBUG_MEGAPAIR

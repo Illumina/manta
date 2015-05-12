@@ -34,7 +34,7 @@
 #include <string>
 
 
-//#define DEBUG_SCORE
+#define DEBUG_SCORE
 //#define DEBUG_SOMATIC_SCORE
 
 #if defined(DEBUG_SCORE) || defined(DEBUG_SOMATIC_SCORE)
@@ -579,8 +579,6 @@ scoreSV(
         bp2CutoffDepth = cutoffDepthFactor*bp2MaxMaxDepth;
     }
 
-    std::cerr << __FUNCTION__ << "Xiaoyu: isMaxDepth=" << isMaxDepth << "!!!\n";
-
     // get breakend center_pos depth estimate:
     getBreakendMaxMappedDepthAndMQ0(isTumorOnly, isMaxDepth, bp1CutoffDepth, sv.bp1, baseInfo.bp1MaxDepth, baseInfo.bp1MQ0Frac);
     const bool isBp1OverDepth(baseInfo.bp1MaxDepth > bp1CutoffDepth);
@@ -595,8 +593,6 @@ scoreSV(
 
     if (! isSkipEvidenceSearch)
     {
-    	std::cerr << __FUNCTION__ << "Xiaoyu: computing evidence!!!\n";
-
     	// count the paired-read fragments supporting the ref and alt alleles in each sample:
         //
         getSVPairSupport(svData, assemblyData, sv, evidence);
@@ -613,10 +609,10 @@ scoreSV(
     //
     getSVSupportSummary(evidence, baseInfo);
 
-    std::cerr << __FUNCTION__ << "Xiaoyu: PR="
+    std::cerr << __FUNCTION__ << " Xiaoyu: PR="
     		<< str( boost::format("%i,%i") % baseInfo.normal.ref.confidentSpanningPairCount % baseInfo.normal.alt.confidentSpanningPairCount)
     		<< "\n";
-    std::cerr << __FUNCTION__ << "Xiaoyu: SP="
+    std::cerr << __FUNCTION__ << " Xiaoyu: SP="
     		<< str( boost::format("%i,%i") % baseInfo.normal.ref.confidentSplitReadCount % baseInfo.normal.alt.confidentSplitReadCount)
     		<< "\n";
 }

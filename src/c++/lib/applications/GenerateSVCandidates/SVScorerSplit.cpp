@@ -23,7 +23,7 @@
 
 #include "boost/scoped_array.hpp"
 
-//#define DEBUG_SVS
+#define DEBUG_SVS
 
 #ifdef DEBUG_SVS
 #include <iostream>
