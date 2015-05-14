@@ -34,7 +34,7 @@
 #include <string>
 
 
-#define DEBUG_SCORE
+//#define DEBUG_SCORE
 //#define DEBUG_SOMATIC_SCORE
 
 #if defined(DEBUG_SCORE) || defined(DEBUG_SOMATIC_SCORE)
@@ -610,10 +610,10 @@ scoreSV(
     getSVSupportSummary(evidence, baseInfo);
 
     std::cerr << __FUNCTION__ << " Xiaoyu: PR="
-    		<< str( boost::format("%i,%i") % baseInfo.normal.ref.confidentSpanningPairCount % baseInfo.normal.alt.confidentSpanningPairCount)
+    		<< str( boost::format("%i,%i") % baseInfo.tumor.ref.confidentSpanningPairCount % baseInfo.tumor.alt.confidentSpanningPairCount)
     		<< "\n";
     std::cerr << __FUNCTION__ << " Xiaoyu: SP="
-    		<< str( boost::format("%i,%i") % baseInfo.normal.ref.confidentSplitReadCount % baseInfo.normal.alt.confidentSplitReadCount)
+    		<< str( boost::format("%i,%i") % baseInfo.tumor.ref.confidentSplitReadCount % baseInfo.tumor.alt.confidentSplitReadCount)
     		<< "\n";
 }
 
