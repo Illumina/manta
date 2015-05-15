@@ -1,3 +1,4 @@
+- VCF output formatting: FileData correctd to FileDate
 v0.26.0
 - MANTA-224 improve short-fragment handling for RNA
 - MANTA-235 kmer refernce mask to accelerate RNA contig alignments

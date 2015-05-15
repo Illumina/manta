@@ -61,7 +61,7 @@ writeHeaderPrefix(
     const char* progVersion)
 {
     _os << "##fileformat=VCFv4.1\n";
-    _os << "##fileData=" << vcf_fileDate << "\n";
+    _os << "##fileDate=" << vcf_fileDate << "\n";
     _os << "##source=" << progName << " " << progVersion << "\n";
     _os << "##reference=file://" << _referenceFilename << "\n";
 
