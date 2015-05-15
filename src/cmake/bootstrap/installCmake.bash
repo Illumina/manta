@@ -61,7 +61,7 @@ if [[ "${AVAILABLE_CMAKE_VERSION}" =~ ^cmake\ version\ ([0-9]+)\.([0-9]+)\.([0-9
     MAJOR=${BASH_REMATCH[1]}
     MINOR=${BASH_REMATCH[2]}
     PATCH=${BASH_REMATCH[3]}
-    if [[ "$MAJOR" -eq "$CMAKE_MAJOR" && ( "$MINOR" -gt "$CMAKE_MINOR" || "$MINOR" -eq "$CMAKE_MINOR" && "$PATCH" -ge "$CMAKE_PATCH_MIN"  ) ]] ; then
+    if [[ "$MAJOR" -gt "$CMAKE_MAJOR" || ( "$MAJOR" -eq "$CMAKE_MAJOR" && ( "$MINOR" -gt "$CMAKE_MINOR" || ( "$MINOR" -eq "$CMAKE_MINOR" && "$PATCH" -ge "$CMAKE_PATCH_MIN"  ) ) ) ]] ; then
         ilog "${BASH_REMATCH[0]} (>= $CMAKE_REQUIRED) is already installed"
         echo "cmake"
         exit 0
