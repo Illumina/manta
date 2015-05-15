@@ -244,6 +244,7 @@ private:
     const CallOptionsTumor _tumorOpt;
     const ChromDepthFilterUtil _dFilterDiploid;
     const ChromDepthFilterUtil _dFilterSomatic;
+    const ChromDepthFilterUtil _dFilterTumor;
     const SVLocusScanner& _readScanner;
 
     std::vector<streamPtr> _bamStreams;

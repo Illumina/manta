@@ -65,6 +65,7 @@ SVScorer(
     _somaticDopt(_somaticOpt),
     _dFilterDiploid(opt.chromDepthFilename, _diploidOpt.maxDepthFactor, header),
     _dFilterSomatic(opt.chromDepthFilename, _somaticOpt.maxDepthFactor, header),
+    _dFilterTumor(opt.chromDepthFilename, _tumorOpt.maxDepthFactor, header),
     _readScanner(readScanner)
 {
     // setup regionless bam_streams:
@@ -567,7 +568,10 @@ scoreSV(
     // at what factor above the maxDepth FILTER criteria do we stop enumerating scoring components?
     static const unsigned cutoffDepthFactor(2);
 
-    const bool isMaxDepth(_dFilterDiploid.isMaxDepthFilter() && _dFilterSomatic.isMaxDepthFilter());
+    const bool isMaxDepth(isTumorOnly ?
+    		_dFilterTumor.isMaxDepthFilter() :
+    		(_dFilterDiploid.isMaxDepthFilter() && _dFilterSomatic.isMaxDepthFilter()));
+
     double bp1CutoffDepth(0);
     double bp2CutoffDepth(0);
     if (isMaxDepth)
@@ -608,13 +612,6 @@ scoreSV(
     // compute allele likelihoods, and any other summary metric shared between all models:
     //
     getSVSupportSummary(evidence, baseInfo);
-
-    std::cerr << __FUNCTION__ << " Xiaoyu: PR="
-    		<< str( boost::format("%i,%i") % baseInfo.tumor.ref.confidentSpanningPairCount % baseInfo.tumor.alt.confidentSpanningPairCount)
-    		<< "\n";
-    std::cerr << __FUNCTION__ << " Xiaoyu: SP="
-    		<< str( boost::format("%i,%i") % baseInfo.tumor.ref.confidentSplitReadCount % baseInfo.tumor.alt.confidentSplitReadCount)
-    		<< "\n";
 }
 
 
