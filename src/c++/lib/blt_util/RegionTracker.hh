@@ -132,9 +132,34 @@ struct RegionPayloadTracker
         return _regions.empty();
     }
 
+    /// is single position in a tracked region w/ payload?
     boost::optional<T>
-    isPayloadInRegion(
-        const pos_t pos) const;
+    isIntersectRegion(
+        const pos_t pos) const
+    {
+        return isIntersectRegionImpl(pos,pos+1);
+    }
+
+    // commenting out pending definition of expected behavior when
+    // the query range intercepts more than one tracked range, what
+    // is the payload returned in such a case?
+#if 0
+    /// does range intersect any tracked region w/ payload?
+    boost::optional<T>
+    isIntersectRegion(
+        const known_pos_range2 range) const
+    {
+        return isIntersectRegionImpl(range.begin_pos(),range.end_pos());
+    }
+#endif
+
+    /// is range entirely contained in a tracked region w/ payload?
+    boost::optional<T>
+    isSubsetOfRegion(
+        const known_pos_range2 range) const
+    {
+        return isSubsetOfRegionImpl(range.begin_pos(),range.end_pos());
+    }
 
     /// add region
     ///
@@ -159,6 +184,17 @@ struct RegionPayloadTracker
     typedef typename std::map<known_pos_range2,T,PosRangeEndSort> region_t;
 
 private:
+
+    boost::optional<T>
+    isIntersectRegionImpl(
+        const pos_t beginPos,
+        const pos_t endPos) const;
+
+    boost::optional<T>
+    isSubsetOfRegionImpl(
+        const pos_t beginPos,
+        const pos_t endPos) const;
+
     region_t _regions;
 };
 

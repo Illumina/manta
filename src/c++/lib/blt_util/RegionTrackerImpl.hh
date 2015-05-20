@@ -22,17 +22,45 @@
 template <typename T>
 boost::optional<T>
 RegionPayloadTracker<T>::
-isPayloadInRegion(
-    const pos_t pos) const
+isIntersectRegionImpl(
+    const pos_t beginPos,
+    const pos_t endPos) const
 {
     boost::optional<T> result;
     if (_regions.empty()) return result;
 
-    // 1. find first region where endPos > pos
-    const auto posIter(_regions.upper_bound(known_pos_range2(pos,pos)));
+    // 1. find first region where region.endPos > query.beginPos
+    const auto posIter(_regions.upper_bound(known_pos_range2(beginPos,beginPos)));
 
     // 2. conclusion based on non-overlapping region constraint
-    if ((posIter != _regions.end()) && (posIter->first.begin_pos() <= pos))
+    if ((posIter != _regions.end()) && (posIter->first.begin_pos() < endPos))
+    {
+        result.reset(posIter->second);
+    }
+    return result;
+}
+
+
+
+template <typename T>
+boost::optional<T>
+RegionPayloadTracker<T>::
+isSubsetOfRegionImpl(
+    const pos_t beginPos,
+    const pos_t endPos) const
+{
+    boost::optional<T> result;
+    if (_regions.empty()) return result;
+
+    // 1. find first region where region.endPos > query.beginPos
+    const auto posIter(_regions.upper_bound(known_pos_range2(beginPos,beginPos)));
+
+    // 2. conclusion based on non-overlapping region constraint
+    if (posIter == _regions.end()) return result;
+    if (posIter->first.end_pos() < endPos) return result;
+
+    // 2. conclusion based on non-overlapping region constraint
+    if (posIter->first.begin_pos() <= beginPos)
     {
         result.reset(posIter->second);
     }
