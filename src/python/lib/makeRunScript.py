@@ -35,8 +35,7 @@ def makeRunScript(scriptFile, workflowModulePath, workflowClassName, primaryConf
     configSections -- a hash or hashes representing all configuration info
     @param pythonBin: optionally specify a custom python interpreter for the script she-bang
     """
-    import inspect
-
+    
     assert os.path.isdir(os.path.dirname(scriptFile))
     assert os.path.isfile(workflowModulePath)
 
@@ -57,6 +56,24 @@ def makeRunScript(scriptFile, workflowModulePath, workflowClassName, primaryConf
         pythonBin="/usr/bin/env python"
 
     sfp.write(runScript1 % (pythonBin, " ".join(sys.argv),workflowModuleDir,workflowModuleName,workflowClassName))
+
+    sfp.write('\n')
+    sfp.write(runScript2)
+    sfp.write('\n')
+    sfp.write(runScript3)
+    sfp.write('\n')
+
+    sfp.write('main("%s","%s",%s)\n' % (pickleConfigFile, primaryConfigSection, workflowClassName))
+    sfp.write('\n')
+    sfp.close()
+    os.chmod(scriptFile,0755)
+    
+
+# this is the old version of makeRunScript which used reflection instead of simple text blocks. it is theoretically better,
+# at production scale, we found that python reflection is not 100% reliable. Intermitent, hard to pin down failures in this
+# process suggest subtle python interpreter bugs in this feature.
+oldLogic="""
+    import inspect
 
     def auditInspection(label,objectName) :
         assert(objectName is not None)
@@ -87,7 +104,7 @@ def makeRunScript(scriptFile, workflowModulePath, workflowClassName, primaryConf
     sfp.write('\n')
     sfp.close()
     os.chmod(scriptFile,0755)
-
+"""
 
 
 runScript1="""#!%s
@@ -104,8 +121,7 @@ from %s import %s
 """
 
 
-# This code will be reflected in the auto-generated runscript,
-# but will not be called in this module:
+runScript2="""
 def get_run_options(workflowClassName) :
 
     from optparse import OptionGroup
@@ -116,9 +132,9 @@ def get_run_options(workflowClassName) :
 
     sgeDefaultCores=workflowClassName.runModeDefaultCores('sge')
 
-    epilog="""Note this script can be re-run to continue the workflow run in case of interruption.
+    epilog=\"\"\"Note this script can be re-run to continue the workflow run in case of interruption.
 Also note that dryRun option has limited utility when task definition depends on upstream task
-results -- in this case the dry run will not cover the full 'live' run task set."""
+results -- in this case the dry run will not cover the full 'live' run task set.\"\"\"
 
     parser = EpilogOptionParser(description="Version: %s" % (workflowVersion), epilog=epilog, version=workflowVersion)
 
@@ -195,11 +211,10 @@ results -- in this case the dry run will not cover the full 'live' run task set.
         options.resetTasks.append("makeHyGenDir")
 
     return options
+"""
 
 
-
-# This code will be reflected in the auto-generated runscript,
-# but will not be called in this module:
+runScript3="""
 def main(pickleConfigFile, primaryConfigSection, workflowClassName) :
 
     from configureUtil import getConfigWithPrimaryOptions
@@ -238,9 +253,9 @@ def main(pickleConfigFile, primaryConfigSection, workflowClassName) :
                          errorLogFile=errorpath)
     finally:
         exitfp=open(exitpath,"w")
-        exitfp.write("%i\n" % (retval))
+        exitfp.write("%i\\n" % (retval))
         exitfp.close()
 
     sys.exit(retval)
-
+"""
 
