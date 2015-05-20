@@ -1,3 +1,5 @@
+- Remove python reflection from run configuration process, fixes rare
+config issue
 - VCF output formatting: FileData correctd to FileDate
 v0.26.0
 - MANTA-224 improve short-fragment handling for RNA
