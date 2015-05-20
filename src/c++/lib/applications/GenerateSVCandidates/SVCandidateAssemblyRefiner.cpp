@@ -1107,7 +1107,9 @@ getCandidateAssemblyData(
     }
 }
 
-/// Represents a strech of reference sequence exlcuded from alignment by the kmer matcher.
+
+
+/// Represents a stretch of reference sequence excluded from alignment by the kmer matcher.
 struct exclusion_block
 {
     exclusion_block(const unsigned s, const unsigned l, const unsigned sp)
@@ -1117,8 +1119,12 @@ struct exclusion_block
     unsigned nSpacer; // Number of 'N' added in place of excluded sequence
 };
 
+
+
 /// Translate a reduced reference position to the original reference coordinates
-unsigned translateMaskedPos(
+static
+unsigned
+translateMaskedPos(
     const std::vector<exclusion_block>& exclBlocks,
     const unsigned maskedPos)
 {
@@ -1131,8 +1137,12 @@ unsigned translateMaskedPos(
     return offset + maskedPos;
 }
 
+
+
 /// Translate an alignment made against a reduced reference to the original reference coordinates
-bool translateMaskedAlignment(
+static
+bool
+translateMaskedAlignment(
     Alignment& align,
     const std::vector<exclusion_block>& exclBlocks)
 {
@@ -1172,6 +1182,9 @@ bool translateMaskedAlignment(
 #endif
     return true;
 }
+
+
+namespace {
 
 /// Returns a reduced reference sequence where long stretches without kmer matches to the contig are removed
 template <typename SymIter>
@@ -1226,6 +1239,9 @@ std::string kmerMaskReference(
     if (maskedRef.empty()) maskedRef.append(nSpacer, 'N');
     return maskedRef;
 }
+
+}
+
 
 
 /// convert jump alignment results into an SVCandidate
