@@ -322,3 +322,17 @@ def cleanPyEnv() :
     for key in clearList :
         if key in os.environ :
             del os.environ[key]
+
+
+
+def isLocalSmtp() :
+    """
+    return true if a local smtp server is available
+    """
+    import smtplib
+    try :
+        smtplib.SMTP('localhost')
+    except :
+        return False
+    return True
+

@@ -124,7 +124,7 @@ from %s import %s
 runScript2="""
 def get_run_options(workflowClassName) :
 
-    from optparse import OptionGroup
+    from optparse import OptionGroup, SUPPRESS_HELP
 
     from configBuildTimeInfo import workflowVersion
     from configureUtil import EpilogOptionParser
@@ -147,12 +147,25 @@ results -- in this case the dry run will not cover the full 'live' run task set.
                   help="number of jobs, must be an integer or 'unlimited' (default: Estimate total cores on this node for local mode, %s for sge mode)" % (sgeDefaultCores))
     parser.add_option("-g","--memGb", type="string",dest="memGb",
                   help="gigabytes of memory available to run workflow -- only meaningful in local mode, must be an integer (default: Estimate the total memory for this node for local mode, 'unlimited' for sge mode)")
-    parser.add_option("-e","--mailTo", type="string",dest="mailTo",action="append",
-	              help="send email notification of job completion status to this address (may be provided multiple times for more than one email address)")
     parser.add_option("-d","--dryRun", dest="isDryRun",action="store_true",default=False,
                       help="dryRun workflow code without actually running command-tasks")
     parser.add_option("--quiet", dest="isQuiet",action="store_true",default=False,
                       help="Don't write any log output to stderr (but still write to workspace/pyflow.data/logs/pyflow_log.txt)")
+
+    def isLocalSmtp() :
+        import smtplib
+        try :
+            smtplib.SMTP('localhost')
+        except :
+            return False
+        return True
+
+    isEmail = isLocalSmtp()
+    emailHelp = SUPPRESS_HELP
+    if isEmail :
+        emailHelp="send email notification of job completion status to this address (may be provided multiple times for more than one email address)"
+
+    parser.add_option("-e","--mailTo", type="string",dest="mailTo",action="append",help=emailHelp)
 
     debug_group = OptionGroup(parser,"development debug options")
     debug_group.add_option("--rescore", dest="isRescore",action="store_true",default=False,
@@ -161,6 +174,8 @@ results -- in this case the dry run will not cover the full 'live' run task set.
     parser.add_option_group(debug_group)
 
     (options,args) = parser.parse_args()
+
+    if not isEmail : options.mailTo = None
 
     if len(args) :
         parser.print_help()
