@@ -27,6 +27,9 @@ REDIST_DIR=$1
 INSTALL_DIR=$2
 if [[ $# -ge 3 ]] ; then PARALLEL=$3 ; else PARALLEL=1 ; fi
 
+echo "CC $CC"
+echo "CXX $CXX"
+
 # test that these values are defined:
 test=${THIS_BOOST_VERSION}
 test=${THIS_BOOST_BUILD_COMPONENTS}
