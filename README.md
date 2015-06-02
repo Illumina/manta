@@ -1,9 +1,7 @@
 Manta Structural Variant Caller
 ===============================
 
-Version: NOT RELEASED
-
-Manta is a tool to call structural variants and indels from short paired-end
+Manta calls structural variants and indels from short paired-end
 sequencing reads. It combines paired-end and split read evidence during SV
 discovery and scoring to improve performance, but does not require split reads
 or successful breakpoint assemblies to report a variant in cases where there is
@@ -16,6 +14,8 @@ capabilities and limitations.
 
 Build instructions
 ------------------
+
+[![Build Status](https://travis-ci.org/sequencing/manta.svg?branch=master)](https://travis-ci.org/sequencing/manta)
 
 For Manta users it is recommended to start from one of the binary releases
 on the Manta [releases] page. If building from source please
