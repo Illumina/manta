@@ -1076,8 +1076,7 @@ getCandidateAssemblyData(
     SVCandidateAssemblyData& assemblyData) const
 {
 #ifdef DEBUG_REFINER
-    static const std::string logtag("getCandidateAssemblyData: ");
-    log_os << logtag << "START sv: " << sv;
+    log_os << __FUNCTION__ << ": START sv " << sv;
 #endif
 
     assemblyData.clear();
@@ -1702,7 +1701,7 @@ getSmallSVAssembly(
     }
     else
     {
-        /// check if we've already assembled this region?
+        // check if we've already assembled this region?
         if (_spanToComplexAssmRegions.isSubsetOfRegion(sv.bp1.interval))
         {
             assemblyData.isOverlapSkip = true;
@@ -1744,7 +1743,7 @@ getSmallSVAssembly(
     getIntervalReferenceSegment(_opt.referenceFilename, _header, extraRefSize, sv.bp1.interval, assemblyData.bp1ref, leadingTrim, trailingTrim);
 
     // in most cases, these values should equal extraRefSplitSize,
-    // sometimes they're forced to be shorter b/c we didn't retreieve as much reference sequence as targeted:
+    // sometimes they're forced to be shorter b/c we didn't retrieve as much reference sequence as targeted:
     const pos_t maxLeadingCut(std::max(0, extraRefSize - static_cast<pos_t>(leadingTrim)));
     const pos_t maxTrailingCut(std::max(0, extraRefSize - static_cast<pos_t>(trailingTrim)));
     const pos_t leadingCut(std::max(0, maxLeadingCut - extraRefEdgeSize));
@@ -1851,8 +1850,7 @@ getSmallSVAssembly(
             adjustedTrailingCut=(refSize-(refIndex+merSize));
         }
 
-        // start with largeSV aligner (currently restricted to
-        // insertion only:
+        // start with largeSV aligner
         {
             _largeSVAligner.align(
                 contig.seq.begin(), contig.seq.end(),

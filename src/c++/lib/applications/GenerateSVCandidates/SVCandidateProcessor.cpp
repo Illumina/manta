@@ -473,11 +473,10 @@ evaluateCandidate(
     std::vector<unsigned> junctionTracker(junctionCount,0);
     while (true)
     {
-        // note this loop is stupid -- it was originally written with the intention of
-        // combinatorially enumerating all possible assembly combinations for the case
-        // of multiple junctions with multiple assemblies each.
-        // It doesn't do that -- but the broken thing it does, in fact, do, is what we want for the
-        // isAnySmallAssembler case so it's well enough for now.
+        // Note this loop is an accident -- it was intended to enumerate all assembly
+        // combinations for  multiple junctions with multiple assemblies each.
+        // It doesn't do that -- but the broken thing it does, in fact, do, is what we
+        // want for the isAnySmallAssembler case so it's well enough for now.
         //
         bool isWrite(false);
         for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
