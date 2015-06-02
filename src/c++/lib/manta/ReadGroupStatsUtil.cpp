@@ -26,6 +26,7 @@
 #include "manta/ReadGroupLabel.hh"
 #include "manta/SVLocusScanner.hh"
 
+#include <array>
 #include <iostream>
 #include <set>
 #include <sstream>
