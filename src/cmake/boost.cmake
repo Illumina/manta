@@ -147,13 +147,23 @@ if (NOT Boost_FOUND)
             COMMAND ${CMAKE_COMMAND} -E touch "${BOOST_BUILD_DIR}/boost_unpack_complete")
     endif ()
 
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        set (UCONFIG "${BOOST_SRC_DIR}/tools/build/v2/user-config.jam")
+        if (EXISTS "${UCONFIG}.orig")
+            file(COPY "${UCONFIG}.orig" DESTINATION "${UCONFIG}")
+        else ()
+            file(COPY "${UCONFIG}" DESTINATION "${UCONFIG}.orig")
+        endif ()
+        file(APPEND "${UCONFIG}" "using gcc : : \"${CMAKE_CXX_COMPILER}\" ;\n")
+    endif ()
+
     set (BOOST_BOOTSTRAP sh "bootstrap.sh")
     if (WIN32)
         set (BOOST_BOOTSTRAP "bootstrap.bat")
     endif ()
 
     if (NOT WIN32)
-        # boost compile works in windows, but we aren't going to link anyway, so we're
+        # boost compile works in windows, but we aren't going to link anyway so we're
         # skipping to save time:
         message(STATUS "Configuring boost library")
         execute_process(
