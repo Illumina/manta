@@ -77,8 +77,8 @@ mv $tmp_file $cml
 rme=$pname/README.md
 awk -v gver=$gitversion '
 {
-    if      ($0~/^Version: NOT RELEASED/) printf "Version: %s\n",gver;
-    else if ($0~/_NOT_ part of an end-user/) a=1;
+    if      (!ver && !NF) { printf "\nVersion: %s\n\n",gver; ver=1}
+    else if ($0~/_NOT_ part of/) a=1;
     else print;
 }' $rme >| $tmp_file
 mv $tmp_file $rme
