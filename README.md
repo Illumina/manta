@@ -14,28 +14,22 @@ of structural variants which can be identified in the absence of copy number
 analysis and large-scale assembly. See the user guide for a full description of
 capabilities and limitations.
 
-
 Build instructions
 ------------------
 
-For Manta users it is strongly recommended to start from one of the release
-distributions of the source code provided on the Manta [releases] page. Acquiring
-the source via a git clone or archive could result in missing version number
-entries, undesirably stringent build requirements, or an unstable development
-intermediate between releases. Additional build notes for developers can be
-found below.
+For Manta users it is recommended to start from one of the binary releases
+on the Manta [releases] page. If building from source please
+use the release distributions of the source code, alse provided on the Manta
+[releases] page. Acquiring the source via a git clone or archive could result
+in missing version number entries, undesirably stringent build requirements,
+or an unstable development intermediate between releases. Additional build
+notes for developers can be found below.
 
-Note that this README is _NOT_ part of an end-user release distribution.
+Note that this README is _NOT_ part of a tagged source-code release.
 
 [releases]:https://github.com/StructuralVariants/manta/releases
 
-### Prerequisites
-
-Manta has been built and tested on linux systems only. It is currently
-maintained for CentOS 5,6 and Ubuntu 12.04,14.04 (with gcc updated to meet
-the minimum version where required).
-
-#### Compilation prerequisites:
+### Compilation prerequisites:
 
 Manta requires a compiler supporting most of the C++11 standard. These are the
 current minimum versions enforced by the build system:
@@ -44,15 +38,50 @@ current minimum versions enforced by the build system:
 * gcc 4.7+ OR clang 3.2+ (OR Visual Studio 2013+, see windev note below)
 * libz (including headers)
 
-#### Runtime prerequisites
+### Runtime prerequisites
 
 * python 2.4+
 
-#### Prerequisite package names (RHEL/CentOS)
+### Operating System Guidelines
 
-* g++
-* make
-* zlib-devel
+Manta is known to build and run on the following linux distrubutions
+(with package modifications as described below):
+
+- Ubuntu 12.04,14.04
+- CentOS 5,6,7
+
+##### Ubuntu 14.04
+
+    sudo apt-get update -qq
+    sudo apt-get install -qq gcc g++ make zlib1g-dev python
+
+##### Ubuntu 12.04
+
+    apt-get update -qq
+    apt-get install -qq bzip2 gcc g++ make zlib1g-dev python python-software-properties
+    # add newer gcc from ubuntu ppa:
+    add-apt-repository -y ppa:ubuntu-toolchain-r/test
+    apt-get update -qq
+    apt-get install -qq gcc-4.8 g++-4.8
+
+    # Prior to the manta configuration, point CC/CXX to gcc 4.8 installation:
+    export CC=/usr/bin/gcc-4.8
+    export CXX=/usr/bin/g++-4.8
+
+##### Centos 7
+
+    yum install -y tar bzip2 make gcc gcc-c++ zlib-devel
+
+##### Centos 5 and 6
+
+    yum install -y tar wget bzip2 make gcc gcc-c++ zlib-devel
+    # add newer gcc from developer tools v2:
+    wget http://people.centos.org/tru/devtools-2/devtools-2.repo -O /etc/yum.repos.d/devtools-2.repo
+    yum install -y devtoolset-2-gcc devtoolset-2-gcc-c++ devtoolset-2-binutils
+
+    # Prior to the manta configuration, point CC/CXX to gcc 4.8 installation:
+    export CC=/opt/rh/devtoolset-2/root/usr/bin/gcc
+    export CXX=/opt/rh/devtoolset-2/root/usr/bin/g++
 
 ### Build procedure
 
@@ -65,23 +94,23 @@ After acquiring a release distribution of the source code, the build procedure i
 * Compile
 * Install
 
-Example:
+Example (building on 4 cores):
 
     wget https://github.com/StructuralVariants/manta/releases/download/vA.B.C/manta-A.B.C.tar.bz2
     tar -xjf manta-A.B.C.tar.bz2
     mkdir build
     cd build
-    ../manta-A.B.C/src/configure --prefix=/path/to/install
-    make
-    make install
+    # Ensure that CC and CXX are updated to target compiler if needed 
+    ../manta-A.B.C/src/configure --jobs=4 --prefix=/path/to/install
+    make -j4 install
 
 Note that during the configuration step, the following compilation
-dependencies will be built if these are not found:
+dependencies will be built from source if these are not found:
 
 * cmake 2.8.0+
 * boost 1.53.0
 
-To optionally avoid this extra step, ensure that (1) cmake is in your PATH and (2)
+To optionally avoid this extra step, ensure that (1) cmake 2.8.0+ is in your PATH and (2)
 BOOST\_ROOT is defined to point to boost 1.53.0 (the boost version is required to
 be an exact match). If either of these dependencies are not found, they will be
 built during the configuration step, To accelerate this process it may be
