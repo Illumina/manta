@@ -59,27 +59,27 @@ Manta is known to build and run on the following linux distrubutions
 
     apt-get update -qq
     apt-get install -qq bzip2 gcc g++ make zlib1g-dev python python-software-properties
-    # add newer gcc from ubuntu ppa:
+    # add gcc 4.8 from ubuntu ppa:
     add-apt-repository -y ppa:ubuntu-toolchain-r/test
     apt-get update -qq
     apt-get install -qq gcc-4.8 g++-4.8
 
-    # Prior to the manta configuration, point CC/CXX to gcc 4.8 installation:
+    # Prior to manta configuration, set CC/CXX to gcc 4.8:
     export CC=/usr/bin/gcc-4.8
     export CXX=/usr/bin/g++-4.8
 
-##### Centos 7
+##### CentOS 7
 
     yum install -y tar bzip2 make gcc gcc-c++ zlib-devel
 
-##### Centos 5 and 6
+##### CentOS 5 and 6
 
     yum install -y tar wget bzip2 make gcc gcc-c++ zlib-devel
-    # add newer gcc from developer tools v2:
+    # add gcc 4.8 from developer tools v2:
     wget http://people.centos.org/tru/devtools-2/devtools-2.repo -O /etc/yum.repos.d/devtools-2.repo
     yum install -y devtoolset-2-gcc devtoolset-2-gcc-c++ devtoolset-2-binutils
 
-    # Prior to the manta configuration, point CC/CXX to gcc 4.8 installation:
+    # Prior to manta configuration, set CC/CXX to gcc 4.8:
     export CC=/opt/rh/devtoolset-2/root/usr/bin/gcc
     export CXX=/opt/rh/devtoolset-2/root/usr/bin/g++
 
@@ -132,11 +132,13 @@ To see more configure options, run:
 Data analysis and Interpretation
 --------------------------------
 
-After completing the installation, see the Manta user guide for instructions on
-how to use Manta, interpret results, and a high-level overview of the method.
-The user guide can be found in:
+After completing the installation, see the [Manta user guide](src/markdown/mantaUserGuide.md) for instructions on
+how to run Manta, interpret results, and a high-level overview of the method.
+
+The user guide is also available within any manta binary distrubution: 
 
     ${MANTA_INSTALL_PATH}/doc/html/mantaUserGuide.html
+
 
 
 Developer build configuration
@@ -156,10 +158,11 @@ windows cmake configuration all final library linking is disabled and all
 third party libraries are unpacked such that their headers can be
 included, but the libraries are not compiled. Cmake generated VS solutions allow
 the c++ code to be browsed, analyzed and compiled to the library level.
-Note that unit tests can not be run under this scheme -- just like the other
-runtime binaries, they can't be linked without building 3rd party libraries.
+Note that unit test codes are compiled to libraries but cannot be run
+according to this scheme -- just like the other runtime binaries, unit tests
+can't be linked without building 3rd party libraries.
 
-Note that the c++11 features used by manta require at least Visual Studio
+C++11 features used by manta require at least Visual Studio
 2013. In addition to VS2013 and cmake, a zlib installation is required. The
 simplist way to do this may be to use the gnuwin32 pacakge here:
 
