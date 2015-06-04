@@ -79,6 +79,8 @@ awk -v gver=$gitversion '
 {
     if      (!ver && !NF) { printf "\nVersion: %s\n\n",gver; ver=1}
     else if ($0~/_NOT_ part of/) a=1;
+    else if ($0~/\[Build Status\]/) b=1;
+    else if (b && !NF) b=0;
     else print;
 }' $rme >| $tmp_file
 mv $tmp_file $rme
