@@ -124,10 +124,27 @@ function(get_compiler_version compiler_version)
     set(${compiler_version} ${this_version} PARENT_SCOPE)
 endfunction()
 
-# clang doesn't make finding the version easy for us...
+# clang doesn't make finding the version easy for us,
+# and apple makes it even harder...
 macro(get_clang_version compiler_version)
 #    execute_process(COMMAND bash -c "${CMAKE_CXX_COMPILER} -v 2>&1 | awk '{printf $3; exit}'" OUTPUT_VARIABLE ${compiler_version})
     execute_process(COMMAND bash -c "echo | ${CMAKE_CXX_COMPILER} -dM -E - | awk '/__clang_version__/ {printf $3; exit}' | tr -d '\"'" OUTPUT_VARIABLE ${compiler_version})
+    if (APPLE)
+        # translate apple clang version numbers back to root llvm value (better way to do this?)
+        if (${compiler_version} VERSION_LESS "4.2")
+            set (${compiler_version} "3.1")
+        elseif (${compiler_version} VERSION_LESS "5.0")
+            set (${compiler_version} "3.2")
+        elseif (${compiler_version} VERSION_LESS "5.1")
+            set (${compiler_version} "3.3")
+        elseif (${compiler_version} VERSION_LESS "6.0")
+            set (${compiler_version} "3.4")
+        elseif (${compiler_version} VERSION_LESS "6.1")
+            set (${compiler_version} "3.5")
+        else ()
+            set (${compiler_version} "3.6")
+        endif ()
+    endif ()
 endmacro()
 
 macro(test_min_compiler compiler_version min_compiler_version compiler_label)

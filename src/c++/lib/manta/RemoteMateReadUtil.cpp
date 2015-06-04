@@ -18,6 +18,8 @@
 
 #include "RemoteMateReadUtil.hh"
 
+#include <cstdlib>
+
 
 
 bool

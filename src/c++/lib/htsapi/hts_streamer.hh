@@ -22,6 +22,8 @@
 
 #include "boost/utility.hpp"
 
+#include <string>
+
 
 struct hts_streamer : private boost::noncopyable
 {

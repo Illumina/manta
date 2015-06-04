@@ -20,6 +20,8 @@
 #include "blt_util/align_path.hh"
 #include "manta/SVBreakend.hh"
 
+#include <cstdlib>
+
 #include <iosfwd>
 #include <string>
 

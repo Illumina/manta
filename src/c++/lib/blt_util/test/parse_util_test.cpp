@@ -15,6 +15,8 @@
 
 #include "parse_util.hh"
 
+#include <cmath>
+
 #include <string>
 
 BOOST_AUTO_TEST_SUITE( parse_util )
