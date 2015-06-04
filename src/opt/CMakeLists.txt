@@ -84,9 +84,10 @@ set (SAMTOOLS_FINAL_TASK ${SAMTOOLS_DIR})
 if (NOT WIN32)
     add_custom_command(
         OUTPUT ${SAMTOOLS_PROG}
-        COMMAND ${CMAKE_COMMAND} -E chdir "${SAMTOOLS_DIR}" $(MAKE) all 2>| samtools.build.log
+        COMMAND $(MAKE) all 2>| samtools.build.log
         DEPENDS ${HTSLIB_LIBRARY}
         DEPENDS ${SAMTOOLS_DIR}
+        WORKING_DIRECTORY ${SAMTOOLS_DIR}
         COMMENT "Building samtools package")
 
     set (SAMTOOLS_FINAL_TASK ${SAMTOOLS_PROG})
