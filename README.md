@@ -176,9 +176,7 @@ can't be linked without building 3rd party libraries.
 
 C++11 features used by manta require at least Visual Studio
 2013. In addition to VS2013 and cmake, a zlib installation is required. The
-simplist way to do this may be to use the gnuwin32 pacakge here:
-
-http://gnuwin32.sourceforge.net/packages/zlib.htm
-
+simplist way to do this may be to use the
+[gnuwin32 package](http://gnuwin32.sourceforge.net/packages/zlib.htm).
 This library will enable building for 32 bit only.
 
