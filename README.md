@@ -149,8 +149,7 @@ rather than end-user distribution. As such, all builds include -Werror. If
 cppcheck is found any detected issue is converted to a build error.
 
 
-Windows developer support
--------------------------
+### Windows developer support
 
 Manta does not link or run on windows. The build system does however
 facilitate developers preferring to use Visual Studio. During
