@@ -44,11 +44,25 @@ current minimum versions enforced by the build system:
 
 ### Operating System Guidelines
 
+##### Linux 
+
 Manta is known to build and run on the following linux distrubutions
 (with package modifications as described below):
 
 - Ubuntu 12.04,14.04
 - CentOS 5,6,7
+
+##### OS X
+
+Build support for OS X is ad-hoc, with limited runtime testing.
+Last success was v0.26.1-15-gfe9a48d on OS X 10.9.5 / Xcode 6.2
+
+##### Windows
+
+Manta does not build or run on windows. Library-level compilation is
+possible for Visual Studio users. See Developer section below.
+
+### Linux Package Modifications
 
 ##### Ubuntu 14.04
 
@@ -138,7 +152,6 @@ how to run Manta, interpret results, and a high-level overview of the method.
 The user guide is also available within any manta binary distrubution: 
 
     ${MANTA_INSTALL_PATH}/doc/html/mantaUserGuide.html
-
 
 
 Developer build configuration
