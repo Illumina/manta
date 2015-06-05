@@ -144,6 +144,10 @@ To see more configure options, run:
 
     ${MANTA_SRC_PATH}/configure --help
 
+### Build relocation
+
+After Manta is built the installation directory can be relocated to another directory.
+All internal paths used in the workflow are relative.
 
 Data analysis and Interpretation
 --------------------------------
