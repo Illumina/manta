@@ -160,9 +160,22 @@ Contributor build configuration
 -------------------------------
 
 When the Manta source is cloned from github, it is configured for development
-rather than user distribution. As such, all builds include -Werror. If
-cppcheck is found any detected issue is converted to a build error.
+rather than user distribution. As such, builds are strict: all warnings are
+treated as errors and if cppcheck is found any detected issue is converted
+to a build error.
 
+### C++ documentation
+
+If doxygen is found in the path (and optionally dot as well) during build
+configuration, then c++ documentation is available as an additional "doc"
+target for the makefile:
+
+    make doc
+
+There is no installation for the documentation outside of the build directory,
+the root doxygen page after completing this target will be:
+
+    ${MANTA_BUILD_DIR}/c++/doxygen/html/index.html
 
 ### Windows development support
 

@@ -73,9 +73,26 @@ endif ()
 include  (FindDoxygen)
 message (STATUS "Doxygen: ${DOXYGEN_EXECUTABLE}. Dot: ${DOXYGEN_DOT_EXECUTABLE}.")
 if (DOXYGEN_FOUND)
+    set (DOXYFILE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
+    set (DOXYFILE_SRC2 ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile.in)
     set (DOXYFILE ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
     message (STATUS "Creating Doxygen config file: ${DOXYFILE}")
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${DOXYFILE} @ONLY)
-    add_custom_target(doc ${DOXYGEN_EXECUTABLE} ${DOXYFILE})
+    
+    # configure doxyfile twice, once at config time and once at build time:
+    set (BUILDTIME_WORKFLOW_VERSION "@WORKFLOW_VERSION@")
+    configure_file(${DOXYFILE_SRC} ${DOXYFILE_SRC2} @ONLY)
+    
+    # set doxyfile to update from build-time configuration info:
+    set (THIS_BUILDTIME_DOXYGEN_TARGET "${THIS_PROJECT_NAME}_doxygen_buildtime_config")
+    add_custom_target(${THIS_BUILDTIME_DOXYGEN_TARGET}
+        DEPENDS ${THIS_BUILDTIME_CONFIG_TARGET}
+        COMMAND ${CMAKE_COMMAND}
+            -D CONFIG_FILE=${THIS_BUILDTIME_CONFIG_FILE}
+            -D SOURCE_FILE=${DOXYFILE_SRC2}
+            -D DEST_FILE=${DOXYFILE}
+            -P ${THIS_MODULE_DIR}/buildTimeConfigure.cmake)
+    add_custom_target(doc
+        DEPENDS ${THIS_BUILDTIME_DOXYGEN_TARGET}
+        COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYFILE})
 endif ()
 
