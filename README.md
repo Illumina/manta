@@ -1,29 +1,31 @@
 Manta Structural Variant Caller
 ===============================
 
-Manta calls structural variants and indels from short paired-end
-sequencing reads. It combines paired-end and split read evidence during SV
+Manta calls structural variants and indels from paired-end
+sequencing reads. It combines paired and split read evidence during SV
 discovery and scoring to improve performance, but does not require split reads
 or successful breakpoint assemblies to report a variant in cases where there is
 strong evidence of an imprecise variant. It provides genotypes and quality
 scores for variants in single diploid samples, and will also call somatic
 variants when a matched tumor sample is specified. Manta can detect all classes
 of structural variants which can be identified in the absence of copy number
-analysis and large-scale assembly. See the user guide for a full description of
+analysis and large-scale assembly. See the [user guide] [UserGuide] for a full description of
 capabilities and limitations.
+
+[UserGuide]:src/markdown/mantaUserGuide.md
 
 Build instructions
 ------------------
 
 [![Build Status](https://travis-ci.org/sequencing/manta.svg?branch=master)](https://travis-ci.org/sequencing/manta)
 
-For Manta users it is recommended to start from one of the binary releases
-on the Manta [releases] page. If building from source please
-use the release distributions of the source code, alse provided on the Manta
-[releases] page. Acquiring the source via a git clone or archive could result
-in missing version number entries, undesirably stringent build requirements,
-or an unstable development intermediate between releases. Additional build
-notes for developers can be found below.
+It is recommended to start from one of the [binary distributions
+on the Manta releases page] [releases] if a suitable version is available.
+If building from source start from the release distributions of the source code,
+alse provided on the [Manta releases page] [releases]. Cloning/archiving the
+source directly from git could result in missing version number entries, undesirably
+stringent build requirements or an unstable development version between
+releases. Additional build notes for developers can be found below.
 
 Note that this README is _NOT_ part of a tagged source-code release.
 
@@ -47,7 +49,7 @@ current minimum versions enforced by the build system:
 ##### Linux 
 
 Manta is known to build and run on the following linux distrubutions
-(with package modifications as described below):
+(with additional packages as described below):
 
 - Ubuntu 12.04,14.04
 - CentOS 5,6,7
@@ -62,7 +64,7 @@ Last success was v0.26.1-15-gfe9a48d on OS X 10.9.5 / Xcode 6.2
 Manta does not build or run on windows. Library-level compilation is
 possible for Visual Studio users. See Developer section below.
 
-### Linux Package Modifications
+### Linux Package Additions
 
 ##### Ubuntu 14.04
 
@@ -146,7 +148,7 @@ To see more configure options, run:
 Data analysis and Interpretation
 --------------------------------
 
-After completing the installation, see the [Manta user guide](src/markdown/mantaUserGuide.md) for instructions on
+After completing the installation, see the [Manta user guide] [UserGuide] for instructions on
 how to run Manta, interpret results, and a high-level overview of the method.
 
 The user guide is also available within any manta binary distrubution: 
@@ -158,25 +160,22 @@ Developer build configuration
 -----------------------------
 
 When the Manta source is cloned from github, it is configured for development
-rather than end-user distribution. As such, all builds include -Werror. If
+rather than user distribution. As such, all builds include -Werror. If
 cppcheck is found any detected issue is converted to a build error.
 
 
-### Windows developer support
+### Windows development support
 
-Manta does not link or run on windows. The build system does however
-facilitate developers preferring to use Visual Studio. During
-windows cmake configuration all final library linking is disabled and all
-third party libraries are unpacked such that their headers can be
-included, but the libraries are not compiled. Cmake generated VS solutions allow
+Manta does not link or run on windows. However, the build system does
+facilitate Visual Studio (VS) users. When cmake configuration is run on
+windows, all linking is disabled and third party libraries are unpacked
+for header include access, but are not compiled. Cmake VS solutions allow
 the c++ code to be browsed, analyzed and compiled to the library level.
-Note that unit test codes are compiled to libraries but cannot be run
-according to this scheme -- just like the other runtime binaries, unit tests
-can't be linked without building 3rd party libraries.
+Note that unit test codes are compiled to libraries but cannot be run.
 
-C++11 features used by manta require at least Visual Studio
-2013. In addition to VS2013 and cmake, a zlib installation is required. The
-simplist way to do this may be to use the
+C++11 features used by manta require at least VS2013. Windows installations
+of cmake and zlib are also required to configure and compile. Windows zlib
+is provided by the 
 [gnuwin32 package](http://gnuwin32.sourceforge.net/packages/zlib.htm).
-This library will enable building for 32 bit only.
+among others.
 
