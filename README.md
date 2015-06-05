@@ -22,10 +22,10 @@ Build instructions
 It is recommended to start from one of the [binary distributions
 on the Manta releases page] [releases] if a suitable version is available.
 If building from source start from the release distributions of the source code,
-alse provided on the [Manta releases page] [releases]. Cloning/archiving the
+also provided on the [Manta releases page] [releases]. Cloning/archiving the
 source directly from git could result in missing version number entries, undesirably
 stringent build requirements or an unstable development version between
-releases. Additional build notes for developers can be found below.
+releases. Additional build notes for contributors can be found below.
 
 Note that this README is _NOT_ part of a tagged source-code release.
 
@@ -48,7 +48,7 @@ current minimum versions enforced by the build system:
 
 ##### Linux 
 
-Manta is known to build and run on the following linux distrubutions
+Manta is known to build and run on the following linux distributions
 (with additional packages as described below):
 
 - Ubuntu 12.04,14.04
@@ -151,13 +151,13 @@ Data analysis and Interpretation
 After completing the installation, see the [Manta user guide] [UserGuide] for instructions on
 how to run Manta, interpret results, and a high-level overview of the method.
 
-The user guide is also available within any manta binary distrubution: 
+The user guide is also available within any Manta binary distribution:
 
     ${MANTA_INSTALL_PATH}/doc/html/mantaUserGuide.html
 
 
-Developer build configuration
------------------------------
+Contributor build configuration
+-------------------------------
 
 When the Manta source is cloned from github, it is configured for development
 rather than user distribution. As such, all builds include -Werror. If
