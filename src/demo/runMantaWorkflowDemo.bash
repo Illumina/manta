@@ -18,9 +18,14 @@
 set -o nounset
 set -o pipefail
 
-scriptDir=$(dirname $0)
-demoDir=$scriptDir/../share/demo/manta
+rel2abs() {
+    (cd $1 && pwd -P)
+}
+
+scriptDir=$(rel2abs $(dirname $0))
+demoDir=$(rel2abs $scriptDir/../share/demo/manta)
 dataDir=$demoDir/data
+expectedDir=$demoDir/expectedResults
 
 analysisDir=./MantaDemoAnalysis
 
@@ -51,8 +56,11 @@ END
 fi
 
 cmd="$configScript \
---normalBam='$dataDir/NA12891_dupmark_chr20_region.bam' \
---referenceFasta='$dataDir/chr20_860k_only.fa' \
+--normalBam='$dataDir/HCC1954.NORMAL.30x.compare.COST16011_region.bam' \
+--tumorBam='$dataDir/G15512.HCC1954.1.COST16011_region.bam' \
+--referenceFasta='$dataDir/Homo_sapiens_assembly19.COST16011_region.fa' \
+--region=8:107652000-107655000 \
+--region=11:94974000-94989000 \
 --candidateBins=4 \
 --exome \
 --runDir=$analysisDir"
@@ -105,37 +113,40 @@ fi
 #
 # Step 3: Compare results to expected calls
 #
-#resultsDir=$analysisDir/results/variants
-#echo 1>&2
-#echo "**** Starting comparison to expected results." 1>&2
-#echo "**** Expected results dir: $expectedDir" 1>&2
-#echo "**** Demo results dir: $resultsDir" 1>&2
-#echo 1>&2
+resultsDir=$analysisDir/results/variants
+echo 1>&2
+echo "**** Starting comparison to expected results." 1>&2
+echo "**** Expected results dir: $expectedDir" 1>&2
+echo "**** Demo results dir: $resultsDir" 1>&2
+echo 1>&2
 
 filterVariableMetadata() {
-    awk '!/^##(fileDate|source_version|startTime|reference|cmdline)/'
+    awk '!/^##(fileDate|source|startTime|reference|cmdline)/'
 }
 
-#for f in $(ls $expectedDir); do
-#    efile=$expectedDir/$f
-#    rfile=$resultsDir/$f
-#    diff <(gzip -dc $efile | filterVariableMetadata) <(gzip -dc $rfile | filterVariableMetadata)
+for f in $(ls $expectedDir); do
+    efile=$expectedDir/$f
+    rfile=$resultsDir/$f
 
-#    if [ $? -ne 0 ]; then
-#        cat<<END 1>&2
-#
-#ERROR: Found difference between demo and expected results in file '$f'.
-#       Expected file: $efile
-#       Demo results file: $rfile
-#
-#END
-#        exit 1
-#    fi
-#done
+    #echo "**** Checking expected result file: $f" 1>&2
 
-#echo 1>&2
-#echo "**** No differences between expected and computed results." 1>&2
-#echo 1>&2
+    diff <(gzip -dc $efile | filterVariableMetadata) <(gzip -dc $rfile | filterVariableMetadata)
+
+    if [ $? -ne 0 ]; then
+        cat<<END 1>&2
+
+ERROR: Found difference between demo and expected results in file '$f'.
+       Expected file: $efile
+       Demo results file: $rfile
+
+END
+        exit 1
+    fi
+done
+
+echo 1>&2
+echo "**** No differences between expected and computed results." 1>&2
+echo 1>&2
 
 echo 1>&2
 echo "**** Demo/verification successfully completed" 1>&2

@@ -139,6 +139,21 @@ To see more configure options, run:
 After Manta is built the installation directory can be relocated to another directory.
 All internal paths used in the workflow are relative.
 
+### Demo / Build Verification 
+
+To help verify a successful installation, Manta includes a small demo data
+set and test script. After completing the installation steps above, run the
+demo as follows:
+
+    ${MANTA_INSTALL_PATH}/bin/runMantaWorkflowDemo.bash
+
+The demo data includes aligned reads near the breakends of an HCC1954 somatic translocation
+(COST16011). The demo script runs Manta on these regions and verifies that the
+somatic translocation is called as expected. Data, expected results and additional details 
+can be found in the Manta installation demo directory:
+
+    ${MANTA_INSTALL_PATH}/share/demo/manta
+
 Data analysis and Interpretation
 --------------------------------
 

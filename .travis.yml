@@ -30,6 +30,9 @@ install:
 script:
   - mkdir build && cd build && ../src/configure --jobs=4 --prefix=../install && make -j4 install
 
+after_success:
+  - ../install/bin/runMantaWorkflowDemo.bash
+
 branches:
   only:
     - master
