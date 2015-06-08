@@ -130,14 +130,14 @@ will still be used in discovery, assembly and split-read scoring if their alignm
 suggests a possible breakend location.
 
 Manta requires input sequencing reads to be mapped by an external tool and
-provided as input in BAM or CRAM format.
+provided as input in BAM format.
 
-At configuration time, at least one bam/cram file must be provided for the normal
+At configuration time, at least one BAM file must be provided for the normal
 sample. A matched tumor sample can optionally be provided as well. If multiple
 input files are provided for the normal or tumor sample, these are merged and treated
 as a single normal or tumor sample.
 
-The following limitations exist on the input BAM or CRAM files provided to Manta:
+The following limitations exist on the input BAM files provided to Manta:
 
 * Alignments cannot contain the "=" character in the SEQ field.
 * Alignments cannot use the sequence match/mismatch ("="/"X") CIGAR notation
@@ -151,17 +151,17 @@ treated as representing one sample.
 ### Structural Variant predictions
 
 The primary manta outputs are a set of [VCF 4.1][1] files, found in
-`${RUNFOLDER}/results/variants`. Currently there are at least two vcf files
-created for any manta run, and a third somatic vcf is produced when tumor input
+`${RUNFOLDER}/results/variants`. Currently there are at least 3 VCF files
+created for any manta run, and an additional somatic VCF is produced when tumor input
 is provided. These files are:
 
 * __diploidSV.vcf.gz__
     * SVs and indels scored and genotyped under a diploid model for the normal
   sample. The scores in this file do not reflect any information in the tumor
-  bams
+  BAMs
 * __somaticSV.vcf.gz__
     * SVs and indels scored under a somatic variant model. This file
-  will only be produced if at least one tumor bam argument is supplied during
+  will only be produced if at least one tumor BAM argument is supplied during
   configuration
 * __candidateSV.vcf.gz__
     * Unscored SV and indel candidates. Only a minimal amount of supporting
@@ -179,23 +179,92 @@ is provided. These files are:
   evaluated together. Alternate small indel candidate sets can be parted out of the
   candidateSV.vcf.gz file if this candidate set is not appropriate.
 
-All variants are reported in the vcf using symbolic alleles unless they are classified 
-as a small indel, in which case full sequences are provided for the vcf `REF` and `ALT`
+### Manta VCF reporting format
+
+Manta VCF output follows the VCF 4.1 spec for describing structural variants, and uses
+as many standard field names as possible. All custom fields are described in the VCF header.
+The section below highlights some of the variant representation details and lists the 
+primary VCF field values.
+
+#### Small indels
+
+All variants are reported in the VCF using symbolic alleles unless they are classified 
+as a small indel, in which case full sequences are provided for the VCF `REF` and `ALT`
 allele fields. A variant is classified as a small indel if all of these criteria are met:
 
 * The variant can be entirely expressed as a combination of inserted and deleted sequence.
 * The deletion or insertion length is not 1000 or greater.
 * The variant breakends and/or the inserted sequence are not imprecise.
 
-When vcf records are printed in the small indel format, they will also include
+When VCF records are printed in the small indel format, they will also include
 the `CIGAR` INFO tag describing the combined insertion and deletion event.
+
+#### Insertions with incomplete insert sequence assembly
+
+Large insertions are reported in some cases even when the insert sequence cannot be fully assembled.
+In this case Manta reports the insertion using the `<INS>` symbolic allele and includes the special
+INFO fields `LEFT_SVINSSEQ` and `RIGHT_SVINSSEQ` to describe the assembled left and right ends
+of the insert sequence. The following is an example of such a record:
+
+```
+chr1    11830208        MantaINS:714:0:0:0:3:0  T       <INS>   1497    PASS    END=11830208;SVTYPE=INS;CIPOS=0,12;CIEND=0,12;HOMLEN=12;HOMSEQ=TAAATTTTTCTT;LEFT_SVINSSEQ=TAAATTTTTCTTTTTTCTTTTTTTTTTAAATTTATTTTTTTATTGATAATTCTTGGGTGTTTCTCACAGAGGGGGATTTGGCAGGGTCACGGGACAACAGTGGAGGGAAGGTCAGCAGACAAACAAGTGAACAAAGGTCTCTGGT;RIGHT_SVINSSEQ=CCAGGCAGAGACGCTCCTCACTTCCTAGATGTGATGGCGGCTGGGAAGAGGCGCTCCTCACTTCCTAGATGGGACGGCGGCCGGGCGGAGACGCTCCTCACTTTCCAGACTGGGCAGCCAGGCAGAGGGGCTCCTCACATCCCAGACGATGGGCGGCCAGGCAGAGACACTCCCCACTTCCCAGACGGGGTGGCGGCCGGGCAGAGGCTGCAATCTCGGCACTTTGGGAGGCCAAGGCAGGCGGCTGCTCCTTGCCCTCGGGCCCCGCGGGGCCCGTCCGCTCCTCCAGCCGCTGCCTCC    GT:GQ:PR:SR      0/1:1497:22,13:22,32
+```
+
+#### VCF INFO Fields
+
+ID | Description
+--- | ---
+IMPRECISE | Flag indicating that the structural variation is imprecise, i.e. the exact breakpoint location is not found
+SVTYPE | Type of structural variant
+SVLEN | Difference in length between REF and ALT alleles
+END | End position of the variant described in this record
+CIPOS | Confidence interval around POS
+CIEND | Confidence interval around END
+CIGAR | CIGAR alignment for each alternate indel allele
+MATEID | ID of mate breakend
+EVENT | ID of event associated to breakend
+HOMLEN | Length of base pair identical homology at event breakpoints
+HOMSEQ | Sequence of base pair identical homology at event breakpoints
+SVINSLEN | Length of insertion
+SVINSSEQ | Sequence of insertion
+LEFT_SVINSSEQ | Known left side of insertion for an insertion of unknown length 
+RIGHT_SVINSSEQ | Known right side of insertion for an insertion of unknown length
+INV3 | Flag indicating that inversion breakends open 3' of reported location
+INV5 | Flag indicating that inversion breakends open 5' of reported location
+BND_DEPTH | Read depth at local translocation breakend
+MATE_BND_DEPTH | Read depth at remote translocation mate breakend
+JUNCTION_QUAL | If the SV junction is part of an EVENT (ie. a multi-adjacency variant), this field provides the QUAL value for the adjacency in question only
+SOMATIC | Flag indicating a somatic variant
+SOMATICSCORE | Somatic variant quality score
+JUNCTION_SOMATICSCORE | If the SV junction is part of an EVENT (ie. a multi-adjacency variant), this field provides the SOMATICSCORE value for the adjacency in question only
+
+#### VCF FORMAT Fields
+
+ID | Description
+--- | ---
+GT | Genotype
+GQ | Genotype Quality
+PR | Number of spanning read pairs which strongly (Q30) support the REF or ALT alleles
+SR | Number of split-reads which strongly (Q30) support the REF or ALT alleles
+
+#### VCF FILTER Fields
+
+ID | Description
+--- | ---
+Ploidy | For DEL & DUP variants, the genotypes of overlapping variants (with similar size) are inconsistent with diploid expectation
+MaxDepth | Sample site depth is greater than 3x the mean chromosome depth near one or both variant breakends
+MinGQ | GQ score is less than 20
+MaxMQ0Frac | For a small variant (<1000 bases), the fraction of reads with MAPQ0 around either breakend exceeds 0.4
+NoPairSupport | For variants significantly larger than the paired read fragment size, no paired reads support the alternate allele
+MinSomaticScore | SOMATICSCORE is less than 30
+
 
 ### Statistics
 
 Additional secondary output is provided in `${RUNFOLDER}/results/stats`
 
 * __alignmentStatsSummary.txt__
-    * fragment length quantiles for each input bam
+    * fragment length quantiles for each input BAM file
 * __svLocusGraphStats.tsv__
     * statistics and runtime information pertaining to the SV locus graph
 * __svCandidateGenerationStats.tsv__
@@ -218,8 +287,8 @@ without changing the final result of the workflow.
 
 The workflow is configured with the script: `${MANTA_INSTALL_DIR}/bin/configManta.py`
 . Running this script with no arguments will display all standard configuration
-options to specify input BAM or CRAM files, the reference sequence and the output run folder.
-Note that all input BAM or CRAM files and reference sequence must contain the same chromosome names
+options to specify input BAM files, the reference sequence and the output run folder.
+Note that all input BAM files and reference sequence must contain the same chromosome names
 in the same order. Manta's default settings assume a whole genome DNA-Seq analysis, but there
 are configuration options for exome/targeted sequencing analysis in addition to RNA-Seq.
 
