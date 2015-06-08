@@ -20,7 +20,9 @@ Build instructions
 [![Build Status](https://travis-ci.org/sequencing/manta.svg?branch=master)](https://travis-ci.org/sequencing/manta)
 
 It is recommended to start from one of the [binary distributions
-on the Manta releases page] [releases] if a suitable version is available.
+on the Manta releases page] [releases] if a suitable version is available (note
+that the CentOS 5 binary distribution is expected to support a large variety
+of linux systems). 
 If building from source start from the release distributions of the source code,
 also provided on the [Manta releases page] [releases]. Cloning/archiving the
 source directly from git could result in missing version number entries, undesirably
@@ -31,7 +33,7 @@ Note that this README is _NOT_ part of a tagged source-code release.
 
 [releases]:https://github.com/StructuralVariants/manta/releases
 
-### Compilation prerequisites:
+### Build prerequisites:
 
 Manta requires a compiler supporting most of the C++11 standard. These are the
 current minimum versions enforced by the build system:
@@ -56,8 +58,8 @@ Manta is known to build and run on the following linux distributions
 
 ##### OS X
 
-Build support for OS X is ad-hoc, with limited runtime testing.
-Last success was v0.26.1-15-gfe9a48d on OS X 10.9.5 / Xcode 6.2
+Build and run testing on OS X is ad-hoc. Last successful build was on
+v0.26.1-15-gfe9a48d using OS X 10.9.5 / Xcode 6.2
 
 ##### Windows
 
@@ -103,12 +105,10 @@ possible for Visual Studio users. See Developer section below.
 
 After acquiring a release distribution of the source code, the build procedure is:
 
-* Unpack the source code
-* Create a separate `build` directory (note an out-of-source build is
-  required.)
-* Configure the build
-* Compile
-* Install
+* Unpack source code
+* Create and move to a separate build directory (out-of-source build is required.)
+* Configure build
+* Compile & Install
 
 Example (building on 4 cores):
 
@@ -120,31 +120,21 @@ Example (building on 4 cores):
     ../manta-A.B.C/src/configure --jobs=4 --prefix=/path/to/install
     make -j4 install
 
-Note that during the configuration step, the following compilation
-dependencies will be built from source if these are not found:
+Note that during the configuration step, the following dependencies will be
+built from source if they are not found:
 
 * cmake 2.8.0+
 * boost 1.53.0
 
-To optionally avoid this extra step, ensure that (1) cmake 2.8.0+ is in your PATH and (2)
-BOOST\_ROOT is defined to point to boost 1.53.0 (the boost version is required to
-be an exact match). If either of these dependencies are not found, they will be
-built during the configuration step, To accelerate this process it may be
-desirable to parallelize the configure step over multiple cores. To do so
-provide the `--jobs` argument to the configuration script. For example:
-
-    ${MANTA_SRC_PATH}/configure --prefix=/path/to/install --jobs=4
-
-Compiling Manta itself can also be parallelized by the standard make procedure, e.g.
-
-    make -j4
-    make install
+To accelerate this process the configuration step can be parallelized over
+multiple cores, as demonstrated in the example above with the `--jobs=4`
+argument to configure.
 
 To see more configure options, run:
 
     ${MANTA_SRC_PATH}/configure --help
 
-### Build relocation
+##### Workflow relocation
 
 After Manta is built the installation directory can be relocated to another directory.
 All internal paths used in the workflow are relative.
@@ -168,7 +158,7 @@ rather than user distribution. As such, builds are strict: all warnings are
 treated as errors and if cppcheck is found any detected issue is converted
 to a build error.
 
-### C++ documentation
+#### Source documentation
 
 If doxygen is found in the path (and optionally dot as well) during build
 configuration, then c++ documentation is available as an additional "doc"
@@ -181,7 +171,25 @@ the root doxygen page after completing this target will be:
 
     ${MANTA_BUILD_DIR}/c++/doxygen/html/index.html
 
-### Windows development support
+#### Improving build time
+
+##### ccache
+
+Manta's build system is configured to use ccache whenever this is found in the path
+
+##### Bundleded dependencies:
+
+Note that during the configuration step, the following compilation
+dependencies will be built from source if they are not found:
+
+* cmake 2.8.0+
+* boost 1.53.0
+
+To avoid the extra time associated with this step, ensure that (1) cmake 2.8.0+
+is in your PATH and (2) BOOST\_ROOT is defined to point to boost 1.53.0 (the
+boost version is required to be an exact match).
+
+#### Windows development support
 
 Manta does not link or run on windows. However, the build system does
 facilitate Visual Studio (VS) users. When cmake configuration is run on
