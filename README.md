@@ -1,15 +1,17 @@
 Manta Structural Variant Caller
 ===============================
 
-Manta calls structural variants and indels from paired-end
-sequencing reads. It combines paired and split read evidence during SV
-discovery and scoring to improve performance, but does not require split reads
+Manta calls structural variants (SVs), small indels and large insertions from paired-end
+sequencing reads. The method is designed for very rapid/low-cost analysis of individuals
+or tumor-normal sample pairs. Manta combines paired and split-read evidence during SV
+discovery and scoring to improve accuracy, but does not require split-reads
 or successful breakpoint assemblies to report a variant in cases where there is
-strong evidence of an imprecise variant. It provides genotypes and quality
-scores for variants in single diploid samples, and will also call somatic
-variants when a matched tumor sample is specified. Manta can detect all classes
-of structural variants which can be identified in the absence of copy number
-analysis and large-scale assembly. See the [user guide] [UserGuide] for a full description of
+strong evidence of an imprecise variant. It provides scoring models
+for germline variants in individual diploid samples and somatic variants in matched
+tumor-normal sample pairs. Manta can detect all classes
+of structural variants and indels which can be identified in the absence of copy number
+analysis and large-scale assembly.
+See the [user guide] [UserGuide] for a full description of
 capabilities and limitations.
 
 [UserGuide]:src/markdown/mantaUserGuide.md
@@ -112,10 +114,9 @@ After acquiring a release distribution of the source code, the build procedure i
 
 Example (building on 4 cores):
 
-    wget https://github.com/StructuralVariants/manta/releases/download/vA.B.C/manta-A.B.C.tar.bz2
-    tar -xjf manta-A.B.C.tar.bz2
-    mkdir build
-    cd build
+    wget https://github.com/sequencing/manta/releases/download/vA.B.C/manta-A.B.C.release_src.tar.bz2
+    tar -xjf manta-A.B.C.release_src.tar.bz2
+    mkdir build && cd build
     # Ensure that CC and CXX are updated to target compiler if needed 
     ../manta-A.B.C/src/configure --jobs=4 --prefix=/path/to/install
     make -j4 install
@@ -148,19 +149,21 @@ demo as follows:
     ${MANTA_INSTALL_PATH}/bin/runMantaWorkflowDemo.bash
 
 The demo data includes aligned reads near the breakends of an HCC1954 somatic translocation
-(COST16011). The demo script runs Manta on these regions and verifies that the
+([COSMIC] id: COST16011). The demo script runs Manta on these regions and verifies that the
 somatic translocation is called as expected. Data, expected results and additional details 
 can be found in the Manta installation demo directory:
 
     ${MANTA_INSTALL_PATH}/share/demo/manta
 
+[COSMIC]:http://cancer.sanger.ac.uk/cosmic
+
 Data analysis and Interpretation
 --------------------------------
 
-After completing the installation, see the [Manta user guide] [UserGuide] for instructions on
+After completing installation, see the [Manta user guide] [UserGuide] for instructions on
 how to run Manta, interpret results, and a high-level overview of the method.
 
-The user guide is also available within any Manta binary distribution:
+The user guide is also available within any Manta binary distribution here:
 
     ${MANTA_INSTALL_PATH}/doc/html/mantaUserGuide.html
 

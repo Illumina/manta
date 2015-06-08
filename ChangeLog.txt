@@ -1,3 +1,12 @@
+v0.26.2
+- MANTA-242 cleanup code portability and documentation:
+-- Updated all build/installation and contributor guidelines
+-- Updated Manta user guide
+-- Added Travis CI configuration file for clang/gcc build and demo run
+-- Minor code edits to clean compile on OS X 10.9, CentOS 5,6,7, Ubuntu
+12.04 and 14.04
+-- Updated demo: new dataset covers COSMIC HCC1954 variants, added test
+to verify expected output from demo run.
 v0.26.1
 - Remove python reflection from run configuration process, fixes rare
 config issue
