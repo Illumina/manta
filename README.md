@@ -192,7 +192,7 @@ the root doxygen page after completing this target will be:
 
 Manta's build system is configured to use ccache whenever this is found in the path
 
-##### Bundleded dependencies:
+##### Bundled dependencies
 
 Note that during the configuration step, the following compilation
 dependencies will be built from source if they are not found:
