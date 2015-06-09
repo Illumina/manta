@@ -38,15 +38,15 @@ class MantaWorkflowOptions(MantaWorkflowOptionsBase) :
         return """Version: %s
 
 This script configures the Manta SV analysis pipeline.
-You must specify a BAM or CRAM file for at least one sample.
+You must specify a BAM file for at least one sample.
 """ % (workflowVersion)
 
 
     def addWorkflowGroupOptions(self,group) :
         group.add_option("--normalBam", type="string",dest="normalBamList",metavar="FILE", action="append",
-                         help="Normal sample BAM or CRAM file. May be specified more than once, multiple inputs will be merged. [at least one required] (no default)")
+                         help="Normal sample BAM file. May be specified more than once, multiple inputs will be merged. [at least one required] (no default)")
         group.add_option("--tumorBam","--tumourBam", type="string",dest="tumorBamList",metavar="FILE", action="append",
-                          help="Tumor sample BAM or CRAM file. May be specified more than once, multiple inputs will be merged. [optional] (no default)")
+                          help="Tumor sample BAM file. May be specified more than once, multiple inputs will be merged. [optional] (no default)")
         group.add_option("--exome", dest="isExome", action="store_true",
                          help="Set options for WES input: turn off depth filters")
         group.add_option("--rna", dest="isRNA", action="store_true",
