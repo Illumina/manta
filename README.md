@@ -33,7 +33,7 @@ releases. Additional build notes for contributors can be found below.
 
 Note that this README is _NOT_ part of a tagged source-code release.
 
-[releases]:https://github.com/StructuralVariants/manta/releases
+[releases]:https://github.com/sequencing/manta/releases
 
 ### Build prerequisites:
 
