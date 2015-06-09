@@ -143,19 +143,12 @@ All internal paths used in the workflow are relative.
 ### Demo / Build Verification 
 
 To help verify a successful installation, Manta includes a small demo data
-set and test script. After completing the installation steps above, run the
-demo as follows:
+set and test script. After completing the installation steps above, the
+demo can be run as follows:
 
-    ${MANTA_INSTALL_PATH}/bin/runMantaWorkflowDemo.bash
+    bash ${MANTA_INSTALL_PATH}/bin/runMantaWorkflowDemo.bash
 
-The demo data includes aligned reads near the breakends of an HCC1954 somatic translocation
-([COSMIC] id: COST16011). The demo script runs Manta on these regions and verifies that the
-somatic translocation is called as expected. Data, expected results and additional details 
-can be found in the Manta installation demo directory:
-
-    ${MANTA_INSTALL_PATH}/share/demo/manta
-
-[COSMIC]:http://cancer.sanger.ac.uk/cosmic
+See [the demo README](src/demo/README.md) for additional information on the test script and data.
 
 Data analysis and Interpretation
 --------------------------------
@@ -187,7 +180,7 @@ target for the makefile:
 There is no installation for the documentation outside of the build directory,
 the root doxygen page after completing this target will be:
 
-    ${MANTA_BUILD_DIR}/c++/doxygen/html/index.html
+    ${MANTA_BUILD_PATH}/c++/doxygen/html/index.html
 
 #### Improving build time
 
