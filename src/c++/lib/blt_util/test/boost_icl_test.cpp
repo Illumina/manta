@@ -21,9 +21,6 @@
 
 using namespace boost::icl;
 
-//
-// this is more of a test/demo for boost:icl then an actual test....
-//
 
 BOOST_AUTO_TEST_SUITE( test_boost_icl )
 
@@ -100,7 +97,7 @@ BOOST_AUTO_TEST_CASE( boost_icl_test_map2 )
     test_map.add(std::make_pair(interval<int>::right_open(4,5),2u));
     test_map.add(std::make_pair(interval<int>::right_open(6,8),1u));
 
-    BOOST_REQUIRE_EQUAL(test_map.size(),5u);
+    BOOST_REQUIRE_EQUAL(test_map.iterative_size(),5u);
 
     auto b(test_map.begin());
     BOOST_REQUIRE_EQUAL(b->first.lower(),3);
@@ -126,10 +123,12 @@ BOOST_AUTO_TEST_CASE( boost_icl_test_map2 )
 
 BOOST_AUTO_TEST_CASE( boost_icl_test_map3 )
 {
-    // recreates ICL bug reported for OS X clang + boost 1.53
+    // recreates ICL bug reported for OS X 10.9/clang 3.5 and boost 1.53
     // (probably) related: https://github.com/Astron/Astron/issues/213
     // intent is to test for an assertion from boost ICL, boost value
     // tests below are just placeholders.
+    //
+    // known to pass with boost 1.56+ and fail in boost 1.55-
     //
 
     typedef interval_map<int,unsigned> map_t;
@@ -139,7 +138,8 @@ BOOST_AUTO_TEST_CASE( boost_icl_test_map3 )
     test_map.add(std::make_pair(interval<int>::right_open(8,9),2u));
     test_map.add(std::make_pair(interval<int>::right_open(1,12),1u));
 
-    BOOST_REQUIRE_EQUAL(test_map.size(),5u);
+    BOOST_REQUIRE_EQUAL(test_map.iterative_size(),5u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
