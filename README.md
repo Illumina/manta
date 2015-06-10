@@ -125,7 +125,7 @@ Note that during the configuration step, the following dependencies will be
 built from source if they are not found:
 
 * cmake 2.8.0+
-* boost 1.53.0
+* boost 1.56.0+
 
 To accelerate this process the configuration step can be parallelized over
 multiple cores, as demonstrated in the example above with the `--jobs=4`
@@ -190,15 +190,14 @@ Manta's build system is configured to use ccache whenever this is found in the p
 
 ##### Bundled dependencies
 
-Note that during the configuration step, the following compilation
-dependencies will be built from source if they are not found:
+Note that during the configuration step, the following dependencies will be
+built from source if they are not found:
 
 * cmake 2.8.0+
-* boost 1.53.0
+* boost 1.56.0+
 
 To avoid the extra time associated with this step, ensure that (1) cmake 2.8.0+
-is in your PATH and (2) BOOST\_ROOT is defined to point to boost 1.53.0 (the
-boost version is required to be an exact match).
+is in your PATH and (2) BOOST\_ROOT is defined to point to boost 1.56.0 or newer. 
 
 #### Windows development support
 
