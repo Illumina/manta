@@ -74,16 +74,22 @@ endif ()
 # other cache variables
 #
 
-# remove this setting if win build needs to rebuild boost:
-set (CMAKE_PARALLEL "1")
-
 if (NOT CMAKE_PARALLEL)
-    set(CMAKE_PARALLEL "0" CACHE STRING
-        "Choose the number of cores used by cmake during configuration (no default)")
+    # set to true if win build needs to rebuild boost, right now on win32 all we do is unpack boost for headers:
+    set (IS_WIN_BOOST_BUILD FALSE)
+    
+   
+    if (IS_WIN_BOOST_BUILD)
+        set(CMAKE_PARALLEL "0" CACHE STRING
+            "Choose the number of cores used by cmake during configuration (no default)")
 
-    # must give user the chance to set this before proceeding, otherwise we force a long wait for boost to compile
-    message (WARNING "\n*** Must set CMAKE_PARALLEL before continuing configuration ***\n")
-    return()
+        # give windows/cmake-gui user the chance to set this before proceeding, otherwise
+        # we force a long wait for boost to compile
+        message (WARNING "\n*** Must set CMAKE_PARALLEL before continuing configuration ***\n")
+        return()
+    else ()
+        set (CMAKE_PARALLEL "1")
+    endif ()
 endif ()
 
 message (STATUS "CMAKE_PARALLEL: ${CMAKE_PARALLEL}")
