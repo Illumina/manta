@@ -21,13 +21,13 @@ before_install:
   - if [ $TRAVIS_OS_NAME == linux ]; then sudo apt-get update -qq; fi
 
 install:
+  # add cppcheck: static analysis should be independent of os/compiler, so only install this on one test case:
+  - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" == "g++" ]; then sudo apt-get install -qq cppcheck; fi
   # install gcc 4.8
   - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" == "g++" ]; then sudo apt-get install -qq gcc-4.8 g++-4.8; fi
   - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" == "g++" ]; then export CC=/usr/bin/gcc-4.8 && export CXX=/usr/bin/g++-4.8; fi
   # install clang 3.4
   - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" == "clang++" ]; then sudo apt-get install -qq llvm-3.4 llvm-3.4-dev; fi
-  # add cppcheck: static analysis should be independent of os/compiler, so only install this on one test case:
-  - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" == "g++" ]; then sudo apt-get install -qq cppcheck; fi
  
 script:
   - mkdir build && cd build && ../src/configure --jobs=4 --prefix=../install && make -j4 install
