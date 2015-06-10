@@ -9,16 +9,21 @@ Version: @WORKFLOW_VERSION@
 
 ## Introduction
 
-Manta is a structural variant caller for short sequencing reads. It is capable
-of discovering structural variants of any size and scoring these using both a
-diploid genotype model and a somatic model (when separate tumor and normal
-samples are specified). Structural variant discovery and scoring incorporate
-both paired-read fragment spanning and split read evidence.
+Manta is a rapid structural variant and indel caller for mapped next generation
+sequencing paired-read data. It is capable of discovering structural variants,
+medium-sized indels and large insertions given BAM files produced by any standard
+seqeunce mapper. Manta provides scoring models appropriate for germline
+variants in individual diploid samples and somatic variants in matched tumor-normal
+sample pairs. Manta is capable of assembling a large fraction of variants to basepair
+resolution, but can score and report variants at lower resolution when this is not
+possible. Discovery and scoring of all variants combines both paired and split-read
+evidence, with split-read support for the recently introduced "SA" read tag format
+for BAM.
 
 ## Method Overview
 
-Manta works by dividing the structural variant (SV) discovery process into two
-primary steps: (1) scanning the genome to find SV associated regions and (2)
+Manta works by dividing the structural variant (SV) and indel discovery process into
+two primary steps: (1) scanning the genome to find SV associated regions and (2)
 analysis, scoring and output of SVs found in such regions.
 
 1. **Build SV association graph** In this step the entire genome is scanned to
@@ -44,7 +49,7 @@ Manta is capable of detecting all structural variant types which are
 identifiable in the absence of copy number analysis and large-scale de-novo
 assembly. Detectable types are enumerated further below.
 
-For each structural variant and indel, Manta attempts to align the breakends to
+For each structural variant and indel, Manta attempts to assemble the breakends to
 basepair resolution and report the left-shifted breakend coordinate (per the [VCF 4.1][1]
 SV reporting guidelines), together with the any breakend homology sequence
 and/or inserted sequence between the breakends. It is often the case that the
@@ -59,7 +64,7 @@ the fragment insert inward.
 
 Manta is primarily tested for whole genome DNA-Seq experiments of single
 diploid samples or subtractive analysis of a matched tumor/normal sample pair.
-There has been limited testing in support of other cases:
+There is some support for other use cases:
 
 * For exome or other targeted sequencing experiments, the workflow can be
 configured with the `--exome` flag to set filtration levels more appropriate for
@@ -95,7 +100,7 @@ Manta should not be able to detect the following variant types:
   below ~200bases. So-called micro-inversions might be detected indirectly as
   combined insertion/deletion variants.
 * Fully-assembled large insertions
-    * The maximum fully-assembled insertions size should correspond to
+    * The maximum fully-assembled insertion size should correspond to
   approximately twice the read-pair fragment size, but note that power to fully
   assemble the insertion should fall off to impractical levels before this
   size
@@ -110,7 +115,7 @@ More general repeat-based limitations exist for all variant types:
 * Power to detect any breakend falls to (nearly) zero as the breakend repeat
   length approaches the fragment size.
 
-Note that while manta classifies novel DNA-adjacencies, it does not infer the
+Note that while Manta classifies novel DNA-adjacencies, it does not infer the
 higher level constructs implied by the classification. For instance, a variant
 marked as a deletion by manta indicates an intrachromosomal translocation with a
 deletion-like breakend pattern, however there is no test of depth, b-allele
@@ -125,7 +130,7 @@ insert inward.
 
 Manta can tolerate non-paired reads in the input, so long as sufficient paired-end
 reads exist to estimate the paired fragment size distribution. Non-paired reads
-will still be used in discovery, assembly and split-read scoring if their alignment
+will still be used in discovery, assembly and split-read scoring if their alignments
 (or SA tag split alignments) support a large indel or SV, or mismatch/clipping 
 suggests a possible breakend location.
 
@@ -150,8 +155,8 @@ treated as representing one sample.
 
 ### Structural Variant predictions
 
-The primary manta outputs are a set of [VCF 4.1][1] files, found in
-`${RUNFOLDER}/results/variants`. Currently there are at least 3 VCF files
+The primary Manta outputs are a set of [VCF 4.1][1] files, found in
+`${MANTA_ANALYSIS_PATH}/results/variants`. Currently there are at least 3 VCF files
 created for any manta run, and an additional somatic VCF is produced when tumor input
 is provided. These files are:
 
@@ -182,7 +187,7 @@ is provided. These files are:
 ### Manta VCF reporting format
 
 Manta VCF output follows the VCF 4.1 spec for describing structural variants, and uses
-as many standard field names as possible. All custom fields are described in the VCF header.
+standard field names whereever possible. All custom fields are described in the VCF header.
 The section below highlights some of the variant representation details and lists the 
 primary VCF field values.
 
@@ -261,7 +266,7 @@ MinSomaticScore | SOMATICSCORE is less than 30
 
 ### Statistics
 
-Additional secondary output is provided in `${RUNFOLDER}/results/stats`
+Additional secondary output is provided in `${MANTA_ANALYSIS_PATH}/results/stats`
 
 * __alignmentStatsSummary.txt__
     * fragment length quantiles for each input BAM file
@@ -285,7 +290,7 @@ without changing the final result of the workflow.
 
 ### Configuration
 
-The workflow is configured with the script: `${MANTA_INSTALL_DIR}/bin/configManta.py`
+The workflow is configured with the script: `${MANTA_INSTALL_PATH}/bin/configManta.py`
 . Running this script with no arguments will display all standard configuration
 options to specify input BAM files, the reference sequence and the output run folder.
 Note that all input BAM files and reference sequence must contain the same chromosome names
@@ -295,23 +300,23 @@ are configuration options for exome/targeted sequencing analysis in addition to 
 Single Sample Analysis -- Example Configuration:
 
 ```
-${MANTA_INSTALL_DIR}/bin/configManta.py \
+${MANTA_INSTALL_PATH}/bin/configManta.py \
 --normalBam NA12878_S1.bam \
 --referenceFasta hg19.fa \
---runDir ${ANALYSIS_RUN_DIR}
+--runDir ${MANTA_ANALYSIS_PATH}
 ```
 
 Tumor Normal Analysis -- Example Configuration:
 
 ```
-${MANTA_INSTALL_DIR}/bin/configManta.py \
+${MANTA_INSTALL_PATH}/bin/configManta.py \
 --normalBam HCC1187BL.bam \
 --tumorBam HCC1187C.bam \
 --referenceFasta hg19.fa \
---runDir ${ANALYSIS_RUN_DIR}
+--runDir ${MANTA_ANALYSIS_PATH}
 ```
 
-On completion, the configuration script will create the workflow run script `${ANALYSIS_RUN_DIR}/runWorkflow.py`
+On completion, the configuration script will create the workflow run script `${MANTA_ANALYSIS_PATH}/runWorkflow.py`
 . This can be used to run the workflow in various parallel compute modes per the
 instructions in the [Execution] section below.
 
@@ -319,13 +324,13 @@ instructions in the [Execution] section below.
 
 There are two sources of advanced configuration options:
 
-* Options listed in the file: `${MANTA_INSTALL_DIR}/bin/configManta.py.ini`
+* Options listed in the file: `${MANTA_INSTALL_PATH}/bin/configManta.py.ini`
     * These parameters are not expected to change frequently. Changing the file
   listed above will re-configure all manta runs for the installation. To change
   parameters for a single run, copy the configManta.py.ini file to another location,
   change the desired parameter values and supply the new file using the configuration
   script's `--config FILE` option.
-* Advanced options listed in: `${MANTA_INSTALL_DIR}/bin/configManta.py --allHelp`
+* Advanced options listed in: `${MANTA_INSTALL_PATH}/bin/configManta.py --allHelp`
     * These options are indented primarily for workflow development and
   debugging, but could be useful for runtime optimization in some specialized
   cases.
@@ -334,7 +339,7 @@ There are two sources of advanced configuration options:
 
 The configuration step creates a new workflow run script in the requested run directory:
 
-`{ANALYSIS_RUN_DIR}/runWorkflow.py`
+`{MANTA_ANALYSIS_PATH}/runWorkflow.py`
 
 This script is used to control parallel execution of Manta via the [pyFlow][2]
 task engine. It can be used to parallelize structural variant analysis via one
@@ -349,18 +354,18 @@ core count.
 
 For a full list of execution options, see:
 
-`{ANALYSIS_RUN_DIR}/runWorkflow.py -h`
+`{MANTA_ANALYSIS_PATH}/runWorkflow.py -h`
 
 Example execution on a single node:
 
 ```
-${ANALYSIS_RUN_DIR}/runWorkflow.py -m local -j 8
+${MANTA_ANALYSIS_PATH}/runWorkflow.py -m local -j 8
 ```
 
 Example execution on an SGE cluster:
 
 ```
-${ANALYSIS_RUN_DIR}/runWorkflow.py -m sge -j 36
+${MANTA_ANALYSIS_PATH}/runWorkflow.py -m sge -j 36
 ```
 
 #### Advanced execution options
@@ -368,7 +373,7 @@ ${ANALYSIS_RUN_DIR}/runWorkflow.py -m sge -j 36
 These options are useful for Manta development and debugging:
 
 * Stderr logging can be disabled with `--quiet` argument. Note this log is
-  replicated to `${ANALYSIS_RUN_DIR}/workspace/pyflow.data/logs/pyflow_log.txt`
+  replicated to `${MANTA_ANALYSIS_PATH}/workspace/pyflow.data/logs/pyflow_log.txt`
   so there is no loss of log information.
 * The `--rescore` option can be provided to force the workflow to re-execute
   candidates discovery and scoring, but not the initial graph generation steps.
@@ -401,11 +406,13 @@ It may also be helpful to consider the high sensitivity calling documentation be
 Manta is configured with a discovery sensitivity appropriate for general  WGS applications.
 In targeted or other specialized contexts the candidate sensitivity can be increased. A
 recommended general high sensitivity mode can be obtained by changing the two values 'minEdgeObservations'
-and 'minCandidateSpanningCount' in the manta configuration file (see 'Advanced configuration options' above) to 2 observations per candidate (the default is 3):
+and 'minCandidateSpanningCount' in the manta configuration file (see 'Advanced configuration options'
+above) to 2 observations per candidate (the default is 3):
 
 ```
 # Remove all edges from the graph unless they're supported by this many 'observations'.
-# Note that one supporting read pair or split read usually equals one observation, but evidence is sometimes downweighted.
+# Note that one supporting read pair or split read usually equals one observation, but
+# evidence is sometimes downweighted.
 minEdgeObservations = 2
 
 # Run discovery and candidate reporting for all SVs/indels with at least this
@@ -420,5 +427,5 @@ Manta does not yet provide a scoring model for unpaired tumor samples. The candi
 
 
 [1]: http://www.1000genomes.org/wiki/Analysis/Variant%20Call%20Format/vcf-variant-call-format-version-41
-[2]: http://ctsa.github.io/pyflow/
+[2]: http://sequencing.github.io/pyflow/
 
