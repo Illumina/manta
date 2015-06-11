@@ -12,7 +12,7 @@ matrix:
   # gcc would just repeat the clang test on OSX, so skip it:
   exclude:
     - os: osx
-    - compiler: gcc
+      compiler: gcc
 
 osx_image: xcode61
 
