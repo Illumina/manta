@@ -77,8 +77,8 @@ endif ()
 if (NOT CMAKE_PARALLEL)
     # set to true if win build needs to rebuild boost, right now on win32 all we do is unpack boost for headers:
     set (IS_WIN_BOOST_BUILD FALSE)
-    
-   
+
+
     if (IS_WIN_BOOST_BUILD)
         set(CMAKE_PARALLEL "0" CACHE STRING
             "Choose the number of cores used by cmake during configuration (no default)")

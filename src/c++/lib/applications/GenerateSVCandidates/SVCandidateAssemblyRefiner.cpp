@@ -1183,7 +1183,8 @@ translateMaskedAlignment(
 }
 
 
-namespace {
+namespace
+{
 
 /// Returns a reduced reference sequence where long stretches without kmer matches to the contig are removed
 template <typename SymIter>

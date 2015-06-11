@@ -925,8 +925,8 @@ getReadBreakendsImpl(
                 BOOST_THROW_EXCEPTION(LogicException(msg));
             }
             getSingleReadSVCandidates(opt, dopt, remoteRead, remoteAlign,
-                    chromToIndex, (*remoteRefSeqPtr),
-                    candidates);
+                                      chromToIndex, (*remoteRefSeqPtr),
+                                      candidates);
         }
 
         // process shadows:

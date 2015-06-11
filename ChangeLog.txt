@@ -1,3 +1,5 @@
+- Fix OSX build and demo run (req. update to boost 1.56)
+- Update travis CI OSX build, static analyzer
 v0.26.2
 - MANTA-242 cleanup code portability and documentation:
 -- Updated all build/installation and contributor guidelines

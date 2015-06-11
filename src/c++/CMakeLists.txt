@@ -77,11 +77,11 @@ if (DOXYGEN_FOUND)
     set (DOXYFILE_SRC2 ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile.in)
     set (DOXYFILE ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
     message (STATUS "Creating Doxygen config file: ${DOXYFILE}")
-    
+
     # configure doxyfile twice, once at config time and once at build time:
     set (BUILDTIME_WORKFLOW_VERSION "@WORKFLOW_VERSION@")
     configure_file(${DOXYFILE_SRC} ${DOXYFILE_SRC2} @ONLY)
-    
+
     # set doxyfile to update from build-time configuration info:
     set (THIS_BUILDTIME_DOXYGEN_TARGET "${THIS_PROJECT_NAME}_doxygen_buildtime_config")
     add_custom_target(${THIS_BUILDTIME_DOXYGEN_TARGET}

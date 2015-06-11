@@ -35,7 +35,7 @@ def makeRunScript(scriptFile, workflowModulePath, workflowClassName, primaryConf
     configSections -- a hash or hashes representing all configuration info
     @param pythonBin: optionally specify a custom python interpreter for the script she-bang
     """
-    
+
     assert os.path.isdir(os.path.dirname(scriptFile))
     assert os.path.isfile(workflowModulePath)
 
@@ -67,7 +67,7 @@ def makeRunScript(scriptFile, workflowModulePath, workflowClassName, primaryConf
     sfp.write('\n')
     sfp.close()
     os.chmod(scriptFile,0755)
-    
+
 
 # this is the old version of makeRunScript which used reflection instead of simple text blocks. it is theoretically better,
 # at production scale, we found that python reflection is not 100% reliable. Intermitent, hard to pin down failures in this
