@@ -1,3 +1,4 @@
+v0.26.3
 - Fix OSX build and demo run (req. update to boost 1.56)
 - Update travis CI OSX build, static analyzer
 v0.26.2
