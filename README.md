@@ -18,10 +18,11 @@ variants in matched tumor-normal sample pairs. See the [user guide]
 
 [UserGuide]:src/markdown/mantaUserGuide.md
 
+
 Build instructions
 ------------------
 
-[![Build Status](https://travis-ci.org/sequencing/manta.svg?branch=master)](https://travis-ci.org/sequencing/manta)
+[![Build Status] [tcistatus]] [tcihome]
 
 It is recommended to start from one of the [binary distributions on
 the Manta releases page] [releases] if a suitable version is available
@@ -37,6 +38,9 @@ be found below.
 Note that this README is _NOT_ part of a tagged source-code release.
 
 [releases]:https://github.com/sequencing/manta/releases
+
+[tcistatus]:https://travis-ci.org/sequencing/manta.svg?branch=master
+[tcihome]:https://travis-ci.org/sequencing/manta
 
 ### Build prerequisites:
 
@@ -158,6 +162,7 @@ above, the demo can be run as follows:
 See [the demo README](src/demo/README.md) for additional information
 on the test script and data.
 
+
 Data analysis and Interpretation
 --------------------------------
 
@@ -224,6 +229,7 @@ libraries but cannot be run.
 C++11 features used by manta require at least VS2013. Windows
 installations of cmake and zlib are also required to configure and
 compile. Windows zlib is provided by the [gnuwin32
-package](http://gnuwin32.sourceforge.net/packages/zlib.htm).  among
-others.
+package] [gnuwin32] among others.
+
+[gnuwin32]:http://gnuwin32.sourceforge.net/packages/zlib.htm
 
