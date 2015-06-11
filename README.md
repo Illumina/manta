@@ -121,8 +121,10 @@ Example (building on 4 cores):
     wget https://github.com/sequencing/manta/releases/download/vA.B.C/manta-A.B.C.release_src.tar.bz2
     tar -xjf manta-A.B.C.release_src.tar.bz2
     mkdir build && cd build
-    # Ensure that CC and CXX are updated to target compiler if needed 
-    ../manta-A.B.C/src/configure --jobs=4 --prefix=/path/to/install
+    # Ensure that CC and CXX are updated to target compiler if needed, e.g.:
+    #     export CC=/path/to/cc
+    #     export CXX=/path/to/c++
+    ../manta-A.B.C.release_src/src/configure --jobs=4 --prefix=/path/to/install
     make -j4 install
 
 Note that during the configuration step, the following dependencies

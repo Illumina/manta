@@ -88,7 +88,9 @@ mv $tmp_file $rme
 # tar it up:
 (
 cd $outdir
-tar -f $pname_root.release_src.tar.bz2 -cj $pname_root
+rname=$pname_root.release_src
+mv $pname_root $rname
+tar -f $rname.tar.bz2 -cj $rname
+rm -rf $rname
 )
 
-rm -rf $pname
