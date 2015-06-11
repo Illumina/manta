@@ -9,16 +9,17 @@ os:
   - osx
 
 matrix:
-  # need multi-os from travis before knowing if os x config is sane:
-  allow_failures:
+  # gcc would just repeat the clang test on OSX, so skip it:
+  exclude:
     - os: osx
+    - compiler: gcc
 
 osx_image: xcode61
 
 before_install:
   # setup gcc 4.8:
   - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" == "g++" ]; then sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test; fi
-  # add cppcheck: static analysis should be independent of os/compiler, so only install this on one test case:
+  # setup cppcheck 1.67:
   - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" == "g++" ]; then sudo add-apt-repository -y ppa:j-rivero/cppcheck-latest; fi
   - if [ $TRAVIS_OS_NAME == linux ]; then sudo apt-get update -qq; fi
 
