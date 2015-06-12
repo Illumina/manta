@@ -131,7 +131,9 @@ macro(get_clang_version compiler_version)
     execute_process(COMMAND bash -c "echo | ${CMAKE_CXX_COMPILER} -dM -E - | awk '/__clang_version__/ {printf $3; exit}' | tr -d '\"'" OUTPUT_VARIABLE ${compiler_version})
     if (APPLE)
         # translate apple clang version numbers back to root llvm value (better way to do this?)
-        if (${compiler_version} VERSION_LESS "4.2")
+        if (${compiler_version} VERSION_LESS "3.1")
+            set (${compiler_version} "0.0")
+        elseif (${compiler_version} VERSION_LESS "4.2")
             set (${compiler_version} "3.1")
         elseif (${compiler_version} VERSION_LESS "5.0")
             set (${compiler_version} "3.2")
@@ -156,7 +158,7 @@ endmacro()
 
 
 set (min_gxx_version "4.7")
-set (min_clang_version "3.2")
+set (min_clang_version "3.1")
 set (min_intel_version "12.0") # guestimate based on intel support documentation
 set (min_msvc_version "1800") # cl.exe 18, as shipped in Visual Studio 12 2013
 
@@ -266,9 +268,8 @@ elseif (${IS_CLANGXX})
     endif ()
 
     set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wmissing-prototypes -Wunused-exception-parameter -Wbool-conversion")
-    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wimplicit-fallthrough -Wsizeof-array-argument -Wstring-conversion")
-    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wloop-analysis -Wextra-semi -Wmissing-variable-declarations")
-    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wheader-hygiene -Wmismatched-tags -Wunused-private-field")
+    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wsizeof-array-argument -Wstring-conversion")
+    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wheader-hygiene -Wmismatched-tags")
 
     if (${IS_WARN_EVERYTHING})
         set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-sign-conversion -Wno-weak-vtables -Wno-conversion -Wno-cast-align -Wno-padded")
@@ -276,6 +277,11 @@ elseif (${IS_CLANGXX})
         set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-unreachable-code -Wno-global-constructors -Wno-exit-time-destructors")
         set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-c++98-compat -Wno-old-style-cast -Wno-unused-member-function")
         set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-documentation -Wno-float-equal")
+    endif ()
+
+    if (NOT (${COMPILER_VERSION} VERSION_LESS "3.2"))
+        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wimplicit-fallthrough -Wloop-analysis -Wextra-semi")
+        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wmissing-variable-declarations -Wunused-private-field")
     endif ()
 
     if (NOT (${COMPILER_VERSION} VERSION_LESS "3.3"))
