@@ -159,7 +159,7 @@ endmacro()
 
 set (min_gxx_version "4.7")
 set (min_clang_version "3.1")
-set (min_intel_version "12.0") # guestimate based on intel support documentation
+set (min_intel_version "14.0")
 set (min_msvc_version "1800") # cl.exe 18, as shipped in Visual Studio 12 2013
 
 set (CXX_COMPILER_NAME "${CMAKE_CXX_COMPILER_ID}")
@@ -244,12 +244,16 @@ endif ()
 set (GNU_COMPAT_COMPILER ( (CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR (${IS_CLANGXX}) OR (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")))
 if (${GNU_COMPAT_COMPILER})
     set (CXX_WARN_FLAGS "-Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -pedantic -Wunused-parameter")
-    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wundef -Wdisabled-optimization -Wno-unknown-pragmas")
-    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wdeprecated -Wno-missing-braces")
-    if ((NOT CMAKE_CXX_COMPILER_ID STREQUAL "Intel") OR (${COMPILER_VERSION} VERSION_LESS "15.0"))
-        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wempty-body")
+    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wundef -Wno-unknown-pragmas")
+    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wdeprecated")
+
+    if ((NOT CMAKE_CXX_COMPILER_ID STREQUAL "Intel") OR (NOT ${COMPILER_VERSION} VERSION_LESS "14.0"))
+        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wdisabled-optimization")
+        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-missing-braces")
     endif ()
+
     if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wempty-body")
         set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wredundant-decls")
     endif ()
 
@@ -273,8 +277,9 @@ if     (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     endif ()
 
     if (NOT (${COMPILER_VERSION} VERSION_LESS "5.1"))
-        # these mostly only make sense sith flto:
-        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wodr -Wsuggest-final-types -Wsuggest-final-methods")
+        # these mostly only make sense with flto:
+        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wodr")
+        #set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wsuggest-final-types -Wsuggest-final-methods")
     endif ()
 
 elseif (${IS_CLANGXX})
