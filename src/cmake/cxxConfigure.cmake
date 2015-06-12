@@ -219,9 +219,19 @@ endif ()
 ##
 ## set bug workarounds:
 ##
-if     (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    if (((${COMPILER_VERSION} VERSION_EQUAL "4.7") OR (${COMPILER_VERSION} VERSION_EQUAL "4.7.3")) OR
-        ((${COMPILER_VERSION} VERSION_EQUAL "4.8") OR (${COMPILER_VERSION} VERSION_EQUAL "4.8.2")))
+
+# determine version of libstdc++ library
+if     (CMAKE_CXX_COMPILER_ID STREQUAL "INTEL")
+    set(STDCXX_VERSION ${gxx_compiler_version})
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set(STDCXX_VERSION ${COMPILER_VERSION})
+else ()
+    set(STDCXX_VERSION FALSE)
+endif ()
+
+if     (STDCXX_VERSION)
+    if (((${STDCXX_VERSION} VERSION_EQUAL "4.7") OR (${STDCXX_VERSION} VERSION_EQUAL "4.7.3")) OR
+        ((${STDCXX_VERSION} VERSION_EQUAL "4.8") OR (${STDCXX_VERSION} VERSION_EQUAL "4.8.2")))
         # workaround for: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=58800
         add_definitions( -DBROKEN_NTH_ELEMENT )
     endif ()
