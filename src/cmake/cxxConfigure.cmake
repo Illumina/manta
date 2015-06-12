@@ -271,6 +271,12 @@ if     (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         # don't know which patch levels are affected, so marking out all gcc 4.7.X
         set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-unused-function")
     endif ()
+
+    if (NOT (${COMPILER_VERSION} VERSION_LESS "5.1"))
+        # these mostly only make sense sith flto:
+        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wodr -Wsuggest-final-types -Wsuggest-final-methods")
+    endif ()
+
 elseif (${IS_CLANGXX})
     set (IS_WARN_EVERYTHING FALSE)
 
