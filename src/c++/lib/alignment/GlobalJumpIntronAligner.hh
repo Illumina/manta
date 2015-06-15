@@ -44,7 +44,7 @@ struct GlobalJumpIntronAligner : public JumpAlignerBase<ScoreType>
         const SymIter queryBegin, const SymIter queryEnd,
         const SymIter ref1Begin, const SymIter ref1End,
         const SymIter ref2Begin, const SymIter ref2End,
-        bool ref1Fw, bool ref2Fw,
+        bool ref1Fw, bool ref2Fw, bool isStranded,
         JumpAlignmentResult<ScoreType>& result) const;
 
 private:
