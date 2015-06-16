@@ -99,10 +99,14 @@ void
 getReadSplitScore(
     const bam_record& bamRead,
     const CallOptionsSharedDeriv& dopt,
+    const SVBreakend& bp,
+    const reference_contig_segment& bpRef,
+    const bool isBP1,
     const unsigned flankScoreSize,
     const SVAlignmentInfo& svAlignInfo,
     const unsigned minMapQ,
     const unsigned minTier2MapQ,
+    const bool isRNA,
     const bool isShadow,
     const bool isReversedShadow,
     SVEvidence::evidenceTrack_t& sampleEvidence,
@@ -162,9 +166,22 @@ getReadSplitScore(
     {
         SRAlignmentInfo bp1RefSR;
         SRAlignmentInfo bp2RefSR;
-        splitReadAligner(flankScoreSize, readSeq, dopt.refQ, qual, svAlignInfo.bp1ReferenceSeq(), svAlignInfo.bp1RefOffset, bp1RefSR);
-        splitReadAligner(flankScoreSize, readSeq, dopt.refQ, qual, svAlignInfo.bp2ReferenceSeq(), svAlignInfo.bp2RefOffset, bp2RefSR);
-
+        if (!isRNA)
+        {
+            splitReadAligner(flankScoreSize, readSeq, dopt.refQ, qual, svAlignInfo.bp1ReferenceSeq(), svAlignInfo.bp1RefOffset, bp1RefSR);
+            splitReadAligner(flankScoreSize, readSeq, dopt.refQ, qual, svAlignInfo.bp2ReferenceSeq(), svAlignInfo.bp2RefOffset, bp2RefSR);
+        }
+        else
+        {
+            if (isBP1)
+                getRefAlignment(bamRead, bpRef, bp.interval.range, dopt.refQ, bp1RefSR);
+            else
+                getRefAlignment(bamRead, bpRef, bp.interval.range, dopt.refQ, bp2RefSR);
+        }
+#ifdef DEBUG_SVS
+        log_os << "\t reference align bp1: " << bp1RefSR << "\n";
+        log_os << "\t reference align bp2: " << bp2RefSR << "\n";
+#endif
         // scoring
         incrementAlleleEvidence(bp1RefSR, bp2RefSR, readMapQ, sample.ref, refBp1ReadSupport, refBp2ReadSupport);
     }
@@ -179,10 +196,13 @@ scoreSplitReads(
     const unsigned flankScoreSize,
     const SVBreakend& bp,
     const SVAlignmentInfo& svAlignInfo,
+    const reference_contig_segment& bpRef,
+    const bool isBP1,
     const unsigned minMapQ,
     const unsigned minTier2MapQ,
     const int bamShadowRange,
     const unsigned shadowMinMapq,
+    const bool isRNA,
     SVEvidence::evidenceTrack_t& sampleEvidence,
     bam_streamer& readStream,
     SVSampleInfo& sample)
@@ -213,7 +233,7 @@ scoreSplitReads(
         static const bool isReversedShadow(false);
 
         //const uint8_t mapq(bamRead.map_qual());
-        getReadSplitScore(bamRead, dopt, flankScoreSize, svAlignInfo, minMapQ, minTier2MapQ,
+        getReadSplitScore(bamRead, dopt, bp, bpRef, isBP1, flankScoreSize, svAlignInfo, minMapQ, minTier2MapQ, isRNA,
                           isShadow, isReversedShadow, sampleEvidence, sample);
     }
 
@@ -261,7 +281,7 @@ scoreSplitReads(
             const bool isReversedShadow(bamRead.is_mate_fwd_strand());
 
             //const uint8_t mapq(shadow.getMateMapq());
-            getReadSplitScore(bamRead, dopt, flankScoreSize, svAlignInfo, minMapQ, minTier2MapQ,
+            getReadSplitScore(bamRead, dopt, bp, bpRef, isBP1, flankScoreSize, svAlignInfo, minMapQ, minTier2MapQ, isRNA,
                               isShadow, isReversedShadow, sampleEvidence, sample);
         }
     }
@@ -350,12 +370,18 @@ getSVSplitReadSupport(
         const int bamShadowRange(_readScanner.getShadowSearchRange(bamIndex));
 
         // scoring split reads overlapping bp1
-        scoreSplitReads(_callDopt, flankScoreSize, sv.bp1, SVAlignInfo, minMapQ, minTier2MapQ,
-                        bamShadowRange, _scanOpt.minSingletonMapqCandidates,
+#ifdef DEBUG_SVS
+        log_os << __FUNCTION__ << " scoring BP1\n";
+#endif
+        scoreSplitReads(_callDopt, flankScoreSize, sv.bp1, SVAlignInfo, assemblyData.bp1ref, true, minMapQ, minTier2MapQ,
+                        bamShadowRange, _scanOpt.minSingletonMapqCandidates, _isRNA,
                         sampleEvidence, bamStream, sample);
         // scoring split reads overlapping bp2
-        scoreSplitReads(_callDopt, flankScoreSize, sv.bp2, SVAlignInfo, minMapQ, minTier2MapQ,
-                        bamShadowRange, _scanOpt.minSingletonMapqCandidates,
+#ifdef DEBUG_SVS
+        log_os << __FUNCTION__ << " scoring BP2\n";
+#endif
+        scoreSplitReads(_callDopt, flankScoreSize, sv.bp2, SVAlignInfo, assemblyData.bp2ref, false, minMapQ, minTier2MapQ,
+                        bamShadowRange, _scanOpt.minSingletonMapqCandidates, _isRNA,
                         sampleEvidence, bamStream, sample);
     }
 

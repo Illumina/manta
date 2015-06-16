@@ -13,6 +13,7 @@
 
 ///
 /// \author Xiaoyu Chen
+/// \author Felix Schlesinger
 ///
 
 #include "SplitReadAlignment.hh"
@@ -20,9 +21,11 @@
 #include "blt_util/log.hh"
 #include "blt_util/seq_printer.hh"
 #include "common/Exceptions.hh"
+#include "htsapi/SimpleAlignment_bam_util.hh"
 
 #include <cassert>
 #include <cmath>
+
 #include <iostream>
 
 
@@ -180,6 +183,90 @@ setEvidence(
 
     const float size(static_cast<float>(alignment.leftSize+alignment.rightSize));
     alignment.evidence = 2 * std::min(alignment.leftSize, alignment.rightSize) / (size);
+}
+
+
+
+void
+getRefAlignment(
+    const bam_record& bamRead,
+    const reference_contig_segment& bp1ref,
+    const known_pos_range2& bpPos,
+    const qscore_snp& qualConvert,
+    SRAlignmentInfo& alignment)
+{
+    using namespace ALIGNPATH;
+    const SimpleAlignment align(getAlignment(bamRead));
+    const std::string qrySeq(bamRead.get_bam_read().get_string());
+    const int refLength(apath_ref_length(align.path));
+    std::string bp1Ref;
+    bp1ref.get_substring(align.pos, refLength, bp1Ref);
+    const uint8_t* qual(bamRead.qual());
+#ifdef DEBUG_SRA
+    log_os << __FUNCTION__ << bamRead << '\n';
+    log_os << "\t" << refLength << " " << qrySeq << '\n';
+    log_os << "\t" << bp1Ref.substr(0,10) << '\n';
+#endif
+
+    auto queryIndex(qrySeq.begin());
+    auto refIndex(bp1Ref.begin());
+    for (const path_segment seg : align.path)
+    {
+        if (is_segment_align_match(seg.type))
+        {
+            for (unsigned i=0; i < seg.length; i++)
+            {
+                int refPos(align.pos + refIndex - bp1Ref.begin());
+                bool isSeqMatch(false);
+                if ((*queryIndex == 'N') || (*refIndex == 'N'))
+                {
+                    static const float lnRandomBase(-std::log(4.f));
+                    alignment.alignLnLhood += lnRandomBase;
+                }
+                else
+                {
+                    const int baseQual(std::max(2, static_cast<int>(qual[i])));
+                    if ((*queryIndex) == (*refIndex))
+                    {
+                        isSeqMatch = true;
+                        alignment.alignLnLhood += qualConvert.qphred_to_ln_comp_error_prob(baseQual);
+                    }
+                    else
+                    {
+                        static const float ln_one_third(std::log(1 / 3.f));
+                        alignment.alignLnLhood += qualConvert.qphred_to_ln_error_prob(baseQual) + ln_one_third;
+                    }
+                }
+
+                if (refPos <= bpPos.begin_pos())
+                {
+                    alignment.leftSize++;
+                    if (!isSeqMatch) alignment.leftMismatches++;
+                }
+                if ((refPos > bpPos.begin_pos()) && (refPos < bpPos.end_pos()))
+                {
+                    alignment.homSize++;
+                    if (!isSeqMatch) alignment.homMismatches++;
+                }
+                if (refPos >= bpPos.end_pos())
+                {
+                    alignment.rightSize++;
+                    if (!isSeqMatch) alignment.rightMismatches++;
+                }
+                queryIndex++;
+                refIndex++;
+            }
+        }
+        else
+        {
+            if (is_segment_type_read_length(seg.type)) std::advance(queryIndex, seg.length);
+            if (is_segment_type_ref_length(seg.type)) std::advance(refIndex, seg.length);
+        }
+    }
+    alignment.alignPos = align.pos - bp1ref.get_offset();
+    alignment.alignScore = apath_matched_length(align.path) - alignment.leftMismatches - 
+            alignment.homMismatches - alignment.rightMismatches;
+    setEvidence(alignment);
 }
 
 
