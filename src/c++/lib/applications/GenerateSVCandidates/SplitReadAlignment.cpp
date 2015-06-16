@@ -264,8 +264,8 @@ getRefAlignment(
         }
     }
     alignment.alignPos = align.pos - bp1ref.get_offset();
-    alignment.alignScore = apath_matched_length(align.path) - alignment.leftMismatches - 
-            alignment.homMismatches - alignment.rightMismatches;
+    alignment.alignScore = apath_matched_length(align.path) - alignment.leftMismatches -
+                           alignment.homMismatches - alignment.rightMismatches;
     setEvidence(alignment);
 }
 
