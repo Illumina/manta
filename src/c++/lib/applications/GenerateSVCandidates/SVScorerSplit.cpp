@@ -114,6 +114,10 @@ getReadSplitScore(
 
     SVFragmentEvidenceAlleleBreakendPerRead& altBp1ReadSupport(fragment.alt.bp1.getRead(isRead1));
 
+#ifdef DEBUG_SVS
+    log_os << __FUNCTION__ << " split scoring read: " << bamRead << "\n";
+#endif
+
     // in this function we evaluate the hypothesis of both breakends at the same time, the only difference bp1 vs
     // bp2 makes is where in the bam we look for reads, therefore if we see split evaluation for bp1 or bp2, we can skip this read:
     if (altBp1ReadSupport.isSplitEvaluated) return;
@@ -327,8 +331,8 @@ getSVSplitReadSupport(
     if (! SVAlignInfo.isMinBpEdge(100)) return;
 
 #ifdef DEBUG_SVS
-    static const std::string logtag("getSVSplitReadSupport: ");
-    log_os << logtag << SVAlignInfo << '\n';
+    log_os << __FUNCTION__ << sv << '\n';
+    log_os << __FUNCTION__ << SVAlignInfo << '\n';
 #endif
 
     const unsigned minMapQ(_readScanner.getMinMapQ());

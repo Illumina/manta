@@ -405,14 +405,13 @@ getSampleCounts(
     for (const SVEvidence::evidenceTrack_t::value_type& val : sampleEvidence)
     {
         const SVFragmentEvidence& fragev(val.second);
-
+#ifdef DEBUG_SCORE
+        log_os << __FUNCTION__ << ": Counting read: " << val.first << "\n";
+#endif
         // evaluate read1 and read2 from this fragment
         //
         addConservativeSplitReadSupport(fragev,true,sampleBaseInfo);
         addConservativeSplitReadSupport(fragev,false,sampleBaseInfo);
-#ifdef DEBUG_SCORE
-        log_os << __FUNCTION__ << ": Counting read: " << val.first << "\n";
-#endif
         addSpanningPairSupport(fragev, sampleBaseInfo);
         addConservativeSpanningPairSupport(fragev, sampleBaseInfo);
     }

@@ -220,10 +220,9 @@ splitReadAligner(
                                       targetBpOffsetRange.end_pos()+static_cast<pos_t>(flankScoreSize));
 
 #ifdef DEBUG_SRA
-    static const std::string logtag("splitReadAligner: ");
-    log_os << logtag << "query size = " << querySize << " target size = " << targetSize << '\n';
-    log_os << logtag << "targetBeginPos = " << targetBpBeginPos << '\n';
-    log_os << logtag << "scan start = " << scanStart << " scan end = " << scanEnd << '\n';
+    log_os << __FUNCTION__ << "query size = " << querySize << " target size = " << targetSize << '\n';
+    log_os << __FUNCTION__ << "targetBeginPos = " << targetBpOffsetRange.begin_pos() << '\n';
+    log_os << __FUNCTION__ << "scan start = " << scanStart << " scan end = " << scanEnd << '\n';
 #endif
     if (scanEnd < scanStart)
     {
@@ -246,7 +245,7 @@ splitReadAligner(
                                            targetSeq, i, scoreRange, isBest, bestLnLhood));
 
 #ifdef DEBUG_SRA
-            log_os << logtag << "scanning: " << i << " lhood: " << lnLhood << " bestLnLhood " << bestLnLhood << " isBest " << isBest << " bestPos " << bestPos << '\n';
+            log_os << __FUNCTION__ << "scanning: " << i << " lhood: " << lnLhood << " bestLnLhood " << bestLnLhood << " isBest " << isBest << " bestPos " << bestPos << '\n';
 #endif
             if ( (! isBest) || (lnLhood > bestLnLhood))
             {
@@ -301,6 +300,6 @@ splitReadAligner(
     setEvidence(alignment);
 
 #ifdef DEBUG_SRA
-    log_os << logtag << "bestpos: " << bestPos << " final alignment\n" << alignment << "\n";
+    log_os << __FUNCTION__ << "bestpos: " << bestPos << " final alignment\n" << alignment << "\n";
 #endif
 }
