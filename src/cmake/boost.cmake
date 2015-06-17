@@ -216,7 +216,7 @@ if (NOT Boost_FOUND)
     else ()
         # for the time being on windows the goal is only to enable dev and library level compilation, not linking, so we don't need the libraries
         # do a quick copy instead to get the headers in place only:
-        message(STATUS "WIN32 - skipping to header only boost instation for non-linked development")
+        message(STATUS "WIN32 - skipping to header only boost installation for non-linked development")
         makedir("${BOOST_INSTALL_DIR}/include")
         makedir("${BOOST_INSTALL_DIR}/lib")
         file(COPY "${BOOST_SRC_DIR}/boost"
