@@ -240,6 +240,8 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
             hygenCmd.append("--ignore-anom-proper-pair")
         if self.params.isRNA :
             hygenCmd.append("--rna")
+        if self.params.isUnstrandedRNA :
+            hygenCmd.append("--unstranded")
 
         hygenTaskLabel=preJoin(taskPrefix,"generateCandidateSV_"+binStr)
         hygenTasks.add(self.addTask(hygenTaskLabel,hygenCmd,dependencies=dirTask, memMb=hyGenMemMb))

@@ -115,6 +115,12 @@ struct SVCandidate
         return (fwReads > rvReads);
     }
 
+    bool
+    isStranded() const
+    {
+        return ((std::max(fwReads, rvReads)+1) / (std::min(fwReads, rvReads)+1) >= 2);
+    }
+
     /// if 1 is added to the position of one breakend (within the homologous breakend range), then is 1 also added to the other breakend?
     ///
     /// if false then breakends move in opposite directions;
@@ -172,7 +178,6 @@ public:
 
     unsigned fwReads = 0; ///< Number of reads (pairs) supporting a direction from bp1 to bp2 (used for stranded RNA data)
     unsigned rvReads = 0; ///< Number of reads (pairs) directed from bp2 to bp1
-
     /// filter out this sv candidate unless it's rescued by a multi-junction event:
     bool isSingleJunctionFilter = false;
 };

@@ -223,15 +223,17 @@ GetSplitSACandidate(
     // If it is a forward read (e.g. read1 on + strand), this means it's a forward read for this event.
     const bool isSplitDownstream(isSplitOpenDownstream(localAlign.path));
     const bool isReadFw = (localRead.is_first() == localRead.is_fwd_strand());
-    if (isReadFw == isSplitDownstream)
+    if (dopt.isStranded)
     {
-        sv.fwReads += 1;
+        if (isReadFw == isSplitDownstream)
+        {
+            sv.fwReads += 1;
+        }
+        else
+        {
+            sv.rvReads += 1;
+        }
     }
-    else
-    {
-        sv.rvReads += 1;
-    }
-
     return sv;
 }
 
@@ -482,8 +484,10 @@ struct AlignmentPairAnalyzer
 {
     AlignmentPairAnalyzer(
         const ReadScannerOptions& opt,
+        const ReadScannerDerivOptions& dopt,
         const SVLocusScanner::CachedReadGroupStats& rstats)
         : _opt(opt),
+          _dopt(dopt),
           _rstats(rstats)
     {}
 
@@ -533,16 +537,17 @@ struct AlignmentPairAnalyzer
 
         localBreakend.lowresEvidence.add(svLocalPair);
 
-
-        if (_isForward)
+        if (_dopt.isStranded)
         {
-            sv.fwReads++;
+            if (_isForward)
+            {
+                sv.fwReads++;
+            }
+            else
+            {
+                sv.rvReads++;
+            }
         }
-        else
-        {
-            sv.rvReads++;
-        }
-
         if (_isRemote)
         {
             remoteBreakend.lowresEvidence.add(svLocalPair);
@@ -700,6 +705,7 @@ private:
     }
 
     const ReadScannerOptions& _opt;
+    const ReadScannerDerivOptions& _dopt;
     const SVLocusScanner::CachedReadGroupStats& _rstats;
     const SimpleAlignment* _local = nullptr;
     const SimpleAlignment* _remote = nullptr;
@@ -719,6 +725,7 @@ static
 void
 getSVCandidatesFromPair(
     const ReadScannerOptions& opt,
+    const ReadScannerDerivOptions& dopt,
     const SVLocusScanner::CachedReadGroupStats& rstats,
     const bam_record& localRead,
     const SimpleAlignment& localAlign,
@@ -739,7 +746,7 @@ getSVCandidatesFromPair(
     const bool isRemote(nullptr != remoteReadPtr);
     const SimpleAlignment remoteAlign(isRemote ? getAlignment(*remoteReadPtr) : getFakeMateAlignment(localRead));
 
-    AlignmentPairAnalyzer pairInspector(opt,rstats);
+    AlignmentPairAnalyzer pairInspector(opt, dopt, rstats);
     pairInspector.reset(localAlign, remoteAlign, isRemote, localRead.is_first());
 
     if (! pairInspector.computeLargeEventRegionScale()) return;
@@ -933,7 +940,7 @@ getReadBreakendsImpl(
         //getSVCandidatesFromShadow(opt, rstats, localRead, localAlign,remoteReadPtr,candidates);
 
         // - process anomalous read pairs:
-        getSVCandidatesFromPair(opt, rstats, localRead, localAlign, remoteReadPtr,
+        getSVCandidatesFromPair(opt, dopt, rstats, localRead, localAlign, remoteReadPtr,
                                 candidates);
     }
     catch (...)
@@ -1177,9 +1184,10 @@ SVLocusScanner(
     const ReadScannerOptions& opt,
     const std::string& statsFilename,
     const std::vector<std::string>& /*alignmentFilename*/,
-    const bool isRNA) :
+    const bool isRNA,
+    const bool isStranded) :
     _opt(opt),
-    _dopt(opt, isRNA)
+    _dopt(opt, isRNA, isStranded)
 {
     using namespace illumina::common;
 

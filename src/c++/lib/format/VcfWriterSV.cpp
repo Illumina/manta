@@ -219,6 +219,7 @@ addRNAInfo(
 
     const bool isFirst = (assemblyData.bporient.isBp1First == isFirstOfPair);
     infotags.push_back(str(boost::format("RNA_FIRST=%1%") % isFirst));
+    infotags.push_back(str(boost::format("RNA_STRANDED=%1%") % assemblyData.bporient.isStranded));
 
     if (!isFirstOfPair) return; // only the first breakpoint gets the additional RNA info attached to its VCF entry
 

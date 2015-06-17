@@ -1386,6 +1386,7 @@ getJumpAssembly(
     BPOrientation& bporient(assemblyData.bporient);
 
     bporient.isBp1First = sv.isForward();
+    bporient.isStranded = sv.isStranded();
     if (_opt.isRNA)
     {
         bporient.isBp1First = !sv.isForward(); // RNA-seq reads generate candidates in the opposite direction of the RNA
@@ -1549,7 +1550,7 @@ getJumpAssembly(
 #endif
             _RNASpanningAligner.align(contig.seq.begin(), contig.seq.end(),
                                       cutRef1.begin(), cutRef1.end(), cutRef2.begin(), cutRef2.end(),
-                                      bp1Fw, bp2Fw,
+                                      bp1Fw, bp2Fw, bporient.isStranded,
                                       alignment);
 
 #ifdef DEBUG_REFINER

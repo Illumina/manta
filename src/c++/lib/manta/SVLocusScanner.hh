@@ -70,11 +70,13 @@ struct ReadScannerDerivOptions
 {
     ReadScannerDerivOptions(
         const ReadScannerOptions& opt,
-        const bool isRNA) :
+        const bool isRNA,
+        const bool stranded) :
         isSmallCandidates(opt.minCandidateVariantSize<=opt.maxCandidateSizeForLocalAssmEvidence),
         beforeBreakend(opt.minPairBreakendSize/2),
         afterBreakend(opt.minPairBreakendSize-beforeBreakend),
-        isUseOverlappingPairs(isRNA)
+        isUseOverlappingPairs(isRNA),
+        isStranded(stranded)
     {}
 
     const bool isSmallCandidates;
@@ -84,6 +86,8 @@ struct ReadScannerDerivOptions
     /// TODO standardize the overlapping pair treatment to be the same for DNA/RNA modes, then
     /// remove this bit:
     const bool isUseOverlappingPairs;
+
+    const bool isStranded;
 };
 
 
@@ -102,7 +106,8 @@ struct SVLocusScanner
         const ReadScannerOptions& opt,
         const std::string& statsFilename,
         const std::vector<std::string>& alignmentFilename,
-        const bool isRNA);
+        const bool isRNA,
+        const bool isStranded = false);
 
     /// this predicate runs isReadFiltered without the mapq components
     static

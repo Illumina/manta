@@ -27,8 +27,9 @@ BOOST_AUTO_TEST_SUITE( test_SVLocusScanner )
 BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromReadIndels )
 {
     const bool isRNA(false);
+    const bool isStranded(true);
     const ReadScannerOptions opt;
-    const ReadScannerDerivOptions dopt(opt,isRNA);
+    const ReadScannerDerivOptions dopt(opt,isRNA,isStranded);
 
     ALIGNPATH::path_t inputPath;
     cigar_to_apath("100M2000D100M",inputPath);

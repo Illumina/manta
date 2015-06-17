@@ -62,6 +62,8 @@ struct GSCOptions
 
     bool isRNA = false; ///< if true, RNA specific filtering on candidates and diploid scoring is used
 
+    bool isUnstrandedRNA = false; /// For unstranded RNA data, the direction of fusion transcripts is unknown
+
     unsigned minCandidateSpanningCount = 3; ///< how many spanning evidence observations are required to become a candidate?
 
     unsigned minScoredVariantSize = 51; ///< min size for scoring and scored output following candidate generation

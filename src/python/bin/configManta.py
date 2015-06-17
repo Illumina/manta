@@ -52,6 +52,8 @@ You must specify a BAM file for at least one sample.
         group.add_option("--rna", dest="isRNA", action="store_true",
                          help="Set options for RNA-Seq input: turn off depth filters and don't treat "
                               "anomalous reads as SV evidence when the proper-pair bit is set.")
+        group.add_option("--unstrandedRNA", dest="isUnstrandedRNA", action="store_true",
+                         help="Set if RNA-Seq input is unstranded: Allows splice-junctions on either strand")
 
         MantaWorkflowOptionsBase.addWorkflowGroupOptions(self,group)
 
@@ -78,6 +80,7 @@ You must specify a BAM file for at least one sample.
             'runDir' : 'MantaWorkflow',
             'isExome' : False,
             'isRNA' : False,
+            'isUnstrandedRNA' : False,
             'useExistingAlignStats' : False,
             'useExistingChromDepths' : False,
             'nonlocalWorkBins' : 256
