@@ -91,7 +91,7 @@ possible for Visual Studio users. See Contributor section below.
     apt-get update -qq
     apt-get install -qq gcc-4.8 g++-4.8
 
-    # Prior to manta configuration, set CC/CXX to gcc 4.8:
+    # Prior to build configuration, set CC/CXX to gcc 4.8:
     export CC=/usr/bin/gcc-4.8
     export CXX=/usr/bin/g++-4.8
 
@@ -106,7 +106,7 @@ possible for Visual Studio users. See Contributor section below.
     wget http://people.centos.org/tru/devtools-2/devtools-2.repo -O /etc/yum.repos.d/devtools-2.repo
     yum install -y devtoolset-2-gcc devtoolset-2-gcc-c++ devtoolset-2-binutils
 
-    # Prior to manta configuration, set CC/CXX to gcc 4.8:
+    # Prior to build configuration, set CC/CXX to gcc 4.8:
     export CC=/opt/rh/devtoolset-2/root/usr/bin/gcc
     export CXX=/opt/rh/devtoolset-2/root/usr/bin/g++
 
@@ -116,7 +116,7 @@ After acquiring a release distribution of the source code, the build
 procedure is:
 
 * Unpack source code
-* Create and move to a separate build directory (out-of-source build is required.)
+* Create and move to a separate `build` directory (out-of-source build is required.)
 * Configure build
 * Compile & Install
 
@@ -201,7 +201,7 @@ directory, the root doxygen page after completing this target will be:
 
 ##### ccache
 
-Manta's build system is configured to use ccache whenever this is
+The build system is configured to use ccache whenever this is
 found in the path
 
 ##### Bundled dependencies
