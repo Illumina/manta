@@ -11,7 +11,7 @@
 #
 
 """
-get cpu and memory capability info from linux hosts
+get cpu and memory capability info from linux and os x hosts
 """
 
 
@@ -23,67 +23,89 @@ class EstException(Exception):
     pass
 
 
+
 def getNodeRealCoreCount() :
     """
-    Only works on Linux systems
-    Reads /proc/cpuinfo and tries to determine the real number of cpu cores
+    find the number of physical cpu cores
 
-    adapted from B Sickler
+    linux logic adapted from B Sickler
+
+    only works on linux and os x
     """
-    cpuinfo = '/proc/cpuinfo'
-    if not os.path.isfile(cpuinfo):
-        raise EstException("Can't read processor information from '%s'" % (cpuinfo))
 
-    physical_core_ids = set()
-    cpu_cores = set()
+    import platform
+    if platform.system().find("Linux") > -1:
 
-    for line in open(cpuinfo):
-        l_array = [item.strip() for item in line.strip().split(': ')]
-        if len(l_array) < 2: continue
-        cpuid = l_array[0]
-        if cpuid == 'cpu cores':
-            cpu_cores.add(int(l_array[1]))
-        if cpuid == 'physical id':
-            physical_core_ids.add(l_array[1])
+        cpuinfo = '/proc/cpuinfo'
+        if not os.path.isfile(cpuinfo):
+            raise EstException("Can't read processor information from '%s'" % (cpuinfo))
 
-    if len(physical_core_ids) == 0 :
-        raise EstException("No 'physical id' key found in '%s'" % (cpuinfo))
-    if len(cpu_cores) == 0 :
-        raise EstException("No 'cpu cores' key found in '%s'" % (cpuinfo))
+        physical_core_ids = set()
+        cpu_cores = set()
 
-    return ( len(physical_core_ids) * cpu_cores.pop() )
+        for line in open(cpuinfo):
+            l_array = [item.strip() for item in line.strip().split(': ')]
+            if len(l_array) < 2: continue
+            cpuid = l_array[0]
+            if cpuid == 'cpu cores':
+                cpu_cores.add(int(l_array[1]))
+            if cpuid == 'physical id':
+                physical_core_ids.add(l_array[1])
+
+        if len(physical_core_ids) == 0 :
+            raise EstException("No 'physical id' key found in '%s'" % (cpuinfo))
+        if len(cpu_cores) == 0 :
+            raise EstException("No 'cpu cores' key found in '%s'" % (cpuinfo))
+
+        return ( len(physical_core_ids) * cpu_cores.pop() )
+
+    elif platform.system().find("Darwin") > -1:
+        import subprocess
+        cmd=['sysctl', '-n', 'hw.physicalcpu']
+        proc=subprocess.Popen(cmd,shell=False,stdout=subprocess.PIPE)
+        for line in proc.stdout :
+            cpuCount=int(line.strip())
+            break
+
+        return cpuCount
+    else:
+        raise EstException("Can't determine total physical cores available on OS: '%s'" (platform.system()))
 
 
 
 
 def getNodeHyperthreadCoreCount():
     """
-    return the number of hyperthread cores on this host
+    return the number of hyperthread (or 'logical') cores on this host
 
-    Taken from R Kelley's function in IsisWorkflow
+    linux logic taken from R Kelley's function in IsisWorkflow
+
+    only works on linux and os x
     """
 
-    #
-    # We're being called from a qsub,
-    # respect the core count that it was
-    # trying to assign
-    #
-    #if "NSLOTS" in os.environ:
-    #    return int(os.environ["NSLOTS"])
-
-    #
-    # User didn't specify a core limit and neither
-    # did SGE. It's open season on CPU cores.
-    #
-    cname="/proc/cpuinfo"
-    if not os.path.isfile(cname):
-        raise EstException("Can't read processor information from %s" % (cname))
-
     cpuCount = 0
-    for line in open(cname):
-        if line.startswith("processor"): cpuCount += 1
 
-    if cpuCount == 0: raise EstException("Can't estimate processor core count from %s" % (cname))
+    import platform
+
+    if platform.system().find("Linux") > -1:
+        cname="/proc/cpuinfo"
+        if not os.path.isfile(cname):
+            raise EstException("Can't read processor information from %s" % (cname))
+
+        for line in open(cname):
+            if line.startswith("processor"): cpuCount += 1
+
+        if cpuCount == 0: raise EstException("Can't estimate processor core count from %s" % (cname))
+
+    elif platform.system().find("Darwin") > -1:
+        import subprocess
+        cmd=['sysctl', '-n', 'hw.logicalcpu']
+        proc=subprocess.Popen(cmd,shell=False,stdout=subprocess.PIPE)
+        for line in proc.stdout :
+            cpuCount=int(line.strip())
+            break
+    else:
+        raise EstException("Can't determine total logical cores available on OS: '%s'" (platform.system()))
 
     return cpuCount
 
@@ -93,24 +115,41 @@ def getNodeMemMb():
     """
     return total memory in Mbytes
 
-    Taken from R Kelley's function in IsisWorkflow
+    linux logic taken from R Kelley's function in IsisWorkflow
+
+    only works on linux and os x
     """
-    #
-    # Can only get this from /proc/meminfo
-    #
-    mname="/proc/meminfo"
-    if not os.path.isfile(mname):
-        raise EstException("Can't read memory information from %s" % (mname))
 
-    line = open(mname).readline()
-    splat = line.rstrip().split()
-    if len(splat) != 3:
-        raise EstException("Unexpected format in %s" % (mname))
+    memMb = 0
 
-    try:
-        memMb = 1+(int(splat[1])-1)/1024
-    except:
-        raise EstException("Unexpected format in %s" % (mname))
+    import platform
+
+    if platform.system().find("Linux") > -1:
+        #
+        # get this from /proc/meminfo
+        #
+        mname="/proc/meminfo"
+        if not os.path.isfile(mname):
+            raise EstException("Can't read memory information from %s" % (mname))
+
+        line = open(mname).readline()
+        splat = line.rstrip().split()
+        if len(splat) != 3:
+            raise EstException("Unexpected format in %s" % (mname))
+
+        try:
+            memMb = 1+(int(splat[1])-1)/1024
+        except:
+            raise EstException("Unexpected format in %s" % (mname))
+    elif platform.system().find("Darwin") > -1:
+        import subprocess
+        cmd=['sysctl', '-n', 'hw.memsize']
+        proc=subprocess.Popen(cmd,shell=False,stdout=subprocess.PIPE)
+        for line in proc.stdout :
+            memMb=int(line.strip())/(1024*1024)
+            break
+    else:
+        raise EstException("Can't determine total memory available on OS: '%s'" (platform.system()))
 
     return memMb
 
