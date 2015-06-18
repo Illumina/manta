@@ -564,7 +564,7 @@ writeInvdel(
     // complex in/del combinations
     //
     bool isSmallVariant(false);
-    if ((! isImprecise) && isIndel && (! sv.isUnknownSizeInsertion))
+    if ((! _isRNA) && (! isImprecise) && isIndel && (! sv.isUnknownSizeInsertion))
     {
         const unsigned deleteSize(bpBrange.begin_pos() - bpArange.begin_pos());
         const unsigned insertSize(sv.insertSeq.size());
@@ -574,7 +574,7 @@ writeInvdel(
 
         isSmallVariant = (isSmallDelete && isSmallInsert);
     }
-    if (isSmallVariant && _isRNA) return;
+
     // get POS and endPos
     pos_t pos(bpArange.center_pos()+1);
     pos_t endPos(bpBrange.center_pos());

@@ -93,20 +93,9 @@ classifyIndel(
     return ((deleteSize >= insertSize) ? DELETE : INSERT);
 }
 
+}
 
-static
-    bool
-    isIntrachromBnd(
-    const SVCandidate& /*sv*/)
-{
-    /// TODO turn this feature back on when fewer pieces are in motion
-#if 0
-    static const int intrachromTranslocThreshold(1000000);
-    return (sv.centerSize() >= intrachromTranslocThreshold);
-#endif
-    return false;
-}
-}
+
 
 EXTENDED_SV_TYPE::index_t
 getExtendedSVType(
@@ -119,7 +108,7 @@ getExtendedSVType(
 
     if (svType == SV_TYPE::INTERTRANSLOC) return INTERTRANSLOC;
 
-    if (isForceIntraChromBnd || isIntrachromBnd(sv)) return INTRATRANSLOC;
+    if (isForceIntraChromBnd) return INTRATRANSLOC;
 
     switch (svType)
     {
