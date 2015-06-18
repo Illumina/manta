@@ -216,6 +216,15 @@ To avoid the extra time associated with this step, ensure that (1)
 cmake 2.8.0+ is in your PATH and (2) BOOST\_ROOT is defined to point
 to boost 1.56.0 or newer.
 
+#### Address Sanitizer
+
+The build system offers first-class support for google address sanitizer
+when a supporting compiler is detected. To use this mode, start a fresh
+installation process with the additional configure option `--build-type=ASan`,
+extending from the configuration example in the above build instructions, use:
+
+    ../manta-A.B.C.release_src/src/configure --jobs=4 --prefix=/path/to/install --build-type=ASan
+
 #### Windows development support
 
 Manta does not link or run on windows. However, the build system does
