@@ -15,7 +15,7 @@ library.
 
 ******************************************************************
 
-samtools 1.0
+samtools 1.2
 
 The MIT/Expat License
 
@@ -54,7 +54,7 @@ to a notice that reads "Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010,
 
 ******************************************************************
 
-htslib 1.0
+htslib 1.2.1
 
 [Files in this distribution outwith the cram/ subdirectory are distributed
 according to the terms of the following MIT/Expat license.]

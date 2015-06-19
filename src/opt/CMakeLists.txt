@@ -32,7 +32,7 @@ endmacro()
 #
 # htslib
 #
-set(HTSLIB_PREFIX "htslib-1.0")
+set(HTSLIB_PREFIX "htslib-1.2.1")
 superset(HTSLIB_DIR "${CMAKE_CURRENT_BINARY_DIR}/${HTSLIB_PREFIX}")
 superset(HTSLIB_LIBRARY "${HTSLIB_DIR}/libhts.a")
 
@@ -64,7 +64,7 @@ endif ()
 #
 # samtools
 #
-set(SAMTOOLS_PREFIX "samtools-1.0")
+set(SAMTOOLS_PREFIX "samtools-1.2")
 superset(SAMTOOLS_DIR "${CMAKE_CURRENT_BINARY_DIR}/${SAMTOOLS_PREFIX}")
 superset(SAMTOOLS_LIBRARY "${SAMTOOLS_DIR}/libbam.a")
 superset(SAMTOOLS_PROG "${SAMTOOLS_DIR}/samtools")
@@ -74,8 +74,7 @@ add_custom_command(
     OUTPUT ${SAMTOOLS_DIR}
     COMMAND ${CMAKE_COMMAND} -E remove_directory "${SAMTOOLS_DIR}"
     COMMAND ${CMAKE_COMMAND} -E tar xjf "${THIS_REDIST_DIR}/${SAMTOOLS_PREFIX}.tar.bz2"
-    COMMAND ${CMAKE_COMMAND} -E remove_directory "${CMAKE_CURRENT_BINARY_DIR}/htslib"
-    COMMAND ${CMAKE_COMMAND} -E copy_directory "${HTSLIB_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/htslib"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${HTSLIB_DIR}" "${SAMTOOLS_DIR}/${HTSLIB_PREFIX}"
     DEPENDS ${HTSLIB_FINAL_TASK}
     COMMENT "Unpacking samtools package")
 
