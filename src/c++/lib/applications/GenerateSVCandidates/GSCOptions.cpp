@@ -97,7 +97,7 @@ parseGSCOptions(
      "Turn off remote mapq0 read search for assembly (reduces assembly success for insertions/mobile elements).")
     ("rna", po::value(&opt.isRNA)->zero_tokens(),
      "For RNA input. Skip small deletions and modify diploid scoring.")
-     ("unstranded", po::value(&opt.isUnstrandedRNA)->zero_tokens(),
+    ("unstranded", po::value(&opt.isUnstrandedRNA)->zero_tokens(),
      "For RNA input. Is data stranded?.")
     ("min-candidate-spanning-count", po::value(&opt.minCandidateSpanningCount)->default_value(opt.minCandidateSpanningCount),
      "minimum number of supporting spanning observations required to become an SV candidate")

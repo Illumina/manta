@@ -1,3 +1,4 @@
+- MANTA-244 Handle unstranded RNA data
 - MANTA-239 Use RNA bam alignments for ref read scoring
 v0.26.3
 - Fix OSX build and demo run (req. update to boost 1.56)

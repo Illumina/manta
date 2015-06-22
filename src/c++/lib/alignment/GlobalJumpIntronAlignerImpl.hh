@@ -53,7 +53,8 @@ isDownstreamSpliceDonor(
     const SymIter refEnd,
     bool fwStrand,
     bool isStranded)
-{ // Default (Truseq) RNA data is on the opposite strand from the original RNA
+{
+    // Default (Truseq) RNA data is on the opposite strand from the original RNA
     if (std::distance(refIter,refEnd)<2) return false;
     if (((!fwStrand) || (!isStranded)) && (*(refIter) == 'G' && (*(refIter + 1) == 'T')))
         return true;
