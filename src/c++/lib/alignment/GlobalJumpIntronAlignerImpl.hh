@@ -37,9 +37,9 @@ isUpstreamSpliceAcceptor(
     bool isStranded)
 {
     if (std::distance(refBegin,refIter)<2) return false;
-    if (((!fwStrand) || (!isStranded)) && (*(refIter - 2) == 'A' && (*(refIter - 1) == 'G')))
+    if (((fwStrand) || (!isStranded)) && (*(refIter - 2) == 'A' && (*(refIter - 1) == 'G')))
         return true;
-    if (((fwStrand) || (!isStranded)) && (*(refIter - 2) == 'A' && (*(refIter - 1) == 'C')))
+    if (((!fwStrand) || (!isStranded)) && (*(refIter - 2) == 'A' && (*(refIter - 1) == 'C')))
         return true;
     return false;
 }
@@ -54,11 +54,10 @@ isDownstreamSpliceDonor(
     bool fwStrand,
     bool isStranded)
 {
-    // Default (Truseq) RNA data is on the opposite strand from the original RNA
     if (std::distance(refIter,refEnd)<2) return false;
-    if (((!fwStrand) || (!isStranded)) && (*(refIter) == 'G' && (*(refIter + 1) == 'T')))
+    if (((fwStrand) || (!isStranded)) && (*(refIter) == 'G' && (*(refIter + 1) == 'T')))
         return true;
-    if (((fwStrand) || (!isStranded)) && (*(refIter) == 'C' && (*(refIter + 1) == 'T')))
+    if (((!fwStrand) || (!isStranded)) && (*(refIter) == 'C' && (*(refIter + 1) == 'T')))
         return true;
     return false;
 }

@@ -35,7 +35,8 @@ testAlignScores(
     const std::string& seq,
     const std::string& ref1,
     const std::string& ref2,
-    int match, int mismatch, int open, int extend, int spliceOpen, int offEdge, int spliceOffEdge)
+    int match, int mismatch, int open, int extend, int spliceOpen, int offEdge, int spliceOffEdge,
+    bool stranded, bool bp1Fw, bool bp2Fw)
 {
     AlignmentScores<score_t> scores(match, mismatch, open, extend, offEdge);
     score_t jumpScore(-3);
@@ -45,7 +46,7 @@ testAlignScores(
         seq.begin(),seq.end(),
         ref1.begin(),ref1.end(),
         ref2.begin(),ref2.end(),
-        false, false, true,//todo make tests for all ortientations
+        bp1Fw, bp2Fw, stranded,
         result);
 
     return result;
@@ -56,9 +57,11 @@ JumpAlignmentResult<score_t>
 testAlignSplice(
     const std::string& seq,
     const std::string& ref1,
-    const std::string& ref2)
+    const std::string& ref2,
+    bool stranded=true,
+    bool fw=true)
 {
-    return testAlignScores(seq, ref1, ref2, 2,-4,-5,-1,-4,-1,-1);
+    return testAlignScores(seq, ref1, ref2, 2,-4,-5,-1,-4,-1,-1, stranded, fw, fw);
 }
 
 
