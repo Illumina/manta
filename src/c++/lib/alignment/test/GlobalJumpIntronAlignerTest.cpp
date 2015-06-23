@@ -89,6 +89,42 @@ BOOST_AUTO_TEST_CASE( test_GlobalJumpAlignerSpliceRef2 )
     BOOST_REQUIRE_EQUAL(result.align2.beginPos,1);
 }
 
+BOOST_AUTO_TEST_CASE(test_GlobalJumpAlignerSpliceRev)
+{
+    static const std::string seq("AAAAABBBBB");
+    static const std::string ref1("xxxx");
+    static const std::string ref2("xAAAAACTxxxACBBBBBx");
+
+    JumpAlignmentResult<score_t> result = testAlignSplice(seq, ref1, ref2, true, false);
+
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath), "5=7N5=");
+    BOOST_REQUIRE_EQUAL(result.align2.beginPos, 1);
+}
+
+BOOST_AUTO_TEST_CASE(test_GlobalJumpAlignerSpliceUnstrandedRev)
+{
+    static const std::string seq("AAAAABBBBB");
+    static const std::string ref1("xxxx");
+    static const std::string ref2("xAAAAACTxxxACBBBBBx");
+
+    JumpAlignmentResult<score_t> result = testAlignSplice(seq, ref1, ref2, false);
+
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath), "5=7N5=");
+    BOOST_REQUIRE_EQUAL(result.align2.beginPos, 1);
+}
+
+BOOST_AUTO_TEST_CASE(test_GlobalJumpAlignerNoSpliceWrongStrand)
+{
+    static const std::string seq("AAAAABBBBB");
+    static const std::string ref1("xxxx");
+    static const std::string ref2("xAAAAACTxxxACBBBBBx");
+
+    JumpAlignmentResult<score_t> result = testAlignSplice(seq, ref1, ref2, true, true);
+
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath), "5=7D5=");
+    BOOST_REQUIRE_EQUAL(result.align2.beginPos, 1);
+}
+
 BOOST_AUTO_TEST_CASE( test_GlobalJumpAlignerSpliceNoSplice )
 {
     static const std::string seq("AAAAABBBBB");
