@@ -159,7 +159,6 @@ private:
     writeInvdel(
         const SVCandidate& sv,
         const SVId& svId,
-        const SVCandidateAssemblyData& adata,
         const bool isIndel,
         const EventInfo& event);
 

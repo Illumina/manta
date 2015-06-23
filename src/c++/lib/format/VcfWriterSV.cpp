@@ -530,7 +530,6 @@ VcfWriterSV::
 writeInvdel(
     const SVCandidate& sv,
     const SVId& svId,
-    const SVCandidateAssemblyData& adata,
     const bool isIndel,
     const EventInfo& event)
 {
@@ -565,7 +564,7 @@ writeInvdel(
     // complex in/del combinations
     //
     bool isSmallVariant(false);
-    if ((! _isRNA) && (! isImprecise) && isIndel && (! sv.isUnknownSizeInsertion))
+    if ((! isImprecise) && isIndel && (! sv.isUnknownSizeInsertion))
     {
         const unsigned deleteSize(bpBrange.begin_pos() - bpArange.begin_pos());
         const unsigned insertSize(sv.insertSeq.size());
@@ -690,14 +689,6 @@ writeInvdel(
         {
             infoTags.push_back( str( boost::format("CIEND=%i,%i") % (bpBrange.begin_pos() - endPos) % ((bpBrange.end_pos()-1) - endPos) ));
         }
-    }
-
-    if ((! isSmallVariant) && _isRNA)
-    {
-        addRNAInfo(true, sv, adata, infoTags);
-#ifdef DEBUG_VCF
-        addRNADebugInfo(isFirstBreakend, sv, adata, infotags);
-#endif
     }
 
     if (! isImprecise)
@@ -831,14 +822,14 @@ writeSVCore(
 
     try
     {
-        if      (isSVTransloc(svType))
+        if (isSVTransloc(svType))
         {
             writeTranslocPair(sv, svId, svData, adata, event);
         }
         else
         {
             const bool isIndel(isSVIndel(svType));
-            writeInvdel(sv, svId, adata, isIndel, event);
+            writeInvdel(sv, svId, isIndel, event);
         }
     }
     catch (...)
