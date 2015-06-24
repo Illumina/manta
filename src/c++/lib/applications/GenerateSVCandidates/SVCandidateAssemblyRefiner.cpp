@@ -1543,10 +1543,26 @@ getJumpAssembly(
             log_os << "\t cutref Lengths " << cutRef1.size() << " " << cutRef2.size() << "\n";
 #endif
 
-            const bool bp1Fw = (bporient.isBp1Reversed != bporient.isBp1First);
-            const bool bp2Fw = (bporient.isBp2Reversed != bporient.isBp1First);
+            bool bp1RnaStrandFw; // Is the RNA fusion transcript on the forward strand at bp1
+            bool bp2RnaStrandFw;
+            if (bporient.isBp1First)
+            {
+                bp1RnaStrandFw = (sv.bp1.state == SVBreakendState::RIGHT_OPEN);
+                bp2RnaStrandFw = (sv.bp2.state == SVBreakendState::LEFT_OPEN);
+            }
+            else
+            {
+                bp1RnaStrandFw = (sv.bp1.state == SVBreakendState::LEFT_OPEN);
+                bp2RnaStrandFw = (sv.bp2.state == SVBreakendState::RIGHT_OPEN);
+            }
+            bool bp1Fw = (bporient.isBp1Reversed != bp1RnaStrandFw); //Should we look for the splice motif on the fw or rev strand in the bp1 ref seq
+            bool bp2Fw = (bporient.isBp2Reversed != bp2RnaStrandFw);
+            if (bporient.isBp2AlignedFirst) //bp1 and bp2 sequences have been swapped above
+                std::swap(bp1Fw, bp2Fw);
+
+
 #ifdef DEBUG_REFINER
-            log_os << __FUNCTION__ << ": bp1Fw: " << bp1Fw << " ; bp2Fw: " << bp2Fw << '\n';
+            log_os << __FUNCTION__ << " isStranded: " << bporient.isStranded << "; bp1Fw: " << bp1Fw << " ; bp2Fw: " << bp2Fw << '\n';
 #endif
             _RNASpanningAligner.align(contig.seq.begin(), contig.seq.end(),
                                       cutRef1.begin(), cutRef1.end(), cutRef2.begin(), cutRef2.end(),
