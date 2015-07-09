@@ -18,6 +18,13 @@ variants in matched tumor-normal sample pairs. See the [user guide]
 
 [UserGuide]:src/markdown/mantaUserGuide.md
 
+License
+-------
+
+Manta source code is provided under the [GPLv3 license] (LICENSE.txt).
+Manta includes several third party packages provided under other
+open source licenses, please see [COPYRIGHT.txt] (COPYRIGHT.txt)
+for additional details.
 
 Build instructions
 ------------------
