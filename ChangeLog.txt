@@ -1,4 +1,5 @@
 - Update license to GPLv3
+- Update to relicensed pyflow v1.1.5
 - MANTA-244 Handle unstranded RNA data
 - MANTA-239 Use RNA bam alignments for ref read scoring
 - Fix core/memory auto-detect for OSX
