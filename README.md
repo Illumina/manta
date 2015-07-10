@@ -44,7 +44,7 @@ be found below.
 
 Note that this README is _NOT_ part of a tagged source-code release.
 
-[releases]:https://github.com/sequencing/manta/releases
+[releases]:https://github.com/illumina/manta/releases
 
 [tcistatus]:https://travis-ci.org/sequencing/manta.svg?branch=master
 [tcihome]:https://travis-ci.org/sequencing/manta
@@ -129,7 +129,7 @@ procedure is:
 
 Example (building on 4 cores):
 
-    wget https://github.com/sequencing/manta/releases/download/vA.B.C/manta-A.B.C.release_src.tar.bz2
+    wget https://github.com/illumina/manta/releases/download/vA.B.C/manta-A.B.C.release_src.tar.bz2
     tar -xjf manta-A.B.C.release_src.tar.bz2
     mkdir build && cd build
     # Ensure that CC and CXX are updated to target compiler if needed, e.g.:
