@@ -46,8 +46,8 @@ Note that this README is _NOT_ part of a tagged source-code release.
 
 [releases]:https://github.com/illumina/manta/releases
 
-[tcistatus]:https://travis-ci.org/sequencing/manta.svg?branch=master
-[tcihome]:https://travis-ci.org/sequencing/manta
+[tcistatus]:https://travis-ci.org/illumina/manta.svg?branch=master
+[tcihome]:https://travis-ci.org/illumina/manta
 
 ### Build prerequisites:
 
