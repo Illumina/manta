@@ -1,3 +1,6 @@
+v0.26.5
+- Update pyflow to v1.1.6: fixes multithread bug introduced in v1.1.5.
+Manta should be isolated from this issue in theory.
 v0.26.4
 - Update license to GPLv3
 - Update to relicensed pyflow v1.1.5
