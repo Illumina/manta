@@ -59,7 +59,7 @@ struct SVRefinerOptions
         largeGapOpenScore(SUPERTMP::largeGapOpenScore),
         jumpScore(-25),
         RNAspanningAlignScores(2, -8, -19, -1, -1),
-        RNAJumpScore(-60),
+        RNAJumpScore(-100),
         RNAIntronOpenScore(-15),
         RNAIntronOffEdgeScore(-1)
     {
