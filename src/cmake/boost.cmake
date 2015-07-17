@@ -1,13 +1,20 @@
 #
-# Manta
+# Manta - Structural Variant and Indel Caller
 # Copyright (c) 2013-2015 Illumina, Inc.
 #
-# This software is provided under the terms and conditions of the
-# Illumina Open Source Software License 1.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# at your option) any later version.
 #
-# You should have received a copy of the Illumina Open Source
-# Software License 1 along with this program. If not, see
-# <https://github.com/sequencing/licenses/>
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
 #
 
 ################################################################################
@@ -27,7 +34,7 @@ endif ()
 
 macro (initBoostParams)
     # required boost libraries
-    set (THIS_BOOST_VERSION 1.53.0)
+    set (THIS_BOOST_VERSION 1.56.0)
     # note we default to alphabetical order here, except where boost libraries depend on
     # each other (timer->chrono)
     set (THIS_BOOST_COMPONENTS date_time filesystem program_options
@@ -152,9 +159,16 @@ if (NOT Boost_FOUND)
         set (BOOST_BOOTSTRAP "bootstrap.bat")
     endif ()
 
+    # boost compile works in windows, but we aren't going to link anyway so we're
+    # skipping to save time:
+    #
     if (NOT WIN32)
-        # boost compile works in windows, but we aren't going to link anyway, so we're
-        # skipping to save time:
+
+        if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+            set (UCONFIG "${BOOST_SRC_DIR}/tools/build/src/user-config.jam")
+            file (WRITE "${UCONFIG}" "using gcc : : \"${CMAKE_CXX_COMPILER}\" ;\n")
+        endif ()
+
         message(STATUS "Configuring boost library")
         execute_process(
             COMMAND ${BOOST_BOOTSTRAP}
@@ -209,7 +223,7 @@ if (NOT Boost_FOUND)
     else ()
         # for the time being on windows the goal is only to enable dev and library level compilation, not linking, so we don't need the libraries
         # do a quick copy instead to get the headers in place only:
-        message(STATUS "WIN32 - skipping to header only boost instation for non-linked development")
+        message(STATUS "WIN32 - skipping to header only boost installation for non-linked development")
         makedir("${BOOST_INSTALL_DIR}/include")
         makedir("${BOOST_INSTALL_DIR}/lib")
         file(COPY "${BOOST_SRC_DIR}/boost"

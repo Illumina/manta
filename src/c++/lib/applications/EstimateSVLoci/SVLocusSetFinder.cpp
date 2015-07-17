@@ -1,14 +1,21 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Manta
+// Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2015 Illumina, Inc.
 //
-// This software is provided under the terms and conditions of the
-// Illumina Open Source Software License 1.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// at your option) any later version.
 //
-// You should have received a copy of the Illumina Open Source
-// Software License 1 along with this program. If not, see
-// <https://github.com/sequencing/licenses/>
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 //
 
 ///
@@ -62,8 +69,7 @@ SVLocusSetFinder(
     const ESLOptions& opt,
     const GenomeInterval& scanRegion,
     const bam_header_info& bamHeader,
-    const reference_contig_segment& refSeq,
-    TruthTracker& truthTracker) :
+    const reference_contig_segment& refSeq) :
     _isAlignmentTumor(opt.alignFileOpt.isAlignmentTumor),
     _scanRegion(scanRegion),
     _stageman(
@@ -77,12 +83,11 @@ SVLocusSetFinder(
     _isScanStarted(false),
     _isInDenoiseRegion(false),
     _denoisePos(0),
-    _readScanner(opt.scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilename),
+    _readScanner(opt.scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilename, opt.isRNA),
     _isMaxDepth(false),
     _maxDepth(0),
     _bamHeader(bamHeader),
-    _refSeq(refSeq),
-    _truthTracker(truthTracker)
+    _refSeq(refSeq)
 {
     const ChromDepthFilterUtil dFilter(opt.chromDepthFilename, opt.scanOpt.maxDepthFactor, bamHeader);
     _isMaxDepth=dFilter.isMaxDepthFilter();
@@ -271,7 +276,7 @@ update(
     SampleEvidenceCounts& eCounts(counts.evidence);
 
     _readScanner.getSVLoci(bamRead, defaultReadGroupIndex, _bamHeader,
-                           _refSeq, loci, eCounts, _truthTracker);
+                           _refSeq, loci, eCounts);
 
     for (const SVLocus& locus : loci)
     {

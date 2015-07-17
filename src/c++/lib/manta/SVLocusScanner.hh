@@ -1,14 +1,21 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Manta
+// Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2015 Illumina, Inc.
 //
-// This software is provided under the terms and conditions of the
-// Illumina Open Source Software License 1.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// at your option) any later version.
 //
-// You should have received a copy of the Illumina Open Source
-// Software License 1 along with this program. If not, see
-// <https://github.com/sequencing/licenses/>
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 //
 
 ///
@@ -22,12 +29,13 @@
 #include "blt_util/LinearScaler.hh"
 #include "htsapi/bam_record.hh"
 #include "htsapi/bam_record_util.hh"
+#include "htsapi/bam_header_info.hh"
 #include "manta/ReadGroupStatsSet.hh"
 #include "manta/SVCandidate.hh"
 #include "manta/SVLocusEvidenceCount.hh"
 #include "svgraph/SVLocus.hh"
+#include "svgraph/SVLocusSampleCounts.hh"
 #include "options/ReadScannerOptions.hh"
-#include "truth/TruthTracker.hh"
 
 #include <string>
 #include <vector>
@@ -67,15 +75,26 @@ struct SVObservationWeights
 
 struct ReadScannerDerivOptions
 {
-    ReadScannerDerivOptions(const ReadScannerOptions& opt) :
+    ReadScannerDerivOptions(
+        const ReadScannerOptions& opt,
+        const bool isRNA,
+        const bool stranded) :
         isSmallCandidates(opt.minCandidateVariantSize<=opt.maxCandidateSizeForLocalAssmEvidence),
         beforeBreakend(opt.minPairBreakendSize/2),
-        afterBreakend(opt.minPairBreakendSize-beforeBreakend)
+        afterBreakend(opt.minPairBreakendSize-beforeBreakend),
+        isUseOverlappingPairs(isRNA),
+        isStranded(stranded)
     {}
 
     const bool isSmallCandidates;
     const pos_t beforeBreakend;
     const pos_t afterBreakend;
+
+    /// TODO standardize the overlapping pair treatment to be the same for DNA/RNA modes, then
+    /// remove this bit:
+    const bool isUseOverlappingPairs;
+
+    const bool isStranded;
 };
 
 
@@ -93,7 +112,9 @@ struct SVLocusScanner
     SVLocusScanner(
         const ReadScannerOptions& opt,
         const std::string& statsFilename,
-        const std::vector<std::string>& alignmentFilename);
+        const std::vector<std::string>& alignmentFilename,
+        const bool isRNA,
+        const bool isStranded = false);
 
     /// this predicate runs isReadFiltered without the mapq components
     static
@@ -103,7 +124,8 @@ struct SVLocusScanner
     {
         if      (bamRead.is_filter()) return true;
         else if (bamRead.is_dup()) return true;
-        else {
+        else
+        {
             // hack to work with bwamem '-M' formatting,
             // keep secondary reads when they contain an SA tag
             if (bamRead.is_secondary())
@@ -209,8 +231,7 @@ struct SVLocusScanner
         const bam_header_info& bamHeader,
         const reference_contig_segment& refSeq,
         std::vector<SVLocus>& loci,
-        SampleEvidenceCounts& eCounts,
-        TruthTracker& truthTracker) const;
+        SampleEvidenceCounts& eCounts) const;
 
     /// get local and remote breakends for each SV Candidate which can be extracted from a read pair
     ///
@@ -227,8 +248,7 @@ struct SVLocusScanner
         const bam_header_info& bamHeader,
         const reference_contig_segment& localRefSeq,
         const reference_contig_segment* remoteRefSeqPtr,
-        std::vector<SVObservation>& candidates,
-        TruthTracker& truthTracker) const;
+        std::vector<SVObservation>& candidates) const;
 
     /// this information is needed for the whole bam, not just one read group:
     int
@@ -294,6 +314,12 @@ struct SVLocusScanner
 
         LinearScaler<int> largeEventRegionScaler; ///< used to set expanded breakend sizes for large events
     };
+
+    bool
+    isUseOverlappingPairs() const
+    {
+        return _dopt.isUseOverlappingPairs;
+    }
 
 private:
 

@@ -1,14 +1,21 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Manta
+// Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2015 Illumina, Inc.
 //
-// This software is provided under the terms and conditions of the
-// Illumina Open Source Software License 1.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// at your option) any later version.
 //
-// You should have received a copy of the Illumina Open Source
-// Software License 1 along with this program. If not, see
-// <https://github.com/sequencing/licenses/>
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 //
 
 ///
@@ -31,7 +38,7 @@
 #include "format/VcfWriterDiploidSV.hh"
 #include "format/VcfWriterSomaticSV.hh"
 #include "format/VcfWriterTumorSV.hh"
-#include "truth/TruthTracker.hh"
+
 
 #include <memory>
 
@@ -46,8 +53,7 @@ struct SVWriter
         const SVLocusScanner& readScanner,
         const SVLocusSet& cset,
         const char* progName,
-        const char* progVersion,
-        TruthTracker& truthTracker);
+        const char* progVersion);
 
     void
     writeSV(
@@ -75,8 +81,6 @@ struct SVWriter
     VcfWriterSomaticSV somWriter;
     VcfWriterTumorSV tumorWriter;
 
-    TruthTracker& _truthTracker;
-
     JunctionIdGenerator _idgen;
 };
 
@@ -89,7 +93,6 @@ struct SVCandidateProcessor
         const char* progName,
         const char* progVersion,
         const SVLocusSet& cset,
-        TruthTracker& truthTracker,
         EdgeRuntimeTracker& edgeTracker,
         GSCEdgeStatsManager& _edgeStatMan);
 
@@ -110,7 +113,6 @@ private:
 
     const GSCOptions& _opt;
     const SVLocusSet& _cset;
-    TruthTracker& _truthTracker;
     EdgeRuntimeTracker& _edgeTracker;
     GSCEdgeStatsManager& _edgeStatMan;
     SVCandidateAssemblyRefiner _svRefine;

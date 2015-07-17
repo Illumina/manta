@@ -77,8 +77,10 @@ mv $tmp_file $cml
 rme=$pname/README.md
 awk -v gver=$gitversion '
 {
-    if      ($0~/^Version: NOT RELEASED/) printf "Version: %s\n",gver;
-    else if ($0~/_NOT_ part of an end-user/) a=1;
+    if      (!ver && !NF) { printf "\nVersion: %s\n\n",gver; ver=1}
+    else if ($0~/_NOT_ part of/) a=1;
+    else if ($0~/\[Build Status\]/) b=1;
+    else if (b && !NF) b=0;
     else print;
 }' $rme >| $tmp_file
 mv $tmp_file $rme
@@ -86,7 +88,9 @@ mv $tmp_file $rme
 # tar it up:
 (
 cd $outdir
-tar -f $pname_root.tar.bz2 -cj $pname_root
+rname=$pname_root.release_src
+mv $pname_root $rname
+tar -f $rname.tar.bz2 -cj $rname
+rm -rf $rname
 )
 
-rm -rf $pname

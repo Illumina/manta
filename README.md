@@ -1,140 +1,251 @@
 Manta Structural Variant Caller
 ===============================
 
-Version: NOT RELEASED
+Manta calls structural variants (SVs) and indels from mapped
+paired-end sequencing reads. It is optimized for analysis of
+individuals and tumor/normal sample pairs, calling SVs, medium-sized
+indels and large insertions within a single workflow. The method is
+designed for rapid analysis on standard compute hardware: NA12878 at
+50x genomic coverage is analyzed in less than 20 minutes on a 20 core
+server, most WGS tumor-normal analyses can be completed within 2
+hours. Manta combines paired and split-read evidence during SV
+discovery and scoring to improve accuracy, but does not require
+split-reads or successful breakpoint assemblies to report a variant in
+cases where there is strong evidence otherwise. It provides scoring
+models for germline variants in individual diploid samples and somatic
+variants in matched tumor-normal sample pairs. See the [user guide]
+[UserGuide] for a full description of capabilities and limitations.
 
-Manta is a tool to call structural variants and indels from short paired-end
-sequencing reads. It combines paired-end and split read evidence during SV
-discovery and scoring to improve performance, but does not require split reads
-or successful breakpoint assemblies to report a variant in cases where there is
-strong evidence of an imprecise variant. It provides genotypes and quality
-scores for variants in single diploid samples, and will also call somatic
-variants when a matched tumor sample is specified. Manta can detect all classes
-of structural variants which can be identified in the absence of copy number
-analysis and large-scale assembly. See the user guide for a full description of
-capabilities and limitations.
+[UserGuide]:src/markdown/mantaUserGuide.md
 
+License
+-------
+
+Manta source code is provided under the [GPLv3 license] (LICENSE.txt).
+Manta includes several third party packages provided under other
+open source licenses, please see [COPYRIGHT.txt] (COPYRIGHT.txt)
+for additional details.
 
 Build instructions
 ------------------
 
-For Manta users it is strongly recommended to start from one of the release
-distributions of the source code provided on the Manta [releases] page. Acquiring
-the source via a git clone or archive could result in missing version number
-entries, undesirably stringent build requirements, or an unstable development
-intermediate between releases. Additional build notes for developers can be
-found below.
+[![Build Status] [tcistatus]] [tcihome]
 
-Note that this README is _NOT_ part of an end-user release distribution.
+It is recommended to start from one of the [binary distributions on
+the Manta releases page] [releases] if a suitable version is available
+(note that the CentOS 5 binary distribution is expected to support a
+large variety of linux systems).  If building from source start from
+the release distributions of the source code, also provided on the
+[Manta releases page] [releases]. Cloning/archiving the source
+directly from git could result in missing version number entries,
+undesirably stringent build requirements or an unstable development
+version between releases. Additional build notes for contributors can
+be found below.
 
-[releases]:https://github.com/StructuralVariants/manta/releases
+Note that this README is _NOT_ part of a tagged source-code release.
 
-### Prerequisites
+[releases]:https://github.com/Illumina/manta/releases
 
-Manta has been built and tested on linux systems only. It is currently
-maintained for CentOS 5,6 and Ubuntu 12.04,14.04 (with gcc updated to meet
-the minimum version where required).
+[tcistatus]:https://travis-ci.org/Illumina/manta.svg?branch=master
+[tcihome]:https://travis-ci.org/Illumina/manta
 
-#### Compilation prerequisites:
+### Build prerequisites:
 
-Manta requires a compiler supporting most of the C++11 standard. These are the
-current minimum versions enforced by the build system:
+Manta requires a compiler supporting most of the C++11 standard. These
+are the current minimum versions enforced by the build system:
 
 * python 2.4+
-* gcc 4.7+ OR clang 3.2+ (OR Visual Studio 2013+, see windev note below)
+* gcc 4.7+ OR clang 3.1+ (OR Visual Studio 2013+, see windev note below)
 * libz (including headers)
 
-#### Runtime prerequisites
+### Runtime prerequisites
 
 * python 2.4+
 
-#### Prerequisite package names (RHEL/CentOS)
+### Operating System Guidelines
 
-* g++
-* make
-* zlib-devel
+##### Linux 
+
+Manta is known to build and run on the following linux distributions
+(with additional packages as described below):
+
+- Ubuntu 12.04,14.04
+- CentOS 5,6,7
+
+##### OS X
+
+Manta builds and passes basic tests on OS X 10.9, but full WGS analyses
+are not tested for this platform.
+
+##### Windows
+
+Manta does not build or run on windows. Library-level compilation is
+possible for Visual Studio users. See Contributor section below.
+
+### Linux Package Additions
+
+##### Ubuntu 14.04
+
+    apt-get update -qq
+    apt-get install -qq gcc g++ make zlib1g-dev python
+
+##### Ubuntu 12.04
+
+    apt-get update -qq
+    apt-get install -qq bzip2 gcc g++ make zlib1g-dev python python-software-properties
+    # add gcc 4.8 from ubuntu ppa:
+    add-apt-repository -y ppa:ubuntu-toolchain-r/test
+    apt-get update -qq
+    apt-get install -qq gcc-4.8 g++-4.8
+
+    # Prior to build configuration, set CC/CXX to gcc 4.8:
+    export CC=/usr/bin/gcc-4.8
+    export CXX=/usr/bin/g++-4.8
+
+##### CentOS 7
+
+    yum install -y tar bzip2 make gcc gcc-c++ zlib-devel
+
+##### CentOS 5 and 6
+
+    yum install -y tar wget bzip2 make gcc gcc-c++ zlib-devel
+    # add gcc 4.8 from developer tools v2:
+    wget http://people.centos.org/tru/devtools-2/devtools-2.repo -O /etc/yum.repos.d/devtools-2.repo
+    yum install -y devtoolset-2-gcc devtoolset-2-gcc-c++ devtoolset-2-binutils
+
+    # Prior to build configuration, set CC/CXX to gcc 4.8:
+    export CC=/opt/rh/devtoolset-2/root/usr/bin/gcc
+    export CXX=/opt/rh/devtoolset-2/root/usr/bin/g++
 
 ### Build procedure
 
-After acquiring a release distribution of the source code, the build procedure is:
+After acquiring a release distribution of the source code, the build
+procedure is:
 
-* Unpack the source code
-* Create a separate `build` directory (note an out-of-source build is
-  required.)
-* Configure the build
-* Compile
-* Install
+* Unpack source code
+* Create and move to a separate `build` directory (out-of-source build is required.)
+* Configure build
+* Compile & Install
 
-Example:
+Example (building on 4 cores):
 
-    wget https://github.com/StructuralVariants/manta/releases/download/vA.B.C/manta-A.B.C.tar.bz2
-    tar -xjf manta-A.B.C.tar.bz2
-    mkdir build
-    cd build
-    ../manta-A.B.C/src/configure --prefix=/path/to/install
-    make
-    make install
+    wget https://github.com/Illumina/manta/releases/download/vA.B.C/manta-A.B.C.release_src.tar.bz2
+    tar -xjf manta-A.B.C.release_src.tar.bz2
+    mkdir build && cd build
+    # Ensure that CC and CXX are updated to target compiler if needed, e.g.:
+    #     export CC=/path/to/cc
+    #     export CXX=/path/to/c++
+    ../manta-A.B.C.release_src/src/configure --jobs=4 --prefix=/path/to/install
+    make -j4 install
 
-Note that during the configuration step, the following compilation
-dependencies will be built if these are not found:
+Note that during the configuration step, the following dependencies
+will be built from source if they are not found:
 
 * cmake 2.8.0+
-* boost 1.53.0
+* boost 1.56.0+
 
-To optionally avoid this extra step, ensure that (1) cmake is in your PATH and (2)
-BOOST\_ROOT is defined to point to boost 1.53.0 (the boost version is required to
-be an exact match). If either of these dependencies are not found, they will be
-built during the configuration step, To accelerate this process it may be
-desirable to parallelize the configure step over multiple cores. To do so
-provide the `--jobs` argument to the configuration script. For example:
-
-    ${MANTA_SRC_PATH}/configure --prefix=/path/to/install --jobs=4
-
-Compiling Manta itself can also be parallelized by the standard make procedure, e.g.
-
-    make -j4
-    make install
+To accelerate this process the configuration step can be parallelized
+over multiple cores, as demonstrated in the example above with the
+`--jobs=4` argument to configure.
 
 To see more configure options, run:
 
     ${MANTA_SRC_PATH}/configure --help
 
+##### Workflow relocation
+
+After Manta is built the installation directory can be relocated to
+another directory.  All internal paths used in the workflow are
+relative.
+
+### Demo / Build Verification 
+
+To help verify a successful installation, Manta includes a small demo
+data set and test script. After completing the installation steps
+above, the demo can be run as follows:
+
+    bash ${MANTA_INSTALL_PATH}/bin/runMantaWorkflowDemo.bash
+
+See [the demo README](src/demo/README.md) for additional information
+on the test script and data.
+
 
 Data analysis and Interpretation
 --------------------------------
 
-After completing the installation, see the Manta user guide for instructions on
-how to use Manta, interpret results, and a high-level overview of the method.
-The user guide can be found in:
+After completing installation, see the [Manta user guide] [UserGuide]
+for instructions on how to run Manta, interpret results, and a
+high-level overview of the method.
+
+The user guide is also available within any Manta binary distribution
+here:
 
     ${MANTA_INSTALL_PATH}/doc/html/mantaUserGuide.html
 
 
-Developer build configuration
------------------------------
+Contributor build configuration
+-------------------------------
 
-When the Manta source is cloned from github, it is configured for development
-rather than end-user distribution. As such, all builds include -Werror. If
-cppcheck is found any detected issue is converted to a build error.
+When Manta is cloned from github, it is configured for development
+rather than user distribution. As such, builds are strict: all
+warnings are treated as errors and if cppcheck is found any detected
+issue is converted to a build error.
 
+#### Source documentation
 
-Windows developer support
--------------------------
+If doxygen is found in the path (and optionally dot as well) during
+build configuration, then c++ documentation is available as an
+additional "doc" target for the makefile:
 
-Manta does not link or run on windows. The build system does however
-facilitate developers preferring to use Visual Studio. During
-windows cmake configuration all final library linking is disabled and all
-third party libraries are unpacked such that their headers can be
-included, but the libraries are not compiled. Cmake generated VS solutions allow
-the c++ code to be browsed, analyzed and compiled to the library level.
-Note that unit tests can not be run under this scheme -- just like the other
-runtime binaries, they can't be linked without building 3rd party libraries.
+    make doc
 
-Note that the c++11 features used by manta require at least Visual Studio
-2013. In addition to VS2013 and cmake, a zlib installation is required. The
-simplist way to do this may be to use the gnuwin32 pacakge here:
+There is no installation for the documentation outside of the build
+directory, the root doxygen page after completing this target will be:
 
-http://gnuwin32.sourceforge.net/packages/zlib.htm
+    ${MANTA_BUILD_PATH}/c++/doxygen/html/index.html
 
-This library will enable building for 32 bit only.
+#### Improving build time
+
+##### ccache
+
+The build system is configured to use ccache whenever this is
+found in the path
+
+##### Bundled dependencies
+
+Note that during the configuration step, the following dependencies will be
+built from source if they are not found:
+
+* cmake 2.8.0+
+* boost 1.56.0+
+
+To avoid the extra time associated with this step, ensure that (1)
+cmake 2.8.0+ is in your PATH and (2) BOOST\_ROOT is defined to point
+to boost 1.56.0 or newer.
+
+#### Address Sanitizer
+
+The build system offers first-class support for google address sanitizer
+when a supporting compiler is detected. To use this mode, start a fresh
+installation process with the additional configure option `--build-type=ASan`,
+extending from the configuration example in the above build instructions, use:
+
+    ../manta-A.B.C.release_src/src/configure --jobs=4 --prefix=/path/to/install --build-type=ASan
+
+#### Windows development support
+
+Manta does not link or run on windows. However, the build system does
+facilitate Visual Studio (VS) users. When cmake configuration is run
+on windows, all linking is disabled and third party libraries are
+unpacked for header include access, but are not compiled. Cmake VS
+solutions allow the c++ code to be browsed, analyzed and compiled to
+the library level.  Note that unit test codes are compiled to
+libraries but cannot be run.
+
+C++11 features used by manta require at least VS2013. Windows
+installations of cmake and zlib are also required to configure and
+compile. Windows zlib is provided by the [gnuwin32
+package] [gnuwin32] among others.
+
+[gnuwin32]:http://gnuwin32.sourceforge.net/packages/zlib.htm
 

@@ -1,13 +1,20 @@
 #
-# Manta
+# Manta - Structural Variant and Indel Caller
 # Copyright (c) 2013-2015 Illumina, Inc.
 #
-# This software is provided under the terms and conditions of the
-# Illumina Open Source Software License 1.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# at your option) any later version.
 #
-# You should have received a copy of the Illumina Open Source
-# Software License 1 along with this program. If not, see
-# <https://github.com/sequencing/licenses/>
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
 #
 
 """
@@ -128,6 +135,8 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
 
         if self.params.isIgnoreAnomProperPair :
             graphCmd.append("--ignore-anom-proper-pair")
+        if self.params.isRNA :
+            graphCmd.append("--rna")
 
         graphTaskLabel=preJoin(taskPrefix,"makeLocusGraph_"+gseg.pyflowId)
         graphTasks.add(self.addTask(graphTaskLabel,graphCmd,dependencies=dirTask,memMb=self.params.estimateMemMb))
@@ -249,6 +258,8 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
             hygenCmd.append("--ignore-anom-proper-pair")
         if self.params.isRNA :
             hygenCmd.append("--rna")
+        if self.params.isUnstrandedRNA :
+            hygenCmd.append("--unstranded")
 
         hygenTaskLabel=preJoin(taskPrefix,"generateCandidateSV_"+binStr)
         hygenTasks.add(self.addTask(hygenTaskLabel,hygenCmd,dependencies=dirTask, memMb=hyGenMemMb))

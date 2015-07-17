@@ -1,14 +1,21 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Manta
+// Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2015 Illumina, Inc.
 //
-// This software is provided under the terms and conditions of the
-// Illumina Open Source Software License 1.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// at your option) any later version.
 //
-// You should have received a copy of the Illumina Open Source
-// Software License 1 along with this program. If not, see
-// <https://github.com/sequencing/licenses/>
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 //
 
 ///
@@ -52,8 +59,7 @@ struct SVFinder
     findCandidateSV(
         const EdgeInfo& edge,
         SVCandidateSetData& svData,
-        std::vector<SVCandidate>& svs,
-        TruthTracker& truthTracker);
+        std::vector<SVCandidate>& svs);
 
     void
     checkResult(
@@ -71,8 +77,7 @@ private:
         const GenomeInterval& searchInterval,
         const reference_contig_segment& refSeq,
         const bool isNode1,
-        SVCandidateSetData& svData,
-        TruthTracker& truthTracker);
+        SVCandidateSetData& svData);
 
     void
     assignFragmentObservationsToSVCandidates(
@@ -96,7 +101,6 @@ private:
         const unsigned bamIndex,
         const bool isExpandSVCandidateSet,
         std::vector<FatSVCandidate>& svs,
-        TruthTracker& truthTracker,
         SVCandidateSetSequenceFragment& fragment);
 
     void
@@ -108,16 +112,14 @@ private:
         const reference_contig_segment& refSeq2,
         SVCandidateSetData& svData,
         std::vector<SVCandidate>& svs,
-        SVFinderStats& stats,
-        TruthTracker& truthTracker);
+        SVFinderStats& stats);
 
     void
     findCandidateSVImpl(
         const EdgeInfo& edge,
         SVCandidateSetData& svData,
         std::vector<SVCandidate>& svs,
-        SVFinderStats& stats,
-        TruthTracker& truthTracker);
+        SVFinderStats& stats);
 
     const ChromDepthFilterUtil&
     dFilter() const

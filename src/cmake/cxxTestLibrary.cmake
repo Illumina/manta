@@ -1,13 +1,20 @@
 #
-# Manta
+# Manta - Structural Variant and Indel Caller
 # Copyright (c) 2013-2015 Illumina, Inc.
 #
-# This software is provided under the terms and conditions of the
-# Illumina Open Source Software License 1.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# at your option) any later version.
 #
-# You should have received a copy of the Illumina Open Source
-# Software License 1 along with this program. If not, see
-# <https://github.com/sequencing/licenses/>
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
 #
 
 ################################################################################
@@ -39,7 +46,7 @@ endif ()
 if (WIN32)
     # create a fake library target on win32 instead of linking and running the unit test
     # this creates a project in VS that allows for interaction with the unit test code
-    
+
     # add all files to TEST_SOURCE to make the IDE project more usable:
     file(GLOB TMP_TARGET_FILES *)
 

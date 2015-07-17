@@ -1,14 +1,21 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Manta
+// Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2015 Illumina, Inc.
 //
-// This software is provided under the terms and conditions of the
-// Illumina Open Source Software License 1.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// at your option) any later version.
 //
-// You should have received a copy of the Illumina Open Source
-// Software License 1 along with this program. If not, see
-// <https://github.com/sequencing/licenses/>
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 //
 
 ///
@@ -26,7 +33,6 @@
 #include "common/Exceptions.hh"
 #include "manta/MultiJunctionUtil.hh"
 #include "manta/SVCandidateUtil.hh"
-#include "truth/TruthTracker.hh"
 
 #include <iostream>
 
@@ -167,15 +173,13 @@ runGSC(
     EdgeRuntimeTracker edgeTracker(opt.edgeRuntimeFilename);
     GSCEdgeStatsManager edgeStatMan(opt.edgeStatsFilename);
 
-    const SVLocusScanner readScanner(opt.scanOpt, opt.statsFilename, opt.alignFileOpt.alignmentFilename);
+    const SVLocusScanner readScanner(opt.scanOpt, opt.statsFilename, opt.alignFileOpt.alignmentFilename, opt.isRNA, !opt.isUnstrandedRNA);
 
     SVFinder svFind(opt, readScanner, edgeTracker,edgeStatMan);
     MultiJunctionFilter svMJFilter(opt,edgeStatMan);
     const SVLocusSet& cset(svFind.getSet());
 
-    TruthTracker truthTracker(opt.truthVcfFilename, cset);
-
-    SVCandidateProcessor svProcessor(opt, readScanner, progName, progVersion, cset,  truthTracker, edgeTracker, edgeStatMan);
+    SVCandidateProcessor svProcessor(opt, readScanner, progName, progVersion, cset, edgeTracker, edgeStatMan);
 
     std::unique_ptr<EdgeRetriever> edgerPtr(edgeRFactory(cset, opt.edgeOpt));
     EdgeRetriever& edger(*edgerPtr);
@@ -195,7 +199,6 @@ runGSC(
 
         try
         {
-            truthTracker.addEdge(edge);
             edgeTracker.start();
 
             if (opt.isVerbose)
@@ -205,7 +208,7 @@ runGSC(
             }
 
             // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
-            svFind.findCandidateSV(edge, svData, svs, truthTracker);
+            svFind.findCandidateSV(edge, svData, svs);
 
             // filter long-range junctions outside of the candidate finder so that we can evaluate
             // junctions which are part of a larger event (like a reciprocal translocation)
@@ -238,8 +241,6 @@ runGSC(
 
         edgeStatMan.updateScoredEdgeTime(edge, edgeTracker);
     }
-
-    truthTracker.dumpAll();
 }
 
 

@@ -1,13 +1,20 @@
 #
-# Manta
+# Manta - Structural Variant and Indel Caller
 # Copyright (c) 2013-2015 Illumina, Inc.
 #
-# This software is provided under the terms and conditions of the
-# Illumina Open Source Software License 1.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# at your option) any later version.
 #
-# You should have received a copy of the Illumina Open Source
-# Software License 1 along with this program. If not, see
-# <https://github.com/sequencing/licenses/>
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
 #
 
 ################################################################################
@@ -32,7 +39,7 @@ endmacro()
 #
 # htslib
 #
-set(HTSLIB_PREFIX "htslib-1.0")
+set(HTSLIB_PREFIX "htslib-1.2.1")
 superset(HTSLIB_DIR "${CMAKE_CURRENT_BINARY_DIR}/${HTSLIB_PREFIX}")
 superset(HTSLIB_LIBRARY "${HTSLIB_DIR}/libhts.a")
 
@@ -64,7 +71,7 @@ endif ()
 #
 # samtools
 #
-set(SAMTOOLS_PREFIX "samtools-1.0")
+set(SAMTOOLS_PREFIX "samtools-1.2")
 superset(SAMTOOLS_DIR "${CMAKE_CURRENT_BINARY_DIR}/${SAMTOOLS_PREFIX}")
 superset(SAMTOOLS_LIBRARY "${SAMTOOLS_DIR}/libbam.a")
 superset(SAMTOOLS_PROG "${SAMTOOLS_DIR}/samtools")
@@ -74,8 +81,7 @@ add_custom_command(
     OUTPUT ${SAMTOOLS_DIR}
     COMMAND ${CMAKE_COMMAND} -E remove_directory "${SAMTOOLS_DIR}"
     COMMAND ${CMAKE_COMMAND} -E tar xjf "${THIS_REDIST_DIR}/${SAMTOOLS_PREFIX}.tar.bz2"
-    COMMAND ${CMAKE_COMMAND} -E remove_directory "${CMAKE_CURRENT_BINARY_DIR}/htslib"
-    COMMAND ${CMAKE_COMMAND} -E copy_directory "${HTSLIB_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/htslib"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${HTSLIB_DIR}" "${SAMTOOLS_DIR}/${HTSLIB_PREFIX}"
     DEPENDS ${HTSLIB_FINAL_TASK}
     COMMENT "Unpacking samtools package")
 
@@ -84,9 +90,10 @@ set (SAMTOOLS_FINAL_TASK ${SAMTOOLS_DIR})
 if (NOT WIN32)
     add_custom_command(
         OUTPUT ${SAMTOOLS_PROG}
-        COMMAND ${CMAKE_COMMAND} -E chdir "${SAMTOOLS_DIR}" $(MAKE) all 2>| samtools.build.log
+        COMMAND $(MAKE) all 2>| samtools.build.log
         DEPENDS ${HTSLIB_LIBRARY}
         DEPENDS ${SAMTOOLS_DIR}
+        WORKING_DIRECTORY ${SAMTOOLS_DIR}
         COMMENT "Building samtools package")
 
     set (SAMTOOLS_FINAL_TASK ${SAMTOOLS_PROG})
@@ -104,7 +111,7 @@ endif ()
 #
 
 #make sure unpacking happens regardless of whether ${VCF_TOOLS_DIR} exists
-set(PYFLOW_PREFIX "pyflow-1.1.3")
+set(PYFLOW_PREFIX "pyflow-1.1.6")
 set(PYFLOW_DIR "${CMAKE_CURRENT_BINARY_DIR}/${PYFLOW_PREFIX}")
 set(PYFLOW_SCRIPT "${PYFLOW_DIR}/src/pyflow.py")
 

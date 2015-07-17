@@ -1,0 +1,47 @@
+language: cpp
+
+compiler:
+  - gcc
+  - clang
+
+os:
+  - linux
+  - osx
+
+matrix:
+  # gcc would just repeat the clang test on OSX, so skip it:
+  exclude:
+    - os: osx
+      compiler: gcc
+
+osx_image: xcode61
+
+before_install:
+  # setup gcc 4.8:
+  - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" == "g++" ]; then sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test; fi
+  # setup cppcheck 1.67:
+  - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" == "g++" ]; then sudo add-apt-repository -y ppa:j-rivero/cppcheck-latest; fi
+  - if [ $TRAVIS_OS_NAME == linux ]; then sudo apt-get update -qq; fi
+
+install:
+  # add cppcheck: static analysis should be independent of os/compiler, so only install this on one test case:
+  - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" == "g++" ]; then sudo apt-get install -qq cppcheck; fi
+  # install gcc 4.8
+  - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" == "g++" ]; then sudo apt-get install -qq gcc-4.8 g++-4.8; fi
+  - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" == "g++" ]; then export CC=/usr/bin/gcc-4.8 && export CXX=/usr/bin/g++-4.8; fi
+  # install clang 3.4
+  - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" == "clang++" ]; then sudo apt-get install -qq llvm-3.4 llvm-3.4-dev; fi
+ 
+script:
+  - mkdir build && cd build && ../src/configure --jobs=4 --prefix=../install && make -j4 install && ../install/bin/runMantaWorkflowDemo.bash
+
+branches:
+  only:
+    - master
+
+notifications:
+  email:
+    recipients:
+      - csaunders@illumina.com
+
+

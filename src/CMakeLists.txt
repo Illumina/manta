@@ -1,13 +1,20 @@
 #
-# Manta
+# Manta - Structural Variant and Indel Caller
 # Copyright (c) 2013-2015 Illumina, Inc.
 #
-# This software is provided under the terms and conditions of the
-# Illumina Open Source Software License 1.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# at your option) any later version.
 #
-# You should have received a copy of the Illumina Open Source
-# Software License 1 along with this program. If not, see
-# <https://github.com/sequencing/licenses/>
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
 #
 
 ################################################################################
@@ -74,16 +81,22 @@ endif ()
 # other cache variables
 #
 
-# remove this setting if win build needs to rebuild boost:
-set (CMAKE_PARALLEL "1")
-
 if (NOT CMAKE_PARALLEL)
-    set(CMAKE_PARALLEL "0" CACHE STRING
-        "Choose the number of cores used by cmake during configuration (no default)")
+    # set to true if win build needs to rebuild boost, right now on win32 all we do is unpack boost for headers:
+    set (IS_WIN_BOOST_BUILD FALSE)
 
-    # must give user the chance to set this before proceeding, otherwise we force a long wait for boost to compile
-    message (WARNING "\n*** Must set CMAKE_PARALLEL before continuing configuration ***\n")
-    return()
+
+    if (IS_WIN_BOOST_BUILD)
+        set(CMAKE_PARALLEL "0" CACHE STRING
+            "Choose the number of cores used by cmake during configuration (no default)")
+
+        # give windows/cmake-gui user the chance to set this before proceeding, otherwise
+        # we force a long wait for boost to compile
+        message (WARNING "\n*** Must set CMAKE_PARALLEL before continuing configuration ***\n")
+        return()
+    else ()
+        set (CMAKE_PARALLEL "1")
+    endif ()
 endif ()
 
 message (STATUS "CMAKE_PARALLEL: ${CMAKE_PARALLEL}")
@@ -127,7 +140,7 @@ if (CPACK_GENERATOR)
 
     if (CPACK_GENERATOR STREQUAL "RPM")
         set(CPACK_RPM_PACKAGE_RELOCATABLE TRUE)
-        set(CPACK_RPM_PACKAGE_LICENSE "Illumina Open Source Software License 1")
+        set(CPACK_RPM_PACKAGE_LICENSE "GPLv3")
         set(CPACK_RPM_PACKAGE_REQUIRES "python >= 2.4.0")
     else ()
         set(CPACK_SET_DESTDIR ON)

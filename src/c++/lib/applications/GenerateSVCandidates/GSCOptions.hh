@@ -1,14 +1,21 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Manta
+// Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2015 Illumina, Inc.
 //
-// This software is provided under the terms and conditions of the
-// Illumina Open Source Software License 1.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// at your option) any later version.
 //
-// You should have received a copy of the Illumina Open Source
-// Software License 1 along with this program. If not, see
-// <https://github.com/sequencing/licenses/>
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 //
 
 ///
@@ -64,6 +71,8 @@ struct GSCOptions
     bool isSkipRemoteReads = false; ///< if true, don't search for non-local mapq0 mate pairs for assembly
 
     bool isRNA = false; ///< if true, RNA specific filtering on candidates and diploid scoring is used
+
+    bool isUnstrandedRNA = false; /// For unstranded RNA data, the direction of fusion transcripts is unknown
 
     unsigned minCandidateSpanningCount = 3; ///< how many spanning evidence observations are required to become a candidate?
 

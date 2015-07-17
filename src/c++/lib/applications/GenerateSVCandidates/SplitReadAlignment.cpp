@@ -1,18 +1,26 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Manta
+// Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2015 Illumina, Inc.
 //
-// This software is provided under the terms and conditions of the
-// Illumina Open Source Software License 1.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// at your option) any later version.
 //
-// You should have received a copy of the Illumina Open Source
-// Software License 1 along with this program. If not, see
-// <https://github.com/sequencing/licenses/>
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 //
 
 ///
 /// \author Xiaoyu Chen
+/// \author Felix Schlesinger
 ///
 
 #include "SplitReadAlignment.hh"
@@ -20,9 +28,11 @@
 #include "blt_util/log.hh"
 #include "blt_util/seq_printer.hh"
 #include "common/Exceptions.hh"
+#include "htsapi/SimpleAlignment_bam_util.hh"
 
 #include <cassert>
 #include <cmath>
+
 #include <iostream>
 
 
@@ -185,6 +195,90 @@ setEvidence(
 
 
 void
+getRefAlignment(
+    const bam_record& bamRead,
+    const reference_contig_segment& bp1ref,
+    const known_pos_range2& bpPos,
+    const qscore_snp& qualConvert,
+    SRAlignmentInfo& alignment)
+{
+    using namespace ALIGNPATH;
+    const SimpleAlignment align(getAlignment(bamRead));
+    const std::string qrySeq(bamRead.get_bam_read().get_string());
+    const int refLength(apath_ref_length(align.path));
+    std::string bp1Ref;
+    bp1ref.get_substring(align.pos, refLength, bp1Ref);
+    const uint8_t* qual(bamRead.qual());
+#ifdef DEBUG_SRA
+    log_os << __FUNCTION__ << bamRead << '\n';
+    log_os << "\t" << refLength << " " << qrySeq << '\n';
+    log_os << "\t" << bp1Ref.substr(0,10) << '\n';
+#endif
+
+    auto queryIndex(qrySeq.begin());
+    auto refIndex(bp1Ref.begin());
+    for (const path_segment seg : align.path)
+    {
+        if (is_segment_align_match(seg.type))
+        {
+            for (unsigned i=0; i < seg.length; i++)
+            {
+                int refPos(align.pos + refIndex - bp1Ref.begin());
+                bool isSeqMatch(false);
+                if ((*queryIndex == 'N') || (*refIndex == 'N'))
+                {
+                    static const float lnRandomBase(-std::log(4.f));
+                    alignment.alignLnLhood += lnRandomBase;
+                }
+                else
+                {
+                    const int baseQual(std::max(2, static_cast<int>(qual[i])));
+                    if ((*queryIndex) == (*refIndex))
+                    {
+                        isSeqMatch = true;
+                        alignment.alignLnLhood += qualConvert.qphred_to_ln_comp_error_prob(baseQual);
+                    }
+                    else
+                    {
+                        static const float ln_one_third(std::log(1 / 3.f));
+                        alignment.alignLnLhood += qualConvert.qphred_to_ln_error_prob(baseQual) + ln_one_third;
+                    }
+                }
+
+                if (refPos <= bpPos.begin_pos())
+                {
+                    alignment.leftSize++;
+                    if (!isSeqMatch) alignment.leftMismatches++;
+                }
+                if ((refPos > bpPos.begin_pos()) && (refPos < bpPos.end_pos()))
+                {
+                    alignment.homSize++;
+                    if (!isSeqMatch) alignment.homMismatches++;
+                }
+                if (refPos >= bpPos.end_pos())
+                {
+                    alignment.rightSize++;
+                    if (!isSeqMatch) alignment.rightMismatches++;
+                }
+                queryIndex++;
+                refIndex++;
+            }
+        }
+        else
+        {
+            if (is_segment_type_read_length(seg.type)) std::advance(queryIndex, seg.length);
+            if (is_segment_type_ref_length(seg.type)) std::advance(refIndex, seg.length);
+        }
+    }
+    alignment.alignPos = align.pos - bp1ref.get_offset();
+    alignment.alignScore = apath_matched_length(align.path) - alignment.leftMismatches -
+                           alignment.homMismatches - alignment.rightMismatches;
+    setEvidence(alignment);
+}
+
+
+
+void
 splitReadAligner(
     const unsigned flankScoreSize,
     const std::string& querySeq,
@@ -220,10 +314,9 @@ splitReadAligner(
                                       targetBpOffsetRange.end_pos()+static_cast<pos_t>(flankScoreSize));
 
 #ifdef DEBUG_SRA
-    static const std::string logtag("splitReadAligner: ");
-    log_os << logtag << "query size = " << querySize << " target size = " << targetSize << '\n';
-    log_os << logtag << "targetBeginPos = " << targetBpBeginPos << '\n';
-    log_os << logtag << "scan start = " << scanStart << " scan end = " << scanEnd << '\n';
+    log_os << __FUNCTION__ << "query size = " << querySize << " target size = " << targetSize << '\n';
+    log_os << __FUNCTION__ << "targetBeginPos = " << targetBpOffsetRange.begin_pos() << '\n';
+    log_os << __FUNCTION__ << "scan start = " << scanStart << " scan end = " << scanEnd << '\n';
 #endif
     if (scanEnd < scanStart)
     {
@@ -246,7 +339,7 @@ splitReadAligner(
                                            targetSeq, i, scoreRange, isBest, bestLnLhood));
 
 #ifdef DEBUG_SRA
-            log_os << logtag << "scanning: " << i << " lhood: " << lnLhood << " bestLnLhood " << bestLnLhood << " isBest " << isBest << " bestPos " << bestPos << '\n';
+            log_os << __FUNCTION__ << "scanning: " << i << " lhood: " << lnLhood << " bestLnLhood " << bestLnLhood << " isBest " << isBest << " bestPos " << bestPos << '\n';
 #endif
             if ( (! isBest) || (lnLhood > bestLnLhood))
             {
@@ -301,6 +394,6 @@ splitReadAligner(
     setEvidence(alignment);
 
 #ifdef DEBUG_SRA
-    log_os << logtag << "bestpos: " << bestPos << " final alignment\n" << alignment << "\n";
+    log_os << __FUNCTION__ << "bestpos: " << bestPos << " final alignment\n" << alignment << "\n";
 #endif
 }

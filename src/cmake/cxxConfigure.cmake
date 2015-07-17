@@ -1,13 +1,20 @@
 #
-# Manta
+# Manta - Structural Variant and Indel Caller
 # Copyright (c) 2013-2015 Illumina, Inc.
 #
-# This software is provided under the terms and conditions of the
-# Illumina Open Source Software License 1.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# at your option) any later version.
 #
-# You should have received a copy of the Illumina Open Source
-# Software License 1 along with this program. If not, see
-# <https://github.com/sequencing/licenses/>
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
 #
 
 ################################################################################
@@ -87,6 +94,10 @@ if (NOT WIN32)
     endif()
 endif ()
 
+set (IS_CLANG ((CMAKE_C_COMPILER_ID STREQUAL "Clang") OR (CMAKE_C_COMPILER_ID STREQUAL "AppleClang")))
+set (IS_CLANGXX ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")))
+
+
 if (${IS_CCACHE})
     message (STATUS "Found ccache: ${CCACHE_PATH}")
     SET_PROPERTY(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ${CCACHE_PATH})
@@ -94,10 +105,10 @@ if (${IS_CCACHE})
 
     # special logic to get clang and ccache working together (suggestion from http://petereisentraut.blogspot.com/2011/09/ccache-and-clang-part-2.html):
     set(ENV{CCACHE_CPP2} "yes")
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    if (${IS_CLANGXX})
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Qunused-arguments")
     endif()
-    if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    if (${IS_CLANG})
         set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Qunused-arguments")
     endif()
 
@@ -120,10 +131,29 @@ function(get_compiler_version compiler_version)
     set(${compiler_version} ${this_version} PARENT_SCOPE)
 endfunction()
 
-# clang doesn't make finding the version easy for us...
+# clang doesn't make finding the version easy for us,
+# and apple makes it even harder...
 macro(get_clang_version compiler_version)
 #    execute_process(COMMAND bash -c "${CMAKE_CXX_COMPILER} -v 2>&1 | awk '{printf $3; exit}'" OUTPUT_VARIABLE ${compiler_version})
     execute_process(COMMAND bash -c "echo | ${CMAKE_CXX_COMPILER} -dM -E - | awk '/__clang_version__/ {printf $3; exit}' | tr -d '\"'" OUTPUT_VARIABLE ${compiler_version})
+    if (APPLE)
+        # translate apple clang version numbers back to root llvm value (better way to do this?)
+        if (${compiler_version} VERSION_LESS "3.1")
+            set (${compiler_version} "0.0")
+        elseif (${compiler_version} VERSION_LESS "4.2")
+            set (${compiler_version} "3.1")
+        elseif (${compiler_version} VERSION_LESS "5.0")
+            set (${compiler_version} "3.2")
+        elseif (${compiler_version} VERSION_LESS "5.1")
+            set (${compiler_version} "3.3")
+        elseif (${compiler_version} VERSION_LESS "6.0")
+            set (${compiler_version} "3.4")
+        elseif (${compiler_version} VERSION_LESS "6.1")
+            set (${compiler_version} "3.5")
+        else ()
+            set (${compiler_version} "3.6")
+        endif ()
+    endif ()
 endmacro()
 
 macro(test_min_compiler compiler_version min_compiler_version compiler_label)
@@ -135,8 +165,8 @@ endmacro()
 
 
 set (min_gxx_version "4.7")
-set (min_clang_version "3.2")
-set (min_intel_version "12.0") # guestimate based on intel support documentation
+set (min_clang_version "3.1")
+set (min_intel_version "14.0")
 set (min_msvc_version "1800") # cl.exe 18, as shipped in Visual Studio 12 2013
 
 set (CXX_COMPILER_NAME "${CMAKE_CXX_COMPILER_ID}")
@@ -146,7 +176,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     get_compiler_version(COMPILER_VERSION)
     set (CXX_COMPILER_NAME "g++")
     test_min_compiler(${COMPILER_VERSION} "${min_gxx_version}" "${CXX_COMPILER_NAME}")
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+elseif (${IS_CLANGXX})
     get_clang_version(COMPILER_VERSION)
     set (CXX_COMPILER_NAME "clang++")
     test_min_compiler(${COMPILER_VERSION} "${min_clang_version}" "${CXX_COMPILER_NAME}")
@@ -183,11 +213,9 @@ set (IS_STANDARD_STATIC FALSE)
 if     (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if (NOT (${COMPILER_VERSION} VERSION_LESS "4.5"))
         set (IS_STANDARD_STATIC TRUE)
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
     endif ()
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
     set (IS_STANDARD_STATIC TRUE)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
 endif ()
 
 if (${IS_STANDARD_STATIC})
@@ -198,9 +226,19 @@ endif ()
 ##
 ## set bug workarounds:
 ##
-if     (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    if (((${COMPILER_VERSION} VERSION_EQUAL "4.7") OR (${COMPILER_VERSION} VERSION_EQUAL "4.7.3")) OR
-        ((${COMPILER_VERSION} VERSION_EQUAL "4.8") OR (${COMPILER_VERSION} VERSION_EQUAL "4.8.2")))
+
+# determine version of libstdc++ library
+if     (CMAKE_CXX_COMPILER_ID STREQUAL "INTEL")
+    set(STDCXX_VERSION ${gxx_compiler_version})
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set(STDCXX_VERSION ${COMPILER_VERSION})
+else ()
+    set(STDCXX_VERSION FALSE)
+endif ()
+
+if     (STDCXX_VERSION)
+    if (((${STDCXX_VERSION} VERSION_EQUAL "4.7") OR (${STDCXX_VERSION} VERSION_EQUAL "4.7.3")) OR
+        ((${STDCXX_VERSION} VERSION_EQUAL "4.8") OR (${STDCXX_VERSION} VERSION_EQUAL "4.8.2")))
         # workaround for: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=58800
         add_definitions( -DBROKEN_NTH_ELEMENT )
     endif ()
@@ -210,12 +248,19 @@ endif ()
 ##
 ## set warning flags:
 ##
-set (GNU_COMPAT_COMPILER ( (CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")))
+set (GNU_COMPAT_COMPILER ( (CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR (${IS_CLANGXX}) OR (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")))
 if (${GNU_COMPAT_COMPILER})
     set (CXX_WARN_FLAGS "-Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -pedantic -Wunused-parameter")
-    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wundef -Wdisabled-optimization -Wno-unknown-pragmas")
-    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wempty-body -Wdeprecated -Wno-missing-braces")
+    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wundef -Wno-unknown-pragmas")
+    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wdeprecated")
+
+    if ((NOT CMAKE_CXX_COMPILER_ID STREQUAL "Intel") OR (NOT ${COMPILER_VERSION} VERSION_LESS "14.0"))
+        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wdisabled-optimization")
+        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-missing-braces")
+    endif ()
+
     if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wempty-body")
         set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wredundant-decls")
     endif ()
 
@@ -237,7 +282,14 @@ if     (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         # don't know which patch levels are affected, so marking out all gcc 4.7.X
         set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-unused-function")
     endif ()
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+
+    if (NOT (${COMPILER_VERSION} VERSION_LESS "5.1"))
+        # these mostly only make sense with flto:
+        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wodr")
+        #set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wsuggest-final-types -Wsuggest-final-methods")
+    endif ()
+
+elseif (${IS_CLANGXX})
     set (IS_WARN_EVERYTHING FALSE)
 
     if (${IS_WARN_EVERYTHING})
@@ -245,9 +297,8 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     endif ()
 
     set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wmissing-prototypes -Wunused-exception-parameter -Wbool-conversion")
-    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wimplicit-fallthrough -Wsizeof-array-argument -Wstring-conversion")
-    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wloop-analysis -Wextra-semi -Wmissing-variable-declarations")
-    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wheader-hygiene -Wmismatched-tags -Wunused-private-field")
+    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wsizeof-array-argument -Wstring-conversion")
+    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wheader-hygiene -Wmismatched-tags")
 
     if (${IS_WARN_EVERYTHING})
         set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-sign-conversion -Wno-weak-vtables -Wno-conversion -Wno-cast-align -Wno-padded")
@@ -255,6 +306,11 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-unreachable-code -Wno-global-constructors -Wno-exit-time-destructors")
         set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-c++98-compat -Wno-old-style-cast -Wno-unused-member-function")
         set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-documentation -Wno-float-equal")
+    endif ()
+
+    if (NOT (${COMPILER_VERSION} VERSION_LESS "3.2"))
+        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wimplicit-fallthrough -Wloop-analysis -Wextra-semi")
+        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wmissing-variable-declarations -Wunused-private-field")
     endif ()
 
     if (NOT (${COMPILER_VERSION} VERSION_LESS "3.3"))
@@ -291,7 +347,11 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX_WARN_FLAGS}")
 
 
 if (${GNU_COMPAT_COMPILER})
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+    if ((NOT CMAKE_CXX_COMPILER_ID STREQUAL "Intel") OR (${COMPILER_VERSION} VERSION_LESS "15.0"))
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+    else ()
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+    endif ()
     set (CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 
     # The NDEBUG macro is intentionally removed from release. One discussion on this is:
@@ -314,7 +374,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "ASan")
         if (NOT (${COMPILER_VERSION} VERSION_LESS "4.8"))
             set (IS_ASAN_SUPPORTED true)
         endif ()
-    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    elseif (${IS_CLANGXX})
         if (NOT (${COMPILER_VERSION} VERSION_LESS "3.1"))
             set (IS_ASAN_SUPPORTED true)
         endif ()

@@ -1,14 +1,21 @@
 #!/usr/bin/env bash
 #
-# Manta
+# Manta - Structural Variant and Indel Caller
 # Copyright (c) 2013-2015 Illumina, Inc.
 #
-# This software is provided under the terms and conditions of the
-# Illumina Open Source Software License 1.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# at your option) any later version.
 #
-# You should have received a copy of the Illumina Open Source
-# Software License 1 along with this program. If not, see
-# <https://github.com/sequencing/licenses/>
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
 #
 
 ################################################################################
@@ -35,7 +42,7 @@ INCLUDE_DIR=${INSTALL_DIR}/include
 
 CMAKE_MAJOR=2
 CMAKE_MINOR=8
-CMAKE_PATCH=9
+CMAKE_PATCH=12
 CMAKE_PATCH_MIN=4
 CMAKE_REQUIRED="$CMAKE_MAJOR.$CMAKE_MINOR.$CMAKE_PATCH_MIN"
 TARBALL_VERSION="$CMAKE_MAJOR.$CMAKE_MINOR.$CMAKE_PATCH"
@@ -61,7 +68,7 @@ if [[ "${AVAILABLE_CMAKE_VERSION}" =~ ^cmake\ version\ ([0-9]+)\.([0-9]+)\.([0-9
     MAJOR=${BASH_REMATCH[1]}
     MINOR=${BASH_REMATCH[2]}
     PATCH=${BASH_REMATCH[3]}
-    if [[ "$MAJOR" -eq "$CMAKE_MAJOR" && ( "$MINOR" -gt "$CMAKE_MINOR" || "$MINOR" -eq "$CMAKE_MINOR" && "$PATCH" -ge "$CMAKE_PATCH_MIN"  ) ]] ; then
+    if [[ "$MAJOR" -gt "$CMAKE_MAJOR" || ( "$MAJOR" -eq "$CMAKE_MAJOR" && ( "$MINOR" -gt "$CMAKE_MINOR" || ( "$MINOR" -eq "$CMAKE_MINOR" && "$PATCH" -ge "$CMAKE_PATCH_MIN"  ) ) ) ]] ; then
         ilog "${BASH_REMATCH[0]} (>= $CMAKE_REQUIRED) is already installed"
         echo "cmake"
         exit 0

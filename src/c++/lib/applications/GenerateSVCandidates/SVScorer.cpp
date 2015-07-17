@@ -1,14 +1,21 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Manta
+// Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2015 Illumina, Inc.
 //
-// This software is provided under the terms and conditions of the
-// Illumina Open Source Software License 1.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// at your option) any later version.
 //
-// You should have received a copy of the Illumina Open Source
-// Software License 1 along with this program. If not, see
-// <https://github.com/sequencing/licenses/>
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 //
 
 ///
@@ -290,7 +297,12 @@ addConservativeSplitReadSupport(
     else
     {
         lnToProb(altLnLhood, refLnLhood);
-        if (refLnLhood > splitSupportProb) sampleBaseInfo.ref.confidentSplitReadCount++;
+        if (refLnLhood > splitSupportProb)
+        {
+            sampleBaseInfo.ref.confidentSplitReadCount++;
+            if (fragev.ref.bp1.getRead(isRead1).isSplitSupport) sampleBaseInfo.ref.confidentSplitReadCountBp1++;
+            if (fragev.ref.bp2.getRead(isRead1).isSplitSupport) sampleBaseInfo.ref.confidentSplitReadCountBp2++;
+        }
     }
 }
 
@@ -407,14 +419,13 @@ getSampleCounts(
     for (const SVEvidence::evidenceTrack_t::value_type& val : sampleEvidence)
     {
         const SVFragmentEvidence& fragev(val.second);
-
+#ifdef DEBUG_SCORE
+        log_os << __FUNCTION__ << ": Counting read: " << val.first << "\n";
+#endif
         // evaluate read1 and read2 from this fragment
         //
         addConservativeSplitReadSupport(fragev,true,sampleBaseInfo);
         addConservativeSplitReadSupport(fragev,false,sampleBaseInfo);
-#ifdef DEBUG_SCORE
-        log_os << __FUNCTION__ << ": Counting read: " << val.first << "\n";
-#endif
         addSpanningPairSupport(fragev, sampleBaseInfo);
         addConservativeSpanningPairSupport(fragev, sampleBaseInfo);
     }
@@ -620,6 +631,7 @@ scoreSV(
 ///
 struct ProbSet
 {
+    explicit
     ProbSet(const double initProb) :
         prob(initProb),
         comp(1-prob),
@@ -1034,6 +1046,7 @@ static
 void
 scoreDiploidSV(
     const CallOptionsDiploid& diploidOpt,
+    const SVLocusScanner& readScanner,
     const CallOptionsDiploidDeriv& diploidDopt,
     const ChromDepthFilterUtil& dFilter,
     const std::vector<JunctionCallInfo>& junctionData,
@@ -1120,7 +1133,6 @@ scoreDiploidSV(
                 const SVScoreInfo& baseInfo(junction.getBaseInfo());
                 const SVCandidate& sv(junction.getSV());
 
-
                 const bool isMQ0FilterSize(isSVBelowMinSize(sv,1000));
                 if (isMQ0FilterSize)
                 {
@@ -1136,6 +1148,38 @@ scoreDiploidSV(
             if ((filteredJunctionCount*2) > junctionCount)
             {
                 diploidInfo.filters.insert(diploidOpt.maxMQ0FracLabel);
+            }
+        }
+
+        // apply zero pair filter
+        {
+            // this size represents the outer edge of variant size above which we expect pair
+            // discovery to suffer no dropouts due to normal pair distro sizes
+            static const double insertSizeFactor(1);
+            const unsigned maxClosePairSize(readScanner.getExtremeFifthRange().max * insertSizeFactor);
+
+            unsigned filteredJunctionCount(0);
+            for (const JunctionCallInfo& junction : junctionData)
+            {
+                const SVScoreInfo& baseInfo(junction.getBaseInfo());
+                const SVCandidate& sv(junction.getSV());
+
+                // only apply the zero pair filter to variants that should definitely have located supporting pairs:
+                const EXTENDED_SV_TYPE::index_t svType(getExtendedSVType(sv));
+                const bool isZeroPairFilterSize((svType != EXTENDED_SV_TYPE::INSERT) && (! isSVBelowMinSize(sv, maxClosePairSize)));
+
+                if (isZeroPairFilterSize)
+                {
+                    if (baseInfo.normal.alt.confidentSpanningPairCount == 0)
+                    {
+                        filteredJunctionCount++;
+                    }
+                }
+            }
+
+            if ((filteredJunctionCount*2) > junctionCount)
+            {
+                diploidInfo.filters.insert(diploidOpt.noPairSupportLabel);
             }
         }
     }
@@ -1677,7 +1721,7 @@ computeAllScoreModels(
     }
     else
     {
-		scoreDiploidSV(_diploidOpt, _diploidDopt, _dFilterDiploid, junctionData, modelScoreInfo.diploid);
+    	scoreDiploidSV(_diploidOpt, _readScanner, _diploidDopt, _dFilterDiploid, junctionData, modelScoreInfo.diploid);
 
 		// score components specific to somatic model:
 		if (isSomatic)

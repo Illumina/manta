@@ -1,14 +1,21 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Manta
+// Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2015 Illumina, Inc.
 //
-// This software is provided under the terms and conditions of the
-// Illumina Open Source Software License 1.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// at your option) any later version.
 //
-// You should have received a copy of the Illumina Open Source
-// Software License 1 along with this program. If not, see
-// <https://github.com/sequencing/licenses/>
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 //
 
 ///
@@ -24,7 +31,6 @@
 #include "common/OutStream.hh"
 #include "htsapi/bam_header_util.hh"
 #include "manta/SVReferenceUtil.hh"
-#include "truth/TruthTracker.hh"
 
 #include <iostream>
 #include <vector>
@@ -83,7 +89,6 @@ runESL(const ESLOptions& opt)
 
     const bam_header_t& header(*(bamStreams[0]->get_header()));
     const bam_header_info bamHeader(header);
-    TruthTracker truthTracker(opt.truthVcfFilename, bamHeader);
 
     int32_t tid(0), beginPos(0), endPos(0);
     parse_bam_region(bamHeader,opt.region,tid,beginPos,endPos);
@@ -100,7 +105,7 @@ runESL(const ESLOptions& opt)
     reference_contig_segment refSegment;
     getIntervalReferenceSegment(opt.referenceFilename, bamHeader, refEdgeBufferSize, scanRegion, refSegment);
 
-    SVLocusSetFinder locusFinder(opt, scanRegion, bamHeader, refSegment, truthTracker);
+    SVLocusSetFinder locusFinder(opt, scanRegion, bamHeader, refSegment);
 
     input_stream_data sdata;
     for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
@@ -138,8 +143,6 @@ runESL(const ESLOptions& opt)
 #endif
     locusFinder.setBuildTime(totalTimes);
     locusFinder.getLocusSet().save(opt.outputFilename.c_str());
-
-    truthTracker.dumpAll();
 }
 
 

@@ -1,14 +1,21 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Manta
+// Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2015 Illumina, Inc.
 //
-// This software is provided under the terms and conditions of the
-// Illumina Open Source Software License 1.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// at your option) any later version.
 //
-// You should have received a copy of the Illumina Open Source
-// Software License 1 along with this program. If not, see
-// <https://github.com/sequencing/licenses/>
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 //
 
 ///
@@ -34,8 +41,7 @@ SVWriter(
     const SVLocusScanner& readScanner,
     const SVLocusSet& cset,
     const char* progName,
-    const char* progVersion,
-    TruthTracker& truthTracker) :
+    const char* progVersion) :
     opt(initOpt),
     isSomatic(! opt.somaticOutputFilename.empty()),
     isTumorOnly(! opt.tumorOutputFilename.empty()),
@@ -50,8 +56,7 @@ SVWriter(
     somWriter(opt.somaticOpt, (! opt.chromDepthFilename.empty()),
               opt.referenceFilename, cset,somfs.getStream()),
     tumorWriter(opt.tumorOpt, (! opt.chromDepthFilename.empty()),
-                opt.referenceFilename, cset,tumfs.getStream()),
-    _truthTracker(truthTracker)
+                opt.referenceFilename, cset,tumfs.getStream())
 {
     if (0 == opt.edgeOpt.binIndex)
     {
@@ -151,7 +156,6 @@ writeSV(
 #ifdef DEBUG_GSV
                 log_os << __FUNCTION__ << ": Rejecting candidate junction: imprecise non-spanning SV\n";
 #endif
-                _truthTracker.reportOutcome(SVLog::IMPRECISE_NON_SPANNING);
                 isJunctionFiltered[junctionIndex] = true;
                 continue;
             }
@@ -177,7 +181,6 @@ writeSV(
 #ifdef DEBUG_GSV
             log_os << __FUNCTION__ << ": Rejecting candidate junction: minCandidateSpanningCount\n";
 #endif
-            _truthTracker.reportOutcome(SVLog::LOW_SPANNING_COUNT);
             isJunctionFiltered[junctionIndex] = true;
         }
     }
@@ -203,7 +206,7 @@ writeSV(
         const SVCandidate& sv(mjSV.junction[junctionIndex]);
         SVId& svId(junctionSVId[junctionIndex]);
 
-        _idgen.getId(edge, sv, svId);
+        _idgen.getId(edge, sv, opt.isRNA, svId);
 
         candWriter.writeSV(svData, assemblyData, sv, svId);
     }
@@ -359,11 +362,6 @@ writeSV(
 				if (isWriteSomatic)
 				{
 					somWriter.writeSV(svData, assemblyData, sv, svId, baseInfo, somaticInfo, event, modelScoreInfo.somatic);
-					_truthTracker.reportOutcome(SVLog::WRITTEN);
-				}
-				else
-				{
-					_truthTracker.reportOutcome(SVLog::LOW_SOMATIC_SCORE);
 				}
 			}
         }
@@ -379,16 +377,14 @@ SVCandidateProcessor(
     const char* progName,
     const char* progVersion,
     const SVLocusSet& cset,
-    TruthTracker& truthTracker,
     EdgeRuntimeTracker& edgeTracker,
     GSCEdgeStatsManager& edgeStatMan) :
     _opt(opt),
     _cset(cset),
-    _truthTracker(truthTracker),
     _edgeTracker(edgeTracker),
     _edgeStatMan(edgeStatMan),
     _svRefine(opt, cset.header, cset.getCounts(), _edgeTracker),
-    _svWriter(opt, readScanner, cset, progName, progVersion, truthTracker)
+    _svWriter(opt, readScanner, cset, progName, progVersion)
 {}
 
 
@@ -492,17 +488,11 @@ evaluateCandidate(
 
                 // fill in assembly tracking data:
                 _edgeTracker.addAssm(isComplex);
-                _truthTracker.reportNumAssembled(assemblyData.svs.size());
-                for (unsigned assemblyIndex(0); assemblyIndex<assemblyCount; ++assemblyIndex)
-                {
-                    _truthTracker.addAssembledSV();
-                }
             }
             else
             {
                 _edgeStatMan.updateAssemblyCount(edge, 0, assemblyData.isSpanning, assemblyData.isOverlapSkip);
             }
-
         }
     }
 
@@ -513,11 +503,10 @@ evaluateCandidate(
     std::vector<unsigned> junctionTracker(junctionCount,0);
     while (true)
     {
-        // note this loop is stupid -- it was originally written with the intention of
-        // combinatorially enumerating all possible assembly combinations for the case
-        // of multiple junctions with multiple assemblies each.
-        // It doesn't do that -- but the broken thing it does, in fact, do, is what we want for the
-        // isAnySmallAssembler case so it's well enough for now.
+        // Note this loop is an accident -- it was intended to enumerate all assembly
+        // combinations for  multiple junctions with multiple assemblies each.
+        // It doesn't do that -- but the broken thing it does, in fact, do, is what we
+        // want for the isAnySmallAssembler case so it's well enough for now.
         //
         bool isWrite(false);
         for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)

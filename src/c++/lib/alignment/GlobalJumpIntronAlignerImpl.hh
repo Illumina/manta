@@ -1,14 +1,21 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Manta
+// Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2015 Illumina, Inc.
 //
-// This software is provided under the terms and conditions of the
-// Illumina Open Source Software License 1.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// at your option) any later version.
 //
-// You should have received a copy of the Illumina Open Source
-// Software License 1 along with this program. If not, see
-// <https://github.com/sequencing/licenses/>
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 //
 
 //
@@ -33,13 +40,15 @@ bool
 isUpstreamSpliceAcceptor(
     const SymIter refBegin,
     SymIter refIter,
-    bool fwStrand)
+    bool fwStrand,
+    bool isStranded)
 {
     if (std::distance(refBegin,refIter)<2) return false;
-    if (!fwStrand) // Default (Truseq) RNA data is on the opposite strand from the original RNA
-        return (*(refIter-2)=='A' && *(refIter-1)=='G');
-    else
-        return (*(refIter-2)=='A' && *(refIter-1)=='C');
+    if (((fwStrand) || (!isStranded)) && (*(refIter - 2) == 'A' && (*(refIter - 1) == 'G')))
+        return true;
+    if (((!fwStrand) || (!isStranded)) && (*(refIter - 2) == 'A' && (*(refIter - 1) == 'C')))
+        return true;
+    return false;
 }
 
 
@@ -49,14 +58,15 @@ bool
 isDownstreamSpliceDonor(
     SymIter refIter,
     const SymIter refEnd,
-    bool fwStrand)
+    bool fwStrand,
+    bool isStranded)
 {
     if (std::distance(refIter,refEnd)<2) return false;
-    if (!fwStrand) // Default (Truseq) RNA data is on the opposite strand from the original RNA
-        return (*(refIter)=='G' && *(refIter+1)=='T');
-    else
-        return (*(refIter)=='C' && *(refIter+1)=='T');
-
+    if (((fwStrand) || (!isStranded)) && (*(refIter) == 'G' && (*(refIter + 1) == 'T')))
+        return true;
+    if (((!fwStrand) || (!isStranded)) && (*(refIter) == 'C' && (*(refIter + 1) == 'T')))
+        return true;
+    return false;
 }
 
 
@@ -68,7 +78,7 @@ align(
     const SymIter queryBegin, const SymIter queryEnd,
     const SymIter ref1Begin, const SymIter ref1End,
     const SymIter ref2Begin, const SymIter ref2End,
-    bool ref1Fw, bool ref2Fw,
+    bool ref1Fw, bool ref2Fw, bool isStranded,
     JumpAlignmentResult<ScoreType>& result) const
 {
     result.clear();
@@ -139,7 +149,7 @@ align(
                                         sval.ins);
                     // Only can leave the intron (splice) state if the last two
                     // bases of the intron match the motif
-                    if (isUpstreamSpliceAcceptor(ref1Begin,ref1Iter, ref1Fw))
+                    if (isUpstreamSpliceAcceptor(ref1Begin,ref1Iter, ref1Fw, isStranded))
                     {
                         if (headScore.match < sval.intron)
                         {
@@ -182,7 +192,7 @@ align(
                     headScore.intron = sval.intron;
                     // Only can enter the intron (splice) state if the first two
                     // bases of the intron match the motif
-                    if (isDownstreamSpliceDonor(ref1Iter,ref1End, ref1Fw))
+                    if (isDownstreamSpliceDonor(ref1Iter, ref1End, ref1Fw, isStranded))
                     {
                         if (sval.match + _intronOpenScore > sval.intron)
                         {
@@ -272,7 +282,7 @@ align(
                                         sval.jump);
                     // Only can leave the intron (splice) state if the last two
                     // bases of the intron match the motif
-                    if (isUpstreamSpliceAcceptor(ref2Begin,ref2Iter, ref2Fw))
+                    if (isUpstreamSpliceAcceptor(ref2Begin,ref2Iter, ref2Fw, isStranded))
                     {
                         if (headScore.match < sval.intron)
                         {
@@ -315,7 +325,7 @@ align(
                     headScore.intron = sval.intron;
                     // Only can enter the intron (splice) state if the first two
                     // bases of the intron match the motif
-                    if (isDownstreamSpliceDonor(ref2Iter,ref2End, ref2Fw))
+                    if (isDownstreamSpliceDonor(ref2Iter, ref2End, ref2Fw, isStranded))
                     {
                         if (sval.match + _intronOpenScore > sval.intron)
                         {

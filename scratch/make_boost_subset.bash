@@ -8,25 +8,27 @@
 #
 
 set -o nounset
+set -o xtrace
 
+mkdir -p output
 
-boost_name=boost_1_53_0
-subset_name=${boost_name}_subset
+boost_name=boost_1_56_0
 
 
 tar -xjf $boost_name.tar.bz2
-mv $boost_name $subset_name
+mv $boost_name output 
+cd output
 
 for ddir in doc more status; do
-    rm -rf $subset_name/$ddir
+    rm -rf $boost_name/$ddir
 done
 
 # remove docs:
 (
-cd $subset_name
+cd $boost_name
 find . -name doc -type d -print | xargs rm -rf
 )
 
 # tarball up:
 
-tar -c $subset_name -f - | bzip2 -c -9 >| $subset_name.tar.bz2
+tar -c $boost_name -f - | bzip2 -c -9 >| $boost_name.tar.bz2

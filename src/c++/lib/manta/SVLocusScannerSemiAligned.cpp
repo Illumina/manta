@@ -1,20 +1,28 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Manta
+// Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2015 Illumina, Inc.
 //
-// This software is provided under the terms and conditions of the
-// Illumina Open Source Software License 1.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// at your option) any later version.
 //
-// You should have received a copy of the Illumina Open Source
-// Software License 1 along with this program. If not, see
-// <https://github.com/sequencing/licenses/>
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 //
 
 ///
 /// \author Chris Saunders
 /// \author Ole Schulz-Trieglaff
 /// \author Bret Barnes
+/// \author Felix Schlesinger
 ///
 
 #include "alignment/ReadScorer.hh"
@@ -205,6 +213,7 @@ getSVBreakendCandidateSemiAligned(
     const bam_record& bamRead,
     const SimpleAlignment& bamAlign,
     const reference_contig_segment& refSeq,
+    const bool isUseOverlappingPairs,
     unsigned& leadingMismatchLen,
     pos_t& leadingRefPos,
     unsigned& trailingMismatchLen,
@@ -219,10 +228,15 @@ getSVBreakendCandidateSemiAligned(
     trailingMismatchLen = 0;
     trailingRefPos = 0;
 
+    if (is_possible_adapter_pair(bamRead)) return;
+
     // create a new alignment with all soft-clip sections forced to match:
     const SimpleAlignment matchedAlignment(matchifyEdgeSoftClip(bamAlign));
 
-    if (is_overlapping_pair(bamRead, matchedAlignment)) return;
+    if (! isUseOverlappingPairs)
+    {
+        if (is_overlapping_pair(bamRead, matchedAlignment)) return;
+    }
 
     using namespace ALIGNPATH;
     const bam_seq querySeq(bamRead.get_bam_read());
@@ -240,28 +254,42 @@ getSVBreakendCandidateSemiAligned(
 
     if (0 != leadingMismatchLenTmp)
     {
-        unsigned minQCount(0);
-        for (unsigned pos(0); pos<leadingMismatchLenTmp; ++pos)
+        if (bamRead.is_fwd_strand() || (!is_overlapping_pair(bamRead, matchedAlignment)))
         {
-            if (qual[pos] >= minQ) ++minQCount;
+            unsigned minQCount(0);
+            for (unsigned pos(0); pos<leadingMismatchLenTmp; ++pos)
+            {
+                if (qual[pos] >= minQ) ++minQCount;
+            }
+            if ((static_cast<float>(minQCount)/(leadingMismatchLenTmp)) >= minQFrac)
+            {
+                leadingMismatchLen = leadingMismatchLenTmp;
+            }
         }
-        if ((static_cast<float>(minQCount)/(leadingMismatchLenTmp)) >= minQFrac)
-        {
-            leadingMismatchLen = leadingMismatchLenTmp;
-        }
+#ifdef DEBUG_SEMI_ALIGNED
+        else
+            log_os << " Overlapping_pair leading" << " read qname=" << bamRead.qname() << std::endl;
+#endif
     }
 
     if (0 != trailingMismatchLenTmp)
     {
-        unsigned minQCount(0);
-        for (unsigned pos(0); pos<trailingMismatchLenTmp; ++pos)
+        if ((!bamRead.is_fwd_strand()) || (!is_overlapping_pair(bamRead, matchedAlignment)))
         {
-            if (qual[readSize-pos-1] >= minQ) ++minQCount;
+            unsigned minQCount(0);
+            for (unsigned pos(0); pos<trailingMismatchLenTmp; ++pos)
+            {
+                if (qual[readSize-pos-1] >= minQ) ++minQCount;
+            }
+            if ((static_cast<float>(minQCount)/(trailingMismatchLenTmp)) >= minQFrac)
+            {
+                trailingMismatchLen = trailingMismatchLenTmp;
+            }
         }
-        if ((static_cast<float>(minQCount)/(trailingMismatchLenTmp)) >= minQFrac)
-        {
-            trailingMismatchLen = trailingMismatchLenTmp;
-        }
+#ifdef DEBUG_SEMI_ALIGNED
+        else
+            log_os << "Overlapping_pair trailing" << " read qname=" << bamRead.qname() << std::endl;
+#endif
     }
 }
 

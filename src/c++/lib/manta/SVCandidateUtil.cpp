@@ -1,14 +1,21 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Manta
+// Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2015 Illumina, Inc.
 //
-// This software is provided under the terms and conditions of the
-// Illumina Open Source Software License 1.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// at your option) any later version.
 //
-// You should have received a copy of the Illumina Open Source
-// Software License 1 along with this program. If not, see
-// <https://github.com/sequencing/licenses/>
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 //
 
 ///
@@ -26,10 +33,10 @@ isSVBelowMinSize(
 {
     if (sv.bp1.interval.tid != sv.bp2.interval.tid) return false;
 
-    const unsigned bpSize(std::abs(sv.bp1.interval.range.center_pos() - sv.bp2.interval.range.center_pos())-1);
-    const unsigned insertSize(sv.insertSeq.size());
+    const pos_t bpSize(std::abs(sv.bp1.interval.range.center_pos() - sv.bp2.interval.range.center_pos())-1);
+    const pos_t insertSize(sv.insertSeq.size());
 
-    return (std::max(bpSize,insertSize) < minSize);
+    return (std::max(bpSize,insertSize) < static_cast<pos_t>(minSize));
 }
 
 
@@ -93,26 +100,14 @@ classifyIndel(
     return ((deleteSize >= insertSize) ? DELETE : INSERT);
 }
 
-
-static
-bool
-isIntrachromBnd(
-    const SVCandidate& /*sv*/)
-{
-    /// TODO turn this feature back on when fewer pieces are in motion
-#if 0
-    static const int intrachromTranslocThreshold(1000000);
-    return (sv.centerSize() >= intrachromTranslocThreshold);
-#endif
-    return false;
-}
 }
 
 
 
 EXTENDED_SV_TYPE::index_t
 getExtendedSVType(
-    const SVCandidate& sv)
+    const SVCandidate& sv,
+    const bool isForceIntraChromBnd)
 {
     using namespace EXTENDED_SV_TYPE;
 
@@ -120,7 +115,7 @@ getExtendedSVType(
 
     if (svType == SV_TYPE::INTERTRANSLOC) return INTERTRANSLOC;
 
-    if (isIntrachromBnd(sv)) return INTRATRANSLOC;
+    if (isForceIntraChromBnd) return INTRATRANSLOC;
 
     switch (svType)
     {

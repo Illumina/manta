@@ -1,14 +1,21 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Manta
+// Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2015 Illumina, Inc.
 //
-// This software is provided under the terms and conditions of the
-// Illumina Open Source Software License 1.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// at your option) any later version.
 //
-// You should have received a copy of the Illumina Open Source
-// Software License 1 along with this program. If not, see
-// <https://github.com/sequencing/licenses/>
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 //
 
 ///
@@ -19,6 +26,8 @@
 
 #include "blt_util/align_path.hh"
 #include "manta/SVBreakend.hh"
+
+#include <cstdlib>
 
 #include <iosfwd>
 #include <string>
@@ -113,6 +122,12 @@ struct SVCandidate
         return (fwReads > rvReads);
     }
 
+    bool
+    isStranded() const
+    {
+        return ((std::max(fwReads, rvReads)+1) / (std::min(fwReads, rvReads)+1) >= 2);
+    }
+
     /// if 1 is added to the position of one breakend (within the homologous breakend range), then is 1 also added to the other breakend?
     ///
     /// if false then breakends move in opposite directions;
@@ -170,7 +185,6 @@ public:
 
     unsigned fwReads = 0; ///< Number of reads (pairs) supporting a direction from bp1 to bp2 (used for stranded RNA data)
     unsigned rvReads = 0; ///< Number of reads (pairs) directed from bp2 to bp1
-
     /// filter out this sv candidate unless it's rescued by a multi-junction event:
     bool isSingleJunctionFilter = false;
 };

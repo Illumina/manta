@@ -1,14 +1,21 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Manta
+// Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2015 Illumina, Inc.
 //
-// This software is provided under the terms and conditions of the
-// Illumina Open Source Software License 1.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// at your option) any later version.
 //
-// You should have received a copy of the Illumina Open Source
-// Software License 1 along with this program. If not, see
-// <https://github.com/sequencing/licenses/>
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 //
 
 ///
@@ -99,10 +106,14 @@ void
 getReadSplitScore(
     const bam_record& bamRead,
     const CallOptionsSharedDeriv& dopt,
+    const SVBreakend& bp,
+    const reference_contig_segment& bpRef,
+    const bool isBP1,
     const unsigned flankScoreSize,
     const SVAlignmentInfo& svAlignInfo,
     const unsigned minMapQ,
     const unsigned minTier2MapQ,
+    const bool isRNA,
     const bool isShadow,
     const bool isReversedShadow,
     SVEvidence::evidenceTrack_t& sampleEvidence,
@@ -114,8 +125,12 @@ getReadSplitScore(
 
     SVFragmentEvidenceAlleleBreakendPerRead& altBp1ReadSupport(fragment.alt.bp1.getRead(isRead1));
 
-    /// in this function we evaluate the hypothesis of both breakends at the same time, the only difference bp1 vs
-    /// bp2 makes is where in the bam we look for reads, therefore if we see split evaluation for bp1 or bp2, we can skip this read:
+#ifdef DEBUG_SVS
+    log_os << __FUNCTION__ << " split scoring read: " << bamRead << "\n";
+#endif
+
+    // in this function we evaluate the hypothesis of both breakends at the same time, the only difference bp1 vs
+    // bp2 makes is where in the bam we look for reads, therefore if we see split evaluation for bp1 or bp2, we can skip this read:
     if (altBp1ReadSupport.isSplitEvaluated) return;
 
     SVFragmentEvidenceAlleleBreakendPerRead& refBp1ReadSupport(fragment.ref.bp1.getRead(isRead1));
@@ -158,9 +173,22 @@ getReadSplitScore(
     {
         SRAlignmentInfo bp1RefSR;
         SRAlignmentInfo bp2RefSR;
-        splitReadAligner(flankScoreSize, readSeq, dopt.refQ, qual, svAlignInfo.bp1ReferenceSeq(), svAlignInfo.bp1RefOffset, bp1RefSR);
-        splitReadAligner(flankScoreSize, readSeq, dopt.refQ, qual, svAlignInfo.bp2ReferenceSeq(), svAlignInfo.bp2RefOffset, bp2RefSR);
-
+        if (!isRNA)
+        {
+            splitReadAligner(flankScoreSize, readSeq, dopt.refQ, qual, svAlignInfo.bp1ReferenceSeq(), svAlignInfo.bp1RefOffset, bp1RefSR);
+            splitReadAligner(flankScoreSize, readSeq, dopt.refQ, qual, svAlignInfo.bp2ReferenceSeq(), svAlignInfo.bp2RefOffset, bp2RefSR);
+        }
+        else
+        {
+            if (isBP1)
+                getRefAlignment(bamRead, bpRef, bp.interval.range, dopt.refQ, bp1RefSR);
+            else
+                getRefAlignment(bamRead, bpRef, bp.interval.range, dopt.refQ, bp2RefSR);
+        }
+#ifdef DEBUG_SVS
+        log_os << "\t reference align bp1: " << bp1RefSR << "\n";
+        log_os << "\t reference align bp2: " << bp2RefSR << "\n";
+#endif
         // scoring
         incrementAlleleEvidence(bp1RefSR, bp2RefSR, readMapQ, sample.ref, refBp1ReadSupport, refBp2ReadSupport);
     }
@@ -175,10 +203,13 @@ scoreSplitReads(
     const unsigned flankScoreSize,
     const SVBreakend& bp,
     const SVAlignmentInfo& svAlignInfo,
+    const reference_contig_segment& bpRef,
+    const bool isBP1,
     const unsigned minMapQ,
     const unsigned minTier2MapQ,
     const int bamShadowRange,
     const unsigned shadowMinMapq,
+    const bool isRNA,
     SVEvidence::evidenceTrack_t& sampleEvidence,
     bam_streamer& readStream,
     SVSampleInfo& sample)
@@ -188,8 +219,8 @@ scoreSplitReads(
     // We are not looking for remote reads, (semialigned-) reads mapping near this breakpoint, but not across it
     // or any other kind of additional reads used for assembly.
     readStream.set_new_region(bp.interval.tid,
-        std::max(0, bp.interval.range.begin_pos() - extendedSearchRange),
-        bp.interval.range.end_pos() + extendedSearchRange);
+                              std::max(0, bp.interval.range.begin_pos() - extendedSearchRange),
+                              bp.interval.range.end_pos() + extendedSearchRange);
     while (readStream.next())
     {
         const bam_record& bamRead(*(readStream.get_record_ptr()));
@@ -209,7 +240,7 @@ scoreSplitReads(
         static const bool isReversedShadow(false);
 
         //const uint8_t mapq(bamRead.map_qual());
-        getReadSplitScore(bamRead, dopt, flankScoreSize, svAlignInfo, minMapQ, minTier2MapQ,
+        getReadSplitScore(bamRead, dopt, bp, bpRef, isBP1, flankScoreSize, svAlignInfo, minMapQ, minTier2MapQ, isRNA,
                           isShadow, isReversedShadow, sampleEvidence, sample);
     }
 
@@ -257,7 +288,7 @@ scoreSplitReads(
             const bool isReversedShadow(bamRead.is_mate_fwd_strand());
 
             //const uint8_t mapq(shadow.getMateMapq());
-            getReadSplitScore(bamRead, dopt, flankScoreSize, svAlignInfo, minMapQ, minTier2MapQ,
+            getReadSplitScore(bamRead, dopt, bp, bpRef, isBP1, flankScoreSize, svAlignInfo, minMapQ, minTier2MapQ, isRNA,
                               isShadow, isReversedShadow, sampleEvidence, sample);
         }
     }
@@ -327,8 +358,8 @@ getSVSplitReadSupport(
     if (! SVAlignInfo.isMinBpEdge(100)) return;
 
 #ifdef DEBUG_SVS
-    static const std::string logtag("getSVSplitReadSupport: ");
-    log_os << logtag << SVAlignInfo << '\n';
+    log_os << __FUNCTION__ << sv << '\n';
+    log_os << __FUNCTION__ << SVAlignInfo << '\n';
 #endif
 
     const unsigned minMapQ(_readScanner.getMinMapQ());
@@ -346,12 +377,18 @@ getSVSplitReadSupport(
         const int bamShadowRange(_readScanner.getShadowSearchRange(bamIndex));
 
         // scoring split reads overlapping bp1
-        scoreSplitReads(_callDopt, flankScoreSize, sv.bp1, SVAlignInfo, minMapQ, minTier2MapQ,
-                        bamShadowRange, _scanOpt.minSingletonMapqCandidates,
+#ifdef DEBUG_SVS
+        log_os << __FUNCTION__ << " scoring BP1\n";
+#endif
+        scoreSplitReads(_callDopt, flankScoreSize, sv.bp1, SVAlignInfo, assemblyData.bp1ref, true, minMapQ, minTier2MapQ,
+                        bamShadowRange, _scanOpt.minSingletonMapqCandidates, _isRNA,
                         sampleEvidence, bamStream, sample);
         // scoring split reads overlapping bp2
-        scoreSplitReads(_callDopt, flankScoreSize, sv.bp2, SVAlignInfo, minMapQ, minTier2MapQ,
-                        bamShadowRange, _scanOpt.minSingletonMapqCandidates,
+#ifdef DEBUG_SVS
+        log_os << __FUNCTION__ << " scoring BP2\n";
+#endif
+        scoreSplitReads(_callDopt, flankScoreSize, sv.bp2, SVAlignInfo, assemblyData.bp2ref, false, minMapQ, minTier2MapQ,
+                        bamShadowRange, _scanOpt.minSingletonMapqCandidates, _isRNA,
                         sampleEvidence, bamStream, sample);
     }
 

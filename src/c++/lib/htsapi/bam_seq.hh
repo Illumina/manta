@@ -1,14 +1,21 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Manta
+// Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2015 Illumina, Inc.
 //
-// This software is provided under the terms and conditions of the
-// Illumina Open Source Software License 1.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// at your option) any later version.
 //
-// You should have received a copy of the Illumina Open Source
-// Software License 1 along with this program. If not, see
-// <https://github.com/sequencing/licenses/>
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 //
 
 ///
@@ -150,10 +157,12 @@ struct bam_seq_base
     bam_seq_base() = default;
     virtual ~bam_seq_base() = default;
 
+    explicit
     bam_seq_base(const bam_seq_base&) = default; // support copying
     bam_seq_base& operator=(const bam_seq_base&) = default;
 
 #if ((!defined(_MSC_VER)) || (_MSC_VER > 1800))
+    explicit
     bam_seq_base(bam_seq_base&&) = default; // support moving
     bam_seq_base& operator=(bam_seq_base&&) = default;
 #endif
@@ -254,6 +263,7 @@ private:
 //
 struct string_bam_seq : public bam_seq_base
 {
+    explicit
     string_bam_seq(const std::string& s)
         : _s(s.c_str()), _size(s.size()) {}
 
@@ -289,6 +299,7 @@ private:
 //
 struct rc_segment_bam_seq : public bam_seq_base
 {
+    explicit
     rc_segment_bam_seq(const reference_contig_segment& r)
         : _r(r)
     {}

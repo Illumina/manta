@@ -1,14 +1,21 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Manta
+// Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2015 Illumina, Inc.
 //
-// This software is provided under the terms and conditions of the
-// Illumina Open Source Software License 1.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// at your option) any later version.
 //
-// You should have received a copy of the Illumina Open Source
-// Software License 1 along with this program. If not, see
-// <https://github.com/sequencing/licenses/>
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 //
 
 ///
@@ -57,13 +64,14 @@ SVCandidateAssembler(
     const std::string& chromDepthFilename,
     const bam_header_info& bamHeader,
     const AllCounts& counts,
+    const bool isRNA,
     TimeTracker& remoteTime) :
     _scanOpt(scanOpt),
     _assembleOpt(assembleOpt),
     _isAlignmentTumor(alignFileOpt.isAlignmentTumor),
     _dFilter(chromDepthFilename, scanOpt.maxDepthFactor, bamHeader),
     _dFilterRemoteReads(chromDepthFilename, scanOpt.maxDepthFactorRemoteReads, bamHeader),
-    _readScanner(_scanOpt, statsFilename, alignFileOpt.alignmentFilename),
+    _readScanner(_scanOpt, statsFilename, alignFileOpt.alignmentFilename, isRNA),
     _remoteTime(remoteTime)
 {
     // setup regionless bam_streams:
@@ -546,7 +554,7 @@ getBreakendReads(
 
                 unsigned leadingMismatchLen(0);
                 unsigned trailingMismatchLen(0);
-                getSVBreakendCandidateSemiAligned(bamRead, bamAlign, refSeq, leadingMismatchLen, trailingMismatchLen);
+                getSVBreakendCandidateSemiAlignedSimple(bamRead, bamAlign, refSeq, _readScanner.isUseOverlappingPairs(), leadingMismatchLen, trailingMismatchLen);
 
                 if (isSearchForRightOpen)
                 {

@@ -1,8 +1,39 @@
+v0.26.5
+- Update pyflow to v1.1.6: fixes multithread bug introduced in v1.1.5.
+Manta should be isolated from this issue in theory.
+v0.26.4
+- Update license to GPLv3
+- Update to relicensed pyflow v1.1.5
+- MANTA-244 Handle unstranded RNA data
+- MANTA-239 Use RNA bam alignments for ref read scoring
+- Fix core/memory auto-detect for OSX
+v0.26.3
+- Fix OSX build and demo run (req. update to boost 1.56)
+- Update travis CI OSX build, static analyzer
+v0.26.2
+- MANTA-242 cleanup code portability and documentation:
+-- Updated all build/installation and contributor guidelines
+-- Updated Manta user guide
+-- Added Travis CI configuration file for clang/gcc build and demo run
+-- Minor code edits to clean compile on OS X 10.9, CentOS 5,6,7, Ubuntu
+12.04 and 14.04
+-- Updated demo: new dataset covers COSMIC HCC1954 variants, added test
+to verify expected output from demo run.
+v0.26.1
+- Remove python reflection from run configuration process, fixes rare
+config issue
+- VCF output formatting: FileData corrected to FileDate
+v0.26.0
+- MANTA-224 improve short-fragment handling for RNA
+- MANTA-235 kmer reference mask to accelerate RNA contig alignments
+- MANTA-232 filter large SVs with no read pair support
+- MANTA-236 expand conditions for large insertion search to normalize
+BWA-mem/Isaac performance
 - MANTA-231 expand scoring phase split read search around breakends to
 find soft clipped ref and alt support.
 - MANTA-234 remove discovery pair counts from scored output files
 - MANTA-222 support bwa-mem '-M' split read format
-- MANTA-218 filter spanning candidates without signifcant signal/noise
+- MANTA-218 filter spanning candidates without significant signal/noise
 - MANTA-155 handle N's and lowqual bases during assembly
 - MANTA-219 Build system improvements for auditing, visual studio support
 - MANTA-217 Improve runtime for large min candidate size settings, creating
@@ -101,7 +132,7 @@ runtime and lower repeat observations (part 2)
 - MANTA-103 fix issue in RNA and WES modes introduced by MANTA-99
 v0.14.0
 - MANTA-102 filter calls with high MQ0 fraction
-- MANTA-99 add high-dpeth graph filter to improve FFPE runtime
+- MANTA-99 add high-depth graph filter to improve FFPE runtime
 - MANTA-100 allow for neighboring variants during assembly
 - MANTA-83 sort vcfs in bam chrom order
 - MANTA-96 Keep matching read pairs after candidate generation

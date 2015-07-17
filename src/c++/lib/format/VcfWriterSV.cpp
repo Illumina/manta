@@ -1,14 +1,21 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Manta
+// Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2015 Illumina, Inc.
 //
-// This software is provided under the terms and conditions of the
-// Illumina Open Source Software License 1.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// at your option) any later version.
 //
-// You should have received a copy of the Illumina Open Source
-// Software License 1 along with this program. If not, see
-// <https://github.com/sequencing/licenses/>
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 //
 
 ///
@@ -61,7 +68,7 @@ writeHeaderPrefix(
     const char* progVersion)
 {
     _os << "##fileformat=VCFv4.1\n";
-    _os << "##fileData=" << vcf_fileDate << "\n";
+    _os << "##fileDate=" << vcf_fileDate << "\n";
     _os << "##source=" << progName << " " << progVersion << "\n";
     _os << "##reference=file://" << _referenceFilename << "\n";
 
@@ -218,15 +225,14 @@ addRNAInfo(
     if (! assemblyData.isSpanning) return;
 
     const bool isFirst = (assemblyData.bporient.isBp1First == isFirstOfPair);
-    // cppcheck-suppress zerodivcond
     infotags.push_back(str(boost::format("RNA_FIRST=%1%") % isFirst));
+    infotags.push_back(str(boost::format("RNA_STRANDED=%1%") % assemblyData.bporient.isStranded));
 
     if (!isFirstOfPair) return; // only the first breakpoint gets the additional RNA info attached to its VCF entry
 
     infotags.push_back(str(boost::format("RNA_FwRvReads=%i:%i") % sv.fwReads % sv.rvReads));
 
     const unsigned numContigs(assemblyData.contigs.size());
-    // cppcheck-suppress zerodivcond
     if (numContigs > 0)
     {
         if (numContigs != assemblyData.spanningAlignments.size())
@@ -251,7 +257,6 @@ addRNADebugInfo(
     if (! assemblyData.isSpanning) return;
 
     const bool isFirst = (assemblyData.bporient.isBp1First == isFirstOfPair);
-    // cppcheck-suppress zerodivcond
     const bool isRightOpen = (isFirstOfPair ? sv.bp1.state : sv.bp2.state) == SVBreakendState::RIGHT_OPEN;
     infotags.push_back(str(boost::format("FOOBAR_FW=%1%") % (isFirst == isRightOpen)));
 
@@ -532,7 +537,6 @@ VcfWriterSV::
 writeInvdel(
     const SVCandidate& sv,
     const SVId& svId,
-    const SVCandidateAssemblyData& adata,
     const bool isIndel,
     const EventInfo& event)
 {
@@ -694,14 +698,6 @@ writeInvdel(
         }
     }
 
-    if ((! isSmallVariant) && _isRNA)
-    {
-        addRNAInfo(true, sv, adata, infoTags);
-#ifdef DEBUG_VCF
-        addRNADebugInfo(isFirstBreakend, sv, adata, infotags);
-#endif
-    }
-
     if (! isImprecise)
     {
         if (bpArange.size() > 1)
@@ -816,7 +812,7 @@ writeSVCore(
     const EventInfo& event)
 {
     using namespace EXTENDED_SV_TYPE;
-    const index_t svType(getExtendedSVType(sv));
+    const index_t svType(getExtendedSVType(sv, _isRNA));
 
 #ifdef DEBUG_VCF
     log_os << "VcfWriterSV::writeSVCore svType: " << EXTENDED_SV_TYPE::label(svType) << "\n";
@@ -831,15 +827,16 @@ writeSVCore(
         BOOST_THROW_EXCEPTION(LogicException(oss.str()));
     }
 
-    try {
-        if      (isSVTransloc(svType))
+    try
+    {
+        if (isSVTransloc(svType))
         {
             writeTranslocPair(sv, svId, svData, adata, event);
         }
         else
         {
             const bool isIndel(isSVIndel(svType));
-            writeInvdel(sv, svId, adata, isIndel, event);
+            writeInvdel(sv, svId, isIndel, event);
         }
     }
     catch (...)

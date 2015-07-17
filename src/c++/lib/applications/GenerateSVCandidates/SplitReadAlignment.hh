@@ -1,24 +1,33 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Manta
+// Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2015 Illumina, Inc.
 //
-// This software is provided under the terms and conditions of the
-// Illumina Open Source Software License 1.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// at your option) any later version.
 //
-// You should have received a copy of the Illumina Open Source
-// Software License 1 along with this program. If not, see
-// <https://github.com/sequencing/licenses/>
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 //
 
 ///
 /// \author Xiaoyu Chen
+/// \author Felix Schlesinger
 ///
 
 #pragma once
 
 #include "blt_util/known_pos_range2.hh"
 #include "blt_util/qscore_snp.hh"
+#include "htsapi/bam_record.hh"
 
 #include <cstdint>
 
@@ -63,4 +72,17 @@ splitReadAligner(
     const uint8_t* queryQual,
     const std::string& targetSeq,
     const known_pos_range2& targetBpOffsetRange,
+    SRAlignmentInfo& alignment);
+
+/// Populate an SRAlignmentInfo object based on the existing alignment of the bamRead to the genomic region around this break-end.
+/// Scores the alignment based on (mis-)match counts and likelihood as the splitReadAligner.
+///
+/// \param[in] bpPos this is the range of the breakend (accounting for microhomology) in genome coordinates
+///
+void
+getRefAlignment(
+    const bam_record& bamRead,
+    const reference_contig_segment& bp1ref,
+    const known_pos_range2& bpPos,
+    const qscore_snp& qualConvert,
     SRAlignmentInfo& alignment);

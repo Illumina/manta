@@ -1,13 +1,20 @@
 #
-# Manta
+# Manta - Structural Variant and Indel Caller
 # Copyright (c) 2013-2015 Illumina, Inc.
 #
-# This software is provided under the terms and conditions of the
-# Illumina Open Source Software License 1.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# at your option) any later version.
 #
-# You should have received a copy of the Illumina Open Source
-# Software License 1 along with this program. If not, see
-# <https://github.com/sequencing/licenses/>
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
 #
 
 """
@@ -35,7 +42,6 @@ def makeRunScript(scriptFile, workflowModulePath, workflowClassName, primaryConf
     configSections -- a hash or hashes representing all configuration info
     @param pythonBin: optionally specify a custom python interpreter for the script she-bang
     """
-    import inspect
 
     assert os.path.isdir(os.path.dirname(scriptFile))
     assert os.path.isfile(workflowModulePath)
@@ -57,6 +63,24 @@ def makeRunScript(scriptFile, workflowModulePath, workflowClassName, primaryConf
         pythonBin="/usr/bin/env python"
 
     sfp.write(runScript1 % (pythonBin, " ".join(sys.argv),workflowModuleDir,workflowModuleName,workflowClassName))
+
+    sfp.write('\n')
+    sfp.write(runScript2)
+    sfp.write('\n')
+    sfp.write(runScript3)
+    sfp.write('\n')
+
+    sfp.write('main("%s","%s",%s)\n' % (pickleConfigFile, primaryConfigSection, workflowClassName))
+    sfp.write('\n')
+    sfp.close()
+    os.chmod(scriptFile,0755)
+
+
+# this is the old version of makeRunScript which used reflection instead of simple text blocks. it is theoretically better,
+# at production scale, we found that python reflection is not 100% reliable. Intermitent, hard to pin down failures in this
+# process suggest subtle python interpreter bugs in this feature.
+oldLogic="""
+    import inspect
 
     def auditInspection(label,objectName) :
         assert(objectName is not None)
@@ -87,7 +111,7 @@ def makeRunScript(scriptFile, workflowModulePath, workflowClassName, primaryConf
     sfp.write('\n')
     sfp.close()
     os.chmod(scriptFile,0755)
-
+"""
 
 
 runScript1="""#!%s
@@ -104,11 +128,10 @@ from %s import %s
 """
 
 
-# This code will be reflected in the auto-generated runscript,
-# but will not be called in this module:
+runScript2="""
 def get_run_options(workflowClassName) :
 
-    from optparse import OptionGroup
+    from optparse import OptionGroup, SUPPRESS_HELP
 
     from configBuildTimeInfo import workflowVersion
     from configureUtil import EpilogOptionParser
@@ -116,9 +139,9 @@ def get_run_options(workflowClassName) :
 
     sgeDefaultCores=workflowClassName.runModeDefaultCores('sge')
 
-    epilog="""Note this script can be re-run to continue the workflow run in case of interruption.
+    epilog=\"\"\"Note this script can be re-run to continue the workflow run in case of interruption.
 Also note that dryRun option has limited utility when task definition depends on upstream task
-results -- in this case the dry run will not cover the full 'live' run task set."""
+results -- in this case the dry run will not cover the full 'live' run task set.\"\"\"
 
     parser = EpilogOptionParser(description="Version: %s" % (workflowVersion), epilog=epilog, version=workflowVersion)
 
@@ -131,12 +154,25 @@ results -- in this case the dry run will not cover the full 'live' run task set.
                   help="number of jobs, must be an integer or 'unlimited' (default: Estimate total cores on this node for local mode, %s for sge mode)" % (sgeDefaultCores))
     parser.add_option("-g","--memGb", type="string",dest="memGb",
                   help="gigabytes of memory available to run workflow -- only meaningful in local mode, must be an integer (default: Estimate the total memory for this node for local mode, 'unlimited' for sge mode)")
-    parser.add_option("-e","--mailTo", type="string",dest="mailTo",action="append",
-	              help="send email notification of job completion status to this address (may be provided multiple times for more than one email address)")
     parser.add_option("-d","--dryRun", dest="isDryRun",action="store_true",default=False,
                       help="dryRun workflow code without actually running command-tasks")
     parser.add_option("--quiet", dest="isQuiet",action="store_true",default=False,
                       help="Don't write any log output to stderr (but still write to workspace/pyflow.data/logs/pyflow_log.txt)")
+
+    def isLocalSmtp() :
+        import smtplib
+        try :
+            smtplib.SMTP('localhost')
+        except :
+            return False
+        return True
+
+    isEmail = isLocalSmtp()
+    emailHelp = SUPPRESS_HELP
+    if isEmail :
+        emailHelp="send email notification of job completion status to this address (may be provided multiple times for more than one email address)"
+
+    parser.add_option("-e","--mailTo", type="string",dest="mailTo",action="append",help=emailHelp)
 
     debug_group = OptionGroup(parser,"development debug options")
     debug_group.add_option("--rescore", dest="isRescore",action="store_true",default=False,
@@ -145,6 +181,8 @@ results -- in this case the dry run will not cover the full 'live' run task set.
     parser.add_option_group(debug_group)
 
     (options,args) = parser.parse_args()
+
+    if not isEmail : options.mailTo = None
 
     if len(args) :
         parser.print_help()
@@ -195,11 +233,10 @@ results -- in this case the dry run will not cover the full 'live' run task set.
         options.resetTasks.append("makeHyGenDir")
 
     return options
+"""
 
 
-
-# This code will be reflected in the auto-generated runscript,
-# but will not be called in this module:
+runScript3="""
 def main(pickleConfigFile, primaryConfigSection, workflowClassName) :
 
     from configureUtil import getConfigWithPrimaryOptions
@@ -238,9 +275,9 @@ def main(pickleConfigFile, primaryConfigSection, workflowClassName) :
                          errorLogFile=errorpath)
     finally:
         exitfp=open(exitpath,"w")
-        exitfp.write("%i\n" % (retval))
+        exitfp.write("%i\\n" % (retval))
         exitfp.close()
 
     sys.exit(retval)
-
+"""
 

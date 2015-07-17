@@ -1,14 +1,21 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Manta
+// Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2015 Illumina, Inc.
 //
-// This software is provided under the terms and conditions of the
-// Illumina Open Source Software License 1.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// at your option) any later version.
 //
-// You should have received a copy of the Illumina Open Source
-// Software License 1 along with this program. If not, see
-// <https://github.com/sequencing/licenses/>
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 //
 
 ///
@@ -132,9 +139,34 @@ struct RegionPayloadTracker
         return _regions.empty();
     }
 
+    /// is single position in a tracked region w/ payload?
     boost::optional<T>
-    isPayloadInRegion(
-        const pos_t pos) const;
+    isIntersectRegion(
+        const pos_t pos) const
+    {
+        return isIntersectRegionImpl(pos,pos+1);
+    }
+
+    // commenting out pending definition of expected behavior when
+    // the query range intercepts more than one tracked range, what
+    // is the payload returned in such a case?
+#if 0
+    /// does range intersect any tracked region w/ payload?
+    boost::optional<T>
+    isIntersectRegion(
+        const known_pos_range2 range) const
+    {
+        return isIntersectRegionImpl(range.begin_pos(),range.end_pos());
+    }
+#endif
+
+    /// is range entirely contained in a tracked region w/ payload?
+    boost::optional<T>
+    isSubsetOfRegion(
+        const known_pos_range2 range) const
+    {
+        return isSubsetOfRegionImpl(range.begin_pos(),range.end_pos());
+    }
 
     /// add region
     ///
@@ -159,6 +191,17 @@ struct RegionPayloadTracker
     typedef typename std::map<known_pos_range2,T,PosRangeEndSort> region_t;
 
 private:
+
+    boost::optional<T>
+    isIntersectRegionImpl(
+        const pos_t beginPos,
+        const pos_t endPos) const;
+
+    boost::optional<T>
+    isSubsetOfRegionImpl(
+        const pos_t beginPos,
+        const pos_t endPos) const;
+
     region_t _regions;
 };
 

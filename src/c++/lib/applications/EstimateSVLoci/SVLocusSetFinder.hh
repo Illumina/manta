@@ -1,14 +1,21 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Manta
+// Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2015 Illumina, Inc.
 //
-// This software is provided under the terms and conditions of the
-// Illumina Open Source Software License 1.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// at your option) any later version.
 //
-// You should have received a copy of the Illumina Open Source
-// Software License 1 along with this program. If not, see
-// <https://github.com/sequencing/licenses/>
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 //
 
 ///
@@ -25,7 +32,6 @@
 #include "htsapi/bam_record.hh"
 #include "manta/SVLocusScanner.hh"
 #include "svgraph/SVLocusSet.hh"
-#include "truth/TruthTracker.hh"
 
 #include <iosfwd>
 #include <string>
@@ -44,8 +50,7 @@ struct SVLocusSetFinder : public pos_processor_base
         const ESLOptions& opt,
         const GenomeInterval& scanRegion,
         const bam_header_info& bamHeader,
-        const reference_contig_segment& refSeq,
-        TruthTracker& truthTracker);
+        const reference_contig_segment& refSeq);
 
     ~SVLocusSetFinder()
     {
@@ -121,6 +126,5 @@ private:
 
     const bam_header_info& _bamHeader;
     const reference_contig_segment& _refSeq;
-    TruthTracker& _truthTracker;
 };
 
