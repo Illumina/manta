@@ -70,6 +70,7 @@ SVScorer(
     _refineOpt(opt.refineOpt),
     _somaticOpt(opt.somaticOpt),
     _somaticDopt(_somaticOpt),
+    _tumorOpt(opt.tumorOpt),
     _dFilterDiploid(opt.chromDepthFilename, _diploidOpt.maxDepthFactor, header),
     _dFilterSomatic(opt.chromDepthFilename, _somaticOpt.maxDepthFactor, header),
     _dFilterTumor(opt.chromDepthFilename, _tumorOpt.maxDepthFactor, header),
