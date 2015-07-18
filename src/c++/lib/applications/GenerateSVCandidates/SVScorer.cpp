@@ -132,7 +132,7 @@ addReadToDepthEst(
 void
 SVScorer::
 getBreakendMaxMappedDepthAndMQ0(
-	const bool isTumorOnly,
+    const bool isTumorOnly,
     const bool isMaxDepth,
     const double cutoffDepth,
     const SVBreakend& bp,
@@ -581,8 +581,8 @@ scoreSV(
     static const unsigned cutoffDepthFactor(2);
 
     const bool isMaxDepth(isTumorOnly ?
-    		_dFilterTumor.isMaxDepthFilter() :
-    		(_dFilterDiploid.isMaxDepthFilter() && _dFilterSomatic.isMaxDepthFilter()));
+                          _dFilterTumor.isMaxDepthFilter() :
+                          (_dFilterDiploid.isMaxDepthFilter() && _dFilterSomatic.isMaxDepthFilter()));
 
     double bp1CutoffDepth(0);
     double bp2CutoffDepth(0);
@@ -609,7 +609,7 @@ scoreSV(
 
     if (! isSkipEvidenceSearch)
     {
-    	// count the paired-read fragments supporting the ref and alt alleles in each sample:
+        // count the paired-read fragments supporting the ref and alt alleles in each sample:
         //
         getSVPairSupport(svData, assemblyData, sv, evidence);
 
@@ -1718,22 +1718,22 @@ computeAllScoreModels(
 {
     if (isTumorOnly)
     {
-    	scoreTumorSV(_tumorOpt, _dFilterDiploid, junctionData, modelScoreInfo.tumor);
+        scoreTumorSV(_tumorOpt, _dFilterDiploid, junctionData, modelScoreInfo.tumor);
     }
     else
     {
-    	scoreDiploidSV(_diploidOpt, _readScanner, _diploidDopt, _dFilterDiploid, junctionData, modelScoreInfo.diploid);
+        scoreDiploidSV(_diploidOpt, _readScanner, _diploidDopt, _dFilterDiploid, junctionData, modelScoreInfo.diploid);
 
-		// score components specific to somatic model:
-		if (isSomatic)
-		{
-			scoreSomaticSV(_somaticOpt, _somaticDopt, _dFilterSomatic, junctionData, modelScoreInfo.somatic);
-		}
+        // score components specific to somatic model:
+        if (isSomatic)
+        {
+            scoreSomaticSV(_somaticOpt, _somaticDopt, _dFilterSomatic, junctionData, modelScoreInfo.somatic);
+        }
     }
 
     if (_isRNA)
     {
-    	scoreRNASV(_diploidOpt, modelScoreInfo.base, modelScoreInfo.diploid);
+        scoreRNASV(_diploidOpt, modelScoreInfo.base, modelScoreInfo.diploid);
     }
 }
 

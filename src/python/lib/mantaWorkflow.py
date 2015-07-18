@@ -205,7 +205,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
 
     for binId in range(self.params.nonlocalWorkBins) :
         binStr = str(binId).zfill(4)
-        candidateVcfPaths.append(self.paths.getHyGenCandidatePath(binStr))       
+        candidateVcfPaths.append(self.paths.getHyGenCandidatePath(binStr))
         if isTumorOnly :
             tumorVcfPaths.append(self.paths.getHyGenTumorPath(binStr))
 	else:
@@ -236,10 +236,10 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
        	        hygenCmd.extend(["--somatic-output-file", somaticVcfPaths[-1]])
                 hygenCmd.extend(["--min-somatic-score", self.params.minSomaticScore])
                 hygenCmd.extend(["--min-pass-somatic-score", self.params.minPassSomaticScore])
-        
+
                 # temporary fix for FFPE:
                 hygenCmd.append("--skip-remote-reads")
-        
+
         if self.params.isHighDepthFilter :
             hygenCmd.extend(["--chrom-depth", self.paths.getChromDepth()])
 
@@ -387,7 +387,7 @@ class PathInfo:
 
     def getSortedSomaticPath(self) :
         return os.path.join(self.params.variantsDir,"somaticSV.vcf.gz")
-   
+
     def getSortedTumorPath(self) :
         return os.path.join(self.params.variantsDir,"tumorSV.vcf.gz")
 

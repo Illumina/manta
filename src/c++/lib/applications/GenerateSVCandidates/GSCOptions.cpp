@@ -179,7 +179,7 @@ parseGSCOptions(
     }
 
     {
-    	unsigned normalCount(0);
+        unsigned normalCount(0);
         unsigned tumorCount(0);
         for (const bool value : opt.alignFileOpt.isAlignmentTumor)
         {
@@ -194,26 +194,26 @@ parseGSCOptions(
 
         if (! opt.diploidOutputFilename.empty())
         {
-        	if (normalCount==0)
-        	{
-        		usage(log_os,prog,visible,"Must specify at least one non-tumor alignment file for diploid output");
-        	}
+            if (normalCount==0)
+            {
+                usage(log_os,prog,visible,"Must specify at least one non-tumor alignment file for diploid output");
+            }
         }
 
         if (! opt.somaticOutputFilename.empty())
         {
-        	if ((normalCount==0) || (tumorCount==0))
-        	{
-        		usage(log_os,prog,visible,"Must specify at least one tumor and non-tumor alignment file for somatic output");
-        	}
+            if ((normalCount==0) || (tumorCount==0))
+            {
+                usage(log_os,prog,visible,"Must specify at least one tumor and non-tumor alignment file for somatic output");
+            }
         }
 
         if (! opt.tumorOutputFilename.empty())
         {
-        	if (tumorCount==0)
-        	{
-        		usage(log_os,prog,visible,"Must specify at least one tumor alignment file for tumor output");
-        	}
+            if (tumorCount==0)
+            {
+                usage(log_os,prog,visible,"Must specify at least one tumor alignment file for tumor output");
+            }
         }
     }
 }

@@ -1,14 +1,21 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Manta
+// Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2015 Illumina, Inc.
 //
-// This software is provided under the terms and conditions of the
-// Illumina Open Source Software License 1.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// at your option) any later version.
 //
-// You should have received a copy of the Illumina Open Source
-// Software License 1 along with this program. If not, see
-// <https://github.com/sequencing/licenses/>
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 //
 
 ///
@@ -70,7 +77,7 @@ altFraction(const index_t i)
     case REF :
         return 0;
     case HET :
-    	//TODO: fix this prior for low-AF
+        //TODO: fix this prior for low-AF
         return 0.5;
     case HOM :
         return 1.0;
@@ -84,7 +91,7 @@ inline
 double
 altLnFraction(const index_t i)
 {
-	//TODO: fix value of HET for low-AF
+    //TODO: fix value of HET for low-AF
     static const double val[] = { std::log(0.), std::log(0.5), std::log(1.) };
     switch (i)
     {

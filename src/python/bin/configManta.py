@@ -51,7 +51,7 @@ You must specify a BAM file for at least one sample.
 
     def addWorkflowGroupOptions(self,group) :
         group.add_option("--normalBam", type="string",dest="normalBamList",metavar="FILE", action="append",
-                         help="Normal sample BAM file. May be specified more than once, multiple inputs will be merged. [at least one required] (no default)")
+                         help="Normal sample BAM file. May be specified more than once, multiple inputs will be merged. [optional] (no default)")
         group.add_option("--tumorBam","--tumourBam", type="string",dest="tumorBamList",metavar="FILE", action="append",
                           help="Tumor sample BAM file. May be specified more than once, multiple inputs will be merged. [optional] (no default)")
         group.add_option("--exome", dest="isExome", action="store_true",
@@ -107,7 +107,7 @@ You must specify a BAM file for at least one sample.
 
     def validateOptionExistence(self,options) :
 
-        if (((options.normalBamList is None) or (len(options.normalBamList) == 0)) and 
+        if (((options.normalBamList is None) or (len(options.normalBamList) == 0)) and
             ((options.tumorBamList is None) or (len(options.tumorBamList) == 0))) :
             raise OptParseException("No normal & tumor sample BAM files specified")
 

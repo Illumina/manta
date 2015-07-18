@@ -417,6 +417,18 @@ WGS case but cannot be applied correctly to a targeted analysis.
 For small targeted regions, it may also be helpful to consider the
 high sensitivity calling documentation below.
 
+#### Unpaired tumor sample
+
+Manta supports SV calling for tumor sample only. The tumor only mode 
+can be triggered by supplying a tumor bam file but no normal bam. 
+The results are reported in tumorSV.vcf.gz, where the supporting evidence 
+of split reads and spanning paired reads are reported for each variance. 
+However, Manta does not yet provide a scoring model for unpaired tumor
+samples, therefore no variant score reported in the vcf of tumor SVs.
+
+For low allele frequency variants, it may also be helpful to consider the
+high sensitivity calling documentation below.
+
 ### RNA-Seq
 
 Supplying the '--rna' flag at configuration time will provide
@@ -452,12 +464,6 @@ minEdgeObservations = 2
 # many spanning support observations
 minCandidateSpanningCount = 2
 ```
-
-#### Extended use case 2: Unpaired tumor sample
-
-Manta does not yet provide a scoring model for unpaired tumor
-samples. The candidate SV output file should provide an appropriate
-approximation for this case until one is available.
 
 
 [1]: http://www.1000genomes.org/wiki/Analysis/Variant%20Call%20Format/vcf-variant-call-format-version-41

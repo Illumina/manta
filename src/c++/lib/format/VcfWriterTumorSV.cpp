@@ -1,14 +1,21 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// Manta
+// Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2015 Illumina, Inc.
 //
-// This software is provided under the terms and conditions of the
-// Illumina Open Source Software License 1.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// at your option) any later version.
 //
-// You should have received a copy of the Illumina Open Source
-// Software License 1 along with this program. If not, see
-// <https://github.com/sequencing/licenses/>
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 //
 
 ///
@@ -30,28 +37,28 @@ void
 VcfWriterTumorSV::
 addHeaderInfo() const
 {
-	_os << "##INFO=<ID=BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at local translocation breakend\">\n";
-	_os << "##INFO=<ID=MATE_BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at remote translocation mate breakend\">\n";
+    _os << "##INFO=<ID=BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at local translocation breakend\">\n";
+    _os << "##INFO=<ID=MATE_BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at remote translocation mate breakend\">\n";
 }
 
 void
 VcfWriterTumorSV::
 addHeaderFormat() const
 {
-	_os << "##FORMAT=<ID=PR,Number=.,Type=Integer,Description=\"Spanning paired-read support for the ref and alt alleles in the order listed\">\n";
-	_os << "##FORMAT=<ID=SR,Number=.,Type=Integer,Description=\"Split reads for the ref and alt alleles in the order listed, for reads where P(allele|read)>0.999\">\n";
+    _os << "##FORMAT=<ID=PR,Number=.,Type=Integer,Description=\"Spanning paired-read support for the ref and alt alleles in the order listed\">\n";
+    _os << "##FORMAT=<ID=SR,Number=.,Type=Integer,Description=\"Split reads for the ref and alt alleles in the order listed, for reads where P(allele|read)>0.999\">\n";
 }
 
 void
 VcfWriterTumorSV::
 addHeaderFilters() const
 {
-	if (_isMaxDepthFilter)
-	{
-	   _os << "##FILTER=<ID=" << _tumorOpt.maxDepthFilterLabel << ",Description=\"Sample site depth is greater than " << _tumorOpt.maxDepthFactor << "x the mean chromosome depth near one or both variant breakends\">\n";
-	}
+    if (_isMaxDepthFilter)
+    {
+        _os << "##FILTER=<ID=" << _tumorOpt.maxDepthFilterLabel << ",Description=\"Sample site depth is greater than " << _tumorOpt.maxDepthFactor << "x the mean chromosome depth near one or both variant breakends\">\n";
+    }
 
-	_os << "##FILTER=<ID=" << _tumorOpt.maxMQ0FracLabel << ",Description=\"For a small variant (<1000 base), the fraction of reads with MAPQ0 around either breakend exceeds " << _tumorOpt.maxMQ0Frac << "\">\n";
+    _os << "##FILTER=<ID=" << _tumorOpt.maxMQ0FracLabel << ",Description=\"For a small variant (<1000 base), the fraction of reads with MAPQ0 around either breakend exceeds " << _tumorOpt.maxMQ0Frac << "\">\n";
 }
 
 void
@@ -108,7 +115,7 @@ writeSV(
     const SVScoreInfo& baseInfo,
     const SVScoreInfoTumor& tumorInfo,
     const EventInfo& event
-    )
+)
 {
     //TODO: this is a lame way to customize subclass behavior:
     setScoreInfo(baseInfo);
