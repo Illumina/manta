@@ -49,7 +49,7 @@ Note that this README is _NOT_ part of a tagged source-code release.
 [tcistatus]:https://travis-ci.org/Illumina/manta.svg?branch=master
 [tcihome]:https://travis-ci.org/Illumina/manta
 
-### Build prerequisites:
+### Build prerequisites
 
 Manta requires a compiler supporting most of the C++11 standard. These
 are the current minimum versions enforced by the build system:
@@ -182,20 +182,32 @@ here:
 
     ${MANTA_INSTALL_PATH}/doc/html/mantaUserGuide.html
 
-### Typical hardware requirements
+### Runtime hardware requirements
 
-Manta workflows are parallelized at the process level using the [pyFlow] [pyflow_site]
-task manager. pyFlow can distrubute Manta workflows to a specified number of cores on
-a single host or SGE cluster. Typical memory guidelines are <1Gb per core
-for germline analysis and <2Gb per core for cancer/FFPE/highly rearranged samples.
-The exact requirement depends on many factors including sequencing depth, read length,
-fragment size and sample quality. Manta does not require or benefit from any specific
-modern CPU features (e.g. NUMA, AVX..), but in general faster clock and larger caches will
-improve performance. I/O can be approximated (very roughly) as 1.1 reads of the input BAM(s)
-per run, with no writes that are significant relative to the BAM size. As a benchmark,
-[Platinum Genomes] [PG] sequencing reads for NA12878 at 50x coverage (whole genome) can
-be analyzed in less than 20 minutes on 20 (physical) cores using a dual Xeon E5-2680 v2
-server with the BAM accessed from a conventional local drive.
+Manta workflows are parallelized at the process level using the
+[pyFlow] [pyflow_site] task manager. pyFlow can distrubute Manta
+workflows to a specified number of cores on a single host or
+SGE-managed cluster.
+
+As a useful runtime benchmark, [Platinum Genomes] [PG] sequencing
+reads for NA12878 at 50x coverage (whole genome) can be analyzed in
+less than 20 minutes on 20 physical cores using a dual Xeon E5-2680
+v2 server with the BAM accessed from a conventional local
+drive, peak total memory (RSS) for this run was 2.35 Gb.
+Additional hardware notes:
+
+* **Memory** Typical memory requirements are <1Gb/core for germline
+analysis and <2Gb/core for cancer/FFPE/highly rearranged
+samples. The exact requirement depends on many factors including
+sequencing depth, read length, fragment size and sample quality.
+
+* **CPU** Manta does not require or benefit from any specific modern
+CPU feature (e.g. NUMA, AVX..), but in general faster clock and
+larger caches will improve performance.
+
+* **I/O** I/O can be roughly approximated as 1.1 reads of the
+input BAM(s) per analysis, with no writes that are significant
+relative to the BAM size.
 
 [pyflow_site]:http://illumina.github.io/pyflow
 [PG]:http://www.platinumgenomes.org
