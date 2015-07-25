@@ -13,7 +13,8 @@ discovery and scoring to improve accuracy, but does not require
 split-reads or successful breakpoint assemblies to report a variant in
 cases where there is strong evidence otherwise. It provides scoring
 models for germline variants in individual diploid samples and somatic
-variants in matched tumor-normal sample pairs. See the [user guide]
+variants in matched tumor-normal sample pairs. There is limited support
+for unmatched tumor sample analysis. See the [user guide]
 [UserGuide] for a full description of capabilities and limitations.
 
 [UserGuide]:src/markdown/mantaUserGuide.md

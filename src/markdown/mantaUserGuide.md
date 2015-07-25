@@ -73,11 +73,15 @@ presenting a read from the outer edge of the fragment insert inward.
 
 Manta is primarily tested for whole genome DNA-Seq experiments of
 single diploid samples or subtractive analysis of a matched
-tumor/normal sample pair.  There is some support for other use cases:
+tumor/normal sample pair.  There is some support for other use cases
+(details for each case are included below):
 
 * For exome or other targeted sequencing experiments, the workflow can
 be configured with the `--exome` flag to set filtration levels more
 appropriate for this case.
+* Tumor samples can be analyzed without a matched normal sample. In
+this case no scoring function is available, but the supporting
+evidence counts and many filters can still be usefully applied.
 * RNA-Seq analysis can be configured with the `--rna` flag to also
 adjust filtration levels and take other RNA-specific filtration and
 intron handling steps.
@@ -170,9 +174,9 @@ treated as representing one sample.
 ### Structural Variant predictions
 
 The primary Manta outputs are a set of [VCF 4.1][1] files, found in
-`${MANTA_ANALYSIS_PATH}/results/variants`. Currently there are at
-least 3 VCF files created for any manta run, and an additional somatic
-VCF is produced when tumor input is provided. These files are:
+`${MANTA_ANALYSIS_PATH}/results/variants`. Currently there are
+3 VCF files created for a germline analysis, and an additional somatic
+VCF is produced for a tumor/normal subtraction. These files are:
 
 * __diploidSV.vcf.gz__
     * SVs and indels scored and genotyped under a diploid model for the normal
@@ -197,6 +201,14 @@ VCF is produced when tumor input is provided. These files are:
   coverage over all indel sizes when the small variant caller and manta outputs are
   evaluated together. Alternate small indel candidate sets can be parted out of the
   candidateSV.vcf.gz file if this candidate set is not appropriate.
+
+For tumor-only analysis, Manta will produce an additional VCF:
+
+* __tumorSV.vcf.gz__
+    * Unscored SV and indel candidates (same content as the __candidateSV.vcf.gz__ above),
+  but including additional details: (1) paired and split read supporting evidence counts
+  for each allele (2) a subset of the filters from the scored tumor-normal model can
+  are applied to the single tumor case to improve precision.
 
 ### Manta VCF reporting format
 
@@ -338,6 +350,15 @@ ${MANTA_INSTALL_PATH}/bin/configManta.py \
 --runDir ${MANTA_ANALYSIS_PATH}
 ```
 
+Tumor-Only Analysis -- Example Configuration:
+
+```
+${MANTA_INSTALL_PATH}/bin/configManta.py \
+--tumorBam HCC1187C.bam \
+--referenceFasta hg19.fa \
+--runDir ${MANTA_ANALYSIS_PATH}
+```
+
 On completion, the configuration script will create the workflow run
 script `${MANTA_ANALYSIS_PATH}/runWorkflow.py`. This can be used to
 run the workflow in various parallel compute modes per the
@@ -419,12 +440,14 @@ high sensitivity calling documentation below.
 
 #### Unpaired tumor sample
 
-Manta supports SV calling for tumor sample only. The tumor only mode 
+Manta supports SV calling for tumor sample only. The tumor-only mode 
 can be triggered by supplying a tumor bam file but no normal bam. 
-The results are reported in tumorSV.vcf.gz, where the supporting evidence 
-of split reads and spanning paired reads are reported for each variance. 
-However, Manta does not yet provide a scoring model for unpaired tumor
-samples, therefore no variant score reported in the vcf of tumor SVs.
+The results are reported in __tumorSV.vcf.gz__. This file contains all
+SV candidates (similar to the __candidateSV.vcf.gz__ file), but also
+includes paired and split read evidence for each allele and includes a
+subset of the filters used for the tumor-normal comparative analysis. 
+Note that Manta does not yet provide a scoring model for unpaired tumor
+samples.
 
 For low allele frequency variants, it may also be helpful to consider the
 high sensitivity calling documentation below.
