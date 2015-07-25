@@ -1,4 +1,4 @@
-- Add a tumor-only mode
+- MANTA-229 Add initial support for tumor-only analysis
 v0.26.5
 - Update pyflow to v1.1.6: fixes multithread bug introduced in v1.1.5.
 Manta should be isolated from this issue in theory.
