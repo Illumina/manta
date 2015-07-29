@@ -24,6 +24,8 @@
 
 #include "format/VcfWriterTumorSV.hh"
 
+
+
 void
 VcfWriterTumorSV::
 addHeaderFormatSampleKey() const
@@ -41,6 +43,8 @@ addHeaderInfo() const
     _os << "##INFO=<ID=MATE_BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at remote translocation mate breakend\">\n";
 }
 
+
+
 void
 VcfWriterTumorSV::
 addHeaderFormat() const
@@ -48,6 +52,8 @@ addHeaderFormat() const
     _os << "##FORMAT=<ID=PR,Number=.,Type=Integer,Description=\"Spanning paired-read support for the ref and alt alleles in the order listed\">\n";
     _os << "##FORMAT=<ID=SR,Number=.,Type=Integer,Description=\"Split reads for the ref and alt alleles in the order listed, for reads where P(allele|read)>0.999\">\n";
 }
+
+
 
 void
 VcfWriterTumorSV::
@@ -61,12 +67,15 @@ addHeaderFilters() const
     _os << "##FILTER=<ID=" << _tumorOpt.maxMQ0FracLabel << ",Description=\"For a small variant (<1000 base), the fraction of reads with MAPQ0 around either breakend exceeds " << _tumorOpt.maxMQ0Frac << "\">\n";
 }
 
+
+
 void
 VcfWriterTumorSV::
 writeFilter() const
 {
     writeFilters(getTumorInfo().filters);
 }
+
 
 
 void
@@ -104,6 +113,8 @@ modifyTranslocInfo(
     infotags.push_back( str(boost::format("MATE_BND_DEPTH=%i") %
                             (isFirstOfPair ? baseInfo.bp2MaxDepth : baseInfo.bp1MaxDepth) ) );
 }
+
+
 
 void
 VcfWriterTumorSV::
