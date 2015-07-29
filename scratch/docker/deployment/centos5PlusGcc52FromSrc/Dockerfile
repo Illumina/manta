@@ -29,7 +29,7 @@ RUN GCCVER=5.2.0 && mkdir -p /download/gcc-${GCCVER} && cd /download/gcc-${GCCVE
         --enable-lto \
         --with-system-zlib \
         --enable-languages=c,c++ && \
-    make -j4 && make install && cd / && rm -rf /download && \
+    make -j2 && make install && cd / && rm -rf /download && \
     GCC_PATH=/opt/gcc-${GCCVER} && SPECS_PATH=${GCC_PATH}/lib/gcc/x86_64-unknown-linux-gnu/${GCCVER} && SPECS_FILE=${SPECS_PATH}/specs && \
     ${GCC_PATH}/bin/gcc -dumpspecs > ${SPECS_FILE} && echo '*link:'$'\n'+ -R ${GCC_PATH}/lib64$'\n'  >> ${SPECS_FILE}
 
