@@ -3,7 +3,7 @@
 # binaries, by allowing us to build in a virtual centos 5
 # environment.
 #
-# At present we simply add all of the projects build requirements onto 
+# At present we simply add all of the projects build requirements onto
 # the centos5 base image.
 #
 

@@ -20,13 +20,14 @@ rel2abs() {
   cd $1 && pwd -P
 }
 
+builderImage=centos5PlusGcc52FromSrc
 scriptDir=$(rel2abs $(dirname $0))
 
 echo scriptDir $scriptDir
 
 # in dockerfile directory:
-tag="deployment:MantaBuilderImage"
-sudo docker build -t $tag $scriptDir
+tag="deployment:$builderImage"
+sudo docker build -t $tag $scriptDir/$builderImage
 
 # in scratch
 #unpack src tarball and cd into tarball root
@@ -35,7 +36,7 @@ dmount=/builder
 
 installScript=installManta.bash
 
-cat << ENDE >| $installScript 
+cat << ENDE >| $installScript
 set -o errexit
 set -o nounset
 
