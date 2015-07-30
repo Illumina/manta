@@ -364,11 +364,29 @@ struct SVBreakend
                 lowresEvidence.getVal(SPLIT_ALIGN));
     }
 
+    pos_t
+    getLeftSideOfBkptAdjustment() const
+    {
+        using namespace SVBreakendState;
+        switch(state)
+        {
+        case RIGHT_OPEN : return 0;
+        case LEFT_OPEN : return -1;
+        default: return 0;
+        }
+    }
+
 public:
 
     // if ! isPrecise() the interval is the X% confidence interval of the SV breakend, the interface allows for
     // various probability distributions to back this interval, but these must be accessed via
     // SVCandidate:
+    //
+    // csaunders 07-2015: observation of what's here rather than a policy description (where is the design discussion for this?)
+    // if isPrecise(), the the left end of the pos is the leftmost *mapped* base when the variant is fully left-shifted wrt this breakend.
+    // this means that the left most position concept is different for the right open and left-open cases. for right-open, this is the base
+    // before the breakend, for left-open this is the base after.
+    //
     GenomeInterval interval;
     SVBreakendState::index_t state;
 

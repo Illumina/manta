@@ -583,23 +583,26 @@ writeInvdel(
     }
 
     // get POS and endPos
-    pos_t pos(bpArange.center_pos()+1);
-    pos_t endPos(bpBrange.center_pos());
+    // everything is +1'd to get out zero-indexed coordinates:
+    const pos_t bpABkptAdjust(bpA.getLeftSideOfBkptAdjustment());
+    const pos_t bpBBkptAdjust(bpB.getLeftSideOfBkptAdjustment());
+    pos_t pos(bpArange.center_pos() + bpABkptAdjust + 1);
+    pos_t endPos(bpBrange.center_pos() + bpBBkptAdjust + 1);
     if (! isImprecise)
     {
-        pos = bpArange.begin_pos()+1;
+        pos = bpArange.begin_pos() + bpABkptAdjust + 1;
         if (isBreakendRangeSameShift)
         {
-            endPos = bpBrange.begin_pos();
+            endPos = bpBrange.begin_pos() + bpBBkptAdjust + 1;
         }
         else
         {
-            endPos = bpBrange.end_pos()-1;
+            endPos = (bpBrange.end_pos()- 1)  + bpBBkptAdjust + 1;
         }
     }
     else
     {
-        /// check against the rare case arising when CIEND is a subset of CIPOS:
+        // check against the rare case arising when CIEND is a subset of CIPOS:
         endPos=std::max(endPos,pos+1);
     }
 
