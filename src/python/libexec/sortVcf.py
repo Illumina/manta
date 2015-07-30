@@ -26,6 +26,10 @@ import os, sys
 import re
 
 
+def isInfoKey(string,key) :
+    match=re.search("[;\t]%s[;\t]" % (key) ,string)
+    return match is not None
+
 
 def getKeyVal(string,key) :
     match=re.search("%s=([^;\t]*);?" % (key) ,string)
@@ -54,6 +58,12 @@ class VcfRecord :
             self.alt=w[VCF_ALT]
             self.qual=w[VCF_QUAL]
             self.isPass=(w[VCF_FILTER] == "PASS")
+            self.invState=None
+            inv3 = isInfoKey(w[VCF_INFO],"INV3")
+            inv5 = getKeyVal(w[VCF_INFO],"INV5")
+            assert(not (inv3 and inv5))
+            if inv3: self.invState = "INV3"
+            if inv5: self.invState = "INV5"
         self.endPos=self.pos+len(w[VCF_REF])-1
         val = getKeyVal(w[VCF_INFO],"END")
         if val is not None :
@@ -94,7 +104,7 @@ def getOptions() :
     parser = OptionParser(usage=usage)
 
     parser.add_option("-u", dest="isUnique",action="store_true",default=False,
-                      help="filter all but one record with the same {CHR,POS,REF,ALT}")
+                      help="filter all but one record with the same {CHR,POS,REF,ALT,(INV3|INV5|)}")
 
     (options,args) = parser.parse_args()
 
@@ -114,6 +124,7 @@ def getOptions() :
 def resolveRec(recEqualSet, recList) :
     """
     determine which of a set of 'equal' vcf records is the best
+
     right now best is a record with PASS in the filter field, and
     secondarily having the highest quality
     """
@@ -185,11 +196,13 @@ def main() :
     def isEqualRec(rec1,rec2) :
         if (rec1 is None) or (rec2 is None) : return False
 
-        if rec1[0] != rec2[0]: return False
-        if rec1[1] != rec2[1]: return False
-        if rec1[2] != rec2[2]: return False
-        if rec1[4] != rec2[4]: return False
+        if rec1[0] != rec2[0]: return False # chrom
+        if rec1[1] != rec2[1]: return False # pos
+        if rec1[2] != rec2[2]: return False # ref
+        if rec1[4] != rec2[4]: return False # endPos
+        if rec1[5] != rec2[5]: return False # invState
 
+        # special handling to find duplications when alt is the only difference:
         if rec1[3] != rec2[3]:
             if rec1[3] != "<INS>" and rec2[3] != "<INS>":
                 return False
@@ -212,7 +225,7 @@ def main() :
         recEqualSet = []
         lastRec = None
         for vcfrec in recList :
-            rec = (vcfrec.chrom, vcfrec.pos, vcfrec.ref, vcfrec.alt, vcfrec.endPos)
+            rec = (vcfrec.chrom, vcfrec.pos, vcfrec.ref, vcfrec.alt, vcfrec.endPos, vcfrec.invState)
             if not isEqualRec(rec,lastRec) :
                 resolveRec(recEqualSet,recList2)
                 recEqualSet = []
