@@ -1,4 +1,6 @@
 v0.27.0
+- MANTA-188 fix off-by-one position issues in some precise duplication
+and inversion breakends
 - MANTA-229 Add initial support for tumor-only analysis
 v0.26.5
 - Update pyflow to v1.1.6: fixes multithread bug introduced in v1.1.5.
