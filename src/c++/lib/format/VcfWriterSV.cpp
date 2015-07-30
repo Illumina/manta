@@ -582,28 +582,40 @@ writeInvdel(
         isSmallVariant = (isSmallDelete && isSmallInsert);
     }
 
-    // get POS and endPos
-    // everything is +1'd to get out zero-indexed coordinates:
-    const pos_t bpABkptAdjust(bpA.getLeftSideOfBkptAdjustment());
-    const pos_t bpBBkptAdjust(bpB.getLeftSideOfBkptAdjustment());
-    pos_t pos(bpArange.center_pos() + bpABkptAdjust + 1);
-    pos_t endPos(bpBrange.center_pos() + bpBBkptAdjust + 1);
+    // get POS and endPos,
+    // first compute internal coordinates and then transform per vcf conventions:
+    pos_t internal_pos(bpArange.center_pos());
+    pos_t internal_endPos(bpBrange.center_pos());
     if (! isImprecise)
     {
-        pos = bpArange.begin_pos() + bpABkptAdjust + 1;
+        internal_pos = bpArange.begin_pos();
         if (isBreakendRangeSameShift)
         {
-            endPos = bpBrange.begin_pos() + bpBBkptAdjust + 1;
+            internal_endPos = bpBrange.begin_pos();
         }
         else
         {
-            endPos = (bpBrange.end_pos()- 1)  + bpBBkptAdjust + 1;
+            internal_endPos = (bpBrange.end_pos()- 1);
         }
     }
     else
     {
-        // check against the rare case arising when CIEND is a subset of CIPOS:
-        endPos=std::max(endPos,pos+1);
+        // check against the rare IMPRECISE case arising when CIEND is a subset of CIPOS:
+        internal_endPos=std::max(internal_endPos,internal_pos+1);
+    }
+
+    // now create external pos values for vcf only
+    // everything is +1'd to get out zero-indexed coordinates:
+    pos_t pos(internal_pos+1);
+    pos_t endPos(internal_endPos+1);
+
+    if (! isImprecise)
+    {
+        // precise variants are adjusted by one according to breakend direction to match vcf spec:
+        const pos_t bpABkptAdjust(bpA.getLeftSideOfBkptAdjustment());
+        const pos_t bpBBkptAdjust(bpB.getLeftSideOfBkptAdjustment());
+        pos += bpABkptAdjust;
+        endPos += bpBBkptAdjust;
     }
 
     if (pos<1) return;
@@ -690,14 +702,14 @@ writeInvdel(
 
     if (bpArange.size() > 1)
     {
-        infoTags.push_back( str( boost::format("CIPOS=%i,%i") % ((bpArange.begin_pos()+1) - pos) % (bpArange.end_pos() - pos) ));
+        infoTags.push_back( str( boost::format("CIPOS=%i,%i") % (bpArange.begin_pos() - internal_pos) % ((bpArange.end_pos()-1) - internal_pos) ));
     }
 
     if (! isSmallVariant)
     {
         if (bpBrange.size() > 1)
         {
-            infoTags.push_back( str( boost::format("CIEND=%i,%i") % (bpBrange.begin_pos() - endPos) % ((bpBrange.end_pos()-1) - endPos) ));
+            infoTags.push_back( str( boost::format("CIEND=%i,%i") % (bpBrange.begin_pos() - internal_endPos) % ((bpBrange.end_pos()-1) - internal_endPos) ));
         }
     }
 
