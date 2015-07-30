@@ -598,24 +598,22 @@ writeInvdel(
             internal_endPos = (bpBrange.end_pos()- 1);
         }
     }
-    else
-    {
-        // check against the rare IMPRECISE case arising when CIEND is a subset of CIPOS:
-        internal_endPos=std::max(internal_endPos,internal_pos+1);
-    }
 
     // now create external pos values for vcf only
     // everything is +1'd to get out zero-indexed coordinates:
     pos_t pos(internal_pos+1);
     pos_t endPos(internal_endPos+1);
 
-    if (! isImprecise)
+    // variants are adjusted by up to one base according to breakend direction to match vcf spec:
+    const pos_t bpABkptAdjust(bpA.getLeftSideOfBkptAdjustment());
+    const pos_t bpBBkptAdjust(bpB.getLeftSideOfBkptAdjustment());
+    pos += bpABkptAdjust;
+    endPos += bpBBkptAdjust;
+
+    if (isImprecise)
     {
-        // precise variants are adjusted by one according to breakend direction to match vcf spec:
-        const pos_t bpABkptAdjust(bpA.getLeftSideOfBkptAdjustment());
-        const pos_t bpBBkptAdjust(bpB.getLeftSideOfBkptAdjustment());
-        pos += bpABkptAdjust;
-        endPos += bpBBkptAdjust;
+        // check against the rare IMPRECISE case arising when CIEND is a subset of CIPOS:
+        endPos=std::max(endPos,pos+1);
     }
 
     if (pos<1) return;
