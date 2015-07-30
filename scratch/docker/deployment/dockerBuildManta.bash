@@ -20,7 +20,7 @@ rel2abs() {
   cd $1 && pwd -P
 }
 
-builderImage=centos5PlusGcc52FromSrc
+builderImage=centos5PlusGcc49FromSrc
 scriptDir=$(rel2abs $(dirname $0))
 
 echo scriptDir $scriptDir

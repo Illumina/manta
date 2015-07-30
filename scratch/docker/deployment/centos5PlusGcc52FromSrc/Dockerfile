@@ -18,6 +18,18 @@ RUN yum install -y bzip2 make gcc gcc-c++ tar wget zlib-devel && \
     yum install -y epel-release && \
     yum install -y cmake28 && cd /usr/bin && ln -s cmake28 cmake
 
+## update binutils
+## 
+## this was a test to get lto working in centos5
+#
+#RUN mkdir -p /download/binutils && cd /download/binutils && wget ftp://ftp.gnu.org/gnu/binutils/binutils-2.25.tar.bz2 && \
+#    tar -xjf binutils-2.25.tar.bz2 && cd binutils-2.25 && ./configure --prefix=/opt/binutils-2.25 --enable-lto && \
+#    make -j2 && make install && cd / && rm -rf /download
+#
+## other lto stuff for gcc configure below:
+#        --with-ld=/opt/binutils-2.25/bin/ld \
+#        --with-as=/opt/binutils-2.25/bin/as \
+
 # build gcc 5.2 from source
 RUN GCCVER=5.2.0 && mkdir -p /download/gcc-${GCCVER} && cd /download/gcc-${GCCVER} && wget ftp://ftp.gnu.org/gnu/gcc/gcc-${GCCVER}/gcc-${GCCVER}.tar.bz2 && \
     tar -xjf gcc-${GCCVER}.tar.bz2 && cd gcc-${GCCVER} && ./contrib/download_prerequisites && \
