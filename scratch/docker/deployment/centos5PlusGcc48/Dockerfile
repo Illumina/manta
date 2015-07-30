@@ -9,8 +9,6 @@
 
 FROM centos:5
 
-MAINTAINER Chris Saunders <csaunders@illumina.com>
-
 # add standard centos5 packages:
 RUN yum install -y bzip2 make gcc gcc-c++ tar wget zlib-devel && \
     yum install -y epel-release && \

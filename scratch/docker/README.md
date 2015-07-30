@@ -1,15 +1,14 @@
-
-# docker information associated with the manta projects
+# Manta docker information
 
 ## subdirectories
 
-* deployment/
+### deployment/
 
 These are docker image instructions and scripts associated with
-issueing a conventional binary release of manta. As a rule of thumb,
-these images use the oldest practical OS (for glibc compatibility)
-with the newest practical compiler (for binary performance). These
-images are not meant to assist users who want to run manta in docker.
+issuing a conventional binary release of manta. These images typically
+use an older OS (for wide compatibility) with a newer compiler (for
+binary performance, new c++ features, etc.). These images are not
+meant to assist users who want to run manta in docker.
 
 
 
