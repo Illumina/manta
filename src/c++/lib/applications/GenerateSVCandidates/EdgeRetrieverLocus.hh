@@ -34,7 +34,7 @@
 /// dividing iteration into a set of bins with similar total edge
 /// observation counts
 ///
-struct EdgeRetrieverLocus : public EdgeRetriever
+struct EdgeRetrieverLocus final : public EdgeRetriever
 {
     /// \param locusIndex iterate over all edges of a specific locus
     EdgeRetrieverLocus(
@@ -43,7 +43,7 @@ struct EdgeRetrieverLocus : public EdgeRetriever
         const LocusEdgeOptions& opt);
 
     bool
-    next() final override;
+    next() override;
 
 private:
     void

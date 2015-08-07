@@ -33,7 +33,7 @@
 /// dividing iteration into a set of bins with similar total edge
 /// observation counts
 ///
-struct EdgeRetrieverBin : public EdgeRetriever
+struct EdgeRetrieverBin final : public EdgeRetriever
 {
     /// \param[in] graphNodeMaxEdgeCount filtration parameter for skipping edges
     ///            from highly connected nodes (set to zero to disable)
@@ -46,7 +46,7 @@ struct EdgeRetrieverBin : public EdgeRetriever
         const unsigned binIndex);
 
     bool
-    next() final override;
+    next() override;
 
 private:
     void
