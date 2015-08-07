@@ -43,7 +43,7 @@ struct EdgeRetrieverLocus : public EdgeRetriever
         const LocusEdgeOptions& opt);
 
     bool
-    next();
+    next() final override;
 
 private:
     void

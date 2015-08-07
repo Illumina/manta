@@ -35,7 +35,8 @@
 ///
 struct EdgeRetrieverBin : public EdgeRetriever
 {
-    /// \param[in] graphNodeMaxEdgeCount filtration parameter for skipping edges from highly connected nodes (set to zero to disable)
+    /// \param[in] graphNodeMaxEdgeCount filtration parameter for skipping edges
+    ///            from highly connected nodes (set to zero to disable)
     /// \param[in] binCount total number of parallel bins, must be 1 or greater
     /// \param[in] binIndex parallel bin id, must be less than binCount
     EdgeRetrieverBin(
@@ -45,7 +46,7 @@ struct EdgeRetrieverBin : public EdgeRetriever
         const unsigned binIndex);
 
     bool
-    next();
+    next() final override;
 
 private:
     void
@@ -54,7 +55,12 @@ private:
     void
     advanceEdge();
 
+    /// _beginCount and _endCount provide the observation range for the bin we're retrieving.
+    /// these values should be contant following the ctor
     unsigned long _beginCount;
     unsigned long _endCount;
+
+    /// _headCount is a tracking index of cumulative observation count as we step through
+    /// the graph
     unsigned long _headCount;
 };

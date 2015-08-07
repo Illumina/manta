@@ -368,11 +368,14 @@ struct SVBreakend
     getLeftSideOfBkptAdjustment() const
     {
         using namespace SVBreakendState;
-        switch(state)
+        switch (state)
         {
-        case RIGHT_OPEN : return 0;
-        case LEFT_OPEN : return -1;
-        default: return 0;
+        case RIGHT_OPEN :
+            return 0;
+        case LEFT_OPEN :
+            return -1;
+        default:
+            return 0;
         }
     }
 

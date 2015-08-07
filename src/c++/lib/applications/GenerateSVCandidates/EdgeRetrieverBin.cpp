@@ -26,11 +26,11 @@
 
 #include <cassert>
 
-#include <iostream>
 
 //#define DEBUG_EDGER
 
 #ifdef DEBUG_EDGER
+#include <iostream>
 #include "blt_util/log.hh"
 #endif
 
@@ -82,11 +82,12 @@ jumpToFirstEdge()
     typedef SVLocusEdgesType::const_iterator edgeiter_t;
 
     const bool isFilterNodes(_graphNodeMaxEdgeCount>0);
+    const unsigned setSize(_set.size());
 
     // first catch headCount up to the begin edge if required:
     while (true)
     {
-        assert(_edge.locusIndex<_set.size());
+        assert(_edge.locusIndex < setSize);
 
         const SVLocus& locus(_set.getLocus(_edge.locusIndex));
         const unsigned locusObservationCount(locus.totalObservationCount());
@@ -150,6 +151,7 @@ advanceEdge()
     typedef SVLocusEdgesType::const_iterator edgeiter_t;
 
     const bool isFilterNodes(_graphNodeMaxEdgeCount>0);
+    const unsigned setSize(_set.size());
 
     if (0 != _headCount) _edge.nodeIndex2++;
 
@@ -157,15 +159,17 @@ advanceEdge()
 
     while (true)
     {
-        if (isLastFiltered && (_edge.locusIndex == _set.size()))
+        if (isLastFiltered && (_edge.locusIndex == setSize))
         {
             _headCount = (_endCount + 1);
             return;
         }
-        assert(_edge.locusIndex<_set.size());
+        assert(_edge.locusIndex < setSize);
 
         const SVLocus& locus(_set.getLocus(_edge.locusIndex));
-        while (_edge.nodeIndex1<locus.size())
+        const unsigned locusSize(locus.size());
+
+        while (_edge.nodeIndex1 < locusSize)
         {
             const SVLocusNode& node1(locus.getNode(_edge.nodeIndex1));
             const bool isEdgeFilterNode1(isFilterNodes && (node1.size()>_graphNodeMaxEdgeCount));

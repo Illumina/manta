@@ -38,6 +38,12 @@
 #include <vector>
 
 
+#ifdef DEBUG_SVL
+#include <iostream>
+#include "blt_util/log.hh"
+#endif
+
+
 /// A set of SVLocus objects comprising a full locus graph
 ///
 /// When finalized, the SVLocusSet contains non-overlapping SVLoci
