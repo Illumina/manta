@@ -1,3 +1,4 @@
+- [#5] Improve robustness to filesystem delay (update ot pyflow v1.1.7)
 v0.27.0
 - MANTA-188 fix off-by-one position issues in some precise duplication
 and inversion breakends
