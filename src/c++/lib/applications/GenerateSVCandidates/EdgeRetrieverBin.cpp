@@ -93,7 +93,8 @@ jumpToFirstEdge()
 
         if ((_headCount+locusObservationCount) > _beginCount)
         {
-            while (true)
+            const unsigned locusSize(locus.size());
+            while (_edge.nodeIndex1 < locusSize)
             {
                 const SVLocusNode& node1(locus.getNode(_edge.nodeIndex1));
                 const bool isEdgeFilterNode1(isFilterNodes && (node1.size()>_graphNodeMaxEdgeCount));
