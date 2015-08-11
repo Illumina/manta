@@ -15,9 +15,12 @@ cases where there is strong evidence otherwise. It provides scoring
 models for germline variants in individual diploid samples and somatic
 variants in matched tumor-normal sample pairs. There is limited support
 for unmatched tumor sample analysis. See the [user guide]
-[UserGuide] for a full description of capabilities and limitations.
+[UserGuide] for a full description of capabilities and limitations, and
+the [Manta preprint][mss] for additional methods and benchmarking details.
 
 [UserGuide]:src/markdown/mantaUserGuide.md
+[mss]:http://dx.doi.org/10.1101/024232
+
 
 License
 -------
@@ -26,6 +29,7 @@ Manta source code is provided under the [GPLv3 license] (LICENSE.txt).
 Manta includes several third party packages provided under other
 open source licenses, please see [COPYRIGHT.txt] (COPYRIGHT.txt)
 for additional details.
+
 
 Build instructions
 ------------------
