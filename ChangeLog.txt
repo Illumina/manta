@@ -1,8 +1,10 @@
-- MANTA-264 remove samtools from manta dependencies
+-v0.29.0
+- MANTA-252 Complete support for CRAM input
+- MANTA-264 Remove samtools from manta dependencies
 - MANTA-252 Change default chrom depth to median estimate from alignments
-- MANTA-263 improve performance/stability for references with
+- MANTA-263 Improve performance/stability for references with
 large numbers of small contigs
-- MANTA-261 stable components from Manta windows port
+- MANTA-261 Transfer stable components from Manta windows port
 v0.28.0
 - MANTA-259 Support joint analysis of multiple diploid samples
 - MANTA-260 Add per-sample filtration to separate QUAL and GQ filters for
