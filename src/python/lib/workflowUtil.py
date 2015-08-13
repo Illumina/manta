@@ -268,6 +268,11 @@ def cleanId(input_id) :
 
 
 
+def getRobustChromId(chromIndex,chromLabel):
+    return "%s_%s" % (str(chromIndex).zfill(3),cleanId(chromLabel))
+
+
+
 class GenomeSegment(object) :
     """
     organizes all variables which can change

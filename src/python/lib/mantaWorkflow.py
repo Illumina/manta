@@ -38,7 +38,7 @@ sys.path.append(os.path.abspath(pyflowDir))
 from configBuildTimeInfo import workflowVersion
 from pyflow import WorkflowRunner
 from workflowUtil import checkFile, ensureDir, preJoin, which, \
-                         getNextGenomeSegment, getFastaChromOrderSize, cleanPyEnv
+                         getNextGenomeSegment, getFastaChromOrderSize, getRobustChromId, cleanPyEnv
 
 from configureUtil import getIniSections,dumpIniSections
 
@@ -87,13 +87,30 @@ def runDepth(self,taskPrefix="",dependencies=None) :
     else :
         return set()
 
+    depthPath=self.paths.getChromDepth()
 
-    cmd  = "%s -E %s" % (sys.executable, self.params.getChromDepth)
-    cmd += " --bam '%s'" % (bamFile)
-    cmd += " > %s" % (self.paths.getChromDepth())
+    depthFilename=os.path.basename(depthPath)
+    tmpDepthDir=os.path.join(self.params.workDir,depthFilename+".tmpdir")
+    dirTask=self.addTask(preJoin(taskPrefix,"makeTmpDir"), "mkdir -p "+tmpDepthDir, dependencies=dependencies, isForceLocal=True)
+
+    tmpDepthFiles = []
+    depthTasks = set()
+
+
+    for (chromIndex, chromLabel) in enumerate(self.params.chromOrder) :
+        cid = getRobustChromId(chromIndex, chromLabel)
+        tmpDepthFiles.append(os.path.join(tmpDepthDir,depthFilename+"_"+cid))
+        cmd = [self.params.mantaGetChromDepthBin,"--align-file",bamFile,"--chrom",chromLabel,"--output",tmpDepthFiles[-1]]
+        depthTasks.add(self.addTask(preJoin(taskPrefix,"estimateChromDepth_"+cid),cmd,dependencies=dirTask))
+
+    catCmd = "cat " + " ".join(["'%s'" % (x) for x in tmpDepthFiles]) + " > '%s'" % (depthPath)
+    catTask = self.addTask(preJoin(taskPrefix,"catChromDepth"),catCmd,dependencies=depthTasks, isForceLocal=True)
 
     nextStepWait = set()
-    nextStepWait.add(self.addTask(preJoin(taskPrefix,"estimateChromDepth"),cmd,dependencies=dependencies))
+    nextStepWait.add(catTask)
+    
+    rmDepthTmpCmd = "rm -rf " + tmpDepthDir
+    rmTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmDepthTmpCmd,dependencies=catTask, isForceLocal=True)
 
     return nextStepWait
 
@@ -159,7 +176,7 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
     checkTask = self.addTask(preJoin(taskPrefix,"checkLocusGraph"),checkCmd,dependencies=mergeTask,memMb=self.params.mergeMemMb)
 
     rmGraphTmpCmd = "rm -rf " + tmpGraphDir
-    rmTask=self.addTask(preJoin(taskPrefix,"rmGraphTmp"),rmGraphTmpCmd,dependencies=mergeTask)
+    rmTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmGraphTmpCmd,dependencies=mergeTask)
 
     graphStatsCmd  = self.params.mantaGraphStatsBin
     graphStatsCmd += " --global"
@@ -482,7 +499,7 @@ class MantaWorkflow(WorkflowRunner) :
             graphTaskDependencies |= statsTasks
 
         if not ((not self.params.isHighDepthFilter) or self.params.useExistingChromDepths) :
-            depthTasks = runDepth(self)
+            depthTasks = runDepth(self,taskPrefix="getChromDepth")
             graphTaskDependencies |= depthTasks
 
         graphTasks = runLocusGraph(self,dependencies=graphTaskDependencies)

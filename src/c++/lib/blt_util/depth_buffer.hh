@@ -29,9 +29,16 @@
 
 #include <cassert>
 
+
 /// base object for depth_buffers, do not call this directly
 struct depth_buffer_base
 {
+    void
+    clear()
+    {
+        _data.clear();
+    }
+
 protected:
     unsigned
     _val(const pos_t pos) const
