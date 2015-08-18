@@ -16,9 +16,11 @@ breakpoint assemblies to report a variant in cases where there is
 strong evidence otherwise. It provides scoring models for germline
 variants in small sets of diploid samples and somatic variants in
 matched tumor/normal sample pairs. There is experimental support for
-analysis of unmatched tumor samples as well. See the [user guide]
-[UserGuide] for a full description of capabilities and limitations, and
-the [Manta preprint][mss] for additional methods and benchmarking details.
+analysis of unmatched tumor samples as well. Manta accepts input read
+mappings from BAM or CRAM files and reports all SV and indel inferences
+in VCF 4.1 format. See the [user guide] [UserGuide] for a full
+description of capabilities and limitations, and the [Manta preprint]
+[mss] for additional methods and benchmarking details.
 
 [UserGuide]:src/markdown/mantaUserGuide.md
 [mss]:http://dx.doi.org/10.1101/024232
@@ -212,8 +214,8 @@ CPU feature (e.g. NUMA, AVX..), but in general faster clock and
 larger caches will improve performance.
 
 * **I/O** I/O can be roughly approximated as 1.1 reads of the
-input BAM(s) per analysis, with no writes that are significant
-relative to the BAM size.
+input alignment file per analysis, with no writes that are significant
+relative to the alignment file size.
 
 [pyflow_site]:http://illumina.github.io/pyflow
 [PG]:http://www.platinumgenomes.org

@@ -29,9 +29,10 @@ breakpoint assemblies to report a variant in cases where there is
 strong evidence otherwise. It provides scoring models for germline
 variants in small sets of diploid samples and somatic variants in
 matched tumor/normal sample pairs. There is experimental support for
-analysis of unmatched tumor samples as well (see details below). For
-extended methods and benchmarking details, please see the [Manta
-preprint][mss].
+analysis of unmatched tumor samples as well (see details below). Manta
+accepts input read mappings from BAM or CRAM files and reports all SV
+and indel inferences in VCF 4.1 format. For extended methods and benchmarking
+details, please see the [Manta preprint][mss].
 
 [mss]:http://dx.doi.org/10.1101/024232
 
@@ -169,18 +170,18 @@ alignments) support a large indel or SV, or mismatch/clipping suggests
 a possible breakend location.
 
 Manta requires input sequencing reads to be mapped by an external tool
-and provided as input in BAM format. Each input BAM file must be
-coordinate sorted and indexed to produce a`samtools`-style index in a
-file named to match the input BAM file with an additional '.bai'
-extension.
+and provided as input in either BAM or CRAM format. Each input file must be
+coordinate sorted and indexed to produce a`samtools/htslib`-style index in a
+file named to match the input BAM orCRAM file with an additional '.bai', '.crai'
+or '.csi' filename extension.
 
-At configuration time, at least one BAM file must be provided for the
+At configuration time, at least one BAM or CRAM file must be provided for the
 normal or tumor sample. A matched tumor-normal sample pair can be
 provided as well. If multiple input files are provided for the normal
 sample, each file will be treated as a separate sample as part of a
 joint diploid sample analysis.
 
-The following limitations exist on the input BAM files provided to
+The following limitations exist on the input BAM or CRAM files provided to
 Manta:
 
 * Alignments cannot contain the "=" character in the SEQ field.
@@ -191,8 +192,8 @@ treated as representing one sample.
   are not supported on the assumption that this indicates an offset error)
 
 Manta also requires a reference sequence in fasta format. This must be
-the same reference used for mapping the input BAM files. The reference
-must include a `samtools`-style index in a file named to match the
+the same reference used for mapping the input alignment files. The reference
+must include a `samtools/htslib`-style index in a file named to match the
 input fasta with an additional '.fai' file extension.
 
 
@@ -250,9 +251,9 @@ field values.
 #### VCF Sample Names
 
 Sample names printed into the VCF output are extracted from each input
-BAM file from the first first read group ('@RG') record found in the
+alignment file from the first read group ('@RG') record found in the
 header. Any spaces found in the name will be replaced with
-underscores. If no sample name is found a default SAMPLE1,SAMPLE2,
+underscores. If no sample name is found a default SAMPLE1, SAMPLE2,
 etc.. label will be used instead.
 
 #### Small indels
@@ -384,12 +385,11 @@ changing the final result of the workflow.
 The workflow is configured with the script:
 `${MANTA_INSTALL_PATH}/bin/configManta.py` . Running this script with
 no arguments will display all standard configuration options to
-specify input alignment files, the reference sequence and the output run
-folder. Note that all input BAM files and reference sequence must
+folder. Note that all input alignment (BAM or CRAM) files and reference sequence must
 contain the same chromosome names in the same order. In addition all
-input BAM files and reference sequences must be indexed with
-`samtools` (or a utility which creates an equivilent index
-file). Manta's default settings assume a whole genome DNA-Seq
+input alignment files and reference sequences must be indexed with
+`samtools` (or a utility which creates equivilent index
+files). Manta's default settings assume a whole genome DNA-Seq
 analysis, but there are configuration options for exome/targeted
 sequencing analysis in addition to RNA-Seq.
 
@@ -406,9 +406,9 @@ Joint Diploid Sample Analysis -- Example Configuration:
 
 ```
 ${MANTA_INSTALL_PATH}/bin/configManta.py \
---bam NA12878_S1.bam \
---bam NA12891_S1.bam \
---bam NA12892_S1.bam \
+--bam NA12878_S1.cram \
+--bam NA12891_S1.cram \
+--bam NA12892_S1.cram \
 --referenceFasta hg19.fa \
 --runDir ${MANTA_ANALYSIS_PATH}
 ```
@@ -417,8 +417,8 @@ Tumor Normal Analysis -- Example Configuration:
 
 ```
 ${MANTA_INSTALL_PATH}/bin/configManta.py \
---normalBam HCC1187BL.bam \
---tumorBam HCC1187C.bam \
+--normalBam HCC1187BL.cram \
+--tumorBam HCC1187C.cram \
 --referenceFasta hg19.fa \
 --runDir ${MANTA_ANALYSIS_PATH}
 ```
@@ -427,7 +427,7 @@ Tumor-Only Analysis -- Example Configuration:
 
 ```
 ${MANTA_INSTALL_PATH}/bin/configManta.py \
---tumorBam HCC1187C.bam \
+--tumorBam HCC1187C.cram \
 --referenceFasta hg19.fa \
 --runDir ${MANTA_ANALYSIS_PATH}
 ```
