@@ -118,9 +118,9 @@ modifyTranslocInfo(
     if (_isRNA)
     {
         infotags.push_back(str(boost::format("REF_COUNT=%i") %
-                               (isFirstOfPair ? baseInfo.normal.ref.confidentReadCountBp1 : baseInfo.normal.ref.confidentReadCountBp2)));
+                               (isFirstOfPair ? baseInfo.normal.ref.confidentSplitReadAndPairCountRefBp1 : baseInfo.normal.ref.confidentSplitReadAndPairCountRefBp2)));
         infotags.push_back(str(boost::format("MATE_REF_COUNT=%i") %
-                               (isFirstOfPair ? baseInfo.normal.ref.confidentReadCountBp2 : baseInfo.normal.ref.confidentReadCountBp1)));
+                               (isFirstOfPair ? baseInfo.normal.ref.confidentSplitReadAndPairCountRefBp2 : baseInfo.normal.ref.confidentSplitReadAndPairCountRefBp1)));
     }
 }
 

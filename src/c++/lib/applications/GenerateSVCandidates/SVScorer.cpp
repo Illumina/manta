@@ -301,8 +301,8 @@ addConservativeSplitReadSupport(
         if (refLnLhood > splitSupportProb)
         {
             sampleBaseInfo.ref.confidentSplitReadCount++;
-            if (fragev.ref.bp1.getRead(isRead1).isSplitSupport) sampleBaseInfo.ref.confidentSplitReadCountBp1++;
-            if (fragev.ref.bp2.getRead(isRead1).isSplitSupport) sampleBaseInfo.ref.confidentSplitReadCountBp2++;
+            if (fragev.ref.bp1.getRead(isRead1).isSplitSupport) sampleBaseInfo.ref.confidentSplitReadAndPairCountRefBp1++;
+            if (fragev.ref.bp2.getRead(isRead1).isSplitSupport) sampleBaseInfo.ref.confidentSplitReadAndPairCountRefBp2++;
         }
     }
 }
@@ -404,6 +404,8 @@ addConservativeSpanningPairSupport(
                 log_os << __FUNCTION__ << ": fully-mapped ref pair support\n";
 #endif
                 sampleBaseInfo.ref.confidentSpanningPairCount++;
+                if (fragev.ref.bp1.isFragmentSupport) sampleBaseInfo.ref.confidentSplitReadAndPairCountRefBp1++;
+                if (fragev.ref.bp2.isFragmentSupport) sampleBaseInfo.ref.confidentSplitReadAndPairCountRefBp2++;
             }
         }
     }

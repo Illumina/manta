@@ -113,8 +113,8 @@ struct SVSampleAlleleInfo
         splitReadEvidence = 0;
         splitReadMapQ = 0;
         confidentSplitReadCount = 0;
-        confidentSplitReadCountBp1 = 0;
-        confidentSplitReadCountBp2 = 0;
+        confidentSplitReadAndPairCountRefBp1 = 0;
+        confidentSplitReadAndPairCountRefBp2 = 0;
     }
 
     // allele pair support
@@ -129,8 +129,8 @@ struct SVSampleAlleleInfo
 
     unsigned confidentSplitReadCount = 0; ///< count by comparing alignment quality vs the other allele
 
-    unsigned confidentSplitReadCountBp1 = 0; ///< For 'ref' alleles, the support at bp1
-    unsigned confidentSplitReadCountBp2 = 0; ///< For 'ref' alleles, the support at bp2
+    unsigned confidentSplitReadAndPairCountRefBp1 = 0; ///< For 'ref' alleles, the support by split reads and spanning pairs at bp1
+    unsigned confidentSplitReadAndPairCountRefBp2 = 0; ///< For 'ref' alleles, the support at bp2
 
 };
 
