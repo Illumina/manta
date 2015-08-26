@@ -43,6 +43,11 @@ addHeaderInfo() const
     _os << "##INFO=<ID=BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at local translocation breakend\">\n";
     _os << "##INFO=<ID=MATE_BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at remote translocation mate breakend\">\n";
     _os << "##INFO=<ID=JUNCTION_QUAL,Number=1,Type=Integer,Description=\"If the SV junction is part of an EVENT (ie. a multi-adjacency variant), this field provides the QUAL value for the adjacency in question only\">\n";
+    if (_isRNA)
+    {
+        _os << "##INFO=<ID=REF_COUNT,Number=1,Type=Integer,Description=\"For RNA fusions, the number of reads supporting the reference allele at this breakend\">\n";
+        _os << "##INFO=<ID=MATE_REF_COUNT,Number=1,Type=Integer,Description=\"For RNA fusions, the number of reads supporting the reference allele at the other breakend\">\n";
+    }
 }
 
 
@@ -55,6 +60,11 @@ addHeaderFormat() const
     _os << "##FORMAT=<ID=GQ,Number=1,Type=Float,Description=\"Genotype Quality\">\n";
     _os << "##FORMAT=<ID=PR,Number=.,Type=Integer,Description=\"Spanning paired-read support for the ref and alt alleles in the order listed\">\n";
     _os << "##FORMAT=<ID=SR,Number=.,Type=Integer,Description=\"Split reads for the ref and alt alleles in the order listed, for reads where P(allele|read)>0.999\">\n";
+    if (_isRNA)
+    {
+        _os << "##FORMAT=<ID=FS,Number=2,Type=Integer,Description=\"For RNA variants split reads supporting the ref and alt alleles in the order listed\">\n";
+        _os << "##FORMAT=<ID=FP,Number=2,Type=Integer,Description=\"For RNA variants spanning paired reads supporting the ref and alt alleles in the order listed\">\n";
+    }
 }
 
 
@@ -70,6 +80,10 @@ addHeaderFilters() const
     _os << "##FILTER=<ID=" << _diploidOpt.minGTFilterLabel << ",Description=\"GQ score is less than " << _diploidOpt.minPassGTScore << "\">\n";
     _os << "##FILTER=<ID=" << _diploidOpt.maxMQ0FracLabel << ",Description=\"For a small variant (<1000 bases), the fraction of reads with MAPQ0 around either breakend exceeds " << _diploidOpt.maxMQ0Frac << "\">\n";
     _os << "##FILTER=<ID=" << _diploidOpt.noPairSupportLabel << ",Description=\"For variants significantly larger than the paired read fragment size, no paired reads support the alternate allele.\">\n";
+    if (_isRNA)
+    {
+        _os << "##FILTER=<ID=" << _diploidOpt.rnaFilterLabel << ",Description=\"RNA fusion variants without split read and split pair support\">\n";
+    }
 }
 
 
@@ -104,9 +118,9 @@ modifyTranslocInfo(
     if (_isRNA)
     {
         infotags.push_back(str(boost::format("REF_COUNT=%i") %
-                               (isFirstOfPair ? baseInfo.normal.ref.confidentSplitReadCountBp1 : baseInfo.normal.ref.confidentSplitReadCountBp2)));
+                               (isFirstOfPair ? baseInfo.normal.ref.confidentReadCountBp1 : baseInfo.normal.ref.confidentReadCountBp2)));
         infotags.push_back(str(boost::format("MATE_REF_COUNT=%i") %
-                               (isFirstOfPair ? baseInfo.normal.ref.confidentSplitReadCountBp2 : baseInfo.normal.ref.confidentSplitReadCountBp1)));
+                               (isFirstOfPair ? baseInfo.normal.ref.confidentReadCountBp2 : baseInfo.normal.ref.confidentReadCountBp1)));
     }
 }
 

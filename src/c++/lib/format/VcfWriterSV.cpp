@@ -98,6 +98,14 @@ writeHeaderPrefix(
     _os << "##INFO=<ID=INV3,Number=0,Type=Flag,Description=\"Inversion breakends open 3' of reported location\">\n";
     _os << "##INFO=<ID=INV5,Number=0,Type=Flag,Description=\"Inversion breakends open 5' of reported location\">\n";
 
+    if (_isRNA)
+    {
+        _os << "##INFO=<ID=RNA_FIRST,Number=0,Type=Flag,Description=\"For RNA fusions, this break-end is 5' in the fusion transcript\">\n";
+        _os << "##INFO=<ID=RNA_STRANDED,Number=0,Type=Flag,Description=\"For RNA fusions, the direction of transcription is known\">\n";        
+        _os << "##INFO=<ID=RNA_FwRvReads,Number=2,Type=Integer,Description=\"For RNA fusions, number of stranded reads supporting forward or reverse direction of transcription\">\n";
+        _os << "##INFO=<ID=RNA_CONTIG,Number=1,Type=String,Description=\"For RNA fusions, the sequence of the breakend spanning contig\">\n";
+        _os << "##INFO=<ID=RNA_CONTIG_ALN,Number=2,Type=Integer,Description=\"For RNA fusions, length of the spanning contig alignment on each breakend\">\n";
+    }
     addHeaderInfo();
 
     addHeaderFormat();
@@ -225,8 +233,8 @@ addRNAInfo(
     if (! assemblyData.isSpanning) return;
 
     const bool isFirst = (assemblyData.bporient.isBp1First == isFirstOfPair);
-    infotags.push_back(str(boost::format("RNA_FIRST=%1%") % isFirst));
-    infotags.push_back(str(boost::format("RNA_STRANDED=%1%") % assemblyData.bporient.isStranded));
+    if (isFirst) infotags.push_back("RNA_FIRST");
+    if (assemblyData.bporient.isStranded) infotags.push_back("RNA_STRANDED");
 
     if (!isFirstOfPair) return; // only the first breakpoint gets the additional RNA info attached to its VCF entry
 
@@ -240,8 +248,9 @@ addRNAInfo(
         if (numContigs <= assemblyData.bestAlignmentIndex)
             infotags.push_back(str(boost::format("ERROR2=%i;%i") % numContigs % assemblyData.bestAlignmentIndex));
         infotags.push_back(str(boost::format("RNA_CONTIG=%s") % assemblyData.contigs[assemblyData.bestAlignmentIndex].seq));
-        infotags.push_back(str(boost::format("RNA_CONTIGLeftAln=%i") % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align1.apath)));
-        infotags.push_back(str(boost::format("RNA_CONTIGRightAln=%i") % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align2.apath)));
+        infotags.push_back(str(boost::format("RNA_CONTIG_ALN=%i;%i")
+            % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align1.apath)
+            % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align2.apath)));
     }
 }
 
