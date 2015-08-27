@@ -238,19 +238,19 @@ addRNAInfo(
 
     if (!isFirstOfPair) return; // only the first breakpoint gets the additional RNA info attached to its VCF entry
 
-    infotags.push_back(str(boost::format("RNA_FwRvReads=%i:%i") % sv.fwReads % sv.rvReads));
+    infotags.push_back(str(boost::format("RNA_FwRvReads=%i,%i") % sv.fwReads % sv.rvReads));
 
     const unsigned numContigs(assemblyData.contigs.size());
     if (numContigs > 0)
     {
         if (numContigs != assemblyData.spanningAlignments.size())
-            infotags.push_back(str(boost::format("ERROR=%i;%i") % numContigs % assemblyData.spanningAlignments.size()));
+            infotags.push_back(str(boost::format("ERROR=%i,%i") % numContigs % assemblyData.spanningAlignments.size()));
         if (numContigs <= assemblyData.bestAlignmentIndex)
-            infotags.push_back(str(boost::format("ERROR2=%i;%i") % numContigs % assemblyData.bestAlignmentIndex));
+            infotags.push_back(str(boost::format("ERROR2=%i,%i") % numContigs % assemblyData.bestAlignmentIndex));
         infotags.push_back(str(boost::format("RNA_CONTIG=%s") % assemblyData.contigs[assemblyData.bestAlignmentIndex].seq));
-        infotags.push_back(str(boost::format("RNA_CONTIG_ALN=%i;%i")
-                               % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align1.apath)
-                               % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align2.apath)));
+        infotags.push_back(str(boost::format("RNA_CONTIG_ALN=%i,%i")
+            % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align1.apath)
+            % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align2.apath)));
     }
 }
 
