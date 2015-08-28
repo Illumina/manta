@@ -22,16 +22,117 @@
 // \author Chris Saunders
 //
 
-//#define DEBUG_ALN
-
 #include <cassert>
 
-#include <iostream>
 
-#ifdef DEBUG_ALN
+#if defined(DEBUG_ALN) || defined(DEBUG_ALN_MATRIX)
 #include "blt_util/log.hh"
 #include <iostream>
 #endif
+
+#ifdef DEBUG_ALN_MATRIX
+#include <iomanip>
+#endif
+
+
+
+#ifdef DEBUG_ALN_MATRIX
+
+
+template <typename ScoreType>
+template <typename SymIter, typename MatrixType, typename ScoreValType>
+void
+JumpAlignerBase<ScoreType>::
+dumpSingleRefTable(
+    const SymIter refBegin, const SymIter refEnd,
+    const size_t querySize,
+    const MatrixType& ptrMatrix,
+    const std::vector<std::vector<ScoreValType>>& storeScores,
+    const char refSym,
+    const AlignState::index_t sIndex,
+    unsigned& storeIndex) const
+{
+    auto printVal = [](
+            const ScoreType& val,
+            const char fromSym,
+            std::ostream& os)
+    {
+        if (val<-900)
+        {
+            os << " XX";
+        }
+        else
+        {
+            os << std::setfill(' ') << std::setw(3) << val;
+        }
+        os << fromSym;
+    };
+
+    {
+        log_os << "# N ";
+        for (unsigned queryIndex(0);queryIndex<=querySize;++queryIndex)
+        {
+            const auto& val(storeScores[storeIndex][queryIndex].getScore(sIndex));
+            static const char fromSym('.');
+            printVal(val,fromSym, log_os);
+        }
+        log_os << "\n";
+    }
+    unsigned refIndex(0);
+    for (SymIter refIter(refBegin); refIter != refEnd; ++refIter, ++refIndex)
+    {
+        log_os << refSym << " " << *refIter << " ";
+        storeIndex++;
+        for (unsigned queryIndex(0);queryIndex<=querySize;++queryIndex)
+        {
+            const auto& val(storeScores[storeIndex][queryIndex].getScore(sIndex));
+            const char fromSym(queryIndex==0 ? '.' : AlignState::symbol(ptrMatrix.val(queryIndex,refIndex+1).getStatePtr(sIndex)));
+            printVal(val,fromSym, log_os);
+        }
+        log_os << "\n";
+    }
+}
+
+
+
+template <typename ScoreType>
+template <typename SymIter, typename MatrixType, typename ScoreValType>
+void
+JumpAlignerBase<ScoreType>::
+dumpTables(
+    const SymIter queryBegin, const SymIter queryEnd,
+    const SymIter ref1Begin, const SymIter ref1End,
+    const SymIter ref2Begin, const SymIter ref2End,
+    const size_t querySize,
+    const MatrixType& ptrMatrix1, const MatrixType& ptrMatrix2,
+    const std::vector<AlignState::index_t>& dumpStates,
+    const std::vector<std::vector<ScoreValType>>& storeScores) const
+{
+    const unsigned stateSize(dumpStates.size());
+    for (unsigned stateIndex(0); stateIndex<stateSize; ++stateIndex)
+    {
+        const AlignState::index_t sIndex(dumpStates[stateIndex]);
+        log_os << "******** Dumping matrix for state: " << AlignState::label(sIndex) << " ********\n";
+        {
+            unsigned queryIndex(0);
+            log_os << "REF    -";
+            for (SymIter queryIter(queryBegin); queryIter != queryEnd; ++queryIter, ++queryIndex)
+            {
+                log_os << "   " << *queryIter;
+            }
+            log_os << "\n";
+        }
+
+        // dump state before refIndex 0
+        unsigned storeIndex(0);
+        dumpSingleRefTable(ref1Begin,ref1End,querySize,ptrMatrix1,storeScores, '1', sIndex, storeIndex);
+
+        storeIndex++;
+        dumpSingleRefTable(ref2Begin,ref2End,querySize,ptrMatrix2,storeScores, '2', sIndex, storeIndex);
+    }
+}
+#endif
+
 
 
 template <typename ScoreType>
@@ -68,6 +169,11 @@ backTraceAlignment(
     assert(btrace.refBegin <= ref1Size+ref2Size);
     assert(btrace.queryBegin <= querySize);
 
+#ifdef DEBUG_ALN
+    log_os << "qSize: " << querySize << " ref1Size: " << ref1Size << " ref2Size: " << ref2Size << "\n";
+    log_os << "bt-start max: " << btrace.max << " refBegin: " << btrace.refBegin << " qBegin: " << btrace.queryBegin << "\n";
+#endif
+
     result.score = btrace.max;
 
     // traceback:
@@ -91,7 +197,7 @@ backTraceAlignment(
         ALIGNPATH::path_t& apath( isRef1 ? apath1 : apath2 );
         const unsigned refXBegin(btrace.refBegin - (isRef1 ? 0 : ref1Size));
         const MatrixType* ptrMatrixX(isRef1 ? &ptrMatrix1 : &ptrMatrix2 );
-        const AlignState::index_t nextState(static_cast<AlignState::index_t>(ptrMatrixX->val(btrace.queryBegin,refXBegin).get(btrace.state)));
+        const AlignState::index_t nextState(ptrMatrixX->val(btrace.queryBegin,refXBegin).getStatePtr(btrace.state));
 
 #ifdef DEBUG_ALN
         log_os << "bt-iter queryIndex: " << btrace.queryBegin

@@ -62,6 +62,7 @@ struct BackTrace
 
 
 
+/// track values needed to run the alignment backtrace:
 template <typename ScoreType>
 void
 updateBacktrace(

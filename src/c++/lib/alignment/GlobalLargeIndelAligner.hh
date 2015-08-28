@@ -71,8 +71,19 @@ private:
 
     struct PtrVal
     {
-        uint8_t
-        get(const AlignState::index_t i) const
+        typedef uint16_t code_t;
+
+        /// for state i, return the highest scoring previous state
+        /// to use during the backtrace?
+        AlignState::index_t
+        getStatePtr(const AlignState::index_t i) const
+        {
+            return static_cast<AlignState::index_t>(getStateCode(i));
+        }
+
+    private:
+        code_t
+        getStateCode(const AlignState::index_t i) const
         {
             switch (i)
             {
@@ -92,13 +103,13 @@ private:
             }
         }
 
+    public:
         /// pack 3x5 bits into 2 bytes:
-        typedef uint16_t ptrType;
-        ptrType match : 3;
-        ptrType ins : 3;
-        ptrType del : 3;
-        ptrType jumpDel : 3;
-        ptrType jumpIns : 3;
+        code_t match : 3;
+        code_t ins : 3;
+        code_t del : 3;
+        code_t jumpDel : 3;
+        code_t jumpIns : 3;
     };
 
     static

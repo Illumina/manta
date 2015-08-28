@@ -22,7 +22,6 @@
 // \author Chris Saunders and Felix Schlesinger
 //
 
-//#define DEBUG_ALN
 
 #include "AlignerUtil.hh"
 
@@ -115,6 +114,13 @@ align(
         val.jump = badVal;
         val.intron = badVal;
     }
+
+#ifdef DEBUG_ALN_MATRIX
+    // store full matrix of scores to print out later, don't turn this debug option on for large references!
+    std::vector<ScoreVec> storeScores;
+
+    storeScores.push_back(*thisSV);
+#endif
 
     BackTrace<ScoreType> btrace;
 
@@ -214,13 +220,17 @@ align(
 
 #ifdef DEBUG_ALN
                 log_os << "queryIdx refIdx ref1Idx: " << queryIndex+1 << " " << ref1Index+1 << " " << ref1Index+1 << "\n";
-                log_os << headScore.match << ":" << headScore.del << ":" << headScore.ins << ":" << headScore.jump << ":" << headScore.intron << "/"
-                       << static_cast<int>(headPtr.match) << static_cast<int>(headPtr.del) << static_cast<int>(headPtr.ins) << static_cast<int>(headPtr.jump) << "\n";
-                log_os << "Q:" << *queryIter << " R:" << *ref1Iter << "\n";
+                log_os << "MIDJS: "<< headScore.match << ":" << headScore.ins << ":" << headScore.del << ":" << headScore.jump << ":" << headScore.intron << "/"
+                       << static_cast<int>(headPtr.match) << static_cast<int>(headPtr.ins) << static_cast<int>(headPtr.del) << static_cast<int>(headPtr.jump)  << static_cast<int>(headPtr.intron) << "\n";
+                log_os << "QuerySymbol:" << *queryIter << " RefSymbol:" << *ref1Iter << "\n";
 #endif
             }
 #ifdef DEBUG_ALN
             log_os << "\n";
+#endif
+
+#ifdef DEBUG_ALN_MATRIX
+            storeScores.push_back(*thisSV);
 #endif
 
             // get backtrace info:
@@ -250,6 +260,10 @@ align(
             val.intron = badVal;
             //val.jump = badVal; // preserve jump setting from last iteration of ref1
         }
+
+#ifdef DEBUG_ALN_MATRIX
+        storeScores.push_back(*thisSV);
+#endif
 
         unsigned ref2Index(0);
         for (SymIter ref2Iter(ref2Begin); ref2Iter != ref2End; ++ref2Iter, ++ref2Index)
@@ -343,12 +357,17 @@ align(
 
 #ifdef DEBUG_ALN
                 log_os << "queryIdx refIdx ref2Idx: " << queryIndex+1 << " " << ref1Size+ref2Index+1 << " " << ref2Index+1 << "\n";
-                log_os << headScore.match << ":" << headScore.del << ":" << headScore.ins << ":" << headScore.jump << "/"
-                       << static_cast<int>(headPtr.match) << static_cast<int>(headPtr.del) << static_cast<int>(headPtr.ins) << static_cast<int>(headPtr.jump) << "\n";
+                log_os << "MIDJS: "<< headScore.match << ":" << headScore.ins << ":" << headScore.del << ":" << headScore.jump << ":" << headScore.intron << "/"
+                       << static_cast<int>(headPtr.match) << static_cast<int>(headPtr.ins) << static_cast<int>(headPtr.del) << static_cast<int>(headPtr.jump)  << static_cast<int>(headPtr.intron) << "\n";
+                log_os << "QuerySymbol:" << *queryIter << " RefSymbol:" << *ref2Iter << "\n";
 #endif
             }
 #ifdef DEBUG_ALN
             log_os << "\n";
+#endif
+
+#ifdef DEBUG_ALN_MATRIX
+        storeScores.push_back(*thisSV);
 #endif
 
             // get backtrace start info:
@@ -369,6 +388,16 @@ align(
 
 #ifdef DEBUG_ALN
     log_os << "bt-start queryIndex: " << btrace.queryBegin << " refIndex: " << btrace.refBegin << " state: " << AlignState::label(btrace.state) << " maxScore: " << btrace.max << "\n";
+#endif
+
+#ifdef DEBUG_ALN_MATRIX
+    std::vector<AlignState::index_t> dumpStates {AlignState::MATCH, AlignState::DELETE, AlignState::INSERT, AlignState::JUMP, AlignState::SPLICE};
+    this->dumpTables(queryBegin, queryEnd,
+            ref1Begin, ref1End,
+            ref2Begin, ref2End,
+            querySize,
+            _ptrMat1, _ptrMat2,
+            dumpStates,storeScores);
 #endif
 
     this->backTraceAlignment(

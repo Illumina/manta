@@ -58,16 +58,8 @@ private:
     // insert and delete are for seq1 wrt seq2
     struct ScoreVal
     {
-        ScoreType match;
-        ScoreType ins;
-        ScoreType del;
-        ScoreType jump;
-    };
-
-    struct PtrVal
-    {
-        uint8_t
-        get(const AlignState::index_t i) const
+        ScoreType
+        getScore(const AlignState::index_t i) const
         {
             switch (i)
             {
@@ -85,11 +77,50 @@ private:
             }
         }
 
-        /// pack 2x4 bits into 1 byte:
-        uint8_t match : 2;
-        uint8_t ins : 2;
-        uint8_t del : 2;
-        uint8_t jump : 2;
+        ScoreType match;
+        ScoreType ins;
+        ScoreType del;
+        ScoreType jump;
+    };
+
+    struct PtrVal
+    {
+        typedef uint8_t code_t;
+
+        /// for state i, return the highest scoring previous state
+        /// to use during the backtrace?
+        AlignState::index_t
+        getStatePtr(const AlignState::index_t i) const
+        {
+            return static_cast<AlignState::index_t>(getStateCode(i));
+        }
+
+    private:
+        code_t
+        getStateCode(const AlignState::index_t i) const
+        {
+            switch (i)
+            {
+            case AlignState::MATCH:
+                return match;
+            case AlignState::INSERT:
+                return ins;
+            case AlignState::DELETE:
+                return del;
+            case AlignState::JUMP:
+                return jump;
+            default:
+                assert(false && "Unexpected Index Value");
+                return 0;
+            }
+        }
+
+    public:
+        // pack 2x4 bits into 1 byte:
+        code_t match : 2;
+        code_t ins : 2;
+        code_t del : 2;
+        code_t jump : 2;
     };
 
     // add the matrices here to reduce allocations over many alignment calls:

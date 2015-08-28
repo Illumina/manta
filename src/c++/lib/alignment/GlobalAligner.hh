@@ -63,8 +63,18 @@ private:
 
     struct PtrVal
     {
-        uint8_t
-        get(const AlignState::index_t i) const
+        typedef uint8_t code_t;
+
+        /// for state i, return the highest scoring previous state
+        /// to use during the backtrace?
+        AlignState::index_t
+        getStatePtr(const AlignState::index_t i) const
+        {
+            return static_cast<AlignState::index_t>(getStateCode(i));
+        }
+    private:
+        code_t
+        getStateCode(const AlignState::index_t i) const
         {
             switch (i)
             {
@@ -80,9 +90,10 @@ private:
             }
         }
 
-        uint8_t match : 2;
-        uint8_t ins : 2;
-        uint8_t del : 2;
+    public:
+        code_t match : 2;
+        code_t ins : 2;
+        code_t del : 2;
     };
 
     // add the matrices here to reduce allocations over many alignment calls:

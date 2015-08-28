@@ -87,4 +87,26 @@ struct AlignState
             return "UNKNOWN";
         }
     }
+
+    static
+    char
+    symbol(const index_t i)
+    {
+        switch (i)
+        {
+        case MATCH:
+            return 'M';
+        case DELETE:
+            return 'D';
+        case INSERT:
+            return 'I';
+        case JUMP:
+            return 'J';
+        case SPLICE:
+            return 'N';
+        default:
+            return '?';
+        }
+    }
+
 };

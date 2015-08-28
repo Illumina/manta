@@ -66,7 +66,7 @@ backTraceAlignment(
 
     while ((btrace.queryBegin>0) && (btrace.refBegin>0))
     {
-        const AlignState::index_t nextMatrix(static_cast<AlignState::index_t>(ptrMatrix.val(btrace.queryBegin,btrace.refBegin).get(btrace.state)));
+        const AlignState::index_t nextMatrix(ptrMatrix.val(btrace.queryBegin,btrace.refBegin).getStatePtr(btrace.state));
 
         if (btrace.state==AlignState::MATCH)
         {

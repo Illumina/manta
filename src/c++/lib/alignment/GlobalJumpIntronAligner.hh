@@ -59,17 +59,8 @@ private:
     // insert and delete are for seq1 wrt seq2
     struct ScoreVal
     {
-        ScoreType match;
-        ScoreType ins;
-        ScoreType del;
-        ScoreType jump;
-        ScoreType intron;
-    };
-
-    struct PtrVal
-    {
-        uint8_t
-        get(const AlignState::index_t i) const
+        ScoreType
+        getScore(const AlignState::index_t i) const
         {
             switch (i)
             {
@@ -89,12 +80,54 @@ private:
             }
         }
 
+        ScoreType match;
+        ScoreType ins;
+        ScoreType del;
+        ScoreType jump;
+        ScoreType intron;
+    };
+
+    struct PtrVal
+    {
+        typedef uint16_t code_t;
+
+        /// for state i, return the highest scoring previous state
+        /// to use during the backtrace?
+        AlignState::index_t
+        getStatePtr(const AlignState::index_t i) const
+        {
+            return static_cast<AlignState::index_t>(getStateCode(i));
+        }
+
+    private:
+        code_t
+        getStateCode(const AlignState::index_t i) const
+        {
+            switch (i)
+            {
+            case AlignState::MATCH:
+                return match;
+            case AlignState::INSERT:
+                return ins;
+            case AlignState::DELETE:
+                return del;
+            case AlignState::JUMP:
+                return jump;
+            case AlignState::SPLICE:
+                return intron;
+            default:
+                assert(false && "Unexpected Index Value");
+                return 0;
+            }
+        }
+
+    public:
         /// pack 3x5 bits into a single uint16_t:
-        uint16_t match : 3;
-        uint16_t ins : 3;
-        uint16_t del : 3;
-        uint16_t jump : 3;
-        uint16_t intron : 3;
+        code_t match : 3;
+        code_t ins : 3;
+        code_t del : 3;
+        code_t jump : 3;
+        code_t intron : 3;
     };
 
     const ScoreType _intronOpenScore; ///< gap open for introns (i.e. deletions starting with splice motif) (should be negative)
