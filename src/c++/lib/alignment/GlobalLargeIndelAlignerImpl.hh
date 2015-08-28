@@ -123,7 +123,7 @@ align(
                                       sval.jumpIns);
 
                     headScore.del += scores.extend;
-                    if (0==queryIndex) headScore.del += badVal;
+                    if (0==queryIndex) headScore.del = badVal;
                 }
 
                 // update insert
@@ -138,7 +138,7 @@ align(
                                       badVal);
 
                     headScore.ins += scores.extend;
-                    if (0==queryIndex) headScore.ins += badVal;
+                    if (0==queryIndex) headScore.ins = badVal;
                 }
 
                 // update jumpDel
@@ -158,7 +158,7 @@ align(
                                           sval.jumpDel,
                                           sval.jumpIns + _largeIndelScore);
 
-                    if (0==queryIndex) headScore.jumpDel += badVal;
+                    if (0==queryIndex) headScore.jumpDel = badVal;
                 }
 
                 // update jumpIns
@@ -172,7 +172,7 @@ align(
                                           badVal,
                                           sval.jumpIns);
 
-                    if (0==queryIndex) headScore.jumpIns += badVal;
+                    if (0==queryIndex) headScore.jumpIns = badVal;
                 }
 
 #ifdef DEBUG_ALN

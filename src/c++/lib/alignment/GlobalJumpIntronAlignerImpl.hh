@@ -176,7 +176,7 @@ align(
                                       sval.ins + scores.open);
 
                     headScore.del += scores.extend;
-                    if (0==queryIndex) headScore.del += badVal;
+                    if (0==queryIndex) headScore.del = badVal;
                 }
 
                 // update insert
@@ -189,7 +189,7 @@ align(
                                       sval.ins);
 
                     headScore.ins += scores.extend;
-                    if (0==queryIndex) headScore.ins += badVal;
+                    if (0==queryIndex) headScore.ins = badVal;
                 }
                 // update intron / splice
                 {
