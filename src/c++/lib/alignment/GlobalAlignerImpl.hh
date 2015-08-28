@@ -20,11 +20,11 @@
 
 /// derived from ELAND implementation by Tony Cox
 
-//#define ALN_DEBUG
+//#define DEBUG_ALN
 
 #include <cassert>
 
-#ifdef ALN_DEBUG
+#ifdef DEBUG_ALN
 #include "blt_util/log.hh"
 #include <iostream>
 #endif
@@ -129,13 +129,13 @@ align(
                     if (0==queryIndex) headScore.ins += badVal;
                 }
 
-#ifdef ALN_DEBUG
+#ifdef DEBUG_ALN
                 log_os << "i1i2: " << queryIndex+1 << " " << refIndex+1 << "\n";
                 log_os << headScore.match << ":" << headScore.del << ":" << headScore.ins << "/"
                        << static_cast<int>(headPtr.match) << static_cast<int>(headPtr.del) << static_cast<int>(headPtr.ins) << "\n";
 #endif
             }
-#ifdef ALN_DEBUG
+#ifdef DEBUG_ALN
             log_os << "\n";
 #endif
 
@@ -156,7 +156,7 @@ align(
         updateBacktrace(thisMax,refSize,queryIndex,btrace);
     }
 
-#ifdef ALN_DEBUG
+#ifdef DEBUG_ALN
     log_os << "btrace-start queryIndex: " << queryBegin << " refIndex: " << refBegin << " state: " << AlignState::label(btrace.state) << " maxScore: " << btrace.max << "\n";
 #endif
 

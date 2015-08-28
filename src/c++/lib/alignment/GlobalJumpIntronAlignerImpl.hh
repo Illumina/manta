@@ -22,13 +22,13 @@
 // \author Chris Saunders and Felix Schlesinger
 //
 
-//#define ALN_DEBUG
+//#define DEBUG_ALN
 
 #include "AlignerUtil.hh"
 
 #include <cassert>
 
-#ifdef ALN_DEBUG
+#ifdef DEBUG_ALN
 #include "blt_util/log.hh"
 #include <iostream>
 #endif
@@ -212,14 +212,14 @@ align(
                                        sval.jump);
                 }
 
-#ifdef ALN_DEBUG
+#ifdef DEBUG_ALN
                 log_os << "queryIdx refIdx ref1Idx: " << queryIndex+1 << " " << ref1Index+1 << " " << ref1Index+1 << "\n";
                 log_os << headScore.match << ":" << headScore.del << ":" << headScore.ins << ":" << headScore.jump << ":" << headScore.intron << "/"
                        << static_cast<int>(headPtr.match) << static_cast<int>(headPtr.del) << static_cast<int>(headPtr.ins) << static_cast<int>(headPtr.jump) << "\n";
                 log_os << "Q:" << *queryIter << " R:" << *ref1Iter << "\n";
 #endif
             }
-#ifdef ALN_DEBUG
+#ifdef DEBUG_ALN
             log_os << "\n";
 #endif
 
@@ -341,13 +341,13 @@ align(
                     headScore.jump = sval.jump;
                 }
 
-#ifdef ALN_DEBUG
+#ifdef DEBUG_ALN
                 log_os << "queryIdx refIdx ref2Idx: " << queryIndex+1 << " " << ref1Size+ref2Index+1 << " " << ref2Index+1 << "\n";
                 log_os << headScore.match << ":" << headScore.del << ":" << headScore.ins << ":" << headScore.jump << "/"
                        << static_cast<int>(headPtr.match) << static_cast<int>(headPtr.del) << static_cast<int>(headPtr.ins) << static_cast<int>(headPtr.jump) << "\n";
 #endif
             }
-#ifdef ALN_DEBUG
+#ifdef DEBUG_ALN
             log_os << "\n";
 #endif
 
@@ -367,7 +367,7 @@ align(
         updateBacktrace(thisMax, ref1Size+ref2Size, queryIndex, btrace);
     }
 
-#ifdef ALN_DEBUG
+#ifdef DEBUG_ALN
     log_os << "bt-start queryIndex: " << btrace.queryBegin << " refIndex: " << btrace.refBegin << " state: " << AlignState::label(btrace.state) << " maxScore: " << btrace.max << "\n";
 #endif
 

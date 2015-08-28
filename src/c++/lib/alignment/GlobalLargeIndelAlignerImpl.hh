@@ -22,11 +22,11 @@
 // \author Chris Saunders
 //
 
-//#define ALN_DEBUG
+//#define DEBUG_ALN
 
 #include <cassert>
 
-#ifdef ALN_DEBUG
+#ifdef DEBUG_ALN
 #include "blt_util/log.hh"
 #include <iostream>
 #endif
@@ -175,7 +175,7 @@ align(
                     if (0==queryIndex) headScore.jumpIns += badVal;
                 }
 
-#ifdef ALN_DEBUG
+#ifdef DEBUG_ALN
                 log_os << "queryIdx refIdx: " << queryIndex+1 << " " << refIndex+1 << "\n";
                 log_os << headScore.match << ":"
                        << headScore.del << ":"
@@ -189,7 +189,7 @@ align(
                        << static_cast<int>(headPtr.jumpIns)<< "\n";
 #endif
             }
-#ifdef ALN_DEBUG
+#ifdef DEBUG_ALN
             log_os << "\n";
 #endif
 
@@ -210,7 +210,7 @@ align(
     }
 
 
-#ifdef ALN_DEBUG
+#ifdef DEBUG_ALN
     log_os << "bt-start queryIndex: " << btrace.queryBegin << " refIndex: " << btrace.refBegin << " state: " << AlignState::label(btrace.state) << " maxScore: " << btrace.max << "\n";
 #endif
 

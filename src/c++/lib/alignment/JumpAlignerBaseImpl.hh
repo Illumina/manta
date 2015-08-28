@@ -22,13 +22,13 @@
 // \author Chris Saunders
 //
 
-//#define ALN_DEBUG
+//#define DEBUG_ALN
 
 #include <cassert>
 
 #include <iostream>
 
-#ifdef ALN_DEBUG
+#ifdef DEBUG_ALN
 #include "blt_util/log.hh"
 #include <iostream>
 #endif
@@ -93,7 +93,7 @@ backTraceAlignment(
         const MatrixType* ptrMatrixX(isRef1 ? &ptrMatrix1 : &ptrMatrix2 );
         const AlignState::index_t nextState(static_cast<AlignState::index_t>(ptrMatrixX->val(btrace.queryBegin,refXBegin).get(btrace.state)));
 
-#ifdef ALN_DEBUG
+#ifdef DEBUG_ALN
         log_os << "bt-iter queryIndex: " << btrace.queryBegin
                << " refIndex: " << btrace.refBegin
                << " state: " << AlignState::label(btrace.state)
