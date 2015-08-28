@@ -171,7 +171,7 @@ backTraceAlignment(
 
 #ifdef DEBUG_ALN
     log_os << "qSize: " << querySize << " ref1Size: " << ref1Size << " ref2Size: " << ref2Size << "\n";
-    log_os << "bt-start max: " << btrace.max << " refBegin: " << btrace.refBegin << " qBegin: " << btrace.queryBegin << "\n";
+    log_os << "bt-start max: " << btrace.max << " refBegin: " << btrace.refBegin << " qBegin: " << btrace.queryBegin << " state: " << AlignState::label(btrace.state) << "\n";
 #endif
 
     result.score = btrace.max;
@@ -223,6 +223,8 @@ backTraceAlignment(
         }
         else if (btrace.state==AlignState::SPLICE)
         {
+            if ((!isRef1) && (refXBegin == 1) && (nextState == AlignState::SPLICE)) isRef2End = true;
+
             AlignerUtil::updatePath(apath,ps,ALIGNPATH::SKIP);
             btrace.refBegin--;
         }

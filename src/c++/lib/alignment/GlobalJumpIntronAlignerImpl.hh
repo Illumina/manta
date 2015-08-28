@@ -22,7 +22,6 @@
 // \author Chris Saunders and Felix Schlesinger
 //
 
-
 #include "AlignerUtil.hh"
 
 #include <cassert>
@@ -112,7 +111,7 @@ align(
         val.del = badVal;
         val.ins = badVal;
         val.jump = badVal;
-        val.intron = badVal;
+        val.intron = queryIndex * _intronOffEdgeScore;
     }
 
 #ifdef DEBUG_ALN_MATRIX
@@ -245,8 +244,16 @@ align(
     for (unsigned queryIndex(0); queryIndex<querySize; queryIndex++)
     {
         const ScoreVal& sval((*thisSV)[queryIndex]);
-        const ScoreType thisMax(sval.match + (querySize-queryIndex) * scores.offEdge);
-        updateBacktrace(thisMax, ref1Size, queryIndex, btrace);
+        const ScoreType maxMatch(sval.match + (querySize - queryIndex) * scores.offEdge);
+        const ScoreType maxIntronOffEdge(sval.intron + (querySize - queryIndex) * _intronOffEdgeScore);
+        if (maxMatch >= maxIntronOffEdge)
+        {
+            updateBacktrace(maxMatch, ref1Size, queryIndex, btrace, AlignState::MATCH);
+        }
+        else
+        {
+            updateBacktrace(maxIntronOffEdge, ref1Size, queryIndex, btrace, AlignState::SPLICE);
+        }
     }
 
 
@@ -257,7 +264,7 @@ align(
             val.match = queryIndex * scores.offEdge;
             val.del = badVal;
             val.ins = badVal;
-            val.intron = badVal;
+            val.intron = queryIndex * _intronOffEdgeScore;
             //val.jump = badVal; // preserve jump setting from last iteration of ref1
         }
 
@@ -382,8 +389,16 @@ align(
     for (unsigned queryIndex(0); queryIndex<querySize; queryIndex++)
     {
         const ScoreVal& sval((*thisSV)[queryIndex]);
-        const ScoreType thisMax(sval.match + (querySize-queryIndex) * scores.offEdge);
-        updateBacktrace(thisMax, ref1Size+ref2Size, queryIndex, btrace);
+        const ScoreType maxMatch(sval.match + (querySize - queryIndex) * scores.offEdge);
+        const ScoreType maxIntronOffEdge(sval.intron + (querySize - queryIndex) * _intronOffEdgeScore);
+        if (maxMatch >= maxIntronOffEdge)
+        {
+            updateBacktrace(maxMatch, ref1Size + ref2Size, queryIndex, btrace, AlignState::MATCH);
+        }
+        else
+        {
+            updateBacktrace(maxIntronOffEdge, ref1Size + ref2Size, queryIndex, btrace, AlignState::SPLICE);
+        }
     }
 
 #ifdef DEBUG_ALN
