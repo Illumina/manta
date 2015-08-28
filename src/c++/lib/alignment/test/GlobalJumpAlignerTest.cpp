@@ -78,6 +78,28 @@ testAlign2(
 }
 
 
+
+static
+JumpAlignmentResult<score_t>
+testAlign3(
+    const std::string& seq,
+    const std::string& ref1,
+    const std::string& ref2)
+{
+    static const AlignmentScores<score_t> scores(2,-4,-2,0,-1);
+    static const int jumpScore(-20);
+    GlobalJumpAligner<score_t> aligner(scores,jumpScore);
+    JumpAlignmentResult<score_t> result;
+    aligner.align(
+        seq.begin(),seq.end(),
+        ref1.begin(),ref1.end(),
+        ref2.begin(),ref2.end(),
+        result);
+
+    return result;
+}
+
+
 BOOST_AUTO_TEST_CASE( test_GlobalJumpAligner0 )
 {
     static const std::string seq("ABABACDCDC");
@@ -303,6 +325,23 @@ BOOST_AUTO_TEST_CASE( test_GlobalJumpAlignerRef1Clip )
     BOOST_REQUIRE_EQUAL(result.align1.beginPos,0);
     BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"");
     BOOST_REQUIRE_EQUAL(result.align2.beginPos,0);
+    BOOST_REQUIRE_EQUAL(result.jumpInsertSize,0u);
+    BOOST_REQUIRE_EQUAL(result.jumpRange,0u);
+}
+
+
+BOOST_AUTO_TEST_CASE( test_GlobalJumpAlignerDelJunction )
+{
+    static const std::string seq("AAAACCCCCCCCTTTTAAAATTTT");
+    static const std::string ref1("AAAAAAAACCCCCCCCG");
+    static const std::string ref2("GGGGTTTTAAAATTTT");
+
+    JumpAlignmentResult<score_t> result = testAlign3(seq,ref1,ref2);
+
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath),"12=");
+    BOOST_REQUIRE_EQUAL(result.align1.beginPos,4);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath),"12=");
+    BOOST_REQUIRE_EQUAL(result.align2.beginPos,4);
     BOOST_REQUIRE_EQUAL(result.jumpInsertSize,0u);
     BOOST_REQUIRE_EQUAL(result.jumpRange,0u);
 }
