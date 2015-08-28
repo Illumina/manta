@@ -53,9 +53,9 @@ dumpSingleRefTable(
     unsigned& storeIndex) const
 {
     auto printVal = [](
-            const ScoreType& val,
-            const char fromSym,
-            std::ostream& os)
+                        const ScoreType& val,
+                        const char fromSym,
+                        std::ostream& os)
     {
         if (val<-900)
         {
@@ -70,7 +70,7 @@ dumpSingleRefTable(
 
     {
         log_os << "# N ";
-        for (unsigned queryIndex(0);queryIndex<=querySize;++queryIndex)
+        for (unsigned queryIndex(0); queryIndex<=querySize; ++queryIndex)
         {
             const auto& val(storeScores[storeIndex][queryIndex].getScore(sIndex));
             static const char fromSym('.');
@@ -83,7 +83,7 @@ dumpSingleRefTable(
     {
         log_os << refSym << " " << *refIter << " ";
         storeIndex++;
-        for (unsigned queryIndex(0);queryIndex<=querySize;++queryIndex)
+        for (unsigned queryIndex(0); queryIndex<=querySize; ++queryIndex)
         {
             const auto& val(storeScores[storeIndex][queryIndex].getScore(sIndex));
             const char fromSym(queryIndex==0 ? '.' : AlignState::symbol(ptrMatrix.val(queryIndex,refIndex+1).getStatePtr(sIndex)));

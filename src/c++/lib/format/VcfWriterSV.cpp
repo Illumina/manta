@@ -101,7 +101,7 @@ writeHeaderPrefix(
     if (_isRNA)
     {
         _os << "##INFO=<ID=RNA_FIRST,Number=0,Type=Flag,Description=\"For RNA fusions, this break-end is 5' in the fusion transcript\">\n";
-        _os << "##INFO=<ID=RNA_STRANDED,Number=0,Type=Flag,Description=\"For RNA fusions, the direction of transcription is known\">\n";        
+        _os << "##INFO=<ID=RNA_STRANDED,Number=0,Type=Flag,Description=\"For RNA fusions, the direction of transcription is known\">\n";
         _os << "##INFO=<ID=RNA_FwRvReads,Number=2,Type=Integer,Description=\"For RNA fusions, number of stranded reads supporting forward or reverse direction of transcription\">\n";
         _os << "##INFO=<ID=RNA_CONTIG,Number=1,Type=String,Description=\"For RNA fusions, the sequence of the breakend spanning contig\">\n";
         _os << "##INFO=<ID=RNA_CONTIG_ALN,Number=2,Type=Integer,Description=\"For RNA fusions, length of the spanning contig alignment on each breakend\">\n";
@@ -249,8 +249,8 @@ addRNAInfo(
             infotags.push_back(str(boost::format("ERROR2=%i;%i") % numContigs % assemblyData.bestAlignmentIndex));
         infotags.push_back(str(boost::format("RNA_CONTIG=%s") % assemblyData.contigs[assemblyData.bestAlignmentIndex].seq));
         infotags.push_back(str(boost::format("RNA_CONTIG_ALN=%i;%i")
-            % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align1.apath)
-            % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align2.apath)));
+                               % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align1.apath)
+                               % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align2.apath)));
     }
 }
 

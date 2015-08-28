@@ -367,7 +367,7 @@ align(
 #endif
 
 #ifdef DEBUG_ALN_MATRIX
-        storeScores.push_back(*thisSV);
+            storeScores.push_back(*thisSV);
 #endif
 
             // get backtrace start info:
@@ -393,11 +393,11 @@ align(
 #ifdef DEBUG_ALN_MATRIX
     std::vector<AlignState::index_t> dumpStates {AlignState::MATCH, AlignState::DELETE, AlignState::INSERT, AlignState::JUMP, AlignState::SPLICE};
     this->dumpTables(queryBegin, queryEnd,
-            ref1Begin, ref1End,
-            ref2Begin, ref2End,
-            querySize,
-            _ptrMat1, _ptrMat2,
-            dumpStates,storeScores);
+                     ref1Begin, ref1End,
+                     ref2Begin, ref2End,
+                     querySize,
+                     _ptrMat1, _ptrMat2,
+                     dumpStates,storeScores);
 #endif
 
     this->backTraceAlignment(
