@@ -30,7 +30,10 @@
 
 #include <string>
 
-
+#ifdef DEBUG
+#include "blt_util/log.hh"
+#include <iostream>
+#endif
 
 BOOST_AUTO_TEST_SUITE( test_GlobalJumpIntronAligner )
 
@@ -42,11 +45,11 @@ testAlignScores(
     const std::string& seq,
     const std::string& ref1,
     const std::string& ref2,
-    int match, int mismatch, int open, int extend, int spliceOpen, int offEdge, int spliceOffEdge,
+    int match, int mismatch, int open, int extend, int spliceOpen, int offEdge, int spliceOffEdge, int jump, 
     bool stranded, bool bp1Fw, bool bp2Fw)
 {
     AlignmentScores<score_t> scores(match, mismatch, open, extend, offEdge);
-    score_t jumpScore(-3);
+    score_t jumpScore(jump);
     GlobalJumpIntronAligner<score_t> aligner(scores,jumpScore,spliceOpen,spliceOffEdge);
     JumpAlignmentResult<score_t> result;
     aligner.align(
@@ -68,9 +71,20 @@ testAlignSplice(
     bool stranded=true,
     bool fw=true)
 {
-    return testAlignScores(seq, ref1, ref2, 2,-4,-5,-1,-4,-1,-1, stranded, fw, fw);
+    return testAlignScores(seq, ref1, ref2, 2,-4,-5,-1,-4,-1,-1, -3, stranded, fw, fw);
 }
 
+static
+JumpAlignmentResult<score_t>
+testAlignSpliceNoJump(
+    const std::string& seq,
+    const std::string& ref1,
+    const std::string& ref2,
+    bool stranded = true,
+    bool fw = true)
+{
+    return testAlignScores(seq, ref1, ref2, 2, -8, -19, -1, -15, -1, -1, -10000, stranded, fw, fw);
+}
 
 BOOST_AUTO_TEST_CASE( test_GlobalJumpAlignerSplice )
 {
@@ -154,6 +168,51 @@ BOOST_AUTO_TEST_CASE( test_GlobalJumpAlignerSpliceNoSplice2 )
 
     BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath),"5=7D5=");
     BOOST_REQUIRE_EQUAL(result.align1.beginPos,1);
+}
+
+BOOST_AUTO_TEST_CASE(test_GlobalJumpAlignerIntronOffEdgeRef2Left)
+{
+    static const std::string seq("GGACTGGGCCCAGA");
+    static const std::string ref1("ATTTAACTCAAGATGGATTAA");
+    static const std::string ref2("GGTTACCTGGGCCCAGATCCTGCTTGGTCACACCCAGCCCAGAAGAC");
+
+    JumpAlignmentResult<score_t> result = testAlignSpliceNoJump(seq, ref1, ref2, false);
+#ifdef DEBUG
+    log_os << result << "\n";
+#endif
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath), "");
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath), "3S6N11=");
+    BOOST_REQUIRE_EQUAL(result.score, 11 * 2 - 3);
+}
+
+BOOST_AUTO_TEST_CASE(test_GlobalJumpAlignerIntronOffEdgeRef2Right)
+{
+    static const std::string seq("TGGTCACACCCXXXX");
+    static const std::string ref1("ATTTAACTCAAGATGGATTAA");
+    static const std::string ref2("XXTGGTCACACCCGTAGCCCAAGAC");
+
+    JumpAlignmentResult<score_t> result = testAlignSpliceNoJump(seq, ref1, ref2, false);
+#ifdef DEBUG
+    log_os << result << "\n";
+#endif
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath), "");
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath), "11=12N4S");
+    BOOST_REQUIRE_EQUAL(result.score, 11*2-15-4);
+}
+
+BOOST_AUTO_TEST_CASE(test_GlobalJumpAlignerIntronOffEdgeRef1Both)
+{
+    static const std::string seq("TTTTACACACACACACACACGGGG");
+    static const std::string ref1("GGGGGGGACACACACACACACACACGTTTTTTT");
+    static const std::string ref2("ATTTAACTCAAGATGGATTAA");
+
+    JumpAlignmentResult<score_t> result = testAlignSpliceNoJump(seq, ref1, ref2, false);
+#ifdef DEBUG
+    log_os << result << "\n";
+#endif
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath), "4S9N16=8N4S");
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath), "");
+    BOOST_REQUIRE_EQUAL(result.score, -4+16*2-15-4);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
