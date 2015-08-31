@@ -64,6 +64,17 @@ testAlignScores(
 
 static
 JumpAlignmentResult<score_t>
+testAlign(
+    const std::string& seq,
+    const std::string& ref1,
+    const std::string& ref2)
+{
+    AlignmentScores<score_t> scores(2, -4, -5, -1, -1);
+    return testAlignScores(seq, ref1, ref2, 2, -4, -5, -1, -4, -1, -1, -3, true, true, true);
+}
+
+static
+JumpAlignmentResult<score_t>
 testAlignSplice(
     const std::string& seq,
     const std::string& ref1,
@@ -85,6 +96,96 @@ testAlignSpliceNoJump(
 {
     return testAlignScores(seq, ref1, ref2, 2, -8, -19, -1, -15, -1, -1, -10000, stranded, fw, fw);
 }
+
+BOOST_AUTO_TEST_CASE(test_GlobalJumpIntronAligner0)
+{
+    static const std::string seq("ABABACDCDC");
+    static const std::string ref1("ABABA");
+    static const std::string ref2("CDCDC");
+
+    JumpAlignmentResult<score_t> result = testAlign(seq, ref1, ref2);
+
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath), "5=");
+    BOOST_REQUIRE_EQUAL(result.align1.beginPos, 0);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath), "5=");
+    BOOST_REQUIRE_EQUAL(result.align2.beginPos, 0);
+}
+
+BOOST_AUTO_TEST_CASE(test_GlobalJumpIntronAligner1)
+{
+    static const std::string seq("ABABACDCDC");
+    static const std::string ref1("ABABAX");
+    static const std::string ref2("CDCDC");
+
+    JumpAlignmentResult<score_t> result = testAlign(seq, ref1, ref2);
+
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath), "5=");
+    BOOST_REQUIRE_EQUAL(result.align1.beginPos, 0);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath), "5=");
+    BOOST_REQUIRE_EQUAL(result.align2.beginPos, 0);
+}
+
+
+BOOST_AUTO_TEST_CASE(test_GlobalJumpIntronAligner2)
+{
+    static const std::string seq("ABABACDCDC");
+    static const std::string ref1("ABABA");
+    static const std::string ref2("XCDCDC");
+
+    JumpAlignmentResult<score_t> result = testAlign(seq, ref1, ref2);
+
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath), "5=");
+    BOOST_REQUIRE_EQUAL(result.align1.beginPos, 0);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath), "5=");
+    BOOST_REQUIRE_EQUAL(result.align2.beginPos, 1);
+}
+
+BOOST_AUTO_TEST_CASE(test_GlobalJumpIntronAlignerLong)
+{
+    static const std::string seq("ABABACDCDC");
+    static const std::string ref1("dslfjfkjaslABABAlsjfkdsflsk");
+    static const std::string ref2("sdfldsklkjdCDCDCfsdlkjfslk");
+
+    JumpAlignmentResult<score_t> result = testAlign(seq, ref1, ref2);
+
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath), "5=");
+    BOOST_REQUIRE_EQUAL(result.align1.beginPos, 11);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath), "5=");
+    BOOST_REQUIRE_EQUAL(result.align2.beginPos, 11);
+}
+
+
+BOOST_AUTO_TEST_CASE(test_GlobalJumpIntronAlignerSimpleIndels)
+{
+    static const std::string seq("ABABAABABACDCDCDyCDCDC");
+    static const std::string ref1("xABABABABABAx");
+    static const std::string ref2("xCDCDCDCDCDCDCx");
+
+    JumpAlignmentResult<score_t> result = testAlign(seq, ref1, ref2);
+
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath), "5=1D5=");
+    BOOST_REQUIRE_EQUAL(result.align1.beginPos, 1);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath), "6=1I5=");
+    BOOST_REQUIRE_EQUAL(result.align2.beginPos, 1);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(test_GlobalJumpIntronAlignerBPInsert)
+{
+    static const std::string seq("ABABABABABA1234CDCDCDCDCDC");
+    static const std::string ref1("xABABABABABAx");
+    static const std::string ref2("xCDCDCDCDCDCDCx");
+
+    JumpAlignmentResult<score_t> result = testAlign(seq, ref1, ref2);
+
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath), "11=");
+    BOOST_REQUIRE_EQUAL(result.align1.beginPos, 1);
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath), "11=");
+    BOOST_REQUIRE_EQUAL(result.align2.beginPos, 1);
+    BOOST_REQUIRE_EQUAL(result.jumpInsertSize, 4u);
+}
+
 
 BOOST_AUTO_TEST_CASE( test_GlobalJumpAlignerSplice )
 {
