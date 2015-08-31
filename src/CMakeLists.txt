@@ -25,7 +25,11 @@
 ##
 ################################################################################
 
-cmake_minimum_required(VERSION 2.8.0)
+if (WIN32)
+    cmake_minimum_required(VERSION 3.1.0)
+else ()
+    cmake_minimum_required(VERSION 2.8.0)
+endif ()
 
 message (STATUS "==== Initializing project cmake configuration ====")
 
@@ -51,31 +55,44 @@ include ("${THIS_MACROS_CMAKE}")
 set(DEVELOPER_MODE true)
 
 #
-# setup build type
+# set WIN specific cache values
+#   - WIN user potentially interacts with cache via cmake-gui
+#   - Linux user interacts via the configure shell script
 #
-if (NOT WIN32)
-    set(CMAKE_BUILD_TYPES Debug Release RelWithDebInfo ASan)
-    join(CMAKE_BUILD_TYPES ", " CMAKE_BUILD_TYPES_STRING)
-
-    if (NOT CMAKE_BUILD_TYPE)
-        set(DEFAULT_CMAKE_BUILD_TYPE Release)
-        set(CMAKE_BUILD_TYPE ${DEFAULT_CMAKE_BUILD_TYPE} CACHE STRING
-            "Choose the type of build, options are: {${CMAKE_BUILD_TYPES_STRING}} (default: ${DEFAULT_CMAKE_BUILD_TYPE})")
-    endif()
-
-    # check that a valid build type has been selected:
-    list(FIND CMAKE_BUILD_TYPES ${CMAKE_BUILD_TYPE} TINDEX)
-    if(TINDEX EQUAL -1)
-        message (FATAL_ERROR "Selected build type, '${CMAKE_BUILD_TYPE}', is not in the set of available types: {${CMAKE_BUILD_TYPES_STRING}}")
-    endif()
-
-    message (STATUS "BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
-else ()
+if (WIN32)
     set(IS_MSVC_ANALYZE FALSE CACHE BOOL
         "Turn on Visual Studio /analyze option")
+
+    # TODO better specify/document how this interacts with CMAKE_BUILD_TYPES
     set(CMAKE_CONFIGURATION_TYPES "Release" CACHE INTERNAL
         "Visual Studio build types" FORCE)
 endif ()
+
+
+#
+# setup build type
+#
+set(CMAKE_BUILD_TYPES Debug Release RelWithDebInfo)
+if (NOT WIN32)
+    set(CMAKE_BUILD_TYPES "${CMAKE_BUILD_TYPES} ASan")
+endif ()
+
+join(CMAKE_BUILD_TYPES ", " CMAKE_BUILD_TYPES_STRING)
+
+if (NOT CMAKE_BUILD_TYPE)
+    set(DEFAULT_CMAKE_BUILD_TYPE Release)
+    set(CMAKE_BUILD_TYPE ${DEFAULT_CMAKE_BUILD_TYPE} CACHE STRING
+        "Choose the type of build, options are: {${CMAKE_BUILD_TYPES_STRING}} (default: ${DEFAULT_CMAKE_BUILD_TYPE})")
+endif()
+
+# check that a valid build type has been selected:
+list(FIND CMAKE_BUILD_TYPES ${CMAKE_BUILD_TYPE} TINDEX)
+if(TINDEX EQUAL -1)
+    message (FATAL_ERROR "Selected build type, '${CMAKE_BUILD_TYPE}', is not in the set of available types: {${CMAKE_BUILD_TYPES_STRING}}")
+endif()
+
+message (STATUS "BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
+
 
 #
 # other cache variables

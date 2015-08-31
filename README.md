@@ -282,5 +282,7 @@ installations of cmake and zlib are also required to configure and
 compile. Windows zlib is provided by the [gnuwin32
 package] [gnuwin32] among others.
 
+Note that on Windows, the minimum cmake version is 3.1.0
+
 [gnuwin32]:http://gnuwin32.sourceforge.net/packages/zlib.htm
 

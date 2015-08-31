@@ -37,6 +37,47 @@ macro(superset symbol value)
 endmacro()
 
 #
+# zlib
+#
+set(ZLIB_PREFIX "zlib-1.2.8")
+superset(ZLIB_DIR "${CMAKE_CURRENT_BINARY_DIR}/${ZLIB_PREFIX}")
+if (WIN32)
+    superset(ZLIB_LIBRARY "${ZLIB_DIR}/${CMAKE_BUILD_TYPE}/zlibstatic.lib")
+else ()
+    superset(ZLIB_LIBRARY "${ZLIB_DIR}/libz.a")
+endif ()
+
+add_custom_command(
+	OUTPUT ${ZLIB_DIR}
+	COMMAND ${CMAKE_COMMAND} -E remove_directory "${ZLIB_DIR}"
+	COMMAND ${CMAKE_COMMAND} -E tar xjf "${THIS_REDIST_DIR}/${ZLIB_PREFIX}.tar.bz2"
+	COMMENT "Unpacking zlib package")
+
+set(ZMAKECMD "")
+if (WIN32)
+    set(ZMAKECMD "${ZLIB_DIR}/zlib.sln")
+endif ()
+
+# Sometimes the platform (x64,win32...) is specified as part of the target name
+# this captures the cases where it is specified separately:
+set (ZLIB_PLATFORM "")
+if (CMAKE_GENERATOR_PLATFORM)
+    set (ZLIB_PLATFORM -A "${CMAKE_GENERATOR_PLATFORM}")
+endif ()
+
+add_custom_command(
+    OUTPUT ${ZLIB_LIBRARY}
+    COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" ${ZLIB_PLATFORM}
+    -DCMAKE_C_COMPILER="${CMAKE_C_COMPILER}" ${ZLIB_DIR} >zlib.config.log
+    COMMAND ${CMAKE_MAKE_PROGRAM} ${ZMAKECMD} >zlib.build.log
+    WORKING_DIRECTORY ${ZLIB_DIR}
+    DEPENDS ${ZLIB_DIR}
+    COMMENT "Building zlib package")
+
+set(THIS_ZLIB "${THIS_PROJECT_NAME}_zlib")
+add_custom_target(${THIS_ZLIB} DEPENDS "${ZLIB_LIBRARY}")
+
+#
 # htslib
 #
 set(HTSLIB_PREFIX "htslib-1.2.1")
@@ -47,6 +88,7 @@ add_custom_command(
     OUTPUT ${HTSLIB_DIR}
     COMMAND ${CMAKE_COMMAND} -E remove_directory "${HTSLIB_DIR}"
     COMMAND ${CMAKE_COMMAND} -E tar xjf "${THIS_REDIST_DIR}/${HTSLIB_PREFIX}.tar.bz2"
+    DEPENDS ${THIS_ZLIB}
     COMMENT "Unpacking htslib library")
 
 set (HTSLIB_FINAL_TASK ${HTSLIB_DIR})
@@ -54,7 +96,9 @@ set (HTSLIB_FINAL_TASK ${HTSLIB_DIR})
 if (NOT WIN32)
     add_custom_command(
         OUTPUT ${HTSLIB_LIBRARY}
-        COMMAND $(MAKE) CC="${CMAKE_C_COMPILER}" -C "${HTSLIB_DIR}" lib-static tabix bgzip 2>| htslib.build.log
+        COMMAND ./configure CC="${CMAKE_C_COMPILER}" CFLAGS="-I${ZLIB_DIR}" LDFLAGS="-L${ZLIB_DIR}" >htslib.config.log
+        COMMAND $(MAKE) lib-static tabix bgzip >htslib.build.log 2>htslib.build.error.log
+        WORKING_DIRECTORY ${HTSLIB_DIR}
         DEPENDS ${HTSLIB_DIR}
         COMMENT "Building htslib library")
 
@@ -90,7 +134,7 @@ set (SAMTOOLS_FINAL_TASK ${SAMTOOLS_DIR})
 if (NOT WIN32)
     add_custom_command(
         OUTPUT ${SAMTOOLS_PROG}
-        COMMAND $(MAKE) CC="${CMAKE_C_COMPILER}" all 2>| samtools.build.log
+        COMMAND $(MAKE) CC="${CMAKE_C_COMPILER}" CFLAGS="-I${ZLIB_DIR}" LDFLAGS="-L${ZLIB_DIR}" all 2>samtools.build.error.log
         DEPENDS ${HTSLIB_LIBRARY}
         DEPENDS ${SAMTOOLS_DIR}
         WORKING_DIRECTORY ${SAMTOOLS_DIR}
@@ -121,7 +165,7 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E remove_directory "${PYFLOW_DIR}"
     COMMAND ${CMAKE_COMMAND} -E tar xjf "${THIS_REDIST_DIR}/${PYFLOW_PREFIX}.tar.bz2"
     COMMAND ${CMAKE_COMMAND} -E remove -f "${PYFLOW_DIR}/src/__init__.py"
-    COMMENT "Extracting pyflow")
+    COMMENT "Unpacking pyflow")
 
 if (PYTHONINTERP_FOUND)
     set (PYFLOW_DEPENDS "${PYFLOW_SCRIPT}c")
@@ -129,7 +173,7 @@ if (PYTHONINTERP_FOUND)
         OUTPUT ${PYFLOW_SCRIPT}c
         COMMAND ${PYTHON_EXECUTABLE} -m compileall -q "${PYFLOW_DIR}/src"
         DEPENDS ${PYFLOW_SCRIPT}
-        COMMENT "Compiling pyflow")
+        COMMENT "Building pyflow")
 endif()
 
 install_python_lib_dir("${PYFLOW_DIR}/src" "${THIS_PYTHON_LIBDIR}/pyflow")
@@ -140,7 +184,7 @@ add_custom_target(${THIS_PYFLOW} DEPENDS "${PYFLOW_DEPENDS}")
 
 # tie results back to parent:
 #
-add_dependencies(${THIS_OPT} ${THIS_SAMTOOLS} ${THIS_PYFLOW})
+add_dependencies(${THIS_OPT} ${THIS_ZLIB} ${THIS_SAMTOOLS} ${THIS_PYFLOW})
 
 
 #

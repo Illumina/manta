@@ -30,6 +30,7 @@
 #include "blt_util/thirdparty_push.h"
 
 extern "C" {
+#include <unistd.h> // this simplifies zlib on windows
 #define __STDC_LIMIT_MACROS
 #include "bam.h"
 }

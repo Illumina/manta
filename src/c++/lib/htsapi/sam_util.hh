@@ -27,6 +27,7 @@
 #include "blt_util/thirdparty_push.h"
 
 extern "C" {
+#include <unistd.h> // this simplifies zlib on windows
 #include "sam.h"
 }
 
