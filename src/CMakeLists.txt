@@ -74,7 +74,7 @@ endif ()
 #
 set(CMAKE_BUILD_TYPES Debug Release RelWithDebInfo)
 if (NOT WIN32)
-    set(CMAKE_BUILD_TYPES "${CMAKE_BUILD_TYPES} ASan")
+    set(CMAKE_BUILD_TYPES ${CMAKE_BUILD_TYPES} ASan)
 endif ()
 
 join(CMAKE_BUILD_TYPES ", " CMAKE_BUILD_TYPES_STRING)
