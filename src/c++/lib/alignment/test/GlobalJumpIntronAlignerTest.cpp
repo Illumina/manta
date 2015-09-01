@@ -45,7 +45,7 @@ testAlignScores(
     const std::string& seq,
     const std::string& ref1,
     const std::string& ref2,
-    int match, int mismatch, int open, int extend, int spliceOpen, int offEdge, int spliceOffEdge, int jump, 
+    int match, int mismatch, int open, int extend, int spliceOpen, int offEdge, int spliceOffEdge, int jump,
     bool stranded, bool bp1Fw, bool bp2Fw)
 {
     AlignmentScores<score_t> scores(match, mismatch, open, extend, offEdge);

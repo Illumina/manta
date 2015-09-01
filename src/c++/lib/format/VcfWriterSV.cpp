@@ -249,8 +249,8 @@ addRNAInfo(
             infotags.push_back(str(boost::format("ERROR2=%i,%i") % numContigs % assemblyData.bestAlignmentIndex));
         infotags.push_back(str(boost::format("RNA_CONTIG=%s") % assemblyData.contigs[assemblyData.bestAlignmentIndex].seq));
         infotags.push_back(str(boost::format("RNA_CONTIG_ALN=%i,%i")
-            % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align1.apath)
-            % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align2.apath)));
+                               % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align1.apath)
+                               % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align2.apath)));
     }
 }
 
