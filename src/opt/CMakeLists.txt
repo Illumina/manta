@@ -96,7 +96,7 @@ set (HTSLIB_FINAL_TASK ${HTSLIB_DIR})
 if (NOT WIN32)
     add_custom_command(
         OUTPUT ${HTSLIB_LIBRARY}
-        COMMAND ./configure CC="${CMAKE_C_COMPILER}" CFLAGS="-I${ZLIB_DIR}" LDFLAGS="-L${ZLIB_DIR}" >htslib.config.log
+        COMMAND ./configure CC="${CMAKE_C_COMPILER}" CFLAGS="-I${ZLIB_DIR}" LIBS="${ZLIB_LIBRARY}" >htslib.config.log
         COMMAND $(MAKE) lib-static tabix bgzip >htslib.build.log 2>htslib.build.error.log
         WORKING_DIRECTORY ${HTSLIB_DIR}
         DEPENDS ${HTSLIB_DIR}
@@ -134,7 +134,7 @@ set (SAMTOOLS_FINAL_TASK ${SAMTOOLS_DIR})
 if (NOT WIN32)
     add_custom_command(
         OUTPUT ${SAMTOOLS_PROG}
-        COMMAND $(MAKE) CC="${CMAKE_C_COMPILER}" CFLAGS="-I${ZLIB_DIR}" LDFLAGS="-L${ZLIB_DIR}" all 2>samtools.build.error.log
+        COMMAND $(MAKE) CC="${CMAKE_C_COMPILER}" CFLAGS="-I${ZLIB_DIR}" LDLIBS="${ZLIB_LIBRARY}" all 2>samtools.build.error.log
         DEPENDS ${HTSLIB_LIBRARY}
         DEPENDS ${SAMTOOLS_DIR}
         WORKING_DIRECTORY ${SAMTOOLS_DIR}
