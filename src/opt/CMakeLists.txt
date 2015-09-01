@@ -65,11 +65,16 @@ if (CMAKE_GENERATOR_PLATFORM)
     set (ZLIB_PLATFORM -A "${CMAKE_GENERATOR_PLATFORM}")
 endif ()
 
+set (ZLIB_MAKE "$(MAKE)")
+if (WIN32)
+    set (ZLIB_MAKE "${CMAKE_MAKE_PROGRAM}")
+endif ()
+
 add_custom_command(
     OUTPUT ${ZLIB_LIBRARY}
     COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" ${ZLIB_PLATFORM}
     -DCMAKE_C_COMPILER="${CMAKE_C_COMPILER}" ${ZLIB_DIR} >zlib.config.log
-    COMMAND ${CMAKE_MAKE_PROGRAM} ${ZMAKECMD} >zlib.build.log
+    COMMAND ${ZLIB_MAKE} ${ZMAKECMD} >zlib.build.log
     WORKING_DIRECTORY ${ZLIB_DIR}
     DEPENDS ${ZLIB_DIR}
     COMMENT "Building zlib package")
