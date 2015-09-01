@@ -53,31 +53,40 @@ add_custom_command(
 	COMMAND ${CMAKE_COMMAND} -E tar xjf "${THIS_REDIST_DIR}/${ZLIB_PREFIX}.tar.bz2"
 	COMMENT "Unpacking zlib package")
 
-set(ZMAKECMD "")
-if (WIN32)
-    set(ZMAKECMD "${ZLIB_DIR}/zlib.sln")
+if (NOT WIN32)
+    set (ZLIB_ARCH "")
+    if (CMAKE_SYSTEM_PROCESSOR MATCHES "^.*86$")
+        set(ZLIB_ARCH "")
+    elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "^x86_64$")
+        set(ZLIB_ARCH "--64")
+    endif ()
+    
+    message(STATUS "${ZLIB_ARCH}")
+
+    add_custom_command(
+        OUTPUT ${ZLIB_LIBRARY}
+        COMMAND CC=${CMAKE_C_COMPILER} ${ZLIB_DIR}/configure --prefix="${ZLIB_DIR}" --static ${ZLIB_ARCH} >zlib.config.log
+        COMMAND $(MAKE) >zlib.build.log
+        WORKING_DIRECTORY ${ZLIB_DIR}
+        DEPENDS ${ZLIB_DIR}
+        COMMENT "Building zlib package")
+else ()
+    # Sometimes the platform (x64,win32...) is specified as part of the target name
+    # this captures the cases where it is specified separately:
+    set (ZLIB_PLATFORM "")
+    if (CMAKE_GENERATOR_PLATFORM)
+        set (ZLIB_PLATFORM -A "${CMAKE_GENERATOR_PLATFORM}")
+    endif ()
+    
+    add_custom_command(
+        OUTPUT ${ZLIB_LIBRARY}
+        COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" ${ZLIB_PLATFORM} -DCMAKE_C_COMPILER="${CMAKE_C_COMPILER}" ${ZLIB_DIR} >zlib.config.log
+        COMMAND ${CMAKE_MAKE_PROGRAM} "${ZLIB_DIR}/zlib.sln" >zlib.build.log
+        WORKING_DIRECTORY ${ZLIB_DIR}
+        DEPENDS ${ZLIB_DIR}
+        COMMENT "Building zlib package")
 endif ()
 
-# Sometimes the platform (x64,win32...) is specified as part of the target name
-# this captures the cases where it is specified separately:
-set (ZLIB_PLATFORM "")
-if (CMAKE_GENERATOR_PLATFORM)
-    set (ZLIB_PLATFORM -A "${CMAKE_GENERATOR_PLATFORM}")
-endif ()
-
-set (ZLIB_MAKE "$(MAKE)")
-if (WIN32)
-    set (ZLIB_MAKE "${CMAKE_MAKE_PROGRAM}")
-endif ()
-
-add_custom_command(
-    OUTPUT ${ZLIB_LIBRARY}
-    COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" ${ZLIB_PLATFORM}
-    -DCMAKE_C_COMPILER="${CMAKE_C_COMPILER}" ${ZLIB_DIR} >zlib.config.log
-    COMMAND ${ZLIB_MAKE} ${ZMAKECMD} >zlib.build.log
-    WORKING_DIRECTORY ${ZLIB_DIR}
-    DEPENDS ${ZLIB_DIR}
-    COMMENT "Building zlib package")
 
 set(THIS_ZLIB "${THIS_PROJECT_NAME}_zlib")
 add_custom_target(${THIS_ZLIB} DEPENDS "${ZLIB_LIBRARY}")
