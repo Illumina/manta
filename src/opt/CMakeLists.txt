@@ -54,19 +54,24 @@ add_custom_command(
 	COMMENT "Unpacking zlib package")
 
 if (NOT WIN32)
-    set (ZLIB_ARCH "")
+    set (ASM_MAKE_OPTION LOC=-DASMV OBJA=match.o)
     if (CMAKE_SYSTEM_PROCESSOR MATCHES "^.*86$")
         set(ZLIB_ARCH "")
+        set(ASM_FILE_COPY cp contrib/asm686/match.S match.S)
     elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "^x86_64$")
         set(ZLIB_ARCH "--64")
+        set(ASM_FILE_COPY cp contrib/amd64/amd64-match.S match.S)
+    else ()
+        set (ZLIB_ARCH "")
+        set (ASM_FILE_COPY "")
+        set (ASM_MAKE_OPTION "")
     endif ()
     
-    message(STATUS "${ZLIB_ARCH}")
-
     add_custom_command(
         OUTPUT ${ZLIB_LIBRARY}
         COMMAND CC=${CMAKE_C_COMPILER} ${ZLIB_DIR}/configure --prefix="${ZLIB_DIR}" --static ${ZLIB_ARCH} >zlib.config.log
-        COMMAND $(MAKE) >zlib.build.log
+        COMMAND ${ASM_FILE_COPY}
+        COMMAND $(MAKE) ${ASM_MAKE_OPTION} >zlib.build.log
         WORKING_DIRECTORY ${ZLIB_DIR}
         DEPENDS ${ZLIB_DIR}
         COMMENT "Building zlib package")
