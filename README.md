@@ -61,7 +61,6 @@ are the current minimum versions enforced by the build system:
 
 * python 2.4+
 * gcc 4.7+ OR clang 3.1+ (OR Visual Studio 2013+, see windev note below)
-* libz (including headers)
 
 ### Runtime prerequisites
 
@@ -92,12 +91,12 @@ possible for Visual Studio users. See Contributor section below.
 ##### Ubuntu 14.04
 
     apt-get update -qq
-    apt-get install -qq gcc g++ make zlib1g-dev python
+    apt-get install -qq gcc g++ make python
 
 ##### Ubuntu 12.04
 
     apt-get update -qq
-    apt-get install -qq bzip2 gcc g++ make zlib1g-dev python python-software-properties
+    apt-get install -qq bzip2 gcc g++ make python python-software-properties
     # add gcc 4.8 from ubuntu ppa:
     add-apt-repository -y ppa:ubuntu-toolchain-r/test
     apt-get update -qq
@@ -109,11 +108,11 @@ possible for Visual Studio users. See Contributor section below.
 
 ##### CentOS 7
 
-    yum install -y tar bzip2 make gcc gcc-c++ zlib-devel
+    yum install -y tar bzip2 make gcc gcc-c++
 
 ##### CentOS 5 and 6
 
-    yum install -y tar wget bzip2 make gcc gcc-c++ zlib-devel
+    yum install -y tar wget bzip2 make gcc gcc-c++
     # add gcc 4.8 from developer tools v2:
     wget http://people.centos.org/tru/devtools-2/devtools-2.repo -O /etc/yum.repos.d/devtools-2.repo
     yum install -y devtoolset-2-gcc devtoolset-2-gcc-c++ devtoolset-2-binutils
@@ -271,18 +270,13 @@ extending from the configuration example in the above build instructions, use:
 
 Manta does not link or run on windows. However, the build system does
 facilitate Visual Studio (VS) users. When cmake configuration is run
-on windows, all linking is disabled and third party libraries are
+on windows, all linking is disabled and most third party libraries are
 unpacked for header include access, but are not compiled. Cmake VS
 solutions allow the c++ code to be browsed, analyzed and compiled to
 the library level.  Note that unit test codes are compiled to
 libraries but cannot be run.
 
-C++11 features used by manta require at least VS2013. Windows
-installations of cmake and zlib are also required to configure and
-compile. Windows zlib is provided by the [gnuwin32
-package] [gnuwin32] among others.
-
-Note that on Windows, the minimum cmake version is 3.1.0
-
-[gnuwin32]:http://gnuwin32.sourceforge.net/packages/zlib.htm
+C++11 features used by manta require at least VS2013. A Windows
+installation of cmake is also required to configure and compile.
+Note that the minimum cmake version for Windows is 3.1.0
 
