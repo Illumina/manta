@@ -131,7 +131,7 @@ if (NOT PYTHONINTERP_FOUND)
     message (WARNING "No python interpreter found, disabling optional python build and installation components. Installed workflow requires python interpreter to run")
 endif()
 
-message (STATUS "TARGET_ARCHITECTURE:" ${CMAKE_SYSTEM_PROCESSOR} )
+message (STATUS "TARGET_ARCHITECTURE: " ${CMAKE_SYSTEM_PROCESSOR} )
 
 
 # Create package versioning target - version derived from git describe except for

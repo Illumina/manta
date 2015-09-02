@@ -113,9 +113,11 @@ add_custom_command(
 set (HTSLIB_FINAL_TASK ${HTSLIB_DIR})
 
 if (NOT WIN32)
+    # note that htslib ./configure CFLAGS="custom" will overwrite the standard "-g -O2 -Wall" CFLAGS, so
+    # we need to restore at least the -O2 for reasonable library performance:
     add_custom_command(
         OUTPUT ${HTSLIB_LIBRARY}
-        COMMAND ./configure CC="${CMAKE_C_COMPILER}" CFLAGS="-I${ZLIB_DIR}" LIBS="${ZLIB_LIBRARY}" >htslib.config.log
+        COMMAND ./configure CC="${CMAKE_C_COMPILER}" CFLAGS='-O2 -I"${ZLIB_DIR}"' LIBS="${ZLIB_LIBRARY}" >htslib.config.log
         COMMAND $(MAKE) lib-static tabix bgzip >htslib.build.log 2>htslib.build.error.log
         WORKING_DIRECTORY ${HTSLIB_DIR}
         DEPENDS ${HTSLIB_DIR}
@@ -151,9 +153,11 @@ add_custom_command(
 set (SAMTOOLS_FINAL_TASK ${SAMTOOLS_DIR})
 
 if (NOT WIN32)
+    # note that samtools make CFLAGS="custom" will overwrite the standard "-g -O2 -Wall" CFLAGS, so
+    # we need to restore at least the -O2 for reasonable library performance:
     add_custom_command(
         OUTPUT ${SAMTOOLS_PROG}
-        COMMAND $(MAKE) CC="${CMAKE_C_COMPILER}" CFLAGS="-I${ZLIB_DIR}" LDLIBS="${ZLIB_LIBRARY}" all 2>samtools.build.error.log
+        COMMAND $(MAKE) CC="${CMAKE_C_COMPILER}" CFLAGS='-O2 -I"${ZLIB_DIR}"' LDLIBS="${ZLIB_LIBRARY}" all 2>samtools.build.error.log
         DEPENDS ${HTSLIB_LIBRARY}
         DEPENDS ${SAMTOOLS_DIR}
         WORKING_DIRECTORY ${SAMTOOLS_DIR}
