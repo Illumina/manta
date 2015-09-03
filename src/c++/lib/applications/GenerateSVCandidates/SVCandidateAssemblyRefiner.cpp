@@ -1135,7 +1135,7 @@ translateMaskedPos(
     const unsigned maskedPos)
 {
     int offset = 0;
-    for (const auto cblock : exclBlocks)
+    for (const auto& cblock : exclBlocks)
     {
         if (cblock.start > (offset + maskedPos)) break;
         offset += cblock.length - cblock.nSpacer;
@@ -1158,7 +1158,7 @@ translateMaskedAlignment(
 #endif
     path_t newPath;
     pos_t cpos = align.beginPos;
-    for (const path_segment seg : align.apath)
+    for (const path_segment& seg : align.apath)
     {
         if (!is_segment_type_ref_length(seg.type))
         {

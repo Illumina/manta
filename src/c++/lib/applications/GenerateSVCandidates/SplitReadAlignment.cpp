@@ -217,7 +217,7 @@ getRefAlignment(
 
     auto queryIndex(qrySeq.begin());
     auto refIndex(bp1Ref.begin());
-    for (const path_segment seg : align.path)
+    for (const path_segment& seg : align.path)
     {
         if (is_segment_align_match(seg.type))
         {

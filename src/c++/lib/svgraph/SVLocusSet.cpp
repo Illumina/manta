@@ -432,7 +432,7 @@ getIntersectingEdgeNodes(
     std::set<NodeAddressType> edgeIntersectRemoteTemp;
     getNodeIntersectCore(inputLocusIndex,inputRemoteNodeIndex,remoteIntersect,inputLocusIndex,edgeIntersectRemoteTemp);
 
-    for (const NodeAddressType remoteIsectAddy : edgeIntersectRemoteTemp)
+    for (const NodeAddressType& remoteIsectAddy : edgeIntersectRemoteTemp)
     {
         // find what local nodes the remote notes trace back to:
         const rlmap_range_t remoteIsectRange(remoteToLocal.equal_range(remoteIsectAddy));
@@ -463,7 +463,7 @@ findSignalNodes(
     // get a standard intersection of the input node:
     std::set<NodeAddressType> intersectNodes;
     getNodeIntersectCore(findSignalAddy.first, findSignalAddy.second, _inodes, inputLocusIndex, intersectNodes);
-    for (const NodeAddressType intersectAddy : intersectNodes)
+    for (const NodeAddressType& intersectAddy : intersectNodes)
     {
 #ifdef DEBUG_SVL
         log_os << logtag << "\tsignal_boost: intersectAddy: " << intersectAddy << "\n";
@@ -616,7 +616,7 @@ getNodeMergeableIntersect(
         unsigned mergedLocalEdgeCount(0);
         unsigned mergedRemoteEdgeCount(0);
 
-        for (const EdgeInfoType edgeInfo : inputIntersectEdges)
+        for (const EdgeInfoType& edgeInfo : inputIntersectEdges)
         {
             const SVLocus& edgeLocus(getLocus(edgeInfo.first.first));
             const NodeIndexType localNodeIndex(edgeInfo.first.second);
@@ -703,7 +703,7 @@ getNodeMergeableIntersect(
         //
         // Add type1 mergeable nodes:
         //
-        for (const EdgeInfoType edgeInfo : inputIntersectEdges)
+        for (const EdgeInfoType& edgeInfo : inputIntersectEdges)
         {
             mergeIntersectNodes.insert(edgeInfo.first);
         }
@@ -718,7 +718,7 @@ getNodeMergeableIntersect(
         {
             /// this is used to search for the (rare) case where the intersection set locals overlap with the intersection set remotes
             std::set<NodeAddressType> inputIntersectRemotes;
-            for (const EdgeInfoType edgeInfo : inputIntersectEdges)
+            for (const EdgeInfoType& edgeInfo : inputIntersectEdges)
             {
                 inputIntersectRemotes.insert(std::make_pair(edgeInfo.first.first,edgeInfo.second));
             }
@@ -727,14 +727,14 @@ getNodeMergeableIntersect(
 
             // check both the original node and intersected nodes for intersection to any of the group's remotes, and for new type2 signal intersect:
             findSignalNodes(inputLocusIndex, inputAddy, signalIntersectNodes, inputIntersectRemotes, isIntersectRemotes);
-            for (const EdgeInfoType edgeInfo : inputIntersectEdges)
+            for (const EdgeInfoType& edgeInfo : inputIntersectEdges)
             {
                 findSignalNodes(inputLocusIndex, edgeInfo.first, signalIntersectNodes, inputIntersectRemotes, isIntersectRemotes);
             }
 
             if (isIntersectRemotes)
             {
-                for (const NodeAddressType intersectAddy : inputIntersectRemotes)
+                for (const NodeAddressType& intersectAddy : inputIntersectRemotes)
                 {
 #ifdef DEBUG_SVL
                     log_os << logtag << " adding ownRemote: " << intersectAddy << "\n";
@@ -749,7 +749,7 @@ getNodeMergeableIntersect(
         //
         // Add type2 mergeable nodes:
         //
-        for (const NodeAddressType signalAddy : signalIntersectNodes)
+        for (const NodeAddressType& signalAddy : signalIntersectNodes)
         {
             mergeIntersectNodes.insert(signalAddy);
         }
