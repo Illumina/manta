@@ -239,109 +239,115 @@ endif ()
 ##
 set (GNU_COMPAT_COMPILER ( (CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR (${IS_CLANGXX}) OR (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")))
 if (${GNU_COMPAT_COMPILER})
-    set (CXX_WARN_FLAGS "-Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -pedantic -Wunused-parameter")
-    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wundef -Wno-unknown-pragmas")
-    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wdeprecated")
+    append_args(CXX_WARN_FLAGS "-Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -pedantic -Wunused-parameter")
+    append_args(CXX_WARN_FLAGS "-Wundef -Wno-unknown-pragmas")
+    append_args(CXX_WARN_FLAGS "-Wdeprecated")
 
     if ((NOT CMAKE_CXX_COMPILER_ID STREQUAL "Intel") OR (NOT ${COMPILER_VERSION} VERSION_LESS "14.0"))
-        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wdisabled-optimization")
-        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-missing-braces")
+        append_args(CXX_WARN_FLAGS "-Wdisabled-optimization")
+        append_args(CXX_WARN_FLAGS "-Wno-missing-braces")
     endif ()
 
     if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
-        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wempty-body")
-        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wredundant-decls")
+        append_args(CXX_WARN_FLAGS "-Wempty-body")
+        append_args(CXX_WARN_FLAGS "-Wredundant-decls")
     endif ()
 
     if (NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
-        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wuninitialized")
+        append_args(CXX_WARN_FLAGS "-Wuninitialized")
     endif ()
 elseif (MSVC)
-    set (CXX_WARN_FLAGS "/W3 /wd4305 /wd4244 /wd4068")
+    append_args(CXX_WARN_FLAGS "/W3 /wd4305 /wd4244 /wd4068")
     # suppress warnings for size_t to {unsigned,int, etc...} narrowing (most occur in 64 bit build):
-    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} /wd4267")
+    append_args(CXX_WARN_FLAGS "/wd4267")
     add_definitions(/D_CRT_SECURE_NO_WARNINGS)
 endif ()
 
 if     (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if (NOT (${COMPILER_VERSION} VERSION_LESS "4.2"))
-        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wlogical-op")
+        append_args(CXX_WARN_FLAGS "-Wlogical-op")
     endif ()
 
     if ((${COMPILER_VERSION} VERSION_LESS "4.8") AND (NOT (${COMPILER_VERSION} VERSION_LESS "4.7")))
         # switching off warning about unused function because otherwise compilation will fail with g++ 4.7.3 in Ubuntu,
         # don't know which patch levels are affected, so marking out all gcc 4.7.X
-        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-unused-function")
+        append_args(CXX_WARN_FLAGS "-Wno-unused-function")
     endif ()
 
     if (NOT (${COMPILER_VERSION} VERSION_LESS "5.1"))
         # these mostly only make sense with flto:
-        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wodr")
-        #set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wsuggest-final-types -Wsuggest-final-methods")
+        append_args(CXX_WARN_FLAGS "-Wodr")
+        #append_args(CXX_WARN_FLAGS "-Wsuggest-final-types -Wsuggest-final-methods")
     endif ()
 
 elseif (${IS_CLANGXX})
+    # set to true to uncover new clang warnings after llvm update:
     set (IS_WARN_EVERYTHING FALSE)
 
     if (${IS_WARN_EVERYTHING})
-        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Weverything")
+        append_args(CXX_WARN_FLAGS "-Weverything")
     endif ()
 
-    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wmissing-prototypes -Wunused-exception-parameter -Wbool-conversion")
-    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wsizeof-array-argument -Wstring-conversion")
-    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wheader-hygiene -Wmismatched-tags")
+    append_args(CXX_WARN_FLAGS "-Wmissing-prototypes -Wunused-exception-parameter -Wbool-conversion")
+    append_args(CXX_WARN_FLAGS "-Wsizeof-array-argument -Wstring-conversion")
+    append_args(CXX_WARN_FLAGS "-Wheader-hygiene -Wmismatched-tags")
 
     if (${IS_WARN_EVERYTHING})
-        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-sign-conversion -Wno-weak-vtables -Wno-conversion -Wno-cast-align -Wno-padded")
-        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-switch-enum -Wno-missing-noreturn -Wno-covered-switch-default")
-        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-unreachable-code -Wno-global-constructors -Wno-exit-time-destructors")
-        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-c++98-compat -Wno-old-style-cast -Wno-unused-member-function")
-        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-documentation -Wno-float-equal")
+        append_args(CXX_WARN_FLAGS "-Wno-sign-conversion -Wno-weak-vtables -Wno-conversion -Wno-cast-align -Wno-padded")
+        append_args(CXX_WARN_FLAGS "-Wno-switch-enum -Wno-missing-noreturn -Wno-covered-switch-default")
+        append_args(CXX_WARN_FLAGS "-Wno-unreachable-code -Wno-global-constructors -Wno-exit-time-destructors")
+        append_args(CXX_WARN_FLAGS "-Wno-c++98-compat -Wno-old-style-cast -Wno-unused-member-function")
+        append_args(CXX_WARN_FLAGS "-Wno-documentation -Wno-float-equal")
     endif ()
 
     if (NOT (${COMPILER_VERSION} VERSION_LESS "3.2"))
-        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wimplicit-fallthrough -Wloop-analysis -Wextra-semi")
-        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wmissing-variable-declarations -Wunused-private-field")
+        append_args(CXX_WARN_FLAGS "-Wimplicit-fallthrough -Wloop-analysis -Wextra-semi")
+        append_args(CXX_WARN_FLAGS "-Wmissing-variable-declarations -Wunused-private-field")
     endif ()
 
     if (NOT (${COMPILER_VERSION} VERSION_LESS "3.3"))
-        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Woverloaded-shift-op-parentheses")
+        append_args(CXX_WARN_FLAGS "-Woverloaded-shift-op-parentheses")
 
         if (${IS_WARN_EVERYTHING})
-            set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-documentation-unknown-command")
+            append_args(CXX_WARN_FLAGS "-Wno-documentation-unknown-command")
         endif ()
     endif ()
 
     if (NOT (${COMPILER_VERSION} VERSION_LESS "3.4"))
-        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wheader-guard -Wlogical-not-parentheses")
+        append_args(CXX_WARN_FLAGS "-Wheader-guard -Wlogical-not-parentheses")
     endif ()
 
     if (NOT (${COMPILER_VERSION} VERSION_LESS "3.6"))
-        set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wunreachable-code-return -Wkeyword-macro -Winconsistent-missing-override")
+        append_args(CXX_WARN_FLAGS "-Wunreachable-code-return -Wkeyword-macro -Winconsistent-missing-override")
 
         if (${IS_WARN_EVERYTHING})
-            set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wno-reserved-id-macro")
+            append_args(CXX_WARN_FLAGS "-Wno-reserved-id-macro")
+        endif ()
+    endif ()
+
+    if (NOT (${COMPILER_VERSION} VERSION_LESS "3.7"))
+        if (${IS_WARN_EVERYTHING})
+            append_args(CXX_WARN_FLAGS "-Wno-c++98-compat-pedantic")
         endif ()
     endif ()
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
     # suppress errors in boost headers:
-    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -diag-disable 177,193,869,1599,3280")
+    append_args(CXX_WARN_FLAGS "-diag-disable 177,193,869,1599,3280")
 
-    set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wunused-variable -Wpointer-arith")
+    append_args(CXX_WARN_FLAGS "-Wunused-variable -Wpointer-arith")
 
-    #set (CXX_WARN_FLAGS "${CXX_WARN_FLAGS} -Wmissing-prototypes -Wmissing-declarations -Wunused-variable -Wpointer-arith -Wuninitialized")
+    #append_args(CXX_WARN_FLAGS "-Wmissing-prototypes -Wmissing-declarations -Wunused-variable -Wpointer-arith -Wuninitialized")
 endif()
 
-
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX_WARN_FLAGS}")
+append_args (CMAKE_CXX_FLAGS "${CXX_WARN_FLAGS}")
 
 
 if (${GNU_COMPAT_COMPILER})
     if ((NOT CMAKE_CXX_COMPILER_ID STREQUAL "Intel") OR (${COMPILER_VERSION} VERSION_LESS "15.0"))
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+        append_args (CMAKE_CXX_FLAGS "-std=c++0x")
     else ()
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+        append_args (CMAKE_CXX_FLAGS "-std=c++11")
     endif ()
     set (CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 
@@ -381,7 +387,7 @@ endif ()
 #
 if (MSVC)
     if (IS_MSVC_ANALYZE)
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /analyze")
+        append_args (CMAKE_CXX_FLAGS "/analyze")
     endif ()
 endif ()
 
@@ -404,7 +410,7 @@ if (${GNU_COMPAT_COMPILER})
 
     if(${IS_WERROR})
         message (STATUS "Building in developer mode: treating compiler warnings as errors")
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+        append_args (CMAKE_CXX_FLAGS "-Werror")
     endif ()
   endif ()
 
@@ -413,12 +419,12 @@ if (${GNU_COMPAT_COMPILER})
     ## Use scalar floating point instructions from the SSE instruction set.
     ## Note: Pentium3 SSE supports only single precision arithmetics
     ##
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse -mfpmath=sse")
+    append_args(CMAKE_CXX_FLAGS "-msse -mfpmath=sse")
   elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "^i[345]86$")
     ##
     ## Prevent using 80bit registers (more consistent rounding)
     ##
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffloat-store")
+    append_args (CMAKE_CXX_FLAGS "-ffloat-store")
   endif ()
 
 endif()

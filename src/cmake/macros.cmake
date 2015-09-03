@@ -81,6 +81,9 @@ endfunction()
 #
 # standard join(list) -> string function
 #
+# usage:
+# join (C_FLAG_LIST " " C_FLAG_STRING)
+#
 function(join list sep output)
     set(tmp "")
     foreach(val ${${list}})
@@ -93,6 +96,35 @@ function(join list sep output)
     set(${output} ${tmp} PARENT_SCOPE)
 endfunction()
 
+
+# usage:
+# append(C_WARN_FLAGS " -Wall -Wextra")
+#
+function(append output)
+    set(tmp ${${output}})
+    foreach(val ${ARGN})
+        set(tmp "${tmp}${val}")
+    endforeach()
+    set(${output} ${tmp} PARENT_SCOPE)
+endfunction()
+
+# Appends strings with spaces added automatically:
+#
+# usage:
+# append_args(C_WARN_FLAGS "-Wall" "-Wextra")
+#
+function(append_args output)
+    set(sep " ")
+    set(tmp ${${output}})
+    foreach(val ${ARGN})
+        if ("${tmp}" STREQUAL "")
+            set(tmp "${val}")
+        else()
+            set(tmp "${tmp}${sep}${val}")
+        endif()
+    endforeach()
+    set(${output} ${tmp} PARENT_SCOPE)
+endfunction()
 
 
 include("${THIS_GLOBALS_CMAKE}") # get THIS_*_PERMISSIONS

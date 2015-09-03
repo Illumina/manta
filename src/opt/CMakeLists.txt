@@ -71,7 +71,7 @@ if (NOT WIN32)
         OUTPUT ${ZLIB_LIBRARY}
         COMMAND CC=${CMAKE_C_COMPILER} ${ZLIB_DIR}/configure --prefix="${ZLIB_DIR}" --static ${ZLIB_ARCH} >zlib.config.log
         COMMAND ${ASM_FILE_COPY}
-        COMMAND $(MAKE) ${ASM_MAKE_OPTION} >zlib.build.log
+        COMMAND $(MAKE) ${ASM_MAKE_OPTION} >zlib.build.log 2>zlib.build.error.log
         WORKING_DIRECTORY ${ZLIB_DIR}
         DEPENDS ${ZLIB_DIR}
         COMMENT "Building zlib package")
