@@ -3,10 +3,13 @@
 Manta User Guide
 ================
 
-Version: @WORKFLOW_VERSION@
-
-<script src="tableOfContents.js"></script>
-
+## Table of Contents
+* [Introduction](#introduction)
+* [Method Overview](#method-overview)
+* [Capabilities](#capabilities)
+* [Input requirements](#input-requirements)
+* [Outputs](#outputs)
+* [Run configuration and execution](#run-configuration-and-execution)
 
 ## Introduction
 
@@ -308,7 +311,7 @@ Additional secondary output is provided in `${MANTA_ANALYSIS_PATH}/results/stats
     * xml data backing the svCandidateGenerationStats.tsv report 
     
 
-## Run configuration and Execution
+## Run configuration and execution
 
 Manta is run in a two step procedure: (1) configuration and (2)
 workflow execution. The configuration step is used to specify the
