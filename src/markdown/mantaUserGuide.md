@@ -34,24 +34,24 @@ Manta divides the SV and indel discovery process into two primary
 steps: (1) scanning the genome to find SV associated regions and (2)
 analysis, scoring and output of SVs found in such regions.
 
-1. **Build SV association graph** In this step the entire genome is
+1. **Build breakend association graph** In this step the entire genome is
 scanned to discover evidence of possible SVs and large indels. This
 evidence is enumerated into a graph with edges connecting all regions
-of the genome which have a possible SV association. Edges may connect
+of the genome which have a possible breakend association. Edges may connect
 two different regions of the genome to represent evidence of a
 long-range association, or an edge may connect a region to itself to
 capture a local indel/small SV association. Note that these
 associations are more general than a specific SV hypothesis, in that
-many SV candidates may be found on one edge, although typically only
+many breakend candidates may be found on one edge, although typically only
 one or two candidates are found per edge.
 
 2. **Analyze graph edges to find SVs** The second step is to analyze
 individual graph edges or groups of highly connected edges to discover
 and score SVs associated with the edge(s). The substeps of this
 process include inference of SV candidates associated with the edge,
-attempted assembly of the SVs breakends, scoring and filtration of the
-SV under various biological models (currently diploid germline and
-somatic), and finally, output to VCF.
+attempted assembly of the SVs breakends, scoring/genotyping and
+filtration of the SV under various biological models (currently diploid
+germline and somatic), and finally, output to VCF.
 
 
 ## Capabilities
@@ -63,11 +63,11 @@ de-novo assembly. Detectable types are enumerated further below.
 For each structural variant and indel, Manta attempts to assemble the
 breakends to basepair resolution and report the left-shifted breakend
 coordinate (per the [VCF 4.1][1] SV reporting guidelines), together
-with the any breakend homology sequence and/or inserted sequence
+with any breakend homology sequence and/or inserted sequence
 between the breakends. It is often the case that the assembly will
 fail to provide a confident explanation of the data -- in such cases
-the variant will be reported as `IMPRECISE`, and scored according the
-paired-end read evidence alone.
+the variant will be reported as `IMPRECISE`, and scored according to
+the paired-end read evidence only.
 
 The sequencing reads provided as input to Manta are expected to be
 from a paired-end sequencing assay which results in an "innie"
@@ -216,7 +216,7 @@ For tumor-only analysis, Manta will produce an additional VCF:
 ### Manta VCF reporting format
 
 Manta VCF output follows the VCF 4.1 spec for describing structural
-variants, and uses standard field names whereever possible. All custom
+variants. It uses standard field names whereever possible. All custom
 fields are described in the VCF header.  The section below highlights
 some of the variant representation details and lists the primary VCF
 field values.
