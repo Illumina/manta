@@ -95,10 +95,10 @@ if (${IS_CCACHE})
     # special logic to get clang and ccache working together (suggestion from http://petereisentraut.blogspot.com/2011/09/ccache-and-clang-part-2.html):
     set(ENV{CCACHE_CPP2} "yes")
     if (${IS_CLANGXX})
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Qunused-arguments")
+        append_args (CMAKE_CXX_FLAGS "-Qunused-arguments")
     endif()
     if (${IS_CLANG})
-        set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Qunused-arguments")
+        append_args (CMAKE_C_FLAGS "-Qunused-arguments")
     endif()
 
 else()
@@ -208,7 +208,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
 endif ()
 
 if (${IS_STANDARD_STATIC})
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
+    append_args (CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
 endif ()
 
 
