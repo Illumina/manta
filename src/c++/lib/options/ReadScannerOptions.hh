@@ -83,8 +83,10 @@ struct ReadScannerOptions
     ///
     unsigned minSemiAlignedMismatchLen = 8;
 
-    /// Minimal length of a deletion / insertion SV candidate in RNA data
-    unsigned minRNALength = 100000;
+    /// Minimal length of a cis SV candidate in RNA data
+    unsigned minRNACisLength = 100000;
+    /// Minimal length of any SV candidate in RNA data
+    unsigned minRNALength = 1000;
 
     /// Accept semi-aligned reads with at least this hypothesis score
     /// different for graph and candidate generation

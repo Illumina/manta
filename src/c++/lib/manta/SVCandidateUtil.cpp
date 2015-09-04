@@ -39,7 +39,16 @@ isSVBelowMinSize(
     return (std::max(bpSize,insertSize) < static_cast<pos_t>(minSize));
 }
 
-
+bool
+isCis(const SVCandidate& sv)
+{
+    if (sv.bp1.interval.tid != sv.bp2.interval.tid) return false;
+    if (isSameOrientation(sv.bp1.state, sv.bp2.state)) return false;
+    const bool bp1Left(sv.bp1.interval.range.center_pos() < sv.bp2.interval.range.center_pos());
+    if ((sv.bp1.state == SVBreakendState::RIGHT_OPEN) && bp1Left) return true;
+    if ((sv.bp1.state == SVBreakendState::LEFT_OPEN) && !bp1Left) return true;
+    return false;
+}
 
 SV_TYPE::index_t
 getSVType(const SVCandidate& sv)

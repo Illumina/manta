@@ -684,13 +684,11 @@ assignFragmentObservationsToSVCandidates(
 #endif
         if (_isRNA)
         {
-            if ((! SVBreakendState::isSameOrientation(readCand.bp1.state,readCand.bp2.state) ||
-                 (! SVBreakendState::isSimpleBreakend(readCand.bp1.state)) ||
-                 (! SVBreakendState::isSimpleBreakend(readCand.bp2.state))) &&
-                isSVBelowMinSize(readCand, _scanOpt.minRNALength))
+            int minLength = isCis(readCand) ? _scanOpt.minRNACisLength : _scanOpt.minRNALength;
+            if (isSVBelowMinSize(readCand, minLength))
             {
 #ifdef DEBUG_SVDATA
-                log_os << __FUNCTION__ << ": Filtered short RNA Candidate\n";
+                log_os << __FUNCTION__ << ": Filtered short RNA Candidate (< " << minLength << ")\n";
 #endif
                 continue;
             }
