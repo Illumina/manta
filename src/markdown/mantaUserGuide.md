@@ -153,13 +153,16 @@ alignments) support a large indel or SV, or mismatch/clipping suggests
 a possible breakend location.
 
 Manta requires input sequencing reads to be mapped by an external tool
-and provided as input in BAM format.
+and provided as input in BAM format. Each input BAM file must be
+coordinate sorted and indexed to produce a`samtools`-style index in
+a file named to match the input BAM file with an additional '.bai'
+extension.
 
 At configuration time, at least one BAM file must be provided for the
-normal sample. A matched tumor sample can optionally be provided as
-well. If multiple input files are provided for the normal or tumor
-sample, these are merged and treated as a single normal or tumor
-sample.
+normal or tumor sample. A matched tumor-normal sample pair can be
+provided as well. If multiple input files are provided for the normal
+or tumor sample, these are merged and treated as a single normal or
+tumor sample.
 
 The following limitations exist on the input BAM files provided to
 Manta:
@@ -170,6 +173,11 @@ Manta:
 treated as representing one sample.
 * Alignments with basecall quality values greater than 70 are rejected (these
   are not supported on the assumption that this indicates an offset error)
+
+Manta also requires a reference sequence in fasta format. This must be the same
+reference used for mapping the input BAM files. The reference must include a
+`samtools`-style index in a file named to match the input fasta with an 
+additional '.fai' file extension.
 
 
 ## Outputs
@@ -328,8 +336,10 @@ The workflow is configured with the script:
 `${MANTA_INSTALL_PATH}/bin/configManta.py` . Running this script with
 no arguments will display all standard configuration options to
 specify input BAM files, the reference sequence and the output run
-folder.  Note that all input BAM files and reference sequence must
-contain the same chromosome names in the same order. Manta's default
+folder. Note that all input BAM files and reference sequence must
+contain the same chromosome names in the same order. In addition all input
+BAM files and reference sequences must be indexed with `samtools` (or a utility
+which creates an equivilent index file). Manta's default
 settings assume a whole genome DNA-Seq analysis, but there are
 configuration options for exome/targeted sequencing analysis in
 addition to RNA-Seq.
