@@ -168,7 +168,7 @@ To help verify a successful installation, Manta includes a small demo
 data set and test script. After completing the installation steps
 above, the demo can be run as follows:
 
-    bash ${MANTA_INSTALL_PATH}/bin/runMantaWorkflowDemo.bash
+    python ${MANTA_INSTALL_PATH}/bin/runMantaWorkflowDemo.py
 
 See [the demo README](src/demo/README.md) for additional information
 on the test script and data.

@@ -7,7 +7,7 @@ workflow. To run the demonstration, run the demo script found in the
 installation bin directory:
 
 ```
-bash ${MANTA_INSTALL_PATH}/bin/runMantaWorkflowDemo.bash
+python ${MANTA_INSTALL_PATH}/bin/runMantaWorkflowDemo.py
 ```
 
 This script creates a `MantaDemoAnalysis` directory under the current
