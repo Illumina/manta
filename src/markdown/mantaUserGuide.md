@@ -304,6 +304,16 @@ MaxMQ0Frac | For a small variant (<1000 bases), the fraction of reads with MAPQ0
 NoPairSupport | For variants significantly larger than the paired read fragment size, no paired reads support the alternate allele
 MinSomaticScore | SOMATICSCORE is less than 30
 
+#### Converting Manta VCF to BEDPE format
+
+It can sometimes be convenient to express structural variants in BEDPE format. For such applications we recommend the script `vcfToBedpe` available from:
+
+https://github.com/ctsa/svtools
+
+This repository is forked from @hall-lab with edits to support VCF 4.1 SV format and match Manta's portability contstaints.
+
+Note that BEDPE format greatly reduces structural variant information compared to Manta's VCF output. In particular breakend orientation, breakend homology and insertion sequence are lost, in addition to the ability to define fields for locus and sample specific information. 
+
 
 ### Statistics
 
