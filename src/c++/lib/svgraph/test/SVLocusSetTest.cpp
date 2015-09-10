@@ -1058,5 +1058,115 @@ BOOST_AUTO_TEST_CASE( test_SVLocusTransitiveOverlap3 )
 }
 
 
+// replicate at least one part of MANTA-257 in minimal form:
+BOOST_AUTO_TEST_CASE( test_SVLocusSet_MANTA257_min1 )
+{
+    SVLocus locus1;
+    {
+        const NodeIndexType nodePtr1 = locus1.addNode(GenomeInterval(0,10,20));
+        const NodeIndexType nodePtr2 = locus1.addNode(GenomeInterval(1,60,80));
+        const NodeIndexType nodePtr3 = locus1.addNode(GenomeInterval(1,20,50));
+
+        locus1.linkNodes(nodePtr1,nodePtr2);
+        locus1.linkNodes(nodePtr1,nodePtr3);
+    }
+
+    SVLocus locus2;
+    {
+        const NodeIndexType nodePtr1 = locus2.addNode(GenomeInterval(1,10,30));
+        const NodeIndexType nodePtr2 = locus2.addNode(GenomeInterval(0,10,20));
+        const NodeIndexType nodePtr3 = locus2.addNode(GenomeInterval(1,40,70));
+
+        locus2.linkNodes(nodePtr1,nodePtr2);
+        locus2.linkNodes(nodePtr3,nodePtr1);
+    }
+
+    SVLocusSetOptions sopt;
+    sopt.minMergeEdgeObservations = 1;
+    SVLocusSet set1(sopt);
+    set1.merge(locus1);
+    set1.merge(locus2);
+    const SVLocusSet& cset1(set1);
+
+    set1.finalize();
+    cset1.checkState(true,true);
+}
+
+
+// replicate the MANTA-257 bug in slightly reduced form:
+BOOST_AUTO_TEST_CASE( test_SVLocusSet_MANTA257_simplified )
+{
+
+    SVLocus locus1;
+    {
+        const NodeIndexType nodePtr1 = locus1.addNode(GenomeInterval(0,10,40));
+        const NodeIndexType nodePtr2 = locus1.addNode(GenomeInterval(1,60,100));
+        const NodeIndexType nodePtr3 = locus1.addNode(GenomeInterval(1,20,50));
+
+        locus1.linkNodes(nodePtr1,nodePtr2,1,0);
+        locus1.linkNodes(nodePtr1,nodePtr3,1,0);
+    }
+
+    SVLocus locus2;
+    {
+        const NodeIndexType nodePtr1 = locus2.addNode(GenomeInterval(1,10,30));
+        const NodeIndexType nodePtr2 = locus2.addNode(GenomeInterval(0,20,30));
+        const NodeIndexType nodePtr3 = locus2.addNode(GenomeInterval(1,80,90));
+        const NodeIndexType nodePtr4 = locus2.addNode(GenomeInterval(1,40,70));
+
+        locus2.linkNodes(nodePtr1,nodePtr2,1,0);
+        locus2.linkNodes(nodePtr1,nodePtr3,1,0);
+        locus2.linkNodes(nodePtr4,nodePtr1,1,0);
+    }
+
+    SVLocusSetOptions sopt;
+    sopt.minMergeEdgeObservations = 1;
+    SVLocusSet set1(sopt);
+    set1.merge(locus1);
+    set1.merge(locus2);
+    const SVLocusSet& cset1(set1);
+
+    set1.finalize();
+    cset1.checkState(true,true);
+}
+
+
+// replicate the MANTA-257 bug in minimally reduced form:
+BOOST_AUTO_TEST_CASE( test_SVLocusSet_MANTA257 )
+{
+
+    SVLocus locus1;
+    {
+        const NodeIndexType nodePtr1 = locus1.addNode(GenomeInterval(0,2255650,2256356));
+        const NodeIndexType nodePtr2 = locus1.addNode(GenomeInterval(1,776,1618));
+        const NodeIndexType nodePtr3 = locus1.addNode(GenomeInterval(1,-298,488));
+
+        locus1.linkNodes(nodePtr1,nodePtr2,51,0);
+        locus1.linkNodes(nodePtr1,nodePtr3,78,0);
+    }
+
+    SVLocus locus2;
+    {
+        const NodeIndexType nodePtr1 = locus2.addNode(GenomeInterval(1,-309,265));
+        const NodeIndexType nodePtr2 = locus2.addNode(GenomeInterval(0,2255700,2256245));
+        const NodeIndexType nodePtr3 = locus2.addNode(GenomeInterval(1,1018,1595));
+        const NodeIndexType nodePtr4 = locus2.addNode(GenomeInterval(1,412,904));
+
+        locus2.linkNodes(nodePtr1,nodePtr2,21,0);
+        locus2.linkNodes(nodePtr1,nodePtr3,9,3);
+        locus2.linkNodes(nodePtr4,nodePtr1,12,0);
+    }
+
+    SVLocusSetOptions sopt;
+    sopt.minMergeEdgeObservations = 9;
+    SVLocusSet set1(sopt);
+    set1.merge(locus1);
+    set1.merge(locus2);
+    const SVLocusSet& cset1(set1);
+
+    set1.finalize();
+    cset1.checkState(true,true);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
