@@ -54,6 +54,7 @@
 
 struct SVLocusNode;
 
+
 // no constructor so that this can be used in a union:
 struct SVLocusEdge
 {
@@ -66,7 +67,7 @@ struct SVLocusEdge
     bool
     isCountExact() const
     {
-        return (_count != maxCount());
+        return (getCount() != maxCount());
     }
 
     template<class Archive>
@@ -92,7 +93,7 @@ private:
     void
     mergeEdge(const SVLocusEdge& edge)
     {
-        addCount(edge._count);
+        addCount(edge.getCount());
     }
 
     void
@@ -437,33 +438,35 @@ struct SVLocusNode
         SVLocusEdgesType::iterator edgeIter(getMap().find(index));
         if (edgeIter == getMap().end())
         {
-            // this node does not already have an edge to "toIndex", add a new edge:
+            // this node does not already have an edge to "index", add a new edge:
             getMap().insert(std::make_pair(index,edge));
         }
         else
         {
-            // this node already has an edge to "toIndex", merge the existing edge with the new one:
+            // this node already has an edge to "index", merge the existing edge with the new one:
             edgeIter->second.mergeEdge(edge);
         }
     }
 
     /// reduce edge count to zero
     void
-    clearEdge(const NodeIndexType index)
+    setEdgeCount(
+        const NodeIndexType index,
+        const unsigned count)
     {
         if (_isSingle)
         {
             if (! isEdge(index))
             {
-                getEdgeException(index, "clearEdge");
+                getEdgeException(index, "setEdgeCount");
             }
-            _edges.single.edge.clearCount();
+            _edges.single.edge.setCount(count);
         }
         else
         {
             SVLocusEdgesType::iterator i(getMap().find(index));
-            if (i == getMap().end()) getEdgeException(index, "clearEdge");
-            i->second.clearCount();
+            if (i == getMap().end()) getEdgeException(index, "setEdgeCount");
+            i->second.setCount(count);
         }
     }
 

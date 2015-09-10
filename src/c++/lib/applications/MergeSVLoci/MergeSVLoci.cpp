@@ -48,7 +48,7 @@ runMSL(const MSLOptions& opt)
     {
         if (opt.isVerbose)
         {
-            log_os << "INFO: Merging file: " << graphFile << "\n";
+            log_os << "INFO: Merging file: '" << graphFile << "'\n";
         }
 
         if (mergedSet.empty())
@@ -64,11 +64,15 @@ runMSL(const MSLOptions& opt)
 
         if (opt.isVerbose)
         {
-            log_os << "INFO: Finished merging file: " << graphFile << "\n";
+            log_os << "INFO: Finished merging file: '" << graphFile << "'\n";
         }
     }
 
     mergedSet.finalize();
+    if (opt.isVerbose)
+    {
+        log_os << "INFO: Finished cleaning merged graph.\n";
+    }
     timer.stop();
     mergedSet.setMergeTime(timer.getTimes());
     mergedSet.save(opt.outputFilename.c_str());
@@ -80,7 +84,6 @@ void
 MergeSVLoci::
 runInternal(int argc, char* argv[]) const
 {
-
     MSLOptions opt;
 
     parseMSLOptions(*this,argc,argv,opt);

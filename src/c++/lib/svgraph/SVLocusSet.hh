@@ -426,8 +426,8 @@ private:
     getIntersectingEdgeNodes(
         const LocusIndexType inputLocusIndex,
         const NodeIndexType inputRemoteNodeIndex,
-        const EdgeMapType& remoteToLocal,
-        const LocusSetIndexerType& remoteIntersect,
+        const EdgeMapType& remoteIntersectNodeToLocalNodeMap,
+        const LocusSetIndexerType& remoteIntersectNodes,
         std::vector<EdgeInfoType>& edges) const;
 
     /// find nodes which could be merged with the input node, accounting for edge overlap and noise thresholds
@@ -570,8 +570,10 @@ private:
     checkForOverlapNodes(
         const bool isFilterNoise) const;
 
-    /// look for non-noise nodes intersecting findSignalAddy
+    /// look for non-noise nodes intersecting the findSignalAddy node
     ///
+    /// Noise nodes are checked for intersection to inputIntersectRemotes,
+    /// if found isIntersectRemotes is set to true
     ///
     void
     findSignalNodes(

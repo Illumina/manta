@@ -96,7 +96,7 @@ mergeNode(
     }
     else if ((! isFromCount) && (isToCount))
     {
-        // pass (keep toNode value as is
+        // pass (keep toNode value as is)
     }
     else
     {
@@ -145,15 +145,15 @@ mergeNode(
         {
             if (isFromRegionRightmost)
             {
-                fromNode.clearEdge(fromNodeEdgeIndex);
+                fromNode.setEdgeCount(fromNodeEdgeIndex,0);
 
-                // we've updated the supposedly 'const' edge via a cheat: the clearEdge function
+                // we've updated the supposedly 'const' edge via a workaround, from the non-const node reference above
                 // because of this we have to update the edge reference:
                 fromNodeEdgePtr=&(fromNode.getEdge(fromNodeEdgeIndex));
             }
             else
             {
-                toNode.clearEdge(fromIndex);
+                toNode.setEdgeCount(fromIndex,0);
             }
         }
 
@@ -250,7 +250,7 @@ cleanNodeCore(
             {
                 // clean criteria met -- go ahead and erase edge count:
                 totalCleaned += edgePtr->getCount();
-                queryNode.clearEdge(edgeIter.first);
+                queryNode.setEdgeCount(edgeIter.first,0);
 
                 // we've just snuck around the const iterator by calling the clearEdge function against this edge,
                 // so we have to fix this by hand:

@@ -85,7 +85,7 @@ SVLocusSet::
 merge(const SVLocus& inputLocus)
 {
     //
-    // test each node in input locus for intersection and insert/join to existing node
+    // test each node in the input locus for intersection to nodes in this graph and insert/join to existing nodes as appropriate
     //
 
     using namespace illumina::common;
@@ -163,7 +163,7 @@ merge(const SVLocus& inputLocus)
         getNodeMergeableIntersect(startLocusIndex, nodeIndex, isInputLocusMoved, intersectNodes);
 
 #ifdef DEBUG_SVL
-        log_os << logtag << " insersect_size: " << intersectNodes.size() << "\n";
+        log_os << logtag << " intersect_size: " << intersectNodes.size() << "\n";
         for (const NodeAddressType& val : intersectNodes)
         {
             log_os << logtag << " intersect address: " << val << " node: " <<  getNode(val) << "\n";
@@ -188,6 +188,10 @@ merge(const SVLocus& inputLocus)
 
             getNodeMergeableIntersect(startLocusIndex, nodeIndex, isInputLocusMoved, intersectNodes);
             assert(! intersectNodes.empty());
+
+#ifdef DEBUG_SVL
+            log_os << logtag << " multilocus detected, nodes moved and re-intersected. intersect_size: " << intersectNodes.size() << "\n";
+#endif
         }
 
 #ifdef DEBUG_SVL
@@ -201,7 +205,7 @@ merge(const SVLocus& inputLocus)
         // merge overlapping nodes in order from highest nodeid to lowest, so that the
         // merge process does not invalidate nodeids of higher value
         //
-        // we first need to find a node corresponding to the input node (but possibly merged to a larger region:
+        // we first need to find a node corresponding to the input node (but possibly merged to a larger region already):
         //
         NodeAddressType inputSuperAddy;
         {
@@ -314,7 +318,7 @@ getNodeIntersectCore(
 
     intersectNodes.clear();
 
-    // get all existing nodes which intersect with this one:
+    // get all nodes \in searchNodes which intersect with the input node:
     const NodeAddressType inputAddy(std::make_pair(inputLocusIndex,inputNodeIndex));
     const in_citer it(searchNodes.lower_bound(inputAddy));
     const GenomeInterval& inputInterval(getNode(inputAddy).getInterval());
@@ -419,8 +423,8 @@ SVLocusSet::
 getIntersectingEdgeNodes(
     const LocusIndexType inputLocusIndex,
     const NodeIndexType inputRemoteNodeIndex,
-    const EdgeMapType& remoteToLocal,
-    const LocusSetIndexerType& remoteIntersect,
+    const EdgeMapType& remoteIntersectNodeToLocalNodeMap,
+    const LocusSetIndexerType& remoteIntersectNodes,
     std::vector<EdgeInfoType>& edges) const
 {
     typedef EdgeMapType::const_iterator rliter_t;
@@ -428,15 +432,19 @@ getIntersectingEdgeNodes(
 
     edges.clear();
 
-    // find all remote nodes that are part of edges which intersect the input:
+    // find all nodes, from the remoteIntersectNodes set, which intersect this function's input node:
+    //
+    // for this application, inputLocus is an input set isolated from the rest of the graph, so nodes
+    // intersected in the inputLocus are filtered out
+    //
     std::set<NodeAddressType> edgeIntersectRemoteTemp;
-    getNodeIntersectCore(inputLocusIndex,inputRemoteNodeIndex,remoteIntersect,inputLocusIndex,edgeIntersectRemoteTemp);
+    getNodeIntersectCore(inputLocusIndex,inputRemoteNodeIndex,remoteIntersectNodes,inputLocusIndex,edgeIntersectRemoteTemp);
 
     for (const NodeAddressType& remoteIsectAddy : edgeIntersectRemoteTemp)
     {
-        // find what local nodes the remote notes trace back to:
-        const rlmap_range_t remoteIsectRange(remoteToLocal.equal_range(remoteIsectAddy));
-        assert(remoteIsectRange.first != remoteToLocal.end());
+        // find what local nodes the remote nodes trace back to:
+        const rlmap_range_t remoteIsectRange(remoteIntersectNodeToLocalNodeMap.equal_range(remoteIsectAddy));
+        assert(remoteIsectRange.first != remoteIntersectNodeToLocalNodeMap.end());
         for (rliter_t riter(remoteIsectRange.first); riter != remoteIsectRange.second; ++riter)
         {
             const NodeAddressType localIntersectAddy(std::make_pair(remoteIsectAddy.first,riter->second));
@@ -458,7 +466,7 @@ findSignalNodes(
 {
 #ifdef DEBUG_SVL
     static const std::string logtag("SVLocusSet::findSignalNodes");
-    log_os << logtag << "\tsignal_boost: findSignalAddy: " << findSignalAddy << "\n";
+    log_os << logtag << " findSignalAddy: " << findSignalAddy << "\n";
 #endif
     // get a standard intersection of the input node:
     std::set<NodeAddressType> intersectNodes;
@@ -466,7 +474,7 @@ findSignalNodes(
     for (const NodeAddressType& intersectAddy : intersectNodes)
     {
 #ifdef DEBUG_SVL
-        log_os << logtag << "\tsignal_boost: intersectAddy: " << intersectAddy << "\n";
+        log_os << logtag << " intersectAddy: " << intersectAddy << "\n";
 #endif
         if (isNoiseNode(intersectAddy))
         {
@@ -484,7 +492,7 @@ findSignalNodes(
 #ifdef DEBUG_SVL
         if (signalIntersectNodes.count(intersectAddy) == 0)
         {
-            log_os << logtag << " signal boost merge/new: " << findSignalAddy << " " << intersectAddy << "\n";
+            log_os << logtag << " merge/new: " << findSignalAddy << " " << intersectAddy << "\n";
         }
 #endif
 
@@ -534,60 +542,75 @@ getNodeMergeableIntersect(
     std::set<NodeAddressType> intersectNodes;
 
     //
-    // build a new index, which contains an enumeration of remote nodes for each intersecting node,
-    // and a map pointing back to the intersecting locals for each remote:
+    // build a new index, which contains, for all nodes x which intersect the input, an
+    // enumeration of the remote nodes Y connected by edges to node x (remoteIntersectNodes)
+    // and a map for each node y \in Y pointing back to node x (remoteIntersectNodeToLocalNodeMap)
     //
-    EdgeMapType remoteToLocal;
-    LocusSetIndexerType remoteIntersect(*this);
+    LocusSetIndexerType remoteIntersectNodes(*this);
+    EdgeMapType remoteIntersectNodeToLocalNodeMap;
 
-    // these nodes intersect the input and already qualify as non-noise:
+    // nodes which intersect the input and have already been certified as signal:
     std::set<NodeAddressType> signalIntersectNodes;
     {
         // get a standard intersection of the input node:
         getNodeIntersect(inputLocusIndex, inputNodeIndex, intersectNodes);
 
+        //
+        // 1. build the new remoteIntersectNodes/remoteIntersectNodeToLocalNodeMap index
+        //
         for (const NodeAddressType& intersectAddy : intersectNodes)
         {
             const SVLocusNode& intersectNode(getNode(intersectAddy));
 
             // get the remotes of each node which intersect with the query node,
-            // place these in remoteIntersect
+            // place these in remoteIntersectNodes
             const SVLocusEdgeManager edgeMap(intersectNode.getEdgeManager());
             for (const SVLocusEdgesType::value_type& intersectEdge : edgeMap.getMap())
             {
-                // 1. build remote <-> local indexing structures:
+                // build remote <-> local indexing structures:
                 NodeAddressType remoteAddy(std::make_pair(intersectAddy.first,intersectEdge.first));
-                remoteToLocal.insert(std::make_pair(remoteAddy,intersectAddy.second));
-                remoteIntersect.insert(remoteAddy);
+                remoteIntersectNodes.insert(remoteAddy);
+                remoteIntersectNodeToLocalNodeMap.insert(std::make_pair(remoteAddy,intersectAddy.second));
             }
-
-            // 2. build the signal node set:
-            if (isNoiseNode(intersectAddy)) continue;
-
-            signalIntersectNodes.insert(intersectAddy);
         }
 
 #ifdef DEBUG_SVL
-        log_os << logtag << " remoteIntersect.size(): " << remoteIntersect.size() << "\n";
-        for (const NodeAddressType& addy : remoteIntersect)
+        log_os << logtag << " remoteIntersectNodes.size(): " << remoteIntersectNodes.size() << "\n";
+        for (const NodeAddressType& addy : remoteIntersectNodes)
         {
-            log_os << logtag << "\tremoteIsect node: " << addy << " " << getNode(addy);
+            log_os << logtag << "\tremoteIntersectNode: " << addy << " " << getNode(addy);
+        }
+#endif
+
+        //
+        // 2. get the signal node set:
+        //
+        // Note that the signal node search is not transitive b/c we have required all signal nodes
+        // in the graph to have merged already.
+        //
+        for (const NodeAddressType& intersectAddy : intersectNodes)
+        {
+            if (! isNoiseNode(intersectAddy))
+            {
+                signalIntersectNodes.insert(intersectAddy);
+            }
         }
 
+#ifdef DEBUG_SVL
         log_os << logtag << " signalIntersect.size(): " << signalIntersectNodes.size() << "\n";
         for (const NodeAddressType& addy : signalIntersectNodes)
         {
-            log_os << logtag << "\tsignalIsect node: " << addy << " " << getNode(addy);
+            log_os << logtag << "\tsignalIntersectNode: " << addy << " " << getNode(addy);
         }
 #endif
     }
 
     //
-    // next build mergeIntersect by running through all edges of the input node
+    // begin building the primary function output, mergeIntersectNodes, by enumerating all edges of the input node
     //
     mergeIntersectNodes.clear();
 
-    // for each edge from the input node, get all intersecting edges
+    // loop through each edge connected to the input node
     const SVLocusEdgeManager edgeMap(inputNode.getEdgeManager());
     for (const SVLocusEdgesType::value_type& inputEdge : edgeMap.getMap())
     {
@@ -596,16 +619,49 @@ getNodeMergeableIntersect(
         checkState();
 #endif
 
-        // get the set of nodes that intersect the input node *and* have remotes which intersect the input remotes:
+        //
+        // for each edge from the input node, get all intersecting edges
+        //
+        // 'intersecting edge' means that the nodes connected by the two edges each overlap
+        //
         std::vector<EdgeInfoType> inputIntersectEdges;
-        getIntersectingEdgeNodes(inputLocusIndex, inputEdge.first, remoteToLocal, remoteIntersect, inputIntersectEdges);
+        getIntersectingEdgeNodes(inputLocusIndex, inputEdge.first, remoteIntersectNodeToLocalNodeMap, remoteIntersectNodes, inputIntersectEdges);
 
         unsigned intersectCount(inputIntersectEdges.size());
         if (! isInputLocusMoved)
         {
+            /// TODO: doc this adjustment, does this normalize the edge count to always include self-intersect?
             intersectCount++;
         }
 
+        // isRegionCheck initiates a more detailed evidence signal threshold check process
+        //
+        // - The default process checks the total evidence summed over the entire
+        // Node intersect set. This neglects to account for the possibility that that evidence
+        // density could be low, and yet a high evidence sum could be achieved by transitive over
+        // lap of many nodes.
+        //
+        // - The regioncheck pathway sums up evidence at each genomic region. It more accurately
+        // reflects peak evidence but is somewhat slower to compute.
+        //
+        // Example:
+        //
+        // Assume each node below has an evidence count of 1.
+        //
+        // |---node1-----|
+        //           |-----node2-----|
+        //                        |-----node3---|
+        //
+        // Default evidence count:
+        // 33333333333333333333333333333333333333
+        //
+        // isRegionCheck evidence count:
+        // 11111111112222211111111222211111111111
+        //
+        //
+
+        // peak RegionCheck count will always equal default count when 2 or fewer nodes exist,
+        // so there's no reason to turn it on until we have more nodes
         const bool isRegionCheck(intersectCount>2);
 
         if (isRegionCheck)
@@ -613,73 +669,52 @@ getNodeMergeableIntersect(
             _mergeRegions.clear();
         }
 
+        // enumerate counts as part of the (non-RegionCheck) process to determine if the intersection set
+        // contains sufficient evidence to initiate a merge
         unsigned mergedLocalEdgeCount(0);
         unsigned mergedRemoteEdgeCount(0);
 
+        ///
+        /// enumerate node evidence using either the default or RegionCheck process:
+        ///
+        auto addEdgeEvidenceCount = [&](
+                const SVLocus& edgeLocus,
+                const NodeIndexType localNodeIndex,
+                const NodeIndexType remoteNodeIndex)
+                {
+                    // total edge counts on the remote->local edge:
+                    const unsigned remoteEdgeCount = edgeLocus.getEdge(remoteNodeIndex,localNodeIndex).getCount();
+
+                    // total edge counts on the local->remote edge:
+                    const unsigned localEdgeCount = edgeLocus.getEdge(localNodeIndex,remoteNodeIndex).getCount();
+
+                    if (isRegionCheck)
+                    {
+                        const known_pos_range2& localRange(edgeLocus.getNode(localNodeIndex).getInterval().range);
+                        const known_pos_range2& remoteRange(edgeLocus.getNode(remoteNodeIndex).getInterval().range);
+
+                        _mergeRegions.localNodeOutbound.add(localRange,localEdgeCount);
+                        _mergeRegions.localNodeInbound.add(localRange,remoteEdgeCount);
+                        _mergeRegions.remoteNodeOutbound.add(remoteRange,remoteEdgeCount);
+                        _mergeRegions.remoteNodeInbound.add(remoteRange,localEdgeCount);
+                    }
+                    else
+                    {
+                        mergedLocalEdgeCount += localEdgeCount;
+                        mergedRemoteEdgeCount += remoteEdgeCount;
+                    }
+                };
+
         for (const EdgeInfoType& edgeInfo : inputIntersectEdges)
         {
-            const SVLocus& edgeLocus(getLocus(edgeInfo.first.first));
-            const NodeIndexType localNodeIndex(edgeInfo.first.second);
-            const NodeIndexType remoteNodeIndex(edgeInfo.second);
-
-            const known_pos_range2& localRange(edgeLocus.getNode(localNodeIndex).getInterval().range);
-            const known_pos_range2& remoteRange(edgeLocus.getNode(remoteNodeIndex).getInterval().range);
-
-            // total edge counts on the remote->local edge:
-            const unsigned remoteEdgeCount = edgeLocus.getEdge(remoteNodeIndex,localNodeIndex).getCount();
-
-            // total edge counts on the local->remote edge:
-            const unsigned localEdgeCount = edgeLocus.getEdge(localNodeIndex,remoteNodeIndex).getCount();
-
-            if (isRegionCheck)
-            {
-                _mergeRegions.localNodeOutbound.add(localRange,localEdgeCount);
-                _mergeRegions.localNodeInbound.add(localRange,remoteEdgeCount);
-                _mergeRegions.remoteNodeOutbound.add(remoteRange,remoteEdgeCount);
-                _mergeRegions.remoteNodeInbound.add(remoteRange,localEdgeCount);
-            }
-            else
-            {
-                mergedLocalEdgeCount += localEdgeCount;
-                mergedRemoteEdgeCount += remoteEdgeCount;
-            }
+            addEdgeEvidenceCount(getLocus(edgeInfo.first.first),edgeInfo.first.second,edgeInfo.second);
         }
 
-#ifdef DEBUG_SVL
-        log_os << logtag << " pre-input merge counts"
-               << " local: " << mergedLocalEdgeCount
-               << " remote: " << mergedRemoteEdgeCount
-               << "\n";
-        checkState();
-#endif
-
+        // if the input hasn't been moved into the primary locus graph yet, then we need to include the inputLocus
+        // in order to get an accurate edge intersection count:
         if (! isInputLocusMoved)
         {
-            // if the input hasn't been moved into the primary locus graph yet, then we need to include the inputLocus
-            // in order to get an accurate edge intersection count:
-
-            const SVLocus& inputLocus(getLocus(inputAddy.first));
-            const known_pos_range2& localRange(inputLocus.getNode(inputNodeIndex).getInterval().range);
-            const known_pos_range2& remoteRange(inputLocus.getNode(inputEdge.first).getInterval().range);
-
-            // total edge counts on the input remote->local edge
-            const unsigned remoteEdgeCount = inputLocus.getEdge(inputEdge.first,inputNodeIndex).getCount();
-
-            // total edge counts on the input local->remote edge
-            const unsigned localEdgeCount = inputEdge.second.getCount();
-
-            if (isRegionCheck)
-            {
-                _mergeRegions.localNodeOutbound.add(localRange,localEdgeCount);
-                _mergeRegions.localNodeInbound.add(localRange,remoteEdgeCount);
-                _mergeRegions.remoteNodeOutbound.add(remoteRange,remoteEdgeCount);
-                _mergeRegions.remoteNodeInbound.add(remoteRange,localEdgeCount);
-            }
-            else
-            {
-                mergedLocalEdgeCount += localEdgeCount;
-                mergedRemoteEdgeCount += remoteEdgeCount;
-            }
+            addEdgeEvidenceCount(getLocus(inputAddy.first),inputNodeIndex,inputEdge.first);
         }
 
         if (isRegionCheck)
@@ -689,13 +724,13 @@ getNodeMergeableIntersect(
         }
 
 #ifdef DEBUG_SVL
+        log_os << logtag << " isRegionCheck: " << isRegionCheck << "\n";
         log_os << logtag << " final merge counts"
                << " local: " << mergedLocalEdgeCount
                << " remote: " << mergedRemoteEdgeCount
                << "\n";
         checkState();
 #endif
-
 
         if ((mergedLocalEdgeCount < getMinMergeEdgeCount()) &&
             (mergedRemoteEdgeCount < getMinMergeEdgeCount())) continue;
@@ -716,7 +751,8 @@ getNodeMergeableIntersect(
         ///
 
         {
-            /// this is used to search for the (rare) case where the intersection set locals overlap with the intersection set remotes
+            // this is used to search for the (rare) case where the intersection set
+            // locals overlap with the intersection set remotes
             std::set<NodeAddressType> inputIntersectRemotes;
             for (const EdgeInfoType& edgeInfo : inputIntersectEdges)
             {
@@ -725,7 +761,8 @@ getNodeMergeableIntersect(
 
             bool isIntersectRemotes(false);
 
-            // check both the original node and intersected nodes for intersection to any of the group's remotes, and for new type2 signal intersect:
+            // check both the original node and intersected nodes for intersection to
+            // any of the group's remotes, and for new type2 signal intersect:
             findSignalNodes(inputLocusIndex, inputAddy, signalIntersectNodes, inputIntersectRemotes, isIntersectRemotes);
             for (const EdgeInfoType& edgeInfo : inputIntersectEdges)
             {
