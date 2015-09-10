@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeMergeSelfEdgeReverse)
 
     const SVLocusNode& node1(locus1.getNode(0));
 
-    BOOST_REQUIRE_EQUAL(node1.outCount(),0u);
+    BOOST_REQUIRE_EQUAL(node1.outCount(),1u);
     BOOST_REQUIRE_EQUAL(node1.getInterval().range.begin_pos(),10);
     BOOST_REQUIRE_EQUAL(node1.getInterval().range.end_pos(),25);
     BOOST_REQUIRE_EQUAL(node1.size(),1u);

@@ -82,9 +82,6 @@ mergeNode(
         BOOST_THROW_EXCEPTION(LogicException(oss.str()));
     }
 
-    // store node relationship before merging regions:
-    const bool isFromRegionRightmost(toNode.getInterval().range < fromNode.getInterval().range);
-
     notifyDelete(obs,toIndex);
 
     toNode.setIntervalRange(merge_range(toNode.getInterval().range,fromNode.getInterval().range));
@@ -137,28 +134,35 @@ mergeNode(
         // edges and nodes with weight X. If this is a non-chimera and the nodes collide and
         // merge, we want to prevent the evidence from being doubled to 2X when it should not be.
         //
-        // To achieve this, we remove the edge counts from the 'right'-most region of the two nodes being merged. This is an
-        // approximate solution, but very simple to add into the graph without blowing up per-node/edge storage.
+        // To achieve this, we take the max edge counts from the two nodes being merged instead
+        // of the sum. This is an approximate solution, but very simple to add into the
+        // graph without blowing up per-node/edge storage.
         //
         const bool isFromToEdge(fromNodeEdgeIndex == toIndex);
+        unsigned mergeCount(0);
         if (isFromToEdge)
         {
-            if (isFromRegionRightmost)
-            {
-                fromNode.setEdgeCount(fromNodeEdgeIndex,0);
+            auto getNodeEdgeCount = [](const SVLocusNode& node, const NodeIndexType index) -> unsigned
+                {
+                    if (! node.isEdge(index)) return 0u;
+                    return node.getEdge(index).getCount();
+                };
 
-                // we've updated the supposedly 'const' edge via a workaround, from the non-const node reference above
-                // because of this we have to update the edge reference:
-                fromNodeEdgePtr=&(fromNode.getEdge(fromNodeEdgeIndex));
-            }
-            else
-            {
-                toNode.setEdgeCount(fromIndex,0);
-            }
+            // determine what the override edge count should be:
+            const unsigned fromCount(fromNodeEdgePtr->getCount());
+            const unsigned toCount(getNodeEdgeCount(toNode,fromIndex));
+            const unsigned maxCount(std::max(fromCount,toCount));
+            mergeCount = getNodeEdgeCount(toNode,toIndex) + maxCount;
         }
 
         // update local edge:
         toNode.mergeEdge(fromNodeEdgeIndex,*(fromNodeEdgePtr));
+
+        if (isFromToEdge)
+        {
+            toNode.setEdgeCount(toIndex,mergeCount);
+            toNode.setEdgeCount(fromIndex,0);
+        }
 
         // update remote inputNodeEdgeIter
         {
@@ -573,7 +577,7 @@ mergeSelfOverlap()
             // test whether 1 and 2 intersect, if they do, merge this into a self-edge node:
             if (! node2.getInterval().isIntersect(node1.getInterval())) continue;
 
-            static flyweight_observer_t* obs(NULL);
+            static flyweight_observer_t* obs(nullptr);
             mergeNode(revNodeIndex, revNodeIndex2, obs);
             eraseNode(revNodeIndex, obs);
             break;
