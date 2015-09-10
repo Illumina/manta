@@ -143,10 +143,10 @@ mergeNode(
         if (isFromToEdge)
         {
             auto getNodeEdgeCount = [](const SVLocusNode& node, const NodeIndexType index) -> unsigned
-                {
-                    if (! node.isEdge(index)) return 0u;
-                    return node.getEdge(index).getCount();
-                };
+            {
+                if (! node.isEdge(index)) return 0u;
+                return node.getEdge(index).getCount();
+            };
 
             // determine what the override edge count should be:
             const unsigned fromCount(fromNodeEdgePtr->getCount());

@@ -66,7 +66,7 @@ if (NOT WIN32)
         set (ASM_FILE_COPY "")
         set (ASM_MAKE_OPTION "")
     endif ()
-    
+
     add_custom_command(
         OUTPUT ${ZLIB_LIBRARY}
         COMMAND CC=${CMAKE_C_COMPILER} ${ZLIB_DIR}/configure --prefix="${ZLIB_DIR}" --static ${ZLIB_ARCH} >zlib.config.log
@@ -82,7 +82,7 @@ else ()
     if (CMAKE_GENERATOR_PLATFORM)
         set (ZLIB_PLATFORM -A "${CMAKE_GENERATOR_PLATFORM}")
     endif ()
-    
+
     add_custom_command(
         OUTPUT ${ZLIB_LIBRARY}
         COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" ${ZLIB_PLATFORM} -DCMAKE_C_COMPILER="${CMAKE_C_COMPILER}" ${ZLIB_DIR} >zlib.config.log

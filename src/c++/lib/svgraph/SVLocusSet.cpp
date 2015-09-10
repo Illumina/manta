@@ -678,32 +678,32 @@ getNodeMergeableIntersect(
         /// enumerate node evidence using either the default or RegionCheck process:
         ///
         auto addEdgeEvidenceCount = [&](
-                const SVLocus& edgeLocus,
-                const NodeIndexType localNodeIndex,
-                const NodeIndexType remoteNodeIndex)
-                {
-                    // total edge counts on the remote->local edge:
-                    const unsigned remoteEdgeCount = edgeLocus.getEdge(remoteNodeIndex,localNodeIndex).getCount();
+                                        const SVLocus& edgeLocus,
+                                        const NodeIndexType localNodeIndex,
+                                        const NodeIndexType remoteNodeIndex)
+        {
+            // total edge counts on the remote->local edge:
+            const unsigned remoteEdgeCount = edgeLocus.getEdge(remoteNodeIndex,localNodeIndex).getCount();
 
-                    // total edge counts on the local->remote edge:
-                    const unsigned localEdgeCount = edgeLocus.getEdge(localNodeIndex,remoteNodeIndex).getCount();
+            // total edge counts on the local->remote edge:
+            const unsigned localEdgeCount = edgeLocus.getEdge(localNodeIndex,remoteNodeIndex).getCount();
 
-                    if (isRegionCheck)
-                    {
-                        const known_pos_range2& localRange(edgeLocus.getNode(localNodeIndex).getInterval().range);
-                        const known_pos_range2& remoteRange(edgeLocus.getNode(remoteNodeIndex).getInterval().range);
+            if (isRegionCheck)
+            {
+                const known_pos_range2& localRange(edgeLocus.getNode(localNodeIndex).getInterval().range);
+                const known_pos_range2& remoteRange(edgeLocus.getNode(remoteNodeIndex).getInterval().range);
 
-                        _mergeRegions.localNodeOutbound.add(localRange,localEdgeCount);
-                        _mergeRegions.localNodeInbound.add(localRange,remoteEdgeCount);
-                        _mergeRegions.remoteNodeOutbound.add(remoteRange,remoteEdgeCount);
-                        _mergeRegions.remoteNodeInbound.add(remoteRange,localEdgeCount);
-                    }
-                    else
-                    {
-                        mergedLocalEdgeCount += localEdgeCount;
-                        mergedRemoteEdgeCount += remoteEdgeCount;
-                    }
-                };
+                _mergeRegions.localNodeOutbound.add(localRange,localEdgeCount);
+                _mergeRegions.localNodeInbound.add(localRange,remoteEdgeCount);
+                _mergeRegions.remoteNodeOutbound.add(remoteRange,remoteEdgeCount);
+                _mergeRegions.remoteNodeInbound.add(remoteRange,localEdgeCount);
+            }
+            else
+            {
+                mergedLocalEdgeCount += localEdgeCount;
+                mergedRemoteEdgeCount += remoteEdgeCount;
+            }
+        };
 
         for (const EdgeInfoType& edgeInfo : inputIntersectEdges)
         {
