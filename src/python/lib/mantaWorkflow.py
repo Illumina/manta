@@ -74,9 +74,34 @@ def runStats(self,taskPrefix="",dependencies=None) :
 
 
 
-def runDepth(self,taskPrefix="",dependencies=None) :
+def runDepthFromIndex(self,taskPrefix="",dependencies=None) :
     """
-    estimate chrom depth
+    estimate chrom depth using stats from samtools bam index 'bai'
+    """
+
+    bamFile=""
+    if len(self.params.normalBamList) :
+        bamFile = self.params.normalBamList[0]
+    elif len(self.params.tumorBamList) :
+        bamFile = self.params.tumorBamList[0]
+    else :
+        return set()
+
+
+    cmd  = "%s -E %s" % (sys.executable, self.params.getChromDepth)
+    cmd += " --bam '%s'" % (bamFile)
+    cmd += " > %s" % (self.paths.getChromDepth())
+
+    nextStepWait = set()
+    nextStepWait.add(self.addTask(preJoin(taskPrefix,"estimateChromDepth"),cmd,dependencies=dependencies))
+
+    return nextStepWait
+
+
+
+def runDepthFromAlignments(self,taskPrefix="",dependencies=None) :
+    """
+    estimate chrom depth directly from BAM/CRAM file
     """
 
     bamFile=""
@@ -499,7 +524,7 @@ class MantaWorkflow(WorkflowRunner) :
             graphTaskDependencies |= statsTasks
 
         if not ((not self.params.isHighDepthFilter) or self.params.useExistingChromDepths) :
-            depthTasks = runDepth(self,taskPrefix="getChromDepth")
+            depthTasks = runDepthFromIndex(self,taskPrefix="getChromDepth")
             graphTaskDependencies |= depthTasks
 
         graphTasks = runLocusGraph(self,dependencies=graphTaskDependencies)
