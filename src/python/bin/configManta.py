@@ -50,10 +50,10 @@ You must specify a BAM file for at least one sample.
 
 
     def addWorkflowGroupOptions(self,group) :
-        group.add_option("--normalBam", type="string",dest="normalBamList",metavar="FILE", action="append",
-                         help="Normal sample BAM file. May be specified more than once, multiple inputs will be merged. [optional] (no default)")
+        group.add_option("--bam","--normalBam", type="string",dest="normalBamList",metavar="FILE", action="append",
+                         help="Normal sample BAM file. May be specified more than once, multiple inputs will be treated as each BAM file representing a different sample. [optional] (no default)")
         group.add_option("--tumorBam","--tumourBam", type="string",dest="tumorBamList",metavar="FILE", action="append",
-                          help="Tumor sample BAM file. May be specified more than once, multiple inputs will be merged. [optional] (no default)")
+                          help="Tumor sample BAM file. Only up to one tumor bam file accepted. [optional] (no default)")
         group.add_option("--exome", dest="isExome", action="store_true",
                          help="Set options for WES input: turn off depth filters")
         group.add_option("--rna", dest="isRNA", action="store_true",
@@ -106,10 +106,20 @@ You must specify a BAM file for at least one sample.
 
 
     def validateOptionExistence(self,options) :
+        
+        def safeLen(x) :
+            if x is None : return 0
+            return len(x)
 
-        if (((options.normalBamList is None) or (len(options.normalBamList) == 0)) and
-            ((options.tumorBamList is None) or (len(options.tumorBamList) == 0))) :
-            raise OptParseException("No normal & tumor sample BAM files specified")
+        if ((safeLen(options.normalBamList) == 0) and
+            (safeLen(options.tumorBamList) == 0)) :
+            raise OptParseException("No normal or tumor sample BAM files specified")
+
+        if (safeLen(options.tumorBamList) > 1) :
+            raise OptParseException("Can't accept more then one tumor sample")
+
+        if ((safeLen(options.tumorBamList) > 0) and (safeLen(options.normalBamList) > 1)) :
+            raise OptParseException("Can't accept multiple normal samples for tumor subtraction")
 
         bcheck = BamSetChecker()
         bcheck.appendBams(options.normalBamList,"Normal")
