@@ -75,7 +75,27 @@ BOOST_CLASS_IMPLEMENTATION(ReadGroupStatsExporter, boost::serialization::object_
 
 
 
-// serialize
+void
+ReadGroupStatsSet::
+merge(
+    const ReadGroupStatsSet& rhs)
+{
+    const unsigned numGroups(rhs.size());
+    for (unsigned i(0); i<numGroups; ++i)
+    {
+        const ReadGroupLabel& mkey(rhs.getKey(i));
+        if (_group.test_key(mkey))
+        {
+            log_os << "ERROR: Can't merge stats set objects with repeated key: '" << mkey << "'\n";
+            exit(EXIT_FAILURE);
+        }
+
+        setStats(mkey,rhs.getStats(i));
+    }
+}
+
+
+
 void
 ReadGroupStatsSet::
 save(
@@ -103,7 +123,6 @@ save(
 
 
 
-// restore from serialization
 void
 ReadGroupStatsSet::
 load(

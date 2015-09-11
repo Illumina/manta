@@ -90,12 +90,15 @@ struct ReadGroupStatsSet
         _group.insert(rgLabel,rps);
     }
 
-    /// serialize
+    /// merge in the contents of another stats set object:
+    void
+    merge(
+        const ReadGroupStatsSet& rhs);
+
     void
     save(
         const char* filename) const;
 
-    /// deserialize
     void
     load(
         const char* filename);

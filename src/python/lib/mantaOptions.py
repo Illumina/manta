@@ -84,6 +84,7 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         tabixBin=joinFile(libexecDir,"tabix")
 
         mantaStatsBin=joinFile(libexecDir,"GetAlignmentStats")
+        mantaMergeStatsBin=joinFile(libexecDir,"MergeAlignmentStats")
         mantaGetChromDepthBin=joinFile(libexecDir,"GetChromDepth")
         mantaGraphBin=joinFile(libexecDir,"EstimateSVLoci")
         mantaGraphMergeBin=joinFile(libexecDir,"MergeSVLoci")

@@ -51,24 +51,42 @@ __version__ = workflowVersion
 def runStats(self,taskPrefix="",dependencies=None) :
 
     statsPath=self.paths.getStatsPath()
+    statsFilename=os.path.basename(statsPath)
 
-    cmd = [ self.params.mantaStatsBin ]
-    cmd.extend(["--output-file",statsPath])
-    for bamPath in self.params.normalBamList :
+    tmpStatsDir=statsPath+".tmpdir"
+    dirTask=self.addTask(preJoin(taskPrefix,"makeTmpDir"), "mkdir -p "+tmpStatsDir, dependencies=dependencies, isForceLocal=True)
+
+    tmpStatsFiles = []
+    statsTasks = set()
+
+    for (bamIndex,bamPath) in enumerate(self.params.normalBamList + self.params.tumorBamList) :
+        indexStr = str(bamIndex).zfill(3)
+        tmpStatsFiles.append(os.path.join(tmpStatsDir,statsFilename+"."+ indexStr +".xml"))
+
+        cmd = [ self.params.mantaStatsBin ]
+        cmd.extend(["--output-file",tmpStatsFiles[-1]])
         cmd.extend(["--align-file",bamPath])
-    for bamPath in self.params.tumorBamList :
-        cmd.extend(["--tumor-align-file",bamPath])
 
-    statsTask = self.addTask(preJoin(taskPrefix,"generateStats"),cmd,dependencies=dependencies)
+        statsTasks.add(self.addTask(preJoin(taskPrefix,"generateStats_"+indexStr),cmd,dependencies=dirTask))
+
+    cmd = [ self.params.mantaMergeStatsBin ]
+    cmd.extend(["--output-file",statsPath])
+    for tmpStatsFile in tmpStatsFiles :
+        cmd.extend(["--align-stats-file",tmpStatsFile])
+
+    mergeTask = self.addTask(preJoin(taskPrefix,"mergeStats"),cmd,dependencies=statsTasks,isForceLocal=True)
 
     nextStepWait = set()
-    nextStepWait.add(statsTask)
+    nextStepWait.add(mergeTask)
+    
+    rmStatsTmpCmd = "rm -rf " + tmpStatsDir
+    rmTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmStatsTmpCmd,dependencies=mergeTask, isForceLocal=True)
 
-    # summarize stats for humans, no need for follow-up tasks to wait for this:
+    # summarize stats in format that's easier for human review
     cmd  = self.params.mantaStatsSummaryBin
     cmd += " --align-stats " + statsPath
     cmd += " > " + self.paths.getStatsSummaryPath()
-    self.addTask(preJoin(taskPrefix,"summarizeStats"),cmd,dependencies=statsTask)
+    self.addTask(preJoin(taskPrefix,"summarizeStats"),cmd,dependencies=mergeTask)
 
     return nextStepWait
 
@@ -521,7 +539,7 @@ class MantaWorkflow(WorkflowRunner) :
         graphTaskDependencies = set()
 
         if not self.params.useExistingAlignStats :
-            statsTasks = runStats(self)
+            statsTasks = runStats(self,taskPrefix="getAlignmentStats")
             graphTaskDependencies |= statsTasks
 
         if not ((not self.params.isHighDepthFilter) or self.params.useExistingChromDepths) :
