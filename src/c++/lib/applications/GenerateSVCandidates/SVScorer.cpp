@@ -1088,9 +1088,11 @@ scoreDiploidSV(
         }
 #endif
 
+        static const int maxQ(999);
+
         diploidInfo.gt=static_cast<DIPLOID_GT::index_t>(maxGt);
-        diploidInfo.altScore=error_prob_to_qphred(pprob[DIPLOID_GT::REF]);
-        diploidInfo.gtScore=error_prob_to_qphred(prob_comp(pprob.begin(),pprob.end(), diploidInfo.gt));
+        diploidInfo.altScore=std::min(maxQ,error_prob_to_qphred(pprob[DIPLOID_GT::REF]));
+        diploidInfo.gtScore=std::min(maxQ,error_prob_to_qphred(prob_comp(pprob.begin(),pprob.end(), diploidInfo.gt)));
 
         // set phredLoghood:
         {
@@ -1101,7 +1103,7 @@ scoreDiploidSV(
             }
             for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
             {
-                diploidInfo.phredLoghood[gt] = ln_error_prob_to_qphred(loglhood[gt]-loglhood[maxIndex]);
+                diploidInfo.phredLoghood[gt] = std::min(maxQ,ln_error_prob_to_qphred(loglhood[gt]-loglhood[maxIndex]));
             }
         }
     }
