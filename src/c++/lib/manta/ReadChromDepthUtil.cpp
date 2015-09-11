@@ -71,7 +71,7 @@ struct DepthTracker
             _isRegionInit=true;
         }
 
-        for(;_maxPos<pos; ++_maxPos) flushPos(_maxPos);
+        for (; _maxPos<pos; ++_maxPos) flushPos(_maxPos);
         _depth.inc(pos,rsize);
         _count++;
     }

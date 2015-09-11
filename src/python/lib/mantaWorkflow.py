@@ -133,7 +133,7 @@ def runDepthFromAlignments(self,taskPrefix="",dependencies=None) :
 
     nextStepWait = set()
     nextStepWait.add(catTask)
-    
+
     rmDepthTmpCmd = "rm -rf " + tmpDepthDir
     rmTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmDepthTmpCmd,dependencies=catTask, isForceLocal=True)
 
