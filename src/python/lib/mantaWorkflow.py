@@ -272,7 +272,8 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
 	else:
             hygenCmd.extend(["--diploid-output-file", diploidVcfPaths[-1]])
             hygenCmd.extend(["--min-qual-score", self.params.minDiploidVariantScore])
-            hygenCmd.extend(["--min-pass-gt-score", self.params.minPassGTScore])
+            hygenCmd.extend(["--min-pass-qual-score", self.params.minPassDiploidVariantScore])
+            hygenCmd.extend(["--min-pass-gt-score", self.params.minPassDiploidGTScore])
 	    # tumor/normal mode
 	    if isSomatic :
        	        hygenCmd.extend(["--somatic-output-file", somaticVcfPaths[-1]])
