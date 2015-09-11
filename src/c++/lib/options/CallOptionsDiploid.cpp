@@ -35,8 +35,10 @@ getOptionsDescription(CallOptionsDiploid& opt)
      "Variants where the depth around the breakpoint is greater than this factor x the chromosomal mean will be filtered out")
     ("min-qual-score", po::value(&opt.minOutputAltScore)->default_value(opt.minOutputAltScore),
      "minimum QUAL score for variants included in the germline output vcf")
+    ("min-pass-qual-score", po::value(&opt.minPassAltScore)->default_value(opt.minPassAltScore),
+     "minimum QUAL score for variants to PASS in germline output vcf")
     ("min-pass-gt-score", po::value(&opt.minPassGTScore)->default_value(opt.minPassGTScore),
-     "minimum genoteyp quality score below which variants are filtered in the germline output vcf")
+     "minimum genotype quality score below which samples are filtered for a variant in the germline output vcf")
     ;
 
     return desc;

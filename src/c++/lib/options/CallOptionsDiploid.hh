@@ -38,8 +38,12 @@ struct CallOptionsDiploid
     /// minimum QUAL score to print out a diploid variant
     unsigned minOutputAltScore = 10;
 
-    /// below this GQ value, the record is filtered in the diploid output VCF
-    unsigned minPassGTScore = 20;
+    /// minimum QUAL score to PASS a diploid variant
+    unsigned minPassAltScore = 20;
+    std::string minAltFilterLabel = "MinQUAL";
+
+    /// below this GQ value, the SAMPLE filter is marked in the VCF
+    unsigned minPassGTScore = 10;
     std::string minGTFilterLabel = "MinGQ";
 
     // control filtration based on MQ0 fraction:

@@ -73,7 +73,7 @@ void
 VcfWriterTumorSV::
 writeFilter() const
 {
-    writeFilters(getTumorInfo().filters);
+    writeFilters(getTumorInfo().filters, _os);
 }
 
 

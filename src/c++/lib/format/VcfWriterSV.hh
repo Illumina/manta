@@ -137,9 +137,17 @@ protected:
         SampleTag_t& /*sampletags*/) const
     {}
 
+    static
     void
     writeFilters(
-        const std::set<std::string>& filters) const;
+        const std::set<std::string>& filters,
+        std::ostream& os);
+
+    static
+    void
+    writeFilters(
+        const std::set<std::string>& filters,
+        std::string& s);
 
 private:
 

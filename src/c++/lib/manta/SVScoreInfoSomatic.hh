@@ -161,7 +161,6 @@ altLnCompFraction(
 /// consolidate all somatic scoring results applied to an SV candidate
 struct SVScoreInfoSomatic
 {
-
     void
     clear()
     {

@@ -1090,9 +1090,14 @@ scoreDiploidSV(
 
         static const int maxQ(999);
 
-        diploidInfo.gt=static_cast<DIPLOID_GT::index_t>(maxGt);
         diploidInfo.altScore=std::min(maxQ,error_prob_to_qphred(pprob[DIPLOID_GT::REF]));
-        diploidInfo.gtScore=std::min(maxQ,error_prob_to_qphred(prob_comp(pprob.begin(),pprob.end(), diploidInfo.gt)));
+
+        /// TODO: TMP -- fill in with real sample index number:
+        const unsigned sampleIndex(0);
+
+        SVScoreInfoDiploidSample& diploidSampleInfo(diploidInfo.samples[sampleIndex]);
+        diploidSampleInfo.gt=static_cast<DIPLOID_GT::index_t>(maxGt);
+        diploidSampleInfo.gtScore=std::min(maxQ,error_prob_to_qphred(prob_comp(pprob.begin(),pprob.end(), diploidSampleInfo.gt)));
 
         // set phredLoghood:
         {
@@ -1103,7 +1108,7 @@ scoreDiploidSV(
             }
             for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
             {
-                diploidInfo.phredLoghood[gt] = std::min(maxQ,ln_error_prob_to_qphred(loglhood[gt]-loglhood[maxIndex]));
+                diploidSampleInfo.phredLoghood[gt] = std::min(maxQ,ln_error_prob_to_qphred(loglhood[gt]-loglhood[maxIndex]));
             }
         }
     }
@@ -1113,9 +1118,22 @@ scoreDiploidSV(
     // apply filters
     //
     {
-        if (diploidInfo.gtScore < diploidOpt.minPassGTScore)
+        if (diploidInfo.altScore < diploidOpt.minPassAltScore)
         {
-            diploidInfo.filters.insert(diploidOpt.minGTFilterLabel);
+            diploidInfo.filters.insert(diploidOpt.minAltFilterLabel);
+        }
+
+        ///TODO TMP: fill in with read sampleCount
+        const unsigned sampleCount(1);
+
+        // add sample specific filters
+        for (unsigned sampleIndex(0); sampleIndex<sampleCount; ++sampleIndex)
+        {
+            SVScoreInfoDiploidSample& diploidSampleInfo(diploidInfo.samples[sampleIndex]);
+            if (diploidSampleInfo.gtScore < diploidOpt.minPassGTScore)
+            {
+                diploidSampleInfo.filters.insert(diploidOpt.minGTFilterLabel);
+            }
         }
 
         const unsigned junctionCount(junctionData.size());
@@ -1292,7 +1310,11 @@ scoreRNASV(
 #ifdef DEBUG_SCORE
     //log_os << __FUNCTION__ << "Scoring RNA candidate " << sv << "\n";
 #endif
-    diploidInfo.gtScore=0;
+
+    /// TODO TMP add real sampleIndex
+    const unsigned sampleIndex(0);
+
+    diploidInfo.samples[sampleIndex].gtScore=0;
     diploidInfo.altScore=42;
     if (baseInfo.normal.alt.splitReadCount == 0)
     {

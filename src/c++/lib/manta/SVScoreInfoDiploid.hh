@@ -116,10 +116,10 @@ altLnCompFraction(const index_t i)
 }
 
 
-/// consolidate all germline scoring results applied to an SV candidate
-struct SVScoreInfoDiploid
+
+struct SVScoreInfoDiploidSample
 {
-    SVScoreInfoDiploid()
+    SVScoreInfoDiploidSample()
       : phredLoghood(DIPLOID_GT::SIZE,0)
     {}
 
@@ -128,7 +128,6 @@ struct SVScoreInfoDiploid
     {
         filters.clear();
         gt=DIPLOID_GT::REF;
-        altScore=0;
         gtScore=0;
         std::fill(phredLoghood.begin(),phredLoghood.end(),0);
     }
@@ -137,11 +136,46 @@ struct SVScoreInfoDiploid
 
     DIPLOID_GT::index_t gt = DIPLOID_GT::REF;
 
-    unsigned altScore = 0; ///< quality score indicating any non-reference state (regardless of specific genotype)
     unsigned gtScore = 0; ///< quality score of genotype
 
     std::vector<unsigned> phredLoghood;
 };
+
+
+std::ostream&
+operator<<(
+    std::ostream& os,
+    const SVScoreInfoDiploidSample& sid);
+
+
+
+/// consolidate all germline scoring results applied to an SV candidate
+struct SVScoreInfoDiploid
+{
+    SVScoreInfoDiploid(
+        const unsigned sampleCount = 1)
+      : samples(sampleCount)
+    {}
+
+    void
+    clear()
+    {
+        filters.clear();
+        altScore=0;
+        for (auto& sample : samples)
+        {
+            sample.clear();
+        }
+    }
+
+    std::set<std::string> filters;
+
+    unsigned altScore = 0; ///< quality score indicating any non-reference state (regardless of specific genotype)
+
+    std::vector<SVScoreInfoDiploidSample> samples;
+};
+
+
 
 std::ostream&
 operator<<(

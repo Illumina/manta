@@ -32,16 +32,44 @@
 std::ostream&
 operator<<(
     std::ostream& os,
+    const SVScoreInfoDiploidSample& sids)
+{
+    os << "DiploidSVScoreInfoSample "
+       << " gt=" << DIPLOID_GT::label(sids.gt)
+       << " gtScore=" << sids.gtScore
+       << " pl=";
+
+    for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
+    {
+        if (gt!=0) os << ',';
+        os << sids.phredLoghood[gt];
+    }
+    os << " sampleFilters:";
+    for (const std::string& filter : sids.filters)
+    {
+        os << " " << filter;
+    }
+    return os;
+}
+
+
+
+std::ostream&
+operator<<(
+    std::ostream& os,
     const SVScoreInfoDiploid& sid)
 {
     os << "DiploidSVScoreInfo "
-       << " altScore=" << sid.altScore
-       << " gtScore=" << sid.gtScore
-       << " gt=" << DIPLOID_GT::label(sid.gt)
-       << "\n";
+       << " altScore=" << sid.altScore;
+    os << " filters:";
     for (const std::string& filter : sid.filters)
     {
         os << " " << filter;
+    }
+    os << "\n";
+    for (const auto& sample : sid.samples)
+    {
+        os << sample << "\n";
     }
     return os;
 }

@@ -138,7 +138,7 @@ void
 VcfWriterSomaticSV::
 writeFilter() const
 {
-    writeFilters(getSomaticInfo().filters);
+    writeFilters(getSomaticInfo().filters, _os);
 }
 
 

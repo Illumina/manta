@@ -233,6 +233,7 @@ writeSV(
     if (! isAnyFalse(isJunctionFiltered)) return;
 
     bool isMJEvent(false);
+
     SVModelScoreInfo mjJointModelScoreInfo;
     svScore.scoreSV(svData, mjAssemblyData, mjSV, isJunctionFiltered, isSomatic, isTumorOnly, mjModelScoreInfo, mjJointModelScoreInfo, isMJEvent);
 

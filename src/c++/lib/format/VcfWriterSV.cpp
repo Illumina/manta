@@ -874,11 +874,12 @@ writeSVCore(
 void
 VcfWriterSV::
 writeFilters(
-    const std::set<std::string>& filters) const
+    const std::set<std::string>& filters,
+    std::ostream& os)
 {
     if (filters.empty())
     {
-        _os << "PASS";
+        os << "PASS";
     }
     else
     {
@@ -891,11 +892,22 @@ writeFilters(
             }
             else
             {
-                _os << ';';
+                os << ';';
             }
-            _os << filter;
+            os << filter;
         }
     }
 }
 
 
+
+void
+VcfWriterSV::
+writeFilters(
+    const std::set<std::string>& filters,
+    std::string& s)
+{
+    std::ostringstream oss;
+    writeFilters(filters,oss);
+    s = oss.str();
+}

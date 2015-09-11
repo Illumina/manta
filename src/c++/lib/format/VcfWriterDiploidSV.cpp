@@ -78,9 +78,10 @@ addHeaderFilters() const
     {
         _os << "##FILTER=<ID=" << _diploidOpt.maxDepthFilterLabel << ",Description=\"Sample site depth is greater than " << _diploidOpt.maxDepthFactor << "x the mean chromosome depth near one or both variant breakends\">\n";
     }
-    _os << "##FILTER=<ID=" << _diploidOpt.minGTFilterLabel << ",Description=\"GQ score is less than " << _diploidOpt.minPassGTScore << "\">\n";
     _os << "##FILTER=<ID=" << _diploidOpt.maxMQ0FracLabel << ",Description=\"For a small variant (<1000 bases), the fraction of reads with MAPQ0 around either breakend exceeds " << _diploidOpt.maxMQ0Frac << "\">\n";
     _os << "##FILTER=<ID=" << _diploidOpt.noPairSupportLabel << ",Description=\"For variants significantly larger than the paired read fragment size, no paired reads support the alternate allele.\">\n";
+    _os << "##FILTER=<ID=" << _diploidOpt.minAltFilterLabel << ",Description=\"QUAL score is less than " << _diploidOpt.minPassAltScore << "\">\n";
+    _os << "##FILTER=<ID=" << _diploidOpt.minGTFilterLabel << ",Description=\"GQ score is less than " << _diploidOpt.minPassGTScore << " (applied at individual sample level)\">\n";
     if (_isRNA)
     {
         _os << "##FILTER=<ID=" << _diploidOpt.rnaFilterLabel << ",Description=\"RNA fusion variants without split read and split pair support\">\n";
@@ -140,7 +141,7 @@ void
 VcfWriterDiploidSV::
 writeFilter() const
 {
-    writeFilters(getDiploidInfo().filters);
+    writeFilters(getDiploidInfo().filters,_os);
 }
 
 
@@ -172,42 +173,52 @@ modifySample(
     const SVCandidate& sv,
     SampleTag_t& sampletags) const
 {
+    static const unsigned sampleCount(1);
     const SVScoreInfo& baseInfo(getBaseInfo());
-    const SVScoreInfoDiploid& diploidInfo(getDiploidInfo());
 
-    std::vector<std::string> values(1);
-
-    static const std::string gtTag("GT");
-    values[0] = gtLabel(diploidInfo.gt);
-    sampletags.push_back(std::make_pair(gtTag,values));
-
-    static const std::string gqTag("GQ");
-    values[0] = str( boost::format("%s") % diploidInfo.gtScore);
-    sampletags.push_back(std::make_pair(gqTag,values));
-
-    static const std::string plTag("PL");
-    values[0] = str( boost::format("%s,%s,%s") % diploidInfo.phredLoghood[DIPLOID_GT::REF]
-                                               % diploidInfo.phredLoghood[DIPLOID_GT::HET]
-                                               % diploidInfo.phredLoghood[DIPLOID_GT::HOM]);
-    sampletags.push_back(std::make_pair(plTag,values));
-
-    static const std::string pairTag("PR");
-    values[0] = str( boost::format("%i,%i") % baseInfo.normal.ref.confidentSpanningPairCount % baseInfo.normal.alt.confidentSpanningPairCount);
-    sampletags.push_back(std::make_pair(pairTag,values));
-
-    if (sv.isImprecise()) return;
-
-    static const std::string srTag("SR");
-    values[0] = str( boost::format("%i,%i") % baseInfo.normal.ref.confidentSplitReadCount % baseInfo.normal.alt.confidentSplitReadCount);
-    sampletags.push_back(std::make_pair(srTag,values));
-    if (_isRNA)
+    std::vector<std::string> values(sampleCount);
+    for (unsigned sampleIndex(0); sampleIndex<sampleCount; ++sampleIndex)
     {
-        static const std::string fsTag("FS");
-        values[0] = str( boost::format("%i,%i") % baseInfo.normal.ref.splitReadCount % baseInfo.normal.alt.splitReadCount);
-        sampletags.push_back(std::make_pair(fsTag,values));
-        static const std::string fpTag("FP");
-        values[0] = str( boost::format("%i,%i") % baseInfo.normal.ref.spanningPairCount % baseInfo.normal.alt.spanningPairCount);
-        sampletags.push_back(std::make_pair(fpTag,values));
+        const SVScoreInfoDiploidSample& diploidSampleInfo(getDiploidInfo().samples[sampleIndex]);
+
+        std::string& sampleVal(values[sampleIndex]);
+
+        static const std::string gtTag("GT");
+        sampleVal = gtLabel(diploidSampleInfo.gt);
+        sampletags.push_back(std::make_pair(gtTag,values));
+
+        static const std::string ftTag("FT");
+        writeFilters(diploidSampleInfo.filters,sampleVal);
+        sampletags.push_back(std::make_pair(ftTag,values));
+
+        static const std::string gqTag("GQ");
+        sampleVal = str( boost::format("%s") % diploidSampleInfo.gtScore);
+        sampletags.push_back(std::make_pair(gqTag,values));
+
+        static const std::string plTag("PL");
+        sampleVal = str( boost::format("%s,%s,%s") % diploidSampleInfo.phredLoghood[DIPLOID_GT::REF]
+                                                   % diploidSampleInfo.phredLoghood[DIPLOID_GT::HET]
+                                                   % diploidSampleInfo.phredLoghood[DIPLOID_GT::HOM]);
+        sampletags.push_back(std::make_pair(plTag,values));
+
+        static const std::string pairTag("PR");
+        sampleVal = str( boost::format("%i,%i") % baseInfo.normal.ref.confidentSpanningPairCount % baseInfo.normal.alt.confidentSpanningPairCount);
+        sampletags.push_back(std::make_pair(pairTag,values));
+
+        if (sv.isImprecise()) return;
+
+        static const std::string srTag("SR");
+        values[0] = str( boost::format("%i,%i") % baseInfo.normal.ref.confidentSplitReadCount % baseInfo.normal.alt.confidentSplitReadCount);
+        sampletags.push_back(std::make_pair(srTag,values));
+        if (_isRNA)
+        {
+            static const std::string fsTag("FS");
+            values[0] = str( boost::format("%i,%i") % baseInfo.normal.ref.splitReadCount % baseInfo.normal.alt.splitReadCount);
+            sampletags.push_back(std::make_pair(fsTag,values));
+            static const std::string fpTag("FP");
+            values[0] = str( boost::format("%i,%i") % baseInfo.normal.ref.spanningPairCount % baseInfo.normal.alt.spanningPairCount);
+            sampletags.push_back(std::make_pair(fpTag,values));
+        }
     }
 }
 
