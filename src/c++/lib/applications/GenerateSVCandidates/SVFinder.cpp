@@ -48,12 +48,12 @@ static
 double
 getSpanningNoiseRate(
     const AllCounts& counts,
-    const bool isTumor)
+    const unsigned sampleIndex)
 {
     static const double pseudoTotal(1000.);
     static const double pseudoSpan(10.);
 
-    const SampleReadInputCounts& input(counts.getSample(isTumor).input);
+    const SampleReadInputCounts& input(counts.getSampleCounts(sampleIndex).input);
     return ((input.evidenceCount.anom+input.evidenceCount.split)+pseudoSpan)/(input.total()+pseudoTotal);
 }
 
@@ -63,12 +63,12 @@ static
 double
 getAssemblyNoiseRate(
     const AllCounts& counts,
-    const bool isTumor)
+    const unsigned sampleIndex)
 {
     static const double pseudoTotal(1000.);
     static const double pseudoAssm(10.);
 
-    const SampleReadInputCounts& input(counts.getSample(isTumor).input);
+    const SampleReadInputCounts& input(counts.getSampleCounts(sampleIndex).input);
     return (input.evidenceCount.assm+pseudoAssm)/(input.total()+pseudoTotal);
 }
 
@@ -105,11 +105,11 @@ SVFinder(
     }
 
 
+    const unsigned bamCount(_bamStreams.size());
     {
         // assert expected bam order of all normal samples followed by all tumor samples,
         // also, determine if this is a somatic run:
         bool isFirstTumor(false);
-        const unsigned bamCount(_bamStreams.size());
         for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
         {
             const bool isTumor(_isAlignmentTumor[bamIndex]);
@@ -124,15 +124,18 @@ SVFinder(
     }
 
     const AllCounts& counts(getSet().getCounts());
-    _spanningNoiseRate=getSpanningNoiseRate(counts,false);
-    _assemblyNoiseRate=getAssemblyNoiseRate(counts,false);
-    if (_isSomatic)
+    for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
     {
-        const double spanningNoiseRateTumor=getSpanningNoiseRate(counts,true);
-        const double assemblyNoiseRateTumor=getAssemblyNoiseRate(counts,true);
-        // for now just use a hack over samples:
-        _spanningNoiseRate=std::max(_spanningNoiseRate,spanningNoiseRateTumor);
-        _assemblyNoiseRate=std::max(_assemblyNoiseRate,assemblyNoiseRateTumor);
+        // take max rate over all samples:
+        auto updateRate = [](double& x, const double val, const bool isFirst)
+        {
+            if (isFirst) x=val;
+            else x=std::max(x,val);
+        };
+
+        const bool isFirst(bamIndex==0);
+        updateRate(_spanningNoiseRate,getSpanningNoiseRate(counts,bamIndex), isFirst);
+        updateRate(_assemblyNoiseRate,getAssemblyNoiseRate(counts,bamIndex), isFirst);
     }
 }
 

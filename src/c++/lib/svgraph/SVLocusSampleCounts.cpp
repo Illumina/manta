@@ -103,3 +103,18 @@ write(
     evidence.write(os);
 }
 
+
+
+void
+AllCounts::
+write(
+    std::ostream& os,
+    const std::vector<std::string>& sampleLabels) const
+{
+    assert(size() == sampleLabels.size());
+    const unsigned s(size());
+    for (unsigned i(0);i<s;++i)
+    {
+        getSampleCounts(i).write(os,sampleLabels[i].c_str());
+    }
+}

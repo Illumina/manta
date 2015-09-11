@@ -29,6 +29,7 @@
 
 #include <algorithm>
 #include <iosfwd>
+#include <string>
 #include <vector>
 
 
@@ -155,27 +156,70 @@ struct SampleCounts
 
 struct AllCounts
 {
+
     void
     clear()
     {
-        tumor.clear();
-        normal.clear();
+        for (auto& sample : _samples)
+        {
+            sample.clear();
+        }
+    }
+
+    void
+    setSampleCount(
+        const unsigned sampleCount)
+    {
+        _samples.resize(sampleCount);
+    }
+
+    unsigned
+    size() const
+    {
+        return _samples.size();
     }
 
     SampleCounts&
-    getSample(
-        const bool isTumor)
+    getSampleCounts(
+        const unsigned index)
     {
-        return ( isTumor ? tumor : normal );
+        assert(index < size());
+        return _samples[index];
     }
 
     const SampleCounts&
-    getSample(
-        const bool isTumor) const
+    getSampleCounts(
+        const unsigned index) const
     {
-        return ( isTumor ? tumor : normal );
+        assert(index < size());
+        return _samples[index];
     }
 
-    SampleCounts normal;
-    SampleCounts tumor;
+    void
+    merge(
+        const AllCounts& rhs)
+    {
+        assert(size() == rhs.size());
+
+        const unsigned s(size());
+        for (unsigned i(0);i<s;++i)
+        {
+            getSampleCounts(i).merge(rhs.getSampleCounts(i));
+        }
+    }
+
+    void
+    write(
+        std::ostream& os,
+        const std::vector<std::string>& sampleLabels) const;
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned /* version */)
+    {
+        ar& _samples;
+    }
+
+private:
+
+    std::vector<SampleCounts> _samples;
 };

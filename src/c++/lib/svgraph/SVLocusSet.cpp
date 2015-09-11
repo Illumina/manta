@@ -284,8 +284,7 @@ merge(
     }
 
     _totalCleaned += inputSet._totalCleaned;
-    _counts.normal.merge(inputSet._counts.normal);
-    _counts.tumor.merge(inputSet._counts.tumor);
+    _counts.merge(inputSet._counts);
     _highestSearchCount = std::max(_highestSearchCount, inputSet._highestSearchCount);
     _isMaxSearchCount = (_isMaxSearchCount || inputSet._isMaxSearchCount);
     _highestSearchDensity = std::max(_highestSearchDensity, inputSet._highestSearchDensity);
@@ -1023,7 +1022,8 @@ dumpRegion(std::ostream& os,
 
 void
 SVLocusSet::
-dumpStats(std::ostream& os) const
+dumpStats(
+    std::ostream& os) const
 {
     static const char sep('\t');
 
@@ -1044,8 +1044,18 @@ dumpStats(std::ostream& os) const
     os << "highestSearchDensity" << sep << _highestSearchDensity << "\n";
     os << "isMaxSearchDensity" << sep << _isMaxSearchDensity << "\n";
 
-    _counts.normal.write(os,"NormalSample");
-    _counts.tumor.write(os,"TumorSample");
+    /// TODO: Add real sample labels:
+    {
+        std::vector<std::string> labels;
+        const unsigned csize(_counts.size());
+        for (unsigned i(0);i<csize;++i)
+        {
+            std::ostringstream oss;
+            oss << "Sample" << i;
+            labels.push_back(oss.str());
+        }
+        _counts.write(os,labels);
+    }
     os << "\n";
 
     // node region size quantiles
@@ -1178,8 +1188,7 @@ save(const char* filename) const
     oa << _opt;
     oa << _isFinalized;
     oa << _totalCleaned;
-    oa << _counts.normal;
-    oa << _counts.tumor;
+    oa << _counts;
     oa << _highestSearchCount;
     oa << _highestSearchDensity;
     oa << _isMaxSearchCount;
@@ -1220,8 +1229,7 @@ load(
     ia >> _opt;
     ia >> _isFinalized;
     ia >> _totalCleaned;
-    ia >> _counts.normal;
-    ia >> _counts.tumor;
+    ia >> _counts;
     ia >> _highestSearchCount;
     ia >> _highestSearchDensity;
     ia >> _isMaxSearchCount;

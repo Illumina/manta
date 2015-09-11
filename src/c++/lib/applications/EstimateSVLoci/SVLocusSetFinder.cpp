@@ -96,6 +96,9 @@ SVLocusSetFinder(
         _maxDepth=dFilter.maxDepth(scanRegion.tid);
     }
 
+    const unsigned sampleCount(opt.alignFileOpt.alignmentFilename.size());
+    _svLoci.getCounts().setSampleCount(sampleCount);
+
     _svLoci.header = _bamHeader;
     updateDenoiseRegion();
 }
@@ -252,7 +255,7 @@ update(
         if (_depth.val(bamRead.pos()-1) > _maxDepth) return;
     }
 
-    SampleCounts& counts(_svLoci.getCounts().getSample(isTumor));
+    SampleCounts& counts(_svLoci.getCounts().getSampleCounts(defaultReadGroupIndex));
     SampleReadInputCounts& incounts(counts.input);
     if (bamRead.map_qual() < _readScanner.getMinMapQ())
     {

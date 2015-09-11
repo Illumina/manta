@@ -44,12 +44,12 @@ static
 double
 getRemoteRate(
     const AllCounts& counts,
-    const bool isTumor)
+    const unsigned sampleIndex)
 {
     static const double pseudoTotal(10000.);
     static const double pseudoRemote(100.);
 
-    const SampleReadInputCounts& input(counts.getSample(isTumor).input);
+    const SampleReadInputCounts& input(counts.getSampleCounts(sampleIndex).input);
     return (input.evidenceCount.remoteRecoveryCandidates+pseudoRemote)/(input.total()+pseudoTotal);
 }
 
@@ -83,8 +83,12 @@ SVCandidateAssembler(
         _bamStreams.push_back(tmp);
     }
 
-    _normalBackgroundRemoteRate=getRemoteRate(counts,false);
-    _tumorBackgroundRemoteRate=getRemoteRate(counts,true);
+    const unsigned bamSize(_bamStreams.size());
+    _sampleBackgroundRemoteRate.resize(bamSize);
+    for (unsigned bamIndex(0); bamIndex<bamSize; ++bamIndex)
+    {
+        _sampleBackgroundRemoteRate[bamIndex] = getRemoteRate(counts,bamIndex);
+    }
 }
 
 

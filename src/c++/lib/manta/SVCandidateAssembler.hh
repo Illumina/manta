@@ -125,6 +125,5 @@ private:
     std::vector<streamPtr> _bamStreams;
     TimeTracker& _remoteTime;
 
-    double _normalBackgroundRemoteRate = 0;
-    double _tumorBackgroundRemoteRate = 0;
+    std::vector<double> _sampleBackgroundRemoteRate;
 };
