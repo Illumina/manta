@@ -49,11 +49,29 @@ error_prob_to_phred(const FloatType prob)
 }
 
 template <typename FloatType>
+FloatType
+ln_error_prob_to_phred(const FloatType lnProb)
+{
+    static const FloatType minlog10(static_cast<FloatType>(std::numeric_limits<FloatType>::min_exponent10));
+    static const FloatType ln10(std::log(static_cast<FloatType>(10)));
+    return -10.*std::max(minlog10,lnProb/ln10);
+}
+
+
+template <typename FloatType>
 int
 error_prob_to_qphred(const FloatType prob)
 {
     return static_cast<int>(std::floor(error_prob_to_phred(prob)+0.5));
 }
+
+template <typename FloatType>
+int
+ln_error_prob_to_qphred(const FloatType lnProb)
+{
+    return static_cast<int>(std::floor(ln_error_prob_to_phred(lnProb)+0.5));
+}
+
 
 inline
 double

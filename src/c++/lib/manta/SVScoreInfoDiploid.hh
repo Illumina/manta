@@ -31,6 +31,7 @@
 #include <iosfwd>
 #include <set>
 #include <string>
+#include <vector>
 
 
 namespace DIPLOID_GT
@@ -118,6 +119,10 @@ altLnCompFraction(const index_t i)
 /// consolidate all germline scoring results applied to an SV candidate
 struct SVScoreInfoDiploid
 {
+    SVScoreInfoDiploid()
+      : phredLoghood(DIPLOID_GT::SIZE,0)
+    {}
+
     void
     clear()
     {
@@ -125,6 +130,7 @@ struct SVScoreInfoDiploid
         gt=DIPLOID_GT::REF;
         altScore=0;
         gtScore=0;
+        std::fill(phredLoghood.begin(),phredLoghood.end(),0);
     }
 
     std::set<std::string> filters;
@@ -133,6 +139,8 @@ struct SVScoreInfoDiploid
 
     unsigned altScore = 0; ///< quality score indicating any non-reference state (regardless of specific genotype)
     unsigned gtScore = 0; ///< quality score of genotype
+
+    std::vector<unsigned> phredLoghood;
 };
 
 std::ostream&

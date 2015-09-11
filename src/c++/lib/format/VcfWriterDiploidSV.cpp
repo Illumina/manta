@@ -58,6 +58,7 @@ addHeaderFormat() const
 {
     _os << "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n";
     _os << "##FORMAT=<ID=GQ,Number=1,Type=Float,Description=\"Genotype Quality\">\n";
+    _os << "##FORMAT=<ID=PL,Number=G,Type=Integer,Description=\"Normalized, Phred-scaled likelihoods for genotypes as defined in the VCF specification\">\n";
     _os << "##FORMAT=<ID=PR,Number=.,Type=Integer,Description=\"Spanning paired-read support for the ref and alt alleles in the order listed\">\n";
     _os << "##FORMAT=<ID=SR,Number=.,Type=Integer,Description=\"Split reads for the ref and alt alleles in the order listed, for reads where P(allele|read)>0.999\">\n";
     if (_isRNA)
@@ -183,6 +184,12 @@ modifySample(
     static const std::string gqTag("GQ");
     values[0] = str( boost::format("%s") % diploidInfo.gtScore);
     sampletags.push_back(std::make_pair(gqTag,values));
+
+    static const std::string plTag("PL");
+    values[0] = str( boost::format("%s,%s,%s") % diploidInfo.phredLoghood[DIPLOID_GT::REF]
+                                               % diploidInfo.phredLoghood[DIPLOID_GT::HET]
+                                               % diploidInfo.phredLoghood[DIPLOID_GT::HOM]);
+    sampletags.push_back(std::make_pair(plTag,values));
 
     static const std::string pairTag("PR");
     values[0] = str( boost::format("%i,%i") % baseInfo.normal.ref.confidentSpanningPairCount % baseInfo.normal.alt.confidentSpanningPairCount);

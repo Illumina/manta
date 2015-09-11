@@ -1091,6 +1091,19 @@ scoreDiploidSV(
         diploidInfo.gt=static_cast<DIPLOID_GT::index_t>(maxGt);
         diploidInfo.altScore=error_prob_to_qphred(pprob[DIPLOID_GT::REF]);
         diploidInfo.gtScore=error_prob_to_qphred(prob_comp(pprob.begin(),pprob.end(), diploidInfo.gt));
+
+        // set phredLoghood:
+        {
+            unsigned maxIndex(0);
+            for (unsigned gt(1); gt<DIPLOID_GT::SIZE; ++gt)
+            {
+                if (loglhood[gt] > loglhood[maxIndex]) maxIndex = gt;
+            }
+            for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
+            {
+                diploidInfo.phredLoghood[gt] = ln_error_prob_to_qphred(loglhood[gt]-loglhood[maxIndex]);
+            }
+        }
     }
 
 
