@@ -198,8 +198,8 @@ modifySample(
 
         static const std::string plTag("PL");
         sampleVal = str( boost::format("%s,%s,%s") % diploidSampleInfo.phredLoghood[DIPLOID_GT::REF]
-                                                   % diploidSampleInfo.phredLoghood[DIPLOID_GT::HET]
-                                                   % diploidSampleInfo.phredLoghood[DIPLOID_GT::HOM]);
+                         % diploidSampleInfo.phredLoghood[DIPLOID_GT::HET]
+                         % diploidSampleInfo.phredLoghood[DIPLOID_GT::HOM]);
         sampletags.push_back(std::make_pair(plTag,values));
 
         static const std::string pairTag("PR");

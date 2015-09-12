@@ -1,3 +1,5 @@
+- MANTA-260 Add per-sample filtration to separate QUAL and GQ filters for
+diploid case
 - MANTA-252 Add fast chrom median depth estimator (partally enables CRAM)
 - MANTA-258 Add PL values to diploid output
 - MANTA-257 Fix rare failure condition for graph merge

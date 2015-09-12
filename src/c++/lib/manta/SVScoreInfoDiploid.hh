@@ -120,7 +120,7 @@ altLnCompFraction(const index_t i)
 struct SVScoreInfoDiploidSample
 {
     SVScoreInfoDiploidSample()
-      : phredLoghood(DIPLOID_GT::SIZE,0)
+        : phredLoghood(DIPLOID_GT::SIZE,0)
     {}
 
     void
@@ -154,7 +154,7 @@ struct SVScoreInfoDiploid
 {
     SVScoreInfoDiploid(
         const unsigned sampleCount = 1)
-      : samples(sampleCount)
+        : samples(sampleCount)
     {}
 
     void
