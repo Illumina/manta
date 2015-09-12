@@ -1075,7 +1075,11 @@ scoreDiploidSV(
     //
     // compute qualities
     //
+    static const int maxQ(999);
+
     assert(! junctionData.empty());
+
+    double jointRefProb(1.);
 
     const unsigned diploidSampleCount(diploidInfo.samples.size());
     for (unsigned diploidSampleIndex(0); diploidSampleIndex<diploidSampleCount; ++diploidSampleIndex)
@@ -1110,8 +1114,6 @@ scoreDiploidSV(
         }
 #endif
 
-        static const int maxQ(999);
-
         diploidSampleInfo.gt=static_cast<DIPLOID_GT::index_t>(maxGt);
         diploidSampleInfo.gtScore=std::min(maxQ,error_prob_to_qphred(prob_comp(pprob.begin(),pprob.end(), diploidSampleInfo.gt)));
 
@@ -1128,9 +1130,9 @@ scoreDiploidSV(
             }
         }
 
-        /// TODO?
-        diploidInfo.altScore=std::min(maxQ,error_prob_to_qphred(pprob[DIPLOID_GT::REF]));
+        jointRefProb *= pprob[DIPLOID_GT::REF];
     }
+    diploidInfo.altScore=std::min(maxQ,error_prob_to_qphred(jointRefProb));
 
 
     //
