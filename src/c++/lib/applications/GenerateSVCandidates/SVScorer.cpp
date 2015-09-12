@@ -1144,12 +1144,9 @@ scoreDiploidSV(
             diploidInfo.filters.insert(diploidOpt.minAltFilterLabel);
         }
 
-        ///TODO TMP: fill in with read sampleCount
-        const unsigned sampleCount(1);
-
         // add sample specific filters
         bool isAllMinGTFiltered(true);
-        for (unsigned sampleIndex(0); sampleIndex<sampleCount; ++sampleIndex)
+        for (unsigned sampleIndex(0); sampleIndex<diploidSampleCount; ++sampleIndex)
         {
             SVScoreInfoDiploidSample& diploidSampleInfo(diploidInfo.samples[sampleIndex]);
             if (diploidSampleInfo.gtScore < diploidOpt.minPassGTScore)
@@ -1163,7 +1160,7 @@ scoreDiploidSV(
         }
 
         // apply sample-specific filter to whole record when all samples are impacted
-        if ((sampleCount>0) && isAllMinGTFiltered)
+        if ((diploidSampleCount>0) && isAllMinGTFiltered)
         {
             diploidInfo.filters.insert(diploidOpt.minGTFilterLabel);
         }
