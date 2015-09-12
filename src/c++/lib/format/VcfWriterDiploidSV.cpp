@@ -82,7 +82,7 @@ addHeaderFilters() const
     _os << "##FILTER=<ID=" << _diploidOpt.maxMQ0FracLabel << ",Description=\"For a small variant (<1000 bases), the fraction of reads with MAPQ0 around either breakend exceeds " << _diploidOpt.maxMQ0Frac << "\">\n";
     _os << "##FILTER=<ID=" << _diploidOpt.noPairSupportLabel << ",Description=\"For variants significantly larger than the paired read fragment size, no paired reads support the alternate allele.\">\n";
     _os << "##FILTER=<ID=" << _diploidOpt.minAltFilterLabel << ",Description=\"QUAL score is less than " << _diploidOpt.minPassAltScore << "\">\n";
-    _os << "##FILTER=<ID=" << _diploidOpt.minGTFilterLabel << ",Description=\"GQ score is less than " << _diploidOpt.minPassGTScore << " (applied at individual sample level)\">\n";
+    _os << "##FILTER=<ID=" << _diploidOpt.minGTFilterLabel << ",Description=\"GQ score is less than " << _diploidOpt.minPassGTScore << " (filter applied at sample level and record level if all samples are filtered)\">\n";
     if (_isRNA)
     {
         _os << "##FILTER=<ID=" << _diploidOpt.rnaFilterLabel << ",Description=\"RNA fusion variants without split read and split pair support\">\n";

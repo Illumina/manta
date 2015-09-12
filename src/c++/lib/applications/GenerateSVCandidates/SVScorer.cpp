@@ -1127,6 +1127,7 @@ scoreDiploidSV(
         const unsigned sampleCount(1);
 
         // add sample specific filters
+        bool isAllMinGTFiltered(true);
         for (unsigned sampleIndex(0); sampleIndex<sampleCount; ++sampleIndex)
         {
             SVScoreInfoDiploidSample& diploidSampleInfo(diploidInfo.samples[sampleIndex]);
@@ -1134,6 +1135,16 @@ scoreDiploidSV(
             {
                 diploidSampleInfo.filters.insert(diploidOpt.minGTFilterLabel);
             }
+            else
+            {
+                isAllMinGTFiltered=false;
+            }
+        }
+
+        // apply sample-specific filter to whole record when all samples are impacted
+        if ((sampleCount>0) && isAllMinGTFiltered)
+        {
+            diploidInfo.filters.insert(diploidOpt.minGTFilterLabel);
         }
 
         const unsigned junctionCount(junctionData.size());
