@@ -491,8 +491,6 @@ processExistingAltPairInfo(
     const unsigned bamCount(_bamStreams.size());
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
-        const bool isTumor(_isAlignmentTumor[bamIndex]);
-
         const SizeDistribution& fragDistro(_readScanner.getFragSizeDistro(bamIndex));
 
         const SVCandidateSetSequenceFragmentSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
@@ -533,7 +531,7 @@ processExistingAltPairInfo(
             log_os << __FUNCTION__ << ": Finding alt fragment evidence for svIndex: " << sv.candidateIndex << "  isTumor: " << isTumor << " bam-fragment: " << fragment << "\n";
 #endif
 
-            SVFragmentEvidence& fragEvidence(evidence.getSample(isTumor)[qname]);
+            SVFragmentEvidence& fragEvidence(evidence.getSampleEvidence(bamIndex)[qname]);
             SVFragmentEvidenceAllele& alt(fragEvidence.alt);
 
             static const bool isShadow(false);

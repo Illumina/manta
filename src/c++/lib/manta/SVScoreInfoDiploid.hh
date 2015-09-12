@@ -152,10 +152,12 @@ operator<<(
 /// consolidate all germline scoring results applied to an SV candidate
 struct SVScoreInfoDiploid
 {
-    SVScoreInfoDiploid(
-        const unsigned sampleCount = 1)
-        : samples(sampleCount)
-    {}
+    void
+    setSampleCount(
+        const unsigned sampleCount)
+    {
+        samples.resize(sampleCount);
+    }
 
     void
     clear()

@@ -257,8 +257,12 @@ operator<<(
     const SVScoreInfo& ssi)
 {
     os << "SVScoreInfo bp1MaxDepth=" << ssi.bp1MaxDepth << " bp2MaxDepth=" << ssi.bp2MaxDepth << '\n'
-       << "SVScoreInfo bp1MQ0Frac=" << ssi.bp1MQ0Frac << " bp2MQ0Frac=" << ssi.bp2MQ0Frac << '\n'
-       << "Normal sample info " << ssi.normal;
+       << "SVScoreInfo bp1MQ0Frac=" << ssi.bp1MQ0Frac << " bp2MQ0Frac=" << ssi.bp2MQ0Frac << '\n';
+
+    for (const auto& sample : ssi.samples)
+    {
+        os << "Sample info " << sample;
+    }
     return os;
 }
 

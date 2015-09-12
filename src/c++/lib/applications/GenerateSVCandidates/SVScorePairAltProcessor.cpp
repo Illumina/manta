@@ -436,7 +436,7 @@ processClearedRecord(
                 // record the mapq value of the shadow mate:
                 if (_shadow.isShadowMate())
                 {
-                    SVFragmentEvidence& fragment(evidence.getSample(bamParams.isTumor)[bamRead.qname()]);
+                    SVFragmentEvidence& fragment(evidence.getSampleEvidence(bamParams.bamIndex)[bamRead.qname()]);
                     SVFragmentEvidenceRead& evRead(fragment.getRead(bamRead.is_first()));
                     setReadEvidence(svParams.minMapQ, svParams.minTier2MapQ, bamRead, isShadowAlignment, evRead);
                 }
@@ -548,7 +548,7 @@ processClearedRecord(
         if (! testFragOverlap(fragBeginRefPos, fragEndRefPos)) return;
     }
 
-    SVFragmentEvidence& fragment(evidence.getSample(bamParams.isTumor)[bamRead.qname()]);
+    SVFragmentEvidence& fragment(evidence.getSampleEvidence(bamParams.bamIndex)[bamRead.qname()]);
 
     SVFragmentEvidenceRead& evRead(fragment.getRead(bamRead.is_first()));
 

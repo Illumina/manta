@@ -120,10 +120,14 @@ modifyTranslocInfo(
                             (isFirstOfPair ? baseInfo.bp2MaxDepth : baseInfo.bp1MaxDepth) ) );
     if (_isRNA)
     {
+        ///TODO better multisample handler here:
+        const unsigned sampleIndex(0);
+
+        const SVSampleAlleleInfo& refinfo(baseInfo.samples[sampleIndex].ref);
         infotags.push_back(str(boost::format("REF_COUNT=%i") %
-                               (isFirstOfPair ? baseInfo.normal.ref.confidentSplitReadAndPairCountRefBp1 : baseInfo.normal.ref.confidentSplitReadAndPairCountRefBp2)));
+                               (isFirstOfPair ? refinfo.confidentSplitReadAndPairCountRefBp1 : refinfo.confidentSplitReadAndPairCountRefBp2)));
         infotags.push_back(str(boost::format("MATE_REF_COUNT=%i") %
-                               (isFirstOfPair ? baseInfo.normal.ref.confidentSplitReadAndPairCountRefBp2 : baseInfo.normal.ref.confidentSplitReadAndPairCountRefBp1)));
+                               (isFirstOfPair ? refinfo.confidentSplitReadAndPairCountRefBp2 : refinfo.confidentSplitReadAndPairCountRefBp1)));
     }
 }
 
@@ -174,53 +178,84 @@ modifySample(
     const SVCandidate& sv,
     SampleTag_t& sampletags) const
 {
-    static const unsigned sampleCount(1);
     const SVScoreInfo& baseInfo(getBaseInfo());
+    const SVScoreInfoDiploid& diploidInfo(getDiploidInfo());
+    const unsigned diploidSampleCount(diploidInfo.samples.size());
 
-    std::vector<std::string> values(sampleCount);
-    for (unsigned sampleIndex(0); sampleIndex<sampleCount; ++sampleIndex)
+    std::vector<std::string> values(diploidSampleCount);
+    for (unsigned diploidSampleIndex(0); diploidSampleIndex<diploidSampleCount; ++diploidSampleIndex)
     {
-        const SVScoreInfoDiploidSample& diploidSampleInfo(getDiploidInfo().samples[sampleIndex]);
+        const SVScoreInfoDiploidSample& diploidSampleInfo(diploidInfo.samples[diploidSampleIndex]);
+        values[diploidSampleIndex] = gtLabel(diploidSampleInfo.gt);
+    }
+    sampletags.push_back(std::make_pair("GT",values));
 
-        std::string& sampleVal(values[sampleIndex]);
+    for (unsigned diploidSampleIndex(0); diploidSampleIndex<diploidSampleCount; ++diploidSampleIndex)
+    {
+        const SVScoreInfoDiploidSample& diploidSampleInfo(diploidInfo.samples[diploidSampleIndex]);
 
-        static const std::string gtTag("GT");
-        sampleVal = gtLabel(diploidSampleInfo.gt);
-        sampletags.push_back(std::make_pair(gtTag,values));
+        writeFilters(diploidSampleInfo.filters, values[diploidSampleIndex]);
+    }
+    sampletags.push_back(std::make_pair("FT",values));
 
-        static const std::string ftTag("FT");
-        writeFilters(diploidSampleInfo.filters,sampleVal);
-        sampletags.push_back(std::make_pair(ftTag,values));
+    for (unsigned diploidSampleIndex(0); diploidSampleIndex<diploidSampleCount; ++diploidSampleIndex)
+    {
+        const SVScoreInfoDiploidSample& diploidSampleInfo(diploidInfo.samples[diploidSampleIndex]);
 
-        static const std::string gqTag("GQ");
-        sampleVal = str( boost::format("%s") % diploidSampleInfo.gtScore);
-        sampletags.push_back(std::make_pair(gqTag,values));
+        values[diploidSampleIndex] = str( boost::format("%s") % diploidSampleInfo.gtScore);
+    }
+    sampletags.push_back(std::make_pair("GQ",values));
 
-        static const std::string plTag("PL");
-        sampleVal = str( boost::format("%s,%s,%s") % diploidSampleInfo.phredLoghood[DIPLOID_GT::REF]
+    for (unsigned diploidSampleIndex(0); diploidSampleIndex<diploidSampleCount; ++diploidSampleIndex)
+    {
+        const SVScoreInfoDiploidSample& diploidSampleInfo(diploidInfo.samples[diploidSampleIndex]);
+
+        values[diploidSampleIndex] =  str( boost::format("%s,%s,%s")
+                         % diploidSampleInfo.phredLoghood[DIPLOID_GT::REF]
                          % diploidSampleInfo.phredLoghood[DIPLOID_GT::HET]
                          % diploidSampleInfo.phredLoghood[DIPLOID_GT::HOM]);
-        sampletags.push_back(std::make_pair(plTag,values));
-
-        static const std::string pairTag("PR");
-        sampleVal = str( boost::format("%i,%i") % baseInfo.normal.ref.confidentSpanningPairCount % baseInfo.normal.alt.confidentSpanningPairCount);
-        sampletags.push_back(std::make_pair(pairTag,values));
-
-        if (sv.isImprecise()) return;
-
-        static const std::string srTag("SR");
-        values[0] = str( boost::format("%i,%i") % baseInfo.normal.ref.confidentSplitReadCount % baseInfo.normal.alt.confidentSplitReadCount);
-        sampletags.push_back(std::make_pair(srTag,values));
-        if (_isRNA)
-        {
-            static const std::string fsTag("FS");
-            values[0] = str( boost::format("%i,%i") % baseInfo.normal.ref.splitReadCount % baseInfo.normal.alt.splitReadCount);
-            sampletags.push_back(std::make_pair(fsTag,values));
-            static const std::string fpTag("FP");
-            values[0] = str( boost::format("%i,%i") % baseInfo.normal.ref.spanningPairCount % baseInfo.normal.alt.spanningPairCount);
-            sampletags.push_back(std::make_pair(fpTag,values));
-        }
     }
+    sampletags.push_back(std::make_pair("PL",values));
+
+    for (unsigned diploidSampleIndex(0); diploidSampleIndex<diploidSampleCount; ++diploidSampleIndex)
+    {
+        const SVSampleInfo& sampleInfo(baseInfo.samples[diploidSampleIndex]);
+        values[diploidSampleIndex] =  str( boost::format("%i,%i")
+                                    % sampleInfo.ref.confidentSpanningPairCount
+                                    % sampleInfo.alt.confidentSpanningPairCount);
+    }
+    sampletags.push_back(std::make_pair("PR",values));
+
+    if (sv.isImprecise()) return;
+
+    for (unsigned diploidSampleIndex(0); diploidSampleIndex<diploidSampleCount; ++diploidSampleIndex)
+    {
+        const SVSampleInfo& sampleInfo(baseInfo.samples[diploidSampleIndex]);
+        values[diploidSampleIndex] =  str( boost::format("%i,%i")
+                                    % sampleInfo.ref.confidentSplitReadCount
+                                    % sampleInfo.alt.confidentSplitReadCount);
+    }
+    sampletags.push_back(std::make_pair("SR",values));
+
+    if (! _isRNA) return;
+
+    for (unsigned diploidSampleIndex(0); diploidSampleIndex<diploidSampleCount; ++diploidSampleIndex)
+    {
+        const SVSampleInfo& sampleInfo(baseInfo.samples[diploidSampleIndex]);
+        values[diploidSampleIndex] =  str( boost::format("%i,%i")
+                                    % sampleInfo.ref.splitReadCount
+                                    % sampleInfo.alt.splitReadCount);
+    }
+    sampletags.push_back(std::make_pair("FS",values));
+
+    for (unsigned diploidSampleIndex(0); diploidSampleIndex<diploidSampleCount; ++diploidSampleIndex)
+    {
+        const SVSampleInfo& sampleInfo(baseInfo.samples[diploidSampleIndex]);
+        values[diploidSampleIndex] =  str( boost::format("%i,%i")
+                                    % sampleInfo.ref.spanningPairCount
+                                    % sampleInfo.alt.spanningPairCount);
+    }
+    sampletags.push_back(std::make_pair("FP",values));
 }
 
 

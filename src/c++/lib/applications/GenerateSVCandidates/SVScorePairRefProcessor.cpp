@@ -95,7 +95,7 @@ processClearedRecord(
         if (fragOverlap < pairOpt.minFragSupport) return;
     }
 
-    SVFragmentEvidence& fragment(evidence.getSample(bamParams.isTumor)[bamRead.qname()]);
+    SVFragmentEvidence& fragment(evidence.getSampleEvidence(bamParams.bamIndex)[bamRead.qname()]);
 
     static const bool isShadow(false);
 

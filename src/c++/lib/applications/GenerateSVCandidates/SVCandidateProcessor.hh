@@ -69,6 +69,7 @@ struct SVWriter
     const bool isTumorOnly;
 
     SVScorer svScore;
+
     std::vector<SVModelScoreInfo> mjModelScoreInfo;
 
     OutStream candfs;

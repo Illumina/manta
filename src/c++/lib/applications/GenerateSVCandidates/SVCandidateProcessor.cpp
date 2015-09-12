@@ -235,6 +235,7 @@ writeSV(
     bool isMJEvent(false);
 
     SVModelScoreInfo mjJointModelScoreInfo;
+    mjJointModelScoreInfo.setSampleCount(svScore.sampleCount(),svScore.diploidSampleCount());
     svScore.scoreSV(svData, mjAssemblyData, mjSV, isJunctionFiltered, isSomatic, isTumorOnly, mjModelScoreInfo, mjJointModelScoreInfo, isMJEvent);
 
     const unsigned unfilteredJunctionCount(std::count(isJunctionFiltered.begin(),isJunctionFiltered.end(),true));

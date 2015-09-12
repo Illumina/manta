@@ -161,10 +161,20 @@ operator<<(std::ostream& os, const SVSampleInfo& si);
 struct SVScoreInfo
 {
     void
+    setSampleCount(
+        const unsigned sampleCount)
+    {
+        samples.resize(sampleCount);
+        clear();
+    }
+
+    void
     clear()
     {
-        normal.clear();
-        tumor.clear();
+        for (auto& sample : samples)
+        {
+            sample.clear();
+        }
 
         bp1MaxDepth = 0;
         bp2MaxDepth = 0;
@@ -173,8 +183,7 @@ struct SVScoreInfo
         bp2MQ0Frac = 0.;
     }
 
-    SVSampleInfo normal;
-    SVSampleInfo tumor;
+    std::vector<SVSampleInfo> samples;
 
     unsigned bp1MaxDepth = 0;
     unsigned bp2MaxDepth = 0;

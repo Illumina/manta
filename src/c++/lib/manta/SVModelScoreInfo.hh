@@ -36,6 +36,15 @@
 struct SVModelScoreInfo
 {
     void
+    setSampleCount(
+        const unsigned sampleCount,
+        const unsigned diploidSampleCount)
+    {
+      base.setSampleCount(sampleCount);
+      diploid.setSampleCount(diploidSampleCount);
+    }
+
+    void
     clear()
     {
         base.clear();
@@ -48,4 +57,4 @@ struct SVModelScoreInfo
     SVScoreInfoDiploid diploid;
     SVScoreInfoSomatic somatic;
     SVScoreInfoTumor tumor;
-};
+    };

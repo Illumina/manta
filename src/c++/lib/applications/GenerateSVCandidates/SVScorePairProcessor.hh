@@ -53,6 +53,7 @@ struct SVScorePairInitParams
 struct SVScorePairBamParams
 {
     bool isSet = false;
+    unsigned bamIndex = 0;
     bool isTumor = false;
     pos_t minFrag = 0;
     pos_t maxFrag = 0;

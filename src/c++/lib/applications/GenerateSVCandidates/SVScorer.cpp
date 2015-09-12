@@ -84,6 +84,14 @@ SVScorer(
         streamPtr tmp(new bam_streamer(afile.c_str()));
         _bamStreams.push_back(tmp);
     }
+
+    _sampleCount=0;
+    _diploidSampleCount=0;
+    for (const bool isTumor : opt.alignFileOpt.isAlignmentTumor)
+    {
+        _sampleCount ++;
+        if (! isTumor) _diploidSampleCount++;
+    }
 }
 
 
@@ -444,8 +452,13 @@ getSVSupportSummary(
     const SVEvidence& evidence,
     SVScoreInfo& baseInfo)
 {
-    getSampleCounts(evidence.normal, baseInfo.normal);
-    getSampleCounts(evidence.tumor, baseInfo.tumor);
+    const unsigned sampleCount(baseInfo.samples.size());
+    assert(sampleCount == evidence.samples.size());
+
+    for (unsigned sampleIndex(0);sampleIndex<sampleCount;++sampleIndex)
+    {
+        getSampleCounts(evidence.getSampleEvidence(sampleIndex), baseInfo.samples[sampleIndex]);
+    }
 }
 
 
@@ -562,8 +575,12 @@ resolvePairSplitConflicts(
     static const pos_t maxAltPairConflictSearch(1000);
     const bool isFindAltPairConflict(sv.centerSize() <= maxAltPairConflictSearch);
 
-    resolvePairSplitConflictsSample(isFindAltPairConflict, evidence.normal);
-    resolvePairSplitConflictsSample(isFindAltPairConflict, evidence.tumor);
+    const unsigned sampleCount(evidence.size());
+
+    for (unsigned sampleIndex(0);sampleIndex<sampleCount;++sampleIndex)
+    {
+        resolvePairSplitConflictsSample(isFindAltPairConflict, evidence.getSampleEvidence(sampleIndex));
+    }
 }
 
 
@@ -1060,12 +1077,17 @@ scoreDiploidSV(
     //
     assert(! junctionData.empty());
 
+    const unsigned diploidSampleCount(diploidInfo.samples.size());
+    for (unsigned diploidSampleIndex(0); diploidSampleIndex<diploidSampleCount; ++diploidSampleIndex)
     {
+        SVScoreInfoDiploidSample& diploidSampleInfo(diploidInfo.samples[diploidSampleIndex]);
+
         std::array<double,DIPLOID_GT::SIZE> loglhood;
         std::fill(loglhood.begin(),loglhood.end(),0);
         for (const JunctionCallInfo& junction : junctionData)
         {
-            addDiploidLoglhood(junction.getSpanningWeight(), junction.getEvidence().normal, loglhood);
+            const SVEvidence::evidenceTrack_t& etrack(junction.getEvidence().samples[diploidSampleIndex]);
+            addDiploidLoglhood(junction.getSpanningWeight(), etrack, loglhood);
         }
         std::array<double,DIPLOID_GT::SIZE> pprob;
         for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
@@ -1090,12 +1112,6 @@ scoreDiploidSV(
 
         static const int maxQ(999);
 
-        diploidInfo.altScore=std::min(maxQ,error_prob_to_qphred(pprob[DIPLOID_GT::REF]));
-
-        /// TODO: TMP -- fill in with real sample index number:
-        const unsigned sampleIndex(0);
-
-        SVScoreInfoDiploidSample& diploidSampleInfo(diploidInfo.samples[sampleIndex]);
         diploidSampleInfo.gt=static_cast<DIPLOID_GT::index_t>(maxGt);
         diploidSampleInfo.gtScore=std::min(maxQ,error_prob_to_qphred(prob_comp(pprob.begin(),pprob.end(), diploidSampleInfo.gt)));
 
@@ -1111,6 +1127,9 @@ scoreDiploidSV(
                 diploidSampleInfo.phredLoghood[gt] = std::min(maxQ,ln_error_prob_to_qphred(loglhood[gt]-loglhood[maxIndex]));
             }
         }
+
+        /// TODO?
+        diploidInfo.altScore=std::min(maxQ,error_prob_to_qphred(pprob[DIPLOID_GT::REF]));
     }
 
 
@@ -1217,7 +1236,13 @@ scoreDiploidSV(
 
                 if (isZeroPairFilterSize)
                 {
-                    if (baseInfo.normal.alt.confidentSpanningPairCount == 0)
+                    unsigned totalDiploidSpanningPairCount(0);
+                    for (unsigned diploidSampleIndex(0); diploidSampleIndex<diploidSampleCount; ++diploidSampleIndex)
+                    {
+                        totalDiploidSpanningPairCount += baseInfo.samples[diploidSampleIndex].alt.confidentSpanningPairCount;
+                    }
+
+                    if (totalDiploidSpanningPairCount == 0)
                     {
                         filteredJunctionCount++;
                     }
@@ -1327,14 +1352,14 @@ scoreRNASV(
 
     diploidInfo.samples[sampleIndex].gtScore=0;
     diploidInfo.altScore=42;
-    if (baseInfo.normal.alt.splitReadCount == 0)
+    if (baseInfo.samples[sampleIndex].alt.splitReadCount == 0)
     {
         diploidInfo.filters.insert(diploidOpt.rnaFilterLabel);
 #ifdef DEBUG_SCORE
         log_os << __FUNCTION__ << "Failed. No spanning pair " << "\n";
 #endif
     }
-    if (baseInfo.normal.alt.confidentSpanningPairCount == 0)
+    if (baseInfo.samples[sampleIndex].alt.confidentSpanningPairCount == 0)
     {
         diploidInfo.filters.insert(diploidOpt.rnaFilterLabel);
 #ifdef DEBUG_SCORE
@@ -1389,6 +1414,7 @@ estimateSomaticMutationFreq(
 static
 double
 estimateSomaticMutationFreq(
+    const unsigned tumorSampleIndex,
     const std::vector<JunctionCallInfo>& junctionData,
     const bool /*isPermissive*/)
 {
@@ -1400,8 +1426,9 @@ estimateSomaticMutationFreq(
     {
         const SVScoreInfo& baseInfo(junction.getBaseInfo());
         const float& spanningPairWeight(junction.getSpanningWeight());
-        altCounts += getSupportCount(baseInfo.tumor.alt, spanningPairWeight, isPermissive);
-        refCounts += getSupportCount(baseInfo.tumor.ref, spanningPairWeight, isPermissive);
+        const SVSampleInfo& tumorSampleInfo(baseInfo.samples[tumorSampleIndex]);
+        altCounts += getSupportCount(tumorSampleInfo.alt, spanningPairWeight, isPermissive);
+        refCounts += getSupportCount(tumorSampleInfo.ref, spanningPairWeight, isPermissive);
     }
     if ((altCounts + refCounts) == 0) return 0;
     return static_cast<double>(altCounts) / static_cast<double>(altCounts + refCounts);
@@ -1436,6 +1463,8 @@ estimateNoiseMutationFreq(
 static
 double
 estimateNoiseMutationFreq(
+    const unsigned normalSampleIndex,
+    const unsigned tumorSampleIndex,
     const std::vector<JunctionCallInfo>& junctionData,
     const bool /*isPermissive*/)
 {
@@ -1446,10 +1475,14 @@ estimateNoiseMutationFreq(
     {
         const SVScoreInfo& baseInfo(junction.getBaseInfo());
         const float& spanningPairWeight(junction.getSpanningWeight());
-        const unsigned normalAltCounts(getSupportCount(baseInfo.normal.alt, spanningPairWeight, isPermissive));
-        const unsigned normalRefCounts(getSupportCount(baseInfo.normal.ref, spanningPairWeight, isPermissive));
-        const unsigned tumorAltCounts(getSupportCount(baseInfo.tumor.alt, spanningPairWeight, isPermissive));
-        const unsigned tumorRefCounts(getSupportCount(baseInfo.tumor.ref, spanningPairWeight, isPermissive));
+
+        const SVSampleInfo& normalSampleInfo(baseInfo.samples[normalSampleIndex]);
+        const unsigned normalAltCounts(getSupportCount(normalSampleInfo.alt, spanningPairWeight, isPermissive));
+        const unsigned normalRefCounts(getSupportCount(normalSampleInfo.ref, spanningPairWeight, isPermissive));
+
+        const SVSampleInfo& tumorSampleInfo(baseInfo.samples[tumorSampleIndex]);
+        const unsigned tumorAltCounts(getSupportCount(tumorSampleInfo.alt, spanningPairWeight, isPermissive));
+        const unsigned tumorRefCounts(getSupportCount(tumorSampleInfo.ref, spanningPairWeight, isPermissive));
 
         altCounts += (normalAltCounts + tumorAltCounts);
         refCounts += (normalRefCounts + tumorRefCounts);
@@ -1531,6 +1564,8 @@ computeSomaticSampleLoghood(
 static
 void
 scoreSomaticSV(
+    const unsigned sampleCount,
+    const unsigned diploidSampleCount,
     const CallOptionsSomatic& somaticOpt,
     const CallOptionsSomaticDeriv& somaticDopt,
     const ChromDepthFilterUtil& dFilter,
@@ -1547,6 +1582,12 @@ scoreSomaticSV(
     // kept as the final reported quality:
     static const unsigned tierCount(2);
     int tierScore[tierCount] = { 0 , 0 };
+
+    // hard code 1 tumor - 1 normal for now, should be able to support multiple tumors in future:
+    assert(sampleCount==2);
+    assert(diploidSampleCount==1);
+    const unsigned normalSampleIndex(0);
+    const unsigned tumorSampleIndex(1);
 
     /// for multi-junction events, we use the prior noise weight associated with the largest event:
     float largeNoiseWeight(0.f);
@@ -1567,10 +1608,10 @@ scoreSomaticSV(
         std::fill(tumorSomaticLhood.begin(),tumorSomaticLhood.end(),0);
 
         // estimate the somatic mutation rate using alternate allele freq from the tumor sample
-        const double somaticMutationFreq = estimateSomaticMutationFreq(junctionData, isPermissive);
+        const double somaticMutationFreq = estimateSomaticMutationFreq(tumorSampleIndex,junctionData, isPermissive);
 
         // estimate the noise mutation rate using alternate allele freq from the tumor and normal samples
-        const double noiseMutationFreq = estimateNoiseMutationFreq(junctionData, isPermissive);
+        const double noiseMutationFreq = estimateNoiseMutationFreq(normalSampleIndex,tumorSampleIndex,junctionData, isPermissive);
 
 #ifdef DEBUG_SOMATIC_SCORE
         log_os << __FUNCTION__ << ": somaticMutationFrequency: " << somaticMutationFreq << "\n";
@@ -1602,13 +1643,13 @@ scoreSomaticSV(
             const float& spanningPairWeight(junction.getSpanningWeight());
 
             // compute likelihood for the fragments from the tumor sample
-            computeSomaticSampleLoghood(spanningPairWeight, evidence.tumor, somaticMutationFreq, noiseMutationFreq,
+            computeSomaticSampleLoghood(spanningPairWeight, evidence.samples[tumorSampleIndex], somaticMutationFreq, noiseMutationFreq,
                                         isPermissive, true,
                                         chimeraProbDefault, chimeraProbDefault,
                                         refSplitMapProb, altSplitMapProbDefault, tumorSomaticLhood);
 
             // compute likelihood for the fragments from the normal sample
-            computeSomaticSampleLoghood(spanningPairWeight, evidence.normal, 0, noiseMutationFreq,
+            computeSomaticSampleLoghood(spanningPairWeight, evidence.samples[normalSampleIndex], 0, noiseMutationFreq,
                                         isPermissive, false,
                                         chimeraProbDefault, chimeraProb,
                                         refSplitMapProb, altSplitMapProb, normalSomaticLhood);
@@ -1630,7 +1671,7 @@ scoreSomaticSV(
         std::fill(normalLhood.begin(),normalLhood.end(),0);
         for (const JunctionCallInfo& junction : junctionData)
         {
-            addDiploidLoglhood(junction.getSpanningWeight(), junction.getEvidence().normal, normalLhood);
+            addDiploidLoglhood(junction.getSpanningWeight(), junction.getEvidence().samples[normalSampleIndex], normalLhood);
         }
 
         std::array<double,DIPLOID_GT::SIZE> normalPprob;
@@ -1777,7 +1818,7 @@ computeAllScoreModels(
         // score components specific to somatic model:
         if (isSomatic)
         {
-            scoreSomaticSV(_somaticOpt, _somaticDopt, _dFilterSomatic, junctionData, modelScoreInfo.somatic);
+            scoreSomaticSV(_sampleCount,_diploidSampleCount,_somaticOpt, _somaticDopt, _dFilterSomatic, junctionData, modelScoreInfo.somatic);
         }
     }
 
@@ -1808,9 +1849,14 @@ scoreSV(
     //
     const unsigned junctionCount(mjSV.junction.size());
     mjModelScoreInfo.resize(junctionCount);
-
     std::vector<SVEvidence> junctionEvidence(junctionCount);
     std::vector<float> junctionSpanningPairWeight(junctionCount);
+
+    for (unsigned jIndex(0); jIndex<junctionCount; ++jIndex)
+    {
+        mjModelScoreInfo[jIndex].setSampleCount(sampleCount(),diploidSampleCount());
+        junctionEvidence[jIndex].samples.resize(sampleCount());
+    }
 
     mjJointModelScoreInfo.clear();
 

@@ -24,9 +24,12 @@
 
 #pragma once
 
+#include <cassert>
+
 #include <iosfwd>
 #include <map>
 #include <string>
+#include <vector>
 
 
 ///
@@ -269,13 +272,27 @@ struct SVEvidence
 {
     typedef std::map<std::string,SVFragmentEvidence> evidenceTrack_t;
 
-    evidenceTrack_t&
-    getSample(
-        const bool isTumor)
+    unsigned
+    size() const
     {
-        return (isTumor ? tumor : normal);
+        return samples.size();
     }
 
-    evidenceTrack_t normal;
-    evidenceTrack_t tumor;
+    evidenceTrack_t&
+    getSampleEvidence(
+        const unsigned index)
+    {
+        assert(index < size());
+        return samples[index];
+    }
+
+    const evidenceTrack_t&
+    getSampleEvidence(
+        const unsigned index) const
+    {
+        assert(index < size());
+        return samples[index];
+    }
+
+    std::vector<evidenceTrack_t> samples;
 };

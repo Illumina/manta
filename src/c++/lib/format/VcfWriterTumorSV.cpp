@@ -85,18 +85,25 @@ modifySample(
     SampleTag_t& sampletags) const
 {
     const SVScoreInfo& baseInfo(getBaseInfo());
+    const unsigned sampleCount(baseInfo.samples.size());
 
-    std::vector<std::string> values(1);
+    std::vector<std::string> values(sampleCount);
 
-    static const std::string pairTag("PR");
-    values[0] = str( boost::format("%i,%i") % baseInfo.tumor.ref.confidentSpanningPairCount % baseInfo.tumor.alt.confidentSpanningPairCount);
-    sampletags.push_back(std::make_pair(pairTag,values));
+    for (unsigned sampleIndex(0); sampleIndex<sampleCount; ++sampleIndex)
+    {
+        const SVSampleInfo& sinfo(baseInfo.samples[sampleIndex]);
+        values[sampleIndex] = str( boost::format("%i,%i") % sinfo.ref.confidentSpanningPairCount % sinfo.alt.confidentSpanningPairCount);
+    }
+    sampletags.push_back(std::make_pair("PR",values));
 
     if (sv.isImprecise()) return;
 
-    static const std::string srTag("SR");
-    values[0] = str( boost::format("%i,%i") % baseInfo.tumor.ref.confidentSplitReadCount % baseInfo.tumor.alt.confidentSplitReadCount);
-    sampletags.push_back(std::make_pair(srTag,values));
+    for (unsigned sampleIndex(0); sampleIndex<sampleCount; ++sampleIndex)
+    {
+        const SVSampleInfo& sinfo(baseInfo.samples[sampleIndex]);
+        values[sampleIndex] = str( boost::format("%i,%i") % sinfo.ref.confidentSplitReadCount % sinfo.alt.confidentSplitReadCount);
+    }
+    sampletags.push_back(std::make_pair("SR",values));
 }
 
 void

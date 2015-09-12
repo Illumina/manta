@@ -170,6 +170,18 @@ struct SVScorer
     typedef std::shared_ptr<SVScorePairProcessor> pairProcPtr;
     typedef std::shared_ptr<bam_streamer> streamPtr;
 
+    unsigned
+    sampleCount() const
+    {
+        return _sampleCount;
+    }
+
+    unsigned
+    diploidSampleCount() const
+    {
+        return _diploidSampleCount;
+    }
+
 private:
 
     void
@@ -258,4 +270,7 @@ private:
     const SVLocusScanner& _readScanner;
 
     std::vector<streamPtr> _bamStreams;
+
+    unsigned _sampleCount;
+    unsigned _diploidSampleCount;
 };

@@ -64,6 +64,7 @@ nextBamIndex(
     const unsigned bamIndex)
 {
     bamParams.isSet = true;
+    bamParams.bamIndex = bamIndex;
     bamParams.isTumor = (isAlignmentTumor[bamIndex]);
 
     // set the search range around centerPos so that we can get any fragments at the Xth percentile length or smaller which could have

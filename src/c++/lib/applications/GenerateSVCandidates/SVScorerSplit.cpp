@@ -368,11 +368,10 @@ getSVSplitReadSupport(
     const unsigned bamCount(_bamStreams.size());
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
-        const bool isTumor(_isAlignmentTumor[bamIndex]);
-        SVSampleInfo& sample(isTumor ? baseInfo.tumor : baseInfo.normal);
+        SVSampleInfo& sample(baseInfo.samples[bamIndex]);
         bam_streamer& bamStream(*_bamStreams[bamIndex]);
 
-        SVEvidence::evidenceTrack_t& sampleEvidence(evidence.getSample(isTumor));
+        SVEvidence::evidenceTrack_t& sampleEvidence(evidence.getSampleEvidence(bamIndex));
 
         const int bamShadowRange(_readScanner.getShadowSearchRange(bamIndex));
 
@@ -390,10 +389,9 @@ getSVSplitReadSupport(
         scoreSplitReads(_callDopt, flankScoreSize, sv.bp2, SVAlignInfo, assemblyData.bp2ref, false, minMapQ, minTier2MapQ,
                         bamShadowRange, _scanOpt.minSingletonMapqCandidates, _isRNA,
                         sampleEvidence, bamStream, sample);
-    }
 
-    finishSampleSRData(baseInfo.tumor);
-    finishSampleSRData(baseInfo.normal);
+        finishSampleSRData(sample);
+    }
 
 #ifdef DEBUG_SVS
     log_os << "tumor contig SP count: " << baseInfo.tumor.alt.splitReadCount << "\n";
