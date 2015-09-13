@@ -28,17 +28,14 @@
 
 void
 VcfWriterDiploidSV::
-addHeaderFormatSampleKey() const
+addHeaderFormatSampleKey(const unsigned sampleCount) const
 {
-    const SVScoreInfoDiploid& diploidInfo(getDiploidInfo());
-    const unsigned diploidSampleCount(diploidInfo.samples.size());
-
     _os << "\tFORMAT;";
 
     // TODO: extract sample name from input bam header / user
-    for (unsigned diploidSampleIndex(0); diploidSampleIndex<diploidSampleCount; ++diploidSampleIndex)
+    for (unsigned sampleIndex(0); sampleIndex<sampleCount; ++sampleIndex)
     {
-        _os << "\tSAMPLE" << diploidSampleIndex;
+        _os << "\tSAMPLE" << sampleIndex;
     }
 }
 

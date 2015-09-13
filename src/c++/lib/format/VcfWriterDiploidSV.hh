@@ -61,7 +61,7 @@ struct VcfWriterDiploidSV : public VcfWriterSV, VcfWriterScoredSV
 private:
 
     void
-    addHeaderFormatSampleKey() const override;
+    addHeaderFormatSampleKey(const unsigned sampleCount) const override;
 
     void
     addHeaderInfo() const override;
@@ -97,7 +97,7 @@ private:
     const SVScoreInfoDiploid&
     getDiploidInfo() const
     {
-        assert(NULL != _diploidInfoPtr);
+        assert(nullptr != _diploidInfoPtr);
         return *_diploidInfoPtr;
     }
 

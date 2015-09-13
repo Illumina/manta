@@ -61,7 +61,7 @@ struct VcfWriterSomaticSV : public VcfWriterSV, VcfWriterScoredSV
 private:
 
     void
-    addHeaderFormatSampleKey() const override;
+    addHeaderFormatSampleKey(const unsigned sampleCount) const override;
 
     void
     addHeaderInfo() const override;

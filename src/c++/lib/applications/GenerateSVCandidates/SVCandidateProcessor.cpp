@@ -60,15 +60,15 @@ SVWriter(
 {
     if (0 == opt.edgeOpt.binIndex)
     {
-        candWriter.writeHeader(progName, progVersion);
+        candWriter.writeHeader(progName, progVersion,svScore.sampleCount());
         if (isTumorOnly)
         {
-            tumorWriter.writeHeader(progName, progVersion);
+            tumorWriter.writeHeader(progName, progVersion,svScore.sampleCount());
         }
         else
         {
-            diploidWriter.writeHeader(progName, progVersion);
-            if (isSomatic) somWriter.writeHeader(progName, progVersion);
+            diploidWriter.writeHeader(progName, progVersion,svScore.diploidSampleCount());
+            if (isSomatic) somWriter.writeHeader(progName, progVersion,svScore.sampleCount());
         }
     }
 }

@@ -30,7 +30,7 @@
 
 void
 VcfWriterSomaticSV::
-addHeaderFormatSampleKey() const
+addHeaderFormatSampleKey(const unsigned /*sampleCount*/) const
 {
     /// TODO: get sample name from bam header/user
     _os << "\tFORMAT\tNORMAL\tTUMOR";

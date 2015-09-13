@@ -28,7 +28,7 @@
 
 void
 VcfWriterTumorSV::
-addHeaderFormatSampleKey() const
+addHeaderFormatSampleKey(const unsigned /*sampleCount*/) const
 {
     // TODO: extract sample name from input bam header / user
     _os << "\tFORMAT\tSAMPLE";

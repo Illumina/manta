@@ -131,10 +131,10 @@ writeHeaderColKeyPrefix(std::ostream& os)
 
 void
 VcfWriterSV::
-writeHeaderColumnKey()
+writeHeaderColumnKey(const unsigned sampleCount)
 {
     writeHeaderColKeyPrefix(_os);
-    addHeaderFormatSampleKey();
+    addHeaderFormatSampleKey(sampleCount);
     _os << '\n';
 }
 
