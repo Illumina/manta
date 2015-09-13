@@ -149,7 +149,7 @@ def _runDepthShared(self,taskPrefix,dependencies, depthFunc) :
     for (bamIndex, bamFile) in enumerate(bamList) :
         indexStr = str(bamIndex).zfill(3)
         tmpFiles.append(os.path.join(tmpDir,outputFilename+"."+ indexStr +".txt"))
-        scatterTasks |= setzer(depthFunc(self,taskPrefix,dirTask,bamFile,tmpFiles[-1],indexStr))
+        scatterTasks |= setzer(depthFunc(self,taskPrefix+"_sample"+indexStr,dirTask,bamFile,tmpFiles[-1]))
 
     cmd = [ self.params.mergeChromDepth ]
     cmd.extend(["--out",outputPath])
@@ -162,7 +162,7 @@ def _runDepthShared(self,taskPrefix,dependencies, depthFunc) :
     nextStepWait.add(mergeTask)
     
     rmTmpCmd = "rm -rf " + tmpDir
-    #rmTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmTmpCmd,dependencies=mergeTask, isForceLocal=True)
+    rmTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmTmpCmd,dependencies=mergeTask, isForceLocal=True)
 
     return nextStepWait
 
@@ -173,11 +173,11 @@ def runDepthFromIndex(self,taskPrefix="",dependencies=None) :
     estimate chrom depth using stats from samtools bam index 'bai'
     """
 
-    def depthFunc(self,taskPrefix,dependencies,bamFile,outFile,indexStr) :
+    def depthFunc(self,taskPrefix,dependencies,bamFile,outFile) :
         cmd  = "%s -E '%s'" % (sys.executable, self.params.getChromDepth)
         cmd += " --bam '%s'" % (bamFile)
         cmd += " > %s" % (outFile)
-        return self.addTask(preJoin(taskPrefix,"estimateChromDepth_"+indexStr),cmd,dependencies=dependencies)
+        return self.addTask(preJoin(taskPrefix,"estimateChromDepth"),cmd,dependencies=dependencies)
 
     return _runDepthShared(self,taskPrefix,dependencies,depthFunc)
 
@@ -188,43 +188,31 @@ def runDepthFromAlignments(self,taskPrefix="",dependencies=None) :
     estimate chrom depth directly from BAM/CRAM file
     """
 
-    bamList=[]
-    if len(self.params.normalBamList) :
-        bamList = self.params.normalBamList
-    elif len(self.params.tumorBamList) :
-        bamList = self.params.tumorBamList
-    else :
-        return set()
+    def depthFunc(self,taskPrefix,dependencies,bamFile,outFile) :
+        outputPath=outFile
+        outputFilename=os.path.basename(outputPath)
 
-    depthPath=self.paths.getChromDepth()
+        tmpDir=os.path.join(outputPath+".tmpdir")
+        dirTask=self.addTask(preJoin(taskPrefix,"makeTmpDir"), "mkdir -p "+tmpDir, dependencies=dependencies, isForceLocal=True)
+    
+        tmpFiles = []
+        scatterTasks = set()
+    
+        for (chromIndex, chromLabel) in enumerate(self.params.chromOrder) :
+            cid = getRobustChromId(chromIndex, chromLabel)
+            tmpFiles.append(os.path.join(tmpDir,outputFilename+"_"+cid))
+            cmd = [self.params.mantaGetChromDepthBin,"--align-file",bamFile,"--chrom",chromLabel,"--output",tmpFiles[-1]]
+            scatterTasks.add(self.addTask(preJoin(taskPrefix,"estimateChromDepth_"+cid),cmd,dependencies=dirTask))
+    
+        catCmd = "cat " + " ".join(["'%s'" % (x) for x in tmpFiles]) + " > '%s'" % (outputPath)
+        catTask = self.addTask(preJoin(taskPrefix,"catChromDepth"),catCmd,dependencies=scatterTasks, isForceLocal=True)
+    
+        nextStepWait = set()
+        nextStepWait.add(catTask)
+    
+        return nextStepWait
 
-    depthFilename=os.path.basename(depthPath)
-    tmpDepthDir=os.path.join(self.params.workDir,depthFilename+".tmpdir")
-    dirTask=self.addTask(preJoin(taskPrefix,"makeTmpDir"), "mkdir -p "+tmpDepthDir, dependencies=dependencies, isForceLocal=True)
-
-    tmpDepthFiles = []
-    depthTasks = set()
-
-
-    for (chromIndex, chromLabel) in enumerate(self.params.chromOrder) :
-        cid = getRobustChromId(chromIndex, chromLabel)
-        tmpDepthFiles.append(os.path.join(tmpDepthDir,depthFilename+"_"+cid))
-        cmd = [self.params.mantaGetChromDepthBin,"--align-file",bamFile,"--chrom",chromLabel,"--output",tmpDepthFiles[-1]]
-        depthTasks.add(self.addTask(preJoin(taskPrefix,"estimateChromDepth_"+cid),cmd,dependencies=dirTask))
-
-    catCmd = "cat " + " ".join(["'%s'" % (x) for x in tmpDepthFiles]) + " > '%s'" % (depthPath)
-    catTask = self.addTask(preJoin(taskPrefix,"catChromDepth"),catCmd,dependencies=depthTasks, isForceLocal=True)
-
-    nextStepWait = set()
-    nextStepWait.add(catTask)
-
-    rmDepthTmpCmd = "rm -rf " + tmpDepthDir
-    rmTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmDepthTmpCmd,dependencies=catTask, isForceLocal=True)
-
-    return nextStepWait
-
-
-
+    return _runDepthShared(self,taskPrefix,dependencies,depthFunc)
 
 
 
