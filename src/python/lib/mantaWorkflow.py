@@ -92,9 +92,9 @@ def runStats(self,taskPrefix="",dependencies=None) :
 
 
 
-def runDepthFromIndex(self,taskPrefix="",dependencies=None) :
+def _runDepthShared(self,taskPrefix,dependencies, depthFunc) :
     """
-    estimate chrom depth using stats from samtools bam index 'bai'
+    estimate chrom depth using the specified depthFunc to compute per-sample dpeth
     """
 
     bamList=[]
@@ -116,12 +116,8 @@ def runDepthFromIndex(self,taskPrefix="",dependencies=None) :
 
     for (bamIndex, bamFile) in enumerate(bamList) :
         indexStr = str(bamIndex).zfill(3)
-        tmpFiles.append(os.path.join(tmpDir,outputFilename+"."+ indexStr +".xml"))
-
-        cmd  = "%s -E '%s'" % (sys.executable, self.params.getChromDepth)
-        cmd += " --bam '%s'" % (bamFile)
-        cmd += " > %s" % (tmpFiles[-1])
-        scatterTasks.add(self.addTask(preJoin(taskPrefix,"estimateChromDepth_"+indexStr),cmd,dependencies=dirTask))
+        tmpFiles.append(os.path.join(tmpDir,outputFilename+"."+ indexStr +".txt"))
+        scatterTasks |= depthFunc(self,taskPrefix,dirTask,bamFile,tmpFiles[-1],indexStr)
 
     cmd = [ self.params.mergeChromDepth ]
     cmd.extend(["--out",outputFilename])
@@ -137,6 +133,21 @@ def runDepthFromIndex(self,taskPrefix="",dependencies=None) :
     rmTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmTmpCmd,dependencies=mergeTask, isForceLocal=True)
 
     return nextStepWait
+
+
+
+def runDepthFromIndex(self,taskPrefix="",dependencies=None) :
+    """
+    estimate chrom depth using stats from samtools bam index 'bai'
+    """
+
+    def depthFunc(self,taskPrefix,dependencies,bamFile,outFile,indexStr) :
+        cmd  = "%s -E '%s'" % (sys.executable, self.params.getChromDepth)
+        cmd += " --bam '%s'" % (bamFile)
+        cmd += " > %s" % (outFile)
+        return self.addTask(preJoin(taskPrefix,"estimateChromDepth_"+indexStr),cmd,dependencies=dependencies)
+
+    return _runDepthShared(self,taskPrefix,dependencies,depthFunc)
 
 
 
@@ -179,6 +190,9 @@ def runDepthFromAlignments(self,taskPrefix="",dependencies=None) :
     rmTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmDepthTmpCmd,dependencies=catTask, isForceLocal=True)
 
     return nextStepWait
+
+
+
 
 
 
