@@ -95,6 +95,7 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         mantaStatsSummaryBin=joinFile(libexecDir,"SummarizeAlignmentStats")
 
         getChromDepth=joinFile(libexecDir,"getBamAvgChromDepth.py")
+        mergeChromDepth=joinFile(libexecDir,"mergeChromDepth.py")
         mantaSortVcf=joinFile(libexecDir,"sortVcf.py")
         mantaExtraSmallVcf=joinFile(libexecDir,"extractSmallIndelCandidates.py")
         mantaPloidyFilter=joinFile(libexecDir,"ploidyFilter.py")

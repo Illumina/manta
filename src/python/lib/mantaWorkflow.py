@@ -97,21 +97,44 @@ def runDepthFromIndex(self,taskPrefix="",dependencies=None) :
     estimate chrom depth using stats from samtools bam index 'bai'
     """
 
-    bamFile=""
+    bamList=[]
     if len(self.params.normalBamList) :
-        bamFile = self.params.normalBamList[0]
+        bamList = self.params.normalBamList
     elif len(self.params.tumorBamList) :
-        bamFile = self.params.tumorBamList[0]
+        bamList = self.params.tumorBamList
     else :
         return set()
 
+    outputPath=self.paths.getChromDepth()
+    outputFilename=os.path.basename(outputPath)
 
-    cmd  = "%s -E %s" % (sys.executable, self.params.getChromDepth)
-    cmd += " --bam '%s'" % (bamFile)
-    cmd += " > %s" % (self.paths.getChromDepth())
+    tmpDir=outputPath+".tmpdir"
+    dirTask=self.addTask(preJoin(taskPrefix,"makeTmpDir"), "mkdir -p "+tmpDir, dependencies=dependencies, isForceLocal=True)
+
+    tmpFiles = []
+    scatterTasks = set()
+
+    for (bamIndex, bamFile) in enumerate(bamList) :
+        indexStr = str(bamIndex).zfill(3)
+        tmpFiles.append(os.path.join(tmpDir,outputFilename+"."+ indexStr +".xml"))
+
+        cmd  = "%s -E '%s'" % (sys.executable, self.params.getChromDepth)
+        cmd += " --bam '%s'" % (bamFile)
+        cmd += " > %s" % (tmpFiles[-1])
+        scatterTasks.add(self.addTask(preJoin(taskPrefix,"estimateChromDepth_"+indexStr),cmd,dependencies=dirTask))
+
+    cmd = [ self.params.mergeChromDepth ]
+    cmd.extend(["--out",outputFilename])
+    for tmpFile in tmpFiles :
+        cmd.extend(["--in",tmpFile])
+
+    mergeTask = self.addTask(preJoin(taskPrefix,"mergeChromDepth"),cmd,dependencies=scatterTasks,isForceLocal=True)
 
     nextStepWait = set()
-    nextStepWait.add(self.addTask(preJoin(taskPrefix,"estimateChromDepth"),cmd,dependencies=dependencies))
+    nextStepWait.add(mergeTask)
+    
+    rmTmpCmd = "rm -rf " + tmpDir
+    rmTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmTmpCmd,dependencies=mergeTask, isForceLocal=True)
 
     return nextStepWait
 
@@ -122,11 +145,11 @@ def runDepthFromAlignments(self,taskPrefix="",dependencies=None) :
     estimate chrom depth directly from BAM/CRAM file
     """
 
-    bamFile=""
+    bamList=[]
     if len(self.params.normalBamList) :
-        bamFile = self.params.normalBamList[0]
+        bamList = self.params.normalBamList
     elif len(self.params.tumorBamList) :
-        bamFile = self.params.tumorBamList[0]
+        bamList = self.params.tumorBamList
     else :
         return set()
 
