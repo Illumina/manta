@@ -133,6 +133,7 @@ struct SampleCounts
     merge(
         const SampleCounts& srs)
     {
+        assert(sampleSource == srs.sampleSource);
         input.merge(srs.input);
         evidence.merge(srs.evidence);
     }
@@ -145,9 +146,10 @@ struct SampleCounts
     template<class Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {
-        ar& input& evidence;
+        ar& sampleSource& input& evidence;
     }
 
+    std::string sampleSource;
     SampleReadInputCounts input;
     SampleEvidenceCounts evidence;
 };
@@ -156,7 +158,6 @@ struct SampleCounts
 
 struct AllCounts
 {
-
     void
     clear()
     {

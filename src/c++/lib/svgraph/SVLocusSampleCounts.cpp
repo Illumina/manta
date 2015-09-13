@@ -99,6 +99,7 @@ write(
     const char* label) const
 {
     os << "\n[" << label << "]\n";
+    os << "Source\t" << sampleSource << "\n";
     input.write(os);
     evidence.write(os);
 }

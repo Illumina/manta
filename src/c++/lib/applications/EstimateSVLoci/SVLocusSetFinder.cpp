@@ -99,6 +99,11 @@ SVLocusSetFinder(
     const unsigned sampleCount(opt.alignFileOpt.alignmentFilename.size());
     _svLoci.getCounts().setSampleCount(sampleCount);
 
+    for (unsigned sampleIndex(0);sampleIndex<sampleCount;++sampleIndex)
+    {
+        _svLoci.getCounts().getSampleCounts(sampleIndex).sampleSource = opt.alignFileOpt.alignmentFilename[sampleIndex];
+    }
+
     _svLoci.header = _bamHeader;
     updateDenoiseRegion();
 }
