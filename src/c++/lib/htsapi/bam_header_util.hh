@@ -55,5 +55,5 @@ check_header_compatibility(
 /// if none found return default string value
 std::string
 get_bam_header_sample_name(
-    const std::string& bam_header_text,
+    const bam_header_t* header,
     const char* default_sample_name = "SAMPLE");

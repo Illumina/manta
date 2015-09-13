@@ -27,13 +27,10 @@
 #include "blt_util/parse_util.hh"
 #include "blt_util/string_util.hh"
 
+#include <cassert>
+
+#include <algorithm>
 #include <sstream>
-
-#include "blt_util/thirdparty_push.h"
-
-#include "boost/tokenizer.hpp"
-
-#include "blt_util/thirdparty_pop.h"
 
 
 
@@ -121,18 +118,30 @@ check_header_compatibility(
 
 std::string
 get_bam_header_sample_name(
-    const std::string& bam_header_text,
+    const bam_header_t* header,
     const char* default_sample_name)
 {
-    using namespace boost;
-    char_separator<char> sep("\t\n");
-    tokenizer< char_separator<char>> tokens(bam_header_text, sep);
-    for (const auto& t : tokens)
-    {
-        const auto sm = t.find("SM:");
-        if (std::string::npos == sm) continue;
-        return t.substr(sm+3);
-    }
+    assert(header != nullptr);
 
+    std::vector<std::string> lines;
+    std::vector<std::string> words;
+    split_string(header->text,'\n',lines);
+    for (const auto& line : lines)
+    {
+        split_string(line,'\t',words);
+        if ((! words.empty()) && (words.front() == "@RG"))
+        {
+            for (const auto& word : words)
+            {
+                static const std::string prefix("SM:");
+                const auto res = std::mismatch(prefix.begin(), prefix.end(), word.begin());
+
+                if (res.first == prefix.end())
+                {
+                    return std::string(res.second, word.end());
+                }
+            }
+        }
+    }
     return default_sample_name;
 }

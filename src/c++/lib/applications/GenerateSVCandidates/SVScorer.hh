@@ -182,6 +182,12 @@ struct SVScorer
         return _diploidSampleCount;
     }
 
+    const std::vector<std::string>&
+    sampleNames() const
+    {
+        return _sampleNames;
+    }
+
 private:
 
     void
@@ -273,4 +279,5 @@ private:
 
     unsigned _sampleCount;
     unsigned _diploidSampleCount;
+    std::vector<std::string> _sampleNames;
 };

@@ -32,6 +32,7 @@
 #include "blt_util/qscore.hh"
 #include "common/Exceptions.hh"
 #include "htsapi/align_path_bam_util.hh"
+#include "htsapi/bam_header_util.hh"
 #include "htsapi/bam_streamer.hh"
 #include "manta/ReadGroupStatsSet.hh"
 #include "manta/SVCandidateUtil.hh"
@@ -91,6 +92,20 @@ SVScorer(
     {
         _sampleCount ++;
         if (! isTumor) _diploidSampleCount++;
+    }
+
+    // initialize sampleNames from all bam headers (assuming 1 sample per bam for now)
+    const unsigned bamCount(_bamStreams.size());
+    for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
+    {
+        const bam_header_t* indexHeader(_bamStreams[bamIndex]->get_header());
+        std::ostringstream oss;
+        oss << "SAMPLE" << bamIndex;
+        const char* defaultName(oss.str().c_str());
+        std::string name(get_bam_header_sample_name(indexHeader,defaultName));
+        // remove spaces from sample name for everyone's sanity:
+        std::replace(name.begin(), name.end(), ' ', '_');
+        _sampleNames.push_back(name);
     }
 }
 

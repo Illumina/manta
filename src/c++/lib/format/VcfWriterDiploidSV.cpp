@@ -28,21 +28,6 @@
 
 void
 VcfWriterDiploidSV::
-addHeaderFormatSampleKey(const unsigned sampleCount) const
-{
-    _os << "\tFORMAT;";
-
-    // TODO: extract sample name from input bam header / user
-    for (unsigned sampleIndex(0); sampleIndex<sampleCount; ++sampleIndex)
-    {
-        _os << "\tSAMPLE" << sampleIndex;
-    }
-}
-
-
-
-void
-VcfWriterDiploidSV::
 addHeaderInfo() const
 {
     _os << "##INFO=<ID=BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at local translocation breakend\">\n";

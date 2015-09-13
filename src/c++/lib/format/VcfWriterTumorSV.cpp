@@ -28,15 +28,6 @@
 
 void
 VcfWriterTumorSV::
-addHeaderFormatSampleKey(const unsigned /*sampleCount*/) const
-{
-    // TODO: extract sample name from input bam header / user
-    _os << "\tFORMAT\tSAMPLE";
-}
-
-
-void
-VcfWriterTumorSV::
 addHeaderInfo() const
 {
     _os << "##INFO=<ID=BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at local translocation breakend\">\n";

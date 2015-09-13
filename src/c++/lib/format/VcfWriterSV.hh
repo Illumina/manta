@@ -49,10 +49,10 @@ struct VcfWriterSV
     writeHeader(
         const char* progName,
         const char* progVersion,
-        const unsigned sampleCount)
+        const std::vector<std::string>& sampleNames)
     {
         writeHeaderPrefix(progName, progVersion);
-        writeHeaderColumnKey(sampleCount);
+        writeHeaderColumnKey(sampleNames);
     }
 
     typedef std::vector<std::string> InfoTag_t;
@@ -65,7 +65,8 @@ protected:
         const char* progVersion);
 
     void
-    writeHeaderColumnKey(const unsigned sampleCount);
+    writeHeaderColumnKey(
+        const std::vector<std::string>& sampleNames) const;
 
     virtual
     void
@@ -78,10 +79,6 @@ protected:
     virtual
     void
     addHeaderFilters() const {}
-
-    virtual
-    void
-    addHeaderFormatSampleKey(const unsigned /*sampleCount*/) const {}
 
     void
     writeSVCore(

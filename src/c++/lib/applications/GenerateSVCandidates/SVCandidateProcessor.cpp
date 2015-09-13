@@ -60,17 +60,23 @@ SVWriter(
 {
     if (0 == opt.edgeOpt.binIndex)
     {
-        candWriter.writeHeader(progName, progVersion,svScore.sampleCount());
+        std::vector<std::string> noSampleNames;
+        candWriter.writeHeader(progName, progVersion,noSampleNames);
+
+        const std::vector<std::string>& sampleNames(svScore.sampleNames());
         if (isTumorOnly)
         {
-            tumorWriter.writeHeader(progName, progVersion,svScore.sampleCount());
+            tumorWriter.writeHeader(progName, progVersion,sampleNames);
         }
         else
         {
-            diploidWriter.writeHeader(progName, progVersion,svScore.diploidSampleCount());
-            if (isSomatic) somWriter.writeHeader(progName, progVersion,svScore.sampleCount());
+            std::vector<std::string> diploidSampleNames(sampleNames.begin(),sampleNames.begin()+svScore.diploidSampleCount());
+            diploidWriter.writeHeader(progName, progVersion,diploidSampleNames);
+            if (isSomatic) somWriter.writeHeader(progName, progVersion,sampleNames);
         }
     }
+
+    //get_bam_header_sample_name
 }
 
 

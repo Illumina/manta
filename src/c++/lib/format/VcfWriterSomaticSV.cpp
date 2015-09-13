@@ -30,16 +30,6 @@
 
 void
 VcfWriterSomaticSV::
-addHeaderFormatSampleKey(const unsigned /*sampleCount*/) const
-{
-    /// TODO: get sample name from bam header/user
-    _os << "\tFORMAT\tNORMAL\tTUMOR";
-}
-
-
-
-void
-VcfWriterSomaticSV::
 addHeaderInfo() const
 {
     _os << "##INFO=<ID=BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at local translocation breakend\">\n";
