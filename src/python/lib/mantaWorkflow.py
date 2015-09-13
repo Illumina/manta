@@ -48,6 +48,38 @@ __version__ = workflowVersion
 
 
 
+def isString(x):
+    return isinstance(x, basestring)
+
+
+def isIterable(x):
+    return (getattr(x, '__iter__', False) != False)
+
+
+def lister(x):
+    """
+    Convert input into a list, whether it's already iterable or
+    not. Make an exception for individual strings to be returned
+    as a list of one string, instead of being chopped into letters
+    Also, convert None type to empty list:
+    """
+    # special handling in case a single string is given:
+    if x is None : return []
+    if (isString(x) or (not isIterable(x))) : return [x]
+    return list(x)
+
+
+
+def setzer(x) :
+    """
+    convert user input into a set, handling the pathological case
+    that you have been handed a single string, and you don't want
+    a set of letters:
+    """
+    return set(lister(x))
+
+
+
 def runStats(self,taskPrefix="",dependencies=None) :
 
     statsPath=self.paths.getStatsPath()
@@ -117,10 +149,10 @@ def _runDepthShared(self,taskPrefix,dependencies, depthFunc) :
     for (bamIndex, bamFile) in enumerate(bamList) :
         indexStr = str(bamIndex).zfill(3)
         tmpFiles.append(os.path.join(tmpDir,outputFilename+"."+ indexStr +".txt"))
-        scatterTasks |= depthFunc(self,taskPrefix,dirTask,bamFile,tmpFiles[-1],indexStr)
+        scatterTasks |= setzer(depthFunc(self,taskPrefix,dirTask,bamFile,tmpFiles[-1],indexStr))
 
     cmd = [ self.params.mergeChromDepth ]
-    cmd.extend(["--out",outputFilename])
+    cmd.extend(["--out",outputPath])
     for tmpFile in tmpFiles :
         cmd.extend(["--in",tmpFile])
 
@@ -130,7 +162,7 @@ def _runDepthShared(self,taskPrefix,dependencies, depthFunc) :
     nextStepWait.add(mergeTask)
     
     rmTmpCmd = "rm -rf " + tmpDir
-    rmTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmTmpCmd,dependencies=mergeTask, isForceLocal=True)
+    #rmTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmTmpCmd,dependencies=mergeTask, isForceLocal=True)
 
     return nextStepWait
 
