@@ -55,10 +55,10 @@ add_custom_command(
 
 if (NOT WIN32)
     set (ASM_MAKE_OPTION LOC=-DASMV OBJA=match.o)
-    if (CMAKE_SYSTEM_PROCESSOR MATCHES "^.*86$")
+    if (THIS_ARCH MATCHES "^.*86$")
         set(ZLIB_ARCH "")
         set(ASM_FILE_COPY cp contrib/asm686/match.S match.S)
-    elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "^x86_64$")
+    elseif (THIS_ARCH MATCHES "^x86_64$")
         set(ZLIB_ARCH "--64")
         set(ASM_FILE_COPY cp contrib/amd64/amd64-match.S match.S)
     else ()
