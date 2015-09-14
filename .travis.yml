@@ -38,6 +38,7 @@ script:
 branches:
   only:
     - master
+    - v0.27.x
 
 notifications:
   email:
