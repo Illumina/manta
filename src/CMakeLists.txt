@@ -131,7 +131,15 @@ if (NOT PYTHONINTERP_FOUND)
     message (WARNING "No python interpreter found, disabling optional python build and installation components. Installed workflow requires python interpreter to run")
 endif()
 
-message (STATUS "TARGET_ARCHITECTURE: " ${CMAKE_SYSTEM_PROCESSOR} )
+set (THIS_ARCH ${CMAKE_SYSTEM_PROCESSOR})
+if (NOT WIN32)
+    if (CMAKE_SIZEOF_VOID_P MATCHES 8)
+        set (THIS_ARCH "x86_64")
+    else ()
+        set (THIS_ARCH "x86")
+    endif ()
+endif ()
+message (STATUS "TARGET_ARCHITECTURE: " ${THIS_ARCH} )
 
 
 # Create package versioning target - version derived from git describe except for

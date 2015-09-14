@@ -24,10 +24,10 @@
 
 #include <cassert>
 
+#include <iostream>
 
 #if defined(DEBUG_ALN) || defined(DEBUG_ALN_MATRIX)
 #include "blt_util/log.hh"
-#include <iostream>
 #endif
 
 #ifdef DEBUG_ALN_MATRIX
