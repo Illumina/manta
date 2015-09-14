@@ -64,11 +64,13 @@ class VcfRecord :
         self.svType = getKeyVal(w[VCF_INFO],"SVTYPE")
 
         fmt = w[VCF_FORMAT]
-        sample = w[VCF_SAMPLE]
         gtIx = fmt.split(':').index("GT")
-        gt = sample.split(':')[gtIx]
-        t = gt.split('/')
-        self.gtType = int(t[0]) + int(t[1])
+
+        self.gtType = []
+        for sample in w[VCF_SAMPLE:] :
+            gt = sample.split(':')[gtIx]
+            t = gt.split('/')
+            self.gtType.append(int(t[0]) + int(t[1]))
 
 
 def getOptions():
@@ -105,7 +107,9 @@ def process_block(recordBlock, nextPos, filteredSites):
             targetLen = abs(target.svLen)
         targetType = target.svType
 
-        ploidySum = target.gtType
+        ploidySum = []
+        for gtPloidy in target.gtType :
+            ploidySum.append(gtPloidy)
         overlapIds = [0]
 
         for ix in xrange(1, len(recordBlock)):
@@ -115,7 +119,6 @@ def process_block(recordBlock, nextPos, filteredSites):
             if record.svLen is not None:
                 svLen = abs(record.svLen)
             svType = record.svType
-            ploidy = record.gtType
 
             # collecting stacked sites
             # with the same type and similar size
@@ -124,13 +127,18 @@ def process_block(recordBlock, nextPos, filteredSites):
                    # (svType == targetType) and
                     (svLen < 2*targetLen) and
                     (svLen > 0.5*targetLen)):
-                    ploidySum += ploidy
+                    for (sampleIndex, gtPloidy) in enumerate(record.gtType) :
+                        ploidySum[sampleIndex] += gtPloidy
                     overlapIds.append(ix)
             else:
                 break
 
         overlapIds.reverse()
-        if (ploidySum > 2):
+        isAnomPloidy = False
+        for psum in ploidySum :
+            if psum > 2 :
+                isAnomPloidy = True
+        if isAnomPloidy:
             # sites to be filtered due to ploidity
             for i in overlapIds:
                 site = recordBlock.pop(i)
