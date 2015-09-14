@@ -10,22 +10,30 @@ Manta User Guide
 * [Input requirements](#input-requirements)
 * [Outputs](#outputs)
 * [Run configuration and execution](#run-configuration-and-execution)
+* [Extended use cases](#extended-use-cases)
 
 ## Introduction
 
 Manta calls structural variants (SVs) and indels from mapped
-paired-end sequencing reads. It is optimized for analysis of
-individuals and tumor/normal sample pairs, calling SVs, medium-sized
-indels and large insertions within a single workflow. The method is
-designed for rapid analysis on standard compute hardware: NA12878 at
-50x genomic coverage is analyzed in less than 20 minutes on a 20 core
-server, most WGS tumor-normal analyses can be completed within 2
-hours. Manta combines paired and split-read evidence during SV
-discovery and scoring to improve accuracy, but does not require
-split-reads or successful breakpoint assemblies to report a variant in
-cases where there is strong evidence otherwise. It provides scoring
-models for germline variants in individual diploid samples and somatic
-variants in matched tumor-normal sample pairs.
+paired-end sequencing reads. It is optimized for analysis of germline
+variation in small sets of individuals and somatic variation in
+tumor/normal sample pairs. Manta discovers, assembles and scores
+large-scale SVs, medium-sized indels and large insertions within a
+single efficient workflow. The method is designed for rapid analysis
+on standard compute hardware: NA12878 at 50x genomic coverage is
+analyzed in less than 20 minutes on a 20 core server, and most WGS
+tumor/normal analyses can be completed within 2 hours. Manta combines
+paired and split-read evidence during SV discovery and scoring to
+improve accuracy, but does not require split-reads or successful
+breakpoint assemblies to report a variant in cases where there is
+strong evidence otherwise. It provides scoring models for germline
+variants in small sets of diploid samples and somatic variants in
+matched tumor/normal sample pairs. There is experimental support for
+analysis of unmatched tumor samples as well (see details below). For
+extended methods and benchmarking details, please see the [Manta
+preprint][mss].
+
+[mss]:http://dx.doi.org/10.1101/024232
 
 
 ## Method Overview
@@ -34,24 +42,24 @@ Manta divides the SV and indel discovery process into two primary
 steps: (1) scanning the genome to find SV associated regions and (2)
 analysis, scoring and output of SVs found in such regions.
 
-1. **Build breakend association graph** In this step the entire genome is
-scanned to discover evidence of possible SVs and large indels. This
+1. **Build breakend association graph** In this step the entire genome
+is scanned to discover evidence of possible SVs and large indels. This
 evidence is enumerated into a graph with edges connecting all regions
-of the genome which have a possible breakend association. Edges may connect
-two different regions of the genome to represent evidence of a
+of the genome which have a possible breakend association. Edges may
+connect two different regions of the genome to represent evidence of a
 long-range association, or an edge may connect a region to itself to
 capture a local indel/small SV association. Note that these
 associations are more general than a specific SV hypothesis, in that
-many breakend candidates may be found on one edge, although typically only
-one or two candidates are found per edge.
+many breakend candidates may be found on one edge, although typically
+only one or two candidates are found per edge.
 
 2. **Analyze graph edges to find SVs** The second step is to analyze
 individual graph edges or groups of highly connected edges to discover
 and score SVs associated with the edge(s). The substeps of this
 process include inference of SV candidates associated with the edge,
 attempted assembly of the SVs breakends, scoring/genotyping and
-filtration of the SV under various biological models (currently diploid
-germline and somatic), and finally, output to VCF.
+filtration of the SV under various biological models (currently
+diploid germline and somatic), and finally, output to VCF.
 
 
 ## Capabilities
@@ -63,31 +71,39 @@ de-novo assembly. Detectable types are enumerated further below.
 For each structural variant and indel, Manta attempts to assemble the
 breakends to basepair resolution and report the left-shifted breakend
 coordinate (per the [VCF 4.1][1] SV reporting guidelines), together
-with any breakend homology sequence and/or inserted sequence
-between the breakends. It is often the case that the assembly will
-fail to provide a confident explanation of the data -- in such cases
-the variant will be reported as `IMPRECISE`, and scored according to
-the paired-end read evidence only.
+with any breakend homology sequence and/or inserted sequence between
+the breakends. It is often the case that the assembly will fail to
+provide a confident explanation of the data -- in such cases the
+variant will be reported as `IMPRECISE`, and scored according to the
+paired-end read evidence only.
 
 The sequencing reads provided as input to Manta are expected to be
 from a paired-end sequencing assay which results in an "innie"
 orientation between the two reads of each sequence fragment, each
 presenting a read from the outer edge of the fragment insert inward.
 
-Manta is primarily tested for whole genome DNA-Seq experiments of
-single diploid samples or subtractive analysis of a matched
-tumor/normal sample pair.  There is some support for other use cases
-(details for each case are included below):
+Manta is primarily tested for whole-genome and whole-exome (or other
+targeted enrichement) sequencing assays on DNA. For these assays the
+following applications are supported:
 
-* For exome or other targeted sequencing experiments, the workflow can
-be configured with the `--exome` flag to set filtration levels more
-appropriate for this case.
-* Tumor samples can be analyzed without a matched normal sample. In
+* Joint analysis of small sets of diploid individuals (where 'small' means
+family-scale -- roughly 10 or fewer samples)
+* Subtractive analysis of a matched tumor/normal sample pair
+* Analysis of an individual tumor sample
+
+For the first use case above, note that there is no specific restriction against
+using Manta for the joint analysis of larger cohorts, but this has not 
+been extensively tested so there may be stability or call quality
+issues.
+
+Per the final use case above, tumor samples can be analyzed without a matched normal sample. In
 this case no scoring function is available, but the supporting
 evidence counts and many filters can still be usefully applied.
-* RNA-Seq analysis can be configured with the `--rna` flag to also
-adjust filtration levels and take other RNA-specific filtration and
-intron handling steps.
+
+RNA-Seq analysis is still in development and not fully supported. It
+can be configured with the `--rna` flag. This will adjust filtration
+levels and take other RNA-specific filtration and intron handling steps
+(more details are provided further below).
 
 ### Detected variant classes
 
@@ -154,15 +170,15 @@ a possible breakend location.
 
 Manta requires input sequencing reads to be mapped by an external tool
 and provided as input in BAM format. Each input BAM file must be
-coordinate sorted and indexed to produce a`samtools`-style index in
-a file named to match the input BAM file with an additional '.bai'
+coordinate sorted and indexed to produce a`samtools`-style index in a
+file named to match the input BAM file with an additional '.bai'
 extension.
 
 At configuration time, at least one BAM file must be provided for the
 normal or tumor sample. A matched tumor-normal sample pair can be
 provided as well. If multiple input files are provided for the normal
-or tumor sample, these are merged and treated as a single normal or
-tumor sample.
+sample, each file will be treated as a separate sample as part of a
+joint diploid sample analysis.
 
 The following limitations exist on the input BAM files provided to
 Manta:
@@ -174,10 +190,10 @@ treated as representing one sample.
 * Alignments with basecall quality values greater than 70 are rejected (these
   are not supported on the assumption that this indicates an offset error)
 
-Manta also requires a reference sequence in fasta format. This must be the same
-reference used for mapping the input BAM files. The reference must include a
-`samtools`-style index in a file named to match the input fasta with an 
-additional '.fai' file extension.
+Manta also requires a reference sequence in fasta format. This must be
+the same reference used for mapping the input BAM files. The reference
+must include a `samtools`-style index in a file named to match the
+input fasta with an additional '.fai' file extension.
 
 
 ## Outputs
@@ -185,32 +201,34 @@ additional '.fai' file extension.
 ### Structural Variant predictions
 
 The primary Manta outputs are a set of [VCF 4.1][1] files, found in
-`${MANTA_ANALYSIS_PATH}/results/variants`. Currently there are
-3 VCF files created for a germline analysis, and an additional somatic
-VCF is produced for a tumor/normal subtraction. These files are:
+`${MANTA_ANALYSIS_PATH}/results/variants`. Currently there are 3 VCF
+files created for a germline analysis, and an additional somatic VCF
+is produced for a tumor/normal subtraction. These files are:
 
 * __diploidSV.vcf.gz__
-    * SVs and indels scored and genotyped under a diploid model for the normal
-  sample. The scores in this file do not reflect any information in the tumor
-  BAMs
+    * SVs and indels scored and genotyped under a diploid model for the set of
+  samples in a joint diploid sample analysis or for the normal sample in a
+  tumor/normal subtraction analysis. In the case of a tumor/normal subtraction,
+  the scores in this file do not reflect any information from the tumor sample.
 * __somaticSV.vcf.gz__
     * SVs and indels scored under a somatic variant model. This file
-  will only be produced if at least one tumor BAM argument is supplied during
+  will only be produced if a tumor sample alignment file is supplied during
   configuration
 * __candidateSV.vcf.gz__
     * Unscored SV and indel candidates. Only a minimal amount of supporting
-  evidence is required for an SV to be entered as a candidate. An SV or indel
-  must be a candidate to be considered for scoring, therefore an SV cannot
-  appear in the other VCF outputs if it is not present in this file. Note that
-  by default this file includes indels down to a very small size (>= 8 bases).
-  These are intended to be passed on to a small variant caller without scoring
-  by manta itself (by default manta scoring starts at size 51).
+  evidence is required for an SV to be entered as a candidate in this file.
+  An SV or indel must be a candidate to be considered for scoring, therefore
+  an SV cannot appear in the other VCF outputs if it is not present in this
+  file. Note that by default this file includes indels down to a very small
+  size (>= 8 bases). These are intended to be passed on to a small variant
+  caller without scoring by manta itself (by default manta scoring starts
+  at size 51).
 * __candidateSmallIndels.vcf.gz__
     * Subset of the candidateSV.vcf.gz file containing only simple insertion and
   deletion variants of size 50 or less. Passing this file to a small variant caller
   like strelka or starling (Isaac Variant Caller) will provide continuous
   coverage over all indel sizes when the small variant caller and manta outputs are
-  evaluated together. Alternate small indel candidate sets can be parted out of the
+  evaluated together. Alternate small indel candidate sets can be parsed out of the
   candidateSV.vcf.gz file if this candidate set is not appropriate.
 
 For tumor-only analysis, Manta will produce an additional VCF:
@@ -229,6 +247,14 @@ fields are described in the VCF header.  The section below highlights
 some of the variant representation details and lists the primary VCF
 field values.
 
+#### VCF Sample Names
+
+Sample names printed into the VCF output are extracted from each input
+BAM file from the first first read group ('@RG') record found in the
+header. Any spaces found in the name will be replaced with
+underscores. If no sample name is found a default SAMPLE1,SAMPLE2,
+etc.. label will be used instead.
+
 #### Small indels
 
 All variants are reported in the VCF using symbolic alleles unless
@@ -240,8 +266,9 @@ classified as a small indel if all of these criteria are met:
 * The deletion or insertion length is not 1000 or greater.
 * The variant breakends and/or the inserted sequence are not imprecise.
 
-When VCF records are printed in the small indel format, they will also include
-the `CIGAR` INFO tag describing the combined insertion and deletion event.
+When VCF records are printed in the small indel format, they will also
+include the `CIGAR` INFO tag describing the combined insertion and
+deletion event.
 
 #### Insertions with incomplete insert sequence assembly
 
@@ -250,10 +277,11 @@ sequence cannot be fully assembled.  In this case Manta reports the
 insertion using the `<INS>` symbolic allele and includes the special
 INFO fields `LEFT_SVINSSEQ` and `RIGHT_SVINSSEQ` to describe the
 assembled left and right ends of the insert sequence. The following is
-an example of such a record:
+an example of such a record from the joint diploid analysis of
+NA12878, NA12891 and NA12892 mapped to hg19:
 
 ```
-chr1    11830208        MantaINS:714:0:0:0:3:0  T       <INS>   1497    PASS    END=11830208;SVTYPE=INS;CIPOS=0,12;CIEND=0,12;HOMLEN=12;HOMSEQ=TAAATTTTTCTT;LEFT_SVINSSEQ=TAAATTTTTCTTTTTTCTTTTTTTTTTAAATTTATTTTTTTATTGATAATTCTTGGGTGTTTCTCACAGAGGGGGATTTGGCAGGGTCACGGGACAACAGTGGAGGGAAGGTCAGCAGACAAACAAGTGAACAAAGGTCTCTGGT;RIGHT_SVINSSEQ=CCAGGCAGAGACGCTCCTCACTTCCTAGATGTGATGGCGGCTGGGAAGAGGCGCTCCTCACTTCCTAGATGGGACGGCGGCCGGGCGGAGACGCTCCTCACTTTCCAGACTGGGCAGCCAGGCAGAGGGGCTCCTCACATCCCAGACGATGGGCGGCCAGGCAGAGACACTCCCCACTTCCCAGACGGGGTGGCGGCCGGGCAGAGGCTGCAATCTCGGCACTTTGGGAGGCCAAGGCAGGCGGCTGCTCCTTGCCCTCGGGCCCCGCGGGGCCCGTCCGCTCCTCCAGCCGCTGCCTCC    GT:GQ:PR:SR      0/1:1497:22,13:22,32
+chr1    11830208        MantaINS:1577:0:0:0:3:0 T       <INS>   999     PASS    END=11830208;SVTYPE=INS;CIPOS=0,12;CIEND=0,12;HOMLEN=12;HOMSEQ=TAAATTTTTCTT;LEFT_SVINSSEQ=TAAATTTTTCTTTTTTCTTTTTTTTTTAAATTTATTTTTTTATTGATAATTCTTGGGTGTTTCTCACAGAGGGGGATTTGGCAGGGTCACGGGACAACAGTGGAGGGAAGGTCAGCAGACAAACAAGTGAACAAAGGTCTCTGGTTTTCCCAGGCAGAGGACCCTGCGGCCTTCCGCAGTGTTCGTGTCCCTGATTACCTGAGATTAGGGATTTGTGATGACTCCCAACGAGCATGCTGCCTTCAAGCATCTGTTCAACAAAGCACATCTTGCACTGCCCTTAATTCATTTAACCCCGAGTGGACACAGCACATGTTTCAAAGAG;RIGHT_SVINSSEQ=GGGGCAGAGGCGCTCCCCACATCTCAGATGATGGGCGGCCAGGCAGAGACGCTCCTCACTTCCTAGATGTGATGGCGGCTGGGAAGAGGCGCTCCTCACTTCCTAGATGGGACGGCGGCCGGGCGGAGACGCTCCTCACTTTCCAGACTGGGCAGCCAGGCAGAGGGGCTCCTCACATCCCAGACGATGGGCGGCCAGGCAGAGACACTCCCCACTTCCCAGACGGGGTGGCGGCCGGGCAGAGGCTGCAATCTCGGCACTTTGGGAGGCCAAGGCAGGCGGCTGCTCCTTGCCCTCGGGCCCCGCGGGGCCCGTCCGCTCCTCCAGCCGCTGCCTCC  GT:FT:GQ:PL:PR:SR       0/1:PASS:999:999,0,999:22,24:22,32      0/1:PASS:999:999,0,999:18,25:24,20    0/0:PASS:230:0,180,999:39,0:34,0
 ```
 
 #### VCF INFO Fields
@@ -289,7 +317,9 @@ JUNCTION_SOMATICSCORE | If the SV junction is part of an EVENT (ie. a multi-adja
 ID | Description
 --- | ---
 GT | Genotype
+FT | Sample filter, 'PASS' indicates that all filters have passed for this sample
 GQ | Genotype Quality
+PL | Normalized, Phred-scaled likelihoods for genotypes as defined in the VCF specification
 PR | Number of spanning read pairs which strongly (Q30) support the REF or ALT alleles
 SR | Number of split-reads which strongly (Q30) support the REF or ALT alleles
 
@@ -297,22 +327,31 @@ SR | Number of split-reads which strongly (Q30) support the REF or ALT alleles
 
 ID | Description
 --- | ---
-Ploidy | For DEL & DUP variants, the genotypes of overlapping variants (with similar size) are inconsistent with diploid expectation
-MaxDepth | Sample site depth is greater than 3x the mean chromosome depth near one or both variant breakends
-MinGQ | GQ score is less than 20
-MaxMQ0Frac | For a small variant (<1000 bases), the fraction of reads with MAPQ0 around either breakend exceeds 0.4
-NoPairSupport | For variants significantly larger than the paired read fragment size, no paired reads support the alternate allele
+MinQUAL | QUAL score is less than 20
+MinGQ | GQ score is less than 15 (filter applied at sample level and record level if all samples are filtered)
 MinSomaticScore | SOMATICSCORE is less than 30
+Ploidy | For DEL & DUP variants, the genotypes of overlapping variants (with similar size) are inconsistent with diploid expectation
+MaxDepth | Depth is greater than 3x the mean chromosome depth near one or both variant breakends
+MaxMQ0Frac | For a small variant (<1000 bases), the fraction of reads in all samples with MAPQ0 around either breakend exceeds 0.4
+NoPairSupport | For variants significantly larger than the paired read fragment size, no paired reads support the alternate allele in any sample
 
 #### Converting Manta VCF to BEDPE format
 
-It can sometimes be convenient to express structural variants in BEDPE format. For such applications we recommend the script `vcfToBedpe` available from:
+It can sometimes be convenient to express structural variants in BEDPE
+format. For such applications we recommend the script `vcfToBedpe`
+available from:
 
 https://github.com/ctsa/svtools
 
-This repository is forked from @hall-lab with edits to support VCF 4.1 SV format and match Manta's portability contstaints.
+This repository is forked from @hall-lab with edits to support VCF 4.1
+SV format and match Manta's portability contstaints.
 
-Note that BEDPE format greatly reduces structural variant information compared to Manta's VCF output. In particular breakend orientation, breakend homology and insertion sequence are lost, in addition to the ability to define fields for locus and sample specific information. 
+Note that BEDPE format greatly reduces structural variant information
+compared to Manta's VCF output. In particular breakend orientation,
+breakend homology and insertion sequence are lost, in addition to the
+ability to define fields for locus and sample specific
+information. For this reason we only recommend BEDPE as a temporary
+intermediate output for applications which require it.
 
 
 ### Statistics
@@ -347,18 +386,29 @@ The workflow is configured with the script:
 no arguments will display all standard configuration options to
 specify input BAM files, the reference sequence and the output run
 folder. Note that all input BAM files and reference sequence must
-contain the same chromosome names in the same order. In addition all input
-BAM files and reference sequences must be indexed with `samtools` (or a utility
-which creates an equivilent index file). Manta's default
-settings assume a whole genome DNA-Seq analysis, but there are
-configuration options for exome/targeted sequencing analysis in
-addition to RNA-Seq.
+contain the same chromosome names in the same order. In addition all
+input BAM files and reference sequences must be indexed with
+`samtools` (or a utility which creates an equivilent index
+file). Manta's default settings assume a whole genome DNA-Seq
+analysis, but there are configuration options for exome/targeted
+sequencing analysis in addition to RNA-Seq.
 
 Single Diploid Sample Analysis -- Example Configuration:
 
 ```
 ${MANTA_INSTALL_PATH}/bin/configManta.py \
---normalBam NA12878_S1.bam \
+--bam NA12878_S1.bam \
+--referenceFasta hg19.fa \
+--runDir ${MANTA_ANALYSIS_PATH}
+```
+
+Joint Diploid Sample Analysis -- Example Configuration:
+
+```
+${MANTA_INSTALL_PATH}/bin/configManta.py \
+--bam NA12878_S1.bam \
+--bam NA12891_S1.bam \
+--bam NA12892_S1.bam \
 --referenceFasta hg19.fa \
 --runDir ${MANTA_ANALYSIS_PATH}
 ```
@@ -398,7 +448,7 @@ There are two sources of advanced configuration options:
   change the desired parameter values and supply the new file using the configuration
   script's `--config FILE` option.
 * Advanced options listed in: `${MANTA_INSTALL_PATH}/bin/configManta.py --allHelp`
-    * These options are indented primarily for workflow development and
+    * These options are intended primarily for workflow development and
   debugging, but could be useful for runtime optimization in some specialized
   cases.
 
@@ -448,7 +498,7 @@ These options are useful for Manta development and debugging:
   re-execute candidates discovery and scoring, but not the initial
   graph generation steps.
 
-### Use cases
+### Extended use cases
 
 #### Exome/Targeted
 
@@ -469,8 +519,8 @@ The results are reported in __tumorSV.vcf.gz__. This file contains all
 SV candidates (similar to the __candidateSV.vcf.gz__ file), but also
 includes paired and split read evidence for each allele and a
 subset of the filters used for the tumor-normal comparative analysis. 
-Note that Manta does not yet provide a scoring model for unpaired tumor
-samples.
+Note that Manta does not yet provide a quality scoring model for unpaired
+tumor sample analysis.
 
 For low allele frequency variants, it may also be helpful to consider the
 high sensitivity calling documentation below.
@@ -490,7 +540,7 @@ fusion calling step.
 It may also be helpful to consider the high sensitivity calling
 documentation below for this mode.
 
-#### Extended use case 1: High sensitivity calling
+### High sensitivity calling
 
 Manta is configured with a discovery sensitivity appropriate for
 general WGS applications.  In targeted or other specialized contexts
@@ -514,4 +564,3 @@ minCandidateSpanningCount = 2
 
 [1]: http://www.1000genomes.org/wiki/Analysis/Variant%20Call%20Format/vcf-variant-call-format-version-41
 [2]: http://sequencing.github.io/pyflow/
-

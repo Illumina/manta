@@ -2,19 +2,21 @@ Manta Structural Variant Caller
 ===============================
 
 Manta calls structural variants (SVs) and indels from mapped
-paired-end sequencing reads. It is optimized for analysis of
-individuals and tumor/normal sample pairs, calling SVs, medium-sized
-indels and large insertions within a single workflow. The method is
-designed for rapid analysis on standard compute hardware: NA12878 at
-50x genomic coverage is analyzed in less than 20 minutes on a 20 core
-server, most WGS tumor-normal analyses can be completed within 2
-hours. Manta combines paired and split-read evidence during SV
-discovery and scoring to improve accuracy, but does not require
-split-reads or successful breakpoint assemblies to report a variant in
-cases where there is strong evidence otherwise. It provides scoring
-models for germline variants in individual diploid samples and somatic
-variants in matched tumor-normal sample pairs. There is limited support
-for unmatched tumor sample analysis. See the [user guide]
+paired-end sequencing reads. It is optimized for analysis of germline
+variation in small sets of individuals and somatic variation in
+tumor/normal sample pairs. Manta discovers, assembles and scores
+large-scale SVs, medium-sized indels and large insertions within a
+single efficient workflow. The method is designed for rapid analysis
+on standard compute hardware: NA12878 at 50x genomic coverage is
+analyzed in less than 20 minutes on a 20 core server, and most WGS
+tumor/normal analyses can be completed within 2 hours. Manta combines
+paired and split-read evidence during SV discovery and scoring to
+improve accuracy, but does not require split-reads or successful
+breakpoint assemblies to report a variant in cases where there is
+strong evidence otherwise. It provides scoring models for germline
+variants in small sets of diploid samples and somatic variants in
+matched tumor/normal sample pairs. There is experimental support for
+analysis of unmatched tumor samples as well. See the [user guide]
 [UserGuide] for a full description of capabilities and limitations, and
 the [Manta preprint][mss] for additional methods and benchmarking details.
 

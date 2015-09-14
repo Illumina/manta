@@ -1,7 +1,9 @@
+- MANTA-259
 - MANTA-260 Add per-sample filtration to separate QUAL and GQ filters for
 diploid case
 - MANTA-252 Add fast chrom median depth estimator (partally enables CRAM)
 - MANTA-258 Add PL values to diploid output
+v0.27.2
 - MANTA-257 Fix rare failure condition for graph merge
 - MANTA-255 include zlib in build, simplify win64 development
 - MANTA-254 Fix handling of off-edge splicing in the RNA Jump Intron Aligner
