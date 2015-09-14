@@ -77,10 +77,10 @@ def main() :
             w = line.strip().split('\t')
             assert(w[0] not in chr)
             chr[w[0]] = float(w[1])
-            
+
         if (index!=0) :
             assert(len(chrtot) == len(chr))
-            
+
         for k in chr :
             if (index!=0) :
                 assert(k in chrtot)

@@ -110,7 +110,7 @@ def runStats(self,taskPrefix="",dependencies=None) :
 
     nextStepWait = set()
     nextStepWait.add(mergeTask)
-    
+
     rmStatsTmpCmd = "rm -rf " + tmpStatsDir
     rmTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmStatsTmpCmd,dependencies=mergeTask, isForceLocal=True)
 
@@ -160,7 +160,7 @@ def _runDepthShared(self,taskPrefix,dependencies, depthFunc) :
 
     nextStepWait = set()
     nextStepWait.add(mergeTask)
-    
+
     rmTmpCmd = "rm -rf " + tmpDir
     rmTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmTmpCmd,dependencies=mergeTask, isForceLocal=True)
 
@@ -194,22 +194,22 @@ def runDepthFromAlignments(self,taskPrefix="",dependencies=None) :
 
         tmpDir=os.path.join(outputPath+".tmpdir")
         dirTask=self.addTask(preJoin(taskPrefix,"makeTmpDir"), "mkdir -p "+tmpDir, dependencies=dependencies, isForceLocal=True)
-    
+
         tmpFiles = []
         scatterTasks = set()
-    
+
         for (chromIndex, chromLabel) in enumerate(self.params.chromOrder) :
             cid = getRobustChromId(chromIndex, chromLabel)
             tmpFiles.append(os.path.join(tmpDir,outputFilename+"_"+cid))
             cmd = [self.params.mantaGetChromDepthBin,"--align-file",bamFile,"--chrom",chromLabel,"--output",tmpFiles[-1]]
             scatterTasks.add(self.addTask(preJoin(taskPrefix,"estimateChromDepth_"+cid),cmd,dependencies=dirTask))
-    
+
         catCmd = "cat " + " ".join(["'%s'" % (x) for x in tmpFiles]) + " > '%s'" % (outputPath)
         catTask = self.addTask(preJoin(taskPrefix,"catChromDepth"),catCmd,dependencies=scatterTasks, isForceLocal=True)
-    
+
         nextStepWait = set()
         nextStepWait.add(catTask)
-    
+
         return nextStepWait
 
     return _runDepthShared(self,taskPrefix,dependencies,depthFunc)

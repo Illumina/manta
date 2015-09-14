@@ -470,7 +470,7 @@ getSVSupportSummary(
     const unsigned sampleCount(baseInfo.samples.size());
     assert(sampleCount == evidence.samples.size());
 
-    for (unsigned sampleIndex(0);sampleIndex<sampleCount;++sampleIndex)
+    for (unsigned sampleIndex(0); sampleIndex<sampleCount; ++sampleIndex)
     {
         getSampleCounts(evidence.getSampleEvidence(sampleIndex), baseInfo.samples[sampleIndex]);
     }
@@ -592,7 +592,7 @@ resolvePairSplitConflicts(
 
     const unsigned sampleCount(evidence.size());
 
-    for (unsigned sampleIndex(0);sampleIndex<sampleCount;++sampleIndex)
+    for (unsigned sampleIndex(0); sampleIndex<sampleCount; ++sampleIndex)
     {
         resolvePairSplitConflictsSample(isFindAltPairConflict, evidence.getSampleEvidence(sampleIndex));
     }

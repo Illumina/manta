@@ -114,7 +114,7 @@ write(
 {
     assert(size() == sampleLabels.size());
     const unsigned s(size());
-    for (unsigned i(0);i<s;++i)
+    for (unsigned i(0); i<s; ++i)
     {
         getSampleCounts(i).write(os,sampleLabels[i].c_str());
     }

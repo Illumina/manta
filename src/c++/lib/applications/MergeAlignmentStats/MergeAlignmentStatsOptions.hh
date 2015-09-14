@@ -36,6 +36,6 @@ struct MergeAlignmentStatsOptions
 
 void
 parseMergeAlignmentStatsOptions(
-        const manta::Program& prog,
-        int argc, char* argv[],
-        MergeAlignmentStatsOptions& opt);
+    const manta::Program& prog,
+    int argc, char* argv[],
+    MergeAlignmentStatsOptions& opt);

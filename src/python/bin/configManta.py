@@ -106,7 +106,7 @@ You must specify a BAM file for at least one sample.
 
 
     def validateOptionExistence(self,options) :
-        
+
         def safeLen(x) :
             if x is None : return 0
             return len(x)

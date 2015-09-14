@@ -1048,7 +1048,7 @@ dumpStats(
     {
         std::vector<std::string> labels;
         const unsigned csize(_counts.size());
-        for (unsigned i(0);i<csize;++i)
+        for (unsigned i(0); i<csize; ++i)
         {
             std::ostringstream oss;
             oss << "Sample" << i;

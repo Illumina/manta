@@ -203,7 +203,7 @@ struct AllCounts
         assert(size() == rhs.size());
 
         const unsigned s(size());
-        for (unsigned i(0);i<s;++i)
+        for (unsigned i(0); i<s; ++i)
         {
             getSampleCounts(i).merge(rhs.getSampleCounts(i));
         }

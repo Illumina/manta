@@ -201,9 +201,9 @@ modifySample(
         const SVScoreInfoDiploidSample& diploidSampleInfo(diploidInfo.samples[diploidSampleIndex]);
 
         values[diploidSampleIndex] =  str( boost::format("%s,%s,%s")
-                         % diploidSampleInfo.phredLoghood[DIPLOID_GT::REF]
-                         % diploidSampleInfo.phredLoghood[DIPLOID_GT::HET]
-                         % diploidSampleInfo.phredLoghood[DIPLOID_GT::HOM]);
+                                           % diploidSampleInfo.phredLoghood[DIPLOID_GT::REF]
+                                           % diploidSampleInfo.phredLoghood[DIPLOID_GT::HET]
+                                           % diploidSampleInfo.phredLoghood[DIPLOID_GT::HOM]);
     }
     sampletags.push_back(std::make_pair("PL",values));
 
@@ -211,8 +211,8 @@ modifySample(
     {
         const SVSampleInfo& sampleInfo(baseInfo.samples[diploidSampleIndex]);
         values[diploidSampleIndex] =  str( boost::format("%i,%i")
-                                    % sampleInfo.ref.confidentSpanningPairCount
-                                    % sampleInfo.alt.confidentSpanningPairCount);
+                                           % sampleInfo.ref.confidentSpanningPairCount
+                                           % sampleInfo.alt.confidentSpanningPairCount);
     }
     sampletags.push_back(std::make_pair("PR",values));
 
@@ -222,8 +222,8 @@ modifySample(
     {
         const SVSampleInfo& sampleInfo(baseInfo.samples[diploidSampleIndex]);
         values[diploidSampleIndex] =  str( boost::format("%i,%i")
-                                    % sampleInfo.ref.confidentSplitReadCount
-                                    % sampleInfo.alt.confidentSplitReadCount);
+                                           % sampleInfo.ref.confidentSplitReadCount
+                                           % sampleInfo.alt.confidentSplitReadCount);
     }
     sampletags.push_back(std::make_pair("SR",values));
 
@@ -233,8 +233,8 @@ modifySample(
     {
         const SVSampleInfo& sampleInfo(baseInfo.samples[diploidSampleIndex]);
         values[diploidSampleIndex] =  str( boost::format("%i,%i")
-                                    % sampleInfo.ref.splitReadCount
-                                    % sampleInfo.alt.splitReadCount);
+                                           % sampleInfo.ref.splitReadCount
+                                           % sampleInfo.alt.splitReadCount);
     }
     sampletags.push_back(std::make_pair("FS",values));
 
@@ -242,8 +242,8 @@ modifySample(
     {
         const SVSampleInfo& sampleInfo(baseInfo.samples[diploidSampleIndex]);
         values[diploidSampleIndex] =  str( boost::format("%i,%i")
-                                    % sampleInfo.ref.spanningPairCount
-                                    % sampleInfo.alt.spanningPairCount);
+                                           % sampleInfo.ref.spanningPairCount
+                                           % sampleInfo.alt.spanningPairCount);
     }
     sampletags.push_back(std::make_pair("FP",values));
 }

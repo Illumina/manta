@@ -1,4 +1,5 @@
-- MANTA-259
+v0.28.0
+- MANTA-259 Support joint analysis of multiple diploid samples
 - MANTA-260 Add per-sample filtration to separate QUAL and GQ filters for
 diploid case
 - MANTA-252 Add fast chrom median depth estimator (partally enables CRAM)
