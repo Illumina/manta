@@ -91,8 +91,7 @@ def main() :
     #
     # Step 2: run demo (on single local core):
     #
-    #stderrlog=$analysis_dir/make.stderr.log
-    cmd=[os.path.join(analysisDir,"runWorkflow.py"),"-m","local","-j","1","-g","4"]
+    cmd=[sys.executable,"-E",os.path.join(analysisDir,"runWorkflow.py"),"-m","local","-j","1","-g","4"]
 
     logfp.write("\n")
     logfp.write("**** Starting demo workflow execution.\n")
@@ -146,6 +145,7 @@ def main() :
     for f in os.listdir(expectedDir) :
         efile=os.path.join(expectedDir,f)
         rfile=os.path.join(resultsDir,f)
+        if not os.path.isfile(efile): continue
 
         udiff_output = difflib.unified_diff(list(rstream(efile)),list(rstream(rfile)),fromfile=efile,tofile=rfile,n=0)
         udiff_str = "".join(list(udiff_output))
