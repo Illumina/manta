@@ -42,7 +42,7 @@ usage(
     const boost::program_options::options_description& visible,
     const char* msg = nullptr)
 {
-    usage(os, prog, visible, "summarize fragment size stats", "", msg);
+    usage(os, prog, visible, "summarize fragment size stats", " [ > output]", msg);
 }
 
 
@@ -76,6 +76,8 @@ parseSASOptions(
     req.add_options()
     ("align-stats", po::value(&opt.statsFilename),
      "pre-computed alignment statistics for the input alignment files (required)")
+    ("output-file", po::value(&opt.outputFilename),
+     "write fragment summary stats to filename (default: stdout)");
     ;
 
     po::options_description help("help");

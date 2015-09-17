@@ -26,6 +26,7 @@
 #include "SASOptions.hh"
 
 #include "blt_util/log.hh"
+#include "common/OutStream.hh"
 #include "manta/ReadGroupStatsSet.hh"
 
 #include <iostream>
@@ -39,7 +40,8 @@ runSAS(const SASOptions& opt)
     static const float quantLevel[] = { 0.01f, 0.05f, 0.10f, 0.25f, 0.50f, 0.75f, 0.90f, 0.95f, 0.99f };
     static const unsigned quantLevelCount(sizeof(quantLevel)/sizeof(float));
 
-    std::ostream& report_os(std::cout);
+    OutStream outs(opt.outputFilename);
+    std::ostream& report_os(outs.getStream());
 
     ReadGroupStatsSet rgss;
     rgss.load(opt.statsFilename.c_str());

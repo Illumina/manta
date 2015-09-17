@@ -115,9 +115,9 @@ def runStats(self,taskPrefix="",dependencies=None) :
     rmTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmStatsTmpCmd,dependencies=mergeTask, isForceLocal=True)
 
     # summarize stats in format that's easier for human review
-    cmd  = self.params.mantaStatsSummaryBin
-    cmd += " --align-stats " + statsPath
-    cmd += " > " + self.paths.getStatsSummaryPath()
+    cmd = [self.params.mantaStatsSummaryBin]
+    cmd.extend(["--align-stats ", statsPath])
+    cmd.extend(["--output-file", self.paths.getStatsSummaryPath()])
     self.addTask(preJoin(taskPrefix,"summarizeStats"),cmd,dependencies=mergeTask)
 
     return nextStepWait

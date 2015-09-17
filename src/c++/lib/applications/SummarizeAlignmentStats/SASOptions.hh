@@ -32,6 +32,7 @@
 struct SASOptions
 {
     std::string statsFilename;
+    std::string outputFilename;
 };
 
 
