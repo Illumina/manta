@@ -439,8 +439,13 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
     extractSmall(self.paths.getSortedCandidatePath(), self.paths.getSortedCandidateSmallIndelsPath())
 
     # sort edge logs:
+    def getEdgeLogSortCmd(logPaths, outPath) :
+        cmd  = [sys.executable,"-E",self.params.mantaSortEdgeLogs,"-o",outPath]
+        cmd.extend(logPaths)
+        return cmd
+
     edgeSortLabel=preJoin(taskPrefix,"sortEdgeRuntimeLogs")
-    edgeSortCmd="sort -rnk2 " + " ".join(edgeRuntimeLogPaths) + " >| " + self.paths.getSortedEdgeRuntimeLogPath()
+    edgeSortCmd=getEdgeLogSortCmd(edgeRuntimeLogPaths,self.paths.getSortedEdgeRuntimeLogPath())
     self.addTask(edgeSortLabel, edgeSortCmd, dependencies=hygenTasks, isForceLocal=True)
 
     # merge edge stats:
