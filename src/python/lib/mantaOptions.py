@@ -34,6 +34,24 @@ from configureUtil import assertOptionExists, joinFile, OptParseException, valid
 from workflowUtil import parseGenomeRegion
 
 
+
+def isWindows() :
+    import platform
+    return (platform.system().find("Windows") > -1)
+
+
+class Constants :
+    isWindows=isWindows()
+
+
+def exeFile(filename):
+    """
+    adjust filename suffix by platform
+    """
+    if Constants.isWindows : return filename + ".exe"
+    return filename
+
+
 def cleanLocals(locals_dict) :
     """
     When passed a locals() dictionary, clean out all of the hidden keys and return
@@ -79,20 +97,20 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         libexecDir=os.path.abspath(os.path.join(scriptDir,"@THIS_RELATIVE_LIBEXECDIR@"))
         assert os.path.isdir(libexecDir)
 
-        bgzipBin=joinFile(libexecDir,"bgzip")
-        samtoolsBin=joinFile(libexecDir,"samtools")
-        tabixBin=joinFile(libexecDir,"tabix")
+        bgzipBin=joinFile(libexecDir,exeFile("bgzip"))
+        samtoolsBin=joinFile(libexecDir,exeFile("samtools"))
+        tabixBin=joinFile(libexecDir,exeFile("tabix"))
 
-        mantaStatsBin=joinFile(libexecDir,"GetAlignmentStats")
-        mantaMergeStatsBin=joinFile(libexecDir,"MergeAlignmentStats")
-        mantaGetChromDepthBin=joinFile(libexecDir,"GetChromDepth")
-        mantaGraphBin=joinFile(libexecDir,"EstimateSVLoci")
-        mantaGraphMergeBin=joinFile(libexecDir,"MergeSVLoci")
-        mantaStatsMergeBin=joinFile(libexecDir,"MergeEdgeStats")
-        mantaGraphCheckBin=joinFile(libexecDir,"CheckSVLoci")
-        mantaHyGenBin=joinFile(libexecDir,"GenerateSVCandidates")
-        mantaGraphStatsBin=joinFile(libexecDir,"SummarizeSVLoci")
-        mantaStatsSummaryBin=joinFile(libexecDir,"SummarizeAlignmentStats")
+        mantaStatsBin=joinFile(libexecDir,exeFile("GetAlignmentStats"))
+        mantaMergeStatsBin=joinFile(libexecDir,exeFile("MergeAlignmentStats"))
+        mantaGetChromDepthBin=joinFile(libexecDir,exeFile("GetChromDepth"))
+        mantaGraphBin=joinFile(libexecDir,exeFile("EstimateSVLoci"))
+        mantaGraphMergeBin=joinFile(libexecDir,exeFile("MergeSVLoci"))
+        mantaStatsMergeBin=joinFile(libexecDir,exeFile("MergeEdgeStats"))
+        mantaGraphCheckBin=joinFile(libexecDir,exeFile("CheckSVLoci"))
+        mantaHyGenBin=joinFile(libexecDir,exeFile("GenerateSVCandidates"))
+        mantaGraphStatsBin=joinFile(libexecDir,exeFile("SummarizeSVLoci"))
+        mantaStatsSummaryBin=joinFile(libexecDir,exeFile("SummarizeAlignmentStats"))
 
         getChromDepth=joinFile(libexecDir,"getBamAvgChromDepth.py")
         mergeChromDepth=joinFile(libexecDir,"mergeChromDepth.py")
