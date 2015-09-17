@@ -25,6 +25,7 @@
 #include "SummarizeSVLoci.hh"
 #include "SSLOptions.hh"
 
+#include "common/OutStream.hh"
 #include "svgraph/SVLocusSet.hh"
 
 #include <iostream>
@@ -39,7 +40,8 @@ runSSL(const SSLOptions& opt)
 
     set.load(opt.graphFilename.c_str());
 
-    std::ostream& os(std::cout);
+    OutStream outs(opt.outputFilename);
+    std::ostream& os(outs.getStream());
 
     if (opt.isGlobalStats)
     {

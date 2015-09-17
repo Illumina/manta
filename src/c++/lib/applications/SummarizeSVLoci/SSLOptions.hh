@@ -33,6 +33,7 @@ struct SSLOptions
 {
     std::string graphFilename;
     bool isGlobalStats = false;
+    std::string outputFilename;
 };
 
 

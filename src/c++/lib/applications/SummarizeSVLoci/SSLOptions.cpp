@@ -42,7 +42,7 @@ usage(
     const boost::program_options::options_description& visible,
     const char* msg = nullptr)
 {
-    usage(os, prog, visible, "write graph summary stats to stdout (tsv format)", " > graph summary", msg);
+    usage(os, prog, visible, "write graph summary stats to stdout (tsv format)", " [ > output ]", msg);
 }
 
 
@@ -60,6 +60,8 @@ parseSSLOptions(
      "sv locus graph file")
     ("global", po::value(&opt.isGlobalStats)->zero_tokens(),
      "provide global stats on full graph (default output is per-locus stats)")
+    ("output-file", po::value(&opt.outputFilename),
+     "write graph summary stats to filename (default: stdout)");
     ;
 
     po::options_description help("help");

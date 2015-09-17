@@ -278,10 +278,9 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
     rmGraphTmpCmd = "rm -rf " + tmpGraphDir
     rmTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmGraphTmpCmd,dependencies=mergeTask)
 
-    graphStatsCmd  = self.params.mantaGraphStatsBin
-    graphStatsCmd += " --global"
-    graphStatsCmd += " --graph-file " + graphPath
-    graphStatsCmd += " >| " + graphStatsPath
+    graphStatsCmd  = [self.params.mantaGraphStatsBin,"--global"]
+    graphStatsCmd.extend(["--graph-file",graphPath])
+    graphStatsCmd.extend(["--output-file",graphStatsPath])
 
     graphStatsTask = self.addTask(preJoin(taskPrefix,"locusGraphStats"),graphStatsCmd,dependencies=mergeTask,memMb=self.params.mergeMemMb)
 
