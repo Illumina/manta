@@ -393,18 +393,22 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
             cmd += " > %s" % (tempVcf)
             cmd += " && %s %s" % (self.params.mantaPloidyFilter, tempVcf)
 
-        cmd += " | %s -c > %s && %s -p vcf %s" % (self.params.bgzipBin, outPath, self.params.tabixBin, outPath)
+        cmd += " | %s -c > %s" % (self.params.bgzipBin, outPath)
 
         if isDiploid:
             cmd += " && rm -f %s" % (self.paths.getTempDiploidPath())
         return cmd
 
+    def getVcfTabixCmd(vcfPath) :
+        return [self.params.tabixBin,"-f","-p","vcf", vcfPath]
+
+
     def sortVcfs(pathList, outPath, label, isDiploid=False) :
         if len(pathList) == 0 : return set()
         sortCmd = getVcfSortCmd(pathList, outPath, isDiploid)
-        sortLabel=preJoin(taskPrefix,label)
-        nextStepWait.add(self.addTask(sortLabel,sortCmd,dependencies=hygenTasks))
-        return sortLabel
+        sortTask=self.addTask(preJoin(taskPrefix,"sort_"+label),sortCmd,dependencies=hygenTasks)
+        nextStepWait.add(self.addTask(preJoin(taskPrefix,"tabix_"+label),getVcfTabixCmd(outPath),dependencies=sortTask,isForceLocal=True))
+        return sortTask
 
     candSortTask = sortVcfs(candidateVcfPaths,
                             self.paths.getSortedCandidatePath(),
@@ -424,16 +428,14 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         cmd  = "%s -dc %s" % (self.params.bgzipBin, inPath)
         cmd += " | %s -E %s --maxSize %i" % (sys.executable, self.params.mantaExtraSmallVcf, maxSize)
         cmd += " | %s -c > %s" % (self.params.bgzipBin, outPath)
-        cmd += " && %s -p vcf %s" % (self.params.tabixBin, outPath)
         return cmd
 
     def extractSmall(inPath, outPath) :
         maxSize = int(self.params.minScoredVariantSize) - 1
         if maxSize < 1 : return
-
         smallCmd = getExtractSmallCmd(maxSize, inPath, outPath)
-        smallLabel=preJoin(taskPrefix,"extractSmallIndels")
-        nextStepWait.add(self.addTask(smallLabel, smallCmd, dependencies=candSortTask, isForceLocal=True))
+        smallLabel=self.addTask(preJoin(taskPrefix,"extractSmallIndels"), smallCmd, dependencies=candSortTask, isForceLocal=True)
+        nextStepWait.add(self.addTask(smallLabel+"_tabix", getVcfTabixCmd(outPath), dependencies=smallLabel, isForceLocal=True))
 
     extractSmall(self.paths.getSortedCandidatePath(), self.paths.getSortedCandidateSmallIndelsPath())
 
