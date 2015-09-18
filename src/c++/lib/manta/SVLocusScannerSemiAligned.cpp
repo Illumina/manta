@@ -105,9 +105,9 @@ leadingEdgeMismatchLength(
                 }
             }
         }
-        else
+        else if (is_segment_type_indel(ps.type))
         {
-            matchLength=0;
+            matchLength = 0;
         }
 
         if (is_segment_type_read_length(ps.type)) readIndex += ps.length;
@@ -163,9 +163,9 @@ trailingEdgeMismatchLength(
                 }
             }
         }
-        else
+        else if (is_segment_type_indel(ps.type))
         {
-            matchLength=0;
+            matchLength = 0;
         }
 
         if (is_segment_type_read_length(ps.type)) readIndex -= ps.length;
