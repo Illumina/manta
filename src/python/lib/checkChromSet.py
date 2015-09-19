@@ -67,7 +67,7 @@ def getBamChromInfo(samtoolsBin,bam) :
 
     import subprocess
 
-    cmd="\"%s\" view -H '%s'" % (samtoolsBin,bam)
+    cmd="\"%s\" view -H \"%s\"" % (samtoolsBin,bam)
 
     info = {}
     chromIndex=0
