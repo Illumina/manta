@@ -78,6 +78,8 @@ def setzer(x) :
     """
     return set(lister(x))
 
+def quoteStringList(strList):
+    return ["\"%s\"" % (x) for x in strList]
 
 
 def runStats(self,taskPrefix="",dependencies=None) :
@@ -174,9 +176,9 @@ def runDepthFromIndex(self,taskPrefix="",dependencies=None) :
     """
 
     def depthFunc(self,taskPrefix,dependencies,bamFile,outFile) :
-        cmd  = "%s -E '%s'" % (sys.executable, self.params.getChromDepth)
-        cmd += " --bam '%s'" % (bamFile)
-        cmd += " > %s" % (outFile)
+        cmd  = "\"%s\" -E \"%s\"" % (sys.executable, self.params.getChromDepth)
+        cmd += " --bam \"%s\"" % (bamFile)
+        cmd += " > \"%s\"" % (outFile)
         return self.addTask(preJoin(taskPrefix,"estimateChromDepth"),cmd,dependencies=dependencies)
 
     return _runDepthShared(self,taskPrefix,dependencies,depthFunc)
@@ -204,7 +206,7 @@ def runDepthFromAlignments(self,taskPrefix="",dependencies=None) :
             cmd = [self.params.mantaGetChromDepthBin,"--align-file",bamFile,"--chrom",chromLabel,"--output",tmpFiles[-1]]
             scatterTasks.add(self.addTask(preJoin(taskPrefix,"estimateChromDepth_"+cid),cmd,dependencies=dirTask))
 
-        catCmd = "cat " + " ".join(["'%s'" % (x) for x in tmpFiles]) + " > '%s'" % (outputPath)
+        catCmd = "cat " + " ".join(quoteStringList(tmpFiles)) + " > \"%s\"" % (outputPath)
         catTask = self.addTask(preJoin(taskPrefix,"catChromDepth"),catCmd,dependencies=scatterTasks, isForceLocal=True)
 
         nextStepWait = set()
@@ -384,19 +386,19 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
     nextStepWait = copy.deepcopy(hygenTasks)
 
     def getVcfSortCmd(vcfPaths, outPath, isDiploid) :
-        cmd  = "%s -E %s -u " % (sys.executable,self.params.mantaSortVcf)
-        cmd += " ".join(vcfPaths)
+        cmd  = "\"%s\" -E \"%s\" -u " % (sys.executable,self.params.mantaSortVcf)
+        cmd += " ".join(quoteStringList(vcfPaths))
 
         # apply the ploidy filter to diploid variants
         if isDiploid:
             tempVcf = self.paths.getTempDiploidPath()
-            cmd += " > %s" % (tempVcf)
-            cmd += " && %s %s" % (self.params.mantaPloidyFilter, tempVcf)
+            cmd += " > \"%s\"" % (tempVcf)
+            cmd += " && \"%s\" -E \"%s\" \"%s\"" % (sys.executable, self.params.mantaPloidyFilter, tempVcf)
 
-        cmd += " | %s -c > %s" % (self.params.bgzipBin, outPath)
+        cmd += " | \"%s\" -c > \"%s\"" % (self.params.bgzipBin, outPath)
 
         if isDiploid:
-            cmd += " && rm -f %s" % (self.paths.getTempDiploidPath())
+            cmd += " && rm -f \"%s\"" % (self.paths.getTempDiploidPath())
         return cmd
 
     def getVcfTabixCmd(vcfPath) :
@@ -425,9 +427,9 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
              "sortTumorSV")
 
     def getExtractSmallCmd(maxSize, inPath, outPath) :
-        cmd  = "%s -dc %s" % (self.params.bgzipBin, inPath)
-        cmd += " | %s -E %s --maxSize %i" % (sys.executable, self.params.mantaExtraSmallVcf, maxSize)
-        cmd += " | %s -c > %s" % (self.params.bgzipBin, outPath)
+        cmd  = "\"%s\" -dc \"%s\"" % (self.params.bgzipBin, inPath)
+        cmd += " | \"%s\" -E \"%s\" --maxSize %i" % (sys.executable, self.params.mantaExtraSmallVcf, maxSize)
+        cmd += " | \"%s\" -c > \"%s\"" % (self.params.bgzipBin, outPath)
         return cmd
 
     def extractSmall(inPath, outPath) :
