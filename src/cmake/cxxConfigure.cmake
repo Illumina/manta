@@ -71,6 +71,11 @@ if (UNIX AND NOT APPLE)
     set  (THIS_ADDITIONAL_LIB ${THIS_ADDITIONAL_LIB} rt)
 endif ()
 
+if (WIN32)
+    set  (THIS_ADDITIONAL_LIB ${THIS_ADDITIONAL_LIB} ws2_32)
+endif ()
+
+
 # samtools 1.x forces pthreads in link:
 find_package( Threads )
 
