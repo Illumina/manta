@@ -33,7 +33,7 @@ libexecDir=os.path.abspath(os.path.join(scriptDir,"@THIS_RELATIVE_LIBEXECDIR@"))
 pythonLibDir=os.path.abspath(os.path.join(scriptDir,"@THIS_RELATIVE_PYTHON_LIBDIR@"))
 sys.path.append(pythonLibDir)
 
-from workflowUtil import checkDir, checkFile
+from workflowUtil import checkDir, checkFile, exeFile, isWindows
 
 
 
@@ -76,14 +76,14 @@ def main() :
 
     checkDir(libexecDir)
 
-    samtoolsBin = os.path.join(libexecDir,'samtools')
+    samtoolsBin = os.path.join(libexecDir,exeFile("samtools"))
     checkFile(samtoolsBin,"samtools binary")
 
     chromData = {}
     chromList = []
 
     if True :
-        cmd = samtoolsBin + " idxstats '%s'" % (options.bamFile)
+        cmd = "\"%s\" idxstats \"%s\"" % (samtoolsBin, options.bamFile)
         proc = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE)
         for line in proc.stdout :
             word = line.strip().split('\t')
@@ -112,13 +112,13 @@ def main() :
         matchRex = re.compile("([0-9]+)[M=X]")
 
         # use "-F 4" to filter out unmapped reads
-        cmd = samtoolsBin + " view -F 4"
+        cmd = "\"%s\" view -F 4" % (samtoolsBin)
 
         # use "-s 0.1" to subsample the bam records to increaase sampled read diversity
         if type == 'subsample' :
             cmd += " -s 0.1"
 
-        cmd += " '%s'" % (options.bamFile)
+        cmd += " \"%s\"" % (options.bamFile)
 
         proc = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE)
         for line in proc.stdout :
@@ -133,7 +133,8 @@ def main() :
             if count >= (min_count*2) : break
 
         # done with subprocess:
-        os.kill(proc.pid, signal.SIGINT)
+        if not isWindows() :
+            os.kill(proc.pid, signal.SIGINT)
 
         if count > min_count : break
 

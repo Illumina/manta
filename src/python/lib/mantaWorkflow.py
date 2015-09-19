@@ -37,7 +37,7 @@ sys.path.append(os.path.abspath(pyflowDir))
 
 from configBuildTimeInfo import workflowVersion
 from pyflow import WorkflowRunner
-from workflowUtil import checkFile, ensureDir, preJoin, which, \
+from workflowUtil import checkFile, ensureDir, isWindows, preJoin, which, \
                          getNextGenomeSegment, getFastaChromOrderSize, getRobustChromId, cleanPyEnv
 
 from configureUtil import getIniSections,dumpIniSections
@@ -45,14 +45,6 @@ from configureUtil import getIniSections,dumpIniSections
 
 
 __version__ = workflowVersion
-
-
-def isWindows() :
-    import platform
-    return (platform.system().find("Windows") > -1)
-
-class Constants :
-    isWindows = isWindows()
 
 
 def isString(x):
@@ -87,25 +79,25 @@ def setzer(x) :
 
 
 def getMkdirCmd() :
-    if Constants.isWindows:
+    if isWindows() :
         return ["mkdir"]
     else:
         return ["mkdir","-p"]
 
 def getRmdirCmd() :
-    if Constants.isWindows:
+    if isWindows():
         return ["rd","/s","/q"]
     else:
         return ["rm","-rf"]
 
 def getRmCmd() :
-    if Constants.isWindows:
+    if isWindows():
         return ["del","/f"]
     else:
         return ["rm","-f"]
 
 def getCatCmd() :
-    if Constants.isWindows:
+    if isWindows():
         return ["type"]
     else:
         return ["cat"]

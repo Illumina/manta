@@ -348,3 +348,23 @@ def isLocalSmtp() :
         return False
     return True
 
+
+def _isWindows() :
+    import platform
+    return (platform.system().find("Windows") > -1)
+
+
+class Constants :
+    isWindows=_isWindows()
+
+
+def isWindows() :
+    return Constants.isWindows
+
+
+def exeFile(filename):
+    """
+    adjust filename suffix by platform
+    """
+    if isWindows() : return filename + ".exe"
+    return filename

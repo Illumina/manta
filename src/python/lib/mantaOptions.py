@@ -31,25 +31,8 @@ sys.path.append(scriptDir)
 
 from configureOptions import ConfigureWorkflowOptions
 from configureUtil import assertOptionExists, joinFile, OptParseException, validateFixExistingDirArg, validateFixExistingFileArg
-from workflowUtil import parseGenomeRegion
+from workflowUtil import exeFile, parseGenomeRegion
 
-
-
-def isWindows() :
-    import platform
-    return (platform.system().find("Windows") > -1)
-
-
-class Constants :
-    isWindows=isWindows()
-
-
-def exeFile(filename):
-    """
-    adjust filename suffix by platform
-    """
-    if Constants.isWindows : return filename + ".exe"
-    return filename
 
 
 def cleanLocals(locals_dict) :
