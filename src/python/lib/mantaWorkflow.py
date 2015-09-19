@@ -47,6 +47,13 @@ from configureUtil import getIniSections,dumpIniSections
 __version__ = workflowVersion
 
 
+def isWindows() :
+    import platform
+    return (platform.system().find("Windows") > -1)
+
+class Constants :
+    isWindows = isWindows()
+
 
 def isString(x):
     return isinstance(x, basestring)
@@ -78,6 +85,32 @@ def setzer(x) :
     """
     return set(lister(x))
 
+
+def getMkdirCmd() :
+    if Constants.isWindows:
+        return ["mkdir"]
+    else:
+        return ["mkdir","-p"]
+
+def getRmdirCmd() :
+    if Constants.isWindows:
+        return ["rd","/s","/q"]
+    else:
+        return ["rm","-rf"]
+
+def getRmCmd() :
+    if Constants.isWindows:
+        return ["del","/f"]
+    else:
+        return ["rm","-f"]
+
+def getCatCmd() :
+    if Constants.isWindows:
+        return ["type"]
+    else:
+        return ["cat"]
+
+
 def quoteStringList(strList):
     return ["\"%s\"" % (x) for x in strList]
 
@@ -88,7 +121,9 @@ def runStats(self,taskPrefix="",dependencies=None) :
     statsFilename=os.path.basename(statsPath)
 
     tmpStatsDir=statsPath+".tmpdir"
-    dirTask=self.addTask(preJoin(taskPrefix,"makeTmpDir"), "mkdir -p "+tmpStatsDir, dependencies=dependencies, isForceLocal=True)
+
+    makeTmpStatsDirCmd = getMkdirCmd() + [tmpStatsDir]
+    dirTask=self.addTask(preJoin(taskPrefix,"makeTmpDir"), makeTmpStatsDirCmd, dependencies=dependencies, isForceLocal=True)
 
     tmpStatsFiles = []
     statsTasks = set()
@@ -113,7 +148,7 @@ def runStats(self,taskPrefix="",dependencies=None) :
     nextStepWait = set()
     nextStepWait.add(mergeTask)
 
-    rmStatsTmpCmd = "rm -rf " + tmpStatsDir
+    rmStatsTmpCmd = getRmdirCmd() + [tmpStatsDir]
     rmTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmStatsTmpCmd,dependencies=mergeTask, isForceLocal=True)
 
     # summarize stats in format that's easier for human review
@@ -143,7 +178,8 @@ def _runDepthShared(self,taskPrefix,dependencies, depthFunc) :
     outputFilename=os.path.basename(outputPath)
 
     tmpDir=outputPath+".tmpdir"
-    dirTask=self.addTask(preJoin(taskPrefix,"makeTmpDir"), "mkdir -p "+tmpDir, dependencies=dependencies, isForceLocal=True)
+    makeTmpDirCmd = getMkdirCmd() + [tmpDir]
+    dirTask=self.addTask(preJoin(taskPrefix,"makeTmpDir"), makeTmpDirCmd, dependencies=dependencies, isForceLocal=True)
 
     tmpFiles = []
     scatterTasks = set()
@@ -163,7 +199,7 @@ def _runDepthShared(self,taskPrefix,dependencies, depthFunc) :
     nextStepWait = set()
     nextStepWait.add(mergeTask)
 
-    rmTmpCmd = "rm -rf " + tmpDir
+    rmTmpCmd = getRmdirCmd() + [tmpDir]
     rmTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmTmpCmd,dependencies=mergeTask, isForceLocal=True)
 
     return nextStepWait
@@ -195,7 +231,8 @@ def runDepthFromAlignments(self,taskPrefix="",dependencies=None) :
         outputFilename=os.path.basename(outputPath)
 
         tmpDir=os.path.join(outputPath+".tmpdir")
-        dirTask=self.addTask(preJoin(taskPrefix,"makeTmpDir"), "mkdir -p "+tmpDir, dependencies=dependencies, isForceLocal=True)
+        makeTmpDirCmd = getMkdirCmd() + [tmpDir]
+        dirTask=self.addTask(preJoin(taskPrefix,"makeTmpDir"), makeTmpDirCmd, dependencies=dependencies, isForceLocal=True)
 
         tmpFiles = []
         scatterTasks = set()
@@ -206,7 +243,7 @@ def runDepthFromAlignments(self,taskPrefix="",dependencies=None) :
             cmd = [self.params.mantaGetChromDepthBin,"--align-file",bamFile,"--chrom",chromLabel,"--output",tmpFiles[-1]]
             scatterTasks.add(self.addTask(preJoin(taskPrefix,"estimateChromDepth_"+cid),cmd,dependencies=dirTask))
 
-        catCmd = "cat " + " ".join(quoteStringList(tmpFiles)) + " > \"%s\"" % (outputPath)
+        catCmd = " ".join(getCatCmd()+quoteStringList(tmpFiles)) + " > \"%s\"" % (outputPath)
         catTask = self.addTask(preJoin(taskPrefix,"catChromDepth"),catCmd,dependencies=scatterTasks, isForceLocal=True)
 
         nextStepWait = set()
@@ -229,7 +266,9 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
 
     graphFilename=os.path.basename(graphPath)
     tmpGraphDir=os.path.join(self.params.workDir,graphFilename+".tmpdir")
-    dirTask=self.addTask(preJoin(taskPrefix,"makeTmpDir"), "mkdir -p "+tmpGraphDir, dependencies=dependencies, isForceLocal=True)
+
+    makeTmpDirCmd = getMkdirCmd() + [tmpGraphDir]
+    dirTask=self.addTask(preJoin(taskPrefix,"makeTmpDir"), makeTmpDirCmd, dependencies=dependencies, isForceLocal=True)
 
     tmpGraphFiles = []
     graphTasks = set()
@@ -277,7 +316,7 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
     checkCmd.extend(["--graph-file", graphPath])
     checkTask = self.addTask(preJoin(taskPrefix,"checkLocusGraph"),checkCmd,dependencies=mergeTask,memMb=self.params.mergeMemMb)
 
-    rmGraphTmpCmd = "rm -rf " + tmpGraphDir
+    rmGraphTmpCmd = getRmdirCmd() + [tmpGraphDir]
     rmTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmGraphTmpCmd,dependencies=mergeTask)
 
     graphStatsCmd  = [self.params.mantaGraphStatsBin,"--global"]
@@ -303,7 +342,8 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
     graphPath=self.paths.getGraphPath()
     hygenDir=self.paths.getHyGenDir()
 
-    dirTask=self.addTask(preJoin(taskPrefix,"makeHyGenDir"), "mkdir -p "+ hygenDir, dependencies=dependencies, isForceLocal=True)
+    makeHyGenDirCmd = getMkdirCmd() + [hygenDir]
+    dirTask = self.addTask(preJoin(taskPrefix,"makeHyGenDir"), makeHyGenDirCmd, dependencies=dependencies, isForceLocal=True)
 
     isSomatic = (len(self.params.normalBamList) and len(self.params.tumorBamList))
     isTumorOnly = ((not isSomatic) and len(self.params.tumorBamList))
@@ -398,7 +438,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         cmd += " | \"%s\" -c > \"%s\"" % (self.params.bgzipBin, outPath)
 
         if isDiploid:
-            cmd += " && rm -f \"%s\"" % (self.paths.getTempDiploidPath())
+            cmd += " && " + " ".join(getRmCmd()) + " \"%s\"" % (self.paths.getTempDiploidPath())
         return cmd
 
     def getVcfTabixCmd(vcfPath) :
