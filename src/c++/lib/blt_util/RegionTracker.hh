@@ -110,6 +110,13 @@ struct RegionTracker
 
     typedef std::set<known_pos_range2,PosRangeEndSort>  region_t;
 
+	unsigned
+    size() const
+    {
+        return _regions.size();
+    }
+
+
 private:
 
     bool
@@ -189,6 +196,12 @@ struct RegionPayloadTracker
         std::ostream& os) const;
 
     typedef typename std::map<known_pos_range2,T,PosRangeEndSort> region_t;
+
+    unsigned
+    size() const
+    {
+        return _regions.size();
+    }
 
 private:
 

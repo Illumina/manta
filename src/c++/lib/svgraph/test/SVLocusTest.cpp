@@ -24,9 +24,6 @@
 
 #include "boost/test/unit_test.hpp"
 
-#pragma clang diagnostic ignored "-Wkeyword-macro"
-#define private public
-
 #include "svgraph/SVLocus.hh"
 
 #include "SVLocusTestUtil.hh"
@@ -61,13 +58,14 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeMerge2)
     locus1.linkNodes(nodePtr1,nodePtr3);
     locus1.linkNodes(nodePtr2,nodePtr4);
 
-    locus1.mergeNode(nodePtr2, nodePtr1, NULL);
+    //locus1.mergeNode(nodePtr2, nodePtr1, NULL);
+    locus1.mergeSelfOverlap();
 
-    const SVLocusNode& node1(locus1.getNode(nodePtr1));
+    const SVLocusNode& node1(static_cast<const SVLocus&>(locus1).getNode(nodePtr1));
 
     BOOST_REQUIRE_EQUAL(node1.outCount(),2u);
-    BOOST_REQUIRE_EQUAL(node1._interval.range.begin_pos(),10);
-    BOOST_REQUIRE_EQUAL(node1._interval.range.end_pos(),25);
+    BOOST_REQUIRE_EQUAL(node1.getInterval().range.begin_pos(),10);
+    BOOST_REQUIRE_EQUAL(node1.getInterval().range.end_pos(),25);
     BOOST_REQUIRE_EQUAL(node1.size(),2u);
 }
 
@@ -80,11 +78,11 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeMergeSelfEdge)
     locus1.linkNodes(nodePtr1,nodePtr2);
     locus1.mergeSelfOverlap();
 
-    const SVLocusNode& node1(locus1.getNode(0));
+    const SVLocusNode& node1(static_cast<const SVLocus&>(locus1).getNode(0));
 
     BOOST_REQUIRE_EQUAL(node1.outCount(),1u);
-    BOOST_REQUIRE_EQUAL(node1._interval.range.begin_pos(),10);
-    BOOST_REQUIRE_EQUAL(node1._interval.range.end_pos(),25);
+    BOOST_REQUIRE_EQUAL(node1.getInterval().range.begin_pos(),10);
+    BOOST_REQUIRE_EQUAL(node1.getInterval().range.end_pos(),25);
     BOOST_REQUIRE_EQUAL(node1.size(),1u);
 
     // test that the single edge of the merged node is to self:
@@ -100,7 +98,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeMergeSelfEdgeReverse)
     locus1.linkNodes(nodePtr2,nodePtr1);
     locus1.mergeSelfOverlap();
 
-    const SVLocusNode& node1(locus1.getNode(0));
+    const SVLocusNode& node1(static_cast<const SVLocus&>(locus1).getNode(0));
 
     BOOST_REQUIRE_EQUAL(node1.outCount(),1u);
     BOOST_REQUIRE_EQUAL(node1.getInterval().range.begin_pos(),10);
@@ -123,11 +121,11 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeMergeMultiSelfEdge )
 
     locus1.mergeSelfOverlap();
 
-    const SVLocusNode& node1(locus1.getNode(0));
+    const SVLocusNode& node1(static_cast<const SVLocus&>(locus1).getNode(0));
 
     BOOST_REQUIRE_EQUAL(node1.outCount(),2u);
-    BOOST_REQUIRE_EQUAL(node1._interval.range.begin_pos(),10);
-    BOOST_REQUIRE_EQUAL(node1._interval.range.end_pos(),25);
+    BOOST_REQUIRE_EQUAL(node1.getInterval().range.begin_pos(),10);
+    BOOST_REQUIRE_EQUAL(node1.getInterval().range.end_pos(),25);
     BOOST_REQUIRE_EQUAL(node1.size(),1u);
 
     // test that the single edge of the merged node is to self:
@@ -157,12 +155,13 @@ BOOST_AUTO_TEST_CASE( test_SVLocusClearEdges )
     // now disconnect 1 from 2,3:
     locus1.clearNodeEdges(nodePtr1);
 
-    BOOST_REQUIRE_EQUAL(locus1.size(),4u);
+    const SVLocus& clocus1(locus1);
+    BOOST_REQUIRE_EQUAL(clocus1.size(),4u);
 
-    BOOST_REQUIRE_EQUAL(locus1.getNode(nodePtr1).size(),0u);
-    BOOST_REQUIRE_EQUAL(locus1.getNode(nodePtr2).size(),1u);
-    BOOST_REQUIRE_EQUAL(locus1.getNode(nodePtr3).size(),1u);
-    BOOST_REQUIRE_EQUAL(locus1.getNode(nodePtr4).size(),2u);
+    BOOST_REQUIRE_EQUAL(clocus1.getNode(nodePtr1).size(),0u);
+    BOOST_REQUIRE_EQUAL(clocus1.getNode(nodePtr2).size(),1u);
+    BOOST_REQUIRE_EQUAL(clocus1.getNode(nodePtr3).size(),1u);
+    BOOST_REQUIRE_EQUAL(clocus1.getNode(nodePtr4).size(),2u);
 }
 
 

@@ -309,6 +309,15 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
 
     typedef std::pair<LocusIndexType,NodeIndexType> NodeAddressType;
 
+    /// get all nodes in this object which intersect with
+    /// an external node
+    ///
+    /// this is effectively const
+    void
+    getRegionIntersect(
+        const GenomeInterval interval,
+        std::set<NodeAddressType>& intersectNodes);
+
 private:
 
     typedef NodeAddressType EdgeMapKeyType;
@@ -441,13 +450,6 @@ private:
         const NodeIndexType inputNodeIndex,
         const bool isInputLocusMoved,
         std::set<NodeAddressType>& mergeIntersect) const;
-
-    /// get all nodes in this object which intersect with
-    /// an external node
-    void
-    getRegionIntersect(
-        const GenomeInterval interval,
-        std::set<NodeAddressType>& intersectNodes);
 
     /// assign all intersect clusters to the lowest index number that is not startLocusIndex
     ///

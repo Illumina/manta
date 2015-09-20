@@ -263,6 +263,9 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
     unsigned
     getNodeInCount(const LocusIndexType nodeIndex) const;
 
+    void
+    clearNodeEdges(const NodeIndexType nodePtr);
+
     // a fancier version of the SVLocusNode dumper which can
     // report in-edge information
     void
@@ -340,9 +343,6 @@ private:
     clean(
         const unsigned minMergeEdgeCount,
         flyweight_observer_t* obs);
-
-    void
-    clearNodeEdges(const NodeIndexType nodePtr);
 
     void
     getEdgeException(

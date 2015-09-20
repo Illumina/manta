@@ -24,9 +24,6 @@
 
 #include "boost/test/unit_test.hpp"
 
-#pragma clang diagnostic ignored "-Wkeyword-macro"
-#define private public
-
 #include "svgraph/SVLocus.hh"
 
 #include "SVLocusTestUtil.hh"
@@ -46,9 +43,9 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNode_EM )
 
     BOOST_REQUIRE_EQUAL(locus1.size(),1u);
 
-    SVLocusNode& node(locus1.getNode(0));
+    const SVLocusNode& node(static_cast<const SVLocus&>(locus1).getNode(0));
 
-    SVLocusEdgeManager em = node.getEdgeManager();
+    const SVLocusEdgeManager em = node.getEdgeManager();
 
     BOOST_REQUIRE_EQUAL(em.getMap().size(),1u);
 
