@@ -110,7 +110,7 @@ struct RegionTracker
 
     typedef std::set<known_pos_range2,PosRangeEndSort>  region_t;
 
-	unsigned
+    unsigned
     size() const
     {
         return _regions.size();

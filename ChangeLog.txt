@@ -1,3 +1,4 @@
+- MANTA-261 stable components from Manta windows port
 v0.28.0
 - MANTA-259 Support joint analysis of multiple diploid samples
 - MANTA-260 Add per-sample filtration to separate QUAL and GQ filters for

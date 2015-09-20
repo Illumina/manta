@@ -34,7 +34,7 @@ isSVBelowMinSize(
     const SVCandidate& sv,
     const unsigned minSize);
 
-/// returns true if the sv is in cis orientation, i.e same chromosome 
+/// returns true if the sv is in cis orientation, i.e same chromosome
 /// and a right open breakend to the left of a left open breakend
 ///
 bool

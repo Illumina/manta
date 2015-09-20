@@ -60,7 +60,7 @@ parseChromDepthOptions(
      "chromosome name")
     ("output-file", po::value(&opt.outputFilename),
      "write stats to filename (default: stdout)")
-     ;
+    ;
 
     po::options_description help("help");
     help.add_options()

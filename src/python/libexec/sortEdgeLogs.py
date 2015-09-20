@@ -78,7 +78,7 @@ def main() :
             slog.append((w1,line))
 
     slog.sort(reverse=True)
-    
+
     ofp = open(options.outFile,"w")
 
     for (w1,line) in slog :
