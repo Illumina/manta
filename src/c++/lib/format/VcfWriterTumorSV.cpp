@@ -52,7 +52,7 @@ addHeaderFilters() const
 {
     if (_isMaxDepthFilter)
     {
-        _os << "##FILTER=<ID=" << _tumorOpt.maxDepthFilterLabel << ",Description=\"Sample site depth is greater than " << _tumorOpt.maxDepthFactor << "x the mean chromosome depth near one or both variant breakends\">\n";
+        _os << "##FILTER=<ID=" << _tumorOpt.maxDepthFilterLabel << ",Description=\"Sample site depth is greater than " << _tumorOpt.maxDepthFactor << "x the median chromosome depth near one or both variant breakends\">\n";
     }
 
     _os << "##FILTER=<ID=" << _tumorOpt.maxMQ0FracLabel << ",Description=\"For a small variant (<1000 base), the fraction of reads with MAPQ0 around either breakend exceeds " << _tumorOpt.maxMQ0Frac << "\">\n";

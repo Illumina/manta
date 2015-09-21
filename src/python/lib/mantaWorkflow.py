@@ -682,7 +682,7 @@ class MantaWorkflow(WorkflowRunner) :
             graphTaskDependencies |= statsTasks
 
         if not ((not self.params.isHighDepthFilter) or self.params.useExistingChromDepths) :
-            depthTasks = runDepthFromIndex(self,taskPrefix="getChromDepth")
+            depthTasks = runDepthFromAlignments(self,taskPrefix="getChromDepth")
             graphTaskDependencies |= depthTasks
 
         graphTasks = runLocusGraph(self,dependencies=graphTaskDependencies)

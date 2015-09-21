@@ -67,7 +67,7 @@ addHeaderFilters() const
 {
     if (_isMaxDepthFilter)
     {
-        _os << "##FILTER=<ID=" << _diploidOpt.maxDepthFilterLabel << ",Description=\"Depth is greater than " << _diploidOpt.maxDepthFactor << "x the mean chromosome depth near one or both variant breakends\">\n";
+        _os << "##FILTER=<ID=" << _diploidOpt.maxDepthFilterLabel << ",Description=\"Depth is greater than " << _diploidOpt.maxDepthFactor << "x the median chromosome depth near one or both variant breakends\">\n";
     }
     _os << "##FILTER=<ID=" << _diploidOpt.maxMQ0FracLabel << ",Description=\"For a small variant (<1000 bases), the fraction of reads in all samples with MAPQ0 around either breakend exceeds " << _diploidOpt.maxMQ0Frac << "\">\n";
     _os << "##FILTER=<ID=" << _diploidOpt.noPairSupportLabel << ",Description=\"For variants significantly larger than the paired read fragment size, no paired reads support the alternate allele in any sample.\">\n";

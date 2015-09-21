@@ -57,7 +57,7 @@ addHeaderFilters() const
 {
     if (_isMaxDepthFilter)
     {
-        _os << "##FILTER=<ID=" << _somaticOpt.maxDepthFilterLabel << ",Description=\"Normal sample site depth is greater than " << _somaticOpt.maxDepthFactor << "x the mean chromosome depth near one or both variant breakends\">\n";
+        _os << "##FILTER=<ID=" << _somaticOpt.maxDepthFilterLabel << ",Description=\"Normal sample site depth is greater than " << _somaticOpt.maxDepthFactor << "x the median chromosome depth near one or both variant breakends\">\n";
     }
     _os << "##FILTER=<ID=" << _somaticOpt.minSomaticScoreLabel << ",Description=\"Somatic score is less than " << _somaticOpt.minPassSomaticScore << "\">\n";
     _os << "##FILTER=<ID=" << _somaticOpt.maxMQ0FracLabel << ",Description=\"For a small variant (<1000 bases) in the normal sample, the fraction of reads with MAPQ0 around either breakend exceeds " << _somaticOpt.maxMQ0Frac << "\">\n";

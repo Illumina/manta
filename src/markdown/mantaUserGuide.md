@@ -331,7 +331,7 @@ MinQUAL | QUAL score is less than 20
 MinGQ | GQ score is less than 15 (filter applied at sample level and record level if all samples are filtered)
 MinSomaticScore | SOMATICSCORE is less than 30
 Ploidy | For DEL & DUP variants, the genotypes of overlapping variants (with similar size) are inconsistent with diploid expectation
-MaxDepth | Depth is greater than 3x the mean chromosome depth near one or both variant breakends
+MaxDepth | Depth is greater than 3x the median chromosome depth near one or both variant breakends
 MaxMQ0Frac | For a small variant (<1000 bases), the fraction of reads in all samples with MAPQ0 around either breakend exceeds 0.4
 NoPairSupport | For variants significantly larger than the paired read fragment size, no paired reads support the alternate allele in any sample
 
