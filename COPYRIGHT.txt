@@ -26,7 +26,7 @@ library:
 
 ******************************************************************
 
-htslib 1.2.1
+htslib 1.2.1-204-g8197cfd
 
 [Files in this distribution outwith the cram/ subdirectory are distributed
 according to the terms of the following MIT/Expat license.]

@@ -101,7 +101,7 @@ add_custom_target(${THIS_ZLIB} DEPENDS "${ZLIB_LIBRARY}")
 #
 # htslib
 #
-set(HTSLIB_PREFIX "htslib-1.2.1")
+set(HTSLIB_PREFIX "htslib-1.2.1-204-g8197cfd")
 superset(HTSLIB_DIR "${CMAKE_CURRENT_BINARY_DIR}/${HTSLIB_PREFIX}")
 superset(HTSLIB_LIBRARY "${HTSLIB_DIR}/libhts.a")
 
