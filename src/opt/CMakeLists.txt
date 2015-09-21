@@ -146,7 +146,6 @@ add_custom_command(
     OUTPUT ${SAMTOOLS_DIR}
     COMMAND ${CMAKE_COMMAND} -E remove_directory "${SAMTOOLS_DIR}"
     COMMAND ${CMAKE_COMMAND} -E tar xjf "${THIS_REDIST_DIR}/${SAMTOOLS_PREFIX}.tar.bz2"
-    COMMAND ${CMAKE_COMMAND} -E copy_directory "${HTSLIB_DIR}" "${SAMTOOLS_DIR}/${HTSLIB_PREFIX}"
     DEPENDS ${HTSLIB_FINAL_TASK}
     COMMENT "Unpacking samtools package")
 
@@ -157,7 +156,7 @@ if (NOT WIN32)
     # we need to restore at least the -O2 for reasonable library performance:
     add_custom_command(
         OUTPUT ${SAMTOOLS_PROG}
-        COMMAND $(MAKE) CC="${CMAKE_C_COMPILER}" CFLAGS='-O2 -I"${ZLIB_DIR}"' LDLIBS="${ZLIB_LIBRARY}" all 2>samtools.build.error.log
+        COMMAND $(MAKE) CC="${CMAKE_C_COMPILER}" HTSDIR="${HTSLIB_DIR}" CFLAGS='-O2 -I"${ZLIB_DIR}"' LDLIBS="${ZLIB_LIBRARY}" all 2>samtools.build.error.log
         DEPENDS ${HTSLIB_LIBRARY}
         DEPENDS ${SAMTOOLS_DIR}
         WORKING_DIRECTORY ${SAMTOOLS_DIR}

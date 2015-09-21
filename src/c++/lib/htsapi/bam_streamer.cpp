@@ -31,6 +31,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 
 
@@ -56,8 +57,9 @@ bam_streamer(
 
     if (nullptr == _bfp)
     {
-        log_os << "ERROR: Failed to open SAM/BAM/CRAM file: " << filename << "\n";
-        exit(EXIT_FAILURE);
+        std::ostringstream oss;
+        oss << "Failed to open SAM/BAM/CRAM file: " << filename;
+        throw blt_exception(oss.str().c_str());
     }
 
     if (nullptr == region)
@@ -141,8 +143,9 @@ _load_index()
     _hidx = sam_index_load(_bfp->file, index_base.c_str());
     if (nullptr == _hidx)
     {
-        log_os << "ERROR: BAM/CRAM index is not available for file: " << name() << "\n";
-        exit(EXIT_FAILURE);
+        std::ostringstream oss;
+        oss << "BAM/CRAM index is not available for file: " << name();
+        throw blt_exception(oss.str().c_str());
     }
 }
 
@@ -153,10 +156,26 @@ bam_streamer::
 set_new_region(const char* region)
 {
     int ref,beg,end;
-    bam_parse_region(_bfp->header, region, &ref, &beg, &end); // parse the region
+    int retval = bam_parse_region(_bfp->header, region, &ref, &beg, &end); // parse the region
 
-    set_new_region(ref,beg,end);
-    _region=region;
+    if (retval != 0)
+    {
+        std::ostringstream oss;
+        oss << "Failed to parse BAM/CRAM region: '" << region << "'";
+        throw blt_exception(oss.str().c_str());
+    }
+
+    try
+    {
+        set_new_region(ref,beg,end);
+        _region=region;
+    }
+    catch (const std::exception& /*e*/)
+    {
+        log_os << "ERROR: exception while fetching BAM/CRAM region: '" << region
+               << "' from file '" << name() << "'\n";
+        throw;
+    }
 }
 
 
@@ -171,11 +190,18 @@ set_new_region(const int ref, const int beg, const int end)
 
     if (ref < 0)
     {
-        log_os << "ERROR: Invalid region specified for BAM/CRAM file: " << name() << "\n";
-        exit(EXIT_FAILURE);
+        std::ostringstream oss;
+        oss << "Invalid region (contig index: " << ref << ") specified for BAM/CRAM file: " << name();
+        throw blt_exception(oss.str().c_str());
     }
 
     _hitr = sam_itr_queryi(_hidx,ref,beg,end);
+    if (_hitr == nullptr)
+    {
+        std::ostringstream oss;
+        oss << "Failed to fetch region: #" << ref << ":" << beg << "-" << end << " specified for BAM/CRAM file: " << name();
+        throw blt_exception(oss.str().c_str());
+    }
     _is_region = true;
     _region.clear();
 

@@ -359,7 +359,7 @@ intermediate output for applications which require it.
 Additional secondary output is provided in `${MANTA_ANALYSIS_PATH}/results/stats`
 
 * __alignmentStatsSummary.txt__
-    * fragment length quantiles for each input BAM file
+    * fragment length quantiles for each input alignment file
 * __svLocusGraphStats.tsv__
     * statistics and runtime information pertaining to the SV locus graph
 * __svCandidateGenerationStats.tsv__
@@ -384,7 +384,7 @@ changing the final result of the workflow.
 The workflow is configured with the script:
 `${MANTA_INSTALL_PATH}/bin/configManta.py` . Running this script with
 no arguments will display all standard configuration options to
-specify input BAM files, the reference sequence and the output run
+specify input alignment files, the reference sequence and the output run
 folder. Note that all input BAM files and reference sequence must
 contain the same chromosome names in the same order. In addition all
 input BAM files and reference sequences must be indexed with
@@ -514,7 +514,7 @@ high sensitivity calling documentation below.
 #### Unpaired tumor sample
 
 Manta supports SV calling for tumor sample only. The tumor-only mode 
-can be triggered by supplying a tumor bam file but no normal bam. 
+can be triggered by supplying a tumor sample alignment file but no alignments for the normal sample. 
 The results are reported in __tumorSV.vcf.gz__. This file contains all
 SV candidates (similar to the __candidateSV.vcf.gz__ file), but also
 includes paired and split read evidence for each allele and a

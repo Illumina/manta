@@ -113,7 +113,7 @@ You must specify a BAM file for at least one sample.
 
         if ((safeLen(options.normalBamList) == 0) and
             (safeLen(options.tumorBamList) == 0)) :
-            raise OptParseException("No normal or tumor sample BAM files specified")
+            raise OptParseException("No normal or tumor sample alignment files specified")
 
         if (safeLen(options.tumorBamList) > 1) :
             raise OptParseException("Can't accept more then one tumor sample")

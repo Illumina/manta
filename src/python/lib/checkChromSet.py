@@ -77,7 +77,7 @@ def getBamChromInfo(samtoolsBin,bam) :
         if not line.startswith("@SQ") : continue
         w = line.strip().split('\t')
         if len(w) < 3 :
-            chromError("Unexpected bam/cram header for file '%s'" % (bam))
+            chromError("Unexpected BAM/CRAM header for file '%s'" % (bam))
 
         h = {}
         for word in w[1:] :
@@ -87,7 +87,7 @@ def getBamChromInfo(samtoolsBin,bam) :
         key = h["SN"]
         size = int(h["LN"])
         if size <= 0 :
-            chromError("Unexpected chromosome size '%i' in bam/cram header for file '%s'" % (size,bam))
+            chromError("Unexpected chromosome size '%i' in BAM/CRAM header for file '%s'" % (size,bam))
 
         info[key] = (size,chromIndex)
         chromIndex += 1
