@@ -100,6 +100,7 @@ def quoteStringList(strList):
     return ["\"%s\"" % (x) for x in strList]
 
 
+
 def runStats(self,taskPrefix="",dependencies=None) :
 
     statsPath=self.paths.getStatsPath()
@@ -222,10 +223,37 @@ def runDepthFromAlignments(self,taskPrefix="",dependencies=None) :
         tmpFiles = []
         scatterTasks = set()
 
-        for (chromIndex, chromLabel) in enumerate(self.params.chromOrder) :
-            cid = getRobustChromId(chromIndex, chromLabel)
+        def getChromosomeGroups(params) :
+            """
+            Iterate chromosomes/contigs and 'clump' small contigs together
+            """
+            minSize=200000
+            group = []
+            headSize = 0
+
+            chromCount = len(params.chromSizes)
+            assert(len(params.chromOrder) == chromCount)
+            for chromIndex in range(chromCount) :
+                chromLabel = params.chromOrder[chromIndex]
+                chromSize = params.chromSizes[chromLabel]
+                if headSize+chromSize <= minSize :
+                    group.append((chromIndex,chromLabel))
+                    headSize += chromSize
+                else :
+                    if len(group) != 0 : yield(group)
+                    group = [(chromIndex,chromLabel)]
+                    headSize = chromSize
+            if len(group) != 0 : yield(group)
+
+        for chromGroup in getChromosomeGroups(self.params) :
+            assert(len(chromGroup) > 0)
+            cid = getRobustChromId(chromGroup[0][0], chromGroup[0][1])
+            if len(chromGroup) > 1 :
+                cid += "_to_"+getRobustChromId(chromGroup[-1][0], chromGroup[-1][1])
             tmpFiles.append(os.path.join(tmpDir,outputFilename+"_"+cid))
-            cmd = [self.params.mantaGetChromDepthBin,"--align-file",bamFile,"--chrom",chromLabel,"--output",tmpFiles[-1]]
+            cmd = [self.params.mantaGetChromDepthBin,"--align-file",bamFile,"--output",tmpFiles[-1]]
+            for (chromIndex,chromLabel) in chromGroup :
+                cmd.extend(["--chrom",chromLabel])
             scatterTasks.add(self.addTask(preJoin(taskPrefix,"estimateChromDepth_"+cid),cmd,dependencies=dirTask))
 
         catCmd = [self.params.mantaCat,"--output",outputPath]+tmpFiles
@@ -258,22 +286,29 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
     tmpGraphFiles = []
     graphTasks = set()
 
-    # group tiny contigs together into batched calls
-    minSegmentGroupSize=200000
-    gsegGroups = []
-    headSize = 0
-    for gseg in getNextGenomeSegment(self.params) :
-        if headSize+gseg.size() <= minSegmentGroupSize :
-            if len(gsegGroups) == 0 : gsegGroups.append([])
-            gsegGroups[-1].append(gseg)
-            headSize += gseg.size()
-        else :
-            gsegGroups.append([gseg])
-            headSize = gseg.size()
+    def getGenomeSegmentGroups(params) :
+        """
+        Iterate segment groups and 'clump' small contigs together
+        """
+        minSegmentGroupSize=200000
+        group = []
+        headSize = 0
+        for gseg in getNextGenomeSegment(self.params) :
+            if headSize+gseg.size() <= minSegmentGroupSize :
+                group.append(gseg)
+                headSize += gseg.size()
+            else :
+                if len(group) != 0 : yield(group)
+                group = [gseg]
+                headSize = gseg.size()
+        if len(group) != 0 : yield(group)
 
-    for gsegGroup in gsegGroups :
+    for gsegGroup in getGenomeSegmentGroups(self.params) :
         assert(len(gsegGroup) != 0)
-        tmpGraphFiles.append(os.path.join(tmpGraphDir,graphFilename+"."+gsegGroup[0].id+".bin"))
+        gid=gsegGroup[0].id
+        if len(gsegGroup) > 1 :
+            gid += "_to_"+gsegGroup[-1].id
+        tmpGraphFiles.append(os.path.join(tmpGraphDir,graphFilename+"."+gid+".bin"))
         graphCmd = [ self.params.mantaGraphBin ]
         graphCmd.extend(["--output-file", tmpGraphFiles[-1]])
         graphCmd.extend(["--align-stats",statsPath])
@@ -295,7 +330,7 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
         if self.params.isRNA :
             graphCmd.append("--rna")
 
-        graphTaskLabel=preJoin(taskPrefix,"makeLocusGraph_"+gsegGroup[0].pyflowId)
+        graphTaskLabel=preJoin(taskPrefix,"makeLocusGraph_"+gid)
         graphTasks.add(self.addTask(graphTaskLabel,graphCmd,dependencies=dirTask,memMb=self.params.estimateMemMb))
 
     if len(tmpGraphFiles) == 0 :
