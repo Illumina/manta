@@ -41,14 +41,13 @@
 
 static
 void
-runESL(const ESLOptions& opt)
+runESLRegion(
+    const ESLOptions& opt,
+    const std::string& region,
+    SVLocusSet& mergedSet)
 {
     TimeTracker timer;
     timer.resume();
-    {
-        // early test that we have permission to write to output file
-        OutStream outs(opt.outputFilename);
-    }
 
     typedef std::shared_ptr<bam_streamer> stream_ptr;
     std::vector<stream_ptr> bamStreams;
@@ -57,9 +56,9 @@ runESL(const ESLOptions& opt)
     for (const std::string& afile : opt.alignFileOpt.alignmentFilename)
     {
         stream_ptr tmp(new bam_streamer(afile.c_str(),
-                                        (opt.region.empty()
-                                         ? NULL
-                                         : opt.region.c_str())));
+                                        (region.empty()
+                                         ? nullptr
+                                         : region.c_str())));
         bamStreams.push_back(tmp);
     }
 
@@ -91,7 +90,7 @@ runESL(const ESLOptions& opt)
     const bam_header_info bamHeader(header);
 
     int32_t tid(0), beginPos(0), endPos(0);
-    parse_bam_region(bamHeader,opt.region,tid,beginPos,endPos);
+    parse_bam_region(bamHeader,region,tid,beginPos,endPos);
 
     const GenomeInterval scanRegion(tid,beginPos,endPos);
 #ifdef DEBUG_ESL
@@ -142,7 +141,48 @@ runESL(const ESLOptions& opt)
     log_os << "\n";
 #endif
     locusFinder.setBuildTime(totalTimes);
-    locusFinder.getLocusSet().save(opt.outputFilename.c_str());
+
+    const bool isMultiRegion(opt.regions.size()>1);
+
+    if (! isMultiRegion)
+    {
+        locusFinder.getLocusSet().save(opt.outputFilename.c_str());
+    }
+    else
+    {
+        if (mergedSet.empty())
+        {
+            mergedSet = locusFinder.getLocusSet();
+        }
+        else
+        {
+            mergedSet.merge(locusFinder.getLocusSet());
+        }
+    }
+}
+
+
+
+static
+void
+runESL(const ESLOptions& opt)
+{
+    {
+        // early test that we have permission to write to output file
+        OutStream outs(opt.outputFilename);
+    }
+
+    SVLocusSet mergedSet;
+
+    for (const auto& region : opt.regions)
+    {
+        runESLRegion(opt, region, mergedSet);
+    }
+
+    if (! mergedSet.empty())
+    {
+        mergedSet.save(opt.outputFilename.c_str());
+    }
 }
 
 
@@ -151,7 +191,6 @@ void
 EstimateSVLoci::
 runInternal(int argc, char* argv[]) const
 {
-
     ESLOptions opt;
 
     parseESLOptions(*this,argc,argv,opt);

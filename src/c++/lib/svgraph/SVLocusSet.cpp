@@ -270,6 +270,8 @@ merge(
 
     for (const SVLocus& locus : inputSet._loci)
     {
+        if (locus.empty()) continue;
+
         try
         {
             merge(locus);
@@ -319,11 +321,11 @@ getNodeIntersectCore(
 
     // get all nodes \in searchNodes which intersect with the input node:
     const NodeAddressType inputAddy(std::make_pair(inputLocusIndex,inputNodeIndex));
-    const in_citer it(searchNodes.lower_bound(inputAddy));
+    const in_citer it(searchNodes.data().lower_bound(inputAddy));
     const GenomeInterval& inputInterval(getNode(inputAddy).getInterval());
     const pos_t maxRegionSize(_maxRegionSize[inputInterval.tid]);
 
-    const in_citer it_begin(searchNodes.begin()), it_end(searchNodes.end());
+    const in_citer it_begin(searchNodes.data().begin()), it_end(searchNodes.data().end());
 
     // diagnostics to determine if graph is growing too dense in one region:
     bool isUsable(true);
@@ -568,14 +570,14 @@ getNodeMergeableIntersect(
             {
                 // build remote <-> local indexing structures:
                 NodeAddressType remoteAddy(std::make_pair(intersectAddy.first,intersectEdge.first));
-                remoteIntersectNodes.insert(remoteAddy);
+                remoteIntersectNodes.data().insert(remoteAddy);
                 remoteIntersectNodeToLocalNodeMap.insert(std::make_pair(remoteAddy,intersectAddy.second));
             }
         }
 
 #ifdef DEBUG_SVL
-        log_os << logtag << " remoteIntersectNodes.size(): " << remoteIntersectNodes.size() << "\n";
-        for (const NodeAddressType& addy : remoteIntersectNodes)
+        log_os << logtag << " remoteIntersectNodes.size(): " << remoteIntersectNodes.data().size() << "\n";
+        for (const NodeAddressType& addy : remoteIntersectNodes.data())
         {
             log_os << logtag << "\tremoteIntersectNode: " << addy << " " << getNode(addy);
         }
@@ -832,7 +834,7 @@ moveIntersectToLowIndex(
 
     // get lowest index number that is not startLocusIndex:
     bool isFirst(true);
-    for (const LocusSetIndexerType::value_type& val : intersectNodes)
+    for (const NodeAddressType& val : intersectNodes)
     {
         if ((!isFirst) && (val.first >= locusIndex)) continue;
         locusIndex = val.first;
@@ -840,7 +842,7 @@ moveIntersectToLowIndex(
     }
 
     combineLoci(startHeadLocusIndex,locusIndex,isClearSource);
-    for (const LocusSetIndexerType::value_type& val : intersectNodes)
+    for (const NodeAddressType& val : intersectNodes)
     {
         combineLoci(val.first,locusIndex);
     }
@@ -922,8 +924,8 @@ mergeNodePtr(NodeAddressType fromPtr,
 #endif
     assert(_isIndexed);
 
-    LocusSetIndexerType::iterator iter(_inodes.find(toPtr));
-    assert(iter != _inodes.end());
+    LocusSetIndexerType::iterator iter(_inodes.data().find(toPtr));
+    assert(iter != _inodes.data().end());
     assert(fromPtr.first == toPtr.first);
     getLocus(fromPtr.first).mergeNode(fromPtr.second, toPtr.second, this);
 }
@@ -1007,10 +1009,10 @@ dumpRegion(std::ostream& os,
     LocusSetIndexerType sortedNodes(*this);
     for (const NodeAddressType& val : intersectNodes)
     {
-        sortedNodes.insert(val);
+        sortedNodes.data().insert(val);
     }
 
-    for (const NodeAddressType& val : sortedNodes)
+    for (const NodeAddressType& val : sortedNodes.data())
     {
         os << "SVNode LocusIndex:NodeIndex : " << val << "\n";
         os << getNode(val);
@@ -1286,7 +1288,7 @@ reconstructIndex()
         for (NodeIndexType nodeIndex(0); nodeIndex<nodeCount; ++nodeIndex)
         {
             const NodeAddressType addy(std::make_pair(locusIndex,nodeIndex));
-            _inodes.insert(addy);
+            _inodes.data().insert(addy);
             updateMaxRegionSize(getNode(addy).getInterval());
         }
         if (locus.empty()) _emptyLoci.insert(locusIndex);
@@ -1309,7 +1311,7 @@ dumpIndex(std::ostream& os) const
     assert(_isIndexed);
 
     os << "SVLocusSet Index START\n";
-    for (const NodeAddressType& in : _inodes)
+    for (const NodeAddressType& in : _inodes.data())
     {
         os << "SVNodeIndex: " << in << "\n";
     }
@@ -1349,8 +1351,8 @@ checkState(
 
         for (NodeIndexType nodeIndex(0); nodeIndex<nodeCount; ++nodeIndex)
         {
-            LocusSetIndexerType::const_iterator citer(_inodes.find(std::make_pair(locusIndex,nodeIndex)));
-            if (citer == _inodes.end())
+            LocusSetIndexerType::const_iterator citer(_inodes.data().find(std::make_pair(locusIndex,nodeIndex)));
+            if (citer == _inodes.data().end())
             {
                 std::ostringstream oss;
                 oss << "ERROR: locus node is missing from node index\n"
@@ -1369,11 +1371,11 @@ checkState(
         locusIndex++;
     }
 
-    if (checkStateTotalNodeCount != _inodes.size())
+    if (checkStateTotalNodeCount != _inodes.data().size())
     {
         using namespace illumina::common;
         std::ostringstream oss;
-        oss << "ERROR: SVLocusSet conflicting internal node counts. TotalNodeCount: " << checkStateTotalNodeCount << " inodeSize: " << _inodes.size() << "n";
+        oss << "ERROR: SVLocusSet conflicting internal node counts. TotalNodeCount: " << checkStateTotalNodeCount << " inodeSize: " << _inodes.data().size() << "n";
         BOOST_THROW_EXCEPTION(LogicException(oss.str()));
     }
 
@@ -1396,7 +1398,7 @@ compressSingletonNodes() const
     bool isFirst(true);
     GenomeInterval lastInterval;
     NodeAddressType lastAddy;
-    for (const NodeAddressType& addy : _inodes)
+    for (const NodeAddressType& addy : _inodes.data())
     {
         if (isNoiseNode(addy)) continue;
 
@@ -1445,7 +1447,7 @@ checkForOverlapNodes(
     bool isFirst(true);
     GenomeInterval lastInterval;
     NodeAddressType lastAddy;
-    for (const NodeAddressType& addy : _inodes)
+    for (const NodeAddressType& addy : _inodes.data())
     {
         if (isFilterNoise)
         {

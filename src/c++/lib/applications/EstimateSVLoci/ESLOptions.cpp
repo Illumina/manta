@@ -36,6 +36,8 @@
 #include <iostream>
 
 
+typedef std::vector<std::string> regions_t;
+
 
 static
 void
@@ -87,8 +89,8 @@ parseESLOptions(
      "average depth estimate for each chromosome")
     ("truth-vcf", po::value(&opt.truthVcfFilename),
      "optional truth VCF file (for testing)")
-    ("region", po::value(&opt.region),
-     "samtools formatted region, eg. 'chr1:20-30'")
+    ("region", po::value<regions_t>(),
+     "samtools formatted region, eg. 'chr1:20-30'. May be supplied more than once but regions must not overlap. At least one entry required.")
     ("rna", po::value(&opt.isRNA)->zero_tokens(),
      "For RNA input. Changes small fragment handling.")
     ;
@@ -123,6 +125,11 @@ parseESLOptions(
         usage(log_os,prog,visible);
     }
 
+    if (vm.count("region"))
+    {
+        opt.regions=(boost::any_cast<regions_t>(vm["region"].value()));
+    }
+
     std::string errorMsg;
     if (parseOptions(vm, opt.alignFileOpt, errorMsg))
     {
@@ -140,9 +147,17 @@ parseESLOptions(
     {
         usage(log_os,prog,visible,"Need the FASTA reference file");
     }
-    else if (opt.region.empty())
+    else if (opt.regions.empty())
     {
-        usage(log_os,prog,visible,"Need the samtools formatted region");
+        usage(log_os,prog,visible,"Need at least one samtools formatted region");
+    }
+
+    for (const auto& region : opt.regions)
+    {
+        if (region.empty())
+        {
+            usage(log_os,prog,visible,"Empty region argument");
+        }
     }
 
     checkStandardizeUsageFile(log_os,prog,visible,opt.statsFilename,"alignment statistics");

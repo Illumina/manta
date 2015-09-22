@@ -306,6 +306,8 @@ class GenomeSegment(object) :
         self.pyflowId = "chromId_%s_%s_%s" % (str(chromIndex).zfill(3), regionId, self.binStr)
         self.id = self.pyflowId
 
+    def size(self) :
+        return (self.endPos-self.beginPos)+1
 
 
 def getNextGenomeSegment(params) :

@@ -30,6 +30,8 @@
 #include "options/ReadScannerOptions.hh"
 #include "options/SVLocusSetOptions.hh"
 
+#include <vector>
+
 
 struct ESLOptions
 {
@@ -43,7 +45,7 @@ struct ESLOptions
 
     std::string referenceFilename;
     std::string outputFilename;
-    std::string region;
+    std::vector<std::string> regions;
     std::string statsFilename;
     std::string chromDepthFilename;
     std::string truthVcfFilename;

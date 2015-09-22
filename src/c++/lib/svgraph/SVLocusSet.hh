@@ -57,7 +57,7 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
     SVLocusSet(
         const SVLocusSetOptions& opt = SVLocusSetOptions()) :
         _opt(opt),
-        _inodes(NodeAddressSorter(*this)),
+        _inodes(*this),
         _source("UNKNOWN"),
         _isFinalized(false),
         _totalCleaned(0),
@@ -356,7 +356,42 @@ private:
         const SVLocusSet& _set;
     };
 
-    typedef std::set<NodeAddressType, NodeAddressSorter> LocusSetIndexerType;
+    // wrap this set in an object b/c a special copy-ctor is required
+    struct LocusSetIndexerType
+    {
+        typedef std::set<NodeAddressType, NodeAddressSorter> data_t;
+        typedef data_t::iterator iterator;
+        typedef data_t::const_iterator const_iterator;
+
+        LocusSetIndexerType(const SVLocusSet& set)
+            : _data(NodeAddressSorter(set))
+        {}
+
+        LocusSetIndexerType(const LocusSetIndexerType& rhs) = delete;
+
+        LocusSetIndexerType& operator=(const LocusSetIndexerType& rhs)
+        {
+            if (this == &rhs) return *this;
+            _data.clear();
+            _data.insert(rhs._data.begin(),rhs._data.end());
+            return *this;
+        }
+
+        data_t&
+        data()
+        {
+            return _data;
+        }
+
+        const data_t&
+        data() const
+        {
+            return _data;
+        }
+
+    private:
+        data_t _data;
+    };
 
     friend
     std::ostream&
@@ -480,8 +515,8 @@ private:
     {
         assert(_isIndexed);
 
-        LocusSetIndexerType::iterator iter(_inodes.find(inputNodePtr));
-        if (iter == _inodes.end()) return;
+        LocusSetIndexerType::iterator iter(_inodes.data().find(inputNodePtr));
+        if (iter == _inodes.data().end()) return;
 
         SVLocus& locus(getLocus(inputNodePtr.first));
         locus.eraseNode(inputNodePtr.second, this);
@@ -524,7 +559,7 @@ private:
 #ifdef DEBUG_SVL
             log_os << "SVLocusSetObserver: Adding node: " << msg.second.first << ":" << msg.second.second << "\n";
 #endif
-            _inodes.insert(msg.second);
+            _inodes.data().insert(msg.second);
             updateMaxRegionSize(getNode(msg.second).getInterval());
         }
         else
@@ -533,7 +568,7 @@ private:
 #ifdef DEBUG_SVL
             log_os << "SVLocusSetObserver: Deleting node: " << msg.second.first << ":" << msg.second.second << "\n";
 #endif
-            _inodes.erase(msg.second);
+            _inodes.data().erase(msg.second);
         }
     }
 
@@ -558,7 +593,7 @@ private:
     clearIndex()
     {
         _emptyLoci.clear();
-        _inodes.clear();
+        _inodes.data().clear();
         _maxRegionSize.clear();
     }
 

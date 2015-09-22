@@ -265,13 +265,27 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
     tmpGraphFiles = []
     graphTasks = set()
 
+    # group tiny contigs together into batched calls
+    minSegmentGroupSize=200000
+    gsegGroups = []
+    headSize = 0
     for gseg in getNextGenomeSegment(self.params) :
+        if headSize+gseg.size() <= minSegmentGroupSize :
+            if len(gsegGroups) == 0 : gsegGroups.append([])
+            gsegGroups[-1].append(gseg)
+            headSize += gseg.size()
+        else :
+            gsegGroups.append([gseg])
+            headSize = gseg.size()
 
-        tmpGraphFiles.append(os.path.join(tmpGraphDir,graphFilename+"."+gseg.id+".bin"))
+    for gsegGroup in gsegGroups :
+        assert(len(gsegGroup) != 0)
+        tmpGraphFiles.append(os.path.join(tmpGraphDir,graphFilename+"."+gsegGroup[0].id+".bin"))
         graphCmd = [ self.params.mantaGraphBin ]
         graphCmd.extend(["--output-file", tmpGraphFiles[-1]])
         graphCmd.extend(["--align-stats",statsPath])
-        graphCmd.extend(["--region",gseg.bamRegion])
+        for gseg in gsegGroup :
+            graphCmd.extend(["--region",gseg.bamRegion])
         graphCmd.extend(["--min-candidate-sv-size", self.params.minCandidateVariantSize])
         graphCmd.extend(["--min-edge-observations", self.params.minEdgeObservations])
         graphCmd.extend(["--ref",self.params.referenceFasta])
@@ -288,7 +302,7 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
         if self.params.isRNA :
             graphCmd.append("--rna")
 
-        graphTaskLabel=preJoin(taskPrefix,"makeLocusGraph_"+gseg.pyflowId)
+        graphTaskLabel=preJoin(taskPrefix,"makeLocusGraph_"+gsegGroup[0].pyflowId)
         graphTasks.add(self.addTask(graphTaskLabel,graphCmd,dependencies=dirTask,memMb=self.params.estimateMemMb))
 
     if len(tmpGraphFiles) == 0 :
