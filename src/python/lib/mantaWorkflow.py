@@ -96,13 +96,6 @@ def getRmCmd() :
     else:
         return ["rm","-f"]
 
-def getCatCmd() :
-    if isWindows():
-        return ["type"]
-    else:
-        return ["cat"]
-
-
 def quoteStringList(strList):
     return ["\"%s\"" % (x) for x in strList]
 
@@ -235,7 +228,7 @@ def runDepthFromAlignments(self,taskPrefix="",dependencies=None) :
             cmd = [self.params.mantaGetChromDepthBin,"--align-file",bamFile,"--chrom",chromLabel,"--output",tmpFiles[-1]]
             scatterTasks.add(self.addTask(preJoin(taskPrefix,"estimateChromDepth_"+cid),cmd,dependencies=dirTask))
 
-        catCmd = " ".join(getCatCmd()+quoteStringList(tmpFiles)) + " > \"%s\"" % (outputPath)
+        catCmd = [self.params.mantaCat,"--output",outputPath]+tmpFiles
         catTask = self.addTask(preJoin(taskPrefix,"catChromDepth"),catCmd,dependencies=scatterTasks, isForceLocal=True)
 
         nextStepWait = set()

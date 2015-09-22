@@ -101,6 +101,7 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         mantaExtraSmallVcf=joinFile(libexecDir,"extractSmallIndelCandidates.py")
         mantaPloidyFilter=joinFile(libexecDir,"ploidyFilter.py")
         mantaSortEdgeLogs=joinFile(libexecDir,"sortEdgeLogs.py")
+        mantaCat=joinFile(libexecDir,"cat.py")
 
         # default memory request per process-type
         #
