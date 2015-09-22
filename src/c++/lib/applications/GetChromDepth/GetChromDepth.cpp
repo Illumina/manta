@@ -41,13 +41,20 @@ getChromDepth(const ChromDepthOptions& opt)
         OutStream outs(opt.outputFilename);
     }
 
-    const double depth = readChromDepthFromAlignment(opt.alignmentFilename, opt.chromName);
+    std::vector<double> chromDepth;
+    for (const std::string& chrom : opt.chromNames)
+    {
+        chromDepth.push_back(readChromDepthFromAlignment(opt.alignmentFilename, chrom));
+    }
 
     OutStream outs(opt.outputFilename);
-
     std::ostream& os(outs.getStream());
 
-    os << opt.chromName << "\t" << std::fixed << std::setprecision(2) << depth << "\n";
+    const unsigned chromCount(opt.chromNames.size());
+    for (unsigned chromIndex(0); chromIndex<chromCount; ++chromIndex)
+    {
+        os << opt.chromNames[chromIndex] << "\t" << std::fixed << std::setprecision(2) << chromDepth[chromIndex] << "\n";
+    }
 }
 
 

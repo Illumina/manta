@@ -30,6 +30,7 @@
 
 #include <iostream>
 
+typedef std::vector<std::string> chroms_t;
 
 
 static
@@ -56,8 +57,8 @@ parseChromDepthOptions(
     req.add_options()
     ("align-file", po::value(&opt.alignmentFilename),
      "alignment file in BAM or CRAM format")
-    ("chrom", po::value(&opt.chromName),
-     "chromosome name")
+    ("chrom", po::value<chroms_t>(),
+     "chromosome name. May be supplied more than once. At least one entry required.")
     ("output-file", po::value(&opt.outputFilename),
      "write stats to filename (default: stdout)")
     ;
@@ -93,13 +94,29 @@ parseChromDepthOptions(
         exit(EXIT_FAILURE);
     }
 
+    if (vm.count("chrom"))
+    {
+        opt.chromNames=(boost::any_cast<chroms_t>(vm["chrom"].value()));
+    }
+
     std::string errorMsg;
     if      (checkStandardizeInputFile(opt.alignmentFilename, "alignment", errorMsg))
     {
     }
-    else if (opt.chromName.empty())
+    else if (opt.chromNames.empty())
     {
-        errorMsg = "Must specify a chromosome name";
+        errorMsg = "Need at least one chromosome name";
+    }
+    else
+    {
+        for (const std::string& chrom : opt.chromNames)
+        {
+            if (chrom.empty())
+            {
+                errorMsg = "Empty chromosome name";
+                break;
+            }
+        }
     }
 
     if (! errorMsg.empty())

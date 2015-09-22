@@ -24,12 +24,13 @@
 #include "manta/Program.hh"
 
 #include <string>
+#include <vector>
 
 
 struct ChromDepthOptions
 {
     std::string alignmentFilename;
-    std::string chromName;
+    std::vector<std::string> chromNames;
     std::string outputFilename;
 };
 
