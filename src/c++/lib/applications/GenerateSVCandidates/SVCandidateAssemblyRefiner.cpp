@@ -107,6 +107,10 @@ isFilterSpanningAlignment(
 
     ALIGNPATH::path_t apath(input_apath);
 
+#ifdef DEBUG_REFINER
+    log_os << __FUNCTION__ << ": apath: " << apath << " ; maxRefSpan: " << maxQCRefSpan << "\n";
+#endif
+
     // prepare apath by orienting it always going forward from the breakend and limiting the length to
     // the first maxQCRefSpan ref bases covered:
     //
@@ -1668,11 +1672,13 @@ getJumpAssembly(
         static const unsigned spanSet[] = {75, 100, 200};
         for (const unsigned maxQCRefSpan : spanSet)
         {
-            if (! isFilterSpanningAlignment( maxQCRefSpan, _spanningAligner, true, isRNA, hsAlign.align1.apath))
+            const unsigned qcSpan1 = maxQCRefSpan + (isRNA ? apath_spliced_length(hsAlign.align1.apath) : 0);
+            if (! isFilterSpanningAlignment(qcSpan1, _spanningAligner, true, isRNA, hsAlign.align1.apath))
             {
                 isFilterAlign1 = false;
             }
-            if (! isFilterSpanningAlignment( maxQCRefSpan, _spanningAligner, false, isRNA, hsAlign.align2.apath))
+            const unsigned qcSpan2 = maxQCRefSpan + (isRNA ? apath_spliced_length(hsAlign.align2.apath) : 0);
+            if (! isFilterSpanningAlignment(qcSpan2, _spanningAligner, false, isRNA, hsAlign.align2.apath))
             {
                 isFilterAlign2 = false;
             }

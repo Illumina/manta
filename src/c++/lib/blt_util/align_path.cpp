@@ -147,6 +147,17 @@ apath_matched_length(const path_t& apath)
 }
 
 unsigned
+apath_spliced_length(const path_t& apath)
+{
+    unsigned val(0);
+    for (const path_segment& ps : apath)
+    {
+        if (ps.type == SKIP) val += ps.length;
+    }
+    return val;
+}
+
+unsigned
 apath_ref_length(const path_t& apath)
 {
     unsigned val(0);
