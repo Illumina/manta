@@ -58,7 +58,7 @@ def getFastaInfo(fasta) :
 
 
 
-def getBamChromInfo(samtoolsBin,bam) :
+def getBamChromInfo(htsfileBin,bam) :
     """
     Get chromosome information from bam/cram header
 
@@ -67,7 +67,7 @@ def getBamChromInfo(samtoolsBin,bam) :
 
     import subprocess
 
-    cmd="\"%s\" view -H \"%s\"" % (samtoolsBin,bam)
+    cmd="\"%s\" -h \"%s\"" % (htsfileBin,bam)
 
     info = {}
     chromIndex=0
@@ -100,11 +100,11 @@ def getBamChromInfo(samtoolsBin,bam) :
 
 
 
-def checkChromSet(samtoolsBin,referenceFasta,bamList,bamLabel=None,isReferenceLocked=False) :
+def checkChromSet(htsfileBin,referenceFasta,bamList,bamLabel=None,isReferenceLocked=False) :
     """
     Check that chromosomes in reference and input bam/cram(s) are consistent
 
-    @param samtoolsBin - samtools binary
+    @param htsfileBin - htsfile binary
     @param referenceFasta - samtools indexed fasta file
     @param bamList - a container of indexed bam/cram(s) to check for consistency
     @param bamLabel - a container of labels for each bam/cram file (default is to label files by index number)
@@ -123,7 +123,7 @@ def checkChromSet(samtoolsBin,referenceFasta,bamList,bamLabel=None,isReferenceLo
     refChromInfo = getFastaInfo(referenceFasta)
 
     # first bam is used as a reference:
-    chromInfo = getBamChromInfo(samtoolsBin,bamList[0])
+    chromInfo = getBamChromInfo(htsfileBin,bamList[0])
     chroms = sorted(chromInfo.keys(),key=lambda x:chromInfo[x][1])
 
     # check that first bam is compatible with reference:
@@ -146,7 +146,7 @@ def checkChromSet(samtoolsBin,referenceFasta,bamList,bamLabel=None,isReferenceLo
 
     # check that other bams are compatible with first bam:
     for index in range(1,len(bamList)) :
-        compareChromInfo=getBamChromInfo(samtoolsBin,bamList[index])
+        compareChromInfo=getBamChromInfo(htsfileBin,bamList[index])
         for chrom in chroms:
             isError=False
             if not chrom in compareChromInfo :

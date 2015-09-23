@@ -44,13 +44,13 @@ change_bam_data_len(const int new_len,
         br.m_data = new_len;
         kroundup32(br.m_data);
         br.data = (uint8_t*) realloc(br.data,br.m_data);
-        if (NULL == br.data)
+        if (nullptr == br.data)
         {
             log_os << "ERROR: failed to realloc BAM data size to: " << new_len << "\n";
             exit(EXIT_FAILURE);
         }
     }
-    br.data_len = new_len;
+    br.l_data = new_len;
 }
 
 
@@ -62,7 +62,7 @@ change_bam_data_segment_len(const int end,
 {
     assert(end>=0);
     if (0==delta) return;
-    const int old_len(br.data_len);
+    const int old_len(br.l_data);
     const int new_len(old_len+delta);
     const int tail_size(old_len-end);
     assert(tail_size>=0);
@@ -99,7 +99,7 @@ edit_bam_qname(const char* name,
         bc.l_qname=new_qname_size;
     }
 
-    strcpy(bam1_qname(&br),name);
+    strcpy(bam_get_qname(&br),name);
 }
 
 
@@ -123,19 +123,19 @@ edit_bam_read_and_quality(const char* read,
 
     if (0 != delta)
     {
-        const int end(bam1_aux(&br)-br.data);
+        const int end(bam_get_aux(&br)-br.data);
         change_bam_data_segment_len(end,delta,br);
     }
     br.core.l_qseq = new_len;
     // update seq:
-    uint8_t* p(bam1_seq(&br));
+    uint8_t* p(bam_get_seq(&br));
     memset(p,0,(new_len+1)/2);
     for (int i(0); i<new_len; ++i)
     {
         p[i/2] |= get_bam_seq_code(read[i]) << 4*(1-i%2);
     }
     // update qual
-    memcpy(bam1_qual(&br),qual,new_len);
+    memcpy(bam_get_qual(&br),qual,new_len);
 }
 
 
@@ -147,7 +147,7 @@ nuke_bam_aux_field(bam1_t& br,
     while (true)
     {
         uint8_t* p(bam_aux_get(&br,tag));
-        if (NULL==p) return;
+        if (nullptr==p) return;
         bam_aux_del(&br,p);
     }
 }
@@ -173,5 +173,32 @@ bam_aux_append_unsigned(bam1_t& br,
     {
         uint8_t z(x);
         bam_aux_append(&br,tag,'C',1,&z);
+    }
+}
+
+
+void
+bam_parse_region2(
+    const bam_hdr_t* header,
+    const char* str,
+    int& ref_id, int& beg, int& end)
+{
+    const char* name_lim = hts_parse_reg(str, &beg, &end);
+    if (name_lim)
+    {
+        const std::string name(str,name_lim);
+        ref_id = bam_name2id(const_cast<bam_hdr_t*>(header), name.c_str());
+    }
+    else
+    {
+        // not parsable as a region, but possibly a sequence named "foo:a"
+        ref_id = bam_name2id(const_cast<bam_hdr_t*>(header), str);
+        beg = 0;
+        end = std::numeric_limits<int>::max();
+    }
+    if ((ref_id == -1) || (beg > end))
+    {
+        log_os << "ERROR: failed to parse samtools region string: '" << str << "'\n";
+        exit(EXIT_FAILURE);
     }
 }

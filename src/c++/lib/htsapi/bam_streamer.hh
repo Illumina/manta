@@ -94,17 +94,18 @@ struct bam_streamer : public boost::noncopyable
     int32_t
     target_name_to_id(const char* seq_name) const;
 
-    const bam_header_t*
+    const bam_hdr_t*
     get_header() const
     {
-        return _bfp->header;
+        return _hdr;
     }
 
 private:
     void _load_index();
 
     bool _is_record_set;
-    samfile_t* _bfp;
+    htsFile* _hfp;
+    bam_hdr_t* _hdr;
     hts_idx_t* _hidx;
     hts_itr_t* _hitr;
     bam_record _brec;

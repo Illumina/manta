@@ -70,10 +70,10 @@ runESLRegion(
     if (bamCount > 1)
     {
         /// TODO: provide a better error exception for failed bam header check:
-        const bam_header_t* compareHeader(bamStreams[0]->get_header());
+        const bam_hdr_t* compareHeader(bamStreams[0]->get_header());
         for (unsigned bamIndex(1); bamIndex<bamCount; ++bamIndex)
         {
-            const bam_header_t* indexHeader(bamStreams[bamIndex]->get_header());
+            const bam_hdr_t* indexHeader(bamStreams[bamIndex]->get_header());
             if (! check_header_compatibility(compareHeader,indexHeader))
             {
                 log_os << "ERROR: incompatible bam headers between files:\n"
@@ -86,7 +86,7 @@ runESLRegion(
 
     // assume headers compatible after this point....
 
-    const bam_header_t& header(*(bamStreams[0]->get_header()));
+    const bam_hdr_t& header(*(bamStreams[0]->get_header()));
     const bam_header_info bamHeader(header);
 
     int32_t tid(0), beginPos(0), endPos(0);

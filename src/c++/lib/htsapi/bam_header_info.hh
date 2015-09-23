@@ -53,7 +53,7 @@ struct bam_header_info
     {}
 
     explicit
-    bam_header_info(const bam_header_t& header);
+    bam_header_info(const bam_hdr_t& header);
 
     bool
     operator==(const bam_header_info& rhs) const

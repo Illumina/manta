@@ -36,6 +36,7 @@ macro(superset symbol value)
     set(${symbol} "${value}" PARENT_SCOPE)
 endmacro()
 
+
 #
 # zlib
 #
@@ -96,6 +97,7 @@ endif ()
 set(THIS_ZLIB "${THIS_PROJECT_NAME}_zlib")
 add_custom_target(${THIS_ZLIB} DEPENDS "${ZLIB_LIBRARY}")
 
+
 #
 # htslib
 #
@@ -118,7 +120,7 @@ if (NOT WIN32)
     add_custom_command(
         OUTPUT ${HTSLIB_LIBRARY}
         COMMAND ./configure CC="${CMAKE_C_COMPILER}" CFLAGS='-O2 -I"${ZLIB_DIR}"' LIBS="${ZLIB_LIBRARY}" >htslib.config.log
-        COMMAND $(MAKE) lib-static tabix bgzip >htslib.build.log 2>htslib.build.error.log
+        COMMAND $(MAKE) lib-static bgzip htsfile tabix >htslib.build.log 2>htslib.build.error.log
         WORKING_DIRECTORY ${HTSLIB_DIR}
         DEPENDS ${HTSLIB_DIR}
         COMMENT "Building htslib library")
@@ -126,51 +128,16 @@ if (NOT WIN32)
     set (HTSLIB_FINAL_TASK ${HTSLIB_LIBRARY})
 endif ()
 
-#add_custom_target(${THIS_PROJECT_NAME}_htslib DEPENDS "${HTSLIB_FINAL_TASK}")
+set(THIS_HTSLIB "${THIS_PROJECT_NAME}_htslib")
+add_custom_target(${THIS_HTSLIB} DEPENDS "${HTSLIB_FINAL_TASK}")
+
 
 if (NOT WIN32)
-    install(PROGRAMS "${HTSLIB_DIR}/tabix" DESTINATION "${THIS_LIBEXECDIR}")
     install(PROGRAMS "${HTSLIB_DIR}/bgzip" DESTINATION "${THIS_LIBEXECDIR}")
+    install(PROGRAMS "${HTSLIB_DIR}/htsfile" DESTINATION "${THIS_LIBEXECDIR}")
+    install(PROGRAMS "${HTSLIB_DIR}/tabix" DESTINATION "${THIS_LIBEXECDIR}")
 endif ()
 
-#
-# samtools
-#
-set(SAMTOOLS_PREFIX "samtools-1.2")
-superset(SAMTOOLS_DIR "${CMAKE_CURRENT_BINARY_DIR}/${SAMTOOLS_PREFIX}")
-superset(SAMTOOLS_LIBRARY "${SAMTOOLS_DIR}/libbam.a")
-superset(SAMTOOLS_PROG "${SAMTOOLS_DIR}/samtools")
-
-# final directory copy below would ideally be a soft-link, copy is for windows build
-add_custom_command(
-    OUTPUT ${SAMTOOLS_DIR}
-    COMMAND ${CMAKE_COMMAND} -E remove_directory "${SAMTOOLS_DIR}"
-    COMMAND ${CMAKE_COMMAND} -E tar xjf "${THIS_REDIST_DIR}/${SAMTOOLS_PREFIX}.tar.bz2"
-    DEPENDS ${HTSLIB_FINAL_TASK}
-    COMMENT "Unpacking samtools package")
-
-set (SAMTOOLS_FINAL_TASK ${SAMTOOLS_DIR})
-
-if (NOT WIN32)
-    # note that samtools make CFLAGS="custom" will overwrite the standard "-g -O2 -Wall" CFLAGS, so
-    # we need to restore at least the -O2 for reasonable library performance:
-    add_custom_command(
-        OUTPUT ${SAMTOOLS_PROG}
-        COMMAND $(MAKE) CC="${CMAKE_C_COMPILER}" HTSDIR="${HTSLIB_DIR}" CFLAGS='-O2 -I"${ZLIB_DIR}"' LDLIBS="${ZLIB_LIBRARY}" all 2>samtools.build.error.log
-        DEPENDS ${HTSLIB_LIBRARY}
-        DEPENDS ${SAMTOOLS_DIR}
-        WORKING_DIRECTORY ${SAMTOOLS_DIR}
-        COMMENT "Building samtools package")
-
-    set (SAMTOOLS_FINAL_TASK ${SAMTOOLS_PROG})
-endif ()
-
-set(THIS_SAMTOOLS "${THIS_PROJECT_NAME}_samtools")
-add_custom_target(${THIS_SAMTOOLS} DEPENDS "${SAMTOOLS_FINAL_TASK}")
-
-if (NOT WIN32)
-    install(PROGRAMS "${SAMTOOLS_PROG}" DESTINATION "${THIS_LIBEXECDIR}")
-endif ()
 
 #
 # pyflow
@@ -206,7 +173,7 @@ add_custom_target(${THIS_PYFLOW} DEPENDS "${PYFLOW_DEPENDS}")
 
 # tie results back to parent:
 #
-add_dependencies(${THIS_OPT} ${THIS_ZLIB} ${THIS_SAMTOOLS} ${THIS_PYFLOW})
+add_dependencies(${THIS_OPT} ${THIS_ZLIB} ${THIS_HTSLIB} ${THIS_PYFLOW})
 
 
 #

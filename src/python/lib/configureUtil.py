@@ -241,9 +241,9 @@ class BamSetChecker(object):
             self.bamList.append(inputBamFile)
             self.bamLabels.append(inputLabel)
 
-    def check(self, samtoolsBin, referenceFasta) :
+    def check(self, htsfileBin, referenceFasta) :
 
-        checkChromSet(samtoolsBin,
+        checkChromSet(htsfileBin,
                       referenceFasta,
                       self.bamList,
                       self.bamLabels,

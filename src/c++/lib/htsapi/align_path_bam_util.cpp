@@ -81,5 +81,5 @@ edit_bam_cigar(const path_t& apath,
     }
 
     //update content of cigar array:
-    apath_to_bam_cigar(apath,bam1_cigar(&br));
+    apath_to_bam_cigar(apath,bam_get_cigar(&br));
 }

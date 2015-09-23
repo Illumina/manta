@@ -40,7 +40,8 @@ bam_streamer(
     const char* filename,
     const char* region)
     : _is_record_set(false),
-      _bfp(nullptr),
+      _hfp(nullptr),
+      _hdr(nullptr),
       _hidx(nullptr),
       _hitr(nullptr),
       _record_no(0),
@@ -53,12 +54,21 @@ bam_streamer(
         throw blt_exception("Can't initialize bam_streamer with empty filename\n");
     }
 
-    _bfp = samopen(filename, "rb", 0);
+    _hfp = hts_open(filename, "rb");
 
-    if (nullptr == _bfp)
+    if (nullptr == _hfp)
     {
         std::ostringstream oss;
-        oss << "Failed to open SAM/BAM/CRAM file: " << filename;
+        oss << "Failed to open SAM/BAM/CRAM file for reading: '" << name() << "'";
+        throw blt_exception(oss.str().c_str());
+    }
+
+    _hdr = sam_hdr_read(_hfp);
+
+    if (nullptr == _hdr)
+    {
+        std::ostringstream oss;
+        oss << "Failed to parse header from SAM/BAM/CRAM file: " << name();
         throw blt_exception(oss.str().c_str());
     }
 
@@ -66,13 +76,13 @@ bam_streamer(
     {
         // read the whole BAM file:
 
-        if (_bfp->header->n_targets)
+        if (_hdr->n_targets)
         {
             // parse a fake region so that header->hash is created
             std::string fake_region(target_id_to_name(0));
             fake_region += ":1-1";
             int ref,beg,end;
-            bam_parse_region(_bfp->header, fake_region.c_str(), &ref, &beg, &end);
+            bam_parse_region2(_hdr, fake_region.c_str(), ref, beg, end);
         }
         return;
     }
@@ -88,7 +98,17 @@ bam_streamer::
 {
     if (nullptr != _hitr) hts_itr_destroy(_hitr);
     if (nullptr != _hidx) hts_idx_destroy(_hidx);
-    if (nullptr != _bfp) samclose(_bfp);
+    if (nullptr != _hdr) bam_hdr_destroy(_hdr);
+    if (nullptr != _hfp)
+    {
+        const int retval = hts_close(_hfp);
+        if (retval != 0)
+        {
+            std::ostringstream oss;
+            oss << "Failed to close SAM/BAM/CRAM file: " << name();
+            throw blt_exception(oss.str().c_str());
+        }
+    }
 }
 
 
@@ -140,7 +160,7 @@ _load_index()
         }
     }
 
-    _hidx = sam_index_load(_bfp->file, index_base.c_str());
+    _hidx = sam_index_load(_hfp, index_base.c_str());
     if (nullptr == _hidx)
     {
         std::ostringstream oss;
@@ -156,14 +176,7 @@ bam_streamer::
 set_new_region(const char* region)
 {
     int ref,beg,end;
-    int retval = bam_parse_region(_bfp->header, region, &ref, &beg, &end); // parse the region
-
-    if (retval != 0)
-    {
-        std::ostringstream oss;
-        oss << "Failed to parse BAM/CRAM region: '" << region << "'";
-        throw blt_exception(oss.str().c_str());
-    }
+    bam_parse_region2(_hdr, region, ref, beg, end); // parse the region
 
     try
     {
@@ -214,16 +227,16 @@ bool
 bam_streamer::
 next()
 {
-    if (nullptr == _bfp) return false;
+    if (nullptr == _hfp) return false;
 
     int ret;
     if (nullptr == _hitr)
     {
-        ret = samread(_bfp, _brec._bp);
+        ret = sam_read1(_hfp,_hdr, _brec._bp);
     }
     else
     {
-        ret = sam_itr_next(_bfp->file, _hitr, _brec._bp);
+        ret = sam_itr_next(_hfp, _hitr, _brec._bp);
     }
 
     _is_record_set=(ret >= 0);
@@ -244,7 +257,7 @@ target_id_to_name(const int32_t tid) const
         static const char unmapped[] = "*";
         return unmapped;
     }
-    return _bfp->header->target_name[tid];
+    return _hdr->target_name[tid];
 }
 
 
@@ -253,7 +266,7 @@ int32_t
 bam_streamer::
 target_name_to_id(const char* seq_name) const
 {
-    return bam_get_tid(_bfp->header,seq_name);
+    return bam_name2id(_hdr,seq_name);
 }
 
 

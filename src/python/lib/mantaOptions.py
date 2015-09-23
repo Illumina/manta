@@ -81,7 +81,7 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         assert os.path.isdir(libexecDir)
 
         bgzipBin=joinFile(libexecDir,exeFile("bgzip"))
-        samtoolsBin=joinFile(libexecDir,exeFile("samtools"))
+        htsfileBin=joinFile(libexecDir,exeFile("htsfile"))
         tabixBin=joinFile(libexecDir,exeFile("tabix"))
 
         mantaStatsBin=joinFile(libexecDir,exeFile("GetAlignmentStats"))

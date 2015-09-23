@@ -22,24 +22,54 @@
 /// \author Chris Saunders
 ///
 
-#include "blt_util/log.hh"
+#include "blt_util/blt_exception.hh"
 #include "htsapi/bam_dumper.hh"
 
+#include <cassert>
 #include <cstdlib>
 
 #include <iostream>
-
+#include <sstream>
 
 
 bam_dumper::
 bam_dumper(const char* filename,
-           const bam_header_t* header)
+           const bam_hdr_t* header)
+    : _hdr(header)
 {
-    _bfp = samopen(filename, "wb", header);
+    assert(nullptr != filename);
+    assert(nullptr != header);
 
-    if (NULL == _bfp)
+    _hfp = hts_open(filename, "wb");
+
+    if (nullptr == _hfp)
     {
-        log_os << "ERROR: Failed to open output BAM file: " << filename << "\n";
-        exit(EXIT_FAILURE);
+        std::ostringstream oss;
+        oss << "Failed to open SAM/BAM/CRAM file for writing: '" << filename << "'";
+        throw blt_exception(oss.str().c_str());
+    }
+
+    const int retval = sam_hdr_write(_hfp,_hdr);
+    if (retval != 0)
+    {
+        std::ostringstream oss;
+        oss << "Failed to write SAM/BAM/CRAM file header for: '" << filename << "'";
+        throw blt_exception(oss.str().c_str());
+    }
+}
+
+
+bam_dumper::
+~bam_dumper()
+{
+    if (nullptr != _hfp)
+    {
+        const int retval = hts_close(_hfp);
+        if (retval != 0)
+        {
+            std::ostringstream oss;
+            oss << "Failed to close SAM/BAM/CRAM file";
+            throw blt_exception(oss.str().c_str());
+        }
     }
 }

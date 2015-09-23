@@ -28,7 +28,7 @@
 
 
 bam_header_info::
-bam_header_info(const bam_header_t& header)
+bam_header_info(const bam_hdr_t& header)
 {
     for (int i(0); i<header.n_targets; ++i)
     {

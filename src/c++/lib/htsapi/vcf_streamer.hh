@@ -35,7 +35,7 @@ struct vcf_streamer : public hts_streamer
     vcf_streamer(
         const char* filename,
         const char* region,
-        const bam_header_t* bh = nullptr);
+        const bam_hdr_t* bh = nullptr);
 
     ~vcf_streamer();
 

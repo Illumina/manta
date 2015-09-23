@@ -191,22 +191,6 @@ def _runDepthShared(self,taskPrefix,dependencies, depthFunc) :
     return nextStepWait
 
 
-
-def runDepthFromIndex(self,taskPrefix="",dependencies=None) :
-    """
-    estimate chrom depth using stats from samtools bam index 'bai'
-    """
-
-    def depthFunc(self,taskPrefix,dependencies,bamFile,outFile) :
-        cmd  = "\"%s\" -E \"%s\"" % (sys.executable, self.params.getChromDepth)
-        cmd += " --bam \"%s\"" % (bamFile)
-        cmd += " > \"%s\"" % (outFile)
-        return self.addTask(preJoin(taskPrefix,"estimateChromDepth"),cmd,dependencies=dependencies)
-
-    return _runDepthShared(self,taskPrefix,dependencies,depthFunc)
-
-
-
 def runDepthFromAlignments(self,taskPrefix="",dependencies=None) :
     """
     estimate chrom depth directly from BAM/CRAM file

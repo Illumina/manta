@@ -47,13 +47,13 @@ parse_bam_region(
 ///
 bool
 check_header_compatibility(
-    const bam_header_t* h1,
-    const bam_header_t* h2);
+    const bam_hdr_t* h1,
+    const bam_hdr_t* h2);
 
 
 /// try to determine the sample_name from the BAM header
 /// if none found return default string value
 std::string
 get_bam_header_sample_name(
-    const bam_header_t* header,
+    const bam_hdr_t* header,
     const char* default_sample_name = "SAMPLE");

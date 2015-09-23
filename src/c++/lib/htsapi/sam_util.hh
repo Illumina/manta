@@ -28,7 +28,7 @@
 
 extern "C" {
 #include <unistd.h> // this simplifies zlib on windows
-#include "sam.h"
+#include "htslib/sam.h"
 }
 
 #include "blt_util/thirdparty_pop.h"

@@ -273,7 +273,7 @@ public:
 
     const uint32_t* raw_cigar() const
     {
-        return bam1_cigar(_bp);
+        return bam_get_cigar(_bp);
     }
     unsigned n_cigar() const
     {
@@ -287,7 +287,7 @@ public:
 
     bam_seq get_bam_read() const
     {
-        return bam_seq(bam1_seq(_bp),read_size());
+        return bam_seq(bam_get_seq(_bp),read_size());
     }
 
     /// get string AUX field, return NULL if field is not found, or field is not a string
@@ -302,7 +302,7 @@ public:
 
     const uint8_t* qual() const
     {
-        return bam1_qual(_bp);
+        return bam_get_qual(_bp);
     }
 
     void
@@ -337,7 +337,7 @@ public:
     empty() const
     {
         assert(NULL != _bp);
-        return (_bp->data_len == 0);
+        return (_bp->l_data == 0);
     }
 
 private:

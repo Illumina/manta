@@ -32,10 +32,44 @@
 extern "C" {
 #include <unistd.h> // this simplifies zlib on windows
 #define __STDC_LIMIT_MACROS
-#include "bam.h"
+#include "htslib/bgzf.h"
+#include "htslib/sam.h"
 }
 
 #include "blt_util/thirdparty_pop.h"
+
+/// pull two remaining functions in from samtools API:
+
+/*!
+  @abstract    Calculate the minimum bin that contains a region [beg,end).
+  @param  beg  start of the region, 0-based
+  @param  end  end of the region, 0-based
+  @return      bin
+ */
+static inline int bam_reg2bin(uint32_t beg, uint32_t end)
+{
+    return hts_reg2bin(beg, end, 14, 5);
+}
+
+/*!
+  @abstract Calculate the rightmost coordinate of an alignment on the
+  reference genome.
+
+  @param  c      pointer to the bam1_core_t structure
+  @param  cigar  the corresponding CIGAR array (from bam1_t::cigar)
+  @return        the rightmost coordinate, 0-based
+*/
+static inline uint32_t bam_calend(const bam1_core_t* c, const uint32_t* cigar)
+{
+    return c->pos + (c->n_cigar? bam_cigar2rlen(c->n_cigar, cigar) : 1);
+}
+
+
+void
+bam_parse_region2(
+    const bam_hdr_t* header,
+    const char* str,
+    int& ref_id, int& beg, int& end);
 
 
 namespace BAM_FLAG
@@ -94,6 +128,7 @@ change_bam_data_segment_len(const int end,
                             const int delta,
                             bam1_t& br);
 
+
 /// Update bam record bin value -- call after updating pos and/or
 /// cigar fields.
 ///
@@ -112,7 +147,7 @@ bam_update_bin(bam1_t& br)
         if (brc.n_cigar!=0)
         {
             // normal case:
-            brc.bin = bam_reg2bin(brc.pos, bam_calend(&brc, bam1_cigar(&br)));
+            brc.bin = bam_reg2bin(brc.pos, bam_calend(&brc, bam_get_cigar(&br)));
         }
         else
         {

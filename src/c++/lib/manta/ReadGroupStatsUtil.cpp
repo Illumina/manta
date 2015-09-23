@@ -543,7 +543,7 @@ struct GenomeSampler
         _isActiveChrom(true),
         _currentChrom(0)
     {
-        const bam_header_t& header(*_readStream.get_header());
+        const bam_hdr_t& header(*_readStream.get_header());
 
         _chromCount = (header.n_targets);
 
@@ -722,7 +722,7 @@ extractReadGroupStatsFromBam(
 {
     bam_streamer read_stream(statsBamFile.c_str());
 
-    const bam_header_t& header(* read_stream.get_header());
+    const bam_hdr_t& header(* read_stream.get_header());
     const int32_t chromCount(header.n_targets);
     std::vector<int32_t> chromSize(chromCount,0);
     std::vector<int32_t> chromHighestPos(chromCount,-1);

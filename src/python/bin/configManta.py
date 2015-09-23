@@ -124,7 +124,7 @@ You must specify a BAM file for at least one sample.
         bcheck = BamSetChecker()
         bcheck.appendBams(options.normalBamList,"Normal")
         bcheck.appendBams(options.tumorBamList,"Tumor")
-        bcheck.check(options.samtoolsBin,
+        bcheck.check(options.htsfileBin,
                      options.referenceFasta)
 
         MantaWorkflowOptionsBase.validateOptionExistence(self,options)

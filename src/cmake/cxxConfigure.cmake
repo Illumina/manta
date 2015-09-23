@@ -76,7 +76,7 @@ if (WIN32)
 endif ()
 
 
-# samtools 1.x forces pthreads in link:
+# htslib 1.x forces pthreads in link:
 find_package( Threads )
 
 # setup ccache if found in path
@@ -463,5 +463,5 @@ endif ()
 #
 # include dirs:
 #
-set (THIS_CXX_BEFORE_SYSTEM_INCLUDES "${Boost_INCLUDE_DIRS}" "${HTSLIB_DIR}" "${SAMTOOLS_DIR}")
+set (THIS_CXX_BEFORE_SYSTEM_INCLUDES "${Boost_INCLUDE_DIRS}" "${HTSLIB_DIR}")
 set (THIS_CXX_ALL_INCLUDES "${CMAKE_SOURCE_DIR}/c++/lib")

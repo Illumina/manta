@@ -45,7 +45,7 @@ void
 check_bam_bcf_header_compatability(
     const char* bcf_filename,
     const bcf_hdr_t* bcfh,
-    const bam_header_t* bamh)
+    const bam_hdr_t* bamh)
 {
     assert(nullptr != bamh);
     assert(nullptr != bcfh);
@@ -76,7 +76,7 @@ vcf_streamer::
 vcf_streamer(
     const char* filename,
     const char* region,
-    const bam_header_t* bh) :
+    const bam_hdr_t* bh) :
     hts_streamer(filename,region),
     _hdr(nullptr)
 {
