@@ -172,7 +172,7 @@ corresponding subdirectories.
 
 ******************************************************************
 
-pyFlow 1.1.8
+pyFlow 1.1.9
 
 pyFlow - a lightweight parallel task engine
 

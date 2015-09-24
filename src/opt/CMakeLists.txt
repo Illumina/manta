@@ -144,7 +144,7 @@ endif ()
 #
 
 #make sure unpacking happens regardless of whether ${VCF_TOOLS_DIR} exists
-set(PYFLOW_PREFIX "pyflow-1.1.8")
+set(PYFLOW_PREFIX "pyflow-1.1.9")
 set(PYFLOW_DIR "${CMAKE_CURRENT_BINARY_DIR}/${PYFLOW_PREFIX}")
 set(PYFLOW_SCRIPT "${PYFLOW_DIR}/src/pyflow.py")
 
