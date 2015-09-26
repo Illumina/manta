@@ -81,7 +81,7 @@ def getBamChromInfo(htsfileBin,bam) :
 
         h = {}
         for word in w[1:] :
-            vals=word.split(':')
+            vals=word.split(':', 1)
             h[vals[0]] = vals[1]
 
         key = h["SN"]
