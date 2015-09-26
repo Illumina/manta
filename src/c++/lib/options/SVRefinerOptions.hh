@@ -64,6 +64,9 @@ struct SVRefinerOptions
         RNAIntronOffEdgeScore(-1)
     {
         spanningAssembleOpt.minContigLength=75; ///< For breakend-spanning assemblies we require a larger contig than for small-variant assemblies
+        RNAspanningAssembleOpt.minContigLength = 75; ///< For breakend-spanning assemblies we require a larger contig than for small-variant assemblies
+        RNAspanningAssembleOpt.minWordLength = 31; /// Use smaller kmer for RNA
+
     }
 
     /// parameters for small SV assembly/alignment:
@@ -82,4 +85,6 @@ struct SVRefinerOptions
     const int RNAIntronOpenScore;
     const int RNAIntronOffEdgeScore;
     AssemblerOptions spanningAssembleOpt;
+    AssemblerOptions RNAspanningAssembleOpt;
+
 };
