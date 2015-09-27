@@ -33,10 +33,32 @@
 #include <string>
 
 
+/// parse a bam region into chrom/begin/end values
+///
+void
+parse_bam_region(
+    const char* region,
+    std::string& chrom,
+    int32_t& begin_pos,
+    int32_t& end_pos);
+
+
+/// parse a bam region into chrom-index/begin/end values based
+/// on chromosome index lookup and end positions in bam header
+///
+void
+parse_bam_region_from_hdr(
+    const bam_hdr_t* header,
+    const char* region,
+    int32_t& tid,
+    int32_t& begin_pos,
+    int32_t& end_pos);
+
+
 void
 parse_bam_region(
     const bam_header_info& header,
-    const std::string& region,
+    const char* region,
     int32_t& tid,
     int32_t& begin_pos,
     int32_t& end_pos);

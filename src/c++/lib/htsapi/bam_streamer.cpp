@@ -24,6 +24,7 @@
 
 #include "blt_util/blt_exception.hh"
 #include "blt_util/log.hh"
+#include "htsapi/bam_header_util.hh"
 #include "htsapi/bam_streamer.hh"
 
 #include <cassert>
@@ -78,11 +79,10 @@ bam_streamer(
 
         if (_hdr->n_targets)
         {
-            // parse a fake region so that header->hash is created
-            std::string fake_region(target_id_to_name(0));
-            fake_region += ":1-1";
-            int ref,beg,end;
-            bam_parse_region2(_hdr, fake_region.c_str(), ref, beg, end);
+            // parse any contig name so that header->hash is created
+            // ignore returned tid value, so doesn't matter if fake name
+            // exists
+            target_name_to_id("fake_name");
         }
         return;
     }
@@ -175,8 +175,8 @@ void
 bam_streamer::
 set_new_region(const char* region)
 {
-    int ref,beg,end;
-    bam_parse_region2(_hdr, region, ref, beg, end); // parse the region
+    int32_t ref,beg,end;
+    parse_bam_region_from_hdr(_hdr, region, ref, beg, end);
 
     try
     {

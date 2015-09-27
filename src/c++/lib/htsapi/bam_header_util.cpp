@@ -30,68 +30,137 @@
 #include <cassert>
 
 #include <algorithm>
+#include <limits>
 #include <sstream>
 
 
 
 void
 parse_bam_region(
-    const bam_header_info& header,
-    const std::string& region,
+    const char* region,
+    std::string& chrom,
+    int32_t& begin_pos,
+    int32_t& end_pos)
+{
+    // make first split:
+    const char* afterChrom;
+    {
+        static const char region_sep1(':');
+        afterChrom = strrchr(region,region_sep1);
+        if (nullptr != afterChrom)
+        {
+            chrom=std::string(region,afterChrom);
+            assert((*afterChrom) != '\0');
+            afterChrom++;
+        }
+    }
+
+
+    bool isWholeChrom(nullptr == afterChrom);
+
+    if (! isWholeChrom)
+    {
+        // make second split
+        static const char region_sep2('-');
+        std::vector<std::string> words2;
+        split_string(afterChrom,region_sep2,words2);
+
+        if (words2.empty() || (words2.size() > 2))
+        {
+            std::ostringstream oss;
+            oss << "ERROR: can't parse begin and end positions from bam_region '" << region << "'\n";
+            throw blt_exception(oss.str().c_str());
+        }
+
+        if (words2.size() == 2)
+        {
+            begin_pos = (illumina::blt_util::parse_int_str(words2[0]))-1;
+            end_pos = (illumina::blt_util::parse_int_str(words2[1]));
+        }
+        else
+        {
+            // this exception allows for chrom names with colons (HLA...) but no positions included
+            isWholeChrom=true;
+        }
+    }
+
+    if (isWholeChrom)
+    {
+        chrom=region;
+        begin_pos = 0;
+        end_pos = std::numeric_limits<int32_t>::max();
+
+    }
+
+    if (chrom.empty())
+    {
+        std::ostringstream oss;
+        oss << "ERROR: can't parse contig name from bam_region '" << region << "'\n";
+        throw blt_exception(oss.str().c_str());
+    }
+
+    if ((begin_pos<0) || (end_pos<0) || (end_pos<=begin_pos))
+    {
+        std::ostringstream oss;
+        oss << "ERROR: nonsensical begin (" << begin_pos << ") and end (" << end_pos << ") positions parsed from bam_region '" << region << "'\n";
+        throw blt_exception(oss.str().c_str());
+    }
+}
+
+
+
+void
+parse_bam_region_from_hdr(
+    const bam_hdr_t* header,
+    const char* region,
     int32_t& tid,
     int32_t& begin_pos,
     int32_t& end_pos)
 {
-    static const char region_sep1(':');
-    std::vector<std::string> words;
-    split_string(region,region_sep1,words);
+    assert(nullptr != header);
+    assert(nullptr != region);
 
-    if (words.empty() || words[0].empty() || (words.size() > 2))
+    std::string chrom;
+    parse_bam_region(region,chrom,begin_pos,end_pos);
+
+    tid = bam_name2id(const_cast<bam_hdr_t*>(header),chrom.c_str());
+
+    if (tid < 0)
     {
         std::ostringstream oss;
-        oss << "ERROR: can't parse bam_region [err 1] " << region << "\n";
+        oss << "ERROR: contig '" << chrom << "' from bam_region '" << region << "' not found in BAM/CRAM header\n";
         throw blt_exception(oss.str().c_str());
     }
 
-    bool isFound(false);
-    const unsigned n_chroms(header.chrom_data.size());
-    for (unsigned i(0); i<n_chroms; ++i)
-    {
-        if (words[0]==header.chrom_data[i].label)
-        {
-            tid=i;
-            isFound=true;
-            break;
-        }
-    }
+    end_pos = std::min(end_pos,static_cast<int32_t>(header->target_len[tid]));
+}
 
-    if (! isFound)
+
+
+void
+parse_bam_region(
+    const bam_header_info& header,
+    const char* region,
+    int32_t& tid,
+    int32_t& begin_pos,
+    int32_t& end_pos)
+{
+    assert(nullptr != region);
+
+    std::string chrom;
+    parse_bam_region(region,chrom,begin_pos,end_pos);
+
+    const auto citer(header.chrom_to_index.find(chrom));
+
+    if (citer == header.chrom_to_index.end())
     {
         std::ostringstream oss;
-        oss << "ERROR: can't parse bam_region [err 2] " << region << "\n"
-            << "\tchromosome: '" << words[0] << "' not found in header\n";
+        oss << "ERROR: contig '" << chrom << "' from bam_region '" << region << "' not found in BAM/CRAM header\n";
         throw blt_exception(oss.str().c_str());
     }
 
-    begin_pos = 0;
-    end_pos = header.chrom_data[tid].length;
-    if (1 == words.size()) return;
-
-    static const char region_sep2('-');
-    std::vector<std::string> words2;
-    split_string(words[1],region_sep2,words2);
-
-    if (words2.empty() || (words2.size() > 2))
-    {
-        std::ostringstream oss;
-        oss << "ERROR: can't parse bam_region [err 3] " << region << "\n";
-        throw blt_exception(oss.str().c_str());
-    }
-
-    begin_pos = (illumina::blt_util::parse_int_str(words2[0]))-1;
-
-    if (1 == words2.size()) return;
-    end_pos = (illumina::blt_util::parse_int_str(words2[1]));
+    tid = citer->second;
+    end_pos = std::min(end_pos,static_cast<int32_t>(header.chrom_data[tid].length));
 }
 
 

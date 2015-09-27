@@ -93,9 +93,9 @@ def parseGenomeRegion(regionStr) :
 
     assert(regionStr is not None)
 
-    word=regionStr.strip().split(':')
+    word=regionStr.strip().rsplit(':',1)
 
-    if (len(word) < 1) or (len(word) > 2) :
+    if len(word) < 1 :
         raise Exception("Unexpected format in genome region string: %s" % (regionStr))
 
     chrom=word[0]
@@ -106,14 +106,19 @@ def parseGenomeRegion(regionStr) :
     end=None
 
     if (len(word) > 1) :
+        if len(word[1]) == 0 :
+            raise Exception("Unexpected format in genome region string: %s" % (regionStr))
+
         rangeWord=word[1].split('-')
         if len(rangeWord) != 2 :
-            raise Exception("Unexpected format in genome region string: %s" % (regionStr))
-        start = int(rangeWord[0])
-        end = int(rangeWord[1])
+            # assume this might be an HLA chrom at this point:
+            chrom=regionStr.strip()
+        else :
+            start = int(rangeWord[0])
+            end = int(rangeWord[1])
 
-        if (end < start) or (start < 1) or (end < 1) :
-            raise Exception("Unexpected format in genome region string: %s" % (regionStr))
+            if (end < start) or (start < 1) or (end < 1) :
+                raise Exception("Unexpected format in genome region string: %s" % (regionStr))
 
     return {"chrom":chrom, "start":start, "end":end}
 

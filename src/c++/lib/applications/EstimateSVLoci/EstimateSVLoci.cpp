@@ -90,7 +90,7 @@ runESLRegion(
     const bam_header_info bamHeader(header);
 
     int32_t tid(0), beginPos(0), endPos(0);
-    parse_bam_region(bamHeader,region,tid,beginPos,endPos);
+    parse_bam_region(bamHeader,region.c_str(),tid,beginPos,endPos);
 
     const GenomeInterval scanRegion(tid,beginPos,endPos);
 #ifdef DEBUG_ESL

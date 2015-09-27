@@ -175,30 +175,3 @@ bam_aux_append_unsigned(bam1_t& br,
         bam_aux_append(&br,tag,'C',1,&z);
     }
 }
-
-
-void
-bam_parse_region2(
-    const bam_hdr_t* header,
-    const char* str,
-    int& ref_id, int& beg, int& end)
-{
-    const char* name_lim = hts_parse_reg(str, &beg, &end);
-    if (name_lim)
-    {
-        const std::string name(str,name_lim);
-        ref_id = bam_name2id(const_cast<bam_hdr_t*>(header), name.c_str());
-    }
-    else
-    {
-        // not parsable as a region, but possibly a sequence named "foo:a"
-        ref_id = bam_name2id(const_cast<bam_hdr_t*>(header), str);
-        beg = 0;
-        end = std::numeric_limits<int>::max();
-    }
-    if ((ref_id == -1) || (beg > end))
-    {
-        log_os << "ERROR: failed to parse samtools region string: '" << str << "'\n";
-        exit(EXIT_FAILURE);
-    }
-}

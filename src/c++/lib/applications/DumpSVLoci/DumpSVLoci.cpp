@@ -43,7 +43,6 @@ static
 void
 runDSL(const DSLOptions& opt)
 {
-
     SVLocusSet set;
     set.load(opt.graphFilename.c_str());
 
@@ -57,7 +56,7 @@ runDSL(const DSLOptions& opt)
     if (! opt.region.empty())
     {
         int32_t tid,beginPos,endPos;
-        parse_bam_region(set.header, opt.region, tid, beginPos, endPos); // parse the region
+        parse_bam_region(set.header, opt.region.c_str(), tid, beginPos, endPos);
 
         set.dumpRegion(os,GenomeInterval(tid,beginPos,endPos));
     }

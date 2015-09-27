@@ -65,13 +65,6 @@ static inline uint32_t bam_calend(const bam1_core_t* c, const uint32_t* cigar)
 }
 
 
-void
-bam_parse_region2(
-    const bam_hdr_t* header,
-    const char* str,
-    int& ref_id, int& beg, int& end);
-
-
 namespace BAM_FLAG
 {
 enum index_t
