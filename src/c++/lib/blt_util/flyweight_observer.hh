@@ -40,6 +40,8 @@ struct flyweight_observer
 {
     friend struct flyweight_notifier<T>;
 
+    flyweight_observer& operator=(const flyweight_observer&) = default;
+
     virtual ~flyweight_observer() {}
 
 private:
