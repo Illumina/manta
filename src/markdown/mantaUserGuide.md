@@ -172,7 +172,7 @@ a possible breakend location.
 Manta requires input sequencing reads to be mapped by an external tool
 and provided as input in either BAM or CRAM format. Each input file must be
 coordinate sorted and indexed to produce a`samtools/htslib`-style index in a
-file named to match the input BAM orCRAM file with an additional '.bai', '.crai'
+file named to match the input BAM or CRAM file with an additional '.bai', '.crai'
 or '.csi' filename extension.
 
 At configuration time, at least one BAM or CRAM file must be provided for the
