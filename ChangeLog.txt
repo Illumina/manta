@@ -1,5 +1,5 @@
 -v0.29.0
-- MANTA-267 Support contig names with colons (for HLA contigs in 1kg hg38)
+- MANTA-267/[#12] Support contig names with colons (for HLA contigs in 1kg hg38)
 - MANTA-252 Complete support for CRAM input
 - MANTA-264 Remove samtools from manta dependencies
 - MANTA-252 Change default chrom depth to median estimate from alignments
