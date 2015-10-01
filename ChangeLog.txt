@@ -1,3 +1,4 @@
+- MANTA-273/[#14] allow bam index fileanmes in single-extension (Picard) style
 -v0.29.0
 - MANTA-267/[#12] Support contig names with colons (for HLA contigs in 1kg hg38)
 - MANTA-252 Complete support for CRAM input
