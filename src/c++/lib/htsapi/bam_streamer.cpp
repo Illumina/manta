@@ -150,7 +150,7 @@ _load_index()
 
     // hack to allow GATK/Picard bai name convention:
     if ((! fexists((index_base+".bai").c_str())) &&
-        (! fexists((index_base+".csa").c_str())) &&
+        (! fexists((index_base+".csi").c_str())) &&
         (! fexists((index_base+".crai").c_str())))
     {
         static const std::string bamext(".bam");
