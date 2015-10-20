@@ -341,7 +341,7 @@ getSACandidatesFromRead(
     {
         candidates.push_back(GetSplitSACandidate(dopt, localRead, localAlign, ral, fragSource));
 #ifdef DEBUG_SCANNER
-        log_os << __FUNCTION__ << ": evaluating SA sv for inclusion: " << candidates.data.back() << "\n";
+        log_os << __FUNCTION__ << ": evaluating SA sv for inclusion: " << candidates.back() << "\n";
 #endif
     }
 }

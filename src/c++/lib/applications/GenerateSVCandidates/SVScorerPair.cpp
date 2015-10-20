@@ -528,7 +528,7 @@ processExistingAltPairInfo(
             const std::string& qname(fragment.qname());
 
 #ifdef DEBUG_PAIR
-            log_os << __FUNCTION__ << ": Finding alt fragment evidence for svIndex: " << sv.candidateIndex << "  isTumor: " << isTumor << " bam-fragment: " << fragment << "\n";
+            log_os << __FUNCTION__ << ": Finding alt fragment evidence for svIndex: " << sv.candidateIndex << " bam-fragment: " << fragment << "\n";
 #endif
 
             SVFragmentEvidence& fragEvidence(evidence.getSampleEvidence(bamIndex)[qname]);
