@@ -47,6 +47,7 @@ enum index_t
 {
     COMPRESSED,
     NORMAL,
+    UNKNOWN,
     VERYCLOSE,
     CLOSE,
     DISTANT

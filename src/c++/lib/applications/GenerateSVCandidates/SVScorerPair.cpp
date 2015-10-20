@@ -462,7 +462,10 @@ getFragProb(
     log_os << logtag << "cdf: " << fragProb << " final: " << std::min(fragProb, (1-fragProb)) << "\n";
 #endif
     fragProb = std::min(fragProb, (1-fragProb));
-
+    if (pairOpt.RNA)
+    {
+        fragProb = std::max(fragProb, pairOpt.minFragProb);
+    }
     /// TODO: any cases where fragProb is 0 or extremely small should be some
     /// sort of mulit-SV error artifact (like a large CIGAR indel in one of the
     /// reads of the pair) try to improve this case -- ideally we can account
@@ -473,7 +476,7 @@ getFragProb(
     }
 
 #ifdef DEBUG_PAIR
-    log_os << logtag << "isSupportSV: " << isFragSupportSV << "\n";
+    log_os << logtag << "isSupportSV: " << isFragSupportSV << " fragProb: " << fragProb << "\n";
 #endif
 }
 

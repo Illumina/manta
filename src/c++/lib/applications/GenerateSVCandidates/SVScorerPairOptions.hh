@@ -33,7 +33,10 @@ struct PairOptions
     explicit
     PairOptions(const bool isRNA) :
         minFragSupport(50),
-        minFragProb(! isRNA ? 0.0001f : 0.0f)
+        minFragProb(0.0001f),
+        RNA(isRNA),
+        useProperPairFlag(isRNA)
+
     {}
 
     /// we're interested in any fragments which cross center pos with at least N bases of support on each side
@@ -43,4 +46,11 @@ struct PairOptions
     const pos_t minFragSupport;
 
     const float minFragProb;
+
+    /// This is an RNA dataset. Insert size distribution is less meaningful due to splicing
+    const bool RNA;
+    
+    /// Use the proper pair flag to decide if read pairs are are anomalous for ref and alt scoring
+    /// Used for RNA, since splicing makes the pair insert size distribution less informative
+    const bool useProperPairFlag;
 };

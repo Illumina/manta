@@ -95,10 +95,10 @@ struct SVScorePairProcessor : public BamRegionProcessor
     processRecord(
             const bam_record& bamRead)
     {
-    	if (isSkipRecordCore(bamRead)) return;
-    	if (isSkipRecord(bamRead)) return;
+        if (isSkipRecordCore(bamRead)) return;
+        if (isSkipRecord(bamRead)) return;
 
-    	processClearedRecord(bamRead);
+        processClearedRecord(bamRead);
     }
     */
 
@@ -140,7 +140,6 @@ struct SVScorePairProcessor : public BamRegionProcessor
 
 protected:
 
-    static
     void
     setAlleleFrag(
         const SizeDistribution& fragDistro,
@@ -160,10 +159,13 @@ protected:
             fragProb = fragDistro.cdf(size);
             fragProb = std::min(fragProb, (1-fragProb));
         }
+        if (pairOpt.RNA)
+        {
+            fragProb = std::max(fragProb, pairOpt.minFragProb);
+        }
 #ifdef DEBUG_MEGAPAIR
         log_os << __FUNCTION__ << ": fraglen,prob " << size << " " << fragProb << "\n";
 #endif
-
         bp.isFragmentSupport = true;
         bp.fragLengthProb = fragProb;
     }
