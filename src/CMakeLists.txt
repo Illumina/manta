@@ -102,7 +102,7 @@ if (NOT CMAKE_PARALLEL)
     set (IS_WIN_BOOST_BUILD FALSE)
 
 
-    if (IS_WIN_BOOST_BUILD)
+    if (WIN32 AND IS_WIN_BOOST_BUILD)
         set(CMAKE_PARALLEL "0" CACHE STRING
             "Choose the number of cores used by cmake during configuration (no default)")
 
@@ -229,20 +229,22 @@ if (NOT WIN32)
     add_dependencies(${THIS_OPT} ${THIS_SOURCE_CHECK})
 endif ()
 
+add_subdirectory (cmake/preInstall)
+add_subdirectory (opt)
+
 # force unit tests at compile time, and set them to be more verbose than
 # cmake's default "test" target:
 set(THIS_UNITTESTS "${THIS_PROJECT_NAME}_unittests")
+set(utest_cmd ${CMAKE_CTEST_COMMAND} --force-new-ctest-process --output-on-failure)
 add_custom_target(${THIS_UNITTESTS}
     ALL
-    COMMAND ${CMAKE_CTEST_COMMAND} --force-new-ctest-process --output-on-failure
+    COMMAND ${utest_cmd}
     )
 
-add_subdirectory (cmake/preInstall)
-add_subdirectory (opt)
 add_subdirectory (c++)
 add_subdirectory (python)
+add_subdirectory (demo)
 if (NOT WIN32)
-    add_subdirectory (demo)
     add_subdirectory (markdown)
 endif ()
 add_subdirectory (cmake/postInstall)

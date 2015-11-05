@@ -37,6 +37,16 @@ macro(superset symbol value)
 endmacro()
 
 
+set (THIS_CMAKE_PLATFORM "")
+if (WIN32)
+    # Sometimes the platform (x64,win32...) is specified as part of the target name
+    # this captures the cases where it is specified separately:
+    if (CMAKE_GENERATOR_PLATFORM)
+        set (THIS_CMAKE_PLATFORM -A "${CMAKE_GENERATOR_PLATFORM}")
+    endif ()
+endif ()
+
+
 #
 # zlib
 #
@@ -77,17 +87,10 @@ if (NOT WIN32)
         DEPENDS ${ZLIB_DIR}
         COMMENT "Building zlib package")
 else ()
-    # Sometimes the platform (x64,win32...) is specified as part of the target name
-    # this captures the cases where it is specified separately:
-    set (ZLIB_PLATFORM "")
-    if (CMAKE_GENERATOR_PLATFORM)
-        set (ZLIB_PLATFORM -A "${CMAKE_GENERATOR_PLATFORM}")
-    endif ()
-
     add_custom_command(
         OUTPUT ${ZLIB_LIBRARY}
-        COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" ${ZLIB_PLATFORM} -DCMAKE_C_COMPILER="${CMAKE_C_COMPILER}" ${ZLIB_DIR} >zlib.config.log
-        COMMAND ${CMAKE_MAKE_PROGRAM} "${ZLIB_DIR}/zlib.sln" >zlib.build.log
+        COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" ${THIS_CMAKE_PLATFORM} -DCMAKE_C_COMPILER="${CMAKE_C_COMPILER}" ${ZLIB_DIR} >zlib.config.log
+        COMMAND ${CMAKE_MAKE_PROGRAM}  /p:Configuration=${CMAKE_BUILD_TYPE} "${ZLIB_DIR}/zlib.sln" >zlib.build.log
         WORKING_DIRECTORY ${ZLIB_DIR}
         DEPENDS ${ZLIB_DIR}
         COMMENT "Building zlib package")

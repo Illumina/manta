@@ -78,6 +78,7 @@ endif ()
 
 # htslib 1.x forces pthreads in link:
 find_package( Threads )
+set  (THIS_ADDITIONAL_LIB ${THIS_ADDITIONAL_LIB} ${CMAKE_THREAD_LIBS_INIT})
 
 # setup ccache if found in path
 if (NOT WIN32)
