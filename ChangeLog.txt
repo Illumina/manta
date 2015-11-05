@@ -1,3 +1,5 @@
+v0.23.2
+- [#6] Fix assertion caused by filtered graph edges on bin boundaries.
 v0.23.1
 - MANTA-206 Disable remote read search in T/N analysis
 - MANTA-195 Improve filtration of short fragments in FFPE samples
