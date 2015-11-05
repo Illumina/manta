@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+set -o errexit
 set -o nounset
 set -o pipefail
 set -o xtrace
@@ -12,7 +13,7 @@ if [ $# -gt 1 ]; then
     cat <<END
 usage: $0 [tarball_rootname]
 
-This script makes the manta source tarball
+This script makes the $package_name source tarball
 
 - script assumes that it is located in the release checkout version
 - the tarball is written to the caller's working directory
@@ -23,7 +24,7 @@ elif [ $# == 1 ]; then
 fi
 
 rel2abs() {
-    (cd $1; pwd -P)
+    cd $1; pwd -P
 }
 
 thisdir=$(rel2abs $(dirname $0))
@@ -74,7 +75,9 @@ mv $tmp_file $rme
 # tar it up:
 (
 cd $outdir
-tar -f $pname_root.tar.bz2 -cj $pname_root
+rname=$pname_root.release_src
+mv $pname_root $rname
+tar -f $rname.tar.bz2 -cj $rname
+rm -rf $rname
 )
 
-rm -rf $pname
