@@ -103,6 +103,7 @@ writeHeaderPrefix(
         _os << "##INFO=<ID=RNA_FIRST,Number=0,Type=Flag,Description=\"For RNA fusions, this break-end is 5' in the fusion transcript\">\n";
         _os << "##INFO=<ID=RNA_STRANDED,Number=0,Type=Flag,Description=\"For RNA fusions, the direction of transcription is known\">\n";
         _os << "##INFO=<ID=RNA_FwRvReads,Number=2,Type=Integer,Description=\"For RNA fusions, number of stranded reads supporting forward or reverse direction of transcription\">\n";
+        _os << "##INFO=<ID=RNA_Reads,Number=1,Type=Integer,Description=\"For RNA fusions, the number of reads and pairs that potentially support this candidate before refinement and scoring\">\n";
         _os << "##INFO=<ID=RNA_CONTIG,Number=1,Type=String,Description=\"For RNA fusions, the sequence of the breakend spanning contig\">\n";
         _os << "##INFO=<ID=RNA_CONTIG_ALN,Number=2,Type=Integer,Description=\"For RNA fusions, length of the spanning contig alignment on each breakend\">\n";
     }
@@ -247,7 +248,7 @@ addRNAInfo(
     if (!isFirstOfPair) return; // only the first breakpoint gets the additional RNA info attached to its VCF entry
 
     infotags.push_back(str(boost::format("RNA_FwRvReads=%i,%i") % sv.fwReads % sv.rvReads));
-
+    infotags.push_back(str(boost::format("RNA_Reads=%i") % sv.bp2.lowresEvidence.getTotal()));
     const unsigned numContigs(assemblyData.contigs.size());
     if (numContigs > 0)
     {
