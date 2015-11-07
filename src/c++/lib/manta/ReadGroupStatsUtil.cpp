@@ -133,15 +133,12 @@ struct ReadGroupOrientTracker
 
     void
     addOrient(
-        const bam_record& bamRead)
+        const PAIR_ORIENT::index_t ori)
     {
-        if (bamRead.pos() == bamRead.mate_pos()) return;
-
         static const unsigned maxOrientCount(100000);
-        if (_totalOrientCount < maxOrientCount)
-        {
-            addOrient(getRelOrient(bamRead));
-        }
+        if (_totalOrientCount >= maxOrientCount) return;
+        if (ori == PAIR_ORIENT::UNKNOWN) return;
+        addOrientImpl(ori);
     }
 
     const ReadPairOrient&
@@ -154,13 +151,13 @@ struct ReadGroupOrientTracker
 private:
 
     void
-    addOrient(
-        const PAIR_ORIENT::index_t id)
+    addOrientImpl(
+        const PAIR_ORIENT::index_t ori)
     {
         assert(! _isFinalized);
-        assert((id>=0) && (id<PAIR_ORIENT::SIZE));
+        assert((ori>=0) && (ori<PAIR_ORIENT::SIZE));
 
-        _orientCount[id]++;
+        _orientCount[ori]++;
         _totalOrientCount++;
     }
 
@@ -243,11 +240,11 @@ struct ReadGroupTracker
 
     void
     addOrient(
-        const bam_record& bamRead)
+        const PAIR_ORIENT::index_t ori)
     {
         assert(! _isFinalized);
 
-        _orientInfo.addOrient(bamRead);
+        _orientInfo.addOrient(ori);
     }
 
     void
@@ -776,7 +773,8 @@ extractReadGroupStatsFromBam(
                 // orientation beforehand allows us to detect, ie. a mate-pair library
                 // so that we can blow-up with an informative error msg
                 //
-                rgInfo.addOrient(bamRead);
+                const PAIR_ORIENT::index_t ori(getRelOrient(bamRead));
+                rgInfo.addOrient(ori);
 
                 // filter mapped innies on the same chrom
                 //
@@ -788,7 +786,7 @@ extractReadGroupStatsFromBam(
                 // pair decisions by estimating a fragment distro for each orientation and only keeping the one with
                 // the most samples
                 //
-                if (! is_innie_pair(bamRead)) continue;
+                if (ori != PAIR_ORIENT::Rp) continue;
 
                 rgInfo.addInsertSize(getSimplifiedFragSize(bamRead));
 

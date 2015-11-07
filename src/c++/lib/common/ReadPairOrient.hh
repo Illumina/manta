@@ -78,7 +78,11 @@ get_index(const pos_t pos1, const bool is_fwd_strand1,
     if (is_fwd_strand1 != is_fwd_strand2)
     {
         // special-case very short fragments as innies:
-        if (pos1 == pos2) return Rp;
+        //
+        // a few bases of overhang are allowed to account for random matches of
+        // the reverse read to the primer
+        //
+        if (std::abs(pos1-pos2) <= 2) return Rp;
 
         const bool left_strand(is_read1_left
                                ? is_fwd_strand1
