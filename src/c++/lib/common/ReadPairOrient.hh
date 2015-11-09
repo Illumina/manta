@@ -39,7 +39,9 @@
 #include "blt_util/thirdparty_pop.h"
 
 #include <cassert>
+#include <cstdlib>
 #include <cstring>
+
 #include <iosfwd>
 #include <string>
 
