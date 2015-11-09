@@ -1,3 +1,4 @@
+- [#21] improve fragment size estimation for very short fragments
 - MANTA-261 Transfer stable components from Manta windows port
 - MANTA-273/[#14] allow bam index fileanmes in single-extension (Picard) style
 -v0.29.0
