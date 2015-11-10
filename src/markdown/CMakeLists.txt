@@ -31,7 +31,7 @@
 ## build the documentation when available
 ##
 
-function(process_user_guide name)
+function(process_md_guide name)
     set (UG "${name}.md")
     set (UL "${CMAKE_CURRENT_BINARY_DIR}/${name}.html")
 
@@ -60,8 +60,7 @@ function(process_user_guide name)
     install(FILES ${UL} DESTINATION ${THIS_DOCDIR}/html)
 endfunction()
 
-process_user_guide("mantaUserGuide")
+process_md_guide("mantaUserGuide")
 
-install(FILES "userGuide.css" DESTINATION ${THIS_DOCDIR}/html)
-install(FILES "tableOfContents.js" DESTINATION ${THIS_DOCDIR}/html)
+install(FILES "guideStyle.css" DESTINATION ${THIS_DOCDIR}/html)
 

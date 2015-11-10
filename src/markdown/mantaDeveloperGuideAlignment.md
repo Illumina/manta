@@ -1,7 +1,9 @@
 
-# Manta Contributor Guide - Alignment Library
+# Manta Developer Guide - Alignment Library
 
-This is a subsection of the manta contributor guide focusing on the alignment library.
+[Return to Manta Developer Guide](mantaDeveloperGuide.md)
+
+This is a subsection of the manta developer guide focusing on the alignment library.
 
 ## Debugging
 

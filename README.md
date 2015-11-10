@@ -48,8 +48,8 @@ the release distributions of the source code, also provided on the
 [Manta releases page] [releases]. Cloning/archiving the source
 directly from git could result in missing version number entries,
 undesirably stringent build requirements or an unstable development
-version between releases. Additional build notes for contributors can
-be found below.
+version between releases. Additional build notes for Manta developers can
+be found in the [manta developer guide] [DeveloperGuide]
 
 Note that this README is _NOT_ part of a tagged source-code release.
 
@@ -58,13 +58,15 @@ Note that this README is _NOT_ part of a tagged source-code release.
 [tcistatus]:https://travis-ci.org/Illumina/manta.svg?branch=master
 [tcihome]:https://travis-ci.org/Illumina/manta
 
+[DeveloperGuide]:src/markdown/mantaDeveloperGuide.md
+
 ### Build prerequisites
 
 Manta requires a compiler supporting most of the C++11 standard. These
 are the current minimum versions enforced by the build system:
 
 * python 2.4+
-* gcc 4.7+ OR clang 3.1+ (OR Visual Studio 2013+, see windev note below)
+* gcc 4.7+ OR clang 3.1+ (OR Visual Studio 2013+, see windows note below)
 
 ### Runtime prerequisites
 
@@ -88,7 +90,7 @@ are not tested for this platform.
 ##### Windows
 
 Manta does not build or run on windows. Library-level compilation is
-possible for Visual Studio users. See Contributor section below.
+possible for Visual Studio users. See the the [manta developer guide] [DeveloperGuide] for details.
 
 ### Linux Package Additions
 
@@ -221,66 +223,8 @@ relative to the alignment file size.
 [PG]:http://www.platinumgenomes.org
 
 
-Contributor build configuration
--------------------------------
+Manta Code Development
+----------------------
 
-When Manta is cloned from github, it is configured for development
-rather than user distribution. As such, builds are strict: all
-warnings are treated as errors and if cppcheck is found any detected
-issue is converted to a build error.
-
-#### Source documentation
-
-If doxygen is found in the path (and optionally dot as well) during
-build configuration, then c++ documentation is available as an
-additional "doc" target for the makefile:
-
-    make doc
-
-There is no installation for the documentation outside of the build
-directory, the root doxygen page after completing this target will be:
-
-    ${MANTA_BUILD_PATH}/c++/doxygen/html/index.html
-
-#### Improving build time
-
-##### ccache
-
-The build system is configured to use ccache whenever this is
-found in the path
-
-##### Bundled dependencies
-
-Note that during the configuration step, the following dependencies will be
-built from source if they are not found:
-
-* cmake 2.8.0+
-* boost 1.56.0+
-
-To avoid the extra time associated with this step, ensure that (1)
-cmake 2.8.0+ is in your PATH and (2) BOOST\_ROOT is defined to point
-to boost 1.56.0 or newer.
-
-#### Address Sanitizer
-
-The build system offers first-class support for google address sanitizer
-when a supporting compiler is detected. To use this mode, start a fresh
-installation process with the additional configure option `--build-type=ASan`,
-extending from the configuration example in the above build instructions, use:
-
-    ../manta-A.B.C.release_src/src/configure --jobs=4 --prefix=/path/to/install --build-type=ASan
-
-#### Windows development support
-
-Manta does not link or run on windows. However, the build system does
-facilitate Visual Studio (VS) users. When cmake configuration is run
-on windows, all linking is disabled and most third party libraries are
-unpacked for header include access, but are not compiled. Cmake VS
-solutions allow the c++ code to be browsed, analyzed and compiled to
-the library level.  Note that unit test codes are compiled to
-libraries but cannot be run.
-
-C++11 features used by manta require at least VS2013. A Windows
-installation of cmake is also required to configure and compile.
-Note that the minimum cmake version for Windows is 3.1.0
+For manta code development and debugging details, please see the [Manta developer guide] [DeveloperGuide]. This includes details on Manta's developement protocols, recommended workflows for debugging/investigating suspected FP or FN SV calls, and internal documentation details.
 
