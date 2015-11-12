@@ -34,6 +34,7 @@
 struct MESOptions
 {
     std::vector<std::string> statsFilename;
+    std::string statsFilenameList;
     std::string outputFilename;
     std::string reportFilename;
 };
