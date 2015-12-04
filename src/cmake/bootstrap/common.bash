@@ -30,26 +30,6 @@ ilog() {
 	echo -e $@ >&2
 }
 
-common_options () {
-    TEMP=`getopt -n $SCRIPT -o fc -- "$@"`
-    if [ $? != 0 ] ; then
-        ilog $SCRIPT: invalid option
-        ilog "Terminating..."
-        exit 2
-    fi
-    eval set -- "$TEMP"
-    FORCE=
-    CLEAN=
-    while true ; do
-        case "$1" in
-            -f) FORCE=true ; shift ;;
-            -c) CLEAN=true ; shift ;;
-            --)              shift ; break ;;
-            *) ilog "Internal error!"; exit 2 ;;
-        esac
-    done
-}
-
 
 common_create_source () {
     if [[ ! -e $SOURCE_TARBALL ]] ; then
