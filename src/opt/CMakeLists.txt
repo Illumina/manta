@@ -146,7 +146,7 @@ endif ()
 # pyflow
 #
 
-set(PYFLOW_PREFIX "pyflow-1.1.11")
+set(PYFLOW_PREFIX "pyflow-1.1.12")
 set(PYFLOW_DIR "${CMAKE_CURRENT_BINARY_DIR}/${PYFLOW_PREFIX}")
 set(PYFLOW_SCRIPT "${PYFLOW_DIR}/src/pyflow.py")
 
