@@ -14,7 +14,7 @@
 FROM centos:5
 
 # add standard centos5 packages && swap in newer cmake as default:
-RUN yum install -y bzip2 make gcc gcc-c++ tar wget zlib-devel && \
+RUN yum install -y bzip2 make gcc gcc-c++ tar wget zlib-devel git && \
     yum install -y epel-release && \
     yum install -y cmake28 && cd /usr/bin && ln -s cmake28 cmake
 
