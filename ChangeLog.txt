@@ -1,3 +1,4 @@
+- MANTA-277 fix: invalid genome region requested during insert size est
 - Update to pyflow 1.1.12 to improve SGE filesystem delay handling
 and fix issue between SGE and recent bash shellshock fix
 v0.29.1
