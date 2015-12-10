@@ -750,6 +750,8 @@ extractReadGroupStatsFromBam(
 #ifdef DEBUG_RPS
             std::cerr << "INFO: Stats requesting bam region starting from: chrid: " << chromIndex << " start: " << startPos << "\n";
 #endif
+            if (startPos >= chromSize[chromIndex]) continue;
+
             read_stream.set_new_region(chromIndex,startPos,chromSize[chromIndex]);
             while (read_stream.next())
             {
