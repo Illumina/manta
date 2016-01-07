@@ -133,5 +133,15 @@ BOOST_AUTO_TEST_CASE( test_rangeMap_eraseTo2 )
     BOOST_REQUIRE_EQUAL(rm.getConstRef(7), 1);
 }
 
+BOOST_AUTO_TEST_CASE( test_rangeMap_dataSizeBoundary )
+{
+    RangeMap<int,int> rm(8);
+
+    rm.getRef(0) += 1;
+    rm.getRef(8) += 1;
+    BOOST_REQUIRE_EQUAL(rm.getConstRef(0), 1);
+    BOOST_REQUIRE_EQUAL(rm.getConstRef(8), 1);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
