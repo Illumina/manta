@@ -1,3 +1,4 @@
+- STARKA-306 fix rare chunk size boundary defect in RangeMap
 v0.29.2
 - MANTA-277 fix: invalid genome region requested during insert size est
 - Update to pyflow 1.1.12 to improve SGE filesystem delay handling
