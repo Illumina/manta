@@ -39,7 +39,7 @@
 #include <string>
 
 /// standard debug output for this file:
-#define DEBUG_PAIR
+//#define DEBUG_PAIR
 
 /// ridiculous debug output for this file:
 //#define DEBUG_MEGAPAIR
@@ -474,7 +474,6 @@ getFragProb(
 }
 
 
-
 /// count the read pairs supporting the alternate allele in each sample, using data we already produced during candidate generation:
 ///
 void
@@ -498,6 +497,9 @@ processExistingAltPairInfo(
         {
             // at least one non-supplemental read of the pair must have been found to use this pipeline:
             if (! (fragment.read1.isSet() || fragment.read2.isSet())) continue;
+
+            // sanity check of read pairs
+            if (! fragment.checkReadPair()) continue;
 
             // is this read pair associated with this candidateIndex? (each read fragment can be associated with multiple candidates)
             unsigned linkIndex(0);

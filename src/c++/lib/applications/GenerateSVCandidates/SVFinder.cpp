@@ -168,9 +168,6 @@ addSVNodeRead(
 
     if (scanner.isMappedReadFilteredCore(bamRead)) return;
 
-    // filter out supplementary reads that have no SA tag (split reads).
-    if (bamRead.is_supplement() && (! bamRead.isSASplit())) return;
-
     if (bamRead.map_qual() < scanner.getMinTier2MapQ()) return;
 
     const bool isSubMapped(bamRead.map_qual() < scanner.getMinMapQ());
@@ -816,6 +813,10 @@ processSequenceFragment(
         return;
         //assert(localReadPtr->isSet() && "Neither read in pair is set");
     }
+
+    // sanity check of read pairs
+    if (! fragment.checkReadPair()) return;
+
     const bam_record* remoteBamRecPtr( remoteReadPtr->isSet() ? &(remoteReadPtr->bamrec) : nullptr);
 
     const reference_contig_segment& localRef( localReadPtr->isNode1 ? refSeq1 : refSeq2 );
