@@ -471,7 +471,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
 
     def sortVcfs(pathList, outPath, label, isDiploid=False) :
         if len(pathList) == 0 : return set()
-        
+
         # make header modifications to first vcf in list of files to be sorted:
         headerFixTask=preJoin(taskPrefix,"fixVcfHeader_"+label)
         def getHeaderFixCmd(fileName) :
