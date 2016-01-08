@@ -96,6 +96,12 @@ def getRmCmd() :
     else:
         return ["rm","-f"]
 
+def getMvCmd() :
+    if isWindows():
+        return ["rename"]
+    else:
+        return ["mv"]
+
 def quoteStringList(strList):
     return ["\"%s\"" % (x) for x in strList]
 
@@ -384,9 +390,9 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         candidateVcfPaths.append(self.paths.getHyGenCandidatePath(binStr))
         if isTumorOnly :
             tumorVcfPaths.append(self.paths.getHyGenTumorPath(binStr))
-	else:
-	    diploidVcfPaths.append(self.paths.getHyGenDiploidPath(binStr))
-	    if isSomatic :
+        else:
+            diploidVcfPaths.append(self.paths.getHyGenDiploidPath(binStr))
+            if isSomatic :
                 somaticVcfPaths.append(self.paths.getHyGenSomaticPath(binStr))
 
         hygenCmd = [ self.params.mantaHyGenBin ]
@@ -400,16 +406,16 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         hygenCmd.extend(["--ref",self.params.referenceFasta])
         hygenCmd.extend(["--candidate-output-file", candidateVcfPaths[-1]])
 
-	# tumor-only mode
+        # tumor-only mode
         if isTumorOnly :
             hygenCmd.extend(["--tumor-output-file", tumorVcfPaths[-1]])
-	else:
+        else:
             hygenCmd.extend(["--diploid-output-file", diploidVcfPaths[-1]])
             hygenCmd.extend(["--min-qual-score", self.params.minDiploidVariantScore])
             hygenCmd.extend(["--min-pass-qual-score", self.params.minPassDiploidVariantScore])
             hygenCmd.extend(["--min-pass-gt-score", self.params.minPassDiploidGTScore])
-	    # tumor/normal mode
-	    if isSomatic :
+            # tumor/normal mode
+            if isSomatic :
        	        hygenCmd.extend(["--somatic-output-file", somaticVcfPaths[-1]])
                 hygenCmd.extend(["--min-somatic-score", self.params.minSomaticScore])
                 hygenCmd.extend(["--min-pass-somatic-score", self.params.minPassSomaticScore])
@@ -465,8 +471,21 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
 
     def sortVcfs(pathList, outPath, label, isDiploid=False) :
         if len(pathList) == 0 : return set()
+        
+        # make header modifications to first vcf in list of files to be sorted:
+        headerFixTask=preJoin(taskPrefix,"fixVcfHeader_"+label)
+        def getHeaderFixCmd(fileName) :
+            tmpName=fileName+".reheader.tmp"
+            cmd  = "\"%s\" -E \"%s\"" % (sys.executable, self.params.vcfCmdlineSwapper)
+            cmd += ' "' + " ".join(self.params.configCommandLine) + '"'
+            cmd += " < \"%s\" > \"%s\"" % (fileName,tmpName)
+            cmd += " && " + " ".join(getMvCmd()) +  " \"%s\" \"%s\"" % (tmpName, fileName)
+            return cmd
+
+        self.addTask(headerFixTask,getHeaderFixCmd(pathList[0]),dependencies=hygenTasks,isForceLocal=True)
+
         sortCmd = getVcfSortCmd(pathList, outPath, isDiploid)
-        sortTask=self.addTask(preJoin(taskPrefix,"sort_"+label),sortCmd,dependencies=hygenTasks)
+        sortTask=self.addTask(preJoin(taskPrefix,"sort_"+label),sortCmd,dependencies=headerFixTask)
         nextStepWait.add(self.addTask(preJoin(taskPrefix,"tabix_"+label),getVcfTabixCmd(outPath),dependencies=sortTask,isForceLocal=True))
         return sortTask
 

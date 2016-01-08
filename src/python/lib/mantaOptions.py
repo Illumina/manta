@@ -75,6 +75,8 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         Every local variable in this method becomes part of the default hash
         """
 
+        configCommandLine=sys.argv
+
         alignerMode = "isaac"
 
         libexecDir=os.path.abspath(os.path.join(scriptDir,"@THIS_RELATIVE_LIBEXECDIR@"))
@@ -101,6 +103,7 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         mantaPloidyFilter=joinFile(libexecDir,"ploidyFilter.py")
         mantaSortEdgeLogs=joinFile(libexecDir,"sortEdgeLogs.py")
         mantaCat=joinFile(libexecDir,"cat.py")
+        vcfCmdlineSwapper=joinFile(libexecDir,"vcfCmdlineSwapper.py")
 
         # default memory request per process-type
         #
