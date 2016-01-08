@@ -25,12 +25,12 @@
 #include "SASOptions.hh"
 
 #include "blt_util/log.hh"
-#include "manta/ProgramUtil.hh"
 #include "options/optionsUtil.hh"
 
 #include "boost/program_options.hpp"
 
 #include <iostream>
+#include "../../common/ProgramUtil.hh"
 
 
 
@@ -38,7 +38,7 @@ static
 void
 usage(
     std::ostream& os,
-    const manta::Program& prog,
+    const illumina::Program& prog,
     const boost::program_options::options_description& visible,
     const char* msg = nullptr)
 {
@@ -51,7 +51,7 @@ static
 void
 checkStandardizeUsageFile(
     std::ostream& os,
-    const manta::Program& prog,
+    const illumina::Program& prog,
     const boost::program_options::options_description& visible,
     std::string& filename,
     const char* fileLabel)
@@ -67,7 +67,7 @@ checkStandardizeUsageFile(
 
 void
 parseSASOptions(
-    const manta::Program& prog,
+    const illumina::Program& prog,
     int argc, char* argv[],
     SASOptions& opt)
 {

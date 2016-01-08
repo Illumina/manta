@@ -24,9 +24,8 @@
 
 #pragma once
 
-#include "manta/Program.hh"
-
 #include <string>
+#include "../../common/Program.hh"
 
 
 struct SSLOptions
@@ -39,6 +38,6 @@ struct SSLOptions
 
 void
 parseSSLOptions(
-    const manta::Program& prog,
+    const illumina::Program& prog,
     int argc, char* argv[],
     SSLOptions& opt);

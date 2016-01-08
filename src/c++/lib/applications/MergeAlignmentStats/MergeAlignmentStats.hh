@@ -23,14 +23,13 @@
 
 #pragma once
 
-#include "manta/Program.hh"
+#include "common/Program.hh"
 
 
 /// merge alignment stats information from multiple bam files
 ///
-struct MergeAlignmentStats : public manta::Program
+struct MergeAlignmentStats : public illumina::Program
 {
-
     const char*
     name() const
     {

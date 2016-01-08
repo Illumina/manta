@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include "manta/Program.hh"
+#include "common/Program.hh"
 
 #include <string>
 
@@ -41,6 +41,6 @@ struct CSLOptions
 
 
 void
-parseCSLOptions(const manta::Program& prog,
+parseCSLOptions(const illumina::Program& prog,
                 int argc, char* argv[],
                 CSLOptions& opt);

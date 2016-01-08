@@ -24,14 +24,13 @@
 
 #pragma once
 
-#include "manta/Program.hh"
+#include "common/Program.hh"
 
 
 /// estimate per-library information from alignment file(s)
 ///
-struct SummarizeAlignmentStats : public manta::Program
+struct SummarizeAlignmentStats : public illumina::Program
 {
-
     const char*
     name() const
     {

@@ -25,13 +25,12 @@
 #include "MSLOptions.hh"
 
 #include "blt_util/log.hh"
-#include "manta/ProgramUtil.hh"
-
 #include "boost/filesystem.hpp"
 #include "boost/program_options.hpp"
 
 #include <iostream>
 #include <sstream>
+#include "../../common/ProgramUtil.hh"
 
 
 
@@ -39,7 +38,7 @@ static
 void
 usage(
     std::ostream& os,
-    const manta::Program& prog,
+    const illumina::Program& prog,
     const boost::program_options::options_description& visible,
     const char* msg = nullptr)
 {
@@ -49,7 +48,7 @@ usage(
 
 
 void
-parseMSLOptions(const manta::Program& prog,
+parseMSLOptions(const illumina::Program& prog,
                 int argc, char* argv[],
                 MSLOptions& opt)
 {

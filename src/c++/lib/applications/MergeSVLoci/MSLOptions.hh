@@ -24,10 +24,9 @@
 
 #pragma once
 
-#include "manta/Program.hh"
-
 #include <string>
 #include <vector>
+#include "../../common/Program.hh"
 
 
 
@@ -45,6 +44,6 @@ struct MSLOptions
 
 
 void
-parseMSLOptions(const manta::Program& prog,
+parseMSLOptions(const illumina::Program& prog,
                 int argc, char* argv[],
                 MSLOptions& opt);

@@ -26,7 +26,7 @@
 #include "EdgeOptionsParser.hh"
 
 #include "blt_util/log.hh"
-#include "manta/ProgramUtil.hh"
+#include "common/ProgramUtil.hh"
 #include "options/AlignmentFileOptionsParser.hh"
 #include "options/ReadScannerOptionsParser.hh"
 #include "options/optionsUtil.hh"
@@ -39,7 +39,7 @@ static
 void
 usage(
     std::ostream& os,
-    const manta::Program& prog,
+    const illumina::Program& prog,
     const boost::program_options::options_description& visible,
     const char* msg = nullptr)
 {
@@ -51,7 +51,7 @@ static
 void
 checkStandardizeUsageFile(
     std::ostream& os,
-    const manta::Program& prog,
+    const illumina::Program& prog,
     const boost::program_options::options_description& visible,
     std::string& filename,
     const char* fileLabel)
@@ -67,7 +67,7 @@ checkStandardizeUsageFile(
 
 void
 parseGSCOptions(
-    const manta::Program& prog,
+    const illumina::Program& prog,
     int argc, char* argv[],
     GSCOptions& opt)
 {

@@ -24,14 +24,13 @@
 
 #pragma once
 
-#include "manta/Program.hh"
+#include "common/Program.hh"
 
 
 /// generates candidate calls from graph edges
 ///
-struct GenerateSVCandidates : public manta::Program
+struct GenerateSVCandidates : public illumina::Program
 {
-
     const char*
     name() const
     {

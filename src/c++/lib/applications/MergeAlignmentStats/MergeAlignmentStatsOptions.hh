@@ -21,10 +21,9 @@
 
 #pragma once
 
-#include "manta/Program.hh"
-
 #include <string>
 #include <vector>
+#include "../../common/Program.hh"
 
 
 struct MergeAlignmentStatsOptions
@@ -36,6 +35,6 @@ struct MergeAlignmentStatsOptions
 
 void
 parseMergeAlignmentStatsOptions(
-    const manta::Program& prog,
+    const illumina::Program& prog,
     int argc, char* argv[],
     MergeAlignmentStatsOptions& opt);

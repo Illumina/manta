@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include "manta/Program.hh"
+#include "common/Program.hh"
 
 #include <string>
 #include <vector>
@@ -41,6 +41,6 @@ struct MESOptions
 
 void
 parseMESOptions(
-    const manta::Program& prog,
+    const illumina::Program& prog,
     int argc, char* argv[],
     MESOptions& opt);

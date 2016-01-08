@@ -24,9 +24,8 @@
 
 #pragma once
 
-#include "manta/Program.hh"
-
 #include <string>
+#include "../../common/Program.hh"
 
 
 struct SASOptions
@@ -38,7 +37,7 @@ struct SASOptions
 
 void
 parseSASOptions(
-    const manta::Program& prog,
+    const illumina::Program& prog,
     int argc, char* argv[],
     SASOptions& opt);
 

@@ -25,7 +25,7 @@
 #pragma once
 
 #include "EdgeOptions.hh"
-#include "manta/Program.hh"
+#include "common/Program.hh"
 #include "options/AlignmentFileOptions.hh"
 #include "options/CallOptionsDiploid.hh"
 #include "options/CallOptionsShared.hh"
@@ -82,6 +82,6 @@ struct GSCOptions
 
 void
 parseGSCOptions(
-    const manta::Program& prog,
+    const illumina::Program& prog,
     int argc, char* argv[],
     GSCOptions& opt);

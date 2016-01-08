@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include "manta/Program.hh"
+#include "../../common/Program.hh"
 #include "options/AlignmentFileOptions.hh"
 
 
@@ -33,6 +33,6 @@ struct AlignmentStatsOptions
 
 
 void
-parseAlignmentStatsOptions(const manta::Program& prog,
+parseAlignmentStatsOptions(const illumina::Program& prog,
                            int argc, char* argv[],
                            AlignmentStatsOptions& opt);

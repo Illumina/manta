@@ -23,12 +23,12 @@
 #include "ChromDepthOptions.hh"
 
 #include "blt_util/log.hh"
-#include "manta/ProgramUtil.hh"
 #include "options/optionsUtil.hh"
 
 #include "boost/program_options.hpp"
 
 #include <iostream>
+#include "../../common/ProgramUtil.hh"
 
 typedef std::vector<std::string> chroms_t;
 
@@ -37,7 +37,7 @@ static
 void
 usage(
     std::ostream& os,
-    const manta::Program& prog,
+    const illumina::Program& prog,
     const boost::program_options::options_description& visible,
     const char* msg = nullptr)
 {
@@ -48,7 +48,7 @@ usage(
 
 void
 parseChromDepthOptions(
-    const manta::Program& prog,
+    const illumina::Program& prog,
     int argc, char* argv[],
     ChromDepthOptions& opt)
 {

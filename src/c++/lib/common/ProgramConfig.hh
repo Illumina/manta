@@ -18,51 +18,41 @@
 //
 //
 
-/// \author Chris Saunders
-///
+/// \brief provide access to cmake project version numbers
 
 #pragma once
 
-#include <iosfwd>
+#include "config.h"
 
-namespace manta
+namespace illumina
 {
 
-/// base-class for all command-line programs
-///
-/// this is used to standardize bottom-level exception handling
-struct Program
+inline
+const char*
+getVersion()
 {
-    virtual
-    ~Program() {}
+    return WORKFLOW_VERSION;
+}
 
-    int
-    run(int argc, char* argv[]) const;
+inline
+const char*
+getBuildTime()
+{
+    return BUILD_TIME;
+}
 
-    virtual
-    const char*
-    name() const = 0;
+inline
+const char*
+cxxCompilerName()
+{
+    return CXX_COMPILER_NAME;
+}
 
-    const char*
-    version() const;
-
-    const char*
-    compiler() const;
-
-    const char*
-    buildTime() const;
-
-protected:
-    virtual
-    void
-    runInternal(int argc, char* argv[]) const = 0;
-
-private:
-    void
-    post_catch(
-        int argc,
-        char* argv[],
-        std::ostream& os) const;
-};
+inline
+const char*
+compilerVersion()
+{
+    return COMPILER_VERSION;
+}
 
 }

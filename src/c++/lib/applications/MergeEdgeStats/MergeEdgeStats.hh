@@ -24,11 +24,11 @@
 
 #pragma once
 
-#include "manta/Program.hh"
+#include "common/Program.hh"
 
 
 ///
-struct MergeEdgeStats : public manta::Program
+struct MergeEdgeStats : public illumina::Program
 {
     const char*
     name() const

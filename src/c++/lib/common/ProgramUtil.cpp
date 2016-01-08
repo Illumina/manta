@@ -21,20 +21,31 @@
 /// \author Chris Saunders
 ///
 
-#pragma once
+#include "ProgramUtil.hh"
 
-#include "Program.hh"
+#include <iostream>
 
-#include "boost/program_options.hpp"
-
-#include <iosfwd>
 
 
 void
 usage(
     std::ostream& os,
-    const manta::Program& prog,
+    const illumina::Program& prog,
     const boost::program_options::options_description& visible,
     const char* desc,
     const char* afteropts,
-    const char* msg);
+    const char* msg)
+{
+    os << "\n" << prog.name() << ": " << desc << "\n\n";
+    os << "version: " << prog.version() << "\n";
+    os << "compiler: " << prog.compiler() << "\n";
+    os << "build-time: " << prog.buildTime() << "\n\n";
+    os << "usage: " << prog.name() << " [options]" << afteropts << "\n\n";
+    os << visible << "\n\n";
+
+    if (nullptr != msg)
+    {
+        os << msg << "\n\n";
+    }
+    exit(2);
+}

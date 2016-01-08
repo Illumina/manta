@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include "manta/Program.hh"
+#include "common/Program.hh"
 
 #include <string>
 
@@ -45,6 +45,6 @@ struct DSLOptions
 
 
 void
-parseDSLOptions(const manta::Program& prog,
+parseDSLOptions(const illumina::Program& prog,
                 int argc, char* argv[],
                 DSLOptions& opt);

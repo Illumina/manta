@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include "manta/Program.hh"
+#include "common/Program.hh"
 #include "manta/SVLocusScanner.hh"
 #include "options/AlignmentFileOptions.hh"
 #include "options/ReadScannerOptions.hh"
@@ -56,6 +56,6 @@ struct ESLOptions
 
 
 void
-parseESLOptions(const manta::Program& prog,
+parseESLOptions(const illumina::Program& prog,
                 int argc, char* argv[],
                 ESLOptions& opt);

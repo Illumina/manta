@@ -21,10 +21,9 @@
 
 #pragma once
 
-#include "manta/Program.hh"
-
 #include <string>
 #include <vector>
+#include "../../common/Program.hh"
 
 
 struct ChromDepthOptions
@@ -37,6 +36,6 @@ struct ChromDepthOptions
 
 void
 parseChromDepthOptions(
-    const manta::Program& prog,
+    const illumina::Program& prog,
     int argc, char* argv[],
     ChromDepthOptions& opt);
