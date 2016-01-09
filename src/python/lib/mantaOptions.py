@@ -88,7 +88,7 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
 
         mantaStatsBin=joinFile(libexecDir,exeFile("GetAlignmentStats"))
         mantaMergeStatsBin=joinFile(libexecDir,exeFile("MergeAlignmentStats"))
-        mantaGetChromDepthBin=joinFile(libexecDir,exeFile("GetChromDepth"))
+        getChromDepthBin=joinFile(libexecDir,exeFile("GetChromDepth"))
         mantaGraphBin=joinFile(libexecDir,exeFile("EstimateSVLoci"))
         mantaGraphMergeBin=joinFile(libexecDir,exeFile("MergeSVLoci"))
         mantaStatsMergeBin=joinFile(libexecDir,exeFile("MergeEdgeStats"))
@@ -102,7 +102,7 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         mantaExtraSmallVcf=joinFile(libexecDir,"extractSmallIndelCandidates.py")
         mantaPloidyFilter=joinFile(libexecDir,"ploidyFilter.py")
         mantaSortEdgeLogs=joinFile(libexecDir,"sortEdgeLogs.py")
-        mantaCat=joinFile(libexecDir,"cat.py")
+        catScript=joinFile(libexecDir,"cat.py")
         vcfCmdlineSwapper=joinFile(libexecDir,"vcfCmdlineSwapper.py")
 
         # default memory request per process-type

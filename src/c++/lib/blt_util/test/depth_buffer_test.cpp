@@ -71,7 +71,7 @@ get_db_compressible_test_pattern(
 BOOST_AUTO_TEST_CASE( test_depth_buffer_val )
 {
     depth_buffer db(get_db_test_pattern());
-    BOOST_CHECK_EQUAL(static_cast<int>(db.val(109)),9);
+    BOOST_REQUIRE_EQUAL(static_cast<int>(db.val(109)),9);
 }
 
 
@@ -79,24 +79,24 @@ BOOST_AUTO_TEST_CASE( test_depth_buffer_clear )
 {
     depth_buffer db(get_db_test_pattern());
     db.clear_pos(109);
-    BOOST_CHECK_EQUAL(static_cast<int>(db.val(109)),0);
+    BOOST_REQUIRE_EQUAL(static_cast<int>(db.val(109)),0);
 }
 
 
 BOOST_AUTO_TEST_CASE( test_depth_buffer_range )
 {
     depth_buffer db(get_db_test_pattern());
-    BOOST_CHECK(! db.is_range_ge_than(0,107,8));
-    BOOST_CHECK(  db.is_range_ge_than(0,108,8));
+    BOOST_REQUIRE(! db.is_range_ge_than(0,107,8));
+    BOOST_REQUIRE(  db.is_range_ge_than(0,108,8));
 }
 
 BOOST_AUTO_TEST_CASE( test_depth_buffer_compressible_val )
 {
     depth_buffer_compressible db(get_db_compressible_test_pattern(8));
-    BOOST_CHECK_EQUAL(static_cast<int>(db.val(107)),8);
-    BOOST_CHECK_EQUAL(static_cast<int>(db.val(110)),8);
-    BOOST_CHECK_EQUAL(static_cast<int>(db.val(150)),48);
-    BOOST_CHECK_EQUAL(static_cast<int>(db.val(199)),96);
+    BOOST_REQUIRE_EQUAL(static_cast<int>(db.val(107)),8);
+    BOOST_REQUIRE_EQUAL(static_cast<int>(db.val(110)),8);
+    BOOST_REQUIRE_EQUAL(static_cast<int>(db.val(150)),48);
+    BOOST_REQUIRE_EQUAL(static_cast<int>(db.val(199)),96);
 }
 
 
@@ -107,10 +107,10 @@ BOOST_AUTO_TEST_CASE( test_depth_buffer_compressible_clear )
     {
         db.clear_pos(i);
     }
-    BOOST_CHECK_EQUAL(static_cast<int>(db.val(110)),0);
-    BOOST_CHECK_EQUAL(static_cast<int>(db.val(150)),48);
-    BOOST_CHECK_EQUAL(static_cast<int>(db.val(199)),96);
-    BOOST_CHECK_EQUAL(static_cast<int>(db.val(109)),0);
+    BOOST_REQUIRE_EQUAL(static_cast<int>(db.val(110)),0);
+    BOOST_REQUIRE_EQUAL(static_cast<int>(db.val(150)),48);
+    BOOST_REQUIRE_EQUAL(static_cast<int>(db.val(199)),96);
+    BOOST_REQUIRE_EQUAL(static_cast<int>(db.val(109)),0);
 }
 
 

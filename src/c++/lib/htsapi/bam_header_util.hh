@@ -77,5 +77,5 @@ check_header_compatibility(
 /// if none found return default string value
 std::string
 get_bam_header_sample_name(
-    const bam_hdr_t* header,
+    const bam_hdr_t* const header,
     const char* default_sample_name = "SAMPLE");

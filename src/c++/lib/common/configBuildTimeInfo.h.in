@@ -17,7 +17,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 //
- 
+
 ///
 /// This consolidates compile-time config data such as git status
 /// and build date. This is in contrast to cmake configuration-time

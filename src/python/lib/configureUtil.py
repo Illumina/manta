@@ -196,11 +196,28 @@ def validateFixExistingFileArg(argFile,label) :
     return _validateFixArgHelper(argFile,label,os.path.isfile)
 
 
-def checkOptionalTabixIndexedFile(iname,desc) :
-    if iname is None : return
+def checkTabixIndexedFile(iname,label) :
+    assert(iname is not None)
     tabixFile = iname + ".tbi"
     if os.path.isfile(tabixFile) : return
-    raise OptParseException("Can't find expected %s index file: '%s'" % (desc,tabixFile))
+    raise OptParseException("Can't find expected %s index file: '%s'" % (label,tabixFile))
+
+
+def checkOptionalTabixIndexedFile(iname,label) :
+    """
+    if iname is not none, then we expect an tabix tbi file to accompany it, raise an exception otherwise
+    """
+    if iname is None : return
+    checkTabixIndexedFile(iname,label)
+
+
+def checkTabixListOption(opt,label) :
+    """
+    check a list of files which are expected to be tabix indexed
+    """
+    if opt is None : return
+    for val in opt :
+        checkTabixIndexedFile(val,label)
 
 
 def checkForBamIndex(bamFile):
