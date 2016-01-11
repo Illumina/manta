@@ -101,7 +101,8 @@ private:
         const unsigned bamIndex,
         const bool isExpandSVCandidateSet,
         std::vector<FatSVCandidate>& svs,
-        SVCandidateSetSequenceFragment& fragment);
+        SVCandidateSetSequenceFragment& fragment,
+        SVFinderStats& stats);
 
     void
     getCandidatesFromData(

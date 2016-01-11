@@ -35,4 +35,5 @@ report(std::ostream& os) const
     os << "SemiMappedFilter\t" << semiMappedFilter << "\n";
     os << "ComplexLowCountFilter\t" << ComplexLowCountFilter << "\n";
     os << "ComplexLowSignalFilter\t" << ComplexLowSignalFilter << "\n";
+    os << "UnmatchedReadPairFilter\t" << unmatchedReadPairFilter << "\n";
 }

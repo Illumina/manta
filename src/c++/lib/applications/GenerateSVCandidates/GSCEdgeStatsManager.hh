@@ -110,7 +110,6 @@ struct GSCEdgeStatsManager : private boost::noncopyable
         }
     }
 
-
     void
     updateScoredEdgeTime(
         const EdgeInfo& edge,

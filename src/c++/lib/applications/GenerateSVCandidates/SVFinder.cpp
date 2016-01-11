@@ -796,7 +796,8 @@ processSequenceFragment(
     const unsigned bamIndex,
     const bool isExpandSVCandidateSet,
     std::vector<FatSVCandidate>& svs,
-    SVCandidateSetSequenceFragment& fragment)
+    SVCandidateSetSequenceFragment& fragment,
+    SVFinderStats& stats)
 {
     SVCandidateSetRead* localReadPtr(&(fragment.read1));
     SVCandidateSetRead* remoteReadPtr(&(fragment.read2));
@@ -815,7 +816,11 @@ processSequenceFragment(
     }
 
     // sanity check of read pairs
-    if (! fragment.checkReadPair()) return;
+    if (! fragment.checkReadPair())
+    {
+        stats.unmatchedReadPairFilter++;
+        return;
+    }
 
     const bam_record* remoteBamRecPtr( remoteReadPtr->isSet() ? &(remoteReadPtr->bamrec) : nullptr);
 
@@ -1131,7 +1136,7 @@ getCandidatesFromData(
             static const bool isAnchored(true);
             processSequenceFragment(
                 node1, node2, bamHeader, refSeq1, refSeq2, bamIndex, isAnchored,
-                svs, fragment);
+                svs, fragment, stats);
         }
     }
 
@@ -1151,7 +1156,7 @@ getCandidatesFromData(
                 static const bool isAnchored(false);
                 processSequenceFragment(
                     node1, node2, bamHeader, refSeq1, refSeq2, bamIndex, isAnchored,
-                    svs, pair);
+                    svs, pair, stats);
             }
         }
     }
