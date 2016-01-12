@@ -38,10 +38,11 @@ script:
 branches:
   only:
     - master
+    - travis
 
 notifications:
   email:
     recipients:
       - csaunders@illumina.com
-
+      - xchen@illumina.com
 
