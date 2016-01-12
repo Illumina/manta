@@ -1,6 +1,8 @@
+v0.29.3
+- MANTA-280 filter supplementary reads without SA tags and read pairs with unmatched mate information
 - STARKA-306 fix rare chunk size boundary defect in RangeMap
 v0.29.2
-- MANTA-277 fix: invalid genome region requested during insert size est
+- MANTA-277 fix invalid genome region requested during insert size estimation
 - Update to pyflow 1.1.12 to improve SGE filesystem delay handling
 and fix issue between SGE and recent bash shellshock fix
 v0.29.1
