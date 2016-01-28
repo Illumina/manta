@@ -84,7 +84,7 @@ def getRmCmd() :
 
 def getMvCmd() :
     if isWindows():
-        return ["rename"]
+        return ["move","/y"]
     else:
         return ["mv"]
 
