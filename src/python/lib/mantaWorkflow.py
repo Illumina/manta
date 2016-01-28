@@ -94,7 +94,7 @@ def runStats(self,taskPrefix="",dependencies=None) :
 
 
 
-def mantaRunDepthFromAlignments(self,taskPrefix="",dependencies=None):
+def mantaRunDepthFromAlignments(self,taskPrefix="getChromDepth",dependencies=None):
     bamList=[]
     if len(self.params.normalBamList) :
         bamList = self.params.normalBamList
@@ -535,7 +535,7 @@ class MantaWorkflow(WorkflowRunner) :
             graphTaskDependencies |= statsTasks
 
         if not ((not self.params.isHighDepthFilter) or self.params.useExistingChromDepths) :
-            depthTasks = mantaRunDepthFromAlignments(self,taskPrefix="getChromDepth")
+            depthTasks = mantaRunDepthFromAlignments(self)
             graphTaskDependencies |= depthTasks
 
         graphTasks = runLocusGraph(self,dependencies=graphTaskDependencies)

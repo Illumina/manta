@@ -108,14 +108,13 @@ struct RegionTracker
     dump(
         std::ostream& os) const;
 
-    typedef std::set<known_pos_range2,PosRangeEndSort>  region_t;
-
     unsigned
     size() const
     {
         return _regions.size();
     }
 
+    typedef std::set<known_pos_range2,PosRangeEndSort>  region_t;
 
 private:
 

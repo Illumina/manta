@@ -302,13 +302,13 @@ class GenomeSegment(object) :
         self.binId = binId
         self.binStr = str(binId).zfill(4)
 
-        regionId=cleanId(chromLabel)
+        regionId=getRobustChromId(chromIndex,chromLabel)
         if genomeRegion is not None :
             if genomeRegion['start'] is not None :
                 regionId += "-"+str(genomeRegion['start'])
                 if genomeRegion['end'] is not None :
                     regionId += "-"+str(genomeRegion['end'])
-        self.pyflowId = "chromId_%s_%s_%s" % (str(chromIndex).zfill(3), regionId, self.binStr)
+        self.pyflowId = "chromId_%s_%s" % (regionId, self.binStr)
         self.id = self.pyflowId
 
     def size(self) :

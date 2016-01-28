@@ -32,6 +32,7 @@
 /// \brief a minimal exception class
 struct blt_exception : public std::exception
 {
+    explicit
     blt_exception(const char* s);
 
     const char* what() const noexcept
