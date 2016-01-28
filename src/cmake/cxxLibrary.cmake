@@ -24,11 +24,8 @@
 ## author Come Raczy
 ##
 ################################################################################
-include_directories (BEFORE SYSTEM ${THIS_CXX_BEFORE_SYSTEM_INCLUDES})
-include_directories (${THIS_CXX_ALL_INCLUDES})
-include_directories (${CMAKE_CURRENT_BINARY_DIR})
-include_directories (${CMAKE_CURRENT_SOURCE_DIR})
-include_directories (${THIS_CXX_CONFIG_H_DIR})
+
+include (${THIS_CXX_COMMMON_CMAKE})
 
 get_filename_component(CURRENT_DIR_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 message (STATUS "Adding c++ library subdirectory: ${CURRENT_DIR_NAME}")

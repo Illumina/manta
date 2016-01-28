@@ -25,8 +25,7 @@
 ##
 ################################################################################
 
-set(IS_QUIET true)
-include(${THIS_CXX_EXECUTABLE_CMAKE})
+include (${THIS_CXX_COMMMON_CMAKE})
 
 set(TESTCONFIGNAME "test_config.h")
 set(TESTCONFIGSRC "${CMAKE_CURRENT_SOURCE_DIR}/${TESTCONFIGNAME}.in")
