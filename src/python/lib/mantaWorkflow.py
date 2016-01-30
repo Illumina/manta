@@ -170,8 +170,8 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
         if self.params.isRNA :
             graphCmd.append("--rna")
 
-        graphTaskLabel=preJoin(taskPrefix,"makeLocusGraph_"+gid)
-        graphTasks.add(self.addTask(graphTaskLabel,graphCmd,dependencies=dirTask,memMb=self.params.estimateMemMb))
+        graphTask=preJoin(taskPrefix,"makeLocusGraph_"+gid)
+        graphTasks.add(self.addTask(graphTask,graphCmd,dependencies=dirTask,memMb=self.params.estimateMemMb))
 
     if len(tmpGraphFiles) == 0 :
         raise Exception("No SV Locus graphs to create. Possible target region parse error.")
@@ -294,8 +294,8 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         if self.params.isUnstrandedRNA :
             hygenCmd.append("--unstranded")
 
-        hygenTaskLabel=preJoin(taskPrefix,"generateCandidateSV_"+binStr)
-        hygenTasks.add(self.addTask(hygenTaskLabel,hygenCmd,dependencies=dirTask, memMb=hyGenMemMb))
+        hygenTask=preJoin(taskPrefix,"generateCandidateSV_"+binStr)
+        hygenTasks.add(self.addTask(hygenTask,hygenCmd,dependencies=dirTask, memMb=hyGenMemMb))
 
     nextStepWait = copy.deepcopy(hygenTasks)
 
@@ -363,8 +363,8 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         maxSize = int(self.params.minScoredVariantSize) - 1
         if maxSize < 1 : return
         smallCmd = getExtractSmallCmd(maxSize, inPath, outPath)
-        smallLabel=self.addTask(preJoin(taskPrefix,"extractSmallIndels"), smallCmd, dependencies=candSortTask, isForceLocal=True)
-        nextStepWait.add(self.addTask(smallLabel+"_tabix", getVcfTabixCmd(outPath), dependencies=smallLabel, isForceLocal=True))
+        smallTask=self.addTask(preJoin(taskPrefix,"extractSmallIndels"), smallCmd, dependencies=candSortTask, isForceLocal=True)
+        nextStepWait.add(self.addTask(smallTask+"_tabix", getVcfTabixCmd(outPath), dependencies=smallTask, isForceLocal=True))
 
     extractSmall(self.paths.getSortedCandidatePath(), self.paths.getSortedCandidateSmallIndelsPath())
 
@@ -374,18 +374,18 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         cmd.extend(logPaths)
         return cmd
 
-    edgeSortLabel=preJoin(taskPrefix,"sortEdgeRuntimeLogs")
+    edgeSortTask=preJoin(taskPrefix,"sortEdgeRuntimeLogs")
     edgeSortCmd=getEdgeLogSortCmd(edgeRuntimeLogPaths,self.paths.getSortedEdgeRuntimeLogPath())
-    self.addTask(edgeSortLabel, edgeSortCmd, dependencies=hygenTasks, isForceLocal=True)
+    self.addTask(edgeSortTask, edgeSortCmd, dependencies=hygenTasks, isForceLocal=True)
 
     # merge edge stats:
-    edgeStatsMergeLabel=preJoin(taskPrefix,"mergeEdgeStats")
+    edgeStatsMergeTask=preJoin(taskPrefix,"mergeEdgeStats")
     edgeStatsMergeCmd=[self.params.mantaStatsMergeBin]
     for statsFile in edgeStatsLogPaths :
         edgeStatsMergeCmd.extend(["--stats-file",statsFile])
     edgeStatsMergeCmd.extend(["--output-file",self.paths.getFinalEdgeStatsPath()])
     edgeStatsMergeCmd.extend(["--report-file",self.paths.getFinalEdgeStatsReportPath()])
-    self.addTask(edgeStatsMergeLabel, edgeStatsMergeCmd, dependencies=hygenTasks, isForceLocal=True)
+    self.addTask(edgeStatsMergeTask, edgeStatsMergeCmd, dependencies=hygenTasks, isForceLocal=True)
 
     return nextStepWait
 
