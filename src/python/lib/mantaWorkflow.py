@@ -300,7 +300,7 @@ def sortAllVcfs(self, taskPrefix="", dependencies=None) :
         nextStepWait.add(self.addTask(smallTask+"_tabix", getVcfTabixCmd(outPath), dependencies=smallTask, isForceLocal=True))
 
     extractSmall(self.paths.getSortedCandidatePath(), self.paths.getSortedCandidateSmallIndelsPath())
-    
+
     return nextStepWait
 
 
