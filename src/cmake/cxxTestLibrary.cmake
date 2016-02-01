@@ -66,7 +66,7 @@ else ()
 endif ()
 
 # make the target project use folders when applying cmake IDE generators like Visual Studio
-file(RELATIVE_PATH THIS_RELATIVE_LIBDIR "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}")
+file(RELATIVE_PATH THIS_RELATIVE_LIBDIR "${THIS_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}")
 set_property(TARGET ${TEST_TARGET_NAME} PROPERTY FOLDER "${THIS_RELATIVE_LIBDIR}")
 
 add_dependencies(${THIS_UNITTESTS} ${TEST_TARGET_NAME})

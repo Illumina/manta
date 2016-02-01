@@ -145,7 +145,7 @@ Example (building on 4 cores):
     # Ensure that CC and CXX are updated to target compiler if needed, e.g.:
     #     export CC=/path/to/cc
     #     export CXX=/path/to/c++
-    ../manta-${MANTA_VERSION}.release_src/src/configure --jobs=4 --prefix=/path/to/install
+    ../manta-${MANTA_VERSION}.release_src/configure --jobs=4 --prefix=/path/to/install
     make -j4 install
 
 Note that during the configuration step, the following dependencies

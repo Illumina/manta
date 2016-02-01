@@ -36,7 +36,7 @@ message (STATUS "Adding c++ library subdirectory: ${CURRENT_DIR_NAME}")
 ## shared across libraries
 ##
 
-string(REGEX REPLACE ${CMAKE_SOURCE_DIR}/c[+][+]/ "" TMP1 ${CMAKE_CURRENT_SOURCE_DIR}/)
+string(REGEX REPLACE ${THIS_SOURCE_DIR}/c[+][+]/ "" TMP1 ${CMAKE_CURRENT_SOURCE_DIR}/)
 string(REGEX REPLACE "/" "_" THIS_UNIQUE_PREFIX ${TMP1})
 
 ##
@@ -64,7 +64,7 @@ if (THIS_LIBRARY_SOURCES)
     add_dependencies(${LIB_TARGET_NAME} ${THIS_OPT})
 
     # make the target project use folders when applying cmake IDE generators like Visual Studio
-    file(RELATIVE_PATH THIS_RELATIVE_LIBDIR "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}")
+    file(RELATIVE_PATH THIS_RELATIVE_LIBDIR "${THIS_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}")
     set_property(TARGET ${LIB_TARGET_NAME} PROPERTY FOLDER "${THIS_RELATIVE_LIBDIR}")
 endif()
 

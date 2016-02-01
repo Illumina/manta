@@ -472,4 +472,4 @@ endif ()
 # include dirs:
 #
 set (THIS_CXX_BEFORE_SYSTEM_INCLUDES "${Boost_INCLUDE_DIRS}" "${HTSLIB_DIR}")
-set (THIS_CXX_ALL_INCLUDES "${CMAKE_SOURCE_DIR}/c++/lib")
+set (THIS_CXX_ALL_INCLUDES "${THIS_SOURCE_DIR}/c++/lib")

@@ -19,13 +19,13 @@
 
 ################################################################################
 ##
-## Configuration file for the opt subfolder (external tools)
+## Configuration file for external tools
 ##
 ## author Come Raczy
 ##
 ################################################################################
 
-message(STATUS "Creating external tools in subdirectory opt")
+message(STATUS "Building external tools")
 
 include ("${THIS_GLOBALS_CMAKE}")
 include ("${THIS_MACROS_CMAKE}")

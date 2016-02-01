@@ -20,7 +20,9 @@
 
 
 #
-# Top level configuration file
+# Top level configuration file for *nix like OS's, note that there's
+# some legacy support for both cygwin and minGW in here but neither
+# have been supported for serveral years.
 #
 
 set -o nounset
@@ -115,10 +117,10 @@ create_path ()
 system="`uname`"
 processor="`uname -p`"
 arch="`uname -a`"
-source_dir="`echo $0 | sed -n '/\//{s/\/[^\/]*$//;p;}'`"
-source_dir="$(rel2abs $source_dir)"
-redist_dir="${source_dir}/../redist"
-src_bootstrap_dir="${source_dir}/cmake/bootstrap"
+root_dir="`echo $0 | sed -n '/\//{s/\/[^\/]*$//;p;}'`"
+root_dir="$(rel2abs $root_dir)"
+redist_dir="${root_dir}/redist"
+bootstrap_dir="${root_dir}/src/cmake/bootstrap"
 build_dir="$(pwd -P)"
 
 
@@ -197,16 +199,15 @@ done
 #
 # prevent in-source builds (but allow usage to be triggered first)
 #
-if [ "$source_dir" == "$build_dir" ]; then
+if [ "$root_dir" == "$build_dir" ]; then
     cat <<EOF 1>&2
 
 ERROR: This project cannot be built in the source directory. Please run
        configuration in a separate directory. Example:
 
     """
-    mkdir ../build
-    cd ../build
-    \${MANTA_ROOT_DIR}/src/configure [configure_options]
+    mkdir ../build && cd ../build
+    \${MANTA_ROOT_DIR}/configure [configure_options]
     """
 
 EOF
@@ -246,7 +247,7 @@ fi
 #
 cmake_install_dir="${build_dir}/bootstrap/cmake"
 if [ "x${cmake}" == "x" ] ; then
-    cmake=$(bash ${src_bootstrap_dir}/installCmake.bash ${redist_dir} ${cmake_install_dir} ${parallel_jobs})
+    cmake=$(bash ${bootstrap_dir}/installCmake.bash ${redist_dir} ${cmake_install_dir} ${parallel_jobs})
 
     if [ "$?" != "0" ]; then
         clog "ERROR: Failed to verify or install cmake"
@@ -265,7 +266,7 @@ fi
 # display information if required
 if $is_verbose; then
     cat<<EOF
-Source  directory: ${source_dir}
+Source  directory: ${root_dir}
 Prefix  directory: ${prefix_dir}
 Build   directory: ${build_dir}
 Cmake  executable: ${cmake}
@@ -278,7 +279,7 @@ fi
 #
 # finally, invoke cmake
 #
-cmake_command="${cmake} -H\"${source_dir}\" -B\"${build_dir}\" -G\"${cmake_generator}\" ${CMAKE_OPTIONS}"
+cmake_command="${cmake} -H\"${root_dir}\" -B\"${build_dir}\" -G\"${cmake_generator}\" ${CMAKE_OPTIONS}"
 
 if $is_verbose ; then
     cat<<EOF
@@ -312,7 +313,7 @@ cat<<EOF
 
 The build directory ${build_dir} was configured successfully
 
-Type "make" at the top level of the root directory to build
+Type "make -C ${build_dir}" to build
 
 EOF
 
