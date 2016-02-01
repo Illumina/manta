@@ -156,26 +156,6 @@ add_custom_target(
     -P "${THIS_MODULE_DIR}/getBuildTimeConfigInfo.cmake"
     COMMENT "Updating buildtime config info")
 
-#
-# setup cpack
-#
-if (CPACK_GENERATOR)
-    message (STATUS "Configuring to produce the following package types: ${CPACK_GENERATOR}")
-    set(CPACK_PACKAGE_VENDOR "Illumina")
-    #set(CPACK_PACKAGE_VERSION "${WORKFLOW_VERSION}")
-    set(CPAKC_PACKAGE_CONTACT "csaunders@illumina.com")
-
-    if (CPACK_GENERATOR STREQUAL "RPM")
-        set(CPACK_RPM_PACKAGE_RELOCATABLE TRUE)
-        set(CPACK_RPM_PACKAGE_LICENSE "GPLv3")
-        set(CPACK_RPM_PACKAGE_REQUIRES "python >= 2.4.0")
-    else ()
-        set(CPACK_SET_DESTDIR ON)
-    endif ()
-
-    INCLUDE(CPack)
-endif ()
-
 # Installation directories
 if    (NOT CMAKE_INSTALL_PREFIX)
     set(CMAKE_INSTALL_PREFIX "/usr/local")

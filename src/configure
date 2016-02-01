@@ -52,8 +52,6 @@ Configuration:
                             Release: All portable optimization
                             RelWithDebInfo: Most optimizations, try to keep stack trace info
                             ASan: Light optimization with google addresss sanitizer on
-  --package-type=type     enables generation of deployment package target (make package)
-                          Valid types are: rpm, deb, tgz
 
 Directory and file names:
   --prefix=PREFIX         install files in tree rooted at PREFIX
@@ -165,7 +163,6 @@ cmake=
 parallel_jobs=1
 cmake_generator="Unix Makefiles"
 is_verbose=false
-package_type=none
 if [ -z "${CMAKE_OPTIONS+xxx}" ]; then CMAKE_OPTIONS=""; fi
 
 # Parse arguments
@@ -188,8 +185,6 @@ for a in "$@"; do
         CMAKE_OPTIONS="$CMAKE_OPTIONS -DECLIPSE_CDT4_GENERATE_SOURCE_PROJECT=TRUE"
     elif echo $a | grep "^--verbose" > /dev/null 2> /dev/null; then
         is_verbose=true
-    elif echo $a | grep "^--package-type=" > /dev/null 2> /dev/null; then
-        package_type=`echo $a | sed "s/^--package-type=//"`
     elif echo $a | grep "^--jobs=" > /dev/null 2> /dev/null; then
         parallel_jobs=`echo $a | sed "s/^--jobs=//"`
     else
@@ -229,31 +224,7 @@ if $is_verbose; then
 fi
 
 
-is_package=true
-if   [ "deb" == "${package_type}" ]; then
-    CMAKE_OPTIONS="$CMAKE_OPTIONS \
-        -DCPACK_GENERATOR:STRING=DEB \
-        -DCPACK_SYSTEM_NAME:STRING=${system}-$processor \
-        -DCPACK_DEBIAN_PACKAGE_ARCHITECTURE:STRING='`dpkg --print-architecture`'"
-
-elif [ "rpm" == "${package_type}" ]; then
-    CMAKE_OPTIONS="$CMAKE_OPTIONS \
-        -DCPACK_GENERATOR:STRING=RPM \
-        -DCPACK_SYSTEM_NAME:STRING=${system}-$processor"
-
-elif [ "tgz" == "${package_type}" ]; then
-    CMAKE_OPTIONS="$CMAKE_OPTIONS \
-        -DCPACK_GENERATOR:STRING=TGZ"
-
-elif [ "none" != "${package_type}" ]; then
-	clog "ERROR: unrecognized package option: $package_type"
-	exit 1
-
-else
-    is_package=false
-    if [ "x${prefix_dir}" != "x" ]; then prefix_dir=$(create_path "${prefix_dir}") || exit 1; fi
-
-fi
+if [ "x${prefix_dir}" != "x" ]; then prefix_dir=$(create_path "${prefix_dir}") || exit 1; fi
 
 CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX:PATH=\"$prefix_dir\" $CMAKE_OPTIONS"
 
@@ -309,7 +280,7 @@ fi
 #
 cmake_command="${cmake} -H\"${source_dir}\" -B\"${build_dir}\" -G\"${cmake_generator}\" ${CMAKE_OPTIONS}"
 
-if $is_verbose || $is_package ; then
+if $is_verbose ; then
     cat<<EOF
 
 Running on: $arch
