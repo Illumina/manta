@@ -1,14 +1,14 @@
-<link rel='stylesheet' href='guideStyle.css' />
-
 Manta User Guide
 ================
 
 ## Table of Contents
 * [Introduction](#introduction)
+* [Installation](#installation)
 * [Method Overview](#method-overview)
 * [Capabilities](#capabilities)
 * [Input requirements](#input-requirements)
 * [Outputs](#outputs)
+* [Runtime hardware requirements](#runtime-hardware-requirements)
 * [Run configuration and execution](#run-configuration-and-execution)
 * [Extended use cases](#extended-use-cases)
 
@@ -35,6 +35,11 @@ and indel inferences in VCF 4.1 format. For extended methods and benchmarking
 details, please see the [Manta preprint][mss].
 
 [mss]:http://dx.doi.org/10.1101/024232
+
+
+## Installation
+
+Please see the [Manta installation instructions](installation.md)
 
 
 ## Method Overview
@@ -377,6 +382,37 @@ Additional secondary output is provided in `${MANTA_ANALYSIS_PATH}/results/stats
 * __svCandidateGenerationStats.xml__
     * xml data backing the svCandidateGenerationStats.tsv report 
     
+
+## Runtime hardware requirements
+
+Manta workflows are parallelized at the process level using the
+[pyFlow] [pyflow_site] task manager. pyFlow can distrubute Manta
+workflows to a specified number of cores on a single host or
+SGE-managed cluster.
+
+As a useful runtime benchmark, [Platinum Genomes] [PG] sequencing
+reads for NA12878 at 50x coverage (whole genome) can be analyzed in
+less than 20 minutes on 20 physical cores using a dual Xeon E5-2680
+v2 server with the BAM accessed from a conventional local
+drive, peak total memory (RSS) for this run was 2.35 Gb.
+Additional hardware notes:
+
+* **Memory** Typical memory requirements are <1Gb/core for germline
+analysis and <2Gb/core for cancer/FFPE/highly rearranged
+samples. The exact requirement depends on many factors including
+sequencing depth, read length, fragment size and sample quality.
+
+* **CPU** Manta does not require or benefit from any specific modern
+CPU feature (e.g. NUMA, AVX..), but in general faster clock and
+larger caches will improve performance.
+
+* **I/O** I/O can be roughly approximated as 1.1 reads of the
+input alignment file per analysis, with no writes that are significant
+relative to the alignment file size.
+
+[pyflow_site]:http://illumina.github.io/pyflow
+[PG]:http://www.platinumgenomes.org
+
 
 ## Run configuration and execution
 

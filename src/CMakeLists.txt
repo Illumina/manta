@@ -38,7 +38,4 @@ add_custom_target(${THIS_UNITTESTS}
 add_subdirectory (c++)
 add_subdirectory (python)
 add_subdirectory (demo)
-if (NOT WIN32)
-    add_subdirectory (markdown)
-endif ()
 add_subdirectory (cmake/postInstall)

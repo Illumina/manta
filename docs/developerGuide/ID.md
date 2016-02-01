@@ -1,7 +1,7 @@
 
 # Manta Developer Guide - VCF ID field
 
-[Return to Manta Developer Guide](mantaDeveloperGuide.md)
+[Developer Guide Home](README.md)
 
 Manta includes an identifier (VCF `ID` field) for every VCF record in its output. This ID is guaranteed to be unique within any VCF output by manta, as requierd by the VCF spec.
 
@@ -19,7 +19,7 @@ An example for other record types is:
 MantaDEL:47029:3:9:0:0:0
 ```
 
-We describe the first example ID by describing each sub-field when the ID is split on the colon character. Note the [breakend graph description](mantaDeveloperGuideBreakendGraph.md) may be helpful for reference here.
+We describe the first example ID by describing each sub-field when the ID is split on the colon character. Note the [breakend graph description](breakendGraph.md) may be helpful for reference here.
 
 index | ID component name | Value from above example | Description
 ----- | ----------------- | ------------------------ | -----------

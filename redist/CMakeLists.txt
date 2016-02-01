@@ -177,22 +177,3 @@ add_custom_target(${THIS_PYFLOW} DEPENDS "${PYFLOW_DEPENDS}")
 #
 add_dependencies(${THIS_OPT} ${THIS_ZLIB} ${THIS_HTSLIB} ${THIS_PYFLOW})
 
-
-#
-# hoedown
-#
-set(HOEDOWN_PREFIX "hoedown-1.0.2_with_allext")
-set(HOEDOWN_DIR "${CMAKE_CURRENT_BINARY_DIR}/${HOEDOWN_PREFIX}")
-superset(HOEDOWN_PROG "${HOEDOWN_DIR}/hoedown_allext")
-
-if (NOT WIN32)
-    add_custom_command(
-        OUTPUT ${HOEDOWN_PROG}
-        COMMAND ${CMAKE_COMMAND} -E remove_directory "${HOEDOWN_DIR}"
-        COMMAND ${CMAKE_COMMAND} -E tar xjf "${THIS_REDIST_DIR}/${HOEDOWN_PREFIX}.tar.bz2"
-        COMMAND $(MAKE) -C "${HOEDOWN_DIR}"
-        COMMENT "Building hoedown markdown parser")
-
-    superset(THIS_MARKDOWN "${THIS_PROJECT_NAME}_markdown")
-    add_custom_target(${THIS_MARKDOWN} DEPENDS "${HOEDOWN_PROG}")
-endif ()

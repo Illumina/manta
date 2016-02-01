@@ -1,12 +1,10 @@
-<link rel='stylesheet' href='guideStyle.css' />
-
 Manta Developer Guide
 =====================
 
 This guide provides information for manta development, including protocols for
 contirbuting new methods, debugging stability problems, suspected false or missing variant calls and some high-level internal methods documentation.
 
-For end user documentation describing how to run Manta and interpret its output, please see the [Manta User Guide](mantaUserGuide.md).
+For end user documentation describing how to run Manta and interpret its output, please see the [Manta User Guide](../userGuide/README.md).
 
 ## Table of Contents
 * [Developer Build Notes](#developer-build-notes)
@@ -101,15 +99,15 @@ Note that the minimum cmake version for Windows is 3.1.0
 * All tests use the boost unit test framework
 * All unit tests are required to run and pass as part of every build (including end-user builds)
 * Unit tests are already enabled for every library "test" subdirectory, additional tests in these directories will be automatically detected 
-  * Example [svgraph unit tests directory](../c++/lib/svgraph/test)
+  * Example [svgraph unit tests directory](../../src/c++/lib/svgraph/test)
 
 ## Special Topic Guides
 
 The following items provide more in-depth details on a subsection of the methods/debugging protocol, etc.
 
-* [Alignment Library](mantaDeveloperGuideAlignment.md)
-* [Breakend Graph Queries](mantaDeveloperGuideBreakendGraph.md)
-* [Debug Single SV](mantaDeveloperGuideDebugSingleSV.md)
-* [Debug Full Manta Run](mantaDeveloperGuideDebugSingleSV.md)
-* [Manta VCF ID field](mantaDeveloperGuideID.md)
+* [Alignment Library](alignment.md)
+* [Breakend Graph Queries](breakendGraph.md)
+* [Debug Single SV](debugSingleSV.md)
+* [Debug Full Manta Run](debugSingleSV.md)
+* [Manta VCF ID field](ID.md)
 

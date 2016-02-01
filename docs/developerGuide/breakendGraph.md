@@ -1,7 +1,7 @@
 
 # Manta Developer Guide - Breakend Graph
 
-[Return to Manta Developer Guide](mantaDeveloperGuide.md)
+[Developer Guide Home](README.md)
 
 ## Summary
 
@@ -20,7 +20,7 @@ The graph can be queried as follows:
 
 Example:
 
-    $MANTA_INSTALL_ROOT/libexec/DumpSVLoci --graph-file foo --region chr10:1000000-1001000
+    ${MANTA_INSTALL_ROOT}/libexec/DumpSVLoci --graph-file foo --region chr10:1000000-1001000
  
 You can also get summary metrics from the graph:
 * List of node count, edge count, observation count, etc. for every locus

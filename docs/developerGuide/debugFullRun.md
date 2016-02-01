@@ -1,11 +1,11 @@
 
 # Manta Developer Guide - Debugging a full Manta run
 
-[Return to Manta Developer Guide](mantaDeveloperGuide.md)
+[Developer Guide Home](README.md)
 
 ## Summary
 
-This page describes debug/analysis capabilities which are especially useful to full Manta runs -- for instance for scenarios when iterating on a general improvement to the methods. When debugging a single SV, see the related page on [Debugging a single SV in Manta](mantaDeveloperGuideDebugSingleSV.md)
+This page describes debug/analysis capabilities which are especially useful to full Manta runs -- for instance for scenarios when iterating on a general improvement to the methods. When debugging a single SV, see the related page on [Debugging a single SV in Manta](debugSingleSV.md)
 
 ## Rerun SVCandidateGeneration without recreating the SVLocus graph:
 
@@ -22,7 +22,7 @@ To assist in evaluating the quality of predictions from a full run compared to a
 
 ## Options to accelerate a small test case:
 
-If not running an analysis on single small genome segment (see [Debugging a single SV in Manta](mantaDeveloperGuideDebugSingleSV.md)) there are various options to make small bam subsegments run a bit faster:
+If not running an analysis on single small genome segment (see [Debugging a single SV in Manta](debugSingleSV.md)) there are various options to make small bam subsegments run a bit faster:
 
 At config time you can reduce/increase the total number of tasks by making each job do more/less :
 

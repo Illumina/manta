@@ -1,7 +1,7 @@
 
 # Manta Developer Guide - Alignment Library
 
-[Return to Manta Developer Guide](mantaDeveloperGuide.md)
+[Developer Guide Home](README.md)
 
 This is a subsection of the manta developer guide focusing on the alignment library.
 

@@ -1,11 +1,11 @@
 
 # Manta Developer Guide - Debugging a single SV in Manta
 
-[Return to Manta Developer Guide](mantaDeveloperGuide.md)
+[Developer Guide Home](README.md)
 
 ## Summary
 
-Manta tries to reduce intermediate I/O as much as possible, which is helpful in production, but not so for development/debug. As debuging cases come up, speciallized debug/localized running modes have been added to certain Manta tools, and more will certainly be added. This page documents the workflows that exist – especially those that facilitate debugging a single known FN or FP case. We also note workflows which would be useful and should be added in the future. For related debug discussions involving properties of an entire run, see the related page: [Debugging a full Manta run](mantaDeveloperGuideDebugFullRun.md)
+Manta tries to reduce intermediate I/O as much as possible, which is helpful in production, but not so for development/debug. As debuging cases come up, speciallized debug/localized running modes have been added to certain Manta tools, and more will certainly be added. This page documents the workflows that exist – especially those that facilitate debugging a single known FN or FP case. We also note workflows which would be useful and should be added in the future. For related debug discussions involving properties of an entire run, see the related page: [Debugging a full Manta run](debugFullRun.md)
 
 ## Scenario 0: Debug SV call in both graph creation and SV candidate generation steps:
 
