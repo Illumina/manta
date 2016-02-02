@@ -1,3 +1,4 @@
+- MANTA-276 mv configure to top-level, mv guides to docs dir, add methods docs
 - MANTA-284 improve windows shell support by shortening very long cmdlines
 v0.29.3
 - MANTA-280 filter supplementary reads without SA tags and read pairs with unmatched mate information
