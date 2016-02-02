@@ -55,7 +55,19 @@ Manta's two phase structure enables a high level of parallelization. In the firs
 
 Before entering the first major phase of the workflow, Manta completes a rapid estimation of fragment size and read depth information. During this step the sequence fragment size distribution is estimated for each BAM file provided as input. To accomplish this efficiently, the size distribution is sampled until convergence, so that only a small subset of the input sequence alignments for each sample need to be scanned. To reduce regional bias, this step cycles through several small sections from each chromosome. Reads are filtered from this process to reduce bias from fragments associated with SVs or small indels, this filtration includes removing any reads marked as secondary, supplemental, filtered or PCR duplicates. Both reads from a pair must be mapped to the same chromosome with a non-zero mapping quality, align without indels and must not include a split-read annotation (i.e. using the BAM ``SA" tag).
 
-A related prerequisite step Manta performs is estimation of the average depth for each chromosome. For somatic analysis this depth is only computed for the normal sample. This information is used downstream to filter out high-depth regions (details below) when Manta is run in its default whole genome sequencing mode, these values can be ignored for exome or other targeted analyses.
+A related prerequisite step Manta performs is estimation of the sequencing depth for each chromosome. For somatic analysis this depth is only computed for the normal sample. This information is used downstream to filter out high-depth regions (details below) when Manta is run in its default whole genome sequencing mode, these values can be ignored for exome or other targeted analyses.
+
+\subsubsection{Chromosome depth estimation}
+
+For each chromosome, depth is estimated using a modified median calculation. As a first step, each chromosome is partitioned into segments of similar size to ensure the estimation process samples several chromosome regions. The chromosome is divided into the smallest number of segments no larger than $S_{max}$, where all segments have nearly equal size (all sizes must be $S$ or $S+1$, given smallest segment size of $S$). If this procedure results in more than 20 segments than $S_max$ is doubled until 20 or fewer segments are found. $S_max$ is initialized to 2 Mbase.
+
+The depth estimation procedure repeatedly cycles through all segments. Within each segment, at least 40,000 reads are scanned before moving to the next segment (additional reads are scanned until the mapping position changes.) After the target number of reads have been scanned from every segment in the chromosome, the procedure returns to the first position and repeats this procedure starting from the last unscanned position. The process repeats until the all reads in all segments are scanned or the depth estimate converges.
+
+Each scanned read is filtered if it is unmapped. Otherwise the read alignment is ignored and the read is applied to a simple depth pileup assuming a complete and ungapped alignment starting from the mapping position. Every 1M reads triggers a convergence check, but only after every chromosome segment has been sampled at least once.
+
+Depth is estimated from the resulting pileup, using a simple median over all depth observations from the pileup structure excluding zero counts. Convergence is checked between the depth estimate of the last convergence check and the current one. An absolute change of less than 0.05 is treated as converged (or given the median case, the integer median estimates must be an exact match).
+
+The depth estimation procedure is run separately for each non-tumor sample, and all high-depth thresholds are set based on the sum of depth estimates over these samples.
 
 \subsection{Manta Workflow Phase One: Breakend graph construction}
 
