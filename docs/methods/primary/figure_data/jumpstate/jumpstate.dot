@@ -1,0 +1,24 @@
+
+digraph jump_aligner {
+        rankdir=LR;
+        size="6,3"
+        //node [shape = none, width=0, height=0, label=""] p1;
+        node [shape = doublecircle]; jump
+        node [shape = circle];
+        //LR_8 -> LR_5 [ label = "S(a)" ];
+{rank=min; insert1 -> delete1;}
+{rank=max; insert2 -> delete2;}
+        delete1 -> insert1;
+        insert1 -> match1;
+        delete1 -> match1;
+        match1 -> insert1;
+        match1 -> delete1;
+        match1 -> jump;
+        jump -> match2
+        jump -> insert2
+        match2 -> insert2
+        match2 -> delete2
+        insert2 -> match2
+        delete2 -> match2
+        delete2 -> insert2
+}
