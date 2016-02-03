@@ -122,8 +122,9 @@ def _runDepthShared(self,taskPrefix, dependencies, bamList, outputPath, depthFun
     nextStepWait = set()
     nextStepWait.add(mergeTask)
 
-    rmTmpCmd = getRmdirCmd() + [tmpDir]
-    rmTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmTmpCmd,dependencies=mergeTask, isForceLocal=True)
+    if not self.params.isRetainTempFiles :
+        rmTmpCmd = getRmdirCmd() + [tmpDir]
+        rmTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmTmpCmd,dependencies=mergeTask, isForceLocal=True)
 
     return nextStepWait
 

@@ -81,8 +81,9 @@ def runStats(self,taskPrefix="",dependencies=None) :
     nextStepWait = set()
     nextStepWait.add(mergeTask)
 
-    rmStatsTmpCmd = getRmdirCmd() + [tmpStatsDir]
-    rmTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmStatsTmpCmd,dependencies=mergeTask, isForceLocal=True)
+    if not self.params.isRetainTempFiles :
+        rmStatsTmpCmd = getRmdirCmd() + [tmpStatsDir]
+        rmTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmStatsTmpCmd,dependencies=mergeTask, isForceLocal=True)
 
     # summarize stats in format that's easier for human review
     cmd = [self.params.mantaStatsSummaryBin]
@@ -194,8 +195,9 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
     checkCmd.extend(["--graph-file", graphPath])
     checkTask = self.addTask(preJoin(taskPrefix,"checkLocusGraph"),checkCmd,dependencies=mergeTask,memMb=self.params.mergeMemMb)
 
-    rmGraphTmpCmd = getRmdirCmd() + [tmpGraphDir]
-    rmTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmGraphTmpCmd,dependencies=mergeTask)
+    if not self.params.isRetainTempFiles :
+        rmGraphTmpCmd = getRmdirCmd() + [tmpGraphDir]
+        rmTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmGraphTmpCmd,dependencies=mergeTask)
 
     graphStatsCmd  = [self.params.mantaGraphStatsBin,"--global"]
     graphStatsCmd.extend(["--graph-file",graphPath])
@@ -431,6 +433,12 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
     edgeStatsMergeCmd.extend(["--output-file",self.paths.getFinalEdgeStatsPath()])
     edgeStatsMergeCmd.extend(["--report-file",self.paths.getFinalEdgeStatsReportPath()])
     self.addTask(edgeStatsMergeTask, edgeStatsMergeCmd, dependencies=statsListTask, isForceLocal=True)
+
+    if not self.params.isRetainTempFiles :
+        # we could delete the temp hygenDir directory here, but it is used for debug so frequently it doesn't seem worth it at present.
+        # rmDirCmd = getRmdirCmd() + [hygenDir]
+        # rmDirTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmDirCmd,dependencies=TBD_XXX_MANY)
+        pass
 
     return nextStepWait
 

@@ -69,6 +69,15 @@ extending from the configuration example in the above build instructions, use:
 
     ../manta-A.B.C.release_src/src/configure --jobs=4 --prefix=/path/to/install --build-type=ASan
 
+### General Debugging: Inspecting temporary files 
+
+Manta's configuration step includes an extended option to keep all temporary
+files which would normally be deleted by the workflow as it runs. Keeping these
+files may be helpful in various debugging scenarios. To turn on this option, add
+`--retainTempFiles` as a configuration argument:
+
+    configManta.py [other_options...] --retainTempFiles
+
 ### Windows development support
 
 Manta does not link or run on windows. However, the build system does
