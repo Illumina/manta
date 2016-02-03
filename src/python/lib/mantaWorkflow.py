@@ -118,10 +118,11 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
     graphStatsPath=self.paths.getGraphStatsPath()
 
     graphFilename=os.path.basename(graphPath)
-    tmpGraphDir=os.path.join(self.params.workDir,graphFilename+".tmpdir")
 
-    makeTmpDirCmd = getMkdirCmd() + [tmpGraphDir]
-    dirTask=self.addTask(preJoin(taskPrefix,"makeTmpDir"), makeTmpDirCmd, dependencies=dependencies, isForceLocal=True)
+    tmpGraphDir=self.paths.getTmpGraphDir()
+
+    makeTmpGraphDirCmd = getMkdirCmd() + [tmpGraphDir]
+    dirTask = self.addTask(preJoin(taskPrefix,"makeGraphTmpDir"), makeTmpGraphDirCmd, dependencies=dependencies, isForceLocal=True)
 
     tmpGraphFiles = []
     graphTasks = set()
@@ -149,7 +150,7 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
         gid=gsegGroup[0].id
         if len(gsegGroup) > 1 :
             gid += "_to_"+gsegGroup[-1].id
-        tmpGraphFiles.append(os.path.join(tmpGraphDir,graphFilename+"."+gid+".bin"))
+        tmpGraphFiles.append(self.paths.getTmpGraphFile(gid))
         graphCmd = [ self.params.mantaGraphBin ]
         graphCmd.extend(["--output-file", tmpGraphFiles[-1]])
         graphCmd.extend(["--align-stats",statsPath])
@@ -177,12 +178,14 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
     if len(tmpGraphFiles) == 0 :
         raise Exception("No SV Locus graphs to create. Possible target region parse error.")
 
+    tmpGraphFileList = self.paths.getTmpGraphFileListPath()
+    tmpGraphFileListTask = preJoin(taskPrefix,"mergeLocusGraphInputList")
+    self.addWorkflowTask(tmpGraphFileListTask,listFileWorkflow(tmpGraphFileList,tmpGraphFiles),dependencies=graphTasks)
+
     mergeCmd = [ self.params.mantaGraphMergeBin ]
     mergeCmd.extend(["--output-file", graphPath])
-    for gfile in tmpGraphFiles :
-        mergeCmd.extend(["--graph-file", gfile])
-
-    mergeTask = self.addTask(preJoin(taskPrefix,"mergeLocusGraph"),mergeCmd,dependencies=graphTasks,memMb=self.params.mergeMemMb)
+    mergeCmd.extend(["--graph-file-list",tmpGraphFileList])
+    mergeTask = self.addTask(preJoin(taskPrefix,"mergeLocusGraph"),mergeCmd,dependencies=tmpGraphFileListTask,memMb=self.params.mergeMemMb)
 
     # Run a separate process to rigorously check that the final graph is valid, the sv candidate generators will check as well, but
     # this makes the check much more clear:
@@ -418,13 +421,13 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
     #
     # merge all edge stats
     #
-    statsListFile = self.paths.getStatsFileListPath()
+    statsFileList = self.paths.getStatsFileListPath()
     statsListTask = preJoin(taskPrefix,"mergeEdgeStatsInputList")
-    self.addWorkflowTask(statsListTask,listFileWorkflow(statsListFile,edgeStatsLogPaths),dependencies=hygenTasks)
+    self.addWorkflowTask(statsListTask,listFileWorkflow(statsFileList,edgeStatsLogPaths),dependencies=hygenTasks)
 
     edgeStatsMergeTask=preJoin(taskPrefix,"mergeEdgeStats")
     edgeStatsMergeCmd=[self.params.mantaStatsMergeBin]
-    edgeStatsMergeCmd.extend(["--stats-file-list",statsListFile])
+    edgeStatsMergeCmd.extend(["--stats-file-list",statsFileList])
     edgeStatsMergeCmd.extend(["--output-file",self.paths.getFinalEdgeStatsPath()])
     edgeStatsMergeCmd.extend(["--report-file",self.paths.getFinalEdgeStatsReportPath()])
     self.addTask(edgeStatsMergeTask, edgeStatsMergeCmd, dependencies=statsListTask, isForceLocal=True)
@@ -452,6 +455,12 @@ class PathInfo:
 
     def getGraphPath(self) :
         return os.path.join(self.params.workDir,"svLocusGraph.bin")
+
+    def getTmpGraphDir(self) :
+        return os.path.join(self.getGraphPath()+".tmpdir")
+
+    def getTmpGraphFile(self, gid) :
+        return os.path.join(self.getTmpGraphDir(),"svLocusGraph.%s.bin" % (gid))
 
     def getHyGenDir(self) :
         return os.path.join(self.params.workDir,"svHyGen")
@@ -504,6 +513,9 @@ class PathInfo:
     def getGraphStatsPath(self) :
         return os.path.join(self.params.statsDir,"svLocusGraphStats.tsv")
 
+    def getTmpGraphFileListPath(self) :
+        return os.path.join(self.getTmpGraphDir(),"list.svLocusGraph.txt")
+
     def getVcfListPath(self, label) :
         return os.path.join(self.getHyGenDir(),"list.%s.txt" % (label))
 
@@ -512,7 +524,6 @@ class PathInfo:
 
     def getStatsFileListPath(self) :
         return os.path.join(self.getHyGenDir(),"list.edgeStats.txt")
-
 
 
 class MantaWorkflow(WorkflowRunner) :

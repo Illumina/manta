@@ -25,12 +25,15 @@
 #include "MSLOptions.hh"
 
 #include "blt_util/log.hh"
+#include "common/ProgramUtil.hh"
+
 #include "boost/filesystem.hpp"
 #include "boost/program_options.hpp"
 
 #include <iostream>
+#include <fstream>
+#include <set>
 #include <sstream>
-#include "../../common/ProgramUtil.hh"
 
 
 
@@ -57,6 +60,8 @@ parseMSLOptions(const illumina::Program& prog,
     req.add_options()
     ("graph-file", po::value(&opt.graphFilename),
      "input sv locus graph file (may be specified multiple times)")
+    ("graph-file-list", po::value(&opt.graphFilenameList),
+     "file listing all input sv locus graph files, one filename per line (specified only once)")
     ("output-file", po::value(&opt.outputFilename),
      "merged output sv locus graph file")
     ("verbose", po::value(&opt.isVerbose)->zero_tokens(),
@@ -89,11 +94,38 @@ parseMSLOptions(const illumina::Program& prog,
         usage(log_os,prog,visible);
     }
 
+    //read graph file names from a user-defined file
+    if (! opt.graphFilenameList.empty())
+    {
+        std::ifstream parFile(opt.graphFilenameList.c_str(), std::ios_base::in | std::ios_base::binary);
+        if (! parFile.good())
+        {
+            std::ostringstream osfl;
+            osfl << "SV locus graph file list does not exist: '" << opt.graphFilenameList << "'";
+            usage(log_os, prog, visible, osfl.str().c_str());
+        }
+
+        std::string lineIn;
+        while (getline(parFile, lineIn))
+        {
+            if (lineIn.size() == 0) continue;
+            const unsigned sm1(lineIn.size()-1);
+            if (lineIn[sm1] == '\r')
+            {
+                if (sm1 == 0) continue;
+                lineIn.resize(sm1);
+            }
+            opt.graphFilename.push_back(lineIn);
+        }
+    }
+
     // fast check of config state:
     if (opt.graphFilename.empty())
     {
         usage(log_os,prog,visible, "Must specify at least 1 input sv locus graph file");
     }
+
+    std::set<std::string> dupCheck;
     for (const std::string& graphFilename : opt.graphFilename)
     {
         if (! boost::filesystem::exists(graphFilename))
@@ -102,6 +134,14 @@ parseMSLOptions(const illumina::Program& prog,
             oss << "SV locus graph file does not exist: '" << graphFilename << "'";
             usage(log_os,prog,visible,oss.str().c_str());
         }
+
+        if (dupCheck.find(graphFilename) != dupCheck.end())
+        {
+            std::ostringstream oss;
+            oss << "Same SV locus graph file submitted multiple times: '" << graphFilename << "'";
+            usage(log_os,prog,visible,oss.str().c_str());
+        }
+        dupCheck.insert(graphFilename);
     }
     if (opt.outputFilename.empty())
     {

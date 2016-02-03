@@ -24,20 +24,20 @@
 
 #pragma once
 
+#include "common/Program.hh"
+
 #include <string>
 #include <vector>
-#include "../../common/Program.hh"
-
 
 
 struct MSLOptions
 {
-
     MSLOptions() :
         isVerbose(false)
     {}
 
     std::vector<std::string> graphFilename;
+    std::string graphFilenameList;
     std::string outputFilename;
     bool isVerbose;
 };

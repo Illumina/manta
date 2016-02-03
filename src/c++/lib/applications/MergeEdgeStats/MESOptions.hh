@@ -30,7 +30,6 @@
 #include <vector>
 
 
-
 struct MESOptions
 {
     std::vector<std::string> statsFilename;
