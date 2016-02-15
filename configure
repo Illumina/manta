@@ -20,8 +20,8 @@
 
 
 #
-# Top level configuration file for *nix like OS's, note that there's
-# some legacy support for both cygwin and minGW in here but neither
+# Top level configuration file for *nix like OS's, note that there
+# is legacy support for both cygwin and minGW in here but neither
 # have been supported for serveral years.
 #
 
@@ -207,7 +207,7 @@ ERROR: This project cannot be built in the source directory. Please run
 
     """
     mkdir ../build && cd ../build
-    \${MANTA_ROOT_DIR}/configure [configure_options]
+    \${MANTA_ROOT_PATH}/configure [configure_options]
     """
 
 EOF

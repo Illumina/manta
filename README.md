@@ -62,8 +62,9 @@ Manta Code Development
 ----------------------
 
 For manta code development and debugging details, see the
-[Manta developer guide] [DeveloperGuide]. This includes details on
-Manta's developement protocols, recommended workflows for investigating
-suspected FP or FN SV calls, and internal documentation details.
+[Manta developer guide] [DeveloperGuide]. This includes details
+on Manta's developement protocols, special build instructions,
+recommended workflows for investigating
+calls, and internal documentation details.
 
 [DeveloperGuide]:docs/developerGuide/README.md

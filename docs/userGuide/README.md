@@ -347,7 +347,7 @@ The VCF ID or 'identifer' field can be used for annotation, or in the case of BN
 
 An example Manta VCF ID is "MantaINS:1577:0:0:0:3:0". The value provided in this field reflects the SV association graph edge(s) from which the SV or indel was discovered. The ID value provided by Manta is primarily intended for internal use by manta developers. The value is guaranteed to be unique within any VCF file produced by Manta, and these ID values are used to link associated breakend records using the standard VCF `MATEID` key. The structure of this ID may change in the future, it is safe to use the entire value as a unique key, but parsing this value may lead to incompatibilities with future updates.
 
-The exact meaning of the ID field for the current Manta version is described in the [following section](mantaDeveloperGuideID.md) of the [Manta developer guide](mantaDeveloperGuide.md).
+The exact meaning of the ID field for the current Manta version is described in the [following section](../developerGuide/ID.md) of the [Manta developer guide](../developerGuide/README.md).
 
 
 #### Converting Manta VCF to BEDPE format

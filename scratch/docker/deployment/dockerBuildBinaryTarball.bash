@@ -1,21 +1,27 @@
 #!/usr/bin/env bash
 
 set -o nounset
-set -o xtrace
+#set -o xtrace
 
 buildLabel=
-if ! [ $# != 3 ]; then
+if [ $# != 2 ]; then
     cat <<END
 Create binary distro tarball using docker.
 
 usage: $0 distro_root_directory binary_distro_prefix
 
-  distro_root_directory - root directory of the package git repository
-  binary_distro_prefix - filename prefix of tarball and directory name
-                         used when tarball is unpacked
+  distro_root_directory - Root directory of the package git repository or source release
+  binary_distro_prefix - Filename prefix of tarball. This will also be the
+                         directory name used when tarball is unpacked
+
 END
     exit 2
 fi
+
+error() {
+    echo "ERROR: $@" 2>&1
+    exit 1
+}
 
 rootDir="$1"
 buildLabel="$2"
@@ -32,14 +38,17 @@ rootDir=$(rel2abs $rootDir)
 
 # check that rootDir conatins expected files:
 if ! [ -f $rootDir/configure ]; then
-    echo "Can't find package configure script. Expected location is '$rootDir/configure'" 2>&1
-    exit 1
+    error "Can't find package configure script. Expected location is '$rootDir/configure'"
 fi
 
 
 # in dockerfile directory:
 tag="deployment:$builderImage"
 sudo docker build -t $tag $scriptDir/$builderImage
+
+if [ $? -ne 0 ] ; then
+    error "Failed to build docker deployment image"
+fi
 
 # in scratch
 #unpack src tarball and cd into tarball root
@@ -70,5 +79,10 @@ chmod 777 $buildLabel.tar.bz2
 ENDE
 
 sudo docker run -v $rootDir:$dmount -t $tag bash $dmount/$installScriptFilename
+
+if [ $? -ne 0 ] ; then
+    error "Failed to build binary package release"
+fi
+
 mv $rootDir/$buildLabel.tar.bz2 .
 

@@ -1,10 +1,17 @@
 Manta Developer Guide
 =====================
 
-This guide provides information for manta development, including protocols for
-contirbuting new methods, debugging stability problems, suspected false or missing variant calls and some high-level internal methods documentation.
+This guide provides:
+* protocols for contributing new or modified methods
+* methods to debug stability or runtime issues
+* methods to debug suspected false or missing variant calls
+* high-level architectural documentation
 
-For end user documentation describing how to run Manta and interpret its output, please see the [Manta User Guide](../userGuide/README.md).
+Information is added as pertinent questions/discussions come up in the contributor community,
+so this guide is not intended to provide complete coverage of the above topics.
+
+For end user documentation describing how to run an analysis and interpret its output,
+please see the [User Guide](../userGuide/README.md).
 
 ## Table of Contents
 * [Developer Build Notes](#developer-build-notes)
@@ -19,14 +26,14 @@ developers.
 
 ### Building from source repository vs. versioned code distribution:
 
-When Manta is cloned from github, it is configured for development
+When the source repository is cloned from github, it is configured for development
 rather than user distribution. In this configuration all builds are strict
 such that:
 * all warnings are treated as errors
 * if cppcheck is found any detected cppcheck issue is converted to a build error
 
-Note that in all build configurations, all of Manta's unit tests are run and required
-to pass as part of the default build procedure.
+Note that all unit tests are always run and required to pass for the build
+procedure to complete.
 
 ### Source auto-documentation
 
@@ -88,9 +95,30 @@ solutions allow the c++ code to be browsed, analyzed and compiled to
 the library level.  Note that unit test codes are compiled to
 libraries but cannot be run.
 
-C++11 features used by manta require at least VS2013. A Windows
+C++11 features in use require at least VS2013. A Windows
 installation of cmake is also required to configure and compile.
-Note that the minimum cmake version for Windows is 3.1.0
+Note that the minimum cmake version is 3.1.0 for Windows.
+
+### Automating Portable Binary Builds 
+
+A script is provided to enable a dockerized build process which
+issues Centos5+ or Centos6+ binary tarballs. To do so, ensure you
+have permission to `docker run` on the current system and execute the
+following script:
+
+```
+${MANTA_ROOT_PATH}/scratch/docker/deployment/dockerBuildBinaryTarball.bash ${MANTA_ROOT_PATH2} ${BINARY_BUILD_PREFIX}
+```
+
+The term `${MANTA_ROOT_PATH2}` can point to the current git repo (ie. `${MANTA_ROOT_PATH}`),
+or to an extracted Manta source tarball previously created using the script:
+
+```
+${MANTA_ROOT_PATH}/scratch/make_release_tarball.bash
+```
+
+The choice of virtualized build environment is hard-coded in the deploy script for the time being,
+see the `builderImage` variable.
 
 ## Coding Guidelines
 
@@ -101,10 +129,67 @@ Note that the minimum cmake version for Windows is 3.1.0
   * 4-space indents
   * "ANSI" bracket style
 * Note the above restrictions are enforced by an astyle script which is occasionally run on the master branch (see [run_cxx_formatter.bash](../../scratch/source_check_and_format/run_cxx_formatter.bash))
-* Otherwise, just follow local code conventions
+* Otherwise, follow local code conventions
+
+### Error handling
+
+#### General Policies
+* Exceptions with informative contextual details are encouraged whenever possible.
+* To quickly express invariants it is acceptable to add `assert()`'s first, and transition to exceptions as code stabilizes.
+* Note that the build process will never define `NDEBUG` to compile out assert statements, even in release code.
+* Exceptions are never thrown with the intent to recover -- this is not a web browser. The goal is to:
+  * Fail at the first sign of trouble.
+  * Provide as much helpful contextual information as possible, including context from multiple layers of the stack.
+* Warnings are discouraged. If considering a warning you should probably just fail per the above policy.
+
+#### Exception Details
+* Preferred exception pattern is to use an internal class derived from `boost::exception`:
+ 
+```c++
+
+#include "common/Exceptions.hh"
+
+#include <sstream>
+
+void
+foo(const char* name)
+{
+    using namespace illumina::common;
+
+    std::ostringstream oss;
+    oss << "ERROR: unrecognized variant scoring model name: '" << name << "'\n";
+    BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+}
+```
+ 
+* Context at the original throw site is often supplemented by a 'catch and release' block to add
+information at a few critical points on the stack. Typically this is information which
+is unavailable at the throw site. Example code is:
+
+```c++
+try
+{
+    realign_and_score_read(_opt,_dopt,sif.sample_opt,_ref,realign_buffer_range,rseg,sif.indel_sync());
+}
+catch (...)
+{
+    log_os << "ERROR: Exception caught in align_pos() while realigning segment: "
+	   << static_cast<int>(r.second) << " of read: " << (*r.first) << "\n";
+    throw;
+}
+```
+
+#### Logging
+
+* At the workflow (python) layer, please write all logging messages through pyflow's logging interface as follows:
+```python
+self.flowLog("Initiating Starling workflow version: %s" % (__version__)
+```
+
+* At the binary (c++) layer, there is no logger at present. Direct all error messaging to `std::cerr`.
 
 ### Unit tests
-* Unit tests are enabled for a subset of the c++ code in manta
+* Unit tests are enabled for a subset of the c++ code
 * All tests use the boost unit test framework
 * All unit tests are required to run and pass as part of every build (including end-user builds)
 * Unit tests are already enabled for every library "test" subdirectory, additional tests in these directories will be automatically detected 

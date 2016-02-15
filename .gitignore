@@ -40,3 +40,12 @@ src/.project
 *.rar
 *.tar
 *.zip
+
+# IDE and temp files #
+######################
+*.swp
+.ycm_extra_conf.py*
+tags
+*.sublime-project
+*.sublime-workspace
+src/.idea
