@@ -606,6 +606,23 @@ minEdgeObservations = 2
 minCandidateSpanningCount = 2
 ```
 
+### De novo calling
+
+Manta can be used for de novo calling, following a two-step procedure:
+
+1) Manta can take multiple input bams for the normal
+sample, each bam file being treated as a separate sample as part of a
+joint diploid sample analysis, and then output a multi-sample vcf, where the sample order follows that of the input bams.
+
+2) A post-processing script, provided as $MANTA_INSTALL_FOLDER/libexec/denovo_scoring.py, can be applied to the multi-sample vcf and detects SVs that have inheritance conflicts among a trio sample set.
+
+   The script usage is  
+   denovo_scoring.py <vcf file> <proband sample ID> <father sample ID> <mother sample ID>
+   It will ignore any samples in the vcf that are not specified at the commandline.
+
+   Under the same folder of the input vcf, the script outputs a new vcf file and a text file of stats for the de novo calls. Currently, all SVs with inheritance conflicts are labled with "DQ=60" inside the INFO, while all SVs without any conflict are labled with "DQ=0".
+
+ 
 
 [1]: http://www.1000genomes.org/wiki/Analysis/Variant%20Call%20Format/vcf-variant-call-format-version-41
 [2]: http://sequencing.github.io/pyflow/
