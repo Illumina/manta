@@ -33,7 +33,7 @@ install:
   - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" == "clang++" ]; then sudo apt-get install -qq llvm-3.4 llvm-3.4-dev; fi
  
 script:
-  - mkdir build && cd build && ../src/configure --jobs=4 --prefix=../install && make -j4 install && ../install/bin/runMantaWorkflowDemo.py
+  - mkdir build && cd build && ../configure --jobs=4 --prefix=../install && make -j4 install && ../install/bin/runMantaWorkflowDemo.py
 
 branches:
   only:
