@@ -48,7 +48,7 @@ checkStandardizeInputFile(
     }
     else
     {
-        filename = boost::filesystem::canonical(filename).string();
+        filename = boost::filesystem::absolute(filename).string();
     }
 
     return (! errorMsg.empty());

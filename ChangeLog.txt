@@ -1,3 +1,4 @@
+- [#32] Preserve softlinks in input file paths to find sidecar index files
 v0.29.4
 - Add a python script to identify de novo calls
 - MANTA-285 add option to keep all temp files to support workflow debug
