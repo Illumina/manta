@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 #
-#
 # Manta - Structural Variant and Indel Caller
-# Copyright (c) 2013-2015 Illumina, Inc.
+# Copyright (c) 2013-2016 Illumina, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -43,7 +42,7 @@ def check_genotype(probandGT, fatherGT, motherGT):
 
 
 
-def process_vcf(vcfFile, probandID, 
+def process_vcf(vcfFile, probandID,
                 fatherID, motherID):
 
     vcfFile = abspath(vcfFile)
@@ -110,7 +109,7 @@ def process_vcf(vcfFile, probandID,
         for ix in xrange(len(items)):
             if items[ix] == "GT":
                 GTix = ix
-        
+
         items = tokens[probandIx].split(':')
         probandGT = items[GTix]
 
@@ -122,7 +121,7 @@ def process_vcf(vcfFile, probandID,
 
         isConsistent = check_genotype(probandGT, fatherGT, motherGT)
         if not(isConsistent):
-            info += ";PG=60"
+            info += ";DQ=60"
 
             # stats
             filter = tokens[6]
@@ -136,7 +135,7 @@ def process_vcf(vcfFile, probandID,
                 consistencyDict[GTstring] = 0
             consistencyDict[GTstring] += 1
         else:
-            info += ";PG=0"
+            info += ";DQ=0"
 
         newLine = ""
         for i in xrange(7):
@@ -145,14 +144,14 @@ def process_vcf(vcfFile, probandID,
         for i in xrange(8, len(tokens)):
             newLine += "\t" + tokens[i]
         fpOut.write(newLine+"\n")
-                
+
     fpVcf.close()
     fpOut.close()
 
     fpStats.write("# of passed SVs: %s\n" % (countPassed))
     fpStats.write("# of filtered SVs: %s\n" % (countFiltered))
     fpStats.write("probandGT-fatherGT-motherGT\tcounts\n")
-    genotypes = consistencyDict.keys() 
+    genotypes = consistencyDict.keys()
     genotypes.sort()
     for gt in genotypes:
         fpStats.write("%s\t%s\n" % (gt, consistencyDict[gt]))
@@ -160,7 +159,7 @@ def process_vcf(vcfFile, probandID,
 
 
 if __name__=='__main__':
-    
+
     usage = "denovo_scoring.py <vcf file> <proband sample ID> <father sample ID> <mother sample ID>\n"
     if len(sys.argv) <= 4:
         sys.stderr.write(usage)
@@ -177,5 +176,5 @@ if __name__=='__main__':
         sys.stderr.write(errMsg + '\nProgram exits.')
         sys.exit(1)
 
-    process_vcf(vcfFile, probandID, 
+    process_vcf(vcfFile, probandID,
                 fatherID, motherID)
