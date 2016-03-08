@@ -337,6 +337,12 @@ elseif (${IS_CLANGXX})
         endif ()
     endif ()
 
+    if (NOT (${COMPILER_VERSION} VERSION_LESS "3.8"))
+        if (${IS_WARN_EVERYTHING})
+            append_args(CXX_WARN_FLAGS "-Wno-double-promotion")
+        endif ()
+    endif ()
+
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
     # suppress errors in boost headers:
     append_args(CXX_WARN_FLAGS "-diag-disable 177,193,869,1599,3280")
