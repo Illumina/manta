@@ -35,7 +35,7 @@
 
 
 // compile with this macro to get verbose output:
-#define DEBUG_ASBL
+//#define DEBUG_ASBL
 
 
 // stream used by DEBUG_ASBL:
@@ -183,32 +183,32 @@ walk(const SmallAssemblerOptions& opt,
     contig.seq = seed;
 
     // collecting rejecting reads for the seed from the unselected branches
-	for (const char symbol : opt.alphabet)
-	{
-		// the seed itself
-		if (symbol == seed[wordLength-1]) continue;
+    for (const char symbol : opt.alphabet)
+    {
+        // the seed itself
+        if (symbol == seed[wordLength-1]) continue;
 
-		// add rejecting reads from an unselected word/branch
-		const std::string tmpBack = getEnd(seed, wordLength-1, false);
-		const std::string newKey(addBase(tmpBack, symbol, true));
+        // add rejecting reads from an unselected word/branch
+        const std::string tmpBack = getEnd(seed, wordLength-1, false);
+        const std::string newKey(addBase(tmpBack, symbol, true));
 #ifdef DEBUG_ASBL
-		log_os << "Extending end backwords: base " << symbol << " " << newKey << "\n";
+        log_os << "Extending end backwords: base " << symbol << " " << newKey << "\n";
 #endif
 
-		wordReadsIter= wordReads.find(newKey);
-		if (wordReadsIter == wordReadsEnd) continue;
-		const std::set<unsigned>& unselectedReads(wordReadsIter->second);
+        wordReadsIter= wordReads.find(newKey);
+        if (wordReadsIter == wordReadsEnd) continue;
+        const std::set<unsigned>& unselectedReads(wordReadsIter->second);
 #ifdef DEBUG_ASBL
-		log_os << "Supporting reads for the backwards word : ";
-		print_readSet(unselectedReads);
+        log_os << "Supporting reads for the backwards word : ";
+        print_readSet(unselectedReads);
 #endif
 
-		contig.rejectReads.insert(unselectedReads.begin(), unselectedReads.end());
+        contig.rejectReads.insert(unselectedReads.begin(), unselectedReads.end());
 #ifdef DEBUG_ASBL
-		log_os << "seed's rejecting reads : ";
-		print_readSet(contig.rejectReads);
+        log_os << "seed's rejecting reads : ";
+        print_readSet(contig.rejectReads);
 #endif
-	}
+    }
 
     seenEdgeBefore.clear();
     seenEdgeBefore.insert(seed);
@@ -224,8 +224,8 @@ walk(const SmallAssemblerOptions& opt,
 
         while (true)
         {
-        	const std::string previousWord = getEnd(contig.seq, wordLength, isEnd);
-        	const std::string trunk(getEnd(contig.seq, wordLength-1, isEnd));
+            const std::string previousWord = getEnd(contig.seq, wordLength, isEnd);
+            const std::string trunk(getEnd(contig.seq, wordLength-1, isEnd));
 
 #ifdef DEBUG_ASBL
             log_os << "# current contig : " << contig.seq << " size : " << contig.seq.size() << "\n"
@@ -345,35 +345,35 @@ walk(const SmallAssemblerOptions& opt,
 
             // TODO: can add threshold for the count or percentage of shared reads
             {
-            	// walk backwards for one step at a branching point
-				if (maxWordReads != previousWordReads)
-				{
-					const char tmpSymbol = (isEnd? previousWord[0] : previousWord[wordLength-1]);
-					for (const char symbol : opt.alphabet)
-					{
-						// the selected branch
-						if (symbol == tmpSymbol) continue;
+                // walk backwards for one step at a branching point
+                if (maxWordReads != previousWordReads)
+                {
+                    const char tmpSymbol = (isEnd? previousWord[0] : previousWord[wordLength-1]);
+                    for (const char symbol : opt.alphabet)
+                    {
+                        // the selected branch
+                        if (symbol == tmpSymbol) continue;
 
-						// add rejecting reads from an unselected branch
-						const std::string newKey(addBase(trunk, symbol, !isEnd));
+                        // add rejecting reads from an unselected branch
+                        const std::string newKey(addBase(trunk, symbol, !isEnd));
 #ifdef DEBUG_ASBL
-						log_os << "Extending end backwords: base " << symbol << " " << newKey << "\n";
+                        log_os << "Extending end backwords: base " << symbol << " " << newKey << "\n";
 #endif
-						wordReadsIter= wordReads.find(newKey);
-						if (wordReadsIter == wordReadsEnd) continue;
-						const std::set<unsigned>& backWordReads(wordReadsIter->second);
+                        wordReadsIter= wordReads.find(newKey);
+                        if (wordReadsIter == wordReadsEnd) continue;
+                        const std::set<unsigned>& backWordReads(wordReadsIter->second);
 #ifdef DEBUG_ASBL
-						log_os << "Supporting reads for the backwards word : ";
-						print_readSet(backWordReads);
+                        log_os << "Supporting reads for the backwards word : ";
+                        print_readSet(backWordReads);
 #endif
-						rejectReads2Add.insert(backWordReads.begin(), backWordReads.end());
+                        rejectReads2Add.insert(backWordReads.begin(), backWordReads.end());
 #ifdef DEBUG_ASBL
-						log_os << "rejectReads2Add upated : ";
-						print_readSet(rejectReads2Add);
+                        log_os << "rejectReads2Add upated : ";
+                        print_readSet(rejectReads2Add);
 #endif
-					}
-				}
-				previousWordReads = maxWordReads;
+                    }
+                }
+                previousWordReads = maxWordReads;
 
 #ifdef DEBUG_ASBL
                 log_os << "Adding rejecting reads " << "\n"
@@ -604,12 +604,11 @@ buildContigs(
 
         while (! maxWords.empty())
         {
+            maxWord=(*maxWords.begin());
+            maxWords.erase(maxWords.begin());
 #ifdef DEBUG_ASBL
             log_os << logtag << "Seeding kmer : " << maxWord << "\n";
 #endif
-
-            maxWord=(*maxWords.begin());
-            maxWords.erase(maxWords.begin());
 
             AssembledContig newContig;
             walk(opt, maxWord, wordLength, wordCount, wordSupportReads, seenEdgeBefore, newContig);

@@ -102,5 +102,57 @@ BOOST_AUTO_TEST_CASE( test_PoisonRead )
 }
 
 
+
+BOOST_AUTO_TEST_CASE( test_supportingReadConsistency )
+{
+    // test against observed case where a single bad read could kill the whole assembly
+
+    SmallAssemblerOptions assembleOpt;
+
+    assembleOpt.minWordLength = 6;
+    assembleOpt.maxWordLength = 6;
+    assembleOpt.minCoverage = 2;
+    assembleOpt.minSeedReads = 3;
+
+    AssemblyReadInput reads;
+    reads.push_back(        "AAACGTGTATTA");
+    reads.push_back(          "ACGTGTATTACC");
+    reads.push_back(           "CGTGTATTACCT");
+    reads.push_back(            "GTGTATTACCTA");
+    reads.push_back(                "ATTACCTAGTAC");
+    reads.push_back(                  "TACCTAGTACTC");
+    // the above reads build a contig ACGTG TATTACC TAGTAC
+    //
+    // Notice ACGTG should not be extended by adding 'A' to the left => AACGTG
+    // using the reads below, because they have a different suffix after ACGTG *GCC*
+    // Instead, the reads below build a contig CTTA GCTA ACGTG GCC
+    reads.push_back("CCCTTAGCTAAC");
+    reads.push_back(  "CTTAGCTAACGT");
+    reads.push_back(    "TAGCTAACGTGG");
+    reads.push_back(      "GCTAACGTGGCC");
+    reads.push_back(         "AACGTGGCCTAG");
+
+
+    AssemblyReadOutput readInfo;
+    Assembly contigs;
+
+    runSmallAssembler(assembleOpt, reads, readInfo, contigs);
+
+    BOOST_REQUIRE_EQUAL(contigs.size(),2u);
+    BOOST_REQUIRE_EQUAL(contigs[0].seq,"AACGTGTATTACCTAGTAC");
+    BOOST_REQUIRE_EQUAL(contigs[1].seq,"CTTAGCTAACGTGGCC");
+    for (unsigned i(0); i<6; ++i)
+    {
+        BOOST_REQUIRE(readInfo[i].isUsed);
+        BOOST_REQUIRE_EQUAL(readInfo[i].contigId,0u);
+    }
+
+    for (unsigned i(6); i<11; ++i)
+    {
+        BOOST_REQUIRE(readInfo[i].isUsed);
+        BOOST_REQUIRE_EQUAL(readInfo[i].contigId,1u);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
