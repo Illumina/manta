@@ -149,7 +149,7 @@ results -- in this case the dry run will not cover the full 'live' run task set.
     parser.add_option("-m", "--mode", type="string",dest="mode",
                       help="select run mode (local|sge)")
     parser.add_option("-q", "--queue", type="string",dest="queue",
-                      help="specify sge queue name")
+                      help="specify scheduler queue name")
     parser.add_option("-j", "--jobs", type="string",dest="jobs",
                   help="number of jobs, must be an integer or 'unlimited' (default: Estimate total cores on this node for local mode, %s for sge mode)" % (sgeDefaultCores))
     parser.add_option("-g","--memGb", type="string",dest="memGb",
@@ -179,6 +179,12 @@ results -- in this case the dry run will not cover the full 'live' run task set.
                           help="Reset task list to re-run hypothesis generation and scoring without resetting graph generation.")
 
     parser.add_option_group(debug_group)
+
+    ext_group = OptionGroup(parser,"extended portability options (should not be needed by most users)")
+    ext_group.add_option("--maxTaskRuntime", type="string", metavar="hh:mm:ss",
+                      help="Specify scheduler max runtime per task, argument is provided to the 'h_rt' resource limit if using SGE (no default)")
+
+    parser.add_option_group(ext_group)
 
     (options,args) = parser.parse_args()
 
@@ -226,7 +232,9 @@ results -- in this case the dry run will not cover the full 'live' run task set.
 
     options.schedulerArgList=[]
     if options.queue is not None :
-        options.schedulerArgList=["-q",options.queue]
+        options.schedulerArgList.extend(["-q",options.queue])
+    if options.maxTaskRuntime is not None :
+        options.schedulerArgList.extend(["-l","h_rt="+options.maxTaskRuntime])
 
     options.resetTasks=[]
     if options.isRescore :
@@ -280,4 +288,3 @@ def main(pickleConfigFile, primaryConfigSection, workflowClassName) :
 
     sys.exit(retval)
 """
-
