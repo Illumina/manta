@@ -150,6 +150,8 @@ results -- in this case the dry run will not cover the full 'live' run task set.
                       help="select run mode (local|sge)")
     parser.add_option("-q", "--queue", type="string",dest="queue",
                       help="specify sge queue name")
+    parser.add_option("-l", "--resource", type="string",dest="sge_resources", action="append",
+                      help="specify sge resources")
     parser.add_option("-j", "--jobs", type="string",dest="jobs",
                   help="number of jobs, must be an integer or 'unlimited' (default: Estimate total cores on this node for local mode, %s for sge mode)" % (sgeDefaultCores))
     parser.add_option("-g","--memGb", type="string",dest="memGb",
@@ -226,7 +228,10 @@ results -- in this case the dry run will not cover the full 'live' run task set.
 
     options.schedulerArgList=[]
     if options.queue is not None :
-        options.schedulerArgList=["-q",options.queue]
+        options.schedulerArgList.extend(["-q",options.queue])
+    if options.sge_resources is not None :
+        for sge_resource in options.sge_resources:
+            options.schedulerArgList.extend(["-l",sge_resource])
 
     options.resetTasks=[]
     if options.isRescore :
@@ -280,4 +285,3 @@ def main(pickleConfigFile, primaryConfigSection, workflowClassName) :
 
     sys.exit(retval)
 """
-
