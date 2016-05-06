@@ -26,6 +26,7 @@ do_latex_cmds() {
 for mm in $mname; do
 (
 cd $builddir
+cp ../packages/* .
 ln -sf $docdir/$mm.tex
 ln -sf $docdir/$mname.bib
 ln -sf $docdir/figures
