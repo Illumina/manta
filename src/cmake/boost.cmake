@@ -98,7 +98,17 @@ if (EXISTS "${BOOST_BOOTSTRAP_INSTALL_DIR}/boost_install_complete")
     set (BOOST_ROOT "${BOOST_BOOTSTRAP_INSTALL_DIR}")
 endif ()
 
-find_package(Boost ${THIS_BOOST_VERSION} COMPONENTS ${THIS_BOOST_COMPONENTS})
+# newer cmake versions (at least cmake 3.5) will issue tons of warning text for
+# each component query if no boost version is found at all, for this reason we
+# break up the boost version search into two steps:
+#
+# (1) can you find boost >= min_version at all?
+# (2) if so, does that boost version include all of our required components?
+#
+find_package(Boost ${THIS_BOOST_VERSION})
+if (Boost_FOUND)
+    find_package(Boost ${THIS_BOOST_VERSION} COMPONENTS ${THIS_BOOST_COMPONENTS})
+endif ()
 
 # CMAKE_PARALLEL is only used if boost is found, but moving the setting here (outside of the if below) supresses a cmake warning:
 if (NOT CMAKE_PARALLEL)
@@ -126,7 +136,7 @@ if (NOT Boost_FOUND)
 
     # Try to find it in target installation location
     resetFindBoost()
-    message(STATUS "Boost ${THIS_BOOST_VERSION} not found. Boost will be built from the distribution...")
+    message(STATUS "Boost version ${THIS_BOOST_VERSION} or higher not found. Boost will be built from the distribution...")
 
     set(ENV{THIS_BOOST_BUILD_COMPONENTS} "${THIS_BOOST_BUILD_COMPONENTS}")
     set(ENV{THIS_BOOST_VERSION} "${THIS_BOOST_VERSION}")
