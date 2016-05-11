@@ -295,6 +295,11 @@ if     (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         #append_args(CXX_WARN_FLAGS "-Wsuggest-final-types -Wsuggest-final-methods")
     endif ()
 
+    if (NOT (${COMPILER_VERSION} VERSION_LESS "6.1"))
+        append_args(CXX_WARN_FLAGS "-Wshift-negative-value -Wshift-overflow=2 -Wduplicated-cond")
+        #append_args(CXX_WARN_FLAGS "-Wnull-dereference")
+    endif ()
+
 elseif (${IS_CLANGXX})
     # set to true to uncover new clang warnings after llvm update:
     set (IS_WARN_EVERYTHING FALSE)
