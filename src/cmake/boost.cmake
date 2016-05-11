@@ -107,7 +107,7 @@ endif ()
 #
 find_package(Boost ${THIS_BOOST_VERSION})
 if (Boost_FOUND)
-    find_package(Boost ${THIS_BOOST_VERSION} COMPONENTS ${THIS_BOOST_COMPONENTS})
+    find_package(Boost ${THIS_BOOST_VERSION} COMPONENTS ${THIS_BOOST_COMPONENTS} QUIET)
 endif ()
 
 # CMAKE_PARALLEL is only used if boost is found, but moving the setting here (outside of the if below) supresses a cmake warning:
