@@ -174,9 +174,15 @@ if (NOT Boost_FOUND)
     #
     if (NOT WIN32)
 
+        set (BJAM_OPTIONS "")
+
+        set (UCONFIG "${BOOST_SRC_DIR}/tools/build/src/user-config.jam")
         if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-            set (UCONFIG "${BOOST_SRC_DIR}/tools/build/src/user-config.jam")
             file (WRITE "${UCONFIG}" "using gcc : : \"${CMAKE_CXX_COMPILER}\" ;\n")
+        elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+            file (WRITE "${UCONFIG}" "using clang : : \"${CMAKE_CXX_COMPILER}\" ;\n")
+            set (BJAM_OPTIONS ${BJAM_OPTIONS} "define=_GLIBCXX_USE_CXX11_ABI=0")
+            set (BJAM_OPTIONS ${BJAM_OPTIONS} "toolset=clang")
         endif ()
 
         message(STATUS "Configuring boost library")
@@ -197,7 +203,7 @@ if (NOT Boost_FOUND)
         # Include full path for bjam so that we don't depend on cwd in build user's PATH
         set (BOOST_BJAM "${BOOST_SRC_DIR}/bjam")
 
-        set (BJAM_OPTIONS "link=static")
+        set (BJAM_OPTIONS ${BJAM_OPTIONS} "link=static")
         if (WIN32)
             if (MSVC)
                 math (EXPR VS_VERSION "(${MSVC_VERSION}/100) - 6")
