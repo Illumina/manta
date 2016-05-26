@@ -61,6 +61,7 @@ struct GSCOptions
     std::string diploidOutputFilename;
     std::string somaticOutputFilename;
     std::string tumorOutputFilename;
+    std::string supportBamStub;
 
     bool isVerbose = false; ///< provide some high-level log info to assist in debugging
 

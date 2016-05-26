@@ -19,14 +19,13 @@
 //
 
 ///
-/// \author Chris Saunders and Xiaoyu Chen
+/// \author Chris Saunders
 ///
 
 #pragma once
 
-#include "htsapi/bam_record.hh"
 #include "SVEvidence.hh"
-
+#include "htsapi/bam_record_util.hh"
 
 void
 setReadEvidence(

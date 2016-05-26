@@ -85,6 +85,7 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         bgzipBin=joinFile(libexecDir,exeFile("bgzip"))
         htsfileBin=joinFile(libexecDir,exeFile("htsfile"))
         tabixBin=joinFile(libexecDir,exeFile("tabix"))
+        samtoolsBin=joinFile(libexecDir,exeFile("samtools"))
 
         mantaStatsBin=joinFile(libexecDir,exeFile("GetAlignmentStats"))
         mantaMergeStatsBin=joinFile(libexecDir,exeFile("MergeAlignmentStats"))
@@ -104,6 +105,9 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         mantaSortEdgeLogs=joinFile(libexecDir,"sortEdgeLogs.py")
         catScript=joinFile(libexecDir,"cat.py")
         vcfCmdlineSwapper=joinFile(libexecDir,"vcfCmdlineSwapper.py")
+        mantaSortBam=joinFile(libexecDir,"sortBam.py")
+        mantaMergeBam=joinFile(libexecDir,"mergeBam.py")
+        mantaFilterBam=joinFile(libexecDir,"filterBam.py")
 
         # default memory request per process-type
         #

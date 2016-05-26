@@ -141,6 +141,43 @@ if (NOT WIN32)
     install(PROGRAMS "${HTSLIB_DIR}/tabix" DESTINATION "${THIS_LIBEXECDIR}")
 endif ()
 
+#
+# samtools
+#
+set(SAMTOOLS_PREFIX "samtools-1.2")
+set(SAMTOOLS_DIR "${CMAKE_CURRENT_BINARY_DIR}/${SAMTOOLS_PREFIX}")
+set(SAMTOOLS_LIBRARY "${SAMTOOLS_DIR}/libbam.a")
+superset(SAMTOOLS_PROG "${SAMTOOLS_DIR}/samtools")
+
+# final directory copy below would ideally be a soft-link, copy is for windows build
+add_custom_command(
+    OUTPUT ${SAMTOOLS_DIR}
+    COMMAND ${CMAKE_COMMAND} -E remove_directory "${SAMTOOLS_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E tar xjf "${THIS_REDIST_DIR}/${SAMTOOLS_PREFIX}.tar.bz2"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${HTSLIB_DIR}" "${SAMTOOLS_DIR}/${HTSLIB_PREFIX}"
+    DEPENDS ${HTSLIB_FINAL_TASK}
+    COMMENT "Unpacking samtools package")
+
+set (SAMTOOLS_FINAL_TASK ${SAMTOOLS_DIR})
+
+if (NOT WIN32)
+    add_custom_command(
+        OUTPUT ${SAMTOOLS_PROG}
+        COMMAND $(MAKE) HTSDIR=${HTSLIB_PREFIX} all 2>| samtools.build.log
+        DEPENDS ${HTSLIB_LIBRARY}
+        DEPENDS ${SAMTOOLS_DIR}
+        WORKING_DIRECTORY ${SAMTOOLS_DIR}
+        COMMENT "Building samtools package")
+
+    set (SAMTOOLS_FINAL_TASK ${SAMTOOLS_PROG})
+endif ()
+
+set(THIS_SAMTOOLS "${THIS_PROJECT_NAME}_samtools")
+add_custom_target(${THIS_SAMTOOLS} DEPENDS "${SAMTOOLS_FINAL_TASK}")
+
+if (NOT WIN32)
+    install(PROGRAMS "${SAMTOOLS_PROG}" DESTINATION "${THIS_LIBEXECDIR}")
+endif ()
 
 #
 # pyflow
@@ -175,5 +212,5 @@ add_custom_target(${THIS_PYFLOW} DEPENDS "${PYFLOW_DEPENDS}")
 
 # tie results back to parent:
 #
-add_dependencies(${THIS_OPT} ${THIS_ZLIB} ${THIS_HTSLIB} ${THIS_PYFLOW})
+add_dependencies(${THIS_OPT} ${THIS_ZLIB} ${THIS_HTSLIB} ${THIS_SAMTOOLS} ${THIS_PYFLOW})
 

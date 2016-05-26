@@ -41,7 +41,7 @@ getId(
     svId.localId = str(_SVIdFormatter % label(svId.svType) % edge.locusIndex % edge.nodeIndex1 % edge.nodeIndex2
                        % sv.candidateIndex %  sv.assemblyAlignIndex % sv.assemblySegmentIndex );
 
-    if      (isSVTransloc(svId.svType))
+    if (isSVTransloc(svId.svType))
     {
         svId.mateId = svId.localId + ":1";
         svId.localId = svId.localId + ":0";

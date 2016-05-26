@@ -163,6 +163,7 @@ private:
     bool _isImprecise = true;
 
 public:
+
     SVBreakend bp1;
     SVBreakend bp2;
 

@@ -28,7 +28,6 @@
 #include "JunctionCallInfo.hh"
 #include "SplitReadAlignment.hh"
 #include "SVEvidence.hh"
-#include "SVScorerPairOptions.hh"
 #include "SVScorePairProcessor.hh"
 
 #include "assembly/AssembledContig.hh"
@@ -160,12 +159,14 @@ struct SVScorer
         const SVCandidateSetData& svData,
         const std::vector<SVCandidateAssemblyData>& mjAssemblyData,
         const SVMultiJunctionCandidate& mjSV,
+        const std::vector<SVId>& mjSVId,
         const std::vector<bool>& isJunctionFiltered,
         const bool isSomatic,
         const bool isTumorOnly,
         std::vector<SVModelScoreInfo>& mjModelScoreInfo,
         SVModelScoreInfo& mjJointModelScoreInfo,
-        bool& isMJEvent);
+        bool& isMJEvent,
+        SupportSamples& svSupports);
 
     typedef std::shared_ptr<SVScorePairProcessor> pairProcPtr;
     typedef std::shared_ptr<bam_streamer> streamPtr;
@@ -195,7 +196,9 @@ private:
         const PairOptions& pairOpt,
         const SVCandidateSetData& svData,
         const SVCandidate& sv,
-        SVEvidence& evidence);
+        const SVId& svId,
+        SVEvidence& evidence,
+        SupportSamples& svSupports);
 
     /// estimate pair support for an sv candidate
     /// restricted to simple indel style svs
@@ -221,15 +224,19 @@ private:
         const SVCandidateSetData& svData,
         const SVCandidateAssemblyData& assemblyData,
         const SVCandidate& sv,
-        SVEvidence& evidence);
+        const SVId& svId,
+        SVEvidence& evidence,
+        SupportSamples& svSupports);
 
     /// find split read support for ref and alt alleles
     void
     getSVSplitReadSupport(
         const SVCandidateAssemblyData& assemblyData,
         const SVCandidate& sv,
+        const SVId& svId,
         SVScoreInfo& ssInfo,
-        SVEvidence& evidence);
+        SVEvidence& evidence,
+        SupportSamples& svSupports);
 
     /// determine maximum depth and MQ0 frac in region around breakend of normal sample
     void
@@ -256,8 +263,10 @@ private:
         const SVCandidateAssemblyData& assemblyData,
         const bool isTumorOnly,
         const SVCandidate& sv,
+        const SVId& svId,
         SVScoreInfo& ssInfo,
-        SVEvidence& evidence);
+        SVEvidence& evidence,
+        SupportSamples& svSupports);
 
     const std::vector<bool> _isAlignmentTumor;
     const bool _isRNA;

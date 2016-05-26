@@ -23,7 +23,6 @@
 ///
 
 #include "SVScorer.hh"
-#include "SVScorerShared.hh"
 #include "blt_util/seq_util.hh"
 #include "manta/ShadowReadFinder.hh"
 #include "htsapi/SimpleAlignment_bam_util.hh"
@@ -32,11 +31,12 @@
 
 //#define DEBUG_SVS
 
-#ifdef DEBUG_SVS
+//#define DEBUG_SUPPORT
+
+#if defined(DEBUG_SVS) || defined(DEBUG_SUPPORT)
 #include <iostream>
 #include "blt_util/log.hh"
 #endif
-
 
 
 static
@@ -106,6 +106,7 @@ void
 getReadSplitScore(
     const bam_record& bamRead,
     const CallOptionsSharedDeriv& dopt,
+    const SVId& svId,
     const SVBreakend& bp,
     const reference_contig_segment& bpRef,
     const bool isBP1,
@@ -117,7 +118,8 @@ getReadSplitScore(
     const bool isShadow,
     const bool isReversedShadow,
     SVEvidence::evidenceTrack_t& sampleEvidence,
-    SVSampleInfo& sample)
+    SVSampleInfo& sample,
+    SupportFragments& svSupportFrags)
 {
     SVFragmentEvidence& fragment(sampleEvidence[bamRead.qname()]);
 
@@ -167,6 +169,21 @@ getReadSplitScore(
         splitReadAligner(flankScoreSize, readSeq, dopt.altQ, qual, svAlignInfo.bp2ContigSeq(), svAlignInfo.bp2ContigOffset, bp2ContigSR);
 
         incrementAlleleEvidence(bp1ContigSR, bp2ContigSR, readMapQ, sample.alt, altBp1ReadSupport, altBp2ReadSupport);
+
+        if (fragment.isAltSplitReadSupport(bamRead.is_first()))
+        {
+            SupportFragment& supportFrag(svSupportFrags.getSupportFragment(bamRead));
+            supportFrag.addSplitSupport(bamRead.is_first(), svId.localId);
+#ifdef DEBUG_SUPPORT
+            log_os << __FUNCTION__ << "  Adding read support (split): "
+                   << bamRead.qname();
+            if (bamRead.is_first())
+                log_os << "\tR1";
+            else
+                log_os << "\tR2";
+            log_os << "\n" << supportFrag;
+#endif
+        }
     }
 
     // align the read to reference regions
@@ -201,6 +218,7 @@ void
 scoreSplitReads(
     const CallOptionsSharedDeriv& dopt,
     const unsigned flankScoreSize,
+    const SVId& svId,
     const SVBreakend& bp,
     const SVAlignmentInfo& svAlignInfo,
     const reference_contig_segment& bpRef,
@@ -212,7 +230,8 @@ scoreSplitReads(
     const bool isRNA,
     SVEvidence::evidenceTrack_t& sampleEvidence,
     bam_streamer& readStream,
-    SVSampleInfo& sample)
+    SVSampleInfo& sample,
+    SupportFragments& svSupportFrags)
 {
     static const int extendedSearchRange(200); // Window to look for alignments that may (if unclipped) overlap the breakpoint
     // extract reads overlapping the break point
@@ -240,8 +259,10 @@ scoreSplitReads(
         static const bool isReversedShadow(false);
 
         //const uint8_t mapq(bamRead.map_qual());
-        getReadSplitScore(bamRead, dopt, bp, bpRef, isBP1, flankScoreSize, svAlignInfo, minMapQ, minTier2MapQ, isRNA,
-                          isShadow, isReversedShadow, sampleEvidence, sample);
+        getReadSplitScore(bamRead, dopt, svId, bp, bpRef, isBP1,
+                          flankScoreSize, svAlignInfo, minMapQ, minTier2MapQ,
+                          isRNA, isShadow, isReversedShadow,
+                          sampleEvidence, sample, svSupportFrags);
     }
 
     static const bool isIncludeShadowReads(false);
@@ -288,8 +309,10 @@ scoreSplitReads(
             const bool isReversedShadow(bamRead.is_mate_fwd_strand());
 
             //const uint8_t mapq(shadow.getMateMapq());
-            getReadSplitScore(bamRead, dopt, bp, bpRef, isBP1, flankScoreSize, svAlignInfo, minMapQ, minTier2MapQ, isRNA,
-                              isShadow, isReversedShadow, sampleEvidence, sample);
+            getReadSplitScore(bamRead, dopt, svId, bp, bpRef, isBP1,
+                              flankScoreSize, svAlignInfo, minMapQ, minTier2MapQ,
+                              isRNA, isShadow, isReversedShadow,
+                              sampleEvidence, sample, svSupportFrags);
         }
     }
 }
@@ -337,8 +360,10 @@ SVScorer::
 getSVSplitReadSupport(
     const SVCandidateAssemblyData& assemblyData,
     const SVCandidate& sv,
+    const SVId& svId,
     SVScoreInfo& baseInfo,
-    SVEvidence& evidence)
+    SVEvidence& evidence,
+    SupportSamples& svSupports)
 {
     // apply the split-read scoring only when:
     // 1) the SV is precise, i.e. has successfully aligned contigs;
@@ -372,6 +397,7 @@ getSVSplitReadSupport(
         bam_streamer& bamStream(*_bamStreams[bamIndex]);
 
         SVEvidence::evidenceTrack_t& sampleEvidence(evidence.getSampleEvidence(bamIndex));
+        SupportFragments& svSupportFrags(svSupports.getSupportFragments(bamIndex));
 
         const int bamShadowRange(_readScanner.getShadowSearchRange(bamIndex));
 
@@ -379,16 +405,18 @@ getSVSplitReadSupport(
 #ifdef DEBUG_SVS
         log_os << __FUNCTION__ << " scoring BP1\n";
 #endif
-        scoreSplitReads(_callDopt, flankScoreSize, sv.bp1, SVAlignInfo, assemblyData.bp1ref, true, minMapQ, minTier2MapQ,
+        scoreSplitReads(_callDopt, flankScoreSize, svId, sv.bp1,
+                        SVAlignInfo, assemblyData.bp1ref, true, minMapQ, minTier2MapQ,
                         bamShadowRange, _scanOpt.minSingletonMapqCandidates, _isRNA,
-                        sampleEvidence, bamStream, sample);
+                        sampleEvidence, bamStream, sample, svSupportFrags);
         // scoring split reads overlapping bp2
 #ifdef DEBUG_SVS
         log_os << __FUNCTION__ << " scoring BP2\n";
 #endif
-        scoreSplitReads(_callDopt, flankScoreSize, sv.bp2, SVAlignInfo, assemblyData.bp2ref, false, minMapQ, minTier2MapQ,
+        scoreSplitReads(_callDopt, flankScoreSize, svId, sv.bp2,
+                        SVAlignInfo, assemblyData.bp2ref, false, minMapQ, minTier2MapQ,
                         bamShadowRange, _scanOpt.minSingletonMapqCandidates, _isRNA,
-                        sampleEvidence, bamStream, sample);
+                        sampleEvidence, bamStream, sample, svSupportFrags);
 
         finishSampleSRData(sample);
     }

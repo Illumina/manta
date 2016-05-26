@@ -61,7 +61,8 @@ struct SVWriter
         const SVCandidateSetData& svData,
         const std::vector<SVCandidateAssemblyData>& assemblyData,
         const SVMultiJunctionCandidate& mjSV,
-        const std::vector<bool>& isInputJunctionFiltered);
+        const std::vector<bool>& isInputJunctionFiltered,
+        SupportSamples& svSupports);
 
     ///////////////////////// data:
     const GSCOptions& opt;
@@ -101,7 +102,8 @@ struct SVCandidateProcessor
     evaluateCandidates(
         const EdgeInfo& edge,
         const std::vector<SVMultiJunctionCandidate>& mjSVs,
-        const SVCandidateSetData& svData);
+        const SVCandidateSetData& svData,
+        SupportSamples& svSupports);
 
 private:
 
@@ -110,7 +112,8 @@ private:
         const EdgeInfo& edge,
         const SVMultiJunctionCandidate& mjCandidateSV,
         const SVCandidateSetData& svData,
-        const bool isFindLargeInsertions);
+        const bool isFindLargeInsertions,
+        SupportSamples& svSupports);
 
     const GSCOptions& _opt;
     const SVLocusSet& _cset;

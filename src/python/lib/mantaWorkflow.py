@@ -226,6 +226,28 @@ class listFileWorkflow(WorkflowRunner) :
 
 
 
+def sortBams(self, sortBamTasks, taskPrefix="", binStr="", isNormal=True, bamIdx=0, dependencies=None):
+
+    if isNormal:
+        bamList = self.params.normalBamList
+    else:
+        bamList = self.params.tumorBamList
+
+    for bamPath in bamList:
+        supportBam = self.paths.getSupportBamPath(bamIdx, binStr)
+        sortedBam = os.path.splitext(self.paths.getSortedSupportBamPath(bamIdx, binStr))[0]
+        # first check the existence of the supporting bam
+        # then sort the bam only if it exists
+        sortBamCmd = [ sys.executable,"-E", self.params.mantaSortBam,
+                      self.params.samtoolsBin, supportBam, sortedBam ]
+
+        sortBamTask = preJoin(taskPrefix, "sortEvidenceBam_%s_%s" % (binStr, bamIdx))
+        sortBamTasks.add(self.addTask(sortBamTask, sortBamCmd, dependencies=dependencies))
+        bamIdx += 1
+
+    return bamIdx
+
+
 def sortAllVcfs(self, taskPrefix="", dependencies=None) :
     """sort/prep final vcf outputs"""
 
@@ -308,6 +330,49 @@ def sortAllVcfs(self, taskPrefix="", dependencies=None) :
     return nextStepWait
 
 
+def mergeSupportBams(self, mergeBamTasks, taskPrefix="", isNormal=True, bamIdx=0, dependencies=None) :
+
+    if isNormal:
+        bamList = self.params.normalBamList
+    else:
+        bamList = self.params.tumorBamList
+
+    for bamPath in bamList:
+        # merge support bams
+        mergedSamFile = self.paths.getMergedSupportSamPath(bamIdx)
+        mergeCmd = [ sys.executable,"-E", self.params.mantaMergeBam,
+                     self.params.samtoolsBin,
+                     self.paths.getSortedSupportBamMask(bamIdx),
+                     self.paths.getMergedSupportBamPath(bamIdx),
+                     mergedSamFile,
+                     self.paths.getSupportBamListPath(bamIdx) ]
+
+        mergeBamTask=self.addTask(preJoin(taskPrefix,"merge_evidenceBam_%s" % (bamIdx)),
+                                  mergeCmd, dependencies=dependencies)
+        mergeBamTasks.add(mergeBamTask)
+
+        # filter the merged sam
+        filteredBamFile = self.paths.getFinalSupportBamPath(bamPath)
+        filterCmd = [ sys.executable,"-E", self.params.mantaFilterBam,
+                     self.params.samtoolsBin,
+                     self.paths.getSortedCandidatePath(),
+                     mergedSamFile,
+                     self.paths.getfilteredSupportSamPath(bamIdx),
+                     filteredBamFile ]
+        filterBamTask = self.addTask(preJoin(taskPrefix,"filter_evidenceSam_%s" % (bamIdx)),
+                                     filterCmd, dependencies=mergeBamTask)
+        mergeBamTasks.add(filterBamTask)
+
+        # index the filtered bam
+        indexCmd = [ self.params.samtoolsBin, "index", filteredBamFile ]
+        indexBamTask = self.addTask(preJoin(taskPrefix,"index_evidenceBam_%s" % (bamIdx)),
+                                    indexCmd, dependencies=filterBamTask)
+        mergeBamTasks.add(indexBamTask)
+
+        bamIdx += 1
+
+    return bamIdx
+
 
 def runHyGen(self, taskPrefix="", dependencies=None) :
     """
@@ -331,6 +396,9 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         hyGenMemMb = self.params.hyGenSGEMemMb
 
     hygenTasks=set()
+    if self.params.isGenerateSupportBam :
+        sortBamVcfTasks = set()
+
     self.candidateVcfPaths = []
     self.diploidVcfPaths = []
     self.somaticVcfPaths = []
@@ -386,6 +454,9 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         edgeStatsLogPaths.append(self.paths.getHyGenEdgeStatsPath(binStr))
         hygenCmd.extend(["--edge-stats-log", edgeStatsLogPaths[-1]])
 
+        if self.params.isGenerateSupportBam :
+            hygenCmd.extend(["--evidence-bam-stub", self.paths.getSupportBamStub(binStr)])
+
         for bamPath in self.params.normalBamList :
             hygenCmd.extend(["--align-file", bamPath])
         for bamPath in self.params.tumorBamList :
@@ -398,12 +469,45 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         if self.params.isUnstrandedRNA :
             hygenCmd.append("--unstranded")
 
-        hygenTask=preJoin(taskPrefix,"generateCandidateSV_"+binStr)
+        hygenTask = preJoin(taskPrefix,"generateCandidateSV_"+binStr)
         hygenTasks.add(self.addTask(hygenTask,hygenCmd,dependencies=dirTask, memMb=hyGenMemMb))
 
+        # TODO: if the bam is large, for efficiency, consider
+        # 1) filtering the bin-specific bam first w.r.t. the final candidate vcf
+        # 2) then sort the bin-specific bam and merge them
+        # This would require moving the filter/sort bam jobs outside the hygen loop
+        if self.params.isGenerateSupportBam :
+            bamIndex = 0
+            # sort supporting bams extracted from normal samples
+            bamIndex  = sortBams(self, sortBamVcfTasks,
+                                 taskPrefix=taskPrefix, binStr=binStr,
+                                 isNormal=True, bamIdx=bamIndex,
+                                 dependencies=hygenTask)
+            # sort supporting bams extracted from tumor samples
+            bamIndex = sortBams(self, sortBamVcfTasks,
+                                taskPrefix=taskPrefix, binStr=binStr,
+                                isNormal=False, bamIdx=bamIndex,
+                                dependencies=hygenTask)
+
+    vcfTasks = sortAllVcfs(self,taskPrefix=taskPrefix,dependencies=hygenTasks)
     nextStepWait = copy.deepcopy(hygenTasks)
 
-    sortAllVcfs(self,taskPrefix=taskPrefix,dependencies=hygenTasks)
+    if self.params.isGenerateSupportBam :
+        sortBamVcfTasks.union(vcfTasks)
+        mergeBamTasks = set()
+        bamCount = 0
+        # merge supporting bams for each normal sample
+        bamCount = mergeSupportBams(self, mergeBamTasks, taskPrefix=taskPrefix,
+                                    isNormal=True, bamIdx=bamCount,
+                                    dependencies=sortBamVcfTasks)
+
+        # merge supporting bams for each tumor sample
+        bamCount = mergeSupportBams(self, mergeBamTasks, taskPrefix=taskPrefix,
+                                    isNormal=False, bamIdx=bamCount,
+                                    dependencies=sortBamVcfTasks)
+
+        nextStepWait = nextStepWait.union(sortBamVcfTasks)
+        nextStepWait = nextStepWait.union(mergeBamTasks)
 
     #
     # sort the edge runtime logs
@@ -520,6 +624,44 @@ class PathInfo:
     def getGraphStatsPath(self) :
         return os.path.join(self.params.statsDir,"svLocusGraphStats.tsv")
 
+
+    def getSupportBamPath(self, bamIdx, binStr):
+        return os.path.join(self.getHyGenDir(),
+                            "evidence_%s.bam_%s.bam" % (binStr, bamIdx))
+
+    def getSupportBamStub(self, binStr):
+        return os.path.join(self.getHyGenDir(),
+                            "evidence_%s" % (binStr))
+
+    def getSortedSupportBamPath(self, bamIdx, binStr):
+        return os.path.join(self.getHyGenDir(),
+                            "evidence_%s.bam_%s.sorted.bam" % (binStr, bamIdx))
+
+    def getSortedSupportBamMask(self, bamIdx):
+        return os.path.join(self.getHyGenDir(),
+                            "evidence_*.bam_%s.sorted.bam" % (bamIdx))
+
+    def getMergedSupportBamPath(self, bamIdx):
+        return os.path.join(self.getHyGenDir(),
+                            "evidence.bam_%s.merged.bam" % (bamIdx))
+
+    def getMergedSupportSamPath(self, bamIdx):
+        return os.path.join(self.getHyGenDir(),
+                            "evidence.bam_%s.merged.sam" % (bamIdx))
+
+    def getfilteredSupportSamPath(self, bamIdx):
+        return os.path.join(self.getHyGenDir(),
+                            "evidence.bam_%s.filtered.sam" % (bamIdx))
+
+    def getFinalSupportBamPath(self, bamPath):
+        bamPrefix = os.path.splitext(os.path.basename(bamPath))[0]
+        return os.path.join(self.params.evidenceDir,
+                            "evidence.%s.bam" % (bamPrefix))
+
+    def getSupportBamListPath(self, bamIdx):
+        return os.path.join(self.getHyGenDir(),
+                            "list.evidence.bam_%s.txt" % (bamIdx))
+
     def getTmpGraphFileListPath(self) :
         return os.path.join(self.getTmpGraphDir(),"list.svLocusGraph.txt")
 
@@ -531,6 +673,7 @@ class PathInfo:
 
     def getStatsFileListPath(self) :
         return os.path.join(self.getHyGenDir(),"list.edgeStats.txt")
+
 
 
 class MantaWorkflow(WorkflowRunner) :
@@ -564,6 +707,8 @@ class MantaWorkflow(WorkflowRunner) :
         ensureDir(self.params.statsDir)
         self.params.variantsDir=os.path.join(self.params.resultsDir,"variants")
         ensureDir(self.params.variantsDir)
+        self.params.evidenceDir=os.path.join(self.params.resultsDir,"evidence")
+        ensureDir(self.params.evidenceDir)
 #         self.params.reportsDir=os.path.join(self.params.resultsDir,"reports")
 #         ensureDir(self.params.reportsDir)
 

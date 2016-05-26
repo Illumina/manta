@@ -28,6 +28,7 @@
 #include "GSCOptions.hh"
 #include "SVCandidateProcessor.hh"
 #include "SVFinder.hh"
+#include "SVSupports.hh"
 
 #include "blt_util/log.hh"
 #include "common/Exceptions.hh"
@@ -35,6 +36,7 @@
 #include "manta/SVCandidateUtil.hh"
 
 #include <iostream>
+#include <string>
 
 //#define DEBUG_GSV
 
@@ -188,6 +190,24 @@ runGSC(
     std::vector<SVCandidate> svs;
     std::vector<SVMultiJunctionCandidate> mjSVs;
 
+    const unsigned sampleSize(opt.alignFileOpt.alignmentFilename.size());
+    std::vector<bam_streamer_ptr> origBamStreamPtrs;
+    std::vector<bam_dumper_ptr> supportBamDumperPtrs;
+
+    for (unsigned idx(0); idx<sampleSize; ++idx)
+    {
+        std::string alignmentFile(opt.alignFileOpt.alignmentFilename[idx]);
+        bam_streamer_ptr bamStreamPtr(new bam_streamer(alignmentFile.c_str()));
+        origBamStreamPtrs.push_back(bamStreamPtr);
+
+        std::string supportBamName(opt.supportBamStub
+                                   + ".bam_" + std::to_string(idx)
+                                   + ".bam");
+        const bam_hdr_t* header(bamStreamPtr->get_header());
+        bam_dumper_ptr bamDumperPtr(new bam_dumper(supportBamName.c_str(), header));
+        supportBamDumperPtrs.push_back(bamDumperPtr);
+    }
+
     if (opt.isVerbose)
     {
         log_os << __FUNCTION__ << ": " << cset.header << "\n";
@@ -214,8 +234,23 @@ runGSC(
             // junctions which are part of a larger event (like a reciprocal translocation)
             svMJFilter.filterGroupCandidateSV(edge, svs, mjSVs);
 
+
+            SupportSamples svSupports;
+            svSupports.supportSamples.resize(sampleSize);
             // determine if this is the only edge for this node:
-            svProcessor.evaluateCandidates(edge, mjSVs, svData);
+            svProcessor.evaluateCandidates(edge, mjSVs, svData, svSupports);
+
+            // write supporting reads into bam files
+            const bool isGenerateSupportBam(opt.supportBamStub.size() > 0);
+            if (isGenerateSupportBam)
+            {
+                for (unsigned idx(0); idx<sampleSize; ++idx)
+                {
+                    writeSupportBam(origBamStreamPtrs[idx],
+                                    svSupports.supportSamples[idx],
+                                    supportBamDumperPtrs[idx]);
+                }
+            }
         }
         catch (illumina::common::ExceptionData& e)
         {

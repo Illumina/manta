@@ -23,7 +23,6 @@
 ///
 
 #include "SVScorePairAltProcessor.hh"
-#include "SVScorerShared.hh"
 #include "blt_util/seq_util.hh"
 #include "blt_util/SimpleAlignment.hh"
 #include "common/Exceptions.hh"
@@ -43,7 +42,9 @@
 
 //#define DEBUG_SHADOW
 
-#if defined(DEBUG_PAIR) || defined(DEBUG_MEGAPAIR) || defined(DEBUG_SHADOW)
+//#define DEBUG_SUPPORT
+
+#if defined(DEBUG_PAIR) || defined(DEBUG_MEGAPAIR) || defined(DEBUG_SHADOW) || defined(DEBUG_SUPPORT)
 #define ANY_DEBUG_PAIR
 #endif
 
@@ -385,7 +386,9 @@ alignShadowRead(
 void
 SVScorePairAltProcessor::
 processClearedRecord(
-    const bam_record& bamRead)
+    const SVId& svId,
+    const bam_record& bamRead,
+    SupportFragments& svSupportFrags)
 {
     using namespace illumina::common;
 
@@ -567,10 +570,21 @@ processClearedRecord(
         setReadEvidence(svParams.minMapQ, svParams.minTier2MapQ, mapq, readSize, isRealignedTemplate, evMateRead);
     }
 
-    setAlleleFrag(*bamParams.fragDistroPtr, altTemplateSize, fragment.alt.getBp(isBp1), isLargeInsert);
+    SVFragmentEvidenceAlleleBreakend& svAltBp(fragment.alt.getBp(isBp1));
+    setAlleleFrag(*bamParams.fragDistroPtr, altTemplateSize, svAltBp, isLargeInsert);
 #ifdef DEBUG_MEGAPAIR
-    log_os << __FUNCTION__ << ": altset: " << fragment.alt.getBp(isBp1) << "\n";
+    log_os << __FUNCTION__ << ": altset: " << svAltBp << "\n";
 #endif
+
+    if (fragment.isAltSpanningPairSupport())
+    {
+        SupportFragment& supportFrag(svSupportFrags.getSupportFragment(bamRead));
+        supportFrag.addSpanningSupport(svId.localId);
+#ifdef DEBUG_SUPPORT
+        log_os << __FUNCTION__ << "  Adding read support (spanning): "
+               << bamRead.qname() << "\t" << supportFrag;
+#endif
+    }
 
     if (! isRealignedTemplate)
     {

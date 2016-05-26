@@ -50,8 +50,9 @@ struct BamRegionProcessor
         const unsigned bamIndex) = 0;
 
     /// provide the next bam record
-    virtual
+    /*virtual
     void
     processRecord(
         const bam_record& bamRead) = 0;
+    */
 };

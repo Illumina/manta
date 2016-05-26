@@ -23,7 +23,6 @@
 ///
 
 #include "SVScorer.hh"
-#include "SVScorerShared.hh"
 #include "SVScorePairAltProcessor.hh"
 #include "SVScorePairRefProcessor.hh"
 
@@ -44,7 +43,9 @@
 /// ridiculous debug output for this file:
 //#define DEBUG_MEGAPAIR
 
-#ifdef DEBUG_PAIR
+//#define DEBUG_SUPPORT
+
+#if defined(DEBUG_PAIR) || defined(DEBUG_SUPPORT)
 #include "blt_util/log.hh"
 #endif
 
@@ -54,7 +55,9 @@ static
 void
 processBamProcList(
     const std::vector<SVScorer::streamPtr>& bamList,
-    std::vector<SVScorer::pairProcPtr>& pairProcList)
+    const SVId& svId,
+    std::vector<SVScorer::pairProcPtr>& pairProcList,
+    SupportSamples& svSupports)
 {
     const unsigned bamCount(bamList.size());
     const unsigned bamProcCount(pairProcList.size());
@@ -77,6 +80,7 @@ processBamProcList(
         }
 
         bam_streamer& bamStream(*bamList[bamIndex]);
+        SupportFragments& svSupportFrags(svSupports.getSupportFragments(bamIndex));
 
         const unsigned intervalCount(scanIntervals.size());
         for (unsigned intervalIndex(0); intervalIndex<intervalCount; ++intervalIndex)
@@ -109,7 +113,7 @@ processBamProcList(
                     SVScorer::pairProcPtr& bpp(pairProcList[procIndex]);
 
                     if (bpp->isSkipRecord(bamRead)) continue;
-                    bpp->processClearedRecord(bamRead);
+                    bpp->processClearedRecord(svId, bamRead, svSupportFrags);
                 }
             }
         }
@@ -482,7 +486,9 @@ processExistingAltPairInfo(
     const PairOptions& pairOpt,
     const SVCandidateSetData& svData,
     const SVCandidate& sv,
-    SVEvidence& evidence)
+    const SVId& svId,
+    SVEvidence& evidence,
+    SupportSamples& svSupports)
 {
     const unsigned minMapQ(_readScanner.getMinMapQ());
     const unsigned minTier2MapQ(_readScanner.getMinTier2MapQ());
@@ -491,6 +497,7 @@ processExistingAltPairInfo(
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
         const SizeDistribution& fragDistro(_readScanner.getFragSizeDistro(bamIndex));
+        SupportFragments& svSupportFrags(svSupports.getSupportFragments(bamIndex));
 
         const SVCandidateSetSequenceFragmentSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
         for (const SVCandidateSetSequenceFragment& fragment : svDataGroup)
@@ -578,6 +585,13 @@ processExistingAltPairInfo(
 
             alt.bp2.isFragmentSupport = true;
             alt.bp2.fragLengthProb = fragProb;
+
+            SupportFragment& supportFrag(svSupportFrags.getSupportFragment(fragment));
+            supportFrag.addSpanningSupport(svId.localId);
+#ifdef DEBUG_SUPPORT
+            log_os << __FUNCTION__ << "  Adding read support (spanning): "
+                   << fragment.qname() << "\n" << supportFrag;
+#endif
         }
     }
 }
@@ -590,7 +604,9 @@ getSVPairSupport(
     const SVCandidateSetData& svData,
     const SVCandidateAssemblyData& assemblyData,
     const SVCandidate& sv,
-    SVEvidence& evidence)
+    const SVId& svId,
+    SVEvidence& evidence,
+    SupportSamples& svSupports)
 {
     const PairOptions pairOpt(_isRNA);
 
@@ -622,8 +638,12 @@ getSVPairSupport(
             // count the read pairs supporting the alternate allele in each sample
             // using data we already produced during candidate generation:
             //
-            processExistingAltPairInfo(pairOpt, svData, sv, evidence);
+            processExistingAltPairInfo(pairOpt, svData, sv, svId, evidence, svSupports);
             isAltPairFound = true;
+
+#ifdef DEBUG_SUPPORT
+            log_os << __FUNCTION__ << "  SV pair support: processed existing alt pairs.\n";
+#endif
         }
     }
 
@@ -633,6 +653,9 @@ getSVPairSupport(
         // for SVs which were assembled without a pair-driven prior hypothesis,
         // we need to go back to the bam and and find any supporting alt read-pairs
         getSVAltPairSupport(pairOpt, assemblyData, sv, evidence, pairProcList);
+#ifdef DEBUG_SUPPORT
+        log_os << __FUNCTION__ << "  SV pair support: get new alt pairs.\n";
+#endif
     }
 
     // count the read pairs supporting the reference allele on each breakend in each sample:
@@ -641,5 +664,5 @@ getSVPairSupport(
 
     // execute bam scanning for all pairs:
     //
-    processBamProcList(_bamStreams, pairProcList);
+    processBamProcList(_bamStreams, svId, pairProcList, svSupports);
 }

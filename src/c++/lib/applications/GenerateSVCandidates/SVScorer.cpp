@@ -23,7 +23,6 @@
 ///
 
 #include "SVScorer.hh"
-
 #include "SVScorePairAltProcessor.hh"
 
 #include "blt_util/LinearScaler.hh"
@@ -317,6 +316,8 @@ addConservativeSplitReadSupport(
     {
         lnToProb(refLnLhood, altLnLhood);
         if (altLnLhood > splitSupportProb) sampleBaseInfo.alt.confidentSplitReadCount++;
+
+
     }
     else
     {
@@ -412,6 +413,8 @@ addConservativeSpanningPairSupport(
                 sampleBaseInfo.alt.confidentSpanningPairCount++;
             }
         }
+
+
     }
     else
     {
@@ -608,8 +611,10 @@ scoreSV(
     const SVCandidateAssemblyData& assemblyData,
     const bool isTumorOnly,
     const SVCandidate& sv,
+    const SVId& svId,
     SVScoreInfo& baseInfo,
-    SVEvidence& evidence)
+    SVEvidence& evidence,
+    SupportSamples& svSupports)
 {
     // at what factor above the maxDepth FILTER criteria do we stop enumerating scoring components?
     static const unsigned cutoffDepthFactor(2);
@@ -637,7 +642,6 @@ scoreSV(
         getBreakendMaxMappedDepthAndMQ0(isTumorOnly, isMaxDepth, bp2CutoffDepth, sv.bp2, baseInfo.bp2MaxDepth, baseInfo.bp2MQ0Frac);
     }
     const bool isBp2OverDepth(baseInfo.bp2MaxDepth > bp2CutoffDepth);
-
     const bool isOverDepth(isBp1OverDepth || isBp2OverDepth);
     const bool isSkipEvidenceSearch(isMaxDepth && isOverDepth);
 
@@ -645,11 +649,11 @@ scoreSV(
     {
         // count the paired-read fragments supporting the ref and alt alleles in each sample:
         //
-        getSVPairSupport(svData, assemblyData, sv, evidence);
+        getSVPairSupport(svData, assemblyData, sv, svId, evidence, svSupports);
 
         // count the split reads supporting the ref and alt alleles in each sample
         //
-        getSVSplitReadSupport(assemblyData, sv, baseInfo, evidence);
+        getSVSplitReadSupport(assemblyData, sv, svId, baseInfo, evidence, svSupports);
 
         // fix erroneous pair support based on split evidence:
         resolvePairSplitConflicts(sv, evidence);
@@ -1850,12 +1854,14 @@ scoreSV(
     const SVCandidateSetData& svData,
     const std::vector<SVCandidateAssemblyData>& mjAssemblyData,
     const SVMultiJunctionCandidate& mjSV,
+    const std::vector<SVId>& mjSVId,
     const std::vector<bool>& isJunctionFiltered,
     const bool isSomatic,
     const bool isTumorOnly,
     std::vector<SVModelScoreInfo>& mjModelScoreInfo,
     SVModelScoreInfo& mjJointModelScoreInfo,
-    bool& isMJEvent)
+    bool& isMJEvent,
+    SupportSamples& svSupports)
 {
     // scoring is roughly divided into two parts -- treating individual dna-junctions
     // independently (the simpler call mechanism used the great majority of the time) and
@@ -1890,13 +1896,15 @@ scoreSV(
 
         const SVCandidateAssemblyData& assemblyData(mjAssemblyData[junctionIndex]);
         const SVCandidate& sv(mjSV.junction[junctionIndex]);
+        const SVId& svId(mjSVId[junctionIndex]);
         SVModelScoreInfo& modelScoreInfo(mjModelScoreInfo[junctionIndex]);
 
         modelScoreInfo.clear();
 
         // accumulate model-neutral evidence for each candidate (or its corresponding reference allele)
         SVEvidence& evidence(junctionEvidence[junctionIndex]);
-        scoreSV(svData, assemblyData, isTumorOnly, sv, modelScoreInfo.base, evidence);
+        scoreSV(svData, assemblyData, isTumorOnly, sv, svId,
+                modelScoreInfo.base, evidence, svSupports);
 
         // score components specific to diploid-germline model:
         float& spanningPairWeight(junctionSpanningPairWeight[junctionIndex]);;

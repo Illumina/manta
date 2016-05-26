@@ -26,10 +26,15 @@
 
 #include "SVEvidence.hh"
 #include "SVScorerPairOptions.hh"
+#include "SVScorerShared.hh"
+#include "SVSupports.hh"
+
 #include "blt_util/SizeDistribution.hh"
+
 #include "manta/BamRegionProcessor.hh"
 #include "manta/SVCandidate.hh"
 #include "manta/SVLocusScanner.hh"
+#include "manta/JunctionIdGenerator.hh"
 
 
 struct SVScorePairInitParams
@@ -85,14 +90,17 @@ struct SVScorePairProcessor : public BamRegionProcessor
     nextBamIndex(
         const unsigned bamIndex);
 
+    /*
     void
     processRecord(
-        const bam_record& bamRead)
+            const bam_record& bamRead)
     {
-        if (isSkipRecordCore(bamRead)) return;
-        if (isSkipRecord(bamRead)) return;
-        processClearedRecord(bamRead);
+    	if (isSkipRecordCore(bamRead)) return;
+    	if (isSkipRecord(bamRead)) return;
+
+    	processClearedRecord(bamRead);
     }
+    */
 
     // alternate interface
     static
@@ -118,7 +126,9 @@ struct SVScorePairProcessor : public BamRegionProcessor
     virtual
     void
     processClearedRecord(
-        const bam_record& bamRead) = 0;
+        const SVId& svId,
+        const bam_record& bamRead,
+        SupportFragments& svSupportFrags) = 0;
 
     static
     bool

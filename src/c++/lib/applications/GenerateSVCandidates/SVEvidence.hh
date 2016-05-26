@@ -222,6 +222,15 @@ struct SVFragmentEvidence
         return (isRefSupport || isAltSupport);
     }
 
+    /// does this fragment read provide any pair evidence for any bp of the ALT allele?
+    bool
+    isAltSpanningPairSupport() const
+    {
+        const bool isAltSupport(alt.bp1.isFragmentSupport || alt.bp2.isFragmentSupport);
+
+        return (isAltSupport);
+    }
+
     /// does this fragment read provide any split evidence for any allele/bp combination?
     std::pair<bool,bool>
     isAnySplitReadSupport(
@@ -231,6 +240,16 @@ struct SVFragmentEvidence
         const std::pair<bool,bool> isRef(ref.isAnySplitReadSupport(isRead1));
 
         return std::make_pair((isAlt.first || isRef.first), (isAlt.second || isRef.second));
+    }
+
+    /// does this fragment read provide any split evidence for any bp of the ALT allele?
+    bool
+    isAltSplitReadSupport(
+        const bool isRead1) const
+    {
+        const std::pair<bool,bool> isAlt(alt.isAnySplitReadSupport(isRead1));
+
+        return (isAlt.first || isAlt.second);
     }
 
     /// does this fragment read provide any split evidence for any allele/bp combination?
@@ -243,6 +262,17 @@ struct SVFragmentEvidence
 
         return std::make_pair((isAlt.first || isRef.first), (isAlt.second || isRef.second));
     }
+
+    /// does this fragment read provide any split evidence for any bp of the ALT allele?
+    bool
+    isAltTier2SplitReadSupport(
+        const bool isRead1) const
+    {
+        const std::pair<bool,bool> isAlt(alt.isAnyTier2SplitReadSupport(isRead1));
+
+        return (isAlt.first || isAlt.second);
+    }
+
 
     void
     clearPairSupport()

@@ -72,12 +72,16 @@ You must specify a BAM or CRAM file for at least one sample.
         group.add_option("--useExistingChromDepths",
                          dest="useExistingChromDepths", action="store_true",
                          help="Use pre-calculated chromosome depths.")
-        group.add_option("--candidateBins",type="int",dest="nonlocalWorkBins",metavar="candidateBins",
+        group.add_option("--candidateBins",type="int",
+                         dest="nonlocalWorkBins", metavar="candidateBins",
                          help="Provide the total number of tasks which candidate generation "
                             " will be sub-divided into. (default: %default)")
         group.add_option("--retainTempFiles",
                          dest="isRetainTempFiles", action="store_true",
                          help="Keep all temporary files (for workflow debugging)")
+        group.add_option("--generateEvidenceBam",
+                         dest="isGenerateSupportBam", action="store_true",
+                         help="Generate a bam of supporting reads for all SVs")
 
         MantaWorkflowOptionsBase.addExtendedGroupOptions(self,group)
 
@@ -94,6 +98,7 @@ You must specify a BAM or CRAM file for at least one sample.
             'useExistingAlignStats' : False,
             'useExistingChromDepths' : False,
             'isRetainTempFiles' : False,
+            'isGenerateSupportBam' : False,
             'nonlocalWorkBins' : 256
                           })
         return defaults

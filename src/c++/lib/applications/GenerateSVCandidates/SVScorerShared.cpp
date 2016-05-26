@@ -19,12 +19,10 @@
 //
 
 ///
-/// \author Chris Saunders and Xiaoyu Chen
+/// \author Chris Saunders
 ///
 
 #include "SVScorerShared.hh"
-
-
 
 void
 setReadEvidence(

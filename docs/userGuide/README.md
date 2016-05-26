@@ -567,6 +567,9 @@ These options are useful for Manta development and debugging:
 * The `--rescore` option can be provided to force the workflow to
   re-execute candidates discovery and scoring, but not the initial
   graph generation steps.
+* The `--generateEvidenceBam` option can be used to generate bam files 
+  of evidence reads for SVs listed in the candidate vcf file.
+  (More details in the section "Generating evidence bams" below)
 
 ### Extended use cases
 
@@ -648,6 +651,21 @@ joint diploid sample analysis, and then output a multi-sample vcf, where the sam
    Under the same folder of the input vcf, the script outputs a new vcf file and a text file of stats for the de novo calls. Currently, all SVs with inheritance conflicts are labled with "DQ=60" inside the INFO, while all SVs without any conflict are labled with "DQ=0".
 
 
+### Generating evidence bams
+
+Using the `--generateEvidenceBam` option, Manta can be configured to generate bam files of evidence reads for SVs listed in the candidate vcf file. 
+
+It is recommended to use this option together with the `--region` option, so that the analysis is limited to relatively small genomic regions for debugging purposes.
+
+The evidence bam files are provided in `${MANTA_ANALYSIS_PATH}/results/evidence`, with a naming format `evidence.*.bam`. 
+There is one such file for each input bam of the analysis, containing evidence reads of the candidate SVs identified from that input bam. 
+Each read in an evidence bam keeps all information from the original bam, and it contains also a customized tag in the format: `ZM:Z:${MANTA_SV_ID_1}|${EVIDENCE_TYPE},${MANTA_SV_ID_2}|${EVIDENCE_TYPE}`. For example, ZM:Z:MantaINV:5:0:1:0:0:0|PR|SRM,MantaDEL:5:1:2:0:0:0|SR
+* One read can have more than one of the three evidence types: PR for paired reads, SR for split reads, and SRM for split read mates. 
+* One read can be evidence for multiple SVs, which are separated by commas in the tag.
+
+Notice that the number of evidence reads for a particular SV in the evidence bam files could be more than the evidence counts (PR and SR) in the final vcf files. This is because more stringent criteria are applied for generating evidence counts in the final vcf files.
+
 
 [1]: http://www.1000genomes.org/wiki/Analysis/Variant%20Call%20Format/vcf-variant-call-format-version-41
 [2]: http://sequencing.github.io/pyflow/
+

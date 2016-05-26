@@ -102,7 +102,8 @@ writeSV(
     const SVCandidateSetData& svData,
     const std::vector<SVCandidateAssemblyData>& mjAssemblyData,
     const SVMultiJunctionCandidate& mjSV,
-    const std::vector<bool>& isInputJunctionFiltered)
+    const std::vector<bool>& isInputJunctionFiltered,
+    SupportSamples& svSupports)
 {
     const unsigned junctionCount(mjSV.junction.size());
     const unsigned minJunctionCandidateSpanningCount(std::min(2u,opt.minCandidateSpanningCount));
@@ -242,7 +243,10 @@ writeSV(
 
     SVModelScoreInfo mjJointModelScoreInfo;
     mjJointModelScoreInfo.setSampleCount(svScore.sampleCount(),svScore.diploidSampleCount());
-    svScore.scoreSV(svData, mjAssemblyData, mjSV, isJunctionFiltered, isSomatic, isTumorOnly, mjModelScoreInfo, mjJointModelScoreInfo, isMJEvent);
+    svScore.scoreSV(svData, mjAssemblyData, mjSV, junctionSVId,
+                    isJunctionFiltered, isSomatic, isTumorOnly,
+                    mjModelScoreInfo, mjJointModelScoreInfo,
+                    isMJEvent, svSupports);
 
     const unsigned unfilteredJunctionCount(std::count(isJunctionFiltered.begin(),isJunctionFiltered.end(),true));
 
@@ -402,7 +406,8 @@ SVCandidateProcessor::
 evaluateCandidates(
     const EdgeInfo& edge,
     const std::vector<SVMultiJunctionCandidate>& mjSVs,
-    const SVCandidateSetData& svData)
+    const SVCandidateSetData& svData,
+    SupportSamples& svSupports)
 {
     const bool isIsolatedEdge(testIsolatedEdge(_cset,edge));
 
@@ -421,7 +426,7 @@ evaluateCandidates(
     _svRefine.clearEdgeData();
     for (const auto& cand : mjSVs)
     {
-        evaluateCandidate(edge,cand,svData,isFindLargeInsertions);
+        evaluateCandidate(edge,cand,svData,isFindLargeInsertions, svSupports);
     }
 }
 
@@ -433,7 +438,8 @@ evaluateCandidate(
     const EdgeInfo& edge,
     const SVMultiJunctionCandidate& mjCandidateSV,
     const SVCandidateSetData& svData,
-    const bool isFindLargeInsertions)
+    const bool isFindLargeInsertions,
+    SupportSamples& svSupports)
 {
     assert(! mjCandidateSV.junction.empty());
 
@@ -555,12 +561,14 @@ evaluateCandidate(
             {
                 std::vector<bool> isJunctionFilteredHack(junctionCount,true);
                 isJunctionFilteredHack[junctionIndex] = false;
-                _svWriter.writeSV(edge, svData, mjAssemblyData, mjAssembledCandidateSV, isJunctionFilteredHack);
+                _svWriter.writeSV(edge, svData, mjAssemblyData, mjAssembledCandidateSV,
+                                  isJunctionFilteredHack, svSupports);
             }
         }
         else
         {
-            _svWriter.writeSV(edge, svData, mjAssemblyData, mjAssembledCandidateSV, isJunctionFiltered);
+            _svWriter.writeSV(edge, svData, mjAssemblyData, mjAssembledCandidateSV,
+                              isJunctionFiltered, svSupports);
         }
     }
 }

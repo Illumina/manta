@@ -23,7 +23,6 @@
 ///
 
 #include "SVScorePairRefProcessor.hh"
-#include "SVScorerShared.hh"
 #include "common/Exceptions.hh"
 #include "htsapi/bam_record_util.hh"
 #include "manta/SVCandidateUtil.hh"
@@ -48,7 +47,9 @@
 void
 SVScorePairRefProcessor::
 processClearedRecord(
-    const bam_record& bamRead)
+    const SVId& /*svId*/,
+    const bam_record& bamRead,
+    SupportFragments& /*svSupportFrags*/)
 {
     using namespace illumina::common;
 

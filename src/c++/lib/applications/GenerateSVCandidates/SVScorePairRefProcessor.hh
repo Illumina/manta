@@ -41,5 +41,7 @@ struct SVScorePairRefProcessor : public SVScorePairProcessor
 
     void
     processClearedRecord(
-        const bam_record& bamRead);
+        const SVId& svId,
+        const bam_record& bamRead,
+        SupportFragments& svSupportFrags);
 };
