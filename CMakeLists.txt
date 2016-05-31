@@ -63,33 +63,32 @@ set(DEVELOPER_MODE true)
 if (WIN32)
     set(IS_MSVC_ANALYZE FALSE CACHE BOOL
         "Turn on Visual Studio /analyze option")
-
-    # TODO better specify/document how this interacts with CMAKE_BUILD_TYPES
-    set(CMAKE_CONFIGURATION_TYPES "Release" CACHE INTERNAL
-        "Visual Studio build types" FORCE)
 endif ()
 
-
 #
-# setup build type
+# setup configuration types, and pick set a build type from this set
 #
-set(CMAKE_BUILD_TYPES Debug Release RelWithDebInfo)
+# To translate the CMAKE-ese here:
+# The plural of "BUILD_TYPE" is not "BUILD_TYPES", it is "CONFIGURATION_TYPES"
+#
+set(CMAKE_CONFIGURATION_TYPES_TMP Debug Release RelWithDebInfo)
 if (NOT WIN32)
-    set(CMAKE_BUILD_TYPES ${CMAKE_BUILD_TYPES} ASan)
+    set(CMAKE_CONFIGURATION_TYPES_TMP ${CMAKE_CONFIGURATION_TYPES_TMP} ASan)
 endif ()
+set(CMAKE_CONFIGURATION_TYPES ${CMAKE_CONFIGURATION_TYPES_TMP} CACHE STRING "" FORCE)
 
-join(CMAKE_BUILD_TYPES ", " CMAKE_BUILD_TYPES_STRING)
+join(CMAKE_CONFIGURATION_TYPES ", " CMAKE_CONFIGURATION_TYPES_STRING)
 
 if (NOT CMAKE_BUILD_TYPE)
     set(DEFAULT_CMAKE_BUILD_TYPE Release)
     set(CMAKE_BUILD_TYPE ${DEFAULT_CMAKE_BUILD_TYPE} CACHE STRING
-        "Choose the type of build, options are: {${CMAKE_BUILD_TYPES_STRING}} (default: ${DEFAULT_CMAKE_BUILD_TYPE})")
+        "Choose the type of build, options are: {${CMAKE_CONFIGURATION_TYPES_STRING}} (default: ${DEFAULT_CMAKE_BUILD_TYPE})")
 endif()
 
 # check that a valid build type has been selected:
-list(FIND CMAKE_BUILD_TYPES ${CMAKE_BUILD_TYPE} TINDEX)
+list(FIND CMAKE_CONFIGURATION_TYPES ${CMAKE_BUILD_TYPE} TINDEX)
 if(TINDEX EQUAL -1)
-    message (FATAL_ERROR "Selected build type, '${CMAKE_BUILD_TYPE}', is not in the set of available types: {${CMAKE_BUILD_TYPES_STRING}}")
+    message (FATAL_ERROR "Selected build type, '${CMAKE_BUILD_TYPE}', is not in the set of available types: {${CMAKE_CONFIGURATION_TYPES_STRING}}")
 endif()
 
 message (STATUS "BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
