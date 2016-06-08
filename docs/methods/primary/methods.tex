@@ -8,17 +8,13 @@
 % for scalebox,...
 \usepackage{graphics}
 
-\usepackage{hyperref}
+% hide hyperref links  with pdfborder (more portable than hidelinks option)
+\usepackage[pdfborder={0 0 0}]{hyperref}
 
 % for pseudocode
 \usepackage{algorithm}
 \usepackage[noend]{algpseudocode}
 
-% hide hyperref links (more portable than hidelinks option)
-\hypersetup{
-    colorlinks=false,
-    pdfborder={0 0 0},
-}
 
 \title{'In-source Methods for Manta Structural Variant and Indel Caller'}
 
