@@ -1047,7 +1047,7 @@ addDiploidLoglhood(
             log_os << __FUNCTION__ << ": starting gt: " << gt << " " << label(gt) << "\n";
 #endif
 
-            const index_t gtid(static_cast<const index_t>(gt));
+            const index_t gtid(static_cast<index_t>(gt));
             const double refLnFragLhood(getFragLnLhood(refLnLhoodSet, isRead1Evaluated, isRead2Evaluated));
 #ifdef DEBUG_SCORE
             log_os << __FUNCTION__ << ": refLnFragLhood: " << refLnFragLhood << "\n";
@@ -1550,7 +1550,7 @@ computeSomaticSampleLoghood(
             log_os << __FUNCTION__ << ": starting gt: " << gt << " " << label(gt) << "\n";
 #endif
 
-            const index_t gtid(static_cast<const index_t>(gt));
+            const index_t gtid(static_cast<index_t>(gt));
 
             const double refLnFragLhood(getFragLnLhood(refLnLhoodSet, isRead1Evaluated, isRead2Evaluated));
             const double altLnFragLhood(getFragLnLhood(altLnLhoodSet, isRead1Evaluated, isRead2Evaluated));

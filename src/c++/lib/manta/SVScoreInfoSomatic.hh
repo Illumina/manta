@@ -74,7 +74,7 @@ inline
 const char*
 label(const unsigned i)
 {
-    return label(static_cast<const index_t>(i));
+    return label(static_cast<index_t>(i));
 }
 
 inline
