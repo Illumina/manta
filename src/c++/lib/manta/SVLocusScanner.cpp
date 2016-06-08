@@ -36,14 +36,16 @@
 #include "manta/SVLocusScanner.hh"
 #include "manta/SVLocusScannerSemiAligned.hh"
 
-// #define DEBUG_SCANNER
+#include <iostream>
+
+//#define DEBUG_SCANNER
 
 //#define DEBUG_IS_SHADOW
 
 #ifdef DEBUG_SCANNER
 #include "blt_util/log.hh"
-#include <iostream>
 #endif
+
 
 
 /// used for classifying fragments based on size so that they can be treated differently

@@ -89,13 +89,13 @@ BOOST_AUTO_TEST_CASE( test_simple_binomial_test )
     p = 6.484e-5;
 
     BOOST_REQUIRE_CLOSE(get_binomial_gte_n_success_exact_pval(p, x, n), 3.23685517e-3, tol);
-    BOOST_MESSAGE( "x " << x << "; n " << n << "; p" << p << " p-value is " << get_binomial_gte_n_success_exact_pval(p, x, n));
+    BOOST_TEST_MESSAGE( "x " << x << "; n " << n << "; p" << p << " p-value is " << get_binomial_gte_n_success_exact_pval(p, x, n));
     BOOST_REQUIRE(! is_reject_binomial_gte_n_success_exact(1e-9, p, x, n));
     BOOST_REQUIRE(  is_reject_binomial_gte_n_success_exact(1e-2, p, x, n));
 
     x = 4;
     BOOST_REQUIRE_CLOSE(get_binomial_gte_n_success_exact_pval(p, x, n), 4.06096935e-12, tol);
-    BOOST_MESSAGE( "x " << x << "; n " << n << "; p" << p << " p-value is " << get_binomial_gte_n_success_exact_pval(p, x, n));
+    BOOST_TEST_MESSAGE( "x " << x << "; n " << n << "; p" << p << " p-value is " << get_binomial_gte_n_success_exact_pval(p, x, n));
     BOOST_REQUIRE(! is_reject_binomial_gte_n_success_exact(1e-13, p, x, n));
     BOOST_REQUIRE(  is_reject_binomial_gte_n_success_exact(1e-9,  p, x, n));
 }

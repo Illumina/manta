@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include "boost/chrono.hpp"
 #include "boost/serialization/nvp.hpp"
 #include "boost/timer/timer.hpp"
 #include "boost/utility.hpp"
