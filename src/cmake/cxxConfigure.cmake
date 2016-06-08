@@ -159,9 +159,9 @@ macro(test_min_compiler compiler_version min_compiler_version compiler_label)
 endmacro()
 
 
-set (min_gxx_version "4.7")
-set (min_clang_version "3.1")
-set (min_intel_version "14.0")
+set (min_gxx_version "4.8")
+set (min_clang_version "3.2")
+set (min_intel_version "15.0")
 set (min_msvc_version "1800") # cl.exe 18, as shipped in Visual Studio 12 2013
 
 set (CXX_COMPILER_NAME "${CMAKE_CXX_COMPILER_ID}")
