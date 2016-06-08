@@ -88,6 +88,7 @@ hts_streamer::
     if (nullptr != _titr) tbx_itr_destroy(_titr);
     if (nullptr != _tidx) tbx_destroy(_tidx);
     if (nullptr != _hfp) hts_close(_hfp);
+    if (nullptr != _kstr.s) free(_kstr.s);
 }
 
 
