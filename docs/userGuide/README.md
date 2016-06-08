@@ -31,10 +31,18 @@ variants in small sets of diploid samples and somatic variants in
 matched tumor/normal sample pairs. There is experimental support for
 analysis of unmatched tumor samples as well (see details below). Manta
 accepts input read mappings from BAM or CRAM files and reports all SV
-and indel inferences in VCF 4.1 format. For extended methods and benchmarking
-details, please see the [Manta preprint][mss].
+and indel inferences in VCF 4.1 format.
 
-[mss]:http://dx.doi.org/10.1101/024232
+Methods and benchmarking details are described in:
+
+Chen, X. *et al.* (2016) Manta: rapid detection of structural variants and
+indels for germline and cancer sequencing applications. *Bioinformatics*,
+32, 1220-1222. [doi:10.1093/bioinformatics/btv710][bpaper]
+
+...and the corresponding [open-access pre-print][preprint].
+
+[bpaper]:https://dx.doi.org/10.1093/bioinformatics/btv710
+[preprint]:http://dx.doi.org/10.1101/024232
 
 
 ## Installation
