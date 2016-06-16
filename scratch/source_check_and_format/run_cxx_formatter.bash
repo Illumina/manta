@@ -23,7 +23,7 @@ astyle \
 --lineend=linux \
 --suffix=none \
 --recursive \
-*.cpp *.hh *.h
+*.cpp *.hpp *.hh *.h *.h.in
 
 #--keep-one-line-blocks \
 #--keep-one-line-statements \

@@ -49,6 +49,14 @@ find_script_source() {
         -name "*.py"
 }
 
+find_doc_source() {
+    base_dir=$1
+    find $base_dir -type f \
+        -name "*.md" -or \
+        -name "*.tex"
+}
+
+
 get_source() {
     for f in $basedir/src/*; do
         dir=$(basename $f)
@@ -57,6 +65,8 @@ get_source() {
         find_cxx_source $f
         find_script_source $f
     done
+    find_cmake_source $basedir/redist
+    find_doc_source $basedir
 }
 
 for f in $(get_source); do
