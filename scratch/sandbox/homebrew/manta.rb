@@ -7,7 +7,10 @@ class Manta < Formula
   sha256 "f06fcb33290f78924c0d87e5a0e3b70150e828246e218fe3869a49684fc9dc16"
 
   needs :cxx11
-  depends_on "boost"
+
+  # depending on boost regex from homebrew automatically pulls in icu as a dependency
+  # if not prevented from doing so here:
+  depends_on "boost" => "without-icu4c"
   depends_on "cmake" => :build
   depends_on "zlib"
 
