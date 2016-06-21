@@ -1,4 +1,3 @@
-
 # Manta Developer Guide - VCF ID field
 
 [Developer Guide Home](README.md)

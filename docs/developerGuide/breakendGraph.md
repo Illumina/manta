@@ -1,7 +1,12 @@
-
 # Manta Developer Guide - Breakend Graph
 
 [Developer Guide Home](README.md)
+
+## Table of Contents
+[] (BEGIN automated TOC section, any edits will be overwritten on next source refresh)
+* [Summary](#summary)
+* [Querying the graph](#querying-the-graph)
+[] (END automated TOC section, any edits will be overwritten on next source refresh)
 
 ## Summary
 
@@ -10,7 +15,7 @@ The breakend graph is a central intermediate  in the manta workflow. It contains
   * Evidence range: Each node has an additional chromosomal range where it's read evidence was originally aligned. (if the node is built from indirect evidence only, then evidence range should be the same as the node range.
   * Edges between nodes – Every node with an edge has a return pointer in a properly formatted SV graph, but the evidence count on an out-edge represents that evidence for the edge was observed at the node the edge is coming from.
 * "Loci" – A locus is a disjoint subgraph
- 
+
 ## Querying the graph
 The graph can be queried as follows:
 
@@ -21,7 +26,7 @@ The graph can be queried as follows:
 Example:
 
     ${MANTA_INSTALL_ROOT}/libexec/DumpSVLoci --graph-file foo --region chr10:1000000-1001000
- 
+
 You can also get summary metrics from the graph:
 * List of node count, edge count, observation count, etc. for every locus
 * Summary of total reads used and total reads cleaned out as noise edges.

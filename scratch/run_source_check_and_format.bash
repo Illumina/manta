@@ -20,3 +20,8 @@ $script_dir/delete_trailing_wspace.bash -imeanit
 $script_dir/run_cxx_formatter.bash
 
 $script_dir/refresh_markdown_tocs.bash
+
+echo
+echo "Source update complete."
+echo
+

@@ -10,6 +10,11 @@ reltoabs() {
 scriptdir=$(dirname $0)
 basedir=$(reltoabs $scriptdir/../..)
 
+if ! [ -d $basedir/scratch/util ]; then
+    echo "ERROR: [$0] Can't find source repo root directory"
+    exit 1
+fi
+
 tocMaker=$basedir/scratch/util/tocMaker.py
 
 
@@ -37,7 +42,7 @@ get_source() {
 }
 
 for f in $(get_source); do
-    echo "checking: $f"
+    echo "updating_toc: $f"
     newF=$f.$$.toc
     $tocMaker --depth=3 < $f > $newF
     if cmp -s $f $newF; then

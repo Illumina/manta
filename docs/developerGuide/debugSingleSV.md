@@ -1,13 +1,25 @@
-
 # Manta Developer Guide - Debugging a single SV in Manta
 
 [Developer Guide Home](README.md)
+
+## Table of Contents
+[] (BEGIN automated TOC section, any edits will be overwritten on next source refresh)
+* [Summary](#summary)
+* [Scenario 0: Debug SV call in both graph creation and SV candidate generation steps](#scenario-0-debug-sv-call-in-both-graph-creation-and-sv-candidate-generation-steps)
+* [Scenario 1 : Debug gold-standard SV call which is already covered by an edge in the SVLocus graph](#scenario-1--debug-gold-standard-sv-call-which-is-already-covered-by-an-edge-in-the-svlocus-graph)
+  * [Step 1: Identify the graph edge corresponding to the SV](#step-1-identify-the-graph-edge-corresponding-to-the-sv)
+    * [S1 - Step 1A : Query Node in the SV Locus graph](#s1---step-1a--query-node-in-the-sv-locus-graph)
+    * [S1 - Step 1B : Query Node in the SV Locus graph](#s1---step-1b--query-node-in-the-sv-locus-graph)
+    * [S1 - Step 1C : Query Locus in the SV Locus graph](#s1---step-1c--query-locus-in-the-sv-locus-graph)
+    * [S1 - Step 2 : Run candidate generation on specific SV locus or specific SV locus edge](#s1---step-2--run-candidate-generation-on-specific-sv-locus-or-specific-sv-locus-edge)
+* [Debugging Infrastructure TODO](#debugging-infrastructure-todo)
+[] (END automated TOC section, any edits will be overwritten on next source refresh)
 
 ## Summary
 
 Manta tries to reduce intermediate I/O as much as possible, which is helpful in production, but not so for development/debug. As debuging cases come up, speciallized debug/localized running modes have been added to certain Manta tools, and more will certainly be added. This page documents the workflows that exist – especially those that facilitate debugging a single known FN or FP case. We also note workflows which would be useful and should be added in the future. For related debug discussions involving properties of an entire run, see the related page: [Debugging a full Manta run](debugFullRun.md)
 
-## Scenario 0: Debug SV call in both graph creation and SV candidate generation steps:
+## Scenario 0: Debug SV call in both graph creation and SV candidate generation steps
 
 Manta workflow has the ability to run one to many sub-segments of the genome, which can accelerate debugging for by setting the region(s) to cover the breakends of any SVs of interest.
 
@@ -23,7 +35,7 @@ An example debug build for a translocation is:
 
     ${MANTA_INSTALL_ROOT}/bin/configManta.py --normalBam myBam.bam --tumorBam myTumorBam.bam --region chr2:19000-20000 --region chr20:1000-2000 --candidateBins 4
 
-## Scenario 1 : Debug gold-standard SV call which is already covered by an edge in the SVLocus graph:
+## Scenario 1 : Debug gold-standard SV call which is already covered by an edge in the SVLocus graph
 
 If a known clean SV is either missing from the output, or we would like to repeatedly/quickly run just this one SV during development of a new feature, there is limited support to run a specific SV (actually a specific disjoint subgraph of the SVgraph – often for gold-standard calls, the call is the only member of a disjoint sub-graph).
 
@@ -33,7 +45,7 @@ Every edge in the breakend graph has a locus index (each locus is a connected su
 
 The following subsections of step1 describe how to extract these graph indices for an SV which is already being printed out at least to the candidate vcf file (Step 1A – easier case), or for the general case (Step 1B, a bit more involved).
 
-#### S1 - Step 1A : Query Node in the SV Locus graph 
+#### S1 - Step 1A : Query Node in the SV Locus graph
 
 The following record from a Manta candidate VCF shows the locus-index<sup>**A**</sup>, node1-index<sup>**B**</sup> and node2-index<sup>**C**</sup> , per the corresponding superscripts applied to each field:
 
@@ -103,7 +115,7 @@ An example full command-line is:
 
 The additional `--locus-index ARG` command is highlighted, together with the new `--verbose` option. In the example, SV generation runs for the specified edge "13716:0:1" only. This makes it easier to run modifications of the SV generator with various types of verbose debugging outputs, etc...  To get started in this direction, the example includes the --verbose option to provide some quick high level logging without recompiling – for many problems more specific/noising debug output will have to be compiled in as part of a follow-up step.
 
-## Debugging Infrastructure TODO:
+## Debugging Infrastructure TODO
 
 The above process could be more streamlined, especially for cases where an SV is part of a large disjoint subgraph. New features:
 * GenerateSVCandidates should accept a --region1 and --region2 argument, and only call SVGraph edges connecting those two regions.

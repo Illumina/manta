@@ -1,7 +1,15 @@
-
 # Manta Developer Guide - Alignment Library
 
 [Developer Guide Home](README.md)
+
+## Table of Contents
+[] (BEGIN automated TOC section, any edits will be overwritten on next source refresh)
+* [Introduction](#introduction)
+* [Debugging](#debugging)
+* [Running single alignment unit tests](#running-single-alignment-unit-tests)
+[] (END automated TOC section, any edits will be overwritten on next source refresh)
+
+## Introduction
 
 This is a subsection of the manta developer guide focusing on the alignment library.
 

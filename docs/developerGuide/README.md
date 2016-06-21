@@ -1,6 +1,31 @@
 Manta Developer Guide
 =====================
 
+## Table of Contents
+[] (BEGIN automated TOC section, any edits will be overwritten on next source refresh)
+* [Scope](#scope)
+* [Developer Build Notes](#developer-build-notes)
+  * [Building from source repository vs. versioned code distribution:](#building-from-source-repository-vs-versioned-code-distribution)
+  * [Source auto-documentation](#source-auto-documentation)
+  * [Improving build time](#improving-build-time)
+    * [ccache](#ccache)
+    * [Bundled dependencies](#bundled-dependencies)
+  * [General Debugging: Address Sanitizer](#general-debugging-address-sanitizer)
+  * [General Debugging: Inspecting temporary files](#general-debugging-inspecting-temporary-files)
+  * [Windows development support](#windows-development-support)
+  * [Automating Portable Binary Builds](#automating-portable-binary-builds)
+* [Coding Guidelines](#coding-guidelines)
+  * [Source formatting](#source-formatting)
+  * [Error handling](#error-handling)
+    * [General Policies](#general-policies)
+    * [Exception Details](#exception-details)
+    * [Logging](#logging)
+  * [Unit tests](#unit-tests)
+* [Special Topic Guides](#special-topic-guides)
+[] (END automated TOC section, any edits will be overwritten on next source refresh)
+
+## Scope
+
 This guide provides:
 * protocols for contributing new or modified methods
 * methods to debug stability or runtime issues
@@ -12,11 +37,6 @@ so this guide is not intended to provide complete coverage of the above topics.
 
 For end user documentation describing how to run an analysis and interpret its output,
 please see the [User Guide](../userGuide/README.md).
-
-## Table of Contents
-* [Developer Build Notes](#developer-build-notes)
-* [Coding Guidelines](#coding-guidelines)
-* [Special Topic Guides](#special-topic-guides)
 
 ## Developer Build Notes
 
@@ -76,7 +96,7 @@ extending from the configuration example in the above build instructions, use:
 
     ../manta-A.B.C.release_src/src/configure --jobs=4 --prefix=/path/to/install --build-type=ASan
 
-### General Debugging: Inspecting temporary files 
+### General Debugging: Inspecting temporary files
 
 Manta's configuration step includes an extended option to keep all temporary
 files which would normally be deleted by the workflow as it runs. Keeping these
@@ -99,7 +119,7 @@ C++11 features in use require at least VS2013. A Windows
 installation of cmake is also required to configure and compile.
 Note that the minimum cmake version is 3.1.0 for Windows.
 
-### Automating Portable Binary Builds 
+### Automating Portable Binary Builds
 
 A script is provided to enable a dockerized build process which
 issues Centos5+ or Centos6+ binary tarballs. To do so, ensure you
@@ -134,6 +154,7 @@ see the `builderImage` variable.
 ### Error handling
 
 #### General Policies
+
 * Exceptions with informative contextual details are encouraged whenever possible.
 * To quickly express invariants it is acceptable to add `assert()`'s first, and transition to exceptions as code stabilizes.
 * Note that the build process will never define `NDEBUG` to compile out assert statements, even in release code.
@@ -143,8 +164,9 @@ see the `builderImage` variable.
 * Warnings are discouraged. If considering a warning you should probably just fail per the above policy.
 
 #### Exception Details
+
 * Preferred exception pattern is to use an internal class derived from `boost::exception`:
- 
+
 ```c++
 
 #include "common/Exceptions.hh"
@@ -161,7 +183,7 @@ foo(const char* name)
     BOOST_THROW_EXCEPTION(LogicException(oss.str()));
 }
 ```
- 
+
 * Context at the original throw site is often supplemented by a 'catch and release' block to add
 information at a few critical points on the stack. Typically this is information which
 is unavailable at the throw site. Example code is:
@@ -189,10 +211,11 @@ self.flowLog("Initiating Starling workflow version: %s" % (__version__)
 * At the binary (c++) layer, there is no logger at present. Direct all error messaging to `std::cerr`.
 
 ### Unit tests
+
 * Unit tests are enabled for a subset of the c++ code
 * All tests use the boost unit test framework
 * All unit tests are required to run and pass as part of every build (including end-user builds)
-* Unit tests are already enabled for every library "test" subdirectory, additional tests in these directories will be automatically detected 
+* Unit tests are already enabled for every library "test" subdirectory, additional tests in these directories will be automatically detected
   * Example [svgraph unit tests directory](../../src/c++/lib/svgraph/test)
 
 ## Special Topic Guides

@@ -2,15 +2,32 @@ Manta User Guide
 ================
 
 ## Table of Contents
-* [Introduction](#introduction)
-* [Installation](#installation)
-* [Method Overview](#method-overview)
-* [Capabilities](#capabilities)
-* [Input requirements](#input-requirements)
-* [Outputs](#outputs)
-* [Runtime hardware requirements](#runtime-hardware-requirements)
-* [Run configuration and execution](#run-configuration-and-execution)
-* [Extended use cases](#extended-use-cases)
+[] (BEGIN automated TOC section, any edits will be overwritten on next source refresh)
+  * [Introduction](#introduction)
+  * [Installation](#installation)
+  * [Method Overview](#method-overview)
+  * [Capabilities](#capabilities)
+    * [Detected variant classes](#detected-variant-classes)
+    * [Known Limitations](#known-limitations)
+  * [Input requirements](#input-requirements)
+  * [Outputs](#outputs)
+    * [Structural Variant predictions](#structural-variant-predictions)
+    * [Manta VCF reporting format](#manta-vcf-reporting-format)
+    * [Statistics](#statistics)
+  * [Runtime hardware requirements](#runtime-hardware-requirements)
+  * [Run configuration and execution](#run-configuration-and-execution)
+    * [Configuration](#configuration)
+    * [Execution](#execution)
+    * [Extended use cases](#extended-use-cases)
+    * [RNA-Seq](#rna-seq)
+    * [High sensitivity calling](#high-sensitivity-calling)
+* [Remove all edges from the graph unless they're supported by this many 'observations'.](#remove-all-edges-from-the-graph-unless-theyre-supported-by-this-many-observations)
+* [Note that one supporting read pair or split read usually equals one observation, but](#note-that-one-supporting-read-pair-or-split-read-usually-equals-one-observation-but)
+* [evidence is sometimes downweighted.](#evidence-is-sometimes-downweighted)
+* [Run discovery and candidate reporting for all SVs/indels with at least this](#run-discovery-and-candidate-reporting-for-all-svsindels-with-at-least-this)
+* [many spanning support observations](#many-spanning-support-observations)
+    * [De novo calling](#de-novo-calling)
+[] (END automated TOC section, any edits will be overwritten on next source refresh)
 
 ## Introduction
 
@@ -106,7 +123,7 @@ family-scale -- roughly 10 or fewer samples)
 * Analysis of an individual tumor sample
 
 For the first use case above, note that there is no specific restriction against
-using Manta for the joint analysis of larger cohorts, but this has not 
+using Manta for the joint analysis of larger cohorts, but this has not
 been extensively tested so there may be stability or call quality
 issues.
 
@@ -315,7 +332,7 @@ HOMLEN | Length of base pair identical homology at event breakpoints
 HOMSEQ | Sequence of base pair identical homology at event breakpoints
 SVINSLEN | Length of insertion
 SVINSSEQ | Sequence of insertion
-LEFT_SVINSSEQ | Known left side of insertion for an insertion of unknown length 
+LEFT_SVINSSEQ | Known left side of insertion for an insertion of unknown length
 RIGHT_SVINSSEQ | Known right side of insertion for an insertion of unknown length
 INV3 | Flag indicating that inversion breakends open 3' of reported location
 INV5 | Flag indicating that inversion breakends open 5' of reported location
@@ -388,8 +405,8 @@ Additional secondary output is provided in `${MANTA_ANALYSIS_PATH}/results/stats
 * __svCandidateGenerationStats.tsv__
     * statistics and runtime information pertaining to the SV candidate generation
 * __svCandidateGenerationStats.xml__
-    * xml data backing the svCandidateGenerationStats.tsv report 
-    
+    * xml data backing the svCandidateGenerationStats.tsv report
+
 
 ## Runtime hardware requirements
 
@@ -566,12 +583,12 @@ high sensitivity calling documentation below.
 
 #### Unpaired tumor sample
 
-Manta supports SV calling for tumor sample only. The tumor-only mode 
-can be triggered by supplying a tumor sample alignment file but no alignments for the normal sample. 
+Manta supports SV calling for tumor sample only. The tumor-only mode
+can be triggered by supplying a tumor sample alignment file but no alignments for the normal sample.
 The results are reported in __tumorSV.vcf.gz__. This file contains all
 SV candidates (similar to the __candidateSV.vcf.gz__ file), but also
 includes paired and split read evidence for each allele and a
-subset of the filters used for the tumor-normal comparative analysis. 
+subset of the filters used for the tumor-normal comparative analysis.
 Note that Manta does not yet provide a quality scoring model for unpaired
 tumor sample analysis.
 
@@ -624,13 +641,13 @@ joint diploid sample analysis, and then output a multi-sample vcf, where the sam
 
 2) A post-processing script, provided as $MANTA_INSTALL_FOLDER/libexec/denovo_scoring.py, can be applied to the multi-sample vcf and detects SVs that have inheritance conflicts among a trio sample set.
 
-   The script usage is  
+   The script usage is
    denovo_scoring.py <vcf file> <proband sample ID> <father sample ID> <mother sample ID>
    It will ignore any samples in the vcf that are not specified at the commandline.
 
    Under the same folder of the input vcf, the script outputs a new vcf file and a text file of stats for the de novo calls. Currently, all SVs with inheritance conflicts are labled with "DQ=60" inside the INFO, while all SVs without any conflict are labled with "DQ=0".
 
- 
+
 
 [1]: http://www.1000genomes.org/wiki/Analysis/Variant%20Call%20Format/vcf-variant-call-format-version-41
 [2]: http://sequencing.github.io/pyflow/

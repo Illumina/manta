@@ -30,7 +30,7 @@
 
 \section{Overview}
 
-On any release branch, the methods described here should reflect the default implementation in the source repository containing this document. 
+On any release branch, the methods described here should reflect the default implementation in the source repository containing this document.
 
 \section{Methods}
 
@@ -48,7 +48,7 @@ Manta's structural variant calling workflow contains two major phases. In the fi
 \label{fig:workflow}
 \end{figure}
 
-For the breakend graph created in phase one, each node represents a region of the genome where evidence for at least one breakend exists. Edges represent evidence of a junction between two breakends. By design, the edges in the breakend graph do not correspond to a specific SV candidate hypotheses, instead they represent evidence of potentially many junctions between regions. This lack of specificity allows the graph for all variant types in the genome to be compactly represented in a small memory footprint. 
+For the breakend graph created in phase one, each node represents a region of the genome where evidence for at least one breakend exists. Edges represent evidence of a junction between two breakends. By design, the edges in the breakend graph do not correspond to a specific SV candidate hypotheses, instead they represent evidence of potentially many junctions between regions. This lack of specificity allows the graph for all variant types in the genome to be compactly represented in a small memory footprint.
 
 Phase two of Manta's workflow occurs after the complete breakend graph is created. Given the complete breakend graph, sets of graph edges are approximated as independent structural variant discovery problems and each of these sets is analyzed in parallel. Each structural variant discovery process starts from one (or more) edges from the breakend graph, discovers any structural variant candidates on its edge (or edges) and executes assembly, scoring and reporting for each candidate variant.
 
@@ -89,7 +89,7 @@ The breakend graph is constructed by first computing subgraphs corresponding to 
 For each genome segment, input BAM file(s) are scanned over the corresponding genome region for breakend associated reads, which are merged into the segment's breakend graph. To do so, each mapped read in the genome segment must first pass through a filtration process to eliminate noise. Any remaining reads are then translated into a set of small breakend graphs (currently each of these graphs is a single edge connecting either one or two nodes). These graphs are merged into the segment's breakend graph, where threshold-based merging and de-noising procedures are implemented to prune edges which do not have sufficient evidence. The de-noising procedure is constrained from running on an edge until both regions connected by the edge have been scanned for evidence. The details of this procedure are as follows.
 
 \paragraph{Filtration}
-For graph construction, reads are removed if they are marked as secondary, filtered or PCR duplicates. Reads also must be mapped and have a mapping quality of 15 or greater. A read pair is determined to be anomalous if it has (1) unexpected read orientation, (2) a mate mapping to another chromosome, or (3) an unexpectedly large fragment size. For the fragment size to be considered anomalous at the initial filtration stage, it must be greater than $1.5s_{max}$, where $s_{max}$ is the 99th percentile of the sample fragment size distribution. If the read pair is not found to be anomalous, the read is additionally checked for (1) indels of at least the minimum candidate indel size (default: 8), (2) a split-read annotated using the BAM record's ``SA" tag, or (3) an alignment where 5 contiguous matches to the reference cannot be found within 7 bases from either end of the read. If none of these read alignment conditions exist and the read pair is not anomalous, the read pair is filtered out of the graph construction process. 
+For graph construction, reads are removed if they are marked as secondary, filtered or PCR duplicates. Reads also must be mapped and have a mapping quality of 15 or greater. A read pair is determined to be anomalous if it has (1) unexpected read orientation, (2) a mate mapping to another chromosome, or (3) an unexpectedly large fragment size. For the fragment size to be considered anomalous at the initial filtration stage, it must be greater than $1.5s_{max}$, where $s_{max}$ is the 99th percentile of the sample fragment size distribution. If the read pair is not found to be anomalous, the read is additionally checked for (1) indels of at least the minimum candidate indel size (default: 8), (2) a split-read annotated using the BAM record's ``SA" tag, or (3) an alignment where 5 contiguous matches to the reference cannot be found within 7 bases from either end of the read. If none of these read alignment conditions exist and the read pair is not anomalous, the read pair is filtered out of the graph construction process.
 
 \paragraph{Read pair translation to breakend graph set}
 Each unfiltered read pair is translated into a set of breakend graphs via a two step process. The read pair is first translated to a set of SV candidates. The translation process allows for the possibility that the BAM record for only one read of the pair is available, in which case the length and alignment of the remote mate read is approximated. The logic to translate read pairs to SV candidates is the same as that used in SV hypothesis generation during Manta's second phase.
@@ -99,7 +99,7 @@ The translation of each read (or read pair) into a set of SV candidates proceeds
 \item \textit{Anomalous Read Pairs} We create an SV candidate for any read pair with an unexpected orientation, chimeric mapping or anomalously large fragment size. To determine large fragment size we find $r_p$, the extent of the read pair in reference coordinates, and accept a read pair if $r_p > s_{max} + c_{min}$, where $c_{min}$ is the minimum candidate indel size. If accepted, the candidate breakend regions extend from the end of each read to length $\max(40, s_{br} - r_1 - r_2)$, where $r_1$ and $r_2$ provide the extent of read 1 and read 2 alignments in reference coordinates, and $s_{br}  = f_l s_{lr} + (1 - f_l) s_{sr}$, where $s_{lr}$ and $s_{sr}$ are the 90th and 75th percentile of the fragment size distribution respectively. The $f_l$ term is defined such that shorter candidate breakend regions are used for smaller candidate deletions, as described below
 
 \begin{equation*}
-f_l = 
+f_l =
 \left\{
 \begin{array}{cl}
 1 & \mbox{ chimeric/anomalous orientation,} \\
@@ -108,7 +108,7 @@ f_l =
 \frac{r_p - s_{sr}} {s_{lr} - s_{sr}} & \mbox{otherwise.}
 \end{array}
 \right.
-\end{equation*} 
+\end{equation*}
 
 \item \textit{Read alignment gaps} Any gaps indicated in the an individual read alignment are translated into SV candidates if the total inserted or deleted sequence length exceeds the minimum indel candidate size. The SV candidate breakend regions are expanded by 20 bases in each direction form the exact breakpoint implied in the read alignment.
 
@@ -120,7 +120,7 @@ Complex region candidates indicate that there is evidence for small indels or SV
 
 \end{itemize}
 
-These SV candidates are translated into breakend graph elements by converting SV breakend regions into graph nodes spanning the same region and representing the connection between regions as a directed edge from the region of direct evidence (the locally observed read of a pair), to the region of indirect evidence (the remote read of a pair). Complex region candidates are translated into a single graph node spanning the candidate region with a self-edge added to indicate that there is evidence for novel breakend junctions within the candidate region. Each edge has an `evidence weight' of 3, except for edges corresponding to read pairs which imply a fragment size close to the anomalous size threshold (less than $4s_{max}$), which are given an evidence weight of 1. 
+These SV candidates are translated into breakend graph elements by converting SV breakend regions into graph nodes spanning the same region and representing the connection between regions as a directed edge from the region of direct evidence (the locally observed read of a pair), to the region of indirect evidence (the remote read of a pair). Complex region candidates are translated into a single graph node spanning the candidate region with a self-edge added to indicate that there is evidence for novel breakend junctions within the candidate region. Each edge has an `evidence weight' of 3, except for edges corresponding to read pairs which imply a fragment size close to the anomalous size threshold (less than $4s_{max}$), which are given an evidence weight of 1.
 
 \paragraph{Merge and de-noising procedure}
 
@@ -149,7 +149,7 @@ The node merging criteria are described in more detail below, the underlying rat
 \end{algorithmic}
 \end{algorithm}
 
-The high level merge procedure is outlined in Method \ref{method:merge}.The two input graphs are merged by taking their union, identifying and annotating nodes in the graph union which are eligible for merging (described in Method \ref{method:annotate}), and executing the eligible node merges (described in Method \ref{method:mergenodes}). 
+The high level merge procedure is outlined in Method \ref{method:merge}.The two input graphs are merged by taking their union, identifying and annotating nodes in the graph union which are eligible for merging (described in Method \ref{method:annotate}), and executing the eligible node merges (described in Method \ref{method:mergenodes}).
 
 \begin{algorithm}[t!]
 \floatname{algorithm}{Method}
@@ -343,7 +343,7 @@ Following initial SV hypothesis generation and refinement via assembly, all cand
 The diploid scoring model produces diploid genotype probabilities for each candidate structural variant. Candidates are approximated as independent for scoring purposes, therefore we apply a simple model with a single alternate allele, that is, for reference and alternate alleles $A = \{r,x\}$ the genotype states at each allele are restricted to $G = \{rr, rx, xx\}$. We solve for the posterior probability over G using
 
 \begin{equation*}
-P( G \vert D ) \propto P( D \vert G )  P (G) 
+P( G \vert D ) \propto P( D \vert G )  P (G)
 \end{equation*}
 
 \noindent
@@ -383,10 +383,10 @@ This likelihood for each fragment to support a given allele $P(d \vert a)$ is co
 
 \paragraph{Somatic scoring model}
 
-The somatic scoring model expresses the probability that the candidate variant is somatic, i.e exists in the tumor but not in a matched normal or other type of control. The scoring model used in Manta is a simplification of the same model used in the Strelka small variant caller \cite{strelka2012}. In this simplified form a 'somatic genotype' state space is defined consisting of non-somatic germline variant states $\{rr, rx, xx\}$, a noise state $n$ representing spurious observations at the same allele frequency in the tumor and normal sample and the somatic state $s$. The posterior probability is found over the somatic genotype states $S = \{rr,rx,xx,n,s\}$, 
+The somatic scoring model expresses the probability that the candidate variant is somatic, i.e exists in the tumor but not in a matched normal or other type of control. The scoring model used in Manta is a simplification of the same model used in the Strelka small variant caller \cite{strelka2012}. In this simplified form a 'somatic genotype' state space is defined consisting of non-somatic germline variant states $\{rr, rx, xx\}$, a noise state $n$ representing spurious observations at the same allele frequency in the tumor and normal sample and the somatic state $s$. The posterior probability is found over the somatic genotype states $S = \{rr,rx,xx,n,s\}$,
 
 \begin{equation*}
-P( S \vert D ) \propto P( D \vert S )  P (S) 
+P( S \vert D ) \propto P( D \vert S )  P (S)
 \end{equation*}
 
 \noindent
@@ -472,7 +472,7 @@ P (r \vert a,m) = \prod_{b_r \in r} P(b_r \vert b_a)
 \noindent
 where $P(b_r \vert b_a)$ is the probability of observing basecall $b_r$ given the corresponding base $b_a$ of the evaluated allele. Using the basecall quality error estimate $e$ this is
 
-\begin{equation*} 
+\begin{equation*}
 P(b_r \vert b_a) =
 \left\{
 \begin{array}{rl}
@@ -496,7 +496,7 @@ Filters are applied in a final step to improve precision of the scored output. T
 
 The current filters are:
 
-\begin{itemize} 
+\begin{itemize}
 
 \item \textit{High read depth} To remove calls in pericentromeric and other regions with collapsed reference representation, calls with very high depth relative to the mean depth of the chromosome are filtered out. Note for somatic calling only the depth of the normal sample is used for testing filtration.
 
