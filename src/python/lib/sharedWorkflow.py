@@ -18,7 +18,7 @@
 #
 
 """
-Workflow components shared between SV and smal variant packages
+Workflow components shared between SV and small variant packages
 """
 
 

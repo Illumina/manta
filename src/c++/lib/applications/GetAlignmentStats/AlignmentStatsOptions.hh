@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include "../../common/Program.hh"
+#include "common/Program.hh"
 #include "options/AlignmentFileOptions.hh"
 
 

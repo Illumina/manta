@@ -31,7 +31,6 @@ scriptDir=os.path.abspath(os.path.dirname(__file__))
 sys.path.append(os.path.abspath(scriptDir))
 
 # add pyflow path:
-# TODO: get a more robust link to the pyflow dir at config time:
 pyflowDir=os.path.join(scriptDir,"pyflow")
 sys.path.append(os.path.abspath(pyflowDir))
 
