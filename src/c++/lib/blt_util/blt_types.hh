@@ -26,8 +26,6 @@
 
 #include <cstdint>
 
-#include <ciso646>
-
 
 typedef int32_t pos_t;
 

@@ -24,7 +24,6 @@
 
 #pragma once
 
-#include <ciso646>
 
 /// \brief two-sided binomial exact probability
 ///

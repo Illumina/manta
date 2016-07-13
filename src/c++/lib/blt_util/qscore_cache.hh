@@ -25,7 +25,6 @@
 #pragma once
 
 #include <cassert>
-#include <ciso646>
 #include <cstdint>
 
 #include <array>
