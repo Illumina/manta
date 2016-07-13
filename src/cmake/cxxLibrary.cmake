@@ -51,12 +51,11 @@ foreach (SOURCE_FILE ${THIS_LIBRARY_SOURCES})
     endif ()
 endforeach ()
 
-# we don't need to add headers to the library for the build to work, but we
-# add headers on win32 to make the Visual Studio solution easier to work with:
-if (WIN32)
-    file(GLOB THIS_LIBRARY_HEADERS *.hh)
-    set (THIS_LIBRARY_SOURCES ${THIS_LIBRARY_SOURCES} ${THIS_LIBRARY_HEADERS})
-endif ()
+# we don't need to add headers to the library for the build to work, but adding headers
+# results in better IDE support from cmake, without this step any "unpaired" header file
+# appears to be outside of the project for any IDE relying on cmake's project definition:
+file(GLOB THIS_LIBRARY_HEADERS *.hh)
+set (THIS_LIBRARY_SOURCES ${THIS_LIBRARY_SOURCES} ${THIS_LIBRARY_HEADERS})
 
 if (THIS_LIBRARY_SOURCES)
     set (LIB_TARGET_NAME "${THIS_PROJECT_NAME}_${CURRENT_DIR_NAME}")
