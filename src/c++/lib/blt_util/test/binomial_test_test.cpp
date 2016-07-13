@@ -443,7 +443,7 @@ BOOST_AUTO_TEST_CASE( test_binomial_gte_min_count )
         unsigned trials       = (unsigned )exampledata[i][0];
         double   success_rate = exampledata[i][1];
         double   p_val        = exampledata[i][2];
-        BOOST_CHECK_EQUAL((unsigned )min_count_binomial_gte_exact(p_val, success_rate, trials), exampledata[i][3]);
+        BOOST_CHECK_EQUAL((unsigned )min_count_binomial_gte_exact(p_val, success_rate, trials), 1+exampledata[i][3]);
     }
 }
 BOOST_AUTO_TEST_SUITE_END()

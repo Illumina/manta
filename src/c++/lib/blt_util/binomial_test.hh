@@ -97,7 +97,7 @@ is_reject_binomial_gte_n_success_exact(
 /// returns the minimum number of successes to reject the null hypothesis
 /// with a p-value of at most alpha for a given error rate and number of trials
 ///
-/// matches R code qbinom(alpha, n_trials, p, lower.tail = FALSE)
+/// matches R code 1 + qbinom(alpha, n_trials, p, lower.tail = FALSE)
 double
 min_count_binomial_gte_exact(
     const double alpha,

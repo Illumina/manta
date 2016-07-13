@@ -190,7 +190,5 @@ min_count_binomial_gte_exact(
     assert(alpha >= 0);
     assert((p >= 0.) && (p <= 1.));
 
-    const double min_count_above_threshold = quantile(complement(binomial(n_trials, p), alpha));
-
-    return min_count_above_threshold;
+    return (1 + quantile(complement(binomial(n_trials, p), alpha)));
 }
