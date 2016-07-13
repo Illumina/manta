@@ -117,7 +117,65 @@ set(const char* s)
     return (wordindex >= maxword);
 }
 
+bool
+vcf_record::
+is_normalized() const
+{
+    // normalized indels are left-aligned, reference-padded, and parsimonious
+    // normalized SNVs are a single differing base
+    // normalized MNVs (and complex alleles) have differing bases at the beginning
+    // and end of the ref and alt alleles.  However, many input VCFs have
+    // reference-padded MNVs, which should not affect Strelka's calling, so for
+    // now, we're allowing variants to violate left-parsimony in MNVs and complex
+    // alleles
+    // see http://genome.sph.umich.edu/wiki/Variant_Normalization
+    unsigned ref_length = ref.size();
+    assert (ref_length != 0);
 
+    for (const auto& alt_allele : alt)
+    {
+        unsigned alt_length = alt_allele.size();
+        assert (alt_length != 0);
+
+        // all normalized variants with the same length ref and alt
+        // must differ at the last ref and alt base.  Any indel that
+        // has more than one base in both the ref and the alt must
+        // also differ at the last base (this should only happen at
+        // complex indels).  This checks for right-padding, i.e. parsimony
+        if ((alt_length > 1 && ref_length > 1) ||
+            alt_length == ref_length)
+        {
+            if ((*alt_allele.rbegin()) == (*ref.rbegin()))
+            {
+                return false;
+            }
+        }
+
+        if (alt_length != ref_length)
+        {
+            // this checks that indels are reference-padded
+            if ( (*alt_allele.begin()) == (*ref.begin()))
+            {
+                // this checks that they're left-shifted
+                for (unsigned i = ref_length - 1, j = alt_length - 1; ; ++i, ++j)
+                {
+                    if (ref[i] != alt_allele[j])
+                    {
+                        break;
+                    }
+                    else if (i == 0 || j == 0)
+                    {
+                        return false;
+                    }
+                }
+            }
+            // if the first and last bases of alleles with two differing lengths
+            // do not match, the record represents a complex allele, and fulfills
+            // normalization requirements
+        }
+    }
+    return true;
+}
 
 std::ostream& operator<<(std::ostream& os, const vcf_record& vcfr)
 {

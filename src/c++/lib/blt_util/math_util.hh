@@ -107,3 +107,21 @@ median(
     return _ps_median(begin,end);
 #endif
 }
+
+
+/// standardize the div by zero guard on division
+///
+/// note while this is a relatively simple utility, it was creeping
+/// up all over the place with minor type variations. This standard
+/// library copy should consistently do the sane thing for all integral
+/// and floating point types, unless you want floating point wider than
+/// double..
+///
+template <typename A, typename B>
+double
+safeFrac(
+    const A a, const B b)
+{
+    const double bd(static_cast<double>(b));
+    return (((bd<=0.) && (bd>=0)) ? 0. : (a/bd));
+}

@@ -236,16 +236,6 @@ public:
         return alt_map_qual(smtag);
     }
 
-#if 0
-    // attempt to recover the ELAND paired-end mapping score if it
-    // exists, else return MAPQ:
-    unsigned pe_map_qual() const
-    {
-        static const char astag[] = {'A','S'};
-        return alt_map_qual(astag);
-    }
-#endif
-
     int32_t template_size() const
     {
         return _bp->core.isize;

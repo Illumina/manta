@@ -25,21 +25,28 @@
 
 #include "sam_util.hh"
 
+#include <string>
+
 
 struct bam_dumper
 {
-    bam_dumper(const char* filename,
-               const bam_hdr_t* header);
+    bam_dumper(
+        const char* filename,
+        const bam_hdr_t& header);
 
     ~bam_dumper();
 
     void
-    put_record(const bam1_t* brec)
+    put_record(const bam1_t* brec);
+
+    const char* name() const
     {
-        sam_write1(_hfp,_hdr,brec);
+        return _stream_name.c_str();
     }
 
 private:
     htsFile* _hfp;
     const bam_hdr_t* _hdr;
+
+    std::string _stream_name;
 };

@@ -18,8 +18,6 @@
 //
 //
 
-/// \file
-
 /// \author Chris Saunders
 ///
 #include "blt_util/log.hh"
@@ -236,9 +234,10 @@ get_ref_seq_known_size(const reference_contig_segment& ref,
 
 
 void
-get_seq_repeat_unit(const std::string& seq,
-                    std::string& repeat_unit,
-                    unsigned& repeat_count)
+get_seq_repeat_unit(
+    const std::string& seq,
+    std::string& repeat_unit,
+    unsigned& repeat_count)
 {
     const std::string::size_type sg(seq.find('-'));
     const unsigned seq_size((sg!=std::string::npos) ? sg : seq.size());
@@ -274,4 +273,16 @@ get_seq_repeat_unit(const std::string& seq,
 
     repeat_unit = seq;
     repeat_count = 1;
+}
+
+
+
+void
+get_vcf_seq_repeat_unit(
+    const std::string& seq,
+    std::string& repeat_unit,
+    unsigned& repeat_count)
+{
+    assert(! seq.empty());
+    get_seq_repeat_unit(seq.substr(1),repeat_unit,repeat_count);
 }

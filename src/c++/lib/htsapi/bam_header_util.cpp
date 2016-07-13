@@ -28,6 +28,7 @@
 #include "blt_util/string_util.hh"
 
 #include <cassert>
+#include <cstring>
 
 #include <algorithm>
 #include <limits>
@@ -167,18 +168,18 @@ parse_bam_region(
 
 bool
 check_header_compatibility(
-    const bam_hdr_t* h1,
-    const bam_hdr_t* h2)
+    const bam_hdr_t& h1,
+    const bam_hdr_t& h2)
 {
-    if (h1->n_targets != h2->n_targets)
+    if (h1.n_targets != h2.n_targets)
     {
         return false;
     }
 
-    for (int32_t i(0); i<h1->n_targets; ++i)
+    for (int32_t i(0); i<h1.n_targets; ++i)
     {
-        if (h1->target_len[i] != h2->target_len[i]) return false;
-        if (0 != strcmp(h1->target_name[i],h2->target_name[i])) return false;
+        if (h1.target_len[i] != h2.target_len[i]) return false;
+        if (0 != strcmp(h1.target_name[i],h2.target_name[i])) return false;
     }
     return true;
 }
@@ -187,14 +188,12 @@ check_header_compatibility(
 
 std::string
 get_bam_header_sample_name(
-    const bam_hdr_t* const header,
+    const bam_hdr_t& header,
     const char* default_sample_name)
 {
-    assert(header != nullptr);
-
     std::vector<std::string> lines;
     std::vector<std::string> words;
-    split_string(header->text,'\n',lines);
+    split_string(header.text,'\n',lines);
     for (const auto& line : lines)
     {
         split_string(line,'\t',words);

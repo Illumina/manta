@@ -36,7 +36,7 @@
 /// \brief Provides something like a set, but with sequential id numbers
 /// assigned to each key starting from 0
 ///
-template <typename K>
+template <typename K, typename COMPARE = std::less<K>>
 struct id_set
 {
     /// \brief Add object to set if not present, and return id
@@ -116,7 +116,7 @@ struct id_set
     }
 
 private:
-    typedef std::map<K,unsigned> k2id_t;
+    typedef std::map<K,unsigned,COMPARE> k2id_t;
 
     k2id_t _k2id;
     std::vector<K> _id2k;
@@ -130,7 +130,7 @@ private:
 /// The id numbers can be useful for faster lookup of the value, while
 /// retaining the option of doing key lookup when required
 ///
-template <typename K, typename V>
+template <typename K, typename V, typename COMPARE = std::less<K>>
 struct id_map
 {
     /// \brief Update map with (key,value) and return id
@@ -221,7 +221,7 @@ struct id_map
     }
 
 private:
-    typedef std::map<K,unsigned> k2id_t;
+    typedef std::map<K,unsigned,COMPARE> k2id_t;
 
     k2id_t _k2id;
     std::vector<std::pair<K,V>> _id2kv;

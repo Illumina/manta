@@ -30,12 +30,9 @@
 
 struct vcf_streamer : public hts_streamer
 {
-    // optionally provide a BAM header to validate vcf chromosome names against
-    //
     vcf_streamer(
         const char* filename,
-        const char* region,
-        const bam_hdr_t* bh = nullptr);
+        const char* region);
 
     ~vcf_streamer();
 
@@ -53,6 +50,12 @@ struct vcf_streamer : public hts_streamer
     }
 
     void report_state(std::ostream& os) const;
+
+    /// provide a BAM header to validate vcf chromosome names against
+    ///
+    void
+    validateBamHeaderChromSync(
+        const bam_hdr_t& header) const;
 
 private:
     bcf_hdr_t* _hdr;

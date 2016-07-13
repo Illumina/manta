@@ -104,7 +104,7 @@ bam_streamer::
         const int retval = hts_close(_hfp);
         if (retval != 0)
         {
-            log_os << "ERROR: Failed to close SAM/BAM/CRAM file: " << name() << "\n";
+            log_os << "ERROR: Failed to close SAM/BAM/CRAM file: '" << name() << "'\n";
             std::exit(EXIT_FAILURE);
         }
     }

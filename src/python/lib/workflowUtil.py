@@ -308,8 +308,7 @@ class GenomeSegment(object) :
                 regionId += "-"+str(genomeRegion['start'])
                 if genomeRegion['end'] is not None :
                     regionId += "-"+str(genomeRegion['end'])
-        self.pyflowId = "chromId_%s_%s" % (regionId, self.binStr)
-        self.id = self.pyflowId
+        self.id = "chromId_%s_%s" % (regionId, self.binStr)
 
     def size(self) :
         return (self.endPos-self.beginPos)+1

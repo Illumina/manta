@@ -28,6 +28,141 @@
 #include <cmath>
 
 #include <iterator>
+#include <type_traits>
+
+
+/// given a value on [-inf,inf], transform it
+/// to a value on [0,1]
+///
+/// This uses the simple binomial version of the 'soft-max'
+/// multinomial transformation:
+///
+/// out = exp(in) / (1 + exp(in))
+///
+/// TODO: probably some roundoff/precision changes that would improve handling of certain input ranges
+///
+template <typename FloatType>
+FloatType
+softMaxTransform(
+    const FloatType real)
+{
+    static_assert(std::is_floating_point<FloatType>::value, "Transform requires floating point type.");
+    if (real<=0.)
+    {
+        const FloatType er(std::exp(real));
+        return (er/(1.+er));
+    }
+    else
+    {
+        const FloatType enr(std::exp(-real));
+        return (1./(enr+1.));
+    }
+}
+
+template <typename FloatType>
+FloatType
+softMaxInverseTransform(
+    const FloatType ranged)
+{
+    static_assert(std::is_floating_point<FloatType>::value, "Transform requires floating point type.");
+    assert((ranged>=0) && (ranged<=1));
+    if (ranged<=0.5)
+    {
+        return std::log(ranged/(1-ranged));
+    }
+    else
+    {
+        return -std::log((1-ranged)/ranged);
+    }
+}
+
+/// helper function for softMaxTransform to map [0,1] output to [rangedMin,rangedMax] range instead:
+template <typename FloatType>
+FloatType
+softMaxTransform(
+    const FloatType real,
+    const FloatType rangedMin,
+    const FloatType rangedMax)
+{
+    const FloatType range(rangedMax-rangedMin);
+    const FloatType offset(rangedMin);
+    return softMaxTransform(real)*range + offset;
+}
+
+template <typename FloatType>
+FloatType
+softMaxInverseTransform(
+    const FloatType ranged,
+    const FloatType rangedMin,
+    const FloatType rangedMax)
+{
+    const FloatType range(rangedMax-rangedMin);
+    const FloatType offset(rangedMin);
+    return softMaxInverseTransform((ranged-offset)/range);
+}
+
+
+
+/// Given a set of N values on [-inf,inf], transform them to
+/// the probability simplex sum(N+1) < 1, where the N+1 term
+/// is implicit and does not represent a new degree of freedom
+/// in the prob distro. The function returns the final value of
+/// the probability distro.
+///
+/// this uses basic soft-max multinomial transformation:
+///
+/// out_i = exp(in_i) / (1 + sum{i}{exp(in_i)})
+///
+/// TODO: probably some roundoff/precision changes that would improve handling of certain input ranges
+///
+template <typename IterType>
+typename std::iterator_traits<IterType>::value_type
+softMaxRangeTransform(
+    const IterType begin,
+    const IterType end)
+{
+    typedef typename std::iterator_traits<IterType>::value_type value_type;
+    static_assert(std::is_floating_point<value_type>::value, "Transform requires iterators over floating point type.");
+    value_type sum(1);
+    for (IterType i(begin); i!=end; ++i)
+    {
+        *i = std::exp(*i);
+        sum += *i;
+    }
+
+    const value_type norm(1/sum);
+    value_type sum2(0);
+    for (IterType i(begin); i!=end; ++i)
+    {
+        *i *= norm;
+        sum2 += *i;
+    }
+    return (1.-sum2);
+}
+
+template <typename IterType>
+void
+softMaxInverseRangeTransform(
+    const IterType begin,
+    const IterType end)
+{
+    typedef typename std::iterator_traits<IterType>::value_type value_type;
+    static_assert(std::is_floating_point<value_type>::value, "Transform requires iterators over floating point type.");
+
+    value_type sum(0);
+    for (IterType i(begin); i!=end; ++i)
+    {
+        assert((*i>=0) && (*i<=1));
+        sum += *i;
+    }
+    assert((sum>=0) && (sum<=1));
+
+    const value_type norm(1./(1-sum));
+    for (IterType i(begin); i!=end; ++i)
+    {
+        *i = std::log(*i * norm);
+    }
+}
 
 
 /// Find more accurate complement of probability distro:
@@ -83,7 +218,7 @@ normalize_ln_distro(const It pbegin,
     float_type sum(0.);
     for (It p(pbegin); p!=pend; ++p)
     {
-        *p = std::exp(*p-max);
+        *p = std::exp(*p-max);  // To alleviate underflow problem
         sum += *p;
     }
 

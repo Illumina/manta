@@ -198,11 +198,8 @@ struct path_segment
     operator<(const path_segment& rhs) const
     {
         if (type<rhs.type) return true;
-        if (type==rhs.type)
-        {
-            return length<rhs.length;
-        }
-        return false;
+        if (type!=rhs.type) return false;
+        return (length<rhs.length);
     }
 
     align_t type;
@@ -281,6 +278,13 @@ apath_insert_lead_size(const path_t& apath);
 /// how much insert occurs after the last aligned base?
 unsigned
 apath_insert_trail_size(const path_t& apath);
+
+/// how many indels are in the alignment?
+///
+/// combinations of adjacent I and D segments are counted
+/// as one indel
+unsigned
+apath_indel_count(const path_t& apath);
 
 /// append segment to end of apath
 void

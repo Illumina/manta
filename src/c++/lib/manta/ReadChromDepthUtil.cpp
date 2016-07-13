@@ -366,7 +366,7 @@ readChromDepthFromAlignment(
 {
     bam_streamer read_stream(statsAlignmentFile.c_str());
 
-    const bam_hdr_t& header(* read_stream.get_header());
+    const bam_hdr_t& header(read_stream.get_header());
     const bam_header_info bamHeader(header);
 
     const auto& chromToIndex(bamHeader.chrom_to_index);
@@ -414,7 +414,7 @@ readChromDepthFromAlignment(
     }
 #endif
 
-    /// loop through segments until convergence criteria are met, or we run out of data:
+    // loop through segments until convergence criteria are met, or we run out of data:
     static const unsigned maxCycle(10);
     bool isFinished(false);
     for (unsigned cycleIndex(0); cycleIndex<maxCycle; cycleIndex++)

@@ -84,8 +84,7 @@ alt_map_qual(const char* tag) const
         if (alt_map<0)
         {
             std::ostringstream oss;
-            oss << "ERROR: Unexpected negative value in optional BAM tag: '" << std::string(tag,2) << "'\n"
-                << "\tRemove the --eland-compatibility flag to stop using this tag.\n";
+            oss << "ERROR: Unexpected negative value in optional BAM/CRAM tag: '" << std::string(tag,2) << "'\n";
             throw blt_exception(oss.str().c_str());
         }
         return static_cast<unsigned>(alt_map);

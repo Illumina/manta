@@ -146,11 +146,8 @@ struct known_pos_range2
     operator<(const known_pos_range2& rhs) const
     {
         if (_begin_pos < rhs._begin_pos) return true;
-        if (_begin_pos == rhs._begin_pos)
-        {
-            if (_end_pos < rhs._end_pos) return true;
-        }
-        return false;
+        if (_begin_pos != rhs._begin_pos) return false;
+        return (_end_pos < rhs._end_pos);
     }
 
     bool

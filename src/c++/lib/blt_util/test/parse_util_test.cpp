@@ -79,6 +79,12 @@ BOOST_AUTO_TEST_CASE( test_parse_int_str_bad_input )
     BOOST_REQUIRE_THROW(parse_int_str(junk), std::exception);
 }
 
+BOOST_AUTO_TEST_CASE( test_parse_int_rval )
+{
+    const int val(parse_int_rvalue("2"));
+    BOOST_REQUIRE_EQUAL(val, 2);
+}
+
 
 //
 // check long parsing
@@ -118,6 +124,12 @@ BOOST_AUTO_TEST_CASE( test_parse_long_str )
 {
     static const char two[] = "2";
     const long val(parse_long_str(std::string(two)));
+    BOOST_REQUIRE_EQUAL(val, 2l);
+}
+
+BOOST_AUTO_TEST_CASE( test_parse_long_rval )
+{
+    const long val(parse_long_rvalue("2"));
     BOOST_REQUIRE_EQUAL(val, 2l);
 }
 
@@ -175,6 +187,12 @@ BOOST_AUTO_TEST_CASE( test_parse_unsigned_str_bad_input )
     BOOST_REQUIRE_THROW(parse_unsigned_str(junk), std::exception);
 }
 
+BOOST_AUTO_TEST_CASE( test_parse_unsigned_rval )
+{
+    const unsigned val(parse_unsigned_rvalue("2"));
+    BOOST_REQUIRE_EQUAL(val, 2u);
+}
+
 
 
 //
@@ -221,6 +239,13 @@ BOOST_AUTO_TEST_CASE( test_parse_double_str_bad_input2 )
     static const std::string junk("");
     BOOST_REQUIRE_THROW(parse_double_str(junk), std::exception);
 }
+
+BOOST_AUTO_TEST_CASE( test_parse_double_rval )
+{
+    const double val(parse_double_rvalue("2.0"));
+    BOOST_REQUIRE_CLOSE(val, 2.0, tol);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

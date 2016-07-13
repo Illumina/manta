@@ -347,6 +347,29 @@ apath_insert_trail_size(const path_t& apath)
 
 
 
+unsigned
+apath_indel_count(
+    const path_t& apath)
+{
+    unsigned val(0);
+    bool isIndel(false);
+    for (const path_segment& ps : apath)
+    {
+        if ((DELETE == ps.type) || (INSERT == ps.type))
+        {
+            if (! isIndel) val++;
+            isIndel=true;
+        }
+        else
+        {
+            isIndel=false;
+        }
+    }
+    return val;
+}
+
+
+
 void
 apath_limit_ref_length(
     const unsigned target_ref_length,
@@ -851,8 +874,9 @@ is_seq_swap(const path_t& apath)
 
 
 bool
-is_segment_swap_start(const path_t& apath,
-                      unsigned i)
+is_segment_swap_start(
+    const path_t& apath,
+    unsigned i)
 {
     using namespace ALIGNPATH;
 

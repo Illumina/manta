@@ -329,7 +329,14 @@ get_ref_seq_known_size(const reference_contig_segment& ref_seq,
 /// Looks for the smallest possible perfect repeat in seq
 ///
 void
-get_seq_repeat_unit(const std::string& seq,
-                    std::string& repeat_unit,
-                    unsigned& repeat_count);
+get_seq_repeat_unit(
+    const std::string& seq,
+    std::string& repeat_unit,
+    unsigned& repeat_count);
 
+/// Same as above but removes first base from seq
+void
+get_vcf_seq_repeat_unit(
+    const std::string& seq,
+    std::string& repeat_unit,
+    unsigned& repeat_count);

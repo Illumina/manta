@@ -98,7 +98,7 @@ SVScorer(
     const unsigned bamCount(_bamStreams.size());
     for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
     {
-        const bam_hdr_t* indexHeader(_bamStreams[bamIndex]->get_header());
+        const bam_hdr_t& indexHeader(_bamStreams[bamIndex]->get_header());
         std::ostringstream oss;
         oss << "SAMPLE" << bamIndex;
         const char* defaultName(oss.str().c_str());

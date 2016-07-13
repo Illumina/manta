@@ -57,6 +57,29 @@ parse_double(
     const char* s_end = nullptr);
 
 
+/// parse c-string to TYPE
+///
+/// similar to above functions but:
+/// - entire string must be convertible, no trailing suffix is allowed
+/// - appropriate for rvalue char pointers
+///
+unsigned
+parse_unsigned_rvalue(
+    const char* s);
+
+int
+parse_int_rvalue(
+    const char* s);
+
+long
+parse_long_rvalue(
+    const char* s);
+
+double
+parse_double_rvalue(
+    const char* s,
+    const char* s_end = nullptr);
+
 
 /// parse std::string to TYPE
 ///

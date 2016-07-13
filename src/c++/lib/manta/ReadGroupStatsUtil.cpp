@@ -704,7 +704,6 @@ private:
         _isFinalized=true;
     }
 
-
     bool _isFinalized;
     const std::string _statsBamFile;
     RGMapType _rgTracker;
@@ -719,7 +718,7 @@ extractReadGroupStatsFromBam(
 {
     bam_streamer read_stream(statsBamFile.c_str());
 
-    const bam_hdr_t& header(* read_stream.get_header());
+    const bam_hdr_t& header(read_stream.get_header());
     const int32_t chromCount(header.n_targets);
     std::vector<int32_t> chromSize(chromCount,0);
     std::vector<int32_t> chromHighestPos(chromCount,-1);

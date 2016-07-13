@@ -25,6 +25,7 @@
 #pragma once
 
 #include "blt_util/blt_types.hh"
+#include "blt_util/PolymorphicObject.hh"
 #include "blt_util/reference_contig_segment.hh"
 #include "blt_util/seq_util.hh"
 
@@ -153,21 +154,8 @@ bam_seq_code_to_id(const uint8_t a,
 // sequences from bam files and regular strings using the same
 // object:
 //
-struct bam_seq_base
+struct bam_seq_base : public PolymorphicObject
 {
-    bam_seq_base() = default;
-    virtual ~bam_seq_base() = default;
-
-    explicit
-    bam_seq_base(const bam_seq_base&) = default; // support copying
-    bam_seq_base& operator=(const bam_seq_base&) = default;
-
-#if ((!defined(_MSC_VER)) || (_MSC_VER > 1800))
-    explicit
-    bam_seq_base(bam_seq_base&&) = default; // support moving
-    bam_seq_base& operator=(bam_seq_base&&) = default;
-#endif
-
     virtual uint8_t get_code(pos_t i) const = 0;
 
     virtual char get_char(const pos_t i) const = 0;
@@ -205,7 +193,7 @@ struct bam_seq : public bam_seq_base
 #endif
 
     uint8_t
-    get_code(pos_t i) const
+    get_code(pos_t i) const override
     {
         if (! is_in_range(i)) return BAM_BASE::ANY;
         i += static_cast<pos_t>(_offset);
@@ -213,7 +201,7 @@ struct bam_seq : public bam_seq_base
     }
 
     char
-    get_char(const pos_t i) const
+    get_char(const pos_t i) const override
     {
         return get_bam_seq_char(get_code(i));
     }
@@ -248,7 +236,7 @@ struct bam_seq : public bam_seq_base
         return s;
     }
 
-    unsigned size() const
+    unsigned size() const override
     {
         return _size;
     }
@@ -273,19 +261,19 @@ struct string_bam_seq : public bam_seq_base
         : _s(s), _size(init_size) {}
 
     uint8_t
-    get_code(pos_t i) const
+    get_code(pos_t i) const override
     {
         return get_bam_seq_code(get_char(i));
     }
 
     char
-    get_char(const pos_t i) const
+    get_char(const pos_t i) const override
     {
         if (! is_in_range(i)) return 'N';
         return _s[i];
     }
 
-    unsigned size() const
+    unsigned size() const override
     {
         return _size;
     }
@@ -306,18 +294,18 @@ struct rc_segment_bam_seq : public bam_seq_base
     {}
 
     uint8_t
-    get_code(pos_t i) const
+    get_code(pos_t i) const override
     {
         return get_bam_seq_code(get_char(i));
     }
 
     char
-    get_char(const pos_t i) const
+    get_char(const pos_t i) const override
     {
         return _r.get_base(i);
     }
 
-    unsigned size() const
+    unsigned size() const override
     {
         return _r.end();
     }

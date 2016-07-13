@@ -94,10 +94,10 @@ struct bam_streamer : public boost::noncopyable
     int32_t
     target_name_to_id(const char* seq_name) const;
 
-    const bam_hdr_t*
+    const bam_hdr_t&
     get_header() const
     {
-        return _hdr;
+        return *(_hdr);
     }
 
 private:

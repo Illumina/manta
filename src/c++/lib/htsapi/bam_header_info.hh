@@ -48,7 +48,6 @@
 ///
 struct bam_header_info
 {
-
     bam_header_info()
     {}
 

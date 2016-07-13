@@ -23,6 +23,7 @@
 ///
 
 #include "blt_util/blt_exception.hh"
+#include "blt_util/log.hh"
 #include "htsapi/bam_dumper.hh"
 
 #include <cassert>
@@ -34,11 +35,11 @@
 
 bam_dumper::
 bam_dumper(const char* filename,
-           const bam_hdr_t* header)
-    : _hdr(header)
+           const bam_hdr_t& header)
+    : _hdr(&header),
+      _stream_name(filename)
 {
     assert(nullptr != filename);
-    assert(nullptr != header);
 
     _hfp = hts_open(filename, "wb");
 
@@ -67,9 +68,24 @@ bam_dumper::
         const int retval = hts_close(_hfp);
         if (retval != 0)
         {
-            std::ostringstream oss;
-            oss << "Failed to close SAM/BAM/CRAM file";
-            throw blt_exception(oss.str().c_str());
+            log_os << "Failed to close SAM/BAM/CRAM file: '" << name() <<"'\n";
+            std::exit(EXIT_FAILURE);
         }
     }
 }
+
+
+
+void
+bam_dumper::
+put_record(const bam1_t* brec)
+{
+    const int retval = sam_write1(_hfp,_hdr,brec);
+    if (retval < 0)
+    {
+        std::ostringstream oss;
+        oss << "Failed to write new record to BAM file: '" << name() << "'";
+        throw blt_exception(oss.str().c_str());
+    }
+}
+

@@ -52,9 +52,11 @@ namespace illumina
 namespace blt_util
 {
 
+static
 unsigned
-parse_unsigned(
-    const char*& s)
+parse_unsigned_core(
+    const char* s,
+    const char*& s_out)
 {
     static const int base(10);
 
@@ -73,32 +75,45 @@ parse_unsigned(
         parse_exception("unsigned",s);
     }
 
-    s = endptr;
+    s_out = endptr;
 
     return static_cast<unsigned>(val);
 }
 
+unsigned
+parse_unsigned(
+    const char*& s)
+{
+    return parse_unsigned_core(s,s);
+}
 
+unsigned
+parse_unsigned_rvalue(
+    const char* s)
+{
+    const char* s_tmp(0);
+    const unsigned val(parse_unsigned_core(s,s_tmp));
+    if (*s_tmp != '\0')
+    {
+        parse_exception("unsigned",s);
+    }
+    return val;
+}
 
 unsigned
 parse_unsigned_str(
     const std::string& s)
 {
-    const char* s2(s.c_str());
-    const char* const s2_end(s2+s.size());
-    const unsigned val(parse_unsigned(s2));
-    if (s2 != s2_end)
-    {
-        parse_exception("unsigned",s.c_str());
-    }
-    return val;
+    return parse_unsigned_rvalue(s.c_str());
 }
 
 
 
+static
 int
-parse_int(
-    const char*& s)
+parse_int_core(
+    const char* s,
+    const char*& s_out)
 {
     const char* endptr(s);
     const long val(parse_long(endptr));
@@ -109,32 +124,45 @@ parse_int(
         parse_exception("int",s);
     }
 
-    s = endptr;
+    s_out = endptr;
 
     return static_cast<int>(val);
 }
 
+int
+parse_int(
+    const char*& s)
+{
+    return parse_int_core(s,s);
+}
 
+int
+parse_int_rvalue(
+    const char* s)
+{
+    const char* s_tmp(0);
+    const int val(parse_int_core(s,s_tmp));
+    if (*s_tmp != '\0')
+    {
+        parse_exception("int",s);
+    }
+    return val;
+}
 
 int
 parse_int_str(
     const std::string& s)
 {
-    const char* s2(s.c_str());
-    const char* const s2_end(s2+s.size());
-    const int val(parse_int(s2));
-    if (s2 != s2_end)
-    {
-        parse_exception("int",s.c_str());
-    }
-    return val;
+    return parse_int_rvalue(s.c_str());
 }
 
 
 
+static
 long
-parse_long(
-    const char*& s)
+parse_long_core(
+    const char* s,
+    const char*& s_out)
 {
     static const int base(10);
 
@@ -148,50 +176,83 @@ parse_long(
         parse_exception("long int",s);
     }
 
-    s = endptr;
+    s_out = endptr;
 
     return val;
 }
 
+long
+parse_long(
+    const char*& s)
+{
+    return parse_long_core(s,s);
+}
 
+long
+parse_long_rvalue(
+    const char* s)
+{
+    const char* s_tmp(0);
+    const long val(parse_long_core(s,s_tmp));
+    if (*s_tmp != '\0')
+    {
+        parse_exception("long int",s);
+    }
+    return val;
+}
 
 long
 parse_long_str(
     const std::string& s)
 {
-    const char* s2(s.c_str());
-    const char* const s2_end(s2+s.size());
-    const long val(parse_long(s2));
-    if (s2 != s2_end)
-    {
-        parse_exception("long int",s.c_str());
-    }
-    return val;
+    return parse_long_rvalue(s.c_str());
 }
 
 
+
+static
+double
+parse_double_core(
+    const char* s,
+    const char*& s_out,
+    const char* s_end)
+{
+    double val;
+    s_out = s;
+    if (s_end == nullptr) s_end=s+strlen(s);
+    bool isPass(boost::spirit::qi::parse(s_out, s_end, boost::spirit::double_, val));
+    if (isPass)
+    {
+        isPass = (s != s_out);
+    }
+    if (! isPass)
+    {
+        parse_exception("double",s);
+    }
+    return val;
+}
 
 double
 parse_double(
     const char*& s,
     const char* s_end)
 {
-    double val;
-    const char* s_start(s);
-    if (s_end == nullptr) s_end=s+strlen(s);
-    bool isPass(boost::spirit::qi::parse(s, s_end, boost::spirit::double_, val));
-    if (isPass)
+    return parse_double_core(s,s,s_end);
+}
+
+double
+parse_double_rvalue(
+    const char* s,
+    const char* s_end)
+{
+    const char* s_tmp(0);
+    const double val(parse_double_core(s,s_tmp,s_end));
+    if (*s_tmp != '\0')
     {
-        isPass = (s_start != s);
-    }
-    if (! isPass)
-    {
-        parse_exception("double",s_start);
+        parse_exception("double",s);
     }
     return val;
 }
-
-
 
 double
 parse_double_str(
@@ -199,12 +260,7 @@ parse_double_str(
 {
     const char* s2(s.c_str());
     const char* const s2_end(s2+s.size());
-    const double val(parse_double(s2,s2_end));
-    if (s2 != s2_end)
-    {
-        parse_exception("double",s.c_str());
-    }
-    return val;
+    return parse_double_rvalue(s2,s2_end);
 }
 
 }

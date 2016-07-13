@@ -46,7 +46,7 @@ test_single_cigar_conversion(const std::string& input)
 
     path_t apath;
     cigar_to_apath(input.c_str(),apath);
-    BOOST_CHECK_EQUAL(input,apath_to_cigar(apath));
+    BOOST_REQUIRE_EQUAL(input,apath_to_cigar(apath));
 }
 
 BOOST_AUTO_TEST_CASE( test_align_path_cigar_conversion )
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE( test_align_path_cigar_conversion )
 
     path_t apath;
     cigar_to_apath("10I10M10D10M10S",apath);
-    BOOST_CHECK_EQUAL(static_cast<int>(apath.size()),5);
+    BOOST_REQUIRE_EQUAL(apath.size(),5u);
 
     // test round-trip:
     test_single_cigar_conversion("10I10M2S20M2I10M10D10M");
@@ -65,19 +65,26 @@ BOOST_AUTO_TEST_CASE( test_align_path_cigar_conversion )
 
 BOOST_AUTO_TEST_CASE( test_align_path_ref_length )
 {
-
     path_t apath;
     cigar_to_apath("2I10M10D4I10M10N10M3S",apath);
-    BOOST_CHECK_EQUAL(static_cast<int>(apath_ref_length(apath)),50);
+    BOOST_REQUIRE_EQUAL(apath_ref_length(apath),50u);
 }
 
 
 BOOST_AUTO_TEST_CASE( test_align_path_read_length )
 {
-
     path_t apath;
     cigar_to_apath("2I10M10D4I10M10N10M3S",apath);
-    BOOST_CHECK_EQUAL(static_cast<int>(apath_read_length(apath)),39);
+    BOOST_REQUIRE_EQUAL(apath_read_length(apath),39u);
+}
+
+
+
+BOOST_AUTO_TEST_CASE( test_apath_indel_count )
+{
+    path_t apath;
+    cigar_to_apath("2I10M10D4I10M1D10M10N10M3S",apath);
+    BOOST_REQUIRE_EQUAL(apath_indel_count(apath),3u);
 }
 
 
@@ -98,7 +105,7 @@ test_string_clean(const char* cigar, const char* expect)
     log_os << "cleaned,expect: " << apath << " " << expect_path << "\n";
 #endif
 
-    BOOST_CHECK(apath==expect_path);
+    BOOST_REQUIRE_EQUAL(apath,expect_path);
 }
 
 

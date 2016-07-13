@@ -50,6 +50,11 @@ struct vcf_record
         line=nullptr;
     }
 
+
+    // N.B. the current implementation of is_valid does not
+    // allow symbolic ALTs, e.g. representing a deletion using
+    // the <DEL> symbolic allele and the END INFO field.  This
+    // is probably fine, but worth noting
     bool
     is_valid() const
     {
@@ -84,6 +89,8 @@ struct vcf_record
         }
         return true;
     }
+
+    bool is_normalized() const;
 
     std::string chrom;
     int pos = 0;

@@ -52,6 +52,9 @@ struct hts_streamer : private boost::noncopyable
         return _record_no;
     }
 
+    void set_region(
+        const char* region);
+
 protected:
     void
     _load_index();

@@ -73,11 +73,7 @@ hts_streamer(
     _load_index();
 
     // read only a region of HTS file:
-    _titr = tbx_itr_querys(_tidx, region);
-    if (nullptr == _titr)
-    {
-        _is_stream_end=true;
-    }
+    set_region(region);
 }
 
 
@@ -91,6 +87,21 @@ hts_streamer::
     if (nullptr != _kstr.s) free(_kstr.s);
 }
 
+
+void
+hts_streamer::
+set_region(
+    const char* region)
+{
+    // free _titr if it's already been set to avoid memory leaks
+    if (nullptr != _titr) tbx_itr_destroy(_titr);
+
+    _titr = tbx_itr_querys(_tidx, region);
+    if (nullptr == _titr)
+    {
+        _is_stream_end=true;
+    }
+}
 
 
 // load index if it hasn't been set already:
