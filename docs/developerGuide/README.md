@@ -227,4 +227,5 @@ The following items provide more in-depth details on a subsection of the methods
 * [Debug Single SV](debugSingleSV.md)
 * [Debug Full Manta Run](debugSingleSV.md)
 * [Manta VCF ID field](ID.md)
+* [Test assembler directly from BAM input](testAssembler.md)
 
