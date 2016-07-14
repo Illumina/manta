@@ -58,15 +58,31 @@ align(
 
     static const ScoreType badVal(-10000);
 
-    // global alignment of query -- disallow start from insertion or deletion
-    // state, query can 'fall-off' the end of a short reference, in which case it will
-    // be soft-clipped and each base off the end will be scored as offEdge:
+    // global alignment of query
+    //
+    // disallow start from the delete state, control start from insert state with flag
+    //
+    // query can 'fall-off' the end of a short reference, in which case it will
+    // be soft-clipped and each base off the end will be scored as offEdge
+    //
     for (unsigned queryIndex(0); queryIndex<=querySize; queryIndex++)
     {
+        PtrVal& headPtr(_ptrMat.val(queryIndex,0));
         ScoreVal& val((*thisSV)[queryIndex]);
+        headPtr.match = AlignState::MATCH;
         val.match = queryIndex * scores.offEdge;
+        headPtr.del = AlignState::MATCH;
         val.del = badVal;
-        val.ins = badVal;
+        if (not scores.isAllowEdgeInsertion)
+        {
+            headPtr.ins = AlignState::MATCH;
+            val.ins = badVal;
+        }
+        else
+        {
+            headPtr.ins = AlignState::INSERT;
+            val.ins = scores.open + (queryIndex * scores.extend);
+        }
     }
 
 #ifdef DEBUG_ALN_MATRIX
@@ -85,10 +101,14 @@ align(
             std::swap(thisSV,prevSV);
 
             {
-                // disallow start from the insert or delete state:
+                // disallow start from the delete or insert state
+                PtrVal& headPtr(_ptrMat.val(0,refIndex+1));
                 ScoreVal& val((*thisSV)[0]);
+                headPtr.match = AlignState::MATCH;
                 val.match = 0;
+                headPtr.del = AlignState::MATCH;
                 val.del = badVal;
+                headPtr.ins = AlignState::MATCH;
                 val.ins = badVal;
             }
 
@@ -152,10 +172,16 @@ align(
             // get backtrace info:
             {
                 const ScoreVal& sval((*thisSV)[querySize]);
-                const ScoreType thisMax(sval.match);
-                updateBacktrace(thisMax,refIndex+1,querySize,btrace);
+                updateBacktrace(sval.match,refIndex+1,querySize,btrace);
             }
         }
+    }
+
+    // optionally allow for trailing insertion
+    if (scores.isAllowEdgeInsertion)
+    {
+        const ScoreVal& sval((*thisSV)[querySize]);
+        updateBacktrace(sval.ins,refSize,querySize,btrace, AlignState::INSERT);
     }
 
     // also allow for the case where query falls-off the end of the reference:

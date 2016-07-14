@@ -55,7 +55,7 @@ dumpTables(
 
         // dump state before refIndex 0
         unsigned storeIndex(0);
-        this->dumpSingleRefTable(refBegin,refEnd,querySize,ptrMatrix,storeScores, '1', sIndex, storeIndex);
+        this->dumpSingleRefTable(refBegin,refEnd,querySize,ptrMatrix,storeScores, '1', sIndex, storeIndex, log_os);
     }
 }
 #endif
@@ -109,7 +109,7 @@ backTraceAlignment(
         ps.length = (querySize-btrace.queryBegin);
     }
 
-    while ((btrace.queryBegin>0) && (btrace.refBegin>0))
+    while (true)
     {
         const AlignState::index_t nextState(ptrMatrix.val(btrace.queryBegin,btrace.refBegin).getStatePtr(btrace.state));
 
@@ -123,17 +123,20 @@ backTraceAlignment(
 
         if (btrace.state==AlignState::MATCH)
         {
+            if ((btrace.queryBegin<1) or (btrace.refBegin<1)) break;
             AlignerUtil::updatePath(apath,ps,ALIGNPATH::MATCH);
             btrace.queryBegin--;
             btrace.refBegin--;
         }
         else if ((btrace.state==AlignState::DELETE) || (btrace.state==AlignState::JUMP))
         {
+            if (btrace.refBegin<1) break;
             AlignerUtil::updatePath(apath,ps,ALIGNPATH::DELETE);
             btrace.refBegin--;
         }
         else if ((btrace.state==AlignState::INSERT) || (btrace.state==AlignState::JUMPINS))
         {
+            if (btrace.queryBegin<1) break;
             AlignerUtil::updatePath(apath,ps,ALIGNPATH::INSERT);
             btrace.queryBegin--;
         }

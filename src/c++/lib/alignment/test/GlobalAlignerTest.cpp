@@ -40,9 +40,11 @@ static
 AlignmentResult<score_t>
 testAlign(
     const std::string& seq,
-    const std::string& ref)
+    const std::string& ref,
+    const int offEdgeScore = -4,
+    const bool isAllowEdgeInsertion = false)
 {
-    AlignmentScores<score_t> scores(2,-4,-5,-1,-4);
+    AlignmentScores<score_t> scores(2, -4, -5, -1, offEdgeScore, isAllowEdgeInsertion);
     GlobalAligner<score_t> aligner(scores);
     AlignmentResult<score_t> result;
     aligner.align(seq.begin(),seq.end(),ref.begin(),ref.end(),result);
@@ -173,6 +175,50 @@ BOOST_AUTO_TEST_CASE( test_GlobalAlignerLeftShift2 )
     AlignmentResult<score_t> result = testAlign(seq,ref);
 
     BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align.apath),"5=1I12=");
+    BOOST_REQUIRE_EQUAL(result.align.beginPos,0);
+}
+
+
+// show that alignment is global over the query
+//
+BOOST_AUTO_TEST_CASE( test_GlobalAlignerGlocal )
+{
+    static const std::string seq("AABCC");
+    static const std::string ref("ZZBYY");
+
+    AlignmentResult<score_t> result = testAlign(seq,ref);
+
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align.apath),"2X1=2X");
+    BOOST_REQUIRE_EQUAL(result.align.beginPos,0);
+}
+
+
+// show that soft-clipping weights and edge indel blocking are working correctly by setting
+// off-edge score to a prohibitively high value.
+//
+BOOST_AUTO_TEST_CASE( test_GlobalAlignerNoClip )
+{
+    static const std::string seq("12ABCDEFFFFFFFGHIJKL12");
+    static const std::string ref(  "ABCDEFFFFFFFGHIJKL");
+
+    AlignmentResult<score_t> result = testAlign(seq,ref,-1000);
+
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align.apath),"1X2I16=2I1X");
+    BOOST_REQUIRE_EQUAL(result.align.beginPos,0);
+}
+
+
+// show that soft-clipping weights and edge indel blocking are working correctly by setting
+// off-edge score to a prohibitively high value, and allowing edge Indels
+//
+BOOST_AUTO_TEST_CASE( test_GlobalAlignerNoClipEdgeIndel )
+{
+    static const std::string seq("12ABCDEFFFFFFFGHIJKL12");
+    static const std::string ref(  "ABCDEFFFFFFFGHIJKL");
+
+    AlignmentResult<score_t> result = testAlign(seq,ref,-1000, true);
+
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align.apath),"2I18=2I");
     BOOST_REQUIRE_EQUAL(result.align.beginPos,0);
 }
 

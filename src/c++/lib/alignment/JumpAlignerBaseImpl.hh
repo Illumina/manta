@@ -62,10 +62,10 @@ dumpTables(
 
         // dump state before refIndex 0
         unsigned storeIndex(0);
-        this->dumpSingleRefTable(ref1Begin, ref1End, querySize, ptrMatrix1, storeScores, '1', sIndex, storeIndex);
+        this->dumpSingleRefTable(ref1Begin, ref1End, querySize, ptrMatrix1, storeScores, '1', sIndex, storeIndex, log_os);
 
         storeIndex++;
-        this->dumpSingleRefTable(ref2Begin, ref2End, querySize, ptrMatrix2, storeScores, '2', sIndex, storeIndex);
+        this->dumpSingleRefTable(ref2Begin, ref2End, querySize, ptrMatrix2, storeScores, '2', sIndex, storeIndex, log_os);
     }
 }
 #endif

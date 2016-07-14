@@ -28,8 +28,14 @@
 #include "alignment/AlignmentScores.hh"
 #include "blt_util/align_path.hh"
 
+
 // #define DEBUG_ALN // Standard debug output
 // #define DEBUG_ALN_MATRIX // Dump full edit-matrix tables to stderr. Does not scale to non-trivial ref/query size!
+
+
+#ifdef DEBUG_ALN_MATRIX
+#include <iosfwd>
+#endif
 
 
 /// shared methods for all aligners
@@ -102,7 +108,8 @@ protected:
         const std::vector<std::vector<ScoreValType>>& storeScores,
         const char refSym,
         const AlignState::index_t sIndex,
-        unsigned& storeIndex) const;
+        unsigned& storeIndex,
+        std::ostream& os) const;
 #endif
 
     const AlignmentScores<ScoreType> _scores;

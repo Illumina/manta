@@ -25,8 +25,10 @@
 #include <cassert>
 
 #ifdef DEBUG_ALN_MATRIX
-#include "blt_util/log.hh"
+#include <boost/io/ios_state.hpp>
+
 #include <iomanip>
+#include <iostream>
 #endif
 
 
@@ -42,46 +44,47 @@ dumpSingleRefTable(
     const std::vector<std::vector<ScoreValType>>& storeScores,
     const char refSym,
     const AlignState::index_t sIndex,
-    unsigned& storeIndex) const
+    unsigned& storeIndex,
+    std::ostream& os) const
 {
+    boost::io::ios_all_saver guard(os);
+
     auto printVal = [](
-                        const ScoreType& val,
-                        const char fromSym,
-                        std::ostream& os)
+                    const ScoreType& val,
+                    const char fromSym,
+                    std::ostream& pos)
     {
         if (val<-900)
         {
-            os << " XX";
+            pos << " XX";
         }
         else
         {
-            os << std::setfill(' ') << std::setw(3) << val;
+            pos << std::setfill(' ') << std::setw(3) << val;
         }
-        os << fromSym;
+        pos << fromSym;
     };
 
+    auto printQueryRow = [&](
+        const unsigned qrefIndex)
     {
-        log_os << "# N ";
-        for (unsigned queryIndex(0); queryIndex<=querySize; ++queryIndex)
+        for (unsigned queryIndex(0); queryIndex <= querySize; ++queryIndex)
         {
             const auto& val(storeScores[storeIndex][queryIndex].getScore(sIndex));
-            static const char fromSym('.');
-            printVal(val,fromSym, log_os);
+            const char fromSym(AlignState::symbol(ptrMatrix.val(queryIndex, qrefIndex).getStatePtr(sIndex)));
+            printVal(val, fromSym, os);
         }
-        log_os << "\n";
-    }
+        os << "\n";
+    };
+
+    os << "# - ";
+    printQueryRow(0);
     unsigned refIndex(0);
     for (SymIter refIter(refBegin); refIter != refEnd; ++refIter, ++refIndex)
     {
-        log_os << refSym << " " << *refIter << " ";
+        os << refSym << " " << *refIter << " ";
         storeIndex++;
-        for (unsigned queryIndex(0); queryIndex<=querySize; ++queryIndex)
-        {
-            const auto& val(storeScores[storeIndex][queryIndex].getScore(sIndex));
-            const char fromSym(queryIndex==0 ? '.' : AlignState::symbol(ptrMatrix.val(queryIndex,refIndex+1).getStatePtr(sIndex)));
-            printVal(val,fromSym, log_os);
-        }
-        log_os << "\n";
+        printQueryRow(refIndex+1);
     }
 }
 #endif

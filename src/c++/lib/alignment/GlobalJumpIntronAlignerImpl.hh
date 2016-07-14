@@ -101,16 +101,32 @@ align(
 
     static const ScoreType badVal(-10000);
 
-    // global alignment of query -- disallow start from insertion or deletion
-    // state, query can 'fall-off' the end of a short reference, in which case it will
-    // be soft-clipped and each base off the end will count as an 'offEdge' state:
+    // global alignment of query
+    //
+    // disallow start from the delete state, control start from insert state with flag
+    //
+    // query can 'fall-off' the end of a short reference, in which case it will
+    // be soft-clipped and each base off the end will be scored as offEdge
+    //
     for (unsigned queryIndex(0); queryIndex<=querySize; queryIndex++)
     {
+        PtrVal& headPtr1(_ptrMat1.val(queryIndex,0));
+        PtrVal& headPtr2(_ptrMat2.val(queryIndex,0));
         ScoreVal& val((*thisSV)[queryIndex]);
+        headPtr1.match = AlignState::MATCH;
+        headPtr2.match = AlignState::MATCH;
         val.match = queryIndex * scores.offEdge;
+        headPtr1.del = AlignState::MATCH;
+        headPtr2.del = AlignState::MATCH;
         val.del = badVal;
+        headPtr1.ins = AlignState::MATCH;
+        headPtr2.ins = AlignState::MATCH;
         val.ins = badVal;
+        headPtr1.jump = AlignState::MATCH;
+        headPtr2.jump = AlignState::MATCH;
         val.jump = badVal;
+        headPtr1.intron = AlignState::MATCH;
+        headPtr2.intron = AlignState::MATCH;
         val.intron = queryIndex * _intronOffEdgeScore;
     }
 
@@ -131,11 +147,17 @@ align(
 
             {
                 // disallow start from the insert or delete state:
+                PtrVal& headPtr(_ptrMat1.val(0,ref1Index+1));
                 ScoreVal& val((*thisSV)[0]);
+                headPtr.match = AlignState::MATCH;
                 val.match = 0;
+                headPtr.del = AlignState::MATCH;
                 val.del = badVal;
+                headPtr.ins = AlignState::MATCH;
                 val.ins = badVal;
+                headPtr.jump = AlignState::MATCH;
                 val.jump = badVal;
+                headPtr.intron = AlignState::MATCH;
                 val.intron = badVal;
             }
 
@@ -279,11 +301,17 @@ align(
 
             {
                 // disallow start from the insert or delete state:
+                PtrVal& headPtr(_ptrMat2.val(0,ref2Index+1));
                 ScoreVal& val((*thisSV)[0]);
+                headPtr.match = AlignState::MATCH;
                 val.match = 0;
+                headPtr.del = AlignState::MATCH;
                 val.del = badVal;
+                headPtr.ins = AlignState::MATCH;
                 val.ins = badVal;
+                headPtr.jump = AlignState::MATCH;
                 val.jump = badVal;
+                headPtr.intron = AlignState::MATCH;
                 val.intron = badVal;
             }
 

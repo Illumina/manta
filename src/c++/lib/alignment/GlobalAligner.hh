@@ -63,10 +63,10 @@ private:
             {
             case AlignState::MATCH:
                 return match;
-            case AlignState::INSERT:
-                return ins;
             case AlignState::DELETE:
                 return del;
+            case AlignState::INSERT:
+                return ins;
             default:
                 assert(false && "Unexpected Index Value");
                 return 0;
@@ -74,8 +74,8 @@ private:
         }
 
         ScoreType match;
-        ScoreType ins;
         ScoreType del;
+        ScoreType ins;
     };
 
     struct PtrVal
@@ -97,10 +97,10 @@ private:
             {
             case AlignState::MATCH:
                 return match;
-            case AlignState::INSERT:
-                return ins;
             case AlignState::DELETE:
                 return del;
+            case AlignState::INSERT:
+                return ins;
             default:
                 assert(false && "Unexpected Index Value");
                 return 0;
@@ -109,8 +109,8 @@ private:
 
     public:
         code_t match : 2;
-        code_t ins : 2;
         code_t del : 2;
+        code_t ins : 2;
     };
 
     // add the matrices here to reduce allocations over many alignment calls:

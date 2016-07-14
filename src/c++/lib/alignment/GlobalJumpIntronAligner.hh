@@ -42,7 +42,10 @@ struct GlobalJumpIntronAligner : public JumpAlignerBase<ScoreType>
         JumpAlignerBase<ScoreType>(scores,jumpScore),
         _intronOpenScore(intronOpenScore),
         _intronOffEdgeScore(intronOffEdgeScore)
-    {}
+    {
+        // unsupported option:
+        assert (not scores.isAllowEdgeInsertion);
+    }
 
     /// returns alignment path of query to reference
     template <typename SymIter>
