@@ -70,8 +70,7 @@ updateBacktrace(
     const unsigned refIndex,
     const unsigned queryIndex,
     BackTrace<ScoreType>& btrace,
-    const AlignState::index_t state = AlignState::MATCH
-)
+    const AlignState::index_t state = AlignState::MATCH)
 {
     if ( (! btrace.isInit) || (thisMax>btrace.max))
     {

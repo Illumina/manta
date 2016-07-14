@@ -23,24 +23,13 @@
 ///
 
 #include "GSCEdgeStats.hh"
+#include "blt_util/math_util.hh"
 
 #include "boost/archive/xml_iarchive.hpp"
 #include "boost/archive/xml_oarchive.hpp"
 
 #include <fstream>
 #include <iostream>
-
-
-
-template <typename A,typename B>
-double
-safeFrac(
-    const A num,
-    const B den)
-{
-    if (den == 0) return 0;
-    return (static_cast<double>(num)/den);
-}
 
 
 
