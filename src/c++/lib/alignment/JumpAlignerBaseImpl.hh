@@ -30,71 +30,8 @@
 #include "blt_util/log.hh"
 #endif
 
-#ifdef DEBUG_ALN_MATRIX
-#include <iomanip>
-#endif
-
-
 
 #ifdef DEBUG_ALN_MATRIX
-
-
-template <typename ScoreType>
-template <typename SymIter, typename MatrixType, typename ScoreValType>
-void
-JumpAlignerBase<ScoreType>::
-dumpSingleRefTable(
-    const SymIter refBegin, const SymIter refEnd,
-    const size_t querySize,
-    const MatrixType& ptrMatrix,
-    const std::vector<std::vector<ScoreValType>>& storeScores,
-    const char refSym,
-    const AlignState::index_t sIndex,
-    unsigned& storeIndex) const
-{
-    auto printVal = [](
-                        const ScoreType& val,
-                        const char fromSym,
-                        std::ostream& os)
-    {
-        if (val<-900)
-        {
-            os << " XX";
-        }
-        else
-        {
-            os << std::setfill(' ') << std::setw(3) << val;
-        }
-        os << fromSym;
-    };
-
-    {
-        log_os << "# N ";
-        for (unsigned queryIndex(0); queryIndex<=querySize; ++queryIndex)
-        {
-            const auto& val(storeScores[storeIndex][queryIndex].getScore(sIndex));
-            static const char fromSym('.');
-            printVal(val,fromSym, log_os);
-        }
-        log_os << "\n";
-    }
-    unsigned refIndex(0);
-    for (SymIter refIter(refBegin); refIter != refEnd; ++refIter, ++refIndex)
-    {
-        log_os << refSym << " " << *refIter << " ";
-        storeIndex++;
-        for (unsigned queryIndex(0); queryIndex<=querySize; ++queryIndex)
-        {
-            const auto& val(storeScores[storeIndex][queryIndex].getScore(sIndex));
-            const char fromSym(queryIndex==0 ? '.' : AlignState::symbol(ptrMatrix.val(queryIndex,refIndex+1).getStatePtr(sIndex)));
-            printVal(val,fromSym, log_os);
-        }
-        log_os << "\n";
-    }
-}
-
-
-
 template <typename ScoreType>
 template <typename SymIter, typename MatrixType, typename ScoreValType>
 void
@@ -125,10 +62,10 @@ dumpTables(
 
         // dump state before refIndex 0
         unsigned storeIndex(0);
-        dumpSingleRefTable(ref1Begin,ref1End,querySize,ptrMatrix1,storeScores, '1', sIndex, storeIndex);
+        this->dumpSingleRefTable(ref1Begin, ref1End, querySize, ptrMatrix1, storeScores, '1', sIndex, storeIndex);
 
         storeIndex++;
-        dumpSingleRefTable(ref2Begin,ref2End,querySize,ptrMatrix2,storeScores, '2', sIndex, storeIndex);
+        this->dumpSingleRefTable(ref2Begin, ref2End, querySize, ptrMatrix2, storeScores, '2', sIndex, storeIndex);
     }
 }
 #endif
@@ -149,7 +86,6 @@ operator<<(std::ostream& os, JumpAlignmentResult<ScoreType>& alignment)
 
 
 
-// traceback:
 template <typename ScoreType>
 template <typename SymIter, typename MatrixType>
 void

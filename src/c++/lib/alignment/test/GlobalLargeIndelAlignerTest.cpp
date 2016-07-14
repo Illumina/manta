@@ -32,7 +32,7 @@
 
 
 
-BOOST_AUTO_TEST_SUITE( test_GlobalAligner )
+BOOST_AUTO_TEST_SUITE( test_GlobalLargeIndelAligner )
 
 typedef short int score_t;
 

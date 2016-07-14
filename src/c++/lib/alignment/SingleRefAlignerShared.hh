@@ -77,6 +77,19 @@ protected:
         const MatrixType& ptrMatrix,
         const BackTrace<ScoreType>& btraceInput,
         AlignmentResult<ScoreType>& result) const;
+
+#ifdef DEBUG_ALN_MATRIX
+    /// write out matrix of scores and back-trace pointers for debug:
+    template <typename SymIter, typename MatrixType, typename ScoreValType>
+    void
+    dumpTables(
+        const SymIter queryBegin, const SymIter queryEnd,
+        const SymIter refBegin, const SymIter refEnd,
+        const size_t querySize,
+        const MatrixType& ptrMatrix,
+        const std::vector<AlignState::index_t>& dumpStates,
+        const std::vector<std::vector<ScoreValType>>& storeScores) const;
+#endif
 };
 
 

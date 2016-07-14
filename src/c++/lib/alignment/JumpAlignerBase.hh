@@ -30,9 +30,6 @@
 
 #include "blt_util/basic_matrix.hh"
 
-//#define DEBUG_ALN // Standard debug output
-//#define DEBUG_ALN_MATRIX // Dump full edit-matrix tables to stderr. Does not scale to non-trivial ref/query size!
-
 
 /// represents alignment of a query sequence which can switch over from reference1 to reference2
 ///
@@ -134,7 +131,6 @@ protected:
     }
 
 #ifdef DEBUG_ALN_MATRIX
-
     /// write out matrix of scores back-trace pointers for debug:
     template <typename SymIter, typename MatrixType, typename ScoreValType>
     void
@@ -146,22 +142,6 @@ protected:
         const MatrixType& ptrMatrix1, const MatrixType& ptrMatrix2,
         const std::vector<AlignState::index_t>& dumpStates,
         const std::vector<std::vector<ScoreValType>>& storeScores) const;
-
-private:
-    /// write out subset of matrix of scores back-trace pointers for debug, for
-    /// one of the two references
-    template <typename SymIter, typename MatrixType, typename ScoreValType>
-    void
-    dumpSingleRefTable(
-        const SymIter refBegin, const SymIter refEnd,
-        const size_t querySize,
-        const MatrixType& ptrMatrix,
-        const std::vector<std::vector<ScoreValType>>& storeScores,
-        const char refSym,
-        const AlignState::index_t sIndex,
-        unsigned& storeIndex) const;
-
-protected:
 #endif
 
     const ScoreType _jumpScore;

@@ -56,6 +56,23 @@ private:
     // insert and delete are for query wrt reference
     struct ScoreVal
     {
+        ScoreType
+        getScore(const AlignState::index_t i) const
+        {
+            switch (i)
+            {
+            case AlignState::MATCH:
+                return match;
+            case AlignState::INSERT:
+                return ins;
+            case AlignState::DELETE:
+                return del;
+            default:
+                assert(false && "Unexpected Index Value");
+                return 0;
+            }
+        }
+
         ScoreType match;
         ScoreType ins;
         ScoreType del;

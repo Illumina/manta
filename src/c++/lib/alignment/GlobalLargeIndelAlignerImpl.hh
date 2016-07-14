@@ -22,8 +22,6 @@
 // \author Chris Saunders
 //
 
-//#define DEBUG_ALN
-
 #include <cassert>
 
 #ifdef DEBUG_ALN
@@ -73,6 +71,13 @@ align(
         val.jumpDel = badVal;
         val.jumpIns = badVal;
     }
+
+#ifdef DEBUG_ALN_MATRIX
+    // store full matrix of scores to print out later, don't turn this debug option on for large references!
+    std::vector<ScoreVec> storeScores;
+
+    storeScores.push_back(*thisSV);
+#endif
 
     BackTrace<ScoreType> btrace;
 
@@ -193,6 +198,10 @@ align(
             log_os << "\n";
 #endif
 
+#ifdef DEBUG_ALN_MATRIX
+            storeScores.push_back(*thisSV);
+#endif
+
             // get backtrace info:
             {
                 const ScoreVal& sval((*thisSV)[querySize]);
@@ -209,9 +218,12 @@ align(
         updateBacktrace(thisMax, refSize, queryIndex, btrace);
     }
 
-
-#ifdef DEBUG_ALN
-    log_os << "bt-start queryIndex: " << btrace.queryBegin << " refIndex: " << btrace.refBegin << " state: " << AlignState::label(btrace.state) << " maxScore: " << btrace.max << "\n";
+#ifdef DEBUG_ALN_MATRIX
+    std::vector<AlignState::index_t> dumpStates {AlignState::MATCH, AlignState::DELETE, AlignState::INSERT, AlignState::JUMP, AlignState::JUMPINS};
+    this->dumpTables(queryBegin, queryEnd,
+                     refBegin, refEnd,
+                     querySize, _ptrMat,
+                     dumpStates, storeScores);
 #endif
 
     this->backTraceAlignment(

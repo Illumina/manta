@@ -24,13 +24,15 @@
 
 #pragma once
 
+#include "alignment/Alignment.hh"
 #include "alignment/AlignmentScores.hh"
 #include "blt_util/align_path.hh"
 
-#include <cassert>
+// #define DEBUG_ALN // Standard debug output
+// #define DEBUG_ALN_MATRIX // Dump full edit-matrix tables to stderr. Does not scale to non-trivial ref/query size!
 
 
-/// base class containing a few shared aligner functions
+/// shared methods for all aligners
 ///
 template <typename ScoreType>
 struct AlignerBase
@@ -52,51 +54,7 @@ struct AlignerBase
     ScoreType
     getPathScore(
         const ALIGNPATH::path_t& apath,
-        const bool isScoreOffEdge = true) const
-    {
-        using namespace ALIGNPATH;
-
-        ScoreType val(0);
-
-        // note that the intent of this function was to replicate the underling aligner and thus
-        // not penalize insert-delete transitions, however as written the open score is added twice for
-        // such an event. This turns out to perform much better for the performance of this tool as
-        // a variant 'arm' validator. so the unintended code is staying in place for now.
-        //
-        /// TODO: reevaluate policy for insertion-deletion state transition score
-
-        for (const path_segment& ps : apath)
-        {
-            bool isIndel(false); // placement of isIndel inside of this loop is the 'bug'
-            switch (ps.type)
-            {
-            case MATCH:
-                assert(false && "Unexpected MATCH segment"); // if MATCH segments exist, then you're using the wrong type of CIGAR for this function
-                break;
-            case SEQ_MATCH:
-                val += (_scores.match * ps.length);
-                isIndel = false;
-                break;
-            case SEQ_MISMATCH:
-                val += (_scores.mismatch * ps.length);
-                isIndel = false;
-                break;
-            case INSERT:
-            case DELETE:
-                if (! isIndel) val += _scores.open;
-                val += (_scores.extend * ps.length);
-                isIndel = true;
-                break;
-            case SOFT_CLIP:
-                if (isScoreOffEdge) val += (_scores.offEdge * ps.length);
-                isIndel = false;
-                break;
-            default:
-                break;
-            }
-        }
-        return val;
-    }
+        const bool isScoreOffEdge = true) const;
 
     /// recover the maximum partial path alignment score (going left->right) without aligning, requires SEQ_MATCH style CIGAR
     ///
@@ -105,68 +63,7 @@ struct AlignerBase
         const ALIGNPATH::path_t& apath,
         unsigned& maxReadOffset,
         unsigned& maxRefOffset,
-        const bool isScoreOffEdge = true) const
-    {
-        using namespace ALIGNPATH;
-
-        ScoreType val(0);
-        unsigned readOffset(0);
-        unsigned refOffset(0);
-
-        ScoreType maxVal(0);
-        maxReadOffset=0;
-        maxRefOffset=0;
-
-        for (const path_segment& ps : apath)
-        {
-            bool isIndel(false); // unintended 'bug' with positive results, see TODO note above
-            switch (ps.type)
-            {
-            case MATCH:
-                assert(false && "Unexpected MATCH segment"); // if MATCH segments exist, then you're using the wrong type of CIGAR for this function
-                break;
-            case SEQ_MATCH:
-                val += (_scores.match * ps.length);
-                readOffset += ps.length;
-                refOffset += ps.length;
-                isIndel = false;
-                break;
-            case SEQ_MISMATCH:
-                val += (_scores.mismatch * ps.length);
-                readOffset += ps.length;
-                refOffset += ps.length;
-                isIndel = false;
-                break;
-            case INSERT:
-                if (! isIndel) val += _scores.open;
-                val += (_scores.extend * ps.length);
-                readOffset += ps.length;
-                isIndel = true;
-                break;
-            case DELETE:
-                if (! isIndel) val += _scores.open;
-                val += (_scores.extend * ps.length);
-                refOffset += ps.length;
-                isIndel = true;
-                break;
-            case SOFT_CLIP:
-                if (isScoreOffEdge) val += (_scores.offEdge * ps.length);
-                readOffset += ps.length;
-                isIndel = false;
-                break;
-            default:
-                break;
-            }
-
-            if (val>maxVal)
-            {
-                maxVal = val;
-                maxReadOffset = readOffset;
-                maxRefOffset = refOffset;
-            }
-        }
-        return maxVal;
-    }
+        const bool isScoreOffEdge = true) const;
 
 protected:
 
@@ -193,5 +90,23 @@ protected:
         return ptr;
     }
 
+#ifdef DEBUG_ALN_MATRIX
+    /// write out subset of matrix of scores back-trace pointers for debug,for
+    /// one reference
+    template <typename SymIter, typename MatrixType, typename ScoreValType>
+    void
+    dumpSingleRefTable(
+        const SymIter refBegin, const SymIter refEnd,
+        const size_t querySize,
+        const MatrixType& ptrMatrix,
+        const std::vector<std::vector<ScoreValType>>& storeScores,
+        const char refSym,
+        const AlignState::index_t sIndex,
+        unsigned& storeIndex) const;
+#endif
+
     const AlignmentScores<ScoreType> _scores;
 };
+
+
+#include "alignment/AlignerBaseImpl.hh"

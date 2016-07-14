@@ -401,10 +401,6 @@ align(
         }
     }
 
-#ifdef DEBUG_ALN
-    log_os << "bt-start queryIndex: " << btrace.queryBegin << " refIndex: " << btrace.refBegin << " state: " << AlignState::label(btrace.state) << " maxScore: " << btrace.max << "\n";
-#endif
-
 #ifdef DEBUG_ALN_MATRIX
     std::vector<AlignState::index_t> dumpStates {AlignState::MATCH, AlignState::DELETE, AlignState::INSERT, AlignState::JUMP, AlignState::SPLICE};
     this->dumpTables(queryBegin, queryEnd,
