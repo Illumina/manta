@@ -59,7 +59,7 @@ def process_vcf(vcfFile, probandID,
     consistencyDict = {}
 
     # parser
-    isInfoAdded = False
+    isFormatAdded = False
     isIxFound = False
     colNameLine = ""
     probandIx = -1
@@ -69,9 +69,9 @@ def process_vcf(vcfFile, probandID,
     fpVcf = open(vcfFile, 'rb')
     for line in fpVcf:
         if line[0] == '#':
-            if not(isInfoAdded) and (line[:8] == "##FORMAT"):
-                fpOut.write("##INFO=<ID=DQ,Number=1,Type=Integer,Description=\"De novo quality score\">\n")
-                isInfoAdded = True
+            if not(isFormatAdded) and (line[:8] == "##FORMAT"):
+                fpOut.write("##FORMAT=<ID=DQ,Number=1,Type=Integer,Description=\"De novo quality score\">\n")
+                isFormatAdded = True
             fpOut.write(line)
             colNameLine = line
             continue
@@ -101,7 +101,6 @@ def process_vcf(vcfFile, probandID,
                 sys.exit(1)
 
         tokens = line.split()
-        info = tokens[7]
         format = tokens[8]
 
         items = format.split(':')
@@ -119,9 +118,14 @@ def process_vcf(vcfFile, probandID,
         items = tokens[motherIx].split(':')
         motherGT = items[GTix]
 
+        # add DQ to the format string
+        format += ":DQ"
         isConsistent = check_genotype(probandGT, fatherGT, motherGT)
         if not(isConsistent):
-            info += ";DQ=60"
+            # DQ set to 60
+            tokens[probandIx] += ":60"
+            tokens[fatherIx] += ":."
+            tokens[motherIx] += ":."
 
             # stats
             filter = tokens[6]
@@ -135,13 +139,16 @@ def process_vcf(vcfFile, probandID,
                 consistencyDict[GTstring] = 0
             consistencyDict[GTstring] += 1
         else:
-            info += ";DQ=0"
+            # DQ set to 0
+            tokens[probandIx] += ":0"
+            tokens[fatherIx] += ":."
+            tokens[motherIx] += ":."
 
         newLine = ""
-        for i in xrange(7):
+        for i in xrange(8):
             newLine += tokens[i] + "\t"
-        newLine += info
-        for i in xrange(8, len(tokens)):
+        newLine += format
+        for i in xrange(9, len(tokens)):
             newLine += "\t" + tokens[i]
         fpOut.write(newLine+"\n")
 
