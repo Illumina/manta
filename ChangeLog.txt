@@ -1,3 +1,8 @@
+v0.29.7
+- Format change of de novo calls, moving DQ from INFO to FORMAT
+- [#40] improve robustness to user locale settings
+- close infrequent memory leak in hts_streamer
+- A number of changes in build and docs
 v0.29.6
 - MANTA-287 add the unit test of consistency of supporting reads
 - MANTA-287 fix a bug in the small assembler by checking consistency when adding a new supporting read of contig
