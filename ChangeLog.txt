@@ -1,5 +1,6 @@
 v1.0.0
-- MANTA-290 add the feature of generating evidence bams for candidate SVs
+- [#36] support setting SGE task runtime limit
+- MANTA-290 add debug option to generate candidate SV evidence BAMs
 v0.29.7
 - Format change of de novo calls, moving DQ from INFO to FORMAT
 - [#40] improve robustness to user locale settings
