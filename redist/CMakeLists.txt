@@ -212,5 +212,5 @@ add_custom_target(${THIS_PYFLOW} DEPENDS "${PYFLOW_DEPENDS}")
 
 # tie results back to parent:
 #
-add_dependencies(${THIS_OPT} ${THIS_ZLIB} ${THIS_HTSLIB} ${THIS_SAMTOOLS} ${THIS_PYFLOW})
+add_dependencies(${THIS_OPT} ${THIS_ZLIB} ${THIS_SAMTOOLS} ${THIS_PYFLOW})
 

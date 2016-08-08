@@ -203,7 +203,7 @@ runGSC(
         std::string supportBamName(opt.supportBamStub
                                    + ".bam_" + std::to_string(idx)
                                    + ".bam");
-        const bam_hdr_t* header(bamStreamPtr->get_header());
+        const bam_hdr_t& header(bamStreamPtr->get_header());
         bam_dumper_ptr bamDumperPtr(new bam_dumper(supportBamName.c_str(), header));
         supportBamDumperPtrs.push_back(bamDumperPtr);
     }
