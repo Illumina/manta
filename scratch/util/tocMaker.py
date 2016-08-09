@@ -82,6 +82,7 @@ def main() :
     
     isBuilding=False
     isScanning=False
+    isValidHeaderZone=True
     lineBuffer=[]
     tocInfo=[]
     for line in infp :
@@ -93,10 +94,16 @@ def main() :
             sline = line.strip()
             if sline == "" : isScanning=True
         else :
-            level = getHeaderLevel(line)
-            if level > 0 :
-                tocInfo.append([level,line.strip().split(None, 1)[1]])
-                
+            sys.stderr.write("test\n")
+            if line.startswith("```") :
+                sys.stderr.write("test-true\n")
+                isValidHeaderZone = not isValidHeaderZone
+
+            if isValidHeaderZone :
+                level = getHeaderLevel(line)
+                if level > 0 :
+                    tocInfo.append([level,line.strip().split(None, 1)[1]])
+ 
             lineBuffer.append(line)
     
     # build TOC:
