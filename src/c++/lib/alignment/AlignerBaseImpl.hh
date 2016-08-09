@@ -50,9 +50,9 @@ dumpSingleRefTable(
     boost::io::ios_all_saver guard(os);
 
     auto printVal = [](
-                    const ScoreType& val,
-                    const char fromSym,
-                    std::ostream& pos)
+                        const ScoreType& val,
+                        const char fromSym,
+                        std::ostream& pos)
     {
         if (val<-900)
         {
@@ -66,7 +66,7 @@ dumpSingleRefTable(
     };
 
     auto printQueryRow = [&](
-        const unsigned qrefIndex)
+                             const unsigned qrefIndex)
     {
         for (unsigned queryIndex(0); queryIndex <= querySize; ++queryIndex)
         {

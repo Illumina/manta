@@ -208,9 +208,9 @@ operator<<( std::ostream& os, const SupportSamples& suppSmps);
 
 void
 processBamRecords(bam_streamer& origBamStream,
-			      const GenomeInterval& interval,
-			      const support_fragments_t& supportFrags,
-			      bam_dumper& bamDumper);
+                  const GenomeInterval& interval,
+                  const support_fragments_t& supportFrags,
+                  bam_dumper& bamDumper);
 
 void
 writeSupportBam(bam_streamer_ptr origBamStream,

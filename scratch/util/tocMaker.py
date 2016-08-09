@@ -94,9 +94,7 @@ def main() :
             sline = line.strip()
             if sline == "" : isScanning=True
         else :
-            sys.stderr.write("test\n")
             if line.startswith("```") :
-                sys.stderr.write("test-true\n")
                 isValidHeaderZone = not isValidHeaderZone
 
             if isValidHeaderZone :

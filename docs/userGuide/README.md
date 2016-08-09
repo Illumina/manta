@@ -3,30 +3,38 @@ Manta User Guide
 
 ## Table of Contents
 [] (BEGIN automated TOC section, any edits will be overwritten on next source refresh)
-  * [Introduction](#introduction)
-  * [Installation](#installation)
-  * [Method Overview](#method-overview)
-  * [Capabilities](#capabilities)
-    * [Detected variant classes](#detected-variant-classes)
-    * [Known Limitations](#known-limitations)
-  * [Input requirements](#input-requirements)
-  * [Outputs](#outputs)
-    * [Structural Variant predictions](#structural-variant-predictions)
-    * [Manta VCF reporting format](#manta-vcf-reporting-format)
-    * [Statistics](#statistics)
-  * [Runtime hardware requirements](#runtime-hardware-requirements)
-  * [Run configuration and execution](#run-configuration-and-execution)
-    * [Configuration](#configuration)
-    * [Execution](#execution)
-    * [Extended use cases](#extended-use-cases)
-    * [RNA-Seq](#rna-seq)
-    * [High sensitivity calling](#high-sensitivity-calling)
-* [Remove all edges from the graph unless they're supported by this many 'observations'.](#remove-all-edges-from-the-graph-unless-theyre-supported-by-this-many-observations)
-* [Note that one supporting read pair or split read usually equals one observation, but](#note-that-one-supporting-read-pair-or-split-read-usually-equals-one-observation-but)
-* [evidence is sometimes downweighted.](#evidence-is-sometimes-downweighted)
-* [Run discovery and candidate reporting for all SVs/indels with at least this](#run-discovery-and-candidate-reporting-for-all-svsindels-with-at-least-this)
-* [many spanning support observations](#many-spanning-support-observations)
-    * [De novo calling](#de-novo-calling)
+* [Introduction](#introduction)
+* [Installation](#installation)
+* [Method Overview](#method-overview)
+* [Capabilities](#capabilities)
+  * [Detected variant classes](#detected-variant-classes)
+  * [Known Limitations](#known-limitations)
+* [Input requirements](#input-requirements)
+* [Outputs](#outputs)
+  * [Structural Variant predictions](#structural-variant-predictions)
+  * [Manta VCF reporting format](#manta-vcf-reporting-format)
+    * [VCF Sample Names](#vcf-sample-names)
+    * [Small indels](#small-indels)
+    * [Insertions with incomplete insert sequence assembly](#insertions-with-incomplete-insert-sequence-assembly)
+    * [VCF INFO Fields](#vcf-info-fields)
+    * [VCF FORMAT Fields](#vcf-format-fields)
+    * [VCF FILTER Fields](#vcf-filter-fields)
+    * [What do the values in Manta's VCF ID field mean?](#what-do-the-values-in-mantas-vcf-id-field-mean)
+    * [Converting Manta VCF to BEDPE format](#converting-manta-vcf-to-bedpe-format)
+  * [Statistics](#statistics)
+* [Runtime hardware requirements](#runtime-hardware-requirements)
+* [Run configuration and execution](#run-configuration-and-execution)
+  * [Configuration](#configuration)
+    * [Advanced configuration options](#advanced-configuration-options)
+  * [Execution](#execution)
+    * [Advanced execution options](#advanced-execution-options)
+  * [Extended use cases](#extended-use-cases)
+    * [Exome/Targeted](#exometargeted)
+    * [Unpaired tumor sample](#unpaired-tumor-sample)
+  * [RNA-Seq](#rna-seq)
+  * [High sensitivity calling](#high-sensitivity-calling)
+  * [De novo calling](#de-novo-calling)
+  * [Generating evidence bams](#generating-evidence-bams)
 [] (END automated TOC section, any edits will be overwritten on next source refresh)
 
 ## Introduction
@@ -567,7 +575,7 @@ These options are useful for Manta development and debugging:
 * The `--rescore` option can be provided to force the workflow to
   re-execute candidates discovery and scoring, but not the initial
   graph generation steps.
-* The `--generateEvidenceBam` option can be used to generate bam files 
+* The `--generateEvidenceBam` option can be used to generate bam files
   of evidence reads for SVs listed in the candidate vcf file.
   (More details in the section "Generating evidence bams" below)
 
@@ -653,14 +661,14 @@ joint diploid sample analysis, and then output a multi-sample vcf, where the sam
 
 ### Generating evidence bams
 
-Using the `--generateEvidenceBam` option, Manta can be configured to generate bam files of evidence reads for SVs listed in the candidate vcf file. 
+Using the `--generateEvidenceBam` option, Manta can be configured to generate bam files of evidence reads for SVs listed in the candidate vcf file.
 
 It is recommended to use this option together with the `--region` option, so that the analysis is limited to relatively small genomic regions for debugging purposes.
 
-The evidence bam files are provided in `${MANTA_ANALYSIS_PATH}/results/evidence`, with a naming format `evidence.*.bam`. 
-There is one such file for each input bam of the analysis, containing evidence reads of the candidate SVs identified from that input bam. 
+The evidence bam files are provided in `${MANTA_ANALYSIS_PATH}/results/evidence`, with a naming format `evidence.*.bam`.
+There is one such file for each input bam of the analysis, containing evidence reads of the candidate SVs identified from that input bam.
 Each read in an evidence bam keeps all information from the original bam, and it contains also a customized tag in the format: `ZM:Z:${MANTA_SV_ID_1}|${EVIDENCE_TYPE},${MANTA_SV_ID_2}|${EVIDENCE_TYPE}`. For example, ZM:Z:MantaINV:5:0:1:0:0:0|PR|SRM,MantaDEL:5:1:2:0:0:0|SR
-* One read can have more than one of the three evidence types: PR for paired reads, SR for split reads, and SRM for split read mates. 
+* One read can have more than one of the three evidence types: PR for paired reads, SR for split reads, and SRM for split read mates.
 * One read can be evidence for multiple SVs, which are separated by commas in the tag.
 
 Notice that the number of evidence reads for a particular SV in the evidence bam files could be more than the evidence counts (PR and SR) in the final vcf files. This is because more stringent criteria are applied for generating evidence counts in the final vcf files.
