@@ -1,44 +1,52 @@
+sudo: false
+
 language: cpp
 
-compiler:
-  - gcc
-  - clang
-
-os:
-  - linux
-  - osx
-
 matrix:
-  # gcc would just repeat the clang test on OSX, so skip it:
-  exclude:
-    - os: osx
+  include:
+    - os: linux
       compiler: gcc
-
-osx_image: xcode61
-
-before_install:
-  # setup gcc 4.8:
-  - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" == "g++" ]; then sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test; fi
-  # setup cppcheck 1.67:
-  - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" == "g++" ]; then sudo add-apt-repository -y ppa:j-rivero/cppcheck-latest; fi
-  - if [ $TRAVIS_OS_NAME == linux ]; then sudo apt-get update -qq; fi
-
-install:
-  # add cppcheck: static analysis should be independent of os/compiler, so only install this on one test case:
-  - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" == "g++" ]; then sudo apt-get install -qq cppcheck; fi
-  # install gcc 4.8
-  - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" == "g++" ]; then sudo apt-get install -qq gcc-4.8 g++-4.8; fi
-  - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" == "g++" ]; then export CC=/usr/bin/gcc-4.8 && export CXX=/usr/bin/g++-4.8; fi
-  # install clang 3.4
-  - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" == "clang++" ]; then sudo apt-get install -qq llvm-3.4 llvm-3.4-dev; fi
+      addons:
+        apt:
+          sources:
+          - ubuntu-toolchain-r-test # for gcc 4.8
+          packages:
+          - gcc-4.8
+          - g++-4.8
+      before_install:
+      - export CC=gcc-4.8 CXX=g++-4.8
+      install:
+      # install cppcheck from source:
+      - wget https://sourceforge.net/projects/cppcheck/files/cppcheck/1.69/cppcheck-1.69.tar.bz2 &&
+        tar -xjf cppcheck-1.69.tar.bz2 &&
+        cd cppcheck-1.69 &&
+        make -j4 &&
+        export PATH=$PATH:$PWD/ &&
+        cd ..
+    - os: linux
+      compiler: clang
+      addons:
+        apt:
+          packages:
+          - llvm-3.4
+          - llvm-3.4-dev
+    - os: osx
+      compiler: clang
+      osx_image: xcode61
+    # gcc would just repeat the clang test on OSX (unless we do some extra work...), so skip it
  
 script:
-  - mkdir build && cd build && ../configure --jobs=4 --prefix=../install && make -j4 install && ../install/bin/runMantaWorkflowDemo.py
+  - mkdir build &&
+    cd build &&
+    ../configure --jobs=4 --prefix=../install &&
+    make -j4 install &&
+    ../install/bin/runMantaWorkflowDemo.py
 
 branches:
   only:
     - master
     - travis
+    - /v\d\.\d\.\d/
 
 notifications:
   email:
