@@ -191,6 +191,7 @@ get_bam_header_sample_name(
     const char* default_sample_name)
 {
     assert(header != nullptr);
+    assert(default_sample_name != nullptr);
 
     std::vector<std::string> lines;
     std::vector<std::string> words;
@@ -214,3 +215,4 @@ get_bam_header_sample_name(
     }
     return default_sample_name;
 }
+

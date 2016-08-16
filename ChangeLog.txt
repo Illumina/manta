@@ -1,3 +1,4 @@
+- [#43] fix freed string pointer use in sample name
 v0.29.6
 - MANTA-287 add the unit test of consistency of supporting reads
 - MANTA-287 fix a bug in the small assembler by checking consistency when adding a new supporting read of contig
