@@ -191,6 +191,8 @@ get_bam_header_sample_name(
     const bam_hdr_t& header,
     const char* default_sample_name)
 {
+    assert(nullptr != default_sample_name);
+
     std::vector<std::string> lines;
     std::vector<std::string> words;
     split_string(header.text,'\n',lines);

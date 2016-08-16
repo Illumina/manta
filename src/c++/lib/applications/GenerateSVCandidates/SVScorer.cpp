@@ -98,13 +98,12 @@ SVScorer(
     for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
     {
         const bam_hdr_t& indexHeader(_bamStreams[bamIndex]->get_header());
-        std::ostringstream oss;
-        oss << "SAMPLE" << bamIndex;
-        const char* defaultName(oss.str().c_str());
-        std::string name(get_bam_header_sample_name(indexHeader,defaultName));
-        // remove spaces from sample name for everyone's sanity:
-        std::replace(name.begin(), name.end(), ' ', '_');
-        _sampleNames.push_back(name);
+        std::ostringstream defaultName;
+        defaultName << "SAMPLE" << (bamIndex+1);
+        std::string sampleName(get_bam_header_sample_name(indexHeader, defaultName.str().c_str()));
+        // remove spaces from sample name
+        std::replace(sampleName.begin(), sampleName.end(), ' ', '_');
+        _sampleNames.push_back(sampleName);
     }
 }
 

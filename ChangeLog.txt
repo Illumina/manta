@@ -1,3 +1,4 @@
+- [#43] fix freed string pointer use in sample name
 v1.0.0
 - [#36] support setting SGE task runtime limit
 - MANTA-290 add debug option to generate candidate SV evidence BAMs
