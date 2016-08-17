@@ -12,7 +12,7 @@ Manta User Guide - Installation
     * [OS X](#os-x)
     * [Windows](#windows)
 * [Linux Package Additions](#linux-package-additions)
-    * [Ubuntu 14.04](#ubuntu-1404)
+    * [Ubuntu 14.04 and 16.04](#ubuntu-1404-and-1604)
     * [Ubuntu 12.04](#ubuntu-1204)
     * [CentOS 7](#centos-7)
     * [CentOS 5 and 6](#centos-5-and-6)
@@ -60,8 +60,8 @@ are the current minimum versions enforced by the build system:
 Manta is known to build and run on the following linux distributions
 (with additional packages as described below):
 
-- Ubuntu 12.04,14.04
-- CentOS 5,6,7
+- Ubuntu 12.04, 14.04, 16.04
+- CentOS 5, 6, 7
 
 ##### OS X
 
@@ -75,7 +75,7 @@ possible for Visual Studio users. See the the [manta developer guide] [Developer
 
 ### Linux Package Additions
 
-##### Ubuntu 14.04
+##### Ubuntu 14.04 and 16.04
 
     apt-get update -qq
     apt-get install -qq gcc g++ make python
