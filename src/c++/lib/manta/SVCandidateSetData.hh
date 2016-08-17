@@ -61,10 +61,16 @@ struct SVCandidateSetRead
 
     //realignment info, etc...
     bam_record bamrec;
-    bool isNode1 = true; ///< used to link this read to node1 or node2 in the original graph ordering, note this is not the same as read1 and read2
-    bool isSubMapped = false; ///< is mapq below the minimum normally required to use this read
-    double mappedReadCount = 0;
-    double subMappedReadCount = 0;
+
+    /// used to link this read to node1 or node2 in the original graph ordering,
+    /// note this is not the same as read1 and read2
+    bool isNode1 = true;
+
+    /// is mapq below the minimum normally required to use this read
+    bool isSubMapped = false;
+
+    /// relative index of this read compared to all reads with the same mapping status in bam-input order
+    double readIndex = 0;
 };
 
 std::ostream&
@@ -173,11 +179,11 @@ struct SVCandidateSetSequenceFragmentSampleGroup
     {
         if (isSubMapped)
         {
-            _subMappedReadCount++;
+            _subMappedReadIndex++;
         }
         else
         {
-            _mappedReadCount++;
+            _mappedReadIndex++;
         }
     }
 
@@ -246,8 +252,14 @@ private:
 
     bool _isFull = false; ///< this flag can be set if the object grows too large to insert more data into it
 
-    double _mappedReadCount = 0;
-    double _subMappedReadCount = 0;
+    /// Tracks the relative index of all mapped reads as read off of the input bam file. This is used to provide a
+    /// relative index number for all reads supporting a particular SV candidate, so that supporting read density
+    /// can be estimated. For instance, if 3 reads supporting a breakpoint have mapped read counts of {100,200,300},
+    /// we can roughly estimate the 1/100 reads support the breakpoint.
+    double _mappedReadIndex = 0;
+
+    /// same as above for reads with mapping quality below theshold
+    double _subMappedReadIndex = 0;
 };
 
 

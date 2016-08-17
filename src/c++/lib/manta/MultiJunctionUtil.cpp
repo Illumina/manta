@@ -29,6 +29,7 @@
 
 #include <limits>
 
+//#define DEBUG_SVDATA
 
 
 /// return true for candidates that should be filtered out, based on
@@ -57,6 +58,20 @@ isFilterMultiJunctionCandidate(
                 isSingleFilter = false;
             }
         }
+
+#ifdef DEBUG_SVDATA
+        using namespace SVEvidenceType;
+        log_os << __FUNCTION__
+               << " spanning=" << sv.bp1.getSpanningCount()
+               << " pair=" << sv.bp1.lowresEvidence.getVal(PAIR)
+               << " cigar=" << sv.bp1.lowresEvidence.getVal(CIGAR)
+               << " split=" << sv.bp1.lowresEvidence.getVal(SPLIT_ALIGN)
+               << "\n"
+               << " isCountFilter=" << isCountFilter
+               << " isSingleFilter=" << isSingleFilter
+               << "\n";
+#endif
+
     }
     return (isCountFilter || isSingleFilter);
 }

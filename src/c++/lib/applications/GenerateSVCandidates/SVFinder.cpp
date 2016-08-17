@@ -36,7 +36,7 @@
 #include <iostream>
 
 
-// #define DEBUG_SVDATA
+//#define DEBUG_SVDATA
 
 #ifdef DEBUG_SVDATA
 #include "blt_util/log.hh"
@@ -147,7 +147,7 @@ SVFinder::
 {}
 
 
-// test if read supports an SV on this edge, if so, add to SVData
+/// test if read supports an SV on this edge, if so, add to SVData
 static
 void
 addSVNodeRead(
@@ -606,11 +606,10 @@ consolidateOverlap(
 
 
 
-// store additional signal rate information to
-// help decide if the candidate evidence is significant relative to background
-// noise in the sample:
-//
-// only handles complex cases for now (assumes sv is complex)
+/// store additional signal rate information to help decide if the candidate evidence
+/// is significant relative to background noise in the sample.
+///
+/// TODO -- is the following comment out of date?: only handles complex cases for now (assumes sv is complex)
 static
 void
 updateEvidenceIndex(
@@ -623,22 +622,42 @@ updateEvidenceIndex(
         const SVCandidateSetRead& candRead(obs.isRead1Source() ? fragment.read1 : fragment.read2);
         if (obs.evtype != SVEvidenceType::SPLIT_ALIGN)
         {
-            sv.bp1EvidenceIndex[obs.evtype].push_back(candRead.mappedReadCount);
+            if ((not candRead.bamrec.empty()) && (not candRead.isSubMapped) )
+            {
+                sv.bp1EvidenceIndex[obs.evtype].push_back(candRead.readIndex);
+#ifdef DEBUG_SVDATA
+                log_os << __FUNCTION__ << ": non_split: Added readIndex " << candRead.readIndex
+                       << " to evtype " << obs.evtype << "\n";
+#endif
+
+            }
         }
         else
         {
-            // account for bp1 and bp2 mapping to non-supp and supplemental reads
             const bool is1to1(sv.isIntersect1to1(obs));
-            const bool isBp1toRead(is1to1 == obs.isRead1Source());
-            auto& readBp(isBp1toRead ? sv.bp1EvidenceIndex : sv.bp2EvidenceIndex);
-            auto& readSuppBp(isBp1toRead ? sv.bp2EvidenceIndex : sv.bp1EvidenceIndex);
+            auto& readBp(is1to1 ? sv.bp1EvidenceIndex : sv.bp2EvidenceIndex);
+            auto& readSuppBp(is1to1 ? sv.bp2EvidenceIndex : sv.bp1EvidenceIndex);
             const auto& read(obs.isRead1Source() ? fragment.read1 : fragment.read2);
             const auto& readSupp(obs.isRead1Source() ? fragment.read1Supplemental : fragment.read2Supplemental);
 
-            readBp[obs.evtype].push_back(read.mappedReadCount);
+            if ((not read.bamrec.empty()) && (not read.isSubMapped))
+            {
+                readBp[obs.evtype].push_back(read.readIndex);
+#ifdef DEBUG_SVDATA
+                log_os << __FUNCTION__ << ": split_mapped: Added readIndex " << candRead.readIndex
+                       << " to evtype " << obs.evtype << "\n";
+#endif
+            }
             if (readSupp.size() == 1)
             {
-                readSuppBp[obs.evtype].push_back(readSupp.front().mappedReadCount);
+                if ((not readSupp.front().bamrec.empty()) && (not readSupp.front().isSubMapped))
+                {
+                    readSuppBp[obs.evtype].push_back(readSupp.front().readIndex);
+#ifdef DEBUG_SVDATA
+                    log_os << __FUNCTION__ << ": split_supp_mapped: Added readIndex " << readSupp.front().readIndex
+                           << " to evtype " << obs.evtype << "\n";
+#endif
+                }
             }
         }
     }
@@ -648,8 +667,22 @@ updateEvidenceIndex(
         const bool is1to1(sv.isIntersect1to1(obs));
         const SVCandidateSetRead& bp1Read(is1to1 ? fragment.read1 : fragment.read2);
         const SVCandidateSetRead& bp2Read(is1to1 ? fragment.read2 : fragment.read1);
-        sv.bp1EvidenceIndex[obs.evtype].push_back(bp1Read.mappedReadCount);
-        sv.bp2EvidenceIndex[obs.evtype].push_back(bp2Read.mappedReadCount);
+        if ((not bp1Read.bamrec.empty()) && (not bp1Read.isSubMapped))
+        {
+            sv.bp1EvidenceIndex[obs.evtype].push_back(bp1Read.readIndex);
+#ifdef DEBUG_SVDATA
+            log_os << __FUNCTION__ << ": multi_read_source: Added readIndex " << bp1Read.readIndex
+                   << " to evtype " << obs.evtype << "\n";
+#endif
+        }
+        if ((not bp1Read.bamrec.empty()) && (not bp2Read.isSubMapped))
+        {
+            sv.bp2EvidenceIndex[obs.evtype].push_back(bp2Read.readIndex);
+#ifdef DEBUG_SVDATA
+            log_os << __FUNCTION__ << ": multi_read_source: Added readIndex " << bp2Read.readIndex
+                   << " to evtype " << obs.evtype << "\n";
+#endif
+        }
     }
 }
 
@@ -736,10 +769,6 @@ assignFragmentObservationsToSVCandidates(
                 if (isCandLocalOnly == isSVLocalOnly)
 #endif
                 {
-
-#ifdef DEBUG_SVDATA
-                    log_os << __FUNCTION__ << ": Adding to svIndex: " << svIndex << " match_sv: " << sv << "\n";
-#endif
                     if (isSpanningCand)
                     {
                         // don't store fragment association unless there's a specific hypothesis --
@@ -753,6 +782,10 @@ assignFragmentObservationsToSVCandidates(
 
                     // check evidence distance:
                     sv.merge(FatSVCandidate(readCand), isExpandSVCandidateSet);
+
+#ifdef DEBUG_SVDATA
+                    log_os << __FUNCTION__ << ": Added to svIndex: " << svIndex << " match_sv: " << sv << "\n";
+#endif
 
                     isMatched=true;
                     break;
@@ -914,50 +947,89 @@ isCandidateCountSufficient(
 }
 
 
-
+/// determine if the rate of supporting read observations at a breakpoint is significant
+/// relative to a background noise rate
+///
+/// \param signalReadInfo vector which has a size equal to the supporting read count, for each supporting read, the vector
+///                    contains a relative index for the supporting read among all qualifying (mapped) reads from
+///                    the same input BAM file. This relative index is used to estimate signal density.
+/// \return true if we reject the null hyp that breakpoint signal is noise
 static
 bool
 isBreakPointSignificant(
     const double alpha,
     const double noiseRate,
-    std::vector<double>& v)
+    std::vector<double>& signalReadInfo)
 {
-    if (v.size() < 2) return false;
-    std::sort(v.begin(),v.end());
-    const unsigned vso(v.size());
-    for (unsigned i(0); (i+1)<vso; ++i)
-    {
-        v[i] = (v[i+1] - v[i]);
-    }
-    const unsigned vs(vso-1);
-    v.resize(vs);
+    const unsigned signalReadCount(signalReadInfo.size());
 
-    // take up to the top winMax observations to make sure we focus on peak density only:
-    static const unsigned winMax(4);
-    double minWinVal(0);
-    const unsigned signalCount(std::min(winMax,vs));
-    for (unsigned i(0); i<signalCount; ++i)
-    {
-        minWinVal += v[i];
-    }
+    // enforce a simple minimum signal count regardless of noiseRate/alpha
+    if (signalReadCount < 2) return false;
 
-    double winVal(minWinVal);
-    for (unsigned i(1); (i+(winMax-1))<vs; ++i)
+    assert(signalReadCount >= 1);
+
+    // sort the indices so that by taking the difference we can get an estimate of the
+    // number of background reads that occurred 'between' the signal observations:
+    std::sort(signalReadInfo.begin(),signalReadInfo.end());
+#ifdef DEBUG_SVDATA
+    log_os << __FUNCTION__ << ": signalReadInfo_size=" << signalReadInfo.size()
+           << " signalReadInfo={";
+    for (const auto rd : signalReadInfo)
     {
-        winVal -= v[i-1];
-        winVal += v[i+(winMax-1)];
-        if (winVal < minWinVal)
+        log_os << rd << ",";
+    }
+    log_os << "}\n";
+#endif
+
+
+    // The density of signal reads will be variable, so focus on peak density. To do this we pick out a small
+    // continuous set of signal observations. The count of observation intervals in this window is
+    // 'signalWindowSize' equal to maxSignalWindowSize (or less if the total number of observation
+    // intervals is smaller)
+    //
+    static const unsigned maxSignalWindowSize(4);
+    unsigned signalWindowSize(std::min(maxSignalWindowSize, (signalReadCount-1)));
+
+    // move a sliding window of size 'signalWindowSize' through the sorted read index list to find the minimum
+    // estimated background read count among a continuous signalWindowSize+1 series of signal observations.
+    //
+    // this greedy minimum approach will tend to err on the side of over-estimating signal rate and calling noisy
+    // evidence significant, which is the behavior we want for this kind of conservative noise filter.
+    double minWindowBackgroundCount(0);
+    for (unsigned signalReadIndex(0); signalReadIndex<(signalReadCount-signalWindowSize); ++signalReadIndex)
+    {
+        const double windowBackgroundCount(signalReadInfo[signalReadIndex+signalWindowSize] - signalReadInfo[signalReadIndex]);
+        if ((signalReadIndex==0) or (minWindowBackgroundCount > windowBackgroundCount))
         {
-            minWinVal=winVal;
+            minWindowBackgroundCount = windowBackgroundCount;
         }
     }
+    if (signalWindowSize > minWindowBackgroundCount) signalWindowSize = unsigned(minWindowBackgroundCount);
 
-    const unsigned backgroundCount(static_cast<unsigned>(minWinVal));
-    return is_reject_binomial_gte_n_success_exact(alpha, noiseRate,signalCount,(backgroundCount+signalCount));
+#ifdef DEBUG_SVDATA
+    {
+        log_os << __FUNCTION__
+               << ": noiseRate=" << noiseRate
+               << " signalWindowSize=" << signalWindowSize
+               << " backgroundCount=" << minWindowBackgroundCount
+               << " isReject=" << is_reject_binomial_gte_n_success_exact(alpha, noiseRate, signalWindowSize, static_cast<unsigned>(minWindowBackgroundCount))
+               << "\n";
+    }
+#endif
+
+    return is_reject_binomial_gte_n_success_exact(alpha, noiseRate, signalWindowSize, static_cast<unsigned>(minWindowBackgroundCount));
 }
 
 
 
+/// test a spanning candidate for minimum supporting evidence level prior
+/// to assembly and scoring stages
+///
+/// Note this test is applied early, and as such it is intended to only filter
+/// out cases which are very likely to be noise. This method has an important
+/// role in controlling the analysis runtime for FFPE tumor samples, where we
+/// might otherwise initiate a very large number of assembly processes for unlikely
+/// variant candidates.
 static
 bool
 isSpanningCandidateSignalSignificant(
@@ -966,10 +1038,10 @@ isSpanningCandidateSignalSignificant(
 {
     std::vector<double> evidence_bp1;
     std::vector<double> evidence_bp2;
-    for (unsigned i(0); i<SVEvidenceType::SIZE; ++i)
+    for (unsigned evidenceTypeIndex(0); evidenceTypeIndex<SVEvidenceType::SIZE; ++evidenceTypeIndex)
     {
-        appendVec(evidence_bp1,sv.bp1EvidenceIndex[i]);
-        appendVec(evidence_bp2,sv.bp2EvidenceIndex[i]);
+        appendVec(evidence_bp1,sv.bp1EvidenceIndex[evidenceTypeIndex]);
+        appendVec(evidence_bp2,sv.bp2EvidenceIndex[evidenceTypeIndex]);
     }
 
     static const double alpha(0.05);

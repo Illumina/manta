@@ -40,6 +40,7 @@ std::ostream&
 operator<<(std::ostream& os, const SVCandidateSetRead& svr)
 {
     os << "SVCandidateSetRead: " << svr.bamrec << "\n";
+    os << "Read_index: " << svr.readIndex << "\n";
     return os;
 }
 
@@ -154,8 +155,7 @@ add(const bam_record& bamRead,
     targetRead.bamrec = bamRead;
     targetRead.isNode1 = isNode1;
     targetRead.isSubMapped = isSubMapped;
-    targetRead.mappedReadCount = _mappedReadCount;
-    targetRead.subMappedReadCount = _subMappedReadCount;
+    targetRead.readIndex = (isSubMapped ? _subMappedReadIndex : _mappedReadIndex);
 }
 
 

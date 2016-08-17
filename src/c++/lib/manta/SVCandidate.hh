@@ -244,6 +244,8 @@ struct SVObservation : public SVCandidate
     }
 #endif
 
+    /// does the evidence for this SV observation come from a single read (eg. CIGAR read alignment) or
+    /// from both reads (eg. anomolous read pair)
     bool
     isSingleReadSource() const
     {

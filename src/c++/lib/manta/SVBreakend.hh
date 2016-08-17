@@ -202,6 +202,10 @@ label(const index_t idx)
     }
 }
 
+/// return true if this is a 'normal' breakend with a known orientation
+///
+/// a false return should typically be for a region targeted for local assembly, but without a specific
+/// variant hypothesis
 inline
 bool
 isSimpleBreakend(
