@@ -78,12 +78,12 @@ possible for Visual Studio users. See the the [manta developer guide] [Developer
 ##### Ubuntu 14.04 and 16.04
 
     apt-get update -qq
-    apt-get install -qq gcc g++ make python
+    apt-get install -qq bzip2 gcc g++ make python zlib1g-dev
 
 ##### Ubuntu 12.04
 
     apt-get update -qq
-    apt-get install -qq bzip2 gcc g++ make python python-software-properties
+    apt-get install -qq bzip2 gcc g++ make python python-software-properties zlib1g-dev
     # add gcc 4.8 from ubuntu ppa:
     add-apt-repository -y ppa:ubuntu-toolchain-r/test
     apt-get update -qq
@@ -95,11 +95,11 @@ possible for Visual Studio users. See the the [manta developer guide] [Developer
 
 ##### CentOS 7
 
-    yum install -y tar bzip2 make gcc gcc-c++
+    yum install -y tar bzip2 make gcc gcc-c++ libstdc++-static zlib-devel
 
 ##### CentOS 5 and 6
 
-    yum install -y tar wget bzip2 make gcc gcc-c++
+    yum install -y tar wget bzip2 make gcc gcc-c++ zlib-devel
     # add gcc 4.8 from developer tools v2:
     wget http://people.centos.org/tru/devtools-2/devtools-2.repo -O /etc/yum.repos.d/devtools-2.repo
     yum install -y devtoolset-2-gcc devtoolset-2-gcc-c++ devtoolset-2-binutils
