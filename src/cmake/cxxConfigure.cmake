@@ -461,10 +461,12 @@ if (${GNU_COMPAT_COMPILER})
     ##
     append_args(CMAKE_CXX_FLAGS "-msse -mfpmath=sse")
   elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "^i[345]86$")
-    ##
-    ## Prevent using 80bit registers (more consistent rounding)
-    ##
-    append_args (CMAKE_CXX_FLAGS "-ffloat-store")
+    if (NOT ${IS_CLANGXX})
+      ##
+      ## Prevent using 80bit registers (more consistent rounding)
+      ##
+      append_args (CMAKE_CXX_FLAGS "-ffloat-store")
+    endif ()
   endif ()
 
 endif()

@@ -24,6 +24,8 @@
 
 #include "SVSupports.hh"
 
+#include <iostream>
+
 //#define DEBUG_SUPPORT
 
 #ifdef DEBUG_SUPPORT
