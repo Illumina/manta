@@ -23,7 +23,7 @@
 
 import os
 import sys
-
+import commands
 
 
 def which(searchFile) :
@@ -38,6 +38,20 @@ def which(searchFile) :
 
     return None
 
+
+def check_version(executable, versionRequired):
+    ret = commands.getoutput("cppcheck --version")
+    version = ret.split()[1]
+
+    is_old_version = False
+    versionReqNums = versionRequired.split('.')
+    versionNums = version.split('.')
+    for ix in xrange(len(versionNums)):
+        if int(versionNums[ix]) < int(versionReqNums[ix]):
+            is_old_version = True
+            break
+
+    return is_old_version
 
 
 def usage() :
@@ -67,7 +81,9 @@ def main() :
     srcRoot=sys.argv[1]
 
     cppcheck_path = which("cppcheck")
-    if cppcheck_path is None : sys.exit(0)
+    is_old_version = check_version("cppcheck", "1.69")
+    if (cppcheck_path is None) or (is_old_version) :
+        sys.exit(0)
 
     # need to trace real path out of any symlinks so that cppcheck can find its runtime config info:
     cppcheck_path = os.path.realpath(cppcheck_path)
