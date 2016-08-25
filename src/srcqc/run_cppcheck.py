@@ -81,8 +81,11 @@ def main() :
     srcRoot=sys.argv[1]
 
     cppcheck_path = which("cppcheck")
+    if cppcheck_path is None :
+        sys.exit(0)
+
     is_old_version = check_version("cppcheck", "1.69")
-    if (cppcheck_path is None) or (is_old_version) :
+    if is_old_version :
         sys.exit(0)
 
     # need to trace real path out of any symlinks so that cppcheck can find its runtime config info:
