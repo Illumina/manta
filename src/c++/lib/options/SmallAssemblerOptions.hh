@@ -29,7 +29,9 @@
 ///
 struct SmallAssemblerOptions
 {
-    /// the symbol set used during assembly
+	SmallAssemblerOptions() {}
+
+	/// the symbol set used during assembly
     std::string alphabet = "ACGT";
 
     /// minimum basecall quality for assembly input

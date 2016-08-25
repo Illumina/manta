@@ -30,7 +30,9 @@
 ///
 struct IterativeAssemblerOptions
 {
-    /// the symbol set used during assembly
+    IterativeAssemblerOptions() {}
+
+	/// the symbol set used during assembly
     std::string alphabet = "ACGT";
 
     /// minimum basecall quality for assembly input
