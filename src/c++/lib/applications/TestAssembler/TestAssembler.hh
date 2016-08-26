@@ -23,7 +23,17 @@
 
 #pragma once
 
+#include <iostream>
+#include <cstdlib>
+
+#include "blt_util/log.hh"
+#include "common/OutStream.hh"
 #include "common/Program.hh"
+
+#include "assembly/IterativeAssembler.hh"
+#include "assembly/SmallAssembler.hh"
+#include "TestAssemblerOptions.hh"
+#include "extractAssemblyReads.hh"
 
 
 /// test front-end to run the manta assembler from command-line

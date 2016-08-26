@@ -28,7 +28,7 @@
 void
 extractAssemblyReadsFromBam(
     const ReadScannerOptions& scanOpt,
-    const SmallAssemblerOptions& asmOpt,
+    const AssemblerOptions& asmOpt,
     const char* bamFile,
     AssemblyReadInput& reads)
 {

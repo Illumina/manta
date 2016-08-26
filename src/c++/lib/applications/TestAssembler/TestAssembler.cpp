@@ -19,17 +19,6 @@
 //
 
 #include "TestAssembler.hh"
-#include "TestAssemblerOptions.hh"
-#include "extractAssemblyReads.hh"
-#include "assembly/SmallAssembler.hh"
-#include "blt_util/log.hh"
-#include "common/OutStream.hh"
-
-#include <cstdlib>
-
-#include <iostream>
-
-
 
 static
 void
@@ -41,7 +30,7 @@ runTestAssembler(const TestAssemblerOptions& opt)
     }
 
     const ReadScannerOptions scanOpt;
-    const SmallAssemblerOptions asmOpt;
+    const AssemblerOptions asmOpt;
 
     AssemblyReadInput reads;
     for (const std::string& file : opt.alignFileOpt.alignmentFilename)
@@ -56,7 +45,11 @@ runTestAssembler(const TestAssemblerOptions& opt)
 
     log_os << "[INFO] Assmbling read input.\n";
 
+#ifdef ITERATIVE_ASSEMBLER
+    runIterativeAssembler(asmOpt, reads, readInfo, contigs);
+#else
     runSmallAssembler(asmOpt, reads, readInfo, contigs);
+#endif
 
     OutStream outs(opt.outputFilename);
     std::ostream& os(outs.getStream());

@@ -61,7 +61,7 @@ static
 void print_stringSet(const std::set<std::string>& strSet)
 {
     log_os << "[";
-    for (const std::string& str, strSet)
+    for (const std::string& str : strSet)
     {
         log_os << str << ",";
     }
