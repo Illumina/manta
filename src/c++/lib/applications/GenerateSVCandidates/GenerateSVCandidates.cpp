@@ -194,18 +194,22 @@ runGSC(
     std::vector<bam_streamer_ptr> origBamStreamPtrs;
     std::vector<bam_dumper_ptr> supportBamDumperPtrs;
 
-    for (unsigned idx(0); idx<sampleSize; ++idx)
+    const bool isGenerateSupportBam(opt.supportBamStub.size() > 0);
+    if (isGenerateSupportBam)
     {
-        std::string alignmentFile(opt.alignFileOpt.alignmentFilename[idx]);
-        bam_streamer_ptr bamStreamPtr(new bam_streamer(alignmentFile.c_str()));
-        origBamStreamPtrs.push_back(bamStreamPtr);
+        for (unsigned idx(0); idx<sampleSize; ++idx)
+        {
+            std::string alignmentFile(opt.alignFileOpt.alignmentFilename[idx]);
+            bam_streamer_ptr bamStreamPtr(new bam_streamer(alignmentFile.c_str()));
+            origBamStreamPtrs.push_back(bamStreamPtr);
 
-        std::string supportBamName(opt.supportBamStub
-                                   + ".bam_" + std::to_string(idx)
-                                   + ".bam");
-        const bam_hdr_t& header(bamStreamPtr->get_header());
-        bam_dumper_ptr bamDumperPtr(new bam_dumper(supportBamName.c_str(), header));
-        supportBamDumperPtrs.push_back(bamDumperPtr);
+            std::string supportBamName(opt.supportBamStub
+                                       + ".bam_" + std::to_string(idx)
+                                       + ".bam");
+            const bam_hdr_t& header(bamStreamPtr->get_header());
+            bam_dumper_ptr bamDumperPtr(new bam_dumper(supportBamName.c_str(), header));
+            supportBamDumperPtrs.push_back(bamDumperPtr);
+        }
     }
 
     if (opt.isVerbose)
@@ -241,7 +245,6 @@ runGSC(
             svProcessor.evaluateCandidates(edge, mjSVs, svData, svSupports);
 
             // write supporting reads into bam files
-            const bool isGenerateSupportBam(opt.supportBamStub.size() > 0);
             if (isGenerateSupportBam)
             {
                 for (unsigned idx(0); idx<sampleSize; ++idx)
