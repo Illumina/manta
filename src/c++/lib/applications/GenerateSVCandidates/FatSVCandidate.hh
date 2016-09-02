@@ -29,7 +29,14 @@
 #include <array>
 #include <iosfwd>
 
-
+/// extend vector A with the contents of B
+///
+/// example:
+/// vector<int> A = {1,2};
+/// vector<int> B = {2,3};
+/// appendVec(A,B);
+/// assert(A == {1,2,2,3});
+///
 template <typename Vec>
 void
 appendVec(
@@ -66,10 +73,10 @@ struct FatSVCandidate : public SVCandidate
         const bool isExpandRegion = true)
     {
         if (! base_t::merge(rhs, isExpandRegion)) return false;
-        for (unsigned i(0); i<SVEvidenceType::SIZE; ++i)
+        for (unsigned evidenceTypeIndex(0); evidenceTypeIndex<SVEvidenceType::SIZE; ++evidenceTypeIndex)
         {
-            appendVec(bp1EvidenceIndex[i],rhs.bp1EvidenceIndex[i]);
-            appendVec(bp2EvidenceIndex[i],rhs.bp2EvidenceIndex[i]);
+            appendVec(bp1EvidenceIndex[evidenceTypeIndex],rhs.bp1EvidenceIndex[evidenceTypeIndex]);
+            appendVec(bp2EvidenceIndex[evidenceTypeIndex],rhs.bp2EvidenceIndex[evidenceTypeIndex]);
         }
         return true;
     }
@@ -94,6 +101,10 @@ struct FatSVCandidate : public SVCandidate
     }
 #endif
 
+    /// a 2d array type to track breakpoint evidence, the first dimension is evidence type
+    /// and the inner dimension is a vector with size equal to the number of (confident-mapping) observations.
+    /// For each observation the inner-diminsion value provides the index of the read used as an observation, which
+    /// can be used to estimate signal density vs. all reads.
     typedef std::array<std::vector<double>,SVEvidenceType::SIZE> evidenceIndex_t;
 
     evidenceIndex_t bp1EvidenceIndex;

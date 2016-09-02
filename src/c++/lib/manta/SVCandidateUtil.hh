@@ -158,6 +158,11 @@ getExtendedSVType(
     const bool isForceIntraChromBnd = false);
 
 
+/// a 'spanning' sv means that this is a 'normal' breakend, where we have a
+/// hypothesis for the region and orientation of each end of the breakend
+///
+/// a 'spanning' sv type stands in contrast to a 'complex' sv type as described
+/// in the 'isComplexSV' function below
 inline
 bool
 isSpanningSV(const SVCandidate& sv)
