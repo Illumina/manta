@@ -1,3 +1,5 @@
+v1.0.1
+- MANTA-299 documentation and method cleanup for handling split read evidence with a couple of bug fixes
 - MANTA-296 Test assembler directly from bam input
 - [#43] fix freed string pointer use in sample name
 v1.0.0
