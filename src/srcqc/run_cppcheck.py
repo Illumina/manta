@@ -23,7 +23,7 @@
 
 import os
 import sys
-import commands
+import subprocess
 
 
 def which(searchFile) :
@@ -40,18 +40,22 @@ def which(searchFile) :
 
 
 def check_version(executable, versionRequired):
-    ret = commands.getoutput("cppcheck --version")
-    version = ret.split()[1]
 
-    is_old_version = False
+    proc=subprocess.Popen(["cppcheck","--version"],stdout=subprocess.PIPE)
+
+    lines = proc.stdout.readlines()
+    if len(lines) == 0 : return False
+    version = lines[0].split()[1]
+
     versionReqNums = versionRequired.split('.')
     versionNums = version.split('.')
     for ix in xrange(len(versionNums)):
-        if int(versionNums[ix]) < int(versionReqNums[ix]):
-            is_old_version = True
-            break
+        if int(versionNums[ix]) < int(versionReqNums[ix]) :
+            return True
+        if int(versionNums[ix]) > int(versionReqNums[ix]) :
+            return False
 
-    return is_old_version
+    return False
 
 
 def usage() :
@@ -72,8 +76,6 @@ def usage() :
 
 
 def main() :
-
-    import subprocess
 
     if len(sys.argv) != 2 :
         usage()
@@ -108,11 +110,6 @@ def main() :
 
     # xml output is usful for getting a warnings id field, which is what you need to suppress it:
     #checkCmd.append("--xml")
-
-    # additional suppressed checks from starka:
-    #--suppress=uninitMemberVar \
-    #--suppress=unsignedLessThanZero \
-    #--suppress=obsoleteFunctionsasctime \
 
     # this is more aggressive  and includes more FPs
     #checkCmd.append("--inconclusive")
