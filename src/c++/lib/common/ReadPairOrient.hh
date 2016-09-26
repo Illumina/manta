@@ -18,13 +18,9 @@
 //
 //
 
-/**
- ** \brief Encapsulation of the concept of a read pair relative orientation.
- **
- ** Encapsulation of the concept of a read pair relative orientation.
- **
- ** \author Richard Shaw
- **/
+/// \brief Encapsulation of the concept of a read pair relative orientation.
+///
+/// \author Richard Shaw
 
 #pragma once
 

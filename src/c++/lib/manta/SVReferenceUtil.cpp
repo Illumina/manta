@@ -146,7 +146,7 @@ getIntervalReferenceSegment(
     intervalRefSeq.set_offset(range.begin_pos());
 
     // note: begin and end pos follow Manta's closed-open bpInterval conventions (a la bedtools,
-    // but the ref function below takes closed-closed endpoints, so we subract one from endPos
+    // but the ref function below takes closed-closed endpoints, so we subtract one from endPos
     get_standardized_region_seq(referenceFilename, chrom, range.begin_pos(), (range.end_pos()-1), intervalRefSeq.seq());
 
     if (intervalRefSeq.seq().size() != range.size())

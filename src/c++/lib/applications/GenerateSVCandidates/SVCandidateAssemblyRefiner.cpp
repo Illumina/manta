@@ -1603,9 +1603,9 @@ getJumpAssembly(
         {
 #ifdef DEBUG_REFINER
             log_os << __FUNCTION__ << " Ref1 for alignment: "
-            	   << bp1refSeq.substr(align1LeadingCut, bp1refSeq.size()-align1LeadingCut-align1TrailingCut) << '\n';
+                   << bp1refSeq.substr(align1LeadingCut, bp1refSeq.size()-align1LeadingCut-align1TrailingCut) << '\n';
             log_os << __FUNCTION__ << " Ref2 for alignment: "
-            	   << bp2refSeq.substr(align2LeadingCut, bp2refSeq.size()-align2LeadingCut-align2TrailingCut) << '\n';
+                   << bp2refSeq.substr(align2LeadingCut, bp2refSeq.size()-align2LeadingCut-align2TrailingCut) << '\n';
 #endif
             _spanningAligner.align(contig.seq.begin(), contig.seq.end(),
                                    align1RefStrPtr->begin() + align1LeadingCut, align1RefStrPtr->end() - align1TrailingCut,
@@ -1889,10 +1889,10 @@ getSmallSVAssembly(
         }
 
 #ifdef DEBUG_REFINER
-            log_os << __FUNCTION__ << " Ref for alignment: "
-            	   << align1RefStr.substr(adjustedLeadingCut, align1RefStr.size()-adjustedLeadingCut-adjustedTrailingCut) << '\n';
+        log_os << __FUNCTION__ << " Ref for alignment: "
+               << align1RefStr.substr(adjustedLeadingCut, align1RefStr.size()-adjustedLeadingCut-adjustedTrailingCut) << '\n';
 #endif
-            ;
+        ;
 
         // start with largeSV aligner
         {

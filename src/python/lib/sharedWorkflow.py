@@ -147,7 +147,8 @@ def runDepthFromAlignments(self, bamList, outputPath, taskPrefix="",dependencies
 
         def getChromosomeGroups(params) :
             """
-            Iterate chromosomes/contigs and 'clump' small contigs together
+            Iterate through chromosomes/contigs and group small contigs together. This functions as a generator yielding
+            successive contig groups.
             """
             minSize=200000
             group = []

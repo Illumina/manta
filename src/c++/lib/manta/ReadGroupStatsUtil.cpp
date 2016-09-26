@@ -201,7 +201,7 @@ private:
                 const unsigned maxPercent((_orientCount[maxIndex]*100)/_totalOrientCount);
                 std::ostringstream oss;
                 oss << "ERROR: Can't determine consensus pair orientation of " << _rgLabel << ".\n"
-                    << "\tMost frequent orientation is '" << _finalOrient << "' (" << maxPercent << "% of " << _totalOrientCount << " total observations)\n";
+                    << "\tThe most frequent orientation is '" << _finalOrient << "' (" << maxPercent << "% of " << _totalOrientCount << " total observations)\n";
                 BOOST_THROW_EXCEPTION(LogicException(oss.str()));
             }
         }

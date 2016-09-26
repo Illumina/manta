@@ -145,7 +145,7 @@ parseESLOptions(
     }
     else if (opt.referenceFilename.empty())
     {
-        usage(log_os,prog,visible,"Need the FASTA reference file");
+        usage(log_os,prog,visible,"Must specify a fasta reference file");
     }
     else if (opt.regions.empty())
     {

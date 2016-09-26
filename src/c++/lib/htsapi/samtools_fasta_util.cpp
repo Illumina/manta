@@ -47,7 +47,6 @@ void
 get_chrom_sizes(const std::string& fai_file,
                 std::map<std::string,unsigned>& chrom_sizes)
 {
-
     static const char delim('\t');
 
     chrom_sizes.clear();
@@ -77,7 +76,6 @@ unsigned
 get_chrom_length(const std::string& fai_file,
                  const std::string& chrom_name)
 {
-
     static const char delim('\t');
 
     bool isFound(false);
@@ -155,6 +153,8 @@ get_region_seq(const std::string& ref_file,
     free(ref_tmp);
     fai_destroy(fai);
 }
+
+
 
 
 
