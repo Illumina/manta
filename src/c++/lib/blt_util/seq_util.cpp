@@ -68,103 +68,6 @@ is_valid_seq(const char* seq)
 
 
 void
-get_ref_seq(const char* ref_seq_file,
-            std::string& ref_seq,
-            const pos_range ref_segment)
-{
-    static const unsigned buff_size(50000);
-    char buff[buff_size];
-
-    std::ifstream ref_is(ref_seq_file);
-
-    if ( ! ref_is )
-    {
-        log_os << "ERROR: Can't open reference sequence file: " << ref_seq_file << "\n";
-        exit(EXIT_FAILURE);
-    }
-
-    unsigned line_no(1);
-#ifdef SEQ_UTIL_VERBOSE
-    log_os << "Reading from reference sequence file " << ref_seq_file << "\n";
-#endif
-    ref_is.getline(buff,buff_size);
-#ifdef SEQ_UTIL_VERBOSE
-    log_os << "First line: " << buff << "\n";
-#endif
-
-    if (buff[0] != '>')
-    {
-        log_os << "ERROR: Unexpected format in reference sequence file: " << ref_seq_file << " line_no: " << line_no << "\n"
-               << "\tline: '" << buff << "'\n";
-        exit(EXIT_FAILURE);
-    }
-
-    const pos_t begin_pos(ref_segment.is_begin_pos ? ref_segment.begin_pos : 0);
-    pos_t ref_pos(0);
-
-    ref_seq.clear();
-    while (true)
-    {
-        ref_is.getline(buff,buff_size);
-        if (! ref_is)
-        {
-            if     (ref_is.eof()) break;
-            else if (ref_is.fail())
-            {
-                if (ref_is.bad())
-                {
-                    log_os << "ERROR: unexpected failure while attempting to read sequence file: " << ref_seq_file << "\n";
-                    exit(EXIT_FAILURE);
-                }
-                ref_is.clear();
-            }
-        }
-        line_no++;
-        if (buff[0] == '>')
-        {
-            log_os << "ERROR: Unexpected format in reference sequence file: " << ref_seq_file << " line_no: " << line_no << "\n"
-                   << "\tline: '" << buff << "'\n";
-            exit(EXIT_FAILURE);
-        }
-
-        // correct for '\r' if present:
-        pos_t rc(ref_is.gcount()-1);
-        if (rc && (buff[rc-1]=='\r'))
-        {
-            buff[--rc]='\0';
-        }
-        if (ref_segment.is_end_pos)
-        {
-            if (ref_pos>=ref_segment.end_pos) break;
-            if ((ref_pos+rc)>ref_segment.end_pos)
-            {
-                rc=(ref_segment.end_pos-ref_pos);
-                buff[rc]='\0';
-            }
-        }
-        if (ref_pos<begin_pos)
-        {
-            if ((ref_pos+rc) > begin_pos)
-            {
-                ref_seq += (buff+(begin_pos-ref_pos));
-            }
-        }
-        else
-        {
-            ref_seq += buff;
-        }
-        ref_pos += rc;
-    }
-
-#ifdef SEQ_UTIL_VERBOSE
-    log_os << "Finished reading from reference sequence file " << ref_seq_file << "\n";
-    log_os << "Reference sequence size: " << ref_seq.size() << "\n";
-#endif
-}
-
-
-
-void
 standardize_ref_seq(const char* ref_seq_file,
                     const char* chr_name,
                     std::string& ref_seq,
@@ -197,22 +100,6 @@ standardize_ref_seq(const char* ref_seq_file,
     }
 }
 
-
-
-#if 0
-std::size_t
-get_ref_seq_known_size(const std::string& ref_seq)
-{
-    std::string::const_iterator i(ref_seq.begin());
-    const std::string::const_iterator i_end(ref_seq.end());
-    std::size_t size(0);
-    for (; i != i_end; ++i)
-    {
-        if (*i != 'N') size++;
-    }
-    return size;
-}
-#endif
 
 
 std::size_t

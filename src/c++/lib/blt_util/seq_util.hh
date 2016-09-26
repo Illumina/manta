@@ -295,14 +295,6 @@ reverseCompCopyStr(const std::string& seq)
     return result;
 }
 
-// Get single sequence from a fasta file, there must be only one
-// sequence in the file.
-//
-void
-get_ref_seq(const char* ref_seq_file,
-            std::string& ref_seq,
-            const pos_range ref_segment = pos_range());
-
 /// Standardize reference sequence to [ACGTN]. Fail when non-IUPAC
 /// character is found.
 void
@@ -310,17 +302,6 @@ standardize_ref_seq(const char* ref_seq_file,
                     const char* chr_name,
                     std::string& ref_seq,
                     const pos_t offset);
-
-inline
-void
-standardize_ref_seq(const char* ref_seq_file,
-                    std::string& ref_seq)
-{
-    standardize_ref_seq(ref_seq_file,NULL,ref_seq,0);
-}
-
-//std::size_t
-//get_ref_seq_known_size(const std::string& ref_seq);
 
 std::size_t
 get_ref_seq_known_size(const reference_contig_segment& ref_seq,
@@ -335,6 +316,7 @@ get_seq_repeat_unit(
     unsigned& repeat_count);
 
 /// Same as above but removes first base from seq
+///
 void
 get_vcf_seq_repeat_unit(
     const std::string& seq,
