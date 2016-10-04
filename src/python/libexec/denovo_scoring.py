@@ -41,6 +41,13 @@ def check_genotype(probandGT, fatherGT, motherGT):
     return isConsistent
 
 
+def add_dq(tokens, probandIx, dq):
+    for ix in xrange(9, len(tokens)):
+        if (ix == probandIx):
+            tokens[ix] += ":%s" % dq
+        else:
+            tokens[ix] += ":."
+
 
 def process_vcf(vcfFile, probandID,
                 fatherID, motherID):
@@ -123,9 +130,7 @@ def process_vcf(vcfFile, probandID,
         isConsistent = check_genotype(probandGT, fatherGT, motherGT)
         if not(isConsistent):
             # DQ set to 60
-            tokens[probandIx] += ":60"
-            tokens[fatherIx] += ":."
-            tokens[motherIx] += ":."
+            add_dq(tokens, probandIx, "60")
 
             # stats
             filter = tokens[6]
@@ -140,9 +145,7 @@ def process_vcf(vcfFile, probandID,
             consistencyDict[GTstring] += 1
         else:
             # DQ set to 0
-            tokens[probandIx] += ":0"
-            tokens[fatherIx] += ":."
-            tokens[motherIx] += ":."
+            add_dq(tokens, probandIx, "0")
 
         newLine = ""
         for i in xrange(8):
