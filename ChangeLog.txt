@@ -1,3 +1,6 @@
+v1.0.2
+- SPW-316 update denovo scoring script to write valide vcf when the input vcf contains more than three samples
+- Remove old/unused reference utility functions
 v1.0.1
 - MANTA-299 documentation and method cleanup for handling split read evidence with a couple of bug fixes
 - MANTA-296 Test assembler directly from bam input
