@@ -35,6 +35,10 @@
 
 /// parse a bam region into chrom/begin/end values
 ///
+/// \param[out] begin_pos start position (zero-indexed, closed)
+/// \param[out] end_pos end position (zero-indexed, open)
+///
+/// example: "chr2:100-200" will be parsed to begin_pos=99 and end_pos=200
 void
 parse_bam_region(
     const char* region,
@@ -46,6 +50,9 @@ parse_bam_region(
 /// parse a bam region into chrom-index/begin/end values based
 /// on chromosome index lookup and end positions in bam header
 ///
+/// \param[out] tid htslib zero-indexed contig id
+/// \param[out] begin_pos start position (zero-indexed, closed)
+/// \param[out] end_pos end position (zero-indexed, open)
 void
 parse_bam_region_from_hdr(
     const bam_hdr_t* header,

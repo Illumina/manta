@@ -94,7 +94,7 @@ processBamRecords(
            << interval << "\n";
 #endif
 
-    origBamStream.set_new_region(interval.tid, interval.range.begin_pos(), interval.range.end_pos());
+    origBamStream.resetRegion(interval.tid, interval.range.begin_pos(), interval.range.end_pos());
     while (origBamStream.next())
     {
         const bam_record* origBamRec(origBamStream.get_record_ptr());

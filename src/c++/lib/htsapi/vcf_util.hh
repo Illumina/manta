@@ -70,9 +70,9 @@ write_vcf_filter(
     const char* desc);
 
 
-// look for 'key' in vcf FORMAT field, provide index of key or return
-// false
-//
+/// look for 'key' in vcf FORMAT field, provide index of key or return
+/// false
+///
 inline
 bool
 get_format_key_index(const char* format,
@@ -115,6 +115,7 @@ get_format_string_nocopy(const char* const* word,
 
 // returns -1 for '.' alleles
 void
-parse_gt(const char* gt,
-         std::vector<int>& gti,
-         const bool is_allow_bad_end_char=false);
+parse_gt(
+    const char* gt,
+    std::vector<int>& gti,
+    const bool is_allow_bad_end_char=false);

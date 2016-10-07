@@ -435,7 +435,7 @@ readChromDepthFromAlignment(
 #ifdef DEBUG_DPS
             log_os << "scanning region: " << startPos << "," << endPos << "\n";
 #endif
-            read_stream.set_new_region(chromIndex,startPos,endPos);
+            read_stream.resetRegion(chromIndex,startPos,endPos);
 
             cdTracker.setNewRegion();
 

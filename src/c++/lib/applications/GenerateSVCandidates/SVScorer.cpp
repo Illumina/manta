@@ -189,7 +189,7 @@ getBreakendMaxMappedDepthAndMQ0(
         bam_streamer& bamStream(*_bamStreams[bamIndex]);
 
         // set bam stream to new search interval:
-        bamStream.set_new_region(bp.interval.tid, searchRange.begin_pos(), searchRange.end_pos());
+        bamStream.resetRegion(bp.interval.tid, searchRange.begin_pos(), searchRange.end_pos());
 
         while (bamStream.next())
         {

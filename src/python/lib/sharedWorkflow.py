@@ -188,4 +188,3 @@ def runDepthFromAlignments(self, bamList, outputPath, taskPrefix="",dependencies
         return nextStepWait
 
     return _runDepthShared(self, taskPrefix, dependencies, bamList, outputPath, depthFunc)
-

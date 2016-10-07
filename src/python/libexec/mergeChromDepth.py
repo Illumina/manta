@@ -19,7 +19,7 @@
 #
 
 """
-Merge chrom depth from multiple samples/BAM files
+Merge chrom depth from multiple samples/mapping files
 """
 
 import os,sys

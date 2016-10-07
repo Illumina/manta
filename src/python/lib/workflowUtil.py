@@ -332,6 +332,33 @@ def getNextGenomeSegment(params) :
 
 
 
+def getGenomeSegmentGroups(params, excludedContigs = None) :
+    """
+    Iterate segment groups and 'clump' small contigs together
+    """
+
+    def isGroupEligible(gseg) :
+        if excludedContigs is None : return True
+        return (gseg.chromLabel not in excludedContigs)
+
+    minSegmentGroupSize=200000
+    group = []
+    headSize = 0
+    isLastSegmentGroupEligible = True
+    for gseg in getNextGenomeSegment(params) :
+        isSegmentGroupEligible = isGroupEligible(gseg)
+        if (isSegmentGroupEligible and isLastSegmentGroupEligible) and (headSize+gseg.size() <= minSegmentGroupSize) :
+            group.append(gseg)
+            headSize += gseg.size()
+        else :
+            if len(group) != 0 : yield(group)
+            group = [gseg]
+            headSize = gseg.size()
+        isLastSegmentGroupEligible = isSegmentGroupEligible
+    if len(group) != 0 : yield(group)
+
+
+
 def cleanPyEnv() :
     """
     clear out some potentially destabilizing env variables:
@@ -376,3 +403,16 @@ def exeFile(filename):
     """
     if isWindows() : return filename + ".exe"
     return filename
+
+
+def bamListCatCmd(samtoolsBin, bamList, output) :
+    assert(len(bamList) > 0)
+
+    if len(bamList) > 1:
+        headerTmp = bamList[0] + "header"
+        cmd  = "\"%s\" view -H \"%s\" >| \"%s\"" % (samtoolsBin, bamList[0], headerTmp)
+        cmd += " && \"%s\" merge -h \"%s\" \"%s\" " % (samtoolsBin, headerTmp, output)
+        cmd += " ".join(bamList)
+    else:
+        cmd = "mv -f \"%s\" \"%s\"" % (bamList[0], output)
+    return cmd + " && \"%s\" index \"%s\"" % (samtoolsBin, output)

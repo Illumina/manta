@@ -38,7 +38,7 @@ struct vcf_record
         clear();
     }
 
-    // set record from record string s, return false on error
+    /// set the vcf record from record string s, return false on error
     bool set(const char* s);
 
     void clear()
@@ -50,14 +50,18 @@ struct vcf_record
         line=nullptr;
     }
 
-
+    /// test if the variant represents a "simple" SNV or small indel
+    /// where all REF/ALT entries are composed of only [ACGTN] sequences
+    //
     // N.B. the current implementation of is_valid does not
     // allow symbolic ALTs, e.g. representing a deletion using
     // the <DEL> symbolic allele and the END INFO field.  This
     // is probably fine, but worth noting
     bool
-    is_valid() const
+    isSimpleVariantLocus() const
     {
+        if (ref.empty()) return false;
+        if (alt.empty()) return false;
         if (! is_valid_seq(ref.c_str())) return false;
         for (const auto& alt_allele : alt)
         {
@@ -66,10 +70,12 @@ struct vcf_record
         return true;
     }
 
+    /// check for REF or ALT alleles with a size > 1, alleles with equal length REF and ALT sequences will
+    /// count as an indel
     bool
     is_indel() const
     {
-        if (! is_valid()) return false;
+        if (!isSimpleVariantLocus()) return false;
         if ((ref.size()>1) && (alt.size()>0)) return true;
         for (const auto& alt_allele : alt)
         {
@@ -81,7 +87,7 @@ struct vcf_record
     bool
     is_snv() const
     {
-        if (! is_valid()) return false;
+        if (!isSimpleVariantLocus()) return false;
         if (1 != ref.size()) return false;
         for (const auto& alt_allele : alt)
         {

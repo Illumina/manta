@@ -232,7 +232,7 @@ recoverRemoteReads(
 #endif
 
         // set bam stream to new search interval:
-        bamStream.set_new_region(
+        bamStream.resetRegion(
             interval.tid,
             interval.range.begin_pos(),
             interval.range.end_pos()+1);
@@ -420,7 +420,7 @@ getBreakendReads(
         bam_streamer& bamStream(*_bamStreams[bamIndex]);
 
         // set bam stream to new search interval:
-        bamStream.set_new_region(bp.interval.tid, searchBeginPos, searchEndPos);
+        bamStream.resetRegion(bp.interval.tid, searchBeginPos, searchEndPos);
 
         ShadowReadFinder shadow(_scanOpt.minSingletonMapqCandidates, isSearchForLeftOpen, isSearchForRightOpen);
 

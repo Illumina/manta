@@ -108,7 +108,7 @@ def checkChromSet(htsfileBin,referenceFasta,bamList,bamLabel=None,isReferenceLoc
     @param referenceFasta - samtools indexed fasta file
     @param bamList - a container of indexed bam/cram(s) to check for consistency
     @param bamLabel - a container of labels for each bam/cram file (default is to label files by index number)
-    @param isReferenceLocked - if true, then the input BAMs must contain all of the chromosomes in the reference fasta
+    @param isReferenceLocked - if true, then the input BAM/CRAMs must contain all of the chromosomes in the reference fasta
 
     This function closely follows the strelka input configuration step validator
     """

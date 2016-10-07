@@ -28,18 +28,21 @@
 #include "blt_util/log.hh"
 #include "blt_util/seq_util.hh"
 
+#include "common/Exceptions.hh"
+
 #include <cassert>
 #include <cstdlib>
 #include <sys/stat.h>
 
 #include <iostream>
+#include <sstream>
 #include <set>
 #include <string>
 
 
 
-// return true only if all chromosomes in the bcf/vcf exist in the
-// bam header
+/// return true only if all chromosomes in the bcf/vcf exist in the
+/// bam header
 static
 void
 check_bam_bcf_header_compatability(
@@ -74,9 +77,11 @@ check_bam_bcf_header_compatability(
 vcf_streamer::
 vcf_streamer(
     const char* filename,
-    const char* region) :
+    const char* region,
+    const bool isRequireNormalized) :
     hts_streamer(filename,region),
-    _hdr(nullptr)
+    _hdr(nullptr),
+    _isRequireNormalized(isRequireNormalized)
 {
     //
     // note with the switch to samtools 1.X vcf/bcf still involve predominantly separate
@@ -90,6 +95,7 @@ vcf_streamer(
         log_os << "ERROR: Failed to load header for VCF file: '" << filename << "'\n";
         exit(EXIT_FAILURE);
     }
+    _sampleCount = bcf_hdr_nsamples(_hdr);
 }
 
 
@@ -104,8 +110,7 @@ vcf_streamer::
 
 bool
 vcf_streamer::
-next(
-    const bool is_indel_only)
+next()
 {
     if (_is_stream_end || (nullptr==_hfp) || (nullptr==_titr)) return false;
 
@@ -132,8 +137,30 @@ next(
             log_os << "ERROR: Can't parse vcf record: '" << _kstr.s << "'\n";
             exit(EXIT_FAILURE);
         }
-        if (! _vcfrec.is_valid()) continue;
-        if (is_indel_only && (! _vcfrec.is_indel())) continue;
+
+        if (_vcfrec.isSimpleVariantLocus())
+        {
+            if (!_vcfrec.is_normalized())
+            {
+                std::ostringstream oss;
+                oss << "Input VCF record contains is not normalized:\n";
+                report_state(oss);
+
+                if (_isRequireNormalized)
+                {
+                    std::ostringstream ess;
+                    ess << "ERROR: " << oss.str();
+                    ess << "Please normalize all records in this VCF with a tool such as vt, then resubmit\n";
+                    BOOST_THROW_EXCEPTION(illumina::common::LogicException(ess.str()));
+                }
+                else
+                {
+                    log_os << "WARNING: " << oss.str();
+                    log_os << "All alleles in this VCF record have been skipped.\n";
+                    continue;
+                }
+            }
+        }
 
         break; // found expected vcf record type
     }

@@ -343,7 +343,7 @@ addSVNodeData(
         bam_streamer& readStream(*bamPtr);
 
         // set bam stream to new search interval:
-        readStream.set_new_region(searchInterval.tid,searchInterval.range.begin_pos(),searchInterval.range.end_pos());
+        readStream.resetRegion(searchInterval.tid,searchInterval.range.begin_pos(),searchInterval.range.end_pos());
 
 #ifdef DEBUG_SVDATA
         log_os << __FUNCTION__ << ": scanning bamIndex: " << bamIndex << "\n";

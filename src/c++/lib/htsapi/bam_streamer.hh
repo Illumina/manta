@@ -48,25 +48,28 @@ struct bam_streamer : public boost::noncopyable
     /// \param region if filename is indexed CRAM or BAM, you can
     ///        restrict the stream to a specific region
     explicit
-    bam_streamer(const char* filename,
-                 const char* region = nullptr);
+    bam_streamer(
+        const char* filename,
+        const char* region = nullptr);
 
     ~bam_streamer();
 
-    /// \brief set new or first region for file:
+    /// \brief set new region for indexed file
     ///
-    /// \param region if ctor filename is indexed CRAM or BAM, you can
-    ///        restrict the stream to a specific region
+    /// \param region htslib-style region string in format: "chromName:beginPos-endPos", cannot be nullptr
     void
-    set_new_region(const char* region);
+    resetRegion(const char* region);
 
-    /// \brief set new or first region for file:
+    /// \brief set new region for indexed file
     ///
-    /// \param beg zero-indexed start pos
-    /// \param end zero-indexed end pos
+    /// \param referenceContigId htslib zero-indexed contig id
+    /// \param beginPos start position (zero-indexed, closed)
+    /// \param endPos end position (zero-indexed, closed)
     void
-    set_new_region(
-        int reg, int beg, int end);
+    resetRegion(
+        int referenceContigId,
+        int beginPos,
+        int endPos);
 
     bool next();
 

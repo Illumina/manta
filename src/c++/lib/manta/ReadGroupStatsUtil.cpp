@@ -751,7 +751,7 @@ extractReadGroupStatsFromBam(
 #endif
             if (startPos >= chromSize[chromIndex]) continue;
 
-            read_stream.set_new_region(chromIndex,startPos,chromSize[chromIndex]);
+            read_stream.resetRegion(chromIndex,startPos,chromSize[chromIndex]);
             while (read_stream.next())
             {
                 const bam_record& bamRead(*(read_stream.get_record_ptr()));

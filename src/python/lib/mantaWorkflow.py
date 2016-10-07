@@ -23,7 +23,6 @@ Manta SV discovery workflow
 
 
 import os.path
-import shutil
 import sys
 
 # add script path to pull in utils in same directory:
@@ -35,12 +34,11 @@ pyflowDir=os.path.join(scriptDir,"pyflow")
 sys.path.append(os.path.abspath(pyflowDir))
 
 from configBuildTimeInfo import workflowVersion
-from configureUtil import getIniSections,dumpIniSections
 from pyflow import WorkflowRunner
 from sharedWorkflow import getMkdirCmd, getMvCmd, getRmCmd, getRmdirCmd, \
-                           quoteStringList, runDepthFromAlignments
-from workflowUtil import checkFile, ensureDir, isWindows, preJoin, which, \
-                         getNextGenomeSegment, getFastaChromOrderSize, cleanPyEnv
+                           runDepthFromAlignments
+from workflowUtil import checkFile, ensureDir, preJoin, \
+                          getGenomeSegmentGroups, getFastaChromOrderSize, cleanPyEnv
 
 
 __version__ = workflowVersion
@@ -126,24 +124,6 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
 
     tmpGraphFiles = []
     graphTasks = set()
-
-    def getGenomeSegmentGroups(params) :
-        """
-        Iterate segment groups and 'clump' small contigs together
-        """
-
-        minSegmentGroupSize=200000
-        group = []
-        headSize = 0
-        for gseg in getNextGenomeSegment(self.params) :
-            if headSize+gseg.size() <= minSegmentGroupSize :
-                group.append(gseg)
-                headSize += gseg.size()
-            else :
-                if len(group) != 0 : yield(group)
-                group = [gseg]
-                headSize = gseg.size()
-        if len(group) != 0 : yield(group)
 
     for gsegGroup in getGenomeSegmentGroups(self.params) :
         assert(len(gsegGroup) != 0)

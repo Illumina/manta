@@ -27,20 +27,23 @@
 #include "hts_streamer.hh"
 #include "vcf_record.hh"
 
+#include <cassert>
+
 
 struct vcf_streamer : public hts_streamer
 {
+    /// \param isRequireNormalized[in] if true an exception is thrown for any input variant records which are not
+    ///                                left shifted
     vcf_streamer(
         const char* filename,
-        const char* region);
+        const char* region,
+        const bool isRequireNormalized = true);
 
     ~vcf_streamer();
 
-    // advance to next vcf record
-    //
-    // is_indel_only - if set, skip all records except indels
-    //
-    bool next(const bool is_indel_only=false);
+    /// advance to next (normalized) vcf record
+    ///
+    bool next();
 
     const vcf_record*
     get_record_ptr() const
@@ -57,7 +60,24 @@ struct vcf_streamer : public hts_streamer
     validateBamHeaderChromSync(
         const bam_hdr_t& header) const;
 
+    unsigned
+    getSampleCount() const
+    {
+        assert(nullptr != _hdr);
+        return _sampleCount;
+    }
+
+    const char*
+    getSampleName(const unsigned sampleIndex) const
+    {
+        assert(nullptr != _hdr);
+        assert(sampleIndex < _sampleCount);
+        return _hdr->samples[sampleIndex];
+    }
+
 private:
     bcf_hdr_t* _hdr;
+    unsigned _sampleCount;
     vcf_record _vcfrec;
+    bool _isRequireNormalized;
 };

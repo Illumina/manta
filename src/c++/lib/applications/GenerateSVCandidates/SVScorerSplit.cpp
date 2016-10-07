@@ -237,7 +237,7 @@ scoreSplitReads(
     // extract reads overlapping the break point
     // We are not looking for remote reads, (semialigned-) reads mapping near this breakpoint, but not across it
     // or any other kind of additional reads used for assembly.
-    readStream.set_new_region(bp.interval.tid,
+    readStream.resetRegion(bp.interval.tid,
                               std::max(0, bp.interval.range.begin_pos() - extendedSearchRange),
                               bp.interval.range.end_pos() + extendedSearchRange);
     while (readStream.next())
@@ -294,7 +294,7 @@ scoreSplitReads(
             assert(false && "Invalid bp state");
         }
 
-        readStream.set_new_region(bp.interval.tid, shadowRange.begin_pos(), shadowRange.end_pos());
+        readStream.resetRegion(bp.interval.tid, shadowRange.begin_pos(), shadowRange.end_pos());
 
         ShadowReadFinder shadow(shadowMinMapq,isSearchForLeftOpen,isSearchForRightOpen);
 

@@ -32,7 +32,9 @@
 #include <iostream>
 
 
+
 static const kstring_t kinit = {0,0,0};
+
 
 
 hts_streamer::
@@ -53,11 +55,6 @@ hts_streamer(
         throw blt_exception("hts filename is null ptr");
     }
 
-    if (nullptr == region)
-    {
-        throw blt_exception("hts region is null ptr");
-    }
-
     if ('\0' == *filename)
     {
         throw blt_exception("hts filename is empty string");
@@ -73,7 +70,10 @@ hts_streamer(
     _load_index();
 
     // read only a region of HTS file:
-    set_region(region);
+    if (nullptr != region)
+    {
+        resetRegion(region);
+    }
 }
 
 
@@ -88,23 +88,20 @@ hts_streamer::
 }
 
 
+
 void
 hts_streamer::
-set_region(
+resetRegion(
     const char* region)
 {
-    // free _titr if it's already been set to avoid memory leaks
     if (nullptr != _titr) tbx_itr_destroy(_titr);
 
     _titr = tbx_itr_querys(_tidx, region);
-    if (nullptr == _titr)
-    {
-        _is_stream_end=true;
-    }
+    _is_stream_end = (nullptr == _titr);
 }
 
 
-// load index if it hasn't been set already:
+
 void
 hts_streamer::
 _load_index()

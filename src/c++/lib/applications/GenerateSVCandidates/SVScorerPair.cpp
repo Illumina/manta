@@ -89,7 +89,7 @@ processBamProcList(
             if (scanInterval.range.begin_pos() >= scanInterval.range.end_pos()) continue;
 
             // set bam stream to new search interval:
-            bamStream.set_new_region(scanInterval.tid, scanInterval.range.begin_pos(), scanInterval.range.end_pos());
+            bamStream.resetRegion(scanInterval.tid, scanInterval.range.begin_pos(), scanInterval.range.end_pos());
 
             /// define the procs where' going to handle in this interval:
             std::vector<unsigned> targetProcs;

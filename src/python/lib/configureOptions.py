@@ -119,10 +119,11 @@ class ConfigureWorkflowOptions(object) :
 
         # next is the 'global' ini file, in the same directory as the configure
         # script:
-        cmdlineScriptName=os.path.basename(sys.argv[0])
+        realArg0=os.path.realpath(sys.argv[0])
+        cmdlineScriptName=os.path.basename(realArg0)
         configFileName=cmdlineScriptName+".ini"
 
-        cmdlineScriptDir=os.path.abspath(os.path.dirname(sys.argv[0]))
+        cmdlineScriptDir=os.path.abspath(os.path.dirname(realArg0))
         globalConfigPath=os.path.join(cmdlineScriptDir,configFileName)
         updateIniSections(iniSections,getIniSections(globalConfigPath))
 
