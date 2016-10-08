@@ -149,11 +149,13 @@ class ConfigureWorkflowOptions(object) :
             parser.print_help()
             sys.exit(2)
 
-        if len(args) : # or (len(sys.argv) == 1):
-            parser.print_help()
-            sys.exit(2)
-
         try :
+            nargs=len(args)
+            if nargs :
+                plural=""
+                if nargs>1 : plural="s"
+                raise OptParseException("%i unrecognized argument%s:\n%s" % (nargs, plural, "\n".join(["'"+arg+"'" for arg in args])))
+
             # sanitize arguments before writing defaults, check for missing arguments after:
             #
             self.validateAndSanitizeExistingOptions(options)
