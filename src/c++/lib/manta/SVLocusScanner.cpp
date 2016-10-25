@@ -97,6 +97,7 @@ SVObservation
 GetSplitSVCandidate(
     const ReadScannerDerivOptions& dopt,
     const int32_t alignTid,
+    const pos_t alignTlen,
     const pos_t leftPos,
     const pos_t rightPos,
     const SVEvidenceType::index_t& svSource,
@@ -130,15 +131,15 @@ GetSplitSVCandidate(
 
     if (! isComplex)
     {
-        localBreakend.interval.range.set_end_pos(leftPos+dopt.afterBreakend);
+        localBreakend.interval.range.set_end_pos(std::min(alignTlen, (leftPos+dopt.afterBreakend)));
     }
     else
     {
-        localBreakend.interval.range.set_end_pos(rightPos+dopt.afterBreakend);
+        localBreakend.interval.range.set_end_pos(std::min(alignTlen, (rightPos+dopt.afterBreakend)));
     }
 
     remoteBreakend.interval.range.set_begin_pos(std::max(0,rightPos-dopt.beforeBreakend));
-    remoteBreakend.interval.range.set_end_pos(rightPos+dopt.afterBreakend);
+    remoteBreakend.interval.range.set_end_pos(std::min(alignTlen, (rightPos+dopt.afterBreakend)));
 
     return sv;
 }
@@ -164,7 +165,8 @@ void
 updateSABreakend(
     const ReadScannerDerivOptions& dopt,
     const SimpleAlignment& align,
-    SVBreakend& breakend)
+    SVBreakend& breakend,
+    const bam_header_info& bamHeader)
 {
     // Need to use the match descriptors to determine if the split is upstream (i.e. 5' assuming fwd strand)
     // of the current alignment (i.e. we are clipped on the left side) or downstream
@@ -186,6 +188,7 @@ updateSABreakend(
     }
 
     breakend.interval.tid = align.tid;
+    const pos_t alignTlength(bamHeader.chrom_data[align.tid].length);
     // get the position of the breakend implied by the split, if split
     // is downstream (see above) the split position is the end of this split
     // read segment
@@ -196,7 +199,7 @@ updateSABreakend(
         pos += apath_ref_length(align.path);
     }
     breakend.interval.range.set_begin_pos(std::max(0,pos-dopt.beforeBreakend));
-    breakend.interval.range.set_end_pos(pos+dopt.afterBreakend);
+    breakend.interval.range.set_end_pos(std::min(alignTlength, (pos+dopt.afterBreakend)));
 }
 
 
@@ -209,7 +212,8 @@ GetSplitSACandidate(
     const bam_record& localRead,
     const SimpleAlignment& localAlign,
     const SimpleAlignment& remoteAlign,
-    const FRAGSOURCE::index_t fragSource)
+    const FRAGSOURCE::index_t fragSource,
+    const bam_header_info& bamHeader)
 {
     using namespace SVEvidenceType;
     static const index_t svSource(SPLIT_ALIGN);
@@ -225,8 +229,8 @@ GetSplitSACandidate(
     // reverse edge. this protects against double-count:
     localBreakend.lowresEvidence.add(svSource);
 
-    updateSABreakend(dopt, localAlign, localBreakend);
-    updateSABreakend(dopt, remoteAlign, remoteBreakend);
+    updateSABreakend(dopt, localAlign, localBreakend, bamHeader);
+    updateSABreakend(dopt, remoteAlign, remoteBreakend, bamHeader);
 
     // If the local (bp1) alignment is split downstream (on the right side) then this read goes from bp1 -> bp2.
     // If it is a forward read (e.g. read1 on + strand), this means it's a forward read for this event.
@@ -324,13 +328,13 @@ getSACandidatesFromRead(
     const bam_record& localRead,
     const SimpleAlignment& localAlign,
     const FRAGSOURCE::index_t fragSource,
-    const chromMap_t& chromToIndex,
+    const bam_header_info& bamHeader,
     std::vector<SVObservation>& candidates)
 {
     using namespace ALIGNPATH;
 
     std::vector<SimpleAlignment> remoteAlign;
-    parseSACandidatesFromRead(opt, localRead, chromToIndex, remoteAlign);
+    parseSACandidatesFromRead(opt, localRead, bamHeader.chrom_to_index, remoteAlign);
 
     if (remoteAlign.empty()) return;
 
@@ -341,7 +345,7 @@ getSACandidatesFromRead(
 
     for (const auto& ral : remoteAlign)
     {
-        candidates.push_back(GetSplitSACandidate(dopt, localRead, localAlign, ral, fragSource));
+        candidates.push_back(GetSplitSACandidate(dopt, localRead, localAlign, ral, fragSource, bamHeader));
 #ifdef DEBUG_SCANNER
         log_os << __FUNCTION__ << ": evaluating SA sv for inclusion: " << candidates.back() << "\n";
 #endif
@@ -357,6 +361,7 @@ getSVCandidatesFromReadIndels(
     const ReadScannerOptions& opt,
     const ReadScannerDerivOptions& dopt,
     const SimpleAlignment& align,
+    const bam_header_info& bamHeader,
     const FRAGSOURCE::index_t fragSource,
     std::vector<SVObservation>& candidates)
 {
@@ -369,6 +374,8 @@ getSVCandidatesFromReadIndels(
     unsigned pathIndex(0);
     unsigned readOffset(0);
     pos_t refHeadPos(align.pos);
+    const int32_t alignTid(align.tid);
+    const pos_t alignTlen(bamHeader.chrom_data[alignTid].length);
 
     const unsigned pathSize(align.path.size());
     while (pathIndex<pathSize)
@@ -400,7 +407,7 @@ getSVCandidatesFromReadIndels(
                 if (ps.length >= opt.minCandidateVariantSize)
                 {
                     static const bool isComplex(true);
-                    candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos, svSource, fragSource, isComplex));
+                    candidates.push_back(GetSplitSVCandidate(dopt, alignTid, alignTlen, refHeadPos, refHeadPos, svSource, fragSource, isComplex));
                 }
             }
         }
@@ -409,7 +416,7 @@ getSVCandidatesFromReadIndels(
             const swap_info sinfo(align.path,pathIndex);
             if ((sinfo.delete_length >= opt.minCandidateVariantSize) || (sinfo.insert_length >= opt.minCandidateVariantSize))
             {
-                candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos+sinfo.delete_length, svSource, fragSource));
+                candidates.push_back(GetSplitSVCandidate(dopt, alignTid, alignTlen, refHeadPos, refHeadPos+sinfo.delete_length, svSource, fragSource));
             }
 
             nPathSegments = sinfo.n_seg;
@@ -422,14 +429,14 @@ getSVCandidatesFromReadIndels(
             {
                 if (ps.length >= opt.minCandidateVariantSize)
                 {
-                    candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos+ps.length, svSource, fragSource));
+                    candidates.push_back(GetSplitSVCandidate(dopt, alignTid, alignTlen, refHeadPos, refHeadPos+ps.length, svSource, fragSource));
                 }
             }
             else if (ps.type == INSERT)
             {
                 if (ps.length >= opt.minCandidateVariantSize)
                 {
-                    candidates.push_back(GetSplitSVCandidate(dopt, align.tid, refHeadPos, refHeadPos, svSource, fragSource));
+                    candidates.push_back(GetSplitSVCandidate(dopt, alignTid, alignTlen, refHeadPos, refHeadPos, svSource, fragSource));
                 }
             }
         }
@@ -451,6 +458,7 @@ getSVCandidatesFromSemiAligned(
     const ReadScannerOptions& opt,
     const ReadScannerDerivOptions& dopt,
     const bam_record& bamRead,
+    const bam_header_info& bamHeader,
     const SimpleAlignment& bamAlign,
     const FRAGSOURCE::index_t fragSource,
     const reference_contig_segment& refSeq,
@@ -472,17 +480,19 @@ getSVCandidatesFromSemiAligned(
     // semi-aligned reads don't define a full hypothesis, so they're always evidence for a 'complex' ie. undefined, event
     // in a fashion analogous to clipped reads
     static const bool isComplex(true);
+    const int32_t alignTid(bamRead.target_id());
+    const pos_t alignTlen(bamHeader.chrom_data[alignTid].length);
 
     if (leadingMismatchLen >= opt.minSemiAlignedMismatchLen)
     {
         const pos_t pos(leadingRefPos);
-        candidates.push_back(GetSplitSVCandidate(dopt,bamRead.target_id(),pos,pos,svSource, fragSource,isComplex));
+        candidates.push_back(GetSplitSVCandidate(dopt,alignTid,alignTlen,pos,pos,svSource, fragSource,isComplex));
     }
 
     if (trailingMismatchLen >= opt.minSemiAlignedMismatchLen)
     {
         const pos_t pos(trailingRefPos);
-        candidates.push_back(GetSplitSVCandidate(dopt,bamRead.target_id(),pos,pos,svSource, fragSource,isComplex));
+        candidates.push_back(GetSplitSVCandidate(dopt,alignTid,alignTlen,pos,pos,svSource, fragSource,isComplex));
     }
 }
 
@@ -494,10 +504,12 @@ struct AlignmentPairAnalyzer
     AlignmentPairAnalyzer(
         const ReadScannerOptions& opt,
         const ReadScannerDerivOptions& dopt,
-        const SVLocusScanner::CachedReadGroupStats& rstats)
+        const SVLocusScanner::CachedReadGroupStats& rstats,
+        const bam_header_info& bamHeader)
         : _opt(opt),
           _dopt(dopt),
-          _rstats(rstats)
+          _rstats(rstats),
+          _header(bamHeader)
     {}
 
     void
@@ -526,6 +538,7 @@ struct AlignmentPairAnalyzer
         if (! _isScale) setLargeEventRegionScale();
         return (_scale >= 0.);
     }
+
 
     void
     getSVObservation(
@@ -578,34 +591,69 @@ struct AlignmentPairAnalyzer
         const pos_t remoteStartRefPos(remoteAlign().pos);
 
         localBreakend.interval.tid = localAlign().tid;
+        const pos_t localAlignTlen(_header.chrom_data[localBreakend.interval.tid].length);
         // expected breakpoint range is from the end of the localRead alignment to the (probabilistic) end of the fragment:
         if (localAlign().is_fwd_strand)
         {
             localBreakend.state = SVBreakendState::RIGHT_OPEN;
-            localBreakend.interval.range.set_begin_pos(_localEndRefPos);
-            localBreakend.interval.range.set_end_pos(_localEndRefPos + breakendSize);
+            localBreakend.interval.range.set_begin_pos(std::min(localAlignTlen, _localEndRefPos));
+            localBreakend.interval.range.set_end_pos(std::min(localAlignTlen, (_localEndRefPos + breakendSize)));
         }
         else
         {
             localBreakend.state = SVBreakendState::LEFT_OPEN;
             localBreakend.interval.range.set_end_pos(localStartRefPos);
-            localBreakend.interval.range.set_begin_pos(localStartRefPos - breakendSize);
+            localBreakend.interval.range.set_begin_pos(std::max(0, (localStartRefPos - breakendSize)));
         }
 
         remoteBreakend.interval.tid = remoteAlign().tid;
+        const pos_t remoteAlignTlen(_header.chrom_data[remoteBreakend.interval.tid].length);
         if (remoteAlign().is_fwd_strand)
         {
             remoteBreakend.state = SVBreakendState::RIGHT_OPEN;
-            remoteBreakend.interval.range.set_begin_pos(_remoteEndRefPos);
-            remoteBreakend.interval.range.set_end_pos(_remoteEndRefPos + breakendSize);
+            remoteBreakend.interval.range.set_begin_pos(std::min(remoteAlignTlen, _remoteEndRefPos));
+            remoteBreakend.interval.range.set_end_pos(std::min(remoteAlignTlen, (_remoteEndRefPos + breakendSize)));
         }
         else
         {
             remoteBreakend.state = SVBreakendState::LEFT_OPEN;
             remoteBreakend.interval.range.set_end_pos(remoteStartRefPos);
-            remoteBreakend.interval.range.set_begin_pos(remoteStartRefPos - breakendSize);
+            remoteBreakend.interval.range.set_begin_pos(std::max(0, (remoteStartRefPos - breakendSize)));
         }
     }
+
+    /// return true if the open end of a read is aligned to chromosome ends
+    bool
+    isAlignedToChrmEnds()
+    {
+        const int32_t localTid(localAlign().tid);
+        const pos_t localAlignTlen(_header.chrom_data[localTid].length);
+        const int32_t remoteTid(remoteAlign().tid);
+        const pos_t remoteAlignTlen(_header.chrom_data[remoteTid].length);
+
+        if (localAlign().is_fwd_strand)
+        {
+            if (_localEndRefPos >= localAlignTlen) return true;
+        }
+        else
+        {
+            if (localAlign().pos <= 0) return true;
+        }
+
+
+        if (remoteAlign().is_fwd_strand)
+        {
+            if (_remoteEndRefPos >= remoteAlignTlen) return true;
+        }
+        else
+        {
+            if (remoteAlign().pos <= 0) return true;
+        }
+
+
+        return false;
+    };
+
 
     /// return the amount of unaligned sequence proceding the pair insert:
     static
@@ -716,6 +764,7 @@ private:
     const ReadScannerOptions& _opt;
     const ReadScannerDerivOptions& _dopt;
     const SVLocusScanner::CachedReadGroupStats& _rstats;
+    const bam_header_info& _header;
     const SimpleAlignment* _local = nullptr;
     const SimpleAlignment* _remote = nullptr;
     bool _isRemote = false;
@@ -739,6 +788,7 @@ getSVCandidatesFromPair(
     const bam_record& localRead,
     const SimpleAlignment& localAlign,
     const bam_record* remoteReadPtr,
+    const bam_header_info& bamHeader,
     std::vector<SVObservation>& candidates)
 {
     if (! localRead.is_paired()) return;
@@ -755,10 +805,12 @@ getSVCandidatesFromPair(
     const bool isRemote(nullptr != remoteReadPtr);
     const SimpleAlignment remoteAlign(isRemote ? getAlignment(*remoteReadPtr) : getFakeMateAlignment(localRead));
 
-    AlignmentPairAnalyzer pairInspector(opt, dopt, rstats);
+    AlignmentPairAnalyzer pairInspector(opt, dopt, rstats, bamHeader);
     pairInspector.reset(localAlign, remoteAlign, isRemote, localRead.is_first());
 
     if (! pairInspector.computeLargeEventRegionScale()) return;
+
+    if (pairInspector.isAlignedToChrmEnds()) return;
 
     candidates.emplace_back();
     pairInspector.getSVObservation(candidates.back());
@@ -851,7 +903,7 @@ getSingleReadSVCandidates(
     const ReadScannerDerivOptions& dopt,
     const bam_record& localRead,
     const SimpleAlignment& localAlign,
-    const chromMap_t& chromToIndex,
+    const bam_header_info& bamHeader,
     const reference_contig_segment& refSeq,
     std::vector<SVObservation>& candidates)
 {
@@ -861,7 +913,7 @@ getSingleReadSVCandidates(
     const FRAGSOURCE::index_t fragSource(isRead2 ? FRAGSOURCE::READ2 : FRAGSOURCE::READ1);
 
     // - process any large indels in the localRead:
-    getSVCandidatesFromReadIndels(opt, dopt, localAlign, fragSource, candidates);
+    getSVCandidatesFromReadIndels(opt, dopt, localAlign, bamHeader, fragSource, candidates);
 #ifdef DEBUG_SCANNER
     log_os << __FUNCTION__ << ": post-indels candidate_size: " << candidates.size() << "\n";
 #endif
@@ -872,8 +924,7 @@ getSingleReadSVCandidates(
     // be very rare.
     if (localRead.isSASplit())
     {
-        getSACandidatesFromRead(opt, dopt, localRead, localAlign, fragSource, chromToIndex,
-                                candidates);
+        getSACandidatesFromRead(opt, dopt, localRead, localAlign, fragSource, bamHeader, candidates);
 #ifdef DEBUG_SCANNER
         log_os << __FUNCTION__ << ": post-split read candidate_size: " << candidates.size() << "\n";
 #endif
@@ -882,7 +933,7 @@ getSingleReadSVCandidates(
     {
         if (dopt.isSmallCandidates)
         {
-            getSVCandidatesFromSemiAligned(opt, dopt, localRead, localAlign, fragSource, refSeq,
+            getSVCandidatesFromSemiAligned(opt, dopt, localRead, bamHeader, localAlign, fragSource, refSeq,
                                            candidates);
         }
 #ifdef DEBUG_SCANNER
@@ -926,7 +977,7 @@ getReadBreakendsImpl(
 
     try
     {
-        getSingleReadSVCandidates(opt, dopt, localRead, localAlign, chromToIndex,
+        getSingleReadSVCandidates(opt, dopt, localRead, localAlign, bamHeader,
                                   localRefSeq, candidates);
 
         // run the same check on the read's mate if we have access to it
@@ -941,7 +992,7 @@ getReadBreakendsImpl(
                 BOOST_THROW_EXCEPTION(LogicException(msg));
             }
             getSingleReadSVCandidates(opt, dopt, remoteRead, remoteAlign,
-                                      chromToIndex, (*remoteRefSeqPtr),
+                                      bamHeader, (*remoteRefSeqPtr),
                                       candidates);
         }
 
@@ -949,8 +1000,8 @@ getReadBreakendsImpl(
         //getSVCandidatesFromShadow(opt, rstats, localRead, localAlign,remoteReadPtr,candidates);
 
         // - process anomalous read pairs:
-        getSVCandidatesFromPair(opt, dopt, rstats, localRead, localAlign, remoteReadPtr,
-                                candidates);
+        getSVCandidatesFromPair(opt, dopt, rstats, localRead, localAlign,
+                                remoteReadPtr, bamHeader, candidates);
     }
     catch (...)
     {

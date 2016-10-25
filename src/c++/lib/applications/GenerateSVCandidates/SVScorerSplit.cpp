@@ -238,8 +238,8 @@ scoreSplitReads(
     // We are not looking for remote reads, (semialigned-) reads mapping near this breakpoint, but not across it
     // or any other kind of additional reads used for assembly.
     readStream.resetRegion(bp.interval.tid,
-                              std::max(0, bp.interval.range.begin_pos() - extendedSearchRange),
-                              bp.interval.range.end_pos() + extendedSearchRange);
+                           std::max(0, bp.interval.range.begin_pos() - extendedSearchRange),
+                           bp.interval.range.end_pos() + extendedSearchRange);
     while (readStream.next())
     {
         const bam_record& bamRead(*(readStream.get_record_ptr()));

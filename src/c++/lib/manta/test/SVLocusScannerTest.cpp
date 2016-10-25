@@ -46,12 +46,14 @@ BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromReadIndels )
     edit_bam_cigar(inputPath,*bamDataPtr);
 
     SimpleAlignment align(getAlignment(bamRead));
+    align.tid = 0;
 
     std::vector<SVObservation> candidates;
 
     bam_header_info hdr_info;
+    hdr_info.chrom_data.emplace_back("chr1", 1000000);
 
-    getSVCandidatesFromReadIndels(opt, dopt, align, FRAGSOURCE::UNKNOWN, candidates);
+    getSVCandidatesFromReadIndels(opt, dopt, align, hdr_info, FRAGSOURCE::UNKNOWN, candidates);
 
     BOOST_REQUIRE_EQUAL(candidates.size(),1u);
     BOOST_REQUIRE(candidates[0].bp1.interval.range.is_pos_intersect(100));

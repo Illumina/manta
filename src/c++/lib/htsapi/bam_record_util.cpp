@@ -71,11 +71,13 @@ is_innie_pair(
 }
 
 
-
 bool
 is_possible_adapter_pair(
     const bam_record& bamRead)
 {
+    // TODO: improvements for datasets with short fragment size
+    // - return false when one read is split aligned
+    // - check both alignment start and alignment end for signals of running into adapters
     if (! is_mapped_chrom_pair(bamRead)) return false;
     if (bamRead.is_fwd_strand() == bamRead.is_mate_fwd_strand()) return false;
 
