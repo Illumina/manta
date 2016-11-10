@@ -27,12 +27,12 @@ import re
 
 
 def isInfoKey(string,key) :
-    match=re.search("[;\t]%s[;\t]" % (key) ,string)
+    match=re.search("(^|;)%s(;|$)" % (key) ,string)
     return match is not None
 
 
 def getKeyVal(string,key) :
-    match=re.search("%s=([^;\t]*);?" % (key) ,string)
+    match=re.search("%s=([^;]*);?" % (key) ,string)
     if match is None : return None
     return match.group(1);
 
@@ -58,12 +58,14 @@ class VcfRecord :
             self.alt=w[VCF_ALT]
             self.qual=w[VCF_QUAL]
             self.isPass=(w[VCF_FILTER] == "PASS")
+
             self.invState=None
             inv3 = isInfoKey(w[VCF_INFO],"INV3")
-            inv5 = getKeyVal(w[VCF_INFO],"INV5")
+            inv5 = isInfoKey(w[VCF_INFO],"INV5")
             assert(not (inv3 and inv5))
             if inv3: self.invState = "INV3"
             if inv5: self.invState = "INV5"
+
         self.endPos=self.pos+len(w[VCF_REF])-1
         val = getKeyVal(w[VCF_INFO],"END")
         if val is not None :
