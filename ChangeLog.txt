@@ -1,3 +1,6 @@
+v1.0.3
+- MANTA-302 fix the bug of duplicate variant ID
+- MANTA-279 fix the bug of reporting variants beyond chromosome end position
 v1.0.2
 - SPW-316 update denovo scoring script to write valide vcf when the input vcf contains more than three samples
 - Remove old/unused reference utility functions

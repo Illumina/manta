@@ -650,9 +650,8 @@ struct AlignmentPairAnalyzer
             if (remoteAlign().pos <= 0) return true;
         }
 
-
         return false;
-    };
+    }
 
 
     /// return the amount of unaligned sequence proceding the pair insert:
