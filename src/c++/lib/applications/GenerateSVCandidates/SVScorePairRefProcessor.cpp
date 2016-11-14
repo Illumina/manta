@@ -66,8 +66,13 @@ processClearedRecord(
 
     /// check if fragment is too big or too small:
     const int templateSize(std::abs(bamRead.template_size()));
-    if (templateSize < bamParams.minFrag) return;
-    if (templateSize > bamParams.maxFrag) return;
+
+    if (!pairOpt.useProperPairFlag)
+    {
+        if (templateSize < bamParams.minFrag) return;
+        if (templateSize > bamParams.maxFrag) return;
+    }
+    else if (!bamRead.is_proper_pair()) return;
 
     // count only from the down stream reads
     const bool isFirstBamRead(isFirstRead(bamRead));

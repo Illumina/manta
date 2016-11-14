@@ -128,6 +128,7 @@ writeSV(
 
 #ifdef DEBUG_GSV
         log_os << __FUNCTION__ << ": isSpanningSV junction: " <<  isCandidateSpanning << "\n";
+        log_os << __FUNCTION__ << ": Pairs:" << sv.bp1.getPairCount() << " Spanning:" << sv.bp1.getSpanningCount() << "\n";
 #endif
 
         // junction dependent tests:
@@ -135,7 +136,7 @@ writeSV(
         bool isJunctionSpanFail(false);
         if (isCandidateSpanning)
         {
-            if (sv.getPostAssemblySpanningCount() < opt.minCandidateSpanningCount)
+            if (sv.getPostAssemblySpanningCount(opt.isRNA) < opt.minCandidateSpanningCount)
             {
                 isJunctionSpanFail=true;
             }
@@ -148,7 +149,7 @@ writeSV(
         //   (2) no unassembled non-spanning candidates
         if (isCandidateSpanning)
         {
-            if (sv.getPostAssemblySpanningCount() < minJunctionCandidateSpanningCount)
+            if (sv.getPostAssemblySpanningCount(opt.isRNA) < minJunctionCandidateSpanningCount)
             {
                 isJunctionFiltered[junctionIndex] = true;
                 continue;

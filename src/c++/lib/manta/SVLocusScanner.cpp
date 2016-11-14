@@ -1309,7 +1309,8 @@ isProperPair(
 
     const Range& ppr(_stats[defaultReadGroupIndex].properPair);
     const int32_t fragmentSize(std::abs(bamRead.template_size()));
-
+    /// Unknown fragment size
+    if (fragmentSize == 0) return false;
     // we're seeing way to much large fragment garbage in cancers to use
     // vanilla proper pair criteria, push the max fragment size out a bit for now:
     static const float maxAnomFactor(1.5);
@@ -1330,6 +1331,7 @@ _getFragmentSizeType(
     using namespace FragmentSizeType;
     if (bamRead.target_id() != bamRead.mate_target_id()) return DISTANT;
     const int32_t fragmentSize(std::abs(bamRead.template_size()));
+    if (fragmentSize == 0) return UNKNOWN;
     return classifySize(_stats[defaultReadGroupIndex], fragmentSize);
 }
 
