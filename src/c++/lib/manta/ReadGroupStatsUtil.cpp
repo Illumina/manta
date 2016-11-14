@@ -129,7 +129,7 @@ getFragSizeMinusSkip(
     for (const path_segment& ps : _apath)
     {
         if (ps.type == SKIP) fragSize -= ps.length;
-    }  
+    }
 	assert(fragSize > 0);
     return fragSize;
 }
@@ -522,7 +522,7 @@ struct ReadPairDepthFilter
         static const unsigned maxMateSetSize(100000);
         if (_goodMates.size() > maxMateSetSize) _goodMates.clear();
 
-		// Ignore pairs where the upstream mate has a refskip, since we cannot 
+		// Ignore pairs where the upstream mate has a refskip, since we cannot
 		// compute the correct insert size later when looking at the downstream mate
 		// (Or we would have to save the total refskip length here)
 		if (hasRefSkip(bamRead)) return true;

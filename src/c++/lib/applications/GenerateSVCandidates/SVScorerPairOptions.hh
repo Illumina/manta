@@ -49,7 +49,7 @@ struct PairOptions
 
     /// This is an RNA dataset. Insert size distribution is less meaningful due to splicing
     const bool RNA;
-    
+
     /// Use the proper pair flag to decide if read pairs are are anomalous for ref and alt scoring
     /// Used for RNA, since splicing makes the pair insert size distribution less informative
     const bool useProperPairFlag;
