@@ -82,8 +82,6 @@ parseGSCOptions(
      "average depth estimate for each chromosome")
     ("ref", po::value(&opt.referenceFilename),
      "fasta reference sequence (required)")
-    ("truth-vcf", po::value(&opt.truthVcfFilename),
-     "optional truth VCF file (for testing)")
     ("edge-runtime-log", po::value(&opt.edgeRuntimeFilename),
      "optionally log time for long-running edges to this file")
     ("edge-stats-log", po::value(&opt.edgeStatsFilename),
