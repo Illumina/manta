@@ -98,6 +98,8 @@ index_t
 classifyIndel(
     const SVCandidate& sv)
 {
+    if (sv.isUnknownSizeInsertion) return INSERT;
+
     const bool isBp1First(sv.bp1.interval.range.begin_pos()<=sv.bp2.interval.range.begin_pos());
 
     const SVBreakend& bpA(isBp1First ? sv.bp1 : sv.bp2);
