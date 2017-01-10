@@ -44,9 +44,44 @@
 #endif
 
 
-/// A set of SVLocus objects comprising a full locus graph
+/// \brief parent object used to manage Manta's SV Locus graph
 ///
-/// When finalized, the SVLocusSet contains non-overlapping SVLoci
+/// This includes all data on the graph itself, in addition to various meta-data on the graph or graph creation process.
+///
+/// The primary role of this object, per its name, is to act as a "bag of SVLocus objects", thus there is some standard
+/// container interface supporting this role (size/begin/end...), and special interface reflecting the region based
+/// nature of the stored objects (getRegionIntersect). The rationale of the SVLocus object is that one should exist for
+/// each disjoint subgraph of the SV Locus graph. This is true when the graph is finalized, but may not hold during
+/// intermediate stages of the graph building and merging process.
+///
+/// Additional interface methods added to this object include:
+///
+/// merge() - Merging 2 SVLocusSet objects is the fundamental operation which allows for the creation of a genome-wide
+/// graph. It is one of the more complex operations in Manta due to the signal vs. noise edge evidence distinction.
+///
+/// cleanRegion()/clean()/finalize() - 'cleaning' is an operation to remove noise edges. For the merge operation to work
+/// without information loss, this cannot be done until all sequences from a region have been observed and merged in,
+/// after which any noise edge connecting two nodes which both lie in the observed region can be removed. cleanRegion()
+/// does this for a specific region (executed as information is scanned in for the purpose of memory management), while
+/// clean() removes all noise edges from the entire graph. finalize() is used to declare intent to stop merging
+/// information into the graph and begin variant calling, its primary role is to run clean().
+///
+/// save()/load() - write/read the graph
+///
+/// Various additional stats functions report on:
+/// (1) graph summary stats (no of nodes, edges, self-edges, etc...)
+/// (2) graph creation summary stats (no of anom/split/filtered read-pairs observed, etc...)
+/// (3) graph processing info (no of edges/nodes cleaned so far), reading merging runtime cost,...
+/// (4) object parameters
+///
+/// Internal methods mostly provide details to support the above interface. Of special note is the node indexing system
+/// used by this object. For certain operations we (internally) need to provide range based queries for nodes
+/// intersecting points or segments of the genome. While an interval tree is an obvious starting point for this, it is
+/// pessimistic in time/memory, given that nodes are very small relative to chrom size. Instead, the maximum node size
+/// is stored for every chromosome, then a binary search is used to search nodes indexed on their beginning positions,
+/// and linear search backwards up to the maximum node size guarantees that all nodes intersecting a point can be found
+/// in (effectively) log-N time. This object inherits from flyweight_observer to help keep this node indexing data
+/// structure up to date as nodes are added/deleted within the SVLocus objects managed by this graph.
 ///
 struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
 {
@@ -110,16 +145,12 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
         return _loci[index];
     }
 
-    /// merge locus into this:
-    ///
-    /// locus is destroyed in this process
+    /// merge a single locus into this
     ///
     void
     merge(const SVLocus& locus);
 
-    /// merge locus set into this:
-    ///
-    /// locus set is destroyed in this process
+    /// merge a second locus set into this
     ///
     void
     merge(const SVLocusSet& set);

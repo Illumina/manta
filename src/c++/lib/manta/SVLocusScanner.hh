@@ -215,6 +215,8 @@ struct SVLocusScanner
         const bam_record& bamRead,
         const reference_contig_segment& refSeq) const;
 
+    /// \brief fast screen to eliminate reads which are very unlikely to contribute any SV or indel evidence
+    ///
     bool
     isSVEvidence(
         const bam_record& bamRead,

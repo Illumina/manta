@@ -54,8 +54,12 @@
 
 struct SVLocusNode;
 
-
-// no constructor so that this can be used in a union:
+/// \brief object to represent graph edges
+///
+/// Note most edge information is pushed to the node class, the edge object only holds evidence count information.
+///
+/// This class has no constructor so that it can be used in a union
+///
 struct SVLocusEdge
 {
     unsigned
@@ -166,11 +170,14 @@ private:
 };
 #endif
 
-
+/// This map is used to represent all edges for a node in the "normal" case.
+///
 typedef std::map<NodeIndexType,SVLocusEdge> SVLocusEdgesType;
 
 
-/// used for an alternate compact representation of a node with zero or one edges
+/// this object is used for an alternate compact representation of a node, when the node has only zero or one
+/// edges. It is an alternative to to SVLocusEdgesType. Because the majority of nodes have a zero or one edge count,
+/// this leads to a very large savings in RAM required to represent the graph in memory.
 struct SVLocusEdgeSingle
 {
     template<class Archive>
@@ -186,8 +193,10 @@ struct SVLocusEdgeSingle
 };
 
 
-/// The edge manager enables iterator over the two forms of edges stored as a union
-/// TODO: hide the union behind an actual iteraror class
+/// The edge manager enables iterator over either of the two edge container formats (the "fat" map option or the
+/// compact SVLocusEdgeSingle option). The two edge formats need to be differentiated from a union.
+///
+/// TODO: hide the union behind an actual iterator class
 struct SVLocusEdgeManager
 {
     SVLocusEdgeManager(const SVLocusEdgeSingle& edge) :
@@ -219,6 +228,18 @@ private:
 };
 
 
+
+/// \brief stores all node region information plus all edges connecting to this node
+///
+/// This class stores all of the SV Locus graph information associated with each node:
+/// (1) genomic region of the node
+/// (2) genomic region of the sequencing evidence used to propose the node
+/// (3) a container of outgoing node edges.
+///
+/// Note to minimize memory usage, the edge container switches between two different formats which are wrapped behind
+/// a union. One container allows for any number of edges, an second compact format allows only zero or one edges.
+/// SVLocusNode itself is responsible for tracking the object type presently supported in this union.
+///
 struct SVLocusNode
 {
     typedef SVLocusEdgesType::const_iterator const_iterator;
@@ -229,7 +250,24 @@ struct SVLocusNode
         _edges.single.isZero=true;
     }
 
-    // specialized copy ctor which offsets all address:
+    /// standard copy ctor
+    SVLocusNode(const SVLocusNode& rhs) :
+        _interval(rhs._interval),
+        _evidenceRange(rhs._evidenceRange),
+        _isSingle(rhs._isSingle)
+    {
+        if (_isSingle)
+        {
+            _edges.single = rhs._edges.single;
+        }
+        else
+        {
+            _edges.multiPtr = new SVLocusEdgesType;
+            getMap() = rhs.getMap();
+        }
+    }
+
+    /// specialized copy ctor which offsets all node index numbers compared to those in the source object
     SVLocusNode(
         const SVLocusNode& in,
         const unsigned offset) :
@@ -252,22 +290,6 @@ struct SVLocusNode
             {
                 getMap().insert(std::make_pair(val.first+offset, val.second));
             }
-        }
-    }
-
-    SVLocusNode(const SVLocusNode& rhs) :
-        _interval(rhs._interval),
-        _evidenceRange(rhs._evidenceRange),
-        _isSingle(rhs._isSingle)
-    {
-        if (_isSingle)
-        {
-            _edges.single = rhs._edges.single;
-        }
-        else
-        {
-            _edges.multiPtr = new SVLocusEdgesType;
-            getMap() = rhs.getMap();
         }
     }
 
@@ -608,8 +630,8 @@ private:
         return *(_edges.multiPtr);
     }
 
-    // given a node in the multi-edge state with one edge, convert to
-    // the single-edge state
+    /// given a node in the multi-edge state with one edge, convert to
+    /// the single-edge state
     void
     convertToSingle()
     {
@@ -629,8 +651,8 @@ private:
     }
 
 
-    // given a node in the single-edge state with one edge, convert to
-    // the multi-edge state
+    /// given a node in the single-edge state with one edge, convert to
+    /// the multi-edge state
     void
     convertToMulti()
     {
@@ -648,10 +670,12 @@ private:
         const NodeIndexType toIndex,
         const char* label) const;
 
-    //////////////////  data:
+    //--------------  data:
     GenomeInterval _interval;
     known_pos_range2 _evidenceRange;
     CompactEdgeType _edges;
+
+    /// if true the CompactEdgeType union is set to represent type: SVLocusEdgeSingle
     bool _isSingle;
 };
 
