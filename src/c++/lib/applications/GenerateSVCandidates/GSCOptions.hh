@@ -53,7 +53,6 @@ struct GSCOptions
     std::string referenceFilename;
     std::string statsFilename;
     std::string chromDepthFilename;
-    std::string truthVcfFilename;
     std::string edgeRuntimeFilename;
     std::string edgeStatsFilename;
 

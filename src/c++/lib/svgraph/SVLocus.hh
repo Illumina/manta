@@ -41,17 +41,28 @@ struct SVLocusSet;
 
 
 
-/// \brief a set of regions containing dependent SV evidence
+/// \brief a connected subgraph of the full SV locus graph
 ///
-/// An SV locus is a region set hypothetically containing the breakends of 1 to many
-/// SVs.
+/// An SVLocus is a set of graph nodes which are all (transitivivly) associated by some level of sequencing evidence,
+/// thus when the full SVLocus set is analyzed, each SVLocus can be treated as an independent variant calling problem
+/// without introducing any approximations.
 ///
-/// The locus is composed of a set of non-overlapping contiguous genomic regions and
-/// the links (edges) between them. Each link has an associated evidence count.
+/// The SVLocus acts as a "container of SVLocusNode objects" and thus a significant portion of the API surface is
+/// container-like (empty/size/begin/end). Note that edges are not explicitly stored in this graph format, nodes
+/// contain all edge information.
 ///
-/// This class internally manages the node shared pointers in a synced data structure,
-/// there's probably a better way to do this with transform_iterator, but I've always
-/// regretted using that.
+/// The index number of this SVLocs is stored in the class and needs to be synced with the parent SVLocusSet object.
+///
+/// The parent SVLocusSet object tracks individual SVLocusNode objects in this class (to enable a fast region-based
+/// query of all nodes). Thus any operation which changes node index numbers has to be synced with SVLocusSet via the
+/// flyweight_notifier base class.
+///
+/// The SVLocusNode index numbers also need to be synced with the node index number stored in the SVLocusNode edges,
+/// all edges are recorded between nodes via node index numbers, so any change to the node index number requires
+/// all in/out edges to be updated appropriately.
+///
+/// All SVLocusNodes will be non-overlapping when the graph is finalized, but during the graph building stage this may
+/// not be the case.
 ///
 struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
 {
@@ -150,7 +161,7 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
 
     /// find all node indices connected to startIndex
     ///
-    /// non-recursive version
+    /// this version uses a stack to avoid recursive function calls (otherwise this call tends to fail on large graphs)
     void
     findConnected(
         const NodeIndexType startIndex,

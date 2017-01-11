@@ -87,8 +87,6 @@ parseESLOptions(
      "pre-computed alignment statistics for the input alignment files (required)")
     ("chrom-depth", po::value(&opt.chromDepthFilename),
      "average depth estimate for each chromosome")
-    ("truth-vcf", po::value(&opt.truthVcfFilename),
-     "optional truth VCF file (for testing)")
     ("region", po::value<regions_t>(),
      "samtools formatted region, eg. 'chr1:20-30'. May be supplied more than once but regions must not overlap. At least one entry required.")
     ("rna", po::value(&opt.isRNA)->zero_tokens(),

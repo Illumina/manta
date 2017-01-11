@@ -48,7 +48,6 @@ struct ESLOptions
     std::vector<std::string> regions;
     std::string statsFilename;
     std::string chromDepthFilename;
-    std::string truthVcfFilename;
 
     /// TODO remove the need for this bool by having a single overlap pair handler
     bool isRNA = false;
