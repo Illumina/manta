@@ -95,7 +95,12 @@ getRelOrient(
 
 
 
-/// limit the precision to 4 digits
+/// given an input integer, return an integer with all but the highest 4 decimal digits set to zero
+///
+/// this method is not written effeciently, and not intended for general integer truncation.
+/// it is used as part of a simple compression scheme for the fragment sizes of the frag size
+/// distribution
+///
 static
 unsigned
 getSimplifiedFragSize(
@@ -104,7 +109,6 @@ getSimplifiedFragSize(
     unsigned fragSize(fragmentSize);
 
     // reduce fragsize resolution for very large sizes:
-    // (large sizes are uncommon -- this doesn't need to be efficient, and it's not)
     unsigned steps(0);
     while (fragSize>1000)
     {
@@ -130,7 +134,17 @@ getFragSizeMinusSkip(
     {
         if (ps.type == SKIP) fragSize -= ps.length;
     }
-	assert(fragSize > 0);
+
+    if (fragSize <= 0)
+    {
+        using namespace illumina::common;
+
+        std::ostringstream oss;
+        oss << "ERROR: unexpected fragment size (" << fragSize << ") deduced from bam record: " << bamRead << "\n"
+            << "\tPossible invalid template size in bam record.";
+        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+    }
+
     return fragSize;
 }
 

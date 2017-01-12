@@ -47,7 +47,10 @@ operator<<(std::ostream& os, const bam_record& br)
         bam_cigar_to_apath(br.raw_cigar(),br.n_cigar(),apath);
         os << " cigar: " << apath;
 
-        /// print SAtag if present:
+
+        os << " templSize: " << br.template_size();
+
+        // print SAtag if present:
         static const char satag[] = {'S','A'};
         const char* saStr(br.get_string_tag(satag));
         if (nullptr != saStr)
