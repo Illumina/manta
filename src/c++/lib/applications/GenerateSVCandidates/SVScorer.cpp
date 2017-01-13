@@ -1364,6 +1364,9 @@ scoreRNASV(
     //log_os << __FUNCTION__ << "Scoring RNA candidate " << sv << "\n";
 #endif
 
+    // RNA assumes exactly one 'normal' sample:
+    assert(diploidInfo.samples.size() == 1);
+
     /// TODO TMP add real sampleIndex
     const unsigned sampleIndex(0);
 
