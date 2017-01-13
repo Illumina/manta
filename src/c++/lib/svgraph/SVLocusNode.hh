@@ -144,7 +144,7 @@ typedef unsigned NodeIndexType;
 #if 0
 class customConstEdgeIterator
     : public boost::iterator_adaptor<
-    customConstEdgeIterator            // Derived
+      customConstEdgeIterator            // Derived
     , Finite_vertices_iterator      // Base
     , Vertex_handle                 // Value
     , boost::forward_traversal_tag  // Traversal type

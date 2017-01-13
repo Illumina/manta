@@ -1,4 +1,4 @@
-v1.0.3-2-4a1ccf
+- MANTA-486/[#57] clarify rna mode configuration/improve errors
 - RNA: Include some spliced reads in insert-size estimation
 - RNA: Include split-reads as evidence for imprecise translocations
 - RNA: Use proper-pair BAM flag for abnormal pair detection

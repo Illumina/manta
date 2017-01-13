@@ -152,17 +152,17 @@ getFragSizeMinusSkip(
 static
 bool
 hasRefSkip(
-	const bam_record& bamRead)
+    const bam_record& bamRead)
 {
-	using namespace ALIGNPATH;
-	ALIGNPATH::path_t _apath;
-	bam_cigar_to_apath(bamRead.raw_cigar(), bamRead.n_cigar(), _apath);
+    using namespace ALIGNPATH;
+    ALIGNPATH::path_t _apath;
+    bam_cigar_to_apath(bamRead.raw_cigar(), bamRead.n_cigar(), _apath);
 
-	for (const path_segment& ps : _apath)
-	{
-		if (ps.type == SKIP) return true;
-	}
-	return false;
+    for (const path_segment& ps : _apath)
+    {
+        if (ps.type == SKIP) return true;
+    }
+    return false;
 }
 
 /// track pair orientation so that a consensus can be found for a read group
@@ -393,7 +393,7 @@ struct ReadGroupTracker
             if (! isInsertSizeConverged())
             {
                 log_os << "WARNING: read pair statistics did not converge for " << _rgLabel << "\n"
-                    << "\tTotal observed read pairs: " << insertSizeObservations() << "\n";
+                       << "\tTotal observed read pairs: " << insertSizeObservations() << "\n";
             }
         }
 
@@ -424,7 +424,7 @@ struct ReadAlignFilter
 {
     /// use only the most conservative alignments to generate fragment stats --
     /// filter reads containing any cigar types besides MATCH with optional
-	/// trailing SOFTCLIP and single REFSKIP
+    /// trailing SOFTCLIP and single REFSKIP
     bool
     isFilterRead(
         const bam_record& bamRead)
@@ -498,8 +498,8 @@ struct ReadPairDepthFilter
         const unsigned readNum(bamRead.is_first() ? 1 : 2);
         assert(bamRead.is_second() == (readNum == 2));
 
-	    // Filter pairs with templateSize 0 (unknown)
-		if (bamRead.template_size() == 0) return true;
+        // Filter pairs with templateSize 0 (unknown)
+        if (bamRead.template_size() == 0) return true;
 
         // sample each read pair once by sampling stats from
         // downstream read only, or whichever read is encountered
@@ -536,10 +536,10 @@ struct ReadPairDepthFilter
         static const unsigned maxMateSetSize(100000);
         if (_goodMates.size() > maxMateSetSize) _goodMates.clear();
 
-		// Ignore pairs where the upstream mate has a refskip, since we cannot
-		// compute the correct insert size later when looking at the downstream mate
-		// (Or we would have to save the total refskip length here)
-		if (hasRefSkip(bamRead)) return true;
+        // Ignore pairs where the upstream mate has a refskip, since we cannot
+        // compute the correct insert size later when looking at the downstream mate
+        // (Or we would have to save the total refskip length here)
+        if (hasRefSkip(bamRead)) return true;
 
         _goodMates.insert(ReadKey(bamRead));
         return true;
@@ -853,7 +853,7 @@ extractReadGroupStatsFromBam(
                 if (ori != PAIR_ORIENT::Rp) continue;
 
                 int fragSize = getFragSizeMinusSkip(bamRead);
-				rgInfo.addInsertSize(getSimplifiedFragSize(fragSize));
+                rgInfo.addInsertSize(getSimplifiedFragSize(fragSize));
 
                 if (! rgInfo.isInsertSizeCountCheck()) continue;
 
