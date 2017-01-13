@@ -612,11 +612,14 @@ Supplying the '--rna' flag at configuration time will provide
 experimental settings for RNA-Seq Fusion calling. At present this flag
 disables all high depth filters which are designed to exclude
 pericentromeric reference compressions in the WGS case but cannot be
-applied correctly to RNA-Seq analysis.  In addition many custom RNA
+applied correctly to RNA-Seq analysis. In addition many custom RNA
 read processing and alignment steps are invoked. This mode is designed
 to function as part of larger workflow with additional steps to reduce
 overall false positive rate which take place downstream from Manta's
 fusion calling step.
+
+When RNA mode is turned on, exactly one sample must be specified as normal
+input only (using either the `--bam` or `--normalBam` option).
 
 It may also be helpful to consider the high sensitivity calling
 documentation below for this mode.

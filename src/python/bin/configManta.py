@@ -130,6 +130,11 @@ You must specify a BAM or CRAM file for at least one sample.
         if ((safeLen(options.tumorBamList) > 0) and (safeLen(options.normalBamList) > 1)) :
             raise OptParseException("Can't accept multiple normal samples for tumor subtraction")
 
+        if options.isRNA :
+            if ((safeLen(options.normalBamList) != 1) or
+                (safeLen(options.tumorBamList) != 0)) :
+                raise OptParseException("RNA mode currently requires exactly one normal sample")
+
         bcheck = BamSetChecker()
         bcheck.appendBams(options.normalBamList,"Normal")
         bcheck.appendBams(options.tumorBamList,"Tumor")
