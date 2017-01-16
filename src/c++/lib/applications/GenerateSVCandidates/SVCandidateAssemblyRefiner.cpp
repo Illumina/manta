@@ -1629,19 +1629,52 @@ getJumpAssembly(
         log_os << __FUNCTION__ << "\tbp2seq_fwd: " << bp2Seq << "\n";
 #endif
 
+#ifdef DEBUG_REFINER
+		log_os << __FUNCTION__ << ": Checking contig aln: " << contigIndex << "\n";
+#endif
         // QC the alignment to make sure it spans the two breakend locations:
         static const unsigned minAlignRefSpan(20);
         const bool isAlignment1Good(alignment.align1.isAligned() && (apath_ref_length(alignment.align1.apath) >= minAlignRefSpan));
         const bool isAlignment2Good(alignment.align2.isAligned() && (apath_ref_length(alignment.align2.apath) >= minAlignRefSpan));
-        const bool isAlignmentGood(isAlignment1Good && isAlignment2Good);
+        bool isAlignmentGood(isAlignment1Good && isAlignment2Good);
 #ifdef DEBUG_REFINER
-        log_os << __FUNCTION__ << ": Checking contig aln: " << contigIndex << "\n";
+		log_os << __FUNCTION__ << ": contig alignment initial okay: " << contigIndex << "\n";
 #endif
+		{
+			// check the min size and fraction of optimal alignment score
+			// for each of the two sub-alignments on each side of the bp
+			//
+			// note this is done for multiple values -- the lower value is
+			// motivated by cases where a second breakpoint exists near to
+			// the target breakpoint -- the higher value is motivated by
+			// cases with some alignment 'messiness' near the breakpoint
+			// that stabilizes as we move farther away
+			//
+			/// TODO change iterative refspan to a single consistent alignment criteria
+			bool isFilterAlign1(true);
+			bool isFilterAlign2(true);
+			static const unsigned spanSet[] = { 75, 100, 200 };
+			for (const unsigned maxQCRefSpan : spanSet)
+			{
+				const unsigned qcSpan1 = maxQCRefSpan + (isRNA ? apath_spliced_length(alignment.align1.apath) : 0);
+				if (!isFilterSpanningAlignment(qcSpan1, _spanningAligner, true, isRNA, alignment.align1.apath))
+				{
+					isFilterAlign1 = false;
+				}
+				const unsigned qcSpan2 = maxQCRefSpan + (isRNA ? apath_spliced_length(alignment.align2.apath) : 0);
+				if (!isFilterSpanningAlignment(qcSpan2, _spanningAligner, false, isRNA, alignment.align2.apath))
+				{
+					isFilterAlign2 = false;
+				}
+			}
+			if (isFilterAlign1 || isFilterAlign2) isAlignmentGood = false;
+		}
         if (! isAlignmentGood) continue;
 #ifdef DEBUG_REFINER
-        log_os << __FUNCTION__ << ": contig okay: " << contigIndex << "\n";
+        log_os << __FUNCTION__ << ": contig alignment okay: " << contigIndex << "\n";
 #endif
-        if ((! isHighScore) || (alignment.score > assemblyData.spanningAlignments[highScoreIndex].score))
+		//if ((! isHighScore) || (alignment.score > assemblyData.spanningAlignments[highScoreIndex].score))
+		if ((! isHighScore) || (contig.supportReads > assemblyData.contigs[highScoreIndex].supportReads))
         {
             isHighScore = true;
             highScoreIndex=contigIndex;
@@ -1652,44 +1685,6 @@ getJumpAssembly(
 #ifdef DEBUG_REFINER
     log_os << __FUNCTION__ << ": high scoring contig: " << highScoreIndex << "\n";
 #endif
-
-    // set any additional QC steps before deciding an alignment is
-    // usable:
-
-    {
-        // check the min size and fraction of optimal alignment score
-        // for each of the two sub-alignments on each side of the bp
-        //
-        // note this is done for multiple values -- the lower value is
-        // motivated by cases where a second breakpoint exists near to
-        // the target breakpoint -- the higher value is motivated by
-        // cases with some alignment 'messiness' near the breakpoint
-        // that stabilizes as we move farther away
-        //
-        /// TODO change iterative refspan to a single consistent alignment criteria
-        /// TODO should this be moved into the candidate selection loop?
-        //
-        const SVCandidateAssemblyData::JumpAlignmentResultType& hsAlign(assemblyData.spanningAlignments[highScoreIndex]);
-
-        bool isFilterAlign1(true);
-        bool isFilterAlign2(true);
-        static const unsigned spanSet[] = {75, 100, 200};
-        for (const unsigned maxQCRefSpan : spanSet)
-        {
-            const unsigned qcSpan1 = maxQCRefSpan + (isRNA ? apath_spliced_length(hsAlign.align1.apath) : 0);
-            if (! isFilterSpanningAlignment(qcSpan1, _spanningAligner, true, isRNA, hsAlign.align1.apath))
-            {
-                isFilterAlign1 = false;
-            }
-            const unsigned qcSpan2 = maxQCRefSpan + (isRNA ? apath_spliced_length(hsAlign.align2.apath) : 0);
-            if (! isFilterSpanningAlignment(qcSpan2, _spanningAligner, false, isRNA, hsAlign.align2.apath))
-            {
-                isFilterAlign2 = false;
-            }
-        }
-        if (isFilterAlign1 || isFilterAlign2) return;
-    }
-
 
     // ok, passed QC -- mark the high-scoring alignment as usable for
     // hypothesis refinement:
