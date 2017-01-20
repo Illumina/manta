@@ -242,8 +242,10 @@ writeSV(
 
     bool isMJEvent(false);
 
+    unsigned sampleCount(svScore.sampleCount());
+    unsigned diploidSampleCount(svScore.diploidSampleCount());
     SVModelScoreInfo mjJointModelScoreInfo;
-    mjJointModelScoreInfo.setSampleCount(svScore.sampleCount(),svScore.diploidSampleCount());
+    mjJointModelScoreInfo.setSampleCount(sampleCount, diploidSampleCount);
     svScore.scoreSV(svData, mjAssemblyData, mjSV, junctionSVId,
                     isJunctionFiltered, isSomatic, isTumorOnly,
                     mjModelScoreInfo, mjJointModelScoreInfo,
@@ -258,12 +260,66 @@ writeSV(
     bool isMJEventWriteDiploid(false);
     bool isMJEventWriteSomatic(false);
 
+    std::vector<bool> isJunctionSampleSpanFail;
+    isJunctionSampleSpanFail.resize(diploidSampleCount);
+
     if (isMJEvent)
     {
+        // check sample-specific evidence for all diploid samples
+        for (unsigned sampleIndex(0); sampleIndex<diploidSampleCount; ++sampleIndex)
+        {
+            // fail the evidence check per sample if
+            // 1) any of the junctions has zero evidence
+            // 2) none of the junctions meet the minimum evidence requirement
+            isJunctionSampleSpanFail[sampleIndex] = false;
+            unsigned maxEvidence(0);
+            for (unsigned junctionIndex(0); junctionIndex < junctionCount; ++junctionIndex)
+            {
+                if (isJunctionFiltered[junctionIndex]) continue;
+
+                const SVScoreInfo& baseInfo(mjModelScoreInfo[junctionIndex].base);
+                const SVSampleAlleleInfo& altInfo(baseInfo.samples[sampleIndex].alt);
+                const unsigned altEvidence(altInfo.confidentSpanningPairCount + altInfo.confidentSplitReadCount);
+
+                //  identify any junction with 0 evidence in the sample
+                if (altEvidence == 0)
+                {
+                    isJunctionSampleSpanFail[sampleIndex] = true;
+                    break;
+                }
+                else
+                {
+                    maxEvidence = std::max(maxEvidence, altEvidence);
+                }
+
+            }
+            // none of the junctions has evidence exceeding the minimum requirement in the sample
+            if (maxEvidence < opt.minCandidateSpanningCount) isJunctionSampleSpanFail[sampleIndex] = true;
+#ifdef DEBUG_GSV
+            if (isJunctionSampleSpanFail[sampleIndex])
+            {
+                log_os << __FUNCTION__ << ": The multi-junction candidate failed the check of sample-specific evidence for sample #"
+                       << sampleIndex << ".\n";
+            }
+#endif
+        }
+
+        // the multi-junction diploid event remains valid if any sample passing the evidence check
+        if (! isAnyFalse(isJunctionSampleSpanFail)) isMJDiploidEvent = false;
+
+#ifdef DEBUG_GSV
+        if (! isMJDiploidEvent)
+        {
+
+            log_os << __FUNCTION__ << ": Rejecting the multi-junction candidate, failed the check of sample-specific evidence for all  diploid samples.\n";
+        }
+#endif
+
         for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
         {
             if (isJunctionFiltered[junctionIndex]) continue;
 
+            // set the Id of the first junction in the group as the event (i.e. multi-junction) label
             if (event.label.empty())
             {
                 const SVId& svId(junctionSVId[junctionIndex]);
@@ -272,7 +328,8 @@ writeSV(
 
             const SVModelScoreInfo& modelScoreInfo(mjModelScoreInfo[junctionIndex]);
 
-            // for diploid case only we decide to use multi-junction or single junction based on best score:
+            // for diploid case only,
+            // we decide to use multi-junction or single junction based on best score:
             // (for somatic case a lower somatic score could be due to reference evidence in an event member)
             //
             if (mjJointModelScoreInfo.diploid.filters.size() > modelScoreInfo.diploid.filters.size())
@@ -283,23 +340,10 @@ writeSV(
             {
                 isMJDiploidEvent=false;
             }
-        }
 
-        // for events, we write all junctions, or no junctions, so we need to determine write status over
-        // the whole set rather than a single junctions:
-        for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
-        {
-            const SVModelScoreInfo& modelScoreInfo(mjModelScoreInfo[junctionIndex]);
-
-            if (isMJDiploidEvent)
-            {
-                if ((mjJointModelScoreInfo.diploid.altScore >= opt.diploidOpt.minOutputAltScore) ||
-                    (modelScoreInfo.diploid.altScore >= opt.diploidOpt.minOutputAltScore))
-                {
-                    isMJEventWriteDiploid = true;
-                }
-            }
-
+            // for somatic case,
+            // we decide to use multi-junction if either the multi-junction OR ANY single junction has a good score?
+            // @Chris: Could you please look into the logic here?
             if ((mjJointModelScoreInfo.somatic.somaticScore >= opt.somaticOpt.minOutputSomaticScore) ||
                 (modelScoreInfo.somatic.somaticScore >= opt.somaticOpt.minOutputSomaticScore))
             {
@@ -307,6 +351,11 @@ writeSV(
             }
 
             //TODO: set up criteria for isMJEventWriteTumor
+        }
+
+        if (isMJDiploidEvent)
+        {
+            isMJEventWriteDiploid = (mjJointModelScoreInfo.diploid.altScore >= opt.diploidOpt.minOutputAltScore);
         }
     }
 
@@ -335,8 +384,24 @@ writeSV(
         {
             {
                 const EventInfo& diploidEvent( isMJDiploidEvent ? event : nonEvent );
-                const SVModelScoreInfo& scoreInfo(isMJDiploidEvent ? mjJointModelScoreInfo : modelScoreInfo);
-                const SVScoreInfoDiploid& diploidInfo(scoreInfo.diploid);
+                const SVModelScoreInfo& scoreInfo( isMJDiploidEvent ? mjJointModelScoreInfo : modelScoreInfo);
+                SVScoreInfoDiploid diploidInfo(scoreInfo.diploid);
+
+                if (isMJDiploidEvent)
+                {
+                    // if one sample failed the evidence check, use the sample-specific diploid scoreInfo, instead of the joint scoreInfo
+                    for (unsigned sampleIndex(0); sampleIndex<diploidSampleCount; ++sampleIndex)
+                    {
+                        if (isJunctionSampleSpanFail[sampleIndex])
+                        {
+                            diploidInfo.samples[sampleIndex] = modelScoreInfo.diploid.samples[sampleIndex];
+#ifdef DEBUG_GSV
+                            log_os << __FUNCTION__ << ": Junction #" << junctionIndex
+                                   << ": Swapped diploid info for sample #" << sampleIndex << ".\n" ;
+#endif
+                        }
+                    }
+                }
 
                 bool isWriteDiploid(false);
                 if (isMJDiploidEvent)
@@ -358,6 +423,7 @@ writeSV(
 
             if (isSomatic)
             {
+                const EventInfo& somaticEvent( isMJEvent ? event : nonEvent );
                 const SVModelScoreInfo& scoreInfo(isMJEvent ? mjJointModelScoreInfo : modelScoreInfo);
                 const SVScoreInfoSomatic& somaticInfo(scoreInfo.somatic);
 
@@ -374,7 +440,10 @@ writeSV(
 
                 if (isWriteSomatic)
                 {
-                    somWriter.writeSV(svData, assemblyData, sv, svId, baseInfo, somaticInfo, event, modelScoreInfo.somatic);
+                    // Previously, we put the multi-junction event tag anyway, even for single-junction writing...
+                    // I changed it into no event tag for single junctions
+                    // @Chris: Could you please take a look if I overlook anything?
+                    somWriter.writeSV(svData, assemblyData, sv, svId, baseInfo, somaticInfo, somaticEvent, modelScoreInfo.somatic);
                 }
             }
         }
