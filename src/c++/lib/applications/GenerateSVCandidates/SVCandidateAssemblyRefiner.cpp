@@ -1538,12 +1538,12 @@ getJumpAssembly(
             static const int nSpacer(25);
             std::vector<exclusion_block> exclBlocks1;
             const std::string cutRef1 = kmerMaskReference(align1RefStrPtr->begin() + align1LeadingCut,
-                                                          align1RefStrPtr->end() - align1TrailingCut,
-                                                          contig.seq, nSpacer, exclBlocks1);
+                align1RefStrPtr->end() - align1TrailingCut,
+                contig.seq, nSpacer, exclBlocks1);
             std::vector<exclusion_block> exclBlocks2;
             const std::string cutRef2 = kmerMaskReference(align2RefStrPtr->begin() + align2LeadingCut,
-                                                          align2RefStrPtr->end() - align2TrailingCut,
-                                                          contig.seq, nSpacer, exclBlocks2);
+                align2RefStrPtr->end() - align2TrailingCut,
+                contig.seq, nSpacer, exclBlocks2);
 #ifdef DEBUG_REFINER
             log_os << __FUNCTION__ << " Kmer-masked references\n";
             log_os << "\t ref Lengths " << align1RefStrPtr->size() << " " << align2RefStrPtr->size() << "\n";
@@ -1572,16 +1572,16 @@ getJumpAssembly(
             log_os << __FUNCTION__ << " isTranscriptStrandKnown: " << bporient.isTranscriptStrandKnown << "; bp1Fw: " << bp1Fw << " ; bp2Fw: " << bp2Fw << '\n';
 #endif
             _RNASpanningAligner.align(contig.seq.begin(), contig.seq.end(),
-                                      cutRef1.begin(), cutRef1.end(), cutRef2.begin(), cutRef2.end(),
-                                      bp1Fw, bp2Fw, bporient.isTranscriptStrandKnown,
-                                      alignment);
+                cutRef1.begin(), cutRef1.end(), cutRef2.begin(), cutRef2.end(),
+                bp1Fw, bp2Fw, bporient.isTranscriptStrandKnown,
+                alignment);
 
 #ifdef DEBUG_REFINER
             log_os << __FUNCTION__ << " Masked 1: " << alignment.align1 << '\n';
             log_os << __FUNCTION__ << " Masked 2: " << alignment.align2 << '\n';
 #endif
             if (!(translateMaskedAlignment(alignment.align1, exclBlocks1) &&
-                  translateMaskedAlignment(alignment.align2, exclBlocks2)))
+                translateMaskedAlignment(alignment.align2, exclBlocks2)))
             {
 #ifdef DEBUG_REFINER
                 log_os << __FUNCTION__ << " Failed to fix kmer-masked alignment\n";
@@ -1598,14 +1598,14 @@ getJumpAssembly(
         {
 #ifdef DEBUG_REFINER
             log_os << __FUNCTION__ << " Ref1 for alignment: "
-                   << bp1refSeq.substr(align1LeadingCut, bp1refSeq.size()-align1LeadingCut-align1TrailingCut) << '\n';
+                << bp1refSeq.substr(align1LeadingCut, bp1refSeq.size() - align1LeadingCut - align1TrailingCut) << '\n';
             log_os << __FUNCTION__ << " Ref2 for alignment: "
-                   << bp2refSeq.substr(align2LeadingCut, bp2refSeq.size()-align2LeadingCut-align2TrailingCut) << '\n';
+                << bp2refSeq.substr(align2LeadingCut, bp2refSeq.size() - align2LeadingCut - align2TrailingCut) << '\n';
 #endif
             _spanningAligner.align(contig.seq.begin(), contig.seq.end(),
-                                   align1RefStrPtr->begin() + align1LeadingCut, align1RefStrPtr->end() - align1TrailingCut,
-                                   align2RefStrPtr->begin() + align2LeadingCut, align2RefStrPtr->end() - align2TrailingCut,
-                                   alignment);
+                align1RefStrPtr->begin() + align1LeadingCut, align1RefStrPtr->end() - align1TrailingCut,
+                align2RefStrPtr->begin() + align2LeadingCut, align2RefStrPtr->end() - align2TrailingCut,
+                alignment);
         }
 
         alignment.align1.beginPos += align1LeadingCut;
@@ -1679,6 +1679,7 @@ getJumpAssembly(
         }
     }
     if (goodContigIndicies.empty()) return;
+    // Find the contig with the highest alignment score
     unsigned maxAlignContigIndex = goodContigIndicies.front();
     for (unsigned index : goodContigIndicies)
     {
@@ -1688,17 +1689,19 @@ getJumpAssembly(
         }
     }
     unsigned selectedContigIndex(maxAlignContigIndex);
+    // Pick the contig with the most supporting reads that has an alignment score at least half as high as the highest-scoring contig
     for (unsigned index : goodContigIndicies)
     {
-        if ((assemblyData.spanningAlignments[index].score * 2 > assemblyData.spanningAlignments[maxAlignContigIndex].score) &&
-            (assemblyData.contigs[index].supportReads.size() > assemblyData.contigs[selectedContigIndex].supportReads.size()))
+        const bool sufficientScore(assemblyData.spanningAlignments[index].score * 2 > assemblyData.spanningAlignments[maxAlignContigIndex].score);
+        const bool moreReads(assemblyData.contigs[index].supportReads.size() > assemblyData.contigs[selectedContigIndex].supportReads.size());
+        if (sufficientScore && moreReads)
         {
             selectedContigIndex = index;
         }
     }
 
 #ifdef DEBUG_REFINER
-    log_os << __FUNCTION__ << ": high scoring contig: " << selectedContigIndex << "\n";
+    log_os << __FUNCTION__ << ": selected contig: " << selectedContigIndex << "\n";
 #endif
 
     // ok, passed QC -- mark the high-scoring alignment as usable for
