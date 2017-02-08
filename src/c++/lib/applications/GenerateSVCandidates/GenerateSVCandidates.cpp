@@ -96,7 +96,7 @@ struct MultiJunctionFilter
     {
         unsigned mjComplexCount(0);
         unsigned mjSpanningFilterCount(0);
-        findMultiJunctionCandidates(svs, _opt.minCandidateSpanningCount, mjComplexCount, mjSpanningFilterCount, mjSVs);
+        findMultiJunctionCandidates(svs, _opt.minCandidateSpanningCount, _opt.isRNA, mjComplexCount, mjSpanningFilterCount, mjSVs);
         _edgeStatMan.updateMJFilter(edge, mjComplexCount, mjSpanningFilterCount);
 
         if (_opt.isVerbose)
