@@ -37,10 +37,9 @@ struct VcfWriterDiploidSV : public VcfWriterSV, VcfWriterScoredSV
         const CallOptionsDiploid& diploidOpt,
         const bool isMaxDepthFilter,
         const std::string& referenceFilename,
-        const bool isRNA,
         const SVLocusSet& set,
         std::ostream& os) :
-        VcfWriterSV(referenceFilename,isRNA,set,os),
+        VcfWriterSV(referenceFilename,set,os),
         _diploidOpt(diploidOpt),
         _isMaxDepthFilter(isMaxDepthFilter),
         _diploidInfoPtr(nullptr),
@@ -83,6 +82,7 @@ private:
     modifyTranslocInfo(
         const SVCandidate& sv,
         const bool isFirstOfPair,
+        const SVCandidateAssemblyData& assemblyData,
         InfoTag_t& infotags) const override;
 
     void

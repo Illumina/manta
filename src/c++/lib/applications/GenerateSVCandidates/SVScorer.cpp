@@ -1831,6 +1831,10 @@ computeAllScoreModels(
     {
         scoreTumorSV(_tumorOpt, _dFilterDiploid, junctionData, modelScoreInfo.tumor);
     }
+    else if (_isRNA)
+    {
+        scoreRNASV(_diploidOpt, modelScoreInfo.base, modelScoreInfo.diploid);
+    }
     else
     {
         scoreDiploidSV(_diploidOpt, _readScanner, _diploidDopt, _dFilterDiploid, junctionData, modelScoreInfo.diploid);
@@ -1840,11 +1844,6 @@ computeAllScoreModels(
         {
             scoreSomaticSV(_sampleCount,_diploidSampleCount,_somaticOpt, _somaticDopt, _dFilterSomatic, junctionData, modelScoreInfo.somatic);
         }
-    }
-
-    if (_isRNA)
-    {
-        scoreRNASV(_diploidOpt, modelScoreInfo.base, modelScoreInfo.diploid);
     }
 }
 

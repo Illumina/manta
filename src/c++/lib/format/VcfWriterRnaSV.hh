@@ -24,25 +24,25 @@
 
 #pragma once
 
+#include "manta/JunctionIdGenerator.hh"
 #include "manta/SVModelScoreInfo.hh"
 #include "format/VcfWriterSV.hh"
 #include "format/VcfWriterScoredSV.hh"
-#include "options/CallOptionsSomatic.hh"
+#include "options/CallOptionsDiploid.hh"
 
 
-struct VcfWriterSomaticSV : public VcfWriterSV, VcfWriterScoredSV
+struct VcfWriterRnaSV : public VcfWriterSV, VcfWriterScoredSV
 {
-    VcfWriterSomaticSV(
-        const CallOptionsSomatic& somaticOpt,
+    VcfWriterRnaSV(
+        const CallOptionsDiploid& diploidOpt,
         const bool isMaxDepthFilter,
         const std::string& referenceFilename,
         const SVLocusSet& set,
         std::ostream& os) :
-        VcfWriterSV(referenceFilename, set,os),
-        _somaticOpt(somaticOpt),
+        VcfWriterSV(referenceFilename,set,os),
+        _diploidOpt(diploidOpt),
         _isMaxDepthFilter(isMaxDepthFilter),
-        _somaticInfoPtr(nullptr),
-        _singleJunctionSomaticInfoPtr(nullptr)
+        _diploidInfoPtr(nullptr)
     {}
 
     void
@@ -52,9 +52,8 @@ struct VcfWriterSomaticSV : public VcfWriterSV, VcfWriterScoredSV
         const SVCandidate& sv,
         const SVId& svId,
         const SVScoreInfo& baseInfo,
-        const SVScoreInfoSomatic& somaticInfo,
-        const EventInfo& event,
-        const SVScoreInfoSomatic& singleJunctionSomaticInfo);
+        const SVScoreInfoDiploid& diploidInfo,
+        const EventInfo& event);
 
 private:
 
@@ -68,43 +67,28 @@ private:
     addHeaderFilters() const override;
 
     void
-    modifyInfo(
-        const EventInfo& event,
-        std::vector<std::string>& infotags) const override;
+    modifySample(
+        const SVCandidate& sv,
+        SampleTag_t& sampletags) const override;
 
     void
     modifyTranslocInfo(
         const SVCandidate& sv,
         const bool isFirstOfPair,
         const SVCandidateAssemblyData& assemblyData,
-        std::vector<std::string>& infotags) const override;
-
-    void
-    modifySample(
-        const SVCandidate& sv,
-        SampleTag_t& sampletags) const override;
+        InfoTag_t& infotags) const override;
 
     void
     writeFilter() const override;
 
-    const SVScoreInfoSomatic&
-    getSomaticInfo() const
+    const SVScoreInfoDiploid&
+    getDiploidInfo() const
     {
-        assert(NULL != _somaticInfoPtr);
-        return *_somaticInfoPtr;
+        assert(nullptr != _diploidInfoPtr);
+        return *_diploidInfoPtr;
     }
 
-    const SVScoreInfoSomatic&
-    getSingleJunctionSomaticInfo() const
-    {
-        assert(NULL != _singleJunctionSomaticInfoPtr);
-        return *_singleJunctionSomaticInfoPtr;
-    }
-
-
-    const CallOptionsSomatic& _somaticOpt;
+    const CallOptionsDiploid& _diploidOpt;
     const bool _isMaxDepthFilter;
-    const SVScoreInfoSomatic* _somaticInfoPtr;
-    const SVScoreInfoSomatic* _singleJunctionSomaticInfoPtr;
+    const SVScoreInfoDiploid* _diploidInfoPtr;
 };
-
