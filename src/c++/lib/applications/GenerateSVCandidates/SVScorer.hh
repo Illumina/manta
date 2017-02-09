@@ -154,6 +154,7 @@ struct SVScorer
     /// gather supporting evidence and generate:
     /// 1) diploid quality score and genotype for SV candidate
     /// 2) somatic quality score
+    ///
     void
     scoreSV(
         const SVCandidateSetData& svData,
@@ -256,9 +257,13 @@ private:
         const std::vector<JunctionCallInfo>& junctionData,
         SVModelScoreInfo& modelScoreInfo);
 
-    /// shared information gathering steps of all scoring models
+    /// accumulate (model-agnostic) evidence for the SV alt/ref alleles
+    ///
+    /// This step gathers information (such as counts and allele likelihoods) to be used downstream by more specific
+    /// (germline, somatic, etc..) scoring models.
+    ///
     void
-    scoreSV(
+    getSVSupportingEvidence(
         const SVCandidateSetData& svData,
         const SVCandidateAssemblyData& assemblyData,
         const bool isTumorOnly,

@@ -602,10 +602,9 @@ resolvePairSplitConflicts(
 
 
 
-/// shared information gathering steps of all scoring models
 void
 SVScorer::
-scoreSV(
+getSVSupportingEvidence(
     const SVCandidateSetData& svData,
     const SVCandidateAssemblyData& assemblyData,
     const bool isTumorOnly,
@@ -1905,8 +1904,8 @@ scoreSV(
 
         // accumulate model-neutral evidence for each candidate (or its corresponding reference allele)
         SVEvidence& evidence(junctionEvidence[junctionIndex]);
-        scoreSV(svData, assemblyData, isTumorOnly, sv, svId,
-                modelScoreInfo.base, evidence, svSupports);
+        getSVSupportingEvidence(svData, assemblyData, isTumorOnly, sv, svId,
+                                modelScoreInfo.base, evidence, svSupports);
 
         // score components specific to diploid-germline model:
         float& spanningPairWeight(junctionSpanningPairWeight[junctionIndex]);;
