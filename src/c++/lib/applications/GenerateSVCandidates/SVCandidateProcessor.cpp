@@ -50,6 +50,7 @@ SVWriter(
     dipfs(opt.diploidOutputFilename),
     somfs(opt.somaticOutputFilename),
     tumfs(opt.tumorOutputFilename),
+    rnafs(opt.rnaOutputFilename),
     candWriter(opt.referenceFilename, cset,candfs.getStream()),
     diploidWriter(opt.diploidOpt, (! opt.chromDepthFilename.empty()),
                   opt.referenceFilename, cset,dipfs.getStream()),
@@ -58,7 +59,7 @@ SVWriter(
     tumorWriter(opt.tumorOpt, (! opt.chromDepthFilename.empty()),
                 opt.referenceFilename, cset,tumfs.getStream()),
     rnaWriter(opt.diploidOpt, (!opt.chromDepthFilename.empty()),
-        opt.referenceFilename, cset, dipfs.getStream())
+        opt.referenceFilename, cset, rnafs.getStream())
 {
     if (0 == opt.edgeOpt.binIndex)
     {

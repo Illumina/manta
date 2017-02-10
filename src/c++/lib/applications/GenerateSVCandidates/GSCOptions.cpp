@@ -94,6 +94,8 @@ parseGSCOptions(
      "Write somatic SVs to file (at least one tumor and non-tumor alignment file must be specified)")
     ("tumor-output-file", po::value(&opt.tumorOutputFilename),
      "Write tumor SVs to file (at least one tumor alignment file must be specified)")
+    ("rna-output-file", po::value(&opt.rnaOutputFilename),
+     "Write RNA fusions to file (at least one BAM file and --rna must be specified)")     
     ("verbose", po::value(&opt.isVerbose)->zero_tokens(),
      "Turn on low-detail INFO logging.")
     ("skip-assembly", po::value(&opt.isSkipAssembly)->zero_tokens(),
@@ -214,6 +216,11 @@ parseGSCOptions(
             {
                 usage(log_os,prog,visible,"Must specify at least one tumor alignment file for tumor output");
             }
+        }
+
+        if ((!opt.rnaOutputFilename.empty()) != opt.isRNA)
+        {
+            usage(log_os, prog, visible, "For RNA, specify RNA output file and --rna");
         }
     }
 }

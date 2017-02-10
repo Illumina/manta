@@ -78,6 +78,7 @@ struct SVWriter
     OutStream dipfs;
     OutStream somfs;
     OutStream tumfs;
+    OutStream rnafs;
 
     VcfWriterCandidateSV candWriter;
     VcfWriterDiploidSV diploidWriter;
