@@ -32,19 +32,14 @@ addHeaderInfo() const
 {
     _os << "##INFO=<ID=BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at local translocation breakend\">\n";
     _os << "##INFO=<ID=MATE_BND_DEPTH,Number=1,Type=Integer,Description=\"Read depth at remote translocation mate breakend\">\n";
-    _os << "##INFO=<ID=JUNCTION_QUAL,Number=1,Type=Integer,Description=\"If the SV junction is part of an EVENT (ie. a multi-adjacency variant), this field provides the QUAL value for the adjacency in question only\">\n";
-    {
-        _os << "##INFO=<ID=REF_COUNT,Number=1,Type=Integer,Description=\"For RNA fusions, the number of reads supporting the reference allele at this breakend\">\n";
-        _os << "##INFO=<ID=MATE_REF_COUNT,Number=1,Type=Integer,Description=\"For RNA fusions, the number of reads supporting the reference allele at the other breakend\">\n";
-        {
-            _os << "##INFO=<ID=RNA_FIRST,Number=0,Type=Flag,Description=\"For RNA fusions, this break-end is 5' in the fusion transcript\">\n";
-            _os << "##INFO=<ID=RNA_STRANDED,Number=0,Type=Flag,Description=\"For RNA fusions, the direction of transcription is known\">\n";
-            _os << "##INFO=<ID=RNA_FwRvReads,Number=2,Type=Integer,Description=\"For RNA fusions, number of stranded reads supporting forward or reverse direction of transcription\">\n";
-            _os << "##INFO=<ID=RNA_Reads,Number=1,Type=Integer,Description=\"For RNA fusions, the number of reads and pairs that potentially support this candidate before refinement and scoring\">\n";
-            _os << "##INFO=<ID=RNA_CONTIG,Number=1,Type=String,Description=\"For RNA fusions, the sequence of the breakend spanning contig\">\n";
-            _os << "##INFO=<ID=RNA_CONTIG_ALN,Number=2,Type=Integer,Description=\"For RNA fusions, length of the spanning contig alignment on each breakend\">\n";
-        }
-    }
+    _os << "##INFO=<ID=REF_COUNT,Number=1,Type=Integer,Description=\"The number of reads supporting the reference allele at this breakend\">\n";
+    _os << "##INFO=<ID=MATE_REF_COUNT,Number=1,Type=Integer,Description=\"The number of reads supporting the reference allele at the other breakend\">\n";
+    _os << "##INFO=<ID=RNA_FIRST,Number=0,Type=Flag,Description=\"For RNA fusions, this break-end is 5' in the fusion transcript\">\n";
+    _os << "##INFO=<ID=RNA_STRANDED,Number=0,Type=Flag,Description=\"For RNA fusions, the direction of transcription is known\">\n";
+    _os << "##INFO=<ID=RNA_FwRvReads,Number=2,Type=Integer,Description=\"For RNA fusions, number of stranded reads supporting forward or reverse direction of transcription\">\n";
+    _os << "##INFO=<ID=RNA_Reads,Number=1,Type=Integer,Description=\"The number of reads and pairs that potentially support this candidate before refinement and scoring\">\n";
+    _os << "##INFO=<ID=RNA_CONTIG,Number=1,Type=String,Description=\"The sequence of the breakend spanning contig\">\n";
+    _os << "##INFO=<ID=RNA_CONTIG_ALN,Number=2,Type=Integer,Description=\"Length of the spanning contig alignment on each breakend\">\n";
 }
 
 
@@ -53,16 +48,8 @@ void
 VcfWriterRnaSV::
 addHeaderFormat() const
 {
-    _os << "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n";
-    _os << "##FORMAT=<ID=FT,Number=1,Type=String,Description=\"Sample filter, 'PASS' indicates that all filters have passed for this sample\">\n";
-    _os << "##FORMAT=<ID=GQ,Number=1,Type=Float,Description=\"Genotype Quality\">\n";
-    _os << "##FORMAT=<ID=PL,Number=G,Type=Integer,Description=\"Normalized, Phred-scaled likelihoods for genotypes as defined in the VCF specification\">\n";
     _os << "##FORMAT=<ID=PR,Number=.,Type=Integer,Description=\"Spanning paired-read support for the ref and alt alleles in the order listed\">\n";
-    _os << "##FORMAT=<ID=SR,Number=.,Type=Integer,Description=\"Split reads for the ref and alt alleles in the order listed, for reads where P(allele|read)>0.999\">\n";
-    {
-        _os << "##FORMAT=<ID=FS,Number=2,Type=Integer,Description=\"For RNA variants split reads supporting the ref and alt alleles in the order listed\">\n";
-        _os << "##FORMAT=<ID=FP,Number=2,Type=Integer,Description=\"For RNA variants spanning paired reads supporting the ref and alt alleles in the order listed\">\n";
-    }
+    _os << "##FORMAT=<ID=SR,Number=.,Type=Integer,Description=\"Split reads for the ref and alt alleles in the order listed\">\n";
 }
 
 
@@ -71,17 +58,7 @@ void
 VcfWriterRnaSV::
 addHeaderFilters() const
 {
-    if (_isMaxDepthFilter)
-    {
-        _os << "##FILTER=<ID=" << _diploidOpt.maxDepthFilterLabel << ",Description=\"Depth is greater than " << _diploidOpt.maxDepthFactor << "x the median chromosome depth near one or both variant breakends\">\n";
-    }
-    _os << "##FILTER=<ID=" << _diploidOpt.maxMQ0FracLabel << ",Description=\"For a small variant (<1000 bases), the fraction of reads in all samples with MAPQ0 around either breakend exceeds " << _diploidOpt.maxMQ0Frac << "\">\n";
-    _os << "##FILTER=<ID=" << _diploidOpt.noPairSupportLabel << ",Description=\"For variants significantly larger than the paired read fragment size, no paired reads support the alternate allele in any sample.\">\n";
-    _os << "##FILTER=<ID=" << _diploidOpt.minAltFilterLabel << ",Description=\"QUAL score is less than " << _diploidOpt.minPassAltScore << "\">\n";
-    _os << "##FILTER=<ID=" << _diploidOpt.minGTFilterLabel << ",Description=\"GQ score is less than " << _diploidOpt.minPassGTScore << " (filter applied at sample level and record level if all samples are filtered)\">\n";
-    {
-        _os << "##FILTER=<ID=" << _diploidOpt.rnaFilterLabel << ",Description=\"RNA fusion variants without split read and split pair support\">\n";
-    }
+    _os << "##FILTER=<ID=" << _diploidOpt.rnaFilterLabel << ",Description=\"RNA fusion calls without both split read and spanning pair support\">\n";
 }
 
 
@@ -200,7 +177,7 @@ modifySample(
             % sampleInfo.ref.spanningPairCount
             % sampleInfo.alt.spanningPairCount);
     }
-    sampletags.push_back(std::make_pair("FP", values));
+    sampletags.push_back(std::make_pair("PR", values));
 
     if (sv.isImprecise()) return;
 
@@ -211,7 +188,7 @@ modifySample(
                                            % sampleInfo.ref.splitReadCount
                                            % sampleInfo.alt.splitReadCount);
     }
-    sampletags.push_back(std::make_pair("FS",values));
+    sampletags.push_back(std::make_pair("SR",values));
 }
 
 
