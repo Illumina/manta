@@ -213,7 +213,7 @@ processBamRecords(bam_streamer& origBamStream,
                   bam_dumper& bamDumper);
 
 void
-writeSupportBam(bam_streamer_ptr origBamStream,
+writeSupportBam(const bam_streamer_ptr& origBamStream,
                 const SupportFragments& svSupportFrags,
-                bam_dumper_ptr supportBamDumper);
+                const bam_dumper_ptr& supportBamDumper);
 
