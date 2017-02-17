@@ -34,15 +34,11 @@
 struct VcfWriterRnaSV : public VcfWriterSV, VcfWriterScoredSV
 {
     VcfWriterRnaSV(
-        const CallOptionsDiploid& diploidOpt,
-        const bool isMaxDepthFilter,
         const std::string& referenceFilename,
         const SVLocusSet& set,
         std::ostream& os) :
         VcfWriterSV(referenceFilename,set,os),
-        _diploidOpt(diploidOpt),
-        _isMaxDepthFilter(isMaxDepthFilter),
-        _diploidInfoPtr(nullptr)
+        _rnaInfoPtr(nullptr)
     {}
 
     void
@@ -52,7 +48,7 @@ struct VcfWriterRnaSV : public VcfWriterSV, VcfWriterScoredSV
         const SVCandidate& sv,
         const SVId& svId,
         const SVScoreInfo& baseInfo,
-        const SVScoreInfoDiploid& diploidInfo,
+        const SVScoreInfoRna& rnaInfo,
         const EventInfo& event);
 
 private:
@@ -81,14 +77,12 @@ private:
     void
     writeFilter() const override;
 
-    const SVScoreInfoDiploid&
-    getDiploidInfo() const
+    const SVScoreInfoRna&
+    getRnaInfo() const
     {
-        assert(nullptr != _diploidInfoPtr);
-        return *_diploidInfoPtr;
+        assert(nullptr != _rnaInfoPtr);
+        return *_rnaInfoPtr;
     }
 
-    const CallOptionsDiploid& _diploidOpt;
-    const bool _isMaxDepthFilter;
-    const SVScoreInfoDiploid* _diploidInfoPtr;
+    const SVScoreInfoRna* _rnaInfoPtr;
 };

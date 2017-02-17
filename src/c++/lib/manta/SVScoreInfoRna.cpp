@@ -19,45 +19,28 @@
 //
 
 ///
-/// \author Chris Saunders and Xiaoyu Chen
+/// \author Chris Saunders
 ///
 
-#pragma once
-
-#include "manta/SVScoreInfo.hh"
-#include "manta/SVScoreInfoDiploid.hh"
-#include "manta/SVScoreInfoSomatic.hh"
-#include "manta/SVScoreInfoTumor.hh"
 #include "manta/SVScoreInfoRna.hh"
+#include "blt_util/log.hh"
 
+#include <iostream>
 
-/// all scoring info for one sv candidate, including data related to specific scoring models
-///
-///
-struct SVModelScoreInfo
+const std::string SVScoreInfoRna::rnaFilterLabel = "RNAFail";
+
+std::ostream&
+operator<<(
+    std::ostream& os,
+    const SVScoreInfoRna& sid)
 {
-    void
-    setSampleCount(
-        const unsigned sampleCount,
-        const unsigned diploidSampleCount)
+    os << "RnaSVScoreInfo "
+       << " altScore=" << sid.altScore;
+    os << " filters:";
+    for (const std::string& filter : sid.filters)
     {
-        base.setSampleCount(sampleCount);
-        diploid.setSampleCount(diploidSampleCount);
+        os << " " << filter;
     }
-
-    void
-    clear()
-    {
-        base.clear();
-        diploid.clear();
-        somatic.clear();
-        tumor.clear();
-        rna.clear();
-    }
-
-    SVScoreInfo base;
-    SVScoreInfoDiploid diploid;
-    SVScoreInfoRna rna;
-    SVScoreInfoSomatic somatic;
-    SVScoreInfoTumor tumor;
-};
+    os << "\n";
+    return os;
+}

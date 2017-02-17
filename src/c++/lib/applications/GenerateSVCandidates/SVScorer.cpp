@@ -1352,36 +1352,28 @@ scoreTumorSV(
 }
 
 
-//todo This is mostly a placeholder. Add real RNA scoring model
+//todo This is mostly a placeholder, real RNA scoring currently happens downstream of Manta
 static
 void
 scoreRNASV(
-    const CallOptionsDiploid& diploidOpt,
-    SVScoreInfo& baseInfo,
-    SVScoreInfoDiploid& diploidInfo)
+    const SVSampleInfo& baseInfo,
+    SVScoreInfoRna& rnaInfo)
 {
 #ifdef DEBUG_SCORE
     //log_os << __FUNCTION__ << "Scoring RNA candidate " << sv << "\n";
 #endif
 
-    // RNA assumes exactly one 'normal' sample:
-    assert(diploidInfo.samples.size() == 1);
-
-    /// TODO TMP add real sampleIndex
-    const unsigned sampleIndex(0);
-
-    diploidInfo.samples[sampleIndex].gtScore=0;
-    diploidInfo.altScore=42;
-    if (baseInfo.samples[sampleIndex].alt.splitReadCount == 0)
+    rnaInfo.altScore=42;
+    if (baseInfo.alt.splitReadCount == 0)
     {
-        diploidInfo.filters.insert(diploidOpt.rnaFilterLabel);
+        rnaInfo.filters.insert(SVScoreInfoRna::rnaFilterLabel);
 #ifdef DEBUG_SCORE
         log_os << __FUNCTION__ << "Failed. No spanning pair " << "\n";
 #endif
     }
-    if (baseInfo.samples[sampleIndex].alt.confidentSpanningPairCount == 0)
+    if (baseInfo.alt.confidentSpanningPairCount == 0)
     {
-        diploidInfo.filters.insert(diploidOpt.rnaFilterLabel);
+        rnaInfo.filters.insert(SVScoreInfoRna::rnaFilterLabel);
 #ifdef DEBUG_SCORE
         log_os << __FUNCTION__ << "Failed. No split read " << "\n";
 #endif
@@ -1833,7 +1825,7 @@ computeAllScoreModels(
     }
     else if (_isRNA)
     {
-        scoreRNASV(_diploidOpt, modelScoreInfo.base, modelScoreInfo.diploid);
+        scoreRNASV(modelScoreInfo.base.samples[0], modelScoreInfo.rna);
     }
     else
     {

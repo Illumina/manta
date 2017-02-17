@@ -58,8 +58,7 @@ SVWriter(
               opt.referenceFilename, cset,somfs.getStream()),
     tumorWriter(opt.tumorOpt, (! opt.chromDepthFilename.empty()),
                 opt.referenceFilename, cset,tumfs.getStream()),
-    rnaWriter(opt.diploidOpt, (!opt.chromDepthFilename.empty()),
-        opt.referenceFilename, cset, rnafs.getStream())
+    rnaWriter(opt.referenceFilename, cset, rnafs.getStream())
 {
     if (0 == opt.edgeOpt.binIndex)
     {
@@ -340,7 +339,7 @@ writeSV(
         }
         else if (opt.isRNA)
         {
-            const SVScoreInfoDiploid& rnaInfo(modelScoreInfo.diploid);
+            const SVScoreInfoRna& rnaInfo(modelScoreInfo.rna);
             rnaWriter.writeSV(svData, assemblyData, sv, svId, baseInfo, rnaInfo, nonEvent);
         }
         else

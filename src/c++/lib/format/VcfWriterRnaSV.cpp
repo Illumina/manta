@@ -58,7 +58,7 @@ void
 VcfWriterRnaSV::
 addHeaderFilters() const
 {
-    _os << "##FILTER=<ID=" << _diploidOpt.rnaFilterLabel << ",Description=\"RNA fusion calls without both split read and spanning pair support\">\n";
+    _os << "##FILTER=<ID=" << SVScoreInfoRna::rnaFilterLabel << ",Description=\"RNA fusion calls without both split read and spanning pair support\">\n";
 }
 
 
@@ -155,7 +155,7 @@ void
 VcfWriterRnaSV::
 writeFilter() const
 {
-    writeFilters(getDiploidInfo().filters,_os);
+    writeFilters(getRnaInfo().filters, _os);
 }
 
 
@@ -200,15 +200,15 @@ writeSV(
     const SVCandidate& sv,
     const SVId& svId,
     const SVScoreInfo& baseInfo,
-    const SVScoreInfoDiploid& diploidInfo,
+    const SVScoreInfoRna& rnaInfo,
     const EventInfo& event)
 {
     //TODO: this is a lame way to customize subclass behavior:
     setScoreInfo(baseInfo);
-    _diploidInfoPtr=&diploidInfo;
+    _rnaInfoPtr =&rnaInfo;
 
     writeSVCore(svData, adata, sv, svId, event, true);
 
     clearScoreInfo();
-    _diploidInfoPtr=nullptr;
+    _rnaInfoPtr =nullptr;
 }

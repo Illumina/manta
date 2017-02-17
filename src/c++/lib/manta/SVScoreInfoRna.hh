@@ -19,45 +19,40 @@
 //
 
 ///
-/// \author Chris Saunders and Xiaoyu Chen
+/// \author Xiaoyu Chen
 ///
 
 #pragma once
 
-#include "manta/SVScoreInfo.hh"
-#include "manta/SVScoreInfoDiploid.hh"
-#include "manta/SVScoreInfoSomatic.hh"
-#include "manta/SVScoreInfoTumor.hh"
-#include "manta/SVScoreInfoRna.hh"
+#include <cassert>
+#include <cmath>
+#include <cstdlib>
+
+#include <iosfwd>
+#include <set>
+#include <string>
 
 
-/// all scoring info for one sv candidate, including data related to specific scoring models
-///
-///
-struct SVModelScoreInfo
+/// consolidate all RNA scoring results applied to an SV candidate
+///todo This is mostly a placeholder. Add real RNA scoring model
+struct SVScoreInfoRna
 {
-    void
-    setSampleCount(
-        const unsigned sampleCount,
-        const unsigned diploidSampleCount)
-    {
-        base.setSampleCount(sampleCount);
-        diploid.setSampleCount(diploidSampleCount);
-    }
-
     void
     clear()
     {
-        base.clear();
-        diploid.clear();
-        somatic.clear();
-        tumor.clear();
-        rna.clear();
+        filters.clear();
+        altScore=0;
     }
 
-    SVScoreInfo base;
-    SVScoreInfoDiploid diploid;
-    SVScoreInfoRna rna;
-    SVScoreInfoSomatic somatic;
-    SVScoreInfoTumor tumor;
+    std::set<std::string> filters;
+
+    unsigned altScore = 0; ///< quality score indicating any non-reference state (regardless of specific genotype)
+
+    static const std::string rnaFilterLabel;
+
 };
+
+std::ostream&
+operator<<(
+    std::ostream& os,
+    const SVScoreInfoRna& sid);
