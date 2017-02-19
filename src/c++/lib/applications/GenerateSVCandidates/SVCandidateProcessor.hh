@@ -98,6 +98,7 @@ struct SVCandidateProcessor
         EdgeRuntimeTracker& edgeTracker,
         GSCEdgeStatsManager& _edgeStatMan);
 
+    /// Refine initial low-resolution candidates using an assembly step, then score and output final SVs
     void
     evaluateCandidates(
         const EdgeInfo& edge,

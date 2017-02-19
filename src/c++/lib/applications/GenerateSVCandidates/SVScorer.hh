@@ -144,6 +144,8 @@ private:
 
 
 
+/// object to support SV scoring process
+///
 struct SVScorer
 {
     SVScorer(
@@ -155,6 +157,9 @@ struct SVScorer
     /// 1) diploid quality score and genotype for SV candidate
     /// 2) somatic quality score
     ///
+    /// \param mjModelScoreInfo standard (junction-independent) scoring information for each junction
+    /// \param mjJointModelScoreInfo  joint junction scoring information used for cases where a multi-junction event
+    ///                               is detected
     void
     scoreSV(
         const SVCandidateSetData& svData,
@@ -250,6 +255,9 @@ private:
         float& MQ0Frac);
 
     /// apply all scoring models relevant to this event:
+    ///
+    /// \param junctionData one element describing each junction of an event, for normal (single-junction) candidates,
+    ///                     the vector size should be one
     void
     computeAllScoreModels(
         const bool isSomatic,

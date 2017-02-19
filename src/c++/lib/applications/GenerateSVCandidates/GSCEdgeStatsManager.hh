@@ -75,7 +75,7 @@ struct GSCEdgeStatsManager : private boost::noncopyable
     }
 
     void
-    updateJunctionCandidates(
+    updateJunctionCandidateCounts(
         const EdgeInfo& edge,
         const unsigned junctionCount,
         const bool isComplex)

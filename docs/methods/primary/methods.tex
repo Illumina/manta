@@ -28,13 +28,11 @@
 
 \tableofcontents
 
-\section{Overview}
+\section{Purpose}
 
 On any release branch, the methods described here should reflect the default implementation in the source repository containing this document.
 
-\section{Methods}
-
-\subsection{Manta Workflow Overview}
+\section{Manta Workflow Overview}
 
 Manta's structural variant calling workflow contains two major phases. In the first phase, the genome is scanned to build a genome-wide breakend graph. In the second phase, edges of this graph are analyzed to generate SV candidates, each of which is assembled, scored according to diploid or somatic quality models and reported. A high-level schematic of the workflow is described in Figure \ref{fig:workflow} below.
 
@@ -54,13 +52,13 @@ Phase two of Manta's workflow occurs after the complete breakend graph is create
 
 Manta's two phase structure enables a high level of parallelization. In the first phase a set of independent tasks generate subsets of the breakend graph corresponding to small segments of the genome (Manta's default segment size is 12 Megabases). At the end of this phase there is a final step to merge all genome segment graphs into a single graph for the whole genome. In the next phase the genome breakend graph edges are divided among a set of independent SV discovery processes. The output of all such discovery processes are merged to produce the final set of SV candidates and calls.
 
-\subsection{Fragment size and depth statistics}
+\section{Fragment size and depth statistics}
 
 Before entering the first major phase of the workflow, Manta completes a rapid estimation of fragment size and read depth information. During this step the sequence fragment size distribution is estimated for each BAM file provided as input. To accomplish this efficiently, the size distribution is sampled until convergence, so that only a small subset of the input sequence alignments for each sample need to be scanned. To reduce regional bias, this step cycles through several small sections from each chromosome. Reads are filtered from this process to reduce bias from fragments associated with SVs or small indels, this filtration includes removing any reads marked as secondary, supplemental, filtered or PCR duplicates. Both reads from a pair must be mapped to the same chromosome with a non-zero mapping quality, align without indels and must not include a split-read annotation (i.e. using the BAM ``SA" tag).
 
 A related prerequisite step Manta performs is estimation of the sequencing depth for each chromosome. For somatic analysis this depth is only computed for the normal sample. This information is used downstream to filter out high-depth regions (details below) when Manta is run in its default whole genome sequencing mode, these values can be ignored for exome or other targeted analyses.
 
-\subsubsection{Chromosome depth estimation}
+\subsection{Chromosome depth estimation}
 
 For each chromosome, depth is estimated using a modified median calculation. As a first step, each chromosome is partitioned into segments of similar size to ensure the estimation process samples several chromosome regions. The chromosome is divided into the smallest number of segments no larger than $S_{max}$, where all segments have nearly equal size (all sizes must be $S$ or $S+1$, given smallest segment size of $S$). If this procedure results in more than 20 segments than $S_max$ is doubled until 20 or fewer segments are found. $S_max$ is initialized to 2 Mbase.
 
@@ -72,26 +70,28 @@ Depth is estimated from the resulting pileup, using a simple median over all dep
 
 The depth estimation procedure is run separately for each non-tumor sample, and all high-depth thresholds are set based on the sum of depth estimates over these samples.
 
-\subsection{Manta Workflow Phase One: Breakend graph construction}
+\section{Manta Workflow Phase One: Breakend graph construction}
 
-\subsubsection{Breakend graph structure}
+\subsection{Breakend graph structure}
 
 The breakend graph $G$ describes regions of the genome which are connected by one or more possible breakend junctions. The graph, $G = (V, E)$, comprises a set of nodes $V$ and a set of directed edges $E$. Each node $v \in V$ is annotated with a contiguous genome segment containing one or more breakends. Each edge $e \in E$ connects nodes where evidence of a breakend junction exists. Edge direction is set from the node where a direct read mapping observation is observed to the node where the read mapping is inferred. Self-edges indicate that there is evidence for one or more breakend junctions within the region defined by the node incident to the self-edge. Typically this indicates that a small indel could exist in the region. Each edge is annotated with an evidence weight, which enumerates all of the individual paired and split-read observations supporting the edge. Supporting observations are weighted by reliability, for instance, the weight of an anomalous read pair insert size observation is reduced as the implied fragment length of the pair approaches non-anomalous values. To facilitate recovery of read evidence associated with each graph node in downstream hypothesis generation steps, each node is also annotated with a region spanning the mapping location for all the node's read evidence.
 
 This graph is designed to contain only the information required to partition the SV discovery problem into a set of independent SV discovery processes in the second workflow phase. It does not provide sufficient detail to support candidate discovery on its own. According to this design the breakend graph for full human genomes can be represented in a small memory footprint. In practice, a case has yet to be found where the graph (and its indexing structures) require greater than 2Gb, including breakend graphs for high-depth FFPE tumor/normal pairs.
 
-\subsubsection{Genome segment distribution}
+\subsection{Genome segment distribution}
 
 The breakend graph is constructed by first computing subgraphs corresponding to individual segments of the genome. Graph construction is run in parallel over a set of disjoint segments covering the entire genome, followed by a graph merging step. Given a maximum segment size (default is 12 Mb), each chromosome is partitioned into a set of nearly equal size segments without exceeding the maximum segment size, and one subgraph construction process is started for each.
 
-\subsubsection{Genome segment breakend graph construction}
+\subsection{Genome segment breakend graph construction}
 
 For each genome segment, input BAM file(s) are scanned over the corresponding genome region for breakend associated reads, which are merged into the segment's breakend graph. To do so, each mapped read in the genome segment must first pass through a filtration process to eliminate noise. Any remaining reads are then translated into a set of small breakend graphs (currently each of these graphs is a single edge connecting either one or two nodes). These graphs are merged into the segment's breakend graph, where threshold-based merging and de-noising procedures are implemented to prune edges which do not have sufficient evidence. The de-noising procedure is constrained from running on an edge until both regions connected by the edge have been scanned for evidence. The details of this procedure are as follows.
 
-\paragraph{Filtration}
+\subsubsection{Filtration}
 For graph construction, reads are removed if they are marked as secondary, filtered or PCR duplicates. Reads also must be mapped and have a mapping quality of 15 or greater. A read pair is determined to be anomalous if it has (1) unexpected read orientation, (2) a mate mapping to another chromosome, or (3) an unexpectedly large fragment size. For the fragment size to be considered anomalous at the initial filtration stage, it must be greater than $1.5s_{max}$, where $s_{max}$ is the 99th percentile of the sample fragment size distribution. If the read pair is not found to be anomalous, the read is additionally checked for (1) indels of at least the minimum candidate indel size (default: 8), (2) a split-read annotated using the BAM record's ``SA" tag, or (3) an alignment where 5 contiguous matches to the reference cannot be found within 7 bases from either end of the read. If none of these read alignment conditions exist and the read pair is not anomalous, the read pair is filtered out of the graph construction process.
 
-\paragraph{Read pair translation to breakend graph set}
+\subsubsection{Read pair translation to breakend graph set}
+\label{sec:pair2graph}
+
 Each unfiltered read pair is translated into a set of breakend graphs via a two step process. The read pair is first translated to a set of SV candidates. The translation process allows for the possibility that the BAM record for only one read of the pair is available, in which case the length and alignment of the remote mate read is approximated. The logic to translate read pairs to SV candidates is the same as that used in SV hypothesis generation during Manta's second phase.
 
 The translation of each read (or read pair) into a set of SV candidates proceeds as follows:
@@ -122,7 +122,7 @@ Complex region candidates indicate that there is evidence for small indels or SV
 
 These SV candidates are translated into breakend graph elements by converting SV breakend regions into graph nodes spanning the same region and representing the connection between regions as a directed edge from the region of direct evidence (the locally observed read of a pair), to the region of indirect evidence (the remote read of a pair). Complex region candidates are translated into a single graph node spanning the candidate region with a self-edge added to indicate that there is evidence for novel breakend junctions within the candidate region. Each edge has an `evidence weight' of 3, except for edges corresponding to read pairs which imply a fragment size close to the anomalous size threshold (less than $4s_{max}$), which are given an evidence weight of 1.
 
-\paragraph{Merge and de-noising procedure}
+\subsubsection{Merge and de-noising procedure}
 
 In the procedure above, each SV-associated read or read pair is translated into one or more single-edge breakend graphs. Each one of the these single-edge breakend graphs is then sequentially merged into the breakend graph for the entire genomic segment. Merging is performed using a procedure which is general to any two breakend graphs. The high-level steps to this procedure are (1) take the union of the two input graphs, (2) find nodes from the graph union which qualify for merging, and (3) merge qualifying sets of nodes.
 
@@ -269,15 +269,15 @@ The breakend graph merge procedure can be limited under conditions of high graph
 
 As the target genome segment is scanned, the region breakend graph is periodically de-noised. The procedure is only performed for edges where the input alignment files have been scanned over the genomic regions of the nodes incident on the edge (excluding small buffer zones at the edges of the scanned genome segments). For any edge $e = (v,w)$ which is eligible for de-noising, if both evidence[$(v,w)$] and evidence[$(w,v)$] are less than $e_s$, the edge is removed from the graph, together with any nodes isolated by the edge removal.
 
-\subsubsection{Global breakend graph construction}
+\subsection{Global breakend graph construction}
 
 Using the graph merging and de-noising procedures described in the previous section, it is straightforward to create the global breakend graph from the set of genome segment graphs. To do so the genome segment breakend graphs are sequentially merged into the global breakend graph using the breakend graph merge procedure described in the previous section. This merging step is followed by a final de-noising step which is the same as that described for genome segments above, except that all edges are treated as eligible for de-noising.
 
-\subsection{Manta Workflow Phase Two: Hypothesis generation and scoring}
+\section{Manta Workflow Phase Two: Hypothesis generation and scoring}
 
 After construction of the global breakend graph, each set of independent breakend-associations is distributed among a group of SV discovery workers running in parallel. Each worker handles SV hypothesis generation, scoring and reporting for its input breakend associations. At present an independent breakend association is approximated as a single breakend graph edge, however Manta's design enables larger highly-connected subgraphs to be distributed to SV discovery workers in the future to directly generate larger multi-junction SV hypotheses.
 
-\subsubsection{SV hypothesis generation}
+\subsection{SV hypothesis generation}
 
 Hypothesis generation currently proceeds from a single breakend graph edge. The noise filtration criteria for hypothesis generation are more strict than that used in the graph de-noising step, so that any edge $e = (v,w)$ where either evidence[$(v,w)$] or evidence[$(w,v)$] is less than $e_s$ is filtered.
 
@@ -285,13 +285,52 @@ For any non-filtered edge, the first step of hypothesis generation is to find al
 
 After gathering SV-associated reads from the targeted regions, each read or read pair is translated into a set of SV candidates using the same logic described for graph construction above. Any SV candidate which does not intersect the targeted graph edge is discarded. Intersecting the graph edge is defined as having one breakend intersect each of the two genomic regions connected by the edge. The SV candidates remaining after this filtration process are merged into a combined SV candidate set -- any two SV candidates are merged if both of their breakend regions intersect and the expected breakend orientation for each region matches. Complex region candidates targeting small indels are only merged with other complex region candidates. It is expected that this merging procedure could be improved with additional steps to reduce over-clustering by determining if the hypothesis region supports more than one breakend and splitting the candidate appropriately. Thus far, the simple intersection-based hypothesis generation described above has not been implicated as a significant source of errors compared to other workflow components.
 
-\subsubsection{SV hypothesis refinement}
+\subsubsection{Building multi-junction SV candidates}
+
+Standard SV candidates (ie. non-complex candidates) represent a single novel junction between two genomic regions. At a larger scale, it is helpful to group together multiple junctions which have proximal in-phase breakends, with these grouped junctions being reported and/or scored as a single event. An example of such an event is a reciprocal translocation, which is composed of two junctions.
+
+Manta has limited support for multi-junction event detection and scoring. This process begins after the initial SV hypothesis generation step by grouping junctions into candidate multi-junction events. This process currently only considers standard (non-complex) SV candidates. Non-inversion intrachromosomal events of size 100000 or less are also excluded from multi-junction event detection to reduce spurious associations. Given this filtered set of input SV candidates, the method searches for pairs of junctions where the two junctions (1) have breakends oriented in opposite directions at both junction ends
+(2) have breakends with genomic regions centered within 1000 bases of each other at both junction ends (3) must have been discovered from the analysis of the same breakend graph edge. If more than one partner junction is eligible for grouping with a given junction, the pair with the lowest breakend region distance is selected -- such that only 2 junctions can be grouped together.
+
+The multi-junction candidate search is currently limited to grouping together no more than 2 junctions for simplicity, in principle the method could be expanded to look for transitive associations over a larger set of junctions. To do this, constraint (3) above would need to be relaxed by ensuring that all edges possibly participating in the multi-junction event are analyzed by the same process (at present edges are distributed to independent processes for analysis).
+
+\subsubsection{Early SV candidate filtration}
+
+Before proceeding to downstream refinement steps, filters are applied to the standard and complex SV candidates. Standard SV filters are as follows:
+
+\begin{enumerate}
+    \item Standard SV candidates are filtered out if they are supported only by \textit{semi-mapped} anomalous read pairs. A \textit{semi-mapped} read pair refers to pairs where one read has a mapping quality of zero.
+    \item Standard SV candidates are filtered out if they have fewer than 3 supporting spanning observations. A multi-junction SV candidate will fail this filter only if all individual junctions fail the filter.
+    \item Standard SV candidates are filtered if the frequency of spanning read evidence is insufficient to reject (at $\alpha = 0.05$) a null model based on the \textit{spanning evidence noise rate} according to a one-sided binomial exact test. The estimation of \textit{spanning evidence noise rate} is described below. This test result is ignored if an SV candidate is grouped into a multi-junction event. This filter is skipped for RNA-Seq analysis. Note that this filter is intended to conservatively reject only very unlikely candidates, and is an import part of controlling total runtime in noisy samples (such as FFPE), where high background chimera rates could otherwise create very large numbers of spurious SV candidates.
+\end{enumerate}
+
+Filters for complex SVs are:
+
+\begin{enumerate}
+    \item Complex SV candidates are filtered out if they have fewer than 2 supporting observations of the same type associated with evidence of an indel (e.g. soft-clipping, etc).
+    \item Complex SV candidates are filtered if the frequency of assembly evidence is insufficient to reject (at $\alpha = 0.005$) a null model based on the \textit{assembly evidence noise rate} according to a one-sided binomial exact test. The definition of assembly evidence and estimation procedure for \textit{assembly evidence noise rate} are described below.
+\end{enumerate}
+
+\paragraph{Noise Rates estimated from input read alignments}
+
+The \textit{spanning evidence noise rate} and \textit{assembly evidence noise rate} used in the above filtration process are based on read counts accumulated during the first phase of Manta's workflow.
+
+The \textit{spanning evidence noise rate} is based on the number of spanning (anomalous read pairs and split reads)  observations $s$ vs all reads observed $n$. Including pseudocounts, the estimate for this rate is $(s + 10) / (n + 1000)$.
+
+\textit{Assembly evidence} observations are reads with poorly aligned edges (either soft-clipped or having a high mismatch density) as described above in section ``\nameref{sec:pair2graph}''. The \textit{assembly evidence noise rate} is based on the count of assembly evidence, $p$ vs all reads observed $n$. Including pseudocounts, the estimate for this rate is $(p + 10) / (n + 1000)$.
+
+Given multiple alignment files, the above noise rates will be estimated independently for each alignment file, but only the maximum estimated noise rate will be kept for the purpose of SV candidate significance testing.
+
+
+
+\subsection{SV hypothesis refinement}
 
 Initial SV hypothesis generation translates each graph edge into a set of low-resolution SV candidates, where breakends are associated with an imprecise region. In the refinement step, each low-resolution SV candidate is translated into a set of basepair-resolution SV candidates via local read assembly. If the assembly procedure fails to produce at least one basepair-resolution candidate, then the low-resolution candidate can still be scored and reported in the variant caller output as an imprecise variant. If assembly fails for a complex region candidate associated with small indels, the candidate is discarded.
 
 Hypothesis refinement is described below in two alternate forms: standard SV assembly describes the case of two remote breakend regions associated with a specific SV candidate; complex region assembly describes the case of a single breakend region where small indels or SVs are likely to exist, but no specific variant hypothesis exists.
 
-\paragraph{Contig assembly}
+
+\subsubsection{Contig assembly}
 
 The contig assembly procedure gathers SV-associated reads from the candidate region or regions and assembles these reads into contigs intended to represent variant haplotypes.
 
@@ -303,7 +342,7 @@ The selected reads are assembled using a simple algorithm implicitly based on th
 
 For a given word size $k$, a list is made of all $k$-mers present in the input reads. The most frequent $k$-mer is chosen as a seed for the resulting contig assembly if it is observed in at least 3 reads. The contig is extended from this seed in each direction by choosing $k$-mers from this list having a $k-1$ overlap with the contig end. To avoid haplotype switching, reads that support the contig are tracked at each extension point. When there are multiple potential extensions, a $k$-mer is selected so that the current extension has the highest consistency of supporting reads with the previous extensions. The extension ends when there is no overlapping $k$-mer from a previous supporting read. If a $k$-mer is repeated during contig extension (i.e. if a loop is created in the assembly graph), the word size is incremented and the contig assembly procedure is restarted. After a contig is accepted, all reads used to assemble the contig are removed from the assembly read pool and the assembly procedure recurses into the reduced pool to search for additional contigs from the remaining read evidence.
 
-\paragraph{Contig alignment for large SVs} For large SV candidates spanning two distinct regions of the genome, the reference sequences are extracted from the two expected breakend regions, and the order and/or orientation of the references is adjusted such that if the candidate SV exists, the left-most segment of the SV contig should align to the first transformed reference region and the right-most contig segment should align to the second reference region. The contig is aligned across the two reference regions using a variant of Smith-Waterman-Gotoh alignment (\cite{smith1981,gotoh1982}) where a `jump' state is included which can only be entered from the match state for the first reference segment and only exits to the match or insert states of the second reference segment. The state transitions of this alignment scheme are shown in Figure \ref{fig:jumpstate}
+\subsubsection{Contig alignment for large SVs} For large SV candidates spanning two distinct regions of the genome, the reference sequences are extracted from the two expected breakend regions, and the order and/or orientation of the references is adjusted such that if the candidate SV exists, the left-most segment of the SV contig should align to the first transformed reference region and the right-most contig segment should align to the second reference region. The contig is aligned across the two reference regions using a variant of Smith-Waterman-Gotoh alignment (\cite{smith1981,gotoh1982}) where a `jump' state is included which can only be entered from the match state for the first reference segment and only exits to the match or insert states of the second reference segment. The state transitions of this alignment scheme are shown in Figure \ref{fig:jumpstate}
 
 \begin{figure}[!tpb]
 \centerline{
@@ -318,29 +357,43 @@ For a given word size $k$, a list is made of all $k$-mers present in the input r
 The alignment scores used for each reference segment are (2,-8,-12,-1) for match, mismatch, gap open and gap extend. Switching between insertion and deletion states is allowed at no cost. Scores to transition into and extend the 'jump' state are -24 and 0, respectively. The jump state is entered from any point in reference segment 1 and exits to any point in reference segment 2. The alignments resulting from this method are only used when a transition through the jump state occurs. In addition, each of the two alignment segments flanking the jump state are required to extend at least 30 bases with an alignment score no less than 75\% of the perfect match score for the flanking alignment segment. If more than one contig meets all quality criteria the contig with the highest alignment score is selected. When a contig and alignment meet all quality criteria, the reference orientation and ordering transformations applied before alignment are reversed to express the refined basepair-resolution structural variant candidate in standard reference genome coordinates.
 
 
-\paragraph{Contig alignment for complex region candidates}
+\subsubsection{Contig alignment for complex region candidates}
 Complex regions are segments of the genome targeted for assembly without a specific variant hypothesis. For this reason the problem of aligning contigs for these regions is somewhat more difficult than for specific large SV candidates, because a wide range of variant sizes are possible. This is reflected in the alignment procedure for complex region contigs, which are checked against two aligners optimized for large and small indels respectively.
 
 A contig is first aligned with the large indel aligner and only checked for small indels if no large indels are found. The structure of the large indel aligner is a variant on a standard affine-gap scheme, in which a second pair of delete and insert states are added for large indels. Alignment scores for standard alignment states are (2, -8, -18, -1) for match, mismatch, gap open, and gap extend. Open and extend scores for 'large' gaps are -24 and 0. Transitions are allowed between standard insertions and deletions but disallowed between the large indel states. Variants are only reported from the large indel aligner if an insertion of at least 80 bases or a deletion of at least 200 bases is found. The flanking alignment quality criteria described above for large SVs is also applied to filter out noisy alignments. To reduce false positive calls in repetitive regions an additional filter is applied to complex region candidates: the left and right segments of the contig flanking a candidate indel are checked for uniqueness in the local reference context. Contig alignments are filtered out if either of the two flanking contig segments can be aligned equally well to multiple locations within 500bp of the target reference region.
 
 If the large indel aligner fails to identify a candidate meeting the size and quality criteria above, the contig is used to search for smaller indels, this time using a conventional affine gap aligner with parameters: (2,-8,-12,0) for match, mismatch, gap open, gap extend. All indels larger than the minimum indel size are identified. For each indel, the flanking contig alignment quality and uniqueness checks described above are applied to filter likely false positives, and any remaining cases become small indel candidates.
 
-\paragraph{Large Insertions}
+\subsubsection{Large Insertions}
 
 Fully assembled large insertions will be detected by the standard contig assembly and alignment pipeline described above. Additional logic is added to detect and report the signature of a large insertion represented by two contig alignments which are consistent with left and right breakends of a large insertion. Under this scheme, all contig alignments are checked for the a signature of a high quality alignment for only a left or right subsegment of the contig. If two contigs form a left and right alignment pair implying two breakends within 35 bases then an imprecise long insertion is reported. In this case the left and right sides of the insert sequence are reported for an insertion of unknown total size.
 
-\paragraph{Post-alignment}
+\subsubsection{Post-alignment}
 Following alignment of either complex region or standard SV candidates, the homology length and inserted sequence at the breakend junction are extracted from the alignment so that these can be included in the candidate scoring and reporting stages.
 
-The total set of refined candidates (or imprecise candidates in the case of assembly failure) are reported to a `candidate' VCF file. This file does not include scoring or quality filtration information but provides partial support for applications which are not represented by Manta's current scoring models (i.e. tumor without matched normal), as a method development aid, or as input to a small variant caller or another SV scoring/genotyping method. As an example of the latter case. in the author's workflows all Manta indel candidates of size 50 and smaller are forwarded to a small variant caller to improve support for indels which are larger than the alignment gap size supported by typical high-speed read mappers.
+\paragraph{Late SV candidate filtration}
 
-\subsubsection{Scoring}
+Candidates are filtered following SV hypothesis refinement as follows:
 
-Following initial SV hypothesis generation and refinement via assembly, all candidate variants are scored. In this phase, multiple scoring models can be applied to the candidate variants. Manta currently applies a diploid scoring model for individual and control samples, as well as a somatic scoring model when a tumor and matched normal sample pair are given.
+\begin{enumerate}
+    \item Standard SV candidates are filtered out if they have fewer than 3 supporting spanning observations. A multi-junction SV candidate will fail this filter only if all individual junctions fail the filter.
+    \item Standard SV candidates (either successfully assembled or imprecise) are filtered if they have fewer than 2 supporting spanning observations. Multi-junction status has no effect on this filtration step, each component junction will be tested and filtered indepedently.
+    \item Any complex SV candidates which failed to assembled are filtered
+    \item SV candidate is below the minimum candidate SV size (8 by default) are filtered
+\end{enumerate}
 
-\paragraph{Diploid scoring model}
+\paragraph{Candidate output}
 
-The diploid scoring model produces diploid genotype probabilities for each candidate structural variant. Candidates are approximated as independent for scoring purposes, therefore we apply a simple model with a single alternate allele, that is, for reference and alternate alleles $A = \{r,x\}$ the genotype states at each allele are restricted to $G = \{rr, rx, xx\}$. We solve for the posterior probability over G using
+Following the late filtration steps, the total set of refined candidates (or imprecise candidates in the case of assembly failure) are reported to a `candidate' VCF file. This file does not include scoring or quality filtration information but provides partial support for applications which are not represented by Manta's current scoring models (i.e. tumor without matched normal), as a method development aid, or as input to a small variant caller or another SV scoring/genotyping method. As an example of the latter case. in the author's workflows all Manta indel candidates of size 50 and smaller are forwarded to a small variant caller to improve support for indels which are larger than the alignment gap size supported by typical high-speed read mappers.
+
+
+\subsection{Scoring}
+
+Following initial SV hypothesis generation, refinement via assembly, and filtration, all candidate variants are scored. In this phase, multiple scoring models can be applied to the candidate variants. Manta currently applies a diploid scoring model for one or more diploid samples (treated as unrelated), as well as a somatic scoring model when a tumor and matched normal sample pair are given.
+
+\subsubsection{Diploid scoring model}
+
+The diploid scoring model produces diploid genotype probabilities for each candidate structural variant. Most candidates are approximated as independent for scoring purposes, therefore we apply a simple model with a single alternate allele, that is, for reference and alternate alleles $A = \{r,x\}$ the genotype states at each allele are restricted to $G = \{rr, rx, xx\}$. We solve for the posterior probability over G using
 
 \begin{equation*}
 P( G \vert D ) \propto P( D \vert G )  P (G)
@@ -380,8 +433,17 @@ P(d \vert G) = \sum_{a \in A} P(d \vert a) P(a|G)
 
 This likelihood for each fragment to support a given allele $P(d \vert a)$ is common to both diploid and somatic scoring models, and is detailed below.
 
+\paragraph{Multi-junction scoring}
 
-\paragraph{Somatic scoring model}
+For multi-junction variants, an alternate scoring procedure is applied, wherein the genotype likelihood represents the joint likelihood over all junctions in the multi-junction event, assuming that all junctions in the event must have the same genotype. Thus the genotype likelihood of the set of junctions $J$ is:
+
+\begin{equation*}
+P(D_{J} \vert G) = \prod_{j \in J} P(D_{j} \vert G)
+\end{equation*}
+
+The multi-junction likelihood is evaluated to see if it provides a better fit to the data. If either of the conditions hold, the event scoring and reporting is reverted to the independent junction format (1) if the number of variant filters applied to the multi-junction record is higher than what would have been applied to any of the single junctions (2) if the probability of any variant genotype is lower for the multi-junction record than it would have been for any of the single junctions.
+
+\subsubsection{Somatic scoring model}
 
 The somatic scoring model expresses the probability that the candidate variant is somatic, i.e exists in the tumor but not in a matched normal or other type of control. The scoring model used in Manta is a simplification of the same model used in the Strelka small variant caller \cite{strelka2012}. In this simplified form a 'somatic genotype' state space is defined consisting of non-somatic germline variant states $\{rr, rx, xx\}$, a noise state $n$ representing spurious observations at the same allele frequency in the tumor and normal sample and the somatic state $s$. The posterior probability is found over the somatic genotype states $S = \{rr,rx,xx,n,s\}$,
 
@@ -439,11 +501,20 @@ P(d \vert S) = \sum_{a \in A} P(d \vert a) P(a | S)
 \noindent
 where $P(a|S)$ is derived from the expected tumor and normal allele frequencies as discussed above. The likelihood for each fragment to support a given allele $P(d \vert a)$ is shared with the germline model and detailed further below.
 
+\paragraph{Multi-junction scoring}
+
+For multi-junction variants, an alternate scoring procedure is applied, wherein the somatic likelihood represents the joint likelihood over all junctions in the multi-junction event, assuming that all junctions in the event must have the same somatic variant status. Thus the likelihood of the set of junctions $J$ is thus:
+
+\begin{equation*}
+P(D_{J} \vert S) = \prod_{j \in J} P(D_{j} \vert S)
+\end{equation*}
+
+
 \paragraph{Somatic calling tiers}
 
 An additional feature of the somatic scoring model is that it uses two calling tiers to reduce false positives. Tier 1 uses relatively stringent noise filtration parameters, while the Tier 2 is more permissive. All calls are initially made using Tier 1 settings, after which the variant is called again using Tier 2. Manta reports the minimum of the two somatic call qualities $Q = \min(Q_{\text{Tier 1}},Q_{\text{Tier 2}})$ as the final somatic quality score. The parameters used for each tier are described in the allele likelihood discussion below. The motivation for this scheme is to reduce false positive calls which could occur due to weak evidence for the alternative allele in the normal. Such evidence should be found under Tier 2 caller settings to reduce the confidence in events that are more likely to represent germline variation.
 
-\paragraph{Allele likelihood computation}
+\subsubsection{Allele likelihood computation}
 
 For any read fragment $d$ which interacts with one of the variant allele breakends, the likelihood $P(d \vert a)$ is found for the reference and alternate allele $a$. As described above, these values are shared by diploid and somatic quality scoring schemes for each variant. The read fragment likelihood combines both paired-read and split-read evidence, approximating their contributions as independent:
 
@@ -490,7 +561,11 @@ P ( r \vert a) = P ( r \vert a,m ) (P(m \vert a))  + P (\neg m \vert \neg a)
 
 In theory, the mapping qualities for each read should be used to set the spurious mapping values, however in Manta's current implementation constant values are used to approximate read mapping errors.  In all models the reference allele erroneous mapping probability is $P(\neg m \vert r) =  1\e{-6}$. In the diploid model the alternate allele erroneous mapping probability is $P(\neg m \vert x) =  1\e{-4}$. In the somatic model this value is the same except for the Tier 2 evaluation, in which case it is set to $P(\neg m \vert x) =  1\e{-6}$ for the normal sample only.
 
-\paragraph{Variant Filters}
+
+
+
+
+\subsection{Variant Filters}
 
 Filters are applied in a final step to improve precision of the scored output. These filters include the minimum quality scores appropriate for each scoring model and additional terms which correlate with error modes not represented in the scoring models.
 

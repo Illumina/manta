@@ -241,7 +241,8 @@ runGSC(
 
             SupportSamples svSupports;
             svSupports.supportSamples.resize(sampleSize);
-            // determine if this is the only edge for this node:
+
+            // assemble, score and output SVs
             svProcessor.evaluateCandidates(edge, mjSVs, svData, svSupports);
 
             // write supporting reads into bam files
