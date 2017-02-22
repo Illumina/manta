@@ -33,7 +33,7 @@
 
 /// A pair of ids for both ends of a single SV junction
 ///
-/// the mateid will only be defined for tranlocations, and empty otherwise
+/// the mateId will only be defined for tranlocations, and empty otherwise
 ///
 struct SVId
 {

@@ -602,10 +602,9 @@ resolvePairSplitConflicts(
 
 
 
-/// shared information gathering steps of all scoring models
 void
 SVScorer::
-scoreSV(
+getSVSupportingEvidence(
     const SVCandidateSetData& svData,
     const SVCandidateAssemblyData& assemblyData,
     const bool isTumorOnly,
@@ -831,7 +830,7 @@ getFragLnLhood(
 
     double ret(al.fragPair);
 
-    // limit split read evidence to only one read, b/c it's only possible for one section
+    // limit split read evidence to only one read, because it's only possible for one section
     // of the molecule to independently cross the breakend:
     if (isRead1Evaluated)
     {
@@ -1015,21 +1014,20 @@ addDiploidLoglhood(
         bool isRead1Evaluated(true);
         bool isRead2Evaluated(true);
 
-        /// TODO: set this from graph data:
-        ///
-        /// put some more thought into this -- is this P (spurious | any old read) or P( spurious | chimera ) ??
-        /// it seems like it should be the latter in the usages that really matter.
-        ///
+        /// TODO: set this value from error rates observed in input data:
+        //
+        // put some more thought into this -- is this P (spurious | any old read) or P( spurious | chimera ) ??
+        // it seems like it should be the latter in the usages that really matter.
+        //
         static const ProbSet chimeraProb(1e-3);
 
-        /// use a constant mapping prob for now just to get the zero-th order concept into the model
-        /// that "reads are mismapped at a non-trivial rate"
+        // use a constant mapping prob for now just to get the zero-th order concept into the model
+        // that "reads are mismapped at a non-trivial rate"
         /// TODO: experiment with per-read mapq values
-        ///
         static const ProbSet refSplitMapProb(1e-6);
         static const ProbSet altSplitMapProb(1e-5);
 
-        /// don't use semi-mapped reads for germline calling:
+        // don't use semi-mapped reads for germline calling:
         static const double semiMappedPower(0.);
 
         static const bool isPermissive(false);
@@ -1042,6 +1040,14 @@ addDiploidLoglhood(
             continue;
         }
 
+        const double refLnFragLhood(getFragLnLhood(refLnLhoodSet, isRead1Evaluated, isRead2Evaluated));
+        const double altLnFragLhood(getFragLnLhood(altLnLhoodSet, isRead1Evaluated, isRead2Evaluated));
+
+#ifdef DEBUG_SCORE
+        log_os << __FUNCTION__ << ": refLnFragLhood: " << refLnFragLhood << "\n";
+        log_os << __FUNCTION__ << ": altLnFragLhood: " << altLnFragLhood << "\n";
+#endif
+
         for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
         {
             using namespace DIPLOID_GT;
@@ -1051,14 +1057,6 @@ addDiploidLoglhood(
 #endif
 
             const index_t gtid(static_cast<index_t>(gt));
-            const double refLnFragLhood(getFragLnLhood(refLnLhoodSet, isRead1Evaluated, isRead2Evaluated));
-#ifdef DEBUG_SCORE
-            log_os << __FUNCTION__ << ": refLnFragLhood: " << refLnFragLhood << "\n";
-#endif
-            const double altLnFragLhood(getFragLnLhood(altLnLhoodSet, isRead1Evaluated, isRead2Evaluated));
-#ifdef DEBUG_SCORE
-            log_os << __FUNCTION__ << ": altLnFragLhood: " << altLnFragLhood << "\n";
-#endif
             const double refLnLhood(refLnFragLhood + altLnCompFraction(gtid));
             const double altLnLhood(altLnFragLhood + altLnFraction(gtid));
             loglhood[gt] += log_sum(refLnLhood, altLnLhood);
@@ -1609,7 +1607,7 @@ scoreSomaticSV(
     const unsigned normalSampleIndex(0);
     const unsigned tumorSampleIndex(1);
 
-    /// for multi-junction events, we use the prior noise weight associated with the largest event:
+    // for multi-junction events, we use the prior noise weight associated with the largest junction:
     float largeNoiseWeight(0.f);
     for (const JunctionCallInfo& junction : junctionData)
     {
@@ -1647,10 +1645,9 @@ scoreSomaticSV(
         static const ProbSet chimeraProbPermissive(5e-6);
         const ProbSet& chimeraProb( isPermissive ? chimeraProbPermissive : chimeraProbDefault );
 
-        /// use a constant mapping prob for now just to get the zero-th order concept into the model
-        /// that "reads are mismapped at a non-trivial rate"
+        // use a constant mapping prob for now just to get the zero-th order concept into the model
+        // that "reads are mismapped at a non-trivial rate"
         /// TODO: experiment with per-read mapq values
-        ///
         static const ProbSet refSplitMapProb(1e-6);
 
         static const ProbSet altSplitMapProbDefault(1e-4);
@@ -1872,12 +1869,14 @@ scoreSV(
     const unsigned junctionCount(mjSV.junction.size());
     mjModelScoreInfo.resize(junctionCount);
     std::vector<SVEvidence> junctionEvidence(junctionCount);
+
+    // set the degree to which we rely on spanning pair evidence for each junction, see getSpanningPairWeight()
     std::vector<float> junctionSpanningPairWeight(junctionCount);
 
-    for (unsigned jIndex(0); jIndex<junctionCount; ++jIndex)
+    for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
     {
-        mjModelScoreInfo[jIndex].setSampleCount(sampleCount(),diploidSampleCount());
-        junctionEvidence[jIndex].samples.resize(sampleCount());
+        mjModelScoreInfo[junctionIndex].setSampleCount(sampleCount(),diploidSampleCount());
+        junctionEvidence[junctionIndex].samples.resize(sampleCount());
     }
 
     mjJointModelScoreInfo.clear();
@@ -1903,10 +1902,10 @@ scoreSV(
 
         modelScoreInfo.clear();
 
-        // accumulate model-neutral evidence for each candidate (or its corresponding reference allele)
+        // accumulate model-agnostic evidence for each candidate (or its corresponding reference allele)
         SVEvidence& evidence(junctionEvidence[junctionIndex]);
-        scoreSV(svData, assemblyData, isTumorOnly, sv, svId,
-                modelScoreInfo.base, evidence, svSupports);
+        getSVSupportingEvidence(svData, assemblyData, isTumorOnly, sv, svId,
+                                modelScoreInfo.base, evidence, svSupports);
 
         // score components specific to diploid-germline model:
         float& spanningPairWeight(junctionSpanningPairWeight[junctionIndex]);;

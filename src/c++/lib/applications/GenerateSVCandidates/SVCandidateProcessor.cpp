@@ -106,12 +106,15 @@ writeSV(
     SupportSamples& svSupports)
 {
     const unsigned junctionCount(mjSV.junction.size());
+
+    // relax min spanning count to just 2 for the special case of a junction that is part of a multi-junction EVENT
+    //
     const unsigned minJunctionCandidateSpanningCount(std::min(2u,opt.minCandidateSpanningCount));
 
     // track filtration for each junction:
     std::vector<bool> isJunctionFiltered(isInputJunctionFiltered);
 
-    // early SV filtering:
+    // first step of SV filtering (before candidates are written):
     //
     // 2 junction filter types:
     // 1) tests where the junction can fail independently
@@ -132,7 +135,7 @@ writeSV(
 #endif
 
         // junction dependent tests:
-        //   (1) at least one junction in the set must have spanning count of 3 or more
+        //   (1) at least one junction in the set must have spanning count of minCandidateSpanningCount or more
         bool isJunctionSpanFail(false);
         if (isCandidateSpanning)
         {
@@ -257,6 +260,7 @@ writeSV(
     bool isMJDiploidEvent(isMJEvent);
     EventInfo event;
     event.junctionCount=unfilteredJunctionCount;
+
     bool isMJEventWriteDiploid(false);
     bool isMJEventWriteSomatic(false);
 
@@ -353,6 +357,8 @@ writeSV(
             //TODO: set up criteria for isMJEventWriteTumor
         }
 
+        // for events, we write all junctions, or no junctions,
+        // so we need to determine write status over the whole set rather than a single junction
         if (isMJDiploidEvent)
         {
             isMJEventWriteDiploid = (mjJointModelScoreInfo.diploid.altScore >= opt.diploidOpt.minOutputAltScore);
@@ -532,9 +538,11 @@ evaluateCandidate(
     const bool isComplex(isComplexSV(mjCandidateSV));
     _edgeTracker.addCand(isComplex);
 
-    _edgeStatMan.updateJunctionCandidates(edge, junctionCount, isComplex);
+    _edgeStatMan.updateJunctionCandidateCounts(edge, junctionCount, isComplex);
 
-    // assemble each junction independently:
+    // true if any junction returns a complex (indel) assembly result
+    //
+    // if true, and if the candidate is multi-junction then score and write each junction independently:
     bool isAnySmallAssembler(false);
     std::vector<SVCandidateAssemblyData> mjAssemblyData(junctionCount);
 
@@ -592,6 +600,7 @@ evaluateCandidate(
         // It doesn't do that -- but the broken thing it does, in fact, do, is what we
         // want for the isAnySmallAssembler case so it's well enough for now.
         //
+        /// TODO: update docs -- what is it we "want for the isAnySmallAssembler case"?
         bool isWrite(false);
         for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
         {
@@ -627,6 +636,8 @@ evaluateCandidate(
         const TimeScoper scoreTime(_edgeTracker.scoreTime);
         if ((junctionCount>1) && isAnySmallAssembler)
         {
+            // call each junction independently by providing a filter vector in each iteration
+            // which only leaves a single junction unfiltered:
             for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
             {
                 std::vector<bool> isJunctionFilteredHack(junctionCount,true);

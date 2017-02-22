@@ -21,10 +21,10 @@ cat << END > $hook1
 #
 
 # this adds the branch name to the beginning of the commit message
-BRANCH_NAME=\$(git rev-parse --abbrev-ref HEAD)
+BRANCH_NAME=\$(git rev-parse --abbrev-ref HEAD | sed "s/^feature[^-]*-//g" | sed "s/^bug[^-]*-//g")
 FIRST_LINE=\$(head -1 \$1)
-if [ -z \$FIRST_LINE ] ; then
-    if [ "X\$BRANCH_NAME" != "Xmaster" ] && [ "X\$BRANCH_NAME" != "Xdevelop" ] ; then
+if [ -z "\$FIRST_LINE" ] ; then
+    if [ "\$BRANCH_NAME" != "master" ] && [ "\$BRANCH_NAME" != "develop" ] ; then
         sed -i "1s/^/\$BRANCH_NAME \n/" \$1
     fi
 fi

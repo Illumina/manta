@@ -149,7 +149,12 @@ private:
     /// throwaway stats tracker...
     SampleEvidenceCounts _eCounts;
 
+    /// rate of spanning read noise estimated from the current dataset
+    /// - estimate is roughly (anom + split)/all
     double _spanningNoiseRate;
+
+    /// rate of assembly read noise estimated from the current dataset
+    /// - assembly read noise means reads with edges which have high mismatch density or soft-clipping
     double _assemblyNoiseRate;
 
     EdgeRuntimeTracker& _edgeTracker;

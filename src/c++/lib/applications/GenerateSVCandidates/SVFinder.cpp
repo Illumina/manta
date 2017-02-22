@@ -1085,9 +1085,9 @@ enum index_t
 
 
 
-/// return true for candidates that should be filtered out, based on
+/// return enumerator describing the candidate's filtration state, based on
 /// information available in a single junction (as opposed to
-/// requiring multi-junction analysis
+/// requiring multi-junction analysis)
 ///
 static
 SINGLE_FILTER::index_t
@@ -1127,6 +1127,11 @@ isFilterSingleJunctionCandidate(
 
 
 
+/// run early filters on all SV candidates
+///
+/// some candidates are immediately filtered in this function (so the length of svs will be shorter), other
+/// filtration cases require the SV to be marked now and evaluated for filtration once more information is
+/// available
 static
 void
 filterCandidates(
@@ -1159,6 +1164,7 @@ filterCandidates(
             isFilter = true;
             break;
         case SPANNINGLOWSIGNAL:
+            // this case is marked, but filtering is delayed until a multi-junction evaluation can be done later
             svs[index].isSingleJunctionFilter = true;
             break;
         default:

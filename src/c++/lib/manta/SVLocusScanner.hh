@@ -193,7 +193,9 @@ struct SVLocusScanner
     isLocalIndelEvidence(
         const SimpleAlignment& bamAlign) const;
 
-    /// semi-aligned and soft-clipped edges
+    /// true for reads with semi-aligned and soft-clipped edges
+    ///
+    /// "semi-aligned" here means the edge has a high density of mismatches
     bool
     isSemiAlignedEvidence(
         const bam_record& bamRead,

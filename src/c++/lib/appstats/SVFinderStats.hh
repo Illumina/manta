@@ -31,6 +31,10 @@
 #include <iosfwd>
 
 
+/// statistics accumulated during the SVFinder process
+///
+/// this includes trackers for filtered edges, sv candidates, and reads/read-pairs
+///
 struct SVFinderStats
 {
     SVFinderStats() {}
@@ -60,11 +64,21 @@ struct SVFinderStats
     void
     report(std::ostream& os) const;
 
-
+    /// number of edges filtered out from the SV finding process
     uint64_t edgeFilter = 0;
+
+    /// number of sv candidates filtered out for being supported only be semi-mapped read pairs
     uint64_t semiMappedFilter = 0;
+
+    /// number of complex candidates filtered out for not meeting hard evidence count thresholds
     uint64_t ComplexLowCountFilter = 0;
+
+    /// number of complex candidates filtered out for evidence counts which are not significant relative to noise rates
+    /// in the data
     uint64_t ComplexLowSignalFilter = 0;
+
+    /// number of read-pairs filtered out becuase the read1 and read2 alignment records contained conflicting
+    /// information
     uint64_t unmatchedReadPairFilter = 0;
 };
 

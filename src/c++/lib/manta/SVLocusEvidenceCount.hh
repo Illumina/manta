@@ -61,7 +61,7 @@ struct SVLocusEvidenceCount
 
     // using doubles for integral counts here because (1) counts are potentially very high and (2) exact counts don't matter
 
-    ///< total number of non-filtered anomalous reads scanned
+    ///< total number of non-filtered reads scanned
     double total = 0;
 
     ///< total number of non-filtered reads ignored for SV purposes
