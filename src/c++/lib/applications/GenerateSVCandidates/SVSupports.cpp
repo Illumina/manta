@@ -150,9 +150,9 @@ processBamRecords(
 
 
 void
-writeSupportBam(bam_streamer_ptr origBamStreamPtr,
+writeSupportBam(const bam_streamer_ptr& origBamStreamPtr,
                 const SupportFragments& svSupportFrags,
-                bam_dumper_ptr supportBamDumperPtr)
+                const bam_dumper_ptr& supportBamDumperPtr)
 {
     std::vector<SupportRead> supportReads;
     const support_fragments_t& supportFrags(svSupportFrags.supportFrags);

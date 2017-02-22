@@ -44,6 +44,12 @@ operator<<(
         if (gt!=0) os << ',';
         os << sids.phredLoghood[gt];
     }
+    os << " pprob=";
+    for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
+    {
+        if (gt!=0) os << ',';
+        os << sids.pprob[gt];
+    }
     os << " sampleFilters:";
     for (const std::string& filter : sids.filters)
     {

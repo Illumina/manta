@@ -443,6 +443,18 @@ P(D_{J} \vert G) = \prod_{j \in J} P(D_{j} \vert G)
 
 The multi-junction likelihood is evaluated to see if it provides a better fit to the data. If either of the conditions hold, the event scoring and reporting is reverted to the independent junction format (1) if the number of variant filters applied to the multi-junction record is higher than what would have been applied to any of the single junctions (2) if the probability of any variant genotype is lower for the multi-junction record than it would have been for any of the single junctions.
 
+In the case of multiple samples, the event is then further evaluated for each individual sample after the multi-junction likelihood calculation. For each sample, the assumption that every junction shares the same genotype is evaluated. The check is failed if the individual junctions should be potentially assigned different genotypes.
+\begin{enumerate}
+    \item A sample fails the check if the joint genotype is hom-ref.
+    \item A sample fails the check if both of the creteria are met:
+    \begin{enumerate}
+        \item The joint event changes the genotype of the junction and increases the posterior prob of the new genotype by more than 0.9.
+        \item The posterior prob of the old genotype is larger than 0.9 when the junction is genotyped individually.
+    \end{enumerate}
+\end{enumerate}
+
+A multi-junction event is reported only if at least one sample passes the check. For the samples that pass the check, the sample-level scoring remains the same as the multi-junction event; for the samples that fail the check, the sample-level scoring is reverted to that of individual junctions.
+
 \subsubsection{Somatic scoring model}
 
 The somatic scoring model expresses the probability that the candidate variant is somatic, i.e exists in the tumor but not in a matched normal or other type of control. The scoring model used in Manta is a simplification of the same model used in the Strelka small variant caller \cite{strelka2012}. In this simplified form a 'somatic genotype' state space is defined consisting of non-somatic germline variant states $\{rr, rx, xx\}$, a noise state $n$ representing spurious observations at the same allele frequency in the tumor and normal sample and the somatic state $s$. The posterior probability is found over the somatic genotype states $S = \{rr,rx,xx,n,s\}$,

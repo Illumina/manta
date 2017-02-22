@@ -264,58 +264,70 @@ writeSV(
     bool isMJEventWriteDiploid(false);
     bool isMJEventWriteSomatic(false);
 
-    std::vector<bool> isJunctionSampleSpanFail;
-    isJunctionSampleSpanFail.resize(diploidSampleCount);
+    std::vector<bool> isJunctionSampleCheckFail(diploidSampleCount, false);
 
     if (isMJEvent)
     {
-        // check sample-specific evidence for all diploid samples
+        // sample specific check for the assumption of multi-junction candidates: every junction shares the same genotype.
+        // check if the individual junctions should be potentially assigned different genotypes.
         for (unsigned sampleIndex(0); sampleIndex<diploidSampleCount; ++sampleIndex)
         {
-            // fail the evidence check per sample if
-            // 1) any of the junctions has zero evidence
-            // 2) none of the junctions meet the minimum evidence requirement
-            isJunctionSampleSpanFail[sampleIndex] = false;
-            unsigned maxEvidence(0);
+            const SVScoreInfoDiploid& jointDiploidInfo(mjJointModelScoreInfo.diploid);
+            const SVScoreInfoDiploidSample& jointDiploidSampleInfo(jointDiploidInfo.samples[sampleIndex]);
+            const DIPLOID_GT::index_t jointGT(jointDiploidSampleInfo.gt);
+            const double jointGtPProb(jointDiploidSampleInfo.pprob[jointGT]);
+
+            if (jointGT == DIPLOID_GT::REF)
+            {
+                isJunctionSampleCheckFail[sampleIndex] = true;
+#ifdef DEBUG_GSV
+                if (isJunctionSampleCheckFail[sampleIndex])
+                {
+                    log_os << __FUNCTION__ << ": The multi-junction candidate has hom-ref for sample #"
+                           << sampleIndex << ".\n";
+                }
+#endif
+                continue;
+            }
+
             for (unsigned junctionIndex(0); junctionIndex < junctionCount; ++junctionIndex)
             {
                 if (isJunctionFiltered[junctionIndex]) continue;
 
-                const SVScoreInfo& baseInfo(mjModelScoreInfo[junctionIndex].base);
-                const SVSampleAlleleInfo& altInfo(baseInfo.samples[sampleIndex].alt);
-                const unsigned altEvidence(altInfo.confidentSpanningPairCount + altInfo.confidentSplitReadCount);
+                const SVScoreInfoDiploid& diploidInfo(mjModelScoreInfo[junctionIndex].diploid);
+                const SVScoreInfoDiploidSample& diploidSampleInfo(diploidInfo.samples[sampleIndex]);
+                const DIPLOID_GT::index_t singleGT(diploidSampleInfo.gt);
+                const double singleGtPProb(diploidSampleInfo.pprob[singleGT]);
+                const double deltaGtPProb(jointGtPProb - diploidSampleInfo.pprob[jointGT]);
 
-                //  identify any junction with 0 evidence in the sample
-                if (altEvidence == 0)
+                // fail the genotype check if
+                // 1) the joint event changes the genotype of the junction and increases the posterior prob by more than 0.9
+                // 2) the posterior prob is larger than 0.9 when the junction is genotyped individually
+                if ((! jointGT==singleGT) && (deltaGtPProb > 0.9) && (singleGtPProb > 0.9))
                 {
-                    isJunctionSampleSpanFail[sampleIndex] = true;
+                    isJunctionSampleCheckFail[sampleIndex] = true;
                     break;
                 }
-                else
-                {
-                    maxEvidence = std::max(maxEvidence, altEvidence);
-                }
-
             }
-            // none of the junctions has evidence exceeding the minimum requirement in the sample
-            if (maxEvidence < opt.minCandidateSpanningCount) isJunctionSampleSpanFail[sampleIndex] = true;
+
 #ifdef DEBUG_GSV
-            if (isJunctionSampleSpanFail[sampleIndex])
+            if (isJunctionSampleCheckFail[sampleIndex])
             {
-                log_os << __FUNCTION__ << ": The multi-junction candidate failed the check of sample-specific evidence for sample #"
+                log_os << __FUNCTION__ << ": The multi-junction candidate failed the check of sample-specific genotyping for sample #"
                        << sampleIndex << ".\n";
             }
 #endif
         }
 
-        // the multi-junction diploid event remains valid if any sample passing the evidence check
-        if (! isAnyFalse(isJunctionSampleSpanFail)) isMJDiploidEvent = false;
+        // if any sample passing the genotype check, the multi-junction diploid event remains valid;
+        // otherwise, fail the multi-junction candidate
+        if (! isAnyFalse(isJunctionSampleCheckFail)) isMJDiploidEvent = false;
 
 #ifdef DEBUG_GSV
         if (! isMJDiploidEvent)
         {
 
-            log_os << __FUNCTION__ << ": Rejecting the multi-junction candidate, failed the check of sample-specific evidence for all  diploid samples.\n";
+            log_os << __FUNCTION__ << ": Rejecting the multi-junction candidate, failed the sample-specific check of genotyping for all diploid samples.\n";
         }
 #endif
 
@@ -346,8 +358,7 @@ writeSV(
             }
 
             // for somatic case,
-            // we decide to use multi-junction if either the multi-junction OR ANY single junction has a good score?
-            // @Chris: Could you please look into the logic here?
+            // report multi-junction if either the multi-junction OR ANY single junction has a good score.
             if ((mjJointModelScoreInfo.somatic.somaticScore >= opt.somaticOpt.minOutputSomaticScore) ||
                 (modelScoreInfo.somatic.somaticScore >= opt.somaticOpt.minOutputSomaticScore))
             {
@@ -395,16 +406,19 @@ writeSV(
 
                 if (isMJDiploidEvent)
                 {
-                    // if one sample failed the evidence check, use the sample-specific diploid scoreInfo, instead of the joint scoreInfo
+                    // if one sample failed the genotype check,
+                    // use the sample-specific diploid scoreInfo, instead of the joint scoreInfo
                     for (unsigned sampleIndex(0); sampleIndex<diploidSampleCount; ++sampleIndex)
                     {
-                        if (isJunctionSampleSpanFail[sampleIndex])
+                        if (isJunctionSampleCheckFail[sampleIndex])
                         {
-                            diploidInfo.samples[sampleIndex] = modelScoreInfo.diploid.samples[sampleIndex];
 #ifdef DEBUG_GSV
                             log_os << __FUNCTION__ << ": Junction #" << junctionIndex
-                                   << ": Swapped diploid info for sample #" << sampleIndex << ".\n" ;
+                                   << ": Swapped diploid info for sample #" << sampleIndex << ".\n"
+                                   << "Before:" << diploidInfo.samples[sampleIndex] << "\n"
+                                   << "After:" << modelScoreInfo.diploid.samples[sampleIndex] << "\n" ;
 #endif
+                            diploidInfo.samples[sampleIndex] = modelScoreInfo.diploid.samples[sampleIndex];
                         }
                     }
                 }
@@ -446,9 +460,6 @@ writeSV(
 
                 if (isWriteSomatic)
                 {
-                    // Previously, we put the multi-junction event tag anyway, even for single-junction writing...
-                    // I changed it into no event tag for single junctions
-                    // @Chris: Could you please take a look if I overlook anything?
                     somWriter.writeSV(svData, assemblyData, sv, svId, baseInfo, somaticInfo, somaticEvent, modelScoreInfo.somatic);
                 }
             }

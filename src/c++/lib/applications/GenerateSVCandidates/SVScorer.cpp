@@ -1142,6 +1142,7 @@ scoreDiploidSV(
             }
             for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
             {
+                diploidSampleInfo.pprob[gt] = pprob[gt];
                 diploidSampleInfo.phredLoghood[gt] = std::min(maxQ,ln_error_prob_to_qphred(loglhood[gt]-loglhood[maxIndex]));
             }
         }
@@ -1934,6 +1935,8 @@ scoreSV(
         junctionData.resize(unfilteredJunctionCount);
         for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
         {
+            if (isJunctionFiltered[junctionIndex]) continue;
+
             junctionData[junctionIndex].init(
                 mjSV.junction[junctionIndex],
                 junctionEvidence[junctionIndex],
