@@ -1,3 +1,5 @@
+- MANTA-583 Document multi-junction handling
+- MANTA-518 Add sample level check of genotyping for multi-junction events
 - MANTA-486/[#57] clarify rna mode configuration/improve errors
 - RNA: Include some spliced reads in insert-size estimation
 - RNA: Include split-reads as evidence for imprecise translocations

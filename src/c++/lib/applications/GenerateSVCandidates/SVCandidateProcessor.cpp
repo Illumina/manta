@@ -326,7 +326,6 @@ writeSV(
 #ifdef DEBUG_GSV
         if (! isMJDiploidEvent)
         {
-
             log_os << __FUNCTION__ << ": Rejecting the multi-junction candidate, failed the sample-specific check of genotyping for all diploid samples.\n";
         }
 #endif
