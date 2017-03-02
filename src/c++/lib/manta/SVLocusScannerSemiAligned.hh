@@ -47,6 +47,7 @@ getSVBreakendCandidateSemiAligned(
     const SimpleAlignment& bamAlign,
     const reference_contig_segment& refSeq,
     const bool isUseOverlappingPairs,
+    const bool isAgressiveAdaptorCheck,
     unsigned& leadingMismatchLen,
     pos_t& leadingRefPos,
     unsigned& trailingMismatchLen,
@@ -63,6 +64,7 @@ getSVBreakendCandidateSemiAlignedSimple(
     const SimpleAlignment& bamAlign,
     const reference_contig_segment& refSeq,
     const bool isUseOverlappingPairs,
+    const bool isAgressiveAdaptorCheck,
     unsigned& leadingMismatchLen,
     unsigned& trailingMismatchLen)
 {
@@ -70,6 +72,7 @@ getSVBreakendCandidateSemiAlignedSimple(
     getSVBreakendCandidateSemiAligned(
         bamRead, bamAlign, refSeq,
         isUseOverlappingPairs,
+        isAgressiveAdaptorCheck,
         leadingMismatchLen, leadingRefPos,
         trailingMismatchLen, trailingRefPos);
 }

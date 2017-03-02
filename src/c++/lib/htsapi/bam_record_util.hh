@@ -53,7 +53,8 @@ is_innie_pair(
 /// read into adapter sequence (assuming innie pairs)
 bool
 is_possible_adapter_pair(
-    const bam_record& bamRead);
+    const bam_record& bamRead,
+    const bool isAgressiveAdaptorCheck);
 
 /// detect cases where paired-end reads overlap (i.e. a fragment shorter than the combined read-length).
 ///
