@@ -31,7 +31,7 @@
 
 #include <iostream>
 
-
+//#define OUTPUT_CDF
 
 static
 void
@@ -65,6 +65,15 @@ runSAS(const SASOptions& opt)
             report_os << quantLevel[quantLevelIndex] << '\t' << rgs.fragStats.quantile(quantLevel[quantLevelIndex]) << '\n';
         }
         report_os << '\n';
+
+#ifdef OUTPUT_CDF
+        report_os << "fragment length cdf:\n";
+        for (unsigned fragIndex(0); fragIndex<=1000; ++fragIndex)
+        {
+            const unsigned fragLen(fragIndex * 10);
+            report_os << fragLen << '\t' << rgs.fragStats.cdf(fragLen) << '\n';
+        }
+#endif
     }
 }
 
