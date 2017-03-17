@@ -78,11 +78,9 @@ typedef std::unordered_map<std::string, std::pair<unsigned,unsigned> > str_pair_
 
 
 
-/**
- * Adds base @p base to the end (isEnd is true) or start (otherwise) of the contig.
- *
- *	@return The extended contig.
- */
+/// Adds base @p base to the end (isEnd is true) or start (otherwise) of the contig.
+///
+/// \return the extended contig.
 static
 std::string
 addBase(
@@ -96,11 +94,7 @@ addBase(
 
 
 
-/**
- * Returns a suffix (isEnd is true) or prefix (otherwise) of @p contig with length @p length.
- *
- *	@return The suffix or prefix.
- */
+/// Returns a suffix (isEnd is true) or prefix (otherwise) of the input contig with the specified length.
 static
 std::string
 getEnd(
@@ -167,10 +161,13 @@ wordHashToDot(
 
 
 
-/**
- * Extends the seed contig (aka most frequent k-mer)
- *
- */
+/// Construct a contig from the seed provided
+///
+/// The contig is extened in both directions until
+/// either the there is no sufficient support evidence
+/// or the last k-mer is repeatitive (i.e. part of a bubble in the graph)
+///
+/// \return True if the contig runs into a repeatitive k-mer when extending in either mode
 static
 bool
 walk(const IterativeAssemblerOptions& opt,
@@ -200,7 +197,7 @@ walk(const IterativeAssemblerOptions& opt,
         const std::string tmpBack = getEnd(seed, wordLength-1, false);
         const std::string newKey(addBase(tmpBack, symbol, true));
 #ifdef DEBUG_WALK
-        log_os << "Extending end backwords: base " << symbol << " " << newKey << "\n";
+        log_os << "Extending end one step back: base " << symbol << " " << newKey << "\n";
 #endif
 
         wordReadsIter= wordReads.find(newKey);
@@ -362,7 +359,7 @@ walk(const IterativeAssemblerOptions& opt,
                         // add rejecting reads from an unselected branch
                         const std::string newKey(addBase(trunk, symbol, !isEnd));
 #ifdef DEBUG_WALK
-                        log_os << "Extending end backwords: base " << symbol << " " << newKey << "\n";
+                        log_os << "Extending end one step back: base " << symbol << " " << newKey << "\n";
 #endif
                         wordReadsIter= wordReads.find(newKey);
                         if (wordReadsIter == wordReadsEnd) continue;
@@ -463,8 +460,9 @@ walk(const IterativeAssemblerOptions& opt,
 
 
 
-/// \params isFindRepeatReads if true record all reads with repeated words
-///
+/// Construct k-mer maps
+/// k-mer ==> number of reads containing the k-mer
+/// k-mer ==> a list of read IDs containg the k-mer
 static
 void
 getKmerCounts(
@@ -516,6 +514,9 @@ getKmerCounts(
 }
 
 
+/// Identify repeatitive k-mers
+/// i.e. k-mers that form a circular subgraph
+///
 static
 unsigned
 searchRepeats(
