@@ -37,8 +37,8 @@
 
 
 // compile with this macro to get verbose output:
-//#define DEBUG_ASBL
-//#define DEBUG_WALK
+#define DEBUG_ASBL
+// #define DEBUG_WALK
 
 
 // stream used by DEBUG_ASBL:
@@ -72,7 +72,7 @@ void print_stringSet(const std::set<std::string>& strSet)
 
 // maps kmers to positions in read
 typedef std::unordered_map<std::string,unsigned> str_uint_map_t;
-// maps kmers to support reads
+// maps kmers to supporting reads
 typedef std::unordered_map<std::string,std::set<unsigned> > str_set_uint_map_t;
 typedef std::unordered_map<std::string, std::pair<unsigned,unsigned> > str_pair_uint_map_t;
 
@@ -182,39 +182,14 @@ walk(const IterativeAssemblerOptions& opt,
     const str_uint_map_t::const_iterator wordCountEnd(wordCount.cend());
     const str_set_uint_map_t::const_iterator wordReadsEnd(wordReads.cend());
 
+#ifdef DEBUG_WALK
+    log_os << "\nSeed: " << seed << "\n";
+#endif
     // we start with the seed
     str_set_uint_map_t::const_iterator wordReadsIter(wordReads.find(seed));
     assert(wordReadsIter != wordReadsEnd);
     contig.supportReads = wordReadsIter->second;
     contig.seq = seed;
-    // collecting rejecting reads for the seed from the unselected branches
-    for (const char symbol : opt.alphabet)
-    {
-        // the seed itself
-        if (symbol == seed[wordLength-1]) continue;
-
-        // add rejecting reads from an unselected word/branch
-        const std::string tmpBack = getEnd(seed, wordLength-1, false);
-        const std::string newKey(addBase(tmpBack, symbol, true));
-#ifdef DEBUG_WALK
-        log_os << "Extending end one step back: base " << symbol << " " << newKey << "\n";
-#endif
-
-        wordReadsIter= wordReads.find(newKey);
-        if (wordReadsIter == wordReadsEnd) continue;
-        const std::set<unsigned>& unselectedReads(wordReadsIter->second);
-#ifdef DEBUG_WALK
-        log_os << "Supporting reads for the backwards word : ";
-        print_unsignSet(unselectedReads);
-#endif
-
-        contig.rejectReads.insert(unselectedReads.begin(), unselectedReads.end());
-#ifdef DEBUG_WALK
-        log_os << "seed's rejecting reads : ";
-        print_unsignSet(contig.rejectReads);
-#endif
-    }
-
     unusedWords.erase(seed);
 
     if (repeatWords.find(seed) != repeatWords.end())
@@ -225,6 +200,34 @@ walk(const IterativeAssemblerOptions& opt,
         contig.conservativeRange.set_begin_pos(0);
         contig.conservativeRange.set_end_pos(wordLength);
         return true;
+    }
+
+    const std::string tmpTrunk = getEnd(seed, wordLength-1, false);
+    // collecting rejecting reads for the seed from the unselected branches
+    for (const char symbol : opt.alphabet)
+    {
+        // the seed itself
+        if (symbol == seed[wordLength-1]) continue;
+
+        // add rejecting reads from an unselected word/branch
+        const std::string newKey(addBase(tmpTrunk, symbol, true));
+#ifdef DEBUG_WALK
+        log_os << "Extending the seed trunk: base " << symbol << " " << newKey << "\n";
+#endif
+
+        wordReadsIter= wordReads.find(newKey);
+        if (wordReadsIter == wordReadsEnd) continue;
+        const std::set<unsigned>& unselectedReads(wordReadsIter->second);
+#ifdef DEBUG_WALK
+        log_os << "Supporting reads for the non-seed word : ";
+        print_unsignSet(unselectedReads);
+#endif
+
+        contig.rejectReads.insert(unselectedReads.begin(), unselectedReads.end());
+#ifdef DEBUG_WALK
+        log_os << "seed's rejecting reads : ";
+        print_unsignSet(contig.rejectReads);
+#endif
     }
 
     bool isRepeatFound(false);
@@ -353,16 +356,20 @@ walk(const IterativeAssemblerOptions& opt,
                     const char tmpSymbol = (isEnd? previousWord[0] : previousWord[wordLength-1]);
                     for (const char symbol : opt.alphabet)
                     {
-                        // the selected branch
+                        // the selected branch: skip the backward word itself
                         if (symbol == tmpSymbol) continue;
 
                         // add rejecting reads from an unselected branch
                         const std::string newKey(addBase(trunk, symbol, !isEnd));
 #ifdef DEBUG_WALK
-                        log_os << "Extending end one step back: base " << symbol << " " << newKey << "\n";
+                        log_os << "Extending end backwards: base " << symbol << " " << newKey << "\n";
 #endif
+                        // the selected branch: skip the word just extended
+                        if (newKey == maxWord) continue;
+
                         wordReadsIter= wordReads.find(newKey);
                         if (wordReadsIter == wordReadsEnd) continue;
+
                         const std::set<unsigned>& backWordReads(wordReadsIter->second);
 #ifdef DEBUG_WALK
                         log_os << "Supporting reads for the backwards word : ";
@@ -410,7 +417,7 @@ walk(const IterativeAssemblerOptions& opt,
                         contig.supportReads.insert(rd);
 #ifdef DEBUG_WALK
                     if (contig.rejectReads.find(rd) != contig.rejectReads.end())
-                        log_os << "  Excluding rejected " << rd << "\n";
+                        log_os << "  Excluding rejected read " << rd << " for the contig\n";
 #endif
                 }
 
@@ -500,6 +507,8 @@ getKmerCounts(
         AssemblyReadInfo& rinfo(readInfo[readIndex]);
         unsigned wordCountAdd = 1;
         // pseudo reads must have passed coverage check with smaller kmers
+        // Assigning minCoverage (instead of 1) to a pseudo read allows the pseudo read to rescue the regions
+        // where coverage is as low as minCoverage and reads overlap is small
         if (rinfo.isPseudo)
             wordCountAdd = opt.minCoverage;
 
@@ -665,6 +674,7 @@ buildContigs(
             unusedWords.insert(wdct.first);
     }
 
+    // TODO: for the seek of speed, consider limiting the number of contigs generated
     while (!unusedWords.empty())
     {
         std::string maxWord;
@@ -727,6 +737,7 @@ selectContigs(
     // a set of pseudo reads that has been used to construct contigs
     std::set<unsigned> usedPseudoReads;
 
+    // contig are selected based on the number of supporting reads that are not pseudo
     while ((candidateContigs.size() > 0) && (finalContigCount < opt.maxAssemblyCount))
     {
         // count unused reads that are not pseudo reads
@@ -747,7 +758,7 @@ selectContigs(
         unsigned maxLength(0);
         for (const AssembledContig& contig : candidateContigs)
         {
-            // identify new support reads that were not used for the previously identified contigs
+            // identify new supporting reads that were not used for the previously identified contigs
             std::set<unsigned> newSupportReads;
             std::set_difference(contig.supportReads.begin(), contig.supportReads.end(),
                                 usedReads.begin(), usedReads.end(),
@@ -757,7 +768,7 @@ selectContigs(
             print_unsignSet(newSupportReads);
 #endif
 
-            // count the number of new support reads that are not pseudo reads
+            // count the number of new supporting reads that are not pseudo reads
             unsigned newNormalSupport(0);
             for (const unsigned rd : newSupportReads)
             {
@@ -767,14 +778,14 @@ selectContigs(
             if (newNormalSupport < opt.minSupportReads)
             {
 #ifdef DEBUG_ASBL
-                log_os << logtag << "Contig #" << contigIndex << " to be skipped: too few non-pseudo support reads that has not been used for previously identified contigs.\n";
+                log_os << logtag << "Contig #" << contigIndex << " to be skipped: too few non-pseudo supporting reads that has not been used for previously identified contigs.\n";
 #endif
                 contigs2Remove.insert(contigIndex);
                 contigIndex++;
                 continue;
             }
 
-            // either more support reads that were not used
+            // either more supporting reads that were not used
             // or the same number of supports but longer contig
             const unsigned currNewSupport = newSupportReads.size();
             const unsigned currContigLen = contig.seq.size();
@@ -815,13 +826,10 @@ selectContigs(
         {
             usedReads.insert(rd);
             AssemblyReadInfo& rinfo(readInfo[rd]);
-            // read info record the ID of the very first contig that the read supports
-            // TODO: may need to record the IDs of all contigs that the read supports?
-            if (!rinfo.isUsed)
-            {
-                rinfo.isUsed = true;
-                rinfo.contigId = finalContigCount;
-            }
+            // read info record the ID of all contigs that the read supports
+            if (!rinfo.isUsed)  rinfo.isUsed = true;
+            rinfo.contigIds.push_back(finalContigCount);
+
             if (rinfo.isPseudo) usedPseudoReads.insert(rd);
         }
 #ifdef DEBUG_ASBL
@@ -858,6 +866,10 @@ runIterativeAssembler(
         log_os << logtag << "Try " << wordLength << "-mer.\n";
 #endif
         const bool isAssemblySuccess = buildContigs(opt, reads, readInfo, wordLength, iterativeContigs);
+
+        // remove pseudo reads from the previous iteration
+        const unsigned readCount(reads.size());
+
         if (isAssemblySuccess)
         {
 #ifdef DEBUG_ASBL
@@ -869,8 +881,6 @@ runIterativeAssembler(
 #ifdef DEBUG_ASBL
         log_os << logtag << "Repeats encountered with " << wordLength << "-mer.\n";
 #endif
-        // remove pseudo reads from the previous iteration
-        const unsigned readCount(reads.size());
         for (unsigned readIndex(0); readIndex<readCount; ++readIndex)
         {
             AssemblyReadInfo& rinfo(readInfo[readIndex]);
@@ -912,7 +922,7 @@ runIterativeAssembler(
     selectContigs(opt, readInfo, normalReadCount, iterativeContigs, contigs);
 
 #ifdef DEBUG_ASBL
-    log_os << logtag << "Selected " << contigs.size() << "contigs.\n";
+    log_os << logtag << "Selected " << contigs.size() << " contigs.\n";
     unsigned index(1);
     for (const AssembledContig& ctg : contigs)
     {
@@ -925,4 +935,3 @@ runIterativeAssembler(
     }
 #endif
 }
-

@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE( test_SmallAssembler1 )
     for (unsigned i(0); i<4; ++i)
     {
         BOOST_REQUIRE(readInfo[i].isUsed);
-        BOOST_REQUIRE_EQUAL(readInfo[i].contigId,0u);
+        BOOST_REQUIRE_EQUAL(readInfo[i].contigIds[0],0u);
     }
     BOOST_REQUIRE(! readInfo[4].isUsed);
 }
@@ -95,10 +95,10 @@ BOOST_AUTO_TEST_CASE( test_PoisonRead )
     for (unsigned i(0); i<4; ++i)
     {
         BOOST_REQUIRE(readInfo[i].isUsed);
-        BOOST_REQUIRE_EQUAL(readInfo[i].contigId,0u);
+        BOOST_REQUIRE_EQUAL(readInfo[i].contigIds[0],0u);
     }
     BOOST_REQUIRE(readInfo[4].isUsed);
-    BOOST_REQUIRE_EQUAL(readInfo[4].contigId,0u);
+    BOOST_REQUIRE_EQUAL(readInfo[4].contigIds.size(),0u);
 }
 
 
@@ -144,13 +144,13 @@ BOOST_AUTO_TEST_CASE( test_supportingReadConsistency )
     for (unsigned i(0); i<6; ++i)
     {
         BOOST_REQUIRE(readInfo[i].isUsed);
-        BOOST_REQUIRE_EQUAL(readInfo[i].contigId,0u);
+        BOOST_REQUIRE_EQUAL(readInfo[i].contigIds[0],0u);
     }
 
     for (unsigned i(6); i<11; ++i)
     {
         BOOST_REQUIRE(readInfo[i].isUsed);
-        BOOST_REQUIRE_EQUAL(readInfo[i].contigId,1u);
+        BOOST_REQUIRE_EQUAL(readInfo[i].contigIds[0],1u);
     }
 }
 

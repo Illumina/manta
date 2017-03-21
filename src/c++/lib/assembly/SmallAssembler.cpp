@@ -64,7 +64,7 @@ print_readSet(
 
 // maps kmers to positions in read
 typedef std::unordered_map<std::string,unsigned> str_uint_map_t;
-// maps kmers to support reads
+// maps kmers to supporting reads
 typedef std::unordered_map<std::string,std::set<unsigned> > str_set_uint_map_t;
 
 typedef std::unordered_set<std::string> str_set_t;
@@ -666,7 +666,7 @@ buildContigs(
         if (contig.supportReads.find(readIndex) != contig.supportReads.end())
         {
             rinfo.isUsed = true;
-            rinfo.contigId = contigs.size();
+            rinfo.contigIds.push_back(contigs.size());
 
             assert(unusedReads != 0);
             --unusedReads;
