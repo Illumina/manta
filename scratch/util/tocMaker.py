@@ -70,7 +70,7 @@ class Constants:
     rmLinkChars = "[^0-9a-z -]"
 
     # this works as a semi-inline comment on github, but may not work on other md parsers:
-    warnString = "[] (%s automated TOC section, any edits will be overwritten on next source refresh)\n"
+    warnString = "\n[//]: # (%s automated TOC section, any edits will be overwritten on next source refresh)\n\n"
 
 
 def main() :

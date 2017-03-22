@@ -2,7 +2,9 @@ Manta Developer Guide
 =====================
 
 ## Table of Contents
-[] (BEGIN automated TOC section, any edits will be overwritten on next source refresh)
+
+[//]: # (BEGIN automated TOC section, any edits will be overwritten on next source refresh)
+
 * [Scope](#scope)
 * [Developer Build Notes](#developer-build-notes)
   * [Building from source repository vs. versioned code distribution:](#building-from-source-repository-vs-versioned-code-distribution)
@@ -22,7 +24,9 @@ Manta Developer Guide
     * [Logging](#logging)
   * [Unit tests](#unit-tests)
 * [Special Topic Guides](#special-topic-guides)
-[] (END automated TOC section, any edits will be overwritten on next source refresh)
+
+[//]: # (END automated TOC section, any edits will be overwritten on next source refresh)
+
 
 ## Scope
 

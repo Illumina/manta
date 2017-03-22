@@ -2,7 +2,9 @@ Manta User Guide
 ================
 
 ## Table of Contents
-[] (BEGIN automated TOC section, any edits will be overwritten on next source refresh)
+
+[//]: # (BEGIN automated TOC section, any edits will be overwritten on next source refresh)
+
 * [Introduction](#introduction)
 * [Installation](#installation)
 * [Method Overview](#method-overview)
@@ -35,7 +37,9 @@ Manta User Guide
   * [High sensitivity calling](#high-sensitivity-calling)
   * [De novo calling](#de-novo-calling)
   * [Generating evidence bams](#generating-evidence-bams)
-[] (END automated TOC section, any edits will be overwritten on next source refresh)
+
+[//]: # (END automated TOC section, any edits will be overwritten on next source refresh)
+
 
 ## Introduction
 
@@ -419,11 +423,11 @@ Additional secondary output is provided in `${MANTA_ANALYSIS_PATH}/results/stats
 ## Runtime hardware requirements
 
 Manta workflows are parallelized at the process level using the
-[pyFlow] [pyflow_site] task manager. pyFlow can distrubute Manta
+[pyFlow][pyflow_site] task manager. pyFlow can distrubute Manta
 workflows to a specified number of cores on a single host or
 SGE-managed cluster.
 
-As a useful runtime benchmark, [Platinum Genomes] [PG] sequencing
+As a useful runtime benchmark, [Platinum Genomes][PG] sequencing
 reads for NA12878 at 50x coverage (whole genome) can be analyzed in
 less than 20 minutes on 20 physical cores using a dual Xeon E5-2680
 v2 server with the BAM accessed from a conventional local

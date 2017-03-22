@@ -3,7 +3,9 @@
 [Developer Guide Home](README.md)
 
 ## Table of Contents
-[] (BEGIN automated TOC section, any edits will be overwritten on next source refresh)
+
+[//]: # (BEGIN automated TOC section, any edits will be overwritten on next source refresh)
+
 * [Summary](#summary)
 * [Scenario 0: Debug SV call in both graph creation and SV candidate generation steps](#scenario-0-debug-sv-call-in-both-graph-creation-and-sv-candidate-generation-steps)
 * [Scenario 1 : Debug gold-standard SV call which is already covered by an edge in the SVLocus graph](#scenario-1--debug-gold-standard-sv-call-which-is-already-covered-by-an-edge-in-the-svlocus-graph)
@@ -13,7 +15,9 @@
     * [S1 - Step 1C : Query Locus in the SV Locus graph](#s1---step-1c--query-locus-in-the-sv-locus-graph)
     * [S1 - Step 2 : Run candidate generation on specific SV locus or specific SV locus edge](#s1---step-2--run-candidate-generation-on-specific-sv-locus-or-specific-sv-locus-edge)
 * [Debugging Infrastructure TODO](#debugging-infrastructure-todo)
-[] (END automated TOC section, any edits will be overwritten on next source refresh)
+
+[//]: # (END automated TOC section, any edits will be overwritten on next source refresh)
+
 
 ## Summary
 
