@@ -292,9 +292,7 @@ struct ReadGroupBuffer
     void
     updateBuffer(PAIR_ORIENT::index_t ort, unsigned sz)
     {
-        SimpleRead srd(ort, sz);
-
-        _readInfo.push_back(srd);
+        _readInfo.emplace_back(ort, sz);
 
         if (ort == PAIR_ORIENT::Rp)
         {
@@ -304,14 +302,16 @@ struct ReadGroupBuffer
     }
 
     bool
-    isBufferFull()
+    isBufferFull() const
     {
         return (_observationRpCount >= 1000);
     }
 
     bool
-    checkBuffer()
+    isBufferNormal() const
     {
+        if (_observationRpCount == 0) return false;
+
         return ((_abnormalRpCount/(float)_observationRpCount) < 0.01);
     }
 
@@ -368,22 +368,6 @@ struct ReadGroupTracker
         _isInsertSizeConverged(false)
     {}
 
-    void
-    addOrient(
-        const PAIR_ORIENT::index_t ori)
-    {
-        assert(! _isFinalized);
-
-        _orientInfo.addOrient(ori);
-    }
-
-    void
-    addInsertSize(const int size)
-    {
-        assert(! _isFinalized);
-
-        _stats.fragStats.addObservation(size);
-    }
 
     unsigned
     insertSizeObservations() const
@@ -391,19 +375,18 @@ struct ReadGroupTracker
         return _stats.fragStats.totalObservations();
     }
 
-    bool
-    isInsertSizeCountCheck()
+    void
+    checkInsertSizeCount()
     {
         static const unsigned statsCheckCnt(100000);
         const bool isCheck((insertSizeObservations() % statsCheckCnt) == 0);
         if (isCheck) _isChecked=true;
-        return isCheck;
     }
 
     bool
-    isChecked() const
+    isInsertSizeChecked() const
     {
-        return (_isChecked || isInsertSizeConverged());
+        return _isChecked;
     }
 
     void
@@ -416,6 +399,11 @@ struct ReadGroupTracker
     isInsertSizeConverged() const
     {
         return _isInsertSizeConverged;
+    }
+
+    bool
+    isCheckedOrConverged() const {
+        return (_isChecked || isInsertSizeConverged());
     }
 
     void
@@ -464,6 +452,41 @@ struct ReadGroupTracker
         }
     }
 
+    /// Add one observation to the buffer
+    /// If the buffer is full, AND if the fragment size distribution in the buffer looks normal, add the buffered data;
+    /// otherwise, discard the buffer and move to the next region
+    bool
+    addObservation(PAIR_ORIENT::index_t ori, unsigned sz)
+    {
+        bool isNormal(true);
+
+        _buffer.updateBuffer(ori, sz);
+
+        if (_buffer.isBufferFull())
+        {
+            // check abnormal fragment-size distribution in the buffer
+            if (_buffer.isBufferNormal())
+            {
+                addBufferedData();
+                checkInsertSizeCount();
+            }
+            else
+            {
+                isNormal = false;
+#ifdef DEBUG_RPS
+                std::cerr << "The previous region (buffered) contains too many abnormal reads. "
+                          << "abnormalCount=" << _buffer.getAbnormalCount()
+                          << " observationCount=" << _buffer.getObservationCount()
+                          << "\n";
+#endif
+            }
+
+            _buffer.clearBuffer();
+        }
+
+        return isNormal;
+    }
+
     const ReadGroupOrientTracker&
     getOrintInfo() const
     {
@@ -484,7 +507,7 @@ struct ReadGroupTracker
         if (_isFinalized) return;
 
         // add the remaining data in the buffer
-        addBufferedData();
+        if (_buffer.isBufferNormal()) addBufferedData();
         _buffer.clearBuffer();
 
         // finalize pair orientation:
@@ -512,7 +535,7 @@ struct ReadGroupTracker
                     << "\tTotal observed read pairs: " << insertSizeObservations() << "\n";
                 BOOST_THROW_EXCEPTION(LogicException(oss.str()));
             }
-            else if (! isInsertSizeCountCheck())
+            else if (! isInsertSizeChecked())
             {
                 updateInsertSizeConvergenceTest();
             }
@@ -533,6 +556,24 @@ struct ReadGroupTracker
     }
 
 private:
+
+    void
+    addOrient(
+            const PAIR_ORIENT::index_t ori)
+    {
+        assert(! _isFinalized);
+
+        _orientInfo.addOrient(ori);
+    }
+
+    void
+    addInsertSize(const int size)
+    {
+        assert(! _isFinalized);
+
+        _stats.fragStats.addObservation(size);
+    }
+
 
     bool _isFinalized;
     const ReadGroupLabel _rgLabel;
@@ -846,16 +887,14 @@ struct ReadGroupManager
         return rgIter->second;
     }
 
-    // check if all read groups have been sufficiently sampled for a slice
-    // for each read group,
-    // either 100k samples has been collected for each read group
-    // or the insert size distrubution has converged
+    /// check if all read groups have been sufficiently sampled for a slice
+    /// for each read group, either 100k samples has been collected, or the insert size distrubution has converged
     bool
     isFinishedSlice()
     {
         for (RGMapType::value_type& val : _rgTracker)
         {
-            if (! val.second.isChecked()) return false;
+            if (! val.second.isCheckedOrConverged()) return false;
         }
 
         for (RGMapType::value_type& val : _rgTracker)
@@ -866,7 +905,7 @@ struct ReadGroupManager
         return true;
     }
 
-    // test if all read groups have converged or hit other stopping conditions
+    /// test if all read groups have converged or hit other stopping conditions
     bool
     isStopEstimation()
     {
@@ -956,7 +995,7 @@ extractReadGroupStatsFromBam(
 
                 while (read_stream.next())
                 {
-                    const bam_record &bamRead(*(read_stream.get_record_ptr()));
+                    const bam_record& bamRead(*(read_stream.get_record_ptr()));
                     if (bamRead.pos() < startPos) continue;
 
                     chromHighestPos[chromIndex] = bamRead.pos();
@@ -969,41 +1008,25 @@ extractReadGroupStatsFromBam(
 #endif
                     if (rgInfo.isInsertSizeConverged()) continue;
 
-                    ReadGroupBuffer& rgBuffer(rgInfo.getBuffer());
                     const PAIR_ORIENT::index_t ori(getRelOrient(bamRead));
                     unsigned fragSize(0);
                     if (ori == PAIR_ORIENT::Rp)
                     {
                         fragSize = getSimplifiedFragSize(getFragSizeMinusSkip(bamRead));
                     }
-                    rgBuffer.updateBuffer(ori, fragSize);
+                    const bool isNormal = rgInfo.addObservation(ori, fragSize);
 
-                    // keep loading buffer until it's full
-                    if (! rgBuffer.isBufferFull()) continue;
-
-                    // if the insert size distribution in the buffer looks normal, add the buffered data;
-                    // otherwise, discard the buffer and move to the next region
-                    const bool isNormalBuffer(rgBuffer.checkBuffer());
-                    if (isNormalBuffer)
-                    {
-                        rgInfo.addBufferedData();
-                        rgBuffer.clearBuffer();
-                    }
-                    else
+                    if (! isNormal)
                     {
                         chromHighestPos[chromIndex] += chromSize[chromIndex]/100;
 #ifdef DEBUG_RPS
-                        std::cerr << "The previous region contains too many abnormal reads. "
-                                  << "abnormalCount=" << rgBuffer.getAbnormalCount()
-                                  << " observationCount=" << rgBuffer.getObservationCount()
-                                  << " Jump to chrid: " << chromIndex << " position: "
+                        std::cerr << " Jump to chrid: " << chromIndex << " position: "
                                   << chromHighestPos[chromIndex] << "\n";
 #endif
-                        rgBuffer.clearBuffer();
                         break;
                     }
 
-                    if (!rgInfo.isInsertSizeCountCheck()) continue;
+                    if (! rgInfo.isInsertSizeChecked()) continue;
 
                     // check convergence
                     rgInfo.updateInsertSizeConvergenceTest();
