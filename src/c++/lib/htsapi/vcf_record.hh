@@ -95,6 +95,16 @@ struct vcf_record
         return true;
     }
 
+    /// complements is_snv() by taking case of the form: REF="A", ALT="."
+    bool
+    is_ref_site() const
+    {
+        if (ref.empty()) return false;
+        if (! is_valid_seq(ref.c_str())) return false;
+        if (1 != ref.size()) return false;
+        return (alt.empty());
+    }
+
     bool is_normalized() const;
 
     std::string chrom;

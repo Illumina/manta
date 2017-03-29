@@ -29,8 +29,8 @@
 #include <vector>
 
 
-// maintains the average of a set in a sliding window
-//
+/// maintains the average of a set in a sliding window
+///
 struct window_average
 {
     window_average(const int32_t init_full_size)

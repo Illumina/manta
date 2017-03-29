@@ -176,6 +176,10 @@ BOOST_AUTO_TEST_CASE( test_apath_limit_ref_length )
 
     BOOST_REQUIRE_EQUAL(test_limit_case(testCigar,true,1),"1X");
     BOOST_REQUIRE_EQUAL(test_limit_case(testCigar,true,5),"1X3=1D");
+
+    static const std::string testCigar2("2=1X1=4I3=1X");
+    BOOST_REQUIRE_EQUAL(test_limit_case(testCigar2,false,5),"2=1X1=4I1=");
+    BOOST_REQUIRE_EQUAL(test_limit_case(testCigar2,true,5),"1X3=4I1=");
 }
 
 

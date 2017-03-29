@@ -142,7 +142,7 @@ next()
             if (!_vcfrec.is_normalized())
             {
                 std::ostringstream oss;
-                oss << "Input VCF record contains is not normalized:\n";
+                oss << "Input VCF record is not normalized:\n";
                 report_state(oss);
 
                 if (_isRequireNormalized)

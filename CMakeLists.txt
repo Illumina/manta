@@ -82,7 +82,7 @@ join(CMAKE_CONFIGURATION_TYPES ", " CMAKE_CONFIGURATION_TYPES_STRING)
 if (NOT CMAKE_BUILD_TYPE)
     set(DEFAULT_CMAKE_BUILD_TYPE Release)
     set(CMAKE_BUILD_TYPE ${DEFAULT_CMAKE_BUILD_TYPE} CACHE STRING
-        "Choose the type of build, options are: {${CMAKE_CONFIGURATION_TYPES_STRING}} (default: ${DEFAULT_CMAKE_BUILD_TYPE})")
+        "Choose the type of build, options are: {${CMAKE_CONFIGURATION_TYPES_STRING}} (default: ${DEFAULT_CMAKE_BUILD_TYPE})" FORCE)
 endif()
 
 # check that a valid build type has been selected:

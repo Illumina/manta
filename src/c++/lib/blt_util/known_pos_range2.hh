@@ -94,6 +94,13 @@ struct known_pos_range2
         _end_pos += offsetSize;
     }
 
+    void
+    makeNonNegative()
+    {
+        if (_begin_pos < 0) _begin_pos = 0;
+        if (_end_pos < 0) _end_pos = 0;
+    }
+
     pos_t
     begin_pos() const
     {
