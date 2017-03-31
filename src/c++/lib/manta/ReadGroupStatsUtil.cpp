@@ -93,7 +93,6 @@ getRelOrient(
 }
 
 
-
 /// given an input integer, return an integer with all but the highest 4 decimal digits set to zero
 ///
 /// this method is not written effeciently, and not intended for general integer truncation.
@@ -117,6 +116,7 @@ getSimplifiedFragSize(
     for (unsigned stepIndex(0); stepIndex<steps; ++stepIndex) fragSize *= 10;
     return fragSize;
 }
+
 
 /// get insert size from bam record removing refskip (e.g. spliced) segments
 int
@@ -147,6 +147,7 @@ getFragSizeMinusSkip(
     return fragSize;
 }
 
+
 /// Does this read contain any refskip operation
 static
 bool
@@ -163,6 +164,7 @@ hasRefSkip(
     }
     return false;
 }
+
 
 /// track pair orientation so that a consensus can be found for a read group
 ///
@@ -265,6 +267,86 @@ private:
 };
 
 
+struct SimpleRead
+{
+    SimpleRead(
+        PAIR_ORIENT::index_t  ort,
+        unsigned sz):
+        _orient(ort),
+        _insertSize(sz)
+    {}
+
+    PAIR_ORIENT::index_t  _orient;
+    unsigned _insertSize;
+};
+
+
+struct ReadGroupBuffer
+{
+    ReadGroupBuffer():
+        _abnormalRpCount(0),
+        _observationRpCount(0)
+    {}
+
+    void
+    updateBuffer(PAIR_ORIENT::index_t ort, unsigned sz)
+    {
+        _readInfo.emplace_back(ort, sz);
+
+        if (ort == PAIR_ORIENT::Rp)
+        {
+            _observationRpCount++;
+            if (sz >= 5000) _abnormalRpCount++;
+        }
+    }
+
+    bool
+    isBufferFull() const
+    {
+        return (_observationRpCount >= 1000);
+    }
+
+    bool
+    isBufferNormal() const
+    {
+        if (_observationRpCount == 0) return false;
+
+        return ((_abnormalRpCount/(float)_observationRpCount) < 0.01);
+    }
+
+    unsigned
+    getAbnormalCount()
+    {
+        return _abnormalRpCount;
+    }
+
+    unsigned
+    getObservationCount()
+    {
+        return _observationRpCount;
+    }
+
+    const std::vector<SimpleRead>&
+    getBufferedReads()
+    {
+        return _readInfo;
+    }
+
+    void
+    clearBuffer()
+    {
+        _abnormalRpCount = 0;
+        _observationRpCount = 0;
+        _readInfo.clear();
+    }
+
+private:
+
+    unsigned _abnormalRpCount;
+    unsigned _observationRpCount;
+    std::vector<SimpleRead> _readInfo;
+};
+
 
 
 /// all data required to build ReadGroupStats during estimation from the bam file
@@ -285,22 +367,6 @@ struct ReadGroupTracker
         _isInsertSizeConverged(false)
     {}
 
-    void
-    addOrient(
-        const PAIR_ORIENT::index_t ori)
-    {
-        assert(! _isFinalized);
-
-        _orientInfo.addOrient(ori);
-    }
-
-    void
-    addInsertSize(const int size)
-    {
-        assert(! _isFinalized);
-
-        _stats.fragStats.addObservation(size);
-    }
 
     unsigned
     insertSizeObservations() const
@@ -308,19 +374,18 @@ struct ReadGroupTracker
         return _stats.fragStats.totalObservations();
     }
 
-    bool
-    isInsertSizeCountCheck()
+    void
+    checkInsertSizeCount()
     {
         static const unsigned statsCheckCnt(100000);
         const bool isCheck((insertSizeObservations() % statsCheckCnt) == 0);
         if (isCheck) _isChecked=true;
-        return isCheck;
     }
 
     bool
-    isChecked() const
+    isInsertSizeChecked() const
     {
-        return (_isChecked || isInsertSizeConverged());
+        return _isChecked;
     }
 
     void
@@ -335,6 +400,11 @@ struct ReadGroupTracker
         return _isInsertSizeConverged;
     }
 
+    bool
+    isCheckedOrConverged() const {
+        return (_isChecked || isInsertSizeConverged());
+    }
+
     void
     updateInsertSizeConvergenceTest()
     {
@@ -344,6 +414,82 @@ struct ReadGroupTracker
             _isInsertSizeConverged=isStatSetMatch(_oldInsertSize, _stats.fragStats);
         }
         _oldInsertSize = _stats.fragStats;
+    }
+
+    ReadGroupBuffer&
+    getBuffer()
+    {
+        return _buffer;
+    }
+
+    void
+    addBufferedData()
+    {
+        for (const SimpleRead& srd: _buffer.getBufferedReads())
+        {
+            // get orientation stats before final filter for innie reads below:
+            //
+            // we won't use anything but innie reads for insert size stats, but sampling
+            // orientation beforehand allows us to detect, ie. a mate-pair library
+            // so that we can blow-up with an informative error msg
+            //
+            const PAIR_ORIENT::index_t ori(srd._orient);
+            addOrient(ori);
+
+            // filter mapped innies on the same chrom
+            //
+            // note we don't rely on the proper pair bit because this already contains an
+            // arbitrary length filter and  subjects the method to aligner specific variation
+            //
+            // TODO: ..note this locks-in standard ilmn orientation -- okay for now but this function needs major
+            // re-arrangement for mate-pair support, we could still keep independence from each aligner's proper
+            // pair decisions by estimating a fragment distro for each orientation and only keeping the one with
+            // the most samples
+            //
+            if (ori != PAIR_ORIENT::Rp) continue;
+            addInsertSize(srd._insertSize);
+        }
+    }
+
+    /// Add one observation to the buffer
+    /// If the buffer is full, AND if the fragment size distribution in the buffer looks normal, add the buffered data;
+    /// otherwise, discard the buffer and move to the next region
+    bool
+    addObservation(PAIR_ORIENT::index_t ori, unsigned sz)
+    {
+        bool isNormal(true);
+
+        _buffer.updateBuffer(ori, sz);
+
+        if (_buffer.isBufferFull())
+        {
+            // check abnormal fragment-size distribution in the buffer
+            if (_buffer.isBufferNormal())
+            {
+                addBufferedData();
+                checkInsertSizeCount();
+            }
+            else
+            {
+                isNormal = false;
+#ifdef DEBUG_RPS
+                std::cerr << "The previous region (buffered) contains too many abnormal reads. "
+                          << "abnormalCount=" << _buffer.getAbnormalCount()
+                          << " observationCount=" << _buffer.getObservationCount()
+                          << "\n";
+#endif
+            }
+
+            _buffer.clearBuffer();
+        }
+
+        return isNormal;
+    }
+
+    const ReadGroupOrientTracker&
+    getOrintInfo() const
+    {
+        return _orientInfo;
     }
 
     /// getting a const ref of the stats forces finalization steps:
@@ -358,6 +504,10 @@ struct ReadGroupTracker
     finalize()
     {
         if (_isFinalized) return;
+
+        // add the remaining data in the buffer
+        if (_buffer.isBufferNormal()) addBufferedData();
+        _buffer.clearBuffer();
 
         // finalize pair orientation:
         _stats.relOrients = _orientInfo.getConsensusOrient();
@@ -384,7 +534,7 @@ struct ReadGroupTracker
                     << "\tTotal observed read pairs: " << insertSizeObservations() << "\n";
                 BOOST_THROW_EXCEPTION(LogicException(oss.str()));
             }
-            else if (! isInsertSizeCountCheck())
+            else if (! isInsertSizeChecked())
             {
                 updateInsertSizeConvergenceTest();
             }
@@ -406,6 +556,24 @@ struct ReadGroupTracker
 
 private:
 
+    void
+    addOrient(
+            const PAIR_ORIENT::index_t ori)
+    {
+        assert(! _isFinalized);
+
+        _orientInfo.addOrient(ori);
+    }
+
+    void
+    addInsertSize(const int size)
+    {
+        assert(! _isFinalized);
+
+        _stats.fragStats.addObservation(size);
+    }
+
+
     bool _isFinalized;
     const ReadGroupLabel _rgLabel;
     ReadGroupOrientTracker _orientInfo;
@@ -414,6 +582,7 @@ private:
     bool _isInsertSizeConverged;
     SizeDistribution _oldInsertSize; // previous fragment distribution is stored to determine convergence
 
+    ReadGroupBuffer _buffer;
     ReadGroupStats _stats;
 };
 
@@ -717,13 +886,14 @@ struct ReadGroupManager
         return rgIter->second;
     }
 
-    // check if all read groups have been sufficiently sampled in this region:
+    /// check if all read groups have been sufficiently sampled for a slice
+    /// for each read group, either 100k samples has been collected, or the insert size distrubution has converged
     bool
-    isFinishedRegion()
+    isFinishedSlice()
     {
         for (RGMapType::value_type& val : _rgTracker)
         {
-            if (! val.second.isChecked()) return false;
+            if (! val.second.isCheckedOrConverged()) return false;
         }
 
         for (RGMapType::value_type& val : _rgTracker)
@@ -734,7 +904,7 @@ struct ReadGroupManager
         return true;
     }
 
-    // test if all read groups have converged or hit other stopping conditions
+    /// test if all read groups have converged or hit other stopping conditions
     bool
     isStopEstimation()
     {
@@ -807,64 +977,78 @@ extractReadGroupStatsFromBam(
         {
             if (isStopEstimation) break;
 
-            const int32_t startPos(chromHighestPos[chromIndex]+1);
-#ifdef DEBUG_RPS
-            std::cerr << "INFO: Stats requesting bam region starting from: chrid: " << chromIndex << " start: " << startPos << "\n";
-#endif
-            if (startPos >= chromSize[chromIndex]) continue;
-
-            read_stream.resetRegion(chromIndex,startPos,chromSize[chromIndex]);
-            while (read_stream.next())
+            // keep sampling until
+            // either the chromosome has been exhuasted
+            // or the current chunk has been sufficiently sampled
+            bool isFinishedSlice(false);
+            while (! isFinishedSlice)
             {
-                const bam_record& bamRead(*(read_stream.get_record_ptr()));
-                if (bamRead.pos()<startPos) continue;
+                const int32_t startPos(chromHighestPos[chromIndex] + 1);
+                if (startPos >= chromSize[chromIndex]) break;
 
-                chromHighestPos[chromIndex]=bamRead.pos();
-                isActiveChrom=true;
+#ifdef DEBUG_RPS
+                std::cerr << "INFO: Stats requesting bam region starting from: chrid: " << chromIndex << " start: "
+                          << startPos << "\n";
+#endif
+                read_stream.resetRegion(chromIndex, startPos, chromSize[chromIndex]);
 
-                if (coreFilter.isFilterRead(bamRead)) continue;
+                while (read_stream.next())
+                {
+                    const bam_record& bamRead(*(read_stream.get_record_ptr()));
+                    if (bamRead.pos() < startPos) continue;
+
+                    chromHighestPos[chromIndex] = bamRead.pos();
+                    isActiveChrom = true;
+
+                    if (coreFilter.isFilterRead(bamRead)) continue;
 
 #ifdef READ_GROUPS
-                ReadGroupTracker& rgInfo(rgManager.getTracker(bamRead));
+                    ReadGroupTracker& rgInfo(rgManager.getTracker(bamRead));
 #endif
+                    if (rgInfo.isInsertSizeConverged()) continue;
 
-                if (rgInfo.isInsertSizeConverged()) continue;
+                    const PAIR_ORIENT::index_t ori(getRelOrient(bamRead));
+                    unsigned fragSize(0);
+                    if (ori == PAIR_ORIENT::Rp)
+                    {
+                        fragSize = getSimplifiedFragSize(getFragSizeMinusSkip(bamRead));
+                    }
+                    const bool isNormal = rgInfo.addObservation(ori, fragSize);
 
-                // get orientation stats before final filter for innie reads below:
-                //
-                // we won't use anything but innie reads for insert size stats, but sampling
-                // orientation beforehand allows us to detect, ie. a mate-pair library
-                // so that we can blow-up with an informative error msg
-                //
-                const PAIR_ORIENT::index_t ori(getRelOrient(bamRead));
-                rgInfo.addOrient(ori);
+                    if (! isNormal)
+                    {
+                        chromHighestPos[chromIndex] += chromSize[chromIndex]/100;
+#ifdef DEBUG_RPS
+                        std::cerr << " Jump to chrid: " << chromIndex << " position: "
+                                  << chromHighestPos[chromIndex] << "\n";
+#endif
+                        break;
+                    }
 
-                // filter mapped innies on the same chrom
-                //
-                // note we don't rely on the proper pair bit because this already contains an
-                // arbitrary length filter and  subjects the method to aligner specific variation
-                //
-                // TODO: ..note this locks-in standard ilmn orientation -- okay for now but this function needs major
-                // re-arrangement for mate-pair support, we could still keep independence from each aligner's proper
-                // pair decisions by estimating a fragment distro for each orientation and only keeping the one with
-                // the most samples
-                //
-                if (ori != PAIR_ORIENT::Rp) continue;
+                    if (! rgInfo.isInsertSizeChecked()) continue;
 
-                int fragSize = getFragSizeMinusSkip(bamRead);
-                rgInfo.addInsertSize(getSimplifiedFragSize(fragSize));
+                    // check convergence
+                    rgInfo.updateInsertSizeConvergenceTest();
 
-                if (! rgInfo.isInsertSizeCountCheck()) continue;
+                    isFinishedSlice = rgManager.isFinishedSlice();
+                    if (! isFinishedSlice) continue;
 
-                // check convergence
-                rgInfo.updateInsertSizeConvergenceTest();
+                    isStopEstimation = rgManager.isStopEstimation();
 
-                if (! rgManager.isFinishedRegion()) continue;
+                    // break from reading the current chromosome
+                    break;
+                }
 
-                isStopEstimation = rgManager.isStopEstimation();
+                // move to next region if no read falling in the current region
+                if (chromHighestPos[chromIndex] <= startPos)
+                {
+#ifdef DEBUG_RPS
+                    std::cerr << "No read found in the previous region.\n";
+#endif
+                    chromHighestPos[chromIndex] += chromSize[chromIndex]/100;
 
-                // break from reading the current chromosome
-                break;
+                }
+
             }
         }
     }
