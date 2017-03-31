@@ -17,19 +17,15 @@
 //
 //
 
-///
-/// \author Chris Saunders
-///
-
 #pragma once
 
 #include "blt_util/blt_types.hh"
 
 
-/// \brief base for objects designed to perform work in a single pass over a position range
+/// \brief Interface for objects designed to perform work in a single pass over a position range.
 ///
-/// Work progress is communicated via the process_pos() method. This base class is designed to
-/// link the worker object with the stage_manager object
+/// Work progress is communicated via process_pos(). This object is designed to
+/// link its child with the stage_manager.
 ///
 struct pos_processor_base
 {
@@ -47,6 +43,13 @@ struct pos_processor_base
         process_pos(stage_no,pos);
     }
 
+    /// Execute position dependent logic associated with a particular stage
+    /// in a positional processing pipeline.
+    ///
+    /// Stages are each offset by a fixed value from the HEAD position in the
+    /// positional pipeline. Conventions on stage numbering are assumed to be
+    /// enforced the a separate stage_manager object.
+    ///
     virtual
     void
     process_pos(const int stage_no,

@@ -128,7 +128,7 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
         return nodePtr;
     }
 
-    // an edge count is only added on on from->to
+    // an edge count is only added on from->to
     //
     void
     linkNodes(

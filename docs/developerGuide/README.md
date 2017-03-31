@@ -70,7 +70,7 @@ additional "doc" target for the makefile:
 There is no installation for the documentation outside of the build
 directory, the root doxygen page after completing this target will be:
 
-    ${MANTA_BUILD_PATH}/c++/doxygen/html/index.html
+    ${MANTA_BUILD_PATH}/src/c++/doxygen/html/index.html
 
 ### Improving build time
 

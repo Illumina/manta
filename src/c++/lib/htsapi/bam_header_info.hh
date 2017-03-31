@@ -17,9 +17,6 @@
 //
 //
 
-/// \author Chris Saunders
-///
-
 #pragma once
 
 #include "bam_util.hh"
@@ -38,12 +35,12 @@
 #include <map>
 
 
-/// minimal c++ bam header info
+/// \brief Subset of information from a BAM file header
 ///
-/// this class replicates the minimum information
-/// from the bam header required to parse regions
-/// (ie. chr1:20-30). It is friendlier to mem management
-/// and serialization than using the samtools struct
+/// This holds a subset of information from the samtools bam_hdr_t object,
+/// but with easier copy semantics / serialization, etc.
+///
+/// Currently this stores for each chromosome, the label, size and corresponding BAM index id.
 ///
 struct bam_header_info
 {
@@ -103,5 +100,6 @@ struct bam_header_info
 };
 
 
+/// \brief Print header info to stream in a simple tabular format
 std::ostream&
 operator<<(std::ostream& os, const bam_header_info& bhi);

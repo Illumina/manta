@@ -17,9 +17,6 @@
 //
 //
 
-/// \author Chris Saunders
-///
-
 #include "bam_header_info.hh"
 
 #include <iostream>
