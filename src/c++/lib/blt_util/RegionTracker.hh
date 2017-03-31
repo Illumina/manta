@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -143,6 +142,12 @@ struct RegionPayloadTracker
     empty() const
     {
         return _regions.empty();
+    }
+
+    void
+    clear()
+    {
+        _regions.clear();
     }
 
     /// is single position in a tracked region w/ payload?

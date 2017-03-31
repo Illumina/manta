@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -30,8 +29,8 @@
 #include <vector>
 
 
-// maintains the average of a set in a sliding window
-//
+/// maintains the average of a set in a sliding window
+///
 struct window_average
 {
     window_average(const int32_t init_full_size)
