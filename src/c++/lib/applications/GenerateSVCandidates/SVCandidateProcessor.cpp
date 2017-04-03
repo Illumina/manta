@@ -302,7 +302,7 @@ writeSV(
                 // fail the genotype check if
                 // 1) the joint event changes the genotype of the junction and increases the posterior prob by more than 0.9
                 // 2) the posterior prob is larger than 0.9 when the junction is genotyped individually
-                if ((! jointGT==singleGT) && (deltaGtPProb > 0.9) && (singleGtPProb > 0.9))
+                if ((! (jointGT==singleGT)) && (deltaGtPProb > 0.9) && (singleGtPProb > 0.9))
                 {
                     isJunctionSampleCheckFail[sampleIndex] = true;
                     break;
