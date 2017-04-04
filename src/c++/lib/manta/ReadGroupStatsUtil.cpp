@@ -119,6 +119,7 @@ getSimplifiedFragSize(
 
 
 /// get insert size from bam record removing refskip (e.g. spliced) segments
+static
 int
 getFragSizeMinusSkip(
     const bam_record& bamRead)
@@ -401,7 +402,8 @@ struct ReadGroupTracker
     }
 
     bool
-    isCheckedOrConverged() const {
+    isCheckedOrConverged() const
+    {
         return (_isChecked || isInsertSizeConverged());
     }
 
@@ -558,7 +560,7 @@ private:
 
     void
     addOrient(
-            const PAIR_ORIENT::index_t ori)
+        const PAIR_ORIENT::index_t ori)
     {
         assert(! _isFinalized);
 
