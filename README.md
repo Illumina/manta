@@ -18,7 +18,7 @@ variants in small sets of diploid samples and somatic variants in
 matched tumor/normal sample pairs. There is experimental support for
 analysis of unmatched tumor samples as well. Manta accepts input read
 mappings from BAM or CRAM files and reports all SV and indel inferences
-in VCF 4.1 format. See the [user guide] [UserGuide] for a full
+in VCF 4.1 format. See the [user guide][UserGuide] for a full
 description of capabilities and limitations.
 
 [UserGuide]:docs/userGuide/README.md
@@ -38,9 +38,9 @@ indels for germline and cancer sequencing applications. *Bioinformatics*,
 License
 -------
 
-Manta source code is provided under the [GPLv3 license] (LICENSE.txt).
+Manta source code is provided under the [GPLv3 license](LICENSE.txt).
 Manta includes several third party packages provided under other
-open source licenses, please see [COPYRIGHT.txt] (COPYRIGHT.txt)
+open source licenses, please see [COPYRIGHT.txt](COPYRIGHT.txt)
 for additional details.
 
 
@@ -48,7 +48,7 @@ Getting Started
 ---------------
 
 For linux users, it is recommended to start from the most recent
-[binary distribution on the Manta releases page] [releases], this
+[binary distribution on the Manta releases page][releases], this
 distribution can be unpacked, moved to any convenient directory and
 tested by [running a small demo](docs/userGuide/installation.md#demo)
 included with the release distribution. Manta can also be installed
@@ -61,7 +61,7 @@ for full build and installation details of all supported cases.
 Data Analysis and Interpretation
 --------------------------------
 
-After completing installation, see the [Manta user guide] [UserGuide]
+After completing installation, see the [Manta user guide][UserGuide]
 for instructions on how to run Manta, interpret results and estimate
 hardware requirements/compute cost, in addition to a high-level methods
 overview.
@@ -71,7 +71,7 @@ Manta Code Development
 ----------------------
 
 For manta code development and debugging details, see the
-[Manta developer guide] [DeveloperGuide]. This includes details
+[Manta developer guide][DeveloperGuide]. This includes details
 on Manta's developement protocols, special build instructions,
 recommended workflows for investigating
 calls, and internal documentation details.
