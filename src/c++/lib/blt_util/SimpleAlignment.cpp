@@ -17,10 +17,6 @@
 //
 //
 
-///
-///
-///
-
 #include "SimpleAlignment.hh"
 
 #include <cassert>
