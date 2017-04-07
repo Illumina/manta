@@ -21,6 +21,7 @@ Manta User Guide
     * [VCF INFO Fields](#vcf-info-fields)
     * [VCF FORMAT Fields](#vcf-format-fields)
     * [VCF FILTER Fields](#vcf-filter-fields)
+    * [How to interpret VCF filters?](#how-to-interpret-vcf-filters)
     * [What do the values in Manta's VCF ID field mean?](#what-do-the-values-in-mantas-vcf-id-field-mean)
     * [Converting Manta VCF to BEDPE format](#converting-manta-vcf-to-bedpe-format)
   * [Statistics](#statistics)
@@ -377,6 +378,12 @@ Ploidy | For DEL & DUP variants, the genotypes of overlapping variants (with sim
 MaxDepth | Depth is greater than 3x the median chromosome depth near one or both variant breakends
 MaxMQ0Frac | For a small variant (<1000 bases), the fraction of reads in all samples with MAPQ0 around either breakend exceeds 0.4
 NoPairSupport | For variants significantly larger than the paired read fragment size, no paired reads support the alternate allele in any sample
+
+#### How to interpret VCF filters?
+
+As described above, there are two levels of filters: record level (FILTER) and sample level (FORMAT/FT). Record-level filters are generally independant to sample-level filters. However, if none of the samples passes one record-level filter, that filter will be copied to the record level (e.g. MinGQ). 
+
+A sample-specific passing variant needs to have the record level FILTER passed, the sample level FORMAT/FT passed, and the sample level FORMAT/GT is not "0/0"(hom-reference).
 
 #### What do the values in Manta's VCF ID field mean?
 
