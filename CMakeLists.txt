@@ -125,10 +125,18 @@ set(THIS_PROJECT_NAME "manta")
 
 project (${THIS_PROJECT_NAME})
 
-# find interpreters
-find_package(PythonInterp)
+# Find python2 interpreter
+find_package(PythonInterp 2 QUIET)
 if (NOT PYTHONINTERP_FOUND)
-    message (WARNING "No python interpreter found, disabling optional python build and installation components. Installed workflow requires python interpreter to run")
+    message (WARNING "No python2 interpreter found, disabling optional python build and installation components. Installed workflow requires python2 interpreter to run.")
+else()
+    set (MINIMUM_PYTHON_VERSION "2.4")
+    if (${PYTHON_VERSION_STRING} VERSION_LESS ${MINIMUM_PYTHON_VERSION})
+        message (WARNING
+            "Python2 interpretor must be at least version (${MINIMUM_PYTHON_VERSION}). Found version ${PYTHON_VERSION_STRING} at '${PYTHON_EXECUTABLE}'."
+		    " Disabling optional python build and installation components. Installed workflow requires python ${MINIMUM_PYTHON_VERSION} or higher to run.")
+        set(PYTHONINTERP_FOUND false)
+    endif ()
 endif()
 
 set (THIS_ARCH ${CMAKE_SYSTEM_PROCESSOR})
