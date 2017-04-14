@@ -54,7 +54,7 @@
 /// Considering this DNA fragment as a whole, we expect a poor alignment on either the left end of read1 or the
 /// right end of read2 to indicate that a breakend opens to the left or right side of the fragment, respectively.
 ///
-/// In the following example we add the indicate "S" to signify a portion of the read which is semi-aligned:
+/// In the following example we add "S" to signify a portion of the read which is poorly aligned:
 /// read1 |------------SSS>
 /// read2         <----SSSSSSSSSS|
 ///
