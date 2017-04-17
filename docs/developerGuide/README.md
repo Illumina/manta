@@ -7,7 +7,8 @@ Manta Developer Guide
 
 * [Scope](#scope)
 * [Developer Build Notes](#developer-build-notes)
-  * [Building from source repository vs. versioned code distribution:](#building-from-source-repository-vs-versioned-code-distribution)
+  * [Building from source repository vs. versioned code distribution](#building-from-source-repository-vs-versioned-code-distribution)
+  * [Static analysis](#static-analysis)
   * [Source auto-documentation](#source-auto-documentation)
   * [Improving build time](#improving-build-time)
     * [ccache](#ccache)
@@ -48,16 +49,26 @@ The following section provides a supplement to the standard build
 instructions including additional details of interest to methods
 developers.
 
-### Building from source repository vs. versioned code distribution:
+### Building from source repository vs. versioned code distribution
 
 When the source repository is cloned from github, it is configured for development
 rather than user distribution. In this configuration all builds are strict
 such that:
 * all warnings are treated as errors
-* if cppcheck is found any detected cppcheck issue is converted to a build error
+* if cppcheck is found any detected cppcheck issue is converted to a build error (see details below)
 
 Note that all unit tests are always run and required to pass for the build
 procedure to complete.
+
+### Static analysis
+
+When the build is configured for development, static analysis is run on all project c++ source using cppcheck, so long
+as an appropriate cppcheck version can be found in the user's path. This static analysis step is configured as follows:
+* cppcheck will be used if it can be found in the user's path and the version found is at least 1.69
+* The script which runs and interprets cppcheck is [run_cppcheck.py](../../src/srcqc/run_cppcheck.py).
+* Any cppcheck warning will be treated as an error. A few warnings are suppressed, depending on the cppcheck version.
+* All cppcheck warnings are reformatted to follow standard gcc/clang error message style to work correctly in most IDEs.
+* All project c++ code will be analyzed, but third-party/redistributed packages are ignored.
 
 ### Source auto-documentation
 

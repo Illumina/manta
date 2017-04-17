@@ -381,7 +381,7 @@ NoPairSupport | For variants significantly larger than the paired read fragment 
 
 #### How to interpret VCF filters?
 
-As described above, there are two levels of filters: record level (FILTER) and sample level (FORMAT/FT). Record-level filters are generally independant to sample-level filters. However, if none of the samples passes one record-level filter, that filter will be copied to the record level (e.g. MinGQ). 
+As described above, there are two levels of filters: record level (FILTER) and sample level (FORMAT/FT). Record-level filters are generally independant to sample-level filters. However, if none of the samples passes one record-level filter, that filter will be copied to the record level (e.g. MinGQ).
 
 A sample-specific passing variant needs to have the record level FILTER passed, the sample level FORMAT/FT passed, and the sample level FORMAT/GT is not "0/0"(hom-reference).
 
