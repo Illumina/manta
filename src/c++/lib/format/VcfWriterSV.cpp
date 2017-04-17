@@ -283,7 +283,6 @@ addRNADebugInfo(
 
     // there can be several contigs per breakend, so we iterate over all of them.
     const unsigned numContigs(assemblyData.contigs.size());
-    // cppcheck-suppress zerodivcond
     infotags.push_back(str(boost::format("FOOBAR_NCONTIGS=%i") % numContigs));
     if (numContigs > 0)
     {

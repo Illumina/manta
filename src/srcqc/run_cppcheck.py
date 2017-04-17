@@ -39,23 +39,45 @@ def which(searchFile) :
     return None
 
 
-def check_version(executable, versionRequired):
+def getCppcheckVersion() :
+    """
+    return the cppcheck version number, or None if version cannot be obtained.
+    """
 
     proc=subprocess.Popen(["cppcheck","--version"],stdout=subprocess.PIPE)
-
     lines = proc.stdout.readlines()
-    if len(lines) == 0 : return False
-    version = lines[0].split()[1]
+    if len(lines) == 0 : return None
+    return lines[0].split()[1]
 
-    versionReqNums = versionRequired.split('.')
-    versionNums = version.split('.')
-    for ix in xrange(len(versionNums)):
-        if int(versionNums[ix]) < int(versionReqNums[ix]) :
-            return True
-        if int(versionNums[ix]) > int(versionReqNums[ix]) :
-            return False
 
-    return False
+def compareVersions(version1, version2):
+    """
+    Compare two version strings.
+
+    Return
+      < 0 if version1 is less than version2
+      > 0 if version2 is less than version1
+      0 if version1 == version2
+    """
+
+    def versionToIntArray(version) :
+        return [int(i) for i in version.split('.')]
+
+    # parse version components
+    version1Nums = versionToIntArray(version1)
+    version2Nums = versionToIntArray(version2)
+
+    # pad versions to be the same length:
+    maxlen = max(len(version1Nums), len(version2Nums))
+    while len(version1Nums) < maxlen : version1Nums.append(0)
+    while len(version2Nums) < maxlen : version2Nums.append(0)
+
+    # compare
+    for v1,v2 in zip(version1Nums, version2Nums) :
+        if v1 < v2 : return -1
+        if v1 > v2 : return 1
+
+    return 0
 
 
 def usage() :
@@ -86,8 +108,11 @@ def main() :
     if cppcheck_path is None :
         sys.exit(0)
 
-    is_old_version = check_version("cppcheck", "1.69")
-    if is_old_version :
+    cppcheckVersion = getCppcheckVersion()
+
+    minCppcheckVersion = "1.69"
+    isOldVersion = (compareVersions(cppcheckVersion, minCppcheckVersion) < 0)
+    if isOldVersion :
         sys.exit(0)
 
     # need to trace real path out of any symlinks so that cppcheck can find its runtime config info:
@@ -105,6 +130,16 @@ def main() :
     checkCmd.append("--template={file}:{line}:1: error: {severity}:{message}")
 
     suppressList=["unusedFunction", "unmatchedSuppression", "missingInclude", "purgedConfiguration"]
+
+    # In cppcheck versions 1.69 and lower (TODO how low?), there is a bug parsing the use of the '%' character
+    # in boost::format as a regular mod operator. For these versions, an extra suppression is required.
+    #
+    if True :
+        maxCppcheckBoostFormatBugVersion = "1.69"
+        isBoostFormatBugVersion = (compareVersions(cppcheckVersion, maxCppcheckBoostFormatBugVersion) <= 0)
+        if isBoostFormatBugVersion :
+            suppressList.append("zerodivcond")
+
     for stype in suppressList :
         checkCmd.append("--suppress="+stype)
 
