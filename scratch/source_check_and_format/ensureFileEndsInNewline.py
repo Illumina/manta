@@ -17,7 +17,14 @@ if len(sys.argv) < 2 :
 for arg in sys.argv[1:] :
     assert(os.path.isfile(arg))
     fp=open(arg,"rb+")
-    fp.seek(-1,2)
-    if fp.read() != "\n" : fp.write("\n")
+
+    def isFileMissingFinalNewline(fp) :
+        fpStart=fp.tell()
+        fp.seek(0,2)
+        if fpStart == fp.tell() : return True  # file is empty
+        fp.seek(-1,2)
+        return (fp.read() != "\n")
+
+    if isFileMissingFinalNewline(fp) : fp.write("\n")
     fp.close()
 
