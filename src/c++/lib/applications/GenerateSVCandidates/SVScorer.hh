@@ -246,8 +246,8 @@ private:
     /// determine maximum depth and MQ0 frac in region around breakend of normal sample
     void
     getBreakendMaxMappedDepthAndMQ0(
-        const bool isMaxDepth,
         const bool isTumorOnly,
+        const bool isMaxDepth,
         const double cutoffDepth,
         const SVBreakend& bp,
         unsigned& maxDepth,
