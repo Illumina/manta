@@ -102,14 +102,16 @@ To avoid the extra time associated with this step, ensure that (1)
 cmake 2.8.0+ is in your PATH and (2) BOOST\_ROOT is defined to point
 to boost 1.56.0 or newer.
 
+## General Debugging Notes
+
 ### General Debugging: Address Sanitizer
 
 The build system offers first-class support for google address sanitizer
 when a supporting compiler is detected. To use this mode, start a fresh
 installation process with the additional configure option `--build-type=ASan`,
-extending from the configuration example in the above build instructions, use:
+for example:
 
-    ../manta-A.B.C.release_src/src/configure --jobs=4 --prefix=/path/to/install --build-type=ASan
+    ../configure --jobs=4 --prefix=/path/to/install --build-type=ASan
 
 ### General Debugging: Inspecting temporary files
 
@@ -134,22 +136,22 @@ C++11 features in use require at least VS2013. A Windows
 installation of cmake is also required to configure and compile.
 Note that the minimum cmake version is 3.1.0 for Windows.
 
-### Automating Portable Binary Builds
+### Automating Portable Binary Builds for Linux
 
 A script is provided to enable a dockerized build process which
-issues Centos5+ or Centos6+ binary tarballs. To do so, ensure you
+issues Centos5+ or Centos6+ binary tarballs. To use this script, ensure you
 have permission to `docker run` on the current system and execute the
 following script:
 
 ```
-${MANTA_ROOT_PATH}/scratch/docker/deployment/dockerBuildBinaryTarball.bash ${MANTA_ROOT_PATH2} ${BINARY_BUILD_PREFIX}
+${SOURCE_PATH}/scratch/docker/deployment/dockerBuildBinaryTarball.bash ${SOURCE_PATH2} ${BINARY_BUILD_PREFIX}
 ```
 
-The term `${MANTA_ROOT_PATH2}` can point to the current git repo (ie. `${MANTA_ROOT_PATH}`),
-or to an extracted Manta source tarball previously created using the script:
+The term `${SOURCE_PATH2}` can point to the current git repository (ie. `${SOURCE_PATH}`),
+or to an extracted source release tarball previously created using the script:
 
 ```
-${MANTA_ROOT_PATH}/scratch/make_release_tarball.bash
+${SOURCE_PATH}/scratch/make_release_tarball.bash
 ```
 
 The choice of virtualized build environment is hard-coded in the deploy script for the time being,
@@ -165,6 +167,41 @@ see the `builderImage` variable.
   * "ANSI" bracket style
 * Note the above restrictions are enforced by an astyle script which is occasionally run on the master branch (see [run_cxx_formatter.bash](../../scratch/source_check_and_format/run_cxx_formatter.bash))
 * Otherwise, follow local code conventions
+
+### Git conventions
+
+#### Commit messages
+
+All git commit messages should be prepended with either the associated JIRA or github issue id. For example:
+
+```
+MANTA-123 improve insertion genotype accuracy
+
+Improve assembly and realignemnt of large insertions to reduce hom->het undercall
+```
+
+Very minor updates (eg. "Fix spelling errors in user guide") may be made without an associated ticket.
+All git commit messages should attempt to conform to practices outlined here:
+
+http://chris.beams.io/posts/git-commit/
+
+### Commit consolidation
+
+On any single-developer research branch, history editing is encouraged within the branch to collapse bugs and
+build a more clear feature-by-feature story for other other developers to follow.
+
+In all other situations history editing is discouraged and a conventional merge-based workflow is preferred.
+
+### Changelog conventions
+
+Changelog entries should follow very similar guidelines to git commit header lines as described here:
+
+http://chris.beams.io/posts/git-commit/
+
+...except that a longer message length can be used if needed.
+
+Changelog entries should typically be made for any major branch merge, bug fix, or user-visible changes.
+
 
 ### Error handling
 
@@ -206,7 +243,7 @@ is unavailable at the throw site. Example code is:
 ```c++
 try
 {
-    realign_and_score_read(_opt,_dopt,sif.sample_opt,_ref,realign_buffer_range,rseg,sif.indel_sync());
+    realign_and_score_read(_opt,_dopt,sif.sample_opt,_ref,realign_buffer_range,rseg,sif.getIndelBuffer());
 }
 catch (...)
 {
@@ -232,6 +269,19 @@ self.flowLog("Initiating Starling workflow version: %s" % (__version__)
 * All unit tests are required to run and pass as part of every build (including end-user builds)
 * Unit tests are already enabled for every library "test" subdirectory, additional tests in these directories will be automatically detected
   * Example [svgraph unit tests directory](../../src/c++/lib/svgraph/test)
+
+## IDE support
+
+Little support for any specific IDE is provided, except as made available by cmake generators. IDE-specific configuration files maintained in the project are described below.
+
+### Clion
+
+A subset of code formatting settings which can be imported into Clion are available in the configuration file
+
+`${STRELKA_REPO_PATH}/scratch/ideConfiguration/CLion/referenceCodeStyleSettings.xml`
+
+..note that the automated `astyle` formatting settings still define the project defaults, the above configuration simply provides a starting point for CLion which is closer to the project's formatting norms.
+
 
 ## Special Topic Guides
 
