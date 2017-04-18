@@ -107,7 +107,11 @@ def ordinalStr(n) :
     assert(n>0)
 
     def getSuffix(n) :
-        i = n if (n < 14) else (n % 10)
+        def getOrdKey(n) :
+            if n < 14 : return n
+            else      : return (n % 10)
+
+        i = getOrdKey(n)
         if   i == 1: return 'st'
         elif i == 2: return 'nd'
         elif i == 3: return 'rd'
