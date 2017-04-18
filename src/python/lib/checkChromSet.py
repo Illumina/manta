@@ -62,7 +62,7 @@ def getBamChromInfo(htsfileBin,bam) :
     """
     Get chromosome information from bam/cram header
 
-    return a map of [chrom_name]=(chrom_size,chrom_order)
+    return a map of [chrom_name]=(chrom_size,chrom_order), where chrom_order is zero-indexed
     """
 
     import subprocess
@@ -100,9 +100,33 @@ def getBamChromInfo(htsfileBin,bam) :
 
 
 
+def ordinalStr(n) :
+    """
+    Given the positive integer n, return the corresponding ordinal number string
+    """
+    assert(n>0)
+
+    def getSuffix(n) :
+        i = n if (n < 14) else (n % 10)
+        if   i == 1: return 'st'
+        elif i == 2: return 'nd'
+        elif i == 3: return 'rd'
+        else :       return 'th'
+
+    return str(n) + getSuffix(n)
+
+
+
 def checkChromSet(htsfileBin,referenceFasta,bamList,bamLabel=None,isReferenceLocked=False) :
     """
     Check that chromosomes in reference and input bam/cram(s) are consistent
+
+    The current requirement is very stringent. The reference and all alignment files must have
+    the same set of chromosomes, and they must all be the same size. If isReferenceLocked is false
+    then the reference is allowed to contain extra chromosomes not found in the alignment files.
+
+    Within the set of alignment files, there is an additional constraint that all chromosomes are
+    in the same order.
 
     @param htsfileBin - htsfile binary
     @param referenceFasta - samtools indexed fasta file
@@ -128,39 +152,36 @@ def checkChromSet(htsfileBin,referenceFasta,bamList,bamLabel=None,isReferenceLoc
 
     # check that first bam is compatible with reference:
     for chrom in chroms :
-        isError=False
         if chrom not in refChromInfo :
-            isError = True
+            chromError("Reference genome mismatch: Reference fasta file is missing a chromosome found in the %s BAM/CRAM file: '%s'" % (bamLabel[0], chrom))
         else :
             if refChromInfo[chrom] != chromInfo[chrom][0] :
-                isError = True
-
-        if isError :
-            chromError("Reference fasta and '%s' BAM/CRAM file conflict on chromosome: '%s'" % (bamLabel[0],chrom))
+                chromError("Reference genome mismatch: The length of chromosome '%s' is %i in the reference fasta file but %i in the %s BAM/CRAM file" % (chrom, refChromInfo[chrom], chromInfo[chrom][0], bamLabel[0]))
 
     # optionally check that BAM contains all chromosomes in reference:
     if isReferenceLocked :
         for refChrom in refChromInfo.keys() :
             if refChrom not in chroms :
-                chromError("'%s' BAM/CRAM file is missing reference fasta chromosome: '%s'" % (bamLabel[0],refChrom))
+                chromError("Reference genome mismatch: %s BAM/CRAM file is missing a chromosome found in the reference fasta file: '%s'" % (bamLabel[0], refChrom))
 
     # check that other bams are compatible with first bam:
     for index in range(1,len(bamList)) :
         compareChromInfo=getBamChromInfo(htsfileBin,bamList[index])
         for chrom in chroms:
-            isError=False
             if not chrom in compareChromInfo :
-                isError=True
+                chromError("Reference genome mismatch: %s BAM/CRAM file is missing a chromosome found in the %s BAM/CRAM file: '%s'" % (bamLabel[index], bamLabel[0], chrom))
             else :
-                (ln,order) = chromInfo[chrom]
-                (tln,torder) = compareChromInfo[chrom]
-                if ln != tln or order != torder : isError=True
-
-            if isError :
-                chromError("'%s' and '%s' BAM/CRAM files have a conflict on chromosome: '%s'" % (bamLabel[0],bamLabel[index],chrom))
+                (length, order) = chromInfo[chrom]
+                (compareLength, compareOrder) = compareChromInfo[chrom]
+                if length != compareLength :
+                    chromError("Reference genome mismatch: The length of chromosome '%s' is %i in the %s BAM/CRAM file, but %i in the %s BAM/CRAM file" % (chrom, length, bamLabel[0], compareLength, bamLabel[index]))
+                if order != compareOrder :
+                    chromError("Reference genome mismatch: Chromosome '%s' is ordered %s in the %s BAM/CRAM file, but %s in the %s BAM/CRAM file" % (chrom, ordinalStr(order+1), bamLabel[0], ordinalStr(compareOrder+1), bamLabel[index]))
 
             del compareChromInfo[chrom]
 
-        # check that no chromosomes are unique to the tumor:
+        # If all chromosomes matched, then compareChromInfo should be empty at this point.
+        #
+        # Check that no chromosomes are unique to the 'compare' BAM file.
         for chrom in compareChromInfo.keys() :
-            chromError("'%s' and '%s' BAM/CRAM files have a conflict on chromosome: '%s'" % (bamLabel[0],bamLabel[index],chrom))
+            chromError("Reference genome mismatch: %s BAM/CRAM file is missing a chromosome found in the %s BAM/CRAM file: '%s'" % (bamLabel[0], bamLabel[index], chrom))
