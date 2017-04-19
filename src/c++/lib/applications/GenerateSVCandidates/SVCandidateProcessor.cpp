@@ -72,7 +72,7 @@ SVWriter(
         }
         else if (opt.isRNA)
         {
-            rnaWriter.writeHeader(progName, progVersion, noSampleNames);
+            rnaWriter.writeHeader(progName, progVersion, sampleNames);
         }
         else
         {
