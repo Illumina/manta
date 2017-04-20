@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -41,11 +40,40 @@
 //#define DEBUG_SFINDER
 
 
-
-/// estimate an SVLocusSet
+/// \brief Build an SV locus graph from read evidence extracted from a contiguous bam segment
+///
+/// This object is used to build an SV locus graph (SVLocusSet),from a contiguous bam
+/// segment, given that sequencing read evidence will be provided with strictly increasing
+/// aligned position values from one end to the other of the bam segment in question.
+///
+/// pos_processor_base:
+///
+/// This inherits from pos_processor_base to facilitate a "rolling" execution of
+/// functions at a defined positional offset less than the position of the most recent
+/// read alignment input. These offset functions will (1) trigger the inline graph denoising
+/// process (2) clean up buffered read depth data after it is no longer needed.
+///
+/// Depth Tracking and High-Depth Filtration:
+///
+/// This object tracks the estimated depth per position summed over all non-tumor samples in
+/// the input. This depth estimate is compared to a precomputed expected depth for the chromosome/contig
+/// currently being analyzed. At positions where the local read depth is substantially higher than the
+/// expected chromosome depth, SV evidence reads are not merged into the SV graph.
+///
+/// The motivation for skipping high depth regions is that (in an unbiased/non-targeted sequencing assay)
+/// high-depth regions indicated reference compressions and other artifacts which typically produce many
+/// artifactual SV calls, skipping these regions is an optimization of both FP rate and runtime. Tumor
+/// depth is not used because very high depth in the tumor is much more likely to indicate a somatic
+/// mutation process, so at least on non-tumor sample is required to infer the location of reference
+/// compressions or similarly unreliable regions.
 ///
 struct SVLocusSetFinder : public pos_processor_base
 {
+    /// This constructs to an immediately usable state following an RAII-like pattern.
+    ///
+    /// \param scanRegion The genomic region which this SVLocusSetFinder object will translate into an SVLocusGraph
+    /// \param bamHeader Bam header containing chromosome details. This is used directly in this object and copied
+    ///                  into the SV locus graph.
     SVLocusSetFinder(
         const ESLOptions& opt,
         const GenomeInterval& scanRegion,
@@ -57,27 +85,39 @@ struct SVLocusSetFinder : public pos_processor_base
         flush();
     }
 
-    /// index is the read group index to use by in the absence of an RG tag
-    /// (for now RGs are ignored for the purpose of gathering insert stats)
+    /// \brief Push a new read alignment into the SV graph building process
+    ///
+    /// \param[in] defaultReadGroupIndex The read group index to use in the absence of a BAM read group (RG) tag.
+    /// This should effectively be the same as the sample index.
     ///
     void
     update(
         const bam_record& bamRead,
         const unsigned defaultReadGroupIndex);
 
+    /// \brief Provide const access to the SV locus graph that this object is building.
     const SVLocusSet&
     getLocusSet()
     {
         return _svLoci;
     }
 
-    // flush any cached values built up during the update process
+    /// \brief Flush any cached values built up during the update process.
+    ///
+    /// Calling this method should ensure that the SV locus graph reflects all read evidence input so far, and the
+    /// graph is represented as compactly as possible.
     void
     flush()
     {
-        _stageman.reset();
+        _stageManager.reset();
     }
 
+    /// \brief Record the time elapsed in the graph building process.
+    ///
+    /// The SV locus graph object tracks various meta-data related to the graph
+    /// including the time spent conducting the graph construction process. This
+    /// information is only used for debug/audit and does not impact results.
+    ///
     void
     setBuildTime(const CpuTimes& t)
     {
@@ -86,45 +126,77 @@ struct SVLocusSetFinder : public pos_processor_base
 
 private:
 
+    /// Execute logic which is dependent on being a fixed offset from the
+    /// the HEAD position in this object's "rolling" positional processing pipeline.
+    ///
+    /// For this object the HEAD position is defined by the mapping position of the
+    /// most recently processed BAM input read.
+    ///
+    /// For more general background see stage_manager and its associated tests.
+    ///
+    /// \param stage_no the stage id is used to determine what logic to execute on the given position
+    /// \param pos execute stage specific logic on this position number
     void
     process_pos(const int stage_no,
-                const pos_t pos);
+                const pos_t pos) override;
 
-    void
-    updateDenoiseRegion();
-
+    /// \brief Add the input read to this objects running estimate of read depth per position.
+    ///
+    /// (see class docs for overview of high depth filtration)
     void
     addToDepthBuffer(
         const unsigned defaultReadGroupIndex,
         const bam_record& bamRead);
 
-    // TODO -- compute this number from read insert ranges:
     enum hack_t
     {
-        REGION_DENOISE_BORDER = 5000    ///< length in bases on the beginning and the end of scan range which is excluded from in-line graph de-noising
+        /// Length in bases on the beginning and the end of scan range which is excluded from in-line graph de-noising
+        ///
+        /// TODO compute this number from read insert ranges
+        REGION_DENOISE_BORDER = 5000
     };
 
     /////////////////////////////////////////////////
     // data:
+
+    /// Maps the Read Group/Sample Index to a bit indicating whether the index comes from a tumor sample.
+    ///
+    /// This is required for high-depth filtration because high-depth can only be determined from non-tumor samples.
     const std::vector<bool> _isAlignmentTumor;
+
+    /// The target genome region for this SV locus graph building process
     const GenomeInterval _scanRegion;
-    GenomeInterval _denoiseRegion;
-    stage_manager _stageman;
+
+    /// A subset of _scanRegion in which the inline graph denoising operation is allowed.
+    const GenomeInterval _denoiseRegion;
+
+    /// Helper object used to schedule calls at positions with a defined offset below the current input read's position
+    stage_manager _stageManager;
+
+    /// The SV locus graph being built by this object
     SVLocusSet _svLoci;
 
-    depth_buffer_compressible _depth; ///< track depth for the purpose of filtering high-depth regions
+    /// Track estimated depth per position for the purpose of filtering high-depth regions
+    depth_buffer_compressible _positionReadDepthEstimate;
 
-    bool _isScanStarted;
-
+    /// True when the denoising position pointer is within _denoiseRegion
     bool _isInDenoiseRegion;
-    pos_t _denoisePos;
+
+    /// The graph inline denoising routine has run up to this position, subseqeunt denoising passes should start
+    /// from this position up to a chosen window size
+    pos_t _denoiseStartPos;
 
     SVLocusScanner _readScanner;
 
-    bool _isMaxDepth;
+    /// If true, then track estimated depth/pos and filter out input from very high depth regions
+    /// This would typically be true for WGS and false for targeted sequencing.
+    bool _isMaxDepthFilter;
+
+    /// Above this depth, read input is not added to the SV Locus graph.
+    ///
+    /// This depth is supplied from an external estimate
     float _maxDepth;
 
     const bam_header_info& _bamHeader;
     const reference_contig_segment& _refSeq;
 };
-

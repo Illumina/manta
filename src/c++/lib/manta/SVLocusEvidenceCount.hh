@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -61,7 +60,7 @@ struct SVLocusEvidenceCount
 
     // using doubles for integral counts here because (1) counts are potentially very high and (2) exact counts don't matter
 
-    ///< total number of non-filtered anomalous reads scanned
+    ///< total number of non-filtered reads scanned
     double total = 0;
 
     ///< total number of non-filtered reads ignored for SV purposes

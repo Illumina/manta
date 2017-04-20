@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -144,6 +143,8 @@ private:
 
 
 
+/// object to support SV scoring process
+///
 struct SVScorer
 {
     SVScorer(
@@ -154,6 +155,10 @@ struct SVScorer
     /// gather supporting evidence and generate:
     /// 1) diploid quality score and genotype for SV candidate
     /// 2) somatic quality score
+    ///
+    /// \param mjModelScoreInfo standard (junction-independent) scoring information for each junction
+    /// \param mjJointModelScoreInfo  joint junction scoring information used for cases where a multi-junction event
+    ///                               is detected
     void
     scoreSV(
         const SVCandidateSetData& svData,
@@ -241,14 +246,17 @@ private:
     /// determine maximum depth and MQ0 frac in region around breakend of normal sample
     void
     getBreakendMaxMappedDepthAndMQ0(
-        const bool isMaxDepth,
         const bool isTumorOnly,
+        const bool isMaxDepth,
         const double cutoffDepth,
         const SVBreakend& bp,
         unsigned& maxDepth,
         float& MQ0Frac);
 
     /// apply all scoring models relevant to this event:
+    ///
+    /// \param junctionData one element describing each junction of an event, for normal (single-junction) candidates,
+    ///                     the vector size should be one
     void
     computeAllScoreModels(
         const bool isSomatic,
@@ -256,9 +264,13 @@ private:
         const std::vector<JunctionCallInfo>& junctionData,
         SVModelScoreInfo& modelScoreInfo);
 
-    /// shared information gathering steps of all scoring models
+    /// accumulate (model-agnostic) evidence for the SV alt/ref alleles
+    ///
+    /// This step gathers information (such as counts and allele likelihoods) to be used downstream by more specific
+    /// (germline, somatic, etc..) scoring models.
+    ///
     void
-    scoreSV(
+    getSVSupportingEvidence(
         const SVCandidateSetData& svData,
         const SVCandidateAssemblyData& assemblyData,
         const bool isTumorOnly,

@@ -1,6 +1,6 @@
 #
 # Manta - Structural Variant and Indel Caller
-# Copyright (c) 2013-2016 Illumina, Inc.
+# Copyright (c) 2013-2017 Illumina, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -43,6 +43,14 @@ check_function_exists(roundf HAVE_ROUNDF)
 check_function_exists(powf HAVE_POWF)
 
 include ("${THIS_MACROS_CMAKE}")
+
+if (NOT CMAKE_CXX_COMPILER_ID)
+    message(FATAL_ERROR "CMAKE failed to detect c++ compiler id for CMAKE_CXX_COMPILER: '${CMAKE_CXX_COMPILER}'")
+endif ()
+
+if (NOT (CMAKE_C_COMPILER_ID AND (${CMAKE_CXX_COMPILER_ID} STREQUAL ${CMAKE_CXX_COMPILER_ID})))
+    message(FATAL_ERROR "CMAKE detected different C++ and C compiler types, which could lead to link errors in certain cases. Please set CC and CXX to the C and C++ front ends of the same compiler installation.")
+endif ()
 
 # Support for static linking
 # Note that this implies that all libraries must be found with the
@@ -89,8 +97,8 @@ if (NOT WIN32)
     endif()
 endif ()
 
-set (IS_CLANG ((CMAKE_C_COMPILER_ID STREQUAL "Clang") OR (CMAKE_C_COMPILER_ID STREQUAL "AppleClang")))
-set (IS_CLANGXX ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")))
+set (IS_CLANG ((${CMAKE_C_COMPILER_ID} STREQUAL "Clang") OR (${CMAKE_C_COMPILER_ID} STREQUAL "AppleClang")))
+set (IS_CLANGXX ((${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang")))
 
 
 if (${IS_CCACHE})
@@ -167,7 +175,7 @@ set (min_msvc_version "1800") # cl.exe 18, as shipped in Visual Studio 12 2013
 set (CXX_COMPILER_NAME "${CMAKE_CXX_COMPILER_ID}")
 set (COMPILER_VERSION "UNKNOWN")
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
     get_compiler_version(COMPILER_VERSION)
     set (CXX_COMPILER_NAME "g++")
     test_min_compiler(${COMPILER_VERSION} "${min_gxx_version}" "${CXX_COMPILER_NAME}")
@@ -175,7 +183,7 @@ elseif (${IS_CLANGXX})
     get_clang_version(COMPILER_VERSION)
     set (CXX_COMPILER_NAME "clang++")
     test_min_compiler(${COMPILER_VERSION} "${min_clang_version}" "${CXX_COMPILER_NAME}")
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
     get_compiler_version(COMPILER_VERSION)
     set (CXX_COMPILER_NAME "icpc")
     test_min_compiler(${COMPILER_VERSION} "${min_intel_version}" "${CXX_COMPILER_NAME}")
@@ -187,7 +195,7 @@ endif ()
 
 message (STATUS "Using compiler: ${CXX_COMPILER_NAME} version ${COMPILER_VERSION}")
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
     # for intel we also need to test the minimum version of g++ currently
     # in the path (because this is the stdc++ library that intel will use):
     get_compiler_name_version("g++" gxx_compiler_version)
@@ -205,11 +213,11 @@ endif ()
 ## set static linking of standard libraries for binary redistribution:
 ##
 set (IS_STANDARD_STATIC FALSE)
-if     (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+if     (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
     if (NOT (${COMPILER_VERSION} VERSION_LESS "4.5"))
         set (IS_STANDARD_STATIC TRUE)
     endif ()
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
     set (IS_STANDARD_STATIC TRUE)
 endif ()
 
@@ -223,9 +231,9 @@ endif ()
 ##
 
 # determine version of libstdc++ library
-if     (CMAKE_CXX_COMPILER_ID STREQUAL "INTEL")
+if     (${CMAKE_CXX_COMPILER_ID} STREQUAL "INTEL")
     set(STDCXX_VERSION ${gxx_compiler_version})
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
     set(STDCXX_VERSION ${COMPILER_VERSION})
 else ()
     set(STDCXX_VERSION FALSE)
@@ -252,18 +260,18 @@ endif ()
 ##
 ## set warning flags:
 ##
-set (GNU_COMPAT_COMPILER ( (CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR (${IS_CLANGXX}) OR (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")))
+set (GNU_COMPAT_COMPILER ( (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${IS_CLANGXX}) OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")))
 if (${GNU_COMPAT_COMPILER})
     append_args(CXX_WARN_FLAGS "-Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -pedantic -Wunused-parameter")
     append_args(CXX_WARN_FLAGS "-Wundef -Wno-unknown-pragmas")
     append_args(CXX_WARN_FLAGS "-Wdeprecated")
 
-    if ((NOT CMAKE_CXX_COMPILER_ID STREQUAL "Intel") OR (NOT ${COMPILER_VERSION} VERSION_LESS "14.0"))
+    if ((NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel") OR (NOT ${COMPILER_VERSION} VERSION_LESS "14.0"))
         append_args(CXX_WARN_FLAGS "-Wdisabled-optimization")
         append_args(CXX_WARN_FLAGS "-Wno-missing-braces")
     endif ()
 
-    if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+    if (NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
         append_args(CXX_WARN_FLAGS "-Wempty-body")
         append_args(CXX_WARN_FLAGS "-Wredundant-decls")
     endif ()
@@ -280,7 +288,7 @@ elseif (MSVC)
     append_args(CXX_WARN_FLAGS "/wd4503")
 endif ()
 
-if     (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+if     (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
     if (NOT (${COMPILER_VERSION} VERSION_LESS "4.2"))
         append_args(CXX_WARN_FLAGS "-Wlogical-op")
     endif ()
@@ -361,7 +369,14 @@ elseif (${IS_CLANGXX})
         endif ()
     endif ()
 
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+    if (NOT (${COMPILER_VERSION} VERSION_LESS "3.9"))
+        append_args(CXX_WARN_FLAGS "-Wnewline-eof")
+
+        if (${IS_WARN_EVERYTHING})
+            append_args(CXX_WARN_FLAGS "-Wno-comma")
+        endif ()
+    endif ()
+elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
     # suppress errors in boost headers:
     append_args(CXX_WARN_FLAGS "-diag-disable 177,193,869,1599,3280")
 
@@ -376,7 +391,7 @@ append_args (CMAKE_CXX_FLAGS "${CXX_WARN_FLAGS}")
 # other customizations
 #
 if (${GNU_COMPAT_COMPILER})
-    if ((NOT CMAKE_CXX_COMPILER_ID STREQUAL "Intel") OR (${COMPILER_VERSION} VERSION_LESS "15.0"))
+    if ((NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel") OR (${COMPILER_VERSION} VERSION_LESS "15.0"))
         append_args (CMAKE_CXX_FLAGS "-std=c++0x")
     else ()
         append_args (CMAKE_CXX_FLAGS "-std=c++11")
@@ -407,7 +422,7 @@ endif()
 # if ASan build type is requested, check that the compiler supports it:
 if (CMAKE_BUILD_TYPE STREQUAL "ASan")
     set (IS_ASAN_SUPPORTED false)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
         if (NOT (${COMPILER_VERSION} VERSION_LESS "4.8"))
             set (IS_ASAN_SUPPORTED true)
         endif ()
@@ -442,7 +457,7 @@ if (${GNU_COMPAT_COMPILER})
     # being identified as a system header
     #
     set(IS_WERROR true)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
         if (${COMPILER_VERSION} VERSION_LESS "4.2")
             set(IS_WERROR false)
         endif ()

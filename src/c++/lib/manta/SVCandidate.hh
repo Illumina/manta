@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -184,6 +183,7 @@ public:
 
     unsigned fwReads = 0; ///< Number of reads (pairs) supporting a direction from bp1 to bp2 (used for stranded RNA data)
     unsigned rvReads = 0; ///< Number of reads (pairs) directed from bp2 to bp1
+
     /// filter out this sv candidate unless it's rescued by a multi-junction event:
     bool isSingleJunctionFilter = false;
 };

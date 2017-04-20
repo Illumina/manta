@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -53,7 +52,7 @@ isFilterMultiJunctionCandidate(
                 isCountFilter = false;
             }
 
-            if (! sv.isSingleJunctionFilter)
+            if (not sv.isSingleJunctionFilter)
             {
                 isSingleFilter = false;
             }
@@ -77,7 +76,10 @@ isFilterMultiJunctionCandidate(
 }
 
 
-
+/// distance between the centerpoint from each of two intervals
+///
+/// if intervals are on different chroms, return max(unsigned)
+///
 static
 unsigned
 getIntervalDist(
@@ -301,16 +303,15 @@ findMultiJunctionCandidates(
 
     mjComplexCount = complexSVs.size();
 
-    /// do a brute-force intersection test to see if we can associate candidates:
-    ///
-    /// intersection rules : breakend region center must be within distance N
-    /// intersecting breakend orientation makes it possible for these to be a single event -- ie. pointing away or towards each other
-    /// full set of intersections must complete a loop, this is an intentionally conservative requirement to make sure we start into
-    ///    this without getting involved in the really difficult stuff
-    ///
-    /// just for the starting version, the number of SVCandidates which can intersect is limited to 2
-    ///
-
+    // do a brute-force intersection test to see if we can associate candidates:
+    //
+    // intersection rules : breakend region center must be within distance N
+    // intersecting breakend orientation makes it possible for these to be a single event -- ie. pointing away or towards each other
+    // full set of intersections must complete a loop, this is an intentionally conservative requirement to make sure we start into
+    //    this without getting involved in the really difficult stuff
+    //
+    // just for the starting version, the number of SVCandidates which can intersect is limited to 2
+    //
     const unsigned spanCount(spanningSVs.size());
     std::vector<MJ_INTERACTION::MJState> spanPartners(spanCount);
     {
@@ -332,8 +333,13 @@ findMultiJunctionCandidates(
                 bool isGroup(false);
                 if (isSameBpGroup || isFlipBpGroup)
                 {
-                    /// check that this isn't a flipped association as breakpoints get near each other,
-                    /// if it is treat the association as independent junctions:
+                    // check that this isn't a flipped association as breakpoints get near each other,
+                    // if it is treat the association as independent junctions:
+                    //
+                    // the basic idea is that if we think SV1.bp1 is associated with SV2.bp1, then something is wrong if
+                    // we see that distance(SV1.bp1,SV2.bp2) or distance(SV1.bp2,SV2,bp1) is shorter than
+                    // distance(SV1.bp1,SV2.bp1), etc.
+                    //
                     if (isSameBpGroup)
                     {
                         isGroup = (getJunctionBpAlignment(spanA, spanB) > 0);
@@ -344,7 +350,7 @@ findMultiJunctionCandidates(
                     }
                 }
 
-                if (!isGroup) continue;
+                if (not isGroup) continue;
 
                 const index_t newType( isSameBpGroup ? SAME : FLIP );
                 const unsigned maxPartnerDistance(getMaxIntervalDistance(spanA, spanB, isSameBpGroup));
@@ -364,7 +370,7 @@ findMultiJunctionCandidates(
                 }
                 else
                 {
-                    /// multiple candidates, keep the pair that's closer, and don't tolerate more than one repeat
+                    // multiple candidates
                     spanPartners[spanIndexA].type = CONFLICT;
                     spanPartners[spanIndexB].type = CONFLICT;
                 }
@@ -376,6 +382,11 @@ findMultiJunctionCandidates(
     //
     // spanning SVs should come first in order so that overlap checks can
     // be used to reduce work in the assembler
+    //
+    // note that everything is being pushed into the SVMultiJunctionCandidate format
+    // even though in most cases they will be "multi-junctions" with a junction size
+    // of one, it should be thought of as a multi-junction "capable" object.
+    //
     for (unsigned spanIndex(0); spanIndex<spanCount; ++spanIndex)
     {
         SVMultiJunctionCandidate mj;
@@ -410,6 +421,4 @@ findMultiJunctionCandidates(
         mj.junction.push_back(candidateSV);
         mjSVs.push_back(mj);
     }
-
-
 }

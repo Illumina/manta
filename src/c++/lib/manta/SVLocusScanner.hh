@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -193,7 +192,9 @@ struct SVLocusScanner
     isLocalIndelEvidence(
         const SimpleAlignment& bamAlign) const;
 
-    /// semi-aligned and soft-clipped edges
+    /// true for reads with semi-aligned and soft-clipped edges
+    ///
+    /// "semi-aligned" here means the edge has a high density of mismatches
     bool
     isSemiAlignedEvidence(
         const bam_record& bamRead,

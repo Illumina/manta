@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -190,14 +189,16 @@ prob_comp(It begin,
     return val;
 }
 
-
-/// given a log() transformed distribution, transform it to a standard
-/// distro, set max_idx to the index of the most probable component
+/// probability distro normalization for log-transformed input
+///
+/// \param max_idx[out] set to the index of the most probable component
+///
 template <typename It>
 void
-normalize_ln_distro(const It pbegin,
-                    const It pend,
-                    unsigned& max_idx)
+normalize_ln_distro(
+    const It pbegin,
+    const It pend,
+    unsigned& max_idx)
 {
     typedef typename std::iterator_traits<It>::value_type float_type;
 
@@ -231,19 +232,20 @@ normalize_ln_distro(const It pbegin,
 }
 
 
-// optimized version of probability normalization
-//
-// values significantly less than opt-max will be treated as zero probability
-//
-// opt-max is found within the subset of the distribution where the predicate
-// iterator is true
-//
+/// optimized version of probability distro normalization for log-transformed input
+///
+/// optimization is to treat values significantly less than opt-max as zero probability
+///
+/// opt-max is found within the subset of the distribution where the predicate
+/// iterator is true
+///
 template <typename It,typename It2>
 void
-opt_normalize_ln_distro(const It pbegin,
-                        const It pend,
-                        const It2 pred_begin,
-                        unsigned& max_idx)
+opt_normalize_ln_distro(
+    const It pbegin,
+    const It pend,
+    const It2 pred_begin,
+    unsigned& max_idx)
 {
     typedef typename std::iterator_traits<It>::value_type float_type;
 

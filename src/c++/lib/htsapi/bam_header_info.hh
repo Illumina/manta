@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,9 +16,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 //
-
-/// \author Chris Saunders
-///
 
 #pragma once
 
@@ -39,12 +35,12 @@
 #include <map>
 
 
-/// minimal c++ bam header info
+/// \brief Subset of information from a BAM file header
 ///
-/// this class replicates the minimum information
-/// from the bam header required to parse regions
-/// (ie. chr1:20-30). It is friendlier to mem management
-/// and serialization than using the samtools struct
+/// This holds a subset of information from the samtools bam_hdr_t object,
+/// but with easier copy semantics / serialization, etc.
+///
+/// Currently this stores for each chromosome, the label, size and corresponding BAM index id.
 ///
 struct bam_header_info
 {
@@ -104,5 +100,6 @@ struct bam_header_info
 };
 
 
+/// \brief Print header info to stream in a simple tabular format
 std::ostream&
 operator<<(std::ostream& os, const bam_header_info& bhi);

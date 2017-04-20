@@ -3,11 +3,15 @@
 [Developer Guide Home](README.md)
 
 ## Table of Contents
-[] (BEGIN automated TOC section, any edits will be overwritten on next source refresh)
+
+[//]: # (BEGIN automated TOC section, any edits will be overwritten on next source refresh)
+
 * [Introduction](#introduction)
 * [Debugging](#debugging)
 * [Running single alignment unit tests](#running-single-alignment-unit-tests)
-[] (END automated TOC section, any edits will be overwritten on next source refresh)
+
+[//]: # (END automated TOC section, any edits will be overwritten on next source refresh)
+
 
 ## Introduction
 

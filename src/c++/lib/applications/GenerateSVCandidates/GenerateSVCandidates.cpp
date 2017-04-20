@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -241,7 +240,8 @@ runGSC(
 
             SupportSamples svSupports;
             svSupports.supportSamples.resize(sampleSize);
-            // determine if this is the only edge for this node:
+
+            // assemble, score and output SVs
             svProcessor.evaluateCandidates(edge, mjSVs, svData, svSupports);
 
             // write supporting reads into bam files

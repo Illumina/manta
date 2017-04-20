@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -30,7 +29,22 @@
 #include "boost/icl/interval_map.hpp"
 
 
-/// accumulates region specific sum(T) give a set of (region,T) associations
+/// \brief Accumulates region specific sum(T) give a set of (region,T) associations.
+///
+/// Example:
+/// Given the following set of input ranges and payload values:
+/// range: [0,10] value: 3
+/// range: [5,15] value: 1
+/// range: [12,16] value: 2
+///
+/// This object internally constructs region-specific sum values:
+/// range: [0,4] value: 3
+/// range: [5,10] value: 4
+/// range: [11,11] value: 1
+/// range: [12,15] value: 3
+/// range: [15,16] value: 2
+///
+/// ..and the maxVal() function below will return 4.
 ///
 template <typename T>
 struct RegionSum

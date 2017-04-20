@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -30,6 +29,18 @@
 #include <vector>
 
 
+/// convert independent SV candidates into multi-junction event candidates
+///
+/// given a set of un-associated single-junction SV candidates, analyze which
+/// candidate junctions could potentially be treated as a single multi-junction
+/// event (such as a reciprocal translocation)
+///
+/// right now multi-junction events are limited to pairs of (spannning) SV candidates, where
+/// the breakends of both junctions in the pair are proximal and meeting the expected orientation
+/// pattern consistent with a reciprocal translocation.
+///
+/// Note that 'complex' (short assembly targets from self-edges) SVs will not be grouped into
+//
 void
 findMultiJunctionCandidates(
     const std::vector<SVCandidate>& svs,

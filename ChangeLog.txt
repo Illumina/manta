@@ -1,7 +1,19 @@
+v1.1.0
+- Manta-677 Stats generation
+-- Add a sampling buffer to skip regions with a large number of abnormal reads
+-- Add a compiler flag to output fragment-size cdf in stats summary
+- Sync shared library/build changes with strelka
+- Scratch: Merge src formatting changes from strelka
+- Docs: Update comments in automated TOC generation; Fix nonstandard markdown links
+- MANTA-583 Document multi-junction handling
+- MANTA-518 Add sample level check of genotyping for multi-junction events
 - MANTA-486/[#57] clarify rna mode configuration/improve errors
-- RNA: Include some spliced reads in insert-size estimation
-- RNA: Include split-reads as evidence for imprecise translocations
-- RNA: Use proper-pair BAM flag for abnormal pair detection
+- MANTA-436 Classify indels with unknown size insertions as insertions
+- MANTA-304 Merge RNAMaster branch
+-- RNA: Include some spliced reads in insert-size estimation
+-- RNA: Include split-reads as evidence for imprecise translocations
+-- RNA: Use proper-pair BAM flag for abnormal pair detection
+
 v1.0.3
 - MANTA-302 fix the bug of duplicate variant ID
 - MANTA-279 fix the bug of reporting variants beyond chromosome end position

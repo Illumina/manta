@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -112,12 +111,15 @@ writeSV(
     SupportSamples& svSupports)
 {
     const unsigned junctionCount(mjSV.junction.size());
+
+    // relax min spanning count to just 2 for the special case of a junction that is part of a multi-junction EVENT
+    //
     const unsigned minJunctionCandidateSpanningCount(std::min(2u,opt.minCandidateSpanningCount));
 
     // track filtration for each junction:
     std::vector<bool> isJunctionFiltered(isInputJunctionFiltered);
 
-    // early SV filtering:
+    // first step of SV filtering (before candidates are written):
     //
     // 2 junction filter types:
     // 1) tests where the junction can fail independently
@@ -138,7 +140,7 @@ writeSV(
 #endif
 
         // junction dependent tests:
-        //   (1) at least one junction in the set must have spanning count of 3 or more
+        //   (1) at least one junction in the set must have spanning count of minCandidateSpanningCount or more
         bool isJunctionSpanFail(false);
         if (isCandidateSpanning)
         {
@@ -248,8 +250,10 @@ writeSV(
 
     bool isMJEvent(false);
 
+    unsigned sampleCount(svScore.sampleCount());
+    unsigned diploidSampleCount(svScore.diploidSampleCount());
     SVModelScoreInfo mjJointModelScoreInfo;
-    mjJointModelScoreInfo.setSampleCount(svScore.sampleCount(),svScore.diploidSampleCount());
+    mjJointModelScoreInfo.setSampleCount(sampleCount, diploidSampleCount);
     svScore.scoreSV(svData, mjAssemblyData, mjSV, junctionSVId,
                     isJunctionFiltered, isSomatic, isTumorOnly,
                     mjModelScoreInfo, mjJointModelScoreInfo,
@@ -261,15 +265,81 @@ writeSV(
     bool isMJDiploidEvent(isMJEvent);
     EventInfo event;
     event.junctionCount=unfilteredJunctionCount;
+
     bool isMJEventWriteDiploid(false);
     bool isMJEventWriteSomatic(false);
 
+    std::vector<bool> isJunctionSampleCheckFail(diploidSampleCount, false);
+
     if (isMJEvent)
     {
+        // sample specific check for the assumption of multi-junction candidates: every junction shares the same genotype.
+        // check if the individual junctions should be potentially assigned different genotypes.
+        for (unsigned sampleIndex(0); sampleIndex<diploidSampleCount; ++sampleIndex)
+        {
+            const SVScoreInfoDiploid& jointDiploidInfo(mjJointModelScoreInfo.diploid);
+            const SVScoreInfoDiploidSample& jointDiploidSampleInfo(jointDiploidInfo.samples[sampleIndex]);
+            const DIPLOID_GT::index_t jointGT(jointDiploidSampleInfo.gt);
+            const double jointGtPProb(jointDiploidSampleInfo.pprob[jointGT]);
+
+            if (jointGT == DIPLOID_GT::REF)
+            {
+                isJunctionSampleCheckFail[sampleIndex] = true;
+#ifdef DEBUG_GSV
+                if (isJunctionSampleCheckFail[sampleIndex])
+                {
+                    log_os << __FUNCTION__ << ": The multi-junction candidate has hom-ref for sample #"
+                           << sampleIndex << ".\n";
+                }
+#endif
+                continue;
+            }
+
+            for (unsigned junctionIndex(0); junctionIndex < junctionCount; ++junctionIndex)
+            {
+                if (isJunctionFiltered[junctionIndex]) continue;
+
+                const SVScoreInfoDiploid& diploidInfo(mjModelScoreInfo[junctionIndex].diploid);
+                const SVScoreInfoDiploidSample& diploidSampleInfo(diploidInfo.samples[sampleIndex]);
+                const DIPLOID_GT::index_t singleGT(diploidSampleInfo.gt);
+                const double singleGtPProb(diploidSampleInfo.pprob[singleGT]);
+                const double deltaGtPProb(jointGtPProb - diploidSampleInfo.pprob[jointGT]);
+
+                // fail the genotype check if
+                // 1) the joint event changes the genotype of the junction and increases the posterior prob by more than 0.9
+                // 2) the posterior prob is larger than 0.9 when the junction is genotyped individually
+                if ((! (jointGT==singleGT)) && (deltaGtPProb > 0.9) && (singleGtPProb > 0.9))
+                {
+                    isJunctionSampleCheckFail[sampleIndex] = true;
+                    break;
+                }
+            }
+
+#ifdef DEBUG_GSV
+            if (isJunctionSampleCheckFail[sampleIndex])
+            {
+                log_os << __FUNCTION__ << ": The multi-junction candidate failed the check of sample-specific genotyping for sample #"
+                       << sampleIndex << ".\n";
+            }
+#endif
+        }
+
+        // if any sample passing the genotype check, the multi-junction diploid event remains valid;
+        // otherwise, fail the multi-junction candidate
+        if (! isAnyFalse(isJunctionSampleCheckFail)) isMJDiploidEvent = false;
+
+#ifdef DEBUG_GSV
+        if (! isMJDiploidEvent)
+        {
+            log_os << __FUNCTION__ << ": Rejecting the multi-junction candidate, failed the sample-specific check of genotyping for all diploid samples.\n";
+        }
+#endif
+
         for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
         {
             if (isJunctionFiltered[junctionIndex]) continue;
 
+            // set the Id of the first junction in the group as the event (i.e. multi-junction) label
             if (event.label.empty())
             {
                 const SVId& svId(junctionSVId[junctionIndex]);
@@ -278,7 +348,8 @@ writeSV(
 
             const SVModelScoreInfo& modelScoreInfo(mjModelScoreInfo[junctionIndex]);
 
-            // for diploid case only we decide to use multi-junction or single junction based on best score:
+            // for diploid case only,
+            // we decide to use multi-junction or single junction based on best score:
             // (for somatic case a lower somatic score could be due to reference evidence in an event member)
             //
             if (mjJointModelScoreInfo.diploid.filters.size() > modelScoreInfo.diploid.filters.size())
@@ -289,23 +360,9 @@ writeSV(
             {
                 isMJDiploidEvent=false;
             }
-        }
 
-        // for events, we write all junctions, or no junctions, so we need to determine write status over
-        // the whole set rather than a single junctions:
-        for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
-        {
-            const SVModelScoreInfo& modelScoreInfo(mjModelScoreInfo[junctionIndex]);
-
-            if (isMJDiploidEvent)
-            {
-                if ((mjJointModelScoreInfo.diploid.altScore >= opt.diploidOpt.minOutputAltScore) ||
-                    (modelScoreInfo.diploid.altScore >= opt.diploidOpt.minOutputAltScore))
-                {
-                    isMJEventWriteDiploid = true;
-                }
-            }
-
+            // for somatic case,
+            // report multi-junction if either the multi-junction OR ANY single junction has a good score.
             if ((mjJointModelScoreInfo.somatic.somaticScore >= opt.somaticOpt.minOutputSomaticScore) ||
                 (modelScoreInfo.somatic.somaticScore >= opt.somaticOpt.minOutputSomaticScore))
             {
@@ -313,6 +370,13 @@ writeSV(
             }
 
             //TODO: set up criteria for isMJEventWriteTumor
+        }
+
+        // for events, we write all junctions, or no junctions,
+        // so we need to determine write status over the whole set rather than a single junction
+        if (isMJDiploidEvent)
+        {
+            isMJEventWriteDiploid = (mjJointModelScoreInfo.diploid.altScore >= opt.diploidOpt.minOutputAltScore);
         }
     }
 
@@ -346,8 +410,27 @@ writeSV(
         {
             {
                 const EventInfo& diploidEvent( isMJDiploidEvent ? event : nonEvent );
-                const SVModelScoreInfo& scoreInfo(isMJDiploidEvent ? mjJointModelScoreInfo : modelScoreInfo);
-                const SVScoreInfoDiploid& diploidInfo(scoreInfo.diploid);
+                const SVModelScoreInfo& scoreInfo( isMJDiploidEvent ? mjJointModelScoreInfo : modelScoreInfo);
+                SVScoreInfoDiploid diploidInfo(scoreInfo.diploid);
+
+                if (isMJDiploidEvent)
+                {
+                    // if one sample failed the genotype check,
+                    // use the sample-specific diploid scoreInfo, instead of the joint scoreInfo
+                    for (unsigned sampleIndex(0); sampleIndex<diploidSampleCount; ++sampleIndex)
+                    {
+                        if (isJunctionSampleCheckFail[sampleIndex])
+                        {
+#ifdef DEBUG_GSV
+                            log_os << __FUNCTION__ << ": Junction #" << junctionIndex
+                                   << ": Swapped diploid info for sample #" << sampleIndex << ".\n"
+                                   << "Before:" << diploidInfo.samples[sampleIndex] << "\n"
+                                   << "After:" << modelScoreInfo.diploid.samples[sampleIndex] << "\n" ;
+#endif
+                            diploidInfo.samples[sampleIndex] = modelScoreInfo.diploid.samples[sampleIndex];
+                        }
+                    }
+                }
 
                 bool isWriteDiploid(false);
                 if (isMJDiploidEvent)
@@ -367,6 +450,7 @@ writeSV(
 
             if (isSomatic)
             {
+                const EventInfo& somaticEvent( isMJEvent ? event : nonEvent );
                 const SVModelScoreInfo& scoreInfo(isMJEvent ? mjJointModelScoreInfo : modelScoreInfo);
                 const SVScoreInfoSomatic& somaticInfo(scoreInfo.somatic);
 
@@ -383,7 +467,7 @@ writeSV(
 
                 if (isWriteSomatic)
                 {
-                    somWriter.writeSV(svData, assemblyData, sv, svId, baseInfo, somaticInfo, event, modelScoreInfo.somatic);
+                    somWriter.writeSV(svData, assemblyData, sv, svId, baseInfo, somaticInfo, somaticEvent, modelScoreInfo.somatic);
                 }
             }
         }
@@ -472,9 +556,11 @@ evaluateCandidate(
     const bool isComplex(isComplexSV(mjCandidateSV));
     _edgeTracker.addCand(isComplex);
 
-    _edgeStatMan.updateJunctionCandidates(edge, junctionCount, isComplex);
+    _edgeStatMan.updateJunctionCandidateCounts(edge, junctionCount, isComplex);
 
-    // assemble each junction independently:
+    // true if any junction returns a complex (indel) assembly result
+    //
+    // if true, and if the candidate is multi-junction then score and write each junction independently:
     bool isAnySmallAssembler(false);
     std::vector<SVCandidateAssemblyData> mjAssemblyData(junctionCount);
 
@@ -532,6 +618,7 @@ evaluateCandidate(
         // It doesn't do that -- but the broken thing it does, in fact, do, is what we
         // want for the isAnySmallAssembler case so it's well enough for now.
         //
+        /// TODO: update docs -- what is it we "want for the isAnySmallAssembler case"?
         bool isWrite(false);
         for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
         {
@@ -567,6 +654,8 @@ evaluateCandidate(
         const TimeScoper scoreTime(_edgeTracker.scoreTime);
         if ((junctionCount>1) && isAnySmallAssembler)
         {
+            // call each junction independently by providing a filter vector in each iteration
+            // which only leaves a single junction unfiltered:
             for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
             {
                 std::vector<bool> isJunctionFilteredHack(junctionCount,true);

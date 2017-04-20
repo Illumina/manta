@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -73,7 +72,7 @@ struct GSCOptions
 
     bool isRNA = false; ///< if true, RNA specific filtering on candidates and diploid scoring is used
 
-    bool isUnstrandedRNA = false; /// For unstranded RNA data, the direction of fusion transcripts is unknown
+    bool isUnstrandedRNA = false; ///< For unstranded RNA data, the direction of fusion transcripts is unknown
 
     unsigned minCandidateSpanningCount = 3; ///< how many spanning evidence observations are required to become a candidate?
 

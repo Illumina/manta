@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -47,6 +46,8 @@ stage_data
 getStageData(
     const unsigned denoiseBorderSize)
 {
+    // the number of positions below the HEAD position where the
+    // depth buffer can be safely erased
     static const unsigned clearDepthBorderSize(10);
 
     stage_data sd;
@@ -60,6 +61,55 @@ getStageData(
 
 
 
+/// \brief Compute the genomic region in which graph denoising is allowed.
+///
+/// The allowed denoising region is the same as the current scan region, except that the region is shortened
+/// by a fixed-size buffer wherever an adjacent genome segment is potentially being analyzed by another
+/// process in parallel. This protected zone near adjacent segment boundaries helps to ensure that SV
+/// breakend regions spanning the adjacent process boundary are not pessimistically marked as noise before
+/// the evidence from both segments has been merged.
+///
+/// \param scanRegion The region of the genome scanned by this process for SV locus evidence.
+/// \param bamHeader Bam header information. Used to extract chromosome length here.
+/// \param denoiseRegionProtectedBorderSize Length of the protected region where denoising is skipped at adjacent
+///                                         process boundaries.
+/// \return Region where denoising is allowed in this process
+static
+GenomeInterval
+computeDenoiseRegion(
+    const GenomeInterval& scanRegion,
+    const bam_header_info& bamHeader,
+    const int denoiseRegionProtectedBorderSize)
+{
+    GenomeInterval denoiseRegion=scanRegion;
+
+    known_pos_range2& range(denoiseRegion.range);
+    if (range.begin_pos() > 0)
+    {
+        range.set_begin_pos(range.begin_pos()+denoiseRegionProtectedBorderSize);
+    }
+
+    bool isEndBorder(true);
+    if (static_cast<int32_t>(bamHeader.chrom_data.size()) > denoiseRegion.tid)
+    {
+        const pos_t chromEndPos(bamHeader.chrom_data[denoiseRegion.tid].length);
+        isEndBorder=(range.end_pos() < chromEndPos);
+    }
+
+    if (isEndBorder)
+    {
+        range.set_end_pos(range.end_pos()-denoiseRegionProtectedBorderSize);
+    }
+
+#ifdef DEBUG_SFINDER
+    log_os << __FUNCTION__ << ": " << denoiseRegion << "\n";
+#endif
+
+    return  denoiseRegion;
+}
+
+
+/// The compression level used by this object's private depth-per-position buffer.
 static const unsigned depthBufferCompression = 16;
 
 
@@ -72,30 +122,36 @@ SVLocusSetFinder(
     const reference_contig_segment& refSeq) :
     _isAlignmentTumor(opt.alignFileOpt.isAlignmentTumor),
     _scanRegion(scanRegion),
-    _stageman(
+    _denoiseRegion(computeDenoiseRegion(scanRegion, bamHeader, REGION_DENOISE_BORDER)),
+    _stageManager(
         STAGE::getStageData(REGION_DENOISE_BORDER),
         pos_range(
             scanRegion.range.begin_pos(),
             scanRegion.range.end_pos()),
         *this),
     _svLoci(opt.graphOpt),
-    _depth(depthBufferCompression),
-    _isScanStarted(false),
+    _positionReadDepthEstimate(depthBufferCompression),
     _isInDenoiseRegion(false),
-    _denoisePos(0),
+    _denoiseStartPos(0),
     _readScanner(opt.scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilename, opt.isRNA),
-    _isMaxDepth(false),
+    _isMaxDepthFilter(false),
     _maxDepth(0),
     _bamHeader(bamHeader),
     _refSeq(refSeq)
 {
+    //
+    // initialize max depth filtration values:
+    //
     const ChromDepthFilterUtil dFilter(opt.chromDepthFilename, opt.scanOpt.maxDepthFactor, bamHeader);
-    _isMaxDepth=dFilter.isMaxDepthFilter();
-    if (_isMaxDepth)
+    _isMaxDepthFilter=dFilter.isMaxDepthFilter();
+    if (_isMaxDepthFilter)
     {
         _maxDepth=dFilter.maxDepth(scanRegion.tid);
     }
 
+    //
+    // initialize various SV locus graph meta-data
+    //
     const unsigned sampleCount(opt.alignFileOpt.alignmentFilename.size());
     _svLoci.getCounts().setSampleCount(sampleCount);
 
@@ -104,40 +160,7 @@ SVLocusSetFinder(
         _svLoci.getCounts().getSampleCounts(sampleIndex).sampleSource = opt.alignFileOpt.alignmentFilename[sampleIndex];
     }
 
-    _svLoci.header = _bamHeader;
-    updateDenoiseRegion();
-}
-
-
-
-void
-SVLocusSetFinder::
-updateDenoiseRegion()
-{
-    _denoiseRegion=_scanRegion;
-
-    known_pos_range2& range(_denoiseRegion.range);
-    if (range.begin_pos() > 0)
-    {
-        range.set_begin_pos(range.begin_pos()+REGION_DENOISE_BORDER);
-    }
-
-    bool isEndBorder(true);
-    if (static_cast<int32_t>(_svLoci.header.chrom_data.size()) > _denoiseRegion.tid)
-    {
-        const pos_t chromEndPos(_svLoci.header.chrom_data[_denoiseRegion.tid].length);
-        isEndBorder=(range.end_pos() < chromEndPos);
-    }
-
-    if (isEndBorder)
-    {
-        range.set_end_pos(range.end_pos()-REGION_DENOISE_BORDER);
-    }
-
-#ifdef DEBUG_SFINDER
-    log_os << __FUNCTION__ << ": " << _denoiseRegion << "\n";
-#endif
-
+    _svLoci.header = bamHeader;
 }
 
 
@@ -157,7 +180,12 @@ process_pos(const int stage_no,
     }
     else if (stage_no == STAGE::DENOISE)
     {
-        static const pos_t denoiseMinChunk(1000);
+        // denoise the SV locus graph in regions of at least this size
+        //
+        // this parameter batches the denoising process to balance runtime vs.
+        // maintaining the SV locus graph as a reasonably compact data structure
+        //
+        static const pos_t minDenoiseRegionSize(1000);
 
         if (_denoiseRegion.range.is_pos_intersect(pos))
         {
@@ -168,14 +196,14 @@ process_pos(const int stage_no,
 
             if (! _isInDenoiseRegion)
             {
-                _denoisePos=_denoiseRegion.range.begin_pos();
+                _denoiseStartPos=_denoiseRegion.range.begin_pos();
                 _isInDenoiseRegion=true;
             }
 
-            if ( (1 + pos-_denoisePos) >= denoiseMinChunk)
+            if ( (1 + pos-_denoiseStartPos) >= minDenoiseRegionSize)
             {
-                _svLoci.cleanRegion(GenomeInterval(_denoiseRegion.tid, _denoisePos, (pos+1)));
-                _denoisePos = (pos+1);
+                _svLoci.cleanRegion(GenomeInterval(_denoiseRegion.tid, _denoiseStartPos, (pos+1)));
+                _denoiseStartPos = (pos+1);
             }
         }
         else
@@ -187,10 +215,10 @@ process_pos(const int stage_no,
 
             if (_isInDenoiseRegion)
             {
-                if ( (_denoiseRegion.range.end_pos()-_denoisePos) > 0)
+                if ( (_denoiseRegion.range.end_pos()-_denoiseStartPos) > 0)
                 {
-                    _svLoci.cleanRegion(GenomeInterval(_denoiseRegion.tid, _denoisePos, _denoiseRegion.range.end_pos()));
-                    _denoisePos = _denoiseRegion.range.end_pos();
+                    _svLoci.cleanRegion(GenomeInterval(_denoiseRegion.tid, _denoiseStartPos, _denoiseRegion.range.end_pos()));
+                    _denoiseStartPos = _denoiseRegion.range.end_pos();
                 }
                 _isInDenoiseRegion=false;
             }
@@ -198,7 +226,7 @@ process_pos(const int stage_no,
     }
     else if (stage_no == STAGE::CLEAR_DEPTH)
     {
-        _depth.clear_pos(pos);
+        _positionReadDepthEstimate.clear_pos(pos);
     }
     else
     {
@@ -214,20 +242,22 @@ addToDepthBuffer(
     const unsigned defaultReadGroupIndex,
     const bam_record& bamRead)
 {
-    if (! _isMaxDepth) return;
+    if (! _isMaxDepthFilter) return;
 
-    // estimate depth from normal sample only:
+    // estimate depth from normal sample(s) only:
     if (_isAlignmentTumor[defaultReadGroupIndex]) return;
 
-    // depth estimation relies on a simple filtration criteria to stay in sync with the chromosome mean
-    // depth estimates:
+    // depth estimation uses only very simple read filtration criteria (these filters should be synced with
+    // the chromosome expected depth estimator)
+    /// TODO: Update filtration here to match current expected depth filtration
     if (bamRead.is_unmapped()) return;
 
     const pos_t refPos(bamRead.pos()-1);
 
-    /// stick to a simple approximation -- ignore CIGAR string and just look at the read length:
+    // Estimated read depth uses a very simple approximation that each input read aligns without any indels.
+    // This is done to reduce the depth estimation runtime overhead.
     const pos_t readSize(bamRead.read_size());
-    _depth.inc(refPos,readSize);
+    _positionReadDepthEstimate.inc(refPos,readSize);
 }
 
 
@@ -238,36 +268,49 @@ update(
     const bam_record& bamRead,
     const unsigned defaultReadGroupIndex)
 {
-    _isScanStarted=true;
-
+    // True if the read comes from a tumor sample.
     const bool isTumor(_isAlignmentTumor[defaultReadGroupIndex]);
     if (! isTumor)
     {
-        // depth estimation relies on a simple filtration criteria to stay in sync with the chromosome mean
-        // depth estimates using samtools idxstats:
         if (! bamRead.is_unmapped())
         {
+            // Update the depth buffer used to determine high-depth read filtration
             addToDepthBuffer(defaultReadGroupIndex, bamRead);
         }
     }
 
-    // note we currently filter unmapped but allow unpaired/unmapped mate to come through this screen
-    // these reads can still show an assembly signal as individual reads, or by contributing shadows
+    // This is the primary read filtration step for the purpose of graph building
+    //
+    // Although unmapped reads themselves are filtered out, reads with unmapped mates are still
+    // accepted, because these contribute signal for assembly (indel) regions.
     if (SVLocusScanner::isMappedReadFilteredCore(bamRead)) return;
 
-    if (_isMaxDepth)
+    // Filter out reads from high-depth chromosome regions
+    if (_isMaxDepthFilter)
     {
-        if (_depth.val(bamRead.pos()-1) > _maxDepth) return;
+        if (_positionReadDepthEstimate.val(bamRead.pos()-1) > _maxDepth) return;
     }
 
+    // counts/incounts are part of the statistics tracking framework used for
+    // methods diagnostics. They do not impact the graph build.
     SampleCounts& counts(_svLoci.getCounts().getSampleCounts(defaultReadGroupIndex));
     SampleReadInputCounts& incounts(counts.input);
+
+    // Filter out reads below the minimum MAPQ threshold
     if (bamRead.map_qual() < _readScanner.getMinMapQ())
     {
         incounts.minMapq++;
         return;
     }
 
+    // Filter out reads which are not found to be indicative of an SV
+    //
+    // For certain types of SV evidence, these tests are designed to be a faster approximation of the
+    // full test which will be repeated when the read(-pairs) are converted to SV locus graph elements,
+    // therefor a small number of reads which make it through this filter will be effectively filtered
+    // later as non-evidence -- they will not be filtered per se, but rather converted into zero SVLocus
+    // objects.
+    //
     if (! _readScanner.isSVEvidence(bamRead,defaultReadGroupIndex,_refSeq,&(incounts.evidenceCount))) return;
 
 #ifdef DEBUG_SFINDER
@@ -277,15 +320,24 @@ update(
     // check that this read starts in our scan region:
     if (! _scanRegion.range.is_pos_intersect(bamRead.pos()-1)) return;
 
-    _stageman.handle_new_pos_value(bamRead.pos()-1);
+    // update the stage manager to move the head pointer forward to the current read's position
+    //
+    // This may trigger a denoising step or clear buffered information for all positions at a
+    // given offset below the new head position
+    //
+    _stageManager.handle_new_pos_value(bamRead.pos()-1);
 
+    // convert the given read into zero to many SVLocus objects
+    //
+    // In almost all cases, each read should be converted into one SVLocus object, and that
+    // SVLocus will consist of either one or two SVLocusNodes.
+    //
     std::vector<SVLocus> loci;
-
     SampleEvidenceCounts& eCounts(counts.evidence);
-
     _readScanner.getSVLoci(bamRead, defaultReadGroupIndex, _bamHeader,
                            _refSeq, loci, eCounts);
 
+    // merge each non-empty SV locus into this genome segment graph:
     for (const SVLocus& locus : loci)
     {
         if (locus.empty()) continue;
