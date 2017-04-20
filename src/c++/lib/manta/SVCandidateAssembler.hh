@@ -38,7 +38,7 @@
 #include <vector>
 
 
-//#define ITERATIVE_ASSEMBLER
+#define ITERATIVE_ASSEMBLER
 #ifdef ITERATIVE_ASSEMBLER
 typedef IterativeAssemblerOptions AssemblerOptions;
 #else
