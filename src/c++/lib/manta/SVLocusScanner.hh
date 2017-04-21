@@ -17,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 /// \author Ole Schulz-Trieglaff
 /// \author Bret Barnes
@@ -54,21 +54,26 @@ enum index_t
 }
 
 
-/// The counts in the SVLocus Graph represent an abstract weight of evidence supporting each edge/node.
+/// \brief This object centralizes the weights applied to different sources of SV evidence to indicate relative
+///        confidence in the accuracy of each observation.
 ///
-/// To support large and small-scale evidence in a single graph, we need to allow for different weightings
-/// for different evidence types
+/// The evidence weights used in the SVLocus Graph represent an abstract strength of evidence supporting each edge. The
+/// evidence weights are reduced to small counts so that the weights can be used as part of a low-memory graph
+/// representation. The weights can be arbitrarily scaled collectively without changing the result, only the  relative
+/// values are important.
 ///
+/// Evidence weights express the confidence in an evidence source for discovery and graph building, when SV's are
+/// actually scored a much more detailed process is used to derive confidence in the SV based on observed evidence.
 struct SVObservationWeights
 {
-    // noise reduction:
-    static const unsigned observation = 3; ///< 'average' observation weight, this is used to scale noise filtration, but not for any evidence type
+    /// Evidence weight for one average-case observation. This acts as a baseline scale for the whole weighting scheme.
+    static const unsigned observation = 3;
 
     // input evidence:
-    static const unsigned readPair = observation;
+    static const unsigned readPair = observation; ///< Weight used for anomalous read pairs
     static const unsigned closeReadPair = 1;
     static const unsigned veryCloseReadPair = 1;
-    static const unsigned internalReadEvent = observation; ///< indels, soft-clip, etc.
+    static const unsigned internalReadEvent = observation; ///< Weight used for indels, soft-clip, etc.
 };
 
 

@@ -17,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 /// \author Ole Schulz-Trieglaff
 /// \author Bret Barnes
@@ -91,32 +91,40 @@ isLarge(const index_t i)
 
 
 
+/// \brief Convert input details into an SVObservation indicating an SV candidate which occurs on a single
+///        chromosome from \p leftPos to \p rightPos.
+///
+/// \param[in] candidateChromosomeIndex Index of the chromosome on which the SV candidate occurs
+/// \param[in] svEvidenceSource The type of SV evidence (anomalous read pair, CIGAR string, etc)
+/// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2, etc..)
+/// \param[in] isComplex If true, create a 'complex' candidate indicating a non-specific local assembly task to search
+///                      for indels in a single region.
 static
 SVObservation
 GetSplitSVCandidate(
     const ReadScannerDerivOptions& dopt,
-    const int32_t alignTid,
-    const pos_t alignTlen,
+    const int32_t candidateChromosomeIndex,
+    const pos_t candidateChromosomeLength,
     const pos_t leftPos,
     const pos_t rightPos,
-    const SVEvidenceType::index_t& svSource,
-    const FRAGSOURCE::index_t& fragSource,
+    const SVEvidenceType::index_t& svEvidenceSource,
+    const SourceOfSVEvidenceInDNAFragment::index_t& dnaFragmentSVEvidenceSource,
     const bool isComplex = false)
 {
     SVObservation sv;
     SVBreakend& localBreakend(sv.bp1);
     SVBreakend& remoteBreakend(sv.bp2);
 
-    localBreakend.interval.tid = alignTid;
-    remoteBreakend.interval.tid = alignTid;
+    localBreakend.interval.tid = candidateChromosomeIndex;
+    remoteBreakend.interval.tid = candidateChromosomeIndex;
 
-    localBreakend.lowresEvidence.add(svSource);
-    sv.evtype = svSource;
-    sv.fragSource = fragSource;
+    localBreakend.lowresEvidence.add(svEvidenceSource);
+    sv.svEvidenceType = svEvidenceSource;
+    sv.dnaFragmentSVEvidenceSource = dnaFragmentSVEvidenceSource;
 
     if (! isComplex)
     {
-        remoteBreakend.lowresEvidence.add(svSource);
+        remoteBreakend.lowresEvidence.add(svEvidenceSource);
         localBreakend.state = SVBreakendState::RIGHT_OPEN;
         remoteBreakend.state = SVBreakendState::LEFT_OPEN;
     }
@@ -130,15 +138,15 @@ GetSplitSVCandidate(
 
     if (! isComplex)
     {
-        localBreakend.interval.range.set_end_pos(std::min(alignTlen, (leftPos+dopt.afterBreakend)));
+        localBreakend.interval.range.set_end_pos(std::min(candidateChromosomeLength, (leftPos+dopt.afterBreakend)));
     }
     else
     {
-        localBreakend.interval.range.set_end_pos(std::min(alignTlen, (rightPos+dopt.afterBreakend)));
+        localBreakend.interval.range.set_end_pos(std::min(candidateChromosomeLength, (rightPos+dopt.afterBreakend)));
     }
 
     remoteBreakend.interval.range.set_begin_pos(std::max(0,rightPos-dopt.beforeBreakend));
-    remoteBreakend.interval.range.set_end_pos(std::min(alignTlen, (rightPos+dopt.afterBreakend)));
+    remoteBreakend.interval.range.set_end_pos(std::min(candidateChromosomeLength, (rightPos+dopt.afterBreakend)));
 
     return sv;
 }
@@ -203,7 +211,9 @@ updateSABreakend(
 
 
 
-/// get SV candidates from SA-tag split-read alignment
+/// \brief Convert details from one of \p localRead's SA-tag split-read alignments into an SVObservation.
+///
+/// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2, etc..)
 static
 SVObservation
 GetSplitSACandidate(
@@ -211,15 +221,15 @@ GetSplitSACandidate(
     const bam_record& localRead,
     const SimpleAlignment& localAlign,
     const SimpleAlignment& remoteAlign,
-    const FRAGSOURCE::index_t fragSource,
+    const SourceOfSVEvidenceInDNAFragment::index_t dnaFragmentSVEvidenceSource,
     const bam_header_info& bamHeader)
 {
     using namespace SVEvidenceType;
     static const index_t svSource(SPLIT_ALIGN);
 
     SVObservation sv;
-    sv.evtype = svSource;
-    sv.fragSource = fragSource;
+    sv.svEvidenceType = svSource;
+    sv.dnaFragmentSVEvidenceSource = dnaFragmentSVEvidenceSource;
 
     SVBreakend& localBreakend(sv.bp1);
     SVBreakend& remoteBreakend(sv.bp2);
@@ -318,7 +328,15 @@ parseSACandidatesFromRead(
 }
 
 
-
+/// \brief Find all 'SA' formatted split read sub-alignments in a single read alignment record, and convert these
+///        into SVObservation objects.
+///
+/// Convert each BAM "SA" sub-alignment record in a read into an SVObservation object. The method currently only
+/// returns an SVObservation object if the read contains exactly one "SA" sub-alignment record, but the interface
+/// supports parsing out any number of split alignments, and this function may be updated to do so in the future.
+///
+/// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2, etc..)
+/// \param[out] candidates New SVObservation objects are appended to this vector. Contents of the vector are preserved but not read.
 static
 void
 getSACandidatesFromRead(
@@ -326,7 +344,7 @@ getSACandidatesFromRead(
     const ReadScannerDerivOptions& dopt,
     const bam_record& localRead,
     const SimpleAlignment& localAlign,
-    const FRAGSOURCE::index_t fragSource,
+    const SourceOfSVEvidenceInDNAFragment::index_t dnaFragmentSVEvidenceSource,
     const bam_header_info& bamHeader,
     std::vector<SVObservation>& candidates)
 {
@@ -337,14 +355,13 @@ getSACandidatesFromRead(
 
     if (remoteAlign.empty()) return;
 
-    // Only handle a single split alignment right now.
-    // In the future we could sort the SA tags by order on the template, possibly
-    // also removing segments that map to two different areas,
+    // Only handle a single split alignment right now. In the future we should sort the SA tags by order on the
+    // template, possibly also removing segments that map to two different areas.
     if (remoteAlign.size() > 1) return;
 
     for (const auto& ral : remoteAlign)
     {
-        candidates.push_back(GetSplitSACandidate(dopt, localRead, localAlign, ral, fragSource, bamHeader));
+        candidates.push_back(GetSplitSACandidate(dopt, localRead, localAlign, ral, dnaFragmentSVEvidenceSource, bamHeader));
 #ifdef DEBUG_SCANNER
         log_os << __FUNCTION__ << ": evaluating SA sv for inclusion: " << candidates.back() << "\n";
 #endif
@@ -353,7 +370,10 @@ getSACandidatesFromRead(
 
 
 
-/// extract large indels in alignment cigar string to internal candidate format
+/// \brief Convert all large-indels already present in a single read's alignment into SVObservation objects
+///
+/// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2, etc..)
+/// \param[out] candidates New SVObservation objects are appended to this vector. Contents of the vector are preserved but not read.
 static
 void
 getSVCandidatesFromReadIndels(
@@ -361,7 +381,7 @@ getSVCandidatesFromReadIndels(
     const ReadScannerDerivOptions& dopt,
     const SimpleAlignment& align,
     const bam_header_info& bamHeader,
-    const FRAGSOURCE::index_t fragSource,
+    const SourceOfSVEvidenceInDNAFragment::index_t dnaFragmentSVEvidenceSource,
     std::vector<SVObservation>& candidates)
 {
     using namespace SVEvidenceType;
@@ -373,8 +393,8 @@ getSVCandidatesFromReadIndels(
     unsigned pathIndex(0);
     unsigned readOffset(0);
     pos_t refHeadPos(align.pos);
-    const int32_t alignTid(align.tid);
-    const pos_t alignTlen(bamHeader.chrom_data[alignTid].length);
+    const int32_t chromosomeIndex(align.tid);
+    const pos_t chromosomeLength(bamHeader.chrom_data[chromosomeIndex].length);
 
     const unsigned pathSize(align.path.size());
     while (pathIndex<pathSize)
@@ -406,7 +426,7 @@ getSVCandidatesFromReadIndels(
                 if (ps.length >= opt.minCandidateVariantSize)
                 {
                     static const bool isComplex(true);
-                    candidates.push_back(GetSplitSVCandidate(dopt, alignTid, alignTlen, refHeadPos, refHeadPos, svSource, fragSource, isComplex));
+                    candidates.push_back(GetSplitSVCandidate(dopt, chromosomeIndex, chromosomeLength, refHeadPos, refHeadPos, svSource, dnaFragmentSVEvidenceSource, isComplex));
                 }
             }
         }
@@ -415,7 +435,7 @@ getSVCandidatesFromReadIndels(
             const swap_info sinfo(align.path,pathIndex);
             if ((sinfo.delete_length >= opt.minCandidateVariantSize) || (sinfo.insert_length >= opt.minCandidateVariantSize))
             {
-                candidates.push_back(GetSplitSVCandidate(dopt, alignTid, alignTlen, refHeadPos, refHeadPos+sinfo.delete_length, svSource, fragSource));
+                candidates.push_back(GetSplitSVCandidate(dopt, chromosomeIndex, chromosomeLength, refHeadPos, refHeadPos+sinfo.delete_length, svSource, dnaFragmentSVEvidenceSource));
             }
 
             nPathSegments = sinfo.n_seg;
@@ -428,14 +448,14 @@ getSVCandidatesFromReadIndels(
             {
                 if (ps.length >= opt.minCandidateVariantSize)
                 {
-                    candidates.push_back(GetSplitSVCandidate(dopt, alignTid, alignTlen, refHeadPos, refHeadPos+ps.length, svSource, fragSource));
+                    candidates.push_back(GetSplitSVCandidate(dopt, chromosomeIndex, chromosomeLength, refHeadPos, refHeadPos+ps.length, svSource, dnaFragmentSVEvidenceSource));
                 }
             }
             else if (ps.type == INSERT)
             {
                 if (ps.length >= opt.minCandidateVariantSize)
                 {
-                    candidates.push_back(GetSplitSVCandidate(dopt, alignTid, alignTlen, refHeadPos, refHeadPos, svSource, fragSource));
+                    candidates.push_back(GetSplitSVCandidate(dopt, chromosomeIndex, chromosomeLength, refHeadPos, refHeadPos, svSource, dnaFragmentSVEvidenceSource));
                 }
             }
         }
@@ -448,9 +468,16 @@ getSVCandidatesFromReadIndels(
 }
 
 
-
-/// extract poorly aligned read ends (semi-aligned and/or soft-clipped)
-/// to internal candidate format
+/// \brief Detect if \p bamRead is semi-aligned (has one or two poorly-aligned ends), if so convert each poorly aligned
+///       read end to an SVObservation object.
+///
+/// Reads with poorly aligned ends are referred to as semi-aligned because part of the read is confidently aligned
+/// and part of the read (one or both edges) is poorly aligned. The basis for an SV hypothesis is that the poorly
+/// aligned sections of the reads should be mapped elsewhere due to a large indel or SV breakpoint not reflected
+/// in the current read alignment.
+///
+/// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2, etc..)
+/// \param[out] candidates New SVObservation objects are appended to this vector. Contents of the vector are preserved but not read.
 static
 void
 getSVCandidatesFromSemiAligned(
@@ -459,7 +486,7 @@ getSVCandidatesFromSemiAligned(
     const bam_record& bamRead,
     const bam_header_info& bamHeader,
     const SimpleAlignment& bamAlign,
-    const FRAGSOURCE::index_t fragSource,
+    const SourceOfSVEvidenceInDNAFragment::index_t dnaFragmentSVEvidenceSource,
     const reference_contig_segment& refSeq,
     std::vector<SVObservation>& candidates)
 {
@@ -474,24 +501,26 @@ getSVCandidatesFromSemiAligned(
     if ((leadingMismatchLen + trailingMismatchLen) >= bamRead.read_size()) return;
 
     using namespace SVEvidenceType;
-    static const index_t svSource(SEMIALIGN);
+    static const index_t svEvidenceSource(SEMIALIGN);
 
     // semi-aligned reads don't define a full hypothesis, so they're always evidence for a 'complex' ie. undefined, event
     // in a fashion analogous to clipped reads
     static const bool isComplex(true);
-    const int32_t alignTid(bamRead.target_id());
-    const pos_t alignTlen(bamHeader.chrom_data[alignTid].length);
+    const int32_t candidateChromosomeIndex(bamRead.target_id());
+    const pos_t candidateChromosomeLength(bamHeader.chrom_data[candidateChromosomeIndex].length);
 
     if (leadingMismatchLen >= opt.minSemiAlignedMismatchLen)
     {
         const pos_t pos(leadingRefPos);
-        candidates.push_back(GetSplitSVCandidate(dopt,alignTid,alignTlen,pos,pos,svSource, fragSource,isComplex));
+        candidates.push_back(GetSplitSVCandidate(dopt,candidateChromosomeIndex,candidateChromosomeLength,pos,pos,
+                                                 svEvidenceSource, dnaFragmentSVEvidenceSource,isComplex));
     }
 
     if (trailingMismatchLen >= opt.minSemiAlignedMismatchLen)
     {
         const pos_t pos(trailingRefPos);
-        candidates.push_back(GetSplitSVCandidate(dopt,alignTid,alignTlen,pos,pos,svSource, fragSource,isComplex));
+        candidates.push_back(GetSplitSVCandidate(dopt,candidateChromosomeIndex,candidateChromosomeLength,pos,pos,
+                                                 svEvidenceSource, dnaFragmentSVEvidenceSource,isComplex));
     }
 }
 
@@ -550,8 +579,8 @@ struct AlignmentPairAnalyzer
         static const index_t svLocalPair(LOCAL_PAIR);
         static const index_t svPair(PAIR);
 
-        sv.evtype = svLocalPair;
-        sv.fragSource = FRAGSOURCE::PAIR;
+        sv.svEvidenceType = svLocalPair;
+        sv.dnaFragmentSVEvidenceSource = SourceOfSVEvidenceInDNAFragment::READ_PAIR;
 
         SVBreakend& localBreakend(sv.bp1);
         SVBreakend& remoteBreakend(sv.bp2);
@@ -574,7 +603,7 @@ struct AlignmentPairAnalyzer
             remoteBreakend.lowresEvidence.add(svLocalPair);
             localBreakend.lowresEvidence.add(svPair);
             remoteBreakend.lowresEvidence.add(svPair);
-            sv.evtype = svPair;
+            sv.svEvidenceType = svPair;
         }
 
         // set state and interval for each breakend:
@@ -908,7 +937,7 @@ getSingleReadSVCandidates(
     using namespace illumina::common;
 
     const bool isRead2(localRead.is_paired() && (localRead.read_no() == 2));
-    const FRAGSOURCE::index_t fragSource(isRead2 ? FRAGSOURCE::READ2 : FRAGSOURCE::READ1);
+    const SourceOfSVEvidenceInDNAFragment::index_t fragSource(isRead2 ? SourceOfSVEvidenceInDNAFragment::READ2 : SourceOfSVEvidenceInDNAFragment::READ1);
 
     // - process any large indels in the localRead:
     getSVCandidatesFromReadIndels(opt, dopt, localAlign, bamHeader, fragSource, candidates);

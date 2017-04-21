@@ -17,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -78,8 +78,7 @@ struct ReadScannerOptions
     /// the predicted breakend range should be no smaller than this:
     unsigned minSplitBreakendSize = 10;
 
-    /// Semi-aligned regions (including soft-clipped) need to be at least this long to be included as SV evidence
-    ///
+    /// \brief Minimum length required of a poorly aligned read end-segment for it to be treated as SV evidence.
     unsigned minSemiAlignedMismatchLen = 8;
 
     /// Minimal length of a cis SV candidate in RNA data

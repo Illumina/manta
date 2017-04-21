@@ -32,10 +32,12 @@
 #include "htsapi/bam_record.hh"
 
 
-/// \brief Searches for poorly aligned read ends indicative of a possible SV or indel breakpoint.
+/// \brief Searches for reads with poorly aligned ends indicative of a possible SV or indel breakpoint.
 ///
-/// The input read is examined for evidence of poor alignment on both the leading and
-/// trailing ends.
+/// The input read is examined for evidence of poor alignment on both the leading and trailing ends.
+/// If poor edge alignment is found, the read is refered to as "semi-aligned' because in this state
+/// part of the read is well aligned while one or both edges of the read are poorly aligned. A semi-aligned read is
+/// distinct from a read which is poorly aligned throughout.
 ///
 /// To do so the following steps are taken:
 /// 1. Reads where there is suspected adaptor 'read-through' due to short fragments size are filtered out.

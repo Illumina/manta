@@ -619,14 +619,14 @@ updateEvidenceIndex(
     if (obs.isSingleReadSource())
     {
         const SVCandidateSetRead& candRead(obs.isRead1Source() ? fragment.read1 : fragment.read2);
-        if (obs.evtype != SVEvidenceType::SPLIT_ALIGN)
+        if (obs.svEvidenceType != SVEvidenceType::SPLIT_ALIGN)
         {
             if ((not candRead.bamrec.empty()) && (not candRead.isSubMapped) )
             {
-                sv.bp1EvidenceIndex[obs.evtype].push_back(candRead.readIndex);
+                sv.bp1EvidenceIndex[obs.svEvidenceType].push_back(candRead.readIndex);
 #ifdef DEBUG_SVDATA
                 log_os << __FUNCTION__ << ": non_split: Added readIndex " << candRead.readIndex
-                       << " to evtype " << obs.evtype << "\n";
+                       << " to svEvidenceType " << obs.svEvidenceType << "\n";
 #endif
 
             }
@@ -641,20 +641,20 @@ updateEvidenceIndex(
 
             if ((not read.bamrec.empty()) && (not read.isSubMapped))
             {
-                readBp[obs.evtype].push_back(read.readIndex);
+                readBp[obs.svEvidenceType].push_back(read.readIndex);
 #ifdef DEBUG_SVDATA
                 log_os << __FUNCTION__ << ": split_mapped: Added readIndex " << candRead.readIndex
-                       << " to evtype " << obs.evtype << "\n";
+                       << " to svEvidenceType " << obs.svEvidenceType << "\n";
 #endif
             }
             if (readSupp.size() == 1)
             {
                 if ((not readSupp.front().bamrec.empty()) && (not readSupp.front().isSubMapped))
                 {
-                    readSuppBp[obs.evtype].push_back(readSupp.front().readIndex);
+                    readSuppBp[obs.svEvidenceType].push_back(readSupp.front().readIndex);
 #ifdef DEBUG_SVDATA
                     log_os << __FUNCTION__ << ": split_supp_mapped: Added readIndex " << readSupp.front().readIndex
-                           << " to evtype " << obs.evtype << "\n";
+                           << " to svEvidenceType " << obs.svEvidenceType << "\n";
 #endif
                 }
             }
@@ -668,18 +668,18 @@ updateEvidenceIndex(
         const SVCandidateSetRead& bp2Read(is1to1 ? fragment.read2 : fragment.read1);
         if ((not bp1Read.bamrec.empty()) && (not bp1Read.isSubMapped))
         {
-            sv.bp1EvidenceIndex[obs.evtype].push_back(bp1Read.readIndex);
+            sv.bp1EvidenceIndex[obs.svEvidenceType].push_back(bp1Read.readIndex);
 #ifdef DEBUG_SVDATA
             log_os << __FUNCTION__ << ": multi_read_source: Added readIndex " << bp1Read.readIndex
-                   << " to evtype " << obs.evtype << "\n";
+                   << " to svEvidenceType " << obs.svEvidenceType << "\n";
 #endif
         }
         if ((not bp1Read.bamrec.empty()) && (not bp2Read.isSubMapped))
         {
-            sv.bp2EvidenceIndex[obs.evtype].push_back(bp2Read.readIndex);
+            sv.bp2EvidenceIndex[obs.svEvidenceType].push_back(bp2Read.readIndex);
 #ifdef DEBUG_SVDATA
             log_os << __FUNCTION__ << ": multi_read_source: Added readIndex " << bp2Read.readIndex
-                   << " to evtype " << obs.evtype << "\n";
+                   << " to svEvidenceType " << obs.svEvidenceType << "\n";
 #endif
         }
     }
@@ -762,7 +762,7 @@ assignFragmentObservationsToSVCandidates(
                 /// the separation starts early (ie. here) because we might not want to use the local-pair
                 /// regions... this will take some trial and error
                 ///
-                const bool isCandLocalOnly(readCand.evtype == SVEvidenceType::LOCAL_PAIR);
+                const bool isCandLocalOnly(readCand.svEvidenceType == SVEvidenceType::LOCAL_PAIR);
                 const bool isSVLocalOnly(sv.bp1.isLocalPairOnly() && sv.bp2.isLocalPairOnly());
 
                 if (isCandLocalOnly == isSVLocalOnly)
@@ -774,7 +774,7 @@ assignFragmentObservationsToSVCandidates(
                         // if there is no hypothesis (small assembly cases (thus "! isSpanning")), we'll be
                         // going back through the bam region during assembly anyway:
                         //
-                        fragment.svLink.emplace_back(svIndex,readCand.evtype);
+                        fragment.svLink.emplace_back(svIndex,readCand.svEvidenceType);
                     }
 
                     updateEvidenceIndex(fragment,readCand,sv);
@@ -808,7 +808,7 @@ assignFragmentObservationsToSVCandidates(
             if (isSpanningCand)
             {
                 // ditto note above, store fragment association only when there's an SV hypothesis:
-                fragment.svLink.emplace_back(newSVIndex,readCand.evtype);
+                fragment.svLink.emplace_back(newSVIndex,readCand.svEvidenceType);
             }
             updateEvidenceIndex(fragment,readCand,svs.back());
         }
@@ -889,7 +889,7 @@ processSequenceFragment(
     for (SVObservation& readCand : _readCandidates)
     {
         using namespace SVEvidenceType;
-        if ( readCand.evtype != SPLIT_ALIGN ) continue;
+        if ( readCand.svEvidenceType != SPLIT_ALIGN ) continue;
 
         if (readCand.bp1.lowresEvidence.getVal(SPLIT_ALIGN) == 0) readCand.bp1.lowresEvidence.add(SPLIT_ALIGN);
         if (readCand.bp2.lowresEvidence.getVal(SPLIT_ALIGN) == 0) readCand.bp2.lowresEvidence.add(SPLIT_ALIGN);

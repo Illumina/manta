@@ -58,7 +58,7 @@ operator<<(
     const SVObservation& svc)
 {
     os << static_cast<SVCandidate>(svc);
-    os << "SVObservation etype: " << SVEvidenceType::label(svc.evtype)
-       << " fragtype: " << FRAGSOURCE::label(svc.fragSource) << "\n";
+    os << "SVObservation etype: " << SVEvidenceType::label(svc.svEvidenceType)
+       << " fragtype: " << SourceOfSVEvidenceInDNAFragment::label(svc.dnaFragmentSVEvidenceSource) << "\n";
     return os;
 }

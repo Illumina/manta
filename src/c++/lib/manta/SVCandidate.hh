@@ -17,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -192,14 +192,21 @@ std::ostream&
 operator<<(std::ostream& os, const SVCandidate& svc);
 
 
-namespace FRAGSOURCE
+/// \brief Specify the nature of SV evidence provided by a single DNA/RNA fragment.
+///
+/// A given fragment to which paired-end sequencing has been run, can provide evidence of an SV via
+/// the alignment of read1 or read2 (for instance if either read directly crosses an SV breakpoint)
+/// or the relative alignment of both reads, which can be used to infer that the fragment spans an
+/// SV breakpoint.
+///
+namespace SourceOfSVEvidenceInDNAFragment
 {
 enum index_t
 {
     UNKNOWN,
     READ1,
     READ2,
-    PAIR
+    READ_PAIR
 };
 
 inline
@@ -214,7 +221,7 @@ label(const index_t i)
         return "read1";
     case READ2:
         return "read2";
-    case PAIR:
+    case READ_PAIR:
         return "pair";
     default:
         return "";
@@ -222,44 +229,52 @@ label(const index_t i)
 }
 }
 
-/// when we extract an SV candidate from a single piece of evidence, it can be treated as a special 'observation' class:
+
+/// \brief A specialized SVCandidate which represents an SV hypothesis generated from a single piece of evidnece, ie.
+///        a single SV 'observation'.
 ///
+/// It is helpful to represent this case as a distinct specialization of SVCandidate b/c this allows additional
+/// detail on the nature of the SV evidence to be added onto the object, (ie. This SV candidate is inferred from
+/// the poorly aligned end of the second read in a read pair).
 struct SVObservation : public SVCandidate
 {
     SVObservation() :
         SVCandidate(),
-        evtype(SVEvidenceType::UNKNOWN),
-        fragSource(FRAGSOURCE::UNKNOWN)
+        svEvidenceType(SVEvidenceType::UNKNOWN),
+        dnaFragmentSVEvidenceSource(SourceOfSVEvidenceInDNAFragment::UNKNOWN)
     {}
 
 #if 0
     void
     clear()
     {
-        evtype = SVEvidenceType::UNKNOWN;
-        fragSource = FRAGSOURCE::UNKNOWN;
+        svEvidenceType = SVEvidenceType::UNKNOWN;
+        dnaFragmentSVEvidenceSource = SourceOfSVEvidenceInDNAFragment::UNKNOWN;
         SVCandidate::clear();
     }
 #endif
 
-    /// does the evidence for this SV observation come from a single read (eg. CIGAR read alignment) or
-    /// from both reads (eg. anomolous read pair)
+    /// \return True if the evidence for this SV observation relies on only a single read (eg. CIGAR read alignment) or
+    ///         relies on both reads of a paired end observation (eg. anomalous read pair)
     bool
     isSingleReadSource() const
     {
-        using namespace FRAGSOURCE;
-        return ((fragSource == READ1) || (fragSource == READ2));
+        using namespace SourceOfSVEvidenceInDNAFragment;
+        return ((dnaFragmentSVEvidenceSource == READ1) || (dnaFragmentSVEvidenceSource == READ2));
     }
 
+    /// \return True if this observation is inferred from the alignment/sequence of the read1
     bool
     isRead1Source() const
     {
-        using namespace FRAGSOURCE;
-        return (fragSource == READ1);
+        using namespace SourceOfSVEvidenceInDNAFragment;
+        return (dnaFragmentSVEvidenceSource == READ1);
     }
 
-    SVEvidenceType::index_t evtype;
-    FRAGSOURCE::index_t fragSource;
+    /// \brief The type of SV evidence (eg. anomalous read pair, large indel in CIGAR string of one read, etc....)
+    SVEvidenceType::index_t svEvidenceType;
+    /// \brief Ths source of the SV evidence within a single DNA fragment (eg. read1, read2, of both)
+    SourceOfSVEvidenceInDNAFragment::index_t dnaFragmentSVEvidenceSource;
 };
 
 
