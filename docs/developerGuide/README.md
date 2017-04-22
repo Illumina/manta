@@ -22,8 +22,9 @@ Manta Developer Guide
   * [Source formatting](#source-formatting)
   * [Git conventions](#git-conventions)
     * [Commit messages](#commit-messages)
-  * [Commit consolidation](#commit-consolidation)
+    * [Commit consolidation](#commit-consolidation)
   * [Changelog conventions](#changelog-conventions)
+* [Branching and release tagging guidelines](#branching-and-release-tagging-guidelines)
   * [Error handling](#error-handling)
     * [General Policies](#general-policies)
     * [Exception Details](#exception-details)
@@ -173,6 +174,10 @@ see the `builderImage` variable.
   * 4-space indents
   * "ANSI" bracket style
 * Note the above restrictions are enforced by an astyle script which is occasionally run on the master branch (see [run_cxx_formatter.bash](../../scratch/source_check_and_format/run_cxx_formatter.bash))
+* Name formatting for all newly introduced code:
+  * Make variable/type names self-documenting whereever this is practical, e.g. sampleCount, breakpointRegion, etc.
+  * Lowercase camelCase variable names
+  * Uppercase CamelCase type names
 * Otherwise, follow local code conventions
 
 ### Git conventions
@@ -182,17 +187,28 @@ see the `builderImage` variable.
 All git commit messages should be prepended with either the associated JIRA or github issue id. For example:
 
 ```
-MANTA-123 improve insertion genotype accuracy
+MANTA-123 Improve insertion genotype accuracy
 
-Improve assembly and realignemnt of large insertions to reduce hom->het undercall
+Improve assembly and realignemnt of large insertions to reduce hom->het undercall.
 ```
 
-Very minor updates (eg. "Fix spelling errors in user guide") may be made without an associated ticket.
-All git commit messages should attempt to conform to practices outlined here:
+Very minor updates may be made without an associated ticket. In these cases providing a category prefix for
+the minor change is still encouraged to provide context, for instance:
+
+```
+docs: Fix paths in user guide examples
+```
+
+```
+build: Close new warnings from clang-4.0.0
+```
+
+All git commit messages should conform to practices outlined here:
 
 http://chris.beams.io/posts/git-commit/
 
-### Commit consolidation
+
+#### Commit consolidation
 
 On any single-developer research branch, history editing is encouraged within the branch to collapse bugs and
 build a more clear feature-by-feature story for other other developers to follow.
@@ -201,14 +217,23 @@ In all other situations history editing is discouraged and a conventional merge-
 
 ### Changelog conventions
 
-Changelog entries should follow very similar guidelines to git commit header lines as described here:
+Changelog entries should follow very similar guidelines to git commit header lines as described in the above section.
+except that a slightly longer message length can be used if needed.
 
-http://chris.beams.io/posts/git-commit/
+Changelog entries should be made for any major branch merge, bug fix, or generally something that would change
+a user's interaction at the configuration step, change the format/interpretation of the output or change
+the variant calling performance.
 
-...except that a longer message length can be used if needed.
+## Branching and release tagging guidelines
 
-Changelog entries should typically be made for any major branch merge, bug fix, or user-visible changes.
-
+All features and bugfixes are developed on separate branches. Branch names should contain the corresponding JIRA ticket
+id or contain the key "github${issueNumber}' to refer to the corresponding issue on github.com. After code
+review and testing, all branches intended for release are merged to the 'develop' branch. Releases are tagged
+on the development branch, and the corresponding release tag can be pushed to the 'master' branch. Thus the master
+branch always represents the most recent stable release. As required version specific development branches are
+created to support continued bugfix iterations on older releases. These branches replace the patch number in the
+release version with an "x", for instance the "v2.4.x" branch would be used to provide bugfix updates "v2.4.2",
+"v2.4.3", etc.
 
 ### Error handling
 
