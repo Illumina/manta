@@ -1350,7 +1350,7 @@ scoreTumorSV(
 }
 
 
-//todo This is mostly a placeholder, real RNA scoring currently happens downstream of Manta
+/// This is mostly a placeholder, real RNA scoring currently happens downstream of Manta
 static
 void
 scoreRNASV(

@@ -94,7 +94,7 @@ parseGSCOptions(
     ("tumor-output-file", po::value(&opt.tumorOutputFilename),
      "Write tumor SVs to file (at least one tumor alignment file must be specified)")
     ("rna-output-file", po::value(&opt.rnaOutputFilename),
-     "Write RNA fusions to file (at least one BAM file and --rna must be specified)")     
+     "Write RNA fusions to file (at least one BAM file and --rna must be specified)")
     ("verbose", po::value(&opt.isVerbose)->zero_tokens(),
      "Turn on low-detail INFO logging.")
     ("skip-assembly", po::value(&opt.isSkipAssembly)->zero_tokens(),
