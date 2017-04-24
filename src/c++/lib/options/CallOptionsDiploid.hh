@@ -51,8 +51,6 @@ struct CallOptionsDiploid
 
     /// filter for large SVs with no pair support
     std::string noPairSupportLabel = "NoPairSupport";
-
-    std::string rnaFilterLabel = "RNAFail";
 };
 
 

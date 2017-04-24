@@ -31,15 +31,13 @@
 
 struct VcfWriterSomaticSV : public VcfWriterSV, VcfWriterScoredSV
 {
-    static const bool isRNA = false;
-
     VcfWriterSomaticSV(
         const CallOptionsSomatic& somaticOpt,
         const bool isMaxDepthFilter,
         const std::string& referenceFilename,
         const SVLocusSet& set,
         std::ostream& os) :
-        VcfWriterSV(referenceFilename, isRNA, set,os),
+        VcfWriterSV(referenceFilename, set,os),
         _somaticOpt(somaticOpt),
         _isMaxDepthFilter(isMaxDepthFilter),
         _somaticInfoPtr(nullptr),
@@ -77,6 +75,7 @@ private:
     modifyTranslocInfo(
         const SVCandidate& sv,
         const bool isFirstOfPair,
+        const SVCandidateAssemblyData& assemblyData,
         std::vector<std::string>& infotags) const override;
 
     void

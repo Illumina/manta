@@ -30,19 +30,14 @@
 #include "options/CallOptionsDiploid.hh"
 
 
-struct VcfWriterDiploidSV : public VcfWriterSV, VcfWriterScoredSV
+struct VcfWriterRnaSV : public VcfWriterSV, VcfWriterScoredSV
 {
-    VcfWriterDiploidSV(
-        const CallOptionsDiploid& diploidOpt,
-        const bool isMaxDepthFilter,
+    VcfWriterRnaSV(
         const std::string& referenceFilename,
         const SVLocusSet& set,
         std::ostream& os) :
         VcfWriterSV(referenceFilename,set,os),
-        _diploidOpt(diploidOpt),
-        _isMaxDepthFilter(isMaxDepthFilter),
-        _diploidInfoPtr(nullptr),
-        _singleJunctionDiploidInfoPtr(nullptr)
+        _rnaInfoPtr(nullptr)
     {}
 
     void
@@ -52,9 +47,8 @@ struct VcfWriterDiploidSV : public VcfWriterSV, VcfWriterScoredSV
         const SVCandidate& sv,
         const SVId& svId,
         const SVScoreInfo& baseInfo,
-        const SVScoreInfoDiploid& diploidInfo,
-        const EventInfo& event,
-        const SVScoreInfoDiploid& singleJunctionDiploidInfo);
+        const SVScoreInfoRna& rnaInfo,
+        const EventInfo& event);
 
 private:
 
@@ -66,11 +60,6 @@ private:
 
     void
     addHeaderFilters() const override;
-
-    void
-    modifyInfo(
-        const EventInfo& event,
-        InfoTag_t& infotags) const override;
 
     void
     modifySample(
@@ -85,28 +74,14 @@ private:
         InfoTag_t& infotags) const override;
 
     void
-    writeQual() const override;
-
-    void
     writeFilter() const override;
 
-    const SVScoreInfoDiploid&
-    getDiploidInfo() const
+    const SVScoreInfoRna&
+    getRnaInfo() const
     {
-        assert(nullptr != _diploidInfoPtr);
-        return *_diploidInfoPtr;
+        assert(nullptr != _rnaInfoPtr);
+        return *_rnaInfoPtr;
     }
 
-    const SVScoreInfoDiploid&
-    getSingleJunctionDiploidInfo() const
-    {
-        assert(NULL != _singleJunctionDiploidInfoPtr);
-        return *_singleJunctionDiploidInfoPtr;
-    }
-
-
-    const CallOptionsDiploid& _diploidOpt;
-    const bool _isMaxDepthFilter;
-    const SVScoreInfoDiploid* _diploidInfoPtr;
-    const SVScoreInfoDiploid* _singleJunctionDiploidInfoPtr;
+    const SVScoreInfoRna* _rnaInfoPtr;
 };

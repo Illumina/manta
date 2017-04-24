@@ -27,6 +27,7 @@
 #include "manta/SVScoreInfoDiploid.hh"
 #include "manta/SVScoreInfoSomatic.hh"
 #include "manta/SVScoreInfoTumor.hh"
+#include "manta/SVScoreInfoRna.hh"
 
 
 /// all scoring info for one sv candidate, including data related to specific scoring models
@@ -50,10 +51,12 @@ struct SVModelScoreInfo
         diploid.clear();
         somatic.clear();
         tumor.clear();
+        rna.clear();
     }
 
     SVScoreInfo base;
     SVScoreInfoDiploid diploid;
+    SVScoreInfoRna rna;
     SVScoreInfoSomatic somatic;
     SVScoreInfoTumor tumor;
 };

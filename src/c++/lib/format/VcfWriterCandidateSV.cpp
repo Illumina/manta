@@ -43,6 +43,7 @@ VcfWriterCandidateSV::
 modifyTranslocInfo(
     const SVCandidate& sv,
     const bool isFirstOfPair,
+    const SVCandidateAssemblyData& /*assemblyData*/,
     InfoTag_t& infoTags) const
 {
     const SVBreakend& bpA( isFirstOfPair ? sv.bp1 : sv.bp2);

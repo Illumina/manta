@@ -632,6 +632,9 @@ fusion calling step.
 When RNA mode is turned on, exactly one sample must be specified as normal
 input only (using either the `--bam` or `--normalBam` option).
 
+RNA Fusions are reported in __rnaSV.vcf.gz__ in translocation format.
+Smaller variants are not reported.
+
 It may also be helpful to consider the high sensitivity calling
 documentation below for this mode.
 

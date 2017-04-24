@@ -101,6 +101,7 @@ VcfWriterTumorSV::
 modifyTranslocInfo(
     const SVCandidate& /*sv*/,
     const bool isFirstOfPair,
+    const SVCandidateAssemblyData& /*assemblyData*/,
     InfoTag_t& infotags) const
 {
     const SVScoreInfo& baseInfo(getBaseInfo());

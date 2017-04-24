@@ -86,6 +86,8 @@ VcfWriterSomaticSV::
 modifyTranslocInfo(
     const SVCandidate& /*sv*/,
     const bool isFirstOfPair,
+    const SVCandidateAssemblyData& /*assemblyData*/,
+
     std::vector<std::string>& infotags) const
 {
     const SVScoreInfo& baseInfo(getBaseInfo());

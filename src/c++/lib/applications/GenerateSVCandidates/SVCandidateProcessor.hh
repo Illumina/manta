@@ -37,6 +37,7 @@
 #include "format/VcfWriterDiploidSV.hh"
 #include "format/VcfWriterSomaticSV.hh"
 #include "format/VcfWriterTumorSV.hh"
+#include "format/VcfWriterRnaSV.hh"
 
 
 #include <memory>
@@ -76,11 +77,14 @@ struct SVWriter
     OutStream dipfs;
     OutStream somfs;
     OutStream tumfs;
+    OutStream rnafs;
 
     VcfWriterCandidateSV candWriter;
     VcfWriterDiploidSV diploidWriter;
     VcfWriterSomaticSV somWriter;
     VcfWriterTumorSV tumorWriter;
+    VcfWriterRnaSV rnaWriter;
+
 
     JunctionIdGenerator _idgen;
 };

@@ -49,13 +49,15 @@ SVWriter(
     dipfs(opt.diploidOutputFilename),
     somfs(opt.somaticOutputFilename),
     tumfs(opt.tumorOutputFilename),
-    candWriter(opt.referenceFilename, opt.isRNA, cset,candfs.getStream()),
+    rnafs(opt.rnaOutputFilename),
+    candWriter(opt.referenceFilename, cset,candfs.getStream()),
     diploidWriter(opt.diploidOpt, (! opt.chromDepthFilename.empty()),
-                  opt.referenceFilename,  opt.isRNA, cset,dipfs.getStream()),
+                  opt.referenceFilename, cset,dipfs.getStream()),
     somWriter(opt.somaticOpt, (! opt.chromDepthFilename.empty()),
               opt.referenceFilename, cset,somfs.getStream()),
     tumorWriter(opt.tumorOpt, (! opt.chromDepthFilename.empty()),
-                opt.referenceFilename, cset,tumfs.getStream())
+                opt.referenceFilename, cset,tumfs.getStream()),
+    rnaWriter(opt.referenceFilename, cset, rnafs.getStream())
 {
     if (0 == opt.edgeOpt.binIndex)
     {
@@ -66,6 +68,10 @@ SVWriter(
         if (isTumorOnly)
         {
             tumorWriter.writeHeader(progName, progVersion,sampleNames);
+        }
+        else if (opt.isRNA)
+        {
+            rnaWriter.writeHeader(progName, progVersion, sampleNames);
         }
         else
         {
@@ -395,6 +401,11 @@ writeSV(
             const SVScoreInfoTumor& tumorInfo(modelScoreInfo.tumor);
             tumorWriter.writeSV(svData, assemblyData, sv, svId, baseInfo, tumorInfo, nonEvent);
         }
+        else if (opt.isRNA)
+        {
+            const SVScoreInfoRna& rnaInfo(modelScoreInfo.rna);
+            rnaWriter.writeSV(svData, assemblyData, sv, svId, baseInfo, rnaInfo, nonEvent);
+        }
         else
         {
             {
@@ -430,8 +441,6 @@ writeSV(
                 {
                     isWriteDiploid = (modelScoreInfo.diploid.altScore >= opt.diploidOpt.minOutputAltScore);
                 }
-
-                if (opt.isRNA) isWriteDiploid = true; /// TODO remove after adding RNA scoring
 
                 if (isWriteDiploid)
                 {
