@@ -278,6 +278,7 @@ void
 findMultiJunctionCandidates(
     const std::vector<SVCandidate>& svs,
     const unsigned minCandidateSpanningCount,
+    const bool isRNA,
     unsigned& mjComplexCount,
     unsigned& mjSpanningFilterCount,
     std::vector<SVMultiJunctionCandidate>& mjSVs)
@@ -314,6 +315,7 @@ findMultiJunctionCandidates(
     //
     const unsigned spanCount(spanningSVs.size());
     std::vector<MJ_INTERACTION::MJState> spanPartners(spanCount);
+    if (!isRNA)
     {
         using namespace MJ_INTERACTION;
 
