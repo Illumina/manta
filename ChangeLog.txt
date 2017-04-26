@@ -1,9 +1,9 @@
-- Move RNA-mode output to RnaSV.vcf.gz;
+- MANTA-554 Disable multiJunction scoring logic in RNA mode
+- MANTA-625 Add RNA-mode specific rnaMinCandidateSize option
+-- With default set to disable small variant calling
+- MANTA-449 Move RNA-mode output to RnaSV.vcf.gz;
 -- remove GT and related fields and filters
 -- no longer output unpaired breakends
-- Add RNA-mode specific rnaMinCandidateSize option
--- With default set to disable small variant calling
-- Disable multiJunction scoring logic in RNA mode
 
 v1.1.0
 - Manta-677 Stats generation
