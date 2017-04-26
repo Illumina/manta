@@ -25,8 +25,9 @@
 #include <iosfwd>
 
 
-/// holds minimal alignment information processed
-/// from a BAM record or other source
+/// \brief Minimal read alignment information
+///
+/// Alignment information is typically processed from a BAM alignment record, but may come from other sources
 struct SimpleAlignment
 {
     bool is_fwd_strand = true;

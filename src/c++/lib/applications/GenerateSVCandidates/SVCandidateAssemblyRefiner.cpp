@@ -1573,7 +1573,7 @@ getJumpAssembly(
 
 
 #ifdef DEBUG_REFINER
-            log_os << __FUNCTION__ << " isStranded: " << bporient.isStranded << "; bp1Fw: " << bp1Fw << " ; bp2Fw: " << bp2Fw << '\n';
+            log_os << __FUNCTION__ << " isStrandedRNA: " << bporient.isStrandedRNA << "; bp1Fw: " << bp1Fw << " ; bp2Fw: " << bp2Fw << '\n';
 #endif
             _RNASpanningAligner.align(contig.seq.begin(), contig.seq.end(),
                                       cutRef1.begin(), cutRef1.end(), cutRef2.begin(), cutRef2.end(),

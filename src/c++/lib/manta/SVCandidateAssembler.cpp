@@ -568,13 +568,6 @@ getBreakendReads(
                 {
                     if (leadingMismatchLen >= minMismatchLen) isSemiAlignedKeeper = true;
                 }
-
-#if 0
-                if (isSemiAligned(bamRead,ref,_scanOpt.minSemiAlignedScoreCandidates))
-                {
-                    isSemiAlignedKeeper = true;
-                }
-#endif
             }
 
             const bool isShadowKeeper(shadow.check(bamRead));

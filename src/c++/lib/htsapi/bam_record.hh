@@ -205,7 +205,9 @@ public:
         return _bp->core.qual;
     }
 
-    /// does read contain the new SA split-read tag?
+    /// \brief Test if this read contains an 'SA' tag, used to annotate split read alignments
+    ///
+    /// \return True if the 'SA' tag is found
     bool
     isSASplit() const
     {
@@ -213,11 +215,18 @@ public:
         return (nullptr != get_string_tag(satag));
     }
 
-    /// test if the read is supplemental by more liberal criteria
+    /// \brief Test if the read is supplemental, using a more liberal community criteria to define 'supplemental'
+    ///        compared to that from the BAM spec.
     ///
-    /// this generalizes the bam flag for supplemental to work
-    /// correctly with the workaround typified by the bwamem '-M'
-    /// option, which uses the 'secondary' flag
+    /// Reads are considered supplemental if either:
+    /// 1. The 'supplemental' bit is set in the bam record.
+    /// 2. The 'secondary' bit is set in the bam record and the record contains an 'SA' tag.
+    ///
+    /// The second condition supports the common workaround typified by bwamem's '-M' option,
+    /// which allows split reads to be added to the alignment without creating BAM's which could break
+    /// on older tools.
+    ///
+    /// \return True if this read is treated as supplemental
     bool
     isNonStrictSupplement() const
     {

@@ -42,14 +42,14 @@
 
 namespace FragmentSizeType
 {
+/// \brief Discrete categories used to label DNA fragment length relative to the expected fragment size distribution.
 enum index_t
 {
-    COMPRESSED,
-    NORMAL,
-    UNKNOWN,
-    VERYCLOSE,
-    CLOSE,
-    DISTANT
+    COMPRESSED, ///< The fragment is anomalously small
+    NORMAL,     ///< The fragment is non-anomalous
+    UNKNOWN,    ///< The fragment size category is unknown
+    CLOSE,      ///< The fragment is anomalous, but close enough to the non-anomalous threshold that it is treated as possibly non-anomolous.
+    DISTANT     ///< The fragment is clearly anomalous
 };
 }
 
@@ -72,7 +72,6 @@ struct SVObservationWeights
     // input evidence:
     static const unsigned readPair = observation; ///< Weight used for anomalous read pairs
     static const unsigned closeReadPair = 1;
-    static const unsigned veryCloseReadPair = 1;
     static const unsigned internalReadEvent = observation; ///< Weight used for indels, soft-clip, etc.
 };
 
@@ -83,12 +82,12 @@ struct ReadScannerDerivOptions
     ReadScannerDerivOptions(
         const ReadScannerOptions& opt,
         const bool isRNA,
-        const bool stranded) :
+        const bool isStrandedRNAInit) :
         isSmallCandidates(opt.minCandidateVariantSize<=opt.maxCandidateSizeForLocalAssmEvidence),
         beforeBreakend(opt.minPairBreakendSize/2),
         afterBreakend(opt.minPairBreakendSize-beforeBreakend),
         isUseOverlappingPairs(isRNA),
-        isStranded(stranded)
+        isStrandedRNA(isStrandedRNAInit)
     {}
 
     const bool isSmallCandidates;
@@ -99,7 +98,8 @@ struct ReadScannerDerivOptions
     /// remove this bit:
     const bool isUseOverlappingPairs;
 
-    const bool isStranded;
+    /// \brief True if running in RNA-Seq mode with a stranded input RNA assay
+    const bool isStrandedRNA;
 };
 
 
@@ -119,7 +119,7 @@ struct SVLocusScanner
         const std::string& statsFilename,
         const std::vector<std::string>& alignmentFilename,
         const bool isRNA,
-        const bool isStranded = false);
+        const bool isStrandedRNA = false);
 
     /// this predicate runs isReadFiltered without the mapq components
     static
@@ -177,22 +177,29 @@ struct SVLocusScanner
         return _opt.minTier2Mapq;
     }
 
-    /// custom version of proper pair bit test:
-    bool
-    isProperPair(
-        const bam_record& bamRead,
-        const unsigned defaultReadGroupIndex) const;
-
-    /// return true if the read pair is anomalous, for any anomaly type besides being a short innie read:
+    /// \brief Test \p bamRead to determine if it is from a paired-read DNA fragment with an anomalous orientation or
+    ///        inferred fragment size
     ///
-    /// according to this method nothing besides mapped read pairs can be anomalous, so all single read
-    /// anomalies (SA tags, CIGAR, semi-aligned) have to be detected elsewhere
+    /// Note that in the general case, Manta disregards the bam spec's 'proper pair' flag on input alignments and
+    /// instead directly determines anomalous state.
     bool
-    isNonCompressedAnomalous(
+    isAnomalousReadPair(
         const bam_record& bamRead,
         const unsigned defaultReadGroupIndex) const;
 
-    /// large indels in CIGAR string
+    /// \breif Test \p bamRead to determine if it is from a paired-end DNA fragment with anomolous orientation or size,
+    ///        excluding the case of an anomalously short standard orientation read pair
+    ///
+    /// According to this method only mapped read pairs can be anomalous. All single read
+    /// anomalies (SA tags, CIGAR, semi-aligned) are detected elsewhere.
+    bool
+    isNonCompressedAnomalousReadPair(
+        const bam_record& bamRead,
+        const unsigned defaultReadGroupIndex) const;
+
+    /// \brief Test \p bamAlign for large indel segments
+    ///
+    /// \return True if \p bamAlign contains any indel segments above a critical size threshold
     bool
     isLocalIndelEvidence(
         const SimpleAlignment& bamAlign) const;
@@ -206,7 +213,7 @@ struct SVLocusScanner
         const SimpleAlignment& bamAlign,
         const reference_contig_segment& refSeq) const;
 
-    /// \brief is the read likely to indicate the presence of a small SV?
+    /// \brief Return true if the read indicates the presence of a small SV?
     ///
     /// this function flags reads which could contribute to a local small-variant assembly
     /// but would not otherwise be caught by the proper pair function
@@ -221,8 +228,11 @@ struct SVLocusScanner
         const bam_record& bamRead,
         const reference_contig_segment& refSeq) const;
 
-    /// \brief fast screen to eliminate reads which are very unlikely to contribute any SV or indel evidence
+    /// \brief A fast test to eliminate reads which are very unlikely to contribute any SV or indel evidence
     ///
+    /// \param[inout] incountsPtr If not nullptr, the pointed object is appended with statistics on the SV evidence
+    ///                           type associated with \p bamRead
+    /// \return True if it is probable that \p bamRead provides evidence for an SV or indel
     bool
     isSVEvidence(
         const bam_record& bamRead,
@@ -264,10 +274,10 @@ struct SVLocusScanner
 
     /// this information is needed for the whole bam, not just one read group:
     int
-    getShadowSearchRange(
+    getShadowSearchDistance(
         const unsigned defaultReadGroupIndex) const
     {
-        return _stats[defaultReadGroupIndex].shadowSearchRange;
+        return _stats[defaultReadGroupIndex].shadowSearchDistance;
     }
 
     /// provide direct access to the frag distro for
@@ -299,32 +309,43 @@ struct SVLocusScanner
         return _fifthPerc;
     }
 
+    /// \brief Summary statistics derived from the full fragment length distribution.
+    ///
+    /// Instead of transmitting the full fragment distribution for each read group, this object holds the critical
+    /// statistics computed from that distribution which are used during discovery and variant calling.
+    ///
+    /// Note that conceptually, there is one fragment length distribution per "Read Group", but in the current methods
+    /// the concept of read group is forced to have a 1-1 relationship with each sample.
     struct CachedReadGroupStats
     {
-        /// fragment size range assumed for the purpose of creating SVLocusGraph regions
+        /// \brief Fragment size range used for the purpose of creating SVLocusGraph regions.
         Range breakendRegion;
 
-        /// fragment size range assumed for the purpose of creating SVLocusGraph regions,
-        /// this range is used exclusively for large scale events (non-deletion or deletion above a threshold size):
+        /// \brief Fragment size range used for the purpose of creating SVLocusGraph regions,this range is used
+        /// exclusively for large scale events (non-deletion or deletion above a threshold size).
         Range largeScaleEventBreakendRegion;
 
-        /// fragment size range used to determine if a read is anomalous
+        /// \brief Fragment size range used to determine if a fragment is considered non-anomalous (ie. "proper")
+        ///        during SV discovery.
         Range properPair;
 
+        /// \brief Fragment size range used to determine if a fragment will be evaluated as paired-read support
+        ///        during SV scoring.
         Range evidencePair;
 
-        /// range fixed the 5th and 95th percentiles:
+        /// \brief Fragment size range over the [0.05,0.95] quantiles of the fragment size distribution.
         Range fifthPerc;
 
-        int shadowSearchRange = 0;
+        /// \brief Shadow read support for a breakend is searched for from the breakend location to this distance
+        ///        upstream.
+        int shadowSearchDistance = 0;
 
-        int minDistantFragmentSize = 0; ///< beyond the properPair anomalous threshold, there is a threshold to distinguish close and far pairs for the purpose of evidence weight
-        int minCloseFragmentSize = 0; ///< beyond the properPair anomalous threshold, there is a threshold to distinguish 'really-close' and 'close' pairs for the purpose of evidence weight
-        int minVeryCloseFragmentSize = 0;
+        /// \brief Beyond the properPair anomalous threshold, this threshold is used to distinguish 'close' and 'far'
+        ///        pairs for the purpose of setting the anomalous pair evidence weight
+        int minDistantFragmentSize = 0;
 
-        //LinearScaler<int> veryCloseEventScaler; ///< used to scale down breakend size as fragments get smaller
-
-        LinearScaler<int> largeEventRegionScaler; ///< used to set expanded breakend sizes for large events
+        /// \brief Used to set expanded breakend sizes for large events \TODO more detail?
+        LinearScaler<int> largeEventRegionScaler;
     };
 
     bool
@@ -335,9 +356,9 @@ struct SVLocusScanner
 
 private:
 
-    /// fragments sizes get thrown is serveral pre-defined categories:
+    /// \brief Classify read pair fragment sizes into a pre-defined size category.
     ///
-    /// assumes a mapped read pair -- check this in code if making this method non-private
+    /// Note this assumes a mapped read pair. Add a check on this pre-condition if making this method non-private.
     FragmentSizeType::index_t
     _getFragmentSizeType(
         const bam_record& bamRead,

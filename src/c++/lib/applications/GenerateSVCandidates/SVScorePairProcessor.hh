@@ -89,18 +89,6 @@ struct SVScorePairProcessor : public BamRegionProcessor
     nextBamIndex(
         const unsigned bamIndex);
 
-    /*
-    void
-    processRecord(
-            const bam_record& bamRead)
-    {
-        if (isSkipRecordCore(bamRead)) return;
-        if (isSkipRecord(bamRead)) return;
-
-        processClearedRecord(bamRead);
-    }
-    */
-
     // alternate interface
     static
     bool

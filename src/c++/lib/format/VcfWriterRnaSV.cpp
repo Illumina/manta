@@ -96,7 +96,7 @@ modifyTranslocInfo(
 
         if (!isFirstOfPair) return; // only the first breakpoint gets the additional RNA info attached to its VCF entry
 
-        infotags.push_back(str(boost::format("RNA_FwRvReads=%i,%i") % sv.fwReads % sv.rvReads));
+        infotags.push_back(str(boost::format("RNA_FwRvReads=%i,%i") % sv.forwardReadCount % sv.reverseReadCount));
         infotags.push_back(str(boost::format("RNA_Reads=%i") % sv.bp2.lowresEvidence.getTotal()));
         const unsigned numContigs(assemblyData.contigs.size());
         if (numContigs > 0)

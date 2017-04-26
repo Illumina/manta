@@ -47,13 +47,14 @@
 
 
 
-/// used for classifying fragments based on size so that they can be treated differently
+/// \brief Utilities pertaining to classifying anomolous fragments based on size so that they can be
+///        treated/weighted differently.
 ///
 namespace FragmentSizeType
 {
-static const float closePairFactor(4); ///< fragments within this factor of the minimum size cutoff are treated as 'close' pairs and receive a modified evidence count
-static const float veryClosePairFactor(1.5); ///< fragments within this factor of the minimum size cutoff are treated as 'reallyClose' pairs and receive a modified evidence count
-static const float maxNormalFactor(1.5);
+/// \brief Fragments within this factor of the minimum size cutoff are treated as 'close' pairs and receive a
+///        modified evidence count.
+static const float closePairFactor(4);
 
 static const float minLargeEventRegionFactor(10);
 static const float maxLargeEventRegionFactor(20);
@@ -245,15 +246,15 @@ GetSplitSACandidate(
     // If it is a forward read (e.g. read1 on + strand), this means it's a forward read for this event.
     const bool isSplitDownstream(isSplitOpenDownstream(localAlign.path));
     const bool isReadFw = (localRead.is_first() == localRead.is_fwd_strand());
-    if (dopt.isStranded)
+    if (dopt.isStrandedRNA)
     {
         if (isReadFw == isSplitDownstream)
         {
-            sv.fwReads += 1;
+            sv.forwardReadCount += 1;
         }
         else
         {
-            sv.rvReads += 1;
+            sv.reverseReadCount += 1;
         }
     }
     return sv;
@@ -369,7 +370,8 @@ parseSACandidatesFromRead(
 /// supports parsing out any number of split alignments, and this function may be updated to do so in the future.
 ///
 /// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2, etc..)
-/// \param[out] candidates New SVObservation objects are appended to this vector. Contents of the vector are preserved but not read.
+/// \param[inout] candidates New SVObservation objects are appended to this vector. Contents of the vector are preserved
+///                        but not read.
 static
 void
 getSACandidatesFromRead(
@@ -406,7 +408,8 @@ getSACandidatesFromRead(
 /// \brief Convert all large-indels already present in a single read's alignment into SVObservation objects
 ///
 /// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2, etc..)
-/// \param[out] candidates New SVObservation objects are appended to this vector. Contents of the vector are preserved but not read.
+/// \param[inout] candidates New SVObservation objects are appended to this vector. Contents of the vector are preserved
+///                        but not read.
 static
 void
 getSVCandidatesFromReadIndels(
@@ -510,7 +513,8 @@ getSVCandidatesFromReadIndels(
 /// in the current read alignment.
 ///
 /// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2, etc..)
-/// \param[out] candidates New SVObservation objects are appended to this vector. Contents of the vector are preserved but not read.
+/// \param[inout] candidates New SVObservation objects are appended to this vector. Contents of the vector are preserved
+///                        but not read.
 static
 void
 getSVCandidatesFromSemiAligned(
@@ -558,8 +562,18 @@ getSVCandidatesFromSemiAligned(
 }
 
 
+namespace
+{
 
-/// local utility class to analyze read pair relationship as lazily as possible
+/// \brief Utility class for ::getSVCandidatesFromPair to evaluate the anomalous status of a read pair and
+/// generate the corresponding SVCandidate object for anomalous cases.
+///
+/// The point of moving this logic to a utility class is to improve efficiency by reusing some intermediates
+/// between the tests and SVCandidate generation.
+///
+/// Usage:
+/// The class must be reset() with read pair alignment information before any other methods can be called.
+///
 struct AlignmentPairAnalyzer
 {
     AlignmentPairAnalyzer(
@@ -570,43 +584,64 @@ struct AlignmentPairAnalyzer
         : _opt(opt),
           _dopt(dopt),
           _rstats(rstats),
-          _header(bamHeader)
-    {}
+          _header(bamHeader) {}
 
+    /// \brief Reset read pair (local and remote) alignment information
+    ///
+    /// This method must be called before any other methods.
+    ///
+    /// \param[in] localAlignment Alignment of the local read from a read pair
+    /// \param[in] remoteAlignment Alignment of the remote read from a read pair
+    /// \param[in] isRemoteAlignmentInferred True if remote read alignment was inferred from the local read alignment
+    ///                                      instead of directly observed from the remote read alignment record
+    /// \param[in] isForwardStrand True if the local read is 1st in read pair (this value is used in stranded RNA mode)
     void
     reset(
-        const SimpleAlignment& local,
-        const SimpleAlignment& remote,
-        const bool isRemoteObserved,
-        const bool isForward) //Is the local read 1st in pair
+        const SimpleAlignment& localAlignment,
+        const SimpleAlignment& remoteAlignment,
+        const bool isRemoteAlignmentInferred,
+        const bool isForwardStrand)
     {
-        _local= &local;
-        _remote= &remote;
-        _isRemote = isRemoteObserved;
-        _isForward = isForward;
-        _isScale = false;
-        _scale = 0;
+        _localAlignment = &localAlignment;
+        _remoteAlignment = &remoteAlignment;
+        _isRemoteAlignmentInferred = isRemoteAlignmentInferred;
+        _isForwardStrand = isForwardStrand;
+        _isBreakendRegionScaleSet = false;
+        _breakendRegionScale = 0;
         _totalNonInsertSize = 0;
         _localEndRefPos = 0;
         _remoteEndRefPos = 0;
     }
 
-    /// returns true if scale is valid (ie. the pair is anomalous)
+    /// \brief Test if read pair is anomalous
+    ///
+    /// Requires that ::reset has been called at least once on this class to initialize the local alignment.
+    ///
+    /// An important side effect of this test is that the read pair's breakend scaling is computed in order to respond
+    /// to this query. If the read is anomalous, this breakend scaling information can be efficiently reused to
+    /// generate the intended breakend scaling when the pair is converted to an SV candidate.
+    ///
+    /// Breakends scales are used to reduce the breakend region size for small deletions as a noise reduction step.
+    ///
+    /// \return True if read pair is anomalous
     bool
-    computeLargeEventRegionScale()
+    isAnomalousReadPair()
     {
         assert(isInit());
-        if (! _isScale) setLargeEventRegionScale();
-        return (_scale >= 0.);
+        if (!_isBreakendRegionScaleSet) setLargeEventRegionScale();
+        return (_breakendRegionScale >= 0.);
     }
 
 
+    /// Requires that ::isAnomalousReadPair has already been called since the last call to ::reset.
+    ///
+    /// \param sv[out] The SVObservation inferred from the anomalous read pair
     void
     getSVObservation(
         SVObservation& sv)
     {
-        assert(_isScale);
-        assert((_scale >= 0.) && (_scale <= 1.));
+        assert(_isBreakendRegionScaleSet);
+        assert((_breakendRegionScale >= 0.) && (_breakendRegionScale <= 1.));
 
         using namespace SVEvidenceType;
         static const index_t svLocalPair(LOCAL_PAIR);
@@ -620,18 +655,19 @@ struct AlignmentPairAnalyzer
 
         localBreakend.lowresEvidence.add(svLocalPair);
 
-        if (_dopt.isStranded)
+        if (_dopt.isStrandedRNA)
         {
-            if (_isForward)
+            if (_isForwardStrand)
             {
-                sv.fwReads++;
+                sv.forwardReadCount++;
             }
             else
             {
-                sv.rvReads++;
+                sv.reverseReadCount++;
             }
         }
-        if (_isRemote)
+
+        if (! _isRemoteAlignmentInferred)
         {
             remoteBreakend.lowresEvidence.add(svLocalPair);
             localBreakend.lowresEvidence.add(svPair);
@@ -639,26 +675,32 @@ struct AlignmentPairAnalyzer
             sv.svEvidenceType = svPair;
         }
 
-        // set state and interval for each breakend:
-        const double breakendRegionMax(
-            (_scale*_rstats.largeScaleEventBreakendRegion.max) +
-            ((1.-_scale)*_rstats.breakendRegion.max));
+        // Determine the maximum (implicitly non-anomalous) fragment size to use when computing breakend regions,
+        // according to the _breakendRegionScale value found earlier.
+        const double maxFragmentSize(
+            (_breakendRegionScale * _rstats.largeScaleEventBreakendRegion.max) +
+            ((1. - _breakendRegionScale) * _rstats.breakendRegion.max));
 
+        // The size used for the breakend is the maximum fragment size minus the length of read1 and read2 we can
+        // already account for. If the true fragment size is within maximum fragment size, then the breakend should
+        // be found within this remaining size from the current inside edge of read1 or read2.
         const pos_t breakendSize(std::max(
-                                     static_cast<pos_t>(_opt.minPairBreakendSize),
-                                     static_cast<pos_t>(breakendRegionMax-_totalNonInsertSize)));
+            static_cast<pos_t>(_opt.minPairBreakendSize),
+            static_cast<pos_t>(maxFragmentSize - _totalNonInsertSize)));
 
         const pos_t localStartRefPos(localAlign().pos);
         const pos_t remoteStartRefPos(remoteAlign().pos);
 
         localBreakend.interval.tid = localAlign().tid;
-        const pos_t localAlignTlen(_header.chrom_data[localBreakend.interval.tid].length);
-        // expected breakpoint range is from the end of the localRead alignment to the (probabilistic) end of the fragment:
+        const pos_t localChromLength(_header.chrom_data[localBreakend.interval.tid].length);
+
+        // Expected breakpoint range is from the edge of the read alignment to the last possible breakpoint position
+        // assuming the fragment size is maxFragmentSize.
         if (localAlign().is_fwd_strand)
         {
             localBreakend.state = SVBreakendState::RIGHT_OPEN;
-            localBreakend.interval.range.set_begin_pos(std::min(localAlignTlen, _localEndRefPos));
-            localBreakend.interval.range.set_end_pos(std::min(localAlignTlen, (_localEndRefPos + breakendSize)));
+            localBreakend.interval.range.set_begin_pos(std::min(localChromLength, _localEndRefPos));
+            localBreakend.interval.range.set_end_pos(std::min(localChromLength, (_localEndRefPos + breakendSize)));
         }
         else
         {
@@ -668,12 +710,12 @@ struct AlignmentPairAnalyzer
         }
 
         remoteBreakend.interval.tid = remoteAlign().tid;
-        const pos_t remoteAlignTlen(_header.chrom_data[remoteBreakend.interval.tid].length);
+        const pos_t remoteChromLength(_header.chrom_data[remoteBreakend.interval.tid].length);
         if (remoteAlign().is_fwd_strand)
         {
             remoteBreakend.state = SVBreakendState::RIGHT_OPEN;
-            remoteBreakend.interval.range.set_begin_pos(std::min(remoteAlignTlen, _remoteEndRefPos));
-            remoteBreakend.interval.range.set_end_pos(std::min(remoteAlignTlen, (_remoteEndRefPos + breakendSize)));
+            remoteBreakend.interval.range.set_begin_pos(std::min(remoteChromLength, _remoteEndRefPos));
+            remoteBreakend.interval.range.set_end_pos(std::min(remoteChromLength, (_remoteEndRefPos + breakendSize)));
         }
         else
         {
@@ -683,18 +725,31 @@ struct AlignmentPairAnalyzer
         }
     }
 
-    /// return true if the open end of a read is aligned to chromosome ends
+
+    /// \brief Test if the 'inside' end of either read in a read pair touches or goes past either edge of the
+    ///        chromosome it has been mapped to
+    ///
+    /// Given chromosome and read pairs:
+    ///         |----------chrom---------------|
+    /// pairA:  <--read2--|    |--read1--->
+    /// pairB:                         |-read1->   <--read2--|
+    /// pairC:                   |-read1->         <--read2--|
+    ///
+    /// Here pairs A and B, but not C, meet the requirements to be marked true by this test.
+    ///
+    /// Requires that ::isAnomalousReadPair has already been called since the last call to ::reset.
+    ///
+    /// \return True if the inside end of either read is aligned to/past the end of the chromosome
     bool
-    isAlignedToChrmEnds()
+    isAlignedToChromEnds() const
     {
-        const int32_t localTid(localAlign().tid);
-        const pos_t localAlignTlen(_header.chrom_data[localTid].length);
-        const int32_t remoteTid(remoteAlign().tid);
-        const pos_t remoteAlignTlen(_header.chrom_data[remoteTid].length);
+        assert(_isBreakendRegionScaleSet);
 
         if (localAlign().is_fwd_strand)
         {
-            if (_localEndRefPos >= localAlignTlen) return true;
+            const int32_t localChromIndex(localAlign().tid);
+            const pos_t localChromLength(_header.chrom_data[localChromIndex].length);
+            if (_localEndRefPos >= localChromLength) return true;
         }
         else
         {
@@ -704,7 +759,9 @@ struct AlignmentPairAnalyzer
 
         if (remoteAlign().is_fwd_strand)
         {
-            if (_remoteEndRefPos >= remoteAlignTlen) return true;
+            const int32_t remoteChromIndex(remoteAlign().tid);
+            const pos_t remoteChromLength(_header.chrom_data[remoteChromIndex].length);
+            if (_remoteEndRefPos >= remoteChromLength) return true;
         }
         else
         {
@@ -714,64 +771,83 @@ struct AlignmentPairAnalyzer
         return false;
     }
 
-
-    /// return the amount of unaligned sequence proceding the pair insert:
-    static
-    unsigned
-    distanceFromInsert(
-        const SimpleAlignment& al)
-    {
-        if (al.is_fwd_strand) return apath_read_trail_size(al.path);
-        else                  return apath_read_lead_size(al.path);
-    }
-
 private:
 
+    /// \return The length of unaligned sequence from one read on the 'inside' of the read pair
+    ///
+    /// \example Returned value for each read from an example read pair
+    ///
+    /// For read1 and read2, with soft clip segments indicated by an S:
+    ///
+    ///  S\----read1----->SSSS     SS<-----read2-----|SSSSS
+    ///
+    /// The unaligned sequence length on the 'inside' of the pair for read1 is 4
+    /// The unaligned sequence length on the 'inside' of the pair for read2 is 2
     static
     unsigned
-    getNonInsertSize(
+    unalignedSequenceLengthInsideReadPair(
+        const SimpleAlignment& al)
+    {
+        if (al.is_fwd_strand) return unalignedSuffixSize(al.path);
+        else                  return unalignedPrefixSize(al.path);
+    }
+
+
+    /// \return Size of the read, excluding any unaligned segment on the inside of the read's pair
+    static
+    unsigned
+    getNonInsertReadSize(
         const SimpleAlignment& al)
     {
         const unsigned readSize(apath_read_length(al.path));
-        return readSize - distanceFromInsert(al);
+        return readSize - unalignedSequenceLengthInsideReadPair(al);
     }
 
+    /// \return The 0-indexed reference position one base after the final mapped base of the input alignment
     static
     pos_t
-    getEndPos(
+    getEndRefPos(
         const SimpleAlignment& al)
     {
         return (al.pos + apath_ref_length(al.path));
     }
 
-
+    /// \brief Determine the appropriate scaling factor to be used for breakend regions of the given read pair.
+    ///
+    /// Different breakend sizes are used for long-range vs short-range deletions (this is a noise reduction step).
+    /// Non-deletions use the default (long-range) scaling factor. This function computes the required scaling factor.
+    ///
+    /// The scaling factor will be set to 0 if the read pair is found to be non-anomalous, so this computation also
+    /// embeds an anomalous read pair test.
     void
     setLargeEventRegionScale()
     {
-        // different breakend sizes are used for long-range pairings vs short-ish range deletions,
-        // because of occasional long-fragment noise. This ramps from 0 to 1 as we go from short to
-        // long deletions sizes:
-        _isScale = true;
-        _scale = 1.0;
+        // _breakendRegionScale ramps from 0 to 1 as we go from short to long deletions sizes, and remains set to 1 for non-deletions.
+        _isBreakendRegionScaleSet = true;
+        _breakendRegionScale = 1.0;
 
-        // find the read size excluding soft-clip/edge-insert on the 'inside' of the fragment
-        const unsigned localNoninsertSize(getNonInsertSize(localAlign()));
-        const unsigned remoteNoninsertSize(getNonInsertSize(remoteAlign()));
+        // Find the read size excluding soft-clip/edge-insert on the 'inside' of the read pair's fragment
+        const unsigned localNonInsertSize(getNonInsertReadSize(localAlign()));
+        const unsigned remoteNonInsertSize(getNonInsertReadSize(remoteAlign()));
 
-        // total the 'used' read span of read1 and read2 (ie. the elements of the
+        // Total the 'used' read span of read1 and read2 (ie. the elements of the
         // fragment that are not part of the insert between the reads)
-        //
-        _totalNonInsertSize = (localNoninsertSize+remoteNoninsertSize);
+        _totalNonInsertSize = (localNonInsertSize + remoteNonInsertSize);
 
         const pos_t localStartRefPos(localAlign().pos);
         const pos_t remoteStartRefPos(remoteAlign().pos);
-        _localEndRefPos=getEndPos(localAlign());
-        _remoteEndRefPos=getEndPos(remoteAlign());
+        _localEndRefPos = getEndRefPos(localAlign());
+        _remoteEndRefPos = getEndRefPos(remoteAlign());
 
-        // check if fragment size is still anomalous after accounting for read alignment patterns:
+        // Check if fragment size is still anomalous after accounting for read alignment patterns
+
+        // First, jump out if the reads are aligned to different chromosomes or orientations
+        // (this isn't done earlier because the values above are used to generate the SVObservation
         if ((localAlign().tid != remoteAlign().tid) ||
-            (localAlign().is_fwd_strand == remoteAlign().is_fwd_strand)) return;
+            (localAlign().is_fwd_strand == remoteAlign().is_fwd_strand))
+            return;
 
+        // Get the range spanned by the read pair insert
         known_pos_range2 insertRange;
         if (localAlign().is_fwd_strand)
         {
@@ -782,63 +858,89 @@ private:
             insertRange.set_range(_remoteEndRefPos, localStartRefPos);
         }
 
-        // get length of fragment after accounting for any variants described directly in either read alignment:
-        // note insertRange can be negative, so don't use insertRange.size()
+        // Get length of fragment after accounting for any variants described directly in either read alignment.
+        // Note the size of insertRange can be negative, so don't call insertRange.size()
         const pos_t cigarAdjustedFragmentSize(_totalNonInsertSize + (insertRange.end_pos() - insertRange.begin_pos()));
 
-        // this is an arbitrary point to start officially tagging 'outties' -- for now  we just want to avoid conventional small fragments from FFPE
-        const bool isOuttie(cigarAdjustedFragmentSize < 0);
+        // Identify read pairs with an 'outtie' orientation and skip these cases (so they will be counted as anomalous)
+        // These are typically small fragments from FFPE samples.
+        const bool isOuttieReadPair(cigarAdjustedFragmentSize < 0);
 
-        if (isOuttie) return;
+        if (isOuttieReadPair) return;
 
         const bool isLargeFragment(cigarAdjustedFragmentSize > (_rstats.properPair.max + _opt.minCandidateVariantSize));
 
         if (isLargeFragment)
         {
-            _scale = _rstats.largeEventRegionScaler.getScale(cigarAdjustedFragmentSize);
+            _breakendRegionScale = _rstats.largeEventRegionScaler.getScale(cigarAdjustedFragmentSize);
         }
         else
         {
-            _scale = -1.;
+            _breakendRegionScale = -1.;
         }
     }
 
     bool
     isInit() const
     {
-        return (_local != nullptr);
+        return (_localAlignment != nullptr);
     }
 
     const SimpleAlignment&
     localAlign() const
     {
-        return *_local;
+        return *_localAlignment;
     }
 
     const SimpleAlignment&
     remoteAlign() const
     {
-        return *_remote;
+        return *_remoteAlignment;
     }
 
     const ReadScannerOptions& _opt;
     const ReadScannerDerivOptions& _dopt;
     const SVLocusScanner::CachedReadGroupStats& _rstats;
     const bam_header_info& _header;
-    const SimpleAlignment* _local = nullptr;
-    const SimpleAlignment* _remote = nullptr;
-    bool _isRemote = false;
-    bool _isForward = false;
-    bool _isScale = false;
-    double _scale = 0.;
+    const SimpleAlignment* _localAlignment = nullptr;
+    const SimpleAlignment* _remoteAlignment = nullptr;
+
+    /// \brief This is true if the remote alignment is inferred indirectly from the local read's alignment record
+    bool _isRemoteAlignmentInferred = true;
+
+    /// \brief True if the local read is 1st in read pair (this value is used in stranded RNA mode)
+    bool _isForwardStrand = false;
+
+    /// \brief True if _breakendRegionScale is initialized
+    bool _isBreakendRegionScaleSet = false;
+
+    /// \brief Scaling factor applied to the breakend regions of the SV candidate generated from the given read pair
+    double _breakendRegionScale = 0.;
+
+    /// \brief The total length of local and remote reads, excluding any unaligned read segments on the inside of the
+    ///        read pair
     unsigned _totalNonInsertSize = 0;
+
+    /// \brief The zero-indexed reference position one base after the local read's last aligned base
     pos_t _localEndRefPos = 0;
+
+    /// \brief The zero-indexed reference position one base after the remote read's last aligned base
     pos_t _remoteEndRefPos = 0;
 };
 
+}
 
 
-/// get SV candidates from anomalous read pairs
+/// \brief Detect if \p localRead is part of an anomalous read pair, and if so, convert the read pair information into
+///        an SVObservation, and append it to \p candidates
+///
+/// \param[in] rstats Statistics computed from the fragment length distribution associated with \p localRead
+/// \param[in] localRead The read which is the subject of testing/conversion to an SV candidate
+/// \param[in] localAlign Pre-computed alignment data generated from \p localRead as a caching optimization
+/// \param[in] remoteReadPtr Pointer to the bam record of \p localRead's mate. If nullptr, then properties of the mate
+///                          alignment are inferred from the local alignment record.
+/// \param[inout] candidates New SVObservation objects are appended to this vector. Contents of the vector are preserved
+///                          but not read.
 static
 void
 getSVCandidatesFromPair(
@@ -853,24 +955,28 @@ getSVCandidatesFromPair(
 {
     if (! localRead.is_paired()) return;
 
-    // don't count paired end evidence from SA-split reads twice:
+    // If this is one of the 'supplemental' sub-reads of a split read entry, don't use it here. This ensures
+    // that each read pair is evaluated for anomolous pair evidence only once (when the non-supplemental read
+    // is evaluated).
     if (localRead.isNonStrictSupplement()) return;
 
+    // If either read is unmapped, an anomalous fragment size cannot be inferred.
     if (localRead.is_unmapped() || localRead.is_mate_unmapped()) return;
 
-    // special case typically used for RNA-Seq analysis:
+    // Special case typically used for RNA-Seq analysis:
     if (opt.isIgnoreAnomProperPair && localRead.is_proper_pair()) return;
 
-    // abstract remote alignment to SimpleAlignment object:
-    const bool isRemote(nullptr != remoteReadPtr);
-    const SimpleAlignment remoteAlign(isRemote ? getAlignment(*remoteReadPtr) : getFakeMateAlignment(localRead));
+    // All information about the remote alignment is consolidated to one object. If the remote alignment record is
+    // available the remote alignment will be more accurate.
+    const bool isRemoteReadAvailable(nullptr != remoteReadPtr);
+    const SimpleAlignment remoteAlign(isRemoteReadAvailable ? getAlignment(*remoteReadPtr) : getFakeMateAlignment(localRead));
 
     AlignmentPairAnalyzer pairInspector(opt, dopt, rstats, bamHeader);
-    pairInspector.reset(localAlign, remoteAlign, isRemote, localRead.is_first());
+    pairInspector.reset(localAlign, remoteAlign, (! isRemoteReadAvailable), localRead.is_first());
 
-    if (! pairInspector.computeLargeEventRegionScale()) return;
+    if (!pairInspector.isAnomalousReadPair()) return;
 
-    if (pairInspector.isAlignedToChrmEnds()) return;
+    if (pairInspector.isAlignedToChromEnds()) return;
 
     candidates.emplace_back();
     pairInspector.getSVObservation(candidates.back());
@@ -1283,7 +1389,12 @@ getSVLociImpl(
 
 
 
-/// compute one of the scanner's fragment ranges:
+/// \breif Given a fragment length distribution and a quantile value \p qprob, compute the range between
+///        quantile(qprob) and quantile(1-prob)
+///
+/// \param[in] fragStats Fragment size distribution
+/// \param[in] qprob Quantile value
+/// \param[out] range Computed qauntile range
 static
 void
 setRGRange(
@@ -1305,51 +1416,47 @@ SVLocusScanner(
     const std::string& statsFilename,
     const std::vector<std::string>& /*alignmentFilename*/,
     const bool isRNA,
-    const bool isStranded) :
+    const bool isStrandedRNA) :
     _opt(opt),
-    _dopt(opt, isRNA, isStranded)
+    _dopt(opt, isRNA, isStrandedRNA)
 {
     using namespace illumina::common;
 
     // pull in insert stats:
     _rss.load(statsFilename.c_str());
 
-    // precompute frequently used insert stats for each rg:
-    const unsigned rgCount(_rss.size());
-    for (unsigned rgIndex(0); rgIndex<rgCount; rgIndex++)
+    // precompute frequently used insert stats for each read group:
+    const unsigned readGroupCount(_rss.size());
+    for (unsigned readGroupIndex(0); readGroupIndex<readGroupCount; readGroupIndex++)
     {
-        /// TODO: add check that the filenames in the stats file are a complete match to alignmentFilename
+        /// \TODO add check that the filenames in the stats file are a complete match to alignmentFilename
 
-        const SizeDistribution& rgDistro(getFragSizeDistro(rgIndex));
+        const SizeDistribution& readGroupFragSizeDistro(getFragSizeDistro(readGroupIndex));
 
         _stats.resize(_stats.size()+1);
         CachedReadGroupStats& rgStats(_stats.back());
-        setRGRange(rgDistro, _opt.breakendEdgeTrimProb, rgStats.breakendRegion);
-        setRGRange(rgDistro, _opt.largeScaleEventBreakendEdgeTrimProb, rgStats.largeScaleEventBreakendRegion);
-        setRGRange(rgDistro, _opt.properPairTrimProb, rgStats.properPair);
-        setRGRange(rgDistro, _opt.evidenceTrimProb, rgStats.evidencePair);
-        setRGRange(rgDistro, 0.05f, rgStats.fifthPerc);
+        setRGRange(readGroupFragSizeDistro, _opt.breakendEdgeTrimProb, rgStats.breakendRegion);
+        setRGRange(readGroupFragSizeDistro, _opt.largeScaleEventBreakendEdgeTrimProb, rgStats.largeScaleEventBreakendRegion);
+        setRGRange(readGroupFragSizeDistro, _opt.properPairTrimProb, rgStats.properPair);
+        setRGRange(readGroupFragSizeDistro, _opt.evidenceTrimProb, rgStats.evidencePair);
+        setRGRange(readGroupFragSizeDistro, 0.05f, rgStats.fifthPerc);
 
-        if ((rgIndex==0) || (rgStats.fifthPerc.min < _fifthPerc.min))
+        if ((readGroupIndex==0) || (rgStats.fifthPerc.min < _fifthPerc.min))
         {
             _fifthPerc.min = rgStats.fifthPerc.min;
         }
-        if ((rgIndex==0) || (rgStats.fifthPerc.max > _fifthPerc.max))
+        if ((readGroupIndex==0) || (rgStats.fifthPerc.max > _fifthPerc.max))
         {
             _fifthPerc.max = rgStats.fifthPerc.max;
         }
 
-        rgStats.shadowSearchRange = rgDistro.quantile(1-(_opt.shadowSearchRangeProb))*_opt.shadowSearchRangeFactor;
+        rgStats.shadowSearchDistance = readGroupFragSizeDistro.quantile(1-(_opt.shadowSearchRangeProb))*_opt.shadowSearchRangeFactor;
 
-        assert(rgStats.shadowSearchRange > 0);
+        assert(rgStats.shadowSearchDistance > 0);
 
-        rgStats.minVeryCloseFragmentSize = static_cast<int>(rgStats.properPair.max*FragmentSizeType::maxNormalFactor);
-        rgStats.minCloseFragmentSize = static_cast<int>(rgStats.properPair.max*FragmentSizeType::veryClosePairFactor);
         rgStats.minDistantFragmentSize = static_cast<int>(rgStats.properPair.max*FragmentSizeType::closePairFactor);
 
         assert(rgStats.minDistantFragmentSize > rgStats.properPair.max);
-
-        //rgStats.veryCloseEventScaler.init(rgStats.minVeryCloseFragmentSize, rgStats.minCloseFragmentSize);
 
         const int largeEventRegionMin(rgStats.properPair.max*FragmentSizeType::minLargeEventRegionFactor);
         const int largeEventRegionMax(rgStats.properPair.max*FragmentSizeType::maxLargeEventRegionFactor);
@@ -1362,7 +1469,7 @@ SVLocusScanner(
 
 bool
 SVLocusScanner::
-isProperPair(
+isAnomalousReadPair(
     const bam_record& bamRead,
     const unsigned defaultReadGroupIndex) const
 {
@@ -1370,15 +1477,17 @@ isProperPair(
 
     const Range& ppr(_stats[defaultReadGroupIndex].properPair);
     const int32_t fragmentSize(std::abs(bamRead.template_size()));
-    /// Unknown fragment size
-    if (fragmentSize == 0) return false;
+
+    // Unknown fragment size
+    if (fragmentSize == 0) return true;
+
     // we're seeing way to much large fragment garbage in cancers to use
     // vanilla proper pair criteria, push the max fragment size out a bit for now:
     static const float maxAnomFactor(1.5);
-    if (fragmentSize > static_cast<int32_t>(maxAnomFactor*ppr.max)) return false;
-    if (fragmentSize < ppr.min) return false;
+    if (fragmentSize > static_cast<int32_t>(maxAnomFactor*ppr.max)) return true;
+    if (fragmentSize < ppr.min) return true;
 
-    return true;
+    return false;
 }
 
 
@@ -1410,12 +1519,12 @@ _isLargeFragment(
 
 bool
 SVLocusScanner::
-isNonCompressedAnomalous(
+isNonCompressedAnomalousReadPair(
     const bam_record& bamRead,
     const unsigned defaultReadGroupIndex) const
 {
     if (! is_mapped_pair(bamRead)) return false;
-    const bool isAnomalous(! isProperPair(bamRead,defaultReadGroupIndex));
+    const bool isAnomalous(isAnomalousReadPair(bamRead, defaultReadGroupIndex));
     const bool isInnie(is_innie_pair(bamRead));
     const bool isLarge(_isLargeFragment(bamRead,defaultReadGroupIndex));
 
@@ -1484,7 +1593,7 @@ isSVEvidence(
     SVLocusEvidenceCount* incountsPtr) const
 {
     // exclude innie read pairs which are anomalously short:
-    const bool isAnom(isNonCompressedAnomalous(bamRead,defaultReadGroupIndex));
+    const bool isAnom(isNonCompressedAnomalousReadPair(bamRead, defaultReadGroupIndex));
     const bool isSplit(bamRead.isSASplit());
     getAlignment(bamRead,_bamAlign);
     const bool isIndel(isLocalIndelEvidence(_bamAlign));

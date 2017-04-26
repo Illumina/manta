@@ -73,15 +73,15 @@ struct SVCandidate
         {
             bp1.merge(rhs.bp1, isExpandRegion);
             bp2.merge(rhs.bp2, isExpandRegion);
-            fwReads += rhs.fwReads;
-            rvReads += rhs.rvReads;
+            forwardReadCount += rhs.forwardReadCount;
+            reverseReadCount += rhs.reverseReadCount;
         }
         else
         {
             bp1.merge(rhs.bp2, isExpandRegion);
             bp2.merge(rhs.bp1, isExpandRegion);
-            fwReads += rhs.rvReads;
-            rvReads += rhs.fwReads;
+            forwardReadCount += rhs.reverseReadCount;
+            reverseReadCount += rhs.forwardReadCount;
         }
 
         _isImprecise = (isImprecise() || rhs.isImprecise());
@@ -103,8 +103,8 @@ struct SVCandidate
         isUnknownSizeInsertion = false;
         unknownSizeInsertionLeftSeq.clear();
         unknownSizeInsertionRightSeq.clear();
-        fwReads = 0;
-        rvReads = 0;
+        forwardReadCount = 0;
+        reverseReadCount = 0;
         isSingleJunctionFilter = false;
     }
 #endif
@@ -118,13 +118,13 @@ struct SVCandidate
     bool
     isForward() const
     {
-        return (fwReads > rvReads);
+        return (forwardReadCount > reverseReadCount);
     }
 
     bool
     isStranded() const
     {
-        return ((std::max(fwReads, rvReads)+1) / (std::min(fwReads, rvReads)+1) >= 2);
+        return ((std::max(forwardReadCount, reverseReadCount)+1) / (std::min(forwardReadCount, reverseReadCount)+1) >= 2);
     }
 
     /// if 1 is added to the position of one breakend (within the homologous breakend range), then is 1 also added to the other breakend?
@@ -181,8 +181,8 @@ public:
     std::string unknownSizeInsertionLeftSeq; ///< for an incomplete insertion, this is the known left side of the insert sequence
     std::string unknownSizeInsertionRightSeq; ///< for an incomplete insertion, this is the known right side of the insert sequence
 
-    unsigned fwReads = 0; ///< Number of reads (pairs) supporting a direction from bp1 to bp2 (used for stranded RNA data)
-    unsigned rvReads = 0; ///< Number of reads (pairs) directed from bp2 to bp1
+    unsigned forwardReadCount = 0; ///< Number of reads (pairs) supporting a direction from bp1 to bp2 (used for stranded RNA data)
+    unsigned reverseReadCount = 0; ///< Number of reads (pairs) directed from bp2 to bp1
 
     /// filter out this sv candidate unless it's rescued by a multi-junction event:
     bool isSingleJunctionFilter = false;
@@ -233,9 +233,9 @@ label(const index_t i)
 /// \brief A specialized SVCandidate which represents an SV hypothesis generated from a single piece of evidnece, ie.
 ///        a single SV 'observation'.
 ///
-/// It is helpful to represent this case as a distinct specialization of SVCandidate b/c this allows additional
-/// detail on the nature of the SV evidence to be added onto the object, (ie. This SV candidate is inferred from
-/// the poorly aligned end of the second read in a read pair).
+/// It is helpful to represent this case as a distinct specialization of SVCandidate because this allows additional
+/// detail on the nature of the SV evidence to be added onto the object, (eg. "This SV candidate is inferred from
+/// the poorly aligned end of the second read in a read pair").
 struct SVObservation : public SVCandidate
 {
     SVObservation() :
