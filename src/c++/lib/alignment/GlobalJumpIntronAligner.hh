@@ -133,7 +133,7 @@ private:
     };
 
     const ScoreType _intronOpenScore; ///< gap open for introns (i.e. deletions starting with splice motif) (should be negative)
-    const ScoreType _intronOffEdgeScore; ///< As offEdge but only of the last aligned bases match a splice motif (should be negative) todo: not implemented
+    const ScoreType _intronOffEdgeScore; ///< As offEdge but only of the last aligned bases match a splice motif (should be negative)
 
     // add the matrices here to reduce allocations over many alignment calls:
     typedef std::vector<ScoreVal> ScoreVec;
