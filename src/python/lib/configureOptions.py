@@ -131,25 +131,29 @@ class ConfigureWorkflowOptions(object) :
                                      version=version, configHelp=configHelp)
         (options,args) = parser.parse_args()
 
-        if options.userConfigPath :
-            if not os.path.isfile(options.userConfigPath) :
-                raise OptParseException("Can't find config file: '%s'" % (options.userConfigPath))
+        try:
+            if options.userConfigPath :
+                if not os.path.isfile(options.userConfigPath) :
+                    raise OptParseException("Can't find config file: '%s'" % (options.userConfigPath))
 
-            updateIniSections(iniSections,getIniSections(options.userConfigPath))
+                updateIniSections(iniSections,getIniSections(options.userConfigPath))
 
-            # reparse with updated default values:
-            parser=self._getOptionParser(iniSections[primary_section],configFileName, cmdlineScriptDir,
-                                         version=version, configHelp=configHelp)
-            (options,args) = parser.parse_args()
+                # reparse with updated default values:
+                parser=self._getOptionParser(iniSections[primary_section],configFileName, cmdlineScriptDir,
+                                             version=version, configHelp=configHelp)
+                (options,args) = parser.parse_args()
+            else :
+                if not os.path.isfile(globalConfigPath) :
+                    raise OptParseException("Can't find default config file: '%s'" % (globalConfigPath))
 
-        if options.isAllHelp :
-            # this second call to getOptionParser is only here to provide the extended help option:
-            parser=self._getOptionParser(iniSections[primary_section],configFileName, cmdlineScriptDir, True,
-                                         version=version, configHelp=configHelp)
-            parser.print_help()
-            sys.exit(2)
 
-        try :
+            if options.isAllHelp :
+                # this second call to getOptionParser is only here to provide the extended help option:
+                parser=self._getOptionParser(iniSections[primary_section],configFileName, cmdlineScriptDir, True,
+                                             version=version, configHelp=configHelp)
+                parser.print_help()
+                sys.exit(2)
+
             nargs=len(args)
             if nargs :
                 plural=""
