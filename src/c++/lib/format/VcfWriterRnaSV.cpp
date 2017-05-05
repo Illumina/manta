@@ -58,6 +58,8 @@ VcfWriterRnaSV::
 addHeaderFilters() const
 {
     _os << "##FILTER=<ID=" << SVScoreInfoRna::rnaFilterLabel << ",Description=\"RNA fusion calls without both split read and spanning pair support\">\n";
+    _os << "##FILTER=<ID=" << SVScoreInfoRna::impreciseLabel << ",Description=\"RNA fusion candidates for which no spanning contig was found\">\n";
+    _os << "##FILTER=<ID=" << SVScoreInfoRna::localLabel << ",Description=\"RNA call covering short genomic distance\">\n";
 }
 
 

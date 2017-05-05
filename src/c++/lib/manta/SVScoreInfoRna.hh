@@ -47,8 +47,13 @@ struct SVScoreInfoRna
 
     unsigned altScore = 0; ///< quality score indicating any non-reference state (regardless of specific genotype)
 
+    /// Dummy value used for variant score in RNA output
+    static const int defaultScore = 42;
+    /// Min length for passing fusions
+    static const int minLength = 100000;
     static const std::string rnaFilterLabel;
-
+    static const std::string impreciseLabel;
+    static const std::string localLabel;
 };
 
 std::ostream&
