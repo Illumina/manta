@@ -18,6 +18,7 @@
 //
 
 /**
+ ** \file
  ** \brief Implementation of the common exception mechanism.
  **
  ** \author Come Raczy

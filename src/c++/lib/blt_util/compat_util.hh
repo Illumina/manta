@@ -17,12 +17,9 @@
 //
 //
 
+/// \file
+/// \brief Take care of some (mostly C99) functions not available in VS C++
 ///
-/// \author Chris Saunders
-///
-
-// take care of some (mostly C99) functions not available in VS C++
-//
 
 #pragma once
 

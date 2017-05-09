@@ -17,10 +17,6 @@
 //
 //
 
-///
-/// \author Ole Schulz-Trieglaff
-///
-
 #pragma once
 
 

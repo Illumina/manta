@@ -17,6 +17,7 @@
 //
 //
 
+/// \file
 /// \brief Encapsulation of the concept of a read pair relative orientation.
 ///
 /// \author Richard Shaw

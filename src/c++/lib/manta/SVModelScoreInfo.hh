@@ -17,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders and Xiaoyu Chen
 ///
 
@@ -31,7 +31,6 @@
 
 
 /// all scoring info for one sv candidate, including data related to specific scoring models
-///
 ///
 struct SVModelScoreInfo
 {

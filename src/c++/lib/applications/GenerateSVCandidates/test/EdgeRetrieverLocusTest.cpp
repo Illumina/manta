@@ -17,10 +17,6 @@
 //
 //
 
-///
-/// \author Chris Saunders
-///
-
 #include "boost/test/unit_test.hpp"
 
 #include "applications/GenerateSVCandidates/EdgeRetrieverLocus.hh"

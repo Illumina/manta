@@ -18,7 +18,6 @@
 //
 
 /// \file
-
 /// \author Chris Saunders
 ///
 #include "blt_util/blt_exception.hh"

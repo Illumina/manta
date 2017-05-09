@@ -17,16 +17,11 @@
 //
 //
 
-///
-/// \author Chris Saunders
-///
-
 #pragma once
 
 #include "common/Program.hh"
 
 
-///
 struct MergeEdgeStats : public illumina::Program
 {
     const char*

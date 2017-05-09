@@ -17,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 
 #include "manta/SVCandidateAssemblyData.hh"

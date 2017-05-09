@@ -17,12 +17,9 @@
 //
 //
 
-///
-/// \author Chris Saunders
-///
-
+/// \file
 /// \brief bam record manipulation functions
-///
+/// \author Chris Saunders
 
 #pragma once
 

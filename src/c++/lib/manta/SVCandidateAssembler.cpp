@@ -17,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Ole Schulz-Trieglaff
 /// \author Chris Saunders
 ///

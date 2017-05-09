@@ -17,10 +17,6 @@
 //
 //
 
-///
-/// \author Chris Saunders
-///
-
 #include "svgraph/GenomeInterval.hh"
 
 #include <iostream>

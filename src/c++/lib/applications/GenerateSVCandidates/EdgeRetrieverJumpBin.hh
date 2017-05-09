@@ -17,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -26,8 +26,8 @@
 #include "EdgeRetriever.hh"
 
 
-/// WARNING -- initial testing suggests this class still has a possible edge repetition/dropout bug
-///            this still has potential but only if you have time to go in and hunt down the bug
+// WARNING -- initial testing suggests this class still has a possible edge repetition/dropout bug
+//            this still has potential but only if you have time to go in and hunt down the bug
 
 
 /// provide an iterator over edges in a set of SV locus graphs

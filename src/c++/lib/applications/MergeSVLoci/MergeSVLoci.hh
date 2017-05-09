@@ -17,17 +17,11 @@
 //
 //
 
-///
-/// \author Chris Saunders
-///
-
 #pragma once
 
 #include "common/Program.hh"
 
 
-/// estimate per-library information from alignment file(s)
-///
 struct MergeSVLoci : public illumina::Program
 {
     const char*

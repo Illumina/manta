@@ -17,10 +17,10 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
-/// \brief align a contig across two breakend regions
+/// \brief Align a contig across two breakend regions
 ///
 
 

@@ -17,9 +17,6 @@
 //
 //
 
-///
-/// \author Chris Saunders
-///
 
 #include "options/SVLocusSetOptionsParser.hh"
 

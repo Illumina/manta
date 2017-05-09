@@ -17,9 +17,9 @@
 //
 //
 
-//
-// \author Chris Saunders and Felix Schlesinger
-//
+/// \file
+/// \author Chris Saunders and Felix Schlesinger
+///
 
 #include "AlignerUtil.hh"
 

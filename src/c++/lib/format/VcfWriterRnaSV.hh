@@ -17,8 +17,8 @@
 //
 //
 
-///
-/// \author Chris Saunders
+/// \file
+/// \author Felix Schlesinger
 ///
 
 #pragma once

@@ -18,6 +18,7 @@
 //
 
 /**
+ ** \file
  ** \brief Encapsulation of the concept of a read pair relative orientation.
  **
  ** Encapsulation of the concept of a read pair relative orientation.

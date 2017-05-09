@@ -17,8 +17,10 @@
 //
 //
 
+/// \file
 /// \author Chris Saunders
 ///
+
 #include "blt_util/log.hh"
 #include "blt_util/seq_util.hh"
 

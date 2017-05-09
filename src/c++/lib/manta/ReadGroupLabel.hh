@@ -17,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -37,7 +37,6 @@ struct ReadGroupLabel
     /// if isCopyPtrs then the strings are copied and alloced/de-alloced by
     /// the object, if false the client is responsible these pointers over
     /// the lifetime of the label:
-    explicit
     ReadGroupLabel(
         const char* bamLabelInit,
         const char* rgLabelInit,

@@ -17,10 +17,6 @@
 //
 //
 
-/// \file
-
-/// \author Chris Saunders
-///
 #include "blt_util/log.hh"
 
 #include <iostream>

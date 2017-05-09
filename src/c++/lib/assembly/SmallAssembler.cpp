@@ -17,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Ole Schulz-Trieglaff and Xiaoyu Chen
 ///
 

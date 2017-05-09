@@ -17,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 /// \brief functions to convert alignments to/from the match descriptor (MD) format

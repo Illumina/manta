@@ -17,10 +17,6 @@
 //
 //
 
-///
-/// \author Chris Saunders
-///
-
 #include "boost/archive/tmpdir.hpp"
 #include "boost/test/unit_test.hpp"
 

@@ -17,10 +17,6 @@
 //
 //
 
-///
-/// \author Chris Saunders
-///
-
 #include "options/optionsUtil.hh"
 #include "options/AlignmentFileOptionsParser.hh"
 

@@ -17,9 +17,6 @@
 //
 //
 
-/// \author Chris Saunders
-///
-
 #pragma once
 
 #include "common/Program.hh"

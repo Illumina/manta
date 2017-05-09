@@ -17,9 +17,9 @@
 //
 //
 
-//
-// \author Chris Saunders
-//
+/// \file
+/// \author Chris Saunders
+///
 
 #include <cassert>
 

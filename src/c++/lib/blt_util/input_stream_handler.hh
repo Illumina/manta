@@ -17,12 +17,11 @@
 //
 //
 
-
+/// \file
+/// \author Chris Saunders
 ///
 /// object which accepts as input bam (and formerly vcf/other chromosome ordered) files from multiple
 /// samples and merges them in order
-///
-/// \author Chris Saunders
 ///
 
 

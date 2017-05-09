@@ -17,10 +17,6 @@
 //
 //
 
-///
-/// \author Xiaoyu Chen
-///
-
 #include "options/CallOptionsTumor.hh"
 
 

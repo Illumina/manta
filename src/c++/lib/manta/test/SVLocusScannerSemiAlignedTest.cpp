@@ -17,10 +17,6 @@
 //
 //
 
-/// \file
-/// \author Chris Saunders
-///
-
 #include "boost/test/unit_test.hpp"
 
 #include "htsapi/align_path_bam_util.hh"

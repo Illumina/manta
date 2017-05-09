@@ -17,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Felix Schlesinger
 ///
 

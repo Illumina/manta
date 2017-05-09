@@ -17,10 +17,6 @@
 //
 //
 
-///
-/// \author Chris Saunders
-///
-
 #include "options/ReadScannerOptionsParser.hh"
 
 
@@ -59,5 +55,4 @@ parseOptions(
     }
 
     return (! errorMsg.empty());
-
 }
