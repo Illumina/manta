@@ -1355,7 +1355,7 @@ static
 void
 scoreRNASV(
     const SVSampleInfo& baseInfo,
-    const SVCandidate sv,
+    const SVCandidate& sv,
     SVScoreInfoRna& rnaInfo)
 {
 #ifdef DEBUG_SCORE
