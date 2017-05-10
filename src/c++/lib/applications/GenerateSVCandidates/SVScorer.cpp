@@ -1355,13 +1355,24 @@ static
 void
 scoreRNASV(
     const SVSampleInfo& baseInfo,
+    const SVCandidate sv,
     SVScoreInfoRna& rnaInfo)
 {
 #ifdef DEBUG_SCORE
     //log_os << __FUNCTION__ << "Scoring RNA candidate " << sv << "\n";
 #endif
 
-    rnaInfo.altScore=42;
+    rnaInfo.altScore = SVScoreInfoRna::defaultScore;
+    if (sv.isImprecise())
+    {
+        rnaInfo.filters.insert(SVScoreInfoRna::impreciseLabel);
+        return;
+    }
+    if ((sv.bp1.interval.tid == sv.bp2.interval.tid) &&
+        (sv.centerSize() < SVScoreInfoRna::minLength))
+    {
+        rnaInfo.filters.insert(SVScoreInfoRna::localLabel);
+    }
     if (baseInfo.alt.splitReadCount == 0)
     {
         rnaInfo.filters.insert(SVScoreInfoRna::rnaFilterLabel);
@@ -1822,7 +1833,7 @@ computeAllScoreModels(
     }
     else if (_isRNA)
     {
-        scoreRNASV(modelScoreInfo.base.samples[0], modelScoreInfo.rna);
+        scoreRNASV(modelScoreInfo.base.samples[0], junctionData[0].getSV(), modelScoreInfo.rna);
     }
     else
     {

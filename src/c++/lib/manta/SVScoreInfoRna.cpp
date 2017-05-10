@@ -26,7 +26,10 @@
 
 #include <iostream>
 
-const std::string SVScoreInfoRna::rnaFilterLabel = "RNAFail";
+const std::string SVScoreInfoRna::rnaFilterLabel = "LowEvidence";
+const std::string SVScoreInfoRna::impreciseLabel = "Imprecise";
+const std::string SVScoreInfoRna::localLabel = "Local";
+
 
 std::ostream&
 operator<<(
