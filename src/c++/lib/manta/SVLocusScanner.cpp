@@ -265,65 +265,98 @@ typedef std::map<std::string, int32_t> chromMap_t;
 
 
 
+/// \brief Enumerate the fields for each split alignment segment as described in the BAM spec "SA" tag entry
+namespace SAFields
+{
+    enum index_t {
+        CHROM,
+        POS,
+        STRAND,
+        CIGAR,
+        MAPQ,
+        NM,
+        SIZE
+    };
+}
+
+
 static
 void
 parseSACandidatesFromRead(
     const ReadScannerOptions& opt,
     const bam_record& bamRead,
     const chromMap_t& chromToIndex,
-    std::vector<SimpleAlignment>& splitAlign)
+    std::vector<SimpleAlignment>& splitAlignments)
 {
+    using namespace illumina::common;
     using namespace ALIGNPATH;
 
-    splitAlign.clear();
+    splitAlignments.clear();
 
-    std::vector<std::string> saVec;
+    std::vector<std::string> splitAlignmentSegmentStrings;
     {
-        static const char satag[] = {'S','A'};
-        const char* saStr(bamRead.get_string_tag(satag));
-        if (nullptr == saStr) return;
+        static const char splitAlignmentTag[] = {'S','A'};
+        const char* splitAlignmentString(bamRead.get_string_tag(splitAlignmentTag));
+        if (nullptr == splitAlignmentString) return;
 
-        split_string(saStr, ';', saVec);
-        if ( (! saVec.empty()) && saVec.back().empty())
+        split_string(splitAlignmentString, ';', splitAlignmentSegmentStrings);
+        if ( (! splitAlignmentSegmentStrings.empty()) && splitAlignmentSegmentStrings.back().empty())
         {
-            saVec.pop_back();
+            splitAlignmentSegmentStrings.pop_back();
         }
     }
 
-    // Only handle a single split alignment right now.
+    // Only handle a single split alignment segment right now (meaning the read is split into 2 parts).
     // In the future we could sort the SA tags by order on the template, possibly
-    // also removing segments that map to two different areas,
+    // also removing segments that map to two different areas.
+    if (splitAlignmentSegmentStrings.size() > 1) return;
 
-    if (saVec.size() > 1) return;
-
-    for (const std::string& sa : saVec)
+    for (const std::string& splitAlignmentSegmentString : splitAlignmentSegmentStrings)
     {
 #ifdef DEBUG_SCANNER
-        log_os << __FUNCTION__ << ": SA STRING: " << sa << "\n";
+        log_os << __FUNCTION__ << ": splitAlignmentSegmentString: " << splitAlignmentSegmentString << "\n";
 #endif
-        std::vector<std::string> saDat;
-        split_string(sa, ',', saDat);
+        std::vector<std::string> splitAlignmentSegmentFields;
+        split_string(splitAlignmentSegmentString, ',', splitAlignmentSegmentFields);
 
-        assert((saDat.size() == 6) && "Unexpected number of SA tag values");
-
-        /// filter split reads with low MAPQ:
-        const unsigned saMapq(illumina::blt_util::parse_unsigned_str(saDat[4]));
-        if (saMapq < opt.minMapq) continue;
-
-        const chromMap_t::const_iterator ci(chromToIndex.find(saDat[0]));
-        assert(ci != chromToIndex.end());
-
-        splitAlign.emplace_back();
-        SimpleAlignment& sal(splitAlign.back());
-        sal.tid=(ci->second); // convert chr to int32_t via new bam header map
-        sal.pos = (illumina::blt_util::parse_int_str(saDat[1])-1);
+        if (splitAlignmentSegmentFields.size() != SAFields::SIZE)
         {
-            const char saStrand(saDat[2][0]); // convert to char
-            assert((saStrand=='-') || (saStrand=='+'));
-            sal.is_fwd_strand = (saStrand == '+');
+            std::ostringstream oss;
+            oss << "ERROR: Unexpected format in the split alignment segment: '" << splitAlignmentSegmentString << "'\n";
+            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
         }
 
-        cigar_to_apath(saDat[3].c_str(), sal.path);
+        /// filter split reads with low MappingQuality:
+        const unsigned splitAlignmentMappingQuality(
+            illumina::blt_util::parse_unsigned_str(splitAlignmentSegmentFields[SAFields::MAPQ]));
+        if (splitAlignmentMappingQuality < opt.minMapq) continue;
+
+        const std::string& splitAlignmentChrom(splitAlignmentSegmentFields[SAFields::CHROM]);
+        const chromMap_t::const_iterator ci(chromToIndex.find(splitAlignmentChrom));
+
+        if (ci == chromToIndex.end())
+        {
+            std::ostringstream oss;
+            oss << "ERROR: Split alignment segment maps to an unknown chromosome: '" << splitAlignmentChrom << "'\n";
+            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        }
+
+        splitAlignments.emplace_back();
+        SimpleAlignment& sal(splitAlignments.back());
+        sal.tid=(ci->second); // convert chr to int32_t via new bam header map
+        sal.pos = (illumina::blt_util::parse_int_str(splitAlignmentSegmentFields[SAFields::POS])-1);
+        {
+            const char splitAlignmentStrand(splitAlignmentSegmentFields[SAFields::STRAND][0]); // convert to char
+            if (! ((splitAlignmentStrand=='-') || (splitAlignmentStrand=='+')))
+            {
+                std::ostringstream oss;
+                oss << "ERROR: Unexpected strand entry in split alignment segment: '" << splitAlignmentSegmentString << "'\n";
+                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            }
+            sal.is_fwd_strand = (splitAlignmentStrand == '+');
+        }
+
+        cigar_to_apath(splitAlignmentSegmentFields[SAFields::CIGAR].c_str(), sal.path);
     }
 }
 
