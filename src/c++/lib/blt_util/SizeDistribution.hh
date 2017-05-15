@@ -78,7 +78,9 @@ struct SizeDistribution
         _quantiles(_quantileNum,0)
     {}
 
-    /// \return The value for which we observe value or less with probability \p prob
+    /// \brief Implements the quantile function for this distribution
+    ///
+    /// \return The size at which all sizes equal or less are observed with probability \p prob
     int
     quantile(const float prob) const;
 

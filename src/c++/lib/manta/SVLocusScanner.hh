@@ -104,8 +104,7 @@ struct ReadScannerDerivOptions
 
 
 
-/// consolidate functions which process a read to determine its
-/// SV evidence value
+/// \brief Consolidate functions which test aligned reads for SV evidence
 ///
 /// In manta, evidence is scanned (at least) twice: once for SVLocus Graph generation
 /// and then once again during hygen/scoring. We need to make sure both of these steps
@@ -187,7 +186,7 @@ struct SVLocusScanner
         const bam_record& bamRead,
         const unsigned defaultReadGroupIndex) const;
 
-    /// \breif Test \p bamRead to determine if it is from a paired-end DNA fragment with anomolous orientation or size,
+    /// \breif Test \p bamRead to determine if it is from a paired-end DNA fragment with anomalous orientation or size,
     ///        excluding the case of an anomalously short standard orientation read pair
     ///
     /// According to this method only mapped read pairs can be anomalous. All single read
@@ -272,7 +271,10 @@ struct SVLocusScanner
         const reference_contig_segment* remoteRefSeqPtr,
         std::vector<SVObservation>& candidates) const;
 
-    /// this information is needed for the whole bam, not just one read group:
+    /// \brief Get the distance upstream of a breakend in which shadow reads support will be searched for
+    ///
+    /// \TODO if read groups are decoupled from samples, then this value needs to be revisited to reflect all read
+    ///       groups in the sample.
     int
     getShadowSearchDistance(
         const unsigned defaultReadGroupIndex) const
@@ -280,8 +282,7 @@ struct SVLocusScanner
         return _stats[defaultReadGroupIndex].shadowSearchDistance;
     }
 
-    /// provide direct access to the frag distro for
-    /// functions which can't be cached
+    /// \brief Provide read-only access to the fragment length distribution for each read-group/sample
     ///
     const SizeDistribution&
     getFragSizeDistro(
@@ -388,8 +389,5 @@ private:
 
     // cached temporary to reduce syscalls:
     mutable SimpleAlignment _bamAlign;
-
-//    std::string lastQname;
-//    uint8_t lastMapq;
 };
 

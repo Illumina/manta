@@ -33,36 +33,38 @@ struct ReadScannerOptions
     ///        to help disprove a somatic candidate via the existence of weak candidate evidence in the normal
     unsigned minTier2Mapq = 5;
 
-    /// report breakend regions with x prob regions removed from each edge
-    float breakendEdgeTrimProb = 0.25f;
+    /// \brief Probability used to create fragment size quantile range for reported breakend regions
+    float breakendEdgeQuantileProb = 0.25f;
 
-    /// report breakend regions with x prob regions removed from each edge
-    /// used only for 'large-scale' events.
-    float largeScaleEventBreakendEdgeTrimProb = 0.1f;
+    /// \brief Probability used to create fragment size quantile range for reported breakend regions, this version is
+    ///        reserved for large-scale SV candidates
+    float largeScaleEventBreakendEdgeQuantileProb = 0.1f;
 
-    /// \brief Fragment size quantile used for anomalous read pair detection during SV discovery
+    /// \brief Probability used to create fragment size quantile range for anomalous read pair detection during
+    ///        SV discovery
     ///
     /// Treat a paired read as non-anomalous (ie. "proper") during SV discovery if orientation is non-anomalous and
-    /// implied fragment size is within the [x, 1-x], x=properPairTrimProb quantile range of the fragment length
+    /// implied fragment size is within the [x, 1-x], x=properPairQuantileProb quantile range of the fragment length
     /// distribution.
-    float properPairTrimProb = 0.01f;
+    float properPairQuantileProb = 0.01f;
 
-    /// \brief Fragment size quantile used for supporting read pair evidence during SV scoring
+    /// \brief Probability used to create fragment size quantile range for supporting read pair evidence during
+    ///        SV scoring
     ///
     /// Add a read pair to an SV's pool of evidence to evaluate for paired-read support during the scoring phase if
-    /// the orientation is non-anomalous and the implied fragment size is within the [x, 1-x], x=evidenceTrimProb
+    /// the orientation is non-anomalous and the implied fragment size is within the [x, 1-x], x=evidenceQuantileProb
     /// quantile range of the fragment length
-    float evidenceTrimProb = 0.15f;
+    float evidenceTrimQuantileProb = 0.15f;
 
     /// Shadow read support is searched upstream of a breakend to a distance of X*Y, where
-    /// X=quantile(shadowSearchRangeProb) on the fragment length distribution
-    /// Y=shadowSearchRangeFactor
-    float shadowSearchRangeProb = 0.05f;
+    /// X=quantile(1-shadowSearchDistanceQuantileProb) on the fragment length distribution
+    /// Y=shadowSearchDistanceFactor
+    float shadowSearchDistanceQuantileProb = 0.05f;
 
     /// Shadow read support is searched upstream of a breakend to a distance of X*Y, where
-    /// X=quantile(shadowSearchRangeProb) on the fragment length distribution
-    /// Y=shadowSearchRangeFactor
-    float shadowSearchRangeFactor = 1.2f;
+    /// X=quantile(shadowSearchDistanceProb) on the fragment length distribution
+    /// Y=shadowSearchDistanceFactor
+    float shadowSearchDistanceFactor = 1.2f;
 
     /// \brief Ignore indels smaller than this when building graph, constructing candidates and scoring output
     unsigned minCandidateVariantSize = 10;
@@ -83,10 +85,10 @@ struct ReadScannerOptions
     /// \brief Minimum length of any SV candidate in RNA data
     unsigned minRNALength = 1000;
 
-    /// \brief Minimum MAPQ for shadow mate used to build SV adjacency graph
+    /// \brief Minimum mapping quality for shadow mate used to build SV adjacency graph
     unsigned minSingletonMapqGraph = 30;
 
-    /// \brief Minimum MAPQ for shadow mate used for candidate assembly and scoring
+    /// \brief Minimum mapping quality for shadow mate used for candidate assembly and scoring
     unsigned minSingletonMapqCandidates = 15;
 
     /// \brief If true, do not treat reads with the 'proper pair' bit set as SV evidence.

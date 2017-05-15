@@ -102,7 +102,7 @@ isLarge(const index_t i)
 ///                      for indels in a single region.
 static
 SVObservation
-GetSplitSVCandidate(
+getSplitSVCandidate(
     const ReadScannerDerivOptions& dopt,
     const int32_t candidateChromosomeIndex,
     const pos_t candidateChromosomeLength,
@@ -217,7 +217,7 @@ updateSABreakend(
 /// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2, etc..)
 static
 SVObservation
-GetSplitSACandidate(
+getSplitSACandidate(
     const ReadScannerDerivOptions& dopt,
     const bam_record& localRead,
     const SimpleAlignment& localAlign,
@@ -396,7 +396,8 @@ getSACandidatesFromRead(
 
     for (const auto& ral : remoteAlign)
     {
-        candidates.push_back(GetSplitSACandidate(dopt, localRead, localAlign, ral, dnaFragmentSVEvidenceSource, bamHeader));
+        candidates.push_back(
+            getSplitSACandidate(dopt, localRead, localAlign, ral, dnaFragmentSVEvidenceSource, bamHeader));
 #ifdef DEBUG_SCANNER
         log_os << __FUNCTION__ << ": evaluating SA sv for inclusion: " << candidates.back() << "\n";
 #endif
@@ -405,7 +406,7 @@ getSACandidatesFromRead(
 
 
 
-/// \brief Convert all large-indels already present in a single read's alignment into SVObservation objects
+/// \brief Convert all large indels already present in a single read's alignment into SVObservation objects
 ///
 /// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2, etc..)
 /// \param[inout] candidates New SVObservation objects are appended to this vector. Contents of the vector are preserved
@@ -462,7 +463,9 @@ getSVCandidatesFromReadIndels(
                 if (ps.length >= opt.minCandidateVariantSize)
                 {
                     static const bool isComplex(true);
-                    candidates.push_back(GetSplitSVCandidate(dopt, chromosomeIndex, chromosomeLength, refHeadPos, refHeadPos, svSource, dnaFragmentSVEvidenceSource, isComplex));
+                    candidates.push_back(
+                        getSplitSVCandidate(dopt, chromosomeIndex, chromosomeLength, refHeadPos, refHeadPos, svSource,
+                                            dnaFragmentSVEvidenceSource, isComplex));
                 }
             }
         }
@@ -471,7 +474,9 @@ getSVCandidatesFromReadIndels(
             const swap_info sinfo(align.path,pathIndex);
             if ((sinfo.delete_length >= opt.minCandidateVariantSize) || (sinfo.insert_length >= opt.minCandidateVariantSize))
             {
-                candidates.push_back(GetSplitSVCandidate(dopt, chromosomeIndex, chromosomeLength, refHeadPos, refHeadPos+sinfo.delete_length, svSource, dnaFragmentSVEvidenceSource));
+                candidates.push_back(getSplitSVCandidate(dopt, chromosomeIndex, chromosomeLength, refHeadPos,
+                                                         refHeadPos + sinfo.delete_length, svSource,
+                                                         dnaFragmentSVEvidenceSource));
             }
 
             nPathSegments = sinfo.n_seg;
@@ -484,14 +489,18 @@ getSVCandidatesFromReadIndels(
             {
                 if (ps.length >= opt.minCandidateVariantSize)
                 {
-                    candidates.push_back(GetSplitSVCandidate(dopt, chromosomeIndex, chromosomeLength, refHeadPos, refHeadPos+ps.length, svSource, dnaFragmentSVEvidenceSource));
+                    candidates.push_back(
+                        getSplitSVCandidate(dopt, chromosomeIndex, chromosomeLength, refHeadPos, refHeadPos + ps.length,
+                                            svSource, dnaFragmentSVEvidenceSource));
                 }
             }
             else if (ps.type == INSERT)
             {
                 if (ps.length >= opt.minCandidateVariantSize)
                 {
-                    candidates.push_back(GetSplitSVCandidate(dopt, chromosomeIndex, chromosomeLength, refHeadPos, refHeadPos, svSource, dnaFragmentSVEvidenceSource));
+                    candidates.push_back(
+                        getSplitSVCandidate(dopt, chromosomeIndex, chromosomeLength, refHeadPos, refHeadPos, svSource,
+                                            dnaFragmentSVEvidenceSource));
                 }
             }
         }
@@ -549,15 +558,15 @@ getSVCandidatesFromSemiAligned(
     if (leadingMismatchLen >= opt.minSemiAlignedMismatchLen)
     {
         const pos_t pos(leadingRefPos);
-        candidates.push_back(GetSplitSVCandidate(dopt,candidateChromosomeIndex,candidateChromosomeLength,pos,pos,
-                                                 svEvidenceSource, dnaFragmentSVEvidenceSource,isComplex));
+        candidates.push_back(getSplitSVCandidate(dopt, candidateChromosomeIndex, candidateChromosomeLength, pos, pos,
+                                                 svEvidenceSource, dnaFragmentSVEvidenceSource, isComplex));
     }
 
     if (trailingMismatchLen >= opt.minSemiAlignedMismatchLen)
     {
         const pos_t pos(trailingRefPos);
-        candidates.push_back(GetSplitSVCandidate(dopt,candidateChromosomeIndex,candidateChromosomeLength,pos,pos,
-                                                 svEvidenceSource, dnaFragmentSVEvidenceSource,isComplex));
+        candidates.push_back(getSplitSVCandidate(dopt, candidateChromosomeIndex, candidateChromosomeLength, pos, pos,
+                                                 svEvidenceSource, dnaFragmentSVEvidenceSource, isComplex));
     }
 }
 
@@ -633,6 +642,11 @@ struct AlignmentPairAnalyzer
     }
 
 
+    /// \brief Convert the input alignments (provided in ::reset) into a structural variant observation
+    ///
+    /// The regions where each of the two breakends are likely to be found in the event that an SV exists are computed
+    /// from the two read alignments and the fragement size distribution.
+    ///
     /// Requires that ::isAnomalousReadPair has already been called since the last call to ::reset.
     ///
     /// \param sv[out] The SVObservation inferred from the anomalous read pair
@@ -1110,9 +1124,9 @@ getSingleReadSVCandidates(
 
 
 
-/// scan read record (and optionally its mate record) for SV evidence.
+/// \brief Scan read record (and optionally its mate record) for SV evidence
 //
-/// note that estimation is improved by the mate record (because we have the mate cigar string in this case)
+/// Note that estimation is improved by the mate record (because we have the mate cigar string in this case)
 ///
 static
 void
@@ -1270,9 +1284,9 @@ getReadBreakendsImpl(
 
 
 
-/// Create an SVLocus for each potential SV event supported by the BAM record
+/// \brief Create an SVLocus for each potential SV event supported by the BAM record
 ///
-/// the loci count should almost always be one (or, depending on input filtration, zero).
+/// The loci count should almost always be one (or, depending on input filtration, zero).
 /// multiple suggested loci from one read is more of a theoretical possibility than an
 /// expectation.
 ///
@@ -1389,21 +1403,20 @@ getSVLociImpl(
 
 
 
-/// \breif Given a fragment length distribution and a quantile value \p qprob, compute the range between
-///        quantile(qprob) and quantile(1-prob)
+/// \brief Given a size distribution and probability \p prob, set \p range to span
+///        quantile(prob) to quantile(1-prob)
 ///
-/// \param[in] fragStats Fragment size distribution
-/// \param[in] qprob Quantile value
-/// \param[out] range Computed qauntile range
+/// \param[in] prob Probability used to determine quantile range drawn from the \p sizeDistribution
+/// \param[out] range Computed quantile range over size
 static
 void
-setRGRange(
-    const SizeDistribution& fragStats,
-    const float qprob,
+getSizeQuantileRange(
+    const SizeDistribution& sizeDistribution,
+    const float prob,
     SVLocusScanner::Range& range)
 {
-    range.min=fragStats.quantile(qprob);
-    range.max=fragStats.quantile((1-qprob));
+    range.min=sizeDistribution.quantile(prob);
+    range.max=sizeDistribution.quantile((1-prob));
     if (range.min<0.) range.min = 0;
     assert(range.max>0.);
 }
@@ -1435,11 +1448,12 @@ SVLocusScanner(
 
         _stats.resize(_stats.size()+1);
         CachedReadGroupStats& rgStats(_stats.back());
-        setRGRange(readGroupFragSizeDistro, _opt.breakendEdgeTrimProb, rgStats.breakendRegion);
-        setRGRange(readGroupFragSizeDistro, _opt.largeScaleEventBreakendEdgeTrimProb, rgStats.largeScaleEventBreakendRegion);
-        setRGRange(readGroupFragSizeDistro, _opt.properPairTrimProb, rgStats.properPair);
-        setRGRange(readGroupFragSizeDistro, _opt.evidenceTrimProb, rgStats.evidencePair);
-        setRGRange(readGroupFragSizeDistro, 0.05f, rgStats.fifthPerc);
+        getSizeQuantileRange(readGroupFragSizeDistro, _opt.breakendEdgeQuantileProb, rgStats.breakendRegion);
+        getSizeQuantileRange(readGroupFragSizeDistro, _opt.largeScaleEventBreakendEdgeQuantileProb,
+                             rgStats.largeScaleEventBreakendRegion);
+        getSizeQuantileRange(readGroupFragSizeDistro, _opt.properPairQuantileProb, rgStats.properPair);
+        getSizeQuantileRange(readGroupFragSizeDistro, _opt.evidenceTrimQuantileProb, rgStats.evidencePair);
+        getSizeQuantileRange(readGroupFragSizeDistro, 0.05f, rgStats.fifthPerc);
 
         if ((readGroupIndex==0) || (rgStats.fifthPerc.min < _fifthPerc.min))
         {
@@ -1450,7 +1464,7 @@ SVLocusScanner(
             _fifthPerc.max = rgStats.fifthPerc.max;
         }
 
-        rgStats.shadowSearchDistance = readGroupFragSizeDistro.quantile(1-(_opt.shadowSearchRangeProb))*_opt.shadowSearchRangeFactor;
+        rgStats.shadowSearchDistance = readGroupFragSizeDistro.quantile(1-(_opt.shadowSearchDistanceQuantileProb))*_opt.shadowSearchDistanceFactor;
 
         assert(rgStats.shadowSearchDistance > 0);
 

@@ -44,7 +44,7 @@ parseOptions(
 {
     errorMsg.clear();
 #if 0
-    if ((opt.breakendEdgeTrimProb <= 0) || (opt.breakendEdgeTrimProb >= 1.0))
+    if ((opt.breakendEdgeQuantileProb <= 0) || (opt.breakendEdgeQuantileProb >= 1.0))
     {
         errorMsg="edge-prob argument is restricted to (0,1)";
     }
