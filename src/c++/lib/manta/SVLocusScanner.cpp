@@ -246,15 +246,15 @@ getSplitSACandidate(
     // If it is a forward read (e.g. read1 on + strand), this means it's a forward read for this event.
     const bool isSplitDownstream(isSplitOpenDownstream(localAlign.path));
     const bool isReadFw = (localRead.is_first() == localRead.is_fwd_strand());
-    if (dopt.isStrandedRNA)
+    if (dopt.isTranscriptStrandKnown)
     {
         if (isReadFw == isSplitDownstream)
         {
-            sv.forwardReadCount += 1;
+            sv.forwardTranscriptStrandReadCount += 1;
         }
         else
         {
-            sv.reverseReadCount += 1;
+            sv.reverseTranscriptStrandReadCount += 1;
         }
     }
     return sv;
@@ -669,15 +669,15 @@ struct AlignmentPairAnalyzer
 
         localBreakend.lowresEvidence.add(svLocalPair);
 
-        if (_dopt.isStrandedRNA)
+        if (_dopt.isTranscriptStrandKnown)
         {
             if (_isForwardStrand)
             {
-                sv.forwardReadCount++;
+                sv.forwardTranscriptStrandReadCount++;
             }
             else
             {
-                sv.reverseReadCount++;
+                sv.reverseTranscriptStrandReadCount++;
             }
         }
 
@@ -1429,9 +1429,9 @@ SVLocusScanner(
     const std::string& statsFilename,
     const std::vector<std::string>& /*alignmentFilename*/,
     const bool isRNA,
-    const bool isStrandedRNA) :
+    const bool isTranscriptStrandKnown) :
     _opt(opt),
-    _dopt(opt, isRNA, isStrandedRNA)
+    _dopt(opt, isRNA, isTranscriptStrandKnown)
 {
     using namespace illumina::common;
 

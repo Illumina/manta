@@ -92,11 +92,11 @@ modifyTranslocInfo(
 
         const bool isFirst = (assemblyData.bporient.isBp1First == isFirstOfPair);
         if (isFirst) infotags.push_back("RNA_FIRST");
-        if (assemblyData.bporient.isStranded) infotags.push_back("RNA_STRANDED");
+        if (assemblyData.bporient.isTranscriptStrandKnown) infotags.push_back("RNA_STRANDED");
 
         if (!isFirstOfPair) return; // only the first breakpoint gets the additional RNA info attached to its VCF entry
 
-        infotags.push_back(str(boost::format("RNA_FwRvReads=%i,%i") % sv.forwardReadCount % sv.reverseReadCount));
+        infotags.push_back(str(boost::format("RNA_FwRvReads=%i,%i") % sv.forwardTranscriptStrandReadCount % sv.reverseTranscriptStrandReadCount));
         infotags.push_back(str(boost::format("RNA_Reads=%i") % sv.bp2.lowresEvidence.getTotal()));
         const unsigned numContigs(assemblyData.contigs.size());
         if (numContigs > 0)

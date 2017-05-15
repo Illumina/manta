@@ -73,15 +73,15 @@ struct SVCandidate
         {
             bp1.merge(rhs.bp1, isExpandRegion);
             bp2.merge(rhs.bp2, isExpandRegion);
-            forwardReadCount += rhs.forwardReadCount;
-            reverseReadCount += rhs.reverseReadCount;
+            forwardTranscriptStrandReadCount += rhs.forwardTranscriptStrandReadCount;
+            reverseTranscriptStrandReadCount += rhs.reverseTranscriptStrandReadCount;
         }
         else
         {
             bp1.merge(rhs.bp2, isExpandRegion);
             bp2.merge(rhs.bp1, isExpandRegion);
-            forwardReadCount += rhs.reverseReadCount;
-            reverseReadCount += rhs.forwardReadCount;
+            forwardTranscriptStrandReadCount += rhs.reverseTranscriptStrandReadCount;
+            reverseTranscriptStrandReadCount += rhs.forwardTranscriptStrandReadCount;
         }
 
         _isImprecise = (isImprecise() || rhs.isImprecise());
@@ -103,8 +103,8 @@ struct SVCandidate
         isUnknownSizeInsertion = false;
         unknownSizeInsertionLeftSeq.clear();
         unknownSizeInsertionRightSeq.clear();
-        forwardReadCount = 0;
-        reverseReadCount = 0;
+        forwardTranscriptStrandReadCount = 0;
+        reverseTranscriptStrandReadCount = 0;
         isSingleJunctionFilter = false;
     }
 #endif
@@ -118,13 +118,13 @@ struct SVCandidate
     bool
     isForward() const
     {
-        return (forwardReadCount > reverseReadCount);
+        return (forwardTranscriptStrandReadCount > reverseTranscriptStrandReadCount);
     }
 
     bool
-    isStranded() const
+    isTranscriptStrandKnown() const
     {
-        return ((std::max(forwardReadCount, reverseReadCount)+1) / (std::min(forwardReadCount, reverseReadCount)+1) >= 2);
+        return ((std::max(forwardTranscriptStrandReadCount, reverseTranscriptStrandReadCount)+1) / (std::min(forwardTranscriptStrandReadCount, reverseTranscriptStrandReadCount)+1) >= 2);
     }
 
     /// if 1 is added to the position of one breakend (within the homologous breakend range), then is 1 also added to the other breakend?
@@ -181,8 +181,8 @@ public:
     std::string unknownSizeInsertionLeftSeq; ///< for an incomplete insertion, this is the known left side of the insert sequence
     std::string unknownSizeInsertionRightSeq; ///< for an incomplete insertion, this is the known right side of the insert sequence
 
-    unsigned forwardReadCount = 0; ///< Number of reads (pairs) supporting a direction from bp1 to bp2 (used for stranded RNA data)
-    unsigned reverseReadCount = 0; ///< Number of reads (pairs) directed from bp2 to bp1
+    unsigned forwardTranscriptStrandReadCount = 0; ///< Number of reads (pairs) supporting a direction from bp1 to bp2 (used for stranded RNA data)
+    unsigned reverseTranscriptStrandReadCount = 0; ///< Number of reads (pairs) directed from bp2 to bp1
 
     /// filter out this sv candidate unless it's rescued by a multi-junction event:
     bool isSingleJunctionFilter = false;

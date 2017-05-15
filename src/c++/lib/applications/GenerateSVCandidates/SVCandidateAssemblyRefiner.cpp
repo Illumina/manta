@@ -1397,7 +1397,7 @@ getJumpAssembly(
     BPOrientation& bporient(assemblyData.bporient);
 
     bporient.isBp1First = sv.isForward();
-    bporient.isStranded = sv.isStranded();
+    bporient.isTranscriptStrandKnown = sv.isTranscriptStrandKnown();
     if (_opt.isRNA)
     {
         bporient.isBp1First = !sv.isForward(); // RNA-seq reads generate candidates in the opposite direction of the RNA
@@ -1573,11 +1573,11 @@ getJumpAssembly(
 
 
 #ifdef DEBUG_REFINER
-            log_os << __FUNCTION__ << " isStrandedRNA: " << bporient.isStrandedRNA << "; bp1Fw: " << bp1Fw << " ; bp2Fw: " << bp2Fw << '\n';
+            log_os << __FUNCTION__ << " isTranscriptStrandKnown: " << bporient.isTranscriptStrandKnown << "; bp1Fw: " << bp1Fw << " ; bp2Fw: " << bp2Fw << '\n';
 #endif
             _RNASpanningAligner.align(contig.seq.begin(), contig.seq.end(),
                                       cutRef1.begin(), cutRef1.end(), cutRef2.begin(), cutRef2.end(),
-                                      bp1Fw, bp2Fw, bporient.isStranded,
+                                      bp1Fw, bp2Fw, bporient.isTranscriptStrandKnown,
                                       alignment);
 
 #ifdef DEBUG_REFINER

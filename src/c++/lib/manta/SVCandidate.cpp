@@ -35,7 +35,7 @@ operator<<(
     static const char indent('\t');
     os << "SVCandidate:\n"
        << indent << "isImprecise?: " << svc.isImprecise() << "\n"
-       << indent << "forwardReadCount: " << svc.forwardReadCount << " ; reverseReadCount: " << svc.reverseReadCount << "\n"
+       << indent << "forwardTranscriptStrandReadCount: " << svc.forwardTranscriptStrandReadCount << " ; reverseTranscriptStrandReadCount: " << svc.reverseTranscriptStrandReadCount << "\n"
        << indent << "index candidate:assemblyAlign:assemblySegment: " << svc.candidateIndex
        << ":" << svc.assemblyAlignIndex
        << ":" << svc.assemblySegmentIndex

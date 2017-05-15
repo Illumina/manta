@@ -48,7 +48,7 @@ enum index_t
     COMPRESSED, ///< The fragment is anomalously small
     NORMAL,     ///< The fragment is non-anomalous
     UNKNOWN,    ///< The fragment size category is unknown
-    CLOSE,      ///< The fragment is anomalous, but close enough to the non-anomalous threshold that it is treated as possibly non-anomolous.
+    CLOSE,      ///< The fragment is anomalous, but close enough to the non-anomalous threshold that it is treated as possibly non-anomalous.
     DISTANT     ///< The fragment is clearly anomalous
 };
 }
@@ -82,12 +82,12 @@ struct ReadScannerDerivOptions
     ReadScannerDerivOptions(
         const ReadScannerOptions& opt,
         const bool isRNA,
-        const bool isStrandedRNAInit) :
+        const bool initIsTranscriptStrandKnown) :
         isSmallCandidates(opt.minCandidateVariantSize<=opt.maxCandidateSizeForLocalAssmEvidence),
         beforeBreakend(opt.minPairBreakendSize/2),
         afterBreakend(opt.minPairBreakendSize-beforeBreakend),
         isUseOverlappingPairs(isRNA),
-        isStrandedRNA(isStrandedRNAInit)
+        isTranscriptStrandKnown(initIsTranscriptStrandKnown)
     {}
 
     const bool isSmallCandidates;
@@ -99,7 +99,7 @@ struct ReadScannerDerivOptions
     const bool isUseOverlappingPairs;
 
     /// \brief True if running in RNA-Seq mode with a stranded input RNA assay
-    const bool isStrandedRNA;
+    const bool isTranscriptStrandKnown;
 };
 
 
@@ -118,7 +118,7 @@ struct SVLocusScanner
         const std::string& statsFilename,
         const std::vector<std::string>& alignmentFilename,
         const bool isRNA,
-        const bool isStrandedRNA = false);
+        const bool isTranscriptStrandKnown = false);
 
     /// this predicate runs isReadFiltered without the mapq components
     static
