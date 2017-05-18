@@ -181,7 +181,7 @@ enum index_t
     RIGHT_OPEN, ///< 5'/left side of breakend is mapped, 3'/right side of the breakend is mapped elsewhere
     LEFT_OPEN,  ///< 3'/right side of breakend is mapped, 5'/left side of the breakend is mapped elsewhere
     COMPLEX     ///< A typical small scale assembly locus -- something is happening in a small region,
-                ///  the event might be local to that region but we don't know
+    ///  the event might be local to that region but we don't know
 };
 
 inline

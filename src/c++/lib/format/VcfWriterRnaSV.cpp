@@ -107,8 +107,8 @@ modifyTranslocInfo(
                 infotags.push_back(str(boost::format("ERROR2=%i,%i") % numContigs % assemblyData.bestAlignmentIndex));
             infotags.push_back(str(boost::format("RNA_CONTIG=%s") % assemblyData.contigs[assemblyData.bestAlignmentIndex].seq));
             infotags.push_back(str(boost::format("RNA_CONTIG_ALN=%i,%i")
-                % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align1.apath)
-                % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align2.apath)));
+                                   % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align1.apath)
+                                   % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align2.apath)));
         }
     }
 #ifdef DEBUG_VCF
@@ -174,8 +174,8 @@ modifySample(
     {
         const SVSampleInfo& sampleInfo(baseInfo.samples[sampleIndex]);
         values[sampleIndex] = str(boost::format("%i,%i")
-            % sampleInfo.ref.spanningPairCount
-            % sampleInfo.alt.spanningPairCount);
+                                  % sampleInfo.ref.spanningPairCount
+                                  % sampleInfo.alt.spanningPairCount);
     }
     sampletags.push_back(std::make_pair("PR", values));
 
@@ -185,8 +185,8 @@ modifySample(
     {
         const SVSampleInfo& sampleInfo(baseInfo.samples[sampleIndex]);
         values[sampleIndex] =  str( boost::format("%i,%i")
-                                           % sampleInfo.ref.splitReadCount
-                                           % sampleInfo.alt.splitReadCount);
+                                    % sampleInfo.ref.splitReadCount
+                                    % sampleInfo.alt.splitReadCount);
     }
     sampletags.push_back(std::make_pair("SR",values));
 }

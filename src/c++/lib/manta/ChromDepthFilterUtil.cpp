@@ -48,15 +48,19 @@ ChromDepthFilterUtil(
     for (const bam_header_info::chrom_info& cdata : header.chrom_data)
     {
         cdmap_t::const_iterator cdi(chromDepth.find(cdata.label));
+        /*
         if (cdi == chromDepth.end())
         {
             std::ostringstream oss;
             oss << "ERROR: Can't find chromosome: '" << cdata.label
                 << "' in chrom depth file: " << chromDepthFile << "\n";
             BOOST_THROW_EXCEPTION(LogicException(oss.str()));
-        }
+        }*/
 
-        _maxDepthFilter.push_back(cdi->second*maxDepthFactor);
+        if (cdi != chromDepth.end())
+        {
+            _maxDepthFilter.push_back(cdi->second*maxDepthFactor);
+        }
         assert(_maxDepthFilter.back()>=0.);
     }
 }

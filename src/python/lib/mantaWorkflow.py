@@ -38,7 +38,8 @@ from pyflow import WorkflowRunner
 from sharedWorkflow import getMkdirCmd, getMvCmd, getRmCmd, getRmdirCmd, \
                            runDepthFromAlignments
 from workflowUtil import checkFile, ensureDir, preJoin, \
-                          getGenomeSegmentGroups, getFastaChromOrderSize, cleanPyEnv
+                        getGenomeSegmentGroups, getFastaChromOrderSize, \
+                        getCallRegions, cleanPyEnv
 
 
 __version__ = workflowVersion
@@ -720,6 +721,8 @@ class MantaWorkflow(WorkflowRunner) :
 
         # read fasta index
         (self.params.chromOrder,self.params.chromSizes) = getFastaChromOrderSize(indexRefFasta)
+        # determine subset of chroms where we can skip calling entirely
+        (self.params.callRegionList, self.params.chromIsSkipped) = getCallRegions(self.params)
 
         self.paths = PathInfo(self.params)
 

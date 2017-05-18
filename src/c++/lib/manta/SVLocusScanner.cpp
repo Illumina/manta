@@ -269,15 +269,16 @@ typedef std::map<std::string, int32_t> chromMap_t;
 /// \brief Enumerate the fields for each split alignment segment as described in the BAM spec "SA" tag entry
 namespace SAFields
 {
-    enum index_t {
-        CHROM,
-        POS,
-        STRAND,
-        CIGAR,
-        MAPQ,
-        NM,
-        SIZE
-    };
+enum index_t
+{
+    CHROM,
+    POS,
+    STRAND,
+    CIGAR,
+    MAPQ,
+    NM,
+    SIZE
+};
 }
 
 
@@ -699,8 +700,8 @@ struct AlignmentPairAnalyzer
         // already account for. If the true fragment size is within maximum fragment size, then the breakend should
         // be found within this remaining size from the current inside edge of read1 or read2.
         const pos_t breakendSize(std::max(
-            static_cast<pos_t>(_opt.minPairBreakendSize),
-            static_cast<pos_t>(maxFragmentSize - _totalNonInsertSize)));
+                                     static_cast<pos_t>(_opt.minPairBreakendSize),
+                                     static_cast<pos_t>(maxFragmentSize - _totalNonInsertSize)));
 
         const pos_t localStartRefPos(localAlign().pos);
         const pos_t remoteStartRefPos(remoteAlign().pos);
