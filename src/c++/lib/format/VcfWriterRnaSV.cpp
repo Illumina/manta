@@ -103,12 +103,14 @@ modifyTranslocInfo(
         {
             if (numContigs != assemblyData.spanningAlignments.size())
                 infotags.push_back(str(boost::format("ERROR=%i,%i") % numContigs % assemblyData.spanningAlignments.size()));
-            if (numContigs <= assemblyData.bestAlignmentIndex)
-                infotags.push_back(str(boost::format("ERROR2=%i,%i") % numContigs % assemblyData.bestAlignmentIndex));
-            infotags.push_back(str(boost::format("RNA_CONTIG=%s") % assemblyData.contigs[assemblyData.bestAlignmentIndex].seq));
+            const unsigned int bestAlignmentIdx(assemblyData.bestAlignmentIndex);
+            if (numContigs <= bestAlignmentIdx)
+                infotags.push_back(str(boost::format("ERROR2=%i,%i") % numContigs % bestAlignmentIdx));
+            infotags.push_back(str(boost::format("RNA_CONTIG=%s") % assemblyData.contigs[bestAlignmentIdx].seq));
+            const auto& bestAlignment(assemblyData.spanningAlignments[bestAlignmentIdx]);
             infotags.push_back(str(boost::format("RNA_CONTIG_ALN=%i,%i")
-                                   % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align1.apath)
-                                   % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align2.apath)));
+                                   % apath_matched_length(bestAlignment.align1.apath)
+                                   % apath_matched_length(bestAlignment.align2.apath)));
         }
     }
 #ifdef DEBUG_VCF

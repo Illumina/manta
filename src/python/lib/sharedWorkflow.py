@@ -154,14 +154,11 @@ def runDepthFromAlignments(self, bamList, outputPath, taskPrefix="",dependencies
             group = []
             headSize = 0
 
-            isSkipEnabled = params.chromIsSkipped is not None
-
             chromCount = len(params.chromSizes)
             assert(len(params.chromOrder) == chromCount)
             for chromIndex in range(chromCount) :
                 chromLabel = params.chromOrder[chromIndex]
-                if isSkipEnabled :
-                    if chromLabel in params.chromIsSkipped : continue
+                if chromLabel in params.chromIsSkipped : continue
 
                 chromSize = params.chromSizes[chromLabel]
                 if headSize+chromSize <= minSize :

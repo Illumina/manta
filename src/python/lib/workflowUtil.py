@@ -282,10 +282,13 @@ def getCallRegions(params) :
     \return a list of genomic regions for calling
     \return a set of chromLabels which are skipped
     """
-    # return None when no region selections have been made:
+    callRegionList = []
+    chromIsSkipped = set()
+
+    # when no region selections have been made:
     if ((params.genomeRegionList is None) and
         (params.callRegionsBed is None)) :
-        return (None, None)
+        return (callRegionList, chromIsSkipped)
 
     # check chromosome coverage of "regions" arguments
     chromIsSkipped = set(params.chromOrder)
@@ -300,7 +303,6 @@ def getCallRegions(params) :
     # check chromsome coverage based on callRegions BED file
     callChromList = []
     chromIsSkipped2 = set(params.chromOrder)
-
     tabixCmd = [params.tabixBin,"-l", params.callRegionsBed]
     proc=subprocess.Popen(tabixCmd,stdout=subprocess.PIPE)
     for line in proc.stdout :
@@ -311,7 +313,6 @@ def getCallRegions(params) :
     proc.stdout.close()
     proc.wait()
 
-    callRegionList = []
     if params.genomeRegionList is None :
         chromIsSkipped = chromIsSkipped2
 
@@ -434,7 +435,7 @@ def getNextGenomeSegment(params) :
     MEGABASE = 1000000
     scanSize = params.scanSizeMb * MEGABASE
 
-    if params.callRegionList is None :
+    if len(params.callRegionList) == 0 :
         for segval in getChromIntervals(params.chromOrder,params.chromSizes, scanSize) :
             yield GenomeSegment(*segval)
     else :

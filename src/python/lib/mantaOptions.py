@@ -139,8 +139,7 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
 
     def validateAndSanitizeExistingOptions(self,options) :
 
-        self.abspath = os.path.abspath(options.runDir)
-        options.runDir= self.abspath
+        options.runDir = os.path.abspath(options.runDir)
 
         # check alignerMode:
         if options.alignerMode is not None :

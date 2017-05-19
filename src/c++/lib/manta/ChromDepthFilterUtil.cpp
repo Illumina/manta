@@ -45,23 +45,28 @@ ChromDepthFilterUtil(
 
     // translate string chrom labels into tid values in lookup vector:
     //
+    unsigned int callableChromCount(0);
     for (const bam_header_info::chrom_info& cdata : header.chrom_data)
     {
         cdmap_t::const_iterator cdi(chromDepth.find(cdata.label));
-        /*
-        if (cdi == chromDepth.end())
-        {
-            std::ostringstream oss;
-            oss << "ERROR: Can't find chromosome: '" << cdata.label
-                << "' in chrom depth file: " << chromDepthFile << "\n";
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
-        }*/
 
         if (cdi != chromDepth.end())
         {
             _maxDepthFilter.push_back(cdi->second*maxDepthFactor);
+            callableChromCount++;
+        }
+        else
+        {
+            _maxDepthFilter.push_back(0);
         }
         assert(_maxDepthFilter.back()>=0.);
     }
-}
 
+    if (callableChromCount != chromDepth.size())
+    {
+        std::ostringstream oss;
+        oss << "ERROR: " << chromDepth.size() << " chromosomes in chrom depth file, but "
+                << callableChromCount << " found in the bam header." << "\n";
+        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+    }
+}

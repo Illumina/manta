@@ -32,7 +32,8 @@ Manta User Guide
   * [Execution](#execution)
     * [Advanced execution options](#advanced-execution-options)
   * [Extended use cases](#extended-use-cases)
-    * [Exome/Targeted](#exometargeted)
+    * [Exome/Targeted](#exome-targeted)
+    * [Call regions](#call-regions)
     * [Unpaired tumor sample](#unpaired-tumor-sample)
   * [RNA-Seq](#rna-seq)
   * [High sensitivity calling](#high-sensitivity-calling)
@@ -602,6 +603,10 @@ WGS case but cannot be applied correctly to a targeted analysis.
 
 For small targeted regions, it may also be helpful to consider the
 high sensitivity calling documentation below.
+
+#### Call regions
+
+Manta calls the entire genome by default, however variant calling may be restricted to an arbitrary subset of the genome by providing a region file in BED format with the --callRegions configuration option. The BED file must be bgzip-compressed and tabix-indexed, and only one such BED file may be specified. When specified, all VCF output is restricted to the provided call regions only, however statistics derived from the input data (such as expected fragment size distribution) will not be restricted to the call regions. Note in particular that even when --callRegions is specified, the --exome flag is still required for exome or targeted data to get appropriate depth filtration behavior for non-WGS cases.
 
 #### Unpaired tumor sample
 
