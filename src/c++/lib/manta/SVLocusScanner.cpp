@@ -1487,7 +1487,7 @@ isAnomalousReadPair(
     const bam_record& bamRead,
     const unsigned defaultReadGroupIndex) const
 {
-    if (! is_innie_pair(bamRead)) return false;
+    if (! is_innie_pair(bamRead)) return true;
 
     const Range& ppr(_stats[defaultReadGroupIndex].properPair);
     const int32_t fragmentSize(std::abs(bamRead.template_size()));
