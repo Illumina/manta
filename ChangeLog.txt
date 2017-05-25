@@ -1,3 +1,9 @@
+v1.1.1
+- MANTA-691 Add an option to specify call regions in a bed file
+- MANTA-977/[#83] Improve SA tag error reporting
+- Manta-894 Add INTRON_OPEN penality to off_edge splicing
+- Manta-586 Add RNA filters to vcf
+- MANTA-962/[#79] Add a user error for missing ini file
 - MANTA-554 Disable multiJunction scoring logic in RNA mode
 - MANTA-625 Add RNA-mode specific rnaMinCandidateSize option
 -- With default set to disable small variant calling
