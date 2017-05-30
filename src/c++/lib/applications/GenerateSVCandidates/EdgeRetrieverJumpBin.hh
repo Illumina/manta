@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -27,8 +26,8 @@
 #include "EdgeRetriever.hh"
 
 
-/// WARNING -- initial testing suggests this class still has a possible edge repetition/dropout bug
-///            this still has potential but only if you have time to go in and hunt down the bug
+// WARNING -- initial testing suggests this class still has a possible edge repetition/dropout bug
+//            this still has potential but only if you have time to go in and hunt down the bug
 
 
 /// provide an iterator over edges in a set of SV locus graphs

@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -32,15 +31,13 @@
 
 struct VcfWriterSomaticSV : public VcfWriterSV, VcfWriterScoredSV
 {
-    static const bool isRNA = false;
-
     VcfWriterSomaticSV(
         const CallOptionsSomatic& somaticOpt,
         const bool isMaxDepthFilter,
         const std::string& referenceFilename,
         const SVLocusSet& set,
         std::ostream& os) :
-        VcfWriterSV(referenceFilename, isRNA, set,os),
+        VcfWriterSV(referenceFilename, set,os),
         _somaticOpt(somaticOpt),
         _isMaxDepthFilter(isMaxDepthFilter),
         _somaticInfoPtr(nullptr),
@@ -78,6 +75,7 @@ private:
     modifyTranslocInfo(
         const SVCandidate& sv,
         const bool isFirstOfPair,
+        const SVCandidateAssemblyData& assemblyData,
         std::vector<std::string>& infotags) const override;
 
     void

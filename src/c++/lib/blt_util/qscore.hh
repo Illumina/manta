@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -30,6 +29,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <type_traits>
 
 
 //
@@ -44,6 +44,7 @@ template <typename FloatType>
 FloatType
 error_prob_to_phred(const FloatType prob)
 {
+    static_assert(std::is_floating_point<FloatType>::value, "Transform requires floating point type.");
     static const FloatType minlog10(static_cast<FloatType>(std::numeric_limits<FloatType>::min_exponent10));
     return -10.*std::max(minlog10,std::log10(prob));
 }
@@ -52,6 +53,7 @@ template <typename FloatType>
 FloatType
 ln_error_prob_to_phred(const FloatType lnProb)
 {
+    static_assert(std::is_floating_point<FloatType>::value, "Transform requires floating point type.");
     static const FloatType minlog10(static_cast<FloatType>(std::numeric_limits<FloatType>::min_exponent10));
     static const FloatType ln10(std::log(static_cast<FloatType>(10)));
     return -10.*std::max(minlog10,lnProb/ln10);

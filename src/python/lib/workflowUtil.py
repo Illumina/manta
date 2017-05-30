@@ -1,6 +1,6 @@
 #
 # Manta - Structural Variant and Indel Caller
-# Copyright (c) 2013-2016 Illumina, Inc.
+# Copyright (c) 2013-2017 Illumina, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ __author__ = "Chris Saunders"
 
 import os
 import re
+import subprocess
 
 
 
@@ -220,6 +221,115 @@ def getChromIntervals(chromOrder,chromSizes,segmentSize, genomeRegion = None) :
             start=end+1
 
 
+def getOverlapCallRegions(params, genomeRegion) :
+    """
+    determine a set of overlapping regions between regions arguments and the callRegions bed file
+
+    \return a list of overlapping genomic regions for calling
+    """
+
+    maxSubregionCallGap = 5000
+    subregions = []
+
+    chrom = genomeRegion["chrom"]
+    genomeRegionStart = genomeRegion["start"]
+    genomeRegionEnd = genomeRegion["end"]
+    genomeRegionStr = ("%s:%s-%s" % (chrom, genomeRegionStart, genomeRegionEnd))
+    # get overlapping subregions
+    tabixCmd = [params.tabixBin, params.callRegionsBed, genomeRegionStr]
+    proc = subprocess.Popen(tabixCmd, stdout=subprocess.PIPE)
+    for line in proc.stdout:
+        # format check of the bed file
+        words = line.strip().split()
+        if len(words) < 3 :
+            raise Exception("Unexpected format in bed file: %s\n%s" %
+                            (params.callRegionsBed, line))
+        callRegionStart = int(words[1])+1
+        callRegionEnd = int(words[2])
+        if callRegionEnd < callRegionStart :
+            raise Exception("Unexpected format in bed file: %s\n%s" %
+                            (params.callRegionsBed, line))
+
+        isStartNewSubregion = True
+        prevSubregionEnd = 0
+        if len(subregions) > 0 :
+            # don't start a new subregion unless it's 5kb away from the end of the previous subregion
+            prevSubregionEnd = subregions[-1]["end"]
+            callGap = callRegionStart - prevSubregionEnd
+            isStartNewSubregion = (callGap > maxSubregionCallGap)
+
+        subregionEnd = min(genomeRegionEnd, callRegionEnd)
+        if isStartNewSubregion :
+            subregionStart = max(genomeRegionStart, callRegionStart)
+            subregions.append({"chrom": chrom, "start":subregionStart, "end":subregionEnd})
+        else :
+            prevSubregion = subregions[-1]
+            prevSubregion["end"] = max(subregionEnd, prevSubregionEnd)
+
+    proc.stdout.close()
+    proc.wait()
+
+    return subregions
+
+
+def getCallRegions(params) :
+    """
+    determine
+    1) a set of genomic regions for calling
+    2) a set of chromosomes that are completely skipped over,
+       where "skipped" means that not a single base on the chrom is requested for calling
+
+    \return a list of genomic regions for calling
+    \return a set of chromLabels which are skipped
+    """
+    callRegionList = []
+    chromIsSkipped = set()
+
+    # when no region selections have been made:
+    if ((params.genomeRegionList is None) and
+        (params.callRegionsBed is None)) :
+        return (callRegionList, chromIsSkipped)
+
+    # check chromosome coverage of "regions" arguments
+    chromIsSkipped = set(params.chromOrder)
+    if params.genomeRegionList is not None :
+        for genomeRegion in params.genomeRegionList :
+            if genomeRegion["chrom"] in chromIsSkipped :
+                chromIsSkipped.remove(genomeRegion["chrom"])
+
+    if params.callRegionsBed is None :
+        return (params.genomeRegionList, chromIsSkipped)
+
+    # check chromsome coverage based on callRegions BED file
+    callChromList = []
+    chromIsSkipped2 = set(params.chromOrder)
+    tabixCmd = [params.tabixBin,"-l", params.callRegionsBed]
+    proc=subprocess.Popen(tabixCmd,stdout=subprocess.PIPE)
+    for line in proc.stdout :
+        chrom = line.strip()
+        callChromList.append(chrom)
+        if chrom in chromIsSkipped2 :
+            chromIsSkipped2.remove(chrom)
+    proc.stdout.close()
+    proc.wait()
+
+    if params.genomeRegionList is None :
+        chromIsSkipped = chromIsSkipped2
+
+        for chrom in callChromList:
+            chromRegion = {"chrom":chrom, "start":1, "end":params.chromSizes[chrom]}
+            callRegions = getOverlapCallRegions(params, chromRegion)
+            callRegionList.extend(callRegions)
+    else:
+        chromIsSkipped = chromIsSkipped | chromIsSkipped2
+
+        for genomeRegion in params.genomeRegionList:
+            subCallRegions = getOverlapCallRegions(params, genomeRegion)
+            callRegionList.extend(subCallRegions)
+
+    return (callRegionList, chromIsSkipped)
+
+
 class PathDigger(object) :
     """
     Digs into a well-defined directory structure with prefixed
@@ -318,23 +428,33 @@ def getNextGenomeSegment(params) :
     """
     generator which iterates through all genomic segments and
     returns a segmentValues object for each one.
+
+    This segment generator understands callRegionList that accounts for both genomeRegionList and the callRegions bed file.
     """
+
     MEGABASE = 1000000
     scanSize = params.scanSizeMb * MEGABASE
 
-    if params.genomeRegionList is None :
+    if len(params.callRegionList) == 0 :
         for segval in getChromIntervals(params.chromOrder,params.chromSizes, scanSize) :
             yield GenomeSegment(*segval)
     else :
-        for genomeRegion in params.genomeRegionList :
+        for genomeRegion in params.callRegionList :
             for segval in getChromIntervals(params.chromOrder,params.chromSizes, scanSize, genomeRegion) :
                 yield GenomeSegment(*segval)
-
 
 
 def getGenomeSegmentGroups(params, excludedContigs = None) :
     """
     Iterate segment groups and 'clump' small contigs together
+
+    @param genomeSegmentIterator any object which will iterate through ungrouped genome segments)
+    @param excludedContigs defines a set of contigs which are excluded from grouping
+                           (useful when a particular contig, eg. chrM, is called with contig-specific parameters)
+    @return yields a series of segment group lists
+
+    Note this function will not reorder segments. This means that grouping will be suboptimal if small segments are
+    sparsely distributed among larger ones.
     """
 
     def isGroupEligible(gseg) :
@@ -345,7 +465,9 @@ def getGenomeSegmentGroups(params, excludedContigs = None) :
     group = []
     headSize = 0
     isLastSegmentGroupEligible = True
-    for gseg in getNextGenomeSegment(params) :
+
+    genomeSegmentIterator = getNextGenomeSegment(params)
+    for gseg in genomeSegmentIterator :
         isSegmentGroupEligible = isGroupEligible(gseg)
         if (isSegmentGroupEligible and isLastSegmentGroupEligible) and (headSize+gseg.size() <= minSegmentGroupSize) :
             group.append(gseg)

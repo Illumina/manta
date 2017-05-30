@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -190,7 +189,7 @@ is_segment_type_unaligned_read_edge(const align_t id)
 
 
 unsigned
-apath_read_lead_size(const path_t& apath)
+unalignedPrefixSize(const path_t& apath)
 {
     unsigned val(0);
     for (const path_segment& ps : apath)
@@ -204,7 +203,7 @@ apath_read_lead_size(const path_t& apath)
 
 
 unsigned
-apath_read_trail_size(const path_t& apath)
+unalignedSuffixSize(const path_t& apath)
 {
     unsigned val(0);
     BOOST_REVERSE_FOREACH(const path_segment& ps, apath)

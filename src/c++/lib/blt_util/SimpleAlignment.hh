@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,10 +17,6 @@
 //
 //
 
-///
-///
-///
-
 #pragma once
 
 #include "blt_util/align_path.hh"
@@ -30,8 +25,9 @@
 #include <iosfwd>
 
 
-/// holds minimal alignment information processed
-/// from a BAM record or other source
+/// \brief Minimal read alignment information
+///
+/// Alignment information is typically processed from a BAM alignment record, but may come from other sources
 struct SimpleAlignment
 {
     bool is_fwd_strand = true;

@@ -1,9 +1,32 @@
+v1.1.1
+- MANTA-691 Add an option to specify call regions in a bed file
+- MANTA-977/[#83] Improve SA tag error reporting
+- Manta-894 Add INTRON_OPEN penality to off_edge splicing
+- Manta-586 Add RNA filters to vcf
+- MANTA-962/[#79] Add a user error for missing ini file
+- MANTA-554 Disable multiJunction scoring logic in RNA mode
+- MANTA-625 Add RNA-mode specific rnaMinCandidateSize option
+-- With default set to disable small variant calling
+- MANTA-449 Move RNA-mode output to RnaSV.vcf.gz;
+-- remove GT and related fields and filters
+-- no longer output unpaired breakends
+
+v1.1.0
+- Manta-677 Stats generation
+-- Add a sampling buffer to skip regions with a large number of abnormal reads
+-- Add a compiler flag to output fragment-size cdf in stats summary
+- Sync shared library/build changes with strelka
+- Scratch: Merge src formatting changes from strelka
+- Docs: Update comments in automated TOC generation; Fix nonstandard markdown links
 - MANTA-583 Document multi-junction handling
 - MANTA-518 Add sample level check of genotyping for multi-junction events
 - MANTA-486/[#57] clarify rna mode configuration/improve errors
-- RNA: Include some spliced reads in insert-size estimation
-- RNA: Include split-reads as evidence for imprecise translocations
-- RNA: Use proper-pair BAM flag for abnormal pair detection
+- MANTA-436 Classify indels with unknown size insertions as insertions
+- MANTA-304 Merge RNAMaster branch
+-- RNA: Include some spliced reads in insert-size estimation
+-- RNA: Include split-reads as evidence for imprecise translocations
+-- RNA: Use proper-pair BAM flag for abnormal pair detection
+
 v1.0.3
 - MANTA-302 fix the bug of duplicate variant ID
 - MANTA-279 fix the bug of reporting variants beyond chromosome end position

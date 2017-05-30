@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -74,15 +73,15 @@ struct SVCandidate
         {
             bp1.merge(rhs.bp1, isExpandRegion);
             bp2.merge(rhs.bp2, isExpandRegion);
-            fwReads += rhs.fwReads;
-            rvReads += rhs.rvReads;
+            forwardTranscriptStrandReadCount += rhs.forwardTranscriptStrandReadCount;
+            reverseTranscriptStrandReadCount += rhs.reverseTranscriptStrandReadCount;
         }
         else
         {
             bp1.merge(rhs.bp2, isExpandRegion);
             bp2.merge(rhs.bp1, isExpandRegion);
-            fwReads += rhs.rvReads;
-            rvReads += rhs.fwReads;
+            forwardTranscriptStrandReadCount += rhs.reverseTranscriptStrandReadCount;
+            reverseTranscriptStrandReadCount += rhs.forwardTranscriptStrandReadCount;
         }
 
         _isImprecise = (isImprecise() || rhs.isImprecise());
@@ -104,8 +103,8 @@ struct SVCandidate
         isUnknownSizeInsertion = false;
         unknownSizeInsertionLeftSeq.clear();
         unknownSizeInsertionRightSeq.clear();
-        fwReads = 0;
-        rvReads = 0;
+        forwardTranscriptStrandReadCount = 0;
+        reverseTranscriptStrandReadCount = 0;
         isSingleJunctionFilter = false;
     }
 #endif
@@ -119,13 +118,13 @@ struct SVCandidate
     bool
     isForward() const
     {
-        return (fwReads > rvReads);
+        return (forwardTranscriptStrandReadCount > reverseTranscriptStrandReadCount);
     }
 
     bool
-    isStranded() const
+    isTranscriptStrandKnown() const
     {
-        return ((std::max(fwReads, rvReads)+1) / (std::min(fwReads, rvReads)+1) >= 2);
+        return ((std::max(forwardTranscriptStrandReadCount, reverseTranscriptStrandReadCount)+1) / (std::min(forwardTranscriptStrandReadCount, reverseTranscriptStrandReadCount)+1) >= 2);
     }
 
     /// if 1 is added to the position of one breakend (within the homologous breakend range), then is 1 also added to the other breakend?
@@ -182,8 +181,8 @@ public:
     std::string unknownSizeInsertionLeftSeq; ///< for an incomplete insertion, this is the known left side of the insert sequence
     std::string unknownSizeInsertionRightSeq; ///< for an incomplete insertion, this is the known right side of the insert sequence
 
-    unsigned fwReads = 0; ///< Number of reads (pairs) supporting a direction from bp1 to bp2 (used for stranded RNA data)
-    unsigned rvReads = 0; ///< Number of reads (pairs) directed from bp2 to bp1
+    unsigned forwardTranscriptStrandReadCount = 0; ///< Number of reads (pairs) supporting a direction from bp1 to bp2 (used for stranded RNA data)
+    unsigned reverseTranscriptStrandReadCount = 0; ///< Number of reads (pairs) directed from bp2 to bp1
 
     /// filter out this sv candidate unless it's rescued by a multi-junction event:
     bool isSingleJunctionFilter = false;
@@ -193,14 +192,21 @@ std::ostream&
 operator<<(std::ostream& os, const SVCandidate& svc);
 
 
-namespace FRAGSOURCE
+/// \brief Specify the nature of SV evidence provided by a single DNA/RNA fragment.
+///
+/// A given fragment to which paired-end sequencing has been run, can provide evidence of an SV via
+/// the alignment of read1 or read2 (for instance if either read directly crosses an SV breakpoint)
+/// or the relative alignment of both reads, which can be used to infer that the fragment spans an
+/// SV breakpoint.
+///
+namespace SourceOfSVEvidenceInDNAFragment
 {
 enum index_t
 {
     UNKNOWN,
     READ1,
     READ2,
-    PAIR
+    READ_PAIR
 };
 
 inline
@@ -215,7 +221,7 @@ label(const index_t i)
         return "read1";
     case READ2:
         return "read2";
-    case PAIR:
+    case READ_PAIR:
         return "pair";
     default:
         return "";
@@ -223,44 +229,52 @@ label(const index_t i)
 }
 }
 
-/// when we extract an SV candidate from a single piece of evidence, it can be treated as a special 'observation' class:
+
+/// \brief A specialized SVCandidate which represents an SV hypothesis generated from a single piece of evidnece, ie.
+///        a single SV 'observation'.
 ///
+/// It is helpful to represent this case as a distinct specialization of SVCandidate because this allows additional
+/// detail on the nature of the SV evidence to be added onto the object, (eg. "This SV candidate is inferred from
+/// the poorly aligned end of the second read in a read pair").
 struct SVObservation : public SVCandidate
 {
     SVObservation() :
         SVCandidate(),
-        evtype(SVEvidenceType::UNKNOWN),
-        fragSource(FRAGSOURCE::UNKNOWN)
+        svEvidenceType(SVEvidenceType::UNKNOWN),
+        dnaFragmentSVEvidenceSource(SourceOfSVEvidenceInDNAFragment::UNKNOWN)
     {}
 
 #if 0
     void
     clear()
     {
-        evtype = SVEvidenceType::UNKNOWN;
-        fragSource = FRAGSOURCE::UNKNOWN;
+        svEvidenceType = SVEvidenceType::UNKNOWN;
+        dnaFragmentSVEvidenceSource = SourceOfSVEvidenceInDNAFragment::UNKNOWN;
         SVCandidate::clear();
     }
 #endif
 
-    /// does the evidence for this SV observation come from a single read (eg. CIGAR read alignment) or
-    /// from both reads (eg. anomolous read pair)
+    /// \return True if the evidence for this SV observation relies on only a single read (eg. CIGAR read alignment) or
+    ///         relies on both reads of a paired end observation (eg. anomalous read pair)
     bool
     isSingleReadSource() const
     {
-        using namespace FRAGSOURCE;
-        return ((fragSource == READ1) || (fragSource == READ2));
+        using namespace SourceOfSVEvidenceInDNAFragment;
+        return ((dnaFragmentSVEvidenceSource == READ1) || (dnaFragmentSVEvidenceSource == READ2));
     }
 
+    /// \return True if this observation is inferred from the alignment/sequence of the read1
     bool
     isRead1Source() const
     {
-        using namespace FRAGSOURCE;
-        return (fragSource == READ1);
+        using namespace SourceOfSVEvidenceInDNAFragment;
+        return (dnaFragmentSVEvidenceSource == READ1);
     }
 
-    SVEvidenceType::index_t evtype;
-    FRAGSOURCE::index_t fragSource;
+    /// \brief The type of SV evidence (eg. anomalous read pair, large indel in CIGAR string of one read, etc....)
+    SVEvidenceType::index_t svEvidenceType;
+    /// \brief Ths source of the SV evidence within a single DNA fragment (eg. read1, read2, of both)
+    SourceOfSVEvidenceInDNAFragment::index_t dnaFragmentSVEvidenceSource;
 };
 
 

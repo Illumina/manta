@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -31,7 +30,7 @@
 
 #include <iostream>
 
-
+//#define OUTPUT_CDF
 
 static
 void
@@ -65,6 +64,15 @@ runSAS(const SASOptions& opt)
             report_os << quantLevel[quantLevelIndex] << '\t' << rgs.fragStats.quantile(quantLevel[quantLevelIndex]) << '\n';
         }
         report_os << '\n';
+
+#ifdef OUTPUT_CDF
+        report_os << "fragment length cdf:\n";
+        for (unsigned fragIndex(0); fragIndex<=1000; ++fragIndex)
+        {
+            const unsigned fragLen(fragIndex * 10);
+            report_os << fragLen << '\t' << rgs.fragStats.cdf(fragLen) << '\n';
+        }
+#endif
     }
 }
 

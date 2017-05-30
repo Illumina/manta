@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,10 +17,6 @@
 //
 //
 
-///
-/// \author Chris Saunders
-///
-
 #include "options/ReadScannerOptionsParser.hh"
 
 
@@ -35,7 +30,7 @@ getOptionsDescription(ReadScannerOptions& opt)
      "Indels below this size will not be discovered or reported as candidates")
     ("min-mapq", po::value(&opt.minMapq)->default_value(opt.minMapq),
      "Reads with MAPQ less than this value will be ignored")
-    ("edge-prob", po::value(&opt.breakendEdgeTrimProb)->default_value(opt.breakendEdgeTrimProb),
+    ("edge-prob", po::value(&opt.breakendEdgeQuantileProb)->default_value(opt.breakendEdgeQuantileProb),
      "Breakend range associated with each read will trimmed to expected fragment quantile range [p,(1-p)], p: edge-prob")
     ("ignore-anom-proper-pair", po::value(&opt.isIgnoreAnomProperPair)->zero_tokens(),
      "Disregard anomalous fragment sizes if the BAM record has the proper pair bit set. "
@@ -54,11 +49,10 @@ parseOptions(
     std::string& errorMsg)
 {
     errorMsg.clear();
-    if ((opt.breakendEdgeTrimProb <= 0) || (opt.breakendEdgeTrimProb >= 1.0))
+    if ((opt.breakendEdgeQuantileProb <= 0) || (opt.breakendEdgeQuantileProb >= 1.0))
     {
         errorMsg="edge-prob argument is restricted to (0,1)";
     }
 
     return (! errorMsg.empty());
-
 }

@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Ole Schulz-Trieglaff
 /// \author Chris Saunders
 ///
@@ -1398,7 +1397,7 @@ getJumpAssembly(
     BPOrientation& bporient(assemblyData.bporient);
 
     bporient.isBp1First = sv.isForward();
-    bporient.isStranded = sv.isStranded();
+    bporient.isTranscriptStrandKnown = sv.isTranscriptStrandKnown();
     if (_opt.isRNA)
     {
         bporient.isBp1First = !sv.isForward(); // RNA-seq reads generate candidates in the opposite direction of the RNA
@@ -1574,11 +1573,11 @@ getJumpAssembly(
 
 
 #ifdef DEBUG_REFINER
-            log_os << __FUNCTION__ << " isStranded: " << bporient.isStranded << "; bp1Fw: " << bp1Fw << " ; bp2Fw: " << bp2Fw << '\n';
+            log_os << __FUNCTION__ << " isTranscriptStrandKnown: " << bporient.isTranscriptStrandKnown << "; bp1Fw: " << bp1Fw << " ; bp2Fw: " << bp2Fw << '\n';
 #endif
             _RNASpanningAligner.align(contig.seq.begin(), contig.seq.end(),
                                       cutRef1.begin(), cutRef1.end(), cutRef2.begin(), cutRef2.end(),
-                                      bp1Fw, bp2Fw, bporient.isStranded,
+                                      bp1Fw, bp2Fw, bporient.isTranscriptStrandKnown,
                                       alignment);
 
 #ifdef DEBUG_REFINER

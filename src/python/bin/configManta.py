@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # Manta - Structural Variant and Indel Caller
-# Copyright (c) 2013-2016 Illumina, Inc.
+# Copyright (c) 2013-2017 Illumina, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -57,8 +57,7 @@ You must specify a BAM or CRAM file for at least one sample.
         group.add_option("--exome", dest="isExome", action="store_true",
                          help="Set options for WES input: turn off depth filters")
         group.add_option("--rna", dest="isRNA", action="store_true",
-                         help="Set options for RNA-Seq input: turn off depth filters and don't treat "
-                              "anomalous reads as SV evidence when the proper-pair bit is set.")
+                         help="Set options for RNA-Seq input. Must specify exactly one bam input file")
         group.add_option("--unstrandedRNA", dest="isUnstrandedRNA", action="store_true",
                          help="Set if RNA-Seq input is unstranded: Allows splice-junctions on either strand")
 
@@ -134,6 +133,9 @@ You must specify a BAM or CRAM file for at least one sample.
             if ((safeLen(options.normalBamList) != 1) or
                 (safeLen(options.tumorBamList) != 0)) :
                 raise OptParseException("RNA mode currently requires exactly one normal sample")
+        else :
+            if (options.isUnstrandedRNA) :
+                raise OptParseException("Unstranded only applied for RNA inputs")
 
         bcheck = BamSetChecker()
         bcheck.appendBams(options.normalBamList,"Normal")

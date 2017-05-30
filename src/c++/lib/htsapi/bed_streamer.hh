@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -28,6 +27,16 @@
 #include "hts_streamer.hh"
 
 
+/// Stream records from BED files.
+//
+// Example use:
+//
+// bed_streamer bst("foo.bed.gz","chr20:100-200");
+// while (bst.next()) {
+//     const bed_record& bre(*(bst.get_record_ptr()));
+//     if(bre.end > 100) foo++;
+// }
+//
 struct bed_streamer : public hts_streamer
 {
     bed_streamer(

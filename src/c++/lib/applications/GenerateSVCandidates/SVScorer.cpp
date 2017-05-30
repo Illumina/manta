@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders and Xiaoyu Chen
 ///
 
@@ -1351,36 +1350,39 @@ scoreTumorSV(
 }
 
 
-//todo This is mostly a placeholder. Add real RNA scoring model
+/// This is mostly a placeholder, real RNA scoring currently happens downstream of Manta
 static
 void
 scoreRNASV(
-    const CallOptionsDiploid& diploidOpt,
-    SVScoreInfo& baseInfo,
-    SVScoreInfoDiploid& diploidInfo)
+    const SVSampleInfo& baseInfo,
+    const SVCandidate& sv,
+    SVScoreInfoRna& rnaInfo)
 {
 #ifdef DEBUG_SCORE
     //log_os << __FUNCTION__ << "Scoring RNA candidate " << sv << "\n";
 #endif
 
-    // RNA assumes exactly one 'normal' sample:
-    assert(diploidInfo.samples.size() == 1);
-
-    /// TODO TMP add real sampleIndex
-    const unsigned sampleIndex(0);
-
-    diploidInfo.samples[sampleIndex].gtScore=0;
-    diploidInfo.altScore=42;
-    if (baseInfo.samples[sampleIndex].alt.splitReadCount == 0)
+    rnaInfo.altScore = SVScoreInfoRna::defaultScore;
+    if (sv.isImprecise())
     {
-        diploidInfo.filters.insert(diploidOpt.rnaFilterLabel);
+        rnaInfo.filters.insert(SVScoreInfoRna::impreciseLabel);
+        return;
+    }
+    if ((sv.bp1.interval.tid == sv.bp2.interval.tid) &&
+        (sv.centerSize() < SVScoreInfoRna::minLength))
+    {
+        rnaInfo.filters.insert(SVScoreInfoRna::localLabel);
+    }
+    if (baseInfo.alt.splitReadCount == 0)
+    {
+        rnaInfo.filters.insert(SVScoreInfoRna::rnaFilterLabel);
 #ifdef DEBUG_SCORE
         log_os << __FUNCTION__ << "Failed. No spanning pair " << "\n";
 #endif
     }
-    if (baseInfo.samples[sampleIndex].alt.confidentSpanningPairCount == 0)
+    if (baseInfo.alt.confidentSpanningPairCount == 0)
     {
-        diploidInfo.filters.insert(diploidOpt.rnaFilterLabel);
+        rnaInfo.filters.insert(SVScoreInfoRna::rnaFilterLabel);
 #ifdef DEBUG_SCORE
         log_os << __FUNCTION__ << "Failed. No split read " << "\n";
 #endif
@@ -1829,6 +1831,10 @@ computeAllScoreModels(
     {
         scoreTumorSV(_tumorOpt, _dFilterDiploid, junctionData, modelScoreInfo.tumor);
     }
+    else if (_isRNA)
+    {
+        scoreRNASV(modelScoreInfo.base.samples[0], junctionData[0].getSV(), modelScoreInfo.rna);
+    }
     else
     {
         scoreDiploidSV(_diploidOpt, _readScanner, _diploidDopt, _dFilterDiploid, junctionData, modelScoreInfo.diploid);
@@ -1838,11 +1844,6 @@ computeAllScoreModels(
         {
             scoreSomaticSV(_sampleCount,_diploidSampleCount,_somaticOpt, _somaticDopt, _dFilterSomatic, junctionData, modelScoreInfo.somatic);
         }
-    }
-
-    if (_isRNA)
-    {
-        scoreRNASV(_diploidOpt, modelScoreInfo.base, modelScoreInfo.diploid);
     }
 }
 

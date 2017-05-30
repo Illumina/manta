@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,9 +17,6 @@
 //
 //
 
-///
-/// \author Chris Saunders
-///
 
 #include "options/SVLocusSetOptionsParser.hh"
 
@@ -48,7 +44,7 @@ parseOptions(
 {
     errorMsg.clear();
 #if 0
-    if ((opt.breakendEdgeTrimProb <= 0) || (opt.breakendEdgeTrimProb >= 1.0))
+    if ((opt.breakendEdgeQuantileProb <= 0) || (opt.breakendEdgeQuantileProb >= 1.0))
     {
         errorMsg="edge-prob argument is restricted to (0,1)";
     }

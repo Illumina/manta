@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Xiaoyu Chen
 ///
 
@@ -49,7 +48,9 @@ struct SizeData
 };
 
 
-/// this structure's only purpose is to provide neat xml output.
+/// \brief XML Output helper object
+///
+/// This structure's only purpose is to provide neat xml output.
 /// it is not used outside of serialize/deserialize steps
 struct SizeMapXmlElement
 {
@@ -67,7 +68,7 @@ struct SizeMapXmlElement
 BOOST_CLASS_IMPLEMENTATION(SizeMapXmlElement, object_serializable)
 
 
-/// accumulate size observations and provide cdf/quantile/smoothed-pdf for the distribution
+/// \brief Accumulate size observations and provide cdf/quantile/smoothed-pdf for the distribution
 ///
 struct SizeDistribution
 {
@@ -77,15 +78,17 @@ struct SizeDistribution
         _quantiles(_quantileNum,0)
     {}
 
-    /// return size value for which we observe size value or less with prob p
+    /// \brief Implements the quantile function for this distribution
+    ///
+    /// \return The size at which all sizes equal or less are observed with probability \p prob
     int
     quantile(const float prob) const;
 
-    /// return prob of observing this size or less
+    /// \return Probability of observing value <= \p x
     float
     cdf(const int x) const;
 
-    /// provide smoothed prob of observing this size
+    /// \return Probability of observing value \p x, (with a smoothing window)
     float
     pdf(const int x) const;
 

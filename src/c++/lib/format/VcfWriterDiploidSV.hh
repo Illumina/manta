@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -37,10 +36,9 @@ struct VcfWriterDiploidSV : public VcfWriterSV, VcfWriterScoredSV
         const CallOptionsDiploid& diploidOpt,
         const bool isMaxDepthFilter,
         const std::string& referenceFilename,
-        const bool isRNA,
         const SVLocusSet& set,
         std::ostream& os) :
-        VcfWriterSV(referenceFilename,isRNA,set,os),
+        VcfWriterSV(referenceFilename,set,os),
         _diploidOpt(diploidOpt),
         _isMaxDepthFilter(isMaxDepthFilter),
         _diploidInfoPtr(nullptr),
@@ -83,6 +81,7 @@ private:
     modifyTranslocInfo(
         const SVCandidate& sv,
         const bool isFirstOfPair,
+        const SVCandidateAssemblyData& assemblyData,
         InfoTag_t& infotags) const override;
 
     void

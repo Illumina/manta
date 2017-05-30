@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders and Felix Schlesinger
 ///
 
@@ -134,7 +133,7 @@ private:
     };
 
     const ScoreType _intronOpenScore; ///< gap open for introns (i.e. deletions starting with splice motif) (should be negative)
-    const ScoreType _intronOffEdgeScore; ///< As offEdge but only of the last aligned bases match a splice motif (should be negative) todo: not implemented
+    const ScoreType _intronOffEdgeScore; ///< As offEdge but only of the last aligned bases match a splice motif (should be negative)
 
     // add the matrices here to reduce allocations over many alignment calls:
     typedef std::vector<ScoreVal> ScoreVec;

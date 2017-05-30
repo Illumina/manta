@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,9 +17,8 @@
 //
 //
 
-///
-///
-///
+/// \file
+/// \brief Utility functions on BAM records
 
 #pragma once
 
@@ -29,44 +27,50 @@
 #include "htsapi/bam_record.hh"
 
 
-/// is this read part of a pair where both members are mapped?
+/// \brief Test if this read is part of a pair where both members are mapped.
 bool
 is_mapped_pair(
     const bam_record& bam_read);
 
 
-/// is this read part of a pair where both members are mapped to the same chrom?
+/// \brief Test if this read part of a pair where both members are mapped to the same chrom.
 ///
 bool
 is_mapped_chrom_pair(
     const bam_record& bam_read);
 
-/// is this read part of mapped pair with 'Innie' orientation?
+/// \brief Test if this read part of mapped pair with "innie" orientation.
 ///
-/// Note this does not test MAPQ or fragment size, but could
-/// be used as the core of a 'proper-pair' predicate
+/// This does not test MAPQ or fragment size, but could
+/// be used as the core of a 'proper-pair' predicate.
+///
+/// This is designed to return true for the common case
+/// of pos == mate_pos occurring for short FFPE fragments.
 bool
 is_innie_pair(
     const bam_record& bam_read);
 
-/// detect cases where paired-end reads overlap in such a way as to suggest a possible unfiltered
-/// read into adapter sequence (assuming innie pairs)
+/// Detect cases where paired-end reads overlap in such a way as to suggest a possible unfiltered
+/// read into adapter sequence (assuming innie pairs).
 bool
 is_possible_adapter_pair(
     const bam_record& bamRead,
     const bool isAgressiveAdaptorCheck);
 
-/// detect cases where paired-end reads overlap (i.e. a fragment shorter than the combined read-length).
+/// \brief Detect cases where paired-end reads overlap
 ///
-/// note this is an approximation because it's based on a single bam record, an
-/// exact answer would require both records in the pair. In practice, this should
-/// be good enough.
+/// Overlapping read pairs implies that the sequenced DNA/RNA fragment size is shorter than
+/// the combined read-length,
+///
+/// This is an approximation because it's based on a single bam record, and as such
+/// the length and alignment of the mate read are inferred. An exact answer would
+/// require having BAM records for both ends of the read pair.
 bool
 is_overlapping_pair(
     const bam_record& bam_read,
     const SimpleAlignment& matchedAlignment);
 
-/// return average basecall qscore for this read
+/// \return The average basecall quality score for this read.
 unsigned
 get_avg_quality(
     const bam_record& bam_read);
@@ -84,7 +88,7 @@ isFirstRead(
     return false;
 }
 
-/// get BAM RG tag, return an empty string "" if no RG tag exists:
+/// \return The BAM record's auxillary RG tag value, or an empty string if no RG tag exists.
 inline
 const char*
 getReadGroup(

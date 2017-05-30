@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -38,7 +37,6 @@ struct VcfWriterSV
 {
     VcfWriterSV(
         const std::string& referenceFilename,
-        const bool isRNA,
         const SVLocusSet& set,
         std::ostream& os);
 
@@ -86,7 +84,8 @@ protected:
         const SVCandidateAssemblyData& adata,
         const SVCandidate& sv,
         const SVId& svId,
-        const EventInfo& event);
+        const EventInfo& event,
+        const bool isForceIntraChromBnd = false);
 
     /// add info tags which can be customized by sub-class
     virtual
@@ -102,6 +101,7 @@ protected:
     modifyTranslocInfo(
         const SVCandidate& /*sv*/,
         const bool /*isFirstOfPair*/,
+        const SVCandidateAssemblyData& /*assemblyData*/,
         InfoTag_t& /*infoTags*/) const
     {}
 
@@ -177,7 +177,6 @@ private:
 
 protected:
     const std::string& _referenceFilename;
-    const bool _isRNA;
 
 private:
     const bam_header_info& _header;

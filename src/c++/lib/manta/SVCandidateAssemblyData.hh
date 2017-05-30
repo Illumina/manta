@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 
 #pragma once
@@ -34,8 +33,8 @@
 #include <vector>
 
 
-/// minimum set of information required to describe bp transformations between SVCandidate and its
-/// corresponding contig alignment
+/// \brief Minimum set of information required to describe bp transformations between SVCandidate and its
+///        corresponding contig alignment
 ///
 struct BPOrientation
 {
@@ -46,14 +45,14 @@ struct BPOrientation
         isBp1Reversed=false;
         isBp2Reversed=false;
         isBp1First=true;
-        isStranded=false;
+        isTranscriptStrandKnown=false;
     }
 
     bool isBp2AlignedFirst = false; ///< should the contig on the fwd strand align bp2->bp1 (true) or bp1->bp2 (false)
     bool isBp1Reversed = false; ///< should all bp1 reads be reversed for the contig to assemble correctly?
     bool isBp2Reversed = false; ///< should all bp2 reads be reversed for the contig to assemble correctly?
-    bool isBp1First = true; ///< Is this candidate oriented from bp1 to bp2 (used in RNA)? Valid if isStranded==true
-    bool isStranded = false; /// Do we know the strand for this candidate (RNA)
+    bool isBp1First = true; ///< Is this candidate oriented from bp1 to bp2 (used in RNA)? Valid if isTranscriptStrandKnown is true
+    bool isTranscriptStrandKnown = false; ///< Do we know the strand for this candidate (RNA)
 };
 
 
@@ -72,9 +71,9 @@ struct LargeInsertionInfo
 
     bool isLeftCandidate = false;
     bool isRightCandidate = false;
-    unsigned contigOffset = 0; // if candidate, how far into the contig is the breakend?
-    unsigned refOffset = 0; // if candidate, how far from the start of the contig alignment is the breakend on reference?
-    int score = 0; // what is the alignment score of the contig up to the insertion breakpoint?
+    unsigned contigOffset = 0; ///< If candidate, how far into the contig is the breakend?
+    unsigned refOffset = 0; ///< If candidate, how far from the start of the contig alignment is the breakend on reference?
+    int score = 0; ///< What is the alignment score of the contig up to the insertion breakpoint?
 };
 
 std::ostream&
@@ -95,7 +94,7 @@ struct RemoteReadPayload
         readSeq(initReadSeq)
     {}
 
-    uint8_t readNo; // read no of the remote read, ie. the readno matching readSeq
+    uint8_t readNo; ///< Read no of the remote read, ie. the readno matching readSeq
     std::string readSeq;
 };
 

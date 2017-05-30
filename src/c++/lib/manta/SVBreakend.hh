@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -31,18 +30,20 @@
 #include <array>
 #include <iosfwd>
 
+/// \brief Categorize the nature of the evidence used to infer an SV candidate
+///        (anomalous read pair, CIGAR string, etc...)
 namespace SVEvidenceType
 {
 enum index_t
 {
-    PAIR,        /// a pair observation based on both read BAM records
-    LOCAL_PAIR,  /// a pair observation based on one read, htere
-    CIGAR,
-    SOFTCLIP,
-    SEMIALIGN,
-    SHADOW,
-    SPLIT_ALIGN,
-    UNKNOWN,    /// temporary state
+    PAIR,        ///< An anomalous read pair observation based on both of the read pair's alignment records
+    LOCAL_PAIR,  ///< An anomalous read pair observation inferred from the information in only one of the read pair's alignment records
+    CIGAR,       ///< A large indel found in a single read
+    SOFTCLIP,    ///< A large soft-clipped region on one edge of a single read
+    SEMIALIGN,   ///< A large poorly-aligned region on one edge of a single read
+    SHADOW,      ///< A read with an unmapped mate read
+    SPLIT_ALIGN, ///< A read alignment which is split between two or more locations using the BAM spec 'SA' format
+    UNKNOWN,     ///< Temporary initialization state
     SIZE
 };
 
@@ -176,11 +177,11 @@ namespace SVBreakendState
 {
 enum index_t
 {
-    UNKNOWN,    // Everything else not covered below
-    RIGHT_OPEN, // 5' side of region is mapped
-    LEFT_OPEN,  // 3' side of region is mapped
-    COMPLEX     // A typical small scale assembly locus -- something is happening in a small region,
-    // the event might be local to that region but we don't know
+    UNKNOWN,    ///< Everything else not covered below
+    RIGHT_OPEN, ///< 5'/left side of breakend is mapped, 3'/right side of the breakend is mapped elsewhere
+    LEFT_OPEN,  ///< 3'/right side of breakend is mapped, 5'/left side of the breakend is mapped elsewhere
+    COMPLEX     ///< A typical small scale assembly locus -- something is happening in a small region,
+    ///  the event might be local to that region but we don't know
 };
 
 inline

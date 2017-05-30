@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -93,6 +92,13 @@ struct known_pos_range2
     {
         _begin_pos += offsetSize;
         _end_pos += offsetSize;
+    }
+
+    void
+    makeNonNegative()
+    {
+        if (_begin_pos < 0) _begin_pos = 0;
+        if (_end_pos < 0) _end_pos = 0;
     }
 
     pos_t

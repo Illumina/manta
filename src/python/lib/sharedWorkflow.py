@@ -1,6 +1,6 @@
 #
 # Manta - Structural Variant and Indel Caller
-# Copyright (c) 2013-2016 Illumina, Inc.
+# Copyright (c) 2013-2017 Illumina, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -158,6 +158,8 @@ def runDepthFromAlignments(self, bamList, outputPath, taskPrefix="",dependencies
             assert(len(params.chromOrder) == chromCount)
             for chromIndex in range(chromCount) :
                 chromLabel = params.chromOrder[chromIndex]
+                if chromLabel in params.chromIsSkipped : continue
+
                 chromSize = params.chromSizes[chromLabel]
                 if headSize+chromSize <= minSize :
                     group.append((chromIndex,chromLabel))

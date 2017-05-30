@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -38,7 +37,6 @@ struct ReadGroupLabel
     /// if isCopyPtrs then the strings are copied and alloced/de-alloced by
     /// the object, if false the client is responsible these pointers over
     /// the lifetime of the label:
-    explicit
     ReadGroupLabel(
         const char* bamLabelInit,
         const char* rgLabelInit,

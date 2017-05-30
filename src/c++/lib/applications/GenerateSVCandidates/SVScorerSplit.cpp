@@ -1,7 +1,6 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2016 Illumina, Inc.
+// Copyright (c) 2013-2017 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders and Xiaoyu Chen
 ///
 
@@ -225,7 +224,7 @@ scoreSplitReads(
     const bool isBP1,
     const unsigned minMapQ,
     const unsigned minTier2MapQ,
-    const int bamShadowRange,
+    const int bamShadowSearchDistance,
     const unsigned shadowMinMapq,
     const bool isRNA,
     SVEvidence::evidenceTrack_t& sampleEvidence,
@@ -279,7 +278,7 @@ scoreSplitReads(
         {
             isSearchForLeftOpen = false;
 
-            shadowRange.set_begin_pos(std::max(0,bp.interval.range.begin_pos()-bamShadowRange));
+            shadowRange.set_begin_pos(std::max(0,bp.interval.range.begin_pos()-bamShadowSearchDistance));
             shadowRange.set_end_pos(bp.interval.range.begin_pos());
         }
         else if (bp.state == SVBreakendState::LEFT_OPEN)
@@ -287,7 +286,7 @@ scoreSplitReads(
             isSearchForRightOpen = false;
 
             shadowRange.set_begin_pos(bp.interval.range.end_pos());
-            shadowRange.set_end_pos(bp.interval.range.end_pos()+bamShadowRange);
+            shadowRange.set_end_pos(bp.interval.range.end_pos()+bamShadowSearchDistance);
         }
         else
         {
@@ -399,7 +398,7 @@ getSVSplitReadSupport(
         SVEvidence::evidenceTrack_t& sampleEvidence(evidence.getSampleEvidence(bamIndex));
         SupportFragments& svSupportFrags(svSupports.getSupportFragments(bamIndex));
 
-        const int bamShadowRange(_readScanner.getShadowSearchRange(bamIndex));
+        const int bamShadowSearchDistance(_readScanner.getShadowSearchDistance(bamIndex));
 
         // scoring split reads overlapping bp1
 #ifdef DEBUG_SVS
@@ -407,7 +406,7 @@ getSVSplitReadSupport(
 #endif
         scoreSplitReads(_callDopt, flankScoreSize, svId, sv.bp1,
                         SVAlignInfo, assemblyData.bp1ref, true, minMapQ, minTier2MapQ,
-                        bamShadowRange, _scanOpt.minSingletonMapqCandidates, _isRNA,
+                        bamShadowSearchDistance, _scanOpt.minSingletonMapqCandidates, _isRNA,
                         sampleEvidence, bamStream, sample, svSupportFrags);
         // scoring split reads overlapping bp2
 #ifdef DEBUG_SVS
@@ -415,7 +414,7 @@ getSVSplitReadSupport(
 #endif
         scoreSplitReads(_callDopt, flankScoreSize, svId, sv.bp2,
                         SVAlignInfo, assemblyData.bp2ref, false, minMapQ, minTier2MapQ,
-                        bamShadowRange, _scanOpt.minSingletonMapqCandidates, _isRNA,
+                        bamShadowSearchDistance, _scanOpt.minSingletonMapqCandidates, _isRNA,
                         sampleEvidence, bamStream, sample, svSupportFrags);
 
         finishSampleSRData(sample);
