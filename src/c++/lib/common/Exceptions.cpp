@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -19,6 +18,7 @@
 //
 
 /**
+ ** \file
  ** \brief Implementation of the common exception mechanism.
  **
  ** \author Come Raczy

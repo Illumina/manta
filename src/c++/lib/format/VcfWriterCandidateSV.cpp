@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -44,6 +43,7 @@ VcfWriterCandidateSV::
 modifyTranslocInfo(
     const SVCandidate& sv,
     const bool isFirstOfPair,
+    const SVCandidateAssemblyData& /*assemblyData*/,
     InfoTag_t& infoTags) const
 {
     const SVBreakend& bpA( isFirstOfPair ? sv.bp1 : sv.bp2);

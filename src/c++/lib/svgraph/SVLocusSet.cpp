@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -64,18 +63,20 @@ locusHurl(const LocusIndexType index, const char* label) const
 
 
 
-/// is the node set from multiple loci?
+/// Test if the set of node addresses come from only one, expected locus index.
+///
+/// \return True if all nodes addressed in \p nodeAddresses are in the expected locus.
 static
 bool
-isMultiLocus(
-    const LocusIndexType locusIndex,
-    const std::set<SVLocusSet::NodeAddressType>& nodes)
+isExpectedLocusOnly(
+    const LocusIndexType expectedLocusIndex,
+    const std::set<SVLocusSet::NodeAddressType>& nodeAddresses)
 {
-    for (const SVLocusSet::NodeAddressType& addy : nodes)
+    for (const SVLocusSet::NodeAddressType& nodeAddress : nodeAddresses)
     {
-        if (addy.first != locusIndex) return true;
+        if (nodeAddress.first != expectedLocusIndex) return false;
     }
-    return false;
+    return true;
 }
 
 
@@ -84,17 +85,17 @@ void
 SVLocusSet::
 merge(const SVLocus& inputLocus)
 {
-    //
-    // test each node in the input locus for intersection to nodes in this graph and insert/join to existing nodes as appropriate
-    //
-
     using namespace illumina::common;
 
+    //
+    // 1. Sanity check the inputLocus and this SVLocusSet to ensure input conditions for merging are met.
+    //
     assert(! _isFinalized);
 
-    // meaningless input indicates an error in client code:
+    // An empty inputLocus is meaningless input, and thus indicates an error in client code.
     assert(! inputLocus.empty());
 
+    // In case we ever decide that an empty inputLocus is not a failed assertion, there is nothing to merge so return.
     if (inputLocus.empty()) return;
 
 #ifdef DEBUG_SVL
@@ -105,40 +106,43 @@ merge(const SVLocus& inputLocus)
 
     inputLocus.checkState(true);
 
+    //
+    // 2. Add the inputLocus as a new locus in SVLocusSet, called startLocus. In this step no merging takes place.
+    //
     const LocusIndexType startLocusIndex(insertLocus(inputLocus));
     const SVLocus& startLocus(_loci[startLocusIndex]);
     LocusIndexType headLocusIndex(startLocusIndex);
 
-    // indicates if the input locus has been 'moved' into another locus in the graph:
-    bool isInputLocusMoved(false);
+    /// True if the startLocus has been copied from startLocusIndex into another locus in the graph
+    bool isStartLocusDuplicatedInAnotherGraphLocus(false);
 
-    // indicates that the locus will not be inserted into the graph.
-    // if true, skip merge and clear out the startLocus
+    /// True if this locus will not be merged into the graph because such a merge would exceed complexity limits.
     bool isAbortMerge(false);
 
     // because we have a non-general interval overlap test, we must order search
     // nodes by begin_pos on each chromosome
     //
     typedef std::map<GenomeInterval,NodeIndexType> nodeMap_t;
-    nodeMap_t nodeMap;
+    nodeMap_t startLocusNodeMap;
     {
         const NodeIndexType nodeCount(startLocus.size());
         for (NodeIndexType nodeIndex(0); nodeIndex<nodeCount; ++nodeIndex)
         {
-            nodeMap.insert(std::make_pair(startLocus.getNode(nodeIndex).getInterval(),nodeIndex));
+            startLocusNodeMap.insert(std::make_pair(startLocus.getNode(nodeIndex).getInterval(),nodeIndex));
         }
     }
 
-    // reuse this intersectNodes object throughout the merge:
-    std::set<NodeAddressType> intersectNodes;
+    // reuse this intersectingNodeAddresses object throughout the merge:
+    std::set<NodeAddressType> intersectingNodeAddresses;
 
-    // test if the graph has grown too complex in these regions. If so, abort the insertion of this locus:
-    for (const nodeMap_t::value_type& nodeVal : nodeMap)
+    //
+    // 3. Test if the graph's node intersections with any of startLocus' nodes exceeds complexity limits. If so, abort the merge.
+    //
+    for (const nodeMap_t::value_type& startLocusNodeVal : startLocusNodeMap)
     {
         static const bool isTestUsability(true);
-
-        // get a standard intersection of the input node:
-        const bool isUsable(getNodeIntersect(startLocusIndex, nodeVal.second, intersectNodes, isTestUsability));
+        const bool isUsable(
+            getIntersectingNodeAddresses(startLocusIndex, startLocusNodeVal.second, intersectingNodeAddresses, isTestUsability));
 
         if (! isUsable)
         {
@@ -150,104 +154,125 @@ merge(const SVLocus& inputLocus)
         }
     }
 
-    for (const nodeMap_t::value_type& nodeVal : nodeMap)
+    //
+    // 4. Test each node in the startLocus for mergeable intersections to other nodes in this graph. If such cases are found, merge these nodes.
+    //
+    for (const nodeMap_t::value_type& startLocusNodeVal : startLocusNodeMap)
     {
         if (isAbortMerge) break;
 
-        const NodeIndexType nodeIndex(nodeVal.second);
+        const NodeIndexType startLocusNodeIndex(startLocusNodeVal.second);
 
 #ifdef DEBUG_SVL
-        log_os << logtag << " inputNode: " << NodeAddressType(std::make_pair(startLocusIndex,nodeIndex)) << " " << startLocus.getNode(nodeIndex);
+        log_os << logtag << " startLocusNode: " << NodeAddressType(std::make_pair(startLocusIndex,startLocusNodeIndex)) << " " << startLocus.getNode(startLocusNodeIndex);
 #endif
 
-        getNodeMergeableIntersect(startLocusIndex, nodeIndex, isInputLocusMoved, intersectNodes);
+        // get all nodes which can be merged with start node.
+        getMergeableIntersectingNodeAddresses(startLocusIndex, startLocusNodeIndex, isStartLocusDuplicatedInAnotherGraphLocus, intersectingNodeAddresses);
 
 #ifdef DEBUG_SVL
-        log_os << logtag << " intersect_size: " << intersectNodes.size() << "\n";
-        for (const NodeAddressType& val : intersectNodes)
+        log_os << logtag << " intersect_size: " << intersectingNodeAddresses.size() << "\n";
+        for (const NodeAddressType& intersectingNodeAddress : intersectingNodeAddresses)
         {
-            log_os << logtag << " intersect address: " << val << " node: " <<  getNode(val) << "\n";
-        }
-#endif
-
-        if (isInputLocusMoved)
-        {
-            if (2>intersectNodes.size()) continue;
-        }
-        else
-        {
-            if (intersectNodes.empty()) continue;
-        }
-
-        while ( isMultiLocus(headLocusIndex, intersectNodes) )
-        {
-            // if there are any intersections, copy the loci of all intersecting nodes into
-            // a single locus, by convention we use the lowest locusIndex of the intersecting set
-            moveIntersectToLowIndex(intersectNodes,startLocusIndex,headLocusIndex);
-            if (! isInputLocusMoved) isInputLocusMoved=(headLocusIndex != startLocusIndex);
-
-            getNodeMergeableIntersect(startLocusIndex, nodeIndex, isInputLocusMoved, intersectNodes);
-            assert(! intersectNodes.empty());
-
-#ifdef DEBUG_SVL
-            log_os << logtag << " multilocus detected, nodes moved and re-intersected. intersect_size: " << intersectNodes.size() << "\n";
-#endif
-        }
-
-#ifdef DEBUG_SVL
-        log_os << logtag << " intersect2_size: " << intersectNodes.size() << "\n";
-        for (const NodeAddressType& val : intersectNodes)
-        {
-            log_os << logtag << " intersect2 address: " << val << " node: " <<  getNode(val) << "\n";
+            log_os << logtag << " intersect address: " << intersectingNodeAddress << " node: " <<  getNode(intersectingNodeAddress) << "\n";
         }
 #endif
 
-        // merge overlapping nodes in order from highest nodeid to lowest, so that the
-        // merge process does not invalidate nodeids of higher value
+        // Skip to the next start locus node if no mergeable nodes are found.
+        if (intersectingNodeAddresses.empty()) continue;
+
+        // If the start locus has been copied to another graph locus, then the copy of the start locus will be among
+        // the set of mergeable nodes returned. In this case we should also skip to the next node in the start locus
+        // if only one intersecting node was found, because the start node is just finding a copy of itself.
+        if (isStartLocusDuplicatedInAnotherGraphLocus)
+        {
+            if (2>intersectingNodeAddresses.size()) continue;
+        }
+
+        // Consolidate all intersecting nodes into a single locus to prepare for merge.
         //
-        // we first need to find a node corresponding to the input node (but possibly merged to a larger region already):
-        //
-        NodeAddressType inputSuperAddy;
+        while (! isExpectedLocusOnly(headLocusIndex, intersectingNodeAddresses) )
         {
-            bool isInputSuperFound(false);
-            const known_pos_range2& inputRange(getLocus(startLocusIndex).getNode(nodeIndex).getInterval().range);
+            // Since the intersecting nodes are not already in the same locus, the contents of
+            // all loci represented in the intersecting node set are moved to a single locus.
+            // By convention the target of this copy is the locus with the lowest index among the
+            // loci in the intersecting node set.
+            moveIntersectingNodesToLowestLocusIndex(intersectingNodeAddresses, startLocusIndex, headLocusIndex);
 
-            for (const NodeAddressType& val : intersectNodes)
+            // Record whether the start locus was duplicated in the above locus consolidation step
+            if (! isStartLocusDuplicatedInAnotherGraphLocus) isStartLocusDuplicatedInAnotherGraphLocus=(headLocusIndex != startLocusIndex);
+
+            // Rerun the search for nodes intersecting the start node:
+            // (1) This is a lazy/safe way to update the intersecting ndoes with their new addresses resulting from the
+            //     above locus consolidation step.
+            // (2) It appears to be possible for this search to reveal new mergeable nodes, for which additional rounds
+            //     of locus consolidation are required. \TODO Document an example where this could occur
+            getMergeableIntersectingNodeAddresses(startLocusIndex, startLocusNodeIndex, isStartLocusDuplicatedInAnotherGraphLocus,
+                                                  intersectingNodeAddresses);
+            assert(! intersectingNodeAddresses.empty());
+
+#ifdef DEBUG_SVL
+            log_os << logtag << " multilocus detected, nodes moved and re-intersected. Updated intersect_size: " << intersectingNodeAddresses.size() << "\n";
+#endif
+        }
+
+#ifdef DEBUG_SVL
+        log_os << logtag << " intersect2_size: " << intersectingNodeAddresses.size() << "\n";
+        for (const NodeAddressType& intersectingNodeAddress : intersectingNodeAddresses)
+        {
+            log_os << logtag << " intersect2 address: " << intersectingNodeAddress << " node: " <<  getNode(intersectingNodeAddress) << "\n";
+        }
+#endif
+
+        // Find the node corresponding to the startLocusNode already duplicated into another locus in the graph.
+        //
+        // The startLocusNode may already have been merged into a larger node already, so we look for a node which
+        // is a superset of startLocusNode.
+        //
+        NodeAddressType startLocusNodeSupersetAddress;
+        {
+            bool isStartLocusNodeSupersetFound(false);
+            const known_pos_range2& startLocusNodeRange(getLocus(startLocusIndex).getNode(startLocusNodeIndex).getInterval().range);
+
+            for (const NodeAddressType& intersectingNodeAddress : intersectingNodeAddresses)
             {
-                assert(val.first == headLocusIndex);
+                assert(intersectingNodeAddress.first == headLocusIndex);
 
-                // one node must be a superset of the input node, find this and store separately:
-                if (getNode(val).getInterval().range.is_superset_of(inputRange))
+                // one node must be a superset of the start node, find this and store separately:
+                if (getNode(intersectingNodeAddress).getInterval().range.is_superset_of(startLocusNodeRange))
                 {
-                    inputSuperAddy=val;
-                    isInputSuperFound=true;
+                    startLocusNodeSupersetAddress=intersectingNodeAddress;
+                    isStartLocusNodeSupersetFound=true;
                     break;
                 }
             }
-            assert(isInputSuperFound);
+            assert(isStartLocusNodeSupersetFound);
         }
 
-        // merge this inputNode with each intersecting Node,
-        // and eliminate the intersecting node:
+        // Merge each intersecting node with the node found at startLocusNodeSupersetAddress. Target each merge to the
+        // lower of the two node index values, and eliminate the node at the higher index value.
         //
-        NodeAddressType mergeTargetAddy(inputSuperAddy);
-        BOOST_REVERSE_FOREACH(NodeAddressType nodeAddy, intersectNodes)
+        // Merge must be ordered from highest to lowest node index, so that the merge process does not invalidate
+        // node indexes at higher value as it goes.
+        //
+        NodeAddressType mergeTargetNodeAddress(startLocusNodeSupersetAddress);
+        BOOST_REVERSE_FOREACH(NodeAddressType intersectingNodeAddress, intersectingNodeAddresses)
         {
-            if (nodeAddy == inputSuperAddy) continue;
-            if (nodeAddy < mergeTargetAddy) std::swap(nodeAddy,mergeTargetAddy);
+            if (intersectingNodeAddress == startLocusNodeSupersetAddress) continue;
+            if (intersectingNodeAddress < mergeTargetNodeAddress) std::swap(intersectingNodeAddress,mergeTargetNodeAddress);
 #ifdef DEBUG_SVL
-            log_os << logtag << " MergeAndRemove: " << nodeAddy << "\n";
+            log_os << logtag << " MergeAndRemove: " << intersectingNodeAddress << "\n";
 #endif
-            mergeNodePtr(nodeAddy,mergeTargetAddy);
-            removeNode(nodeAddy);
+            mergeNodePtr(intersectingNodeAddress,mergeTargetNodeAddress);
+            eraseNode(intersectingNodeAddress);
 #ifdef DEBUG_SVL
-            log_os << logtag << " Finished: " << nodeAddy << "\n";
+            log_os << logtag << " Finished: " << intersectingNodeAddress << "\n";
             checkState();
 #endif
         }
     }
 
-    if (isAbortMerge || isInputLocusMoved)
+    if (isAbortMerge || isStartLocusDuplicatedInAnotherGraphLocus)
     {
         clearLocus(startLocusIndex);
     }
@@ -299,31 +324,31 @@ merge(
 
 bool
 SVLocusSet::
-getNodeIntersectCore(
-    const LocusIndexType inputLocusIndex,
-    const NodeIndexType inputNodeIndex,
+getIntersectingNodeAddressesCore(
+    const LocusIndexType queryLocusIndex,
+    const NodeIndexType queryNodeIndex,
     const LocusSetIndexerType& searchNodes,
     const LocusIndexType filterLocusIndex,
-    std::set<NodeAddressType>& intersectNodes,
+    std::set<NodeAddressType>& intersectingNodeAddresses,
     const bool isTestUsability) const
 {
     typedef LocusSetIndexerType::const_iterator in_citer;
 
 #ifdef DEBUG_SVL
     static const std::string logtag("SVLocusSet::getNodeIntersectCore");
-    log_os << logtag << " inputNode: " << inputLocusIndex << ":" << inputNodeIndex << " " << getNode(std::make_pair(inputLocusIndex,inputNodeIndex));
+    log_os << logtag << " inputNode: " << queryLocusIndex << ":" << queryNodeIndex << " " << getNode(std::make_pair(queryLocusIndex,queryNodeIndex));
     checkState();
 #endif
 
     assert(_isIndexed);
 
-    intersectNodes.clear();
+    intersectingNodeAddresses.clear();
 
-    // get all nodes \in searchNodes which intersect with the input node:
-    const NodeAddressType inputAddy(std::make_pair(inputLocusIndex,inputNodeIndex));
-    const in_citer it(searchNodes.data().lower_bound(inputAddy));
-    const GenomeInterval& inputInterval(getNode(inputAddy).getInterval());
-    const pos_t maxRegionSize(_maxRegionSize[inputInterval.tid]);
+    // get all nodes \in searchNodes which intersect with the query node:
+    const NodeAddressType queryNodeAddress(std::make_pair(queryLocusIndex,queryNodeIndex));
+    const in_citer it(searchNodes.data().lower_bound(queryNodeAddress));
+    const GenomeInterval& queryInterval(getNode(queryNodeAddress).getInterval());
+    const pos_t maxRegionSize(_maxRegionSize[queryInterval.tid]);
 
     const in_citer it_begin(searchNodes.data().begin()), it_end(searchNodes.data().end());
 
@@ -331,7 +356,7 @@ getNodeIntersectCore(
     bool isUsable(true);
     unsigned searchCount(0);
 
-    // first look forward and extend to find all nodes which this inputNode intersects:
+    // first look forward and extend to find all nodes which intersect queryInterval:
     for (in_citer it_fwd(it); it_fwd != it_end; ++it_fwd)
     {
         if (isTestUsability)
@@ -349,8 +374,8 @@ getNodeIntersectCore(
 #ifdef DEBUG_SVL
         log_os << logtag << "\tFWD test: " << (*it_fwd) << " " << getNode(*it_fwd);
 #endif
-        if (! inputInterval.isIntersect(getNode(*it_fwd).getInterval())) break;
-        intersectNodes.insert(*it_fwd);
+        if (! queryInterval.isIntersect(getNode(*it_fwd).getInterval())) break;
+        intersectingNodeAddresses.insert(*it_fwd);
 #ifdef DEBUG_SVL
         log_os << logtag << "\tFWD insert: " << (*it_fwd) << "\n";
 #endif
@@ -378,16 +403,16 @@ getNodeIntersectCore(
         log_os << logtag << "\tREV test: " << (*it_rev) << " " << getNode(*it_rev);
 #endif
         const GenomeInterval& searchInterval(getNode(*it_rev).getInterval());
-        if (! inputInterval.isIntersect(searchInterval))
+        if (! queryInterval.isIntersect(searchInterval))
         {
             if (! isOverlapAllowed()) break;
 
-            if (inputInterval.tid != searchInterval.tid) break;
-            if ((searchInterval.range.begin_pos()+maxRegionSize)<inputInterval.range.begin_pos()) break;
+            if (queryInterval.tid != searchInterval.tid) break;
+            if ((searchInterval.range.begin_pos()+maxRegionSize)<queryInterval.range.begin_pos()) break;
             continue;
         }
 
-        intersectNodes.insert(*it_rev);
+        intersectingNodeAddresses.insert(*it_rev);
 #ifdef DEBUG_SVL
         log_os << logtag << "\tREV insert: " << (*it_rev) << "\n";
 #endif
@@ -397,7 +422,7 @@ getNodeIntersectCore(
 
     _highestSearchCount = std::max(_highestSearchCount, searchCount);
 
-    pos_t searchSize(inputInterval.range.end_pos() - std::max(0, inputInterval.range.begin_pos()-maxRegionSize));
+    pos_t searchSize(queryInterval.range.end_pos() - std::max(0, queryInterval.range.begin_pos()-maxRegionSize));
 
     assert(searchSize>=0);
     if (0 != searchSize)
@@ -421,9 +446,9 @@ getNodeIntersectCore(
 
 void
 SVLocusSet::
-getIntersectingEdgeNodes(
-    const LocusIndexType inputLocusIndex,
-    const NodeIndexType inputRemoteNodeIndex,
+getIntersectingEdges(
+    const LocusIndexType queryLocusIndex,
+    const NodeIndexType queryRemoteNodeIndex,
     const EdgeMapType& remoteIntersectNodeToLocalNodeMap,
     const LocusSetIndexerType& remoteIntersectNodes,
     std::vector<EdgeInfoType>& edges) const
@@ -433,13 +458,14 @@ getIntersectingEdgeNodes(
 
     edges.clear();
 
-    // find all nodes, from the remoteIntersectNodes set, which intersect this function's input node:
+    // Find all nodes, from the remoteIntersectNodes set, which intersect the query node:
     //
-    // for this application, inputLocus is an input set isolated from the rest of the graph, so nodes
-    // intersected in the inputLocus are filtered out
+    // for this application, the query locus is an input set isolated from the rest of the graph, so nodes
+    // intersected in the query locus are filtered out
     //
     std::set<NodeAddressType> edgeIntersectRemoteTemp;
-    getNodeIntersectCore(inputLocusIndex,inputRemoteNodeIndex,remoteIntersectNodes,inputLocusIndex,edgeIntersectRemoteTemp);
+    getIntersectingNodeAddressesCore(queryLocusIndex, queryRemoteNodeIndex, remoteIntersectNodes, queryLocusIndex,
+                                     edgeIntersectRemoteTemp);
 
     for (const NodeAddressType& remoteIsectAddy : edgeIntersectRemoteTemp)
     {
@@ -458,46 +484,46 @@ getIntersectingEdgeNodes(
 
 void
 SVLocusSet::
-findSignalNodes(
-    const LocusIndexType inputLocusIndex,
-    const NodeAddressType findSignalAddy,
-    std::set<NodeAddressType>& signalIntersectNodes,
-    const std::set<NodeAddressType>& inputIntersectRemotes,
-    bool& isIntersectRemotes) const
+getIntersectingSignalNodeAddresses(
+    const LocusIndexType filterLocusIndex,
+    const NodeAddressType targetNodeAddress,
+    std::set<NodeAddressType>& intersectingSignalNodeAddresses,
+    const std::set<NodeAddressType>& intersectingNoiseNodeTestTargets,
+    bool& isIntersectingNoiseNodeOverlapTestTargets) const
 {
 #ifdef DEBUG_SVL
     static const std::string logtag("SVLocusSet::findSignalNodes");
-    log_os << logtag << " findSignalAddy: " << findSignalAddy << "\n";
+    log_os << logtag << " targetNodeAddress: " << targetNodeAddress << "\n";
 #endif
-    // get a standard intersection of the input node:
-    std::set<NodeAddressType> intersectNodes;
-    getNodeIntersectCore(findSignalAddy.first, findSignalAddy.second, _inodes, inputLocusIndex, intersectNodes);
-    for (const NodeAddressType& intersectAddy : intersectNodes)
+    // Get all nodes which intersect the node at targetNodeAddress.
+    std::set<NodeAddressType> intersectingNodeAddresses;
+    getIntersectingNodeAddressesCore(targetNodeAddress.first, targetNodeAddress.second, _inodes, filterLocusIndex,
+                                     intersectingNodeAddresses);
+    for (const NodeAddressType& intersectingNodeAddress : intersectingNodeAddresses)
     {
 #ifdef DEBUG_SVL
-        log_os << logtag << " intersectAddy: " << intersectAddy << "\n";
+        log_os << logtag << " intersectingNodeAddress: " << intersectingNodeAddress << "\n";
 #endif
-        if (isNoiseNode(intersectAddy))
+        if (! isNoiseNode(intersectingNodeAddress))
         {
-            // check for the rare remote intersect condition:
-            if (! isIntersectRemotes)
+#ifdef DEBUG_SVL
+            if (intersectingSignalNodeAddresses.count(intersectingNodeAddress) == 0)
             {
-                if (inputIntersectRemotes.count(intersectAddy))
+                log_os << logtag << " merge/new: " << targetNodeAddress << " " << intersectingNodeAddress << "\n";
+            }
+#endif
+            intersectingSignalNodeAddresses.insert(intersectingNodeAddress);
+        }
+        else
+        {
+            if (! isIntersectingNoiseNodeOverlapTestTargets)
+            {
+                if (intersectingNoiseNodeTestTargets.count(intersectingNodeAddress))
                 {
-                    isIntersectRemotes=true;
+                    isIntersectingNoiseNodeOverlapTestTargets=true;
                 }
             }
-            continue;
         }
-
-#ifdef DEBUG_SVL
-        if (signalIntersectNodes.count(intersectAddy) == 0)
-        {
-            log_os << logtag << " merge/new: " << findSignalAddy << " " << intersectAddy << "\n";
-        }
-#endif
-
-        signalIntersectNodes.insert(intersectAddy);
     }
 }
 
@@ -505,11 +531,11 @@ findSignalNodes(
 
 void
 SVLocusSet::
-getNodeMergeableIntersect(
-    const LocusIndexType inputLocusIndex,
-    const NodeIndexType inputNodeIndex,
-    const bool isInputLocusMoved,
-    std::set<NodeAddressType>& mergeIntersectNodes) const
+getMergeableIntersectingNodeAddresses(
+    const LocusIndexType queryLocusIndex,
+    const NodeIndexType queryNodeIndex,
+    const bool isQueryLocusDuplicatedInAnotherLocus,
+    std::set<NodeAddressType>& mergeableIntersectingNodeAddresses) const
 {
     //
     // TODO: There's room for significant optimization of these methods. The improvements are not trivial,
@@ -519,283 +545,403 @@ getNodeMergeableIntersect(
     //
     // There are two ways sets of mergeable nodes can occur:
     //
-    // (1) There is a set of nodes which overlap with both input node and one
-    // of the remote nodes that the input points to (ie they have a shared edge).
-    // When totaled together, the edge count of this set + the inputNode edge
-    // exceeds minMergeEdgeCount.
+    // (1) There is a set of nodes which overlap with both query node and one
+    // of the remote nodes that the query has an edge connecting to (ie they have a shared edge).
+    // When totaled, the evidence count of these edges plus the query node edge
+    // is at least minMergeEdgeCount. See schematic below.
     //
-    // (2) The input node either contains an edge which is greater than minMergeEdgeCount
-    // or will contain such an edge due to (1), in this case the input node can be merged
+    // (2) The query node either contains an edge which is at least minMergeEdgeCount
+    // or will contain such an edge due to (1), in this case the query node can be merged
     // with a locally overlapping node which also contains an edge which is greater than
     // minMergeEdgeCount. Note that in case (2) remote node intersection is not required.
+    // See schematic below.
+    //
+    // # Schematic illustrations of intersection cases
+    //
+    // ## Key
+    // - Assume a single genome coordinate in column space.
+    // - Node is: |--NodeX--|
+    // - Noise edge is:  ------>
+    // - Signal edge is: ======>
+    //
+    //
+    // ## Case 1:
+    //
+    // QueryLocus:      |-Node1-|--------------->|-Node2-|
+    //
+    // GraphLocus:           |-Node1-|-------->|-Node2-|
+    //                           |-Node3-|--->|-Node4-|
+    //
+    // MergedLocus:     |-----Node1------|===>|--Node2---|
+    //
+    //
+    // ## Case 2:
+    //
+    // QueryLocus:  |-Node1-|=======>|-Node2-|
+    //
+    // GraphLocus:                         |-Node1-|=======>|-Node2-|
+    //
+    // MergedLocus: |-Node3-|=======>|----Node1----|=======>|-Node2-|
     //
 
-    const NodeAddressType inputAddy(std::make_pair(inputLocusIndex,inputNodeIndex));
-    const SVLocusNode& inputNode(getNode(inputAddy));
+    const NodeAddressType queryNodeAddress(std::make_pair(queryLocusIndex,queryNodeIndex));
+    const SVLocusNode& queryNode(getNode(queryNodeAddress));
 
 #ifdef DEBUG_SVL
-    static const std::string logtag("SVLocusSet::getNodeMergableIntersect");
-    log_os << logtag << " inputNode: " << inputAddy << " " << inputNode;
+    static const std::string logtag("SVLocusSet::getMergeableIntersectingNodeAddresses");
+    log_os << logtag << " queryNode: " << queryNodeAddress << " " << queryNode;
     checkState();
 #endif
 
-    // reuse this intersectNodes as a temporary throughout the methods below
-    std::set<NodeAddressType> intersectNodes;
+    // Reuse this as a temporary throughout the methods below, it isn't actually needed at this scope.
+    std::set<NodeAddressType> intersectingNodeAddresses;
 
     //
-    // build a new index, which contains, for all nodes x which intersect the input, an
-    // enumeration of the remote nodes Y connected by edges to node x (remoteIntersectNodes)
-    // and a map for each node y \in Y pointing back to node x (remoteIntersectNodeToLocalNodeMap)
+    // Build a new searchable node data structure which contains, for the set of nodes X intersecting the query node,
+    // all of the remote nodes Y connected by edges to X (searchableIntersectingNodeConnections)
     //
-    LocusSetIndexerType remoteIntersectNodes(*this);
-    EdgeMapType remoteIntersectNodeToLocalNodeMap;
+    // Also build a map for each node y \in Y pointing back to node x \in X (connectedNodeToIntersectingNodeMap)
+    //
+    // Schematic Example. Given the following queryNode and Graph Loci:
+    //
+    // queryNode:                 |--Node1--|
+    //
+    // GraphLocus1:                |-Node1-|<-------->|-Node2-|
+    //                                |-Node3-|<--->|-Node4-|<---->| Node5 |
+    //
+    // GraphLocus2:  |-Node1-|<------->|-Node2-|
+    //
+    // searchableIntersectingNodeConnections should contain:
+    // (Locus1,Node2),(Locus1,Node4),(Locus2,Node1)
+    //
+    // connectedNodeToIntersectingNodeMap should contain:
+    // (Locus1,Node2) => (Locus1,Node1)
+    // (Locus1,Node4) => (Locus1,Node3)
+    // (Locus2,Node1) => (Locus2,Node2)
+    //
+    //
+    LocusSetIndexerType searchableIntersectingNodeConnections(*this);
+    EdgeMapType connectedNodeToIntersectingNodeMap;
 
-    // nodes which intersect the input and have already been certified as signal:
-    std::set<NodeAddressType> signalIntersectNodes;
+    // Nodes which intersect the query node and have already met the signal evidence threshold:
+    std::set<NodeAddressType> intersectingSignalNodeAddresses;
     {
-        // get a standard intersection of the input node:
-        getNodeIntersect(inputLocusIndex, inputNodeIndex, intersectNodes);
+        // get a standard intersection of the query node:
+        getIntersectingNodeAddresses(queryLocusIndex, queryNodeIndex, intersectingNodeAddresses);
 
         //
-        // 1. build the new remoteIntersectNodes/remoteIntersectNodeToLocalNodeMap index
+        // 1. Add data to searchableIntersectingNodeConnections and connectedNodeToIntersectingNodeMap
         //
-        for (const NodeAddressType& intersectAddy : intersectNodes)
+        for (const NodeAddressType& intersectingNodeAddress : intersectingNodeAddresses)
         {
-            const SVLocusNode& intersectNode(getNode(intersectAddy));
+            const SVLocusNode& intersectingNode(getNode(intersectingNodeAddress));
 
-            // get the remotes of each node which intersect with the query node,
-            // place these in remoteIntersectNodes
-            const SVLocusEdgeManager edgeMap(intersectNode.getEdgeManager());
-            for (const SVLocusEdgesType::value_type& intersectEdge : edgeMap.getMap())
+            // Iterate through intersectingNode's edges to get its connecting node addresses
+            const SVLocusEdgeManager intersectingNodeEdgeMap(intersectingNode.getEdgeManager());
+            for (const SVLocusEdgesType::value_type& intersectingNodeEdge : intersectingNodeEdgeMap.getMap())
             {
-                // build remote <-> local indexing structures:
-                NodeAddressType remoteAddy(std::make_pair(intersectAddy.first,intersectEdge.first));
-                remoteIntersectNodes.data().insert(remoteAddy);
-                remoteIntersectNodeToLocalNodeMap.insert(std::make_pair(remoteAddy,intersectAddy.second));
+                NodeAddressType connectingNodeAddress(std::make_pair(intersectingNodeAddress.first,intersectingNodeEdge.first));
+                searchableIntersectingNodeConnections.data().insert(connectingNodeAddress);
+                connectedNodeToIntersectingNodeMap.insert(std::make_pair(connectingNodeAddress,intersectingNodeAddress.second));
             }
         }
 
 #ifdef DEBUG_SVL
-        log_os << logtag << " remoteIntersectNodes.size(): " << remoteIntersectNodes.data().size() << "\n";
-        for (const NodeAddressType& addy : remoteIntersectNodes.data())
+        log_os << logtag << " searchableIntersectingNodeConnections.size(): " << searchableIntersectingNodeConnections.data().size() << "\n";
+        for (const NodeAddressType& nodeAddress : searchableIntersectingNodeConnections.data())
         {
-            log_os << logtag << "\tremoteIntersectNode: " << addy << " " << getNode(addy);
+            log_os << logtag << "\tintersectingNodeConnection: " << nodeAddress << " " << getNode(nodeAddress);
         }
 #endif
 
         //
-        // 2. get the signal node set:
+        // 2. Add data to intersectingSignalNodeAddresses:
         //
         // Note that the signal node search is not transitive b/c we have required all signal nodes
         // in the graph to have merged already.
         //
-        for (const NodeAddressType& intersectAddy : intersectNodes)
+        for (const NodeAddressType& intersectingNodeAddress : intersectingNodeAddresses)
         {
-            if (! isNoiseNode(intersectAddy))
+            if (! isNoiseNode(intersectingNodeAddress))
             {
-                signalIntersectNodes.insert(intersectAddy);
+                intersectingSignalNodeAddresses.insert(intersectingNodeAddress);
             }
         }
 
 #ifdef DEBUG_SVL
-        log_os << logtag << " signalIntersect.size(): " << signalIntersectNodes.size() << "\n";
-        for (const NodeAddressType& addy : signalIntersectNodes)
+        log_os << logtag << " intersectingSignalNodeAddresses.size(): " << intersectingSignalNodeAddresses.size() << "\n";
+        for (const NodeAddressType& intersectingSignalNodeAddress : intersectingSignalNodeAddresses)
         {
-            log_os << logtag << "\tsignalIntersectNode: " << addy << " " << getNode(addy);
+            log_os << logtag << "\tintersectingSignalNode: " << intersectingSignalNodeAddress << " " << getNode(intersectingSignalNodeAddress);
         }
 #endif
     }
 
     //
-    // begin building the primary function output, mergeIntersectNodes, by enumerating all edges of the input node
+    // Begin building this function's primary output, mergeableIntersectingNodeAddresses,
+    // by enumerating all outgoing edges from the query node
     //
-    mergeIntersectNodes.clear();
+    mergeableIntersectingNodeAddresses.clear();
 
-    // loop through each edge connected to the input node
-    const SVLocusEdgeManager edgeMap(inputNode.getEdgeManager());
-    for (const SVLocusEdgesType::value_type& inputEdge : edgeMap.getMap())
+    // loop through each edge connected to the query node
+    const SVLocusEdgeManager queryNodeOutgoingEdgeMap(queryNode.getEdgeManager());
+    for (const SVLocusEdgesType::value_type& queryNodeOutgoingEdge : queryNodeOutgoingEdgeMap.getMap())
     {
 #ifdef DEBUG_SVL
-        log_os << logtag << " processing edge: " << inputAddy << "->" << inputLocusIndex << ":" << inputEdge.first << "\n";
+        log_os << logtag << " processing edge: " << queryNodeAddress << "->" << queryLocusIndex << ":" << queryNodeOutgoingEdge.first << "\n";
         checkState();
 #endif
 
         //
-        // for each edge from the input node, get all intersecting edges
+        // For each of the query node's outgoing edges, get all intersecting edges.
         //
-        // 'intersecting edge' means that the nodes connected by the two edges each overlap
+        // 'intersecting edge' means that the from->to nodes connected by the intersecting edge overlap
+        // with the from->to nodes (respectively) connected by the query node's outgoing edge
         //
-        std::vector<EdgeInfoType> inputIntersectEdges;
-        getIntersectingEdgeNodes(inputLocusIndex, inputEdge.first, remoteIntersectNodeToLocalNodeMap, remoteIntersectNodes, inputIntersectEdges);
+        // Schematic Example. Given that Node1 is the queryNode and the following QueryLocus and Graph Loci:
+        //
+        // QueryLocus:                |--Node1--|<--------->|-Node2-|
+        //
+        // GraphLocus1:                |-Node1-|<-------->|-Node2-|
+        //                |-Node4-|<---->|-Node3-|<--->|-Node4-|<------->| Node5 |
+        //
+        // GraphLocus2:  |-Node1-|<------->|-Node2-|
+        //
+        // The intersecting edges of the query node's only outgoing edge are:
+        // (Locus1,Node1) -> (Locus1,Node2)
+        // (Locus1,Node3) -> (Locus1,Node4)
+        //
+        std::vector<EdgeInfoType> intersectingEdges;
+        getIntersectingEdges(queryLocusIndex, queryNodeOutgoingEdge.first, connectedNodeToIntersectingNodeMap,
+                             searchableIntersectingNodeConnections, intersectingEdges);
 
-        unsigned intersectCount(inputIntersectEdges.size());
-        if (! isInputLocusMoved)
+        unsigned intersectingEdgeCount(intersectingEdges.size());
+
+        // If the query locus has not been copied into another graph locus, then the query node's outgoing edge
+        // is not reflected in the intersecting edge count, so it needs to be added here to find the total count
+        // of intersecting edges.
+        if (! isQueryLocusDuplicatedInAnotherLocus)
         {
-            /// TODO: doc this adjustment, does this normalize the edge count to always include self-intersect?
-            intersectCount++;
+            intersectingEdgeCount++;
         }
 
         // isRegionCheck initiates a more detailed evidence signal threshold check process
         //
-        // - The default process checks the total evidence summed over the entire
-        // Node intersect set. This neglects to account for the possibility that that evidence
-        // density could be low, and yet a high evidence sum could be achieved by transitive over
-        // lap of many nodes.
+        // - The default process checks the total evidence summed over the entire intersecting edge set.
+        // This neglects to account for the possibility that transitive overlap of many nodes could have
+        // a high total evidence count but low evidence density.
         //
-        // - The regioncheck pathway sums up evidence at each genomic region. It more accurately
+        // - The RegionCheck process sums up evidence in each genomic sub-interval. It more accurately
         // reflects peak evidence but is somewhat slower to compute.
         //
         // Example:
         //
         // Assume each node below has an evidence count of 1.
         //
-        // |---node1-----|
-        //           |-----node2-----|
-        //                        |-----node3---|
+        // |----Node1----|
+        //           |-----Node2-----|
+        //                        |----Node3----|
         //
         // Default evidence count:
         // 33333333333333333333333333333333333333
         //
-        // isRegionCheck evidence count:
+        // RegionCheck evidence count:
         // 11111111112222211111111222211111111111
         //
         //
 
-        // peak RegionCheck count will always equal default count when 2 or fewer nodes exist,
-        // so there's no reason to turn it on until we have more nodes
-        const bool isRegionCheck(intersectCount>2);
+        // The peak evidence count from the RegionCheck process will always equal the evidence count from the default
+        // process when 2 or fewer nodes exist, so there's no reason to turn the RegionCheck process on in this case.
+        const bool isRegionCheck(intersectingEdgeCount>2);
 
         if (isRegionCheck)
         {
             _mergeRegions.clear();
         }
 
-        // enumerate counts as part of the (non-RegionCheck) process to determine if the intersection set
-        // contains sufficient evidence to initiate a merge
-        unsigned mergedLocalEdgeCount(0);
-        unsigned mergedRemoteEdgeCount(0);
+        // Store total evidence count for the outgoing and incoming edge as part of the default (ie. non-RegionCheck)
+        // process to determine if the intersection set contains sufficient evidence to initiate a merge
+        //
+        // Note: Outgoing/incoming orientation are defined relative to the target node.
+        //
+        unsigned mergedOutgoingEdgeEvidenceCount(0);
+        unsigned mergedIncomingEdgeEvidenceCount(0);
 
-        ///
-        /// enumerate node evidence using either the default or RegionCheck process:
-        ///
+        //
+        // enumerate node evidence using either the default or RegionCheck process:
+        //
         auto addEdgeEvidenceCount = [&](
                                         const SVLocus& edgeLocus,
-                                        const NodeIndexType localNodeIndex,
-                                        const NodeIndexType remoteNodeIndex)
+                                        const NodeIndexType edgeFromNodeIndex,
+                                        const NodeIndexType edgeToNodeIndex)
         {
-            // total edge counts on the remote->local edge:
-            const unsigned remoteEdgeCount = edgeLocus.getEdge(remoteNodeIndex,localNodeIndex).getCount();
+            // total edge counts on the to->from edge:
+            const unsigned incomingEdgeEvidenceCount = edgeLocus.getEdge(edgeToNodeIndex,edgeFromNodeIndex).getCount();
 
-            // total edge counts on the local->remote edge:
-            const unsigned localEdgeCount = edgeLocus.getEdge(localNodeIndex,remoteNodeIndex).getCount();
+            // total edge counts on the from->to edge:
+            const unsigned outgoingEdgeEvidenceCount = edgeLocus.getEdge(edgeFromNodeIndex,edgeToNodeIndex).getCount();
 
             if (isRegionCheck)
             {
-                const known_pos_range2& localRange(edgeLocus.getNode(localNodeIndex).getInterval().range);
-                const known_pos_range2& remoteRange(edgeLocus.getNode(remoteNodeIndex).getInterval().range);
+                // In the default process the local outgoing evidence and the remote incoming evidence are the same.
+                // In the RegionCheck process the sum of all evidence for these two cases is still the same, but the
+                // density of evidence in the overlapping local nodes and overlapping remote nodes may be very
+                // different. For this reason the evidence density of both ends of both edges are enumerated below.
+                //
+                const known_pos_range2& localNodeRange(edgeLocus.getNode(edgeFromNodeIndex).getInterval().range);
+                const known_pos_range2& remoteNodeRange(edgeLocus.getNode(edgeToNodeIndex).getInterval().range);
 
-                _mergeRegions.localNodeOutbound.add(localRange,localEdgeCount);
-                _mergeRegions.localNodeInbound.add(localRange,remoteEdgeCount);
-                _mergeRegions.remoteNodeOutbound.add(remoteRange,remoteEdgeCount);
-                _mergeRegions.remoteNodeInbound.add(remoteRange,localEdgeCount);
+                _mergeRegions.localNodeOutgoingEdgeEvidence.add(localNodeRange,outgoingEdgeEvidenceCount);
+                _mergeRegions.localNodeIncomingEdgeEvidence.add(localNodeRange,incomingEdgeEvidenceCount);
+                _mergeRegions.remoteNodeOutgoingEdgeEvidence.add(remoteNodeRange,incomingEdgeEvidenceCount);
+                _mergeRegions.remoteNodeIncomingEdgeEvidence.add(remoteNodeRange,outgoingEdgeEvidenceCount);
             }
             else
             {
-                mergedLocalEdgeCount += localEdgeCount;
-                mergedRemoteEdgeCount += remoteEdgeCount;
+                mergedOutgoingEdgeEvidenceCount += outgoingEdgeEvidenceCount;
+                mergedIncomingEdgeEvidenceCount += incomingEdgeEvidenceCount;
             }
         };
 
-        for (const EdgeInfoType& edgeInfo : inputIntersectEdges)
+        for (const EdgeInfoType& intersectingEdgeInfo : intersectingEdges)
         {
-            addEdgeEvidenceCount(getLocus(edgeInfo.first.first),edgeInfo.first.second,edgeInfo.second);
+            const SVLocus& intersectingEdgeLocus(getLocus(intersectingEdgeInfo.first.first));
+            const NodeIndexType intersectingEdgeFromNodeIndex(intersectingEdgeInfo.first.second);
+            const NodeIndexType intersectingEdgeToNodeIndex(intersectingEdgeInfo.second);
+            addEdgeEvidenceCount(intersectingEdgeLocus, intersectingEdgeFromNodeIndex, intersectingEdgeToNodeIndex);
         }
 
-        // if the input hasn't been moved into the primary locus graph yet, then we need to include the inputLocus
-        // in order to get an accurate edge intersection count:
-        if (! isInputLocusMoved)
+        // If the query locus has not been duplicated in another graph locus, then the query node edge must
+        // also be included to get accurate edge intersection count:
+        if (! isQueryLocusDuplicatedInAnotherLocus)
         {
-            addEdgeEvidenceCount(getLocus(inputAddy.first),inputNodeIndex,inputEdge.first);
+            addEdgeEvidenceCount(getLocus(queryLocusIndex), queryNodeIndex, queryNodeOutgoingEdge.first);
         }
 
         if (isRegionCheck)
         {
-            mergedLocalEdgeCount=(std::min(_mergeRegions.localNodeOutbound.maxVal(),_mergeRegions.remoteNodeInbound.maxVal()));
-            mergedRemoteEdgeCount=(std::min(_mergeRegions.localNodeInbound.maxVal(),_mergeRegions.remoteNodeOutbound.maxVal()));
+            // The density of evidence on the local and remote ends of an edge may be different, even though
+            // the total evidence carried by the edge is the same. Here we take the lower peak evidence density from
+            //  either of the local or remote nodes.
+            //
+            // Example:
+            // In the following schematic there are 3 intersecting edges. The local node group is the set of nodes
+            // intersecting Node1. The remote node is the set of nodes connected to local nodes by an edge. All 3
+            // edges have an evidence count of 1 on the local->remote edge and 0 on the remote->local edge.
+            //
+            //       |-Node1-|----->|-Node2-|
+            //        |-Node3-|---------->|-Node4-|
+            //       |-Node5-|---------------->|-Node6-|
+            //
+            // In this case the default process would total the edge evidence count to 3. In the RegionCheck process
+            // the local node outgoing edge evidence has a peak density of 3, but the remote node incoming edge
+            // evidence has a peak density of 2. The min value of the two ends is used below, thus the final outgoing
+            // edge evidence count is 2.
+            //
+            mergedOutgoingEdgeEvidenceCount=(std::min(_mergeRegions.localNodeOutgoingEdgeEvidence.maxVal(),
+                                                      _mergeRegions.remoteNodeIncomingEdgeEvidence.maxVal()));
+            mergedIncomingEdgeEvidenceCount=(std::min(_mergeRegions.localNodeIncomingEdgeEvidence.maxVal(),
+                                                      _mergeRegions.remoteNodeOutgoingEdgeEvidence.maxVal()));
         }
 
 #ifdef DEBUG_SVL
         log_os << logtag << " isRegionCheck: " << isRegionCheck << "\n";
         log_os << logtag << " final merge counts"
-               << " local: " << mergedLocalEdgeCount
-               << " remote: " << mergedRemoteEdgeCount
+               << " local: " << mergedOutgoingEdgeEvidenceCount
+               << " remote: " << mergedIncomingEdgeEvidenceCount
                << "\n";
         checkState();
 #endif
 
-        if ((mergedLocalEdgeCount < getMinMergeEdgeCount()) &&
-            (mergedRemoteEdgeCount < getMinMergeEdgeCount())) continue;
+        // if the total outgoing and incoming evidence count for this edge is below the signal threshold, then
+        // move on to the query node's next edge.
+        if ((mergedOutgoingEdgeEvidenceCount < getMinMergeEdgeCount()) &&
+            (mergedIncomingEdgeEvidenceCount < getMinMergeEdgeCount())) continue;
 
         //
         // Add type1 mergeable nodes:
         //
-        for (const EdgeInfoType& edgeInfo : inputIntersectEdges)
+        for (const EdgeInfoType& intersectingEdgeInfo : intersectingEdges)
         {
-            mergeIntersectNodes.insert(edgeInfo.first);
+            mergeableIntersectingNodeAddresses.insert(intersectingEdgeInfo.first);
         }
 
-        /// for each type1 node, add any new intersections to the signal node set:
-        ///
-        /// this is not very efficient for now -- each type1 edge added in potentially
-        /// expands the current node to intersect new signal nodes
-        /// -- this loop looks for those new signal nodes
-        ///
+        // for each type1 node, add any new intersections to the signal node set:
+        //
+        // this is not very efficient for now -- each type1 edge added in potentially
+        // expands the current node to intersect new signal nodes
+        // -- this loop looks for those new signal nodes
+        //
 
         {
-            // this is used to search for the (rare) case where the intersection set
-            // locals overlap with the intersection set remotes
-            std::set<NodeAddressType> inputIntersectRemotes;
-            for (const EdgeInfoType& edgeInfo : inputIntersectEdges)
+            // Get all of the remote node addresses from the intersecting edge set.
+            //
+            // This is used to search for the (rare) case where the intersecting edge set
+            // locals overlap with the remotes.
+            std::set<NodeAddressType> intersectingEdgeRemoteNodeAddresses;
+            for (const EdgeInfoType& intersectingEdgeInfo : intersectingEdges)
             {
-                inputIntersectRemotes.insert(std::make_pair(edgeInfo.first.first,edgeInfo.second));
+                intersectingEdgeRemoteNodeAddresses.insert(std::make_pair(intersectingEdgeInfo.first.first,intersectingEdgeInfo.second));
             }
 
             bool isIntersectRemotes(false);
 
-            // check both the original node and intersected nodes for intersection to
-            // any of the group's remotes, and for new type2 signal intersect:
-            findSignalNodes(inputLocusIndex, inputAddy, signalIntersectNodes, inputIntersectRemotes, isIntersectRemotes);
-            for (const EdgeInfoType& edgeInfo : inputIntersectEdges)
+            // Check both the query node and the nodes intersecting the query node for signal node intersections.
+            //
+            // Also check if any of these nodes intersect the remote node set (a rare event), in which case the remote
+            // nodes will be added to the mergeable node set for this query node. This will mean that the local and
+            // remote nodes will later be merged together into a larger node connected by a self-edge.
+            //
+            // Example of remote node intersection given Node1 is the query node:
+            //
+            // Intersecting Edges:
+            //          |-Node1-|--->|-Node2-|
+            //         |-Node3-|---------->|-Node4-|
+            //               |--Node5--|------>|-Node6-|
+            //
+            // In this case Nodes 3 and 5 intersect the query node (Node1) and the set of three nodes has already been
+            // found to be mergeable based on the total evidence of the three intersecting edges in the left->right
+            // direction. The fact that one of the mergeable source (local) nodes (Node5) intersects one of the sink
+            // (remote) nodes (Node2), is the condition that results in isIntersectRemotes being set to true.
+            //
+            getIntersectingSignalNodeAddresses(queryLocusIndex, queryNodeAddress, intersectingSignalNodeAddresses,
+                                               intersectingEdgeRemoteNodeAddresses, isIntersectRemotes);
+            for (const EdgeInfoType& intersectingEdgeInfo : intersectingEdges)
             {
-                findSignalNodes(inputLocusIndex, edgeInfo.first, signalIntersectNodes, inputIntersectRemotes, isIntersectRemotes);
+                getIntersectingSignalNodeAddresses(queryLocusIndex, intersectingEdgeInfo.first,
+                                                   intersectingSignalNodeAddresses, intersectingEdgeRemoteNodeAddresses,
+                                                   isIntersectRemotes);
             }
 
             if (isIntersectRemotes)
             {
-                for (const NodeAddressType& intersectAddy : inputIntersectRemotes)
+                for (const NodeAddressType& intersectingEdgeRemoteNodeAddress : intersectingEdgeRemoteNodeAddresses)
                 {
 #ifdef DEBUG_SVL
-                    log_os << logtag << " adding ownRemote: " << intersectAddy << "\n";
+                    log_os << logtag << " adding ownRemote: " << intersectingEdgeRemoteNodeAddress << "\n";
 #endif
-                    mergeIntersectNodes.insert(intersectAddy);
+                    mergeableIntersectingNodeAddresses.insert(intersectingEdgeRemoteNodeAddress);
 
-                    // check to see if this adds even more signal nodes!
-                    findSignalNodes(inputLocusIndex, intersectAddy, signalIntersectNodes, inputIntersectRemotes, isIntersectRemotes);
+                    // check to see if the remote nodes transitively intersect even more signal nodes!
+                    getIntersectingSignalNodeAddresses(queryLocusIndex, intersectingEdgeRemoteNodeAddress,
+                                                       intersectingSignalNodeAddresses,
+                                                       intersectingEdgeRemoteNodeAddresses, isIntersectRemotes);
                 }
             }
         }
+
         //
         // Add type2 mergeable nodes:
         //
-        for (const NodeAddressType& signalAddy : signalIntersectNodes)
+        for (const NodeAddressType& signalNodeAddress : intersectingSignalNodeAddresses)
         {
-            mergeIntersectNodes.insert(signalAddy);
+            mergeableIntersectingNodeAddresses.insert(signalNodeAddress);
         }
     }
 
 #ifdef DEBUG_SVL
-    log_os << logtag << " END. IntersectNodeSize: " << mergeIntersectNodes.size() << " Nodes:\n";
-    for (const NodeAddressType addy : mergeIntersectNodes)
+    log_os << logtag << " END. IntersectNodeSize: " << mergeableIntersectingNodeAddresses.size() << " Nodes:\n";
+    for (const NodeAddressType addy : mergeableIntersectingNodeAddresses)
     {
         log_os << logtag << "\tInode: " << addy << "\n";
     }
@@ -813,7 +959,7 @@ getRegionIntersect(
     const LocusIndexType startLocusIndex(insertLocus(SVLocus()));
     const NodeIndexType nodeIndex(getLocus(startLocusIndex).addNode(interval, this));
 
-    getNodeIntersect(startLocusIndex, nodeIndex, intersectNodes);
+    getIntersectingNodeAddresses(startLocusIndex, nodeIndex, intersectNodes);
 
     clearLocus(startLocusIndex);
 }
@@ -822,34 +968,36 @@ getRegionIntersect(
 
 void
 SVLocusSet::
-moveIntersectToLowIndex(
-    const std::set<NodeAddressType>& intersectNodes,
+moveIntersectingNodesToLowestLocusIndex(
+    const std::set<NodeAddressType>& intersectingNodeAddresses,
     const LocusIndexType startLocusIndex,
-    LocusIndexType& locusIndex)
+    LocusIndexType& headLocusIndex)
 {
-    const unsigned startHeadLocusIndex(locusIndex);
+    // Capture the headLocusIndex value on input.
+    const unsigned inputHeadLocusIndex(headLocusIndex);
 
-    // assign all intersect clusters to the lowest index number
-    const bool isClearSource(startLocusIndex!=startHeadLocusIndex);
-
-    // get lowest index number that is not startLocusIndex:
+    // Now reassign headLocusIndex to the lowest locus value found in the intersecting node set:
     bool isFirst(true);
-    for (const NodeAddressType& val : intersectNodes)
+    for (const NodeAddressType& intersectingNodeAddress : intersectingNodeAddresses)
     {
-        if ((!isFirst) && (val.first >= locusIndex)) continue;
-        locusIndex = val.first;
+        if ((!isFirst) && (intersectingNodeAddress.first >= headLocusIndex)) continue;
+        headLocusIndex = intersectingNodeAddress.first;
         isFirst=false;
     }
 
-    combineLoci(startHeadLocusIndex,locusIndex,isClearSource);
-    for (const NodeAddressType& val : intersectNodes)
+    // Move all locus content to locus at headLocusIndex.
+    //
+    // Don't clear the source locus if it is startLocusIndex
+    const bool isClearSourceLocus(startLocusIndex != inputHeadLocusIndex);
+    combineLoci(inputHeadLocusIndex, headLocusIndex, isClearSourceLocus);
+    for (const NodeAddressType& intersectingNodeAddress : intersectingNodeAddresses)
     {
-        combineLoci(val.first,locusIndex);
+        combineLoci(intersectingNodeAddress.first, headLocusIndex);
     }
 
 #ifdef DEBUG_SVL
-    static const std::string logtag("SVLocusSet::moveIntersectToLowIndex");
-    log_os << logtag << " Reassigned all intersecting nodes to locusIndex: " << locusIndex << " startHeadLocusIndex: " << startHeadLocusIndex << " startLocusIndex:" << startLocusIndex << "\n";
+    static const std::string logtag("SVLocusSet::moveIntersectingNodesToLowestLocusIndex");
+    log_os << logtag << " Reassigned all intersecting nodes to headLocusIndex: " << headLocusIndex << " inputHeadLocusIndex: " << inputHeadLocusIndex << " startLocusIndex:" << startLocusIndex << "\n";
     checkState();
 #endif
 }
@@ -890,6 +1038,13 @@ insertLocus(
 {
     assert(_isIndexed);
 
+    // The locus index (which is also the position in which we will place this locus in _loci), is found as follows.
+    //
+    // If the locus vector contains any empty locus entries, we take the index from the lowest empty position.
+    //
+    // If the locus vector doesn't contain any empty entries, we append a new entry to the end of the vector, and take
+    // the index reflecting the appended position.
+    //
     LocusIndexType locusIndex(0);
     if (_emptyLoci.empty())
     {

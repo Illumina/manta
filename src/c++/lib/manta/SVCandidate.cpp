@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -36,7 +35,7 @@ operator<<(
     static const char indent('\t');
     os << "SVCandidate:\n"
        << indent << "isImprecise?: " << svc.isImprecise() << "\n"
-       << indent << "fwReads: " << svc.fwReads << " ; rvReads: " << svc.rvReads << "\n"
+       << indent << "forwardTranscriptStrandReadCount: " << svc.forwardTranscriptStrandReadCount << " ; reverseTranscriptStrandReadCount: " << svc.reverseTranscriptStrandReadCount << "\n"
        << indent << "index candidate:assemblyAlign:assemblySegment: " << svc.candidateIndex
        << ":" << svc.assemblyAlignIndex
        << ":" << svc.assemblySegmentIndex
@@ -59,7 +58,7 @@ operator<<(
     const SVObservation& svc)
 {
     os << static_cast<SVCandidate>(svc);
-    os << "SVObservation etype: " << SVEvidenceType::label(svc.evtype)
-       << " fragtype: " << FRAGSOURCE::label(svc.fragSource) << "\n";
+    os << "SVObservation etype: " << SVEvidenceType::label(svc.svEvidenceType)
+       << " fragtype: " << SourceOfSVEvidenceInDNAFragment::label(svc.dnaFragmentSVEvidenceSource) << "\n";
     return os;
 }

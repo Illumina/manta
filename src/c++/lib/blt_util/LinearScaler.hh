@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -29,7 +28,13 @@
 #include <algorithm>
 
 
-/// return [0,1] to describe where a value is between min and max values
+/// \brief Maps an input to [0,1] based on where it lies within a [min,max] range specified during initialization.
+///
+/// ### Example:
+/// ```
+/// LinearScalar<int> ls(50,100);
+/// assert(ls.getScale(75) == 0.5);
+/// ```
 ///
 template <typename T>
 struct LinearScaler

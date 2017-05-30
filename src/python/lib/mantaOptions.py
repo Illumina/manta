@@ -30,7 +30,9 @@ scriptName=os.path.basename(__file__)
 sys.path.append(scriptDir)
 
 from configureOptions import ConfigureWorkflowOptions
-from configureUtil import assertOptionExists, joinFile, OptParseException, validateFixExistingDirArg, validateFixExistingFileArg
+from configureUtil import assertOptionExists, joinFile, OptParseException, \
+                          validateFixExistingDirArg, validateFixExistingFileArg, \
+                          checkTabixIndexedFile
 from workflowUtil import exeFile, parseGenomeRegion
 
 
@@ -58,6 +60,11 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         group.add_option("--scanSizeMb", type="int", metavar="INT",
                          help="Maximum sequence region size (in megabases) scanned by each task during "
                          "SV Locus graph generation. (default: %default)")
+        group.add_option("--callRegions", dest="callRegionsBed",
+                         help="Optionally provide a bgzip-compressed/tabix-indexed BED file containing the set of regions to call. "
+                              "No VCF output will be provided outside of these regions. The full genome will still be used "
+                              "to estimate statistics from the input (such as expected fragment size distribution). "
+                              "Only one BED file may be specified. (default: call the entire genome)")
         group.add_option("--region", type="string",dest="regionStrList",metavar="REGION", action="append",
                          help="Limit the analysis to a region of the genome for debugging purposes. "
                               "If this argument is provided multiple times all specified regions will "
@@ -132,7 +139,7 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
 
     def validateAndSanitizeExistingOptions(self,options) :
 
-        options.runDir=os.path.abspath(options.runDir)
+        options.runDir = os.path.abspath(options.runDir)
 
         # check alignerMode:
         if options.alignerMode is not None :
@@ -141,12 +148,16 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
                 raise OptParseException("Invalid aligner mode: '%s'" % options.alignerMode)
 
         options.referenceFasta=validateFixExistingFileArg(options.referenceFasta,"reference")
-
         # check for reference fasta index file:
         if options.referenceFasta is not None :
             faiFile=options.referenceFasta + ".fai"
             if not os.path.isfile(faiFile) :
                 raise OptParseException("Can't find expected fasta index file: '%s'" % (faiFile))
+
+        # check for bed file of call regions and its index file
+        if options.callRegionsBed is not None:
+            options.callRegionsBed = os.path.abspath(options.callRegionsBed)
+            checkTabixIndexedFile(options.callRegionsBed,"call-regions bed")
 
         if (options.regionStrList is None) or (len(options.regionStrList) == 0) :
             options.genomeRegionList = None

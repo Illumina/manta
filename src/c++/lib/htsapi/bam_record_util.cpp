@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -17,10 +16,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 //
-
-///
-///
-///
 
 #include "bam_record_util.hh"
 #include "align_path_bam_util.hh"
@@ -48,9 +43,6 @@ is_mapped_chrom_pair(
 
 
 
-// note this is designed to return true for the common case
-// of pos == mate_pos occurring for short FFPE fragments
-//
 bool
 is_innie_pair(
     const bam_record& bam_read)
@@ -69,6 +61,7 @@ is_innie_pair(
 
     return true;
 }
+
 
 
 bool

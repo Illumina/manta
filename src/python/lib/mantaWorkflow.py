@@ -38,7 +38,8 @@ from pyflow import WorkflowRunner
 from sharedWorkflow import getMkdirCmd, getMvCmd, getRmCmd, getRmdirCmd, \
                            runDepthFromAlignments
 from workflowUtil import checkFile, ensureDir, preJoin, \
-                          getGenomeSegmentGroups, getFastaChromOrderSize, cleanPyEnv
+                        getGenomeSegmentGroups, getFastaChromOrderSize, \
+                        getCallRegions, cleanPyEnv
 
 
 __version__ = workflowVersion
@@ -291,6 +292,9 @@ def sortAllVcfs(self, taskPrefix="", dependencies=None) :
     sortVcfs(self.tumorVcfPaths,
              self.paths.getSortedTumorPath(),
              "sortTumorSV")
+    sortVcfs(self.rnaVcfPaths,
+             self.paths.getSortedRnaPath(),
+             "sortRnaSV")
 
     def getExtractSmallCmd(maxSize, inPath, outPath) :
         cmd  = "\"%s\" -dc \"%s\"" % (self.params.bgzipBin, inPath)
@@ -383,6 +387,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
     self.diploidVcfPaths = []
     self.somaticVcfPaths = []
     self.tumorVcfPaths = []
+    self.rnaVcfPaths = []
 
     edgeRuntimeLogPaths = []
     edgeStatsLogPaths = []
@@ -392,6 +397,8 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         self.candidateVcfPaths.append(self.paths.getHyGenCandidatePath(binStr))
         if isTumorOnly :
             self.tumorVcfPaths.append(self.paths.getHyGenTumorPath(binStr))
+        elif self.params.isRNA:
+            self.rnaVcfPaths.append(self.paths.getHyGenRnaPath(binStr))
         else:
             self.diploidVcfPaths.append(self.paths.getHyGenDiploidPath(binStr))
             if isSomatic :
@@ -411,6 +418,8 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         # tumor-only mode
         if isTumorOnly :
             hygenCmd.extend(["--tumor-output-file", self.tumorVcfPaths[-1]])
+        elif self.params.isRNA:
+            hygenCmd.extend(["--rna-output-file", self.rnaVcfPaths[-1]])
         else:
             hygenCmd.extend(["--diploid-output-file", self.diploidVcfPaths[-1]])
             hygenCmd.extend(["--min-qual-score", self.params.minDiploidVariantScore])
@@ -446,8 +455,8 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
             hygenCmd.append("--ignore-anom-proper-pair")
         if self.params.isRNA :
             hygenCmd.append("--rna")
-        if self.params.isUnstrandedRNA :
-            hygenCmd.append("--unstranded")
+            if self.params.isUnstrandedRNA :
+                hygenCmd.append("--unstranded")
 
         hygenTask = preJoin(taskPrefix,"generateCandidateSV_"+binStr)
         hygenTasks.add(self.addTask(hygenTask,hygenCmd,dependencies=dirTask, memMb=hyGenMemMb))
@@ -580,11 +589,17 @@ class PathInfo:
     def getHyGenTumorPath(self, binStr) :
         return os.path.join(self.getHyGenDir(),"tumorSV.%s.vcf" % (binStr))
 
+    def getHyGenRnaPath(self, binStr) :
+        return os.path.join(self.getHyGenDir(),"rnaFusion.%s.vcf" % (binStr))
+
     def getSortedSomaticPath(self) :
         return os.path.join(self.params.variantsDir,"somaticSV.vcf.gz")
 
     def getSortedTumorPath(self) :
         return os.path.join(self.params.variantsDir,"tumorSV.vcf.gz")
+
+    def getSortedRnaPath(self) :
+        return os.path.join(self.params.variantsDir,"rnaSV.vcf.gz")
 
     def getHyGenEdgeRuntimeLogPath(self, binStr) :
         return os.path.join(self.getHyGenDir(),"edgeRuntimeLog.%s.txt" % (binStr))
@@ -668,6 +683,10 @@ class MantaWorkflow(WorkflowRunner) :
         self.params=params
         self.iniSections=iniSections
 
+        # Use RNA option for minCandidate size
+        if self.params.isRNA:
+            self.params.minCandidateVariantSize = self.params.rnaMinCandidateVariantSize
+
         # format bam lists:
         if self.params.normalBamList is None : self.params.normalBamList = []
         if self.params.tumorBamList is None : self.params.tumorBamList = []
@@ -702,6 +721,8 @@ class MantaWorkflow(WorkflowRunner) :
 
         # read fasta index
         (self.params.chromOrder,self.params.chromSizes) = getFastaChromOrderSize(indexRefFasta)
+        # determine subset of chroms where we can skip calling entirely
+        (self.params.callRegionList, self.params.chromIsSkipped) = getCallRegions(self.params)
 
         self.paths = PathInfo(self.params)
 

@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,10 +17,12 @@
 //
 //
 
-/// random vcf utilities
+/// \file
+///
+/// \brief VCF utilities
 ///
 /// \author Chris Saunders
-///
+
 
 #pragma once
 
@@ -113,7 +114,7 @@ get_format_string_nocopy(const char* const* word,
 
 
 
-// returns -1 for '.' alleles
+/// returns -1 for '.' alleles
 void
 parse_gt(
     const char* gt,

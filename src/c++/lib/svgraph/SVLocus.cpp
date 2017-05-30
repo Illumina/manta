@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -421,6 +420,8 @@ eraseNode(
     log_os << logtag << " BEFORE: " << getNode(nodePtr) << "\n";
 #endif
 
+    // If the erased node is not the last indexed position in the node vector, then take the last indexed
+    // node and move it to the erased node's current position.
     if (fromPtr != nodePtr)
     {
 #ifdef DEBUG_SVL

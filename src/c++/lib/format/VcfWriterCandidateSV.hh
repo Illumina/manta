@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -31,10 +30,9 @@ struct VcfWriterCandidateSV : public VcfWriterSV
 {
     VcfWriterCandidateSV(
         const std::string& referenceFilename,
-        const bool isRNA,
         const SVLocusSet& set,
         std::ostream& os) :
-        VcfWriterSV(referenceFilename, isRNA, set, os)
+        VcfWriterSV(referenceFilename, set, os)
     {}
 
     void
@@ -44,6 +42,7 @@ struct VcfWriterCandidateSV : public VcfWriterSV
     modifyTranslocInfo(
         const SVCandidate& sv,
         const bool isFirstOfPair,
+        const SVCandidateAssemblyData& assemblyData,
         InfoTag_t& infoTags) const override;
 
     void

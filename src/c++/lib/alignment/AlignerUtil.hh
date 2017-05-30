@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,10 +17,10 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
-/// \brief align a contig across two breakend regions
+/// \brief Align a contig across two breakend regions
 ///
 
 

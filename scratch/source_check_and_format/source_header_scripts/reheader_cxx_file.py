@@ -16,8 +16,7 @@ if len(sys.argv) != 2 :
 
 header_file = sys.argv[1] 
 
-newstr  = "// -*- mode: c++; indent-tabs-mode: nil; -*-\n"
-newstr += "//\n"
+newstr = "//\n"
 
 for line in open(header_file) :
     newstr += "//"

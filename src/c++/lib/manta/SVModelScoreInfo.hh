@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders and Xiaoyu Chen
 ///
 
@@ -28,10 +27,10 @@
 #include "manta/SVScoreInfoDiploid.hh"
 #include "manta/SVScoreInfoSomatic.hh"
 #include "manta/SVScoreInfoTumor.hh"
+#include "manta/SVScoreInfoRna.hh"
 
 
 /// all scoring info for one sv candidate, including data related to specific scoring models
-///
 ///
 struct SVModelScoreInfo
 {
@@ -51,10 +50,12 @@ struct SVModelScoreInfo
         diploid.clear();
         somatic.clear();
         tumor.clear();
+        rna.clear();
     }
 
     SVScoreInfo base;
     SVScoreInfoDiploid diploid;
+    SVScoreInfoRna rna;
     SVScoreInfoSomatic somatic;
     SVScoreInfoTumor tumor;
 };

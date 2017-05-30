@@ -2,7 +2,9 @@ Manta User Guide
 ================
 
 ## Table of Contents
-[] (BEGIN automated TOC section, any edits will be overwritten on next source refresh)
+
+[//]: # (BEGIN automated TOC section, any edits will be overwritten on next source refresh)
+
 * [Introduction](#introduction)
 * [Installation](#installation)
 * [Method Overview](#method-overview)
@@ -19,6 +21,7 @@ Manta User Guide
     * [VCF INFO Fields](#vcf-info-fields)
     * [VCF FORMAT Fields](#vcf-format-fields)
     * [VCF FILTER Fields](#vcf-filter-fields)
+    * [How to interpret VCF filters?](#how-to-interpret-vcf-filters)
     * [What do the values in Manta's VCF ID field mean?](#what-do-the-values-in-mantas-vcf-id-field-mean)
     * [Converting Manta VCF to BEDPE format](#converting-manta-vcf-to-bedpe-format)
   * [Statistics](#statistics)
@@ -29,13 +32,16 @@ Manta User Guide
   * [Execution](#execution)
     * [Advanced execution options](#advanced-execution-options)
   * [Extended use cases](#extended-use-cases)
-    * [Exome/Targeted](#exometargeted)
+    * [Exome/Targeted](#exome-targeted)
+    * [Call regions](#call-regions)
     * [Unpaired tumor sample](#unpaired-tumor-sample)
   * [RNA-Seq](#rna-seq)
   * [High sensitivity calling](#high-sensitivity-calling)
   * [De novo calling](#de-novo-calling)
   * [Generating evidence bams](#generating-evidence-bams)
-[] (END automated TOC section, any edits will be overwritten on next source refresh)
+
+[//]: # (END automated TOC section, any edits will be overwritten on next source refresh)
+
 
 ## Introduction
 
@@ -374,6 +380,12 @@ MaxDepth | Depth is greater than 3x the median chromosome depth near one or both
 MaxMQ0Frac | For a small variant (<1000 bases), the fraction of reads in all samples with MAPQ0 around either breakend exceeds 0.4
 NoPairSupport | For variants significantly larger than the paired read fragment size, no paired reads support the alternate allele in any sample
 
+#### How to interpret VCF filters?
+
+As described above, there are two levels of filters: record level (FILTER) and sample level (FORMAT/FT). Record-level filters are generally independant to sample-level filters. However, if none of the samples passes one record-level filter, that filter will be copied to the record level (e.g. MinGQ).
+
+A sample-specific passing variant needs to have the record level FILTER passed, the sample level FORMAT/FT passed, and the sample level FORMAT/GT is not "0/0"(hom-reference).
+
 #### What do the values in Manta's VCF ID field mean?
 
 The VCF ID or 'identifer' field can be used for annotation, or in the case of BND ('breakend') records for translocations, the ID value is used to link breakend mates or partners.
@@ -419,11 +431,11 @@ Additional secondary output is provided in `${MANTA_ANALYSIS_PATH}/results/stats
 ## Runtime hardware requirements
 
 Manta workflows are parallelized at the process level using the
-[pyFlow] [pyflow_site] task manager. pyFlow can distrubute Manta
+[pyFlow][pyflow_site] task manager. pyFlow can distrubute Manta
 workflows to a specified number of cores on a single host or
 SGE-managed cluster.
 
-As a useful runtime benchmark, [Platinum Genomes] [PG] sequencing
+As a useful runtime benchmark, [Platinum Genomes][PG] sequencing
 reads for NA12878 at 50x coverage (whole genome) can be analyzed in
 less than 20 minutes on 20 physical cores using a dual Xeon E5-2680
 v2 server with the BAM accessed from a conventional local
@@ -592,6 +604,10 @@ WGS case but cannot be applied correctly to a targeted analysis.
 For small targeted regions, it may also be helpful to consider the
 high sensitivity calling documentation below.
 
+#### Call regions
+
+Manta calls the entire genome by default, however variant calling may be restricted to an arbitrary subset of the genome by providing a region file in BED format with the --callRegions configuration option. The BED file must be bgzip-compressed and tabix-indexed, and only one such BED file may be specified. When specified, all VCF output is restricted to the provided call regions only, however statistics derived from the input data (such as expected fragment size distribution) will not be restricted to the call regions. Note in particular that even when --callRegions is specified, the --exome flag is still required for exome or targeted data to get appropriate depth filtration behavior for non-WGS cases.
+
 #### Unpaired tumor sample
 
 Manta supports SV calling for tumor sample only. The tumor-only mode
@@ -620,6 +636,9 @@ fusion calling step.
 
 When RNA mode is turned on, exactly one sample must be specified as normal
 input only (using either the `--bam` or `--normalBam` option).
+
+RNA Fusions are reported in __rnaSV.vcf.gz__ in translocation format.
+Smaller variants are not reported.
 
 It may also be helpful to consider the high sensitivity calling
 documentation below for this mode.

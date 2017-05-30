@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -94,6 +93,16 @@ struct vcf_record
             if (1 != alt_allele.size()) return false;
         }
         return true;
+    }
+
+    /// complements is_snv() by taking case of the form: REF="A", ALT="."
+    bool
+    is_ref_site() const
+    {
+        if (ref.empty()) return false;
+        if (! is_valid_seq(ref.c_str())) return false;
+        if (1 != ref.size()) return false;
+        return (alt.empty());
     }
 
     bool is_normalized() const;

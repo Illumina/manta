@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,9 +17,9 @@
 //
 //
 
-//
-// \author Chris Saunders and Felix Schlesinger
-//
+/// \file
+/// \author Chris Saunders and Felix Schlesinger
+///
 
 #include "AlignerUtil.hh"
 
@@ -127,7 +126,7 @@ align(
         val.jump = badVal;
         headPtr1.intron = AlignState::MATCH;
         headPtr2.intron = AlignState::MATCH;
-        val.intron = queryIndex * _intronOffEdgeScore;
+        val.intron = queryIndex * _intronOffEdgeScore + _intronOpenScore;
     }
 
 #ifdef DEBUG_ALN_MATRIX
@@ -146,7 +145,7 @@ align(
             std::swap(thisSV,prevSV);
 
             {
-                // disallow start from the insert or delete state:
+                // only start from match state
                 PtrVal& headPtr(_ptrMat1.val(0,ref1Index+1));
                 ScoreVal& val((*thisSV)[0]);
                 headPtr.match = AlignState::MATCH;
@@ -280,13 +279,14 @@ align(
 
 
     {
+        // Start values for ref2, including 'offEdge''
         for (unsigned queryIndex(0); queryIndex<=querySize; queryIndex++)
         {
             ScoreVal& val((*thisSV)[queryIndex]);
             val.match = queryIndex * scores.offEdge;
             val.del = badVal;
             val.ins = badVal;
-            val.intron = queryIndex * _intronOffEdgeScore;
+            val.intron = queryIndex * _intronOffEdgeScore + _intronOpenScore;
             //val.jump = badVal; // preserve jump setting from last iteration of ref1
         }
 

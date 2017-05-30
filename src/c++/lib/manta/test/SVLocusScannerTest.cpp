@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,10 +17,6 @@
 //
 //
 
-///
-/// \author Chris Saunders
-///
-
 #include "boost/test/unit_test.hpp"
 
 #include "htsapi/SimpleAlignment_bam_util.hh"
@@ -34,9 +29,9 @@ BOOST_AUTO_TEST_SUITE( test_SVLocusScanner )
 BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromReadIndels )
 {
     const bool isRNA(false);
-    const bool isStranded(true);
+    const bool isTranscriptStrandKnown(true);
     const ReadScannerOptions opt;
-    const ReadScannerDerivOptions dopt(opt,isRNA,isStranded);
+    const ReadScannerDerivOptions dopt(opt,isRNA,isTranscriptStrandKnown);
 
     ALIGNPATH::path_t inputPath;
     cigar_to_apath("100M2000D100M",inputPath);
@@ -53,7 +48,7 @@ BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromReadIndels )
     bam_header_info hdr_info;
     hdr_info.chrom_data.emplace_back("chr1", 1000000);
 
-    getSVCandidatesFromReadIndels(opt, dopt, align, hdr_info, FRAGSOURCE::UNKNOWN, candidates);
+    getSVCandidatesFromReadIndels(opt, dopt, align, hdr_info, SourceOfSVEvidenceInDNAFragment::UNKNOWN, candidates);
 
     BOOST_REQUIRE_EQUAL(candidates.size(),1u);
     BOOST_REQUIRE(candidates[0].bp1.interval.range.is_pos_intersect(100));

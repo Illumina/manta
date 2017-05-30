@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,17 +17,11 @@
 //
 //
 
-///
-/// \author Chris Saunders
-///
-
 #pragma once
 
 #include "common/Program.hh"
 
 
-/// estimate per-library information from alignment file(s)
-///
 struct MergeSVLoci : public illumina::Program
 {
     const char*

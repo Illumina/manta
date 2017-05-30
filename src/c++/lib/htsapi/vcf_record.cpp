@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -91,13 +90,19 @@ set(const char* s)
                 // additional parse loop for ',' character:
             {
                 const char* p2(start);
+
                 while (p2<=p)
                 {
-                    if ((*p2==',') || (p2==p))
+                    if ((*p2 == ',') || (p2 == p))
                     {
-                        alt.emplace_back(start,p2-start);
-                        stoupper(alt.back());
-                        start=p2+1;
+                        // recognize '.' value and leave alt empty in this case:
+                        const bool isEmpty((p2==p) and alt.empty() and ((p2-start) == 1) and (*start == '.'));
+                        if (not isEmpty)
+                        {
+                            alt.emplace_back(start, p2 - start);
+                            stoupper(alt.back());
+                        }
+                        start = p2 + 1;
                     }
                     p2++;
                 }

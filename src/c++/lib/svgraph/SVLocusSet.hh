@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -44,9 +43,10 @@
 #endif
 
 
-/// \brief parent object used to manage Manta's SV Locus graph
+/// \brief The parent object used to manage Manta's SV Locus graph.
 ///
-/// This includes all data on the graph itself, in addition to various meta-data on the graph or graph creation process.
+/// This object includes all data on the graph itself, in addition to various meta-data on the graph or graph
+/// creation process.
 ///
 /// The primary role of this object, per its name, is to act as a "bag of SVLocus objects", thus there is some standard
 /// container interface supporting this role (size/begin/end...), and special interface reflecting the region based
@@ -74,14 +74,18 @@
 /// (3) graph processing info (no of edges/nodes cleaned so far), reading merging runtime cost,...
 /// (4) object parameters
 ///
+/// ## Region based node query
+///
 /// Internal methods mostly provide details to support the above interface. Of special note is the node indexing system
 /// used by this object. For certain operations we (internally) need to provide range based queries for nodes
 /// intersecting points or segments of the genome. While an interval tree is an obvious starting point for this, it is
 /// pessimistic in time/memory, given that nodes are very small relative to chrom size. Instead, the maximum node size
 /// is stored for every chromosome, then a binary search is used to search nodes indexed on their beginning positions,
 /// and linear search backwards up to the maximum node size guarantees that all nodes intersecting a point can be found
-/// in (effectively) log-N time. This object inherits from flyweight_observer to help keep this node indexing data
-/// structure up to date as nodes are added/deleted within the SVLocus objects managed by this graph.
+/// in (effectively) log-N time.
+///
+/// This object inherits from flyweight_observer to help keep this node indexing data structure up to date as nodes
+/// are added/deleted within the SVLocus objects managed by this graph.
 ///
 struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
 {
@@ -387,7 +391,14 @@ private:
         const SVLocusSet& _set;
     };
 
-    // wrap this set in an object b/c a special copy-ctor is required
+    /// \brief Container to hold a set of node addresses which support range-based node intersect queries.
+    ///
+    /// This object holds a set of node addresses with a sorting scheme designed to support
+    /// range-based intersection queries.
+    ///
+    /// The core data type here, "data_t", is wrapped by this object because a special copy-ctor/assign is required.
+    /// The custom methods can be isolated here so that the enclosing object can continue to benefit from
+    /// compiler defaults.
     struct LocusSetIndexerType
     {
         typedef std::set<NodeAddressType, NodeAddressSorter> data_t;
@@ -462,73 +473,98 @@ private:
         _source="UNKNOWN";
     }
 
-    /// shared node intersection utility
+    /// \brief Get addresses of all nodes in the graph which intersect with the query node. (A more general
+    ///        version of getNodeIntersect)
     ///
-    /// \param[in] searchNodes the set of nodes to search for intersections in
-    /// \param[in] filterLocusIndex ignore intersections from this locus
-    ///
-    /// \param[in] isTestUsability check whether a node intersection exceeds computablility limits
-    ///
-    /// \return is usable node (can only be false when isTestUsability is true)
-    ///
+    /// \param[in] queryLocusIndex First part of query node address.
+    /// \param[in] queryNodeIndex Second part of query node address.
+    /// \param[in] searchNodes The set of nodes which will be search for intersections with the query node.
+    /// \param[in] filterLocusIndex Intersections to nodes in this locus will be filtered out of the results.
+    /// \param[out] intersectingNodeAddresses Set of all intersecting node addresses. Any set contents are erased on input.
+    /// \param[in] isTestUsability If true, check whether a node intersection exceeds computability limits.
+    /// \return True if the query node is usable. This can only be false when isTestUsability is true.
     bool
-    getNodeIntersectCore(
-        const LocusIndexType inputLocusIndex,
-        const NodeIndexType inputNodeIndex,
+    getIntersectingNodeAddressesCore(
+        const LocusIndexType queryLocusIndex,
+        const NodeIndexType queryNodeIndex,
         const LocusSetIndexerType& searchNodes,
         const LocusIndexType filterLocusIndex,
-        std::set<NodeAddressType>& intersectNodes,
+        std::set<NodeAddressType>& intersectingNodeAddresses,
         const bool isTestUsability = false) const;
 
-    /// get all nodes in this object which intersect with the inputNode
+    /// \brief Get addresses of all nodes in the graph which intersect with the query node.
     ///
-    /// \param[in] isTestUsability check whether a node intersection exceeds computability limits
-    ///
-    /// \return is usable node (can only be false when isTestUsability is true)
+    /// \param[in] queryLocusIndex First part of query node address.
+    /// \param[in] queryNodeIndex Second part of query node address.
+    /// \param[out] intersectingNodeAddresses Set of all intersecting node addresses. Any set contents are erased on input.
+    /// \param[in] isTestUsability If true, check whether a node intersection exceeds computability limits.
+    /// \return True if the query node is usable. This can only be false when isTestUsability is true.
     ///
     bool
-    getNodeIntersect(
-        const LocusIndexType locusIndex,
-        const NodeIndexType nodeIndex,
-        std::set<NodeAddressType>& intersectNodes,
+    getIntersectingNodeAddresses(
+        const LocusIndexType queryLocusIndex,
+        const NodeIndexType queryNodeIndex,
+        std::set<NodeAddressType>& intersectingNodeAddresses,
         const bool isTestUsability = false) const
     {
-        return getNodeIntersectCore(locusIndex, nodeIndex, _inodes, locusIndex, intersectNodes, isTestUsability);
+        return getIntersectingNodeAddressesCore(queryLocusIndex, queryNodeIndex, _inodes, queryLocusIndex, intersectingNodeAddresses,
+                                                isTestUsability);
     }
 
     /// edges returned are in local_addy->remote_node orientation
     void
-    getIntersectingEdgeNodes(
-        const LocusIndexType inputLocusIndex,
-        const NodeIndexType inputRemoteNodeIndex,
+    getIntersectingEdges(
+        const LocusIndexType queryLocusIndex,
+        const NodeIndexType queryRemoteNodeIndex,
         const EdgeMapType& remoteIntersectNodeToLocalNodeMap,
         const LocusSetIndexerType& remoteIntersectNodes,
         std::vector<EdgeInfoType>& edges) const;
 
-    /// find nodes which could be merged with the input node, accounting for edge overlap and noise thresholds
+    /// \brief Get addresses of nodes which could be merged with the query node, accounting for edge overlap and
+    /// signal/noise thresholds used in the merging process.
     ///
-    /// \param[in] isInputLocusMoved has the input locus been moved into the graph from an initial temporary locus?
-    /// \param[out] mergeIntersect nodes which could be merged with input
+    /// This will return only a subset of the nodes which intersect the query node.
     ///
+    /// \param[in] queryLocusIndex First part of query node address.
+    /// \param[in] queryNodeIndex Second part of query node address.
+    /// \param[in] isQueryLocusDuplicatedInAnotherLocus True if the query locus been copied into a graph locus besides \p queryLocusIndex.
+    /// \param[out] mergeableIntersectingNodeAddresses Addresses of nodes which could be merged with the query node.
+    ///                                                Any set contents are erased on input.
     void
-    getNodeMergeableIntersect(
-        const LocusIndexType inputLocusIndex,
-        const NodeIndexType inputNodeIndex,
-        const bool isInputLocusMoved,
-        std::set<NodeAddressType>& mergeIntersect) const;
+    getMergeableIntersectingNodeAddresses(
+        const LocusIndexType queryLocusIndex,
+        const NodeIndexType queryNodeIndex,
+        const bool isQueryLocusDuplicatedInAnotherLocus,
+        std::set<NodeAddressType>& mergeableIntersectingNodeAddresses) const;
 
-    /// assign all intersect clusters to the lowest index number that is not startLocusIndex
+    /// \brief Move all intersecting nodes to be co-located in the same locus.
     ///
+    /// The set of intersecting loci are the loci containing nodes in the intersecting node set. In this method
+    /// the contents of all intersecting loci are copied to a target locus. The target locus is the member of the
+    /// intersecting loci set with the lowest locus index.
+    ///
+    /// All loci are cleared after copying into the target locus, except for the locus at \p startLocusIndex.
+    ///
+    /// By co-locating all of the intersecting nodes into one locus, this method achieves a preliminary step in the
+    /// process of merging the intersecting node set.
+    ///
+    /// \param[in] intersectingNodeAddresses Addresses of a set of nodes which will be moved such that they are all in the same locus.
+    /// \param[in] startLocusIndex This locus is not cleared after copying its contents to the lowest locus index.
+    /// \param[inout] headLocusIndex The value on input should contain the locus holding the duplicated start locus.
+    ///                              If the start locus hasn't been duplicated yet it will equal \p startLocusIndex.
+    ///                              The value returned is the target locus of the move operation, which after this
+    ///                              function completes is the neow locus holding the duplication of the start locus.
     void
-    moveIntersectToLowIndex(
-        const std::set<NodeAddressType>& intersectNodes,
+    moveIntersectingNodesToLowestLocusIndex(
+        const std::set<NodeAddressType>& intersectingNodeAddresses,
         const LocusIndexType startLocusIndex,
-        LocusIndexType& locusIndex);
+        LocusIndexType& headLocusIndex);
 
-    /// combine all content from 'from' locus into 'to' locus
+    /// \brief Combine all content from \p fromIndex locus into \p toIndex locus
     ///
-    /// this is typically required when a node is merged
-    /// which combines two loci
+    /// This is typically required as a first step to merging a set of nodes which span two different loci.
+    ///
+    /// \param[in] isClearSource If true, clear the locus at \p fromIndex after copying.
     void
     combineLoci(
         const LocusIndexType fromIndex,
@@ -536,27 +572,37 @@ private:
         const bool isClearSource = true);
 
 
-    /// add locus to this locusSet (intermediate step in merging)
+    /// \brief add \p inputLocus to this SVLocusSet
+    ///
+    /// Copies the inputLocus into this object without attempting do any merging. This is an intermediate (private)
+    /// step in the process of merging the \p inputLocus into this graph.
+    ///
+    /// \return The locus index assigned to the copy of inputLocus placed into this graph
     LocusIndexType
     insertLocus(
         const SVLocus& inputLocus);
 
+    /// \brief Erase the node at \p nodeAddress by calling SVLocus::eraseNode() on the appropriate locus.
     void
-    removeNode(const NodeAddressType inputNodePtr)
+    eraseNode(const NodeAddressType nodeAddress)
     {
         assert(_isIndexed);
 
-        LocusSetIndexerType::iterator iter(_inodes.data().find(inputNodePtr));
+        LocusSetIndexerType::iterator iter(_inodes.data().find(nodeAddress));
         if (iter == _inodes.data().end()) return;
 
-        SVLocus& locus(getLocus(inputNodePtr.first));
-        locus.eraseNode(inputNodePtr.second, this);
+        SVLocus& locus(getLocus(nodeAddress.first));
+        locus.eraseNode(nodeAddress.second, this);
     }
 
+    /// Test if the addressed node has no edges with sufficient evidence to be retained when
+    /// noisy graph elements are removed.
+    ///
+    /// \return True if the address points to a noise node.
     bool
-    isNoiseNode(const NodeAddressType inputAddy) const
+    isNoiseNode(const NodeAddressType nodeAddress) const
     {
-        return getLocus(inputAddy.first).isNoiseNode(getMinMergeEdgeCount(),inputAddy.second);
+        return getLocus(nodeAddress.first).isNoiseNode(getMinMergeEdgeCount(),nodeAddress.second);
     }
 
     /// node with a self edge only:
@@ -638,18 +684,27 @@ private:
     checkForOverlapNodes(
         const bool isFilterNoise) const;
 
-    /// look for non-noise nodes intersecting the findSignalAddy node
+    /// \brief Get all non-noise nodes intersecting the node at \p targetNodeAddress.
     ///
-    /// Noise nodes are checked for intersection to inputIntersectRemotes,
-    /// if found isIntersectRemotes is set to true
+    /// This is similar to getIntersectingNodeAddresses, except that we only get the addresses of non-noise
+    /// (ie. signal) nodes. Also note that in this method the output address set is appended instead of replaced.
     ///
+    /// A second operation tacked onto this method is that noise nodes intersecting the target node are checked for
+    /// intersection to intersectingNoiseNodeTestTargets, if intersection is found, then
+    /// isIntersectingNoiseNodeOverlapTestTargets is set true.
+    ///
+    /// \param[in] filterLocusIndex Exclude all nodes in this locus from the intersecting node set.
+    /// \param[in] targetNodeAddress Address of the target node which is the target of the intersection search.
+    /// \param[out] intersectingSignalNodeAddresses Append to this set the addresses of all signal nodes found which intersect the target node.
+    /// \param[in] intersectingNoiseNodeTestTargets The node addresses against which all intersecting noise nodes will be tested for overlap.
+    /// \param[out] isIntersectingNoiseNodeOverlapTestTargets True if at least one overlapping noise node is found to overlap at least one test target.
     void
-    findSignalNodes(
-        const LocusIndexType inputLocusIndex,
-        const NodeAddressType findSignalAddy,
-        std::set<NodeAddressType>& signalIntersectNodes,
-        const std::set<NodeAddressType>& inputIntersectRemotes,
-        bool& isIntersectRemotes) const;
+    getIntersectingSignalNodeAddresses(
+        const LocusIndexType filterLocusIndex,
+        const NodeAddressType targetNodeAddress,
+        std::set<NodeAddressType>& intersectingSignalNodeAddresses,
+        const std::set<NodeAddressType>& intersectingNoiseNodeTestTargets,
+        bool& isIntersectingNoiseNodeOverlapTestTargets) const;
 
     ///////////////////// data
 
@@ -657,35 +712,48 @@ public:
     bam_header_info header;
 private:
 
-
+    /// \brief Used to evaluate peak SV evidence density among a set of overlapping nodes.
     struct MergeRegionSumData
     {
         void
         clear()
         {
-            localNodeOutbound.clear();
-            localNodeInbound.clear();
-            remoteNodeOutbound.clear();
-            remoteNodeInbound.clear();
+            localNodeOutgoingEdgeEvidence.clear();
+            localNodeIncomingEdgeEvidence.clear();
+            remoteNodeOutgoingEdgeEvidence.clear();
+            remoteNodeIncomingEdgeEvidence.clear();
         }
 
-        // total counts for this edge:
         using rsum_t = RegionSum<unsigned>;
-        rsum_t localNodeOutbound;
-        rsum_t localNodeInbound;
-        rsum_t remoteNodeOutbound;
-        rsum_t remoteNodeInbound;
+        rsum_t localNodeOutgoingEdgeEvidence;
+        rsum_t localNodeIncomingEdgeEvidence;
+        rsum_t remoteNodeOutgoingEdgeEvidence;
+        rsum_t remoteNodeIncomingEdgeEvidence;
     };
+
     SVLocusSetOptions _opt;
 
-    // contains the full set of loci
+    /// Contains the full set of loci in this graph.
     locusset_type _loci;
+
+    /// \brief The indexes of loci which are empty.
+    ///
+    /// This data is useful because empty loci are never removed from the graph, otherwise many locus index numbers
+    /// (which is set for each locus to the locus's index in the _loci vector) would have to be frequenty updated.
+    /// Instead of removing loci from the vector, the positions are marked as empty and prioritized for use the next
+    /// time a new locus needs to be stored in the graph.
     std::set<unsigned> _emptyLoci;
 
     // provides an intersection search of overlapping nodes given a bound node size:
     LocusSetIndexerType _inodes;
 
-    // maximum region size per chromosome:
+    /// \brief Largest node breakend region in this graph for each chromosome.
+    ///
+    /// This is used to support the graph's region-based query scheme to find all nodes overlapping a given a certain
+    /// interval from a chromosome. Instead of using a fully general indexing scheme, such as an interval tree, the
+    /// scheme leverages the fact that the largest breakend region stored from each chromosome is relatively small, by
+    /// supplementing a simple binary search with a linear walk of the size provided by this object, which guarantees
+    /// that all intersecting nodes are found using a relatively lightweight procedure.
     std::vector<unsigned> _maxRegionSize;
 
     // simple debug string describing the source of this
@@ -711,6 +779,9 @@ private:
     CpuTimes _buildTime;
     CpuTimes _mergeTime;
 
+    /// \brief A temporary data structure used by the RegionCheck process.
+    ///
+    /// The RegionCheck process searches for peak SV evidence density among a set of overlapping nodes.
     mutable MergeRegionSumData _mergeRegions;
 };
 

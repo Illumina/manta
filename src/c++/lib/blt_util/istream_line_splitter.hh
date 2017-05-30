@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -19,11 +18,9 @@
 //
 
 /// \file
+/// \author Chris Saunders
 ///
 /// an efficient (and slightly unsafe) class for basic tab-delimited files, etc...
-///
-
-/// \author Chris Saunders
 ///
 
 #pragma once

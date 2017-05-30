@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -19,10 +18,11 @@
 //
 
 /**
+ ** \file
  ** \brief Declaration of the common exception mechanism.
  **
  ** All exceptions must carry the same data (independently of the
- ** exception type) to homogenixe the reporting and processing of
+ ** exception type) to homogenize the reporting and processing of
  ** errors.
  **
  ** \author Come Raczy
@@ -49,8 +49,7 @@ namespace illumina
 namespace common
 {
 
-/// this type can be used to add more info onto an in-flight exception:
-///
+/// This type can be used to add more info onto an in-flight exception.
 typedef boost::error_info<struct extra_exception_message,std::string> ExceptionMsg;
 
 
@@ -202,7 +201,7 @@ public:
     OutOfBoundsException(const std::string& message);
 };
 
-/// General purpose exception for all other cases:
+/// \brief General purpose exception for all cases not described elsewhere.
 ///
 struct LogicException: public std::logic_error, public ExceptionData
 {

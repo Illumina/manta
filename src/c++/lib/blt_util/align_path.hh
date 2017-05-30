@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -31,12 +30,6 @@
 #include <string>
 #include <vector>
 
-/// process export MD and output the alignment information in a format
-/// which will not need to change significantly for SAM/BAM (by
-/// providing essentially a parsed forward strand CIGAR string)
-///
-/// idea is for this code to migrate to some kind of joint export/sam api code
-///
 namespace ALIGNPATH
 {
 
@@ -223,36 +216,36 @@ apath_to_cigar(const path_t& apath)
     return cigar;
 }
 
-/// Convert cigar string into apath format
+/// \brief Convert CIGAR string into apath format
 ///
-/// any padding in the CIGAR string is removed
+/// Any padding in the CIGAR string is removed
 void
 cigar_to_apath(const char* cigar,
                path_t& apath);
 
-/// \return the read length spanned by the path
+/// \return The read length spanned by the path
 unsigned
 apath_read_length(const path_t& apath);
 
-/// \return the reference length spanned by the path
+/// \return The reference length spanned by the path
 unsigned
 apath_ref_length(const path_t& apath);
 
-/// \return the number of aligned (matched or mismatched) bases in the path
+/// \return The number of aligned (matched or mismatched) bases in the path
 unsigned
 apath_matched_length(const path_t& apath);
 
-/// \return the number of refskip (e.g. RNA spliced) bases in the path
+/// \return The number of refskip (e.g. RNA spliced) bases in the path
 unsigned
 apath_spliced_length(const path_t& apath);
 
-/// how much unaligned sequence (soft_clip or insert) occurs before the first aligned base?
+/// \return The length of unaligned sequence (soft_clip or insert) occurring before the first aligned base
 unsigned
-apath_read_lead_size(const path_t& apath);
+unalignedPrefixSize(const path_t& apath);
 
-/// how much unaligned sequence (soft_clip or insert) occurs after the last aligned base?
+/// \return The length of unaligned sequence (soft_clip or insert) occurring after the last aligned base
 unsigned
-apath_read_trail_size(const path_t& apath);
+unalignedSuffixSize(const path_t& apath);
 
 /// how much soft_clip occurs before the first aligned base?
 unsigned

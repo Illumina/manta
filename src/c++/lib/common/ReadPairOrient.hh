@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,6 +17,7 @@
 //
 //
 
+/// \file
 /// \brief Encapsulation of the concept of a read pair relative orientation.
 ///
 /// \author Richard Shaw

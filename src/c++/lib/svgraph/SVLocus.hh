@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -30,8 +29,8 @@
 
 typedef unsigned LocusIndexType;
 
-/// move message is composed of a bool, indicating if the node is being added (true) or deleted (false) from the index,
-/// and the id of the node itself.
+/// The move message is composed of a bool, indicating if the node is being added (true) or deleted (false)
+/// from the index, and the id of the node itself.
 ///
 typedef std::pair<bool, std::pair<LocusIndexType,NodeIndexType> > SVLocusNodeMoveMessage;
 
@@ -129,7 +128,7 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
         return nodePtr;
     }
 
-    // an edge count is only added on on from->to
+    // an edge count is only added on from->to
     //
     void
     linkNodes(
@@ -231,18 +230,18 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
     /// return from->to edge
     const SVLocusEdge&
     getEdge(
-        const NodeIndexType fromIndex,
-        const NodeIndexType toIndex) const
+        const NodeIndexType fromNodeIndex,
+        const NodeIndexType toNodeIndex) const
     {
-        const SVLocusNode& fromNode(getNode(fromIndex));
+        const SVLocusNode& fromNode(getNode(fromNodeIndex));
         try
         {
-            return fromNode.getEdge(toIndex);
+            return fromNode.getEdge(toNodeIndex);
         }
         catch (...)
         {
             // throw a richer exception message than node can produce on its own:
-            getEdgeException(fromIndex,toIndex);
+            getEdgeException(fromNodeIndex,toNodeIndex);
         }
 
         // handle compiler warning for return val, this code should never run:
@@ -320,8 +319,13 @@ private:
         _index=index;
     }
 
-    // return true if node contains no out or in edges greater than
-    // minMergeEdgeCount
+    /// Test if all (out+in) edges of the indexed node have less than \p minMergeEdgeCount evidence.
+    /// If this is true the node will be removed when the graph is denoised, we refer to this as a
+    /// noise node.
+    ///
+    /// \param[in] minMergeEdgeCount The minimum evidence on an edge below which it is considered noise.
+    /// \param[in] nodeIndex Index of the query node within this locus.
+    /// \return True if the index points to a noise node
     bool
     isNoiseNode(
         const unsigned minMergeEdgeCount,
@@ -380,7 +384,18 @@ private:
         getNode(fromIndex).eraseEdge(toIndex);
     }
 
-    /// copy fromLocus into this locus (this should be an intermediate part of a locus merge)
+    /// \brief Copy the contents of \p fromLocus into this locus without merging.
+    ///
+    /// This method copies each node from \p fromLocus into this locus object. The method
+    /// makes no attempt to merge overlapping nodes, it is meant to be run as an intermediate
+    /// step in the merge process.
+    ///
+    /// The fromLocus nodes that are copied in are mostly unchanged, except that all node index
+    /// numbers used have to be offset such that they are all higher than the node index numbers
+    /// already in use by this locus object.
+    ///
+    /// \param obs Observer object is required to notify the parent SVLocusSet of all node changes
+    ///            so that its 'search for nodes by genome interval' logic works correctly.
     void
     copyLocus(
         const SVLocus& fromLocus,
@@ -409,8 +424,8 @@ private:
         const NodeIndexType toIndex,
         flyweight_observer_t* obs);
 
-    // remove node
-    //
+    /// \brief Remove node \p nodePtr from this Locus
+    ///
     void
     eraseNode(
         const NodeIndexType nodePtr,

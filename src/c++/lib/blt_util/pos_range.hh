@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -146,6 +145,23 @@ struct pos_range
         return false;
     }
 
+    bool
+    operator==(const pos_range& rhs) const
+    {
+        if ((is_begin_pos != rhs.is_begin_pos) || (is_end_pos != rhs.is_end_pos)) return false;
+
+        if (is_begin_pos)
+        {
+            if (begin_pos!=rhs.begin_pos) return false;
+        }
+        if (is_end_pos)
+        {
+            if (end_pos!=rhs.end_pos) return false;
+        }
+
+        return true;
+    }
+
     template<class Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {
@@ -169,11 +185,8 @@ struct known_pos_range : public pos_range
     operator<(const pos_range& rhs) const
     {
         if (begin_pos < rhs.begin_pos) return true;
-        if (begin_pos == rhs.begin_pos)
-        {
-            if (end_pos < rhs.end_pos) return true;
-        }
-        return false;
+        if (begin_pos != rhs.begin_pos) return false;
+        return (end_pos < rhs.end_pos);
     }
 
     bool

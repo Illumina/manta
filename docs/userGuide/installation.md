@@ -4,7 +4,9 @@ Manta User Guide - Installation
 [User Guide Home](README.md)
 
 ## Table of Contents
-[] (BEGIN automated TOC section, any edits will be overwritten on next source refresh)
+
+[//]: # (BEGIN automated TOC section, any edits will be overwritten on next source refresh)
+
 * [Prerequisites to build from source](#prerequisites-to-build-from-source)
 * [Runtime prerequisites](#runtime-prerequisites)
 * [Operating System Guidelines](#operating-system-guidelines)
@@ -19,18 +21,20 @@ Manta User Guide - Installation
 * [Build procedure](#build-procedure)
     * [Workflow relocation](#workflow-relocation)
 * [Demo](#demo)
-[] (END automated TOC section, any edits will be overwritten on next source refresh)
+
+[//]: # (END automated TOC section, any edits will be overwritten on next source refresh)
+
 
 It is recommended to start from one of the [binary distributions on
-the Manta releases page] [releases] if a suitable version is available
+the Manta releases page][releases] if a suitable version is available
 (note that the CentOS 5 binary distribution is expected to support a
 large variety of linux systems).  If building from source start from
 the release distributions of the source code, also provided on the
-[Manta releases page] [releases]. Cloning/archiving the source
+[Manta releases page][releases]. Cloning/archiving the source
 directly from git could result in missing version number entries,
 undesirably stringent build requirements or an unstable development
 version between releases. Additional build notes for Manta developers can
-be found in the [manta developer guide] [developerGuide].
+be found in the [manta developer guide][developerGuide].
 
 [releases]:https://github.com/Illumina/manta/releases
 [DeveloperGuide]:../developerGuide/README.md
@@ -38,7 +42,7 @@ be found in the [manta developer guide] [developerGuide].
 
 ### Prerequisites to build from source
 
-[![Build Status] [tcistatus]] [tcihome]
+[![Build Status][tcistatus]][tcihome]
 
 [tcistatus]:https://travis-ci.org/Illumina/manta.svg?branch=master
 [tcihome]:https://travis-ci.org/Illumina/manta
@@ -71,7 +75,7 @@ are not tested for this platform.
 ##### Windows
 
 Manta does not build or run on windows. Library-level compilation is
-possible for Visual Studio users. See the the [manta developer guide] [DeveloperGuide] for details.
+possible for Visual Studio users. See the the [manta developer guide][DeveloperGuide] for details.
 
 ### Linux Package Additions
 

@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -143,7 +142,7 @@ next()
             if (!_vcfrec.is_normalized())
             {
                 std::ostringstream oss;
-                oss << "Input VCF record contains is not normalized:\n";
+                oss << "Input VCF record is not normalized:\n";
                 report_state(oss);
 
                 if (_isRequireNormalized)

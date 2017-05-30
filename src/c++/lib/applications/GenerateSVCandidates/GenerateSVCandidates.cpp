@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -97,7 +96,7 @@ struct MultiJunctionFilter
     {
         unsigned mjComplexCount(0);
         unsigned mjSpanningFilterCount(0);
-        findMultiJunctionCandidates(svs, _opt.minCandidateSpanningCount, mjComplexCount, mjSpanningFilterCount, mjSVs);
+        findMultiJunctionCandidates(svs, _opt.minCandidateSpanningCount, _opt.isRNA, mjComplexCount, mjSpanningFilterCount, mjSVs);
         _edgeStatMan.updateMJFilter(edge, mjComplexCount, mjSpanningFilterCount);
 
         if (_opt.isVerbose)

@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 /// \author Ole Schulz-Trieglaff
 /// \author Bret Barnes
@@ -43,33 +42,37 @@
 
 namespace FragmentSizeType
 {
+/// \brief Discrete categories used to label DNA fragment length relative to the expected fragment size distribution.
 enum index_t
 {
-    COMPRESSED,
-    NORMAL,
-    UNKNOWN,
-    VERYCLOSE,
-    CLOSE,
-    DISTANT
+    COMPRESSED, ///< The fragment is anomalously small
+    NORMAL,     ///< The fragment is non-anomalous
+    UNKNOWN,    ///< The fragment size category is unknown
+    CLOSE,      ///< The fragment is anomalous, but close enough to the non-anomalous threshold that it is treated as possibly non-anomalous.
+    DISTANT     ///< The fragment is clearly anomalous
 };
 }
 
 
-/// The counts in the SVLocus Graph represent an abstract weight of evidence supporting each edge/node.
+/// \brief This object centralizes the weights applied to different sources of SV evidence to indicate relative
+///        confidence in the accuracy of each observation.
 ///
-/// To support large and small-scale evidence in a single graph, we need to allow for different weightings
-/// for different evidence types
+/// The evidence weights used in the SVLocus Graph represent an abstract strength of evidence supporting each edge. The
+/// evidence weights are reduced to small counts so that the weights can be used as part of a low-memory graph
+/// representation. The weights can be arbitrarily scaled collectively without changing the result, only the  relative
+/// values are important.
 ///
+/// Evidence weights express the confidence in an evidence source for discovery and graph building, when SV's are
+/// actually scored a much more detailed process is used to derive confidence in the SV based on observed evidence.
 struct SVObservationWeights
 {
-    // noise reduction:
-    static const unsigned observation = 3; ///< 'average' observation weight, this is used to scale noise filtration, but not for any evidence type
+    /// Evidence weight for one average-case observation. This acts as a baseline scale for the whole weighting scheme.
+    static const unsigned observation = 3;
 
     // input evidence:
-    static const unsigned readPair = observation;
+    static const unsigned readPair = observation; ///< Weight used for anomalous read pairs
     static const unsigned closeReadPair = 1;
-    static const unsigned veryCloseReadPair = 1;
-    static const unsigned internalReadEvent = observation; ///< indels, soft-clip, etc.
+    static const unsigned internalReadEvent = observation; ///< Weight used for indels, soft-clip, etc.
 };
 
 
@@ -79,12 +82,12 @@ struct ReadScannerDerivOptions
     ReadScannerDerivOptions(
         const ReadScannerOptions& opt,
         const bool isRNA,
-        const bool stranded) :
+        const bool initIsTranscriptStrandKnown) :
         isSmallCandidates(opt.minCandidateVariantSize<=opt.maxCandidateSizeForLocalAssmEvidence),
         beforeBreakend(opt.minPairBreakendSize/2),
         afterBreakend(opt.minPairBreakendSize-beforeBreakend),
         isUseOverlappingPairs(isRNA),
-        isStranded(stranded)
+        isTranscriptStrandKnown(initIsTranscriptStrandKnown)
     {}
 
     const bool isSmallCandidates;
@@ -95,13 +98,13 @@ struct ReadScannerDerivOptions
     /// remove this bit:
     const bool isUseOverlappingPairs;
 
-    const bool isStranded;
+    /// \brief True if running in RNA-Seq mode with a stranded input RNA assay
+    const bool isTranscriptStrandKnown;
 };
 
 
 
-/// consolidate functions which process a read to determine its
-/// SV evidence value
+/// \brief Consolidate functions which test aligned reads for SV evidence
 ///
 /// In manta, evidence is scanned (at least) twice: once for SVLocus Graph generation
 /// and then once again during hygen/scoring. We need to make sure both of these steps
@@ -115,7 +118,7 @@ struct SVLocusScanner
         const std::string& statsFilename,
         const std::vector<std::string>& alignmentFilename,
         const bool isRNA,
-        const bool isStranded = false);
+        const bool isTranscriptStrandKnown = false);
 
     /// this predicate runs isReadFiltered without the mapq components
     static
@@ -173,22 +176,29 @@ struct SVLocusScanner
         return _opt.minTier2Mapq;
     }
 
-    /// custom version of proper pair bit test:
-    bool
-    isProperPair(
-        const bam_record& bamRead,
-        const unsigned defaultReadGroupIndex) const;
-
-    /// return true if the read pair is anomalous, for any anomaly type besides being a short innie read:
+    /// \brief Test \p bamRead to determine if it is from a paired-read DNA fragment with an anomalous orientation or
+    ///        inferred fragment size
     ///
-    /// according to this method nothing besides mapped read pairs can be anomalous, so all single read
-    /// anomalies (SA tags, CIGAR, semi-aligned) have to be detected elsewhere
+    /// Note that in the general case, Manta disregards the bam spec's 'proper pair' flag on input alignments and
+    /// instead directly determines anomalous state.
     bool
-    isNonCompressedAnomalous(
+    isAnomalousReadPair(
         const bam_record& bamRead,
         const unsigned defaultReadGroupIndex) const;
 
-    /// large indels in CIGAR string
+    /// \breif Test \p bamRead to determine if it is from a paired-end DNA fragment with anomalous orientation or size,
+    ///        excluding the case of an anomalously short standard orientation read pair
+    ///
+    /// According to this method only mapped read pairs can be anomalous. All single read
+    /// anomalies (SA tags, CIGAR, semi-aligned) are detected elsewhere.
+    bool
+    isNonCompressedAnomalousReadPair(
+        const bam_record& bamRead,
+        const unsigned defaultReadGroupIndex) const;
+
+    /// \brief Test \p bamAlign for large indel segments
+    ///
+    /// \return True if \p bamAlign contains any indel segments above a critical size threshold
     bool
     isLocalIndelEvidence(
         const SimpleAlignment& bamAlign) const;
@@ -202,7 +212,7 @@ struct SVLocusScanner
         const SimpleAlignment& bamAlign,
         const reference_contig_segment& refSeq) const;
 
-    /// \brief is the read likely to indicate the presence of a small SV?
+    /// \brief Return true if the read indicates the presence of a small SV?
     ///
     /// this function flags reads which could contribute to a local small-variant assembly
     /// but would not otherwise be caught by the proper pair function
@@ -217,8 +227,11 @@ struct SVLocusScanner
         const bam_record& bamRead,
         const reference_contig_segment& refSeq) const;
 
-    /// \brief fast screen to eliminate reads which are very unlikely to contribute any SV or indel evidence
+    /// \brief A fast test to eliminate reads which are very unlikely to contribute any SV or indel evidence
     ///
+    /// \param[inout] incountsPtr If not nullptr, the pointed object is appended with statistics on the SV evidence
+    ///                           type associated with \p bamRead
+    /// \return True if it is probable that \p bamRead provides evidence for an SV or indel
     bool
     isSVEvidence(
         const bam_record& bamRead,
@@ -258,16 +271,18 @@ struct SVLocusScanner
         const reference_contig_segment* remoteRefSeqPtr,
         std::vector<SVObservation>& candidates) const;
 
-    /// this information is needed for the whole bam, not just one read group:
+    /// \brief Get the distance upstream of a breakend in which shadow reads support will be searched for
+    ///
+    /// \TODO if read groups are decoupled from samples, then this value needs to be revisited to reflect all read
+    ///       groups in the sample.
     int
-    getShadowSearchRange(
+    getShadowSearchDistance(
         const unsigned defaultReadGroupIndex) const
     {
-        return _stats[defaultReadGroupIndex].shadowSearchRange;
+        return _stats[defaultReadGroupIndex].shadowSearchDistance;
     }
 
-    /// provide direct access to the frag distro for
-    /// functions which can't be cached
+    /// \brief Provide read-only access to the fragment length distribution for each read-group/sample
     ///
     const SizeDistribution&
     getFragSizeDistro(
@@ -295,32 +310,43 @@ struct SVLocusScanner
         return _fifthPerc;
     }
 
+    /// \brief Summary statistics derived from the full fragment length distribution.
+    ///
+    /// Instead of transmitting the full fragment distribution for each read group, this object holds the critical
+    /// statistics computed from that distribution which are used during discovery and variant calling.
+    ///
+    /// Note that conceptually, there is one fragment length distribution per "Read Group", but in the current methods
+    /// the concept of read group is forced to have a 1-1 relationship with each sample.
     struct CachedReadGroupStats
     {
-        /// fragment size range assumed for the purpose of creating SVLocusGraph regions
+        /// \brief Fragment size range used for the purpose of creating SVLocusGraph regions.
         Range breakendRegion;
 
-        /// fragment size range assumed for the purpose of creating SVLocusGraph regions,
-        /// this range is used exclusively for large scale events (non-deletion or deletion above a threshold size):
+        /// \brief Fragment size range used for the purpose of creating SVLocusGraph regions,this range is used
+        /// exclusively for large scale events (non-deletion or deletion above a threshold size).
         Range largeScaleEventBreakendRegion;
 
-        /// fragment size range used to determine if a read is anomalous
+        /// \brief Fragment size range used to determine if a fragment is considered non-anomalous (ie. "proper")
+        ///        during SV discovery.
         Range properPair;
 
+        /// \brief Fragment size range used to determine if a fragment will be evaluated as paired-read support
+        ///        during SV scoring.
         Range evidencePair;
 
-        /// range fixed the 5th and 95th percentiles:
+        /// \brief Fragment size range over the [0.05,0.95] quantiles of the fragment size distribution.
         Range fifthPerc;
 
-        int shadowSearchRange = 0;
+        /// \brief Shadow read support for a breakend is searched for from the breakend location to this distance
+        ///        upstream.
+        int shadowSearchDistance = 0;
 
-        int minDistantFragmentSize = 0; ///< beyond the properPair anomalous threshold, there is a threshold to distinguish close and far pairs for the purpose of evidence weight
-        int minCloseFragmentSize = 0; ///< beyond the properPair anomalous threshold, there is a threshold to distinguish 'really-close' and 'close' pairs for the purpose of evidence weight
-        int minVeryCloseFragmentSize = 0;
+        /// \brief Beyond the properPair anomalous threshold, this threshold is used to distinguish 'close' and 'far'
+        ///        pairs for the purpose of setting the anomalous pair evidence weight
+        int minDistantFragmentSize = 0;
 
-        //LinearScaler<int> veryCloseEventScaler; ///< used to scale down breakend size as fragments get smaller
-
-        LinearScaler<int> largeEventRegionScaler; ///< used to set expanded breakend sizes for large events
+        /// \brief Used to set expanded breakend sizes for large events \TODO more detail?
+        LinearScaler<int> largeEventRegionScaler;
     };
 
     bool
@@ -331,9 +357,9 @@ struct SVLocusScanner
 
 private:
 
-    /// fragments sizes get thrown is serveral pre-defined categories:
+    /// \brief Classify read pair fragment sizes into a pre-defined size category.
     ///
-    /// assumes a mapped read pair -- check this in code if making this method non-private
+    /// Note this assumes a mapped read pair. Add a check on this pre-condition if making this method non-private.
     FragmentSizeType::index_t
     _getFragmentSizeType(
         const bam_record& bamRead,
@@ -363,8 +389,5 @@ private:
 
     // cached temporary to reduce syscalls:
     mutable SimpleAlignment _bamAlign;
-
-//    std::string lastQname;
-//    uint8_t lastMapq;
 };
 

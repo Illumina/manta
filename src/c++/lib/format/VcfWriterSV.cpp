@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 /// \author Felix Schlesinger
 ///
@@ -49,11 +48,9 @@
 VcfWriterSV::
 VcfWriterSV(
     const std::string& referenceFilename,
-    const bool isRNA,
     const SVLocusSet& set,
     std::ostream& os) :
     _referenceFilename(referenceFilename),
-    _isRNA(isRNA),
     _header(set.header),
     _os(os)
 {
@@ -98,15 +95,6 @@ writeHeaderPrefix(
     _os << "##INFO=<ID=INV3,Number=0,Type=Flag,Description=\"Inversion breakends open 3' of reported location\">\n";
     _os << "##INFO=<ID=INV5,Number=0,Type=Flag,Description=\"Inversion breakends open 5' of reported location\">\n";
 
-    if (_isRNA)
-    {
-        _os << "##INFO=<ID=RNA_FIRST,Number=0,Type=Flag,Description=\"For RNA fusions, this break-end is 5' in the fusion transcript\">\n";
-        _os << "##INFO=<ID=RNA_STRANDED,Number=0,Type=Flag,Description=\"For RNA fusions, the direction of transcription is known\">\n";
-        _os << "##INFO=<ID=RNA_FwRvReads,Number=2,Type=Integer,Description=\"For RNA fusions, number of stranded reads supporting forward or reverse direction of transcription\">\n";
-        _os << "##INFO=<ID=RNA_Reads,Number=1,Type=Integer,Description=\"For RNA fusions, the number of reads and pairs that potentially support this candidate before refinement and scoring\">\n";
-        _os << "##INFO=<ID=RNA_CONTIG,Number=1,Type=String,Description=\"For RNA fusions, the sequence of the breakend spanning contig\">\n";
-        _os << "##INFO=<ID=RNA_CONTIG_ALN,Number=2,Type=Integer,Description=\"For RNA fusions, length of the spanning contig alignment on each breakend\">\n";
-    }
     addHeaderInfo();
 
     addHeaderFormat();
@@ -229,76 +217,6 @@ makeFormatSampleField(
     }
 }
 
-
-
-static
-void
-addRNAInfo(
-    const bool isFirstOfPair,
-    const SVCandidate& sv,
-    const SVCandidateAssemblyData& assemblyData,
-    VcfWriterSV::InfoTag_t& infotags)
-{
-    if (! assemblyData.isSpanning) return;
-
-    const bool isFirst = (assemblyData.bporient.isBp1First == isFirstOfPair);
-    if (isFirst) infotags.push_back("RNA_FIRST");
-    if (assemblyData.bporient.isStranded) infotags.push_back("RNA_STRANDED");
-
-    if (!isFirstOfPair) return; // only the first breakpoint gets the additional RNA info attached to its VCF entry
-
-    infotags.push_back(str(boost::format("RNA_FwRvReads=%i,%i") % sv.fwReads % sv.rvReads));
-    infotags.push_back(str(boost::format("RNA_Reads=%i") % sv.bp2.lowresEvidence.getTotal()));
-    const unsigned numContigs(assemblyData.contigs.size());
-    if (numContigs > 0)
-    {
-        if (numContigs != assemblyData.spanningAlignments.size())
-            infotags.push_back(str(boost::format("ERROR=%i,%i") % numContigs % assemblyData.spanningAlignments.size()));
-        if (numContigs <= assemblyData.bestAlignmentIndex)
-            infotags.push_back(str(boost::format("ERROR2=%i,%i") % numContigs % assemblyData.bestAlignmentIndex));
-        infotags.push_back(str(boost::format("RNA_CONTIG=%s") % assemblyData.contigs[assemblyData.bestAlignmentIndex].seq));
-        infotags.push_back(str(boost::format("RNA_CONTIG_ALN=%i,%i")
-                               % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align1.apath)
-                               % apath_matched_length(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex].align2.apath)));
-    }
-}
-
-#ifdef DEBUG_VCF
-static
-void
-addRNADebugInfo(
-    const bool isFirstOfPair,
-    const SVCandidate& sv,
-    const SVCandidateAssemblyData& assemblyData,
-    VcfWriterSV::InfoTag_t& infotags)
-{
-    if (! assemblyData.isSpanning) return;
-
-    const bool isFirst = (assemblyData.bporient.isBp1First == isFirstOfPair);
-    const bool isRightOpen = (isFirstOfPair ? sv.bp1.state : sv.bp2.state) == SVBreakendState::RIGHT_OPEN;
-    infotags.push_back(str(boost::format("FOOBAR_FW=%1%") % (isFirst == isRightOpen)));
-
-    if (!isFirst) return; // only the first breakpoint gets the alignments attached to its VCF entry
-
-    infotags.push_back(str(boost::format("FOOBAR_bp1=%i;bp2=%i") % sv.bp1.interval.tid % sv.bp2.interval.tid));
-
-    // there can be several contigs per breakend, so we iterate over all of them.
-    const unsigned numContigs(assemblyData.contigs.size());
-    // cppcheck-suppress zerodivcond
-    infotags.push_back(str(boost::format("FOOBAR_NCONTIGS=%i") % numContigs));
-    if (numContigs > 0)
-    {
-        if (numContigs != assemblyData.spanningAlignments.size())
-            infotags.push_back(str(boost::format("FOOBAR_ERROR=%i;%i") % numContigs % assemblyData.spanningAlignments.size()));
-        if (numContigs <= assemblyData.bestAlignmentIndex)
-            infotags.push_back(str(boost::format("FOOBAR_ERROR2=%i;%i") % numContigs % assemblyData.bestAlignmentIndex));
-
-        infotags.push_back(str(boost::format("FOOBAR_BEST=%i") % assemblyData.bestAlignmentIndex));
-        //infotags.push_back(str(boost::format("FOOBAR_EXTCONTIG=%s") % assemblyData.extendedContigs[assemblyData.bestAlignmentIndex]));
-        infotags.push_back(str(boost::format("FOOBAR_CONTIGcount=%i") % assemblyData.contigs[assemblyData.bestAlignmentIndex].supportReads.size()));
-    }
-}
-#endif
 
 #ifdef DEBUG_VCF
 static
@@ -502,20 +420,12 @@ writeTransloc(
     addSharedInfo(event, infotags);
 
     modifyInfo(event, infotags);
-    modifyTranslocInfo(sv, isFirstBreakend, infotags);
+    modifyTranslocInfo(sv, isFirstBreakend, adata, infotags);
 
     modifySample(sv, sampletags);
 #ifdef DEBUG_VCF
     addDebugInfo(bpA, bpB, isFirstBreakend, adata, infotags);
 #endif
-
-    if (_isRNA)
-    {
-        addRNAInfo(isFirstBreakend, sv, adata, infotags);
-#ifdef DEBUG_VCF
-        addRNADebugInfo(isFirstBreakend, sv, adata, infotags);
-#endif
-    }
 
     // write out record:
     _os << chrom
@@ -840,10 +750,11 @@ writeSVCore(
     const SVCandidateAssemblyData& adata,
     const SVCandidate& sv,
     const SVId& svId,
-    const EventInfo& event)
+    const EventInfo& event,
+    const bool isForceIntraChromBnd)
 {
     using namespace EXTENDED_SV_TYPE;
-    const index_t svType(getExtendedSVType(sv, _isRNA));
+    const index_t svType(getExtendedSVType(sv, isForceIntraChromBnd));
 
 #ifdef DEBUG_VCF
     log_os << "VcfWriterSV::writeSVCore svType: " << EXTENDED_SV_TYPE::label(svType) << "\n";

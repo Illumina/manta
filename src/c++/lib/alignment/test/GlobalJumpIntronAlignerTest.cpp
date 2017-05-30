@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Felix Schlesinger
 ///
 
@@ -283,7 +282,7 @@ BOOST_AUTO_TEST_CASE(test_GlobalJumpAlignerIntronOffEdgeRef2Left)
 #endif
     BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath), "");
     BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath), "3S6N11=");
-    BOOST_REQUIRE_EQUAL(result.score, 11 * 2 - 3);
+    BOOST_REQUIRE_EQUAL(result.score, -3-15+11*2);
 }
 
 BOOST_AUTO_TEST_CASE(test_GlobalJumpAlignerIntronOffEdgeRef2Right)
@@ -303,17 +302,17 @@ BOOST_AUTO_TEST_CASE(test_GlobalJumpAlignerIntronOffEdgeRef2Right)
 
 BOOST_AUTO_TEST_CASE(test_GlobalJumpAlignerIntronOffEdgeRef1Both)
 {
-    static const std::string seq("TTTTACACACACACACACACGGGG");
-    static const std::string ref1("GGGGGGGACACACACACACACACACGTTTTTTT");
+    static const std::string seq("TTTTACACACACACACACACACACACACACACACACACACGGGG");
+    static const std::string ref1("GGGGGGGACACACACACACACACACACACACACACACACACACACGTTTTTTT");
     static const std::string ref2("ATTTAACTCAAGATGGATTAA");
 
     JumpAlignmentResult<score_t> result = testAlignSpliceNoJump(seq, ref1, ref2, false);
 #ifdef DEBUG
     log_os << result << "\n";
 #endif
-    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath), "4S9N16=8N4S");
+    BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align1.apath), "4S9N36=8N4S");
     BOOST_REQUIRE_EQUAL(apath_to_cigar(result.align2.apath), "");
-    BOOST_REQUIRE_EQUAL(result.score, -4+16*2-15-4);
+    BOOST_REQUIRE_EQUAL(result.score, -4-15+36*2-15-4);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

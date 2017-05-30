@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,10 +17,6 @@
 //
 //
 
-///
-/// \author Chris Saunders
-///
-
 #pragma once
 
 
@@ -29,33 +24,49 @@ struct ReadScannerOptions
 {
     ReadScannerOptions() {}
 
-    /// standard MAPQ filter applied during locus generation and some/not all subsequent steps
+    /// \brief Reads with MAPQ below this value are filtered out during SV locus generation and many subsequent
+    ///        candidate creation and scoring steps
+    ///
     unsigned minMapq = 15;
 
-    /// a second, lower mapq threshold used only during somatic calling to disprove a
-    /// somatic candidate using weak normal sample evidence
+    /// \brief Reads with MAPQ below this value may be considered in the normal sample as part of the 'tier2' evidence
+    ///        to help disprove a somatic candidate via the existence of weak candidate evidence in the normal
     unsigned minTier2Mapq = 5;
 
-    /// report breakend regions with x prob regions removed from each edge
-    float breakendEdgeTrimProb = 0.25f;
+    /// \brief Probability used to create fragment size quantile range for reported breakend regions
+    float breakendEdgeQuantileProb = 0.25f;
 
-    /// report breakend regions with x prob regions removed from each edge
-    /// used only for 'large-scale' events.
-    float largeScaleEventBreakendEdgeTrimProb = 0.1f;
+    /// \brief Probability used to create fragment size quantile range for reported breakend regions, this version is
+    ///        reserved for large-scale SV candidates
+    float largeScaleEventBreakendEdgeQuantileProb = 0.1f;
 
-    /// report a pair as "proper pair" if fragment size is within x prob region removed from each edge
-    float properPairTrimProb = 0.01f;
+    /// \brief Probability used to create fragment size quantile range for anomalous read pair detection during
+    ///        SV discovery
+    ///
+    /// Treat a paired read as non-anomalous (ie. "proper") during SV discovery if orientation is non-anomalous and
+    /// implied fragment size is within the [x, 1-x], x=properPairQuantileProb quantile range of the fragment length
+    /// distribution.
+    float properPairQuantileProb = 0.01f;
 
-    /// add a pair to the evidence pool if frag size is within x prob region removed from each edge
-    float evidenceTrimProb = 0.15f;
+    /// \brief Probability used to create fragment size quantile range for supporting read pair evidence during
+    ///        SV scoring
+    ///
+    /// Add a read pair to an SV's pool of evidence to evaluate for paired-read support during the scoring phase if
+    /// the orientation is non-anomalous and the implied fragment size is within the [x, 1-x], x=evidenceQuantileProb
+    /// quantile range of the fragment length
+    float evidenceTrimQuantileProb = 0.15f;
 
-    /// fragment length to search upstream of a breakend for shadow read support
-    float shadowSearchRangeProb = 0.05f;
+    /// Shadow read support is searched upstream of a breakend to a distance of X*Y, where
+    /// X=quantile(1-shadowSearchDistanceQuantileProb) on the fragment length distribution
+    /// Y=shadowSearchDistanceFactor
+    float shadowSearchDistanceQuantileProb = 0.05f;
 
-    /// multiplier for fragment length
-    float shadowSearchRangeFactor = 1.2f;
+    /// Shadow read support is searched upstream of a breakend to a distance of X*Y, where
+    /// X=quantile(shadowSearchDistanceProb) on the fragment length distribution
+    /// Y=shadowSearchDistanceFactor
+    float shadowSearchDistanceFactor = 1.2f;
 
-    /// ignore indels smaller than this when building graph, constructing candidates and scoring output:
+    /// \brief Ignore indels smaller than this when building graph, constructing candidates and scoring output
     unsigned minCandidateVariantSize = 10;
 
     /// if minCandidateVariantSize is set higher than this value, then we ignore non-specific assembly evidence
@@ -66,46 +77,33 @@ struct ReadScannerOptions
     /// range should be no smaller than this:
     unsigned minPairBreakendSize = 40;
 
-    /// whenever a breakend is predicted from an individual read split (ie. non-assembled),
-    /// set the predicted breakend size to this fraction of the
-    /// event size (modified by the min and max limits below)
-    float splitBreakendSizeFraction = 0.1f;
-
-    /// whenever a breakend is predicted from an individual read split (ie. non-assembled),
-    /// the predicted breakend range should be no larger than this:
-    unsigned maxSplitBreakendSize = 100;
-
-    /// whenever a breakend is predicted from an individual read split (ie. non-assembled),
-    /// the predicted breakend range should be no smaller than this:
-    unsigned minSplitBreakendSize = 10;
-
-    /// Semi-aligned regions (including soft-clipped) need to be at least this long to be included as SV evidence
-    ///
+    /// \brief Minimum length required of a poorly aligned read end-segment for it to be treated as SV evidence.
     unsigned minSemiAlignedMismatchLen = 8;
 
-    /// Minimal length of a cis SV candidate in RNA data
+    /// \brief Minimum length of a cis SV candidate in RNA data
     unsigned minRNACisLength = 100000;
-    /// Minimal length of any SV candidate in RNA data
+    /// \brief Minimum length of any SV candidate in RNA data
     unsigned minRNALength = 1000;
 
-    /// Accept semi-aligned reads with at least this hypothesis score
-    /// different for graph and candidate generation
-    double minSemiAlignedScoreGraph = 180.0;
-    double minSemiAlignedScoreCandidates = 180.0;
-
-    /// min MAPQ for shadow mate used to build SV adjacency graph
+    /// \brief Minimum mapping quality for shadow mate used to build SV adjacency graph
     unsigned minSingletonMapqGraph = 30;
 
-    /// min MAPQ for shadow mate used for candidate assembly and scoring
+    /// \brief Minimum mapping quality for shadow mate used for candidate assembly and scoring
     unsigned minSingletonMapqCandidates = 15;
 
-    /// typically set true for RNA-Seq analysis, where proper-pair is used to signal intron-spanning pairs
+    /// \brief If true, do not treat reads with the 'proper pair' bit set as SV evidence.
+    ///
+    /// This is typically set true for RNA-Seq analysis, where proper-pair is used to signal intron-spanning pairs.
     bool isIgnoreAnomProperPair = false;
 
-    /// the maximum depth at which input reads are considered in graph creation/assembly, etc.
-    /// (when avg chrom depths are provided)
+    /// \brief The maximum depth factor at which input reads are considered in graph creation/assembly, etc.
+    ///
+    /// 'depth factor' is the locus' multiple of the expected chromosome depth.
     float maxDepthFactor = 12;
 
-    /// the maximum depth for a whole locus for remote read retrieval (ie. MAPQ0 chimera mates retrieved for large insertion assembly)
+    /// \brief The maximum depth factor for a whole locus for remote read retrieval (ie. MAPQ0 chimera mates retrieved
+    ///        for large insertion assembly)
+    ///
+    /// 'depth factor' is the locus' multiple of the expected chromosome depth.
     float maxDepthFactorRemoteReads = 7;
 };

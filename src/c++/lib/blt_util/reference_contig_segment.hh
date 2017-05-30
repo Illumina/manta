@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -29,14 +28,14 @@
 #include <string>
 
 
-/// Manages a partial reference sequence segment
+/// \brief Manages a partial reference sequence segment.
 ///
-/// This object holds the reference sequence specified by the current
-/// run's begin and end range, plus some padding on each side. To get
-/// this integrated into the current code as quickly as possible it
-/// currently exposes the internal string object holding the sequence
-/// data. When time allows this will be restricted so that a compressed
-/// internal object can be used.
+/// This object holds a subset of the reference sequence within a specific [begin,end] range,
+/// plus some padding on each side. This scheme allows the client to store only the part of the
+/// the reference that is currently required (to save memory), but access the reference using
+/// the regular position coordinates of the full reference sequence.
+///
+/// \TODO Do not expose internal reference storage object type.
 ///
 struct reference_contig_segment
 {

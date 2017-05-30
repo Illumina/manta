@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -17,10 +16,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 //
-
-///
-/// \author Chris Saunders
-///
 
 #include "boost/test/unit_test.hpp"
 
@@ -77,8 +72,8 @@ semiAlignTestCase(
     SimpleAlignment align(getAlignment(bamRead));
     align.pos = alignPos;
 
-    edgeMismatchLength(align, bamRead.get_bam_read(), testRefSeg, 5,
-                       leadingLength, leadingRefPos, trailingLength, trailingRefPos);
+    edgePoorAlignmentLength(align, bamRead.get_bam_read(), testRefSeg, 5,
+                            leadingLength, leadingRefPos, trailingLength, trailingRefPos);
 }
 
 

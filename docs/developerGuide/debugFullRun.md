@@ -3,12 +3,16 @@
 [Developer Guide Home](README.md)
 
 ## Table of Contents
-[] (BEGIN automated TOC section, any edits will be overwritten on next source refresh)
+
+[//]: # (BEGIN automated TOC section, any edits will be overwritten on next source refresh)
+
 * [Summary](#summary)
 * [Rerun SVCandidateGeneration without recreating the SVLocus graph](#rerun-svcandidategeneration-without-recreating-the-svlocus-graph)
 * [Comparing VCF output between runs](#comparing-vcf-output-between-runs)
 * [Options to accelerate a small test case](#options-to-accelerate-a-small-test-case)
-[] (END automated TOC section, any edits will be overwritten on next source refresh)
+
+[//]: # (END automated TOC section, any edits will be overwritten on next source refresh)
+
 
 ## Summary
 

@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Ole Schulz-Trieglaff
 /// \author Chris Saunders
 ///
@@ -569,13 +568,6 @@ getBreakendReads(
                 {
                     if (leadingMismatchLen >= minMismatchLen) isSemiAlignedKeeper = true;
                 }
-
-#if 0
-                if (isSemiAligned(bamRead,ref,_scanOpt.minSemiAlignedScoreCandidates))
-                {
-                    isSemiAlignedKeeper = true;
-                }
-#endif
             }
 
             const bool isShadowKeeper(shadow.check(bamRead));

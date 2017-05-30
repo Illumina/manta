@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -27,7 +26,8 @@
 #include "htsapi/bam_record.hh"
 #include "svgraph/GenomeInterval.hh"
 
-
+/// \brief Shared interface for methods which process alignment file regions
+///
 /// This enables specification of different methods which
 /// must traverse a range of reads in a bam file. By abstracting
 /// multiple methods to this interface, we can accomplish multiple
@@ -39,20 +39,14 @@ struct BamRegionProcessor
     virtual
     ~BamRegionProcessor() {}
 
-    /// provide the index of the next bam file, must be called before switching files/samples
+    /// Provide the index of the next bam file, must be called before switching files/samples
     ///
-    /// for each bam index, return the requested interval for this operation,
-    /// operations with closely related intervals will be compbined
-    /// and the union of intervals will be processed
+    /// For each bam index, return the requested interval for this operation,
+    /// operations with closely related intervals will be combined
+    /// and the union of intervals will be processed.
     virtual
     const GenomeInterval&
     nextBamIndex(
         const unsigned bamIndex) = 0;
 
-    /// provide the next bam record
-    /*virtual
-    void
-    processRecord(
-        const bam_record& bamRead) = 0;
-    */
 };

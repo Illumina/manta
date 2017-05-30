@@ -70,7 +70,7 @@ class Constants:
     rmLinkChars = "[^0-9a-z -]"
 
     # this works as a semi-inline comment on github, but may not work on other md parsers:
-    warnString = "[] (%s automated TOC section, any edits will be overwritten on next source refresh)\n"
+    warnString = "\n[//]: # (%s automated TOC section, any edits will be overwritten on next source refresh)\n\n"
 
 
 def main() :
@@ -80,7 +80,10 @@ def main() :
     infp=sys.stdin
     outfp=sys.stdout
     
+    # true when current line is part of a previous table of contents or body text
     isBuilding=False
+
+    # true when the body text of the document is being analyzed to build the new table of contents
     isScanning=False
     isValidHeaderZone=True
     lineBuffer=[]
@@ -92,8 +95,9 @@ def main() :
                 isBuilding=True
         elif not isScanning:
             sline = line.strip()
-            if sline == "" : isScanning=True
-        else :
+            if not ((sline == "") or (sline[0] == "*") or (sline[0] == "[")) : isScanning=True
+
+        if isBuilding and isScanning :
             if line.startswith("```") :
                 isValidHeaderZone = not isValidHeaderZone
 

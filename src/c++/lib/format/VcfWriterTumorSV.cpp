@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Xiaoyu Chen
 ///
 
@@ -102,6 +101,7 @@ VcfWriterTumorSV::
 modifyTranslocInfo(
     const SVCandidate& /*sv*/,
     const bool isFirstOfPair,
+    const SVCandidateAssemblyData& /*assemblyData*/,
     InfoTag_t& infotags) const
 {
     const SVScoreInfo& baseInfo(getBaseInfo());

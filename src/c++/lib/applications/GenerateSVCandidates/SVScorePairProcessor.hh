@@ -1,4 +1,3 @@
-// -*- mode: c++; indent-tabs-mode: nil; -*-
 //
 // Manta - Structural Variant and Indel Caller
 // Copyright (c) 2013-2017 Illumina, Inc.
@@ -18,7 +17,7 @@
 //
 //
 
-///
+/// \file
 /// \author Chris Saunders
 ///
 
@@ -89,18 +88,6 @@ struct SVScorePairProcessor : public BamRegionProcessor
     const GenomeInterval&
     nextBamIndex(
         const unsigned bamIndex);
-
-    /*
-    void
-    processRecord(
-            const bam_record& bamRead)
-    {
-        if (isSkipRecordCore(bamRead)) return;
-        if (isSkipRecord(bamRead)) return;
-
-        processClearedRecord(bamRead);
-    }
-    */
 
     // alternate interface
     static
