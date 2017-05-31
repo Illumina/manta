@@ -86,7 +86,7 @@ getSVBreakendCandidateSemiAligned(
     const reference_contig_segment& refSeq,
     const bool isUseOverlappingPairs,
     const bool isAgressiveAdaptorCheck,
-    oorAlignmentLength,
+    unsigned& leadingEdgePoorAlignmentLength,
     pos_t& leadingEdgeRefPos,
     unsigned& trailingEdgePoorAlignmentLength,
     pos_t& trailingEdgeRefPos,
