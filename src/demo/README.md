@@ -17,7 +17,6 @@ the somatic structural variant output to an expected result.
 The demo data contain reads from HCC1954/HCC1954BL mapped in the
 vicinity of somatic translocation breakends corresponding to COSMIC
 variant [COST16011][1]. The demo sequencing data is extracted from
-[TCGA Benchmark 4][2].
+TCGA Benchmark 4.
 
 [1]:http://grch37-cancer.sanger.ac.uk/cosmic/rearrangement/overview?id=16011
-[2]:https://cghub.ucsc.edu/datasets/benchmark_download.html
