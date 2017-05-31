@@ -32,7 +32,7 @@ Manta User Guide
   * [Execution](#execution)
     * [Advanced execution options](#advanced-execution-options)
   * [Extended use cases](#extended-use-cases)
-    * [Exome/Targeted](#exome-targeted)
+    * [Exome/Targeted](#exometargeted)
     * [Call regions](#call-regions)
     * [Unpaired tumor sample](#unpaired-tumor-sample)
   * [RNA-Seq](#rna-seq)

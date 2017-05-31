@@ -1602,7 +1602,7 @@ scoreSomaticSV(
     // somatic score is computed at a high stringency date tier (1) and low stringency tier (2), the min value is
     // kept as the final reported quality:
     static const unsigned tierCount(2);
-    int tierScore[tierCount] = { 0 , 0 };
+    int tierScore[tierCount] = { 0, 0 };
 
     // hard code 1 tumor - 1 normal for now, should be able to support multiple tumors in future:
     assert(sampleCount==2);

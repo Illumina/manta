@@ -1,3 +1,4 @@
+- MANTA-1038 Fix infrequent graph edge lookup failure
 v1.1.1
 - MANTA-691 Add an option to specify call regions in a bed file
 - MANTA-977/[#83] Improve SA tag error reporting
