@@ -139,15 +139,17 @@ else()
     endif ()
 endif()
 
-set (THIS_ARCH ${CMAKE_SYSTEM_PROCESSOR})
-if (NOT WIN32)
+set (TARGET_ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})
+if (APPLE)
+    # On OS X, CMAKE_SYSTEM_PROCESSOR is set to 'i386' regardless of the actual processor, so
+    # architecture is inferred from pointer size instead:
     if (CMAKE_SIZEOF_VOID_P MATCHES 8)
-        set (THIS_ARCH "x86_64")
+        set (TARGET_ARCHITECTURE "x86_64")
     else ()
-        set (THIS_ARCH "x86")
+        set (TARGET_ARCHITECTURE "x86")
     endif ()
 endif ()
-message (STATUS "TARGET_ARCHITECTURE: " ${THIS_ARCH} )
+message (STATUS "TARGET_ARCHITECTURE: " ${TARGET_ARCHITECTURE} )
 
 
 # Create package versioning target - version derived from git describe except for
