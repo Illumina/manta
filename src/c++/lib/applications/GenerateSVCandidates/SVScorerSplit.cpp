@@ -22,20 +22,19 @@
 ///
 
 #include "SVScorer.hh"
+#include "blt_util/log.hh"
 #include "blt_util/seq_util.hh"
 #include "manta/ShadowReadFinder.hh"
 #include "htsapi/SimpleAlignment_bam_util.hh"
 
 #include "boost/scoped_array.hpp"
 
+#include <iostream>
+
 //#define DEBUG_SVS
 
 //#define DEBUG_SUPPORT
 
-#if defined(DEBUG_SVS) || defined(DEBUG_SUPPORT)
-#include <iostream>
-#include "blt_util/log.hh"
-#endif
 
 
 static
@@ -257,11 +256,18 @@ scoreSplitReads(
         static const bool isShadow(false);
         static const bool isReversedShadow(false);
 
-        //const uint8_t mapq(bamRead.map_qual());
-        getReadSplitScore(bamRead, dopt, svId, bp, bpRef, isBP1,
-                          flankScoreSize, svAlignInfo, minMapQ, minTier2MapQ,
-                          isRNA, isShadow, isReversedShadow,
-                          sampleEvidence, sample, svSupportFrags);
+        try
+        {
+            getReadSplitScore(bamRead, dopt, svId, bp, bpRef, isBP1,
+                              flankScoreSize, svAlignInfo, minMapQ, minTier2MapQ,
+                              isRNA, isShadow, isReversedShadow,
+                              sampleEvidence, sample, svSupportFrags);
+        }
+        catch (...)
+        {
+            log_os << "ERROR: Exception caught in getReadSplitScore() while scoring read: " << bamRead << "\n";
+            throw;
+        }
     }
 
     static const bool isIncludeShadowReads(false);

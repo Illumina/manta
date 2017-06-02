@@ -25,6 +25,7 @@
 #include "SVScorePairAltProcessor.hh"
 
 #include "blt_util/LinearScaler.hh"
+#include "blt_util/log.hh"
 #include "blt_util/math_util.hh"
 #include "blt_util/prob_util.hh"
 #include "blt_util/qscore.hh"
@@ -46,11 +47,6 @@
 #if defined(DEBUG_SCORE) || defined(DEBUG_SOMATIC_SCORE)
 #define ANY_DEBUG_SCORE
 #endif
-
-#ifdef ANY_DEBUG_SCORE
-#include "blt_util/log.hh"
-#endif
-
 
 
 
@@ -1904,19 +1900,27 @@ scoreSV(
 
         modelScoreInfo.clear();
 
-        // accumulate model-agnostic evidence for each candidate (or its corresponding reference allele)
-        SVEvidence& evidence(junctionEvidence[junctionIndex]);
-        getSVSupportingEvidence(svData, assemblyData, isTumorOnly, sv, svId,
-                                modelScoreInfo.base, evidence, svSupports);
+        try
+        {
+            // accumulate model-agnostic evidence for each candidate (or its corresponding reference allele)
+            SVEvidence& evidence(junctionEvidence[junctionIndex]);
+            getSVSupportingEvidence(svData, assemblyData, isTumorOnly, sv, svId,
+                                    modelScoreInfo.base, evidence, svSupports);
 
-        // score components specific to diploid-germline model:
-        float& spanningPairWeight(junctionSpanningPairWeight[junctionIndex]);;
-        spanningPairWeight=(getSpanningPairWeight(sv));
+            // score components specific to diploid-germline model:
+            float& spanningPairWeight(junctionSpanningPairWeight[junctionIndex]);;
+            spanningPairWeight = (getSpanningPairWeight(sv));
 
-        junctionData.resize(1);
-        junctionData[0].init(sv, evidence, modelScoreInfo.base, spanningPairWeight);
+            junctionData.resize(1);
+            junctionData[0].init(sv, evidence, modelScoreInfo.base, spanningPairWeight);
 
-        computeAllScoreModels(isSomatic, isTumorOnly, junctionData, modelScoreInfo);
+            computeAllScoreModels(isSomatic, isTumorOnly, junctionData, modelScoreInfo);
+        }
+        catch (...)
+        {
+            log_os << "ERROR: Exception caught while scoring candidate SV: " << sv << "\n";
+            throw;
+        }
     }
 
     //

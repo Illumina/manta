@@ -320,7 +320,7 @@ splitReadAligner(
     if (scanEnd < scanStart)
     {
         std::ostringstream oss;
-        oss << "ERROR: scanEnd < scanStart."
+        oss << "ERROR: Unexpected split read alignment input condition: scanEnd < scanStart."
             << " scanEnd: " << scanEnd << " scanStart: " << scanStart
             << " querySize: " << querySize << " targetSize: " << targetSize << '\n'
             << "\ttargetRange: " << targetBpOffsetRange << '\n';

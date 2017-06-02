@@ -124,8 +124,11 @@ run(int argc, char* argv[]) const
     }
     catch (const illumina::common::ExceptionData& e)
     {
+        // Note that ExceptionData.getContext() already calls std::exception::what(), so additionally calling
+        // e.Message() would only write the exception message twice.
+        /// TODO Redesign the above exception class so that the correct usage is obvious
         log_os << "FATAL_ERROR: " << name() << " EXCEPTION: "
-               << e.getContext() << ": " << e.getMessage() << "\n";
+               << e.getContext() << "\n";
         post_catch(argc,argv,log_os);
     }
     catch (const boost::exception& e)
