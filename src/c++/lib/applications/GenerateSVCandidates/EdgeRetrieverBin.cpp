@@ -35,6 +35,9 @@
 
 
 
+/// \brief When \p totalCount is subdivided into \p binCount approximately even bins, return the 0-indexed count
+///        which starts the zero-indexed \p binIndex bin.
+///
 static
 unsigned long
 getBoundaryCount(
@@ -64,7 +67,7 @@ EdgeRetrieverBin(
     _endCount=(getBoundaryCount(binCount,binIndex+1,totalObservationCount));
 
 #ifdef DEBUG_EDGER
-    log_os << "EDGER: bi,bc,begin,end: "
+    log_os << "EDGER: binIndex,binCount,beginCount,endCount: "
            << binIndex << " "
            << binCount << " "
            << _beginCount << " "
@@ -83,17 +86,35 @@ jumpToFirstEdge()
     const bool isFilterNodes(_graphNodeMaxEdgeCount>0);
     const unsigned setSize(_set.size());
 
+    bool isLastFiltered(false);
+
     // first catch headCount up to the begin edge if required:
     while (true)
     {
+        if (isLastFiltered && (_edge.locusIndex == setSize))
+        {
+            _headCount = (_endCount + 1);
+            _edge.locusIndex = 0;
+            _edge.nodeIndex1 = 0;
+            _edge.nodeIndex2 = 0;
+            return;
+        }
+
         assert(_edge.locusIndex < setSize);
 
         const SVLocus& locus(_set.getLocus(_edge.locusIndex));
         const unsigned locusObservationCount(locus.totalObservationCount());
 
-        if ((_headCount+locusObservationCount) > _beginCount)
+        if ((_headCount+locusObservationCount) <= _beginCount)
         {
+            // skip over the locus in this case:
+            _headCount += locusObservationCount;
+        }
+        else
+        {
+            // In this case we expect to (usually) find the start edge within the locus
             const unsigned locusSize(locus.size());
+
             while (_edge.nodeIndex1 < locusSize)
             {
                 const SVLocusNode& node1(locus.getNode(_edge.nodeIndex1));
@@ -108,7 +129,10 @@ jumpToFirstEdge()
                     unsigned edgeCount(edgeIter->second.getCount());
                     const bool isSelfEdge(edgeIter->first == _edge.nodeIndex1);
                     if (! isSelfEdge) edgeCount += locus.getEdge(edgeIter->first,_edge.nodeIndex1).getCount();
+
                     _headCount += edgeCount;
+                    isLastFiltered=false;
+
                     if (_headCount > _beginCount)
                     {
                         _edge.nodeIndex2 = edgeIter->first;
@@ -123,6 +147,7 @@ jumpToFirstEdge()
 #ifdef DEBUG_EDGER
                                 log_os << "EDGER: jump filtering @ hc: " << _headCount << "\n";
 #endif
+                                isLastFiltered=true;
                                 continue;
                             }
                         }
@@ -132,10 +157,18 @@ jumpToFirstEdge()
 
                 _edge.nodeIndex1++;
             }
+
+            // It is not common, but possible, to reach the end of the above while loop without returning.
+            // This can happen if the final edge(s) in the locus are all filtered.
+#ifdef DEBUG_EDGER
+            log_os << "EDGER: reached end of locus without finding first edge: " << _edge.locusIndex << "\n";
+#endif
+            assert(isLastFiltered);
             assert(_headCount >= _beginCount);
         }
-        _headCount += locusObservationCount;
         _edge.locusIndex++;
+        _edge.nodeIndex1=0;
+        _edge.nodeIndex2=0;
     }
 
     assert(false && "jumpToFirstEdge: invalid state");
@@ -161,6 +194,9 @@ advanceEdge()
         if (isLastFiltered && (_edge.locusIndex == setSize))
         {
             _headCount = (_endCount + 1);
+            _edge.locusIndex = 0;
+            _edge.nodeIndex1 = 0;
+            _edge.nodeIndex2 = 0;
             return;
         }
         assert(_edge.locusIndex < setSize);

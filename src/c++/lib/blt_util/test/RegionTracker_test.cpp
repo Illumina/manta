@@ -289,11 +289,11 @@ BOOST_AUTO_TEST_CASE( test_PayloadRegionTrackerSubset )
 
     const auto test1(rt.isSubsetOfRegion(known_pos_range2(5,10)));
     BOOST_REQUIRE(test1);
-    BOOST_REQUIRE_EQUAL(*test1 , 5);
+    BOOST_REQUIRE_EQUAL(*test1, 5);
 
     const auto test2(rt.isSubsetOfRegion(known_pos_range2(6,7)));
     BOOST_REQUIRE(test2);
-    BOOST_REQUIRE_EQUAL(*test2 , 5);
+    BOOST_REQUIRE_EQUAL(*test2, 5);
     BOOST_REQUIRE(! rt.isSubsetOfRegion(known_pos_range2(4,10)));
     BOOST_REQUIRE(! rt.isSubsetOfRegion(known_pos_range2(5,11)));
     BOOST_REQUIRE(! rt.isSubsetOfRegion(known_pos_range2(0,1)));

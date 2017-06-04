@@ -27,7 +27,7 @@
 #include "svgraph/SVLocusSet.hh"
 
 
-/// provide an iterator over edges in a set of SV locus graphs
+/// Provide an iterator over edges in a set of SV locus graphs
 ///
 struct EdgeRetriever
 {

@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE( test_softmax_factor_scale )
 
 BOOST_AUTO_TEST_CASE( test_softmax_range )
 {
-    static const std::vector<double> startVal = { 0.2 , 0.3 , 0.0001 };
+    static const std::vector<double> startVal = { 0.2, 0.3, 0.0001 };
     auto val = startVal;
     softMaxInverseRangeTransform(val.begin(), val.end());
     softMaxRangeTransform(val.begin(), val.end());
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE( test_prob_comp )
     // uncomment this case to demo why prob_comp is used:
 #if 0
     const float val1(1.-prob[0]);
-    BOOST_REQUIRE_CLOSE(val1, expect , eps);
+    BOOST_REQUIRE_CLOSE(val1, expect, eps);
 #endif
 }
 

@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeSerialze )
 
     BOOST_REQUIRE_EQUAL(node1.outCount(), node_copy1.outCount());
     BOOST_REQUIRE_EQUAL(node1.getInterval(), node_copy1.getInterval());
-    BOOST_REQUIRE_EQUAL(node1.size() ,node_copy1.size());
+    BOOST_REQUIRE_EQUAL(node1.size(),node_copy1.size());
 
     const SVLocusEdgeManager node1Manager(node1.getEdgeManager());
     const SVLocusEdgeManager node1CopyManager(node_copy1.getEdgeManager());

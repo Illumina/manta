@@ -276,5 +276,69 @@ BOOST_AUTO_TEST_CASE( test_EdgeRetrieverOddBinSelfEdge )
 }
 
 
-BOOST_AUTO_TEST_SUITE_END()
+// MANTA-1038
+BOOST_AUTO_TEST_CASE( test_EdgeRetrieverFilteredEdge )
+{
+    SVLocus locus1a;
+    locusAddPair(locus1a,1,10,20,5,10,20, true);
+    SVLocus locus1b;
+    locusAddPair(locus1b,5,10,20,2,30,40, true);
 
+    // 1. outgoing edge count on locus 1 edge is such that it will be filtered out
+    // 2. evidence weights are set such that this will be the end of a bin
+    SVLocus locus1;
+    locusAddPair(locus1,1,10,20,2,30,40, true, 2);
+
+    SVLocus locus2;
+    locusAddPair(locus2,3,10,20,4,30,40, true, 4);
+
+    SVLocusSetOptions sopt;
+    sopt.minMergeEdgeObservations = 1;
+    SVLocusSet set1(sopt);
+    set1.merge(locus1a);
+    set1.merge(locus1b);
+    set1.merge(locus1);
+    set1.merge(locus2);
+    set1.checkState(true,true);
+
+    static const unsigned graphNodeMaxEdgeCount(1);
+    EdgeRetrieverBin edger(set1, graphNodeMaxEdgeCount, 4, 1);
+
+    BOOST_REQUIRE(! edger.next() );
+}
+
+
+// MANTA-1038
+BOOST_AUTO_TEST_CASE( test_EdgeRetrieverFilteredFinalEdge )
+{
+    SVLocus locus0;
+    locusAddPair(locus0,3,10,20,4,30,40, true, 4);
+
+    SVLocus locus1a;
+    locusAddPair(locus1a,1,10,20,5,10,20, true);
+    SVLocus locus1b;
+    locusAddPair(locus1b,5,10,20,2,30,40, true);
+
+    // 1. outgoing edge count on locus 1 edge is such that it will be filtered out
+    // 2. evidence weights are set such that this will be the end of the final bin
+    SVLocus locus1;
+    locusAddPair(locus1,1,10,20,2,30,40, true, 2);
+
+
+    SVLocusSetOptions sopt;
+    sopt.minMergeEdgeObservations = 1;
+    SVLocusSet set1(sopt);
+    set1.merge(locus0);
+    set1.merge(locus1a);
+    set1.merge(locus1b);
+    set1.merge(locus1);
+    set1.checkState(true,true);
+
+    static const unsigned graphNodeMaxEdgeCount(1);
+    EdgeRetrieverBin edger(set1, graphNodeMaxEdgeCount, 4, 3);
+
+    BOOST_REQUIRE(! edger.next() );
+}
+
+
+BOOST_AUTO_TEST_SUITE_END()
