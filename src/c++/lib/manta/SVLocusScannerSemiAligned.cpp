@@ -227,6 +227,7 @@ getSVBreakendCandidateSemiAligned(
     const SimpleAlignment& bamAlign,
     const reference_contig_segment& refSeq,
     const bool isUseOverlappingPairs,
+    const bool isAgressiveAdaptorCheck,
     unsigned& leadingEdgePoorAlignmentLength,
     pos_t& leadingEdgeRefPos,
     unsigned& trailingEdgePoorAlignmentLength,
@@ -241,8 +242,7 @@ getSVBreakendCandidateSemiAligned(
     trailingEdgePoorAlignmentLength = 0;
     trailingEdgeRefPos = 0;
 
-    // First filter out reads which appear to be reading into adaptor sequence.
-    if (is_possible_adapter_pair(bamRead)) return;
+    if (is_possible_adapter_pair(bamRead, isAgressiveAdaptorCheck)) return;
 
     // Create a new alignment with all soft-clip sections unrolled to a matched alignment state.
     const SimpleAlignment matchedAlignment(matchifyEdgeSoftClip(bamAlign));

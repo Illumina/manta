@@ -85,12 +85,14 @@ getSVBreakendCandidateSemiAligned(
     const SimpleAlignment& bamAlign,
     const reference_contig_segment& refSeq,
     const bool isUseOverlappingPairs,
+    const bool isAgressiveAdaptorCheck,
     unsigned& leadingEdgePoorAlignmentLength,
     pos_t& leadingEdgeRefPos,
     unsigned& trailingEdgePoorAlignmentLength,
     pos_t& trailingEdgeRefPos,
     const uint8_t minBasecallQuality = 20,
     const float minHighBasecallQualityFraction = 0.75);
+
 
 
 /// \brief Simplified interface to ::getSVBreakendCandidateSemiAligned
@@ -103,6 +105,7 @@ getSVBreakendCandidateSemiAlignedSimple(
     const SimpleAlignment& bamAlign,
     const reference_contig_segment& refSeq,
     const bool isUseOverlappingPairs,
+    const bool isAgressiveAdaptorCheck,
     unsigned& leadingMismatchLen,
     unsigned& trailingMismatchLen)
 {
@@ -110,6 +113,7 @@ getSVBreakendCandidateSemiAlignedSimple(
     getSVBreakendCandidateSemiAligned(
         bamRead, bamAlign, refSeq,
         isUseOverlappingPairs,
+        isAgressiveAdaptorCheck,
         leadingMismatchLen, leadingRefPos,
         trailingMismatchLen, trailingRefPos);
 }

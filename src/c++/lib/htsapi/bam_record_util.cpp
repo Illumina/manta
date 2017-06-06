@@ -66,11 +66,9 @@ is_innie_pair(
 
 bool
 is_possible_adapter_pair(
-    const bam_record& bamRead)
+    const bam_record& bamRead,
+    const bool isAgressive)
 {
-    // TODO: improvements for datasets with short fragment size
-    // - return false when one read is split aligned
-    // - check both alignment start and alignment end for signals of running into adapters
     if (! is_mapped_chrom_pair(bamRead)) return false;
     if (bamRead.is_fwd_strand() == bamRead.is_mate_fwd_strand()) return false;
 
@@ -80,7 +78,34 @@ is_possible_adapter_pair(
     {
         posDiff *= -1;
     }
-    return ((posDiff < 10) && (posDiff > -50));
+
+    // Aggressive check: the pos difference between the reverse read and the forwarding read is [-50, 10]
+    bool isCandidate((posDiff < 10) && (posDiff > -50));
+    if (! isCandidate) return false;
+    // The aggressive check is applied for candidate/hypothesis generation
+    // to avoid large number of spurious small indels for short insert data that are derived from adapter k-mers
+    else if (isAgressive) return true;
+
+    // A less aggressive check is applied for read filtration of assembly to avoid missing any evidence reads
+    // if the read (primary) contains a SA tag, keep it for assembly
+    if (bamRead.isSASplit()) return false;
+
+    using namespace ALIGNPATH;
+    path_t apath;
+    bam_cigar_to_apath(bamRead.raw_cigar(), bamRead.n_cigar(), apath);
+    // if the read contains soft clip on the 3' end, it likely runs into adapter.
+    unsigned softClipSize;
+    if (bamRead.is_fwd_strand())
+    {
+        softClipSize = apath_soft_clip_trail_size(apath);
+    }
+    else
+    {
+        softClipSize = apath_soft_clip_lead_size(apath);
+    }
+
+    isCandidate = (softClipSize > 0);
+    return (isCandidate);
 }
 
 
