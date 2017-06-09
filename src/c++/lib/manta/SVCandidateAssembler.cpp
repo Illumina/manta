@@ -510,7 +510,7 @@ getBreakendReads(
                     {
 #ifdef DEBUG_ASBL
                         log_os << logtag << "Adding remote bamrec. idx: " << bamIndex << " rec: " << bamRead << '\n'
-                               << "\tmapq: " << bamRead.map_qual() << '\n'
+                               << "\tmapq: " << int(bamRead.map_qual()) << '\n'
                                << "\tread: " << bamRead.get_bam_read() << '\n';
 #endif
 
@@ -615,7 +615,7 @@ getBreakendReads(
             if (isShadowKeeper) ++shadowCount;
 
             log_os << logtag << "Adding bamrec. idx: " << bamIndex << " rec: " << bamRead << '\n'
-                   << "\tmapq: " << bamRead.map_qual() << '\n'
+                   << "\tmapq: " << int(bamRead.map_qual()) << '\n'
                    << "\tread: " << bamRead.get_bam_read() << '\n';
             log_os << "isIndelKeeper: " << isIndelKeeper
                    << " isSemiAlignedKeeper: " << isSemiAlignedKeeper

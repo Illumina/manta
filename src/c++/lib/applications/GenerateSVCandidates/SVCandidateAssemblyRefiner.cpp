@@ -2064,12 +2064,6 @@ getSmallSVAssembly(
             }
             else if (alignment.score > assemblyData.smallSVAlignments[highScoreIndex].score)
             {
-                highScoreIndex = contigIndex;
-
-#ifdef DEBUG_REFINER
-                log_os << __FUNCTION__ << ": contigIndex: " << highScoreIndex << " is high score\n";
-#endif
-
 #ifdef ITERATIVE_ASSEMBLER
                 isSecHighScore = true;
                 secHighScoreIndex = highScoreIndex;
@@ -2079,6 +2073,10 @@ getSmallSVAssembly(
 #ifdef DEBUG_REFINER
                 log_os << __FUNCTION__ << ": contigIndex: " << secHighScoreIndex << " is the second high score\n";
 #endif
+#endif
+                highScoreIndex = contigIndex;
+#ifdef DEBUG_REFINER
+                log_os << __FUNCTION__ << ": contigIndex: " << highScoreIndex << " is high score\n";
 #endif
             }
 #ifdef ITERATIVE_ASSEMBLER
@@ -2103,10 +2101,10 @@ getSmallSVAssembly(
         const unsigned highScoreSuppReads = assemblyData.contigs[highScoreIndex].supportReads.size();
         const unsigned secHighScoreSuppReads = assemblyData.contigs[secHighScoreIndex].supportReads.size();
 #ifdef DEBUG_REFINER
-        log_os << __FUNCTION__ << ": contig #" << highScoreIndex << "has " << highScoreSuppReads
-               <<" support reads, with max variant size " << highScoreVarSize;
-        log_os << __FUNCTION__ << ": contig #" << secHighScoreIndex << "has " << secHighScoreSuppReads
-               <<" support reads, with max variant size " << secHighScoreVarSize;
+        log_os << __FUNCTION__ << ": contig #" << highScoreIndex << " has " << highScoreSuppReads
+               <<" support reads, with max variant size " << highScoreVarSize << "\n";
+        log_os << __FUNCTION__ << ": contig #" << secHighScoreIndex << " has " << secHighScoreSuppReads
+               <<" support reads, with max variant size " << secHighScoreVarSize << "\n";
 #endif
 
         const bool secondIsBest((secHighScoreSuppReads > highScoreSuppReads *(1+extraSuppReadPerc)) ||
