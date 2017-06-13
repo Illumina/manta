@@ -616,8 +616,25 @@ The results are reported in __tumorSV.vcf.gz__. This file contains all
 SV candidates (similar to the __candidateSV.vcf.gz__ file), but also
 includes paired and split read evidence for each allele and a
 subset of the filters used for the tumor-normal comparative analysis.
-Note that Manta does not yet provide a quality scoring model for unpaired
-tumor sample analysis.
+
+Note that Manta does not yet provide a quality scoring model for unpaired tumor sample analysis. Users interested in
+selecting for higher precision subsets of the unpaired tumor calls may consider selection based on the counts of paired
+and split reads supporting each allele (`SAMPLE/PR` and `SAMPLE/SR` respectively). Note that the split read counts will
+not always be available because some calls will be imprecise, so the paired read count (`SAMPLE/PR`), could be used as a
+simple starting point for filtration, but it is more accurate to consider the split and paired read support counts
+together if a more accurate filter is required. The status of a call's `IMPRECISE` flag may also be a strong indicator
+of its reliability.
+
+For example, in the unpaired tumor analysis output below, the records could be filtered to only include those with
+`SAMPLE/PR[1] >= 15 || SAMPLE/SR[1] >= 15`. This would remove the inversion record, because the paired-read count
+for the inversion allele is 13 and the split-read count is not known. The two translocation breakends would not be
+filtered because they have 15 and 19 split-read counts, respectively, supporting the breakend allele:
+
+```
+11      94975747        MantaBND:0:2:3:0:0:0:1  G       G]8:107653520]  .       PASS    SVTYPE=BND;MATEID=MantaBND:0:2:3:0:0:0:0;CIPOS=0,2;HOMLEN=2;HOMSEQ=TT;BND_DEPTH=216;MATE_BND_DEPTH=735  PR:SR   722,9:463,15
+11      94975753        MantaINV:0:1:2:0:0:0    T       <INV>   .       PASS    END=94987865;SVTYPE=INV;SVLEN=12112;IMPRECISE;CIPOS=-156,156;CIEND=-150,150;INV3        PR      161,13
+11      94987872        MantaBND:0:0:1:0:0:0:0  T       T[8:107653411[  .       PASS    SVTYPE=BND;MATEID=MantaBND:0:0:1:0:0:0:1;BND_DEPTH=171;MATE_BND_DEPTH=830       PR:SR   489,4:520,19
+```
 
 For low allele frequency variants, it may also be helpful to consider the
 high sensitivity calling documentation below.
