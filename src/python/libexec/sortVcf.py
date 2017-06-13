@@ -200,9 +200,9 @@ def main() :
         try :
             headerOrder = chromOrder.index(x.chrom)
         except ValueError :
-            headerOrder = size(chromOrder)
+            headerOrder = len(chromOrder)
 
-        return (headerOrder, x.chrom, x.pos, x.endPos)
+        return (headerOrder, x.chrom, x.pos, x.endPos, x.ref, x.alt)
 
     recList.sort(key = vcfRecSortKey)
 
