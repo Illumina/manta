@@ -29,12 +29,14 @@
 #include "htsapi/bam_record.hh"
 #include "htsapi/bam_record_util.hh"
 #include "htsapi/bam_header_info.hh"
+#include "htsapi/align_path_bam_util.hh"
 #include "manta/ReadGroupStatsSet.hh"
 #include "manta/SVCandidate.hh"
 #include "manta/SVLocusEvidenceCount.hh"
 #include "svgraph/SVLocus.hh"
 #include "svgraph/SVLocusSampleCounts.hh"
 #include "options/ReadScannerOptions.hh"
+#include "common/Exceptions.hh"
 
 #include <string>
 #include <vector>
@@ -119,6 +121,28 @@ struct SVLocusScanner
         const std::vector<std::string>& alignmentFilename,
         const bool isRNA,
         const bool isTranscriptStrandKnown = false);
+
+    /// QC check if the read length implied by cigar string matches the length of read sequence
+    static
+    void
+    checkReadSize(const bam_record& bamRead)
+    {
+        ALIGNPATH::path_t path;
+        bam_cigar_to_apath(bamRead.raw_cigar(), bamRead.n_cigar(), path);
+        ALIGNPATH::apath_cleaner(path);
+        const unsigned alignedSize(ALIGNPATH::apath_read_length(path));
+
+        const unsigned seqSize(bamRead.read_size());
+        if (seqSize != alignedSize)
+        {
+            std::ostringstream oss;
+            oss << "ERROR: Read length implied by mapped alignment ("
+                << alignedSize << ") does not match sequence length ("
+                << seqSize << ") in alignment record:\n";
+            BOOST_THROW_EXCEPTION(illumina::common::LogicException(oss.str()));
+        }
+    }
+
 
     /// this predicate runs isReadFiltered without the mapq components
     static

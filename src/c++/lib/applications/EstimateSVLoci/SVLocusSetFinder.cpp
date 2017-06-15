@@ -268,6 +268,9 @@ update(
     const bam_record& bamRead,
     const unsigned defaultReadGroupIndex)
 {
+    // QC check of read length
+    SVLocusScanner::checkReadSize(bamRead);
+
     // True if the read comes from a tumor sample.
     const bool isTumor(_isAlignmentTumor[defaultReadGroupIndex]);
     if (! isTumor)
