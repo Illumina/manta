@@ -129,16 +129,16 @@ struct SVLocusScanner
     {
         ALIGNPATH::path_t path;
         bam_cigar_to_apath(bamRead.raw_cigar(), bamRead.n_cigar(), path);
-        ALIGNPATH::apath_cleaner(path);
         const unsigned alignedSize(ALIGNPATH::apath_read_length(path));
-
         const unsigned seqSize(bamRead.read_size());
+
         if (seqSize != alignedSize)
         {
             std::ostringstream oss;
             oss << "ERROR: Read length implied by mapped alignment ("
                 << alignedSize << ") does not match sequence length ("
                 << seqSize << ") in alignment record:\n";
+            oss << "read: " << bamRead << "\n";
             BOOST_THROW_EXCEPTION(illumina::common::LogicException(oss.str()));
         }
     }

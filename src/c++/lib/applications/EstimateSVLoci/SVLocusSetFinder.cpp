@@ -268,9 +268,6 @@ update(
     const bam_record& bamRead,
     const unsigned defaultReadGroupIndex)
 {
-    // QC check of read length
-    SVLocusScanner::checkReadSize(bamRead);
-
     // True if the read comes from a tumor sample.
     const bool isTumor(_isAlignmentTumor[defaultReadGroupIndex]);
     if (! isTumor)
@@ -322,6 +319,9 @@ update(
 
     // check that this read starts in our scan region:
     if (! _scanRegion.range.is_pos_intersect(bamRead.pos()-1)) return;
+
+    // QC check of read length
+    SVLocusScanner::checkReadSize(bamRead);
 
     // update the stage manager to move the head pointer forward to the current read's position
     //
