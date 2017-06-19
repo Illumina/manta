@@ -138,7 +138,7 @@ struct SVLocusScanner
             oss << "ERROR: Read length implied by mapped alignment ("
                 << alignedSize << ") does not match sequence length ("
                 << seqSize << ") in alignment record:\n";
-            oss << "read: " << bamRead << "\n";
+            oss << bamRead << "\n";
             BOOST_THROW_EXCEPTION(illumina::common::LogicException(oss.str()));
         }
     }
