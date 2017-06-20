@@ -36,8 +36,8 @@
 
 
 // compile with this macro to get verbose output:
-//#define DEBUG_ASBL
-//#define DEBUG_WALK
+#define DEBUG_ASBL
+#define DEBUG_WALK
 
 
 // stream used by DEBUG_ASBL:
@@ -581,7 +581,8 @@ searchRepeats(
     }
 
     // if the current word is a root node,
-    if (wordIndices[word].second == index)
+    const unsigned wordLowLink(wordIndices[word].second);
+    if (wordLowLink == index)
     {
         // exclude singletons
         bool isSingleton(wordStack.back() == word);
@@ -589,13 +590,14 @@ searchRepeats(
         {
             wordStack.pop_back();
         }
-        // record identified repeat words (i.e. words in the current circle)
         else
         {
+            // record identified repeat words (i.e. words in the current circle) if the circle is small
+            const bool isSmallCircle((index - wordLowLink) <= 50);
             while (true)
             {
                 const std::string repeatWd = wordStack.back();
-                repeatWords.insert(repeatWd);
+                if (isSmallCircle) repeatWords.insert(repeatWd);
                 wordStack.pop_back();
 
                 if (repeatWd == word) break;
