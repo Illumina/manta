@@ -36,8 +36,8 @@
 
 
 // compile with this macro to get verbose output:
-#define DEBUG_ASBL
-#define DEBUG_WALK
+//#define DEBUG_ASBL
+//#define DEBUG_WALK
 
 
 // stream used by DEBUG_ASBL:
@@ -201,6 +201,10 @@ walk(const IterativeAssemblerOptions& opt,
         return true;
     }
 
+    // collecting words used to build the contig
+    std::set<std::string> wordsInContig;
+    wordsInContig.insert(seed);
+
     const std::string tmpTrunk = getEnd(seed, wordLength-1, false);
     // collecting rejecting reads for the seed from the unselected branches
     for (const char symbol : opt.alphabet)
@@ -251,11 +255,11 @@ walk(const IterativeAssemblerOptions& opt,
 #endif
 
             unsigned maxBaseCount(0);
-            unsigned maxSharedReadCount(0);
+            unsigned maxContigWordReadCount(0);
             char maxBase(opt.alphabet[0]);
             std::string maxWord;
             std::set<unsigned> maxWordReads;
-            std::set<unsigned> maxSharedReads;
+            std::set<unsigned> maxContigWordReads;
             std::set<unsigned> previousWordReads;
             std::set<unsigned> supportReads2Remove;
             std::set<unsigned> rejectReads2Add;
@@ -275,50 +279,83 @@ walk(const IterativeAssemblerOptions& opt,
                 const std::set<unsigned>& currWordReads(wordReadsIter->second);
 
                 // get the shared supporting reads between the contig and the current word
-                std::set<unsigned> sharedReads;
+                std::set<unsigned> contigWordReads;
                 std::set_intersection(contig.supportReads.begin(), contig.supportReads.end(),
+                                      currWordReads.begin(), currWordReads.end(),
+                                      std::inserter(contigWordReads, contigWordReads.begin()));
+
+                // get the shared supporting reads across two alleles
+                std::set<unsigned> sharedReads;
+                std::set_intersection(maxContigWordReads.begin(), maxContigWordReads.end(),
                                       currWordReads.begin(), currWordReads.end(),
                                       std::inserter(sharedReads, sharedReads.begin()));
 #ifdef DEBUG_WALK
                 log_os << "Word supporting reads : ";
                 print_unsignSet(currWordReads);
                 log_os << "Contig-word shared reads : ";
+                print_unsignSet(contigWordReads);
+                log_os << "Allele shared reads : ";
                 print_unsignSet(sharedReads);
 #endif
 
-                if (sharedReads.empty()) continue;
+                if (contigWordReads.empty()) continue;
 
-                const unsigned sharedReadCount(sharedReads.size());
-                if (sharedReadCount > maxSharedReadCount)
+                const unsigned contigWordReadCount(contigWordReads.size());
+                if (contigWordReadCount > maxContigWordReadCount)
                 {
-                    // the old shared reads support an unselected allele
+                    // the old shared reads support an unselected allele if they don't support the new word
                     // remove them from the contig's supporting reads
-                    if (!maxSharedReads.empty())
-                        supportReads2Remove.insert(maxSharedReads.begin(), maxSharedReads.end());
-                    // the old supporting reads is for an unselected allele
+                    if (!maxContigWordReads.empty())
+                    {
+                        std::set<unsigned> toRemove;
+                        std::set_difference(maxContigWordReads.begin(), maxContigWordReads.end(),
+                                            sharedReads.begin(), sharedReads.end(),
+                                            std::inserter(toRemove, toRemove.begin()));
+                        if (!toRemove.empty())
+                            supportReads2Remove.insert(toRemove.begin(), toRemove.end());
+                    }
+
+                    // the old supporting reads is for an unselected allele if they don't support the new word
                     // they become rejecting reads for the currently selected allele
                     if (!maxWordReads.empty())
-                        rejectReads2Add.insert(maxWordReads.begin(), maxWordReads.end());
+                    {
+                        std::set<unsigned> toAdd;
+                        std::set_difference(maxWordReads.begin(), maxWordReads.end(),
+                                            sharedReads.begin(), sharedReads.end(),
+                                            std::inserter(toAdd, toAdd.begin()));
+                        if (!toAdd.empty())
+                            rejectReads2Add.insert(toAdd.begin(), toAdd.end());
+                    }
                     // new supporting reads for the currently selected allele
                     maxWordReads = currWordReads;
 
-                    maxSharedReadCount = sharedReadCount;
-                    maxSharedReads = sharedReads;
+                    maxContigWordReadCount = contigWordReadCount;
+                    maxContigWordReads = contigWordReads;
                     maxBaseCount = currWordCount;
                     maxBase = symbol;
                     maxWord = newKey;
                 }
                 else
                 {
-                    supportReads2Remove.insert(sharedReads.begin(), sharedReads.end());
-                    rejectReads2Add.insert(currWordReads.begin(), currWordReads.end());
+                    std::set<unsigned> toRemove;
+                    std::set_difference(contigWordReads.begin(), contigWordReads.end(),
+                                        sharedReads.begin(), sharedReads.end(),
+                                        std::inserter(toRemove, toRemove.begin()));
+                    if (!toRemove.empty())
+                        supportReads2Remove.insert(toRemove.begin(), toRemove.end());
+
+                    std::set<unsigned> toAdd;
+                    std::set_difference(currWordReads.begin(), currWordReads.end(),
+                                        sharedReads.begin(), sharedReads.end(),
+                                        std::inserter(toAdd, toAdd.begin()));
+                    if (!toAdd.empty())
+                        rejectReads2Add.insert(toAdd.begin(), toAdd.end());
                 }
             }
 
 #ifdef DEBUG_WALK
             log_os << "Winner is : " << maxBase << " with " << maxBaseCount << " occurrences." << "\n";
 #endif
-
 
             if (maxBaseCount < opt.minCoverage)
             {
@@ -327,7 +364,16 @@ walk(const IterativeAssemblerOptions& opt,
                 log_os << "Coverage or error rate below threshold.\n"
                        << "maxBaseCount : " << maxBaseCount << " minCoverage: " << opt.minCoverage << "\n";
 #endif
+                break;
+            }
 
+            // stop walk in the current mode after seeing one repeat word
+            if (wordsInContig.find(maxWord) != wordsInContig.end())
+            {
+#ifdef DEBUG_WALK
+                log_os << "Seen a repeat word " << maxWord << ".\n Stop walk in the current mode " << mode << "\n";
+#endif
+                isRepeatFound = true;
                 break;
             }
 
@@ -335,7 +381,6 @@ walk(const IterativeAssemblerOptions& opt,
 #ifdef DEBUG_WALK
             log_os << "Adding base " << contig.seq << " " << maxBase << " " << mode << "\n";
 #endif
-
             contig.seq = addBase(contig.seq, maxBase, isEnd);
 #ifdef DEBUG_WALK
             log_os << "New contig : " << contig.seq << "\n";
@@ -374,10 +419,27 @@ walk(const IterativeAssemblerOptions& opt,
                         log_os << "Supporting reads for the backwards word : ";
                         print_unsignSet(backWordReads);
 #endif
-                        rejectReads2Add.insert(backWordReads.begin(), backWordReads.end());
+                        // get the shared supporting reads across two alleles
+                        std::set<unsigned> sharedReads;
+                        std::set_intersection(maxContigWordReads.begin(), maxContigWordReads.end(),
+                                              backWordReads.begin(), backWordReads.end(),
+                                              std::inserter(sharedReads, sharedReads.begin()));
+
+                        std::set<unsigned> toUpdate;
+                        std::set_difference(backWordReads.begin(), backWordReads.end(),
+                                            sharedReads.begin(), sharedReads.end(),
+                                            std::inserter(toUpdate, toUpdate.begin()));
+                        if (!toUpdate.empty())
+                        {
+                            rejectReads2Add.insert(toUpdate.begin(), toUpdate.end());
+                            supportReads2Remove.insert(toUpdate.begin(), toUpdate.end());
+                        }
+
 #ifdef DEBUG_WALK
                         log_os << "rejectReads2Add upated : ";
                         print_unsignSet(rejectReads2Add);
+                        log_os << "supportReads2Remove updated : ";
+                        print_unsignSet(supportReads2Remove);
 #endif
                     }
                 }
@@ -437,15 +499,8 @@ walk(const IterativeAssemblerOptions& opt,
 
             // remove the last word from the unused list, so it cannot be used as the seed in finding the next contig
             unusedWords.erase(maxWord);
-            // stop walk in the current mode after seeing one repeat word
-            if (repeatWords.find(maxWord) != repeatWords.end())
-            {
-#ifdef DEBUG_WALK
-                log_os << "Seen a repeat word " << maxWord << ". Stop walk in the current mode " << mode << "\n";
-#endif
-                isRepeatFound = true;
-                break;
-            }
+            // collect the words used to build the contig
+            wordsInContig.insert(maxWord);
         }
 
         // set conservative coverage range for the contig
@@ -581,11 +636,11 @@ searchRepeats(
     }
 
     // if the current word is a root node,
-    const unsigned wordLowLink(wordIndices[word].second);
-    if (wordLowLink == index)
+    if (wordIndices[word].second == index)
     {
+        const std::string& lastWord(wordStack.back());
         // exclude singletons
-        bool isSingleton(wordStack.back() == word);
+        bool isSingleton(lastWord == word);
         if (isSingleton)
         {
             wordStack.pop_back();
@@ -593,7 +648,9 @@ searchRepeats(
         else
         {
             // record identified repeat words (i.e. words in the current circle) if the circle is small
-            const bool isSmallCircle((index - wordLowLink) <= 50);
+
+            const unsigned lastWordIndex(wordIndices[lastWord].first);
+            const bool isSmallCircle((lastWordIndex - index) <= 50);
             while (true)
             {
                 const std::string repeatWd = wordStack.back();

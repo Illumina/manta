@@ -37,7 +37,7 @@
 #include <unordered_set>
 
 //#define DEBUG_REFINER
-#define DEBUG_CONTIG
+//#define DEBUG_CONTIG
 //#define DEBUG_KMER
 
 #ifdef DEBUG_REFINER
