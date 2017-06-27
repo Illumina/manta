@@ -1761,6 +1761,7 @@ getSmallSVAssembly(
     static const pos_t extraRefSize(extraRefEdgeSize+extraRefSplitSize);
 
 #ifdef ITERATIVE_ASSEMBLER
+    static const float extraScorePerc(0.1f);
     static const float extraVarSizePerc(0.1f);
     static const float extraSuppReadPerc(0.2f);
 #endif
@@ -1819,10 +1820,12 @@ getSmallSVAssembly(
 
     bool isHighScore(false);
     unsigned highScoreIndex(0);
+    int highScore(0);
 
 #ifdef ITERATIVE_ASSEMBLER
-    bool isSecHighScore(false);
     unsigned highScoreVarSize(0);
+    bool isSecHighScore(false);
+    int secHighScore(0);
     unsigned secHighScoreIndex(0);
     unsigned secHighScoreVarSize(0);
 #endif
@@ -2057,15 +2060,17 @@ getSmallSVAssembly(
                 log_os << __FUNCTION__ << ": contigIndex: " << contigIndex << " is high score\n";
 #endif
                 isHighScore = true;
-                highScoreIndex=contigIndex;
+                highScoreIndex = contigIndex;
+                highScore = alignment.score;
 #ifdef ITERATIVE_ASSEMBLER
                 highScoreVarSize = getLargestIndelSize(alignment.align.apath, candidateSegments);
 #endif
             }
-            else if (alignment.score > assemblyData.smallSVAlignments[highScoreIndex].score)
+            else if (alignment.score > highScore)
             {
 #ifdef ITERATIVE_ASSEMBLER
                 isSecHighScore = true;
+                secHighScore = highScore;
                 secHighScoreIndex = highScoreIndex;
                 secHighScoreVarSize = highScoreVarSize;
                 highScoreVarSize = getLargestIndelSize(alignment.align.apath, candidateSegments);
@@ -2075,6 +2080,7 @@ getSmallSVAssembly(
 #endif
 #endif
                 highScoreIndex = contigIndex;
+                highScore = alignment.score;
 #ifdef DEBUG_REFINER
                 log_os << __FUNCTION__ << ": contigIndex: " << highScoreIndex << " is high score\n";
 #endif
@@ -2083,6 +2089,7 @@ getSmallSVAssembly(
             else if ((! isSecHighScore) || (alignment.score > assemblyData.smallSVAlignments[secHighScoreIndex].score))
             {
                 isSecHighScore = true;
+                secHighScore = alignment.score;
                 secHighScoreIndex = contigIndex;
                 secHighScoreVarSize = getLargestIndelSize(alignment.align.apath, candidateSegments);
 #ifdef DEBUG_REFINER
@@ -2107,8 +2114,13 @@ getSmallSVAssembly(
                <<" support reads, with max variant size " << secHighScoreVarSize << "\n";
 #endif
 
-        const bool secondIsBest((secHighScoreSuppReads > highScoreSuppReads *(1+extraSuppReadPerc)) ||
-                                (secHighScoreVarSize > highScoreVarSize * (1+extraVarSizePerc)));
+        // the second best contig is selected
+        // if its score is higher than (1-extraScorePerc) of the highest score
+        // AND either its support reads is more than  (1+extraSuppReadPerc) of that of the highest-score contig
+        //     or its variant size is more than (1+extraVarSizePerc) of that of the highsest-score contig
+        const bool secondIsBest((secHighScore > highScore * (1-extraScorePerc)) &&
+                                ((secHighScoreSuppReads > highScoreSuppReads *(1+extraSuppReadPerc)) ||
+                                 (secHighScoreVarSize > highScoreVarSize * (1+extraVarSizePerc))));
         if (secondIsBest) highScoreIndex = secHighScoreIndex;
 #ifdef DEBUG_REFINER
         log_os << __FUNCTION__ << ": contigIndex: " << highScoreIndex << " is finally selected.\n";
