@@ -7,7 +7,7 @@
 # the centos5 base image.
 #
 
-FROM centos:5
+FROM astj/centos5-vault
 
 # add standard centos5 packages:
 RUN yum install -y bzip2 make gcc gcc-c++ tar wget zlib-devel git && \

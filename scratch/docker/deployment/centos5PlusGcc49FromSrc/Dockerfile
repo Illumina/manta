@@ -11,7 +11,7 @@
 # to our non-docker based deployment:
 #
 
-FROM centos:5
+FROM astj/centos5-vault
 
 # add standard centos5 packages && swap in newer cmake as default:
 RUN yum install -y bzip2 make gcc gcc-c++ tar wget zlib-devel git && \
