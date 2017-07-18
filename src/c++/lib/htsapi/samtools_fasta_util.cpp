@@ -115,7 +115,6 @@ get_region_seq(const std::string& ref_file,
                const std::string& fa_region,
                std::string& ref_seq)
 {
-
     faidx_t* fai(fai_load(ref_file.c_str()));
     int len; // throwaway...
     char* ref_tmp(fai_fetch(fai,fa_region.c_str(), &len));

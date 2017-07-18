@@ -23,6 +23,8 @@
 /// config data like relative paths and library/header availability.
 ///
 
+#pragma once
+
 #define BUILD_TIME "@BUILD_TIME@"
 
 #define WORKFLOW_VERSION "@WORKFLOW_VERSION@"

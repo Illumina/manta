@@ -28,7 +28,7 @@
 #include <string>
 
 
-/// \brief Manages a partial reference sequence segment.
+/// \brief Manages a partial reference sequence segment
 ///
 /// This object holds a subset of the reference sequence within a specific [begin,end] range,
 /// plus some padding on each side. This scheme allows the client to store only the part of the

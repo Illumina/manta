@@ -22,12 +22,12 @@
 #include "ChromDepthOptions.hh"
 
 #include "blt_util/log.hh"
+#include "common/ProgramUtil.hh"
 #include "options/optionsUtil.hh"
 
 #include "boost/program_options.hpp"
 
 #include <iostream>
-#include "../../common/ProgramUtil.hh"
 
 typedef std::vector<std::string> chroms_t;
 

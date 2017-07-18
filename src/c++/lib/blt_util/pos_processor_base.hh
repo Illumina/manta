@@ -22,7 +22,7 @@
 #include "blt_util/blt_types.hh"
 
 
-/// \brief Interface for objects designed to perform work in a single pass over a position range.
+/// \brief Interface for objects designed to perform work in a single pass over a position range
 ///
 /// Work progress is communicated via process_pos(). This object is designed to
 /// link its child with the stage_manager.

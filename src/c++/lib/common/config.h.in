@@ -21,6 +21,8 @@
 /// \brief Various system-specific definitions (configured by cmake)
 ///
 
+#pragma once
+
 #include "configBuildTimeInfo.h"
 
 /* c++/include/config.h.cmake. Manually edited */

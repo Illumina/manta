@@ -18,6 +18,11 @@
 //
 
 /// \file
+/// \brief Various quality-score/probability conversion services
+///
+/// These methods rely on precomputed/cached conversion table to accelerate common quality score conversion
+/// operations.
+///
 /// \author Chris Saunders
 ///
 
@@ -31,14 +36,6 @@
 #include <limits>
 #include <type_traits>
 
-
-//
-inline
-int
-char_to_qval(const char c)
-{
-    return (static_cast<int>(c)-64);
-}
 
 template <typename FloatType>
 FloatType
@@ -104,8 +101,7 @@ qphred_to_ln_error_prob(const int qscore)
 }
 
 
-// modify basecall error_prob score according to mapping quality of the
-// read:
+/// \brief Modify basecall error_prob score according to mapping quality of the read.
 inline
 double
 phred_to_mapped_error_prob(const double basecall_val,

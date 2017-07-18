@@ -22,12 +22,10 @@
 ///
 
 #include "blt_util/blt_exception.hh"
-#include "blt_util/log.hh"
 #include "blt_util/math_util.hh"
 #include "blt_util/qscore.hh"
 #include "blt_util/qscore_cache.hh"
 
-#include <cstdlib>
 #include <iostream>
 #include <sstream>
 

@@ -20,9 +20,10 @@
 
 #pragma once
 
+#include "common/Program.hh"
+
 #include <string>
 #include <vector>
-#include "../../common/Program.hh"
 
 
 struct ChromDepthOptions
