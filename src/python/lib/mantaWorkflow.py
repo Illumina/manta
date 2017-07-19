@@ -235,7 +235,7 @@ def sortAllVcfs(self, taskPrefix="", dependencies=None) :
     nextStepWait = set()
 
     def getVcfSortCmd(vcfListFile, outPath, isDiploid) :
-        cmd  = "\"%s\" -E \"%s\" -u " % (sys.executable, self.params.mantaSortVcf)
+        cmd  = "\"%s\" -E \"%s\" " % (sys.executable, self.params.mantaSortVcf)
         cmd += "-f \"%s\"" % (vcfListFile)
 
         # apply the ploidy filter to diploid variants

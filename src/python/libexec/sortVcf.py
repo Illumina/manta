@@ -48,23 +48,22 @@ VCF_INFO = 7
 
 
 class VcfRecord :
-    def __init__(self, line, isUnique) :
+    def __init__(self, line) :
         self.line = line
         w=line.strip().split('\t')
         self.chrom=w[VCF_CHROM]
         self.pos=int(w[VCF_POS])
-        if isUnique :
-            self.ref=w[VCF_REF]
-            self.alt=w[VCF_ALT]
-            self.qual=w[VCF_QUAL]
-            self.isPass=(w[VCF_FILTER] == "PASS")
+        self.ref=w[VCF_REF]
+        self.alt=w[VCF_ALT]
+        self.qual=w[VCF_QUAL]
+        self.isPass=(w[VCF_FILTER] == "PASS")
 
-            self.invState=None
-            inv3 = isInfoKey(w[VCF_INFO],"INV3")
-            inv5 = isInfoKey(w[VCF_INFO],"INV5")
-            assert(not (inv3 and inv5))
-            if inv3: self.invState = "INV3"
-            if inv5: self.invState = "INV5"
+        self.invState=None
+        inv3 = isInfoKey(w[VCF_INFO],"INV3")
+        inv5 = isInfoKey(w[VCF_INFO],"INV5")
+        assert(not (inv3 and inv5))
+        if inv3: self.invState = "INV3"
+        if inv5: self.invState = "INV5"
 
         self.endPos=self.pos+len(w[VCF_REF])-1
         val = getKeyVal(w[VCF_INFO],"END")
@@ -79,7 +78,7 @@ class Constants :
     contigpat = re.compile("^##contig=<ID=([^,>]*)[,>]")
 
 
-def processFile(isUnique, vcfFile, isFirst, chromOrder, header, recList) :
+def processFile(vcfFile, isFirst, chromOrder, header, recList) :
     """
     read in a vcf file
     """
@@ -94,7 +93,7 @@ def processFile(isUnique, vcfFile, isFirst, chromOrder, header, recList) :
             if match is not None :
                 chromOrder.append(match.group(1))
         else :
-            recList.append(VcfRecord(line, isUnique))
+            recList.append(VcfRecord(line))
 
 
 
@@ -113,8 +112,6 @@ def getOptions() :
 
     parser = OptionParser(usage="%prog [options] [input_vcf [input_vcf..]] > output_vcf")
 
-    parser.add_option("-u", dest="isUnique",action="store_true",default=False,
-                      help="filter all but one record with the same {CHR,POS,REF,ALT,(INV3|INV5|)}")
     parser.add_option("-f", dest="vcfListFile",
                       help="File listing input vcf files, one file per line. These will be used in addition to any provided directly on the command-line")
 
@@ -184,7 +181,7 @@ def main() :
 
     isFirst=True
     for vcfFile in listInputVcfs(options.vcfListFile,args) :
-        processFile(options.isUnique, vcfFile, isFirst, chromOrder, header, recList)
+        processFile(vcfFile, isFirst, chromOrder, header, recList)
         isFirst = False
 
     def vcfRecSortKey(x) :
@@ -236,19 +233,18 @@ def main() :
         return True
 
 
-    if options.isUnique :
-        recList2 = []
-        recEqualSet = []
-        lastRec = None
-        for vcfrec in recList :
-            rec = (vcfrec.chrom, vcfrec.pos, vcfrec.ref, vcfrec.alt, vcfrec.endPos, vcfrec.invState)
-            if not isEqualRec(rec,lastRec) :
-                resolveRec(recEqualSet,recList2)
-                recEqualSet = []
-            recEqualSet.append(vcfrec)
-            lastRec = rec
-        resolveRec(recEqualSet,recList2)
-        recList = recList2
+    recList2 = []
+    recEqualSet = []
+    lastRec = None
+    for vcfrec in recList :
+        rec = (vcfrec.chrom, vcfrec.pos, vcfrec.ref, vcfrec.alt, vcfrec.endPos, vcfrec.invState)
+        if not isEqualRec(rec,lastRec) :
+            resolveRec(recEqualSet,recList2)
+            recEqualSet = []
+        recEqualSet.append(vcfrec)
+        lastRec = rec
+    resolveRec(recEqualSet,recList2)
+    recList = recList2
 
     for vcfrec in recList :
         outfp.write(vcfrec.line)
