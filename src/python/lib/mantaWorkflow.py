@@ -64,6 +64,7 @@ def runStats(self,taskPrefix="",dependencies=None) :
         tmpStatsFiles.append(os.path.join(tmpStatsDir,statsFilename+"."+ indexStr +".xml"))
 
         cmd = [ self.params.mantaStatsBin ]
+        cmd.extend(["--ref", self.params.referenceFasta])
         cmd.extend(["--output-file",tmpStatsFiles[-1]])
         cmd.extend(["--align-file",bamPath])
 

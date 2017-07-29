@@ -36,30 +36,35 @@
 ///
 //
 // Example use:
+// bam_streamer stream("sample1.bam","hg19.fasta");
+// stream.resetRegion("chr1:1000000-2000000");
 // while (stream.next()) {
 //     const bam_record& read(*(stream.get_record_ptr()));
-//     if(read.is_unmapped) foo++;
+//     if(read.is_unmapped()) unmappedCount++;
 // }
 //
 struct bam_streamer : public boost::noncopyable
 {
-    /// \param filename CRAM/BAM/SAM input file
-    /// \param region if filename is indexed CRAM or BAM, you can
-    ///        restrict the stream to a specific region
-    explicit
+    /// \param filename CRAM/BAM input file
+    /// \param referenceFilename Corresponding reference file. nullptr can be given here to indicate that the
+    ///            the reference is not being provided, but many CRAM files cannot be read in this case.
+    /// \param region Restrict the stream to iterate through a specific region. The BAM/CRAM input file must be
+    ///            indexed for this option to work. If 'region' is not provided, the stream is configured to
+    ///            iterate through the entire alignment file.
     bam_streamer(
         const char* filename,
+        const char* referenceFilename,
         const char* region = nullptr);
 
     ~bam_streamer();
 
-    /// \brief set new region for indexed file
+    /// \brief Set new region to iterate over, this will fail if the alignment file is not indexed
     ///
     /// \param region htslib-style region string in format: "chromName:beginPos-endPos", cannot be nullptr
     void
     resetRegion(const char* region);
 
-    /// \brief set new region for indexed file
+    /// \brief Set new region to iterate over, this will fail if the alignment file is not indexed
     ///
     /// \param referenceContigId htslib zero-indexed contig id
     /// \param beginPos start position (zero-indexed, closed)

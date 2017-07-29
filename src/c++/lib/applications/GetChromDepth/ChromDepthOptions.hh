@@ -30,6 +30,8 @@ struct ChromDepthOptions
 {
     std::string alignmentFilename;
     std::vector<std::string> chromNames;
+
+    std::string referenceFilename;
     std::string outputFilename;
 };
 

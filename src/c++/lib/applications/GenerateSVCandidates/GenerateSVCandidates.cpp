@@ -199,7 +199,7 @@ runGSC(
         for (unsigned idx(0); idx<sampleSize; ++idx)
         {
             std::string alignmentFile(opt.alignFileOpt.alignmentFilename[idx]);
-            bam_streamer_ptr bamStreamPtr(new bam_streamer(alignmentFile.c_str()));
+            bam_streamer_ptr bamStreamPtr(new bam_streamer(alignmentFile.c_str(), opt.referenceFilename.c_str()));
             origBamStreamPtrs.push_back(bamStreamPtr);
 
             std::string supportBamName(opt.supportBamStub

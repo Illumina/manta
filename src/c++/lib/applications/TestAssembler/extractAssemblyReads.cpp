@@ -28,10 +28,11 @@ void
 extractAssemblyReadsFromBam(
     const ReadScannerOptions& scanOpt,
     const AssemblerOptions& asmOpt,
-    const char* bamFile,
+    const std::string& referenceFilename,
+    const std::string& alignmentFilename,
     AssemblyReadInput& reads)
 {
-    bam_streamer bamStream(bamFile);
+    bam_streamer bamStream(alignmentFilename.c_str(), referenceFilename.c_str());
 
     ShadowReadFinder shadow(scanOpt.minSingletonMapqCandidates);
 

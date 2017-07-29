@@ -946,11 +946,12 @@ private:
 
 
 void
-extractReadGroupStatsFromBam(
-    const std::string& statsBamFile,
+extractReadGroupStatsFromAlignmentFile(
+    const std::string& referenceFilename,
+    const std::string& alignmentFilename,
     ReadGroupStatsSet& rstats)
 {
-    bam_streamer read_stream(statsBamFile.c_str());
+    bam_streamer read_stream(alignmentFilename.c_str(), referenceFilename.c_str());
 
     const bam_hdr_t& header(read_stream.get_header());
     const int32_t chromCount(header.n_targets);
@@ -965,7 +966,7 @@ extractReadGroupStatsFromBam(
     bool isActiveChrom(true);
 
     CoreInsertStatsReadFilter coreFilter;
-    ReadGroupManager rgManager(statsBamFile.c_str());
+    ReadGroupManager rgManager(alignmentFilename.c_str());
 
 #ifndef READ_GROUPS
     static const char defaultReadGroup[] = "";

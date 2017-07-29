@@ -27,11 +27,14 @@
 struct AlignmentStatsOptions
 {
     AlignmentFileOptions alignFileOpt;
+
+    std::string referenceFilename;
     std::string outputFilename;
 };
 
 
 void
-parseAlignmentStatsOptions(const illumina::Program& prog,
-                           int argc, char* argv[],
-                           AlignmentStatsOptions& opt);
+parseAlignmentStatsOptions(
+    const illumina::Program& prog,
+    int argc, char* argv[],
+    AlignmentStatsOptions& opt);

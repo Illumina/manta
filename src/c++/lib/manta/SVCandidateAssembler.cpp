@@ -59,6 +59,7 @@ SVCandidateAssembler(
     const ReadScannerOptions& scanOpt,
     const AssemblerOptions& assembleOpt,
     const AlignmentFileOptions& alignFileOpt,
+    const std::string& referenceFilename,
     const std::string& statsFilename,
     const std::string& chromDepthFilename,
     const bam_header_info& bamHeader,
@@ -75,10 +76,10 @@ SVCandidateAssembler(
 {
     // setup regionless bam_streams:
     // setup all data for main analysis loop:
-    for (const std::string& afile : alignFileOpt.alignmentFilename)
+    for (const std::string& alignmentFilename : alignFileOpt.alignmentFilename)
     {
         // avoid creating shared_ptr temporaries:
-        streamPtr tmp(new bam_streamer(afile.c_str()));
+        streamPtr tmp(new bam_streamer(alignmentFilename.c_str(), referenceFilename.c_str()));
         _bamStreams.push_back(tmp);
     }
 

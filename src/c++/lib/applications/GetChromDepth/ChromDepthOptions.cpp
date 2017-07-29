@@ -60,6 +60,8 @@ parseChromDepthOptions(
      "chromosome name. May be supplied more than once. At least one entry required.")
     ("output-file", po::value(&opt.outputFilename),
      "write stats to filename (default: stdout)")
+    ("ref", po::value(&opt.referenceFilename),
+     "fasta reference sequence (required)")
     ;
 
     po::options_description help("help");
@@ -100,6 +102,9 @@ parseChromDepthOptions(
 
     std::string errorMsg;
     if      (checkStandardizeInputFile(opt.alignmentFilename, "alignment", errorMsg))
+    {
+    }
+    else if (checkStandardizeInputFile(opt.referenceFilename, "reference fasta", errorMsg))
     {
     }
     else if (opt.chromNames.empty())

@@ -52,12 +52,13 @@ runESLRegion(
     std::vector<stream_ptr> bamStreams;
 
     // setup all data for main alignment loop:
-    for (const std::string& afile : opt.alignFileOpt.alignmentFilename)
+    for (const std::string& alignmentFilename : opt.alignFileOpt.alignmentFilename)
     {
-        stream_ptr tmp(new bam_streamer(afile.c_str(),
-                                        (region.empty()
-                                         ? nullptr
-                                         : region.c_str())));
+        stream_ptr tmp(new bam_streamer(alignmentFilename.c_str(), opt.referenceFilename.c_str()));
+        if (! region.empty())
+        {
+            tmp->resetRegion(region.c_str());
+        }
         bamStreams.push_back(tmp);
     }
 

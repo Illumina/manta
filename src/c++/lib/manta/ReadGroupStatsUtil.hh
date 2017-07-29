@@ -29,6 +29,7 @@
 
 
 void
-extractReadGroupStatsFromBam(
-    const std::string& statsBamFile,
+extractReadGroupStatsFromAlignmentFile(
+    const std::string& referenceFilename,
+    const std::string& alignmentFilename,
     ReadGroupStatsSet& rstats);

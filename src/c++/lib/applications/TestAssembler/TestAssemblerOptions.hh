@@ -27,6 +27,8 @@
 struct TestAssemblerOptions
 {
     AlignmentFileOptions alignFileOpt;
+
+    std::string referenceFilename;
     std::string outputFilename;
 };
 

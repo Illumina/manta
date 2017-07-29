@@ -52,6 +52,7 @@ struct SVCandidateAssembler
         const ReadScannerOptions& scanOpt,
         const AssemblerOptions& assembleOpt,
         const AlignmentFileOptions& alignFileOpt,
+        const std::string& referenceFilename,
         const std::string& statsFilename,
         const std::string& chromDepthFilename,
         const bam_header_info& bamHeader,

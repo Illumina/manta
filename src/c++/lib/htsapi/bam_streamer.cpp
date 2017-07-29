@@ -38,6 +38,7 @@
 bam_streamer::
 bam_streamer(
     const char* filename,
+    const char* referenceFilename,
     const char* region)
     : _is_record_set(false),
       _hfp(nullptr),
@@ -63,6 +64,12 @@ bam_streamer(
         throw blt_exception(oss.str().c_str());
     }
 
+    if (nullptr != referenceFilename)
+    {
+        const std::string referenceFilenameIndex(std::string(referenceFilename) + ".fai");
+        hts_set_fai_filename(_hfp, referenceFilenameIndex.c_str());
+    }
+
     _hdr = sam_hdr_read(_hfp);
 
     if (nullptr == _hdr)
@@ -74,7 +81,7 @@ bam_streamer(
 
     if (nullptr == region)
     {
-        // read the whole BAM file:
+        // setup to read the whole BAM file by default if resetRegion() is not called:
         if (_hdr->n_targets)
         {
             // parse any contig name so that header->hash is created

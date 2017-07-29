@@ -40,5 +40,6 @@ void
 extractAssemblyReadsFromBam(
     const ReadScannerOptions& scanOpt,
     const AssemblerOptions& asmOpt,
-    const char* bamFile,
+    const std::string& referenceFilename,
+    const std::string& alignmentFilename,
     AssemblyReadInput& reads);

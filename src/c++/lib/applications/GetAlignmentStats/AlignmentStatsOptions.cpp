@@ -45,15 +45,19 @@ usage(
 
 
 void
-parseAlignmentStatsOptions(const illumina::Program& prog,
-                           int argc, char* argv[],
-                           AlignmentStatsOptions& opt)
+parseAlignmentStatsOptions(
+    const illumina::Program& prog,
+    int argc, char* argv[],
+    AlignmentStatsOptions& opt)
 {
     namespace po = boost::program_options;
     po::options_description req("configuration");
     req.add_options()
     ("output-file", po::value(&opt.outputFilename),
-     "write stats to filename (default: stdout)");
+     "write stats to filename (default: stdout)")
+    ("ref", po::value(&opt.referenceFilename),
+     "fasta reference sequence (required)")
+    ;
 
     po::options_description help("help");
     help.add_options()
@@ -91,7 +95,13 @@ parseAlignmentStatsOptions(const illumina::Program& prog,
     std::string errorMsg;
     if (parseOptions(vm, opt.alignFileOpt, errorMsg))
     {
-        usage(log_os,prog,visible,errorMsg.c_str());
+    }
+    else if (checkStandardizeInputFile(opt.referenceFilename, "reference fasta", errorMsg))
+    {
     }
 
+    if (! errorMsg.empty())
+    {
+        usage(log_os, prog, visible, errorMsg.c_str());
+    }
 }
