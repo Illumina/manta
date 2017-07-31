@@ -223,11 +223,11 @@ def checkForBamExtension(bamFile):
     """
     make sure the specified file ends with either ".bam" or ".cram"
     """
-    ext_list = (".bam", ".cram")
-    for ext in ext_list:
+    extList = (".bam", ".cram")
+    for ext in extList:
         if bamFile.endswith(ext): return
 
-    raise OptParseException("Input files should be either BAM/CRAM files: '%s'" % (bamFile))
+    raise OptParseException("Input alignment files should be in BAM/CRAM format and with extension .bam/.cram: '%s'" % (bamFile))
 
 
 def checkForBamIndex(bamFile):
