@@ -93,7 +93,7 @@ def quoteStringList(strList):
 
 
 
-def _runDepthShared(self,taskPrefix, dependencies, bamList, outputPath, depthFunc) :
+def _getDepthShared(self,taskPrefix, dependencies, bamList, outputPath, depthFunc) :
     """
     estimate chrom depth using the specified depthFunc to compute per-sample depth
     """
@@ -124,12 +124,12 @@ def _runDepthShared(self,taskPrefix, dependencies, bamList, outputPath, depthFun
 
     if not self.params.isRetainTempFiles :
         rmTmpCmd = getRmdirCmd() + [tmpDir]
-        rmTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmTmpCmd,dependencies=mergeTask, isForceLocal=True)
+        rmTask=self.addTask(preJoin(taskPrefix,"removeTmpDir"),rmTmpCmd,dependencies=mergeTask, isForceLocal=True)
 
     return nextStepWait
 
 
-def runDepthFromAlignments(self, bamList, outputPath, taskPrefix="",dependencies=None) :
+def getDepthFromAlignments(self, bamList, outputPath, taskPrefix="", dependencies=None) :
     """
     estimate chrom depth directly from BAM/CRAM file
     """
@@ -181,6 +181,8 @@ def runDepthFromAlignments(self, bamList, outputPath, taskPrefix="",dependencies
                 cmd.extend(["--chrom",chromLabel])
             scatterTasks.add(self.addTask(preJoin(taskPrefix,"estimateChromDepth_"+cid),cmd,dependencies=dirTask))
 
+        assert(len(tmpFiles) != 0)
+
         catCmd = [self.params.catScript,"--output",outputPath]+tmpFiles
         catTask = self.addTask(preJoin(taskPrefix,"catChromDepth"),catCmd,dependencies=scatterTasks, isForceLocal=True)
 
@@ -189,4 +191,4 @@ def runDepthFromAlignments(self, bamList, outputPath, taskPrefix="",dependencies
 
         return nextStepWait
 
-    return _runDepthShared(self, taskPrefix, dependencies, bamList, outputPath, depthFunc)
+    return _getDepthShared(self, taskPrefix, dependencies, bamList, outputPath, depthFunc)

@@ -36,7 +36,7 @@ sys.path.append(os.path.abspath(pyflowDir))
 from configBuildTimeInfo import workflowVersion
 from pyflow import WorkflowRunner
 from sharedWorkflow import getMkdirCmd, getMvCmd, getRmCmd, getRmdirCmd, \
-                           runDepthFromAlignments
+                           getDepthFromAlignments
 from workflowUtil import checkFile, ensureDir, preJoin, \
                         getGenomeSegmentGroups, getFastaChromOrderSize, \
                         getCallRegions, cleanPyEnv
@@ -82,7 +82,7 @@ def runStats(self,taskPrefix="",dependencies=None) :
 
     if not self.params.isRetainTempFiles :
         rmStatsTmpCmd = getRmdirCmd() + [tmpStatsDir]
-        rmTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmStatsTmpCmd,dependencies=mergeTask, isForceLocal=True)
+        rmTask=self.addTask(preJoin(taskPrefix,"removeTmpDir"),rmStatsTmpCmd,dependencies=mergeTask, isForceLocal=True)
 
     # summarize stats in format that's easier for human review
     cmd = [self.params.mantaStatsSummaryBin]
@@ -94,7 +94,7 @@ def runStats(self,taskPrefix="",dependencies=None) :
 
 
 
-def mantaRunDepthFromAlignments(self,taskPrefix="getChromDepth",dependencies=None):
+def mantaGetDepthFromAlignments(self,taskPrefix="getChromDepth",dependencies=None):
     bamList=[]
     if len(self.params.normalBamList) :
         bamList = self.params.normalBamList
@@ -104,7 +104,7 @@ def mantaRunDepthFromAlignments(self,taskPrefix="getChromDepth",dependencies=Non
         return set()
 
     outputPath=self.paths.getChromDepth()
-    return runDepthFromAlignments(self, bamList, outputPath, taskPrefix, dependencies)
+    return getDepthFromAlignments(self, bamList, outputPath, taskPrefix, dependencies)
 
 
 
@@ -178,7 +178,7 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
 
     if not self.params.isRetainTempFiles :
         rmGraphTmpCmd = getRmdirCmd() + [tmpGraphDir]
-        rmTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmGraphTmpCmd,dependencies=mergeTask)
+        rmTask=self.addTask(preJoin(taskPrefix,"removeTmpDir"),rmGraphTmpCmd,dependencies=mergeTask)
 
     graphStatsCmd  = [self.params.mantaGraphStatsBin,"--global"]
     graphStatsCmd.extend(["--graph-file",graphPath])
@@ -530,7 +530,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
     if not self.params.isRetainTempFiles :
         # we could delete the temp hygenDir directory here, but it is used for debug so frequently it doesn't seem worth it at present.
         # rmDirCmd = getRmdirCmd() + [hygenDir]
-        # rmDirTask=self.addTask(preJoin(taskPrefix,"rmTmpDir"),rmDirCmd,dependencies=TBD_XXX_MANY)
+        # rmDirTask=self.addTask(preJoin(taskPrefix,"removeTmpDir"),rmDirCmd,dependencies=TBD_XXX_MANY)
         pass
 
     return nextStepWait
@@ -751,7 +751,7 @@ class MantaWorkflow(WorkflowRunner) :
             graphTaskDependencies |= statsTasks
 
         if not ((not self.params.isHighDepthFilter) or self.params.useExistingChromDepths) :
-            depthTasks = mantaRunDepthFromAlignments(self)
+            depthTasks = mantaGetDepthFromAlignments(self)
             graphTaskDependencies |= depthTasks
 
         graphTasks = runLocusGraph(self,dependencies=graphTaskDependencies)
