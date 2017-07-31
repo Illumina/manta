@@ -19,10 +19,10 @@
 
 #include "GetChromDepth.hh"
 #include "ChromDepthOptions.hh"
+#include "ReadChromDepthUtil.hh"
 
 #include "blt_util/log.hh"
 #include "common/OutStream.hh"
-#include "manta/ReadChromDepthUtil.hh"
 
 #include <cstdlib>
 

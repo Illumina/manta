@@ -22,7 +22,7 @@
 ///
 
 
-#include "manta/ReadChromDepthUtil.hh"
+#include "ReadChromDepthUtil.hh"
 
 #include "blt_util/log.hh"
 #include "blt_util/MedianDepthTracker.hh"
@@ -435,7 +435,7 @@ readChromDepthFromAlignment(
 #ifdef DEBUG_DPS
             log_os << "scanning region: " << startPos << "," << endPos << "\n";
 #endif
-            read_stream.resetRegion(chromIndex,startPos,endPos);
+            read_stream.resetRegion(chromIndex, startPos, endPos);
 
             cdTracker.setNewRegion();
 
