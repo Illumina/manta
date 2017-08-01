@@ -19,6 +19,7 @@
 
 #include "bam_record_util.hh"
 #include "align_path_bam_util.hh"
+#include "htsapi/SimpleAlignment_bam_util.hh"
 
 
 bool
@@ -63,49 +64,59 @@ is_innie_pair(
 }
 
 
-
 bool
 is_possible_adapter_pair(
-    const bam_record& bamRead,
-    const bool isAgressive)
+    const bam_record& bamRead)
 {
-    if (! is_mapped_chrom_pair(bamRead)) return false;
+    if (!is_mapped_chrom_pair(bamRead)) return false;
     if (bamRead.is_fwd_strand() == bamRead.is_mate_fwd_strand()) return false;
-
-    // get range of alignment before matching softclip:
-    int posDiff(bamRead.mate_pos()-bamRead.pos());
-    if (! bamRead.is_fwd_strand())
+    int posDiff(bamRead.mate_pos() - bamRead.pos());
+    if (!bamRead.is_fwd_strand())
     {
         posDiff *= -1;
     }
-
     // Aggressive check: the pos difference between the reverse read and the forwarding read is [-50, 10]
-    bool isCandidate((posDiff < 10) && (posDiff > -50));
-    if (! isCandidate) return false;
-    // The aggressive check is applied for candidate/hypothesis generation
-    // to avoid large number of spurious small indels for short insert data that are derived from adapter k-mers
-    else if (isAgressive) return true;
+    return (posDiff < 10) && (posDiff > -50);
+}
 
-    // A less aggressive check is applied for read filtration of assembly to avoid missing any evidence reads
+
+bool
+is_adapter_pair(
+    const bam_record& bamRead
+ )
+{
     // if the read (primary) contains a SA tag, keep it for assembly
     if (bamRead.isSASplit()) return false;
 
     using namespace ALIGNPATH;
-    path_t apath;
-    bam_cigar_to_apath(bamRead.raw_cigar(), bamRead.n_cigar(), apath);
-    // if the read contains soft clip on the 3' end, it likely runs into adapter.
-    unsigned softClipSize;
-    if (bamRead.is_fwd_strand())
+    const SimpleAlignment aln(getAlignment(bamRead));
+    if (bamRead.hasMateCigar())
     {
-        softClipSize = apath_soft_clip_trail_size(apath);
+        // If we have mate cigar information, check for exact adapter condition:
+        // Does this read extend (3') past the start (5') of its mate (including softclipping on either)?
+        const SimpleAlignment mate(getKnownOrFakedMateAlignment(bamRead));
+        if (aln.is_fwd_strand)
+        {
+            unsigned endpos = aln.pos + apath_ref_length(aln.path) + apath_soft_clip_trail_size(aln.path);
+            unsigned mateStartPos = mate.pos + apath_ref_length(mate.path) + apath_soft_clip_lead_size(mate.path);
+            return (endpos > mateStartPos);
+        }
+        else
+        {
+            unsigned endpos = aln.pos - apath_soft_clip_trail_size(aln.path);
+            unsigned mateStartPos = mate.pos - apath_soft_clip_lead_size(mate.path);
+            return (endpos < mateStartPos);
+        }
     }
     else
     {
-        softClipSize = apath_soft_clip_lead_size(apath);
+        // If we do not have mate cigar information use an aggressive heuristic:
+        // if the read contains soft clip on the 3' end, it likely runs into adapter.
+        unsigned softClipSize(aln.is_fwd_strand ?
+            apath_soft_clip_trail_size(aln.path) :
+            apath_soft_clip_lead_size(aln.path));
+        return (softClipSize > 0);
     }
-
-    isCandidate = (softClipSize > 0);
-    return (isCandidate);
 }
 
 
@@ -118,24 +129,16 @@ is_overlapping_pair(
     if (! is_mapped_chrom_pair(bamRead)) return false;
     if (bamRead.is_fwd_strand() == bamRead.is_mate_fwd_strand()) return false;
 
-    // we want a substantial gap between pos and mate-pos before we switch from
-    // treating the read pair as an overlapping standard mate pair to a duplicate pair.
-    //static const int dupDist(50);
-
     // get range of alignment after matching all softclip:
     if (bamRead.is_fwd_strand())
     {
-        // is this likely to be a duplication read pair?:
-        //if (((matchedAlignment.pos+1)-bamRead.mate_pos()) >= dupDist) return false;
-
         const pos_t matchedEnd(matchedAlignment.pos + apath_ref_length(matchedAlignment.path));
         return (matchedEnd >= bamRead.mate_pos());
     }
     else
     {
-        // is this likely to be a duplication read pair?:
-        //if ((bamRead.mate_pos()-(matchedAlignment.pos+1)) >= dupDist) return false;
-
+        // NOTE: We do not have the mate alignment information here (missing mate end position)
+        // so this check uses a very lenient heuristic (overlap mate start position).
         const pos_t matchedBegin(matchedAlignment.pos);
         return (matchedBegin <= bamRead.mate_pos());
     }

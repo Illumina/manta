@@ -242,7 +242,11 @@ getSVBreakendCandidateSemiAligned(
     trailingEdgePoorAlignmentLength = 0;
     trailingEdgeRefPos = 0;
 
-    if (is_possible_adapter_pair(bamRead, isAgressiveAdaptorCheck)) return;
+    if (is_possible_adapter_pair(bamRead) && 
+        (isAgressiveAdaptorCheck || is_adapter_pair(bamRead)))
+    {
+        return;
+    }
 
     // Create a new alignment with all soft-clip sections unrolled to a matched alignment state.
     const SimpleAlignment matchedAlignment(matchifyEdgeSoftClip(bamAlign));

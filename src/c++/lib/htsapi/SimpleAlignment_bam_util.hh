@@ -36,9 +36,10 @@ SimpleAlignment
 getAlignment(
     const bam_record& bamRead);
 
-/// generate a mate alignment, assuming same read length and perfect alignment
+/// generate a mate alignment, using the MATE CIGAR (MC) BAM tag if available, else assuming same read length and perfect alignment
 SimpleAlignment
-getFakeMateAlignment(
+getKnownOrFakedMateAlignment(
     const bam_record& bamRead);
+
 
 
