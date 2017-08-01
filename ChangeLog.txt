@@ -1,3 +1,4 @@
+- MANTA-1177 Improve CRAM reference handling
 - MANTA-1118 Add QC check of read length for a bam record
 - MANTA-865 Fix sortVcf.py for vcf's without a header
 - MANTA-1116 Sort duplicate vcf entries together to allow merging
