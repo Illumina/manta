@@ -44,6 +44,26 @@ usage(
 
 
 
+/// \brief Parse TestAssemblerOptions
+///
+/// \param[out] errorMsg If an error occurs this is set to an end-user targeted error message. Any string content on
+///                 input is cleared
+///
+/// \return True if an error occurs while parsing options
+static
+bool
+parseOptions(
+    const boost::program_options::variables_map& vm,
+    TestAssemblerOptions& opt,
+    std::string& errorMsg)
+{
+    if (parseOptions(vm, opt.alignFileOpt, errorMsg)) return true;
+    if (checkStandardizeInputFile(opt.referenceFilename, "reference fasta", errorMsg)) return true;
+    return false;
+}
+
+
+
 void
 parseTestAssemblerOptions(
     const illumina::Program& prog,
@@ -93,14 +113,7 @@ parseTestAssemblerOptions(
     }
 
     std::string errorMsg;
-    if (parseOptions(vm, opt.alignFileOpt, errorMsg))
-    {
-    }
-    else if (checkStandardizeInputFile(opt.referenceFilename, "reference fasta", errorMsg))
-    {
-    }
-
-    if (! errorMsg.empty())
+    if (parseOptions(vm, opt, errorMsg))
     {
         usage(log_os, prog, visible, errorMsg.c_str());
     }

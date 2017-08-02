@@ -31,6 +31,12 @@ getOptionsDescription(
     AlignmentFileOptions& opt);
 
 
+/// \brief Parse AlignmentFileOptions
+///
+/// \param[out] errorMsg If an error occurs this is set to an end-user targeted error message. Any string content on
+///                 input is cleared
+///
+/// \return True if an error occurs while parsing options
 bool
 parseOptions(
     const boost::program_options::variables_map& vm,

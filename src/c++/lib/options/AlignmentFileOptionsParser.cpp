@@ -49,6 +49,8 @@ parseOptions(
     AlignmentFileOptions& opt,
     std::string& errorMsg)
 {
+    errorMsg.clear();
+
     // paste together tumor and normal:
     {
         files_t normal;
@@ -70,7 +72,6 @@ parseOptions(
         opt.isAlignmentTumor.resize(opt.alignmentFilename.size(), true);
     }
 
-    errorMsg.clear();
     if (opt.alignmentFilename.empty())
     {
         errorMsg="Must specify at least one input alignment file";

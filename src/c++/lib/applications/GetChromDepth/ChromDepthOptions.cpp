@@ -45,6 +45,45 @@ usage(
 
 
 
+/// \brief Parse ChromDepthOptions
+///
+/// \param[out] errorMsg If an error occurs this is set to an end-user targeted error message. Any string content on
+///                 input is cleared
+///
+/// \return True if an error occurs while parsing options
+static
+bool
+parseOptions(
+    const boost::program_options::variables_map& vm,
+    ChromDepthOptions& opt,
+    std::string& errorMsg)
+{
+    if (checkStandardizeInputFile(opt.alignmentFilename, "alignment", errorMsg)) return true;
+    if (checkStandardizeInputFile(opt.referenceFilename, "reference fasta", errorMsg)) return true;
+
+    if (vm.count("chrom"))
+    {
+        opt.chromNames=(boost::any_cast<chroms_t>(vm["chrom"].value()));
+    }
+
+    if (opt.chromNames.empty())
+    {
+        errorMsg = "Need at least one chromosome name";
+        return true;
+    }
+
+    for (const std::string& chromName : opt.chromNames)
+    {
+        if (! chromName.empty()) continue;
+        errorMsg = "At least one chromosome name is empty";
+        return true;
+    }
+
+    return false;
+}
+
+
+
 void
 parseChromDepthOptions(
     const illumina::Program& prog,
@@ -95,35 +134,8 @@ parseChromDepthOptions(
         exit(EXIT_FAILURE);
     }
 
-    if (vm.count("chrom"))
-    {
-        opt.chromNames=(boost::any_cast<chroms_t>(vm["chrom"].value()));
-    }
-
     std::string errorMsg;
-    if      (checkStandardizeInputFile(opt.alignmentFilename, "alignment", errorMsg))
-    {
-    }
-    else if (checkStandardizeInputFile(opt.referenceFilename, "reference fasta", errorMsg))
-    {
-    }
-    else if (opt.chromNames.empty())
-    {
-        errorMsg = "Need at least one chromosome name";
-    }
-    else
-    {
-        for (const std::string& chrom : opt.chromNames)
-        {
-            if (chrom.empty())
-            {
-                errorMsg = "Empty chromosome name";
-                break;
-            }
-        }
-    }
-
-    if (! errorMsg.empty())
+    if (parseOptions(vm, opt, errorMsg))
     {
         usage(log_os, prog, visible, errorMsg.c_str());
     }
