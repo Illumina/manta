@@ -42,7 +42,7 @@ struct bam_record
     bam_record(const bam_record& br)
         : _bp(br.empty() ? bam_init1() : bam_dup1(br._bp)) {}
 
-    const bam_record&
+    bam_record&
     operator=(const bam_record& br)
     {
         if (this == &br) return (*this);
@@ -249,26 +249,6 @@ public:
         return _bp->core.isize;
     }
 
-
-    /// Test if SM and AM fields both exist and are equal to zero. Any
-    /// other result returns false:
-    ///
-    bool
-    is_unanchored() const
-    {
-        if (! is_paired()) return false;
-        static const char amtag[] = {'A','M'};
-        uint8_t* am_ptr(bam_aux_get(_bp,amtag));
-        if (NULL == am_ptr)  return false;
-        static const char smtag[] = {'S','M'};
-        uint8_t* sm_ptr(bam_aux_get(_bp,smtag));
-        if (NULL == sm_ptr)  return false;
-        return (is_int_code(am_ptr[0]) &&
-                is_int_code(sm_ptr[0]) &&
-                (0 == bam_aux2i(am_ptr)) &&
-                (0 == bam_aux2i(sm_ptr)));
-    }
-
     const uint32_t* raw_cigar() const
     {
         return bam_get_cigar(_bp);
@@ -334,7 +314,7 @@ public:
     bool
     empty() const
     {
-        assert(NULL != _bp);
+        assert(nullptr != _bp);
         return (_bp->l_data == 0);
     }
 
@@ -364,9 +344,9 @@ private:
     void
     freeBam()
     {
-        if (NULL != _bp)
+        if (nullptr != _bp)
         {
-            if (NULL != _bp->data) free(_bp->data);
+            if (nullptr != _bp->data) free(_bp->data);
             free(_bp);
         }
     }

@@ -44,8 +44,7 @@
 ///
 struct bam_header_info
 {
-    bam_header_info()
-    {}
+    bam_header_info() = default;
 
     explicit
     bam_header_info(const bam_hdr_t& header);
@@ -72,10 +71,11 @@ struct bam_header_info
 
     struct chrom_info
     {
+        explicit
         chrom_info(
-            const char* init_label = NULL,
+            const char* init_label = nullptr,
             const unsigned init_length = 0) :
-            label((NULL==init_label) ? "" : init_label ),
+            label((nullptr==init_label) ? "" : init_label ),
             length(init_length)
         {}
 

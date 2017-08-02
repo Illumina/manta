@@ -80,7 +80,7 @@ bam_record::
 alt_map_qual(const char* tag) const
 {
     uint8_t* alt_ptr(bam_aux_get(_bp,tag));
-    if ((NULL != alt_ptr) && is_int_code(alt_ptr[0]))
+    if ((nullptr != alt_ptr) && is_int_code(alt_ptr[0]))
     {
         const int alt_map(bam_aux2i(alt_ptr));
         if (alt_map<0)

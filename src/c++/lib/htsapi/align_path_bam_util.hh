@@ -27,22 +27,23 @@
 #include "htsapi/bam_util.hh"
 
 
-/// convert internal BAM cigar representation directly into a path:
+/// Convert htslib CIGAR format into ALIGNPATH::path_t
 ///
 void
 bam_cigar_to_apath(const uint32_t* bam_cigar,
                    const unsigned n_cigar,
                    ALIGNPATH::path_t& apath);
 
-/// convert apath to internal BAM cigar representation:
+/// Convert ALIGNPATH::path_t into htslib CIGAR format
 ///
-/// bam_cigar should already be set to apath.size() capacity
+/// bam_cigar must already be allocated to at least apath.size() capacity
 ///
 void
 apath_to_bam_cigar(const ALIGNPATH::path_t& apath,
                    uint32_t* bam_cigar);
 
-/// convert apath into a CIGAR string and replace CIGAR in BAM record
+/// Convert ALIGNPATH::path_t into htslib CIGAR format, and insert this
+/// into the input htslib BAM record
 ///
 void
 edit_bam_cigar(const ALIGNPATH::path_t& apath,

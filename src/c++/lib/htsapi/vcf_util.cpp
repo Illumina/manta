@@ -36,9 +36,9 @@
 std::ostream&
 vcf_fileDate(std::ostream& os)
 {
-    const time_t t(time(NULL));
+    const time_t t(time(nullptr));
     struct tm* ct(localtime(&t));
-    assert(NULL != ct);
+    assert(nullptr != ct);
 
     static const unsigned dsize(64);
     char datebuf[dsize];

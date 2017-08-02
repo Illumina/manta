@@ -75,7 +75,7 @@ struct vcf_record
     is_indel() const
     {
         if (!isSimpleVariantLocus()) return false;
-        if ((ref.size()>1) && (alt.size()>0)) return true;
+        if ((ref.size()>1) && (! alt.empty())) return true;
         for (const auto& alt_allele : alt)
         {
             if (alt_allele.size()>1) return true;

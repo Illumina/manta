@@ -192,7 +192,7 @@ std::ostream& operator<<(std::ostream& os, const vcf_record& vcfr)
     const unsigned nalt(vcfr.alt.size());
     for (unsigned a(0); a<nalt; ++a)
     {
-        if (a) os << ',';
+        if (a>0) os << ',';
         os << vcfr.alt[a];
     }
     os << '\t'

@@ -283,8 +283,8 @@ private:
 };
 
 
-//
-//
+/// Coerce a reference_contig_segment to the bam_seq_base interface without copying
+///
 struct rc_segment_bam_seq : public bam_seq_base
 {
     explicit

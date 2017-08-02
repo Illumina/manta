@@ -27,8 +27,6 @@
 
 #include <cassert>
 
-#include <iostream>
-
 
 
 static
@@ -38,7 +36,9 @@ change_bam_data_len(const int new_len,
 {
     assert(new_len>=0);
 
-    if (new_len > br.m_data)
+    // Note that bam1_t::m_data has changed from int to uint32_t in htslib commit 36c5c47e
+    // (?between htslib 1.3.2 and 1.4?), so need to account for either type here
+    if (new_len > static_cast<int>(br.m_data))
     {
         br.m_data = new_len;
         kroundup32(br.m_data);

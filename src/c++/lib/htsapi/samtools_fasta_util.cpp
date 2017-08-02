@@ -118,7 +118,7 @@ get_region_seq(const std::string& ref_file,
     faidx_t* fai(fai_load(ref_file.c_str()));
     int len; // throwaway...
     char* ref_tmp(fai_fetch(fai,fa_region.c_str(), &len));
-    if (NULL == ref_tmp)
+    if (nullptr == ref_tmp)
     {
         std::ostringstream oss;
         oss << "ERROR: Can't find sequence region '" << fa_region << "' in reference file: '" << ref_file << "'\n";
@@ -141,7 +141,7 @@ get_region_seq(const std::string& ref_file,
     faidx_t* fai(fai_load(ref_file.c_str()));
     int len; // throwaway...
     char* ref_tmp(faidx_fetch_seq(fai,const_cast<char*>(chrom.c_str()), begin_pos, end_pos, &len));
-    if (NULL == ref_tmp)
+    if (nullptr == ref_tmp)
     {
         std::ostringstream oss;
         oss << "ERROR: Can't find sequence region '" << chrom << ":" << (begin_pos+1) << "-" << (end_pos+1) << "' in reference file: '" << ref_file << "'\n";
