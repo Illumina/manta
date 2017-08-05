@@ -278,7 +278,7 @@ getSVBreakendCandidateSemiAligned(
 
     if (0 != leadingEdgePoorAlignmentLengthTmp)
     {
-        if ((! isOverlappingReadPair) || bamRead.is_fwd_strand())
+        if ((! isOverlappingReadPair) || bamRead.isSASplit() || bamRead.is_fwd_strand())
         {
             unsigned highQualityCount(0);
             for (unsigned pos(0); pos<leadingEdgePoorAlignmentLengthTmp; ++pos)
@@ -300,7 +300,7 @@ getSVBreakendCandidateSemiAligned(
 
     if (0 != trailingEdgePoorAlignmentLengthTmp)
     {
-        if ((! isOverlappingReadPair) || (! bamRead.is_fwd_strand()))
+        if ((! isOverlappingReadPair) || bamRead.isSASplit() || (! bamRead.is_fwd_strand()))
         {
             unsigned highQualityCount(0);
             for (unsigned pos(0); pos<trailingEdgePoorAlignmentLengthTmp; ++pos)
