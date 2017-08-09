@@ -111,6 +111,8 @@ possible for Visual Studio users. See the the [manta developer guide][DeveloperG
     # Prior to build configuration, set CC/CXX to gcc 4.8:
     export CC=/opt/rh/devtoolset-2/root/usr/bin/gcc
     export CXX=/opt/rh/devtoolset-2/root/usr/bin/g++
+    # boost 1.63.0 didn't work
+    export BOOST_ROOT=/PATH_TO/boost-1.56.0
 
 ### Build procedure
 
