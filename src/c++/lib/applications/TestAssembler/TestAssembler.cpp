@@ -43,12 +43,7 @@ runTestAssembler(const TestAssemblerOptions& opt)
     Assembly contigs;
 
     log_os << "[INFO] Assmbling read input.\n";
-
-#ifdef ITERATIVE_ASSEMBLER
     runIterativeAssembler(asmOpt, reads, readInfo, contigs);
-#else
-    runSmallAssembler(asmOpt, reads, readInfo, contigs);
-#endif
 
     OutStream outs(opt.outputFilename);
     std::ostream& os(outs.getStream());

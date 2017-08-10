@@ -762,12 +762,7 @@ assembleSingleSVBreakend(
     getBreakendReads(bp, isBpReversed, refSeq, isSearchRemoteInsertionReads, remoteReads, readIndex, reads);
     AssemblyReadOutput readInfo;
 
-#ifdef ITERATIVE_ASSEMBLER
     runIterativeAssembler(_assembleOpt, reads, readInfo, as);
-#else
-    runSmallAssembler(_assembleOpt, reads, readInfo, as);
-#endif
-
 }
 
 
@@ -794,9 +789,6 @@ assembleSVBreakends(
     readRev.resize(reads.size(),isBp2Reversed);
     AssemblyReadOutput readInfo;
 
-#ifdef ITERATIVE_ASSEMBLER
     runIterativeAssembler(_assembleOpt, reads, readInfo, as);
-#else
-    runSmallAssembler(_assembleOpt, reads, readInfo, as);
-#endif
+
 }

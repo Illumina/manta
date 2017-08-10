@@ -202,8 +202,6 @@ getLargeIndelSegments(
 }
 
 
-
-#ifdef ITERATIVE_ASSEMBLER
 static
 unsigned
 getLargestIndelSize(
@@ -227,7 +225,6 @@ getLargestIndelSize(
 
     return largestSize;
 }
-#endif
 
 
 /// identify the single largest insert segment, if one exists above minSize:
@@ -1760,11 +1757,9 @@ getSmallSVAssembly(
 
     static const pos_t extraRefSize(extraRefEdgeSize+extraRefSplitSize);
 
-#ifdef ITERATIVE_ASSEMBLER
     static const float extraScorePerc(0.1f);
     static const float extraVarSizePerc(0.1f);
     static const float extraSuppReadPerc(0.2f);
-#endif
 
     // min alignment context
     //const unsigned minAlignContext(4);
@@ -1822,13 +1817,11 @@ getSmallSVAssembly(
     unsigned highScoreIndex(0);
     int highScore(0);
 
-#ifdef ITERATIVE_ASSEMBLER
     unsigned highScoreVarSize(0);
     bool isSecHighScore(false);
     int secHighScore(0);
     unsigned secHighScoreIndex(0);
     unsigned secHighScoreVarSize(0);
-#endif
 
     std::vector<unsigned> largeInsertionCandidateIndex;
 
@@ -2062,13 +2055,10 @@ getSmallSVAssembly(
                 isHighScore = true;
                 highScoreIndex = contigIndex;
                 highScore = alignment.score;
-#ifdef ITERATIVE_ASSEMBLER
                 highScoreVarSize = getLargestIndelSize(alignment.align.apath, candidateSegments);
-#endif
             }
             else if (alignment.score > highScore)
             {
-#ifdef ITERATIVE_ASSEMBLER
                 isSecHighScore = true;
                 secHighScore = highScore;
                 secHighScoreIndex = highScoreIndex;
@@ -2078,14 +2068,12 @@ getSmallSVAssembly(
 #ifdef DEBUG_REFINER
                 log_os << __FUNCTION__ << ": contigIndex: " << secHighScoreIndex << " is the second high score\n";
 #endif
-#endif
                 highScoreIndex = contigIndex;
                 highScore = alignment.score;
 #ifdef DEBUG_REFINER
                 log_os << __FUNCTION__ << ": contigIndex: " << highScoreIndex << " is high score\n";
 #endif
             }
-#ifdef ITERATIVE_ASSEMBLER
             else if ((! isSecHighScore) || (alignment.score > assemblyData.smallSVAlignments[secHighScoreIndex].score))
             {
                 isSecHighScore = true;
@@ -2096,11 +2084,9 @@ getSmallSVAssembly(
                 log_os << __FUNCTION__ << ": contigIndex: " << secHighScoreIndex << " is the second high score\n";
 #endif
             }
-#endif
         }
     }
 
-#ifdef ITERATIVE_ASSEMBLER
     // select the contig with the larger indel size between the two
     // highest-scoring contigs
     if (isSecHighScore)
@@ -2126,7 +2112,6 @@ getSmallSVAssembly(
         log_os << __FUNCTION__ << ": contigIndex: " << highScoreIndex << " is finally selected.\n";
 #endif
     }
-#endif
 
 
     // set any additional QC steps before deciding an alignment is usable:

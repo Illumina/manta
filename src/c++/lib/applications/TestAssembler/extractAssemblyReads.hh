@@ -24,13 +24,7 @@
 #include "options/SmallAssemblerOptions.hh"
 #include "options/IterativeAssemblerOptions.hh"
 
-//#define ITERATIVE_ASSEMBLER
-
-#ifdef ITERATIVE_ASSEMBLER
 typedef IterativeAssemblerOptions AssemblerOptions;
-#else
-typedef SmallAssemblerOptions AssemblerOptions;
-#endif
 
 
 /// load all reads form bam into assembly input structure with minimal
