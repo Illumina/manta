@@ -732,8 +732,8 @@ buildContigs(
             unusedWords.insert(wdct.first);
     }
 
-    // TODO: for the seek of speed, consider limiting the number of contigs generated
-    while (!unusedWords.empty())
+    // limit the number of contigs generated for the seek of speed
+    while ((! unusedWords.empty()) && (contigs.size() < 2*opt.maxAssemblyCount))
     {
         std::string maxWord;
         unsigned maxWordCount(0);
