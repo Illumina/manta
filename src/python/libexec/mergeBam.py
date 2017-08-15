@@ -65,7 +65,7 @@ if __name__=='__main__':
     fpList.close()
 
     if fileCount > 1:
-        call([ samtoolsBin, "merge", "-b",
+        call([ samtoolsBin, "merge", "-c -p -b",
                bamListFile, mergedBam ])
     elif fileCount == 1:
         copyfile(firstBam, mergedBam)
