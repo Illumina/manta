@@ -1,5 +1,7 @@
+- MANTA-1043 Add more read statistics when 'too few read pair observations' exception
 - MANTA-696 Improve the iterative assembler and set it to the default assembler
 - MANTA-1175 Fix a bug of duplicate RG & PG in evidence bams
+- MANTA-886 Verify extension of alignment input file
 - MANTA-1177 Improve CRAM reference handling
 - MANTA-1118 Add QC check of read length for a bam record
 - MANTA-865 Fix sortVcf.py for vcf's without a header

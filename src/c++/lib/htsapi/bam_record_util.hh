@@ -77,7 +77,7 @@ get_avg_quality(
 
 /// select 'first' read in pair such that you
 /// consistently get only one read per-pair
-/// (assuming the bam file is properly formated)
+/// (assuming the bam file is properly formatted)
 inline
 bool
 isFirstRead(
