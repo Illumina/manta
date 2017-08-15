@@ -63,7 +63,7 @@ print_readSet(
 
 // maps kmers to positions in read
 typedef std::unordered_map<std::string,unsigned> str_uint_map_t;
-// maps kmers to support reads
+// maps kmers to supporting reads
 typedef std::unordered_map<std::string,std::set<unsigned> > str_set_uint_map_t;
 
 typedef std::unordered_set<std::string> str_set_t;
@@ -665,7 +665,7 @@ buildContigs(
         if (contig.supportReads.find(readIndex) != contig.supportReads.end())
         {
             rinfo.isUsed = true;
-            rinfo.contigId = contigs.size();
+            rinfo.contigIds.push_back(contigs.size());
 
             assert(unusedReads != 0);
             --unusedReads;
@@ -723,11 +723,30 @@ runSmallAssembler(
 #ifdef DEBUG_ASBL
             log_os << logtag << "Number of unused reads (" << unusedReads << ") did not change in this iteration. Stopping.\n";
 #endif
-            return;
+            break;
         }
     }
+
 #ifdef DEBUG_ASBL
-    log_os << logtag << "Reached max number of assembly iterations: " << opt.maxAssemblyIterations << "\n";
+    log_os << logtag << "Generated " << contigs.size() << " contigs.\n";
+    unsigned index(1);
+    for (const AssembledContig& ctg : contigs)
+    {
+        log_os << logtag <<"Contig # " << index << ": " << ctg.seq << "\n";
+        log_os << logtag << "Contig supporting reads: [";
+        for (const unsigned us : ctg.supportReads)
+        {
+            log_os << us << ",";
+        }
+        log_os << "]\n";
+        log_os << logtag << "Contig rejecting reads: [";
+        for (const unsigned us : ctg.rejectReads)
+        {
+            log_os << us << ",";
+        }
+        log_os << "]\n";
+        index++;
+    }
 #endif
 }
 

@@ -36,13 +36,8 @@
 
 #include <vector>
 
-
-//#define ITERATIVE_ASSEMBLER
-#ifdef ITERATIVE_ASSEMBLER
 typedef IterativeAssemblerOptions AssemblerOptions;
-#else
-typedef SmallAssemblerOptions AssemblerOptions;
-#endif
+
 
 /// Assembles SV-candidate reads for single and paired SVBreakend objects
 ///

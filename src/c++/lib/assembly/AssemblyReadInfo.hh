@@ -34,7 +34,7 @@ struct AssemblyReadInfo
     bool isUsed = false;
     bool isFiltered = false; ///< if true, the read was 'used' but filtered out, so there is no meaningful contig id association
     bool isPseudo = false; ///< if true, the read was an assembled contig
-    unsigned contigId = 0; ///< index of the contig that this read is used in
+    std::vector<unsigned> contigIds; ///< index of the contigs that this read is used in
 };
 
 

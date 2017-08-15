@@ -511,7 +511,7 @@ getBreakendReads(
                     {
 #ifdef DEBUG_ASBL
                         log_os << logtag << "Adding remote bamrec. idx: " << bamIndex << " rec: " << bamRead << '\n'
-                               << "\tmapq: " << bamRead.map_qual() << '\n'
+                               << "\tmapq: " << int(bamRead.map_qual()) << '\n'
                                << "\tread: " << bamRead.get_bam_read() << '\n';
 #endif
 
@@ -620,7 +620,7 @@ getBreakendReads(
             if (isShadowKeeper) ++shadowCount;
 
             log_os << logtag << "Adding bamrec. idx: " << bamIndex << " rec: " << bamRead << '\n'
-                   << "\tmapq: " << bamRead.map_qual() << '\n'
+                   << "\tmapq: " << int(bamRead.map_qual()) << '\n'
                    << "\tread: " << bamRead.get_bam_read() << '\n';
             log_os << "isIndelKeeper: " << isIndelKeeper
                    << " isSemiAlignedKeeper: " << isSemiAlignedKeeper
@@ -767,12 +767,7 @@ assembleSingleSVBreakend(
     getBreakendReads(bp, isBpReversed, refSeq, isSearchRemoteInsertionReads, remoteReads, readIndex, reads);
     AssemblyReadOutput readInfo;
 
-#ifdef ITERATIVE_ASSEMBLER
     runIterativeAssembler(_assembleOpt, reads, readInfo, as);
-#else
-    runSmallAssembler(_assembleOpt, reads, readInfo, as);
-#endif
-
 }
 
 
@@ -799,9 +794,6 @@ assembleSVBreakends(
     readRev.resize(reads.size(),isBp2Reversed);
     AssemblyReadOutput readInfo;
 
-#ifdef ITERATIVE_ASSEMBLER
     runIterativeAssembler(_assembleOpt, reads, readInfo, as);
-#else
-    runSmallAssembler(_assembleOpt, reads, readInfo, as);
-#endif
+
 }

@@ -23,12 +23,7 @@
 #include "options/IterativeAssemblerOptions.hh"
 #include "options/SmallAssemblerOptions.hh"
 
-//#define ITERATIVE_ASSEMBLER
-#ifdef ITERATIVE_ASSEMBLER
 typedef IterativeAssemblerOptions AssemblerOptions;
-#else
-typedef SmallAssemblerOptions AssemblerOptions;
-#endif
 
 namespace SUPERTMP
 {
