@@ -119,12 +119,19 @@ endif ()
 # If the right version of boost is not found, it will be built from the distribution
 #
 if (NOT Boost_FOUND)
+    #
+    # Provide details on why any user-supplied/auto-detected boost can't be used:
+    #
     foreach(COMPONENT ${THIS_BOOST_COMPONENTS})
         STRING(TOUPPER ${COMPONENT} UPPERCOMPONENT)
         if (${Boost_${UPPERCOMPONENT}_FOUND})
             set(FOUND_STATUS "found")
         else()
-            set(FOUND_STATUS "NOT FOUND")
+            set(FOUND_STATUS "")
+            if (Boost_USE_STATIC_LIBS)
+                set(FOUND_STATUS "STATIC LIBRARY ")
+            endif ()
+            set(FOUND_STATUS "${FOUND_STATUS}NOT FOUND")
         endif()
         message(STATUS "Boost component: ${COMPONENT}\tstatus: ${FOUND_STATUS}")
     endforeach()
@@ -134,9 +141,9 @@ if (NOT Boost_FOUND)
         message (FATAL_ERROR "Unset BOOST_ROOT or set it to the root location of boost ${THIS_BOOST_VERSION}.")
     endif()
 
-    # Try to find it in target installation location
+    # Try to find boost in bootstrap installation location
     resetFindBoost()
-    message(STATUS "Boost version ${THIS_BOOST_VERSION} or higher not found. Boost will be built from the distribution...")
+    message(STATUS "Boost version ${THIS_BOOST_VERSION}+ not found or found without all required components. Boost will be built from source distribution...")
 
     set(ENV{THIS_BOOST_BUILD_COMPONENTS} "${THIS_BOOST_BUILD_COMPONENTS}")
     set(ENV{THIS_BOOST_VERSION} "${THIS_BOOST_VERSION}")

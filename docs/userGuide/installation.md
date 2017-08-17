@@ -133,15 +133,20 @@ Example (building on 4 cores):
     ../manta-${MANTA_VERSION}.release_src/configure --jobs=4 --prefix=/path/to/install
     make -j4 install
 
-Note that during the configuration step, the following dependencies
-will be built from source if they are not found:
+Note that there are two other dependencies to cmake and boost. These are different than the requirements discussed
+above, in that they can optionally be provided by the user. They will automatically be built from source if not
+detected. The minimum required versions of these tools for users planning to provide them to the build process are
 
 * cmake 2.8.0+
-* boost 1.56.0+
+* boost 1.56.0+ (must include static libraries)
 
-To accelerate this process the configuration step can be parallelized
-over multiple cores, as demonstrated in the example above with the
-`--jobs=4` argument to configure.
+...the build process will find an existing cmake version on the user's `PATH` and an existing boost installation
+indicated by the environment variable `BOOST_ROOT`.
+
+If not detected, then versions of cmake and boost will be built from source and installed to temporary locations under
+the build directory automatically. This step can make installation more convenient, but does increase the time
+requiered for configuration. To accelerate this process the configuration step can be parallelized over multiple cores,
+as demonstrated in the example above with the`--jobs=4` argument to configure.
 
 To see more configure options, run:
 
