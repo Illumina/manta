@@ -648,7 +648,7 @@ struct AlignmentPairAnalyzer
     /// \brief Convert the input alignments (provided in ::reset) into a structural variant observation
     ///
     /// The regions where each of the two breakends are likely to be found in the event that an SV exists are computed
-    /// from the two read alignments and the fragement size distribution.
+    /// from the two read alignments and the fragment size distribution.
     ///
     /// Requires that ::isAnomalousReadPair has already been called since the last call to ::reset.
     ///
