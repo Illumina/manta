@@ -25,7 +25,7 @@
 
 #include "blt_util/SizeDistribution.hh"
 #include "common/ReadPairOrient.hh"
-#include "ReadCounter.hh"
+#include "manta/ReadCounter.hh"
 
 
 /// Read pair insert stats can be computed for each sample or read group, this
