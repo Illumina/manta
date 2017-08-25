@@ -25,6 +25,7 @@
 
 #include "blt_util/SizeDistribution.hh"
 #include "common/ReadPairOrient.hh"
+#include "manta/ReadCounter.hh"
 
 
 /// Read pair insert stats can be computed for each sample or read group, this
@@ -41,12 +42,14 @@ private:
     {
         ar& boost::serialization::make_nvp("fragmentSizeDistribution", fragStats);
         ar& boost::serialization::make_nvp("pairOrientation", relOrients);
+        ar& boost::serialization::make_nvp("readCount", readCounter);
     }
 
     ///////////////////////////// data:
 public:
     SizeDistribution fragStats;
     ReadPairOrient relOrients;
+    ReadCounter readCounter;
 };
 
 BOOST_CLASS_IMPLEMENTATION(ReadGroupStats, boost::serialization::object_serializable)
