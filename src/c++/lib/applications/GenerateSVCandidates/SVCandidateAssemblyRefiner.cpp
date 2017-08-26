@@ -574,7 +574,7 @@ isSmallAssemblerSVAlignment(
 static const unsigned minSemiLargeInsertionLength(40); // if a large insertion is not complete assembled, it must be assembled at least this far into either side
 
 
-/// \params[in] trimInsertLength remove extra length from the end of the contig
+/// \param[in] trimInsertLength remove extra length from the end of the contig
 /// for the purpose of determining if the "unaligned" end is long enough
 ///
 /// \return true if this is a left->right insert candidate

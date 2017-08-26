@@ -191,7 +191,7 @@ prob_comp(It begin,
 
 /// probability distro normalization for log-transformed input
 ///
-/// \param max_idx[out] set to the index of the most probable component
+/// \param[out] max_idx set to the index of the most probable component
 ///
 template <typename It>
 void

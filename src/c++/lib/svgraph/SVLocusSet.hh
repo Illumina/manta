@@ -550,7 +550,7 @@ private:
     ///
     /// \param[in] intersectingNodeAddresses Addresses of a set of nodes which will be moved such that they are all in the same locus.
     /// \param[in] startLocusIndex This locus is not cleared after copying its contents to the lowest locus index.
-    /// \param[inout] headLocusIndex The value on input should contain the locus holding the duplicated start locus.
+    /// \param[in,out] headLocusIndex The value on input should contain the locus holding the duplicated start locus.
     ///                              If the start locus hasn't been duplicated yet it will equal \p startLocusIndex.
     ///                              The value returned is the target locus of the move operation, which after this
     ///                              function completes is the neow locus holding the duplication of the start locus.

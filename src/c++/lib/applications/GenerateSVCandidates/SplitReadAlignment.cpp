@@ -55,7 +55,7 @@ operator<<(std::ostream& os, const SRAlignmentInfo& info)
 
 
 
-/// \params[out] return the LnLhood expected from a perfect match to the reference
+/// \param[out] return the LnLhood expected from a perfect match to the reference
 static
 float
 getLnLhood(

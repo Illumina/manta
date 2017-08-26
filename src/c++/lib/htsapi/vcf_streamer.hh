@@ -31,7 +31,7 @@
 
 struct vcf_streamer : public hts_streamer
 {
-    /// \param isRequireNormalized[in] if true an exception is thrown for any input variant records which are not
+    /// \param[in] isRequireNormalized if true an exception is thrown for any input variant records which are not
     ///                                left shifted
     vcf_streamer(
         const char* filename,

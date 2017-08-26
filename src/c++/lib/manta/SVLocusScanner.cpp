@@ -371,7 +371,7 @@ parseSACandidatesFromRead(
 /// supports parsing out any number of split alignments, and this function may be updated to do so in the future.
 ///
 /// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2, etc..)
-/// \param[inout] candidates New SVObservation objects are appended to this vector. Contents of the vector are preserved
+/// \param[in,out] candidates New SVObservation objects are appended to this vector. Contents of the vector are preserved
 ///                        but not read.
 static
 void
@@ -410,7 +410,7 @@ getSACandidatesFromRead(
 /// \brief Convert all large indels already present in a single read's alignment into SVObservation objects
 ///
 /// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2, etc..)
-/// \param[inout] candidates New SVObservation objects are appended to this vector. Contents of the vector are preserved
+/// \param[in,out] candidates New SVObservation objects are appended to this vector. Contents of the vector are preserved
 ///                        but not read.
 static
 void
@@ -523,7 +523,7 @@ getSVCandidatesFromReadIndels(
 /// in the current read alignment.
 ///
 /// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2, etc..)
-/// \param[inout] candidates New SVObservation objects are appended to this vector. Contents of the vector are preserved
+/// \param[in,out] candidates New SVObservation objects are appended to this vector. Contents of the vector are preserved
 ///                        but not read.
 static
 void
@@ -652,7 +652,7 @@ struct AlignmentPairAnalyzer
     ///
     /// Requires that ::isAnomalousReadPair has already been called since the last call to ::reset.
     ///
-    /// \param sv[out] The SVObservation inferred from the anomalous read pair
+    /// \param[out] sv The SVObservation inferred from the anomalous read pair
     void
     getSVObservation(
         SVObservation& sv)
@@ -956,7 +956,7 @@ private:
 /// \param[in] localAlign Pre-computed alignment data generated from \p localRead as a caching optimization
 /// \param[in] remoteReadPtr Pointer to the bam record of \p localRead's mate. If nullptr, then properties of the mate
 ///                          alignment are inferred from the local alignment record.
-/// \param[inout] candidates New SVObservation objects are appended to this vector. Contents of the vector are preserved
+/// \param[in,out] candidates New SVObservation objects are appended to this vector. Contents of the vector are preserved
 ///                          but not read.
 static
 void

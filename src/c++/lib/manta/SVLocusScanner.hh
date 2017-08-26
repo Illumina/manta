@@ -253,7 +253,7 @@ struct SVLocusScanner
 
     /// \brief A fast test to eliminate reads which are very unlikely to contribute any SV or indel evidence
     ///
-    /// \param[inout] incountsPtr If not nullptr, the pointed object is appended with statistics on the SV evidence
+    /// \param[in,out] incountsPtr If not nullptr, the pointed object is appended with statistics on the SV evidence
     ///                           type associated with \p bamRead
     /// \return True if it is probable that \p bamRead provides evidence for an SV or indel
     bool

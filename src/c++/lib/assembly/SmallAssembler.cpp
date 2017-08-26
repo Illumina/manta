@@ -446,7 +446,7 @@ walk(const SmallAssemblerOptions& opt,
 
 
 
-/// \params isFindRepeatReads if true record all reads with repeated words
+/// \param isFindRepeatReads if true record all reads with repeated words
 ///
 static
 bool

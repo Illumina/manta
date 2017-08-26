@@ -577,7 +577,7 @@ getKmerCounts(
 }
 
 
-/// Identify repeatitive k-mers
+/// Identify repetitive k-mers
 /// i.e. k-mers that form a circular subgraph
 ///
 static
