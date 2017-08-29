@@ -1377,33 +1377,43 @@ load(
     clear();
 
     assert(nullptr != filename);
-    std::ifstream ifs(filename, std::ios::binary);
-    binary_iarchive ia(ifs);
 
-    _source=filename;
-
-    ia >> header;
-    ia >> _opt;
-    ia >> _isFinalized;
-    ia >> _totalCleaned;
-    ia >> _counts;
-    ia >> _highestSearchCount;
-    ia >> _highestSearchDensity;
-    ia >> _isMaxSearchCount;
-    ia >> _isMaxSearchDensity;
-    ia >> _buildTime;
-    ia >> _mergeTime;
-
-    SVLocus locus;
-    while (ifs.peek() != EOF)
+    try
     {
-        locus.clear(this);
-        ia >> locus;
-        if (locus.empty()) continue;
-        const LocusIndexType locusIndex(size());
-        _loci.push_back(locus);
-        SVLocus& locusCopy(_loci.back());
-        locusCopy.updateIndex(locusIndex);
+        std::ifstream ifs(filename, std::ios::binary);
+        binary_iarchive ia(ifs);
+
+        _source = filename;
+
+        ia >> header;
+        ia >> _opt;
+        ia >> _isFinalized;
+        ia >> _totalCleaned;
+        ia >> _counts;
+        ia >> _highestSearchCount;
+        ia >> _highestSearchDensity;
+        ia >> _isMaxSearchCount;
+        ia >> _isMaxSearchDensity;
+        ia >> _buildTime;
+        ia >> _mergeTime;
+
+        SVLocus locus;
+        while (ifs.peek() != EOF)
+        {
+            locus.clear(this);
+            ia >> locus;
+            if (locus.empty()) continue;
+            const LocusIndexType locusIndex(size());
+            _loci.push_back(locus);
+            SVLocus& locusCopy(_loci.back());
+            locusCopy.updateIndex(locusIndex);
+        }
+    }
+    catch (...)
+    {
+        log_os << "ERROR: Exception caught while attempting to deserialize Manta SV locus graph file:\n"
+               << "'" << filename << "'" << "\n";
+        throw;
     }
 
     if (! isSkipIndex)
