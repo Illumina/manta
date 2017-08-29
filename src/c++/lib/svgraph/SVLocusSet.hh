@@ -201,9 +201,9 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
     void
     save(const char* filename) const;
 
-    /// restore from serialization
+    /// \brief Deserialize object from binary file format
     ///
-    /// \param[in] isSkipIndex if true, don't build the graph index, and only allow a limited set of operations:
+    /// \param[in] isSkipIndex If true, don't build the graph index, and only allow a limited set of operations
     ///
     void
     load(
@@ -572,7 +572,7 @@ private:
         const bool isClearSource = true);
 
 
-    /// \brief add \p inputLocus to this SVLocusSet
+    /// \brief Add \p inputLocus to this SVLocusSet
     ///
     /// Copies the inputLocus into this object without attempting do any merging. This is an intermediate (private)
     /// step in the process of merging the \p inputLocus into this graph.
@@ -677,9 +677,9 @@ private:
     void
     dumpIndex(std::ostream& os) const;
 
-    /// throw an exception if any nodes are overlapping
+    /// \brief Throw an exception if any nodes are overlapping
     ///
-    /// if isFilterNoise is true, consider only signal nodes
+    /// \param[in] isFilterNoise If true, consider only signal nodes
     void
     checkForOverlapNodes(
         const bool isFilterNoise) const;
@@ -747,7 +747,7 @@ private:
     // provides an intersection search of overlapping nodes given a bound node size:
     LocusSetIndexerType _inodes;
 
-    /// \brief Largest node breakend region in this graph for each chromosome.
+    /// \brief The largest node breakend region in this graph for each chromosome.
     ///
     /// This is used to support the graph's region-based query scheme to find all nodes overlapping a given a certain
     /// interval from a chromosome. Instead of using a fully general indexing scheme, such as an interval tree, the
@@ -765,7 +765,7 @@ private:
 
     AllCounts _counts;
 
-    // total number of observations removed on edges with less than minMergeEdgeCount counts
+    /// Total number of observations removed on edges with less than minMergeEdgeCount counts
     unsigned _totalCleaned;
 
     mutable unsigned _highestSearchCount; ///< highest search count observed during graph build
