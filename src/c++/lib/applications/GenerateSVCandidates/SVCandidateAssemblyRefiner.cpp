@@ -1311,7 +1311,42 @@ generateRefinedVCFSVCandidateFromJumpAlignment(
     addCigarToSpanningAlignment(sv);
 }
 
-
+// check the min size and fraction of optimal alignment score
+// for each of the two sub-alignments on each side of the bp
+//
+// note this is done for multiple values -- the lower value is
+// motivated by cases where a second breakpoint exists near to
+// the target breakpoint -- the higher value is motivated by
+// cases with some alignment 'messiness' near the breakpoint
+// that stabilizes as we move farther away
+//
+/// TODO change iterative refspan to a single consistent alignment criteria
+static
+bool
+checkFilterSubAlignments(
+    const JumpAlignmentResult<int>& alignment,
+    const GlobalJumpAligner<int>& spanningAligner,
+    const bool isRNA)
+{
+    using namespace ALIGNPATH;
+    bool isFilterAlign1(true);
+    bool isFilterAlign2(true);
+    static const unsigned spanSet[] = { 75, 100, 200 };
+    for (const unsigned maxQCRefSpan : spanSet)
+    {
+        const unsigned qcSpan1 = maxQCRefSpan + (isRNA ? apath_spliced_length(alignment.align1.apath) : 0);
+        if (!isFilterSpanningAlignment(qcSpan1, spanningAligner, true, isRNA, alignment.align1.apath))
+        {
+            isFilterAlign1 = false;
+        }
+        const unsigned qcSpan2 = maxQCRefSpan + (isRNA ? apath_spliced_length(alignment.align2.apath) : 0);
+        if (!isFilterSpanningAlignment(qcSpan2, spanningAligner, false, isRNA, alignment.align2.apath))
+        {
+            isFilterAlign2 = false;
+        }
+    }
+    return (isFilterAlign1 || isFilterAlign2);
+}
 
 void
 SVCandidateAssemblyRefiner::
@@ -1641,34 +1676,10 @@ getJumpAssembly(
 #ifdef DEBUG_REFINER
         log_os << __FUNCTION__ << ": contig alignment initial okay: " << contigIndex << "\n";
 #endif
+        if (isRNA && checkFilterSubAlignments(alignment, _spanningAligner, isRNA))
         {
-            // check the min size and fraction of optimal alignment score
-            // for each of the two sub-alignments on each side of the bp
-            //
-            // note this is done for multiple values -- the lower value is
-            // motivated by cases where a second breakpoint exists near to
-            // the target breakpoint -- the higher value is motivated by
-            // cases with some alignment 'messiness' near the breakpoint
-            // that stabilizes as we move farther away
-            //
-            /// TODO change iterative refspan to a single consistent alignment criteria
-            bool isFilterAlign1(true);
-            bool isFilterAlign2(true);
-            static const unsigned spanSet[] = { 75, 100, 200 };
-            for (const unsigned maxQCRefSpan : spanSet)
-            {
-                const unsigned qcSpan1 = maxQCRefSpan + (isRNA ? apath_spliced_length(alignment.align1.apath) : 0);
-                if (!isFilterSpanningAlignment(qcSpan1, _spanningAligner, true, isRNA, alignment.align1.apath))
-                {
-                    isFilterAlign1 = false;
-                }
-                const unsigned qcSpan2 = maxQCRefSpan + (isRNA ? apath_spliced_length(alignment.align2.apath) : 0);
-                if (!isFilterSpanningAlignment(qcSpan2, _spanningAligner, false, isRNA, alignment.align2.apath))
-                {
-                    isFilterAlign2 = false;
-                }
-            }
-            if (isFilterAlign1 || isFilterAlign2) isAlignmentGood = false;
+            // For RNA pre-filter all contigs to only consider those passing the SubAlignment filter
+            isAlignmentGood = false;
         }
         if (isAlignmentGood)
         {
@@ -1706,6 +1717,13 @@ getJumpAssembly(
 #ifdef DEBUG_REFINER
     log_os << __FUNCTION__ << ": selected contig: " << selectedContigIndex << "\n";
 #endif
+    if (checkFilterSubAlignments(assemblyData.spanningAlignments[selectedContigIndex], _spanningAligner, isRNA))
+    {
+        // Check the selected contig with the SubAlignments filter.
+        // Only relevant for DNA, since the RNA contigs were pre-filtered with this filter before selection
+        // TODO (Maybe) switch DNA to the RNA logic?
+        return;
+    }
 
     // ok, passed QC -- mark the high-scoring alignment as usable for
     // hypothesis refinement:
