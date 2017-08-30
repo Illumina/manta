@@ -1688,18 +1688,21 @@ getJumpAssembly(
             maxAlignContigIndex = index;
         }
     }
+
     unsigned selectedContigIndex(maxAlignContigIndex);
-    // Pick the contig with the most supporting reads that has an alignment score at least half as high as the highest-scoring contig
-    for (unsigned index : goodContigIndicies)
+    if (isRNA)
     {
-        const bool sufficientScore(assemblyData.spanningAlignments[index].score * 2 > assemblyData.spanningAlignments[maxAlignContigIndex].score);
-        const bool moreReads(assemblyData.contigs[index].supportReads.size() > assemblyData.contigs[selectedContigIndex].supportReads.size());
-        if (sufficientScore && moreReads)
+        // Pick the contig with the most supporting reads that has an alignment score at least half as high as the highest-scoring contig
+        for (unsigned index : goodContigIndicies)
         {
-            selectedContigIndex = index;
+            const bool sufficientScore(assemblyData.spanningAlignments[index].score * 2 > assemblyData.spanningAlignments[maxAlignContigIndex].score);
+            const bool moreReads(assemblyData.contigs[index].supportReads.size() > assemblyData.contigs[selectedContigIndex].supportReads.size());
+            if (sufficientScore && moreReads)
+            {
+                selectedContigIndex = index;
+            }
         }
     }
-
 #ifdef DEBUG_REFINER
     log_os << __FUNCTION__ << ": selected contig: " << selectedContigIndex << "\n";
 #endif
