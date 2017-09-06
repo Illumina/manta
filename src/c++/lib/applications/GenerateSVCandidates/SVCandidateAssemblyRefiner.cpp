@@ -1387,7 +1387,7 @@ selectContigRNA(
     if (goodContigIndicies.empty()) return false;
     // Find the highest alignment score
     int maxAlnScore = 0;
-	unsigned selectedContigIndex(goodContigIndicies.front());
+    unsigned selectedContigIndex(goodContigIndicies.front());
     for (unsigned index : goodContigIndicies)
     {
         if (assemblyData.spanningAlignments[index].score > maxAlnScore)
@@ -1741,9 +1741,9 @@ getJumpAssembly(
                 << bp2refSeq.substr(align2LeadingCut, bp2refSeq.size() - align2LeadingCut - align2TrailingCut) << '\n';
 #endif
             _spanningAligner.align(contig.seq.begin(), contig.seq.end(),
-                align1RefStrPtr->begin() + align1LeadingCut, align1RefStrPtr->end() - align1TrailingCut,
-                align2RefStrPtr->begin() + align2LeadingCut, align2RefStrPtr->end() - align2TrailingCut,
-                alignment);
+                                   align1RefStrPtr->begin() + align1LeadingCut, align1RefStrPtr->end() - align1TrailingCut,
+                                   align2RefStrPtr->begin() + align2LeadingCut, align2RefStrPtr->end() - align2TrailingCut,
+                                   alignment);
         }
 
         alignment.align1.beginPos += align1LeadingCut;
@@ -1779,7 +1779,7 @@ getJumpAssembly(
     }
     if (!foundContig) return;
 #ifdef DEBUG_REFINER
-    log_os << __FUNCTION__ << ": highscoreid: " << selectedContigIndex << " alignment: " << assemblyData.spanningAlignments[selectedContigIndex];
+    log_os << __FUNCTION__ << ": highscoreid: " << assemblyData.bestAlignmentIndex << " alignment: " << assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex];
 #endif
     // process the alignment into information that's easily usable
     // in the vcf output (ie. breakends in reference coordinates)
