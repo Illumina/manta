@@ -37,8 +37,9 @@ struct VcfWriterDiploidSV : public VcfWriterSV, VcfWriterScoredSV
         const bool isMaxDepthFilter,
         const std::string& referenceFilename,
         const SVLocusSet& set,
-        std::ostream& os) :
-        VcfWriterSV(referenceFilename,set,os),
+        std::ostream& os,
+        const bool& isOutputContig) :
+        VcfWriterSV(referenceFilename, set, os, isOutputContig),
         _diploidOpt(diploidOpt),
         _isMaxDepthFilter(isMaxDepthFilter),
         _diploidInfoPtr(nullptr),

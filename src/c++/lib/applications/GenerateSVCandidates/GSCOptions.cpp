@@ -113,6 +113,8 @@ parseGSCOptions(
      "minimum size for variants which are scored and output following initial candidate generation")
     ("evidence-bam-stub", po::value(&opt.supportBamStub)->default_value(opt.supportBamStub),
      "Directory and prefix of bams storing the supporting reads of SVs")
+    ("output-contigs", po::value(&opt.isOutputContig)->zero_tokens(),
+     "Output assembled contig sequences in VCF files")
     ;
 
     po::options_description alignDesc(getOptionsDescription(opt.alignFileOpt));

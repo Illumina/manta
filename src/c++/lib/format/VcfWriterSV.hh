@@ -38,7 +38,8 @@ struct VcfWriterSV
     VcfWriterSV(
         const std::string& referenceFilename,
         const SVLocusSet& set,
-        std::ostream& os);
+        std::ostream& os,
+        const bool& isOutputContig);
 
     virtual
     ~VcfWriterSV() {}
@@ -177,10 +178,16 @@ private:
 
 protected:
     const std::string& _referenceFilename;
+    const bool& _isOutputContig;
+    std::ostream& _os;
 
 private:
     const bam_header_info& _header;
-protected:
-    std::ostream& _os;
+
+//protected:
+//    std::ostream& _os;
+
+//protected:
+//    const bool& _isOutputContig;
 };
 
