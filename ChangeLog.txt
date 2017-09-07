@@ -1,3 +1,5 @@
+- MANTA-1097 Use MateCigar BAM tag (if available) for adapter-read check
+-- RNA: Use overlapping read pairs with SA alignments
 - MANTA-445 RNA: Select contigs for refinement based on alignment score and read count
 - MANTA-1211/[#90] Fix issue with empty regions input to EstimateSVLoci
 - MANTA-1043 Add more read statistics when 'too few read pair observations' exception

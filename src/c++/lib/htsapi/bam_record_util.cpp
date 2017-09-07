@@ -68,10 +68,10 @@ bool
 is_possible_adapter_pair(
     const bam_record& bamRead)
 {
-    if (!is_mapped_chrom_pair(bamRead)) return false;
+    if (! is_mapped_chrom_pair(bamRead)) return false;
     if (bamRead.is_fwd_strand() == bamRead.is_mate_fwd_strand()) return false;
     int posDiff(bamRead.mate_pos() - bamRead.pos());
-    if (!bamRead.is_fwd_strand())
+    if (! bamRead.is_fwd_strand())
     {
         posDiff *= -1;
     }
