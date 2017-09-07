@@ -1260,10 +1260,9 @@ void
 generateRefinedSVCandidateFromJumpAlignment(
     const BPOrientation& bporient,
     const SVCandidateAssemblyData& assemblyData,
-    const unsigned contigIndex,
     SVCandidate& sv)
 {
-    const SVCandidateAssemblyData::JumpAlignmentResultType& align(assemblyData.spanningAlignments[contigIndex]);
+    const SVCandidateAssemblyData::JumpAlignmentResultType& align(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex]);
 
     // first get each alignment associated with the correct breakend:
     const Alignment* bp1AlignPtr(&align.align1);
@@ -1273,7 +1272,7 @@ generateRefinedSVCandidateFromJumpAlignment(
 
     // summarize usable output information in a second SVBreakend
     // object -- this is the 'refined' sv:
-    sv.assemblyAlignIndex = contigIndex;
+    sv.assemblyAlignIndex = assemblyData.bestAlignmentIndex;
     sv.assemblySegmentIndex = 0;
 
     sv.setPrecise();
@@ -1292,13 +1291,12 @@ void
 generateRefinedVCFSVCandidateFromJumpAlignment(
     const BPOrientation& bporient,
     const SVCandidateAssemblyData& assemblyData,
-    const unsigned contigIndex,
     SVCandidate& sv)
 {
-    generateRefinedSVCandidateFromJumpAlignment(bporient, assemblyData, contigIndex, sv);
+    generateRefinedSVCandidateFromJumpAlignment(bporient, assemblyData, sv);
 
-    const AssembledContig& contig(assemblyData.contigs[contigIndex]);
-    const SVCandidateAssemblyData::JumpAlignmentResultType& align(assemblyData.spanningAlignments[contigIndex]);
+    const AssembledContig& contig(assemblyData.contigs[assemblyData.bestAlignmentIndex]);
+    const SVCandidateAssemblyData::JumpAlignmentResultType& align(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex]);
 
     // fill in insertSeq:
     sv.insertSeq.clear();
@@ -1311,6 +1309,147 @@ generateRefinedVCFSVCandidateFromJumpAlignment(
     addCigarToSpanningAlignment(sv);
 }
 
+// QC the alignment to make sure it spans the two breakend locations:
+static
+bool
+basicContigAlignmentCheck(
+    const JumpAlignmentResult<int>& alignment
+)
+{
+    static const unsigned minAlignRefSpan(20);
+    const bool isAlignment1Good(alignment.align1.isAligned() && (apath_ref_length(alignment.align1.apath) >= minAlignRefSpan));
+    const bool isAlignment2Good(alignment.align2.isAligned() && (apath_ref_length(alignment.align2.apath) >= minAlignRefSpan));
+    return (isAlignment1Good && isAlignment2Good);
+}
+
+// check the min size and fraction of optimal alignment score
+// for each of the two sub-alignments on each side of the bp
+//
+// note this is done for multiple values -- the lower value is
+// motivated by cases where a second breakpoint exists near to
+// the target breakpoint -- the higher value is motivated by
+// cases with some alignment 'messiness' near the breakpoint
+// that stabilizes as we move farther away
+//
+/// TODO change iterative refspan to a single consistent alignment criteria
+static
+bool
+checkFilterSubAlignments(
+    const JumpAlignmentResult<int>& alignment,
+    const GlobalJumpAligner<int>& spanningAligner,
+    const bool isRNA)
+{
+    using namespace ALIGNPATH;
+    bool isFilterAlign1(true);
+    bool isFilterAlign2(true);
+    static const unsigned spanSet[] = { 75, 100, 200 };
+    for (const unsigned maxQCRefSpan : spanSet)
+    {
+        const unsigned qcSpan1 = maxQCRefSpan + (isRNA ? apath_spliced_length(alignment.align1.apath) : 0);
+        if (!isFilterSpanningAlignment(qcSpan1, spanningAligner, true, isRNA, alignment.align1.apath))
+        {
+            isFilterAlign1 = false;
+        }
+        const unsigned qcSpan2 = maxQCRefSpan + (isRNA ? apath_spliced_length(alignment.align2.apath) : 0);
+        if (!isFilterSpanningAlignment(qcSpan2, spanningAligner, false, isRNA, alignment.align2.apath))
+        {
+            isFilterAlign2 = false;
+        }
+    }
+    return (isFilterAlign1 || isFilterAlign2);
+}
+
+// Filter fusion contigs and select the 'best' one, based on alignment score and supporting read count
+static
+bool
+selectContigRNA(
+    SVCandidateAssemblyData& assemblyData,
+    const GlobalJumpAligner<int>& spanningAligner
+)
+{
+    std::vector<int> goodContigIndicies;
+    for (unsigned contigIndex = 0; contigIndex < assemblyData.contigs.size(); contigIndex++)
+    {
+        const JumpAlignmentResult<int>& alignment(assemblyData.spanningAlignments[contigIndex]);
+#ifdef DEBUG_REFINER
+        log_os << __FUNCTION__ << ": Checking contig alignment: " << contigIndex << "\n";
+#endif
+        if (!basicContigAlignmentCheck(alignment)) continue;
+#ifdef DEBUG_REFINER
+        log_os << __FUNCTION__ << ": contig alignment initial okay: " << contigIndex << "\n";
+#endif
+        if (checkFilterSubAlignments(alignment, spanningAligner, true)) continue;
+#ifdef DEBUG_REFINER
+        if (isRNA) log_os << __FUNCTION__ << ": contig alignment okay: " << contigIndex << "\n";
+#endif
+        goodContigIndicies.push_back(contigIndex);
+    }
+    if (goodContigIndicies.empty()) return false;
+    // Find the highest alignment score
+    int maxAlnScore = 0;
+    unsigned selectedContigIndex(goodContigIndicies.front());
+    for (unsigned index : goodContigIndicies)
+    {
+        if (assemblyData.spanningAlignments[index].score > maxAlnScore)
+        {
+            maxAlnScore = assemblyData.spanningAlignments[index].score;
+			selectedContigIndex = index;
+        }
+    }
+    // Pick the contig with the most supporting reads that has an alignment score at least half as high as the highest-scoring contig
+    for (unsigned index : goodContigIndicies)
+    {
+        const bool sufficientScore(assemblyData.spanningAlignments[index].score * 2 > maxAlnScore);
+        const bool moreReads(assemblyData.contigs[index].supportReads.size() > assemblyData.contigs[selectedContigIndex].supportReads.size());
+        if (sufficientScore && moreReads) selectedContigIndex = index;
+    }
+#ifdef DEBUG_REFINER
+    log_os << __FUNCTION__ << ": selected contig: " << selectedContigIndex << "\n";
+#endif
+    assemblyData.bestAlignmentIndex = selectedContigIndex;
+    return true;
+}
+
+// Filter breakpoint contigs, select the 'best' one based on alignment score and check alignment on selected contig
+// TODO Consider making this more like the RNA case, e.g. all alignment checks before selection and pick the best passing one.
+static
+bool
+selectContigDNA(
+    SVCandidateAssemblyData& assemblyData,
+    const GlobalJumpAligner<int>& spanningAligner
+)
+{
+    int maxAlignContigIndex(-1);
+    for (unsigned index = 0; index < assemblyData.contigs.size(); index++)
+    {
+        const JumpAlignmentResult<int>& alignment(assemblyData.spanningAlignments[index]);
+#ifdef DEBUG_REFINER
+        log_os << __FUNCTION__ << ": Checking contig alignment: " << contigIndex << "\n";
+#endif
+        if (!basicContigAlignmentCheck(alignment)) continue;
+#ifdef DEBUG_REFINER
+        log_os << __FUNCTION__ << ": contig alignment initial okay: " << contigIndex << "\n";
+#endif
+        // Find the contig with the highest alignment score
+        if ((maxAlignContigIndex == -1) ||
+            (assemblyData.spanningAlignments[index].score > assemblyData.spanningAlignments[maxAlignContigIndex].score))
+        {
+            maxAlignContigIndex = index;
+        }
+    }
+#ifdef DEBUG_REFINER
+        log_os << __FUNCTION__ << ": selected contig: " << selectedContigIndex << "\n";
+#endif
+    if ((maxAlignContigIndex == -1) ||
+        (checkFilterSubAlignments(assemblyData.spanningAlignments[maxAlignContigIndex], spanningAligner, false)))
+    {
+        return false;
+    }
+    // ok, passed QC -- mark the high-scoring alignment as usable for
+    // hypothesis refinement:
+    assemblyData.bestAlignmentIndex = maxAlignContigIndex;
+    return true;
+}
 
 
 void
@@ -1519,10 +1658,7 @@ getJumpAssembly(
     // it's empty:
     assemblyData.spanningAlignments.resize(contigCount);
 
-    bool isHighScore(false);
-    unsigned highScoreIndex(0);
-
-    for (unsigned contigIndex(0); contigIndex<contigCount; ++contigIndex)
+    for (unsigned contigIndex(0); contigIndex < contigCount; ++contigIndex)
     {
         const AssembledContig& contig(assemblyData.contigs[contigIndex]);
 
@@ -1540,12 +1676,12 @@ getJumpAssembly(
             static const int nSpacer(25);
             std::vector<exclusion_block> exclBlocks1;
             const std::string cutRef1 = kmerMaskReference(align1RefStrPtr->begin() + align1LeadingCut,
-                                                          align1RefStrPtr->end() - align1TrailingCut,
-                                                          contig.seq, nSpacer, exclBlocks1);
+                align1RefStrPtr->end() - align1TrailingCut,
+                contig.seq, nSpacer, exclBlocks1);
             std::vector<exclusion_block> exclBlocks2;
             const std::string cutRef2 = kmerMaskReference(align2RefStrPtr->begin() + align2LeadingCut,
-                                                          align2RefStrPtr->end() - align2TrailingCut,
-                                                          contig.seq, nSpacer, exclBlocks2);
+                align2RefStrPtr->end() - align2TrailingCut,
+                contig.seq, nSpacer, exclBlocks2);
 #ifdef DEBUG_REFINER
             log_os << __FUNCTION__ << " Kmer-masked references\n";
             log_os << "\t ref Lengths " << align1RefStrPtr->size() << " " << align2RefStrPtr->size() << "\n";
@@ -1574,16 +1710,16 @@ getJumpAssembly(
             log_os << __FUNCTION__ << " isTranscriptStrandKnown: " << bporient.isTranscriptStrandKnown << "; bp1Fw: " << bp1Fw << " ; bp2Fw: " << bp2Fw << '\n';
 #endif
             _RNASpanningAligner.align(contig.seq.begin(), contig.seq.end(),
-                                      cutRef1.begin(), cutRef1.end(), cutRef2.begin(), cutRef2.end(),
-                                      bp1Fw, bp2Fw, bporient.isTranscriptStrandKnown,
-                                      alignment);
+                cutRef1.begin(), cutRef1.end(), cutRef2.begin(), cutRef2.end(),
+                bp1Fw, bp2Fw, bporient.isTranscriptStrandKnown,
+                alignment);
 
 #ifdef DEBUG_REFINER
             log_os << __FUNCTION__ << " Masked 1: " << alignment.align1 << '\n';
             log_os << __FUNCTION__ << " Masked 2: " << alignment.align2 << '\n';
 #endif
             if (!(translateMaskedAlignment(alignment.align1, exclBlocks1) &&
-                  translateMaskedAlignment(alignment.align2, exclBlocks2)))
+                translateMaskedAlignment(alignment.align2, exclBlocks2)))
             {
 #ifdef DEBUG_REFINER
                 log_os << __FUNCTION__ << " Failed to fix kmer-masked alignment\n";
@@ -1600,9 +1736,9 @@ getJumpAssembly(
         {
 #ifdef DEBUG_REFINER
             log_os << __FUNCTION__ << " Ref1 for alignment: "
-                   << bp1refSeq.substr(align1LeadingCut, bp1refSeq.size()-align1LeadingCut-align1TrailingCut) << '\n';
+                << bp1refSeq.substr(align1LeadingCut, bp1refSeq.size() - align1LeadingCut - align1TrailingCut) << '\n';
             log_os << __FUNCTION__ << " Ref2 for alignment: "
-                   << bp2refSeq.substr(align2LeadingCut, bp2refSeq.size()-align2LeadingCut-align2TrailingCut) << '\n';
+                << bp2refSeq.substr(align2LeadingCut, bp2refSeq.size() - align2LeadingCut - align2TrailingCut) << '\n';
 #endif
             _spanningAligner.align(contig.seq.begin(), contig.seq.end(),
                                    align1RefStrPtr->begin() + align1LeadingCut, align1RefStrPtr->end() - align1TrailingCut,
@@ -1619,100 +1755,45 @@ getJumpAssembly(
 
 #ifdef DEBUG_REFINER
         log_os << __FUNCTION__ << ": contigIndex: " << contigIndex << " alignment: " << alignment;
-
-        std::string bp1Seq,bp2Seq,insertSeq;
-        getFwdStrandQuerySegments(alignment, contig.seq,
-                                  bporient.isBp2AlignedFirst, bporient.isBp1Reversed, bporient.isBp2Reversed,
-                                  bp1Seq, bp2Seq, insertSeq);
-        log_os << __FUNCTION__ << "\tbp1seq_fwd: " << bp1Seq << "\n";
-        log_os << __FUNCTION__ << "\tinsseq_fwd: " << insertSeq << "\n";
-        log_os << __FUNCTION__ << "\tbp2seq_fwd: " << bp2Seq << "\n";
-#endif
-
-        // QC the alignment to make sure it spans the two breakend locations:
-        static const unsigned minAlignRefSpan(20);
-        const bool isAlignment1Good(alignment.align1.isAligned() && (apath_ref_length(alignment.align1.apath) >= minAlignRefSpan));
-        const bool isAlignment2Good(alignment.align2.isAligned() && (apath_ref_length(alignment.align2.apath) >= minAlignRefSpan));
-        const bool isAlignmentGood(isAlignment1Good && isAlignment2Good);
-#ifdef DEBUG_REFINER
-        log_os << __FUNCTION__ << ": Checking contig aln: " << contigIndex << "\n";
-#endif
-        if (! isAlignmentGood) continue;
-#ifdef DEBUG_REFINER
-        log_os << __FUNCTION__ << ": contig okay: " << contigIndex << "\n";
-#endif
-        if ((! isHighScore) || (alignment.score > assemblyData.spanningAlignments[highScoreIndex].score))
+        if (alignment.align1.isAligned())
         {
-            isHighScore = true;
-            highScoreIndex=contigIndex;
+            std::string bp1Seq, bp2Seq, insertSeq;
+            getFwdStrandQuerySegments(alignment, contig.seq,
+                bporient.isBp2AlignedFirst, bporient.isBp1Reversed, bporient.isBp2Reversed,
+                bp1Seq, bp2Seq, insertSeq);
+            log_os << __FUNCTION__ << "\tbp1seq_fwd: " << bp1Seq << "\n";
+            log_os << __FUNCTION__ << "\tinsseq_fwd: " << insertSeq << "\n";
+            log_os << __FUNCTION__ << "\tbp2seq_fwd: " << bp2Seq << "\n";
         }
-    }
-
-    if (! isHighScore) return;
-#ifdef DEBUG_REFINER
-    log_os << __FUNCTION__ << ": high scoring contig: " << highScoreIndex << "\n";
 #endif
-
-    // set any additional QC steps before deciding an alignment is
-    // usable:
-
+    }
+    // Find the contig with the highest alignment score
+    bool foundContig(false);
+    if (isRNA)
     {
-        // check the min size and fraction of optimal alignment score
-        // for each of the two sub-alignments on each side of the bp
-        //
-        // note this is done for multiple values -- the lower value is
-        // motivated by cases where a second breakpoint exists near to
-        // the target breakpoint -- the higher value is motivated by
-        // cases with some alignment 'messiness' near the breakpoint
-        // that stabilizes as we move farther away
-        //
-        /// TODO change iterative refspan to a single consistent alignment criteria
-        /// TODO should this be moved into the candidate selection loop?
-        //
-        const SVCandidateAssemblyData::JumpAlignmentResultType& hsAlign(assemblyData.spanningAlignments[highScoreIndex]);
-
-        bool isFilterAlign1(true);
-        bool isFilterAlign2(true);
-        static const unsigned spanSet[] = {75, 100, 200};
-        for (const unsigned maxQCRefSpan : spanSet)
-        {
-            const unsigned qcSpan1 = maxQCRefSpan + (isRNA ? apath_spliced_length(hsAlign.align1.apath) : 0);
-            if (! isFilterSpanningAlignment(qcSpan1, _spanningAligner, true, isRNA, hsAlign.align1.apath))
-            {
-                isFilterAlign1 = false;
-            }
-            const unsigned qcSpan2 = maxQCRefSpan + (isRNA ? apath_spliced_length(hsAlign.align2.apath) : 0);
-            if (! isFilterSpanningAlignment(qcSpan2, _spanningAligner, false, isRNA, hsAlign.align2.apath))
-            {
-                isFilterAlign2 = false;
-            }
-        }
-        if (isFilterAlign1 || isFilterAlign2) return;
+        foundContig = selectContigRNA(assemblyData, _spanningAligner);
     }
-
-
-    // ok, passed QC -- mark the high-scoring alignment as usable for
-    // hypothesis refinement:
+    else
     {
-        assemblyData.bestAlignmentIndex = highScoreIndex;
-#ifdef DEBUG_REFINER
-        log_os << __FUNCTION__ << ": highscoreid: " << highScoreIndex << " alignment: " << assemblyData.spanningAlignments[highScoreIndex];
-#endif
-
-        // process the alignment into information that's easily usable
-        // in the vcf output (ie. breakends in reference coordinates)
-
-        // summarize usable output information in a second SVBreakend
-        // object -- this is the 'refined' sv:
-        assemblyData.svs.push_back(sv);
-        SVCandidate& newSV(assemblyData.svs.back());
-
-        generateRefinedVCFSVCandidateFromJumpAlignment(bporient, assemblyData, highScoreIndex, newSV);
-
-#ifdef DEBUG_REFINER
-        log_os << __FUNCTION__ << ": highscore refined sv: " << newSV;
-#endif
+        foundContig = selectContigDNA(assemblyData, _spanningAligner);
     }
+    if (!foundContig) return;
+#ifdef DEBUG_REFINER
+    log_os << __FUNCTION__ << ": highscoreid: " << assemblyData.bestAlignmentIndex << " alignment: " << assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex];
+#endif
+    // process the alignment into information that's easily usable
+    // in the vcf output (ie. breakends in reference coordinates)
+
+    // summarize usable output information in a second SVBreakend
+    // object -- this is the 'refined' sv:
+    assemblyData.svs.push_back(sv);
+    SVCandidate& newSV(assemblyData.svs.back());
+
+    generateRefinedVCFSVCandidateFromJumpAlignment(bporient, assemblyData, newSV);
+
+#ifdef DEBUG_REFINER
+    log_os << __FUNCTION__ << ": highscore refined sv: " << newSV;
+#endif
 }
 
 

@@ -1,3 +1,4 @@
+- MANTA-445 RNA: Select contigs for refinement based on alignment score and read count
 - MANTA-1211/[#90] Fix issue with empty regions input to EstimateSVLoci
 - MANTA-1043 Add more read statistics when 'too few read pair observations' exception
 - MANTA-696 Improve the iterative assembler and set it to the default assembler
@@ -9,6 +10,7 @@
 - MANTA-1116 Sort duplicate vcf entries together to allow merging
 - MANTA-443 Improve the check of running into adapter for data with small insert size
 - MANTA-1038 Fix infrequent graph edge lookup failure
+
 v1.1.1
 - MANTA-691 Add an option to specify call regions in a bed file
 - MANTA-977/[#83] Improve SA tag error reporting
