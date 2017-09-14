@@ -99,5 +99,5 @@ getReadGroup(
 
     const char* rgStr(bamRead.get_string_tag(rgTag));
 
-    return ((NULL == rgStr) ? defaultRG : rgStr);
+    return ((nullptr == rgStr) ? defaultRG : rgStr);
 }

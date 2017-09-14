@@ -101,7 +101,7 @@ private:
     const SVScoreInfoDiploid&
     getSingleJunctionDiploidInfo() const
     {
-        assert(NULL != _singleJunctionDiploidInfoPtr);
+        assert(nullptr != _singleJunctionDiploidInfoPtr);
         return *_singleJunctionDiploidInfoPtr;
     }
 

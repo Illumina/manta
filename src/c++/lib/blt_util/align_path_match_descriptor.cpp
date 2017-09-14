@@ -157,7 +157,7 @@ export_md_to_apath(const char* md,
     // alignment direction and then orient apath to the forward strand
     // as a second step if required
     //
-    assert(NULL != md);
+    assert(nullptr != md);
 
     apath.clear();
     export_md_to_apath_impl(md,apath);

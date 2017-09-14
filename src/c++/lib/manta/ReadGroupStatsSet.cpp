@@ -100,7 +100,7 @@ ReadGroupStatsSet::
 save(
     const char* filename) const
 {
-    assert(NULL != filename);
+    assert(nullptr != filename);
     std::ofstream ofs(filename);
     boost::archive::xml_oarchive oa(ofs);
 
@@ -129,7 +129,7 @@ load(
 {
     clear();
 
-    assert(NULL != filename);
+    assert(nullptr != filename);
     std::ifstream ifs(filename);
     boost::archive::xml_iarchive ia(ifs);
 

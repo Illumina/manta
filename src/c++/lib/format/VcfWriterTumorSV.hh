@@ -84,7 +84,7 @@ private:
     const SVScoreInfoTumor&
     getTumorInfo() const
     {
-        assert(NULL != _tumorInfoPtr);
+        assert(nullptr != _tumorInfoPtr);
         return *_tumorInfoPtr;
     }
 

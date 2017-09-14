@@ -56,7 +56,7 @@ label(const index_t i)
         return "hom";
     default:
         assert(false && "Unknown GT state");
-        return NULL;
+        return nullptr;
     }
 }
 

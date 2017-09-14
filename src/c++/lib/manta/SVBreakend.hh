@@ -71,7 +71,7 @@ label(const int i)
         return "unknown";
     default:
         assert(false && "Unknown SVCandidate evidence type");
-        return NULL;
+        return nullptr;
     }
 }
 

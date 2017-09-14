@@ -88,7 +88,7 @@ cigar_to_apath(const char* cigar,
 {
     using illumina::blt_util::parse_unsigned;
 
-    assert(NULL != cigar);
+    assert(nullptr != cigar);
 
     apath.clear();
 

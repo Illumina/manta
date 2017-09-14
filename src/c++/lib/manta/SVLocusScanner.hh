@@ -280,7 +280,7 @@ struct SVLocusScanner
 
     /// get local and remote breakends for each SV Candidate which can be extracted from a read pair
     ///
-    /// if remote read is not available, set remoteReadPtr to NULL and a best estimate will be generated for the remote breakend
+    /// if remote read is not available, set remoteReadPtr to nullptr and a best estimate will be generated for the remote breakend
     ///
     /// for all candidates, if one breakend is estimated from localRead and one is estimated from remoteRead, then
     /// the local breakend will be placed in candidate bp1 and the remote breakend will be placed in candidate.bp2

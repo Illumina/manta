@@ -159,6 +159,6 @@ writeSV(
     writeSVCore(svData, adata, sv, svId, event);
 
     clearScoreInfo();
-    _somaticInfoPtr=NULL;
-    _singleJunctionSomaticInfoPtr=NULL;
+    _somaticInfoPtr=nullptr;
+    _singleJunctionSomaticInfoPtr=nullptr;
 }

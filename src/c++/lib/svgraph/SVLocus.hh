@@ -115,7 +115,7 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
     NodeIndexType
     addNode(
         const GenomeInterval interval,
-        flyweight_observer_t* obs = NULL)
+        flyweight_observer_t* obs = nullptr)
     {
         assert(interval.tid >= 0);
 
@@ -452,7 +452,7 @@ private:
         flyweight_observer_t* obs,
         const NodeIndexType nodePtr)
     {
-        if (NULL == obs) return;
+        if (nullptr == obs) return;
 #ifdef DEBUG_SVL
         log_os << "SVLocusNotifier: Add node: " << _index << ":" << nodePtr << "\n";
 #endif
@@ -464,7 +464,7 @@ private:
         flyweight_observer_t* obs,
         const NodeIndexType nodePtr)
     {
-        if (NULL == obs) return;
+        if (nullptr == obs) return;
 #ifdef DEBUG_SVL
         log_os << "SVLocusNotifier: Delete node: " << _index << ":" << nodePtr << "\n";
 #endif

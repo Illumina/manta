@@ -1337,7 +1337,7 @@ save(const char* filename) const
 {
     using namespace boost::archive;
 
-    assert(NULL != filename);
+    assert(nullptr != filename);
     std::ofstream ofs(filename, std::ios::binary);
     binary_oarchive oa(ofs);
 

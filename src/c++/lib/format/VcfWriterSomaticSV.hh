@@ -90,14 +90,14 @@ private:
     const SVScoreInfoSomatic&
     getSomaticInfo() const
     {
-        assert(NULL != _somaticInfoPtr);
+        assert(nullptr != _somaticInfoPtr);
         return *_somaticInfoPtr;
     }
 
     const SVScoreInfoSomatic&
     getSingleJunctionSomaticInfo() const
     {
-        assert(NULL != _singleJunctionSomaticInfoPtr);
+        assert(nullptr != _singleJunctionSomaticInfoPtr);
         return *_singleJunctionSomaticInfoPtr;
     }
 

@@ -73,7 +73,7 @@ parse_chrom_depth(const std::string& chrom_depth_file,
         }
 
         char* word2(strchr(buff,'\t'));
-        if (NULL == word2)
+        if (nullptr == word2)
         {
             log_os << "ERROR: unexpected format in read chrom depth file line " << (line_no) << "\n";
             exit(EXIT_FAILURE);
