@@ -80,7 +80,7 @@ struct SVLocusSetFinder : public pos_processor_base
         const bam_header_info& bamHeader,
         const reference_contig_segment& refSeq);
 
-    ~SVLocusSetFinder()
+    ~SVLocusSetFinder() override
     {
         flush();
     }

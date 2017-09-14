@@ -311,7 +311,12 @@ if     (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
     endif ()
 
 elseif (${IS_CLANGXX})
-    # set to true to uncover new clang warnings after llvm update:
+    if (${DEVELOPER_MODE})
+        # catch typos in warning arguments below
+        append_args(CXX_WARN_FLAGS "-Wunknown-warning-option")
+    endif ()
+
+    # Set this TRUE to uncover new clang warnings (typically this is done to test a new clang release):
     set (IS_WARN_EVERYTHING FALSE)
 
     if (${IS_WARN_EVERYTHING})
@@ -320,14 +325,15 @@ elseif (${IS_CLANGXX})
 
     append_args(CXX_WARN_FLAGS "-Wmissing-prototypes -Wunused-exception-parameter -Wbool-conversion")
     append_args(CXX_WARN_FLAGS "-Wsizeof-array-argument -Wstring-conversion")
-    append_args(CXX_WARN_FLAGS "-Wheader-hygiene -Wmismatched-tags")
+    append_args(CXX_WARN_FLAGS "-Wheader-hygiene -Wmismatched-tags -Wcast-qual")
 
     if (${IS_WARN_EVERYTHING})
         append_args(CXX_WARN_FLAGS "-Wno-sign-conversion -Wno-weak-vtables -Wno-conversion -Wno-cast-align -Wno-padded")
         append_args(CXX_WARN_FLAGS "-Wno-switch-enum -Wno-missing-noreturn -Wno-covered-switch-default")
         append_args(CXX_WARN_FLAGS "-Wno-unreachable-code -Wno-global-constructors -Wno-exit-time-destructors")
         append_args(CXX_WARN_FLAGS "-Wno-c++98-compat -Wno-old-style-cast -Wno-unused-member-function")
-        append_args(CXX_WARN_FLAGS "-Wno-documentation -Wno-float-equal")
+        append_args(CXX_WARN_FLAGS "-Wno-documentation -Wno-float-equal -Wnewline-eof -Wnon-virtual-dtor")
+        append_args(CXX_WARN_FLAGS "-Wno-c++98-compat-pedantic")
     endif ()
 
     if (NOT (${COMPILER_VERSION} VERSION_LESS "3.2"))
@@ -347,35 +353,42 @@ elseif (${IS_CLANGXX})
         append_args(CXX_WARN_FLAGS "-Wheader-guard -Wlogical-not-parentheses")
     endif ()
 
+    if (NOT (${COMPILER_VERSION} VERSION_LESS "3.5"))
+        append_args(CXX_WARN_FLAGS "-Wunreachable-code-return")
+    endif ()
+
     if (NOT (${COMPILER_VERSION} VERSION_LESS "3.6"))
-        append_args(CXX_WARN_FLAGS "-Wunreachable-code-return -Wkeyword-macro -Winconsistent-missing-override")
+        append_args(CXX_WARN_FLAGS "-Wkeyword-macro -Winconsistent-missing-override")
 
         if (${IS_WARN_EVERYTHING})
             append_args(CXX_WARN_FLAGS "-Wno-reserved-id-macro")
         endif ()
     endif ()
 
-    if (NOT (${COMPILER_VERSION} VERSION_LESS "3.7"))
-        if (${IS_WARN_EVERYTHING})
-            append_args(CXX_WARN_FLAGS "-Wno-c++98-compat-pedantic")
-        endif ()
-    endif ()
+    # No changes for clang 3.7
 
     if (NOT (${COMPILER_VERSION} VERSION_LESS "3.8"))
-        append_args(CXX_WARN_FLAGS "-Wnon-virtual-dtor")
-
         if (${IS_WARN_EVERYTHING})
             append_args(CXX_WARN_FLAGS "-Wno-double-promotion")
         endif ()
     endif ()
 
     if (NOT (${COMPILER_VERSION} VERSION_LESS "3.9"))
-        append_args(CXX_WARN_FLAGS "-Wnewline-eof")
-
         if (${IS_WARN_EVERYTHING})
             append_args(CXX_WARN_FLAGS "-Wno-comma")
         endif ()
     endif ()
+
+    # No chagnes for clang 4.0
+
+    if (NOT (${COMPILER_VERSION} VERSION_LESS "5.0"))
+        append_args(CXX_WARN_FLAGS "-Winconsistent-missing-destructor-override")
+
+        if (${IS_WARN_EVERYTHING})
+            append_args(CXX_WARN_FLAGS "-Wno-zero-as-null-pointer-constant")
+        endif ()
+    endif ()
+
 elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
     # suppress errors in boost headers:
     append_args(CXX_WARN_FLAGS "-diag-disable 177,193,869,1599,3280")
