@@ -35,7 +35,7 @@ sys.path.append(os.path.abspath(pyflowDir))
 
 from configBuildTimeInfo import workflowVersion
 from pyflow import WorkflowRunner
-from sharedWorkflow import getMkdirCmd, getMvCmd, getRmCmd, getRmdirCmd, \
+from sharedWorkflow import getCpCmd, getMkdirCmd, getMvCmd, getRmCmd, getRmdirCmd, \
                            getDepthFromAlignments
 from workflowUtil import checkFile, ensureDir, preJoin, \
                         getGenomeSegmentGroups, getFastaChromOrderSize, \
@@ -44,8 +44,27 @@ from workflowUtil import checkFile, ensureDir, preJoin, \
 
 __version__ = workflowVersion
 
+def copyStats(self, taskPrefix="",dependencies=None ) : 
+    statsPath=self.paths.getStatsPath()
+    existingStatsPath=self.params.existingAlignStatsFile
+    
+    statsTasks = set()
+    copyStatsCmd = getCpCmd() + [existingStatsPath, statsPath]
+    copyTask=self.addTask(preJoin(taskPrefix,"copyStats"), copyStatsCmd, dependencies=dependencies, isForceLocal=True)
+    statsTasks.add(copyTask)
 
-
+    if not os.path.isdir(self.params.workDir): 
+        os.makedirs(self.params.workDir)
+    
+    # summarize stats in format that's easier for human review
+    cmd = [self.params.mantaStatsSummaryBin]
+    cmd.extend(["--align-stats ", statsPath])
+    cmd.extend(["--output-file", self.paths.getStatsSummaryPath()]) 
+    summarizeTask = self.addTask(preJoin(taskPrefix,"summarizeStats"),cmd,dependencies=copyTask,isForceLocal=True)
+    statsTasks.add(summarizeTask)
+    
+    return statsTasks
+    
 def runStats(self,taskPrefix="",dependencies=None) :
 
     statsPath=self.paths.getStatsPath()
@@ -746,8 +765,12 @@ class MantaWorkflow(WorkflowRunner) :
 
         graphTaskDependencies = set()
 
-        if not self.params.useExistingAlignStats :
+        if not self.params.useExistingAlignStats and not self.params.existingAlignStatsFile:
             statsTasks = runStats(self,taskPrefix="getAlignmentStats")
+            graphTaskDependencies |= statsTasks
+
+        if self.params.existingAlignStatsFile: 
+            statsTasks = copyStats(self,taskPrefix="copyAlignmentStats")
             graphTaskDependencies |= statsTasks
 
         if not ((not self.params.isHighDepthFilter) or self.params.useExistingChromDepths) :

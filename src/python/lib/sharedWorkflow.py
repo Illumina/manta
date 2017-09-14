@@ -88,6 +88,12 @@ def getMvCmd() :
     else:
         return ["mv"]
 
+def getCpCmd() : 
+    if isWindows(): 
+        return ["copy"]
+    else:
+        return ['cp']
+
 def quoteStringList(strList):
     return ["\"%s\"" % (x) for x in strList]
 
