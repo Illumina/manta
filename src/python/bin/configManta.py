@@ -65,12 +65,9 @@ You must specify a BAM or CRAM file for at least one sample.
 
 
     def addExtendedGroupOptions(self,group) :
-        group.add_option("--useExistingAlignStats",
-                         dest="useExistingAlignStats", action="store_true",
-                         help="Use pre-calculated alignment statistics.")
-        group.add_option('--existingAlignStatsFile', 
-                         dest="existingAlignStatsFile", metavar="FILE",
-                         help="Pre-calculated alignment statistics file.")
+        group.add_option("--existingAlignStatsFile",
+                         dest="existingAlignStatsFile", metavar="FILE", 
+                         help="Pre-calculated alignment statistics file. Skips alignment stats calculation.")
         group.add_option("--useExistingChromDepths",
                          dest="useExistingChromDepths", action="store_true",
                          help="Use pre-calculated chromosome depths.")
@@ -97,7 +94,6 @@ You must specify a BAM or CRAM file for at least one sample.
             'isExome' : False,
             'isRNA' : False,
             'isUnstrandedRNA' : False,
-            'useExistingAlignStats' : False,
             'useExistingChromDepths' : False,
             'isRetainTempFiles' : False,
             'isGenerateSupportBam' : False,
