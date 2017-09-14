@@ -311,82 +311,107 @@ if     (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
     endif ()
 
 elseif (${IS_CLANGXX})
-    if (${DEVELOPER_MODE})
-        # catch typos in warning arguments below
-        append_args(CXX_WARN_FLAGS "-Wunknown-warning-option")
-    endif ()
 
     # Set this TRUE to uncover new clang warnings (typically this is done to test a new clang release):
-    set (IS_WARN_EVERYTHING FALSE)
+    set (IS_WARN_EVERYTHING TRUE)
+
+    set (CXX_WARN_LIST "") # all clang-specific enabled warnings
+    set (CXX_NOWARN_LIST "") # all clang-specific warnings disabled only when "-Weverything" is defined
+
+    if (${DEVELOPER_MODE})
+        # catch typos in warning arguments below
+        list(APPEND CXX_WARN_LIST unknown-warning-option)
+    endif ()
 
     if (${IS_WARN_EVERYTHING})
-        append_args(CXX_WARN_FLAGS "-Weverything")
+        list(APPEND CXX_WARN_LIST everything)
     endif ()
 
-    append_args(CXX_WARN_FLAGS "-Wmissing-prototypes -Wunused-exception-parameter -Wbool-conversion")
-    append_args(CXX_WARN_FLAGS "-Wsizeof-array-argument -Wstring-conversion")
-    append_args(CXX_WARN_FLAGS "-Wheader-hygiene -Wmismatched-tags -Wcast-qual")
+    # baseline warnings assume clang 3.2+
+    #
+    list(APPEND CXX_WARN_LIST
+            bool-conversion
+            cast-qual
+            extra-semi
+            header-hygiene
+            implicit-fallthrough
+            loop-analysis
+            mismatched-tags
+            missing-prototypes
+            missing-variable-declarations
+            non-virtual-dtor
+            sizeof-array-argument
+            string-conversion
+            unused-exception-parameter
+            unused-private-field
+            )
 
-    if (${IS_WARN_EVERYTHING})
-        append_args(CXX_WARN_FLAGS "-Wno-sign-conversion -Wno-weak-vtables -Wno-conversion -Wno-cast-align -Wno-padded")
-        append_args(CXX_WARN_FLAGS "-Wno-switch-enum -Wno-missing-noreturn -Wno-covered-switch-default")
-        append_args(CXX_WARN_FLAGS "-Wno-unreachable-code -Wno-global-constructors -Wno-exit-time-destructors")
-        append_args(CXX_WARN_FLAGS "-Wno-c++98-compat -Wno-old-style-cast -Wno-unused-member-function")
-        append_args(CXX_WARN_FLAGS "-Wno-documentation -Wno-float-equal -Wnewline-eof -Wnon-virtual-dtor")
-        append_args(CXX_WARN_FLAGS "-Wno-c++98-compat-pedantic")
-    endif ()
-
-    if (NOT (${COMPILER_VERSION} VERSION_LESS "3.2"))
-        append_args(CXX_WARN_FLAGS "-Wimplicit-fallthrough -Wloop-analysis -Wextra-semi")
-        append_args(CXX_WARN_FLAGS "-Wmissing-variable-declarations -Wunused-private-field")
-    endif ()
+    # baseline disabled warnings (only used if -Weveryhing is turned on)
+    #
+    list(APPEND CXX_NOWARN_LIST
+            c++98-compat
+            c++98-compat-pedantic
+            cast-align
+            conversion
+            covered-switch-default
+            documentation
+            exit-time-destructors
+            float-equal
+            global-constructors
+            missing-noreturn
+            newline-eof
+            old-style-cast
+            padded
+            sign-conversion
+            switch-enum
+            unreachable-code
+            unused-member-function
+            weak-vtables
+            )
 
     if (NOT (${COMPILER_VERSION} VERSION_LESS "3.3"))
-        append_args(CXX_WARN_FLAGS "-Woverloaded-shift-op-parentheses")
-
-        if (${IS_WARN_EVERYTHING})
-            append_args(CXX_WARN_FLAGS "-Wno-documentation-unknown-command")
-        endif ()
+        list(APPEND CXX_WARN_LIST overloaded-shift-op-parentheses)
+        list(APPEND CXX_NOWARN_LIST documentation-unknown-command)
     endif ()
 
     if (NOT (${COMPILER_VERSION} VERSION_LESS "3.4"))
-        append_args(CXX_WARN_FLAGS "-Wheader-guard -Wlogical-not-parentheses")
+        list(APPEND CXX_WARN_LIST header-guard logical-not-parentheses)
     endif ()
 
     if (NOT (${COMPILER_VERSION} VERSION_LESS "3.5"))
-        append_args(CXX_WARN_FLAGS "-Wunreachable-code-return")
+        list(APPEND CXX_WARN_LIST unreachable-code-return)
     endif ()
 
     if (NOT (${COMPILER_VERSION} VERSION_LESS "3.6"))
-        append_args(CXX_WARN_FLAGS "-Wkeyword-macro -Winconsistent-missing-override")
-
-        if (${IS_WARN_EVERYTHING})
-            append_args(CXX_WARN_FLAGS "-Wno-reserved-id-macro")
-        endif ()
+        list(APPEND CXX_WARN_LIST keyword-macro inconsistent-missing-override)
+        list(APPEND CXX_NOWARN_LIST reserved-id-macro)
     endif ()
 
     # No changes for clang 3.7
 
     if (NOT (${COMPILER_VERSION} VERSION_LESS "3.8"))
-        if (${IS_WARN_EVERYTHING})
-            append_args(CXX_WARN_FLAGS "-Wno-double-promotion")
-        endif ()
+        list(APPEND CXX_NOWARN_LIST double-promotion)
     endif ()
 
     if (NOT (${COMPILER_VERSION} VERSION_LESS "3.9"))
-        if (${IS_WARN_EVERYTHING})
-            append_args(CXX_WARN_FLAGS "-Wno-comma")
-        endif ()
+        list(APPEND CXX_NOWARN_LIST comma)
     endif ()
 
     # No chagnes for clang 4.0
 
     if (NOT (${COMPILER_VERSION} VERSION_LESS "5.0"))
-        append_args(CXX_WARN_FLAGS "-Winconsistent-missing-destructor-override")
+        list(APPEND CXX_WARN_LIST inconsistent-missing-destructor-override)
+        list(APPEND CXX_NOWARN_LIST zero-as-null-pointer-constant)
+    endif ()
 
-        if (${IS_WARN_EVERYTHING})
-            append_args(CXX_WARN_FLAGS "-Wno-zero-as-null-pointer-constant")
-        endif ()
+    # convert warning lists to compiler arg strings:
+    foreach(arg ${CXX_WARN_LIST})
+        append_args(CXX_WARN_FLAGS -W${arg})
+    endforeach()
+    if (${IS_WARN_EVERYTHING})
+        foreach(arg ${CXX_NOWARN_LIST})
+            append_args(CXX_WARN_FLAGS -Wno-${arg})
+        endforeach()
     endif ()
 
 elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
