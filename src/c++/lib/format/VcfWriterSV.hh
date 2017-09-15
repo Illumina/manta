@@ -184,10 +184,5 @@ protected:
 private:
     const bam_header_info& _header;
 
-//protected:
-//    std::ostream& _os;
-
-//protected:
-//    const bool& _isOutputContig;
 };
 
