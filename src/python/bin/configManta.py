@@ -32,7 +32,7 @@ sys.path.append(workflowDir)
 
 from configBuildTimeInfo import workflowVersion
 from mantaOptions import MantaWorkflowOptionsBase
-from configureUtil import BamSetChecker, groomBamList, OptParseException
+from configureUtil import BamSetChecker, groomBamList, OptParseException, validateFixExistingFileArg
 from makeRunScript import makeRunScript
 from mantaWorkflow import MantaWorkflow
 from workflowUtil import ensureDir
@@ -107,6 +107,9 @@ You must specify a BAM or CRAM file for at least one sample.
 
         groomBamList(options.normalBamList,"normal sample")
         groomBamList(options.tumorBamList, "tumor sample")
+
+        if options.existingAlignStatsFile is not None :
+            options.existingAlignStatsFile=validateFixExistingFileArg(options.existingAlignStatsFile,"existing align stats")
 
         MantaWorkflowOptionsBase.validateAndSanitizeExistingOptions(self,options)
 

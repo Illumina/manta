@@ -61,8 +61,7 @@ def copyStats(self) :
     statsPath=self.paths.getStatsPath()
     existingStatsPath=self.params.existingAlignStatsFile
 
-    if not os.path.isdir(self.params.workDir): 
-        ensureDir(self.params.workDir)
+    ensureDir(self.params.workDir)
     
     shutil.copy(existingStatsPath, statsPath)
         
@@ -767,7 +766,7 @@ class MantaWorkflow(WorkflowRunner) :
             statsTasks = set()
             copyStats(self)
 
-        summaryStats(self, taskPrefix="SummarizeStats", dependencies=statsTasks)
+        summaryStats(self, dependencies=statsTasks)
 
         if not ((not self.params.isHighDepthFilter) or self.params.useExistingChromDepths) :
             depthTasks = mantaGetDepthFromAlignments(self)
