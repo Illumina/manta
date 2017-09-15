@@ -44,26 +44,28 @@ from workflowUtil import checkFile, ensureDir, preJoin, \
 
 
 __version__ = workflowVersion
-
-def copyStats(self, taskPrefix="",dependencies=None ) : 
+def summaryStats(self, taskPrefix="", dependencies=None) : 
     statsPath=self.paths.getStatsPath()
-    existingStatsPath=self.params.existingAlignStatsFile
 
-    if not os.path.isdir(self.params.workDir): 
-        os.makedirs(self.params.workDir)
-    
-    shutil.copy(existingStatsPath, statsPath)
-    
-    statsTasks = set()
+    summaryTasks = set()
     # summarize stats in format that's easier for human review
     cmd = [self.params.mantaStatsSummaryBin]
     cmd.extend(["--align-stats ", statsPath])
     cmd.extend(["--output-file", self.paths.getStatsSummaryPath()]) 
     summarizeTask = self.addTask(preJoin(taskPrefix,"summarizeStats"),cmd,dependencies=dependencies, isForceLocal=True)
-    statsTasks.add(summarizeTask)
+    summaryTasks.add(summarizeTask)
     
-    return statsTasks
+    return summaryTasks    
+
+def copyStats(self) : 
+    statsPath=self.paths.getStatsPath()
+    existingStatsPath=self.params.existingAlignStatsFile
+
+    if not os.path.isdir(self.params.workDir): 
+        ensureDir(self.params.workDir)
     
+    shutil.copy(existingStatsPath, statsPath)
+        
 def runStats(self,taskPrefix="",dependencies=None) :
 
     statsPath=self.paths.getStatsPath()
@@ -101,12 +103,6 @@ def runStats(self,taskPrefix="",dependencies=None) :
     if not self.params.isRetainTempFiles :
         rmStatsTmpCmd = getRmdirCmd() + [tmpStatsDir]
         rmTask=self.addTask(preJoin(taskPrefix,"removeTmpDir"),rmStatsTmpCmd,dependencies=mergeTask, isForceLocal=True)
-
-    # summarize stats in format that's easier for human review
-    cmd = [self.params.mantaStatsSummaryBin]
-    cmd.extend(["--align-stats ", statsPath])
-    cmd.extend(["--output-file", self.paths.getStatsSummaryPath()])
-    self.addTask(preJoin(taskPrefix,"summarizeStats"),cmd,dependencies=mergeTask)
 
     return nextStepWait
 
@@ -768,8 +764,10 @@ class MantaWorkflow(WorkflowRunner) :
             statsTasks = runStats(self,taskPrefix="getAlignmentStats")
             graphTaskDependencies |= statsTasks
         else:
-            statsTasks = copyStats(self,taskPrefix="copyAlignmentStats")
-            graphTaskDependencies |= statsTasks
+            statsTasks = set()
+            copyStats(self)
+
+        summaryStats(self, taskPrefix="SummarizeStats", dependencies=statsTasks)
 
         if not ((not self.params.isHighDepthFilter) or self.params.useExistingChromDepths) :
             depthTasks = mantaGetDepthFromAlignments(self)
