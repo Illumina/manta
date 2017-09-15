@@ -30,9 +30,9 @@ scriptName=os.path.basename(__file__)
 sys.path.append(scriptDir)
 
 from configureOptions import ConfigureWorkflowOptions
-from configureUtil import assertOptionExists, joinFile, OptParseException, \
-                          validateFixExistingDirArg, validateFixExistingFileArg, \
-                          checkTabixIndexedFile
+from configureUtil import assertOptionExists, checkTabixIndexedFile, joinFile, OptParseException, \
+                          validateFixExistingFileArg
+
 from workflowUtil import exeFile, parseGenomeRegion
 
 
@@ -136,23 +136,25 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         return cleanLocals(locals())
 
 
+    def validateAndSanitizeOptions(self,options) :
 
-    def validateAndSanitizeExistingOptions(self,options) :
-
+        assertOptionExists(options.runDir,"run directory")
         options.runDir = os.path.abspath(options.runDir)
 
         # check alignerMode:
-        if options.alignerMode is not None :
-            options.alignerMode = options.alignerMode.lower()
-            if options.alignerMode not in self.validAlignerModes :
-                raise OptParseException("Invalid aligner mode: '%s'" % options.alignerMode)
+        assertOptionExists(options.alignerMode,"aligner mode")
+        options.alignerMode = options.alignerMode.lower()
+        if options.alignerMode not in self.validAlignerModes :
+            raise OptParseException("Invalid aligner mode: '%s'" % options.alignerMode)
 
+        # check reference fasta file exists
+        assertOptionExists(options.referenceFasta,"reference fasta file")
         options.referenceFasta=validateFixExistingFileArg(options.referenceFasta,"reference")
+
         # check for reference fasta index file:
-        if options.referenceFasta is not None :
-            faiFile=options.referenceFasta + ".fai"
-            if not os.path.isfile(faiFile) :
-                raise OptParseException("Can't find expected fasta index file: '%s'" % (faiFile))
+        faiFile=options.referenceFasta + ".fai"
+        if not os.path.isfile(faiFile) :
+            raise OptParseException("Can't find expected fasta index file: '%s'" % (faiFile))
 
         # check for bed file of call regions and its index file
         if options.callRegionsBed is not None:
@@ -163,13 +165,3 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
             options.genomeRegionList = None
         else :
             options.genomeRegionList = [parseGenomeRegion(r) for r in options.regionStrList]
-
-
-    def validateOptionExistence(self,options) :
-
-        assertOptionExists(options.runDir,"run directory")
-
-        assertOptionExists(options.alignerMode,"aligner mode")
-        assertOptionExists(options.referenceFasta,"reference fasta file")
-
-

@@ -691,12 +691,11 @@ class MantaWorkflow(WorkflowRunner) :
     Manta SV discovery workflow
     """
 
-    def __init__(self,params,iniSections) :
+    def __init__(self,params) :
 
         cleanPyEnv()
 
         self.params=params
-        self.iniSections=iniSections
 
         # Use RNA option for minCandidate size
         if self.params.isRNA:

@@ -105,27 +105,16 @@ You must specify a BAM or CRAM file for at least one sample.
         return defaults
 
 
+    def validateAndSanitizeOptions(self,options) :
 
-    def validateAndSanitizeExistingOptions(self,options) :
-
-        groomBamList(options.normalBamList,"normal sample")
-        groomBamList(options.tumorBamList, "tumor sample")
-
-        if options.existingAlignStatsFile is not None :
-            options.existingAlignStatsFile=validateFixExistingFileArg(options.existingAlignStatsFile,"existing align stats")
-
-        MantaWorkflowOptionsBase.validateAndSanitizeExistingOptions(self,options)
-
-
-
-    def validateOptionExistence(self,options) :
+        MantaWorkflowOptionsBase.validateAndSanitizeOptions(self,options)
 
         def safeLen(x) :
             if x is None : return 0
             return len(x)
 
         if ((safeLen(options.normalBamList) == 0) and
-            (safeLen(options.tumorBamList) == 0)) :
+                (safeLen(options.tumorBamList) == 0)) :
             raise OptParseException("No normal or tumor sample alignment files specified")
 
         if (safeLen(options.tumorBamList) > 1) :
@@ -136,20 +125,23 @@ You must specify a BAM or CRAM file for at least one sample.
 
         if options.isRNA :
             if ((safeLen(options.normalBamList) != 1) or
-                (safeLen(options.tumorBamList) != 0)) :
+                    (safeLen(options.tumorBamList) != 0)) :
                 raise OptParseException("RNA mode currently requires exactly one normal sample")
         else :
-            if (options.isUnstrandedRNA) :
+            if options.isUnstrandedRNA :
                 raise OptParseException("Unstranded only applied for RNA inputs")
 
-        bcheck = BamSetChecker()
-        bcheck.appendBams(options.normalBamList,"Normal")
-        bcheck.appendBams(options.tumorBamList,"Tumor")
-        bcheck.check(options.htsfileBin,
-                     options.referenceFasta)
+        if options.existingAlignStatsFile is not None :
+            options.existingAlignStatsFile=validateFixExistingFileArg(options.existingAlignStatsFile,"existing align stats")
 
-        MantaWorkflowOptionsBase.validateOptionExistence(self,options)
+        groomBamList(options.normalBamList,"normal sample")
+        groomBamList(options.tumorBamList, "tumor sample")
 
+        bamSetChecker = BamSetChecker()
+        bamSetChecker.appendBams(options.normalBamList,"Normal")
+        bamSetChecker.appendBams(options.tumorBamList,"Tumor")
+        bamSetChecker.check(options.htsfileBin,
+                            options.referenceFasta)
 
 
 
@@ -158,10 +150,10 @@ def main() :
     primarySectionName="manta"
     options,iniSections=MantaWorkflowOptions().getRunOptions(primarySectionName, version=workflowVersion)
 
-    # we don't need to instantiate the workflow object during configuration,
-    # but this is done here to trigger additional parameter validation:
+    # We don't need to instantiate the workflow object during configuration,
+    # but do it here anyway to trigger additional parameter validation:
     #
-    MantaWorkflow(options,iniSections)
+    MantaWorkflow(options)
 
     # generate runscript:
     #
