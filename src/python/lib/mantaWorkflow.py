@@ -44,7 +44,7 @@ from workflowUtil import checkFile, ensureDir, preJoin, \
 
 
 __version__ = workflowVersion
-def summaryStats(self, taskPrefix="", dependencies=None) : 
+def summarizeStats(self, taskPrefix="", dependencies=None) : 
     statsPath=self.paths.getStatsPath()
 
     summaryTasks = set()
@@ -60,8 +60,6 @@ def summaryStats(self, taskPrefix="", dependencies=None) :
 def copyStats(self) : 
     statsPath=self.paths.getStatsPath()
     existingStatsPath=self.params.existingAlignStatsFile
-
-    ensureDir(self.params.workDir)
     
     shutil.copy(existingStatsPath, statsPath)
         
@@ -766,7 +764,7 @@ class MantaWorkflow(WorkflowRunner) :
             statsTasks = set()
             copyStats(self)
 
-        summaryStats(self, dependencies=statsTasks)
+        summarizeStats(self, dependencies=statsTasks)
 
         if not ((not self.params.isHighDepthFilter) or self.params.useExistingChromDepths) :
             depthTasks = mantaGetDepthFromAlignments(self)
