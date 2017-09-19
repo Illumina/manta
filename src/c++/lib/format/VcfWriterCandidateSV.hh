@@ -31,8 +31,9 @@ struct VcfWriterCandidateSV : public VcfWriterSV
     VcfWriterCandidateSV(
         const std::string& referenceFilename,
         const SVLocusSet& set,
-        std::ostream& os) :
-        VcfWriterSV(referenceFilename, set, os)
+        std::ostream& os,
+        const bool& isOutputContig) :
+        VcfWriterSV(referenceFilename, set, os, isOutputContig)
     {}
 
     void

@@ -60,6 +60,8 @@ You must specify a BAM or CRAM file for at least one sample.
                          help="Set options for RNA-Seq input. Must specify exactly one bam input file")
         group.add_option("--unstrandedRNA", dest="isUnstrandedRNA", action="store_true",
                          help="Set if RNA-Seq input is unstranded: Allows splice-junctions on either strand")
+        group.add_option("--outputContig", dest="isOutputContig", action="store_true",
+                         help="Output assembled contig sequences in VCF file")
 
         MantaWorkflowOptionsBase.addWorkflowGroupOptions(self,group)
 
@@ -93,6 +95,7 @@ You must specify a BAM or CRAM file for at least one sample.
             'runDir' : 'MantaWorkflow',
             'isExome' : False,
             'isRNA' : False,
+            'isOutputContig' : False,
             'isUnstrandedRNA' : False,
             'useExistingChromDepths' : False,
             'isRetainTempFiles' : False,

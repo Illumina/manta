@@ -470,6 +470,9 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
             if self.params.isUnstrandedRNA :
                 hygenCmd.append("--unstranded")
 
+        if self.params.isOutputContig :
+            hygenCmd.append("--output-contigs")
+
         hygenTask = preJoin(taskPrefix,"generateCandidateSV_"+binStr)
         hygenTasks.add(self.addTask(hygenTask,hygenCmd,dependencies=dirTask, memMb=hyGenMemMb))
 

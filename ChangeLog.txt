@@ -1,3 +1,4 @@
+- MANTA-1207 Add an optional feature to output contig in vcf
 - MANTA-1215 Allow for specification of alignmentStats.xml file. Remove useExistingAlignStats and replace with existingAlignStatsFile.
 - MANTA-445 RNA: Select contigs for refinement based on alignment score and read count
 - MANTA-1211/[#90] Fix issue with empty regions input to EstimateSVLoci

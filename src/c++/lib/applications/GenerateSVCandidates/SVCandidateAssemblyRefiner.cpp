@@ -1291,7 +1291,8 @@ void
 generateRefinedVCFSVCandidateFromJumpAlignment(
     const BPOrientation& bporient,
     const SVCandidateAssemblyData& assemblyData,
-    SVCandidate& sv)
+    SVCandidate& sv,
+    const GSCOptions& opt)
 {
     generateRefinedSVCandidateFromJumpAlignment(bporient, assemblyData, sv);
 
@@ -1303,6 +1304,11 @@ generateRefinedVCFSVCandidateFromJumpAlignment(
     if (align.jumpInsertSize > 0)
     {
         getFwdStrandInsertSegment(align, contig.seq, bporient.isBp1Reversed, sv.insertSeq);
+    }
+
+    // fill in contigSeq, only when "--outputConfig" is specified
+    if(opt.isOutputContig){
+        sv.contigSeq = contig.seq;
     }
 
     // add CIGAR for any simple (insert/delete) cases:
@@ -1380,7 +1386,7 @@ selectContigRNA(
 #endif
         if (checkFilterSubAlignments(alignment, spanningAligner, true)) continue;
 #ifdef DEBUG_REFINER
-        if (isRNA) log_os << __FUNCTION__ << ": contig alignment okay: " << contigIndex << "\n";
+        log_os << __FUNCTION__ << ": contig alignment okay: " << contigIndex << "\n";
 #endif
         goodContigIndicies.push_back(contigIndex);
     }
@@ -1420,9 +1426,9 @@ selectContigDNA(
 )
 {
     int maxAlignContigIndex(-1);
-    for (unsigned index = 0; index < assemblyData.contigs.size(); index++)
+    for (unsigned contigIndex = 0; contigIndex < assemblyData.contigs.size(); contigIndex++)
     {
-        const JumpAlignmentResult<int>& alignment(assemblyData.spanningAlignments[index]);
+        const JumpAlignmentResult<int>& alignment(assemblyData.spanningAlignments[contigIndex]);
 #ifdef DEBUG_REFINER
         log_os << __FUNCTION__ << ": Checking contig alignment: " << contigIndex << "\n";
 #endif
@@ -1432,13 +1438,13 @@ selectContigDNA(
 #endif
         // Find the contig with the highest alignment score
         if ((maxAlignContigIndex == -1) ||
-            (assemblyData.spanningAlignments[index].score > assemblyData.spanningAlignments[maxAlignContigIndex].score))
+            (assemblyData.spanningAlignments[contigIndex].score > assemblyData.spanningAlignments[maxAlignContigIndex].score))
         {
-            maxAlignContigIndex = index;
+            maxAlignContigIndex = contigIndex;
         }
     }
 #ifdef DEBUG_REFINER
-        log_os << __FUNCTION__ << ": selected contig: " << selectedContigIndex << "\n";
+        log_os << __FUNCTION__ << ": selected contig: " << maxAlignContigIndex << "\n";
 #endif
     if ((maxAlignContigIndex == -1) ||
         (checkFilterSubAlignments(assemblyData.spanningAlignments[maxAlignContigIndex], spanningAligner, false)))
@@ -1789,7 +1795,7 @@ getJumpAssembly(
     assemblyData.svs.push_back(sv);
     SVCandidate& newSV(assemblyData.svs.back());
 
-    generateRefinedVCFSVCandidateFromJumpAlignment(bporient, assemblyData, newSV);
+    generateRefinedVCFSVCandidateFromJumpAlignment(bporient, assemblyData, newSV, _opt);
 
 #ifdef DEBUG_REFINER
     log_os << __FUNCTION__ << ": highscore refined sv: " << newSV;
