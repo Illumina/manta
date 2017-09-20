@@ -1307,7 +1307,8 @@ generateRefinedVCFSVCandidateFromJumpAlignment(
     }
 
     // fill in contigSeq, only when "--outputConfig" is specified
-    if(opt.isOutputContig){
+    if (opt.isOutputContig)
+    {
         sv.contigSeq = contig.seq;
     }
 
@@ -1399,7 +1400,7 @@ selectContigRNA(
         if (assemblyData.spanningAlignments[index].score > maxAlnScore)
         {
             maxAlnScore = assemblyData.spanningAlignments[index].score;
-			selectedContigIndex = index;
+            selectedContigIndex = index;
         }
     }
     // Pick the contig with the most supporting reads that has an alignment score at least half as high as the highest-scoring contig
@@ -1444,7 +1445,7 @@ selectContigDNA(
         }
     }
 #ifdef DEBUG_REFINER
-        log_os << __FUNCTION__ << ": selected contig: " << maxAlignContigIndex << "\n";
+    log_os << __FUNCTION__ << ": selected contig: " << maxAlignContigIndex << "\n";
 #endif
     if ((maxAlignContigIndex == -1) ||
         (checkFilterSubAlignments(assemblyData.spanningAlignments[maxAlignContigIndex], spanningAligner, false)))
@@ -1682,12 +1683,12 @@ getJumpAssembly(
             static const int nSpacer(25);
             std::vector<exclusion_block> exclBlocks1;
             const std::string cutRef1 = kmerMaskReference(align1RefStrPtr->begin() + align1LeadingCut,
-                align1RefStrPtr->end() - align1TrailingCut,
-                contig.seq, nSpacer, exclBlocks1);
+                                                          align1RefStrPtr->end() - align1TrailingCut,
+                                                          contig.seq, nSpacer, exclBlocks1);
             std::vector<exclusion_block> exclBlocks2;
             const std::string cutRef2 = kmerMaskReference(align2RefStrPtr->begin() + align2LeadingCut,
-                align2RefStrPtr->end() - align2TrailingCut,
-                contig.seq, nSpacer, exclBlocks2);
+                                                          align2RefStrPtr->end() - align2TrailingCut,
+                                                          contig.seq, nSpacer, exclBlocks2);
 #ifdef DEBUG_REFINER
             log_os << __FUNCTION__ << " Kmer-masked references\n";
             log_os << "\t ref Lengths " << align1RefStrPtr->size() << " " << align2RefStrPtr->size() << "\n";
@@ -1716,16 +1717,16 @@ getJumpAssembly(
             log_os << __FUNCTION__ << " isTranscriptStrandKnown: " << bporient.isTranscriptStrandKnown << "; bp1Fw: " << bp1Fw << " ; bp2Fw: " << bp2Fw << '\n';
 #endif
             _RNASpanningAligner.align(contig.seq.begin(), contig.seq.end(),
-                cutRef1.begin(), cutRef1.end(), cutRef2.begin(), cutRef2.end(),
-                bp1Fw, bp2Fw, bporient.isTranscriptStrandKnown,
-                alignment);
+                                      cutRef1.begin(), cutRef1.end(), cutRef2.begin(), cutRef2.end(),
+                                      bp1Fw, bp2Fw, bporient.isTranscriptStrandKnown,
+                                      alignment);
 
 #ifdef DEBUG_REFINER
             log_os << __FUNCTION__ << " Masked 1: " << alignment.align1 << '\n';
             log_os << __FUNCTION__ << " Masked 2: " << alignment.align2 << '\n';
 #endif
             if (!(translateMaskedAlignment(alignment.align1, exclBlocks1) &&
-                translateMaskedAlignment(alignment.align2, exclBlocks2)))
+                  translateMaskedAlignment(alignment.align2, exclBlocks2)))
             {
 #ifdef DEBUG_REFINER
                 log_os << __FUNCTION__ << " Failed to fix kmer-masked alignment\n";
@@ -1742,9 +1743,9 @@ getJumpAssembly(
         {
 #ifdef DEBUG_REFINER
             log_os << __FUNCTION__ << " Ref1 for alignment: "
-                << bp1refSeq.substr(align1LeadingCut, bp1refSeq.size() - align1LeadingCut - align1TrailingCut) << '\n';
+                   << bp1refSeq.substr(align1LeadingCut, bp1refSeq.size() - align1LeadingCut - align1TrailingCut) << '\n';
             log_os << __FUNCTION__ << " Ref2 for alignment: "
-                << bp2refSeq.substr(align2LeadingCut, bp2refSeq.size() - align2LeadingCut - align2TrailingCut) << '\n';
+                   << bp2refSeq.substr(align2LeadingCut, bp2refSeq.size() - align2LeadingCut - align2TrailingCut) << '\n';
 #endif
             _spanningAligner.align(contig.seq.begin(), contig.seq.end(),
                                    align1RefStrPtr->begin() + align1LeadingCut, align1RefStrPtr->end() - align1TrailingCut,
@@ -1765,8 +1766,8 @@ getJumpAssembly(
         {
             std::string bp1Seq, bp2Seq, insertSeq;
             getFwdStrandQuerySegments(alignment, contig.seq,
-                bporient.isBp2AlignedFirst, bporient.isBp1Reversed, bporient.isBp2Reversed,
-                bp1Seq, bp2Seq, insertSeq);
+                                      bporient.isBp2AlignedFirst, bporient.isBp1Reversed, bporient.isBp2Reversed,
+                                      bp1Seq, bp2Seq, insertSeq);
             log_os << __FUNCTION__ << "\tbp1seq_fwd: " << bp1Seq << "\n";
             log_os << __FUNCTION__ << "\tinsseq_fwd: " << insertSeq << "\n";
             log_os << __FUNCTION__ << "\tbp2seq_fwd: " << bp2Seq << "\n";

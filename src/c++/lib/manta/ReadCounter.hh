@@ -33,11 +33,11 @@
 struct ReadCounter
 {
     ReadCounter() :
-            _totalReadCount(0),
-            _totalPairedReadCount(0),
-            _totalUnpairedReadCount(0),
-            _totalPairedLowMapqReadCount(0),
-            _totalHighConfidenceReadPairCount(0)
+        _totalReadCount(0),
+        _totalPairedReadCount(0),
+        _totalUnpairedReadCount(0),
+        _totalPairedLowMapqReadCount(0),
+        _totalHighConfidenceReadPairCount(0)
     {}
 
     unsigned
@@ -104,8 +104,8 @@ private:
     friend class boost::serialization::access;
     template<class Archive>
     void serialize(
-            Archive& ar,
-            const unsigned /*version*/)
+        Archive& ar,
+        const unsigned /*version*/)
     {
         ar& boost::serialization::make_nvp("totalReadCount", _totalReadCount);
         ar& boost::serialization::make_nvp("totalPairedReadCount", _totalPairedReadCount);

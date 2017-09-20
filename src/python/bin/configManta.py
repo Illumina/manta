@@ -68,7 +68,7 @@ You must specify a BAM or CRAM file for at least one sample.
 
     def addExtendedGroupOptions(self,group) :
         group.add_option("--existingAlignStatsFile",
-                         dest="existingAlignStatsFile", metavar="FILE", 
+                         dest="existingAlignStatsFile", metavar="FILE",
                          help="Pre-calculated alignment statistics file. Skips alignment stats calculation.")
         group.add_option("--useExistingChromDepths",
                          dest="useExistingChromDepths", action="store_true",

@@ -98,7 +98,8 @@ writeHeaderPrefix(
     _os << "##INFO=<ID=INV5,Number=0,Type=Flag,Description=\"Inversion breakends open 5' of reported location\">\n";
 
     // if "--outputContig" is specified, then print out INFO tag for Assembled contig sequence
-    if(_isOutputContig) {
+    if (_isOutputContig)
+    {
         _os << "##INFO=<ID=ASSEMBLED_CONTIG,Number=1,Type=String,Description=\"Assembled contig sequence\">\n";
     }
 
@@ -401,7 +402,8 @@ writeTransloc(
     {
         infotags.push_back("IMPRECISE");
     }
-    else if (_isOutputContig){
+    else if (_isOutputContig)
+    {
         infotags.push_back("ASSEMBLED_CONTIG=" + sv.contigSeq);
     }
 

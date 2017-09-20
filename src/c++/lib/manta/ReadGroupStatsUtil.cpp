@@ -522,17 +522,20 @@ struct ReadGroupTracker
     }
 
     void
-    addUnpairedReadCount() {
+    addUnpairedReadCount()
+    {
         _stats.readCounter.addUnpairedReadCount();
     }
 
     void
-    addPairedLowMapqReadCount() {
+    addPairedLowMapqReadCount()
+    {
         _stats.readCounter.addPairedLowMapqReadCount();
     }
 
     void
-    addHighConfidenceReadPairCount() {
+    addHighConfidenceReadPairCount()
+    {
         _stats.readCounter.addHighConfidenceReadPairCount();
     }
 
@@ -1048,12 +1051,13 @@ extractReadGroupStatsFromAlignmentFile(
                     if (bamRead.is_paired())
                     {
                         rgInfo.addPairedReadCount();
-                        if(bamRead.map_qual()==0)
+                        if (bamRead.map_qual()==0)
                         {
                             rgInfo.addPairedLowMapqReadCount();
                         }
                     }
-                    else{
+                    else
+                    {
                         rgInfo.addUnpairedReadCount();
                     }
 

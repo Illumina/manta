@@ -44,25 +44,25 @@ from workflowUtil import checkFile, ensureDir, preJoin, \
 
 
 __version__ = workflowVersion
-def summarizeStats(self, taskPrefix="", dependencies=None) : 
+def summarizeStats(self, taskPrefix="", dependencies=None) :
     statsPath=self.paths.getStatsPath()
 
     summaryTasks = set()
     # summarize stats in format that's easier for human review
     cmd = [self.params.mantaStatsSummaryBin]
     cmd.extend(["--align-stats ", statsPath])
-    cmd.extend(["--output-file", self.paths.getStatsSummaryPath()]) 
+    cmd.extend(["--output-file", self.paths.getStatsSummaryPath()])
     summarizeTask = self.addTask(preJoin(taskPrefix,"summarizeStats"),cmd,dependencies=dependencies, isForceLocal=True)
     summaryTasks.add(summarizeTask)
-    
-    return summaryTasks    
 
-def copyStats(self) : 
+    return summaryTasks
+
+def copyStats(self) :
     statsPath=self.paths.getStatsPath()
     existingStatsPath=self.params.existingAlignStatsFile
-    
+
     shutil.copy(existingStatsPath, statsPath)
-        
+
 def runStats(self,taskPrefix="",dependencies=None) :
 
     statsPath=self.paths.getStatsPath()
