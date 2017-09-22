@@ -1,17 +1,21 @@
+v1.2.0
+- MANTA-1215 Add an option for specification of an existing alignment stats file
+- MANTA-1231 Enable clang5.0 build
 - MANTA-1207 Add an optional feature to output contig in vcf
-- MANTA-1215 Allow for specification of alignmentStats.xml file. Remove useExistingAlignStats and replace with existingAlignStatsFile.
 - MANTA-445 RNA: Select contigs for refinement based on alignment score and read count
-- MANTA-1211/[#90] Fix issue with empty regions input to EstimateSVLoci
+- MANTA-1211/[#99] Fix issue with empty regions input to EstimateSVLoci
 - MANTA-1043 Add more read statistics when 'too few read pair observations' exception
 - MANTA-696 Improve the iterative assembler and set it to the default assembler
 - MANTA-1175 Fix a bug of duplicate RG & PG in evidence bams
-- MANTA-886 Verify extension of alignment input file
+- MANTA-886 Add verification of the extension of alignment input file
 - MANTA-1177 Improve CRAM reference handling
-- MANTA-1118 Add QC check of read length for a bam record
-- MANTA-865 Fix sortVcf.py for vcf's without a header
+- MANTA-1118 Add QC check of read length
+- MANTA-1041 Improve exception message context to include associated read and SV candidate info
 - MANTA-1116 Sort duplicate vcf entries together to allow merging
+- MANTA-865 Fix sortVcf.py to handle vcf files without a header
 - MANTA-443 Improve the check of running into adapter for data with small insert size
 - MANTA-1038 Fix infrequent graph edge lookup failure
+- MANTA-1044 Enable build on more architectures
 
 v1.1.1
 - MANTA-691 Add an option to specify call regions in a bed file
