@@ -313,7 +313,7 @@ if     (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
 elseif (${IS_CLANGXX})
 
     # Set this TRUE to uncover new clang warnings (typically this is done to test a new clang release):
-    set (IS_WARN_EVERYTHING TRUE)
+    set (IS_WARN_EVERYTHING FALSE)
 
     set (CXX_WARN_LIST "") # all clang-specific enabled warnings
     set (CXX_NOWARN_LIST "") # all clang-specific warnings disabled only when "-Weverything" is defined
