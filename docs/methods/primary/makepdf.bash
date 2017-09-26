@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 set -o nounset
+set -o errexit
 
 
 rel2abs() {
@@ -14,12 +15,16 @@ mkdir -p $builddir
 
 mname=methods
 
+latexCmd() {
+  latex -halt-on-error -interaction=nonstopmode $1
+}
+
 do_latex_cmds() {
   file=$1
-  latex $file
+  latexCmd $file
   bibtex $file
-  latex $file
-  latex $file
+  latexCmd $file
+  latexCmd $file
   dvipdf $file
 }
 

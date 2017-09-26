@@ -168,6 +168,9 @@ public:
     // in case bp1 and bp2 are on opposite strands (ie. an inversion) the insertSeq is oriented to the fwd strand for bp1
     std::string insertSeq;
 
+    // Assembled contig sequence for outputting in VCF
+    std::string contigSeq;
+
     // for some small indels, the alignment becomes sufficiently complex that a CIGAR string provides better detail
     // (this is provided for any small SV which is more complicated than a simple insert or deletion)
     ALIGNPATH::path_t insertAlignment;

@@ -1026,7 +1026,7 @@ getSVCandidatesFromShadow(
     static const bool isComplex(true);
     pos_t singletonGenomePos(0);
     int targetId(0);
-    if (NULL == remoteReadPtr)
+    if (nullptr == remoteReadPtr)
     {
         if (!localRead.is_unmapped()) return;
         // need to take care of this case
@@ -1270,7 +1270,7 @@ getReadBreakendsImpl(
 
             oss << "\tlocal_bam_record: " <<  localRead << "\n"
                 << "\tremote_bam record: ";
-            if (NULL==remoteReadPtr)
+            if (nullptr==remoteReadPtr)
             {
                 oss << "NONE";
             }

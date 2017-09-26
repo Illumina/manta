@@ -49,10 +49,12 @@ VcfWriterSV::
 VcfWriterSV(
     const std::string& referenceFilename,
     const SVLocusSet& set,
-    std::ostream& os) :
+    std::ostream& os,
+    const bool& isOutputContig) :
     _referenceFilename(referenceFilename),
-    _header(set.header),
-    _os(os)
+    _isOutputContig(isOutputContig),
+    _os(os),
+    _header(set.header)
 {
 }
 
@@ -94,6 +96,12 @@ writeHeaderPrefix(
     _os << "##INFO=<ID=RIGHT_SVINSSEQ,Number=.,Type=String,Description=\"Known right side of insertion for an insertion of unknown length\">\n";
     _os << "##INFO=<ID=INV3,Number=0,Type=Flag,Description=\"Inversion breakends open 3' of reported location\">\n";
     _os << "##INFO=<ID=INV5,Number=0,Type=Flag,Description=\"Inversion breakends open 5' of reported location\">\n";
+
+    // if "--outputContig" is specified, then print out INFO tag for Assembled contig sequence
+    if (_isOutputContig)
+    {
+        _os << "##INFO=<ID=ASSEMBLED_CONTIG,Number=1,Type=String,Description=\"Assembled contig sequence\">\n";
+    }
 
     addHeaderInfo();
 
@@ -393,6 +401,10 @@ writeTransloc(
     if (isImprecise)
     {
         infotags.push_back("IMPRECISE");
+    }
+    else if (_isOutputContig)
+    {
+        infotags.push_back("ASSEMBLED_CONTIG=" + sv.contigSeq);
     }
 
     if (bpArange.size() > 1)

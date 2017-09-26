@@ -36,8 +36,9 @@ struct VcfWriterSomaticSV : public VcfWriterSV, VcfWriterScoredSV
         const bool isMaxDepthFilter,
         const std::string& referenceFilename,
         const SVLocusSet& set,
-        std::ostream& os) :
-        VcfWriterSV(referenceFilename, set,os),
+        std::ostream& os,
+        const bool& isOutputContig) :
+        VcfWriterSV(referenceFilename, set, os, isOutputContig),
         _somaticOpt(somaticOpt),
         _isMaxDepthFilter(isMaxDepthFilter),
         _somaticInfoPtr(nullptr),
@@ -89,14 +90,14 @@ private:
     const SVScoreInfoSomatic&
     getSomaticInfo() const
     {
-        assert(NULL != _somaticInfoPtr);
+        assert(nullptr != _somaticInfoPtr);
         return *_somaticInfoPtr;
     }
 
     const SVScoreInfoSomatic&
     getSingleJunctionSomaticInfo() const
     {
-        assert(NULL != _singleJunctionSomaticInfoPtr);
+        assert(nullptr != _singleJunctionSomaticInfoPtr);
         return *_singleJunctionSomaticInfoPtr;
     }
 

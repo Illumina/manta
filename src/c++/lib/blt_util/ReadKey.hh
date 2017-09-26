@@ -43,10 +43,10 @@ struct ReadKey
         const bam_record& br,
         const bool isCopyPtrs = true)
         : _isCopyPtrs(isCopyPtrs)
-        , _qname((_isCopyPtrs && (NULL != br.qname())) ? strdup(br.qname()) : br.qname())
+        , _qname((_isCopyPtrs && (nullptr != br.qname())) ? strdup(br.qname()) : br.qname())
         , _readNo(br.read_no())
     {
-        assert(NULL != _qname);
+        assert(nullptr != _qname);
     }
 
     ReadKey(
@@ -54,10 +54,10 @@ struct ReadKey
         const int initReadNo,
         const bool isCopyPtrs = true)
         : _isCopyPtrs(isCopyPtrs)
-        , _qname((_isCopyPtrs && (NULL != initQname)) ? strdup(initQname) : initQname)
+        , _qname((_isCopyPtrs && (nullptr != initQname)) ? strdup(initQname) : initQname)
         , _readNo(initReadNo)
     {
-        assert(NULL != _qname);
+        assert(nullptr != _qname);
     }
 
     ReadKey(
@@ -75,7 +75,7 @@ public:
     {
         if (_isCopyPtrs)
         {
-            if (NULL != _qname) free(const_cast<char*>(_qname));
+            if (nullptr != _qname) free(const_cast<char*>(_qname));
         }
     }
 

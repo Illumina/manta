@@ -1,3 +1,10 @@
+
+#
+# Using sudo-false/container-based tests for greater (linux) test responsiveness. This doesn't seem
+# to effect the queing time for OSX tests.
+#
+
+dist: trusty
 sudo: false
 
 language: cpp
@@ -6,34 +13,24 @@ matrix:
   include:
     - os: linux
       compiler: gcc
-      addons:
-        apt:
-          sources:
-          - ubuntu-toolchain-r-test # for gcc 4.8
-          packages:
-          - gcc-4.8
-          - g++-4.8
-      before_install:
-      - export CC=gcc-4.8 CXX=g++-4.8
       install:
-      # install cppcheck from source:
-      - wget https://sourceforge.net/projects/cppcheck/files/cppcheck/1.69/cppcheck-1.69.tar.bz2 &&
-        tar -xjf cppcheck-1.69.tar.bz2 &&
-        cd cppcheck-1.69 &&
+      # Install cppcheck from source:
+      - CPPCHECK_VERSION=1.79 &&
+        wget https://sourceforge.net/projects/cppcheck/files/cppcheck/${CPPCHECK_VERSION}/cppcheck-${CPPCHECK_VERSION}.tar.bz2 &&
+        tar -xjf cppcheck-${CPPCHECK_VERSION}.tar.bz2 &&
+        cd cppcheck-${CPPCHECK_VERSION} &&
         make -j4 &&
         export PATH=$PATH:$PWD/ &&
         cd ..
     - os: linux
       compiler: clang
-      addons:
-        apt:
-          packages:
-          - llvm-3.4
-          - llvm-3.4-dev
+
+    # Note osx_image request corresponds to travis default as of Aug 2017 (OSX 10.11.6 with Xcode 7.3.1)
+    #
+    # Running gcc would just repeat the clang test on OSX (unless we do some extra work...), so skip it
     - os: osx
       compiler: clang
-      osx_image: xcode61
-    # gcc would just repeat the clang test on OSX (unless we do some extra work...), so skip it
+      osx_image: xcode7.3
  
 script:
   - mkdir build &&

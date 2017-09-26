@@ -24,6 +24,7 @@ Manta SV discovery workflow
 
 import os.path
 import sys
+import shutil
 
 # add script path to pull in utils in same directory:
 scriptDir=os.path.abspath(os.path.dirname(__file__))
@@ -43,8 +44,24 @@ from workflowUtil import checkFile, ensureDir, preJoin, \
 
 
 __version__ = workflowVersion
+def summarizeStats(self, taskPrefix="", dependencies=None) :
+    statsPath=self.paths.getStatsPath()
 
+    summaryTasks = set()
+    # summarize stats in format that's easier for human review
+    cmd = [self.params.mantaStatsSummaryBin]
+    cmd.extend(["--align-stats ", statsPath])
+    cmd.extend(["--output-file", self.paths.getStatsSummaryPath()])
+    summarizeTask = self.addTask(preJoin(taskPrefix,"summarizeStats"),cmd,dependencies=dependencies, isForceLocal=True)
+    summaryTasks.add(summarizeTask)
 
+    return summaryTasks
+
+def copyStats(self) :
+    statsPath=self.paths.getStatsPath()
+    existingStatsPath=self.params.existingAlignStatsFile
+
+    shutil.copy(existingStatsPath, statsPath)
 
 def runStats(self,taskPrefix="",dependencies=None) :
 
@@ -83,12 +100,6 @@ def runStats(self,taskPrefix="",dependencies=None) :
     if not self.params.isRetainTempFiles :
         rmStatsTmpCmd = getRmdirCmd() + [tmpStatsDir]
         rmTask=self.addTask(preJoin(taskPrefix,"removeTmpDir"),rmStatsTmpCmd,dependencies=mergeTask, isForceLocal=True)
-
-    # summarize stats in format that's easier for human review
-    cmd = [self.params.mantaStatsSummaryBin]
-    cmd.extend(["--align-stats ", statsPath])
-    cmd.extend(["--output-file", self.paths.getStatsSummaryPath()])
-    self.addTask(preJoin(taskPrefix,"summarizeStats"),cmd,dependencies=mergeTask)
 
     return nextStepWait
 
@@ -459,6 +470,9 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
             if self.params.isUnstrandedRNA :
                 hygenCmd.append("--unstranded")
 
+        if self.params.isOutputContig :
+            hygenCmd.append("--output-contigs")
+
         hygenTask = preJoin(taskPrefix,"generateCandidateSV_"+binStr)
         hygenTasks.add(self.addTask(hygenTask,hygenCmd,dependencies=dirTask, memMb=hyGenMemMb))
 
@@ -677,12 +691,11 @@ class MantaWorkflow(WorkflowRunner) :
     Manta SV discovery workflow
     """
 
-    def __init__(self,params,iniSections) :
+    def __init__(self,params) :
 
         cleanPyEnv()
 
         self.params=params
-        self.iniSections=iniSections
 
         # Use RNA option for minCandidate size
         if self.params.isRNA:
@@ -746,9 +759,14 @@ class MantaWorkflow(WorkflowRunner) :
 
         graphTaskDependencies = set()
 
-        if not self.params.useExistingAlignStats :
+        if not self.params.existingAlignStatsFile:
             statsTasks = runStats(self,taskPrefix="getAlignmentStats")
             graphTaskDependencies |= statsTasks
+        else:
+            statsTasks = set()
+            copyStats(self)
+
+        summarizeStats(self, dependencies=statsTasks)
 
         if not ((not self.params.isHighDepthFilter) or self.params.useExistingChromDepths) :
             depthTasks = mantaGetDepthFromAlignments(self)

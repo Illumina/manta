@@ -35,8 +35,9 @@ struct VcfWriterTumorSV : public VcfWriterSV, VcfWriterScoredSV
         const bool isMaxDepthFilter,
         const std::string& referenceFilename,
         const SVLocusSet& set,
-        std::ostream& os) :
-        VcfWriterSV(referenceFilename, set, os),
+        std::ostream& os,
+        const bool& isOutputContig) :
+        VcfWriterSV(referenceFilename, set, os, isOutputContig),
         _tumorOpt(tumorOpt),
         _isMaxDepthFilter(isMaxDepthFilter),
         _tumorInfoPtr(nullptr)
@@ -83,7 +84,7 @@ private:
     const SVScoreInfoTumor&
     getTumorInfo() const
     {
-        assert(NULL != _tumorInfoPtr);
+        assert(nullptr != _tumorInfoPtr);
         return *_tumorInfoPtr;
     }
 

@@ -40,7 +40,7 @@ printSeq(
     static const unsigned rowSize(100);
     static const unsigned sectionSize(10);
 
-    assert(NULL != seq);
+    assert(nullptr != seq);
     const unsigned seqLen(strlen(seq));
 
     for (unsigned i(0); i<seqLen; ++i)

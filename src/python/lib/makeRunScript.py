@@ -263,7 +263,7 @@ def main(pickleConfigFile, primaryConfigSection, workflowClassName) :
             raise Exception("Unexpected filesystem item: '%s'" % (exitpath))
         os.unlink(exitpath)
 
-    wflow = workflowClassName(flowOptions,configSections)
+    wflow = workflowClassName(flowOptions)
 
     retval=1
     try:

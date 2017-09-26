@@ -22,7 +22,7 @@ import os,sys
 scriptDir=os.path.abspath(os.path.dirname(__file__))
 scriptName=os.path.basename(__file__)
 
-from configureUtil import dumpIniSections, getIniSections, OptParseException
+from configureUtil import getIniSections, OptParseException
 
 
 
@@ -37,9 +37,8 @@ def noArgOrError(parser,msg) :
 
 class ConfigureWorkflowOptions(object) :
     """
-    This class consolidates common configuration functions
-    for setting up workflows, specific configurations
-    overload the indicated functions to gather/validate
+    Consolidates common configuration functions for setting up workflows,
+    specific configurations overload the indicated functions to gather/validate
     specific parameter sets for their workflow.
     """
 
@@ -47,20 +46,20 @@ class ConfigureWorkflowOptions(object) :
 
     def workflowDescription(self) :
         """
-        brief description of the workflow to appear in usage
+        Brief description of the workflow to appear in usage
         """
         return ""
 
     def addWorkflowGroupOptions(self,group) :
         """
-        add options to OptionsGroup object which specify
+        Add options to OptionsGroup object which specify
         parameters which commonly change from run to run
         """
         pass
 
     def addExtendedGroupOptions(self,group) :
         """
-        This options are expected to change less frequently and
+        These options are expected to change less frequently and
         should live in the ini file, they will not appear if a
         default exists.
         """
@@ -75,19 +74,9 @@ class ConfigureWorkflowOptions(object) :
         """
         return {}
 
-    def validateAndSanitizeExistingOptions(self,options) :
+    def validateAndSanitizeOptions(self,options) :
         """
-        validate any arguments in options which are not None, and
-        optionally sanitize them. This validation step is run
-        *before* writing the ini file
-        """
-        pass
-
-    def validateOptionExistence(self,options) :
-        """
-        validate that all required options actually exist
-
-        this method is run *after* writing template ini file
+        Validate arguments in options. An invalid argument can either be sanitized or validation can fail.
         """
         pass
 
@@ -160,17 +149,13 @@ class ConfigureWorkflowOptions(object) :
                 if nargs>1 : plural="s"
                 raise OptParseException("%i unrecognized argument%s:\n%s" % (nargs, plural, "\n".join(["'"+arg+"'" for arg in args])))
 
-            # sanitize arguments before writing defaults, check for missing arguments after:
-            #
-            self.validateAndSanitizeExistingOptions(options)
+            self.validateAndSanitizeOptions(options)
 
             # write options object back into full iniSections object:
             #
             for k,v in vars(options).iteritems() :
                 if k == "isAllHelp" : continue
                 iniSections[primary_section][k] = v
-
-            self.validateOptionExistence(options)
 
         except OptParseException, e :
             noArgOrError(parser,str(e))
