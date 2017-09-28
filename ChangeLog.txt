@@ -1,3 +1,5 @@
+- MANTA-1039 Output all candidates in candidateSV.vcf to match variant IDs
+
 v1.2.0
 - MANTA-1215 Add an option for specification of an existing alignment stats file
 - MANTA-1231 Enable clang5.0 build

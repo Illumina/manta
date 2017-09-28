@@ -246,9 +246,12 @@ def sortAllVcfs(self, taskPrefix="", dependencies=None) :
 
     nextStepWait = set()
 
-    def getVcfSortCmd(vcfListFile, outPath, isDiploid) :
+    def getVcfSortCmd(vcfListFile, outPath, isDiploid, isCandidate) :
         cmd  = "\"%s\" -E \"%s\" " % (sys.executable, self.params.mantaSortVcf)
         cmd += "-f \"%s\"" % (vcfListFile)
+
+        if isCandidate:
+            cmd += " -a"
 
         # apply the ploidy filter to diploid variants
         if isDiploid:
@@ -266,7 +269,7 @@ def sortAllVcfs(self, taskPrefix="", dependencies=None) :
         return [self.params.tabixBin,"-f","-p","vcf", vcfPath]
 
 
-    def sortVcfs(pathList, outPath, label, isDiploid=False) :
+    def sortVcfs(pathList, outPath, label, isDiploid=False, isCandidate=False) :
         if len(pathList) == 0 : return set()
 
         # make header modifications to first vcf in list of files to be sorted:
@@ -284,7 +287,7 @@ def sortAllVcfs(self, taskPrefix="", dependencies=None) :
         vcfListFile = self.paths.getVcfListPath(label)
         inputVcfTask = self.addWorkflowTask(preJoin(taskPrefix,label+"InputList"),listFileWorkflow(vcfListFile,pathList),dependencies=headerFixTask)
 
-        sortCmd = getVcfSortCmd(vcfListFile, outPath, isDiploid)
+        sortCmd = getVcfSortCmd(vcfListFile, outPath, isDiploid, isCandidate)
         sortTask=self.addTask(preJoin(taskPrefix,"sort_"+label),sortCmd,dependencies=inputVcfTask)
 
         nextStepWait.add(self.addTask(preJoin(taskPrefix,"tabix_"+label),getVcfTabixCmd(outPath),dependencies=sortTask,isForceLocal=True))
@@ -293,7 +296,8 @@ def sortAllVcfs(self, taskPrefix="", dependencies=None) :
 
     candSortTask = sortVcfs(self.candidateVcfPaths,
                             self.paths.getSortedCandidatePath(),
-                            "sortCandidateSV")
+                            "sortCandidateSV",
+                            isCandidate=True)
     sortVcfs(self.diploidVcfPaths,
              self.paths.getSortedDiploidPath(),
              "sortDiploidSV",
