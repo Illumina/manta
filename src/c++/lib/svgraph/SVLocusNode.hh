@@ -297,6 +297,7 @@ struct SVLocusNode
         if (! _isSingle) delete _edges.multiPtr;
     }
 
+    /// copy assignment operator
     SVLocusNode&
     operator=(const SVLocusNode& rhs)
     {
@@ -320,13 +321,15 @@ struct SVLocusNode
         return *this;
     }
 
-
+    /// is empty?
+    /// return true if no edges, otherwise false.
     bool
     empty() const
     {
         return (_isSingle && (_edges.single.isZero));
     }
 
+    /// total number of edges
     unsigned
     size() const
     {
@@ -353,6 +356,7 @@ struct SVLocusNode
         }
     }
 
+    /// Has any out going edge count?
     bool
     isOutCount() const
     {
@@ -371,6 +375,7 @@ struct SVLocusNode
         }
     }
 
+    /// Get total count from out going edges
     unsigned
     outCount() const
     {
@@ -410,7 +415,8 @@ struct SVLocusNode
         }
     }
 
-    /// return true if edge exists:
+    /// Has any edge?
+    /// Return true if edge(s) exists between this and index node, return false otherwise.
     bool
     isEdge(const NodeIndexType index) const
     {
@@ -431,8 +437,8 @@ struct SVLocusNode
     /// this method is responsible for merging edge counts into the node count as well
     void
     mergeEdge(
-        const NodeIndexType index,
-        const SVLocusEdge& edge)
+            const NodeIndexType index,
+            const SVLocusEdge& edge)
     {
         if (_isSingle)
         {
@@ -469,11 +475,11 @@ struct SVLocusNode
         }
     }
 
-    /// reduce edge count to zero
+    /// Set edge count between this and index node
     void
     setEdgeCount(
-        const NodeIndexType index,
-        const unsigned count)
+            const NodeIndexType index,
+            const unsigned count)
     {
         if (_isSingle)
         {
@@ -491,7 +497,7 @@ struct SVLocusNode
         }
     }
 
-    /// eliminate edge
+    /// Eliminate edge(s) between this and index node
     void
     eraseEdge(const NodeIndexType index)
     {
@@ -513,11 +519,11 @@ struct SVLocusNode
         }
     }
 
-    /// unhook edge from one node id, and stick it to another:
+    /// Unhook edge from one node id, and stick it to another:
     void
     moveEdge(
-        const NodeIndexType fromIndex,
-        const NodeIndexType toIndex)
+            const NodeIndexType fromIndex,
+            const NodeIndexType toIndex)
     {
         if (_isSingle)
         {
@@ -531,6 +537,7 @@ struct SVLocusNode
         }
     }
 
+    /// clear all edges
     void
     clear()
     {
@@ -542,12 +549,14 @@ struct SVLocusNode
         _edges.single.isZero = true;
     }
 
+    /// get genome interval
     const GenomeInterval&
     getInterval() const
     {
         return _interval;
     }
 
+    /// set genome interval
     void
     setInterval(const GenomeInterval& interval)
     {
@@ -555,18 +564,21 @@ struct SVLocusNode
         setIntervalRange(interval.range);
     }
 
+    /// Set genome interval range
     void
     setIntervalRange(const known_pos_range2& range)
     {
         _interval.range=range;
     }
 
+    /// Get evidence range
     const known_pos_range2&
     getEvidenceRange() const
     {
         return _evidenceRange;
     }
 
+    /// Set evidence range
     void
     setEvidenceRange(const known_pos_range2& range)
     {

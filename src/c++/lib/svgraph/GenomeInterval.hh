@@ -23,12 +23,18 @@
 
 #include <iosfwd>
 
-
-/// single chromosome range
 ///
-/// all internal locations use a chromosome index number
+/// \author Chris Saunders
+///
+/// \brief GenomeInterval identifies a unique contiguous chromosomal region.
+///
+/// \details GenomeInterval identifies single contiguous chromosome range. All internal locations use a chromosome
+/// index number. GenomeInterval uses boost::serialize to save/load the class.
 struct GenomeInterval
 {
+    /// \brief GenomeInverval represents a single chromosome range
+    ///
+    /// All internal locations use a chromosome index number
     GenomeInterval(
         const int32_t initTid = 0,
         const pos_t beginPos = 0,
@@ -37,7 +43,10 @@ struct GenomeInterval
         range(beginPos,endPos)
     {}
 
-    /// does this intersect a second GenomeInterval?
+    /// \brief Identify if the GenomeIntersect Intersects with another GenomeInterval
+    ///
+    /// 1. The ids must be the same.
+    /// 2. The range of the GenomeIntervals must overlap by more than 1 BP.
     bool
     isIntersect(const GenomeInterval& gi) const
     {
@@ -45,6 +54,10 @@ struct GenomeInterval
         return range.is_range_intersect(gi.range);
     }
 
+    /// \brief Identify if the GenomeInterval range is less than the input GenomeInterval
+    ///
+    /// 1. start < start
+    /// 2. if start == start, then end < end
     bool
     operator<(const GenomeInterval& rhs) const
     {
@@ -56,12 +69,16 @@ struct GenomeInterval
         return false;
     }
 
+    /// \brief Identify if the GenomeIntervals are identical
+    ///
+    /// 1. id == id && range == range
     bool
     operator==(const GenomeInterval& rhs) const
     {
         return ((tid==rhs.tid) && (range==rhs.range));
     }
 
+    /// \brief Set the id to 0 and clear the chromosome range.
     void
     clear()
     {
@@ -69,16 +86,18 @@ struct GenomeInterval
         range.clear();
     }
 
+    /// \brief Serialize the GenomeInterval
     template<class Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {
         ar& tid& range;
     }
 
+    /// \brief Chromsome range identifier
     int32_t tid;
+    /// \brief Chromosome interval range
     known_pos_range2 range;
 };
-
 
 std::ostream&
 operator<<(std::ostream& os, const GenomeInterval& gi);

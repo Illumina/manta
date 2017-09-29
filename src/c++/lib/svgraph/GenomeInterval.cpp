@@ -22,7 +22,7 @@
 #include <iostream>
 
 
-
+/// Operator overload << writes the GenomeInterval id and range to an output stream.
 std::ostream&
 operator<<(std::ostream& os, const GenomeInterval& gi)
 {

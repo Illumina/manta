@@ -49,7 +49,7 @@ operator<<(std::ostream& os, const SVLocusSet::NodeAddressType& a)
 }
 
 
-
+#ifdef DEBUG_SVL
 void
 SVLocusSet::
 locusHurl(const LocusIndexType index, const char* label) const
@@ -60,7 +60,7 @@ locusHurl(const LocusIndexType index, const char* label) const
     oss << "ERROR: Attempting to access locus: " << index << " in locusSet with size: " << size() << " accessLabel: " << label << "\n";
     BOOST_THROW_EXCEPTION(LogicException(oss.str()));
 }
-
+#endif
 
 
 /// Test if the set of node addresses come from only one, expected locus index.
@@ -1468,7 +1468,7 @@ reconstructIndex()
 }
 
 
-
+#ifdef DEBUG_SVL
 void
 SVLocusSet::
 dumpIndex(std::ostream& os) const
@@ -1482,7 +1482,7 @@ dumpIndex(std::ostream& os) const
     }
     os << "SVLocusSet Index END\n";
 }
-
+#endif
 
 
 void
