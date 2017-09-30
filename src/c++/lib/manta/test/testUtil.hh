@@ -22,7 +22,6 @@
 /// \file
 /// \author Trevor Ramsay
 ///
-
 #pragma once
 
 #include "htsapi/align_path_bam_util.hh"
@@ -38,6 +37,7 @@
 #include <fstream>
 #include <iostream>
 
+
 /// Wrap string for handling input streams
 class line : public std::string {};
 
@@ -48,6 +48,7 @@ std::istream &operator>>(std::istream &is, line &l)
 }
 
 /// \brief Create an alignment file based on the bam_header_info input
+inline
 void
 createAlignFile(
         const bam_header_info& info,
@@ -64,6 +65,7 @@ createAlignFile(
 
 /// \brief Create a stats file for testing.
 ///        Default has 4 elements with 250 observations each for 50, 75, 100, 125
+inline
 void
 createStatsFile(
         const std::string& filename,
@@ -126,6 +128,7 @@ createStatsFile(
 }
 
 /// \brief Read the given stats file looking for a specific row of information.
+inline
 std::string
 getResultFromStatsFile(
         std::string statsFile,
@@ -151,6 +154,7 @@ getResultFromStatsFile(
 }
 
 /// \brief Change the templateSize of the bam record.
+inline
 void
 changeTemplateSize(
         bam_record& bamRead,
@@ -161,6 +165,7 @@ changeTemplateSize(
 }
 
 /// \brief Add supplementary evidence to a given read, defaulting to chrT from the default bam_header_info.
+inline
 void addSupplementaryEvidence(
         bam_record &bamRead,
         std::string svStr = "chrT,6348,-,54H22M,50,0;")
@@ -171,6 +176,7 @@ void addSupplementaryEvidence(
 }
 
 /// \brief Create the BamAlignment for a given read using the SimpleAlignment object.
+inline
 void
 getBamAlignment(
         const bam_record& bamRead,
@@ -184,6 +190,7 @@ getBamAlignment(
 }
 
 /// \brief Generic function to create a file with the given input
+inline
 void
 createFile(
         const std::string& filename,
@@ -207,10 +214,11 @@ createFile(
 }
 
 /// \brief Return a bam_header_info object with references 0 and 1: "chrM" and "chrT", both size 1000000
+inline
 bam_header_info
 buildBamHeader()
 {
-    bam_header_info bamHeader = bam_header_info();
+    bam_header_info bamHeader;
     // Add default chrom options to handle most testing conditions.
     bamHeader.chrom_to_index.insert(std::pair<std::string,int32_t>("chrM",0));
     bamHeader.chrom_to_index.insert(std::pair<std::string,int32_t>("chrT",1));
@@ -222,6 +230,7 @@ buildBamHeader()
 
 /// \brief Build a bam_record based on the input parameters.
 ///        A default bam_record is a proper paired reference sequence.
+inline
 void
 buildBamRecord(
         bam_record& bamRead,
@@ -252,6 +261,7 @@ buildBamRecord(
     ALIGNPATH::path_t inputPath;
     inputPath.push_back(ALIGNPATH::path_segment(ALIGNPATH::MATCH,querySize));
     cigar_to_apath(cigarString.c_str(),inputPath);
+
     bam1_t* bamDataPtr(bamRead.get_data());
     edit_bam_cigar(inputPath,*bamDataPtr);
 
@@ -282,6 +292,7 @@ buildBamRecord(
 /// \brief SVLocusScanner builder
 ///        Default: Creates a DNA SVLocusScanner with minCandidateVariantSize = 8 and simple
 ///        stats and align files (Refer to createStatsFile() and createAlignFile respectively).
+inline
 std::unique_ptr<SVLocusScanner>
 buildSVLocusScanner(
         const bam_header_info& bamHeaderInfo,
@@ -299,7 +310,7 @@ buildSVLocusScanner(
     const std::vector<std::string> alignFilenameVector(1, alignFilename);
     bool& refIsRna(isRNA);
 
-    std::unique_ptr<SVLocusScanner> newSVLS(new SVLocusScanner(constRefOpts, statsFilename, alignFilenameVector, refIsRna));
-
+    std::unique_ptr<SVLocusScanner> newSVLS(new SVLocusScanner(constRefOpts, statsFilename,
+                                                               alignFilenameVector, refIsRna));
     return newSVLS;
 }

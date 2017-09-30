@@ -22,9 +22,11 @@
 /// \author Trevor Ramsay
 ///
 
-#include "common/test/EstimateSVLoci_util.hh"
-#include "applications/EstimateSVLoci/SVLocusSetFinder.hh"
 #include "boost/test/unit_test.hpp"
+
+#include "manta/test/testUtil.hh"
+#include "applications/EstimateSVLoci/SVLocusSetFinder.hh"
+
 
 /// Utility function necessary for testing the SVLocusSetFinder.
 /// Necessary to put here instead of EstimateSVLoci_util.hh because of undefined reference issue.
@@ -56,7 +58,7 @@ static std::unique_ptr<SVLocusSetFinder> buildSVLocusSetFinder(
     return newSVLSF;
 }
 
-BOOST_AUTO_TEST_SUITE( test_SVLocusSetFinderUpdate)
+BOOST_AUTO_TEST_SUITE( test_SVLocusSetFinderUpdate )
 
     BOOST_AUTO_TEST_CASE( test_DepthFiltering ) {
         //BOOST_TEST_MESSAGE("SDS MANTA-753");

@@ -157,14 +157,12 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
     /// \brief Merge SVLocus into the SVLocusSet.
     ///
     /// the referenced SVLocus is destroyed in this process.
-    /// Refer to the SDD for in depth explanation.
     void
     merge(const SVLocus& locus);
 
     /// \brief Merge referenced SVLocusSet into the calling SVLocusSet.
     ///
     /// The referenced SVLocusSet is destroyed in this process.
-    /// Refer to the SDD for in depth explanation.
     void
     merge(const SVLocusSet& set);
 
@@ -692,7 +690,7 @@ private:
         _maxRegionSize.clear();
     }
 
-#if 0
+#ifdef DEBUG_SVL
     void
     dumpIndex(std::ostream& os) const;
 #endif

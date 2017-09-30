@@ -72,7 +72,6 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
 
     friend struct SVLocusSet;
 
-    /// Is empty
     bool
     empty() const
     {

@@ -297,7 +297,6 @@ struct SVLocusNode
         if (! _isSingle) delete _edges.multiPtr;
     }
 
-    /// copy assignment operator
     SVLocusNode&
     operator=(const SVLocusNode& rhs)
     {
