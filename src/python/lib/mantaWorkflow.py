@@ -250,6 +250,8 @@ def sortAllVcfs(self, taskPrefix="", dependencies=None) :
         cmd  = "\"%s\" -E \"%s\" " % (sys.executable, self.params.mantaSortVcf)
         cmd += "-f \"%s\"" % (vcfListFile)
 
+        # Boolean variable isCandidate is set "True" for candidateSV.vcf
+        # If it is True, commandline argument "-a" is passed on to sortBam.py to print out all vcf records
         if isCandidate:
             cmd += " -a"
 
