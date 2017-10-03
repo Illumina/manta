@@ -633,9 +633,12 @@ writeInvdel(
         }
     }
 
-    if (isImprecise)
+    if (isImprecise && !sv.contigSeq.compare(""))
     {
         infoTags.push_back("IMPRECISE");
+    }
+    else if(_isOutputContig){
+        infoTags.push_back("ASSEMBLED_CONTIG=" + sv.contigSeq);
     }
 
     if (bpArange.size() > 1)
