@@ -227,6 +227,16 @@ public:
         return (nullptr != get_string_tag(satag));
     }
 
+    /// \brief Test if this read contains an 'MC' tag, containing mate cigar alignment information
+    ///
+    /// \return True if the 'MC' tag is found
+    bool
+    hasMateCigar() const
+    {
+        static const char satag[] = { 'M','C' };
+        return (nullptr != get_string_tag(satag));
+    }
+
     /// \brief Test if the read is supplemental, using a more liberal community criteria to define 'supplemental'
     ///        compared to that from the BAM spec.
     ///
