@@ -17,14 +17,6 @@
 //
 //
 
-#include "svgraph/GenomeInterval.hh"
+#define BOOST_TEST_MODULE libapplications
+#include "boost/test/unit_test.hpp"
 
-#include <iostream>
-
-
-std::ostream&
-operator<<(std::ostream& os, const GenomeInterval& gi)
-{
-    os << "GenomeInterval: " << gi.tid << ":" << gi.range;
-    return os;
-}
