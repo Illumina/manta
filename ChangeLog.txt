@@ -1,3 +1,4 @@
+- MANTA-1218 Add sanity check of specified target regions
 v1.2.0
 - MANTA-1215 Add an option for specification of an existing alignment stats file
 - MANTA-1231 Enable clang5.0 build

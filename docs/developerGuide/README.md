@@ -147,7 +147,7 @@ Note that the minimum cmake version is 3.1.0 for Windows.
 ### Automating Portable Binary Builds for Linux
 
 A script is provided to enable a dockerized build process which
-issues Centos5+ or Centos6+ binary tarballs. To use this script, ensure you
+issues Centos6+ binary tarballs. To use this script, ensure you
 have permission to `docker run` on the current system and execute the
 following script:
 
