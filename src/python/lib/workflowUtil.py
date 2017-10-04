@@ -221,6 +221,7 @@ def getChromIntervals(chromOrder,chromSizes,segmentSize, genomeRegion = None) :
             start=end+1
 
 
+
 def getOverlapCallRegions(params, genomeRegion) :
     """
     determine a set of overlapping regions between regions arguments and the callRegions bed file
@@ -272,6 +273,7 @@ def getOverlapCallRegions(params, genomeRegion) :
     return subregions
 
 
+
 def getCallRegions(params) :
     """
     determine
@@ -294,8 +296,14 @@ def getCallRegions(params) :
     chromIsSkipped = set(params.chromOrder)
     if params.genomeRegionList is not None :
         for genomeRegion in params.genomeRegionList :
-            if genomeRegion["chrom"] in chromIsSkipped :
-                chromIsSkipped.remove(genomeRegion["chrom"])
+            chrom = genomeRegion["chrom"]
+
+            if chrom not in params.chromOrder:
+                raise Exception("Unexpected chromosome '%s' in the argument of target regions (--region)" %
+                                (chrom))
+
+            if chrom in chromIsSkipped :
+                chromIsSkipped.remove(chrom)
 
     if params.callRegionsBed is None :
         return (params.genomeRegionList, chromIsSkipped)
@@ -307,6 +315,11 @@ def getCallRegions(params) :
     proc=subprocess.Popen(tabixCmd,stdout=subprocess.PIPE)
     for line in proc.stdout :
         chrom = line.strip()
+
+        if chrom not in params.chromOrder:
+            raise Exception("Unexpected chromosome '%s' in the bed file of call regions %s " %
+                            (chrom, params.callRegionsBed))
+
         callChromList.append(chrom)
         if chrom in chromIsSkipped2 :
             chromIsSkipped2.remove(chrom)
@@ -328,6 +341,7 @@ def getCallRegions(params) :
             callRegionList.extend(subCallRegions)
 
     return (callRegionList, chromIsSkipped)
+
 
 
 class PathDigger(object) :

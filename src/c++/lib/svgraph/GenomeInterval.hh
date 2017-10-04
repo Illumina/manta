@@ -23,10 +23,13 @@
 
 #include <iosfwd>
 
-
-/// single chromosome range
 ///
-/// all internal locations use a chromosome index number
+/// \author Chris Saunders
+///
+/// \brief GenomeInterval identifies a contiguous chromosomal region.
+///
+/// \details GenomeInterval identifies single contiguous chromosome range. All internal locations use a chromosome
+/// index number. GenomeInterval uses boost::serialize to save/load the class.
 struct GenomeInterval
 {
     GenomeInterval(
@@ -37,7 +40,10 @@ struct GenomeInterval
         range(beginPos,endPos)
     {}
 
-    /// does this intersect a second GenomeInterval?
+    /// \brief Identify if the GenomeIntersect Intersects with another GenomeInterval
+    ///
+    /// 1. The ids must be the same
+    /// 2. The range of the GenomeIntervals must overlap
     bool
     isIntersect(const GenomeInterval& gi) const
     {
@@ -48,10 +54,10 @@ struct GenomeInterval
     bool
     operator<(const GenomeInterval& rhs) const
     {
-        if (tid<rhs.tid) return true;
+        if (tid < rhs.tid) return true;
         if (tid == rhs.tid)
         {
-            return (range<rhs.range);
+            return (range < rhs.range);
         }
         return false;
     }
@@ -75,10 +81,11 @@ struct GenomeInterval
         ar& tid& range;
     }
 
+    /// \brief Samtools chromosome index (samtools)
     int32_t tid;
+    /// \brief Chromosome interval range
     known_pos_range2 range;
 };
-
 
 std::ostream&
 operator<<(std::ostream& os, const GenomeInterval& gi);

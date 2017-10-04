@@ -79,6 +79,8 @@ semiAlignTestCase(
 
 BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromSemiAligned_null )
 {
+    BOOST_TEST_MESSAGE("SDS MANTA-668");
+
     static const pos_t alignPos(500);
     static const char querySeq[] = "AACCCACAAACATCACACACAAGAGTCCAGAGACCGACTTTTTTCTAAAA";
     static const char refSeq[]   = "AACCCACAAACATCACACACAAGAGTCCAGAGACCGACTTTTTTCTAAAA";
@@ -97,6 +99,8 @@ BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromSemiAligned_null )
 
 BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromSemiAligned_leading )
 {
+    BOOST_TEST_MESSAGE("SDS MANTA-668");
+
     static const pos_t alignPos(500);
     static const char querySeq[] = "AACCCACAAACATCACACACAAGAGTCCAGAGACCGACTTTTTTCTAAAA";
     static const char refSeq[]   = "AACCTTTTTTCATCACACACAAGAGTCCAGAGACCGACTTTTTTCTAAAA";
@@ -115,6 +119,8 @@ BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromSemiAligned_leading )
 
 BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromSemiAligned_trailing )
 {
+    BOOST_TEST_MESSAGE("SDS MANTA-668");
+
     static const pos_t alignPos(500);
     static const char querySeq[] = "AACCCACAAACATCACACACAAGAGTCCAGAGACCGACTTTTTTCTAAAA";
     static const char refSeq[]   = "AACCCACAAACATCACACACAAGAGTCCAGAGACCGACTTCCCCCCAAAA";
@@ -133,6 +139,8 @@ BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromSemiAligned_trailing )
 
 BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromSemiAligned_both )
 {
+    BOOST_TEST_MESSAGE("SDS MANTA-668");
+
     static const pos_t alignPos(500);
     static const char querySeq[] = "AACCCACAAACATCACACACAAGAGTCCAGAGACCGACTTTTTTCTAAAA";
     static const char refSeq[]   = "AACCTTTTTTCATCACACACAAGAGTCCAGAGACCGACTTCCCCCCAAAA";
@@ -151,6 +159,8 @@ BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromSemiAligned_both )
 
 BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromSemiAligned_mismatch )
 {
+    BOOST_TEST_MESSAGE("SDS MANTA-668");
+
     static const pos_t alignPos(500);
     static const char querySeq[] = "AACCCACAAACATCACACACAAGAGTCCAGAGACCGACTTTTTTCTAAAA";
     static const char refSeq[]   = "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG";
@@ -163,7 +173,7 @@ BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromSemiAligned_mismatch )
     BOOST_REQUIRE_EQUAL(leadingLength,50u);
     BOOST_REQUIRE_EQUAL(trailingLength,50u);
     BOOST_REQUIRE_EQUAL(leadingRefPos,alignPos+50);
-    BOOST_REQUIRE_EQUAL(trailingRefPos,alignPos+50-50);
+    BOOST_REQUIRE_EQUAL(trailingRefPos,(alignPos+50-50));
 }
 
 

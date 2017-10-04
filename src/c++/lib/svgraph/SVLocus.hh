@@ -78,6 +78,7 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
         return _graph.empty();
     }
 
+    /// Total number of Locus Node
     unsigned
     size() const
     {
@@ -102,6 +103,7 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
         return _index;
     }
 
+    /// Get a node by index
     const SVLocusNode&
     getNode(const NodeIndexType nodePtr) const
     {
@@ -112,6 +114,9 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
         return _graph[nodePtr];
     }
 
+    /// Add a node
+    /// \param[in] interval breakend interval
+    /// \param[in] obs observer subscribes to the addNode events
     NodeIndexType
     addNode(
         const GenomeInterval interval,
@@ -128,8 +133,12 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
         return nodePtr;
     }
 
-    // an edge count is only added on from->to
-    //
+    /// Link two nodes
+    /// \param[in] fromIndex index of from node
+    /// \param[in] toIndex index of to node
+    /// \param[in] fromCount edge count (weight) assigned to from -> to edge
+    /// \param[in] toCount edge count (weight) assigned to to -> from edge
+    /// by default, an edge count is only added on from -> to
     void
     linkNodes(
         const NodeIndexType fromIndex,
@@ -150,10 +159,11 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
         toNode.mergeEdge(fromIndex,toEdge);
     }
 
+    /// Set evidence range of a node
     void
     setNodeEvidence(
-        const NodeIndexType nodeIndex,
-        const known_pos_range2& evidenceRange)
+            const NodeIndexType nodeIndex,
+            const known_pos_range2& evidenceRange)
     {
         getNode(nodeIndex).setEvidenceRange(evidenceRange);
     }
@@ -163,8 +173,8 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
     /// this version uses a stack to avoid recursive function calls (otherwise this call tends to fail on large graphs)
     void
     findConnected(
-        const NodeIndexType startIndex,
-        std::set<NodeIndexType>& connected) const;
+            const NodeIndexType startIndex,
+            std::set<NodeIndexType>& connected) const;
 
     /// the total observations in all nodes of the locus
     unsigned
@@ -178,7 +188,7 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
         return sum;
     }
 
-    // the total number of edges between all nodes of the locus
+    /// the total number of edges between all nodes of the locus
     unsigned
     totalEdgeCount() const
     {
@@ -190,7 +200,7 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
         return sum;
     }
 
-    // the total number of self edges in the locus
+    /// the total number of self edges in the locus
     unsigned
     selfEdgeCount() const
     {
@@ -249,9 +259,9 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
         return bogusWarning;
     }
 
+    /// clear the graph
     void
-    clear(
-        flyweight_observer_t* obs)
+    clear(flyweight_observer_t* obs)
     {
         for (NodeIndexType i(0); i<size(); ++i)
         {
@@ -260,7 +270,7 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
         _graph.clear();
     }
 
-    // find any self-overlapping nodes within the locus and merge
+    /// find any self-overlapping nodes within the locus and merge
     void
     mergeSelfOverlap();
 
@@ -269,15 +279,15 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
     void
     checkState(const bool isCheckConnected = false) const;
 
-    // total the evidence count of all in-edges to this node
+    /// total the evidence count of all in-edges to this node
     unsigned
     getNodeInCount(const LocusIndexType nodeIndex) const;
 
     void
     clearNodeEdges(const NodeIndexType nodePtr);
 
-    // a fancier version of the SVLocusNode dumper which can
-    // report in-edge information
+    /// a fancier version of the SVLocusNode dumper which can
+    /// report in-edge information
     void
     dumpNode(
         std::ostream& os,

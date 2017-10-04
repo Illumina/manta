@@ -50,12 +50,23 @@ bool
 is_innie_pair(
     const bam_record& bam_read);
 
-/// Detect cases where paired-end reads overlap in such a way as to suggest a possible unfiltered
-/// read into adapter sequence (assuming innie pairs).
+/// Rough heuristic to detect cases where paired-end reads overlap in such a way as to suggest 
+/// a possible unfiltered read into adapter sequence (assuming innie pairs).
+/// Used as an aggressive check for candidate/hypothesis generation to avoid large number of 
+/// spurious small indels for short insert data that are derived from adapter k-mers
 bool
 is_possible_adapter_pair(
-    const bam_record& bamRead,
-    const bool isAgressiveAdaptorCheck);
+    const bam_record& bamRead);
+
+/// Based on pair alignment information (MC tag) if available, detect cases where a read extends 
+/// past the beginning of its mate, suggesting the presence of unfiltered adapter sequence 
+/// If MC information is not available, use a more aggressive heuristic (any 3' softclipping)
+/// but still less aggressive then is_possible_adapter_pair
+/// Used for read filtration of assembly to avoid including adapter sequence, but also missing any evidence reads
+/// Assumes innie pairs
+bool
+is_adapter_pair(
+    const bam_record& bamRead);
 
 /// \brief Detect cases where paired-end reads overlap
 ///

@@ -264,7 +264,7 @@ set (GNU_COMPAT_COMPILER ( (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${IS_CL
 if (${GNU_COMPAT_COMPILER})
     append_args(CXX_WARN_FLAGS "-Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -pedantic -Wunused-parameter")
     append_args(CXX_WARN_FLAGS "-Wundef -Wno-unknown-pragmas")
-    append_args(CXX_WARN_FLAGS "-Wdeprecated")
+    append_args(CXX_WARN_FLAGS "-Wdeprecated -Woverloaded-virtual -Wwrite-strings")
 
     if ((NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel") OR (NOT ${COMPILER_VERSION} VERSION_LESS "14.0"))
         append_args(CXX_WARN_FLAGS "-Wdisabled-optimization")
@@ -434,6 +434,7 @@ if (${GNU_COMPAT_COMPILER})
     else ()
         append_args (CMAKE_CXX_FLAGS "-std=c++11")
     endif ()
+
     set (CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 
     # The NDEBUG macro is intentionally removed from release. One discussion on this is:
@@ -441,12 +442,7 @@ if (${GNU_COMPAT_COMPILER})
     set (CMAKE_CXX_FLAGS_RELEASE "-O3 -fomit-frame-pointer")
     set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
     set (CMAKE_CXX_FLAGS_ASAN "-O1 -g -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls")
-    #set (CMAKE_CXX_FLAGS_PROFILE "-O0 -g -pg -fprofile-arcs -ftest-coverage")
-
-    # this doesn't seem to impact performance, taking out for now:
-    #if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    #    set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto")
-    #endif ()
+    set (CMAKE_CXX_FLAGS_GCOV "-O0 -g -fprofile-arcs -ftest-coverage")
 endif()
 
 if (MSVC)
@@ -472,6 +468,18 @@ if (CMAKE_BUILD_TYPE STREQUAL "ASan")
 
     if (NOT ${IS_ASAN_SUPPORTED})
         message(FATAL_ERROR "Address sanitizer build type requested, but this is not supported by compiler.")
+    endif ()
+endif ()
+
+# if GCov build type is requested, check that the compiler supports it:
+if (CMAKE_BUILD_TYPE STREQUAL "GCov")
+    set (IS_GCOV_SUPPORTED false)
+    if (${GNU_COMPAT_COMPILER})
+        set (IS_GCOV_SUPPORTED true)
+    endif ()
+
+    if (NOT ${IS_GCOV_SUPPORTED})
+        message(FATAL_ERROR "GCov build type requested, but this is not supported by compiler.")
     endif ()
 endif ()
 
@@ -521,7 +529,6 @@ if (${GNU_COMPAT_COMPILER})
       append_args (CMAKE_CXX_FLAGS "-ffloat-store")
     endif ()
   endif ()
-
 endif()
 
 # cmake configure-time c++ configuration:

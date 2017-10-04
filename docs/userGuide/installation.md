@@ -17,7 +17,7 @@ Manta User Guide - Installation
     * [Ubuntu 14.04 and 16.04](#ubuntu-1404-and-1604)
     * [Ubuntu 12.04](#ubuntu-1204)
     * [CentOS 7](#centos-7)
-    * [CentOS 5 and 6](#centos-5-and-6)
+    * [CentOS 6](#centos-6)
 * [Build procedure](#build-procedure)
     * [Workflow relocation](#workflow-relocation)
 * [Demo](#demo)
@@ -27,7 +27,7 @@ Manta User Guide - Installation
 
 It is recommended to start from one of the [binary distributions on
 the Manta releases page][releases] if a suitable version is available
-(note that the CentOS 5 binary distribution is expected to support a
+(note that the CentOS 6 binary distribution is expected to support a
 large variety of linux systems).  If building from source start from
 the release distributions of the source code, also provided on the
 [Manta releases page][releases]. Cloning/archiving the source
@@ -50,12 +50,12 @@ be found in the [manta developer guide][developerGuide].
 Manta requires a compiler supporting most of the C++11 standard. These
 are the current minimum versions enforced by the build system:
 
-* python 2.4+
+* python 2.6+
 * gcc 4.8+ OR clang 3.2+ (OR Visual Studio 2013+, see windows note below)
 
 ### Runtime prerequisites
 
-* python 2.4+
+* python 2.6+
 
 ### Operating System Guidelines
 
@@ -65,7 +65,7 @@ Manta is known to build and run on the following linux distributions
 (with additional packages as described below):
 
 - Ubuntu 12.04, 14.04, 16.04
-- CentOS 5, 6, 7
+- CentOS 6, 7
 
 ##### OS X
 
@@ -101,7 +101,7 @@ possible for Visual Studio users. See the the [manta developer guide][DeveloperG
 
     yum install -y tar bzip2 make gcc gcc-c++ libstdc++-static zlib-devel
 
-##### CentOS 5 and 6
+##### CentOS 6
 
     yum install -y tar wget bzip2 make gcc gcc-c++ zlib-devel
     # add gcc 4.8 from developer tools v2:

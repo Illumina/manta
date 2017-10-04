@@ -50,7 +50,7 @@ getAlignment(
 
 
 SimpleAlignment
-getFakeMateAlignment(
+getKnownOrFakedMateAlignment(
     const bam_record& bamRead)
 {
     using namespace ALIGNPATH;

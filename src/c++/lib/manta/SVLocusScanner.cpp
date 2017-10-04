@@ -986,7 +986,7 @@ getSVCandidatesFromPair(
     // All information about the remote alignment is consolidated to one object. If the remote alignment record is
     // available the remote alignment will be more accurate.
     const bool isRemoteReadAvailable(nullptr != remoteReadPtr);
-    const SimpleAlignment remoteAlign(isRemoteReadAvailable ? getAlignment(*remoteReadPtr) : getFakeMateAlignment(localRead));
+    const SimpleAlignment remoteAlign(isRemoteReadAvailable ? getAlignment(*remoteReadPtr) : getKnownOrFakedMateAlignment(localRead));
 
     AlignmentPairAnalyzer pairInspector(opt, dopt, rstats, bamHeader);
     pairInspector.reset(localAlign, remoteAlign, (! isRemoteReadAvailable), localRead.is_first());

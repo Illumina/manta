@@ -141,6 +141,10 @@ public:
     {
         _bp->core.flag ^= BAM_FLAG::PAIRED;
     }
+    void toggle_is_filtered()
+    {
+        _bp->core.flag ^= BAM_FLAG::FILTER;
+    }
     void toggle_is_unmapped()
     {
         _bp->core.flag ^= BAM_FLAG::UNMAPPED;
@@ -157,6 +161,10 @@ public:
     {
         _bp->core.flag ^= BAM_FLAG::MATE_STRAND;
     }
+    void toggle_is_duplicate()
+    {
+        _bp->core.flag ^= BAM_FLAG::DUPLICATE;
+    }
     void toggle_is_first()
     {
         _bp->core.flag ^= BAM_FLAG::FIRST_READ;
@@ -168,6 +176,10 @@ public:
     void toggle_is_secondary()
     {
         _bp->core.flag ^= BAM_FLAG::SECONDARY;
+    }
+    void toggle_is_supplementary()
+    {
+        _bp->core.flag ^= BAM_FLAG::SUPPLEMENT;
     }
 
     int read_no() const
@@ -212,6 +224,16 @@ public:
     isSASplit() const
     {
         static const char satag[] = {'S','A'};
+        return (nullptr != get_string_tag(satag));
+    }
+
+    /// \brief Test if this read contains an 'MC' tag, containing mate cigar alignment information
+    ///
+    /// \return True if the 'MC' tag is found
+    bool
+    hasMateCigar() const
+    {
+        static const char satag[] = { 'M','C' };
         return (nullptr != get_string_tag(satag));
     }
 
