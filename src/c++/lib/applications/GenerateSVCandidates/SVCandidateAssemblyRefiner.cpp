@@ -1101,7 +1101,7 @@ getCandidateAssemblyData(
     //
     if (isSpanningSV(sv))
     {
-        // record the spanning status of the original low-resolution candidate:get
+        // record the spanning status of the original low-resolution candidate:
         assemblyData.isCandidateSpanning=true;
 
         // this case assumes two suspected breakends with a direction to each, most common large scale SV case:
