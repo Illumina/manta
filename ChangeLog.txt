@@ -1,3 +1,4 @@
+- MANTA-1039 Output all candidates in candidateSV.vcf to match variant IDs
 - MANTA-1218 Add sanity check of specified target regions
 - MANTA-1097 Add handling MateCigar BAM tag in adapter-read check
 - MANTA-1176 Add unit tests for EstimateSVLoci modules 

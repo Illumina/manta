@@ -115,6 +115,9 @@ def getOptions() :
     parser.add_option("-f", dest="vcfListFile",
                       help="File listing input vcf files, one file per line. These will be used in addition to any provided directly on the command-line")
 
+    parser.add_option("-a", dest="isPrintAll", action="store_true", default=False,
+                      help="print out all vcf records without filtering")
+
     (options,args) = parser.parse_args()
 
     if len(args) == 0 and not options.vcfListFile:
@@ -232,19 +235,19 @@ def main() :
 
         return True
 
-
-    recList2 = []
-    recEqualSet = []
-    lastRec = None
-    for vcfrec in recList :
-        rec = (vcfrec.chrom, vcfrec.pos, vcfrec.ref, vcfrec.alt, vcfrec.endPos, vcfrec.invState)
-        if not isEqualRec(rec,lastRec) :
-            resolveRec(recEqualSet,recList2)
-            recEqualSet = []
-        recEqualSet.append(vcfrec)
-        lastRec = rec
-    resolveRec(recEqualSet,recList2)
-    recList = recList2
+    if(not options.isPrintAll):
+        recList2 = []
+        recEqualSet = []
+        lastRec = None
+        for vcfrec in recList :
+            rec = (vcfrec.chrom, vcfrec.pos, vcfrec.ref, vcfrec.alt, vcfrec.endPos, vcfrec.invState)
+            if not isEqualRec(rec,lastRec) :
+                resolveRec(recEqualSet,recList2)
+                recEqualSet = []
+            recEqualSet.append(vcfrec)
+            lastRec = rec
+        resolveRec(recEqualSet,recList2)
+        recList = recList2
 
     for vcfrec in recList :
         outfp.write(vcfrec.line)
