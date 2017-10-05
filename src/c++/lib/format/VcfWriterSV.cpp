@@ -100,7 +100,7 @@ writeHeaderPrefix(
     // if "--outputContig" is specified, then print out INFO tag for Assembled contig sequence
     if (_isOutputContig)
     {
-        _os << "##INFO=<ID=ASSEMBLED_CONTIG,Number=1,Type=String,Description=\"Assembled contig sequence\">\n";
+        _os << "##INFO=<ID=CONTIG,Number=1,Type=String,Description=\"Assembled contig sequence\">\n";
     }
 
     addHeaderInfo();
@@ -404,7 +404,7 @@ writeTransloc(
     }
     else if (_isOutputContig)
     {
-        infotags.push_back("ASSEMBLED_CONTIG=" + sv.contigSeq);
+        infotags.push_back("CONTIG=" + sv.contigSeq);
     }
 
     if (bpArange.size() > 1)
@@ -636,6 +636,9 @@ writeInvdel(
     if (isImprecise)
     {
         infoTags.push_back("IMPRECISE");
+    }
+    else if(_isOutputContig){
+        infoTags.push_back("CONTIG=" + sv.contigSeq);
     }
 
     if (bpArange.size() > 1)

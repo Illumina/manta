@@ -35,6 +35,7 @@ Manta User Guide
     * [Exome/Targeted](#exometargeted)
     * [Call regions](#call-regions)
     * [Unpaired tumor sample](#unpaired-tumor-sample)
+    * [Output assembled contigs](#output-assembled-contigs)
   * [RNA-Seq](#rna-seq)
   * [High sensitivity calling](#high-sensitivity-calling)
   * [De novo calling](#de-novo-calling)
@@ -356,6 +357,7 @@ JUNCTION_QUAL | If the SV junction is part of an EVENT (ie. a multi-adjacency va
 SOMATIC | Flag indicating a somatic variant
 SOMATICSCORE | Somatic variant quality score
 JUNCTION_SOMATICSCORE | If the SV junction is part of an EVENT (ie. a multi-adjacency variant), this field provides the SOMATICSCORE value for the adjacency in question only
+CONTIG | Assembled contig sequence, if the variant is not imprecise (with `--outputContig`)
 
 #### VCF FORMAT Fields
 
@@ -638,6 +640,14 @@ filtered because they have 15 and 19 split-read counts, respectively, supporting
 
 For low allele frequency variants, it may also be helpful to consider the
 high sensitivity calling documentation below.
+
+
+#### Output assembled contigs
+
+Using the `--outputContig` option, Manta can be configured to output assembled contig sequences
+in the final VCF files.
+The contig sequence of each precise SV will be provided in the INFO field `CONTIG`.
+
 
 ### RNA-Seq
 

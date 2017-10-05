@@ -755,7 +755,8 @@ setSmallCandSV(
     const std::string& contig,
     const Alignment& align,
     const std::pair<unsigned,unsigned>& segRange,
-    SVCandidate& sv)
+    SVCandidate& sv,
+    const GSCOptions& opt)
 {
 #ifdef DEBUG_VARR
     log_os << __FUNCTION__ << ": align " << align << "\n";
@@ -828,6 +829,11 @@ setSmallCandSV(
 
     // add CIGAR for all indels:
     sv.insertAlignment = ALIGNPATH::path_t(align.apath.begin()+segRange.first, align.apath.begin()+segRange.second+1);
+
+    // set assembled contig sequence, if option is specified
+    if(opt.isOutputContig){
+        sv.contigSeq = contig;
+    }
 }
 
 
@@ -880,7 +886,8 @@ processLargeInsertion(
     const GlobalAligner<int>& largeInsertCompleteAligner,
     const std::vector<unsigned>& largeInsertionCandidateIndex,
     const std::set<pos_t>& excludedPos,
-    SVCandidateAssemblyData& assemblyData)
+    SVCandidateAssemblyData& assemblyData,
+    const GSCOptions& opt)
 {
     if (largeInsertionCandidateIndex.empty()) return;
 
@@ -1023,7 +1030,7 @@ processLargeInsertion(
         SVCandidate newSV(sv);
         newSV.assemblyAlignIndex = contigCount;
         newSV.assemblySegmentIndex = 0;
-        setSmallCandSV(assemblyData.bp1ref, fakeContig.seq, fakeAlignment.align, fakeSegments[0], newSV);
+        setSmallCandSV(assemblyData.bp1ref, fakeContig.seq, fakeAlignment.align, fakeSegments[0], newSV, opt);
 
         /// check if this matches a fully assembled insertion:
         const pos_t startPos(newSV.bp1.interval.range.begin_pos());
@@ -2231,7 +2238,7 @@ getSmallSVAssembly(
             SVCandidate& newSV(assemblyData.svs.back());
             newSV.assemblyAlignIndex = assemblyData.bestAlignmentIndex;
             newSV.assemblySegmentIndex = segmentIndex;
-            setSmallCandSV(assemblyData.bp1ref, bestContig.seq, bestAlign.align, segRange, newSV);
+            setSmallCandSV(assemblyData.bp1ref, bestContig.seq, bestAlign.align, segRange, newSV, _opt);
             segmentIndex++;
 
             // provide a weak filter to keep fully and partially
@@ -2271,7 +2278,7 @@ getSmallSVAssembly(
         // contig processing loop
         if (isFindLargeInsertions)
         {
-            processLargeInsertion(sv, leadingCut, trailingCut, _largeInsertCompleteAligner, largeInsertionCandidateIndex, insPos, assemblyData);
+            processLargeInsertion(sv, leadingCut, trailingCut, _largeInsertCompleteAligner, largeInsertionCandidateIndex, insPos, assemblyData, _opt);
         }
     }
 }
