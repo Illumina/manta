@@ -1,4 +1,4 @@
-## Unreleased
+## v1.2.1 - 2017-10-06
 ### Added
 - Use the BAM mate CIGAR (MC) tag, when present, to improve the accuracy of accessing if a read has extended into adapter sequence (MANTA-1097)
 - Add sanity check of specified target regions during configuration (MANTA-1218)

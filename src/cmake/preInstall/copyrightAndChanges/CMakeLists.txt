@@ -24,6 +24,6 @@
 #
 
 # Installing top level components
-foreach(topfile ChangeLog.txt COPYRIGHT.txt LICENSE.txt)
+foreach(topfile CHANGELOG.md COPYRIGHT.txt LICENSE.txt)
     install(FILES "${CMAKE_SOURCE_DIR}/${topfile}" DESTINATION "${THIS_DATADIR}")
 endforeach()

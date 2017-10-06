@@ -41,7 +41,9 @@
 /// Wrap string for handling input streams
 class line : public std::string {};
 
-std::istream &operator>>(std::istream &is, line &l)
+inline
+std::istream&
+operator>>(std::istream &is, line &l)
 {
     std::getline(is, l);
     return is;
