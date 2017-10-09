@@ -39,6 +39,7 @@ def getKeyVal(string,key) :
 
 VCF_CHROM = 0
 VCF_POS = 1
+VCF_ID = 2
 VCF_REF = 3
 VCF_ALT = 4
 VCF_QUAL = 5
@@ -53,6 +54,7 @@ class VcfRecord :
         w=line.strip().split('\t')
         self.chrom=w[VCF_CHROM]
         self.pos=int(w[VCF_POS])
+        self.id = w[VCF_ID]
         self.ref=w[VCF_REF]
         self.alt=w[VCF_ALT]
         self.qual=w[VCF_QUAL]
@@ -69,6 +71,10 @@ class VcfRecord :
         val = getKeyVal(w[VCF_INFO],"END")
         if val is not None :
             self.endPos = int(val)
+        self.mateId = None
+        val = getKeyVal(w[VCF_INFO],"MATEID")
+        if val is not None :
+            self.mateId = val
 
 
 class Constants :
@@ -137,12 +143,14 @@ def getOptions() :
 
 
 
-def resolveRec(recEqualSet, recList) :
+def resolveRec(recEqualSet, recList, removedMateIds) :
     """
     determine which of a set of 'equal' vcf records is the best
 
     right now best is a record with PASS in the filter field, and
     secondarily having the highest quality
+
+    Keep track of MateIDs of removed variants
     """
 
     if not recEqualSet: return
@@ -169,6 +177,9 @@ def resolveRec(recEqualSet, recList) :
             bestIsAssembled = (rec.alt[0] != '<')
 
     recList.append(recEqualSet[bestIndex])
+    for index,rec in enumerate(recEqualSet):
+        if index != bestIndex and rec.mateId is not None:
+            removedMateIds.add(rec.mateId)
 
 
 
@@ -235,21 +246,24 @@ def main() :
 
         return True
 
+    idsToRemove = set() #IDs for BNDs we want to remove since their mates have been removed
     if(not options.isPrintAll):
         recList2 = []
         recEqualSet = []
         lastRec = None
         for vcfrec in recList :
+            if vcfrec.id in idsToRemove: continue #Remove a variant if its mate is already removed. Ensures that consistent BND pairs are selected
             rec = (vcfrec.chrom, vcfrec.pos, vcfrec.ref, vcfrec.alt, vcfrec.endPos, vcfrec.invState)
             if not isEqualRec(rec,lastRec) :
-                resolveRec(recEqualSet,recList2)
+                resolveRec(recEqualSet,recList2, idsToRemove)
                 recEqualSet = []
             recEqualSet.append(vcfrec)
             lastRec = rec
-        resolveRec(recEqualSet,recList2)
+        resolveRec(recEqualSet,recList2, idsToRemove)
         recList = recList2
 
     for vcfrec in recList :
+        if vcfrec.id in idsToRemove: continue # Remove BNDs that were kept originally but their mates were removed later in the loop
         outfp.write(vcfrec.line)
 
 

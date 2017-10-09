@@ -1,3 +1,11 @@
+## Unreleased
+### Added
+
+### Changed
+
+### Fixed
+- Ensure consistent BND pairs for translocations or RNA fusions are selected during vcf merging (MANTA-1243)
+
 ## v1.2.1 - 2017-10-06
 ### Added
 - Use the BAM mate CIGAR (MC) tag, when present, to improve the accuracy of accessing if a read has extended into adapter sequence (MANTA-1097)
