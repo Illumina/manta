@@ -2,6 +2,7 @@
 ### Added
 
 ### Changed
+- Update minimum supported linux OS from Centos 5 to 6 (MANTA-1249)
 
 ### Fixed
 - Ensure consistent BND pairs for translocations or RNA fusions are selected during vcf merging (MANTA-1243)

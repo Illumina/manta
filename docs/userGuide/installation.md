@@ -104,13 +104,13 @@ possible for Visual Studio users. See the the [manta developer guide][DeveloperG
 ##### CentOS 6
 
     yum install -y tar wget bzip2 make gcc gcc-c++ zlib-devel
-    # add gcc 4.8 from developer tools v2:
-    wget http://people.centos.org/tru/devtools-2/devtools-2.repo -O /etc/yum.repos.d/devtools-2.repo
-    yum install -y devtoolset-2-gcc devtoolset-2-gcc-c++ devtoolset-2-binutils
-
-    # Prior to build configuration, set CC/CXX to gcc 4.8:
-    export CC=/opt/rh/devtoolset-2/root/usr/bin/gcc
-    export CXX=/opt/rh/devtoolset-2/root/usr/bin/g++
+    # Add gcc 4.9 from developer tools v3:
+    yum install -y centos-release-scl
+    yum install -y devtoolset-3-gcc devtoolset-3-gcc-c++
+ 
+    # Prior to build configuration, set CC/CXX to gcc 4.9:
+    export CC=/opt/rh/devtoolset-3/root/usr/bin/gcc
+    export CXX=/opt/rh/devtoolset-3/root/usr/bin/g++
 
 ### Build procedure
 
