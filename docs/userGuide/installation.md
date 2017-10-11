@@ -137,7 +137,7 @@ Note that there are two other dependencies to cmake and boost. These are differe
 above, in that they can optionally be provided by the user. They will automatically be built from source if not
 detected. The minimum required versions of these tools for users planning to provide them to the build process are
 
-* cmake 2.8.0+
+* cmake 2.8.12+
 * boost 1.56.0+ (must include static libraries)
 
 ...the build process will find an existing cmake version on the user's `PATH` and an existing boost installation
