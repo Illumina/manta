@@ -30,7 +30,7 @@ scriptName=os.path.basename(__file__)
 sys.path.append(scriptDir)
 
 from configureOptions import ConfigureWorkflowOptions
-from configureUtil import assertOptionExists, checkTabixIndexedFile, joinFile, OptParseException, \
+from configureUtil import assertOptionExists, checkFixTabixIndexedFileOption, joinFile, OptParseException, \
                           validateFixExistingFileArg
 
 from workflowUtil import exeFile, parseGenomeRegion
@@ -147,9 +147,7 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
             raise OptParseException("Can't find expected fasta index file: '%s'" % (faiFile))
 
         # check for bed file of call regions and its index file
-        if options.callRegionsBed is not None:
-            options.callRegionsBed = os.path.abspath(options.callRegionsBed)
-            checkTabixIndexedFile(options.callRegionsBed,"call-regions bed")
+        options.callRegionsBed = checkFixTabixIndexedFileOption(options.callRegionsBed, "call-regions bed")
 
         if (options.regionStrList is None) or (len(options.regionStrList) == 0) :
             options.genomeRegionList = None
