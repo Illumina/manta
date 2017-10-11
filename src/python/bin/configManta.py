@@ -138,8 +138,10 @@ You must specify a BAM or CRAM file for at least one sample.
         groomBamList(options.tumorBamList, "tumor sample")
 
         bamSetChecker = BamSetChecker()
-        bamSetChecker.appendBams(options.normalBamList,"Normal")
-        bamSetChecker.appendBams(options.tumorBamList,"Tumor")
+        if safeLen(options.normalBamList) > 0 :
+            bamSetChecker.appendBams(options.normalBamList,"Normal")
+        if safeLen(options.tumorBamList) > 0 :
+            bamSetChecker.appendBams(options.tumorBamList,"Tumor")
         bamSetChecker.check(options.htsfileBin,
                             options.referenceFasta)
 

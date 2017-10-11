@@ -282,9 +282,14 @@ class BamSetChecker(object):
         self.bamList=[]
         self.bamLabels=[]
 
-    def appendBams(self,inputBamList,inputLabel) :
+    def appendBams(self, inputBamList, inputLabel) :
+        """
+        inputBamList must be non-empty
+        """
 
-        if inputBamList is None : return
+        if (inputBamList is None) or (len(inputBamList) == 0) :
+            raise OptParseException("No %s sample BAM/CRAM files specified" % (inputLabel))
+
         for inputBamFile in inputBamList :
             self.bamList.append(inputBamFile)
             self.bamLabels.append(inputLabel)

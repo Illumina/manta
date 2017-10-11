@@ -39,7 +39,7 @@ from pyflow import WorkflowRunner
 from sharedWorkflow import getMkdirCmd, getMvCmd, getRmCmd, getRmdirCmd, \
                            getDepthFromAlignments
 from workflowUtil import checkFile, ensureDir, preJoin, \
-                        getGenomeSegmentGroups, getFastaChromOrderSize, \
+                        getGenomeSegmentGroups, getNextGenomeSegment, getFastaChromOrderSize, \
                         getCallRegions, cleanPyEnv
 
 
@@ -138,7 +138,7 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
     tmpGraphFiles = []
     graphTasks = set()
 
-    for gsegGroup in getGenomeSegmentGroups(self.params) :
+    for gsegGroup in getGenomeSegmentGroups(getNextGenomeSegment(self.params)) :
         assert(len(gsegGroup) != 0)
         gid=gsegGroup[0].id
         if len(gsegGroup) > 1 :

@@ -87,7 +87,7 @@ def which(searchFile) :
 
 def parseGenomeRegion(regionStr) :
     """
-    parse a samtools region string and return a (chrom,start,end) tuple
+    parse a samtools region string and return a hash on keys ("chrom","start","end")
 
     missing start and end values will be entered as None
     """
@@ -182,13 +182,13 @@ def getFastaChromOrderSize(faiFile) :
 
 
 
-def getChromIntervals(chromOrder,chromSizes,segmentSize, genomeRegion = None) :
+def getChromIntervals(chromOrder, chromSizes, segmentSize, genomeRegion = None) :
     """
     generate chromosome intervals no greater than segmentSize
 
-    chromOrder - iterable object of chromosome names
-    chromSizes - a hash of chrom sizes
-    genomeRegionList - optionally restrict chrom intervals to only cover a list of specified chromosome region
+    @param chromOrder - iterable object of chromosome names
+    @param chromSizes - a hash of chrom sizes
+    @param genomeRegion - optionally restrict chrom intervals to only cover a list of specified chromosome regions
 
     return chromIndex,chromLabel,start,end,chromSegment
     where start and end are formatted for use with samtools
@@ -458,12 +458,12 @@ def getNextGenomeSegment(params) :
                 yield GenomeSegment(*segval)
 
 
-def getGenomeSegmentGroups(params, excludedContigs = None) :
+def getGenomeSegmentGroups(genomeSegmentIterator, contigsExcludedFromGrouping = None) :
     """
     Iterate segment groups and 'clump' small contigs together
 
     @param genomeSegmentIterator any object which will iterate through ungrouped genome segments)
-    @param excludedContigs defines a set of contigs which are excluded from grouping
+    @param contigsExcludedFromGrouping defines a set of contigs which are excluded from grouping
                            (useful when a particular contig, eg. chrM, is called with contig-specific parameters)
     @return yields a series of segment group lists
 
@@ -472,15 +472,13 @@ def getGenomeSegmentGroups(params, excludedContigs = None) :
     """
 
     def isGroupEligible(gseg) :
-        if excludedContigs is None : return True
-        return (gseg.chromLabel not in excludedContigs)
+        if contigsExcludedFromGrouping is None : return True
+        return (gseg.chromLabel not in contigsExcludedFromGrouping)
 
     minSegmentGroupSize=200000
     group = []
     headSize = 0
     isLastSegmentGroupEligible = True
-
-    genomeSegmentIterator = getNextGenomeSegment(params)
     for gseg in genomeSegmentIterator :
         isSegmentGroupEligible = isGroupEligible(gseg)
         if (isSegmentGroupEligible and isLastSegmentGroupEligible) and (headSize+gseg.size() <= minSegmentGroupSize) :

@@ -86,8 +86,6 @@ def getNodeHyperthreadCoreCount():
     return the number of hyperthread (or 'logical') cores on this host
 
     linux logic taken from R Kelley's function in IsisWorkflow
-
-    only works on linux and os x
     """
 
     cpuCount = 0
@@ -126,8 +124,6 @@ def getNodeMemMb():
     return total memory in Mbytes
 
     linux logic taken from R Kelley's function in IsisWorkflow
-
-    only works on linux and os x
     """
 
     memMb = 0
