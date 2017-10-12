@@ -104,11 +104,11 @@ Note that during the configuration step, the following dependencies will be
 built from source if they are not found:
 
 * cmake 2.8.12+
-* boost 1.56.0+
+* boost 1.58.0+
 
 To avoid the extra time associated with this step, ensure that (1)
 cmake 2.8.12+ is in your PATH and (2) BOOST\_ROOT is defined to point
-to boost 1.56.0 or newer.
+to boost 1.58.0 or newer.
 
 ## General Debugging Notes
 

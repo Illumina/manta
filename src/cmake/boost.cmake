@@ -34,7 +34,7 @@ endif ()
 
 macro (initBoostParams)
     # required boost libraries
-    set (THIS_BOOST_VERSION 1.56.0)
+    set (THIS_BOOST_VERSION 1.58.0)
     # note we default to alphabetical order here, except where boost libraries depend on
     # each other (timer->chrono)
     set (THIS_BOOST_COMPONENTS date_time filesystem program_options

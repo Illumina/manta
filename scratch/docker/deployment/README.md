@@ -12,3 +12,4 @@ centos6 with gcc X.Y installed from src
 * legacy
 
 Docker images for linux systems which are no longer supported.
+
