@@ -21,13 +21,10 @@
 util -- simple utilities shared by bwa/gatk workflow objects
 """
 
-__author__ = "Chris Saunders"
-
 
 
 import os
 import re
-import subprocess
 
 
 
@@ -221,129 +218,6 @@ def getChromIntervals(chromOrder, chromSizes, segmentSize, genomeRegion = None) 
             start=end+1
 
 
-
-def getOverlapCallRegions(params, genomeRegion) :
-    """
-    determine a set of overlapping regions between regions arguments and the callRegions bed file
-
-    \return a list of overlapping genomic regions for calling
-    """
-
-    maxSubregionCallGap = 5000
-    subregions = []
-
-    chrom = genomeRegion["chrom"]
-    genomeRegionStart = genomeRegion["start"]
-    genomeRegionEnd = genomeRegion["end"]
-    genomeRegionStr = ("%s:%s-%s" % (chrom, genomeRegionStart, genomeRegionEnd))
-    # get overlapping subregions
-    tabixCmd = [params.tabixBin, params.callRegionsBed, genomeRegionStr]
-    proc = subprocess.Popen(tabixCmd, stdout=subprocess.PIPE)
-    for line in proc.stdout:
-        # format check of the bed file
-        words = line.strip().split()
-        if len(words) < 3 :
-            raise Exception("Unexpected format in bed file: %s\n%s" %
-                            (params.callRegionsBed, line))
-        callRegionStart = int(words[1])+1
-        callRegionEnd = int(words[2])
-        if callRegionEnd < callRegionStart :
-            raise Exception("Unexpected format in bed file: %s\n%s" %
-                            (params.callRegionsBed, line))
-
-        isStartNewSubregion = True
-        prevSubregionEnd = 0
-        if len(subregions) > 0 :
-            # don't start a new subregion unless it's 5kb away from the end of the previous subregion
-            prevSubregionEnd = subregions[-1]["end"]
-            callGap = callRegionStart - prevSubregionEnd
-            isStartNewSubregion = (callGap > maxSubregionCallGap)
-
-        subregionEnd = min(genomeRegionEnd, callRegionEnd)
-        if isStartNewSubregion :
-            subregionStart = max(genomeRegionStart, callRegionStart)
-            subregions.append({"chrom": chrom, "start":subregionStart, "end":subregionEnd})
-        else :
-            prevSubregion = subregions[-1]
-            prevSubregion["end"] = max(subregionEnd, prevSubregionEnd)
-
-    proc.stdout.close()
-    proc.wait()
-
-    return subregions
-
-
-
-def getCallRegions(params) :
-    """
-    determine
-    1) a set of genomic regions for calling
-    2) a set of chromosomes that are completely skipped over,
-       where "skipped" means that not a single base on the chrom is requested for calling
-
-    \return a list of genomic regions for calling
-    \return a set of chromLabels which are skipped
-    """
-    callRegionList = []
-    chromIsSkipped = set()
-
-    # when no region selections have been made:
-    if ((params.genomeRegionList is None) and
-        (params.callRegionsBed is None)) :
-        return (callRegionList, chromIsSkipped)
-
-    # check chromosome coverage of "regions" arguments
-    chromIsSkipped = set(params.chromOrder)
-    if params.genomeRegionList is not None :
-        for genomeRegion in params.genomeRegionList :
-            chrom = genomeRegion["chrom"]
-
-            if chrom not in params.chromOrder:
-                raise Exception("Unexpected chromosome '%s' in the argument of target regions (--region)" %
-                                (chrom))
-
-            if chrom in chromIsSkipped :
-                chromIsSkipped.remove(chrom)
-
-    if params.callRegionsBed is None :
-        return (params.genomeRegionList, chromIsSkipped)
-
-    # check chromsome coverage based on callRegions BED file
-    callChromList = []
-    chromIsSkipped2 = set(params.chromOrder)
-    tabixCmd = [params.tabixBin,"-l", params.callRegionsBed]
-    proc=subprocess.Popen(tabixCmd,stdout=subprocess.PIPE)
-    for line in proc.stdout :
-        chrom = line.strip()
-
-        if chrom not in params.chromOrder:
-            raise Exception("Unexpected chromosome '%s' in the bed file of call regions %s " %
-                            (chrom, params.callRegionsBed))
-
-        callChromList.append(chrom)
-        if chrom in chromIsSkipped2 :
-            chromIsSkipped2.remove(chrom)
-    proc.stdout.close()
-    proc.wait()
-
-    if params.genomeRegionList is None :
-        chromIsSkipped = chromIsSkipped2
-
-        for chrom in callChromList:
-            chromRegion = {"chrom":chrom, "start":1, "end":params.chromSizes[chrom]}
-            callRegions = getOverlapCallRegions(params, chromRegion)
-            callRegionList.extend(callRegions)
-    else:
-        chromIsSkipped = chromIsSkipped | chromIsSkipped2
-
-        for genomeRegion in params.genomeRegionList:
-            subCallRegions = getOverlapCallRegions(params, genomeRegion)
-            callRegionList.extend(subCallRegions)
-
-    return (callRegionList, chromIsSkipped)
-
-
-
 class PathDigger(object) :
     """
     Digs into a well-defined directory structure with prefixed
@@ -445,7 +319,6 @@ def getNextGenomeSegment(params) :
 
     This segment generator understands callRegionList that accounts for both genomeRegionList and the callRegions bed file.
     """
-
     MEGABASE = 1000000
     scanSize = params.scanSizeMb * MEGABASE
 
