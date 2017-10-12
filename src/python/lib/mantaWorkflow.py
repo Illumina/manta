@@ -128,8 +128,6 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
     graphPath=self.paths.getGraphPath()
     graphStatsPath=self.paths.getGraphStatsPath()
 
-    graphFilename=os.path.basename(graphPath)
-
     tmpGraphDir=self.paths.getTmpGraphDir()
 
     makeTmpGraphDirCmd = getMkdirCmd() + [tmpGraphDir]
