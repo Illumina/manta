@@ -34,6 +34,7 @@ sys.path.append(os.path.abspath(scriptDir))
 pyflowDir=os.path.join(scriptDir,"pyflow")
 sys.path.append(os.path.abspath(pyflowDir))
 
+from checkChromSet import getTabixChromSet
 from configBuildTimeInfo import workflowVersion
 from pyflow import WorkflowRunner
 from sharedWorkflow import getMkdirCmd, getMvCmd, getRmCmd, getRmdirCmd, \
@@ -137,11 +138,8 @@ def getCallRegions(params) :
     # check chromsome coverage based on callRegions BED file
     callChromList = []
     chromIsSkipped2 = set(params.chromOrder)
-    tabixCmd = [params.tabixBin,"-l", params.callRegionsBed]
-    proc=subprocess.Popen(tabixCmd,stdout=subprocess.PIPE)
-    for line in proc.stdout :
-        chrom = line.strip()
 
+    for chrom in getTabixChromSet(params.tabixBin, params.callRegionsBed) :
         if chrom not in params.chromOrder:
             raise Exception("Unexpected chromosome '%s' in the bed file of call regions %s " %
                             (chrom, params.callRegionsBed))
@@ -149,8 +147,6 @@ def getCallRegions(params) :
         callChromList.append(chrom)
         if chrom in chromIsSkipped2 :
             chromIsSkipped2.remove(chrom)
-    proc.stdout.close()
-    proc.wait()
 
     if params.genomeRegionList is None :
         chromIsSkipped = chromIsSkipped2

@@ -29,10 +29,10 @@ scriptName=os.path.basename(__file__)
 
 sys.path.append(scriptDir)
 
+from checkChromSet import getFastaInfo, getTabixChromSet
 from configureOptions import ConfigureWorkflowOptions
 from configureUtil import assertOptionExists, checkFixTabixIndexedFileOption, joinFile, OptParseException, \
                           validateFixExistingFileArg
-
 from workflowUtil import exeFile, parseGenomeRegion
 
 
@@ -156,3 +156,19 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
             options.genomeRegionList = None
         else :
             options.genomeRegionList = [parseGenomeRegion(r) for r in options.regionStrList]
+
+        # validate chromosome names appearing in region tags and callRegions bed file
+        if (options.callRegionsBed is not None) or (options.genomeRegionList is not None) :
+            refChromInfo = getFastaInfo(options.referenceFasta)
+            if options.callRegionsBed is not None :
+                for chrom in getTabixChromSet(options.tabixBin, options.callRegionsBed) :
+                    if chrom not in refChromInfo :
+                        raise OptParseException("Chromosome label '%s', in call regions bed file '%s', not found in reference genome." %
+                                                (chrom, options.callRegionsBed))
+
+            if options.genomeRegionList is not None :
+                for (genomeRegionIndex, genomeRegion) in enumerate(options.genomeRegionList) :
+                    chrom = genomeRegion["chrom"]
+                    if chrom not in refChromInfo :
+                        raise OptParseException("Chromosome label '%s', parsed from region argument '%s', not found in reference genome." %
+                                                (chrom, options.regionStrList[genomeRegionIndex]))
