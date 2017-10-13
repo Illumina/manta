@@ -52,7 +52,8 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         group.add_option("--referenceFasta",type="string",metavar="FILE",
                          help="samtools-indexed reference fasta file [required]")
         group.add_option("--runDir", type="string",metavar="DIR",
-                         help="Run script and run output will be written to this directory [required] (default: %default)")
+                         help="Name of directory to be created where run scripts and output will be written. "
+                              "This directory must not already exist. (default: %default)")
 
     def addExtendedGroupOptions(self,group) :
         group.add_option("--scanSizeMb", type="int", metavar="INT",
@@ -136,6 +137,8 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
 
         assertOptionExists(options.runDir,"run directory")
         options.runDir = os.path.abspath(options.runDir)
+        if os.path.exists(options.runDir):
+            raise OptParseException("Targeted runDir already exists '%s'. Each analysis requires a separate runDir." % (options.runDir))
 
         # check reference fasta file exists
         assertOptionExists(options.referenceFasta,"reference fasta file")
