@@ -53,7 +53,12 @@ getSpanningNoiseRate(
     static const double pseudoSpan(10.);
 
     const SampleReadInputCounts& input(counts.getSampleCounts(sampleIndex).input);
-    return ((input.evidenceCount.anom+input.evidenceCount.split)+pseudoSpan)/(input.total()+pseudoTotal);
+
+    const double anomOrSplitCount(input.evidenceCount.anom+input.evidenceCount.split-input.evidenceCount.anomAndSplit);
+    assert(anomOrSplitCount >= 0);
+    assert(anomOrSplitCount <= input.total());
+
+    return (anomOrSplitCount+pseudoSpan)/(input.total()+pseudoTotal);
 }
 
 
@@ -68,6 +73,8 @@ getAssemblyNoiseRate(
     static const double pseudoAssm(10.);
 
     const SampleReadInputCounts& input(counts.getSampleCounts(sampleIndex).input);
+    assert(input.evidenceCount.assm <= input.total());
+
     return (input.evidenceCount.assm+pseudoAssm)/(input.total()+pseudoTotal);
 }
 

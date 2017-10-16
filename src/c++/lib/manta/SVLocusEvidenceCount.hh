@@ -34,6 +34,7 @@ struct SVLocusEvidenceCount
         ignored = 0;
         anom = 0;
         split = 0;
+        anomAndSplit = 0;
         indel = 0;
         assm = 0;
         remoteRecoveryCandidates = 0;
@@ -47,6 +48,7 @@ struct SVLocusEvidenceCount
         ignored += rhs.ignored;
         anom += rhs.anom;
         split += rhs.split;
+        anomAndSplit += rhs.anomAndSplit;
         indel += rhs.indel;
         assm += rhs.assm;
         remoteRecoveryCandidates += rhs.remoteRecoveryCandidates;
@@ -55,7 +57,7 @@ struct SVLocusEvidenceCount
     template<class Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {
-        ar& total& ignored& anom& split& indel& assm& remoteRecoveryCandidates;
+        ar& total& ignored& anom& split& anomAndSplit& indel& assm& remoteRecoveryCandidates;
     }
 
     // using doubles for integral counts here because:
@@ -73,6 +75,9 @@ struct SVLocusEvidenceCount
 
     ///< total number of non-filtered split (SA-tag) reads scanned
     double split = 0;
+
+    ///< total number of non-filtered reads scanned which are categorized as BOTH anomolous and split
+    double anomAndSplit = 0;
 
     ///< total number of non-filtered CIGAR large indel reads scanned
     double indel = 0;

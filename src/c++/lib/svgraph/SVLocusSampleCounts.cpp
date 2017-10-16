@@ -62,6 +62,7 @@ write(
     writeLine(os,"NotFilteredAndAnomalousPair",evidenceCount.anom,dtotal);
     writeLine(os,"NotFilteredAndAnomalousPairRemotes",evidenceCount.remoteRecoveryCandidates,dtotal);
     writeLine(os,"NotFilteredAndSplitRead",evidenceCount.split,dtotal);
+    writeLine(os,"NotFilteredAndSplitReadInAnomalousPair",evidenceCount.anomAndSplit,dtotal);
     writeLine(os,"NotFilteredAndLargeIndel",evidenceCount.indel,dtotal);
     writeLine(os,"NotFilteredAndSemiAligned",evidenceCount.assm,dtotal);
 }

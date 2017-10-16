@@ -1661,6 +1661,7 @@ isSVEvidence(
         incounts.total++;
         if (isAnom) incounts.anom++;
         if (isSplit) incounts.split++;
+        if (isAnom && isSplit) incounts.anomAndSplit++;
         if (isIndel) incounts.indel++;
         if (isAssm) incounts.assm++;
 
