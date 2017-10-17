@@ -1653,26 +1653,38 @@ isSVEvidence(
     const bool isIndel(isLocalIndelEvidence(_bamAlign));
     const bool isAssm((_dopt.isSmallCandidates) && ((!isSplit) && isSemiAlignedEvidence(bamRead, _bamAlign, refSeq)));
 
+    // Mark supplemental segments of split reads, and exclude these from the "normal" read counts
+    const bool isSupplementary(bamRead.is_supplementary() || bamRead.is_secondary());
+
     const bool isEvidence(isAnom || isSplit || isIndel || isAssm);
 
     if (nullptr != incountsPtr)
     {
         SVLocusEvidenceCount& incounts(*incountsPtr);
-        incounts.total++;
-        if (isAnom) incounts.anom++;
-        if (isSplit) incounts.split++;
-        if (isAnom && isSplit) incounts.anomAndSplit++;
-        if (isIndel) incounts.indel++;
-        if (isAssm) incounts.assm++;
 
-        if (! isEvidence) incounts.ignored++;
-
-        if (isAnom)
+        if (isSupplementary)
         {
-            if (isMateInsertionEvidenceCandidate(bamRead, getMinMapQ()))
+            assert(isSplit);
+            incounts.splitSupplementarySegment++;
+        }
+        else
+        {
+            incounts.total++;
+            if (isAnom) incounts.anom++;
+            if (isSplit) incounts.split++;
+            if (isAnom && isSplit) incounts.anomAndSplit++;
+            if (isIndel) incounts.indel++;
+            if (isAssm) incounts.assm++;
+
+            if (! isEvidence) incounts.ignored++;
+
+            if (isAnom)
             {
-                // these counts are used to generate background noise rates in later candidate generation stages:
-                incounts.remoteRecoveryCandidates++;
+                if (isMateInsertionEvidenceCandidate(bamRead, getMinMapQ()))
+                {
+                    // these counts are used to generate background noise rates in later candidate generation stages:
+                    incounts.remoteRecoveryCandidates++;
+                }
             }
         }
     }

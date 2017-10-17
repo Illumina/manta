@@ -34,6 +34,24 @@ void
 writeLine(
     std::ostream& os,
     const char* label,
+    const double val)
+{
+    static const char sep('\t');
+
+    os << std::fixed;
+    os << label << sep;
+    os << std::setprecision(0);
+    os << val << sep;
+    os << "N/A" << '\n';
+}
+
+
+
+static
+void
+writeLine(
+    std::ostream& os,
+    const char* label,
     const double val,
     const double total)
 {
@@ -63,6 +81,7 @@ write(
     writeLine(os,"NotFilteredAndAnomalousPairRemotes",evidenceCount.remoteRecoveryCandidates,dtotal);
     writeLine(os,"NotFilteredAndSplitRead",evidenceCount.split,dtotal);
     writeLine(os,"NotFilteredAndSplitReadInAnomalousPair",evidenceCount.anomAndSplit,dtotal);
+    writeLine(os,"NotFilteredAndSplitReadSupplementarySegments",evidenceCount.splitSupplementarySegment);
     writeLine(os,"NotFilteredAndLargeIndel",evidenceCount.indel,dtotal);
     writeLine(os,"NotFilteredAndSemiAligned",evidenceCount.assm,dtotal);
 }
