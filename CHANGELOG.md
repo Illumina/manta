@@ -19,6 +19,10 @@
   - Remove the filter on evidence reads for SV candidates that are not in the file candidateSV.vcf.gz, because the file now contains all SV candidates without removing duplicates.
 - Stop automatically clearing python environment variables (MANTA-1316)
   - This should allow python from certain module systems to be used, but may (rarely) cause instability due to conflicting content in a user's PYTHONPATH.
+- Improve estimation of chimeric fragment rate (ie. fraction of reads which are split or in anomalous pairs) (MANTA-1261/[#103])
+  - This fraction is used to set signal/noise thresholds important for somatic calling.
+  - The secondary/supplmental segments of each split read are no longer counted as separate observations.
+  - The method now accounts for many reads being classified as both anomalous and split.
 
 ## v1.2.2 - 2017-11-10
 
