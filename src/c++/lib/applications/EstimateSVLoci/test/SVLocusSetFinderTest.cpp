@@ -79,16 +79,19 @@ BOOST_AUTO_TEST_CASE( test_MapQuality_Filtering )
 
     std::unique_ptr<SVLocusSetFinder> svLSF(buildSVLocusSetFinder(bamHeader, alignFilename));
 
+    // stand-in state reporter used for the unit test, does nothing
+    stream_state_reporter dummyStateReporter;
+
     // Valid anomolous read fails because its mapQ is 14 and minMapQ is 15.
     bam_record bamRead2;
     buildBamRecord(bamRead2, 0, 200, 0, 100, 99, 14);
-    svLSF->update(bamRead2, bamRead2.target_id());
+    svLSF->update(dummyStateReporter, bamRead2, bamRead2.target_id());
     BOOST_REQUIRE_EQUAL(svLSF->getLocusSet().size(), 0);
 
     // Valid anomolous read passes because its mapQ is 15 and minMapQ is 15.
     bam_record bamRead1;
     buildBamRecord(bamRead1, 0, 200, 0, 100, 99, 15);
-    svLSF->update(bamRead1, bamRead1.target_id());
+    svLSF->update(dummyStateReporter, bamRead1, bamRead1.target_id());
     BOOST_REQUIRE_EQUAL(svLSF->getLocusSet().size(), 1);
 
     BOOST_TEST_MESSAGE("SDS MANTA-755");
@@ -132,9 +135,12 @@ BOOST_AUTO_TEST_CASE( test_SplitReadSemiAligned )
     buildBamRecord(splitRead, 0, alignPos, 0, alignPos+50, 8, 15, "50M", semiQuerySeq);
     addSupplementaryEvidence(splitRead);
 
+    // stand-in state reporter used for the unit test, does nothing
+    stream_state_reporter dummyStateReporter;
+
     const std::string& alignFilename = std::string("tempAlignFile.txt");
     std::unique_ptr<SVLocusSetFinder> finder(buildSVLocusSetFinder(bamHeader, alignFilename));
-    finder->update(splitRead, 0);
+    finder->update(dummyStateReporter, splitRead, 0);
 
     std::filebuf fb;
     fb.open(dumpStatsFile, std::ios::out);

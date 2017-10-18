@@ -24,11 +24,12 @@
 #include "SVLocusSetFinder.hh"
 
 #include "blt_util/log.hh"
+#include "common/Exceptions.hh"
 #include "htsapi/align_path_bam_util.hh"
 #include "manta/ChromDepthFilterUtil.hh"
 
 #include <iostream>
-
+#include <sstream>
 
 
 namespace STAGE
@@ -265,6 +266,7 @@ addToDepthBuffer(
 void
 SVLocusSetFinder::
 update(
+    const stream_state_reporter& streamErrorReporter,
     const bam_record& bamRead,
     const unsigned defaultReadGroupIndex)
 {
@@ -291,6 +293,24 @@ update(
         if (_positionReadDepthEstimate.val(bamRead.pos()-1) > _maxDepth) return;
     }
 
+    // Verify the input reads conform to BAM input restrictions before testing if they could be input evidence
+    // The reason this is done here is that the restriction against the '=' sign in the sequence could otherwise
+    // silently alter downstream evidence checks and assembly steps:
+    {
+        const bam_seq readSeq(bamRead.get_bam_read());
+        const unsigned readSize(readSeq.size());
+        for (unsigned baseIndex(0); baseIndex < readSize; baseIndex++)
+        {
+            if (readSeq.get_code(baseIndex) == BAM_BASE::REF)
+            {
+                std::ostringstream oss;
+                oss << "ERROR: Unsupported use of the '=' symbol in the BAM/CRAM SEQ field from read:\n";
+                streamErrorReporter.report_state(oss);
+                BOOST_THROW_EXCEPTION(illumina::common::LogicException(oss.str()));
+            }
+        }
+    }
+
     // counts/incounts are part of the statistics tracking framework used for
     // methods diagnostics. They do not impact the graph build.
     SampleCounts& counts(_svLoci.getCounts().getSampleCounts(defaultReadGroupIndex));
@@ -302,6 +322,7 @@ update(
         incounts.minMapq++;
         return;
     }
+
 
     // Filter out reads which are not found to be indicative of an SV
     //

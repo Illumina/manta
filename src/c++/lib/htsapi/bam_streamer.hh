@@ -28,7 +28,15 @@
 
 #include "boost/utility.hpp"
 
+#include <iosfwd>
 #include <string>
+
+
+/// Interface for any object which provides current record and file position for error reporting purposes
+struct stream_state_reporter
+{
+    virtual void report_state(std::ostream& /*os*/) const {}
+};
 
 
 /// Stream bam records from CRAM/BAM/SAM files. For CRAM/BAM
@@ -43,7 +51,7 @@
 //     if(read.is_unmapped()) unmappedCount++;
 // }
 //
-struct bam_streamer : public boost::noncopyable
+struct bam_streamer : public stream_state_reporter, public boost::noncopyable
 {
     /// \param filename CRAM/BAM input file
     /// \param referenceFilename Corresponding reference file. nullptr can be given here to indicate that the
@@ -93,7 +101,7 @@ struct bam_streamer : public boost::noncopyable
         return _record_no;
     }
 
-    void report_state(std::ostream& os) const;
+    void report_state(std::ostream& os) const override;
 
     const char*
     target_id_to_name(const int32_t tid) const;

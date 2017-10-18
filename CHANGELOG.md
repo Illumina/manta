@@ -2,6 +2,8 @@
 ### Added
 
 ### Changed
+- Test for unsupported BAM SEQ format (MANTA-1265)
+  - Test the input bam reads for use of the = symbol in the SEQ field, and provide a clear error message if this is found.
 - Update minimum supported linux OS from Centos 5 to 6 (MANTA-1249)
 
 ### Fixed
@@ -11,6 +13,9 @@
   - Change in boost policy for certain vectors causes vector append in some instances that were previously overwritten.
 
 ## v1.2.1 - 2017-10-06
+
+This is a minor bugfix release from v1.2.0
+
 ### Added
 - Use the BAM mate CIGAR (MC) tag, when present, to improve the accuracy of accessing if a read has extended into adapter sequence (MANTA-1097)
 - Add sanity check of specified target regions during configuration (MANTA-1218)

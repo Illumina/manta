@@ -29,6 +29,7 @@
 #include "blt_util/pos_processor_base.hh"
 #include "blt_util/stage_manager.hh"
 #include "htsapi/bam_record.hh"
+#include "htsapi/bam_streamer.hh"
 #include "manta/SVLocusScanner.hh"
 #include "svgraph/SVLocusSet.hh"
 
@@ -87,11 +88,15 @@ struct SVLocusSetFinder : public pos_processor_base
 
     /// \brief Push a new read alignment into the SV graph building process
     ///
+    /// \param[in] streamErrorReporter Reference to the error reporter from the stream which produced \p bamRead.
+    ///              This is only used to improve the detail of exception messages.
+    /// \param[in] bamRead The BAM/CRAM record being pushed into the estimation process.
     /// \param[in] defaultReadGroupIndex The read group index to use in the absence of a BAM read group (RG) tag.
     /// This should effectively be the same as the sample index.
     ///
     void
     update(
+        const stream_state_reporter& streamErrorReporter,
         const bam_record& bamRead,
         const unsigned defaultReadGroupIndex);
 

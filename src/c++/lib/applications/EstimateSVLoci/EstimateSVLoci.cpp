@@ -127,7 +127,7 @@ runESLRegion(
         const bam_streamer& readStream(*bamStreams[current.sample_no]);
         const bam_record& read(*(readStream.get_record_ptr()));
 
-        locusFinder.update(read, current.sample_no);
+        locusFinder.update(readStream, read, current.sample_no);
     }
 
     // finished updating:
