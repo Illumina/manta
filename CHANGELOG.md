@@ -6,6 +6,9 @@
 
 ### Fixed
 - Ensure consistent BND pairs for translocations or RNA fusions are selected during vcf merging (MANTA-1243)
+- Fix manta to tolerate deserialization differences in boost above/below v1.58 (MANTA-1262)
+  - Impact of issue was an (infrequent) assertion using boost v1.58+: `Assertion `size() == rhs.size()' failed`
+  - Change in boost policy for certain vectors causes vector append in some instances that were previously overwritten.
 
 ## v1.2.1 - 2017-10-06
 ### Added

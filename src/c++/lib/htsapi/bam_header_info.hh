@@ -62,6 +62,13 @@ struct bam_header_info
         return true;
     }
 
+    void
+    clear()
+    {
+        chrom_data.clear();
+        chrom_to_index.clear();
+    }
+
     template<class Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {

@@ -170,6 +170,7 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
     void
     clear()
     {
+        header.clear();
         _loci.clear();
         clearIndex();
         _isFinalized=false;

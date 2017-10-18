@@ -124,6 +124,7 @@ struct SampleCounts
     void
     clear()
     {
+        sampleSource.clear();
         input.clear();
         evidence.clear();
     }
@@ -164,6 +165,7 @@ struct AllCounts
         {
             sample.clear();
         }
+        _samples.clear();
     }
 
     void
