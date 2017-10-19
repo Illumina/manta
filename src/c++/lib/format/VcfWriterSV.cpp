@@ -637,7 +637,8 @@ writeInvdel(
     {
         infoTags.push_back("IMPRECISE");
     }
-    else if(_isOutputContig){
+    else if (_isOutputContig)
+    {
         infoTags.push_back("CONTIG=" + sv.contigSeq);
     }
 

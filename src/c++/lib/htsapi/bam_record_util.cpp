@@ -83,7 +83,7 @@ is_possible_adapter_pair(
 bool
 is_adapter_pair(
     const bam_record& bamRead
- )
+)
 {
     // if the read (primary) contains a SA tag, keep it for assembly
     if (bamRead.isSASplit()) return false;
@@ -113,8 +113,8 @@ is_adapter_pair(
         // If we do not have mate cigar information use an aggressive heuristic:
         // if the read contains soft clip on the 3' end, it likely runs into adapter.
         unsigned const softClipSize(aln.is_fwd_strand ?
-            apath_soft_clip_trail_size(aln.path) :
-            apath_soft_clip_lead_size(aln.path));
+                                    apath_soft_clip_trail_size(aln.path) :
+                                    apath_soft_clip_lead_size(aln.path));
         return (softClipSize > 0);
     }
 }

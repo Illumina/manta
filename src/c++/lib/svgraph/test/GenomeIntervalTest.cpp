@@ -25,7 +25,8 @@
 // Test public functionality of the GenomeInterval
 BOOST_AUTO_TEST_SUITE( test_GenomeInterval )
 
-BOOST_AUTO_TEST_CASE( test_GenomeInterval_Clear ) {
+BOOST_AUTO_TEST_CASE( test_GenomeInterval_Clear )
+{
     GenomeInterval TestInterval1(1, 100, 200);
     BOOST_REQUIRE_EQUAL(TestInterval1.tid, 1);
     BOOST_REQUIRE_EQUAL(TestInterval1.range.begin_pos(), 100);
@@ -36,7 +37,8 @@ BOOST_AUTO_TEST_CASE( test_GenomeInterval_Clear ) {
     BOOST_REQUIRE_EQUAL(TestInterval1.range.end_pos(), 0);
 }
 
-BOOST_AUTO_TEST_CASE( test_GenomeInterval_LessThanOperator ) {
+BOOST_AUTO_TEST_CASE( test_GenomeInterval_LessThanOperator )
+{
     // < operator tests
     BOOST_REQUIRE_EQUAL(GenomeInterval(1, 10, 40) < GenomeInterval(1, 10, 40), false);
 
@@ -114,10 +116,10 @@ BOOST_AUTO_TEST_CASE( test_GenomeInterval_Sorting )
     BOOST_REQUIRE_EQUAL(test[4],GenomeInterval(2,8,10));
 }
 
-    BOOST_AUTO_TEST_CASE( test_GenomeInterval_OStreamOperator )
-    {
-        // TODO Need a mock framework to do this cleanly by mocking the streambuffer
-    }
+BOOST_AUTO_TEST_CASE( test_GenomeInterval_OStreamOperator )
+{
+    // TODO Need a mock framework to do this cleanly by mocking the streambuffer
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

@@ -107,7 +107,7 @@ possible for Visual Studio users. See the the [manta developer guide][DeveloperG
     # Add gcc 4.9 from developer tools v3:
     yum install -y centos-release-scl
     yum install -y devtoolset-3-gcc devtoolset-3-gcc-c++
- 
+
     # Prior to build configuration, set CC/CXX to gcc 4.9:
     export CC=/opt/rh/devtoolset-3/root/usr/bin/gcc
     export CXX=/opt/rh/devtoolset-3/root/usr/bin/g++

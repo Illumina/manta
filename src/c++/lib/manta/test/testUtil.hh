@@ -43,7 +43,7 @@ class line : public std::string {};
 
 inline
 std::istream&
-operator>>(std::istream &is, line &l)
+operator>>(std::istream& is, line& l)
 {
     std::getline(is, l);
     return is;
@@ -53,10 +53,11 @@ operator>>(std::istream &is, line &l)
 inline
 void
 createAlignFile(
-        const bam_header_info& info,
-        const std::string& filename)
+    const bam_header_info& info,
+    const std::string& filename)
 {
-    if (FILE* file = fopen(filename.c_str(), "r")) {
+    if (FILE* file = fopen(filename.c_str(), "r"))
+    {
         fclose(file);
         std::remove(filename.c_str());
     }
@@ -70,56 +71,59 @@ createAlignFile(
 inline
 void
 createStatsFile(
-        const std::string& filename,
-        std::string fileInput = "")
+    const std::string& filename,
+    std::string fileInput = "")
 {
-    if ( fileInput.length() < 1) {
+    if ( fileInput.length() < 1)
+    {
         fileInput = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?><!DOCTYPE boost_serialization><boost_serialization signature=\"serialization::archive\" version=\"11\">"
-                "<numGroups>1</numGroups>\n"
-                "<groupStats_0>\n"
-                "<groupLabel>tempStatsGroup</groupLabel>\n"
-                "<groupStats>\n"
-                "<fragmentSizeDistribution>\n"
-                "<totalObservationCount>1000</totalObservationCount>\n"
-                "<elementCount>4</elementCount>\n"
-                "<element>\n"
-                "<size>50</size>\n"
-                "<count>250</count>\n"
-                "</element>"
-                "<element>\n"
-                "<size>75</size>\n"
-                "<count>250</count>\n"
-                "</element>"
-                "<element>\n"
-                "<size>100</size>\n"
-                "<count>250</count>\n"
-                "</element>"
-                "<element>\n"
-                "<size>125</size>\n"
-                "<count>250</count>\n"
-                "</element>"
-                "</fragmentSizeDistribution>\n"
-                "<pairOrientation>\n"
-                "<pairOrientation>Rp</pairOrientation>\n"
-                "</pairOrientation>\n"
-                "<readCount>\n"
-                "<totalReadCount>1000000</totalReadCount>\n"
-                "<totalPairedReadCount>1000000</totalPairedReadCount>\n"
-                "<totalUnpairedReadCount>0</totalUnpairedReadCount>\n"
-                "<totalPairedLowMapqReadCount>0</totalPairedLowMapqReadCount>\n"
-                "<totalHighConfidenceReadPairCount>1000000</totalHighConfidenceReadPairCount>\n"
-                "</readCount>\n"
-                "</groupStats>\n"
-                "</groupStats_0>\n"
-                "</boost_serialization>";
+                    "<numGroups>1</numGroups>\n"
+                    "<groupStats_0>\n"
+                    "<groupLabel>tempStatsGroup</groupLabel>\n"
+                    "<groupStats>\n"
+                    "<fragmentSizeDistribution>\n"
+                    "<totalObservationCount>1000</totalObservationCount>\n"
+                    "<elementCount>4</elementCount>\n"
+                    "<element>\n"
+                    "<size>50</size>\n"
+                    "<count>250</count>\n"
+                    "</element>"
+                    "<element>\n"
+                    "<size>75</size>\n"
+                    "<count>250</count>\n"
+                    "</element>"
+                    "<element>\n"
+                    "<size>100</size>\n"
+                    "<count>250</count>\n"
+                    "</element>"
+                    "<element>\n"
+                    "<size>125</size>\n"
+                    "<count>250</count>\n"
+                    "</element>"
+                    "</fragmentSizeDistribution>\n"
+                    "<pairOrientation>\n"
+                    "<pairOrientation>Rp</pairOrientation>\n"
+                    "</pairOrientation>\n"
+                    "<readCount>\n"
+                    "<totalReadCount>1000000</totalReadCount>\n"
+                    "<totalPairedReadCount>1000000</totalPairedReadCount>\n"
+                    "<totalUnpairedReadCount>0</totalUnpairedReadCount>\n"
+                    "<totalPairedLowMapqReadCount>0</totalPairedLowMapqReadCount>\n"
+                    "<totalHighConfidenceReadPairCount>1000000</totalHighConfidenceReadPairCount>\n"
+                    "</readCount>\n"
+                    "</groupStats>\n"
+                    "</groupStats_0>\n"
+                    "</boost_serialization>";
     }
 
-    if (FILE* file = fopen(filename.c_str(), "r")) {
+    if (FILE* file = fopen(filename.c_str(), "r"))
+    {
         fclose(file);
         std::remove(filename.c_str());
     }
     std::ofstream outfile(filename);
-    if ( fileInput.length() > 0 ) {
+    if ( fileInput.length() > 0 )
+    {
         outfile << fileInput;
     }
     else
@@ -133,21 +137,24 @@ createStatsFile(
 inline
 std::string
 getResultFromStatsFile(
-        std::string statsFile,
-        std::string category)
+    std::string statsFile,
+    std::string category)
 {
     std::ifstream is(statsFile);
     std::istream_iterator<line> start(is), end;
     std::vector<line> stats(start, end);
 
     // iterate through the file
-    for ( std::vector<line>::iterator it=stats.begin(); it!=stats.end(); ++it) {
+    for ( std::vector<line>::iterator it=stats.begin(); it!=stats.end(); ++it)
+    {
         // find all rows that contain the substring
-        if ((*it).find(category) != std::string::npos ) {
+        if ((*it).find(category) != std::string::npos )
+        {
             std::vector<std::string> strs;
             boost::split(strs, (*it), boost::is_any_of("\t"));
             // If the substring is exactly correct (avoid issues like NoFilter vs NoFilterAndIgnored)
-            if ( strs[0].length() ==  category.length()) {
+            if ( strs[0].length() ==  category.length())
+            {
                 return strs[1];
             }
         }
@@ -159,8 +166,8 @@ getResultFromStatsFile(
 inline
 void
 changeTemplateSize(
-        bam_record& bamRead,
-        int newSize)
+    bam_record& bamRead,
+    int newSize)
 {
     bam1_t* bamDataPtr(bamRead.get_data());
     bamDataPtr->core.isize = newSize;
@@ -169,8 +176,8 @@ changeTemplateSize(
 /// \brief Add supplementary evidence to a given read, defaulting to chrT from the default bam_header_info.
 inline
 void addSupplementaryEvidence(
-        bam_record &bamRead,
-        std::string svStr = "chrT,6348,-,54H22M,50,0;")
+    bam_record& bamRead,
+    std::string svStr = "chrT,6348,-,54H22M,50,0;")
 {
     const char svtag[] = {'S','A'};
     bam_aux_append(bamRead.get_data(),svtag,'Z',(svStr.size()+1),
@@ -181,8 +188,8 @@ void addSupplementaryEvidence(
 inline
 void
 getBamAlignment(
-        const bam_record& bamRead,
-        SimpleAlignment& al)
+    const bam_record& bamRead,
+    SimpleAlignment& al)
 {
     al.is_fwd_strand=bamRead.is_fwd_strand();
     al.tid=bamRead.target_id();
@@ -195,8 +202,8 @@ getBamAlignment(
 inline
 void
 createFile(
-        const std::string& filename,
-        const std::string& fileInput = "")
+    const std::string& filename,
+    const std::string& fileInput = "")
 {
     if (FILE* file = fopen(filename.c_str(), "r"))
     {
@@ -235,15 +242,15 @@ buildBamHeader()
 inline
 void
 buildBamRecord(
-        bam_record& bamRead,
-        int targetID = 0,
-        int pos = 100,
-        int mateTargetID = 0,
-        int matePos = 200,
-        int fragmentSize = 100,
-        int mapQ = 15,
-        std::string cigarString = "",
-        std::string querySeq = "")
+    bam_record& bamRead,
+    int targetID = 0,
+    int pos = 100,
+    int mateTargetID = 0,
+    int matePos = 200,
+    int fragmentSize = 100,
+    int mapQ = 15,
+    std::string cigarString = "",
+    std::string querySeq = "")
 {
     if ( querySeq == "")
     {
@@ -297,11 +304,11 @@ buildBamRecord(
 inline
 std::unique_ptr<SVLocusScanner>
 buildSVLocusScanner(
-        const bam_header_info& bamHeaderInfo,
-        const std::string& statsFilename = std::string("tempStatsFile.txt"),
-        const std::string& alignFilename = std::string("tempAlignFile.txt"),
-        bool isRNA = false,
-        int minCandidateVariantSizeInput = 8)
+    const bam_header_info& bamHeaderInfo,
+    const std::string& statsFilename = std::string("tempStatsFile.txt"),
+    const std::string& alignFilename = std::string("tempAlignFile.txt"),
+    bool isRNA = false,
+    int minCandidateVariantSizeInput = 8)
 {
     ReadScannerOptions opts = ReadScannerOptions();
     opts.minCandidateVariantSize = minCandidateVariantSizeInput;

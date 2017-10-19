@@ -162,8 +162,8 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
     /// Set evidence range of a node
     void
     setNodeEvidence(
-            const NodeIndexType nodeIndex,
-            const known_pos_range2& evidenceRange)
+        const NodeIndexType nodeIndex,
+        const known_pos_range2& evidenceRange)
     {
         getNode(nodeIndex).setEvidenceRange(evidenceRange);
     }
@@ -173,8 +173,8 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
     /// this version uses a stack to avoid recursive function calls (otherwise this call tends to fail on large graphs)
     void
     findConnected(
-            const NodeIndexType startIndex,
-            std::set<NodeIndexType>& connected) const;
+        const NodeIndexType startIndex,
+        std::set<NodeIndexType>& connected) const;
 
     /// the total observations in all nodes of the locus
     unsigned

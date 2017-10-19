@@ -831,7 +831,8 @@ setSmallCandSV(
     sv.insertAlignment = ALIGNPATH::path_t(align.apath.begin()+segRange.first, align.apath.begin()+segRange.second+1);
 
     // set assembled contig sequence, if option is specified
-    if(opt.isOutputContig){
+    if (opt.isOutputContig)
+    {
         sv.contigSeq = contig;
     }
 }

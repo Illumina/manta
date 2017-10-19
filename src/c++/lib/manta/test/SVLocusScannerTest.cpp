@@ -30,7 +30,8 @@
 BOOST_AUTO_TEST_SUITE( test_SVLocusScanner )
 
 // Test all of the paths possible for core read filtering.
-BOOST_AUTO_TEST_CASE( test_isReadFilteredCore ) {
+BOOST_AUTO_TEST_CASE( test_isReadFilteredCore )
+{
 
     BOOST_TEST_MESSAGE("SDS MANTA-663");
 
@@ -81,7 +82,8 @@ BOOST_AUTO_TEST_CASE( test_isReadFilteredCore ) {
 }
 
 // Test the mapped core read filtering.
-BOOST_AUTO_TEST_CASE( test_isMappedReadFilteredCore ) {
+BOOST_AUTO_TEST_CASE( test_isMappedReadFilteredCore )
+{
     BOOST_TEST_MESSAGE("SDS MANTA-663");
 
     bam_record bamRead;
@@ -93,7 +95,8 @@ BOOST_AUTO_TEST_CASE( test_isMappedReadFilteredCore ) {
 }
 
 // Test isProperPair for filtering out useless reads.
-BOOST_AUTO_TEST_CASE( test_isAnomalousReadPair  ) {
+BOOST_AUTO_TEST_CASE( test_isAnomalousReadPair  )
+{
     BOOST_TEST_MESSAGE("SDS MANTA-665");
 
     bam_header_info bamHeader = bam_header_info();
@@ -152,7 +155,8 @@ BOOST_AUTO_TEST_CASE( test_isAnomalousReadPair  ) {
 }
 
 // Test the isProperPair functionality for innie-pairs.
-BOOST_AUTO_TEST_CASE( test_InniePair  ) {
+BOOST_AUTO_TEST_CASE( test_InniePair  )
+{
     BOOST_TEST_MESSAGE("SDS MANTA-665");
 
     bam_header_info bamHeader = bam_header_info();
@@ -280,7 +284,8 @@ BOOST_AUTO_TEST_CASE( test_isSVEvidence )
 }
 
 // Test that different size indels are handled properly.
-BOOST_AUTO_TEST_CASE( test_LargeIndels ) {
+BOOST_AUTO_TEST_CASE( test_LargeIndels )
+{
     BOOST_TEST_MESSAGE("SDS MANTA-667");
 
     // minCandidateVariantSize = 8
@@ -336,7 +341,8 @@ BOOST_AUTO_TEST_CASE( test_LargeIndels ) {
 }
 
 // Test filtering for semiAligned reads.
-BOOST_AUTO_TEST_CASE( test_SemiAlignedReads ) {
+BOOST_AUTO_TEST_CASE( test_SemiAlignedReads )
+{
     BOOST_TEST_MESSAGE("SDS MANTA-668");
 
     static const pos_t alignPos(500);

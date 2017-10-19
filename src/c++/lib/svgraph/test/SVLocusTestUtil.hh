@@ -80,9 +80,9 @@ TestSVLocusSetProperties(
 inline
 void
 TestSVLocusSetDistro(
-        const SVLocusSet& set1,
-        std::vector<unsigned> edgeCountDistro,
-        std::vector<unsigned> obsCountDistro)
+    const SVLocusSet& set1,
+    std::vector<unsigned> edgeCountDistro,
+    std::vector<unsigned> obsCountDistro)
 {
 
     // review merged nodes
@@ -93,11 +93,13 @@ TestSVLocusSetDistro(
     set1.getNodeEdgeCountDistro(edgeCount);
     set1.getNodeObsCountDistro(obsCount);
 
-    for ( unsigned count = 0; count < maxCount; count++) {
+    for ( unsigned count = 0; count < maxCount; count++)
+    {
         BOOST_REQUIRE_EQUAL(edgeCountDistro[count], edgeCount[count]);
     }
 
-    for ( unsigned count = 0; count < maxCount; count++) {
+    for ( unsigned count = 0; count < maxCount; count++)
+    {
         BOOST_REQUIRE_EQUAL(obsCountDistro[count], obsCount[count]);
     }
 }
@@ -111,13 +113,14 @@ TestSVLocusSetDistro(
 inline
 void
 TestSVLocusSetOutEdges(
-        const SVLocusSet& set1,
-        unsigned locusIndex,
-        std::vector<unsigned> expectedEdgeOutCount)
+    const SVLocusSet& set1,
+    unsigned locusIndex,
+    std::vector<unsigned> expectedEdgeOutCount)
 {
     assert(set1.getLocus(locusIndex).size() == expectedEdgeOutCount.size());
 
-    for ( unsigned count = 0; count < expectedEdgeOutCount.size(); count++) {
+    for ( unsigned count = 0; count < expectedEdgeOutCount.size(); count++)
+    {
         BOOST_REQUIRE_EQUAL(set1.getLocus(locusIndex).getNode(count).outCount(), expectedEdgeOutCount[count]);
     }
 }
@@ -132,8 +135,10 @@ FindStringInFile(std::string fileName, std::string searchString)
 
     bool found = false;
     std::string line;
-    while ( std::getline(iss, line)) {
-        if ( line.find(searchString) != std::string::npos) {
+    while ( std::getline(iss, line))
+    {
+        if ( line.find(searchString) != std::string::npos)
+        {
             found = true;
         }
     }

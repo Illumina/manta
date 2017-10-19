@@ -436,8 +436,8 @@ struct SVLocusNode
     /// this method is responsible for merging edge counts into the node count as well
     void
     mergeEdge(
-            const NodeIndexType index,
-            const SVLocusEdge& edge)
+        const NodeIndexType index,
+        const SVLocusEdge& edge)
     {
         if (_isSingle)
         {
@@ -477,8 +477,8 @@ struct SVLocusNode
     /// Set edge count between this and index node
     void
     setEdgeCount(
-            const NodeIndexType index,
-            const unsigned count)
+        const NodeIndexType index,
+        const unsigned count)
     {
         if (_isSingle)
         {
@@ -521,8 +521,8 @@ struct SVLocusNode
     /// Unhook edge from one node id, and stick it to another:
     void
     moveEdge(
-            const NodeIndexType fromIndex,
-            const NodeIndexType toIndex)
+        const NodeIndexType fromIndex,
+        const NodeIndexType toIndex)
     {
         if (_isSingle)
         {
