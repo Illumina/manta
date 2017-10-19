@@ -56,9 +56,9 @@ getSpanningNoiseRate(
 
     const double anomOrSplitCount(input.evidenceCount.anom+input.evidenceCount.split-input.evidenceCount.anomAndSplit);
     assert(anomOrSplitCount >= 0);
-    assert(anomOrSplitCount <= input.total());
+    assert(anomOrSplitCount <= input.evidenceCount.total);
 
-    return (anomOrSplitCount+pseudoSpan)/(input.total()+pseudoTotal);
+    return (anomOrSplitCount+pseudoSpan)/(input.evidenceCount.total+pseudoTotal);
 }
 
 
@@ -73,9 +73,9 @@ getAssemblyNoiseRate(
     static const double pseudoAssm(10.);
 
     const SampleReadInputCounts& input(counts.getSampleCounts(sampleIndex).input);
-    assert(input.evidenceCount.assm <= input.total());
+    assert(input.evidenceCount.assm <= input.evidenceCount.total);
 
-    return (input.evidenceCount.assm+pseudoAssm)/(input.total()+pseudoTotal);
+    return (input.evidenceCount.assm+pseudoAssm)/(input.evidenceCount.total+pseudoTotal);
 }
 
 
@@ -1050,7 +1050,7 @@ isSpanningCandidateSignalSignificant(
         appendVec(evidence_bp2,sv.bp2EvidenceIndex[evidenceTypeIndex]);
     }
 
-    static const double alpha(0.05);
+    static const double alpha(0.03);
     const bool isBp1(isBreakPointSignificant(alpha, noiseRate, evidence_bp1));
     const bool isBp2(isBreakPointSignificant(alpha, noiseRate, evidence_bp2));
 
