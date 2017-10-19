@@ -9,6 +9,8 @@
 - Fix manta to tolerate deserialization differences in boost above/below v1.58 (MANTA-1262)
   - Impact of issue was an (infrequent) assertion using boost v1.58+: `Assertion `size() == rhs.size()' failed`
   - Change in boost policy for certain vectors causes vector append in some instances that were previously overwritten.
+- Fix target region retrieval (MANTA-1264)
+  - The bug was in retrieving overlapping subregions specified by "--callRegion" and "--region" when the argument of "--region" has chromosome name only.
 
 ## v1.2.1 - 2017-10-06
 ### Added

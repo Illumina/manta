@@ -608,7 +608,20 @@ high sensitivity calling documentation below.
 
 #### Call regions
 
-Manta calls the entire genome by default, however variant calling may be restricted to an arbitrary subset of the genome by providing a region file in BED format with the --callRegions configuration option. The BED file must be bgzip-compressed and tabix-indexed, and only one such BED file may be specified. When specified, all VCF output is restricted to the provided call regions only, however statistics derived from the input data (such as expected fragment size distribution) will not be restricted to the call regions. Note in particular that even when --callRegions is specified, the --exome flag is still required for exome or targeted data to get appropriate depth filtration behavior for non-WGS cases.
+Manta calls the entire genome by default, however variant calling may be 
+restricted to an arbitrary subset of the genome by providing a region file in BED format 
+with the --callRegions configuration option. The BED file must be bgzip-compressed and 
+tabix-indexed, and only one such BED file may be specified. When specified, 
+all VCF output is restricted to the provided call regions only, 
+however statistics derived from the input data (such as expected fragment size distribution) 
+will not be restricted to the call regions. 
+
+It is not recommended to set up a large number of call regions because 
+it may cause Manta to have a reduced efficiency in segmenting and processing the genome.
+
+Note in particular that even when --callRegions is specified, 
+the --exome flag is still required for exome or targeted data 
+to get appropriate depth filtration behavior for non-WGS cases.
 
 #### Unpaired tumor sample
 
