@@ -69,7 +69,9 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
                               "If this argument is provided multiple times all specified regions will "
                               "be analyzed together. All regions must be non-overlapping to get a "
                               "meaningful result. Examples: '--region chr20' (whole chromosome), "
-                              "'--region chr2:100-2000 --region chr3:2500-3000' (two regions)'")
+                              "'--region chr2:100-2000 --region chr3:2500-3000' (two regions)'. If this "
+                              "option is specified (one or more times) together with the --callRegions BED file, then "
+                              "all region arguments will be intersected with the callRegions BED track.")
 
         ConfigureWorkflowOptions.addExtendedGroupOptions(self,group)
 

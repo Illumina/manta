@@ -56,13 +56,13 @@ def getOverlapCallRegions(params, genomeRegion) :
     """
     import subprocess
 
-    maxSubregionCallGap = 5000
     subregions = []
 
     chrom = genomeRegion["chrom"]
     genomeRegionStart = genomeRegion["start"]
     genomeRegionEnd = genomeRegion["end"]
     genomeRegionStr = ("%s:%s-%s" % (chrom, genomeRegionStart, genomeRegionEnd))
+
     # get overlapping subregions
     tabixCmd = [params.tabixBin, params.callRegionsBed, genomeRegionStr]
     proc = subprocess.Popen(tabixCmd, stdout=subprocess.PIPE)
@@ -78,21 +78,9 @@ def getOverlapCallRegions(params, genomeRegion) :
             raise Exception("Unexpected format in bed file: %s\n%s" %
                             (params.callRegionsBed, line))
 
-        isStartNewSubregion = True
-        prevSubregionEnd = 0
-        if len(subregions) > 0 :
-            # don't start a new subregion unless it's 5kb away from the end of the previous subregion
-            prevSubregionEnd = subregions[-1]["end"]
-            callGap = callRegionStart - prevSubregionEnd
-            isStartNewSubregion = (callGap > maxSubregionCallGap)
-
+        subregionStart = max(genomeRegionStart, callRegionStart)
         subregionEnd = min(genomeRegionEnd, callRegionEnd)
-        if isStartNewSubregion :
-            subregionStart = max(genomeRegionStart, callRegionStart)
-            subregions.append({"chrom": chrom, "start":subregionStart, "end":subregionEnd})
-        else :
-            prevSubregion = subregions[-1]
-            prevSubregion["end"] = max(subregionEnd, prevSubregionEnd)
+        subregions.append({"chrom": chrom, "start":subregionStart, "end":subregionEnd})
 
     proc.stdout.close()
     proc.wait()
@@ -159,6 +147,12 @@ def getCallRegions(params) :
         chromIsSkipped = chromIsSkipped | chromIsSkipped2
 
         for genomeRegion in params.genomeRegionList:
+            chrom = genomeRegion['chrom']
+            if genomeRegion["start"] is None:
+                genomeRegion["start"] = 1
+            if genomeRegion["end"] is None:
+                genomeRegion["end"] = params.chromSizes[chrom]
+
             subCallRegions = getOverlapCallRegions(params, genomeRegion)
             callRegionList.extend(subCallRegions)
 
