@@ -51,9 +51,10 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
     def addWorkflowGroupOptions(self,group) :
         group.add_option("--referenceFasta",type="string",metavar="FILE",
                          help="samtools-indexed reference fasta file [required]")
-        group.add_option("--runDir", type="string",metavar="DIR",
-                         help="Name of directory to be created where run scripts and output will be written. "
-                              "This directory must not already exist. (default: %default)")
+        group.add_option("--runDir", type="string", metavar="DIR",
+                         help="Name of directory to be created where all workflow scripts and output will be written. "
+                              "Each analysis requires a separate directory. (default: %default)")
+
 
     def addExtendedGroupOptions(self,group) :
         group.add_option("--scanSizeMb", type="int", metavar="INT",
@@ -115,6 +116,8 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         mantaMergeBam=joinFile(libexecDir,"mergeBam.py")
         mantaFilterBam=joinFile(libexecDir,"filterBam.py")
 
+        workflowScriptName = "runWorkflow.py"
+
         # default memory request per process-type
         #
         # where different values are provided for SGE and local runs note:
@@ -139,8 +142,10 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
 
         assertOptionExists(options.runDir,"run directory")
         options.runDir = os.path.abspath(options.runDir)
-        if os.path.exists(options.runDir):
-            raise OptParseException("Targeted runDir already exists '%s'. Each analysis requires a separate runDir." % (options.runDir))
+
+        workflowScriptPath = os.path.join(options.runDir, options.workflowScriptName)
+        if os.path.exists(workflowScriptPath):
+            raise OptParseException("Run directory already contains workflow script file '%s'. Each analysis must be configured in a separate directory." % (workflowScriptPath))
 
         # check reference fasta file exists
         assertOptionExists(options.referenceFasta,"reference fasta file")

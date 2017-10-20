@@ -4,6 +4,7 @@
 ### Changed
 - Test for unsupported BAM SEQ format (MANTA-1265)
   - Test the input bam reads for use of the = symbol in the SEQ field, and provide a clear error message if this is found.
+- Verify run directory has not already been configured (MANTA-1252/STREL-734/[#102])
 - Update minimum supported linux OS from Centos 5 to 6 (MANTA-1249)
 
 ### Fixed
