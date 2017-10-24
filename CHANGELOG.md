@@ -8,6 +8,7 @@
 - Update minimum supported linux OS from Centos 5 to 6 (MANTA-1249)
 
 ### Fixed
+- Fix imprecise SV filtering when CIEND is a subset of CIPOS (MANTA-1146)
 - Ensure consistent BND pairs for translocations or RNA fusions are selected during vcf merging (MANTA-1243)
 - Fix manta to tolerate deserialization differences in boost above/below v1.58 (MANTA-1262)
   - Impact of issue was an (infrequent) assertion using boost v1.58+: `Assertion 'size() == rhs.size()' failed`

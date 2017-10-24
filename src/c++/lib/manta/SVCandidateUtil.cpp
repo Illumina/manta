@@ -19,6 +19,7 @@
 
 /// \file
 /// \author Chris Saunders
+/// \author Naoki Nariai
 ///
 
 #include "manta/SVCandidateUtil.hh"
@@ -32,10 +33,37 @@ isSVBelowMinSize(
 {
     if (sv.bp1.interval.tid != sv.bp2.interval.tid) return false;
 
+    // check if the rare IMPRECISE case arising when CIEND is a subset of CIPOS,
+    // which is considered as small SV size
+    if (isInvalidBreakpointInterval(sv)) return true;
+
     const pos_t bpSize(std::abs(sv.bp1.interval.range.center_pos() - sv.bp2.interval.range.center_pos())-1);
     const pos_t insertSize(sv.insertSeq.size());
 
     return (std::max(bpSize,insertSize) < static_cast<pos_t>(minSize));
+}
+
+bool
+isInvalidBreakpointInterval(const SVCandidate& sv)
+{
+    using namespace EXTENDED_SV_TYPE;
+    const index_t svType(getExtendedSVType(sv));
+
+    // if SV is not translocation, and IMPRECISE, then check if the SV's CIEND is a subset of CIPOS
+    if (!isSVTransloc(svType) && sv.isImprecise())
+    {
+        const bool isBp1First(sv.bp1.interval.range.begin_pos()<=sv.bp2.interval.range.begin_pos());
+
+        const SVBreakend& bpA(isBp1First ? sv.bp1 : sv.bp2);
+        const SVBreakend& bpB(isBp1First ? sv.bp2 : sv.bp1);
+
+        const known_pos_range2& bpArange(bpA.interval.range);
+        const known_pos_range2& bpBrange(bpB.interval.range);
+
+        return bpBrange.center_pos() <= bpArange.center_pos();
+    }
+
+    return false;
 }
 
 bool

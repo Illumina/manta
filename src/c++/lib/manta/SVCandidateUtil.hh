@@ -19,6 +19,7 @@
 
 /// \file
 /// \author Chris Saunders
+/// \author Naoki Nariai
 ///
 
 #pragma once
@@ -32,6 +33,12 @@ bool
 isSVBelowMinSize(
     const SVCandidate& sv,
     const unsigned minSize);
+
+/// returns true if the rare IMPRECISE case arising when CIEND is a subset of CIPOS,
+/// which is considered as small SV size
+bool
+isInvalidBreakpointInterval(
+        const SVCandidate& sv);
 
 /// returns true if the sv is in cis orientation, i.e same chromosome
 /// and a right open breakend to the left of a left open breakend
