@@ -19,6 +19,7 @@
 
 /// \file
 /// \author Chris Saunders
+/// \author Naoki Nariai
 ///
 
 #include "SVCandidateProcessor.hh"
@@ -182,7 +183,7 @@ writeSV(
             }
         }
 
-        // check min size for candidate output:
+        // check min size, or if it is IMPRECISE case where CIEND is a subset of CIPOS for candidate output:
         if (isSVBelowMinSize(sv,opt.scanOpt.minCandidateVariantSize))
         {
 #ifdef DEBUG_GSV

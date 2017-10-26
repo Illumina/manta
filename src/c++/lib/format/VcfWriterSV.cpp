@@ -20,6 +20,7 @@
 /// \file
 /// \author Chris Saunders
 /// \author Felix Schlesinger
+/// \author Naoki Nariai
 ///
 
 #include "format/VcfWriterSV.hh"
@@ -549,12 +550,6 @@ writeInvdel(
     const pos_t bpBBkptAdjust(bpB.getLeftSideOfBkptAdjustment());
     pos += bpABkptAdjust;
     endPos += bpBBkptAdjust;
-
-    if (isImprecise)
-    {
-        // check against the rare IMPRECISE case arising when CIEND is a subset of CIPOS:
-        endPos=std::max(endPos,pos+1);
-    }
 
     if (pos<1) return;
 
