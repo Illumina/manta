@@ -57,10 +57,7 @@ isInvalidBreakpointInterval(const SVCandidate& sv)
         const SVBreakend& bpA(isBp1First ? sv.bp1 : sv.bp2);
         const SVBreakend& bpB(isBp1First ? sv.bp2 : sv.bp1);
 
-        const known_pos_range2& bpArange(bpA.interval.range);
-        const known_pos_range2& bpBrange(bpB.interval.range);
-
-        return bpBrange.center_pos() <= bpArange.center_pos();
+        return bpB.interval.range.center_pos() <= bpA.interval.range.center_pos();
     }
 
     return false;
