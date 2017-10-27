@@ -1,5 +1,7 @@
 ## Unreleased
 ### Added
+- Add a configurable option `graphNodeMaxEdgeCount` (MANTA-1247)
+  - During SV candidate generation, if both nodes of an edge have an edge count higher than the configured value, that edge will be skipped for evaluation. 
 
 ### Changed
 - Test for unsupported BAM SEQ format (MANTA-1265)

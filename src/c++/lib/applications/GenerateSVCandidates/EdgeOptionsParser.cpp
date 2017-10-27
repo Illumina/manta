@@ -45,7 +45,9 @@ getOptionsDescription(
     ("bin-count", po::value(&opt.binCount)->default_value(opt.binCount),
      "Specify how many bins the SV candidate problem should be divided into, where bin-index can be used to specify which bin to solve")
     ("bin-index", po::value(&opt.binIndex)->default_value(opt.binIndex),
-     "specify which bin to solve when the SV candidate problem is subdivided into bins. Value must bin in [0,bin-count)")
+     "Specify which bin to solve when the SV candidate problem is subdivided into bins. Value must bin in [0,bin-count)")
+    ("max-edge-count", po::value(&opt.graphNodeMaxEdgeCount)->default_value(opt.graphNodeMaxEdgeCount),
+     "Specify the maximum number of edge count. If both nodes of an edge have an edge count higher than this, the edge is skipped for evaluation.")
     (locusIndexKey, po::value<std::string>(),
      "Instead of solving for all SV candidates in a bin, solve for candidates of a particular locus or edge."
      " If this argument is specified then bin-index is ignored."

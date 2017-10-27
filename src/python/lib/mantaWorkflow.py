@@ -541,6 +541,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         hygenCmd.extend(["--graph-file",graphPath])
         hygenCmd.extend(["--bin-index", str(binId)])
         hygenCmd.extend(["--bin-count", str(self.params.nonlocalWorkBins)])
+        hygenCmd.extend(["--max-edge-count", str(self.params.graphNodeMaxEdgeCount)])
         hygenCmd.extend(["--min-candidate-sv-size", self.params.minCandidateVariantSize])
         hygenCmd.extend(["--min-candidate-spanning-count", self.params.minCandidateSpanningCount])
         hygenCmd.extend(["--min-scored-sv-size", self.params.minScoredVariantSize])
