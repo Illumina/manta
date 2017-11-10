@@ -1,12 +1,16 @@
-## Unreleased
+## v1.2.2 - 2017-11-10
+
+This is a minor update from v1.2.1
+
 ### Added
 - Add a configurable option `graphNodeMaxEdgeCount` (MANTA-1247)
-  - During SV candidate generation, if both nodes of an edge have an edge count higher than the configured value, that edge will be skipped for evaluation. 
+  - During SV candidate generation, if both nodes of an edge have an edge count higher than the configured value, that edge will be skipped for evaluation.
 
 ### Changed
 - Test for unsupported BAM SEQ format (MANTA-1265)
   - Test the input bam reads for use of the = symbol in the SEQ field, and provide a clear error message if this is found.
 - Verify run directory has not already been configured (MANTA-1252/STREL-734/[#102])
+- Update minumum boost version to 1.58 (MANTA-1250)
 - Update minimum supported linux OS from Centos 5 to 6 (MANTA-1249)
 
 ### Fixed
