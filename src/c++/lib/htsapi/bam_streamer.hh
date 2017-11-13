@@ -36,6 +36,8 @@
 struct stream_state_reporter
 {
     virtual void report_state(std::ostream& /*os*/) const {}
+
+    virtual  ~stream_state_reporter();
 };
 
 

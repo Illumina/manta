@@ -34,6 +34,9 @@
 #include <sstream>
 
 
+stream_state_reporter::
+~stream_state_reporter(){}
+
 
 bam_streamer::
 bam_streamer(
