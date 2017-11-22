@@ -24,6 +24,15 @@ This script configures the Manta SV analysis workflow
 
 import os,sys
 
+if sys.version_info >= (3,0):
+    import platform
+    raise Exception("Manta does not currently support python3 (version %s detected)" % (platform.python_version()))
+
+if sys.version_info < (2,6):
+    import platform
+    raise Exception("Manta requires python2 version 2.6+ (version %s detected)" % (platform.python_version()))
+
+
 scriptDir=os.path.abspath(os.path.dirname(__file__))
 scriptName=os.path.basename(__file__)
 workflowDir=os.path.abspath(os.path.join(scriptDir,"@THIS_RELATIVE_PYTHON_LIBDIR@"))

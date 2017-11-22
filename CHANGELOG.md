@@ -1,3 +1,8 @@
+## Unreleased
+
+### Fixed
+- Provide clear error message when attempting to configure/run with python3 (MANTA-1285)
+
 ## v1.2.2 - 2017-11-10
 
 This is a minor update from v1.2.1

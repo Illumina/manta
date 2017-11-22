@@ -413,6 +413,11 @@ def exeFile(filename):
 
 
 def bamListCatCmd(samtoolsBin, bamList, output) :
+    """
+    Concatenate an input list of bam files to an output bam file, and index.
+
+    If len(bamList) is 1 the file will be moved to the output file name.
+    """
     assert(len(bamList) > 0)
 
     if len(bamList) > 1:

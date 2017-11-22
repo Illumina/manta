@@ -157,7 +157,7 @@ class ConfigureWorkflowOptions(object) :
                 if k == "isAllHelp" : continue
                 iniSections[primary_section][k] = v
 
-        except OptParseException, e :
+        except OptParseException as e :
             noArgOrError(parser,str(e))
 
         return options,iniSections
