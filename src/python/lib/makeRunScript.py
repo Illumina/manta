@@ -60,7 +60,7 @@ def makeRunScript(scriptFile, workflowModulePath, workflowClassName, primaryConf
     sfp=open(scriptFile,"w")
 
     if pythonBin is None :
-        pythonBin="/usr/bin/env python"
+        pythonBin="/usr/bin/env python2"
 
     sfp.write(runScript1 % (pythonBin, " ".join(sys.argv),workflowModuleDir,workflowModuleName,workflowClassName))
 
