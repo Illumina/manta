@@ -2,6 +2,7 @@
 
 ### Fixed
 - Provide clear error message when attempting to configure/run with python3 (MANTA-1285)
+- Improve error message/docs for alignment records with unknown sequence (SEQ='\*') (MANTA-1295/[#111])
 
 ## v1.2.2 - 2017-11-10
 

@@ -229,6 +229,7 @@ joint diploid sample analysis.
 The following limitations exist on the input BAM or CRAM files provided to
 Manta:
 
+* Alignments cannot have an unknown read sequence (SEQ="*")
 * Alignments cannot contain the "=" character in the SEQ field.
 * Alignments cannot use the sequence match/mismatch ("="/"X") CIGAR notation
 * RG (read group) tags in the alignment records are ignored -- each file will be

@@ -132,6 +132,15 @@ struct SVLocusScanner
         const unsigned alignedSize(ALIGNPATH::apath_read_length(path));
         const unsigned seqSize(bamRead.read_size());
 
+        if (seqSize == 0)
+        {
+            std::ostringstream oss;
+            oss << "ERROR: Input alignment record contains unknown read sequence (SEQ='*'), "
+                << "which cannot be used for variant calling:\n";
+            oss << bamRead << "\n";
+            BOOST_THROW_EXCEPTION(illumina::common::LogicException(oss.str()));
+        }
+
         if (seqSize != alignedSize)
         {
             std::ostringstream oss;

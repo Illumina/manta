@@ -30,7 +30,7 @@
 #include "common/Exceptions.hh"
 #include "htsapi/bam_header_info.hh"
 #include "htsapi/bam_streamer.hh"
-
+#include "manta/SVLocusScanner.hh"
 
 #include <iostream>
 #include <sstream>
@@ -63,7 +63,7 @@ struct DepthTracker
         const bam_record& bamRead)
     {
         const pos_t pos(bamRead.pos()-1);
-        const unsigned rsize(bamRead.read_size());
+        const unsigned readSize(bamRead.read_size());
         if (! _isRegionInit)
         {
             _maxPos=pos;
@@ -71,7 +71,7 @@ struct DepthTracker
         }
 
         for (; _maxPos<pos; ++_maxPos) flushPos(_maxPos);
-        _depth.inc(pos,rsize);
+        _depth.inc(pos,readSize);
         _count++;
     }
 
@@ -475,6 +475,9 @@ readChromDepthFromAlignment(
 
                 // apply all filters:
                 if (bamRead.is_unmapped()) continue;
+
+                // QC reads:
+                SVLocusScanner::checkReadSize(bamRead);
 
                 cdTracker.addRead(bamRead);
 
