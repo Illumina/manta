@@ -185,18 +185,6 @@ struct SVLocusScanner
         return (bamRead.is_unmapped());
     }
 
-    /// this predicate runs any fast tests on the acceptability of a
-    /// read for the SVLocus build
-    /// Tests also for low mapq
-    bool
-    isReadFiltered(
-        const bam_record& bamRead) const
-    {
-        if      (isReadFilteredCore(bamRead)) return true;
-        else if (bamRead.map_qual() < _opt.minMapq) return true;
-        return false;
-    }
-
     unsigned
     getMinMapQ() const
     {

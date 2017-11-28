@@ -145,7 +145,7 @@ private:
     process_pos(const int stage_no,
                 const pos_t pos) override;
 
-    /// \brief Add the input read to this objects running estimate of read depth per position.
+    /// \brief Add the input read to this object's running estimate of read depth per position.
     ///
     /// (see class docs for overview of high depth filtration)
     void

@@ -731,7 +731,7 @@ getBreakendReads(
 
     if (isRecoverRemotes)
     {
-        const TimeScoper remoteTIme(_remoteTime);
+        const TimeScoper remoteTime(_remoteTime);
         for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
         {
 #ifdef DEBUG_REMOTES
@@ -795,5 +795,4 @@ assembleSVBreakends(
     AssemblyReadOutput readInfo;
 
     runIterativeAssembler(_assembleOpt, reads, readInfo, as);
-
 }
