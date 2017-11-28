@@ -164,8 +164,6 @@ addSVNodeRead(
 {
     using namespace illumina::common;
 
-    if (scanner.isMappedReadFilteredCore(bamRead)) return;
-
     if (bamRead.map_qual() < scanner.getMinTier2MapQ()) return;
 
     const bool isSubMapped(bamRead.map_qual() < scanner.getMinMapQ());
@@ -353,16 +351,13 @@ addSVNodeData(
             const pos_t refPos(bamRead.pos()-1);
             if (refPos >= searchEndPos) break;
 
+            if (SVLocusScanner::isMappedReadFilteredCore(bamRead)) continue;
+
             if (isMaxDepth)
             {
                 if (! isTumor)
                 {
-                    // depth estimation relies on a simple filtration criteria to stay in sync with the chromosome mean
-                    // depth estimates:
-                    if (! bamRead.is_unmapped())
-                    {
-                        addReadToDepthEst(bamRead, searchBeginPos, normalDepthBuffer);
-                    }
+                    addReadToDepthEst(bamRead, searchBeginPos, normalDepthBuffer);
                 }
 
                 assert(refPos<searchEndPos);

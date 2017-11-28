@@ -240,18 +240,9 @@ process_pos(const int stage_no,
 void
 SVLocusSetFinder::
 addToDepthBuffer(
-    const unsigned defaultReadGroupIndex,
     const bam_record& bamRead)
 {
     if (! _isMaxDepthFilter) return;
-
-    // estimate depth from normal sample(s) only:
-    if (_isAlignmentTumor[defaultReadGroupIndex]) return;
-
-    // depth estimation uses only very simple read filtration criteria (these filters should be synced with
-    // the chromosome expected depth estimator)
-    /// TODO: Update filtration here to match current expected depth filtration
-    if (bamRead.is_unmapped()) return;
 
     const pos_t refPos(bamRead.pos()-1);
 
@@ -270,22 +261,14 @@ update(
     const bam_record& bamRead,
     const unsigned defaultReadGroupIndex)
 {
-    // True if the read comes from a tumor sample.
-    const bool isTumor(_isAlignmentTumor[defaultReadGroupIndex]);
-    if (! isTumor)
-    {
-        if (! bamRead.is_unmapped())
-        {
-            // Update the depth buffer used to determine high-depth read filtration
-            addToDepthBuffer(defaultReadGroupIndex, bamRead);
-        }
-    }
-
     // This is the primary read filtration step for the purpose of graph building
     //
     // Although unmapped reads themselves are filtered out, reads with unmapped mates are still
     // accepted, because these contribute signal for assembly (indel) regions.
     if (SVLocusScanner::isMappedReadFilteredCore(bamRead)) return;
+
+    const bool isTumor(_isAlignmentTumor[defaultReadGroupIndex]);
+    if (! isTumor) addToDepthBuffer(bamRead);
 
     // Filter out reads from high-depth chromosome regions
     if (_isMaxDepthFilter)

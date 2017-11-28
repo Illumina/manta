@@ -1,5 +1,9 @@
 ## Unreleased
 
+### Changed
+- Change depth estimation to filter all reads never seen by the SV caller prior to computing depth (MANTA-1296)
+  - Expected depth per chromosome and local depth per locus/variant are now computed after removing filtered, pcr-duplicate, and secondary reads.
+
 ### Fixed
 - Provide clear error message when attempting to configure/run with python3 (MANTA-1285)
 - Improve error message/docs for alignment records with unknown sequence (SEQ='\*') (MANTA-1295/[#111])

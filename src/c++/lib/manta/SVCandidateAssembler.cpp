@@ -449,23 +449,24 @@ getBreakendReads(
             const pos_t refPos(bamRead.pos()-1);
             if (refPos >= searchEndPos) break;
 
+            // don't filter out MAPQ0 reads here because the split reads tend to have reduced mapping scores
+            // don't filter out unmapped reads here because shadow reads are used in assembly
+            if (SVLocusScanner::isReadFilteredCore(bamRead)) continue;
+
             // Filter reads which won't be used in assembly:
             //
             if (isMaxDepth)
             {
                 if (! isTumor)
                 {
-                    // depth estimation relies on a simple filtration criteria to stay in sync with the chromosome mean
-                    // depth estimates:
+                    // also filter out unmapped reads here to stay in sync with process used to estimate expected
+                    // depth:
                     if (! bamRead.is_unmapped())
                     {
                         addReadToDepthEst(bamRead, searchBeginPos, normalDepthBuffer);
                     }
                 }
             }
-
-            // don't filter out MAPQ0 because the split reads tend to have reduced mapping scores:
-            if (SVLocusScanner::isReadFilteredCore(bamRead)) continue;
 
             if (bamRead.isNonStrictSupplement()) continue;
 

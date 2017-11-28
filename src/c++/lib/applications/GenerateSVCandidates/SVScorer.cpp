@@ -190,11 +190,10 @@ getBreakendMaxMappedDepthAndMQ0(
         {
             const bam_record& bamRead(*(bamStream.get_record_ptr()));
 
-            // turn filtration down to mapped only to match depth estimate method:
-            if (bamRead.is_unmapped()) continue;
-
             const pos_t refPos(bamRead.pos()-1);
             if (refPos >= searchRange.end_pos()) break;
+
+            if (SVLocusScanner::isMappedReadFilteredCore(bamRead)) continue;
 
             addReadToDepthEst(bamRead,searchRange.begin_pos(),depth);
 

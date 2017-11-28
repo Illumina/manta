@@ -150,7 +150,6 @@ private:
     /// (see class docs for overview of high depth filtration)
     void
     addToDepthBuffer(
-        const unsigned defaultReadGroupIndex,
         const bam_record& bamRead);
 
     enum hack_t

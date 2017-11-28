@@ -64,7 +64,7 @@ For each chromosome, depth is estimated using a modified median calculation. As 
 
 The depth estimation procedure repeatedly cycles through all segments. Within each segment, at least 40,000 reads are scanned before moving to the next segment (additional reads are scanned until the mapping position changes.) After the target number of reads have been scanned from every segment in the chromosome, the procedure returns to the first position and repeats this procedure starting from the last unscanned position. The process repeats until the all reads in all segments are scanned or the depth estimate converges.
 
-Each scanned read is filtered if it is unmapped. Otherwise the read alignment is ignored and the read is applied to a simple depth pileup assuming a complete and ungapped alignment starting from the mapping position. Every 1M reads triggers a convergence check, but only after every chromosome segment has been sampled at least once.
+Each scanned read is removed from consideration if it is marked as filtered, PCR duplicate, secondary, supplemental, or if the read is unmapped. Otherwise the read alignment is ignored and the read is applied to a simple depth pileup assuming a complete and ungapped alignment starting from the mapping position. Every 1M reads triggers a convergence check, but only after every chromosome segment has been sampled at least once.
 
 Depth is estimated from the resulting pileup, using a simple median over all depth observations from the pileup structure excluding zero counts. Convergence is checked between the depth estimate of the last convergence check and the current one. An absolute change of less than 0.05 is treated as converged (or given the median case, the integer median estimates must be an exact match).
 
@@ -587,7 +587,7 @@ The current filters are:
 
 \begin{itemize}
 
-\item \textit{High read depth} To remove calls in pericentromeric and other regions with collapsed reference representation, calls with very high depth relative to the mean depth of the chromosome are filtered out. Note for somatic calling only the depth of the normal sample is used for testing filtration.
+\item \textit{High read depth} To remove calls in pericentromeric and other regions with collapsed reference representation, calls with very high depth relative to the expected depth of the chromosome are filtered out. Note for somatic calling only the depth of the normal sample is used for testing filtration.
 
 The depth associated with the variant call is found from searching within 50 bases of each breakend region's center position. The position with the highest depth in the normal sample within these regions is treated as the variant depth. If the variant depth exceeds 3 times the average chromosome depth then the variant is filtered.
 
