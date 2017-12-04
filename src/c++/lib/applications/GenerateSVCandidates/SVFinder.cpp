@@ -224,7 +224,7 @@ addSVNodeRead(
 
         if (! locus.getNode(readLocalIndex).getInterval().isIntersect(localNode.getInterval())) continue; //todo should this intersect be checked in swapped orientation?
 
-        svDataGroup.add(bamRead, isExpectRepeat, isNode1, isSubMapped);
+        svDataGroup.add(bamHeader, bamRead, isExpectRepeat, isNode1, isSubMapped);
 
         // once any loci has achieved the local/remote overlap criteria, there's no reason to keep scanning loci
         // of the same bam record:

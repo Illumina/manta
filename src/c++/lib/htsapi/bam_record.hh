@@ -290,7 +290,7 @@ public:
         return bam_seq(bam_get_seq(_bp),read_size());
     }
 
-    /// get string AUX field, return nullptr if field is not found, or field is not a string
+    /// Get string AUX field, return nullptr if field is not found, or field is not a string
     ///
     /// \param[in] tag AUX field tag. This is a char array of length two, null term is not required
     ///
@@ -377,6 +377,6 @@ private:
 };
 
 
+/// Generate summary bam_record output for developer debugging
 std::ostream&
 operator<<(std::ostream& os, const bam_record& br);
-

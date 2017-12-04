@@ -21,6 +21,7 @@
 /// \author Chris Saunders
 
 #include "common/Exceptions.hh"
+#include "htsapi/bam_record_util.hh"
 #include "manta/SVCandidateSetData.hh"
 
 #include <cassert>
@@ -96,7 +97,9 @@ getSequenceFragment(
 
 void
 SVCandidateSetSequenceFragmentSampleGroup::
-add(const bam_record& bamRead,
+add(
+    const bam_header_info& bamHeader,
+    const bam_record& bamRead,
     const bool isExpectRepeat,
     const bool isNode1,
     const bool isSubMapped)
@@ -145,8 +148,12 @@ add(const bam_record& bamRead,
 
         std::ostringstream oss;
         oss << "Unexpected read name collision.\n"
-            << "\tExisting read: " << targetRead << "\n"
-            << "\tNew read: " << bamRead << "\n";
+            << "\tExisting read: ";
+        summarizeAlignmentRecord(bamHeader, targetRead.bamrec, oss);
+        oss << "\n"
+            << "\tNew read: ";
+        summarizeAlignmentRecord(bamHeader, bamRead, oss);
+        oss << "\n";
         BOOST_THROW_EXCEPTION(LogicException(oss.str()));
     }
 

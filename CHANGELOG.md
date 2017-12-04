@@ -7,6 +7,8 @@
 ### Fixed
 - Provide clear error message when attempting to configure/run with python3 (MANTA-1285)
 - Improve error message/docs for alignment records with unknown sequence (SEQ='\*') (MANTA-1295/[#111])
+- Improve error message when two alignments use the same QNAME/read-number (MANTA-1293)
+  - Message changed to help end-users track down the issue in the alignment file more easily - now includes chromosome name instead of contig index and 1-indexed alignment position.
 
 ## v1.2.2 - 2017-11-10
 

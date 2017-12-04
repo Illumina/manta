@@ -24,7 +24,10 @@
 
 #include "blt_util/align_path.hh"
 #include "blt_util/SimpleAlignment.hh"
+#include "htsapi/bam_header_info.hh"
 #include "htsapi/bam_record.hh"
+
+#include <iosfwd>
 
 
 /// \brief Test if this read is part of a pair where both members are mapped.
@@ -81,10 +84,12 @@ is_overlapping_pair(
     const bam_record& bam_read,
     const SimpleAlignment& matchedAlignment);
 
+
 /// \return The average basecall quality score for this read.
 unsigned
 get_avg_quality(
     const bam_record& bam_read);
+
 
 /// select 'first' read in pair such that you
 /// consistently get only one read per-pair
@@ -99,6 +104,7 @@ isFirstRead(
     return false;
 }
 
+
 /// \return The BAM record's auxillary RG tag value, or an empty string if no RG tag exists.
 inline
 const char*
@@ -112,3 +118,11 @@ getReadGroup(
 
     return ((nullptr == rgStr) ? defaultRG : rgStr);
 }
+
+
+/// Pretty print summary information from an alignment record for an end-user error message
+void
+summarizeAlignmentRecord(
+    const bam_header_info& bamHeader,
+    const bam_record& bamRead,
+    std::ostream& os);

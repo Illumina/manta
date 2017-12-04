@@ -31,6 +31,7 @@
 #include <iosfwd>
 #include <map>
 #include <vector>
+#include <htsapi/bam_header_info.hh>
 
 //#define DEBUG_SVDATA
 
@@ -186,9 +187,18 @@ struct SVCandidateSetSequenceFragmentSampleGroup
         }
     }
 
-    /// add a new bam record to the set:
+    /// Add a new bam record to the set
+    ///
+    /// \param[in] bamHeader Bam header information is (only) used to improve the detail of exception messages.
+    /// \param[in] bamRead New bam record to add to the sample group set
+    /// \param[in[ isExpectRepeat If false, raise an exception for a repeated BAM QNAME, otherwise skip all but
+    ///             the first repeated instance.
+    /// \param[in] isNode1 True if this is the first (of two) nodes in the evaluated edge
+    /// \param[in] isSubMapped True if read is below default mapping quality threshold
     void
-    add(const bam_record& bamRead,
+    add(
+        const bam_header_info& bamHeader,
+        const bam_record& bamRead,
         const bool isExpectRepeat,
         const bool isNode1,
         const bool isSubMapped);

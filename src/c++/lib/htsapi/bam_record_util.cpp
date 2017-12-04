@@ -21,6 +21,8 @@
 #include "align_path_bam_util.hh"
 #include "htsapi/SimpleAlignment_bam_util.hh"
 
+#include <iostream>
+
 
 bool
 is_mapped_pair(
@@ -161,4 +163,69 @@ get_avg_quality(
     }
     // this does not capture the decimal remainder but well...
     return (sum/len);
+}
+
+
+
+static
+std::string
+getChromName(
+    const bam_header_info& bamHeader,
+    const int tid)
+{
+    if (tid >= 0)
+    {
+        assert(tid < static_cast<int>(bamHeader.chrom_data.size()));
+        return bamHeader.chrom_data[tid].label;
+    }
+    else
+    {
+            return "UNKNOWN";
+    }
+}
+
+
+
+void
+summarizeAlignmentRecord(
+    const bam_header_info& bamHeader,
+    const bam_record& bamRead,
+    std::ostream& os)
+{
+    if (bamRead.empty())
+    {
+        os << "NONE";
+        return;
+    }
+
+    os << bamRead.qname() << "/" << bamRead.read_no()
+       << " chrom:pos:strand " << getChromName(bamHeader, bamRead.target_id()) << ":" << bamRead.pos() << ":" << (bamRead.is_fwd_strand() ? '+' : '-');
+
+    ALIGNPATH::path_t apath;
+    bam_cigar_to_apath(bamRead.raw_cigar(),bamRead.n_cigar(),apath);
+    os << " cigar: " << apath;
+
+
+    os << " templSize: " << bamRead.template_size();
+
+    // print SAtag if present:
+    static const char satag[] = {'S','A'};
+    const char* saStr(bamRead.get_string_tag(satag));
+    if (nullptr != saStr)
+    {
+        os  << " sa: " << saStr;
+    }
+    if (bamRead.is_secondary())
+    {
+        os << " issec";
+    }
+    if (bamRead.is_supplement())
+    {
+        os << " issupp";
+    }
+
+    if (bamRead.is_paired())
+    {
+        os  << " mateChrom:pos:strand " << getChromName(bamHeader, bamRead.mate_target_id()) << ":" << bamRead.mate_pos() << ":" << (bamRead.is_mate_fwd_strand() ? '+' : '-');
+    }
 }
