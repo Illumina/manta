@@ -43,7 +43,7 @@ ExceptionData::ExceptionData(int errorNumber, const std::string& message) : boos
 std::string ExceptionData::getContext() const
 {
     const std::string now = boost::posix_time::to_simple_string(boost::posix_time::second_clock::local_time());
-    return now + ": " + std::string(strerror(errorNumber_)) + ": " + boost::diagnostic_information(*this);
+    return now + " '" + std::string(strerror(errorNumber_)) + "' " + boost::diagnostic_information(*this);
 }
 
 IoException::IoException(int errorNumber, const std::string& message)

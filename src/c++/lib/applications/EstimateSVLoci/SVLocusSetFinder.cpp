@@ -325,7 +325,7 @@ update(
     if (! _scanRegion.range.is_pos_intersect(bamRead.pos()-1)) return;
 
     // QC check of read length
-    SVLocusScanner::checkReadSize(bamRead);
+    SVLocusScanner::checkReadSize(streamErrorReporter, bamRead);
 
     // update the stage manager to move the head pointer forward to the current read's position
     //

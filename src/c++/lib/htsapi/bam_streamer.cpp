@@ -301,7 +301,6 @@ report_state(std::ostream& os) const
         const char* chrom_name(target_id_to_name(bamp->target_id()));
         os << "\tbam record RNAME: " << chrom_name << "\n";
         os << "\tbam record POS: " << bamp->pos() << "\n";
-
     }
     else
     {

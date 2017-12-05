@@ -41,10 +41,11 @@ dump_cl(int argc,
         char* argv[],
         std::ostream& os)
 {
-    os << "cmdline:";
+    os << "cmdline:\t";
     for (int i(0); i<argc; ++i)
     {
-        os << ' ' << argv[i];
+        if (i) os << ' ';
+        os << argv[i];
     }
     os << "\n";
 }
@@ -88,7 +89,6 @@ post_catch(
     char* argv[],
     std::ostream& os) const
 {
-    os << "...caught in program.run()\n";
     dump_cl(argc,argv,log_os);
     os << "version:\t" << version() << "\n";
     os << "buildTime:\t" << buildTime() << "\n";
@@ -119,7 +119,7 @@ run(int argc, char* argv[]) const
     }
     catch (const blt_exception& e)
     {
-        log_os << "FATAL_ERROR: " << name() << " EXCEPTION: " << e.what() << "\n";
+        log_os << "FATAL_ERROR: " << e.what() << "\n";
         post_catch(argc,argv,log_os);
     }
     catch (const illumina::common::ExceptionData& e)
@@ -127,19 +127,19 @@ run(int argc, char* argv[]) const
         // Note that ExceptionData.getContext() already calls std::exception::what(), so additionally calling
         // e.Message() would only write the exception message twice.
         /// TODO Redesign the above exception class so that the correct usage is obvious
-        log_os << "FATAL_ERROR: " << name() << " EXCEPTION: "
+        log_os << "FATAL_ERROR: "
                << e.getContext() << "\n";
         post_catch(argc,argv,log_os);
     }
     catch (const boost::exception& e)
     {
-        log_os << "FATAL_ERROR: " << name() << " EXCEPTION: "
+        log_os << "FATAL_ERROR: "
                << boost::diagnostic_information(e) << "\n";
         post_catch(argc,argv,log_os);
     }
     catch (const std::exception& e)
     {
-        log_os << "FATAL_ERROR: EXCEPTION: " << e.what() << "\n";
+        log_os << "FATAL_ERROR: " << e.what() << "\n";
         post_catch(argc,argv,log_os);
     }
     catch (...)

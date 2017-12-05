@@ -484,7 +484,7 @@ readChromDepthFromAlignment(
                 if (bamRead.is_supplement() || bamRead.is_secondary()) continue;
 
                 // QC reads:
-                SVLocusScanner::checkReadSize(bamRead);
+                SVLocusScanner::checkReadSize(read_stream, bamRead);
 
                 cdTracker.addRead(bamRead);
 

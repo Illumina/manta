@@ -338,6 +338,9 @@ addSVNodeData(
         SVCandidateSetSequenceFragmentSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
         bam_streamer& readStream(*bamPtr);
 
+        // record the associated stream name to improve error messages
+        svDataGroup.dataSourceName = readStream.name();
+
         // set bam stream to new search interval:
         readStream.resetRegion(searchInterval.tid,searchInterval.range.begin_pos(),searchInterval.range.end_pos());
 

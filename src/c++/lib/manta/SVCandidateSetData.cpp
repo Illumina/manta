@@ -147,7 +147,7 @@ add(
         if (isExpectRepeat) return;
 
         std::ostringstream oss;
-        oss << "Unexpected read name collision.\n"
+        oss << "Unexpected alignment name collision. Source: '" << dataSourceName << "'\n"
             << "\tExisting read: ";
         summarizeAlignmentRecord(bamHeader, targetRead.bamrec, oss);
         oss << "\n"
@@ -156,7 +156,6 @@ add(
         oss << "\n";
         BOOST_THROW_EXCEPTION(LogicException(oss.str()));
     }
-
 
     targetRead.bamrec = bamRead;
     targetRead.isNode1 = isNode1;

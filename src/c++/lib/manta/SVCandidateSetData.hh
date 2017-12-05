@@ -256,6 +256,11 @@ private:
     SVCandidateSetSequenceFragment*
     getSequenceFragment(const pindex_t::key_type& key);
 
+public:
+    /// Record a name for the data source to improve error messages:
+    std::string dataSourceName = "UNKNOWN";
+
+private:
     pair_t _pairs;
     pindex_t _pairIndex;
 
