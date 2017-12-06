@@ -142,7 +142,7 @@ struct SVLocusScanner
         if      (bamRead.is_filter()) return true;
         else if (bamRead.is_dup()) return true;
         // supplementary reads without SA tag
-        else if (bamRead.is_supplement() && (! bamRead.isSASplit())) return true;
+        else if (bamRead.is_supplementary() && (! bamRead.isSASplit())) return true;
         else
         {
             // hack to work with bwamem '-M' formatting,

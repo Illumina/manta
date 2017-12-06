@@ -60,7 +60,7 @@ operator<<(std::ostream& os, const bam_record& br)
         {
             os << " issec";
         }
-        if (br.is_supplement())
+        if (br.is_supplementary())
         {
             os << " issupp";
         }

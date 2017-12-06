@@ -132,7 +132,7 @@ public:
     {
         return ((_bp->core.flag & BAM_FLAG::SECONDARY) != 0);
     }
-    bool is_supplement() const
+    bool is_supplementary() const
     {
         return ((_bp->core.flag & BAM_FLAG::SUPPLEMENT) != 0);
     }
@@ -252,7 +252,7 @@ public:
     bool
     isNonStrictSupplement() const
     {
-        if (is_supplement()) return true;
+        if (is_supplementary()) return true;
         if (! is_secondary()) return false;
         return isSASplit();
     }

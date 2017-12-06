@@ -206,22 +206,22 @@ summarizeAlignmentRecord(
     os << " cigar: " << apath;
 
 
-    os << " templSize: " << bamRead.template_size();
+    os << " templateSize: " << bamRead.template_size();
 
     // print SAtag if present:
     static const char satag[] = {'S','A'};
     const char* saStr(bamRead.get_string_tag(satag));
     if (nullptr != saStr)
     {
-        os  << " sa: " << saStr;
+        os  << " SA: " << saStr;
     }
     if (bamRead.is_secondary())
     {
-        os << " issec";
+        os << " secondary";
     }
-    if (bamRead.is_supplement())
+    if (bamRead.is_supplementary())
     {
-        os << " issupp";
+        os << " supplementary";
     }
 
     if (bamRead.is_paired())
