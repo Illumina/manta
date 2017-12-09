@@ -179,7 +179,7 @@ def getDepthFromAlignments(self, bamList, outputPath, taskPrefix="", dependencie
             cmd = [self.params.getChromDepthBin,"--ref", self.params.referenceFasta, "--align-file", bamFile, "--output", tmpFiles[-1]]
             for (chromIndex,chromLabel) in chromGroup :
                 cmd.extend(["--chrom",chromLabel])
-            scatterTasks.add(self.addTask(preJoin(taskPrefix,"estimateChromDepth_"+cid),cmd,dependencies=dirTask))
+            scatterTasks.add(self.addTask(preJoin(taskPrefix,"estimateChromDepth_"+cid),cmd,dependencies=dirTask,memMb=self.params.estimateMemMb))
 
         assert(len(tmpFiles) != 0)
 

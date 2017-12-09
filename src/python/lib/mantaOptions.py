@@ -73,6 +73,10 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
                               "'--region chr2:100-2000 --region chr3:2500-3000' (two regions)'. If this "
                               "option is specified (one or more times) together with the --callRegions BED file, then "
                               "all region arguments will be intersected with the callRegions BED track.")
+        group.add_option("--callMemMb",dest="callMemMbOverride",type="int",metavar="INT",
+                         help="Set default task memory requirement (in megabytes) for common tasks. This may benefit "
+                              "an analysis of unusual depth, chimera rate, etc.. 'Common' tasks refers to most "
+                              "compute intensive scatter-phase tasks of graph creation and candidate generation.")
 
         ConfigureWorkflowOptions.addExtendedGroupOptions(self,group)
 
@@ -128,12 +132,13 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         #       use ever expected in a production run. The consequence of exceeding the mean is
         #       a slow run due to swapping.
         #
-        estimateMemMb=2*1024
+        estimateMemMb=1.5*1024
         mergeMemMb=4*1024
         hyGenSGEMemMb=4*1024
-        hyGenLocalMemMb=2*1024
+        hyGenLocalMemMb=1.5*1024
 
         scanSizeMb = 12
+        callMemMbOverride = None
 
         return cleanLocals(locals())
 

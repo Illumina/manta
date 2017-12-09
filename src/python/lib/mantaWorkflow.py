@@ -507,10 +507,6 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
     isSomatic = (len(self.params.normalBamList) and len(self.params.tumorBamList))
     isTumorOnly = ((not isSomatic) and len(self.params.tumorBamList))
 
-    hyGenMemMb = self.params.hyGenLocalMemMb
-    if self.getRunMode() == "sge" :
-        hyGenMemMb = self.params.hyGenSGEMemMb
-
     hygenTasks=set()
     if self.params.isGenerateSupportBam :
         sortBamVcfTasks = set()
@@ -595,7 +591,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
             hygenCmd.append("--output-contigs")
 
         hygenTask = preJoin(taskPrefix,"generateCandidateSV_"+binStr)
-        hygenTasks.add(self.addTask(hygenTask,hygenCmd,dependencies=dirTask, memMb=hyGenMemMb))
+        hygenTasks.add(self.addTask(hygenTask,hygenCmd,dependencies=dirTask, memMb=self.params.hyGenMemMb))
 
         # TODO: if the bam is large, for efficiency, consider
         # 1) filtering the bin-specific bam first w.r.t. the final candidate vcf
@@ -865,6 +861,18 @@ class MantaWorkflow(WorkflowRunner) :
         self.params.isIgnoreAnomProperPair = (self.params.isRNA)
 
 
+    def setCallMemMb(self) :
+        "Setup default task memory requirements"
+
+        if self.params.callMemMbOverride is not None :
+            self.params.estimateMemMb = self.params.callMemMbOverride
+            self.params.hyGenMemMb = self.params.callMemMbOverride
+        else :
+            if self.getRunMode() == "sge" :
+                self.params.hyGenMemMb = self.params.hyGenSGEMemMb
+            else :
+                self.params.hyGenMemMb = self.params.hyGenLocalMemMb
+
 
     def getSuccessMessage(self) :
         "Message to be included in email for successful runs"
@@ -877,6 +885,7 @@ class MantaWorkflow(WorkflowRunner) :
 
     def workflow(self) :
         self.flowLog("Initiating Manta workflow version: %s" % (__version__))
+        self.setCallMemMb()
 
         graphTaskDependencies = set()
 

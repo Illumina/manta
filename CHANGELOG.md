@@ -3,6 +3,9 @@
 ### Changed
 - Change depth estimation to filter all reads never seen by the SV caller prior to computing depth (MANTA-1296)
   - Expected depth per chromosome and local depth per locus/variant are now computed after removing filtered, pcr-duplicate, and secondary reads.
+- Lower default memory requirements for scatter phase tasks (MANTA-1307)
+  - Reduce from 2Gb to 1.5Gb to enable all cores by default on c4.8xlarge/other c\* servers.
+  - Added new `--callMemMb` option to override this value for cases of extreme depth/chimera rate, etc...
 
 ### Fixed
 - Provide clear error message when attempting to configure/run with python3 (MANTA-1285)
