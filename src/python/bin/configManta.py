@@ -106,6 +106,7 @@ You must specify a BAM or CRAM file for at least one sample.
             'isRNA' : False,
             'isOutputContig' : False,
             'isUnstrandedRNA' : False,
+            'existingAlignStatsFile' : None,
             'useExistingChromDepths' : False,
             'isRetainTempFiles' : False,
             'isGenerateSupportBam' : False,
