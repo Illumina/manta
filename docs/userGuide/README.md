@@ -274,16 +274,16 @@ is produced for a tumor/normal subtraction. These files are:
     * Subset of the __candidateSV.vcf.gz__ file containing only simple insertion and
   deletion variants of size 50 or less. Passing this file to a small variant caller
   will provide continuous coverage over all indel sizes when the small variant caller
-  and manta outputs are evaluated together. Alternate small indel candidate sets 
-  can be parsed out of the __candidateSV.vcf.gz file__ if this candidate set is not 
+  and manta outputs are evaluated together. Alternate small indel candidate sets
+  can be parsed out of the __candidateSV.vcf.gz file__ if this candidate set is not
   appropriate.
 
 For tumor-only analysis, Manta will produce an additional VCF:
 
 * __tumorSV.vcf.gz__
-    * Subset of the __candidateSV.vcf.gz__ file after removing redundant candidates and 
-  small indels of size 50 or less. The SVs are not scored, but including additional 
-  details: (1) paired and split read supporting evidence counts for each allele 
+    * Subset of the __candidateSV.vcf.gz__ file after removing redundant candidates and
+  small indels of size 50 or less. The SVs are not scored, but including additional
+  details: (1) paired and split read supporting evidence counts for each allele
   (2) a subset of the filters from the scored tumor-normal model
   are applied to the single tumor case to improve precision.
 

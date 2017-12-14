@@ -5,13 +5,15 @@
   - Expected depth per chromosome and local depth per locus/variant are now computed after removing filtered, pcr-duplicate, and secondary reads.
 - Lower default memory requirements for scatter phase tasks (MANTA-1307)
   - Reduce from 2Gb to 1.5Gb to enable all cores by default on c4.8xlarge/other c\* servers.
-  - Added new `--callMemMb` option to override this value for cases of extreme depth/chimera rate, etc...
+  - Added new `--callMemMb` option to override this value for cases of extreme depth/chimera rate, etc
 
 ### Fixed
 - Provide clear error message when attempting to configure/run with python3 (MANTA-1285)
 - Improve error message/docs for alignment records with unknown sequence (SEQ='\*') (MANTA-1295/[#111])
 - Improve error message when two alignments use the same QNAME/read-number (MANTA-1293)
   - Message changed to help end-users track down the issue in the alignment file more easily - now includes chromosome name instead of contig index and 1-indexed alignment position.
+- Fix CRC error from python gzip lib when generating evidence bam (MANTA-1270)
+  - Remove the filter on evidence reads for SV candidates that are not in the file canidateSV.vcf.gz, because the file now contains all SV canidates without removing duplicants.
 
 ## v1.2.2 - 2017-11-10
 

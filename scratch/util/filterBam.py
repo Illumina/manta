@@ -24,11 +24,8 @@ Only keep evidence reads supporting SVs in the candidate vcf.
 """
 
 import sys
-import re
 import gzip
-from os.path import isfile
 from optparse import OptionParser
-from glob import glob
 from subprocess import call
 
 

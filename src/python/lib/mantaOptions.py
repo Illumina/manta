@@ -118,7 +118,6 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         vcfCmdlineSwapper=joinFile(libexecDir,"vcfCmdlineSwapper.py")
         mantaSortBam=joinFile(libexecDir,"sortBam.py")
         mantaMergeBam=joinFile(libexecDir,"mergeBam.py")
-        mantaFilterBam=joinFile(libexecDir,"filterBam.py")
 
         workflowScriptName = "runWorkflow.py"
 

@@ -455,34 +455,21 @@ def mergeSupportBams(self, mergeBamTasks, taskPrefix="", isNormal=True, bamIdx=0
 
     for bamPath in bamList:
         # merge support bams
-        mergedSamFile = self.paths.getMergedSupportSamPath(bamIdx)
+        supportBamFile = self.paths.getFinalSupportBamPath(bamPath)
         mergeCmd = [ sys.executable,"-E", self.params.mantaMergeBam,
                      self.params.samtoolsBin,
                      self.paths.getSortedSupportBamMask(bamIdx),
-                     self.paths.getMergedSupportBamPath(bamIdx),
-                     mergedSamFile,
+                     supportBamFile,
                      self.paths.getSupportBamListPath(bamIdx) ]
 
         mergeBamTask=self.addTask(preJoin(taskPrefix,"merge_evidenceBam_%s" % (bamIdx)),
                                   mergeCmd, dependencies=dependencies)
         mergeBamTasks.add(mergeBamTask)
 
-        # filter the merged sam
-        filteredBamFile = self.paths.getFinalSupportBamPath(bamPath)
-        filterCmd = [ sys.executable,"-E", self.params.mantaFilterBam,
-                     self.params.samtoolsBin,
-                     self.paths.getSortedCandidatePath(),
-                     mergedSamFile,
-                     self.paths.getfilteredSupportSamPath(bamIdx),
-                     filteredBamFile ]
-        filterBamTask = self.addTask(preJoin(taskPrefix,"filter_evidenceSam_%s" % (bamIdx)),
-                                     filterCmd, dependencies=mergeBamTask)
-        mergeBamTasks.add(filterBamTask)
-
         # index the filtered bam
-        indexCmd = [ self.params.samtoolsBin, "index", filteredBamFile ]
+        indexCmd = [ self.params.samtoolsBin, "index", supportBamFile ]
         indexBamTask = self.addTask(preJoin(taskPrefix,"index_evidenceBam_%s" % (bamIdx)),
-                                    indexCmd, dependencies=filterBamTask)
+                                    indexCmd, dependencies=mergeBamTask)
         mergeBamTasks.add(indexBamTask)
 
         bamIdx += 1
@@ -767,18 +754,6 @@ class PathInfo:
     def getSortedSupportBamMask(self, bamIdx):
         return os.path.join(self.getHyGenDir(),
                             "evidence_*.bam_%s.sorted.bam" % (bamIdx))
-
-    def getMergedSupportBamPath(self, bamIdx):
-        return os.path.join(self.getHyGenDir(),
-                            "evidence.bam_%s.merged.bam" % (bamIdx))
-
-    def getMergedSupportSamPath(self, bamIdx):
-        return os.path.join(self.getHyGenDir(),
-                            "evidence.bam_%s.merged.sam" % (bamIdx))
-
-    def getfilteredSupportSamPath(self, bamIdx):
-        return os.path.join(self.getHyGenDir(),
-                            "evidence.bam_%s.filtered.sam" % (bamIdx))
 
     def getFinalSupportBamPath(self, bamPath):
         bamPrefix = os.path.splitext(os.path.basename(bamPath))[0]

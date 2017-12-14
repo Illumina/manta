@@ -31,11 +31,11 @@ from subprocess import call
 from shutil import copyfile
 
 def getOptions():
-    usage = "usage: %prog [options] samtools_bin bam_mask merged_bam merged_sam bam_list_file"
+    usage = "usage: %prog [options] samtools_bin bam_mask merged_bam bam_list_file"
     parser = OptionParser(usage=usage)
     (options,args) = parser.parse_args()
 
-    if len(args) != 5 :
+    if len(args) != 4 :
         parser.print_help()
         sys.exit(2)
 
@@ -50,8 +50,7 @@ if __name__=='__main__':
     samtoolsBin = args[0]
     bamMask = args[1]
     mergedBam = args[2]
-    mergedSam = args[3]
-    bamListFile = args[4]
+    bamListFile = args[3]
 
     firstBam = ""
     fileCount = 0
@@ -70,5 +69,3 @@ if __name__=='__main__':
     elif fileCount == 1:
         copyfile(firstBam, mergedBam)
 
-    call([ samtoolsBin, "view", "-h",
-           "-o", mergedSam, mergedBam ])
