@@ -91,7 +91,7 @@ def main() :
     #
     # Step 2: run demo (on single local core):
     #
-    cmd=[sys.executable,"-E",os.path.join(analysisDir,"runWorkflow.py"),"-m","local","-j","1","-g","4"]
+    cmd=[sys.executable,os.path.join(analysisDir,"runWorkflow.py"),"-m","local","-j","1","-g","4"]
 
     logfp.write("\n")
     logfp.write("**** Starting demo workflow execution.\n")

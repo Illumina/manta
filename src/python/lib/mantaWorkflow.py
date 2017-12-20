@@ -361,7 +361,7 @@ def sortAllVcfs(self, taskPrefix="", dependencies=None) :
     nextStepWait = set()
 
     def getVcfSortCmd(vcfListFile, outPath, isDiploid, isCandidate) :
-        cmd  = "\"%s\" -E \"%s\" " % (sys.executable, self.params.mantaSortVcf)
+        cmd  = "\"%s\" \"%s\" " % (sys.executable, self.params.mantaSortVcf)
         cmd += "-f \"%s\"" % (vcfListFile)
 
         # Boolean variable isCandidate is set "True" for candidateSV.vcf
@@ -373,7 +373,7 @@ def sortAllVcfs(self, taskPrefix="", dependencies=None) :
         if isDiploid:
             tempVcf = self.paths.getTempDiploidPath()
             cmd += " > \"%s\"" % (tempVcf)
-            cmd += " && \"%s\" -E \"%s\" \"%s\"" % (sys.executable, self.params.mantaPloidyFilter, tempVcf)
+            cmd += " && \"%s\" \"%s\" \"%s\"" % (sys.executable, self.params.mantaPloidyFilter, tempVcf)
 
         cmd += " | \"%s\" -c > \"%s\"" % (self.params.bgzipBin, outPath)
 
@@ -392,7 +392,7 @@ def sortAllVcfs(self, taskPrefix="", dependencies=None) :
         headerFixTask=preJoin(taskPrefix,"fixVcfHeader_"+label)
         def getHeaderFixCmd(fileName) :
             tmpName=fileName+".reheader.tmp"
-            cmd  = "\"%s\" -E \"%s\"" % (sys.executable, self.params.vcfCmdlineSwapper)
+            cmd  = "\"%s\" \"%s\"" % (sys.executable, self.params.vcfCmdlineSwapper)
             cmd += ' "' + " ".join(self.params.configCommandLine) + '"'
             cmd += " < \"%s\" > \"%s\"" % (fileName,tmpName)
             cmd += " && " + " ".join(getMvCmd()) +  " \"%s\" \"%s\"" % (tmpName, fileName)
@@ -430,7 +430,7 @@ def sortAllVcfs(self, taskPrefix="", dependencies=None) :
 
     def getExtractSmallCmd(maxSize, inPath, outPath) :
         cmd  = "\"%s\" -dc \"%s\"" % (self.params.bgzipBin, inPath)
-        cmd += " | \"%s\" -E \"%s\" --maxSize %i" % (sys.executable, self.params.mantaExtraSmallVcf, maxSize)
+        cmd += " | \"%s\" \"%s\" --maxSize %i" % (sys.executable, self.params.mantaExtraSmallVcf, maxSize)
         cmd += " | \"%s\" -c > \"%s\"" % (self.params.bgzipBin, outPath)
         return cmd
 
@@ -456,7 +456,7 @@ def mergeSupportBams(self, mergeBamTasks, taskPrefix="", isNormal=True, bamIdx=0
     for bamPath in bamList:
         # merge support bams
         supportBamFile = self.paths.getFinalSupportBamPath(bamPath)
-        mergeCmd = [ sys.executable,"-E", self.params.mantaMergeBam,
+        mergeCmd = [ sys.executable, self.params.mantaMergeBam,
                      self.params.samtoolsBin,
                      self.paths.getSortedSupportBamMask(bamIdx),
                      supportBamFile,
@@ -625,7 +625,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
     self.addWorkflowTask(logListTask,listFileWorkflow(logListFile,edgeRuntimeLogPaths),dependencies=hygenTasks)
 
     def getEdgeLogSortCmd(logListFile, outPath) :
-        cmd  = [sys.executable,"-E",self.params.mantaSortEdgeLogs,"-f", logListFile,"-o",outPath]
+        cmd  = [sys.executable, self.params.mantaSortEdgeLogs,"-f", logListFile,"-o",outPath]
         return cmd
 
     edgeSortCmd=getEdgeLogSortCmd(logListFile,self.paths.getSortedEdgeRuntimeLogPath())
