@@ -259,12 +259,12 @@ runGSC(
         {
             std::ostringstream oss;
             dumpEdgeInfo(edge,cset,oss);
-            e << illumina::common::ExceptionMsg(oss.str());
+            e << boost::error_info<struct current_edge_info,std::string>(oss.str());
             throw;
         }
         catch (...)
         {
-            log_os << "Exception caught while processing graph component: ";
+            log_os << "Exception caught while processing graph edge: ";
             dumpEdgeInfo(edge,cset,log_os);
             throw;
         }

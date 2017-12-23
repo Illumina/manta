@@ -251,7 +251,7 @@ release version with an "x", for instance the "v2.4.x" branch would be used to p
 
 #### Exception Details
 
-* Preferred exception pattern is to use an internal class derived from `boost::exception`:
+* Preferred exception pattern is to use an internal class `GeneralException` derived from `boost::exception`:
 
 ```c++
 
@@ -265,24 +265,67 @@ foo(const char* name)
     using namespace illumina::common;
 
     std::ostringstream oss;
-    oss << "ERROR: unrecognized variant scoring model name: '" << name << "'\n";
-    BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+    oss << "Unrecognized variant scoring model name: '" << name << "'";
+    BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
 }
 ```
 
+* Best practice for exception messages designed to avoid redundant boilerplate at the throw site:
+  * Avoid adding a standard "ERROR" or "EXCEPTION" prefix
+  * Avoid ending the message with a newline. For multi-line exception messages the ending newline may make sense on a case-by-case basis.
+
 * Context at the original throw site is often supplemented by a 'catch and release' block to add
 information at a few critical points on the stack. Typically this is information which
-is unavailable at the throw site. Example code is:
+is unavailable at the throw site.
+  * The preferred method to implement this is to use `boost::error_info`. This only works for exceptions derived from `illumina::common::ExceptionData`, such as the above noted `GeneralException` class:
 
 ```c++
-try
+catch (illumina::common::ExceptionData& e)
 {
-    realign_and_score_read(_opt,_dopt,sif.sample_opt,_ref,realign_buffer_range,rseg,sif.getIndelBuffer());
+    // decorate an in-flight exception:
+    std::ostringstream oss;
+    oss << "Can't find return edge to node index: " << _index << ":" << fromIndex << " in remote node index: " << _index << ":" << fromNodeEdgeIter.first << "\n"
+        << "\tlocal_node: " << fromNode
+        << "\tremote_node: " << remoteNode;
+    e << boost::error_info<struct edge_error_info,std::string>(oss.str());
+    throw;
 }
+```
+
+  * More details on `boost::error_info` usage:
+
+```c++
+catch (illumina::common::ExceptionData& e)
+{
+    // use a custom boost error_info type
+    e << boost::error_info<struct extra_exception_message,std::string>("FOO");
+
+    // use another custom boost error_info type
+    e << boost::error_info<struct current_candidate_info,std::string>("BAR");
+
+    // use standard boost error_info speciailizations:
+    e << boost::errinfo_file_name("FUM");
+
+    // Note that repeating any type (even in different catch blocks) will result in only the last message being
+    // printed to standard error, eg:
+    //
+    // e << boost::error_info<struct special_message, std::string>("BAR1");
+    // e << boost::error_info<struct special_message, std::string>("BAR2");
+    //
+    // ...would result in only the second message "BAR2", being rended in the final exception message.
+
+    throw;
+}
+```
+
+  * A more general backup to the above method that works for all exception types is a simple stderr print at the catch
+  site. In this case the information will be a bit out of order, but this will get the job done:
+
+```c++
 catch (...)
 {
-    log_os << "ERROR: Exception caught in align_pos() while realigning segment: "
-	   << static_cast<int>(r.second) << " of read: " << (*r.first) << "\n";
+    log_os << "Exception caught in align_pos() while realigning segment: "
+           << static_cast<int>(r.second) << " of read: " << (*r.first) << "\n";
     throw;
 }
 ```

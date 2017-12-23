@@ -17,7 +17,8 @@
 //
 //
 
-/// common boilerplate for single-reference sequence aligners
+/// \file
+/// \brief Common boilerplate for single-reference sequence aligners
 
 #pragma once
 

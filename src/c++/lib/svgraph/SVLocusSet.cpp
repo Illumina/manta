@@ -58,7 +58,7 @@ locusHurl(const LocusIndexType index, const char* label) const
 
     std::ostringstream oss;
     oss << "ERROR: Attempting to access locus: " << index << " in locusSet with size: " << size() << " accessLabel: " << label << "\n";
-    BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+    BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
 }
 #endif
 
@@ -1510,7 +1510,7 @@ checkState(
             {
                 std::ostringstream oss;
                 oss << "ERROR: empty locus is not updated in the empty index. Locus index: " << locusIndex << "\n";
-                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
         }
 
@@ -1522,7 +1522,7 @@ checkState(
                 std::ostringstream oss;
                 oss << "ERROR: locus node is missing from node index\n"
                     << "\tNode index: " << locusIndex << " node: " << getNode(std::make_pair(locusIndex,nodeIndex));
-                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
             if ((citer->first != locusIndex) || (citer->second != nodeIndex))
             {
@@ -1530,7 +1530,7 @@ checkState(
                 oss << "ERROR: locus node has conflicting index number in node index\n"
                     << "\tinode index_value: " << citer->first << ":" << citer->second << "\n"
                     << "\tNode index: " << locusIndex << ":" << locusIndex << " node: " << getNode(std::make_pair(locusIndex,nodeIndex));
-                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
         }
         locusIndex++;
@@ -1541,7 +1541,7 @@ checkState(
         using namespace illumina::common;
         std::ostringstream oss;
         oss << "ERROR: SVLocusSet conflicting internal node counts. TotalNodeCount: " << checkStateTotalNodeCount << " inodeSize: " << _inodes.data().size() << "n";
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 
     if (! isCheckOverlap) return;
@@ -1591,7 +1591,7 @@ compressSingletonNodes() const
                     << "\tthis_node: " << addy << " "<< getNode(addy) << "\n"
                     << "\n"
                     << header << "\n";
-                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
         }
         lastAddy = addy;
@@ -1641,7 +1641,7 @@ checkForOverlapNodes(
                     << "\tthis_node: " << addy << " "<< getNode(addy) << "\n"
                     << "\n"
                     << header << "\n";
-                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
         }
         lastAddy = addy;

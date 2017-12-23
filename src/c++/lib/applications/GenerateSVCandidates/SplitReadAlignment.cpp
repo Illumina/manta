@@ -302,7 +302,7 @@ splitReadAligner(
             << "targetSeq:\n";
         printSeq(targetSeq,oss);
         oss << '\n';
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 
     // set the scanning start & end to make sure the candidate windows overlapping the breakpoint
@@ -324,7 +324,7 @@ splitReadAligner(
             << " scanEnd: " << scanEnd << " scanStart: " << scanStart
             << " querySize: " << querySize << " targetSize: " << targetSize << '\n'
             << "\ttargetRange: " << targetBpOffsetRange << '\n';
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 
     // do one high-speed pass to find the optimal alignment (in terms of lhood), then compute all the goodies later:
@@ -372,7 +372,7 @@ splitReadAligner(
             << "targetSeq:\n";
         printSeq(targetSeq,oss);
         oss << '\n';
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
     alignment.homSize = std::min(querySize-alignment.leftSize,(static_cast<pos_t>(targetBpOffsetRange.end_pos()+1) - bestPos) - alignment.leftSize);
 

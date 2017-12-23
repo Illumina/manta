@@ -213,7 +213,7 @@ addSVNodeRead(
                 std::ostringstream oss;
                 oss << "Unexpected svlocus counts from bam record: " << bamRead << "\n"
                     << "\tlocus: " << locus << "\n";
-                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
             if (! locus.getNode(readRemoteIndex).getInterval().isIntersect(remoteNode.getInterval())) continue; //todo should this intersect be checked in swapped orientation?
         }
@@ -414,7 +414,7 @@ checkResult(
                 {
                     std::ostringstream oss;
                     oss << "Searching for SVIndex: " << sva.index << " with svSize: " << svCount << "\n";
-                    BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                    BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
                 }
 
                 if (SVEvidenceType::isPairType(sva.evtype))
@@ -447,7 +447,7 @@ checkResult(
                 << "\tSVreadCount: " << svObsReadCount << " DataReadCount: " << dataObsReadCount << "\n"
                 << "\tSVpaircount: " << svObsPairCount << " DataPaircount: " << dataObsPairCount << "\n"
                 << "\tsvIndex: " << svIndex << " SV: " << svs[svIndex];
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
 
         }
     }

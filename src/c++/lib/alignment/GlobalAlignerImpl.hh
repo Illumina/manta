@@ -17,9 +17,6 @@
 //
 //
 
-/// derived from ELAND implementation by Tony Cox
-
-
 #include <cassert>
 
 #ifdef DEBUG_ALN

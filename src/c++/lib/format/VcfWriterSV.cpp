@@ -570,7 +570,7 @@ writeInvdel(
             oss << "ERROR: Unexpected reference allele size: " << ref.size() << "\n";
             oss << "\tExpected: " << (1+endRefPos-beginRefPos) << "\n";
             oss << "\tbeginRefPos: " << beginRefPos << " endRefPos: " << endRefPos << " isSmallVariant: " << isSmallVariant << "\n";
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
         }
     }
 
@@ -777,7 +777,7 @@ writeSVCore(
 
         std::ostringstream oss;
         oss << "ERROR: sv candidate cannot be classified: " << sv << "\n";
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 
     try

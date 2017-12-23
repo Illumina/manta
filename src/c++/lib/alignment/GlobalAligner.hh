@@ -17,7 +17,6 @@
 //
 //
 
-/// derived from ELAND implementation by Tony Cox
 
 #pragma once
 
@@ -34,6 +33,7 @@
 ///
 /// transition from insert to delete is free and allowed, but not reverse
 ///
+/// derived from ELAND implementation by Tony Cox
 template <typename ScoreType>
 struct GlobalAligner : public SingleRefAlignerBase<ScoreType>
 {

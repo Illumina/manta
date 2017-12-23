@@ -813,7 +813,7 @@ setSmallCandSV(
             << "\treadRange: " << readRange << "\n"
             << "\trefRange: " << refRange << "\n"
             << "\tcipos: " << cipos << "\n";
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 
     sv.bp1.state = SVBreakendState::RIGHT_OPEN;

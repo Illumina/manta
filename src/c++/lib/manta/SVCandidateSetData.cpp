@@ -154,7 +154,7 @@ add(
             << "\tNew read: ";
         summarizeAlignmentRecord(bamHeader, bamRead, oss);
         oss << "\n";
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 
     targetRead.bamrec = bamRead;

@@ -80,7 +80,3 @@ updateBacktrace(
         btrace.state = state;
     }
 }
-
-
-
-

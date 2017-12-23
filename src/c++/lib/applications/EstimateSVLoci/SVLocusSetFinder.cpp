@@ -289,7 +289,7 @@ update(
                 std::ostringstream oss;
                 oss << "ERROR: Unsupported use of the '=' symbol in the BAM/CRAM SEQ field from read:\n";
                 streamErrorReporter.report_state(oss);
-                BOOST_THROW_EXCEPTION(illumina::common::LogicException(oss.str()));
+                BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
             }
         }
     }

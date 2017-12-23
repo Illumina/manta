@@ -150,7 +150,7 @@ next()
                     std::ostringstream ess;
                     ess << "ERROR: " << oss.str();
                     ess << "Please normalize all records in this VCF with a tool such as vt, then resubmit\n";
-                    BOOST_THROW_EXCEPTION(illumina::common::LogicException(ess.str()));
+                    BOOST_THROW_EXCEPTION(illumina::common::GeneralException(ess.str()));
                 }
                 else
                 {

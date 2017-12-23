@@ -35,80 +35,12 @@ namespace illumina
 namespace common
 {
 
-ExceptionData::ExceptionData(int errorNumber, const std::string& message) : boost::exception(),
-    errorNumber_(errorNumber), message_(message)
-{
-}
-
 std::string ExceptionData::getContext() const
 {
     const std::string now = boost::posix_time::to_simple_string(boost::posix_time::second_clock::local_time());
-    return now + " '" + std::string(strerror(errorNumber_)) + "' " + boost::diagnostic_information(*this);
-}
-
-IoException::IoException(int errorNumber, const std::string& message)
-    : std::ios_base::failure(message)
-    , ExceptionData(errorNumber, message)
-{
-}
-
-ResourceException::ResourceException(int errorNumber, const std::string& message)
-    : ExceptionData(errorNumber, message)
-{
-}
-
-
-MemoryException::MemoryException(const std::string& message)
-    : std::bad_alloc(),
-      ExceptionData(ENOMEM, message)
-{
-}
-
-UnsupportedVersionException::UnsupportedVersionException(const std::string& message)
-    : std::logic_error(message)
-    , ExceptionData(EINVAL, message)
-{
-}
-
-FeatureNotAvailable::FeatureNotAvailable(const std::string& message)
-    : std::logic_error(message)
-    , ExceptionData(EINVAL, message)
-{
-}
-
-InvalidParameterException::InvalidParameterException(const std::string& message)
-    : std::logic_error(message)
-    , ExceptionData(EINVAL, message)
-{
-}
-
-InvalidOptionException::InvalidOptionException(const std::string& message)
-    : std::logic_error(message)
-    , ExceptionData(EINVAL, message)
-{
-}
-
-PreConditionException::PreConditionException(const std::string& message)
-    : std::logic_error(message)
-    , ExceptionData(EINVAL, message)
-{
-}
-
-PostConditionException::PostConditionException(const std::string& message)
-    : std::logic_error(message)
-    , ExceptionData(EINVAL, message)
-{
-}
-
-OutOfBoundsException::OutOfBoundsException(const std::string& message)
-    : std::out_of_range("OutOfBoundsException: " + message)
-    , ExceptionData(EINVAL, message)
-{
-}
-
-VcfException::VcfException(const std::string& message)
-    : IoException(EPROTO, std::string("VCF failure: ") + message)
-{
+    std::string errorInfo;
+    if (errorNumber_ != 0) errorInfo = " '" + std::string(strerror(errorNumber_)) + "'";
+    return now + errorInfo + " " + boost::diagnostic_information(*this);
 }
 
 

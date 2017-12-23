@@ -325,7 +325,7 @@ parseSACandidatesFromRead(
         {
             std::ostringstream oss;
             oss << "ERROR: Unexpected format in the split alignment segment: '" << splitAlignmentSegmentString << "'\n";
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
         }
 
         /// filter split reads with low MappingQuality:
@@ -340,7 +340,7 @@ parseSACandidatesFromRead(
         {
             std::ostringstream oss;
             oss << "ERROR: Split alignment segment maps to an unknown chromosome: '" << splitAlignmentChrom << "'\n";
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
         }
 
         splitAlignments.emplace_back();
@@ -353,7 +353,7 @@ parseSACandidatesFromRead(
             {
                 std::ostringstream oss;
                 oss << "ERROR: Unexpected strand entry in split alignment segment: '" << splitAlignmentSegmentString << "'\n";
-                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
             sal.is_fwd_strand = (splitAlignmentStrand == '+');
         }
@@ -451,7 +451,7 @@ getSVCandidatesFromReadIndels(
 
             std::ostringstream oss;
             oss << "Can't process unexpected alignment pattern: " << align << "\n";
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
         }
 
         unsigned nPathSegments(1); // number of path segments consumed
@@ -1172,7 +1172,7 @@ getReadBreakendsImpl(
             if (nullptr == remoteRefSeqPtr)
             {
                 static const char msg[] = "ERROR: remoteRefSeqPtr cannot be null";
-                BOOST_THROW_EXCEPTION(LogicException(msg));
+                BOOST_THROW_EXCEPTION(GeneralException(msg));
             }
             getSingleReadSVCandidates(opt, dopt, remoteRead, remoteAlign,
                                       bamHeader, (*remoteRefSeqPtr),
@@ -1280,7 +1280,7 @@ getReadBreakendsImpl(
             }
             oss << "\n"
                 << "\tSVCandidate: " << sv << "\n";
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
         }
     }
 }
@@ -1335,7 +1335,7 @@ getSVLociImpl(
                 << "\tlocal_breakend: " << localBreakend << "\n"
                 << "\tremote_breakend: " << remoteBreakend << "\n"
                 << "\tbam_record: " << bamRead << "\n";
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
         }
 
         // update evidence stats:
@@ -1502,7 +1502,7 @@ checkReadSize(
             << "which cannot be used for variant calling:\n";
         alignmentStream.report_state(oss);
         oss << "\n";
-        BOOST_THROW_EXCEPTION(illumina::common::LogicException(oss.str()));
+        BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
     }
 
     if (seqSize != alignedSize)
@@ -1512,7 +1512,7 @@ checkReadSize(
             << alignedSize << ") does not match sequence length ("
             << seqSize << "):\n";
         alignmentStream.report_state(oss);
-        BOOST_THROW_EXCEPTION(illumina::common::LogicException(oss.str()));
+        BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
     }
 }
 

@@ -73,5 +73,5 @@ openFile(
     if (ofs) return;
     std::ostringstream oss;
     oss << "ERROR: Can't open output file: " << filename << "\n";
-    BOOST_THROW_EXCEPTION(illumina::common::LogicException(oss.str()));
+    BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
 }

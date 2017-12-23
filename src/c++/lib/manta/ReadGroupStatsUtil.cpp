@@ -142,7 +142,7 @@ getFragSizeMinusSkip(
         std::ostringstream oss;
         oss << "ERROR: unexpected fragment size (" << fragSize << ") deduced from bam record: " << bamRead << "\n"
             << "\tPossible invalid template size in bam record.";
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 
     return fragSize;
@@ -244,7 +244,7 @@ private:
                     << "\tAt least " << minCount << " high-confidence read pairs are required to determine pair orientation.\n"
                     << readCounter << "\n";
 
-                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
 
             const unsigned minMaxCount(static_cast<unsigned>(minMaxFrac*_totalOrientCount));
@@ -257,7 +257,7 @@ private:
                     << "\tThe fraction of '" << _finalOrient << "' among total high-confidence read pairs needs to be more than " << minMaxFrac << " to determine consensus pair orientation.\n"
                     << readCounter << "\n";
 
-                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
         }
 
@@ -561,7 +561,7 @@ struct ReadGroupTracker
             std::ostringstream oss;
             oss << "ERROR: Unexpected consensus read orientation (" << _stats.relOrients << ") for " << _rgLabel << "\n"
                 << "\tManta currently handles paired-end (FR) reads only.\n";
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
         }
 
         // finalize insert size distro:
@@ -577,7 +577,7 @@ struct ReadGroupTracker
                     << "\tTotal high-confidence read pairs (FR) used for insert size estimation: " << insertSizeObservations() << "\n"
                     << "\tAt least " << minObservations << " high-confidence read pairs (FR) are required to estimate insert size.\n"
                     << _stats.readCounter << "\n";
-                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
             else if (! isInsertSizeChecked())
             {

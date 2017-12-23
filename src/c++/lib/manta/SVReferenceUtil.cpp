@@ -80,7 +80,7 @@ getBpReferenceInterval(
             << "\tchromSize: " << chromSize
             << "\n";
 
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 
     pos_t beginPos(bpInterval.range.begin_pos()-extraRefEdgeSize);
@@ -163,7 +163,7 @@ getIntervalReferenceSegment(
             << "\treturned_size: " << intervalRefSeq.seq().size()
             << "\n";
 
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 }
 

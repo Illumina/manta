@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE( test_vcf_streamer_region )
     BOOST_REQUIRE_EQUAL(vptr->alt.size(),1u);
     BOOST_REQUIRE_EQUAL(vptr->alt[0],"T");
 
-    BOOST_REQUIRE_THROW( vcfs.next(), illumina::common::LogicException );
+    BOOST_REQUIRE_THROW( vcfs.next(), illumina::common::GeneralException );
     vptr = vcfs.get_record_ptr();
     assert(vptr != nullptr);
 
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE( test_vcf_streamer_region )
     BOOST_REQUIRE_EQUAL(vptr->alt.size(),1u);
     BOOST_REQUIRE_EQUAL(vptr->alt[0],"A");
 
-    BOOST_REQUIRE_THROW( vcfs.next(), illumina::common::LogicException );
+    BOOST_REQUIRE_THROW( vcfs.next(), illumina::common::GeneralException );
     vptr = vcfs.get_record_ptr();
     assert(vptr != nullptr);
 
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE( test_vcf_streamer_region )
     BOOST_REQUIRE_EQUAL(vptr->alt.size(),1u);
     BOOST_REQUIRE_EQUAL(vptr->alt[0],"AGT");
 
-    BOOST_REQUIRE_THROW( vcfs.next(), illumina::common::LogicException );
+    BOOST_REQUIRE_THROW( vcfs.next(), illumina::common::GeneralException );
     vptr = vcfs.get_record_ptr();
     assert(vptr != nullptr);
 
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE( test_vcf_streamer_region )
     BOOST_REQUIRE_EQUAL(vptr->alt.size(),1u);
     BOOST_REQUIRE_EQUAL(vptr->alt[0],"AGT");
 
-    BOOST_REQUIRE_THROW( vcfs.next(), illumina::common::LogicException );
+    BOOST_REQUIRE_THROW( vcfs.next(), illumina::common::GeneralException );
     vptr = vcfs.get_record_ptr();
     assert(vptr != nullptr);
 
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE( test_vcf_streamer_region )
     BOOST_REQUIRE_EQUAL(vptr->alt.size(),1u);
     BOOST_REQUIRE_EQUAL(vptr->alt[0],"A");
 
-    BOOST_REQUIRE_THROW( vcfs.next(), illumina::common::LogicException );
+    BOOST_REQUIRE_THROW( vcfs.next(), illumina::common::GeneralException );
     vptr = vcfs.get_record_ptr();
     assert(vptr != nullptr);
 

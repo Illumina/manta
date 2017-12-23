@@ -305,7 +305,7 @@ pairError(
         << "\tcandidate-sv: " << sv
         << "\tread-pair: " << pair
         << '\n';
-    BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+    BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
 }
 
 

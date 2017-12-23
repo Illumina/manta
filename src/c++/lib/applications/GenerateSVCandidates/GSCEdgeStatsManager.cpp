@@ -41,7 +41,7 @@ GSCEdgeStatsManager(
     {
         std::ostringstream oss;
         oss << "ERROR: Can't open output file: " << outputFile << '\n';
-        BOOST_THROW_EXCEPTION(illumina::common::LogicException(oss.str()));
+        BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
     }
 
     lifeTime.resume();

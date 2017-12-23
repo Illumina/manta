@@ -43,7 +43,7 @@ nodeHurl(const NodeIndexType nodePtr) const
 
     std::ostringstream oss;
     oss << "ERROR: Attempting to access node: " << _index << ":" << nodePtr << " in locus with size: " << size() << "\n";
-    BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+    BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
 }
 
 
@@ -78,7 +78,7 @@ mergeNode(
         oss << "ERROR: Attempting to merge nodes on different chromosomes\n"
             << "\tNode1: " << fromNode
             << "\tNode2: " << toNode;
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 
     notifyDelete(obs,toIndex);
@@ -175,10 +175,10 @@ mergeNode(
             {
                 // decorate an in-flight exception:
                 std::ostringstream oss;
-                oss << "ERROR: Can't find return edge to node index: " << _index << ":" << fromIndex << " in remote node index: " << _index << ":" << fromNodeEdgeIter.first << "\n"
+                oss << "Can't find return edge to node index: " << _index << ":" << fromIndex << " in remote node index: " << _index << ":" << fromNodeEdgeIter.first << "\n"
                     << "\tlocal_node: " << fromNode
                     << "\tremote_node: " << remoteNode;
-                e << illumina::common::ExceptionMsg(oss.str());
+                e << boost::error_info<struct edge_error_info,std::string>(oss.str());
                 throw;
             }
         }
@@ -204,7 +204,7 @@ getEdgeException(
     oss << "ERROR: SVLocus::getEdge() no edge exists\n";
     oss << "\tfrom_node: " << _index << ":" << fromIndex << " " << getNode(fromIndex);
     oss << "\tto_node: " << _index << ":" << toIndex << " " << getNode(toIndex);
-    BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+    BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
 }
 
 
@@ -361,9 +361,8 @@ clearNodeEdges(NodeIndexType nodePtr)
 {
     using namespace illumina::common;
 
-    static const std::string logtag("SVLocus::clearNodeEdges");
-
 #ifdef DEBUG_SVL
+    static const std::string logtag("SVLocus::clearNodeEdges");
     log_os << logtag << " from nodeIndex: " << nodePtr << "\n";
 #endif
 
@@ -386,10 +385,10 @@ clearNodeEdges(NodeIndexType nodePtr)
         catch (illumina::common::ExceptionData& e)
         {
             std::ostringstream oss;
-            oss << "ERROR: " << logtag << " no return edge on remote node.\n"
+            oss << "No return edge on remote node.\n"
                 << "\tlocal_node: " << node
                 << "\tremote_node: " << remoteNode;
-            e << illumina::common::ExceptionMsg(oss.str());
+            e << boost::error_info<struct error_context,std::string>(oss.str());
             throw;
         }
     }
@@ -619,7 +618,7 @@ checkState(const bool isCheckConnected) const
     {
         std::ostringstream oss;
         oss << "ERROR: SVLocus contains unconnected components, LocusIndex: " << _index << "\n";
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 }
 
