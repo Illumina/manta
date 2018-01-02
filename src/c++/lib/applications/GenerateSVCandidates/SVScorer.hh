@@ -296,6 +296,8 @@ private:
     const ChromDepthFilterUtil _dFilterTumor;
     const SVLocusScanner& _readScanner;
 
+    const bam_header_info& _header;
+
     std::vector<streamPtr> _bamStreams;
 
     unsigned _sampleCount;

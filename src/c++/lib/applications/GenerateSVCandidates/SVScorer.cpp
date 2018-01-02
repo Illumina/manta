@@ -69,7 +69,8 @@ SVScorer(
     _dFilterDiploid(opt.chromDepthFilename, _diploidOpt.maxDepthFactor, header),
     _dFilterSomatic(opt.chromDepthFilename, _somaticOpt.maxDepthFactor, header),
     _dFilterTumor(opt.chromDepthFilename, _tumorOpt.maxDepthFactor, header),
-    _readScanner(readScanner)
+    _readScanner(readScanner),
+    _header(header)
 {
     // setup regionless bam_streams:
     // setup all data for main analysis loop:
@@ -84,7 +85,7 @@ SVScorer(
     _diploidSampleCount=0;
     for (const bool isTumor : opt.alignFileOpt.isAlignmentTumor)
     {
-        _sampleCount ++;
+        _sampleCount++;
         if (! isTumor) _diploidSampleCount++;
     }
 
@@ -1915,9 +1916,17 @@ scoreSV(
 
             computeAllScoreModels(isSomatic, isTumorOnly, junctionData, modelScoreInfo);
         }
+        catch (illumina::common::ExceptionData& e)
+        {
+            std::ostringstream oss;
+            oss << "Exception caught while attempting to score " << sv;
+            e << boost::error_info<struct scoring_candidate_info,std::string>(oss.str());
+            throw;
+        }
+
         catch (...)
         {
-            log_os << "ERROR: Exception caught while scoring candidate SV: " << sv << "\n";
+            log_os << "Exception caught while attempting to score " << sv << "\n";
             throw;
         }
     }

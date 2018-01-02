@@ -689,7 +689,7 @@ private:
     bool _isSingle;
 };
 
-
+/// Debug printer for locus node
 std::ostream&
 operator<<(std::ostream& os, const SVLocusNode& node);
 

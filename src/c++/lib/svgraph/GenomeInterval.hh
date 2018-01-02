@@ -20,6 +20,7 @@
 #pragma once
 
 #include "blt_util/known_pos_range2.hh"
+#include "htsapi/bam_header_info.hh"
 
 #include <iosfwd>
 
@@ -87,6 +88,15 @@ struct GenomeInterval
     known_pos_range2 range;
 };
 
+
+/// Pretty print summary information from a genome interval for end-user error message
+void
+summarizeGenomeInterval(
+    const bam_header_info& bamHeader,
+    const GenomeInterval& gi,
+    std::ostream& os);
+
+/// Debug printer for genome interval
 std::ostream&
 operator<<(std::ostream& os, const GenomeInterval& gi);
 

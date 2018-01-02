@@ -17,7 +17,9 @@
 //
 //
 
-#include <cassert>
+
+#include "common/Exceptions.hh"
+
 
 #ifdef DEBUG_ALN
 #include "blt_util/log.hh"
@@ -42,8 +44,14 @@ align(
     const size_t querySize(std::distance(queryBegin, queryEnd));
     const size_t refSize(std::distance(refBegin, refEnd));
 
-    assert(0 != querySize);
-    assert(0 != refSize);
+    if (0 == querySize)
+    {
+        BOOST_THROW_EXCEPTION(illumina::common::GeneralException("Unexpected empty query sequence"));
+    }
+    if (0 == refSize)
+    {
+        BOOST_THROW_EXCEPTION(illumina::common::GeneralException("Unexpected empty reference sequence"));
+    }
 
     _score1.resize(querySize+1);
     _score2.resize(querySize+1);

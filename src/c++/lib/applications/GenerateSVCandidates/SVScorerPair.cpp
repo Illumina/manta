@@ -130,8 +130,8 @@ getSVAltPairSupport(
     SVEvidence& evidence,
     std::vector<pairProcPtr>& pairProcList)
 {
-    pairProcPtr bp1Ptr(new SVScorePairAltProcessor(_scanOpt, _refineOpt, _isAlignmentTumor, _readScanner, pairOpt, assemblyData, sv, true, evidence));
-    pairProcPtr bp2Ptr(new SVScorePairAltProcessor(_scanOpt, _refineOpt, _isAlignmentTumor, _readScanner, pairOpt, assemblyData, sv, false, evidence));
+    pairProcPtr bp1Ptr(new SVScorePairAltProcessor(_header, _scanOpt, _refineOpt, _isAlignmentTumor, _readScanner, pairOpt, assemblyData, sv, true, evidence));
+    pairProcPtr bp2Ptr(new SVScorePairAltProcessor(_header, _scanOpt, _refineOpt, _isAlignmentTumor, _readScanner, pairOpt, assemblyData, sv, false, evidence));
 
     pairProcList.push_back(bp1Ptr);
     pairProcList.push_back(bp2Ptr);

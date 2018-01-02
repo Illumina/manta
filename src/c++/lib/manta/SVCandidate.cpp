@@ -42,11 +42,17 @@ operator<<(
        << "\n";
     if (! svc.isImprecise())
     {
-        os << "\tAlignment: " << svc.insertAlignment << "\n"
-           << "\tBreakendInsertSeq: " << svc.insertSeq << "\n";
+        os << indent << "Alignment: " << svc.insertAlignment << "\n"
+           << indent << "BreakendInsertSeq: " << svc.insertSeq << "\n";
     }
-    os << "\t" << svc.bp1 << "\n"
-       << "\t" << svc.bp2 << "\n";
+    if (svc.isUnknownSizeInsertion)
+    {
+        os << indent << "UnknownSizeInsertLeftSide: " << svc.unknownSizeInsertionLeftSeq << "\n"
+           << indent << "UnknownSizeInsertRightSide: " << svc.unknownSizeInsertionRightSeq << "\n";
+    }
+    os << indent << svc.bp1 << "\n"
+       << indent << svc.bp2 << "\n";
+
     return os;
 }
 

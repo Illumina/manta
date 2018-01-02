@@ -1984,7 +1984,16 @@ getSmallSVAssembly(
         log_os << __FUNCTION__ << " Ref for alignment: "
                << align1RefStr.substr(adjustedLeadingCut, align1RefStr.size()-adjustedLeadingCut-adjustedTrailingCut) << '\n';
 #endif
-        ;
+
+        // sanity check aligner requirements
+        if (contig.seq.empty())
+        {
+            using namespace illumina::common;
+
+            std::ostringstream oss;
+            oss << "Assembly produced unexpected zero-length contig. ContigIndex: " << contigIndex << " ContigCount: " << contigCount << " ContigDetails: " << contig;
+            BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
+        }
 
         // start with largeSV aligner
         {

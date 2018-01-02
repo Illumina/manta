@@ -577,7 +577,23 @@ evaluateCandidate(
         {
             const SVCandidate& candidateSV(mjCandidateSV.junction[junctionIndex]);
             SVCandidateAssemblyData& assemblyData(mjAssemblyData[junctionIndex]);
-            _svRefine.getCandidateAssemblyData(candidateSV, svData, _opt.isRNA, isFindLargeInsertions, assemblyData);
+            try
+            {
+                _svRefine.getCandidateAssemblyData(candidateSV, svData, _opt.isRNA, isFindLargeInsertions, assemblyData);
+            }
+            catch (illumina::common::ExceptionData& e)
+            {
+                std::ostringstream oss;
+                oss << "Exception caught while attempting to assemble " << candidateSV;
+                e << boost::error_info<struct assembly_candidate_info,std::string>(oss.str());
+                throw;
+            }
+            catch (...)
+            {
+                log_os << "Exception caught while attempting to assemble " << candidateSV << "\n";
+                throw;
+            }
+
 
             if (_opt.isVerbose)
             {
