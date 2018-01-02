@@ -50,8 +50,8 @@ unknown_md_error(const char* const md,
 {
 
     std::ostringstream oss;
-    oss << "ERROR: can't parse match descriptor string: " << md << "\n"
-        << "\tunexpected character: '" << *mdptr << "' at position: " << (mdptr-md+1) << "\n";
+    oss << "Can't parse match descriptor string: " << md << "\n"
+        << "\tunexpected character: '" << *mdptr << "' at position: " << (mdptr-md+1);
     throw blt_exception(oss.str().c_str());
 }
 

@@ -41,7 +41,7 @@ parse_exception(const char* type_label,
                 const char* parse_str)
 {
     std::ostringstream oss;
-    oss << "ERROR: Can't parse " << type_label << " from string: '" << parse_str << "'";
+    oss << "Can't parse " << type_label << " from string: '" << parse_str << "'";
     throw blt_exception(oss.str().c_str());
 }
 

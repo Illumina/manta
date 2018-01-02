@@ -65,8 +65,8 @@ ChromDepthFilterUtil(
     if (callableChromCount != chromDepth.size())
     {
         std::ostringstream oss;
-        oss << "ERROR: " << chromDepth.size() << " chromosomes in chrom depth file, but "
-            << callableChromCount << " found in the bam header." << "\n";
+        oss << chromDepth.size() << " chromosomes in chrom depth file, but "
+            << callableChromCount << " found in the bam header";
         BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 }

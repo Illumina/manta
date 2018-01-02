@@ -57,7 +57,7 @@ locusHurl(const LocusIndexType index, const char* label) const
     using namespace illumina::common;
 
     std::ostringstream oss;
-    oss << "ERROR: Attempting to access locus: " << index << " in locusSet with size: " << size() << " accessLabel: " << label << "\n";
+    oss << "Attempting to access locus: " << index << " in locusSet with size: " << size() << " accessLabel: " << label;
     BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
 }
 #endif
@@ -1509,7 +1509,7 @@ checkState(
             if (_emptyLoci.count(locusIndex) == 0)
             {
                 std::ostringstream oss;
-                oss << "ERROR: empty locus is not updated in the empty index. Locus index: " << locusIndex << "\n";
+                oss << "Empty locus is not updated in the empty index. Locus index: " << locusIndex;
                 BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
         }
@@ -1520,14 +1520,14 @@ checkState(
             if (citer == _inodes.data().end())
             {
                 std::ostringstream oss;
-                oss << "ERROR: locus node is missing from node index\n"
+                oss << "Locus node is missing from node index\n"
                     << "\tNode index: " << locusIndex << " node: " << getNode(std::make_pair(locusIndex,nodeIndex));
                 BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
             if ((citer->first != locusIndex) || (citer->second != nodeIndex))
             {
                 std::ostringstream oss;
-                oss << "ERROR: locus node has conflicting index number in node index\n"
+                oss << "Locus node has conflicting index number in node index\n"
                     << "\tinode index_value: " << citer->first << ":" << citer->second << "\n"
                     << "\tNode index: " << locusIndex << ":" << locusIndex << " node: " << getNode(std::make_pair(locusIndex,nodeIndex));
                 BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
@@ -1540,7 +1540,7 @@ checkState(
     {
         using namespace illumina::common;
         std::ostringstream oss;
-        oss << "ERROR: SVLocusSet conflicting internal node counts. TotalNodeCount: " << checkStateTotalNodeCount << " inodeSize: " << _inodes.data().size() << "n";
+        oss << "SVLocusSet conflicting internal node counts. TotalNodeCount: " << checkStateTotalNodeCount << " inodeSize: " << _inodes.data().size();
         BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 
@@ -1584,7 +1584,7 @@ compressSingletonNodes() const
             if (lastInterval.range.end_pos() > interval.range.begin_pos())
             {
                 std::ostringstream oss;
-                oss << "ERROR: Overlapping nodes in graph\n"
+                oss << "Overlapping nodes in graph\n"
                     << "\tlast_index: " << lastAddy << " interval: " << lastInterval << "\n"
                     << "\tthis_index: " << addy << " interval: " << interval << "\n"
                     << "\tlast_node: " << lastAddy << " "<< getNode(lastAddy) << "\n"
@@ -1634,7 +1634,7 @@ checkForOverlapNodes(
             if (lastInterval.range.end_pos() > interval.range.begin_pos())
             {
                 std::ostringstream oss;
-                oss << "ERROR: Overlapping nodes in graph\n"
+                oss << "Overlapping nodes in graph\n"
                     << "\tlast_index: " << lastAddy << " interval: " << lastInterval << "\n"
                     << "\tthis_index: " << addy << " interval: " << interval << "\n"
                     << "\tlast_node: " << lastAddy << " "<< getNode(lastAddy) << "\n"

@@ -806,7 +806,7 @@ setSmallCandSV(
         using namespace illumina::common;
 
         std::ostringstream oss;
-        oss << "ERROR: Attempting to convert alignment to sv candidate."
+        oss << "Attempting to convert alignment to sv candidate."
             << " contigSize: " << contig.size()
             << " alignment: " << align
             << " segments: [" << segRange.first << "," << segRange.second << "]\n"

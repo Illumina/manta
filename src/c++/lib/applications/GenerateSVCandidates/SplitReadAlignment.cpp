@@ -294,7 +294,7 @@ splitReadAligner(
     if (querySize >= targetSize)
     {
         std::ostringstream oss;
-        oss << "ERROR: Unexpected split read alignment input."
+        oss << "Unexpected split read alignment input."
             << " querySize: " << querySize << " targetSize: " << targetSize << '\n'
             << "querySeq:\n";
         printSeq(querySeq,oss);
@@ -320,7 +320,7 @@ splitReadAligner(
     if (scanEnd < scanStart)
     {
         std::ostringstream oss;
-        oss << "ERROR: Unexpected split read alignment input condition: scanEnd < scanStart."
+        oss << "Unexpected split read alignment input condition: scanEnd < scanStart."
             << " scanEnd: " << scanEnd << " scanStart: " << scanStart
             << " querySize: " << querySize << " targetSize: " << targetSize << '\n'
             << "\ttargetRange: " << targetBpOffsetRange << '\n';
@@ -363,7 +363,7 @@ splitReadAligner(
     if (alignment.leftSize > querySize)
     {
         std::ostringstream oss;
-        oss << "ERROR: Unexpected split read alignment outcome. "
+        oss << "Unexpected split read alignment outcome. "
             << " targetRange: " << targetBpOffsetRange << " bestPos: " << bestPos << " bestLnLhood: " << bestLnLhood << " querySize: " << querySize << " targetSize: " << targetSize << '\n'
             << "alignment: " << alignment << "\n"
             << "querySeq:\n";

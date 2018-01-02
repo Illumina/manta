@@ -567,7 +567,7 @@ writeInvdel(
             using namespace illumina::common;
 
             std::ostringstream oss;
-            oss << "ERROR: Unexpected reference allele size: " << ref.size() << "\n";
+            oss << "Unexpected reference allele size: " << ref.size() << "\n";
             oss << "\tExpected: " << (1+endRefPos-beginRefPos) << "\n";
             oss << "\tbeginRefPos: " << beginRefPos << " endRefPos: " << endRefPos << " isSmallVariant: " << isSmallVariant << "\n";
             BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
@@ -776,7 +776,7 @@ writeSVCore(
         using namespace illumina::common;
 
         std::ostringstream oss;
-        oss << "ERROR: sv candidate cannot be classified: " << sv << "\n";
+        oss << "SV candidate cannot be classified: " << sv;
         BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 

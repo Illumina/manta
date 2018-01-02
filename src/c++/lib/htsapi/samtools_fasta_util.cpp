@@ -102,7 +102,7 @@ get_chrom_length(const std::string& fai_file,
     if (! isFound)
     {
         std::ostringstream oss;
-        oss << "ERROR: Unable to find chromosome '" << chrom_name << "' in fai file '" << fai_file << "'\n";
+        oss << "Unable to find chromosome '" << chrom_name << "' in fai file '" << fai_file << "'";
         throw blt_exception(oss.str().c_str());
     }
     return retval;
@@ -121,7 +121,7 @@ get_region_seq(const std::string& ref_file,
     if (nullptr == ref_tmp)
     {
         std::ostringstream oss;
-        oss << "ERROR: Can't find sequence region '" << fa_region << "' in reference file: '" << ref_file << "'\n";
+        oss << "Can't find sequence region '" << fa_region << "' in reference file: '" << ref_file << "'";
         throw blt_exception(oss.str().c_str());
     }
     ref_seq.assign(ref_tmp);
@@ -144,7 +144,7 @@ get_region_seq(const std::string& ref_file,
     if (nullptr == ref_tmp)
     {
         std::ostringstream oss;
-        oss << "ERROR: Can't find sequence region '" << chrom << ":" << (begin_pos+1) << "-" << (end_pos+1) << "' in reference file: '" << ref_file << "'\n";
+        oss << "Can't find sequence region '" << chrom << ":" << (begin_pos+1) << "-" << (end_pos+1) << "' in reference file: '" << ref_file << "'";
         throw blt_exception(oss.str().c_str());
     }
     ref_seq.assign(ref_tmp);

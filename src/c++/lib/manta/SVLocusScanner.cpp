@@ -324,7 +324,7 @@ parseSACandidatesFromRead(
         if (splitAlignmentSegmentFields.size() != SAFields::SIZE)
         {
             std::ostringstream oss;
-            oss << "ERROR: Unexpected format in the split alignment segment: '" << splitAlignmentSegmentString << "'\n";
+            oss << "Unexpected format in the split alignment segment: '" << splitAlignmentSegmentString << "'";
             BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
         }
 
@@ -339,7 +339,7 @@ parseSACandidatesFromRead(
         if (ci == chromToIndex.end())
         {
             std::ostringstream oss;
-            oss << "ERROR: Split alignment segment maps to an unknown chromosome: '" << splitAlignmentChrom << "'\n";
+            oss << "Split alignment segment maps to an unknown chromosome: '" << splitAlignmentChrom << "'";
             BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
         }
 
@@ -352,7 +352,7 @@ parseSACandidatesFromRead(
             if (! ((splitAlignmentStrand=='-') || (splitAlignmentStrand=='+')))
             {
                 std::ostringstream oss;
-                oss << "ERROR: Unexpected strand entry in split alignment segment: '" << splitAlignmentSegmentString << "'\n";
+                oss << "Unexpected strand entry in split alignment segment: '" << splitAlignmentSegmentString << "'";
                 BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
             sal.is_fwd_strand = (splitAlignmentStrand == '+');
@@ -1498,7 +1498,7 @@ checkReadSize(
     if (seqSize == 0)
     {
         std::ostringstream oss;
-        oss << "ERROR: Input alignment record contains unknown read sequence (SEQ='*'), "
+        oss << "Input alignment record contains unknown read sequence (SEQ='*'), "
             << "which cannot be used for variant calling:\n";
         alignmentStream.report_state(oss);
         oss << "\n";
@@ -1508,7 +1508,7 @@ checkReadSize(
     if (seqSize != alignedSize)
     {
         std::ostringstream oss;
-        oss << "ERROR: Read length implied by mapped alignment ("
+        oss << "Read length implied by mapped alignment ("
             << alignedSize << ") does not match sequence length ("
             << seqSize << "):\n";
         alignmentStream.report_state(oss);

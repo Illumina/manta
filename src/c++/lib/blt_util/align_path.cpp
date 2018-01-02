@@ -45,8 +45,8 @@ unknown_cigar_error(const char* const cigar,
                     const char* const cptr)
 {
     std::ostringstream oss;
-    oss << "ERROR: can't parse cigar string: " << cigar << "\n"
-        << "\tunexpected character: '" << *cptr << "' at position: " << (cptr-cigar+1) << "\n";
+    oss << "Can't parse cigar string: " << cigar << "\n"
+        << "\tunexpected character: '" << *cptr << "' at position: " << (cptr-cigar+1);
     throw blt_exception(oss.str().c_str());
 }
 

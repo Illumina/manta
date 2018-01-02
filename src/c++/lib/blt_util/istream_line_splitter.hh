@@ -107,7 +107,7 @@ private:
         if (dparse.n_word()!=col_count)
         {
             std::ostringstream oss;
-            oss << "ERROR: unexpected number of columns in paired export line:\n\n";
+            oss << "Unexpected number of columns in paired export line:\n\n";
             dparse.dump(oss);
             throw blt_exception(oss.str().c_str());
         }

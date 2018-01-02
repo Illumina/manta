@@ -42,7 +42,7 @@ nodeHurl(const NodeIndexType nodePtr) const
     using namespace illumina::common;
 
     std::ostringstream oss;
-    oss << "ERROR: Attempting to access node: " << _index << ":" << nodePtr << " in locus with size: " << size() << "\n";
+    oss << "Attempting to access node: " << _index << ":" << nodePtr << " in locus with size: " << size();
     BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
 }
 
@@ -75,7 +75,7 @@ mergeNode(
     if (fromNode.getInterval().tid != toNode.getInterval().tid)
     {
         std::ostringstream oss;
-        oss << "ERROR: Attempting to merge nodes on different chromosomes\n"
+        oss << "Attempting to merge nodes on different chromosomes\n"
             << "\tNode1: " << fromNode
             << "\tNode2: " << toNode;
         BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
@@ -201,7 +201,7 @@ getEdgeException(
     using namespace illumina::common;
 
     std::ostringstream oss;
-    oss << "ERROR: SVLocus::getEdge() no edge exists\n";
+    oss << "SVLocus::getEdge() no edge exists\n";
     oss << "\tfrom_node: " << _index << ":" << fromIndex << " " << getNode(fromIndex);
     oss << "\tto_node: " << _index << ":" << toIndex << " " << getNode(toIndex);
     BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
@@ -617,7 +617,7 @@ checkState(const bool isCheckConnected) const
     if (nodeSize != connected.size())
     {
         std::ostringstream oss;
-        oss << "ERROR: SVLocus contains unconnected components, LocusIndex: " << _index << "\n";
+        oss << "SVLocus contains unconnected components, LocusIndex: " << _index;
         BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 }

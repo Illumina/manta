@@ -64,7 +64,7 @@ check_bam_bcf_header_compatability(
     for (int i(0); i<n_labels; ++i)
     {
         if (bamlabels.find(std::string(bcf_labels[i])) != bamlabels.end()) continue;
-        log_os << "ERROR: Chromosome label '" << bcf_labels[i] << "' in BCF/VCF file '" << bcf_filename << "' does not exist in the BAM header\n";
+        log_os << "Chromosome label '" << bcf_labels[i] << "' in BCF/VCF file '" << bcf_filename << "' does not exist in the BAM header";
         exit(EXIT_FAILURE);
     }
 
@@ -91,7 +91,7 @@ vcf_streamer(
     _hdr = bcf_hdr_read(_hfp);
     if (nullptr == _hdr)
     {
-        log_os << "ERROR: Failed to load header for VCF file: '" << filename << "'\n";
+        log_os << "Failed to load header for VCF file: '" << filename << "'";
         exit(EXIT_FAILURE);
     }
     _sampleCount = bcf_hdr_nsamples(_hdr);
@@ -147,10 +147,8 @@ next()
 
                 if (_isRequireNormalized)
                 {
-                    std::ostringstream ess;
-                    ess << "ERROR: " << oss.str();
-                    ess << "Please normalize all records in this VCF with a tool such as vt, then resubmit\n";
-                    BOOST_THROW_EXCEPTION(illumina::common::GeneralException(ess.str()));
+                    oss << "Please normalize all records in this VCF with a tool such as vt, then resubmit\n";
+                    BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
                 }
                 else
                 {

@@ -86,7 +86,7 @@ alt_map_qual(const char* tag) const
         if (alt_map<0)
         {
             std::ostringstream oss;
-            oss << "ERROR: Unexpected negative value in optional BAM/CRAM tag: '" << std::string(tag,2) << "'\n";
+            oss << "Unexpected negative value in optional BAM/CRAM tag: '" << std::string(tag,2) << "'";
             throw blt_exception(oss.str().c_str());
         }
         return static_cast<unsigned>(alt_map);

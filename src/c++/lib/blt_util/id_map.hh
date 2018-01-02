@@ -80,7 +80,7 @@ struct id_set
         const typename k2id_t::const_iterator i(_k2id.find(key));
         if (i==_k2id.end())
         {
-            throw blt_exception("ERROR: id_set.get_id(): invalid key\n");
+            throw blt_exception("id_set.get_id(): invalid key");
         }
         return i->second;
     }
@@ -90,7 +90,7 @@ struct id_set
     {
         if (id>=_id2k.size())
         {
-            throw blt_exception("ERROR: id_set.get_key(): invalid id\n");
+            throw blt_exception("id_set.get_key(): invalid id");
         }
         return _id2k[id];
     }
@@ -175,7 +175,7 @@ struct id_map
         const typename k2id_t::const_iterator i(_k2id.find(key));
         if (i==_k2id.end())
         {
-            throw blt_exception("ERROR: id_map.get_id(): invalid key\n");
+            throw blt_exception("id_map.get_id(): invalid key");
         }
         return i->second;
     }
@@ -185,7 +185,7 @@ struct id_map
     {
         if (id>=_id2kv.size())
         {
-            throw blt_exception("ERROR: idmap.get_key(): invalid id\n");
+            throw blt_exception("idmap.get_key(): invalid id");
         }
         return _id2kv[id].first;
     }
@@ -195,7 +195,7 @@ struct id_map
     {
         if (id>=_id2kv.size())
         {
-            throw blt_exception("ERROR: idmap.get_value(): invalid id\n");
+            throw blt_exception("idmap.get_value(): invalid id");
         }
         return _id2kv[id].second;
     }

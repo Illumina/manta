@@ -301,10 +301,9 @@ pairError(
     using namespace illumina::common;
 
     std::ostringstream oss;
-    oss << "ERROR: " << errorMsg << '\n'
+    oss << errorMsg << '\n'
         << "\tcandidate-sv: " << sv
-        << "\tread-pair: " << pair
-        << '\n';
+        << "\tread-pair: " << pair;
     BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
 }
 

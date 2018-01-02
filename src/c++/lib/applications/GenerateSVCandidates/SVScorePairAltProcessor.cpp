@@ -333,7 +333,7 @@ realignPairedRead(
         using namespace illumina::common;
 
         std::ostringstream oss;
-        oss << "ERROR: Failed to parse fragment range from bam record. Frag begin,end: " << fakeRefSpan << " bamRecord: " << bamRead << "\n";
+        oss << "Failed to parse fragment range from bam record. Frag begin,end: " << fakeRefSpan << " bamRecord: " << bamRead;
         BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 
@@ -543,7 +543,7 @@ processClearedRecord(
         if (fragBeginRefPos > fragEndRefPos)
         {
             std::ostringstream oss;
-            oss << "ERROR: Failed to parse fragment range from bam record. Frag begin,end: " << fragBeginRefPos << " " << fragEndRefPos << " bamRecord: " << bamRead << "\n";
+            oss << "Failed to parse fragment range from bam record. Frag begin,end: " << fragBeginRefPos << " " << fragEndRefPos << " bamRecord: " << bamRead;
             BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
         }
 

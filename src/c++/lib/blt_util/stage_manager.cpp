@@ -48,7 +48,7 @@ add_stage(const int id,
         if (pit==_ids.end())
         {
             std::ostringstream oss;
-            oss << "ERROR: stage_data.add_stage() parent_id " << parent_id << " does not exist\n";
+            oss << "stage_data.add_stage() parent_id " << parent_id << " does not exist";
             throw blt_exception(oss.str().c_str());
         }
 
@@ -58,7 +58,7 @@ add_stage(const int id,
     if (! ret.second)
     {
         std::ostringstream oss;
-        oss << "ERROR: stage_data.add_stage() id " << id << " already exists\n";
+        oss << "stage_data.add_stage() id " << id << " already exists";
         throw blt_exception(oss.str().c_str());
     }
     _stage_pos.push_back(std::make_pair(pos,id));
@@ -74,7 +74,7 @@ stage_data::
 unknown_id_error(const int id) const
 {
     std::ostringstream oss;
-    oss << "ERROR: unknown stage_id requested: " << id << "\n";
+    oss << "Unknown stage_id requested: " << id;
     throw blt_exception(oss.str().c_str());
 }
 
@@ -256,7 +256,7 @@ validate_new_pos_value(const pos_t pos,
     if (! is_new_pos_value_valid(pos,stage_id))
     {
         std::ostringstream oss;
-        oss << "ERROR:: reference sequence position difference too high for multi_stage_circular_buffer\n"
+        oss << "Reference sequence position difference too high for multi_stage_circular_buffer\n"
             << "current position:\t" << (pos+1) << "\n"
             << "top position for stage:\t" << (_max_pos+1) << "\n"
             << "stage id:\t" << stage_id << "\n";

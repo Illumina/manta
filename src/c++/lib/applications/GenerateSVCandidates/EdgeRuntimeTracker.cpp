@@ -46,7 +46,7 @@ EdgeRuntimeTracker(
     if (! *_osPtr)
     {
         std::ostringstream oss;
-        oss << "ERROR: Can't open output file: " << outputFile << '\n';
+        oss << "Can't open output file: '" << outputFile << "'";
         BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
     }
 

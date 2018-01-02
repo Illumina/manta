@@ -85,7 +85,7 @@ merge(
         const ReadGroupLabel& mkey(rhs.getKey(i));
         if (_group.test_key(mkey))
         {
-            log_os << "ERROR: Can't merge stats set objects with repeated key: '" << mkey << "'\n";
+            log_os << "Can't merge stats set objects with repeated key: '" << mkey << "'";
             exit(EXIT_FAILURE);
         }
 

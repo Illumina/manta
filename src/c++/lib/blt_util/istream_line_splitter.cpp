@@ -90,7 +90,7 @@ check_istream(std::istream& is,
         if (is.bad())
         {
             std::ostringstream oss;
-            oss << "ERROR: unexpected failure while attempting to read line " << (line_no+1) << "\n";
+            oss << "Unexpected failure while attempting to read line " << (line_no+1);
             throw blt_exception(oss.str().c_str());
         }
         is.clear();
@@ -119,7 +119,7 @@ parse_line()
         if (! check_istream(_is,_line_no))
         {
             std::ostringstream oss;
-            oss << "ERROR: Unexpected read failure in parse_line() at line_no: " << _line_no << "\n";
+            oss << "Unexpected read failure in parse_line() at line_no: " << _line_no;
             throw blt_exception(oss.str().c_str());
         }
         buflen=(strlen(_buf));
@@ -128,7 +128,7 @@ parse_line()
     if ((buflen+1) >_buf_size)
     {
         std::ostringstream oss;
-        oss << "ERROR: Unexpected read failure in parse_line() at line_no: " << _line_no << "\n";
+        oss << "Unexpected read failure in parse_line() at line_no: " << _line_no;
         throw blt_exception(oss.str().c_str());
     }
 

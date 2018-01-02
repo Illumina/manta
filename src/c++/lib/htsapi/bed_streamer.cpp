@@ -55,7 +55,7 @@ next()
         if (! _bedrec.set(_kstr.s))
         {
             std::ostringstream oss;
-            oss << "ERROR: Can't parse BED record: '" << _kstr.s << "'\n";
+            oss << "Can't parse BED record: '" << _kstr.s << "'";
             throw blt_exception(oss.str().c_str());
         }
         if (! _bedrec.is_valid()) continue;

@@ -42,7 +42,7 @@ open_ifstream(
     if (! ifs)
     {
         std::ostringstream oss;
-        oss << "ERROR: Can't open file: " << filename << "\n";
+        oss << "Can't open file: '" << filename << "'";
         throw blt_exception(oss.str().c_str());
     }
 }

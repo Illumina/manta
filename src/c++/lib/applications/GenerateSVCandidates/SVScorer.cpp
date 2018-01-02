@@ -381,7 +381,7 @@ addConservativeSpanningPairSupport(
         using namespace illumina::common;
 
         std::ostringstream oss;
-        oss << "ERROR: Spanning likelihood is zero for all alleles. Fragment: " << fragev << "\n";
+        oss << "Spanning likelihood is zero for all alleles. Fragment: " << fragev;
         BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 
@@ -1954,7 +1954,7 @@ scoreSV(
     {
         using namespace illumina::common;
         std::ostringstream oss;
-        oss << "ERROR: unexpected junction count: " << unfilteredJunctionCount << ".\n";
+        oss << "Unexpected junction count: " << unfilteredJunctionCount;
         BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 }

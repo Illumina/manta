@@ -68,7 +68,7 @@ parse_bam_region(
         if (words2.empty() || (words2.size() > 2))
         {
             std::ostringstream oss;
-            oss << "ERROR: can't parse begin and end positions from bam_region '" << region << "'\n";
+            oss << "Can't parse begin and end positions from bam_region '" << region << "'";
             throw blt_exception(oss.str().c_str());
         }
 
@@ -95,14 +95,14 @@ parse_bam_region(
     if (chrom.empty())
     {
         std::ostringstream oss;
-        oss << "ERROR: can't parse contig name from bam_region '" << region << "'\n";
+        oss << "Can't parse contig name from bam_region '" << region << "'";
         throw blt_exception(oss.str().c_str());
     }
 
     if ((begin_pos<0) || (end_pos<0) || (end_pos<=begin_pos))
     {
         std::ostringstream oss;
-        oss << "ERROR: nonsensical begin (" << begin_pos << ") and end (" << end_pos << ") positions parsed from bam_region '" << region << "'\n";
+        oss << "Nonsensical begin (" << begin_pos << ") and end (" << end_pos << ") positions parsed from bam_region '" << region << "'";
         throw blt_exception(oss.str().c_str());
     }
 }
@@ -128,7 +128,7 @@ parse_bam_region_from_hdr(
     if (tid < 0)
     {
         std::ostringstream oss;
-        oss << "ERROR: contig '" << chrom << "' from bam_region '" << region << "' not found in BAM/CRAM header\n";
+        oss << "Contig '" << chrom << "' from bam_region '" << region << "' not found in BAM/CRAM header";
         throw blt_exception(oss.str().c_str());
     }
 
@@ -155,7 +155,7 @@ parse_bam_region(
     if (citer == header.chrom_to_index.end())
     {
         std::ostringstream oss;
-        oss << "ERROR: contig '" << chrom << "' from bam_region '" << region << "' not found in BAM/CRAM header\n";
+        oss << "Contig '" << chrom << "' from bam_region '" << region << "' not found in BAM/CRAM header";
         throw blt_exception(oss.str().c_str());
     }
 
