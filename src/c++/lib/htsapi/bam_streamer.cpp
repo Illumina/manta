@@ -35,7 +35,7 @@
 
 
 stream_state_reporter::
-~stream_state_reporter(){}
+~stream_state_reporter() {}
 
 
 bam_streamer::

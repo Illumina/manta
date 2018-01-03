@@ -180,7 +180,7 @@ getChromName(
     }
     else
     {
-            return "UNKNOWN";
+        return "UNKNOWN";
     }
 }
 

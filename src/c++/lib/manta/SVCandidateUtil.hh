@@ -38,7 +38,7 @@ isSVBelowMinSize(
 /// which is considered as small SV size
 bool
 isInvalidBreakpointInterval(
-        const SVCandidate& sv);
+    const SVCandidate& sv);
 
 /// returns true if the sv is in cis orientation, i.e same chromosome
 /// and a right open breakend to the left of a left open breakend
