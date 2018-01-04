@@ -266,23 +266,23 @@ is produced for a tumor/normal subtraction. These files are:
   evidence is required for an SV to be entered as a candidate in this file.
   An SV or indel must be a candidate to be considered for scoring, therefore
   an SV cannot appear in the other VCF outputs if it is not present in this
-  file. Note that by default this file includes indels down to a very small
-  size (>= 8 bases). These are intended to be passed on to a small variant
+  file. Note that by default this file includes indels of size 8 and larger.
+  The smallest indels in this set are intended to be passed on to a small variant
   caller without scoring by manta itself (by default manta scoring starts
-  at size 51).
+  at size 50).
 * __candidateSmallIndels.vcf.gz__
     * Subset of the __candidateSV.vcf.gz__ file containing only simple insertion and
-  deletion variants of size 50 or less. Passing this file to a small variant caller
-  will provide continuous coverage over all indel sizes when the small variant caller
-  and manta outputs are evaluated together. Alternate small indel candidate sets
-  can be parsed out of the __candidateSV.vcf.gz file__ if this candidate set is not
-  appropriate.
+  deletion variants less than the minimum scored variant size (50 by default). Passing
+  this file to a small variant caller will provide continuous coverage over all indel
+  sizes when the small variant caller and manta outputs are evaluated together. Alternate
+  small indel candidate sets can be parsed out of the __candidateSV.vcf.gz file__ if this
+  candidate set is not appropriate.
 
 For tumor-only analysis, Manta will produce an additional VCF:
 
 * __tumorSV.vcf.gz__
     * Subset of the __candidateSV.vcf.gz__ file after removing redundant candidates and
-  small indels of size 50 or less. The SVs are not scored, but including additional
+  small indels of size 49 or less. The SVs are not scored, but including additional
   details: (1) paired and split read supporting evidence counts for each allele
   (2) a subset of the filters from the scored tumor-normal model
   are applied to the single tumor case to improve precision.
