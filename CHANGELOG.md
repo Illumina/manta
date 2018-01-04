@@ -15,7 +15,7 @@
 - Fix CRC error from python gzip lib when generating evidence bam (MANTA-1270)
   - Remove the filter on evidence reads for SV candidates that are not in the file canidateSV.vcf.gz, because the file now contains all SV canidates without removing duplicants.
 - Stop automatically clearing python environment variables (MANTA-1316)
-  - This should allow python from certain module systems to be used, but may (rarely) cause instability due to conflicting content in a user's PYTHON\_PATH.
+  - This should allow python from certain module systems to be used, but may (rarely) cause instability due to conflicting content in a user's PYTHONPATH.
 
 ## v1.2.2 - 2017-11-10
 
