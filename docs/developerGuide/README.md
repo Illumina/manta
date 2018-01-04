@@ -275,9 +275,12 @@ foo(const char* name)
   * Avoid ending the message with a newline. For multi-line exception messages the ending newline may make sense on a case-by-case basis.
 
 * Context at the original throw site is often supplemented by a 'catch and release' block to add
-information at a few critical points on the stack. Typically this is information which
+information at a few critical points on the stack as the stack is unwound. Typically this is information which
 is unavailable at the throw site.
-  * The preferred method to implement this is to use `boost::error_info`. This only works for exceptions derived from `illumina::common::ExceptionData`, such as the above noted `GeneralException` class:
+  * The preferred method to implement this is to use `boost::error_info`. This only works for exceptions derived from `illumina::common::ExceptionData`, such as the above noted `GeneralException` class.
+  * The first template argument to `boost::error_info` (`edge_error_info` in the example below) is an arbitrary empty struct, the name of which will be printed with the metadata proceeding the given string (this seems to be some kind of tag dispatch mechanism in the boost exception library). The coding convention is to create an informative category
+  name for each instance where this exception decoration pattern occurs.
+  * An example of using this pattern in code follows:
 
 ```c++
 catch (illumina::common::ExceptionData& e)
@@ -287,6 +290,9 @@ catch (illumina::common::ExceptionData& e)
     oss << "Can't find return edge to node index: " << _index << ":" << fromIndex << " in remote node index: " << _index << ":" << fromNodeEdgeIter.first << "\n"
         << "\tlocal_node: " << fromNode
         << "\tremote_node: " << remoteNode;
+
+    // Note that the struct 'edge_error_info" is just an arbitrary tag name applied to this string, any name can be
+    // used for this purpose at each exception decoration site:
     e << boost::error_info<struct edge_error_info,std::string>(oss.str());
     throw;
 }
@@ -297,16 +303,14 @@ catch (illumina::common::ExceptionData& e)
 ```c++
 catch (illumina::common::ExceptionData& e)
 {
-    // use a custom boost error_info type
+    // use a boost error_info type to supplement the current exception message
     e << boost::error_info<struct extra_exception_message,std::string>("FOO");
 
-    // use another custom boost error_info type
+    //  to further supplement the exception message, change the tag struct to
+    // create another boost error_info type
     e << boost::error_info<struct current_candidate_info,std::string>("BAR");
 
-    // use standard boost error_info speciailizations:
-    e << boost::errinfo_file_name("FUM");
-
-    // Note that repeating any type (even in different catch blocks) will result in only the last message being
+    // Note that repeating any type will result in only the last message being
     // printed to standard error, eg:
     //
     // e << boost::error_info<struct special_message, std::string>("BAR1");
@@ -328,6 +332,40 @@ catch (...)
            << static_cast<int>(r.second) << " of read: " << (*r.first) << "\n";
     throw;
 }
+```
+
+##### Exception example
+
+The following example shows an exception message with two messages added during stack unwinding using the
+boost::error_info mechanism described above (Additional cmdline/version details are added at the end of the
+message by the lowest-level catch site for each binary).
+
+```
+FATAL_ERROR: 2018-Jan-02 16:27:53 /src/c++/lib/applications/GenerateSVCandidates/SVCandidateAssemblyRefiner.cpp(985): Throw in function void processLargeInsertion(const SVCandidate&, pos_t, pos_t, const GlobalAligner<int>&, const std::vector<unsigned int>&, const std::set<int>&, SVCandidateAssemblyData&, const GSCOptions&)
+Dynamic exception type: boost::exception_detail::clone_impl<illumina::common::GeneralException>
+std::exception::what: Large insertion alignment procedure produced invalid zero-length alignment target
+
+[runGSC(GSCOptions const&, char const*, char const*)::current_edge_info*] = Exception caught while processing graph edge: edgeinfo locus:node1:node2: 3360:0:0
+        node1:LocusNode: GenomeInterval: 19:[44215749,44215797) n_edges: 1 out_count: 18 evidence: [44215637,44215909)
+        EdgeTo: 0 out_count: 18
+        node1:EndUserGenomeInterval: chr20:44215750-44215797
+
+[SVCandidateProcessor::evaluateCandidate(EdgeInfo const&, SVMultiJunctionCandidate const&, SVCandidateSetData const&, bool, SupportSamples&)::assembly_candidate_info*] = Exception caught while attempting to assemble SVCandidate:
+        isImprecise?: 1
+        forwardTranscriptStrandReadCount: 0 ; reverseTranscriptStrandReadCount: 0
+        index candidate:assemblyAlign:assemblySegment: 0:0:0
+        Breakend: GenomeInterval: 19:[44215749,44215797) COMPLEX
+        SVBreakendLowResEvidence: pair: 0 local_pair: 0 cigar: 0 softclip: 0 semialign: 6 shadow: 0 split_align: 0 unknown: 0
+
+        Breakend: GenomeInterval: 19:[44215749,44215797) UNKNOWN
+        SVBreakendLowResEvidence: pair: 0 local_pair: 0 cigar: 0 softclip: 0 semialign: 0 shadow: 0 split_align: 0 unknown: 0
+
+
+
+cmdline:        /install/libexec/GenerateSVCandidates --align-stats /MantaWorkflow/workspace/alignmentStats.xml --graph-file /MantaWorkflow/workspace/svLocusGraph.bin --bin-index 197 --bin-count 256 --max-edge-count 10 --min-candidate-sv-size 8 --min-candidate-spanning-count 3 --min-scored-sv-size 50 --ref /Homo_sapiens/NCBI/GRCh38Decoy/Sequence/WholeGenomeFasta/genome.fa --candidate-output-file /MantaWorkflow/workspace/svHyGen/candidateSV.0197.vcf --diploid-output-file /MantaWorkflow/workspace/svHyGen/diploidSV.0197.vcf --min-qual-score 10 --min-pass-qual-score 20 --min-pass-gt-score 15 --edge-runtime-log /MantaWorkflow/workspace/svHyGen/edgeRuntimeLog.0197.txt --edge-stats-log /MantaWorkflow/workspace/svHyGen/edgeStats.0197.xml --align-file /alignedSamples/NA12878/PCRfree/NA12878-PCRFree_S1.bam
+version:        1.2.2-15-g34b1b79-dirty
+buildTime:      2018-01-03T00:25:46.835456Z
+compiler:       g++-5.4.0
 ```
 
 #### Logging
