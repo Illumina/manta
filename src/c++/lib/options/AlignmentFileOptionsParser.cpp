@@ -63,16 +63,16 @@ parseOptions(
         {
             tumor=(boost::any_cast<files_t>(vm["tumor-align-file"].value()));
         }
-        opt.alignmentFilename = normal;
-        opt.alignmentFilename.insert(opt.alignmentFilename.end(),
+        opt.alignmentFilenames = normal;
+        opt.alignmentFilenames.insert(opt.alignmentFilenames.end(),
                                      tumor.begin(),
                                      tumor.end());
         opt.isAlignmentTumor.clear();
         opt.isAlignmentTumor.resize(normal.size(), false);
-        opt.isAlignmentTumor.resize(opt.alignmentFilename.size(), true);
+        opt.isAlignmentTumor.resize(opt.alignmentFilenames.size(), true);
     }
 
-    if (opt.alignmentFilename.empty())
+    if (opt.alignmentFilenames.empty())
     {
         errorMsg="Must specify at least one input alignment file";
     }
@@ -80,7 +80,7 @@ parseOptions(
     {
         // check that alignment files exist, and names do not repeat
         std::set<std::string> nameCheck;
-        for (std::string& afile : opt.alignmentFilename)
+        for (std::string& afile : opt.alignmentFilenames)
         {
             if (checkStandardizeInputFile(afile,"alignment file",errorMsg)) break;
             if (nameCheck.count(afile))

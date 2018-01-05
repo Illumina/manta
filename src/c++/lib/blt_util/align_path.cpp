@@ -550,14 +550,6 @@ apath_clip_adder(path_t& apath,
 
 
 
-// 1. remove zero-length segments
-// 2. remove pads
-// 3. condense repeated segment types
-// 4. reduce adjacent insertion/deletion tags to a single pair
-// 5. replace NDN pattern with single SKIP segment
-//
-// return true if path has been altered
-//
 bool
 apath_cleaner(path_t& apath)
 {

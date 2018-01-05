@@ -52,7 +52,7 @@ runESLRegion(
     std::vector<stream_ptr> bamStreams;
 
     // setup all data for main alignment loop:
-    for (const std::string& alignmentFilename : opt.alignFileOpt.alignmentFilename)
+    for (const std::string& alignmentFilename : opt.alignFileOpt.alignmentFilenames)
     {
         stream_ptr tmp(new bam_streamer(alignmentFilename.c_str(), opt.referenceFilename.c_str()));
         if (! region.empty())
@@ -77,8 +77,8 @@ runESLRegion(
             if (! check_header_compatibility(compareHeader,indexHeader))
             {
                 log_os << "ERROR: incompatible bam headers between files:\n"
-                       << "\t" << opt.alignFileOpt.alignmentFilename[0] << "\n"
-                       << "\t" << opt.alignFileOpt.alignmentFilename[bamIndex] << "\n";
+                       << "\t" << opt.alignFileOpt.alignmentFilenames[0] << "\n"
+                       << "\t" << opt.alignFileOpt.alignmentFilenames[bamIndex] << "\n";
                 exit(EXIT_FAILURE);
             }
         }

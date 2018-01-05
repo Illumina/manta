@@ -19,6 +19,8 @@
 
 #include "test_config.h"
 
+#include "blt_util/blt_exception.hh"
+
 #include "htsapi/bam_streamer.hh"
 
 #include "boost/test/unit_test.hpp"
@@ -28,35 +30,35 @@
 BOOST_AUTO_TEST_SUITE( test_bam_streamer )
 
 
+static
+void
+checkStream(
+    bam_streamer& stream,
+    const unsigned expectedCount)
+{
+    unsigned count(0);
+    while (stream.next())
+    {
+        const bam_record& read(*(stream.get_record_ptr()));
+        if (! read.is_unmapped()) count++;
+    }
+    BOOST_REQUIRE_EQUAL(count, expectedCount);
+}
+
+
 BOOST_AUTO_TEST_CASE( test_bam_streamer_bam_read )
 {
     const std::string testBamPath(std::string(TEST_DATA_PATH) + "/alignment_test.bam");
 
-    /// Assert that reference pointer is optional for BAM
+    // Assert that reference pointer is optional for BAM
     bam_streamer stream(testBamPath.c_str(), nullptr);
 
-    {
-        // iterate through entire file:
-        unsigned count(0);
-        while (stream.next())
-        {
-            const bam_record& read(*(stream.get_record_ptr()));
-            if (! read.is_unmapped()) count++;
-        }
-        BOOST_REQUIRE_EQUAL(count, 4u);
-    }
+    // iterate through entire file:
+    checkStream(stream, 4u);
 
-    {
-        // iterate through region:
-        stream.resetRegion("chrA");
-        unsigned count(0);
-        while (stream.next())
-        {
-            const bam_record& read(*(stream.get_record_ptr()));
-            if (! read.is_unmapped()) count++;
-        }
-        BOOST_REQUIRE_EQUAL(count, 2u);
-    }
+    // iterate through region:
+    stream.resetRegion("chrA");
+    checkStream(stream, 2u);
 }
 
 
@@ -67,27 +69,28 @@ BOOST_AUTO_TEST_CASE( test_bam_streamer_cram_read )
 
     bam_streamer stream(testCramPath.c_str(), testRefPath.c_str());
 
+    // iterate through entire file:
+    checkStream(stream, 4u);
+
+    // iterate through region:
+    stream.resetRegion("chrA");
+    checkStream(stream, 2u);
+}
+
+BOOST_AUTO_TEST_CASE( test_bam_streamer_cram_read_fail )
+{
+    const std::string testCramPath(std::string(TEST_DATA_PATH) + "/alignment_test.cram");
+
     {
-        // iterate through entire file:
-        unsigned count(0);
-        while (stream.next())
-        {
-            const bam_record& read(*(stream.get_record_ptr()));
-            if (! read.is_unmapped()) count++;
-        }
-        BOOST_REQUIRE_EQUAL(count, 4u);
+        bam_streamer stream(testCramPath.c_str(), nullptr);
+        BOOST_REQUIRE_THROW(stream.next(), blt_exception);
     }
 
     {
-        // iterate through region:
+        bam_streamer stream(testCramPath.c_str(), nullptr);
         stream.resetRegion("chrA");
-        unsigned count(0);
-        while (stream.next())
-        {
-            const bam_record& read(*(stream.get_record_ptr()));
-            if (! read.is_unmapped()) count++;
-        }
-        BOOST_REQUIRE_EQUAL(count, 2u);
+        // Can't activate this check until we update to htslib 1.6
+        // BOOST_REQUIRE_THROW(stream.next(), blt_exception);
     }
 }
 

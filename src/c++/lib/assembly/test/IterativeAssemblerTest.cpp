@@ -74,11 +74,11 @@ BOOST_AUTO_TEST_CASE( test_BasicAssembler )
 
     AssemblyReadInput reads;
 
-    reads.push_back("ACGTGTATTACC");
-    reads.push_back(  "GTGTATTACCTA");
-    reads.push_back(      "ATTACCTAGTAC");
-    reads.push_back(        "TACCTAGTACTC");
-    reads.push_back("123456789123");
+    reads.emplace_back("ACGTGTATTACC");
+    reads.emplace_back(  "GTGTATTACCTA");
+    reads.emplace_back(      "ATTACCTAGTAC");
+    reads.emplace_back(        "TACCTAGTACTC");
+    reads.emplace_back("123456789123");
 
     AssemblyReadOutput readInfo;
     Assembly contigs;
@@ -108,9 +108,9 @@ BOOST_AUTO_TEST_CASE( test_IterativeKmer )
 
     AssemblyReadInput reads;
 
-    reads.push_back("ACACACACGATG");
-    reads.push_back(        "GATGTCTCTCTC");
-    reads.push_back("123456789123");
+    reads.emplace_back("ACACACACGATG");
+    reads.emplace_back(        "GATGTCTCTCTC");
+    reads.emplace_back("123456789123");
 
     AssemblyReadOutput readInfo;
     Assembly contigs;
@@ -141,9 +141,9 @@ BOOST_AUTO_TEST_CASE( test_branching_basic )
 
     AssemblyReadInput reads;
 
-    reads.push_back("ATATAGACGATG");
-    reads.push_back(      "ACGATGTCTATCTT");
-    reads.push_back(      "ACGATGTTGGCCTT");
+    reads.emplace_back("ATATAGACGATG");
+    reads.emplace_back(      "ACGATGTCTATCTT");
+    reads.emplace_back(      "ACGATGTTGGCCTT");
 
     AssemblyReadOutput readInfo;
     Assembly contigs;
@@ -180,9 +180,9 @@ BOOST_AUTO_TEST_CASE( test_branching_iterative )
 
     AssemblyReadInput reads;
 
-    reads.push_back("ACACACACGATG");
-    reads.push_back(        "GATGGCCCCCCC");
-    reads.push_back(        "GATGTCTCTCTC");
+    reads.emplace_back("ACACACACGATG");
+    reads.emplace_back(        "GATGGCCCCCCC");
+    reads.emplace_back(        "GATGTCTCTCTC");
 
     AssemblyReadOutput readInfo;
     Assembly contigs;

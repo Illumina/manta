@@ -45,7 +45,8 @@ FloatType
 softMaxTransform(
     const FloatType real)
 {
-    static_assert(std::is_floating_point<FloatType>::value, "Transform requires floating point type.");
+    static_assert(std::is_floating_point<FloatType>::value, "Requires floating point type.");
+
     if (real<=0.)
     {
         const FloatType er(std::exp(real));
@@ -63,7 +64,8 @@ FloatType
 softMaxInverseTransform(
     const FloatType ranged)
 {
-    static_assert(std::is_floating_point<FloatType>::value, "Transform requires floating point type.");
+    static_assert(std::is_floating_point<FloatType>::value, "Requires floating point type.");
+
     assert((ranged>=0) && (ranged<=1));
     if (ranged<=0.5)
     {
@@ -121,7 +123,8 @@ softMaxRangeTransform(
     const IterType end)
 {
     typedef typename std::iterator_traits<IterType>::value_type value_type;
-    static_assert(std::is_floating_point<value_type>::value, "Transform requires iterators over floating point type.");
+    static_assert(std::is_floating_point<value_type>::value, "Requires iterator on floating point type.");
+
     value_type sum(1);
     for (IterType i(begin); i!=end; ++i)
     {
@@ -146,7 +149,7 @@ softMaxInverseRangeTransform(
     const IterType end)
 {
     typedef typename std::iterator_traits<IterType>::value_type value_type;
-    static_assert(std::is_floating_point<value_type>::value, "Transform requires iterators over floating point type.");
+    static_assert(std::is_floating_point<value_type>::value, "Requires iterator on floating point type.");
 
     value_type sum(0);
     for (IterType i(begin); i!=end; ++i)
@@ -177,10 +180,11 @@ prob_comp(It begin,
           const It end,
           const unsigned cgt)
 {
-    typedef typename std::iterator_traits<It>::value_type float_type;
+    typedef typename std::iterator_traits<It>::value_type FloatType;
+    static_assert(std::is_floating_point<FloatType>::value, "Requires iterator on floating point type.");
 
     unsigned i(0);
-    float_type val(0.);
+    FloatType val(0.);
     for (; begin!=end; ++begin,++i)
     {
         if (i == cgt) continue;
@@ -189,34 +193,35 @@ prob_comp(It begin,
     return val;
 }
 
-/// probability distro normalization for log-transformed input
+/// Normalize log-transformed probability distro
 ///
-/// \param[out] max_idx set to the index of the most probable component
+/// \param[out] maxElementIndex Index of the most probable component
 ///
 template <typename It>
 void
-normalize_ln_distro(
+normalizeLogDistro(
     const It pbegin,
     const It pend,
-    unsigned& max_idx)
+    unsigned& maxElementIndex)
 {
-    typedef typename std::iterator_traits<It>::value_type float_type;
+    typedef typename std::iterator_traits<It>::value_type FloatType;
+    static_assert(std::is_floating_point<FloatType>::value, "Requires iterator on floating point type.");
 
     // scale and exp pprob values:
-    max_idx=0;
+    maxElementIndex=0;
     if (pbegin==pend) return;
-    float_type max(*pbegin);
+    FloatType max(*pbegin);
     unsigned i(1);
     for (It p(pbegin+1); p!=pend; ++p,++i)
     {
         if (*p > max)
         {
             max = *p;
-            max_idx = i;
+            maxElementIndex = i;
         }
     }
 
-    float_type sum(0.);
+    FloatType sum(0.);
     for (It p(pbegin); p!=pend; ++p)
     {
         *p = std::exp(*p-max);  // To alleviate underflow problem
@@ -239,21 +244,23 @@ normalize_ln_distro(
 /// opt-max is found within the subset of the distribution where the predicate
 /// iterator is true
 ///
+/// \param[out] maxElementIndex Index of the most probable component
 template <typename It,typename It2>
 void
 opt_normalize_ln_distro(
     const It pbegin,
     const It pend,
     const It2 pred_begin,
-    unsigned& max_idx)
+    unsigned& maxElementIndex)
 {
-    typedef typename std::iterator_traits<It>::value_type float_type;
+    typedef typename std::iterator_traits<It>::value_type FloatType;
+    static_assert(std::is_floating_point<FloatType>::value, "Requires iterator on floating point type.");
 
-    max_idx=0;
+    maxElementIndex=0;
     if (pbegin==pend) return;
 
     bool is_max(false), is_opt_max(false);
-    float_type max(0), opt_max(0);
+    FloatType max(0), opt_max(0);
 
     unsigned i(0);
     It2 pred(pred_begin);
@@ -262,7 +269,7 @@ opt_normalize_ln_distro(
         if ((! is_max) || (*p > max))
         {
             max = *p;
-            max_idx = i;
+            maxElementIndex = i;
             is_max=true;
         }
         if (((! is_opt_max) || (*p > max)) && *pred)
@@ -274,14 +281,14 @@ opt_normalize_ln_distro(
 
     assert(is_opt_max);
 
-    static const float_type norm_thresh(20);
-    static const float_type opt_thresh(5);
+    static const FloatType norm_thresh(20);
+    static const FloatType opt_thresh(5);
 
-    float_type sum(0.);
+    FloatType sum(0.);
     pred=(pred_begin);
     for (It p(pbegin); p!=pend; ++p,++pred)
     {
-        float_type mdiff(max-*p);
+        FloatType mdiff(max-*p);
         const bool is_mdiff_skip(mdiff>norm_thresh);
         if (is_mdiff_skip)
         {
@@ -290,7 +297,7 @@ opt_normalize_ln_distro(
                 *p=0;
                 continue;
             }
-            float_type optdiff(opt_max-*p);
+            FloatType optdiff(opt_max-*p);
             if (optdiff>opt_thresh)
             {
                 *p=0;

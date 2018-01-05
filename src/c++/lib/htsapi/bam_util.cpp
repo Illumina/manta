@@ -25,9 +25,9 @@
 #include "bam_util.hh"
 #include "blt_util/log.hh"
 
-#include <iostream>
 #include <cassert>
 
+#include <iostream>
 
 
 static

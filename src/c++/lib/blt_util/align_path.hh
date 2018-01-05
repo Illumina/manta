@@ -336,18 +336,19 @@ apath_clip_adder(path_t& apath,
                  const unsigned sc_lead,
                  const unsigned sc_trail);
 
-/// 'cleans' the path so that it can be used, or used more consistently
+/// Normalizes the alignment path to a simpler/canonical form
 ///
-/// note this does not try to correct or work around anything
+/// Note this does not try to correct or work around anything
 /// which can't be unambiguously reinterpreted to a simpler form
 ///
-/// 1. remove zero length alignment segments
-/// 2. remove pad segments
-/// 3. remove repeated segments
-/// 4. for any combined insertion/deletion pair, reduce this to
-///    a single segment pair (in either order)
+/// The following simplification steps are applied:
+/// 1. Remove zero length alignment segments
+/// 2. Remove pad segments
+/// 3. Condense repeated segments
+/// 4. Reduce adjacent insertion/deletion tags to a single pair
+/// 5. Replace Skip-Del-Skip (NDN) pattern with single SKIP (N) segment
 ///
-///  \return true if path has been altered
+///  \return True if path has been altered
 ///
 bool
 apath_cleaner(path_t& apath);

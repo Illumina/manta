@@ -796,7 +796,7 @@ selectContigs(
     std::set<unsigned> usedPseudoReads;
 
     // contig are selected based on the number of supporting reads that are not pseudo
-    while ((candidateContigs.size() > 0) && (finalContigCount < opt.maxAssemblyCount))
+    while ((! candidateContigs.empty()) && (finalContigCount < opt.maxAssemblyCount))
     {
         // count unused reads that are not pseudo reads
         const unsigned usedNormalReads = usedReads.size() - usedPseudoReads.size();

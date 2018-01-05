@@ -48,7 +48,7 @@ static std::unique_ptr<SVLocusSetFinder> buildSVLocusSetFinder(
     std::vector<std::string> alignFilenameVector(1, alignFilename);
     AlignmentFileOptions afo;
 
-    afo.alignmentFilename = alignFilenameVector;
+    afo.alignmentFilenames = alignFilenameVector;
     afo.isAlignmentTumor = tempVector;
 
     opts.alignFileOpt = afo;

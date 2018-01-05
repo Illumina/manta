@@ -134,7 +134,7 @@ public:
     }
     bool is_supplementary() const
     {
-        return ((_bp->core.flag & BAM_FLAG::SUPPLEMENT) != 0);
+        return ((_bp->core.flag & BAM_FLAG::SUPPLEMENTARY) != 0);
     }
 
     void toggle_is_paired()
@@ -179,7 +179,7 @@ public:
     }
     void toggle_is_supplementary()
     {
-        _bp->core.flag ^= BAM_FLAG::SUPPLEMENT;
+        _bp->core.flag ^= BAM_FLAG::SUPPLEMENTARY;
     }
 
     int read_no() const

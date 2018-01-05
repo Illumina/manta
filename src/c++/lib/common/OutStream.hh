@@ -33,6 +33,7 @@
 ///
 struct OutStream
 {
+    explicit
     OutStream(const std::string& fileName);
 
     ~OutStream();

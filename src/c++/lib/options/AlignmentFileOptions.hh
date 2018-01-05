@@ -24,9 +24,11 @@
 #include <vector>
 
 
-/// bam input file object shared by all programs which require these as input
+/// \brief Input alignment file object shared by all programs which require these as input
 struct AlignmentFileOptions
 {
-    std::vector<std::string> alignmentFilename;
+    typedef std::vector<std::string> files_t;
+
+    files_t alignmentFilenames;
     std::vector<bool> isAlignmentTumor; ///< indicates which positions in the alignmnetFilename correspond to tumor
 };

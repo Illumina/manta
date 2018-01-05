@@ -134,7 +134,7 @@ SVLocusSetFinder(
     _positionReadDepthEstimate(depthBufferCompression),
     _isInDenoiseRegion(false),
     _denoiseStartPos(0),
-    _readScanner(opt.scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilename, opt.isRNA),
+    _readScanner(opt.scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilenames, opt.isRNA),
     _isMaxDepthFilter(false),
     _maxDepth(0),
     _bamHeader(bamHeader),
@@ -153,12 +153,12 @@ SVLocusSetFinder(
     //
     // initialize various SV locus graph meta-data
     //
-    const unsigned sampleCount(opt.alignFileOpt.alignmentFilename.size());
+    const unsigned sampleCount(opt.alignFileOpt.alignmentFilenames.size());
     _svLoci.getCounts().setSampleCount(sampleCount);
 
     for (unsigned sampleIndex(0); sampleIndex<sampleCount; ++sampleIndex)
     {
-        _svLoci.getCounts().getSampleCounts(sampleIndex).sampleSource = opt.alignFileOpt.alignmentFilename[sampleIndex];
+        _svLoci.getCounts().getSampleCounts(sampleIndex).sampleSource = opt.alignFileOpt.alignmentFilenames[sampleIndex];
     }
 
     _svLoci.header = bamHeader;

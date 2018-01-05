@@ -76,7 +76,7 @@ enum index_t
     SECONDARY     = 0x100,
     FILTER        = 0x200,
     DUPLICATE     = 0x400,
-    SUPPLEMENT    = 0x800
+    SUPPLEMENTARY = 0x800
 };
 }
 

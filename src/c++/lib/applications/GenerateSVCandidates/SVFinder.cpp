@@ -96,7 +96,7 @@ SVFinder(
 
     // setup regionless bam_streams:
     // setup all data for main analysis loop:
-    for (const std::string& afile : opt.alignFileOpt.alignmentFilename)
+    for (const std::string& afile : opt.alignFileOpt.alignmentFilenames)
     {
         // avoid creating shared_ptr temporaries:
         streamPtr tmp(new bam_streamer(afile.c_str(), opt.referenceFilename.c_str()));

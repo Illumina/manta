@@ -32,7 +32,7 @@ runTestAssembler(const TestAssemblerOptions& opt)
     const AssemblerOptions asmOpt;
 
     AssemblyReadInput reads;
-    for (const std::string& alignmentFilename : opt.alignFileOpt.alignmentFilename)
+    for (const std::string& alignmentFilename : opt.alignFileOpt.alignmentFilenames)
     {
         log_os << "[INFO] Extracting reads from file: '" << alignmentFilename << "'\n";
 

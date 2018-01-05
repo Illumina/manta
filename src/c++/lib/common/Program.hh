@@ -34,7 +34,7 @@ namespace illumina
 struct Program
 {
     virtual
-    ~Program() {}
+    ~Program() = default;
 
     int
     run(int argc, char* argv[]) const;

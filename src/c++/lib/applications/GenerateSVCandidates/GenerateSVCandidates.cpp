@@ -186,7 +186,7 @@ runGSC(
     EdgeRuntimeTracker edgeTracker(opt.edgeRuntimeFilename);
     GSCEdgeStatsManager edgeStatMan(opt.edgeStatsFilename);
 
-    const SVLocusScanner readScanner(opt.scanOpt, opt.statsFilename, opt.alignFileOpt.alignmentFilename, opt.isRNA, !opt.isUnstrandedRNA);
+    const SVLocusScanner readScanner(opt.scanOpt, opt.statsFilename, opt.alignFileOpt.alignmentFilenames, opt.isRNA, !opt.isUnstrandedRNA);
 
     SVFinder svFind(opt, readScanner, edgeTracker,edgeStatMan);
     MultiJunctionFilter svMJFilter(opt,edgeStatMan);
@@ -201,7 +201,7 @@ runGSC(
     std::vector<SVCandidate> svs;
     std::vector<SVMultiJunctionCandidate> mjSVs;
 
-    const unsigned sampleSize(opt.alignFileOpt.alignmentFilename.size());
+    const unsigned sampleSize(opt.alignFileOpt.alignmentFilenames.size());
     std::vector<bam_streamer_ptr> origBamStreamPtrs;
     std::vector<bam_dumper_ptr> supportBamDumperPtrs;
 
@@ -210,7 +210,7 @@ runGSC(
     {
         for (unsigned sampleIndex(0); sampleIndex<sampleSize; ++sampleIndex)
         {
-            std::string alignmentFile(opt.alignFileOpt.alignmentFilename[sampleIndex]);
+            std::string alignmentFile(opt.alignFileOpt.alignmentFilenames[sampleIndex]);
             bam_streamer_ptr bamStreamPtr(new bam_streamer(alignmentFile.c_str(), opt.referenceFilename.c_str()));
             origBamStreamPtrs.push_back(bamStreamPtr);
 
