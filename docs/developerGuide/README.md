@@ -222,9 +222,18 @@ In all other situations history editing is discouraged and a conventional merge-
 The primary function of the changelog is to help end-users weigh the benefits and risks or updating to a newer version.
 
 To this end:
-- Changelog entries should be made for any major branch merge, bug fix, or generally something that would change a user's interaction at the configuration step, change the format/interpretation of the output or change the variant calling performance.
-- The project changelog follows many of the conventions suggested in keepachangelog. Consistent with this formatting, changelog entries should be more descriptive and end-user focused than git commit entries. JIRA or github ticket IDs should be listed at the end of the Changelog description to help developers link issues, without making this the emphasis of each changelog entry.
-- Each major branch with an end-user impact should add a changelog entry to the Unreleased section of the changelog prior to merging the branch.
+- Changelog entries should be made for any major branch merge, bug fix, or generally something that would change
+a user's interaction at the configuration step, change the format/interpretation of the output or change
+the variant calling performance.
+- The project changelog follows many of the conventions suggested in [keepachangelog](http://keepachangelog.com/en/1.0.0/).
+Consistent with this formatting, changelog entries should be more descriptive and end-user focused than git commit
+entries. JIRA or github ticket IDs should be listed at the end of the Changelog description to help developers link
+issues, without making this the emphasis of each changelog entry.
+- Each major branch with an end-user impact should add a changelog entry to the Unreleased section of the changelog
+prior to merging the branch.
+- For consistency with the git commit log, try to follow a similar summary style even though descriptions can be much
+longer, for instance by starting all major bullet points with an imperitive verb.
+
 
 ## Branching and release tagging guidelines
 

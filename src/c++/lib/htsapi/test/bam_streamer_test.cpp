@@ -20,7 +20,6 @@
 #include "test_config.h"
 
 #include "blt_util/blt_exception.hh"
-
 #include "htsapi/bam_streamer.hh"
 
 #include "boost/test/unit_test.hpp"

@@ -24,11 +24,12 @@
  ** \author Come Raczy
  **/
 
+#include "Exceptions.hh"
+
 #include <cstring>
 #include <cerrno>
 #include <boost/date_time.hpp>
 
-#include "common/Exceptions.hh"
 
 namespace illumina
 {
