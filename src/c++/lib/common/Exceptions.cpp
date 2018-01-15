@@ -40,7 +40,7 @@ std::string ExceptionData::getContext() const
 {
     const std::string now = boost::posix_time::to_simple_string(boost::posix_time::second_clock::local_time());
     std::string errorInfo;
-    if (errorNumber_ != 0) errorInfo = " '" + std::string(strerror(errorNumber_)) + "'";
+    if (_errorNumber != 0) errorInfo = " '" + std::string(strerror(_errorNumber)) + "'";
     return now + errorInfo + " " + boost::diagnostic_information(*this);
 }
 

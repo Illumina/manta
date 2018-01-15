@@ -58,7 +58,7 @@ class ExceptionData : public boost::exception
 {
 public:
     ExceptionData(const std::string& message, const int errorNumber=0)
-        : boost::exception(), message_(message), errorNumber_(errorNumber)
+        : boost::exception(), _message(message), _errorNumber(errorNumber)
     {}
 
     ExceptionData(const ExceptionData&) = default;
@@ -66,8 +66,8 @@ public:
 
     std::string getContext() const;
 private:
-    const std::string message_;
-    const int errorNumber_;
+    const std::string _message;
+    const int _errorNumber;
 };
 
 /// A general purpose exception type
@@ -75,7 +75,7 @@ private:
 /// Use BOOST_THROW_EXCEPTION to get the context info (file, function, line)
 /// at the throw site as follows:
 ///
-///     BOOST_THROW_EXCEPTION(BasicException("Error message"));
+///     BOOST_THROW_EXCEPTION(GeneralException("Error message"));
 ///
 class GeneralException : public std::logic_error, public ExceptionData
 {

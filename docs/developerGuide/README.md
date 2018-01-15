@@ -180,6 +180,7 @@ see the `builderImage` variable.
   * Make variable/type names self-documenting whereever this is practical, e.g. sampleCount, breakpointRegion, etc.
   * Lowercase camelCase variable names
   * Uppercase CamelCase type names
+  * Private class members start with a leading underscore, e.g. `_sampleName`.
 * Otherwise, follow local code conventions
 
 ### Git conventions
