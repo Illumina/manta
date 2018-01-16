@@ -340,12 +340,14 @@ def sortBams(self, sortBamTasks, taskPrefix="", binStr="", isNormal=True, bamIdx
     else:
         bamList = self.params.tumorBamList
 
-    for bamPath in bamList:
+    for _ in bamList:
         supportBam = self.paths.getSupportBamPath(bamIdx, binStr)
         sortedBam = os.path.splitext(self.paths.getSortedSupportBamPath(bamIdx, binStr))[0]
+
+
         # first check the existence of the supporting bam
         # then sort the bam only if it exists
-        sortBamCmd = [ sys.executable,"-E", self.params.mantaSortBam,
+        sortBamCmd = [ sys.executable, self.params.mantaSortBam,
                       self.params.samtoolsBin, supportBam, sortedBam ]
 
         sortBamTask = preJoin(taskPrefix, "sortEvidenceBam_%s_%s" % (binStr, bamIdx))

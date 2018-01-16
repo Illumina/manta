@@ -23,8 +23,6 @@ Merge bams listed in a file
 """
 
 import sys
-import re
-from os.path import isfile
 from optparse import OptionParser
 from glob import glob
 from subprocess import call
@@ -64,8 +62,9 @@ if __name__=='__main__':
     fpList.close()
 
     if fileCount > 1:
-        call([ samtoolsBin, "merge", "-c -p -b",
-               bamListFile, mergedBam ])
+        retval = call([samtoolsBin, "merge", "-c", "-p", "-b", bamListFile, mergedBam])
+        if retval != 0 :
+            raise Exception("Failed to merge alignment files")
+
     elif fileCount == 1:
         copyfile(firstBam, mergedBam)
-

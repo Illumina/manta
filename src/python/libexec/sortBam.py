@@ -23,7 +23,6 @@ Sort the given bam file only if it exists
 """
 
 import sys
-import re
 from os.path import isfile
 from optparse import OptionParser
 from subprocess import call
@@ -50,5 +49,6 @@ if __name__=='__main__':
     sortedBam = args[2]
 
     if isfile(originalBam):
-        call([ samtoolsBin, "sort",
-               originalBam, sortedBam ])
+        retval = call([ samtoolsBin, "sort", originalBam, sortedBam])
+        if retval != 0 :
+            raise Exception("Failed to sort alignment file '%s'" % (originalBam))
