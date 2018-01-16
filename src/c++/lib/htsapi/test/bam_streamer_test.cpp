@@ -88,8 +88,7 @@ BOOST_AUTO_TEST_CASE( test_bam_streamer_cram_read_fail )
     {
         bam_streamer stream(testCramPath.c_str(), nullptr);
         stream.resetRegion("chrA");
-        // Can't activate this check until we update to htslib 1.6
-        // BOOST_REQUIRE_THROW(stream.next(), blt_exception);
+        BOOST_REQUIRE_THROW(stream.next(), blt_exception);
     }
 }
 

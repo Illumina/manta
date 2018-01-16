@@ -342,7 +342,7 @@ def sortBams(self, sortBamTasks, taskPrefix="", binStr="", isNormal=True, bamIdx
 
     for _ in bamList:
         supportBam = self.paths.getSupportBamPath(bamIdx, binStr)
-        sortedBam = os.path.splitext(self.paths.getSortedSupportBamPath(bamIdx, binStr))[0]
+        sortedBam = self.paths.getSortedSupportBamPath(bamIdx, binStr)
 
 
         # first check the existence of the supporting bam
@@ -469,6 +469,7 @@ def mergeSupportBams(self, mergeBamTasks, taskPrefix="", isNormal=True, bamIdx=0
         mergeBamTasks.add(mergeBamTask)
 
         # index the filtered bam
+        ### TODO still needs to handle the case where supportBamFile does not exist
         indexCmd = [ self.params.samtoolsBin, "index", supportBamFile ]
         indexBamTask = self.addTask(preJoin(taskPrefix,"index_evidenceBam_%s" % (bamIdx)),
                                     indexCmd, dependencies=mergeBamTask)

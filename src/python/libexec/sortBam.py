@@ -49,6 +49,6 @@ if __name__=='__main__':
     sortedBam = args[2]
 
     if isfile(originalBam):
-        retval = call([ samtoolsBin, "sort", originalBam, sortedBam])
+        retval = call([ samtoolsBin, "sort", originalBam, "-o", sortedBam])
         if retval != 0 :
             raise Exception("Failed to sort alignment file '%s'" % (originalBam))
