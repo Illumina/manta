@@ -65,8 +65,8 @@ parseOptions(
         }
         opt.alignmentFilenames = normal;
         opt.alignmentFilenames.insert(opt.alignmentFilenames.end(),
-                                     tumor.begin(),
-                                     tumor.end());
+                                      tumor.begin(),
+                                      tumor.end());
         opt.isAlignmentTumor.clear();
         opt.isAlignmentTumor.resize(normal.size(), false);
         opt.isAlignmentTumor.resize(opt.alignmentFilenames.size(), true);

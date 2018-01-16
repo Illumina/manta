@@ -4,8 +4,11 @@
 - Change depth estimation to filter all reads never seen by the SV caller prior to computing depth (MANTA-1296)
   - Expected depth per chromosome and local depth per locus/variant are now computed after removing filtered, pcr-duplicate, and secondary reads.
 - Lower default memory requirements for scatter phase tasks (MANTA-1307)
-  - Reduce from 2Gb to 1.5Gb to enable all cores by default on c4.8xlarge/other c\* servers.
+  - Reduce from 2Gb to 1.5Gb to enable all cores by default on AWS c4.8xlarge/other c\* servers.
   - Added new `--callMemMb` option to override this value for cases of extreme depth/chimera rate, etc
+- Update htslib/samtools to 1.6 (MANTA-1331)
+  - Updated from older 1.2 version to include improved checks on corrupted data.
+  - Stopped vendoring zlib as part of this update, so zlib (w/ headers) is now a build requirement.
 
 ### Fixed
 - Provide clear error message when attempting to configure/run with python3 (MANTA-1285)
@@ -13,7 +16,7 @@
 - Improve error message when two alignments use the same QNAME/read-number (MANTA-1293)
   - Message changed to help end-users track down the issue in the alignment file more easily - now includes chromosome name instead of contig index and 1-indexed alignment position.
 - Fix CRC error from python gzip lib when generating evidence bam (MANTA-1270)
-  - Remove the filter on evidence reads for SV candidates that are not in the file canidateSV.vcf.gz, because the file now contains all SV canidates without removing duplicants.
+  - Remove the filter on evidence reads for SV candidates that are not in the file candidateSV.vcf.gz, because the file now contains all SV candidates without removing duplicates.
 - Stop automatically clearing python environment variables (MANTA-1316)
   - This should allow python from certain module systems to be used, but may (rarely) cause instability due to conflicting content in a user's PYTHONPATH.
 
