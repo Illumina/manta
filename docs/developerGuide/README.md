@@ -141,8 +141,10 @@ the library level.  Note that unit test codes are compiled to
 libraries but cannot be run.
 
 C++11 features in use require at least VS2013. A Windows
-installation of cmake is also required to configure and compile.
-Note that the minimum cmake version is 3.1.0 for Windows.
+installation of cmake and zlib are also required to configure and compile.
+Note that the minimum cmake version is 3.1.0 for Windows. Windows zlib is provided by the [gnuwin32 package][gnuwin32] among others.
+
+[gnuwin32]:http://gnuwin32.sourceforge.net/packages/zlib.htm
 
 ### Automating Portable Binary Builds for Linux
 
@@ -168,6 +170,8 @@ The choice of virtualized build environment is hard-coded in the deploy script f
 see the `builderImage` variable.
 
 ## Coding Guidelines
+
+Supported project languages are C++11 for core methods development and python2 (2.6+) for workflow and scripting support.
 
 ### Source formatting
 
