@@ -1,6 +1,6 @@
 #
 # Manta - Structural Variant and Indel Caller
-# Copyright (c) 2013-2017 Illumina, Inc.
+# Copyright (c) 2013-2018 Illumina, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -86,8 +86,6 @@ def getNodeHyperthreadCoreCount():
     return the number of hyperthread (or 'logical') cores on this host
 
     linux logic taken from R Kelley's function in IsisWorkflow
-
-    only works on linux and os x
     """
 
     cpuCount = 0
@@ -126,8 +124,6 @@ def getNodeMemMb():
     return total memory in Mbytes
 
     linux logic taken from R Kelley's function in IsisWorkflow
-
-    only works on linux and os x
     """
 
     memMb = 0

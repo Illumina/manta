@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -132,14 +132,18 @@ public:
     {
         return ((_bp->core.flag & BAM_FLAG::SECONDARY) != 0);
     }
-    bool is_supplement() const
+    bool is_supplementary() const
     {
-        return ((_bp->core.flag & BAM_FLAG::SUPPLEMENT) != 0);
+        return ((_bp->core.flag & BAM_FLAG::SUPPLEMENTARY) != 0);
     }
 
     void toggle_is_paired()
     {
         _bp->core.flag ^= BAM_FLAG::PAIRED;
+    }
+    void toggle_is_filtered()
+    {
+        _bp->core.flag ^= BAM_FLAG::FILTER;
     }
     void toggle_is_unmapped()
     {
@@ -157,6 +161,10 @@ public:
     {
         _bp->core.flag ^= BAM_FLAG::MATE_STRAND;
     }
+    void toggle_is_duplicate()
+    {
+        _bp->core.flag ^= BAM_FLAG::DUPLICATE;
+    }
     void toggle_is_first()
     {
         _bp->core.flag ^= BAM_FLAG::FIRST_READ;
@@ -168,6 +176,10 @@ public:
     void toggle_is_secondary()
     {
         _bp->core.flag ^= BAM_FLAG::SECONDARY;
+    }
+    void toggle_is_supplementary()
+    {
+        _bp->core.flag ^= BAM_FLAG::SUPPLEMENTARY;
     }
 
     int read_no() const
@@ -215,6 +227,16 @@ public:
         return (nullptr != get_string_tag(satag));
     }
 
+    /// \brief Test if this read contains an 'MC' tag, containing mate cigar alignment information
+    ///
+    /// \return True if the 'MC' tag is found
+    bool
+    hasMateCigar() const
+    {
+        static const char satag[] = { 'M','C' };
+        return (nullptr != get_string_tag(satag));
+    }
+
     /// \brief Test if the read is supplemental, using a more liberal community criteria to define 'supplemental'
     ///        compared to that from the BAM spec.
     ///
@@ -230,7 +252,7 @@ public:
     bool
     isNonStrictSupplement() const
     {
-        if (is_supplement()) return true;
+        if (is_supplementary()) return true;
         if (! is_secondary()) return false;
         return isSASplit();
     }
@@ -268,7 +290,7 @@ public:
         return bam_seq(bam_get_seq(_bp),read_size());
     }
 
-    /// get string AUX field, return NULL if field is not found, or field is not a string
+    /// Get string AUX field, return nullptr if field is not found, or field is not a string
     ///
     /// \param[in] tag AUX field tag. This is a char array of length two, null term is not required
     ///
@@ -355,6 +377,6 @@ private:
 };
 
 
+/// Generate summary bam_record output for developer debugging
 std::ostream&
 operator<<(std::ostream& os, const bam_record& br);
-

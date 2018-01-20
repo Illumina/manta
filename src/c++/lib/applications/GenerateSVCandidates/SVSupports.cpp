@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -135,8 +135,9 @@ processBamRecords(
                 }
 
                 static const char svtag[] = {'Z','M'};
+                // Do lots of ugly casting on svStr to fit htsapi signature. Usage is actually const in htslib:
                 bam_aux_append(&br,svtag,'Z',(svStr.size()+1),
-                               (uint8_t*)(svStr.c_str()));
+                               reinterpret_cast<uint8_t*>(const_cast<char*>(svStr.c_str())));
 
                 // Update bam record bin value
                 bam_update_bin(br);

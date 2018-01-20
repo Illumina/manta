@@ -1,6 +1,6 @@
 #
 # Manta - Structural Variant and Indel Caller
-# Copyright (c) 2013-2017 Illumina, Inc.
+# Copyright (c) 2013-2018 Illumina, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ Manta SV discovery workflow
 
 import os.path
 import sys
+import shutil
 
 # add script path to pull in utils in same directory:
 scriptDir=os.path.abspath(os.path.dirname(__file__))
@@ -33,18 +34,150 @@ sys.path.append(os.path.abspath(scriptDir))
 pyflowDir=os.path.join(scriptDir,"pyflow")
 sys.path.append(os.path.abspath(pyflowDir))
 
+from checkChromSet import getTabixChromSet
 from configBuildTimeInfo import workflowVersion
 from pyflow import WorkflowRunner
 from sharedWorkflow import getMkdirCmd, getMvCmd, getRmCmd, getRmdirCmd, \
                            getDepthFromAlignments
 from workflowUtil import checkFile, ensureDir, preJoin, \
-                        getGenomeSegmentGroups, getFastaChromOrderSize, \
-                        getCallRegions, cleanPyEnv
+                         getGenomeSegmentGroups, getNextGenomeSegment, getFastaChromOrderSize, \
+                         cleanPyEnv
 
 
 __version__ = workflowVersion
 
 
+
+def getOverlapCallRegions(params, genomeRegion) :
+    """
+    determine a set of overlapping regions between regions arguments and the callRegions bed file
+
+    \return a list of overlapping genomic regions for calling
+    """
+    import subprocess
+
+    subregions = []
+
+    chrom = genomeRegion["chrom"]
+    genomeRegionStart = genomeRegion["start"]
+    genomeRegionEnd = genomeRegion["end"]
+    genomeRegionStr = ("%s:%s-%s" % (chrom, genomeRegionStart, genomeRegionEnd))
+
+    # get overlapping subregions
+    tabixCmd = [params.tabixBin, params.callRegionsBed, genomeRegionStr]
+    proc = subprocess.Popen(tabixCmd, stdout=subprocess.PIPE)
+    for line in proc.stdout:
+        # format check of the bed file
+        words = line.strip().split()
+        if len(words) < 3 :
+            raise Exception("Unexpected format in bed file: %s\n%s" %
+                            (params.callRegionsBed, line))
+        callRegionStart = int(words[1])+1
+        callRegionEnd = int(words[2])
+        if callRegionEnd < callRegionStart :
+            raise Exception("Unexpected format in bed file: %s\n%s" %
+                            (params.callRegionsBed, line))
+
+        subregionStart = max(genomeRegionStart, callRegionStart)
+        subregionEnd = min(genomeRegionEnd, callRegionEnd)
+        subregions.append({"chrom": chrom, "start":subregionStart, "end":subregionEnd})
+
+    proc.stdout.close()
+    proc.wait()
+
+    return subregions
+
+
+
+def getCallRegions(params) :
+    """
+    determine
+    1) a set of genomic regions for calling
+    2) a set of chromosomes that are completely skipped over,
+       where "skipped" means that not a single base on the chrom is requested for calling
+
+    \return a list of genomic regions for calling
+    \return a set of chromLabels which are skipped
+    """
+    callRegionList = []
+    chromIsSkipped = set()
+
+    # when no region selections have been made:
+    if ((params.genomeRegionList is None) and
+            (params.callRegionsBed is None)) :
+        return (callRegionList, chromIsSkipped)
+
+    # check chromosome coverage of "regions" arguments
+    chromIsSkipped = set(params.chromOrder)
+    if params.genomeRegionList is not None :
+        for genomeRegion in params.genomeRegionList :
+            chrom = genomeRegion["chrom"]
+
+            if chrom not in params.chromOrder:
+                raise Exception("Unexpected chromosome '%s' in the argument of target regions (--region)" %
+                                (chrom))
+
+            if chrom in chromIsSkipped :
+                chromIsSkipped.remove(chrom)
+
+    if params.callRegionsBed is None :
+        return (params.genomeRegionList, chromIsSkipped)
+
+    # check chromsome coverage based on callRegions BED file
+    callChromList = []
+    chromIsSkipped2 = set(params.chromOrder)
+
+    for chrom in getTabixChromSet(params.tabixBin, params.callRegionsBed) :
+        if chrom not in params.chromOrder:
+            raise Exception("Unexpected chromosome '%s' in the bed file of call regions %s " %
+                            (chrom, params.callRegionsBed))
+
+        callChromList.append(chrom)
+        if chrom in chromIsSkipped2 :
+            chromIsSkipped2.remove(chrom)
+
+    if params.genomeRegionList is None :
+        chromIsSkipped = chromIsSkipped2
+
+        for chrom in callChromList:
+            chromRegion = {"chrom":chrom, "start":1, "end":params.chromSizes[chrom]}
+            callRegions = getOverlapCallRegions(params, chromRegion)
+            callRegionList.extend(callRegions)
+    else:
+        chromIsSkipped = chromIsSkipped | chromIsSkipped2
+
+        for genomeRegion in params.genomeRegionList:
+            chrom = genomeRegion['chrom']
+            if genomeRegion["start"] is None:
+                genomeRegion["start"] = 1
+            if genomeRegion["end"] is None:
+                genomeRegion["end"] = params.chromSizes[chrom]
+
+            subCallRegions = getOverlapCallRegions(params, genomeRegion)
+            callRegionList.extend(subCallRegions)
+
+    return (callRegionList, chromIsSkipped)
+
+
+
+def summarizeStats(self, taskPrefix="", dependencies=None) :
+    statsPath=self.paths.getStatsPath()
+
+    summaryTasks = set()
+    # summarize stats in format that's easier for human review
+    cmd = [self.params.mantaStatsSummaryBin]
+    cmd.extend(["--align-stats ", statsPath])
+    cmd.extend(["--output-file", self.paths.getStatsSummaryPath()])
+    summarizeTask = self.addTask(preJoin(taskPrefix,"summarizeStats"),cmd,dependencies=dependencies, isForceLocal=True)
+    summaryTasks.add(summarizeTask)
+
+    return summaryTasks
+
+def copyStats(self) :
+    statsPath=self.paths.getStatsPath()
+    existingStatsPath=self.params.existingAlignStatsFile
+
+    shutil.copy(existingStatsPath, statsPath)
 
 def runStats(self,taskPrefix="",dependencies=None) :
 
@@ -84,12 +217,6 @@ def runStats(self,taskPrefix="",dependencies=None) :
         rmStatsTmpCmd = getRmdirCmd() + [tmpStatsDir]
         rmTask=self.addTask(preJoin(taskPrefix,"removeTmpDir"),rmStatsTmpCmd,dependencies=mergeTask, isForceLocal=True)
 
-    # summarize stats in format that's easier for human review
-    cmd = [self.params.mantaStatsSummaryBin]
-    cmd.extend(["--align-stats ", statsPath])
-    cmd.extend(["--output-file", self.paths.getStatsSummaryPath()])
-    self.addTask(preJoin(taskPrefix,"summarizeStats"),cmd,dependencies=mergeTask)
-
     return nextStepWait
 
 
@@ -117,8 +244,6 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
     graphPath=self.paths.getGraphPath()
     graphStatsPath=self.paths.getGraphStatsPath()
 
-    graphFilename=os.path.basename(graphPath)
-
     tmpGraphDir=self.paths.getTmpGraphDir()
 
     makeTmpGraphDirCmd = getMkdirCmd() + [tmpGraphDir]
@@ -127,7 +252,7 @@ def runLocusGraph(self,taskPrefix="",dependencies=None):
     tmpGraphFiles = []
     graphTasks = set()
 
-    for gsegGroup in getGenomeSegmentGroups(self.params) :
+    for gsegGroup in getGenomeSegmentGroups(getNextGenomeSegment(self.params)) :
         assert(len(gsegGroup) != 0)
         gid=gsegGroup[0].id
         if len(gsegGroup) > 1 :
@@ -215,12 +340,14 @@ def sortBams(self, sortBamTasks, taskPrefix="", binStr="", isNormal=True, bamIdx
     else:
         bamList = self.params.tumorBamList
 
-    for bamPath in bamList:
+    for _ in bamList:
         supportBam = self.paths.getSupportBamPath(bamIdx, binStr)
-        sortedBam = os.path.splitext(self.paths.getSortedSupportBamPath(bamIdx, binStr))[0]
+        sortedBam = self.paths.getSortedSupportBamPath(bamIdx, binStr)
+
+
         # first check the existence of the supporting bam
         # then sort the bam only if it exists
-        sortBamCmd = [ sys.executable,"-E", self.params.mantaSortBam,
+        sortBamCmd = [ sys.executable, self.params.mantaSortBam,
                       self.params.samtoolsBin, supportBam, sortedBam ]
 
         sortBamTask = preJoin(taskPrefix, "sortEvidenceBam_%s_%s" % (binStr, bamIdx))
@@ -235,15 +362,20 @@ def sortAllVcfs(self, taskPrefix="", dependencies=None) :
 
     nextStepWait = set()
 
-    def getVcfSortCmd(vcfListFile, outPath, isDiploid) :
-        cmd  = "\"%s\" -E \"%s\" " % (sys.executable, self.params.mantaSortVcf)
+    def getVcfSortCmd(vcfListFile, outPath, isDiploid, isCandidate) :
+        cmd  = "\"%s\" \"%s\" " % (sys.executable, self.params.mantaSortVcf)
         cmd += "-f \"%s\"" % (vcfListFile)
+
+        # Boolean variable isCandidate is set "True" for candidateSV.vcf
+        # If it is True, commandline argument "-a" is passed on to sortBam.py to print out all vcf records
+        if isCandidate:
+            cmd += " -a"
 
         # apply the ploidy filter to diploid variants
         if isDiploid:
             tempVcf = self.paths.getTempDiploidPath()
             cmd += " > \"%s\"" % (tempVcf)
-            cmd += " && \"%s\" -E \"%s\" \"%s\"" % (sys.executable, self.params.mantaPloidyFilter, tempVcf)
+            cmd += " && \"%s\" \"%s\" \"%s\"" % (sys.executable, self.params.mantaPloidyFilter, tempVcf)
 
         cmd += " | \"%s\" -c > \"%s\"" % (self.params.bgzipBin, outPath)
 
@@ -255,14 +387,14 @@ def sortAllVcfs(self, taskPrefix="", dependencies=None) :
         return [self.params.tabixBin,"-f","-p","vcf", vcfPath]
 
 
-    def sortVcfs(pathList, outPath, label, isDiploid=False) :
+    def sortVcfs(pathList, outPath, label, isDiploid=False, isCandidate=False) :
         if len(pathList) == 0 : return set()
 
         # make header modifications to first vcf in list of files to be sorted:
         headerFixTask=preJoin(taskPrefix,"fixVcfHeader_"+label)
         def getHeaderFixCmd(fileName) :
             tmpName=fileName+".reheader.tmp"
-            cmd  = "\"%s\" -E \"%s\"" % (sys.executable, self.params.vcfCmdlineSwapper)
+            cmd  = "\"%s\" \"%s\"" % (sys.executable, self.params.vcfCmdlineSwapper)
             cmd += ' "' + " ".join(self.params.configCommandLine) + '"'
             cmd += " < \"%s\" > \"%s\"" % (fileName,tmpName)
             cmd += " && " + " ".join(getMvCmd()) +  " \"%s\" \"%s\"" % (tmpName, fileName)
@@ -273,7 +405,7 @@ def sortAllVcfs(self, taskPrefix="", dependencies=None) :
         vcfListFile = self.paths.getVcfListPath(label)
         inputVcfTask = self.addWorkflowTask(preJoin(taskPrefix,label+"InputList"),listFileWorkflow(vcfListFile,pathList),dependencies=headerFixTask)
 
-        sortCmd = getVcfSortCmd(vcfListFile, outPath, isDiploid)
+        sortCmd = getVcfSortCmd(vcfListFile, outPath, isDiploid, isCandidate)
         sortTask=self.addTask(preJoin(taskPrefix,"sort_"+label),sortCmd,dependencies=inputVcfTask)
 
         nextStepWait.add(self.addTask(preJoin(taskPrefix,"tabix_"+label),getVcfTabixCmd(outPath),dependencies=sortTask,isForceLocal=True))
@@ -282,7 +414,8 @@ def sortAllVcfs(self, taskPrefix="", dependencies=None) :
 
     candSortTask = sortVcfs(self.candidateVcfPaths,
                             self.paths.getSortedCandidatePath(),
-                            "sortCandidateSV")
+                            "sortCandidateSV",
+                            isCandidate=True)
     sortVcfs(self.diploidVcfPaths,
              self.paths.getSortedDiploidPath(),
              "sortDiploidSV",
@@ -299,7 +432,7 @@ def sortAllVcfs(self, taskPrefix="", dependencies=None) :
 
     def getExtractSmallCmd(maxSize, inPath, outPath) :
         cmd  = "\"%s\" -dc \"%s\"" % (self.params.bgzipBin, inPath)
-        cmd += " | \"%s\" -E \"%s\" --maxSize %i" % (sys.executable, self.params.mantaExtraSmallVcf, maxSize)
+        cmd += " | \"%s\" \"%s\" --maxSize %i" % (sys.executable, self.params.mantaExtraSmallVcf, maxSize)
         cmd += " | \"%s\" -c > \"%s\"" % (self.params.bgzipBin, outPath)
         return cmd
 
@@ -324,34 +457,22 @@ def mergeSupportBams(self, mergeBamTasks, taskPrefix="", isNormal=True, bamIdx=0
 
     for bamPath in bamList:
         # merge support bams
-        mergedSamFile = self.paths.getMergedSupportSamPath(bamIdx)
-        mergeCmd = [ sys.executable,"-E", self.params.mantaMergeBam,
+        supportBamFile = self.paths.getFinalSupportBamPath(bamPath)
+        mergeCmd = [ sys.executable, self.params.mantaMergeBam,
                      self.params.samtoolsBin,
                      self.paths.getSortedSupportBamMask(bamIdx),
-                     self.paths.getMergedSupportBamPath(bamIdx),
-                     mergedSamFile,
+                     supportBamFile,
                      self.paths.getSupportBamListPath(bamIdx) ]
 
         mergeBamTask=self.addTask(preJoin(taskPrefix,"merge_evidenceBam_%s" % (bamIdx)),
                                   mergeCmd, dependencies=dependencies)
         mergeBamTasks.add(mergeBamTask)
 
-        # filter the merged sam
-        filteredBamFile = self.paths.getFinalSupportBamPath(bamPath)
-        filterCmd = [ sys.executable,"-E", self.params.mantaFilterBam,
-                     self.params.samtoolsBin,
-                     self.paths.getSortedCandidatePath(),
-                     mergedSamFile,
-                     self.paths.getfilteredSupportSamPath(bamIdx),
-                     filteredBamFile ]
-        filterBamTask = self.addTask(preJoin(taskPrefix,"filter_evidenceSam_%s" % (bamIdx)),
-                                     filterCmd, dependencies=mergeBamTask)
-        mergeBamTasks.add(filterBamTask)
-
         # index the filtered bam
-        indexCmd = [ self.params.samtoolsBin, "index", filteredBamFile ]
+        ### TODO still needs to handle the case where supportBamFile does not exist
+        indexCmd = [ self.params.samtoolsBin, "index", supportBamFile ]
         indexBamTask = self.addTask(preJoin(taskPrefix,"index_evidenceBam_%s" % (bamIdx)),
-                                    indexCmd, dependencies=filterBamTask)
+                                    indexCmd, dependencies=mergeBamTask)
         mergeBamTasks.add(indexBamTask)
 
         bamIdx += 1
@@ -375,10 +496,6 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
 
     isSomatic = (len(self.params.normalBamList) and len(self.params.tumorBamList))
     isTumorOnly = ((not isSomatic) and len(self.params.tumorBamList))
-
-    hyGenMemMb = self.params.hyGenLocalMemMb
-    if self.getRunMode() == "sge" :
-        hyGenMemMb = self.params.hyGenSGEMemMb
 
     hygenTasks=set()
     if self.params.isGenerateSupportBam :
@@ -410,6 +527,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         hygenCmd.extend(["--graph-file",graphPath])
         hygenCmd.extend(["--bin-index", str(binId)])
         hygenCmd.extend(["--bin-count", str(self.params.nonlocalWorkBins)])
+        hygenCmd.extend(["--max-edge-count", str(self.params.graphNodeMaxEdgeCount)])
         hygenCmd.extend(["--min-candidate-sv-size", self.params.minCandidateVariantSize])
         hygenCmd.extend(["--min-candidate-spanning-count", self.params.minCandidateSpanningCount])
         hygenCmd.extend(["--min-scored-sv-size", self.params.minScoredVariantSize])
@@ -459,8 +577,11 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
             if self.params.isUnstrandedRNA :
                 hygenCmd.append("--unstranded")
 
+        if self.params.isOutputContig :
+            hygenCmd.append("--output-contigs")
+
         hygenTask = preJoin(taskPrefix,"generateCandidateSV_"+binStr)
-        hygenTasks.add(self.addTask(hygenTask,hygenCmd,dependencies=dirTask, memMb=hyGenMemMb))
+        hygenTasks.add(self.addTask(hygenTask,hygenCmd,dependencies=dirTask, memMb=self.params.hyGenMemMb))
 
         # TODO: if the bam is large, for efficiency, consider
         # 1) filtering the bin-specific bam first w.r.t. the final candidate vcf
@@ -507,7 +628,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
     self.addWorkflowTask(logListTask,listFileWorkflow(logListFile,edgeRuntimeLogPaths),dependencies=hygenTasks)
 
     def getEdgeLogSortCmd(logListFile, outPath) :
-        cmd  = [sys.executable,"-E",self.params.mantaSortEdgeLogs,"-f", logListFile,"-o",outPath]
+        cmd  = [sys.executable, self.params.mantaSortEdgeLogs,"-f", logListFile,"-o",outPath]
         return cmd
 
     edgeSortCmd=getEdgeLogSortCmd(logListFile,self.paths.getSortedEdgeRuntimeLogPath())
@@ -637,18 +758,6 @@ class PathInfo:
         return os.path.join(self.getHyGenDir(),
                             "evidence_*.bam_%s.sorted.bam" % (bamIdx))
 
-    def getMergedSupportBamPath(self, bamIdx):
-        return os.path.join(self.getHyGenDir(),
-                            "evidence.bam_%s.merged.bam" % (bamIdx))
-
-    def getMergedSupportSamPath(self, bamIdx):
-        return os.path.join(self.getHyGenDir(),
-                            "evidence.bam_%s.merged.sam" % (bamIdx))
-
-    def getfilteredSupportSamPath(self, bamIdx):
-        return os.path.join(self.getHyGenDir(),
-                            "evidence.bam_%s.filtered.sam" % (bamIdx))
-
     def getFinalSupportBamPath(self, bamPath):
         bamPrefix = os.path.splitext(os.path.basename(bamPath))[0]
         return os.path.join(self.params.evidenceDir,
@@ -677,12 +786,11 @@ class MantaWorkflow(WorkflowRunner) :
     Manta SV discovery workflow
     """
 
-    def __init__(self,params,iniSections) :
+    def __init__(self,params) :
 
         cleanPyEnv()
 
         self.params=params
-        self.iniSections=iniSections
 
         # Use RNA option for minCandidate size
         if self.params.isRNA:
@@ -731,6 +839,18 @@ class MantaWorkflow(WorkflowRunner) :
         self.params.isIgnoreAnomProperPair = (self.params.isRNA)
 
 
+    def setCallMemMb(self) :
+        "Setup default task memory requirements"
+
+        if self.params.callMemMbOverride is not None :
+            self.params.estimateMemMb = self.params.callMemMbOverride
+            self.params.hyGenMemMb = self.params.callMemMbOverride
+        else :
+            if self.getRunMode() == "sge" :
+                self.params.hyGenMemMb = self.params.hyGenSGEMemMb
+            else :
+                self.params.hyGenMemMb = self.params.hyGenLocalMemMb
+
 
     def getSuccessMessage(self) :
         "Message to be included in email for successful runs"
@@ -743,12 +863,18 @@ class MantaWorkflow(WorkflowRunner) :
 
     def workflow(self) :
         self.flowLog("Initiating Manta workflow version: %s" % (__version__))
+        self.setCallMemMb()
 
         graphTaskDependencies = set()
 
-        if not self.params.useExistingAlignStats :
+        if not self.params.existingAlignStatsFile:
             statsTasks = runStats(self,taskPrefix="getAlignmentStats")
             graphTaskDependencies |= statsTasks
+        else:
+            statsTasks = set()
+            copyStats(self)
+
+        summarizeStats(self, dependencies=statsTasks)
 
         if not ((not self.params.isHighDepthFilter) or self.params.useExistingChromDepths) :
             depthTasks = mantaGetDepthFromAlignments(self)

@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 /// \author Chris Saunders
 
 #include "common/Exceptions.hh"
+#include "htsapi/bam_record_util.hh"
 #include "manta/SVCandidateSetData.hh"
 
 #include <cassert>
@@ -96,7 +97,9 @@ getSequenceFragment(
 
 void
 SVCandidateSetSequenceFragmentSampleGroup::
-add(const bam_record& bamRead,
+add(
+    const bam_header_info& bamHeader,
+    const bam_record& bamRead,
     const bool isExpectRepeat,
     const bool isNode1,
     const bool isSubMapped)
@@ -144,12 +147,15 @@ add(const bam_record& bamRead,
         if (isExpectRepeat) return;
 
         std::ostringstream oss;
-        oss << "Unexpected read name collision.\n"
-            << "\tExisting read: " << targetRead << "\n"
-            << "\tNew read: " << bamRead << "\n";
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        oss << "Unexpected alignment name collision. Source: '" << dataSourceName << "'\n"
+            << "\tExisting read: ";
+        summarizeAlignmentRecord(bamHeader, targetRead.bamrec, oss);
+        oss << "\n"
+            << "\tNew read: ";
+        summarizeAlignmentRecord(bamHeader, bamRead, oss);
+        oss << "\n";
+        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
-
 
     targetRead.bamrec = bamRead;
     targetRead.isNode1 = isNode1;

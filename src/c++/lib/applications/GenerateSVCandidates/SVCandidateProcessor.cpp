@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 
 /// \file
 /// \author Chris Saunders
+/// \author Naoki Nariai
 ///
 
 #include "SVCandidateProcessor.hh"
@@ -50,14 +51,19 @@ SVWriter(
     somfs(opt.somaticOutputFilename),
     tumfs(opt.tumorOutputFilename),
     rnafs(opt.rnaOutputFilename),
-    candWriter(opt.referenceFilename, cset,candfs.getStream()),
+    candWriter(opt.referenceFilename, cset, candfs.getStream(),
+               opt.isOutputContig),
     diploidWriter(opt.diploidOpt, (! opt.chromDepthFilename.empty()),
-                  opt.referenceFilename, cset,dipfs.getStream()),
+                  opt.referenceFilename, cset, dipfs.getStream(),
+                  opt.isOutputContig),
     somWriter(opt.somaticOpt, (! opt.chromDepthFilename.empty()),
-              opt.referenceFilename, cset,somfs.getStream()),
+              opt.referenceFilename, cset,somfs.getStream(),
+              opt.isOutputContig),
     tumorWriter(opt.tumorOpt, (! opt.chromDepthFilename.empty()),
-                opt.referenceFilename, cset,tumfs.getStream()),
-    rnaWriter(opt.referenceFilename, cset, rnafs.getStream())
+                opt.referenceFilename, cset, tumfs.getStream(),
+                opt.isOutputContig),
+    rnaWriter(opt.referenceFilename, cset, rnafs.getStream(),
+              opt.isOutputContig)
 {
     if (0 == opt.edgeOpt.binIndex)
     {
@@ -177,7 +183,7 @@ writeSV(
             }
         }
 
-        // check min size for candidate output:
+        // check min size, or if it is IMPRECISE case where CIEND is a subset of CIPOS for candidate output:
         if (isSVBelowMinSize(sv,opt.scanOpt.minCandidateVariantSize))
         {
 #ifdef DEBUG_GSV
@@ -571,7 +577,23 @@ evaluateCandidate(
         {
             const SVCandidate& candidateSV(mjCandidateSV.junction[junctionIndex]);
             SVCandidateAssemblyData& assemblyData(mjAssemblyData[junctionIndex]);
-            _svRefine.getCandidateAssemblyData(candidateSV, svData, _opt.isRNA, isFindLargeInsertions, assemblyData);
+            try
+            {
+                _svRefine.getCandidateAssemblyData(candidateSV, svData, _opt.isRNA, isFindLargeInsertions, assemblyData);
+            }
+            catch (illumina::common::ExceptionData& e)
+            {
+                std::ostringstream oss;
+                oss << "Exception caught while attempting to assemble " << candidateSV;
+                e << boost::error_info<struct assembly_candidate_info,std::string>(oss.str());
+                throw;
+            }
+            catch (...)
+            {
+                log_os << "Exception caught while attempting to assemble " << candidateSV << "\n";
+                throw;
+            }
+
 
             if (_opt.isVerbose)
             {

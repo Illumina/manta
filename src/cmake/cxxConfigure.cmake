@@ -1,6 +1,6 @@
 #
 # Manta - Structural Variant and Indel Caller
-# Copyright (c) 2013-2017 Illumina, Inc.
+# Copyright (c) 2013-2018 Illumina, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -264,7 +264,7 @@ set (GNU_COMPAT_COMPILER ( (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") OR (${IS_CL
 if (${GNU_COMPAT_COMPILER})
     append_args(CXX_WARN_FLAGS "-Wall -Wextra -Wshadow -Wunused -Wpointer-arith -Winit-self -pedantic -Wunused-parameter")
     append_args(CXX_WARN_FLAGS "-Wundef -Wno-unknown-pragmas")
-    append_args(CXX_WARN_FLAGS "-Wdeprecated")
+    append_args(CXX_WARN_FLAGS "-Wdeprecated -Woverloaded-virtual -Wwrite-strings")
 
     if ((NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel") OR (NOT ${COMPILER_VERSION} VERSION_LESS "14.0"))
         append_args(CXX_WARN_FLAGS "-Wdisabled-optimization")
@@ -311,71 +311,109 @@ if     (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
     endif ()
 
 elseif (${IS_CLANGXX})
-    # set to true to uncover new clang warnings after llvm update:
+
+    # Set this TRUE to uncover new clang warnings (typically this is done to test a new clang release):
     set (IS_WARN_EVERYTHING FALSE)
 
+    set (CXX_WARN_LIST "") # all clang-specific enabled warnings
+    set (CXX_NOWARN_LIST "") # all clang-specific warnings disabled only when "-Weverything" is defined
+
+    if (${DEVELOPER_MODE})
+        # catch typos in warning arguments below
+        list(APPEND CXX_WARN_LIST unknown-warning-option)
+    endif ()
+
     if (${IS_WARN_EVERYTHING})
-        append_args(CXX_WARN_FLAGS "-Weverything")
+        list(APPEND CXX_WARN_LIST everything)
     endif ()
 
-    append_args(CXX_WARN_FLAGS "-Wmissing-prototypes -Wunused-exception-parameter -Wbool-conversion")
-    append_args(CXX_WARN_FLAGS "-Wsizeof-array-argument -Wstring-conversion")
-    append_args(CXX_WARN_FLAGS "-Wheader-hygiene -Wmismatched-tags")
+    # baseline warnings assume clang 3.2+
+    #
+    list(APPEND CXX_WARN_LIST
+            bool-conversion
+            cast-qual
+            extra-semi
+            header-hygiene
+            implicit-fallthrough
+            loop-analysis
+            mismatched-tags
+            missing-prototypes
+            missing-variable-declarations
+            non-virtual-dtor
+            sizeof-array-argument
+            string-conversion
+            unused-exception-parameter
+            unused-private-field
+            )
 
-    if (${IS_WARN_EVERYTHING})
-        append_args(CXX_WARN_FLAGS "-Wno-sign-conversion -Wno-weak-vtables -Wno-conversion -Wno-cast-align -Wno-padded")
-        append_args(CXX_WARN_FLAGS "-Wno-switch-enum -Wno-missing-noreturn -Wno-covered-switch-default")
-        append_args(CXX_WARN_FLAGS "-Wno-unreachable-code -Wno-global-constructors -Wno-exit-time-destructors")
-        append_args(CXX_WARN_FLAGS "-Wno-c++98-compat -Wno-old-style-cast -Wno-unused-member-function")
-        append_args(CXX_WARN_FLAGS "-Wno-documentation -Wno-float-equal")
-    endif ()
-
-    if (NOT (${COMPILER_VERSION} VERSION_LESS "3.2"))
-        append_args(CXX_WARN_FLAGS "-Wimplicit-fallthrough -Wloop-analysis -Wextra-semi")
-        append_args(CXX_WARN_FLAGS "-Wmissing-variable-declarations -Wunused-private-field")
-    endif ()
+    # baseline disabled warnings (only used if -Weveryhing is turned on)
+    #
+    list(APPEND CXX_NOWARN_LIST
+            c++98-compat
+            c++98-compat-pedantic
+            cast-align
+            conversion
+            covered-switch-default
+            documentation
+            exit-time-destructors
+            float-equal
+            global-constructors
+            missing-noreturn
+            newline-eof
+            old-style-cast
+            padded
+            sign-conversion
+            switch-enum
+            unreachable-code
+            unused-member-function
+            weak-vtables
+            )
 
     if (NOT (${COMPILER_VERSION} VERSION_LESS "3.3"))
-        append_args(CXX_WARN_FLAGS "-Woverloaded-shift-op-parentheses")
-
-        if (${IS_WARN_EVERYTHING})
-            append_args(CXX_WARN_FLAGS "-Wno-documentation-unknown-command")
-        endif ()
+        list(APPEND CXX_WARN_LIST overloaded-shift-op-parentheses)
+        list(APPEND CXX_NOWARN_LIST documentation-unknown-command)
     endif ()
 
     if (NOT (${COMPILER_VERSION} VERSION_LESS "3.4"))
-        append_args(CXX_WARN_FLAGS "-Wheader-guard -Wlogical-not-parentheses")
+        list(APPEND CXX_WARN_LIST header-guard logical-not-parentheses)
+    endif ()
+
+    if (NOT (${COMPILER_VERSION} VERSION_LESS "3.5"))
+        list(APPEND CXX_WARN_LIST unreachable-code-return)
     endif ()
 
     if (NOT (${COMPILER_VERSION} VERSION_LESS "3.6"))
-        append_args(CXX_WARN_FLAGS "-Wunreachable-code-return -Wkeyword-macro -Winconsistent-missing-override")
-
-        if (${IS_WARN_EVERYTHING})
-            append_args(CXX_WARN_FLAGS "-Wno-reserved-id-macro")
-        endif ()
+        list(APPEND CXX_WARN_LIST keyword-macro inconsistent-missing-override)
+        list(APPEND CXX_NOWARN_LIST reserved-id-macro)
     endif ()
 
-    if (NOT (${COMPILER_VERSION} VERSION_LESS "3.7"))
-        if (${IS_WARN_EVERYTHING})
-            append_args(CXX_WARN_FLAGS "-Wno-c++98-compat-pedantic")
-        endif ()
-    endif ()
+    # No changes for clang 3.7
 
     if (NOT (${COMPILER_VERSION} VERSION_LESS "3.8"))
-        append_args(CXX_WARN_FLAGS "-Wnon-virtual-dtor")
-
-        if (${IS_WARN_EVERYTHING})
-            append_args(CXX_WARN_FLAGS "-Wno-double-promotion")
-        endif ()
+        list(APPEND CXX_NOWARN_LIST double-promotion)
     endif ()
 
     if (NOT (${COMPILER_VERSION} VERSION_LESS "3.9"))
-        append_args(CXX_WARN_FLAGS "-Wnewline-eof")
-
-        if (${IS_WARN_EVERYTHING})
-            append_args(CXX_WARN_FLAGS "-Wno-comma")
-        endif ()
+        list(APPEND CXX_NOWARN_LIST comma)
     endif ()
+
+    # No chagnes for clang 4.0
+
+    if (NOT (${COMPILER_VERSION} VERSION_LESS "5.0"))
+        list(APPEND CXX_WARN_LIST inconsistent-missing-destructor-override)
+        list(APPEND CXX_NOWARN_LIST zero-as-null-pointer-constant)
+    endif ()
+
+    # convert warning lists to compiler arg strings:
+    foreach(arg ${CXX_WARN_LIST})
+        append_args(CXX_WARN_FLAGS -W${arg})
+    endforeach()
+    if (${IS_WARN_EVERYTHING})
+        foreach(arg ${CXX_NOWARN_LIST})
+            append_args(CXX_WARN_FLAGS -Wno-${arg})
+        endforeach()
+    endif ()
+
 elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
     # suppress errors in boost headers:
     append_args(CXX_WARN_FLAGS "-diag-disable 177,193,869,1599,3280")
@@ -396,6 +434,7 @@ if (${GNU_COMPAT_COMPILER})
     else ()
         append_args (CMAKE_CXX_FLAGS "-std=c++11")
     endif ()
+
     set (CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 
     # The NDEBUG macro is intentionally removed from release. One discussion on this is:
@@ -403,12 +442,7 @@ if (${GNU_COMPAT_COMPILER})
     set (CMAKE_CXX_FLAGS_RELEASE "-O3 -fomit-frame-pointer")
     set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
     set (CMAKE_CXX_FLAGS_ASAN "-O1 -g -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls")
-    #set (CMAKE_CXX_FLAGS_PROFILE "-O0 -g -pg -fprofile-arcs -ftest-coverage")
-
-    # this doesn't seem to impact performance, taking out for now:
-    #if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    #    set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto")
-    #endif ()
+    set (CMAKE_CXX_FLAGS_GCOV "-O0 -g -fprofile-arcs -ftest-coverage")
 endif()
 
 if (MSVC)
@@ -434,6 +468,18 @@ if (CMAKE_BUILD_TYPE STREQUAL "ASan")
 
     if (NOT ${IS_ASAN_SUPPORTED})
         message(FATAL_ERROR "Address sanitizer build type requested, but this is not supported by compiler.")
+    endif ()
+endif ()
+
+# if GCov build type is requested, check that the compiler supports it:
+if (CMAKE_BUILD_TYPE STREQUAL "GCov")
+    set (IS_GCOV_SUPPORTED false)
+    if (${GNU_COMPAT_COMPILER})
+        set (IS_GCOV_SUPPORTED true)
+    endif ()
+
+    if (NOT ${IS_GCOV_SUPPORTED})
+        message(FATAL_ERROR "GCov build type requested, but this is not supported by compiler.")
     endif ()
 endif ()
 
@@ -483,7 +529,6 @@ if (${GNU_COMPAT_COMPILER})
       append_args (CMAKE_CXX_FLAGS "-ffloat-store")
     endif ()
   endif ()
-
 endif()
 
 # cmake configure-time c++ configuration:

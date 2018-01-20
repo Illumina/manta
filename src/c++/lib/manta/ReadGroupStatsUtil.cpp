@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -140,9 +140,9 @@ getFragSizeMinusSkip(
         using namespace illumina::common;
 
         std::ostringstream oss;
-        oss << "ERROR: unexpected fragment size (" << fragSize << ") deduced from bam record: " << bamRead << "\n"
+        oss << "Unexpected fragment size (" << fragSize << ") deduced from bam record: " << bamRead << "\n"
             << "\tPossible invalid template size in bam record.";
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 
     return fragSize;
@@ -192,9 +192,9 @@ struct ReadGroupOrientTracker
     }
 
     const ReadPairOrient&
-    getConsensusOrient()
+    getConsensusOrient(const ReadCounter& readCounter)
     {
-        finalize();
+        finalize(readCounter);
         return _finalOrient;
     }
 
@@ -212,10 +212,9 @@ private:
     }
 
     void
-    finalize()
+    finalize(const ReadCounter& readCounter)
     {
         if (_isFinalized) return;
-
         bool isMaxIndex(false);
         unsigned maxIndex(0);
         for (unsigned i(0); i<_orientCount.size(); ++i)
@@ -241,8 +240,11 @@ private:
             if (_totalOrientCount < minCount)
             {
                 std::ostringstream oss;
-                oss << "ERROR: Too few observations (" << _totalOrientCount << ") to determine pair orientation for " << _rgLabel << "'\n";
-                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                oss << "Too few high-confidence read pairs (" << _totalOrientCount << ") to determine pair orientation for " << _rgLabel << "'\n"
+                    << "\tAt least " << minCount << " high-confidence read pairs are required to determine pair orientation.\n"
+                    << readCounter << "\n";
+
+                BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
 
             const unsigned minMaxCount(static_cast<unsigned>(minMaxFrac*_totalOrientCount));
@@ -250,9 +252,12 @@ private:
             {
                 const unsigned maxPercent((_orientCount[maxIndex]*100)/_totalOrientCount);
                 std::ostringstream oss;
-                oss << "ERROR: Can't determine consensus pair orientation of " << _rgLabel << ".\n"
-                    << "\tThe most frequent orientation is '" << _finalOrient << "' (" << maxPercent << "% of " << _totalOrientCount << " total observations)\n";
-                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                oss << "Can't determine consensus pair orientation of " << _rgLabel << ".\n"
+                    << "\tThe most frequent orientation is '" << _finalOrient << "' (" << maxPercent << "% of " << _totalOrientCount << " total used read pairs)\n"
+                    << "\tThe fraction of '" << _finalOrient << "' among total high-confidence read pairs needs to be more than " << minMaxFrac << " to determine consensus pair orientation.\n"
+                    << readCounter << "\n";
+
+                BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
         }
 
@@ -438,6 +443,9 @@ struct ReadGroupTracker
             const PAIR_ORIENT::index_t ori(srd._orient);
             addOrient(ori);
 
+            // we define "high-confidence" read pairs as those reads passing all filters
+            addHighConfidenceReadPairCount();
+
             // filter mapped innies on the same chrom
             //
             // note we don't rely on the proper pair bit because this already contains an
@@ -481,7 +489,6 @@ struct ReadGroupTracker
                           << "\n";
 #endif
             }
-
             _buffer.clearBuffer();
         }
 
@@ -503,38 +510,74 @@ struct ReadGroupTracker
     }
 
     void
+    addReadCount()
+    {
+        _stats.readCounter.addReadCount();
+    }
+
+    void
+    addPairedReadCount()
+    {
+        _stats.readCounter.addPairedReadCount();
+    }
+
+    void
+    addUnpairedReadCount()
+    {
+        _stats.readCounter.addUnpairedReadCount();
+    }
+
+    void
+    addPairedLowMapqReadCount()
+    {
+        _stats.readCounter.addPairedLowMapqReadCount();
+    }
+
+    void
+    addHighConfidenceReadPairCount()
+    {
+        _stats.readCounter.addHighConfidenceReadPairCount();
+    }
+
+    void
     finalize()
     {
         if (_isFinalized) return;
 
         // add the remaining data in the buffer
-        if (_buffer.isBufferNormal()) addBufferedData();
+        if (_buffer.isBufferNormal())
+        {
+            addBufferedData();
+        }
         _buffer.clearBuffer();
 
         // finalize pair orientation:
-        _stats.relOrients = _orientInfo.getConsensusOrient();
+        _stats.relOrients = _orientInfo.getConsensusOrient(_stats.readCounter);
 
         if (_stats.relOrients.val() != PAIR_ORIENT::Rp)
         {
             using namespace illumina::common;
 
             std::ostringstream oss;
-            oss << "ERROR: Unexpected consensus read orientation (" << _stats.relOrients << ") for " << _rgLabel << "\n"
+            oss << "Unexpected consensus read orientation (" << _stats.relOrients << ") for " << _rgLabel << "\n"
                 << "\tManta currently handles paired-end (FR) reads only.\n";
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
         }
 
         // finalize insert size distro:
         if (! isInsertSizeConverged())
         {
-            if (_stats.fragStats.totalObservations() < 100)
+            static const unsigned minObservations(100);
+            if (_stats.fragStats.totalObservations() < minObservations)
             {
                 using namespace illumina::common;
 
                 std::ostringstream oss;
-                oss << "ERROR: Can't generate pair statistics for " << _rgLabel << "\n"
-                    << "\tTotal observed read pairs: " << insertSizeObservations() << "\n";
-                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                oss << "Can't generate pair statistics for " << _rgLabel << "\n"
+                    << "\tTotal high-confidence read pairs (FR) used for insert size estimation: " << insertSizeObservations() << "\n"
+                    << "\tAt least " << minObservations << " high-confidence read pairs (FR) are required to estimate insert size.\n"
+                    << _stats.readCounter << "\n";
+                BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
             else if (! isInsertSizeChecked())
             {
@@ -544,7 +587,8 @@ struct ReadGroupTracker
             if (! isInsertSizeConverged())
             {
                 log_os << "WARNING: read pair statistics did not converge for " << _rgLabel << "\n"
-                       << "\tTotal observed read pairs: " << insertSizeObservations() << "\n";
+                       << "\tTotal high-confidence read pairs (FR) used for insert size estimation: " << insertSizeObservations() << "\n"
+                       << _stats.readCounter << "\n";
             }
         }
 
@@ -1003,6 +1047,20 @@ extractReadGroupStatsFromAlignmentFile(
                     chromHighestPos[chromIndex] = bamRead.pos();
                     isActiveChrom = true;
 
+                    rgInfo.addReadCount();
+                    if (bamRead.is_paired())
+                    {
+                        rgInfo.addPairedReadCount();
+                        if (bamRead.map_qual()==0)
+                        {
+                            rgInfo.addPairedLowMapqReadCount();
+                        }
+                    }
+                    else
+                    {
+                        rgInfo.addUnpairedReadCount();
+                    }
+
                     if (coreFilter.isFilterRead(bamRead)) continue;
 
 #ifdef READ_GROUPS
@@ -1051,7 +1109,6 @@ extractReadGroupStatsFromAlignmentFile(
                     chromHighestPos[chromIndex] += chromSize[chromIndex]/100;
 
                 }
-
             }
         }
     }

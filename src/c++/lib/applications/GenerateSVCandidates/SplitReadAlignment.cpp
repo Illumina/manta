@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -55,7 +55,7 @@ operator<<(std::ostream& os, const SRAlignmentInfo& info)
 
 
 
-/// \params[out] return the LnLhood expected from a perfect match to the reference
+/// \param[out] return the LnLhood expected from a perfect match to the reference
 static
 float
 getLnLhood(
@@ -294,7 +294,7 @@ splitReadAligner(
     if (querySize >= targetSize)
     {
         std::ostringstream oss;
-        oss << "ERROR: Unexpected split read alignment input."
+        oss << "Unexpected split read alignment input."
             << " querySize: " << querySize << " targetSize: " << targetSize << '\n'
             << "querySeq:\n";
         printSeq(querySeq,oss);
@@ -302,7 +302,7 @@ splitReadAligner(
             << "targetSeq:\n";
         printSeq(targetSeq,oss);
         oss << '\n';
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 
     // set the scanning start & end to make sure the candidate windows overlapping the breakpoint
@@ -320,11 +320,11 @@ splitReadAligner(
     if (scanEnd < scanStart)
     {
         std::ostringstream oss;
-        oss << "ERROR: Unexpected split read alignment input condition: scanEnd < scanStart."
+        oss << "Unexpected split read alignment input condition: scanEnd < scanStart."
             << " scanEnd: " << scanEnd << " scanStart: " << scanStart
             << " querySize: " << querySize << " targetSize: " << targetSize << '\n'
             << "\ttargetRange: " << targetBpOffsetRange << '\n';
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 
     // do one high-speed pass to find the optimal alignment (in terms of lhood), then compute all the goodies later:
@@ -363,7 +363,7 @@ splitReadAligner(
     if (alignment.leftSize > querySize)
     {
         std::ostringstream oss;
-        oss << "ERROR: Unexpected split read alignment outcome. "
+        oss << "Unexpected split read alignment outcome. "
             << " targetRange: " << targetBpOffsetRange << " bestPos: " << bestPos << " bestLnLhood: " << bestLnLhood << " querySize: " << querySize << " targetSize: " << targetSize << '\n'
             << "alignment: " << alignment << "\n"
             << "querySeq:\n";
@@ -372,7 +372,7 @@ splitReadAligner(
             << "targetSeq:\n";
         printSeq(targetSeq,oss);
         oss << '\n';
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
     alignment.homSize = std::min(querySize-alignment.leftSize,(static_cast<pos_t>(targetBpOffsetRange.end_pos()+1) - bestPos) - alignment.leftSize);
 

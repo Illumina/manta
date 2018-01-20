@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -159,6 +159,6 @@ writeSV(
     writeSVCore(svData, adata, sv, svId, event);
 
     clearScoreInfo();
-    _somaticInfoPtr=NULL;
-    _singleJunctionSomaticInfoPtr=NULL;
+    _somaticInfoPtr=nullptr;
+    _singleJunctionSomaticInfoPtr=nullptr;
 }

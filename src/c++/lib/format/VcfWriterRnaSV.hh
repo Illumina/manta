@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -35,8 +35,9 @@ struct VcfWriterRnaSV : public VcfWriterSV, VcfWriterScoredSV
     VcfWriterRnaSV(
         const std::string& referenceFilename,
         const SVLocusSet& set,
-        std::ostream& os) :
-        VcfWriterSV(referenceFilename,set,os),
+        std::ostream& os,
+        const bool& isOutputContig) :
+        VcfWriterSV(referenceFilename, set, os, isOutputContig),
         _rnaInfoPtr(nullptr)
     {}
 

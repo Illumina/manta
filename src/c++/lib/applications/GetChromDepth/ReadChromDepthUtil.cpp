@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 
 
 #include "ReadChromDepthUtil.hh"
+#include "manta/SVLocusScanner.hh"
 
 #include "blt_util/log.hh"
 #include "blt_util/MedianDepthTracker.hh"
@@ -30,7 +31,7 @@
 #include "common/Exceptions.hh"
 #include "htsapi/bam_header_info.hh"
 #include "htsapi/bam_streamer.hh"
-
+#include "manta/SVLocusScanner.hh"
 
 #include <iostream>
 #include <sstream>
@@ -63,7 +64,7 @@ struct DepthTracker
         const bam_record& bamRead)
     {
         const pos_t pos(bamRead.pos()-1);
-        const unsigned rsize(bamRead.read_size());
+        const unsigned readSize(bamRead.read_size());
         if (! _isRegionInit)
         {
             _maxPos=pos;
@@ -71,7 +72,7 @@ struct DepthTracker
         }
 
         for (; _maxPos<pos; ++_maxPos) flushPos(_maxPos);
-        _depth.inc(pos,rsize);
+        _depth.inc(pos,readSize);
         _count++;
     }
 
@@ -376,8 +377,8 @@ readChromDepthFromAlignment(
         using namespace illumina::common;
 
         std::ostringstream oss;
-        oss << "ERROR: Can't find chromosome name '" << chromName << "' in BAM/CRAM file: '" << alignmentFile << "\n";
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        oss << "Can't find chromosome name '" << chromName << "' in BAM/CRAM file: '" << alignmentFile << "'";
+        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 
     const int32_t chromIndex(chromIter->second);
@@ -473,8 +474,17 @@ readChromDepthFromAlignment(
                     }
                 }
 
-                // apply all filters:
-                if (bamRead.is_unmapped()) continue;
+                // apply the set of core filters used everywhere in manta so that "expected" depth computed here
+                // will match up with local depth computed on-the-fly within manta components:
+                if (SVLocusScanner::isMappedReadFilteredCore(bamRead)) continue;
+
+                // Normally supplemental/secondary reads with a split alignment are not filtered out. Because this
+                // depth computation is based on the read length and not the specific alignment, split reads need
+                // to be filtered in this case to prevent double-counting this evidence.
+                if (bamRead.is_supplementary() || bamRead.is_secondary()) continue;
+
+                // QC reads:
+                SVLocusScanner::checkReadSize(read_stream, bamRead);
 
                 cdTracker.addRead(bamRead);
 

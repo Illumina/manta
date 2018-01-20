@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeMerge2)
     locus1.linkNodes(nodePtr1,nodePtr3);
     locus1.linkNodes(nodePtr2,nodePtr4);
 
-    //locus1.mergeNode(nodePtr2, nodePtr1, NULL);
+    //locus1.mergeNode(nodePtr2, nodePtr1, nullptr);
     locus1.mergeSelfOverlap();
 
     const SVLocusNode& node1(static_cast<const SVLocus&>(locus1).getNode(nodePtr1));

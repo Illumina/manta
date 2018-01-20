@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -36,9 +36,10 @@ SimpleAlignment
 getAlignment(
     const bam_record& bamRead);
 
-/// generate a mate alignment, assuming same read length and perfect alignment
+/// generate a mate alignment, using the MATE CIGAR (MC) BAM tag if available, else assuming same read length and perfect alignment
 SimpleAlignment
-getFakeMateAlignment(
+getKnownOrFakedMateAlignment(
     const bam_record& bamRead);
+
 
 

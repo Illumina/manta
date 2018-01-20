@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,11 +24,12 @@
 #include "SVLocusSetFinder.hh"
 
 #include "blt_util/log.hh"
+#include "common/Exceptions.hh"
 #include "htsapi/align_path_bam_util.hh"
 #include "manta/ChromDepthFilterUtil.hh"
 
 #include <iostream>
-
+#include <sstream>
 
 
 namespace STAGE
@@ -133,7 +134,7 @@ SVLocusSetFinder(
     _positionReadDepthEstimate(depthBufferCompression),
     _isInDenoiseRegion(false),
     _denoiseStartPos(0),
-    _readScanner(opt.scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilename, opt.isRNA),
+    _readScanner(opt.scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilenames, opt.isRNA),
     _isMaxDepthFilter(false),
     _maxDepth(0),
     _bamHeader(bamHeader),
@@ -152,12 +153,12 @@ SVLocusSetFinder(
     //
     // initialize various SV locus graph meta-data
     //
-    const unsigned sampleCount(opt.alignFileOpt.alignmentFilename.size());
+    const unsigned sampleCount(opt.alignFileOpt.alignmentFilenames.size());
     _svLoci.getCounts().setSampleCount(sampleCount);
 
     for (unsigned sampleIndex(0); sampleIndex<sampleCount; ++sampleIndex)
     {
-        _svLoci.getCounts().getSampleCounts(sampleIndex).sampleSource = opt.alignFileOpt.alignmentFilename[sampleIndex];
+        _svLoci.getCounts().getSampleCounts(sampleIndex).sampleSource = opt.alignFileOpt.alignmentFilenames[sampleIndex];
     }
 
     _svLoci.header = bamHeader;
@@ -239,18 +240,9 @@ process_pos(const int stage_no,
 void
 SVLocusSetFinder::
 addToDepthBuffer(
-    const unsigned defaultReadGroupIndex,
     const bam_record& bamRead)
 {
     if (! _isMaxDepthFilter) return;
-
-    // estimate depth from normal sample(s) only:
-    if (_isAlignmentTumor[defaultReadGroupIndex]) return;
-
-    // depth estimation uses only very simple read filtration criteria (these filters should be synced with
-    // the chromosome expected depth estimator)
-    /// TODO: Update filtration here to match current expected depth filtration
-    if (bamRead.is_unmapped()) return;
 
     const pos_t refPos(bamRead.pos()-1);
 
@@ -265,30 +257,41 @@ addToDepthBuffer(
 void
 SVLocusSetFinder::
 update(
+    const stream_state_reporter& streamErrorReporter,
     const bam_record& bamRead,
     const unsigned defaultReadGroupIndex)
 {
-    // True if the read comes from a tumor sample.
-    const bool isTumor(_isAlignmentTumor[defaultReadGroupIndex]);
-    if (! isTumor)
-    {
-        if (! bamRead.is_unmapped())
-        {
-            // Update the depth buffer used to determine high-depth read filtration
-            addToDepthBuffer(defaultReadGroupIndex, bamRead);
-        }
-    }
-
     // This is the primary read filtration step for the purpose of graph building
     //
     // Although unmapped reads themselves are filtered out, reads with unmapped mates are still
     // accepted, because these contribute signal for assembly (indel) regions.
     if (SVLocusScanner::isMappedReadFilteredCore(bamRead)) return;
 
+    const bool isTumor(_isAlignmentTumor[defaultReadGroupIndex]);
+    if (! isTumor) addToDepthBuffer(bamRead);
+
     // Filter out reads from high-depth chromosome regions
     if (_isMaxDepthFilter)
     {
         if (_positionReadDepthEstimate.val(bamRead.pos()-1) > _maxDepth) return;
+    }
+
+    // Verify the input reads conform to BAM input restrictions before testing if they could be input evidence
+    // The reason this is done here is that the restriction against the '=' sign in the sequence could otherwise
+    // silently alter downstream evidence checks and assembly steps:
+    {
+        const bam_seq readSeq(bamRead.get_bam_read());
+        const unsigned readSize(readSeq.size());
+        for (unsigned baseIndex(0); baseIndex < readSize; baseIndex++)
+        {
+            if (readSeq.get_code(baseIndex) == BAM_BASE::REF)
+            {
+                std::ostringstream oss;
+                oss << "Unsupported use of the '=' symbol in the BAM/CRAM SEQ field from read:\n";
+                streamErrorReporter.report_state(oss);
+                BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
+            }
+        }
     }
 
     // counts/incounts are part of the statistics tracking framework used for
@@ -302,6 +305,7 @@ update(
         incounts.minMapq++;
         return;
     }
+
 
     // Filter out reads which are not found to be indicative of an SV
     //
@@ -321,7 +325,7 @@ update(
     if (! _scanRegion.range.is_pos_intersect(bamRead.pos()-1)) return;
 
     // QC check of read length
-    SVLocusScanner::checkReadSize(bamRead);
+    SVLocusScanner::checkReadSize(streamErrorReporter, bamRead);
 
     // update the stage manager to move the head pointer forward to the current read's position
     //

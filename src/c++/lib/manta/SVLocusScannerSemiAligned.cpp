@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -242,7 +242,11 @@ getSVBreakendCandidateSemiAligned(
     trailingEdgePoorAlignmentLength = 0;
     trailingEdgeRefPos = 0;
 
-    if (is_possible_adapter_pair(bamRead, isAgressiveAdaptorCheck)) return;
+    if (is_possible_adapter_pair(bamRead) &&
+        (isAgressiveAdaptorCheck || is_adapter_pair(bamRead)))
+    {
+        return;
+    }
 
     // Create a new alignment with all soft-clip sections unrolled to a matched alignment state.
     const SimpleAlignment matchedAlignment(matchifyEdgeSoftClip(bamAlign));
@@ -274,7 +278,7 @@ getSVBreakendCandidateSemiAligned(
 
     if (0 != leadingEdgePoorAlignmentLengthTmp)
     {
-        if ((! isOverlappingReadPair) || bamRead.is_fwd_strand())
+        if ((! isOverlappingReadPair) || bamRead.isSASplit() || bamRead.is_fwd_strand())
         {
             unsigned highQualityCount(0);
             for (unsigned pos(0); pos<leadingEdgePoorAlignmentLengthTmp; ++pos)
@@ -296,7 +300,7 @@ getSVBreakendCandidateSemiAligned(
 
     if (0 != trailingEdgePoorAlignmentLengthTmp)
     {
-        if ((! isOverlappingReadPair) || (! bamRead.is_fwd_strand()))
+        if ((! isOverlappingReadPair) || bamRead.isSASplit() || (! bamRead.is_fwd_strand()))
         {
             unsigned highQualityCount(0);
             for (unsigned pos(0); pos<trailingEdgePoorAlignmentLengthTmp; ++pos)

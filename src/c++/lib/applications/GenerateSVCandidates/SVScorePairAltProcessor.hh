@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -53,6 +53,7 @@ struct ContigParams
 struct SVScorePairAltProcessor : public SVScorePairProcessor
 {
     SVScorePairAltProcessor(
+        const bam_header_info& header,
         const ReadScannerOptions& scanOpt,
         const SVRefinerOptions& refineOpt,
         const std::vector<bool>& initIsAlignmentTumor,
@@ -63,7 +64,8 @@ struct SVScorePairAltProcessor : public SVScorePairProcessor
         const bool initIsBp1,
         SVEvidence& initEvidence) :
         SVScorePairProcessor(initIsAlignmentTumor, initReadScanner, initPairOpt, initSv, initIsBp1, initEvidence),
-        assemblyData(initAssemblyData),
+        _header(header),
+        _assemblyData(initAssemblyData),
         _shadowAligner(refineOpt.spanningAlignScores),
         _shadow(scanOpt.minSingletonMapqCandidates,
                 (! initIsBp1), /// search for left-open shadows
@@ -101,17 +103,24 @@ private:
     checkInput(
         const SVCandidate& sv);
 
-    /// \param[in] bam record used for debug printout only
-    /// \param[in] isLeftOfInsert is the anchor on the left or right side of the insertion
-    /// \param[in] floatRead the read to be realigned, already revcomped to expected orientation
-    /// \param[in] anchorPos the alignment position of the anchoring (ie. non-relaigned) read of the pair
+    /// \brief Realign one end of read pair
+    ///
+    /// \param[in] bamHeader This is only used for debug/exception messages.
+    /// \param[in] fragmentQname QNAME of the anchor/floating read pair fragment. This is only used for debug/exception messages.
+    /// \param[in] isLeftOfInsert If true, the anchor is on the left side of the insertion (and otherwise on the right)
+    /// \param[in] floatRead The read to be realigned, already reverse complemented to the expected orientation, must not be empty
+    /// \param[in] anchorTid The alignment contig id of the anchoring (ie. non-realigned) read of the pair. This is only used for debug/exception messages.
+    /// \param[in] anchorPos The alignment position of the anchoring (ie. non-realigned) read of the pair
+    /// \param[out] altTemplateSize The updated template size of the read pair following realignment.
     ///
     /// \return true for usable alignment
     bool
     realignPairedRead(
-        const bam_record& bamRead,
+        const bam_header_info& bamHeader,
+        const std::string& fragmentQname,
         const bool isLeftOfInsert,
         const std::string& floatRead,
+        const int anchorTid,
         const pos_t anchorPos,
         int& altTemplateSize);
 
@@ -127,7 +136,8 @@ private:
         const int fragEndRefPos) const;
 
     ///////////////////////
-    const SVCandidateAssemblyData& assemblyData;
+    const bam_header_info& _header;
+    const SVCandidateAssemblyData& _assemblyData;
 
     const GlobalAligner<int> _shadowAligner;
     ShadowReadFinder _shadow;

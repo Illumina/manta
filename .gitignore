@@ -48,4 +48,5 @@ src/.project
 tags
 *.sublime-project
 *.sublime-workspace
+.idea
 src/.idea

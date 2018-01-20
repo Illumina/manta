@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ operator<<(std::ostream& os, const bam_record& br)
         {
             os << " issec";
         }
-        if (br.is_supplement())
+        if (br.is_supplementary())
         {
             os << " issupp";
         }
@@ -86,7 +86,7 @@ alt_map_qual(const char* tag) const
         if (alt_map<0)
         {
             std::ostringstream oss;
-            oss << "ERROR: Unexpected negative value in optional BAM/CRAM tag: '" << std::string(tag,2) << "'\n";
+            oss << "Unexpected negative value in optional BAM/CRAM tag: '" << std::string(tag,2) << "'";
             throw blt_exception(oss.str().c_str());
         }
         return static_cast<unsigned>(alt_map);

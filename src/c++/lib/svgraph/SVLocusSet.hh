@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -107,18 +107,21 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
         _isIndexed(true)
     {}
 
+    /// Test if the set of SVLocus objects is empty.
     bool
     empty() const
     {
         return _loci.empty();
     }
 
+    /// Count the number of SVLocus objects in the set.
     unsigned
     size() const
     {
         return _loci.size();
     }
 
+    /// Count the number of SVLocus objects in the set which are not empty.
     unsigned
     nonEmptySize() const
     {
@@ -126,42 +129,48 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
         return size()-_emptyLoci.size();
     }
 
+    /// Return an iterator for the SVLocus set pointing at the beginning.
     const_iterator
     begin() const
     {
         return _loci.begin();
     }
 
+    /// Return an iterator for the SVLocus set pointing at the end.
     const_iterator
     end() const
     {
         return _loci.end();
     }
 
+    /// Return a reference of the SVLocus at the given index.
     const SVLocus&
     getLocus(const LocusIndexType index) const
     {
 #ifdef DEBUG_SVL
         if (index>=_loci.size()) locusHurl(index,"const");
 #endif
-
         assert(index<_loci.size());
         return _loci[index];
     }
 
-    /// merge a single locus into this
+    /// \brief Merge SVLocus into the SVLocusSet.
     ///
+    /// the referenced SVLocus is destroyed in this process.
     void
     merge(const SVLocus& locus);
 
-    /// merge a second locus set into this
+    /// \brief Merge referenced SVLocusSet into the calling SVLocusSet.
     ///
+    /// The referenced SVLocusSet is destroyed in this process.
     void
     merge(const SVLocusSet& set);
 
+    /// \brief Reset all properties and remove all contents.
     void
     clear()
     {
+        header.clear();
         _loci.clear();
         clearIndex();
         _isFinalized=false;
@@ -176,7 +185,7 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
         _isIndexed=true;
     }
 
-    /// indicate that the set is complete
+    /// Indicate that the set is complete
     void
     finalize()
     {
@@ -184,63 +193,66 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
         _isFinalized=true;
     }
 
-    /// remove all existing edges with less than minMergeEdgeCount support:
+    /// Remove all existing edges with less than minMergeEdgeCount support:
     void
     clean();
 
+    /// Remove all existing edges with less than minMergeEdgeCount
     void
     cleanRegion(const GenomeInterval interval);
 
+    /// Return the number of nodes that have been removed from Locus objects by the clean and cleanRegion operations
     unsigned
     totalCleaned() const
     {
         return _totalCleaned;
     }
 
-    // binary serialization
+    /// Binary serialization
     void
     save(const char* filename) const;
 
-    /// restore from serialization
-    ///
-    /// \param[in] isSkipIndex if true, don't build the graph index, and only allow a limited set of operations:
+    /// \brief Deserialize object from binary file format
+    /// \param[in] isSkipIndex If true, don't build the graph index, and only allow a limited set of operations
     ///
     void
     load(
         const char* filename,
         const bool isSkipIndex = false);
 
-    // debug output
+    /// Debug output.
     void
     dump(std::ostream& os) const;
 
-    // debug output
+    /// Debug output for a specific region.
     void
     dumpRegion(
         std::ostream& os,
         const GenomeInterval interval);
 
-    // dump stats on the whole SVLocus set:
+    /// Debug stats output on the whole SVLocus set.
     void
     dumpStats(std::ostream& os) const;
 
-    // dump stats on each locus in tsv format:
+    /// Debug stats on each locus in tsv format.
     void
     dumpLocusStats(std::ostream& os) const;
 
+    /// Return a debug string of the source of the SVLocusSet.
     const std::string&
     getSource() const
     {
         return _source;
     }
 
+    /// Return the setting for the minMergeEdgeCount.
     unsigned
     getMinMergeEdgeCount() const
     {
         return _opt.getMinMergeEdgeCount();
     }
 
-    // total number of reads used as supporting evidence in the graph
+    /// Total number of reads used as supporting evidence in the graph
     unsigned
     totalObservationCount() const
     {
@@ -252,7 +264,7 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
         return sum;
     }
 
-    // total nodes in the graph
+    /// Return the total number of nodes in the SVLocus objects.
     unsigned
     totalNodeCount() const
     {
@@ -264,7 +276,7 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
         return sum;
     }
 
-    /// get total number of directed edges in the graph
+    /// Return the total number of directed edges in the graph
     unsigned
     totalEdgeCount() const
     {
@@ -276,7 +288,7 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
         return sum;
     }
 
-    /// get total number of self-edges in the graph
+    /// Return the total number of self-edges in the graph
     unsigned
     selfEdgeCount() const
     {
@@ -288,7 +300,7 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
         return sum;
     }
 
-    /// fill node edge count histogram up to edgeCount.size()
+    /// Fill node edge count histogram up to edgeCount.size()
     void
     getNodeEdgeCountDistro(std::vector<unsigned>& edgeCount) const
     {
@@ -298,7 +310,7 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
         }
     }
 
-    /// fill node observation count histogram up to obsCount.size()
+    /// Fill node observation count histogram up to obsCount.size()
     void
     getNodeObsCountDistro(std::vector<unsigned>& obsCount) const
     {
@@ -308,26 +320,28 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
         }
     }
 
-    /// check that internal data-structures are in
+    /// Check that internal data-structures are in
     /// a consistent state, throw on error
     void
     checkState(
         const bool isCheckOverlap = false,
         const bool isCheckLocusConnected = false) const;
 
-    /// updater gets direct access to read counts:
+    /// Updater gets direct access to read counts:
     AllCounts&
     getCounts()
     {
         return _counts;
     }
 
+    /// Return the AllCounts object reference for the SVLocusSet object
     const AllCounts&
     getCounts() const
     {
         return _counts;
     }
 
+    /// Set the buildTime  SVLocusSet object
     void
     setBuildTime(
         const CpuTimes& t)
@@ -335,6 +349,7 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
         _buildTime = t;
     }
 
+    /// Set the mergeTime SVLocusSet object.
     void
     setMergeTime(
         const CpuTimes& t)
@@ -344,10 +359,8 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
 
     typedef std::pair<LocusIndexType,NodeIndexType> NodeAddressType;
 
-    /// get all nodes in this object which intersect with
-    /// an external node
-    ///
-    /// this is effectively const
+    /// Fill the argument set with all nodes in this object which intersect with
+    /// an external node.
     void
     getRegionIntersect(
         const GenomeInterval interval,
@@ -362,6 +375,8 @@ private:
 
     typedef std::pair<EdgeMapKeyType, EdgeMapValueType> EdgeInfoType;
 
+    /// \brief  NodeAddressSorter wraps a SVLocusSet in order to add support for
+    /// testing if 2 NodeAddressTypes are sorted a < b.
     struct NodeAddressSorter
     {
         NodeAddressSorter(const SVLocusSet& set) :
@@ -376,6 +391,7 @@ private:
             if (getInterval(a)<getInterval(b)) return true;
             if (getInterval(a)==getInterval(b))
             {
+                // If the GenomeIntervals are the same, compare the contents of the NodeAddressTypes directly.
                 return (a<b);
             }
             return false;
@@ -450,9 +466,10 @@ private:
         return _loci[index];
     }
 
+#ifdef DEBUG_SVL
     void
     locusHurl(const LocusIndexType index, const char* label) const;
-
+#endif
 
     const SVLocusNode&
     getNode(const NodeAddressType n) const
@@ -550,7 +567,7 @@ private:
     ///
     /// \param[in] intersectingNodeAddresses Addresses of a set of nodes which will be moved such that they are all in the same locus.
     /// \param[in] startLocusIndex This locus is not cleared after copying its contents to the lowest locus index.
-    /// \param[inout] headLocusIndex The value on input should contain the locus holding the duplicated start locus.
+    /// \param[in,out] headLocusIndex The value on input should contain the locus holding the duplicated start locus.
     ///                              If the start locus hasn't been duplicated yet it will equal \p startLocusIndex.
     ///                              The value returned is the target locus of the move operation, which after this
     ///                              function completes is the neow locus holding the duplication of the start locus.
@@ -572,7 +589,7 @@ private:
         const bool isClearSource = true);
 
 
-    /// \brief add \p inputLocus to this SVLocusSet
+    /// \brief Add \p inputLocus to this SVLocusSet
     ///
     /// Copies the inputLocus into this object without attempting do any merging. This is an intermediate (private)
     /// step in the process of merging the \p inputLocus into this graph.
@@ -674,12 +691,14 @@ private:
         _maxRegionSize.clear();
     }
 
+#ifdef DEBUG_SVL
     void
     dumpIndex(std::ostream& os) const;
+#endif
 
-    /// throw an exception if any nodes are overlapping
+    /// \brief Throw an exception if any nodes are overlapping
     ///
-    /// if isFilterNoise is true, consider only signal nodes
+    /// \param[in] isFilterNoise If true, consider only signal nodes
     void
     checkForOverlapNodes(
         const bool isFilterNoise) const;
@@ -712,7 +731,10 @@ public:
     bam_header_info header;
 private:
 
-    /// \brief Used to evaluate peak SV evidence density among a set of overlapping nodes.
+
+    ///
+    /// This is used to evaluate peak SV evidence density among the overlapping nodes of a set
+    /// of intersecting edges.
     struct MergeRegionSumData
     {
         void
@@ -747,7 +769,7 @@ private:
     // provides an intersection search of overlapping nodes given a bound node size:
     LocusSetIndexerType _inodes;
 
-    /// \brief Largest node breakend region in this graph for each chromosome.
+    /// \brief The largest node breakend region in this graph for each chromosome.
     ///
     /// This is used to support the graph's region-based query scheme to find all nodes overlapping a given a certain
     /// interval from a chromosome. Instead of using a fully general indexing scheme, such as an interval tree, the
@@ -765,7 +787,7 @@ private:
 
     AllCounts _counts;
 
-    // total number of observations removed on edges with less than minMergeEdgeCount counts
+    /// Total number of observations removed on edges with less than minMergeEdgeCount counts
     unsigned _totalCleaned;
 
     mutable unsigned _highestSearchCount; ///< highest search count observed during graph build

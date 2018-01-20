@@ -1,6 +1,6 @@
 #
 # Manta - Structural Variant and Indel Caller
-# Copyright (c) 2013-2017 Illumina, Inc.
+# Copyright (c) 2013-2018 Illumina, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,6 +24,6 @@
 #
 
 # Installing top level components
-foreach(topfile ChangeLog.txt COPYRIGHT.txt LICENSE.txt)
+foreach(topfile CHANGELOG.md COPYRIGHT.txt LICENSE.txt)
     install(FILES "${CMAKE_SOURCE_DIR}/${topfile}" DESTINATION "${THIS_DATADIR}")
 endforeach()

@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -63,6 +63,11 @@ runSAS(const SASOptions& opt)
         {
             report_os << quantLevel[quantLevelIndex] << '\t' << rgs.fragStats.quantile(quantLevel[quantLevelIndex]) << '\n';
         }
+        report_os << "Total sampled reads:\t" << rgs.readCounter.totalReadCount() << '\n';
+        report_os << "Total sampled paired reads:\t" << rgs.readCounter.totalPairedReadCount() << '\n';
+        report_os << "Total sampled unpaired reads:\t" << rgs.readCounter.totalUnpairedReadCount() << '\n';
+        report_os << "Total sampled paired reads with low MAPQ:\t" << rgs.readCounter.totalPairedLowMapqReadCount() << '\n';
+        report_os << "Total sampled high-confidence read pairs passing all filters:\t" << rgs.readCounter.totalHighConfidenceReadPairCount() << '\n';
         report_os << '\n';
 
 #ifdef OUTPUT_CDF

@@ -49,11 +49,12 @@ Configuration:
                           allow version control within eclipse
   --build-type=TYPE       specify the build type for CMake (affects compiler
                           options). Allowed values are "Debug", "Release",
-                          "RelWithDebInfo", "ASan" [$build_type]
+                          "RelWithDebInfo", "ASan", "GCov" [$build_type]
                             Debug: No optimization and all debug symbols
                             Release: All portable optimization
                             RelWithDebInfo: Most optimizations, try to keep stack trace info
-                            ASan: Light optimization with google addresss sanitizer on
+                            ASan: Light optimization with google address sanitizer on
+                            GCov: Debug mode with code coverage options to enable gcov
 
 Directory and file names:
   --prefix=PREFIX         install files in tree rooted at PREFIX

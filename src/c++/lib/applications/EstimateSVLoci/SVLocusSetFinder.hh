@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@
 #include "blt_util/pos_processor_base.hh"
 #include "blt_util/stage_manager.hh"
 #include "htsapi/bam_record.hh"
+#include "htsapi/bam_streamer.hh"
 #include "manta/SVLocusScanner.hh"
 #include "svgraph/SVLocusSet.hh"
 
@@ -80,18 +81,22 @@ struct SVLocusSetFinder : public pos_processor_base
         const bam_header_info& bamHeader,
         const reference_contig_segment& refSeq);
 
-    ~SVLocusSetFinder()
+    ~SVLocusSetFinder() override
     {
         flush();
     }
 
     /// \brief Push a new read alignment into the SV graph building process
     ///
+    /// \param[in] streamErrorReporter Reference to the error reporter from the stream which produced \p bamRead.
+    ///              This is only used to improve the detail of exception messages.
+    /// \param[in] bamRead The BAM/CRAM record being pushed into the estimation process.
     /// \param[in] defaultReadGroupIndex The read group index to use in the absence of a BAM read group (RG) tag.
     /// This should effectively be the same as the sample index.
     ///
     void
     update(
+        const stream_state_reporter& streamErrorReporter,
         const bam_record& bamRead,
         const unsigned defaultReadGroupIndex);
 
@@ -140,12 +145,11 @@ private:
     process_pos(const int stage_no,
                 const pos_t pos) override;
 
-    /// \brief Add the input read to this objects running estimate of read depth per position.
+    /// \brief Add the input read to this object's running estimate of read depth per position.
     ///
     /// (see class docs for overview of high depth filtration)
     void
     addToDepthBuffer(
-        const unsigned defaultReadGroupIndex,
         const bam_record& bamRead);
 
     enum hack_t

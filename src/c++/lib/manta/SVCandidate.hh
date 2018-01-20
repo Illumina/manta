@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -167,6 +167,9 @@ public:
     // this is either a micro-insertion in a large-scale SV, or the inserted sequence of an actual insertion
     // in case bp1 and bp2 are on opposite strands (ie. an inversion) the insertSeq is oriented to the fwd strand for bp1
     std::string insertSeq;
+
+    // Assembled contig sequence for outputting in VCF
+    std::string contigSeq;
 
     // for some small indels, the alignment becomes sufficiently complex that a CIGAR string provides better detail
     // (this is provided for any small SV which is more complicated than a simple insert or deletion)

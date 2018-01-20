@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -38,11 +38,11 @@ BOOST_AUTO_TEST_CASE( test_SmallAssembler1 )
 
     AssemblyReadInput reads;
 
-    reads.push_back("ACGTGTATTACC");
-    reads.push_back(  "GTGTATTACCTA");
-    reads.push_back(      "ATTACCTAGTAC");
-    reads.push_back(        "TACCTAGTACTC");
-    reads.push_back("123456789123");
+    reads.emplace_back("ACGTGTATTACC");
+    reads.emplace_back(  "GTGTATTACCTA");
+    reads.emplace_back(      "ATTACCTAGTAC");
+    reads.emplace_back(        "TACCTAGTACTC");
+    reads.emplace_back("123456789123");
 
     AssemblyReadOutput readInfo;
     Assembly contigs;
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE( test_SmallAssembler1 )
     for (unsigned i(0); i<4; ++i)
     {
         BOOST_REQUIRE(readInfo[i].isUsed);
-        BOOST_REQUIRE_EQUAL(readInfo[i].contigId,0u);
+        BOOST_REQUIRE_EQUAL(readInfo[i].contigIds[0],0u);
     }
     BOOST_REQUIRE(! readInfo[4].isUsed);
 }
@@ -74,11 +74,11 @@ BOOST_AUTO_TEST_CASE( test_PoisonRead )
 
     AssemblyReadInput reads;
 
-    reads.push_back("ACGTGTATTACC");
-    reads.push_back(  "GTGTATTACCTA");
-    reads.push_back(      "ATTACCTAGTAC");
-    reads.push_back(        "TACCTAGTACTC");
-    reads.push_back("AAAAAAAAAAAAAAAAAAAA");
+    reads.emplace_back("ACGTGTATTACC");
+    reads.emplace_back(  "GTGTATTACCTA");
+    reads.emplace_back(      "ATTACCTAGTAC");
+    reads.emplace_back(        "TACCTAGTACTC");
+    reads.emplace_back("AAAAAAAAAAAAAAAAAAAA");
 
     AssemblyReadOutput readInfo;
     Assembly contigs;
@@ -90,10 +90,10 @@ BOOST_AUTO_TEST_CASE( test_PoisonRead )
     for (unsigned i(0); i<4; ++i)
     {
         BOOST_REQUIRE(readInfo[i].isUsed);
-        BOOST_REQUIRE_EQUAL(readInfo[i].contigId,0u);
+        BOOST_REQUIRE_EQUAL(readInfo[i].contigIds[0],0u);
     }
     BOOST_REQUIRE(readInfo[4].isUsed);
-    BOOST_REQUIRE_EQUAL(readInfo[4].contigId,0u);
+    BOOST_REQUIRE_EQUAL(readInfo[4].contigIds.size(),0u);
 }
 
 
@@ -110,22 +110,22 @@ BOOST_AUTO_TEST_CASE( test_supportingReadConsistency )
     assembleOpt.minSeedReads = 3;
 
     AssemblyReadInput reads;
-    reads.push_back(        "AAACGTGTATTA");
-    reads.push_back(          "ACGTGTATTACC");
-    reads.push_back(           "CGTGTATTACCT");
-    reads.push_back(            "GTGTATTACCTA");
-    reads.push_back(                "ATTACCTAGTAC");
-    reads.push_back(                  "TACCTAGTACTC");
+    reads.emplace_back(        "AAACGTGTATTA");
+    reads.emplace_back(          "ACGTGTATTACC");
+    reads.emplace_back(           "CGTGTATTACCT");
+    reads.emplace_back(            "GTGTATTACCTA");
+    reads.emplace_back(                "ATTACCTAGTAC");
+    reads.emplace_back(                  "TACCTAGTACTC");
     // the above reads build a contig ACGTG TATTACC TAGTAC
     //
     // Notice ACGTG should not be extended by adding 'A' to the left => AACGTG
     // using the reads below, because they have a different suffix after ACGTG *GCC*
     // Instead, the reads below build a contig CTTA GCTA ACGTG GCC
-    reads.push_back("CCCTTAGCTAAC");
-    reads.push_back(  "CTTAGCTAACGT");
-    reads.push_back(    "TAGCTAACGTGG");
-    reads.push_back(      "GCTAACGTGGCC");
-    reads.push_back(         "AACGTGGCCTAG");
+    reads.emplace_back("CCCTTAGCTAAC");
+    reads.emplace_back(  "CTTAGCTAACGT");
+    reads.emplace_back(    "TAGCTAACGTGG");
+    reads.emplace_back(      "GCTAACGTGGCC");
+    reads.emplace_back(         "AACGTGGCCTAG");
 
 
     AssemblyReadOutput readInfo;
@@ -139,13 +139,13 @@ BOOST_AUTO_TEST_CASE( test_supportingReadConsistency )
     for (unsigned i(0); i<6; ++i)
     {
         BOOST_REQUIRE(readInfo[i].isUsed);
-        BOOST_REQUIRE_EQUAL(readInfo[i].contigId,0u);
+        BOOST_REQUIRE_EQUAL(readInfo[i].contigIds[0],0u);
     }
 
     for (unsigned i(6); i<11; ++i)
     {
         BOOST_REQUIRE(readInfo[i].isUsed);
-        BOOST_REQUIRE_EQUAL(readInfo[i].contigId,1u);
+        BOOST_REQUIRE_EQUAL(readInfo[i].contigIds[0],1u);
     }
 }
 

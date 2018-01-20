@@ -31,7 +31,7 @@ rel2abs() {
   cd $1 && pwd -P
 }
 
-builderImage=centos5PlusGcc49FromSrc
+builderImage=centos6PlusGcc63
 scriptDir=$(rel2abs $(dirname $0))
 #rootDir=$(rel2abs $scriptDir/../../..)
 rootDir=$(rel2abs $rootDir)

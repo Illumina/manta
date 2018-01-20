@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@
 #include <iosfwd>
 #include <map>
 #include <vector>
+#include <htsapi/bam_header_info.hh>
 
 //#define DEBUG_SVDATA
 
@@ -186,9 +187,18 @@ struct SVCandidateSetSequenceFragmentSampleGroup
         }
     }
 
-    /// add a new bam record to the set:
+    /// Add a new bam record to the set
+    ///
+    /// \param[in] bamHeader Bam header information is (only) used to improve the detail of exception messages.
+    /// \param[in] bamRead New bam record to add to the sample group set
+    /// \param[in[ isExpectRepeat If false, raise an exception for a repeated BAM QNAME, otherwise skip all but
+    ///             the first repeated instance.
+    /// \param[in] isNode1 True if this is the first (of two) nodes in the evaluated edge
+    /// \param[in] isSubMapped True if read is below default mapping quality threshold
     void
-    add(const bam_record& bamRead,
+    add(
+        const bam_header_info& bamHeader,
+        const bam_record& bamRead,
         const bool isExpectRepeat,
         const bool isNode1,
         const bool isSubMapped);
@@ -246,6 +256,11 @@ private:
     SVCandidateSetSequenceFragment*
     getSequenceFragment(const pindex_t::key_type& key);
 
+public:
+    /// Record a name for the data source to improve error messages:
+    std::string dataSourceName = "UNKNOWN";
+
+private:
     pair_t _pairs;
     pindex_t _pairIndex;
 

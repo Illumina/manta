@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -42,11 +42,11 @@ struct ReadGroupLabel
         const char* rgLabelInit,
         const bool isCopyPtrsInit = true) :
         isCopyPtrs(isCopyPtrsInit),
-        bamLabel((isCopyPtrs && (NULL != bamLabelInit)) ? strdup(bamLabelInit) : bamLabelInit),
-        rgLabel((isCopyPtrs && (NULL != rgLabelInit)) ? strdup(rgLabelInit) : rgLabelInit)
+        bamLabel((isCopyPtrs && (nullptr != bamLabelInit)) ? strdup(bamLabelInit) : bamLabelInit),
+        rgLabel((isCopyPtrs && (nullptr != rgLabelInit)) ? strdup(rgLabelInit) : rgLabelInit)
     {
-        assert(NULL != bamLabel);
-        assert(NULL != rgLabel);
+        assert(nullptr != bamLabel);
+        assert(nullptr != rgLabel);
     }
 
     ReadGroupLabel(const ReadGroupLabel& rhs) :
@@ -73,7 +73,7 @@ public:
         clear();
     }
 
-    /// sort allowing for NULL string pointers in primary and secondary key:
+    /// sort allowing for nullptr string pointers in primary and secondary key:
     bool
     operator<(
         const ReadGroupLabel& rhs) const
@@ -94,8 +94,8 @@ private:
     {
         if (isCopyPtrs)
         {
-            if (NULL != bamLabel) free(const_cast<char*>(bamLabel));
-            if (NULL != rgLabel) free(const_cast<char*>(rgLabel));
+            if (nullptr != bamLabel) free(const_cast<char*>(bamLabel));
+            if (nullptr != rgLabel) free(const_cast<char*>(rgLabel));
         }
     }
 

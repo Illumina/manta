@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -74,11 +74,11 @@ BOOST_AUTO_TEST_CASE( test_BasicAssembler )
 
     AssemblyReadInput reads;
 
-    reads.push_back("ACGTGTATTACC");
-    reads.push_back(  "GTGTATTACCTA");
-    reads.push_back(      "ATTACCTAGTAC");
-    reads.push_back(        "TACCTAGTACTC");
-    reads.push_back("123456789123");
+    reads.emplace_back("ACGTGTATTACC");
+    reads.emplace_back(  "GTGTATTACCTA");
+    reads.emplace_back(      "ATTACCTAGTAC");
+    reads.emplace_back(        "TACCTAGTACTC");
+    reads.emplace_back("123456789123");
 
     AssemblyReadOutput readInfo;
     Assembly contigs;
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE( test_BasicAssembler )
     for (unsigned i(0); i<4; ++i)
     {
         BOOST_REQUIRE(readInfo[i].isUsed);
-        BOOST_REQUIRE_EQUAL(readInfo[i].contigId,0u);
+        BOOST_REQUIRE_EQUAL(readInfo[i].contigIds[0],0u);
     }
     BOOST_REQUIRE(! readInfo[4].isUsed);
 }
@@ -103,14 +103,14 @@ BOOST_AUTO_TEST_CASE( test_IterativeKmer )
 
     assembleOpt.minWordLength = 3;
     assembleOpt.maxWordLength = 9;
-    assembleOpt.wordStepSize = 2;
+    assembleOpt.wordStepSize = 3;
     assembleOpt.minCoverage = 1;
 
     AssemblyReadInput reads;
 
-    reads.push_back("ACACACACGATG");
-    reads.push_back(        "GATGTCTCTCTC");
-    reads.push_back("123456789123");
+    reads.emplace_back("ACACACACGATG");
+    reads.emplace_back(        "GATGTCTCTCTC");
+    reads.emplace_back("123456789123");
 
     AssemblyReadOutput readInfo;
     Assembly contigs;
@@ -122,11 +122,87 @@ BOOST_AUTO_TEST_CASE( test_IterativeKmer )
     for (unsigned i(0); i<2; ++i)
     {
         BOOST_REQUIRE(readInfo[i].isUsed);
-        BOOST_REQUIRE_EQUAL(readInfo[i].contigId,0u);
+        BOOST_REQUIRE_EQUAL(readInfo[i].contigIds[0],0u);
     }
     BOOST_REQUIRE(! readInfo[2].isUsed);
 }
 
+
+BOOST_AUTO_TEST_CASE( test_branching_basic )
+{
+    // test simple assembly functions at a single word size:
+    IterativeAssemblerOptions assembleOpt;
+
+    assembleOpt.minWordLength = 6;
+    assembleOpt.maxWordLength = 6;
+    assembleOpt.minCoverage = 1;
+    assembleOpt.minSupportReads = 1;
+    assembleOpt.minUnusedReads = 1;
+
+    AssemblyReadInput reads;
+
+    reads.emplace_back("ATATAGACGATG");
+    reads.emplace_back(      "ACGATGTCTATCTT");
+    reads.emplace_back(      "ACGATGTTGGCCTT");
+
+    AssemblyReadOutput readInfo;
+    Assembly contigs;
+
+    runIterativeAssembler(assembleOpt, reads, readInfo, contigs);
+
+    BOOST_REQUIRE_EQUAL(contigs.size(),2u);
+    BOOST_REQUIRE_EQUAL(contigs[0].seq,"ATATAGACGATGTCTATCTT");
+    BOOST_REQUIRE_EQUAL(contigs[1].seq,"ATATAGACGATGTTGGCCTT");
+
+    BOOST_REQUIRE(readInfo[0].isUsed);
+    BOOST_REQUIRE_EQUAL(readInfo[0].contigIds[0],0u);
+    BOOST_REQUIRE_EQUAL(readInfo[0].contigIds[1],1u);
+
+    BOOST_REQUIRE(readInfo[1].isUsed);
+    BOOST_REQUIRE_EQUAL(readInfo[1].contigIds[0],0u);
+
+    BOOST_REQUIRE(readInfo[2].isUsed);
+    BOOST_REQUIRE_EQUAL(readInfo[2].contigIds[0],1u);
+}
+
+
+BOOST_AUTO_TEST_CASE( test_branching_iterative )
+{
+    // test simple assembly functions at a single word size:
+    IterativeAssemblerOptions assembleOpt;
+
+    assembleOpt.minWordLength = 3;
+    assembleOpt.maxWordLength = 9;
+    assembleOpt.wordStepSize = 3;
+    assembleOpt.minCoverage = 1;
+    assembleOpt.minSupportReads = 1;
+    assembleOpt.minUnusedReads = 1;
+
+    AssemblyReadInput reads;
+
+    reads.emplace_back("ACACACACGATG");
+    reads.emplace_back(        "GATGGCCCCCCC");
+    reads.emplace_back(        "GATGTCTCTCTC");
+
+    AssemblyReadOutput readInfo;
+    Assembly contigs;
+
+    runIterativeAssembler(assembleOpt, reads, readInfo, contigs);
+
+    BOOST_REQUIRE_EQUAL(contigs.size(),2u);
+    BOOST_REQUIRE_EQUAL(contigs[0].seq,"ACACACACGATGGCCCCCCC");
+    BOOST_REQUIRE_EQUAL(contigs[1].seq,"ACACACACGATGTCTCTCTC");
+
+    BOOST_REQUIRE(readInfo[0].isUsed);
+    BOOST_REQUIRE_EQUAL(readInfo[0].contigIds[0],0u);
+    BOOST_REQUIRE_EQUAL(readInfo[0].contigIds[1],1u);
+
+    BOOST_REQUIRE(readInfo[1].isUsed);
+    BOOST_REQUIRE_EQUAL(readInfo[1].contigIds[0],0u);
+
+    BOOST_REQUIRE(readInfo[2].isUsed);
+    BOOST_REQUIRE_EQUAL(readInfo[2].contigIds[0],1u);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

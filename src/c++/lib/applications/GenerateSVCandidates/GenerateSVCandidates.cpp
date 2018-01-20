@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -49,8 +49,20 @@ dumpEdgeInfo(
     std::ostream& os)
 {
     os << edge;
-    os << "\tnode1:" << set.getLocus(edge.locusIndex).getNode(edge.nodeIndex1);
-    os << "\tnode2:" << set.getLocus(edge.locusIndex).getNode(edge.nodeIndex2);
+    const auto& node1(set.getLocus(edge.locusIndex).getNode(edge.nodeIndex1));
+    os << "\tnode1:" << node1;
+    os << "\tnode1:";
+    summarizeGenomeInterval(set.header, node1.getInterval(), os);
+    os << "\n";
+
+    if (! edge.isSelfEdge())
+    {
+        const auto& node2(set.getLocus(edge.locusIndex).getNode(edge.nodeIndex2));
+        os << "\tnode2:" << node2;
+        os << "\tnode2:";
+        summarizeGenomeInterval(set.header, node2.getInterval(), os);
+        os << "\n";
+    }
 }
 
 
@@ -174,7 +186,7 @@ runGSC(
     EdgeRuntimeTracker edgeTracker(opt.edgeRuntimeFilename);
     GSCEdgeStatsManager edgeStatMan(opt.edgeStatsFilename);
 
-    const SVLocusScanner readScanner(opt.scanOpt, opt.statsFilename, opt.alignFileOpt.alignmentFilename, opt.isRNA, !opt.isUnstrandedRNA);
+    const SVLocusScanner readScanner(opt.scanOpt, opt.statsFilename, opt.alignFileOpt.alignmentFilenames, opt.isRNA, !opt.isUnstrandedRNA);
 
     SVFinder svFind(opt, readScanner, edgeTracker,edgeStatMan);
     MultiJunctionFilter svMJFilter(opt,edgeStatMan);
@@ -189,21 +201,21 @@ runGSC(
     std::vector<SVCandidate> svs;
     std::vector<SVMultiJunctionCandidate> mjSVs;
 
-    const unsigned sampleSize(opt.alignFileOpt.alignmentFilename.size());
+    const unsigned sampleSize(opt.alignFileOpt.alignmentFilenames.size());
     std::vector<bam_streamer_ptr> origBamStreamPtrs;
     std::vector<bam_dumper_ptr> supportBamDumperPtrs;
 
     const bool isGenerateSupportBam(opt.supportBamStub.size() > 0);
     if (isGenerateSupportBam)
     {
-        for (unsigned idx(0); idx<sampleSize; ++idx)
+        for (unsigned sampleIndex(0); sampleIndex<sampleSize; ++sampleIndex)
         {
-            std::string alignmentFile(opt.alignFileOpt.alignmentFilename[idx]);
+            std::string alignmentFile(opt.alignFileOpt.alignmentFilenames[sampleIndex]);
             bam_streamer_ptr bamStreamPtr(new bam_streamer(alignmentFile.c_str(), opt.referenceFilename.c_str()));
             origBamStreamPtrs.push_back(bamStreamPtr);
 
             std::string supportBamName(opt.supportBamStub
-                                       + ".bam_" + std::to_string(idx)
+                                       + ".bam_" + std::to_string(sampleIndex)
                                        + ".bam");
             const bam_hdr_t& header(bamStreamPtr->get_header());
             bam_dumper_ptr bamDumperPtr(new bam_dumper(supportBamName.c_str(), header));
@@ -258,13 +270,14 @@ runGSC(
         catch (illumina::common::ExceptionData& e)
         {
             std::ostringstream oss;
+            oss << "Exception caught while processing graph edge: ";
             dumpEdgeInfo(edge,cset,oss);
-            e << illumina::common::ExceptionMsg(oss.str());
+            e << boost::error_info<struct current_edge_info,std::string>(oss.str());
             throw;
         }
         catch (...)
         {
-            log_os << "Exception caught while processing graph component: ";
+            log_os << "Exception caught while processing graph edge: ";
             dumpEdgeInfo(edge,cset,log_os);
             throw;
         }

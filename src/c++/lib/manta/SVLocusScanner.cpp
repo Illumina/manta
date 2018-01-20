@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -324,8 +324,8 @@ parseSACandidatesFromRead(
         if (splitAlignmentSegmentFields.size() != SAFields::SIZE)
         {
             std::ostringstream oss;
-            oss << "ERROR: Unexpected format in the split alignment segment: '" << splitAlignmentSegmentString << "'\n";
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            oss << "Unexpected format in the split alignment segment: '" << splitAlignmentSegmentString << "'";
+            BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
         }
 
         /// filter split reads with low MappingQuality:
@@ -339,8 +339,8 @@ parseSACandidatesFromRead(
         if (ci == chromToIndex.end())
         {
             std::ostringstream oss;
-            oss << "ERROR: Split alignment segment maps to an unknown chromosome: '" << splitAlignmentChrom << "'\n";
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            oss << "Split alignment segment maps to an unknown chromosome: '" << splitAlignmentChrom << "'";
+            BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
         }
 
         splitAlignments.emplace_back();
@@ -352,8 +352,8 @@ parseSACandidatesFromRead(
             if (! ((splitAlignmentStrand=='-') || (splitAlignmentStrand=='+')))
             {
                 std::ostringstream oss;
-                oss << "ERROR: Unexpected strand entry in split alignment segment: '" << splitAlignmentSegmentString << "'\n";
-                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                oss << "Unexpected strand entry in split alignment segment: '" << splitAlignmentSegmentString << "'";
+                BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
             sal.is_fwd_strand = (splitAlignmentStrand == '+');
         }
@@ -371,7 +371,7 @@ parseSACandidatesFromRead(
 /// supports parsing out any number of split alignments, and this function may be updated to do so in the future.
 ///
 /// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2, etc..)
-/// \param[inout] candidates New SVObservation objects are appended to this vector. Contents of the vector are preserved
+/// \param[in,out] candidates New SVObservation objects are appended to this vector. Contents of the vector are preserved
 ///                        but not read.
 static
 void
@@ -410,7 +410,7 @@ getSACandidatesFromRead(
 /// \brief Convert all large indels already present in a single read's alignment into SVObservation objects
 ///
 /// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2, etc..)
-/// \param[inout] candidates New SVObservation objects are appended to this vector. Contents of the vector are preserved
+/// \param[in,out] candidates New SVObservation objects are appended to this vector. Contents of the vector are preserved
 ///                        but not read.
 static
 void
@@ -451,7 +451,7 @@ getSVCandidatesFromReadIndels(
 
             std::ostringstream oss;
             oss << "Can't process unexpected alignment pattern: " << align << "\n";
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
         }
 
         unsigned nPathSegments(1); // number of path segments consumed
@@ -523,7 +523,7 @@ getSVCandidatesFromReadIndels(
 /// in the current read alignment.
 ///
 /// \param[in] dnaFragmentSVEvidenceSource The source of SV evidence within the read fragment (read1, read2, etc..)
-/// \param[inout] candidates New SVObservation objects are appended to this vector. Contents of the vector are preserved
+/// \param[in,out] candidates New SVObservation objects are appended to this vector. Contents of the vector are preserved
 ///                        but not read.
 static
 void
@@ -648,11 +648,11 @@ struct AlignmentPairAnalyzer
     /// \brief Convert the input alignments (provided in ::reset) into a structural variant observation
     ///
     /// The regions where each of the two breakends are likely to be found in the event that an SV exists are computed
-    /// from the two read alignments and the fragement size distribution.
+    /// from the two read alignments and the fragment size distribution.
     ///
     /// Requires that ::isAnomalousReadPair has already been called since the last call to ::reset.
     ///
-    /// \param sv[out] The SVObservation inferred from the anomalous read pair
+    /// \param[out] sv The SVObservation inferred from the anomalous read pair
     void
     getSVObservation(
         SVObservation& sv)
@@ -956,7 +956,7 @@ private:
 /// \param[in] localAlign Pre-computed alignment data generated from \p localRead as a caching optimization
 /// \param[in] remoteReadPtr Pointer to the bam record of \p localRead's mate. If nullptr, then properties of the mate
 ///                          alignment are inferred from the local alignment record.
-/// \param[inout] candidates New SVObservation objects are appended to this vector. Contents of the vector are preserved
+/// \param[in,out] candidates New SVObservation objects are appended to this vector. Contents of the vector are preserved
 ///                          but not read.
 static
 void
@@ -986,7 +986,7 @@ getSVCandidatesFromPair(
     // All information about the remote alignment is consolidated to one object. If the remote alignment record is
     // available the remote alignment will be more accurate.
     const bool isRemoteReadAvailable(nullptr != remoteReadPtr);
-    const SimpleAlignment remoteAlign(isRemoteReadAvailable ? getAlignment(*remoteReadPtr) : getFakeMateAlignment(localRead));
+    const SimpleAlignment remoteAlign(isRemoteReadAvailable ? getAlignment(*remoteReadPtr) : getKnownOrFakedMateAlignment(localRead));
 
     AlignmentPairAnalyzer pairInspector(opt, dopt, rstats, bamHeader);
     pairInspector.reset(localAlign, remoteAlign, (! isRemoteReadAvailable), localRead.is_first());
@@ -1026,7 +1026,7 @@ getSVCandidatesFromShadow(
     static const bool isComplex(true);
     pos_t singletonGenomePos(0);
     int targetId(0);
-    if (NULL == remoteReadPtr)
+    if (nullptr == remoteReadPtr)
     {
         if (!localRead.is_unmapped()) return;
         // need to take care of this case
@@ -1172,7 +1172,7 @@ getReadBreakendsImpl(
             if (nullptr == remoteRefSeqPtr)
             {
                 static const char msg[] = "ERROR: remoteRefSeqPtr cannot be null";
-                BOOST_THROW_EXCEPTION(LogicException(msg));
+                BOOST_THROW_EXCEPTION(GeneralException(msg));
             }
             getSingleReadSVCandidates(opt, dopt, remoteRead, remoteAlign,
                                       bamHeader, (*remoteRefSeqPtr),
@@ -1270,7 +1270,7 @@ getReadBreakendsImpl(
 
             oss << "\tlocal_bam_record: " <<  localRead << "\n"
                 << "\tremote_bam record: ";
-            if (NULL==remoteReadPtr)
+            if (nullptr==remoteReadPtr)
             {
                 oss << "NONE";
             }
@@ -1280,7 +1280,7 @@ getReadBreakendsImpl(
             }
             oss << "\n"
                 << "\tSVCandidate: " << sv << "\n";
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
         }
     }
 }
@@ -1335,7 +1335,7 @@ getSVLociImpl(
                 << "\tlocal_breakend: " << localBreakend << "\n"
                 << "\tremote_breakend: " << remoteBreakend << "\n"
                 << "\tbam_record: " << bamRead << "\n";
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
         }
 
         // update evidence stats:
@@ -1479,6 +1479,40 @@ SVLocusScanner(
         const int largeEventRegionMax(rgStats.properPair.max*FragmentSizeType::maxLargeEventRegionFactor);
 
         rgStats.largeEventRegionScaler.init(largeEventRegionMin, largeEventRegionMax);
+    }
+}
+
+
+
+void
+SVLocusScanner::
+checkReadSize(
+    const stream_state_reporter& alignmentStream,
+    const bam_record& bamRead)
+{
+    ALIGNPATH::path_t path;
+    bam_cigar_to_apath(bamRead.raw_cigar(), bamRead.n_cigar(), path);
+    const unsigned alignedSize(ALIGNPATH::apath_read_length(path));
+    const unsigned seqSize(bamRead.read_size());
+
+    if (seqSize == 0)
+    {
+        std::ostringstream oss;
+        oss << "Input alignment record contains unknown read sequence (SEQ='*'), "
+            << "which cannot be used for variant calling:\n";
+        alignmentStream.report_state(oss);
+        oss << "\n";
+        BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
+    }
+
+    if (seqSize != alignedSize)
+    {
+        std::ostringstream oss;
+        oss << "Read length implied by mapped alignment ("
+            << alignedSize << ") does not match sequence length ("
+            << seqSize << "):\n";
+        alignmentStream.report_state(oss);
+        BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
     }
 }
 

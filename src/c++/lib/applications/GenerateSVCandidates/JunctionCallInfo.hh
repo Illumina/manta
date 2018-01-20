@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -36,30 +36,30 @@
 struct JunctionCallInfo
 {
     JunctionCallInfo() :
-        _sv(NULL),
-        _evidence(NULL),
-        _baseInfo(NULL),
+        _sv(nullptr),
+        _evidence(nullptr),
+        _baseInfo(nullptr),
         _spanningPairWeight(0)
     {}
 
     const SVCandidate&
     getSV() const
     {
-        assert(NULL != _sv);
+        assert(nullptr != _sv);
         return *_sv;
     }
 
     const SVEvidence&
     getEvidence() const
     {
-        assert(NULL != _evidence);
+        assert(nullptr != _evidence);
         return *_evidence;
     }
 
     const SVScoreInfo&
     getBaseInfo() const
     {
-        assert(NULL != _baseInfo);
+        assert(nullptr != _baseInfo);
         return *_baseInfo;
     }
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # Manta - Structural Variant and Indel Caller
-# Copyright (c) 2013-2017 Illumina, Inc.
+# Copyright (c) 2013-2018 Illumina, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -135,10 +135,31 @@ def main() :
     # in boost::format as a regular mod operator. For these versions, an extra suppression is required.
     #
     if True :
-        maxCppcheckBoostFormatBugVersion = "1.69"
-        isBoostFormatBugVersion = (compareVersions(cppcheckVersion, maxCppcheckBoostFormatBugVersion) <= 0)
+        maxBoostFormatBugVersion = "1.69"
+        isBoostFormatBugVersion = (compareVersions(cppcheckVersion, maxBoostFormatBugVersion) <= 0)
         if isBoostFormatBugVersion :
             suppressList.append("zerodivcond")
+
+    # cppcheck v1.72 the will identify lots of FP unused private method errors
+    #
+    # cppcheck 1.71 and 1.73 are known to not have this issue
+    if True :
+        minUnusedPrivateBugVersion = "1.72"
+        maxUnusedPrivateBugVersion = "1.72"
+        isUnusedPrivateBugVersion = (compareVersions(cppcheckVersion, minUnusedPrivateBugVersion) >= 0) and \
+                                    (compareVersions(cppcheckVersion, maxUnusedPrivateBugVersion) <= 0)
+        if isUnusedPrivateBugVersion :
+            suppressList.append("unusedPrivateFunction")
+
+    # cppcheck v1.71 gives FP unused struct member errors
+    if True :
+        minUnusedStructMemberBugVersion = "1.71"
+        maxUnusedStructMemberBugVersion = "1.71"
+        isUnusedStructMemberBugVersion = (compareVersions(cppcheckVersion, minUnusedStructMemberBugVersion) >= 0) and \
+                                         (compareVersions(cppcheckVersion, maxUnusedStructMemberBugVersion) <= 0)
+        if isUnusedStructMemberBugVersion :
+            suppressList.append("unusedStructMember")
+
 
     for stype in suppressList :
         checkCmd.append("--suppress="+stype)

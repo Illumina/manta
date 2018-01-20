@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -96,7 +96,7 @@ SVFinder(
 
     // setup regionless bam_streams:
     // setup all data for main analysis loop:
-    for (const std::string& afile : opt.alignFileOpt.alignmentFilename)
+    for (const std::string& afile : opt.alignFileOpt.alignmentFilenames)
     {
         // avoid creating shared_ptr temporaries:
         streamPtr tmp(new bam_streamer(afile.c_str(), opt.referenceFilename.c_str()));
@@ -164,8 +164,6 @@ addSVNodeRead(
 {
     using namespace illumina::common;
 
-    if (scanner.isMappedReadFilteredCore(bamRead)) return;
-
     if (bamRead.map_qual() < scanner.getMinTier2MapQ()) return;
 
     const bool isSubMapped(bamRead.map_qual() < scanner.getMinMapQ());
@@ -215,7 +213,7 @@ addSVNodeRead(
                 std::ostringstream oss;
                 oss << "Unexpected svlocus counts from bam record: " << bamRead << "\n"
                     << "\tlocus: " << locus << "\n";
-                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
             if (! locus.getNode(readRemoteIndex).getInterval().isIntersect(remoteNode.getInterval())) continue; //todo should this intersect be checked in swapped orientation?
         }
@@ -226,7 +224,7 @@ addSVNodeRead(
 
         if (! locus.getNode(readLocalIndex).getInterval().isIntersect(localNode.getInterval())) continue; //todo should this intersect be checked in swapped orientation?
 
-        svDataGroup.add(bamRead, isExpectRepeat, isNode1, isSubMapped);
+        svDataGroup.add(bamHeader, bamRead, isExpectRepeat, isNode1, isSubMapped);
 
         // once any loci has achieved the local/remote overlap criteria, there's no reason to keep scanning loci
         // of the same bam record:
@@ -340,6 +338,9 @@ addSVNodeData(
         SVCandidateSetSequenceFragmentSampleGroup& svDataGroup(svData.getDataGroup(bamIndex));
         bam_streamer& readStream(*bamPtr);
 
+        // record the associated stream name to improve error messages
+        svDataGroup.dataSourceName = readStream.name();
+
         // set bam stream to new search interval:
         readStream.resetRegion(searchInterval.tid,searchInterval.range.begin_pos(),searchInterval.range.end_pos());
 
@@ -353,16 +354,13 @@ addSVNodeData(
             const pos_t refPos(bamRead.pos()-1);
             if (refPos >= searchEndPos) break;
 
+            if (SVLocusScanner::isMappedReadFilteredCore(bamRead)) continue;
+
             if (isMaxDepth)
             {
                 if (! isTumor)
                 {
-                    // depth estimation relies on a simple filtration criteria to stay in sync with the chromosome mean
-                    // depth estimates:
-                    if (! bamRead.is_unmapped())
-                    {
-                        addReadToDepthEst(bamRead, searchBeginPos, normalDepthBuffer);
-                    }
+                    addReadToDepthEst(bamRead, searchBeginPos, normalDepthBuffer);
                 }
 
                 assert(refPos<searchEndPos);
@@ -416,7 +414,7 @@ checkResult(
                 {
                     std::ostringstream oss;
                     oss << "Searching for SVIndex: " << sva.index << " with svSize: " << svCount << "\n";
-                    BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                    BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
                 }
 
                 if (SVEvidenceType::isPairType(sva.evtype))
@@ -449,7 +447,7 @@ checkResult(
                 << "\tSVreadCount: " << svObsReadCount << " DataReadCount: " << dataObsReadCount << "\n"
                 << "\tSVpaircount: " << svObsPairCount << " DataPaircount: " << dataObsPairCount << "\n"
                 << "\tsvIndex: " << svIndex << " SV: " << svs[svIndex];
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
 
         }
     }

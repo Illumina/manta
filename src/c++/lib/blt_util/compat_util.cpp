@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -37,10 +37,10 @@ bool
 compat_realpath(std::string& path)
 {
     errno=0;
-    const char* newpath(realpath(path.c_str(),NULL));
-    if ((NULL==newpath) || (errno!=0))
+    const char* newpath(realpath(path.c_str(),nullptr));
+    if ((nullptr==newpath) || (errno!=0))
     {
-        if (NULL!=newpath) free((void*)newpath);
+        if (nullptr!=newpath) free((void*)newpath);
         return false;
     }
     path = newpath;
@@ -74,6 +74,6 @@ compat_basename(const char* str)
     static const char pathsep('/');
 #endif
     const char* res(strrchr(str,pathsep));
-    if (NULL==res) return str;
+    if (nullptr==res) return str;
     return res+1;
 }

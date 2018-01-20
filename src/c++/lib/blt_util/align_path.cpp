@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -45,8 +45,8 @@ unknown_cigar_error(const char* const cigar,
                     const char* const cptr)
 {
     std::ostringstream oss;
-    oss << "ERROR: can't parse cigar string: " << cigar << "\n"
-        << "\tunexpected character: '" << *cptr << "' at position: " << (cptr-cigar+1) << "\n";
+    oss << "Can't parse cigar string: " << cigar << "\n"
+        << "\tunexpected character: '" << *cptr << "' at position: " << (cptr-cigar+1);
     throw blt_exception(oss.str().c_str());
 }
 
@@ -88,7 +88,7 @@ cigar_to_apath(const char* cigar,
 {
     using illumina::blt_util::parse_unsigned;
 
-    assert(NULL != cigar);
+    assert(nullptr != cigar);
 
     apath.clear();
 
@@ -550,14 +550,6 @@ apath_clip_adder(path_t& apath,
 
 
 
-// 1. remove zero-length segments
-// 2. remove pads
-// 3. condense repeated segment types
-// 4. reduce adjacent insertion/deletion tags to a single pair
-// 5. replace NDN pattern with single SKIP segment
-//
-// return true if path has been altered
-//
 bool
 apath_cleaner(path_t& apath)
 {

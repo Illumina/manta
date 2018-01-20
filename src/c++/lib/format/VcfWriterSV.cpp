@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 /// \file
 /// \author Chris Saunders
 /// \author Felix Schlesinger
+/// \author Naoki Nariai
 ///
 
 #include "format/VcfWriterSV.hh"
@@ -49,10 +50,12 @@ VcfWriterSV::
 VcfWriterSV(
     const std::string& referenceFilename,
     const SVLocusSet& set,
-    std::ostream& os) :
+    std::ostream& os,
+    const bool& isOutputContig) :
     _referenceFilename(referenceFilename),
-    _header(set.header),
-    _os(os)
+    _isOutputContig(isOutputContig),
+    _os(os),
+    _header(set.header)
 {
 }
 
@@ -94,6 +97,12 @@ writeHeaderPrefix(
     _os << "##INFO=<ID=RIGHT_SVINSSEQ,Number=.,Type=String,Description=\"Known right side of insertion for an insertion of unknown length\">\n";
     _os << "##INFO=<ID=INV3,Number=0,Type=Flag,Description=\"Inversion breakends open 3' of reported location\">\n";
     _os << "##INFO=<ID=INV5,Number=0,Type=Flag,Description=\"Inversion breakends open 5' of reported location\">\n";
+
+    // if "--outputContig" is specified, then print out INFO tag for Assembled contig sequence
+    if (_isOutputContig)
+    {
+        _os << "##INFO=<ID=CONTIG,Number=1,Type=String,Description=\"Assembled contig sequence\">\n";
+    }
 
     addHeaderInfo();
 
@@ -394,6 +403,10 @@ writeTransloc(
     {
         infotags.push_back("IMPRECISE");
     }
+    else if (_isOutputContig)
+    {
+        infotags.push_back("CONTIG=" + sv.contigSeq);
+    }
 
     if (bpArange.size() > 1)
     {
@@ -538,12 +551,6 @@ writeInvdel(
     pos += bpABkptAdjust;
     endPos += bpBBkptAdjust;
 
-    if (isImprecise)
-    {
-        // check against the rare IMPRECISE case arising when CIEND is a subset of CIPOS:
-        endPos=std::max(endPos,pos+1);
-    }
-
     if (pos<1) return;
 
     // get REF
@@ -560,10 +567,10 @@ writeInvdel(
             using namespace illumina::common;
 
             std::ostringstream oss;
-            oss << "ERROR: Unexpected reference allele size: " << ref.size() << "\n";
+            oss << "Unexpected reference allele size: " << ref.size() << "\n";
             oss << "\tExpected: " << (1+endRefPos-beginRefPos) << "\n";
             oss << "\tbeginRefPos: " << beginRefPos << " endRefPos: " << endRefPos << " isSmallVariant: " << isSmallVariant << "\n";
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
         }
     }
 
@@ -624,6 +631,10 @@ writeInvdel(
     if (isImprecise)
     {
         infoTags.push_back("IMPRECISE");
+    }
+    else if (_isOutputContig)
+    {
+        infoTags.push_back("CONTIG=" + sv.contigSeq);
     }
 
     if (bpArange.size() > 1)
@@ -765,8 +776,8 @@ writeSVCore(
         using namespace illumina::common;
 
         std::ostringstream oss;
-        oss << "ERROR: sv candidate cannot be classified: " << sv << "\n";
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        oss << "SV candidate cannot be classified: " << sv;
+        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 
     try

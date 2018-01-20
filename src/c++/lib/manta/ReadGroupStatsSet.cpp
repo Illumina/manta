@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -85,7 +85,7 @@ merge(
         const ReadGroupLabel& mkey(rhs.getKey(i));
         if (_group.test_key(mkey))
         {
-            log_os << "ERROR: Can't merge stats set objects with repeated key: '" << mkey << "'\n";
+            log_os << "Can't merge stats set objects with repeated key: '" << mkey << "'";
             exit(EXIT_FAILURE);
         }
 
@@ -100,7 +100,7 @@ ReadGroupStatsSet::
 save(
     const char* filename) const
 {
-    assert(NULL != filename);
+    assert(nullptr != filename);
     std::ofstream ofs(filename);
     boost::archive::xml_oarchive oa(ofs);
 
@@ -129,7 +129,7 @@ load(
 {
     clear();
 
-    assert(NULL != filename);
+    assert(nullptr != filename);
     std::ifstream ifs(filename);
     boost::archive::xml_iarchive ia(ifs);
 

@@ -13,8 +13,7 @@
 
 FROM centos:6
 
-# add standard centos6 packages
-# adding cmake here for extra speed even though starka will bootstrap this
+# add standard centos6 packages - adding cmake here for extra speed even though the build system could bootstrap this
 RUN yum install -y bzip2 gcc gcc-c++ tar wget zlib-devel cmake git
 
 # build gcc 4.9 from source

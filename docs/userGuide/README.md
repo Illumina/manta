@@ -35,6 +35,7 @@ Manta User Guide
     * [Exome/Targeted](#exometargeted)
     * [Call regions](#call-regions)
     * [Unpaired tumor sample](#unpaired-tumor-sample)
+    * [Output assembled contigs](#output-assembled-contigs)
   * [RNA-Seq](#rna-seq)
   * [High sensitivity calling](#high-sensitivity-calling)
   * [De novo calling](#de-novo-calling)
@@ -228,6 +229,7 @@ joint diploid sample analysis.
 The following limitations exist on the input BAM or CRAM files provided to
 Manta:
 
+* Alignments cannot have an unknown read sequence (SEQ="*")
 * Alignments cannot contain the "=" character in the SEQ field.
 * Alignments cannot use the sequence match/mismatch ("="/"X") CIGAR notation
 * RG (read group) tags in the alignment records are ignored -- each file will be
@@ -269,19 +271,20 @@ is produced for a tumor/normal subtraction. These files are:
   caller without scoring by manta itself (by default manta scoring starts
   at size 51).
 * __candidateSmallIndels.vcf.gz__
-    * Subset of the candidateSV.vcf.gz file containing only simple insertion and
+    * Subset of the __candidateSV.vcf.gz__ file containing only simple insertion and
   deletion variants of size 50 or less. Passing this file to a small variant caller
-  like strelka or starling (Isaac Variant Caller) will provide continuous
-  coverage over all indel sizes when the small variant caller and manta outputs are
-  evaluated together. Alternate small indel candidate sets can be parsed out of the
-  candidateSV.vcf.gz file if this candidate set is not appropriate.
+  will provide continuous coverage over all indel sizes when the small variant caller
+  and manta outputs are evaluated together. Alternate small indel candidate sets
+  can be parsed out of the __candidateSV.vcf.gz file__ if this candidate set is not
+  appropriate.
 
 For tumor-only analysis, Manta will produce an additional VCF:
 
 * __tumorSV.vcf.gz__
-    * Unscored SV and indel candidates (same content as the __candidateSV.vcf.gz__ above),
-  but including additional details: (1) paired and split read supporting evidence counts
-  for each allele (2) a subset of the filters from the scored tumor-normal model
+    * Subset of the __candidateSV.vcf.gz__ file after removing redundant candidates and
+  small indels of size 50 or less. The SVs are not scored, but including additional
+  details: (1) paired and split read supporting evidence counts for each allele
+  (2) a subset of the filters from the scored tumor-normal model
   are applied to the single tumor case to improve precision.
 
 ### Manta VCF reporting format
@@ -356,6 +359,7 @@ JUNCTION_QUAL | If the SV junction is part of an EVENT (ie. a multi-adjacency va
 SOMATIC | Flag indicating a somatic variant
 SOMATICSCORE | Somatic variant quality score
 JUNCTION_SOMATICSCORE | If the SV junction is part of an EVENT (ie. a multi-adjacency variant), this field provides the SOMATICSCORE value for the adjacency in question only
+CONTIG | Assembled contig sequence, if the variant is not imprecise (with `--outputContig`)
 
 #### VCF FORMAT Fields
 
@@ -595,7 +599,7 @@ These options are useful for Manta development and debugging:
 
 #### Exome/Targeted
 
-Supplying the '--exome' flag at configuration time will provide
+Supplying the `--exome` flag at configuration time will provide
 appropriate settings for WES and other regional enrichment
 analyses. At present this flag disables all high depth filters, which
 are designed to exclude pericentromeric reference compressions in the
@@ -606,7 +610,19 @@ high sensitivity calling documentation below.
 
 #### Call regions
 
-Manta calls the entire genome by default, however variant calling may be restricted to an arbitrary subset of the genome by providing a region file in BED format with the --callRegions configuration option. The BED file must be bgzip-compressed and tabix-indexed, and only one such BED file may be specified. When specified, all VCF output is restricted to the provided call regions only, however statistics derived from the input data (such as expected fragment size distribution) will not be restricted to the call regions. Note in particular that even when --callRegions is specified, the --exome flag is still required for exome or targeted data to get appropriate depth filtration behavior for non-WGS cases.
+Manta calls the entire genome by default, however variant calling may be restricted to
+an arbitrary subset of the genome by providing a region file in BED format with
+the `--callRegions` configuration option. The BED file must be bgzip-compressed and tabix-indexed,
+and only one such BED file may be specified. When specified, all VCF output is restricted to
+the provided call regions only, however statistics derived from the input data
+(such as expected fragment size distribution) will not be restricted to the call regions.
+
+It is not recommended to set up a large number of call regions because
+it may cause Manta to have a reduced efficiency in segmenting and processing the genome.
+
+Note in particular that even when `--callRegions` is specified,
+the `--exome` flag is still required for exome or targeted data
+to get appropriate depth filtration behavior for non-WGS cases.
 
 #### Unpaired tumor sample
 
@@ -638,6 +654,14 @@ filtered because they have 15 and 19 split-read counts, respectively, supporting
 
 For low allele frequency variants, it may also be helpful to consider the
 high sensitivity calling documentation below.
+
+
+#### Output assembled contigs
+
+Using the `--outputContig` option, Manta can be configured to output assembled contig sequences
+in the final VCF files.
+The contig sequence of each precise SV will be provided in the INFO field `CONTIG`.
+
 
 ### RNA-Seq
 

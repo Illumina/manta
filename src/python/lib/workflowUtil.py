@@ -1,6 +1,6 @@
 #
 # Manta - Structural Variant and Indel Caller
-# Copyright (c) 2013-2017 Illumina, Inc.
+# Copyright (c) 2013-2018 Illumina, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,13 +21,10 @@
 util -- simple utilities shared by bwa/gatk workflow objects
 """
 
-__author__ = "Chris Saunders"
-
 
 
 import os
 import re
-import subprocess
 
 
 
@@ -87,7 +84,7 @@ def which(searchFile) :
 
 def parseGenomeRegion(regionStr) :
     """
-    parse a samtools region string and return a (chrom,start,end) tuple
+    parse a samtools region string and return a hash on keys ("chrom","start","end")
 
     missing start and end values will be entered as None
     """
@@ -182,13 +179,13 @@ def getFastaChromOrderSize(faiFile) :
 
 
 
-def getChromIntervals(chromOrder,chromSizes,segmentSize, genomeRegion = None) :
+def getChromIntervals(chromOrder, chromSizes, segmentSize, genomeRegion = None) :
     """
     generate chromosome intervals no greater than segmentSize
 
-    chromOrder - iterable object of chromosome names
-    chromSizes - a hash of chrom sizes
-    genomeRegionList - optionally restrict chrom intervals to only cover a list of specified chromosome region
+    @param chromOrder - iterable object of chromosome names
+    @param chromSizes - a hash of chrom sizes
+    @param genomeRegion - optionally restrict chrom intervals to only cover a list of specified chromosome regions
 
     return chromIndex,chromLabel,start,end,chromSegment
     where start and end are formatted for use with samtools
@@ -219,115 +216,6 @@ def getChromIntervals(chromOrder,chromSizes,segmentSize, genomeRegion = None) :
             end=min(start+(segSize-1),chromStart+chromSize)
             yield (chromIndex,chromLabel,start,end,i,genomeRegion)
             start=end+1
-
-
-def getOverlapCallRegions(params, genomeRegion) :
-    """
-    determine a set of overlapping regions between regions arguments and the callRegions bed file
-
-    \return a list of overlapping genomic regions for calling
-    """
-
-    maxSubregionCallGap = 5000
-    subregions = []
-
-    chrom = genomeRegion["chrom"]
-    genomeRegionStart = genomeRegion["start"]
-    genomeRegionEnd = genomeRegion["end"]
-    genomeRegionStr = ("%s:%s-%s" % (chrom, genomeRegionStart, genomeRegionEnd))
-    # get overlapping subregions
-    tabixCmd = [params.tabixBin, params.callRegionsBed, genomeRegionStr]
-    proc = subprocess.Popen(tabixCmd, stdout=subprocess.PIPE)
-    for line in proc.stdout:
-        # format check of the bed file
-        words = line.strip().split()
-        if len(words) < 3 :
-            raise Exception("Unexpected format in bed file: %s\n%s" %
-                            (params.callRegionsBed, line))
-        callRegionStart = int(words[1])+1
-        callRegionEnd = int(words[2])
-        if callRegionEnd < callRegionStart :
-            raise Exception("Unexpected format in bed file: %s\n%s" %
-                            (params.callRegionsBed, line))
-
-        isStartNewSubregion = True
-        prevSubregionEnd = 0
-        if len(subregions) > 0 :
-            # don't start a new subregion unless it's 5kb away from the end of the previous subregion
-            prevSubregionEnd = subregions[-1]["end"]
-            callGap = callRegionStart - prevSubregionEnd
-            isStartNewSubregion = (callGap > maxSubregionCallGap)
-
-        subregionEnd = min(genomeRegionEnd, callRegionEnd)
-        if isStartNewSubregion :
-            subregionStart = max(genomeRegionStart, callRegionStart)
-            subregions.append({"chrom": chrom, "start":subregionStart, "end":subregionEnd})
-        else :
-            prevSubregion = subregions[-1]
-            prevSubregion["end"] = max(subregionEnd, prevSubregionEnd)
-
-    proc.stdout.close()
-    proc.wait()
-
-    return subregions
-
-
-def getCallRegions(params) :
-    """
-    determine
-    1) a set of genomic regions for calling
-    2) a set of chromosomes that are completely skipped over,
-       where "skipped" means that not a single base on the chrom is requested for calling
-
-    \return a list of genomic regions for calling
-    \return a set of chromLabels which are skipped
-    """
-    callRegionList = []
-    chromIsSkipped = set()
-
-    # when no region selections have been made:
-    if ((params.genomeRegionList is None) and
-        (params.callRegionsBed is None)) :
-        return (callRegionList, chromIsSkipped)
-
-    # check chromosome coverage of "regions" arguments
-    chromIsSkipped = set(params.chromOrder)
-    if params.genomeRegionList is not None :
-        for genomeRegion in params.genomeRegionList :
-            if genomeRegion["chrom"] in chromIsSkipped :
-                chromIsSkipped.remove(genomeRegion["chrom"])
-
-    if params.callRegionsBed is None :
-        return (params.genomeRegionList, chromIsSkipped)
-
-    # check chromsome coverage based on callRegions BED file
-    callChromList = []
-    chromIsSkipped2 = set(params.chromOrder)
-    tabixCmd = [params.tabixBin,"-l", params.callRegionsBed]
-    proc=subprocess.Popen(tabixCmd,stdout=subprocess.PIPE)
-    for line in proc.stdout :
-        chrom = line.strip()
-        callChromList.append(chrom)
-        if chrom in chromIsSkipped2 :
-            chromIsSkipped2.remove(chrom)
-    proc.stdout.close()
-    proc.wait()
-
-    if params.genomeRegionList is None :
-        chromIsSkipped = chromIsSkipped2
-
-        for chrom in callChromList:
-            chromRegion = {"chrom":chrom, "start":1, "end":params.chromSizes[chrom]}
-            callRegions = getOverlapCallRegions(params, chromRegion)
-            callRegionList.extend(callRegions)
-    else:
-        chromIsSkipped = chromIsSkipped | chromIsSkipped2
-
-        for genomeRegion in params.genomeRegionList:
-            subCallRegions = getOverlapCallRegions(params, genomeRegion)
-            callRegionList.extend(subCallRegions)
-
-    return (callRegionList, chromIsSkipped)
 
 
 class PathDigger(object) :
@@ -431,7 +319,6 @@ def getNextGenomeSegment(params) :
 
     This segment generator understands callRegionList that accounts for both genomeRegionList and the callRegions bed file.
     """
-
     MEGABASE = 1000000
     scanSize = params.scanSizeMb * MEGABASE
 
@@ -444,12 +331,12 @@ def getNextGenomeSegment(params) :
                 yield GenomeSegment(*segval)
 
 
-def getGenomeSegmentGroups(params, excludedContigs = None) :
+def getGenomeSegmentGroups(genomeSegmentIterator, contigsExcludedFromGrouping = None) :
     """
     Iterate segment groups and 'clump' small contigs together
 
     @param genomeSegmentIterator any object which will iterate through ungrouped genome segments)
-    @param excludedContigs defines a set of contigs which are excluded from grouping
+    @param contigsExcludedFromGrouping defines a set of contigs which are excluded from grouping
                            (useful when a particular contig, eg. chrM, is called with contig-specific parameters)
     @return yields a series of segment group lists
 
@@ -458,15 +345,13 @@ def getGenomeSegmentGroups(params, excludedContigs = None) :
     """
 
     def isGroupEligible(gseg) :
-        if excludedContigs is None : return True
-        return (gseg.chromLabel not in excludedContigs)
+        if contigsExcludedFromGrouping is None : return True
+        return (gseg.chromLabel not in contigsExcludedFromGrouping)
 
     minSegmentGroupSize=200000
     group = []
     headSize = 0
     isLastSegmentGroupEligible = True
-
-    genomeSegmentIterator = getNextGenomeSegment(params)
     for gseg in genomeSegmentIterator :
         isSegmentGroupEligible = isGroupEligible(gseg)
         if (isSegmentGroupEligible and isLastSegmentGroupEligible) and (headSize+gseg.size() <= minSegmentGroupSize) :
@@ -485,7 +370,17 @@ def cleanPyEnv() :
     """
     clear out some potentially destabilizing env variables:
     """
-    clearList = [ "PYTHONPATH", "PYTHONHOME"]
+
+    # Stopping default clearing of python env variables (MANTA-1316)
+    # There are cases where module'd-in pythons will not operate
+    # after this change. The motivation for clearing were cases where
+    # a user PYTHONPATH library interferes with a workflow function, but
+    # if these are encountered in the future, we should have a more
+    # specfic diagnostic/solution to the problem
+    #
+    # Discussion in the context of manta here: https://github.com/Illumina/manta/issues/116
+    #
+    clearList = [] # [ "PYTHONPATH", "PYTHONHOME"]
     for key in clearList :
         if key in os.environ :
             del os.environ[key]
@@ -528,6 +423,11 @@ def exeFile(filename):
 
 
 def bamListCatCmd(samtoolsBin, bamList, output) :
+    """
+    Concatenate an input list of bam files to an output bam file, and index.
+
+    If len(bamList) is 1 the file will be moved to the output file name.
+    """
     assert(len(bamList) > 0)
 
     if len(bamList) > 1:

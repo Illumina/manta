@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -47,16 +47,16 @@ isRefRegionValid(
     const GenomeInterval& interval);
 
 
-/// given a genome interval, attempt to add an extra buffer
+/// Given a genome interval, attempt to add an extra buffer
 /// to the interval and return the reference sequence corresponding
 /// to this interval
 ///
-/// \params[in] extraRefEdgeSize add this value to the ends of each
+/// \param[in] extraRefEdgeSize add this value to the ends of each
 ///             interval prior to chomosome length clipping and reference
 ///             retrieval
-/// \params[out] leadingTrim indicates how much was cut from the
+/// \param[out] leadingTrim indicates how much was cut from the
 ///              front of the requested interval (with edge buffer)
-/// \params[out] trailingTrim indicates how much was cut from the
+/// \param[out] trailingTrim indicates how much was cut from the
 ///              end of the requested interval (with edge buffer)
 ///
 void

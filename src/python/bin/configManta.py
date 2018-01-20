@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 #
 # Manta - Structural Variant and Indel Caller
-# Copyright (c) 2013-2017 Illumina, Inc.
+# Copyright (c) 2013-2018 Illumina, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,6 +24,15 @@ This script configures the Manta SV analysis workflow
 
 import os,sys
 
+if sys.version_info >= (3,0):
+    import platform
+    raise Exception("Manta does not currently support python3 (version %s detected)" % (platform.python_version()))
+
+if sys.version_info < (2,6):
+    import platform
+    raise Exception("Manta requires python2 version 2.6+ (version %s detected)" % (platform.python_version()))
+
+
 scriptDir=os.path.abspath(os.path.dirname(__file__))
 scriptName=os.path.basename(__file__)
 workflowDir=os.path.abspath(os.path.join(scriptDir,"@THIS_RELATIVE_PYTHON_LIBDIR@"))
@@ -32,7 +41,7 @@ sys.path.append(workflowDir)
 
 from configBuildTimeInfo import workflowVersion
 from mantaOptions import MantaWorkflowOptionsBase
-from configureUtil import BamSetChecker, groomBamList, OptParseException
+from configureUtil import BamSetChecker, groomBamList, OptParseException, validateFixExistingFileArg
 from makeRunScript import makeRunScript
 from mantaWorkflow import MantaWorkflow
 from workflowUtil import ensureDir
@@ -60,14 +69,16 @@ You must specify a BAM or CRAM file for at least one sample.
                          help="Set options for RNA-Seq input. Must specify exactly one bam input file")
         group.add_option("--unstrandedRNA", dest="isUnstrandedRNA", action="store_true",
                          help="Set if RNA-Seq input is unstranded: Allows splice-junctions on either strand")
+        group.add_option("--outputContig", dest="isOutputContig", action="store_true",
+                         help="Output assembled contig sequences in VCF file")
 
         MantaWorkflowOptionsBase.addWorkflowGroupOptions(self,group)
 
 
     def addExtendedGroupOptions(self,group) :
-        group.add_option("--useExistingAlignStats",
-                         dest="useExistingAlignStats", action="store_true",
-                         help="Use pre-calculated alignment statistics.")
+        group.add_option("--existingAlignStatsFile",
+                         dest="existingAlignStatsFile", metavar="FILE",
+                         help="Pre-calculated alignment statistics file. Skips alignment stats calculation.")
         group.add_option("--useExistingChromDepths",
                          dest="useExistingChromDepths", action="store_true",
                          help="Use pre-calculated chromosome depths.")
@@ -93,8 +104,9 @@ You must specify a BAM or CRAM file for at least one sample.
             'runDir' : 'MantaWorkflow',
             'isExome' : False,
             'isRNA' : False,
+            'isOutputContig' : False,
             'isUnstrandedRNA' : False,
-            'useExistingAlignStats' : False,
+            'existingAlignStatsFile' : None,
             'useExistingChromDepths' : False,
             'isRetainTempFiles' : False,
             'isGenerateSupportBam' : False,
@@ -103,24 +115,16 @@ You must specify a BAM or CRAM file for at least one sample.
         return defaults
 
 
+    def validateAndSanitizeOptions(self,options) :
 
-    def validateAndSanitizeExistingOptions(self,options) :
-
-        groomBamList(options.normalBamList,"normal sample")
-        groomBamList(options.tumorBamList, "tumor sample")
-
-        MantaWorkflowOptionsBase.validateAndSanitizeExistingOptions(self,options)
-
-
-
-    def validateOptionExistence(self,options) :
+        MantaWorkflowOptionsBase.validateAndSanitizeOptions(self,options)
 
         def safeLen(x) :
             if x is None : return 0
             return len(x)
 
         if ((safeLen(options.normalBamList) == 0) and
-            (safeLen(options.tumorBamList) == 0)) :
+                (safeLen(options.tumorBamList) == 0)) :
             raise OptParseException("No normal or tumor sample alignment files specified")
 
         if (safeLen(options.tumorBamList) > 1) :
@@ -131,20 +135,25 @@ You must specify a BAM or CRAM file for at least one sample.
 
         if options.isRNA :
             if ((safeLen(options.normalBamList) != 1) or
-                (safeLen(options.tumorBamList) != 0)) :
+                    (safeLen(options.tumorBamList) != 0)) :
                 raise OptParseException("RNA mode currently requires exactly one normal sample")
         else :
-            if (options.isUnstrandedRNA) :
+            if options.isUnstrandedRNA :
                 raise OptParseException("Unstranded only applied for RNA inputs")
 
-        bcheck = BamSetChecker()
-        bcheck.appendBams(options.normalBamList,"Normal")
-        bcheck.appendBams(options.tumorBamList,"Tumor")
-        bcheck.check(options.htsfileBin,
-                     options.referenceFasta)
+        if options.existingAlignStatsFile is not None :
+            options.existingAlignStatsFile=validateFixExistingFileArg(options.existingAlignStatsFile,"existing align stats")
 
-        MantaWorkflowOptionsBase.validateOptionExistence(self,options)
+        groomBamList(options.normalBamList,"normal sample")
+        groomBamList(options.tumorBamList, "tumor sample")
 
+        bamSetChecker = BamSetChecker()
+        if safeLen(options.normalBamList) > 0 :
+            bamSetChecker.appendBams(options.normalBamList,"Normal")
+        if safeLen(options.tumorBamList) > 0 :
+            bamSetChecker.appendBams(options.tumorBamList,"Tumor")
+        bamSetChecker.check(options.htsfileBin,
+                            options.referenceFasta)
 
 
 
@@ -153,17 +162,17 @@ def main() :
     primarySectionName="manta"
     options,iniSections=MantaWorkflowOptions().getRunOptions(primarySectionName, version=workflowVersion)
 
-    # we don't need to instantiate the workflow object during configuration,
-    # but this is done here to trigger additional parameter validation:
+    # We don't need to instantiate the workflow object during configuration,
+    # but do it here anyway to trigger additional parameter validation:
     #
-    MantaWorkflow(options,iniSections)
+    MantaWorkflow(options)
 
     # generate runscript:
     #
     ensureDir(options.runDir)
-    scriptFile=os.path.join(options.runDir,"runWorkflow.py")
+    workflowScriptPath = os.path.join(options.runDir, options.workflowScriptName)
 
-    makeRunScript(scriptFile,os.path.join(workflowDir,"mantaWorkflow.py"),"MantaWorkflow",primarySectionName,iniSections)
+    makeRunScript(workflowScriptPath,os.path.join(workflowDir,"mantaWorkflow.py"),"MantaWorkflow",primarySectionName,iniSections)
 
     notefp=sys.stdout
     notefp.write("""
@@ -171,9 +180,8 @@ Successfully created workflow run script.
 To execute the workflow, run the following script and set appropriate options:
 
 %s
-""" % (scriptFile))
+""" % (workflowScriptPath))
 
 
 if __name__ == "__main__" :
     main()
-

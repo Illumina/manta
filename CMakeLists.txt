@@ -28,7 +28,7 @@
 if (WIN32)
     cmake_minimum_required(VERSION 3.1.0)
 else ()
-    cmake_minimum_required(VERSION 2.8.0)
+    cmake_minimum_required(VERSION 2.8.12)
 endif ()
 
 message (STATUS "==== Initializing project cmake configuration ====")
@@ -73,7 +73,7 @@ endif ()
 #
 set(CMAKE_CONFIGURATION_TYPES_TMP Debug Release RelWithDebInfo)
 if (NOT WIN32)
-    set(CMAKE_CONFIGURATION_TYPES_TMP ${CMAKE_CONFIGURATION_TYPES_TMP} ASan)
+    set(CMAKE_CONFIGURATION_TYPES_TMP ${CMAKE_CONFIGURATION_TYPES_TMP} ASan GCov)
 endif ()
 set(CMAKE_CONFIGURATION_TYPES ${CMAKE_CONFIGURATION_TYPES_TMP} CACHE STRING "" FORCE)
 
@@ -130,7 +130,7 @@ find_package(PythonInterp 2 QUIET)
 if (NOT PYTHONINTERP_FOUND)
     message (WARNING "No python2 interpreter found, disabling optional python build and installation components. Installed workflow requires python2 interpreter to run.")
 else()
-    set (MINIMUM_PYTHON_VERSION "2.4")
+    set (MINIMUM_PYTHON_VERSION "2.6")
     if (${PYTHON_VERSION_STRING} VERSION_LESS ${MINIMUM_PYTHON_VERSION})
         message (WARNING
             "Python2 interpretor must be at least version (${MINIMUM_PYTHON_VERSION}). Found version ${PYTHON_VERSION_STRING} at '${PYTHON_EXECUTABLE}'."

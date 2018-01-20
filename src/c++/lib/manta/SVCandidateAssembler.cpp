@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -71,12 +71,12 @@ SVCandidateAssembler(
     _isAlignmentTumor(alignFileOpt.isAlignmentTumor),
     _dFilter(chromDepthFilename, scanOpt.maxDepthFactor, bamHeader),
     _dFilterRemoteReads(chromDepthFilename, scanOpt.maxDepthFactorRemoteReads, bamHeader),
-    _readScanner(_scanOpt, statsFilename, alignFileOpt.alignmentFilename, isRNA),
+    _readScanner(_scanOpt, statsFilename, alignFileOpt.alignmentFilenames, isRNA),
     _remoteTime(remoteTime)
 {
     // setup regionless bam_streams:
     // setup all data for main analysis loop:
-    for (const std::string& alignmentFilename : alignFileOpt.alignmentFilename)
+    for (const std::string& alignmentFilename : alignFileOpt.alignmentFilenames)
     {
         // avoid creating shared_ptr temporaries:
         streamPtr tmp(new bam_streamer(alignmentFilename.c_str(), referenceFilename.c_str()));
@@ -449,23 +449,24 @@ getBreakendReads(
             const pos_t refPos(bamRead.pos()-1);
             if (refPos >= searchEndPos) break;
 
+            // don't filter out MAPQ0 reads here because the split reads tend to have reduced mapping scores
+            // don't filter out unmapped reads here because shadow reads are used in assembly
+            if (SVLocusScanner::isReadFilteredCore(bamRead)) continue;
+
             // Filter reads which won't be used in assembly:
             //
             if (isMaxDepth)
             {
                 if (! isTumor)
                 {
-                    // depth estimation relies on a simple filtration criteria to stay in sync with the chromosome mean
-                    // depth estimates:
+                    // also filter out unmapped reads here to stay in sync with process used to estimate expected
+                    // depth:
                     if (! bamRead.is_unmapped())
                     {
                         addReadToDepthEst(bamRead, searchBeginPos, normalDepthBuffer);
                     }
                 }
             }
-
-            // don't filter out MAPQ0 because the split reads tend to have reduced mapping scores:
-            if (SVLocusScanner::isReadFilteredCore(bamRead)) continue;
 
             if (bamRead.isNonStrictSupplement()) continue;
 
@@ -511,7 +512,7 @@ getBreakendReads(
                     {
 #ifdef DEBUG_ASBL
                         log_os << logtag << "Adding remote bamrec. idx: " << bamIndex << " rec: " << bamRead << '\n'
-                               << "\tmapq: " << bamRead.map_qual() << '\n'
+                               << "\tmapq: " << int(bamRead.map_qual()) << '\n'
                                << "\tread: " << bamRead.get_bam_read() << '\n';
 #endif
 
@@ -620,7 +621,7 @@ getBreakendReads(
             if (isShadowKeeper) ++shadowCount;
 
             log_os << logtag << "Adding bamrec. idx: " << bamIndex << " rec: " << bamRead << '\n'
-                   << "\tmapq: " << bamRead.map_qual() << '\n'
+                   << "\tmapq: " << int(bamRead.map_qual()) << '\n'
                    << "\tread: " << bamRead.get_bam_read() << '\n';
             log_os << "isIndelKeeper: " << isIndelKeeper
                    << " isSemiAlignedKeeper: " << isSemiAlignedKeeper
@@ -731,7 +732,7 @@ getBreakendReads(
 
     if (isRecoverRemotes)
     {
-        const TimeScoper remoteTIme(_remoteTime);
+        const TimeScoper remoteTime(_remoteTime);
         for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
         {
 #ifdef DEBUG_REMOTES
@@ -767,12 +768,7 @@ assembleSingleSVBreakend(
     getBreakendReads(bp, isBpReversed, refSeq, isSearchRemoteInsertionReads, remoteReads, readIndex, reads);
     AssemblyReadOutput readInfo;
 
-#ifdef ITERATIVE_ASSEMBLER
     runIterativeAssembler(_assembleOpt, reads, readInfo, as);
-#else
-    runSmallAssembler(_assembleOpt, reads, readInfo, as);
-#endif
-
 }
 
 
@@ -799,9 +795,5 @@ assembleSVBreakends(
     readRev.resize(reads.size(),isBp2Reversed);
     AssemblyReadOutput readInfo;
 
-#ifdef ITERATIVE_ASSEMBLER
     runIterativeAssembler(_assembleOpt, reads, readInfo, as);
-#else
-    runSmallAssembler(_assembleOpt, reads, readInfo, as);
-#endif
 }

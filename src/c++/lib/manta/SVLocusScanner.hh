@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -26,9 +26,10 @@
 #pragma once
 
 #include "blt_util/LinearScaler.hh"
+#include "htsapi/bam_header_info.hh"
 #include "htsapi/bam_record.hh"
 #include "htsapi/bam_record_util.hh"
-#include "htsapi/bam_header_info.hh"
+#include "htsapi/bam_streamer.hh"
 #include "htsapi/align_path_bam_util.hh"
 #include "manta/ReadGroupStatsSet.hh"
 #include "manta/SVCandidate.hh"
@@ -36,7 +37,6 @@
 #include "svgraph/SVLocus.hh"
 #include "svgraph/SVLocusSampleCounts.hh"
 #include "options/ReadScannerOptions.hh"
-#include "common/Exceptions.hh"
 
 #include <string>
 #include <vector>
@@ -123,25 +123,14 @@ struct SVLocusScanner
         const bool isTranscriptStrandKnown = false);
 
     /// QC check if the read length implied by cigar string matches the length of read sequence
+    ///
+    /// \param[in] alignmentStream This is used (only) to improve the detail of error messages.
+    /// \param bamRead
     static
     void
-    checkReadSize(const bam_record& bamRead)
-    {
-        ALIGNPATH::path_t path;
-        bam_cigar_to_apath(bamRead.raw_cigar(), bamRead.n_cigar(), path);
-        const unsigned alignedSize(ALIGNPATH::apath_read_length(path));
-        const unsigned seqSize(bamRead.read_size());
-
-        if (seqSize != alignedSize)
-        {
-            std::ostringstream oss;
-            oss << "ERROR: Read length implied by mapped alignment ("
-                << alignedSize << ") does not match sequence length ("
-                << seqSize << ") in alignment record:\n";
-            oss << bamRead << "\n";
-            BOOST_THROW_EXCEPTION(illumina::common::LogicException(oss.str()));
-        }
-    }
+    checkReadSize(
+        const stream_state_reporter& alignmentStream,
+        const bam_record& bamRead);
 
 
     /// this predicate runs isReadFiltered without the mapq components
@@ -153,7 +142,7 @@ struct SVLocusScanner
         if      (bamRead.is_filter()) return true;
         else if (bamRead.is_dup()) return true;
         // supplementary reads without SA tag
-        else if (bamRead.is_supplement() && (! bamRead.isSASplit())) return true;
+        else if (bamRead.is_supplementary() && (! bamRead.isSASplit())) return true;
         else
         {
             // hack to work with bwamem '-M' formatting,
@@ -174,18 +163,6 @@ struct SVLocusScanner
     {
         if (isReadFilteredCore(bamRead)) return true;
         return (bamRead.is_unmapped());
-    }
-
-    /// this predicate runs any fast tests on the acceptability of a
-    /// read for the SVLocus build
-    /// Tests also for low mapq
-    bool
-    isReadFiltered(
-        const bam_record& bamRead) const
-    {
-        if      (isReadFilteredCore(bamRead)) return true;
-        else if (bamRead.map_qual() < _opt.minMapq) return true;
-        return false;
     }
 
     unsigned
@@ -253,7 +230,7 @@ struct SVLocusScanner
 
     /// \brief A fast test to eliminate reads which are very unlikely to contribute any SV or indel evidence
     ///
-    /// \param[inout] incountsPtr If not nullptr, the pointed object is appended with statistics on the SV evidence
+    /// \param[in,out] incountsPtr If not nullptr, the pointed object is appended with statistics on the SV evidence
     ///                           type associated with \p bamRead
     /// \return True if it is probable that \p bamRead provides evidence for an SV or indel
     bool
@@ -280,7 +257,7 @@ struct SVLocusScanner
 
     /// get local and remote breakends for each SV Candidate which can be extracted from a read pair
     ///
-    /// if remote read is not available, set remoteReadPtr to NULL and a best estimate will be generated for the remote breakend
+    /// if remote read is not available, set remoteReadPtr to nullptr and a best estimate will be generated for the remote breakend
     ///
     /// for all candidates, if one breakend is estimated from localRead and one is estimated from remoteRead, then
     /// the local breakend will be placed in candidate bp1 and the remote breakend will be placed in candidate.bp2
@@ -414,4 +391,3 @@ private:
     // cached temporary to reduce syscalls:
     mutable SimpleAlignment _bamAlign;
 };
-

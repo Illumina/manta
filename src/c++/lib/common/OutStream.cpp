@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -72,6 +72,6 @@ openFile(
     ofs.open(filename.c_str());
     if (ofs) return;
     std::ostringstream oss;
-    oss << "ERROR: Can't open output file: " << filename << "\n";
-    BOOST_THROW_EXCEPTION(illumina::common::LogicException(oss.str()));
+    oss << "Can't open output file: '" << filename << "'";
+    BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
 }

@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -56,7 +56,7 @@ id_to_base_error(const uint8_t i)
 bool
 is_valid_seq(const char* seq)
 {
-    assert(NULL != seq);
+    assert(nullptr != seq);
 
     while (*seq !=  '\0')
     {
@@ -85,7 +85,7 @@ standardize_ref_seq(const char* ref_seq_file,
             if (! is_iupac_base(c))
             {
                 static const char def_chr_name[] = "first-sequence-in-file";
-                const char* seq_name(NULL != chr_name ? chr_name : def_chr_name);
+                const char* seq_name(nullptr != chr_name ? chr_name : def_chr_name);
 
                 log_os << "ERROR:: Unexpected character in reference sequence.\n";
                 log_os << "\treference_sequence_file: '" << ref_seq_file << "'\n";

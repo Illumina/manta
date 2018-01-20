@@ -1,6 +1,6 @@
 #
 # Manta - Structural Variant and Indel Caller
-# Copyright (c) 2013-2017 Illumina, Inc.
+# Copyright (c) 2013-2018 Illumina, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -211,13 +211,25 @@ def checkOptionalTabixIndexedFile(iname,label) :
     if iname is None : return
     checkTabixIndexedFile(iname,label)
 
-def checkTabixListOption(tabixList,label) :
+def checkFixTabixIndexedFileOption(tabixFile,label):
+    """
+    Check that the file's tabix index exists, and convert input path to an absolute path.
+
+    If tabixFile is None, return None, else return the absolute file path.
+    """
+    checkOptionalTabixIndexedFile(tabixFile,label)
+    if tabixFile is None : return None
+    return os.path.abspath(tabixFile)
+
+def checkFixTabixListOption(tabixList,label) :
     """
     check a list of files which are expected to be tabix indexed
     """
     if tabixList is None : return
-    for tabixFile in tabixList :
+    for (index,tabixFile) in enumerate(tabixList) :
         checkTabixIndexedFile(tabixFile,label)
+        tabixList[index] = os.path.abspath(tabixFile)
+
 
 def checkForBamExtension(bamFile):
     """
@@ -270,9 +282,14 @@ class BamSetChecker(object):
         self.bamList=[]
         self.bamLabels=[]
 
-    def appendBams(self,inputBamList,inputLabel) :
+    def appendBams(self, inputBamList, inputLabel) :
+        """
+        inputBamList must be non-empty
+        """
 
-        if inputBamList is None : return
+        if (inputBamList is None) or (len(inputBamList) == 0) :
+            raise OptParseException("No %s sample BAM/CRAM files specified" % (inputLabel))
+
         for inputBamFile in inputBamList :
             self.bamList.append(inputBamFile)
             self.bamLabels.append(inputLabel)

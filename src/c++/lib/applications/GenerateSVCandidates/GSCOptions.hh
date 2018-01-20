@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -77,6 +77,8 @@ struct GSCOptions
     unsigned minCandidateSpanningCount = 3; ///< how many spanning evidence observations are required to become a candidate?
 
     unsigned minScoredVariantSize = 51; ///< min size for scoring and scored output following candidate generation
+
+    bool isOutputContig = false; ///< if true, an assembled contig is written in VCF
 };
 
 

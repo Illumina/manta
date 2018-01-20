@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,7 +24,10 @@
 
 #include "blt_util/align_path.hh"
 #include "blt_util/SimpleAlignment.hh"
+#include "htsapi/bam_header_info.hh"
 #include "htsapi/bam_record.hh"
+
+#include <iosfwd>
 
 
 /// \brief Test if this read is part of a pair where both members are mapped.
@@ -50,12 +53,23 @@ bool
 is_innie_pair(
     const bam_record& bam_read);
 
-/// Detect cases where paired-end reads overlap in such a way as to suggest a possible unfiltered
-/// read into adapter sequence (assuming innie pairs).
+/// Rough heuristic to detect cases where paired-end reads overlap in such a way as to suggest
+/// a possible unfiltered read into adapter sequence (assuming innie pairs).
+/// Used as an aggressive check for candidate/hypothesis generation to avoid large number of
+/// spurious small indels for short insert data that are derived from adapter k-mers
 bool
 is_possible_adapter_pair(
-    const bam_record& bamRead,
-    const bool isAgressiveAdaptorCheck);
+    const bam_record& bamRead);
+
+/// Based on pair alignment information (MC tag) if available, detect cases where a read extends
+/// past the beginning of its mate, suggesting the presence of unfiltered adapter sequence
+/// If MC information is not available, use a more aggressive heuristic (any 3' softclipping)
+/// but still less aggressive then is_possible_adapter_pair
+/// Used for read filtration of assembly to avoid including adapter sequence, but also missing any evidence reads
+/// Assumes innie pairs
+bool
+is_adapter_pair(
+    const bam_record& bamRead);
 
 /// \brief Detect cases where paired-end reads overlap
 ///
@@ -70,14 +84,16 @@ is_overlapping_pair(
     const bam_record& bam_read,
     const SimpleAlignment& matchedAlignment);
 
+
 /// \return The average basecall quality score for this read.
 unsigned
 get_avg_quality(
     const bam_record& bam_read);
 
+
 /// select 'first' read in pair such that you
 /// consistently get only one read per-pair
-/// (assuming the bam file is properly formated)
+/// (assuming the bam file is properly formatted)
 inline
 bool
 isFirstRead(
@@ -87,6 +103,7 @@ isFirstRead(
     if ((bamRead.pos() == bamRead.mate_pos()) && bamRead.is_first()) return true;
     return false;
 }
+
 
 /// \return The BAM record's auxillary RG tag value, or an empty string if no RG tag exists.
 inline
@@ -99,5 +116,13 @@ getReadGroup(
 
     const char* rgStr(bamRead.get_string_tag(rgTag));
 
-    return ((NULL == rgStr) ? defaultRG : rgStr);
+    return ((nullptr == rgStr) ? defaultRG : rgStr);
 }
+
+
+/// Pretty print summary information from an alignment record for an end-user error message
+void
+summarizeAlignmentRecord(
+    const bam_header_info& bamHeader,
+    const bam_record& bamRead,
+    std::ostream& os);

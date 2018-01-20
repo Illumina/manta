@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -33,6 +33,9 @@
 #include <iostream>
 #include <sstream>
 
+
+stream_state_reporter::
+~stream_state_reporter() {}
 
 
 bam_streamer::
@@ -241,11 +244,32 @@ next()
     int ret;
     if (nullptr == _hitr)
     {
+
         ret = sam_read1(_hfp,_hdr, _brec._bp);
+
+        // Semi-documented sam_read1 API: -1 is expected read failure at end of stream, any other negative value
+        // is an error
+        if (ret < -1)
+        {
+            std::ostringstream oss;
+            oss << "Unexpected return value from htslib sam_read1 function '" << ret << "' while attempting to read BAM/CRAM file:\n";
+            report_state(oss);
+            throw blt_exception(oss.str().c_str());
+        }
     }
     else
     {
         ret = sam_itr_next(_hfp, _hitr, _brec._bp);
+
+        // Re sam_itr_next API: -1 is expected read failure at end of stream. As of htslib v1.5 errors also give a return
+        // value of -1. If PR #575 is accepted then errors should return a value less than -1.
+        if (ret < -1)
+        {
+            std::ostringstream oss;
+            oss << "Unexpected return value from htslib sam_itr_next function '" << ret << "' while attempting to read BAM/CRAM file:\n";
+            report_state(oss);
+            throw blt_exception(oss.str().c_str());
+        }
     }
 
     _is_record_set=(ret >= 0);
@@ -298,7 +322,6 @@ report_state(std::ostream& os) const
         const char* chrom_name(target_id_to_name(bamp->target_id()));
         os << "\tbam record RNAME: " << chrom_name << "\n";
         os << "\tbam record POS: " << bamp->pos() << "\n";
-
     }
     else
     {

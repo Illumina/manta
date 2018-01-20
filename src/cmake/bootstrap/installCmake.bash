@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Manta - Structural Variant and Indel Caller
-# Copyright (c) 2013-2017 Illumina, Inc.
+# Copyright (c) 2013-2018 Illumina, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ INCLUDE_DIR=${INSTALL_DIR}/include
 CMAKE_MAJOR=2
 CMAKE_MINOR=8
 CMAKE_PATCH=12
-CMAKE_PATCH_MIN=4
+CMAKE_PATCH_MIN=12
 CMAKE_REQUIRED="$CMAKE_MAJOR.$CMAKE_MINOR.$CMAKE_PATCH_MIN"
 TARBALL_VERSION="$CMAKE_MAJOR.$CMAKE_MINOR.$CMAKE_PATCH"
 SCRIPT=`basename "$0"`

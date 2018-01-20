@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -27,14 +27,14 @@
 #include <string>
 
 
-/// information added to each read in the process of assembly
+/// Information added to each read in the process of assembly
 ///
 struct AssemblyReadInfo
 {
     bool isUsed = false;
     bool isFiltered = false; ///< if true, the read was 'used' but filtered out, so there is no meaningful contig id association
     bool isPseudo = false; ///< if true, the read was an assembled contig
-    unsigned contigId = 0; ///< index of the contig that this read is used in
+    std::vector<unsigned> contigIds; ///< index of the contigs that this read is used in
 };
 
 

@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ operator<<(std::ostream& os, const SVLocusSet::NodeAddressType& a)
 }
 
 
-
+#ifdef DEBUG_SVL
 void
 SVLocusSet::
 locusHurl(const LocusIndexType index, const char* label) const
@@ -57,10 +57,10 @@ locusHurl(const LocusIndexType index, const char* label) const
     using namespace illumina::common;
 
     std::ostringstream oss;
-    oss << "ERROR: Attempting to access locus: " << index << " in locusSet with size: " << size() << " accessLabel: " << label << "\n";
-    BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+    oss << "Attempting to access locus: " << index << " in locusSet with size: " << size() << " accessLabel: " << label;
+    BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
 }
-
+#endif
 
 
 /// Test if the set of node addresses come from only one, expected locus index.
@@ -1337,7 +1337,7 @@ save(const char* filename) const
 {
     using namespace boost::archive;
 
-    assert(NULL != filename);
+    assert(nullptr != filename);
     std::ofstream ofs(filename, std::ios::binary);
     binary_oarchive oa(ofs);
 
@@ -1377,33 +1377,43 @@ load(
     clear();
 
     assert(nullptr != filename);
-    std::ifstream ifs(filename, std::ios::binary);
-    binary_iarchive ia(ifs);
 
-    _source=filename;
-
-    ia >> header;
-    ia >> _opt;
-    ia >> _isFinalized;
-    ia >> _totalCleaned;
-    ia >> _counts;
-    ia >> _highestSearchCount;
-    ia >> _highestSearchDensity;
-    ia >> _isMaxSearchCount;
-    ia >> _isMaxSearchDensity;
-    ia >> _buildTime;
-    ia >> _mergeTime;
-
-    SVLocus locus;
-    while (ifs.peek() != EOF)
+    try
     {
-        locus.clear(this);
-        ia >> locus;
-        if (locus.empty()) continue;
-        const LocusIndexType locusIndex(size());
-        _loci.push_back(locus);
-        SVLocus& locusCopy(_loci.back());
-        locusCopy.updateIndex(locusIndex);
+        std::ifstream ifs(filename, std::ios::binary);
+        binary_iarchive ia(ifs);
+
+        _source = filename;
+
+        ia >> header;
+        ia >> _opt;
+        ia >> _isFinalized;
+        ia >> _totalCleaned;
+        ia >> _counts;
+        ia >> _highestSearchCount;
+        ia >> _highestSearchDensity;
+        ia >> _isMaxSearchCount;
+        ia >> _isMaxSearchDensity;
+        ia >> _buildTime;
+        ia >> _mergeTime;
+
+        SVLocus locus;
+        while (ifs.peek() != EOF)
+        {
+            locus.clear(this);
+            ia >> locus;
+            if (locus.empty()) continue;
+            const LocusIndexType locusIndex(size());
+            _loci.push_back(locus);
+            SVLocus& locusCopy(_loci.back());
+            locusCopy.updateIndex(locusIndex);
+        }
+    }
+    catch (...)
+    {
+        log_os << "ERROR: Exception caught while attempting to deserialize Manta SV locus graph file:\n"
+               << "'" << filename << "'" << "\n";
+        throw;
     }
 
     if (! isSkipIndex)
@@ -1458,7 +1468,7 @@ reconstructIndex()
 }
 
 
-
+#ifdef DEBUG_SVL
 void
 SVLocusSet::
 dumpIndex(std::ostream& os) const
@@ -1472,7 +1482,7 @@ dumpIndex(std::ostream& os) const
     }
     os << "SVLocusSet Index END\n";
 }
-
+#endif
 
 
 void
@@ -1499,8 +1509,8 @@ checkState(
             if (_emptyLoci.count(locusIndex) == 0)
             {
                 std::ostringstream oss;
-                oss << "ERROR: empty locus is not updated in the empty index. Locus index: " << locusIndex << "\n";
-                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                oss << "Empty locus is not updated in the empty index. Locus index: " << locusIndex;
+                BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
         }
 
@@ -1510,17 +1520,17 @@ checkState(
             if (citer == _inodes.data().end())
             {
                 std::ostringstream oss;
-                oss << "ERROR: locus node is missing from node index\n"
+                oss << "Locus node is missing from node index\n"
                     << "\tNode index: " << locusIndex << " node: " << getNode(std::make_pair(locusIndex,nodeIndex));
-                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
             if ((citer->first != locusIndex) || (citer->second != nodeIndex))
             {
                 std::ostringstream oss;
-                oss << "ERROR: locus node has conflicting index number in node index\n"
+                oss << "Locus node has conflicting index number in node index\n"
                     << "\tinode index_value: " << citer->first << ":" << citer->second << "\n"
                     << "\tNode index: " << locusIndex << ":" << locusIndex << " node: " << getNode(std::make_pair(locusIndex,nodeIndex));
-                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
         }
         locusIndex++;
@@ -1530,8 +1540,8 @@ checkState(
     {
         using namespace illumina::common;
         std::ostringstream oss;
-        oss << "ERROR: SVLocusSet conflicting internal node counts. TotalNodeCount: " << checkStateTotalNodeCount << " inodeSize: " << _inodes.data().size() << "n";
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        oss << "SVLocusSet conflicting internal node counts. TotalNodeCount: " << checkStateTotalNodeCount << " inodeSize: " << _inodes.data().size();
+        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 
     if (! isCheckOverlap) return;
@@ -1574,14 +1584,14 @@ compressSingletonNodes() const
             if (lastInterval.range.end_pos() > interval.range.begin_pos())
             {
                 std::ostringstream oss;
-                oss << "ERROR: Overlapping nodes in graph\n"
+                oss << "Overlapping nodes in graph\n"
                     << "\tlast_index: " << lastAddy << " interval: " << lastInterval << "\n"
                     << "\tthis_index: " << addy << " interval: " << interval << "\n"
                     << "\tlast_node: " << lastAddy << " "<< getNode(lastAddy) << "\n"
                     << "\tthis_node: " << addy << " "<< getNode(addy) << "\n"
                     << "\n"
                     << header << "\n";
-                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
         }
         lastAddy = addy;
@@ -1624,14 +1634,14 @@ checkForOverlapNodes(
             if (lastInterval.range.end_pos() > interval.range.begin_pos())
             {
                 std::ostringstream oss;
-                oss << "ERROR: Overlapping nodes in graph\n"
+                oss << "Overlapping nodes in graph\n"
                     << "\tlast_index: " << lastAddy << " interval: " << lastInterval << "\n"
                     << "\tthis_index: " << addy << " interval: " << interval << "\n"
                     << "\tlast_node: " << lastAddy << " "<< getNode(lastAddy) << "\n"
                     << "\tthis_node: " << addy << " "<< getNode(addy) << "\n"
                     << "\n"
                     << header << "\n";
-                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
         }
         lastAddy = addy;
