@@ -9,7 +9,9 @@
 - Update htslib/samtools to 1.6 (MANTA-1331)
   - Updated from older 1.2 version to include improved checks on corrupted data.
   - Stopped vendoring zlib as part of this update, so zlib (w/ headers) is now a build requirement.
-
+- Change the eligibility filter of split reads to only consider the most likely allele (MANTA-1332)
+  - A split read is allowed to contribute to the split-read evidence if its alignment to the most like allele passes the eligibility filter.
+ 
 ### Fixed
 - Provide clear error message when attempting to configure/run with python3 (MANTA-1285)
 - Improve error message/docs for alignment records with unknown sequence (SEQ='\*') (MANTA-1295/[#111])

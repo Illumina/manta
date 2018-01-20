@@ -548,7 +548,7 @@ P ( \text{len}(d,a) \vert a) = P ( \text{len}(d,a) ) (1-P(c \vert a))  + P (c \v
 
 In the diploid model the chimera probabilities are the same for both alleles $P(c \vert a) =  1\e{-3}$. In the somatic model these are $P(c \vert a) =  1\e{-4}$ by default; but for Tier 2 analysis, the alternate allele chimera probablity is set to $P(c \vert x) =  5\e{-6}$ for the normal sample only.
 
-For the split-read computation, each read is realigned across both breakends of the reference and variant alleles. Any read which crosses the breakend with at least 16 bases on both sides, has at least 75\% matches on each side and 90\% matches overall is classified as 'supporting' a breakend, and thus is allowed to contribute to the split-read evidence. The likelihood of the read for each of the two alleles, assuming the read is correctly mapped to the locus $m$, is
+For the split-read computation, each read is realigned across both breakends of the reference and variant alleles. The likelihood of the read for each of the two alleles, assuming the read is correctly mapped to the locus $m$, is
 
 \begin{equation*}
 P (r \vert a,m) = \prod_{b_r \in r} P(b_r \vert b_a)
@@ -566,6 +566,8 @@ e/3 & \mbox{ otherwise.}
 \end{array}
 \right.
 \end{equation*}
+
+Each candidate split read is evaluated to determine if it 'supports' a breakend. Only reads supporting a breakend are allowed to contribute to the split-read evidence. The first step of split read evaluation is to select the 'supported allele' for which the read has the highest likelihood. The read is then determined to be supporting the breakend if its alignment to the 'supported allele' (1) crosses the breakend with at least 16 bases on both sides, (2) has at least 75\% matches on each side of the breakend and (3) has at least 90\% matches overall.
 
 A spurious read mapping $P(\neg m \vert \neg a)$ given that the sample actually supports an `other' allele type $\neg a$ at this locus is also accounted for:
 
