@@ -51,12 +51,12 @@ This is a minor bugfix release from v1.2.0
 ### Added
 - Use the BAM mate CIGAR (MC) tag, when present, to improve the accuracy of accessing if a read has extended into adapter sequence (MANTA-1097)
 - Add sanity check of specified target regions during configuration (MANTA-1218)
-    - A configuration error, instead of a runtime error, will be generated if the chromosome portion of the region does not match a chromosome name from the input reference sequence.
+  - A configuration error, instead of a runtime error, will be generated if the chromosome portion of the region does not match a chromosome name from the input reference sequence.
 
 ### Changed
-- Change candidateSV.vcf to include all candidates used to generate final calls(MANTA-1039)
-    - The candidates may include redundanta entries.
-    - Redundant candidates are still reduced to a single best call in the final call output.
+- Change candidateSV.vcf to include all candidates used to generate final calls (MANTA-1039)
+  - The candidates may include redundanta entries.
+  - Redundant candidates are still reduced to a single best call in the final call output.
 - Move changelog to markdown format (MANTA-1245)
 
 ### Fixed

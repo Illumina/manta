@@ -58,7 +58,9 @@ struct SVLocusEvidenceCount
         ar& total& ignored& anom& split& indel& assm& remoteRecoveryCandidates;
     }
 
-    // using doubles for integral counts here because (1) counts are potentially very high and (2) exact counts don't matter
+    // using doubles for integral counts here because:
+    // (1) counts are potentially very high
+    // (2) exact counts don't matter
 
     ///< total number of non-filtered reads scanned
     double total = 0;

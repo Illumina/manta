@@ -25,7 +25,7 @@
 #pragma once
 
 
-/// \brief two-sided binomial exact probability
+/// \brief Two-sided binomial exact probability
 ///
 /// This is a two sided binomial exact pval wherein we find the
 /// prob of n_success or more extreme number of successes and then
@@ -38,7 +38,7 @@ get_binomial_twosided_exact_pval(
     const unsigned n_success,
     const unsigned n_trials);
 
-/// \brief two-sided binomial exact test
+/// \brief Two-sided binomial exact test
 ///
 bool
 is_reject_binomial_twosided_exact(
@@ -47,7 +47,7 @@ is_reject_binomial_twosided_exact(
     const unsigned n_success,
     const unsigned n_trials);
 
-/// \brief two-sided binomial test chi-sqr approximation
+/// \brief Two-sided binomial test chi-sqr approximation
 bool
 is_reject_binomial_twosided_chi_sqr(
     const double alpha,
@@ -55,7 +55,7 @@ is_reject_binomial_twosided_chi_sqr(
     const unsigned n_success,
     const unsigned n_trials);
 
-/// \brief two-sided binomial test
+/// \brief Two-sided binomial test
 ///
 /// Find the probability of n_success or more extreme success under B(n_trial,p)
 ///
@@ -69,11 +69,14 @@ is_reject_binomial_twosided(
     const unsigned n_trials);
 
 
-/// \brief one-sided binomial exact probability
+/// \brief One-sided binomial exact probability
 ///
-/// probability of n_success or more given B(n_trials,p)
+/// Return probability of \p n_success or more given B(n_trials,p)
 ///
-/// matches R code: pbinom((n_success-1),n_trials,p,lower.tail=FALSE)
+/// This should match R code:
+/// \code{.R}
+/// pbinom((n_success-1),n_trials,p,lower.tail=FALSE)
+/// \endcode
 double
 get_binomial_gte_n_success_exact_pval(
     const double p,
@@ -81,12 +84,15 @@ get_binomial_gte_n_success_exact_pval(
     const unsigned n_trials);
 
 
-/// \brief one-sided binomial exact test
+/// \brief One-sided binomial exact test
 ///
-/// tests whether n_success or greater can be rejected under
+/// Test whether \p n_success or greater can be rejected under
 /// a null hypothesis of B(n_trials,p)
 ///
-/// matches R code: binom.test(n_success, n_trials, p, "greater")$p.value <= alpha
+/// This should match R code:
+/// \code{.R}
+/// binom.test(n_success, n_trials, p, "greater")$p.value <= alpha
+/// \endcode
 bool
 is_reject_binomial_gte_n_success_exact(
     const double alpha,
@@ -94,10 +100,13 @@ is_reject_binomial_gte_n_success_exact(
     const unsigned n_success,
     const unsigned n_trials);
 
-/// returns the minimum number of successes to reject the null hypothesis
-/// with a p-value of at most alpha for a given error rate and number of trials
+/// Return the minimum number of successes to reject the null hypothesis
+/// with a p-value of at most \p alpha for a given error rate and number of trials
 ///
-/// matches R code 1 + qbinom(alpha, n_trials, p, lower.tail = FALSE)
+/// This should match R code:
+/// \code{.R}
+/// 1 + qbinom(alpha, n_trials, p, lower.tail = FALSE)
+/// \endcode
 double
 min_count_binomial_gte_exact(
     const double alpha,

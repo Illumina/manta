@@ -175,6 +175,7 @@ is_reject_binomial_gte_n_success_exact(
     const unsigned n_trials)
 {
     assert(alpha >= 0);
+    assert((p >= 0.) && (p <= 1.));
 
     const double observed_pval = get_binomial_gte_n_success_exact_pval(p, n_success, n_trials);
 

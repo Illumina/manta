@@ -132,8 +132,8 @@ SVFinder(
         };
 
         const bool isFirst(bamIndex==0);
-        updateRate(_spanningNoiseRate,getSpanningNoiseRate(counts,bamIndex), isFirst);
-        updateRate(_assemblyNoiseRate,getAssemblyNoiseRate(counts,bamIndex), isFirst);
+        updateRate(_spanningNoiseRate, getSpanningNoiseRate(counts, bamIndex), isFirst);
+        updateRate(_assemblyNoiseRate, getAssemblyNoiseRate(counts, bamIndex), isFirst);
     }
 }
 
@@ -943,13 +943,13 @@ isCandidateCountSufficient(
 }
 
 
-/// determine if the rate of supporting read observations at a breakpoint is significant
+/// Determine if the rate of supporting read observations at a breakpoint is significant
 /// relative to a background noise rate
 ///
-/// \param signalReadInfo vector which has a size equal to the supporting read count, for each supporting read, the vector
+/// \param signalReadInfo Vector which has a size equal to the supporting read count, for each supporting read, the vector
 ///                    contains a relative index for the supporting read among all qualifying (mapped) reads from
 ///                    the same input BAM file. This relative index is used to estimate signal density.
-/// \return true if we reject the null hyp that breakpoint signal is noise
+/// \return true if we reject the null hypothesis that breakpoint signal is noise
 static
 bool
 isBreakPointSignificant(
@@ -957,6 +957,9 @@ isBreakPointSignificant(
     const double noiseRate,
     std::vector<double>& signalReadInfo)
 {
+    assert(alpha >= 0.);
+    assert((noiseRate >= 0.) && (noiseRate <= 1.));
+
     const unsigned signalReadCount(signalReadInfo.size());
 
     // enforce a simple minimum signal count regardless of noiseRate/alpha
@@ -1018,7 +1021,7 @@ isBreakPointSignificant(
 
 
 
-/// test a spanning candidate for minimum supporting evidence level prior
+/// Test a spanning candidate for minimum supporting evidence level prior
 /// to assembly and scoring stages
 ///
 /// Note this test is applied early, and as such it is intended to only filter
@@ -1081,7 +1084,7 @@ enum index_t
 
 
 
-/// return enumerator describing the candidate's filtration state, based on
+/// Return enumerator describing the candidate's filtration state, based on
 /// information available in a single junction (as opposed to
 /// requiring multi-junction analysis)
 ///
@@ -1263,7 +1266,10 @@ getCandidatesFromData(
     }
 #endif
 
-    filterCandidates(_isRNA, _spanningNoiseRate, _assemblyNoiseRate,svs,stats);
+    assert((_spanningNoiseRate >= 0.) && (_spanningNoiseRate <= 1.));
+    assert((_assemblyNoiseRate >= 0.) && (_assemblyNoiseRate <= 1.));
+
+    filterCandidates(_isRNA, _spanningNoiseRate, _assemblyNoiseRate, svs, stats);
 
     std::copy(svs.begin(),svs.end(),std::back_inserter(output_svs));
 }
