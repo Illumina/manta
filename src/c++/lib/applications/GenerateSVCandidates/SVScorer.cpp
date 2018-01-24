@@ -84,7 +84,7 @@ SVScorer(
     _diploidSampleCount=0;
     for (const bool isTumor : opt.alignFileOpt.isAlignmentTumor)
     {
-        _sampleCount ++;
+        _sampleCount++;
         if (! isTumor) _diploidSampleCount++;
     }
 
@@ -793,7 +793,8 @@ incrementSplitReadLhood(
 
     // filter out split read evidence with a poor alignment to both alleles:
     /// TODO: fraction of these noise reads could be informative for filtration
-    // if ((refSplit < (altMapProb.lnProb+1)) && (altSplit < (refMapProb.lnProb+1))) return;
+    static const float pseudoLnProb(0.5);
+    if ((refSplit < (altMapProb.lnProb+pseudoLnProb)) && (altSplit < (refMapProb.lnProb+pseudoLnProb))) return;
 
     refSplitLnLhood += refSplit;
     altSplitLnLhood += altSplit;

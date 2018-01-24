@@ -31,6 +31,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <array>
 
 
 namespace DIPLOID_GT
@@ -43,7 +44,16 @@ enum index_t
     SIZE
 };
 
-static const float altPriors[] = {0., 0.5, 0.99};
+/// Prior probability of expected alt allele for each genotype in the order of {REF, HET, HOM}
+/// Note the alt prior for HOM is set to 0.99, allowing minor evidence (0.01) for ref allele
+static const std::array<float,SIZE> altPriors = { 0., 0.5, 0.99 };
+// pre-compute log values for cache
+static const std::array<float,SIZE> altLnPriors = {std::log(altPriors[REF]),
+                                                   std::log(altPriors[HET]),
+                                                   std::log(altPriors[HOM])};
+static const std::array<float,SIZE> altLnCompPriors = {std::log(1-altPriors[REF]),
+                                                       std::log(1-altPriors[HET]),
+                                                       std::log(1-altPriors[HOM])};
 
 inline
 const char*
@@ -74,54 +84,24 @@ inline
 float
 altFraction(const index_t i)
 {
-    switch (i)
-    {
-    case REF :
-        return altPriors[0];
-    case HET :
-        return altPriors[1];
-    case HOM :
-        return altPriors[2];
-    default:
-        assert(false && "Unknown GT state");
-        return 0;
-    }
+   assert ((i>=0) && (i<SIZE) && "Unknown GT state");
+   return altPriors[i];
 }
 
 inline
 double
 altLnFraction(const index_t i)
 {
-    switch (i)
-    {
-    case REF :
-        return std::log(altPriors[0]);
-    case HET :
-        return std::log(altPriors[1]);
-    case HOM :
-        return std::log(altPriors[2]);
-    default:
-        assert(false && "Unknown GT state");
-        return 0;
-    }
+    assert ((i>=0) && (i<SIZE) && "Unknown GT state");
+    return altLnPriors[i];
 }
 
 inline
 double
 altLnCompFraction(const index_t i)
 {
-    switch (i)
-    {
-    case REF :
-        return std::log(1-altPriors[0]);
-    case HET :
-        return std::log(1-altPriors[1]);
-    case HOM :
-        return std::log(1-altPriors[2]);
-    default:
-        assert(false && "Unknown GT state");
-        return 0;
-    }
+    assert ((i>=0) && (i<SIZE) && "Unknown GT state");
+    return altLnCompPriors[i];
 }
 
 }

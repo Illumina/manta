@@ -3,6 +3,9 @@
 ### Changed
 - Change depth estimation to filter all reads never seen by the SV caller prior to computing depth (MANTA-1296)
   - Expected depth per chromosome and local depth per locus/variant are now computed after removing filtered, pcr-duplicate, and secondary reads.
+- Update the genotyping model (MANTA-1205)
+  - Allow minor evidence of reference allele for hom-alt calls to tolerate a small number of noisy reads.
+  - Filter out split reads with poor alignments to both alleles.
 
 ### Fixed
 - Provide clear error message when attempting to configure/run with python3 (MANTA-1285)
