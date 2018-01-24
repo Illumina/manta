@@ -43,6 +43,8 @@ enum index_t
     SIZE
 };
 
+static const float altPriors[] = {0., 0.5, 0.99};
+
 inline
 const char*
 label(const index_t i)
@@ -75,11 +77,11 @@ altFraction(const index_t i)
     switch (i)
     {
     case REF :
-        return 0;
+        return altPriors[0];
     case HET :
-        return 0.5;
+        return altPriors[1];
     case HOM :
-        return 1.0;
+        return altPriors[2];
     default:
         assert(false && "Unknown GT state");
         return 0;
@@ -90,15 +92,14 @@ inline
 double
 altLnFraction(const index_t i)
 {
-    static const double val[] = { std::log(0.), std::log(0.5), std::log(1.) };
     switch (i)
     {
     case REF :
-        return val[0];
+        return std::log(altPriors[0]);
     case HET :
-        return val[1];
+        return std::log(altPriors[1]);
     case HOM :
-        return val[2];
+        return std::log(altPriors[2]);
     default:
         assert(false && "Unknown GT state");
         return 0;
@@ -109,7 +110,18 @@ inline
 double
 altLnCompFraction(const index_t i)
 {
-    return altLnFraction(static_cast<index_t>(2-i));
+    switch (i)
+    {
+    case REF :
+        return std::log(1-altPriors[0]);
+    case HET :
+        return std::log(1-altPriors[1]);
+    case HOM :
+        return std::log(1-altPriors[2]);
+    default:
+        assert(false && "Unknown GT state");
+        return 0;
+    }
 }
 
 }
