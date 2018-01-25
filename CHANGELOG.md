@@ -9,6 +9,9 @@
 - Update htslib/samtools to 1.6 (MANTA-1331)
   - Updated from older 1.2 version to include improved checks on corrupted data.
   - Stopped vendoring zlib as part of this update, so zlib (w/ headers) is now a build requirement.
+- Update the genotyping model (MANTA-1205)
+  - Allow minor evidence of reference allele for hom-alt calls to tolerate a small number of noisy reads.
+  - Filter out split reads with poor alignments to both alleles.
 
 ### Fixed
 - Provide clear error message when attempting to configure/run with python3 (MANTA-1285)
