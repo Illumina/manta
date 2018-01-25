@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -116,17 +116,17 @@ next()
             if (_current.itype == INPUT_TYPE::READ)
             {
                 std::ostringstream oss;
-                oss << "ERROR: unexpected read order:\n"
+                oss << "Unexpected read order:\n"
                     << "\tInput-record with pos/type/sample_no: "
                     << (_current.pos+1) << "/" << input_type_label(_current.itype) << "/" << _current.sample_no
                     << " follows pos/type/sample_no: "
-                    << (_last.pos+1) << "/" << input_type_label(_last.itype) << "/" << _current.sample_no << "\n";
+                    << (_last.pos+1) << "/" << input_type_label(_last.itype) << "/" << _current.sample_no;
                 throw blt_exception(oss.str().c_str());
             }
             else
             {
                 std::ostringstream oss;
-                oss << "ERROR: unexpected input type: " << _current.itype << "\n";
+                oss << "Unexpected input type: " << _current.itype;
                 throw blt_exception(oss.str().c_str());
             }
         }
@@ -186,7 +186,7 @@ push_next(const INPUT_TYPE::index_t itype,
     else
     {
         std::ostringstream oss;
-        oss << "ERROR: unexpected input type: " << itype << "\n";
+        oss << "Unexpected input type: " << itype;
         throw blt_exception(oss.str().c_str());
     }
     if (! is_next) return;

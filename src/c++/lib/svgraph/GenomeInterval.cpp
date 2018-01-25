@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,6 +20,36 @@
 #include "svgraph/GenomeInterval.hh"
 
 #include <iostream>
+
+
+
+static
+std::string
+getChromName(
+    const bam_header_info& bamHeader,
+    const int tid)
+{
+    if (tid >= 0)
+    {
+        assert(tid < static_cast<int>(bamHeader.chrom_data.size()));
+        return bamHeader.chrom_data[tid].label;
+    }
+    else
+    {
+        return "UNKNOWN";
+    }
+}
+
+
+
+void
+summarizeGenomeInterval(
+    const bam_header_info& bamHeader,
+    const GenomeInterval& gi,
+    std::ostream& os)
+{
+    os << "EndUserGenomeInterval: " << getChromName(bamHeader, gi.tid) << ":" << gi.range.begin_pos()+1 << "-" << gi.range.end_pos();
+}
 
 
 std::ostream&

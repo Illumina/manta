@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -76,7 +76,7 @@ enum index_t
     SECONDARY     = 0x100,
     FILTER        = 0x200,
     DUPLICATE     = 0x400,
-    SUPPLEMENT    = 0x800
+    SUPPLEMENTARY = 0x800
 };
 }
 

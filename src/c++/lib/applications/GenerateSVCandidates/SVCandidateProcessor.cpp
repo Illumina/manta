@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -577,7 +577,23 @@ evaluateCandidate(
         {
             const SVCandidate& candidateSV(mjCandidateSV.junction[junctionIndex]);
             SVCandidateAssemblyData& assemblyData(mjAssemblyData[junctionIndex]);
-            _svRefine.getCandidateAssemblyData(candidateSV, svData, _opt.isRNA, isFindLargeInsertions, assemblyData);
+            try
+            {
+                _svRefine.getCandidateAssemblyData(candidateSV, svData, _opt.isRNA, isFindLargeInsertions, assemblyData);
+            }
+            catch (illumina::common::ExceptionData& e)
+            {
+                std::ostringstream oss;
+                oss << "Exception caught while attempting to assemble " << candidateSV;
+                e << boost::error_info<struct assembly_candidate_info,std::string>(oss.str());
+                throw;
+            }
+            catch (...)
+            {
+                log_os << "Exception caught while attempting to assemble " << candidateSV << "\n";
+                throw;
+            }
+
 
             if (_opt.isVerbose)
             {

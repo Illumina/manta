@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -154,12 +154,33 @@ testFragOverlap(
 
 
 
+static
+std::string
+getChromName(
+    const bam_header_info& bamHeader,
+    const int tid)
+{
+    if (tid >= 0)
+    {
+        assert(tid < static_cast<int>(bamHeader.chrom_data.size()));
+        return bamHeader.chrom_data[tid].label;
+    }
+    else
+    {
+        return "UNKNOWN";
+    }
+}
+
+
+
 bool
 SVScorePairAltProcessor::
 realignPairedRead(
-    const bam_record& bamRead,
+    const bam_header_info& bamHeader,
+    const std::string& fragmentQname,
     const bool isLeftOfInsert,
     const std::string& floatRead,
+    const int anchorTid,
     const pos_t anchorPos,
     int& altTemplateSize)
 {
@@ -175,6 +196,16 @@ realignPairedRead(
     {
         const pos_t endPos(anchorPos + floatRead.size());
         if (endPos <= _contig.segmentSpan.end_pos()) return false;
+    }
+
+    // enforce input contract
+    if (floatRead.empty())
+    {
+        using namespace illumina::common;
+
+        std::ostringstream oss;
+        oss << "Empty read attributed to sequence fragment with QNAME: '" << fragmentQname << "' anchored by mate alignment starting at (1-indexed) position: '" << getChromName(bamHeader, anchorTid) << ":" << anchorPos << "'";
+        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 
     AlignmentResult<int> readAlignment;
@@ -202,13 +233,23 @@ realignPairedRead(
         }
     }
 
+    // sanity check targeted contig region
+    if (0 == std::distance(contigBegin, contigEnd))
+    {
+        using namespace illumina::common;
+
+        std::ostringstream oss;
+        oss << "Unexpected zero-length contig region targeted for alignment.  isLeftOfInsert?: " << isLeftOfInsert << " bpAOffset: " << _contig.bpAOffset << " bpBOffset: " << _contig.bpBOffset << " contig sequence: " << _contig.extSeq;
+        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
+    }
+
     _shadowAligner.align(
         readBegin, readEnd,
         contigBegin, contigEnd,
         readAlignment);
 
     //
-    // first determine if the read meets some minimal quality criteria
+    // first determine if the read alignment meets some minimal quality criteria
     //
 
     // require the complete alignment score to be some percentage of optimal after trimming off any expected softclip
@@ -333,8 +374,8 @@ realignPairedRead(
         using namespace illumina::common;
 
         std::ostringstream oss;
-        oss << "ERROR: Failed to parse fragment range from bam record. Frag begin,end: " << fakeRefSpan << " bamRecord: " << bamRead << "\n";
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        oss << "Failed to parse fragment range from alignment record. Frag begin,end: " << fakeRefSpan << ". Fragment QNAME: '" << fragmentQname << "' anchored at (1-indexed) position: '" << getChromName(bamHeader, anchorTid) << ":" << anchorPos << "'";
+        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 
     altTemplateSize=fakeRefSpan.size();
@@ -375,9 +416,11 @@ alignShadowRead(
         reverseCompStr(shadowRead);
     }
 
+    const int mateTid(bamRead.mate_target_id());
     const pos_t matePos(bamRead.mate_pos() -1);
 
-    return realignPairedRead(bamRead, isLeftOfInsert, shadowRead, matePos, altTemplateSize);
+    return realignPairedRead(_header, bamRead.qname(), isLeftOfInsert, shadowRead, mateTid, matePos,
+                             altTemplateSize);
 }
 
 
@@ -451,7 +494,7 @@ processClearedRecord(
         // test for MAPQ0 pair
         {
             typedef RemoteReadCache::const_iterator riter;
-            const RemoteReadCache& remotes(assemblyData.remoteReads);
+            const RemoteReadCache& remotes(_assemblyData.remoteReads);
             riter remoteIter(remotes.find(bamRead.qname()));
 
             if (remoteIter != remotes.end())
@@ -469,9 +512,11 @@ processClearedRecord(
                     return;
                 }
 
+                const int anchorTid(bamRead.target_id());
                 const pos_t anchorPos(bamRead.pos()-1);
                 const std::string& remoteRead(remoteIter->second.readSeq); /// read is already revcomped as required when stored in cache
-                isRepeatChimeraAlignment=realignPairedRead(bamRead, isLeftOfInsert, remoteRead, anchorPos, altTemplateSize);
+                isRepeatChimeraAlignment= realignPairedRead(_header, bamRead.qname(), isLeftOfInsert,
+                                                            remoteRead, anchorTid, anchorPos, altTemplateSize);
 
                 if (! isRepeatChimeraAlignment) return;
             }
@@ -543,8 +588,8 @@ processClearedRecord(
         if (fragBeginRefPos > fragEndRefPos)
         {
             std::ostringstream oss;
-            oss << "ERROR: Failed to parse fragment range from bam record. Frag begin,end: " << fragBeginRefPos << " " << fragEndRefPos << " bamRecord: " << bamRead << "\n";
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            oss << "Failed to parse fragment range from bam record. Frag begin,end: " << fragBeginRefPos << " " << fragEndRefPos << " bamRecord: " << bamRead;
+            BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
         }
 
         if (! testFragOverlap(fragBeginRefPos, fragEndRefPos)) return;

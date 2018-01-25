@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -130,8 +130,8 @@ getSVAltPairSupport(
     SVEvidence& evidence,
     std::vector<pairProcPtr>& pairProcList)
 {
-    pairProcPtr bp1Ptr(new SVScorePairAltProcessor(_scanOpt, _refineOpt, _isAlignmentTumor, _readScanner, pairOpt, assemblyData, sv, true, evidence));
-    pairProcPtr bp2Ptr(new SVScorePairAltProcessor(_scanOpt, _refineOpt, _isAlignmentTumor, _readScanner, pairOpt, assemblyData, sv, false, evidence));
+    pairProcPtr bp1Ptr(new SVScorePairAltProcessor(_header, _scanOpt, _refineOpt, _isAlignmentTumor, _readScanner, pairOpt, assemblyData, sv, true, evidence));
+    pairProcPtr bp2Ptr(new SVScorePairAltProcessor(_header, _scanOpt, _refineOpt, _isAlignmentTumor, _readScanner, pairOpt, assemblyData, sv, false, evidence));
 
     pairProcList.push_back(bp1Ptr);
     pairProcList.push_back(bp2Ptr);
@@ -301,11 +301,10 @@ pairError(
     using namespace illumina::common;
 
     std::ostringstream oss;
-    oss << "ERROR: " << errorMsg << '\n'
+    oss << errorMsg << '\n'
         << "\tcandidate-sv: " << sv
-        << "\tread-pair: " << pair
-        << '\n';
-    BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        << "\tread-pair: " << pair;
+    BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
 }
 
 

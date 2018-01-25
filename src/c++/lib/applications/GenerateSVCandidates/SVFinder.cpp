@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -53,7 +53,12 @@ getSpanningNoiseRate(
     static const double pseudoSpan(10.);
 
     const SampleReadInputCounts& input(counts.getSampleCounts(sampleIndex).input);
-    return ((input.evidenceCount.anom+input.evidenceCount.split)+pseudoSpan)/(input.total()+pseudoTotal);
+
+    const double anomOrSplitCount(input.evidenceCount.anom+input.evidenceCount.split-input.evidenceCount.anomAndSplit);
+    assert(anomOrSplitCount >= 0);
+    assert(anomOrSplitCount <= input.evidenceCount.total);
+
+    return (anomOrSplitCount+pseudoSpan)/(input.evidenceCount.total+pseudoTotal);
 }
 
 
@@ -68,7 +73,9 @@ getAssemblyNoiseRate(
     static const double pseudoAssm(10.);
 
     const SampleReadInputCounts& input(counts.getSampleCounts(sampleIndex).input);
-    return (input.evidenceCount.assm+pseudoAssm)/(input.total()+pseudoTotal);
+    assert(input.evidenceCount.assm <= input.evidenceCount.total);
+
+    return (input.evidenceCount.assm+pseudoAssm)/(input.evidenceCount.total+pseudoTotal);
 }
 
 
@@ -96,7 +103,7 @@ SVFinder(
 
     // setup regionless bam_streams:
     // setup all data for main analysis loop:
-    for (const std::string& afile : opt.alignFileOpt.alignmentFilename)
+    for (const std::string& afile : opt.alignFileOpt.alignmentFilenames)
     {
         // avoid creating shared_ptr temporaries:
         streamPtr tmp(new bam_streamer(afile.c_str(), opt.referenceFilename.c_str()));
@@ -132,8 +139,8 @@ SVFinder(
         };
 
         const bool isFirst(bamIndex==0);
-        updateRate(_spanningNoiseRate,getSpanningNoiseRate(counts,bamIndex), isFirst);
-        updateRate(_assemblyNoiseRate,getAssemblyNoiseRate(counts,bamIndex), isFirst);
+        updateRate(_spanningNoiseRate, getSpanningNoiseRate(counts, bamIndex), isFirst);
+        updateRate(_assemblyNoiseRate, getAssemblyNoiseRate(counts, bamIndex), isFirst);
     }
 }
 
@@ -213,7 +220,7 @@ addSVNodeRead(
                 std::ostringstream oss;
                 oss << "Unexpected svlocus counts from bam record: " << bamRead << "\n"
                     << "\tlocus: " << locus << "\n";
-                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
             if (! locus.getNode(readRemoteIndex).getInterval().isIntersect(remoteNode.getInterval())) continue; //todo should this intersect be checked in swapped orientation?
         }
@@ -414,7 +421,7 @@ checkResult(
                 {
                     std::ostringstream oss;
                     oss << "Searching for SVIndex: " << sva.index << " with svSize: " << svCount << "\n";
-                    BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                    BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
                 }
 
                 if (SVEvidenceType::isPairType(sva.evtype))
@@ -447,7 +454,7 @@ checkResult(
                 << "\tSVreadCount: " << svObsReadCount << " DataReadCount: " << dataObsReadCount << "\n"
                 << "\tSVpaircount: " << svObsPairCount << " DataPaircount: " << dataObsPairCount << "\n"
                 << "\tsvIndex: " << svIndex << " SV: " << svs[svIndex];
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
 
         }
     }
@@ -943,13 +950,13 @@ isCandidateCountSufficient(
 }
 
 
-/// determine if the rate of supporting read observations at a breakpoint is significant
+/// Determine if the rate of supporting read observations at a breakpoint is significant
 /// relative to a background noise rate
 ///
-/// \param signalReadInfo vector which has a size equal to the supporting read count, for each supporting read, the vector
+/// \param signalReadInfo Vector which has a size equal to the supporting read count, for each supporting read, the vector
 ///                    contains a relative index for the supporting read among all qualifying (mapped) reads from
 ///                    the same input BAM file. This relative index is used to estimate signal density.
-/// \return true if we reject the null hyp that breakpoint signal is noise
+/// \return true if we reject the null hypothesis that breakpoint signal is noise
 static
 bool
 isBreakPointSignificant(
@@ -957,6 +964,9 @@ isBreakPointSignificant(
     const double noiseRate,
     std::vector<double>& signalReadInfo)
 {
+    assert(alpha >= 0.);
+    assert((noiseRate >= 0.) && (noiseRate <= 1.));
+
     const unsigned signalReadCount(signalReadInfo.size());
 
     // enforce a simple minimum signal count regardless of noiseRate/alpha
@@ -1018,7 +1028,7 @@ isBreakPointSignificant(
 
 
 
-/// test a spanning candidate for minimum supporting evidence level prior
+/// Test a spanning candidate for minimum supporting evidence level prior
 /// to assembly and scoring stages
 ///
 /// Note this test is applied early, and as such it is intended to only filter
@@ -1040,7 +1050,7 @@ isSpanningCandidateSignalSignificant(
         appendVec(evidence_bp2,sv.bp2EvidenceIndex[evidenceTypeIndex]);
     }
 
-    static const double alpha(0.05);
+    static const double alpha(0.03);
     const bool isBp1(isBreakPointSignificant(alpha, noiseRate, evidence_bp1));
     const bool isBp2(isBreakPointSignificant(alpha, noiseRate, evidence_bp2));
 
@@ -1081,7 +1091,7 @@ enum index_t
 
 
 
-/// return enumerator describing the candidate's filtration state, based on
+/// Return enumerator describing the candidate's filtration state, based on
 /// information available in a single junction (as opposed to
 /// requiring multi-junction analysis)
 ///
@@ -1263,7 +1273,10 @@ getCandidatesFromData(
     }
 #endif
 
-    filterCandidates(_isRNA, _spanningNoiseRate, _assemblyNoiseRate,svs,stats);
+    assert((_spanningNoiseRate >= 0.) && (_spanningNoiseRate <= 1.));
+    assert((_assemblyNoiseRate >= 0.) && (_assemblyNoiseRate <= 1.));
+
+    filterCandidates(_isRNA, _spanningNoiseRate, _assemblyNoiseRate, svs, stats);
 
     std::copy(svs.begin(),svs.end(),std::back_inserter(output_svs));
 }

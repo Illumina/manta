@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -134,7 +134,7 @@ public:
     }
     bool is_supplementary() const
     {
-        return ((_bp->core.flag & BAM_FLAG::SUPPLEMENT) != 0);
+        return ((_bp->core.flag & BAM_FLAG::SUPPLEMENTARY) != 0);
     }
 
     void toggle_is_paired()
@@ -179,7 +179,7 @@ public:
     }
     void toggle_is_supplementary()
     {
-        _bp->core.flag ^= BAM_FLAG::SUPPLEMENT;
+        _bp->core.flag ^= BAM_FLAG::SUPPLEMENTARY;
     }
 
     int read_no() const

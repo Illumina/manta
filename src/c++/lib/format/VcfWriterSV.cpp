@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -567,10 +567,10 @@ writeInvdel(
             using namespace illumina::common;
 
             std::ostringstream oss;
-            oss << "ERROR: Unexpected reference allele size: " << ref.size() << "\n";
+            oss << "Unexpected reference allele size: " << ref.size() << "\n";
             oss << "\tExpected: " << (1+endRefPos-beginRefPos) << "\n";
             oss << "\tbeginRefPos: " << beginRefPos << " endRefPos: " << endRefPos << " isSmallVariant: " << isSmallVariant << "\n";
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
         }
     }
 
@@ -776,8 +776,8 @@ writeSVCore(
         using namespace illumina::common;
 
         std::ostringstream oss;
-        oss << "ERROR: sv candidate cannot be classified: " << sv << "\n";
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        oss << "SV candidate cannot be classified: " << sv;
+        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 
     try

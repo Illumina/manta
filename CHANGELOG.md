@@ -3,6 +3,12 @@
 ### Changed
 - Change depth estimation to filter all reads never seen by the SV caller prior to computing depth (MANTA-1296)
   - Expected depth per chromosome and local depth per locus/variant are now computed after removing filtered, pcr-duplicate, and secondary reads.
+- Lower default memory requirements for scatter phase tasks (MANTA-1307)
+  - Reduce from 2Gb to 1.5Gb to enable all cores by default on AWS c4.8xlarge/other c\* servers.
+  - Added new `--callMemMb` option to override this value for cases of extreme depth/chimera rate, etc
+- Update htslib/samtools to 1.6 (MANTA-1331)
+  - Updated from older 1.2 version to include improved checks on corrupted data.
+  - Stopped vendoring zlib as part of this update, so zlib (w/ headers) is now a build requirement.
 - Update the genotyping model (MANTA-1205)
   - Allow minor evidence of reference allele for hom-alt calls to tolerate a small number of noisy reads.
   - Filter out split reads with poor alignments to both alleles.
@@ -12,6 +18,14 @@
 - Improve error message/docs for alignment records with unknown sequence (SEQ='\*') (MANTA-1295/[#111])
 - Improve error message when two alignments use the same QNAME/read-number (MANTA-1293)
   - Message changed to help end-users track down the issue in the alignment file more easily - now includes chromosome name instead of contig index and 1-indexed alignment position.
+- Fix CRC error from python gzip lib when generating evidence bam (MANTA-1270)
+  - Remove the filter on evidence reads for SV candidates that are not in the file candidateSV.vcf.gz, because the file now contains all SV candidates without removing duplicates.
+- Stop automatically clearing python environment variables (MANTA-1316)
+  - This should allow python from certain module systems to be used, but may (rarely) cause instability due to conflicting content in a user's PYTHONPATH.
+- Improve estimation of chimeric fragment rate (ie. fraction of reads which are split or in anomalous pairs) (MANTA-1261/[#103])
+  - This fraction is used to set signal/noise thresholds important for somatic calling.
+  - The secondary/supplmental segments of each split read are no longer counted as separate observations.
+  - The method now accounts for many reads being classified as both anomalous and split.
 
 ## v1.2.2 - 2017-11-10
 
@@ -44,12 +58,12 @@ This is a minor bugfix release from v1.2.0
 ### Added
 - Use the BAM mate CIGAR (MC) tag, when present, to improve the accuracy of accessing if a read has extended into adapter sequence (MANTA-1097)
 - Add sanity check of specified target regions during configuration (MANTA-1218)
-    - A configuration error, instead of a runtime error, will be generated if the chromosome portion of the region does not match a chromosome name from the input reference sequence.
+  - A configuration error, instead of a runtime error, will be generated if the chromosome portion of the region does not match a chromosome name from the input reference sequence.
 
 ### Changed
-- Change candidateSV.vcf to include all candidates used to generate final calls(MANTA-1039)
-    - The candidates may include redundanta entries.
-    - Redundant candidates are still reduced to a single best call in the final call output.
+- Change candidateSV.vcf to include all candidates used to generate final calls (MANTA-1039)
+  - The candidates may include redundanta entries.
+  - Redundant candidates are still reduced to a single best call in the final call output.
 - Move changelog to markdown format (MANTA-1245)
 
 ### Fixed

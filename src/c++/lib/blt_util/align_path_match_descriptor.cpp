@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -50,8 +50,8 @@ unknown_md_error(const char* const md,
 {
 
     std::ostringstream oss;
-    oss << "ERROR: can't parse match descriptor string: " << md << "\n"
-        << "\tunexpected character: '" << *mdptr << "' at position: " << (mdptr-md+1) << "\n";
+    oss << "Can't parse match descriptor string: " << md << "\n"
+        << "\tunexpected character: '" << *mdptr << "' at position: " << (mdptr-md+1);
     throw blt_exception(oss.str().c_str());
 }
 

@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 #pragma once
 
 #include "blt_util/known_pos_range2.hh"
+#include "htsapi/bam_header_info.hh"
 
 #include <iosfwd>
 
@@ -87,6 +88,15 @@ struct GenomeInterval
     known_pos_range2 range;
 };
 
+
+/// Pretty print summary information from a genome interval for end-user error message
+void
+summarizeGenomeInterval(
+    const bam_header_info& bamHeader,
+    const GenomeInterval& gi,
+    std::ostream& os);
+
+/// Debug printer for genome interval
 std::ostream&
 operator<<(std::ostream& os, const GenomeInterval& gi);
 

@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -41,7 +41,7 @@ parse_exception(const char* type_label,
                 const char* parse_str)
 {
     std::ostringstream oss;
-    oss << "ERROR: Can't parse " << type_label << " from string: '" << parse_str << "'";
+    oss << "Can't parse " << type_label << " from string: '" << parse_str << "'";
     throw blt_exception(oss.str().c_str());
 }
 

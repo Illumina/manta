@@ -1,7 +1,7 @@
 #! /usr/bin/env python2
 #
 # Manta - Structural Variant and Indel Caller
-# Copyright (c) 2013-2017 Illumina, Inc.
+# Copyright (c) 2013-2018 Illumina, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,19 +23,17 @@ Merge bams listed in a file
 """
 
 import sys
-import re
-from os.path import isfile
 from optparse import OptionParser
 from glob import glob
 from subprocess import call
 from shutil import copyfile
 
 def getOptions():
-    usage = "usage: %prog [options] samtools_bin bam_mask merged_bam merged_sam bam_list_file"
+    usage = "usage: %prog [options] samtools_bin bam_mask merged_bam bam_list_file"
     parser = OptionParser(usage=usage)
     (options,args) = parser.parse_args()
 
-    if len(args) != 5 :
+    if len(args) != 4 :
         parser.print_help()
         sys.exit(2)
 
@@ -50,8 +48,7 @@ if __name__=='__main__':
     samtoolsBin = args[0]
     bamMask = args[1]
     mergedBam = args[2]
-    mergedSam = args[3]
-    bamListFile = args[4]
+    bamListFile = args[3]
 
     firstBam = ""
     fileCount = 0
@@ -65,10 +62,9 @@ if __name__=='__main__':
     fpList.close()
 
     if fileCount > 1:
-        call([ samtoolsBin, "merge", "-c -p -b",
-               bamListFile, mergedBam ])
+        retval = call([samtoolsBin, "merge", "-c", "-p", "-b", bamListFile, mergedBam])
+        if retval != 0 :
+            raise Exception("Failed to merge alignment files")
+
     elif fileCount == 1:
         copyfile(firstBam, mergedBam)
-
-    call([ samtoolsBin, "view", "-h",
-           "-o", mergedSam, mergedBam ])

@@ -1,6 +1,6 @@
 #
 # Manta - Structural Variant and Indel Caller
-# Copyright (c) 2013-2017 Illumina, Inc.
+# Copyright (c) 2013-2018 Illumina, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -340,12 +340,14 @@ def sortBams(self, sortBamTasks, taskPrefix="", binStr="", isNormal=True, bamIdx
     else:
         bamList = self.params.tumorBamList
 
-    for bamPath in bamList:
+    for _ in bamList:
         supportBam = self.paths.getSupportBamPath(bamIdx, binStr)
-        sortedBam = os.path.splitext(self.paths.getSortedSupportBamPath(bamIdx, binStr))[0]
+        sortedBam = self.paths.getSortedSupportBamPath(bamIdx, binStr)
+
+
         # first check the existence of the supporting bam
         # then sort the bam only if it exists
-        sortBamCmd = [ sys.executable,"-E", self.params.mantaSortBam,
+        sortBamCmd = [ sys.executable, self.params.mantaSortBam,
                       self.params.samtoolsBin, supportBam, sortedBam ]
 
         sortBamTask = preJoin(taskPrefix, "sortEvidenceBam_%s_%s" % (binStr, bamIdx))
@@ -361,7 +363,7 @@ def sortAllVcfs(self, taskPrefix="", dependencies=None) :
     nextStepWait = set()
 
     def getVcfSortCmd(vcfListFile, outPath, isDiploid, isCandidate) :
-        cmd  = "\"%s\" -E \"%s\" " % (sys.executable, self.params.mantaSortVcf)
+        cmd  = "\"%s\" \"%s\" " % (sys.executable, self.params.mantaSortVcf)
         cmd += "-f \"%s\"" % (vcfListFile)
 
         # Boolean variable isCandidate is set "True" for candidateSV.vcf
@@ -373,7 +375,7 @@ def sortAllVcfs(self, taskPrefix="", dependencies=None) :
         if isDiploid:
             tempVcf = self.paths.getTempDiploidPath()
             cmd += " > \"%s\"" % (tempVcf)
-            cmd += " && \"%s\" -E \"%s\" \"%s\"" % (sys.executable, self.params.mantaPloidyFilter, tempVcf)
+            cmd += " && \"%s\" \"%s\" \"%s\"" % (sys.executable, self.params.mantaPloidyFilter, tempVcf)
 
         cmd += " | \"%s\" -c > \"%s\"" % (self.params.bgzipBin, outPath)
 
@@ -392,7 +394,7 @@ def sortAllVcfs(self, taskPrefix="", dependencies=None) :
         headerFixTask=preJoin(taskPrefix,"fixVcfHeader_"+label)
         def getHeaderFixCmd(fileName) :
             tmpName=fileName+".reheader.tmp"
-            cmd  = "\"%s\" -E \"%s\"" % (sys.executable, self.params.vcfCmdlineSwapper)
+            cmd  = "\"%s\" \"%s\"" % (sys.executable, self.params.vcfCmdlineSwapper)
             cmd += ' "' + " ".join(self.params.configCommandLine) + '"'
             cmd += " < \"%s\" > \"%s\"" % (fileName,tmpName)
             cmd += " && " + " ".join(getMvCmd()) +  " \"%s\" \"%s\"" % (tmpName, fileName)
@@ -430,7 +432,7 @@ def sortAllVcfs(self, taskPrefix="", dependencies=None) :
 
     def getExtractSmallCmd(maxSize, inPath, outPath) :
         cmd  = "\"%s\" -dc \"%s\"" % (self.params.bgzipBin, inPath)
-        cmd += " | \"%s\" -E \"%s\" --maxSize %i" % (sys.executable, self.params.mantaExtraSmallVcf, maxSize)
+        cmd += " | \"%s\" \"%s\" --maxSize %i" % (sys.executable, self.params.mantaExtraSmallVcf, maxSize)
         cmd += " | \"%s\" -c > \"%s\"" % (self.params.bgzipBin, outPath)
         return cmd
 
@@ -455,34 +457,22 @@ def mergeSupportBams(self, mergeBamTasks, taskPrefix="", isNormal=True, bamIdx=0
 
     for bamPath in bamList:
         # merge support bams
-        mergedSamFile = self.paths.getMergedSupportSamPath(bamIdx)
-        mergeCmd = [ sys.executable,"-E", self.params.mantaMergeBam,
+        supportBamFile = self.paths.getFinalSupportBamPath(bamPath)
+        mergeCmd = [ sys.executable, self.params.mantaMergeBam,
                      self.params.samtoolsBin,
                      self.paths.getSortedSupportBamMask(bamIdx),
-                     self.paths.getMergedSupportBamPath(bamIdx),
-                     mergedSamFile,
+                     supportBamFile,
                      self.paths.getSupportBamListPath(bamIdx) ]
 
         mergeBamTask=self.addTask(preJoin(taskPrefix,"merge_evidenceBam_%s" % (bamIdx)),
                                   mergeCmd, dependencies=dependencies)
         mergeBamTasks.add(mergeBamTask)
 
-        # filter the merged sam
-        filteredBamFile = self.paths.getFinalSupportBamPath(bamPath)
-        filterCmd = [ sys.executable,"-E", self.params.mantaFilterBam,
-                     self.params.samtoolsBin,
-                     self.paths.getSortedCandidatePath(),
-                     mergedSamFile,
-                     self.paths.getfilteredSupportSamPath(bamIdx),
-                     filteredBamFile ]
-        filterBamTask = self.addTask(preJoin(taskPrefix,"filter_evidenceSam_%s" % (bamIdx)),
-                                     filterCmd, dependencies=mergeBamTask)
-        mergeBamTasks.add(filterBamTask)
-
         # index the filtered bam
-        indexCmd = [ self.params.samtoolsBin, "index", filteredBamFile ]
+        ### TODO still needs to handle the case where supportBamFile does not exist
+        indexCmd = [ self.params.samtoolsBin, "index", supportBamFile ]
         indexBamTask = self.addTask(preJoin(taskPrefix,"index_evidenceBam_%s" % (bamIdx)),
-                                    indexCmd, dependencies=filterBamTask)
+                                    indexCmd, dependencies=mergeBamTask)
         mergeBamTasks.add(indexBamTask)
 
         bamIdx += 1
@@ -506,10 +496,6 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
 
     isSomatic = (len(self.params.normalBamList) and len(self.params.tumorBamList))
     isTumorOnly = ((not isSomatic) and len(self.params.tumorBamList))
-
-    hyGenMemMb = self.params.hyGenLocalMemMb
-    if self.getRunMode() == "sge" :
-        hyGenMemMb = self.params.hyGenSGEMemMb
 
     hygenTasks=set()
     if self.params.isGenerateSupportBam :
@@ -595,7 +581,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
             hygenCmd.append("--output-contigs")
 
         hygenTask = preJoin(taskPrefix,"generateCandidateSV_"+binStr)
-        hygenTasks.add(self.addTask(hygenTask,hygenCmd,dependencies=dirTask, memMb=hyGenMemMb))
+        hygenTasks.add(self.addTask(hygenTask,hygenCmd,dependencies=dirTask, memMb=self.params.hyGenMemMb))
 
         # TODO: if the bam is large, for efficiency, consider
         # 1) filtering the bin-specific bam first w.r.t. the final candidate vcf
@@ -642,7 +628,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
     self.addWorkflowTask(logListTask,listFileWorkflow(logListFile,edgeRuntimeLogPaths),dependencies=hygenTasks)
 
     def getEdgeLogSortCmd(logListFile, outPath) :
-        cmd  = [sys.executable,"-E",self.params.mantaSortEdgeLogs,"-f", logListFile,"-o",outPath]
+        cmd  = [sys.executable, self.params.mantaSortEdgeLogs,"-f", logListFile,"-o",outPath]
         return cmd
 
     edgeSortCmd=getEdgeLogSortCmd(logListFile,self.paths.getSortedEdgeRuntimeLogPath())
@@ -772,18 +758,6 @@ class PathInfo:
         return os.path.join(self.getHyGenDir(),
                             "evidence_*.bam_%s.sorted.bam" % (bamIdx))
 
-    def getMergedSupportBamPath(self, bamIdx):
-        return os.path.join(self.getHyGenDir(),
-                            "evidence.bam_%s.merged.bam" % (bamIdx))
-
-    def getMergedSupportSamPath(self, bamIdx):
-        return os.path.join(self.getHyGenDir(),
-                            "evidence.bam_%s.merged.sam" % (bamIdx))
-
-    def getfilteredSupportSamPath(self, bamIdx):
-        return os.path.join(self.getHyGenDir(),
-                            "evidence.bam_%s.filtered.sam" % (bamIdx))
-
     def getFinalSupportBamPath(self, bamPath):
         bamPrefix = os.path.splitext(os.path.basename(bamPath))[0]
         return os.path.join(self.params.evidenceDir,
@@ -865,6 +839,18 @@ class MantaWorkflow(WorkflowRunner) :
         self.params.isIgnoreAnomProperPair = (self.params.isRNA)
 
 
+    def setCallMemMb(self) :
+        "Setup default task memory requirements"
+
+        if self.params.callMemMbOverride is not None :
+            self.params.estimateMemMb = self.params.callMemMbOverride
+            self.params.hyGenMemMb = self.params.callMemMbOverride
+        else :
+            if self.getRunMode() == "sge" :
+                self.params.hyGenMemMb = self.params.hyGenSGEMemMb
+            else :
+                self.params.hyGenMemMb = self.params.hyGenLocalMemMb
+
 
     def getSuccessMessage(self) :
         "Message to be included in email for successful runs"
@@ -877,6 +863,7 @@ class MantaWorkflow(WorkflowRunner) :
 
     def workflow(self) :
         self.flowLog("Initiating Manta workflow version: %s" % (__version__))
+        self.setCallMemMb()
 
         graphTaskDependencies = set()
 

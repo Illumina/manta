@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -796,7 +796,7 @@ selectContigs(
     std::set<unsigned> usedPseudoReads;
 
     // contig are selected based on the number of supporting reads that are not pseudo
-    while ((candidateContigs.size() > 0) && (finalContigCount < opt.maxAssemblyCount))
+    while ((! candidateContigs.empty()) && (finalContigCount < opt.maxAssemblyCount))
     {
         // count unused reads that are not pseudo reads
         const unsigned usedNormalReads = usedReads.size() - usedPseudoReads.size();

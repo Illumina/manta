@@ -1,7 +1,7 @@
 #! /usr/bin/env python2
 #
 # Manta - Structural Variant and Indel Caller
-# Copyright (c) 2013-2017 Illumina, Inc.
+# Copyright (c) 2013-2018 Illumina, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ Sort the given bam file only if it exists
 """
 
 import sys
-import re
 from os.path import isfile
 from optparse import OptionParser
 from subprocess import call
@@ -50,5 +49,6 @@ if __name__=='__main__':
     sortedBam = args[2]
 
     if isfile(originalBam):
-        call([ samtoolsBin, "sort",
-               originalBam, sortedBam ])
+        retval = call([ samtoolsBin, "sort", originalBam, "-o", sortedBam])
+        if retval != 0 :
+            raise Exception("Failed to sort alignment file '%s'" % (originalBam))

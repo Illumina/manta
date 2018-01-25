@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -56,7 +56,7 @@ invalid_qscore_error(const int qscore,
                      const char* label)
 {
     std::stringstream oss;
-    oss << "ERROR: Attempting to lookup invalid " << label << " score: " << qscore;
+    oss << "Attempting to lookup invalid " << label << " score: " << qscore;
     throw blt_exception(oss.str().c_str());
 }
 
@@ -67,7 +67,7 @@ high_qscore_error(const int qscore,
                   const char* label)
 {
     std::stringstream oss;
-    oss << "ERROR: Attempting to lookup " << label << " score " << qscore << " which exceeds the maximum cached " << label << " score of " <<  MAX_QSCORE;
+    oss << "Attempting to lookup " << label << " score " << qscore << " which exceeds the maximum cached " << label << " score of " <<  MAX_QSCORE;
     throw blt_exception(oss.str().c_str());
 }
 

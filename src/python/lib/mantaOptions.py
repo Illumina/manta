@@ -1,6 +1,6 @@
 #
 # Manta - Structural Variant and Indel Caller
-# Copyright (c) 2013-2017 Illumina, Inc.
+# Copyright (c) 2013-2018 Illumina, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -57,10 +57,10 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
 
 
     def addExtendedGroupOptions(self,group) :
-        group.add_option("--scanSizeMb", type="int", metavar="INT",
+        group.add_option("--scanSizeMb", dest="scanSizeMb", type="int", metavar="INT",
                          help="Maximum sequence region size (in megabases) scanned by each task during "
                          "SV Locus graph generation. (default: %default)")
-        group.add_option("--callRegions", dest="callRegionsBed",
+        group.add_option("--callRegions", dest="callRegionsBed", metavar="FILE",
                          help="Optionally provide a bgzip-compressed/tabix-indexed BED file containing the set of regions to call. "
                               "No VCF output will be provided outside of these regions. The full genome will still be used "
                               "to estimate statistics from the input (such as expected fragment size distribution). "
@@ -73,6 +73,10 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
                               "'--region chr2:100-2000 --region chr3:2500-3000' (two regions)'. If this "
                               "option is specified (one or more times) together with the --callRegions BED file, then "
                               "all region arguments will be intersected with the callRegions BED track.")
+        group.add_option("--callMemMb",dest="callMemMbOverride",type="int",metavar="INT",
+                         help="Set default task memory requirement (in megabytes) for common tasks. This may benefit "
+                              "an analysis of unusual depth, chimera rate, etc.. 'Common' tasks refers to most "
+                              "compute intensive scatter-phase tasks of graph creation and candidate generation.")
 
         ConfigureWorkflowOptions.addExtendedGroupOptions(self,group)
 
@@ -114,7 +118,6 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         vcfCmdlineSwapper=joinFile(libexecDir,"vcfCmdlineSwapper.py")
         mantaSortBam=joinFile(libexecDir,"sortBam.py")
         mantaMergeBam=joinFile(libexecDir,"mergeBam.py")
-        mantaFilterBam=joinFile(libexecDir,"filterBam.py")
 
         workflowScriptName = "runWorkflow.py"
 
@@ -128,12 +131,16 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         #       use ever expected in a production run. The consequence of exceeding the mean is
         #       a slow run due to swapping.
         #
-        estimateMemMb=2*1024
+        estimateMemMb=1.5*1024
         mergeMemMb=4*1024
         hyGenSGEMemMb=4*1024
-        hyGenLocalMemMb=2*1024
+        hyGenLocalMemMb=1.5*1024
 
+        # extended options
         scanSizeMb = 12
+        callRegionsBed = None
+        regionStrList = None
+        callMemMbOverride = None
 
         return cleanLocals(locals())
 

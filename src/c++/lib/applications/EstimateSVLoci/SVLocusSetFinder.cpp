@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -134,7 +134,7 @@ SVLocusSetFinder(
     _positionReadDepthEstimate(depthBufferCompression),
     _isInDenoiseRegion(false),
     _denoiseStartPos(0),
-    _readScanner(opt.scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilename, opt.isRNA),
+    _readScanner(opt.scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilenames, opt.isRNA),
     _isMaxDepthFilter(false),
     _maxDepth(0),
     _bamHeader(bamHeader),
@@ -153,12 +153,12 @@ SVLocusSetFinder(
     //
     // initialize various SV locus graph meta-data
     //
-    const unsigned sampleCount(opt.alignFileOpt.alignmentFilename.size());
+    const unsigned sampleCount(opt.alignFileOpt.alignmentFilenames.size());
     _svLoci.getCounts().setSampleCount(sampleCount);
 
     for (unsigned sampleIndex(0); sampleIndex<sampleCount; ++sampleIndex)
     {
-        _svLoci.getCounts().getSampleCounts(sampleIndex).sampleSource = opt.alignFileOpt.alignmentFilename[sampleIndex];
+        _svLoci.getCounts().getSampleCounts(sampleIndex).sampleSource = opt.alignFileOpt.alignmentFilenames[sampleIndex];
     }
 
     _svLoci.header = bamHeader;
@@ -287,9 +287,9 @@ update(
             if (readSeq.get_code(baseIndex) == BAM_BASE::REF)
             {
                 std::ostringstream oss;
-                oss << "ERROR: Unsupported use of the '=' symbol in the BAM/CRAM SEQ field from read:\n";
+                oss << "Unsupported use of the '=' symbol in the BAM/CRAM SEQ field from read:\n";
                 streamErrorReporter.report_state(oss);
-                BOOST_THROW_EXCEPTION(illumina::common::LogicException(oss.str()));
+                BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
             }
         }
     }

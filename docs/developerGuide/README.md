@@ -141,8 +141,10 @@ the library level.  Note that unit test codes are compiled to
 libraries but cannot be run.
 
 C++11 features in use require at least VS2013. A Windows
-installation of cmake is also required to configure and compile.
-Note that the minimum cmake version is 3.1.0 for Windows.
+installation of cmake and zlib are also required to configure and compile.
+Note that the minimum cmake version is 3.1.0 for Windows. Windows zlib is provided by the [gnuwin32 package][gnuwin32] among others.
+
+[gnuwin32]:http://gnuwin32.sourceforge.net/packages/zlib.htm
 
 ### Automating Portable Binary Builds for Linux
 
@@ -169,6 +171,8 @@ see the `builderImage` variable.
 
 ## Coding Guidelines
 
+Supported project languages are C++11 for core methods development and python2 (2.6+) for workflow and scripting support.
+
 ### Source formatting
 
 * Basic formatting restrictions on c++ code:
@@ -180,6 +184,7 @@ see the `builderImage` variable.
   * Make variable/type names self-documenting whereever this is practical, e.g. sampleCount, breakpointRegion, etc.
   * Lowercase camelCase variable names
   * Uppercase CamelCase type names
+  * Private class members start with a leading underscore, e.g. `_sampleName`.
 * Otherwise, follow local code conventions
 
 ### Git conventions
@@ -222,9 +227,18 @@ In all other situations history editing is discouraged and a conventional merge-
 The primary function of the changelog is to help end-users weigh the benefits and risks or updating to a newer version.
 
 To this end:
-- Changelog entries should be made for any major branch merge, bug fix, or generally something that would change a user's interaction at the configuration step, change the format/interpretation of the output or change the variant calling performance.
-- The project changelog follows many of the conventions suggested in keepachangelog. Consistent with this formatting, changelog entries should be more descriptive and end-user focused than git commit entries. JIRA or github ticket IDs should be listed at the end of the Changelog description to help developers link issues, without making this the emphasis of each changelog entry.
-- Each major branch with an end-user impact should add a changelog entry to the Unreleased section of the changelog prior to merging the branch.
+- Changelog entries should be made for any major branch merge, bug fix, or generally something that would change
+a user's interaction at the configuration step, change the format/interpretation of the output or change
+the variant calling performance.
+- The project changelog follows many of the conventions suggested in [keepachangelog](http://keepachangelog.com/en/1.0.0/).
+Consistent with this formatting, changelog entries should be more descriptive and end-user focused than git commit
+entries. JIRA or github ticket IDs should be listed at the end of the Changelog description to help developers link
+issues, without making this the emphasis of each changelog entry.
+- Each major branch with an end-user impact should add a changelog entry to the Unreleased section of the changelog
+prior to merging the branch.
+- For consistency with the git commit log, try to follow a similar summary style even though descriptions can be much
+longer, for instance by starting all major bullet points with an imperitive verb.
+
 
 ## Branching and release tagging guidelines
 
@@ -251,7 +265,7 @@ release version with an "x", for instance the "v2.4.x" branch would be used to p
 
 #### Exception Details
 
-* Preferred exception pattern is to use an internal class derived from `boost::exception`:
+* Preferred exception pattern is to use an internal class `GeneralException` derived from `boost::exception`:
 
 ```c++
 
@@ -265,26 +279,107 @@ foo(const char* name)
     using namespace illumina::common;
 
     std::ostringstream oss;
-    oss << "ERROR: unrecognized variant scoring model name: '" << name << "'\n";
-    BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+    oss << "Unrecognized variant scoring model name: '" << name << "'";
+    BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
 }
 ```
 
+* Best practice for exception messages designed to avoid redundant boilerplate at the throw site:
+  * Avoid adding a standard "ERROR" or "EXCEPTION" prefix
+  * Avoid ending the message with a newline. For multi-line exception messages the ending newline may make sense on a case-by-case basis.
+
 * Context at the original throw site is often supplemented by a 'catch and release' block to add
-information at a few critical points on the stack. Typically this is information which
-is unavailable at the throw site. Example code is:
+information at a few critical points on the stack as the stack is unwound. Typically this is information which
+is unavailable at the throw site.
+  * The preferred method to implement this is to use `boost::error_info`. This only works for exceptions derived from `illumina::common::ExceptionData`, such as the above noted `GeneralException` class.
+  * The first template argument to `boost::error_info` (`edge_error_info` in the example below) is an arbitrary empty struct, the name of which will be printed with the metadata proceeding the given string (this seems to be some kind of tag dispatch mechanism in the boost exception library). The coding convention is to create an informative category
+  name for each instance where this exception decoration pattern occurs.
+  * An example of using this pattern in code follows:
 
 ```c++
-try
+catch (illumina::common::ExceptionData& e)
 {
-    realign_and_score_read(_opt,_dopt,sif.sample_opt,_ref,realign_buffer_range,rseg,sif.getIndelBuffer());
-}
-catch (...)
-{
-    log_os << "ERROR: Exception caught in align_pos() while realigning segment: "
-	   << static_cast<int>(r.second) << " of read: " << (*r.first) << "\n";
+    // decorate an in-flight exception:
+    std::ostringstream oss;
+    oss << "Can't find return edge to node index: " << _index << ":" << fromIndex << " in remote node index: " << _index << ":" << fromNodeEdgeIter.first << "\n"
+        << "\tlocal_node: " << fromNode
+        << "\tremote_node: " << remoteNode;
+
+    // Note that the struct 'edge_error_info" is just an arbitrary tag name applied to this string, any name can be
+    // used for this purpose at each exception decoration site:
+    e << boost::error_info<struct edge_error_info,std::string>(oss.str());
     throw;
 }
+```
+
+  * More details on `boost::error_info` usage:
+
+```c++
+catch (illumina::common::ExceptionData& e)
+{
+    // use a boost error_info type to supplement the current exception message
+    e << boost::error_info<struct extra_exception_message,std::string>("FOO");
+
+    //  to further supplement the exception message, change the tag struct to
+    // create another boost error_info type
+    e << boost::error_info<struct current_candidate_info,std::string>("BAR");
+
+    // Note that repeating any type will result in only the last message being
+    // printed to standard error, eg:
+    //
+    // e << boost::error_info<struct special_message, std::string>("BAR1");
+    // e << boost::error_info<struct special_message, std::string>("BAR2");
+    //
+    // ...would result in only the second message "BAR2", being rended in the final exception message.
+
+    throw;
+}
+```
+
+  * A more general backup to the above method that works for all exception types is a simple stderr print at the catch
+  site. In this case the information will be a bit out of order, but this will get the job done:
+
+```c++
+catch (...)
+{
+    log_os << "Exception caught in align_pos() while realigning segment: "
+           << static_cast<int>(r.second) << " of read: " << (*r.first) << "\n";
+    throw;
+}
+```
+
+##### Exception example
+
+The following example shows an exception message with two messages added during stack unwinding using the
+boost::error_info mechanism described above (Additional cmdline/version details are added at the end of the
+message by the lowest-level catch site for each binary).
+
+```
+FATAL_ERROR: 2018-Jan-02 16:27:53 /src/c++/lib/applications/GenerateSVCandidates/SVCandidateAssemblyRefiner.cpp(985): Throw in function void processLargeInsertion(const SVCandidate&, pos_t, pos_t, const GlobalAligner<int>&, const std::vector<unsigned int>&, const std::set<int>&, SVCandidateAssemblyData&, const GSCOptions&)
+Dynamic exception type: boost::exception_detail::clone_impl<illumina::common::GeneralException>
+std::exception::what: Large insertion alignment procedure produced invalid zero-length alignment target
+
+[runGSC(GSCOptions const&, char const*, char const*)::current_edge_info*] = Exception caught while processing graph edge: edgeinfo locus:node1:node2: 3360:0:0
+        node1:LocusNode: GenomeInterval: 19:[44215749,44215797) n_edges: 1 out_count: 18 evidence: [44215637,44215909)
+        EdgeTo: 0 out_count: 18
+        node1:EndUserGenomeInterval: chr20:44215750-44215797
+
+[SVCandidateProcessor::evaluateCandidate(EdgeInfo const&, SVMultiJunctionCandidate const&, SVCandidateSetData const&, bool, SupportSamples&)::assembly_candidate_info*] = Exception caught while attempting to assemble SVCandidate:
+        isImprecise?: 1
+        forwardTranscriptStrandReadCount: 0 ; reverseTranscriptStrandReadCount: 0
+        index candidate:assemblyAlign:assemblySegment: 0:0:0
+        Breakend: GenomeInterval: 19:[44215749,44215797) COMPLEX
+        SVBreakendLowResEvidence: pair: 0 local_pair: 0 cigar: 0 softclip: 0 semialign: 6 shadow: 0 split_align: 0 unknown: 0
+
+        Breakend: GenomeInterval: 19:[44215749,44215797) UNKNOWN
+        SVBreakendLowResEvidence: pair: 0 local_pair: 0 cigar: 0 softclip: 0 semialign: 0 shadow: 0 split_align: 0 unknown: 0
+
+
+
+cmdline:        /install/libexec/GenerateSVCandidates --align-stats /MantaWorkflow/workspace/alignmentStats.xml --graph-file /MantaWorkflow/workspace/svLocusGraph.bin --bin-index 197 --bin-count 256 --max-edge-count 10 --min-candidate-sv-size 8 --min-candidate-spanning-count 3 --min-scored-sv-size 50 --ref /Homo_sapiens/NCBI/GRCh38Decoy/Sequence/WholeGenomeFasta/genome.fa --candidate-output-file /MantaWorkflow/workspace/svHyGen/candidateSV.0197.vcf --diploid-output-file /MantaWorkflow/workspace/svHyGen/diploidSV.0197.vcf --min-qual-score 10 --min-pass-qual-score 20 --min-pass-gt-score 15 --edge-runtime-log /MantaWorkflow/workspace/svHyGen/edgeRuntimeLog.0197.txt --edge-stats-log /MantaWorkflow/workspace/svHyGen/edgeStats.0197.xml --align-file /alignedSamples/NA12878/PCRfree/NA12878-PCRFree_S1.bam
+version:        1.2.2-15-g34b1b79-dirty
+buildTime:      2018-01-03T00:25:46.835456Z
+compiler:       g++-5.4.0
 ```
 
 #### Logging

@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -806,14 +806,14 @@ setSmallCandSV(
         using namespace illumina::common;
 
         std::ostringstream oss;
-        oss << "ERROR: Attempting to convert alignment to sv candidate."
+        oss << "Attempting to convert alignment to sv candidate."
             << " contigSize: " << contig.size()
             << " alignment: " << align
             << " segments: [" << segRange.first << "," << segRange.second << "]\n"
             << "\treadRange: " << readRange << "\n"
             << "\trefRange: " << refRange << "\n"
             << "\tcipos: " << cipos << "\n";
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 
     sv.bp1.state = SVBreakendState::RIGHT_OPEN;
@@ -1984,7 +1984,16 @@ getSmallSVAssembly(
         log_os << __FUNCTION__ << " Ref for alignment: "
                << align1RefStr.substr(adjustedLeadingCut, align1RefStr.size()-adjustedLeadingCut-adjustedTrailingCut) << '\n';
 #endif
-        ;
+
+        // sanity check aligner requirements
+        if (contig.seq.empty())
+        {
+            using namespace illumina::common;
+
+            std::ostringstream oss;
+            oss << "Assembly produced unexpected zero-length contig. ContigIndex: " << contigIndex << " ContigCount: " << contigCount << " ContigDetails: " << contig;
+            BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
+        }
 
         // start with largeSV aligner
         {

@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -324,8 +324,8 @@ parseSACandidatesFromRead(
         if (splitAlignmentSegmentFields.size() != SAFields::SIZE)
         {
             std::ostringstream oss;
-            oss << "ERROR: Unexpected format in the split alignment segment: '" << splitAlignmentSegmentString << "'\n";
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            oss << "Unexpected format in the split alignment segment: '" << splitAlignmentSegmentString << "'";
+            BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
         }
 
         /// filter split reads with low MappingQuality:
@@ -339,8 +339,8 @@ parseSACandidatesFromRead(
         if (ci == chromToIndex.end())
         {
             std::ostringstream oss;
-            oss << "ERROR: Split alignment segment maps to an unknown chromosome: '" << splitAlignmentChrom << "'\n";
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            oss << "Split alignment segment maps to an unknown chromosome: '" << splitAlignmentChrom << "'";
+            BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
         }
 
         splitAlignments.emplace_back();
@@ -352,8 +352,8 @@ parseSACandidatesFromRead(
             if (! ((splitAlignmentStrand=='-') || (splitAlignmentStrand=='+')))
             {
                 std::ostringstream oss;
-                oss << "ERROR: Unexpected strand entry in split alignment segment: '" << splitAlignmentSegmentString << "'\n";
-                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                oss << "Unexpected strand entry in split alignment segment: '" << splitAlignmentSegmentString << "'";
+                BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
             sal.is_fwd_strand = (splitAlignmentStrand == '+');
         }
@@ -451,7 +451,7 @@ getSVCandidatesFromReadIndels(
 
             std::ostringstream oss;
             oss << "Can't process unexpected alignment pattern: " << align << "\n";
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
         }
 
         unsigned nPathSegments(1); // number of path segments consumed
@@ -1172,7 +1172,7 @@ getReadBreakendsImpl(
             if (nullptr == remoteRefSeqPtr)
             {
                 static const char msg[] = "ERROR: remoteRefSeqPtr cannot be null";
-                BOOST_THROW_EXCEPTION(LogicException(msg));
+                BOOST_THROW_EXCEPTION(GeneralException(msg));
             }
             getSingleReadSVCandidates(opt, dopt, remoteRead, remoteAlign,
                                       bamHeader, (*remoteRefSeqPtr),
@@ -1280,7 +1280,7 @@ getReadBreakendsImpl(
             }
             oss << "\n"
                 << "\tSVCandidate: " << sv << "\n";
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
         }
     }
 }
@@ -1335,7 +1335,7 @@ getSVLociImpl(
                 << "\tlocal_breakend: " << localBreakend << "\n"
                 << "\tremote_breakend: " << remoteBreakend << "\n"
                 << "\tbam_record: " << bamRead << "\n";
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
         }
 
         // update evidence stats:
@@ -1498,21 +1498,21 @@ checkReadSize(
     if (seqSize == 0)
     {
         std::ostringstream oss;
-        oss << "ERROR: Input alignment record contains unknown read sequence (SEQ='*'), "
+        oss << "Input alignment record contains unknown read sequence (SEQ='*'), "
             << "which cannot be used for variant calling:\n";
         alignmentStream.report_state(oss);
         oss << "\n";
-        BOOST_THROW_EXCEPTION(illumina::common::LogicException(oss.str()));
+        BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
     }
 
     if (seqSize != alignedSize)
     {
         std::ostringstream oss;
-        oss << "ERROR: Read length implied by mapped alignment ("
+        oss << "Read length implied by mapped alignment ("
             << alignedSize << ") does not match sequence length ("
             << seqSize << "):\n";
         alignmentStream.report_state(oss);
-        BOOST_THROW_EXCEPTION(illumina::common::LogicException(oss.str()));
+        BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
     }
 }
 
@@ -1653,25 +1653,38 @@ isSVEvidence(
     const bool isIndel(isLocalIndelEvidence(_bamAlign));
     const bool isAssm((_dopt.isSmallCandidates) && ((!isSplit) && isSemiAlignedEvidence(bamRead, _bamAlign, refSeq)));
 
+    // Mark supplemental segments of split reads, and exclude these from the "normal" read counts
+    const bool isSupplementary(bamRead.is_supplementary() || bamRead.is_secondary());
+
     const bool isEvidence(isAnom || isSplit || isIndel || isAssm);
 
     if (nullptr != incountsPtr)
     {
         SVLocusEvidenceCount& incounts(*incountsPtr);
-        incounts.total++;
-        if (isAnom) incounts.anom++;
-        if (isSplit) incounts.split++;
-        if (isIndel) incounts.indel++;
-        if (isAssm) incounts.assm++;
 
-        if (! isEvidence) incounts.ignored++;
-
-        if (isAnom)
+        if (isSupplementary)
         {
-            if (isMateInsertionEvidenceCandidate(bamRead, getMinMapQ()))
+            assert(isSplit);
+            incounts.splitSupplementarySegment++;
+        }
+        else
+        {
+            incounts.total++;
+            if (isAnom) incounts.anom++;
+            if (isSplit) incounts.split++;
+            if (isAnom && isSplit) incounts.anomAndSplit++;
+            if (isIndel) incounts.indel++;
+            if (isAssm) incounts.assm++;
+
+            if (! isEvidence) incounts.ignored++;
+
+            if (isAnom)
             {
-                // these counts are used to generate background noise rates in later candidate generation stages:
-                incounts.remoteRecoveryCandidates++;
+                if (isMateInsertionEvidenceCandidate(bamRead, getMinMapQ()))
+                {
+                    // these counts are used to generate background noise rates in later candidate generation stages:
+                    incounts.remoteRecoveryCandidates++;
+                }
             }
         }
     }

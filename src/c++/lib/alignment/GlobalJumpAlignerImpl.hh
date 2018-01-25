@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,7 +21,9 @@
 /// \author Chris Saunders
 ///
 
-#include <cassert>
+
+#include "common/Exceptions.hh"
+
 
 #ifdef DEBUG_ALN
 #include "blt_util/log.hh"
@@ -48,9 +50,19 @@ align(
     const size_t ref1Size(std::distance(ref1Begin, ref1End));
     const size_t ref2Size(std::distance(ref2Begin, ref2End));
 
-    assert(0 != querySize);
-    assert(0 != ref1Size);
-    assert(0 != ref2Size);
+    if (0 == querySize)
+    {
+        BOOST_THROW_EXCEPTION(illumina::common::GeneralException("Unexpected empty query sequence"));
+    }
+    if (0 == ref1Size)
+    {
+        BOOST_THROW_EXCEPTION(illumina::common::GeneralException("Unexpected empty reference1 sequence"));
+    }
+    if (0 == ref2Size)
+    {
+        BOOST_THROW_EXCEPTION(illumina::common::GeneralException("Unexpected empty reference2 sequence"));
+    }
+
 
     _score1.resize(querySize+1);
     _score2.resize(querySize+1);

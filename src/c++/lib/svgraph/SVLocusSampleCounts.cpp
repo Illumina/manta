@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -26,6 +26,24 @@
 
 #include <iomanip>
 #include <iostream>
+
+
+
+static
+void
+writeLine(
+    std::ostream& os,
+    const char* label,
+    const double val)
+{
+    static const char sep('\t');
+
+    os << std::fixed;
+    os << label << sep;
+    os << std::setprecision(0);
+    os << val << sep;
+    os << "N/A" << '\n';
+}
 
 
 
@@ -62,6 +80,8 @@ write(
     writeLine(os,"NotFilteredAndAnomalousPair",evidenceCount.anom,dtotal);
     writeLine(os,"NotFilteredAndAnomalousPairRemotes",evidenceCount.remoteRecoveryCandidates,dtotal);
     writeLine(os,"NotFilteredAndSplitRead",evidenceCount.split,dtotal);
+    writeLine(os,"NotFilteredAndSplitReadInAnomalousPair",evidenceCount.anomAndSplit,dtotal);
+    writeLine(os,"NotFilteredAndSplitReadSupplementarySegments",evidenceCount.splitSupplementarySegment);
     writeLine(os,"NotFilteredAndLargeIndel",evidenceCount.indel,dtotal);
     writeLine(os,"NotFilteredAndSemiAligned",evidenceCount.assm,dtotal);
 }

@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -69,11 +69,12 @@ SVScorer(
     _dFilterDiploid(opt.chromDepthFilename, _diploidOpt.maxDepthFactor, header),
     _dFilterSomatic(opt.chromDepthFilename, _somaticOpt.maxDepthFactor, header),
     _dFilterTumor(opt.chromDepthFilename, _tumorOpt.maxDepthFactor, header),
-    _readScanner(readScanner)
+    _readScanner(readScanner),
+    _header(header)
 {
     // setup regionless bam_streams:
     // setup all data for main analysis loop:
-    for (const std::string& afile : opt.alignFileOpt.alignmentFilename)
+    for (const std::string& afile : opt.alignFileOpt.alignmentFilenames)
     {
         // avoid creating shared_ptr temporaries:
         streamPtr tmp(new bam_streamer(afile.c_str(), opt.referenceFilename.c_str()));
@@ -381,8 +382,8 @@ addConservativeSpanningPairSupport(
         using namespace illumina::common;
 
         std::ostringstream oss;
-        oss << "ERROR: Spanning likelihood is zero for all alleles. Fragment: " << fragev << "\n";
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        oss << "Spanning likelihood is zero for all alleles. Fragment: " << fragev;
+        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 
     static const bool isTier2(false);
@@ -1111,7 +1112,7 @@ scoreDiploidSV(
         }
 
         unsigned maxGt(0);
-        normalize_ln_distro(pprob.begin(), pprob.end(), maxGt);
+        normalizeLogDistro(pprob.begin(), pprob.end(), maxGt);
 
 #ifdef DEBUG_SCORE
         for (unsigned gt(0); gt<DIPLOID_GT::SIZE; ++gt)
@@ -1679,7 +1680,7 @@ scoreSomaticSV(
 
         {
             unsigned maxGt(0);
-            normalize_ln_distro(somaticPprob.begin(), somaticPprob.end(), maxGt);
+            normalizeLogDistro(somaticPprob.begin(), somaticPprob.end(), maxGt);
         }
 
         // independently estimate diploid genotype:
@@ -1698,7 +1699,7 @@ scoreSomaticSV(
 
         {
             unsigned maxGt(0);
-            normalize_ln_distro(normalPprob.begin(), normalPprob.end(), maxGt);
+            normalizeLogDistro(normalPprob.begin(), normalPprob.end(), maxGt);
         }
 
 #ifdef DEBUG_SOMATIC_SCORE
@@ -1916,9 +1917,17 @@ scoreSV(
 
             computeAllScoreModels(isSomatic, isTumorOnly, junctionData, modelScoreInfo);
         }
+        catch (illumina::common::ExceptionData& e)
+        {
+            std::ostringstream oss;
+            oss << "Exception caught while attempting to score " << sv;
+            e << boost::error_info<struct scoring_candidate_info,std::string>(oss.str());
+            throw;
+        }
+
         catch (...)
         {
-            log_os << "ERROR: Exception caught while scoring candidate SV: " << sv << "\n";
+            log_os << "Exception caught while attempting to score " << sv << "\n";
             throw;
         }
     }
@@ -1955,8 +1964,8 @@ scoreSV(
     {
         using namespace illumina::common;
         std::ostringstream oss;
-        oss << "ERROR: unexpected junction count: " << unfilteredJunctionCount << ".\n";
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        oss << "Unexpected junction count: " << unfilteredJunctionCount;
+        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 }
 

@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -107,7 +107,7 @@ private:
         if (dparse.n_word()!=col_count)
         {
             std::ostringstream oss;
-            oss << "ERROR: unexpected number of columns in paired export line:\n\n";
+            oss << "Unexpected number of columns in paired export line:\n\n";
             dparse.dump(oss);
             throw blt_exception(oss.str().c_str());
         }

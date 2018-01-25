@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -71,12 +71,12 @@ SVCandidateAssembler(
     _isAlignmentTumor(alignFileOpt.isAlignmentTumor),
     _dFilter(chromDepthFilename, scanOpt.maxDepthFactor, bamHeader),
     _dFilterRemoteReads(chromDepthFilename, scanOpt.maxDepthFactorRemoteReads, bamHeader),
-    _readScanner(_scanOpt, statsFilename, alignFileOpt.alignmentFilename, isRNA),
+    _readScanner(_scanOpt, statsFilename, alignFileOpt.alignmentFilenames, isRNA),
     _remoteTime(remoteTime)
 {
     // setup regionless bam_streams:
     // setup all data for main analysis loop:
-    for (const std::string& alignmentFilename : alignFileOpt.alignmentFilename)
+    for (const std::string& alignmentFilename : alignFileOpt.alignmentFilenames)
     {
         // avoid creating shared_ptr temporaries:
         streamPtr tmp(new bam_streamer(alignmentFilename.c_str(), referenceFilename.c_str()));

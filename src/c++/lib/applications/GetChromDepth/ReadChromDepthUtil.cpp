@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -377,8 +377,8 @@ readChromDepthFromAlignment(
         using namespace illumina::common;
 
         std::ostringstream oss;
-        oss << "ERROR: Can't find chromosome name '" << chromName << "' in BAM/CRAM file: '" << alignmentFile << "\n";
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        oss << "Can't find chromosome name '" << chromName << "' in BAM/CRAM file: '" << alignmentFile << "'";
+        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 
     const int32_t chromIndex(chromIter->second);

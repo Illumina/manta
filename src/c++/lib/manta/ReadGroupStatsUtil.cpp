@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -140,9 +140,9 @@ getFragSizeMinusSkip(
         using namespace illumina::common;
 
         std::ostringstream oss;
-        oss << "ERROR: unexpected fragment size (" << fragSize << ") deduced from bam record: " << bamRead << "\n"
+        oss << "Unexpected fragment size (" << fragSize << ") deduced from bam record: " << bamRead << "\n"
             << "\tPossible invalid template size in bam record.";
-        BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+        BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
     }
 
     return fragSize;
@@ -240,11 +240,11 @@ private:
             if (_totalOrientCount < minCount)
             {
                 std::ostringstream oss;
-                oss << "ERROR: Too few high-confidence read pairs (" << _totalOrientCount << ") to determine pair orientation for " << _rgLabel << "'\n"
+                oss << "Too few high-confidence read pairs (" << _totalOrientCount << ") to determine pair orientation for " << _rgLabel << "'\n"
                     << "\tAt least " << minCount << " high-confidence read pairs are required to determine pair orientation.\n"
                     << readCounter << "\n";
 
-                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
 
             const unsigned minMaxCount(static_cast<unsigned>(minMaxFrac*_totalOrientCount));
@@ -252,12 +252,12 @@ private:
             {
                 const unsigned maxPercent((_orientCount[maxIndex]*100)/_totalOrientCount);
                 std::ostringstream oss;
-                oss << "ERROR: Can't determine consensus pair orientation of " << _rgLabel << ".\n"
+                oss << "Can't determine consensus pair orientation of " << _rgLabel << ".\n"
                     << "\tThe most frequent orientation is '" << _finalOrient << "' (" << maxPercent << "% of " << _totalOrientCount << " total used read pairs)\n"
                     << "\tThe fraction of '" << _finalOrient << "' among total high-confidence read pairs needs to be more than " << minMaxFrac << " to determine consensus pair orientation.\n"
                     << readCounter << "\n";
 
-                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
         }
 
@@ -559,9 +559,9 @@ struct ReadGroupTracker
             using namespace illumina::common;
 
             std::ostringstream oss;
-            oss << "ERROR: Unexpected consensus read orientation (" << _stats.relOrients << ") for " << _rgLabel << "\n"
+            oss << "Unexpected consensus read orientation (" << _stats.relOrients << ") for " << _rgLabel << "\n"
                 << "\tManta currently handles paired-end (FR) reads only.\n";
-            BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+            BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
         }
 
         // finalize insert size distro:
@@ -573,11 +573,11 @@ struct ReadGroupTracker
                 using namespace illumina::common;
 
                 std::ostringstream oss;
-                oss << "ERROR: Can't generate pair statistics for " << _rgLabel << "\n"
+                oss << "Can't generate pair statistics for " << _rgLabel << "\n"
                     << "\tTotal high-confidence read pairs (FR) used for insert size estimation: " << insertSizeObservations() << "\n"
                     << "\tAt least " << minObservations << " high-confidence read pairs (FR) are required to estimate insert size.\n"
                     << _stats.readCounter << "\n";
-                BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+                BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
             else if (! isInsertSizeChecked())
             {

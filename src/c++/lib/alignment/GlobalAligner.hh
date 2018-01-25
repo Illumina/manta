@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
 //
 //
 
-/// derived from ELAND implementation by Tony Cox
 
 #pragma once
 
@@ -34,6 +33,7 @@
 ///
 /// transition from insert to delete is free and allowed, but not reverse
 ///
+/// derived from ELAND implementation by Tony Cox
 template <typename ScoreType>
 struct GlobalAligner : public SingleRefAlignerBase<ScoreType>
 {

@@ -1,5 +1,5 @@
 Manta - Stuctural Variant and Indel Caller
-Copyright (c) 2013-2017 Illumina, Inc.
+Copyright (c) 2013-2018 Illumina, Inc.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -172,11 +172,11 @@ corresponding subdirectories.
 
 ******************************************************************
 
-pyFlow 1.1.14
+pyFlow 1.1.19
 
 pyFlow - a lightweight parallel task engine
 
-Copyright (c) 2012-2015 Illumina, Inc.
+Copyright (c) 2012-2017 Illumina, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

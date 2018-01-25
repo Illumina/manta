@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -34,9 +34,11 @@ struct SVLocusEvidenceCount
         ignored = 0;
         anom = 0;
         split = 0;
+        anomAndSplit = 0;
         indel = 0;
         assm = 0;
         remoteRecoveryCandidates = 0;
+        splitSupplementarySegment = 0;
     }
 
     void
@@ -47,37 +49,47 @@ struct SVLocusEvidenceCount
         ignored += rhs.ignored;
         anom += rhs.anom;
         split += rhs.split;
+        anomAndSplit += rhs.anomAndSplit;
         indel += rhs.indel;
         assm += rhs.assm;
         remoteRecoveryCandidates += rhs.remoteRecoveryCandidates;
+        splitSupplementarySegment += rhs.splitSupplementarySegment;
     }
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {
-        ar& total& ignored& anom& split& indel& assm& remoteRecoveryCandidates;
+        ar& total& ignored& anom& split& anomAndSplit& indel& assm& remoteRecoveryCandidates& splitSupplementarySegment;
     }
 
-    // using doubles for integral counts here because (1) counts are potentially very high and (2) exact counts don't matter
+    // using doubles for integral counts here because:
+    // (1) counts are potentially very high
+    // (2) exact counts don't matter
 
-    ///< total number of non-filtered reads scanned
+    ///< total number of non-filtered non-supplement/secondary reads scanned
     double total = 0;
 
-    ///< total number of non-filtered reads ignored for SV purposes
+    ///< total number of non-filtered non-supplement/secondary reads ignored for SV purposes
     double ignored = 0;
 
-    ///< total number of non-filtered anomalous reads scanned
+    ///< total number of non-filtered non-supplement/secondary anomalous reads scanned
     double anom = 0;
 
-    ///< total number of non-filtered split (SA-tag) reads scanned
+    ///< total number of non-filtered non-supplement/secondary split (SA-tag) reads scanned
     double split = 0;
 
-    ///< total number of non-filtered CIGAR large indel reads scanned
+    ///< total number of non-filtered non-supplement/secondary reads scanned which are categorized as BOTH anomolous and split
+    double anomAndSplit = 0;
+
+    ///< total number of non-filtered non-supplement/secondary CIGAR large indel reads scanned
     double indel = 0;
 
-    ///< total number of non-filtered semi-aligned reads scanned
+    ///< total number of non-filtered non-supplement/secondary semi-aligned reads scanned
     double assm = 0;
 
     ///< subset of anom. these are reads which qualify as candidates for remote recovery
     double remoteRecoveryCandidates = 0;
+
+    ///< total number of non-filtered supplement/secondary split read segments
+    double splitSupplementarySegment = 0;
 };

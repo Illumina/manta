@@ -1,6 +1,6 @@
 //
 // Manta - Structural Variant and Indel Caller
-// Copyright (c) 2013-2017 Illumina, Inc.
+// Copyright (c) 2013-2018 Illumina, Inc.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -50,10 +50,10 @@ getEdgeException(
     using namespace illumina::common;
 
     std::ostringstream oss;
-    oss << "ERROR: SVLocusNode::" << label << "() no edge exists\n";
+    oss << "SVLocusNode::" << label << "() no edge exists\n";
     oss << "\tfrom node: " << (*this) << "\n";
-    oss << "\tto_node index: " << toIndex << "\n";
-    BOOST_THROW_EXCEPTION(LogicException(oss.str()));
+    oss << "\tto_node index: " << toIndex;
+    BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
 }
 
 
