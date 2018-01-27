@@ -268,19 +268,19 @@ BOOST_AUTO_TEST_CASE( test_isSVEvidence )
     const unsigned defaultReadGroupIndex = 0;
     reference_contig_segment seq = reference_contig_segment();
     const reference_contig_segment& refSeq(seq);
-    SVLocusEvidenceCount* incountsPtr = new SVLocusEvidenceCount();
+    std::unique_ptr<SVLocusEvidenceCount> incountsPtr(new SVLocusEvidenceCount());
 
     // Normal read is not evidence
     bam_record normalRead;
     buildBamRecord(normalRead);
-    BOOST_REQUIRE(! scanner->isSVEvidence(normalRead, defaultReadGroupIndex, refSeq, incountsPtr));
+    BOOST_REQUIRE(! scanner->isSVEvidence(normalRead, defaultReadGroupIndex, refSeq, incountsPtr.get()));
 
     bam_record supplementSASplitRead;
     buildBamRecord(supplementSASplitRead);
     addSupplementaryEvidence(supplementSASplitRead);
 
     // same read with SA returns true for SV evidence.
-    BOOST_REQUIRE(scanner->isSVEvidence(supplementSASplitRead, defaultReadGroupIndex, refSeq, incountsPtr));
+    BOOST_REQUIRE(scanner->isSVEvidence(supplementSASplitRead, defaultReadGroupIndex, refSeq, incountsPtr.get()));
 }
 
 // Test that different size indels are handled properly.
@@ -297,47 +297,47 @@ BOOST_AUTO_TEST_CASE( test_LargeIndels )
     const unsigned defaultReadGroupIndex = 0;
     reference_contig_segment seq = reference_contig_segment();
     const reference_contig_segment& refSeq(seq);
-    SVLocusEvidenceCount* incountsPtr = new SVLocusEvidenceCount();
+    std::unique_ptr<SVLocusEvidenceCount> incountsPtr(new SVLocusEvidenceCount());
 
     // Normal read is not evidence
     bam_record normalRead;
     buildBamRecord(normalRead);
-    BOOST_REQUIRE(! scanner->isSVEvidence(normalRead, defaultReadGroupIndex, refSeq, incountsPtr));
+    BOOST_REQUIRE(! scanner->isSVEvidence(normalRead, defaultReadGroupIndex, refSeq, incountsPtr.get()));
 
     // Non-indel read is not evidence
     bam_record largeSoftclipRead;
     buildBamRecord(largeSoftclipRead, 0, 100, 0, 200, 100, 15, "100M2000S");
-    BOOST_REQUIRE(! scanner->isSVEvidence(largeSoftclipRead, defaultReadGroupIndex, refSeq, incountsPtr));
+    BOOST_REQUIRE(! scanner->isSVEvidence(largeSoftclipRead, defaultReadGroupIndex, refSeq, incountsPtr.get()));
 
     // large deletion is SV evidence
     bam_record largeDeletionRead;
     buildBamRecord(largeDeletionRead, 0, 100, 0, 200, 100, 15, "100M2000D100M");
-    BOOST_REQUIRE(scanner->isSVEvidence(largeDeletionRead, defaultReadGroupIndex, refSeq, incountsPtr));
+    BOOST_REQUIRE(scanner->isSVEvidence(largeDeletionRead, defaultReadGroupIndex, refSeq, incountsPtr.get()));
 
     // small deletion is not SV evidence
     bam_record smallDeletionRead;
     buildBamRecord(smallDeletionRead, 0, 100, 0, 200, 100, 15, "100M7D100M");
-    BOOST_REQUIRE(! scanner->isSVEvidence(smallDeletionRead, defaultReadGroupIndex, refSeq, incountsPtr));
+    BOOST_REQUIRE(! scanner->isSVEvidence(smallDeletionRead, defaultReadGroupIndex, refSeq, incountsPtr.get()));
 
     // Deletion size = minCandidateVariantSize - deletion is SV evidence
     bam_record equalDeletionRead;
     buildBamRecord(equalDeletionRead, 0, 100, 0, 200, 100, 15, "100M8D100M");
-    BOOST_REQUIRE(scanner->isSVEvidence(equalDeletionRead, defaultReadGroupIndex, refSeq, incountsPtr));
+    BOOST_REQUIRE(scanner->isSVEvidence(equalDeletionRead, defaultReadGroupIndex, refSeq, incountsPtr.get()));
 
     // large insertion is SV evidence
     bam_record largeInsertionRead;
     buildBamRecord(largeInsertionRead, 0, 100, 0, 200, 100, 15, "100M2000I100M");
-    BOOST_REQUIRE(scanner->isSVEvidence(largeInsertionRead, defaultReadGroupIndex, refSeq, incountsPtr));
+    BOOST_REQUIRE(scanner->isSVEvidence(largeInsertionRead, defaultReadGroupIndex, refSeq, incountsPtr.get()));
 
     // small insertion is not SV evidence
     bam_record smallInsertionRead;
     buildBamRecord(smallInsertionRead, 0, 100, 0, 200, 100, 15, "100M7I100M");
-    BOOST_REQUIRE(! scanner->isSVEvidence(smallInsertionRead, defaultReadGroupIndex, refSeq, incountsPtr));
+    BOOST_REQUIRE(! scanner->isSVEvidence(smallInsertionRead, defaultReadGroupIndex, refSeq, incountsPtr.get()));
 
     // insertion size = minCandidateVariantSize - insertion is SV evidence
     bam_record equalInsertionRead;
     buildBamRecord(equalInsertionRead, 0, 100, 0, 200, 100, 15, "100M8I100M");
-    BOOST_REQUIRE(scanner->isSVEvidence(equalInsertionRead, defaultReadGroupIndex, refSeq, incountsPtr));
+    BOOST_REQUIRE(scanner->isSVEvidence(equalInsertionRead, defaultReadGroupIndex, refSeq, incountsPtr.get()));
 }
 
 // Test filtering for semiAligned reads.
