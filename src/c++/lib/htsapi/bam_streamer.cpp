@@ -70,7 +70,13 @@ bam_streamer(
     if (nullptr != referenceFilename)
     {
         const std::string referenceFilenameIndex(std::string(referenceFilename) + ".fai");
-        hts_set_fai_filename(_hfp, referenceFilenameIndex.c_str());
+        int ret = hts_set_fai_filename(_hfp, referenceFilenameIndex.c_str());
+        if (ret != 0)
+        {
+            std::ostringstream oss;
+            oss << "Failed to use reference: '" << referenceFilename << "' for BAM/CRAM file: '" << name() << "'";
+            throw blt_exception(oss.str().c_str());
+        }
     }
 
     _hdr = sam_hdr_read(_hfp);
@@ -113,7 +119,7 @@ bam_streamer::
         const int retval = hts_close(_hfp);
         if (retval != 0)
         {
-            log_os << "ERROR: Failed to close SAM/BAM/CRAM file: '" << name() << "'\n";
+            log_os << "ERROR: Failed to close BAM/CRAM file: '" << name() << "'\n";
             std::exit(EXIT_FAILURE);
         }
     }
@@ -172,7 +178,7 @@ _load_index()
     if (nullptr == _hidx)
     {
         std::ostringstream oss;
-        oss << "BAM/CRAM index is not available for file: " << name();
+        oss << "BAM/CRAM index is not available for file: '" << name() << "'";
         throw blt_exception(oss.str().c_str());
     }
 }
@@ -215,7 +221,7 @@ resetRegion(
     if (referenceContigId < 0)
     {
         std::ostringstream oss;
-        oss << "Invalid region (contig index: " << referenceContigId << ") specified for BAM/CRAM file: " << name();
+        oss << "Invalid region (contig index: " << referenceContigId << ") specified for BAM/CRAM file: '" << name() << "'";
         throw blt_exception(oss.str().c_str());
     }
 
@@ -223,7 +229,7 @@ resetRegion(
     if (_hitr == nullptr)
     {
         std::ostringstream oss;
-        oss << "Failed to fetch region: #" << referenceContigId << ":" << beginPos << "-" << endPos << " specified for BAM/CRAM file: " << name();
+        oss << "Failed to fetch region: #" << referenceContigId << ":" << beginPos << "-" << endPos << " specified for BAM/CRAM file: '" << name() << "'";
         throw blt_exception(oss.str().c_str());
     }
     _is_region = true;
@@ -310,7 +316,7 @@ report_state(std::ostream& os) const
 {
     const bam_record* bamp(get_record_ptr());
 
-    os << "\tbam_stream_label: " << name() << "\n";
+    os << "\tbam_stream_label: '" << name() << "'\n";
     if (_is_region && (! _region.empty()))
     {
         os << "\tbam_stream_selected_region: " << _region << "\n";
