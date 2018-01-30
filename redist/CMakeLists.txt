@@ -76,6 +76,15 @@ set(HTSLIB_PREFIX "htslib-1.6")
 superset(HTSLIB_DIR "${CMAKE_CURRENT_BINARY_DIR}/${HTSLIB_PREFIX}")
 superset(HTSLIB_LIBRARY "${HTSLIB_DIR}/libhts.a")
 
+## It is occasionally useful to extend debug/asan build options from manta all the way down through htslib,
+## the flags below can be uncommented to do so.
+##
+## Addresss sanitizer build options for htslib/samtools
+#set(HTSLIB_CFLAGS '-O0 -g -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls')
+## Debug build optoins for htslib/samtools
+#set(HTSLIB_CFLAGS '-O0 -g')
+#set(HTSLIB_CONFIGOPT CFLAGS=${HTSLIB_CFLAGS} LDFLAGS=${HTSLIB_CFLAGS})
+
 add_custom_command(
     OUTPUT ${HTSLIB_DIR}
     COMMAND ${CMAKE_COMMAND} -E remove_directory "${HTSLIB_DIR}"
@@ -87,7 +96,7 @@ set (HTSLIB_FINAL_TASK ${HTSLIB_DIR})
 if (NOT WIN32)
     add_custom_command(
         OUTPUT ${HTSLIB_LIBRARY}
-        COMMAND ./configure CC="${CMAKE_C_COMPILER}" --disable-libcurl --disable-bz2 --disable-lzma >htslib.config.log 2>htslib.config.error.log || \(echo "Failed to configure htslib, see ${HTSLIB_DIR}/htslib.config.error.log for details." && exit 1\)
+        COMMAND ./configure CC=${CMAKE_C_COMPILER} ${HTSLIB_CONFIGOPT} --disable-libcurl --disable-bz2 --disable-lzma >htslib.config.log 2>htslib.config.error.log || \(echo "Failed to configure htslib, see ${HTSLIB_DIR}/htslib.config.error.log for details." && exit 1\)
         COMMAND $(MAKE) lib-static bgzip htsfile tabix >htslib.build.log 2>htslib.build.error.log || \(echo "Failed to build htslib, see ${HTSLIB_DIR}/htslib.build.error.log for details." && exit 1\)
         WORKING_DIRECTORY ${HTSLIB_DIR}
         DEPENDS ${HTSLIB_DIR}
@@ -127,7 +136,7 @@ set (SAMTOOLS_FINAL_TASK ${SAMTOOLS_DIR})
 if (NOT WIN32)
     add_custom_command(
         OUTPUT ${SAMTOOLS_PROG}
-        COMMAND ./configure CC="${CMAKE_C_COMPILER}" --without-curses --with-htslib=${HTSLIB_DIR} >samtools.config.log 2>samtools.config.error.log || \(echo "Failed to configure samtools, see ${SAMTOOLS_DIR}/samtools.config.error.log for details." && exit 1\)
+        COMMAND ./configure CC=${CMAKE_C_COMPILER} ${HTSLIB_CONFIGOPT} --without-curses --with-htslib=${HTSLIB_DIR} >samtools.config.log 2>samtools.config.error.log || \(echo "Failed to configure samtools, see ${SAMTOOLS_DIR}/samtools.config.error.log for details." && exit 1\)
         COMMAND $(MAKE) all >samtools.build.log 2>samtools.build.error.log  || \(echo "Failed to build samtools, see ${SAMTOOLS_DIR}/samtools.build.error.log for details." && exit 1\)
         DEPENDS ${HTSLIB_LIBRARY}
         DEPENDS ${SAMTOOLS_DIR}
