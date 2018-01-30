@@ -12,6 +12,8 @@
 - Update the genotyping model (MANTA-1205)
   - Allow minor evidence of reference allele for hom-alt calls to tolerate a small number of noisy reads.
   - Filter out split reads with poor alignments to both alleles.
+- Change the eligibility filter of split reads to only consider the most likely allele (MANTA-1332)
+  - A split read is allowed to contribute to the split-read evidence if its alignment to the most like allele passes the eligibility filter.
 
 ### Fixed
 - Provide clear error message when attempting to configure/run with python3 (MANTA-1285)

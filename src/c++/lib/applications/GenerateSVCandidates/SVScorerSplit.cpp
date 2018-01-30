@@ -40,20 +40,15 @@
 static
 void
 incrementAlleleEvidence(
-    const SRAlignmentInfo& bp1SR,
-    const SRAlignmentInfo& bp2SR,
-    const unsigned readMapQ,
-    SVSampleAlleleInfo& allele,
-    SVFragmentEvidenceAlleleBreakendPerRead& bp1Support,
-    SVFragmentEvidenceAlleleBreakendPerRead& bp2Support)
+        const SRAlignmentInfo& bp1SR, const SRAlignmentInfo& bp2SR,
+        const unsigned readMapQ, const float evidence, SVSampleAlleleInfo& allele,
+        SVFragmentEvidenceAlleleBreakendPerRead& bp1Support,
+        SVFragmentEvidenceAlleleBreakendPerRead& bp2Support)
 {
-    float bp1Evidence(0);
-    float bp2Evidence(0);
     if (bp1SR.isEvidence)
     {
-        bp1Evidence = bp1SR.evidence;
         bp1Support.isSplitSupport = true;
-        bp1Support.splitEvidence = bp1Evidence;
+        bp1Support.splitEvidence = bp1SR.evidence;
     }
 
     if (bp1SR.isTier2Evidence)
@@ -61,23 +56,16 @@ incrementAlleleEvidence(
         bp1Support.isTier2SplitSupport = true;
     }
 
-    bp1Support.splitLnLhood = bp1SR.alignLnLhood;
-
     if (bp2SR.isEvidence)
     {
-        bp2Evidence = bp2SR.evidence;
         bp2Support.isSplitSupport = true;
-        bp2Support.splitEvidence = bp2Evidence;
+        bp2Support.splitEvidence = bp2SR.evidence;
     }
 
     if (bp2SR.isTier2Evidence)
     {
         bp2Support.isTier2SplitSupport = true;
     }
-
-    bp2Support.splitLnLhood = bp2SR.alignLnLhood;
-
-    const float evidence(std::max(bp1Evidence, bp2Evidence));
 
     if (bp1SR.isEvidence || bp2SR.isEvidence)
     {
@@ -86,14 +74,58 @@ incrementAlleleEvidence(
         allele.splitReadMapQ += readMapQ * readMapQ;
 
 #ifdef DEBUG_SVS
+        log_os << __FUNCTION__ << "\n";
         log_os << "bp1\n";
         log_os << bp1SR;
         log_os << "bp2\n";
         log_os << bp2SR;
         log_os << "evidence = " << evidence << "\n";
         log_os << "accumulated evidence = " << allele.splitReadEvidence << "\n";
-        log_os << "contigCount = " << allele.splitReadCount << "\n\n";
+        log_os << "split read Count = " << allele.splitReadCount << "\n\n";
 #endif
+    }
+}
+
+
+
+static
+void
+incrementSplitReadEvidence(
+        const SRAlignmentInfo& refBp1SR, const SRAlignmentInfo& refBp2SR,
+        const SRAlignmentInfo& altBp1SR, const SRAlignmentInfo& altBp2SR,
+        const unsigned readMapQ,
+        SVSampleAlleleInfo& refAllele, SVSampleAlleleInfo& altAllele,
+        SVFragmentEvidenceAlleleBreakendPerRead& refBp1Support,
+        SVFragmentEvidenceAlleleBreakendPerRead& refBp2Support,
+        SVFragmentEvidenceAlleleBreakendPerRead& altBp1Support,
+        SVFragmentEvidenceAlleleBreakendPerRead& altBp2Support)
+{
+    refBp1Support.splitLnLhood = refBp1SR.alignLnLhood;
+    refBp2Support.splitLnLhood = refBp2SR.alignLnLhood;
+    altBp1Support.splitLnLhood = altBp1SR.alignLnLhood;
+    altBp2Support.splitLnLhood = altBp2SR.alignLnLhood;
+
+    const float refAlignLlh(std::max(refBp1SR.alignLnLhood, refBp2SR.alignLnLhood));
+    const float altAlignLlh(std::max(altBp1SR.alignLnLhood, altBp2SR.alignLnLhood));
+
+    // only allow a split read to support one allele
+    if (refAlignLlh > altAlignLlh)
+    {
+        float refBp1Evidence = refBp1SR.isEvidence ? refBp1SR.evidence : 0;
+        float refBp2Evidence = refBp2SR.isEvidence ? refBp2SR.evidence : 0;
+        const float refEvidence(std::max(refBp1Evidence, refBp2Evidence));
+
+        incrementAlleleEvidence(refBp1SR, refBp2SR, readMapQ, refEvidence,
+                                refAllele, refBp1Support, refBp2Support);
+    }
+    else if (altAlignLlh > refAlignLlh)
+    {
+        float altBp1Evidence = altBp1SR.isEvidence ? altBp1SR.evidence : 0;
+        float altBp2Evidence = altBp2SR.isEvidence ? altBp2SR.evidence : 0;
+        const float altEvidence(std::max(altBp1Evidence, altBp2Evidence));
+
+        incrementAlleleEvidence(altBp1SR, altBp2SR, readMapQ, altEvidence,
+                                altAllele, altBp1Support, altBp2Support);
     }
 }
 
@@ -119,16 +151,14 @@ getReadSplitScore(
     SVSampleInfo& sample,
     SupportFragments& svSupportFrags)
 {
-    SVFragmentEvidence& fragment(sampleEvidence[bamRead.qname()]);
-
-    const bool isRead1(bamRead.is_first());
-
-    SVFragmentEvidenceAlleleBreakendPerRead& altBp1ReadSupport(fragment.alt.bp1.getRead(isRead1));
-
 #ifdef DEBUG_SVS
     log_os << __FUNCTION__ << " split scoring read: " << bamRead << "\n";
 #endif
 
+    SVFragmentEvidence& fragment(sampleEvidence[bamRead.qname()]);
+
+    const bool isRead1(bamRead.is_first());
+    SVFragmentEvidenceAlleleBreakendPerRead& altBp1ReadSupport(fragment.alt.bp1.getRead(isRead1));
     // in this function we evaluate the hypothesis of both breakends at the same time, the only difference bp1 vs
     // bp2 makes is where in the bam we look for reads, therefore if we see split evaluation for bp1 or bp2, we can skip this read:
     if (altBp1ReadSupport.isSplitEvaluated) return;
@@ -136,7 +166,6 @@ getReadSplitScore(
     SVFragmentEvidenceAlleleBreakendPerRead& refBp1ReadSupport(fragment.ref.bp1.getRead(isRead1));
     SVFragmentEvidenceAlleleBreakendPerRead& altBp2ReadSupport(fragment.alt.bp2.getRead(isRead1));
     SVFragmentEvidenceAlleleBreakendPerRead& refBp2ReadSupport(fragment.ref.bp2.getRead(isRead1));
-
     altBp1ReadSupport.isSplitEvaluated = true;
     refBp1ReadSupport.isSplitEvaluated = true;
     altBp2ReadSupport.isSplitEvaluated = true;
@@ -144,7 +173,6 @@ getReadSplitScore(
 
     std::string readSeq = bamRead.get_bam_read().get_string();
     const uint8_t* qual(bamRead.qual());
-
     boost::scoped_array<uint8_t> qualcpy;
     if (isShadow && isReversedShadow)
     {
@@ -155,57 +183,60 @@ getReadSplitScore(
         qual = qualcpy.get();
     }
 
-    const unsigned readMapQ = bamRead.map_qual();
+    SVFragmentEvidenceRead& evidenceRead(fragment.getRead(isRead1));
+    setReadEvidence(minMapQ, minTier2MapQ, bamRead, isShadow, evidenceRead);
 
-    setReadEvidence(minMapQ, minTier2MapQ, bamRead, isShadow, fragment.getRead(isRead1));
-
-    // align the read to the somatic contig
-    {
-        SRAlignmentInfo bp1ContigSR;
-        SRAlignmentInfo bp2ContigSR;
-        splitReadAligner(flankScoreSize, readSeq, dopt.altQ, qual, svAlignInfo.bp1ContigSeq(), svAlignInfo.bp1ContigOffset, bp1ContigSR);
-        splitReadAligner(flankScoreSize, readSeq, dopt.altQ, qual, svAlignInfo.bp2ContigSeq(), svAlignInfo.bp2ContigOffset, bp2ContigSR);
-
-        incrementAlleleEvidence(bp1ContigSR, bp2ContigSR, readMapQ, sample.alt, altBp1ReadSupport, altBp2ReadSupport);
-
-        if (fragment.isAltSplitReadSupport(bamRead.is_first()))
-        {
-            SupportFragment& supportFrag(svSupportFrags.getSupportFragment(bamRead));
-            supportFrag.addSplitSupport(bamRead.is_first(), svId.localId);
-#ifdef DEBUG_SUPPORT
-            log_os << __FUNCTION__ << "  Adding read support (split): "
-                   << bamRead.qname();
-            if (bamRead.is_first())
-                log_os << "\tR1";
-            else
-                log_os << "\tR2";
-            log_os << "\n" << supportFrag;
-#endif
-        }
-    }
+    // align the read to the alt allele contig
+    SRAlignmentInfo altBp1SR;
+    SRAlignmentInfo altBp2SR;
+    splitReadAligner(flankScoreSize, readSeq, dopt.altQ, qual,
+                     svAlignInfo.bp1ContigSeq(), svAlignInfo.bp1ContigOffset, altBp1SR);
+    splitReadAligner(flankScoreSize, readSeq, dopt.altQ, qual,
+                     svAlignInfo.bp2ContigSeq(), svAlignInfo.bp2ContigOffset, altBp2SR);
 
     // align the read to reference regions
+    SRAlignmentInfo refBp1SR;
+    SRAlignmentInfo refBp2SR;
+    if (!isRNA)
     {
-        SRAlignmentInfo bp1RefSR;
-        SRAlignmentInfo bp2RefSR;
-        if (!isRNA)
-        {
-            splitReadAligner(flankScoreSize, readSeq, dopt.refQ, qual, svAlignInfo.bp1ReferenceSeq(), svAlignInfo.bp1RefOffset, bp1RefSR);
-            splitReadAligner(flankScoreSize, readSeq, dopt.refQ, qual, svAlignInfo.bp2ReferenceSeq(), svAlignInfo.bp2RefOffset, bp2RefSR);
-        }
+        splitReadAligner(flankScoreSize, readSeq, dopt.refQ, qual,
+                         svAlignInfo.bp1ReferenceSeq(), svAlignInfo.bp1RefOffset, refBp1SR);
+        splitReadAligner(flankScoreSize, readSeq, dopt.refQ, qual,
+                         svAlignInfo.bp2ReferenceSeq(), svAlignInfo.bp2RefOffset, refBp2SR);
+    }
+    else
+    {
+        if (isBP1)
+            getRefAlignment(bamRead, bpRef, bp.interval.range, dopt.refQ, refBp1SR);
         else
-        {
-            if (isBP1)
-                getRefAlignment(bamRead, bpRef, bp.interval.range, dopt.refQ, bp1RefSR);
-            else
-                getRefAlignment(bamRead, bpRef, bp.interval.range, dopt.refQ, bp2RefSR);
-        }
+            getRefAlignment(bamRead, bpRef, bp.interval.range, dopt.refQ, refBp2SR);
+    }
 #ifdef DEBUG_SVS
-        log_os << "\t reference align bp1: " << bp1RefSR << "\n";
-        log_os << "\t reference align bp2: " << bp2RefSR << "\n";
+    log_os << "\t reference align bp1: " << refBp1SR << "\n";
+    log_os << "\t reference align bp2: " << refBp2SR << "\n";
 #endif
-        // scoring
-        incrementAlleleEvidence(bp1RefSR, bp2RefSR, readMapQ, sample.ref, refBp1ReadSupport, refBp2ReadSupport);
+
+    const unsigned readMapQ = bamRead.map_qual();
+    // scoring
+    incrementSplitReadEvidence(refBp1SR, refBp2SR, altBp1SR, altBp2SR,
+                               readMapQ, sample.ref, sample.alt,
+                               refBp1ReadSupport, refBp2ReadSupport,
+                               altBp1ReadSupport, altBp2ReadSupport);
+
+    if (fragment.isAltSplitReadSupport(bamRead.is_first()))
+    {
+        SupportFragment& supportFrag(svSupportFrags.getSupportFragment(bamRead));
+        supportFrag.addSplitSupport(bamRead.is_first(), svId.localId);
+
+#ifdef DEBUG_SUPPORT
+        log_os << __FUNCTION__ << "  Adding a split read that supports the alt allele: "
+               << bamRead.qname();
+        if (bamRead.is_first())
+            log_os << "\tR1";
+        else
+            log_os << "\tR2";
+        log_os << "\n" << supportFrag;
+#endif
     }
 }
 
@@ -388,8 +419,8 @@ getSVSplitReadSupport(
     if (! SVAlignInfo.isMinBpEdge(100)) return;
 
 #ifdef DEBUG_SVS
-    log_os << __FUNCTION__ << sv << '\n';
-    log_os << __FUNCTION__ << SVAlignInfo << '\n';
+    log_os << __FUNCTION__ << " sv: " << sv << '\n';
+    log_os << __FUNCTION__ << " SVAlignInfo: " << SVAlignInfo << '\n';
 #endif
 
     const unsigned minMapQ(_readScanner.getMinMapQ());
@@ -408,7 +439,7 @@ getSVSplitReadSupport(
 
         // scoring split reads overlapping bp1
 #ifdef DEBUG_SVS
-        log_os << __FUNCTION__ << " scoring BP1\n";
+        log_os << __FUNCTION__ << " scoring BP1 " << sv.bp1.interval << "\n";
 #endif
         scoreSplitReads(_callDopt, flankScoreSize, svId, sv.bp1,
                         SVAlignInfo, assemblyData.bp1ref, true, minMapQ, minTier2MapQ,
@@ -416,7 +447,7 @@ getSVSplitReadSupport(
                         sampleEvidence, bamStream, sample, svSupportFrags);
         // scoring split reads overlapping bp2
 #ifdef DEBUG_SVS
-        log_os << __FUNCTION__ << " scoring BP2\n";
+        log_os << __FUNCTION__ << " scoring BP2 " << sv.bp2.interval << "\n";
 #endif
         scoreSplitReads(_callDopt, flankScoreSize, svId, sv.bp2,
                         SVAlignInfo, assemblyData.bp2ref, false, minMapQ, minTier2MapQ,
@@ -427,18 +458,17 @@ getSVSplitReadSupport(
     }
 
 #ifdef DEBUG_SVS
-    log_os << "tumor contig SP count: " << baseInfo.tumor.alt.splitReadCount << "\n";
-    log_os << "tumor contig SP evidence: " << baseInfo.tumor.alt.splitReadEvidence << "\n";
-    log_os << "tumor contig SP_mapQ: " << baseInfo.tumor.alt.splitReadMapQ << "\n";
-    log_os << "normal contig SP count: " << baseInfo.normal.alt.splitReadCount << "\n";
-    log_os << "normal contig SP evidence: " << baseInfo.normal.alt.splitReadEvidence << "\n";
-    log_os << "normal contig SP_mapQ: " << baseInfo.normal.alt.splitReadMapQ << "\n";
+    for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
+    {
+        log_os << "bam index: " << bamIndex << "\n";
+        const SVSampleInfo& sample(baseInfo.samples[bamIndex]);
+        log_os << "Alt contig SR count: " << sample.alt.splitReadCount << "\n";
+        log_os << "Alt contig SR evidence: " << sample.alt.splitReadEvidence << "\n";
+        log_os << "Alt contig SR_mapQ: " << sample.alt.splitReadMapQ << "\n";
 
-    log_os << "tumor ref SP count: " << baseInfo.tumor.ref.splitReadCount << "\n";
-    log_os << "tumor ref SP evidence: " << baseInfo.tumor.ref.splitReadEvidence << "\n";
-    log_os << "tumor ref SP_mapQ: " << baseInfo.tumor.ref.splitReadMapQ << "\n";
-    log_os << "normal ref SP count: " << baseInfo.normal.ref.splitReadCount << "\n";
-    log_os << "normal ref SP evidence: " << baseInfo.normal.ref.splitReadEvidence << "\n";
-    log_os << "normal ref SP_mapQ: " << baseInfo.normal.ref.splitReadMapQ << "\n";
+        log_os << "Ref contig SR count: " << sample.ref.splitReadCount << "\n";
+        log_os << "Ref contig SR evidence: " << sample.ref.splitReadEvidence << "\n";
+        log_os << "Ref contig SR_mapQ: " << sample.ref.splitReadMapQ << "\n";
+    }
 #endif
 }
