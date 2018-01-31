@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 #
-# if astyle is found, then run it on all cxx source
+# run astyle on all cxx source
 #
 
 set -o nounset
 
+scriptName=$(basename $0)
 
-if ! which -a astyle > /dev/null 2>&1 ; then exit 0; fi
+if ! which -a astyle > /dev/null 2>&1 ; then
+    echo "ERROR: Can't find required utility 'astyle' in PATH" 1>&2
+    exit 1;
+fi
 
 thisDir=$(dirname $0)
 
