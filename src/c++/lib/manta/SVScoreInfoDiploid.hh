@@ -50,10 +50,12 @@ static const std::array<float,SIZE> altPriors = { 0., 0.5, 0.99 };
 // pre-compute log values for cache
 static const std::array<float,SIZE> altLnPriors = {std::log(altPriors[REF]),
                                                    std::log(altPriors[HET]),
-                                                   std::log(altPriors[HOM])};
+                                                   std::log(altPriors[HOM])
+                                                  };
 static const std::array<float,SIZE> altLnCompPriors = {std::log(1-altPriors[REF]),
                                                        std::log(1-altPriors[HET]),
-                                                       std::log(1-altPriors[HOM])};
+                                                       std::log(1-altPriors[HOM])
+                                                      };
 
 inline
 const char*
@@ -84,8 +86,8 @@ inline
 float
 altFraction(const index_t i)
 {
-   assert ((i>=0) && (i<SIZE) && "Unknown GT state");
-   return altPriors[i];
+    assert ((i>=0) && (i<SIZE) && "Unknown GT state");
+    return altPriors[i];
 }
 
 inline

@@ -40,10 +40,10 @@
 static
 void
 incrementAlleleEvidence(
-        const SRAlignmentInfo& bp1SR, const SRAlignmentInfo& bp2SR,
-        const unsigned readMapQ, const float evidence, SVSampleAlleleInfo& allele,
-        SVFragmentEvidenceAlleleBreakendPerRead& bp1Support,
-        SVFragmentEvidenceAlleleBreakendPerRead& bp2Support)
+    const SRAlignmentInfo& bp1SR, const SRAlignmentInfo& bp2SR,
+    const unsigned readMapQ, const float evidence, SVSampleAlleleInfo& allele,
+    SVFragmentEvidenceAlleleBreakendPerRead& bp1Support,
+    SVFragmentEvidenceAlleleBreakendPerRead& bp2Support)
 {
     if (bp1SR.isEvidence)
     {
@@ -91,14 +91,14 @@ incrementAlleleEvidence(
 static
 void
 incrementSplitReadEvidence(
-        const SRAlignmentInfo& refBp1SR, const SRAlignmentInfo& refBp2SR,
-        const SRAlignmentInfo& altBp1SR, const SRAlignmentInfo& altBp2SR,
-        const unsigned readMapQ,
-        SVSampleAlleleInfo& refAllele, SVSampleAlleleInfo& altAllele,
-        SVFragmentEvidenceAlleleBreakendPerRead& refBp1Support,
-        SVFragmentEvidenceAlleleBreakendPerRead& refBp2Support,
-        SVFragmentEvidenceAlleleBreakendPerRead& altBp1Support,
-        SVFragmentEvidenceAlleleBreakendPerRead& altBp2Support)
+    const SRAlignmentInfo& refBp1SR, const SRAlignmentInfo& refBp2SR,
+    const SRAlignmentInfo& altBp1SR, const SRAlignmentInfo& altBp2SR,
+    const unsigned readMapQ,
+    SVSampleAlleleInfo& refAllele, SVSampleAlleleInfo& altAllele,
+    SVFragmentEvidenceAlleleBreakendPerRead& refBp1Support,
+    SVFragmentEvidenceAlleleBreakendPerRead& refBp2Support,
+    SVFragmentEvidenceAlleleBreakendPerRead& altBp1Support,
+    SVFragmentEvidenceAlleleBreakendPerRead& altBp2Support)
 {
     refBp1Support.splitLnLhood = refBp1SR.alignLnLhood;
     refBp2Support.splitLnLhood = refBp2SR.alignLnLhood;
