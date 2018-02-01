@@ -1,5 +1,4 @@
-# Compiled source #
-###################
+# Compiled source
 *.com
 *.class
 *.dll
@@ -17,36 +16,22 @@
 *.la
 *.a
 
-# emacs
-*~
+# Eclipse
+**/.project
+**/.cproject
+**/.settings
+**/.pydevproject
 
-# Eclipse:
-.project
-.cproject
-.settings
-.pydevproject
-
-src/.cproject
-src/.project
-
-# Packages #
-############
-# it's better to unpack these files and commit the raw source
-# git has its own built in compression methods
-*.7z
-*.dmg
-*.iso
-*.jar
-*.rar
-*.tar
-*.zip
-
-# IDE and temp files #
-######################
+# Other IDE/editor config and temp files
 *.swp
 .ycm_extra_conf.py*
 tags
 *.sublime-project
 *.sublime-workspace
-.idea
-src/.idea
+**/.idea
+*~ # emacs
+
+# Common build directories
+/build*
+/cmake-build-debug
+
