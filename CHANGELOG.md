@@ -1,9 +1,9 @@
 ## v1.3.0 - 2018-2-1
 
-This is a major update from v1.2.2
+This is a major update from v1.2.2. It features improvements to candidate SV precision and genotyping accuracy, in addition to minor improvements in stability, runtime and error diagnostics.
 
 ### Changed
-- Change depth estimation to filter all reads never seen by the SV caller prior to computing depth (MANTA-1296)
+- Change depth estimation read filter to better match the filter used for variant calling (MANTA-1296)
   - Expected depth per chromosome and local depth per locus/variant are now computed after removing filtered, pcr-duplicate, and secondary reads.
 - Lower default memory requirements for scatter phase tasks (MANTA-1307)
   - Reduce from 2Gb to 1.5Gb to enable all cores by default on AWS c4.8xlarge/other c\* servers.
