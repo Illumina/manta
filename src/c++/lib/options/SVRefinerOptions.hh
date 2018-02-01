@@ -21,7 +21,6 @@
 
 #include "alignment/AlignmentScores.hh"
 #include "options/IterativeAssemblerOptions.hh"
-#include "options/SmallAssemblerOptions.hh"
 
 typedef IterativeAssemblerOptions AssemblerOptions;
 

@@ -66,7 +66,7 @@ struct bam_streamer : public stream_state_reporter, public boost::noncopyable
         const char* referenceFilename,
         const char* region = nullptr);
 
-    ~bam_streamer();
+    ~bam_streamer() override;
 
     /// \brief Set new region to iterate over, this will fail if the alignment file is not indexed
     ///

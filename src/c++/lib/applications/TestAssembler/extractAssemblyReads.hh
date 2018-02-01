@@ -21,7 +21,6 @@
 
 #include "assembly/AssemblyReadInfo.hh"
 #include "options/ReadScannerOptions.hh"
-#include "options/SmallAssemblerOptions.hh"
 #include "options/IterativeAssemblerOptions.hh"
 
 typedef IterativeAssemblerOptions AssemblerOptions;

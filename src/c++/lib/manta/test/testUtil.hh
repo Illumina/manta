@@ -181,7 +181,7 @@ void addSupplementaryEvidence(
 {
     const char svtag[] = {'S','A'};
     bam_aux_append(bamRead.get_data(),svtag,'Z',(svStr.size()+1),
-                   (uint8_t*)(svStr.c_str()));
+                   reinterpret_cast<uint8_t*>(const_cast<char*>(svStr.c_str())));
 }
 
 /// \brief Create the BamAlignment for a given read using the SimpleAlignment object.

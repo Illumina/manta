@@ -24,7 +24,7 @@
 ///
 struct SmallAssemblerOptions
 {
-    SmallAssemblerOptions() = default;
+    SmallAssemblerOptions() {}
 
     /// the symbol set used during assembly
     std::string alphabet = "ACGT";
