@@ -1,4 +1,6 @@
-## Unreleased
+## v1.3.0 - 2018-2-1
+
+This is a major update from v1.2.2
 
 ### Changed
 - Change depth estimation to filter all reads never seen by the SV caller prior to computing depth (MANTA-1296)
