@@ -17,11 +17,6 @@
 //
 //
 
-/// \file
-/// \author Ole Schulz-Trieglaff
-/// \author Chris Saunders
-///
-
 
 #include "blt_util/CircularCounter.hh"
 #include "blt_util/log.hh"
@@ -559,10 +554,10 @@ getBreakendReads(
 
                 unsigned leadingMismatchLen(0);
                 unsigned trailingMismatchLen(0);
-                const bool isAgressiveAdaptorCheck(false);
+                const bool isAggressiveAdaptorCheck(false);
                 getSVBreakendCandidateSemiAlignedSimple(bamRead, bamAlign, refSeq,
                                                         _readScanner.isUseOverlappingPairs(),
-                                                        isAgressiveAdaptorCheck,
+                                                        isAggressiveAdaptorCheck,
                                                         leadingMismatchLen, trailingMismatchLen);
 
                 if (isSearchForRightOpen)
@@ -755,7 +750,7 @@ getBreakendReads(
 
 void
 SVCandidateAssembler::
-assembleSingleSVBreakend(
+assembleComplexSVCandidate(
     const SVBreakend& bp,
     const reference_contig_segment& refSeq,
     const bool isSearchRemoteInsertionReads,
@@ -775,7 +770,7 @@ assembleSingleSVBreakend(
 
 void
 SVCandidateAssembler::
-assembleSVBreakends(
+assembleSpanningSVCandidate(
     const SVBreakend& bp1,
     const SVBreakend& bp2,
     const bool isBp1Reversed,

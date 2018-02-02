@@ -157,7 +157,8 @@ struct SVCandidateAssemblyData
 
     BPOrientation bporient;
 
-    std::vector<std::string> extendedContigs; ///extended each contig's sequence by padding reference sequences on each end
+    /// Assembled contigs with additional reference sequence padding added onto each edge
+    std::vector<std::string> extendedContigs;
 
     std::vector<SmallAlignmentResultType> smallSVAlignments; ///< contig smallSV alignments, one per contig, may be empty
     std::vector<JumpAlignmentResultType> spanningAlignments; ///< contig spanning alignments, one per contig, may be empty
@@ -175,6 +176,6 @@ struct SVCandidateAssemblyData
 
     std::vector<SVCandidate> svs; ///< summarize candidate refined sv candidates
 
-    /// if true, assembly was skipped for this case because of an overlapping assembly
+    /// If true, assembly was skipped for this case because of an overlapping assembly
     bool isOverlapSkip = false;
 };

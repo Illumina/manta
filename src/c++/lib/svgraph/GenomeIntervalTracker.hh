@@ -17,10 +17,6 @@
 //
 //
 
-/// \file
-/// \author Chris Saunders
-///
-
 #pragma once
 
 #include "GenomeInterval.hh"
@@ -29,6 +25,9 @@
 #include <iosfwd>
 
 
+/// Accumulates genome intervals, then provides a new test genome interval overlaps any of the
+/// accumulated intervals
+///
 struct GenomeIntervalTracker
 {
     void
@@ -49,6 +48,7 @@ struct GenomeIntervalTracker
         _regions[gi.tid].addRegion(gi.range);
     }
 
+    /// Return true if \p gi is entirely contained within the intervals already added to this object
     bool
     isSubsetOfRegion(
         const GenomeInterval& gi) const

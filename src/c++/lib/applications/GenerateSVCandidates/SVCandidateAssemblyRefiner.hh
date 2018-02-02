@@ -17,10 +17,6 @@
 //
 //
 
-/// \file
-/// \author Ole Schulz-Trieglaff
-///
-
 #pragma once
 
 #include "GSCOptions.hh"
@@ -38,7 +34,11 @@
 #include "svgraph/GenomeIntervalTracker.hh"
 
 
-/// \brief methods to improve low-resolution SVCandidates via assembly and contig alignment
+/// \brief Provides additional details on low-resolution SVCandidates via assembly and contig alignment
+///
+/// Via the getCandidateAssemblyData method, provide a base-pair level 'refinement' of low-resolution SV
+/// candidates by assembling reads in the suspected breakpoint regions and aligning the assembly back to
+/// the reference.
 ///
 struct SVCandidateAssemblyRefiner
 {
@@ -48,14 +48,14 @@ struct SVCandidateAssemblyRefiner
         const AllCounts& counts,
         EdgeRuntimeTracker& edgeTracker);
 
-    /// \brief add assembly and assembly post-processing data to SV candidate
+    /// \brief Given a low-resolution SV candidate, compute a possible base-level refinement via assembly
     ///
     /// \param[in] isRNA if true add intron logic to the contig jump aligner
     /// \param[in] isFindLargeInsertions if true search for insertions which can't be completely assembled, and conduct more expensive search for assembly insertion evidence
+    /// \param[out] assemblyData All candidate refinement results are returned in this structure.
     void
     getCandidateAssemblyData(
         const SVCandidate& sv,
-        const SVCandidateSetData& svData,
         const bool isRNA,
         const bool isFindLargeInsertions,
         SVCandidateAssemblyData& assemblyData) const;
@@ -68,7 +68,9 @@ struct SVCandidateAssemblyRefiner
 
 private:
 
-    /// large SV assembler
+    /// Assembler for large SV candidates
+    ///
+    /// This assumes an SV candidate with two breakend regions and breakpoint direcdtion associated with each region
     void
     getJumpAssembly(
         const SVCandidate& sv,
@@ -76,7 +78,9 @@ private:
         const bool isFindLargeInsertions,
         SVCandidateAssemblyData& assemblyData) const;
 
-    /// small SV/indel assembler
+    /// Assembler for small SV/indel candidates
+    ///
+    /// This assumes an SV candidate is a single suspected SV/indel region, a so-called 'complex' SV candidate
     ///
     /// \param[in] isFindLargeInsertions if true search for insertions which can't be completely assembled, and conduct more expensive search for assembly insertion evidence
     ///
@@ -89,13 +93,24 @@ private:
     //////////////////////////////// data:
     const GSCOptions& _opt;
     const bam_header_info& _header;
+
+    /// Assembler parameterized for 'complex' SV candidate assembly from a single candidate region
     const SVCandidateAssembler _smallSVAssembler;
+
+    /// Assembler parameterized for assembly of a 'spanning' SV candidate spanning two regions
     const SVCandidateAssembler _spanningAssembler;
+
+    /// Aligner optimized to discover a small indel from a single SV candidate region
     const GlobalAligner<int> _smallSVAligner;
+
+    /// Aligner optimized to discover a single large indel from a single SV candidate region
     const GlobalLargeIndelAligner<int> _largeSVAligner;
+
     const GlobalAligner<int> _largeInsertEdgeAligner;
     const GlobalAligner<int> _largeInsertCompleteAligner;
     const GlobalJumpAligner<int> _spanningAligner;
     const GlobalJumpIntronAligner<int> _RNASpanningAligner;
+
+    /// Keeps track of all regions which have already been assembled while processing spanning SVs
     mutable GenomeIntervalTracker _spanToComplexAssmRegions;
 };

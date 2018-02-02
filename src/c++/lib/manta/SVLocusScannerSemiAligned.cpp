@@ -227,7 +227,7 @@ getSVBreakendCandidateSemiAligned(
     const SimpleAlignment& bamAlign,
     const reference_contig_segment& refSeq,
     const bool isUseOverlappingPairs,
-    const bool isAgressiveAdaptorCheck,
+    const bool isAggressiveAdaptorCheck,
     unsigned& leadingEdgePoorAlignmentLength,
     pos_t& leadingEdgeRefPos,
     unsigned& trailingEdgePoorAlignmentLength,
@@ -243,7 +243,7 @@ getSVBreakendCandidateSemiAligned(
     trailingEdgeRefPos = 0;
 
     if (is_possible_adapter_pair(bamRead) &&
-        (isAgressiveAdaptorCheck || is_adapter_pair(bamRead)))
+        (isAggressiveAdaptorCheck || is_adapter_pair(bamRead)))
     {
         return;
     }

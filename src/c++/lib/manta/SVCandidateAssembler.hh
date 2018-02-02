@@ -17,10 +17,6 @@
 //
 //
 
-/// \file
-/// \author Ole Schulz-Trieglaff
-///
-
 #pragma once
 
 #include "applications/GenerateSVCandidates/GSCOptions.hh"
@@ -39,7 +35,13 @@
 typedef IterativeAssemblerOptions AssemblerOptions;
 
 
-/// Assembles SV-candidate reads for single and paired SVBreakend objects
+/// Assembles reads across suspected breakends of both 'spanning' (2 breakend regions) and
+/// 'complex' (1 breakend region) low-resolution SVCandidates
+///
+/// In each case, the breakend regions are scanned for 'assembly-evidence' reads
+/// consistent with the low-resolution SVCandidate hypothesis. These reads are assembled,
+/// iterating over a range of word lengths until the first successful assembly. If unused
+/// reads remain, the assembly is re-started using this subset.
 ///
 struct SVCandidateAssembler
 {
@@ -55,23 +57,20 @@ struct SVCandidateAssembler
         const bool isRNA,
         TimeTracker& remoteTIme);
 
-    /**
-     * @brief Performs a de-novo assembly of a set of reads crossing a breakpoint.
-     *
-     * Iterates over a range of word lengths until the first successful assembly.
-     *
-     * If unused reads remain, the assembly is re-started using this subset.
-     */
+    /// Given a 'complex' SV candidate with 1 breakend region, assemble reads
+    /// over the breakend region
     void
-    assembleSingleSVBreakend(
+    assembleComplexSVCandidate(
         const SVBreakend& bp,
         const reference_contig_segment& refSeq,
         const bool isSearchRemoteInsertionReads,
         RemoteReadCache& remoteReads,
         Assembly& as) const;
 
+    /// Given a 'spanning' SV candidate with 2 breakend regions, assemble reads
+    /// over the junction of the 2 breakend regions
     void
-    assembleSVBreakends(
+    assembleSpanningSVCandidate(
         const SVBreakend& bp1,
         const SVBreakend& bp2,
         const bool isBp1Reversed,

@@ -448,7 +448,7 @@ isSmallAssemblerSVAlignment(
     const std::string& refSeq,
     const unsigned minCandidateIndelSize,
     std::vector<std::pair<unsigned,unsigned> >& candidateSegments,
-    const bool isLargeOnly = false)
+    const bool isLargeOnly)
 {
     using namespace ALIGNPATH;
 
@@ -1087,7 +1087,6 @@ void
 SVCandidateAssemblyRefiner::
 getCandidateAssemblyData(
     const SVCandidate& sv,
-    const SVCandidateSetData& /*svData*/,
     const bool isRNA,
     const bool isFindLargeInsertions,
     SVCandidateAssemblyData& assemblyData) const
@@ -1612,15 +1611,16 @@ getJumpAssembly(
         assemblyData.bp1ref, assemblyData.bp2ref,
         bp1LeadingTrim, bp1TrailingTrim, bp2LeadingTrim, bp2TrailingTrim);
 
-    // the 'cut' values below represent sequence which will be removed
-    // from the edges of the reference region for each breakend.
+    // The *Cut values below represent sequence which will be removed from the edges of the reference region for each
+    // breakend. In most cases this will equal extraRefSplitSize. Sometimes these values are forced to be shorter
+    // because we didn't retrieve as much reference sequence as targeted.
     pos_t align1LeadingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(bp1LeadingTrim)));
     pos_t align1TrailingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(bp1TrailingTrim)));
     pos_t align2LeadingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(bp2LeadingTrim)));
     pos_t align2TrailingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(bp2TrailingTrim)));
 
     // assemble contig(s) spanning the breakend:
-    _spanningAssembler.assembleSVBreakends(
+    _spanningAssembler.assembleSpanningSVCandidate(
         sv.bp1, sv.bp2,
         bporient.isBp1Reversed, bporient.isBp2Reversed,
         assemblyData.bp1ref, assemblyData.bp2ref,
@@ -1813,6 +1813,17 @@ getJumpAssembly(
 
 
 
+/// Stores information associated with each contig to assist with contig rank and selection
+struct ContigScoringInfo
+{
+    bool isDefined = false;
+    int score = 0;
+    unsigned index = 0;
+    unsigned variantSize = 0;
+};
+
+
+
 void
 SVCandidateAssemblyRefiner::
 getSmallSVAssembly(
@@ -1832,7 +1843,8 @@ getSmallSVAssembly(
     }
     else
     {
-        // check if we've already assembled this region?
+        // Check if we've already assembled this region while processing a spanning candidate, if so skip it.
+        // TODO: why does this assume the spanning candidate will be run first?
         if (_spanToComplexAssmRegions.isSubsetOfRegion(sv.bp1.interval))
         {
             assemblyData.isOverlapSkip = true;
@@ -1854,26 +1866,20 @@ getSmallSVAssembly(
 
     static const pos_t extraRefSize(extraRefEdgeSize+extraRefSplitSize);
 
-    static const float extraScorePerc(0.1f);
-    static const float extraVarSizePerc(0.1f);
-    static const float extraSuppReadPerc(0.2f);
-
-    // min alignment context
-    //const unsigned minAlignContext(4);
-
-    // there's always a small chance that our region could fall
-    // completely off the edge of the reference.  b/c of circular
-    // genomes, this can't be treated as a bug -- it's a legitimate
-    // breakend hypothesis that we just aren't setup to handle
-    // correctly:
+    // There is a small chance that the target assembly/alignment region will not intersect with the reference.
+    // This can't be treated as a bug because some chromosomes are circular. Manta is not setup to handle SVs
+    // spanning the origin of circular chromosomes correctly, so these cases are skipped.
+    //
     if (! isRefRegionValid(_header, sv.bp1.interval)) return;
 
     unsigned leadingTrim;
     unsigned trailingTrim;
     getIntervalReferenceSegment(_opt.referenceFilename, _header, extraRefSize, sv.bp1.interval, assemblyData.bp1ref, leadingTrim, trailingTrim);
 
-    // in most cases, these values should equal extraRefSplitSize,
-    // sometimes they're forced to be shorter b/c we didn't retrieve as much reference sequence as targeted:
+    // The *Cut values below represent sequence which will be removed from the edges of the reference region for each
+    // breakend. In most cases: (1) leadingCut and trailingCut will equal extraRefSplitSize (2) maxLeadingCut and
+    // maxTrailingCut will equal extraRefSize. Sometimes these values are forced to be shorter because we didn't
+    // retrieve as much reference sequence as targeted.
     const pos_t maxLeadingCut(std::max(0, extraRefSize - static_cast<pos_t>(leadingTrim)));
     const pos_t maxTrailingCut(std::max(0, extraRefSize - static_cast<pos_t>(trailingTrim)));
     const pos_t leadingCut(std::max(0, maxLeadingCut - extraRefEdgeSize));
@@ -1884,7 +1890,8 @@ getSmallSVAssembly(
     const bool isSearchRemoteInsertionReads((! _opt.isSkipRemoteReads) && isFindLargeInsertions);
 
     // assemble contigs in the breakend region
-    _smallSVAssembler.assembleSingleSVBreakend(sv.bp1, assemblyData.bp1ref, isSearchRemoteInsertionReads, assemblyData.remoteReads, assemblyData.contigs);
+    _smallSVAssembler.assembleComplexSVCandidate(sv.bp1, assemblyData.bp1ref, isSearchRemoteInsertionReads,
+                                                 assemblyData.remoteReads, assemblyData.contigs);
 
 #ifdef DEBUG_REFINER
     log_os << __FUNCTION__ << ": align1RefSize/Seq: " << align1RefStr.size() << '\n';
@@ -1910,15 +1917,10 @@ getSmallSVAssembly(
     assemblyData.largeInsertInfo.resize(contigCount);
     assemblyData.extendedContigs.resize(contigCount);
 
-    bool isHighScore(false);
-    unsigned highScoreIndex(0);
-    int highScore(0);
 
-    unsigned highScoreVarSize(0);
-    bool isSecHighScore(false);
-    int secHighScore(0);
-    unsigned secHighScoreIndex(0);
-    unsigned secHighScoreVarSize(0);
+    // track best and second-best contig details:
+    ContigScoringInfo rank1Contig;
+    ContigScoringInfo rank2Contig;
 
     std::vector<unsigned> largeInsertionCandidateIndex;
 
@@ -1930,8 +1932,7 @@ getSmallSVAssembly(
         log_os << __FUNCTION__ << ": start aligning contigIndex: " << contigIndex << '\n';
 #endif
 
-
-        // try out two different aligners, one optimized to find large
+        // Run two different aligners, one optimized to find large
         // events and one optimized to find smaller events, only look
         // for small events if the large event search fails:
         SVCandidateAssemblyData::SmallAlignmentResultType& alignment(assemblyData.smallSVAlignments[contigIndex]);
@@ -1939,19 +1940,19 @@ getSmallSVAssembly(
         std::vector<std::pair<unsigned,unsigned> >& candidateSegments(assemblyData.smallSVSegments[contigIndex]);
         candidateSegments.clear();
 
-        // remove candidate from consideration unless we find a
-        // sufficiently large indel with good flanking sequence:
+        // Remove candidate from consideration unless we find a sufficiently large indel with good flanking sequence in
+        // the contig alignment
         bool isSmallSVCandidate(false);
 
-        // come up with a more intelligent reference span limit:
+        // To accelerate alignment, find the earliest and latest contig kmer match in the reference, then
+        // limit the target reference region used for alignment to these points (but not less than the
+        // original breakend region)
+        //
+        // New reference span reflected in adjusted*Cut values below
         pos_t adjustedLeadingCut(leadingCut);
         pos_t adjustedTrailingCut(trailingCut);
         {
-            // for all kmers in the contig, find the earliest and
-            // latest kmer match in the reference, limit reference
-            // to these points (but not less than the original breakend region)
-            //
-            // pick low k because this is just a simple runtime optimization
+            // Pick a relatively low value for k because this is just a simple runtime optimization
             static const int merSize(10);
             std::unordered_set<std::string> contigHash;
             const unsigned contigSize(contig.seq.size());
@@ -1995,35 +1996,32 @@ getSmallSVAssembly(
             BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
         }
 
-        // start with largeSV aligner
+        /// Set isSmallSVCandidate true if an indel candidate can be nominated from alignment
+        auto testIfAlignmentNominatesIndelCandidate = [&](
+            const AlignerBase<int>& aligner,
+            const bool isLargeOnly)
         {
-            _largeSVAligner.align(
-                contig.seq.begin(), contig.seq.end(),
-                align1RefStr.begin() + adjustedLeadingCut, align1RefStr.end() - adjustedTrailingCut,
-                alignment);
-
             alignment.align.beginPos += adjustedLeadingCut;
             getExtendedContig(alignment, contig.seq, align1RefStr, extendedContig);
 
-
-            // trial two different flanking test sizes, this way we
-            // account for multiple neighboring noise scenarios
+            // Test alignment quality to determine if it nominates an indel candidate.
+            //
+            // Test is run twice, with different flanking test sizes, this way we
+            // account for multiple neighboring noise scenarios.
             //
             static const unsigned spanSet[] = {100,200};
             for (const unsigned maxQCRefSpan : spanSet)
             {
-                static const bool isLargeOnly(true);
-
                 std::vector<std::pair<unsigned,unsigned> > segments;
                 const bool isCandidate( isSmallAssemblerSVAlignment(
-                                            maxQCRefSpan,
-                                            _largeSVAligner,
-                                            alignment.align,
-                                            contig.seq,
-                                            align1RefStr,
-                                            _opt.scanOpt.minCandidateVariantSize,
-                                            segments,
-                                            isLargeOnly) );
+                    maxQCRefSpan,
+                    aligner,
+                    alignment.align,
+                    contig.seq,
+                    align1RefStr,
+                    _opt.scanOpt.minCandidateVariantSize,
+                    segments,
+                    isLargeOnly) );
 
                 if (isCandidate)
                 {
@@ -2037,14 +2035,25 @@ getSmallSVAssembly(
             }
 
 #ifdef DEBUG_REFINER
-            log_os << __FUNCTION__ << ": finished largeAligner. contigIndex: " << contigIndex
+            const std::string alignerSize(isLargeOnly ? "large" : "small");
+            log_os << __FUNCTION__ << ": finished " << alignerSize << "Aligner. contigIndex: " << contigIndex
                    << " isSmallSVCandidate " << isSmallSVCandidate
                    << " alignment: " << alignment;
 #endif
+        };
+
+        // Start with largeSV aligner to discover any large indels in the contig/reference alignment.
+        {
+            _largeSVAligner.align(
+                contig.seq.begin(), contig.seq.end(),
+                align1RefStr.begin() + adjustedLeadingCut, align1RefStr.end() - adjustedTrailingCut,
+                alignment);
+
+            testIfAlignmentNominatesIndelCandidate(_largeSVAligner, true);
         }
 
 
-        // didn't find anything? try again focused on smaller events:
+        // If no candidate is found by the large indel aligner, try again with the small indel aligner.
         /// TODO: get rid of this step
         if (! isSmallSVCandidate)
         {
@@ -2053,50 +2062,14 @@ getSmallSVAssembly(
                 align1RefStr.begin() + adjustedLeadingCut, align1RefStr.end() - adjustedTrailingCut,
                 alignment);
 
-            alignment.align.beginPos += adjustedLeadingCut;
-            getExtendedContig(alignment, contig.seq, align1RefStr, extendedContig);
-
-            // trial two different flanking test sizes, this way we
-            // account for multiple neighboring noise scenarios
-            //
-            static const unsigned spanSet[] = {100,200};
-            for (const unsigned maxQCRefSpan : spanSet)
-            {
-                std::vector<std::pair<unsigned,unsigned> > segments;
-                const bool isCandidate( isSmallAssemblerSVAlignment(
-                                            maxQCRefSpan,
-                                            _smallSVAligner,
-                                            alignment.align,
-                                            contig.seq,
-                                            align1RefStr,
-                                            _opt.scanOpt.minCandidateVariantSize,
-                                            segments) );
-
-                if (isCandidate)
-                {
-                    // in case both ref spans are accepted take the
-                    // one with the larger segment count:
-                    if (segments.size() > candidateSegments.size())
-                    {
-                        candidateSegments = segments;
-                    }
-                    isSmallSVCandidate=true;
-                }
-            }
-
-#ifdef DEBUG_REFINER
-            log_os << __FUNCTION__ << ": finished smallAligner. contigIndex: " << contigIndex
-                   << " isSmallSVCandidate " << isSmallSVCandidate
-                   << " alignment: " << alignment;
-#endif
+            testIfAlignmentNominatesIndelCandidate(_smallSVAligner, false);
         }
 
 
-        // test each alignment for suitability to be the left or right
-        // side of a large insertion:
+        // Test each alignment for suitability to be the left or right side of a large insertion.
         //
-        // all practical combinations of left and right candidates
-        // will be enumerated below to see if there's a good fit:
+        // All practical combinations of left and right candidates will be enumerated below to see
+        // if any fit a large insertion hypothesis.
         //
         if (isFindLargeInsertions)
         {
@@ -2150,72 +2123,80 @@ getSmallSVAssembly(
 
         if (isSmallSVCandidate)
         {
+            /// Updates \p contigInfo to contain data for the current contig
+            auto refreshContigScoringInfo = [&](ContigScoringInfo& contigInfo)
+            {
+                contigInfo.isDefined = true;
+                contigInfo.index = contigIndex;
+                contigInfo.score = alignment.score;
+                contigInfo.variantSize = getLargestIndelSize(alignment.align.apath, candidateSegments);
+            };
+
             // keep the top two highest scoring QC'd candidate:
             // TODO: we should keep all QC'd candidates for the small event case
             // FIXME : prevents us from finding overlapping events, keep vector of high-scoring contigs?
-            if (! isHighScore)
+            if ((! rank1Contig.isDefined) || (alignment.score > rank1Contig.score))
             {
-#ifdef DEBUG_REFINER
-                log_os << __FUNCTION__ << ": contigIndex: " << contigIndex << " is high score\n";
-#endif
-                isHighScore = true;
-                highScoreIndex = contigIndex;
-                highScore = alignment.score;
-                highScoreVarSize = getLargestIndelSize(alignment.align.apath, candidateSegments);
-            }
-            else if (alignment.score > highScore)
-            {
-                isSecHighScore = true;
-                secHighScore = highScore;
-                secHighScoreIndex = highScoreIndex;
-                secHighScoreVarSize = highScoreVarSize;
-                highScoreVarSize = getLargestIndelSize(alignment.align.apath, candidateSegments);
+                if (rank1Contig.isDefined)
+                {
+                    rank2Contig = rank1Contig;
 
 #ifdef DEBUG_REFINER
-                log_os << __FUNCTION__ << ": contigIndex: " << secHighScoreIndex << " is the second high score\n";
+                    log_os << __FUNCTION__ << ": contigIndex: " << rank2Contig.index << " is the second high score\n";
 #endif
-                highScoreIndex = contigIndex;
-                highScore = alignment.score;
+                }
+
+                refreshContigScoringInfo(rank1Contig);
+
 #ifdef DEBUG_REFINER
-                log_os << __FUNCTION__ << ": contigIndex: " << highScoreIndex << " is high score\n";
+                log_os << __FUNCTION__ << ": contigIndex: " << rank1Contig.index << " is high score\n";
 #endif
             }
-            else if ((! isSecHighScore) || (alignment.score > assemblyData.smallSVAlignments[secHighScoreIndex].score))
+            else if ((! rank2Contig.isDefined) || (alignment.score > rank2Contig.score))
             {
-                isSecHighScore = true;
-                secHighScore = alignment.score;
-                secHighScoreIndex = contigIndex;
-                secHighScoreVarSize = getLargestIndelSize(alignment.align.apath, candidateSegments);
+                refreshContigScoringInfo(rank2Contig);
+
 #ifdef DEBUG_REFINER
-                log_os << __FUNCTION__ << ": contigIndex: " << secHighScoreIndex << " is the second high score\n";
+                log_os << __FUNCTION__ << ": contigIndex: " << rank2Contig.index << " is the second high score\n";
 #endif
             }
         }
     }
 
-    // select the contig with the larger indel size between the two
+    // Select the contig with the larger indel size between the two
     // highest-scoring contigs
-    if (isSecHighScore)
+    if (rank2Contig.isDefined)
     {
-        const unsigned highScoreSuppReads = assemblyData.contigs[highScoreIndex].supportReads.size();
-        const unsigned secHighScoreSuppReads = assemblyData.contigs[secHighScoreIndex].supportReads.size();
+        assert(rank1Contig.isDefined);
+
+        const unsigned rank1ContigSupportReadCount = assemblyData.contigs[rank1Contig.index].supportReads.size();
+        const unsigned rank2ContigSupportReadCount = assemblyData.contigs[rank2Contig.index].supportReads.size();
+
 #ifdef DEBUG_REFINER
-        log_os << __FUNCTION__ << ": contig #" << highScoreIndex << " has " << highScoreSuppReads
-               <<" support reads, with max variant size " << highScoreVarSize << "\n";
-        log_os << __FUNCTION__ << ": contig #" << secHighScoreIndex << " has " << secHighScoreSuppReads
-               <<" support reads, with max variant size " << secHighScoreVarSize << "\n";
+        log_os << __FUNCTION__ << ": contig #" << rank1Contig.index << " has " << rank1ContigSupportReadCount
+               <<" support reads, with max variant size " << rank1Contig.variantSize << "\n";
+        log_os << __FUNCTION__ << ": contig #" << rank1Contig.index << " has " << rank2ContigSupportReadCount
+               <<" support reads, with max variant size " << rank1Contig.variantSize << "\n";
 #endif
 
-        // the second best contig is selected
-        // if its score is higher than (1-extraScorePerc) of the highest score
-        // AND either its support reads is more than  (1+extraSuppReadPerc) of that of the highest-score contig
-        //     or its variant size is more than (1+extraVarSizePerc) of that of the highsest-score contig
-        const bool secondIsBest((secHighScore > highScore * (1-extraScorePerc)) &&
-                                ((secHighScoreSuppReads > highScoreSuppReads *(1+extraSuppReadPerc)) ||
-                                 (secHighScoreVarSize > highScoreVarSize * (1+extraVarSizePerc))));
-        if (secondIsBest) highScoreIndex = secHighScoreIndex;
+        // The second best contig is selected if:
+        // (1) score2/score1 is higher than minScoreRatio
+        // (2) either (2a) or (2b) is true:
+        //    (2a) supportReadCount2/supportReadCount1 is higher than minSupportReadCountRatio
+        //    (2b) variantSize2/variantSize1 is higher than minVariantSizeRatio
+        //
+        static const float minScoreRatio(0.9f);
+        static const float minSupportReadCountRatio(1.2f);
+        static const float minVariantSizeRatio(1.1f);
+        const bool rank2IsBest((rank2Contig.score > (rank1Contig.score*minScoreRatio)) &&
+                                ((rank2ContigSupportReadCount > (rank1ContigSupportReadCount*minSupportReadCountRatio)) ||
+                                 (rank2Contig.variantSize > (rank1Contig.variantSize*minVariantSizeRatio))));
+        if (rank2IsBest)
+        {
+            rank1Contig = rank2Contig;
+        }
 #ifdef DEBUG_REFINER
-        log_os << __FUNCTION__ << ": contigIndex: " << highScoreIndex << " is finally selected.\n";
+        log_os << __FUNCTION__ << ": contigIndex: " << rank1Contig.index << " is finally selected.\n";
 #endif
     }
 
@@ -2225,11 +2206,11 @@ getSmallSVAssembly(
     std::set<pos_t> insPos;
 
     // finished QC, skip small deletions if no candidates have appeared:
-    if (isHighScore)
+    if (rank1Contig.isDefined)
     {
-        assemblyData.bestAlignmentIndex = highScoreIndex;
+        assemblyData.bestAlignmentIndex = rank1Contig.index;
 #ifdef DEBUG_REFINER
-        log_os << __FUNCTION__ << ": highscoreid: " << highScoreIndex << " alignment: " << assemblyData.smallSVAlignments[highScoreIndex];
+        log_os << __FUNCTION__ << ": highscoreid: " << rank1Contig.index << " alignment: " << assemblyData.smallSVAlignments[rank1Contig.index];
 #endif
 
         // process the alignment into information that's easily usable
