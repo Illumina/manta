@@ -154,8 +154,12 @@ isFilterSpanningAlignment(
 }
 
 
-/// identify path indel sequences with an insert or delete segment greater than minSize
+/// Identify indels larger than \p minSize in the input alignment path (\p apath)
 ///
+/// \param[in] apath Input alignment which will be searched for large indels
+/// \param[in] minSize Minimum qualifying indel size
+/// \param[out] segments Return the indices in apath for each qualifying indel. Each qualifying indel has a (start,end)
+///                      index pair to account for combined insetion/deletion (ie. 'complex') events.
 static
 void
 getLargeIndelSegments(
@@ -331,7 +335,7 @@ addCigarToSpanningAlignment(
 
 
 
-/// \param[in] maxQCRefSpan what is the longest flanking sequence length considered for the high quality qc requirement?
+/// \param[in] maxQCRefSpan Longest flanking sequence length considered for the high quality qc requirement
 static
 bool
 isSmallSVSegmentFilter(
@@ -397,18 +401,22 @@ isSmallSVSegmentFilter(
 }
 
 
+
+/// Return the number of locations where the \p querySeq sequence matches the \p targetSeq sequence, allowing for
+/// a maximum mismatch rate, \p mismatchRate, for each sequence match.
+///
 static
 int
-searchContig(
+getQuerySeqMatchCount(
     const std::string& targetSeq,
     const std::string& querySeq,
-    const float mismatchRate)
+    const float maxMismatchRate)
 {
-    unsigned numOccur = 0;
-    const unsigned querySize = querySeq.size();
-    const unsigned targetSize = targetSeq.size();
+    unsigned querySeqMatchCount(0);
+    const unsigned querySize(querySeq.size());
+    const unsigned targetSize(targetSeq.size());
 
-    if (querySize > targetSize) return numOccur;
+    if (querySize > targetSize) return querySeqMatchCount;
 
     // set the scanning start & end to make sure the candidate window is overlapping the breakpoint
     const unsigned scanStart = 0;
@@ -420,35 +428,40 @@ searchContig(
         for (unsigned j(0); j < querySize; j++)
         {
             if ((querySeq[j] != targetSeq[i+j]) || (querySeq[j] == 'N'))
-                mismatches ++;
+                mismatches++;
         }
 
-        if (float(mismatches)/float(querySize) <= mismatchRate)
-            numOccur++;
+        if (float(mismatches)/float(querySize) <= maxMismatchRate)
+        {
+            querySeqMatchCount++;
+        }
     }
 
-    return numOccur;
+    return querySeqMatchCount;
 }
 
 
-/// test whether this single-node assembly is (1) an interesting variant above the minimum size and
+
+/// Find whether the input single-node contig alignment contains an interesting variant above the minimum size and
 /// (2) passes QC otherwise (appropriate flanking regions, etc)
 ///
-/// \param[in] maxQCRefSpan what is the longest flanking sequence length considered for the high quality qc requirement?
+/// \param[in] maxQCRefSpan Longest flanking sequence length considered for the high quality qc requirement
+/// \param[out] candidateSegments Segment indices of all qualifying SV candidates are returned in this structure
+/// \param[in] onlyAcceptLargeCandidates If true, don't accept smaller indel/SV candidates (intended for denoising)
 ///
-/// \return true if these segments are candidates
+/// \return True if a qualifying candidate variant is found in the input alignment
 ///
 static
 bool
-isSmallAssemblerSVAlignment(
+findCandidateVariantsFromComplexSVContigAlignment(
     const unsigned maxQCRefSpan,
     const AlignerBase<int>& aligner,
     const Alignment& align,
     const std::string& contigSeq,
     const std::string& refSeq,
     const unsigned minCandidateIndelSize,
-    std::vector<std::pair<unsigned,unsigned> >& candidateSegments,
-    const bool isLargeOnly)
+    std::vector<std::pair<unsigned, unsigned> >& candidateSegments,
+    const bool onlyAcceptLargeCandidates)
 {
     using namespace ALIGNPATH;
 
@@ -461,7 +474,7 @@ isSmallAssemblerSVAlignment(
     // escape if there are no indels above the minimum size
     if (candidateSegments.empty()) return false;
 
-    // complex is anything besides a simple single indel -- more than one indel or an insert/delete combination:
+    // Here, 'complex' means any indel besides a single simple insertion or deletion:
     const bool isComplex((candidateSegments.size() > 1) || (candidateSegments[0].first != candidateSegments[0].second));
 
     // loop through possible leading segments until a clean one is found:
@@ -481,7 +494,7 @@ isSmallAssemblerSVAlignment(
         // escape if this was the last segment
         if (1 == candidateSegments.size()) return false;
 
-        candidateSegments = std::vector<std::pair<unsigned,unsigned> >(candidateSegments.begin()+1,candidateSegments.end());
+        candidateSegments.erase(candidateSegments.begin());
     }
 
     // loop through possible trailing segments until a clean one is found:
@@ -505,6 +518,12 @@ isSmallAssemblerSVAlignment(
     }
 
 
+    // Filter out candidates with ambiguous contig alignments
+    //
+    // For the contig segment on each side of the candidate SV, search for more than one position on the reference
+    // which the contig segment can be mapped to with 95% identity or higher. If found, then filter out this
+    // candidate due to ambiguous contig alignment.
+    //
     {
         // TODO: iterate on all segments
         const path_t apathTillSvStart(apath.begin(), apath.begin() + candidateSegments.front().first);
@@ -523,11 +542,11 @@ isSmallAssemblerSVAlignment(
 
         // search leftContig in the downstream of refStart
         const int leftSearchStart = std::max(0, refAlignEnd-searchWindow);
-        const std::string refSeq4LeftSearch = refSeq.substr(leftSearchStart, (refAlignEnd-leftSearchStart));
-        unsigned occurrences = searchContig(refSeq4LeftSearch, leftContig, mismatchRate);
+        const std::string refSeqForLeftSearch = refSeq.substr(leftSearchStart, (refAlignEnd-leftSearchStart));
+        unsigned occurrences = getQuerySeqMatchCount(refSeqForLeftSearch, leftContig, mismatchRate);
 
 #ifdef DEBUG_CONTIG
-        log_os << __FUNCTION__ << ": refSeq4LeftSearch: \n" << refSeq4LeftSearch << "\n";
+        log_os << __FUNCTION__ << ": refSeqForLeftSearch: \n" << refSeqForLeftSearch << "\n";
         log_os << __FUNCTION__ << ": left contig has size " << leftSize << ":\n" << leftContig << "\n";
         log_os << __FUNCTION__ << ": left contig occurrences " << occurrences << "\n";
 #endif
@@ -535,18 +554,18 @@ isSmallAssemblerSVAlignment(
 
         // search rightContig in the upstream of refEnd
         const int rightSearchSize = std::min(searchWindow, int(refSeq.length()-refAlignStart));
-        const std::string refSeq4RightSearch = refSeq.substr(refAlignStart, rightSearchSize);
-        occurrences = searchContig(refSeq4RightSearch, rightContig, mismatchRate);
+        const std::string refSeqForRightSearch = refSeq.substr(refAlignStart, rightSearchSize);
+        occurrences = getQuerySeqMatchCount(refSeqForRightSearch, rightContig, mismatchRate);
 
 #ifdef DEBUG_CONTIG
-        log_os << __FUNCTION__ << ": refSeq4RightSearch: \n" << refSeq4RightSearch << "\n";
+        log_os << __FUNCTION__ << ": refSeqForRightSearch: \n" << refSeqForRightSearch << "\n";
         log_os << __FUNCTION__ << ": right contig has size " << rightSize << ":\n" << rightContig << "\n";
         log_os << __FUNCTION__ << ": right contig occurrences " << occurrences << "\n";
 #endif
         if (occurrences > 1) return false;
     }
 
-    if (isLargeOnly)
+    if (onlyAcceptLargeCandidates)
     {
         // only accept large indels in this case
         typedef std::pair<unsigned,unsigned> segment_t;
@@ -571,7 +590,8 @@ isSmallAssemblerSVAlignment(
 
 
 
-static const unsigned minSemiLargeInsertionLength(40); // if a large insertion is not complete assembled, it must be assembled at least this far into either side
+/// If a large insertion is not complete assembled, it must be assembled at least this far into either side
+static const unsigned minSemiLargeInsertionLength(40);
 
 
 /// \param[in] trimInsertLength remove extra length from the end of the contig
@@ -689,7 +709,7 @@ isFinishedLargeInsertAlignment(
 
 
 
-/// get the range over which an alignment element can vary with equal edit distance
+/// Get the range over which an alignment element can vary with equal edit distance
 ///
 /// \param[in] refRange range of the event (ie indel) of interest in reference coordinates
 /// \param[in] readRange range of the event (ie indel) of interest in read coordinates
@@ -877,7 +897,7 @@ getInsertTrim(
 
 
 
-// search for combinations of left and right-side insertion candidates to find a good insertion pair
+/// Search for combinations of left and right-side insertion candidates to find a good insertion pair
 static
 void
 processLargeInsertion(
@@ -1027,7 +1047,7 @@ processLargeInsertion(
 
         getExtendedContig(fakeAlignment, fakeContig.seq, align1RefStr, fakeExtendedContig);
 
-        /// this section mostly imitates the regular SV build below, now that we've constructed our fake contig/alignment
+        // this section mostly imitates the regular SV build below, now that we've constructed our fake contig/alignment
         SVCandidate newSV(sv);
         newSV.assemblyAlignIndex = contigCount;
         newSV.assemblySegmentIndex = 0;
@@ -1260,7 +1280,7 @@ std::string kmerMaskReference(
 
 
 
-/// convert jump alignment results into an SVCandidate
+/// Convert jump alignment results into an SVCandidate
 ///
 static
 void
@@ -1290,7 +1310,7 @@ generateRefinedSVCandidateFromJumpAlignment(
 
 
 
-/// convert jump alignment results into an SVCandidate and add all
+/// Convert jump alignment results into an SVCandidate and add all
 /// extra data required for VCF output
 ///
 static
@@ -1323,7 +1343,9 @@ generateRefinedVCFSVCandidateFromJumpAlignment(
     addCigarToSpanningAlignment(sv);
 }
 
-// QC the alignment to make sure it spans the two breakend locations:
+
+
+/// QC the alignment to make sure it spans the two breakend locations:
 static
 bool
 basicContigAlignmentCheck(
@@ -1336,7 +1358,9 @@ basicContigAlignmentCheck(
     return (isAlignment1Good && isAlignment2Good);
 }
 
-// check the min size and fraction of optimal alignment score
+
+
+// Check the min size and fraction of optimal alignment score
 // for each of the two sub-alignments on each side of the bp
 //
 // note this is done for multiple values -- the lower value is
@@ -1373,7 +1397,9 @@ checkFilterSubAlignments(
     return (isFilterAlign1 || isFilterAlign2);
 }
 
-// Filter fusion contigs and select the 'best' one, based on alignment score and supporting read count
+
+
+/// Filter fusion contigs and select the 'best' one, based on alignment score and supporting read count
 static
 bool
 selectContigRNA(
@@ -1424,7 +1450,9 @@ selectContigRNA(
     return true;
 }
 
-// Filter breakpoint contigs, select the 'best' one based on alignment score and check alignment on selected contig
+
+
+/// Filter breakpoint contigs, select the 'best' one based on alignment score and check alignment on selected contig
 // TODO Consider making this more like the RNA case, e.g. all alignment checks before selection and pick the best passing one.
 static
 bool
@@ -1997,9 +2025,12 @@ getSmallSVAssembly(
         }
 
         /// Set isSmallSVCandidate true if an indel candidate can be nominated from alignment
+        ///
+        /// \param[in] onlyAcceptLargeCandidates If true, don't accept smaller indel/SV candidates (intended for denoising)
+        ///
         auto testIfAlignmentNominatesIndelCandidate = [&](
             const AlignerBase<int>& aligner,
-            const bool isLargeOnly)
+            const bool onlyAcceptLargeCandidates)
         {
             alignment.align.beginPos += adjustedLeadingCut;
             getExtendedContig(alignment, contig.seq, align1RefStr, extendedContig);
@@ -2013,7 +2044,7 @@ getSmallSVAssembly(
             for (const unsigned maxQCRefSpan : spanSet)
             {
                 std::vector<std::pair<unsigned,unsigned> > segments;
-                const bool isCandidate( isSmallAssemblerSVAlignment(
+                const bool isCandidate(findCandidateVariantsFromComplexSVContigAlignment(
                     maxQCRefSpan,
                     aligner,
                     alignment.align,
@@ -2021,7 +2052,7 @@ getSmallSVAssembly(
                     align1RefStr,
                     _opt.scanOpt.minCandidateVariantSize,
                     segments,
-                    isLargeOnly) );
+                    onlyAcceptLargeCandidates) );
 
                 if (isCandidate)
                 {
@@ -2035,7 +2066,7 @@ getSmallSVAssembly(
             }
 
 #ifdef DEBUG_REFINER
-            const std::string alignerSize(isLargeOnly ? "large" : "small");
+            const std::string alignerSize(onlyAcceptLargeCandidates ? "large" : "small");
             log_os << __FUNCTION__ << ": finished " << alignerSize << "Aligner. contigIndex: " << contigIndex
                    << " isSmallSVCandidate " << isSmallSVCandidate
                    << " alignment: " << alignment;
