@@ -70,6 +70,7 @@
 ///                     bamRead but is provided as a (presumed) cache optimization.
 /// \param[in] refSeq Local reference sequence
 /// \param[in] isUseOverlappingPairs When false, filter out read pairs which overlap.
+/// \param[in] isAggressiveAdaptorCheck When true, filter out read pairs that might run into adapters based on an aggressive check
 /// \param[out] leadingEdgePoorAlignmentLength Length of possible breakend-associated poor alignment on the read's leading edge.
 /// \param[out] leadingEdgeRefPos The reference position of the first aligned base after the leading poorly aligned segment.
 /// \param[out] trailingEdgePoorAlignmentLength Length of possible breakend-associated poor alignment on the read's trailing edge.
