@@ -2029,8 +2029,8 @@ getSmallSVAssembly(
         /// \param[in] onlyAcceptLargeCandidates If true, don't accept smaller indel/SV candidates (intended for denoising)
         ///
         auto testIfAlignmentNominatesIndelCandidate = [&](
-            const AlignerBase<int>& aligner,
-            const bool onlyAcceptLargeCandidates)
+                                                          const AlignerBase<int>& aligner,
+                                                          const bool onlyAcceptLargeCandidates)
         {
             alignment.align.beginPos += adjustedLeadingCut;
             getExtendedContig(alignment, contig.seq, align1RefStr, extendedContig);
@@ -2045,14 +2045,14 @@ getSmallSVAssembly(
             {
                 std::vector<std::pair<unsigned,unsigned> > segments;
                 const bool isCandidate(findCandidateVariantsFromComplexSVContigAlignment(
-                    maxQCRefSpan,
-                    aligner,
-                    alignment.align,
-                    contig.seq,
-                    align1RefStr,
-                    _opt.scanOpt.minCandidateVariantSize,
-                    segments,
-                    onlyAcceptLargeCandidates) );
+                                           maxQCRefSpan,
+                                           aligner,
+                                           alignment.align,
+                                           contig.seq,
+                                           align1RefStr,
+                                           _opt.scanOpt.minCandidateVariantSize,
+                                           segments,
+                                           onlyAcceptLargeCandidates) );
 
                 if (isCandidate)
                 {
@@ -2067,8 +2067,8 @@ getSmallSVAssembly(
 
 #ifdef DEBUG_REFINER
             const std::string alignerSize(onlyAcceptLargeCandidates ? "large" : "small");
-            log_os << __FUNCTION__ << ": finished " << alignerSize << "Aligner. contigIndex: " << contigIndex
-                   << " isSmallSVCandidate " << isSmallSVCandidate
+            log_os << __FUNCTION__ << ": finished " << alignerSize << " aligner. contigIndex: " << contigIndex
+                   << " isSmallSVCandidate: " << isSmallSVCandidate
                    << " alignment: " << alignment;
 #endif
         };
@@ -2194,8 +2194,7 @@ getSmallSVAssembly(
         }
     }
 
-    // Select the contig with the larger indel size between the two
-    // highest-scoring contigs
+    // Test to see if the second-best contig alignment should be preferred over the best contig alignment:
     if (rank2Contig.isDefined)
     {
         assert(rank1Contig.isDefined);
@@ -2206,8 +2205,8 @@ getSmallSVAssembly(
 #ifdef DEBUG_REFINER
         log_os << __FUNCTION__ << ": contig #" << rank1Contig.index << " has " << rank1ContigSupportReadCount
                <<" support reads, with max variant size " << rank1Contig.variantSize << "\n";
-        log_os << __FUNCTION__ << ": contig #" << rank1Contig.index << " has " << rank2ContigSupportReadCount
-               <<" support reads, with max variant size " << rank1Contig.variantSize << "\n";
+        log_os << __FUNCTION__ << ": contig #" << rank2Contig.index << " has " << rank2ContigSupportReadCount
+               <<" support reads, with max variant size " << rank2Contig.variantSize << "\n";
 #endif
 
         // The second best contig is selected if:
@@ -2220,8 +2219,8 @@ getSmallSVAssembly(
         static const float minSupportReadCountRatio(1.2f);
         static const float minVariantSizeRatio(1.1f);
         const bool rank2IsBest((rank2Contig.score > (rank1Contig.score*minScoreRatio)) &&
-                                ((rank2ContigSupportReadCount > (rank1ContigSupportReadCount*minSupportReadCountRatio)) ||
-                                 (rank2Contig.variantSize > (rank1Contig.variantSize*minVariantSizeRatio))));
+                               ((rank2ContigSupportReadCount > (rank1ContigSupportReadCount*minSupportReadCountRatio)) ||
+                                (rank2Contig.variantSize > (rank1Contig.variantSize*minVariantSizeRatio))));
         if (rank2IsBest)
         {
             rank1Contig = rank2Contig;
