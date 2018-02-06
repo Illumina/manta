@@ -6,6 +6,7 @@
 *.slo
 *.lo
 *.o
+*.pyc
 
 # Compiled Dynamic libraries
 *.so
@@ -34,4 +35,7 @@ tags
 # Common build directories
 /build*
 /cmake-build-debug
+
+# directory for visual studio auxiliary project info created for the new VS 'build-from-cmake' option:
+/.vs
 
