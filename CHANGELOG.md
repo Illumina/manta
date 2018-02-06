@@ -1,3 +1,10 @@
+## Unreleased
+
+### Changed
+
+### Fixed
+- Fix RNA-seq split read count regression introduced by MANTA-XYZ in the v1.3.0 release (MANTA-1342)
+
 ## v1.3.0 - 2018-2-1
 
 This is a major update from v1.2.2. It features improvements to candidate SV precision and genotyping accuracy, in addition to minor improvements in stability, runtime and error diagnostics.
