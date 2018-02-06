@@ -72,7 +72,7 @@ superset(THIS_ADDITIONAL_LIB "${THIS_ADDITIONAL_LIB}")
 #
 # htslib
 #
-set(HTSLIB_PREFIX "htslib-1.6")
+set(HTSLIB_PREFIX "htslib-1.7-6-g6d2bfb7")
 superset(HTSLIB_DIR "${CMAKE_CURRENT_BINARY_DIR}/${HTSLIB_PREFIX}")
 superset(HTSLIB_LIBRARY "${HTSLIB_DIR}/libhts.a")
 
