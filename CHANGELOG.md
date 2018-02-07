@@ -7,7 +7,7 @@
 ### Fixed
 - Update htslib to incorporate CRAM file query fix (MANTA-1336/[#109])
   - This is expected to resolve all known issues with  manta from alignments in CRAM format.
-- Fix RNA-seq split read count regression introduced by MANTA-XYZ in the v1.3.0 release (MANTA-1342)
+- Fix RNA-seq split read count regression introduced by MANTA-1332 in the v1.3.0 release (MANTA-1342)
 
 ## v1.3.0 - 2018-2-1
 
