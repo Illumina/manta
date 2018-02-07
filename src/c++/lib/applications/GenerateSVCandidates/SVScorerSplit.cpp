@@ -93,7 +93,7 @@ void
 incrementSplitReadEvidence(
     const SRAlignmentInfo& refBp1SR, const SRAlignmentInfo& refBp2SR,
     const SRAlignmentInfo& altBp1SR, const SRAlignmentInfo& altBp2SR,
-    const unsigned readMapQ,
+    const unsigned readMapQ, const bool isRNA,
     SVSampleAlleleInfo& refAllele, SVSampleAlleleInfo& altAllele,
     SVFragmentEvidenceAlleleBreakendPerRead& refBp1Support,
     SVFragmentEvidenceAlleleBreakendPerRead& refBp2Support,
@@ -108,8 +108,9 @@ incrementSplitReadEvidence(
     const float refAlignLlh(std::max(refBp1SR.alignLnLhood, refBp2SR.alignLnLhood));
     const float altAlignLlh(std::max(altBp1SR.alignLnLhood, altBp2SR.alignLnLhood));
 
-    // only allow a split read to support one allele
-    if (refAlignLlh > altAlignLlh)
+    // For DNA, a split read is considered supporting the breakend
+    // if the read's alignment to the allele with higher likelihood meets the evidence requirements
+    if (isRNA || (refAlignLlh > altAlignLlh))
     {
         float refBp1Evidence = refBp1SR.isEvidence ? refBp1SR.evidence : 0;
         float refBp2Evidence = refBp2SR.isEvidence ? refBp2SR.evidence : 0;
@@ -118,7 +119,8 @@ incrementSplitReadEvidence(
         incrementAlleleEvidence(refBp1SR, refBp2SR, readMapQ, refEvidence,
                                 refAllele, refBp1Support, refBp2Support);
     }
-    else if (altAlignLlh > refAlignLlh)
+
+    if (isRNA || (altAlignLlh > refAlignLlh))
     {
         float altBp1Evidence = altBp1SR.isEvidence ? altBp1SR.evidence : 0;
         float altBp2Evidence = altBp2SR.isEvidence ? altBp2SR.evidence : 0;
@@ -219,7 +221,7 @@ getReadSplitScore(
     const unsigned readMapQ = bamRead.map_qual();
     // scoring
     incrementSplitReadEvidence(refBp1SR, refBp2SR, altBp1SR, altBp2SR,
-                               readMapQ, sample.ref, sample.alt,
+                               readMapQ, isRNA, sample.ref, sample.alt,
                                refBp1ReadSupport, refBp2ReadSupport,
                                altBp1ReadSupport, altBp2ReadSupport);
 
