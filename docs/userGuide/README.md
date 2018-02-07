@@ -28,18 +28,19 @@ Manta User Guide
 * [Runtime hardware requirements](#runtime-hardware-requirements)
 * [Run configuration and execution](#run-configuration-and-execution)
   * [Configuration](#configuration)
+    * [Germline configuration examples](#germline-configuration-examples)
+    * [Somatic configuration examples](#somatic-configuration-examples)
+    * [General configuration options](#general-configuration-options)
     * [Advanced configuration options](#advanced-configuration-options)
   * [Execution](#execution)
     * [Advanced execution options](#advanced-execution-options)
   * [Extended use cases](#extended-use-cases)
+    * [Improving runtime for references with many short contigs, such as GRCh38](#improving-runtime-for-references-with-many-short-contigs-such-as-grch38)
     * [Exome/Targeted](#exometargeted)
-    * [Call regions](#call-regions)
     * [Unpaired tumor sample](#unpaired-tumor-sample)
-    * [Output assembled contigs](#output-assembled-contigs)
-  * [RNA-Seq](#rna-seq)
-  * [High sensitivity calling](#high-sensitivity-calling)
-  * [De novo calling](#de-novo-calling)
-  * [Generating evidence bams](#generating-evidence-bams)
+    * [RNA-Seq](#rna-seq)
+    * [High sensitivity calling](#high-sensitivity-calling)
+    * [De novo calling](#de-novo-calling)
 
 [//]: # (END automated TOC section, any edits will be overwritten on next source refresh)
 
@@ -487,6 +488,13 @@ files). Manta's default settings assume a whole genome DNA-Seq
 analysis, but there are configuration options for exome/targeted
 sequencing analysis in addition to RNA-Seq.
 
+On completion, the configuration script will create the workflow run
+script `${MANTA_ANALYSIS_PATH}/runWorkflow.py`. This can be used to
+run the workflow in various parallel compute modes per the
+instructions in the [Execution](#execution) section below.
+
+#### Germline configuration examples
+
 Single Diploid Sample Analysis -- Example Configuration:
 
 ```
@@ -507,6 +515,8 @@ ${MANTA_INSTALL_PATH}/bin/configManta.py \
 --runDir ${MANTA_ANALYSIS_PATH}
 ```
 
+#### Somatic configuration examples
+
 Tumor Normal Analysis -- Example Configuration:
 
 ```
@@ -526,10 +536,24 @@ ${MANTA_INSTALL_PATH}/bin/configManta.py \
 --runDir ${MANTA_ANALYSIS_PATH}
 ```
 
-On completion, the configuration script will create the workflow run
-script `${MANTA_ANALYSIS_PATH}/runWorkflow.py`. This can be used to
-run the workflow in various parallel compute modes per the
-instructions in the [Execution] section below.
+#### General configuration options
+
+##### Call regions
+
+Manta calls the entire genome by default, however variant calling may be restricted to
+an arbitrary subset of the genome by providing a region file in BED format with
+the `--callRegions` configuration option. The BED file must be bgzip-compressed and tabix-indexed,
+and only one such BED file may be specified. When specified, all VCF output is restricted to
+the provided call regions only, however statistics derived from the input data
+(such as expected fragment size distribution) will not be restricted to the call regions.
+
+It is not recommended to set up a large number of call regions because
+it may cause Manta to have a reduced efficiency in segmenting and processing the genome.
+
+Note in particular that even when `--callRegions` is specified,
+the `--exome` flag is still required for exome or targeted data
+to get appropriate depth filtration behavior for non-WGS cases.
+
 
 #### Advanced configuration options
 
@@ -545,6 +569,26 @@ There are two sources of advanced configuration options:
     * These options are intended primarily for workflow development and
   debugging, but could be useful for runtime optimization in some specialized
   cases.
+  
+##### Generating evidence bams
+
+Using the `--generateEvidenceBam` option, Manta can be configured to generate bam files of evidence reads for SVs listed in the candidate vcf file.
+
+It is recommended to use this option together with the `--region` option, so that the analysis is limited to relatively small genomic regions for debugging purposes.
+
+The evidence bam files are provided in `${MANTA_ANALYSIS_PATH}/results/evidence`, with a naming format `evidence.*.bam`.
+There is one such file for each input bam of the analysis, containing evidence reads of the candidate SVs identified from that input bam.
+Each read in an evidence bam keeps all information from the original bam, and it contains also a customized tag in the format: `ZM:Z:${MANTA_SV_ID_1}|${EVIDENCE_TYPE},${MANTA_SV_ID_2}|${EVIDENCE_TYPE}`. For example, ZM:Z:MantaINV:5:0:1:0:0:0|PR|SRM,MantaDEL:5:1:2:0:0:0|SR
+* One read can have more than one of the three evidence types: PR for paired reads, SR for split reads, and SRM for split read mates.
+* One read can be evidence for multiple SVs, which are separated by commas in the tag.
+
+Notice that the number of evidence reads for a particular SV in the evidence bam files could be more than the evidence counts (PR and SR) in the final vcf files. This is because more stringent criteria are applied for generating evidence counts in the final vcf files.
+
+##### Output assembled contigs
+
+Using the `--outputContig` option, Manta can be configured to output assembled contig sequences
+in the final VCF files.
+The contig sequence of each precise SV will be provided in the INFO field `CONTIG`.
 
 ### Execution
 
@@ -597,6 +641,43 @@ These options are useful for Manta development and debugging:
 
 ### Extended use cases
 
+#### Improving runtime for references with many short contigs, such as GRCh38
+
+For both germline and somatic analysis, Manta may have runtime issues while attempting to process the large number of
+small decoys and unplaced/unlocalized contigs found in GRCh38 and other reference genomes. Until those
+issue can be resolved, runtime can be improved for such cases by excluding  smaller contigs from analysis. This can be
+done in Manta by creating a bed file of all the chromosomes that should be included in the analysis, and providing it
+as an argument to the [call regions configuration option](#call-regions). For instance, the following bed file could be
+provided for GRCh38 to exclude all decoys and small contigs:
+
+```
+chr1	0	248956422
+chr2	0	242193529
+chr3	0	198295559
+chr4	0	190214555
+chr5	0	181538259
+chr6	0	170805979
+chr7	0	159345973
+chr8	0	145138636
+chr9	0	138394717
+chr10	0	133797422
+chr11	0	135086622
+chr12	0	133275309
+chr13	0	114364328
+chr14	0	107043718
+chr15	0	101991189
+chr16	0	90338345
+chr17	0	83257441
+chr18	0	80373285
+chr19	0	58617616
+chr20	0	64444167
+chr21	0	46709983
+chr22	0	50818468
+chrX	0	156040895
+chrY	0	57227415
+chrM	0	16569
+```
+
 #### Exome/Targeted
 
 Supplying the `--exome` flag at configuration time will provide
@@ -607,22 +688,6 @@ WGS case but cannot be applied correctly to a targeted analysis.
 
 For small targeted regions, it may also be helpful to consider the
 high sensitivity calling documentation below.
-
-#### Call regions
-
-Manta calls the entire genome by default, however variant calling may be restricted to
-an arbitrary subset of the genome by providing a region file in BED format with
-the `--callRegions` configuration option. The BED file must be bgzip-compressed and tabix-indexed,
-and only one such BED file may be specified. When specified, all VCF output is restricted to
-the provided call regions only, however statistics derived from the input data
-(such as expected fragment size distribution) will not be restricted to the call regions.
-
-It is not recommended to set up a large number of call regions because
-it may cause Manta to have a reduced efficiency in segmenting and processing the genome.
-
-Note in particular that even when `--callRegions` is specified,
-the `--exome` flag is still required for exome or targeted data
-to get appropriate depth filtration behavior for non-WGS cases.
 
 #### Unpaired tumor sample
 
@@ -655,15 +720,7 @@ filtered because they have 15 and 19 split-read counts, respectively, supporting
 For low allele frequency variants, it may also be helpful to consider the
 high sensitivity calling documentation below.
 
-
-#### Output assembled contigs
-
-Using the `--outputContig` option, Manta can be configured to output assembled contig sequences
-in the final VCF files.
-The contig sequence of each precise SV will be provided in the INFO field `CONTIG`.
-
-
-### RNA-Seq
+#### RNA-Seq
 
 Supplying the '--rna' flag at configuration time will provide
 experimental settings for RNA-Seq Fusion calling. At present this flag
@@ -684,7 +741,7 @@ Smaller variants are not reported.
 It may also be helpful to consider the high sensitivity calling
 documentation below for this mode.
 
-### High sensitivity calling
+#### High sensitivity calling
 
 Manta is configured with a discovery sensitivity appropriate for
 general WGS applications.  In targeted or other specialized contexts
@@ -705,7 +762,7 @@ minEdgeObservations = 2
 minCandidateSpanningCount = 2
 ```
 
-### De novo calling
+#### De novo calling
 
 Manta can be used for de novo calling, following a two-step procedure:
 
@@ -720,21 +777,6 @@ joint diploid sample analysis, and then output a multi-sample vcf, where the sam
    It will ignore any samples in the vcf that are not specified at the commandline.
 
    Under the same folder of the input vcf, the script outputs a new vcf file and a text file of stats for the de novo calls. Currently, all SVs with inheritance conflicts are labled with "DQ=60" inside the INFO, while all SVs without any conflict are labled with "DQ=0".
-
-
-### Generating evidence bams
-
-Using the `--generateEvidenceBam` option, Manta can be configured to generate bam files of evidence reads for SVs listed in the candidate vcf file.
-
-It is recommended to use this option together with the `--region` option, so that the analysis is limited to relatively small genomic regions for debugging purposes.
-
-The evidence bam files are provided in `${MANTA_ANALYSIS_PATH}/results/evidence`, with a naming format `evidence.*.bam`.
-There is one such file for each input bam of the analysis, containing evidence reads of the candidate SVs identified from that input bam.
-Each read in an evidence bam keeps all information from the original bam, and it contains also a customized tag in the format: `ZM:Z:${MANTA_SV_ID_1}|${EVIDENCE_TYPE},${MANTA_SV_ID_2}|${EVIDENCE_TYPE}`. For example, ZM:Z:MantaINV:5:0:1:0:0:0|PR|SRM,MantaDEL:5:1:2:0:0:0|SR
-* One read can have more than one of the three evidence types: PR for paired reads, SR for split reads, and SRM for split read mates.
-* One read can be evidence for multiple SVs, which are separated by commas in the tag.
-
-Notice that the number of evidence reads for a particular SV in the evidence bam files could be more than the evidence counts (PR and SR) in the final vcf files. This is because more stringent criteria are applied for generating evidence counts in the final vcf files.
 
 
 [1]: http://www.1000genomes.org/wiki/Analysis/Variant%20Call%20Format/vcf-variant-call-format-version-41

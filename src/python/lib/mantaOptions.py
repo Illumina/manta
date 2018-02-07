@@ -54,17 +54,17 @@ class MantaWorkflowOptionsBase(ConfigureWorkflowOptions) :
         group.add_option("--runDir", type="string", metavar="DIR",
                          help="Name of directory to be created where all workflow scripts and output will be written. "
                               "Each analysis requires a separate directory. (default: %default)")
+        group.add_option("--callRegions", dest="callRegionsBed", metavar="FILE",
+                         help="Optionally provide a bgzip-compressed/tabix-indexed BED file containing the set of regions to call. "
+                              "No VCF output will be provided outside of these regions. The full genome will still be used "
+                              "to estimate statistics from the input (such as expected fragment size distribution). "
+                              "Only one BED file may be specified. (default: call the entire genome)")
 
 
     def addExtendedGroupOptions(self,group) :
         group.add_option("--scanSizeMb", dest="scanSizeMb", type="int", metavar="INT",
                          help="Maximum sequence region size (in megabases) scanned by each task during "
                          "SV Locus graph generation. (default: %default)")
-        group.add_option("--callRegions", dest="callRegionsBed", metavar="FILE",
-                         help="Optionally provide a bgzip-compressed/tabix-indexed BED file containing the set of regions to call. "
-                              "No VCF output will be provided outside of these regions. The full genome will still be used "
-                              "to estimate statistics from the input (such as expected fragment size distribution). "
-                              "Only one BED file may be specified. (default: call the entire genome)")
         group.add_option("--region", type="string",dest="regionStrList",metavar="REGION", action="append",
                          help="Limit the analysis to a region of the genome for debugging purposes. "
                               "If this argument is provided multiple times all specified regions will "
