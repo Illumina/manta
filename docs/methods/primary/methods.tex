@@ -8,7 +8,8 @@
 % for scalebox,...
 \usepackage{graphics}
 
-% hide hyperref links  with pdfborder (more portable than hidelinks option)
+% for automated hyperlinks on sections and \ref's:
+% - hide hyperref links with white pdfborder (this is more portable than the hidelinks option)
 \usepackage[pdfborder={0 0 0}]{hyperref}
 
 % for pseudocode
@@ -16,7 +17,7 @@
 \usepackage[noend]{algpseudocode}
 
 
-\title{'In-source Methods for Manta Structural Variant and Indel Caller'}
+\title{Methods for Manta Structural Variant and Indel Caller}
 
 
 % simple scientific notation:
@@ -386,8 +387,7 @@ Candidates are filtered following SV hypothesis refinement as follows:
 
 \paragraph{Candidate output}
 
-Following the late filtration steps, the total set of refined candidates (or imprecise candidates in the case of assembly failure) are reported to a `candidate' VCF file. This file does not include scoring or quality filtration information but provides partial support for applications which are not represented by Manta's current scoring models (i.e. tumor without matched normal), as a method development aid, or as input to a small variant caller or another SV scoring/genotyping method. As an example of the latter case. in the author's workflows all Manta indel candidates of size 49 and smaller are forwarded to a small variant caller to improve support for indels which are larger than the alignment gap size supported by typical high-speed read mappers.
-
+Following the late filtration steps, the total set of refined candidates (or imprecise candidates in the case of assembly failure) are reported to a `candidate' VCF file. This file does not include scoring or quality filtration information but may be useful in a number of contexts, such as: (1) applications which are not supported by Manta's current scoring models (2) as a method development aid (3) as input to a small variant caller or another SV scoring/genotyping method.
 
 \subsection{Scoring}
 

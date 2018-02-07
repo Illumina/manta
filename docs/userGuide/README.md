@@ -282,15 +282,15 @@ For tumor-only analysis, Manta will produce an additional VCF:
 
 * __tumorSV.vcf.gz__
     * Subset of the __candidateSV.vcf.gz__ file after removing redundant candidates and
-  small indels of size 49 or less. The SVs are not scored, but including additional
-  details: (1) paired and split read supporting evidence counts for each allele
-  (2) a subset of the filters from the scored tumor-normal model
+  small indels less than the minimum scored variant size (50 by default). The SVs are not
+  scored, but include additional details: (1) paired and split read supporting evidence
+  counts for each allele (2) a subset of the filters from the scored tumor-normal model
   are applied to the single tumor case to improve precision.
 
 ### Manta VCF reporting format
 
 Manta VCF output follows the VCF 4.1 spec for describing structural
-variants. It uses standard field names whereever possible. All custom
+variants. It uses standard field names wherever possible. All custom
 fields are described in the VCF header.  The section below highlights
 some of the variant representation details and lists the primary VCF
 field values.
