@@ -36,10 +36,10 @@ EdgeRuntimeTracker::
 EdgeRuntimeTracker(
     const std::string& outputFile) :
     _osPtr(nullptr),
-    _cand(0),
-    _compCand(0),
-    _assmCand(0),
-    _assmCompCand(0)
+    _candidateCount(0),
+    _complexCandidateCount(0),
+    _assembledCandidateCount(0),
+    _assembledComplexCandidateCount(0)
 {
     if (outputFile.empty()) return;
     _osPtr = new std::ofstream(outputFile.c_str());
@@ -78,13 +78,13 @@ stop(const EdgeInfo& edge)
         {
             edge.write(*_osPtr);
             *_osPtr << '\t' << lastTime
-                    << '\t' << _cand
-                    << '\t' << _compCand
-                    << '\t' << _assmCand
-                    << '\t' << _assmCompCand
-                    << '\t' << candTime.getWallSeconds()
-                    << '\t' << assmTime.getWallSeconds()
-                    << '\t' << remoteTime.getWallSeconds()
+                    << '\t' << _candidateCount
+                    << '\t' << _complexCandidateCount
+                    << '\t' << _assembledCandidateCount
+                    << '\t' << _assembledComplexCandidateCount
+                    << '\t' << candidacyTime.getWallSeconds()
+                    << '\t' << assemblyTime.getWallSeconds()
+                    << '\t' << remoteReadRetrievalTime.getWallSeconds()
                     << '\t' << scoreTime.getWallSeconds()
                     << '\n';
         }

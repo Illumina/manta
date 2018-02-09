@@ -45,16 +45,16 @@ struct EdgeRuntimeTracker : private boost::noncopyable
     start()
     {
         edgeTime.clear();
-        candTime.clear();
-        assmTime.clear();
+        candidacyTime.clear();
+        assemblyTime.clear();
         scoreTime.clear();
-        remoteTime.clear();
+        remoteReadRetrievalTime.clear();
 
         edgeTime.resume();
-        _cand = 0;
-        _compCand = 0;
-        _assmCand = 0;
-        _assmCompCand = 0;
+        _candidateCount = 0;
+        _complexCandidateCount = 0;
+        _assembledCandidateCount = 0;
+        _assembledComplexCandidateCount = 0;
     }
 
     void
@@ -67,29 +67,32 @@ struct EdgeRuntimeTracker : private boost::noncopyable
     }
 
     void
-    addCand(const bool isComplex)
+    addCandidate(const bool isComplex)
     {
-        if (isComplex) _compCand++;
-        else           _cand++;
+        if (isComplex) _complexCandidateCount++;
+        else           _candidateCount++;
     }
 
     void
-    addAssm(const bool isComplex)
+    addAssembledCandidate(const bool isComplex)
     {
-        if (isComplex) _assmCompCand++;
-        else           _assmCand++;
+        if (isComplex) _assembledComplexCandidateCount++;
+        else           _assembledCandidateCount++;
     }
 
-    TimeTracker candTime;
-    TimeTracker assmTime;
+    TimeTracker candidacyTime;
+    TimeTracker assemblyTime;
     TimeTracker scoreTime;
-    TimeTracker remoteTime;
+
+    /// Time to retrieve reads from remote locations prior to assembling large insertions.
+    /// Note this is a subset of assemblyTime
+    TimeTracker remoteReadRetrievalTime;
 private:
     std::ostream* _osPtr;
     TimeTracker edgeTime;
 
-    unsigned _cand;
-    unsigned _compCand;
-    unsigned _assmCand;
-    unsigned _assmCompCand;
+    unsigned _candidateCount;
+    unsigned _complexCandidateCount;
+    unsigned _assembledCandidateCount;
+    unsigned _assembledComplexCandidateCount;
 };

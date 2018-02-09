@@ -36,9 +36,15 @@
 //#define DEBUG_ASBL
 
 
+/// Estimate the background fraction of reads which would be eligible for remote read recovery at an insertion
+/// locus.
+///
+/// This number may be used to curtail remote read recovery in samples with anomolously high fractions of
+/// qualifying remote read evidence.
+///
 static
 double
-getRemoteRate(
+getRemoteRecoveryCandidateRate(
     const AllCounts& counts,
     const unsigned sampleIndex)
 {
@@ -62,14 +68,14 @@ SVCandidateAssembler(
     const bam_header_info& bamHeader,
     const AllCounts& counts,
     const bool isRNA,
-    TimeTracker& remoteTime) :
+    TimeTracker& remoteReadRetrievalTime) :
     _scanOpt(scanOpt),
     _assembleOpt(assembleOpt),
     _isAlignmentTumor(alignFileOpt.isAlignmentTumor),
     _dFilter(chromDepthFilename, scanOpt.maxDepthFactor, bamHeader),
     _dFilterRemoteReads(chromDepthFilename, scanOpt.maxDepthFactorRemoteReads, bamHeader),
     _readScanner(_scanOpt, statsFilename, alignFileOpt.alignmentFilenames, isRNA),
-    _remoteTime(remoteTime)
+    _remoteReadRetrievalTime(remoteReadRetrievalTime)
 {
     // setup regionless bam_streams:
     // setup all data for main analysis loop:
@@ -81,10 +87,10 @@ SVCandidateAssembler(
     }
 
     const unsigned bamSize(_bamStreams.size());
-    _sampleBackgroundRemoteRate.resize(bamSize);
+    _sampleRemoteRecoveryCandidateRate.resize(bamSize);
     for (unsigned bamIndex(0); bamIndex<bamSize; ++bamIndex)
     {
-        _sampleBackgroundRemoteRate[bamIndex] = getRemoteRate(counts,bamIndex);
+        _sampleRemoteRecoveryCandidateRate[bamIndex] = getRemoteRecoveryCandidateRate(counts, bamIndex);
     }
 }
 
@@ -176,7 +182,7 @@ recoverRemoteReads(
     // figure out what we can handle in a single region query:
     std::sort(bamRemotes.begin(),bamRemotes.end());
 
-    typedef std::pair<GenomeInterval, std::vector<RemoteReadInfo> > BamRegionInfo_t;
+    typedef std::pair<GenomeInterval, std::vector<RemoteReadInfo>> BamRegionInfo_t;
     std::vector<BamRegionInfo_t> bamRegions;
 
 #ifdef DEBUG_REMOTES
@@ -729,7 +735,7 @@ getBreakendReads(
 
     if (isRecoverRemotes)
     {
-        const TimeScoper remoteTime(_remoteTime);
+        const TimeScoper remoteTime(_remoteReadRetrievalTime);
         for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
         {
 #ifdef DEBUG_REMOTES

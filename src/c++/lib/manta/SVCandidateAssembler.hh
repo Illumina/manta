@@ -55,7 +55,7 @@ struct SVCandidateAssembler
         const bam_header_info& bamHeader,
         const AllCounts& counts,
         const bool isRNA,
-        TimeTracker& remoteTIme);
+        TimeTracker& remoteReadRetrievalTime);
 
     /// Given a 'complex' SV candidate with 1 breakend region, assemble reads
     /// over the breakend region
@@ -117,7 +117,9 @@ private:
     // contains functions to detect/classify anomalous reads
     SVLocusScanner _readScanner;
     std::vector<streamPtr> _bamStreams;
-    TimeTracker& _remoteTime;
+    TimeTracker& _remoteReadRetrievalTime;
 
-    std::vector<double> _sampleBackgroundRemoteRate;
+    /// In each sample, store the background rate of reads which would qualify for remove recovery at an insertion
+    /// locus
+    std::vector<double> _sampleRemoteRecoveryCandidateRate;
 };

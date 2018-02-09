@@ -560,7 +560,7 @@ evaluateCandidate(
 
 
     const bool isComplex(isComplexSV(mjCandidateSV));
-    _edgeTracker.addCand(isComplex);
+    _edgeTracker.addCandidate(isComplex);
 
     _edgeStatMan.updateJunctionCandidateCounts(edge, junctionCount, isComplex);
 
@@ -572,7 +572,7 @@ evaluateCandidate(
 
     if (! _opt.isSkipAssembly)
     {
-        const TimeScoper assmTime(_edgeTracker.assmTime);
+        const TimeScoper assmTime(_edgeTracker.assemblyTime);
         for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
         {
             const SVCandidate& candidateSV(mjCandidateSV.junction[junctionIndex]);
@@ -619,7 +619,7 @@ evaluateCandidate(
                 }
 
                 // fill in assembly tracking data:
-                _edgeTracker.addAssm(isComplex);
+                _edgeTracker.addAssembledCandidate(isComplex);
             }
             else
             {

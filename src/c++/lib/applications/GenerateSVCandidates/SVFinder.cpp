@@ -1359,7 +1359,7 @@ findCandidateSV(
     std::vector<SVCandidate>& svs)
 {
     // time/stats tracking setup:
-    const TimeScoper candTime(_edgeTracker.candTime);
+    const TimeScoper candTime(_edgeTracker.candidacyTime);
     SVFinderStats stats;
 
     findCandidateSVImpl(edge,svData,svs,stats);

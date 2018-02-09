@@ -118,8 +118,8 @@ struct GSCEdgeStatsManager : private boost::noncopyable
 
         GSCEdgeGroupStats& gStats(getStatsGroup(edge));
         gStats.totalTime.merge(edgeTracker.getLastEdgeTime());
-        gStats.candTime.merge(edgeTracker.candTime.getTimes());
-        gStats.assemblyTime.merge(edgeTracker.assmTime.getTimes());
+        gStats.candTime.merge(edgeTracker.candidacyTime.getTimes());
+        gStats.assemblyTime.merge(edgeTracker.assemblyTime.getTimes());
         gStats.scoringTime.merge(edgeTracker.scoreTime.getTimes());
     }
 

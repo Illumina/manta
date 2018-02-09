@@ -102,7 +102,7 @@ struct SVLocusSetFinder : public pos_processor_base
 
     /// \brief Provide const access to the SV locus graph that this object is building.
     const SVLocusSet&
-    getLocusSet()
+    getLocusSet() const
     {
         return _svLoci;
     }
@@ -142,8 +142,9 @@ private:
     /// \param stage_no the stage id is used to determine what logic to execute on the given position
     /// \param pos execute stage specific logic on this position number
     void
-    process_pos(const int stage_no,
-                const pos_t pos) override;
+    process_pos(
+        const int stage_no,
+        const pos_t pos) override;
 
     /// \brief Add the input read to this object's running estimate of read depth per position.
     ///
