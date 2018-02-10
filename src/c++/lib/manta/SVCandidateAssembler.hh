@@ -111,8 +111,13 @@ private:
     const ReadScannerOptions _scanOpt;
     const AssemblerOptions _assembleOpt;
     const std::vector<bool> _isAlignmentTumor;
+
+    /// This depth filters tracks the maximum depth for procssing and assembling a locus
     const ChromDepthFilterUtil _dFilter;
-    const ChromDepthFilterUtil _dFilterRemoteReads;
+
+    /// This depth filter tracks the maximum depth of a source locus which qualifies for remote read recovery
+    /// used to assemble large insertions
+    const ChromDepthFilterUtil _dFilterLocalDepthForRemoteReadRetrieval;
 
     // contains functions to detect/classify anomalous reads
     SVLocusScanner _readScanner;

@@ -73,7 +73,7 @@ SVCandidateAssembler(
     _assembleOpt(assembleOpt),
     _isAlignmentTumor(alignFileOpt.isAlignmentTumor),
     _dFilter(chromDepthFilename, scanOpt.maxDepthFactor, bamHeader),
-    _dFilterRemoteReads(chromDepthFilename, scanOpt.maxDepthFactorRemoteReads, bamHeader),
+    _dFilterLocalDepthForRemoteReadRetrieval(chromDepthFilename, scanOpt.maxLocalDepthFactorForRemoteReadRetrieval, bamHeader),
     _readScanner(_scanOpt, statsFilename, alignFileOpt.alignmentFilenames, isRNA),
     _remoteReadRetrievalTime(remoteReadRetrievalTime)
 {
@@ -165,10 +165,12 @@ insertAssemblyRead(
 
 
 
-/// retrieve remote reads from a list of target loci in the bam
+/// Retrieve remote reads from a list of target loci in the bam
+///
+/// Remote reads are associated with a target SV candidate locus.
 static
 void
-recoverRemoteReads(
+retrieveRemoteReads(
     const SVCandidateAssembler::AssemblerOptions& assembleOpt,
     const unsigned maxNumReads,
     const bool isLocusReversed,
@@ -284,7 +286,7 @@ recoverRemoteReads(
                 const bool isInserted = insertAssemblyRead(assembleOpt.minQval, bamIndexStr, bamRead, isReversed, readIndex, reads);
                 if (! isInserted) break;
 
-                /// add to the remote read cache used during PE scoring:
+                // add to the remote read cache used during PE scoring:
                 remoteReadsCache[remote.qname] = RemoteReadPayload(bamRead.read_no(), reads.back());
 
                 remote.isUsed = true;
@@ -379,11 +381,11 @@ getBreakendReads(
 
     const bool isMaxDepth(_dFilter.isMaxDepthFilter());
     float maxDepth(0);
-    float maxDepthRemoteReads(0);
+    float maxLocalDepthForRemoteReadRetrieval(0);
     if (isMaxDepth)
     {
         maxDepth = _dFilter.maxDepth(bp.interval.tid);
-        maxDepthRemoteReads = _dFilterRemoteReads.maxDepth(bp.interval.tid);
+        maxLocalDepthForRemoteReadRetrieval = _dFilterLocalDepthForRemoteReadRetrieval.maxDepth(bp.interval.tid);
     }
     const pos_t searchBeginPos(searchRange.begin_pos());
     const pos_t searchEndPos(searchRange.end_pos());
@@ -396,7 +398,7 @@ getBreakendReads(
     const unsigned bamCount(_bamStreams.size());
     std::vector<std::vector<RemoteReadInfo> > remoteReads(bamCount);
 
-    bool isMaxDepthRemoteReadsTriggered(false);
+    bool isMaxLocalDepthForRemoteReadRetrievalTriggered(false);
 #ifdef FWDREV_CHECK
     /// sanity check that remote and shadow reads suggest an insertion pattern before doing an expensive remote recovery:
     std::vector<int> fwdSemiReadPos;
@@ -477,9 +479,9 @@ getBreakendReads(
             {
                 assert(refPos<searchEndPos);
                 const pos_t depthOffset(refPos - searchBeginPos);
-                if ((depthOffset >= 0) && (normalDepthBuffer[depthOffset] > maxDepthRemoteReads))
+                if ((depthOffset >= 0) && (normalDepthBuffer[depthOffset] > maxLocalDepthForRemoteReadRetrieval))
                 {
-                    isMaxDepthRemoteReadsTriggered=true;
+                    isMaxLocalDepthForRemoteReadRetrievalTriggered=true;
                 }
                 if ((depthOffset >= 0) && (normalDepthBuffer[depthOffset] > maxDepth))
                 {
@@ -655,8 +657,8 @@ getBreakendReads(
     }
 
 
-    // sanity check the remote reads to see if we're going to recover them:
-    bool isRecoverRemotes(!isMaxDepthRemoteReadsTriggered);
+    // sanity check the remote reads to see if we're going to retrieve them:
+    bool isRetrieveRemoteReads(! isMaxLocalDepthForRemoteReadRetrievalTriggered);
 
 #ifdef REMOTE_NOISE_RATE
     // check if peak rate for both samples is not above expectation
@@ -665,14 +667,14 @@ getBreakendReads(
         const bool isTumorSignal(isSampleSignal(tumorRemoteRate,_tumorBackgroundRemoteRate));
         if (! (isNormalSignal || isTumorSignal))
         {
-            isRecoverRemotes = false;
+            isRetrieveRemoteReads = false;
         }
     }
 #endif
 
 
 #ifdef FWDREV_CHECK
-    if (isRecoverRemotes)
+    if (isRetrieveRemoteReads)
     {
 #ifdef DEBUG_REMOTES
         for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
@@ -711,18 +713,18 @@ getBreakendReads(
 
         if ((fwdSemiReadPos.size() <= 2) || (revSemiReadPos.size() <= 2))
         {
-            isRecoverRemotes=false;
+            isRetrieveRemoteReads=false;
         }
         else
         {
             const int diff(revMedian-fwdMedian);
             if ((diff >= 2000) || (diff < 0))
             {
-                isRecoverRemotes=false;
+                isRetrieveRemoteReads=false;
             }
             else if ((fwdRange >= 400) || (revRange >= 400))
             {
-                isRecoverRemotes=false;
+                isRetrieveRemoteReads=false;
             }
         }
     }
@@ -730,10 +732,10 @@ getBreakendReads(
 
     /// recover any remote reads:
 #ifdef DEBUG_REMOTES
-    log_os << __FUNCTION__ << ": isRecoverRemotes: " << isRecoverRemotes << "\n";
+    log_os << __FUNCTION__ << ": isRetrieveRemoteReads: " << isRetrieveRemoteReads << "\n";
 #endif
 
-    if (isRecoverRemotes)
+    if (isRetrieveRemoteReads)
     {
         const TimeScoper remoteTime(_remoteReadRetrievalTime);
         for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
@@ -746,7 +748,7 @@ getBreakendReads(
             bam_streamer& bamStream(*_bamStreams[bamIndex]);
 
             std::vector<RemoteReadInfo>& bamRemotes(remoteReads[bamIndex]);
-            recoverRemoteReads(
+            retrieveRemoteReads(
                 getAssembleOpt(),
                 maxNumReads, isLocusReversed, bamIndexStr, bamStream,
                 bamRemotes, readIndex, reads, remoteReadsCache);

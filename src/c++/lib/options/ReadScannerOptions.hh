@@ -101,9 +101,9 @@ struct ReadScannerOptions
     /// 'depth factor' is the locus' multiple of the expected chromosome depth.
     float maxDepthFactor = 12;
 
-    /// \brief The maximum depth factor for a whole locus for remote read retrieval (ie. MAPQ0 chimera mates retrieved
-    ///        for large insertion assembly)
+    /// \brief The maximum depth factor over a whole locus. If any site in the locus exceeds this depth, remote read
+    /// retrieval is not used (ie. MAPQ0 chimera mates retrieved for large insertion assembly)
     ///
     /// 'depth factor' is the locus' multiple of the expected chromosome depth.
-    float maxDepthFactorRemoteReads = 7;
+    float maxLocalDepthFactorForRemoteReadRetrieval = 7;
 };
