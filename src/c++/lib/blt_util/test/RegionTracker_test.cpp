@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE( test_RegionTrackerRegionIntersect )
 }
 
 
-BOOST_AUTO_TEST_CASE( test_RegionTracker3 )
+BOOST_AUTO_TEST_CASE( test_RegionTrackerRemoveToPos )
 {
     // region remove tests
     RegionTracker rt;
@@ -156,6 +156,32 @@ BOOST_AUTO_TEST_CASE( test_RegionTrackerSubset )
     BOOST_REQUIRE(! rt.isSubsetOfRegion(known_pos_range2(5,11)));
     BOOST_REQUIRE(! rt.isSubsetOfRegion(known_pos_range2(0,1)));
     BOOST_REQUIRE(! rt.isSubsetOfRegion(known_pos_range2(30,31)));
+}
+
+
+
+BOOST_AUTO_TEST_CASE( test_RegionTrackerMerge )
+{
+    RegionTracker rt1,rt2;
+
+    rt1.addRegion(known_pos_range2(5,10));
+    rt1.addRegion(known_pos_range2(14,15));
+
+    rt2.addRegion(known_pos_range2(2,3));
+    rt2.addRegion(known_pos_range2(24,25));
+
+    rt1.merge(rt2);
+
+    BOOST_REQUIRE_EQUAL(rt1.size(),4);
+    BOOST_REQUIRE_EQUAL(rt2.size(),2);
+
+    BOOST_REQUIRE(rt1.isIntersectRegion(24));
+    BOOST_REQUIRE(rt1.isSubsetOfRegion(known_pos_range2(5,10)));
+    BOOST_REQUIRE(rt1.isSubsetOfRegion(known_pos_range2(6,7)));
+    BOOST_REQUIRE(! rt1.isSubsetOfRegion(known_pos_range2(4,10)));
+    BOOST_REQUIRE(! rt1.isSubsetOfRegion(known_pos_range2(5,11)));
+    BOOST_REQUIRE(! rt1.isSubsetOfRegion(known_pos_range2(0,1)));
+    BOOST_REQUIRE(! rt1.isSubsetOfRegion(known_pos_range2(30,31)));
 }
 
 

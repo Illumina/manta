@@ -26,6 +26,7 @@
 #include "blt_util/known_pos_range2.hh"
 
 #include "boost/optional.hpp"
+#include "boost/serialization/set.hpp"
 
 #include <iosfwd>
 #include <map>
@@ -50,7 +51,9 @@ struct PosRangeEndSort
 };
 
 
-/// facilitate 'rolling' region tracking and position intersect queries
+/// Aggregate multiple regions and support intersection queries against the full region set
+///
+/// This is designed to (optionally) facilitate 'rolling' region tracking along the chromosome.
 ///
 struct RegionTracker
 {
@@ -113,6 +116,16 @@ struct RegionTracker
         return _regions.size();
     }
 
+    /// Merge all range data from \p rhs into this object
+    void
+    merge(const RegionTracker& rhs);
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned /* version */)
+    {
+        ar& _regions;
+    }
+
     typedef std::set<known_pos_range2,PosRangeEndSort>  region_t;
 
 private:
@@ -130,10 +143,14 @@ private:
     region_t _regions;
 };
 
+BOOST_CLASS_IMPLEMENTATION(RegionTracker, boost::serialization::object_serializable)
 
-/// facilitate 'rolling' region tracking and position intersect queries
+
+/// Aggregate multiple regions and support intersection queries against the full region set
 ///
-/// this version of RegionTracker carries a payload associated with each region
+/// This is designed to (optionally) facilitate 'rolling' region tracking along the chromosome.
+///
+/// This specialization of RegionTracker carries a payload associated with each region
 ///
 template <typename T>
 struct RegionPayloadTracker
@@ -199,13 +216,13 @@ struct RegionPayloadTracker
     dump(
         std::ostream& os) const;
 
-    typedef typename std::map<known_pos_range2,T,PosRangeEndSort> region_t;
-
     unsigned
     size() const
     {
         return _regions.size();
     }
+
+    typedef typename std::map<known_pos_range2,T,PosRangeEndSort> region_t;
 
 private:
 

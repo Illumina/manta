@@ -22,21 +22,20 @@
 #include "GenomeInterval.hh"
 #include "blt_util/RegionTracker.hh"
 
+#include "boost/serialization/vector.hpp"
+
 #include <iosfwd>
 
 
-/// Accumulates genome intervals, then provides a new test genome interval overlaps any of the
-/// accumulated intervals
+/// Accumulates genome intervals, then provides tests on how any new genome interval interacts with the
+/// accumulated interval set
 ///
 struct GenomeIntervalTracker
 {
     void
     clear()
     {
-        for (auto& r : _regions)
-        {
-            r.clear();
-        }
+        _regions.clear();
     }
 
     void
@@ -48,16 +47,30 @@ struct GenomeIntervalTracker
         _regions[gi.tid].addRegion(gi.range);
     }
 
+    /// Merge genome interval content from rhs into this
+    void
+    merge(const GenomeIntervalTracker& rhs);
+
+    /// Return true if \p gi intersects any of the intervals already added to this object
+    bool
+    isIntersectRegion(const GenomeInterval& gi) const;
+
     /// Return true if \p gi is entirely contained within the intervals already added to this object
     bool
-    isSubsetOfRegion(
-        const GenomeInterval& gi) const
+    isSubsetOfRegion(const GenomeInterval& gi) const;
+
+    /// debug util
+    void
+    dump(std::ostream& os) const;
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned /* version */)
     {
-        assert(gi.tid >= 0);
-        if (static_cast<unsigned>(gi.tid) >= _regions.size()) return false;
-        return _regions[gi.tid].isSubsetOfRegion(gi.range);
+        ar& _regions;
     }
 
 private:
     std::vector<RegionTracker> _regions;
 };
+
+BOOST_CLASS_IMPLEMENTATION(GenomeIntervalTracker, boost::serialization::object_serializable)

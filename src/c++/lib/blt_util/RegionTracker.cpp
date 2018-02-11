@@ -115,3 +115,14 @@ dump(
         os << "region: " << val << "\n";
     }
 }
+
+
+void
+RegionTracker::
+merge(const RegionTracker& rhs)
+{
+    for (const auto& val : rhs._regions)
+    {
+        addRegion(val);
+    }
+}
