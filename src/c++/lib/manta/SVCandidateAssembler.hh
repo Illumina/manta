@@ -19,20 +19,18 @@
 
 #pragma once
 
-#include "applications/GenerateSVCandidates/GSCOptions.hh"
-#include "assembly/IterativeAssembler.hh"
-#include "assembly/SmallAssembler.hh"
+#include "assembly/AssemblyReadInfo.hh"
 #include "blt_util/time_util.hh"
 #include "htsapi/bam_streamer.hh"
 #include "manta/ChromDepthFilterUtil.hh"
 #include "manta/SVCandidate.hh"
 #include "manta/SVCandidateAssemblyData.hh"
-#include "manta/SVCandidateSetData.hh"
 #include "manta/SVLocusScanner.hh"
+#include "options/AlignmentFileOptions.hh"
+#include "options/IterativeAssemblerOptions.hh"
 
+#include <string>
 #include <vector>
-
-typedef IterativeAssemblerOptions AssemblerOptions;
 
 
 /// Assembles reads across suspected breakends of both 'spanning' (2 breakend regions) and
@@ -45,6 +43,8 @@ typedef IterativeAssemblerOptions AssemblerOptions;
 ///
 struct SVCandidateAssembler
 {
+    typedef IterativeAssemblerOptions AssemblerOptions;
+
     SVCandidateAssembler(
         const ReadScannerOptions& scanOpt,
         const AssemblerOptions& assembleOpt,

@@ -29,6 +29,7 @@
 #include "manta/SVCandidate.hh"
 
 #include <iosfwd>
+#include <string>
 #include <unordered_map>
 #include <vector>
 

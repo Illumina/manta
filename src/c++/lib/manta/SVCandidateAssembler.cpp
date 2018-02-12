@@ -18,6 +18,9 @@
 //
 
 
+#include "manta/SVCandidateAssembler.hh"
+
+#include "assembly/IterativeAssembler.hh"
 #include "blt_util/CircularCounter.hh"
 #include "blt_util/log.hh"
 #include "blt_util/seq_util.hh"
@@ -25,7 +28,6 @@
 #include "htsapi/SimpleAlignment_bam_util.hh"
 #include "manta/RemoteMateReadUtil.hh"
 #include "manta/ShadowReadFinder.hh"
-#include "manta/SVCandidateAssembler.hh"
 #include "manta/SVLocusScannerSemiAligned.hh"
 
 #include <iostream>
@@ -161,7 +163,7 @@ insertAssemblyRead(
 static
 void
 recoverRemoteReads(
-    const AssemblerOptions& assembleOpt,
+    const SVCandidateAssembler::AssemblerOptions& assembleOpt,
     const unsigned maxNumReads,
     const bool isLocusReversed,
     const std::string& bamIndexStr,
