@@ -8,6 +8,8 @@
 - Update htslib to incorporate CRAM file query fix (MANTA-1336/[#109])
   - This is expected to resolve all known issues with  manta from alignments in CRAM format.
 - Fix RNA-seq split read count regression introduced by MANTA-1332 in the v1.3.0 release (MANTA-1342)
+- Stop forcing static linking for zlib (STREL-842)
+  - This change brings zlib policy in-line with strelka, such that options (i.e. LD\_PRELOAD) are available for improved compression performance.
 
 ## v1.3.0 - 2018-2-1
 
