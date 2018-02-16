@@ -113,15 +113,17 @@ merge(const SVLocus& inputLocus)
     const SVLocus& startLocus(_loci[startLocusIndex]);
     LocusIndexType headLocusIndex(startLocusIndex);
 
-    /// True if the startLocus has been copied from startLocusIndex into another locus in the graph
+    // True if the startLocus has been copied from its original position at startLocusIndex into another locus in
+    // the graph
     bool isStartLocusDuplicatedInAnotherGraphLocus(false);
 
-    /// True if this locus will not be merged into the graph because such a merge would exceed complexity limits.
+    // True if this locus will not be merged into the graph because such a merge would exceed complexity limits.
     bool isAbortMerge(false);
 
-    // because we have a non-general interval overlap test, we must order search
-    // nodes by begin_pos on each chromosome
+    // Setup data structures for node intersection search (step 3) below.
     //
+    // Search nodes must be ordered by begin position on each chromosome (this is an artifact of using a non-general
+    // interval overlap test).
     typedef std::map<GenomeInterval,NodeIndexType> nodeMap_t;
     nodeMap_t startLocusNodeMap;
     {
@@ -136,7 +138,8 @@ merge(const SVLocus& inputLocus)
     std::set<NodeAddressType> intersectingNodeAddresses;
 
     //
-    // 3. Test if the graph's node intersections with any of startLocus' nodes exceeds complexity limits. If so, abort the merge.
+    // 3. Test if the graph's node intersections with any of startLocus' nodes exceeds complexity limits. If so, abort
+    // the merge.
     //
     for (const nodeMap_t::value_type& startLocusNodeVal : startLocusNodeMap)
     {
@@ -155,7 +158,8 @@ merge(const SVLocus& inputLocus)
     }
 
     //
-    // 4. Test each node in the startLocus for mergeable intersections to other nodes in this graph. If such cases are found, merge these nodes.
+    // 4. Test each node in the startLocus for mergeable intersections to other nodes in this graph. If such cases are
+    // found, merge these nodes.
     //
     for (const nodeMap_t::value_type& startLocusNodeVal : startLocusNodeMap)
     {
@@ -189,7 +193,8 @@ merge(const SVLocus& inputLocus)
             if (2>intersectingNodeAddresses.size()) continue;
         }
 
-        // Consolidate all intersecting nodes into a single locus to prepare for merge.
+        // If the intersecting nodes (and the start node they intersect) span multiple loci, consolidate all
+        // intersecting nodes into a single locus in preparation for merging.
         //
         while (! isExpectedLocusOnly(headLocusIndex, intersectingNodeAddresses) )
         {
@@ -203,7 +208,7 @@ merge(const SVLocus& inputLocus)
             if (! isStartLocusDuplicatedInAnotherGraphLocus) isStartLocusDuplicatedInAnotherGraphLocus=(headLocusIndex != startLocusIndex);
 
             // Rerun the search for nodes intersecting the start node:
-            // (1) This is a lazy/safe way to update the intersecting ndoes with their new addresses resulting from the
+            // (1) This is a lazy/safe way to update the intersecting nodes with their new addresses resulting from the
             //     above locus consolidation step.
             // (2) It appears to be possible for this search to reveal new mergeable nodes, for which additional rounds
             //     of locus consolidation are required. \TODO Document an example where this could occur
@@ -332,8 +337,6 @@ getIntersectingNodeAddressesCore(
     std::set<NodeAddressType>& intersectingNodeAddresses,
     const bool isTestUsability) const
 {
-    typedef LocusSetIndexerType::const_iterator in_citer;
-
 #ifdef DEBUG_SVL
     static const std::string logtag("SVLocusSet::getNodeIntersectCore");
     log_os << logtag << " inputNode: " << queryLocusIndex << ":" << queryNodeIndex << " " << getNode(std::make_pair(queryLocusIndex,queryNodeIndex));
@@ -344,20 +347,20 @@ getIntersectingNodeAddressesCore(
 
     intersectingNodeAddresses.clear();
 
-    // get all nodes \in searchNodes which intersect with the query node:
+    // Get all nodes in searchNodes which intersect with the query node:
     const NodeAddressType queryNodeAddress(std::make_pair(queryLocusIndex,queryNodeIndex));
-    const in_citer it(searchNodes.data().lower_bound(queryNodeAddress));
+    const auto searchNodeIterStart(searchNodes.data().lower_bound(queryNodeAddress));
     const GenomeInterval& queryInterval(getNode(queryNodeAddress).getInterval());
     const pos_t maxRegionSize(_maxRegionSize[queryInterval.tid]);
 
-    const in_citer it_begin(searchNodes.data().begin()), it_end(searchNodes.data().end());
 
     // diagnostics to determine if graph is growing too dense in one region:
     bool isUsable(true);
     unsigned searchCount(0);
 
-    // first look forward and extend to find all nodes which intersect queryInterval:
-    for (in_citer it_fwd(it); it_fwd != it_end; ++it_fwd)
+    // Look for all intersecting nodes with begin position >= queryInterval's begin position
+    const auto searchNodeIterEnd(searchNodes.data().end());
+    for (auto searchNodeIter(searchNodeIterStart); searchNodeIter != searchNodeIterEnd; ++searchNodeIter)
     {
         if (isTestUsability)
         {
@@ -370,21 +373,26 @@ getIntersectingNodeAddressesCore(
             }
         }
 
-        if (it_fwd->first == filterLocusIndex) continue;
+        const auto searchNodeLocusIndex(searchNodeIter->first);
+        if (searchNodeLocusIndex == filterLocusIndex) continue;
+
 #ifdef DEBUG_SVL
-        log_os << logtag << "\tFWD test: " << (*it_fwd) << " " << getNode(*it_fwd);
+        log_os << logtag << "\tFWD test: " << (*searchNodeIter) << " " << getNode(*searchNodeIter);
 #endif
-        if (! queryInterval.isIntersect(getNode(*it_fwd).getInterval())) break;
-        intersectingNodeAddresses.insert(*it_fwd);
+
+        if (! queryInterval.isIntersect(getNode(*searchNodeIter).getInterval())) break;
+        intersectingNodeAddresses.insert(*searchNodeIter);
+
 #ifdef DEBUG_SVL
-        log_os << logtag << "\tFWD insert: " << (*it_fwd) << "\n";
+        log_os << logtag << "\tFWD insert: " << (*searchNodeIter) << "\n";
 #endif
     }
 
-    // now find all intersecting nodes in reverse direction:
-    for (in_citer it_rev(it); it_rev != it_begin; )
+    // Look for all intersecting nodes with begin position < queryInterval's begin position
+    const auto searchNodeIterBegin(searchNodes.data().begin());
+    for (auto searchNodeIter(searchNodeIterStart); searchNodeIter != searchNodeIterBegin; )
     {
-        --it_rev;
+        --searchNodeIter;
 
         if (isTestUsability)
         {
@@ -398,11 +406,11 @@ getIntersectingNodeAddressesCore(
             }
         }
 
-        if (it_rev->first == filterLocusIndex) continue;
+        if (searchNodeIter->first == filterLocusIndex) continue;
 #ifdef DEBUG_SVL
-        log_os << logtag << "\tREV test: " << (*it_rev) << " " << getNode(*it_rev);
+        log_os << logtag << "\tREV test: " << (*searchNodeIter) << " " << getNode(*searchNodeIter);
 #endif
-        const GenomeInterval& searchInterval(getNode(*it_rev).getInterval());
+        const GenomeInterval& searchInterval(getNode(*searchNodeIter).getInterval());
         if (! queryInterval.isIntersect(searchInterval))
         {
             if (! isOverlapAllowed()) break;
@@ -412,9 +420,9 @@ getIntersectingNodeAddressesCore(
             continue;
         }
 
-        intersectingNodeAddresses.insert(*it_rev);
+        intersectingNodeAddresses.insert(*searchNodeIter);
 #ifdef DEBUG_SVL
-        log_os << logtag << "\tREV insert: " << (*it_rev) << "\n";
+        log_os << logtag << "\tREV insert: " << (*searchNodeIter) << "\n";
 #endif
     }
 

@@ -156,7 +156,7 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
 
     /// \brief Merge SVLocus into the SVLocusSet.
     ///
-    /// the referenced SVLocus is destroyed in this process.
+    /// The referenced SVLocus is destroyed in this process.
     void
     merge(const SVLocus& locus);
 
@@ -412,9 +412,8 @@ private:
     /// This object holds a set of node addresses with a sorting scheme designed to support
     /// range-based intersection queries.
     ///
-    /// The core data type here, "data_t", is wrapped by this object because a special copy-ctor/assign is required.
-    /// The custom methods can be isolated here so that the enclosing object can continue to benefit from
-    /// compiler defaults.
+    /// The core data type here, data_t, is wrapped by this object because this object requires a custom
+    /// copy-ctor/assign-op, whereas data_t can use defaults.
     struct LocusSetIndexerType
     {
         typedef std::set<NodeAddressType, NodeAddressSorter> data_t;
@@ -495,7 +494,7 @@ private:
     ///
     /// \param[in] queryLocusIndex First part of query node address.
     /// \param[in] queryNodeIndex Second part of query node address.
-    /// \param[in] searchNodes The set of nodes which will be search for intersections with the query node.
+    /// \param[in] searchNodes The set of nodes which will be searched for intersections with the query node.
     /// \param[in] filterLocusIndex Intersections to nodes in this locus will be filtered out of the results.
     /// \param[out] intersectingNodeAddresses Set of all intersecting node addresses. Any set contents are erased on input.
     /// \param[in] isTestUsability If true, check whether a node intersection exceeds computability limits.
@@ -516,7 +515,6 @@ private:
     /// \param[out] intersectingNodeAddresses Set of all intersecting node addresses. Any set contents are erased on input.
     /// \param[in] isTestUsability If true, check whether a node intersection exceeds computability limits.
     /// \return True if the query node is usable. This can only be false when isTestUsability is true.
-    ///
     bool
     getIntersectingNodeAddresses(
         const LocusIndexType queryLocusIndex,
@@ -524,8 +522,8 @@ private:
         std::set<NodeAddressType>& intersectingNodeAddresses,
         const bool isTestUsability = false) const
     {
-        return getIntersectingNodeAddressesCore(queryLocusIndex, queryNodeIndex, _inodes, queryLocusIndex, intersectingNodeAddresses,
-                                                isTestUsability);
+        return getIntersectingNodeAddressesCore(queryLocusIndex, queryNodeIndex, _inodes, queryLocusIndex,
+                                                intersectingNodeAddresses, isTestUsability);
     }
 
     /// edges returned are in local_addy->remote_node orientation
@@ -594,7 +592,7 @@ private:
     /// Copies the inputLocus into this object without attempting do any merging. This is an intermediate (private)
     /// step in the process of merging the \p inputLocus into this graph.
     ///
-    /// \return The locus index assigned to the copy of inputLocus placed into this graph
+    /// \return The locus index assigned to the copy of inputLocus inserted into this object
     LocusIndexType
     insertLocus(
         const SVLocus& inputLocus);
@@ -796,6 +794,8 @@ private:
     mutable bool _isMaxSearchCount; ///< has input been filtered because we hit the maximum search count
     mutable bool _isMaxSearchDensity; ///< has input been filtered because we hit the maximum node density
 
+    /// True if indexing is setup to support region-based queries of graph nodes. Such queries are required for merging
+    /// but not used for variant calling.
     bool _isIndexed;
 
     CpuTimes _buildTime;

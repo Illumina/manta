@@ -536,24 +536,26 @@ dumpNode(
 
 void
 SVLocus::
-findConnected(
+findAllConnectedNodes(
     const NodeIndexType startIndex,
-    std::set<NodeIndexType>& connected) const
+    std::set<NodeIndexType>& connectedNodeIndexSet) const
 {
-    connected.clear();
+    connectedNodeIndexSet.clear();
 
-    std::stack<NodeIndexType> nodeStack;
-    nodeStack.push(startIndex);
+    // This stack is used as an alternative to recursion for implementing the depth first node search below. A
+    // recursive implementation tends to fail for large graphs, presumably due to excessive function call stack size.
+    std::stack<NodeIndexType> nodeIndexStack;
+    nodeIndexStack.push(startIndex);
 
-    while (! nodeStack.empty())
+    while (! nodeIndexStack.empty())
     {
-        connected.insert(nodeStack.top());
-        const SVLocusNode& node(getNode(nodeStack.top()));
-        nodeStack.pop();
+        connectedNodeIndexSet.insert(nodeIndexStack.top());
+        const SVLocusNode& node(getNode(nodeIndexStack.top()));
+        nodeIndexStack.pop();
         const SVLocusEdgeManager edgeMap(node.getEdgeManager());
         for (const SVLocusEdgesType::value_type& edgeIter : edgeMap.getMap())
         {
-            if (! connected.count(edgeIter.first)) nodeStack.push(edgeIter.first);
+            if (! connectedNodeIndexSet.count(edgeIter.first)) nodeIndexStack.push(edgeIter.first);
         }
     }
 }
@@ -612,7 +614,7 @@ checkState(const bool isCheckConnected) const
 
     // check that every locus in the graph is connected:
     std::set<NodeIndexType> connected;
-    findConnected(0,connected);
+    findAllConnectedNodes(0, connected);
 
     if (nodeSize != connected.size())
     {

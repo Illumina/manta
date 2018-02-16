@@ -168,13 +168,15 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
         getNode(nodeIndex).setEvidenceRange(evidenceRange);
     }
 
-    /// find all node indices connected to startIndex
+    /// Find the indices of all nodes connected to the \p startIndex node
     ///
-    /// this version uses a stack to avoid recursive function calls (otherwise this call tends to fail on large graphs)
+    /// \param[in] startIndex Index of node to start connected node search from
+    /// \param[out] connectedNodeIndexSet Container of indices for all nodes connected to \p startIndex node, including
+    ///                                   \p startIndex itself
     void
-    findConnected(
+    findAllConnectedNodes(
         const NodeIndexType startIndex,
-        std::set<NodeIndexType>& connected) const;
+        std::set<NodeIndexType>& connectedNodeIndexSet) const;
 
     /// the total observations in all nodes of the locus
     unsigned
@@ -274,8 +276,9 @@ struct SVLocus : public flyweight_notifier<SVLocusNodeMoveMessage>
     void
     mergeSelfOverlap();
 
-    /// debug func to check that internal data-structures are in
-    /// a consistent state
+    /// Assert that internal data-structures are in a consistent state
+    ///
+    /// \param[in] isCheckConnected If true, check that all nodes in the locus are connected.
     void
     checkState(const bool isCheckConnected = false) const;
 
