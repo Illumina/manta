@@ -70,19 +70,10 @@ endif ()
 #    set(THIS_LIBRARY_SUFFIX "")
 #endif ()
 
-# point to local opt/ copy of zlib:
-include_directories(${ZLIB_DIR})
-set  (THIS_ADDITIONAL_LIB ${THIS_ADDITIONAL_LIB} ${ZLIB_LIBRARY})
-
 # required support for librt to allow boost chrono
 if (UNIX AND NOT APPLE)
     set  (THIS_ADDITIONAL_LIB ${THIS_ADDITIONAL_LIB} rt)
 endif ()
-
-if (WIN32)
-    set  (THIS_ADDITIONAL_LIB ${THIS_ADDITIONAL_LIB} ws2_32)
-endif ()
-
 
 # htslib 1.x forces pthreads in link:
 find_package( Threads )
