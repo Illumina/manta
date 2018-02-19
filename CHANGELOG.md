@@ -1,5 +1,7 @@
 ## v1.3.1 - 2018-2-19
 
+This is a bugfix update from v1.3.0, notably providing an htslib update to address issues with running manta from alignments in CRAM format.
+
 ### Changed
 - Change default minimum scored SV size from 51 to 50 (MANTA-1321)
   - This change is intended to better align with GIAB SV size range conventions.
@@ -41,7 +43,7 @@ This is a major update from v1.2.2. It features improvements to candidate SV pre
   - This should allow python from certain module systems to be used, but may (rarely) cause instability due to conflicting content in a user's PYTHONPATH.
 - Improve estimation of chimeric fragment rate (ie. fraction of reads which are split or in anomalous pairs) (MANTA-1261/[#103])
   - This fraction is used to set signal/noise thresholds important for somatic calling.
-  - The secondary/supplmental segments of each split read are no longer counted as separate observations.
+  - The secondary/supplementary segments of each split read are no longer counted as separate observations.
   - The method now accounts for many reads being classified as both anomalous and split.
 
 ## v1.2.2 - 2017-11-10
