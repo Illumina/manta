@@ -1,4 +1,4 @@
-## Unreleased
+## v1.3.1 - 2018-2-19
 
 ### Changed
 - Change default minimum scored SV size from 51 to 50 (MANTA-1321)

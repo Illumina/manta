@@ -569,7 +569,7 @@ There are two sources of advanced configuration options:
     * These options are intended primarily for workflow development and
   debugging, but could be useful for runtime optimization in some specialized
   cases.
-  
+
 ##### Generating evidence bams
 
 Using the `--generateEvidenceBam` option, Manta can be configured to generate bam files of evidence reads for SVs listed in the candidate vcf file.
