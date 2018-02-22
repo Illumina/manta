@@ -1,3 +1,8 @@
+## Unreleased
+
+### Fixed
+- Standardize germline FORMAT/GQ VCF tag to Integer type (MANTA-1349)
+
 ## v1.3.1 - 2018-2-19
 
 This is a bugfix update from v1.3.0, notably providing an htslib update to address issues with running manta from alignments in CRAM format.
