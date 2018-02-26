@@ -26,6 +26,10 @@
 #include "blt_util/known_pos_range2.hh"
 
 #include "boost/optional.hpp"
+
+// This extra boost serialization.hpp include is required before including set.hpp, due to bug observed in boost 1.58
+// and described here: https://svn.boost.org/trac10/ticket/12126
+#include "boost/serialization/serialization.hpp"
 #include "boost/serialization/set.hpp"
 
 #include <iosfwd>
