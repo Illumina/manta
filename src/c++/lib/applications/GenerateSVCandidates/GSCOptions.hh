@@ -68,7 +68,7 @@ struct GSCOptions
 
     bool isSkipScoring = false; ///< if true, skip quality scoring and output candidates only
 
-    bool isSkipRemoteReads = false; ///< if true, don't search for non-local mapq0 mate pairs for assembly
+    bool enableRemoteReadRetrieval = false; ///< if true, turn on retrieval of poorly mapped remote reads for assembly
 
     bool isRNA = false; ///< if true, RNA specific filtering on candidates and diploid scoring is used
 

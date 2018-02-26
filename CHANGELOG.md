@@ -1,5 +1,9 @@
 ## Unreleased
 
+### Changed
+- Moved remote read retrieval for insertions to a configuration file option (MANTA-1351)
+  - This feature was previously hard-coded in the workflow, the default behavior (off for cancer workflows, otherwise on) has not changed.
+
 ### Fixed
 - Standardize germline FORMAT/GQ VCF tag to Integer type (MANTA-1349)
 

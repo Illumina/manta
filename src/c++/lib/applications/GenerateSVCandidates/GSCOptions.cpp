@@ -101,8 +101,8 @@ parseGSCOptions(
      "Turn off all breakend and small-variant assembly. Only large, imprecise variants will be reported based on anomalous read pairs.")
     ("skip-scoring", po::value(&opt.isSkipScoring)->zero_tokens(),
      "Turn off all scoring models and output candidates only.")
-    ("skip-remote-reads", po::value(&opt.isSkipRemoteReads)->zero_tokens(),
-     "Turn off remote mapq0 read search for assembly (reduces assembly success for insertions/mobile elements).")
+    ("enable-remote-read-retrieval", po::value(&opt.enableRemoteReadRetrieval)->zero_tokens(),
+     "Turn on retrieval of poorly mapped remote reads for assembly (improves assembly success for insertions, but may cause runtime issues in noisy data).")
     ("rna", po::value(&opt.isRNA)->zero_tokens(),
      "For RNA input. Skip small deletions and modify diploid scoring.")
     ("unstranded", po::value(&opt.isUnstrandedRNA)->zero_tokens(),

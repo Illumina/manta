@@ -36,6 +36,7 @@ sys.path.append(os.path.abspath(pyflowDir))
 
 from checkChromSet import getTabixChromSet
 from configBuildTimeInfo import workflowVersion
+from configureUtil import safeSetBool
 from pyflow import WorkflowRunner
 from sharedWorkflow import getMkdirCmd, getMvCmd, getRmCmd, getRmdirCmd, \
                            getDepthFromAlignments
@@ -494,8 +495,8 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
     makeHyGenDirCmd = getMkdirCmd() + [hygenDir]
     dirTask = self.addTask(preJoin(taskPrefix,"makeHyGenDir"), makeHyGenDirCmd, dependencies=dependencies, isForceLocal=True)
 
-    isSomatic = (len(self.params.normalBamList) and len(self.params.tumorBamList))
-    isTumorOnly = ((not isSomatic) and len(self.params.tumorBamList))
+    isTumorNormal = (len(self.params.normalBamList) and len(self.params.tumorBamList))
+    isTumorOnly = ((not isTumorNormal) and len(self.params.tumorBamList))
 
     hygenTasks=set()
     if self.params.isGenerateSupportBam :
@@ -519,7 +520,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
             self.rnaVcfPaths.append(self.paths.getHyGenRnaPath(binStr))
         else:
             self.diploidVcfPaths.append(self.paths.getHyGenDiploidPath(binStr))
-            if isSomatic :
+            if isTumorNormal :
                 self.somaticVcfPaths.append(self.paths.getHyGenSomaticPath(binStr))
 
         hygenCmd = [ self.params.mantaHyGenBin ]
@@ -545,13 +546,20 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
             hygenCmd.extend(["--min-pass-qual-score", self.params.minPassDiploidVariantScore])
             hygenCmd.extend(["--min-pass-gt-score", self.params.minPassDiploidGTScore])
             # tumor/normal mode
-            if isSomatic :
+            if isTumorNormal :
                 hygenCmd.extend(["--somatic-output-file", self.somaticVcfPaths[-1]])
                 hygenCmd.extend(["--min-somatic-score", self.params.minSomaticScore])
                 hygenCmd.extend(["--min-pass-somatic-score", self.params.minPassSomaticScore])
 
-                # temporary fix for FFPE:
-                hygenCmd.append("--skip-remote-reads")
+        # Setup remote read retrieval for insertions:
+        def isEnableRemoteReadRetrieval() :
+            if isTumorOnly or isTumorNormal :
+                return self.params.enableRemoteReadRetrievalForInsertionsInCancerCallingModes
+            else :
+                return self.params.enableRemoteReadRetrievalForInsertionsInGermlineCallingModes
+
+        if isEnableRemoteReadRetrieval() :
+            hygenCmd.append("--enable-remote-read-retrieval")
 
         if self.params.isHighDepthFilter :
             hygenCmd.extend(["--chrom-depth", self.paths.getChromDepth()])
@@ -791,6 +799,10 @@ class MantaWorkflow(WorkflowRunner) :
         cleanPyEnv()
 
         self.params=params
+
+        # normalize boolean option input:
+        safeSetBool(self.params,"enableRemoteReadRetrievalForInsertionsInGermlineCallingModes")
+        safeSetBool(self.params,"enableRemoteReadRetrievalForInsertionsInCancerCallingModes")
 
         # Use RNA option for minCandidate size
         if self.params.isRNA:

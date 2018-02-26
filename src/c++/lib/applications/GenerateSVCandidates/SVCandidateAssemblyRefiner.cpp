@@ -1915,7 +1915,7 @@ getSmallSVAssembly(
 
     const std::string& align1RefStr(assemblyData.bp1ref.seq());
 
-    const bool isSearchRemoteInsertionReads((! _opt.isSkipRemoteReads) && isFindLargeInsertions);
+    const bool isSearchRemoteInsertionReads(_opt.enableRemoteReadRetrieval && isFindLargeInsertions);
 
     // assemble contigs in the breakend region
     _smallSVAssembler.assembleComplexSVCandidate(sv.bp1, assemblyData.bp1ref, isSearchRemoteInsertionReads,
