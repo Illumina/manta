@@ -141,9 +141,10 @@ merge(const SVLocus& inputLocus)
     // 3. Test if the graph's node intersections with any of startLocus' nodes exceeds complexity limits. If so, abort
     // the merge.
     //
+    // test usability when the input locus contians only 2 nodes
+    const bool isTestUsability(inputLocus.size() == 2);
     for (const nodeMap_t::value_type& startLocusNodeVal : startLocusNodeMap)
     {
-        static const bool isTestUsability(true);
         const bool isUsable(
             getIntersectingNodeAddresses(startLocusIndex, startLocusNodeVal.second, intersectingNodeAddresses, isTestUsability));
 
