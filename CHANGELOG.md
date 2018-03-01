@@ -3,7 +3,11 @@
 ### Changed
 - Moved remote read retrieval for insertions to a configuration file option (MANTA-1351)
   - This feature was previously hard-coded in the workflow, the default behavior (off for cancer workflows, otherwise on) has not changed.
-
+- Turned off complexity check of SV locus graph for loci containing more than two nodes (MANTA-1346)
+  - A locus will be aborted from merge if it fails the complexity check. 
+  - Keeping the complexity check for two-node loci can effectivly improve runtime during graph build.
+  - The check is turned off for loci with more than two nodes because the abortion of a large locus may lead to loss of valid SV candidates.
+	
 ### Fixed
 - Standardize germline FORMAT/GQ VCF tag to Integer type (MANTA-1349)
 
