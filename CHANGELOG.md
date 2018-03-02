@@ -7,6 +7,9 @@
   - A locus will be aborted from merge if it fails the complexity check. 
   - Keeping the complexity check for two-node loci can effectivly improve runtime during graph build.
   - The check is turned off for loci with more than two nodes because the abortion of a large locus may lead to loss of valid SV candidates.
+- Turn on automated task retry for all workflow run modes (MANTA-1354)
+  - Failed tasks have always been automatically resubmitted in SGE mode, this is now extended to localhost mode.
+  - This change is intended to work around sporatic I/O issues on network filesystems.	
 	
 ### Fixed
 - Standardize germline FORMAT/GQ VCF tag to Integer type (MANTA-1349)

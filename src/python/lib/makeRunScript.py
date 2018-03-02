@@ -250,6 +250,8 @@ def main(pickleConfigFile, primaryConfigSection, workflowClassName) :
                          schedulerArgList=runOptions.schedulerArgList,
                          resetTasks=runOptions.resetTasks,
                          successMsg=wflow.getSuccessMessage(),
+                         retryWindow=0,
+                         retryMode='all',
                          warningLogFile=warningpath,
                          errorLogFile=errorpath)
     finally:
