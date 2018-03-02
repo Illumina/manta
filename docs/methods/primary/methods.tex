@@ -266,9 +266,11 @@ Following annotation of nodes for merge eligibility, the procedure to execute me
 
 In practice, the evidence weight signal threshold $e_s$ defaults to 9 and the evidence weight applied for an non-penalized split or paired read observation (as described in the previous section) is 3. Thus the above described breakend graph merging procedure effectively requires 3 split or paired read observations supporting the same region association before merging this evidence in the breakend graph.
 
-% The merge procedure is described without a layer implementation detail: locus.
-% The merge abortion is actually applied to a whole locus instead of just the candidate merge node.
-% The complexity check has been turned off for loci containing more than two nodes.
+% TODO The graph complexity filtration procedure in the paragraph below seems to have been left in an inaccurate state for some time and should be rewritten from the implementation. A TDR ticket (MANTA-1355) has been created for this update.
+% Specific problems are:
+% 1. There is no reference to the 'locus' concept from source code
+% 2. The abort is actually applied to a whole locus instead of just the candidate merge node.
+% 3. The complexity check has now been turned off for loci containing more than two nodes.
 The breakend graph merge procedure can be limited under conditions of high graph complexity. If the search for all nodes intersecting a candidate merge node (as described in the IntersectingNodes procedure in Method \ref{method:annotate}) results in 500 or more nodes or greater than 0.5 nodes per base in the search region, the merge of the associated candidate edge is stopped. This step is designed to limit graph complexity in repetitive and pericentromeric regions.
 
 As the target genome segment is scanned, the region breakend graph is periodically de-noised. The procedure is only performed for edges where the input alignment files have been scanned over the genomic regions of the nodes incident on the edge (excluding small buffer zones at the edges of the scanned genome segments). For any edge $e = (v,w)$ which is eligible for de-noising, if both evidence[$(v,w)$] and evidence[$(w,v)$] are less than $e_s$, the edge is removed from the graph, together with any nodes isolated by the edge removal.

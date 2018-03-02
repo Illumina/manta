@@ -139,16 +139,20 @@ merge(const SVLocus& inputLocus)
 
     //
     // 3. Test if the graph's node intersections with any of startLocus' nodes exceeds complexity limits. If so, abort
-    // the merge.
+    // the merge for startLocus.
     //
-    // Test usability to improve runtime when the input locus contains only two nodes.
-    // Notice that the test is not apply to any locus with more than two nodes.
-    // A locus will be aborted from merge if it fails the usability test.
-    // And the abortion of a large locus may lead to loss of valid SV candidates.
+    // Note that the complexity measurement below is a function of individual startLocus nodes, but the procedure has
+    // been setup to filter out the entire startLocus in case of even a single high-complexity node. This could lead
+    // to non-complex/true variant graph edges being removed becuase they transitively associate with a complex node.
     //
-    // The usability test is a heuristic for the sake of simplicity.
-    // Ideally, the complex nodes need be identified and removed from the containing locus,
-    // together with any resulting orphan nodes.
+    // An improved procedure would identify only the high complexity nodes, and edit startLocus to remove them (as well
+    // as any orphan nodes resulting from the complex node removal).
+    //
+    // Given the improved procedure would be difficult to implement, a stopgap measure is used below to approximate this:
+    // the overwhelming majority of merge input are simple 2 node loci. If the complexity check continues to check and
+    // filter these simple cases while skipping filtration of more complex loci, there is no risk of throwing out a good
+    // edge by transitive association with a complex node.
+    //
     const bool isTestUsability(inputLocus.size() <= 2);
     for (const nodeMap_t::value_type& startLocusNodeVal : startLocusNodeMap)
     {

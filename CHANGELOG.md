@@ -1,20 +1,20 @@
 ## Unreleased
 
 ### Changed
-- Moved remote read retrieval for insertions to a configuration file option (MANTA-1351)
+- Move remote read retrieval for insertions to a configuration file option (MANTA-1351)
   - This feature was previously hard-coded in the workflow, the default behavior (off for cancer workflows, otherwise on) has not changed.
-- Turned off complexity check of SV locus graph for loci containing more than two nodes (MANTA-1346)
-  - A locus will be aborted from merge if it fails the complexity check. 
-  - Keeping the complexity check for two-node loci can effectivly improve runtime during graph build.
-  - The check is turned off for loci with more than two nodes because the abortion of a large locus may lead to loss of valid SV candidates.
-- Turn on automated task retry for all workflow run modes (MANTA-1354)
-  - Failed tasks have always been automatically resubmitted in SGE mode, this is now extended to localhost mode.
-  - This change is intended to work around sporatic I/O issues on network filesystems.	
-	
+- Turn off the complexity filter for SV breakend graph loci containing more than two nodes (MANTA-1346)
+  - High complexity elements of the SV breakend graph associated with centromeres have always been filtered out to control runtime. With this
+    change the filtration has been slightly relaxed to ensure that true variants will not be filtered out by transitive association with a high
+    complexity graph node.
+- Turn on automated task resubmission for all workflow run modes (MANTA-1354)
+  - Failed tasks have always been automatically resubmitted in SGE mode, this is now extended to localhost mode as well.
+  - This change is intended to work around sporatic I/O issues on network filesystems.
+
 ### Fixed
 - Standardize germline FORMAT/GQ VCF tag to Integer type (MANTA-1349)
 
-## v1.3.1 - 2018-2-19
+## v1.3.1 - 2018-02-19
 
 This is a bugfix update from v1.3.0, notably providing an htslib update to address issues with running manta from alignments in CRAM format.
 
@@ -29,7 +29,7 @@ This is a bugfix update from v1.3.0, notably providing an htslib update to addre
 - Stop forcing static linking for zlib (STREL-842)
   - This change brings zlib policy in-line with strelka, such that options (i.e. LD\_PRELOAD) are available for improved compression performance.
 
-## v1.3.0 - 2018-2-1
+## v1.3.0 - 2018-02-01
 
 This is a major update from v1.2.2. It features improvements to candidate SV precision and genotyping accuracy, in addition to minor improvements in stability, runtime and error diagnostics.
 
@@ -64,7 +64,7 @@ This is a major update from v1.2.2. It features improvements to candidate SV pre
 
 ## v1.2.2 - 2017-11-10
 
-This is a minor update from v1.2.1
+This is a minor update from v1.2.1.
 
 ### Added
 - Add a configurable option `graphNodeMaxEdgeCount` (MANTA-1247)
@@ -88,7 +88,7 @@ This is a minor update from v1.2.1
 
 ## v1.2.1 - 2017-10-06
 
-This is a minor bugfix release from v1.2.0
+This is a minor bugfix release from v1.2.0.
 
 ### Added
 - Use the BAM mate CIGAR (MC) tag, when present, to improve the accuracy of accessing if a read has extended into adapter sequence (MANTA-1097)
