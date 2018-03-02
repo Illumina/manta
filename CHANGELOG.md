@@ -13,6 +13,8 @@
 
 ### Fixed
 - Standardize germline FORMAT/GQ VCF tag to Integer type (MANTA-1349)
+- Update to pyflow v1.1.20 to close infrequent race condition in task resolution (STREL-853)
+  - Under the race condition error, a non-failing task would be logged as failing with the message "TASKNAME has stopped without a traceable cause"
 
 ## v1.3.1 - 2018-02-19
 
