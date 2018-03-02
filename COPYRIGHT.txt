@@ -211,7 +211,7 @@ corresponding subdirectories.
 
 ******************************************************************
 
-pyFlow 1.1.19
+pyFlow 1.1.20
 
 pyFlow - a lightweight parallel task engine
 
