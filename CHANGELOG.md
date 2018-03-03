@@ -1,4 +1,6 @@
-## Unreleased
+## v1.3.2 - 2018-03-02
+
+This is a bugfix update from v1.3.1.
 
 ### Changed
 - Move remote read retrieval for insertions to a configuration file option (MANTA-1351)
@@ -9,7 +11,7 @@
     complexity graph node.
 - Turn on automated task resubmission for all workflow run modes (MANTA-1354)
   - Failed tasks have always been automatically resubmitted in SGE mode, this is now extended to localhost mode as well.
-  - This change is intended to work around sporatic I/O issues on network filesystems.
+  - This change is intended to work around sporadic I/O issues on network filesystems.
 
 ### Fixed
 - Standardize germline FORMAT/GQ VCF tag to Integer type (MANTA-1349)
