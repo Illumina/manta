@@ -18,6 +18,7 @@ Manta User Guide
     * [VCF Sample Names](#vcf-sample-names)
     * [Small indels](#small-indels)
     * [Insertions with incomplete insert sequence assembly](#insertions-with-incomplete-insert-sequence-assembly)
+    * [Inversions](#inversions)
     * [VCF INFO Fields](#vcf-info-fields)
     * [VCF FORMAT Fields](#vcf-format-fields)
     * [VCF FILTER Fields](#vcf-filter-fields)
@@ -331,6 +332,17 @@ NA12878, NA12891 and NA12892 mapped to hg19:
 
 ```
 chr1    11830208        MantaINS:1577:0:0:0:3:0 T       <INS>   999     PASS    END=11830208;SVTYPE=INS;CIPOS=0,12;CIEND=0,12;HOMLEN=12;HOMSEQ=TAAATTTTTCTT;LEFT_SVINSSEQ=TAAATTTTTCTTTTTTCTTTTTTTTTTAAATTTATTTTTTTATTGATAATTCTTGGGTGTTTCTCACAGAGGGGGATTTGGCAGGGTCACGGGACAACAGTGGAGGGAAGGTCAGCAGACAAACAAGTGAACAAAGGTCTCTGGTTTTCCCAGGCAGAGGACCCTGCGGCCTTCCGCAGTGTTCGTGTCCCTGATTACCTGAGATTAGGGATTTGTGATGACTCCCAACGAGCATGCTGCCTTCAAGCATCTGTTCAACAAAGCACATCTTGCACTGCCCTTAATTCATTTAACCCCGAGTGGACACAGCACATGTTTCAAAGAG;RIGHT_SVINSSEQ=GGGGCAGAGGCGCTCCCCACATCTCAGATGATGGGCGGCCAGGCAGAGACGCTCCTCACTTCCTAGATGTGATGGCGGCTGGGAAGAGGCGCTCCTCACTTCCTAGATGGGACGGCGGCCGGGCGGAGACGCTCCTCACTTTCCAGACTGGGCAGCCAGGCAGAGGGGCTCCTCACATCCCAGACGATGGGCGGCCAGGCAGAGACACTCCCCACTTCCCAGACGGGGTGGCGGCCGGGCAGAGGCTGCAATCTCGGCACTTTGGGAGGCCAAGGCAGGCGGCTGCTCCTTGCCCTCGGGCCCCGCGGGGCCCGTCCGCTCCTCCAGCCGCTGCCTCC  GT:FT:GQ:PL:PR:SR       0/1:PASS:999:999,0,999:22,24:22,32      0/1:PASS:999:999,0,999:18,25:24,20    0/0:PASS:230:0,180,999:39,0:34,0
+```
+
+#### Inversions
+
+Inversions are reported as a single inverted sequence junction. As described in the [VCF INFO Fields](#vcf-info-fields) below, the INV3 tag indicates inversion breakends open at the 3' of reported location, whereas the INV5 tag indicates inversion breakends open at the 5' of reported location. More specifically, in the inversion exmaples illustrated at https://software.broadinstitute.org/software/igv/interpreting_pair_orientations, the INV5 tag corresponds to the IGV "RR"/dark blue reads, and the INV3 tag corresponds to the IGV "LL"/ light blue reads.
+
+This format is used because single inverted junctions are often identified as part of a complex SV in real data, whereas simple reciprocal inversions are uncommon outside of simulated data. For a simple reciprocal inversion, both INV3 and INV5 junctions are expected to be reported, and they shall share the same `EVENT` INFO tag. The following is an example of a simple reciptocal inversion:
+
+```
+chr1      17124940      MantaINV:3630:0:1:1:4:0 C       <INV>   999     PASS    END=234919885;SVTYPE=INV;SVLEN=217794945;INV5;EVENT=MantaINV:3630:0:1:0:0:0;JUNCTION_QUAL=999;     GT:FT:GQ:PL:PR:SR     0/1:PASS:999:999,0,999:61,4:24,43
+chr1      17124943      MantaINV:3630:0:1:0:0:0 T       <INV>   999     PASS    END=234919824;SVTYPE=INV;SVLEN=217794881;INV3;EVENT=MantaINV:3630:0:1:0:0:0;JUNCTION_QUAL=999;     GT:FT:GQ:PL:PR:SR     0/1:PASS:999:999,0,999:52,3:8,29
 ```
 
 #### VCF INFO Fields
