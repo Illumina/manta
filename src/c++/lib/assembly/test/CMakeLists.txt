@@ -25,5 +25,4 @@
 ##
 ################################################################################
 
-set(ADDITIONAL_UNITTEST_LIB manta_blt_util)
 include(${THIS_CXX_TEST_LIBRARY_CMAKE})

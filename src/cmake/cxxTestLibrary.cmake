@@ -25,6 +25,10 @@
 ##
 ################################################################################
 
+# Incomplete list of required settings:
+# LIBRARY_DIR_NAME directory name of parent library
+# LIBRARY_TARGET_NAME cmake target name of parent library
+
 include (${THIS_CXX_COMMMON_CMAKE})
 
 set(TESTCONFIGNAME "test_config.h")
@@ -36,11 +40,7 @@ if (EXISTS "${TESTCONFIGSRC}")
     include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 endif ()
 
-set(TEST_TARGET_NAME "${THIS_PROJECT_NAME}_unit_test_${THIS_LIB_DIR}")
-
-if (THIS_LIBRARY_SOURCES)
-    set(ADDITIONAL_UNITTEST_LIB ${ADDITIONAL_UNITTEST_LIB} ${THIS_PROJECT_NAME}_${THIS_LIB_DIR})
-endif ()
+set(TEST_TARGET_NAME "${THIS_PROJECT_NAME}_unit_test_${LIBRARY_DIR_NAME}")
 
 if (WIN32)
     # create a fake library target on win32 instead of linking and running the unit test
@@ -57,7 +57,8 @@ else ()
     add_executable(${TEST_TARGET_NAME} ${TEST_SOURCE})
     add_dependencies(${TEST_TARGET_NAME} ${THIS_OPT})
 
-    target_link_libraries (${TEST_TARGET_NAME} ${ADDITIONAL_UNITTEST_LIB} ${THIS_AVAILABLE_LIBRARIES}
+    target_link_libraries (${TEST_TARGET_NAME} ${LIBRARY_TARGET_NAME}
+                           ${PROJECT_PRIMARY_LIBRARY_TARGETS}
                            ${HTSLIB_LIBRARY} ${Boost_LIBRARIES} ${THIS_ADDITIONAL_LIB})
 
     set(TEST_BINARY ${CMAKE_CURRENT_BINARY_DIR}/${TEST_TARGET_NAME})

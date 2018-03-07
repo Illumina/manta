@@ -148,3 +148,9 @@ macro(superset symbol value)
     set(${symbol} "${value}" PARENT_SCOPE)
 endmacro()
 
+
+# Consolidate the library target naming scheme down logic to a single copy:
+macro(get_library_target_name library_dir library_target_name)
+    set(${library_target_name} "${THIS_PROJECT_NAME}_${library_dir}")
+endmacro()
+
