@@ -137,3 +137,14 @@ function(install_python_lib_dir fromdir todir)
     install (DIRECTORY "${fromdir}/" DESTINATION "${todir}" FILE_PERMISSIONS ${THIS_LIBRARY_PERMISSIONS} FILES_MATCHING PATTERN "*.py")
     install (DIRECTORY "${fromdir}/" DESTINATION "${todir}" FILE_PERMISSIONS ${THIS_EXECUTABLE_PERMISSIONS} FILES_MATCHING PATTERN "*.pyc")
 endfunction()
+
+
+# Set symbol in both current and parent scope
+#
+# Example: superset(PATH "/usr/bin")
+#
+macro(superset symbol value)
+    set(${symbol} "${value}")
+    set(${symbol} "${value}" PARENT_SCOPE)
+endmacro()
+

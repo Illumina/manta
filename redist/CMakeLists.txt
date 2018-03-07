@@ -30,12 +30,6 @@ message(STATUS "Building external tools")
 include ("${THIS_GLOBALS_CMAKE}")
 include ("${THIS_MACROS_CMAKE}")
 
-# convenience macro to set in both current and parent scope:
-macro(superset symbol value)
-    set(${symbol} "${value}")
-    set(${symbol} "${value}" PARENT_SCOPE)
-endmacro()
-
 
 set (THIS_CMAKE_PLATFORM "")
 if (WIN32)
