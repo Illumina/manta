@@ -29,8 +29,8 @@
 #include "htsapi/align_path_bam_util.hh"
 #include "htsapi/bam_record_util.hh"
 #include "htsapi/bam_streamer.hh"
+#include "manta/ReadFilter.hh"
 #include "manta/ReadGroupLabel.hh"
-#include "manta/SVLocusScanner.hh"
 
 #include <array>
 #include <iostream>
@@ -778,7 +778,7 @@ struct CoreInsertStatsReadFilter
         const bam_record& bamRead)
     {
         // filter common categories of undesirable reads:
-        if (SVLocusScanner::isReadFilteredCore(bamRead)) return true;
+        if (isReadFilteredCore(bamRead)) return true;
 
         if (bamRead.isNonStrictSupplement()) return true;
 

@@ -19,6 +19,7 @@
 
 #include "extractAssemblyReads.hh"
 #include "htsapi/bam_streamer.hh"
+#include "manta/ReadFilter.hh"
 #include "manta/ShadowReadFinder.hh"
 #include "manta/SVLocusScanner.hh"
 
@@ -43,7 +44,7 @@ extractAssemblyReadsFromBam(
         // filter out reads we ALWAYS filter out from manta
         //
         // don't filter out MAPQ0 because the split reads tend to have reduced mapping scores:
-        if (SVLocusScanner::isReadFilteredCore(bamRead)) continue;
+        if (isReadFilteredCore(bamRead)) continue;
 
         if (bamRead.isNonStrictSupplement()) continue;
 

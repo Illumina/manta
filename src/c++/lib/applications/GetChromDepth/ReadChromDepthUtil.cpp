@@ -31,6 +31,7 @@
 #include "common/Exceptions.hh"
 #include "htsapi/bam_header_info.hh"
 #include "htsapi/bam_streamer.hh"
+#include "manta/ReadFilter.hh"
 #include "manta/SVLocusScanner.hh"
 
 #include <iostream>
@@ -476,7 +477,7 @@ readChromDepthFromAlignment(
 
                 // apply the set of core filters used everywhere in manta so that "expected" depth computed here
                 // will match up with local depth computed on-the-fly within manta components:
-                if (SVLocusScanner::isMappedReadFilteredCore(bamRead)) continue;
+                if (isReadUnmappedOrFilteredCore(bamRead)) continue;
 
                 // Normally supplemental/secondary reads with a split alignment are not filtered out. Because this
                 // depth computation is based on the read length and not the specific alignment, split reads need

@@ -132,39 +132,6 @@ struct SVLocusScanner
         const stream_state_reporter& alignmentStream,
         const bam_record& bamRead);
 
-
-    /// this predicate runs isReadFiltered without the mapq components
-    static
-    bool
-    isReadFilteredCore(
-        const bam_record& bamRead)
-    {
-        if      (bamRead.is_filter()) return true;
-        else if (bamRead.is_dup()) return true;
-        // supplementary reads without SA tag
-        else if (bamRead.is_supplementary() && (! bamRead.isSASplit())) return true;
-        else
-        {
-            // hack to work with bwamem '-M' formatting,
-            // keep secondary reads when they contain an SA tag
-            if (bamRead.is_secondary())
-            {
-                if (! bamRead.isSASplit()) return true;
-            }
-        }
-        return false;
-    }
-
-
-    static
-    bool
-    isMappedReadFilteredCore(
-        const bam_record& bamRead)
-    {
-        if (isReadFilteredCore(bamRead)) return true;
-        return (bamRead.is_unmapped());
-    }
-
     unsigned
     getMinMapQ() const
     {

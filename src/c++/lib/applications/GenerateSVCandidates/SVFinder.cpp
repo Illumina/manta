@@ -27,6 +27,7 @@
 #include "blt_util/log.hh"
 #include "common/Exceptions.hh"
 #include "htsapi/bam_streamer.hh"
+#include "manta/ReadFilter.hh"
 #include "manta/ReadGroupStatsSet.hh"
 #include "manta/SVCandidateUtil.hh"
 #include "manta/SVReferenceUtil.hh"
@@ -361,7 +362,7 @@ addSVNodeData(
             const pos_t refPos(bamRead.pos()-1);
             if (refPos >= searchEndPos) break;
 
-            if (SVLocusScanner::isMappedReadFilteredCore(bamRead)) continue;
+            if (isReadUnmappedOrFilteredCore(bamRead)) continue;
 
             if (isMaxDepth)
             {

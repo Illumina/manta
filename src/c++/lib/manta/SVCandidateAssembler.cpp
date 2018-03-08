@@ -26,6 +26,7 @@
 #include "blt_util/seq_util.hh"
 #include "htsapi/align_path_bam_util.hh"
 #include "htsapi/SimpleAlignment_bam_util.hh"
+#include "manta/ReadFilter.hh"
 #include "manta/RemoteMateReadUtil.hh"
 #include "manta/ShadowReadFinder.hh"
 #include "manta/SVLocusScannerSemiAligned.hh"
@@ -456,7 +457,7 @@ getBreakendReads(
 
             // don't filter out MAPQ0 reads here because the split reads tend to have reduced mapping scores
             // don't filter out unmapped reads here because shadow reads are used in assembly
-            if (SVLocusScanner::isReadFilteredCore(bamRead)) continue;
+            if (isReadFilteredCore(bamRead)) continue;
 
             // Filter reads which won't be used in assembly:
             //

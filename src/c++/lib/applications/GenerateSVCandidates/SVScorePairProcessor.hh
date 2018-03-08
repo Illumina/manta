@@ -31,6 +31,7 @@
 #include "blt_util/SizeDistribution.hh"
 
 #include "manta/BamRegionProcessor.hh"
+#include "manta/ReadFilter.hh"
 #include "manta/SVCandidate.hh"
 #include "manta/SVLocusScanner.hh"
 #include "manta/JunctionIdGenerator.hh"
@@ -95,7 +96,7 @@ struct SVScorePairProcessor : public BamRegionProcessor
     isSkipRecordCore(
         const bam_record& bamRead)
     {
-        return (SVLocusScanner::isReadFilteredCore(bamRead) || bamRead.isNonStrictSupplement());
+        return (isReadFilteredCore(bamRead) || bamRead.isNonStrictSupplement());
     }
 
     /// what to skip in addition to the core skip test?

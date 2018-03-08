@@ -27,6 +27,7 @@
 #include "common/Exceptions.hh"
 #include "htsapi/align_path_bam_util.hh"
 #include "manta/ChromDepthFilterUtil.hh"
+#include "manta/ReadFilter.hh"
 
 #include <iostream>
 #include <sstream>
@@ -265,7 +266,7 @@ update(
     //
     // Although unmapped reads themselves are filtered out, reads with unmapped mates are still
     // accepted, because these contribute signal for assembly (indel) regions.
-    if (SVLocusScanner::isMappedReadFilteredCore(bamRead)) return;
+    if (isReadUnmappedOrFilteredCore(bamRead)) return;
 
     const bool isTumor(_isAlignmentTumor[defaultReadGroupIndex]);
     if (! isTumor) addToDepthBuffer(bamRead);

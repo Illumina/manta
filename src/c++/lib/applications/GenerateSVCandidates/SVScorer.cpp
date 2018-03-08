@@ -194,7 +194,7 @@ getBreakendMaxMappedDepthAndMQ0(
             const pos_t refPos(bamRead.pos()-1);
             if (refPos >= searchRange.end_pos()) break;
 
-            if (SVLocusScanner::isMappedReadFilteredCore(bamRead)) continue;
+            if (isReadUnmappedOrFilteredCore(bamRead)) continue;
 
             addReadToDepthEst(bamRead,searchRange.begin_pos(),depth);
 

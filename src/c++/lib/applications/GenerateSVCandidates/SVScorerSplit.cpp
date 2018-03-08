@@ -24,6 +24,7 @@
 #include "SVScorer.hh"
 #include "blt_util/log.hh"
 #include "blt_util/seq_util.hh"
+#include "manta/ReadFilter.hh"
 #include "manta/ShadowReadFinder.hh"
 #include "htsapi/SimpleAlignment_bam_util.hh"
 
@@ -275,8 +276,7 @@ scoreSplitReads(
     {
         const bam_record& bamRead(*(readStream.get_record_ptr()));
 
-        if (SVLocusScanner::isReadFilteredCore(bamRead)) continue;
-        if (bamRead.is_unmapped()) continue;
+        if (isReadUnmappedOrFilteredCore(bamRead)) continue;
 
         /// TODO: remove this filter?
         /// The supplemental alignment is likely to be hard-clipped
@@ -340,7 +340,7 @@ scoreSplitReads(
         {
             const bam_record& bamRead(*(readStream.get_record_ptr()));
 
-            if (SVLocusScanner::isReadFilteredCore(bamRead)) continue;
+            if (isReadFilteredCore(bamRead)) continue;
             if (! shadow.check(bamRead)) continue;
 
             static const bool isShadow(true);
