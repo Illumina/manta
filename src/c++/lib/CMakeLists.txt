@@ -41,6 +41,18 @@ macro(buildLibraries library_dirs library_targets)
     endforeach ()
 endmacro()
 
+
+#
+# Build libraries needed for unit testing separately
+#
+# This is logic required for unit-testing, but not deployed production code. This must be run before the
+# primary loop below, so that PROJECT_TEST_LIBRARY_TARGETS is populated prior to configuring the unit test
+# directories.
+#
+set (PROJECT_TEST_LIBRARY_DIRS test)
+buildLibraries("${PROJECT_TEST_LIBRARY_DIRS}" PROJECT_TEST_LIBRARY_TARGETS)
+
+
 #
 # Build all primary libraries for the project
 #
