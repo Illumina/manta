@@ -400,7 +400,7 @@ elseif (${IS_CLANGXX})
         list(APPEND CXX_NOWARN_LIST comma)
     endif ()
 
-    # No chagnes for clang 4.0
+    # No changes for clang 4.0
 
     if (NOT (${COMPILER_VERSION} VERSION_LESS "5.0"))
         list(APPEND CXX_WARN_LIST inconsistent-missing-destructor-override)
@@ -418,11 +418,7 @@ elseif (${IS_CLANGXX})
     endif ()
 
 elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
-    # suppress errors in boost headers:
-    append_args(CXX_WARN_FLAGS "-diag-disable 177,193,869,1599,3280")
-
     append_args(CXX_WARN_FLAGS "-Wunused-variable -Wpointer-arith")
-
     #append_args(CXX_WARN_FLAGS "-Wmissing-prototypes -Wmissing-declarations -Wunused-variable -Wpointer-arith -Wuninitialized")
 endif()
 
@@ -436,6 +432,15 @@ if (${GNU_COMPAT_COMPILER})
         append_args (CMAKE_CXX_FLAGS "-std=c++0x")
     else ()
         append_args (CMAKE_CXX_FLAGS "-std=c++11")
+    endif ()
+
+    # The intel compilers make a LOT of remarks by default. Turn these down a little bit here so that more
+    # critical info isn't drowned out:
+    if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
+        # suppress errors in boost headers:
+        append_args(CMAKE_CXX_FLAGS "-diag-disable 177,193,869,1599,3280")
+        # suppress inlining limit remarks:
+        append_args(CMAKE_CXX_FLAGS "-diag-disable 11074,11076")
     endif ()
 
     set (CMAKE_CXX_FLAGS_DEBUG "-O0 -g")

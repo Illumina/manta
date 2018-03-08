@@ -19,12 +19,14 @@
 
 #pragma once
 
+#include <string>
+
 
 /// Input parameters for IterativeAssembler
 ///
 struct IterativeAssemblerOptions
 {
-    IterativeAssemblerOptions() {}
+    IterativeAssemblerOptions() = default;
 
     /// the symbol set used during assembly
     std::string alphabet = "ACGT";
