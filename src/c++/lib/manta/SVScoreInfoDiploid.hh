@@ -86,7 +86,7 @@ inline
 float
 altFraction(const index_t i)
 {
-    assert ((i>=0) && (i<SIZE) && "Unknown GT state");
+    assert ((i<SIZE) && "Unknown GT state");
     return altPriors[i];
 }
 
@@ -94,7 +94,7 @@ inline
 double
 altLnFraction(const index_t i)
 {
-    assert ((i>=0) && (i<SIZE) && "Unknown GT state");
+    assert ((i<SIZE) && "Unknown GT state");
     return altLnPriors[i];
 }
 
@@ -102,7 +102,7 @@ inline
 double
 altLnCompFraction(const index_t i)
 {
-    assert ((i>=0) && (i<SIZE) && "Unknown GT state");
+    assert ((i<SIZE) && "Unknown GT state");
     return altLnCompPriors[i];
 }
 

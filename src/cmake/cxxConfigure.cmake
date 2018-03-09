@@ -403,8 +403,12 @@ elseif (${IS_CLANGXX})
     # No changes for clang 4.0
 
     if (NOT (${COMPILER_VERSION} VERSION_LESS "5.0"))
-        list(APPEND CXX_WARN_LIST inconsistent-missing-destructor-override)
+        list(APPEND CXX_WARN_LIST inconsistent-missing-destructor-override unused-template)
         list(APPEND CXX_NOWARN_LIST zero-as-null-pointer-constant)
+    endif ()
+
+    if (NOT (${COMPILER_VERSION} VERSION_LESS "6.0"))
+        list(APPEND CXX_WARN_LIST tautological-constant-compare tautological-unsigned-enum-zero-compare)
     endif ()
 
     # convert warning lists to compiler arg strings:

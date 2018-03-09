@@ -205,7 +205,7 @@ private:
         const PAIR_ORIENT::index_t ori)
     {
         assert(! _isFinalized);
-        assert((ori>=0) && (ori<PAIR_ORIENT::SIZE));
+        assert(ori<PAIR_ORIENT::SIZE);
 
         _orientCount[ori]++;
         _totalOrientCount++;
