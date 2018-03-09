@@ -17,44 +17,24 @@
 //
 //
 
-#include "EstimateSVLoci.hh"
-#include "estimateSVLociForSingleRegion.hh"
+/// \file
+/// \author Chris Saunders
+///
 
-#include "common/OutStream.hh"
+#pragma once
 
+#include "ESLOptions.hh"
+#include "svgraph/SVLocusSet.hh"
 
+#include <string>
 
-static
+/// Run the SVlocus estimation process and the specified region and merge results into \p mergedSet
+///
+/// \param[in] opt Options for estimation process
+/// \param[in] region Target region for estimation process
+/// \param[in,out] mergedSet Estimated SVLocus graph components are merged into this object
 void
-runEstimateSVLoci(const ESLOptions& opt)
-{
-    {
-        // early test that we have permission to write to output file
-        OutStream outs(opt.outputFilename);
-    }
-
-    SVLocusSet mergedSet;
-
-    for (const auto& region : opt.regions)
-    {
-        estimateSVLociForSingleRegion(opt, region, mergedSet);
-    }
-
-    const bool isMultiRegion(opt.regions.size()>1);
-    if (isMultiRegion)
-    {
-        mergedSet.save(opt.outputFilename.c_str());
-    }
-}
-
-
-
-void
-EstimateSVLoci::
-runInternal(int argc, char* argv[]) const
-{
-    ESLOptions opt;
-
-    parseESLOptions(*this,argc,argv,opt);
-    runEstimateSVLoci(opt);
-}
+estimateSVLociForSingleRegion(
+    const ESLOptions& opt,
+    const std::string& region,
+    SVLocusSet& mergedSet);
