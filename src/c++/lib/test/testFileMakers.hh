@@ -24,9 +24,10 @@
 
 #pragma once
 
-#include "htsapi/bam_header_info.hh"
-
 #include <string>
+
+struct bam_header_info;
+struct SVLocusSet;
 
 /// Provide access to temporary file and limit lifetime of the temporary file to the object filetime
 struct TestFileMakerBase
@@ -63,8 +64,20 @@ struct TestAlignHeaderFileMaker : public TestFileMakerBase
 
 /// \brief Mock a GetAlignmentStats output file for test purposes.
 ///
+/// Mocked stats output has 4 elements with 250 observations each for 50, 75, 100, 125
+///
 /// The temporary file will be deleted when this object goes out of scope.
 struct TestStatsFileMaker : public TestFileMakerBase
 {
     TestStatsFileMaker();
+};
+
+/// \brief Given an SVLocusSet, dump its stats to a temporary file.
+///
+/// The temporary file will be deleted when this object goes out of scope.
+struct SVLocusSetStatsFileMaker : public TestFileMakerBase
+{
+    explicit
+    SVLocusSetStatsFileMaker(
+        const SVLocusSet& svLocusSet);
 };

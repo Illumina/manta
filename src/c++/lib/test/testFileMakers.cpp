@@ -23,11 +23,14 @@
 
 #include "testFileMakers.hh"
 
+#include "htsapi/bam_header_info.hh"
 #include "manta/ReadGroupStatsSet.hh"
+#include "svgraph/SVLocusSet.hh"
 #include "test/testUtil.hh"
 
 #include "boost/filesystem.hpp"
 
+#include <cassert>
 #include <fstream>
 
 
@@ -51,42 +54,21 @@ TestFilenameMaker()
 
 
 
-/// \brief Create an alignment file based on the bam_header_info input
-/// \return Name of temporary file containing alignment fileoutput
-static
-std::string
-createTestAlignHeaderFile(
-    const bam_header_info& info)
-{
-    const std::string tempFile(getNewTempFile());
-    {
-        std::ofstream outfile(tempFile);
-        assert(outfile);
-        outfile << info;
-    }
-    return tempFile;
-}
-
-
-
 TestAlignHeaderFileMaker::
 TestAlignHeaderFileMaker(const bam_header_info& info)
 {
-    _tempFilename = createTestAlignHeaderFile(info);
+    _tempFilename = getNewTempFile();
+    std::ofstream os(_tempFilename);
+    assert(os);
+    os << info;
 }
 
 
 
-/// \brief Mock a GetAlignmentStats output file for testing.
-///
-/// Default has 4 elements with 250 observations each for 50, 75, 100, 125
-///
-/// \return Name of temporary file containing mock stats output
-static
-std::string
-createTestStatsFile()
+TestStatsFileMaker::
+TestStatsFileMaker()
 {
-    const std::string tempFile(getNewTempFile());
+    _tempFilename = getNewTempFile();
 
     ReadGroupLabel rgKey("tempStatsGroup", "");
     ReadGroupStats rgStats;
@@ -101,15 +83,17 @@ createTestStatsFile()
     ReadGroupStatsSet rstats;
     rstats.setStats(rgKey, rgStats);
 
-    rstats.save(tempFile.c_str());
-
-    return tempFile;
+    rstats.save(_tempFilename.c_str());
 }
 
 
 
-TestStatsFileMaker::
-TestStatsFileMaker()
+SVLocusSetStatsFileMaker::
+SVLocusSetStatsFileMaker(
+    const SVLocusSet& svLocusSet)
 {
-    _tempFilename = createTestStatsFile();
+    _tempFilename = getNewTempFile();
+    std::ofstream os(_tempFilename);
+    assert(os);
+    svLocusSet.dumpStats(os);
 }

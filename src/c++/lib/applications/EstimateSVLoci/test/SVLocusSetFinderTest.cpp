@@ -29,10 +29,7 @@
 #include "test/testFileMakers.hh"
 #include "test/testUtil.hh"
 
-#include "boost/filesystem.hpp"
 #include "boost/make_unique.hpp"
-
-#include <fstream>
 
 
 
@@ -63,23 +60,6 @@ buildSVLocusSetFinder(
 }
 
 
-/// Given an SVLocusSet, dump its stats to a temporary file.
-///
-/// The lifetime of the temporary file matches this object.
-///
-struct SVLocusSetStatsFileMaker : public TestFileMakerBase
-{
-    explicit
-    SVLocusSetStatsFileMaker(
-        const SVLocusSet& svLocusSet)
-    {
-        _tempFilename = getNewTempFile();
-        std::ofstream os(_tempFilename);
-        assert(os);
-        svLocusSet.dumpStats(os);
-    }
-};
-
 BOOST_AUTO_TEST_SUITE( SVLocusSetFinderUpdate_test_suite )
 
 BOOST_AUTO_TEST_CASE( test_DepthFiltering )
@@ -100,13 +80,13 @@ BOOST_AUTO_TEST_CASE( test_MapQuality_Filtering )
     // stand-in state reporter used for the unit test, does nothing
     stream_state_reporter dummyStateReporter;
 
-    // Valid anomolous read fails because its mapQ is 14 and minMapQ is 15.
+    // Valid anomalous read fails because its mapQ is 14 and minMapQ is 15.
     bam_record bamRead2;
     buildTestBamRecord(bamRead2, 0, 200, 0, 100, 99, 14);
     svLSF->update(dummyStateReporter, bamRead2, bamRead2.target_id());
     BOOST_REQUIRE_EQUAL(svLSF->getLocusSet().size(), 0);
 
-    // Valid anomolous read passes because its mapQ is 15 and minMapQ is 15.
+    // Valid anomalous read passes because its mapQ is 15 and minMapQ is 15.
     bam_record bamRead1;
     buildTestBamRecord(bamRead1, 0, 200, 0, 100, 99, 15);
     svLSF->update(dummyStateReporter, bamRead1, bamRead1.target_id());
