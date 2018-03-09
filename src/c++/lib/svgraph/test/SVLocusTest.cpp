@@ -20,11 +20,10 @@
 #include "boost/test/unit_test.hpp"
 
 #include "svgraph/SVLocus.hh"
+#include "test/testSVLocusGraphUtil.hh"
 
-#include "SVLocusTestUtil.hh"
 
-
-BOOST_AUTO_TEST_SUITE( test_SVLocus )
+BOOST_AUTO_TEST_SUITE( SVLocus_test_suite )
 
 
 BOOST_AUTO_TEST_CASE( test_SVLocus1 )
@@ -161,4 +160,3 @@ BOOST_AUTO_TEST_CASE( test_SVLocusClearEdges )
 
 
 BOOST_AUTO_TEST_SUITE_END()
-

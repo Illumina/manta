@@ -20,14 +20,13 @@
 #include "boost/test/unit_test.hpp"
 
 #include "svgraph/SVLocus.hh"
-
-#include "SVLocusTestUtil.hh"
-
-
-BOOST_AUTO_TEST_SUITE( test_SVLocusNode )
+#include "test/testSVLocusGraphUtil.hh"
 
 
-BOOST_AUTO_TEST_CASE( test_SVLocusNode_EM )
+BOOST_AUTO_TEST_SUITE( SVLocusNode_test_suite )
+
+
+BOOST_AUTO_TEST_CASE( test_SVLocusNode_EdgeManager )
 {
     // test the new edge manager for SVLocusNode
     SVLocus locus1;

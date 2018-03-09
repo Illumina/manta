@@ -19,13 +19,14 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "applications/GenerateSVCandidates/EdgeRetrieverLocus.hh"
-#include "svgraph/SVLocusSet.hh"
+#include "EdgeRetrieverLocus.hh"
 
-#include "svgraph/test/SVLocusTestUtil.hh"
+#include "options/SVLocusSetOptions.hh"
+#include "svgraph/SVLocus.hh"
+#include "test/testSVLocusGraphUtil.hh"
 
 
-BOOST_AUTO_TEST_SUITE( test_EdgeRetrieverLocus )
+BOOST_AUTO_TEST_SUITE( EdgeRetrieverLocus_test_suite )
 
 
 BOOST_AUTO_TEST_CASE( test_EdgeRetrieverLocusSimple )

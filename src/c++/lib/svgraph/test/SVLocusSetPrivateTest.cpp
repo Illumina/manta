@@ -24,11 +24,8 @@
 //#define private public
 
 #include "svgraph/SVLocusSet.hh"
+#include "test/testSVLocusGraphUtil.hh"
 
-#include "SVLocusTestUtil.hh"
-
-
-BOOST_AUTO_TEST_SUITE( test_SVLocusSetPrivate )
 
 
 static
@@ -44,6 +41,9 @@ testOverlap(
     return intersect.size();
 }
 
+
+
+BOOST_AUTO_TEST_SUITE( SVLocusSetPrivate_test_suite )
 
 
 BOOST_AUTO_TEST_CASE( test_SVLocusIntersect )

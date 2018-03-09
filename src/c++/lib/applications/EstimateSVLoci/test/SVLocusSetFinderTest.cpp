@@ -80,7 +80,7 @@ struct SVLocusSetStatsFileMaker : public TestFileMakerBase
     }
 };
 
-BOOST_AUTO_TEST_SUITE( test_SVLocusSetFinderUpdate )
+BOOST_AUTO_TEST_SUITE( SVLocusSetFinderUpdate_test_suite )
 
 BOOST_AUTO_TEST_CASE( test_DepthFiltering )
 {

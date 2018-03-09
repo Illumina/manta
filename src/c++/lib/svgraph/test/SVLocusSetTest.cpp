@@ -18,11 +18,115 @@
 //
 
 #include "boost/test/unit_test.hpp"
-#include "boost/timer/timer.hpp"
-#include "svgraph/SVLocusSet.hh"
-#include "SVLocusTestUtil.hh"
 
-BOOST_AUTO_TEST_SUITE( test_SVLocusSet )
+#include "svgraph/SVLocusSet.hh"
+#include "test/testSVLocusGraphUtil.hh"
+
+#include "boost/timer/timer.hpp"
+
+#include <fstream> // For FindStringInFile
+
+
+
+/// \brief Test the size and count of the properties of the SVLocusSet.
+///
+/// \param set1 The SV locus set to be tested
+/// \param setSize The expected number of SVLocus objects in the set
+/// \param setNonEmptySize The expected number of SVLocus objects that are not empty in the set
+/// \param setNodeCount The expected total number of nodes in the SVLocus objects in the set
+/// \param setEdgeCount The expected total number of edges in the SVLocus objects in the set
+inline
+void
+TestSVLocusSetProperties(
+    const SVLocusSet& set1,
+    int setSize,
+    int setNonEmptySize,
+    int setNodeCount,
+    int setEdgeCount)
+{
+    // Test the base SVLocusSet Contents
+    BOOST_REQUIRE_EQUAL(set1.size(), setSize);
+    BOOST_REQUIRE_EQUAL(set1.nonEmptySize(), setNonEmptySize);
+    BOOST_REQUIRE_EQUAL(set1.totalNodeCount(), setNodeCount);
+    BOOST_REQUIRE_EQUAL(set1.totalEdgeCount(), setEdgeCount);
+}
+
+
+
+/// \brief Test the distribution of the total edges and node observations for all nodes in the SVLocusSet.
+///
+/// \param set1 The SV locus set to be tested
+/// \param edgeCountDistro The expected number of edges in each SVLocus object in the set
+/// \param obsCountDistro The expected number of node observations in each SVLocus object in the set
+static
+void
+TestSVLocusSetDistro(
+    const SVLocusSet& set1,
+    const std::vector<unsigned>& edgeCountDistro,
+    const std::vector<unsigned>& obsCountDistro)
+{
+    // review merged nodes
+    static const unsigned maxCount(set1.totalEdgeCount());
+    std::vector<unsigned> edgeCount(maxCount);
+    std::vector<unsigned> obsCount(maxCount);
+
+    set1.getNodeEdgeCountDistro(edgeCount);
+    set1.getNodeObsCountDistro(obsCount);
+
+    for ( unsigned count = 0; count < maxCount; count++)
+    {
+        BOOST_REQUIRE_EQUAL(edgeCountDistro[count], edgeCount[count]);
+    }
+
+    for ( unsigned count = 0; count < maxCount; count++)
+    {
+        BOOST_REQUIRE_EQUAL(obsCountDistro[count], obsCount[count]);
+    }
+}
+
+
+
+/// \brief Test the distribution of out edges for a SV locus
+///
+/// \param set1 The SV locus set to be tested
+/// \param locusIndex The locus index to be tested
+/// \param expectedEdgeOutCount The expected number of out edges for each node of the tested locus
+static
+void
+TestSVLocusSetOutEdges(
+    const SVLocusSet& set1,
+    unsigned locusIndex,
+    const std::vector<unsigned>& expectedEdgeOutCount)
+{
+    assert(set1.getLocus(locusIndex).size() == expectedEdgeOutCount.size());
+
+    for ( unsigned count = 0; count < expectedEdgeOutCount.size(); count++)
+    {
+        BOOST_REQUIRE_EQUAL(set1.getLocus(locusIndex).getNode(count).outCount(), expectedEdgeOutCount[count]);
+    }
+}
+
+
+/// \brief Check if a query string exists in a file name.
+static
+bool
+FindStringInFile(
+    const std::string& fileName,
+    const std::string& searchString)
+{
+    std::ifstream iss(fileName);
+    std::string line;
+    while ( std::getline(iss, line))
+    {
+        if ( line.find(searchString) == std::string::npos) continue;
+        return true;
+    }
+    return false;
+}
+
+
+
+BOOST_AUTO_TEST_SUITE( SVLocusSet_test_suite )
 
 BOOST_AUTO_TEST_CASE( test_SVLocusSetProperties )
 {

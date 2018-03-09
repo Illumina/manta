@@ -25,8 +25,7 @@
 #include "boost/test/unit_test.hpp"
 
 #include "svgraph/SVLocus.hh"
-
-#include "SVLocusTestUtil.hh"
+#include "test/testSVLocusGraphUtil.hh"
 
 #include <fstream>
 

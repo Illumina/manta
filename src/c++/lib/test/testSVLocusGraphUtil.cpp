@@ -18,25 +18,27 @@
 //
 
 /// \file
-/// \brief Utility functions for unit testing
 /// \author Trevor Ramsay
 ///
 
-#pragma once
-
-#include <string>
+#include "testSVLocusGraphUtil.hh"
 
 
-/// \brief Return the name of a new temp file which is unused at the time the function is called
-std::string
-getNewTempFile();
 
-/// \brief Return the value for the given key from a key/value tsv file
-///
-/// \param tsvFile Input file to search
-/// \param key Key value to search for in first column of \p tsvFile
-/// \return Second-column value from first line in \p tsvFile matching \p key, or empty string if key not found.
-std::string
-getValueFromTSVKeyValFile(
-    const std::string& tsvFile,
-    const std::string& key);
+void
+locusAddPair(
+    SVLocus& locus,
+    const int32_t tid1,
+    const int32_t beginPos1,
+    const int32_t endPos1,
+    const int32_t tid2,
+    const int32_t beginPos2,
+    const int32_t endPos2,
+    const bool bothLocal,
+    const unsigned count)
+{
+    const NodeIndexType nodePtr1 = locus.addNode(GenomeInterval(tid1,beginPos1,endPos1));
+    const NodeIndexType nodePtr2 = locus.addNode(GenomeInterval(tid2,beginPos2,endPos2));
+    const unsigned remoteCount(bothLocal ? count : 0);
+    locus.linkNodes(nodePtr1,nodePtr2,count,remoteCount);
+}

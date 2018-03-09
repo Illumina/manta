@@ -17,17 +17,17 @@
 //
 //
 
-#include "boost/archive/tmpdir.hpp"
 #include "boost/test/unit_test.hpp"
 
 #include "svgraph/SVLocusSet.hh"
+#include "test/testSVLocusGraphUtil.hh"
 
-#include "SVLocusTestUtil.hh"
+#include "boost/archive/tmpdir.hpp"
 
 using namespace boost::archive;
 
 
-BOOST_AUTO_TEST_SUITE( test_SVLocusSetSerialize )
+BOOST_AUTO_TEST_SUITE( SVLocusSetSerialize_test_suite )
 
 
 BOOST_AUTO_TEST_CASE( test_SVLocusSetSerialze )
