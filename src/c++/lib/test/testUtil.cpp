@@ -234,23 +234,6 @@ void createBamSamFiles(
     hts_close(samFile1);
 }
 
-/// Generic function to create a file with the given input
-inline
-void createBamHeaderFile(
-    const std::string& filename,
-    bam_header_info fileInput)
-{
-    if (FILE* file = fopen(filename.c_str(), "rb"))
-    {
-        fclose(file);
-        std::remove(filename.c_str());
-    }
-    std::ofstream outfile(filename);
-    outfile << fileInput;
-
-    outfile.close();
-}
-
 inline
 const char*
 getTestAnnotationReferencePath()

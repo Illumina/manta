@@ -32,9 +32,7 @@ BOOST_AUTO_TEST_CASE( test_isAnomalousReadPair  )
 {
     BOOST_TEST_MESSAGE("SDS MANTA-665");
 
-    bam_header_info bamHeader = bam_header_info();
-    bamHeader.chrom_to_index.insert(std::pair<std::string,int32_t>("chrM",0));
-    bamHeader.chrom_data.emplace_back("chrM",1000000);
+    const bam_header_info bamHeader(buildTestBamHeader());
     std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
 
     // Proper pair read
@@ -92,9 +90,7 @@ BOOST_AUTO_TEST_CASE( test_InniePair  )
 {
     BOOST_TEST_MESSAGE("SDS MANTA-665");
 
-    bam_header_info bamHeader = bam_header_info();
-    bamHeader.chrom_to_index.insert(std::pair<std::string,int32_t>("chrM",0));
-    bamHeader.chrom_data.emplace_back("chrM",1000000);
+    const bam_header_info bamHeader(buildTestBamHeader());
     std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
 
     // Passing condition
@@ -136,9 +132,7 @@ BOOST_AUTO_TEST_CASE( test_LargePair  )
 {
     BOOST_TEST_MESSAGE("SDS MANTA-665");
 
-    bam_header_info bamHeader = bam_header_info();
-    bamHeader.chrom_to_index.insert(std::pair<std::string,int32_t>("chrM",0));
-    bamHeader.chrom_data.emplace_back("chrM",1000000);
+    const bam_header_info bamHeader(buildTestBamHeader());
     std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
 
     // Control - test normal, proper pair against isNonCompressedAnomalousReadPair(..)
@@ -193,9 +187,7 @@ BOOST_AUTO_TEST_CASE( test_isSVEvidence )
 {
     BOOST_TEST_MESSAGE("SDS MANTA-666");
 
-    bam_header_info bamHeader = bam_header_info();
-    bamHeader.chrom_to_index.insert(std::pair<std::string,int32_t>("chrM",0));
-    bamHeader.chrom_data.emplace_back("chrM",1000000);
+    const bam_header_info bamHeader(buildTestBamHeader());
     std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
 
     const unsigned defaultReadGroupIndex = 0;
@@ -222,9 +214,7 @@ BOOST_AUTO_TEST_CASE( test_LargeIndels )
     BOOST_TEST_MESSAGE("SDS MANTA-667");
 
     // minCandidateVariantSize = 8
-    bam_header_info bamHeader = bam_header_info();
-    bamHeader.chrom_to_index.insert(std::pair<std::string,int32_t>("chrM",1000000));
-    bamHeader.chrom_data.emplace_back("chrM",1000000);
+    const bam_header_info bamHeader(buildTestBamHeader());
     std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
 
     const unsigned defaultReadGroupIndex = 0;
@@ -280,9 +270,7 @@ BOOST_AUTO_TEST_CASE( test_SemiAlignedReads )
 
     static const pos_t alignPos(500);
 
-    bam_header_info bamHeader = bam_header_info();
-    bamHeader.chrom_to_index.insert(std::pair<std::string,int32_t>("chrM",0));
-    bamHeader.chrom_data.emplace_back("chrM",1000000);
+    const bam_header_info bamHeader(buildTestBamHeader());
     std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
 
     reference_contig_segment ref = reference_contig_segment();

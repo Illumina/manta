@@ -91,12 +91,10 @@ BOOST_AUTO_TEST_CASE( test_DepthFiltering )
 BOOST_AUTO_TEST_CASE( test_MapQuality_Filtering )
 {
     BOOST_TEST_MESSAGE("SDS MANTA-754");
+
     //TODO Setup read with quality above, below, and same as _opt.minMapq
-    bam_header_info bamHeader = bam_header_info();
 
-    bamHeader.chrom_to_index.insert(std::pair<std::string,int32_t>("chrM",1000000));
-    bamHeader.chrom_data.emplace_back("chrM",1000000);
-
+    const bam_header_info bamHeader(buildTestBamHeader());
     std::unique_ptr<SVLocusSetFinder> svLSF(buildSVLocusSetFinder(bamHeader));
 
     // stand-in state reporter used for the unit test, does nothing
