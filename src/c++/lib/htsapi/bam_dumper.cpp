@@ -21,12 +21,11 @@
 /// \author Chris Saunders
 ///
 
-#include "blt_util/blt_exception.hh"
-#include "blt_util/log.hh"
 #include "htsapi/bam_dumper.hh"
 
+#include "common/Exceptions.hh"
+
 #include <cassert>
-#include <cstdlib>
 
 #include <iostream>
 #include <sstream>
@@ -38,39 +37,41 @@ bam_dumper(const char* filename,
     : _hdr(&header),
       _stream_name(filename)
 {
-    assert(nullptr != filename);
+    assert(filename);
 
     _hfp = hts_open(filename, "wb");
 
-    if (nullptr == _hfp)
+    if (! _hfp)
     {
         std::ostringstream oss;
         oss << "Failed to open SAM/BAM/CRAM file for writing: '" << filename << "'";
-        throw blt_exception(oss.str().c_str());
+        BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
     }
 
-    const int retval = sam_hdr_write(_hfp,_hdr);
-    if (retval != 0)
+    const int headerWriteStatus = sam_hdr_write(_hfp,_hdr);
+    if (headerWriteStatus != 0)
     {
         std::ostringstream oss;
         oss << "Failed to write SAM/BAM/CRAM file header for: '" << filename << "'";
-        throw blt_exception(oss.str().c_str());
+        BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
     }
 }
 
 
+
+void
 bam_dumper::
-~bam_dumper()
+close()
 {
-    if (nullptr != _hfp)
+    if (! _hfp) return;
+    const int closeStatus = hts_close(_hfp);
+    if (closeStatus != 0)
     {
-        const int retval = hts_close(_hfp);
-        if (retval != 0)
-        {
-            log_os << "Failed to close SAM/BAM/CRAM file: '" << name() <<"'\n";
-            std::exit(EXIT_FAILURE);
-        }
+        std::ostringstream oss;
+        oss << "Failed to close SAM/BAM/CRAM file. hts_close return code: " << closeStatus << " stream name: '" << name() <<"'\n";
+        BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
     }
+    _hfp = nullptr;
 }
 
 
@@ -79,12 +80,13 @@ void
 bam_dumper::
 put_record(const bam1_t* brec)
 {
-    const int retval = sam_write1(_hfp,_hdr,brec);
-    if (retval < 0)
+    assert(_hfp);
+    const int recordWriteStatus = sam_write1(_hfp,_hdr,brec);
+    if (recordWriteStatus < 0)
     {
         std::ostringstream oss;
         oss << "Failed to write new record to BAM file: '" << name() << "'";
-        throw blt_exception(oss.str().c_str());
+        BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
     }
 }
 

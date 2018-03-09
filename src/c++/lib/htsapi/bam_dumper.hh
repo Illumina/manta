@@ -28,21 +28,30 @@
 #include <string>
 
 
+/// \brief Helper for bam file writing
 struct bam_dumper
 {
     bam_dumper(
         const char* filename,
         const bam_hdr_t& header);
 
-    ~bam_dumper();
+    /// Dtor closes the file if it is not already closed
+    ~bam_dumper() { close(); }
 
+    /// Add another BAM record to the file. File must not be closed.
     void
     put_record(const bam1_t* brec);
 
-    const char* name() const
+    /// Return name of bam stream
+    const char*
+    name() const
     {
         return _stream_name.c_str();
     }
+
+    /// Close the output bam file
+    void
+    close();
 
 private:
     htsFile* _hfp;
