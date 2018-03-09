@@ -29,7 +29,8 @@
 #include <string>
 
 /// Provide access to temporary file and limit lifetime of the temporary file to the object filetime
-struct TestFileMakerBase {
+struct TestFileMakerBase
+{
     ~TestFileMakerBase();
 
     const std::string&
@@ -42,9 +43,18 @@ protected:
     std::string _tempFilename;
 };
 
+/// \brief Get a non-existing temporary file name
+///
+/// If anything is written into the temporary file name, it will be deleted when this object goes out of scope.
+struct TestFilenameMaker : public TestFileMakerBase
+{
+    TestFilenameMaker();
+};
+
+
 /// \brief Given a bam_header_info, serialize this content to a temporary file for test purposes.
 ///
-/// The lifetime of the temporary file matches this object.
+/// The temporary file will be deleted when this object goes out of scope.
 struct TestAlignHeaderFileMaker : public TestFileMakerBase
 {
     explicit
@@ -53,7 +63,7 @@ struct TestAlignHeaderFileMaker : public TestFileMakerBase
 
 /// \brief Mock a GetAlignmentStats output file for test purposes.
 ///
-/// The lifetime of the temporary file matches this object.
+/// The temporary file will be deleted when this object goes out of scope.
 struct TestStatsFileMaker : public TestFileMakerBase
 {
     TestStatsFileMaker();

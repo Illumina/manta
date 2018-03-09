@@ -35,7 +35,18 @@
 TestFileMakerBase::
 ~TestFileMakerBase()
 {
-    boost::filesystem::remove(_tempFilename);
+    using namespace boost::filesystem;
+    if (exists(_tempFilename))
+    {
+        remove(_tempFilename);
+    }
+}
+
+
+TestFilenameMaker::
+TestFilenameMaker()
+{
+    _tempFilename = getNewTempFile();
 }
 
 

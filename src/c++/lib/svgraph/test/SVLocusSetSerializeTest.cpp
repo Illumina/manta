@@ -21,16 +21,13 @@
 
 #include "svgraph/SVLocusSet.hh"
 #include "test/testSVLocusGraphUtil.hh"
-
-#include "boost/archive/tmpdir.hpp"
-
-using namespace boost::archive;
+#include "test/testFileMakers.hh"
 
 
 BOOST_AUTO_TEST_SUITE( SVLocusSetSerialize_test_suite )
 
 
-BOOST_AUTO_TEST_CASE( test_SVLocusSetSerialze )
+BOOST_AUTO_TEST_CASE( test_SVLocusSetSerialize )
 {
     // construct a simple two-node locus
     SVLocus locus1;
@@ -43,16 +40,16 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSetSerialze )
     set1.merge(locus1);
     set1.merge(locus2);
 
-    std::string filename(tmpdir());
-    filename += "/testfile.bin";
+    TestFilenameMaker testFilenameMaker;
+    const char* testFilenamePtr(testFilenameMaker.getFilename().c_str());
 
     // serialize
-    set1.save(filename.c_str());
+    set1.save(testFilenamePtr);
 
     SVLocusSet set1_copy;
 
     // deserialize
-    set1_copy.load(filename.c_str());
+    set1_copy.load(testFilenamePtr);
 
     BOOST_REQUIRE_EQUAL(set1.size(),set1_copy.size());
 
@@ -67,7 +64,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSetSerialze )
 }
 
 
-BOOST_AUTO_TEST_CASE( test_SVLocusSetSerialze2 )
+BOOST_AUTO_TEST_CASE( test_SVLocusSetSerialize2 )
 {
     SVLocusSet set1;
     {
@@ -95,26 +92,26 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSetSerialze2 )
 
     SVLocusSet set1_copy;
     {
-        std::string filename(tmpdir());
-        filename += "/testfile.bin";
+        TestFilenameMaker testFilenameMaker;
+        const char* testFilenamePtr(testFilenameMaker.getFilename().c_str());
 
         // serialize
-        set1.save(filename.c_str());
+        set1.save(testFilenamePtr);
 
         // deserialize
-        set1_copy.load(filename.c_str());
+        set1_copy.load(testFilenamePtr);
     }
 
     SVLocusSet set2_copy;
     {
-        std::string filename(tmpdir());
-        filename += "/testfile.bin";
+        TestFilenameMaker testFilenameMaker;
+        const char* testFilenamePtr(testFilenameMaker.getFilename().c_str());
 
         // serialize
-        set2.save(filename.c_str());
+        set2.save(testFilenamePtr);
 
         // deserialize
-        set2_copy.load(filename.c_str());
+        set2_copy.load(testFilenamePtr);
     }
 
     set1.merge(set2);

@@ -17,15 +17,16 @@
 //
 //
 
-#include "boost/archive/tmpdir.hpp"
+#include "boost/test/unit_test.hpp"
+
+#include "svgraph/SVLocus.hh"
+#include "test/testFileMakers.hh"
+#include "test/testSVLocusGraphUtil.hh"
+
 #include "boost/archive/text_iarchive.hpp"
 #include "boost/archive/text_oarchive.hpp"
 #include "boost/archive/binary_iarchive.hpp"
 #include "boost/archive/binary_oarchive.hpp"
-#include "boost/test/unit_test.hpp"
-
-#include "svgraph/SVLocus.hh"
-#include "test/testSVLocusGraphUtil.hh"
 
 #include <fstream>
 
@@ -37,19 +38,19 @@ BOOST_AUTO_TEST_SUITE( test_SVLocusSerialize )
 // test serialization with a very simple class first:
 //
 template <typename InputArchiver, typename OutputArchiver>
+static
 void
-GenomeIntervalSerializeTest(const char* extension)
+GenomeIntervalSerializeTest()
 {
     // construct a simple two-node locus
     GenomeInterval gi(1,10,20);
 
-    std::string filename(boost::archive::tmpdir());
-    filename += "/testfile";
-    filename += extension;
+    TestFilenameMaker testFilenameMaker;
+    const char* testFilenamePtr(testFilenameMaker.getFilename().c_str());
 
     // serialize
     {
-        std::ofstream ofs(filename.c_str(), std::ios::binary);
+        std::ofstream ofs(testFilenamePtr, std::ios::binary);
         OutputArchiver oa(ofs);
         oa << gi;
     }
@@ -58,7 +59,7 @@ GenomeIntervalSerializeTest(const char* extension)
 
     // deserialize
     {
-        std::ifstream ifs(filename.c_str(), std::ios::binary);
+        std::ifstream ifs(testFilenamePtr, std::ios::binary);
         InputArchiver ia(ifs);
         ia >> gi_copy;
     }
@@ -69,13 +70,13 @@ GenomeIntervalSerializeTest(const char* extension)
 
 BOOST_AUTO_TEST_CASE( test_GenomeIntervalSerializeText )
 {
-    GenomeIntervalSerializeTest<text_iarchive,text_oarchive>(".txt");
+    GenomeIntervalSerializeTest<text_iarchive,text_oarchive>();
 }
 
 
 BOOST_AUTO_TEST_CASE( test_GenomeIntervalSerializeBinary )
 {
-    GenomeIntervalSerializeTest<binary_iarchive,binary_oarchive>(".bin");
+    GenomeIntervalSerializeTest<binary_iarchive,binary_oarchive>();
 }
 
 
@@ -86,14 +87,14 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeSerialze )
     SVLocus locus1;
     locusAddPair(locus1,1,10,20,1,30,40);
 
-    std::string filename(boost::archive::tmpdir());
-    filename += "/testfile.bin";
+    TestFilenameMaker testFilenameMaker;
+    const char* testFilenamePtr(testFilenameMaker.getFilename().c_str());
 
     const SVLocusNode& node1(static_cast<const SVLocus&>(locus1).getNode(0));
 
     // serialize
     {
-        std::ofstream ofs(filename.c_str(), std::ios::binary);
+        std::ofstream ofs(testFilenamePtr, std::ios::binary);
         binary_oarchive oa(ofs);
         oa << node1;
     }
@@ -102,7 +103,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeSerialze )
 
     // deserialize
     {
-        std::ifstream ifs(filename.c_str(), std::ios::binary);
+        std::ifstream ifs(testFilenamePtr, std::ios::binary);
         binary_iarchive ia(ifs);
         ia >> node_copy1;
     }
@@ -131,12 +132,12 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSerialze )
     SVLocus locus1;
     locusAddPair(locus1,1,10,20,1,30,40);
 
-    std::string filename(boost::archive::tmpdir());
-    filename += "/testfile.bin";
+    TestFilenameMaker testFilenameMaker;
+    const char* testFilenamePtr(testFilenameMaker.getFilename().c_str());
 
     // serialize
     {
-        std::ofstream ofs(filename.c_str(), std::ios::binary);
+        std::ofstream ofs(testFilenamePtr, std::ios::binary);
         binary_oarchive oa(ofs);
         oa << locus1;
     }
@@ -145,7 +146,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSerialze )
 
     // deserialize
     {
-        std::ifstream ifs(filename.c_str(), std::ios::binary);
+        std::ifstream ifs(testFilenamePtr, std::ios::binary);
         binary_iarchive ia(ifs);
         ia >> locus1_copy;
     }
