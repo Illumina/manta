@@ -40,7 +40,7 @@ static
 std::unique_ptr<SVLocusSetFinder>
 buildSVLocusSetFinder(
     const bam_header_info& bamHeaderInput,
-    const GenomeInterval& interval = GenomeInterval(1, 1, 1000))
+    const GenomeInterval& interval = GenomeInterval(0, 0, 499))
 {
     ESLOptions opts;
     reference_contig_segment seg;
@@ -62,11 +62,13 @@ buildSVLocusSetFinder(
 
 BOOST_AUTO_TEST_SUITE( SVLocusSetFinderUpdate_test_suite )
 
+#if 0
 BOOST_AUTO_TEST_CASE( test_DepthFiltering )
 {
-    //BOOST_TEST_MESSAGE("SDS MANTA-753");
+    BOOST_TEST_MESSAGE("SDS MANTA-753");
     //TODO Setup a chrom depth for a chromosome and then setup read depth
 }
+#endif
 
 BOOST_AUTO_TEST_CASE( test_MapQuality_Filtering )
 {
@@ -102,9 +104,8 @@ BOOST_AUTO_TEST_CASE( test_MapQuality_Filtering )
 
 BOOST_AUTO_TEST_CASE( test_SplitReadSemiAligned )
 {
-    static const pos_t alignPos(500);
+    static const pos_t alignPos(250);
 
-    // minCandidateVariantSize = 8
     bam_header_info bamHeader = buildTestBamHeader();
     std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
 

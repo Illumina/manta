@@ -32,10 +32,10 @@ bam_header_info
 buildTestBamHeader()
 {
     bam_header_info bamHeader;
-    bamHeader.chrom_data.emplace_back("chrM",1000000);
-    bamHeader.chrom_data.emplace_back("chrT",1000000);
+    bamHeader.chrom_data.emplace_back("chr1",500);
+    bamHeader.chrom_data.emplace_back("chr2",500);
 
-    int32_t chromIndex(0); 
+    int32_t chromIndex(0);
     for (const auto& chromData : bamHeader.chrom_data)
     {
         bamHeader.chrom_to_index.insert(std::make_pair(chromData.label, chromIndex));

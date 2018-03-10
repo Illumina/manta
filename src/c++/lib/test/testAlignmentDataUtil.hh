@@ -30,7 +30,7 @@
 #include <string>
 
 
-/// \brief Return a test bam_header_info object with references 0 and 1: "chrM" and "chrT", both size 1000000
+/// \brief Return a test bam_header_info object with references 0 and 1: "chr1" and "chr2", both size 500
 bam_header_info
 buildTestBamHeader();
 
@@ -56,7 +56,7 @@ buildTestBamRecord(
 void
 addSupplementaryAlignmentEvidence(
     bam_record& bamRead,
-    const std::string& svStr = "chrT,6348,-,54H22M,50,0;");
+    const std::string& svStr = "chr1,300,-,54H22M,50,0;");
 
 /// \brief Change the templateSize of the bam record.
 inline
