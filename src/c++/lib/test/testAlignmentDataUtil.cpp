@@ -32,12 +32,15 @@ bam_header_info
 buildTestBamHeader()
 {
     bam_header_info bamHeader;
-    // Add default chrom options to handle most testing conditions.
-    bamHeader.chrom_to_index.insert(std::pair<std::string,int32_t>("chrM",0));
-    bamHeader.chrom_to_index.insert(std::pair<std::string,int32_t>("chrT",1));
     bamHeader.chrom_data.emplace_back("chrM",1000000);
     bamHeader.chrom_data.emplace_back("chrT",1000000);
 
+    int32_t chromIndex(0); 
+    for (const auto& chromData : bamHeader.chrom_data)
+    {
+        bamHeader.chrom_to_index.insert(std::make_pair(chromData.label, chromIndex));
+        chromIndex++;
+    }
     return bamHeader;
 }
 
@@ -55,59 +58,59 @@ buildTestBamRecord(
     std::string cigarString,
     std::string querySeq)
 {
-    if ( querySeq == "" )
+    bam1_t& bamData(*(bamRead.get_data()));
+
+    // set qname
     {
-        for ( int i = 0; i < fragmentSize; ++i)
+        edit_bam_qname("buildTestBamRecord", bamData);
+    }
+
+    // set CIGAR
+    {
+        if (cigarString.empty())
         {
-            querySeq += "A";
+            cigarString = std::to_string(fragmentSize) + "M";
         }
+
+        ALIGNPATH::path_t inputPath;
+        cigar_to_apath(cigarString.c_str(), inputPath);
+        edit_bam_cigar(inputPath, bamData);
     }
-    if ( cigarString == "" )
+
+    // set read and qual
     {
-        cigarString = std::to_string(fragmentSize) + "M";
+        if ( querySeq.empty() )
+        {
+            querySeq = std::string(fragmentSize,'A');
+        }
+        const unsigned querySize(querySeq.length());
+        // initialize test qual array to all Q30's:
+        std::unique_ptr<uint8_t[]> qual(new uint8_t[querySize]);
+        for (unsigned i(0); i<querySize; ++i)
+        {
+            qual[i] = 30;
+        }
+        edit_bam_read_and_quality(querySeq.c_str(), qual.get(), bamData);
     }
-
-    const unsigned querySize(querySeq.length());
-
-    // Get bam_record ptr
-    ALIGNPATH::path_t inputPath;
-    inputPath.push_back(ALIGNPATH::path_segment(ALIGNPATH::MATCH,querySize));
-    cigar_to_apath(cigarString.c_str(),inputPath);
-
-    bam1_t* bamDataPtr(bamRead.get_data());
-    edit_bam_cigar(inputPath,*bamDataPtr);
-
-    // initialize test qual array to all Q30's:
-    std::unique_ptr<uint8_t[]> qual(new uint8_t[querySize]);
-    for (unsigned i(0); i<querySize; ++i)
-    {
-        qual[i] = 30;
-    }
-
-    edit_bam_read_and_quality(querySeq.c_str(), qual.get(), *bamDataPtr);
 
     // Set some defaults for the read
     bamRead.toggle_is_paired();
-    bamRead.set_target_id(0);
     bamRead.toggle_is_mate_fwd_strand();
-    bamDataPtr->core.pos = pos;
-    bamDataPtr->core.isize = fragmentSize;
-    //bamDataPtr->core.l_qseq = fragmentSize;
-    bamDataPtr->core.qual = mapQ;
+    bamData.core.pos = pos;
+    bamData.core.isize = fragmentSize;
+    bamData.core.qual = mapQ;
     bamRead.set_target_id(targetID);
 
     // Set mate info
-    bamDataPtr->core.mtid = mateTargetID;
-    bamDataPtr->core.mpos = matePos;
+    bamData.core.mtid = mateTargetID;
+    bamData.core.mpos = matePos;
 
-    const char nhTag[] = {'N','H'};
-    const char nmTag[] = {'N','M'};
-    const char rgTag[] = {'R','G'};
-
-    //bam1_t& bamRef(bamRead.get_data());
-    bam_aux_append_unsigned(*bamDataPtr, nhTag, 1);
-    bam_aux_append_unsigned(*bamDataPtr, nmTag, 1);
-    bam_aux_append_unsigned(*bamDataPtr, rgTag, 1);
+    static const char nhTag[] = {'N','H'};
+    static const char nmTag[] = {'N','M'};
+    static const char rgTag[] = {'R','G'};
+    bam_aux_append_unsigned(bamData, nhTag, 1);
+    bam_aux_append_unsigned(bamData, nmTag, 1);
+    bam_aux_append_unsigned(bamData, rgTag, 1);
 }
 
 
@@ -117,7 +120,7 @@ addSupplementaryAlignmentEvidence(
         bam_record& bamRead,
         const std::string& svStr)
 {
-    const char svtag[] = {'S','A'};
+    static const char svtag[] = {'S','A'};
     bam_aux_append(bamRead.get_data(),svtag,'Z',(svStr.size()+1),
                    (uint8_t*)(svStr.c_str()));
 }

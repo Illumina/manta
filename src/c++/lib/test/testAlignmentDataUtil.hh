@@ -38,15 +38,15 @@ buildTestBamHeader();
 ///        A default bam_record is a proper paired reference sequence.
 void
 buildTestBamRecord(
-        bam_record& bamRead,
-        int targetID = 0,
-        int pos = 100,
-        int mateTargetID = 0,
-        int matePos = 200,
-        int fragmentSize = 100,
-        int mapQ = 15,
-        std::string cigarString = "",
-        std::string querySeq = "");
+    bam_record& bamRead,
+    int targetID = 0,
+    int pos = 100,
+    int mateTargetID = 0,
+    int matePos = 200,
+    int fragmentSize = 100,
+    int mapQ = 15,
+    std::string cigarString = "",
+    std::string querySeq = "");
 
 
 /// \brief Add supplementary alignment evidence to a bam record
