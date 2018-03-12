@@ -17,7 +17,7 @@
 //
 //
 
-#include "test_config.h"
+#include "testConfig.h"
 
 #include "htsapi/vcf_streamer.hh"
 

@@ -154,3 +154,19 @@ macro(get_library_target_name library_dir library_target_name)
     set(${library_target_name} "${THIS_PROJECT_NAME}_${library_dir}")
 endmacro()
 
+# Setup configuration required for some unit tests, to macro in values
+# to a testConfig.h.in -> testConfig.h
+#
+# This configuration file can be used for any unit testing configuration
+# needs, but is primarily used to locate static test data files.
+#
+macro(setup_testConfig)
+    set(TESTCONFIGNAME "testConfig.h")
+    set(TESTCONFIGSRC "${CMAKE_CURRENT_SOURCE_DIR}/${TESTCONFIGNAME}.in")
+    set(TESTCONFIGDEST "${CMAKE_CURRENT_BINARY_DIR}/${TESTCONFIGNAME}")
+
+    if (EXISTS "${TESTCONFIGSRC}")
+        configure_file("${TESTCONFIGSRC}" "${TESTCONFIGDEST}" @ONLY)
+        include_directories("${CMAKE_CURRENT_BINARY_DIR}")
+    endif ()
+endmacro()

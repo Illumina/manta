@@ -17,7 +17,7 @@
 //
 //
 
-#include "test_config.h"
+#include "testConfig.h"
 
 #include "blt_util/blt_exception.hh"
 #include "htsapi/bam_streamer.hh"
@@ -26,7 +26,7 @@
 
 
 
-BOOST_AUTO_TEST_SUITE( test_bam_streamer )
+BOOST_AUTO_TEST_SUITE( bam_streamer_test_suite )
 
 
 static
