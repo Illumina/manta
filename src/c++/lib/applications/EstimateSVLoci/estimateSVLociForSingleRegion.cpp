@@ -45,8 +45,8 @@ estimateSVLociForSingleRegion(
     const std::string& region,
     SVLocusSet& mergedSet)
 {
-    TimeTracker timer;
-    timer.resume();
+    TimeTracker regionSVLocusSetBuildTimer;
+    regionSVLocusSetBuildTimer.resume();
 
     typedef std::shared_ptr<bam_streamer> stream_ptr;
     std::vector<stream_ptr> bamStreams;
@@ -96,6 +96,7 @@ estimateSVLociForSingleRegion(
 #ifdef DEBUG_ESL
     static const std::string log_tag("EstimateSVLoci");
     log_os << log_tag << " scanRegion= " << scanRegion << "\n";
+    log_os << log_tag << " startLociCount: " << mergedSet.size() << "\n";
 #endif
 
     // grab the reference for segment we're estimating plus a buffer around the segment edges:
@@ -104,7 +105,7 @@ estimateSVLociForSingleRegion(
     reference_contig_segment refSegment;
     getIntervalReferenceSegment(opt.referenceFilename, bamHeader, refEdgeBufferSize, scanRegion, refSegment);
 
-    SVLocusSetFinder locusFinder(opt, scanRegion, bamHeader, refSegment);
+    SVLocusSetFinder locusFinder(opt, scanRegion, bamHeader, refSegment, mergedSet);
 
     input_stream_data sdata;
     for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
@@ -132,32 +133,14 @@ estimateSVLociForSingleRegion(
 
     // finished updating:
     locusFinder.flush();
-    timer.stop();
-    const CpuTimes totalTimes(timer.getTimes());
+    regionSVLocusSetBuildTimer.stop();
+    const CpuTimes regionSVLocusSetBuildTimes(regionSVLocusSetBuildTimer.getTimes());
+    mergedSet.addBuildTime(regionSVLocusSetBuildTimes);
+
 #ifdef DEBUG_ESL
-    log_os << log_tag << " found " << locusFinder.getLocusSet().size() << " loci. \n";
-    log_os << log_tag << " totalTime: ";
-    totalTimes.reportHr(log_os);
+    log_os << log_tag << " endLociCount: " << mergedSet.size() << "\n";
+    log_os << log_tag << " regionSVLocusSetBuildTimes: ";
+    regionSVLocusSetBuildTimes.reportHr(log_os);
     log_os << "\n";
 #endif
-    locusFinder.setBuildTime(totalTimes);
-
-    const bool isMultiRegion(opt.regions.size()>1);
-
-    if (! isMultiRegion)
-    {
-        // Save the locus set directly in single-region mode to avoid the object copy
-        locusFinder.getLocusSet().save(opt.outputFilename.c_str());
-    }
-    else
-    {
-        if (mergedSet.empty())
-        {
-            mergedSet = locusFinder.getLocusSet();
-        }
-        else
-        {
-            mergedSet.merge(locusFinder.getLocusSet());
-        }
-    }
 }

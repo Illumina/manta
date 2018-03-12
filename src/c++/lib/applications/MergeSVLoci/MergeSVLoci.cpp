@@ -73,7 +73,7 @@ runMSL(const MSLOptions& opt)
         log_os << "INFO: Finished cleaning merged graph.\n";
     }
     timer.stop();
-    mergedSet.setMergeTime(timer.getTimes());
+    mergedSet.addMergeTime(timer.getTimes());
     mergedSet.save(opt.outputFilename.c_str());
 }
 

@@ -67,6 +67,14 @@ struct CpuTimes
     }
 
     void
+    clear()
+    {
+        wall = 0;
+        user = 0;
+        system = 0;
+    }
+
+    void
     difference(
         const CpuTimes& rhs)
     {

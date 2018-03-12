@@ -41,9 +41,9 @@
 //#define DEBUG_SFINDER
 
 
-/// \brief Build an SV locus graph from read evidence extracted from a contiguous bam segment
+/// \brief Build into an SV locus graph from read evidence extracted from a contiguous bam segment
 ///
-/// This object is used to build an SV locus graph (SVLocusSet),from a contiguous bam
+/// This object is used to build more information into a given SV locus graph (SVLocusSet),from a contiguous bam
 /// segment, given that sequencing read evidence will be provided with strictly increasing
 /// aligned position values from one end to the other of the bam segment in question.
 ///
@@ -72,14 +72,16 @@ struct SVLocusSetFinder : public pos_processor_base
 {
     /// This constructs to an immediately usable state following an RAII-like pattern.
     ///
-    /// \param scanRegion The genomic region which this SVLocusSetFinder object will translate into an SVLocusGraph
-    /// \param bamHeader Bam header containing chromosome details. This is used directly in this object and copied
+    /// \param[in] scanRegion The genomic region which this SVLocusSetFinder object will translate into an SVLocusGraph
+    /// \param[in] bamHeader Bam header containing chromosome details. This is used directly in this object and copied
     ///                  into the SV locus graph.
+    /// \param[in,out] svLoci All results will be merged into the given SVLocusSet
     SVLocusSetFinder(
         const ESLOptions& opt,
         const GenomeInterval& scanRegion,
         const bam_header_info& bamHeader,
-        const reference_contig_segment& refSeq);
+        const reference_contig_segment& refSeq,
+        SVLocusSet& svLoci);
 
     ~SVLocusSetFinder() override
     {
@@ -115,18 +117,6 @@ struct SVLocusSetFinder : public pos_processor_base
     flush()
     {
         _stageManager.reset();
-    }
-
-    /// \brief Record the time elapsed in the graph building process.
-    ///
-    /// The SV locus graph object tracks various meta-data related to the graph
-    /// including the time spent conducting the graph construction process. This
-    /// information is only used for debug/audit and does not impact results.
-    ///
-    void
-    setBuildTime(const CpuTimes& t)
-    {
-        _svLoci.setBuildTime(t);
     }
 
 private:
@@ -178,8 +168,8 @@ private:
     /// Helper object used to schedule calls at positions with a defined offset below the current input read's position
     stage_manager _stageManager;
 
-    /// The SV locus graph being built by this object
-    SVLocusSet _svLoci;
+    /// The SV locus graph being built into by this object
+    SVLocusSet& _svLoci;
 
     /// Track estimated depth per position for the purpose of filtering high-depth regions
     depth_buffer_compressible _positionReadDepthEstimate;

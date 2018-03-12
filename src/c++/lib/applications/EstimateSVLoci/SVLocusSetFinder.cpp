@@ -121,7 +121,8 @@ SVLocusSetFinder(
     const ESLOptions& opt,
     const GenomeInterval& scanRegion,
     const bam_header_info& bamHeader,
-    const reference_contig_segment& refSeq) :
+    const reference_contig_segment& refSeq,
+    SVLocusSet& svLoci) :
     _isAlignmentTumor(opt.alignFileOpt.isAlignmentTumor),
     _scanRegion(scanRegion),
     _denoiseRegion(computeDenoiseRegion(scanRegion, bamHeader, REGION_DENOISE_BORDER)),
@@ -131,7 +132,7 @@ SVLocusSetFinder(
             scanRegion.range.begin_pos(),
             scanRegion.range.end_pos()),
         *this),
-    _svLoci(opt.graphOpt),
+    _svLoci(svLoci),
     _positionReadDepthEstimate(depthBufferCompression),
     _isInDenoiseRegion(false),
     _denoiseStartPos(0),
@@ -151,18 +152,30 @@ SVLocusSetFinder(
         _maxDepth=dFilter.maxDepth(scanRegion.tid);
     }
 
-    //
-    // initialize various SV locus graph meta-data
+    // If SV locus graph is empty, initialize various metadata, otherwise verify that meta-data match existing metadata
     //
     const unsigned sampleCount(opt.alignFileOpt.alignmentFilenames.size());
-    _svLoci.getCounts().setSampleCount(sampleCount);
-
-    for (unsigned sampleIndex(0); sampleIndex<sampleCount; ++sampleIndex)
+    if (_svLoci.getCounts().size() == 0)
     {
-        _svLoci.getCounts().getSampleCounts(sampleIndex).sampleSource = opt.alignFileOpt.alignmentFilenames[sampleIndex];
-    }
+        _svLoci.getCounts().setSampleCount(sampleCount);
+        for (unsigned sampleIndex(0); sampleIndex < sampleCount; ++sampleIndex)
+        {
+            _svLoci.getCounts().getSampleCounts(sampleIndex).sampleSource =
+                opt.alignFileOpt.alignmentFilenames[sampleIndex];
+        }
 
-    _svLoci.header = bamHeader;
+        _svLoci.header = bamHeader;
+    }
+    else
+    {
+        assert(_svLoci.getCounts().size() == sampleCount);
+        for (unsigned sampleIndex(0); sampleIndex < sampleCount; ++sampleIndex)
+        {
+            assert(_svLoci.getCounts().getSampleCounts(sampleIndex).sampleSource ==
+                       opt.alignFileOpt.alignmentFilenames[sampleIndex]);
+        }
+        assert(_svLoci.header == bamHeader);
+    }
 }
 
 

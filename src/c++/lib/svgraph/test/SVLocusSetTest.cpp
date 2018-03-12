@@ -177,12 +177,12 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSetProperties )
     const AllCounts& constCounts = cset1.getCounts();
     BOOST_REQUIRE_EQUAL(constCounts.size(), 0);
 
-    // Test setBuildTIme and setMergeTime. Can only test function does not fail.
+    // Test setBuildTIme and addMergeTime. Can only test function does not fail.
     boost::timer::cpu_times tempTimes = {1,2,3};
 
     const CpuTimes cpuTimes(tempTimes);
-    BOOST_REQUIRE_NO_THROW(set1.setBuildTime(cpuTimes));
-    BOOST_REQUIRE_NO_THROW(set1.setMergeTime(cpuTimes));
+    BOOST_REQUIRE_NO_THROW(set1.addBuildTime(cpuTimes));
+    BOOST_REQUIRE_NO_THROW(set1.addMergeTime(cpuTimes));
 }
 
 BOOST_AUTO_TEST_CASE( test_SVLocusMergeLoci )

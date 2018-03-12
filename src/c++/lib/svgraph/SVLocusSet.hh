@@ -183,6 +183,9 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
         _isMaxSearchDensity=false;
 
         _isIndexed=true;
+
+        _buildTime.clear();
+        _mergeRegions.clear();
     }
 
     /// Indicate that the set is complete
@@ -343,18 +346,18 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
 
     /// Set the buildTime  SVLocusSet object
     void
-    setBuildTime(
+    addBuildTime(
         const CpuTimes& t)
     {
-        _buildTime = t;
+        _buildTime.merge(t);
     }
 
     /// Set the mergeTime SVLocusSet object.
     void
-    setMergeTime(
+    addMergeTime(
         const CpuTimes& t)
     {
-        _mergeTime = t;
+        _mergeTime.merge(t);
     }
 
     typedef std::pair<LocusIndexType,NodeIndexType> NodeAddressType;

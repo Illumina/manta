@@ -33,18 +33,12 @@ runEstimateSVLoci(const ESLOptions& opt)
         OutStream outs(opt.outputFilename);
     }
 
-    SVLocusSet mergedSet;
-
+    SVLocusSet mergedSet(opt.graphOpt);
     for (const auto& region : opt.regions)
     {
         estimateSVLociForSingleRegion(opt, region, mergedSet);
     }
-
-    const bool isMultiRegion(opt.regions.size()>1);
-    if (isMultiRegion)
-    {
-        mergedSet.save(opt.outputFilename.c_str());
-    }
+    mergedSet.save(opt.outputFilename.c_str());
 }
 
 
