@@ -138,6 +138,7 @@ get_region_seq(const std::string& ref_file,
                const int end_pos,
                std::string& ref_seq)
 {
+    assert(! ref_file.empty());
     faidx_t* fai(fai_load(ref_file.c_str()));
     int len; // throwaway...
     char* ref_tmp(faidx_fetch_seq(fai,const_cast<char*>(chrom.c_str()), begin_pos, end_pos, &len));
