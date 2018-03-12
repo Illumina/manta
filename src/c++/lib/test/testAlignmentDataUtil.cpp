@@ -23,8 +23,23 @@
 
 #include "testAlignmentDataUtil.hh"
 
+#include "testConfig.h"
+
 #include "blt_util/align_path.hh"
+#include "common/Exceptions.hh"
 #include "htsapi/align_path_bam_util.hh"
+#include "htsapi/bam_dumper.hh"
+
+#include <sstream>
+
+
+
+const std::string&
+getTestReferenceFilename()
+{
+    static const std::string refPath(std::string(SHARED_TEST_DATA_PATH) + "/testGenome.fa");
+    return refPath;
+}
 
 
 
@@ -42,6 +57,54 @@ buildTestBamHeader()
         chromIndex++;
     }
     return bamHeader;
+}
+
+
+
+/// Return pointer to the htslib bam header struct corresponding to the reference details in \p bamHeader
+///
+/// Note that the returned htslib header struct has only the minimum information filled in required for tests to work
+static
+bam_hdr_t*
+buildTestBamHeaderHtslib(
+    const bam_header_info& bamHeader)
+{
+    const auto& chromData(bamHeader.chrom_data);
+    bam_hdr_t* header(bam_hdr_init());
+    header->n_targets = chromData.size();
+    header->target_len = (uint32_t*)calloc(header->n_targets, sizeof(uint32_t));
+    header->target_name = (char**)calloc(header->n_targets, sizeof(char*));
+    for (int i = 0; i < header->n_targets; ++i) {
+        header->target_len[i] = chromData[i].length;
+        header->target_name[i] = strdup(chromData[i].label.c_str());
+    }
+    return header;
+}
+
+
+
+void
+buildTestBamFile(
+    const bam_header_info& bamHeader,
+    const std::vector<bam_record>& readsToAdd,
+    const std::string& bamFilename)
+{
+    bam_hdr_t* header(buildTestBamHeaderHtslib(bamHeader));
+    bam_dumper bd(bam_dumper(bamFilename.c_str(), *header));
+    for (const bam_record& bamRecord : readsToAdd)
+    {
+        bd.put_record(bamRecord.get_data());
+    }
+    bd.close();
+    bam_hdr_destroy(header);
+
+    const int indexStatus = bam_index_build(bamFilename.c_str(), 0);
+    if (indexStatus < 0)
+    {
+        std::ostringstream oss;
+        oss << "Failed to build index for bam file. bam_index_build return code: " << indexStatus << " bam filename: '" << bamFilename << "'\n";
+        BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str().c_str()));
+    }
 }
 
 

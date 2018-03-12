@@ -30,6 +30,8 @@ include (${THIS_CXX_COMMMON_CMAKE})
 get_filename_component(CURRENT_DIR_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 message (STATUS "Adding c++ library subdirectory: ${CURRENT_DIR_NAME}")
 
+setup_testConfig()
+
 # set target name and push to parent so that targets can be automaticaly enumerated
 get_library_target_name(${CURRENT_DIR_NAME} LIBRARY_TARGET_NAME)
 

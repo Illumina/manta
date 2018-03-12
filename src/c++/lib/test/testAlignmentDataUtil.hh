@@ -28,11 +28,33 @@
 #include "htsapi/bam_header_info.hh"
 
 #include <string>
+#include <vector>
 
 
-/// \brief Return a test bam_header_info object with references 0 and 1: "chr1" and "chr2", both size 500
+/// \brief Return path to a file containing a simplified test reference
+///
+/// The test reference contains "chrFoo" and "chrBar", both with size 500
+const std::string&
+getTestReferenceFilename();
+
+
+/// \brief Return a test bam_header_info object
+///
+/// The reference structure matches the that returned by getTestReferenceFilename
 bam_header_info
 buildTestBamHeader();
+
+
+/// \brief Write bamHeader and readsToAdd into new bam file
+///
+/// \param bamHeader Reference contig order and length
+/// \param readsToAdd Bam records
+/// \param bamFilename Name of file to write bam output to
+void
+buildTestBamFile(
+    const bam_header_info& bamHeader,
+    const std::vector<bam_record>& readsToAdd,
+    const std::string& bamFilename);
 
 /// \brief Build a bam_record based on the input parameters.
 ///        A default bam_record is a proper paired reference sequence.

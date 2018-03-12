@@ -74,8 +74,6 @@ getValueFromTSVKeyValFile(
 
 #include <memory>
 
-#include "common/test/test_config.h"
-
 #include "htsapi/SimpleAlignment_bam_util.hh"
 #include "htsapi/bam_record_util.hh"
 #include "htsapi/bam_record.hh"
@@ -168,77 +166,4 @@ bamRecordToString(
     return strOut;
 }
 
-inline
-void createSamFile(
-    std::string filename,
-    bam_header_info regionsToAdd,
-    std::vector<bam_record>& readsToAdd)
-{
-    if (FILE* file = fopen(filename.c_str(), "rb"))
-    {
-        fclose(file);
-        std::remove(filename.c_str());
-    }
-    std::ofstream outFile(filename);
-    //boost::archive::binary_oarchive oa(outfile);
-    outFile << "@HD	VN:1.3	SO:coordinate\n";
-
-    for ( unsigned i = 0; i < regionsToAdd.chrom_data.size(); i++)
-    {
-        outFile << "@SQ\tSN:" + regionsToAdd.chrom_data[i].label;
-        outFile << "\tLN:" + std::to_string(regionsToAdd.chrom_data[i].length);
-        outFile << "\n";
-    }
-
-    outFile << "@PG\tFiller\n";
-    outFile << "@RG\tID:1\t" + filename + "\n";
-    outFile << "@CO\tUser command line: FILLER\n";
-
-    for ( unsigned i = 0; i < readsToAdd.size(); i++ )
-    {
-        outFile << bamRecordToString("read" + std::to_string(i), readsToAdd[i], regionsToAdd);
-        outFile << "\n";
-    }
-
-    outFile.close();
-
-}
-
-
-inline
-void createBamSamFiles(
-    const std::string& bamFilename,
-    const std::string& samFilename,
-    const bam_header_info& bamHeaderInfo,
-    std::vector<bam_record>& readsToAdd)
-{
-    createSamFile(samFilename, bamHeaderInfo, readsToAdd);
-
-    htsFile* samFile1 = hts_open(samFilename.c_str(), "r");
-    bam_hdr_t* header = sam_hdr_read(samFile1);
-
-    {
-        bam_dumper bd(bam_dumper(bamFilename.c_str(), *header));
-
-        bam_record bamData;
-        while (sam_read1(samFile1, header, bamData.get_data()) >= 0)
-        {
-            bd.put_record(bamData.get_data());
-        }
-    }
-
-    int x = bam_index_build(bamFilename.c_str(), 0);
-    if (x < 0) BOOST_THROW_EXCEPTION(illumina::common::GeneralException("failure building bam index"));
-
-    bam_hdr_destroy(header);
-    hts_close(samFile1);
-}
-
-inline
-const char*
-getTestAnnotationReferencePath()
-{
-    static const std::string testPath(std::string(TEST_DATA_PATH) + "/genome_truncated.fa");
-    return testPath.c_str();
-}
 #endif
