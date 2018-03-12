@@ -120,12 +120,14 @@ SVLocusSetFinder::
 SVLocusSetFinder(
     const ESLOptions& opt,
     const GenomeInterval& scanRegion,
-    const bam_header_info& bamHeader,
-    const reference_contig_segment& refSeq,
+    const std::shared_ptr<bam_header_info> bamHeaderPtr,
+    const std::shared_ptr<reference_contig_segment> refSeqPtr,
     SVLocusSet& svLoci) :
     _isAlignmentTumor(opt.alignFileOpt.isAlignmentTumor),
     _scanRegion(scanRegion),
-    _denoiseRegion(computeDenoiseRegion(scanRegion, bamHeader, REGION_DENOISE_BORDER)),
+    _bamHeaderPtr(bamHeaderPtr),
+    _refSeqPtr(refSeqPtr),
+    _denoiseRegion(computeDenoiseRegion(scanRegion, _bamHeader(), REGION_DENOISE_BORDER)),
     _stageManager(
         STAGE::getStageData(REGION_DENOISE_BORDER),
         pos_range(
@@ -138,14 +140,12 @@ SVLocusSetFinder(
     _denoiseStartPos(0),
     _readScanner(opt.scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilenames, opt.isRNA),
     _isMaxDepthFilter(false),
-    _maxDepth(0),
-    _bamHeader(bamHeader),
-    _refSeq(refSeq)
+    _maxDepth(0)
 {
     //
     // initialize max depth filtration values:
     //
-    const ChromDepthFilterUtil dFilter(opt.chromDepthFilename, opt.scanOpt.maxDepthFactor, bamHeader);
+    const ChromDepthFilterUtil dFilter(opt.chromDepthFilename, opt.scanOpt.maxDepthFactor, _bamHeader());
     _isMaxDepthFilter=dFilter.isMaxDepthFilter();
     if (_isMaxDepthFilter)
     {
@@ -164,7 +164,7 @@ SVLocusSetFinder(
                 opt.alignFileOpt.alignmentFilenames[sampleIndex];
         }
 
-        _svLoci.header = bamHeader;
+        _svLoci.header = _bamHeader();
     }
     else
     {
@@ -174,7 +174,7 @@ SVLocusSetFinder(
             assert(_svLoci.getCounts().getSampleCounts(sampleIndex).sampleSource ==
                        opt.alignFileOpt.alignmentFilenames[sampleIndex]);
         }
-        assert(_svLoci.header == bamHeader);
+        assert(_svLoci.header == _bamHeader());
     }
 }
 
@@ -329,7 +329,7 @@ update(
     // later as non-evidence -- they will not be filtered per se, but rather converted into zero SVLocus
     // objects.
     //
-    if (! _readScanner.isSVEvidence(bamRead,defaultReadGroupIndex,_refSeq,&(incounts.evidenceCount))) return;
+    if (! _readScanner.isSVEvidence(bamRead,defaultReadGroupIndex,_refSeq(),&(incounts.evidenceCount))) return;
 
 #ifdef DEBUG_SFINDER
     log_os << __FUNCTION__ << ": Accepted read. isNonCompressedAnomalous "  << isNonCompressedAnomalous << " is Local assm evidence: " << isLocalAssemblyEvidence << " read: " << bamRead << "\n";
@@ -355,8 +355,8 @@ update(
     //
     std::vector<SVLocus> loci;
     SampleEvidenceCounts& eCounts(counts.evidence);
-    _readScanner.getSVLoci(bamRead, defaultReadGroupIndex, _bamHeader,
-                           _refSeq, loci, eCounts);
+    _readScanner.getSVLoci(bamRead, defaultReadGroupIndex, _bamHeader(),
+                           _refSeq(), loci, eCounts);
 
     // merge each non-empty SV locus into this genome segment graph:
     for (const SVLocus& locus : loci)

@@ -25,15 +25,10 @@
 
 #include "applications/EstimateSVLoci/SVLocusSetFinder.hh"
 #include "test/testAlignmentDataUtil.hh"
-#include "test/testSVLocusScanner.hh"
 #include "test/testFileMakers.hh"
-#include "test/testUtil.hh"
 
 #include "boost/make_unique.hpp"
 
-
-const bam_header_info testBamHeaderInput = buildTestBamHeader();
-reference_contig_segment testRefSegment;
 
 
 /// Utility function necessary for testing the SVLocusSetFinder.
@@ -47,8 +42,9 @@ buildSVLocusSetFinder(
     const GenomeInterval interval(0, 0, 499);
     ESLOptions opts;
 
+    const auto testBamHeaderInputPtr(std::make_shared<bam_header_info>(buildTestBamHeader()));
     TestStatsFileMaker statsFile;
-    TestAlignHeaderFileMaker alignFile(testBamHeaderInput);
+    TestAlignHeaderFileMaker alignFile(*(testBamHeaderInputPtr.get()));
 
     AlignmentFileOptions afo;
 
@@ -58,7 +54,9 @@ buildSVLocusSetFinder(
     opts.alignFileOpt = afo;
     opts.statsFilename = statsFile.getFilename();
 
-    return boost::make_unique<SVLocusSetFinder>(opts, interval, testBamHeaderInput, testRefSegment, svLoci);
+    return boost::make_unique<SVLocusSetFinder>(opts, interval,
+                                                std::make_shared<bam_header_info>(buildTestBamHeader()),
+                                                std::make_shared<reference_contig_segment>(), svLoci);
 }
 
 

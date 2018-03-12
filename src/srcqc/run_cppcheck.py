@@ -129,7 +129,8 @@ def main() :
     # manipulate the warning messages so that they look like gcc errors -- this enables IDE parsing of error location:
     checkCmd.append("--template={file}:{line}:1: error: {severity}:{message}")
 
-    suppressList=["unusedFunction", "unmatchedSuppression", "missingInclude", "purgedConfiguration"]
+    # passedByValue has been added to allow more use of c++11 shared_ptrs:
+    suppressList=["unusedFunction", "unmatchedSuppression", "missingInclude", "purgedConfiguration", "passedByValue"]
 
     # In cppcheck versions 1.69 and lower (TODO how low?), there is a bug parsing the use of the '%' character
     # in boost::format as a regular mod operator. For these versions, an extra suppression is required.
@@ -165,7 +166,7 @@ def main() :
         checkCmd.append("--suppress="+stype)
 
     # xml output is usful for getting a warnings id field, which is what you need to suppress it:
-    #checkCmd.append("--xml")
+    # checkCmd.append("--xml")
 
     # this is more aggressive  and includes more FPs
     #checkCmd.append("--inconclusive")

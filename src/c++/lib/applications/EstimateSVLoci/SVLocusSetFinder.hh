@@ -34,6 +34,7 @@
 #include "svgraph/SVLocusSet.hh"
 
 #include <iosfwd>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -73,14 +74,14 @@ struct SVLocusSetFinder : public pos_processor_base
     /// This constructs to an immediately usable state following an RAII-like pattern.
     ///
     /// \param[in] scanRegion The genomic region which this SVLocusSetFinder object will translate into an SVLocusGraph
-    /// \param[in] bamHeader Bam header containing chromosome details. This is used directly in this object and copied
-    ///                  into the SV locus graph.
-    /// \param[in,out] svLoci All results will be merged into the given SVLocusSet
+    /// \param[in] bamHeaderPtr Pointer to a bam header containing chromosome details.
+    /// \param[in,out] svLoci SVLocusSet into which all results wil be merged, the lifetime of svLoci cannot be shorter
+    ///                       than this object.
     SVLocusSetFinder(
         const ESLOptions& opt,
         const GenomeInterval& scanRegion,
-        const bam_header_info& bamHeader,
-        const reference_contig_segment& refSeq,
+        const std::shared_ptr<bam_header_info> bamHeaderPtr,
+        const std::shared_ptr<reference_contig_segment> refSeqPtr,
         SVLocusSet& svLoci);
 
     ~SVLocusSetFinder() override
@@ -143,6 +144,18 @@ private:
     addToDepthBuffer(
         const bam_record& bamRead);
 
+    const bam_header_info&
+    _bamHeader() const
+    {
+        return *(_bamHeaderPtr.get());
+    }
+
+    const reference_contig_segment&
+    _refSeq() const
+    {
+        return *(_refSeqPtr.get());
+    }
+
     enum hack_t
     {
         /// Length in bases on the beginning and the end of scan range which is excluded from in-line graph de-noising
@@ -161,6 +174,9 @@ private:
 
     /// The target genome region for this SV locus graph building process
     const GenomeInterval _scanRegion;
+
+    const std::shared_ptr<bam_header_info> _bamHeaderPtr;
+    const std::shared_ptr<reference_contig_segment> _refSeqPtr;
 
     /// A subset of _scanRegion in which the inline graph denoising operation is allowed.
     const GenomeInterval _denoiseRegion;
@@ -191,7 +207,4 @@ private:
     ///
     /// This depth is supplied from an external estimate
     float _maxDepth;
-
-    const bam_header_info& _bamHeader;
-    const reference_contig_segment& _refSeq;
 };

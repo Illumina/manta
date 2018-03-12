@@ -87,7 +87,10 @@ estimateSVLociForSingleRegion(
     // assume headers compatible after this point....
 
     const bam_hdr_t& header(bamStreams[0]->get_header());
-    const bam_header_info bamHeader(header);
+    const auto bamHeaderPtr(std::make_shared<bam_header_info>(header));
+
+    // Use the const reference for older objects which have an implicit lifetime contract with the caller
+    const bam_header_info& bamHeader(*(bamHeaderPtr.get()));
 
     int32_t tid(0), beginPos(0), endPos(0);
     parse_bam_region(bamHeader,region.c_str(),tid,beginPos,endPos);
@@ -102,10 +105,10 @@ estimateSVLociForSingleRegion(
     // grab the reference for segment we're estimating plus a buffer around the segment edges:
     static const unsigned refEdgeBufferSize(500);
 
-    reference_contig_segment refSegment;
-    getIntervalReferenceSegment(opt.referenceFilename, bamHeader, refEdgeBufferSize, scanRegion, refSegment);
+    auto refSegmentPtr(std::make_shared<reference_contig_segment>());
+    getIntervalReferenceSegment(opt.referenceFilename, bamHeader, refEdgeBufferSize, scanRegion, (*refSegmentPtr.get()));
 
-    SVLocusSetFinder locusFinder(opt, scanRegion, bamHeader, refSegment, mergedSet);
+    SVLocusSetFinder locusFinder(opt, scanRegion, bamHeaderPtr, refSegmentPtr, mergedSet);
 
     input_stream_data sdata;
     for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
