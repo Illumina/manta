@@ -156,6 +156,7 @@ struct SampleCounts
 
 
 
+/// Read count statistics for all samples
 struct AllCounts
 {
     void

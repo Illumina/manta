@@ -32,6 +32,9 @@
 #include "boost/make_unique.hpp"
 
 
+const bam_header_info testBamHeaderInput = buildTestBamHeader();
+reference_contig_segment testRefSegment;
+
 
 /// Utility function necessary for testing the SVLocusSetFinder.
 /// Necessary to put here instead of EstimateSVLoci_util.hh because of undefined reference issue.
@@ -39,14 +42,13 @@
 static
 std::unique_ptr<SVLocusSetFinder>
 buildSVLocusSetFinder(
-    const bam_header_info& bamHeaderInput,
-    const GenomeInterval& interval = GenomeInterval(0, 0, 499))
+    SVLocusSet& svLoci)
 {
+    const GenomeInterval interval(0, 0, 499);
     ESLOptions opts;
-    reference_contig_segment seg;
 
     TestStatsFileMaker statsFile;
-    TestAlignHeaderFileMaker alignFile(bamHeaderInput);
+    TestAlignHeaderFileMaker alignFile(testBamHeaderInput);
 
     AlignmentFileOptions afo;
 
@@ -56,7 +58,7 @@ buildSVLocusSetFinder(
     opts.alignFileOpt = afo;
     opts.statsFilename = statsFile.getFilename();
 
-    return boost::make_unique<SVLocusSetFinder>(opts, interval, bamHeaderInput, seg);
+    return boost::make_unique<SVLocusSetFinder>(opts, interval, testBamHeaderInput, testRefSegment, svLoci);
 }
 
 
@@ -76,8 +78,8 @@ BOOST_AUTO_TEST_CASE( test_MapQuality_Filtering )
 
     //TODO Setup read with quality above, below, and same as _opt.minMapq
 
-    const bam_header_info bamHeader(buildTestBamHeader());
-    std::unique_ptr<SVLocusSetFinder> svLSF(buildSVLocusSetFinder(bamHeader));
+    SVLocusSet svLoci;
+    std::unique_ptr<SVLocusSetFinder> svLSF(buildSVLocusSetFinder(svLoci));
 
     // stand-in state reporter used for the unit test, does nothing
     stream_state_reporter dummyStateReporter;
@@ -94,46 +96,54 @@ BOOST_AUTO_TEST_CASE( test_MapQuality_Filtering )
     svLSF->update(dummyStateReporter, bamRead1, bamRead1.target_id());
     BOOST_REQUIRE_EQUAL(svLSF->getLocusSet().size(), 1);
 
+    svLSF->flush();
+
     BOOST_TEST_MESSAGE("SDS MANTA-755");
-    const SVLocusSetStatsFileMaker stats(svLSF->getLocusSet());
 
     // Test that the mapQ 14 is filtered and 15 is not filtered.
-    BOOST_REQUIRE_EQUAL(getValueFromTSVKeyValFile(stats.getFilename(), "MinMapqFiltered"), "1");
-    BOOST_REQUIRE_EQUAL(getValueFromTSVKeyValFile(stats.getFilename(), "NotFiltered"), "1");
+    //
+    const auto& sampleCounts(svLoci.getCounts().getSampleCounts(0));
+    BOOST_REQUIRE_EQUAL(sampleCounts.input.minMapq, 1);
+    BOOST_REQUIRE_EQUAL(sampleCounts.input.evidenceCount.total, 1);
+
+    //// Indirect test matching above after write/read stats file:
+    //const SVLocusSetStatsFileMaker stats(svLSF->getLocusSet());
+    //BOOST_REQUIRE_EQUAL(getValueFromTSVKeyValFile(stats.getFilename(), "MinMapqFiltered"), "1");
+    //BOOST_REQUIRE_EQUAL(getValueFromTSVKeyValFile(stats.getFilename(), "NotFiltered"), "1");
 }
 
 BOOST_AUTO_TEST_CASE( test_SplitReadSemiAligned )
 {
-    static const pos_t alignPos(250);
-
-    bam_header_info bamHeader = buildTestBamHeader();
-    std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
-
-    //const unsigned defaultReadGroupIndex = 0;
-    reference_contig_segment ref = reference_contig_segment();
-    static const char refSeq[]   =      "AACCTTTTTTCATCACACACAAGAGTCCAGAGACCGACTTCCCCCCAAAA";
-    ref.seq() = refSeq;
-    ref.set_offset(alignPos);
-
-    // Semi-aligned read sequence - is evidence
-    static const char semiQuerySeq[]   = "AACCCACAAACATCACACACAAGAGTCCAGAGACCGACTTTTTTCTAAAA";
-
-    // split read - not semi-aligned evidence
+    // create split read - not semi-aligned evidence
     bam_record splitRead;
-    buildTestBamRecord(splitRead, 0, alignPos, 0, alignPos + 50, 8, 15, "50M", semiQuerySeq);
-    addSupplementaryAlignmentEvidence(splitRead);
+    {
+        static const pos_t alignPos(250);
+        // Semi-aligned read sequence - is evidence
+        static const char semiQuerySeq[] = "AACCCACAAACATCACACACAAGAGTCCAGAGACCGACTTTTTTCTAAAA";
+
+        buildTestBamRecord(splitRead, 0, alignPos, 0, alignPos + 50, 8, 15, "50M", semiQuerySeq);
+        addSupplementaryAlignmentEvidence(splitRead);
+    }
+
+    // insert split read in locus set finder:
+    SVLocusSet svLoci;
+    std::unique_ptr<SVLocusSetFinder> svLSF(buildSVLocusSetFinder(svLoci));
 
     // stand-in state reporter used for the unit test, does nothing
     stream_state_reporter dummyStateReporter;
-
-    std::unique_ptr<SVLocusSetFinder> svLSF(buildSVLocusSetFinder(bamHeader));
     svLSF->update(dummyStateReporter, splitRead, 0);
+    svLSF->flush();
 
-    const SVLocusSetStatsFileMaker stats(svLSF->getLocusSet());
-
+    // test locus set finder stats:
     // split read called first, not called for semi-aligned read sequence.
-    BOOST_REQUIRE_EQUAL(getValueFromTSVKeyValFile(stats.getFilename(), "NotFilteredAndSemiAligned"), "0");
-    BOOST_REQUIRE_EQUAL(getValueFromTSVKeyValFile(stats.getFilename(), "NotFilteredAndSplitRead"), "1");
+    const auto& sampleCounts(svLoci.getCounts().getSampleCounts(0));
+    BOOST_REQUIRE_EQUAL(sampleCounts.input.evidenceCount.assm, 0);
+    BOOST_REQUIRE_EQUAL(sampleCounts.input.evidenceCount.split, 1);
+
+    // repeats the same test as above after going through read/write cycle of stats reporting
+    //const SVLocusSetStatsFileMaker stats(svLSF->getLocusSet());
+    //BOOST_REQUIRE_EQUAL(getValueFromTSVKeyValFile(stats.getFilename(), "NotFilteredAndSemiAligned"), "0");
+    //BOOST_REQUIRE_EQUAL(getValueFromTSVKeyValFile(stats.getFilename(), "NotFilteredAndSplitRead"), "1");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

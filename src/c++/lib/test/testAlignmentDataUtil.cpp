@@ -32,8 +32,8 @@ bam_header_info
 buildTestBamHeader()
 {
     bam_header_info bamHeader;
-    bamHeader.chrom_data.emplace_back("chr1",500);
-    bamHeader.chrom_data.emplace_back("chr2",500);
+    bamHeader.chrom_data.emplace_back("chrFoo",500);
+    bamHeader.chrom_data.emplace_back("chrBar",500);
 
     int32_t chromIndex(0);
     for (const auto& chromData : bamHeader.chrom_data)
