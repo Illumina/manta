@@ -20,10 +20,10 @@
 #include "boost/test/unit_test.hpp"
 
 #include "svgraph/GenomeIntervalUtil.hh"
+#include "test/testAlignmentDataUtil.hh"
 
 
-
-BOOST_AUTO_TEST_SUITE( test_GenomeIntervalUtil )
+BOOST_AUTO_TEST_SUITE( GenomeIntervalUtil_test_suite )
 
 BOOST_AUTO_TEST_CASE( test_IntervalCompressor )
 {
@@ -49,5 +49,13 @@ BOOST_AUTO_TEST_CASE( test_IntervalCompressor )
     BOOST_REQUIRE_EQUAL(indexMap[4],1u);
 }
 
+BOOST_AUTO_TEST_CASE( test_convertSamtoolsRegionToGenomeInterval )
+{
+    BOOST_REQUIRE_EQUAL(GenomeInterval(0,0,500),
+                        convertSamtoolsRegionToGenomeInterval(buildTestBamHeader(), "chrFoo"));
+
+    BOOST_REQUIRE_EQUAL(GenomeInterval(0,99,200),
+                        convertSamtoolsRegionToGenomeInterval(buildTestBamHeader(), "chrFoo:100-200"));
+}
 
 BOOST_AUTO_TEST_SUITE_END()

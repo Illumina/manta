@@ -24,7 +24,7 @@
 #include "DumpSVLoci.hh"
 #include "DSLOptions.hh"
 
-#include "htsapi/bam_header_util.hh"
+#include "svgraph/GenomeIntervalUtil.hh"
 #include "svgraph/SVLocusSet.hh"
 
 #include "blt_util/thirdparty_push.h"
@@ -54,10 +54,7 @@ runDSL(const DSLOptions& opt)
 
     if (! opt.region.empty())
     {
-        int32_t tid,beginPos,endPos;
-        parse_bam_region(set.header, opt.region.c_str(), tid, beginPos, endPos);
-
-        set.dumpRegion(os,GenomeInterval(tid,beginPos,endPos));
+        set.dumpRegion(os, convertSamtoolsRegionToGenomeInterval(cset.header, opt.region));
     }
     else if (opt.isLocusIndex)
     {

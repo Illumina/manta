@@ -116,10 +116,12 @@ BOOST_AUTO_TEST_CASE( test_GenomeInterval_Sorting )
     BOOST_REQUIRE_EQUAL(test[4],GenomeInterval(2,8,10));
 }
 
+#if 0
 BOOST_AUTO_TEST_CASE( test_GenomeInterval_OStreamOperator )
 {
     // TODO Need a mock framework to do this cleanly by mocking the streambuffer
 }
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()
 

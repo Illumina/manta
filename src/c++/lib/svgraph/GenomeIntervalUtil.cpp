@@ -17,11 +17,9 @@
 //
 //
 
-///
-/// \author Chris Saunders
-///
-
-#include "svgraph/GenomeIntervalUtil.hh"
+#include "GenomeIntervalUtil.hh"
+#include "htsapi/bam_header_info.hh"
+#include "htsapi/bam_header_util.hh"
 
 
 
@@ -70,4 +68,16 @@ intervalCompressor(
 
     intervals = intervals2;
     return indexMap;
+}
+
+
+
+GenomeInterval
+convertSamtoolsRegionToGenomeInterval(
+    const bam_header_info& bamHeader,
+    const std::string& region)
+{
+    int32_t tid(0), beginPos(0), endPos(0);
+    parse_bam_region(bamHeader,region.c_str(),tid,beginPos,endPos);
+    return GenomeInterval(tid,beginPos,endPos);
 }

@@ -17,15 +17,14 @@
 //
 //
 
-/// \file
-/// \author Chris Saunders
-///
-
 #pragma once
 
 #include "svgraph/GenomeInterval.hh"
 
+#include <string>
 #include <vector>
+
+struct bam_header_info;
 
 
 /// given a collection of genome intervals, reduce down to the minimum non-overlapping set:
@@ -36,3 +35,10 @@
 std::vector<unsigned>
 intervalCompressor(
     std::vector<GenomeInterval>& intervals);
+
+
+/// \brief Build a new GenomeInterval from a samtools-style region string
+GenomeInterval
+convertSamtoolsRegionToGenomeInterval(
+    const bam_header_info& bamHeader,
+    const std::string& region);

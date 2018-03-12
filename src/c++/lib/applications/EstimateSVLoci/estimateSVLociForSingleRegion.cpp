@@ -30,6 +30,7 @@
 #include "htsapi/bam_header_util.hh"
 #include "htsapi/bam_streamer.hh"
 #include "manta/SVReferenceUtil.hh"
+#include "svgraph/GenomeIntervalUtil.hh"
 
 #include <iostream>
 #include <vector>
@@ -91,11 +92,8 @@ estimateSVLociForSingleRegion(
 
     // Use the const reference for older objects which have an implicit lifetime contract with the caller
     const bam_header_info& bamHeader(*(bamHeaderPtr.get()));
+    const GenomeInterval scanRegion(convertSamtoolsRegionToGenomeInterval(bamHeader, region));
 
-    int32_t tid(0), beginPos(0), endPos(0);
-    parse_bam_region(bamHeader,region.c_str(),tid,beginPos,endPos);
-
-    const GenomeInterval scanRegion(tid,beginPos,endPos);
 #ifdef DEBUG_ESL
     static const std::string log_tag("EstimateSVLoci");
     log_os << log_tag << " scanRegion= " << scanRegion << "\n";
