@@ -28,7 +28,7 @@
 #include "blt_util/log.hh"
 #include "blt_util/time_util.hh"
 #include "htsapi/bam_header_util.hh"
-#include "htsapi/bam_streamer.hh"
+#include "manta/BamStreamerUtils.hh"
 #include "manta/SVReferenceUtil.hh"
 #include "svgraph/GenomeIntervalUtil.hh"
 
@@ -49,19 +49,9 @@ estimateSVLociForSingleRegion(
     TimeTracker regionSVLocusSetBuildTimer;
     regionSVLocusSetBuildTimer.resume();
 
-    typedef std::shared_ptr<bam_streamer> stream_ptr;
-    std::vector<stream_ptr> bamStreams;
-
-    // setup all data for main alignment loop:
-    for (const std::string& alignmentFilename : opt.alignFileOpt.alignmentFilenames)
-    {
-        stream_ptr tmp(new bam_streamer(alignmentFilename.c_str(), opt.referenceFilename.c_str()));
-        if (! region.empty())
-        {
-            tmp->resetRegion(region.c_str());
-        }
-        bamStreams.push_back(tmp);
-    }
+    std::vector<std::shared_ptr<bam_streamer>> bamStreams;
+    openBamStreams(opt.referenceFilename, opt.alignFileOpt.alignmentFilenames, bamStreams);
+    resetBamStreamsRegion(region, bamStreams);
 
     const unsigned bamCount(bamStreams.size());
 
@@ -108,14 +98,8 @@ estimateSVLociForSingleRegion(
 
     SVLocusSetFinder locusFinder(opt, scanRegion, bamHeaderPtr, refSegmentPtr, mergedSet);
 
-    input_stream_data sdata;
-    for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
-    {
-        sdata.register_reads(*bamStreams[bamIndex],bamIndex);
-    }
-
-    // loop through alignments:
-    input_stream_handler sinput(sdata);
+    // loop through alignments from all samples:
+    input_stream_handler sinput(mergeBamStreams(bamStreams));
     while (sinput.next())
     {
         const input_record_info current(sinput.get_current());

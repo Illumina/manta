@@ -31,6 +31,7 @@
 
 #include "blt_util/log.hh"
 #include "common/Exceptions.hh"
+#include "manta/BamStreamerUtils.hh"
 #include "manta/MultiJunctionUtil.hh"
 #include "manta/SVCandidateUtil.hh"
 
@@ -208,16 +209,15 @@ runGSC(
     const bool isGenerateSupportBam(opt.supportBamStub.size() > 0);
     if (isGenerateSupportBam)
     {
+        openBamStreams(opt.referenceFilename, opt.alignFileOpt.alignmentFilenames, origBamStreamPtrs);
+
+        assert(origBamStreamPtrs.size() == sampleSize);
         for (unsigned sampleIndex(0); sampleIndex<sampleSize; ++sampleIndex)
         {
-            std::string alignmentFile(opt.alignFileOpt.alignmentFilenames[sampleIndex]);
-            bam_streamer_ptr bamStreamPtr(new bam_streamer(alignmentFile.c_str(), opt.referenceFilename.c_str()));
-            origBamStreamPtrs.push_back(bamStreamPtr);
-
             std::string supportBamName(opt.supportBamStub
                                        + ".bam_" + std::to_string(sampleIndex)
                                        + ".bam");
-            const bam_hdr_t& header(bamStreamPtr->get_header());
+            const bam_hdr_t& header(origBamStreamPtrs[sampleIndex]->get_header());
             bam_dumper_ptr bamDumperPtr(new bam_dumper(supportBamName.c_str(), header));
             supportBamDumperPtrs.push_back(bamDumperPtr);
         }

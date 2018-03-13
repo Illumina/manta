@@ -32,7 +32,7 @@
 #include "common/Exceptions.hh"
 #include "htsapi/align_path_bam_util.hh"
 #include "htsapi/bam_header_util.hh"
-#include "htsapi/bam_streamer.hh"
+#include "manta/BamStreamerUtils.hh"
 #include "manta/ReadGroupStatsSet.hh"
 #include "manta/SVCandidateUtil.hh"
 
@@ -72,20 +72,12 @@ SVScorer(
     _readScanner(readScanner),
     _header(header)
 {
-    // setup regionless bam_streams:
-    // setup all data for main analysis loop:
-    for (const std::string& afile : opt.alignFileOpt.alignmentFilenames)
-    {
-        // avoid creating shared_ptr temporaries:
-        streamPtr tmp(new bam_streamer(afile.c_str(), opt.referenceFilename.c_str()));
-        _bamStreams.push_back(tmp);
-    }
+    openBamStreams(opt.referenceFilename, opt.alignFileOpt.alignmentFilenames, _bamStreams);
 
-    _sampleCount=0;
+    _sampleCount=opt.alignFileOpt.isAlignmentTumor.size();
     _diploidSampleCount=0;
     for (const bool isTumor : opt.alignFileOpt.isAlignmentTumor)
     {
-        _sampleCount++;
         if (! isTumor) _diploidSampleCount++;
     }
 

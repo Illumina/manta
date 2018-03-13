@@ -26,9 +26,8 @@
 #include "blt_util/binomial_test.hh"
 #include "blt_util/log.hh"
 #include "common/Exceptions.hh"
-#include "htsapi/bam_streamer.hh"
+#include "manta/BamStreamerUtils.hh"
 #include "manta/ReadFilter.hh"
-#include "manta/ReadGroupStatsSet.hh"
 #include "manta/SVCandidateUtil.hh"
 #include "manta/SVReferenceUtil.hh"
 #include "svgraph/EdgeInfoUtil.hh"
@@ -103,13 +102,7 @@ SVFinder(
     _dFilterPtr.reset(new ChromDepthFilterUtil(opt.chromDepthFilename,_scanOpt.maxDepthFactor,_set.header));
 
     // setup regionless bam_streams:
-    // setup all data for main analysis loop:
-    for (const std::string& afile : opt.alignFileOpt.alignmentFilenames)
-    {
-        // avoid creating shared_ptr temporaries:
-        streamPtr tmp(new bam_streamer(afile.c_str(), opt.referenceFilename.c_str()));
-        _bamStreams.push_back(tmp);
-    }
+    openBamStreams(opt.referenceFilename, opt.alignFileOpt.alignmentFilenames, _bamStreams);
 
     const unsigned bamCount(_bamStreams.size());
     {

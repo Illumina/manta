@@ -20,9 +20,6 @@
 /// \file
 /// \author Chris Saunders
 ///
-/// object which accepts as input bam (and formerly vcf/other chromosome ordered) files from multiple
-/// samples and merges them in order
-///
 
 
 #pragma once
@@ -47,6 +44,7 @@ struct input_stream_hander;
 /// this object first
 struct input_stream_data
 {
+    /// Register bam_streamer \p bs for merging. The lifetime of \p bs must exceed the lifetime of this object
     void
     register_reads(bam_streamer& bs,
                    const int sample_no = 0)
@@ -119,13 +117,13 @@ private:
 };
 
 
-
-// streams multiple bam (and vcf) files to present the data
-// in positional order (but with offsets for vcfs to
-// run ahead of the bam reads)
-//
+/// Accepts as input bam (and formerly vcf/other chromosome ordered) files from multiple
+/// samples and merges them in order
+///
+/// Bams are specified indirectly via the input_stream_data class
 struct input_stream_handler
 {
+    explicit
     input_stream_handler(
         const input_stream_data& data);
 

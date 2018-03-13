@@ -26,6 +26,7 @@
 #include "blt_util/seq_util.hh"
 #include "htsapi/align_path_bam_util.hh"
 #include "htsapi/SimpleAlignment_bam_util.hh"
+#include "manta/BamStreamerUtils.hh"
 #include "manta/ReadFilter.hh"
 #include "manta/RemoteMateReadUtil.hh"
 #include "manta/ShadowReadFinder.hh"
@@ -78,14 +79,7 @@ SVCandidateAssembler(
     _readScanner(_scanOpt, statsFilename, alignFileOpt.alignmentFilenames, isRNA),
     _remoteReadRetrievalTime(remoteReadRetrievalTime)
 {
-    // setup regionless bam_streams:
-    // setup all data for main analysis loop:
-    for (const std::string& alignmentFilename : alignFileOpt.alignmentFilenames)
-    {
-        // avoid creating shared_ptr temporaries:
-        streamPtr tmp(new bam_streamer(alignmentFilename.c_str(), referenceFilename.c_str()));
-        _bamStreams.push_back(tmp);
-    }
+    openBamStreams(referenceFilename, alignFileOpt.alignmentFilenames, _bamStreams);
 
     const unsigned bamSize(_bamStreams.size());
     _sampleRemoteRecoveryCandidateRate.resize(bamSize);

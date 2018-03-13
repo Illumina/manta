@@ -73,7 +73,7 @@ buildTestBamRecord(
 
 /// \brief Add supplementary alignment evidence to a bam record
 ///
-/// This fills in an auxilliary "SA" tag, defaulting to a supplementary connections to "chrT"
+/// This fills in an auxiliary "SA" tag, defaulting to a supplementary connections to "chrT"
 /// from the default bam_header_info.
 void
 addSupplementaryAlignmentEvidence(
