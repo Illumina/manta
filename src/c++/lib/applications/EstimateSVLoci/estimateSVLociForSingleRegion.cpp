@@ -52,28 +52,7 @@ estimateSVLociForSingleRegion(
     std::vector<std::shared_ptr<bam_streamer>> bamStreams;
     openBamStreams(opt.referenceFilename, opt.alignFileOpt.alignmentFilenames, bamStreams);
     resetBamStreamsRegion(region, bamStreams);
-
-    const unsigned bamCount(bamStreams.size());
-
-    assert(0 != bamCount);
-
-    // check bam header compatibility:
-    if (bamCount > 1)
-    {
-        /// TODO: provide a better error exception for failed bam header check:
-        const bam_hdr_t& compareHeader(bamStreams[0]->get_header());
-        for (unsigned bamIndex(1); bamIndex<bamCount; ++bamIndex)
-        {
-            const bam_hdr_t& indexHeader(bamStreams[bamIndex]->get_header());
-            if (! check_header_compatibility(compareHeader,indexHeader))
-            {
-                log_os << "ERROR: incompatible bam headers between files:\n"
-                       << "\t" << opt.alignFileOpt.alignmentFilenames[0] << "\n"
-                       << "\t" << opt.alignFileOpt.alignmentFilenames[bamIndex] << "\n";
-                exit(EXIT_FAILURE);
-            }
-        }
-    }
+    assertCompatibleBamStreams(opt.alignFileOpt.alignmentFilenames, bamStreams);
 
     // assume headers compatible after this point....
 

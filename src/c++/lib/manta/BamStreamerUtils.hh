@@ -46,7 +46,19 @@ resetBamStreamsRegion(
     const std::string& region,
     std::vector<std::shared_ptr<bam_streamer>>& bamStreams);
 
-/// Merge bam_streams together so that they can be iterated together
+/// \brief Asserts the headers of all \p bamStreams to see if they are compatible for merged iteration
+///
+/// Throws an exception if headers are not compatible. Here 'compatible' means each bam streamer uses the same
+/// chromosomes in the same order.
+///
+/// \param[in] bamFilenames Alignment filenames are only used for improving the exception message.
+void
+assertCompatibleBamStreams(
+    const std::vector<std::string>& bamFilenames,
+    const std::vector<std::shared_ptr<bam_streamer>>& bamStreams);
+
+/// \brief Merge bam_streamers together so that they can be iterated as a single merged stream
 input_stream_data
 mergeBamStreams(
     std::vector<std::shared_ptr<bam_streamer>>& bamStreams);
+

@@ -19,6 +19,11 @@
 
 #include "BamStreamerUtils.hh"
 
+#include "common/Exceptions.hh"
+#include "htsapi/bam_header_util.hh"
+
+#include <sstream>
+
 
 
 void
@@ -45,6 +50,34 @@ resetBamStreamsRegion(
     for (auto& bamStream : bamStreams)
     {
         bamStream->resetRegion(region.c_str());
+    }
+}
+
+
+
+void
+assertCompatibleBamStreams(
+    const std::vector<std::string>& bamFilenames,
+    const std::vector<std::shared_ptr<bam_streamer>>& bamStreams)
+{
+    const unsigned bamCount(bamStreams.size());
+
+    assert(0 != bamCount);
+
+    if (bamCount < 2) return;
+
+    const bam_hdr_t& compareHeader(bamStreams[0]->get_header());
+    for (unsigned bamIndex(1); bamIndex<bamCount; ++bamIndex)
+    {
+        const bam_hdr_t& indexHeader(bamStreams[bamIndex]->get_header());
+        if (! check_header_compatibility(compareHeader, indexHeader))
+        {
+            std::ostringstream oss;
+            oss << "Incompatible headers between alignment files:\n"
+                << "\t" << bamFilenames[0] << "\n"
+                << "\t" << bamFilenames[bamIndex] << "\n";
+            BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
+        }
     }
 }
 
