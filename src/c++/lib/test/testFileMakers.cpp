@@ -54,6 +54,27 @@ TestFilenameMaker()
 
 
 
+BamFilenameMaker::
+BamFilenameMaker()
+{
+    _tempFilename = getNewTempFile() + ".bam";
+}
+
+
+
+BamFilenameMaker::
+~BamFilenameMaker()
+{
+    using namespace boost::filesystem;
+    const std::string& indexFilename(_tempFilename+".bai");
+    if (exists(indexFilename))
+    {
+        remove(indexFilename);
+    }
+}
+
+
+
 TestAlignHeaderFileMaker::
 TestAlignHeaderFileMaker(const bam_header_info& info)
 {

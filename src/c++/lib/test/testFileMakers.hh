@@ -46,10 +46,21 @@ protected:
 
 /// \brief Get a non-existing temporary file name
 ///
-/// If anything is written into the temporary file name, it will be deleted when this object goes out of scope.
+/// If the temporary file name exists in the filesystem, it will be deleted when this object goes out of scope.
 struct TestFilenameMaker : public TestFileMakerBase
 {
     TestFilenameMaker();
+};
+
+/// \brief Get a non-existing temporary file name
+///
+/// If the temporary file name exists in the filesystem, it will be deleted when this object goes out of scope.
+/// if the temporary file name with the suffix ".bai" exists in the filesystem, this will be deleted when the object
+/// goes out of scope as well.
+struct BamFilenameMaker : public TestFileMakerBase
+{
+    BamFilenameMaker();
+    ~BamFilenameMaker();
 };
 
 

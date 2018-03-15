@@ -52,13 +52,6 @@ struct OpenBamStreamsFixture
         openBamStreams(referenceFilename, bamFilenames, bamStreams);
     }
 
-    ~OpenBamStreamsFixture()
-    {
-        using namespace boost::filesystem;
-        const std::string bamIndexFilename(_bamFilename() + ".bai");
-        if (exists(bamIndexFilename)) remove(bamIndexFilename);
-    }
-
     const std::vector<std::pair<int, int>> readValues;
     std::vector<std::shared_ptr<bam_streamer>> bamStreams;
 private:
@@ -68,7 +61,7 @@ private:
     {
         return _bamFilenameMaker.getFilename();
     }
-    const TestFilenameMaker _bamFilenameMaker;
+    const BamFilenameMaker _bamFilenameMaker;
 };
 
 BOOST_FIXTURE_TEST_SUITE( openBamStreams_test_suite, OpenBamStreamsFixture)

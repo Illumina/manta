@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSampleCounts )
     BOOST_TEST_MESSAGE("SDS MANTA-755");
 
     // Programatically construct a bam file for testing
-    TestFilenameMaker bamFilename;
+    BamFilenameMaker bamFilename;
     std::vector<std::string> bamFiles = { bamFilename.getFilename() };
     {
         std::vector<bam_record> readsToAdd(2);
