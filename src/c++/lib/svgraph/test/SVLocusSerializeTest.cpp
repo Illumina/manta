@@ -80,9 +80,8 @@ BOOST_AUTO_TEST_CASE( test_GenomeIntervalSerializeBinary )
 }
 
 
-BOOST_AUTO_TEST_CASE( test_SVLocusNodeSerialze )
+BOOST_AUTO_TEST_CASE( test_SVLocusNodeSerialize )
 {
-
     // construct a simple two-node locus
     SVLocus locus1;
     locusAddPair(locus1,1,10,20,1,30,40);
@@ -125,9 +124,8 @@ BOOST_AUTO_TEST_CASE( test_SVLocusNodeSerialze )
 
 
 
-BOOST_AUTO_TEST_CASE( test_SVLocusSerialze )
+BOOST_AUTO_TEST_CASE( test_SVLocusSerialize )
 {
-
     // construct a simple two-node locus
     SVLocus locus1;
     locusAddPair(locus1,1,10,20,1,30,40);
