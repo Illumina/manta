@@ -22,7 +22,7 @@
 #include "EdgeRetrieverBin.hh"
 
 #include "svgraph/SVLocusSet.hh"
-#include "test/testSVLocusGraphUtil.hh"
+#include "test/testSVLocusUtil.hh"
 
 
 

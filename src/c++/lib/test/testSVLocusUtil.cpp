@@ -18,17 +18,13 @@
 //
 
 /// \file
-/// \brief Utility functions for mocking SVLocusGraph elements during unit testing
 /// \author Trevor Ramsay
 ///
 
-#pragma once
-
-#include "svgraph/SVLocus.hh"
+#include "testSVLocusUtil.hh"
 
 
-/// \brief Add a pair of nodes to a SVLocus object.
-/// \param count The evidence count applied to the edge from node1 to node2
+
 void
 locusAddPair(
     SVLocus& locus,
@@ -38,5 +34,11 @@ locusAddPair(
     const int32_t tid2,
     const int32_t beginPos2,
     const int32_t endPos2,
-    const bool bothLocal = false,
-    const unsigned count = 1);
+    const bool bothLocal,
+    const unsigned count)
+{
+    const NodeIndexType nodePtr1 = locus.addNode(GenomeInterval(tid1,beginPos1,endPos1));
+    const NodeIndexType nodePtr2 = locus.addNode(GenomeInterval(tid2,beginPos2,endPos2));
+    const unsigned remoteCount(bothLocal ? count : 0);
+    locus.linkNodes(nodePtr1,nodePtr2,count,remoteCount);
+}

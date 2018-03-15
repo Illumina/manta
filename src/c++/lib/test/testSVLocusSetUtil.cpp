@@ -17,30 +17,23 @@
 //
 //
 
-#include "CheckSVLoci.hh"
-#include "CSLOptions.hh"
+#include "testSVLocusSetUtil.hh"
+#include "test/testFileMakers.hh"
 
-#include "svgraph/SVLocusSet.hh"
+#include "boost/make_unique.hpp"
 
 
 
-static
-void
-runCSL(const CSLOptions& opt)
+std::unique_ptr<SVLocusSet>
+getSerializedSVLocusSetCopy(
+    const SVLocusSet& set)
 {
-    SVLocusSet set(opt.graphFilename.c_str());
-    set.finalize();
-    set.checkState(true,true);
-}
+    TestFilenameMaker testFilenameMaker;
+    const char* testFilenamePtr(testFilenameMaker.getFilename().c_str());
 
+    // serialize
+    set.save(testFilenamePtr);
 
-
-void
-CheckSVLoci::
-runInternal(int argc, char* argv[]) const
-{
-    CSLOptions opt;
-
-    parseCSLOptions(*this,argc,argv,opt);
-    runCSL(opt);
+    // deserialize
+    return boost::make_unique<SVLocusSet>(testFilenamePtr);
 }

@@ -35,9 +35,7 @@ static
 void
 runSSL(const SSLOptions& opt)
 {
-    SVLocusSet set;
-
-    set.load(opt.graphFilename.c_str());
+    const SVLocusSet set(opt.graphFilename.c_str());
 
     OutStream outs(opt.outputFilename);
     std::ostream& os(outs.getStream());

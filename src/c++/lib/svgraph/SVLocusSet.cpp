@@ -1175,8 +1175,9 @@ dump(std::ostream& os) const
 
 void
 SVLocusSet::
-dumpRegion(std::ostream& os,
-           const GenomeInterval interval)
+dumpRegion(
+    std::ostream& os,
+    const GenomeInterval interval)
 {
     std::set<NodeAddressType> intersectNodes;
     getRegionIntersect(interval,intersectNodes);
@@ -1382,11 +1383,11 @@ save(const char* filename) const
 
 
 
-void
 SVLocusSet::
-load(
+SVLocusSet(
     const char* filename,
     const bool isSkipIndex)
+  : SVLocusSet()
 {
     using namespace boost::archive;
 
@@ -1394,9 +1395,7 @@ load(
     log_os << "SVLocusSet::load BEGIN\n";
 #endif
 
-    clear();
-
-    assert(nullptr != filename);
+    assert(filename);
 
     try
     {

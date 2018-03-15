@@ -88,6 +88,7 @@ SVFinder(
     GSCEdgeStatsManager& edgeStatMan) :
     _scanOpt(opt.scanOpt),
     _isAlignmentTumor(opt.alignFileOpt.isAlignmentTumor),
+    _set(opt.graphFilename.c_str(), true),
     _readScanner(readScanner),
     _referenceFilename(opt.referenceFilename),
     _isRNA(opt.isRNA),
@@ -96,9 +97,6 @@ SVFinder(
     _edgeTracker(edgeTracker),
     _edgeStatMan(edgeStatMan)
 {
-    // load in set:
-    _set.load(opt.graphFilename.c_str(),true);
-
     _dFilterPtr.reset(new ChromDepthFilterUtil(opt.chromDepthFilename,_scanOpt.maxDepthFactor,_set.header));
 
     // setup regionless bam_streams:

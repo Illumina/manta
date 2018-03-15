@@ -20,8 +20,8 @@
 #include "boost/test/unit_test.hpp"
 
 #include "svgraph/SVLocusSet.hh"
-#include "test/testSVLocusGraphUtil.hh"
-#include "test/testFileMakers.hh"
+#include "test/testSVLocusUtil.hh"
+#include "test/testSVLocusSetUtil.hh"
 
 
 BOOST_AUTO_TEST_SUITE( SVLocusSetSerialize_test_suite )
@@ -40,23 +40,14 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSetSerialize )
     set1.merge(locus1);
     set1.merge(locus2);
 
-    TestFilenameMaker testFilenameMaker;
-    const char* testFilenamePtr(testFilenameMaker.getFilename().c_str());
+    const auto set1_copy_ptr(getSerializedSVLocusSetCopy(set1));
 
-    // serialize
-    set1.save(testFilenamePtr);
-
-    SVLocusSet set1_copy;
-
-    // deserialize
-    set1_copy.load(testFilenamePtr);
-
-    BOOST_REQUIRE_EQUAL(set1.size(),set1_copy.size());
+    BOOST_REQUIRE_EQUAL(set1.size(),set1_copy_ptr->size());
 
     typedef SVLocusSet::const_iterator citer;
 
     citer i(set1.begin());
-    citer i_copy(set1_copy.begin());
+    citer i_copy(set1_copy_ptr->begin());
 
     const SVLocus& set1_locus1(*i);
     const SVLocus& set1_copy_locus1(*i_copy);
@@ -90,39 +81,18 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSetSerialize2 )
         set2.merge(locus2);
     }
 
-    SVLocusSet set1_copy;
-    {
-        TestFilenameMaker testFilenameMaker;
-        const char* testFilenamePtr(testFilenameMaker.getFilename().c_str());
-
-        // serialize
-        set1.save(testFilenamePtr);
-
-        // deserialize
-        set1_copy.load(testFilenamePtr);
-    }
-
-    SVLocusSet set2_copy;
-    {
-        TestFilenameMaker testFilenameMaker;
-        const char* testFilenamePtr(testFilenameMaker.getFilename().c_str());
-
-        // serialize
-        set2.save(testFilenamePtr);
-
-        // deserialize
-        set2_copy.load(testFilenamePtr);
-    }
+    const auto set1_copy_ptr(getSerializedSVLocusSetCopy(set1));
+    const auto set2_copy_ptr(getSerializedSVLocusSetCopy(set2));
 
     set1.merge(set2);
-    set1_copy.merge(set2_copy);
+    set1_copy_ptr->merge(*set2_copy_ptr);
 
-    BOOST_REQUIRE_EQUAL(set1.size(),set1_copy.size());
+    BOOST_REQUIRE_EQUAL(set1.size(),set1_copy_ptr->size());
 
     typedef SVLocusSet::const_iterator citer;
 
     citer i(set1.begin());
-    citer i_copy(set1_copy.begin());
+    citer i_copy(set1_copy_ptr->begin());
 
     const SVLocus& set1_locus1(*i);
     const SVLocus& set1_copy_locus1(*i_copy);
@@ -130,6 +100,4 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSetSerialize2 )
 }
 
 
-
 BOOST_AUTO_TEST_SUITE_END()
-

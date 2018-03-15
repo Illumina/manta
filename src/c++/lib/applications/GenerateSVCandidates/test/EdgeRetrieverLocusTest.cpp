@@ -23,7 +23,7 @@
 
 #include "options/SVLocusSetOptions.hh"
 #include "svgraph/SVLocus.hh"
-#include "test/testSVLocusGraphUtil.hh"
+#include "test/testSVLocusUtil.hh"
 
 
 BOOST_AUTO_TEST_SUITE( EdgeRetrieverLocus_test_suite )

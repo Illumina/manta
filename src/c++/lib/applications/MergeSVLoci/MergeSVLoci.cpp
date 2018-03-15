@@ -41,25 +41,33 @@ runMSL(const MSLOptions& opt)
         OutStream outs(opt.outputFilename);
     }
 
-    SVLocusSet mergedSet;
+    const unsigned graphFileCount(opt.graphFilename.size());
+    // This should already be enforced by the arg parsing interface:
+    assert(graphFileCount > 0);
 
-    for (const std::string& graphFile : opt.graphFilename)
+    if (opt.isVerbose)
     {
+        log_os << "INFO: Initializing from file: '" << opt.graphFilename[0] << "'\n";
+    }
+
+    SVLocusSet mergedSet(opt.graphFilename[0].c_str());
+
+    if (opt.isVerbose)
+    {
+        log_os << "INFO: Finished initializing from file: '" << opt.graphFilename[0] << "'\n";
+    }
+
+    for (unsigned graphFileIndex(1); graphFileIndex < graphFileCount; ++graphFileIndex)
+    {
+        const std::string& graphFile(opt.graphFilename[graphFileIndex]);
+
         if (opt.isVerbose)
         {
             log_os << "INFO: Merging file: '" << graphFile << "'\n";
         }
 
-        if (mergedSet.empty())
-        {
-            mergedSet.load(graphFile.c_str());
-        }
-        else
-        {
-            SVLocusSet inputSet;
-            inputSet.load(graphFile.c_str());
-            mergedSet.merge(inputSet);
-        }
+        const SVLocusSet inputSet(graphFile.c_str());
+        mergedSet.merge(inputSet);
 
         if (opt.isVerbose)
         {

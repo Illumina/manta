@@ -87,7 +87,7 @@
 /// This object inherits from flyweight_observer to help keep this node indexing data structure up to date as nodes
 /// are added/deleted within the SVLocus objects managed by this graph.
 ///
-struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
+struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>, private boost::noncopyable
 {
     typedef std::vector<SVLocus> locusset_type;
     typedef locusset_type::const_iterator const_iterator;
@@ -106,6 +106,15 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
         _isMaxSearchDensity(false),
         _isIndexed(true)
     {}
+
+    /// \brief Deserialize object from binary file format
+    /// \param[in] isSkipIndex If true, don't build the graph index, and only allow a limited set of operations
+    ///
+    explicit
+    SVLocusSet(
+        const char* filename,
+        const bool isSkipIndex = false);
+
 
     /// Test if the set of SVLocus objects is empty.
     bool
@@ -166,28 +175,6 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
     void
     merge(const SVLocusSet& set);
 
-    /// \brief Reset all properties and remove all contents.
-    void
-    clear()
-    {
-        header.clear();
-        _loci.clear();
-        clearIndex();
-        _isFinalized=false;
-        _totalCleaned=0;
-        _counts.clear();
-        _highestSearchCount=0;
-        _highestSearchDensity=0;
-
-        _isMaxSearchCount=false;
-        _isMaxSearchDensity=false;
-
-        _isIndexed=true;
-
-        _buildTime.clear();
-        _mergeRegions.clear();
-    }
-
     /// Indicate that the set is complete
     void
     finalize()
@@ -215,19 +202,14 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
     void
     save(const char* filename) const;
 
-    /// \brief Deserialize object from binary file format
-    /// \param[in] isSkipIndex If true, don't build the graph index, and only allow a limited set of operations
-    ///
-    void
-    load(
-        const char* filename,
-        const bool isSkipIndex = false);
-
     /// Debug output.
     void
     dump(std::ostream& os) const;
 
-    /// Debug output for a specific region.
+    /// \brief Debug output for a specific region.
+    ///
+    /// Note this is conceptually const but can't be marked const to the compiler right now due to implementation
+    /// details (see getRegionIntersect).
     void
     dumpRegion(
         std::ostream& os,
@@ -362,8 +344,13 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>
 
     typedef std::pair<LocusIndexType,NodeIndexType> NodeAddressType;
 
-    /// Fill the argument set with all nodes in this object which intersect with
-    /// an external node.
+    /// \brief Fill \p intersectNodes with all node addresses in this object which intersect with \p interval
+    ///
+    /// \param[in] interval Target genome region for node intersection search
+    /// \param[out] intersectNodes Intersecting nodes are put in this object. This object is cleared on input.
+    ///
+    /// This method is conceptually const. For programming convenience it temporarily changes the graph
+    /// structure (then undoes the change), so it can't be marked const to the compiler.
     void
     getRegionIntersect(
         const GenomeInterval interval,
@@ -592,7 +579,7 @@ private:
 
     /// \brief Add \p inputLocus to this SVLocusSet
     ///
-    /// Copies the inputLocus into this object without attempting do any merging. This is an intermediate (private)
+    /// Copies the inputLocus into this object without attempting to do any merging. This is an intermediate (private)
     /// step in the process of merging the \p inputLocus into this graph.
     ///
     /// \return The locus index assigned to the copy of inputLocus inserted into this object
@@ -732,8 +719,6 @@ public:
     bam_header_info header;
 private:
 
-
-    ///
     /// This is used to evaluate peak SV evidence density among the overlapping nodes of a set
     /// of intersecting edges.
     struct MergeRegionSumData
@@ -779,11 +764,11 @@ private:
     /// that all intersecting nodes are found using a relatively lightweight procedure.
     std::vector<unsigned> _maxRegionSize;
 
-    // simple debug string describing the source of this
+    /// simple debug string describing the source of this
     std::string _source;
 
-    // the graph has intermediate states (during build) when overlapping regions are allowed,
-    // once complete, overlaps are not present and disallowed:
+    /// the graph has intermediate states (during build) when overlapping regions are allowed,
+    /// once complete, overlaps are not present and disallowed:
     bool _isFinalized;
 
     AllCounts _counts;

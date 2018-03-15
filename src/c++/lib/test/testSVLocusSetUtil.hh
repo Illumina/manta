@@ -18,27 +18,17 @@
 //
 
 /// \file
-/// \author Trevor Ramsay
+/// \brief Unit testing utility functions for SVLocusSet elements
 ///
 
-#include "testSVLocusGraphUtil.hh"
+#pragma once
+
+#include "svgraph/SVLocusSet.hh"
+
+#include <memory>
 
 
-
-void
-locusAddPair(
-    SVLocus& locus,
-    const int32_t tid1,
-    const int32_t beginPos1,
-    const int32_t endPos1,
-    const int32_t tid2,
-    const int32_t beginPos2,
-    const int32_t endPos2,
-    const bool bothLocal,
-    const unsigned count)
-{
-    const NodeIndexType nodePtr1 = locus.addNode(GenomeInterval(tid1,beginPos1,endPos1));
-    const NodeIndexType nodePtr2 = locus.addNode(GenomeInterval(tid2,beginPos2,endPos2));
-    const unsigned remoteCount(bothLocal ? count : 0);
-    locus.linkNodes(nodePtr1,nodePtr2,count,remoteCount);
-}
+/// Serialize, then deserialize object and pass back a pointer to the resulting object copy
+std::unique_ptr<SVLocusSet>
+getSerializedSVLocusSetCopy(
+    const SVLocusSet& set);

@@ -21,7 +21,7 @@
 
 #include "svgraph/SVLocus.hh"
 #include "test/testFileMakers.hh"
-#include "test/testSVLocusGraphUtil.hh"
+#include "test/testSVLocusUtil.hh"
 
 #include "boost/archive/text_iarchive.hpp"
 #include "boost/archive/text_oarchive.hpp"

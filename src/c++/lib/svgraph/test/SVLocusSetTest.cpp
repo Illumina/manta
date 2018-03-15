@@ -20,7 +20,8 @@
 #include "boost/test/unit_test.hpp"
 
 #include "svgraph/SVLocusSet.hh"
-#include "test/testSVLocusGraphUtil.hh"
+#include "test/testSVLocusUtil.hh"
+#include "test/testSVLocusSetUtil.hh"
 
 #include "boost/timer/timer.hpp"
 
@@ -1486,7 +1487,6 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSet_MANTA257_min1 )
 // replicate the MANTA-257 bug in slightly reduced form:
 BOOST_AUTO_TEST_CASE( test_SVLocusSet_MANTA257_simplified )
 {
-
     SVLocus locus1;
     {
         const NodeIndexType nodePtr1 = locus1.addNode(GenomeInterval(0,10,40));
@@ -1594,26 +1594,15 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSet_Save_Load)
     set1.merge(locus2);
     set1.checkState(true,true);
 
-    const char* testSaveLoadFileName = "testSaveLoad.bin";
-
-    // save SVLocusSet1
-    set1.save(testSaveLoadFileName);
-
-    // load into SVLocusSet2
-    SVLocusSet set2(sopt);
-    set2.load(testSaveLoadFileName);
-
-    // Delete the temporary file
-    std::remove(testSaveLoadFileName);
+    const auto set1_copy_ptr(getSerializedSVLocusSetCopy(set1));
 
     SVLocusSet& cset1(set1);
-    SVLocusSet& cset2(set2);
+    SVLocusSet& cset1_copy(*set1_copy_ptr);
 
     // Test if SVLocusSet2 == SVLocusSet1
-    set2.checkState(true,true);
+    cset1_copy.checkState(true,true);
     TestSVLocusSetProperties(cset1, 2, 2, 4, 4);
-    TestSVLocusSetProperties(cset2, 2, 2, 4, 4);
-
+    TestSVLocusSetProperties(cset1_copy, 2, 2, 4, 4);
 }
 
 BOOST_AUTO_TEST_CASE( test_SVLocusSet_DumpLoci )

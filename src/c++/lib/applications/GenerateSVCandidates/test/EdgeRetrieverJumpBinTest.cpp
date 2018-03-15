@@ -22,7 +22,7 @@
 #include "EdgeRetrieverJumpBin.hh"
 
 #include "svgraph/SVLocusSet.hh"
-#include "test/testSVLocusGraphUtil.hh"
+#include "test/testSVLocusUtil.hh"
 
 
 BOOST_AUTO_TEST_SUITE( EdgeRetrieverJumpBin_test_suite )

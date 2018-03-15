@@ -42,8 +42,7 @@ static
 void
 runDSL(const DSLOptions& opt)
 {
-    SVLocusSet set;
-    set.load(opt.graphFilename.c_str());
+    SVLocusSet set(opt.graphFilename.c_str());
 
     const SVLocusSet& cset(set);
 

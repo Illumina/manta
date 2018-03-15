@@ -20,7 +20,7 @@
 #include "boost/test/unit_test.hpp"
 
 #include "svgraph/SVLocus.hh"
-#include "test/testSVLocusGraphUtil.hh"
+#include "test/testSVLocusUtil.hh"
 
 
 BOOST_AUTO_TEST_SUITE( SVLocus_test_suite )

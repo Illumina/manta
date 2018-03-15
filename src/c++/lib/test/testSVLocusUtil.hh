@@ -17,30 +17,26 @@
 //
 //
 
-#include "CheckSVLoci.hh"
-#include "CSLOptions.hh"
+/// \file
+/// \brief Utility functions for mocking SVLocus elements during unit testing
+/// \author Trevor Ramsay
+///
 
-#include "svgraph/SVLocusSet.hh"
+#pragma once
+
+#include "svgraph/SVLocus.hh"
 
 
-
-static
+/// \brief Add a pair of nodes to a SVLocus object.
+/// \param count The evidence count applied to the edge from node1 to node2
 void
-runCSL(const CSLOptions& opt)
-{
-    SVLocusSet set(opt.graphFilename.c_str());
-    set.finalize();
-    set.checkState(true,true);
-}
-
-
-
-void
-CheckSVLoci::
-runInternal(int argc, char* argv[]) const
-{
-    CSLOptions opt;
-
-    parseCSLOptions(*this,argc,argv,opt);
-    runCSL(opt);
-}
+locusAddPair(
+    SVLocus& locus,
+    const int32_t tid1,
+    const int32_t beginPos1,
+    const int32_t endPos1,
+    const int32_t tid2,
+    const int32_t beginPos2,
+    const int32_t endPos2,
+    const bool bothLocal = false,
+    const unsigned count = 1);

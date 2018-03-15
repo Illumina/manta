@@ -24,7 +24,7 @@
 //#define private public
 
 #include "svgraph/SVLocusSet.hh"
-#include "test/testSVLocusGraphUtil.hh"
+#include "test/testSVLocusUtil.hh"
 
 
 
