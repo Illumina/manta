@@ -45,6 +45,26 @@ bam_header_info
 buildTestBamHeader();
 
 
+/// \brief Build and manage the lifetime of the htslib bam header structure, bam_hdr_t
+///
+/// Note that the htslib header struct created by this object has only the minimum information filled in required for
+/// testing.
+struct HtslibBamHeaderManager
+{
+    /// \brief Initialize a bam header object with chromosome name, size and order as specified by \p chromData
+    explicit
+    HtslibBamHeaderManager(
+        const std::vector<bam_header_info::chrom_info>& chromData = {});
+
+    ~HtslibBamHeaderManager();
+
+    const bam_hdr_t& get() const { return *_header; }
+
+private:
+    bam_hdr_t* _header;
+};
+
+
 /// \brief Write bamHeader and readsToAdd into new bam file
 ///
 /// \param bamHeader Reference contig order and length

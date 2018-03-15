@@ -20,39 +20,16 @@
 #include "boost/test/unit_test.hpp"
 
 #include "htsapi/bam_header_info.hh"
-#include "htsapi/bam_util.hh"
+#include "test/testAlignmentDataUtil.hh"
 
 
-struct HtsHeaderHelper
-{
-    explicit
-    HtsHeaderHelper(
-        const std::vector<bam_header_info::chrom_info>& chromData = {})
-     : _header(bam_hdr_init())
-    {
-        _header->n_targets = chromData.size();
-        _header->target_len = (uint32_t*)calloc(_header->n_targets, sizeof(uint32_t));
-        _header->target_name = (char**)calloc(_header->n_targets, sizeof(char*));
-        for (int i = 0; i < _header->n_targets; ++i) {
-            _header->target_len[i] = chromData[i].length;
-            _header->target_name[i] = strdup(chromData[i].label.c_str());
-        }
-    }
-
-    ~HtsHeaderHelper() { bam_hdr_destroy(_header); }
-
-    const bam_hdr_t& get() const { return *_header; }
-
-private:
-    bam_hdr_t* _header;
-};
 
 BOOST_AUTO_TEST_SUITE( bam_header_info_test_suite )
 
 /// Create a bam_header_info object from an empty hts header
 BOOST_AUTO_TEST_CASE( test_bam_header_info_empty )
 {
-    HtsHeaderHelper emptyHtsHeader;
+    HtslibBamHeaderManager emptyHtsHeader;
     bam_header_info emptyBamHeader(emptyHtsHeader.get());
     BOOST_REQUIRE(emptyBamHeader.empty());
 }
@@ -63,7 +40,7 @@ BOOST_AUTO_TEST_CASE( test_bam_header_info_1chrom )
     std::vector<bam_header_info::chrom_info> chromData;
     chromData.emplace_back("chr1",1000);
 
-    HtsHeaderHelper oneHtsHeader(chromData);
+    HtslibBamHeaderManager oneHtsHeader(chromData);
     bam_header_info oneBamHeader(oneHtsHeader.get());
 
     BOOST_REQUIRE_EQUAL(oneBamHeader.chrom_data.size(), 1);
@@ -77,7 +54,7 @@ BOOST_AUTO_TEST_CASE( test_bam_header_info_2chrom )
     chromData.emplace_back("chr1", 1000);
     chromData.emplace_back("chr2", 1000);
 
-    HtsHeaderHelper twoHtsHeader(chromData);
+    HtslibBamHeaderManager twoHtsHeader(chromData);
     bam_header_info twoBamHeader(twoHtsHeader.get());
 
     BOOST_REQUIRE_EQUAL(twoBamHeader.chrom_data.size(), 2);
