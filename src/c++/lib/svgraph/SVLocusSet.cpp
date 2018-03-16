@@ -100,10 +100,10 @@ SVLocusSet(
 {
     /// Initialize read counts:
     const unsigned sampleCount(alignmentFilenames.size());
-    getCounts().setSampleCount(sampleCount);
+    _counts.setSampleCount(sampleCount);
     for (unsigned sampleIndex(0); sampleIndex < sampleCount; ++sampleIndex)
     {
-        getCounts().getSampleCounts(sampleIndex).sampleSource =
+        _counts.getSampleCounts(sampleIndex).sampleSource =
             alignmentFilenames[sampleIndex];
     }
 }

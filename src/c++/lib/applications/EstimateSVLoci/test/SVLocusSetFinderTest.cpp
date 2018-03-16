@@ -94,9 +94,9 @@ BOOST_AUTO_TEST_CASE( test_MapQuality_Filtering )
 
     // Test that the mapQ 14 is filtered and 15 is not filtered.
     //
-    const auto& sampleCounts(svLSF->getLocusSet().getCounts().getSampleCounts(0));
-    BOOST_REQUIRE_EQUAL(sampleCounts.input.minMapq, 1);
-    BOOST_REQUIRE_EQUAL(sampleCounts.input.evidenceCount.total, 1);
+    const auto& inputCounts(svLSF->getLocusSet().getAllSampleReadCounts().getSampleCounts(0).input);
+    BOOST_REQUIRE_EQUAL(inputCounts.minMapq, 1);
+    BOOST_REQUIRE_EQUAL(inputCounts.evidenceCount.total, 1);
 
     //// Indirect test matching above after write/read stats file:
     //const SVLocusSetStatsFileMaker stats(svLSF->getLocusSet());
@@ -127,9 +127,9 @@ BOOST_AUTO_TEST_CASE( test_SplitReadSemiAligned )
 
     // test locus set finder stats:
     // split read called first, not called for semi-aligned read sequence.
-    const auto& sampleCounts(svLSF->getLocusSet().getCounts().getSampleCounts(0));
-    BOOST_REQUIRE_EQUAL(sampleCounts.input.evidenceCount.assm, 0);
-    BOOST_REQUIRE_EQUAL(sampleCounts.input.evidenceCount.split, 1);
+    const auto& inputCounts(svLSF->getLocusSet().getAllSampleReadCounts().getSampleCounts(0).input);
+    BOOST_REQUIRE_EQUAL(inputCounts.evidenceCount.assm, 0);
+    BOOST_REQUIRE_EQUAL(inputCounts.evidenceCount.split, 1);
 
     // repeats the same test as above after going through read/write cycle of stats reporting
     //const SVLocusSetStatsFileMaker stats(svLSF->getLocusSet());

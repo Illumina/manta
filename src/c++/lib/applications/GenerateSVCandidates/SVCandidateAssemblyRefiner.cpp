@@ -1079,7 +1079,7 @@ SVCandidateAssemblyRefiner::
 SVCandidateAssemblyRefiner(
     const GSCOptions& opt,
     const bam_header_info& header,
-    const AllCounts& counts,
+    const AllSampleReadCounts& counts,
     EdgeRuntimeTracker& edgeTracker) :
     _opt(opt),
     _header(header),

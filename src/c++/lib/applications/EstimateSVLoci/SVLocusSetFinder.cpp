@@ -152,7 +152,7 @@ SVLocusSetFinder(
         _maxDepth=dFilter.maxDepth(scanRegion.tid);
     }
 
-    assert(opt.alignFileOpt.alignmentFilenames.size() == _svLociPtr->getCounts().size());
+    assert(opt.alignFileOpt.alignmentFilenames.size() == _svLociPtr->getAllSampleReadCounts().size());
 }
 
 
@@ -285,15 +285,14 @@ update(
         }
     }
 
-    // counts/incounts are part of the statistics tracking framework used for
-    // methods diagnostics. They do not impact the graph build.
-    SampleCounts& counts(_getLocusSet().getCounts().getSampleCounts(defaultReadGroupIndex));
-    SampleReadInputCounts& incounts(counts.input);
+    // inputCounts is part of the statistics tracking framework used for
+    // methods diagnostics. It does not impact the graph build.
+    SampleReadInputCounts& inputCounts(_getLocusSet().getSampleReadInputCounts(defaultReadGroupIndex));
 
     // Filter out reads below the minimum MAPQ threshold
     if (bamRead.map_qual() < _readScanner.getMinMapQ())
     {
-        incounts.minMapq++;
+        inputCounts.minMapq++;
         return;
     }
 
@@ -306,7 +305,7 @@ update(
     // later as non-evidence -- they will not be filtered per se, but rather converted into zero SVLocus
     // objects.
     //
-    if (! _readScanner.isSVEvidence(bamRead,defaultReadGroupIndex,_refSeq(),&(incounts.evidenceCount))) return;
+    if (! _readScanner.isSVEvidence(bamRead,defaultReadGroupIndex,_refSeq(),&(inputCounts.evidenceCount))) return;
 
 #ifdef DEBUG_SFINDER
     log_os << __FUNCTION__ << ": Accepted read. isNonCompressedAnomalous "  << isNonCompressedAnomalous << " is Local assm evidence: " << isLocalAssemblyEvidence << " read: " << bamRead << "\n";
@@ -331,9 +330,12 @@ update(
     // SVLocus will consist of either one or two SVLocusNodes.
     //
     std::vector<SVLocus> loci;
-    SampleEvidenceCounts& eCounts(counts.evidence);
+
+    // evidenceCounts is part of the statistics tracking framework used for
+    // methods diagnostics. It does not impact the graph build.
+    SampleEvidenceCounts& evidenceCounts(_getLocusSet().getSampleEvidenceCounts(defaultReadGroupIndex));
     _readScanner.getSVLoci(bamRead, defaultReadGroupIndex, _bamHeader(),
-                           _refSeq(), loci, eCounts);
+                           _refSeq(), loci, evidenceCounts);
 
     // merge each non-empty SV locus into this genome segment graph:
     for (const SVLocus& locus : loci)

@@ -71,9 +71,9 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSampleCounts )
 
     // Test that the mapQ 14 is filtered and 15 is not filtered.
     //
-    const auto& sampleCounts(eslRunner.getLocusSet().getCounts().getSampleCounts(0));
-    BOOST_REQUIRE_EQUAL(sampleCounts.input.minMapq, 1);
-    BOOST_REQUIRE_EQUAL(sampleCounts.input.evidenceCount.total, 1);
+    const auto& inputCounts(eslRunner.getLocusSet().getAllSampleReadCounts().getSampleCounts(0).input);
+    BOOST_REQUIRE_EQUAL(inputCounts.minMapq, 1);
+    BOOST_REQUIRE_EQUAL(inputCounts.evidenceCount.total, 1);
 
     // Test that the mapQ 14 is filtered and 15 is not filtered.
     //SVLocusSetStatsFileMaker graphStats(svLoci);

@@ -112,7 +112,7 @@ write(
 
 
 void
-SampleCounts::
+SampleReadCounts::
 write(
     std::ostream& os,
     const char* label) const
@@ -126,7 +126,7 @@ write(
 
 
 void
-AllCounts::
+AllSampleReadCounts::
 write(
     std::ostream& os,
     const std::vector<std::string>& sampleLabels) const

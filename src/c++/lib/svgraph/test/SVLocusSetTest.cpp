@@ -135,13 +135,12 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSetProperties )
     SVLocusSetOptions sopt;
     sopt.minMergeEdgeObservations = 1;
     SVLocusSet set1(sopt);
-    const SVLocusSet& cset1(set1);
 
     // Test getSource(..)
-    BOOST_REQUIRE_EQUAL("UNKNOWN", cset1.getSource());
+    BOOST_REQUIRE_EQUAL("UNKNOWN", set1.getSource());
 
     // Empty Set
-    TestSVLocusSetProperties(cset1, 0, 0, 0, 0);
+    TestSVLocusSetProperties(set1, 0, 0, 0, 0);
 
     // Test merging empty locus
     SVLocus locus1;
@@ -152,7 +151,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSetProperties )
     // Add a single node to the locus
     locus1.addNode(GenomeInterval(1,10,20));
     set1.merge(locus1);
-    TestSVLocusSetProperties(cset1, 1, 1, 1, 0);
+    TestSVLocusSetProperties(set1, 1, 1, 1, 0);
 
     BOOST_REQUIRE(! set1.empty());
 
@@ -163,8 +162,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSetProperties )
     const NodeIndexType nodePtr3 = locus2.addNode(GenomeInterval(3,50,60));
     locus2.linkNodes(nodePtr2, nodePtr3, 1, 0);
     set2.merge(locus2);
-    const SVLocusSet& cset2(set2);
-    TestSVLocusSetProperties(cset2, 1, 1, 2, 2);
+    TestSVLocusSetProperties(set2, 1, 1, 2, 2);
 
     SVLocusSet set3(sopt);
     set3.merge(locus1);
@@ -172,11 +170,7 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSetProperties )
 
     TestSVLocusSetProperties(set3, 2, 2, 3, 2);
 
-    // Test getCounts(..) returns a counts object.
-    AllCounts& counts = set1.getCounts();
-    BOOST_REQUIRE_EQUAL(counts.size(), 0);
-    const AllCounts& constCounts = cset1.getCounts();
-    BOOST_REQUIRE_EQUAL(constCounts.size(), 0);
+    BOOST_REQUIRE_EQUAL(set1.getAllSampleReadCounts().size(), 0);
 
     // Test setBuildTIme and addMergeTime. Can only test function does not fail.
     boost::timer::cpu_times tempTimes = {1,2,3};

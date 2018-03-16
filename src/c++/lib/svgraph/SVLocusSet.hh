@@ -305,18 +305,24 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>, private b
         const bool isCheckOverlap = false,
         const bool isCheckLocusConnected = false) const;
 
-    /// Updater gets direct access to read counts:
-    AllCounts&
-    getCounts()
+    const AllSampleReadCounts&
+    getAllSampleReadCounts() const
     {
         return _counts;
     }
 
-    /// Return the AllCounts object reference for the SVLocusSet object
-    const AllCounts&
-    getCounts() const
+    SampleReadInputCounts&
+    getSampleReadInputCounts(
+        const unsigned index)
     {
-        return _counts;
+        return _counts.getSampleCounts(index).input;
+    }
+
+    SampleEvidenceCounts&
+    getSampleEvidenceCounts(
+        const unsigned index)
+    {
+        return _counts.getSampleCounts(index).evidence;
     }
 
     /// Set the buildTime  SVLocusSet object
@@ -772,7 +778,7 @@ private:
     /// once complete, overlaps are not present and disallowed:
     bool _isFinalized;
 
-    AllCounts _counts;
+    AllSampleReadCounts _counts;
 
     /// Total number of observations removed on edges with less than minMergeEdgeCount counts
     unsigned _totalCleaned;

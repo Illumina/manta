@@ -47,7 +47,7 @@
 static
 double
 getRemoteRecoveryCandidateRate(
-    const AllCounts& counts,
+    const AllSampleReadCounts& counts,
     const unsigned sampleIndex)
 {
     static const double pseudoTotal(10000.);
@@ -68,7 +68,7 @@ SVCandidateAssembler(
     const std::string& statsFilename,
     const std::string& chromDepthFilename,
     const bam_header_info& bamHeader,
-    const AllCounts& counts,
+    const AllSampleReadCounts& counts,
     const bool isRNA,
     TimeTracker& remoteReadRetrievalTime) :
     _scanOpt(scanOpt),

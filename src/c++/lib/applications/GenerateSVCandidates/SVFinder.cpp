@@ -46,7 +46,7 @@
 static
 double
 getSpanningNoiseRate(
-    const AllCounts& counts,
+    const AllSampleReadCounts& counts,
     const unsigned sampleIndex)
 {
     static const double pseudoTotal(1000.);
@@ -66,7 +66,7 @@ getSpanningNoiseRate(
 static
 double
 getAssemblyNoiseRate(
-    const AllCounts& counts,
+    const AllSampleReadCounts& counts,
     const unsigned sampleIndex)
 {
     static const double pseudoTotal(1000.);
@@ -120,7 +120,7 @@ SVFinder(
         }
     }
 
-    const AllCounts& counts(getSet().getCounts());
+    const AllSampleReadCounts& counts(getSet().getAllSampleReadCounts());
     for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
     {
         // take max rate over all samples:

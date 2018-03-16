@@ -53,7 +53,7 @@ struct SVCandidateAssembler
         const std::string& statsFilename,
         const std::string& chromDepthFilename,
         const bam_header_info& bamHeader,
-        const AllCounts& counts,
+        const AllSampleReadCounts& counts,
         const bool isRNA,
         TimeTracker& remoteReadRetrievalTime);
 

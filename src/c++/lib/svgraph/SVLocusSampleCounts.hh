@@ -119,7 +119,7 @@ struct SampleEvidenceCounts
 
 
 /// total statistics for each sample
-struct SampleCounts
+struct SampleReadCounts
 {
     void
     clear()
@@ -131,7 +131,7 @@ struct SampleCounts
 
     void
     merge(
-        const SampleCounts& srs)
+        const SampleReadCounts& srs)
     {
         assert(sampleSource == srs.sampleSource);
         input.merge(srs.input);
@@ -157,7 +157,7 @@ struct SampleCounts
 
 
 /// Read count statistics for all samples
-struct AllCounts
+struct AllSampleReadCounts
 {
     void
     clear()
@@ -182,7 +182,7 @@ struct AllCounts
         return _samples.size();
     }
 
-    SampleCounts&
+    SampleReadCounts&
     getSampleCounts(
         const unsigned index)
     {
@@ -190,7 +190,7 @@ struct AllCounts
         return _samples[index];
     }
 
-    const SampleCounts&
+    const SampleReadCounts&
     getSampleCounts(
         const unsigned index) const
     {
@@ -200,7 +200,7 @@ struct AllCounts
 
     void
     merge(
-        const AllCounts& rhs)
+        const AllSampleReadCounts& rhs)
     {
         assert(size() == rhs.size());
 
@@ -223,6 +223,5 @@ struct AllCounts
     }
 
 private:
-
-    std::vector<SampleCounts> _samples;
+    std::vector<SampleReadCounts> _samples;
 };
