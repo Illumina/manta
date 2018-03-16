@@ -33,84 +33,6 @@
 #include <sstream>
 
 
-namespace STAGE
-{
-enum index_t
-{
-    HEAD,
-    DENOISE,
-    CLEAR_DEPTH
-};
-
-
-static
-stage_data
-getStageData(
-    const unsigned denoiseBorderSize)
-{
-    // the number of positions below the HEAD position where the
-    // depth buffer can be safely erased
-    static const unsigned clearDepthBorderSize(10);
-
-    stage_data sd;
-    sd.add_stage(HEAD);
-    sd.add_stage(DENOISE, HEAD, denoiseBorderSize);
-    sd.add_stage(CLEAR_DEPTH, HEAD, clearDepthBorderSize);
-
-    return sd;
-}
-}
-
-
-
-/// \brief Compute the genomic region in which graph denoising is allowed.
-///
-/// The allowed denoising region is the same as the current scan region, except that the region is shortened
-/// by a fixed-size buffer wherever an adjacent genome segment is potentially being analyzed by another
-/// process in parallel. This protected zone near adjacent segment boundaries helps to ensure that SV
-/// breakend regions spanning the adjacent process boundary are not pessimistically marked as noise before
-/// the evidence from both segments has been merged.
-///
-/// \param scanRegion The region of the genome scanned by this process for SV locus evidence.
-/// \param bamHeader Bam header information. Used to extract chromosome length here.
-/// \param denoiseRegionProtectedBorderSize Length of the protected region where denoising is skipped at adjacent
-///                                         process boundaries.
-/// \return Region where denoising is allowed in this process
-static
-GenomeInterval
-computeDenoiseRegion(
-    const GenomeInterval& scanRegion,
-    const bam_header_info& bamHeader,
-    const int denoiseRegionProtectedBorderSize)
-{
-    GenomeInterval denoiseRegion=scanRegion;
-
-    known_pos_range2& range(denoiseRegion.range);
-    if (range.begin_pos() > 0)
-    {
-        range.set_begin_pos(range.begin_pos()+denoiseRegionProtectedBorderSize);
-    }
-
-    bool isEndBorder(true);
-    if (static_cast<int32_t>(bamHeader.chrom_data.size()) > denoiseRegion.tid)
-    {
-        const pos_t chromEndPos(bamHeader.chrom_data[denoiseRegion.tid].length);
-        isEndBorder=(range.end_pos() < chromEndPos);
-    }
-
-    if (isEndBorder)
-    {
-        range.set_end_pos(range.end_pos()-denoiseRegionProtectedBorderSize);
-    }
-
-#ifdef DEBUG_SFINDER
-    log_os << __FUNCTION__ << ": " << denoiseRegion << "\n";
-#endif
-
-    return  denoiseRegion;
-}
-
-
 /// The compression level used by this object's private depth-per-position buffer.
 static const unsigned depthBufferCompression = 16;
 
@@ -126,16 +48,8 @@ SVLocusSetFinder(
     _scanRegion(scanRegion),
     _refSeqPtr(refSeqPtr),
     _svLociPtr(svLociPtr),
-    _denoiseRegion(computeDenoiseRegion(scanRegion, _bamHeader(), REGION_DENOISE_BORDER)),
-    _stageManager(
-        STAGE::getStageData(REGION_DENOISE_BORDER),
-        pos_range(
-            scanRegion.range.begin_pos(),
-            scanRegion.range.end_pos()),
-        *this),
     _positionReadDepthEstimatePtr(std::make_shared<depth_buffer_compressible>(depthBufferCompression)),
-    _isInDenoiseRegion(false),
-    _denoiseStartPos(0),
+    _regionManager(_scanRegion,_svLociPtr,_positionReadDepthEstimatePtr),
     _readScanner(opt.scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilenames, opt.isRNA),
     _isMaxDepthFilter(false),
     _maxDepth(0)
@@ -153,77 +67,6 @@ SVLocusSetFinder(
     }
 
     assert(opt.alignFileOpt.alignmentFilenames.size() == _svLociPtr->getAllSampleReadCounts().size());
-}
-
-
-
-void
-SVLocusSetFinder::
-process_pos(const int stage_no,
-            const pos_t pos)
-{
-#ifdef DEBUG_SFINDER
-    log_os << __FUNCTION__ << ": stage_no: " << stage_no << " pos: " << pos << "\n";
-#endif
-
-    if     (stage_no == STAGE::HEAD)
-    {
-        // pass
-    }
-    else if (stage_no == STAGE::DENOISE)
-    {
-        // denoise the SV locus graph in regions of at least this size
-        //
-        // this parameter batches the denoising process to balance runtime vs.
-        // maintaining the SV locus graph as a reasonably compact data structure
-        //
-        static const pos_t minDenoiseRegionSize(1000);
-
-        if (_denoiseRegion.range.is_pos_intersect(pos))
-        {
-
-#ifdef DEBUG_SFINDER
-            log_os << __FUNCTION__ << ": pos intersect. pos: " << pos << " dnRegion: " << _denoiseRegion << " is in region: " << _isInDenoiseRegion << "\n";
-#endif
-
-            if (! _isInDenoiseRegion)
-            {
-                _denoiseStartPos=_denoiseRegion.range.begin_pos();
-                _isInDenoiseRegion=true;
-            }
-
-            if ( (1 + pos-_denoiseStartPos) >= minDenoiseRegionSize)
-            {
-                _getLocusSet().cleanRegion(GenomeInterval(_denoiseRegion.tid, _denoiseStartPos, (pos+1)));
-                _denoiseStartPos = (pos+1);
-            }
-        }
-        else
-        {
-
-#ifdef DEBUG_SFINDER
-            log_os << __FUNCTION__ << ": no pos intersect. pos: " << pos << " dnRegion: " << _denoiseRegion << " is in region: " << _isInDenoiseRegion << "\n";
-#endif
-
-            if (_isInDenoiseRegion)
-            {
-                if ( (_denoiseRegion.range.end_pos()-_denoiseStartPos) > 0)
-                {
-                    _getLocusSet().cleanRegion(GenomeInterval(_denoiseRegion.tid, _denoiseStartPos, _denoiseRegion.range.end_pos()));
-                    _denoiseStartPos = _denoiseRegion.range.end_pos();
-                }
-                _isInDenoiseRegion=false;
-            }
-        }
-    }
-    else if (stage_no == STAGE::CLEAR_DEPTH)
-    {
-        _positionReadDepthEstimatePtr->clear_pos(pos);
-    }
-    else
-    {
-        assert(false && "Unexpected stage id");
-    }
 }
 
 
@@ -317,12 +160,12 @@ update(
     // QC check of read length
     SVLocusScanner::checkReadSize(streamErrorReporter, bamRead);
 
-    // update the stage manager to move the head pointer forward to the current read's position
+    // update the region manager to move the head pointer forward to the current read's position
     //
     // This may trigger a denoising step or clear buffered information for all positions at a
-    // given offset below the new head position
+    // given offset below the new position
     //
-    _stageManager.handle_new_pos_value(bamRead.pos()-1);
+    _regionManager.handle_new_pos_value(bamRead.pos()-1);
 
     // convert the given read into zero to many SVLocus objects
     //

@@ -24,14 +24,15 @@
 #pragma once
 
 #include "ESLOptions.hh"
+#include "SVLocusSetFinderActiveRegionManager.hh"
 
 #include "blt_util/depth_buffer.hh"
-#include "blt_util/pos_processor_base.hh"
-#include "blt_util/stage_manager.hh"
 #include "htsapi/bam_record.hh"
 #include "htsapi/bam_streamer.hh"
 #include "manta/SVLocusScanner.hh"
 #include "svgraph/SVLocusSet.hh"
+
+#include "boost/noncopyable.hpp"
 
 #include <iosfwd>
 #include <memory>
@@ -48,13 +49,6 @@
 /// segment, given that sequencing read evidence will be provided with strictly increasing
 /// aligned position values from one end to the other of the bam segment in question.
 ///
-/// pos_processor_base:
-///
-/// This inherits from pos_processor_base to facilitate a "rolling" execution of
-/// functions at a defined positional offset less than the position of the most recent
-/// read alignment input. These offset functions will (1) trigger the inline graph denoising
-/// process (2) clean up buffered read depth data after it is no longer needed.
-///
 /// Depth Tracking and High-Depth Filtration:
 ///
 /// This object tracks the estimated depth per position summed over all non-tumor samples in
@@ -69,7 +63,7 @@
 /// mutation process, so at least on non-tumor sample is required to infer the location of reference
 /// compressions or similarly unreliable regions.
 ///
-struct SVLocusSetFinder : public pos_processor_base, private boost::noncopyable
+struct SVLocusSetFinder : private boost::noncopyable
 {
     /// This constructs to an immediately usable state following an RAII-like pattern.
     ///
@@ -81,11 +75,6 @@ struct SVLocusSetFinder : public pos_processor_base, private boost::noncopyable
         const GenomeInterval& scanRegion,
         const std::shared_ptr<reference_contig_segment> refSeqPtr,
         std::shared_ptr<SVLocusSet> svLociPtr);
-
-    ~SVLocusSetFinder() override
-    {
-        flush();
-    }
 
     /// \brief Push a new read alignment into the SV graph building process
     ///
@@ -115,25 +104,10 @@ struct SVLocusSetFinder : public pos_processor_base, private boost::noncopyable
     void
     flush()
     {
-        _stageManager.reset();
+        _regionManager.flush();
     }
 
 private:
-
-    /// Execute logic which is dependent on being a fixed offset from the
-    /// the HEAD position in this object's "rolling" positional processing pipeline.
-    ///
-    /// For this object the HEAD position is defined by the mapping position of the
-    /// most recently processed BAM input read.
-    ///
-    /// For more general background see stage_manager and its associated tests.
-    ///
-    /// \param stage_no the stage id is used to determine what logic to execute on the given position
-    /// \param pos execute stage specific logic on this position number
-    void
-    process_pos(
-        const int stage_no,
-        const pos_t pos) override;
 
     /// \brief Add the input read to this object's running estimate of read depth per position.
     ///
@@ -160,14 +134,6 @@ private:
         return *_svLociPtr;
     }
 
-    enum hack_t
-    {
-        /// Length in bases on the beginning and the end of scan range which is excluded from in-line graph de-noising
-        ///
-        /// TODO compute this number from read insert ranges
-        REGION_DENOISE_BORDER = 5000
-    };
-
     /////////////////////////////////////////////////
     // data:
 
@@ -183,22 +149,12 @@ private:
 
     /// Pointer to the SV locus graph being built into by this object
     std::shared_ptr<SVLocusSet> _svLociPtr;
-
-    /// A subset of _scanRegion in which the inline graph denoising operation is allowed.
-    const GenomeInterval _denoiseRegion;
-
-    /// Helper object used to schedule calls at positions with a defined offset below the current input read's position
-    stage_manager _stageManager;
-
+    
     /// Track estimated depth per position for the purpose of filtering high-depth regions
     std::shared_ptr<depth_buffer_compressible> _positionReadDepthEstimatePtr;
 
-    /// True when the denoising position pointer is within _denoiseRegion
-    bool _isInDenoiseRegion;
-
-    /// The graph inline denoising routine has run up to this position, subseqeunt denoising passes should start
-    /// from this position up to a chosen window size
-    pos_t _denoiseStartPos;
+    /// Region manager handles all region-dependent data triggers (denoising, cleaning unused depth positions, etc..)
+    SVLocusSetFinderActiveRegionManager _regionManager;
 
     SVLocusScanner _readScanner;
 
