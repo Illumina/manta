@@ -1362,7 +1362,7 @@ save(const char* filename) const
     std::ofstream ofs(filename, std::ios::binary);
     binary_oarchive oa(ofs);
 
-    oa << header;
+    oa << getBamHeader();
     oa << _opt;
     oa << _isFinalized;
     oa << _totalCleaned;
@@ -1404,7 +1404,7 @@ SVLocusSet(
 
         _source = filename;
 
-        ia >> header;
+        ia >> _bamHeaderInfo;
         ia >> _opt;
         ia >> _isFinalized;
         ia >> _totalCleaned;
@@ -1659,7 +1659,7 @@ checkForOverlapNodes(
                     << "\tlast_node: " << lastAddy << " "<< getNode(lastAddy) << "\n"
                     << "\tthis_node: " << addy << " "<< getNode(addy) << "\n"
                     << "\n"
-                    << header << "\n";
+                    << getBamHeader() << "\n";
                 BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
         }

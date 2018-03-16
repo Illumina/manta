@@ -69,20 +69,18 @@
 /// mutation process, so at least on non-tumor sample is required to infer the location of reference
 /// compressions or similarly unreliable regions.
 ///
-struct SVLocusSetFinder : public pos_processor_base
+struct SVLocusSetFinder : public pos_processor_base, private boost::noncopyable
 {
     /// This constructs to an immediately usable state following an RAII-like pattern.
     ///
     /// \param[in] scanRegion The genomic region which this SVLocusSetFinder object will translate into an SVLocusGraph
-    /// \param[in] bamHeaderPtr Pointer to a bam header containing chromosome details.
-    /// \param[in,out] svLoci SVLocusSet into which all results wil be merged, the lifetime of svLoci cannot be shorter
-    ///                       than this object.
+    /// \param[in] refSeqPtr Pointer reference segment corresponding to scanRegion.
+    /// \param[in,out] svLociPtr Pointer to SVLocusSet into which all results wil be merged.
     SVLocusSetFinder(
         const ESLOptions& opt,
         const GenomeInterval& scanRegion,
-        const std::shared_ptr<bam_header_info> bamHeaderPtr,
         const std::shared_ptr<reference_contig_segment> refSeqPtr,
-        SVLocusSet& svLoci);
+        std::shared_ptr<SVLocusSet> svLociPtr);
 
     ~SVLocusSetFinder() override
     {
@@ -107,7 +105,7 @@ struct SVLocusSetFinder : public pos_processor_base
     const SVLocusSet&
     getLocusSet() const
     {
-        return _svLoci;
+        return *_svLociPtr;
     }
 
     /// \brief Flush any cached values built up during the update process.
@@ -147,13 +145,19 @@ private:
     const bam_header_info&
     _bamHeader() const
     {
-        return *(_bamHeaderPtr.get());
+        return getLocusSet().getBamHeader();
     }
 
     const reference_contig_segment&
     _refSeq() const
     {
         return *(_refSeqPtr.get());
+    }
+
+    SVLocusSet&
+    _getLocusSet()
+    {
+        return *_svLociPtr;
     }
 
     enum hack_t
@@ -175,17 +179,16 @@ private:
     /// The target genome region for this SV locus graph building process
     const GenomeInterval _scanRegion;
 
-    const std::shared_ptr<bam_header_info> _bamHeaderPtr;
     const std::shared_ptr<reference_contig_segment> _refSeqPtr;
+
+    /// Pointer to the SV locus graph being built into by this object
+    std::shared_ptr<SVLocusSet> _svLociPtr;
 
     /// A subset of _scanRegion in which the inline graph denoising operation is allowed.
     const GenomeInterval _denoiseRegion;
 
     /// Helper object used to schedule calls at positions with a defined offset below the current input read's position
     stage_manager _stageManager;
-
-    /// The SV locus graph being built into by this object
-    SVLocusSet& _svLoci;
 
     /// Track estimated depth per position for the purpose of filtering high-depth regions
     depth_buffer_compressible _positionReadDepthEstimate;

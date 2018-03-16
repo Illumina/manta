@@ -23,14 +23,14 @@
 
 #include "boost/test/unit_test.hpp"
 
-#include "estimateSVLociForSingleRegion.hh"
+#include "EstimateSVLociRunner.hh"
 
 #include "test/testAlignmentDataUtil.hh"
 #include "test/testFileMakers.hh"
 
 #include <fstream>
 
-BOOST_AUTO_TEST_SUITE( estimateSVLociForSingleRegion_test_suite )
+BOOST_AUTO_TEST_SUITE( EstimateSVLociRunner_test_suite )
 
 /// Test that the estimateSVLociForSingleRegion works correctly with a basic input of a read filtered for mapQ and a
 /// read that should not be filtered at all. The results will be output to a stats file for confirmation to satisfy
@@ -66,12 +66,12 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSampleCounts )
     eslOpt.alignFileOpt.alignmentFilenames = bamFiles;
     eslOpt.alignFileOpt.isAlignmentTumor = { false };
 
-    SVLocusSet svLoci;
-    estimateSVLociForSingleRegion(eslOpt, "chrFoo", svLoci);
+    EstimateSVLociRunner eslRunner(eslOpt);
+    eslRunner.estimateSVLociForSingleRegion("chrFoo");
 
     // Test that the mapQ 14 is filtered and 15 is not filtered.
     //
-    const auto& sampleCounts(svLoci.getCounts().getSampleCounts(0));
+    const auto& sampleCounts(eslRunner.getLocusSet().getCounts().getSampleCounts(0));
     BOOST_REQUIRE_EQUAL(sampleCounts.input.minMapq, 1);
     BOOST_REQUIRE_EQUAL(sampleCounts.input.evidenceCount.total, 1);
 

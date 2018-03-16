@@ -120,13 +120,12 @@ SVLocusSetFinder::
 SVLocusSetFinder(
     const ESLOptions& opt,
     const GenomeInterval& scanRegion,
-    const std::shared_ptr<bam_header_info> bamHeaderPtr,
     const std::shared_ptr<reference_contig_segment> refSeqPtr,
-    SVLocusSet& svLoci) :
+    std::shared_ptr<SVLocusSet> svLociPtr) :
     _isAlignmentTumor(opt.alignFileOpt.isAlignmentTumor),
     _scanRegion(scanRegion),
-    _bamHeaderPtr(bamHeaderPtr),
     _refSeqPtr(refSeqPtr),
+    _svLociPtr(svLociPtr),
     _denoiseRegion(computeDenoiseRegion(scanRegion, _bamHeader(), REGION_DENOISE_BORDER)),
     _stageManager(
         STAGE::getStageData(REGION_DENOISE_BORDER),
@@ -134,7 +133,6 @@ SVLocusSetFinder(
             scanRegion.range.begin_pos(),
             scanRegion.range.end_pos()),
         *this),
-    _svLoci(svLoci),
     _positionReadDepthEstimate(depthBufferCompression),
     _isInDenoiseRegion(false),
     _denoiseStartPos(0),
@@ -142,6 +140,8 @@ SVLocusSetFinder(
     _isMaxDepthFilter(false),
     _maxDepth(0)
 {
+    assert(_svLociPtr);
+
     //
     // initialize max depth filtration values:
     //
@@ -155,26 +155,23 @@ SVLocusSetFinder(
     // If SV locus graph is empty, initialize various metadata, otherwise verify that meta-data match existing metadata
     //
     const unsigned sampleCount(opt.alignFileOpt.alignmentFilenames.size());
-    if (_svLoci.getCounts().size() == 0)
+    if (getLocusSet().getCounts().size() == 0)
     {
-        _svLoci.getCounts().setSampleCount(sampleCount);
+        _getLocusSet().getCounts().setSampleCount(sampleCount);
         for (unsigned sampleIndex(0); sampleIndex < sampleCount; ++sampleIndex)
         {
-            _svLoci.getCounts().getSampleCounts(sampleIndex).sampleSource =
+            _getLocusSet().getCounts().getSampleCounts(sampleIndex).sampleSource =
                 opt.alignFileOpt.alignmentFilenames[sampleIndex];
         }
-
-        _svLoci.header = _bamHeader();
     }
     else
     {
-        assert(_svLoci.getCounts().size() == sampleCount);
+        assert(getLocusSet().getCounts().size() == sampleCount);
         for (unsigned sampleIndex(0); sampleIndex < sampleCount; ++sampleIndex)
         {
-            assert(_svLoci.getCounts().getSampleCounts(sampleIndex).sampleSource ==
+            assert(getLocusSet().getCounts().getSampleCounts(sampleIndex).sampleSource ==
                        opt.alignFileOpt.alignmentFilenames[sampleIndex]);
         }
-        assert(_svLoci.header == _bamHeader());
     }
 }
 
@@ -217,7 +214,7 @@ process_pos(const int stage_no,
 
             if ( (1 + pos-_denoiseStartPos) >= minDenoiseRegionSize)
             {
-                _svLoci.cleanRegion(GenomeInterval(_denoiseRegion.tid, _denoiseStartPos, (pos+1)));
+                _getLocusSet().cleanRegion(GenomeInterval(_denoiseRegion.tid, _denoiseStartPos, (pos+1)));
                 _denoiseStartPos = (pos+1);
             }
         }
@@ -232,7 +229,7 @@ process_pos(const int stage_no,
             {
                 if ( (_denoiseRegion.range.end_pos()-_denoiseStartPos) > 0)
                 {
-                    _svLoci.cleanRegion(GenomeInterval(_denoiseRegion.tid, _denoiseStartPos, _denoiseRegion.range.end_pos()));
+                    _getLocusSet().cleanRegion(GenomeInterval(_denoiseRegion.tid, _denoiseStartPos, _denoiseRegion.range.end_pos()));
                     _denoiseStartPos = _denoiseRegion.range.end_pos();
                 }
                 _isInDenoiseRegion=false;
@@ -310,7 +307,7 @@ update(
 
     // counts/incounts are part of the statistics tracking framework used for
     // methods diagnostics. They do not impact the graph build.
-    SampleCounts& counts(_svLoci.getCounts().getSampleCounts(defaultReadGroupIndex));
+    SampleCounts& counts(_getLocusSet().getCounts().getSampleCounts(defaultReadGroupIndex));
     SampleReadInputCounts& incounts(counts.input);
 
     // Filter out reads below the minimum MAPQ threshold
@@ -362,6 +359,6 @@ update(
     for (const SVLocus& locus : loci)
     {
         if (locus.empty()) continue;
-        _svLoci.merge(locus);
+        _getLocusSet().merge(locus);
     }
 }

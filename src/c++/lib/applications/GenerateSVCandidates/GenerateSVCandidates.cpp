@@ -49,11 +49,12 @@ dumpEdgeInfo(
     const SVLocusSet& set,
     std::ostream& os)
 {
+    const bam_header_info& bamHeader(set.getBamHeader());
     os << edge;
     const auto& node1(set.getLocus(edge.locusIndex).getNode(edge.nodeIndex1));
     os << "\tnode1:" << node1;
     os << "\tnode1:";
-    summarizeGenomeInterval(set.header, node1.getInterval(), os);
+    summarizeGenomeInterval(bamHeader, node1.getInterval(), os);
     os << "\n";
 
     if (! edge.isSelfEdge())
@@ -61,7 +62,7 @@ dumpEdgeInfo(
         const auto& node2(set.getLocus(edge.locusIndex).getNode(edge.nodeIndex2));
         os << "\tnode2:" << node2;
         os << "\tnode2:";
-        summarizeGenomeInterval(set.header, node2.getInterval(), os);
+        summarizeGenomeInterval(bamHeader, node2.getInterval(), os);
         os << "\n";
     }
 }
@@ -225,7 +226,7 @@ runGSC(
 
     if (opt.isVerbose)
     {
-        log_os << __FUNCTION__ << ": " << cset.header << "\n";
+        log_os << __FUNCTION__ << ": " << cset.getBamHeader() << "\n";
     }
 
     while (edger.next())

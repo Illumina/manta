@@ -493,8 +493,8 @@ SVCandidateProcessor(
     _cset(cset),
     _edgeTracker(edgeTracker),
     _edgeStatMan(edgeStatMan),
-    _svRefine(opt, cset.header, cset.getCounts(), _edgeTracker),
-    _svWriter(opt, readScanner, cset.header, progName, progVersion)
+    _svRefine(opt, cset.getBamHeader(), cset.getCounts(), _edgeTracker),
+    _svWriter(opt, readScanner, cset.getBamHeader(), progName, progVersion)
 {}
 
 

@@ -36,27 +36,20 @@
 /// TODO refactor code to remove the necessity for this to exist.
 static
 std::unique_ptr<SVLocusSetFinder>
-buildSVLocusSetFinder(
-    SVLocusSet& svLoci)
+buildSVLocusSetFinder()
 {
-    const GenomeInterval interval(0, 0, 499);
-    ESLOptions opts;
-
-    const auto testBamHeaderInputPtr(std::make_shared<bam_header_info>(buildTestBamHeader()));
+    const bam_header_info bamHeaderInfo(buildTestBamHeader());
     TestStatsFileMaker statsFile;
-    TestAlignHeaderFileMaker alignFile(*(testBamHeaderInputPtr.get()));
+    TestAlignHeaderFileMaker alignFile(bamHeaderInfo);
 
-    AlignmentFileOptions afo;
-
-    afo.alignmentFilenames = { alignFile.getFilename() };
-    afo.isAlignmentTumor = {false};
-
-    opts.alignFileOpt = afo;
+    ESLOptions opts;
+    opts.alignFileOpt.alignmentFilenames = { alignFile.getFilename() };
+    opts.alignFileOpt.isAlignmentTumor = { false };
     opts.statsFilename = statsFile.getFilename();
 
-    return boost::make_unique<SVLocusSetFinder>(opts, interval,
-                                                std::make_shared<bam_header_info>(buildTestBamHeader()),
-                                                std::make_shared<reference_contig_segment>(), svLoci);
+    return boost::make_unique<SVLocusSetFinder>(opts, GenomeInterval(0, 0, 499),
+                                                std::make_shared<reference_contig_segment>(),
+                                                std::make_shared<SVLocusSet>(opts.graphOpt,bamHeaderInfo));
 }
 
 
@@ -76,8 +69,7 @@ BOOST_AUTO_TEST_CASE( test_MapQuality_Filtering )
 
     //TODO Setup read with quality above, below, and same as _opt.minMapq
 
-    SVLocusSet svLoci;
-    std::unique_ptr<SVLocusSetFinder> svLSF(buildSVLocusSetFinder(svLoci));
+    std::unique_ptr<SVLocusSetFinder> svLSF(buildSVLocusSetFinder());
 
     // stand-in state reporter used for the unit test, does nothing
     stream_state_reporter dummyStateReporter;
@@ -100,7 +92,7 @@ BOOST_AUTO_TEST_CASE( test_MapQuality_Filtering )
 
     // Test that the mapQ 14 is filtered and 15 is not filtered.
     //
-    const auto& sampleCounts(svLoci.getCounts().getSampleCounts(0));
+    const auto& sampleCounts(svLSF->getLocusSet().getCounts().getSampleCounts(0));
     BOOST_REQUIRE_EQUAL(sampleCounts.input.minMapq, 1);
     BOOST_REQUIRE_EQUAL(sampleCounts.input.evidenceCount.total, 1);
 
@@ -124,8 +116,7 @@ BOOST_AUTO_TEST_CASE( test_SplitReadSemiAligned )
     }
 
     // insert split read in locus set finder:
-    SVLocusSet svLoci;
-    std::unique_ptr<SVLocusSetFinder> svLSF(buildSVLocusSetFinder(svLoci));
+    std::unique_ptr<SVLocusSetFinder> svLSF(buildSVLocusSetFinder());
 
     // stand-in state reporter used for the unit test, does nothing
     stream_state_reporter dummyStateReporter;
@@ -134,7 +125,7 @@ BOOST_AUTO_TEST_CASE( test_SplitReadSemiAligned )
 
     // test locus set finder stats:
     // split read called first, not called for semi-aligned read sequence.
-    const auto& sampleCounts(svLoci.getCounts().getSampleCounts(0));
+    const auto& sampleCounts(svLSF->getLocusSet().getCounts().getSampleCounts(0));
     BOOST_REQUIRE_EQUAL(sampleCounts.input.evidenceCount.assm, 0);
     BOOST_REQUIRE_EQUAL(sampleCounts.input.evidenceCount.split, 1);
 

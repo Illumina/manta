@@ -49,11 +49,11 @@ runDSL(const DSLOptions& opt)
     std::ostream& os(std::cout);
 
     // add this handy map of chromosome id to chromosome label at the start of all output types:
-    os << cset.header << "\n";
+    os << cset.getBamHeader() << "\n";
 
     if (! opt.region.empty())
     {
-        set.dumpRegion(os, convertSamtoolsRegionToGenomeInterval(cset.header, opt.region));
+        set.dumpRegion(os, convertSamtoolsRegionToGenomeInterval(cset.getBamHeader(), opt.region));
     }
     else if (opt.isLocusIndex)
     {
@@ -81,7 +81,6 @@ void
 DumpSVLoci::
 runInternal(int argc, char* argv[]) const
 {
-
     DSLOptions opt;
 
     parseDSLOptions(*this,argc,argv,opt);

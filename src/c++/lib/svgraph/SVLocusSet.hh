@@ -94,7 +94,9 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>, private b
 
     explicit
     SVLocusSet(
-        const SVLocusSetOptions& opt = SVLocusSetOptions()) :
+        const SVLocusSetOptions& opt = SVLocusSetOptions(),
+        const bam_header_info& bamHeaderInfo = bam_header_info()) :
+        _bamHeaderInfo(bamHeaderInfo),
         _opt(opt),
         _inodes(*this),
         _source("UNKNOWN"),
@@ -355,6 +357,13 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>, private b
     getRegionIntersect(
         const GenomeInterval interval,
         std::set<NodeAddressType>& intersectNodes);
+
+    /// |brief Provide const access the bam header info which this object stores
+    const bam_header_info&
+    getBamHeader() const
+    {
+        return _bamHeaderInfo;
+    }
 
 private:
 
@@ -715,10 +724,6 @@ private:
 
     ///////////////////// data
 
-public:
-    bam_header_info header;
-private:
-
     /// This is used to evaluate peak SV evidence density among the overlapping nodes of a set
     /// of intersecting edges.
     struct MergeRegionSumData
@@ -738,6 +743,11 @@ private:
         rsum_t remoteNodeOutgoingEdgeEvidence;
         rsum_t remoteNodeIncomingEdgeEvidence;
     };
+
+    /// This object keeps its own copy of bam header info (1) for convenience (2) as an QC mechanism to ensure it
+    /// is not scored against a mismatched reference (3) as an auditing mechanism so the serialized object is better
+    /// documented.
+    bam_header_info _bamHeaderInfo;
 
     SVLocusSetOptions _opt;
 

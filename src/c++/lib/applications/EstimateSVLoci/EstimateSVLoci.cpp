@@ -18,7 +18,7 @@
 //
 
 #include "EstimateSVLoci.hh"
-#include "estimateSVLociForSingleRegion.hh"
+#include "EstimateSVLociRunner.hh"
 
 #include "common/OutStream.hh"
 
@@ -33,12 +33,13 @@ runEstimateSVLoci(const ESLOptions& opt)
         OutStream outs(opt.outputFilename);
     }
 
-    SVLocusSet mergedSet(opt.graphOpt);
+    EstimateSVLociRunner eslRunner(opt);
     for (const auto& region : opt.regions)
     {
-        estimateSVLociForSingleRegion(opt, region, mergedSet);
+        eslRunner.estimateSVLociForSingleRegion(region);
     }
-    mergedSet.save(opt.outputFilename.c_str());
+
+    eslRunner.getLocusSet().save(opt.outputFilename.c_str());
 }
 
 

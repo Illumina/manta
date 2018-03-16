@@ -97,7 +97,7 @@ SVFinder(
     _edgeTracker(edgeTracker),
     _edgeStatMan(edgeStatMan)
 {
-    _dFilterPtr.reset(new ChromDepthFilterUtil(opt.chromDepthFilename,_scanOpt.maxDepthFactor,_set.header));
+    _dFilterPtr.reset(new ChromDepthFilterUtil(opt.chromDepthFilename,_scanOpt.maxDepthFactor,_set.getBamHeader()));
 
     // setup regionless bam_streams:
     openBamStreams(opt.referenceFilename, opt.alignFileOpt.alignmentFilenames, _bamStreams);
@@ -1312,7 +1312,7 @@ findCandidateSVImpl(
     // 2) iterate through breakend read pairs to estimate the number, type
     // and likely breakend interval regions of SVs corresponding to this edge
     //
-    const bam_header_info& bamHeader(cset.header);
+    const bam_header_info& bamHeader(cset.getBamHeader());
 
     const SVLocus& locus(cset.getLocus(edge.locusIndex));
 
