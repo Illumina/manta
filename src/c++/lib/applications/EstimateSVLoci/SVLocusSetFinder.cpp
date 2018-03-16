@@ -133,7 +133,7 @@ SVLocusSetFinder(
             scanRegion.range.begin_pos(),
             scanRegion.range.end_pos()),
         *this),
-    _positionReadDepthEstimate(depthBufferCompression),
+    _positionReadDepthEstimatePtr(std::make_shared<depth_buffer_compressible>(depthBufferCompression)),
     _isInDenoiseRegion(false),
     _denoiseStartPos(0),
     _readScanner(opt.scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilenames, opt.isRNA),
@@ -218,7 +218,7 @@ process_pos(const int stage_no,
     }
     else if (stage_no == STAGE::CLEAR_DEPTH)
     {
-        _positionReadDepthEstimate.clear_pos(pos);
+        _positionReadDepthEstimatePtr->clear_pos(pos);
     }
     else
     {
@@ -240,7 +240,7 @@ addToDepthBuffer(
     // Estimated read depth uses a very simple approximation that each input read aligns without any indels.
     // This is done to reduce the depth estimation runtime overhead.
     const pos_t readSize(bamRead.read_size());
-    _positionReadDepthEstimate.inc(refPos,readSize);
+    _positionReadDepthEstimatePtr->inc(refPos,readSize);
 }
 
 
@@ -264,7 +264,7 @@ update(
     // Filter out reads from high-depth chromosome regions
     if (_isMaxDepthFilter)
     {
-        if (_positionReadDepthEstimate.val(bamRead.pos()-1) > _maxDepth) return;
+        if (_positionReadDepthEstimatePtr->val(bamRead.pos()-1) > _maxDepth) return;
     }
 
     // Verify the input reads conform to BAM input restrictions before testing if they could be input evidence

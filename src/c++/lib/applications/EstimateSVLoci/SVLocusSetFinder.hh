@@ -191,7 +191,7 @@ private:
     stage_manager _stageManager;
 
     /// Track estimated depth per position for the purpose of filtering high-depth regions
-    depth_buffer_compressible _positionReadDepthEstimate;
+    std::shared_ptr<depth_buffer_compressible> _positionReadDepthEstimatePtr;
 
     /// True when the denoising position pointer is within _denoiseRegion
     bool _isInDenoiseRegion;
