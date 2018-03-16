@@ -92,22 +92,13 @@ struct SVLocusSet : public flyweight_observer<SVLocusNodeMoveMessage>, private b
     typedef std::vector<SVLocus> locusset_type;
     typedef locusset_type::const_iterator const_iterator;
 
+    /// For test purposes SVLocusSet can be constructed with no arguments,
+    /// but in this case it will have no chromosome or sample information.
     explicit
     SVLocusSet(
         const SVLocusSetOptions& opt = SVLocusSetOptions(),
-        const bam_header_info& bamHeaderInfo = bam_header_info()) :
-        _bamHeaderInfo(bamHeaderInfo),
-        _opt(opt),
-        _inodes(*this),
-        _source("UNKNOWN"),
-        _isFinalized(false),
-        _totalCleaned(0),
-        _highestSearchCount(0),
-        _highestSearchDensity(0),
-        _isMaxSearchCount(false),
-        _isMaxSearchDensity(false),
-        _isIndexed(true)
-    {}
+        const bam_header_info& bamHeaderInfo = bam_header_info(),
+        const std::vector<std::string>& alignmentFilenames = {});
 
     /// \brief Deserialize object from binary file format
     /// \param[in] isSkipIndex If true, don't build the graph index, and only allow a limited set of operations

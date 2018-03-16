@@ -81,6 +81,35 @@ isExpectedLocusOnly(
 
 
 
+SVLocusSet::
+SVLocusSet(
+    const SVLocusSetOptions& opt,
+    const bam_header_info& bamHeaderInfo,
+    const std::vector<std::string>& alignmentFilenames) :
+    _bamHeaderInfo(bamHeaderInfo),
+    _opt(opt),
+    _inodes(*this),
+    _source("UNKNOWN"),
+    _isFinalized(false),
+    _totalCleaned(0),
+    _highestSearchCount(0),
+    _highestSearchDensity(0),
+    _isMaxSearchCount(false),
+    _isMaxSearchDensity(false),
+    _isIndexed(true)
+{
+    /// Initialize read counts:
+    const unsigned sampleCount(alignmentFilenames.size());
+    getCounts().setSampleCount(sampleCount);
+    for (unsigned sampleIndex(0); sampleIndex < sampleCount; ++sampleIndex)
+    {
+        getCounts().getSampleCounts(sampleIndex).sampleSource =
+            alignmentFilenames[sampleIndex];
+    }
+}
+
+
+
 void
 SVLocusSet::
 merge(const SVLocus& inputLocus)

@@ -52,7 +52,7 @@ EstimateSVLociRunner(
     const bam_hdr_t& htslibBamHeaderInfoPtr(_bamStreams[0]->get_header());
     const bam_header_info bamHeaderInfo(htslibBamHeaderInfoPtr);
 
-    _mergedSetPtr = std::make_shared<SVLocusSet>(_opt.graphOpt, bamHeaderInfo);
+    _mergedSetPtr = std::make_shared<SVLocusSet>(_opt.graphOpt, bamHeaderInfo, _opt.alignFileOpt.alignmentFilenames);
 }
 
 

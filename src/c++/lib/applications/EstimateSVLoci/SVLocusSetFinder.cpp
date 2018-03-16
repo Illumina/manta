@@ -152,27 +152,7 @@ SVLocusSetFinder(
         _maxDepth=dFilter.maxDepth(scanRegion.tid);
     }
 
-    // If SV locus graph is empty, initialize various metadata, otherwise verify that meta-data match existing metadata
-    //
-    const unsigned sampleCount(opt.alignFileOpt.alignmentFilenames.size());
-    if (getLocusSet().getCounts().size() == 0)
-    {
-        _getLocusSet().getCounts().setSampleCount(sampleCount);
-        for (unsigned sampleIndex(0); sampleIndex < sampleCount; ++sampleIndex)
-        {
-            _getLocusSet().getCounts().getSampleCounts(sampleIndex).sampleSource =
-                opt.alignFileOpt.alignmentFilenames[sampleIndex];
-        }
-    }
-    else
-    {
-        assert(getLocusSet().getCounts().size() == sampleCount);
-        for (unsigned sampleIndex(0); sampleIndex < sampleCount; ++sampleIndex)
-        {
-            assert(getLocusSet().getCounts().getSampleCounts(sampleIndex).sampleSource ==
-                       opt.alignFileOpt.alignmentFilenames[sampleIndex]);
-        }
-    }
+    assert(opt.alignFileOpt.alignmentFilenames.size() == _svLociPtr->getCounts().size());
 }
 
 

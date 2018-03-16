@@ -49,7 +49,9 @@ buildSVLocusSetFinder()
 
     return boost::make_unique<SVLocusSetFinder>(opts, GenomeInterval(0, 0, 499),
                                                 std::make_shared<reference_contig_segment>(),
-                                                std::make_shared<SVLocusSet>(opts.graphOpt,bamHeaderInfo));
+                                                std::make_shared<SVLocusSet>(opts.graphOpt,
+                                                                             bamHeaderInfo,
+                                                                             opts.alignFileOpt.alignmentFilenames));
 }
 
 
