@@ -36,10 +36,10 @@ struct VcfWriterDiploidSV : public VcfWriterSV, VcfWriterScoredSV
         const CallOptionsDiploid& diploidOpt,
         const bool isMaxDepthFilter,
         const std::string& referenceFilename,
-        const SVLocusSet& set,
+        const bam_header_info& bamHeaderInfo,
         std::ostream& os,
         const bool& isOutputContig) :
-        VcfWriterSV(referenceFilename, set, os, isOutputContig),
+        VcfWriterSV(referenceFilename, bamHeaderInfo, os, isOutputContig),
         _diploidOpt(diploidOpt),
         _isMaxDepthFilter(isMaxDepthFilter),
         _diploidInfoPtr(nullptr),
@@ -104,7 +104,6 @@ private:
         assert(nullptr != _singleJunctionDiploidInfoPtr);
         return *_singleJunctionDiploidInfoPtr;
     }
-
 
     const CallOptionsDiploid& _diploidOpt;
     const bool _isMaxDepthFilter;

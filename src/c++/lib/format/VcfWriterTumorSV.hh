@@ -34,10 +34,10 @@ struct VcfWriterTumorSV : public VcfWriterSV, VcfWriterScoredSV
         const CallOptionsTumor& tumorOpt,
         const bool isMaxDepthFilter,
         const std::string& referenceFilename,
-        const SVLocusSet& set,
+        const bam_header_info& bamHeaderInfo,
         std::ostream& os,
         const bool& isOutputContig) :
-        VcfWriterSV(referenceFilename, set, os, isOutputContig),
+        VcfWriterSV(referenceFilename, bamHeaderInfo, os, isOutputContig),
         _tumorOpt(tumorOpt),
         _isMaxDepthFilter(isMaxDepthFilter),
         _tumorInfoPtr(nullptr)

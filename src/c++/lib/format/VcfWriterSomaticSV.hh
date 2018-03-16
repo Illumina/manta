@@ -35,10 +35,10 @@ struct VcfWriterSomaticSV : public VcfWriterSV, VcfWriterScoredSV
         const CallOptionsSomatic& somaticOpt,
         const bool isMaxDepthFilter,
         const std::string& referenceFilename,
-        const SVLocusSet& set,
+        const bam_header_info& bamHeaderInfo,
         std::ostream& os,
         const bool& isOutputContig) :
-        VcfWriterSV(referenceFilename, set, os, isOutputContig),
+        VcfWriterSV(referenceFilename, bamHeaderInfo, os, isOutputContig),
         _somaticOpt(somaticOpt),
         _isMaxDepthFilter(isMaxDepthFilter),
         _somaticInfoPtr(nullptr),

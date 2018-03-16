@@ -23,12 +23,12 @@
 
 #pragma once
 
+#include "htsapi/bam_header_info.hh"
 #include "manta/EventInfo.hh"
 #include "manta/JunctionIdGenerator.hh"
 #include "manta/SVCandidate.hh"
 #include "manta/SVCandidateAssemblyData.hh"
 #include "manta/SVCandidateSetData.hh"
-#include "svgraph/SVLocusSet.hh"
 
 #include <iosfwd>
 
@@ -37,7 +37,7 @@ struct VcfWriterSV
 {
     VcfWriterSV(
         const std::string& referenceFilename,
-        const SVLocusSet& set,
+        const bam_header_info& bamHeaderInfo,
         std::ostream& os,
         const bool& isOutputContig);
 
@@ -183,6 +183,4 @@ protected:
 
 private:
     const bam_header_info& _header;
-
 };
-

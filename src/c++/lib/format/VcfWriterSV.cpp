@@ -49,13 +49,13 @@
 VcfWriterSV::
 VcfWriterSV(
     const std::string& referenceFilename,
-    const SVLocusSet& set,
+    const bam_header_info& bamHeaderInfo,
     std::ostream& os,
     const bool& isOutputContig) :
     _referenceFilename(referenceFilename),
     _isOutputContig(isOutputContig),
     _os(os),
-    _header(set.header)
+    _header(bamHeaderInfo)
 {
 }
 

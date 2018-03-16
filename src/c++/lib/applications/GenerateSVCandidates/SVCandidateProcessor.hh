@@ -51,7 +51,7 @@ struct SVWriter
     SVWriter(
         const GSCOptions& initOpt,
         const SVLocusScanner& readScanner,
-        const SVLocusSet& cset,
+        const bam_header_info& bamHeaderInfo,
         const char* progName,
         const char* progVersion);
 
@@ -84,7 +84,6 @@ struct SVWriter
     VcfWriterSomaticSV somWriter;
     VcfWriterTumorSV tumorWriter;
     VcfWriterRnaSV rnaWriter;
-
 
     JunctionIdGenerator _idgen;
 };

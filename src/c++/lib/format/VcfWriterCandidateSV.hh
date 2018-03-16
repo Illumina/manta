@@ -30,10 +30,10 @@ struct VcfWriterCandidateSV : public VcfWriterSV
 {
     VcfWriterCandidateSV(
         const std::string& referenceFilename,
-        const SVLocusSet& set,
+        const bam_header_info& bamHeaderInfo,
         std::ostream& os,
         const bool& isOutputContig) :
-        VcfWriterSV(referenceFilename, set, os, isOutputContig)
+        VcfWriterSV(referenceFilename, bamHeaderInfo, os, isOutputContig)
     {}
 
     void

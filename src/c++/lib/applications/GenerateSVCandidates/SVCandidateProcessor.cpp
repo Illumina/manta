@@ -39,30 +39,30 @@ SVWriter::
 SVWriter(
     const GSCOptions& initOpt,
     const SVLocusScanner& readScanner,
-    const SVLocusSet& cset,
+    const bam_header_info& bamHeaderInfo,
     const char* progName,
     const char* progVersion) :
     opt(initOpt),
     isSomatic(! opt.somaticOutputFilename.empty()),
     isTumorOnly(! opt.tumorOutputFilename.empty()),
-    svScore(opt, readScanner, cset.header),
+    svScore(opt, readScanner, bamHeaderInfo),
     candfs(opt.candidateOutputFilename),
     dipfs(opt.diploidOutputFilename),
     somfs(opt.somaticOutputFilename),
     tumfs(opt.tumorOutputFilename),
     rnafs(opt.rnaOutputFilename),
-    candWriter(opt.referenceFilename, cset, candfs.getStream(),
+    candWriter(opt.referenceFilename, bamHeaderInfo, candfs.getStream(),
                opt.isOutputContig),
     diploidWriter(opt.diploidOpt, (! opt.chromDepthFilename.empty()),
-                  opt.referenceFilename, cset, dipfs.getStream(),
+                  opt.referenceFilename, bamHeaderInfo, dipfs.getStream(),
                   opt.isOutputContig),
     somWriter(opt.somaticOpt, (! opt.chromDepthFilename.empty()),
-              opt.referenceFilename, cset,somfs.getStream(),
+              opt.referenceFilename, bamHeaderInfo,somfs.getStream(),
               opt.isOutputContig),
     tumorWriter(opt.tumorOpt, (! opt.chromDepthFilename.empty()),
-                opt.referenceFilename, cset, tumfs.getStream(),
+                opt.referenceFilename, bamHeaderInfo, tumfs.getStream(),
                 opt.isOutputContig),
-    rnaWriter(opt.referenceFilename, cset, rnafs.getStream(),
+    rnaWriter(opt.referenceFilename, bamHeaderInfo, rnafs.getStream(),
               opt.isOutputContig)
 {
     if (0 == opt.edgeOpt.binIndex)
@@ -86,8 +86,6 @@ SVWriter(
             if (isSomatic) somWriter.writeHeader(progName, progVersion,sampleNames);
         }
     }
-
-    //get_bam_header_sample_name
 }
 
 
@@ -496,7 +494,7 @@ SVCandidateProcessor(
     _edgeTracker(edgeTracker),
     _edgeStatMan(edgeStatMan),
     _svRefine(opt, cset.header, cset.getCounts(), _edgeTracker),
-    _svWriter(opt, readScanner, cset, progName, progVersion)
+    _svWriter(opt, readScanner, cset.header, progName, progVersion)
 {}
 
 
