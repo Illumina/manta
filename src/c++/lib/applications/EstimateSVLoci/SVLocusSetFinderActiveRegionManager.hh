@@ -56,8 +56,11 @@ struct SVLocusSetFinderActiveRegionManager : public pos_processor_base, private 
     /// \param[in] svLociPtr Pointer to the SV Locus graph requiring region-based management
     /// \param[in] positionReadDepthEstimatePtr Pointer to depth estimate tracker, which needs to be cleared as a
     ///                                         function of the current active region
-    /// \param[in] denoiseRegionProtectedBorderSize Length in bases on the beginning and the end of scan range which is
-    ///                                             excluded from in-line graph de-noising
+    /// \param[in] denoiseRegionProtectedBorderSize Length in bases of the region protected from denoising. This region
+    ///              extends back from the highest value provided so far to handle_new_pos_value AND is applied on the
+    ///              beginning and the end of the scan range, unless the scan range is determined to intersect the
+    ///              edge of a chromosome
+    ///
     SVLocusSetFinderActiveRegionManager(
         const GenomeInterval& scanRegion,
         std::shared_ptr<SVLocusSet> svLociPtr,
@@ -69,7 +72,7 @@ struct SVLocusSetFinderActiveRegionManager : public pos_processor_base, private 
         flush();
     }
 
-    /// \brief Forward from stage_manager. See stage_manager::handle_new_pos_value
+    /// \brief Exposed method from stage_manager. See stage_manager::handle_new_pos_value
     void
     handle_new_pos_value(
         const pos_t pos)
