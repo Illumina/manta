@@ -32,9 +32,9 @@
 
 std::unique_ptr<SVLocusScanner>
 buildTestSVLocusScanner(
-        const bam_header_info& bamHeaderInfo,
-        bool isRNA,
-        int minCandidateVariantSizeInput)
+    const bam_header_info& bamHeaderInfo,
+    bool isRNA,
+    int minCandidateVariantSizeInput)
 {
     ReadScannerOptions opts = ReadScannerOptions();
     opts.minCandidateVariantSize = minCandidateVariantSizeInput;

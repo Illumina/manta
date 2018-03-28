@@ -58,7 +58,10 @@ struct HtslibBamHeaderManager
 
     ~HtslibBamHeaderManager();
 
-    const bam_hdr_t& get() const { return *_header; }
+    const bam_hdr_t& get() const
+    {
+        return *_header;
+    }
 
 private:
     bam_hdr_t* _header;

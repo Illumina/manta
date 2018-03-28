@@ -149,7 +149,7 @@ private:
 
     /// Pointer to the SV locus graph being built into by this object
     std::shared_ptr<SVLocusSet> _svLociPtr;
-    
+
     /// Track estimated depth per position for the purpose of filtering high-depth regions
     std::shared_ptr<depth_buffer_compressible> _positionReadDepthEstimatePtr;
 

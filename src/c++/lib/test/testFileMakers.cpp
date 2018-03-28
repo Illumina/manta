@@ -93,7 +93,7 @@ TestStatsFileMaker()
 
     ReadGroupLabel rgKey("tempStatsGroup", "");
     ReadGroupStats rgStats;
-    for (unsigned i(0);i<250; ++i)
+    for (unsigned i(0); i<250; ++i)
     {
         rgStats.fragStats.addObservation(50);
         rgStats.fragStats.addObservation(75);

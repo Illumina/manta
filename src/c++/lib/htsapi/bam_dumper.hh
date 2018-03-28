@@ -36,7 +36,10 @@ struct bam_dumper
         const bam_hdr_t& header);
 
     /// Dtor closes the file if it is not already closed
-    ~bam_dumper() { close(); }
+    ~bam_dumper()
+    {
+        close();
+    }
 
     /// Add another BAM record to the file. File must not be closed.
     void

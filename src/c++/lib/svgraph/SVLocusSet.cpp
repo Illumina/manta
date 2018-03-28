@@ -1416,7 +1416,7 @@ SVLocusSet::
 SVLocusSet(
     const char* filename,
     const bool isSkipIndex)
-  : SVLocusSet()
+    : SVLocusSet()
 {
     using namespace boost::archive;
 

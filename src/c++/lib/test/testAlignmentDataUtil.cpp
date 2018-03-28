@@ -69,7 +69,8 @@ HtslibBamHeaderManager(
     _header->n_targets = chromData.size();
     _header->target_len = (uint32_t*)calloc(_header->n_targets, sizeof(uint32_t));
     _header->target_name = (char**)calloc(_header->n_targets, sizeof(char*));
-    for (int i = 0; i < _header->n_targets; ++i) {
+    for (int i = 0; i < _header->n_targets; ++i)
+    {
         _header->target_len[i] = chromData[i].length;
         _header->target_name[i] = strdup(chromData[i].label.c_str());
     }
@@ -179,8 +180,8 @@ buildTestBamRecord(
 
 void
 addSupplementaryAlignmentEvidence(
-        bam_record& bamRead,
-        const std::string& svStr)
+    bam_record& bamRead,
+    const std::string& svStr)
 {
     static const char svtag[] = {'S','A'};
     bam_aux_append(bamRead.get_data(),svtag,'Z',(svStr.size()+1),

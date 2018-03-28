@@ -36,7 +36,7 @@ getNewTempFile()
     using namespace boost::filesystem;
 
     const path tempDir(temp_directory_path());
-    while(true)
+    while (true)
     {
         path tempFile = tempDir / unique_path();
         if (exists(tempFile)) continue;
