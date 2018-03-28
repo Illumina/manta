@@ -4,7 +4,8 @@
 - Improve user guide to clarify meaning of the INV3/INV5 vcf INFO tags (MANTA-1305)
 
 ### Fixed
-
+- Fix a bug in breakend homology logic for large variants (MANTA-1313)
+  - The breakend insertion was not considered previously when identifying breakend homology sequence.
 
 ## v1.3.2 - 2018-03-02
 

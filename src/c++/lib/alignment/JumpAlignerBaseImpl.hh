@@ -229,15 +229,32 @@ backTraceAlignment(
         // find the distance over which ref1 and ref2 are equal following the start of the breakpoint
         SymIter ref1JumpIter(ref1Begin + result.align1.beginPos + apath_ref_length(apath1));
         SymIter ref2JumpIter(ref2Begin + result.align2.beginPos);
+        SymIter queryJumpIter(queryBegin + apath_read_length(apath1));
+        unsigned int jumpInsertCount(result.jumpInsertSize);
         while (true)
         {
             if (ref1JumpIter == ref1End) break;
-            if (ref2JumpIter == ref2End) break;
-            if ((*ref1JumpIter) != (*ref2JumpIter)) break;
+
+            if (jumpInsertCount > 0)
+            {
+                if (queryJumpIter == queryEnd) break;
+                if ((*ref1JumpIter) != (*queryJumpIter)) break;
+            }
+            else
+            {
+                if (ref2JumpIter == ref2End) break;
+                if ((*ref1JumpIter) != (*ref2JumpIter)) break;
+            }
 
             result.jumpRange++;
             ref1JumpIter++;
-            ref2JumpIter++;
+            if (jumpInsertCount > 0)
+            {
+                jumpInsertCount--;
+                queryJumpIter++;
+            }
+            else
+                ref2JumpIter++;
         }
     }
 

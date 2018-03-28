@@ -24,6 +24,7 @@
 #include "blt_util/align_path.hh"
 
 #include <string>
+#include <iostream>
 
 
 
@@ -339,6 +340,29 @@ BOOST_AUTO_TEST_CASE( test_GlobalJumpAlignerDelJunction )
     BOOST_REQUIRE_EQUAL(result.align2.beginPos,4);
     BOOST_REQUIRE_EQUAL(result.jumpInsertSize,0u);
     BOOST_REQUIRE_EQUAL(result.jumpRange,0u);
+}
+
+// define behavior of the breakpoint homology with and without a breakpoint insert
+BOOST_AUTO_TEST_CASE( test_GlobalJumpAlignerJumpRange )
+{
+    static const std::string ref1("xxxxxxxxxABCABC");
+    static const std::string ref2("ABCABCAyyyyyyyyy");
+
+    static const std::string seq1("xxxxxxAyyyyyy");
+    JumpAlignmentResult<score_t> result1 = testAlign(seq1,ref1,ref2);
+
+    BOOST_REQUIRE_EQUAL(result1.align1.beginPos,3);
+    BOOST_REQUIRE_EQUAL(result1.align2.beginPos,6);
+    BOOST_REQUIRE_EQUAL(result1.jumpInsertSize,0u);
+    BOOST_REQUIRE_EQUAL(result1.jumpRange,1u);
+
+    static const std::string seq2("xxxxxxTAyyyyyy");
+    JumpAlignmentResult<score_t> result2 = testAlign(seq2,ref1,ref2);
+
+    BOOST_REQUIRE_EQUAL(result2.align1.beginPos,3);
+    BOOST_REQUIRE_EQUAL(result2.align2.beginPos,6);
+    BOOST_REQUIRE_EQUAL(result2.jumpInsertSize,1u);
+    BOOST_REQUIRE_EQUAL(result2.jumpRange,0u);
 }
 
 
