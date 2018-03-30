@@ -4,7 +4,7 @@
 - Improve user guide to clarify meaning of the INV3/INV5 vcf INFO tags (MANTA-1305)
 
 ### Fixed
-
+- Fix the off-by-1 bug for the vcf HOMSEQ tag (MANTA-1311)
 
 ## v1.3.2 - 2018-03-02
 
