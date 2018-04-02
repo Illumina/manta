@@ -21,6 +21,7 @@
 /// \author Chris Saunders
 /// \author Felix Schlesinger
 /// \author Naoki Nariai
+/// \author Xiaoyu Chen
 ///
 
 #include "format/VcfWriterSV.hh"
@@ -289,6 +290,27 @@ addSharedInfo(
 }
 
 
+/// add info tags for breakend homology
+static
+void
+addHomologyInfo(
+        const std::string& refFile,
+        const std::string& chrom,
+        const known_pos_range2& bpArange,
+        VcfWriterSV::InfoTag_t& infoTags)
+{
+    if (bpArange.size() > 1) {
+        // get breakend homology sequence
+        infoTags.push_back(str(boost::format("HOMLEN=%i") % (bpArange.size() - 1)));
+        std::string homSeq;
+        // the get region seq function below takes closed-closed, 0-based endpoints
+        const int homBegin(bpArange.begin_pos());
+        const int homEnd(bpArange.end_pos() - 2);
+        get_standardized_region_seq(refFile, chrom, homBegin, homEnd, homSeq);
+        infoTags.push_back(str(boost::format("HOMSEQ=%s") % (homSeq)));
+    }
+}
+
 
 void
 VcfWriterSV::
@@ -415,17 +437,7 @@ writeTransloc(
 
     if (! isImprecise)
     {
-        if (bpArange.size() > 1)
-        {
-            // get breakend homology sequence
-            infotags.push_back( str( boost::format("HOMLEN=%i") % (bpArange.size()-1) ));
-            std::string homSeq;
-            // the get region seq function below takes closed-closed, 0-based endpoints
-            const int homBegin(bpArange.begin_pos());
-            const int homEnd(bpArange.end_pos()-2);
-            get_standardized_region_seq(_referenceFilename,chrom,homBegin,homEnd,homSeq);
-            infotags.push_back( str( boost::format("HOMSEQ=%s") % (homSeq) ));
-        }
+        addHomologyInfo(_referenceFilename, chrom, bpArange, infotags);
     }
 
     if (! insertSeq.empty())
@@ -656,17 +668,7 @@ writeInvdel(
 
     if (! isImprecise)
     {
-        if (bpArange.size() > 1)
-        {
-            // get breakend homology sequence
-            infoTags.push_back( str( boost::format("HOMLEN=%i") % (bpArange.size()-1) ));
-            std::string homSeq;
-            // the get region seq function below takes closed-closed, 0-based endpoints
-            const int homBegin(bpArange.begin_pos());
-            const int homEnd(bpArange.end_pos()-2);
-            get_standardized_region_seq(_referenceFilename,chrom,homBegin,homEnd,homSeq);
-            infoTags.push_back( str( boost::format("HOMSEQ=%s") % (homSeq) ));
-        }
+        addHomologyInfo(_referenceFilename, chrom, bpArange, infoTags);
     }
 
     if (! isSmallVariant)
