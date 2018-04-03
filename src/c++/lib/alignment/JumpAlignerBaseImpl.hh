@@ -254,7 +254,9 @@ backTraceAlignment(
                 queryJumpIter++;
             }
             else
-                ref2JumpIter++;
+            {
+               ref2JumpIter++;
+            }
         }
     }
 

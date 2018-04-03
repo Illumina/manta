@@ -26,6 +26,7 @@
 
 #include "alignment/AlignmentUtil.hh"
 #include "blt_util/log.hh"
+#include "blt_util/seq_printer.hh"
 #include "blt_util/seq_util.hh"
 #include "blt_util/align_path.hh"
 #include "htsapi/samtools_fasta_util.hh"
@@ -730,9 +731,13 @@ getVariantRange(
 {
 #ifdef DEBUG_VARR
     log_os << __FUNCTION__ << ": refRange " << refRange << "\n";
-    log_os << __FUNCTION__ << ": ref:\n" << ref << "\n";
+    log_os << __FUNCTION__ << ": ref:\n";
+    printSeq(ref, log_os);
+    log_os << "\n";
     log_os << __FUNCTION__ << ": readRange " << readRange << "\n";
-    log_os << __FUNCTION__ << ": read:\n" << read << "\n";
+    log_os << __FUNCTION__ << ": read:\n";
+    printSeq(read, log_os);
+    log_os << "\n";
 #endif
 
     // check how far we can slide to the right:
@@ -812,7 +817,6 @@ setSmallCandSV(
                 readRange.set_end_pos(readPos);
             }
         }
-
     }
 
     // by how many positions can the alignment position vary with the same alignment score?:
