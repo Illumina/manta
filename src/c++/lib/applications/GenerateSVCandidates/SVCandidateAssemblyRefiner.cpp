@@ -26,6 +26,7 @@
 
 #include "alignment/AlignmentUtil.hh"
 #include "blt_util/log.hh"
+#include "blt_util/seq_printer.hh"
 #include "blt_util/seq_util.hh"
 #include "blt_util/align_path.hh"
 #include "htsapi/samtools_fasta_util.hh"
@@ -39,6 +40,7 @@
 //#define DEBUG_REFINER
 //#define DEBUG_CONTIG
 //#define DEBUG_KMER
+//#define DEBUG_VARR
 
 #ifdef DEBUG_REFINER
 #include "blt_util/seq_printer.hh"

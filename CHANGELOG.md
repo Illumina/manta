@@ -5,6 +5,8 @@
 
 ### Fixed
 - Fix the off-by-1 bug for the vcf HOMSEQ tag (MANTA-1311)
+- Fix a bug in breakend homology logic for large variants (MANTA-1313)
+  - The breakend insertion was not considered previously when identifying breakend homology sequence.
 
 ## v1.3.2 - 2018-03-02
 

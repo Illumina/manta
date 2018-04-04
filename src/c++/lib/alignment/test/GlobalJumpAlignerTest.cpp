@@ -341,6 +341,40 @@ BOOST_AUTO_TEST_CASE( test_GlobalJumpAlignerDelJunction )
     BOOST_REQUIRE_EQUAL(result.jumpRange,0u);
 }
 
+// define behavior of the breakpoint homology with and without a breakpoint insert
+BOOST_AUTO_TEST_CASE( test_GlobalJumpAlignerJumpRange )
+{
+    static const std::string ref1("xxxxxxxxxABCABC");
+    static const std::string ref2("ABCABCAyyyyyyyyy");
+
+    // test1: the breakpoint has a homology seq "A", but no insert seq
+    static const std::string seq1("xxxxxxAyyyyyy");
+    JumpAlignmentResult<score_t> result1 = testAlign(seq1,ref1,ref2);
+
+    BOOST_REQUIRE_EQUAL(result1.align1.beginPos,3);
+    BOOST_REQUIRE_EQUAL(result1.align2.beginPos,6);
+    BOOST_REQUIRE_EQUAL(result1.jumpInsertSize,0u);
+    BOOST_REQUIRE_EQUAL(result1.jumpRange,1u);
+
+    // test2: the breakpoint has a insert seq "T", but no homology seq
+    static const std::string seq2("xxxxxxTAyyyyyy");
+    JumpAlignmentResult<score_t> result2 = testAlign(seq2,ref1,ref2);
+
+    BOOST_REQUIRE_EQUAL(result2.align1.beginPos,3);
+    BOOST_REQUIRE_EQUAL(result2.align2.beginPos,6);
+    BOOST_REQUIRE_EQUAL(result2.jumpInsertSize,1u);
+    BOOST_REQUIRE_EQUAL(result2.jumpRange,0u);
+
+    // test3: the breakpoint has a insert seq "T", but no homology seq
+    static const std::string seq3("xxxxxxATyyyyyy");
+    JumpAlignmentResult<score_t> result3 = testAlign(seq3,ref1,ref2);
+
+    BOOST_REQUIRE_EQUAL(result3.align1.beginPos,3);
+    BOOST_REQUIRE_EQUAL(result3.align2.beginPos,7);
+    BOOST_REQUIRE_EQUAL(result3.jumpInsertSize,1u);
+    BOOST_REQUIRE_EQUAL(result3.jumpRange,0u);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 
