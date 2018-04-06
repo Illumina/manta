@@ -111,7 +111,6 @@ writeHeaderPrefix(
 
     addHeaderFilters();
 
-    _os << "##ALT=<ID=BND,Description=\"Translocation Breakend\">\n";
     _os << "##ALT=<ID=INV,Description=\"Inversion\">\n";
     _os << "##ALT=<ID=DEL,Description=\"Deletion\">\n";
     _os << "##ALT=<ID=INS,Description=\"Insertion\">\n";

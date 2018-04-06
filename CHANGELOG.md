@@ -2,6 +2,7 @@
 
 ### Changed
 - Improve user guide to clarify meaning of the INV3/INV5 vcf INFO tags (MANTA-1305)
+- Remove BND from vcf ALT field to comply with vcf spec (MANTA-1314)
 
 ### Fixed
 - Fix the off-by-1 bug for the vcf HOMSEQ tag (MANTA-1311)
