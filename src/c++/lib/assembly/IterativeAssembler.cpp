@@ -703,6 +703,10 @@ buildContigs(
 #ifdef DEBUG_ASBL
     static const std::string logtag("buildContigs: ");
     log_os << logtag << "Building contigs with " << reads.size() << " reads.\n";
+    for (unsigned rix(0); rix<reads.size(); rix++)
+    {
+        log_os << "read #" << rix << ": " << reads[rix] << "\n";
+    }
 #endif
 
     contigs.clear();
@@ -912,6 +916,7 @@ runIterativeAssembler(
     static const std::string logtag("runIterativeAssembler: ");
     log_os << logtag << "Starting assembly with " << normalReadCount << " reads.\n";
 #endif
+
     assert(opt.alphabet.size()>1);
 
     readInfo.clear();

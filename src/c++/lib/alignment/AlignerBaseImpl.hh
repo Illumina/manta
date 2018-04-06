@@ -22,6 +22,9 @@
 ///
 
 #include <cassert>
+#include "blt_util/log.hh"
+
+//#define DEBUG_PATHSCORE
 
 #ifdef DEBUG_ALN_MATRIX
 #include <boost/io/ios_state.hpp>
@@ -95,7 +98,8 @@ ScoreType
 AlignerBase<ScoreType>::
 getPathScore(
     const ALIGNPATH::path_t& apath,
-    const bool isScoreOffEdge) const
+    const bool isScoreOffEdge,
+    const bool isFilter) const
 {
     using namespace ALIGNPATH;
 
@@ -108,13 +112,18 @@ getPathScore(
     //
     /// TODO: reevaluate policy for insertion-deletion state transition score
 
+#ifdef DEBUG_PATHSCORE
+    log_os << __FUNCTION__ << " path: " << apath << "\n";
+#endif
+
     for (const path_segment& ps : apath)
     {
         bool isIndel(false); // placement of isIndel inside of this loop is the 'bug'
         switch (ps.type)
         {
         case MATCH:
-            assert(false && "Unexpected MATCH segment"); // if MATCH segments exist, then you're using the wrong type of CIGAR for this function
+            // if MATCH segments exist, then you're using the wrong type of CIGAR for this function
+            assert(false && "Unexpected MATCH segment");
             break;
         case SEQ_MATCH:
             val += (_scores.match * ps.length);
@@ -126,8 +135,17 @@ getPathScore(
             break;
         case INSERT:
         case DELETE:
-            if (! isIndel) val += _scores.open;
-            val += (_scores.extend * ps.length);
+            // For contig check, increase the gap opening penalty but eliminate gap extension penalty
+            // The idea is to discourage indel occurrences near breakends,
+            // and to be less conservative on indel size.
+            if (! isIndel)
+            {
+                const unsigned openPenaltyMultiplier(1.5);
+                if (isFilter) val += openPenaltyMultiplier*_scores.open;
+                else val += _scores.open;
+            }
+
+            if (! isFilter) val += (_scores.extend * ps.length);
             isIndel = true;
             break;
         case SOFT_CLIP:
@@ -137,6 +155,13 @@ getPathScore(
         default:
             break;
         }
+
+#ifdef DEBUG_PATHSCORE
+      log_os << __FUNCTION__
+             << " path.type=" << ps.type
+             << " path.length=" << ps.length
+             << " val=" << val << "\n";
+#endif
     }
     return val;
 }

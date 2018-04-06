@@ -137,14 +137,18 @@ isFilterSpanningAlignment(
         return true;
     }
 
-    int nonClipScore(aligner.getPathScore(apath, false));
-    const int optimalScore(clippedReadSize * aligner.getScores().match);
+    int nonClipScore(aligner.getPathScore(apath, false, true));
+#ifdef DEBUG_REFINER
+    log_os << __FUNCTION__ << ": clippedReadSize=" << clippedReadSize
+           << " matchScore=" << aligner.getScores().match
+           << " nonClipScore=" << nonClipScore << "\n";
+#endif
 
+    const int optimalScore(clippedReadSize * aligner.getScores().match);
     assert(optimalScore>0);
     if (nonClipScore < 0) nonClipScore = 0;
 
     const float scoreFrac(static_cast<float>(nonClipScore)/static_cast<float>(optimalScore));
-
     if (scoreFrac < minScoreFrac)
     {
 #ifdef DEBUG_REFINER
@@ -387,7 +391,7 @@ isSmallSVSegmentFilter(
         return true;
     }
 
-    const int nonClipScore(std::max(0,aligner.getPathScore(apath, false)));
+    const int nonClipScore(std::max(0,aligner.getPathScore(apath, false, true)));
     const int optimalScore(clippedPathSize * aligner.getScores().match);
 
     const float scoreFrac(static_cast<float>(nonClipScore)/static_cast<float>(optimalScore));

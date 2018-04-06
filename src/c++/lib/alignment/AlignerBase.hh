@@ -59,7 +59,8 @@ struct AlignerBase
     ScoreType
     getPathScore(
         const ALIGNPATH::path_t& apath,
-        const bool isScoreOffEdge = true) const;
+        const bool isScoreOffEdge = false,
+        const bool isFilter = false) const;
 
     /// recover the maximum partial path alignment score (going left->right) without aligning, requires SEQ_MATCH style CIGAR
     ///

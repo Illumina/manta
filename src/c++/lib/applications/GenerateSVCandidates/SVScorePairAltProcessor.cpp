@@ -287,7 +287,7 @@ realignPairedRead(
             return false;
         }
 
-        int nonClipScore(_shadowAligner.getPathScore(readPath, false));
+        int nonClipScore(_shadowAligner.getPathScore(readPath));
 
         static const float minScoreFrac(0.85f);
         const int optimalScore(clippedReadSize*_shadowAligner.getScores().match);
