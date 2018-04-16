@@ -56,7 +56,6 @@ struct SVCandidateAssemblyRefiner
     void
     getCandidateAssemblyData(
         const SVCandidate& sv,
-        const bool isRNA,
         const bool isFindLargeInsertions,
         SVCandidateAssemblyData& assemblyData) const;
 
@@ -74,7 +73,6 @@ private:
     void
     getJumpAssembly(
         const SVCandidate& sv,
-        const bool isRNA,
         const bool isFindLargeInsertions,
         SVCandidateAssemblyData& assemblyData) const;
 
