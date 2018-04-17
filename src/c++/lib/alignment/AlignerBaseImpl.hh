@@ -98,11 +98,12 @@ ScoreType
 AlignerBase<ScoreType>::
 getPathScore(
     const ALIGNPATH::path_t& apath,
-    const bool isScoreOffEdge,
-    const bool isFilter) const
+    const bool isContigFilter,
+    const bool isScoreOffEdge) const
 {
     using namespace ALIGNPATH;
 
+    const AlignmentScores<ScoreType>& scores(isContigFilter ? _contigFilterScores : _scores);
     ScoreType val(0);
 
     // note that the intent of this function was to replicate the underling aligner and thus
@@ -126,30 +127,21 @@ getPathScore(
             assert(false && "Unexpected MATCH segment");
             break;
         case SEQ_MATCH:
-            val += (_scores.match * ps.length);
+            val += (scores.match * ps.length);
             isIndel = false;
             break;
         case SEQ_MISMATCH:
-            val += (_scores.mismatch * ps.length);
+            val += (scores.mismatch * ps.length);
             isIndel = false;
             break;
         case INSERT:
         case DELETE:
-            // For contig check, increase the gap opening penalty but eliminate gap extension penalty
-            // The idea is to discourage indel occurrences near breakends,
-            // and to be less conservative on indel size.
-            if (! isIndel)
-            {
-                const unsigned openPenaltyMultiplier(1.5);
-                if (isFilter) val += openPenaltyMultiplier*_scores.open;
-                else val += _scores.open;
-            }
-
-            if (! isFilter) val += (_scores.extend * ps.length);
+            if (! isIndel) val += scores.open;
+            val += (scores.extend * ps.length);
             isIndel = true;
             break;
         case SOFT_CLIP:
-            if (isScoreOffEdge) val += (_scores.offEdge * ps.length);
+            if (isScoreOffEdge) val += (scores.offEdge * ps.length);
             isIndel = false;
             break;
         default:
@@ -165,7 +157,6 @@ getPathScore(
     }
     return val;
 }
-
 
 
 template <typename ScoreType>

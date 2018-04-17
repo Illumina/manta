@@ -703,9 +703,9 @@ buildContigs(
 #ifdef DEBUG_ASBL
     static const std::string logtag("buildContigs: ");
     log_os << logtag << "Building contigs with " << reads.size() << " reads.\n";
-    for (unsigned rix(0); rix<reads.size(); rix++)
+    for (unsigned readIndex(0); readIndex<reads.size(); readIndex++)
     {
-        log_os << "read #" << rix << ": " << reads[rix] << "\n";
+        log_os << "read #" << readIndex << ": " << reads[readIndex] << "\n";
     }
 #endif
 

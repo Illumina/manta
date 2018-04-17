@@ -46,6 +46,16 @@ struct GlobalJumpAligner : public JumpAlignerBase<ScoreType>
         assert (not scores.isAllowEdgeInsertion);
     }
 
+    GlobalJumpAligner(
+            const AlignmentScores<ScoreType>& scores,
+            const AlignmentScores<ScoreType>& contigFilterScores,
+            const ScoreType jumpScore) :
+            JumpAlignerBase<ScoreType>(scores,contigFilterScores,jumpScore)
+    {
+        // unsupported option:
+        assert (not scores.isAllowEdgeInsertion);
+    }
+
     /// returns alignment path of query to reference
     template <typename SymIter>
     void

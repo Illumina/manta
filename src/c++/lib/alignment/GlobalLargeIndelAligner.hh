@@ -42,10 +42,18 @@ struct GlobalLargeIndelAligner : public SingleRefAlignerBase<ScoreType>
     /// \param largeIndelScore is the 'gap open' for the large indels
     ///
     GlobalLargeIndelAligner(
-        const AlignmentScores<ScoreType>& scores,
-        const ScoreType largeIndelScore) :
-        SingleRefAlignerBase<ScoreType>(scores),
-        _largeIndelScore(largeIndelScore)
+            const AlignmentScores<ScoreType>& scores,
+            const ScoreType largeIndelScore) :
+            SingleRefAlignerBase<ScoreType>(scores,scores),
+            _largeIndelScore(largeIndelScore)
+    {}
+
+    GlobalLargeIndelAligner(
+            const AlignmentScores<ScoreType>& scores,
+            const AlignmentScores<ScoreType>& contigFilterScores,
+            const ScoreType largeIndelScore) :
+            SingleRefAlignerBase<ScoreType>(scores,contigFilterScores),
+            _largeIndelScore(largeIndelScore)
     {}
 
     /// returns alignment path of query to reference

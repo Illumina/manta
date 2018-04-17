@@ -137,7 +137,7 @@ isFilterSpanningAlignment(
         return true;
     }
 
-    int nonClipScore(aligner.getPathScore(apath, false, true));
+    int nonClipScore(aligner.getPathScore(apath, true));
 #ifdef DEBUG_REFINER
     log_os << __FUNCTION__ << ": clippedReadSize=" << clippedReadSize
            << " matchScore=" << aligner.getScores().match
@@ -391,7 +391,7 @@ isSmallSVSegmentFilter(
         return true;
     }
 
-    const int nonClipScore(std::max(0,aligner.getPathScore(apath, false, true)));
+    const int nonClipScore(std::max(0,aligner.getPathScore(apath, true)));
     const int optimalScore(clippedPathSize * aligner.getScores().match);
 
     const float scoreFrac(static_cast<float>(nonClipScore)/static_cast<float>(optimalScore));
@@ -1095,11 +1095,11 @@ SVCandidateAssemblyRefiner(
                        (opt.isRNA ? opt.refineOpt.RNAspanningAssembleOpt : opt.refineOpt.spanningAssembleOpt),
                        opt.alignFileOpt, opt.referenceFilename,
                        opt.statsFilename, opt.chromDepthFilename, header, counts, opt.isRNA, edgeTracker.remoteReadRetrievalTime),
-    _smallSVAligner(opt.refineOpt.smallSVAlignScores),
-    _largeSVAligner(opt.refineOpt.largeSVAlignScores,opt.refineOpt.largeGapOpenScore),
+    _smallSVAligner(opt.refineOpt.smallSVAlignScores,opt.refineOpt.contigFilterScores),
+    _largeSVAligner(opt.refineOpt.largeSVAlignScores,opt.refineOpt.contigFilterScores,opt.refineOpt.largeGapOpenScore),
     _largeInsertEdgeAligner(opt.refineOpt.largeInsertEdgeAlignScores),
     _largeInsertCompleteAligner(opt.refineOpt.largeInsertCompleteAlignScores),
-    _spanningAligner(opt.refineOpt.spanningAlignScores, opt.refineOpt.jumpScore),
+    _spanningAligner(opt.refineOpt.spanningAlignScores,opt.refineOpt.contigFilterScores,opt.refineOpt.jumpScore),
     _RNASpanningAligner(
         opt.refineOpt.RNAspanningAlignScores,
         opt.refineOpt.RNAJumpScore,

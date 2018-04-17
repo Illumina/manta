@@ -3,7 +3,7 @@
 ### Changed
 - Improve user guide to clarify meaning of the INV3/INV5 vcf INFO tags (MANTA-1305)
 - Refine contig filter to improve precision (MANTA-1310)
-  - Indel occurrences near breakends are penalized but not indel size.
+  - Indel occurrences near breakends are penalized, but indel extension is free.
 
 ### Fixed
 - Fix the off-by-1 bug for the vcf HOMSEQ tag (MANTA-1311)

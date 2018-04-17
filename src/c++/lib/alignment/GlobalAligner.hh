@@ -42,6 +42,12 @@ struct GlobalAligner : public SingleRefAlignerBase<ScoreType>
         SingleRefAlignerBase<ScoreType>(scores)
     {}
 
+    GlobalAligner(
+            const AlignmentScores<ScoreType>& scores,
+            const AlignmentScores<ScoreType>& contigFilterScores) :
+            SingleRefAlignerBase<ScoreType>(scores,contigFilterScores)
+    {}
+
     /// returns alignment path of query to reference
     template <typename SymIter>
     void

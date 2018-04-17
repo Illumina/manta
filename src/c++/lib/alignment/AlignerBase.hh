@@ -44,7 +44,15 @@ struct AlignerBase
 {
     AlignerBase(
         const AlignmentScores<ScoreType>& scores) :
-        _scores(scores)
+        _scores(scores),
+        _contigFilterScores(scores)
+    {}
+
+    AlignerBase(
+            const AlignmentScores<ScoreType>& scores,
+            const AlignmentScores<ScoreType>& contigFilterScores) :
+            _scores(scores),
+            _contigFilterScores(contigFilterScores)
     {}
 
     /// read-only access to the aligner's scores:
@@ -59,8 +67,8 @@ struct AlignerBase
     ScoreType
     getPathScore(
         const ALIGNPATH::path_t& apath,
-        const bool isScoreOffEdge = false,
-        const bool isFilter = false) const;
+        const bool isContigFilter = false,
+        const bool isScoreOffEdge = false) const;
 
     /// recover the maximum partial path alignment score (going left->right) without aligning, requires SEQ_MATCH style CIGAR
     ///
@@ -113,6 +121,7 @@ protected:
 #endif
 
     const AlignmentScores<ScoreType> _scores;
+    const AlignmentScores<ScoreType> _contigFilterScores;
 };
 
 
