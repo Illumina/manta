@@ -62,13 +62,7 @@ struct SingleRefAlignerBase : public AlignerBase<ScoreType>
 {
     SingleRefAlignerBase(
         const AlignmentScores<ScoreType>& scores) :
-        AlignerBase<ScoreType>(scores,scores)
-    {}
-
-    SingleRefAlignerBase(
-            const AlignmentScores<ScoreType>& scores,
-            const AlignmentScores<ScoreType>& contigFilterScores) :
-            AlignerBase<ScoreType>(scores,contigFilterScores)
+        AlignerBase<ScoreType>(scores)
     {}
 
 protected:

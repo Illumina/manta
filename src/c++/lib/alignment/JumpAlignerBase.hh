@@ -79,14 +79,6 @@ struct JumpAlignerBase : public AlignerBase<ScoreType>
         _jumpScore(jumpScore)
     {}
 
-    JumpAlignerBase(
-            const AlignmentScores<ScoreType>& scores,
-            const AlignmentScores<ScoreType>& contigFilterScores,
-            const ScoreType jumpScore) :
-            AlignerBase<ScoreType>(scores, contigFilterScores),
-            _jumpScore(jumpScore)
-    {}
-
     /// read-only access to the aligner's scores:
     const ScoreType&
     getJumpScore() const

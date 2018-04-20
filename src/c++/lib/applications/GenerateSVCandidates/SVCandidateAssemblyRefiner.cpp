@@ -25,6 +25,7 @@
 #include "SVCandidateAssemblyRefiner.hh"
 
 #include "alignment/AlignmentUtil.hh"
+#include "alignment/AlignmentScoringUtil.hh"
 #include "blt_util/log.hh"
 #include "blt_util/seq_printer.hh"
 #include "blt_util/seq_util.hh"
@@ -89,12 +90,17 @@ adjustAssembledBreakend(
 }
 
 
-/// \param[in] maxQCRefSpan what is the longest flanking sequence length considered for the high quality qc requirement?
+
+/// \brief Determine if a candidate spanning SV alignment should be filtered due to low quality
+///
+/// \param[in] maxQCRefSpan Longest flanking sequence length considered for the high quality requirement
+/// \param[in] alignmentScores Alignment scores to use for quality assessment of \p input_apath
+/// \return True if the alignment path is low quality and should be filtered out
 static
 bool
-isFilterSpanningAlignment(
+isLowQualitySpanningSVAlignment(
     const unsigned maxQCRefSpan,
-    const GlobalJumpAligner<int>& aligner,
+    const AlignmentScores<int>& alignmentScores,
     const bool isLeadingPath,
     const bool isRNA,
     const ALIGNPATH::path_t& input_apath)
@@ -137,27 +143,30 @@ isFilterSpanningAlignment(
         return true;
     }
 
-    int nonClipScore(aligner.getPathScore(apath, true));
+    const int nonClipScore(std::max(0,getPathScore(alignmentScores, apath)));
 #ifdef DEBUG_REFINER
     log_os << __FUNCTION__ << ": clippedReadSize=" << clippedReadSize
-           << " matchScore=" << aligner.getScores().match
+           << " matchScore=" << alignmentScores.match
            << " nonClipScore=" << nonClipScore << "\n";
 #endif
 
-    const int optimalScore(clippedReadSize * aligner.getScores().match);
+    const int optimalScore(clippedReadSize * alignmentScores.match);
     assert(optimalScore>0);
-    if (nonClipScore < 0) nonClipScore = 0;
 
     const float scoreFrac(static_cast<float>(nonClipScore)/static_cast<float>(optimalScore));
-    if (scoreFrac < minScoreFrac)
-    {
+
+    const bool isLowQualityAlignmentScore(scoreFrac < minScoreFrac);
+
 #ifdef DEBUG_REFINER
+    if (isLowQualityAlignmentScore)
+    {
         log_os << __FUNCTION__ << ": Rejecting highest scoring contig sub-alignment. Fraction of optimal alignment score is: " << scoreFrac << " minScoreFrac: " << minScoreFrac << "\n";
-#endif
-        return true;
     }
-    return false;
+#endif
+
+    return isLowQualityAlignmentScore;
 }
+
 
 
 /// Identify indels larger than \p minSize in the input alignment path (\p apath)
@@ -341,12 +350,16 @@ addCigarToSpanningAlignment(
 
 
 
-/// \param[in] maxQCRefSpan Longest flanking sequence length considered for the high quality qc requirement
+/// \brief Determine if a candidate small SV alignment should be filtered due to low quality
+///
+/// \param[in] maxQCRefSpan Longest flanking sequence length considered for the high quality requirement
+/// \param[in] alignmentScores Alignment scores to use for quality assessment of \p apath
+/// \return True if the alignment path is low quality and should be filtered out
 static
 bool
-isSmallSVSegmentFilter(
+isLowQualitySmallSVAlignment(
     const unsigned maxQCRefSpan,
-    const AlignerBase<int>& aligner,
+    const AlignmentScores<int>& alignmentScores,
     const bool isLeadingPath,
     const bool isComplex,
     ALIGNPATH::path_t& apath)
@@ -360,9 +373,9 @@ isSmallSVSegmentFilter(
     const unsigned minAlignRefSpan(isComplex ? minAlignRefSpanComplex : minAlignRefSpanSimple);
     const unsigned minAlignReadLength(isComplex ? minAlignReadLengthComplex : minAlignReadLengthSimple);
 
-    /// prepare apath by orienting it always going forward from the breakend and limiting the length to
-    /// the first maxQCRefSpan ref bases covered:
-    ///
+    // prepare apath by orienting it always going forward from the breakend and limiting the length to
+    // the first maxQCRefSpan ref bases covered:
+    //
     if (isLeadingPath)
     {
         std::reverse(apath.begin(),apath.end());
@@ -391,19 +404,20 @@ isSmallSVSegmentFilter(
         return true;
     }
 
-    const int nonClipScore(std::max(0,aligner.getPathScore(apath, true)));
-    const int optimalScore(clippedPathSize * aligner.getScores().match);
+    const int nonClipScore(std::max(0,getPathScore(alignmentScores, apath)));
+    const int optimalScore(clippedPathSize * alignmentScores.match);
 
     const float scoreFrac(static_cast<float>(nonClipScore)/static_cast<float>(optimalScore));
-    if (scoreFrac < minScoreFrac)
-    {
-#ifdef DEBUG_REFINER
-//        log_os << "Rejecting highest scoring contig sub-alignment. isFirst?: " << isFirstRead << ". Fraction of optimal alignment score is: " << scoreFrac << " minScoreFrac: " << minScoreFrac << "\n";
-#endif
-        return true;
-    }
+    const bool isLowQualityAlignmentScore(scoreFrac < minScoreFrac);
 
-    return false;
+#ifdef DEBUG_REFINER
+    if (isLowQualityAlignmentScore)
+    {
+//        log_os << "Rejecting highest scoring contig sub-alignment. isFirst?: " << isFirstRead << ". Fraction of optimal alignment score is: " << scoreFrac << " minScoreFrac: " << minScoreFrac << "\n";
+    }
+#endif
+
+    return isLowQualityAlignmentScore;
 }
 
 
@@ -461,7 +475,7 @@ static
 bool
 findCandidateVariantsFromComplexSVContigAlignment(
     const unsigned maxQCRefSpan,
-    const AlignerBase<int>& aligner,
+    const AlignmentScores<int>& alignmentScores,
     const Alignment& align,
     const std::string& contigSeq,
     const std::string& refSeq,
@@ -492,7 +506,7 @@ findCandidateVariantsFromComplexSVContigAlignment(
         path_t leadingPath(apath.begin(), apath.begin()+firstCandIndelSegment);
 
         static const bool isLeadingPath(true);
-        if (! isSmallSVSegmentFilter(maxQCRefSpan, aligner, isLeadingPath, isComplex, leadingPath))
+        if (! isLowQualitySmallSVAlignment(maxQCRefSpan, alignmentScores, isLeadingPath, isComplex, leadingPath))
         {
             break;
         }
@@ -512,7 +526,7 @@ findCandidateVariantsFromComplexSVContigAlignment(
         path_t trailingPath(apath.begin()+lastCandIndelSegment+1, apath.end());
 
         static const bool isLeadingPath(false);
-        if (! isSmallSVSegmentFilter(maxQCRefSpan, aligner, isLeadingPath, isComplex, trailingPath))
+        if (! isLowQualitySmallSVAlignment(maxQCRefSpan, alignmentScores, isLeadingPath, isComplex, trailingPath))
         {
             break;
         }
@@ -625,8 +639,8 @@ isLargeInsertSegment(
 
     const unsigned pathSize(apath_read_length(apath));
 
-    /// first evaluate in the forward direction
-    score=(std::max(0,aligner.getMaxPathScore(apath, contigOffset, refOffset)));
+    // first evaluate in the forward direction
+    score=(std::max(0,getMaxPathScore(aligner.getScores(), apath, contigOffset, refOffset)));
 
 #ifdef DEBUG_REFINER
     log_os << __FUNCTION__ << ": apath " << apath << "\n";
@@ -1095,16 +1109,17 @@ SVCandidateAssemblyRefiner(
                        (opt.isRNA ? opt.refineOpt.RNAspanningAssembleOpt : opt.refineOpt.spanningAssembleOpt),
                        opt.alignFileOpt, opt.referenceFilename,
                        opt.statsFilename, opt.chromDepthFilename, header, counts, opt.isRNA, edgeTracker.remoteReadRetrievalTime),
-    _smallSVAligner(opt.refineOpt.smallSVAlignScores,opt.refineOpt.contigFilterScores),
-    _largeSVAligner(opt.refineOpt.largeSVAlignScores,opt.refineOpt.contigFilterScores,opt.refineOpt.largeGapOpenScore),
+    _smallSVAligner(opt.refineOpt.smallSVAlignScores),
+    _largeSVAligner(opt.refineOpt.largeSVAlignScores,opt.refineOpt.largeGapOpenScore),
     _largeInsertEdgeAligner(opt.refineOpt.largeInsertEdgeAlignScores),
     _largeInsertCompleteAligner(opt.refineOpt.largeInsertCompleteAlignScores),
-    _spanningAligner(opt.refineOpt.spanningAlignScores,opt.refineOpt.contigFilterScores,opt.refineOpt.jumpScore),
+    _spanningAligner(opt.refineOpt.spanningAlignScores, opt.refineOpt.jumpScore),
     _RNASpanningAligner(
         opt.refineOpt.RNAspanningAlignScores,
         opt.refineOpt.RNAJumpScore,
         opt.refineOpt.RNAIntronOpenScore,
-        opt.refineOpt.RNAIntronOffEdgeScore)
+        opt.refineOpt.RNAIntronOffEdgeScore),
+    _contigFilterAlignmentScores(opt.refineOpt.contigFilterScores)
 {}
 
 
@@ -1350,57 +1365,73 @@ generateRefinedVCFSVCandidateFromJumpAlignment(
 }
 
 
-
-/// QC the alignment to make sure it spans the two breakend locations:
+/// \brief Helper function for isJumpAlignmentQCFail
+/// \return True if the jump alignment segment fails basic QC checks
 static
 bool
-basicContigAlignmentCheck(
-    const JumpAlignmentResult<int>& alignment
-)
+isJumpAlignmentSegmentQCFail(
+    const Alignment& alignment)
 {
     static const unsigned minAlignRefSpan(20);
-    const bool isAlignment1Good(alignment.align1.isAligned() && (apath_ref_length(alignment.align1.apath) >= minAlignRefSpan));
-    const bool isAlignment2Good(alignment.align2.isAligned() && (apath_ref_length(alignment.align2.apath) >= minAlignRefSpan));
-    return (isAlignment1Good && isAlignment2Good);
+    return ((! alignment.isAligned()) || (apath_ref_length(alignment.apath) < minAlignRefSpan));
 }
 
 
 
-// Check the min size and fraction of optimal alignment score
-// for each of the two sub-alignments on each side of the bp
-//
-// note this is done for multiple values -- the lower value is
-// motivated by cases where a second breakpoint exists near to
-// the target breakpoint -- the higher value is motivated by
-// cases with some alignment 'messiness' near the breakpoint
-// that stabilizes as we move farther away
-//
-/// TODO change iterative refspan to a single consistent alignment criteria
+/// \brief A fast QC check of the jump alignment to ensure it spans the two breakend locations
+///
+/// This jump alignment routine does a less thorough, but simpler assesement of the jump alignment intended for a quick
+/// QC screen
+///
+/// \return True if the jump alignment fails basic QC checks
 static
 bool
-checkFilterSubAlignments(
+isJumpAlignmentQCFail(
+    const JumpAlignmentResult<int>& jumpAlignment)
+{
+    return (isJumpAlignmentSegmentQCFail(jumpAlignment.align1) || isJumpAlignmentSegmentQCFail(jumpAlignment.align2));
+}
+
+
+
+/// \brief Check if the jump alignment result is low quality
+///
+/// Check the min size and fraction of optimal alignment score for each of the two sub-alignments on each side of the
+/// breakpoint
+///
+/// Note this is done for multiple values -- the lower value is motivated by cases where a second breakpoint exists
+/// near to the target breakpoint -- the higher value is motivated by cases with some alignment 'messiness' near the
+/// breakpoint that stabilizes as we move farther away
+/// TODO change iterative refspan to a single consistent alignment criteria
+///
+/// \param[in] alignmentScores Scores used for the purpose of assessing the quality of the jump aligner's two
+///                            subalignments on each side of the breakend
+/// \return True if the jump alignment result is low quality and should be filtered out
+static
+bool
+isLowQualityJumpAlignment(
     const JumpAlignmentResult<int>& alignment,
-    const GlobalJumpAligner<int>& spanningAligner,
+    const AlignmentScores<int>& alignmentScores,
     const bool isRNA)
 {
     using namespace ALIGNPATH;
-    bool isFilterAlign1(true);
-    bool isFilterAlign2(true);
+    bool isLowQualityAlign1(true);
+    bool isLowQualityAlign2(true);
     static const unsigned spanSet[] = { 75, 100, 200 };
     for (const unsigned maxQCRefSpan : spanSet)
     {
         const unsigned qcSpan1 = maxQCRefSpan + (isRNA ? apath_spliced_length(alignment.align1.apath) : 0);
-        if (!isFilterSpanningAlignment(qcSpan1, spanningAligner, true, isRNA, alignment.align1.apath))
+        if (! isLowQualitySpanningSVAlignment(qcSpan1, alignmentScores, true, isRNA, alignment.align1.apath))
         {
-            isFilterAlign1 = false;
+            isLowQualityAlign1 = false;
         }
         const unsigned qcSpan2 = maxQCRefSpan + (isRNA ? apath_spliced_length(alignment.align2.apath) : 0);
-        if (!isFilterSpanningAlignment(qcSpan2, spanningAligner, false, isRNA, alignment.align2.apath))
+        if (! isLowQualitySpanningSVAlignment(qcSpan2, alignmentScores, false, isRNA, alignment.align2.apath))
         {
-            isFilterAlign2 = false;
+            isLowQualityAlign2 = false;
         }
     }
-    return (isFilterAlign1 || isFilterAlign2);
+    return (isLowQualityAlign1 || isLowQualityAlign2);
 }
 
 
@@ -1410,31 +1441,33 @@ static
 bool
 selectContigRNA(
     SVCandidateAssemblyData& assemblyData,
-    const GlobalJumpAligner<int>& spanningAligner
-)
+    const AlignmentScores<int>& alignmentScores)
 {
-    std::vector<int> goodContigIndicies;
-    for (unsigned contigIndex = 0; contigIndex < assemblyData.contigs.size(); contigIndex++)
+    static const bool isRNA(true);
+    const unsigned contigCount(assemblyData.contigs.size());
+
+    std::vector<int> goodContigIndices;
+    for (unsigned contigIndex = 0; contigIndex < contigCount; contigIndex++)
     {
         const JumpAlignmentResult<int>& alignment(assemblyData.spanningAlignments[contigIndex]);
 #ifdef DEBUG_REFINER
         log_os << __FUNCTION__ << ": Checking contig alignment: " << contigIndex << "\n";
 #endif
-        if (!basicContigAlignmentCheck(alignment)) continue;
+        if (isJumpAlignmentQCFail(alignment)) continue;
 #ifdef DEBUG_REFINER
         log_os << __FUNCTION__ << ": contig alignment initial okay: " << contigIndex << "\n";
 #endif
-        if (checkFilterSubAlignments(alignment, spanningAligner, true)) continue;
+        if (isLowQualityJumpAlignment(alignment, alignmentScores, isRNA)) continue;
 #ifdef DEBUG_REFINER
         log_os << __FUNCTION__ << ": contig alignment okay: " << contigIndex << "\n";
 #endif
-        goodContigIndicies.push_back(contigIndex);
+        goodContigIndices.push_back(contigIndex);
     }
-    if (goodContigIndicies.empty()) return false;
+    if (goodContigIndices.empty()) return false;
     // Find the highest alignment score
     int maxAlnScore = 0;
-    unsigned selectedContigIndex(goodContigIndicies.front());
-    for (unsigned index : goodContigIndicies)
+    unsigned selectedContigIndex(goodContigIndices.front());
+    for (unsigned index : goodContigIndices)
     {
         if (assemblyData.spanningAlignments[index].score > maxAlnScore)
         {
@@ -1443,7 +1476,7 @@ selectContigRNA(
         }
     }
     // Pick the contig with the most supporting reads that has an alignment score at least half as high as the highest-scoring contig
-    for (unsigned index : goodContigIndicies)
+    for (unsigned index : goodContigIndices)
     {
         const bool sufficientScore(assemblyData.spanningAlignments[index].score * 2 > maxAlnScore);
         const bool moreReads(assemblyData.contigs[index].supportReads.size() > assemblyData.contigs[selectedContigIndex].supportReads.size());
@@ -1464,23 +1497,26 @@ static
 bool
 selectContigDNA(
     SVCandidateAssemblyData& assemblyData,
-    const GlobalJumpAligner<int>& spanningAligner
-)
+    const AlignmentScores<int>& alignmentScores)
 {
+    static const bool isRNA(false);
+    const auto& alignments(assemblyData.spanningAlignments);
+    const unsigned contigCount(assemblyData.contigs.size());
+
     int maxAlignContigIndex(-1);
-    for (unsigned contigIndex = 0; contigIndex < assemblyData.contigs.size(); contigIndex++)
+    for (unsigned contigIndex = 0; contigIndex < contigCount; contigIndex++)
     {
-        const JumpAlignmentResult<int>& alignment(assemblyData.spanningAlignments[contigIndex]);
+        const JumpAlignmentResult<int>& alignment(alignments[contigIndex]);
 #ifdef DEBUG_REFINER
         log_os << __FUNCTION__ << ": Checking contig alignment: " << contigIndex << "\n";
 #endif
-        if (!basicContigAlignmentCheck(alignment)) continue;
+        if (isJumpAlignmentQCFail(alignment)) continue;
 #ifdef DEBUG_REFINER
         log_os << __FUNCTION__ << ": contig alignment initial okay: " << contigIndex << "\n";
 #endif
         // Find the contig with the highest alignment score
         if ((maxAlignContigIndex == -1) ||
-            (assemblyData.spanningAlignments[contigIndex].score > assemblyData.spanningAlignments[maxAlignContigIndex].score))
+            (alignments[contigIndex].score > alignments[maxAlignContigIndex].score))
         {
             maxAlignContigIndex = contigIndex;
         }
@@ -1489,7 +1525,7 @@ selectContigDNA(
     log_os << __FUNCTION__ << ": selected contig: " << maxAlignContigIndex << "\n";
 #endif
     if ((maxAlignContigIndex == -1) ||
-        (checkFilterSubAlignments(assemblyData.spanningAlignments[maxAlignContigIndex], spanningAligner, false)))
+        (isLowQualityJumpAlignment(alignments[maxAlignContigIndex], alignmentScores, isRNA)))
     {
         return false;
     }
@@ -1820,11 +1856,11 @@ getJumpAssembly(
     bool foundContig(false);
     if (isRNA)
     {
-        foundContig = selectContigRNA(assemblyData, _spanningAligner);
+        foundContig = selectContigRNA(assemblyData, _contigFilterAlignmentScores);
     }
     else
     {
-        foundContig = selectContigDNA(assemblyData, _spanningAligner);
+        foundContig = selectContigDNA(assemblyData, _contigFilterAlignmentScores);
     }
     if (!foundContig) return;
 #ifdef DEBUG_REFINER
@@ -2035,7 +2071,6 @@ getSmallSVAssembly(
         /// \param[in] onlyAcceptLargeCandidates If true, don't accept smaller indel/SV candidates (intended for denoising)
         ///
         auto testIfAlignmentNominatesIndelCandidate = [&](
-                                                          const AlignerBase<int>& aligner,
                                                           const bool onlyAcceptLargeCandidates)
         {
             alignment.align.beginPos += adjustedLeadingCut;
@@ -2052,7 +2087,7 @@ getSmallSVAssembly(
                 std::vector<std::pair<unsigned,unsigned> > segments;
                 const bool isCandidate(findCandidateVariantsFromComplexSVContigAlignment(
                                            maxQCRefSpan,
-                                           aligner,
+                                           _contigFilterAlignmentScores,
                                            alignment.align,
                                            contig.seq,
                                            align1RefStr,
@@ -2086,7 +2121,7 @@ getSmallSVAssembly(
                 align1RefStr.begin() + adjustedLeadingCut, align1RefStr.end() - adjustedTrailingCut,
                 alignment);
 
-            testIfAlignmentNominatesIndelCandidate(_largeSVAligner, true);
+            testIfAlignmentNominatesIndelCandidate(true);
         }
 
 
@@ -2099,7 +2134,7 @@ getSmallSVAssembly(
                 align1RefStr.begin() + adjustedLeadingCut, align1RefStr.end() - adjustedTrailingCut,
                 alignment);
 
-            testIfAlignmentNominatesIndelCandidate(_smallSVAligner, false);
+            testIfAlignmentNominatesIndelCandidate(false);
         }
 
 

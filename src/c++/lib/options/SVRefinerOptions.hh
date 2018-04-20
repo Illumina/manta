@@ -77,6 +77,6 @@ struct SVRefinerOptions
     AssemblerOptions spanningAssembleOpt;
     AssemblerOptions RNAspanningAssembleOpt;
 
-    // parameters for contig filtration
+    // Scores used to check for low quality assembly contig alignments
     AlignmentScores<int> contigFilterScores;
 };

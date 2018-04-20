@@ -2,8 +2,8 @@
 
 ### Changed
 - Improve user guide to clarify meaning of the INV3/INV5 vcf INFO tags (MANTA-1305)
-- Refine contig filter to improve precision (MANTA-1310)
-  - Indel occurrences near breakends are penalized, but indel extension is free.
+- Refine SV candidate filter to improve precision (MANTA-1310)
+  - Change assessment of assembled SV candidate contigs such that indel occurrences near breakends are more heavily penalized and indel extension penalties are removed.
 
 ### Fixed
 - Fix the off-by-1 bug for the vcf HOMSEQ tag (MANTA-1311)

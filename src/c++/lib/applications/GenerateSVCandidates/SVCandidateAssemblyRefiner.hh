@@ -111,6 +111,8 @@ private:
     const GlobalJumpAligner<int> _spanningAligner;
     const GlobalJumpIntronAligner<int> _RNASpanningAligner;
 
+    const AlignmentScores<int> _contigFilterAlignmentScores;
+
     /// Keeps track of all regions which have already been assembled while processing spanning SVs
     mutable GenomeIntervalTracker _spanToComplexAssmRegions;
 };

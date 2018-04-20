@@ -25,7 +25,6 @@
 
 #include "alignment/Alignment.hh"
 #include "alignment/AlignmentScores.hh"
-#include "blt_util/align_path.hh"
 
 
 // #define DEBUG_ALN // Standard debug output
@@ -44,15 +43,7 @@ struct AlignerBase
 {
     AlignerBase(
         const AlignmentScores<ScoreType>& scores) :
-        _scores(scores),
-        _contigFilterScores(scores)
-    {}
-
-    AlignerBase(
-            const AlignmentScores<ScoreType>& scores,
-            const AlignmentScores<ScoreType>& contigFilterScores) :
-            _scores(scores),
-            _contigFilterScores(contigFilterScores)
+        _scores(scores)
     {}
 
     /// read-only access to the aligner's scores:
@@ -61,23 +52,6 @@ struct AlignerBase
     {
         return _scores;
     }
-
-    /// recover a path alignment score without aligning, requires SEQ_MATCH style CIGAR
-    ///
-    ScoreType
-    getPathScore(
-        const ALIGNPATH::path_t& apath,
-        const bool isContigFilter = false,
-        const bool isScoreOffEdge = false) const;
-
-    /// recover the maximum partial path alignment score (going left->right) without aligning, requires SEQ_MATCH style CIGAR
-    ///
-    ScoreType
-    getMaxPathScore(
-        const ALIGNPATH::path_t& apath,
-        unsigned& maxReadOffset,
-        unsigned& maxRefOffset,
-        const bool isScoreOffEdge = true) const;
 
 protected:
 
@@ -121,7 +95,6 @@ protected:
 #endif
 
     const AlignmentScores<ScoreType> _scores;
-    const AlignmentScores<ScoreType> _contigFilterScores;
 };
 
 

@@ -21,20 +21,15 @@
 /// \author Chris Saunders
 ///
 
-#include <cassert>
-#include "blt_util/log.hh"
-
-//#define DEBUG_PATHSCORE
 
 #ifdef DEBUG_ALN_MATRIX
 #include <boost/io/ios_state.hpp>
 
 #include <iomanip>
 #include <iostream>
-#endif
 
 
-#ifdef DEBUG_ALN_MATRIX
+
 template <typename ScoreType>
 template <typename SymIter, typename MatrixType, typename ScoreValType>
 void
@@ -90,141 +85,3 @@ dumpSingleRefTable(
     }
 }
 #endif
-
-
-
-template <typename ScoreType>
-ScoreType
-AlignerBase<ScoreType>::
-getPathScore(
-    const ALIGNPATH::path_t& apath,
-    const bool isContigFilter,
-    const bool isScoreOffEdge) const
-{
-    using namespace ALIGNPATH;
-
-    const AlignmentScores<ScoreType>& scores(isContigFilter ? _contigFilterScores : _scores);
-    ScoreType val(0);
-
-    // note that the intent of this function was to replicate the underling aligner and thus
-    // not penalize insert-delete transitions, however as written the open score is added twice for
-    // such an event. This turns out to perform much better for the performance of this tool as
-    // a variant 'arm' validator. so the unintended code is staying in place for now.
-    //
-    /// TODO: reevaluate policy for insertion-deletion state transition score
-
-#ifdef DEBUG_PATHSCORE
-    log_os << __FUNCTION__ << " path: " << apath << "\n";
-#endif
-
-    for (const path_segment& ps : apath)
-    {
-        bool isIndel(false); // placement of isIndel inside of this loop is the 'bug'
-        switch (ps.type)
-        {
-        case MATCH:
-            // if MATCH segments exist, then you're using the wrong type of CIGAR for this function
-            assert(false && "Unexpected MATCH segment");
-            break;
-        case SEQ_MATCH:
-            val += (scores.match * ps.length);
-            isIndel = false;
-            break;
-        case SEQ_MISMATCH:
-            val += (scores.mismatch * ps.length);
-            isIndel = false;
-            break;
-        case INSERT:
-        case DELETE:
-            if (! isIndel) val += scores.open;
-            val += (scores.extend * ps.length);
-            isIndel = true;
-            break;
-        case SOFT_CLIP:
-            if (isScoreOffEdge) val += (scores.offEdge * ps.length);
-            isIndel = false;
-            break;
-        default:
-            break;
-        }
-
-#ifdef DEBUG_PATHSCORE
-      log_os << __FUNCTION__
-             << " path.type=" << ps.type
-             << " path.length=" << ps.length
-             << " val=" << val << "\n";
-#endif
-    }
-    return val;
-}
-
-
-template <typename ScoreType>
-ScoreType
-AlignerBase<ScoreType>::
-getMaxPathScore(
-    const ALIGNPATH::path_t& apath,
-    unsigned& maxReadOffset,
-    unsigned& maxRefOffset,
-    const bool isScoreOffEdge) const
-{
-    using namespace ALIGNPATH;
-
-    ScoreType val(0);
-    unsigned readOffset(0);
-    unsigned refOffset(0);
-
-    ScoreType maxVal(0);
-    maxReadOffset=0;
-    maxRefOffset=0;
-
-    for (const path_segment& ps : apath)
-    {
-        bool isIndel(false); // unintended 'bug' with positive results, see TODO note above
-        switch (ps.type)
-        {
-        case MATCH:
-            assert(false && "Unexpected MATCH segment"); // if MATCH segments exist, then you're using the wrong type of CIGAR for this function
-            break;
-        case SEQ_MATCH:
-            val += (_scores.match * ps.length);
-            readOffset += ps.length;
-            refOffset += ps.length;
-            isIndel = false;
-            break;
-        case SEQ_MISMATCH:
-            val += (_scores.mismatch * ps.length);
-            readOffset += ps.length;
-            refOffset += ps.length;
-            isIndel = false;
-            break;
-        case INSERT:
-            if (! isIndel) val += _scores.open;
-            val += (_scores.extend * ps.length);
-            readOffset += ps.length;
-            isIndel = true;
-            break;
-        case DELETE:
-            if (! isIndel) val += _scores.open;
-            val += (_scores.extend * ps.length);
-            refOffset += ps.length;
-            isIndel = true;
-            break;
-        case SOFT_CLIP:
-            if (isScoreOffEdge) val += (_scores.offEdge * ps.length);
-            readOffset += ps.length;
-            isIndel = false;
-            break;
-        default:
-            break;
-        }
-
-        if (val>maxVal)
-        {
-            maxVal = val;
-            maxReadOffset = readOffset;
-            maxRefOffset = refOffset;
-        }
-    }
-    return maxVal;
-}
