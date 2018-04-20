@@ -20,6 +20,7 @@
 /// \file
 /// \author Ole Schulz-Trieglaff
 /// \author Chris Saunders
+/// \author Xiaoyu Chen
 ///
 
 #include "SVCandidateAssemblyRefiner.hh"
@@ -1517,6 +1518,13 @@ struct AlignData
 
 
 /// Assemble candidate contigs for large SV candidates
+///
+/// \param[in] alignData Initialized auxilary alignment info for sequence trimming
+/// \param[in] assemblyData Assembly data for a SV candidate that will be updated
+///                         to include contigs assembled and reference sequences
+///
+/// \Return true if the reference region is valid and the assembly procedure is completed
+///
 bool
 static
 assembleJumpContigs(
@@ -1525,7 +1533,7 @@ assembleJumpContigs(
     const pos_t extraRefEdgeSize,
     const pos_t extraRefSplitSize,
     const bam_header_info& header,
-    const SVCandidateAssembler spanningAssembler,
+    const SVCandidateAssembler& spanningAssembler,
     AlignData& alignData,
     SVCandidateAssemblyData& assemblyData)
 {
@@ -1615,13 +1623,17 @@ assembleJumpContigs(
 
 
 /// Align contigs of large SV candidates to reference
+///
+/// \param alignData Auxilary alignment info for sequence trimming initialized in contig assembly
+///                  that will be updated during contig alignment
+///
 void
 static
 alignJumpContigs(
     const GSCOptions& opt,
     const SVCandidate& sv,
-    const GlobalJumpAligner<int> spanningAligner,
-    const GlobalJumpIntronAligner<int> RNASpanningAligner,
+    const GlobalJumpAligner<int>& spanningAligner,
+    const GlobalJumpIntronAligner<int>& RNASpanningAligner,
     AlignData& alignData,
     SVCandidateAssemblyData& assemblyData)
 {
@@ -1660,8 +1672,7 @@ alignJumpContigs(
 
 
     const unsigned contigCount(assemblyData.contigs.size());
-    // make sure an alignment object exists for every contig, even if
-    // it's empty:
+    // make sure an alignment object exists for every contig, even if it's empty
     assemblyData.spanningAlignments.resize(contigCount);
 
 #ifdef DEBUG_REFINER
@@ -1764,6 +1775,41 @@ alignJumpContigs(
                                   align2RefStrPtr->begin() + alignData.align2LeadingCut,
                                   align2RefStrPtr->end() - alignData.align2TrailingCut,
                                   alignment);
+
+            const bool hasJumpInsert(alignment.jumpInsertSize > 0);
+            const pos_t minAlignBuffer(5);
+            const pos_t ref1EndPos(align1RefStrPtr->size() - alignData.align1LeadingCut - alignData.align1TrailingCut -1);
+            const pos_t align1EndPos(alignment.align1.beginPos + apath_ref_length(alignment.align1.apath));
+            // Breakend from align1 is close to the end position of reference sequence
+            const bool isBp1CloseToRef1End(ref1EndPos - align1EndPos < minAlignBuffer);
+            // Breakend from align2 is close to the start position of reference sequence
+            const bool isBp2CloseToRef2Start(alignment.align2.beginPos < minAlignBuffer);
+            // When there is any breakend close to either end of reference sequence,
+            // and when the jump alignment includes an insert,
+            // the contig need be realigned with longer reference sequences
+            // (i.e. the reference sequences without cutting).
+            //
+            // Note that the reference sequences without cutting is expanded at most by extraRefSplitSize(default 100bp).
+            // Therefore this one-time expansion may not resolve the very rare case,
+            // where the breakend is located more than extraRefSplitSize away from the reference end.
+            if (hasJumpInsert && (isBp1CloseToRef1End || isBp2CloseToRef2Start))
+            {
+                alignData.align1LeadingCut = 0;
+                alignData.align1TrailingCut = 0;
+                alignData.align2LeadingCut = 0;
+                alignData.align2TrailingCut = 0;
+#ifdef DEBUG_REFINER
+                log_os << __FUNCTION__ << " Aglignment: " << alignment << "\n"
+                       << "The breakend is close to the start/end position of reference sequence!\n";
+                log_os << __FUNCTION__ << " Realign with longer reference sequences: \n"
+                       << " Ref1 for alignment: " << bp1refSeq << '\n'
+                       << " Ref2 for alignment: " << bp2refSeq << '\n';
+#endif
+                spanningAligner.align(contig.seq.begin(), contig.seq.end(),
+                                      align1RefStrPtr->begin(), align1RefStrPtr->end(),
+                                      align2RefStrPtr->begin(), align2RefStrPtr->end(),
+                                      alignment);
+            }
         }
 
         alignment.align1.beginPos += alignData.align1LeadingCut;
@@ -1813,8 +1859,8 @@ getJumpAssembly(
     //
     const pos_t extraRefEdgeSize(_opt.isRNA ? 25000 : 250);
     // This determines by how much we extend the reference sequence
-    // around the breakend region for all operations except alignment
-    // of the contig back to the reference.
+    // around the breakend region for all operations except for the
+    // initial alignment of the contig back to the reference.
     //
     // The primary motivation for this value is to improve our ability
     // to find reads which support the breakend when quality scoring
@@ -1830,9 +1876,11 @@ getJumpAssembly(
     // extended region will be used for read support scoring (later
     // during Q-value generation)
     //
-    // The extra reference sequence is removed for:
-    // - contig alignment, this means that actual breakpoint discovery
-    // - will not occur in the extended region
+    // The extra reference sequence
+    // - is removed for the initial contig alignment, this means that
+    // actual breakpoint discovery will not occur in the extended region
+    // - will be added back for contig realignment if the initial
+    // alignment leads to breakends close to reference ends.
     //
     const pos_t extraRefSplitSize(100);
 
@@ -1866,26 +1914,28 @@ getJumpAssembly(
         }
     }
 
+    // First assemble candidate contigs
     AlignData alignData;
-    bool assembledContigs(false);
-    assembledContigs = assembleJumpContigs(_opt, sv, extraRefEdgeSize, extraRefSplitSize,
+    bool isAssemblySuccess(false);
+    isAssemblySuccess = assembleJumpContigs(_opt, sv, extraRefEdgeSize, extraRefSplitSize,
                                            _header, _spanningAssembler, alignData, assemblyData);
-    if (! assembledContigs) return;
+    if (! isAssemblySuccess) return;
 
+    // Align candidate contigs back to reference
     alignJumpContigs(_opt, sv, _spanningAligner, _RNASpanningAligner,
                      alignData, assemblyData);
 
     // Select the contig with the highest alignment score
-    bool foundContig(false);
+    bool isContigSelected(false);
     if (_opt.isRNA)
     {
-        foundContig = selectJumpContigRNA(assemblyData, _spanningAligner);
+        isContigSelected = selectJumpContigRNA(assemblyData, _spanningAligner);
     }
     else
     {
-        foundContig = selectJumpContigDNA(assemblyData, _spanningAligner);
+        isContigSelected = selectJumpContigDNA(assemblyData, _spanningAligner);
     }
-    if (!foundContig) return;
+    if (! isContigSelected) return;
 
 #ifdef DEBUG_REFINER
     log_os << __FUNCTION__ << ": highscoreid: " << assemblyData.bestAlignmentIndex
