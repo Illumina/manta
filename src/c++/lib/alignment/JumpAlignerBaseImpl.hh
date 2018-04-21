@@ -255,7 +255,7 @@ backTraceAlignment(
             }
             else
             {
-               ref2JumpIter++;
+                ref2JumpIter++;
             }
         }
     }

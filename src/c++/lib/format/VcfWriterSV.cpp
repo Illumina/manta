@@ -293,12 +293,13 @@ addSharedInfo(
 static
 void
 addHomologyInfo(
-        const std::string& refFile,
-        const std::string& chrom,
-        const known_pos_range2& bpArange,
-        VcfWriterSV::InfoTag_t& infoTags)
+    const std::string& refFile,
+    const std::string& chrom,
+    const known_pos_range2& bpArange,
+    VcfWriterSV::InfoTag_t& infoTags)
 {
-    if (bpArange.size() > 1) {
+    if (bpArange.size() > 1)
+    {
         // get breakend homology sequence
         infoTags.push_back(str(boost::format("HOMLEN=%i") % (bpArange.size() - 1)));
         std::string homSeq;

@@ -36,7 +36,9 @@ BOOST_AUTO_TEST_SUITE( BamStreamerUtils_test_suite)
 struct OpenBamStreamsFixture
 {
     OpenBamStreamsFixture()
-        : readValues({ {0, 10}, {0, 130}, {1, 20}, {1, 140} })
+        : readValues(
+    { {0, 10}, {0, 130}, {1, 20}, {1, 140}
+    })
     {
         const bam_header_info bamHeader(buildTestBamHeader());
         std::vector<bam_record> readsToAdd;

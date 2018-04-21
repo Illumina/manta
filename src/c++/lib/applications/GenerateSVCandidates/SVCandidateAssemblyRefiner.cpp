@@ -1385,7 +1385,7 @@ checkFilterSubAlignments(
     // Use shorter regions for RNA contig alignment QC since reads and inserts
     // (and hence assembled contigs) are typically shorter
     const unsigned spanSet[] = { 75, 100, 200 };
-    const unsigned spanSetRna[] = { 36, 75, 100}; 
+    const unsigned spanSetRna[] = { 36, 75, 100};
     for (const unsigned maxQCRefSpan : isRNA ? spanSetRna : spanSet)
     {
         const unsigned qcSpan1 = maxQCRefSpan + (isRNA ? apath_spliced_length(alignment.align1.apath) : 0);
