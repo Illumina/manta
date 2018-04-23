@@ -31,12 +31,13 @@
 #include <string>
 
 
+/// \brief Stream records various htslib file types
 struct hts_streamer : private boost::noncopyable
 {
     /// \param[in] filename (required)
     /// \param[in] region (may be nullptr)
     ///
-    /// note that region must be set before iteration will produce any output
+    /// Note that region must be set before iteration will produce any output
     /// (ie. there is no "whole genome iteration" enabled if no region is provided)
     hts_streamer(
         const char* filename,
@@ -56,15 +57,15 @@ struct hts_streamer : private boost::noncopyable
         return _record_no;
     }
 
-    /// \brief set new region for indexed file
+    /// \brief Set new region for indexed file
     ///
-    /// \param region htslib-style region string in format: "chromName:beginPos-endPos", cannot be nullptr
+    /// \param[in] region htslib-style region string in format: "chromName:beginPos-endPos", cannot be nullptr
     void
     resetRegion(
         const char* region);
 
 protected:
-    /// load index if it hasn't been set already
+    /// \brief Load index if it hasn't been set already
     void
     _load_index();
 

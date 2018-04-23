@@ -28,15 +28,19 @@
 
 #include <cassert>
 
-
+/// \brief Stream records from VCF files.
 struct vcf_streamer : public hts_streamer
 {
-    /// \param[in] isRequireNormalized if true an exception is thrown for any input variant records which are not
-    ///                                left shifted
+    /// \param[in] requireNormalized if true an exception is thrown for any input variant records which are not
+    ///                              normalized (see below for definition)
+    ///
+    /// A VCF record is considered normalized if it is left-aligned, has a non-zero ref and alt length, and
+    /// is parsimonious except for left-side reference padding required to fulfill the non-zero length rule.
+    ///
     vcf_streamer(
         const char* filename,
         const char* region,
-        const bool isRequireNormalized = true);
+        const bool requireNormalized = true);
 
     ~vcf_streamer();
 
@@ -78,5 +82,5 @@ private:
     bcf_hdr_t* _hdr;
     unsigned _sampleCount;
     vcf_record _vcfrec;
-    bool _isRequireNormalized;
+    bool _requireNormalized;
 };

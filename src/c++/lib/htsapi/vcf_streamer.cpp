@@ -23,14 +23,12 @@
 
 #include "vcf_streamer.hh"
 
-#include "blt_util/blt_exception.hh"
 #include "blt_util/log.hh"
 #include "blt_util/seq_util.hh"
 
 #include "common/Exceptions.hh"
 
 #include <cassert>
-#include <cstdlib>
 #include <sys/stat.h>
 
 #include <iostream>
@@ -44,31 +42,32 @@
 /// bam header
 static
 void
-check_bam_bcf_header_compatability(
+check_bam_bcf_header_compatibility(
     const char* bcf_filename,
-    const bcf_hdr_t* bcfh,
-    const bam_hdr_t& bamh)
+    const bcf_hdr_t* bcf_header,
+    const bam_hdr_t& bam_header)
 {
-    assert(nullptr != bcfh);
+    assert(bcf_header);
 
     // build set of chrom labels from BAM:
-    std::set<std::string> bamlabels;
-    for (int32_t i(0); i<bamh.n_targets; ++i)
+    std::set<std::string> bamLabels;
+    for (int32_t i(0); i<bam_header.n_targets; ++i)
     {
-        bamlabels.insert(std::string(bamh.target_name[i]));
+        bamLabels.insert(std::string(bam_header.target_name[i]));
     }
-    int n_labels(0);
+    int labelCount(0);
 
-    const char** bcf_labels = bcf_hdr_seqnames(bcfh, &n_labels);
+    const char** bcfLabels = bcf_hdr_seqnames(bcf_header, &labelCount);
 
-    for (int i(0); i<n_labels; ++i)
+    for (int labelIndex(0); labelIndex<labelCount; ++labelIndex)
     {
-        if (bamlabels.find(std::string(bcf_labels[i])) != bamlabels.end()) continue;
-        log_os << "Chromosome label '" << bcf_labels[i] << "' in BCF/VCF file '" << bcf_filename << "' does not exist in the BAM header";
-        exit(EXIT_FAILURE);
+        if (bamLabels.find(std::string(bcfLabels[labelIndex])) != bamLabels.end()) continue;
+        std::ostringstream oss;
+        oss << "Chromosome label '" << bcfLabels[labelIndex] << "' in BCF/VCF file '" << bcf_filename << "' does not exist in the BAM header";
+        BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
     }
 
-    free(bcf_labels);
+    free(bcfLabels);
 }
 
 
@@ -77,10 +76,10 @@ vcf_streamer::
 vcf_streamer(
     const char* filename,
     const char* region,
-    const bool isRequireNormalized) :
+    const bool requireNormalized) :
     hts_streamer(filename,region),
     _hdr(nullptr),
-    _isRequireNormalized(isRequireNormalized)
+    _requireNormalized(requireNormalized)
 {
     //
     // note with the switch to samtools 1.X vcf/bcf still involve predominantly separate
@@ -89,10 +88,11 @@ vcf_streamer(
     //
 
     _hdr = bcf_hdr_read(_hfp);
-    if (nullptr == _hdr)
+    if (! _hdr)
     {
-        log_os << "Failed to load header for VCF file: '" << filename << "'";
-        exit(EXIT_FAILURE);
+        std::ostringstream oss;
+        oss << "Failed to load header for VCF file: '" << filename << "'";
+        BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
     }
     _sampleCount = bcf_hdr_nsamples(_hdr);
 }
@@ -102,7 +102,7 @@ vcf_streamer(
 vcf_streamer::
 ~vcf_streamer()
 {
-    if (nullptr != _hdr) bcf_hdr_destroy(_hdr);
+    if (_hdr) bcf_hdr_destroy(_hdr);
 }
 
 
@@ -111,7 +111,7 @@ bool
 vcf_streamer::
 next()
 {
-    if (_is_stream_end || (nullptr==_hfp) || (nullptr==_titr)) return false;
+    if (_is_stream_end || (! _hfp) || (! _titr)) return false;
 
     while (true)
     {
@@ -133,8 +133,10 @@ next()
 
         if (! _vcfrec.set(_kstr.s))
         {
-            log_os << "ERROR: Can't parse vcf record: '" << _kstr.s << "'\n";
-            exit(EXIT_FAILURE);
+            std::ostringstream oss;
+            oss << "Can't parse VCF record: '" << _kstr.s << "'";
+            report_state(oss);
+            BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
         }
 
         if (_vcfrec.isSimpleVariantLocus())
@@ -145,7 +147,7 @@ next()
                 oss << "Input VCF record is not normalized:\n";
                 report_state(oss);
 
-                if (_isRequireNormalized)
+                if (_requireNormalized)
                 {
                     oss << "Please normalize all records in this VCF with a tool such as vt, then resubmit\n";
                     BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
@@ -174,7 +176,7 @@ report_state(std::ostream& os) const
     const vcf_record* vcfp(get_record_ptr());
 
     os << "\tvcf_stream_label: " << name() << "\n";
-    if (nullptr != vcfp)
+    if (vcfp)
     {
         os << "\tvcf_stream_record_no: " << record_no() << "\n"
            << "\tvcf_record: " << *(vcfp) << "\n";
@@ -192,5 +194,5 @@ vcf_streamer::
 validateBamHeaderChromSync(
     const bam_hdr_t& header) const
 {
-    check_bam_bcf_header_compatability(name(), _hdr, header);
+    check_bam_bcf_header_compatibility(name(), _hdr, header);
 }

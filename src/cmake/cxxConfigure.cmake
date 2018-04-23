@@ -404,7 +404,7 @@ elseif (${IS_CLANGXX})
 
     if (NOT (${COMPILER_VERSION} VERSION_LESS "5.0"))
         list(APPEND CXX_WARN_LIST inconsistent-missing-destructor-override unused-template)
-        list(APPEND CXX_NOWARN_LIST zero-as-null-pointer-constant)
+        list(APPEND CXX_NOWARN_LIST zero-as-null-pointer-constant shadow-field)
     endif ()
 
     if (NOT (${COMPILER_VERSION} VERSION_LESS "6.0"))

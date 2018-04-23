@@ -25,9 +25,14 @@
 #
 # requires SRC_DIR, REDIST_DIR and CONFIG_FILE
 #
+# SRC_DIR should point to the project src directory
+# REDIST_DIR should point to the project redist directory (so that cmake-modules can be found)
+# CONFIG_FILE is where all build info is written out to
+#
 
+#
 # generate git describe tag
-
+#
 set (GETGIT_CMAKE "${REDIST_DIR}/cmake-modules-c99fd3/GetGitRevisionDescription.cmake")
 include ("${GETGIT_CMAKE}")
 git_describe(GIT_VERSION "${SRC_DIR}" --match "v[0-9]*" --dirty)
@@ -49,7 +54,7 @@ file(WRITE ${CONFIG_FILE} "WORKFLOW_VERSION\t${WORKFLOW_VERSION}\n")
 # get build timestamp
 #
 # python is a cross platform way to do this without newer cmake,
-# we have compile and runtime python req anyway.
+# and the project has a compile and runtime python requirement anyway.
 #
 find_package(PythonInterp QUIET)
 if (PYTHONINTERP_FOUND)

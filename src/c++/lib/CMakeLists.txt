@@ -56,7 +56,7 @@ buildLibraries("${PROJECT_TEST_LIBRARY_DIRS}" PROJECT_TEST_LIBRARY_TARGETS)
 #
 # Build all primary libraries for the project
 #
-# These are libraries needed by most installled project applications.
+# These are libraries needed by most installed project applications.
 #
 # note that order of PROJECT_PRIMARY_LIBRARY_DIRS approximates dependency chain, where
 # libraries are listed before libraries upon which they depend:

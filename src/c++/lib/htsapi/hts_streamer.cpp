@@ -23,13 +23,10 @@
 
 
 #include "hts_streamer.hh"
-#include "blt_util/blt_exception.hh"
-#include "blt_util/log.hh"
-
-#include <cstdlib>
+#include "common/Exceptions.hh"
 
 #include <iostream>
-
+#include <sstream>
 
 
 static const kstring_t kinit = {0,0,0};
@@ -49,27 +46,28 @@ hts_streamer(
     _titr(nullptr),
     _kstr(kinit)
 {
-    if (nullptr == filename)
+    if (! filename)
     {
-        throw blt_exception("hts filename is null ptr");
+        BOOST_THROW_EXCEPTION(illumina::common::GeneralException("hts filename is null ptr"));
     }
 
     if ('\0' == *filename)
     {
-        throw blt_exception("hts filename is empty string");
+        BOOST_THROW_EXCEPTION(illumina::common::GeneralException("hts filename is empty string"));
     }
 
     _hfp = hts_open(filename, "r");
-    if (nullptr == _hfp)
+    if (! _hfp)
     {
-        log_os << "ERROR: Failed to open hts file: '" << filename << "'\n";
-        exit(EXIT_FAILURE);
+        std::ostringstream oss;
+        oss << "Failed to open hts file: '" << filename << "'";
+        BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
     }
 
     _load_index();
 
     // read only a region of HTS file:
-    if (nullptr != region)
+    if (region)
     {
         resetRegion(region);
     }
@@ -80,10 +78,10 @@ hts_streamer(
 hts_streamer::
 ~hts_streamer()
 {
-    if (nullptr != _titr) tbx_itr_destroy(_titr);
-    if (nullptr != _tidx) tbx_destroy(_tidx);
-    if (nullptr != _hfp) hts_close(_hfp);
-    if (nullptr != _kstr.s) free(_kstr.s);
+    if (_titr) tbx_itr_destroy(_titr);
+    if (_tidx) tbx_destroy(_tidx);
+    if (_hfp) hts_close(_hfp);
+    if (_kstr.s) free(_kstr.s);
 }
 
 
@@ -93,10 +91,10 @@ hts_streamer::
 resetRegion(
     const char* region)
 {
-    if (nullptr != _titr) tbx_itr_destroy(_titr);
+    if (_titr) tbx_itr_destroy(_titr);
 
     _titr = tbx_itr_querys(_tidx, region);
-    _is_stream_end = (nullptr == _titr);
+    _is_stream_end = (! _titr);
 }
 
 
@@ -105,12 +103,13 @@ void
 hts_streamer::
 _load_index()
 {
-    if (nullptr != _tidx) return;
+    if (_tidx) return;
 
     _tidx = tbx_index_load(name());
-    if (nullptr == _tidx)
+    if (! _tidx)
     {
-        log_os << "ERROR: Failed to load index for hts file: '" << name() << "'\n";
-        exit(EXIT_FAILURE);
+        std::ostringstream oss;
+        oss << "Failed to load index for hts file: '" << name() << "'";
+        BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
     }
 }

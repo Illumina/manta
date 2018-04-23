@@ -8,6 +8,7 @@
 - Reduce spanning length in contig alignment QC for RNA (MANTA-1330)
 - Refine SV candidate filter to improve precision (MANTA-1310)
   - Change assessment of assembled SV candidate contigs such that indel occurrences near breakends are more heavily penalized and indel extension penalties are removed.
+- Add strict checks and improve error message for BED regions of size less than one (STREL-865)
 
 ### Fixed
 - Fix the off-by-1 bug for the vcf HOMSEQ tag (MANTA-1311)

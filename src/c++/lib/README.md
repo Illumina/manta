@@ -1,4 +1,4 @@
-# Manta libraries
+# Libraries
 
 - alignment
   - sequence alignment utilities
@@ -9,7 +9,10 @@
 - appstats
   - shared performance tracking code between applications
 
-- blt_util
+- assembly
+  - local sequence assembly utilities
+
+- blt\_util
   - general utility functions from manta/starling/strelka/gvcftools
 
 - common
@@ -18,7 +21,7 @@
 - format
   - conversion of data into external formats
 
-- htsapi:
+- htsapi
   - various c++ wrapper objects built on top of samtools/htslib and other utilities for standard genomic indexed file formats like bam/cram,bed,vcf, etc...
 
 - manta
@@ -31,5 +34,4 @@
   - SV locus graph components
 
 - test
-  - Logic used only for unit testing other libraries. These are linked into the unit tests but not manta production binaries
-
+  - Logic used only for unit testing other libraries. These are linked into the unit tests but not production binaries

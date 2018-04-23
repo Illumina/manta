@@ -27,7 +27,7 @@
 #include "hts_streamer.hh"
 
 
-/// Stream records from BED files.
+/// \brief Stream records from BED files.
 //
 // Example use:
 //
@@ -39,13 +39,16 @@
 //
 struct bed_streamer : public hts_streamer
 {
+    /// \param[in] filename BED filename, must be non-null & non-empty
+    /// \param[in] region Region string in samtools format (eg. "chr2:20-30"), must both be non-null & non-empty
+    /// \param[in] requireNonZeroRegionLength If true, an exception is thrown for any input bed record with region
+    ///                                       size of 0 or less, otherwise such records are skipped without error.
     bed_streamer(
         const char* filename,
-        const char* region) :
-        hts_streamer(filename,region)
-    {}
+        const char* region,
+        const bool requireNonZeroRegionLength = true);
 
-    /// advance to next record
+    /// \brief Advance to next record
     ///
     bool next();
 
@@ -60,4 +63,5 @@ struct bed_streamer : public hts_streamer
 
 private:
     bed_record _bedrec;
+    bool _requireNonZeroRegionLength;
 };

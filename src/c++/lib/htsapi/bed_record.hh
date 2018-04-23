@@ -37,7 +37,10 @@ struct bed_record
         clear();
     }
 
-    // set record from record string s, return false on error
+    /// \brief Construct bed_record from bed file line contained in string s
+    ///
+    /// \return false on error
+    ///
     bool set(const char* s);
 
     void clear()
@@ -48,10 +51,11 @@ struct bed_record
         line=nullptr;
     }
 
+    /// Test if bed records are valid, where valid means having a strictly positive region size
     bool
     is_valid() const
     {
-        return (begin <= end);
+        return (begin < end);
     }
 
     std::string chrom;
@@ -62,4 +66,3 @@ struct bed_record
 
 
 std::ostream& operator<<(std::ostream& os, const bed_record& bedr);
-

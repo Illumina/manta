@@ -19,12 +19,16 @@
 
 # \author Chris Saunders
 
-# update file with various build-time properties
+# update file 'SOURCE_FILE' with key/value substitutions described in CONFIG_FILE, and write the result
+# out to DEST_FILE
+#
 # requires CONFIG_FILE SOURCE_FILE DEST_FILE
 #
 # expected CONFIG_FILE format is:
 # "key1\tvalue1\n"
 # "key2\tvalue2\n" ...
+#
+# ..and SOURCE_FILE should contain @key1 and @key2, etc to indicate the corresponding macro substitution targets.
 #
 
 file (READ ${CONFIG_FILE} CONFIG_LINES)
