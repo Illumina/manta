@@ -25,7 +25,6 @@
 
 #include "alignment/Alignment.hh"
 #include "alignment/AlignmentScores.hh"
-#include "blt_util/align_path.hh"
 
 
 // #define DEBUG_ALN // Standard debug output
@@ -53,22 +52,6 @@ struct AlignerBase
     {
         return _scores;
     }
-
-    /// recover a path alignment score without aligning, requires SEQ_MATCH style CIGAR
-    ///
-    ScoreType
-    getPathScore(
-        const ALIGNPATH::path_t& apath,
-        const bool isScoreOffEdge = true) const;
-
-    /// recover the maximum partial path alignment score (going left->right) without aligning, requires SEQ_MATCH style CIGAR
-    ///
-    ScoreType
-    getMaxPathScore(
-        const ALIGNPATH::path_t& apath,
-        unsigned& maxReadOffset,
-        unsigned& maxRefOffset,
-        const bool isScoreOffEdge = true) const;
 
 protected:
 

@@ -50,7 +50,8 @@ struct SVRefinerOptions
         RNAspanningAlignScores(2, -8, -19, -1, -1),
         RNAJumpScore(-100),
         RNAIntronOpenScore(-15),
-        RNAIntronOffEdgeScore(-1)
+        RNAIntronOffEdgeScore(-1),
+        contigFilterScores(2, -8, -18, 0, -1)
     {
         spanningAssembleOpt.minContigLength=75; ///< For breakend-spanning assemblies we require a larger contig than for small-variant assemblies
         RNAspanningAssembleOpt.minContigLength = 75; ///< For breakend-spanning assemblies we require a larger contig than for small-variant assemblies
@@ -76,4 +77,6 @@ struct SVRefinerOptions
     AssemblerOptions spanningAssembleOpt;
     AssemblerOptions RNAspanningAssembleOpt;
 
+    // Scores used to check for low quality assembly contig alignments
+    AlignmentScores<int> contigFilterScores;
 };

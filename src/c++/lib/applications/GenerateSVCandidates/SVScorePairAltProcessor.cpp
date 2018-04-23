@@ -22,6 +22,7 @@
 ///
 
 #include "SVScorePairAltProcessor.hh"
+#include "alignment/AlignmentScoringUtil.hh"
 #include "blt_util/seq_util.hh"
 #include "blt_util/SimpleAlignment.hh"
 #include "common/Exceptions.hh"
@@ -138,7 +139,6 @@ checkInput(
 
 
 
-/// test whether a frag reference span provides sufficient support for a breakpoint of this sv:
 bool
 SVScorePairAltProcessor::
 testFragOverlap(
@@ -287,7 +287,7 @@ realignPairedRead(
             return false;
         }
 
-        int nonClipScore(_shadowAligner.getPathScore(readPath, false));
+        const int nonClipScore(getPathScore(_shadowAligner.getScores(), readPath));
 
         static const float minScoreFrac(0.85f);
         const int optimalScore(clippedReadSize*_shadowAligner.getScores().match);
@@ -326,7 +326,7 @@ realignPairedRead(
             return false;
         }
 
-        /// set fake end as if the insert allele continued in reference coordinates
+        // set fake end as if the insert allele continued in reference coordinates
         const int readContigEndRefOffset(_contig.segmentSpan.begin_pos() + (readContigEndOffset - _contig.bpAOffset.begin_pos()));
         fakeRefSpan.set_end_pos(readContigEndRefOffset);
 
