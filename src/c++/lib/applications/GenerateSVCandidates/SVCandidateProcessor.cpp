@@ -577,7 +577,7 @@ evaluateCandidate(
             SVCandidateAssemblyData& assemblyData(mjAssemblyData[junctionIndex]);
             try
             {
-                _svRefine.getCandidateAssemblyData(candidateSV, _opt.isRNA, isFindLargeInsertions, assemblyData);
+                _svRefine.getCandidateAssemblyData(candidateSV, isFindLargeInsertions, assemblyData);
             }
             catch (illumina::common::ExceptionData& e)
             {

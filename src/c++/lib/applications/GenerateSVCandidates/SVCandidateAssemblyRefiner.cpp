@@ -20,6 +20,7 @@
 /// \file
 /// \author Ole Schulz-Trieglaff
 /// \author Chris Saunders
+/// \author Xiaoyu Chen
 ///
 
 #include "SVCandidateAssemblyRefiner.hh"
@@ -221,6 +222,7 @@ getLargeIndelSegments(
 }
 
 
+
 static
 unsigned
 getLargestIndelSize(
@@ -244,6 +246,7 @@ getLargestIndelSize(
 
     return largestSize;
 }
+
 
 
 /// identify the single largest insert segment, if one exists above minSize:
@@ -1128,7 +1131,6 @@ void
 SVCandidateAssemblyRefiner::
 getCandidateAssemblyData(
     const SVCandidate& sv,
-    const bool isRNA,
     const bool isFindLargeInsertions,
     SVCandidateAssemblyData& assemblyData) const
 {
@@ -1146,7 +1148,7 @@ getCandidateAssemblyData(
         assemblyData.isCandidateSpanning=true;
 
         // this case assumes two suspected breakends with a direction to each, most common large scale SV case:
-        getJumpAssembly(sv, isRNA, isFindLargeInsertions, assemblyData);
+        getJumpAssembly(sv, isFindLargeInsertions, assemblyData);
     }
     else if (isComplexSV(sv))
     {
@@ -1306,7 +1308,6 @@ std::string kmerMaskReference(
 static
 void
 generateRefinedSVCandidateFromJumpAlignment(
-    const BPOrientation& bporient,
     const SVCandidateAssemblyData& assemblyData,
     SVCandidate& sv)
 {
@@ -1316,7 +1317,7 @@ generateRefinedSVCandidateFromJumpAlignment(
     const Alignment* bp1AlignPtr(&align.align1);
     const Alignment* bp2AlignPtr(&align.align2);
 
-    if (bporient.isBp2AlignedFirst) std::swap(bp1AlignPtr, bp2AlignPtr);
+    if (assemblyData.bporient.isBp2AlignedFirst) std::swap(bp1AlignPtr, bp2AlignPtr);
 
     // summarize usable output information in a second SVBreakend
     // object -- this is the 'refined' sv:
@@ -1325,8 +1326,10 @@ generateRefinedSVCandidateFromJumpAlignment(
 
     sv.setPrecise();
 
-    adjustAssembledBreakend(*bp1AlignPtr, (! bporient.isBp2AlignedFirst), align.jumpRange, assemblyData.bp1ref, bporient.isBp1Reversed, sv.bp1);
-    adjustAssembledBreakend(*bp2AlignPtr, (bporient.isBp2AlignedFirst), align.jumpRange, assemblyData.bp2ref, bporient.isBp2Reversed, sv.bp2);
+    adjustAssembledBreakend(*bp1AlignPtr, (! assemblyData.bporient.isBp2AlignedFirst), align.jumpRange,
+                            assemblyData.bp1ref, assemblyData.bporient.isBp1Reversed, sv.bp1);
+    adjustAssembledBreakend(*bp2AlignPtr, (assemblyData.bporient.isBp2AlignedFirst), align.jumpRange,
+                            assemblyData.bp2ref, assemblyData.bporient.isBp2Reversed, sv.bp2);
 }
 
 
@@ -1337,12 +1340,11 @@ generateRefinedSVCandidateFromJumpAlignment(
 static
 void
 generateRefinedVCFSVCandidateFromJumpAlignment(
-    const BPOrientation& bporient,
     const SVCandidateAssemblyData& assemblyData,
     SVCandidate& sv,
     const GSCOptions& opt)
 {
-    generateRefinedSVCandidateFromJumpAlignment(bporient, assemblyData, sv);
+    generateRefinedSVCandidateFromJumpAlignment(assemblyData, sv);
 
     const AssembledContig& contig(assemblyData.contigs[assemblyData.bestAlignmentIndex]);
     const SVCandidateAssemblyData::JumpAlignmentResultType& align(assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex]);
@@ -1351,7 +1353,7 @@ generateRefinedVCFSVCandidateFromJumpAlignment(
     sv.insertSeq.clear();
     if (align.jumpInsertSize > 0)
     {
-        getFwdStrandInsertSegment(align, contig.seq, bporient.isBp1Reversed, sv.insertSeq);
+        getFwdStrandInsertSegment(align, contig.seq, assemblyData.bporient.isBp1Reversed, sv.insertSeq);
     }
 
     // fill in contigSeq, only when "--outputConfig" is specified
@@ -1443,7 +1445,7 @@ isLowQualityJumpAlignment(
 /// Filter fusion contigs and select the 'best' one, based on alignment score and supporting read count
 static
 bool
-selectContigRNA(
+selectJumpContigRNA(
     SVCandidateAssemblyData& assemblyData,
     const AlignmentScores<int>& alignmentScores)
 {
@@ -1495,11 +1497,12 @@ selectContigRNA(
 
 
 
-/// Filter breakpoint contigs, select the 'best' one based on alignment score and check alignment on selected contig
+/// Filter breakpoint contigs for large SV candidates
+/// Select the 'best' one based on alignment score and check alignment on selected contig
 // TODO Consider making this more like the RNA case, e.g. all alignment checks before selection and pick the best passing one.
 static
 bool
-selectContigDNA(
+selectJumpContigDNA(
     SVCandidateAssemblyData& assemblyData,
     const AlignmentScores<int>& alignmentScores)
 {
@@ -1540,90 +1543,48 @@ selectContigDNA(
 }
 
 
-void
-SVCandidateAssemblyRefiner::
-getJumpAssembly(
-    const SVCandidate& sv,
-    const bool isRNA,
-    const bool isFindLargeInsertions,
-    SVCandidateAssemblyData& assemblyData) const
+/// Store auxilary alignment info
+struct AlignData
 {
-#ifdef DEBUG_REFINER
-    log_os << __FUNCTION__ << ": START\n";
-    if (isRNA)
-    {
-        log_os << __FUNCTION__ << ": RNA\n";
-    }
-#endif
+    unsigned bp1LeadingTrim = 0;
+    unsigned bp1TrailingTrim = 0;
+    unsigned bp2LeadingTrim = 0;
+    unsigned bp2TrailingTrim = 0;
 
-    // This determines by how much we extend the reference sequence
-    // around the breakend region for all discovery and scoring
-    // operations. It is possible to discover breakends and small
-    // indels in this expanded region.
-    //
-    const pos_t extraRefEdgeSize(isRNA ? 25000 : 250);
+    pos_t align1LeadingCut = 0;
+    pos_t align1TrailingCut = 0;
+    pos_t align2LeadingCut = 0;
+    pos_t align2TrailingCut = 0;
+};
 
-    // This determines by how much we extend the reference sequence
-    // around the breakend region for all operations except alignment
-    // of the contig back to the reference.
-    //
-    // The primary motivation for this value is to improve our ability
-    // to find reads which support the breakend when quality scoring
-    // takes place (a subsequent step outside of this function), but
-    // without expanding the regions where a breakend can possibly be
-    // found (ie. without the risk of additional false positives)
-    //
-    // The extra reference sequence is used for:
-    // - Extraction of breakend associated reads (reference sequence
-    // used to find reads which poorly match the reference in this
-    // case)
-    // - Contig extension after alignment, this means that the
-    // extended region will be used for read support scoring (later
-    // during Q-value generation)
-    //
-    // The extra reference sequence is removed for:
-    // - contig alignment, this means that actual breakpoint discovery
-    // - will not occur in the extended region
-    //
-    const pos_t extraRefSplitSize(100);
 
-    const pos_t extraRefSize(extraRefEdgeSize+extraRefSplitSize);
 
-    // if the breakends have a simple insert/delete orientation and
-    // the alignment regions overlap, then handle this case as a local
-    // assembly problem:
-    if (sv.bp1.interval.tid == sv.bp2.interval.tid)
-    {
-        if (! SVBreakendState::isSameOrientation(sv.bp1.state,sv.bp2.state))
-        {
-            const SV_TYPE::index_t svType(getSVType(sv));
-            if ((svType == SV_TYPE::INDEL) || (svType == SV_TYPE::COMPLEX))
-            {
-                if ( isRefRegionOverlap( _header, extraRefSize, sv) )
-                {
-                    // transform SV into a single region format:
-                    SVCandidate singleSV = sv;
-                    singleSV.bp1.state = SVBreakendState::COMPLEX;
-                    singleSV.bp2.state = SVBreakendState::UNKNOWN;
-                    singleSV.bp1.interval.range.merge_range(sv.bp2.interval.range);
-
-#ifdef DEBUG_REFINER
-                    log_os << __FUNCTION__ << ": Candidate breakends regions are too close, transferring problem to local assembler\n";
-#endif
-
-                    getSmallSVAssembly(singleSV, isFindLargeInsertions, assemblyData);
-                    return;
-                }
-            }
-        }
-    }
-
+/// Assemble candidate contigs for large SV candidates
+///
+/// \param[in] alignData Initialized auxilary alignment info for sequence trimming
+/// \param[in] assemblyData Assembly data for a SV candidate that will be updated
+///                         to include contigs assembled and reference sequences
+///
+/// \Return true if the reference region is valid and the assembly procedure is completed
+///
+bool
+static
+assembleJumpContigs(
+    const GSCOptions& opt,
+    const SVCandidate& sv,
+    const pos_t extraRefEdgeSize,
+    const pos_t extraRefSplitSize,
+    const bam_header_info& header,
+    const SVCandidateAssembler& spanningAssembler,
+    AlignData& alignData,
+    SVCandidateAssemblyData& assemblyData)
+{
     assemblyData.isSpanning = true;
     BPOrientation& bporient(assemblyData.bporient);
 
     bporient.isBp1First = sv.isForward();
     bporient.isTranscriptStrandKnown = sv.isTranscriptStrandKnown();
-    if (_opt.isRNA)
+    if (opt.isRNA)
     {
         bporient.isBp1First = !sv.isForward(); // RNA-seq reads generate candidates in the opposite direction of the RNA
     }
@@ -1666,8 +1627,8 @@ getJumpAssembly(
     // chromosomes, this can't be treated as a bug -- it's a
     // legitimate breakend hypothesis that we just aren't setup to
     // handle correctly, so we punt this case:
-    if (! isRefRegionValid(_header, sv.bp1.interval)) return;
-    if (! isRefRegionValid(_header, sv.bp2.interval)) return;
+    if (! isRefRegionValid(header, sv.bp1.interval)) return false;
+    if (! isRefRegionValid(header, sv.bp2.interval)) return false;
 
     // next we extract the reference sequence around both breakends
     //
@@ -1676,63 +1637,85 @@ getJumpAssembly(
     // after accounting for chromosome edges. The trim values will
     // almost always be zero for large chromosomes.
     //
-    unsigned bp1LeadingTrim;
-    unsigned bp1TrailingTrim;
-    unsigned bp2LeadingTrim;
-    unsigned bp2TrailingTrim;
+    const pos_t extraRefSize(extraRefEdgeSize+extraRefSplitSize);
     getSVReferenceSegments(
-        _opt.referenceFilename, _header, extraRefSize, sv,
-        assemblyData.bp1ref, assemblyData.bp2ref,
-        bp1LeadingTrim, bp1TrailingTrim, bp2LeadingTrim, bp2TrailingTrim);
+            opt.referenceFilename, header, extraRefSize, sv,
+            assemblyData.bp1ref, assemblyData.bp2ref,
+            alignData.bp1LeadingTrim, alignData.bp1TrailingTrim,
+            alignData.bp2LeadingTrim, alignData.bp2TrailingTrim);
 
     // The *Cut values below represent sequence which will be removed from the edges of the reference region for each
     // breakend. In most cases this will equal extraRefSplitSize. Sometimes these values are forced to be shorter
     // because we didn't retrieve as much reference sequence as targeted.
-    pos_t align1LeadingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(bp1LeadingTrim)));
-    pos_t align1TrailingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(bp1TrailingTrim)));
-    pos_t align2LeadingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(bp2LeadingTrim)));
-    pos_t align2TrailingCut(std::max(0,extraRefSplitSize - static_cast<pos_t>(bp2TrailingTrim)));
+    alignData.align1LeadingCut = std::max(0,extraRefSplitSize - static_cast<pos_t>(alignData.bp1LeadingTrim));
+    alignData.align1TrailingCut = std::max(0,extraRefSplitSize - static_cast<pos_t>(alignData.bp1TrailingTrim));
+    alignData.align2LeadingCut = std::max(0,extraRefSplitSize - static_cast<pos_t>(alignData.bp2LeadingTrim));
+    alignData.align2TrailingCut = std::max(0,extraRefSplitSize - static_cast<pos_t>(alignData.bp2TrailingTrim));
 
     // assemble contig(s) spanning the breakend:
-    _spanningAssembler.assembleSpanningSVCandidate(
-        sv.bp1, sv.bp2,
-        bporient.isBp1Reversed, bporient.isBp2Reversed,
-        assemblyData.bp1ref, assemblyData.bp2ref,
-        assemblyData.contigs);
+    spanningAssembler.assembleSpanningSVCandidate(
+            sv.bp1, sv.bp2,
+            bporient.isBp1Reversed, bporient.isBp2Reversed,
+            assemblyData.bp1ref, assemblyData.bp2ref,
+            assemblyData.contigs);
 
+    return true;
+}
+
+
+
+/// Align contigs of large SV candidates to reference
+///
+/// \param alignData Auxilary alignment info for sequence trimming initialized in contig assembly
+///                  that will be updated during contig alignment
+///
+void
+static
+alignJumpContigs(
+    const GSCOptions& opt,
+    const SVCandidate& sv,
+    const GlobalJumpAligner<int>& spanningAligner,
+    const GlobalJumpIntronAligner<int>& RNASpanningAligner,
+    AlignData& alignData,
+    SVCandidateAssemblyData& assemblyData)
+{
+    BPOrientation& bporient(assemblyData.bporient);
     std::string bp1refSeq = assemblyData.bp1ref.seq();
     std::string bp2refSeq = assemblyData.bp2ref.seq();
     if (bporient.isBp1Reversed)
     {
         reverseCompStr(bp1refSeq);
-        std::swap(align1LeadingCut, align1TrailingCut);
+        std::swap(alignData.align1LeadingCut, alignData.align1TrailingCut);
     }
     if (bporient.isBp2Reversed)
     {
         reverseCompStr(bp2refSeq);
-        std::swap(align2LeadingCut, align2TrailingCut);
+        std::swap(alignData.align2LeadingCut, alignData.align2TrailingCut);
     }
-    const std::string* align1RefStrPtr(&bp1refSeq);
-    const std::string* align2RefStrPtr(&bp2refSeq);
 
+    const std::string* align1RefStrPtr = &bp1refSeq;
+    const std::string* align2RefStrPtr = &bp2refSeq;
     if (bporient.isBp2AlignedFirst)
     {
         std::swap(align1RefStrPtr, align2RefStrPtr);
 
-        std::swap(align1LeadingCut, align2LeadingCut);
-        std::swap(align1TrailingCut, align2TrailingCut);
+        std::swap(alignData.align1LeadingCut, alignData.align2LeadingCut);
+        std::swap(alignData.align1TrailingCut, alignData.align2TrailingCut);
     }
 
 #ifdef DEBUG_REFINER
-    log_os << __FUNCTION__ << ": al1RefSize/Seq: " << align1RefStrPtr->size() << '\n';
+    log_os << __FUNCTION__ << ": align1RefSize/Seq: " << align1RefStrPtr->size() << '\n';
     printSeq(*align1RefStrPtr,log_os);
     log_os << '\n';
-    log_os << __FUNCTION__ << ": al2Refsize/Seq: " << align2RefStrPtr->size() << '\n';
+    log_os << __FUNCTION__ << ": align2Refsize/Seq: " << align2RefStrPtr->size() << '\n';
     printSeq(*align2RefStrPtr,log_os);
     log_os << '\n';
 #endif
 
+
     const unsigned contigCount(assemblyData.contigs.size());
+    // make sure an alignment object exists for every contig, even if it's empty
+    assemblyData.spanningAlignments.resize(contigCount);
 
 #ifdef DEBUG_REFINER
     log_os << __FUNCTION__ << ": contigCount: " << contigCount << "\n";
@@ -1742,10 +1725,6 @@ getJumpAssembly(
         log_os << __FUNCTION__ << ": contigIndex: " << contigIndex << " contig: " << contig;
     }
 #endif
-
-    // make sure an alignment object exists for every contig, even if
-    // it's empty:
-    assemblyData.spanningAlignments.resize(contigCount);
 
     for (unsigned contigIndex(0); contigIndex < contigCount; ++contigIndex)
     {
@@ -1757,19 +1736,19 @@ getJumpAssembly(
 
         JumpAlignmentResult<int>& alignment(assemblyData.spanningAlignments[contigIndex]);
 
-        if (_opt.isRNA)
+        if (opt.isRNA)
         {
 #ifdef DEBUG_REFINER
             log_os << __FUNCTION__ << " RNA alignment\n";
 #endif
             static const int nSpacer(25);
             std::vector<exclusion_block> exclBlocks1;
-            const std::string cutRef1 = kmerMaskReference(align1RefStrPtr->begin() + align1LeadingCut,
-                                                          align1RefStrPtr->end() - align1TrailingCut,
+            const std::string cutRef1 = kmerMaskReference(align1RefStrPtr->begin() + alignData.align1LeadingCut,
+                                                          align1RefStrPtr->end() - alignData.align1TrailingCut,
                                                           contig.seq, nSpacer, exclBlocks1);
             std::vector<exclusion_block> exclBlocks2;
-            const std::string cutRef2 = kmerMaskReference(align2RefStrPtr->begin() + align2LeadingCut,
-                                                          align2RefStrPtr->end() - align2TrailingCut,
+            const std::string cutRef2 = kmerMaskReference(align2RefStrPtr->begin() + alignData.align2LeadingCut,
+                                                          align2RefStrPtr->end() - alignData.align2TrailingCut,
                                                           contig.seq, nSpacer, exclBlocks2);
 #ifdef DEBUG_REFINER
             log_os << __FUNCTION__ << " Kmer-masked references\n";
@@ -1789,19 +1768,22 @@ getJumpAssembly(
                 bp1RnaStrandFw = (sv.bp1.state == SVBreakendState::LEFT_OPEN);
                 bp2RnaStrandFw = (sv.bp2.state == SVBreakendState::RIGHT_OPEN);
             }
-            bool bp1Fw = (bporient.isBp1Reversed != bp1RnaStrandFw); //Should we look for the splice motif on the fw or rev strand in the bp1 ref seq
+            //Should we look for the splice motif on the fw or rev strand in the bp1 ref seq
+            bool bp1Fw = (bporient.isBp1Reversed != bp1RnaStrandFw);
             bool bp2Fw = (bporient.isBp2Reversed != bp2RnaStrandFw);
-            if (bporient.isBp2AlignedFirst) //bp1 and bp2 sequences have been swapped above
+            //bp1 and bp2 sequences have been swapped above
+            if (bporient.isBp2AlignedFirst)
                 std::swap(bp1Fw, bp2Fw);
 
 
 #ifdef DEBUG_REFINER
-            log_os << __FUNCTION__ << " isTranscriptStrandKnown: " << bporient.isTranscriptStrandKnown << "; bp1Fw: " << bp1Fw << " ; bp2Fw: " << bp2Fw << '\n';
+            log_os << __FUNCTION__ << " isTranscriptStrandKnown: " << bporient.isTranscriptStrandKnown
+                   << "; bp1Fw: " << bp1Fw << " ; bp2Fw: " << bp2Fw << '\n';
 #endif
-            _RNASpanningAligner.align(contig.seq.begin(), contig.seq.end(),
-                                      cutRef1.begin(), cutRef1.end(), cutRef2.begin(), cutRef2.end(),
-                                      bp1Fw, bp2Fw, bporient.isTranscriptStrandKnown,
-                                      alignment);
+            RNASpanningAligner.align(contig.seq.begin(), contig.seq.end(),
+                                     cutRef1.begin(), cutRef1.end(), cutRef2.begin(), cutRef2.end(),
+                                     bp1Fw, bp2Fw, bporient.isTranscriptStrandKnown,
+                                     alignment);
 
 #ifdef DEBUG_REFINER
             log_os << __FUNCTION__ << " Masked 1: " << alignment.align1 << '\n';
@@ -1825,18 +1807,55 @@ getJumpAssembly(
         {
 #ifdef DEBUG_REFINER
             log_os << __FUNCTION__ << " Ref1 for alignment: "
-                   << bp1refSeq.substr(align1LeadingCut, bp1refSeq.size() - align1LeadingCut - align1TrailingCut) << '\n';
+                   << bp1refSeq.substr(alignData.align1LeadingCut, bp1refSeq.size() - alignData.align1LeadingCut - alignData.align1TrailingCut) << '\n';
             log_os << __FUNCTION__ << " Ref2 for alignment: "
-                   << bp2refSeq.substr(align2LeadingCut, bp2refSeq.size() - align2LeadingCut - align2TrailingCut) << '\n';
+                   << bp2refSeq.substr(alignData.align2LeadingCut, bp2refSeq.size() - alignData.align2LeadingCut - alignData.align2TrailingCut) << '\n';
 #endif
-            _spanningAligner.align(contig.seq.begin(), contig.seq.end(),
-                                   align1RefStrPtr->begin() + align1LeadingCut, align1RefStrPtr->end() - align1TrailingCut,
-                                   align2RefStrPtr->begin() + align2LeadingCut, align2RefStrPtr->end() - align2TrailingCut,
-                                   alignment);
+            spanningAligner.align(contig.seq.begin(), contig.seq.end(),
+                                  align1RefStrPtr->begin() + alignData.align1LeadingCut,
+                                  align1RefStrPtr->end() - alignData.align1TrailingCut,
+                                  align2RefStrPtr->begin() + alignData.align2LeadingCut,
+                                  align2RefStrPtr->end() - alignData.align2TrailingCut,
+                                  alignment);
+
+            const bool hasJumpInsert(alignment.jumpInsertSize > 0);
+            const pos_t minAlignBuffer(5);
+            const pos_t ref1EndPos(align1RefStrPtr->size() - alignData.align1LeadingCut - alignData.align1TrailingCut -1);
+            const pos_t align1EndPos(alignment.align1.beginPos + apath_ref_length(alignment.align1.apath));
+            // Breakend from align1 is close to the end position of reference sequence
+            const bool isBp1CloseToRef1End(ref1EndPos - align1EndPos < minAlignBuffer);
+            // Breakend from align2 is close to the start position of reference sequence
+            const bool isBp2CloseToRef2Start(alignment.align2.beginPos < minAlignBuffer);
+            // When there is any breakend close to either end of reference sequence,
+            // and when the jump alignment includes an insert,
+            // the contig need be realigned with longer reference sequences
+            // (i.e. the reference sequences without cutting).
+            //
+            // Note that the reference sequences without cutting is expanded at most by extraRefSplitSize(default 100bp).
+            // Therefore this one-time expansion may not resolve the very rare case,
+            // where the breakend is located more than extraRefSplitSize away from the reference end.
+            if (hasJumpInsert && (isBp1CloseToRef1End || isBp2CloseToRef2Start))
+            {
+                alignData.align1LeadingCut = 0;
+                alignData.align1TrailingCut = 0;
+                alignData.align2LeadingCut = 0;
+                alignData.align2TrailingCut = 0;
+#ifdef DEBUG_REFINER
+                log_os << __FUNCTION__ << " Aglignment: " << alignment << "\n"
+                       << "The breakend is close to the start/end position of reference sequence!\n";
+                log_os << __FUNCTION__ << " Realign with longer reference sequences: \n"
+                       << " Ref1 for alignment: " << bp1refSeq << '\n'
+                       << " Ref2 for alignment: " << bp2refSeq << '\n';
+#endif
+                spanningAligner.align(contig.seq.begin(), contig.seq.end(),
+                                      align1RefStrPtr->begin(), align1RefStrPtr->end(),
+                                      align2RefStrPtr->begin(), align2RefStrPtr->end(),
+                                      alignment);
+            }
         }
 
-        alignment.align1.beginPos += align1LeadingCut;
-        alignment.align2.beginPos += align2LeadingCut;
+        alignment.align1.beginPos += alignData.align1LeadingCut;
+        alignment.align2.beginPos += alignData.align2LeadingCut;
 
         std::string extendedContig;
         getExtendedContig(alignment, contig.seq, *align1RefStrPtr, *align2RefStrPtr, extendedContig);
@@ -1856,29 +1875,122 @@ getJumpAssembly(
         }
 #endif
     }
-    // Find the contig with the highest alignment score
-    bool foundContig(false);
-    if (isRNA)
+}
+
+
+
+void
+SVCandidateAssemblyRefiner::
+getJumpAssembly(
+    const SVCandidate& sv,
+    const bool isFindLargeInsertions,
+    SVCandidateAssemblyData& assemblyData) const
+{
+#ifdef DEBUG_REFINER
+    log_os << __FUNCTION__ << ": START\n";
+    if (_opt.isRNA)
     {
-        foundContig = selectContigRNA(assemblyData, _contigFilterAlignmentScores);
+        log_os << __FUNCTION__ << ": RNA\n";
+    }
+#endif
+
+    // This determines by how much we extend the reference sequence
+    // around the breakend region for all discovery and scoring
+    // operations. It is possible to discover breakends and small
+    // indels in this expanded region.
+    //
+    const pos_t extraRefEdgeSize(_opt.isRNA ? 25000 : 250);
+    // This determines by how much we extend the reference sequence
+    // around the breakend region for all operations except for the
+    // initial alignment of the contig back to the reference.
+    //
+    // The primary motivation for this value is to improve our ability
+    // to find reads which support the breakend when quality scoring
+    // takes place (a subsequent step outside of this function), but
+    // without expanding the regions where a breakend can possibly be
+    // found (ie. without the risk of additional false positives)
+    //
+    // The extra reference sequence is used for:
+    // - Extraction of breakend associated reads (reference sequence
+    // used to find reads which poorly match the reference in this
+    // case)
+    // - Contig extension after alignment, this means that the
+    // extended region will be used for read support scoring (later
+    // during Q-value generation)
+    //
+    // The extra reference sequence
+    // - is removed for the initial contig alignment, this means that
+    // actual breakpoint discovery will not occur in the extended region
+    // - will be added back for contig realignment if the initial
+    // alignment leads to breakends close to reference ends.
+    //
+    const pos_t extraRefSplitSize(100);
+
+    const pos_t extraRefSize(extraRefEdgeSize+extraRefSplitSize);
+
+    // if the breakends have a simple insert/delete orientation and
+    // the alignment regions overlap, then handle this case as a local
+    // assembly problem:
+    if (sv.bp1.interval.tid == sv.bp2.interval.tid)
+    {
+        if (! SVBreakendState::isSameOrientation(sv.bp1.state,sv.bp2.state))
+        {
+            const SV_TYPE::index_t svType(getSVType(sv));
+            if ((svType == SV_TYPE::INDEL) || (svType == SV_TYPE::COMPLEX))
+            {
+                if ( isRefRegionOverlap(_header, extraRefSize, sv) )
+                {
+#ifdef DEBUG_REFINER
+                    log_os << __FUNCTION__ << ": Candidate breakends regions are too close, transferring problem to local assembler\n";
+#endif
+                    // transform SV into a single region format:
+                    SVCandidate singleSV = sv;
+                    singleSV.bp1.state = SVBreakendState::COMPLEX;
+                    singleSV.bp2.state = SVBreakendState::UNKNOWN;
+                    singleSV.bp1.interval.range.merge_range(sv.bp2.interval.range);
+
+                    getSmallSVAssembly(singleSV, isFindLargeInsertions, assemblyData);
+                    return;
+                }
+            }
+        }
+    }
+
+    // First assemble candidate contigs
+    AlignData alignData;
+    bool isAssemblySuccess(false);
+    isAssemblySuccess = assembleJumpContigs(_opt, sv, extraRefEdgeSize, extraRefSplitSize,
+                                           _header, _spanningAssembler, alignData, assemblyData);
+    if (! isAssemblySuccess) return;
+
+    // Align candidate contigs back to reference
+    alignJumpContigs(_opt, sv, _spanningAligner, _RNASpanningAligner,
+                     alignData, assemblyData);
+
+    // Select the contig with the highest alignment score
+    bool isContigSelected(false);
+    if (_opt.isRNA)
+    {
+        isContigSelected = selectJumpContigRNA(assemblyData, _contigFilterAlignmentScores);
     }
     else
     {
-        foundContig = selectContigDNA(assemblyData, _contigFilterAlignmentScores);
+        isContigSelected = selectJumpContigDNA(assemblyData, _contigFilterAlignmentScores);
     }
-    if (!foundContig) return;
-#ifdef DEBUG_REFINER
-    log_os << __FUNCTION__ << ": highscoreid: " << assemblyData.bestAlignmentIndex << " alignment: " << assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex];
-#endif
-    // process the alignment into information that's easily usable
-    // in the vcf output (ie. breakends in reference coordinates)
+    if (! isContigSelected) return;
 
-    // summarize usable output information in a second SVBreakend
+#ifdef DEBUG_REFINER
+    log_os << __FUNCTION__ << ": highscoreid: " << assemblyData.bestAlignmentIndex
+           << " alignment: " << assemblyData.spanningAlignments[assemblyData.bestAlignmentIndex];
+#endif
+
+    // Process the alignment into information that's easily usable
+    // in the vcf output (ie. breakends in reference coordinates)
+    // Summarize usable output information in a second SVBreakend
     // object -- this is the 'refined' sv:
     assemblyData.svs.push_back(sv);
     SVCandidate& newSV(assemblyData.svs.back());
-
-    generateRefinedVCFSVCandidateFromJumpAlignment(bporient, assemblyData, newSV, _opt);
+    generateRefinedVCFSVCandidateFromJumpAlignment(assemblyData, newSV, _opt);
 
 #ifdef DEBUG_REFINER
     log_os << __FUNCTION__ << ": highscore refined sv: " << newSV;

@@ -1,6 +1,8 @@
 ## Unreleased
 
 ### Changed
+- Improve the accuracy of SV breakend position for precise calls (MANTA-1178)
+  - Expand the reference sequence for the rare cases where a detected breakend is close to the reference end 
 - Improve user guide to clarify meaning of the INV3/INV5 vcf INFO tags (MANTA-1305)
 - Remove BND from vcf ALT field to comply with vcf spec (MANTA-1314)
 - Reduce spanning length in contig alignment QC for RNA (MANTA-1330)
