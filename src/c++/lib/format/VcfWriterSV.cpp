@@ -289,23 +289,28 @@ addSharedInfo(
 }
 
 
-/// add info tags for breakend homology
+/// Add HOMLEN & HOMSEQ info tags for breakend homology
+///
+/// \param[in] bpRange breakpoint homology region
+/// \param[in] bpPosAdjust breakpoint position adjustment according to breakend direction to match vcf spec
+/// \param infoTags append HOMELEN & HOMSEQ to infoTags
 static
 void
 addHomologyInfo(
     const std::string& refFile,
     const std::string& chrom,
-    const known_pos_range2& bpArange,
+    const known_pos_range2& bpRange,
+    const pos_t bpPosAdjust,
     VcfWriterSV::InfoTag_t& infoTags)
 {
-    if (bpArange.size() > 1)
+    if (bpRange.size() > 1)
     {
         // get breakend homology sequence
-        infoTags.push_back(str(boost::format("HOMLEN=%i") % (bpArange.size() - 1)));
+        infoTags.push_back(str(boost::format("HOMLEN=%i") % (bpRange.size() - 1)));
         std::string homSeq;
         // the get region seq function below takes closed-closed, 0-based endpoints
-        const int homBegin(bpArange.begin_pos());
-        const int homEnd(bpArange.end_pos() - 2);
+        const int homBegin(bpRange.begin_pos()+bpPosAdjust+1);
+        const int homEnd(bpRange.end_pos()+bpPosAdjust-1);
         get_standardized_region_seq(refFile, chrom, homBegin, homEnd, homSeq);
         infoTags.push_back(str(boost::format("HOMSEQ=%s") % (homSeq)));
     }
@@ -335,27 +340,27 @@ writeTransloc(
     const std::string& chrom(_header.chrom_data[bpA.interval.tid].label);
     const std::string& mateChrom(_header.chrom_data[bpB.interval.tid].label);
 
-    const known_pos_range2& bpArange(bpA.interval.range);
-    const known_pos_range2& bpBrange(bpB.interval.range);
+    const known_pos_range2& bpARange(bpA.interval.range);
+    const known_pos_range2& bpBRange(bpB.interval.range);
 
     if (! isImprecise)
     {
-        assert(bpArange.size() == bpBrange.size());
+        assert(bpARange.size() == bpBRange.size());
     }
 
     // get POS
-    pos_t pos(bpArange.center_pos()+1);
-    pos_t matePos(bpBrange.center_pos()+1);
+    pos_t pos(bpARange.center_pos()+1);
+    pos_t matePos(bpBRange.center_pos()+1);
     if (! isImprecise)
     {
-        pos = bpArange.begin_pos()+1;
+        pos = bpARange.begin_pos()+1;
         if (isBreakendRangeSameShift)
         {
-            matePos = bpBrange.begin_pos()+1;
+            matePos = bpBRange.begin_pos()+1;
         }
         else
         {
-            matePos = bpBrange.end_pos();
+            matePos = bpBRange.end_pos();
         }
     }
 
@@ -387,7 +392,7 @@ writeTransloc(
     {
         std::string altPrefix;
         std::string altSuffix;
-        if     (bpA.state == SVBreakendState::RIGHT_OPEN)
+        if (bpA.state == SVBreakendState::RIGHT_OPEN)
         {
             altPrefix = ref + insertSeq;
         }
@@ -402,7 +407,7 @@ writeTransloc(
 
 
         char altSep('?');
-        if     (bpB.state == SVBreakendState::RIGHT_OPEN)
+        if (bpB.state == SVBreakendState::RIGHT_OPEN)
         {
             altSep=']';
         }
@@ -430,14 +435,15 @@ writeTransloc(
         infotags.push_back("CONTIG=" + sv.contigSeq);
     }
 
-    if (bpArange.size() > 1)
+    if (bpARange.size() > 1)
     {
-        infotags.push_back( str( boost::format("CIPOS=%i,%i") % ((bpArange.begin_pos()+1) - pos) % (bpArange.end_pos() - pos) ));
+        infotags.push_back( str( boost::format("CIPOS=%i,%i") % ((bpARange.begin_pos()+1) - pos) % (bpARange.end_pos() - pos) ));
     }
 
     if (! isImprecise)
     {
-        addHomologyInfo(_referenceFilename, chrom, bpArange, infotags);
+        const pos_t bpAPosAdjust(0);
+        addHomologyInfo(_referenceFilename, chrom, bpARange, bpAPosAdjust, infotags);
     }
 
     if (! insertSeq.empty())
@@ -511,12 +517,12 @@ writeInvdel(
     // get CHROM
     const std::string& chrom(_header.chrom_data[sv.bp1.interval.tid].label);
 
-    const known_pos_range2& bpArange(bpA.interval.range);
-    const known_pos_range2& bpBrange(bpB.interval.range);
+    const known_pos_range2& bpARange(bpA.interval.range);
+    const known_pos_range2& bpBRange(bpB.interval.range);
 
     if (! isImprecise)
     {
-        assert(bpArange.size() == bpBrange.size());
+        assert(bpARange.size() == bpBRange.size());
     }
 
     // above this size all records use symbolic alleles (ie. <DEL>):
@@ -530,7 +536,7 @@ writeInvdel(
     bool isSmallVariant(false);
     if ((! isImprecise) && isIndel && (! sv.isUnknownSizeInsertion))
     {
-        const unsigned deleteSize(bpBrange.begin_pos() - bpArange.begin_pos());
+        const unsigned deleteSize(bpBRange.begin_pos() - bpARange.begin_pos());
         const unsigned insertSize(sv.insertSeq.size());
 
         const bool isSmallDelete(deleteSize<=maxNonSymbolicRecordSize);
@@ -541,18 +547,18 @@ writeInvdel(
 
     // get POS and endPos,
     // first compute internal coordinates and then transform per vcf conventions:
-    pos_t internal_pos(bpArange.center_pos());
-    pos_t internal_endPos(bpBrange.center_pos());
+    pos_t internal_pos(bpARange.center_pos());
+    pos_t internal_endPos(bpBRange.center_pos());
     if (! isImprecise)
     {
-        internal_pos = bpArange.begin_pos();
+        internal_pos = bpARange.begin_pos();
         if (isBreakendRangeSameShift)
         {
-            internal_endPos = bpBrange.begin_pos();
+            internal_endPos = bpBRange.begin_pos();
         }
         else
         {
-            internal_endPos = (bpBrange.end_pos()- 1);
+            internal_endPos = (bpBRange.end_pos()- 1);
         }
     }
 
@@ -562,10 +568,10 @@ writeInvdel(
     pos_t endPos(internal_endPos+1);
 
     // variants are adjusted by up to one base according to breakend direction to match vcf spec:
-    const pos_t bpABkptAdjust(bpA.getLeftSideOfBkptAdjustment());
-    const pos_t bpBBkptAdjust(bpB.getLeftSideOfBkptAdjustment());
-    pos += bpABkptAdjust;
-    endPos += bpBBkptAdjust;
+    const pos_t bpAPosAdjust(bpA.getLeftSideOfBkptAdjustment());
+    const pos_t bpBPosAdjust(bpB.getLeftSideOfBkptAdjustment());
+    pos += bpAPosAdjust;
+    endPos += bpBPosAdjust;
 
     if (pos<1) return;
 
@@ -653,22 +659,22 @@ writeInvdel(
         infoTags.push_back("CONTIG=" + sv.contigSeq);
     }
 
-    if (bpArange.size() > 1)
+    if (bpARange.size() > 1)
     {
-        infoTags.push_back( str( boost::format("CIPOS=%i,%i") % (bpArange.begin_pos() - internal_pos) % ((bpArange.end_pos()-1) - internal_pos) ));
+        infoTags.push_back( str( boost::format("CIPOS=%i,%i") % (bpARange.begin_pos() - internal_pos) % ((bpARange.end_pos()-1) - internal_pos) ));
     }
 
     if (! isSmallVariant)
     {
-        if (bpBrange.size() > 1)
+        if (bpBRange.size() > 1)
         {
-            infoTags.push_back( str( boost::format("CIEND=%i,%i") % (bpBrange.begin_pos() - internal_endPos) % ((bpBrange.end_pos()-1) - internal_endPos) ));
+            infoTags.push_back( str( boost::format("CIEND=%i,%i") % (bpBRange.begin_pos() - internal_endPos) % ((bpBRange.end_pos()-1) - internal_endPos) ));
         }
     }
 
     if (! isImprecise)
     {
-        addHomologyInfo(_referenceFilename, chrom, bpArange, infoTags);
+        addHomologyInfo(_referenceFilename, chrom, bpARange, bpAPosAdjust, infoTags);
     }
 
     if (! isSmallVariant)
