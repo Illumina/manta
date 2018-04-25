@@ -1,17 +1,21 @@
-## Unreleased
+## v1.4.0 - 2018-04-25
+
+This is a major bugfix update from v1.3.2, featuring improved precision and vcf representation, in addition to minor user friendly improvements.
 
 ### Changed
-- Improve the accuracy of SV breakend position for precise calls (MANTA-1178)
-  - Expand the reference sequence for the rare cases where a detected breakend is close to the reference end 
-- Improve user guide to clarify meaning of the INV3/INV5 vcf INFO tags (MANTA-1305)
-- Remove BND from vcf ALT field to comply with vcf spec (MANTA-1314)
-- Reduce spanning length in contig alignment QC for RNA (MANTA-1330)
 - Refine SV candidate filter to improve precision (MANTA-1310)
   - Change assessment of assembled SV candidate contigs such that indel occurrences near breakends are more heavily penalized and indel extension penalties are removed.
+- Improve the accuracy of SV breakend position for precise calls (MANTA-1178)
+  - Expand the reference sequence for the rare cases where a detected breakend is close to the reference end.
+- Improve sensitivity for RNA calling (MANTA-1330)
+  - Reduce the length of reference sequence to which an assembled SV candidate contig is aligned.
 - Add strict checks and improve error message for BED regions of size less than one (STREL-865)
+- Improve user guide to clarify meaning of the INV3/INV5 vcf INFO tags (MANTA-1305)
+- Remove BND from vcf ALT field to comply with vcf spec (MANTA-1314)
 
 ### Fixed
-- Fix the off-by-1 bug for the vcf HOMSEQ tag (MANTA-1311)
+- Fix the off-by-1 bug for vcf HOMSEQ tag in certain variant types (MANTA-1311)
+  - Due to position adjustment for certain breakends of inversions and duplications, HOMSEQ was off-by-1 for those variants.
 - Fix a bug in breakend homology logic for large variants (MANTA-1313)
   - The breakend insertion was not considered previously when identifying breakend homology sequence.
 
