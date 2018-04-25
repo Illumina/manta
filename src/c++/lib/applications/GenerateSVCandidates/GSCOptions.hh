@@ -76,7 +76,7 @@ struct GSCOptions
 
     unsigned minCandidateSpanningCount = 3; ///< how many spanning evidence observations are required to become a candidate?
 
-    unsigned minScoredVariantSize = 51; ///< min size for scoring and scored output following candidate generation
+    unsigned minScoredVariantSize = 50; ///< min size for scoring and scored output following candidate generation
 
     bool isOutputContig = false; ///< if true, an assembled contig is written in VCF
 };

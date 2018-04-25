@@ -21,6 +21,8 @@
 
 #include <cassert>
 
+//#define DEBUG_ALN
+
 #if defined(DEBUG_ALN) || defined(DEBUG_ALN_MATRIX)
 #include "blt_util/log.hh"
 #endif
@@ -145,6 +147,16 @@ backTraceAlignment(
         {
             assert(false && "Unknown align state");
         }
+
+        // check if the alignment path includes JUMP or JUMPINS states
+        if((btrace.state==AlignState::JUMP) || (btrace.state==AlignState::JUMPINS))
+        {
+            result.isJumped = true;
+#ifdef DEBUG_ALN
+            log_os << "isJumped is set true" << "\n";
+#endif
+        }
+
         btrace.state=nextState;
         ps.length++;
     }

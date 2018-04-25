@@ -21,6 +21,7 @@
 /// \author Ole Schulz-Trieglaff
 /// \author Chris Saunders
 /// \author Xiaoyu Chen
+/// \author Naoki Nariai
 ///
 
 #include "SVCandidateAssemblyRefiner.hh"
@@ -402,7 +403,7 @@ isLowQualitySmallSVAlignment(
     if (clippedPathSize < minAlignReadLength)
     {
 #ifdef DEBUG_REFINER
-//        log_os << "Rejecting highest scoring contig sub-alignment. isFirst?: " << isFirstRead << ". Sub-alignmnet read length after clipping is: " << clippedPathSize << " min size is: " << minAlignReadLength << "\n";
+        log_os << "Rejecting highest scoring contig sub-alignment. isFirst?: " << isFirstRead << ". Sub-alignmnet read length after clipping is: " << clippedPathSize << " min size is: " << minAlignReadLength << "\n";
 #endif
         return true;
     }
@@ -416,7 +417,7 @@ isLowQualitySmallSVAlignment(
 #ifdef DEBUG_REFINER
     if (isLowQualityAlignmentScore)
     {
-//        log_os << "Rejecting highest scoring contig sub-alignment. isFirst?: " << isFirstRead << ". Fraction of optimal alignment score is: " << scoreFrac << " minScoreFrac: " << minScoreFrac << "\n";
+        log_os << "Rejecting highest scoring contig sub-alignment. isFirst?: " << isFirstRead << ". Fraction of optimal alignment score is: " << scoreFrac << " minScoreFrac: " << minScoreFrac << "\n";
     }
 #endif
 
@@ -470,7 +471,6 @@ getQuerySeqMatchCount(
 ///
 /// \param[in] maxQCRefSpan Longest flanking sequence length considered for the high quality qc requirement
 /// \param[out] candidateSegments Segment indices of all qualifying SV candidates are returned in this structure
-/// \param[in] onlyAcceptLargeCandidates If true, don't accept smaller indel/SV candidates (intended for denoising)
 ///
 /// \return True if a qualifying candidate variant is found in the input alignment
 ///
@@ -483,8 +483,7 @@ findCandidateVariantsFromComplexSVContigAlignment(
     const std::string& contigSeq,
     const std::string& refSeq,
     const unsigned minCandidateIndelSize,
-    std::vector<std::pair<unsigned, unsigned> >& candidateSegments,
-    const bool onlyAcceptLargeCandidates)
+    std::vector<std::pair<unsigned, unsigned> >& candidateSegments)
 {
     using namespace ALIGNPATH;
 
@@ -588,22 +587,19 @@ findCandidateVariantsFromComplexSVContigAlignment(
         if (occurrences > 1) return false;
     }
 
-    if (onlyAcceptLargeCandidates)
+    // check if an indel of at least minimum size is identified
+    typedef std::pair<unsigned,unsigned> segment_t;
+    std::vector<segment_t> tmpseg(candidateSegments);
+    candidateSegments.clear();
+    for (const segment_t& segment : tmpseg)
     {
-        // only accept large indels in this case
-        typedef std::pair<unsigned,unsigned> segment_t;
-        std::vector<segment_t> tmpseg(candidateSegments);
-        candidateSegments.clear();
-        for (const segment_t& segment : tmpseg)
+        for (unsigned i(segment.first); i<=segment.second; ++i)
         {
-            for (unsigned i(segment.first); i<=segment.second; ++i)
+            if (((apath[i].type == INSERT) && (apath[i].length >= minCandidateIndelSize)) ||
+                ((apath[i].type == DELETE) && (apath[i].length >= minCandidateIndelSize)))
             {
-                if (((apath[i].type == INSERT) && (apath[i].length >= 80)) ||
-                    ((apath[i].type == DELETE) && (apath[i].length >= 200)))
-                {
-                    candidateSegments.push_back(segment);
-                    break;
-                }
+                candidateSegments.push_back(segment);
+                break;
             }
         }
     }
@@ -1112,7 +1108,6 @@ SVCandidateAssemblyRefiner(
                        (opt.isRNA ? opt.refineOpt.RNAspanningAssembleOpt : opt.refineOpt.spanningAssembleOpt),
                        opt.alignFileOpt, opt.referenceFilename,
                        opt.statsFilename, opt.chromDepthFilename, header, counts, opt.isRNA, edgeTracker.remoteReadRetrievalTime),
-    _smallSVAligner(opt.refineOpt.smallSVAlignScores),
     _largeSVAligner(opt.refineOpt.largeSVAlignScores,opt.refineOpt.largeGapOpenScore),
     _largeInsertEdgeAligner(opt.refineOpt.largeInsertEdgeAlignScores),
     _largeInsertCompleteAligner(opt.refineOpt.largeInsertCompleteAlignScores),
@@ -2006,6 +2001,7 @@ struct ContigScoringInfo
     int score = 0;
     unsigned index = 0;
     unsigned variantSize = 0;
+    bool isJumped = false;
 };
 
 
@@ -2118,9 +2114,8 @@ getSmallSVAssembly(
         log_os << __FUNCTION__ << ": start aligning contigIndex: " << contigIndex << '\n';
 #endif
 
-        // Run two different aligners, one optimized to find large
-        // events and one optimized to find smaller events, only look
-        // for small events if the large event search fails:
+        // Run a universal aligner that can find both large events (with free gap-extension after jump)
+        // and smaller events (without jump)
         SVCandidateAssemblyData::SmallAlignmentResultType& alignment(assemblyData.smallSVAlignments[contigIndex]);
         std::string& extendedContig(assemblyData.extendedContigs[contigIndex]);
         std::vector<std::pair<unsigned,unsigned> >& candidateSegments(assemblyData.smallSVSegments[contigIndex]);
@@ -2182,13 +2177,14 @@ getSmallSVAssembly(
             BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
         }
 
-        /// Set isSmallSVCandidate true if an indel candidate can be nominated from alignment
-        ///
-        /// \param[in] onlyAcceptLargeCandidates If true, don't accept smaller indel/SV candidates (intended for denoising)
-        ///
-        auto testIfAlignmentNominatesIndelCandidate = [&](
-                                                          const bool onlyAcceptLargeCandidates)
+        // Use a universal aligner to discover any small/large indels in the contig/reference alignment.
         {
+            _largeSVAligner.align(contig.seq.begin(), contig.seq.end(),
+                align1RefStr.begin() + adjustedLeadingCut, align1RefStr.end() - adjustedTrailingCut,
+                alignment);
+            /// Set isSmallSVCandidate true if an indel candidate can be nominated from alignment
+            ///
+            ///
             alignment.align.beginPos += adjustedLeadingCut;
             getExtendedContig(alignment, contig.seq, align1RefStr, extendedContig);
 
@@ -2202,14 +2198,13 @@ getSmallSVAssembly(
             {
                 std::vector<std::pair<unsigned,unsigned> > segments;
                 const bool isCandidate(findCandidateVariantsFromComplexSVContigAlignment(
-                                           maxQCRefSpan,
-                                           _contigFilterAlignmentScores,
-                                           alignment.align,
-                                           contig.seq,
-                                           align1RefStr,
-                                           _opt.scanOpt.minCandidateVariantSize,
-                                           segments,
-                                           onlyAcceptLargeCandidates) );
+                    maxQCRefSpan,
+                    _contigFilterAlignmentScores,
+                    alignment.align,
+                    contig.seq,
+                    align1RefStr,
+                    _opt.scanOpt.minCandidateVariantSize,
+                    segments) );
 
                 if (isCandidate)
                 {
@@ -2223,36 +2218,11 @@ getSmallSVAssembly(
             }
 
 #ifdef DEBUG_REFINER
-            const std::string alignerSize(onlyAcceptLargeCandidates ? "large" : "small");
-            log_os << __FUNCTION__ << ": finished " << alignerSize << " aligner. contigIndex: " << contigIndex
+            log_os << __FUNCTION__ << ": finished aligner. contigIndex: " << contigIndex
                    << " isSmallSVCandidate: " << isSmallSVCandidate
                    << " alignment: " << alignment;
 #endif
-        };
-
-        // Start with largeSV aligner to discover any large indels in the contig/reference alignment.
-        {
-            _largeSVAligner.align(
-                contig.seq.begin(), contig.seq.end(),
-                align1RefStr.begin() + adjustedLeadingCut, align1RefStr.end() - adjustedTrailingCut,
-                alignment);
-
-            testIfAlignmentNominatesIndelCandidate(true);
         }
-
-
-        // If no candidate is found by the large indel aligner, try again with the small indel aligner.
-        /// TODO: get rid of this step
-        if (! isSmallSVCandidate)
-        {
-            _smallSVAligner.align(
-                contig.seq.begin(), contig.seq.end(),
-                align1RefStr.begin() + adjustedLeadingCut, align1RefStr.end() - adjustedTrailingCut,
-                alignment);
-
-            testIfAlignmentNominatesIndelCandidate(false);
-        }
-
 
         // Test each alignment for suitability to be the left or right side of a large insertion.
         //
@@ -2318,12 +2288,26 @@ getSmallSVAssembly(
                 contigInfo.index = contigIndex;
                 contigInfo.score = alignment.score;
                 contigInfo.variantSize = getLargestIndelSize(alignment.align.apath, candidateSegments);
+                contigInfo.isJumped = alignment.isJumped;
             };
 
             // keep the top two highest scoring QC'd candidate:
             // TODO: we should keep all QC'd candidates for the small event case
             // FIXME : prevents us from finding overlapping events, keep vector of high-scoring contigs?
-            if ((! rank1Contig.isDefined) || (alignment.score > rank1Contig.score))
+
+            // The current contig is selected if any of the following criteria is met:
+            // (1) no contig is selected yet
+            // (2) the current contig contains JUMP/JUMPINS state, but rank1Contig does not
+            // (3) both (a) and (b) are true:
+            //     (a) if both contigs contain JUMP/JUMPINS state (bothJumped), or
+            //         if both contigs do not contain JUMP/JUMPINS state (bothNotJumped)
+            //     (b) score of the current contig is higher than that of the rank1Contig
+            const bool bothJumped = alignment.isJumped && rank1Contig.isJumped;
+            const bool bothNotJumped = (! alignment.isJumped) && (! rank1Contig.isJumped);
+
+            if ((! rank1Contig.isDefined) ||
+                (alignment.isJumped && (! rank1Contig.isJumped)) ||
+                (((bothJumped || bothNotJumped) && (alignment.score > rank1Contig.score))))
             {
                 if (rank1Contig.isDefined)
                 {
@@ -2361,27 +2345,46 @@ getSmallSVAssembly(
 
 #ifdef DEBUG_REFINER
         log_os << __FUNCTION__ << ": contig #" << rank1Contig.index << " has " << rank1ContigSupportReadCount
-               <<" support reads, with max variant size " << rank1Contig.variantSize << "\n";
+               << " support reads, with max variant size " << rank1Contig.variantSize
+               << ", contains JUMP/JUMPINS state " << rank1Contig.isJumped << "\n";
         log_os << __FUNCTION__ << ": contig #" << rank2Contig.index << " has " << rank2ContigSupportReadCount
-               <<" support reads, with max variant size " << rank2Contig.variantSize << "\n";
+               << " support reads, with max variant size " << rank2Contig.variantSize
+               << ", contains JUMP/JUMPINS state " << rank2Contig.isJumped << "\n";
 #endif
 
-        // The second best contig is selected if:
-        // (1) score2/score1 is higher than minScoreRatio
-        // (2) either (2a) or (2b) is true:
-        //    (2a) supportReadCount2/supportReadCount1 is higher than minSupportReadCountRatio
-        //    (2b) variantSize2/variantSize1 is higher than minVariantSizeRatio
-        //
         static const float minScoreRatio(0.9f);
         static const float minSupportReadCountRatio(1.2f);
         static const float minVariantSizeRatio(1.1f);
-        const bool rank2IsBest((rank2Contig.score > (rank1Contig.score*minScoreRatio)) &&
-                               ((rank2ContigSupportReadCount > (rank1ContigSupportReadCount*minSupportReadCountRatio)) ||
-                                (rank2Contig.variantSize > (rank1Contig.variantSize*minVariantSizeRatio))));
-        if (rank2IsBest)
+
+        // rank1Contig will be selected, if rank1Contig contains JUMP/JUMPINS state
+        // and rank2Contig does not
+        static const bool rank1IsSelected((rank1Contig.isJumped && (! rank2Contig.isJumped)));
+        if (! rank1IsSelected)
         {
-            rank1Contig = rank2Contig;
+            // At this point, only possibilities are:
+            // both contigs contain JUMP/JUMPINS state OR
+            // both contigs do not contain JUMP/JUMPINS state
+            //
+            // The reason is that the previous contig selection process already
+            // eliminates the possibility in which
+            // rank1Contig does NOT contain a jump state while rank2Contig does
+            //
+            // The second best contig is selected if both (1) and (2) are true:
+            // (1) score2/score1 is higher than minScoreRatio
+            // (2) either (a) or (b) is true:
+            //     (a) supportReadCount2/supportReadCount1 is higher than minSupportReadCountRatio
+            //     (b) variantSize2/variantSize1 is higher than minVariantSizeRatio
+            //
+            const bool rank2IsBest((rank2Contig.score > (rank1Contig.score*minScoreRatio)) &&
+                                   ((rank2ContigSupportReadCount > (rank1ContigSupportReadCount*minSupportReadCountRatio)) ||
+                                    (rank2Contig.variantSize > (rank1Contig.variantSize*minVariantSizeRatio))));
+
+            if (rank2IsBest)
+            {
+                rank1Contig = rank2Contig;
+            }
         }
+
 #ifdef DEBUG_REFINER
         log_os << __FUNCTION__ << ": contigIndex: " << rank1Contig.index << " is finally selected.\n";
 #endif
