@@ -26,7 +26,7 @@
 ///
 struct IterativeAssemblerOptions
 {
-    IterativeAssemblerOptions() = default;
+    IterativeAssemblerOptions() {}
 
     /// the symbol set used during assembly
     std::string alphabet = "ACGT";
