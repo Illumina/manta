@@ -170,7 +170,7 @@ private:
 
     /// \param isIndel if true, the variant is a simple right/left breakend insert/delete combination
     void
-    writeInvdel(
+    writeIndel(
         const SVCandidate& sv,
         const SVId& svId,
         const bool isIndel,
