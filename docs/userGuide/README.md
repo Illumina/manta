@@ -289,7 +289,7 @@ For tumor-only analysis, Manta will produce an additional VCF:
   counts for each allele (2) a subset of the filters from the scored tumor-normal model
   are applied to the single tumor case to improve precision.
 
-### Manta VCF reporting format
+### Manta VCF interpretation
 
 Manta VCF output follows the VCF 4.1 spec for describing structural
 variants. It uses standard field names wherever possible. All custom
@@ -397,15 +397,31 @@ MaxDepth | Depth is greater than 3x the median chromosome depth near one or both
 MaxMQ0Frac | For a small variant (<1000 bases), the fraction of reads in all samples with MAPQ0 around either breakend exceeds 0.4
 NoPairSupport | For variants significantly larger than the paired read fragment size, no paired reads support the alternate allele in any sample
 
-#### How to interpret VCF filters?
+#### Interpretation of VCF filters
 
-As described above, there are two levels of filters: record level (FILTER) and sample level (FORMAT/FT). Record-level filters are generally independant to sample-level filters. However, if none of the samples passes one record-level filter, that filter will be copied to the record level (e.g. MinGQ).
+As described above, there are two levels of filters: record level (FILTER) and sample level (FORMAT/FT). Record-level filters are generally independent to sample-level filters. However, if none of the samples passes one record-level filter, that filter will be copied to the record level (e.g. MinGQ).
 
 A sample-specific passing variant needs to have the record level FILTER passed, the sample level FORMAT/FT passed, and the sample level FORMAT/GT is not "0/0"(hom-reference).
 
-#### What do the values in Manta's VCF ID field mean?
+#### Interpretation of Manta's INFO/EVENT field
 
-The VCF ID or 'identifer' field can be used for annotation, or in the case of BND ('breakend') records for translocations, the ID value is used to link breakend mates or partners.
+Some structural variants reported in the VCF, such as translocations, represent a single novel sequence junction in the
+sample. Manta uses the `INFO/EVENT` field to indicate that two or more such junctions are hypothesized to occur
+together as part of a single variant event. All individual variant records belonging to the same event will share
+the same `INFO/EVENT` string. Note that although such an inference could be applied after SV calling by analyzing
+the relative distance and orientation of the called variant breakpoints,
+Manta incorporates this event mechanism into the calling process to increase sensitivity towards such larger-scale
+events. Given that at least one junction in the event has already passed standard variant candidacy thresholds,
+sensitivity is improved by lowering the evidence thresholds for additional junctions which occur in a pattern
+consistent with a multi-junction event (such as a reciprocal translocation pair).
+
+Note that although this mechanism could generalize to events including an arbitrary number of junctions,
+it is currently limited to 2. Thus, at present it is most useful for identifying and improving sensitivity
+towards reciprocal translocation pairs.
+
+#### Details of Manta's VCF ID field
+
+The VCF ID or 'identifier' field can be used for annotation, or in the case of BND ('breakend') records for translocations, the ID value is used to link breakend mates or partners.
 
 An example Manta VCF ID is "MantaINS:1577:0:0:0:3:0". The value provided in this field reflects the SV association graph edge(s) from which the SV or indel was discovered. The ID value provided by Manta is primarily intended for internal use by manta developers. The value is guaranteed to be unique within any VCF file produced by Manta, and these ID values are used to link associated breakend records using the standard VCF `MATEID` key. The structure of this ID may change in the future, it is safe to use the entire value as a unique key, but parsing this value may lead to incompatibilities with future updates.
 
