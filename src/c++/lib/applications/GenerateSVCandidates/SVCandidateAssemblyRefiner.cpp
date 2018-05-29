@@ -1634,10 +1634,10 @@ assembleJumpContigs(
     //
     const pos_t extraRefSize(extraRefEdgeSize+extraRefSplitSize);
     getSVReferenceSegments(
-            opt.referenceFilename, header, extraRefSize, sv,
-            assemblyData.bp1ref, assemblyData.bp2ref,
-            alignData.bp1LeadingTrim, alignData.bp1TrailingTrim,
-            alignData.bp2LeadingTrim, alignData.bp2TrailingTrim);
+        opt.referenceFilename, header, extraRefSize, sv,
+        assemblyData.bp1ref, assemblyData.bp2ref,
+        alignData.bp1LeadingTrim, alignData.bp1TrailingTrim,
+        alignData.bp2LeadingTrim, alignData.bp2TrailingTrim);
 
     // The *Cut values below represent sequence which will be removed from the edges of the reference region for each
     // breakend. In most cases this will equal extraRefSplitSize. Sometimes these values are forced to be shorter
@@ -1649,10 +1649,10 @@ assembleJumpContigs(
 
     // assemble contig(s) spanning the breakend:
     spanningAssembler.assembleSpanningSVCandidate(
-            sv.bp1, sv.bp2,
-            bporient.isBp1Reversed, bporient.isBp2Reversed,
-            assemblyData.bp1ref, assemblyData.bp2ref,
-            assemblyData.contigs);
+        sv.bp1, sv.bp2,
+        bporient.isBp1Reversed, bporient.isBp2Reversed,
+        assemblyData.bp1ref, assemblyData.bp2ref,
+        assemblyData.contigs);
 
     return true;
 }
@@ -1955,7 +1955,7 @@ getJumpAssembly(
     AlignData alignData;
     bool isAssemblySuccess(false);
     isAssemblySuccess = assembleJumpContigs(_opt, sv, extraRefEdgeSize, extraRefSplitSize,
-                                           _header, _spanningAssembler, alignData, assemblyData);
+                                            _header, _spanningAssembler, alignData, assemblyData);
     if (! isAssemblySuccess) return;
 
     // Align candidate contigs back to reference
@@ -2180,11 +2180,8 @@ getSmallSVAssembly(
         // Use a universal aligner to discover any small/large indels in the contig/reference alignment.
         {
             _largeSVAligner.align(contig.seq.begin(), contig.seq.end(),
-                align1RefStr.begin() + adjustedLeadingCut, align1RefStr.end() - adjustedTrailingCut,
-                alignment);
-            /// Set isSmallSVCandidate true if an indel candidate can be nominated from alignment
-            ///
-            ///
+                                  align1RefStr.begin() + adjustedLeadingCut, align1RefStr.end() - adjustedTrailingCut,
+                                  alignment);
             alignment.align.beginPos += adjustedLeadingCut;
             getExtendedContig(alignment, contig.seq, align1RefStr, extendedContig);
 
@@ -2198,13 +2195,13 @@ getSmallSVAssembly(
             {
                 std::vector<std::pair<unsigned,unsigned> > segments;
                 const bool isCandidate(findCandidateVariantsFromComplexSVContigAlignment(
-                    maxQCRefSpan,
-                    _contigFilterAlignmentScores,
-                    alignment.align,
-                    contig.seq,
-                    align1RefStr,
-                    _opt.scanOpt.minCandidateVariantSize,
-                    segments) );
+                                           maxQCRefSpan,
+                                           _contigFilterAlignmentScores,
+                                           alignment.align,
+                                           contig.seq,
+                                           align1RefStr,
+                                           _opt.scanOpt.minCandidateVariantSize,
+                                           segments) );
 
                 if (isCandidate)
                 {
@@ -2213,6 +2210,7 @@ getSmallSVAssembly(
                     {
                         candidateSegments = segments;
                     }
+                    // Set isSmallSVCandidate true if an indel candidate can be nominated from alignment
                     isSmallSVCandidate=true;
                 }
             }
@@ -2358,7 +2356,7 @@ getSmallSVAssembly(
 
         // rank1Contig will be selected, if rank1Contig contains JUMP/JUMPINS state
         // and rank2Contig does not
-        static const bool rank1IsSelected((rank1Contig.isJumped && (! rank2Contig.isJumped)));
+        const bool rank1IsSelected((rank1Contig.isJumped && (! rank2Contig.isJumped)));
         if (! rank1IsSelected)
         {
             // At this point, only possibilities are:

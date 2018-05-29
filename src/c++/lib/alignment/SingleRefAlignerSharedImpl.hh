@@ -149,7 +149,7 @@ backTraceAlignment(
         }
 
         // check if the alignment path includes JUMP or JUMPINS states
-        if((btrace.state==AlignState::JUMP) || (btrace.state==AlignState::JUMPINS))
+        if ((btrace.state==AlignState::JUMP) || (btrace.state==AlignState::JUMPINS))
         {
             result.isJumped = true;
 #ifdef DEBUG_ALN

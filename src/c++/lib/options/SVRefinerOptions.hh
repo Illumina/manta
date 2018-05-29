@@ -26,7 +26,7 @@ typedef IterativeAssemblerOptions AssemblerOptions;
 
 namespace ALIGNERPARAM
 {
-    static const int largeGapOpenScore(-100);
+static const int largeGapOpenScore(-100);
 }
 
 
