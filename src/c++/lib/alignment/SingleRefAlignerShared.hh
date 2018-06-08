@@ -42,11 +42,13 @@ struct AlignmentResult
     void
     clear()
     {
-        score=0;
+        score = 0;
+        isJumped = false;
         align.clear();
     }
 
     ScoreType score;
+    bool isJumped; ///< whether alignment path includes jump state(s) while backtracking
     Alignment align;
 };
 

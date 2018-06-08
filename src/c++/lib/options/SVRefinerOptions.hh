@@ -24,9 +24,9 @@
 
 typedef IterativeAssemblerOptions AssemblerOptions;
 
-namespace SUPERTMP
+namespace ALIGNERPARAM
 {
-static const int largeGapOpenScore(-24);
+static const int largeGapOpenScore(-100);
 }
 
 
@@ -40,27 +40,24 @@ struct SVRefinerOptions
     /// match, mismatch, open score ratios taken from bwa defaults (but not extend!) :
     ///
     SVRefinerOptions() :
-        smallSVAlignScores(2, -8, -12, 0, -1),
-        largeSVAlignScores(2, -8, -18, -1, -1),
+        largeSVAlignScores(2, -8, -24, -1, -1),
         largeInsertEdgeAlignScores(2, -8, -18, -1, -1),
-        largeInsertCompleteAlignScores(2, -8,  SUPERTMP::largeGapOpenScore, 0, -1),
+        largeInsertCompleteAlignScores(2, -8,  ALIGNERPARAM::largeGapOpenScore, 0, -1),
         spanningAlignScores(2, -8, -12, -1, -1),
-        largeGapOpenScore(SUPERTMP::largeGapOpenScore),
-        jumpScore(-25),
+        largeGapOpenScore(ALIGNERPARAM::largeGapOpenScore),
+        jumpScore(-100),
         RNAspanningAlignScores(2, -8, -19, -1, -1),
         RNAJumpScore(-100),
         RNAIntronOpenScore(-15),
         RNAIntronOffEdgeScore(-1),
         contigFilterScores(2, -8, -18, 0, -1)
     {
-        spanningAssembleOpt.minContigLength=75; ///< For breakend-spanning assemblies we require a larger contig than for small-variant assemblies
+        spanningAssembleOpt.minContigLength = 75; ///< For breakend-spanning assemblies we require a larger contig than for small-variant assemblies
         RNAspanningAssembleOpt.minContigLength = 75; ///< For breakend-spanning assemblies we require a larger contig than for small-variant assemblies
         RNAspanningAssembleOpt.minWordLength = 31; /// Use smaller kmer for RNA
-
     }
 
     /// parameters for small SV assembly/alignment:
-    AlignmentScores<int> smallSVAlignScores;
     AlignmentScores<int> largeSVAlignScores; // large SV but at a single assembly locus
     AlignmentScores<int> largeInsertEdgeAlignScores;
     AlignmentScores<int> largeInsertCompleteAlignScores;

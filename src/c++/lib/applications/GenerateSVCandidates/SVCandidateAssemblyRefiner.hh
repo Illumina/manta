@@ -98,10 +98,7 @@ private:
     /// Assembler parameterized for assembly of a 'spanning' SV candidate spanning two regions
     const SVCandidateAssembler _spanningAssembler;
 
-    /// Aligner optimized to discover a small indel from a single SV candidate region
-    const GlobalAligner<int> _smallSVAligner;
-
-    /// Aligner optimized to discover a single large indel from a single SV candidate region
+    /// Aligner optimized to discover a single small/large indel from a single SV candidate region
     const GlobalLargeIndelAligner<int> _largeSVAligner;
 
     const GlobalAligner<int> _largeInsertEdgeAligner;

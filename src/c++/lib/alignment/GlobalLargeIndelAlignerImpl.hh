@@ -23,6 +23,8 @@
 
 #include <cassert>
 
+//#define DEBUG_ALN
+
 #ifdef DEBUG_ALN
 #include "blt_util/log.hh"
 #include <iostream>

@@ -1,3 +1,9 @@
+## Unreleased
+
+### Changed
+- Change SV candidate contig aligners to improve precision (MANTA-1396)
+  - Change contig aligners such that variant occurrences are more heavily penalized.
+
 ## v1.4.0 - 2018-04-25
 
 This is a major bugfix update from v1.3.2, featuring improved precision and vcf representation, in addition to minor user friendly improvements.

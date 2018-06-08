@@ -88,10 +88,10 @@ getPathScore(
         }
 
 #ifdef DEBUG_PATHSCORE
-      log_os << __FUNCTION__
-             << " path.type=" << ps.type
-             << " path.length=" << ps.length
-             << " val=" << val << "\n";
+        log_os << __FUNCTION__
+               << " path.type=" << ps.type
+               << " path.length=" << ps.length
+               << " val=" << val << "\n";
 #endif
     }
     return val;
