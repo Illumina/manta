@@ -27,11 +27,11 @@
 struct SummarizeSVLoci : public illumina::Program
 {
     const char*
-    name() const
+    name() const override
     {
         return "SummarizeSVLoci";
     }
 
     void
-    runInternal(int argc, char* argv[]) const;
+    runInternal(int argc, char* argv[]) const override;
 };

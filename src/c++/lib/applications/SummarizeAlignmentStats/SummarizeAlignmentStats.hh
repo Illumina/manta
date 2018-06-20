@@ -27,11 +27,11 @@
 struct SummarizeAlignmentStats : public illumina::Program
 {
     const char*
-    name() const
+    name() const override
     {
         return "SummarizeAlignmentStats";
     }
 
     void
-    runInternal(int argc, char* argv[]) const;
+    runInternal(int argc, char* argv[]) const override;
 };

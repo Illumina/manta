@@ -50,7 +50,7 @@ struct EdgeRetrieverJumpBin : public EdgeRetriever
         const unsigned binIndex);
 
     bool
-    next();
+    next() override;
 
 private:
     void
