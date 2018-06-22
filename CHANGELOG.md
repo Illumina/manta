@@ -1,3 +1,10 @@
+## Unreleased
+
+### Changed
+- Fix multi-junction nomination (MANTA-1430)
+  - Complex events with more than two junctions are no longer nominated as a group
+  - Fix the problem of duplicate detection of the same SV candidate
+
 ## v1.4.0 - 2018-04-25
 
 This is a major bugfix update from v1.3.2, featuring improved precision and vcf representation, in addition to minor user friendly improvements.

@@ -239,8 +239,8 @@ setPartner(
 
 
 
-// 1 is the new partner
-// 2 is the previously connected partner
+// spanIndex1: the new partner
+// spanIndex2: the previously connected partner
 static
 void
 resetPartners(
@@ -372,8 +372,22 @@ findMultiJunctionCandidates(
                 }
                 else
                 {
-                    // multiple candidates
+                    // Clear all the junctions for a multi-junction,
+                    // given complex events with more than two junctions are not handled for now
+                    const unsigned spanIndexC(spanPartners[spanIndexA].partnerId);
+                    assert(spanIndexC != spanIndexB);
+                    spanPartners[spanIndexC].clear();
+                    spanPartners[spanIndexC].type = CONFLICT;
+
+                    const unsigned spanIndexD(spanPartners[spanIndexB].partnerId);
+                    assert(spanIndexD != spanIndexA);
+                    spanPartners[spanIndexD].clear();
+                    spanPartners[spanIndexD].type = CONFLICT;
+
+                    spanPartners[spanIndexA].clear();
                     spanPartners[spanIndexA].type = CONFLICT;
+
+                    spanPartners[spanIndexB].clear();
                     spanPartners[spanIndexB].type = CONFLICT;
                 }
             }
