@@ -238,9 +238,9 @@ setPartner(
 }
 
 
-
-// spanIndex1: the new partner
-// spanIndex2: the previously connected partner
+/*
+// \param spanIndex1 the new partner
+// \param spanIndex2 the previously connected partner
 static
 void
 resetPartners(
@@ -271,6 +271,7 @@ resetPartners(
     setPartner(spanPartners,newType,maxPartnerDistance,spanIndex1,spanIndex2);
     setPartner(spanPartners,newType,maxPartnerDistance,spanIndex2,spanIndex1);
 }
+*/
 
 
 
@@ -319,6 +320,8 @@ findMultiJunctionCandidates(
     {
         using namespace MJ_INTERACTION;
 
+        bool hasMultiJunction(false);
+
         for (unsigned spanIndexA(0); (spanIndexA+1)<spanCount; ++spanIndexA)
         {
             const SVCandidate& spanA(spanningSVs[spanIndexA]);
@@ -362,35 +365,18 @@ findMultiJunctionCandidates(
                     setPartner(spanPartners,newType,maxPartnerDistance,spanIndexA,spanIndexB);
                     setPartner(spanPartners,newType,maxPartnerDistance,spanIndexB,spanIndexA);
                 }
-                else if (spanPartners[spanIndexA].type == NONE)
-                {
-                    resetPartners(spanPartners,newType,maxPartnerDistance,spanIndexA,spanIndexB);
-                }
-                else if (spanPartners[spanIndexB].type == NONE)
-                {
-                    resetPartners(spanPartners,newType,maxPartnerDistance,spanIndexB,spanIndexA);
-                }
                 else
                 {
-                    // Clear all the junctions for a multi-junction,
-                    // given complex events with more than two junctions are not handled for now
-                    const unsigned spanIndexC(spanPartners[spanIndexA].partnerId);
-                    assert(spanIndexC != spanIndexB);
-                    spanPartners[spanIndexC].clear();
-                    spanPartners[spanIndexC].type = CONFLICT;
-
-                    const unsigned spanIndexD(spanPartners[spanIndexB].partnerId);
-                    assert(spanIndexD != spanIndexA);
-                    spanPartners[spanIndexD].clear();
-                    spanPartners[spanIndexD].type = CONFLICT;
-
-                    spanPartners[spanIndexA].clear();
-                    spanPartners[spanIndexA].type = CONFLICT;
-
-                    spanPartners[spanIndexB].clear();
-                    spanPartners[spanIndexB].type = CONFLICT;
+                    // Clear all the junctions if any multi-junction is detected
+                    // Only complex events with exactly two junctions are grouped for now
+                    hasMultiJunction = true;
+                    spanPartners.clear();
+                    spanPartners.resize(spanCount);
+                    break;
                 }
             }
+
+            if (hasMultiJunction) break;
         }
     }
 
