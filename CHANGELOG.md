@@ -3,6 +3,9 @@
 ### Changed
 - Change SV candidate contig aligners to improve precision (MANTA-1396)
   - Change contig aligners such that variant occurrences are more heavily penalized.
+- Fix multi-junction nomination (MANTA-1430)
+  - Complex events with more than two junctions are no longer nominated as a group
+  - Fix the problem of duplicate detection of the same SV candidate
 
 ## v1.4.0 - 2018-04-25
 
