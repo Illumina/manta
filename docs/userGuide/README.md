@@ -588,7 +588,7 @@ Using the `--generateEvidenceBam` option, Manta can be configured to generate ba
 
 It is recommended to use this option together with the `--region` option, so that the analysis is limited to relatively small genomic regions for debugging purposes.
 
-The evidence bam files are provided in `${MANTA_ANALYSIS_PATH}/results/evidence`, with a naming format `evidence.*.bam`.
+The evidence bam files are provided in `${MANTA_ANALYSIS_PATH}/results/evidence`, with a naming format `evidence_*.*.bam`.
 There is one such file for each input bam of the analysis, containing evidence reads of the candidate SVs identified from that input bam.
 Each read in an evidence bam keeps all information from the original bam, and it contains also a customized tag in the format: `ZM:Z:${MANTA_SV_ID_1}|${EVIDENCE_TYPE},${MANTA_SV_ID_2}|${EVIDENCE_TYPE}`. For example, ZM:Z:MantaINV:5:0:1:0:0:0|PR|SRM,MantaDEL:5:1:2:0:0:0|SR
 * One read can have more than one of the three evidence types: PR for paired reads, SR for split reads, and SRM for split read mates.

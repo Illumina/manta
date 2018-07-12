@@ -1,3 +1,9 @@
+## Unreleased
+
+### Changed
+- Add index to ensure uniqueness of evidence bam filenames (MANTA-1431)
+  - It solves the potential problem of name conflicts for evidence bams if the input bam files have the same name while located in different directories.
+
 ## v1.4.0 - 2018-04-25
 
 This is a major bugfix update from v1.3.2, featuring improved precision and vcf representation, in addition to minor user friendly improvements.
