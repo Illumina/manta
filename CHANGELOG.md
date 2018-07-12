@@ -6,6 +6,8 @@
 - Fix multi-junction nomination (MANTA-1430)
   - Complex events with more than two junctions are no longer nominated as a group
   - Fix the problem of duplicate detection of the same SV candidate
+- Add index to ensure uniqueness of evidence bam filenames (MANTA-1431)
+  - It solves the potential problem of name conflicts for evidence bams if the input bam files have the same name while located in different directories.
 
 ## v1.4.0 - 2018-04-25
 
