@@ -1150,25 +1150,23 @@ scoreDiploidSV(
         }
 
         // add sample specific filters
-        bool isAllMinGTFiltered(true);
+        bool isAllSampleFiltered(true);
         for (unsigned sampleIndex(0); sampleIndex<diploidSampleCount; ++sampleIndex)
         {
             SVScoreInfoDiploidSample& diploidSampleInfo(diploidInfo.samples[sampleIndex]);
+            if (diploidSampleInfo.gt == DIPLOID_GT::REF)
+                diploidSampleInfo.filters.insert(diploidOpt.homRefLabel);
+
             if (diploidSampleInfo.gtScore < diploidOpt.minPassGTScore)
-            {
                 diploidSampleInfo.filters.insert(diploidOpt.minGTFilterLabel);
-            }
-            else
-            {
-                isAllMinGTFiltered=false;
-            }
+
+            if (diploidSampleInfo.filters.empty())
+                isAllSampleFiltered = false;
         }
 
-        // apply sample-specific filter to whole record when all samples are impacted
-        if ((diploidSampleCount>0) && isAllMinGTFiltered)
-        {
-            diploidInfo.filters.insert(diploidOpt.minGTFilterLabel);
-        }
+        // If no sample passes all sample-specific filters, apply sample FT filter at the record level
+        if (isAllSampleFiltered)
+            diploidInfo.filters.insert(diploidOpt.failedSampleFTLabel);
 
         const unsigned junctionCount(junctionData.size());
 

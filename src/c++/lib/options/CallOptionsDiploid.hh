@@ -37,16 +37,22 @@ struct CallOptionsDiploid
     unsigned minPassAltScore = 20;
     std::string minAltFilterLabel = "MinQUAL";
 
-    /// below this GQ value, the SAMPLE filter is marked in the VCF
-    unsigned minPassGTScore = 10;
-    std::string minGTFilterLabel = "MinGQ";
-
     // control filtration based on MQ0 fraction:
     float maxMQ0Frac = 0.4f;
     std::string maxMQ0FracLabel = "MaxMQ0Frac";
 
     /// filter for large SVs with no pair support
     std::string noPairSupportLabel = "NoPairSupport";
+
+    /// no sample passes all sample-specific filters
+    std::string failedSampleFTLabel = "SampleFT";
+
+    /// below this GQ value, the SAMPLE filter is marked in the VCF
+    unsigned minPassGTScore = 10;
+    std::string minGTFilterLabel = "MinGQ";
+
+    /// the SAMPLE filter for home-ref calls
+    std::string homRefLabel = "HomRef";
 };
 
 

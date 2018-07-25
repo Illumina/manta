@@ -1,3 +1,11 @@
+## Unreleased
+
+### Changed
+- Change filters for easy interpretation of multi-sample germline variant vcf
+  - Add record-level filter 'SampleFT' when no sample passes all sample level filters
+  - Add sample-level filter 'HomRef' for homogyzous reference calls
+  - No more sample-level filter will be applied at the record level even if it applies to all samples
+
 ## v1.4.0 - 2018-04-25
 
 This is a major bugfix update from v1.3.2, featuring improved precision and vcf representation, in addition to minor user friendly improvements.
