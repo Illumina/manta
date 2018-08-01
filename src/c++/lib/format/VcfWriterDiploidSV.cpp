@@ -61,7 +61,9 @@ addHeaderFilters() const
     _os << "##FILTER=<ID=" << _diploidOpt.maxMQ0FracLabel << ",Description=\"For a small variant (<1000 bases), the fraction of reads in all samples with MAPQ0 around either breakend exceeds " << _diploidOpt.maxMQ0Frac << "\">\n";
     _os << "##FILTER=<ID=" << _diploidOpt.noPairSupportLabel << ",Description=\"For variants significantly larger than the paired read fragment size, no paired reads support the alternate allele in any sample.\">\n";
     _os << "##FILTER=<ID=" << _diploidOpt.minAltFilterLabel << ",Description=\"QUAL score is less than " << _diploidOpt.minPassAltScore << "\">\n";
-    _os << "##FILTER=<ID=" << _diploidOpt.minGTFilterLabel << ",Description=\"GQ score is less than " << _diploidOpt.minPassGTScore << " (filter applied at sample level and record level if all samples are filtered)\">\n";
+    _os << "##FILTER=<ID=" << _diploidOpt.failedSampleFTLabel << ",Description=\"No sample passes all the sample-level filters (at the field FORMAT/FT)\">\n";
+    _os << "##FILTER=<ID=" << _diploidOpt.minGTFilterLabel << ",Description=\"GQ score is less than " << _diploidOpt.minPassGTScore << " (filter applied at sample level)\">\n";
+    _os << "##FILTER=<ID=" << _diploidOpt.homRefLabel << ",Description=\"homozygous reference call (filter applied at sample level)\">\n";
 }
 
 

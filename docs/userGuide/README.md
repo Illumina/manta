@@ -22,8 +22,9 @@ Manta User Guide
     * [VCF INFO Fields](#vcf-info-fields)
     * [VCF FORMAT Fields](#vcf-format-fields)
     * [VCF FILTER Fields](#vcf-filter-fields)
-    * [How to interpret VCF filters?](#how-to-interpret-vcf-filters)
-    * [What do the values in Manta's VCF ID field mean?](#what-do-the-values-in-mantas-vcf-id-field-mean)
+    * [Interpretation of VCF filters](#interpretation-of-vcf-filters)
+    * [Interpretation of Manta's INFO/EVENT field](#interpretation-of-mantas-infoevent-field)
+    * [Details of Manta's VCF ID field](#details-of-mantas-vcf-id-field)
     * [Converting Manta VCF to BEDPE format](#converting-manta-vcf-to-bedpe-format)
   * [Statistics](#statistics)
 * [Runtime hardware requirements](#runtime-hardware-requirements)
@@ -387,21 +388,21 @@ SR | Number of split-reads which strongly (Q30) support the REF or ALT alleles
 
 #### VCF FILTER Fields
 
-ID | Description
---- | ---
-MinQUAL | QUAL score is less than 20
-MinGQ | GQ score is less than 15 (filter applied at sample level and record level if all samples are filtered)
-MinSomaticScore | SOMATICSCORE is less than 30
-Ploidy | For DEL & DUP variants, the genotypes of overlapping variants (with similar size) are inconsistent with diploid expectation
-MaxDepth | Depth is greater than 3x the median chromosome depth near one or both variant breakends
-MaxMQ0Frac | For a small variant (<1000 bases), the fraction of reads in all samples with MAPQ0 around either breakend exceeds 0.4
-NoPairSupport | For variants significantly larger than the paired read fragment size, no paired reads support the alternate allele in any sample
+ID | Level | Description
+--- | --- | ---
+MinQUAL | Record | QUAL score is less than 20
+MinGQ | Sample | GQ score is less than 15
+MinSomaticScore | Record | SOMATICSCORE is less than 30
+Ploidy | Record | For DEL & DUP variants, the genotypes of overlapping variants (with similar size) are inconsistent with diploid expectation
+MaxDepth | Record | Depth is greater than 3x the median chromosome depth near one or both variant breakends
+MaxMQ0Frac | Record | For a small variant (<1000 bases), the fraction of reads in all samples with MAPQ0 around either breakend exceeds 0.4
+NoPairSupport | Record | For variants significantly larger than the paired read fragment size, no paired reads support the alternate allele in any sample
+SampleFT | Record | No sample passes all the sample-level filters
+HomRef | Sample | Homozygous reference call
 
 #### Interpretation of VCF filters
 
-As described above, there are two levels of filters: record level (FILTER) and sample level (FORMAT/FT). Record-level filters are generally independent to sample-level filters. However, if none of the samples passes one record-level filter, that filter will be copied to the record level (e.g. MinGQ).
-
-A sample-specific passing variant needs to have the record level FILTER passed, the sample level FORMAT/FT passed, and the sample level FORMAT/GT is not "0/0"(hom-reference).
+As described above, there are two levels of filters: record level (FILTER) and sample level (FORMAT/FT). Record-level filters are generally independant to sample-level filters. However, if none of the samples passes all sample-level filters, the 'SampleFT' filter will be applied at the record level.
 
 #### Interpretation of Manta's INFO/EVENT field
 
