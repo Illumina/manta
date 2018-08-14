@@ -82,7 +82,7 @@ parseOptions(
         std::set<std::string> nameCheck;
         for (std::string& afile : opt.alignmentFilenames)
         {
-            if (checkStandardizeInputFile(afile,"alignment file",errorMsg)) break;
+            if (checkAndStandardizeRequiredInputFilePath(afile, "alignment file", errorMsg)) break;
             if (nameCheck.count(afile))
             {
                 std::ostringstream oss;

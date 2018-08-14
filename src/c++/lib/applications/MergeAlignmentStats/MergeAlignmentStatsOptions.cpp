@@ -114,7 +114,7 @@ parseMergeAlignmentStatsOptions(
             std::set<std::string> nameCheck;
             for (std::string& afile : opt.statsFiles)
             {
-                if (checkStandardizeInputFile(afile,"alignment stats file",errorMsg)) break;
+                if (checkAndStandardizeRequiredInputFilePath(afile, "alignment stats file", errorMsg)) break;
                 if (nameCheck.count(afile))
                 {
                     std::ostringstream oss;

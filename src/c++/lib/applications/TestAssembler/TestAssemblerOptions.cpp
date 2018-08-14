@@ -58,7 +58,7 @@ parseOptions(
     std::string& errorMsg)
 {
     if (parseOptions(vm, opt.alignFileOpt, errorMsg)) return true;
-    if (checkStandardizeInputFile(opt.referenceFilename, "reference fasta", errorMsg)) return true;
+    if (checkAndStandardizeRequiredInputFilePath(opt.referenceFilename, "reference fasta", errorMsg)) return true;
     return false;
 }
 

@@ -26,7 +26,7 @@
 
 
 bool
-checkStandardizeInputFile(
+checkAndStandardizeRequiredInputFilePath(
     std::string& filename,
     const char* fileLabel,
     std::string& errorMsg)

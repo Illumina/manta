@@ -22,13 +22,11 @@
 #include <string>
 
 
-/// check if input file exists and is usable as
-/// input, if so canonicalize the name
+/// Check if input path exists and is usable as input, if so, convert the input filename to an absolute path.
 ///
-/// In case of error return true and provide error
-/// message
+/// In case of error return true and provide error message
 bool
-checkStandardizeInputFile(
+checkAndStandardizeRequiredInputFilePath(
     std::string& filename,
     const char* fileLabel,
     std::string& errorMsg);
