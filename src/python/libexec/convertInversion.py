@@ -20,6 +20,8 @@
 
 
 import sys
+import gzip
+from io import BufferedReader
 from subprocess import check_output
 from os import path
 from os.path import exists
@@ -91,7 +93,12 @@ def scanVcf(vcfFile):
 
     invMateDict = {}
 
-    fpVcf = open(vcfFile, 'rb')
+    if vcfFile.endswith('gz'):
+        gzfp = gzip.open(vcfFile, 'rb')
+        fpVcf = BufferedReader(gzfp)
+    else:
+        fpVcf = open(vcfFile, 'rb')
+
     for line in fpVcf:
         if line[0] == '#':
             continue
@@ -132,7 +139,12 @@ def convertInversions(samtools, refFasta, vcfFile, invMateDict):
     bufferedChr = ""
     bufferedPos = -1
 
-    fpVcf = open(vcfFile, 'rb')
+    if vcfFile.endswith('gz'):
+        gzfp = gzip.open(vcfFile, 'rb')
+        fpVcf = BufferedReader(gzfp)
+    else:
+        fpVcf = open(vcfFile, 'rb')
+
     for line in fpVcf:
         if line.startswith('#'):
             if (not isHeaderInfoAdded) and line.startswith("##FORMAT="):
@@ -259,7 +271,7 @@ def convertInversions(samtools, refFasta, vcfFile, invMateDict):
 
 if __name__=='__main__':
 
-    usage = "denovo_scoring.py <samtools path> <reference fasta> <vcf file>\n"
+    usage = "convertInversion.py <samtools path> <reference fasta> <vcf file>\n"
     if len(sys.argv) <= 3:
         sys.stderr.write(usage)
         sys.exit(1)
@@ -268,10 +280,10 @@ if __name__=='__main__':
     refFasta = sys.argv[2]
     vcfFile = sys.argv[3]
 
-    for file in [samtools, refFasta, vcfFile]:
-        if not(exists(vcfFile)):
+    for inputFile in [samtools, refFasta, vcfFile]:
+        if not(exists(inputFile)):
             errMsg = ('File %s does not exist.'
-                      % vcfFile)
+                      % inputFile)
             sys.stderr.write(errMsg + '\nProgram exits.')
             sys.exit(1)
 

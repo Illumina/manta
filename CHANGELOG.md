@@ -1,7 +1,9 @@
 ## Unreleased
 
 ### Changed
-- Represent inversions in the format of breakends (MANTA-1385)
+- Change representation of inversions in the VCF output (MANTA-1385)
+  - Intrachromosomal translocations with inverted breakpoints are now reported as two breakend (BND) records.
+  - Previously they were reported in the VCF using the inversion (INV) allele type.
 
 ## v1.4.0 - 2018-04-25
 
