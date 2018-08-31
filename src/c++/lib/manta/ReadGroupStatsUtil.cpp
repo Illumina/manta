@@ -1078,7 +1078,7 @@ extractReadGroupStatsFromAlignmentFile(
 
                     if (! isNormal)
                     {
-                        chromHighestPos[chromIndex] += chromSize[chromIndex]/100;
+                        chromHighestPos[chromIndex] += std::max(1, chromSize[chromIndex]/100);
 #ifdef DEBUG_RPS
                         std::cerr << " Jump to chrid: " << chromIndex << " position: "
                                   << chromHighestPos[chromIndex] << "\n";
@@ -1106,7 +1106,7 @@ extractReadGroupStatsFromAlignmentFile(
 #ifdef DEBUG_RPS
                     std::cerr << "No read found in the previous region.\n";
 #endif
-                    chromHighestPos[chromIndex] += chromSize[chromIndex]/100;
+                    chromHighestPos[chromIndex] += std::max(1, chromSize[chromIndex]/100);
 
                 }
             }
