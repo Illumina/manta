@@ -13,6 +13,9 @@
   - Add sample-level filter 'HomRef' for homogyzous reference calls
   - No more sample-level filter will be applied at the record level even if it applies to all samples
 
+### Fixed
+- Fix the bug of stats generation with short reference sequences (MANTA-1459/[#143])
+
 ## v1.4.0 - 2018-04-25
 
 This is a major bugfix update from v1.3.2, featuring improved precision and vcf representation, in addition to minor user friendly improvements.
