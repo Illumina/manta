@@ -47,7 +47,9 @@ appendVec(
 
 
 
-/// an SV candidate with additional details pertaining to input read evidence which is useful for filtration
+/// \brief An SV candidate with additional details pertaining to input read evidence
+///
+/// The extra read evidence provided in this version of SV candidate is useful for filtration
 ///
 struct FatSVCandidate : public SVCandidate
 {
@@ -80,29 +82,9 @@ struct FatSVCandidate : public SVCandidate
         return true;
     }
 
-#if 0
-    bool
-    merge(const SVCandidate& rhs)
-    {
-        if (! base_t::merge(rhs)) return false;
-
-        return true;
-    }
-#endif
-
-#if 0
-    void
-    clear()
-    {
-        base_t::clear();
-        for (auto& evi : bp1EvidenceIndex) evi.clear();
-        for (auto& evi : bp2EvidenceIndex) evi.clear();
-    }
-#endif
-
     /// a 2d array type to track breakpoint evidence, the first dimension is evidence type
     /// and the inner dimension is a vector with size equal to the number of (confident-mapping) observations.
-    /// For each observation the inner-diminsion value provides the index of the read used as an observation, which
+    /// For each observation the inner-dimension value provides the index of the read used as an observation, which
     /// can be used to estimate signal density vs. all reads.
     typedef std::array<std::vector<double>,SVEvidenceType::SIZE> evidenceIndex_t;
 
