@@ -15,6 +15,7 @@
 
 ### Fixed
 - Fix the bug of stats generation with short reference sequences (MANTA-1459/[#143])
+- Fix the bug of read signal significance test for multi-sample case (MANTA-1294)
 
 ## v1.4.0 - 2018-04-25
 
