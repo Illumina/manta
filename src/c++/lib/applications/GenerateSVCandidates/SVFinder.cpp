@@ -606,7 +606,7 @@ updateEvidenceIndex(
     const SVCandidateSetSequenceFragment& fragment,
     const SVObservation& obs,
     FatSVCandidate& sv,
-    unsigned bamIndex)
+    const unsigned bamIndex)
 {
     if (obs.isSingleReadSource())
     {
@@ -688,9 +688,10 @@ assignFragmentObservationsToSVCandidates(
     const bool isExpandSVCandidateSet,
     SVCandidateSetSequenceFragment& fragment,
     std::vector<FatSVCandidate>& svs,
-    const unsigned bamCount,
-    unsigned bamIndex)
+    const unsigned bamIndex)
 {
+    const unsigned bamCount(_bamStreams.size());
+
     // we anticipate so few svs from the POC method, that there's no indexing on them
     for (const SVObservation& readCand : readCandidates)
     {
@@ -812,8 +813,7 @@ processSequenceFragment(
     const bool isExpandSVCandidateSet,
     std::vector<FatSVCandidate>& svs,
     SVCandidateSetSequenceFragment& fragment,
-    SVFinderStats& stats,
-    const unsigned bamCount)
+    SVFinderStats& stats)
 {
     SVCandidateSetRead* localReadPtr(&(fragment.read1));
     SVCandidateSetRead* remoteReadPtr(&(fragment.read2));
@@ -889,7 +889,7 @@ processSequenceFragment(
         log_os << __FUNCTION__ << ": cand: " << cand << "\n";
     }
 #endif
-    assignFragmentObservationsToSVCandidates(node1, node2, _readCandidates, isExpandSVCandidateSet, fragment, svs, bamCount, bamIndex);
+    assignFragmentObservationsToSVCandidates(node1, node2, _readCandidates, isExpandSVCandidateSet, fragment, svs, bamIndex);
 }
 
 
@@ -1023,7 +1023,7 @@ bool
 isSpanningCandidateSignalSignificant(
     const double noiseRate,
     const FatSVCandidate& sv,
-    unsigned bamIndex)
+    const unsigned bamIndex)
 {
     std::vector<double> evidence_bp1;
     std::vector<double> evidence_bp2;
@@ -1047,7 +1047,7 @@ bool
 isComplexCandidateSignalSignificant(
     const double noiseRate,
     const FatSVCandidate& sv,
-    unsigned bamIndex)
+    const unsigned bamIndex)
 {
     std::vector<double> evidence;
     for (unsigned i(0); i<SVEvidenceType::SIZE; ++i)
@@ -1076,6 +1076,36 @@ enum index_t
 
 
 
+static
+bool
+isAnySpanningCandidateSignalSignificant(
+        const unsigned bamCount,
+        const FatSVCandidate& sv,
+        const std::vector<double>& spanningNoiseRate)
+{
+    for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex) {
+        if (isSpanningCandidateSignalSignificant(spanningNoiseRate[bamIndex], sv, bamIndex)) return true;
+    }
+    return false;
+}
+
+
+
+static
+bool
+isAnyComplexCandidateSignalSignificant(
+        const unsigned bamCount,
+        const FatSVCandidate& sv,
+        const std::vector<double>& assemblyNoiseRate)
+{
+    for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex) {
+        if (isComplexCandidateSignalSignificant(assemblyNoiseRate[bamIndex], sv, bamIndex)) return true;
+    }
+    return false;
+}
+
+
+
 /// Return enumerator value describing the candidate's filtration state, based on
 /// information available in a single junction only (as opposed to
 /// requiring multi-junction analysis)
@@ -1084,8 +1114,8 @@ static
 SINGLE_JUNCTION_FILTER::index_t
 isFilterSingleJunctionCandidate(
     const bool isRNA,
-    const std::vector<double> spanningNoiseRate,
-    const std::vector<double> assemblyNoiseRate,
+    const std::vector<double>& spanningNoiseRate,
+    const std::vector<double>& assemblyNoiseRate,
     const FatSVCandidate& sv,
     const unsigned bamCount)
 {
@@ -1101,29 +1131,13 @@ isFilterSingleJunctionCandidate(
         // TODO make sensitivity adjustments for RNA here:
         if (! isRNA)
         {
-            bool isAnySpanningCandidateSignalSignificant = false;
-            for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
-            {
-                if(isSpanningCandidateSignalSignificant(spanningNoiseRate[bamIndex], sv, bamIndex))
-                {
-                    isAnySpanningCandidateSignalSignificant = true;
-                }
-            }
-            if (! isAnySpanningCandidateSignalSignificant) return SPANNING_LOW_SIGNAL;
+            if (! isAnySpanningCandidateSignalSignificant(bamCount, sv, spanningNoiseRate)) return SPANNING_LOW_SIGNAL;
         }
     }
     else if (isComplexSV(sv))
     {
         if (! isCandidateCountSufficient(sv)) return COMPLEX_LOW_COUNT;
-        bool isAnyComplexCandidateSignalSignificant = false;
-        for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
-        {
-            if(isComplexCandidateSignalSignificant(assemblyNoiseRate[bamIndex], sv, bamIndex))
-            {
-                isAnyComplexCandidateSignalSignificant = true;
-            }
-        }
-        if (! isAnyComplexCandidateSignalSignificant) return COMPLEX_LOW_SIGNAL;
+        if (! isAnyComplexCandidateSignalSignificant(bamCount, sv, assemblyNoiseRate)) return COMPLEX_LOW_SIGNAL;
     }
     else
     {
@@ -1144,8 +1158,8 @@ static
 void
 filterCandidates(
     const bool isRNA,
-    const std::vector<double> spanningNoiseRate,
-    const std::vector<double> assemblyNoiseRate,
+    const std::vector<double>& spanningNoiseRate,
+    const std::vector<double>& assemblyNoiseRate,
     std::vector<FatSVCandidate>& svs,
     SVFinderStats& stats,
     const unsigned bamCount)
@@ -1223,7 +1237,7 @@ getCandidatesFromData(
             static const bool isAnchored(true);
             processSequenceFragment(
                 node1, node2, bamHeader, node1RefSeq, node2RefSeq, bamIndex, isAnchored,
-                svs, fragment, stats, bamCount);
+                svs, fragment, stats);
         }
     }
 
@@ -1243,7 +1257,7 @@ getCandidatesFromData(
                 static const bool isAnchored(false);
                 processSequenceFragment(
                     node1, node2, bamHeader, node1RefSeq, node2RefSeq, bamIndex, isAnchored,
-                    svs, pair, stats, bamCount);
+                    svs, pair, stats);
             }
         }
     }

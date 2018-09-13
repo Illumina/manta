@@ -105,8 +105,7 @@ private:
         const bool isExpandSVCandidateSet,
         SVCandidateSetSequenceFragment& fragment,
         std::vector<FatSVCandidate>& svs,
-        const unsigned bamCount,
-        unsigned bamIndex);
+        const unsigned bamIndex);
 
     /// \brief Either process the fragment to discover new SVs and expand existing SVs,or
     /// go through and add pairs to existing SVs without expansion
@@ -122,8 +121,7 @@ private:
         const bool isExpandSVCandidateSet,
         std::vector<FatSVCandidate>& svs,
         SVCandidateSetSequenceFragment& fragment,
-        SVFinderStats& stats,
-        const unsigned bamCount);
+        SVFinderStats& stats);
 
     void
     getCandidatesFromData(
@@ -148,6 +146,8 @@ private:
     {
         return *(_dFilterPtr);
     }
+
+
 
     const ReadScannerOptions _scanOpt;
     const std::vector<bool> _isAlignmentTumor;

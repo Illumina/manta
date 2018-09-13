@@ -93,11 +93,12 @@ struct FatSVCandidate : public SVCandidate
         return true;
     }
 
-    /// a 2d array type to track breakpoint evidence, the first dimension is evidence type
-    /// and the inner dimension is a vector of vector with size of the outer vector equals to
-    /// the number of bam files, size of the inner vector equals to the number of (confident-mapping) observations.
-    /// For each observation the inner-vector value provides the index of the read used as an observation, which
-    /// can be used to estimate signal density vs. all reads.
+    /// a 3d array type to track breakpoint evidence.
+    /// The first dimension is evidence type,
+    /// the second dimension is bam index with size equal to the number of input bams, and
+    /// the third dimension is evidence read with size equal to the number of confident-mapping observations.
+    /// For each observation the value provides the index of the read used as an observation,
+    /// which can be used to estimate signal density vs. all reads.
     typedef std::array<std::vector< std::vector<double> >,SVEvidenceType::SIZE> evidenceIndex_t;
 
     evidenceIndex_t bp1EvidenceIndex;
