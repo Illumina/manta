@@ -1079,11 +1079,12 @@ enum index_t
 static
 bool
 isAnySpanningCandidateSignalSignificant(
-        const unsigned bamCount,
-        const FatSVCandidate& sv,
-        const std::vector<double>& spanningNoiseRate)
+    const unsigned bamCount,
+    const FatSVCandidate& sv,
+    const std::vector<double>& spanningNoiseRate)
 {
-    for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex) {
+    for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
+    {
         if (isSpanningCandidateSignalSignificant(spanningNoiseRate[bamIndex], sv, bamIndex)) return true;
     }
     return false;
@@ -1094,11 +1095,12 @@ isAnySpanningCandidateSignalSignificant(
 static
 bool
 isAnyComplexCandidateSignalSignificant(
-        const unsigned bamCount,
-        const FatSVCandidate& sv,
-        const std::vector<double>& assemblyNoiseRate)
+    const unsigned bamCount,
+    const FatSVCandidate& sv,
+    const std::vector<double>& assemblyNoiseRate)
 {
-    for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex) {
+    for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
+    {
         if (isComplexCandidateSignalSignificant(assemblyNoiseRate[bamIndex], sv, bamIndex)) return true;
     }
     return false;

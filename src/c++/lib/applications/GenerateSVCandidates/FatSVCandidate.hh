@@ -66,8 +66,8 @@ struct FatSVCandidate : public SVCandidate
     {
         for (unsigned evidenceTypeIndex(0); evidenceTypeIndex<SVEvidenceType::SIZE; ++evidenceTypeIndex)
         {
-           bp1EvidenceIndex[evidenceTypeIndex].resize(bamCount);
-           bp2EvidenceIndex[evidenceTypeIndex].resize(bamCount);
+            bp1EvidenceIndex[evidenceTypeIndex].resize(bamCount);
+            bp2EvidenceIndex[evidenceTypeIndex].resize(bamCount);
         }
     }
 
@@ -83,7 +83,8 @@ struct FatSVCandidate : public SVCandidate
         if (! base_t::merge(rhs, isExpandRegion)) return false;
         for (unsigned evidenceTypeIndex(0); evidenceTypeIndex<SVEvidenceType::SIZE; ++evidenceTypeIndex)
         {
-            for (unsigned bamIndex(0); bamIndex<bp1EvidenceIndex[evidenceTypeIndex].size(); ++bamIndex) {
+            for (unsigned bamIndex(0); bamIndex<bp1EvidenceIndex[evidenceTypeIndex].size(); ++bamIndex)
+            {
                 appendVec(bp1EvidenceIndex[evidenceTypeIndex][bamIndex],
                           rhs.bp1EvidenceIndex[evidenceTypeIndex][bamIndex]);
                 appendVec(bp2EvidenceIndex[evidenceTypeIndex][bamIndex],

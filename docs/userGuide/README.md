@@ -14,7 +14,7 @@ Manta User Guide
 * [Input requirements](#input-requirements)
 * [Outputs](#outputs)
   * [Structural Variant predictions](#structural-variant-predictions)
-  * [Manta VCF reporting format](#manta-vcf-reporting-format)
+  * [Manta VCF interpretation](#manta-vcf-interpretation)
     * [VCF Sample Names](#vcf-sample-names)
     * [Small indels](#small-indels)
     * [Insertions with incomplete insert sequence assembly](#insertions-with-incomplete-insert-sequence-assembly)
