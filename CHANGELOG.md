@@ -15,6 +15,8 @@
 
 ### Fixed
 - Fix the bug of stats generation with short reference sequences (MANTA-1459/[#143])
+- Fix the evidence significance test in the multi-sample calling mode (MANTA-1294)
+  - This issue previously caused spurious false negatives during the multi-sample calling mode. The incidence rate of the problem tended to increase with sample count.
 
 ## v1.4.0 - 2018-04-25
 

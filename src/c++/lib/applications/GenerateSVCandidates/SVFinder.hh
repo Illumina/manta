@@ -19,6 +19,7 @@
 
 /// \file
 /// \author Chris Saunders
+/// \author Naoki Nariai
 ///
 
 #pragma once
@@ -103,7 +104,8 @@ private:
         const std::vector<SVObservation>& readCandidates,
         const bool isExpandSVCandidateSet,
         SVCandidateSetSequenceFragment& fragment,
-        std::vector<FatSVCandidate>& svs);
+        std::vector<FatSVCandidate>& svs,
+        const unsigned bamIndex);
 
     /// \brief Either process the fragment to discover new SVs and expand existing SVs,or
     /// go through and add pairs to existing SVs without expansion
@@ -145,6 +147,8 @@ private:
         return *(_dFilterPtr);
     }
 
+
+
     const ReadScannerOptions _scanOpt;
     const std::vector<bool> _isAlignmentTumor;
     SVLocusSet _set;
@@ -166,13 +170,13 @@ private:
     /// throwaway stats tracker...
     SampleEvidenceCounts _eCounts;
 
-    /// rate of spanning read noise estimated from the current dataset
+    /// rate of spanning read noise estimated from the current dataset for each sample
     /// - estimate is roughly (anom + split)/all
-    double _spanningNoiseRate;
+    std::vector<double> _spanningNoiseRate;
 
-    /// rate of assembly read noise estimated from the current dataset
+    /// rate of assembly read noise estimated from the current dataset for each sample
     /// - assembly read noise means reads with edges which have high mismatch density or soft-clipping
-    double _assemblyNoiseRate;
+    std::vector<double> _assemblyNoiseRate;
 
     EdgeRuntimeTracker& _edgeTracker;
     GSCEdgeStatsManager& _edgeStatMan;

@@ -19,6 +19,7 @@
 
 /// \file
 /// \author Chris Saunders
+/// \author Naoki Nariai
 ///
 
 #include "SVFinder.hh"
@@ -123,16 +124,8 @@ SVFinder(
     const AllSampleReadCounts& counts(getSet().getAllSampleReadCounts());
     for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
     {
-        // take max rate over all samples:
-        auto updateRate = [](double& x, const double val, const bool isFirst)
-        {
-            if (isFirst) x=val;
-            else x=std::max(x,val);
-        };
-
-        const bool isFirst(bamIndex==0);
-        updateRate(_spanningNoiseRate, getSpanningNoiseRate(counts, bamIndex), isFirst);
-        updateRate(_assemblyNoiseRate, getAssemblyNoiseRate(counts, bamIndex), isFirst);
+        _spanningNoiseRate.push_back(getSpanningNoiseRate(counts, bamIndex));
+        _assemblyNoiseRate.push_back(getAssemblyNoiseRate(counts, bamIndex));
     }
 }
 
@@ -612,7 +605,8 @@ void
 updateEvidenceIndex(
     const SVCandidateSetSequenceFragment& fragment,
     const SVObservation& obs,
-    FatSVCandidate& sv)
+    FatSVCandidate& sv,
+    const unsigned bamIndex)
 {
     if (obs.isSingleReadSource())
     {
@@ -621,7 +615,7 @@ updateEvidenceIndex(
         {
             if ((not candRead.bamrec.empty()) && (not candRead.isSubMapped) )
             {
-                sv.bp1EvidenceIndex[obs.svEvidenceType].push_back(candRead.readIndex);
+                sv.bp1EvidenceIndex[obs.svEvidenceType][bamIndex].push_back(candRead.readIndex);
 #ifdef DEBUG_SVDATA
                 log_os << __FUNCTION__ << ": non_split: Added readIndex " << candRead.readIndex
                        << " to svEvidenceType " << obs.svEvidenceType << "\n";
@@ -639,7 +633,7 @@ updateEvidenceIndex(
 
             if ((not read.bamrec.empty()) && (not read.isSubMapped))
             {
-                readBp[obs.svEvidenceType].push_back(read.readIndex);
+                readBp[obs.svEvidenceType][bamIndex].push_back(read.readIndex);
 #ifdef DEBUG_SVDATA
                 log_os << __FUNCTION__ << ": split_mapped: Added readIndex " << candRead.readIndex
                        << " to svEvidenceType " << obs.svEvidenceType << "\n";
@@ -649,7 +643,7 @@ updateEvidenceIndex(
             {
                 if ((not readSupp.front().bamrec.empty()) && (not readSupp.front().isSubMapped))
                 {
-                    readSuppBp[obs.svEvidenceType].push_back(readSupp.front().readIndex);
+                    readSuppBp[obs.svEvidenceType][bamIndex].push_back(readSupp.front().readIndex);
 #ifdef DEBUG_SVDATA
                     log_os << __FUNCTION__ << ": split_supp_mapped: Added readIndex " << readSupp.front().readIndex
                            << " to svEvidenceType " << obs.svEvidenceType << "\n";
@@ -666,7 +660,7 @@ updateEvidenceIndex(
         const SVCandidateSetRead& bp2Read(is1to1 ? fragment.read2 : fragment.read1);
         if ((not bp1Read.bamrec.empty()) && (not bp1Read.isSubMapped))
         {
-            sv.bp1EvidenceIndex[obs.svEvidenceType].push_back(bp1Read.readIndex);
+            sv.bp1EvidenceIndex[obs.svEvidenceType][bamIndex].push_back(bp1Read.readIndex);
 #ifdef DEBUG_SVDATA
             log_os << __FUNCTION__ << ": multi_read_source: Added readIndex " << bp1Read.readIndex
                    << " to svEvidenceType " << obs.svEvidenceType << "\n";
@@ -674,7 +668,7 @@ updateEvidenceIndex(
         }
         if ((not bp1Read.bamrec.empty()) && (not bp2Read.isSubMapped))
         {
-            sv.bp2EvidenceIndex[obs.svEvidenceType].push_back(bp2Read.readIndex);
+            sv.bp2EvidenceIndex[obs.svEvidenceType][bamIndex].push_back(bp2Read.readIndex);
 #ifdef DEBUG_SVDATA
             log_os << __FUNCTION__ << ": multi_read_source: Added readIndex " << bp2Read.readIndex
                    << " to svEvidenceType " << obs.svEvidenceType << "\n";
@@ -693,8 +687,11 @@ assignFragmentObservationsToSVCandidates(
     const std::vector<SVObservation>& readCandidates,
     const bool isExpandSVCandidateSet,
     SVCandidateSetSequenceFragment& fragment,
-    std::vector<FatSVCandidate>& svs)
+    std::vector<FatSVCandidate>& svs,
+    const unsigned bamIndex)
 {
+    const unsigned bamCount(_bamStreams.size());
+
     // we anticipate so few svs from the POC method, that there's no indexing on them
     for (const SVObservation& readCand : readCandidates)
     {
@@ -764,10 +761,10 @@ assignFragmentObservationsToSVCandidates(
                         fragment.svLink.emplace_back(svIndex,readCand.svEvidenceType);
                     }
 
-                    updateEvidenceIndex(fragment,readCand,sv);
+                    updateEvidenceIndex(fragment, readCand, sv, bamIndex);
 
                     // check evidence distance:
-                    sv.merge(FatSVCandidate(readCand), isExpandSVCandidateSet);
+                    sv.merge(FatSVCandidate(readCand, bamCount), isExpandSVCandidateSet);
 
 #ifdef DEBUG_SVDATA
                     log_os << __FUNCTION__ << ": Added to svIndex: " << svIndex << " match_sv: " << sv << "\n";
@@ -789,7 +786,7 @@ assignFragmentObservationsToSVCandidates(
             log_os << __FUNCTION__ << ": New svIndex: " << newSVIndex << "\n";
 #endif
 
-            svs.push_back(FatSVCandidate(readCand));
+            svs.push_back(FatSVCandidate(readCand, bamCount));
             svs.back().candidateIndex = newSVIndex;
 
             if (isSpanningCand)
@@ -797,7 +794,7 @@ assignFragmentObservationsToSVCandidates(
                 // ditto note above, store fragment association only when there's an SV hypothesis:
                 fragment.svLink.emplace_back(newSVIndex,readCand.svEvidenceType);
             }
-            updateEvidenceIndex(fragment,readCand,svs.back());
+            updateEvidenceIndex(fragment, readCand, svs.back(), bamIndex);
         }
     }
 }
@@ -892,7 +889,7 @@ processSequenceFragment(
         log_os << __FUNCTION__ << ": cand: " << cand << "\n";
     }
 #endif
-    assignFragmentObservationsToSVCandidates(node1, node2, _readCandidates, isExpandSVCandidateSet, fragment, svs);
+    assignFragmentObservationsToSVCandidates(node1, node2, _readCandidates, isExpandSVCandidateSet, fragment, svs, bamIndex);
 }
 
 
@@ -1025,14 +1022,15 @@ static
 bool
 isSpanningCandidateSignalSignificant(
     const double noiseRate,
-    const FatSVCandidate& sv)
+    const FatSVCandidate& sv,
+    const unsigned bamIndex)
 {
     std::vector<double> evidence_bp1;
     std::vector<double> evidence_bp2;
     for (unsigned evidenceTypeIndex(0); evidenceTypeIndex<SVEvidenceType::SIZE; ++evidenceTypeIndex)
     {
-        appendVec(evidence_bp1,sv.bp1EvidenceIndex[evidenceTypeIndex]);
-        appendVec(evidence_bp2,sv.bp2EvidenceIndex[evidenceTypeIndex]);
+        appendVec(evidence_bp1,sv.bp1EvidenceIndex[evidenceTypeIndex][bamIndex]);
+        appendVec(evidence_bp2,sv.bp2EvidenceIndex[evidenceTypeIndex][bamIndex]);
     }
 
     static const double alpha(0.03);
@@ -1048,16 +1046,17 @@ static
 bool
 isComplexCandidateSignalSignificant(
     const double noiseRate,
-    const FatSVCandidate& sv)
+    const FatSVCandidate& sv,
+    const unsigned bamIndex)
 {
     std::vector<double> evidence;
     for (unsigned i(0); i<SVEvidenceType::SIZE; ++i)
     {
         //if (! isLocalEvidence(i)) continue;
-        appendVec(evidence,sv.bp1EvidenceIndex[i]);
+        appendVec(evidence, sv.bp1EvidenceIndex[i][bamIndex]);
     }
     static const double alpha(0.005);
-    return (isBreakPointSignificant(alpha, noiseRate,evidence));
+    return (isBreakPointSignificant(alpha, noiseRate, evidence));
 }
 
 
@@ -1077,6 +1076,38 @@ enum index_t
 
 
 
+static
+bool
+isAnySpanningCandidateSignalSignificant(
+    const unsigned bamCount,
+    const FatSVCandidate& sv,
+    const std::vector<double>& spanningNoiseRate)
+{
+    for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
+    {
+        if (isSpanningCandidateSignalSignificant(spanningNoiseRate[bamIndex], sv, bamIndex)) return true;
+    }
+    return false;
+}
+
+
+
+static
+bool
+isAnyComplexCandidateSignalSignificant(
+    const unsigned bamCount,
+    const FatSVCandidate& sv,
+    const std::vector<double>& assemblyNoiseRate)
+{
+    for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
+    {
+        if (isComplexCandidateSignalSignificant(assemblyNoiseRate[bamIndex], sv, bamIndex)) return true;
+    }
+    return false;
+}
+
+
+
 /// Return enumerator value describing the candidate's filtration state, based on
 /// information available in a single junction only (as opposed to
 /// requiring multi-junction analysis)
@@ -1085,9 +1116,10 @@ static
 SINGLE_JUNCTION_FILTER::index_t
 isFilterSingleJunctionCandidate(
     const bool isRNA,
-    const double spanningNoiseRate,
-    const double assemblyNoiseRate,
-    const FatSVCandidate& sv)
+    const std::vector<double>& spanningNoiseRate,
+    const std::vector<double>& assemblyNoiseRate,
+    const FatSVCandidate& sv,
+    const unsigned bamCount)
 {
     using namespace SINGLE_JUNCTION_FILTER;
 
@@ -1101,13 +1133,13 @@ isFilterSingleJunctionCandidate(
         // TODO make sensitivity adjustments for RNA here:
         if (! isRNA)
         {
-            if (! isSpanningCandidateSignalSignificant(spanningNoiseRate, sv)) return SPANNING_LOW_SIGNAL;
+            if (! isAnySpanningCandidateSignalSignificant(bamCount, sv, spanningNoiseRate)) return SPANNING_LOW_SIGNAL;
         }
     }
     else if (isComplexSV(sv))
     {
         if (! isCandidateCountSufficient(sv)) return COMPLEX_LOW_COUNT;
-        if (! isComplexCandidateSignalSignificant(assemblyNoiseRate, sv)) return COMPLEX_LOW_SIGNAL;
+        if (! isAnyComplexCandidateSignalSignificant(bamCount, sv, assemblyNoiseRate)) return COMPLEX_LOW_SIGNAL;
     }
     else
     {
@@ -1128,17 +1160,18 @@ static
 void
 filterCandidates(
     const bool isRNA,
-    const double spanningNoiseRate,
-    const double assemblyNoiseRate,
+    const std::vector<double>& spanningNoiseRate,
+    const std::vector<double>& assemblyNoiseRate,
     std::vector<FatSVCandidate>& svs,
-    SVFinderStats& stats)
+    SVFinderStats& stats,
+    const unsigned bamCount)
 {
     unsigned svCount(svs.size());
     unsigned index(0);
     while (index<svCount)
     {
         using namespace SINGLE_JUNCTION_FILTER;
-        const index_t filt(isFilterSingleJunctionCandidate(isRNA, spanningNoiseRate,assemblyNoiseRate,svs[index]));
+        const index_t filt(isFilterSingleJunctionCandidate(isRNA, spanningNoiseRate, assemblyNoiseRate, svs[index], bamCount));
 
         bool isFilter(false);
         switch (filt)
@@ -1259,10 +1292,13 @@ getCandidatesFromData(
     }
 #endif
 
-    assert((_spanningNoiseRate >= 0.) && (_spanningNoiseRate <= 1.));
-    assert((_assemblyNoiseRate >= 0.) && (_assemblyNoiseRate <= 1.));
+    for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
+    {
+        assert((_spanningNoiseRate[bamIndex] >= 0.) && (_spanningNoiseRate[bamIndex] <= 1.));
+        assert((_assemblyNoiseRate[bamIndex] >= 0.) && (_assemblyNoiseRate[bamIndex] <= 1.));
+    }
 
-    filterCandidates(_isRNA, _spanningNoiseRate, _assemblyNoiseRate, svs, stats);
+    filterCandidates(_isRNA, _spanningNoiseRate, _assemblyNoiseRate, svs, stats, bamCount);
 
     std::copy(svs.begin(),svs.end(),std::back_inserter(output_svs));
 }
