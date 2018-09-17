@@ -8,10 +8,13 @@
   - Fix the problem of duplicate detection of the same SV candidate
 - Add index to ensure uniqueness of evidence bam filenames (MANTA-1431)
   - It solves the potential problem of name conflicts for evidence bams if the input bam files have the same name while located in different directories.
-- Change filters for easy interpretation of multi-sample germline variant vcf
+- Change filters for easy interpretation of multi-sample germline variant vcf (MANTA-1343)
   - Add record-level filter 'SampleFT' when no sample passes all sample level filters
   - Add sample-level filter 'HomRef' for homogyzous reference calls
   - No more sample-level filter will be applied at the record level even if it applies to all samples
+- Change representation of inversions in the VCF output (MANTA-1385)
+  - Intrachromosomal translocations with inverted breakpoints are now reported as two breakend (BND) records.
+  - Previously they were reported in the VCF using the inversion (INV) allele type.
 
 ### Fixed
 - Fix the bug of stats generation with short reference sequences (MANTA-1459/[#143])

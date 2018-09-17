@@ -337,13 +337,17 @@ chr1    11830208        MantaINS:1577:0:0:0:3:0 T       <INS>   999     PASS    
 
 #### Inversions
 
-Inversions are reported as a single inverted sequence junction. As described in the [VCF INFO Fields](#vcf-info-fields) below, the INV3 tag indicates inversion breakends open at the 3' of reported location, whereas the INV5 tag indicates inversion breakends open at the 5' of reported location. More specifically, in the inversion exmaples illustrated at https://software.broadinstitute.org/software/igv/interpreting_pair_orientations, the INV5 tag corresponds to the IGV "RR"/dark blue reads, and the INV3 tag corresponds to the IGV "LL"/ light blue reads.
-
-This format is used because single inverted junctions are often identified as part of a complex SV in real data, whereas simple reciprocal inversions are uncommon outside of simulated data. For a simple reciprocal inversion, both INV3 and INV5 junctions are expected to be reported, and they shall share the same `EVENT` INFO tag. The following is an example of a simple reciptocal inversion:
-
+Inversions are reported as breakends by default. For a simple reciprocal inversion, four breakends will be reported, and they shall share the same `EVENT` INFO tag. The following is an example of a simple reciptocal inversion:
 ```
-chr1      17124940      MantaINV:3630:0:1:1:4:0 C       <INV>   999     PASS    END=234919885;SVTYPE=INV;SVLEN=217794945;INV5;EVENT=MantaINV:3630:0:1:0:0:0;JUNCTION_QUAL=999;     GT:FT:GQ:PL:PR:SR     0/1:PASS:999:999,0,999:61,4:24,43
-chr1      17124943      MantaINV:3630:0:1:0:0:0 T       <INV>   999     PASS    END=234919824;SVTYPE=INV;SVLEN=217794881;INV3;EVENT=MantaINV:3630:0:1:0:0:0;JUNCTION_QUAL=999;     GT:FT:GQ:PL:PR:SR     0/1:PASS:999:999,0,999:52,3:8,29
+chr1    17124941        MantaBND:1445:0:1:1:3:0:0       T       [chr1:234919886[T       999     PASS    SVTYPE=BND;MATEID=MantaBND:1445:0:1:1:3:0:1;CIPOS=0,1;HOMLEN=1;HOMSEQ=T;INV5;EVENT=MantaBND:1445:0:1:0:0:0:0;JUNCTION_QUAL=254;BND_DEPTH=107;MATE_BND_DEPTH=100 GT:FT:GQ:PL:PR:SR       0/1:PASS:999:999,0,999:65,8:15,51
+chr1    17124948        MantaBND:1445:0:1:0:0:0:0       T       T]chr1:234919824]       999     PASS    SVTYPE=BND;MATEID=MantaBND:1445:0:1:0:0:0:1;INV3;EVENT=MantaBND:1445:0:1:0:0:0:0;JUNCTION_QUAL=999;BND_DEPTH=109;MATE_BND_DEPTH=83      GT:FT:GQ:PL:PR:SR       0/1:PASS:999:999,0,999:60,2:0,46
+chr1    234919824       MantaBND:1445:0:1:0:0:0:1       G       G]chr1:17124948]        999     PASS    SVTYPE=BND;MATEID=MantaBND:1445:0:1:0:0:0:0;INV3;EVENT=MantaBND:1445:0:1:0:0:0:0;JUNCTION_QUAL=999;BND_DEPTH=83;MATE_BND_DEPTH=109      GT:FT:GQ:PL:PR:SR       0/1:PASS:999:999,0,999:60,2:0,46
+chr1    234919885       MantaBND:1445:0:1:1:3:0:1       A       [chr1:17124942[A        999     PASS    SVTYPE=BND;MATEID=MantaBND:1445:0:1:1:3:0:0;CIPOS=0,1;HOMLEN=1;HOMSEQ=A;INV5;EVENT=MantaBND:1445:0:1:0:0:0:0;JUNCTION_QUAL=254;BND_DEPTH=100;MATE_BND_DEPTH=107 GT:FT:GQ:PL:PR:SR       0/1:PASS:999:999,0,999:65,8:15,51
+```
+A supplementary script, provided as `$MANTA_INSTALL_FOLDER/libexec/convertInversion.py`, can be applied to Manta's output vcf files to reformat inversions into single inverted sequence junctions, which was the format used in Manta versions <= 1.4.0. Two INFO tags are introduced for such format: the INV3 tag indicates inversion breakends open at the 3' of reported location, whereas the INV5 tag indicates inversion breakends open at the 5' of reported location. More specifically, in the inversion exmaples illustrated at https://software.broadinstitute.org/software/igv/interpreting_pair_orientations, the INV5 tag corresponds to the IGV "RR"/dark blue reads, and the INV3 tag corresponds to the IGV "LL"/ light blue reads. This format was informative because single inverted junctions are often identified as part of a complex SV in real data, whereas simple reciprocal inversions are uncommon outside of simulated data. For a simple reciprocal inversion, both INV3 and INV5 junctions are expected to be reported, and they shall share the same `EVENT` INFO tag. The following is the converted formant of the above example of a simple reciptocal inversion:
+```
+chr1    17124940        MantaINV:1445:0:1:1:3:0 C       <INV>   999     PASS    END=234919885;SVTYPE=INV;SVLEN=217794945;CIPOS=0,1;CIEND=-1,0;HOMLEN=1;HOMSEQ=T;EVENT=MantaINV:1445:0:1:0:0:0;JUNCTION_QUAL=254;INV5    GT:FT:GQ:PL:PR:SR       0/1:PASS:999:999,0,999:65,8:15,51
+chr1    17124948        MantaINV:1445:0:1:0:0:0 T       <INV>   999     PASS    END=234919824;SVTYPE=INV;SVLEN=217794876;EVENT=MantaINV:1445:0:1:0:0:0;JUNCTION_QUAL=999;INV3   GT:FT:GQ:PL:PR:SR        0/1:PASS:999:999,0,999:60,2:0,46
 ```
 
 #### VCF INFO Fields
@@ -365,8 +369,6 @@ SVINSLEN | Length of insertion
 SVINSSEQ | Sequence of insertion
 LEFT_SVINSSEQ | Known left side of insertion for an insertion of unknown length
 RIGHT_SVINSSEQ | Known right side of insertion for an insertion of unknown length
-INV3 | Flag indicating that inversion breakends open 3' of reported location
-INV5 | Flag indicating that inversion breakends open 5' of reported location
 BND_DEPTH | Read depth at local translocation breakend
 MATE_BND_DEPTH | Read depth at remote translocation mate breakend
 JUNCTION_QUAL | If the SV junction is part of an EVENT (ie. a multi-adjacency variant), this field provides the QUAL value for the adjacency in question only
@@ -736,13 +738,13 @@ together if a more accurate filter is required. The status of a call's `IMPRECIS
 of its reliability.
 
 For example, in the unpaired tumor analysis output below, the records could be filtered to only include those with
-`SAMPLE/PR[1] >= 15 || SAMPLE/SR[1] >= 15`. This would remove the inversion record, because the paired-read count
-for the inversion allele is 13 and the split-read count is not known. The two translocation breakends would not be
+`SAMPLE/PR[1] >= 15 || SAMPLE/SR[1] >= 15`. This would remove the deletion record, because the paired-read count
+for the deletion allele is 13 and the split-read count is not known. The two translocation breakends would not be
 filtered because they have 15 and 19 split-read counts, respectively, supporting the breakend allele:
 
 ```
 11      94975747        MantaBND:0:2:3:0:0:0:1  G       G]8:107653520]  .       PASS    SVTYPE=BND;MATEID=MantaBND:0:2:3:0:0:0:0;CIPOS=0,2;HOMLEN=2;HOMSEQ=TT;BND_DEPTH=216;MATE_BND_DEPTH=735  PR:SR   722,9:463,15
-11      94975753        MantaINV:0:1:2:0:0:0    T       <INV>   .       PASS    END=94987865;SVTYPE=INV;SVLEN=12112;IMPRECISE;CIPOS=-156,156;CIEND=-150,150;INV3        PR      161,13
+11      94975753        MantaDEL:0:1:2:0:0:0    T       <DEL>   .       PASS    END=94987865;SVTYPE=DEL;SVLEN=12112;IMPRECISE;CIPOS=-156,156;CIEND=-150,150        PR      161,13
 11      94987872        MantaBND:0:0:1:0:0:0:0  T       T[8:107653411[  .       PASS    SVTYPE=BND;MATEID=MantaBND:0:0:1:0:0:0:1;BND_DEPTH=171;MATE_BND_DEPTH=830       PR:SR   489,4:520,19
 ```
 
