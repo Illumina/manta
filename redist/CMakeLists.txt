@@ -71,7 +71,7 @@ superset(CTPL_DIR "${THIS_REDIST_DIR}/${CTPL_PREFIX}")
 #
 # htslib
 #
-set(HTSLIB_PREFIX "htslib-1.7-6-g6d2bfb7")
+set(HTSLIB_PREFIX "htslib-1.9")
 superset(HTSLIB_DIR "${CMAKE_CURRENT_BINARY_DIR}/${HTSLIB_PREFIX}")
 superset(HTSLIB_LIBRARY "${HTSLIB_DIR}/libhts.a")
 
@@ -117,7 +117,7 @@ endif ()
 #
 # samtools
 #
-set(SAMTOOLS_PREFIX "samtools-1.6")
+set(SAMTOOLS_PREFIX "samtools-1.9")
 set(SAMTOOLS_DIR "${CMAKE_CURRENT_BINARY_DIR}/${SAMTOOLS_PREFIX}")
 set(SAMTOOLS_LIBRARY "${SAMTOOLS_DIR}/libbam.a")
 superset(SAMTOOLS_PROG "${SAMTOOLS_DIR}/samtools")

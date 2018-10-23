@@ -17,10 +17,6 @@ To reduce size, both packages have been modified to remove the test
 directories and test references in the makefiles. The copy of htslib
 in samtools has been removed.
 
-Note that an off-release htslib version is used here because the fix to
-issue https://github.com/samtools/htslib/issues/654 is required for
-valid analysis from alignments in CRAM format.
-
 ### cmake-modules
 
 cmake-modules-c99fd3 modified to show git describe --dirty
