@@ -227,7 +227,6 @@ getSVBreakendCandidateSemiAligned(
     const SimpleAlignment& bamAlign,
     const reference_contig_segment& refSeq,
     const bool isUseOverlappingPairs,
-    const bool isAggressiveAdaptorCheck,
     unsigned& leadingEdgePoorAlignmentLength,
     pos_t& leadingEdgeRefPos,
     unsigned& trailingEdgePoorAlignmentLength,
@@ -242,23 +241,20 @@ getSVBreakendCandidateSemiAligned(
     trailingEdgePoorAlignmentLength = 0;
     trailingEdgeRefPos = 0;
 
-    if (is_possible_adapter_pair(bamRead) &&
-        (isAggressiveAdaptorCheck || is_adapter_pair(bamRead)))
+    const bool isOverlappingReadPair(is_overlapping_pair(bamRead, bamAlign));
+    if (isOverlappingReadPair)
     {
-        return;
+        if ((! isUseOverlappingPairs) || (is_adapter_pair(bamRead))) return;
     }
-
-    // Create a new alignment with all soft-clip sections unrolled to a matched alignment state.
-    const SimpleAlignment matchedAlignment(matchifyEdgeSoftClip(bamAlign));
-
-    const bool isOverlappingReadPair(is_overlapping_pair(bamRead, matchedAlignment));
-    if ((! isUseOverlappingPairs) && (isOverlappingReadPair)) return;
 
     using namespace ALIGNPATH;
     const bam_seq querySeq(bamRead.get_bam_read());
 
     const uint8_t* qual(bamRead.qual());
     const unsigned readSize(bamRead.read_size());
+
+    // Create a new alignment with all soft-clip sections unrolled to a matched alignment state.
+    const SimpleAlignment matchedAlignment(matchifyEdgeSoftClip(bamAlign));
 
     // Get the poorly aligned length for the leading and trailing edge of the input read
     unsigned leadingEdgePoorAlignmentLengthTmp(0);

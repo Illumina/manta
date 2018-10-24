@@ -559,10 +559,8 @@ getBreakendReads(
 
                 unsigned leadingMismatchLen(0);
                 unsigned trailingMismatchLen(0);
-                const bool isAggressiveAdaptorCheck(false);
                 getSVBreakendCandidateSemiAlignedSimple(bamRead, bamAlign, refSeq,
                                                         _readScanner.isUseOverlappingPairs(),
-                                                        isAggressiveAdaptorCheck,
                                                         leadingMismatchLen, trailingMismatchLen);
 
                 if (isSearchForRightOpen)

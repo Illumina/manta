@@ -537,13 +537,11 @@ getSVCandidatesFromSemiAligned(
     const reference_contig_segment& refSeq,
     std::vector<SVObservation>& candidates)
 {
-    const bool isAgressiveAdaptorCheck(true);
     unsigned leadingMismatchLen(0);
     unsigned trailingMismatchLen(0);
     pos_t leadingRefPos(0), trailingRefPos(0);
     getSVBreakendCandidateSemiAligned(bamRead, bamAlign, refSeq,
                                       dopt.isUseOverlappingPairs,
-                                      isAgressiveAdaptorCheck,
                                       leadingMismatchLen, leadingRefPos,
                                       trailingMismatchLen, trailingRefPos);
 
@@ -1610,11 +1608,9 @@ isSemiAlignedEvidence(
     const SimpleAlignment& bamAlign,
     const reference_contig_segment& refSeq) const
 {
-    const bool isAgressiveAdaptorCheck(true);
     unsigned leadingMismatchLen(0), trailingMismatchLen(0);
     getSVBreakendCandidateSemiAlignedSimple(bamRead, bamAlign, refSeq,
                                             _dopt.isUseOverlappingPairs,
-                                            isAgressiveAdaptorCheck,
                                             leadingMismatchLen, trailingMismatchLen);
     return ((leadingMismatchLen >= _opt.minSemiAlignedMismatchLen) || (trailingMismatchLen >= _opt.minSemiAlignedMismatchLen));
 }

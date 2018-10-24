@@ -280,7 +280,6 @@ BOOST_AUTO_TEST_CASE( test_SemiAlignedReads )
 
     // Semi-aligned read - is evidence
     static const char semiQuerySeq[] = "AACCCACAAACATCACACACAAGAGTCCAGAGACCGACTTTTTTCTAAAA";
-    static const char smallSeq[] =     "AACCCACAA";
     bam_record semiRead;
     buildTestBamRecord(semiRead, 0, alignPos, 0, alignPos + 50, 50, 15, "50M", semiQuerySeq);
     semiRead.toggle_is_paired();
@@ -331,31 +330,6 @@ BOOST_AUTO_TEST_CASE( test_SemiAlignedReads )
     // Make scanner in RNA mode.
     std::unique_ptr<SVLocusScanner> rnaScanner(buildTestSVLocusScanner(bamHeader, true, 100));
     BOOST_REQUIRE(rnaScanner->isSemiAlignedEvidence(overlappingRead, semiAlignment, ref));
-
-    // unmapped semi read positions 10bp apart - true
-    bam_record pos10bpApartRead;
-    buildTestBamRecord(pos10bpApartRead, 0, alignPos, 0, alignPos + 10, 5, 15, "5M", semiQuerySeq);
-    SimpleAlignment smallAlignment(getAlignment(pos10bpApartRead));
-
-    //pos10bpApartRead.toggle_is_mate_unmapped();s
-    BOOST_REQUIRE(rnaScanner->isSemiAlignedEvidence(pos10bpApartRead, semiAlignment, ref));
-
-    // unmapped semi read positions 9bp apart - false
-    bam_record pos9bpApartRead;
-    buildTestBamRecord(pos9bpApartRead, 0, alignPos, 0, alignPos + 9, 9, 15, "9M", smallSeq);
-    BOOST_REQUIRE(! rnaScanner->isSemiAlignedEvidence(pos9bpApartRead, semiAlignment, ref));
-
-    // unmapped semi read positions -50bp apart - true
-    bam_record pos50bpApartRead;
-    buildTestBamRecord(pos50bpApartRead, 0, alignPos, 0, alignPos - 50, 20, 15, "20M", semiQuerySeq);
-    //pos50bpApartRead.toggle_is_mate_unmapped();
-    BOOST_REQUIRE(rnaScanner->isSemiAlignedEvidence(pos50bpApartRead, semiAlignment, ref));
-
-    // unmapped semi read positions -49bp apart - false
-    bam_record pos49bpApartRead;
-    buildTestBamRecord(pos49bpApartRead, 0, alignPos, 0, alignPos - 49, 20, 15, "20M", semiQuerySeq);
-    //mateUnmappedRead.toggle_is_mate_unmapped();
-    BOOST_REQUIRE(! rnaScanner->isSemiAlignedEvidence(pos49bpApartRead, semiAlignment, ref));
 }
 
 BOOST_AUTO_TEST_CASE( test_getSVCandidatesFromReadIndels )

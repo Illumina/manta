@@ -66,21 +66,6 @@ is_innie_pair(
 }
 
 
-bool
-is_possible_adapter_pair(
-    const bam_record& bamRead)
-{
-    if (! is_mapped_chrom_pair(bamRead)) return false;
-    if (bamRead.is_fwd_strand() == bamRead.is_mate_fwd_strand()) return false;
-    int posDiff(bamRead.mate_pos() - bamRead.pos());
-    if (! bamRead.is_fwd_strand())
-    {
-        posDiff *= -1;
-    }
-    // Aggressive check: the pos difference between the reverse read and the forwarding read is [-50, 10]
-    return (posDiff < 10) && (posDiff > -50);
-}
-
 
 bool
 is_adapter_pair(
@@ -126,23 +111,33 @@ is_adapter_pair(
 bool
 is_overlapping_pair(
     const bam_record& bamRead,
-    const SimpleAlignment& matchedAlignment)
+    const SimpleAlignment& alignment)
 {
     if (! is_mapped_chrom_pair(bamRead)) return false;
     if (bamRead.is_fwd_strand() == bamRead.is_mate_fwd_strand()) return false;
 
-    // get range of alignment after matching all softclip:
+    static const int reverseOrientDist(bamRead.read_size());
+    int posDiff(bamRead.pos() - bamRead.mate_pos());
+    if (! bamRead.is_fwd_strand())
+    {
+        posDiff *= -1;
+    }
+    if (posDiff > reverseOrientDist) return false;
+
+    static const int overlapDist(0);
     if (bamRead.is_fwd_strand())
     {
-        const pos_t matchedEnd(matchedAlignment.pos + apath_ref_length(matchedAlignment.path));
-        return (matchedEnd >= bamRead.mate_pos());
+        const pos_t alignEnd(alignment.pos + apath_ref_length(alignment.path));
+        return ((alignEnd - bamRead.mate_pos()) >= overlapDist);
     }
     else
     {
-        // NOTE: We do not have the mate alignment information here (missing mate end position)
-        // so this check uses a very lenient heuristic (overlap mate start position).
-        const pos_t matchedBegin(matchedAlignment.pos);
-        return (matchedBegin <= bamRead.mate_pos());
+        // get/estimate the mate alignment
+        const SimpleAlignment mate(getKnownOrFakedMateAlignment(bamRead));
+
+        const pos_t alignBegin(alignment.pos);
+        const pos_t mateEndPos(mate.pos + apath_ref_length(mate.path));
+        return ((alignBegin - mateEndPos) <= overlapDist);
     }
 }
 
