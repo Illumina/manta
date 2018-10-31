@@ -22,6 +22,7 @@
 ///
 
 #include "boost/test/unit_test.hpp"
+
 #include "manta/SVLocusEvidenceCount.hh"
 #include "test/testAlignmentDataUtil.hh"
 #include "test/testSVLocusScanner.hh"
@@ -87,12 +88,12 @@ BOOST_AUTO_TEST_CASE( test_AddSVNodeRead )
 
     // supplementary read in SV evidence
     bam_record supplementSASplitRead;
-    buildTestBamRecord(supplementSASplitRead);
+    buildTestBamRecord(supplementSASplitRead); //pos=100, matePos=200 and fragmentSize=100
     addSupplementaryAlignmentEvidence(supplementSASplitRead);
 
     // large insertion in SV evidence
     bam_record largeInsertionRead;
-    buildTestBamRecord(largeInsertionRead, 0, 200, 0, 300, 100, 15, "100M2000I100M");
+    buildTestBamRecord(largeInsertionRead, 0, 200, 0, 300, 200, 15, "100M2000I100M");
     largeInsertionRead.set_qname("large_insertion");
 
     SVLocus locus1;
@@ -102,8 +103,8 @@ BOOST_AUTO_TEST_CASE( test_AddSVNodeRead )
 
     SVCandidateSetSequenceFragmentSampleGroup svDatagroup;
 
-    // test a read is overlapping with a locus node when localnode's coordinate is GenomeInterval(0,80,120) and
-    // remoteNode's coordinate is GenomeInterval(0,279,319). It will add an entry in svDatagroup.
+    // test a supplementSASplitRead read is overlapping with a locus node when localnode's coordinate is
+    // GenomeInterval(0,80,120) and remoteNode's coordinate is GenomeInterval(0,279,319). It will add an entry in svDatagroup.
     addSVNodeRead(bamHeader, scanner.operator*(), ((const SVLocus&)locus1).getNode(0), ((const SVLocus&)locus1).getNode(1),
             supplementSASplitRead, defaultReadGroupIndex, true, refSeq, true, false, svDatagroup, eCounts);
     BOOST_REQUIRE_EQUAL(svDatagroup.size(), 1u);
@@ -114,8 +115,8 @@ BOOST_AUTO_TEST_CASE( test_AddSVNodeRead )
             largeInsertionRead, defaultReadGroupIndex, true, refSeq, true, false, svDatagroup, eCounts);
     BOOST_REQUIRE_EQUAL(svDatagroup.size(), 1u);
 
-    // test a read is overlapping with a locus node when localnode's coordinate is GenomeInterval(0,410,450) and
-    // remoteNode's coordinate is GenomeInterval(0,279,319). It will add another entry in svDatagroup.
+    // test a read is overlapping with the padded region(20 bp on both side) of locus node when localnode's coordinate is
+    // GenomeInterval(0,410,450) and remoteNode's coordinate is GenomeInterval(0,279,319). It will add another entry in svDatagroup.
     addSVNodeRead(bamHeader, scanner.operator*(), ((const SVLocus&)locus1).getNode(2), ((const SVLocus&)locus1).getNode(1),
             largeInsertionRead, defaultReadGroupIndex, true, refSeq, true, false, svDatagroup, eCounts);
     BOOST_REQUIRE_EQUAL(svDatagroup.size(), 2u);
@@ -124,19 +125,20 @@ BOOST_AUTO_TEST_CASE( test_AddSVNodeRead )
 // test reference sequence of a segment. It will add 100 bases on both side
 // that means if Genomic start and end coordinates are 1, and chromosome id
 // is 0,  then the modified interval will be [max(0, 1-100), min(1+100, chrLength)).
-// So the total length will be 101.
+// So the total length will be 102.
 BOOST_AUTO_TEST_CASE( test_GetNodeRef)
 {
     const bam_header_info bamHeader(buildTestBamHeader());
     SVLocus locus;
-    locus.addNode(GenomeInterval(0,1,1));
+    locus.addNode(GenomeInterval(0,1,2));
     GenomeInterval searchInterval;
     reference_contig_segment refSeq;
     getNodeRefSeq(bamHeader, locus, 0, getTestReferenceFilename(), searchInterval, refSeq);
     // check the size first
-    BOOST_REQUIRE_EQUAL(refSeq.seq().size(), 101);
+    BOOST_REQUIRE_EQUAL(refSeq.seq().size(), 102);
     // check the sequence
-    BOOST_REQUIRE_EQUAL(refSeq.seq(), "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGTATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGG");
+    BOOST_REQUIRE_EQUAL(refSeq.seq(), "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGG"
+                                      "TATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA");
 }
 
 // test candidates must have at least evidence of 2
@@ -154,8 +156,6 @@ BOOST_AUTO_TEST_CASE( test_IsCandidateCountSufficient )
 
     // Evidence count is sufficient
     BOOST_REQUIRE(isCandidateCountSufficient(candidate));
-
-
 }
 
 // test depth on each location i.e. number of
@@ -193,20 +193,20 @@ BOOST_AUTO_TEST_CASE( test_IsBreakPointSignificant )
     // minimum signal count should be 2
     BOOST_REQUIRE(!isBreakPointSignificant(0.1, 0.5, signalReadInfo));
 
-    // Break point is not significant as the probability that
-    // the breakpoint is noise greater than the tolerance (0.005)
     signalReadInfo.push_back(96);
     signalReadInfo.push_back(158);
     signalReadInfo.push_back(163);
+    // Break point is not significant.
+    // 0.005 is alpha in the binomial significance test.
     BOOST_REQUIRE(!isBreakPointSignificant(0.005, 0.005, signalReadInfo));
 
-    // Break point is significant as the probability that
-    // the breakpoint is noise less than the tolerance (0.03)
     signalReadInfo.clear();
     signalReadInfo.push_back(3440);
     signalReadInfo.push_back(3443);
     signalReadInfo.push_back(3452);
     signalReadInfo.push_back(3489);
+    // Break point is significant
+    // 0.03 is alpha in the binomial significance test.
     BOOST_REQUIRE(isBreakPointSignificant(0.03, 0.008, signalReadInfo));
 }
 
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE( test_IsSpanningCandidateSignalSignificant )
     BOOST_REQUIRE(!isSpanningCandidateSignalSignificant(0.008, fatSVCandidate, 0));
 
     // test when both breakpoint-1 and breakpoint-2 are not significant where
-    // noise tolerance rate is 0.03.
+    // 0.03 is alpha in the binomial signicance test.
     fatSVCandidate.bp1EvidenceIndex[0][0].push_back(3443);
     fatSVCandidate.bp1EvidenceIndex[0][0].push_back(3468);
     fatSVCandidate.bp1EvidenceIndex[0][0].push_back(3520);
@@ -238,8 +238,7 @@ BOOST_AUTO_TEST_CASE( test_IsSpanningCandidateSignalSignificant )
     fatSVCandidate.bp2EvidenceIndex[0][0].push_back(1507);
     BOOST_REQUIRE(!isSpanningCandidateSignalSignificant(0.008, fatSVCandidate, 0));
 
-    // test when breakpoint-1 is significant as the probability that
-    // the breakpoint-1 is noise less than the tolerance (0.03) and
+    // test when breakpoint-1 is significant and
     // breakpoint-2 is not significant.
     fatSVCandidate.bp1EvidenceIndex[0][0].clear();
     fatSVCandidate.bp2EvidenceIndex[0][0].clear();
@@ -254,8 +253,7 @@ BOOST_AUTO_TEST_CASE( test_IsSpanningCandidateSignalSignificant )
     fatSVCandidate.bp2EvidenceIndex[0][0].push_back(1507);
     BOOST_REQUIRE(isSpanningCandidateSignalSignificant(0.008, fatSVCandidate, 0));
 
-    // test when breakpoint-2 is significant as the probability that
-    // the breakpoint-2 is noise less than the tolerance (0.03) and
+    // test when breakpoint-2 is significant and
     // breakpoint-1 is not significant.
     fatSVCandidate.bp1EvidenceIndex[0][0].clear();
     fatSVCandidate.bp2EvidenceIndex[0][0].clear();
@@ -293,18 +291,15 @@ BOOST_AUTO_TEST_CASE( test_IsComplexCandidateSignalSignificant )
     SVCandidate svCandidate;
     FatSVCandidate fatSVCandidate(svCandidate, 1u);
 
-    // Complex break point is not significant as the probability that
-    // the breakpoint is noise greater than the tolerance (0.005) where
-    // assembly rate is 0.008
+    // Complex break point is not significant where
+    // assembly noise rate is 0.008
     fatSVCandidate.bp1EvidenceIndex[0][0].push_back(3443);
     fatSVCandidate.bp1EvidenceIndex[0][0].push_back(3452);
     fatSVCandidate.bp1EvidenceIndex[0][0].push_back(3440);
     fatSVCandidate.bp1EvidenceIndex[0][0].push_back(3489);
     BOOST_REQUIRE(!isComplexCandidateSignalSignificant(0.008, fatSVCandidate, 0));
 
-    // Complex break point is significant as the probability that
-    // the breakpoint is noise less than the tolerance (0.005) where
-    // assembly rate is 0.008
+    // Complex break point is significant
     fatSVCandidate.bp1EvidenceIndex[0][0].clear();
     fatSVCandidate.bp1EvidenceIndex[0][0].push_back(3443);
     fatSVCandidate.bp1EvidenceIndex[0][0].push_back(3452);
@@ -403,7 +398,8 @@ BOOST_AUTO_TEST_CASE( test_IsAnyComplexCandidateSignalSignificant )
 }
 
 // test the candidate's filtration state. This test verifies the following cases:
-// 1. SEMI_MAPPED - When all evidence breakends are local
+// 1. SEMI_MAPPED -  The candidate has ONLY evidence from read pairs where one read has MAPQ smaller than the cutoff
+// (including MAPQ0)
 // 2. SPANNING_LOW_SIGNAL - Candidates support spanning SV, but none of them is significant
 // spanning candidate(Significant spanning SV candidate has been described in test_IsAnySpanningCandidateSignalSignificant)
 // 3. COMPLEX_LOW_COUNT - When a complex SV doesn't satisfy minimum candidate count criteria
@@ -431,7 +427,8 @@ BOOST_AUTO_TEST_CASE( test_IsFilterSingleJunctionCandidate )
     spanningNoiseRate.push_back(0.008);
 
     // test for SEMI_MAPPED candidate as filtration state
-    BOOST_REQUIRE_EQUAL(isFilterSingleJunctionCandidate(false, spanningNoiseRate, assemblyNoiseRate, fatSVCandidate1, 1), SINGLE_JUNCTION_FILTER::SEMI_MAPPED);
+    BOOST_REQUIRE_EQUAL(isFilterSingleJunctionCandidate(false, spanningNoiseRate, assemblyNoiseRate, fatSVCandidate1, 1),
+            SINGLE_JUNCTION_FILTER::SEMI_MAPPED);
 
     svCandidate.bp1.state = SVBreakendState::index_t::RIGHT_OPEN ;
     svCandidate.bp2.state = SVBreakendState::index_t::LEFT_OPEN ;
