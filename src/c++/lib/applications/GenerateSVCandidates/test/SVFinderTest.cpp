@@ -89,12 +89,7 @@ BOOST_AUTO_TEST_CASE( test_AddSVNodeRead )
     // supplementary read in SV evidence
     bam_record supplementSASplitRead;
     buildTestBamRecord(supplementSASplitRead); //pos=100, matePos=200 and fragmentSize=100
-    addSupplementaryAlignmentEvidence(supplementSASplitRead);
-
-    // large insertion in SV evidence
-    bam_record largeInsertionRead;
-    buildTestBamRecord(largeInsertionRead, 0, 200, 0, 300, 200, 15, "100M2000I100M");
-    largeInsertionRead.set_qname("large_insertion");
+    addSupplementaryAlignmentEvidence(supplementSASplitRead); // SA tag : chrFoo,300,-,54H22M,50,0;
 
     SVLocus locus1;
     locus1.addNode(GenomeInterval(0,80,120));
@@ -105,26 +100,40 @@ BOOST_AUTO_TEST_CASE( test_AddSVNodeRead )
 
     // test a supplementSASplitRead read is overlapping with a locus node when localnode's coordinate is
     // GenomeInterval(0,80,120) and remoteNode's coordinate is GenomeInterval(0,279,319). It will add an entry in svDatagroup.
+    // As supplementSASplitRead is a split read, so the evidence genomic intervals found from supplementSASplitRead are
+    // as follows:
+    // 1. Local Evidence = GenomeInterval: 0:[80,120) (Read posotion is 100 and 20 bp padding on each side)
+    // 2. Remote Evidence = GenomeInterval: 0:[279,319) (According to SA tag other segment position is 299 and 20bp
+    //                                                   padding on each side)
     addSVNodeRead(bamHeader, scanner.operator*(), ((const SVLocus&)locus1).getNode(0), ((const SVLocus&)locus1).getNode(1),
-            supplementSASplitRead, defaultReadGroupIndex, true, refSeq, true, false, svDatagroup, eCounts);
+                  supplementSASplitRead, defaultReadGroupIndex, true, refSeq, true, false, svDatagroup, eCounts);
     BOOST_REQUIRE_EQUAL(svDatagroup.size(), 1u);
 
-    // test a read is not overlapping with a locus node when localnode's coordinate is GenomeInterval(0,80,120) and
+    // This read is part of the anomalous read pair although there is a large insertion,
+    // priority always goes to anomalous read pair. Based on the read's start-end and its
+    // mate's start-end, the evidence genomic intervals are as follows :
+    // 1. Local Evidence = GenomeInterval: 0:[400,440) (Based on read end and 40 bp minPairBreakendSize)
+    // 2. Remote Evidence = GenomeInterval: 0:[260,300) (Based on mate's start and 40 bp minPairBreakendSize)
+    bam_record anomalousReadBasedOnFragment;
+    buildTestBamRecord(anomalousReadBasedOnFragment, 0, 200, 0, 300, 200, 15, "100M2000I100M");
+    anomalousReadBasedOnFragment.set_qname("anomalous_read");
+
+    // test a read is not overlapping with a locus node (mentioned above) when localnode's coordinate is GenomeInterval(0,80,120) and
     // remoteNode's coordinate is GenomeInterval(0,279,319). It will not add any entry in svDatagroup.
     addSVNodeRead(bamHeader, scanner.operator*(), ((const SVLocus&)locus1).getNode(0), ((const SVLocus&)locus1).getNode(1),
-            largeInsertionRead, defaultReadGroupIndex, true, refSeq, true, false, svDatagroup, eCounts);
+                  anomalousReadBasedOnFragment, defaultReadGroupIndex, true, refSeq, true, false, svDatagroup, eCounts);
     BOOST_REQUIRE_EQUAL(svDatagroup.size(), 1u);
 
-    // test a read is overlapping with the padded region(20 bp on both side) of locus node when localnode's coordinate is
+    // test a read is overlapping with the locus node (mentioned above) when localnode's coordinate is
     // GenomeInterval(0,410,450) and remoteNode's coordinate is GenomeInterval(0,279,319). It will add another entry in svDatagroup.
     addSVNodeRead(bamHeader, scanner.operator*(), ((const SVLocus&)locus1).getNode(2), ((const SVLocus&)locus1).getNode(1),
-            largeInsertionRead, defaultReadGroupIndex, true, refSeq, true, false, svDatagroup, eCounts);
+                  anomalousReadBasedOnFragment, defaultReadGroupIndex, true, refSeq, true, false, svDatagroup, eCounts);
     BOOST_REQUIRE_EQUAL(svDatagroup.size(), 2u);
 }
 
 // test reference sequence of a segment. It will add 100 bases on both side
-// that means if Genomic start and end coordinates are 1, and chromosome id
-// is 0,  then the modified interval will be [max(0, 1-100), min(1+100, chrLength)).
+// that means if Genomic start and end coordinates are 1 and 2 respectively, and chromosome id
+// is 0,  then the modified interval will be [max(0, 1-100), min(2+100, chrLength)).
 // So the total length will be 102.
 BOOST_AUTO_TEST_CASE( test_GetNodeRef)
 {
@@ -227,6 +236,8 @@ BOOST_AUTO_TEST_CASE( test_IsSpanningCandidateSignalSignificant )
 
     // test when both breakpoint-1 and breakpoint-2 are not significant where
     // 0.03 is alpha in the binomial signicance test.
+    // spanning noise rate is 0.008 which is the probability of success in
+    // binomial significance test.
     fatSVCandidate.bp1EvidenceIndex[0][0].push_back(3443);
     fatSVCandidate.bp1EvidenceIndex[0][0].push_back(3468);
     fatSVCandidate.bp1EvidenceIndex[0][0].push_back(3520);
@@ -292,7 +303,8 @@ BOOST_AUTO_TEST_CASE( test_IsComplexCandidateSignalSignificant )
     FatSVCandidate fatSVCandidate(svCandidate, 1u);
 
     // Complex break point is not significant where
-    // assembly noise rate is 0.008
+    // assembly noise rate is 0.008 which is the probability of success in
+    // binomial significance test.
     fatSVCandidate.bp1EvidenceIndex[0][0].push_back(3443);
     fatSVCandidate.bp1EvidenceIndex[0][0].push_back(3452);
     fatSVCandidate.bp1EvidenceIndex[0][0].push_back(3440);
@@ -428,7 +440,7 @@ BOOST_AUTO_TEST_CASE( test_IsFilterSingleJunctionCandidate )
 
     // test for SEMI_MAPPED candidate as filtration state
     BOOST_REQUIRE_EQUAL(isFilterSingleJunctionCandidate(false, spanningNoiseRate, assemblyNoiseRate, fatSVCandidate1, 1),
-            SINGLE_JUNCTION_FILTER::SEMI_MAPPED);
+                                                        SINGLE_JUNCTION_FILTER::SEMI_MAPPED);
 
     svCandidate.bp1.state = SVBreakendState::index_t::RIGHT_OPEN ;
     svCandidate.bp2.state = SVBreakendState::index_t::LEFT_OPEN ;
@@ -448,13 +460,13 @@ BOOST_AUTO_TEST_CASE( test_IsFilterSingleJunctionCandidate )
     spanningNoiseRate.clear();
     spanningNoiseRate.push_back(0.008);
     BOOST_REQUIRE_EQUAL(isFilterSingleJunctionCandidate(false, spanningNoiseRate, assemblyNoiseRate, fatSVCandidate2, 1),
-            SINGLE_JUNCTION_FILTER::NONE);
+                                                        SINGLE_JUNCTION_FILTER::NONE);
 
     spanningNoiseRate.clear();
     spanningNoiseRate.push_back(0.1);
     // test for SPANNING_LOW_SIGNAL as filtration state
     BOOST_REQUIRE_EQUAL(isFilterSingleJunctionCandidate(false, spanningNoiseRate, assemblyNoiseRate, fatSVCandidate2, 1),
-            SINGLE_JUNCTION_FILTER::SPANNING_LOW_SIGNAL);
+                                                        SINGLE_JUNCTION_FILTER::SPANNING_LOW_SIGNAL);
 
     // test for COMPLEX_LOW_COUNT as filtration state
     svCandidate.bp1.state = SVBreakendState::index_t::COMPLEX ;
@@ -462,7 +474,7 @@ BOOST_AUTO_TEST_CASE( test_IsFilterSingleJunctionCandidate )
     svCandidate.bp1.lowresEvidence.add(0, 2);
     FatSVCandidate fatSVCandidate3(svCandidate,1);
     BOOST_REQUIRE_EQUAL(isFilterSingleJunctionCandidate(false, spanningNoiseRate, assemblyNoiseRate, fatSVCandidate3, 1),
-            SINGLE_JUNCTION_FILTER::COMPLEX_LOW_COUNT);
+                                                        SINGLE_JUNCTION_FILTER::COMPLEX_LOW_COUNT);
 
     // test for COMPLEX_LOW_SIGNAL as filtration state
     svCandidate.bp1.state = SVBreakendState::index_t::COMPLEX ;
@@ -471,7 +483,7 @@ BOOST_AUTO_TEST_CASE( test_IsFilterSingleJunctionCandidate )
     svCandidate.bp1.lowresEvidence.add(2, 3);
     FatSVCandidate fatSVCandidate4(svCandidate,1);
     BOOST_REQUIRE_EQUAL(isFilterSingleJunctionCandidate(false, spanningNoiseRate, assemblyNoiseRate, fatSVCandidate4, 1),
-            SINGLE_JUNCTION_FILTER::COMPLEX_LOW_SIGNAL);
+                                                        SINGLE_JUNCTION_FILTER::COMPLEX_LOW_SIGNAL);
 }
 
 
