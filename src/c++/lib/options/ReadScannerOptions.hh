@@ -91,6 +91,9 @@ struct ReadScannerOptions
     /// \brief Minimum mapping quality for shadow mate used for candidate assembly and scoring
     unsigned minSingletonMapqCandidates = 15;
 
+    // \brief If true, consider an overlapping read pair as evidence.
+    bool isUseOverlappingPair = false;
+
     /// \brief If true, do not treat reads with the 'proper pair' bit set as SV evidence.
     ///
     /// This is typically set true for RNA-Seq analysis, where proper-pair is used to signal intron-spanning pairs.

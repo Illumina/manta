@@ -541,7 +541,7 @@ getSVCandidatesFromSemiAligned(
     unsigned trailingMismatchLen(0);
     pos_t leadingRefPos(0), trailingRefPos(0);
     getSVBreakendCandidateSemiAligned(bamRead, bamAlign, refSeq,
-                                      dopt.isUseOverlappingPairs,
+                                      opt.isUseOverlappingPair,
                                       leadingMismatchLen, leadingRefPos,
                                       trailingMismatchLen, trailingRefPos);
 
@@ -1429,10 +1429,9 @@ SVLocusScanner(
     const ReadScannerOptions& opt,
     const std::string& statsFilename,
     const std::vector<std::string>& /*alignmentFilename*/,
-    const bool isRNA,
     const bool isTranscriptStrandKnown) :
     _opt(opt),
-    _dopt(opt, isRNA, isTranscriptStrandKnown)
+    _dopt(opt, isTranscriptStrandKnown)
 {
     using namespace illumina::common;
 
@@ -1610,7 +1609,7 @@ isSemiAlignedEvidence(
 {
     unsigned leadingMismatchLen(0), trailingMismatchLen(0);
     getSVBreakendCandidateSemiAlignedSimple(bamRead, bamAlign, refSeq,
-                                            _dopt.isUseOverlappingPairs,
+                                            _opt.isUseOverlappingPair,
                                             leadingMismatchLen, trailingMismatchLen);
     return ((leadingMismatchLen >= _opt.minSemiAlignedMismatchLen) || (trailingMismatchLen >= _opt.minSemiAlignedMismatchLen));
 }

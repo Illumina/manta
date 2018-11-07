@@ -188,7 +188,7 @@ runGSC(
     EdgeRuntimeTracker edgeTracker(opt.edgeRuntimeFilename);
     GSCEdgeStatsManager edgeStatMan(opt.edgeStatsFilename);
 
-    const SVLocusScanner readScanner(opt.scanOpt, opt.statsFilename, opt.alignFileOpt.alignmentFilenames, opt.isRNA, !opt.isUnstrandedRNA);
+    const SVLocusScanner readScanner(opt.scanOpt, opt.statsFilename, opt.alignFileOpt.alignmentFilenames, !opt.isUnstrandedRNA);
 
     SVFinder svFind(opt, readScanner, edgeTracker,edgeStatMan);
     MultiJunctionFilter svMJFilter(opt,edgeStatMan);

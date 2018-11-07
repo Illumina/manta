@@ -83,22 +83,16 @@ struct ReadScannerDerivOptions
 {
     ReadScannerDerivOptions(
         const ReadScannerOptions& opt,
-        const bool isRNA,
         const bool initIsTranscriptStrandKnown) :
         isSmallCandidates(opt.minCandidateVariantSize<=opt.maxCandidateSizeForLocalAssmEvidence),
         beforeBreakend(opt.minPairBreakendSize/2),
         afterBreakend(opt.minPairBreakendSize-beforeBreakend),
-        isUseOverlappingPairs(isRNA),
         isTranscriptStrandKnown(initIsTranscriptStrandKnown)
     {}
 
     const bool isSmallCandidates;
     const pos_t beforeBreakend;
     const pos_t afterBreakend;
-
-    /// TODO standardize the overlapping pair treatment to be the same for DNA/RNA modes, then
-    /// remove this bit:
-    const bool isUseOverlappingPairs;
 
     /// \brief True if running in RNA-Seq mode with a stranded input RNA assay
     const bool isTranscriptStrandKnown;
@@ -119,7 +113,6 @@ struct SVLocusScanner
         const ReadScannerOptions& opt,
         const std::string& statsFilename,
         const std::vector<std::string>& alignmentFilename,
-        const bool isRNA,
         const bool isTranscriptStrandKnown = false);
 
     /// QC check if the read length implied by cigar string matches the length of read sequence
@@ -316,12 +309,6 @@ struct SVLocusScanner
         /// \brief Used to set expanded breakend sizes for large events \TODO more detail?
         LinearScaler<int> largeEventRegionScaler;
     };
-
-    bool
-    isUseOverlappingPairs() const
-    {
-        return _dopt.isUseOverlappingPairs;
-    }
 
 private:
 

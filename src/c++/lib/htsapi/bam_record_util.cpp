@@ -85,12 +85,12 @@ is_adapter_pair(
         if (aln.is_fwd_strand)
         {
             unsigned const endpos = aln.pos + apath_ref_length(aln.path) + apath_soft_clip_trail_size(aln.path);
-            unsigned const mateStartPos = mate.pos + apath_ref_length(mate.path) + apath_soft_clip_lead_size(mate.path);
+            unsigned const mateStartPos = mate.pos + apath_ref_length(mate.path) + apath_soft_clip_trail_size(mate.path);
             return (endpos > mateStartPos);
         }
         else
         {
-            unsigned const endpos = aln.pos - apath_soft_clip_trail_size(aln.path);
+            unsigned const endpos = aln.pos - apath_soft_clip_lead_size(aln.path);
             unsigned const mateStartPos = mate.pos - apath_soft_clip_lead_size(mate.path);
             return (endpos < mateStartPos);
         }

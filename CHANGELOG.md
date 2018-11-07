@@ -1,3 +1,8 @@
+## Unreleased
+
+### Added
+- Add a configurable option to allow overlapping reads considered as evidence (MANTA-1398)
+
 ## v1.4.0 - 2018-04-25
 
 This is a major bugfix update from v1.3.2, featuring improved precision and vcf representation, in addition to minor user friendly improvements.

@@ -226,7 +226,7 @@ getSVBreakendCandidateSemiAligned(
     const bam_record& bamRead,
     const SimpleAlignment& bamAlign,
     const reference_contig_segment& refSeq,
-    const bool isUseOverlappingPairs,
+    const bool isUseOverlappingPair,
     unsigned& leadingEdgePoorAlignmentLength,
     pos_t& leadingEdgeRefPos,
     unsigned& trailingEdgePoorAlignmentLength,
@@ -244,7 +244,7 @@ getSVBreakendCandidateSemiAligned(
     const bool isOverlappingReadPair(is_overlapping_pair(bamRead, bamAlign));
     if (isOverlappingReadPair)
     {
-        if ((! isUseOverlappingPairs) || (is_adapter_pair(bamRead))) return;
+        if ((! isUseOverlappingPair) || (is_adapter_pair(bamRead))) return;
     }
 
     using namespace ALIGNPATH;
