@@ -27,11 +27,11 @@
 struct MergeAlignmentStats : public illumina::Program
 {
     const char*
-    name() const
+    name() const override
     {
         return "MergeAlignmentStats";
     }
 
     void
-    runInternal(int argc, char* argv[]) const;
+    runInternal(int argc, char* argv[]) const override;
 };

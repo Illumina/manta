@@ -1,7 +1,7 @@
 
 #
 # Using sudo-false/container-based tests for greater (linux) test responsiveness. This doesn't seem
-# to effect the queing time for OSX tests.
+# to effect the queueing time for OSX tests.
 #
 
 dist: trusty

@@ -52,7 +52,7 @@ isRefRegionValid(
 /// to this interval
 ///
 /// \param[in] extraRefEdgeSize add this value to the ends of each
-///             interval prior to chomosome length clipping and reference
+///             interval prior to chromosome length clipping and reference
 ///             retrieval
 /// \param[out] leadingTrim indicates how much was cut from the
 ///              front of the requested interval (with edge buffer)

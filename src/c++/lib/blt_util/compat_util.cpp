@@ -27,28 +27,6 @@
 #include <iostream>
 
 
-#ifdef _MSC_VER
-#include "compat_util_win32_realpath.c"
-#endif
-
-
-
-bool
-compat_realpath(std::string& path)
-{
-    errno=0;
-    const char* newpath(realpath(path.c_str(),nullptr));
-    if ((nullptr==newpath) || (errno!=0))
-    {
-        if (nullptr!=newpath) free((void*)newpath);
-        return false;
-    }
-    path = newpath;
-    free((void*)newpath);
-    return true;
-}
-
-
 
 double
 compat_round(const double x)

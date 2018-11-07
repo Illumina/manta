@@ -19,6 +19,7 @@
 
 /// \file
 /// \author Chris Saunders
+/// \author Naoki Nariai
 ///
 
 #include "SVFinder.hh"
@@ -123,16 +124,8 @@ SVFinder(
     const AllSampleReadCounts& counts(getSet().getAllSampleReadCounts());
     for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
     {
-        // take max rate over all samples:
-        auto updateRate = [](double& x, const double val, const bool isFirst)
-        {
-            if (isFirst) x=val;
-            else x=std::max(x,val);
-        };
-
-        const bool isFirst(bamIndex==0);
-        updateRate(_spanningNoiseRate, getSpanningNoiseRate(counts, bamIndex), isFirst);
-        updateRate(_assemblyNoiseRate, getAssemblyNoiseRate(counts, bamIndex), isFirst);
+        _spanningNoiseRate.push_back(getSpanningNoiseRate(counts, bamIndex));
+        _assemblyNoiseRate.push_back(getAssemblyNoiseRate(counts, bamIndex));
     }
 }
 
@@ -156,7 +149,7 @@ addSVNodeRead(
     const unsigned bamIndex,
     const bool isExpectRepeat,
     const reference_contig_segment& refSeq,
-    const bool isNode1,
+    const bool isLocalNodeGraphEdgeNode1,
     const bool isGatherSubmapped,
     SVCandidateSetSequenceFragmentSampleGroup& svDataGroup,
     SampleEvidenceCounts& eCounts)
@@ -168,7 +161,7 @@ addSVNodeRead(
     const bool isSubMapped(bamRead.map_qual() < scanner.getMinMapQ());
     if ((!isGatherSubmapped) && isSubMapped) return;
 
-    svDataGroup.increment(isNode1,isSubMapped);
+    svDataGroup.increment(isSubMapped);
 
     if (! scanner.isSVEvidence(bamRead, bamIndex, refSeq)) return;
 
@@ -223,7 +216,7 @@ addSVNodeRead(
 
         if (! locus.getNode(readLocalIndex).getInterval().isIntersect(localNode.getInterval())) continue; //todo should this intersect be checked in swapped orientation?
 
-        svDataGroup.add(bamHeader, bamRead, isExpectRepeat, isNode1, isSubMapped);
+        svDataGroup.add(bamHeader, bamRead, isExpectRepeat, isLocalNodeGraphEdgeNode1, isSubMapped);
 
         // once any loci has achieved the local/remote overlap criteria, there's no reason to keep scanning loci
         // of the same bam record:
@@ -233,6 +226,7 @@ addSVNodeRead(
 
 
 
+/// \brief Load a segment of the reference encompassing a node from the SV locus graph
 static
 void
 getNodeRefSeq(
@@ -289,8 +283,8 @@ addSVNodeData(
     const NodeIndexType localNodeIndex,
     const NodeIndexType remoteNodeIndex,
     const GenomeInterval& searchInterval,
-    const reference_contig_segment& refSeq,
-    const bool isNode1,
+    const reference_contig_segment& localNodeRefSeq,
+    const bool isLocalNodeGraphEdgeNode1,
     SVCandidateSetData& svData)
 {
     // get full search interval:
@@ -299,13 +293,14 @@ addSVNodeData(
 
     bool isExpectRepeat(svData.setNewSearchInterval(searchInterval));
 
-    // This is a temporary measure to make the qname collision detection much looser
-    // problems have come up where very large deletions are present in a read, and it is therefore
-    // detected as a repeat in two different regions, even though they are separated by a considerable
-    // distance. Solution is to temporarily turn off collision detection whenever two regions are on
-    // the same chrom (ie. almost always)
+    // This is a temporary measure to make the QNAME collision detection much less strict.
     //
-    // TODO: restore more precise collision detection
+    // Problems have come up where very large deletions are present in a read, and it is therefore
+    // detected as a repeat in two different regions, even though they are separated by a considerable
+    // distance. The solution below is to temporarily turn off QNAME collision detection whenever two
+    // regions are on the same chrom (ie. almost always)
+    //
+    // TODO restore more precise collision detection
     if (! isExpectRepeat) isExpectRepeat = (localNode.getInterval().tid == remoteNode.getInterval().tid);
 
 #ifdef DEBUG_SVDATA
@@ -370,7 +365,7 @@ addSVNodeData(
             // test if read supports an SV on this edge, if so, add to SVData
             addSVNodeRead(
                 bamHeader,_readScanner, localNode, remoteNode,
-                bamRead, bamIndex, isExpectRepeat, refSeq, isNode1,
+                bamRead, bamIndex, isExpectRepeat, localNodeRefSeq, isLocalNodeGraphEdgeNode1,
                 isGatherSubmapped, svDataGroup, _eCounts);
         }
         ++bamIndex;
@@ -601,7 +596,7 @@ consolidateOverlap(
 
 
 
-/// store additional signal rate information to help decide if the candidate evidence
+/// Store additional signal rate information to help decide if the candidate evidence
 /// is significant relative to background noise in the sample.
 ///
 /// TODO -- is the following comment out of date?: only handles complex cases for now (assumes sv is complex)
@@ -610,7 +605,8 @@ void
 updateEvidenceIndex(
     const SVCandidateSetSequenceFragment& fragment,
     const SVObservation& obs,
-    FatSVCandidate& sv)
+    FatSVCandidate& sv,
+    const unsigned bamIndex)
 {
     if (obs.isSingleReadSource())
     {
@@ -619,7 +615,7 @@ updateEvidenceIndex(
         {
             if ((not candRead.bamrec.empty()) && (not candRead.isSubMapped) )
             {
-                sv.bp1EvidenceIndex[obs.svEvidenceType].push_back(candRead.readIndex);
+                sv.bp1EvidenceIndex[obs.svEvidenceType][bamIndex].push_back(candRead.readIndex);
 #ifdef DEBUG_SVDATA
                 log_os << __FUNCTION__ << ": non_split: Added readIndex " << candRead.readIndex
                        << " to svEvidenceType " << obs.svEvidenceType << "\n";
@@ -637,7 +633,7 @@ updateEvidenceIndex(
 
             if ((not read.bamrec.empty()) && (not read.isSubMapped))
             {
-                readBp[obs.svEvidenceType].push_back(read.readIndex);
+                readBp[obs.svEvidenceType][bamIndex].push_back(read.readIndex);
 #ifdef DEBUG_SVDATA
                 log_os << __FUNCTION__ << ": split_mapped: Added readIndex " << candRead.readIndex
                        << " to svEvidenceType " << obs.svEvidenceType << "\n";
@@ -647,7 +643,7 @@ updateEvidenceIndex(
             {
                 if ((not readSupp.front().bamrec.empty()) && (not readSupp.front().isSubMapped))
                 {
-                    readSuppBp[obs.svEvidenceType].push_back(readSupp.front().readIndex);
+                    readSuppBp[obs.svEvidenceType][bamIndex].push_back(readSupp.front().readIndex);
 #ifdef DEBUG_SVDATA
                     log_os << __FUNCTION__ << ": split_supp_mapped: Added readIndex " << readSupp.front().readIndex
                            << " to svEvidenceType " << obs.svEvidenceType << "\n";
@@ -664,7 +660,7 @@ updateEvidenceIndex(
         const SVCandidateSetRead& bp2Read(is1to1 ? fragment.read2 : fragment.read1);
         if ((not bp1Read.bamrec.empty()) && (not bp1Read.isSubMapped))
         {
-            sv.bp1EvidenceIndex[obs.svEvidenceType].push_back(bp1Read.readIndex);
+            sv.bp1EvidenceIndex[obs.svEvidenceType][bamIndex].push_back(bp1Read.readIndex);
 #ifdef DEBUG_SVDATA
             log_os << __FUNCTION__ << ": multi_read_source: Added readIndex " << bp1Read.readIndex
                    << " to svEvidenceType " << obs.svEvidenceType << "\n";
@@ -672,7 +668,7 @@ updateEvidenceIndex(
         }
         if ((not bp1Read.bamrec.empty()) && (not bp2Read.isSubMapped))
         {
-            sv.bp2EvidenceIndex[obs.svEvidenceType].push_back(bp2Read.readIndex);
+            sv.bp2EvidenceIndex[obs.svEvidenceType][bamIndex].push_back(bp2Read.readIndex);
 #ifdef DEBUG_SVDATA
             log_os << __FUNCTION__ << ": multi_read_source: Added readIndex " << bp2Read.readIndex
                    << " to svEvidenceType " << obs.svEvidenceType << "\n";
@@ -683,17 +679,6 @@ updateEvidenceIndex(
 
 
 
-/// readCandidates are the set of hypotheses generated by individual read pair --
-/// this is the read pair which we seek to assign to one of the identified SVs (in svs)
-/// or we push the candidate into svs to start a new candidate associated with this edge
-///
-/// this is meant as only a temporary form of hypothesis generation, in the current system
-/// we do at least delineate alternative candidates by strand and region overlap, but over
-/// the longer term we should be able to delineate cluster by a clustering of possible
-/// breakend locations.
-///
-/// \param isExpandSVCandidateSet if false, don't add new SVs or expand existing SVs
-///
 void
 SVFinder::
 assignFragmentObservationsToSVCandidates(
@@ -702,8 +687,11 @@ assignFragmentObservationsToSVCandidates(
     const std::vector<SVObservation>& readCandidates,
     const bool isExpandSVCandidateSet,
     SVCandidateSetSequenceFragment& fragment,
-    std::vector<FatSVCandidate>& svs)
+    std::vector<FatSVCandidate>& svs,
+    const unsigned bamIndex)
 {
+    const unsigned bamCount(_bamStreams.size());
+
     // we anticipate so few svs from the POC method, that there's no indexing on them
     for (const SVObservation& readCand : readCandidates)
     {
@@ -773,10 +761,10 @@ assignFragmentObservationsToSVCandidates(
                         fragment.svLink.emplace_back(svIndex,readCand.svEvidenceType);
                     }
 
-                    updateEvidenceIndex(fragment,readCand,sv);
+                    updateEvidenceIndex(fragment, readCand, sv, bamIndex);
 
                     // check evidence distance:
-                    sv.merge(FatSVCandidate(readCand), isExpandSVCandidateSet);
+                    sv.merge(FatSVCandidate(readCand, bamCount), isExpandSVCandidateSet);
 
 #ifdef DEBUG_SVDATA
                     log_os << __FUNCTION__ << ": Added to svIndex: " << svIndex << " match_sv: " << sv << "\n";
@@ -798,7 +786,7 @@ assignFragmentObservationsToSVCandidates(
             log_os << __FUNCTION__ << ": New svIndex: " << newSVIndex << "\n";
 #endif
 
-            svs.push_back(FatSVCandidate(readCand));
+            svs.push_back(FatSVCandidate(readCand, bamCount));
             svs.back().candidateIndex = newSVIndex;
 
             if (isSpanningCand)
@@ -806,7 +794,7 @@ assignFragmentObservationsToSVCandidates(
                 // ditto note above, store fragment association only when there's an SV hypothesis:
                 fragment.svLink.emplace_back(newSVIndex,readCand.svEvidenceType);
             }
-            updateEvidenceIndex(fragment,readCand,svs.back());
+            updateEvidenceIndex(fragment, readCand, svs.back(), bamIndex);
         }
     }
 }
@@ -819,8 +807,8 @@ processSequenceFragment(
     const SVLocusNode& node1,
     const SVLocusNode& node2,
     const bam_header_info& bamHeader,
-    const reference_contig_segment& refSeq1,
-    const reference_contig_segment& refSeq2,
+    const reference_contig_segment& node1RefSeq,
+    const reference_contig_segment& node2RefSeq,
     const unsigned bamIndex,
     const bool isExpandSVCandidateSet,
     std::vector<FatSVCandidate>& svs,
@@ -852,17 +840,19 @@ processSequenceFragment(
 
     const bam_record* remoteBamRecPtr( remoteReadPtr->isSet() ? &(remoteReadPtr->bamrec) : nullptr);
 
-    const reference_contig_segment& localRef( localReadPtr->isNode1 ? refSeq1 : refSeq2 );
+    const reference_contig_segment& localRef( localReadPtr->isSourcedFromGraphEdgeNode1 ? node1RefSeq : node2RefSeq );
     const reference_contig_segment* remoteRefPtr(nullptr);
     if (remoteReadPtr->isSet())
     {
-        remoteRefPtr = (remoteReadPtr->isNode1 ?  &refSeq1 : &refSeq2 );
+        remoteRefPtr = (remoteReadPtr->isSourcedFromGraphEdgeNode1 ?  &node1RefSeq : &node2RefSeq );
     }
     _readScanner.getBreakendPair(localReadPtr->bamrec, remoteBamRecPtr,
                                  bamIndex, bamHeader, localRef,
                                  remoteRefPtr, _readCandidates);
 
-    // collapse close spanning sv candidates into complex candidates -- this reflects the fact that the
+    // Label all SVObservations with the sample index:
+
+    // Collapse close spanning sv candidates into complex candidates -- this reflects the fact that the
     // assembler will collapse them anyway, so reduces duplicated work in the assembler;
     for (SVObservation& cand : _readCandidates)
     {
@@ -899,7 +889,7 @@ processSequenceFragment(
         log_os << __FUNCTION__ << ": cand: " << cand << "\n";
     }
 #endif
-    assignFragmentObservationsToSVCandidates(node1, node2, _readCandidates, isExpandSVCandidateSet, fragment, svs);
+    assignFragmentObservationsToSVCandidates(node1, node2, _readCandidates, isExpandSVCandidateSet, fragment, svs, bamIndex);
 }
 
 
@@ -1020,7 +1010,7 @@ isBreakPointSignificant(
 
 
 
-/// Test a spanning candidate for minimum supporting evidence level prior
+/// \brief Test a spanning candidate for minimum supporting evidence level prior
 /// to assembly and scoring stages
 ///
 /// Note this test is applied early, and as such it is intended to only filter
@@ -1032,14 +1022,15 @@ static
 bool
 isSpanningCandidateSignalSignificant(
     const double noiseRate,
-    const FatSVCandidate& sv)
+    const FatSVCandidate& sv,
+    const unsigned bamIndex)
 {
     std::vector<double> evidence_bp1;
     std::vector<double> evidence_bp2;
     for (unsigned evidenceTypeIndex(0); evidenceTypeIndex<SVEvidenceType::SIZE; ++evidenceTypeIndex)
     {
-        appendVec(evidence_bp1,sv.bp1EvidenceIndex[evidenceTypeIndex]);
-        appendVec(evidence_bp2,sv.bp2EvidenceIndex[evidenceTypeIndex]);
+        appendVec(evidence_bp1,sv.bp1EvidenceIndex[evidenceTypeIndex][bamIndex]);
+        appendVec(evidence_bp2,sv.bp2EvidenceIndex[evidenceTypeIndex][bamIndex]);
     }
 
     static const double alpha(0.03);
@@ -1055,65 +1046,100 @@ static
 bool
 isComplexCandidateSignalSignificant(
     const double noiseRate,
-    const FatSVCandidate& sv)
+    const FatSVCandidate& sv,
+    const unsigned bamIndex)
 {
     std::vector<double> evidence;
     for (unsigned i(0); i<SVEvidenceType::SIZE; ++i)
     {
         //if (! isLocalEvidence(i)) continue;
-        appendVec(evidence,sv.bp1EvidenceIndex[i]);
+        appendVec(evidence, sv.bp1EvidenceIndex[i][bamIndex]);
     }
     static const double alpha(0.005);
-    return (isBreakPointSignificant(alpha, noiseRate,evidence));
+    return (isBreakPointSignificant(alpha, noiseRate, evidence));
 }
 
 
 
-namespace SINGLE_FILTER
+namespace SINGLE_JUNCTION_FILTER
 {
+/// Enumerates different types of filters applied to single sv candidate junctions
 enum index_t
 {
     NONE,
-    SEMIMAPPED,
-    COMPLEXLOWCOUNT,
-    COMPLEXLOWSIGNAL,
-    SPANNINGLOWSIGNAL
+    SEMI_MAPPED, ///< Candidate is only supported by semi-mapped read pairs
+    COMPLEX_LOW_COUNT, ///< For a complex candidate, absolute evidence read count is too low
+    COMPLEX_LOW_SIGNAL, ///< For a complex candidate, alt allele read rate is not significant wrt expected noise rate
+    SPANNING_LOW_SIGNAL ///< For a spanning candidate, alt allele read rate is not significant wrt expected noise rate
 };
 }
 
 
 
-/// Return enumerator describing the candidate's filtration state, based on
-/// information available in a single junction (as opposed to
+static
+bool
+isAnySpanningCandidateSignalSignificant(
+    const unsigned bamCount,
+    const FatSVCandidate& sv,
+    const std::vector<double>& spanningNoiseRate)
+{
+    for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
+    {
+        if (isSpanningCandidateSignalSignificant(spanningNoiseRate[bamIndex], sv, bamIndex)) return true;
+    }
+    return false;
+}
+
+
+
+static
+bool
+isAnyComplexCandidateSignalSignificant(
+    const unsigned bamCount,
+    const FatSVCandidate& sv,
+    const std::vector<double>& assemblyNoiseRate)
+{
+    for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
+    {
+        if (isComplexCandidateSignalSignificant(assemblyNoiseRate[bamIndex], sv, bamIndex)) return true;
+    }
+    return false;
+}
+
+
+
+/// Return enumerator value describing the candidate's filtration state, based on
+/// information available in a single junction only (as opposed to
 /// requiring multi-junction analysis)
 ///
 static
-SINGLE_FILTER::index_t
+SINGLE_JUNCTION_FILTER::index_t
 isFilterSingleJunctionCandidate(
     const bool isRNA,
-    const double spanningNoiseRate,
-    const double assemblyNoiseRate,
-    const FatSVCandidate& sv)
+    const std::vector<double>& spanningNoiseRate,
+    const std::vector<double>& assemblyNoiseRate,
+    const FatSVCandidate& sv,
+    const unsigned bamCount)
 {
-    using namespace SINGLE_FILTER;
+    using namespace SINGLE_JUNCTION_FILTER;
 
     // don't consider candidates created from only
     // semi-mapped read pairs (ie. one read of the pair is MAPQ0 or MAPQsmall)
-    if (sv.bp1.isLocalOnly() && sv.bp2.isLocalOnly()) return SEMIMAPPED;
+    if (sv.bp1.isLocalOnly() && sv.bp2.isLocalOnly()) return SEMI_MAPPED;
 
     // candidates must have a minimum amount of evidence:
     if (isSpanningSV(sv))
     {
-        /// TODO make sensitivity adjustments for RNA here:
+        // TODO make sensitivity adjustments for RNA here:
         if (! isRNA)
         {
-            if (! isSpanningCandidateSignalSignificant(spanningNoiseRate, sv)) return SPANNINGLOWSIGNAL;
+            if (! isAnySpanningCandidateSignalSignificant(bamCount, sv, spanningNoiseRate)) return SPANNING_LOW_SIGNAL;
         }
     }
     else if (isComplexSV(sv))
     {
-        if (! isCandidateCountSufficient(sv)) return COMPLEXLOWCOUNT;
-        if (! isComplexCandidateSignalSignificant(assemblyNoiseRate, sv)) return COMPLEXLOWSIGNAL;
+        if (! isCandidateCountSufficient(sv)) return COMPLEX_LOW_COUNT;
+        if (! isAnyComplexCandidateSignalSignificant(bamCount, sv, assemblyNoiseRate)) return COMPLEX_LOW_SIGNAL;
     }
     else
     {
@@ -1134,34 +1160,35 @@ static
 void
 filterCandidates(
     const bool isRNA,
-    const double spanningNoiseRate,
-    const double assemblyNoiseRate,
+    const std::vector<double>& spanningNoiseRate,
+    const std::vector<double>& assemblyNoiseRate,
     std::vector<FatSVCandidate>& svs,
-    SVFinderStats& stats)
+    SVFinderStats& stats,
+    const unsigned bamCount)
 {
     unsigned svCount(svs.size());
     unsigned index(0);
     while (index<svCount)
     {
-        using namespace SINGLE_FILTER;
-        const index_t filt(isFilterSingleJunctionCandidate(isRNA, spanningNoiseRate,assemblyNoiseRate,svs[index]));
+        using namespace SINGLE_JUNCTION_FILTER;
+        const index_t filt(isFilterSingleJunctionCandidate(isRNA, spanningNoiseRate, assemblyNoiseRate, svs[index], bamCount));
 
         bool isFilter(false);
         switch (filt)
         {
-        case SEMIMAPPED:
+        case SEMI_MAPPED:
             stats.semiMappedFilter++;
             isFilter = true;
             break;
-        case COMPLEXLOWCOUNT:
+        case COMPLEX_LOW_COUNT:
             stats.ComplexLowCountFilter++;
             isFilter = true;
             break;
-        case COMPLEXLOWSIGNAL:
+        case COMPLEX_LOW_SIGNAL:
             stats.ComplexLowSignalFilter++;
             isFilter = true;
             break;
-        case SPANNINGLOWSIGNAL:
+        case SPANNING_LOW_SIGNAL:
             // this case is marked, but filtering is delayed until a multi-junction evaluation can be done later
             svs[index].isSingleJunctionFilter = true;
             break;
@@ -1189,8 +1216,8 @@ getCandidatesFromData(
     const SVLocusNode& node1,
     const SVLocusNode& node2,
     const bam_header_info& bamHeader,
-    const reference_contig_segment& refSeq1,
-    const reference_contig_segment& refSeq2,
+    const reference_contig_segment& node1RefSeq,
+    const reference_contig_segment& node2RefSeq,
     SVCandidateSetData& svData,
     std::vector<SVCandidate>& output_svs,
     SVFinderStats& stats)
@@ -1211,7 +1238,7 @@ getCandidatesFromData(
 
             static const bool isAnchored(true);
             processSequenceFragment(
-                node1, node2, bamHeader, refSeq1, refSeq2, bamIndex, isAnchored,
+                node1, node2, bamHeader, node1RefSeq, node2RefSeq, bamIndex, isAnchored,
                 svs, fragment, stats);
         }
     }
@@ -1231,7 +1258,7 @@ getCandidatesFromData(
 
                 static const bool isAnchored(false);
                 processSequenceFragment(
-                    node1, node2, bamHeader, refSeq1, refSeq2, bamIndex, isAnchored,
+                    node1, node2, bamHeader, node1RefSeq, node2RefSeq, bamIndex, isAnchored,
                     svs, pair, stats);
             }
         }
@@ -1265,10 +1292,13 @@ getCandidatesFromData(
     }
 #endif
 
-    assert((_spanningNoiseRate >= 0.) && (_spanningNoiseRate <= 1.));
-    assert((_assemblyNoiseRate >= 0.) && (_assemblyNoiseRate <= 1.));
+    for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
+    {
+        assert((_spanningNoiseRate[bamIndex] >= 0.) && (_spanningNoiseRate[bamIndex] <= 1.));
+        assert((_assemblyNoiseRate[bamIndex] >= 0.) && (_assemblyNoiseRate[bamIndex] <= 1.));
+    }
 
-    filterCandidates(_isRNA, _spanningNoiseRate, _assemblyNoiseRate, svs, stats);
+    filterCandidates(_isRNA, _spanningNoiseRate, _assemblyNoiseRate, svs, stats, bamCount);
 
     std::copy(svs.begin(),svs.end(),std::back_inserter(output_svs));
 }
@@ -1304,7 +1334,6 @@ findCandidateSVImpl(
         return;
     }
 
-    //
     // 1) scan through each region to identify all reads supporting
     // some sort of breakend in the target region, then match up read
     // pairs so that they can easily be accessed from each other
@@ -1316,26 +1345,26 @@ findCandidateSVImpl(
 
     const SVLocus& locus(cset.getLocus(edge.locusIndex));
 
-    reference_contig_segment refSeq1;
-    reference_contig_segment refSeq2;
+    reference_contig_segment node1RefSeq;
+    reference_contig_segment node2RefSeq;
     {
         GenomeInterval searchInterval;
-        getNodeRefSeq(bamHeader, locus, edge.nodeIndex1, _referenceFilename, searchInterval, refSeq1);
+        getNodeRefSeq(bamHeader, locus, edge.nodeIndex1, _referenceFilename, searchInterval, node1RefSeq);
         addSVNodeData(bamHeader, locus, edge.nodeIndex1, edge.nodeIndex2,
-                      searchInterval, refSeq1, true, svData);
+                      searchInterval, node1RefSeq, true, svData);
     }
 
     if (edge.nodeIndex1 != edge.nodeIndex2)
     {
         GenomeInterval searchInterval;
-        getNodeRefSeq(bamHeader, locus, edge.nodeIndex2, _referenceFilename, searchInterval, refSeq2);
+        getNodeRefSeq(bamHeader, locus, edge.nodeIndex2, _referenceFilename, searchInterval, node2RefSeq);
         addSVNodeData(bamHeader, locus, edge.nodeIndex2, edge.nodeIndex1,
-                      searchInterval, refSeq2, false, svData);
+                      searchInterval, node2RefSeq, false, svData);
     }
 
     const SVLocusNode& node1(locus.getNode(edge.nodeIndex1));
     const SVLocusNode& node2(locus.getNode(edge.nodeIndex2));
-    getCandidatesFromData(node1, node2, bamHeader, refSeq1, refSeq2,
+    getCandidatesFromData(node1, node2, bamHeader, node1RefSeq, node2RefSeq,
                           svData, svs, stats);
 
     //checkResult(svData,svs);

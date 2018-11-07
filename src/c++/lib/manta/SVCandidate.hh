@@ -49,6 +49,16 @@ struct SVCandidate
         return _isImprecise;
     }
 
+    /// \brief Test if this SVCandidate intersects with \p rhs
+    ///
+    /// Two SVCandidates intersect if their breakend regions overlap in the same direction.
+    ///
+    /// In the schematic below, the intersecting candidate pairs are (1,2) and (2,3)
+    ///
+    /// Candidate1: >bp2>----------------------------------->>bp1>>
+    /// Candidate2:    >>>>>>>bp1>>>>>>>--------------->>bp2>>
+    /// Candidate3:               >>>bp2>>>--------------->>>>>>>bp1>>>>>>
+    /// Candidate3:               <<<bp2<<<---------------<<<<<<<bp1<<<<<<
     bool
     isIntersect(const SVCandidate& rhs) const
     {
@@ -56,12 +66,17 @@ struct SVCandidate
                 (bp1.isIntersect(rhs.bp2) && bp2.isIntersect(rhs.bp1)));
     }
 
+    /// \brief Test if two SVCandidates intersect such that the two candidate's bp1 and bp2 labels match up.
     bool
     isIntersect1to1(const SVCandidate& rhs) const
     {
         return (bp1.isIntersect(rhs.bp1) && bp2.isIntersect(rhs.bp2));
     }
 
+    /// \param[in] isExpandRegion If true, allow the breakpoint regions of this SVCandidate to expand to the union of
+    ///    this and \p rhs.
+    ///
+    /// \return False if the SVCandidates can't be merged because they do not intersect.
     bool
     merge(
         const SVCandidate& rhs,
@@ -187,7 +202,10 @@ public:
     unsigned forwardTranscriptStrandReadCount = 0; ///< Number of reads (pairs) supporting a direction from bp1 to bp2 (used for stranded RNA data)
     unsigned reverseTranscriptStrandReadCount = 0; ///< Number of reads (pairs) directed from bp2 to bp1
 
-    /// filter out this sv candidate unless it's rescued by a multi-junction event:
+    /// If true, this sv candidate should be filtered out based on information in the candidate's own single junction.
+    ///
+    /// This filter may be disregarded if additional support is found for the SV candidate as part of a multi-junction
+    /// event.
     bool isSingleJunctionFilter = false;
 };
 
@@ -233,7 +251,7 @@ label(const index_t i)
 }
 
 
-/// \brief A specialized SVCandidate which represents an SV hypothesis generated from a single piece of evidnece, ie.
+/// \brief A specialized SVCandidate which represents an SV hypothesis generated from a single piece of evidence, ie.
 ///        a single SV 'observation'.
 ///
 /// It is helpful to represent this case as a distinct specialization of SVCandidate because this allows additional
@@ -247,16 +265,6 @@ struct SVObservation : public SVCandidate
         dnaFragmentSVEvidenceSource(SourceOfSVEvidenceInDNAFragment::UNKNOWN)
     {}
 
-#if 0
-    void
-    clear()
-    {
-        svEvidenceType = SVEvidenceType::UNKNOWN;
-        dnaFragmentSVEvidenceSource = SourceOfSVEvidenceInDNAFragment::UNKNOWN;
-        SVCandidate::clear();
-    }
-#endif
-
     /// \return True if the evidence for this SV observation relies on only a single read (eg. CIGAR read alignment) or
     ///         relies on both reads of a paired end observation (eg. anomalous read pair)
     bool
@@ -266,7 +274,7 @@ struct SVObservation : public SVCandidate
         return ((dnaFragmentSVEvidenceSource == READ1) || (dnaFragmentSVEvidenceSource == READ2));
     }
 
-    /// \return True if this observation is inferred from the alignment/sequence of the read1
+    /// \return True if this observation is inferred from the alignment or sequence of read1
     bool
     isRead1Source() const
     {

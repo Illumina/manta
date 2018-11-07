@@ -77,12 +77,11 @@ struct SVScorePairAltProcessor : public SVScorePairProcessor
 
     /// what to skip in addition to the core skip test?
     ///
-    /// override to allow for shadow and chimera re-maps for large insertions:
+    /// This override accounts for shadow and chimera re-maps for large insertions:
     ///
-    virtual
     bool
     isSkipRecord(
-        const bam_record& bamRead)
+        const bam_record& bamRead) override
     {
         if (! isLargeInsertSV(sv)) return SVScorePairProcessor::isSkipRecord(bamRead);
 
@@ -95,7 +94,7 @@ struct SVScorePairAltProcessor : public SVScorePairProcessor
     processClearedRecord(
         const SVId& svId,
         const bam_record& bamRead,
-        SupportFragments& svSupportFrags);
+        SupportFragments& svSupportFrags) override;
 
 private:
     static

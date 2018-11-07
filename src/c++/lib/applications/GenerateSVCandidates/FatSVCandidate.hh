@@ -19,6 +19,7 @@
 
 /// \file
 /// \author Chris Saunders
+/// \author Naoki Nariai
 ///
 
 #pragma once
@@ -47,7 +48,9 @@ appendVec(
 
 
 
-/// an SV candidate with additional details pertaining to input read evidence which is useful for filtration
+/// \brief An SV candidate with additional details pertaining to input read evidence
+///
+/// The extra read evidence provided in this version of SV candidate is useful for filtration
 ///
 struct FatSVCandidate : public SVCandidate
 {
@@ -58,9 +61,15 @@ struct FatSVCandidate : public SVCandidate
     {}
 
     explicit
-    FatSVCandidate(const SVCandidate& copy)
+    FatSVCandidate(const SVCandidate& copy, const unsigned bamCount)
         : base_t(copy)
-    {}
+    {
+        for (unsigned evidenceTypeIndex(0); evidenceTypeIndex<SVEvidenceType::SIZE; ++evidenceTypeIndex)
+        {
+            bp1EvidenceIndex[evidenceTypeIndex].resize(bamCount);
+            bp2EvidenceIndex[evidenceTypeIndex].resize(bamCount);
+        }
+    }
 
     FatSVCandidate(const FatSVCandidate&) = default;
     FatSVCandidate& operator=(const FatSVCandidate&) = default;
@@ -74,37 +83,24 @@ struct FatSVCandidate : public SVCandidate
         if (! base_t::merge(rhs, isExpandRegion)) return false;
         for (unsigned evidenceTypeIndex(0); evidenceTypeIndex<SVEvidenceType::SIZE; ++evidenceTypeIndex)
         {
-            appendVec(bp1EvidenceIndex[evidenceTypeIndex],rhs.bp1EvidenceIndex[evidenceTypeIndex]);
-            appendVec(bp2EvidenceIndex[evidenceTypeIndex],rhs.bp2EvidenceIndex[evidenceTypeIndex]);
+            for (unsigned bamIndex(0); bamIndex<bp1EvidenceIndex[evidenceTypeIndex].size(); ++bamIndex)
+            {
+                appendVec(bp1EvidenceIndex[evidenceTypeIndex][bamIndex],
+                          rhs.bp1EvidenceIndex[evidenceTypeIndex][bamIndex]);
+                appendVec(bp2EvidenceIndex[evidenceTypeIndex][bamIndex],
+                          rhs.bp2EvidenceIndex[evidenceTypeIndex][bamIndex]);
+            }
         }
         return true;
     }
 
-#if 0
-    bool
-    merge(const SVCandidate& rhs)
-    {
-        if (! base_t::merge(rhs)) return false;
-
-        return true;
-    }
-#endif
-
-#if 0
-    void
-    clear()
-    {
-        base_t::clear();
-        for (auto& evi : bp1EvidenceIndex) evi.clear();
-        for (auto& evi : bp2EvidenceIndex) evi.clear();
-    }
-#endif
-
-    /// a 2d array type to track breakpoint evidence, the first dimension is evidence type
-    /// and the inner dimension is a vector with size equal to the number of (confident-mapping) observations.
-    /// For each observation the inner-diminsion value provides the index of the read used as an observation, which
-    /// can be used to estimate signal density vs. all reads.
-    typedef std::array<std::vector<double>,SVEvidenceType::SIZE> evidenceIndex_t;
+    /// a 3d array type to track breakpoint evidence.
+    /// The first dimension is evidence type,
+    /// the second dimension is bam index with size equal to the number of input bams, and
+    /// the third dimension is evidence read with size equal to the number of confident-mapping observations.
+    /// For each observation the value provides the index of the read used as an observation,
+    /// which can be used to estimate signal density vs. all reads.
+    typedef std::array<std::vector< std::vector<double> >,SVEvidenceType::SIZE> evidenceIndex_t;
 
     evidenceIndex_t bp1EvidenceIndex;
     evidenceIndex_t bp2EvidenceIndex;

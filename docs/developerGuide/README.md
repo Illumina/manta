@@ -24,7 +24,7 @@ Manta Developer Guide
     * [Commit messages](#commit-messages)
     * [Commit consolidation](#commit-consolidation)
   * [Changelog conventions](#changelog-conventions)
-* [Branching and release tagging guidelines](#branching-and-release-tagging-guidelines)
+  * [Branching and release tagging guidelines](#branching-and-release-tagging-guidelines)
   * [Error handling](#error-handling)
     * [General Policies](#general-policies)
     * [Exception Details](#exception-details)
@@ -240,7 +240,7 @@ prior to merging the branch.
 longer, for instance by starting all major bullet points with an imperitive verb.
 
 
-## Branching and release tagging guidelines
+### Branching and release tagging guidelines
 
 All features and bugfixes are developed on separate branches. Branch names should contain the corresponding JIRA ticket
 id or contain the key "github${issueNumber}' to refer to the corresponding issue on github.com. After code

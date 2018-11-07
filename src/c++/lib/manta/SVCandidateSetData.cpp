@@ -101,7 +101,7 @@ add(
     const bam_header_info& bamHeader,
     const bam_record& bamRead,
     const bool isExpectRepeat,
-    const bool isNode1,
+    const bool isSourcedFromGraphEdgeNode1,
     const bool isSubMapped)
 {
     using namespace illumina::common;
@@ -158,7 +158,7 @@ add(
     }
 
     targetRead.bamrec = bamRead;
-    targetRead.isNode1 = isNode1;
+    targetRead.isSourcedFromGraphEdgeNode1 = isSourcedFromGraphEdgeNode1;
     targetRead.isSubMapped = isSubMapped;
     targetRead.readIndex = (isSubMapped ? _subMappedReadIndex : _mappedReadIndex);
 }

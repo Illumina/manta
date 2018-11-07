@@ -133,6 +133,19 @@ isSVIndel(const index_t idx)
     }
 }
 
+inline
+bool
+isSVInv(const index_t idx)
+{
+    switch (idx)
+    {
+        case INVERSION:
+            return true;
+        default:
+            return false;
+    }
+}
+
 // provide a shortened label (mostly from the VCF spec)
 inline
 const char*
@@ -145,7 +158,7 @@ label(const index_t idx)
     case INTRATRANSLOC:
         return "BND";
     case INVERSION:
-        return "INV";
+        return "BND";
     case INSERT:
         return "INS";
     case DELETE:

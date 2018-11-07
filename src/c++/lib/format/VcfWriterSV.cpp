@@ -96,8 +96,6 @@ writeHeaderPrefix(
     _os << "##INFO=<ID=SVINSSEQ,Number=.,Type=String,Description=\"Sequence of insertion\">\n";
     _os << "##INFO=<ID=LEFT_SVINSSEQ,Number=.,Type=String,Description=\"Known left side of insertion for an insertion of unknown length\">\n";
     _os << "##INFO=<ID=RIGHT_SVINSSEQ,Number=.,Type=String,Description=\"Known right side of insertion for an insertion of unknown length\">\n";
-    _os << "##INFO=<ID=INV3,Number=0,Type=Flag,Description=\"Inversion breakends open 3' of reported location\">\n";
-    _os << "##INFO=<ID=INV5,Number=0,Type=Flag,Description=\"Inversion breakends open 5' of reported location\">\n";
 
     // if "--outputContig" is specified, then print out INFO tag for Assembled contig sequence
     if (_isOutputContig)
@@ -111,7 +109,6 @@ writeHeaderPrefix(
 
     addHeaderFilters();
 
-    _os << "##ALT=<ID=INV,Description=\"Inversion\">\n";
     _os << "##ALT=<ID=DEL,Description=\"Deletion\">\n";
     _os << "##ALT=<ID=INS,Description=\"Insertion\">\n";
     _os << "##ALT=<ID=DUP:TANDEM,Description=\"Tandem Duplication\">\n";
@@ -333,8 +330,8 @@ writeTransloc(
     const SVBreakend& bpA( isFirstBreakend ? sv.bp1 : sv.bp2);
     const SVBreakend& bpB( isFirstBreakend ? sv.bp2 : sv.bp1);
 
-    InfoTag_t infotags;
-    SampleTag_t sampletags;
+    InfoTag_t infoTags;
+    SampleTag_t sampleTags;
 
     // get CHROM
     const std::string& chrom(_header.chrom_data[bpA.interval.tid].label);
@@ -424,42 +421,42 @@ writeTransloc(
     }
 
     // build INFO field
-    infotags.push_back("SVTYPE=BND");
-    infotags.push_back("MATEID="+mateId);
+    infoTags.push_back("SVTYPE=BND");
+    infoTags.push_back("MATEID="+mateId);
     if (isImprecise)
     {
-        infotags.push_back("IMPRECISE");
+        infoTags.push_back("IMPRECISE");
     }
     else if (_isOutputContig)
     {
-        infotags.push_back("CONTIG=" + sv.contigSeq);
+        infoTags.push_back("CONTIG=" + sv.contigSeq);
     }
 
     if (bpARange.size() > 1)
     {
-        infotags.push_back( str( boost::format("CIPOS=%i,%i") % ((bpARange.begin_pos()+1) - pos) % (bpARange.end_pos() - pos) ));
+        infoTags.push_back( str( boost::format("CIPOS=%i,%i") % ((bpARange.begin_pos()+1) - pos) % (bpARange.end_pos() - pos) ));
     }
 
     if (! isImprecise)
     {
         const pos_t bpAPosAdjust(0);
-        addHomologyInfo(_referenceFilename, chrom, bpARange, bpAPosAdjust, infotags);
+        addHomologyInfo(_referenceFilename, chrom, bpARange, bpAPosAdjust, infoTags);
     }
 
     if (! insertSeq.empty())
     {
-        infotags.push_back( str( boost::format("SVINSLEN=%i") % (insertSeq.size()) ));
-        infotags.push_back( str( boost::format("SVINSSEQ=%s") % (insertSeq) ));
+        infoTags.push_back( str( boost::format("SVINSLEN=%i") % (insertSeq.size()) ));
+        infoTags.push_back( str( boost::format("SVINSSEQ=%s") % (insertSeq) ));
     }
 
-    addSharedInfo(event, infotags);
+    addSharedInfo(event, infoTags);
 
-    modifyInfo(event, infotags);
-    modifyTranslocInfo(sv, isFirstBreakend, adata, infotags);
+    modifyInfo(event, infoTags);
+    modifyTranslocInfo(sv, isFirstBreakend, adata, infoTags);
 
-    modifySample(sv, sampletags);
+    modifySample(sv, sampleTags);
 #ifdef DEBUG_VCF
-    addDebugInfo(bpA, bpB, isFirstBreakend, adata, infotags);
+    addDebugInfo(bpA, bpB, isFirstBreakend, adata, infoTags);
 #endif
 
     // write out record:
@@ -473,8 +470,8 @@ writeTransloc(
     _os << '\t';
     writeFilter();
     _os << '\t';
-    makeInfoField(infotags,_os); // INFO
-    makeFormatSampleField(sampletags, _os); // FORMAT + SAMPLE
+    makeInfoField(infoTags,_os); // INFO
+    makeFormatSampleField(sampleTags, _os); // FORMAT + SAMPLE
     _os << '\n';
 }
 
@@ -497,7 +494,7 @@ writeTranslocPair(
 
 void
 VcfWriterSV::
-writeInvdel(
+writeIndel(
     const SVCandidate& sv,
     const SVId& svId,
     const bool isIndel,
@@ -706,22 +703,6 @@ writeInvdel(
         }
     }
 
-    if (svId.svType == EXTENDED_SV_TYPE::INVERSION)
-    {
-        if (sv.bp1.state == SVBreakendState::RIGHT_OPEN)
-        {
-            infoTags.push_back("INV3");
-        }
-        else if (sv.bp1.state == SVBreakendState::LEFT_OPEN)
-        {
-            infoTags.push_back("INV5");
-        }
-        else
-        {
-            assert(false && "Unexpected inversion configuration");
-        }
-    }
-
     addSharedInfo(event, infoTags);
 
     modifyInfo(event, infoTags);
@@ -798,14 +779,14 @@ writeSVCore(
 
     try
     {
-        if (isSVTransloc(svType))
+        if (isSVTransloc(svType) || isSVInv(svType))
         {
             writeTranslocPair(sv, svId, svData, adata, event);
         }
         else
         {
             const bool isIndel(isSVIndel(svType));
-            writeInvdel(sv, svId, isIndel, event);
+            writeIndel(sv, svId, isIndel, event);
         }
     }
     catch (...)

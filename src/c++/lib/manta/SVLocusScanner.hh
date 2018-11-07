@@ -215,13 +215,17 @@ struct SVLocusScanner
         std::vector<SVLocus>& loci,
         SampleEvidenceCounts& eCounts) const;
 
-    /// get local and remote breakends for each SV Candidate which can be extracted from a read pair
+    /// \brief Find all candidate SV observations from a single input read pair
     ///
-    /// if remote read is not available, set remoteReadPtr to nullptr and a best estimate will be generated for the remote breakend
+    /// If the alignment record of the remote read from the read pair is not available, set remoteReadPtr to nullptr
+    /// and a best estimate will be generated for the remote breakend.
     ///
-    /// for all candidates, if one breakend is estimated from localRead and one is estimated from remoteRead, then
-    /// the local breakend will be placed in candidate bp1 and the remote breakend will be placed in candidate.bp2
+    /// For all SVObservations generated, if one breakend is estimated from localRead and one is estimated from
+    /// remoteRead, then the local breakend will be placed in candidate bp1 and the remote breakend will be placed
+    /// in candidate.bp2
     ///
+    /// \param[out] candidates Report all candidates found in the input read pair to this structure. This vector is
+    ///    cleared on input.
     void
     getBreakendPair(
         const bam_record& localRead,

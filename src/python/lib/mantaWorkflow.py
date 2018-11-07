@@ -458,7 +458,7 @@ def mergeSupportBams(self, mergeBamTasks, taskPrefix="", isNormal=True, bamIdx=0
 
     for bamPath in bamList:
         # merge support bams
-        supportBamFile = self.paths.getFinalSupportBamPath(bamPath)
+        supportBamFile = self.paths.getFinalSupportBamPath(bamPath, bamIdx)
         mergeCmd = [ sys.executable, self.params.mantaMergeBam,
                      self.params.samtoolsBin,
                      self.paths.getSortedSupportBamMask(bamIdx),
@@ -770,10 +770,10 @@ class PathInfo:
         return os.path.join(self.getHyGenDir(),
                             "evidence_*.bam_%s.sorted.bam" % (bamIdx))
 
-    def getFinalSupportBamPath(self, bamPath):
+    def getFinalSupportBamPath(self, bamPath, bamIdx):
         bamPrefix = os.path.splitext(os.path.basename(bamPath))[0]
         return os.path.join(self.params.evidenceDir,
-                            "evidence.%s.bam" % (bamPrefix))
+                            "evidence_%s.%s.bam" % (bamIdx, bamPrefix))
 
     def getSupportBamListPath(self, bamIdx):
         return os.path.join(self.getHyGenDir(),

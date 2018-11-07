@@ -14,7 +14,7 @@ Manta User Guide
 * [Input requirements](#input-requirements)
 * [Outputs](#outputs)
   * [Structural Variant predictions](#structural-variant-predictions)
-  * [Manta VCF reporting format](#manta-vcf-reporting-format)
+  * [Manta VCF interpretation](#manta-vcf-interpretation)
     * [VCF Sample Names](#vcf-sample-names)
     * [Small indels](#small-indels)
     * [Insertions with incomplete insert sequence assembly](#insertions-with-incomplete-insert-sequence-assembly)
@@ -22,8 +22,9 @@ Manta User Guide
     * [VCF INFO Fields](#vcf-info-fields)
     * [VCF FORMAT Fields](#vcf-format-fields)
     * [VCF FILTER Fields](#vcf-filter-fields)
-    * [How to interpret VCF filters?](#how-to-interpret-vcf-filters)
-    * [What do the values in Manta's VCF ID field mean?](#what-do-the-values-in-mantas-vcf-id-field-mean)
+    * [Interpretation of VCF filters](#interpretation-of-vcf-filters)
+    * [Interpretation of Manta's INFO/EVENT field](#interpretation-of-mantas-infoevent-field)
+    * [Details of Manta's VCF ID field](#details-of-mantas-vcf-id-field)
     * [Converting Manta VCF to BEDPE format](#converting-manta-vcf-to-bedpe-format)
   * [Statistics](#statistics)
 * [Runtime hardware requirements](#runtime-hardware-requirements)
@@ -289,7 +290,7 @@ For tumor-only analysis, Manta will produce an additional VCF:
   counts for each allele (2) a subset of the filters from the scored tumor-normal model
   are applied to the single tumor case to improve precision.
 
-### Manta VCF reporting format
+### Manta VCF interpretation
 
 Manta VCF output follows the VCF 4.1 spec for describing structural
 variants. It uses standard field names wherever possible. All custom
@@ -336,13 +337,17 @@ chr1    11830208        MantaINS:1577:0:0:0:3:0 T       <INS>   999     PASS    
 
 #### Inversions
 
-Inversions are reported as a single inverted sequence junction. As described in the [VCF INFO Fields](#vcf-info-fields) below, the INV3 tag indicates inversion breakends open at the 3' of reported location, whereas the INV5 tag indicates inversion breakends open at the 5' of reported location. More specifically, in the inversion exmaples illustrated at https://software.broadinstitute.org/software/igv/interpreting_pair_orientations, the INV5 tag corresponds to the IGV "RR"/dark blue reads, and the INV3 tag corresponds to the IGV "LL"/ light blue reads.
-
-This format is used because single inverted junctions are often identified as part of a complex SV in real data, whereas simple reciprocal inversions are uncommon outside of simulated data. For a simple reciprocal inversion, both INV3 and INV5 junctions are expected to be reported, and they shall share the same `EVENT` INFO tag. The following is an example of a simple reciptocal inversion:
-
+Inversions are reported as breakends by default. For a simple reciprocal inversion, four breakends will be reported, and they shall share the same `EVENT` INFO tag. The following is an example of a simple reciptocal inversion:
 ```
-chr1      17124940      MantaINV:3630:0:1:1:4:0 C       <INV>   999     PASS    END=234919885;SVTYPE=INV;SVLEN=217794945;INV5;EVENT=MantaINV:3630:0:1:0:0:0;JUNCTION_QUAL=999;     GT:FT:GQ:PL:PR:SR     0/1:PASS:999:999,0,999:61,4:24,43
-chr1      17124943      MantaINV:3630:0:1:0:0:0 T       <INV>   999     PASS    END=234919824;SVTYPE=INV;SVLEN=217794881;INV3;EVENT=MantaINV:3630:0:1:0:0:0;JUNCTION_QUAL=999;     GT:FT:GQ:PL:PR:SR     0/1:PASS:999:999,0,999:52,3:8,29
+chr1    17124941        MantaBND:1445:0:1:1:3:0:0       T       [chr1:234919886[T       999     PASS    SVTYPE=BND;MATEID=MantaBND:1445:0:1:1:3:0:1;CIPOS=0,1;HOMLEN=1;HOMSEQ=T;INV5;EVENT=MantaBND:1445:0:1:0:0:0:0;JUNCTION_QUAL=254;BND_DEPTH=107;MATE_BND_DEPTH=100 GT:FT:GQ:PL:PR:SR       0/1:PASS:999:999,0,999:65,8:15,51
+chr1    17124948        MantaBND:1445:0:1:0:0:0:0       T       T]chr1:234919824]       999     PASS    SVTYPE=BND;MATEID=MantaBND:1445:0:1:0:0:0:1;INV3;EVENT=MantaBND:1445:0:1:0:0:0:0;JUNCTION_QUAL=999;BND_DEPTH=109;MATE_BND_DEPTH=83      GT:FT:GQ:PL:PR:SR       0/1:PASS:999:999,0,999:60,2:0,46
+chr1    234919824       MantaBND:1445:0:1:0:0:0:1       G       G]chr1:17124948]        999     PASS    SVTYPE=BND;MATEID=MantaBND:1445:0:1:0:0:0:0;INV3;EVENT=MantaBND:1445:0:1:0:0:0:0;JUNCTION_QUAL=999;BND_DEPTH=83;MATE_BND_DEPTH=109      GT:FT:GQ:PL:PR:SR       0/1:PASS:999:999,0,999:60,2:0,46
+chr1    234919885       MantaBND:1445:0:1:1:3:0:1       A       [chr1:17124942[A        999     PASS    SVTYPE=BND;MATEID=MantaBND:1445:0:1:1:3:0:0;CIPOS=0,1;HOMLEN=1;HOMSEQ=A;INV5;EVENT=MantaBND:1445:0:1:0:0:0:0;JUNCTION_QUAL=254;BND_DEPTH=100;MATE_BND_DEPTH=107 GT:FT:GQ:PL:PR:SR       0/1:PASS:999:999,0,999:65,8:15,51
+```
+A supplementary script, provided as `$MANTA_INSTALL_FOLDER/libexec/convertInversion.py`, can be applied to Manta's output vcf files to reformat inversions into single inverted sequence junctions, which was the format used in Manta versions <= 1.4.0. Two INFO tags are introduced for such format: the INV3 tag indicates inversion breakends open at the 3' of reported location, whereas the INV5 tag indicates inversion breakends open at the 5' of reported location. More specifically, in the inversion exmaples illustrated at https://software.broadinstitute.org/software/igv/interpreting_pair_orientations, the INV5 tag corresponds to the IGV "RR"/dark blue reads, and the INV3 tag corresponds to the IGV "LL"/ light blue reads. This format was informative because single inverted junctions are often identified as part of a complex SV in real data, whereas simple reciprocal inversions are uncommon outside of simulated data. For a simple reciprocal inversion, both INV3 and INV5 junctions are expected to be reported, and they shall share the same `EVENT` INFO tag. The following is the converted formant of the above example of a simple reciptocal inversion:
+```
+chr1    17124940        MantaINV:1445:0:1:1:3:0 C       <INV>   999     PASS    END=234919885;SVTYPE=INV;SVLEN=217794945;CIPOS=0,1;CIEND=-1,0;HOMLEN=1;HOMSEQ=T;EVENT=MantaINV:1445:0:1:0:0:0;JUNCTION_QUAL=254;INV5    GT:FT:GQ:PL:PR:SR       0/1:PASS:999:999,0,999:65,8:15,51
+chr1    17124948        MantaINV:1445:0:1:0:0:0 T       <INV>   999     PASS    END=234919824;SVTYPE=INV;SVLEN=217794876;EVENT=MantaINV:1445:0:1:0:0:0;JUNCTION_QUAL=999;INV3   GT:FT:GQ:PL:PR:SR        0/1:PASS:999:999,0,999:60,2:0,46
 ```
 
 #### VCF INFO Fields
@@ -364,8 +369,6 @@ SVINSLEN | Length of insertion
 SVINSSEQ | Sequence of insertion
 LEFT_SVINSSEQ | Known left side of insertion for an insertion of unknown length
 RIGHT_SVINSSEQ | Known right side of insertion for an insertion of unknown length
-INV3 | Flag indicating that inversion breakends open 3' of reported location
-INV5 | Flag indicating that inversion breakends open 5' of reported location
 BND_DEPTH | Read depth at local translocation breakend
 MATE_BND_DEPTH | Read depth at remote translocation mate breakend
 JUNCTION_QUAL | If the SV junction is part of an EVENT (ie. a multi-adjacency variant), this field provides the QUAL value for the adjacency in question only
@@ -387,25 +390,41 @@ SR | Number of split-reads which strongly (Q30) support the REF or ALT alleles
 
 #### VCF FILTER Fields
 
-ID | Description
---- | ---
-MinQUAL | QUAL score is less than 20
-MinGQ | GQ score is less than 15 (filter applied at sample level and record level if all samples are filtered)
-MinSomaticScore | SOMATICSCORE is less than 30
-Ploidy | For DEL & DUP variants, the genotypes of overlapping variants (with similar size) are inconsistent with diploid expectation
-MaxDepth | Depth is greater than 3x the median chromosome depth near one or both variant breakends
-MaxMQ0Frac | For a small variant (<1000 bases), the fraction of reads in all samples with MAPQ0 around either breakend exceeds 0.4
-NoPairSupport | For variants significantly larger than the paired read fragment size, no paired reads support the alternate allele in any sample
+ID | Level | Description
+--- | --- | ---
+MinQUAL | Record | QUAL score is less than 20
+MinGQ | Sample | GQ score is less than 15
+MinSomaticScore | Record | SOMATICSCORE is less than 30
+Ploidy | Record | For DEL & DUP variants, the genotypes of overlapping variants (with similar size) are inconsistent with diploid expectation
+MaxDepth | Record | Depth is greater than 3x the median chromosome depth near one or both variant breakends
+MaxMQ0Frac | Record | For a small variant (<1000 bases), the fraction of reads in all samples with MAPQ0 around either breakend exceeds 0.4
+NoPairSupport | Record | For variants significantly larger than the paired read fragment size, no paired reads support the alternate allele in any sample
+SampleFT | Record | No sample passes all the sample-level filters
+HomRef | Sample | Homozygous reference call
 
-#### How to interpret VCF filters?
+#### Interpretation of VCF filters
 
-As described above, there are two levels of filters: record level (FILTER) and sample level (FORMAT/FT). Record-level filters are generally independant to sample-level filters. However, if none of the samples passes one record-level filter, that filter will be copied to the record level (e.g. MinGQ).
+As described above, there are two levels of filters: record level (FILTER) and sample level (FORMAT/FT). Record-level filters are generally independant to sample-level filters. However, if none of the samples passes all sample-level filters, the 'SampleFT' filter will be applied at the record level.
 
-A sample-specific passing variant needs to have the record level FILTER passed, the sample level FORMAT/FT passed, and the sample level FORMAT/GT is not "0/0"(hom-reference).
+#### Interpretation of Manta's INFO/EVENT field
 
-#### What do the values in Manta's VCF ID field mean?
+Some structural variants reported in the VCF, such as translocations, represent a single novel sequence junction in the
+sample. Manta uses the `INFO/EVENT` field to indicate that two or more such junctions are hypothesized to occur
+together as part of a single variant event. All individual variant records belonging to the same event will share
+the same `INFO/EVENT` string. Note that although such an inference could be applied after SV calling by analyzing
+the relative distance and orientation of the called variant breakpoints,
+Manta incorporates this event mechanism into the calling process to increase sensitivity towards such larger-scale
+events. Given that at least one junction in the event has already passed standard variant candidacy thresholds,
+sensitivity is improved by lowering the evidence thresholds for additional junctions which occur in a pattern
+consistent with a multi-junction event (such as a reciprocal translocation pair).
 
-The VCF ID or 'identifer' field can be used for annotation, or in the case of BND ('breakend') records for translocations, the ID value is used to link breakend mates or partners.
+Note that although this mechanism could generalize to events including an arbitrary number of junctions,
+it is currently limited to 2. Thus, at present it is most useful for identifying and improving sensitivity
+towards reciprocal translocation pairs.
+
+#### Details of Manta's VCF ID field
+
+The VCF ID or 'identifier' field can be used for annotation, or in the case of BND ('breakend') records for translocations, the ID value is used to link breakend mates or partners.
 
 An example Manta VCF ID is "MantaINS:1577:0:0:0:3:0". The value provided in this field reflects the SV association graph edge(s) from which the SV or indel was discovered. The ID value provided by Manta is primarily intended for internal use by manta developers. The value is guaranteed to be unique within any VCF file produced by Manta, and these ID values are used to link associated breakend records using the standard VCF `MATEID` key. The structure of this ID may change in the future, it is safe to use the entire value as a unique key, but parsing this value may lead to incompatibilities with future updates.
 
@@ -588,7 +607,7 @@ Using the `--generateEvidenceBam` option, Manta can be configured to generate ba
 
 It is recommended to use this option together with the `--region` option, so that the analysis is limited to relatively small genomic regions for debugging purposes.
 
-The evidence bam files are provided in `${MANTA_ANALYSIS_PATH}/results/evidence`, with a naming format `evidence.*.bam`.
+The evidence bam files are provided in `${MANTA_ANALYSIS_PATH}/results/evidence`, with a naming format `evidence_*.*.bam`.
 There is one such file for each input bam of the analysis, containing evidence reads of the candidate SVs identified from that input bam.
 Each read in an evidence bam keeps all information from the original bam, and it contains also a customized tag in the format: `ZM:Z:${MANTA_SV_ID_1}|${EVIDENCE_TYPE},${MANTA_SV_ID_2}|${EVIDENCE_TYPE}`. For example, ZM:Z:MantaINV:5:0:1:0:0:0|PR|SRM,MantaDEL:5:1:2:0:0:0|SR
 * One read can have more than one of the three evidence types: PR for paired reads, SR for split reads, and SRM for split read mates.
@@ -719,13 +738,13 @@ together if a more accurate filter is required. The status of a call's `IMPRECIS
 of its reliability.
 
 For example, in the unpaired tumor analysis output below, the records could be filtered to only include those with
-`SAMPLE/PR[1] >= 15 || SAMPLE/SR[1] >= 15`. This would remove the inversion record, because the paired-read count
-for the inversion allele is 13 and the split-read count is not known. The two translocation breakends would not be
+`SAMPLE/PR[1] >= 15 || SAMPLE/SR[1] >= 15`. This would remove the deletion record, because the paired-read count
+for the deletion allele is 13 and the split-read count is not known. The two translocation breakends would not be
 filtered because they have 15 and 19 split-read counts, respectively, supporting the breakend allele:
 
 ```
 11      94975747        MantaBND:0:2:3:0:0:0:1  G       G]8:107653520]  .       PASS    SVTYPE=BND;MATEID=MantaBND:0:2:3:0:0:0:0;CIPOS=0,2;HOMLEN=2;HOMSEQ=TT;BND_DEPTH=216;MATE_BND_DEPTH=735  PR:SR   722,9:463,15
-11      94975753        MantaINV:0:1:2:0:0:0    T       <INV>   .       PASS    END=94987865;SVTYPE=INV;SVLEN=12112;IMPRECISE;CIPOS=-156,156;CIEND=-150,150;INV3        PR      161,13
+11      94975753        MantaDEL:0:1:2:0:0:0    T       <DEL>   .       PASS    END=94987865;SVTYPE=DEL;SVLEN=12112;IMPRECISE;CIPOS=-156,156;CIEND=-150,150        PR      161,13
 11      94987872        MantaBND:0:0:1:0:0:0:0  T       T[8:107653411[  .       PASS    SVTYPE=BND;MATEID=MantaBND:0:0:1:0:0:0:1;BND_DEPTH=171;MATE_BND_DEPTH=830       PR:SR   489,4:520,19
 ```
 

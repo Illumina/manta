@@ -4,6 +4,27 @@
 - Add a configurable option to allow overlapping pairs to be used as evidence (MANTA-1398)
   - The option is available in the configure file configureManta.py.ini
 
+### Changed
+- Change SV candidate contig aligners to improve precision (MANTA-1396)
+  - Change contig aligners such that variant occurrences are more heavily penalized.
+- Fix multi-junction nomination (MANTA-1430)
+  - Complex events with more than two junctions are no longer nominated as a group
+  - Fix the problem of duplicate detection of the same SV candidate
+- Add index to ensure uniqueness of evidence bam filenames (MANTA-1431)
+  - It solves the potential problem of name conflicts for evidence bams if the input bam files have the same name while located in different directories.
+- Change filters for easy interpretation of multi-sample germline variant vcf (MANTA-1343)
+  - Add record-level filter 'SampleFT' when no sample passes all sample level filters
+  - Add sample-level filter 'HomRef' for homogyzous reference calls
+  - No more sample-level filter will be applied at the record level even if it applies to all samples
+- Change representation of inversions in the VCF output (MANTA-1385)
+  - Intrachromosomal translocations with inverted breakpoints are now reported as two breakend (BND) records.
+  - Previously they were reported in the VCF using the inversion (INV) allele type.
+
+### Fixed
+- Fix the bug of stats generation with short reference sequences (MANTA-1459/[#143])
+- Fix the evidence significance test in the multi-sample calling mode (MANTA-1294)
+  - This issue previously caused spurious false negatives during the multi-sample calling mode. The incidence rate of the problem tended to increase with sample count.
+
 ## v1.4.0 - 2018-04-25
 
 This is a major bugfix update from v1.3.2, featuring improved precision and vcf representation, in addition to minor user friendly improvements.

@@ -31,8 +31,8 @@ indels for germline and cancer sequencing applications. *Bioinformatics*,
 
 ...and the corresponding [open-access pre-print][preprint].
 
-[bpaper]:https://dx.doi.org/10.1093/bioinformatics/btv710
-[preprint]:http://dx.doi.org/10.1101/024232
+[bpaper]:https://doi.org/10.1093/bioinformatics/btv710
+[preprint]:https://doi.org/10.1101/024232
 
 
 License

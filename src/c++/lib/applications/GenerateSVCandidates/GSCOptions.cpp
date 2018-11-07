@@ -56,7 +56,7 @@ checkStandardizeUsageFile(
     const char* fileLabel)
 {
     std::string errorMsg;
-    if ( checkStandardizeInputFile(filename, fileLabel, errorMsg))
+    if (checkAndStandardizeRequiredInputFilePath(filename, fileLabel, errorMsg))
     {
         usage(os,prog,visible,errorMsg.c_str());
     }

@@ -41,9 +41,9 @@
 #endif
 
 
-/// A read associated with an SV associated set of regions
+/// \brief A read associated with an SV associated set of regions
 ///
-/// note this read could be linked with zero to many specific SVCandidates
+/// Note this read could be linked with zero to many specific SVCandidates
 ///
 struct SVCandidateSetRead
 {
@@ -62,9 +62,11 @@ struct SVCandidateSetRead
     //realignment info, etc...
     bam_record bamrec;
 
-    /// used to link this read to node1 or node2 in the original graph ordering,
+    /// True if this read is associated with Node1 in the corresponding SV locus graph node supporting the SV candidate.
+    ///
+    /// This is used to link this read to node1 or node2 in the original graph ordering,
     /// note this is not the same as read1 and read2
-    bool isNode1 = true;
+    bool isSourcedFromGraphEdgeNode1 = true;
 
     /// is mapq below the minimum normally required to use this read
     bool isSubMapped = false;
@@ -167,14 +169,11 @@ struct SVCandidateSetSequenceFragmentSampleGroup
     typedef pair_t::iterator iterator;
     typedef pair_t::const_iterator const_iterator;
 
-    /// increment once for each eligible read considered
+    /// \brief Increment once for each eligible read considered
     ///
-    /// this information is used to determine signal rate
-    /// so that it can be compared to sample specific noise
-    /// levels
+    /// This information is used to determine signal rate so that it can be compared to sample specific noise levels
     void
     increment(
-        const bool /*isNode1*/,
         const bool isSubMapped)
     {
         if (isSubMapped)
@@ -192,15 +191,15 @@ struct SVCandidateSetSequenceFragmentSampleGroup
     /// \param[in] bamHeader Bam header information is (only) used to improve the detail of exception messages.
     /// \param[in] bamRead New bam record to add to the sample group set
     /// \param[in[ isExpectRepeat If false, raise an exception for a repeated BAM QNAME, otherwise skip all but
-    ///             the first repeated instance.
-    /// \param[in] isNode1 True if this is the first (of two) nodes in the evaluated edge
+    ///             the first repeated QNAME instance.
+    /// \param[in] isSourcedFromGraphEdgeNode1 True if \p bamRead was discovered from SV locus graph edge node1
     /// \param[in] isSubMapped True if read is below default mapping quality threshold
     void
     add(
         const bam_header_info& bamHeader,
         const bam_record& bamRead,
         const bool isExpectRepeat,
-        const bool isNode1,
+        const bool isSourcedFromGraphEdgeNode1,
         const bool isSubMapped);
 
     iterator
@@ -269,7 +268,7 @@ private:
     /// Tracks the relative index of all mapped reads as read off of the input bam file. This is used to provide a
     /// relative index number for all reads supporting a particular SV candidate, so that supporting read density
     /// can be estimated. For instance, if 3 reads supporting a breakpoint have mapped read counts of {100,200,300},
-    /// we can roughly estimate the 1/100 reads support the breakpoint.
+    /// we can roughly estimate the 1 of 100 reads support the breakpoint.
     double _mappedReadIndex = 0;
 
     /// same as above for reads with mapping quality below theshold
@@ -277,7 +276,7 @@ private:
 };
 
 
-/// Data gathered from a set of regions implicated to contain one or more SVs
+/// \brief Data gathered from a set of regions implicated to contain one or more SVs
 ///
 /// Note these data are used for initial hypothesis generation, therefore the
 /// reads are potentially associated with zero to many specific SV candidates
@@ -286,7 +285,7 @@ private:
 ///
 struct SVCandidateSetData
 {
-    /// get evidence associated with a specific sample group:
+    /// \brief Get evidence associated with a specific sample group:
     SVCandidateSetSequenceFragmentSampleGroup&
     getDataGroup(const unsigned bamIndex)
     {
@@ -297,7 +296,7 @@ struct SVCandidateSetData
         return diter2.first->second;
     }
 
-    /// get evidence associated with a specific sample group:
+    /// \brief Get evidence associated with a specific sample group:
     const SVCandidateSetSequenceFragmentSampleGroup&
     getDataGroup(const unsigned bamIndex) const
     {
