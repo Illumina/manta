@@ -249,11 +249,11 @@ unalignedSuffixSize(const path_t& apath);
 
 /// how much soft_clip occurs before the first aligned base?
 unsigned
-apath_soft_clip_lead_size(const path_t& apath);
+apath_soft_clip_left_size(const path_t& apath);
 
 /// how much soft_clip occurs after the last aligned base?
 unsigned
-apath_soft_clip_trail_size(const path_t& apath);
+apath_soft_clip_right_size(const path_t& apath);
 
 /// how much clip (soft or hard) occurs before the first aligned base?
 unsigned

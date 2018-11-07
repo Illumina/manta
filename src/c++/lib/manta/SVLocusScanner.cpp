@@ -541,7 +541,7 @@ getSVCandidatesFromSemiAligned(
     unsigned trailingMismatchLen(0);
     pos_t leadingRefPos(0), trailingRefPos(0);
     getSVBreakendCandidateSemiAligned(bamRead, bamAlign, refSeq,
-                                      opt.isUseOverlappingPair,
+                                      opt.useOverlapPairEvidence,
                                       leadingMismatchLen, leadingRefPos,
                                       trailingMismatchLen, trailingRefPos);
 
@@ -1609,7 +1609,7 @@ isSemiAlignedEvidence(
 {
     unsigned leadingMismatchLen(0), trailingMismatchLen(0);
     getSVBreakendCandidateSemiAlignedSimple(bamRead, bamAlign, refSeq,
-                                            _opt.isUseOverlappingPair,
+                                            _opt.useOverlapPairEvidence,
                                             leadingMismatchLen, trailingMismatchLen);
     return ((leadingMismatchLen >= _opt.minSemiAlignedMismatchLen) || (trailingMismatchLen >= _opt.minSemiAlignedMismatchLen));
 }

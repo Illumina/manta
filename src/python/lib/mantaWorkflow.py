@@ -581,7 +581,7 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         if self.params.isIgnoreAnomProperPair :
             hygenCmd.append("--ignore-anom-proper-pair")
 
-        if self.params.isUseOverlappingPair:
+        if self.params.useOverlapPairEvidence:
             hygenCmd.append("--use-overlapping-pair")
 
         if self.params.isRNA :
@@ -807,7 +807,7 @@ class MantaWorkflow(WorkflowRunner) :
         # normalize boolean option input:
         safeSetBool(self.params,"enableRemoteReadRetrievalForInsertionsInGermlineCallingModes")
         safeSetBool(self.params,"enableRemoteReadRetrievalForInsertionsInCancerCallingModes")
-        safeSetBool(self.params,"isUseOverlappingPair")
+        safeSetBool(self.params,"useOverlapPairEvidence")
 
         # Use RNA option for minCandidate size
         if self.params.isRNA:
@@ -857,7 +857,7 @@ class MantaWorkflow(WorkflowRunner) :
 
         # always use overlapping pairs for RNA calling
         if (self.params.isRNA) :
-            self.params.isUseOverlappingPair = True
+            self.params.useOverlapPairEvidence = True
 
 
     def setCallMemMb(self) :

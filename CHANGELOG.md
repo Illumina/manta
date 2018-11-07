@@ -1,7 +1,8 @@
 ## Unreleased
 
 ### Added
-- Add a configurable option to allow overlapping reads considered as evidence (MANTA-1398)
+- Add a configurable option to allow overlapping pairs to be used as evidence (MANTA-1398)
+  - The option is available in the configure file configureManta.py.ini
 
 ## v1.4.0 - 2018-04-25
 

@@ -217,7 +217,7 @@ unalignedSuffixSize(const path_t& apath)
 
 
 unsigned
-apath_soft_clip_lead_size(const path_t& apath)
+apath_soft_clip_left_size(const path_t& apath)
 {
     unsigned val(0);
     for (const path_segment& ps : apath)
@@ -241,7 +241,7 @@ apath_soft_clip_lead_size(const path_t& apath)
 
 
 unsigned
-apath_soft_clip_trail_size(const path_t& apath)
+apath_soft_clip_right_size(const path_t& apath)
 {
     unsigned val(0);
     BOOST_REVERSE_FOREACH(const path_segment& ps, apath)

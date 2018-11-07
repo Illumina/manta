@@ -84,14 +84,14 @@ is_adapter_pair(
         const SimpleAlignment mate(getKnownOrFakedMateAlignment(bamRead));
         if (aln.is_fwd_strand)
         {
-            unsigned const endpos = aln.pos + apath_ref_length(aln.path) + apath_soft_clip_trail_size(aln.path);
-            unsigned const mateStartPos = mate.pos + apath_ref_length(mate.path) + apath_soft_clip_trail_size(mate.path);
+            unsigned const endpos = aln.pos + apath_ref_length(aln.path) + apath_soft_clip_right_size(aln.path);
+            unsigned const mateStartPos = mate.pos + apath_ref_length(mate.path) + apath_soft_clip_right_size(mate.path);
             return (endpos > mateStartPos);
         }
         else
         {
-            unsigned const endpos = aln.pos - apath_soft_clip_lead_size(aln.path);
-            unsigned const mateStartPos = mate.pos - apath_soft_clip_lead_size(mate.path);
+            unsigned const endpos = aln.pos - apath_soft_clip_left_size(aln.path);
+            unsigned const mateStartPos = mate.pos - apath_soft_clip_left_size(mate.path);
             return (endpos < mateStartPos);
         }
     }
@@ -100,8 +100,8 @@ is_adapter_pair(
         // If we do not have mate cigar information use an aggressive heuristic:
         // if the read contains soft clip on the 3' end, it likely runs into adapter.
         unsigned const softClipSize(aln.is_fwd_strand ?
-                                    apath_soft_clip_trail_size(aln.path) :
-                                    apath_soft_clip_lead_size(aln.path));
+                                    apath_soft_clip_right_size(aln.path) :
+                                    apath_soft_clip_left_size(aln.path));
         return (softClipSize > 0);
     }
 }
@@ -116,7 +116,7 @@ is_overlapping_pair(
     if (! is_mapped_chrom_pair(bamRead)) return false;
     if (bamRead.is_fwd_strand() == bamRead.is_mate_fwd_strand()) return false;
 
-    static const int reverseOrientDist(bamRead.read_size());
+    const int reverseOrientDist(bamRead.read_size());
     int posDiff(bamRead.pos() - bamRead.mate_pos());
     if (! bamRead.is_fwd_strand())
     {

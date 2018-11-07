@@ -265,11 +265,11 @@ realignPairedRead(
         {
             if (isLeftOfInsert)
             {
-                clipSize=apath_soft_clip_trail_size(readPath);
+                clipSize=apath_soft_clip_right_size(readPath);
             }
             else
             {
-                clipSize=apath_soft_clip_lead_size(readPath);
+                clipSize=apath_soft_clip_left_size(readPath);
             }
         }
 

@@ -92,7 +92,7 @@ struct ReadScannerOptions
     unsigned minSingletonMapqCandidates = 15;
 
     // \brief If true, consider an overlapping read pair as evidence.
-    bool isUseOverlappingPair = false;
+    bool useOverlapPairEvidence = false;
 
     /// \brief If true, do not treat reads with the 'proper pair' bit set as SV evidence.
     ///

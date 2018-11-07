@@ -130,7 +130,7 @@ isLowQualitySpanningSVAlignment(
     apath_limit_ref_length(maxQCRefSpan,apath);
 
     const unsigned readSize(apath_read_length(apath));
-    const unsigned clipSize(apath_soft_clip_trail_size(apath));
+    const unsigned clipSize(apath_soft_clip_right_size(apath));
 
     assert(clipSize <= readSize);
 
@@ -393,7 +393,7 @@ isLowQualitySmallSVAlignment(
     }
 
     const unsigned pathSize(apath_read_length(apath));
-    const unsigned clipSize(apath_soft_clip_trail_size(apath));
+    const unsigned clipSize(apath_soft_clip_right_size(apath));
 
     assert(clipSize <= pathSize);
 

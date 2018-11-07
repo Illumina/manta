@@ -41,7 +41,7 @@
 ///
 /// To do so the following steps are taken:
 /// 1. Reads where there is suspected adaptor 'read-through' due to short fragments size are filtered out.
-/// 2. Reads which overlap their mate read are optionally filtered out (per function argument \p isUseOverlappingPair).
+/// 2. Reads which overlap their mate read are optionally filtered out (per function argument \p useOverlapPairEvidence).
 /// 3. Any soft-clipped segments in the input reed are 'unrolled' to the match state.
 /// 4. The length of poorly aligned sequence on each read edge is found.
 /// 5. Cases where the entire read is poorly aligned are filtered out.
@@ -69,7 +69,7 @@
 /// \param[in] bamAlign A simplified representation of the bamRead's alignment. This information can be derived from
 ///                     bamRead but is provided as a (presumed) cache optimization.
 /// \param[in] refSeq Local reference sequence
-/// \param[in] isUseOverlappingPair When false, filter out read pairs which overlap.
+/// \param[in] useOverlapPairEvidence When false, filter out read pairs which overlap.
 /// \param[in] isAggressiveAdaptorCheck When true, filter out read pairs that might run into adapters based on an aggressive check
 /// \param[out] leadingEdgePoorAlignmentLength Length of possible breakend-associated poor alignment on the read's leading edge.
 /// \param[out] leadingEdgeRefPos The reference position of the first aligned base after the leading poorly aligned segment.
@@ -85,7 +85,7 @@ getSVBreakendCandidateSemiAligned(
     const bam_record& bamRead,
     const SimpleAlignment& bamAlign,
     const reference_contig_segment& refSeq,
-    const bool isUseOverlappingPair,
+    const bool useOverlapPairEvidence,
     unsigned& leadingEdgePoorAlignmentLength,
     pos_t& leadingEdgeRefPos,
     unsigned& trailingEdgePoorAlignmentLength,
@@ -104,14 +104,14 @@ getSVBreakendCandidateSemiAlignedSimple(
     const bam_record& bamRead,
     const SimpleAlignment& bamAlign,
     const reference_contig_segment& refSeq,
-    const bool isUseOverlappingPair,
+    const bool useOverlapPairEvidence,
     unsigned& leadingMismatchLen,
     unsigned& trailingMismatchLen)
 {
     pos_t leadingRefPos(0), trailingRefPos(0);
     getSVBreakendCandidateSemiAligned(
         bamRead, bamAlign, refSeq,
-        isUseOverlappingPair,
+        useOverlapPairEvidence,
         leadingMismatchLen, leadingRefPos,
         trailingMismatchLen, trailingRefPos);
 }

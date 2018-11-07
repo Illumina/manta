@@ -32,7 +32,7 @@ getOptionsDescription(ReadScannerOptions& opt)
      "Reads with MAPQ less than this value will be ignored")
     ("edge-prob", po::value(&opt.breakendEdgeQuantileProb)->default_value(opt.breakendEdgeQuantileProb),
      "Breakend range associated with each read will trimmed to expected fragment quantile range [p,(1-p)], p: edge-prob")
-    ("use-overlapping-pair", po::value(&opt.isUseOverlappingPair)->zero_tokens(),
+    ("use-overlapping-pair", po::value(&opt.useOverlapPairEvidence)->zero_tokens(),
      "Consider an overlapping read pair as evidence")
     ("ignore-anom-proper-pair", po::value(&opt.isIgnoreAnomProperPair)->zero_tokens(),
      "Disregard anomalous fragment sizes if the BAM record has the proper pair bit set. "

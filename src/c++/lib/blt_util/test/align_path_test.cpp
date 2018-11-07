@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE( test_apath_clip_trail )
     ALIGNPATH::path_t path;
     cigar_to_apath(testCigar.c_str(), path);
 
-    BOOST_REQUIRE_EQUAL(apath_soft_clip_trail_size(path),3u);
+    BOOST_REQUIRE_EQUAL(apath_soft_clip_right_size(path),3u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

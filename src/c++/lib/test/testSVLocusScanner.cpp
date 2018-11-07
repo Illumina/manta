@@ -38,7 +38,7 @@ buildTestSVLocusScanner(
 {
     ReadScannerOptions opts = ReadScannerOptions();
     opts.minCandidateVariantSize = minCandidateVariantSizeInput;
-    opts.isUseOverlappingPair = isRNA;
+    opts.useOverlapPairEvidence = isRNA;
     const ReadScannerOptions& constRefOpts(opts);
 
     TestStatsFileMaker statsFile;

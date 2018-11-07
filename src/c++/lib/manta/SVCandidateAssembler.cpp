@@ -560,7 +560,7 @@ getBreakendReads(
                 unsigned leadingMismatchLen(0);
                 unsigned trailingMismatchLen(0);
                 getSVBreakendCandidateSemiAlignedSimple(bamRead, bamAlign, refSeq,
-                                                        _scanOpt.isUseOverlappingPair,
+                                                        _scanOpt.useOverlapPairEvidence,
                                                         leadingMismatchLen, trailingMismatchLen);
 
                 if (isSearchForRightOpen)
