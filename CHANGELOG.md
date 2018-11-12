@@ -1,4 +1,4 @@
-## Unreleased
+## v1.5.0 - 2018-11-12
 
 ### Added
 - Add a configurable option to allow overlapping pairs to be used as evidence (MANTA-1398)
