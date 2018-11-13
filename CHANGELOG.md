@@ -1,4 +1,5 @@
 ## v1.5.0 - 2018-11-12
+This is a major update from v1.4.0, featuring improved precision and stability, a new configurable option of overlapping pair reads, and a few bug fixes. VCF representation is improved by introducing a couple of new filters and representing inversions as two breakend records.
 
 ### Added
 - Add a configurable option to allow overlapping pairs to be used as evidence (MANTA-1398)
