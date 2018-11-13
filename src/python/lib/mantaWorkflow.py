@@ -201,6 +201,8 @@ def runStats(self,taskPrefix="",dependencies=None) :
         cmd.extend(["--ref", self.params.referenceFasta])
         cmd.extend(["--output-file",tmpStatsFiles[-1]])
         cmd.extend(["--align-file",bamPath])
+        if self.params.existingAlignStatsFile:
+            cmd.extend(["--default-stats-file",self.params.existingAlignStatsFile])
 
         statsTasks.add(self.addTask(preJoin(taskPrefix,"generateStats_"+indexStr),cmd,dependencies=dirTask))
 
@@ -888,12 +890,8 @@ class MantaWorkflow(WorkflowRunner) :
 
         graphTaskDependencies = set()
 
-        if not self.params.existingAlignStatsFile:
-            statsTasks = runStats(self,taskPrefix="getAlignmentStats")
-            graphTaskDependencies |= statsTasks
-        else:
-            statsTasks = set()
-            copyStats(self)
+        statsTasks = runStats(self,taskPrefix="getAlignmentStats")
+        graphTaskDependencies |= statsTasks
 
         summarizeStats(self, dependencies=statsTasks)
 

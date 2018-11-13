@@ -77,6 +77,8 @@ parseAlignmentStatsOptions(
      "write stats to filename (default: stdout)")
     ("ref", po::value(&opt.referenceFilename),
      "fasta reference sequence (required)")
+    ("default-stats-file", po::value(&opt.defaultStatsFilename),
+     "file containing default stats to use if minimum reads not found (default: raise exception)")
     ;
 
     po::options_description help("help");
