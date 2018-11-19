@@ -29,7 +29,8 @@ BOOST_AUTO_TEST_SUITE( FatSVCandidate_test_suite )
 /// cases have been written in below test cases.
 /// fatSVCandidate1: >>>bp1>>>>-----------------------------------<<bp2<<<<< [bp1(10,100) & bp2(1000,1100)]
 /// fatSVCandidate2:   >>>>bp1>>>------------------------------------<<bp2<<<<< [bp1(50,120) & bp2(1050,1150)]
-/// fatSVCandidate3:               >>>bp1>>>-----------------------------------------<<<bp2<<<<< [bp1(200,300) & bp2(1400,1500)]
+/// fatSVCandidate3:               >>>bp1>>>-----------------------------------------<<<bp2<<<<< [bp1(200,300) &
+///                                                                                               bp2(1400,1500)]
 /// fatSVCandidate4:   <<<bp1<<<<-------------------------------<<<<<<<bp2<<<<< [bp1(50,120) & bp2(990,1050)]
 /// fatSVCandidate5:   >>>bp2>>>>------------------------------------<<bp1<<<<< [bp1(1050,1150) & bp2(50,120)]
 /// fatSVCandidate6: >>>bp1>>>>-----------------------------------<<bp2<<<<< [bp1(10,100) & bp2(1000,1100)]
@@ -134,11 +135,13 @@ BOOST_AUTO_TEST_CASE( test_merge)
     for (unsigned i(0); i < sizeBP1Candidate1; i++)
         BOOST_REQUIRE_EQUAL(fatSVCandidate1.bp1EvidenceIndex[0][0][i], readIndicesBP1ForCandidate1[i]);
     for (unsigned i(sizeBP1Candidate1); i < sizeBP1Candidate1 + sizeBP1Candidate2; i++)
-        BOOST_REQUIRE_EQUAL(fatSVCandidate1.bp1EvidenceIndex[0][0][i], readIndicesBP1ForCandidate2[i - sizeBP1Candidate1]);
+        BOOST_REQUIRE_EQUAL(fatSVCandidate1.bp1EvidenceIndex[0][0][i],
+                            readIndicesBP1ForCandidate2[i - sizeBP1Candidate1]);
     for (unsigned i(0); i < sizeBP2Candidate1; i++)
         BOOST_REQUIRE_EQUAL(fatSVCandidate1.bp2EvidenceIndex[0][0][i], readIndicesBP2ForCandidate1[i]);
     for (unsigned i(sizeBP2Candidate1); i < sizeBP2Candidate1 + sizeBP2Candidate2; i++)
-        BOOST_REQUIRE_EQUAL(fatSVCandidate1.bp2EvidenceIndex[0][0][i], readIndicesBP2ForCandidate2[i - sizeBP2Candidate1]);
+        BOOST_REQUIRE_EQUAL(fatSVCandidate1.bp2EvidenceIndex[0][0][i],
+                            readIndicesBP2ForCandidate2[i - sizeBP2Candidate1]);
 
     SVCandidate svCandidate5;
     svCandidate5.bp1.interval = GenomeInterval(0, 1050, 1150);
