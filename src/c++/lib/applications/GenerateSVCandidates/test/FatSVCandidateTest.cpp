@@ -23,46 +23,26 @@
 
 BOOST_AUTO_TEST_SUITE( FatSVCandidate_test_suite )
 
-// Test the output stream of FatSVCandidate
-BOOST_AUTO_TEST_CASE( test_Print_FatSVCandidate)
-{
-    SVCandidate svCandidate;
-    svCandidate.bp1.interval = GenomeInterval(0,10, 100);
-    svCandidate.bp2.interval = GenomeInterval(0, 1000, 1100);
-    svCandidate.bp1.state  = SVBreakendState::RIGHT_OPEN;
-    svCandidate.bp2.state  = SVBreakendState::LEFT_OPEN;
-    FatSVCandidate fatSVCandidate(svCandidate, 1u);
-    fatSVCandidate.bp1EvidenceIndex[0][0].push_back(3443);
-    fatSVCandidate.bp1EvidenceIndex[0][0].push_back(3452);
-    fatSVCandidate.bp1EvidenceIndex[0][0].push_back(3440);
-    fatSVCandidate.bp1EvidenceIndex[0][0].push_back(3489);
-
-    fatSVCandidate.bp2EvidenceIndex[0][0].push_back(1403);
-    fatSVCandidate.bp2EvidenceIndex[0][0].push_back(1428);
-    fatSVCandidate.bp2EvidenceIndex[0][0].push_back(1480);
-    fatSVCandidate.bp2EvidenceIndex[0][0].push_back(1507);
-    std::cout << fatSVCandidate << std::endl;
-
-
-}
-
 
 /// Two SVCandidates intersect if their breakend regions overlap in the same direction.
-/// In the schematic below, the intersecting candidate pairs are (1,2) and (2,3)
-/// Candidate1: >bp2>----------------------------------->>bp1>>
-/// Candidate2:    >>>>>>>bp1>>>>>>>--------------->>bp2>>
-/// Candidate3:               >>>bp2>>>--------------->>>>>>>bp1>>>>>>
-/// Candidate4:               <<<bp2<<<---------------<<<<<<<bp1<<<<<<
+/// In the schematic below, the intersecting candidate pairs are (1,2) and (5,6). Same
+/// cases have been written in below test cases.
+/// fatSVCandidate1: >>>bp1>>>>-----------------------------------<<bp2<<<<< [bp1(10,100) & bp2(1000,1100)]
+/// fatSVCandidate2:   >>>>bp1>>>------------------------------------<<bp2<<<<< [bp1(50,120) & bp2(1050,1150)]
+/// fatSVCandidate3:               >>>bp1>>>-----------------------------------------<<<bp2<<<<< [bp1(200,300) & bp2(1400,1500)]
+/// fatSVCandidate4:   <<<bp1<<<<-------------------------------<<<<<<<bp2<<<<< [bp1(50,120) & bp2(990,1050)]
+/// fatSVCandidate5:   >>>bp2>>>>------------------------------------<<bp1<<<<< [bp1(1050,1150) & bp2(50,120)]
+/// fatSVCandidate6: >>>bp1>>>>-----------------------------------<<bp2<<<<< [bp1(10,100) & bp2(1000,1100)]
 BOOST_AUTO_TEST_CASE( test_merge)
 {
     SVCandidate svCandidate1;
-    svCandidate1.bp1.interval = GenomeInterval(0,10, 100);
+    svCandidate1.bp1.interval = GenomeInterval(0, 10, 100);
     svCandidate1.bp2.interval = GenomeInterval(0, 1000, 1100);
     svCandidate1.bp1.state  = SVBreakendState::RIGHT_OPEN;
     svCandidate1.bp2.state  = SVBreakendState::LEFT_OPEN;
 
     SVCandidate svCandidate2;
-    svCandidate2.bp1.interval = GenomeInterval(0,50, 120);
+    svCandidate2.bp1.interval = GenomeInterval(0, 50, 120);
     svCandidate2.bp2.interval = GenomeInterval(0, 1050, 1150);
     svCandidate2.bp1.state  = SVBreakendState::RIGHT_OPEN;
     svCandidate2.bp2.state  = SVBreakendState::LEFT_OPEN;
@@ -79,49 +59,41 @@ BOOST_AUTO_TEST_CASE( test_merge)
     svCandidate3.bp1.state  = SVBreakendState::LEFT_OPEN;
     svCandidate3.bp2.state  = SVBreakendState::LEFT_OPEN;
 
-    SVCandidate svCandidate5;
-    svCandidate5.bp1.interval = GenomeInterval(0,1050, 1150);
-    svCandidate5.bp2.interval = GenomeInterval(0, 50, 120);
-    svCandidate5.bp1.state  = SVBreakendState::LEFT_OPEN;
-    svCandidate5.bp2.state  = SVBreakendState::RIGHT_OPEN;
-
-    SVCandidate svCandidate6;
-    svCandidate6.bp1.interval = GenomeInterval(0,10, 100);
-    svCandidate6.bp2.interval = GenomeInterval(0, 1000, 1100);
-    svCandidate6.bp1.state  = SVBreakendState::RIGHT_OPEN;
-    svCandidate6.bp2.state  = SVBreakendState::LEFT_OPEN;
-
     FatSVCandidate fatSVCandidate1(svCandidate1, 1u);
     FatSVCandidate fatSVCandidate2(svCandidate2, 1u);
     FatSVCandidate fatSVCandidate3(svCandidate3, 1u);
     FatSVCandidate fatSVCandidate4(svCandidate4, 1u);
-    FatSVCandidate fatSVCandidate5(svCandidate5, 1u);
-    FatSVCandidate fatSVCandidate6(svCandidate6, 1u);
 
     // Evidence read indices
-    std::vector<int > readIndicesBP1 = {3443,3452,3440,3489,3445,3450,3420,4000};
-    std::vector<int > readIndicesBP2 = {1403,1428,1480,1507,1400,142,140,150};
+    int readIndicesBP1ForCandidate1[] = { 3443, 3452, 3440, 3489};
+    int readIndicesBP2ForCandidate1[] = { 1403, 1428, 1480, 1507 };
+    unsigned sizeBP1Candidate1 = sizeof(readIndicesBP1ForCandidate1)/ sizeof(readIndicesBP1ForCandidate1[0]);
+    unsigned sizeBP2Candidate1 = sizeof(readIndicesBP2ForCandidate1)/ sizeof(readIndicesBP2ForCandidate1[0]);
+    int readIndicesBP1ForCandidate2[] = { 3445, 3450, 3420, 4000 };
+    int readIndicesBP2ForCandidate2[] = { 1400, 142, 140, 150 };
+    unsigned sizeBP1Candidate2 = sizeof(readIndicesBP1ForCandidate2)/ sizeof(readIndicesBP1ForCandidate1[0]);
+    unsigned sizeBP2Candidate2 = sizeof(readIndicesBP2ForCandidate2)/ sizeof(readIndicesBP2ForCandidate1[0]);
 
     // adding evidence indices to all fatsvcandidates
-    fatSVCandidate1.bp1EvidenceIndex[0][0].push_back(readIndicesBP1[0]);
-    fatSVCandidate1.bp1EvidenceIndex[0][0].push_back(readIndicesBP1[1]);
-    fatSVCandidate1.bp1EvidenceIndex[0][0].push_back(readIndicesBP1[2]);
-    fatSVCandidate1.bp1EvidenceIndex[0][0].push_back(readIndicesBP1[3]);
+    fatSVCandidate1.bp1EvidenceIndex[0][0].push_back(readIndicesBP1ForCandidate1[0]);
+    fatSVCandidate1.bp1EvidenceIndex[0][0].push_back(readIndicesBP1ForCandidate1[1]);
+    fatSVCandidate1.bp1EvidenceIndex[0][0].push_back(readIndicesBP1ForCandidate1[2]);
+    fatSVCandidate1.bp1EvidenceIndex[0][0].push_back(readIndicesBP1ForCandidate1[3]);
 
-    fatSVCandidate1.bp2EvidenceIndex[0][0].push_back(readIndicesBP2[0]);
-    fatSVCandidate1.bp2EvidenceIndex[0][0].push_back(readIndicesBP2[1]);
-    fatSVCandidate1.bp2EvidenceIndex[0][0].push_back(readIndicesBP2[2]);
-    fatSVCandidate1.bp2EvidenceIndex[0][0].push_back(readIndicesBP2[3]);
+    fatSVCandidate1.bp2EvidenceIndex[0][0].push_back(readIndicesBP2ForCandidate1[0]);
+    fatSVCandidate1.bp2EvidenceIndex[0][0].push_back(readIndicesBP2ForCandidate1[1]);
+    fatSVCandidate1.bp2EvidenceIndex[0][0].push_back(readIndicesBP2ForCandidate1[2]);
+    fatSVCandidate1.bp2EvidenceIndex[0][0].push_back(readIndicesBP2ForCandidate1[3]);
 
-    fatSVCandidate2.bp1EvidenceIndex[0][0].push_back(readIndicesBP1[4]);
-    fatSVCandidate2.bp1EvidenceIndex[0][0].push_back(readIndicesBP1[5]);
-    fatSVCandidate2.bp1EvidenceIndex[0][0].push_back(readIndicesBP1[6]);
-    fatSVCandidate2.bp1EvidenceIndex[0][0].push_back(readIndicesBP1[7]);
+    fatSVCandidate2.bp1EvidenceIndex[0][0].push_back(readIndicesBP1ForCandidate2[0]);
+    fatSVCandidate2.bp1EvidenceIndex[0][0].push_back(readIndicesBP1ForCandidate2[1]);
+    fatSVCandidate2.bp1EvidenceIndex[0][0].push_back(readIndicesBP1ForCandidate2[2]);
+    fatSVCandidate2.bp1EvidenceIndex[0][0].push_back(readIndicesBP1ForCandidate2[3]);
 
-    fatSVCandidate2.bp2EvidenceIndex[0][0].push_back(readIndicesBP2[4]);
-    fatSVCandidate2.bp2EvidenceIndex[0][0].push_back(readIndicesBP2[5]);
-    fatSVCandidate2.bp2EvidenceIndex[0][0].push_back(readIndicesBP2[6]);
-    fatSVCandidate2.bp2EvidenceIndex[0][0].push_back(readIndicesBP2[7]);
+    fatSVCandidate2.bp2EvidenceIndex[0][0].push_back(readIndicesBP2ForCandidate2[0]);
+    fatSVCandidate2.bp2EvidenceIndex[0][0].push_back(readIndicesBP2ForCandidate2[1]);
+    fatSVCandidate2.bp2EvidenceIndex[0][0].push_back(readIndicesBP2ForCandidate2[2]);
+    fatSVCandidate2.bp2EvidenceIndex[0][0].push_back(readIndicesBP2ForCandidate2[3]);
 
     fatSVCandidate4.bp1EvidenceIndex[0][0].push_back(3423);
     fatSVCandidate4.bp1EvidenceIndex[0][0].push_back(3412);
@@ -138,8 +110,8 @@ BOOST_AUTO_TEST_CASE( test_merge)
     BOOST_REQUIRE(!fatSVCandidate1.merge(fatSVCandidate3));
 
     // Although the breakpoint-1 of fatSVCandidate1 intersects with the the breakpoint-1 of
-    // fatSVCandidate2, but breakpoint-2 direction of fatSVCandidate1 is different from
-    // breakpoint-2 direction of fatSVCandidate4. They cannot be merged.
+    // fatSVCandidate2, but breakpoint-1 direction of fatSVCandidate1 is different from
+    // breakpoint-1 direction of fatSVCandidate4. They cannot be merged.
     BOOST_REQUIRE(!fatSVCandidate1.merge(fatSVCandidate4));
 
     // Checking the size of both breakpoint before merging
@@ -152,15 +124,36 @@ BOOST_AUTO_TEST_CASE( test_merge)
 
     // Both fatSVCandidate1 and fatSVCandidate2 are merged and stored in fatSVCandidate1.
     // So the total evidence count of fatSVCandidate1 is sum of evidence count of fatSVCandidate1 and
-    // fatSVCandidate2.
-    BOOST_REQUIRE_EQUAL(fatSVCandidate1.bp1EvidenceIndex[0][0].size(), readIndicesBP1.size());
-    BOOST_REQUIRE_EQUAL(fatSVCandidate1.bp2EvidenceIndex[0][0].size(), readIndicesBP2.size());
+    // fatSVCandidate2 which is 8 based on read indices array.
+    BOOST_REQUIRE_EQUAL(fatSVCandidate1.bp1EvidenceIndex[0][0].size(), sizeBP1Candidate1 + sizeBP1Candidate2);
+    BOOST_REQUIRE_EQUAL(fatSVCandidate1.bp2EvidenceIndex[0][0].size(), sizeBP2Candidate1 + sizeBP2Candidate2);
 
-    // checking the merged values. It should be sequentially merged.
-    for (unsigned i(0); i < readIndicesBP1.size(); i++)
-        BOOST_REQUIRE_EQUAL(fatSVCandidate1.bp1EvidenceIndex[0][0][i], readIndicesBP1[i]);
-    for (unsigned i(0); i < readIndicesBP2.size(); i++)
-        BOOST_REQUIRE_EQUAL(fatSVCandidate1.bp2EvidenceIndex[0][0][i], readIndicesBP2[i]);
+    // checking the merged values. It should be sequentially merged, that means
+    // if vector A has {1, 2, 3} values and vector B has {2, 3, 4} values, after
+    // merging A should have {1, 2, 3, 2, 3, 4} values.
+    for (unsigned i(0); i < sizeBP1Candidate1; i++)
+        BOOST_REQUIRE_EQUAL(fatSVCandidate1.bp1EvidenceIndex[0][0][i], readIndicesBP1ForCandidate1[i]);
+    for (unsigned i(sizeBP1Candidate1); i < sizeBP1Candidate1 + sizeBP1Candidate2; i++)
+        BOOST_REQUIRE_EQUAL(fatSVCandidate1.bp1EvidenceIndex[0][0][i], readIndicesBP1ForCandidate2[i - sizeBP1Candidate1]);
+    for (unsigned i(0); i < sizeBP2Candidate1; i++)
+        BOOST_REQUIRE_EQUAL(fatSVCandidate1.bp2EvidenceIndex[0][0][i], readIndicesBP2ForCandidate1[i]);
+    for (unsigned i(sizeBP2Candidate1); i < sizeBP2Candidate1 + sizeBP2Candidate2; i++)
+        BOOST_REQUIRE_EQUAL(fatSVCandidate1.bp2EvidenceIndex[0][0][i], readIndicesBP2ForCandidate2[i - sizeBP2Candidate1]);
+
+    SVCandidate svCandidate5;
+    svCandidate5.bp1.interval = GenomeInterval(0, 1050, 1150);
+    svCandidate5.bp2.interval = GenomeInterval(0, 50, 120);
+    svCandidate5.bp1.state  = SVBreakendState::LEFT_OPEN;
+    svCandidate5.bp2.state  = SVBreakendState::RIGHT_OPEN;
+
+    SVCandidate svCandidate6;
+    svCandidate6.bp1.interval = GenomeInterval(0,10, 100);
+    svCandidate6.bp2.interval = GenomeInterval(0, 1000, 1100);
+    svCandidate6.bp1.state  = SVBreakendState::RIGHT_OPEN;
+    svCandidate6.bp2.state  = SVBreakendState::LEFT_OPEN;
+
+    FatSVCandidate fatSVCandidate5(svCandidate5, 1u);
+    FatSVCandidate fatSVCandidate6(svCandidate6, 1u);
 
     // Breakpoint-1 of fatSVCandidate5 intersects breakpoint-2 of fatSVCandidate6 as well as the direction of
     // breakpoint-1 of fatSVCandidate5 matches with direction of breakpoint-2 of fatSVCandidate6. Similar case

@@ -54,56 +54,47 @@ static void compareSVEvidenceRead(SVFragmentEvidenceRead observed, SVFragmentEvi
     BOOST_REQUIRE_EQUAL(observed.size, expected.size);
 }
 
-// Printing the output stream of all object
-BOOST_AUTO_TEST_CASE(test_Print)
-{
-    SVFragmentEvidenceAlleleBreakendPerRead svFragmentEvidenceAlleleBreakendPerRead;
-    std::cout << svFragmentEvidenceAlleleBreakendPerRead;
-    SVFragmentEvidenceAlleleBreakend svFragmentEvidenceAlleleBreakend;
-    std::cout << svFragmentEvidenceAlleleBreakend;
-    SVFragmentEvidenceAllele svFragmentEvidenceAllele;
-    std::cout << svFragmentEvidenceAllele;
-    SVFragmentEvidenceRead svFragmentEvidenceRead;
-    std::cout << svFragmentEvidenceRead;
-    SVFragmentEvidence svFragmentEvidence;
-    std::cout << svFragmentEvidence;
-}
-
 // Test the SVFragmentEvidenceAlleleBreaked structure
+// Following points need to be tested
+// 1. Whether value of a field in the object matches with the value returned by the api.
+// 2. If there is any clear() api, it should reset the value of a variable to default.
+//
 BOOST_AUTO_TEST_CASE( test_SVFragmentEvidenceAlleleBreakend )
 {
-    SVFragmentEvidenceAlleleBreakend svFragmentEvidenceAlleleBreakend;
+    SVFragmentEvidenceAlleleBreakend fragmentEvidenceAltBp1;
 
     // Setting the values for read1 of svFragmentEvidenceAlleleBreakend
-    svFragmentEvidenceAlleleBreakend.read1.isSplitEvaluated = true;
-    svFragmentEvidenceAlleleBreakend.read1.isSplitSupport = true;
-    svFragmentEvidenceAlleleBreakend.read1.isTier2SplitSupport = true;
-    svFragmentEvidenceAlleleBreakend.read1.splitEvidence = 0.5;
-    svFragmentEvidenceAlleleBreakend.read1.splitLnLhood = 0.2;
+    fragmentEvidenceAltBp1.read1.isSplitEvaluated = true;
+    fragmentEvidenceAltBp1.read1.isSplitSupport = true;
+    fragmentEvidenceAltBp1.read1.isTier2SplitSupport = true;
+    fragmentEvidenceAltBp1.read1.splitEvidence = 0.5;
+    fragmentEvidenceAltBp1.read1.splitLnLhood = 0.2;
 
     // setting the values for read2 of svFragmentEvidenceAlleleBreakend
-    svFragmentEvidenceAlleleBreakend.read2.isSplitEvaluated = true;
-    svFragmentEvidenceAlleleBreakend.read2.isSplitSupport = false;
-    svFragmentEvidenceAlleleBreakend.read2.isTier2SplitSupport = false;
-    svFragmentEvidenceAlleleBreakend.read2.splitEvidence = 0.1;
-    svFragmentEvidenceAlleleBreakend.read2.splitLnLhood = 0.05;
+    fragmentEvidenceAltBp1.read2.isSplitEvaluated = true;
+    fragmentEvidenceAltBp1.read2.isSplitSupport = false;
+    fragmentEvidenceAltBp1.read2.isTier2SplitSupport = false;
+    fragmentEvidenceAltBp1.read2.splitEvidence = 0.1;
+    fragmentEvidenceAltBp1.read2.splitLnLhood = 0.05;
 
-    // Check the attributes of read1 and read2 whether they are matching with the required values
-    compareAlleleBreakend(svFragmentEvidenceAlleleBreakend.getRead(true), svFragmentEvidenceAlleleBreakend.read1);
-    compareAlleleBreakend(svFragmentEvidenceAlleleBreakend.getRead(false), svFragmentEvidenceAlleleBreakend.read2);
+    // Check the attributes of read1 and read2 (returned from api) whether they are
+    // matching with the required values
+    compareAlleleBreakend(fragmentEvidenceAltBp1.getRead(true), fragmentEvidenceAltBp1.read1);
+    compareAlleleBreakend(fragmentEvidenceAltBp1.getRead(false), fragmentEvidenceAltBp1.read2);
 
     // Setting the value of fragmentLengthProb which is probability of the fragment size given
     // this allele. Also setting the isFragmentSupport which is whether this read pair fragment supports
-    // this allele on this breakend or not.
-    svFragmentEvidenceAlleleBreakend.fragLengthProb = 0.5;
-    svFragmentEvidenceAlleleBreakend.isFragmentSupport = true;
-    BOOST_REQUIRE(svFragmentEvidenceAlleleBreakend.isFragmentSupport);
-    BOOST_REQUIRE_EQUAL(svFragmentEvidenceAlleleBreakend.fragLengthProb, 0.5);
+    // this allele on this breakend or not. Checking whether values are set correctly or not and after
+    // that calling clearPairSupport to check whether the state goes back to default or not.
+    fragmentEvidenceAltBp1.fragLengthProb = 0.5;
+    fragmentEvidenceAltBp1.isFragmentSupport = true;
+    BOOST_REQUIRE(fragmentEvidenceAltBp1.isFragmentSupport);
+    BOOST_REQUIRE_EQUAL(fragmentEvidenceAltBp1.fragLengthProb, 0.5);
 
     // clearing means it should reset to default values.
-    svFragmentEvidenceAlleleBreakend.clearPairSupport();
-    BOOST_REQUIRE(!svFragmentEvidenceAlleleBreakend.isFragmentSupport);
-    BOOST_REQUIRE_EQUAL(svFragmentEvidenceAlleleBreakend.fragLengthProb, 0);
+    fragmentEvidenceAltBp1.clearPairSupport();
+    BOOST_REQUIRE(!fragmentEvidenceAltBp1.isFragmentSupport);
+    BOOST_REQUIRE_EQUAL(fragmentEvidenceAltBp1.fragLengthProb, 0);
 
     // Setting the values for read1 of SVFragmentEvidenceRead
     SVFragmentEvidenceRead read1;
@@ -118,16 +109,17 @@ BOOST_AUTO_TEST_CASE( test_SVFragmentEvidenceAlleleBreakend )
     read2.size = 100;
     read2.mapq = 40;
 
-    // Check the attributes of read1 and read2 whether they are matching with the required values
+    // Check the attributes of read1 and read2 (returned from api) whether they are matching with
+    // the required values
     SVFragmentEvidence svFragmentEvidence;
     svFragmentEvidence.read1 = read1;
     svFragmentEvidence.read2 = read2;
     compareSVEvidenceRead(svFragmentEvidence.getRead(true), read1);
     compareSVEvidenceRead(svFragmentEvidence.getRead(false), read2);
 
-    svFragmentEvidenceAlleleBreakend.fragLengthProb = 0.5;
-    svFragmentEvidenceAlleleBreakend.isFragmentSupport = true;
-    svFragmentEvidence.alt.bp1 = svFragmentEvidenceAlleleBreakend;
+    fragmentEvidenceAltBp1.fragLengthProb = 0.5;
+    fragmentEvidenceAltBp1.isFragmentSupport = true;
+    svFragmentEvidence.alt.bp1 = fragmentEvidenceAltBp1;
 
     // Whether this fragment read provides any pair evidence for any breakpoint of the ALT allele or not.
     // That means isFragmentSupport of either bp1 or bp2 should be true. Here

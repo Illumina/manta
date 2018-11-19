@@ -25,71 +25,32 @@ using namespace std;
 
 BOOST_AUTO_TEST_SUITE( EdgeOptionsParser_test_suite )
 
-// Test the description of the parser for edge options
-BOOST_AUTO_TEST_CASE( test_OptionsDescription )
-{
-    EdgeOptions opt;
-    boost::program_options::options_description optdesc = getOptionsDescription(opt);
-
-    // check description of bin count option
-    BOOST_REQUIRE_EQUAL(optdesc.options().at(0).get()->format_name(), "--bin-count");
-    BOOST_REQUIRE_EQUAL(optdesc.options().at(0).get()->format_parameter(), "arg (=1)");
-    BOOST_REQUIRE_EQUAL(optdesc.options().at(0).get()->description(), "Specify how many bins "
-                                                                      "the SV candidate problem "
-                                                                      "should be divided into, "
-                                                                      "where bin-index can be "
-                                                                      "used to specify which bin "
-                                                                      "to solve");
-
-    // check description bin index option
-    BOOST_REQUIRE_EQUAL(optdesc.options().at(1).get()->format_name(), "--bin-index");
-    BOOST_REQUIRE_EQUAL(optdesc.options().at(1).get()->format_parameter(), "arg (=0)");
-    BOOST_REQUIRE_EQUAL(optdesc.options().at(1).get()->description(), "Specify which bin to solve "
-                                                                      "when the SV candidate "
-                                                                      "problem is subdivided into "
-                                                                      "bins. Value must bin in "
-                                                                      "[0,bin-count)");
-    // check description of max edge count option
-    BOOST_REQUIRE_EQUAL(optdesc.options().at(2).get()->format_name(), "--max-edge-count");
-    BOOST_REQUIRE_EQUAL(optdesc.options().at(2).get()->format_parameter(), "arg (=10)");
-    BOOST_REQUIRE_EQUAL(optdesc.options().at(2).get()->description(), "Specify the maximum number of edge count. "
-                                                                      "If both nodes of an edge have an edge count "
-                                                                      "higher than this, the edge is skipped for "
-                                                                      "evaluation.");
-
-    // check description of locus index option
-    BOOST_REQUIRE_EQUAL(optdesc.options().at(3).get()->format_name(), "--locus-index");
-    BOOST_REQUIRE_EQUAL(optdesc.options().at(3).get()->format_parameter(), "arg");
-    BOOST_REQUIRE_EQUAL(optdesc.options().at(3).get()->description(), "Instead of solving for all SV candidates in a "
-                                                                      "bin, solve for candidates of a particular locus "
-                                                                      "or edge. If this argument is specified then bin-index "
-                                                                      "is ignored. Argument can be one of { locusIndex , "
-                                                                      "locusIndex:nodeIndex , locusIndex:nodeIndex:nodeIndex }, "
-                                                                      "which will run an entire locus, all edges connected to "
-                                                                      "one node in a locus or a single edge, respectively.");
-}
-
 // Test the parsing of edge options.
+// Following points need to be tested
+// 1. locus index format
+// 2. bin count and bin index validation
 BOOST_AUTO_TEST_CASE( test_ParseEdgeOptions )
 {
+    using namespace boost::program_options;
+
     EdgeOptions edgeoption;
-    namespace po = boost::program_options;
     const char locusIndexKey[] = "locus-index";
     std::string errorMsg;
     boost::program_options::variables_map vm;
     string locusIndex = "1:2:3:4";
-    vm.insert(std::make_pair(locusIndexKey, po::variable_value(locusIndex, true)));
+    vm.insert(std::make_pair(locusIndexKey, variable_value(locusIndex, true)));
 
     // locus index format is not correct. It should not have more than 3 colon separated segments.
-    // locus index format is either of the following two things:
-    // 1. locusIndex:nodeIndex
-    // 2. locusIndex:nodeIndex:nodeIndex
+    // locus index format is either of the following three types:
+    // 1. locusIndex (single locus index)
+    // 2. locusIndex:nodeIndex
+    // 3. locusIndex:nodeIndex:nodeIndex
     parseOptions(vm, edgeoption, errorMsg);
     BOOST_REQUIRE_EQUAL(errorMsg, "locus-index argument can have no more than 3 colon separated segments");
 
-    locusIndex = "1:2:3"; // correct locus-index format
+    locusIndex = "1:2:3"; // locus-index format as locusIndex:nodeIndex:nodeIndex
     vm.clear();
-    vm.insert(std::make_pair(locusIndexKey, po::variable_value(locusIndex, true)));
+    vm.insert(std::make_pair(locusIndexKey, variable_value(locusIndex, true)));
     edgeoption.binCount = 0;
 
     // Divide all edges in the graph into binCount bins of approx equal complexity.
@@ -107,6 +68,20 @@ BOOST_AUTO_TEST_CASE( test_ParseEdgeOptions )
     // Successful case when all parameters are correct
     edgeoption.binCount = 1;
     edgeoption.binIndex = 0;
+    parseOptions(vm, edgeoption, errorMsg);
+    BOOST_REQUIRE_EQUAL(errorMsg, "");
+
+    // Another successful case when locus index format is different.
+    locusIndex = "1:2"; // locus-index format as locusIndex:nodeIndex
+    vm.clear();
+    vm.insert(std::make_pair(locusIndexKey, variable_value(locusIndex, true)));
+    parseOptions(vm, edgeoption, errorMsg);
+    BOOST_REQUIRE_EQUAL(errorMsg, "");
+
+    // Another successful case when locus index format is different.
+    locusIndex = "1"; // locus-index format as single locusIndex
+    vm.clear();
+    vm.insert(std::make_pair(locusIndexKey, variable_value(locusIndex, true)));
     parseOptions(vm, edgeoption, errorMsg);
     BOOST_REQUIRE_EQUAL(errorMsg, "");
 }
