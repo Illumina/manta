@@ -58,6 +58,7 @@ struct BamStream
 
     std::shared_ptr<bam_streamer> bamStream;
     std::vector<bam_record> readsToAdd;
+
 private:
 
     const std::string&
@@ -107,17 +108,17 @@ BOOST_AUTO_TEST_CASE( test_AddNewSV)
     SupportRead supportRead;
     supportRead.tid = 0;
     supportRead.pos = 10345;
-    // Adding new SV with ID INS and support type PR(spanning pair)
-    supportRead.addNewSV("INS", "PR");
-    // Adding new SV with ID INS and support type SR(split pair)
-    supportRead.addNewSV("INS", "SR");
-    // Adding new SV with ID DEL and support type PR(spanning pair)
-    supportRead.addNewSV("DEL", "PR");
+    // Adding new SV with ID INS_1 and support type PR(spanning pair)
+    supportRead.addNewSV("INS_1", "PR");
+    // Adding new SV with ID INS_1 and support type SR(split pair)
+    supportRead.addNewSV("INS_1", "SR");
+    // Adding new SV with ID INS_2 and support type PR(spanning pair)
+    supportRead.addNewSV("INS_2", "PR");
 
     std::map<std::string, std::set<std::string>> svSupportType = supportRead.SVs;
     BOOST_REQUIRE_EQUAL(svSupportType.size(), 2);
-    BOOST_REQUIRE_EQUAL(svSupportType["INS"].size(), 2);
-    BOOST_REQUIRE_EQUAL(svSupportType["DEL"].size(), 1);
+    BOOST_REQUIRE_EQUAL(svSupportType["INS_1"].size(), 2);
+    BOOST_REQUIRE_EQUAL(svSupportType["INS_2"].size(), 1);
 }
 
 // Compare two support reads. Comparison should be based on chromosome number first
@@ -148,7 +149,7 @@ BOOST_AUTO_TEST_CASE( test_CompareSupportReads)
 /// indicating the evidence type.
 BOOST_AUTO_TEST_CASE( test_SupportFragment )
 {
-    SupportFragment supportFragment;
+    SupportFragment suppFragment1;
 
     bam_record bamRecord1;
     buildTestBamRecord(bamRecord1, 0, 200, 1, 300, 200, 15, "200M");
@@ -157,46 +158,51 @@ BOOST_AUTO_TEST_CASE( test_SupportFragment )
     // As bamRecord1 is mate1 read, so read1 of supportFragment
     // contains this read information and read2 of supportFragment
     // contains mate information
-    supportFragment.setReads(bamRecord1);
-    BOOST_REQUIRE_EQUAL(supportFragment.read1.tid, 0);
-    BOOST_REQUIRE_EQUAL(supportFragment.read1.pos, 201);
-    BOOST_REQUIRE_EQUAL(supportFragment.read2.tid, 1);
-    BOOST_REQUIRE_EQUAL(supportFragment.read2.pos, 301);
+    suppFragment1.setReads(bamRecord1);
+    BOOST_REQUIRE_EQUAL(suppFragment1.read1.tid, 0);
+    BOOST_REQUIRE_EQUAL(suppFragment1.read1.pos, 201);
+    BOOST_REQUIRE_EQUAL(suppFragment1.read2.tid, 1);
+    BOOST_REQUIRE_EQUAL(suppFragment1.read2.pos, 301);
 
     // Adding spanning read support. It will add "PR" to both
     // read1 and read2.
-    supportFragment.addSpanningSupport("INS");
+    suppFragment1.addSpanningSupport("INS");
+    // Check the size and value after adding spanning support
+    BOOST_REQUIRE_EQUAL(suppFragment1.read1.SVs.size(), 1);
+    BOOST_REQUIRE_EQUAL(suppFragment1.read2.SVs.size(), 1);
+    BOOST_REQUIRE_EQUAL(suppFragment1.read1.SVs["INS"].size(), 1);
+    BOOST_REQUIRE_EQUAL(suppFragment1.read2.SVs["INS"].size(), 1);
+    BOOST_REQUIRE_EQUAL(*(suppFragment1.read1.SVs["INS"].begin()), "PR");
+    BOOST_REQUIRE_EQUAL(*(suppFragment1.read2.SVs["INS"].begin()), "PR");
 
-    // Check the size after adding spanning support
-    BOOST_REQUIRE_EQUAL(supportFragment.read1.SVs.size(), 1);
-    BOOST_REQUIRE_EQUAL(supportFragment.read2.SVs.size(), 1);
-    BOOST_REQUIRE_EQUAL(supportFragment.read1.SVs["INS"].size(), 1);
-    BOOST_REQUIRE_EQUAL(supportFragment.read2.SVs["INS"].size(), 1);
-
+    SupportFragment suppFragment2;
     // Adding Split candidate support. If it is mate-1 read, it will add
     // SR to read1 and SRM to read2, if it is mate-2 read, it will add
     // SRM to read1 and SR to read2
-    supportFragment.addSplitSupport(true, "INS");
+    suppFragment2.addSplitSupport(true, "INS"); // mate-1 read
     // Check the size after adding split support support to read1
-    BOOST_REQUIRE_EQUAL(supportFragment.read1.SVs.size(), 1);
-    BOOST_REQUIRE_EQUAL(supportFragment.read2.SVs.size(), 1);
-    BOOST_REQUIRE_EQUAL(supportFragment.read1.SVs["INS"].size(), 2);
-    BOOST_REQUIRE_EQUAL(supportFragment.read2.SVs["INS"].size(), 2);
+    BOOST_REQUIRE_EQUAL(suppFragment2.read1.SVs.size(), 1);
+    BOOST_REQUIRE_EQUAL(suppFragment2.read2.SVs.size(), 1);
+    BOOST_REQUIRE_EQUAL(suppFragment2.read1.SVs["INS"].size(), 1);
+    BOOST_REQUIRE_EQUAL(suppFragment2.read2.SVs["INS"].size(), 1);
+    BOOST_REQUIRE_EQUAL(*(suppFragment2.read1.SVs["INS"].begin()), "SR");
+    BOOST_REQUIRE_EQUAL(*(suppFragment2.read2.SVs["INS"].begin()), "SRM");
 
-    supportFragment.addSplitSupport(false, "INS");
-    // Check the size after adding split support support to read2
-    BOOST_REQUIRE_EQUAL(supportFragment.read1.SVs.size(), 1);
-    BOOST_REQUIRE_EQUAL(supportFragment.read2.SVs.size(), 1);
-    BOOST_REQUIRE_EQUAL(supportFragment.read1.SVs["INS"].size(), 3);
-    BOOST_REQUIRE_EQUAL(supportFragment.read2.SVs["INS"].size(), 3);
-
+    SupportFragment suppFragment3;
+    suppFragment3.addSplitSupport(false, "INS"); // mate-2 read
+    BOOST_REQUIRE_EQUAL(suppFragment3.read1.SVs.size(), 1);
+    BOOST_REQUIRE_EQUAL(suppFragment3.read2.SVs.size(), 1);
+    BOOST_REQUIRE_EQUAL(suppFragment3.read1.SVs["INS"].size(), 1);
+    BOOST_REQUIRE_EQUAL(suppFragment3.read2.SVs["INS"].size(), 1);
+    BOOST_REQUIRE_EQUAL(*(suppFragment3.read1.SVs["INS"].begin()), "SRM");
+    BOOST_REQUIRE_EQUAL(*(suppFragment3.read2.SVs["INS"].begin()), "SR");
 }
 
 // Test SupportFragments which records all supporting fragments
 // that support one or more SVs for evidence-BAM output.
 BOOST_AUTO_TEST_CASE( test_SupportFragments )
 {
-    SupportFragments supportFragments;
+    SupportFragments suppFragments;
     bam_record bamRecord1;
     buildTestBamRecord(bamRecord1, 0, 200, 1, 300, 200, 15, "200M");
     bamRecord1.toggle_is_first();
@@ -204,30 +210,30 @@ BOOST_AUTO_TEST_CASE( test_SupportFragments )
 
     // As bamRecord1 is mate-1 read, read1 should contain this read's information
     // and read2 should contain it's mate information.
-    SupportFragment supportFragment1 = supportFragments.getSupportFragment(bamRecord1);
-    BOOST_REQUIRE_EQUAL(supportFragment1.read1.tid, 0);
-    BOOST_REQUIRE_EQUAL(supportFragment1.read1.pos, 201);
-    BOOST_REQUIRE_EQUAL(supportFragment1.read2.tid, 1);
-    BOOST_REQUIRE_EQUAL(supportFragment1.read2.pos, 301);
+    SupportFragment suppFragment1 = suppFragments.getSupportFragment(bamRecord1);
+    BOOST_REQUIRE_EQUAL(suppFragment1.read1.tid, 0);
+    BOOST_REQUIRE_EQUAL(suppFragment1.read1.pos, 201);
+    BOOST_REQUIRE_EQUAL(suppFragment1.read2.tid, 1);
+    BOOST_REQUIRE_EQUAL(suppFragment1.read2.pos, 301);
 
     bam_record bamRecord2;
     buildTestBamRecord(bamRecord2, 1, 350, 0, 250, 200, 15, "100M");
     bamRecord2.toggle_is_second();
     bamRecord2.set_qname("bamRecord2");
 
-    SVCandidateSetSequenceFragment svCandidateSetSequenceFragment1;
-    svCandidateSetSequenceFragment1.read1.bamrec = bamRecord1;
+    SVCandidateSetSequenceFragment candidateSetSequenceFragment1;
+    candidateSetSequenceFragment1.read1.bamrec = bamRecord1;
 
     // Testing same information as above using SVCandidateSetSequenceFragment
-    SupportFragment supportFragment2 = supportFragments.getSupportFragment(svCandidateSetSequenceFragment1);
-    BOOST_REQUIRE_EQUAL(supportFragment2.read1.tid, 0);
-    BOOST_REQUIRE_EQUAL(supportFragment2.read1.pos, 201);
-    BOOST_REQUIRE_EQUAL(supportFragment2.read2.tid, 1);
-    BOOST_REQUIRE_EQUAL(supportFragment2.read2.pos, 301);
+    SupportFragment suppFragment2 = suppFragments.getSupportFragment(candidateSetSequenceFragment1);
+    BOOST_REQUIRE_EQUAL(suppFragment2.read1.tid, 0);
+    BOOST_REQUIRE_EQUAL(suppFragment2.read1.pos, 201);
+    BOOST_REQUIRE_EQUAL(suppFragment2.read2.tid, 1);
+    BOOST_REQUIRE_EQUAL(suppFragment2.read2.pos, 301);
 
-    SVCandidateSetSequenceFragment svCandidateSetSequenceFragment2;
-    svCandidateSetSequenceFragment2.read2.bamrec = bamRecord2;
-    SupportFragment supportFragment3 = supportFragments.getSupportFragment(svCandidateSetSequenceFragment2);
+    SVCandidateSetSequenceFragment candidateSetSequenceFragment2;
+    candidateSetSequenceFragment2.read2.bamrec = bamRecord2;
+    SupportFragment supportFragment3 = suppFragments.getSupportFragment(candidateSetSequenceFragment2);
     // As bamRecord2 is mate-2 read, read1 should contain it's mate information
     // and read2 should contain this read's information.
     BOOST_REQUIRE_EQUAL(supportFragment3.read1.tid, 0);
@@ -241,33 +247,33 @@ BOOST_AUTO_TEST_CASE( test_SupportSamples )
 {
     SupportSamples suppSamples;
     suppSamples.supportSamples.resize(2);
-    SupportFragments supportFragments1;
+    SupportFragments suppFragments1;
     bam_record bamRecord1;
     buildTestBamRecord(bamRecord1, 0, 200, 1, 300, 200, 15, "200M");
     bamRecord1.toggle_is_first();
     bamRecord1.set_qname("bamRecord1");
-    suppSamples.supportSamples[0] = supportFragments1;
+    suppSamples.supportSamples[0] = suppFragments1;
 
-    SupportFragments supportFragments2;
+    SupportFragments suppFragments2;
     bam_record bamRecord2;
     buildTestBamRecord(bamRecord2, 1, 1200, 0, 1300, 200, 15, "200M");
     bamRecord2.toggle_is_first();
     bamRecord2.set_qname("bamRecord2");
-    suppSamples.supportSamples[1] = supportFragments2;
+    suppSamples.supportSamples[1] = suppFragments2;
 
     // Check information for bamRecord1
-    SupportFragment supportFragment1 = suppSamples.getSupportFragments(0).getSupportFragment(bamRecord1);
-    BOOST_REQUIRE_EQUAL(supportFragment1.read1.tid, 0);
-    BOOST_REQUIRE_EQUAL(supportFragment1.read1.pos, 201);
-    BOOST_REQUIRE_EQUAL(supportFragment1.read2.tid, 1);
-    BOOST_REQUIRE_EQUAL(supportFragment1.read2.pos, 301);
+    SupportFragment suppFragment1 = suppSamples.getSupportFragments(0).getSupportFragment(bamRecord1);
+    BOOST_REQUIRE_EQUAL(suppFragment1.read1.tid, 0);
+    BOOST_REQUIRE_EQUAL(suppFragment1.read1.pos, 201);
+    BOOST_REQUIRE_EQUAL(suppFragment1.read2.tid, 1);
+    BOOST_REQUIRE_EQUAL(suppFragment1.read2.pos, 301);
 
     // Check information for bamRecord2
-    SupportFragment supportFragment2 = suppSamples.getSupportFragments(1).getSupportFragment(bamRecord2);
-    BOOST_REQUIRE_EQUAL(supportFragment2.read1.tid, 1);
-    BOOST_REQUIRE_EQUAL(supportFragment2.read1.pos, 1201);
-    BOOST_REQUIRE_EQUAL(supportFragment2.read2.tid, 0);
-    BOOST_REQUIRE_EQUAL(supportFragment2.read2.pos, 1301);
+    SupportFragment suppFragment2 = suppSamples.getSupportFragments(1).getSupportFragment(bamRecord2);
+    BOOST_REQUIRE_EQUAL(suppFragment2.read1.tid, 1);
+    BOOST_REQUIRE_EQUAL(suppFragment2.read1.pos, 1201);
+    BOOST_REQUIRE_EQUAL(suppFragment2.read2.tid, 0);
+    BOOST_REQUIRE_EQUAL(suppFragment2.read2.pos, 1301);
 }
 
 // Take the evidence read from the original bam and add new ZM (SV information)tag to the bam record.
@@ -286,19 +292,19 @@ BOOST_AUTO_TEST_CASE( test_ProcessRecords )
     const std::shared_ptr<BamFilenameMaker> bamFileNameMaker(new BamFilenameMaker());
     const std::string& bamFileName(bamFileNameMaker.get()->getFilename());
 
-    SupportFragments fragments;
-    SupportFragment supportFragment1;
-    supportFragment1.setReads(readsToAdd[0]);
-    supportFragment1.addSpanningSupport("INS");
-    SupportFragment supportFragment2;
-    supportFragment2.setReads(readsToAdd[1]);
-    supportFragment2.addSpanningSupport("DEL");
-    fragments.supportFrags[readsToAdd[0].qname()] = supportFragment1;
-    fragments.supportFrags[readsToAdd[1].qname()] = supportFragment2;
+    SupportFragments suppFragments;
+    SupportFragment suppFragment1;
+    suppFragment1.setReads(readsToAdd[0]);
+    suppFragment1.addSpanningSupport("INS");
+    SupportFragment suppFragment2;
+    suppFragment2.setReads(readsToAdd[1]);
+    suppFragment2.addSpanningSupport("DEL");
+    suppFragments.supportFrags[readsToAdd[0].qname()] = suppFragment1;
+    suppFragments.supportFrags[readsToAdd[1].qname()] = suppFragment2;
 
     bam_dumper bamDumper1(bamFileName.c_str(), bamHeaderManager.get());
     // Process the bam record and add ZM tag for all reads which are intersection to genomeInterval1
-    processBamRecords(bamStream.operator*(), genomeInterval1, fragments.supportFrags, bamDumper1);
+    processBamRecords(bamStream.operator*(), genomeInterval1, suppFragments.supportFrags, bamDumper1);
     bamDumper1.close();
     // creating bam index
     const int indexStatus1 = bam_index_build(bamFileName.c_str(), 0);
@@ -310,7 +316,7 @@ BOOST_AUTO_TEST_CASE( test_ProcessRecords )
 
     bam_dumper bamDumper2(bamFileName.c_str(), bamHeaderManager.get());
     // Process the bam record and add ZM tag for all reads which are intersection to genomeInterval2
-    processBamRecords(bamStream.operator*(), genomeInterval1, fragments.supportFrags, bamDumper2);
+    processBamRecords(bamStream.operator*(), genomeInterval1, suppFragments.supportFrags, bamDumper2);
     bamDumper2.close();
     const int indexStatus2 = bam_index_build(bamFileName.c_str(), 0);
     // check whether .bai file for bam file is build successfully or not.
@@ -335,20 +341,20 @@ BOOST_AUTO_TEST_CASE( test_writeSupportBam )
     const std::shared_ptr<BamFilenameMaker> bamFileNameMaker(new BamFilenameMaker());
     const std::string& bamFileName(bamFileNameMaker.get()->getFilename());
 
-    SupportFragments fragments;
-    SupportFragment supportFragment1;
-    supportFragment1.setReads(readsToAdd[0]);
-    supportFragment1.addSpanningSupport("INS");
-    SupportFragment supportFragment2;
-    supportFragment2.setReads(readsToAdd[1]);
-    supportFragment2.addSpanningSupport("DEL");
+    SupportFragments suppFragments;
+    SupportFragment suppFragment1;
+    suppFragment1.setReads(readsToAdd[0]);
+    suppFragment1.addSpanningSupport("INS");
+    SupportFragment suppFragment2;
+    suppFragment2.setReads(readsToAdd[1]);
+    suppFragment2.addSpanningSupport("DEL");
 
-    fragments.supportFrags[readsToAdd[0].qname()] = supportFragment1;
-    fragments.supportFrags[readsToAdd[1].qname()] = supportFragment2;
+    suppFragments.supportFrags[readsToAdd[0].qname()] = suppFragment1;
+    suppFragments.supportFrags[readsToAdd[1].qname()] = suppFragment2;
 
     bam_dumper_ptr bamDumperPtr(new bam_dumper(bamFileName.c_str(), bamHeaderManager.get()));
     // Write both the bamRecord1 and bamRecord2 in the evidence bam
-    writeSupportBam(bamStream, fragments, bamDumperPtr);
+    writeSupportBam(bamStream, suppFragments, bamDumperPtr);
     bamDumperPtr.get()->close();
     // creating bam index
     const int indexStatus = bam_index_build(bamFileName.c_str(), 0);

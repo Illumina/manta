@@ -96,15 +96,18 @@ BOOST_AUTO_TEST_CASE( test_merge)
     fatSVCandidate2.bp2EvidenceIndex[0][0].push_back(readIndicesBP2ForCandidate2[2]);
     fatSVCandidate2.bp2EvidenceIndex[0][0].push_back(readIndicesBP2ForCandidate2[3]);
 
-    fatSVCandidate4.bp1EvidenceIndex[0][0].push_back(3423);
-    fatSVCandidate4.bp1EvidenceIndex[0][0].push_back(3412);
-    fatSVCandidate4.bp1EvidenceIndex[0][0].push_back(3440);
-    fatSVCandidate4.bp1EvidenceIndex[0][0].push_back(3489);
+    // Evidence read indices
+    int readIndicesBP1ForCandidate4[] = { 3423, 3412, 3440, 3489};
+    int readIndicesBP2ForCandidate4[] = { 14023, 14228, 14820, 15037 };
+    fatSVCandidate4.bp1EvidenceIndex[0][0].push_back(readIndicesBP1ForCandidate4[0]);
+    fatSVCandidate4.bp1EvidenceIndex[0][0].push_back(readIndicesBP1ForCandidate4[1]);
+    fatSVCandidate4.bp1EvidenceIndex[0][0].push_back(readIndicesBP1ForCandidate4[2]);
+    fatSVCandidate4.bp1EvidenceIndex[0][0].push_back(readIndicesBP1ForCandidate4[3]);
 
-    fatSVCandidate4.bp2EvidenceIndex[0][0].push_back(14023);
-    fatSVCandidate4.bp2EvidenceIndex[0][0].push_back(14228);
-    fatSVCandidate4.bp2EvidenceIndex[0][0].push_back(14820);
-    fatSVCandidate4.bp2EvidenceIndex[0][0].push_back(15037);
+    fatSVCandidate4.bp2EvidenceIndex[0][0].push_back(readIndicesBP2ForCandidate4[0]);
+    fatSVCandidate4.bp2EvidenceIndex[0][0].push_back(readIndicesBP2ForCandidate4[1]);
+    fatSVCandidate4.bp2EvidenceIndex[0][0].push_back(readIndicesBP2ForCandidate4[2]);
+    fatSVCandidate4.bp2EvidenceIndex[0][0].push_back(readIndicesBP2ForCandidate4[3]);
 
     // Although the breakend direction of fatSVCandidate1 and fatSVCandidate3 are same,
     // but their breakend coordinates are not intersecting. They cannot be merged.

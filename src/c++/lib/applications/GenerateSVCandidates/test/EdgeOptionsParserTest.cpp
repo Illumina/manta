@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE( test_ParseEdgeOptions )
     // 2. locusIndex:nodeIndex
     // 3. locusIndex:nodeIndex:nodeIndex
     parseOptions(vm, edgeoption, errorMsg);
-    BOOST_REQUIRE_EQUAL(errorMsg, "locus-index argument can have no more than 3 colon separated segments");
+    BOOST_REQUIRE(errorMsg != "" && errorMsg.find("locus-index") == 0);
 
     locusIndex = "1:2:3"; // locus-index format as locusIndex:nodeIndex:nodeIndex
     vm.clear();
@@ -56,14 +56,14 @@ BOOST_AUTO_TEST_CASE( test_ParseEdgeOptions )
     // Divide all edges in the graph into binCount bins of approx equal complexity.
     // So that at least 1 bin count is required.
     parseOptions(vm, edgeoption, errorMsg);
-    BOOST_REQUIRE_EQUAL(errorMsg, "bin-count must be 1 or greater");
+    BOOST_REQUIRE(errorMsg != "" && errorMsg.find("bin-count") == 0);
 
     edgeoption.binCount = 1;
     edgeoption.binIndex = 1;
     // Out of binCount bins, iterate through the edges in this bin only.
     // So the bin index should be less than total bin count.
     parseOptions(vm, edgeoption, errorMsg);
-    BOOST_REQUIRE_EQUAL(errorMsg, "bin-index must be in range [0,bin-count)");
+    BOOST_REQUIRE(errorMsg != "" && errorMsg.find("bin-index") == 0);
 
     // Successful case when all parameters are correct
     edgeoption.binCount = 1;
