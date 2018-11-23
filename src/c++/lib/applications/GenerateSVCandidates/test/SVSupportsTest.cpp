@@ -76,7 +76,7 @@ BOOST_FIXTURE_TEST_SUITE( SVSupports_test_suite, BamStream )
 // 1. Read ID
 // 2. ZM tag : SV information for that read
 // The format of ZM tag should be {SVID1|supportType1|supportType2, SVID2|supportType1|supportType2}
-// For example: if a spanning candidate supports deletion, ZM tag will be {DEL|PR}
+// For example: if a spanning candidate supports deletion, ZM tag will be {DEL_1|PR}
 static void checkEvidenceBam(const GenomeInterval &genomeInterval,
                              const std::string &bamFileName,
                              std::string expectedZMTagValue, std::string expectedReadName)
@@ -166,36 +166,36 @@ BOOST_AUTO_TEST_CASE( test_SupportFragment )
 
     // Adding spanning read support. It will add "PR" to both
     // read1 and read2.
-    suppFragment1.addSpanningSupport("INS");
+    suppFragment1.addSpanningSupport("INS_1");
     // Check the size and value after adding spanning support
     BOOST_REQUIRE_EQUAL(suppFragment1.read1.SVs.size(), 1);
     BOOST_REQUIRE_EQUAL(suppFragment1.read2.SVs.size(), 1);
-    BOOST_REQUIRE_EQUAL(suppFragment1.read1.SVs["INS"].size(), 1);
-    BOOST_REQUIRE_EQUAL(suppFragment1.read2.SVs["INS"].size(), 1);
-    BOOST_REQUIRE_EQUAL(*(suppFragment1.read1.SVs["INS"].begin()), "PR");
-    BOOST_REQUIRE_EQUAL(*(suppFragment1.read2.SVs["INS"].begin()), "PR");
+    BOOST_REQUIRE_EQUAL(suppFragment1.read1.SVs["INS_1"].size(), 1);
+    BOOST_REQUIRE_EQUAL(suppFragment1.read2.SVs["INS_1"].size(), 1);
+    BOOST_REQUIRE_EQUAL(*(suppFragment1.read1.SVs["INS_1"].begin()), "PR");
+    BOOST_REQUIRE_EQUAL(*(suppFragment1.read2.SVs["INS_1"].begin()), "PR");
 
     SupportFragment suppFragment2;
     // Adding Split candidate support. If it is mate-1 read, it will add
     // SR to read1 and SRM to read2, if it is mate-2 read, it will add
     // SRM to read1 and SR to read2
-    suppFragment2.addSplitSupport(true, "INS"); // mate-1 read
+    suppFragment2.addSplitSupport(true, "INS_1"); // mate-1 read
     // Check the size after adding split support support to read1
     BOOST_REQUIRE_EQUAL(suppFragment2.read1.SVs.size(), 1);
     BOOST_REQUIRE_EQUAL(suppFragment2.read2.SVs.size(), 1);
-    BOOST_REQUIRE_EQUAL(suppFragment2.read1.SVs["INS"].size(), 1);
-    BOOST_REQUIRE_EQUAL(suppFragment2.read2.SVs["INS"].size(), 1);
-    BOOST_REQUIRE_EQUAL(*(suppFragment2.read1.SVs["INS"].begin()), "SR");
-    BOOST_REQUIRE_EQUAL(*(suppFragment2.read2.SVs["INS"].begin()), "SRM");
+    BOOST_REQUIRE_EQUAL(suppFragment2.read1.SVs["INS_1"].size(), 1);
+    BOOST_REQUIRE_EQUAL(suppFragment2.read2.SVs["INS_1"].size(), 1);
+    BOOST_REQUIRE_EQUAL(*(suppFragment2.read1.SVs["INS_1"].begin()), "SR");
+    BOOST_REQUIRE_EQUAL(*(suppFragment2.read2.SVs["INS_1"].begin()), "SRM");
 
     SupportFragment suppFragment3;
-    suppFragment3.addSplitSupport(false, "INS"); // mate-2 read
+    suppFragment3.addSplitSupport(false, "INS_1"); // mate-2 read
     BOOST_REQUIRE_EQUAL(suppFragment3.read1.SVs.size(), 1);
     BOOST_REQUIRE_EQUAL(suppFragment3.read2.SVs.size(), 1);
-    BOOST_REQUIRE_EQUAL(suppFragment3.read1.SVs["INS"].size(), 1);
-    BOOST_REQUIRE_EQUAL(suppFragment3.read2.SVs["INS"].size(), 1);
-    BOOST_REQUIRE_EQUAL(*(suppFragment3.read1.SVs["INS"].begin()), "SRM");
-    BOOST_REQUIRE_EQUAL(*(suppFragment3.read2.SVs["INS"].begin()), "SR");
+    BOOST_REQUIRE_EQUAL(suppFragment3.read1.SVs["INS_1"].size(), 1);
+    BOOST_REQUIRE_EQUAL(suppFragment3.read2.SVs["INS_1"].size(), 1);
+    BOOST_REQUIRE_EQUAL(*(suppFragment3.read1.SVs["INS_1"].begin()), "SRM");
+    BOOST_REQUIRE_EQUAL(*(suppFragment3.read2.SVs["INS_1"].begin()), "SR");
 }
 
 // Test SupportFragments which records all supporting fragments
@@ -233,13 +233,13 @@ BOOST_AUTO_TEST_CASE( test_SupportFragments )
 
     SVCandidateSetSequenceFragment candidateSetSequenceFragment2;
     candidateSetSequenceFragment2.read2.bamrec = bamRecord2;
-    SupportFragment supportFragment3 = suppFragments.getSupportFragment(candidateSetSequenceFragment2);
+    SupportFragment suppFragment3 = suppFragments.getSupportFragment(candidateSetSequenceFragment2);
     // As bamRecord2 is mate-2 read, read1 should contain it's mate information
     // and read2 should contain this read's information.
-    BOOST_REQUIRE_EQUAL(supportFragment3.read1.tid, 0);
-    BOOST_REQUIRE_EQUAL(supportFragment3.read1.pos, 251);
-    BOOST_REQUIRE_EQUAL(supportFragment3.read2.tid, 1);
-    BOOST_REQUIRE_EQUAL(supportFragment3.read2.pos, 351);
+    BOOST_REQUIRE_EQUAL(suppFragment3.read1.tid, 0);
+    BOOST_REQUIRE_EQUAL(suppFragment3.read1.pos, 251);
+    BOOST_REQUIRE_EQUAL(suppFragment3.read2.tid, 1);
+    BOOST_REQUIRE_EQUAL(suppFragment3.read2.pos, 351);
 }
 
 // Test SupportSamples which is vector of support fragments
@@ -281,7 +281,7 @@ BOOST_AUTO_TEST_CASE( test_SupportSamples )
 // 1. Read ID
 // 2. ZM tag : SV information for that read
 // The format of ZM tag should be {SVID1|supportType1|supportType2, SVID2|supportType1|supportType2}
-// For example: if a spanning candidate supports deletion, ZM tag will be {DEL|PR}
+// For example: if a spanning candidate supports deletion, ZM tag will be {DEL_1|PR}
 BOOST_AUTO_TEST_CASE( test_ProcessRecords )
 {
 
@@ -295,10 +295,10 @@ BOOST_AUTO_TEST_CASE( test_ProcessRecords )
     SupportFragments suppFragments;
     SupportFragment suppFragment1;
     suppFragment1.setReads(readsToAdd[0]);
-    suppFragment1.addSpanningSupport("INS");
+    suppFragment1.addSpanningSupport("INS_1");
     SupportFragment suppFragment2;
     suppFragment2.setReads(readsToAdd[1]);
-    suppFragment2.addSpanningSupport("DEL");
+    suppFragment2.addSpanningSupport("DEL_1");
     suppFragments.supportFrags[readsToAdd[0].qname()] = suppFragment1;
     suppFragments.supportFrags[readsToAdd[1].qname()] = suppFragment2;
 
@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE( test_ProcessRecords )
     BOOST_REQUIRE(indexStatus1 >=0);
 
     // check the evidence bam for bamRecord1 as genomeInterval1 intersects with bamRecord1.
-    checkEvidenceBam(genomeInterval1, bamFileName, "INS|PR", "bamRecord1");
+    checkEvidenceBam(genomeInterval1, bamFileName, "INS_1|PR", "bamRecord1");
 
     bam_dumper bamDumper2(bamFileName.c_str(), bamHeaderManager.get());
     // Process the bam record and add ZM tag for all reads which are intersection to genomeInterval2
@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE( test_ProcessRecords )
     BOOST_REQUIRE(indexStatus2 >=0);
 
     // check the evidence bam for bamRecord2 as genomeInterval2 intersects with bamRecord2.
-    checkEvidenceBam(genomeInterval2, bamFileName, "DEL|PR", "bamRecord2");
+    checkEvidenceBam(genomeInterval2, bamFileName, "DEL_1|PR", "bamRecord2");
 
     // cleanup
     remove(bamFileName.c_str());
@@ -344,10 +344,10 @@ BOOST_AUTO_TEST_CASE( test_writeSupportBam )
     SupportFragments suppFragments;
     SupportFragment suppFragment1;
     suppFragment1.setReads(readsToAdd[0]);
-    suppFragment1.addSpanningSupport("INS");
+    suppFragment1.addSpanningSupport("INS_1");
     SupportFragment suppFragment2;
     suppFragment2.setReads(readsToAdd[1]);
-    suppFragment2.addSpanningSupport("DEL");
+    suppFragment2.addSpanningSupport("DEL_1");
 
     suppFragments.supportFrags[readsToAdd[0].qname()] = suppFragment1;
     suppFragments.supportFrags[readsToAdd[1].qname()] = suppFragment2;
@@ -362,8 +362,8 @@ BOOST_AUTO_TEST_CASE( test_writeSupportBam )
     BOOST_REQUIRE(indexStatus >=0);
 
     // check the evidence bam as mentioned in the doc in test_ProcessRecords
-    checkEvidenceBam(genomeInterval1, bamFileName, "INS|PR", "bamRecord1");
-    checkEvidenceBam(genomeInterval2, bamFileName, "DEL|PR", "bamRecord2");
+    checkEvidenceBam(genomeInterval1, bamFileName, "INS_1|PR", "bamRecord1");
+    checkEvidenceBam(genomeInterval2, bamFileName, "DEL_1|PR", "bamRecord2");
 
     // cleanup
     remove(bamFileName.c_str());
