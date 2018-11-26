@@ -219,14 +219,14 @@ BOOST_AUTO_TEST_CASE(test_getLnLhood )
     // to location 49
     known_pos_range2 range(8,50);
 
-    static const float ln_one_third(std::log(1 / 3.f));
+    static const float lnOneThird(std::log(1 / 3.f));
     float lnlhood1 = 0.f;
     // for 1st 10 match bases
     for (int i = 0; i < 10; i ++)
         lnlhood1 += qscoreSnp.qphred_to_ln_comp_error_prob(30);
     // next 5 mismatch bases
     for (int i = 0; i < 5; i ++)
-        lnlhood1 += qscoreSnp.qphred_to_ln_error_prob(30) + ln_one_third;
+        lnlhood1 += qscoreSnp.qphred_to_ln_error_prob(30) + lnOneThird;
     // for next 20 match bases
     for (int i = 0; i < 20; i ++)
         lnlhood1 += qscoreSnp.qphred_to_ln_comp_error_prob(30);
@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(test_getLnLhood )
         lnlhood2 += qscoreSnp.qphred_to_ln_comp_error_prob(30);
     // next 5 mismatch bases
     for (int i = 0; i < 5; i ++)
-        lnlhood2 += qscoreSnp.qphred_to_ln_error_prob(30) + ln_one_third;
+        lnlhood2 += qscoreSnp.qphred_to_ln_error_prob(30) + lnOneThird;
     // next 1 N base
     lnlhood2 += lnRandomBase;
     // next 10 match bases
@@ -274,7 +274,7 @@ BOOST_AUTO_TEST_CASE( test_getRefAlignment )
     const CallOptionsShared optionsShared;
     qscore_snp qscoreSnp(optionsShared.snpPrior); // snp prior probability
     SRAlignmentInfo srAlignmentInfo1;
-    static const float ln_one_third(std::log(1 / 3.f));
+    static const float lnOneThird(std::log(1 / 3.f));
 
     float lnlhood1 = 0.f;
     // for 1st 10 match bases
@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_CASE( test_getRefAlignment )
         lnlhood1 += qscoreSnp.qphred_to_ln_comp_error_prob(30);
     // next 5 mismatches
     for (int i = 0; i < 5; i ++)
-        lnlhood1 += qscoreSnp.qphred_to_ln_error_prob(30) + ln_one_third;
+        lnlhood1 += qscoreSnp.qphred_to_ln_error_prob(30) + lnOneThird;
     // next 20 match bases
     for (int i = 0; i < 20; i ++)
         lnlhood1 += qscoreSnp.qphred_to_ln_comp_error_prob(30);
@@ -348,7 +348,7 @@ BOOST_AUTO_TEST_CASE( test_getRefAlignment )
         lnlhood2 += qscoreSnp.qphred_to_ln_comp_error_prob(30);
     // next 5 mismatch bases
     for (int i = 0; i < 5; i ++)
-        lnlhood2 += qscoreSnp.qphred_to_ln_error_prob(30) + ln_one_third;
+        lnlhood2 += qscoreSnp.qphred_to_ln_error_prob(30) + lnOneThird;
     // next 1 N base
     lnlhood2 += lnRandomBase;
     // next 10 match bases
