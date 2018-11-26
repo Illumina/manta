@@ -66,8 +66,6 @@ BOOST_AUTO_TEST_CASE( test_GetVariantRange )
     }
 }
 
-BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(test_getInsertTrim, 1)
-
 // Test start and end coordinate of a read segment based on the cigar elements(like 35M, 5I etc.).
 // For example:
 // Example-1: Let's say CIGAR of a read is 35M5I15M and segment of cigar is (1, 1), then
@@ -82,9 +80,9 @@ BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(test_getInsertTrim, 1)
 //  5. SEQ_MISMATCH
 BOOST_AUTO_TEST_CASE( test_getInsertTrim )
 {
-    bam_record bam_record1;
-    buildTestBamRecord(bam_record1, 0, 9, 0, 30, 60, 15, "35M5I15M");
-    SimpleAlignment simpleAlignment1(getAlignment(bam_record1));
+    bam_record bamRecord1;
+    buildTestBamRecord(bamRecord1, 0, 9, 0, 30, 60, 15, "35M5I15M");
+    SimpleAlignment simpleAlignment1(getAlignment(bamRecord1));
     // segment range is (1, 1)
     known_pos_range2 range1(getInsertTrim(simpleAlignment1.path, std::pair<unsigned, unsigned>(1, 1)));
     // As segment range (1, 1), read segment start will be after 1st element of cigar(35M) and read segment
@@ -93,9 +91,9 @@ BOOST_AUTO_TEST_CASE( test_getInsertTrim )
     BOOST_REQUIRE_EQUAL(range1.begin_pos(), 35);
     BOOST_REQUIRE_EQUAL(range1.end_pos(), 40);
 
-    bam_record bam_record2;
-    buildTestBamRecord(bam_record2, 0, 9, 0, 30, 60, 15, "35M5D5I15M");
-    SimpleAlignment simpleAlignment2(getAlignment(bam_record2));
+    bam_record bamRecord2;
+    buildTestBamRecord(bamRecord2, 0, 9, 0, 30, 60, 15, "35M5D5I15M");
+    SimpleAlignment simpleAlignment2(getAlignment(bamRecord2));
     // segment range is (1, 1)
     known_pos_range2 range2(getInsertTrim(simpleAlignment2.path, std::pair<unsigned, unsigned>(1, 1)));
     // As segment range (1, 1), read segment start will be after 1st element of cigar(35M) and read segment
@@ -104,9 +102,9 @@ BOOST_AUTO_TEST_CASE( test_getInsertTrim )
     BOOST_REQUIRE_EQUAL(range2.begin_pos(), 35);
     BOOST_REQUIRE_EQUAL(range2.end_pos(), 35);
 
-    bam_record bam_record3;
-    buildTestBamRecord(bam_record3, 0, 9, 0, 30, 60, 15, "35M5D15M");
-    SimpleAlignment simpleAlignment3(getAlignment(bam_record3));
+    bam_record bamRecord3;
+    buildTestBamRecord(bamRecord3, 0, 9, 0, 30, 60, 15, "35M5D15M");
+    SimpleAlignment simpleAlignment3(getAlignment(bamRecord3));
     // segment range is (1, 2)
     known_pos_range2 range3(getInsertTrim(simpleAlignment3.path, std::pair<unsigned, unsigned>(1, 2)));
     // As segment range (1, 1), read segment start will be after 1st element of cigar(35M) and read
