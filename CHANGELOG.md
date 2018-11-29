@@ -7,6 +7,7 @@
 
 ### Fixed
 - Fix a bug in selecting large insertion candidates (MANTA-1496)
+- Fix a minor bug in QC small SV alignment (MANTA-1498)
 
 
 ## v1.5.0 - 2018-11-12
