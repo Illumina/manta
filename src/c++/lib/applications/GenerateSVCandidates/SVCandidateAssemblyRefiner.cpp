@@ -387,7 +387,7 @@ isLowQualitySmallSVAlignment(
 
     apath_limit_ref_length(maxQCRefSpan,apath);
 
-    const unsigned refSize(apath_read_length(apath));
+    const unsigned refSize(apath_ref_length(apath));
     if (refSize < minAlignRefSpan)
     {
         return true;
