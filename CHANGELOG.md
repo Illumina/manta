@@ -1,3 +1,14 @@
+
+## Unreleased
+
+### Changed
+- Make existingAlignmentStats as a fallback option (MANTA-1487)
+  - It prioritizes stats estimated from the alignment file and allows static stats file when stats estimation fails due to insufficient high-confidence read pairs.
+
+### Fixed
+- Fix a bug in selecting large insertion candidates (MANTA-1496)
+
+
 ## v1.5.0 - 2018-11-12
 This is a major update from v1.4.0, featuring improved precision and stability, a new configurable option of overlapping pair reads, and a few bug fixes. VCF representation is improved by introducing a couple of new filters and representing inversions as two breakend records.
 

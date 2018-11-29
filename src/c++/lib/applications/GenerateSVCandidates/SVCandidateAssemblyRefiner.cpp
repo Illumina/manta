@@ -968,7 +968,9 @@ processLargeInsertion(
 
             const int breakScore(insert1.score+insert2.score);
 
-            if ( (! isLargeInsertionPair) || (breakDist<bestBreakDist) || (breakScore < bestBreakScore))
+            const bool isBetterCandidate((breakDist < bestBreakDist) ||
+                                         ((breakDist == bestBreakDist) && ((breakScore > bestBreakScore))));
+            if ((! isLargeInsertionPair) || isBetterCandidate)
             {
                 /// set new large insertion candidate:
                 isLargeInsertionPair=true;
@@ -978,8 +980,8 @@ processLargeInsertion(
                 {
                     std::swap(largeInsertionLeftIndex,largeInsertionRightIndex);
                 }
-                bestBreakDist=breakDist;
-                bestBreakScore=breakScore;
+                bestBreakDist = breakDist;
+                bestBreakScore = breakScore;
 
 #ifdef DEBUG_REFINER
                 log_os << logtag << "setting new large insertion candidate. Score: " << breakScore << "\n";
