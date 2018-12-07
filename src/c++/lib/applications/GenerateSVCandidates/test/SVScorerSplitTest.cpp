@@ -93,26 +93,26 @@ BOOST_AUTO_TEST_CASE( test_finishSampleSRData )
 
 // Test the split read count for ref and alt allele.
 // Following cases need to be tested:
-// 1. Test all the information related to alignment if likelihood score of alt alignment
-//    is more than ref alignment.
-// 2. Test all the information related to alignment if likelihood score of ref alignment
-//    is more than alt alignment.
-// 3. Test the sum squared mapping quality value.
+// 1. A split read is aligned to the alt contig and the ref contig, and
+//    the read support alt more than ref.
+// 2. Another split read is aligned to the alt contig and the ref contig, and
+//    the read support ref more than alt.
+// 3. Sum squared mapping quality value.
 BOOST_AUTO_TEST_CASE( test_incrementSplitReadEvidence )
 {
     // Assume that we got following information about breakpoint-1 when
     // a read aligns to alt allele contig near breakpoint-1
     SRAlignmentInfo altBp1SR1;
     altBp1SR1.isEvidence = true;
-    altBp1SR1.evidence = 2.5;
-    altBp1SR1.alignLnLhood = 20;
+    altBp1SR1.evidence = 1.2;
+    altBp1SR1.alignLnLhood = -30;
     // Assume that we got following information about breakpoint-2 when
     // a read aligns to alt allele contig near breakpoint-2
     SRAlignmentInfo altBp2SR1;
     altBp2SR1.isEvidence = true;
     altBp2SR1.isTier2Evidence = true;
-    altBp2SR1.evidence = 10;
-    altBp2SR1.alignLnLhood = 30;
+    altBp2SR1.evidence = 1.5;
+    altBp2SR1.alignLnLhood = -20;
     // allele-specific evidence info
     SVSampleAlleleInfo altSVSampleAlleleInfo;
     // track all support data from an individual read in a fragment specific to an
@@ -123,15 +123,15 @@ BOOST_AUTO_TEST_CASE( test_incrementSplitReadEvidence )
     // a read aligns to reference near breakpoint-1
     SRAlignmentInfo refBp1SR1;
     refBp1SR1.isEvidence = true;
-    refBp1SR1.evidence = 5.2;
-    refBp1SR1.alignLnLhood = 10;
+    refBp1SR1.evidence = 1.4;
+    refBp1SR1.alignLnLhood = -40;
     // Assume that we got following information about breakpoint-1 when
     // a read aligns to reference near breakpoint-1
     SRAlignmentInfo refBp2SR1;
     refBp2SR1.isEvidence = true;
     refBp2SR1.isTier2Evidence = true;
-    refBp2SR1.evidence = 5;
-    refBp2SR1.alignLnLhood = 12;
+    refBp2SR1.evidence = 1.4;
+    refBp2SR1.alignLnLhood = -35;
     // ref-specific evidence info
     SVSampleAlleleInfo refSVSampleAlleleInfo;
     // track all support data from an individual read in a fragment specific to an
@@ -153,8 +153,8 @@ BOOST_AUTO_TEST_CASE( test_incrementSplitReadEvidence )
     BOOST_REQUIRE_EQUAL(altSVSampleAlleleInfo.splitReadMapQ, 2500); // sum squared of mapping quality
     BOOST_REQUIRE_EQUAL(altSVSampleAlleleInfo.splitReadEvidence, std::max(altBp1SR1.evidence, altBp2SR1.evidence));
 
-    altBp2SR1.alignLnLhood = 12;
-    refBp2SR1.alignLnLhood = 30;
+    altBp2SR1.alignLnLhood = -35;
+    refBp2SR1.alignLnLhood = -20;
     refBp1SR1.isTier2Evidence = true;
     refBp2SR1.isTier2Evidence = false;
     // Mapping quality = 20
@@ -173,20 +173,23 @@ BOOST_AUTO_TEST_CASE( test_incrementSplitReadEvidence )
     BOOST_REQUIRE_EQUAL(refSVSampleAlleleInfo.splitReadEvidence, std::max(refBp1SR1.evidence, refBp2SR1.evidence));
 }
 
-// Test the alignment info when reference haplotype is selected over alt haplotype
-BOOST_AUTO_TEST_CASE( test_AlignmentInfo_When_Reference_Haplotype_Selected )
+// The scoreSplitReads api tries to align read on reference regions as well
+// alt contigs. Following test verifies the alignment information specially
+// the split read evidence count when reference haplotype wins
+// over alt haplotype based on alignLnLhood score.
+BOOST_AUTO_TEST_CASE( test_AlignmentInfo_When_Reference_Haplotype_Wins )
 {
     // Reference sequence at breakpoint-1
-    std::string targetSeqBp1 = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
+    std::string refSeqBp1 = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
                                "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
-    // Contig sequence at breakpoint-1
-    std::string contigSeqBp1 = "GATCACAGGTCGATATCCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
+    // Alt Contig sequence at breakpoint-1
+    std::string altContigSeqBp1 = "GATCACAGGTCGATATCCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
                                "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
     // Reference sequence at breakpoint-2
-    std::string targetSeqBp2 = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
+    std::string refSeqBp2 = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
                                "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
-    // Contig sequence at breakpoint-2
-    std::string contigSeqBp2 = "GATCACAGGTCGATATCCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
+    // Alt Contig sequence at breakpoint-2
+    std::string altContigSeqBp2 = "GATCACAGGTCGATATCCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
                                "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
     // Options for  snp prior probability
     CallOptionsShared optionsShared;
@@ -195,17 +198,19 @@ BOOST_AUTO_TEST_CASE( test_AlignmentInfo_When_Reference_Haplotype_Selected )
     SVBreakend breakend;
     breakend.interval.range = known_pos_range2(24, 25);
     reference_contig_segment reference;
-    reference.seq() = targetSeqBp1;
+    reference.seq() = refSeqBp1;
     // assembly data for  a specific sv candidate
     SVCandidateAssemblyData svCandidateAssemblyData;
     SVCandidate candidate;
     // The next four lines are hack to avoid construction of complex svCandidateAssemblyData
     SVAlignmentInfo alignmentInfo(candidate, svCandidateAssemblyData);
-    ((std::string&)alignmentInfo.bp1ReferenceSeq()).assign(targetSeqBp1);
-    ((std::string&)alignmentInfo.bp1ContigSeq()).assign(contigSeqBp1);
-    ((std::string&)alignmentInfo.bp2ReferenceSeq()).assign(targetSeqBp2);
-    ((std::string&)alignmentInfo.bp2ContigSeq()).assign(contigSeqBp2);
-    // Contig and reference offset
+    ((std::string&)alignmentInfo.bp1ReferenceSeq()).assign(refSeqBp1);
+    ((std::string&)alignmentInfo.bp1ContigSeq()).assign(altContigSeqBp1);
+    ((std::string&)alignmentInfo.bp2ReferenceSeq()).assign(refSeqBp2);
+    ((std::string&)alignmentInfo.bp2ContigSeq()).assign(altContigSeqBp2);
+    // Contig and reference offset.
+    // Gapless alignment starting point will be in between (offset_start - flankScoreSize) and
+    // (offset_end + flankScoreSize). In this test case flank score size is 17.
     alignmentInfo.bp1ContigOffset = known_pos_range2(18, 19);
     alignmentInfo.bp1RefOffset = known_pos_range2(18, 19);
     alignmentInfo.bp2ContigOffset = known_pos_range2(23, 24);
@@ -239,20 +244,23 @@ BOOST_AUTO_TEST_CASE( test_AlignmentInfo_When_Reference_Haplotype_Selected )
     BOOST_REQUIRE_EQUAL(sample.alt.splitReadCount, 0);
 }
 
-// Test the alignment info when alt haplotype is selected over reference haplotype
-BOOST_AUTO_TEST_CASE( test_AlignmentInfo_When_Allele_Haplotype_Selected )
+// The scoreSplitReads api tries to align read on reference regions as well
+// alt contigs. Following test verifies the alignment information specially
+// the split read evidence count when alt haplotype wins
+// over reference haplotype based on alignLnLhood score.
+BOOST_AUTO_TEST_CASE( test_AlignmentInfo_When_Allele_Haplotype_Wins )
 {
     // Reference sequence at breakpoint-1
-    std::string targetSeqBp1 = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
+    std::string refSeqBp1 = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
                                "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
     // Contig sequence at breakpoint-1
-    std::string contigSeqBp1 = "GATCACAGGTCGATATCCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
+    std::string altContigSeqBp1 = "GATCACAGGTCGATATCCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
                                "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
     // Reference sequence at breakpoint-2
-    std::string targetSeqBp2 = "GATCACAGGTCGATATCCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
+    std::string refSeqBp2 = "GATCACAGGTCGATATCCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
                                "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
     // Contig sequence at breakpoint-2
-    std::string contigSeqBp2 = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
+    std::string altContigSeqBp2 = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
                                "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
     // Options for  snp prior probability
     CallOptionsShared optionsShared;
@@ -260,17 +268,19 @@ BOOST_AUTO_TEST_CASE( test_AlignmentInfo_When_Allele_Haplotype_Selected )
     SVBreakend breakend;
     breakend.interval.range = known_pos_range2(24, 25);
     reference_contig_segment reference;
-    reference.seq() = targetSeqBp1;
+    reference.seq() = refSeqBp1;
     SVCandidateAssemblyData svCandidateAssemblyData;
     SVCandidate candidate;
     // assembly data for  a specific sv candidate
     SVAlignmentInfo alignmentInfo(candidate, svCandidateAssemblyData);
     // The next four lines are hack to avoid construction of complex svCandidateAssemblyData
-    ((std::string&)alignmentInfo.bp1ReferenceSeq()).assign(targetSeqBp1);
-    ((std::string&)alignmentInfo.bp1ContigSeq()).assign(contigSeqBp1);
-    ((std::string&)alignmentInfo.bp2ReferenceSeq()).assign(targetSeqBp2);
-    ((std::string&)alignmentInfo.bp2ContigSeq()).assign(contigSeqBp2);
+    ((std::string&)alignmentInfo.bp1ReferenceSeq()).assign(refSeqBp1);
+    ((std::string&)alignmentInfo.bp1ContigSeq()).assign(altContigSeqBp1);
+    ((std::string&)alignmentInfo.bp2ReferenceSeq()).assign(refSeqBp2);
+    ((std::string&)alignmentInfo.bp2ContigSeq()).assign(altContigSeqBp2);
     // Contig and reference offset
+    // Gapless alignment starting point will be in between (offset_start - flankScoreSize) and
+    // (offset_end + flankScoreSize). In this test case flank score size is 17.
     alignmentInfo.bp1ContigOffset = known_pos_range2(18, 19);
     alignmentInfo.bp1RefOffset = known_pos_range2(18, 19);
     alignmentInfo.bp2ContigOffset = known_pos_range2(24, 25);
@@ -304,7 +314,7 @@ BOOST_AUTO_TEST_CASE( test_AlignmentInfo_When_Allele_Haplotype_Selected )
     BOOST_REQUIRE_EQUAL(sample.ref.splitReadCount, 0);
 }
 
-// Test the alignment info for RNA read
+// Test the alignment information for RNA read
 // Test the following cases:
 // 1. RNA alignment info should not be updated based on the likelihood score
 // 2. RNA alignement info should be updated for both ref and alt allele whichever
@@ -312,16 +322,16 @@ BOOST_AUTO_TEST_CASE( test_AlignmentInfo_When_Allele_Haplotype_Selected )
 BOOST_AUTO_TEST_CASE( test_AlignmentInfo_For_RNA )
 {
     // Reference sequence at breakpoint-1
-    std::string targetSeqBp1 = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
+    std::string refSeqBp1 = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
                                "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
     // Contig sequence at breakpoint-1
-    std::string contigSeqBp1 = "GATCACAGGTCGATATCCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
+    std::string altContigSeqBp1 = "GATCACAGGTCGATATCCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
                                "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
     // Reference sequence at breakpoint-2
-    std::string targetSeqBp2 = "GATCACAGGTCTATCACCCATTTTACCACTCACGGGAGCTCTCCATGCATTTGGT"
+    std::string refSeqBp2 = "GATCACAGGTCTATCACCCATTTTACCACTCACGGGAGCTCTCCATGCATTTGGT"
                                "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
     // Contig sequence at breakpoint-2
-    std::string contigSeqBp2 = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
+    std::string altContigSeqBp2 = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
                                "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
     // Options for  snp prior probability
     CallOptionsShared optionsShared;
@@ -329,14 +339,16 @@ BOOST_AUTO_TEST_CASE( test_AlignmentInfo_For_RNA )
     SVBreakend breakend;
     breakend.interval.range = known_pos_range2(23, 24);
     reference_contig_segment reference;
-    reference.seq() = targetSeqBp1;
+    reference.seq() = refSeqBp1;
     // assembly data for  a specific sv candidate
     SVCandidateAssemblyData svCandidateAssemblyData;
     SVCandidate candidate;
     // The next four lines are hack to avoid construction of complex svCandidateAssemblyData
     SVAlignmentInfo alignmentInfo(candidate, svCandidateAssemblyData);
-    ((std::string&)alignmentInfo.bp1ContigSeq()).assign(contigSeqBp1);
-    ((std::string&)alignmentInfo.bp2ContigSeq()).assign(contigSeqBp2);
+    ((std::string&)alignmentInfo.bp1ContigSeq()).assign(altContigSeqBp1);
+    ((std::string&)alignmentInfo.bp2ContigSeq()).assign(altContigSeqBp2);
+    // Gapless alignment starting point will be in between (offset_start - flankScoreSize) and
+    // (offset_end + flankScoreSize). In this test case flank score size is 17.
     alignmentInfo.bp1ContigOffset = known_pos_range2(18, 19);
     alignmentInfo.bp2ContigOffset = known_pos_range2(24, 25);
 
@@ -357,7 +369,8 @@ BOOST_AUTO_TEST_CASE( test_AlignmentInfo_For_RNA )
     //         alignScore=32 alignLnLhood: -22.0057
     // RefBP2 Information : Not available (As only for Bp1 it will calculate)
     // As in RNA, we will update both alt and ref, so api does not look likeihood score.
-    // Based on the above information, we can see only AltBP2 is satisfied all the condition, so all the information
+    // Based on the above information, we can see only AltBP2 is satisfied all the conditions
+    // as mentioned in test_incrementSplitReadEvidence, so all the information
     // will be updated for alt allele.
     scoreSplitReads(optionsSharedDeriv, 17, id, breakend, alignmentInfo, reference, true,
                     15, 10, 0, 0, true, evidence1, bamStream.operator*(), sample1, svSupportFrags1);
@@ -369,7 +382,7 @@ BOOST_AUTO_TEST_CASE( test_AlignmentInfo_For_RNA )
     SVEvidence::evidenceTrack_t evidence2;
     SVSampleInfo sample2;
     SupportFragments svSupportFrags2;
-    reference.seq() = targetSeqBp2;
+    reference.seq() = refSeqBp2;
     breakend.interval.range = known_pos_range2(24, 25);
 
     // Bases on the query sequence and all the breakpoint sequences, following information we will get,
@@ -384,8 +397,9 @@ BOOST_AUTO_TEST_CASE( test_AlignmentInfo_For_RNA )
     //        leftSize=16 homSize=0 rightSize=19 leftMismatches=0 homMismatches=0 rightMismatches=0
     //        alignScore=35 alignLnLhood: -0.0700233
     // As in RNA, we will update both alt and ref, so api does not look likelihood score.
-    // Based on the above information, we can see AltBP2 and RefBP2 are satisfied all the condition, so all the information
-    // will be updated for both alt and ref allele.
+    // Based on the above information, we can see AltBP2 and RefBP2 are satisfied all the conditions
+    // as mentioned in test_incrementSplitReadEvidence, so all the information will
+    // be updated for both alt and ref allele.
     scoreSplitReads(optionsSharedDeriv, 17, id, breakend, alignmentInfo, reference, false,
                     15, 10, 0, 0, true, evidence2, bamStream.operator*(), sample2, svSupportFrags2);
     // Alt and Ref both should be updated

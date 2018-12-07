@@ -46,6 +46,18 @@ BOOST_AUTO_TEST_CASE( test_ISEvidenceCheck )
 {
     SRAlignmentInfo alignmentInfo;
 
+    alignmentInfo.leftMismatches = 1;
+    alignmentInfo.rightMismatches = 1;
+    alignmentInfo.leftSize = 15;
+    alignmentInfo.rightSize = 15;
+    alignmentInfo.alignScore = 28;
+    // Here all values are correct
+    // min flank size = 5
+    // Fraction of mismatches in left side = 0.067(1/15)
+    // Fraction of mismatches in right side = 0.067(1/15)
+    // Fraction of alignment score = 0.9333 (28/30)
+    BOOST_REQUIRE(isEvidenceCheck(alignmentInfo, 5));
+
     alignmentInfo.leftSize = 10;
     // min flank size = 11. API should return false as left size
     // is less than 11.
@@ -73,18 +85,6 @@ BOOST_AUTO_TEST_CASE( test_ISEvidenceCheck )
     // fraction of alignment score (0.833 = 15/18) which is less
     // than 0.9.
     BOOST_REQUIRE(!isEvidenceCheck(alignmentInfo, 5));
-
-    alignmentInfo.leftMismatches = 1;
-    alignmentInfo.rightMismatches = 1;
-    alignmentInfo.leftSize = 15;
-    alignmentInfo.rightSize = 15;
-    alignmentInfo.alignScore = 28;
-    // Here all values are correct
-    // min flank size = 5
-    // Fraction of mismatches in left side = 0.067(1/15)
-    // Fraction of mismatches in right side = 0.067(1/15)
-    // Fraction of alignment score = 0.9333 (28/30)
-    BOOST_REQUIRE(isEvidenceCheck(alignmentInfo, 5));
 }
 
 // Test the evidence value of an alignment which is
@@ -191,12 +191,12 @@ BOOST_AUTO_TEST_CASE( test_calculateAlignScore )
     BOOST_REQUIRE_EQUAL(alignmentInfo5.alignScore, 35);
 }
 
-// Test the likelyhood of a read with respect to reference.
+// Test the probability likelihood of a read alignment to the target sequence
 // Let's say snp prior probability is sp, then for each base
-// 1) log((sp-e/3) + (1-e)*sp) + log(1/3), for mismatch base
-// 2) log((sp-e/3) + (1-e)*sp) + log(1/4), if base or reference is N
-// 3) log(1 - ((sp-e/3) + (1-e)*sp)), for a match base
-// where e is the probability of a base is error
+// 1) log((sp-e/3) + (1-e)*sp) + log(1/3), if the query base is not matched with the aligned target base
+// 2) log((sp-e/3) + (1-e)*sp) + log(1/4), if the query base or the target base is N
+// 3) log(1 - ((sp-e/3) + (1-e)*sp)), if the query base is matched with the aligned target base
+//  where e is the probability of the target base being an error
 // so the likelyhood of a read is the sum of above values.
 BOOST_AUTO_TEST_CASE(test_getLnLhood )
 {
@@ -325,6 +325,10 @@ BOOST_AUTO_TEST_CASE( test_getRefAlignment )
     //                                |  [19,23)  |
     // Alignment->    --------------------------------------------->
     //                | left size(11) |hom size(3)| right size(21) |
+    //
+    // alignLnLhood remains unchanged as it is calculated on whole read, but
+    // here only homology range is changing. So all the sizes will have
+    // effect.
     known_pos_range2 range3(19,23);
     SRAlignmentInfo srAlignmentInfo3;
     getRefAlignment(bamRecord1, refSeq, range3, qscoreSnp, srAlignmentInfo3);
@@ -406,9 +410,17 @@ BOOST_AUTO_TEST_CASE( test_Exception )
     BOOST_CHECK_THROW(splitReadAligner(2, querySeq1, qscoreSnp, qual.get(), targetSeq2, range2, alignmentInfo2),
                                        illumina::common::GeneralException);
 
-    // all good
+    // all good means case-1 and case-2 are satisfied. All the metrics are calculated
+    // as described in test_getRefAlignment
     known_pos_range2 range3(8, 50);
     splitReadAligner(2, querySeq1, qscoreSnp, qual.get(), targetSeq2, range3, alignmentInfo2);
+    BOOST_REQUIRE_EQUAL(alignmentInfo2.leftSize, 0);
+    BOOST_REQUIRE_EQUAL(alignmentInfo2.leftMismatches, 0);
+    BOOST_REQUIRE_EQUAL(alignmentInfo2.rightSize, 34);
+    BOOST_REQUIRE_EQUAL(alignmentInfo2.rightMismatches, 27);
+    BOOST_REQUIRE_EQUAL(alignmentInfo2.homSize, 1);
+    BOOST_REQUIRE_EQUAL(alignmentInfo2.homMismatches, 1);
+    BOOST_REQUIRE_EQUAL(alignmentInfo2.alignScore, 7);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
