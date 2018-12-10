@@ -113,3 +113,8 @@ changeTemplateSize(
     bam1_t* bamDataPtr(bamRead.get_data());
     bamDataPtr->core.isize = newSize;
 }
+
+/// \brief Write chromosome depth to a file
+///
+/// \param depthFileName Name of file to write depth output to
+void buildTestChromosomeDepthFile(const std::string& depthFileName);

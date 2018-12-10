@@ -31,6 +31,7 @@
 #include "htsapi/bam_dumper.hh"
 
 #include <sstream>
+#include <fstream>
 
 
 
@@ -186,4 +187,14 @@ addSupplementaryAlignmentEvidence(
     static const char svtag[] = {'S','A'};
     bam_aux_append(bamRead.get_data(),svtag,'Z',(svStr.size()+1),
                    (const uint8_t*)(svStr.c_str()));
+}
+
+// Write two chromosomes withtheir depth
+void buildTestChromosomeDepthFile(const std::string& depthFileName)
+{
+    std::ofstream outfile;
+    outfile.open(depthFileName.c_str());
+    outfile << "chrFoo" << "\t58.000" << std::endl;
+    outfile << "chrBar" << "\t16.000" << std::endl;
+    outfile.close();
 }
