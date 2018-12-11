@@ -39,7 +39,7 @@ struct BamStream
 
         std::string querySeq1 = "TCTATCACCCATTTTACCACTCACGGGAGCTCTCC";
         bam_record bamRecord1;
-        buildTestBamRecord(bamRecord1, 0, 9, 0, 30, 50, 15, "35M", querySeq1);
+        buildTestBamRecord(bamRecord1, 0, 9, 0, 90, 100, 15, "35M", querySeq1);
         bamRecord1.toggle_is_first();
         bamRecord1.set_qname("bamRecord1");
         readsToAdd.push_back(bamRecord1);

@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE( test_getRefAlignment )
     refSeq.seq() = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
                    "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
     bam_record bamRecord1;
-    buildTestBamRecord(bamRecord1, 0, 9, 0, 30, 50, 15, "35M", "TCTATCACCCATCGTACCACTCACGGGAGCTCTCC");
+    buildTestBamRecord(bamRecord1, 0, 9, 0, 100, 200, 15, "35M", "TCTATCACCCATCGTACCACTCACGGGAGCTCTCC");
 
     // alignment information will be calculated using the following range
     //                                | <-range1->|
@@ -344,7 +344,7 @@ BOOST_AUTO_TEST_CASE( test_getRefAlignment )
     // with 10 matches followed by 5 mismatches followed by 1 mismatch with N then
     // followed by 19 matches followed by 5 insertion.
     bam_record bamRecord2;
-    buildTestBamRecord(bamRecord2, 0, 9, 0, 30, 50, 15, "35M5I", "TCTATCACCCATCGTNCCACTCACGGGAGCTCTCCAGCTA");
+    buildTestBamRecord(bamRecord2, 0, 9, 0, 100, 200, 15, "35M5I", "TCTATCACCCATCGTNCCACTCACGGGAGCTCTCCAGCTA");
     float lnlhood2 = 0.f;
     float lnRandomBase(-std::log(4.f));
     // for 1st 10 match bases

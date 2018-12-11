@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE( test_setReadEvidence )
 {
     SVFragmentEvidenceRead svFragmentEvidenceRead1;
     bam_record bamRecord1;
-    buildTestBamRecord(bamRecord1, 0, 200, 0, 210, 20, 50, "15M");
+    buildTestBamRecord(bamRecord1, 0, 200, 0, 300, 200, 50, "35M");
     bamRecord1.set_qname("Read-1");
     // Minimum mapping qulity = 10 which is the threeshold for anchored read
     // Minimum tier2 mapping qulity = 15 which is the threshold for tier2 anchored read
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE( test_setReadEvidence )
 
     SVFragmentEvidenceRead svFragmentEvidenceRead2;
     bam_record bamRecord2;
-    buildTestBamRecord(bamRecord2, 0, 200, 0, 210, 20, 12, "15M");
+    buildTestBamRecord(bamRecord2, 0, 200, 0, 300, 200, 12, "35M");
     bamRecord2.set_qname("Read-2");
     // Minimum anchored mapping qulity = 10
     // Minimum tier2 mapping qulity = 15
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE( test_setReadEvidence )
 
     SVFragmentEvidenceRead svFragmentEvidenceRead3;
     bam_record bamRecord3;
-    buildTestBamRecord(bamRecord3, 0, 200, 0, 210, 20, 12, "15M");
+    buildTestBamRecord(bamRecord3, 0, 200, 0, 300, 20, 12, "35M");
     bamRecord3.set_qname("Read-3");
     // Minimum anchored mapping qulity = 14
     // Minimum tier2 mapping qulity = 10
