@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE( test_GetVariantRange )
 BOOST_AUTO_TEST_CASE( test_getInsertTrim )
 {
     bam_record bamRecord1;
-    buildTestBamRecord(bamRecord1, 0, 9, 0, 30, 60, 15, "35M5I15M");
+    buildTestBamRecord(bamRecord1, 0, 9, 0, 90, 150, 15, "35M5I15M");
     SimpleAlignment simpleAlignment1(getAlignment(bamRecord1));
     // segment range is (1, 1)
     known_pos_range2 range1(getInsertTrim(simpleAlignment1.path, std::pair<unsigned, unsigned>(1, 1)));
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE( test_getInsertTrim )
     BOOST_REQUIRE_EQUAL(range1.end_pos(), 40);
 
     bam_record bamRecord2;
-    buildTestBamRecord(bamRecord2, 0, 9, 0, 30, 60, 15, "35M5D5I15M");
+    buildTestBamRecord(bamRecord2, 0, 9, 0, 90, 150, 15, "35M5D5I15M");
     SimpleAlignment simpleAlignment2(getAlignment(bamRecord2));
     // segment range is (1, 1)
     known_pos_range2 range2(getInsertTrim(simpleAlignment2.path, std::pair<unsigned, unsigned>(1, 1)));
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE( test_getInsertTrim )
     BOOST_REQUIRE_EQUAL(range2.end_pos(), 35);
 
     bam_record bamRecord3;
-    buildTestBamRecord(bamRecord3, 0, 9, 0, 30, 60, 15, "35M5D15M");
+    buildTestBamRecord(bamRecord3, 0, 9, 0, 90, 150, 15, "35M5D15M");
     SimpleAlignment simpleAlignment3(getAlignment(bamRecord3));
     // segment range is (1, 2)
     known_pos_range2 range3(getInsertTrim(simpleAlignment3.path, std::pair<unsigned, unsigned>(1, 2)));
