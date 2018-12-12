@@ -19,12 +19,81 @@
 
 #include "boost/test/unit_test.hpp"
 #include "test/testAlignmentDataUtil.hh"
+#include "test/testFileMakers.hh"
+#include "manta/BamStreamerUtils.hh"
 #include "htsapi/SimpleAlignment_bam_util.hh"
 // test static function in TU:
 #include "applications/GenerateSVCandidates/SVCandidateAssemblyRefiner.cpp"
 
 
 BOOST_AUTO_TEST_SUITE( test_SVRefiner )
+
+// Create Temporary bam streams of a bam file which contains
+// three interchromosomal read pairs.
+struct BamStream
+{
+    BamStream()
+    {
+        const bam_header_info bamHeader(buildTestBamHeader());
+
+        std::string querySeq1 = "GTCTATCACCCTATTAACCACTCACGGGAGAAAAA";
+        std::string querySeq2 = "AAAAATGCTCATCAGTTGATGATACGCCCGAGCAGATGCCAACACAGCAGCCATTCAAGAGTCA";
+        bam_record bamRecord1;
+        buildTestBamRecord(bamRecord1, 0, 8, 1, 69, -1, 15, "35M", querySeq1);
+        bamRecord1.set_qname("Read-1");
+        bam_record bamRecord2;
+        buildTestBamRecord(bamRecord2, 0, 8, 1, 69, -1, 15, "35M", querySeq1);
+        bamRecord2.set_qname("Read-2");
+        bam_record bamRecord3;
+        buildTestBamRecord(bamRecord3, 0, 8, 1, 69, -1, 15, "35M", querySeq1);
+        bamRecord3.set_qname("Read-3");
+        bam_record bamRecord4;
+        buildTestBamRecord(bamRecord4, 1, 69, 0, 8, -1, 50, "64M", querySeq2);
+        bamRecord4.toggle_is_mate_fwd_strand();
+        bamRecord4.toggle_is_fwd_strand();
+        bamRecord4.set_qname("Read-1");
+        bam_record bamRecord5;
+        buildTestBamRecord(bamRecord5, 1, 69, 0, 8, -1, 50, "64M", querySeq2);
+        bamRecord5.set_qname("Read-2");
+        bamRecord5.toggle_is_mate_fwd_strand();
+        bamRecord5.toggle_is_fwd_strand();
+        bam_record bamRecord6;
+        buildTestBamRecord(bamRecord6, 1, 69, 0, 8, -1, 50, "64M", querySeq2);
+        bamRecord6.toggle_is_mate_fwd_strand();
+        bamRecord6.toggle_is_fwd_strand();
+        bamRecord6.set_qname("Read-3");
+        readsToAdd.push_back(bamRecord1);
+        readsToAdd.push_back(bamRecord2);
+        readsToAdd.push_back(bamRecord3);
+        readsToAdd.push_back(bamRecord4);
+        readsToAdd.push_back(bamRecord5);
+        readsToAdd.push_back(bamRecord6);
+        bamFileName = _bamFilename();
+        buildTestBamFile(bamHeader, readsToAdd, bamFileName);
+
+        const std::string referenceFilename = getTestReferenceFilename();
+        std::vector<std::string> bamFilenames = { bamFileName };
+        std::vector<std::shared_ptr<bam_streamer>> bamStreams;
+        openBamStreams(referenceFilename, bamFilenames, bamStreams);
+        bamStream = bamStreams[0];
+    }
+
+    std::shared_ptr<bam_streamer> bamStream;
+    std::vector<bam_record> readsToAdd;
+    std::string bamFileName;
+
+private:
+
+    const std::string&
+    _bamFilename() const
+    {
+        return _bamFilenameMaker.getFilename();
+    }
+    const BamFilenameMaker _bamFilenameMaker;
+};
+
+BOOST_FIXTURE_TEST_SUITE( SVRefiner_test_suite, BamStream )
+
 
 BOOST_AUTO_TEST_CASE( test_GetVariantRange )
 {
@@ -776,4 +845,510 @@ BOOST_AUTO_TEST_CASE( test_isJumpAlignmentQCFail )
     BOOST_REQUIRE(isJumpAlignmentQCFail(jumpAlignmentResultType));
 }
 
+// Test the following cases:
+// 1. If minimum candidate indel is not present in the read alignment, it will return false.
+// 2. If number of candidate segments is 1 and it is LowQualitySmallSVAlignment (as explained in
+//    test_ISLowQualitySmallSVAlignment), it will return false.
+// 3. After discarding LowQualitySmallSVAlignment segments if still it contains some indels which are
+//    more than min indel threshold, it will return true.
+BOOST_AUTO_TEST_CASE( test_findCandidateVariantsFromComplexSVContigAlignment )
+{
+    std::string contigSeq = "TCTATCACCCATCGTACCACTCACGGGAGCTCTCCTCTATCACCCATCGTACCACTCACGGGAGCTCTCC"
+                            "TCTATCACCCATCGTACCACTCACGGGAGCTCTCCTCTATCACCCATCGTACCACTCACGGGAGCTCTCC"
+                            "TCTATCACCCATCGTACCACTCACGGGAGCTCTCC";
+    std::string refSeq = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
+                         "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA"
+                         "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
+                         "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA"
+                         "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
+                         "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
+
+    std::vector<std::pair<unsigned, unsigned> > candidateSegments;
+
+    // Match score = 1, mismatch penalty = -4,
+    // gap opening penalty = -6, gap extension penalty = -2,
+    // clipping penalty = -5.
+    AlignmentScores<int> scores(1, -4, -6, -2, -5);
+    std::string testCigar1("35=5I30=6D10=3I"); // match, insertion and deletion
+    Alignment alignment1;
+    cigar_to_apath(testCigar1.c_str(), alignment1.apath);
+    // Case-1 is designed here. Minimum indel size = 10. But cigar(35=5I30=6D10=3I) does not have any indel
+    // with size more than 10.
+    BOOST_REQUIRE(!findCandidateVariantsFromComplexSVContigAlignment(100, scores, alignment1,
+                   contigSeq, refSeq, 10, candidateSegments));
+
+    // Case-2 is designed here. Min indel size = 6. So only one segment (6D) more than this. Till this segment(35=5I30=) it is
+    // LowQualitySmallSVAlignment which is explained in test_isLowQualitySmallSVAlignment.
+    BOOST_REQUIRE(!findCandidateVariantsFromComplexSVContigAlignment(100, scores, alignment1,
+                   contigSeq, refSeq, 6, candidateSegments));
+
+    // Trim segments from both side until we don't get LowQualitySmallSVAlignment.
+    // So here trim 3I from both side and after trimming cigar is 100=5I30=6D100= which
+    // still contains 5I and 6D which sizes are more than min indel threshold(3 here)
+    std::string testCigar2("3I100=5I30=6D100=3I"); // match, insertion and deletion
+    Alignment alignment2;
+    cigar_to_apath(testCigar2.c_str(), alignment2.apath);
+    alignment2.beginPos = 50;
+    BOOST_REQUIRE(findCandidateVariantsFromComplexSVContigAlignment(100, scores, alignment2,
+                  contigSeq, refSeq, 3, candidateSegments));
+}
+
+// Construct a usable candidate SV from a smallIndel alignment section. For example:
+// If an alignment cigar is 73=6I98=, our segment interest is 6I, api constructs a sv region
+// around that 6I. It will discard 73= and 98= segments. Let's say reference range for 6I is [x, y).
+// While doing this computation at the corresponding reference range, api checks that in how many positions,
+// the alignment position can vary with the same alignment score. Let's say this range is [a, b)
+// So the SV breakend locations are:
+// bp1 = [x, x + b + 1)
+// bp2 = [y, y + b + 1)
+BOOST_AUTO_TEST_CASE( test_setSmallCandSV )
+{
+    reference_contig_segment reference;
+    reference.seq() = "AATATTACCCTTAGTTCTCATTAGTAAATGGATGTGAAAGTCAGGACATTCCAAAAGAAAGAACTAGAACTCACTCGGCC"
+                      "AGAAAACCCCCATTTCAGTTTTTACACAGAAAAATTCTTACAGTCTATGTTTCACTAAGAATGTCTGCTGTGCAAAACCCT"
+                      "CAAACTTTTTAGAACGTTTTTTTTGTTCCAAGTTAGAGAACGGCAATCAGTAATCTATTACCCAAAGTGCTTCTCCTTTCCA"
+                      "GGTTTCATGTTAGAGTGATTCTAATATGTGTGTGCTATCAACTGCCTACACAGAAAACTGAGAGACAAAGGCTTTCTCCTTTT"
+                      "CCACACATTATCCTTCATTCAGACTTAATGCCTGCAGGTCCGGTTTAATGATTTCCCAGAGTTTATGAACGAAAAAGAAAAAC"
+                      "AAAGCAATAAAAACAAAAATCAAAGTTAAATTTCCTCAAAAGTTTTCAAGAAGGAAGTAGTCAGGACAAAAACAAAGGGAATG"
+                      "AGGGCACTTTGTCTCAGGATACAAATTAAAGATCACTGTGGTGGCCTCTGTGGGGTGGTTATAAAGGGGACCAGGTGTATACT"
+                      "AGGAAGTCATTTAGTTTTAGAAATGTAAATATGTGTAAATGTTTTAATTTTACTCAACTTGCCAGAGGTAGAATGTCCCTGGA"
+                      "CAACTAACTGATACATTTCTTTAGGGCCAATCGCTGGCTTTAGAAGAGCCTCAGCTAATCACAGTAGAGCTGGACTGTTGTGG"
+                      "TTTTCCATTCCTTTGCATCGTATTCCTCAGTCTCTGCGGAAGGCACTGCTCCTTCCTTTCCTTTCTAAATCTCTCTCTGTCTCTC"
+                      "TCTCTCTCTCTCTCTCTCTCGCTCTCTCCTCCCCTAGTTTATCCTGGACTCATGCTGAGCTCAGCAACCCTTGAACTCATTTTCT"
+                      "ATCTGACATGT";
+    const std:: string readSequence("ATTCCTTTGCATCGTATTCCTCAGTCTCTGCGGAAGGCACTGCTCCTTCCTTTCCTTTCTAAATCTCTCTCTGTCTCT"
+                              "CTCTCTCTCTCTCTCTCTCTCTCTCTCGCTCTCTCCTCCCCTAGTTTATCCTGGACTCATGCTGAGCTCAGCAACCCTT"
+                              "GAACTCATTTTCTATCTGAC");
+    Alignment alignment;
+    alignment.beginPos = 747;
+    std::string cigar("73=6I98=");
+    cigar_to_apath(cigar.c_str(),  alignment.apath);
+    SVCandidate candidate;
+    GSCOptions  options;
+    options.isOutputContig = true;
+    std::pair<unsigned , unsigned > segment(std::pair<unsigned, unsigned >(1, 1));
+    setSmallCandSV(reference, readSequence, alignment, segment, candidate, options);
+    // ref region is [747 +73-1, 747 + 73) = [819, 820)
+    // read region is [73, 74)
+    // from 819 in reference bases and from 73 in read bases 26 read bases are matching with
+    // reference bases. So final regions are [819, 819+26+1) = [819, 846) and
+    // [820, 820+26+1) = [820, 847)
+    BOOST_REQUIRE_EQUAL(candidate.bp1.interval, GenomeInterval(0, 819, 846));
+    BOOST_REQUIRE_EQUAL(candidate.bp2.interval, GenomeInterval(0, 820, 847));
+    BOOST_REQUIRE_EQUAL(candidate.insertSeq.size(), 6); // for 6I
+}
+
+// Test the original location of masked position where masked position
+// is constructed using exclusion_block data structure which conatins:
+// 1. start of the excluded region
+// 2. Number of Bp excluded(l).
+// 3. Number of 'N' added in place of excluded sequence(N).
+// Consider the following schematic diagram of reduced coordinate:
+// | l = 10, N=3 |    | l = 10, N=3 |    | l = 10, N=3 |
+// --------------------------------------------------------------
+// | <- excl-1 ->|  P | <- excl-2 ->|    | <- excl-3 ->|
+// We need to find the actual coordinate of P. So for every block need
+// to add offset (l-N) to P and check whether it is greater than the start
+// of the next block and so on.
+BOOST_AUTO_TEST_CASE( test_translateMaskedAlignment )
+{
+    // start of excluded region = 1
+    // Length of the excluded region = 10
+    // Number of 'N' added in place of excluded sequence = 3
+    exclusion_block block1(1, 10, 3);
+    // start of excluded region = 22
+    // Length of the excluded region = 10
+    // Number of 'N' added in place of excluded sequence = 3
+    exclusion_block block2(22, 10, 3);
+    // start of excluded region = 34
+    // Length of the excluded region = 10
+    // Number of 'N' added in place of excluded sequence = 3
+    exclusion_block block3(34, 10, 3);
+    std::vector<exclusion_block> blocks = {block1, block2, block3};
+
+
+    std::string testCigar1("20D4=4D12=4I"); // match, insertion and deletion
+    Alignment alignment1;
+    alignment1.beginPos = 2;
+    cigar_to_apath(testCigar1.c_str(), alignment1.apath);
+    // Based on the above schematic diagram this is the expected original cigar.
+    std::string expectedCIGAR("34D4=4D12=4I");
+    ALIGNPATH::path_t expectedPath;
+    cigar_to_apath(expectedCIGAR.c_str(), expectedPath);
+    BOOST_REQUIRE(translateMaskedAlignment(alignment1, blocks));
+    BOOST_REQUIRE_EQUAL(alignment1.apath, expectedPath);
+}
+
+// Test whether jump alignment result is low quality
+// Jump alignment represents alignment of a query sequence which can switch over
+// from reference1 to reference2. If either of the alignment is LowQualitySpanningSVAlignment
+// then api will return true. isLowQualitySpanningSVAlignment is described in test_isLowQualitySpanningSVAlignment.
+// Test the following cases:
+// 1. isLowQualitySpanningSVAlignment is true for Alignment-1, not true for Alignment-2
+// 2. isLowQualitySpanningSVAlignment is true for Alignment-2, not true for Alignment-1
+// 3. isLowQualitySpanningSVAlignment is true for both Alignment-1 and Alignment-2
+// 4. isLowQualitySpanningSVAlignment is not true for both Alignment-1 and Alignment-2
+BOOST_AUTO_TEST_CASE( test_isLowQualityJumpAlignment )
+{
+    JumpAlignmentResult<int> alignmentResult;
+    // Match score = 1, mismatch penalty = -4,
+    // gap opening penalty = -6, gap extension penalty = -2,
+    // clipping penalty = -5.
+    AlignmentScores<int> scores(1, -4, -6, -2, -5);
+    std::string testCigar1("35=5I30=6D10=3I"); // match, insertion and deletion
+    cigar_to_apath(testCigar1.c_str(), alignmentResult.align1.apath);
+    std::string testCigar2("35=");
+    cigar_to_apath(testCigar2.c_str(), alignmentResult.align2.apath);
+    // Case-1 is designed here
+    BOOST_REQUIRE(isLowQualityJumpAlignment(alignmentResult, scores, false));
+
+    // Case-2 is designed here
+    cigar_to_apath(testCigar2.c_str(), alignmentResult.align1.apath);
+    cigar_to_apath(testCigar1.c_str(), alignmentResult.align2.apath);
+    BOOST_REQUIRE(isLowQualityJumpAlignment(alignmentResult, scores, false));
+
+    // case-3 is designed here
+    cigar_to_apath(testCigar1.c_str(), alignmentResult.align1.apath);
+    cigar_to_apath(testCigar1.c_str(), alignmentResult.align2.apath);
+    BOOST_REQUIRE(isLowQualityJumpAlignment(alignmentResult, scores, false));
+
+    // Case-4 is designed here
+    cigar_to_apath(testCigar2.c_str(), alignmentResult.align1.apath);
+    cigar_to_apath(testCigar2.c_str(), alignmentResult.align2.apath);
+    BOOST_REQUIRE(!isLowQualityJumpAlignment(alignmentResult, scores, false));
+}
+
+// Test the following cases:
+// 1. Filter breakpoint contigs for large SV candidates as explained in test_isLowQualityJumpAlignment
+// 2. Select the 'best' one based on alignment score and check alignment on selected contig
+BOOST_AUTO_TEST_CASE( test_selectJumpContigDNA )
+{
+    // Match score = 1, mismatch penalty = -4,
+    // gap opening penalty = -6, gap extension penalty = -2,
+    // clipping penalty = -5.
+    AlignmentScores<int> scores(1, -4, -6, -2, -5);
+    JumpAlignmentResult<int> alignmentResult1;
+    std::string testCigar1("35=5I30=6D10=3I"); // match, insertion and deletion
+    cigar_to_apath(testCigar1.c_str(), alignmentResult1.align1.apath); // alignment score is 29
+    std::string testCigar2("35=");
+    cigar_to_apath(testCigar2.c_str(), alignmentResult1.align2.apath); // alignment score is 35
+    alignmentResult1.score = 64;
+
+    JumpAlignmentResult<int> alignmentResult2;
+    std::string testCigar3("35=5X30=6D10=3I");
+    cigar_to_apath(testCigar3.c_str(), alignmentResult2.align1.apath); // alignment score is 25
+    std::string testCigar4("35=");
+    cigar_to_apath(testCigar4.c_str(), alignmentResult2.align2.apath); // alignment score is 35
+    alignmentResult1.score = 60;
+
+    // Case-1 is designed here. Out of two jump alignments, alignmentResult1 has max alignment score
+    // But it is LowQualityJumpAlignment as mentioned in test_isLowQualityJumpAlignment.
+    SVCandidateAssemblyData candidateAssemblyData;
+    candidateAssemblyData.contigs.resize(2);
+    candidateAssemblyData.spanningAlignments.push_back(alignmentResult1);
+    candidateAssemblyData.spanningAlignments.push_back(alignmentResult2);
+    BOOST_REQUIRE(!selectJumpContigDNA(candidateAssemblyData, scores));
+
+    // Case-2 is designed here. Out of two jump alignments, alignmentResult3 has max alignment score.
+    // And also is alignmentResult3 LowQualityJumpAlignment as mentioned in test_isLowQualityJumpAlignment.
+    JumpAlignmentResult<int> alignmentResult3;
+    std::string testCigar5("35=");
+    cigar_to_apath(testCigar5.c_str(), alignmentResult3.align1.apath); // alignment score is 35
+    std::string testCigar6("35=");
+    cigar_to_apath(testCigar6.c_str(), alignmentResult3.align2.apath); // alignment score is 35
+    alignmentResult3.score = 70;
+    candidateAssemblyData.contigs.resize(3);
+    candidateAssemblyData.spanningAlignments.push_back(alignmentResult3);
+    BOOST_REQUIRE(selectJumpContigDNA(candidateAssemblyData, scores));
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData.bestAlignmentIndex, 2);
+}
+
+// Test the following cases:
+// 1. Filter breakpoint contigs for large SV candidates as explained in test_isLowQualityJumpAlignment
+// 2. Select the 'best' one based on alignment score and check alignment on selected contig
+BOOST_AUTO_TEST_CASE( test_selectJumpContigRNA )
+{
+    // Match score = 1, mismatch penalty = -4,
+    // gap opening penalty = -6, gap extension penalty = -2,
+    // clipping penalty = -5.
+    AlignmentScores<int> scores(1, -4, -6, -2, -5);
+    JumpAlignmentResult<int> alignmentResult1;
+    std::string testCigar1("35=5I30=6D10=3I"); // match, insertion and deletion
+    cigar_to_apath(testCigar1.c_str(), alignmentResult1.align1.apath); // alignment score is 29
+    std::string testCigar2("35=");
+    cigar_to_apath(testCigar2.c_str(), alignmentResult1.align2.apath); // alignment score is 35
+    alignmentResult1.score = 64;
+
+    JumpAlignmentResult<int> alignmentResult2;
+    std::string testCigar3("35=5X30=6D10=3I");
+    cigar_to_apath(testCigar3.c_str(), alignmentResult2.align1.apath); // alignment score is 25
+    std::string testCigar4("35=");
+    cigar_to_apath(testCigar4.c_str(), alignmentResult2.align2.apath); // alignment score is 35
+    alignmentResult1.score = 60;
+
+    // Case-1 is designed here. Out of two jump alignments, alignmentResult1 has max alignment score
+    // But it is LowQualityJumpAlignment as mentioned in test_isLowQualityJumpAlignment.
+    SVCandidateAssemblyData candidateAssemblyData;
+    candidateAssemblyData.contigs.resize(2);
+    candidateAssemblyData.spanningAlignments.push_back(alignmentResult1);
+    candidateAssemblyData.spanningAlignments.push_back(alignmentResult2);
+    BOOST_REQUIRE(!selectJumpContigRNA(candidateAssemblyData, scores));
+
+    // Case-2 is designed here. Out of two jump alignments, alignmentResult3 has max alignment score.
+    // And also is alignmentResult3 LowQualityJumpAlignment as mentioned in test_isLowQualityJumpAlignment.
+    JumpAlignmentResult<int> alignmentResult3;
+    std::string testCigar5("35=");
+    cigar_to_apath(testCigar5.c_str(), alignmentResult3.align1.apath); // alignment score is 35
+    std::string testCigar6("35=");
+    cigar_to_apath(testCigar6.c_str(), alignmentResult3.align2.apath); // alignment score is 35
+    alignmentResult3.score = 70;
+    candidateAssemblyData.contigs.resize(3);
+    candidateAssemblyData.spanningAlignments.push_back(alignmentResult3);
+    BOOST_REQUIRE(selectJumpContigRNA(candidateAssemblyData, scores));
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData.bestAlignmentIndex, 2);
+}
+
+// Convert jump alignment results into an SVCandidate and add all
+// extra data required for VCF output
+// Test the following cases:
+// 1. If the insert size of best alignment is greater than zero, then same length
+//    insert sequence is added to candidate SV.
+// 2. If a user wants to out contig sequence in VCF, it will add contig sequence
+//    to candidate sv.
+// 3. Creation of intervals of candidate SV are explained in test_adjustAssembledBreakend
+// 4. If there are x number of insertions and y number of deletions, it will add
+//    xIyD in candidate SV as insert alignment.
+BOOST_AUTO_TEST_CASE( test_generateRefinedVCFSVCandidateFromJumpAlignment )
+{
+    // Match score = 1, mismatch penalty = -4,
+    // gap opening penalty = -6, gap extension penalty = -2,
+    // clipping penalty = -5.
+    AlignmentScores<int> scores(1, -4, -6, -2, -5);
+    JumpAlignmentResult<int> alignmentResult1;
+    std::string testCigar1("35=5I30=6D10=3I"); // match, insertion and deletion
+    cigar_to_apath(testCigar1.c_str(), alignmentResult1.align1.apath); // alignment score is 29
+    std::string testCigar2("35=");
+    cigar_to_apath(testCigar2.c_str(), alignmentResult1.align2.apath); // alignment score is 35
+    alignmentResult1.score = 64;
+
+    JumpAlignmentResult<int> alignmentResult2;
+    std::string testCigar3("35=5X30=6D10=3I");
+    cigar_to_apath(testCigar3.c_str(), alignmentResult2.align1.apath); // alignment score is 25
+    std::string testCigar4("35=");
+    cigar_to_apath(testCigar4.c_str(), alignmentResult2.align2.apath); // alignment score is 35
+    alignmentResult1.score = 60;
+
+    // Preparing candidate assembly data.
+    SVCandidateAssemblyData candidateAssemblyData;
+    candidateAssemblyData.spanningAlignments.push_back(alignmentResult1);
+    candidateAssemblyData.spanningAlignments.push_back(alignmentResult2);
+
+    // Out of three jump alignments, alignmentResult3 has max alignment score.
+    JumpAlignmentResult<int> alignmentResult3;
+    alignmentResult3.jumpInsertSize = 5;
+    std::string testCigar5("35=");
+    cigar_to_apath(testCigar5.c_str(), alignmentResult3.align1.apath); // alignment score is 35
+    std::string testCigar6("35=");
+    cigar_to_apath(testCigar6.c_str(), alignmentResult3.align2.apath); // alignment score is 35
+    alignmentResult3.score = 70;
+    candidateAssemblyData.spanningAlignments.push_back(alignmentResult3);
+
+    // Preparing dummy contig sequences
+    AssembledContig contig1;
+    contig1.seq = "TCTATCACCCATCGTACCACTCACGGGAGCTCGATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT";
+    AssembledContig contig2;
+    contig2.seq = "AGCTAGTCAGATCGTACCACTCACGGGAGCTCGATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT";
+    AssembledContig contig3;
+    contig3.seq = "TGCATGACGTATCGTACCACTCACGGGAGCTCGATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT";
+    candidateAssemblyData.contigs = {contig1, contig2, contig3};
+    candidateAssemblyData.bp1ref.seq() = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
+                                         "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
+    candidateAssemblyData.bp2ref.seq() = "TCCAGCGTCTCGCAATGCTATCGCGTGCACACCCCCCAGACGAAAATACCAAATGCATGGAGA"
+                                         "GCTCCCGTGAGTGGTTAATAGGGTGATAGACCTGTGATC";
+    // BP2 is stated after 40 bases from the beginning of the reference
+    candidateAssemblyData.bp2ref.set_offset(40);
+    // Best alignment index as explained in test_selectJumpContigDNA.
+    candidateAssemblyData.bestAlignmentIndex = 2;
+    SVCandidate candidate;
+    candidate.bp1.state = SVBreakendState::RIGHT_OPEN;
+    candidate.bp2.state = SVBreakendState::LEFT_OPEN;
+    candidate.setPrecise();
+    GSCOptions options;
+    options.isOutputContig = true; // output contig sequence to VCF.
+    generateRefinedVCFSVCandidateFromJumpAlignment(candidateAssemblyData, candidate, options);
+    // jump insert size = 5
+    // After refinement SV breakpoints are BP1([34, 35)) and BP2([40, 41)). It is explained
+    // in test_adjustAssembledBreakend.
+    std::string expectedAlignment("5I5D");
+    ALIGNPATH::path_t expectedPath;
+    cigar_to_apath(expectedAlignment.c_str(), expectedPath);
+
+    // Case-1
+    BOOST_REQUIRE_EQUAL(candidate.insertSeq.size(), alignmentResult3.jumpInsertSize);
+    // Case-2
+    BOOST_REQUIRE_EQUAL(candidate.contigSeq, contig3.seq);
+    // Case-3
+    BOOST_REQUIRE_EQUAL(candidate.bp1.interval, GenomeInterval(0, 34, 35));
+    BOOST_REQUIRE_EQUAL(candidate.bp2.interval, GenomeInterval(0, 40, 41));
+    // Case-4
+    BOOST_REQUIRE_EQUAL(candidate.insertAlignment, expectedPath);
+}
+
+// Given a SV candidate, Compute a possible assembly.
+// Test the following cases:
+// For Spanning SV:
+// 1. When two breakpoints are overlapping (with extra padding 350) each other, api computes small
+//    candidate assembly. This case assumes a single-interval local assembly, this is the most
+//    common case for small-scale SVs/indels.
+// 2. For large SV or interchromosomal SV, api computes spanning candidate assembly. This case assumes
+//    two suspected breakends with a direction to each, most common large scale SV case.
+// 3. Above two cases are applied for RNA also.
+// For Complex SV:
+// 4. When a SV is complex, api computes small candidate assembly as mentioned in case-1.
+// Contigs are generated based on the bam record specified at the top of this file. BamRecords are
+// created in such a way that leading an trailing has 5 mismatches (as 4 is the leading or trailing
+// mismatch threshold)
+BOOST_AUTO_TEST_CASE( test_getCandidateAssemblyData )
+{
+    const bam_header_info bamHeader(buildTestBamHeader());
+    TestFileMakerBase fileMakerBase1;
+    GSCOptions options;
+    // Assembly options
+    options.refineOpt.spanningAssembleOpt.minWordLength = 3;
+    options.refineOpt.spanningAssembleOpt.maxWordLength = 9;
+    options.refineOpt.spanningAssembleOpt.wordStepSize = 3;
+    options.refineOpt.smallSVAssembleOpt.minWordLength = 3;
+    options.refineOpt.smallSVAssembleOpt.maxWordLength = 9;
+    options.refineOpt.smallSVAssembleOpt.wordStepSize = 3;
+    options.alignFileOpt.alignmentFilenames = {bamFileName};
+    options.referenceFilename = getTestReferenceFilename();
+    options.edgeRuntimeFilename = fileMakerBase1.getFilename();
+    // Creating stats file.
+    TestStatsFileMaker statsFile;
+    options.statsFilename = statsFile.getFilename();
+
+    AllSampleReadCounts counts;
+    counts.setSampleCount(1);
+    SampleReadCounts sample1(counts.getSampleCounts(0));
+    sample1.input.evidenceCount.anom = 6;
+    sample1.input.evidenceCount.split = 0;
+    sample1.input.evidenceCount.anomAndSplit = 0;
+    sample1.input.evidenceCount.total = 4;
+    counts.getSampleCounts(0).merge(sample1);
+    EdgeRuntimeTracker edgeTracker(options.edgeRuntimeFilename);
+
+    // Case-1 is designed here. It is a spanning sv candidate where breakpoints
+    // are overlapping (with extra padding 350) each other.
+    SVCandidateAssemblyRefiner refiner1(options, bamHeader, counts, edgeTracker);
+    SVCandidate candidate1;
+    candidate1.bp1.state = SVBreakendState::RIGHT_OPEN;
+    candidate1.bp1.interval = GenomeInterval(0 , 40, 50);
+    candidate1.bp2.state = SVBreakendState::LEFT_OPEN;
+    candidate1.bp2.interval = GenomeInterval(0 , 65, 75);
+    SVCandidateAssemblyData candidateAssemblyData1;
+    refiner1.getCandidateAssemblyData(candidate1, false, candidateAssemblyData1);
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData1.smallSVAlignments.size(), 1);
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData1.contigs.size(), 1);
+    // Three reads are supporting the contig.
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData1.contigs[0].supportReads.size(), 3);
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData1.contigs[0].seq, "GTCTATCACCCTATTAACCACTCACGGGAGAAAAA");
+
+    // Case-2 designed here. It is a spanning inter-chromosomal SV.
+    SVCandidate candidate2;
+    candidate2.bp1.state = SVBreakendState::RIGHT_OPEN;
+    candidate2.bp1.interval = GenomeInterval(0 , 40, 50);
+    candidate2.bp2.state = SVBreakendState::LEFT_OPEN;
+    candidate2.bp2.interval = GenomeInterval(1 , 65, 75);
+    SVCandidateAssemblyData candidateAssemblyData2;
+    refiner1.getCandidateAssemblyData(candidate2, false, candidateAssemblyData2);
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData2.spanningAlignments.size(), 1);
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData2.contigs.size(), 1);
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData2.contigs[0].supportReads.size(), 3);
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData2.contigs[0].seq, "GTCTATCACCCTATTAACCACTCACGGGAGAAAAA");
+
+    // Case-3 is designed here. This is for RNA sample.
+    SVCandidate candidate3;
+    candidate3.bp1.state = SVBreakendState::RIGHT_OPEN;
+    candidate3.bp1.interval = GenomeInterval(0 , 40, 50);
+    candidate3.bp2.state = SVBreakendState::LEFT_OPEN;
+    candidate3.bp2.interval = GenomeInterval(1 , 65, 75);
+    SVCandidateAssemblyData candidateAssemblyData3;
+    options.isRNA = true;
+    SVCandidateAssemblyRefiner refiner2(options, bamHeader, counts, edgeTracker);
+    refiner2.getCandidateAssemblyData(candidate3, false, candidateAssemblyData3);
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData3.contigs.size(), 1);
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData3.contigs[0].supportReads.size(), 3);
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData3.contigs[0].seq, "GTCTATCACCCTATTAACCACTCACGGGAGAAAAA");
+
+    // Case-4 is designed here.
+    SVCandidate candidate4;
+    candidate4.bp1.state = SVBreakendState::COMPLEX;
+    candidate4.bp1.interval = GenomeInterval(0 , 40, 50);
+    candidate4.bp2.state = SVBreakendState::UNKNOWN;
+    candidate4.bp2.interval = GenomeInterval(0 , 65, 75);
+    SVCandidateAssemblyData candidateAssemblyData4;
+    options.isRNA = true;
+    SVCandidateAssemblyRefiner refiner3(options, bamHeader, counts, edgeTracker);
+    refiner3.getCandidateAssemblyData(candidate4, true, candidateAssemblyData4);
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData4.smallSVAlignments.size(), 1);
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData4.contigs.size(), 1);
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData4.contigs[0].supportReads.size(), 3);
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData4.contigs[0].seq, "GTCTATCACCCTATTAACCACTCACGGGAGAAAAA");
+}
+
+// Search for combinations of left and right-side insertion candidates to find a good insertion pair
+// Test the following case:
+// If there is a large insertion, api creates a new SV candidate around that insertion region.
+BOOST_AUTO_TEST_CASE( test_ProcessLargeInsertion )
+{
+    GSCOptions options;
+    const GlobalAligner<int> largeInsertCompleteAligner(options.refineOpt.largeInsertEdgeAlignScores);
+    SVCandidateAssemblyData candidateAssemblyData;
+    std::vector<SVCandidateAssemblyData::SmallAlignmentResultType>& smallSVAlignments = candidateAssemblyData.smallSVAlignments;
+    smallSVAlignments.resize(2);
+    std::string cigar1("5=60I50=");
+    smallSVAlignments[0].align.beginPos = 50;
+    cigar_to_apath(cigar1.c_str(), smallSVAlignments[1].align.apath);
+    smallSVAlignments[0].score = -23;
+    std::string cigar2("10=50I50=");
+    smallSVAlignments[1].align.beginPos = 50;
+    cigar_to_apath(cigar2.c_str(), smallSVAlignments[0].align.apath);
+    smallSVAlignments[1].score = -8;
+
+    std::vector<LargeInsertionInfo>& largeInsertInfo = candidateAssemblyData.largeInsertInfo;
+    largeInsertInfo.resize(2);
+    largeInsertInfo[0].score = -23;
+    largeInsertInfo[0].isRightCandidate = true;
+    largeInsertInfo[0].contigOffset = 5;
+    largeInsertInfo[0].refOffset = 5;
+    largeInsertInfo[1].score = -8;
+    largeInsertInfo[1].isLeftCandidate = true;
+    largeInsertInfo[1].contigOffset = 10;
+    largeInsertInfo[1].refOffset = 10;
+
+    candidateAssemblyData.bp1ref.seq() = "AATATTACCCTTAGTTCTCATTAGTAAATGGATGTGAAAGTCAGCCTGACTGCAGTGCTGA"
+                                         "GGGGGCCCCATTTTTTTACCCCAAATATTACCCTTAGTTCTC";
+    Assembly& contigs = candidateAssemblyData.contigs;
+    contigs.resize(2);
+    // These are the left and right contigs. Both contigs are combined and try to align with bp1ref. After aligning
+    // the cigar is 53=258I50=.
+    contigs[0].seq = "TCCTTCCTTTCCTTTCTAAATCTCTCTCTGTCTCTCTCTCTCTCTCTCTCTCTCTCTCTCTCGCTCTCTCC"
+                     "TCCCCTAGTTTATCCTGGACTCATGCTGAGCTCAGCAACCCTTG"
+                     "AGTGCTGAGGGGGCCCCATTTTTTTACCCCAAATATTACCCTTAGTTCTC";
+    contigs[1].seq = "AATATTACCCTTAGTTCTCATTAGTAAATGGATGTGAAAGTCAGCCTGACTGCATTCCTTTGCATCGTA"
+                     "TTCCTCAGTCTCTGCGGAAGGCACTGC";
+    SVCandidate candidate;
+    std::set<pos_t > excludedPos;
+    processLargeInsertion(candidate, 0, 0, largeInsertCompleteAligner, {0, 1}, excludedPos, candidateAssemblyData, options);
+    std::string expectedInsertAlignment = "258I";
+    ALIGNPATH::path_t expectedAlignPath;
+    cigar_to_apath(expectedInsertAlignment.c_str(), expectedAlignPath);
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData.svs.size(), 1);
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData.svs[0].insertAlignment, expectedAlignPath);
+    // As the actual insertion is located after 53 base pair, so that following breakend intervals are created.
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData.svs[0].bp1.interval, GenomeInterval(0, 52, 54));
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData.svs[0].bp2.interval, GenomeInterval(0, 53, 55));
+}
+
+BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
