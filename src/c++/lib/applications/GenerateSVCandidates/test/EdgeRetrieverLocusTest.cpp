@@ -20,6 +20,7 @@
 #include "boost/test/unit_test.hpp"
 
 #include "EdgeRetrieverLocus.hh"
+#include "EdgeRetrieverLocus.cpp"
 
 #include "options/SVLocusSetOptions.hh"
 #include "svgraph/SVLocus.hh"
@@ -58,8 +59,73 @@ BOOST_AUTO_TEST_CASE( test_EdgeRetrieverLocusSimple )
     BOOST_REQUIRE_EQUAL(edge.nodeIndex2, 1u);
 
     BOOST_REQUIRE(! edger.next() );
-}
 
+    // when someone is interested to generate candidates for only the
+    // edge from node1 to node2 in one locus.
+    // In the following test case graph has 5 nodes:
+    // Node-0: GenomeInterval:1 [10, 20)
+    // Node-1: GenomeInterval:2 [30, 40)
+    // Node-2: GenomeInterval:4 [30, 40)
+    // Node-3: GenomeInterval:5 [10, 20)
+    // Node-4: GenomeInterval:6 [60, 70)
+    // Let's say we want only candidate in between Node-0 and Node-2
+    SVLocus locus3;
+    locusAddPair(locus3, 1, 10, 20, 2, 30, 40);
+    SVLocus locus4;
+    locusAddPair(locus4, 1, 10, 20, 4, 30, 40);
+    SVLocus locus5;
+    locusAddPair(locus5, 5, 10, 20, 4, 30, 40);
+    SVLocus locus6;
+    locusAddPair(locus6, 5, 10, 20, 6, 60, 70);
+    SVLocusSet set2(sopt);
+    set2.merge(locus3);
+    set2.merge(locus4);
+    set2.merge(locus5);
+    set2.merge(locus6);
+    set2.checkState(true,true);
+    lopt.locusIndex = 0; // report this locus only
+    lopt.isNodeIndex1 = true;
+    lopt.isNodeIndex2 = true;
+    // Required Node index
+    lopt.nodeIndex1 = 0;
+    lopt.nodeIndex2 = 2;
+    EdgeRetrieverLocus edger1(set2, 4, lopt);
+
+    BOOST_REQUIRE( edger1.next() );
+    edge = edger1.getEdge();
+    BOOST_REQUIRE_EQUAL(edge.locusIndex, 0u);
+    BOOST_REQUIRE_EQUAL(edge.nodeIndex1, 0u);
+    BOOST_REQUIRE_EQUAL(edge.nodeIndex2, 2u);
+    BOOST_REQUIRE(! edger1.next() );
+
+    // Now let's say someone wants all the candidates where Node-0 is
+    // involved.
+    lopt.isNodeIndex1 = true;
+    lopt.isNodeIndex2 = false; // as we are only interested in NodeIndex1
+    // Required Node index
+    lopt.nodeIndex1 = 0;
+    EdgeRetrieverLocus edger2(set2, 4, lopt);
+
+    BOOST_REQUIRE( edger2.next() );
+    edge = edger2.getEdge();
+    BOOST_REQUIRE_EQUAL(edge.locusIndex, 0u);
+    // Node-0 ----> Node-1
+    BOOST_REQUIRE_EQUAL(edge.nodeIndex1, 0u);
+    BOOST_REQUIRE_EQUAL(edge.nodeIndex2, 1u);
+    BOOST_REQUIRE( edger2.next() );
+    edge = edger2.getEdge();
+    // Node-0 ----> Node-2
+    BOOST_REQUIRE_EQUAL(edge.nodeIndex1, 0u);
+    BOOST_REQUIRE_EQUAL(edge.nodeIndex2, 2u);
+    BOOST_REQUIRE(! edger2.next() );
+
+    lopt.isNodeIndex2 = true;
+    // Node-0 and Node-2 both node size = 2
+    // But here max Node edge count = 1.
+    // So it's a noisy node. It will not return any edge
+    EdgeRetrieverLocus edger3(set2, 1, lopt);
+    BOOST_REQUIRE(! edger3.next() );
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

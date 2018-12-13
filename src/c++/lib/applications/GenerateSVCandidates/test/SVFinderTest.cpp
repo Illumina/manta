@@ -28,11 +28,13 @@
 #include "test/testSVLocusScanner.hh"
 #include "test/testUtil.hh"
 #include "test/testFileMakers.hh"
+#include "test/testSVLocusUtil.hh"
 
 #include "SVFinder.hh"
 #include "SVFinder.cpp"
 
 BOOST_AUTO_TEST_SUITE( SVFinderTest_test_suite )
+
 
 // Test the fraction of anomalous or split evidence count to total evidence count
 BOOST_AUTO_TEST_CASE( test_SpanningNoiseRate )
@@ -619,6 +621,184 @@ BOOST_AUTO_TEST_CASE( test_updateEvidenceIndex )
     BOOST_REQUIRE_EQUAL(fatSVCandidate.bp2EvidenceIndex[SVEvidenceType::PAIR][0].size(), 1);
     BOOST_REQUIRE_EQUAL(fatSVCandidate.bp1EvidenceIndex[SVEvidenceType::PAIR][0][0], 1);
     BOOST_REQUIRE_EQUAL(fatSVCandidate.bp2EvidenceIndex[SVEvidenceType::PAIR][0][0], 2);
+}
+
+/// Check whether any SVs can intersect each other
+/// Two SVCandidates intersect if their breakend regions overlap in the same direction.
+/// In the schematic below, the sequentially intersecting candidates are (1, 2, 5, 6). Same
+/// cases have been written in below test cases.
+/// fatSVCandidate1: >>>bp1>>>>-----------------------------------<<bp2<<<<< [bp1(10,100) & bp2(1000,1100)]
+/// fatSVCandidate2:   >>>>bp1>>>------------------------------------<<bp2<<<<< [bp1(50,120) & bp2(1050,1150)]
+/// fatSVCandidate3:               >>>bp1>>>-----------------------------------------<<<bp2<<<<< [bp1(200,300) &
+///                                                                                               bp2(1400,1500)]
+/// fatSVCandidate4:   <<<bp1<<<<-------------------------------<<<<<<<bp2<<<<< [bp1(50,120) & bp2(990,1050)]
+/// fatSVCandidate5:        >>>bp1>>>>------------------------------------<<bp2<<<<< [bp1(110,150) & bp2(1110, 1250)]
+/// fatSVCandidate6:               >>>bp1>>>>-----------------------------------<<bp2<<<<< [bp1(140, 200) & bp2(1240, 1300)]
+BOOST_AUTO_TEST_CASE( test_consolidateOverlap )
+{
+    SVCandidate svCandidate1;
+    svCandidate1.bp1.interval = GenomeInterval(0, 10, 100);
+    svCandidate1.bp2.interval = GenomeInterval(0, 1000, 1100);
+    svCandidate1.bp1.state  = SVBreakendState::RIGHT_OPEN;
+    svCandidate1.bp2.state  = SVBreakendState::LEFT_OPEN;
+
+    SVCandidate svCandidate2;
+    svCandidate2.bp1.interval = GenomeInterval(0, 50, 120);
+    svCandidate2.bp2.interval = GenomeInterval(0, 1050, 1150);
+    svCandidate2.bp1.state  = SVBreakendState::RIGHT_OPEN;
+    svCandidate2.bp2.state  = SVBreakendState::LEFT_OPEN;
+
+    SVCandidate svCandidate3;
+    svCandidate3.bp1.interval = GenomeInterval(0, 200, 300);
+    svCandidate3.bp2.interval = GenomeInterval(0, 1400, 1500);
+    svCandidate3.bp1.state  = SVBreakendState::RIGHT_OPEN;
+    svCandidate3.bp2.state  = SVBreakendState::LEFT_OPEN;
+
+    SVCandidate svCandidate4;
+    svCandidate3.bp1.interval = GenomeInterval(0, 50, 120);
+    svCandidate3.bp2.interval = GenomeInterval(0, 990, 1050);
+    svCandidate3.bp1.state  = SVBreakendState::LEFT_OPEN;
+    svCandidate3.bp2.state  = SVBreakendState::LEFT_OPEN;
+
+    FatSVCandidate fatSVCandidate1(svCandidate1, 1u);
+    FatSVCandidate fatSVCandidate2(svCandidate2, 1u);
+    FatSVCandidate fatSVCandidate3(svCandidate3, 1u);
+    FatSVCandidate fatSVCandidate4(svCandidate4, 1u);
+
+    std::vector<FatSVCandidate> fatSVs;
+    fatSVs.push_back(fatSVCandidate1);
+    fatSVs.push_back(fatSVCandidate3);
+    fatSVs.push_back(fatSVCandidate4);
+
+    const bam_header_info bamHeader(buildTestBamHeader());
+    std::string queryseq1 = "AGCTGACTGATCGATTTTTTACGTAGAGGAGCTTTGACGTATGAGCCTGATATGAGCCTG";
+    std::string queryseq2 = "TGACGTATGAGCCTGATATGAGCCT";
+    bam_record bamRecord1;
+    buildTestBamRecord(bamRecord1, 0, 200, 0, 300, 125, 15, "60M", queryseq1);
+    bamRecord1.set_qname("Read-1");
+    bamRecord1.toggle_is_first();
+
+    bam_record bamRecord2;
+    buildTestBamRecord(bamRecord2, 0, 300, 0, 200, 125, 15, "25M", queryseq2);
+    bamRecord2.toggle_is_second();
+    bamRecord2.toggle_is_fwd_strand();
+    bamRecord2.toggle_is_mate_fwd_strand();
+    bamRecord2.set_qname("Read-1");
+    SVCandidateSetData candidateSetData;
+    SVCandidateSetSequenceFragmentSampleGroup& group = candidateSetData.getDataGroup(0);
+    group.add(bamHeader, bamRecord1, false, true, true);
+    group.add(bamHeader, bamRecord2, false, true, true);
+    SVSequenceFragmentAssociation association(0, SVEvidenceType::PAIR);
+    group.begin().operator*().svLink.push_back(association);
+    // candidate-1, candidate-2 and candidate-3 are not overlapping
+    // So consolidated size = 3.
+    consolidateOverlap(1, candidateSetData, fatSVs);
+    BOOST_REQUIRE_EQUAL(fatSVs.size(), 3);
+
+    fatSVs.clear();
+    SVCandidate svCandidate5;
+    svCandidate5.bp1.interval = GenomeInterval(0, 110, 150);
+    svCandidate5.bp2.interval = GenomeInterval(0, 1110, 1250);
+    svCandidate5.bp1.state  = SVBreakendState::RIGHT_OPEN;
+    svCandidate5.bp2.state  = SVBreakendState::LEFT_OPEN;
+    FatSVCandidate fatSVCandidate5(svCandidate5, 1u);
+    SVCandidate svCandidate6;
+    svCandidate6.bp1.interval = GenomeInterval(0, 140, 200);
+    svCandidate6.bp2.interval = GenomeInterval(0, 1240, 1300);
+    svCandidate6.bp1.state  = SVBreakendState::RIGHT_OPEN;
+    svCandidate6.bp2.state  = SVBreakendState::LEFT_OPEN;
+    FatSVCandidate fatSVCandidate6(svCandidate6, 1u);
+    fatSVs.push_back(fatSVCandidate1);
+    fatSVs.push_back(fatSVCandidate2);
+    fatSVs.push_back(fatSVCandidate4);
+    fatSVs.push_back(fatSVCandidate5);
+    fatSVs.push_back(fatSVCandidate6);
+    // Candidate-1 overlaps with candidate2. Resultant candidate overlaps with
+    // Candidate-5, agian resultant candidate overlaps with candidate-6
+    // So consolidated size = 2.
+    consolidateOverlap(1, candidateSetData, fatSVs);
+    BOOST_REQUIRE_EQUAL(fatSVs.size(), 2);
+}
+
+// Test the following cases:
+// 1. When number of edges in a SV locus less than min edge count, no sv will be geneerated for this locus.
+// 2. Edge should be bidirectional that means if there is an edge from node-1 to node-2, there should be an
+//    edge from node-2 to node-1
+// 3. If min edge criteria is satisfied, then for a bam read it will return a sv candidate.
+BOOST_AUTO_TEST_CASE( test_SVCandidates )
+{
+    const bam_header_info bamHeader(buildTestBamHeader());
+    std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
+    const std::string referenceFilename = getTestReferenceFilename();
+
+    // 1. Local Evidence = GenomeInterval: 0:[80,120) (Read posotion is 100 and 20 bp padding on each side)
+    // 2. Remote Evidence = GenomeInterval: 0:[279,319) (According to SA tag other segment position is 299 and 20bp
+    bam_record supplementSASplitRead;
+    buildTestBamRecord(supplementSASplitRead); //pos=100, matePos=200 and fragmentSize=100
+    addSupplementaryAlignmentEvidence(supplementSASplitRead); // SA tag : chrFoo,300,-,54H22M,50,0;
+
+    std::vector<bam_record> readsToAdd;
+    readsToAdd.push_back(supplementSASplitRead);
+    const std::shared_ptr<BamFilenameMaker> bamFileNameMaker(new BamFilenameMaker());
+    const std::string& bamFileName(bamFileNameMaker.get()->getFilename());
+    buildTestBamFile(bamHeader, readsToAdd, bamFileName);
+
+    const std::shared_ptr<TestChromosomeDepthFileMaker> depthFileMaker(new TestChromosomeDepthFileMaker());
+    const std::string depthFileName(depthFileMaker.operator*().getFilename());
+    buildTestChromosomeDepthFile(depthFileName);
+
+    // Generate SV locus graph file
+    SVLocus locus1;
+    locusAddPair(locus1,0,80,120,0,279,319);
+    SVLocus locus2;
+    locusAddPair(locus2,0,279,319,0,80,120);
+    SVLocusSetOptions sopt;
+    sopt.minMergeEdgeObservations = 10;
+    SVLocusSet set1(sopt, bamHeader, {bamFileName});
+    set1.merge(locus1);
+    set1.merge(locus2);
+    set1.checkState(true,true);
+    TestFilenameMaker testFilenameMaker;
+    std::string graphFilename = testFilenameMaker.getFilename();
+    const char* testFilenamePtr(graphFilename.c_str());
+    // serialize
+    set1.save(testFilenamePtr);
+
+    TestFilenameMaker fileMakerBase1;
+    TestFilenameMaker fileMakerBase2;
+    GSCOptions options;
+    options.edgeStatsFilename = fileMakerBase1.getFilename();
+    options.edgeRuntimeFilename = fileMakerBase2.getFilename();
+    options.referenceFilename = referenceFilename;
+    options.alignFileOpt.alignmentFilenames = {bamFileName};
+    options.graphFilename = graphFilename;
+    options.chromDepthFilename = depthFileName;
+    EdgeRuntimeTracker edgeTracker(options.edgeRuntimeFilename);
+    GSCEdgeStatsManager edgeStatMan(options.edgeStatsFilename);
+    SVFinder finder(options, scanner.operator*(), edgeTracker, edgeStatMan);
+    SVCandidateSetData svData;
+    std::vector<SVCandidate> svs;
+    SVLocus locus;
+    EdgeInfo edgeInfo;
+    edgeInfo.nodeIndex1 = 0;
+    edgeInfo.nodeIndex2 = 1;
+    finder.findCandidateSV(edgeInfo, svData, svs);
+    // Min edge criteria is not statisfied
+    BOOST_REQUIRE_EQUAL(svData.getDataGroup(0).size(), 0);
+    BOOST_REQUIRE_EQUAL(svs.size(), 0);
+
+    // Designed the Case-3
+    sopt.minMergeEdgeObservations = 1;
+    SVLocusSet set2(sopt, bamHeader, {bamFileName});
+    set2.merge(locus1);
+    set2.merge(locus2);
+    set2.checkState(true,true);
+    // serialize
+    set2.save(testFilenamePtr);
+    SVFinder finder2(options, scanner.operator*(), edgeTracker, edgeStatMan);
+    finder2.findCandidateSV(edgeInfo, svData, svs);
+    BOOST_REQUIRE_EQUAL(svData.getDataGroup(0).size(), 1);
+    BOOST_REQUIRE_EQUAL(svs.size(), 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
