@@ -194,10 +194,10 @@ struct SVScorer
         return _sampleNames;
     }
 
-    /// FriendSVScorer is a friend structure of SV scorer. So that it can access private
+    /// TestSVScorer is a friend structure of SV scorer. So that it can access private
     /// methods of SVScorer. As SVScorer has many private methods, for unit test writing
     /// this friend structure has been created.
-    friend struct FriendSVScorer;
+    friend struct TestSVScorer;
 
 private:
 

@@ -189,7 +189,7 @@ addSupplementaryAlignmentEvidence(
                    (const uint8_t*)(svStr.c_str()));
 }
 
-// Write two chromosomes withtheir depth
+// Write two chromosomes with their depth
 void buildTestChromosomeDepthFile(const std::string& depthFileName)
 {
     std::ofstream outfile;
