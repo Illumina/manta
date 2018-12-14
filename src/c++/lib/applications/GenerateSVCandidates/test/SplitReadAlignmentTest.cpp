@@ -230,7 +230,8 @@ BOOST_AUTO_TEST_CASE(test_getLnLhood )
     // for next 20 match bases
     for (int i = 0; i < 20; i ++)
         lnlhood1 += qscoreSnp.qphred_to_ln_comp_error_prob(30);
-    BOOST_REQUIRE_EQUAL(getLnLhood(querySeq1, qscoreSnp, qual.get(), targetSeq, 9, range, false, 0.f), lnlhood1);
+    static const double eps = 0.00000001;
+    BOOST_REQUIRE_CLOSE(getLnLhood(querySeq1, qscoreSnp, qual.get(), targetSeq, 9, range, false, 0.f), lnlhood1, eps);
 
     // Alignment of following query sequence starts at position 9 (0-based)
     // with 10 matches followed by 5 mismatches followed by 1 mismatch with N then
@@ -249,7 +250,7 @@ BOOST_AUTO_TEST_CASE(test_getLnLhood )
     // next 10 match bases
     for (int i = 0; i < 19; i ++)
         lnlhood2 += qscoreSnp.qphred_to_ln_comp_error_prob(30);
-    BOOST_REQUIRE_EQUAL(getLnLhood(querySeq2, qscoreSnp, qual.get(), targetSeq, 9, range, false, 0.f), lnlhood2);
+    BOOST_REQUIRE_CLOSE(getLnLhood(querySeq2, qscoreSnp, qual.get(), targetSeq, 9, range, false, 0.f), lnlhood2, eps);
 }
 
 // Test the alignment information
@@ -287,6 +288,7 @@ BOOST_AUTO_TEST_CASE( test_getRefAlignment )
     for (int i = 0; i < 20; i ++)
         lnlhood1 += qscoreSnp.qphred_to_ln_comp_error_prob(30);
 
+    static const double eps = 0.00000001;
     getRefAlignment(bamRecord1, refSeq, range1, qscoreSnp, srAlignmentInfo1);
 
     // Based on above schematic diagram and value of range1, following values
@@ -302,7 +304,7 @@ BOOST_AUTO_TEST_CASE( test_getRefAlignment )
     BOOST_REQUIRE_EQUAL(srAlignmentInfo1.homSize, 5);
     // There are 5 mismatches in hom size
     BOOST_REQUIRE_EQUAL(srAlignmentInfo1.homMismatches, 5);
-    BOOST_REQUIRE_EQUAL(srAlignmentInfo1.alignLnLhood, lnlhood1);
+    BOOST_REQUIRE_CLOSE(srAlignmentInfo1.alignLnLhood, lnlhood1, eps);
 
     // alignment information will be calculated using the following range
     //                                | <-range1->|
@@ -318,7 +320,7 @@ BOOST_AUTO_TEST_CASE( test_getRefAlignment )
     BOOST_REQUIRE_EQUAL(srAlignmentInfo2.rightMismatches, 0);
     BOOST_REQUIRE_EQUAL(srAlignmentInfo2.homSize, 4);
     BOOST_REQUIRE_EQUAL(srAlignmentInfo2.homMismatches, 4);
-    BOOST_REQUIRE_EQUAL(srAlignmentInfo2.alignLnLhood, lnlhood1);
+    BOOST_REQUIRE_CLOSE(srAlignmentInfo2.alignLnLhood, lnlhood1, eps);
 
     // alignment information will be calculated using the following range
     //                                | <-range1->|
@@ -338,7 +340,7 @@ BOOST_AUTO_TEST_CASE( test_getRefAlignment )
     BOOST_REQUIRE_EQUAL(srAlignmentInfo3.rightMismatches, 1);
     BOOST_REQUIRE_EQUAL(srAlignmentInfo3.homSize, 3);
     BOOST_REQUIRE_EQUAL(srAlignmentInfo3.homMismatches, 3);
-    BOOST_REQUIRE_EQUAL(srAlignmentInfo3.alignLnLhood, lnlhood1);
+    BOOST_REQUIRE_CLOSE(srAlignmentInfo3.alignLnLhood, lnlhood1, eps);
 
     // Alignment of following query sequence starts at position 9 (0-based)
     // with 10 matches followed by 5 mismatches followed by 1 mismatch with N then
@@ -373,7 +375,7 @@ BOOST_AUTO_TEST_CASE( test_getRefAlignment )
     BOOST_REQUIRE_EQUAL(srAlignmentInfo4.homSize, 5);
     // There are 5 mismatches in hom size
     BOOST_REQUIRE_EQUAL(srAlignmentInfo4.homMismatches, 5);
-    BOOST_REQUIRE_EQUAL(srAlignmentInfo4.alignLnLhood, lnlhood2);
+    BOOST_REQUIRE_CLOSE(srAlignmentInfo4.alignLnLhood, lnlhood2, eps);
 }
 
 // Test the exceptions
