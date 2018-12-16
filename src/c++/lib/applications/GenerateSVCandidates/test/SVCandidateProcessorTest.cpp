@@ -166,11 +166,10 @@ BOOST_AUTO_TEST_CASE( test_JunctionFilter )
 {
     const bam_header_info bamHeader(buildTestBamHeader());
     TestFilenameMaker fileMakerBase1;
-    TestFilenameMaker fileMakerBase2;
-    TestFilenameMaker fileMakerBase3;
-    TestFilenameMaker fileMakerBase4;
+    TestFilenameMaker filenameMaker2;
     GSCOptions options;
-
+    options.candidateOutputFilename = fileMakerBase1.getFilename();
+    options.tumorOutputFilename = filenameMaker2.getFilename();
     // Creating SV candidate
     SVCandidate candidate1;
     candidate1.setPrecise();
