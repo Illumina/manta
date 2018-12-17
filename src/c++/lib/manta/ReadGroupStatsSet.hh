@@ -102,6 +102,12 @@ struct ReadGroupStatsSet
     load(
         const char* filename);
 
+    bool
+    isEmpty()
+    {
+        return _group.empty();
+    }
+
 private:
     void
     clear()

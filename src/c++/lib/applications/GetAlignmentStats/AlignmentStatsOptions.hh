@@ -30,6 +30,7 @@ struct AlignmentStatsOptions
 
     std::string referenceFilename;
     std::string outputFilename;
+    std::string defaultStatsFilename;
 };
 
 

@@ -1,5 +1,9 @@
 ## Unreleased
 
+### Changed
+- Make existingAlignmentStats as a fallback option (MANTA-1487)
+  - It prioritizes stats estimated from the alignment file and allows static stats file when stats estimation fails due to insufficient high-confidence read pairs.
+
 ### Fixed
 - Fix a bug in selecting large insertion candidates (MANTA-1496)
 - Fix a minor bug in QC small SV alignment (MANTA-1498)

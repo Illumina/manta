@@ -32,4 +32,5 @@ void
 extractReadGroupStatsFromAlignmentFile(
     const std::string& referenceFilename,
     const std::string& alignmentFilename,
+    const std::string& defaultStatsFilename,
     ReadGroupStatsSet& rstats);

@@ -198,6 +198,18 @@ struct ReadGroupOrientTracker
         return _finalOrient;
     }
 
+    unsigned getMinCount()
+    {
+        static const unsigned minCount(100);
+        return minCount;
+    }
+
+    bool
+    isOrientCountGood()
+    {
+        return (_totalOrientCount >= getMinCount());
+    }
+
 private:
 
     void
@@ -232,16 +244,15 @@ private:
 
         {
             // make sure there's a dominant consensus orientation and that we have a minimum number of samples:
-            static const unsigned minCount(100);
             static const float minMaxFrac(0.9f);
 
             using namespace illumina::common;
 
-            if (_totalOrientCount < minCount)
+            if (! isOrientCountGood())
             {
                 std::ostringstream oss;
                 oss << "Too few high-confidence read pairs (" << _totalOrientCount << ") to determine pair orientation for " << _rgLabel << "'\n"
-                    << "\tAt least " << minCount << " high-confidence read pairs are required to determine pair orientation.\n"
+                    << "\tAt least " << getMinCount() << " high-confidence read pairs are required to determine pair orientation.\n"
                     << readCounter << "\n";
 
                 BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
@@ -268,7 +279,6 @@ private:
     unsigned _totalOrientCount;
     const ReadGroupLabel _rgLabel;
     std::array<unsigned,PAIR_ORIENT::SIZE> _orientCount;
-
     ReadPairOrient _finalOrient;
 };
 
@@ -365,12 +375,14 @@ struct ReadGroupTracker
     explicit
     ReadGroupTracker(
         const char* bamLabel = nullptr,
-        const char* rgLabel = nullptr) :
+        const char* rgLabel = nullptr,
+        const std::string& defaultStatsFilename = "") :
         _isFinalized(false),
         _rgLabel(bamLabel, rgLabel),
         _orientInfo(bamLabel, rgLabel),
         _isChecked(false),
-        _isInsertSizeConverged(false)
+        _isInsertSizeConverged(false),
+        _defaultStatsFilename(defaultStatsFilename)
     {}
 
 
@@ -378,6 +390,19 @@ struct ReadGroupTracker
     insertSizeObservations() const
     {
         return _stats.fragStats.totalObservations();
+    }
+
+    unsigned
+    getMinObservationCount() const
+    {
+        static const unsigned minObservations(100);
+        return minObservations;
+    }
+
+    bool
+    isObservationCountGood() const
+    {
+        return (insertSizeObservations() >= getMinObservationCount());
     }
 
     void
@@ -496,7 +521,7 @@ struct ReadGroupTracker
     }
 
     const ReadGroupOrientTracker&
-    getOrintInfo() const
+    getOrientInfo() const
     {
         return _orientInfo;
     }
@@ -551,6 +576,28 @@ struct ReadGroupTracker
         }
         _buffer.clearBuffer();
 
+        if ((_defaultStatsFilename != "") && (! _orientInfo.isOrientCountGood() || ! isObservationCountGood()))
+        {
+            log_os << "Can't generate pair statistics for " << _rgLabel << "\n"
+                   << "\tTotal high-confidence read pairs (FR) used for insert size estimation: " << insertSizeObservations() << "\n"
+                   << "\tAt least " << getMinObservationCount() << " high-confidence read pairs (FR) are required to estimate insert size.\n"
+                   << "\tUsing existing stats as default: " << _defaultStatsFilename << "\n"
+                   << _stats.readCounter << "\n";
+            ReadGroupStatsSet defaultStats;
+            defaultStats.load(_defaultStatsFilename.c_str());
+            // The current implementation for defaultStats assumes that the
+            // provided defaultStats file contains only 1 ReadGroupStatsSet
+            // and uses this for every _rgLabel for which stats determination
+            // fails. However, in more sophisticated scenarios including
+            // variant calling of paired tumor-normal samples, the developer
+            // may want to provide a functionality of using a defaultStats
+            // file containing multiple ReadGroupStatsSet which will be chosen
+            // based on origin of the sample.
+            _stats = defaultStats.getStats(0);
+            _isFinalized = true;
+            return;
+        }
+
         // finalize pair orientation:
         _stats.relOrients = _orientInfo.getConsensusOrient(_stats.readCounter);
 
@@ -567,15 +614,14 @@ struct ReadGroupTracker
         // finalize insert size distro:
         if (! isInsertSizeConverged())
         {
-            static const unsigned minObservations(100);
-            if (_stats.fragStats.totalObservations() < minObservations)
+            if (! isObservationCountGood())
             {
                 using namespace illumina::common;
 
                 std::ostringstream oss;
                 oss << "Can't generate pair statistics for " << _rgLabel << "\n"
                     << "\tTotal high-confidence read pairs (FR) used for insert size estimation: " << insertSizeObservations() << "\n"
-                    << "\tAt least " << minObservations << " high-confidence read pairs (FR) are required to estimate insert size.\n"
+                    << "\tAt least " << getMinObservationCount() << " high-confidence read pairs (FR) are required to estimate insert size.\n"
                     << _stats.readCounter << "\n";
                 BOOST_THROW_EXCEPTION(GeneralException(oss.str()));
             }
@@ -630,6 +676,7 @@ private:
 
     ReadGroupBuffer _buffer;
     ReadGroupStats _stats;
+    const std::string _defaultStatsFilename;
 };
 
 
@@ -906,16 +953,18 @@ struct ReadGroupManager
 
     ReadGroupTracker&
     getTracker(
-        const bam_record& bamRead)
+        const bam_record &bamRead,
+        const std::string& defaultStatsFilename="")
     {
         const char* readGroup(getReadGroup(bamRead));
 
-        return getTracker(readGroup);
+        return getTracker(readGroup, defaultStatsFilename);
     }
 
     ReadGroupTracker&
     getTracker(
-        const char* readGroup)
+        const char *readGroup,
+        const std::string& defaultStatsFilename="")
     {
         ReadGroupLabel rgKey(_statsBamFile.c_str(), readGroup, false);
 
@@ -923,7 +972,7 @@ struct ReadGroupManager
         if (rgIter == _rgTracker.end())
         {
             std::pair<RGMapType::iterator,bool> retval;
-            retval = _rgTracker.insert(std::make_pair(ReadGroupLabel(_statsBamFile.c_str(), readGroup), ReadGroupTracker(_statsBamFile.c_str(),readGroup)));
+            retval = _rgTracker.insert(std::make_pair(ReadGroupLabel(_statsBamFile.c_str(), readGroup), ReadGroupTracker(_statsBamFile.c_str(),readGroup,defaultStatsFilename)));
 
             assert(retval.second);
             rgIter = retval.first;
@@ -993,6 +1042,7 @@ void
 extractReadGroupStatsFromAlignmentFile(
     const std::string& referenceFilename,
     const std::string& alignmentFilename,
+    const std::string& defaultStatsFilename,
     ReadGroupStatsSet& rstats)
 {
     bam_streamer read_stream(alignmentFilename.c_str(), referenceFilename.c_str());
@@ -1014,7 +1064,7 @@ extractReadGroupStatsFromAlignmentFile(
 
 #ifndef READ_GROUPS
     static const char defaultReadGroup[] = "";
-    ReadGroupTracker& rgInfo(rgManager.getTracker(defaultReadGroup));
+    ReadGroupTracker& rgInfo(rgManager.getTracker(defaultReadGroup, defaultStatsFilename));
 #endif
 
     while (isActiveChrom && (!isStopEstimation))
@@ -1064,7 +1114,7 @@ extractReadGroupStatsFromAlignmentFile(
                     if (coreFilter.isFilterRead(bamRead)) continue;
 
 #ifdef READ_GROUPS
-                    ReadGroupTracker& rgInfo(rgManager.getTracker(bamRead));
+                    ReadGroupTracker& rgInfo(rgManager.getTracker(bamRead, defaultStatsFilename));
 #endif
                     if (rgInfo.isInsertSizeConverged()) continue;
 

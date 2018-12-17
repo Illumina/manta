@@ -45,9 +45,10 @@ runAlignmentStats(const AlignmentStatsOptions& opt)
     }
 
     ReadGroupStatsSet rstats;
+
     for (const std::string& alignmentFilename : opt.alignFileOpt.alignmentFilenames)
     {
-        extractReadGroupStatsFromAlignmentFile(opt.referenceFilename, alignmentFilename, rstats);
+        extractReadGroupStatsFromAlignmentFile(opt.referenceFilename, alignmentFilename, opt.defaultStatsFilename, rstats);
     }
 
     rstats.save(opt.outputFilename.c_str());
