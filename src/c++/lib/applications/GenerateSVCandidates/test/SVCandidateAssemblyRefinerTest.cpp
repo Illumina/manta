@@ -185,6 +185,7 @@ BOOST_AUTO_TEST_CASE( test_getInsertTrim )
 
 // Test the following cases
 // 1. Size of largest indel in a cigar segment
+// 2. Size of largest indel with adjacent deletion and insertion
 // 3. Size of largest indel among multiple cigar segments
 BOOST_AUTO_TEST_CASE( test_getLargestIndelSize )
 {
@@ -220,7 +221,7 @@ BOOST_AUTO_TEST_CASE( test_getLargestIndelSize )
     segments.push_back(std::pair<unsigned, unsigned>(0,0));
     segments.push_back(std::pair<unsigned, unsigned>(1,1));
     segments.push_back(std::pair<unsigned, unsigned>(4,4));
-    // Here segments are (0, 0), (1, 1) and (4, 4). Among these 4 segments
+    // Here segments are (0, 0), (1, 1) and (4, 4). Among these 3 segments
     // (1,1) segment has the largest indel and size is 5.
     BOOST_REQUIRE_EQUAL(getLargestIndelSize(path2, segments), 5);
 
@@ -228,13 +229,41 @@ BOOST_AUTO_TEST_CASE( test_getLargestIndelSize )
     segments.push_back(std::pair<unsigned, unsigned>(0,0));
     segments.push_back(std::pair<unsigned, unsigned>(1,1));
     segments.push_back(std::pair<unsigned, unsigned>(3,4));
-    // Here segments are (0, 0), (1, 1) and (4, 4). Among these 4 segments,
+    // Here segments are (0, 0), (1, 1) and (3, 4). Among these 3 segments,
     // (3,4) segment has the largest indel and size is 6.
     BOOST_REQUIRE_EQUAL(getLargestIndelSize(path2, segments), 6);
+
+    std::string testCigar3("35M5I6D40M");
+    ALIGNPATH::path_t path3;
+    cigar_to_apath(testCigar3.c_str(), path3);
+    segments.clear();
+    segments.push_back(std::pair<unsigned, unsigned>(1,2));
+    // Here only one segment (1, 2). It has 5I and 6D, so maximum
+    // indel size is 6.
+    BOOST_REQUIRE_EQUAL(getLargestIndelSize(path3, segments), 6);
+    segments.clear();
+    segments.push_back(std::pair<unsigned, unsigned>(0,0));
+    segments.push_back(std::pair<unsigned, unsigned>(1,1));
+    segments.push_back(std::pair<unsigned, unsigned>(3,3));
+    // Here segments are (0, 0), (1, 1) and (3, 3). Among these 3 segments
+    // (1,1) segment has the largest indel and size is 5.
+    BOOST_REQUIRE_EQUAL(getLargestIndelSize(path3, segments), 5);
+
+    segments.clear();
+    segments.push_back(std::pair<unsigned, unsigned>(0,0));
+    segments.push_back(std::pair<unsigned, unsigned>(1,1));
+    segments.push_back(std::pair<unsigned, unsigned>(2,3));
+    // Here segments are (0, 0), (1, 1) and (3, 4). Among these 3 segments,
+    // (3,4) segment has the largest indel and size is 6.
+    BOOST_REQUIRE_EQUAL(getLargestIndelSize(path3, segments), 6);
 }
 
-// Test the larger indel location in the cigar based on
-// minIndel size as indel theshold.
+// 1. Test the larger indel location in the cigar based on
+//    minIndel size as indel theshold.
+// 2. When there is an adjacent stretch of insertion and deletion,
+//    if one of the adjacent segments satisfy minIndel threshold,
+//    then whole stretch is added in the indel segment. see the example
+//    below.
 BOOST_AUTO_TEST_CASE( test_getLargeIndelSegments )
 {
     std::string testCigar1("35M5I30M6D10M3I");
@@ -256,7 +285,7 @@ BOOST_AUTO_TEST_CASE( test_getLargeIndelSegments )
     BOOST_REQUIRE(segments[0].first == 3);
     BOOST_REQUIRE(segments[0].second == 3);
 
-    // Indel threshold = 3. There is three indels with size greater
+    // Indel threshold = 3. There are three indels with size greater
     // than or equal to 3. So Segments size should be 3.
     getLargeIndelSegments(path1, 3, segments);
     BOOST_REQUIRE(segments.size() == 3);
@@ -267,6 +296,57 @@ BOOST_AUTO_TEST_CASE( test_getLargeIndelSegments )
     BOOST_REQUIRE(segments[1].second == 3);
     BOOST_REQUIRE(segments[2].first == 5);
     BOOST_REQUIRE(segments[2].second == 5);
+
+    segments.clear();
+    // Where Insertion and Deletion (5I6D) are adjacent to each other.
+    // Indel threshold = 4. Both of the segments (5I & 6D) are satisfied
+    // min indel threshold criteria. So Segment start is 1 and segment end is 2.
+    std::string testCigar2("35M5I6D40M3I");
+    ALIGNPATH::path_t path2;
+    cigar_to_apath(testCigar2.c_str(), path2);
+    getLargeIndelSegments(path2, 4, segments);
+    BOOST_REQUIRE(segments.size() == 1);
+    // location of the indel segments.
+    BOOST_REQUIRE(segments[0].first == 1);
+    BOOST_REQUIRE(segments[0].second == 2);
+
+    segments.clear();
+    // Where Insertion and Deletion (5I3D) are adjacent to each other.
+    // Indel threshold = 4. Although Only one segment (5I) is satisfied
+    // min indel threshold criteria, still Segment start is 1 and segment end is 2
+    // as one of the segments satisfied the criteria.
+    std::string testCigar3("35M5I3D40M3I");
+    ALIGNPATH::path_t path3;
+    cigar_to_apath(testCigar3.c_str(), path3);
+    getLargeIndelSegments(path3, 4, segments);
+    BOOST_REQUIRE(segments.size() == 1);
+    // location of the indel segments.
+    BOOST_REQUIRE(segments[0].first == 1);
+    BOOST_REQUIRE(segments[0].second == 2);
+
+    segments.clear();
+    // Where Insertion and Deletion (3I5D) are adjacent to each other.
+    // Indel threshold = 4. Although Only one segment (5D) is satisfied
+    // min indel threshold criteria, still Segment start is 1 and segment end is 2
+    // as one of the segments satisfied the criteria.
+    std::string testCigar4("35M3I5D40M3I");
+    ALIGNPATH::path_t path4;
+    cigar_to_apath(testCigar4.c_str(), path4);
+    getLargeIndelSegments(path4, 4, segments);
+    BOOST_REQUIRE(segments.size() == 1);
+    // location of the indel segments.
+    BOOST_REQUIRE(segments[0].first == 1);
+    BOOST_REQUIRE(segments[0].second == 2);
+
+    segments.clear();
+    // Where Insertion and Deletion are adjacent to each other.
+    // Indel threshold = 4. None of the segments satisfy indel threshold
+    // criteria. So Segments size should be 0.
+    std::string testCigar5("35M3I3D40M3I");
+    ALIGNPATH::path_t path5;
+    cigar_to_apath(testCigar5.c_str(), path5);
+    getLargeIndelSegments(path5, 4, segments);
+    BOOST_REQUIRE(segments.size() == 0);
 }
 
 // Test the largest insert segment with minInsertThreshold.
@@ -301,6 +381,20 @@ BOOST_AUTO_TEST_CASE( test_getLargestInsertSegment )
     // Location of the largest segment
     BOOST_REQUIRE(segments2[0].first == 5);
     BOOST_REQUIRE(segments2[0].second == 5);
+
+    // Where Insertion and Deletion are adjacent.
+    std::string testCigar3("35M5I6D40M6I");
+    ALIGNPATH::path_t path3;
+    cigar_to_apath(testCigar3.c_str(), path3);
+    std::vector<std::pair<unsigned, unsigned>> segments3;
+    // Insertion threshold = 3. There are two insertion segments which
+    // are more than 3 but largest insert segment is 6.
+    // So Segments size should be 1.
+    getLargestInsertSegment(path3, 3, segments3);
+    BOOST_REQUIRE(segments3.size() == 1);
+    // Location of the largest segment
+    BOOST_REQUIRE(segments3[0].first == 4);
+    BOOST_REQUIRE(segments3[0].second == 4);
 }
 
 // Test the number of locations when query sequence aligns gaplessly with
@@ -364,13 +458,13 @@ BOOST_AUTO_TEST_CASE( test_isLowQualitySmallSVAlignment )
     std::string testCigar4("25=");
     ALIGNPATH::path_t path4;
     cigar_to_apath(testCigar4.c_str(), path4);
-    // Here reference projection length is 25 which is less than minAlignRefSpan.
+    // Here reference projection length is 25 which is less than minAlignRefSpan 30.
     BOOST_REQUIRE(isLowQualitySmallSVAlignment(100, scores, false, false, path4));
 
     std::string testCigar5("25=23S");
     ALIGNPATH::path_t path5;
     cigar_to_apath(testCigar5.c_str(), path5);
-    // Here clipped path size 25 which is less than minAlignReadLength.
+    // Here clipped path size 25 which is less than minAlignReadLength 30.
     BOOST_REQUIRE(isLowQualitySmallSVAlignment(100, scores, false, false, path5));
 
     std::string testCigar6("30=23S");
@@ -386,13 +480,13 @@ BOOST_AUTO_TEST_CASE( test_isLowQualitySmallSVAlignment )
     std::string testCigar7("30=");
     ALIGNPATH::path_t path7;
     cigar_to_apath(testCigar7.c_str(), path4);
-    // Here reference projection length is 30 which is less than minAlignRefSpan.
+    // Here reference projection length is 30 which is less than minAlignRefSpan 35.
     BOOST_REQUIRE(isLowQualitySmallSVAlignment(100, scores, false, true, path7));
 
     std::string testCigar8("30=23S");
     ALIGNPATH::path_t path8;
     cigar_to_apath(testCigar8.c_str(), path8);
-    // Here clipped path size 30 which is less than minAlignReadLength.
+    // Here clipped path size 30 which is less than minAlignReadLength 35.
     BOOST_REQUIRE(isLowQualitySmallSVAlignment(100, scores, false, true, path8));
 }
 
