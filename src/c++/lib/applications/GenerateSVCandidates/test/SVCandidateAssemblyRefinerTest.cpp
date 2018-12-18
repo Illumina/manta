@@ -39,26 +39,26 @@ struct BamStream
         std::string querySeq1 = "GTCTATCACCCTATTAACCACTCACGGGAGAAAAA";
         std::string querySeq2 = "AAAAATGCTCATCAGTTGATGATACGCCCGAGCAGATGCCAACACAGCAGCCATTCAAGAGTCA";
         bam_record bamRecord1;
-        buildTestBamRecord(bamRecord1, 0, 8, 1, 69, -1, 15, "35M", querySeq1);
+        buildTestBamRecord(bamRecord1, 0, 8, 1, 69, 0, 15, "35M", querySeq1);
         bamRecord1.set_qname("Read-1");
         bam_record bamRecord2;
-        buildTestBamRecord(bamRecord2, 0, 8, 1, 69, -1, 15, "35M", querySeq1);
+        buildTestBamRecord(bamRecord2, 0, 8, 1, 69, 0, 15, "35M", querySeq1);
         bamRecord2.set_qname("Read-2");
         bam_record bamRecord3;
-        buildTestBamRecord(bamRecord3, 0, 8, 1, 69, -1, 15, "35M", querySeq1);
+        buildTestBamRecord(bamRecord3, 0, 8, 1, 69, 0, 15, "35M", querySeq1);
         bamRecord3.set_qname("Read-3");
         bam_record bamRecord4;
-        buildTestBamRecord(bamRecord4, 1, 69, 0, 8, -1, 50, "64M", querySeq2);
+        buildTestBamRecord(bamRecord4, 1, 69, 0, 8, 0, 50, "64M", querySeq2);
         bamRecord4.toggle_is_mate_fwd_strand();
         bamRecord4.toggle_is_fwd_strand();
         bamRecord4.set_qname("Read-1");
         bam_record bamRecord5;
-        buildTestBamRecord(bamRecord5, 1, 69, 0, 8, -1, 50, "64M", querySeq2);
+        buildTestBamRecord(bamRecord5, 1, 69, 0, 8, 0, 50, "64M", querySeq2);
         bamRecord5.set_qname("Read-2");
         bamRecord5.toggle_is_mate_fwd_strand();
         bamRecord5.toggle_is_fwd_strand();
         bam_record bamRecord6;
-        buildTestBamRecord(bamRecord6, 1, 69, 0, 8, -1, 50, "64M", querySeq2);
+        buildTestBamRecord(bamRecord6, 1, 69, 0, 8, 0, 50, "64M", querySeq2);
         bamRecord6.toggle_is_mate_fwd_strand();
         bamRecord6.toggle_is_fwd_strand();
         bamRecord6.set_qname("Read-3");
@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE( test_getLargestIndelSize )
     segments.push_back(std::pair<unsigned, unsigned>(0,0));
     segments.push_back(std::pair<unsigned, unsigned>(1,1));
     segments.push_back(std::pair<unsigned, unsigned>(2,3));
-    // Here segments are (0, 0), (1, 1) and (3, 4). Among these 3 segments,
+    // Here segments are (0, 0), (1, 1) and (2, 3). Among these 3 segments,
     // (3,4) segment has the largest indel and size is 6.
     BOOST_REQUIRE_EQUAL(getLargestIndelSize(path3, segments), 6);
 }
@@ -262,8 +262,8 @@ BOOST_AUTO_TEST_CASE( test_getLargestIndelSize )
 //    minIndel size as indel theshold.
 // 2. When there is an adjacent stretch of insertion and deletion,
 //    if one of the adjacent segments satisfy minIndel threshold,
-//    then whole stretch is added in the indel segment. see the example
-//    below.
+//    then whole stretch is treated as a single indel segment.
+//    see the example below.
 BOOST_AUTO_TEST_CASE( test_getLargeIndelSegments )
 {
     std::string testCigar1("35M5I30M6D10M3I");
@@ -313,8 +313,9 @@ BOOST_AUTO_TEST_CASE( test_getLargeIndelSegments )
     segments.clear();
     // Where Insertion and Deletion (5I3D) are adjacent to each other.
     // Indel threshold = 4. Although Only one segment (5I) is satisfied
-    // min indel threshold criteria, still Segment start is 1 and segment end is 2
-    // as one of the segments satisfied the criteria.
+    // min indel threshold criteria, still this stretch is treated as single
+    // segment (Segment start is 1 and segment end is 2) as one of the segments
+    // satisfied the criteria.
     std::string testCigar3("35M5I3D40M3I");
     ALIGNPATH::path_t path3;
     cigar_to_apath(testCigar3.c_str(), path3);
@@ -327,8 +328,9 @@ BOOST_AUTO_TEST_CASE( test_getLargeIndelSegments )
     segments.clear();
     // Where Insertion and Deletion (3I5D) are adjacent to each other.
     // Indel threshold = 4. Although Only one segment (5D) is satisfied
-    // min indel threshold criteria, still Segment start is 1 and segment end is 2
-    // as one of the segments satisfied the criteria.
+    // min indel threshold criteria, still this stretch is treated as single
+    // segment (Segment start is 1 and segment end is 2) as one of the segments
+    // satisfied the criteria.
     std::string testCigar4("35M3I5D40M3I");
     ALIGNPATH::path_t path4;
     cigar_to_apath(testCigar4.c_str(), path4);
@@ -491,10 +493,10 @@ BOOST_AUTO_TEST_CASE( test_isLowQualitySmallSVAlignment )
 }
 
 // Test the following cases:
-// 1. Whether simple cigar string is inserted to SV candidate
+// 1. Whether an insertion and deletion are inserted to SV candidate or not.
 // 2. Insertion size = size of the candidate insert sequence
 // 3. Deletion size = Difference between the two breakpoint start position - 1
-// 4. All the above points are valid for indel type sv, otherwise it will not anything.
+// 4. All the above points are valid for indel type sv, otherwise it will not do anything.
 // Following two schematic diagrams are vaild for indel type SV
 //                   BP1               BP2
 // Category-1   >>>>>>> -------------- <<<<<<< (BP1 Right-Open and BP2 Left-Open )
@@ -507,7 +509,7 @@ BOOST_AUTO_TEST_CASE( test_addCigarToSpanningAlignment )
     SVCandidate candidate1;
     candidate1.bp1.state = SVBreakendState::RIGHT_OPEN;
     candidate1.bp2.state = SVBreakendState::LEFT_OPEN;
-    candidate1.bp1.interval = GenomeInterval(0,1000,1200);
+    candidate1.bp1.interval = GenomeInterval(0, 1000, 1200);
     candidate1.bp2.interval = GenomeInterval(0, 2000, 2100);
     candidate1.insertSeq = "AGAGCTAGT";
     // Insertion szie = 9
@@ -521,7 +523,7 @@ BOOST_AUTO_TEST_CASE( test_addCigarToSpanningAlignment )
 
     // Category-2 (See docs)
     SVCandidate candidate2;
-    candidate2.bp1.interval = GenomeInterval(0,2000,2100);
+    candidate2.bp1.interval = GenomeInterval(0, 2000, 2100);
     candidate2.bp2.interval = GenomeInterval(0, 1000, 1200);
     candidate2.bp1.state = SVBreakendState::LEFT_OPEN;
     candidate2.bp2.state = SVBreakendState::RIGHT_OPEN;
@@ -540,7 +542,7 @@ BOOST_AUTO_TEST_CASE( test_addCigarToSpanningAlignment )
     SVCandidate candidate3;
     candidate3.bp1.state = SVBreakendState::RIGHT_OPEN;
     candidate3.bp2.state = SVBreakendState::RIGHT_OPEN;
-    candidate3.bp1.interval = GenomeInterval(0,1000,1200);
+    candidate3.bp1.interval = GenomeInterval(0, 1000, 1200);
     candidate3.bp2.interval = GenomeInterval(0, 2000, 2100);
     candidate3.insertSeq = "AGAGCTAGT";
     addCigarToSpanningAlignment(candidate3);
@@ -549,14 +551,14 @@ BOOST_AUTO_TEST_CASE( test_addCigarToSpanningAlignment )
 
 // Test whether max score contiguous path(starting from the beginning) of alignment
 // satisfies the following criteria:
-// 1. Minimum contig length in the max score contiguous path = 40
-// 2. Minimum reference projection length in the max score contiguous path = 40
-// 3. Fraction of alignment score of max score path should be greater than 0.75 where
-//    fraction of alignment score is calculated as
-//    alignment_score / (clipped_contig_length * match score)
-// 4. Remaining portion means (read length -contig length) should be greater than 40.
-// For example:  If a cigar is 35=5I30=6D10=3I, then max score contiguous path
-// is 35=5I30=.
+// 1. Contig length should be at least 40 in the max score contiguous path.
+// 2. Reference projection length should be at least 40 in the max score contiguous path.
+// 3. Fraction of alignment score relative to the optimal score in the max score path
+//    should be greater than 0.75 where this alignment score fraction is calculated as
+//    alignment_score / (clipped_contig_length * match score).
+// 4. Length of the unaligned portion of contig means (read length -contig length) should be greater than 40.
+//    For example:  If a cigar is 35=5I30=6D10=3I, then max score contiguous path
+//    is 35=5I30=.
 BOOST_AUTO_TEST_CASE( test_isLargeInsertSegment )
 {
     // Match score = 1, mismatch penalty = -4,
@@ -566,17 +568,17 @@ BOOST_AUTO_TEST_CASE( test_isLargeInsertSegment )
     AlignerBase<int> alignerBase(scores);
 
     // contig length in the max score contiguous path
-    unsigned contigOffset1 = 0;
+    unsigned contigOffset1;
     // Reference projection length in the max score contiguous path
-    unsigned refoffset1 = 0;
+    unsigned refoffset1;
     // alignment score in the max score contiguous path
-    int alignmentScore1 = 0;
+    int alignmentScore1;
     std::string testCigar1("35=5I30=6D10=3I");
     ALIGNPATH::path_t path1;
     cigar_to_apath(testCigar1.c_str(), path1);
     // According to 35=5I30=6D10=3I, max score contiguous path is 35=5I30=
-    // But here remaining portion  = 83 - 70 = 13 which is less than 40.
-    // So the api will return false.
+    // But here length of the unaligned portion of contig = 83 - 70 = 13
+    // which is less than 40. So the api will return false.
     BOOST_REQUIRE(!isLargeInsertSegment(alignerBase, path1, contigOffset1, refoffset1, alignmentScore1));
     // Length of the offsets according to 35=5I30=
     BOOST_REQUIRE_EQUAL(contigOffset1, 70);
@@ -590,8 +592,8 @@ BOOST_AUTO_TEST_CASE( test_isLargeInsertSegment )
     ALIGNPATH::path_t path2;
     cigar_to_apath(testCigar2.c_str(), path2);
     // According to 100=, max score contiguous path is 100=
-    // But here remaining portion  = 100 - 100 = 0 which is less than 40.
-    // So the api will return false.
+    // But here length of the unaligned portion of contig = 100 - 100 = 0
+    // which is less than 40. So the api will return false.
     BOOST_REQUIRE(!isLargeInsertSegment(alignerBase, path2, contigOffset2, refoffset2, alignmentScore2));
     // Length of the offsets according to 100=
     BOOST_REQUIRE_EQUAL(contigOffset2, 100);
@@ -605,7 +607,7 @@ BOOST_AUTO_TEST_CASE( test_isLargeInsertSegment )
     ALIGNPATH::path_t path3;
     cigar_to_apath(testCigar3.c_str(), path3);
     // According to 200=40X, max score contiguous path is 200=
-    // But here remaining portion  = 240 - 200 = 40 which is fine.
+    // Here length of the unaligned portion of contig = 240 - 200 = 40 which is fine.
     // And the fraction of alignment score = 200 / 200 = 1 (>0.75).
     BOOST_REQUIRE(isLargeInsertSegment(alignerBase, path3, contigOffset3, refoffset3, alignmentScore3));
     // Length of the offsets according to 200=40X
@@ -620,7 +622,7 @@ BOOST_AUTO_TEST_CASE( test_isLargeInsertSegment )
     ALIGNPATH::path_t path4;
     cigar_to_apath(testCigar4.c_str(), path4);
     // According to 49X200=40X, max score contiguous path is 49X200=
-    // But here remaining portion  = 289- 249 = 40 which is fine.
+    // Here length of the unaligned portion of contig = 289- 249 = 40 which is fine.
     // And the fraction of alignment score = 4 / 289 = ~0.01 (<0.75).
     BOOST_REQUIRE(!isLargeInsertSegment(alignerBase, path4, contigOffset4, refoffset4, alignmentScore4));
     // Length of the offsets according to 200=40X
@@ -684,7 +686,7 @@ BOOST_AUTO_TEST_CASE( test_isLargeInsertAlignment )
     BOOST_REQUIRE(!largeInsertionInfo3.isRightCandidate);
 }
 
-// Test whether an alignment satisfies test_isLargeInsertSegment
+// Test whether an alignment segment satisfies test_isLargeInsertSegment
 // in a partular segment region.
 BOOST_AUTO_TEST_CASE( test_isFinishedLargeInsertAlignment )
 {
@@ -729,7 +731,7 @@ BOOST_AUTO_TEST_CASE( test_translateMaskedPos )
     BOOST_REQUIRE_EQUAL(translateMaskedPos(blocks, 5), 19);
 }
 
-// Test the simple reference coordinates that can be reported in the output vcf
+// Test the reference coordinates that can be reported in the output vcf
 // Test the following cases:
 // 1. In case of sv breakend state is RIGHT_OPEN (coordinates should be around alignment end)
 // 2. In case of sv breaked state is LEFT_OPEN (coordinate should be around in alignment start)
@@ -797,13 +799,13 @@ BOOST_AUTO_TEST_CASE( test_isLowQualitySpanningSVAlignment )
     std::string testCigar4("25=");
     ALIGNPATH::path_t path4;
     cigar_to_apath(testCigar4.c_str(), path4);
-    // Here read size 25 which is less than minAlignReadLength.
+    // Here read size 25 which is less than minAlignReadLength 30.
     BOOST_REQUIRE(isLowQualitySpanningSVAlignment(100, scores, false, false, path4));
 
     std::string testCigar5("25=23S");
     ALIGNPATH::path_t path5;
     cigar_to_apath(testCigar5.c_str(), path5);
-    // Here clipped path size 25 which is less than minAlignReadLength.
+    // Here clipped path size 25 which is less than minAlignReadLength 30.
     BOOST_REQUIRE(isLowQualitySpanningSVAlignment(100, scores, false, false, path5));
 
     std::string testCigar6("30=23S");
@@ -817,14 +819,21 @@ BOOST_AUTO_TEST_CASE( test_isLowQualitySpanningSVAlignment )
     std::string testCigar7("15=");
     ALIGNPATH::path_t path7;
     cigar_to_apath(testCigar7.c_str(), path4);
-    // Here read size 25 which is less than minAlignReadLength.
+    // Here read size 15 which is less than minAlignReadLength 20.
     BOOST_REQUIRE(isLowQualitySpanningSVAlignment(100, scores, false, true, path7));
 
     std::string testCigar8("15=23S");
     ALIGNPATH::path_t path8;
     cigar_to_apath(testCigar8.c_str(), path8);
-    // Here clipped path size 15 which is less than minAlignReadLength.
+    // Here clipped path size 15 which is less than minAlignReadLength 20.
     BOOST_REQUIRE(isLowQualitySpanningSVAlignment(100, scores, false, true, path8));
+
+    std::string testCigar9("25=23S");
+    ALIGNPATH::path_t path9;
+    cigar_to_apath(testCigar9.c_str(), path9);
+    // According to penalty, non-clipped alignment score = 25 and optimal score = 25.
+    // So score fraction is 25/25 = 1.0 (>=0.75)
+    BOOST_REQUIRE(!isLowQualitySpanningSVAlignment(100, scores, false, true, path9));
 }
 
 // Test test_adjustAssembledBreakend when jump alignment results to sv candidates
