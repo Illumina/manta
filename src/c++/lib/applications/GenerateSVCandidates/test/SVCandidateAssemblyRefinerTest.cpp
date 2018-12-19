@@ -254,7 +254,7 @@ BOOST_AUTO_TEST_CASE( test_getLargestIndelSize )
     segments.push_back(std::pair<unsigned, unsigned>(1,1));
     segments.push_back(std::pair<unsigned, unsigned>(2,3));
     // Here segments are (0, 0), (1, 1) and (2, 3). Among these 3 segments,
-    // (3,4) segment has the largest indel and size is 6.
+    // (2, 3) segment has the largest indel and size is 6.
     BOOST_REQUIRE_EQUAL(getLargestIndelSize(path3, segments), 6);
 }
 
@@ -493,7 +493,7 @@ BOOST_AUTO_TEST_CASE( test_isLowQualitySmallSVAlignment )
 }
 
 // Test the following cases:
-// 1. Whether an insertion and deletion are inserted to SV candidate or not.
+// 1. Whether there is breakend insertion and deletion are inserted to SV candidate or not.
 // 2. Insertion size = size of the candidate insert sequence
 // 3. Deletion size = Difference between the two breakpoint start position - 1
 // 4. All the above points are valid for indel type sv, otherwise it will not do anything.
@@ -686,8 +686,7 @@ BOOST_AUTO_TEST_CASE( test_isLargeInsertAlignment )
     BOOST_REQUIRE(!largeInsertionInfo3.isRightCandidate);
 }
 
-// Test whether an alignment segment satisfies test_isLargeInsertSegment
-// in a partular segment region.
+// Test whether an alignment segment satisfies test_isLargeInsertSegment.
 BOOST_AUTO_TEST_CASE( test_isFinishedLargeInsertAlignment )
 {
     AlignmentScores<int> scores(1, -4, -6, -1, -5);
@@ -731,10 +730,10 @@ BOOST_AUTO_TEST_CASE( test_translateMaskedPos )
     BOOST_REQUIRE_EQUAL(translateMaskedPos(blocks, 5), 19);
 }
 
-// Test the reference coordinates that can be reported in the output vcf
+// Test the breakend interval range to be reported in the output vcf.
 // Test the following cases:
-// 1. In case of sv breakend state is RIGHT_OPEN (coordinates should be around alignment end)
-// 2. In case of sv breaked state is LEFT_OPEN (coordinate should be around in alignment start)
+// 1. In case of sv breakend state is RIGHT_OPEN
+// 2. In case of sv breaked state is LEFT_OPEN
 BOOST_AUTO_TEST_CASE( test_adjustAssembledBreakend )
 {
     reference_contig_segment referenceContigSegment;
@@ -765,8 +764,8 @@ BOOST_AUTO_TEST_CASE( test_adjustAssembledBreakend )
 // Test whether a candidate spanning SV alignment should be filtered due to low quality.
 // Test the following cases:
 // 1. minAlignReadLength = 30 (DNA) & 20 (RNA)
-// 2. Fraction of alignment score should be greater than 0.75 where
-//    fraction of alignment score is calculated as
+// 2. Fraction of alignment score relative to the optimal score should be greater than 0.75 where
+//    the fraction of alignment score is calculated as
 //    alignment_score / (clipped_read_length * match score)
 // 3. Soft clip should not be considered.
 BOOST_AUTO_TEST_CASE( test_isLowQualitySpanningSVAlignment )
@@ -836,7 +835,15 @@ BOOST_AUTO_TEST_CASE( test_isLowQualitySpanningSVAlignment )
     BOOST_REQUIRE(!isLowQualitySpanningSVAlignment(100, scores, false, true, path9));
 }
 
-// Test test_adjustAssembledBreakend when jump alignment results to sv candidates
+// For large SV candidates spanning two distinct regions of the genome, the reference sequences are
+// extracted from the two expected breakend regions, and the order and/or orientation of the
+// references is adjusted such that if the candidate SV exists, the left-most segment of the SV
+// contig should align to the first trans- formed reference region and the right-most contig
+// segment should align to the second reference region. The contig is aligned across the two reference
+// regions using a variant of Smith-Waterman-Gotoh alignment where a jump state is
+// included which can only be entered from the match state for the first reference segment and only
+// exits to the match or insert states of the second reference segment. Using this jump alignment
+// verify test_adjustAssembledBreakend.
 BOOST_AUTO_TEST_CASE( test_generateRefinedSVCandidateFromJumpAlignment )
 {
     // Temporary assembly data
@@ -857,6 +864,14 @@ BOOST_AUTO_TEST_CASE( test_generateRefinedSVCandidateFromJumpAlignment )
     jumpAlignmentResultType.align2 = alignment2;
     jumpAlignmentResultType.jumpRange = 2;
     svCandidateAssemblyData.spanningAlignments.push_back(jumpAlignmentResultType);
+    // BP1 and BP2 both are RIGHT_OPEN
+    // As state is RIGHT_OPEN,
+    //     BP1:
+    //         Range start = alignment end - 1 = 500 - 1 = 499
+    //         Rand end = range start + jump range + 1 = 502
+    //     BP2:
+    //         Range start = alignment end - 1 = 621 - 1 = 620
+    //         Rand end = range start + jump range + 1 = 623
     SVCandidate svCandidate1;
     svCandidate1.bp1.state = SVBreakendState::RIGHT_OPEN;
     svCandidate1.bp2.state = SVBreakendState::RIGHT_OPEN;
@@ -876,9 +891,17 @@ BOOST_AUTO_TEST_CASE( test_generateRefinedSVCandidateFromJumpAlignment )
     cigar_to_apath(testCigar4.c_str(), alignment2.apath);
     jumpAlignmentResultType.align1 = alignment1;
     jumpAlignmentResultType.align2 = alignment2;
+    // jump range = 0
     jumpAlignmentResultType.jumpRange = 0;
     svCandidateAssemblyData.spanningAlignments.clear();
     svCandidateAssemblyData.spanningAlignments.push_back(jumpAlignmentResultType);
+    // BP1 is RIGHT_OPEN and BP2 is LEFT_OPEN
+    //     BP1:
+    //         Range start = alignment end - 1 = 489 - 1 = 488
+    //         Rand end = range start + jump range + 1 = 489
+    //     BP2:
+    //         Range start = alignment start - jump range = 510 - 0 = 510
+    //         Rand end = range start + 1 = 511
     SVCandidate svCandidate2;
     svCandidate2.bp1.state = SVBreakendState::RIGHT_OPEN;
     svCandidate2.bp2.state = SVBreakendState::LEFT_OPEN;
@@ -948,11 +971,26 @@ BOOST_AUTO_TEST_CASE( test_isJumpAlignmentQCFail )
     BOOST_REQUIRE(isJumpAlignmentQCFail(jumpAlignmentResultType));
 }
 
-// Test the following cases:
+// The motivation behind this api is:
+// Let's say indel segments in a cigar are (a1,b1), (a2,b2) and (a3,b3) and all these indel stretches are
+// satisfied min indel threshold criteria. API tries to check whether the segment before any of these indel
+// stretch is high quality or not. Similarly it tries to check whether the segment after
+// any of these indel stretch is high quality or not. If the segment before or after any of these indel is low quality
+// drop that indel from the indel segments.
+// After dropping those invalid indel segments, if the segment still contains some indel segments
+// which satisfy min indel threshold criteria it returns true. A segment is said to be high quality if the
+// following conditions are satisfied:
+// 1. minAlignRefSpan = 30 (simple SV) & 35 (complex SV)
+// 2. minAlignReadLength = 30 (simple SV) & 35 (complex SV)
+// 3. Fraction of alignment score should be greater than 0.75 where
+//    fraction of alignment score is calculated as
+//    alignment_score / (clipped_read_length * match score)
+
+// Test the following cases for candidate generation from complex SV contig alignment:
 // 1. If minimum candidate indel is not present in the read alignment, it will return false.
-// 2. If number of candidate segments is 1 and it is LowQualitySmallSVAlignment (as explained in
+// 2. If number of larger indel candidate segments is 1 and it is Low Quality SmallSV Alignment (as explained in
 //    test_ISLowQualitySmallSVAlignment), it will return false.
-// 3. After discarding LowQualitySmallSVAlignment segments if still it contains some indels which are
+// 3. After discarding invalid indel segments(as described above) if it still contains some indel segments which are
 //    more than min indel threshold, it will return true.
 BOOST_AUTO_TEST_CASE( test_findCandidateVariantsFromComplexSVContigAlignment )
 {
@@ -980,14 +1018,18 @@ BOOST_AUTO_TEST_CASE( test_findCandidateVariantsFromComplexSVContigAlignment )
     BOOST_REQUIRE(!findCandidateVariantsFromComplexSVContigAlignment(100, scores, alignment1,
                    contigSeq, refSeq, 10, candidateSegments));
 
-    // Case-2 is designed here. Min indel size = 6. So only one segment (6D) more than this. Till this segment(35=5I30=) it is
-    // LowQualitySmallSVAlignment which is explained in test_isLowQualitySmallSVAlignment.
+    // Case-2 is designed here. Min indel size = 6. So only one segment (6D) more than this.
+    // So before this segment, cigar is 35=5I30= which is low quality as alignment score 0.75(49/70)
+    // which is less than 0.75.
     BOOST_REQUIRE(!findCandidateVariantsFromComplexSVContigAlignment(100, scores, alignment1,
                    contigSeq, refSeq, 6, candidateSegments));
 
-    // Trim segments from both side until we don't get LowQualitySmallSVAlignment.
-    // So here trim 3I from both side and after trimming cigar is 100=5I30=6D100= which
-    // still contains 5I and 6D which sizes are more than min indel threshold(3 here)
+    // Min indel threshold is 3. So Indel segments are [(0,0), (2,2), (4,4), (6,6)].
+    // Before 1st 3I(0,0), there is no segment, so the segment before (0,0) is low quality.
+    // Similarly the segment after last 3I(6,6) is low quality. So drop these two segments
+    // [(0,0) & (6,6)] from indel segments.
+    // After dropping both the segments from indel segments, still it contains 5I and 6D with
+    // sizes larger than min indel threshold = 3.
     std::string testCigar2("3I100=5I30=6D100=3I"); // match, insertion and deletion
     Alignment alignment2;
     cigar_to_apath(testCigar2.c_str(), alignment2.apath);
@@ -1004,6 +1046,7 @@ BOOST_AUTO_TEST_CASE( test_findCandidateVariantsFromComplexSVContigAlignment )
 // So the SV breakend locations are:
 // bp1 = [x, x + b + 1)
 // bp2 = [y, y + b + 1)
+// Test the interval range of bp1 and bp2.
 BOOST_AUTO_TEST_CASE( test_setSmallCandSV )
 {
     reference_contig_segment reference;
@@ -1027,13 +1070,13 @@ BOOST_AUTO_TEST_CASE( test_setSmallCandSV )
     std::string cigar("73=6I98=");
     cigar_to_apath(cigar.c_str(),  alignment.apath);
     SVCandidate candidate;
-    GSCOptions  options;
+    GSCOptions options;
     options.isOutputContig = true;
-    std::pair<unsigned , unsigned > segment(std::pair<unsigned, unsigned >(1, 1));
+    std::pair<unsigned , unsigned > segment(std::pair<unsigned,unsigned >(1, 1));
     setSmallCandSV(reference, readSequence, alignment, segment, candidate, options);
     // ref region is [747 +73-1, 747 + 73) = [819, 820)
     // read region is [73, 74)
-    // from 819 in reference bases and from 73 in read bases 26 read bases are matching with
+    // from 819 in reference coordinate and from 73 in read coordinate 26 read bases are matching with
     // reference bases. So final regions are [819, 819+26+1) = [819, 846) and
     // [820, 820+26+1) = [820, 847)
     BOOST_REQUIRE_EQUAL(candidate.bp1.interval, GenomeInterval(0, 819, 846));
@@ -1069,7 +1112,6 @@ BOOST_AUTO_TEST_CASE( test_translateMaskedAlignment )
     exclusion_block block3(34, 10, 3);
     std::vector<exclusion_block> blocks = {block1, block2, block3};
 
-
     std::string testCigar1("20D4=4D12=4I"); // match, insertion and deletion
     Alignment alignment1;
     alignment1.beginPos = 2;
@@ -1085,7 +1127,8 @@ BOOST_AUTO_TEST_CASE( test_translateMaskedAlignment )
 // Test whether jump alignment result is low quality
 // Jump alignment represents alignment of a query sequence which can switch over
 // from reference1 to reference2. If either of the alignment is LowQualitySpanningSVAlignment
-// then api will return true. isLowQualitySpanningSVAlignment is described in test_isLowQualitySpanningSVAlignment.
+// then api will return true.
+// isLowQualitySpanningSVAlignment is described in test_isLowQualitySpanningSVAlignment.
 // Test the following cases:
 // 1. isLowQualitySpanningSVAlignment is true for Alignment-1, not true for Alignment-2
 // 2. isLowQualitySpanningSVAlignment is true for Alignment-2, not true for Alignment-1
@@ -1102,20 +1145,31 @@ BOOST_AUTO_TEST_CASE( test_isLowQualityJumpAlignment )
     cigar_to_apath(testCigar1.c_str(), alignmentResult.align1.apath);
     std::string testCigar2("35=");
     cigar_to_apath(testCigar2.c_str(), alignmentResult.align2.apath);
-    // Case-1 is designed here
+    // Case-1 is designed here Where fraction of alignment score relative
+    // to optimal score of alignment-1 is 0.349398 (<0.75) but fraction of
+    // alignment score of alignment-2 is 1(>0.75).
+    // So here alignment-1 is low quality and alignment-2 is high quality.
     BOOST_REQUIRE(isLowQualityJumpAlignment(alignmentResult, scores, false));
-
-    // Case-2 is designed here
+    // Case-2 is designed here Where fraction of alignment score relative
+    // to optimal score of alignment-2 is 0.349398 (<0.75) but fraction of
+    // alignment score of alignment-1 is 1(>0.75).
+    // So here alignment-2 is low quality and alignment-1 is high quality.
     cigar_to_apath(testCigar2.c_str(), alignmentResult.align1.apath);
     cigar_to_apath(testCigar1.c_str(), alignmentResult.align2.apath);
     BOOST_REQUIRE(isLowQualityJumpAlignment(alignmentResult, scores, false));
 
-    // case-3 is designed here
+    // Case-3 is designed here Where fraction of alignment score relative
+    // to optimal score of alignment-1 is 0.349398 (<0.75) but fraction of
+    // alignment score of alignment-2 is 0.349398(<0.75).
+    // So here alignment-1 and alignment-2 both are low quality.
     cigar_to_apath(testCigar1.c_str(), alignmentResult.align1.apath);
     cigar_to_apath(testCigar1.c_str(), alignmentResult.align2.apath);
     BOOST_REQUIRE(isLowQualityJumpAlignment(alignmentResult, scores, false));
 
-    // Case-4 is designed here
+    // Case-4 is designed here Where fraction of alignment score relative
+    // to optimal score of alignment-1 is 1 (>0.75) but fraction of
+    // alignment score of alignment-2 is 1(>0.75).
+    // So here alignment-1 and alignment-2 both are high quality.
     cigar_to_apath(testCigar2.c_str(), alignmentResult.align1.apath);
     cigar_to_apath(testCigar2.c_str(), alignmentResult.align2.apath);
     BOOST_REQUIRE(!isLowQualityJumpAlignment(alignmentResult, scores, false));
@@ -1145,15 +1199,17 @@ BOOST_AUTO_TEST_CASE( test_selectJumpContigDNA )
     alignmentResult1.score = 60;
 
     // Case-1 is designed here. Out of two jump alignments, alignmentResult1 has max alignment score
-    // But it is LowQualityJumpAlignment as mentioned in test_isLowQualityJumpAlignment.
+    // But it is LowQualityJumpAlignment as one of the alignments (35=5I30=6D10=3I) is low quality.
+    // The reson behind low quality is its alignment score is 0.349398 (29/83) which is less than 0.75.
     SVCandidateAssemblyData candidateAssemblyData;
     candidateAssemblyData.contigs.resize(2);
     candidateAssemblyData.spanningAlignments.push_back(alignmentResult1);
     candidateAssemblyData.spanningAlignments.push_back(alignmentResult2);
     BOOST_REQUIRE(!selectJumpContigDNA(candidateAssemblyData, scores));
 
-    // Case-2 is designed here. Out of two jump alignments, alignmentResult3 has max alignment score.
-    // And also is alignmentResult3 LowQualityJumpAlignment as mentioned in test_isLowQualityJumpAlignment.
+    // Case-2 is designed here. Out of three jump alignments, alignmentResult3 has max alignment score.
+    // And also alignmentResult3 is not Low Quality Jump Alignment as mentioned in test_isLowQualityJumpAlignment.
+    // The reason behind high quality is all the jump alignments' score are 1 (>0.75).
     JumpAlignmentResult<int> alignmentResult3;
     std::string testCigar5("35=");
     cigar_to_apath(testCigar5.c_str(), alignmentResult3.align1.apath); // alignment score is 35
@@ -1166,9 +1222,11 @@ BOOST_AUTO_TEST_CASE( test_selectJumpContigDNA )
     BOOST_REQUIRE_EQUAL(candidateAssemblyData.bestAlignmentIndex, 2);
 }
 
-// Test the following cases:
-// 1. Filter breakpoint contigs for large SV candidates as explained in test_isLowQualityJumpAlignment
-// 2. Select the 'best' one based on alignment score and check alignment on selected contig
+// Test the following cases for selection of contig in RNA:
+// 1. Filter breakpoint contigs for large SV candidates as explained in test_isLowQualityJumpAlignment.
+// 2. Select the 'best' one based on alignment score and check alignment on selected contig.
+// 3. If two or more jump alignments support high quality spanning SV, best alignment index will be that
+//    jump alignment whose number of supporting reads for contig is maximum.
 BOOST_AUTO_TEST_CASE( test_selectJumpContigRNA )
 {
     // Match score = 1, mismatch penalty = -4,
@@ -1190,15 +1248,17 @@ BOOST_AUTO_TEST_CASE( test_selectJumpContigRNA )
     alignmentResult1.score = 60;
 
     // Case-1 is designed here. Out of two jump alignments, alignmentResult1 has max alignment score
-    // But it is LowQualityJumpAlignment as mentioned in test_isLowQualityJumpAlignment.
+    // But it is LowQualityJumpAlignment as one of the alignments (35=5I30=6D10=3I) is low quality.
+    // The reson behind low quality is its alignment score is 0.349398 (29/83) which is less than 0.75.
     SVCandidateAssemblyData candidateAssemblyData;
     candidateAssemblyData.contigs.resize(2);
     candidateAssemblyData.spanningAlignments.push_back(alignmentResult1);
     candidateAssemblyData.spanningAlignments.push_back(alignmentResult2);
     BOOST_REQUIRE(!selectJumpContigRNA(candidateAssemblyData, scores));
 
-    // Case-2 is designed here. Out of two jump alignments, alignmentResult3 has max alignment score.
-    // And also is alignmentResult3 LowQualityJumpAlignment as mentioned in test_isLowQualityJumpAlignment.
+    // Case-2 is designed here. Out of three jump alignments, alignmentResult3 has max alignment score.
+    // And also alignmentResult3 is not Low Quality Jump Alignment as mentioned in test_isLowQualityJumpAlignment.
+    // The reason behind high quality is all the jump alignments' score are 1 (>0.75).
     JumpAlignmentResult<int> alignmentResult3;
     std::string testCigar5("35=");
     cigar_to_apath(testCigar5.c_str(), alignmentResult3.align1.apath); // alignment score is 35
@@ -1209,18 +1269,40 @@ BOOST_AUTO_TEST_CASE( test_selectJumpContigRNA )
     candidateAssemblyData.spanningAlignments.push_back(alignmentResult3);
     BOOST_REQUIRE(selectJumpContigRNA(candidateAssemblyData, scores));
     BOOST_REQUIRE_EQUAL(candidateAssemblyData.bestAlignmentIndex, 2);
+
+    // Case-3 is designed here. Here both alignmentResult3 and alignmentResult4 are
+    // supporting high quality spanning SV. Although the score of alignmentResult3 (70)
+    // is more than the score of alignmentResult4(64), then also best alignment index
+    // is the index of alignmentResult4 as number of supporting reads of contig in
+    // alignmentResult4(4) is more than number of supporting reads of contig in
+    // alignmentResult3(3).
+    JumpAlignmentResult<int> alignmentResult4;
+    std::string testCigar7("32=");
+    cigar_to_apath(testCigar7.c_str(), alignmentResult4.align1.apath); // alignment score is 32
+    std::string testCigar8("32=");
+    cigar_to_apath(testCigar8.c_str(), alignmentResult4.align2.apath); // alignment score is 32
+    alignmentResult4.score = 64;
+    candidateAssemblyData.contigs.resize(4);
+    // Contig of alignmentResult1, alignmentResult2 and alignmentResult3 are supported
+    // by 3 reads, and contig of alignmentResult4 is supported by 4 reads.
+    candidateAssemblyData.contigs[0].supportReads = {1, 2, 3};
+    candidateAssemblyData.contigs[1].supportReads = {4, 5, 6};
+    candidateAssemblyData.contigs[2].supportReads = {7, 8, 9};
+    candidateAssemblyData.contigs[3].supportReads = {10, 11, 12, 13};
+    candidateAssemblyData.spanningAlignments.push_back(alignmentResult4);
+    BOOST_REQUIRE(selectJumpContigRNA(candidateAssemblyData, scores));
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData.bestAlignmentIndex, 3);
 }
 
 // Convert jump alignment results into an SVCandidate and add all
 // extra data required for VCF output
 // Test the following cases:
-// 1. If the insert size of best alignment is greater than zero, then same length
-//    insert sequence is added to candidate SV.
-// 2. If a user wants to out contig sequence in VCF, it will add contig sequence
+// 1. Breakend insertion sequence, together with its size, are added to candidate SV.
+// 2. If a user wants to output contig sequence in VCF, it will add contig sequence
 //    to candidate sv.
 // 3. Creation of intervals of candidate SV are explained in test_adjustAssembledBreakend
-// 4. If there are x number of insertions and y number of deletions, it will add
-//    xIyD in candidate SV as insert alignment.
+// 4. Breakend insertion sequence, together with its size, are added to candidate SV. Also
+//    breakend deletion size is added to candidate SV.
 BOOST_AUTO_TEST_CASE( test_generateRefinedVCFSVCandidateFromJumpAlignment )
 {
     // Match score = 1, mismatch penalty = -4,
@@ -1254,6 +1336,9 @@ BOOST_AUTO_TEST_CASE( test_generateRefinedVCFSVCandidateFromJumpAlignment )
     std::string testCigar6("35=");
     cigar_to_apath(testCigar6.c_str(), alignmentResult3.align2.apath); // alignment score is 35
     alignmentResult3.score = 70;
+    alignmentResult3.align1.beginPos = 9;
+    alignmentResult3.align2.beginPos = 40;
+    alignmentResult3.jumpRange = 2;
     candidateAssemblyData.spanningAlignments.push_back(alignmentResult3);
 
     // Preparing dummy contig sequences
@@ -1280,20 +1365,28 @@ BOOST_AUTO_TEST_CASE( test_generateRefinedVCFSVCandidateFromJumpAlignment )
     options.isOutputContig = true; // output contig sequence to VCF.
     generateRefinedVCFSVCandidateFromJumpAlignment(candidateAssemblyData, candidate, options);
     // jump insert size = 5
-    // After refinement SV breakpoints are BP1([34, 35)) and BP2([40, 41)). It is explained
-    // in test_adjustAssembledBreakend.
-    std::string expectedAlignment("5I5D");
+    // After refinement SV breakpoints are BP1([43, 46)) and BP2([80, 83)). See the explanation below.
+    // So the deletion size = 80 - 43 - 1 = 36
+    // Insertion size = jump insertion size of best alignment = 5.
+    std::string expectedAlignment("5I36D");
     ALIGNPATH::path_t expectedPath;
     cigar_to_apath(expectedAlignment.c_str(), expectedPath);
 
-    // Case-1
+    // Case-1 is designed where breakend insert sequence size is jump insert size.
     BOOST_REQUIRE_EQUAL(candidate.insertSeq.size(), alignmentResult3.jumpInsertSize);
-    // Case-2
+    // Case-2 is designed. As best jump aligment is alignmentResult3, so candidate contig sequence
+    // is the contig sequence of alignmentResult3.
     BOOST_REQUIRE_EQUAL(candidate.contigSeq, contig3.seq);
-    // Case-3
-    BOOST_REQUIRE_EQUAL(candidate.bp1.interval, GenomeInterval(0, 34, 35));
-    BOOST_REQUIRE_EQUAL(candidate.bp2.interval, GenomeInterval(0, 40, 41));
-    // Case-4
+    // Case-3 is designed here.
+    // homologous jump range across the breakend = 2
+    // As state is RIGHT_OPEN, range start is alignment end - 1 = 44 - 1 = 43
+    // and alignment end = range start + jump range + 1 = 46
+    BOOST_REQUIRE_EQUAL(candidate.bp1.interval, GenomeInterval(0, 43, 46));
+    // homologous jump range across the breakend = 2
+    // As state is LEFT_OPEN, range start is alignment start + ref_offset = 40 + 40 = 80
+    // and alignment end = alignment start + jump range + 1 = 83
+    BOOST_REQUIRE_EQUAL(candidate.bp2.interval, GenomeInterval(0, 80, 83));
+    // Case-4 is designed where expected path is 5I36D.
     BOOST_REQUIRE_EQUAL(candidate.insertAlignment, expectedPath);
 }
 
@@ -1306,11 +1399,12 @@ BOOST_AUTO_TEST_CASE( test_generateRefinedVCFSVCandidateFromJumpAlignment )
 // 2. For large SV or interchromosomal SV, api computes spanning candidate assembly. This case assumes
 //    two suspected breakends with a direction to each, most common large scale SV case.
 // 3. Above two cases are applied for RNA also.
-// For Complex SV:
+//    For Complex SV:
 // 4. When a SV is complex, api computes small candidate assembly as mentioned in case-1.
-// Contigs are generated based on the bam record specified at the top of this file. BamRecords are
-// created in such a way that leading an trailing has 5 mismatches (as 4 is the leading or trailing
-// mismatch threshold)
+//
+//  Contigs are generated based on the bam record specified at the top of this file. BamRecords are
+//  created in such a way that leading or trailing has 5 mismatches (as 4 is the leading or trailing
+//  mismatch threshold)
 BOOST_AUTO_TEST_CASE( test_getCandidateAssemblyData )
 {
     const bam_header_info bamHeader(buildTestBamHeader());
@@ -1342,6 +1436,8 @@ BOOST_AUTO_TEST_CASE( test_getCandidateAssemblyData )
 
     // Case-1 is designed here. It is a spanning sv candidate where breakpoints
     // are overlapping (with extra padding 350) each other.
+    // As the breakends are overlapping each other using padding, api will treat
+    // it as small SV alignment.
     SVCandidateAssemblyRefiner refiner1(options, bamHeader, counts, edgeTracker);
     SVCandidate candidate1;
     candidate1.bp1.state = SVBreakendState::RIGHT_OPEN;
