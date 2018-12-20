@@ -493,7 +493,7 @@ BOOST_AUTO_TEST_CASE( test_isLowQualitySmallSVAlignment )
 }
 
 // Test the following cases:
-// 1. Whether there is breakend insertion and deletion are inserted to SV candidate or not.
+// 1. Whether a breakend insertion/deletion is inserted to SV candidate or not.
 // 2. Insertion size = size of the candidate insert sequence
 // 3. Deletion size = Difference between the two breakpoint start position - 1
 // 4. All the above points are valid for indel type sv, otherwise it will not do anything.
@@ -835,15 +835,13 @@ BOOST_AUTO_TEST_CASE( test_isLowQualitySpanningSVAlignment )
     BOOST_REQUIRE(!isLowQualitySpanningSVAlignment(100, scores, false, true, path9));
 }
 
-// For large SV candidates spanning two distinct regions of the genome, the reference sequences are
-// extracted from the two expected breakend regions, and the order and/or orientation of the
-// references is adjusted such that if the candidate SV exists, the left-most segment of the SV
-// contig should align to the first trans- formed reference region and the right-most contig
-// segment should align to the second reference region. The contig is aligned across the two reference
-// regions using a variant of Smith-Waterman-Gotoh alignment where a jump state is
-// included which can only be entered from the match state for the first reference segment and only
-// exits to the match or insert states of the second reference segment. Using this jump alignment
-// verify test_adjustAssembledBreakend.
+
+// After getting the jump alignment (using assembly) for a spanning candidate SV,
+// adjust the breakend region of SV candidate based on the original
+// genome coordinate. Test the breakend interval range to be reported in the output vcf.
+// Test the following cases:
+// 1. In case of sv breakend state is RIGHT_OPEN
+// 2. In case of sv breaked state is LEFT_OPEN
 BOOST_AUTO_TEST_CASE( test_generateRefinedSVCandidateFromJumpAlignment )
 {
     // Temporary assembly data
@@ -852,35 +850,51 @@ BOOST_AUTO_TEST_CASE( test_generateRefinedSVCandidateFromJumpAlignment )
     svCandidateAssemblyData.bestAlignmentIndex = 0;
     // Created two alignments with jump size = 2
     Alignment alignment1;
-    alignment1.beginPos = 406;
-    std::string testCigar1("94=");
+    alignment1.beginPos = 40;
+    std::string testCigar1("35=");
     cigar_to_apath(testCigar1.c_str(), alignment1.apath);
     Alignment alignment2;
-    alignment2.beginPos = 510;
-    std::string testCigar2("110=75I1D2=");
+    alignment2.beginPos = 70;
+    std::string testCigar2("10=75I1D2=");
     cigar_to_apath(testCigar2.c_str(), alignment2.apath);
     SVCandidateAssemblyData::JumpAlignmentResultType jumpAlignmentResultType;
     jumpAlignmentResultType.align1 = alignment1;
     jumpAlignmentResultType.align2 = alignment2;
     jumpAlignmentResultType.jumpRange = 2;
     svCandidateAssemblyData.spanningAlignments.push_back(jumpAlignmentResultType);
+    svCandidateAssemblyData.bp1ref.seq() = "TCTATCACCCATCGTACCACTCACGGGAGCTCTCCTCTATCACCCATCGTACCACTCACGGGAGCTCTCC"
+                                           "TCTATCACCCATCGTACCACTCACGGGAGCTCTCCTCTATCACCCATCGTACCACTCACGGGAGCTCTCC"
+                                           "TCTATCACCCATCGTACCACTCACGGGAGCTCTCC";
+    svCandidateAssemblyData.bp2ref.seq() = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
+                                           "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA"
+                                           "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
+                                           "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA"
+                                           "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
+                                           "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
+
+    svCandidateAssemblyData.bp1ref.set_offset(100);
+    svCandidateAssemblyData.bp2ref.set_offset(150);
     // BP1 and BP2 both are RIGHT_OPEN
     // As state is RIGHT_OPEN,
     //     BP1:
-    //         Range start = alignment end - 1 = 500 - 1 = 499
-    //         Rand end = range start + jump range + 1 = 502
-    //     BP2:
-    //         Range start = alignment end - 1 = 621 - 1 = 620
-    //         Rand end = range start + jump range + 1 = 623
+    //         Range start = bp1_reffset+ alignment end - 1 = 175 - 1 = 174
+    //         Rand end = range start + jump range + 1 = 177
+    //     BP2 (Reverse strand):
+    //         Range start = bp2_refoffset + (bp2_ref_size - alignment start - 1) - jump size
+    //                     = 150 + (306 - 70 - 1) - 2 = 383
+    //         Rand end = bp2_refoffset + (bp2_ref_size - alignment start - 1) + 1
+    //                  = 150 + (306 - 70 - 1) + 1 = 386
     SVCandidate svCandidate1;
     svCandidate1.bp1.state = SVBreakendState::RIGHT_OPEN;
     svCandidate1.bp2.state = SVBreakendState::RIGHT_OPEN;
+    // As here BP2 is right opened that means BP2 is reversed.
+    svCandidateAssemblyData.bporient.isBp2Reversed = true;
     generateRefinedSVCandidateFromJumpAlignment(svCandidateAssemblyData, svCandidate1);
     // results should be according to test_adjustAssembledBreakend
-    BOOST_REQUIRE_EQUAL(svCandidate1.bp1.interval.range.begin_pos(), 499);
-    BOOST_REQUIRE_EQUAL(svCandidate1.bp1.interval.range.end_pos(), 502);
-    BOOST_REQUIRE_EQUAL(svCandidate1.bp2.interval.range.begin_pos(), 620);
-    BOOST_REQUIRE_EQUAL(svCandidate1.bp2.interval.range.end_pos(), 623);
+    BOOST_REQUIRE_EQUAL(svCandidate1.bp1.interval.range.begin_pos(), 174);
+    BOOST_REQUIRE_EQUAL(svCandidate1.bp1.interval.range.end_pos(), 177);
+    BOOST_REQUIRE_EQUAL(svCandidate1.bp2.interval.range.begin_pos(), 383);
+    BOOST_REQUIRE_EQUAL(svCandidate1.bp2.interval.range.end_pos(), 386);
 
     // Created two alignments with jump size = 0
     alignment1.beginPos = 397;
@@ -891,26 +905,28 @@ BOOST_AUTO_TEST_CASE( test_generateRefinedSVCandidateFromJumpAlignment )
     cigar_to_apath(testCigar4.c_str(), alignment2.apath);
     jumpAlignmentResultType.align1 = alignment1;
     jumpAlignmentResultType.align2 = alignment2;
-    // jump range = 0
-    jumpAlignmentResultType.jumpRange = 0;
+    // jump range = 2
+    jumpAlignmentResultType.jumpRange = 2;
     svCandidateAssemblyData.spanningAlignments.clear();
     svCandidateAssemblyData.spanningAlignments.push_back(jumpAlignmentResultType);
+    // As BP2 is LEFT_OPEN, BP2 is not in reverse strand.
+    svCandidateAssemblyData.bporient.isBp2Reversed = false;
     // BP1 is RIGHT_OPEN and BP2 is LEFT_OPEN
     //     BP1:
-    //         Range start = alignment end - 1 = 489 - 1 = 488
-    //         Rand end = range start + jump range + 1 = 489
+    //         Range start = bp1_refoffset + alignment end - 1 = 589 - 1 = 588
+    //         Rand end = range start + jump range + 1 = 591
     //     BP2:
-    //         Range start = alignment start - jump range = 510 - 0 = 510
-    //         Rand end = range start + 1 = 511
+    //         Range start = bp2_refoffset + alignment start = 150 + 510 = 660
+    //         Rand end = range start  + jump range + 1 = 663
     SVCandidate svCandidate2;
     svCandidate2.bp1.state = SVBreakendState::RIGHT_OPEN;
     svCandidate2.bp2.state = SVBreakendState::LEFT_OPEN;
     generateRefinedSVCandidateFromJumpAlignment(svCandidateAssemblyData, svCandidate2);
     // results should be according to test_adjustAssembledBreakend
-    BOOST_REQUIRE_EQUAL(svCandidate2.bp1.interval.range.begin_pos(), 488);
-    BOOST_REQUIRE_EQUAL(svCandidate2.bp1.interval.range.end_pos(), 489);
-    BOOST_REQUIRE_EQUAL(svCandidate2.bp2.interval.range.begin_pos(), 510);
-    BOOST_REQUIRE_EQUAL(svCandidate2.bp2.interval.range.end_pos(), 511);
+    BOOST_REQUIRE_EQUAL(svCandidate2.bp1.interval.range.begin_pos(), 588);
+    BOOST_REQUIRE_EQUAL(svCandidate2.bp1.interval.range.end_pos(), 591);
+    BOOST_REQUIRE_EQUAL(svCandidate2.bp2.interval.range.begin_pos(), 660);
+    BOOST_REQUIRE_EQUAL(svCandidate2.bp2.interval.range.end_pos(), 663);
 }
 
 // Test whether jump alignment QC fails or not.
@@ -1041,12 +1057,12 @@ BOOST_AUTO_TEST_CASE( test_findCandidateVariantsFromComplexSVContigAlignment )
 // Construct a usable candidate SV from a smallIndel alignment section. For example:
 // If an alignment cigar is 73=6I98=, our segment interest is 6I, api constructs a sv region
 // around that 6I. It will discard 73= and 98= segments. Let's say reference range for 6I is [x, y).
-// While doing this computation at the corresponding reference range, api checks that in how many positions,
-// the alignment position can vary with the same alignment score. Let's say this range is [a, b)
+// While doing this computation at the corresponding reference range, api checks that how far it can
+// expand  around the breakpoint without changing alignment score. Let's say this range is [a, b)
 // So the SV breakend locations are:
 // bp1 = [x, x + b + 1)
 // bp2 = [y, y + b + 1)
-// Test the interval range of bp1 and bp2.
+// Test the expanded breakend region around bp1 and bp2.
 BOOST_AUTO_TEST_CASE( test_setSmallCandSV )
 {
     reference_contig_segment reference;
@@ -1075,7 +1091,7 @@ BOOST_AUTO_TEST_CASE( test_setSmallCandSV )
     std::pair<unsigned , unsigned > segment(std::pair<unsigned,unsigned >(1, 1));
     setSmallCandSV(reference, readSequence, alignment, segment, candidate, options);
     // ref region is [747 +73-1, 747 + 73) = [819, 820)
-    // read region is [73, 74)
+    // insertion location is [73, 74)
     // from 819 in reference coordinate and from 73 in read coordinate 26 read bases are matching with
     // reference bases. So final regions are [819, 819+26+1) = [819, 846) and
     // [820, 820+26+1) = [820, 847)
@@ -1208,8 +1224,8 @@ BOOST_AUTO_TEST_CASE( test_selectJumpContigDNA )
     BOOST_REQUIRE(!selectJumpContigDNA(candidateAssemblyData, scores));
 
     // Case-2 is designed here. Out of three jump alignments, alignmentResult3 has max alignment score.
-    // And also alignmentResult3 is not Low Quality Jump Alignment as mentioned in test_isLowQualityJumpAlignment.
-    // The reason behind high quality is all the jump alignments' score are 1 (>0.75).
+    // And also alignmentResult3 has high quality jump alignment bacause all the
+    // jump alignments' score are 1 (>0.75).
     JumpAlignmentResult<int> alignmentResult3;
     std::string testCigar5("35=");
     cigar_to_apath(testCigar5.c_str(), alignmentResult3.align1.apath); // alignment score is 35
@@ -1479,14 +1495,15 @@ BOOST_AUTO_TEST_CASE( test_getCandidateAssemblyData )
     BOOST_REQUIRE_EQUAL(candidateAssemblyData3.contigs[0].supportReads.size(), 3);
     BOOST_REQUIRE_EQUAL(candidateAssemblyData3.contigs[0].seq, "GTCTATCACCCTATTAACCACTCACGGGAGAAAAA");
 
-    // Case-4 is designed here.
+    // Case-4 is designed here. This is a complex SV. This case assumes a single-interval local assembly,
+    // this is the most common case for small-scale SVs/indels. For complex SV, smallSVAlignments are
+    // expected.
     SVCandidate candidate4;
     candidate4.bp1.state = SVBreakendState::COMPLEX;
     candidate4.bp1.interval = GenomeInterval(0 , 40, 50);
     candidate4.bp2.state = SVBreakendState::UNKNOWN;
     candidate4.bp2.interval = GenomeInterval(0 , 65, 75);
     SVCandidateAssemblyData candidateAssemblyData4;
-    options.isRNA = true;
     SVCandidateAssemblyRefiner refiner3(options, bamHeader, counts, edgeTracker);
     refiner3.getCandidateAssemblyData(candidate4, true, candidateAssemblyData4);
     BOOST_REQUIRE_EQUAL(candidateAssemblyData4.smallSVAlignments.size(), 1);
