@@ -36,38 +36,51 @@ struct BamStream
     {
         const bam_header_info bamHeader(buildTestBamHeader());
 
-        std::string querySeq1 = "GTCTATCACCCTATTAACCACTCACGGGAGAAAAA";
-        std::string querySeq2 = "AAAAATGCTCATCAGTTGATGATACGCCCGAGCAGATGCCAACACAGCAGCCATTCAAGAGTCA";
         bam_record bamRecord1;
-        buildTestBamRecord(bamRecord1, 0, 8, 1, 69, 0, 15, "35M", querySeq1);
+        buildTestBamRecord(bamRecord1, 0, 8, 1, 69, 0, 15, "35M", "GTCTATCACCCTATTAACCACTCACGGGAGAAAAA");
         bamRecord1.set_qname("Read-1");
         bam_record bamRecord2;
-        buildTestBamRecord(bamRecord2, 0, 8, 1, 69, 0, 15, "35M", querySeq1);
+        buildTestBamRecord(bamRecord2, 0, 9, 1, 70, 0, 15, "35M", "TCTATCACCCTATTAACCACTCACGGGAGAAAAAG");
         bamRecord2.set_qname("Read-2");
         bam_record bamRecord3;
-        buildTestBamRecord(bamRecord3, 0, 8, 1, 69, 0, 15, "35M", querySeq1);
+        buildTestBamRecord(bamRecord3, 0, 10, 1, 69, 0, 15, "35M", "CTATCACCCTATTAACCACTCACGGGAGAAAAAGA");
         bamRecord3.set_qname("Read-3");
         bam_record bamRecord4;
-        buildTestBamRecord(bamRecord4, 1, 69, 0, 8, 0, 50, "64M", querySeq2);
-        bamRecord4.toggle_is_mate_fwd_strand();
-        bamRecord4.toggle_is_fwd_strand();
-        bamRecord4.set_qname("Read-1");
+        buildTestBamRecord(bamRecord4, 0, 299, 0, 350, 0, 15, "35M", "AAACCCCCCCCTCCCCCCGCTTCTGGCCTTTTTTT");
+        bamRecord4.set_qname("Read-4");
         bam_record bamRecord5;
-        buildTestBamRecord(bamRecord5, 1, 69, 0, 8, 0, 50, "64M", querySeq2);
-        bamRecord5.set_qname("Read-2");
-        bamRecord5.toggle_is_mate_fwd_strand();
-        bamRecord5.toggle_is_fwd_strand();
+        buildTestBamRecord(bamRecord5, 0, 300, 0, 350, 0, 15, "35M", "AACCCCCCCCTCCCCCCGCTTCTGGCCTTTTTTTT");
+        bamRecord5.set_qname("Read-5");
         bam_record bamRecord6;
-        buildTestBamRecord(bamRecord6, 1, 69, 0, 8, 0, 50, "64M", querySeq2);
-        bamRecord6.toggle_is_mate_fwd_strand();
-        bamRecord6.toggle_is_fwd_strand();
-        bamRecord6.set_qname("Read-3");
+        buildTestBamRecord(bamRecord6, 0, 301, 0, 350, 0, 15, "35M", "ACCCCCCCCTCCCCCCGCTTCTGGCCTTTTTTTTT");
+        bamRecord6.set_qname("Read-6");
+        bam_record bamRecord7;
+        buildTestBamRecord(bamRecord7, 1, 69, 0, 8, 0, 50, "35M", "AAAAAAACTCATCAGTTGATGATACGCCCGAGCAG");
+        bamRecord7.toggle_is_mate_fwd_strand();
+        bamRecord7.toggle_is_second();
+        bamRecord7.toggle_is_fwd_strand();
+        bamRecord7.set_qname("Read-1");
+        bam_record bamRecord8;
+        buildTestBamRecord(bamRecord8, 1, 70, 0, 9, 0, 50, "35M", "AAAAAACTCATCAGTTGATGATACGCCCGAGCAGA");
+        bamRecord8.set_qname("Read-2");
+        bamRecord8.toggle_is_second();
+        bamRecord8.toggle_is_mate_fwd_strand();
+        bamRecord8.toggle_is_fwd_strand();
+        bam_record bamRecord9;
+        buildTestBamRecord(bamRecord9, 1, 71, 0, 10, 0, 50, "35M", "AAAAACTCATCAGTTGATGATACGCCCGAGCAGAT");
+        bamRecord9.toggle_is_mate_fwd_strand();
+        bamRecord9.toggle_is_second();
+        bamRecord9.toggle_is_fwd_strand();
+        bamRecord9.set_qname("Read-3");
         readsToAdd.push_back(bamRecord1);
         readsToAdd.push_back(bamRecord2);
         readsToAdd.push_back(bamRecord3);
         readsToAdd.push_back(bamRecord4);
         readsToAdd.push_back(bamRecord5);
         readsToAdd.push_back(bamRecord6);
+        readsToAdd.push_back(bamRecord7);
+        readsToAdd.push_back(bamRecord8);
+        readsToAdd.push_back(bamRecord9);
         bamFileName = _bamFilename();
         buildTestBamFile(bamHeader, readsToAdd, bamFileName);
 
@@ -1054,15 +1067,10 @@ BOOST_AUTO_TEST_CASE( test_findCandidateVariantsFromComplexSVContigAlignment )
                   contigSeq, refSeq, 3, candidateSegments));
 }
 
-// Construct a usable candidate SV from a smallIndel alignment section. For example:
-// If an alignment cigar is 73=6I98=, our segment interest is 6I, api constructs a sv region
-// around that 6I. It will discard 73= and 98= segments. Let's say reference range for 6I is [x, y).
-// While doing this computation at the corresponding reference range, api checks that how far it can
-// expand  around the breakpoint without changing alignment score. Let's say this range is [a, b)
-// So the SV breakend locations are:
-// bp1 = [x, x + b + 1)
-// bp2 = [y, y + b + 1)
-// Test the expanded breakend region around bp1 and bp2.
+// The api constructs a usable candidate SV from a smallIndel alignment section.
+// It first identifies from alignment cigar a segment of interest with potential SV candidate,
+// then set the breakpoint range by expanding it around the breakpoint without changing alignment
+// score (tested by test_GetVariantRange). Test the expanded breakend region around bp1 and bp2.
 BOOST_AUTO_TEST_CASE( test_setSmallCandSV )
 {
     reference_contig_segment reference;
@@ -1081,6 +1089,13 @@ BOOST_AUTO_TEST_CASE( test_setSmallCandSV )
     const std:: string readSequence("ATTCCTTTGCATCGTATTCCTCAGTCTCTGCGGAAGGCACTGCTCCTTCCTTTCCTTTCTAAATCTCTCTCTGTCTCT"
                               "CTCTCTCTCTCTCTCTCTCTCTCTCTCGCTCTCTCCTCCCCTAGTTTATCCTGGACTCATGCTGAGCTCAGCAACCCTT"
                               "GAACTCATTTTCTATCTGAC");
+    // If an alignment cigar is 73=6I98=, our segment interest is 6I, api constructs a sv region
+    // around that 6I. It will discard 73= and 98= segments. Let's say reference range for 6I is [x, y).
+    // While doing this computation at the corresponding reference range, api checks that how far it can
+    // expand  around the breakpoint without changing alignment score. Let's say this range is [a, b)
+    // So the SV breakend locations are:
+    // bp1 = [x, x + b + 1)
+    // bp2 = [y, y + b + 1)
     Alignment alignment;
     alignment.beginPos = 747;
     std::string cigar("73=6I98=");
@@ -1380,10 +1395,9 @@ BOOST_AUTO_TEST_CASE( test_generateRefinedVCFSVCandidateFromJumpAlignment )
     GSCOptions options;
     options.isOutputContig = true; // output contig sequence to VCF.
     generateRefinedVCFSVCandidateFromJumpAlignment(candidateAssemblyData, candidate, options);
-    // jump insert size = 5
-    // After refinement SV breakpoints are BP1([43, 46)) and BP2([80, 83)). See the explanation below.
-    // So the deletion size = 80 - 43 - 1 = 36
-    // Insertion size = jump insertion size of best alignment = 5.
+    // After refinement, SV breakpoints are BP1([43, 46)) and BP2([80, 83)).
+    // deletion size = 80 - 43 - 1 = 36
+    // Insertion size = jump insert size of best alignment = 5.
     std::string expectedAlignment("5I36D");
     ALIGNPATH::path_t expectedPath;
     cigar_to_apath(expectedAlignment.c_str(), expectedPath);
@@ -1427,9 +1441,9 @@ BOOST_AUTO_TEST_CASE( test_getCandidateAssemblyData )
     TestFileMakerBase fileMakerBase1;
     GSCOptions options;
     // Assembly options
-    options.refineOpt.spanningAssembleOpt.minWordLength = 3;
-    options.refineOpt.spanningAssembleOpt.maxWordLength = 9;
-    options.refineOpt.spanningAssembleOpt.wordStepSize = 3;
+    options.refineOpt.spanningAssembleOpt.minWordLength = 15;
+    options.refineOpt.spanningAssembleOpt.maxWordLength = 40;
+    options.refineOpt.spanningAssembleOpt.wordStepSize = 10;
     options.refineOpt.smallSVAssembleOpt.minWordLength = 3;
     options.refineOpt.smallSVAssembleOpt.maxWordLength = 9;
     options.refineOpt.smallSVAssembleOpt.wordStepSize = 3;
@@ -1439,7 +1453,6 @@ BOOST_AUTO_TEST_CASE( test_getCandidateAssemblyData )
     // Creating stats file.
     TestStatsFileMaker statsFile;
     options.statsFilename = statsFile.getFilename();
-
     AllSampleReadCounts counts;
     counts.setSampleCount(1);
     SampleReadCounts sample1(counts.getSampleCounts(0));
@@ -1452,23 +1465,35 @@ BOOST_AUTO_TEST_CASE( test_getCandidateAssemblyData )
 
     // Case-1 is designed here. It is a spanning sv candidate where breakpoints
     // are overlapping (with extra padding 350) each other.
-    // As the breakends are overlapping each other using padding, api will treat
-    // it as small SV alignment.
+    // As the breakends are overlapping each other using this padding, api treats
+    // it as small SV alignment. Here this SV is supported by Read-4, Read-5 and Read-6.
+    // Let's denote these 3 reads by some index like 0,1,2 respectively. As two breakpoints
+    // are overlapping (using 350 padding) each other, so this padded BP is supported by
+    // reads with read indices 0,1 and 2.
     SVCandidateAssemblyRefiner refiner1(options, bamHeader, counts, edgeTracker);
     SVCandidate candidate1;
     candidate1.bp1.state = SVBreakendState::RIGHT_OPEN;
-    candidate1.bp1.interval = GenomeInterval(0 , 40, 50);
+    candidate1.bp1.interval = GenomeInterval(0 , 310, 320);
     candidate1.bp2.state = SVBreakendState::LEFT_OPEN;
-    candidate1.bp2.interval = GenomeInterval(0 , 65, 75);
+    candidate1.bp2.interval = GenomeInterval(0 , 330, 350);
     SVCandidateAssemblyData candidateAssemblyData1;
     refiner1.getCandidateAssemblyData(candidate1, false, candidateAssemblyData1);
     BOOST_REQUIRE_EQUAL(candidateAssemblyData1.smallSVAlignments.size(), 1);
     BOOST_REQUIRE_EQUAL(candidateAssemblyData1.contigs.size(), 1);
-    // Three reads are supporting the contig.
+    // Read-4, Read-5 and Read-6 are supporting the contig.
     BOOST_REQUIRE_EQUAL(candidateAssemblyData1.contigs[0].supportReads.size(), 3);
-    BOOST_REQUIRE_EQUAL(candidateAssemblyData1.contigs[0].seq, "GTCTATCACCCTATTAACCACTCACGGGAGAAAAA");
+    // Check read indices based on the current set. As the current set contains only
+    // Read-4, Read-5 and Read-6, so their read indices are 0,1 and 2 respectively.
+    BOOST_REQUIRE_EQUAL(*(candidateAssemblyData1.contigs[0].supportReads.begin()), 0);
+    BOOST_REQUIRE_EQUAL(*(std::next(candidateAssemblyData1.contigs[0].supportReads.begin(), 1)), 1);
+    BOOST_REQUIRE_EQUAL(*(std::next(candidateAssemblyData1.contigs[0].supportReads.begin(), 2)), 2);
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData1.contigs[0].seq, "AAACCCCCCCCTCCCCCCGCTTCTGGCCTTTTTTTTT");
 
-    // Case-2 designed here. It is a spanning inter-chromosomal SV.
+    // Case-2 designed here. It is a spanning inter-chromosomal SV which is supported by
+    // Read-1, Read-2 and Read-3 pairs. Let's denote these 6 reads by some index. Let's say
+    // read indices of mate one reads are 0, 1, 2 respectively and read indices of mate two
+    // reads are 3, 4, 5 respectively. Then BP1 is supported by reads with read indices 0,1 and 2
+    // and BP2 is supported by reads with read indices 3,4 and 5.
     SVCandidate candidate2;
     candidate2.bp1.state = SVBreakendState::RIGHT_OPEN;
     candidate2.bp1.interval = GenomeInterval(0 , 40, 50);
@@ -1476,40 +1501,71 @@ BOOST_AUTO_TEST_CASE( test_getCandidateAssemblyData )
     candidate2.bp2.interval = GenomeInterval(1 , 65, 75);
     SVCandidateAssemblyData candidateAssemblyData2;
     refiner1.getCandidateAssemblyData(candidate2, false, candidateAssemblyData2);
-    BOOST_REQUIRE_EQUAL(candidateAssemblyData2.spanningAlignments.size(), 1);
-    BOOST_REQUIRE_EQUAL(candidateAssemblyData2.contigs.size(), 1);
+    // Two contigs are generated for BP1 and BP2.
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData2.contigs.size(), 2);
+    // Each contig aligns to the reference. So total number of spanning alignment is 2.
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData2.spanningAlignments.size(), 2);
+    // Read indices {3,4,5} support BP2 contig.
     BOOST_REQUIRE_EQUAL(candidateAssemblyData2.contigs[0].supportReads.size(), 3);
-    BOOST_REQUIRE_EQUAL(candidateAssemblyData2.contigs[0].seq, "GTCTATCACCCTATTAACCACTCACGGGAGAAAAA");
+    BOOST_REQUIRE_EQUAL(*(candidateAssemblyData2.contigs[0].supportReads.begin()), 3);
+    BOOST_REQUIRE_EQUAL(*(std::next(candidateAssemblyData2.contigs[0].supportReads.begin(), 1)), 4);
+    BOOST_REQUIRE_EQUAL(*(std::next(candidateAssemblyData2.contigs[0].supportReads.begin(), 2)), 5);
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData2.contigs[0].seq, "AAAAAAACTCATCAGTTGATGATACGCCCGAGCAGAT");
+    // Read indices {0,1,2} support BP1 contig.
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData2.contigs[1].supportReads.size(), 3);
+    BOOST_REQUIRE_EQUAL(*(candidateAssemblyData2.contigs[1].supportReads.begin()), 0);
+    BOOST_REQUIRE_EQUAL(*(std::next(candidateAssemblyData2.contigs[1].supportReads.begin(), 1)), 1);
+    BOOST_REQUIRE_EQUAL(*(std::next(candidateAssemblyData2.contigs[1].supportReads.begin(), 2)), 2);
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData2.contigs[1].seq, "GTCTATCACCCTATTAACCACTCACGGGAGAAAAAGA");
 
-    // Case-3 is designed here. This is for RNA sample.
+    // Case-3 is designed here. This is for RNA sample and this is same as the above
+    // test case.
     SVCandidate candidate3;
     candidate3.bp1.state = SVBreakendState::RIGHT_OPEN;
     candidate3.bp1.interval = GenomeInterval(0 , 40, 50);
     candidate3.bp2.state = SVBreakendState::LEFT_OPEN;
     candidate3.bp2.interval = GenomeInterval(1 , 65, 75);
     SVCandidateAssemblyData candidateAssemblyData3;
-    options.isRNA = true;
+    options.isRNA = true; // This is a RNA sample.
     SVCandidateAssemblyRefiner refiner2(options, bamHeader, counts, edgeTracker);
     refiner2.getCandidateAssemblyData(candidate3, false, candidateAssemblyData3);
-    BOOST_REQUIRE_EQUAL(candidateAssemblyData3.contigs.size(), 1);
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData3.contigs.size(), 2);
+    // Read indices {3,4,5} support BP2 contig.
     BOOST_REQUIRE_EQUAL(candidateAssemblyData3.contigs[0].supportReads.size(), 3);
-    BOOST_REQUIRE_EQUAL(candidateAssemblyData3.contigs[0].seq, "GTCTATCACCCTATTAACCACTCACGGGAGAAAAA");
+    BOOST_REQUIRE_EQUAL(*(candidateAssemblyData3.contigs[0].supportReads.begin()), 3);
+    BOOST_REQUIRE_EQUAL(*(std::next(candidateAssemblyData3.contigs[0].supportReads.begin(), 1)), 4);
+    BOOST_REQUIRE_EQUAL(*(std::next(candidateAssemblyData3.contigs[0].supportReads.begin(), 2)), 5);
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData3.contigs[0].seq, "AAAAAAACTCATCAGTTGATGATACGCCCGAGCAGAT");
+    // Read indices {0,1,2} support BP1 contig.
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData3.contigs[1].supportReads.size(), 3);
+    BOOST_REQUIRE_EQUAL(*(candidateAssemblyData3.contigs[1].supportReads.begin()), 0);
+    BOOST_REQUIRE_EQUAL(*(std::next(candidateAssemblyData3.contigs[1].supportReads.begin(), 1)), 1);
+    BOOST_REQUIRE_EQUAL(*(std::next(candidateAssemblyData3.contigs[1].supportReads.begin(), 2)), 2);
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData3.contigs[1].seq, "GTCTATCACCCTATTAACCACTCACGGGAGAAAAAGA");
 
     // Case-4 is designed here. This is a complex SV. This case assumes a single-interval local assembly,
     // this is the most common case for small-scale SVs/indels. For complex SV, smallSVAlignments are
     // expected.
     SVCandidate candidate4;
     candidate4.bp1.state = SVBreakendState::COMPLEX;
-    candidate4.bp1.interval = GenomeInterval(0 , 40, 50);
+    candidate4.bp1.interval = GenomeInterval(0 , 310, 320);
     candidate4.bp2.state = SVBreakendState::UNKNOWN;
-    candidate4.bp2.interval = GenomeInterval(0 , 65, 75);
+    candidate4.bp2.interval = GenomeInterval(0 , 330, 350);
     SVCandidateAssemblyData candidateAssemblyData4;
     SVCandidateAssemblyRefiner refiner3(options, bamHeader, counts, edgeTracker);
     refiner3.getCandidateAssemblyData(candidate4, true, candidateAssemblyData4);
-    BOOST_REQUIRE_EQUAL(candidateAssemblyData4.smallSVAlignments.size(), 1);
+    // As this is a complex SV, contigs are generated based on BP1 (BP2 is unknown).
     BOOST_REQUIRE_EQUAL(candidateAssemblyData4.contigs.size(), 1);
+    // Each contig aligns to the reference. So total number of alignment is 1.
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData4.smallSVAlignments.size(), 1);
+    // Read-4, Read-5 and Read-6 are supporting the contig.
     BOOST_REQUIRE_EQUAL(candidateAssemblyData4.contigs[0].supportReads.size(), 3);
-    BOOST_REQUIRE_EQUAL(candidateAssemblyData4.contigs[0].seq, "GTCTATCACCCTATTAACCACTCACGGGAGAAAAA");
+    // Read indices based on the current set. As current set contains only
+    // Read-4, Read-5 and Read-6, so their read indices are 0,1 and 2 respectively.
+    BOOST_REQUIRE_EQUAL(*(candidateAssemblyData4.contigs[0].supportReads.begin()), 0);
+    BOOST_REQUIRE_EQUAL(*(std::next(candidateAssemblyData4.contigs[0].supportReads.begin(), 1)), 1);
+    BOOST_REQUIRE_EQUAL(*(std::next(candidateAssemblyData4.contigs[0].supportReads.begin(), 2)), 2);
+    BOOST_REQUIRE_EQUAL(candidateAssemblyData4.contigs[0].seq, "AAACCCCCCCCTCCCCCCGCTTCTGGCCTTTTTTTTT");
 }
 
 // Search for combinations of left and right-side insertion candidates to find a good insertion pair
