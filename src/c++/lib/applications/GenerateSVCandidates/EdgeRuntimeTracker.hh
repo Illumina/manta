@@ -89,8 +89,7 @@ struct EdgeRuntimeTracker : private boost::noncopyable
     TimeTracker remoteReadRetrievalTime;
 
     /// TestEdgeRuntimeTracker is a friend structure of EdgeRuntimeTracker. So that it can access private
-    /// members of EdgeRuntimeTracker. As we need to close the output stream which is a private member, so for
-    /// unit test writing this friend structure has been created.
+    /// members of EdgeRuntimeTracker.
     friend struct TestEdgeRuntimeTracker;
 
 private:

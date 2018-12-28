@@ -124,8 +124,7 @@ struct GSCEdgeStatsManager : private boost::noncopyable
     }
 
     /// TestGSCEdgeStatsManager is a friend structure of GSCEdgeStatsManager. So that it can access private
-    /// members of GSCEdgeStatsManager. As we need to close the output stream which is a private member, so for
-    /// unit test writing this friend structure has been created.
+    /// members of GSCEdgeStatsManager.
     friend struct TestGSCEdgeStatsManager;
 
 private:

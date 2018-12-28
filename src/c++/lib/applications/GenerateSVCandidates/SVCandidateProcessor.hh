@@ -109,8 +109,7 @@ struct SVCandidateProcessor
         SupportSamples& svSupports);
 
     /// TestSVCandidateProcessor is a friend structure of SVCandidateProcessor. So that it can access private
-    /// members of SVCandidateProcessor. As we need to close the output streams of _svWriter which is a private member,
-    /// so for unit test writing this friend structure has been created.
+    /// members of SVCandidateProcessor.
     friend struct TestSVCandidateProcessor;
 
 private:

@@ -74,9 +74,9 @@ std::unique_ptr<SVLocusScanner> buildSomaticSVLocusScanner(bam_header_info bamHe
     ReadScannerOptions opts = ReadScannerOptions();
     opts.minCandidateVariantSize = 8;
     const ReadScannerOptions& constRefOpts(opts);
-    TestAlignHeaderFileMaker alignFile(bamHeaderInfo);
-    TestAlignHeaderFileMaker alignFile1(bamHeaderInfo);
-    const std::vector<std::string> alignFilenameVector = { alignFile.getFilename(), alignFile1.getFilename()};
+    TestAlignHeaderFileMaker normalAlignFile(bamHeaderInfo);
+    TestAlignHeaderFileMaker tumorAlignFile(bamHeaderInfo);
+    const std::vector<std::string> alignFilenameVector = { normalAlignFile.getFilename(), tumorAlignFile.getFilename()};
     return boost::make_unique<SVLocusScanner>(constRefOpts, tmpFileName,
                                               alignFilenameVector, false);
 }
@@ -84,7 +84,7 @@ std::unique_ptr<SVLocusScanner> buildSomaticSVLocusScanner(bam_header_info bamHe
 BOOST_AUTO_TEST_SUITE( SVCandidateProcessor_test_suite )
 
 // Create Temporary bam streams of a bam file which contains
-// three interchromosomal read pairs.
+// three inter-chromosomal read pairs.
 struct BamStream
 {
     BamStream()
@@ -94,31 +94,31 @@ struct BamStream
         std::string querySeq1 = "GTCTATCACCCTATTAACCACTCACGGGAGAAAAA";
         std::string querySeq2 = "AAAAATGCTCATCAGTTGATGATACGCCCGAGCAGATGCCAACACAGCAGCCATTCAAGAGTCA";
         bam_record bamRecord1;
-        buildTestBamRecord(bamRecord1, 0, 8, 1, 69, -1, 15, "35M", querySeq1);
+        buildTestBamRecord(bamRecord1, 0, 8, 1, 69, 0, 15, "35M", querySeq1);
         bamRecord1.set_qname("Read-1");
         bamRecord1.toggle_is_first();
         bam_record bamRecord2;
-        buildTestBamRecord(bamRecord2, 0, 8, 1, 69, -1, 15, "35M", querySeq1);
+        buildTestBamRecord(bamRecord2, 0, 8, 1, 69, 0, 15, "35M", querySeq1);
         bamRecord2.set_qname("Read-2");
         bamRecord2.toggle_is_first();
         bam_record bamRecord3;
-        buildTestBamRecord(bamRecord3, 0, 8, 1, 69, -1, 15, "35M", querySeq1);
+        buildTestBamRecord(bamRecord3, 0, 8, 1, 69, 0, 15, "35M", querySeq1);
         bamRecord3.set_qname("Read-3");
         bamRecord3.toggle_is_first();
         bam_record bamRecord4;
-        buildTestBamRecord(bamRecord4, 1, 69, 0, 8, -1, 50, "64M", querySeq2);
+        buildTestBamRecord(bamRecord4, 1, 69, 0, 8, 0, 50, "64M", querySeq2);
         bamRecord4.toggle_is_mate_fwd_strand();
         bamRecord4.toggle_is_fwd_strand();
         bamRecord4.set_qname("Read-1");
         bamRecord4.toggle_is_second();
         bam_record bamRecord5;
-        buildTestBamRecord(bamRecord5, 1, 69, 0, 8, -1, 50, "64M", querySeq2);
+        buildTestBamRecord(bamRecord5, 1, 69, 0, 8, 0, 50, "64M", querySeq2);
         bamRecord5.set_qname("Read-2");
         bamRecord5.toggle_is_mate_fwd_strand();
         bamRecord5.toggle_is_fwd_strand();
         bamRecord5.toggle_is_second();
         bam_record bamRecord6;
-        buildTestBamRecord(bamRecord6, 1, 69, 0, 8, -1, 50, "64M", querySeq2);
+        buildTestBamRecord(bamRecord6, 1, 69, 0, 8, 0, 50, "64M", querySeq2);
         bamRecord6.toggle_is_mate_fwd_strand();
         bamRecord6.toggle_is_fwd_strand();
         bamRecord6.set_qname("Read-3");
@@ -155,21 +155,16 @@ private:
 
 BOOST_FIXTURE_TEST_SUITE( SVCandidateProcessor_test_suite, BamStream )
 
-// A candidate sv needs to be checked after assembly whether it is good candidate sv or not
+// A candidate sv needs to be checked after assembly whether it is good candidate sv or not.
 // A candidate sv is not good if either of the following three cases is  satisfied:
-// 1. Post assembly spanning count is less than min candidate spanning count threshold (default 3).
+// 1. Spanning evidence count of a candidate is less than min candidate spanning count threshold (default 3).
 // 2. Non-spanning low-res candidate went into assembly but did not produce a successful contig alignment
 //    that means SV is imprecise.
 // 3. Variant size is smaller than minCandidateVariantSize (default is 10)
 // Successful cases are designed in test_tumorOnly, test_RNA, test_Diploid and test_Somatic.
 BOOST_AUTO_TEST_CASE( test_JunctionFilter )
 {
-    const bam_header_info bamHeader(buildTestBamHeader());
-    TestFilenameMaker fileMakerBase1;
-    TestFilenameMaker filenameMaker2;
     GSCOptions options;
-    options.candidateOutputFilename = fileMakerBase1.getFilename();
-    options.tumorOutputFilename = filenameMaker2.getFilename();
     // Creating SV candidate
     SVCandidate candidate1;
     candidate1.setPrecise();
@@ -178,75 +173,24 @@ BOOST_AUTO_TEST_CASE( test_JunctionFilter )
     candidate1.bp1.lowresEvidence.add(0, 1);
     candidate1.bp2.state = SVBreakendState::LEFT_OPEN;
     candidate1.bp2.interval = GenomeInterval(1 , 65, 75);
+    // Adding a pair evidence to this candidate
     candidate1.bp2.lowresEvidence.add(0, 1);
-    std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
-    std::string programName = "Manta";
-    std::string version = "Test:0:1";
-    EdgeInfo edgeInfo;
-    edgeInfo.nodeIndex1 = 0;
-    edgeInfo.nodeIndex2 = 1;
     SVMultiJunctionCandidate junctionCandidate;
     junctionCandidate.junction = {candidate1};
-    // Adding fragment information
-    SVCandidateSetData svData;
-    SVCandidateSetSequenceFragmentSampleGroup& group = svData.getDataGroup(0);
-    group.add(bamHeader, readsToAdd[0], false, true, true);
-    group.add(bamHeader, readsToAdd[3], false, true, true);
-    SVSequenceFragmentAssociation association(0, SVEvidenceType::PAIR);
-    group.begin().operator*().svLink.push_back(association);
-    SupportSamples svSupports;
-    svSupports.supportSamples.resize(1);
-    // Generate SV locus graph file
-    // Two nodes are created.
-    SVLocus locus1;
-    locusAddPair(locus1, 0, 40, 50, 1, 65, 75);
-    SVLocus locus2;
-    locusAddPair(locus2, 1, 65, 75, 0, 40, 50);
-    SVLocusSetOptions sopt;
-    sopt.minMergeEdgeObservations = 1;
-    SVLocusSet set1(sopt, bamHeader, {bamFileName});
-    set1.merge(locus1);
-    set1.merge(locus2);
-    set1.checkState(true,true);
-    TestFilenameMaker testFilenameMaker;
-    std::string graphFilename(testFilenameMaker.getFilename());
-    const char* testFilenamePtr(graphFilename.c_str());
-    // serialize
-    set1.save(testFilenamePtr);
-    std::vector<bool> isInputJunctionFiltered;
-    isInputJunctionFiltered.resize(1);
+    std::vector<bool> isInputJunctionFiltered1;
+    isInputJunctionFiltered1.resize(1);
     SVCandidateAssemblyData candidateAssemblyData;
     candidateAssemblyData.isCandidateSpanning = true;
     std::vector <SVCandidateAssemblyData> assemblyData;
     assemblyData.push_back(candidateAssemblyData);
-    // Case-1 is designed
-    SVWriter writer(options, scanner.operator*(), bamHeader, programName.c_str(), version.c_str());
-    writer.writeSV(edgeInfo, svData, assemblyData, junctionCandidate, isInputJunctionFiltered, svSupports);
-    writer.candfs.getStream().flush();
-    writer.tumfs.getStream().flush();
-    std::ifstream candidateFile(options.candidateOutputFilename);
-    std::string line;
-    int count(0);
-
-    // Post assembly spanning count is less than min candidate spanning count 3.
-    if (candidateFile.is_open())
-    {
-        while (std::getline(candidateFile, line))
-        {
-            if (line.find("#") == std::string::npos)
-            {
-                count ++;
-            }
-
-        }
-        candidateFile.close();
-    }
-    BOOST_REQUIRE_EQUAL(count, 0);
+    // Case-1 is designed where number of spanning evidence observations required is 3.
+    // But here spanning observation count is 1.
+    checkJunctionToFilter(junctionCandidate, assemblyData, isInputJunctionFiltered1, options);
+    BOOST_REQUIRE_EQUAL(isInputJunctionFiltered1[0], true);
 
     // Case-2 is designed
-    // in this case a non-spanning low-res candidate went into assembly but
-    // did not produce a successful contig alignment:
-    options.minCandidateSpanningCount = 1;
+    // In this case a non-spanning low-res candidate went into assembly but
+    // did not produce a successful contig alignment.
     SVCandidate candidate2;
     candidate2.bp1.state = SVBreakendState::COMPLEX;
     candidate2.bp1.interval = GenomeInterval(0 , 40, 50);
@@ -254,29 +198,15 @@ BOOST_AUTO_TEST_CASE( test_JunctionFilter )
     candidate2.bp2.state = SVBreakendState::UNKNOWN;
     candidate2.bp2.interval = GenomeInterval(0 , 65, 75);
     candidate2.bp2.lowresEvidence.add(0, 1);
-    count = 0;
     junctionCandidate.junction.clear();
     junctionCandidate.junction.push_back(candidate2);
     candidateAssemblyData.isCandidateSpanning = false;
     assemblyData.clear();
     assemblyData.push_back(candidateAssemblyData);
-    writer.writeSV(edgeInfo, svData, assemblyData, junctionCandidate, isInputJunctionFiltered, svSupports);
-    writer.candfs.getStream().flush();
-    writer.tumfs.getStream().flush();
-    std::ifstream candidateFile1(options.candidateOutputFilename);
-    if (candidateFile1.is_open())
-    {
-        while (std::getline(candidateFile1, line))
-        {
-            if (line.find("#") == std::string::npos)
-            {
-                count ++;
-            }
-
-        }
-        candidateFile1.close();
-    }
-    BOOST_REQUIRE_EQUAL(count, 0);
+    std::vector<bool> isInputJunctionFiltered2;
+    isInputJunctionFiltered2.resize(1);
+    checkJunctionToFilter(junctionCandidate, assemblyData, isInputJunctionFiltered2, options);
+    BOOST_REQUIRE_EQUAL(isInputJunctionFiltered2[0], true);
 
     // Case-3 is designed.
     // variant size is less than min variant size(40)
@@ -288,41 +218,28 @@ BOOST_AUTO_TEST_CASE( test_JunctionFilter )
     candidate3.bp2.state = SVBreakendState::LEFT_OPEN;
     candidate3.bp2.interval = GenomeInterval(0 , 65, 75);
     candidate3.bp2.lowresEvidence.add(0, 1);
-    count = 0;
     junctionCandidate.junction.clear();
     junctionCandidate.junction.push_back(candidate2);
     candidateAssemblyData.isCandidateSpanning = true;
     assemblyData.clear();
     assemblyData.push_back(candidateAssemblyData);
     options.scanOpt.minCandidateVariantSize = 40;
-    SVWriter writer2(options, scanner.operator*(), bamHeader, programName.c_str(), version.c_str());
-    writer2.writeSV(edgeInfo, svData, assemblyData, junctionCandidate, isInputJunctionFiltered, svSupports);
-    writer2.candfs.getStream().flush();
-    writer2.tumfs.getStream().flush();
-    std::ifstream candidateFile2(options.candidateOutputFilename);
-    if (candidateFile2.is_open())
-    {
-        while (std::getline(candidateFile2, line))
-        {
-            if (line.find("#") == std::string::npos)
-            {
-                count ++;
-            }
-
-        }
-        candidateFile1.close();
-    }
-    BOOST_REQUIRE_EQUAL(count, 0);
+    std::vector<bool> isInputJunctionFiltered3;
+    isInputJunctionFiltered3.resize(1);
+    // Variant size = 65 - 40 -1 = 24 which is less than 40.
+    checkJunctionToFilter(junctionCandidate, assemblyData, isInputJunctionFiltered3, options);
+    BOOST_REQUIRE_EQUAL(isInputJunctionFiltered3[0], true);
 }
 
-// Test the VCF records for tumor only caller
+// For Tumor only call, VCF records are written in tumor file.
+// Verify those VCF records in tumor file.
 BOOST_AUTO_TEST_CASE( test_tumorOnly )
 {
     const bam_header_info bamHeader(buildTestBamHeader());
-    TestFilenameMaker fileMakerBase1;
-    TestFilenameMaker fileMakerBase2;
-    TestFilenameMaker fileMakerBase3;
-    TestFilenameMaker fileMakerBase4;
+    TestFilenameMaker filenameMaker1;
+    TestFilenameMaker filenameMaker2;
+    TestFilenameMaker filenameMaker3;
+    TestFilenameMaker filenameMaker4;
     GSCOptions options;
     // Assembly options
     options.refineOpt.spanningAssembleOpt.minWordLength = 3;
@@ -335,10 +252,11 @@ BOOST_AUTO_TEST_CASE( test_tumorOnly )
     options.alignFileOpt.alignmentFilenames = {bamFileName};
     options.alignFileOpt.isAlignmentTumor = {true}; // only tumor bam file
     options.referenceFilename = getTestReferenceFilename();
-    options.edgeRuntimeFilename = fileMakerBase1.getFilename();
-    options.edgeStatsFilename = fileMakerBase2.getFilename();
-    options.tumorOutputFilename = fileMakerBase3.getFilename();
-    options.candidateOutputFilename = fileMakerBase4.getFilename();
+    options.edgeRuntimeFilename = filenameMaker1.getFilename();
+    options.edgeStatsFilename = filenameMaker2.getFilename();
+    // VCF records should be written in this file
+    options.tumorOutputFilename = filenameMaker3.getFilename();
+    options.candidateOutputFilename = filenameMaker4.getFilename();
     options.minCandidateSpanningCount = 1;
     TestStatsFileMaker statsFileMaker;
     options.statsFilename = statsFileMaker.getFilename();
@@ -396,6 +314,8 @@ BOOST_AUTO_TEST_CASE( test_tumorOnly )
     candidateProcessor.evaluateCandidates(edgeInfo, mjSvs, svData, svSupports);
     TestSVCandidateProcessor testSVCandidateProcessor;
     testSVCandidateProcessor.flushStreams(candidateProcessor);
+
+    // Check output vcf file
     std::ifstream tumorFile(options.tumorOutputFilename);
     std::string line;
     int count(0);
@@ -424,13 +344,14 @@ BOOST_AUTO_TEST_CASE( test_tumorOnly )
     BOOST_REQUIRE_EQUAL(count, 2);
 }
 
-// Test the VCF records for RNA caller
+// For RNA caller, VCF records are written in rna file.
+// Verify those VCF records in rna file.
 BOOST_AUTO_TEST_CASE( test_RNA )
 {
     const bam_header_info bamHeader(buildTestBamHeader());
-    TestFilenameMaker fileMakerBase1;
-    TestFilenameMaker fileMakerBase2;
-    TestFilenameMaker fileMakerBase3;
+    TestFilenameMaker filenameMaker1;
+    TestFilenameMaker filenameMaker2;
+    TestFilenameMaker filenameMaker3;
     TestFilenameMaker filenameMaker4;
     GSCOptions options;
     // Assembly options
@@ -445,9 +366,10 @@ BOOST_AUTO_TEST_CASE( test_RNA )
     options.alignFileOpt.isAlignmentTumor = {false}; // Not tumor
     options.isRNA = true;// This is an rna sample
     options.referenceFilename = getTestReferenceFilename();
-    options.edgeRuntimeFilename = fileMakerBase1.getFilename();
-    options.edgeStatsFilename = fileMakerBase2.getFilename();
-    options.rnaOutputFilename = fileMakerBase3.getFilename();
+    options.edgeRuntimeFilename = filenameMaker1.getFilename();
+    options.edgeStatsFilename = filenameMaker2.getFilename();
+    // VCF records should be written in this file
+    options.rnaOutputFilename = filenameMaker3.getFilename();
     options.candidateOutputFilename = filenameMaker4.getFilename();
     options.minCandidateSpanningCount = 1;
     options.minScoredVariantSize = 20;
@@ -507,6 +429,7 @@ BOOST_AUTO_TEST_CASE( test_RNA )
     TestSVCandidateProcessor testSVCandidateProcessor;
     testSVCandidateProcessor.flushStreams(candidateProcessor);
 
+    // Check output vcf file
     std::ifstream rnaFile(options.rnaOutputFilename);
     std::string line;
     int count(0);
@@ -534,13 +457,14 @@ BOOST_AUTO_TEST_CASE( test_RNA )
     BOOST_REQUIRE_EQUAL(count, 2);
 }
 
-// Test the VCF records for Diploid caller
+// For diploid caller, VCF records are written in diploid file.
+// Verify those VCF records in diploid file.
 BOOST_AUTO_TEST_CASE( test_Diploid )
 {
     const bam_header_info bamHeader(buildTestBamHeader());
-    TestFilenameMaker fileMakerBase1;
-    TestFilenameMaker fileMakerBase2;
-    TestFilenameMaker fileMakerBase3;
+    TestFilenameMaker filenameMaker1;
+    TestFilenameMaker filenameMaker2;
+    TestFilenameMaker filenameMaker3;
     TestFilenameMaker filenameMaker4;
     GSCOptions options;
 
@@ -554,9 +478,10 @@ BOOST_AUTO_TEST_CASE( test_Diploid )
     options.alignFileOpt.alignmentFilenames = {bamFileName};
     options.alignFileOpt.isAlignmentTumor = {false};
     options.referenceFilename = getTestReferenceFilename();
-    options.edgeRuntimeFilename = fileMakerBase1.getFilename();
-    options.edgeStatsFilename = fileMakerBase2.getFilename();
-    options.diploidOutputFilename = fileMakerBase3.getFilename();
+    options.edgeRuntimeFilename = filenameMaker1.getFilename();
+    options.edgeStatsFilename = filenameMaker2.getFilename();
+    // VCF records should be written in the diploid file
+    options.diploidOutputFilename = filenameMaker3.getFilename();
     options.candidateOutputFilename = filenameMaker4.getFilename();
     options.minCandidateSpanningCount = 1;
     options.minScoredVariantSize = 20;
@@ -619,6 +544,7 @@ BOOST_AUTO_TEST_CASE( test_Diploid )
     TestSVCandidateProcessor testSVCandidateProcessor;
     testSVCandidateProcessor.flushStreams(candidateProcessor);
 
+    // Check output vcf file
     std::ifstream diploidFile(options.diploidOutputFilename);
     std::string line;
     int count(0);
@@ -645,14 +571,15 @@ BOOST_AUTO_TEST_CASE( test_Diploid )
     BOOST_REQUIRE_EQUAL(count, 2);
 }
 
-// Test the VCF records for somatic caller
+// For Somatic caller, VCF records are written in somatic file.
+// Verify those VCF records in somatic file.
 BOOST_AUTO_TEST_CASE( test_Somatic )
 {
     const bam_header_info bamHeader(buildTestBamHeader());
-    TestFilenameMaker fileMakerBase1;
-    TestFilenameMaker fileMakerBase2;
-    TestFilenameMaker fileMakerBase3;
-    TestFilenameMaker fileMakerBase4;
+    TestFilenameMaker filenameMaker1;
+    TestFilenameMaker filenameMaker2;
+    TestFilenameMaker filenameMaker3;
+    TestFilenameMaker filenameMaker4;
     TestFilenameMaker filenameMaker5;
     GSCOptions options;
 
@@ -668,10 +595,11 @@ BOOST_AUTO_TEST_CASE( test_Somatic )
     options.alignFileOpt.alignmentFilenames = {bamFileName, bamFileName};
     options.alignFileOpt.isAlignmentTumor = {false, true}; // normal and tumor
     options.referenceFilename = getTestReferenceFilename();
-    options.edgeRuntimeFilename = fileMakerBase1.getFilename();
-    options.edgeStatsFilename = fileMakerBase2.getFilename();
-    options.diploidOutputFilename = fileMakerBase3.getFilename();
-    options.somaticOutputFilename = fileMakerBase4.getFilename();
+    options.edgeRuntimeFilename = filenameMaker1.getFilename();
+    options.edgeStatsFilename = filenameMaker2.getFilename();
+    options.diploidOutputFilename = filenameMaker3.getFilename();
+    // VCF records should be written in this file
+    options.somaticOutputFilename = filenameMaker4.getFilename();
     options.candidateOutputFilename = filenameMaker5.getFilename();
 
     TestFilenameMaker depthFileNameMaker;
@@ -754,6 +682,7 @@ BOOST_AUTO_TEST_CASE( test_Somatic )
     TestSVCandidateProcessor testSVCandidateProcessor;
     testSVCandidateProcessor.flushStreams(candidateProcessor);
 
+    // Check output vcf files
     std::ifstream diploidFile(options.diploidOutputFilename);
     std::string line;
     int count(0);
