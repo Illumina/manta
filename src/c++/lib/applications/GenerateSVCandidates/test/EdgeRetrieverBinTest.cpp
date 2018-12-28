@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE( test_EdgeRetrieverOneBin )
     set2.checkState(true,true);
     // max node edge cutoff is 1.
     EdgeRetrieverBin edger1(set2, 1, 1, 0);
-    BOOST_REQUIRE( !edger1.next() );
+    BOOST_REQUIRE( ! edger1.next() );
 }
 
 

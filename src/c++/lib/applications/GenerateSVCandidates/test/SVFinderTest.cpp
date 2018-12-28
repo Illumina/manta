@@ -625,8 +625,8 @@ BOOST_AUTO_TEST_CASE( test_updateEvidenceIndex )
 
 /// Check whether any SVs can intersect each other
 /// Two SVCandidates intersect if their breakend regions overlap in the same direction.
-/// In the schematic below, the sequentially intersecting candidates are (1, 2, 5, 6). Same
-/// cases have been written in below test cases.
+/// The test case examples are illustrated below, where the sequentially
+/// intersecting candidates are (1, 2, 5, 6).
 /// fatSVCandidate1: >>>bp1>>>>-----------------------------------<<bp2<<<<< [bp1(10,100) & bp2(1000,1100)]
 /// fatSVCandidate2:   >>>>bp1>>>------------------------------------<<bp2<<<<< [bp1(50,120) & bp2(1050,1150)]
 /// fatSVCandidate3:               >>>bp1>>>-----------------------------------------<<<bp2<<<<< [bp1(200,300) &
@@ -690,7 +690,7 @@ BOOST_AUTO_TEST_CASE( test_consolidateOverlap )
     group.add(bamHeader, bamRecord2, false, true, true);
     SVSequenceFragmentAssociation association(0, SVEvidenceType::PAIR);
     group.begin().operator*().svLink.push_back(association);
-    // candidate-1, candidate-2 and candidate-3 are not overlapping
+    // candidate-1, candidate-3 and candidate-4 are not overlapping
     // So consolidated size = 3.
     consolidateOverlap(1, candidateSetData, fatSVs);
     BOOST_REQUIRE_EQUAL(fatSVs.size(), 3);
@@ -721,7 +721,7 @@ BOOST_AUTO_TEST_CASE( test_consolidateOverlap )
 }
 
 // Test the following cases:
-// 1. When number of edges in a SV locus less than min edge count, no sv will be geneerated for this locus.
+// 1. When number of edges in a SV locus less than min edge count, no sv will be generated for this locus.
 // 2. Edge should be bidirectional that means if there is an edge from node-1 to node-2, there should be an
 //    edge from node-2 to node-1
 // 3. If min edge criteria is satisfied, then for a bam read it will return a sv candidate.
@@ -736,22 +736,21 @@ BOOST_AUTO_TEST_CASE( test_SVCandidates )
     bam_record supplementSASplitRead;
     buildTestBamRecord(supplementSASplitRead); //pos=100, matePos=200 and fragmentSize=100
     addSupplementaryAlignmentEvidence(supplementSASplitRead); // SA tag : chrFoo,300,-,54H22M,50,0;
-
     std::vector<bam_record> readsToAdd;
     readsToAdd.push_back(supplementSASplitRead);
     const std::shared_ptr<BamFilenameMaker> bamFileNameMaker(new BamFilenameMaker());
     const std::string& bamFileName(bamFileNameMaker.get()->getFilename());
     buildTestBamFile(bamHeader, readsToAdd, bamFileName);
-
+    // Build chromosome depth file
     const std::shared_ptr<TestChromosomeDepthFileMaker> depthFileMaker(new TestChromosomeDepthFileMaker());
     const std::string depthFileName(depthFileMaker.operator*().getFilename());
     buildTestChromosomeDepthFile(depthFileName);
 
     // Generate SV locus graph file
     SVLocus locus1;
-    locusAddPair(locus1,0,80,120,0,279,319);
+    locusAddPair(locus1, 0, 80, 120, 0, 279, 319);
     SVLocus locus2;
-    locusAddPair(locus2,0,279,319,0,80,120);
+    locusAddPair(locus2, 0, 279, 319, 0, 80, 120);
     SVLocusSetOptions sopt;
     sopt.minMergeEdgeObservations = 10;
     SVLocusSet set1(sopt, bamHeader, {bamFileName});
@@ -764,11 +763,11 @@ BOOST_AUTO_TEST_CASE( test_SVCandidates )
     // serialize
     set1.save(testFilenamePtr);
 
-    TestFilenameMaker fileMakerBase1;
-    TestFilenameMaker fileMakerBase2;
+    TestFilenameMaker fileNameMaker1;
+    TestFilenameMaker fileNameMaker2;
     GSCOptions options;
-    options.edgeStatsFilename = fileMakerBase1.getFilename();
-    options.edgeRuntimeFilename = fileMakerBase2.getFilename();
+    options.edgeStatsFilename = fileNameMaker1.getFilename();
+    options.edgeRuntimeFilename = fileNameMaker2.getFilename();
     options.referenceFilename = referenceFilename;
     options.alignFileOpt.alignmentFilenames = {bamFileName};
     options.graphFilename = graphFilename;
@@ -783,20 +782,38 @@ BOOST_AUTO_TEST_CASE( test_SVCandidates )
     edgeInfo.nodeIndex1 = 0;
     edgeInfo.nodeIndex2 = 1;
     finder.findCandidateSV(edgeInfo, svData, svs);
-    // Min edge criteria is not statisfied
+    // Min edge criteria is not satisfied as minimum
+    // number of edges required is 10
     BOOST_REQUIRE_EQUAL(svData.getDataGroup(0).size(), 0);
     BOOST_REQUIRE_EQUAL(svs.size(), 0);
 
-    // Designed the Case-3
+    // Designed the Case-2 where there is an edge from locus node [80,120) to
+    // locus node [279,319) but there is no edge from locus node [279,319) to
+    // locus node [80,120). So number of SV candidates are 0. Here minimum number
+    // of edges required is 1.
     sopt.minMergeEdgeObservations = 1;
     SVLocusSet set2(sopt, bamHeader, {bamFileName});
+    // One edge is created.
     set2.merge(locus1);
-    set2.merge(locus2);
     set2.checkState(true,true);
     // serialize
     set2.save(testFilenamePtr);
     SVFinder finder2(options, scanner.operator*(), edgeTracker, edgeStatMan);
     finder2.findCandidateSV(edgeInfo, svData, svs);
+    BOOST_REQUIRE_EQUAL(svData.getDataGroup(0).size(), 0);
+    BOOST_REQUIRE_EQUAL(svs.size(), 0);
+
+    // Designed the Case-3 where there is an edge from locus node [80,120) to
+    // locus node [279,319) and also there is an edge from locus node [279,319) to
+    // locus node [80,120). Here minimum number of edges required is 1.
+    SVLocusSet set3(sopt, bamHeader, {bamFileName});
+    set3.merge(locus1);
+    set3.merge(locus2);
+    set3.checkState(true,true);
+    // serialize
+    set3.save(testFilenamePtr);
+    SVFinder finder3(options, scanner.operator*(), edgeTracker, edgeStatMan);
+    finder3.findCandidateSV(edgeInfo, svData, svs);
     BOOST_REQUIRE_EQUAL(svData.getDataGroup(0).size(), 1);
     BOOST_REQUIRE_EQUAL(svs.size(), 1);
 }
