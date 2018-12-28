@@ -29,9 +29,24 @@
 /// members of EdgeRuntimeTracker.
 struct TestEdgeRuntimeTracker
 {
-    void flushStream(EdgeRuntimeTracker& tracker)
+    unsigned getCandidate(EdgeRuntimeTracker& tracker)
     {
-        tracker._osPtr->flush();
+        return tracker._candidateCount;
+    }
+
+    unsigned getComplexCandidate(EdgeRuntimeTracker& tracker)
+    {
+        return tracker._complexCandidateCount;
+    }
+
+    unsigned getAssembledCandidate(EdgeRuntimeTracker& tracker)
+    {
+        return tracker._assembledCandidateCount;
+    }
+
+    unsigned getAssembledComplexCandidate(EdgeRuntimeTracker& tracker)
+    {
+        return tracker._assembledComplexCandidateCount;
     }
 };
 
@@ -64,23 +79,12 @@ BOOST_AUTO_TEST_CASE( test_tracker)
     std::this_thread::sleep_for(std::chrono::seconds(1));
     tracker.stop(info);
     TestEdgeRuntimeTracker testEdgeRuntimeTracker;
-    testEdgeRuntimeTracker.flushStream(tracker);
-    std::ifstream trackerFile(filenameMaker.getFilename());
-    std::string edge;
-    std::string edgeTime;
-    unsigned candidate;
-    unsigned complexCandidate;
-    unsigned assembledCandidate;
-    unsigned assembledComplexCandidate;
 
     // Verify the result
-    trackerFile >> edge >> edgeTime >> candidate >> complexCandidate
-                >> assembledCandidate >> assembledComplexCandidate;
-    BOOST_REQUIRE_EQUAL(edge, "0:1:2");
-    BOOST_REQUIRE_EQUAL(candidate, 3);
-    BOOST_REQUIRE_EQUAL(complexCandidate, 1);
-    BOOST_REQUIRE_EQUAL(assembledCandidate, 2);
-    BOOST_REQUIRE_EQUAL(assembledComplexCandidate, 1);
+    BOOST_REQUIRE_EQUAL(testEdgeRuntimeTracker.getCandidate(tracker), 3);
+    BOOST_REQUIRE_EQUAL(testEdgeRuntimeTracker.getComplexCandidate(tracker), 1);
+    BOOST_REQUIRE_EQUAL(testEdgeRuntimeTracker.getAssembledCandidate(tracker), 2);
+    BOOST_REQUIRE_EQUAL(testEdgeRuntimeTracker.getAssembledComplexCandidate(tracker), 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -108,9 +108,9 @@ isAnyFalse(
 // 2. Non-spanning low-res candidate went into assembly but did not produce a successful contig alignment
 //    that means SV is imprecise.
 // 3. Variant size is smaller than minCandidateVariantSize (default is 10)
-static void checkJunctionToFilter(const SVMultiJunctionCandidate &mjSV,
-                                  const std::vector<SVCandidateAssemblyData> &mjAssemblyData,
-                                  std::vector<bool> &isJunctionFiltered, GSCOptions opt) {
+static void checkJunctionsToFilter(const SVMultiJunctionCandidate &mjSV,
+                                   const std::vector<SVCandidateAssemblyData> &mjAssemblyData,
+                                   std::vector<bool> &isJunctionFiltered, GSCOptions opt) {
 
     const unsigned junctionCount(mjSV.junction.size());
 
@@ -211,7 +211,7 @@ writeSV(
 
     // track filtration for each junction:
     std::vector<bool> isJunctionFiltered(isInputJunctionFiltered);
-    checkJunctionToFilter(mjSV, mjAssemblyData, isJunctionFiltered, opt);
+    checkJunctionsToFilter(mjSV, mjAssemblyData, isJunctionFiltered, opt);
     // check to see if all junctions are filtered, if so skip the whole candidate:
     //
     if (! isAnyFalse(isJunctionFiltered))

@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE( test_JunctionFilter )
     assemblyData.push_back(candidateAssemblyData);
     // Case-1 is designed where number of spanning evidence observations required is 3.
     // But here spanning observation count is 1.
-    checkJunctionToFilter(junctionCandidate, assemblyData, isInputJunctionFiltered1, options);
+    checkJunctionsToFilter(junctionCandidate, assemblyData, isInputJunctionFiltered1, options);
     BOOST_REQUIRE_EQUAL(isInputJunctionFiltered1[0], true);
 
     // Case-2 is designed
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE( test_JunctionFilter )
     assemblyData.push_back(candidateAssemblyData);
     std::vector<bool> isInputJunctionFiltered2;
     isInputJunctionFiltered2.resize(1);
-    checkJunctionToFilter(junctionCandidate, assemblyData, isInputJunctionFiltered2, options);
+    checkJunctionsToFilter(junctionCandidate, assemblyData, isInputJunctionFiltered2, options);
     BOOST_REQUIRE_EQUAL(isInputJunctionFiltered2[0], true);
 
     // Case-3 is designed.
@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE( test_JunctionFilter )
     std::vector<bool> isInputJunctionFiltered3;
     isInputJunctionFiltered3.resize(1);
     // Variant size = 65 - 40 -1 = 24 which is less than 40.
-    checkJunctionToFilter(junctionCandidate, assemblyData, isInputJunctionFiltered3, options);
+    checkJunctionsToFilter(junctionCandidate, assemblyData, isInputJunctionFiltered3, options);
     BOOST_REQUIRE_EQUAL(isInputJunctionFiltered3[0], true);
 }
 
