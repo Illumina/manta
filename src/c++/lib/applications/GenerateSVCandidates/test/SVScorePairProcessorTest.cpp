@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE( test_isSkipRecord )
     std::string querySeq1 = "TCTATCACCCATTTTACCACTCACGGGAGCTCTCC";
     // BamRecord1 is mapped and its mate is unmapped
     bam_record bamRecord1;
-    buildTestBamRecord(bamRecord1, 0, 9, -1, -1, -1, 15, "35M", querySeq1);
+    buildTestBamRecord(bamRecord1, 0, 9, -1, -1, 0, 15, "35M", querySeq1);
     bamRecord1.toggle_is_first();
     bamRecord1.set_qname("bamRecord1");
     bamRecord1.toggle_is_mate_unmapped();
@@ -65,9 +65,9 @@ BOOST_AUTO_TEST_CASE( test_isSkipRecord )
     BOOST_REQUIRE(processor.get()->isSkipRecord(bamRecord2));
 
     // BamRecord3 and its mate are translocated pair that means it is
-    // an innie pair.
+    // not an innie pair.
     bam_record bamRecord3;
-    buildTestBamRecord(bamRecord3, 0, 9, 1, 25, -1, 15, "35M", querySeq1);
+    buildTestBamRecord(bamRecord3, 0, 9, 1, 25, 0, 15, "35M", querySeq1);
     bamRecord3.toggle_is_first();
     bamRecord3.set_qname("bamRecord3");
     BOOST_REQUIRE(processor.get()->isSkipRecord(bamRecord3));
@@ -96,6 +96,7 @@ BOOST_AUTO_TEST_CASE( test_isLargeInsertSV )
                                                        scanner.operator*(), options, candidate, true, evidence));
     // Size of insert sequence is 102 (>100)
     BOOST_REQUIRE(processor.get()->isLargeInsertSV(candidate));
+
     candidate.insertSeq = "GATCACAGGTCTATCACCCTATTAACCACTCACG";
     // Size of insert sequence is 34 (<100)
     BOOST_REQUIRE(!processor.get()->isLargeInsertSV(candidate));
@@ -144,6 +145,10 @@ BOOST_AUTO_TEST_CASE( test_SkipRecordCore)
     BOOST_REQUIRE(processor.get()->isSkipRecordCore(bamRecord4));
 
     // Non strict supplementary read
+    // Where non-strict supplementary means
+    // 1) Bam flag is saying it is not supplementary alignment
+    // 2) Bam flag is saying it is secondary alignment
+    // 3) SA tag is present.
     bam_record bamRecord5;
     buildTestBamRecord(bamRecord5);
     bamRecord5.toggle_is_secondary();
@@ -157,7 +162,7 @@ BOOST_AUTO_TEST_CASE( test_SkipRecordCore)
     BOOST_REQUIRE(!processor.get()->isSkipRecordCore(bamRecord6));
 }
 
-// Test the search range of a sv candidate which is to be set around centerPos of sv candidate
+// Test the search range of a sv candidate which is located around centerPos of sv candidate
 // So Search range start = Center postion of breakpoint - (max fragment length - min threshold for fragment length),
 // Search range end = Center postion of breakpoint + (max fragment length - min threshold for fragment length) + 1
 // where min threshold for fragment length = 50 in manta.
@@ -174,10 +179,9 @@ BOOST_AUTO_TEST_CASE( test_nextBAMIndex )
     candidate.bp1.interval.range = known_pos_range2(100, 101);
     candidate.bp2.interval.range = known_pos_range2(150,151);
     SVEvidence evidence;
-    // isBP1 = true
+    // isBP1 = true. So search range is calculated around BP1.
     std::shared_ptr<SVScorePairRefProcessor> processor(new SVScorePairRefProcessor(bamFileInfo,
                                                        scanner.operator*(), options, candidate, true, evidence));
-
     // center positin of BP1 = 100
     // So range start = 100 - (125-50) = 25
     // range end = 100 + (125-50) + 1 = 176
@@ -185,7 +189,7 @@ BOOST_AUTO_TEST_CASE( test_nextBAMIndex )
     BOOST_REQUIRE_EQUAL(genomeInterval.range.begin_pos(), 25);
     BOOST_REQUIRE_EQUAL(genomeInterval.range.end_pos(), 176);
 
-    // isBP1 = false
+    // isBP1 = false. So search range is calculated around BP2.
     std::shared_ptr<SVScorePairRefProcessor> processor1(new SVScorePairRefProcessor(bamFileInfo,
                                                         scanner.operator*(), options, candidate, false, evidence));
     // center position of BP2 = 150
@@ -212,7 +216,6 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord )
     SVCandidate candidate;
     candidate.insertSeq = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
                           "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
-
     // BP1 center pos = 159
     candidate.bp1.interval.range = known_pos_range2(100, 220);
     // BP2 center pos = 309
@@ -221,47 +224,55 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord )
     evidence.samples.resize(1);
     std::shared_ptr<SVScorePairRefProcessor> processor(new SVScorePairRefProcessor(bamFileInfo,
                                                        scanner.operator*(), options1, candidate, true, evidence));
-    // Search genome interval is [84, 235)
+    // So Search range start = 159 - (125-50) = 84
+    // range end = 159 + (125-50) + 1 = 235
     processor.get()->nextBamIndex(0);
     SVId id;
     SupportFragments suppFrags;
 
     std::string querySeq1 = "TCTATCACCCATTTTACCACTCACGGGAGCTCTCC";
+    // case-1 is designed here.
     // bam read start = 9. It is not overlapping with search range [84, 235).
-    // As a result of this, fragment support of this bam read will not be set.
+    // As a result of this, this fragment is not supporting allele on BP1.
     bam_record bamRecord1;
     buildTestBamRecord(bamRecord1, 0, 9, 0, 100, 150, 15, "35M", querySeq1);
     bamRecord1.set_qname("bamRecord1");
     processor.get()->processClearedRecord(id, bamRecord1, suppFrags);
     BOOST_REQUIRE(!evidence.getSampleEvidence(0)[bamRecord1.qname()].ref.bp1.isFragmentSupport);
 
+    // case-2 is designed here.
     // Bam read start = 109. It is overlapping with the search range. But
     // its fragment length is 49 which is less than minimum fragment length(50) of the sample
-    // As a result of this, fragment support of this bam read will not be set.
+    // As a result of this, this fragment is not supporting allele on BP1.
     bam_record bamRecord2;
     buildTestBamRecord(bamRecord2, 0, 109, 0, 125, 49, 15, "35M", querySeq1);
     bamRecord2.set_qname("bamRecord2");
     processor.get()->processClearedRecord(id, bamRecord2, suppFrags);
     BOOST_REQUIRE(!evidence.getSampleEvidence(0)[bamRecord2.qname()].ref.bp1.isFragmentSupport);
 
+    // Case-3 is designed here.
     // Bam read start = 109. It is overlapping with the search range. But
     // its fragment length is 130 which is greater than maximum fragment length(125) of the
-    // sample. As a result of this, fragment support of this bam read will not be set.
+    // sample. As a result of this, this fragment is not supporting allele on BP1.
     bam_record bamRecord3;
     buildTestBamRecord(bamRecord3, 0, 109, 0, 200, 130, 15, "35M", querySeq1);
     bamRecord3.set_qname("bamRecord3");
     processor.get()->processClearedRecord(id, bamRecord3, suppFrags);
     BOOST_REQUIRE(!evidence.getSampleEvidence(0)[bamRecord3.qname()].ref.bp1.isFragmentSupport);
 
-    // Here point-4 is not satisfied. As a result of this, fragment support of this
-    // bam read will not be set.
+    // Case-4 is designed here.
+    // Here min(159-109+1, 168-159) = 9 which is less than 50. As a result of this, this fragment
+    // is not supporting allele on BP1.
     bam_record bamRecord4;
     buildTestBamRecord(bamRecord4, 0, 109, 0, 125, 60, 15, "35M", querySeq1);
     bamRecord4.set_qname("bamRecord4");
     processor.get()->processClearedRecord(id, bamRecord4, suppFrags);
     BOOST_REQUIRE(!evidence.getSampleEvidence(0)[bamRecord4.qname()].ref.bp1.isFragmentSupport);
 
-    // All the above 4 points satisfied, so we go the fragment support for this read.
+    // Here min(159-109+1, 208-159) = 51 which is greater than 50
+    // Fragment start = 109 which is overlapping with the search range[84,235).
+    // Fragment size = 100 which is greater than 50 and less than 125.
+    // All the above 4 points satisfied, this fragment is supporting allele on BP1.
     bam_record bamRecord5;
     buildTestBamRecord(bamRecord5, 0, 109, 0, 200, 100, 15, "35M", querySeq1);
     bamRecord5.set_qname("bamRecord5");
@@ -271,10 +282,11 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord )
     // The following two test cases are for RNA sample
     const PairOptions options2(true);
     std::shared_ptr<SVScorePairRefProcessor> processor1(new SVScorePairRefProcessor(bamFileInfo,
-                                                                                    scanner.operator*(), options2, candidate, true, evidence));
+                                                                                    scanner.operator*(), options2,
+                                                                                    candidate, true, evidence));
     // For RNA, read should be in proper pair. Following
-    // bam read is not in proper pair. As a result of this, fragment support
-    // of this bam read will not be set.
+    // bam read is not in proper pair. As a result of this, this fragment is
+    // not supporting allele on BP1.
     bam_record bamRecord6;
     buildTestBamRecord(bamRecord6, 0, 109, 0, 200, 150, 15, "35M", querySeq1);
     bamRecord6.set_qname("bamRecord6");
@@ -285,7 +297,8 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord )
     std::shared_ptr<SVScorePairRefProcessor> processor2(new SVScorePairRefProcessor(bamFileInfo,
                                                         scanner.operator*(), options2, candidate, true, evidence));
     // All the above points are satisfied for RNA sample.
-    // So we got evidence support for this bam.
+    // Also fragment is in proper pair.
+    // So this fragment is supporting allele on BP1.
     bam_record bamRecord7;
     buildTestBamRecord(bamRecord7, 0, 109, 0, 200, 150, 15, "35M", querySeq1);
     bamRecord7.set_qname("bamRecord7");
@@ -297,6 +310,10 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord )
     // count only from the down stream reads. So here mate location
     // is less than this read's start location. Fragment support is
     // calculated based on mate's location and the fragment length.
+    // Here min(159-109+1, 208-159) = 51 which is greater than 50
+    // Fragment start = 109 which is overlapping with the search range[84,235).
+    // Fragment size = 100 which is greater than 50 and less than 125.
+    // All the above 4 points satisfied, this fragment is supporting allele on BP1.
     bam_record bamRecord8;
     buildTestBamRecord(bamRecord8, 0, 200, 0, 109, 150, 15, "84M");
     bamRecord8.set_qname("bamRecord8");

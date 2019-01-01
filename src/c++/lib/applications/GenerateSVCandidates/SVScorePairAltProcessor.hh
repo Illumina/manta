@@ -97,8 +97,7 @@ struct SVScorePairAltProcessor : public SVScorePairProcessor
         SupportFragments& svSupportFrags) override;
 
     /// TestSVScorerAltProcessor is a friend structure of SVScorePairAltProcessor. So that it can access private
-    /// methods of SVScorePairAltProcessor. As SVScorePairAltProcessor has few private methods, for unit test writing
-    /// this friend structure has been created
+    /// methods of SVScorePairAltProcessor.
     friend struct TestSVScorerAltProcessor;
 
 private:

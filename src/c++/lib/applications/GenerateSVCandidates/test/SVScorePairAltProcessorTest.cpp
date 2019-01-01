@@ -25,7 +25,7 @@
 #include "SVScorePairAltProcessor.hh"
 #include "SVScorePairAltProcessor.cpp"
 
-/// TestSVScorerAltProcessor is a friend of SVScorer. So that can access private
+/// TestSVScorerAltProcessor is a friend of SVScorer. So that it can access private
 /// method of SVScorePairAltProcessor
 struct TestSVScorerAltProcessor
 {
@@ -46,11 +46,15 @@ BOOST_AUTO_TEST_CASE( test_getChromName )
     BOOST_REQUIRE_EQUAL(getChromName(bamHeader, -1), "UNKNOWN");
 }
 
-// Test whether a bam read satisfies core filter or not where core read filter includes
-// 1. test_SkipRecordCore in SVScorePairProcessorTest.cpp
-// 2. Ignore unpaired reads
-// As case-1 is already tested in SVScorePairProcessorTest.cpp, so only valid read and
-// case-2 have been tested here.
+// Test whether a record should be skipped or not.
+// For a large insert SV (insert sequence length >= 100)
+// 1. Ignore unpaired reads
+// 2. Ignore a read which is unmapped as well as mate is also unmapped.
+// For a small insert SV (insert sequence length < 100)
+// 1. Ignore a read which is mapped but mate is unmapped
+// 2. Ignore a read which is unmapped
+// 3. Ignore a pair which is not innie pair
+// 4. Do not ignore a read which is mapped, its mate is also mapped and pair is innie pair
 BOOST_AUTO_TEST_CASE( test_isSkipRecord )
 {
     const bam_header_info bamHeader(buildTestBamHeader());
@@ -58,6 +62,7 @@ BOOST_AUTO_TEST_CASE( test_isSkipRecord )
     std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
     const PairOptions options1(false);
     SVCandidate candidate;
+    // large insert SV. Insert sequence size is greater than 100.
     candidate.insertSeq = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
                           "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
     candidate.bp1.interval.range = known_pos_range2(100, 220);
@@ -89,34 +94,72 @@ BOOST_AUTO_TEST_CASE( test_isSkipRecord )
     candidateAssemblyData.isSpanning = true;
     candidateAssemblyData.extendedContigs.push_back("GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
                                                     "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA");
-    std::shared_ptr<SVScorePairAltProcessor> processor(new SVScorePairAltProcessor(bamHeader, scannerOptions, refinerOptions, initIsAlignmentTumor,
-                                                                                   scanner.operator*(), options1, candidateAssemblyData, candidate, true, evidence));
+    std::shared_ptr<SVScorePairAltProcessor> processor1(new SVScorePairAltProcessor(bamHeader, scannerOptions,
+                                                        refinerOptions, initIsAlignmentTumor,
+                                                        scanner.operator*(), options1, candidateAssemblyData,
+                                                        candidate, true, evidence));
     std::string querySeq1 = "TCTATCACCCATTTTACCACTCACGGGAGCTCTCC";
-    // bamRecord1 satisfies both case-1 and case-2.
+    // bamRecord1 is not paired read. This read should be skipped.
     bam_record bamRecord1;
-    buildTestBamRecord(bamRecord1, 0, 9, 0, 125, 150, 15, "35M", querySeq1);
-    bamRecord1.toggle_is_first();
+    buildTestBamRecord(bamRecord1);
+    bamRecord1.toggle_is_paired();
     bamRecord1.set_qname("bamRecord1");
-    BOOST_REQUIRE(!processor.operator*().isSkipRecord(bamRecord1));
+    BOOST_REQUIRE(processor1.operator*().isSkipRecord(bamRecord1));
 
-    // bamRecord2 is not paired reads. This read should be skipped.
+    // bamRecord2 and its mate both are unmapped. This read should be skipped.
     bam_record bamRecord2;
-    buildTestBamRecord(bamRecord2);
-    bamRecord2.toggle_is_paired();
+    buildTestBamRecord(bamRecord1);
+    bamRecord2.toggle_is_unmapped();
+    bamRecord2.toggle_is_mate_unmapped();
     bamRecord2.set_qname("bamRecord2");
-    BOOST_REQUIRE(processor.operator*().isSkipRecord(bamRecord2));
+    BOOST_REQUIRE(processor1.operator*().isSkipRecord(bamRecord2));
+
+    // Small insert SV (insert sequence size is less than 100)
+    candidate.insertSeq = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTC";
+    std::shared_ptr<SVScorePairAltProcessor> processor2(new SVScorePairAltProcessor(bamHeader, scannerOptions,
+                                                        refinerOptions, initIsAlignmentTumor,
+                                                        scanner.operator*(), options1, candidateAssemblyData,
+                                                        candidate, true, evidence));
+    // BamRecord3 is mapped and its mate is unmapped
+    bam_record bamRecord3;
+    buildTestBamRecord(bamRecord3, 0, 9, -1, -1, 0, 15, "35M", querySeq1);
+    bamRecord3.toggle_is_first();
+    bamRecord3.set_qname("bamRecord3");
+    bamRecord3.toggle_is_mate_unmapped();
+    BOOST_REQUIRE(processor2.get()->isSkipRecord(bamRecord3));
+
+    // BamRecord4 is unmapped
+    bam_record bamRecord4;
+    buildTestBamRecord(bamRecord4);
+    bamRecord4.toggle_is_unmapped();
+    bamRecord4.set_qname("bamRecord4");
+    BOOST_REQUIRE(processor2.get()->isSkipRecord(bamRecord4));
+
+    // BamRecord5 and its mate are translocated pair that means it is
+    // not an innie pair.
+    bam_record bamRecord5;
+    buildTestBamRecord(bamRecord5, 0, 9, 1, 25, 0, 15, "35M", querySeq1);
+    bamRecord5.toggle_is_first();
+    bamRecord5.set_qname("bamRecord5");
+    BOOST_REQUIRE(processor2.get()->isSkipRecord(bamRecord5));
+
+    // BamRecord6 and its mate are mapping in a proper innie pair
+    bam_record bamRecord6;
+    buildTestBamRecord(bamRecord6, 0, 9, 0, 100, 150, 15, "35M", querySeq1);
+    bamRecord6.toggle_is_first();
+    bamRecord6.set_qname("bamRecord6");
+    BOOST_REQUIRE(!processor2.get()->isSkipRecord(bamRecord6));
 }
 
-// Test the following cases for large insertion SV:
-// 1. If a bamrecord is aligned but it's mate is unmapped, it will not add any fragment support unless
-//    next record is it's unmapped mapped and it is properly shadow aligned.
-// 2. does the shadow occur to the left or right of the insertion? It should occur left for BP1 and It should occur right
-//    for BP2.
-// 3. Check for shodow alignment
+// Test the following cases for large insertion SV (insert sequence length >= 100):
+// 1. If a bamrecord is mapped but it's mate is unmapped, it will not add any fragment support unless
+//    next record of the mapped record is its unmapped mate and it is properly shadow aligned.
+// 2. Direction of mapped read should match with the breakpoint direction.
+// 3. Check for shadow alignment
 // 4. Fragment length should be between 50 and 125.
-// 5. minimum of (breakpoint center pos - fragment start + 1) and (fragment end - breakpoint center pos)
+// 5. minimum of (BP1 center pos - fragment start + 1) and (fragment end - BP2 center pos)
 //    should be greater than minimum fragment threshold which is 50
-BOOST_AUTO_TEST_CASE( test_LargeInsertion )
+BOOST_AUTO_TEST_CASE( test_processClearedRecord_LargeInsertion )
 {
     const bam_header_info bamHeader(buildTestBamHeader());
     const std::vector<bool> initIsAlignmentTumor;
@@ -166,9 +209,9 @@ BOOST_AUTO_TEST_CASE( test_LargeInsertion )
     SupportFragments suppFrags;
 
     std::string querySeq1 = "TCTATCACCCATTTTACCACTCACGGGAGCTCTCC";
-    // Case-1 is designed hhere.
-    // bamRecord1 is paired, but mate is unmapped. Till this point mate is not found.As a
-    // result of this, fragment support of this bam read will not be set.
+    // Case-1 is designed here.
+    // bamRecord1 is paired, but mate is unmapped. Till this point mate is not processed. As a
+    // result, this fragment is not supporting allele on BP1.
     bam_record bamRecord1;
     buildTestBamRecord(bamRecord1);
     bamRecord1.set_qname("Read1");
@@ -177,8 +220,8 @@ BOOST_AUTO_TEST_CASE( test_LargeInsertion )
     processor1.get()->processClearedRecord(id, bamRecord1, suppFrags);
     BOOST_REQUIRE(!evidence.getSampleEvidence(0)[bamRecord1.qname()].ref.bp1.isFragmentSupport);
     // case-2 is designed here. bamRecord2 is a shadow read of bamRecord1 means it's mate is aligned
-    // and this is unmapped. Anchored read should be in forward strand for BP1 computation. As a result of
-    // this, fragment support of this bam read will not be set.
+    // and this is unmapped. Anchored read should be in forward strand for BP1 as BP1 is right_open. As a result,
+    // this fragment is not supporting allele on BP1.
     bam_record bamRecord2;
     buildTestBamRecord(bamRecord2);
     bamRecord2.set_qname("Read1");
@@ -186,7 +229,7 @@ BOOST_AUTO_TEST_CASE( test_LargeInsertion )
     processor1.get()->processClearedRecord(id, bamRecord2, suppFrags);
     BOOST_REQUIRE(!evidence.getSampleEvidence(0)[bamRecord2.qname()].ref.bp1.isFragmentSupport);
 
-    // bamRecord2 is satisfied for shadow read criteria. But it is satisfied all the
+    // bamRecord2 is satisfied for shadow read criteria. But it is not satisfied all the
     // conditions of shadow alignment. Shadow alignment test cases have been described in test_alignShadowRead.
     bamRecord1.set_qname("Read2");
     bamRecord2.set_qname("Read2");
@@ -199,14 +242,19 @@ BOOST_AUTO_TEST_CASE( test_LargeInsertion )
     SVCandidate candidate2;
     candidate2.insertSeq = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
                            "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
+    // BP1 center pos = 54
     candidate2.bp1.interval.range = known_pos_range2(50, 60);
+    // BP2 center pos = 70
     candidate2.bp2.interval.range = known_pos_range2(70, 71);
     candidate2.bp1.state = SVBreakendState::RIGHT_OPEN;
     candidate2.bp2.state = SVBreakendState::LEFT_OPEN;
     candidate2.setPrecise();
     candidate2.assemblyAlignIndex = 0;
+    // Fragment length = 124
+    // minimum of (BP1 center pos - fragment start + 1) and (fragment end - BP2 center pos)
+    // = min(54-4, 128-70) = 50 >= min fragment size threshold 50.
     bam_record bamRecord3;
-    buildTestBamRecord(bamRecord3, 0, 4, 0, 125, 124, 15, "35M", querySeq1);
+    buildTestBamRecord(bamRecord3, 0, 4, 0, 100, 124, 15, "35M", querySeq1);
     bamRecord3.set_qname("bamRecord3");
     std::shared_ptr<SVScorePairAltProcessor> processor2(
             new SVScorePairAltProcessor(bamHeader, scannerOptions, refinerOptions, initIsAlignmentTumor,
@@ -218,13 +266,17 @@ BOOST_AUTO_TEST_CASE( test_LargeInsertion )
     BOOST_REQUIRE(evidence.getSampleEvidence(0)[bamRecord3.qname()].ref.bp1.isFragmentSupport);
 }
 
-// Test whether a bam read satisfies the following criteria for small insertion
-// 1. Start of bam read should overlap with the search range
-// 2. Fragment length should be greater than or equal to min fragment length of the sample
-// 3. Fragment length should be less than or equal to max fragment length of the sample
-// 4. minimum of (breakpoint center pos - fragment start + 1) and (fragment end - breakpoint center pos)
+// Test whether a bam read satisfies the following criteria for small insertion (length less than 100)
+// 1. Start of bam read should overlap with the search range where search range is calculated as:
+//           search range start = BP center pos - (max fragment size of the sample - min fragment support)
+//           search range end = BP center pos + (max fragment size of the sample - min fragment support) + 1
+// 2. Alt Fragment length should be greater than or equal to min fragment length of the sample
+// 3. Alt Fragment length should be less than or equal to max fragment length of the sample
+//        Where Alt Fragment length = fragment length - alt_shift
+//                                  alt_shift = BP2 center pos - BP1 center pos - insert sequence size
+// 4. minimum of (BP1 center pos - fragment start + 1) and (fragment end - BP2 center pos)
 //    should be greater than minimum fragment threshold which is 50
-BOOST_AUTO_TEST_CASE( test_smallInsertion )
+BOOST_AUTO_TEST_CASE( test_processClearedRecord_smallInsertion )
 {
     const bam_header_info bamHeader(buildTestBamHeader());
     const std::vector<bool> bamFileInfo = {false};
@@ -232,7 +284,9 @@ BOOST_AUTO_TEST_CASE( test_smallInsertion )
     const PairOptions options1(false);
     SVCandidate candidate;
     candidate.insertSeq = "GATCACAGGTCTATCACCCTATTAACCACTC";
+    // BP1 center pos = 159
     candidate.bp1.interval.range = known_pos_range2(100, 220);
+    // BP2 center pos = 274
     candidate.bp2.interval.range = known_pos_range2(250, 300);
     candidate.bp1.state = SVBreakendState::RIGHT_OPEN;
     candidate.bp2.state = SVBreakendState::LEFT_OPEN;
@@ -265,16 +319,24 @@ BOOST_AUTO_TEST_CASE( test_smallInsertion )
             new SVScorePairAltProcessor(bamHeader, scannerOptions, refinerOptions, bamFileInfo,
                                         scanner.operator*(), options1, candidateAssemblyData, candidate,
                                         true, evidence));
-    // GenomeInterval: 0:[84,235)
+    // As we are interested in BP1,
+    // search range start = 159 - (125-50) = 84
+    // search range end = 159 + (125-50) + 1 = 235
     processor.get()->nextBamIndex(0);
     SVId id;
     SupportFragments suppFrags;
 
     std::string querySeq1 = "TCTATCACCCATTTTACCACTCACGGGAGCTCTCC";
-
-    // Bam read start = 109. It is overlapping with the search range. But
-    // its fragment length is 49 which is less than minimum fragment length(50) of the sample
-    // As a result of this, fragment support of this bam read will not be set.
+    // bam read start = 10. It is not overlapping with search range [84, 235).
+    // As a result of this, the fragment is not supporting allele on BP1.
+    bam_record bamRecord0;
+    buildTestBamRecord(bamRecord0, 0, 10, 0, 125, 200, 15, "35M", querySeq1);
+    bamRecord0.set_qname("bamRecord0");
+    processor.get()->processClearedRecord(id, bamRecord0, suppFrags);
+    // Bam read start = 109. It is overlapping with the search range.
+    // Here altFragment length = 100 - (274-159-31) = 16 which is less
+    // than minimum fragment length(50) of the sample
+    // As a result of this, the fragment is not supporting allele on BP1.
     bam_record bamRecord1;
     buildTestBamRecord(bamRecord1, 0, 109, 0, 175, 100, 15, "35M", querySeq1);
     bamRecord1.set_qname("bamRecord1");
@@ -282,9 +344,10 @@ BOOST_AUTO_TEST_CASE( test_smallInsertion )
     BOOST_REQUIRE(!evidence.getSampleEvidence(0)[bamRecord1.qname()].alt.bp1.isFragmentSupport);
     BOOST_REQUIRE(!evidence.getSampleEvidence(0)[bamRecord1.qname()].ref.bp1.isFragmentSupport);
 
-    // Bam read start = 109. It is overlapping with the search range. But
-    // its fragment length is 300 which is greater than maximum fragment length(125) of the
-    // sample. As a result of this, fragment support of this bam read will not be set.
+    // Bam read start = 109. It is overlapping with the search range.
+    // Here altFragment length = 300 - (274-159-31) = 216 which is greater
+    // than maximum fragment length(125) of the
+    // sample. As a result of this, the fragment is not supporting allele on BP1.
     bam_record bamRecord2;
     buildTestBamRecord(bamRecord2, 0, 109, 0, 175, 300, 15, "35M", querySeq1);
     bamRecord2.set_qname("bamRecord2");
@@ -292,8 +355,9 @@ BOOST_AUTO_TEST_CASE( test_smallInsertion )
     BOOST_REQUIRE(!evidence.getSampleEvidence(0)[bamRecord2.qname()].alt.bp1.isFragmentSupport);
     BOOST_REQUIRE(!evidence.getSampleEvidence(0)[bamRecord2.qname()].ref.bp1.isFragmentSupport);
 
-    // Here point-4 is not satisfied. As a result of this, fragment support of this
-    // bam read will not be set.
+    // Here case-4 is not satisfied.
+    // Here min(159-109+1, 308-274) = 34 which is less than 50
+    // As a result of this, the fragment is not supporting allele on BP1.
     bam_record bamRecord3;
     buildTestBamRecord(bamRecord3, 0, 109, 0, 175, 200, 15, "35M", querySeq1);
     bamRecord3.set_qname("bamRecord3");
@@ -301,19 +365,28 @@ BOOST_AUTO_TEST_CASE( test_smallInsertion )
     BOOST_REQUIRE(!evidence.getSampleEvidence(0)[bamRecord3.qname()].alt.bp1.isFragmentSupport);
     BOOST_REQUIRE(!evidence.getSampleEvidence(0)[bamRecord3.qname()].ref.bp1.isFragmentSupport);
 
-
-    candidate.bp1.interval.range = known_pos_range2(50, 60);
-    candidate.bp2.interval.range = known_pos_range2(70, 71);
-    std::shared_ptr<SVScorePairAltProcessor> processor1(
-            new SVScorePairAltProcessor(bamHeader, scannerOptions, refinerOptions, bamFileInfo,
-                                        scanner.operator*(), options1, candidateAssemblyData, candidate,
-                                        true, evidence));
+    candidate.bp1.interval.range = known_pos_range2(80, 81);
+    candidate.bp2.interval.range = known_pos_range2(160, 161);
+    candidate.insertSeq = "";
+    std::shared_ptr<SVScorePairAltProcessor> processor1(new SVScorePairAltProcessor(bamHeader,
+                                                        scannerOptions, refinerOptions, bamFileInfo,
+                                                        scanner.operator*(), options1, candidateAssemblyData,
+                                                        candidate, true, evidence));
+    // As we are interested in BP1,
+    // search range start = 80 - (125-50) = 5
+    // search range end = 80 + (125-50) + 1 = 156
     processor1.get()->nextBamIndex(0);
     id.localId = "INS_1";
-    // All the above 4 points satisfied, so we will get the fragment support for this read.
+    // All the above 4 points are satisfied,
+    // bamRecord4 is overlapping with the [5,156).
+    // altFragment length = 200 - (160-80-0) = 120 which is greater than 50 and
+    // less than 125.
+    // Also minimum of (BP1 center pos - fragment start + 1) and (fragment end - BP2 center pos)
+    //              = min(80-10+1, 210-160) = 50 >= min fragment length 50.
+    // So, the fragment is supporting allele on BP1.
     // It will add spanning pair(PR) support for this segment
     bam_record bamRecord4;
-    buildTestBamRecord(bamRecord4, 0, 4, 0, 125, 120, 15, "35M", querySeq1);
+    buildTestBamRecord(bamRecord4, 0, 10, 0, 125, 200, 15, "35M", querySeq1);
     bamRecord4.set_qname("bamRecord4");
     processor1.get()->processClearedRecord(id, bamRecord4, suppFrags);
     BOOST_REQUIRE(evidence.getSampleEvidence(0)[bamRecord4.qname()].alt.bp1.isFragmentSupport);
@@ -324,7 +397,7 @@ BOOST_AUTO_TEST_CASE( test_smallInsertion )
     BOOST_REQUIRE(evidence.getSampleEvidence(0)[bamRecord4.qname()].ref.bp1.isFragmentSupport);
 }
 
-// Shadow Read-For a unmapped paired-end or mate-pair read whose mate is mapped,
+// Shadow Read - A unmapped paired-end or mate-pair read whose mate is mapped,
 //              the unmapped read should have RNAME and POS identical to its mate.
 // Shadow alignment means mate rescue where aligner tries to align unmapped read near by to its mate.
 // Test the following cases:
@@ -383,12 +456,12 @@ BOOST_AUTO_TEST_CASE( test_alignShadowRead )
     std::string querySeq1 = "TCTATCACCCATTTTACCACTCACGGGAGCTCTCC";
 
     // bamRecord1 is a shadow read.
-    // Designed case-1 wherher read length is 35 which is less than threshold(40)
+    // Designed case-1 where read length is 35 which is less than threshold(40)
     // So, shadow alignment is not possible here.
     bam_record bamRecord1;
     buildTestBamRecord(bamRecord1, 0, 4, 0, 125, 0, 15, "", querySeq1);
     TestSVScorerAltProcessor altProcessor;
-    int altTemplateSize = 0;
+    int altTemplateSize;
     BOOST_REQUIRE(!altProcessor.alignShadowRead(processor.operator*(), bamRecord1, altTemplateSize));
 
     // bamRecord2 is a shadow read.
@@ -396,7 +469,6 @@ BOOST_AUTO_TEST_CASE( test_alignShadowRead )
     // It is not a good shadow read.
     bam_record bamRecord2;
     buildTestBamRecord(bamRecord2, 0, 4, 0, 125, 0, 15, "", "TCTATCACCCATTTTACCACTCACGGGAGCTCTCCCATTTTACCACTCAC");
-    altTemplateSize = 0;
     BOOST_REQUIRE(!altProcessor.alignShadowRead(processor.operator*(), bamRecord2, altTemplateSize));
 
     // This is a shadow read.
@@ -405,7 +477,6 @@ BOOST_AUTO_TEST_CASE( test_alignShadowRead )
     // alt contig sequence.
     bam_record bamRecord3;
     buildTestBamRecord(bamRecord3, 0, 30, 0, 30, 0, 0, "", "GGTATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA");
-    altTemplateSize = 0;
     BOOST_REQUIRE(altProcessor.alignShadowRead(processor.operator*(), bamRecord3, altTemplateSize));
 
 
@@ -421,12 +492,11 @@ BOOST_AUTO_TEST_CASE( test_alignShadowRead )
                                                         scanner.operator*(), options1, candidateAssemblyData,
                                                         candidate, true, evidence));
     // Anchored read in forward strand. So need to reverse complement of the shadow read.
-    // But here 50 bases of the read matches with last 50 bases of the contig sequence in the reverse
+    // Here 50 bases of the read matches with last 50 bases of the contig sequence in the reverse
     // complement fashion. Perfect shadow alignment in reverse strand.
     bam_record bamRecord4;
     buildTestBamRecord(bamRecord4, 0, 4, 0, 125, 0, 0, "", "TCCAGCGTCTCGCAATGCTATCGCGTGCACACCCCCCAGACGAAAATACC");
     bamRecord4.toggle_is_mate_fwd_strand();
-    altTemplateSize = 0;
     BOOST_REQUIRE(altProcessor.alignShadowRead(processor1.operator*(), bamRecord4, altTemplateSize));
 
     // For empty record it should throw an exception
@@ -443,13 +513,16 @@ BOOST_AUTO_TEST_CASE( test_alignShadowRead )
     buildTestBamRecord(bamRecord6, 0, 4, 0, 125, 0, 0, "", "AACAGCGTCTCGCAATGCTATCGCGTGCACACCCCCCAGACGAAAATATT");
     bamRecord6.toggle_is_mate_fwd_strand();
     candidate.insertSeq = "";
-    // these insertions haven't been assembled all the way through
+    // These insertions haven't been assembled all the way through
+    // So there will be some clipping in the alignment. Clipped length
+    // should be greater than 40.
     candidate.isUnknownSizeInsertion = true;
     std::shared_ptr<SVScorePairAltProcessor> processor3(new SVScorePairAltProcessor(
                                                         bamHeader, scannerOptions, refinerOptions, initIsAlignmentTumor,
                                                         scanner.operator*(), options1, candidateAssemblyData,
                                                         candidate, true, evidence));
-    altTemplateSize = 0;
+    // Clipped length should be greater than 40
+    // Clipping is happening at the end.
     // Alignment is 1=49S. clipped size = 50 - 49 = 1 < 40
     BOOST_REQUIRE(!altProcessor.alignShadowRead(processor3.operator*(), bamRecord6, altTemplateSize));
 
@@ -462,7 +535,8 @@ BOOST_AUTO_TEST_CASE( test_alignShadowRead )
     // shadow bam read
     bam_record bamRecord7;
     buildTestBamRecord(bamRecord7, 0, 30, 0, 30, 0, 0, "", "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCGGA");
-    altTemplateSize = 0;
+    // Clipped length should be greater than 40
+    // Clipping is happening at the beginning.
     // Alignment is 49S1=. clipped size = 50 - 49 = 1 < 40
     BOOST_REQUIRE(!altProcessor.alignShadowRead(processor4.operator*(), bamRecord7, altTemplateSize));
 }

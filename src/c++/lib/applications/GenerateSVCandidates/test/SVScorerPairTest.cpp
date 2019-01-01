@@ -22,6 +22,7 @@
 ///
 
 #include "boost/test/unit_test.hpp"
+#include "boost/make_unique.hpp"
 #include "test/testAlignmentDataUtil.hh"
 #include "test/testSVLocusScanner.hh"
 #include "test/testFileMakers.hh"
@@ -46,6 +47,35 @@ struct TestSVScorer
         scorer.getSVPairSupport(candidateSetData, assemblyData, candidate, id, evidence, suppSamples);
     }
 };
+
+// Creating locus scanner for two bam files
+std::unique_ptr<SVLocusScanner> buildSVLocusScanner(bam_header_info bamHeaderInfo)
+{
+    TestFilenameMaker filenameMaker;
+    std:: string tmpFileName = filenameMaker.getFilename();
+    ReadGroupStatsSet rstats;
+    for (unsigned j(0); j < 2; j++)
+    {
+        ReadGroupLabel rgKey(("Bamfile" + std::to_string(j)).c_str(), std::to_string(j).c_str());
+        ReadGroupStats rgStats;
+        for (unsigned i(0); i < 250; ++i) {
+            rgStats.fragStats.addObservation(50);
+            rgStats.fragStats.addObservation(75);
+            rgStats.fragStats.addObservation(100);
+            rgStats.fragStats.addObservation(125);
+        }
+        rstats.setStats(rgKey, rgStats);
+    }
+    rstats.save(tmpFileName.c_str());
+    ReadScannerOptions opts = ReadScannerOptions();
+    opts.minCandidateVariantSize = 8;
+    const ReadScannerOptions& constRefOpts(opts);
+    TestAlignHeaderFileMaker alignFile1(bamHeaderInfo);
+    TestAlignHeaderFileMaker alignFile2(bamHeaderInfo);
+    const std::vector<std::string> alignFilenameVector = { alignFile1.getFilename(), alignFile2.getFilename()};
+    return boost::make_unique<SVLocusScanner>(constRefOpts, tmpFileName,
+                                              alignFilenameVector, false);
+}
 
 BOOST_AUTO_TEST_SUITE( SVScorerPair_test_suite )
 
@@ -87,7 +117,7 @@ struct BamStream
     std::shared_ptr<bam_streamer> bamStream;
     std::vector<bam_record> readsToAdd;
     std::string bamFileName;
-    
+
 private:
 
     const std::string&
@@ -112,7 +142,7 @@ BOOST_AUTO_TEST_CASE( test_getFragInfo )
 
     std::string readSeq1 = "GGTATTTTCGTCTGGGGGGT";
     std::string readSeq2 = "GGTATTTTCG";
-    // when only mate-1 read available.
+    // when only mate-1 read is available.
     bam_record bamRecord1;
     buildTestBamRecord(bamRecord1, 0, 200, 0, 270, 20, 15, "20M", readSeq1);
     bamRecord1.set_qname("Read-1");
@@ -121,7 +151,7 @@ BOOST_AUTO_TEST_CASE( test_getFragInfo )
     BOOST_REQUIRE(read1.isFwdStrand);
     BOOST_REQUIRE_EQUAL(read1.readSize, 20);
     BOOST_REQUIRE_EQUAL(read1.interval, GenomeInterval(0, 200, 220));
-    // appoximate values of mate-2 as mate-2 is not available
+    // approximate values of mate-2 as mate-2 is not available
     BOOST_REQUIRE(!read2.isFwdStrand);
     BOOST_REQUIRE_EQUAL(read2.readSize, 20);
     BOOST_REQUIRE_EQUAL(read2.interval, GenomeInterval(0, 270, 290));
@@ -141,7 +171,7 @@ BOOST_AUTO_TEST_CASE( test_getFragInfo )
     BOOST_REQUIRE_EQUAL(read2.readSize, 10);
     BOOST_REQUIRE_EQUAL(read2.interval, GenomeInterval(0, 270, 280));
 
-    // When only mate-2 read available
+    // When only mate-2 read is available
     SVCandidateSetSequenceFragment fragment2;
     fragment2.read2.bamrec = bamRecord2;
     getFragInfo(fragment2, read1, read2);
@@ -180,25 +210,26 @@ BOOST_AUTO_TEST_CASE( test_getTerminal )
     BOOST_REQUIRE_EQUAL(terminal.pos, 250);
 }
 
-// Test the read fragment probability if that fragment supports SV.
+// Test the read fragment-size probability if that fragment supports SV.
 // FragProb = min(C, 1-C),
-// C = fragDist.cdf(frag1Size + frag2Size), where
+// C = fragDist.cdf(read1Distance + read2Distance), where
 //            fragDist = sample fragment distribution,
 //            cdf = cumulative density function
-//            frag1Size = distance from center pos of BP1 to read1
-//            frag2Size = distance from center pos of BP2 to read2
+//            read1Distance = distance from center pos of BP1 to read1
+//            read2Distance = distance from center pos of BP2 to read2
 // Following cases need to be tested:
-// 1. If a fragment supports SV frag probability is calculated as mentioned above
+// 1. If a fragment supports SV, frag probability is calculated as mentioned above
 // 2. Fragment probability should be greater than 0.0001f.
-// 3. Distance from breakpoint center position to read position should be greater than 50
+// 3. Distance from breakpoint center position to read position should be greater than or equal to 50
 // 4. For RNA FragProb = max(FragProb, 0.0001f)
 // 5. If read pair is inter chromosomal but breakpoint pair is not inter chromosomal, it throws an exception.
 // 6. If Read1 chromosome id and bp1 chromosome id is not same, it throws an exception
 // 7. If Read2 chromosome id and bp2 chromosome id is not same, it throws an exception
-// 8. if Read1 is in forward strand and sv.bp1.state != SVBreakendState::RIGHT_OPEN, it throws an exception
+// 8. If Read1 is in reverse strand and sv.bp1.state == SVBreakendState::RIGHT_OPEN, it throws an exception
 // 9. If Read2 is in reverse strand and sv.bp1.state == SVBreakendState::RIGHT_OPEN, it throws an exception
 BOOST_AUTO_TEST_CASE( test_getFragProb )
 {
+    static const double eps(0.00000001);
     PairOptions options1(false); // false means it is a DNA sample
     bool isFragSupportSV;
     float fragProb;
@@ -236,22 +267,21 @@ BOOST_AUTO_TEST_CASE( test_getFragProb )
     bamRecord2.set_qname("Read-2");
     fragment.read2.bamrec = bamRecord2;
 
-
-    float expected = 0.25;
-    // This is the positive test case of DNA sample.
-    // Only Case-1, Case-2 and case-3 are satisfied.
-    // Orientation of reads and breakpoints are fine
+    float expected(0.24999994);
+    // Case-1, Case-2 and case-3 are desiged here.
+    // Fragment-size probability = ~0.25 > 0.0001f
+    // Distance between read-1 and BP1 center is 254 - 200 + 1 = 56 which is greater than 50
+    // Distance between read-2 and BP2 center is 325 - 276 + 1 = 50 which is equal to 50.
     getFragProb(options1, candidate, fragment, fragDistribution, true, isFragSupportSV, fragProb);
     BOOST_REQUIRE(isFragSupportSV);
-    BOOST_REQUIRE_EQUAL(((int)(fragProb * 100 + 0.5)) / 100.0, expected);
+    BOOST_REQUIRE_CLOSE(fragProb, expected, eps);
 
     // This is similar test case as above but here fragment probality is performed
-    // on RNA sample. So case-4 is also considered here.
+    // on RNA sample. So fragment-size probability is max(~0.25, 0.0001) = 0.25.
     PairOptions options2(true);
     getFragProb(options2, candidate, fragment, fragDistribution, true, isFragSupportSV, fragProb);
     BOOST_REQUIRE(isFragSupportSV);
-    BOOST_REQUIRE_EQUAL(((int)(fragProb * 100 + 0.5)) / 100.0, expected);
-
+    BOOST_REQUIRE_CLOSE(fragProb, expected, eps);
 
     // BamRecord-1 and bamRecord-2 both are in forward strand
     // If both are in forward strand, then it will check which breakpoint is closer
@@ -267,13 +297,12 @@ BOOST_AUTO_TEST_CASE( test_getFragProb )
     // position of bamRecord-1 is less than position of bamRecord-2 and also bp2 center position
     // less than bp1 center position. So distance calculation will happen between (bamRecord-1 and bp2)
     // and between (bamRecord-2 and bp1).
-    // So Read-1 distance = 224 - 200 = 24 which is less than < 50
+    // So Read-1 distance = 224 - 200 = 24 which is less than 50
     getFragProb(options1, candidate, fragment, fragDistribution, true, isFragSupportSV, fragProb);
     BOOST_REQUIRE(!isFragSupportSV);
     BOOST_REQUIRE_EQUAL(fragProb, 0);
 
-
-    // Interchromosomal read pair
+    // Inter-chromosomal read pair
     bam_record bamRecord3;
     buildTestBamRecord(bamRecord3, 0, 200, 1, 300, -1, 15, "60M", queryseq1);
     bamRecord3.set_qname("Read-3");
@@ -285,20 +314,24 @@ BOOST_AUTO_TEST_CASE( test_getFragProb )
     fragment.read2.bamrec = bamRecord4;
     // Breakpoint pair is not interchromosomal
     candidate.bp2.interval = GenomeInterval(0, 270, 280);
-    // Case-5 are designed here
-    BOOST_CHECK_THROW(getFragProb(options1, candidate, fragment, fragDistribution, true, isFragSupportSV, fragProb), illumina::common::GeneralException);
+    // Case-5 are designed here where read pair is inter chromosomal
+    // but breakpoint pair is not inter chromosomal
+    BOOST_CHECK_THROW(getFragProb(options1, candidate, fragment, fragDistribution, true,
+                                  isFragSupportSV, fragProb), illumina::common::GeneralException);
 
     // Read pair and breakpoint pair are inter chromosomal, but
     // chromosome of read-1 and BP-1 are not matching. Case-6 is designed here.
     candidate.bp1.interval = GenomeInterval(2, 250, 260);
     candidate.bp2.interval = GenomeInterval(0, 270, 280);
-    BOOST_CHECK_THROW(getFragProb(options1, candidate, fragment, fragDistribution, true, isFragSupportSV, fragProb), illumina::common::GeneralException);
+    BOOST_CHECK_THROW(getFragProb(options1, candidate, fragment, fragDistribution, true,
+                                  isFragSupportSV, fragProb), illumina::common::GeneralException);
 
     // Read pair and breakpoint pair are inter chromosomal, but
     // chromosome of read-2 and BP-2 are not matching. Case-7 is designed here.
     candidate.bp1.interval = GenomeInterval(0, 250, 260);
     candidate.bp2.interval = GenomeInterval(2, 270, 280);
-    BOOST_CHECK_THROW(getFragProb(options1, candidate, fragment, fragDistribution, true, isFragSupportSV, fragProb), illumina::common::GeneralException);
+    BOOST_CHECK_THROW(getFragProb(options1, candidate, fragment, fragDistribution, true,
+                                  isFragSupportSV, fragProb), illumina::common::GeneralException);
 
     // Case-8 is designed here where read orientation and breakpoint orientation are not matching
     bamRecord3.toggle_is_fwd_strand();
@@ -310,20 +343,28 @@ BOOST_AUTO_TEST_CASE( test_getFragProb )
     candidate.bp1.state = SVBreakendState::RIGHT_OPEN;
     candidate.bp2.interval = GenomeInterval(0, 270, 280);
     candidate.bp2.state = SVBreakendState::RIGHT_OPEN;
-    BOOST_CHECK_THROW(getFragProb(options1, candidate, fragment, fragDistribution, true, isFragSupportSV, fragProb), illumina::common::GeneralException);
+    // read1(bamRecord3) is in reverse strand and sv.bp1.state = SVBreakendState::RIGHT_OPEN
+    BOOST_CHECK_THROW(getFragProb(options1, candidate, fragment, fragDistribution, true,
+                                  isFragSupportSV, fragProb), illumina::common::GeneralException);
 
     // Case-9 is designed here where read orientation and breakpoint orientation are not matching
+    // read1 is in forward strand
     bamRecord3.toggle_is_fwd_strand();
     fragment.read1.bamrec = bamRecord3;
-    BOOST_CHECK_THROW(getFragProb(options1, candidate, fragment, fragDistribution, true, isFragSupportSV, fragProb), illumina::common::GeneralException);
+    // read2(bamRecord4) is in reverse strand and sv.bp2.state == SVBreakendState::RIGHT_OPEN
+    BOOST_CHECK_THROW(getFragProb(options1, candidate, fragment, fragDistribution, true,
+                                  isFragSupportSV, fragProb), illumina::common::GeneralException);
 }
 
 // Test whether a bam read satisfies the following criteria
-// 1. Start of bam read should overlap with the search range
+// 1. Start of bam read should overlap with the search range where search range is calculated as:
+//            search range start = BP center pos - (max fragment size of the sample - min fragment support)
+//            search range end = BP center pos + (max fragment size of the sample - min fragment support) + 1
 // 2. Fragment length should be greater than or equal to min fragment length of the sample
 // 3. Fragment length should be less than or equal to max fragment length of the sample
 // 4. minimum of (breakpoint center pos - fragment start + 1) and (fragment end - breakpoint center pos)
 //    should be greater than minimum fragment threshold which is 50
+// If the above 4 conditions are satisfied for a fragment, then that fragment supports allele on breakpoint.
 BOOST_AUTO_TEST_CASE( test_processBamProcList )
 {
     // whether alignment file tumor or normal
@@ -340,6 +381,9 @@ BOOST_AUTO_TEST_CASE( test_processBamProcList )
     candidate.bp2.interval.range = known_pos_range2(250,370);
     SVEvidence evidence;
     evidence.samples.resize(1);
+    // As we are interested in BP1,
+    // search range start = 159 - (125-50) = 84
+    // search range end = 159 + (125-50) + 1 = 235
     std::shared_ptr<SVScorePairRefProcessor> processor(new SVScorePairRefProcessor(bamFileInfo,
                                                        scanner.operator*(), options1, candidate, true, evidence));
     std::vector<SVScorer::pairProcPtr> pairProcList = {processor};
@@ -349,30 +393,43 @@ BOOST_AUTO_TEST_CASE( test_processBamProcList )
     suppSamples.supportSamples.resize(1);
     processBamProcList(bamStreams, id, pairProcList, suppSamples);
     // bam read start = 9. It is not overlapping with search range [84, 235).
-    // As a result of this, fragment support of this bam read will not be set.
+    // As a result of this, the fragment is not supporting allele on BP1.
     BOOST_REQUIRE(!evidence.getSampleEvidence(0)["bamRecord1"].ref.bp1.isFragmentSupport);
     // Bam read start = 109. It is overlapping with the search range. But
     // its fragment length is 49 which is less than minimum fragment length(50) of the sample
-    // As a result of this, fragment support of this bam read will not be set.
+    // As a result of this, the fragment is not supporting allele on BP1.
     BOOST_REQUIRE(!evidence.getSampleEvidence(0)["bamRecord2"].ref.bp1.isFragmentSupport);
     // Bam read start = 109. It is overlapping with the search range. But
     // its fragment length is 130 which is greater than maximum fragment length(125) of the
-    // sample. As a result of this, fragment support of this bam read will not be set.
+    // sample. As a result of this, the fragment is not supporting allele on BP1.
     BOOST_REQUIRE(!evidence.getSampleEvidence(0)["bamRecord3"].ref.bp1.isFragmentSupport);
-    // Here point-4 is not satisfied. As a result of this, fragment support of this
-    // bam read will not be set.
+    // Here min(159-109+1, 208-159) = 51 which is greater than 50
+    // And also case-1, case-2 and case-3 are satisfied.
+    // Fragment start = 109 which is overlapping with the search range[84,235).
+    // Fragment size = 100 which is greater than 50 and less than 125.
+    // As a result of this, fragment support of this
+    // bam read will be set.
     BOOST_REQUIRE(evidence.getSampleEvidence(0)["bamRecord4"].ref.bp1.isFragmentSupport);
 }
 
-// count the read pairs supporting the alternate allele in each sample.
-// Also for each supporting fragment it will compute the fragment probability as explained
-// in test_getFragProb.
+// For Each sample Api computes the following informations:
+// 1) Whether read-1 and read-2 are scanned
+// 2) Whether read-1 and read-2 are anchored reads
+// 3) Calculate the fragment-size probability as:
+//       FragProb = min(C, 1-C),
+//       C = fragDist.cdf(read1Distance + read2Distance), where
+//            fragDist = sample fragment distribution,
+//            cdf = cumulative density function
+//            read1Distance = distance from center pos of BP1 to read1
+//            read2Distance = distance from center pos of BP2 to read2
+// 4) If the fragment supports allele on the BPs, then set that flag.
 BOOST_AUTO_TEST_CASE( test_processExistingAltPairInfo )
 {
+    static const double eps(0.00000001);
     const bam_header_info bamHeader(buildTestBamHeader());
-    std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
+    std::unique_ptr<SVLocusScanner> scanner(buildSVLocusScanner(bamHeader));
     GSCOptions options;
-    options.alignFileOpt.alignmentFilenames = {bamFileName};
+    options.alignFileOpt.alignmentFilenames = {bamFileName, bamFileName};
     SVScorer scorer(options, scanner.operator*(), bamHeader);
     TestSVScorer fSVScorer;
     PairOptions pairOptions(false); // false means it is a DNA sample
@@ -384,6 +441,7 @@ BOOST_AUTO_TEST_CASE( test_processExistingAltPairInfo )
     candidate.bp2.interval = GenomeInterval(0, 270, 280);
     candidate.bp2.state = SVBreakendState::LEFT_OPEN;
 
+    // Creating a read pair for 1st bam file
     std::string queryseq1 = "AGCTGACTGATCGATTTTTTACGTAGAGGAGCTTTGACGTATGAGCCTGATATGAGCCTG";
     std::string queryseq2 = "TGACGTATGAGCCTGATATGAGCCT";
     bam_record bamRecord1;
@@ -396,51 +454,111 @@ BOOST_AUTO_TEST_CASE( test_processExistingAltPairInfo )
     bamRecord2.toggle_is_fwd_strand();
     bamRecord2.toggle_is_mate_fwd_strand();
     bamRecord2.set_qname("Read-1");
-    float expected = 0.25;
 
-    // Creating a fragment
+    // creating another read pair for 2nd bam file
+    bam_record bamRecord3;
+    buildTestBamRecord(bamRecord3, 0, 200, 0, 310, 125, 10, "60M", queryseq1);
+    bamRecord3.set_qname("Read-2");
+    bamRecord3.toggle_is_first();
+    bam_record bamRecord4;
+    buildTestBamRecord(bamRecord4, 0, 310, 0, 200, 125, 20, "25M", queryseq2);
+    bamRecord4.toggle_is_second();
+    bamRecord4.toggle_is_fwd_strand();
+    bamRecord4.toggle_is_mate_fwd_strand();
+    bamRecord4.set_qname("Read-2");
+
+    // Creating fragment informations for 1st bam file
     SVCandidateSetData candidateSetData;
-    SVCandidateSetSequenceFragmentSampleGroup& group = candidateSetData.getDataGroup(0);
-    group.add(bamHeader, bamRecord1, false, true, true);
-    group.add(bamHeader, bamRecord2, false, true, true);
+    SVCandidateSetSequenceFragmentSampleGroup& group1 = candidateSetData.getDataGroup(0);
+    group1.add(bamHeader, bamRecord1, false, true, true);
+    group1.add(bamHeader, bamRecord2, false, true, true);
     SVSequenceFragmentAssociation association(0, SVEvidenceType::PAIR);
-    group.begin().operator*().svLink.push_back(association);
+    group1.begin().operator*().svLink.push_back(association);
+    // Creating fragment information for 2nd bam
+    SVCandidateSetSequenceFragmentSampleGroup& group2 = candidateSetData.getDataGroup(1);
+    group2.add(bamHeader, bamRecord3, false, true, true);
+    group2.add(bamHeader, bamRecord4, false, true, true);
+    group2.begin().operator*().svLink.push_back(association);
+
     SVId id;
     SVEvidence evidence;
     SupportSamples suppSamples;
-    suppSamples.supportSamples.resize(1);
-    evidence.samples.resize(1);
+    suppSamples.supportSamples.resize(2);
+    evidence.samples.resize(2);
     fSVScorer.processExistingAltPairInfo(scorer, pairOptions, candidateSetData, candidate, id, evidence, suppSamples);
 
-    for (const SVCandidateSetSequenceFragment& fragment : group)
-    {
+    float expected(0.24999994);
+    // Check information of 1st bam file
+    for (const SVCandidateSetSequenceFragment &fragment : group1) {
         SVFragmentEvidence fragmentEvidence(evidence.getSampleEvidence(0)[fragment.qname()]);
         SVFragmentEvidenceAllele alt(fragmentEvidence.alt);
         // Whether read-1 is scanned
         BOOST_REQUIRE(fragmentEvidence.read1.isScanned);
         // Whether read-2 is scanned
         BOOST_REQUIRE(fragmentEvidence.read2.isScanned);
-        // Read-1 is anchored read as mapping quality (20) greater than min mappig quality (15)
+        // bamRecord-1 is anchored read as mapping quality (20) is
+        // greater than min mappig quality (15)
         BOOST_REQUIRE(fragmentEvidence.read1.isAnchored(false));
-        // Read-1 is anchored read as mapping quality (10) less than min mappig quality(15)
+        // bamRecord-2 is not anchored read as mapping quality (10)
+        // is less than min mappig quality(15)
         BOOST_REQUIRE(!fragmentEvidence.read2.isAnchored(false));
-        // fragment pronbability as explained in test_getFragProb
-        BOOST_REQUIRE_EQUAL(((int)(alt.bp1.fragLengthProb * 100 + 0.5)) / 100.0, expected);
-        BOOST_REQUIRE_EQUAL(((int)(alt.bp2.fragLengthProb * 100 + 0.5)) / 100.0, expected);
-        // Fragments are supporting this breakpoints as explained in test_processBamProcList
+        // FragProb = min(C, 1-C),
+        // C = fragDist.cdf(read1Distance + read2Distance), where
+        //            fragDist = sample fragment distribution,
+        //            cdf = cumulative density function
+        //            read1Distance = distance from center pos of BP1 to read1
+        //            read2Distance = distance from center pos of BP2 to read2
+        // Detail has been explained in test_getFragProb
+        BOOST_REQUIRE_CLOSE(alt.bp1.fragLengthProb, expected, eps);
+        BOOST_REQUIRE_CLOSE(alt.bp2.fragLengthProb, expected, eps);
+        // Fragment is supporting alt allele in BP1 and BP2
         BOOST_REQUIRE(alt.bp1.isFragmentSupport);
         BOOST_REQUIRE(alt.bp2.isFragmentSupport);
     }
 
+    // Check informations for 2nd bam file
+    for (const SVCandidateSetSequenceFragment &fragment : group2) {
+        SVFragmentEvidence fragmentEvidence(evidence.getSampleEvidence(1)[fragment.qname()]);
+        SVFragmentEvidenceAllele alt(fragmentEvidence.alt);
+        // Whether read-1 is scanned
+        BOOST_REQUIRE(fragmentEvidence.read1.isScanned);
+        // Whether read-2 is scanned
+        BOOST_REQUIRE(fragmentEvidence.read2.isScanned);
+        // bamRecord-3 is not anchored read as mapping quality (10) is
+        // less than min mappig quality (15)
+        BOOST_REQUIRE(!fragmentEvidence.read1.isAnchored(false));
+        // bamRecord-4 is anchored read as mapping quality (20) is
+        // greater than min mappig quality (15)
+        BOOST_REQUIRE(fragmentEvidence.read2.isAnchored(false));
+        // FragProb = min(C, 1-C),
+        // C = fragDist.cdf(read1Distance + read2Distance), where
+        //            fragDist = sample fragment distribution,
+        //            cdf = cumulative density function
+        //            read1Distance = distance from center pos of BP1 to read1
+        //            read2Distance = distance from center pos of BP2 to read2
+        // Detail has been explained in test_getFragProb
+        BOOST_REQUIRE_CLOSE(alt.bp1.fragLengthProb, expected, eps);
+        BOOST_REQUIRE_CLOSE(alt.bp2.fragLengthProb, expected, eps);
+        // Fragment is supporting alt allele in BP1 and BP2
+        BOOST_REQUIRE(alt.bp1.isFragmentSupport);
+        BOOST_REQUIRE(alt.bp2.isFragmentSupport);
+    }
 }
 
 // Following two cases are designed here:
 // Let's say, fragment length in extreme 5th-95th percentiles over all read groups is F and
 // deletion size from candidate SV is D.
-// 1. If D <= 2*F then it is incomplete alt pair info, so it should not support the breakpoint
-// 2. If D > 2*F, then fragment probability is cacluated as explained in test_getFragProb
+// 1. If D <= 2*F then it is incomplete alt pair info, so it will not support allele on BPs
+// 2. If D > 2*F, then fragment probability is calculated as:
+//       FragProb = min(C, 1-C),
+//       C = fragDist.cdf(read1Distance + read2Distance), where
+//            fragDist = sample fragment distribution,
+//            cdf = cumulative density function
+//            read1Distance = distance from center pos of BP1 to read1
+//            read2Distance = distance from center pos of BP2 to read2
 BOOST_AUTO_TEST_CASE( test_getSVPairSupport )
 {
+    static const double eps(0.00000001);
     // Dummy Assembly data is created
     SVCandidateAssemblyData candidateAssemblyData;
     candidateAssemblyData.bestAlignmentIndex = 0;
@@ -488,7 +606,7 @@ BOOST_AUTO_TEST_CASE( test_getSVPairSupport )
     bamRecord2.toggle_is_mate_fwd_strand();
     bamRecord2.set_qname("Read-1");
 
-    // Creating fragment
+    // Creating fragment informations
     SVCandidateSetData candidateSetData1;
     SVCandidateSetSequenceFragmentSampleGroup& group1 = candidateSetData1.getDataGroup(0);
     group1.add(bamHeader, bamRecord1, false, true, true);
@@ -505,12 +623,13 @@ BOOST_AUTO_TEST_CASE( test_getSVPairSupport )
     fSVScorer.getSVPairSupport(scorer, candidateSetData1, candidateAssemblyData, candidate1, id, evidence1, suppSamples1);
 
     // According to description, F = 125 and D = 270-250 = 20
-    // So D < 2*F (20 < 250). Nothing will be calculated.
+    // So D < 2*F (20 < 250). So fragment is not supporting allele on the BPs.
+    // For that reason fragment-size probability is zero.
     for (const SVCandidateSetSequenceFragment& fragment : group1)
     {
         SVFragmentEvidenceAllele alt(evidence1.getSampleEvidence(0)[fragment.qname()].alt);
-        BOOST_REQUIRE_EQUAL(((int)(alt.bp1.fragLengthProb * 100 + 0.5)) / 100.0, 0);
-        BOOST_REQUIRE_EQUAL(((int)(alt.bp2.fragLengthProb * 100 + 0.5)) / 100.0, 0);
+        BOOST_REQUIRE_EQUAL(alt.bp1.fragLengthProb, 0);
+        BOOST_REQUIRE_EQUAL(alt.bp2.fragLengthProb, 0);
         BOOST_REQUIRE(!alt.bp1.isFragmentSupport);
         BOOST_REQUIRE(!alt.bp2.isFragmentSupport);
     }
@@ -531,7 +650,6 @@ BOOST_AUTO_TEST_CASE( test_getSVPairSupport )
     bamRecord4.toggle_is_fwd_strand();
     bamRecord4.toggle_is_mate_fwd_strand();
     bamRecord4.set_qname("Read-2");
-    float expected = 0.25;
 
     SVCandidateSetData candidateSetData2;
     SVCandidateSetSequenceFragmentSampleGroup& group2 = candidateSetData2.getDataGroup(0);
@@ -544,14 +662,15 @@ BOOST_AUTO_TEST_CASE( test_getSVPairSupport )
     evidence2.samples.resize(1);
     candidate2.setPrecise();
     candidate2.assemblyAlignIndex = 0;
+    float expected = 0.25;
     fSVScorer.getSVPairSupport(scorer, candidateSetData2, candidateAssemblyData, candidate2, id, evidence2, suppSamples2);
     // Here F = 125, But D = 770-250 = 520 which is greater than 2*F(250).
-    // Fragment probability is calculated as explained in test_getFragProb.
+    // So fragment is supporting alt allele on the BPs.
     for (const SVCandidateSetSequenceFragment& fragment : group2)
     {
         SVFragmentEvidenceAllele alt(evidence2.getSampleEvidence(0)[fragment.qname()].alt);
-        BOOST_REQUIRE_EQUAL(((int)(alt.bp1.fragLengthProb * 100 + 0.5)) / 100.0, expected);
-        BOOST_REQUIRE_EQUAL(((int)(alt.bp2.fragLengthProb * 100 + 0.5)) / 100.0, expected);
+        BOOST_REQUIRE_CLOSE(alt.bp1.fragLengthProb, expected, eps);
+        BOOST_REQUIRE_CLOSE(alt.bp2.fragLengthProb, expected, eps);
         BOOST_REQUIRE(alt.bp1.isFragmentSupport);
         BOOST_REQUIRE(alt.bp2.isFragmentSupport);
     }
