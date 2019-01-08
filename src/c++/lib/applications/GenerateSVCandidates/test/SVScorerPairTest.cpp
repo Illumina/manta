@@ -662,7 +662,7 @@ BOOST_AUTO_TEST_CASE( test_getSVPairSupport )
     evidence2.samples.resize(1);
     candidate2.setPrecise();
     candidate2.assemblyAlignIndex = 0;
-    float expected = 0.25;
+    float expected = 0.24999994;
     fSVScorer.getSVPairSupport(scorer, candidateSetData2, candidateAssemblyData, candidate2, id, evidence2, suppSamples2);
     // Here F = 125, But D = 770-250 = 520 which is greater than 2*F(250).
     // So fragment is supporting alt allele on the BPs.
