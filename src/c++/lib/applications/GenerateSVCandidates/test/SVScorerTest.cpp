@@ -246,17 +246,21 @@ BOOST_AUTO_TEST_CASE( test_getSampleSplitReadLnLhood )
 }
 
 // Test the following cases:
-// 1. If altLnLhood greater than refLnLhood and normalized probability
-//    (explained in test_lnToProb) of altLnLhood greater than splitSupportProb(0.999f), 
+// 1. If altLnLhood is greater than refLnLhood and normalized probability
+//    (explained in test_lnToProb) of altLnLhood is greater than splitSupportProb(0.999f),
 //    then it is a confident split read count for alt allele.
-// 2. If altLnLhood greater than refLnLhood but normalized probability
+// 2. If altLnLhood is greater than refLnLhood but normalized probability
 //    (explained in test_lnToProb) of altLnLhood is not greater than splitSupportProb(0.999f),
 //    then it is not a confident split read count for alt allele. 
-// 3. If refLnLhood greater than altLnLhood and normalized probability
-//    of altLnLhood greater than splitSupportProb(0.999f), then it is
+// 3. If refLnLhood is greater than altLnLhood and normalized probability
+//    of altLnLhood is greater than splitSupportProb(0.999f), then it is
 //    a confident split read count for ref allele.
 // 4. For ref allele, if above case-3 is satisfied, then track the confident
 //    split read count of BP1 and BP2.
+// Normalized probability is calculated as,
+// lnToProb(a, b): a = exp(a-b)/(1 + exp(a-b))
+//                 b = 1/(1 + exp(a-b))
+// where a and b are lnlhood values.
 BOOST_AUTO_TEST_CASE( test_addConservativeSplitReadSupport )
 {
     // Designed the case-1
@@ -638,7 +642,6 @@ BOOST_AUTO_TEST_CASE( test_getSampleCounts )
     BOOST_REQUIRE_EQUAL(sampleInfo3.alt.confidentSplitReadCount, 1);
     // total number of spanning pair count is 1 (fragment-1 and fragment-3) as it supports alt allele on BP1.
     BOOST_REQUIRE_EQUAL(sampleInfo3.alt.spanningPairCount, 2);
-
 }
 
 // For each sample api calculates the following stats:
@@ -729,7 +732,7 @@ BOOST_AUTO_TEST_CASE( test_getSVSupportSummary )
 }
 
 // If there is a conflict of split support and fragment support for a read-pair then
-// priority should be given to split evidence over fragment support. In that case, api
+// priority should be given to split evidence over fragment support in some scenarioes. In that case, api
 // clears the fragment support evidence. Let's consider AFP, RFP, ASL, RSL are alt allele fragment size
 // probability, ref allele fragment size probability, altSplitLnLhood and refSplitLnLhood respectively, then test
 // whether api clears fragment support evidence for the following cases:
@@ -1147,7 +1150,7 @@ BOOST_AUTO_TEST_CASE( test_getRefAltFromFrag )
     evidence.read1.isScanned = true;
     evidence.read2.isScanned = true;
     // Both Read-1 and Read-2 are anchored reads that means both read-1 and read-2
-    // has confident mapping.
+    // have confident mapping.
     // so power = spanningPairWeight = 0.2
     evidence.read1.setAnchored(true);
     evidence.read2.setAnchored(true);
@@ -1163,7 +1166,7 @@ BOOST_AUTO_TEST_CASE( test_getRefAltFromFrag )
 
     // Fragment supports alt allele on BP1
     // Fragment supports ref allele on BP2
-    // Here only read-1 has confident mapping. So it is semmi mapped fragment
+    // Here only read-1 has confident mapping. So it is semi mapped fragment
     // Also fragment-size probability of ref allele (0.6) is greater than alt allele(0.4)
     // so power = 0
     evidence.read2.setAnchored(false);
@@ -1175,7 +1178,7 @@ BOOST_AUTO_TEST_CASE( test_getRefAltFromFrag )
     BOOST_REQUIRE_CLOSE(refLnLhoodSet.fragPair, -0.72238369335991737, eps);
     BOOST_REQUIRE_CLOSE(altLnLhoodSet.fragPair, -0.44038150639490964, eps);
 
-    // Here only read-1 has confident mapping. So it is semmi mapped fragment
+    // Here only read-1 has confident mapping. So it is semi mapped fragment
     // Also fragment-size probability of alt allele (0.8) is greater than ref allele(0.6)
     // so power = spanningPairWeight * semiMappedPower = 0.4.
     evidence.alt.bp1.fragLengthProb = 0.8;
@@ -1342,7 +1345,7 @@ BOOST_AUTO_TEST_CASE( test_scoreDiploidSV )
     scoreInfo.samples[0].alt.confidentSpanningPairCount = 0;
     callInfo.init(candidate, evidence, scoreInfo, 0.2);
     junctionData.push_back(callInfo);
-    // Let's say a junction is called bad if there is no confident spanning pair support of alt allele for this
+    // Let's say, a junction is called bad if there is no confident spanning pair support of alt allele for this
     // junction. If number of bad junction is more than half of the total junctions, then add
     // noPairSupportLabel to diploid info.
     // So here confidentSpanningPairCount of alt allele is 0 and total number of junction is 1.
