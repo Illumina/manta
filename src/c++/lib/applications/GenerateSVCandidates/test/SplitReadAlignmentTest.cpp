@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(test_getLnLhood )
     {
         qual[i] = 30;
     }
-    const CallOptionsShared optionsShared;
+    CallOptionsShared optionsShared;
     qscore_snp qscoreSnp(optionsShared.snpPrior); // snp prior proability
     // Likelyhood score will be calculated from location 8
     // to location 49
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE( test_getRefAlignment )
     // Alignment->    --------------------------------------------->
     //                | left size(10) |hom size(5)| right size(20) |
     known_pos_range2 range1(18,24);
-    const CallOptionsShared optionsShared;
+    CallOptionsShared optionsShared;
     qscore_snp qscoreSnp(optionsShared.snpPrior); // snp prior probability
     SRAlignmentInfo srAlignmentInfo1;
     static const float lnOneThird(std::log(1 / 3.f));
@@ -395,7 +395,7 @@ BOOST_AUTO_TEST_CASE( test_Exception )
     {
         qual[i] = 30;
     }
-    const CallOptionsShared optionsShared;
+    CallOptionsShared optionsShared;
     qscore_snp qscoreSnp(optionsShared.snpPrior); // snp probability
     known_pos_range2 range1(8,50);
     // target sequence is more than query sequence, it will throw an exception
