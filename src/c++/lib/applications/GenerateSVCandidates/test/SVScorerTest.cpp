@@ -154,18 +154,19 @@ BOOST_AUTO_TEST_CASE( test_lnToProb )
 {
     float lower(5);
     float higher(5);
+    static const double eps(0.00000001);
     // exp(a-b) = 1. so a = 1/2 and b = 1/2
     lnToProb(lower, higher);
-    BOOST_REQUIRE_EQUAL(lower, 0.5);
-    BOOST_REQUIRE_EQUAL(higher, 0.5);
+    BOOST_REQUIRE_CLOSE(lower, 0.5, eps);
+    BOOST_REQUIRE_CLOSE(higher, 0.5, eps);
 }
 
 // Test the following cases
 // 1. If forced support is not allowed, a read should support split read evidence either at
 //    breakpoint-1 or breakpoint-2 and calculate lnlhood according to case-3 and case-4.
-// 2. If forced support is allowed even if the read is not supporting the breakpoints then also
+// 2. If forced support is allowed, then even if the read is not supporting the breakpoints,
 //    altlnlhood (maximum of lnlhood of BP1 and BP2)and refLnLhood (maximum of lnlhood of
-//    BP1 and BP2) are calculated.
+//    BP1 and BP2) are still calculated.
 // 3. If forced support is not allowed Value of altlnlhood should be calculated as follows:
 //        altlnlhood = maximum of bp1 lnlhood and bp2 lnlhood of alt allele if
 //        both the breakpoints support split evidence, otherwise corresponding breakpoint
@@ -175,10 +176,10 @@ BOOST_AUTO_TEST_CASE( test_lnToProb )
 //    lnlhood will be taken.
 BOOST_AUTO_TEST_CASE( test_getSampleSplitReadLnLhood )
 {
-    float altSplitLnLhoodBP1(-0.5);
-    float altSplitLnLhoodBP2(-0.8);
-    float refSplitLnLhoodBP1(-0.2);
-    float refSplitLnLhoodBP2(-0.4);
+    float refSplitLnLhoodBP1(-0.5);
+    float refSplitLnLhoodBP2(-0.8);
+    float altSplitLnLhoodBP1(-0.2);
+    float altSplitLnLhoodBP2(-0.4);
     static const double eps(0.00000001);
     float refLnLhood;
     float altLnLhood;
@@ -233,13 +234,13 @@ BOOST_AUTO_TEST_CASE( test_getSampleSplitReadLnLhood )
     // for ref and alt alllele. API returns the default value of refLnLhood
     // and altLnLhood which is 1.
     fragmentEvidence.alt.bp1.read1.isSplitSupport = false;
-    fragmentEvidence.alt.bp1.read1.splitLnLhood = 0;
+    fragmentEvidence.alt.bp1.read1.splitLnLhood = altSplitLnLhoodBP1;
     fragmentEvidence.alt.bp2.read1.isSplitSupport = false;
-    fragmentEvidence.alt.bp2.read1.splitLnLhood = 0;
+    fragmentEvidence.alt.bp2.read1.splitLnLhood = altSplitLnLhoodBP2;
     fragmentEvidence.ref.bp1.read1.isSplitSupport = false;
-    fragmentEvidence.ref.bp1.read1.splitLnLhood = 0;
+    fragmentEvidence.ref.bp1.read1.splitLnLhood = refSplitLnLhoodBP1;
     fragmentEvidence.ref.bp2.read1.isSplitSupport = false;
-    fragmentEvidence.ref.bp2.read1.splitLnLhood = 0;
+    fragmentEvidence.ref.bp2.read1.splitLnLhood = refSplitLnLhoodBP2;
     BOOST_REQUIRE(!getSampleSplitReadLnLhood(fragmentEvidence, true, refLnLhood, altLnLhood));
     BOOST_REQUIRE_EQUAL(refLnLhood, 1.);
     BOOST_REQUIRE_EQUAL(altLnLhood, 1.);
@@ -1539,7 +1540,8 @@ BOOST_AUTO_TEST_CASE( test_scoreRNASV )
 //     spanning pair count = confidentSemiMappedSpanningPairCount * spanning pair weight
 // else
 //     spanning pair count = confidentSpanningPairCount * spanning pair weight
-// where spanning pair weight is 0.2
+// where spanning pair weight is 0.2 and isTier2/isPermissive is the 3rd arg of
+// function getSpanningPairCount().
 BOOST_AUTO_TEST_CASE( test_getSpanningPairCount )
 {
     SVSampleAlleleInfo alleleInfo;
@@ -1952,7 +1954,7 @@ BOOST_AUTO_TEST_CASE( test_computeAllScoreModel )
 }
 
 // Few minor logic checking have been done in this test case
-// 1. When no valid junction is present. It will thow an exception
+// 1. When no valid junction is present. It will throw an exception
 // 2. When only one unfiltered junction is present
 // 3. When more than one unfiltered junction is present
 BOOST_AUTO_TEST_CASE( test_ScoreSV )
@@ -1981,7 +1983,7 @@ BOOST_AUTO_TEST_CASE( test_ScoreSV )
     // So isMJEvent should be false here.
     SVCandidate candidate1;
     candidate1.bp1.interval = GenomeInterval(0, 100, 200);
-    candidate1.bp2.interval = GenomeInterval(0, 400, 500);
+    candidate1.bp2.interval = GenomeInterval(0, 300, 350);
     candidate1.bp1.state = SVBreakendState::RIGHT_OPEN;
     candidate1.bp2.state = SVBreakendState::LEFT_OPEN;
     candidate1.insertSeq = "AGCTGACTGATCAGT";
@@ -2018,8 +2020,8 @@ BOOST_AUTO_TEST_CASE( test_ScoreSV )
     SVSequenceFragmentAssociation association(0, SVEvidenceType::PAIR);
     group.begin().operator*().svLink.push_back(association);
 
-    SVCandidateAssemblyData candidateAssemblyData;
-    candidateAssemblyData.bestAlignmentIndex = 0;
+    SVCandidateAssemblyData candidateAssemblyData1;
+    candidateAssemblyData1.bestAlignmentIndex = 0;
     Alignment alignment1;
     alignment1.beginPos = 406;
     std::string testCigar1("94=");
@@ -2028,18 +2030,60 @@ BOOST_AUTO_TEST_CASE( test_ScoreSV )
     alignment2.beginPos = 510;
     std::string testCigar2("110=75I1D2=");
     cigar_to_apath(testCigar2.c_str(), alignment2.apath);
-    SVCandidateAssemblyData::JumpAlignmentResultType jumpAlignmentResultType;
-    jumpAlignmentResultType.align1 = alignment1;
-    jumpAlignmentResultType.align2 = alignment2;
-    jumpAlignmentResultType.jumpRange = 2;
-    candidateAssemblyData.spanningAlignments.push_back(jumpAlignmentResultType);
-    candidateAssemblyData.isSpanning = true;
-    candidateAssemblyData.extendedContigs.push_back("GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
+    SVCandidateAssemblyData::JumpAlignmentResultType jumpAlignmentResultType1;
+    jumpAlignmentResultType1.align1 = alignment1;
+    jumpAlignmentResultType1.align2 = alignment2;
+    jumpAlignmentResultType1.jumpRange = 2;
+    candidateAssemblyData1.spanningAlignments.push_back(jumpAlignmentResultType1);
+    candidateAssemblyData1.isSpanning = true;
+    candidateAssemblyData1.extendedContigs.push_back("GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
                                                     "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA");
-    mjAssemblyData.push_back(candidateAssemblyData);
+    mjAssemblyData.push_back(candidateAssemblyData1);
     scorer.scoreSV(svData, mjAssemblyData, mjSV, mjSVId, isJunctionFiltered,
                    false, true, mjModelScoreInfo, mjJointModelScoreInfo, isMJEvent, svSupports);
     BOOST_REQUIRE(!isMJEvent);
+
+    // Designed case-3. Here number of unfiltered multi-junction event is 2.
+    // So isMJEvent should be true here.
+    SVCandidate candidate2;
+    candidate2.bp1.interval = GenomeInterval(0, 400, 410);
+    candidate2.bp2.interval = GenomeInterval(0, 505, 520);
+    candidate2.bp1.state = SVBreakendState::RIGHT_OPEN;
+    candidate2.bp2.state = SVBreakendState::LEFT_OPEN;
+    candidate2.insertSeq = "AGCTGACTGATCAGT";
+    candidate2.setPrecise();
+    candidate2.assemblyAlignIndex = 0;
+    mjSV.junction.push_back(candidate2);
+    SVId id2;
+    mjSVId.push_back(id2);
+    isJunctionFiltered.push_back(false);
+    modelScoreInfo.setSampleCount(1, 1);
+    mjModelScoreInfo.push_back(modelScoreInfo);
+    mjJointModelScoreInfo.setSampleCount(1, 1);
+    SVCandidateAssemblyData candidateAssemblyData2;
+    candidateAssemblyData2.bestAlignmentIndex = 0;
+    Alignment alignment3;
+    alignment3.beginPos = 406;
+    std::string testCigar3("54=");
+    cigar_to_apath(testCigar3.c_str(), alignment3.apath);
+    Alignment alignment4;
+    alignment4.beginPos = 510;
+    std::string testCigar4("110=75I1D2=");
+    cigar_to_apath(testCigar4.c_str(), alignment4.apath);
+    SVCandidateAssemblyData::JumpAlignmentResultType jumpAlignmentResultType2;
+    jumpAlignmentResultType2.align1 = alignment3;
+    jumpAlignmentResultType2.align2 = alignment4;
+    jumpAlignmentResultType2.jumpRange = 2;
+    candidateAssemblyData2.spanningAlignments.push_back(jumpAlignmentResultType2);
+    candidateAssemblyData2.isSpanning = true;
+    candidateAssemblyData2.extendedContigs.push_back("GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
+    "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA");
+    mjAssemblyData.push_back(candidateAssemblyData2);
+    //SVScorer scorer2(options, buildSVLocusScannerForSomatic(bamHeader).operator*(), bamHeader);
+    //fSVScorer.setSampleCount(scorer2, 1, 1);
+    scorer.scoreSV(svData, mjAssemblyData, mjSV, mjSVId, isJunctionFiltered,
+    false, true, mjModelScoreInfo, mjJointModelScoreInfo, isMJEvent, svSupports);
+    BOOST_REQUIRE(isMJEvent);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
