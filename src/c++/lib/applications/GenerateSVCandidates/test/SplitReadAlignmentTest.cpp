@@ -220,36 +220,34 @@ BOOST_AUTO_TEST_CASE(test_getLnLhood )
     known_pos_range2 range(8,50);
 
     static const float lnOneThird(std::log(1 / 3.f));
-    float lnlhood1 = 0.f;
-    // for 1st 10 match bases
-    for (int i = 0; i < 10; i ++)
-        lnlhood1 += qscoreSnp.qphred_to_ln_comp_error_prob(30);
-    // next 5 mismatch bases
-    for (int i = 0; i < 5; i ++)
-        lnlhood1 += qscoreSnp.qphred_to_ln_error_prob(30) + lnOneThird;
-    // for next 20 match bases
-    for (int i = 0; i < 20; i ++)
-        lnlhood1 += qscoreSnp.qphred_to_ln_comp_error_prob(30);
-    static const double eps = 0.00000001;
+    float lnlhood1(0);
+    for (unsigned i(0); i < querySize; i ++)
+    {
+        // 1st 10 bases and last 20 bases are match
+        if (i < 10 || i > 14)
+            lnlhood1 += qscoreSnp.qphred_to_ln_comp_error_prob(30);
+        else // base-10 to base-14 total 5 mismatch bases
+            lnlhood1 += qscoreSnp.qphred_to_ln_error_prob(30) + lnOneThird;
+    }
+    static const float eps = 0.00000001f;
     BOOST_REQUIRE_CLOSE(getLnLhood(querySeq1, qscoreSnp, qual.get(), targetSeq, 9, range, false, 0.f), lnlhood1, eps);
 
     // Alignment of following query sequence starts at position 9 (0-based)
     // with 10 matches followed by 5 mismatches followed by 1 mismatch with N then
     // followed by 19 matches.
     std::string querySeq2 = "TCTATCACCCATCGTNCCACTCACGGGAGCTCTCC";
-    float lnlhood2 = 0.f;
+    float lnlhood2(0);
     float lnRandomBase(-std::log(4.f));
-    // for 1st 10 match bases
-    for (int i = 0; i < 10; i ++)
-        lnlhood2 += qscoreSnp.qphred_to_ln_comp_error_prob(30);
-    // next 5 mismatch bases
-    for (int i = 0; i < 5; i ++)
-        lnlhood2 += qscoreSnp.qphred_to_ln_error_prob(30) + lnOneThird;
-    // next 1 N base
-    lnlhood2 += lnRandomBase;
-    // next 10 match bases
-    for (int i = 0; i < 19; i ++)
-        lnlhood2 += qscoreSnp.qphred_to_ln_comp_error_prob(30);
+    for (unsigned i(0); i < querySize; i ++)
+    {
+        // 1st 10 bases and last 19 bases are match
+        if (i < 10 || i > 15)
+            lnlhood2 += qscoreSnp.qphred_to_ln_comp_error_prob(30);
+        else if (i == 15) // base-15 is N
+            lnlhood2 += lnRandomBase;
+        else // base-10 to base-14, total 5 mismatch bases
+            lnlhood2 += qscoreSnp.qphred_to_ln_error_prob(30) + lnOneThird;
+    }
     BOOST_REQUIRE_CLOSE(getLnLhood(querySeq2, qscoreSnp, qual.get(), targetSeq, 9, range, false, 0.f), lnlhood2, eps);
 }
 
@@ -277,18 +275,17 @@ BOOST_AUTO_TEST_CASE( test_getRefAlignment )
     SRAlignmentInfo srAlignmentInfo1;
     static const float lnOneThird(std::log(1 / 3.f));
 
-    float lnlhood1 = 0.f;
-    // for 1st 10 match bases
-    for (int i = 0; i < 10; i ++)
-        lnlhood1 += qscoreSnp.qphred_to_ln_comp_error_prob(30);
-    // next 5 mismatches
-    for (int i = 0; i < 5; i ++)
-        lnlhood1 += qscoreSnp.qphred_to_ln_error_prob(30) + lnOneThird;
-    // next 20 match bases
-    for (int i = 0; i < 20; i ++)
-        lnlhood1 += qscoreSnp.qphred_to_ln_comp_error_prob(30);
+    float lnlhood1(0);
+    for (unsigned i(0); i < 35; i ++)
+    {
+        // 1st 10 bases and last 20 bases are match
+        if (i < 10 || i > 14)
+            lnlhood1 += qscoreSnp.qphred_to_ln_comp_error_prob(30);
+        else // base-10 to base-14, total 5 mismatch bases
+            lnlhood1 += qscoreSnp.qphred_to_ln_error_prob(30) + lnOneThird;
+    }
 
-    static const double eps = 0.00000001;
+    static const float eps = 0.00000001f;
     getRefAlignment(bamRecord1, refSeq, range1, qscoreSnp, srAlignmentInfo1);
 
     // Based on above schematic diagram and value of range1, following values
@@ -347,19 +344,18 @@ BOOST_AUTO_TEST_CASE( test_getRefAlignment )
     // followed by 19 matches followed by 5 insertion.
     bam_record bamRecord2;
     buildTestBamRecord(bamRecord2, 0, 9, 0, 100, 200, 15, "35M5I", "TCTATCACCCATCGTNCCACTCACGGGAGCTCTCCAGCTA");
-    float lnlhood2 = 0.f;
+    float lnlhood2(0);
     float lnRandomBase(-std::log(4.f));
-    // for 1st 10 match bases
-    for (int i = 0; i < 10; i ++)
-        lnlhood2 += qscoreSnp.qphred_to_ln_comp_error_prob(30);
-    // next 5 mismatch bases
-    for (int i = 0; i < 5; i ++)
-        lnlhood2 += qscoreSnp.qphred_to_ln_error_prob(30) + lnOneThird;
-    // next 1 N base
-    lnlhood2 += lnRandomBase;
-    // next 10 match bases
-    for (int i = 0; i < 19; i ++)
-        lnlhood2 += qscoreSnp.qphred_to_ln_comp_error_prob(30);
+    for (unsigned i(0); i < 35; i ++)
+    {
+        // 1st 10 bases and last 19 bases are match
+        if (i < 10 || i > 15)
+            lnlhood2 += qscoreSnp.qphred_to_ln_comp_error_prob(30);
+        else if (i == 15) // base-15 is N
+            lnlhood2 += lnRandomBase;
+        else // base-10 to base-14, total 5 mismatch bases
+            lnlhood2 += qscoreSnp.qphred_to_ln_error_prob(30) + lnOneThird;
+    }
 
     known_pos_range2 range4(18,24);
     SRAlignmentInfo srAlignmentInfo4;
