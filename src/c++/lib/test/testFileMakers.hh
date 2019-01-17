@@ -92,3 +92,11 @@ struct SVLocusSetStatsFileMaker : public TestFileMakerBase
     SVLocusSetStatsFileMaker(
         const SVLocusSet& svLocusSet);
 };
+
+/// \brief Get a non-existing temporary file name
+///
+/// If the temporary file name exists in the filesystem, it will be deleted when this object goes out of scope.
+struct TestChromosomeDepthFileMaker : public TestFileMakerBase
+{
+    TestChromosomeDepthFileMaker();
+};

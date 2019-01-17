@@ -118,3 +118,9 @@ SVLocusSetStatsFileMaker(
     assert(os);
     svLocusSet.dumpStats(os);
 }
+
+TestChromosomeDepthFileMaker::
+TestChromosomeDepthFileMaker()
+{
+    _tempFilename = getNewTempFile() + ".txt";
+}
