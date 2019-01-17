@@ -20,6 +20,7 @@
 #include "boost/test/unit_test.hpp"
 
 #include "EdgeRetrieverBin.hh"
+#include "EdgeRetrieverBin.cpp"
 
 #include "svgraph/SVLocusSet.hh"
 #include "test/testSVLocusUtil.hh"
@@ -61,6 +62,28 @@ BOOST_AUTO_TEST_CASE( test_EdgeRetrieverOneBin )
     BOOST_REQUIRE_EQUAL(edge.nodeIndex2, 1u);
 
     BOOST_REQUIRE( ! edger.next() );
+
+    // Here max node edge threshold as 1.
+    // But all the nodes have two edges.
+    // So all the nodes are noisy. Api does not return
+    // any node.
+    SVLocusSet set2(sopt);
+    SVLocus locus3;
+    locusAddPair(locus3,1,10,20,2,30,40);
+    SVLocus locus4;
+    locusAddPair(locus4,1,10,20,6,30,40);
+    SVLocus locus5;
+    locusAddPair(locus5,7,10,20,2,30,40);
+    SVLocus locus6;
+    locusAddPair(locus6,7,10,20,6,30,40);
+    set2.merge(locus3);
+    set2.merge(locus4);
+    set2.merge(locus5);
+    set2.merge(locus6);
+    set2.checkState(true,true);
+    // max node edge cutoff is 1.
+    EdgeRetrieverBin edger1(set2, 1, 1, 0);
+    BOOST_REQUIRE( ! edger1.next() );
 }
 
 
