@@ -123,6 +123,10 @@ struct GSCEdgeStatsManager : private boost::noncopyable
         gStats.scoringTime.merge(edgeTracker.scoreTime.getTimes());
     }
 
+    /// TestGSCEdgeStatsManager is a friend structure of GSCEdgeStatsManager. So that it can access private
+    /// members of GSCEdgeStatsManager.
+    friend struct TestGSCEdgeStatsManager;
+
 private:
     GSCEdgeGroupStats&
     getStatsGroup(
