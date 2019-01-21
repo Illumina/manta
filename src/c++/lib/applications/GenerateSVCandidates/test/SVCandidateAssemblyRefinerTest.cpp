@@ -1448,6 +1448,7 @@ BOOST_AUTO_TEST_CASE( test_getCandidateAssemblyData )
     options.refineOpt.smallSVAssembleOpt.maxWordLength = 9;
     options.refineOpt.smallSVAssembleOpt.wordStepSize = 3;
     options.alignFileOpt.alignmentFilenames = {bamFileName};
+    options.alignFileOpt.isAlignmentTumor = {false};
     options.referenceFilename = getTestReferenceFilename();
     options.edgeRuntimeFilename = fileMakerBase1.getFilename();
     // Creating stats file.
