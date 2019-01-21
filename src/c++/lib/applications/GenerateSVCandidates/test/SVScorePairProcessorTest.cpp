@@ -32,10 +32,10 @@ BOOST_AUTO_TEST_SUITE( SVScorePairProcessor_test_suite )
 
 // Test whether a record should be skipped or not.
 // Test the following cases:
-// 1. Read is mapped but mate is unmapped
-// 2. Read is unmapped
-// 3. Read pair is not innie pair
-// 4. Read is mapped, its mate is also mapped and pair is innie pair
+// 1. Ignore a mapped, paired read whose mate is not mapped.
+// 2. Ignore a read which is unmapped.
+// 3. Ignore a mapped, paired read whose mate is mapped, but the pair in not innie
+// 4. Accept a mapped read of an innie pair (with mapped mate)
 BOOST_AUTO_TEST_CASE( test_isSkipRecord )
 {
     const std::vector<bool> bamTumorNormalInfo = {false};
@@ -46,23 +46,23 @@ BOOST_AUTO_TEST_CASE( test_isSkipRecord )
     candidate.insertSeq = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
                           "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
     SVEvidence evidence;
-    std::shared_ptr<SVScorePairRefProcessor> processor(new SVScorePairRefProcessor(bamTumorNormalInfo,
-                                                       scanner.operator*(), options, candidate, true, evidence));
+    SVScorePairRefProcessor processor(bamTumorNormalInfo,
+                                      scanner.operator*(), options, candidate, true, evidence);
 
     std::string querySeq1 = "TCTATCACCCATTTTACCACTCACGGGAGCTCTCC";
     // BamRecord1 is mapped and its mate is unmapped
     bam_record bamRecord1;
-    buildTestBamRecord(bamRecord1, 0, 9, -1, -1, 0, 15, "35M", querySeq1);
+    buildTestBamRecord(bamRecord1, 0, 9, 0, 9, 0, 15, "35M", querySeq1);
     bamRecord1.toggle_is_first();
     bamRecord1.set_qname("bamRecord1");
     bamRecord1.toggle_is_mate_unmapped();
-    BOOST_REQUIRE(processor.get()->isSkipRecord(bamRecord1));
+    BOOST_REQUIRE(processor.isSkipRecord(bamRecord1));
 
     // BamRecord2 is unmapped
     bam_record bamRecord2;
     buildTestBamRecord(bamRecord2);
     bamRecord2.toggle_is_unmapped();
-    BOOST_REQUIRE(processor.get()->isSkipRecord(bamRecord2));
+    BOOST_REQUIRE(processor.isSkipRecord(bamRecord2));
 
     // BamRecord3 and its mate are translocated pair that means it is
     // not an innie pair.
@@ -70,21 +70,21 @@ BOOST_AUTO_TEST_CASE( test_isSkipRecord )
     buildTestBamRecord(bamRecord3, 0, 9, 1, 25, 0, 15, "35M", querySeq1);
     bamRecord3.toggle_is_first();
     bamRecord3.set_qname("bamRecord3");
-    BOOST_REQUIRE(processor.get()->isSkipRecord(bamRecord3));
+    BOOST_REQUIRE(processor.isSkipRecord(bamRecord3));
 
     // BamRecord4 and its mate are mapping in a proper innie pair
     bam_record bamRecord4;
     buildTestBamRecord(bamRecord4, 0, 9, 0, 100, 150, 15, "35M", querySeq1);
     bamRecord4.toggle_is_first();
     bamRecord4.set_qname("bamRecord4");
-    BOOST_REQUIRE(!processor.get()->isSkipRecord(bamRecord4));
+    BOOST_REQUIRE(!processor.isSkipRecord(bamRecord4));
 }
 
 // Test whether a candidate sv contains large insertion or not
 // Threshold for large sv is 100.
 BOOST_AUTO_TEST_CASE( test_isLargeInsertSV )
 {
-    const std::vector<bool> bamTumorNormalInfo;
+    const std::vector<bool> bamTumorNormalInfo = {false};
     const bam_header_info bamHeader(buildTestBamHeader());
     std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
     const PairOptions options(false);
@@ -92,14 +92,14 @@ BOOST_AUTO_TEST_CASE( test_isLargeInsertSV )
     candidate.insertSeq = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
                           "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
     SVEvidence evidence;
-    std::shared_ptr<SVScorePairRefProcessor> processor(new SVScorePairRefProcessor(bamTumorNormalInfo,
-                                                       scanner.operator*(), options, candidate, true, evidence));
+    SVScorePairRefProcessor processor(bamTumorNormalInfo,
+                                      scanner.operator*(), options, candidate, true, evidence);
     // Size of insert sequence is 102 (>100)
-    BOOST_REQUIRE(processor.get()->isLargeInsertSV(candidate));
+    BOOST_REQUIRE(processor.isLargeInsertSV(candidate));
 
     candidate.insertSeq = "GATCACAGGTCTATCACCCTATTAACCACTCACG";
     // Size of insert sequence is 34 (<100)
-    BOOST_REQUIRE(!processor.get()->isLargeInsertSV(candidate));
+    BOOST_REQUIRE(!processor.isLargeInsertSV(candidate));
 }
 
 // Test whether a bam read satisfies core filter or not where core read filter includes
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE( test_isLargeInsertSV )
 // 4. Ignore secondary reads with no SA tag
 BOOST_AUTO_TEST_CASE( test_SkipRecordCore)
 {
-    const std::vector<bool> bamTumorNormalInfo;
+    const std::vector<bool> bamTumorNormalInfo = {false};
     const bam_header_info bamHeader(buildTestBamHeader());
     std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
     const PairOptions options(false);
@@ -117,32 +117,32 @@ BOOST_AUTO_TEST_CASE( test_SkipRecordCore)
     candidate.insertSeq = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
                           "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
     SVEvidence evidence;
-    std::shared_ptr<SVScorePairRefProcessor> processor(new SVScorePairRefProcessor(bamTumorNormalInfo,
-                                                       scanner.operator*(), options, candidate, true, evidence));
+    SVScorePairRefProcessor processor(bamTumorNormalInfo,
+                                      scanner.operator*(), options, candidate, true, evidence);
 
     // PCR duplicate read
     bam_record bamRecord1;
     buildTestBamRecord(bamRecord1);
     bamRecord1.toggle_is_duplicate();
-    BOOST_REQUIRE(processor.get()->isSkipRecordCore(bamRecord1));
+    BOOST_REQUIRE(processor.isSkipRecordCore(bamRecord1));
 
     // Filtered Read
     bam_record bamRecord2;
     buildTestBamRecord(bamRecord2);
     bamRecord2.toggle_is_filtered();
-    BOOST_REQUIRE(processor.get()->isSkipRecordCore(bamRecord2));
+    BOOST_REQUIRE(processor.isSkipRecordCore(bamRecord2));
 
     // Supplementary but SA tag is not there
     bam_record bamRecord3;
     buildTestBamRecord(bamRecord3);
     bamRecord3.toggle_is_supplementary();
-    BOOST_REQUIRE(processor.get()->isSkipRecordCore(bamRecord3));
+    BOOST_REQUIRE(processor.isSkipRecordCore(bamRecord3));
 
     // Secondary but SA tag is not there
     bam_record bamRecord4;
     buildTestBamRecord(bamRecord4);
     bamRecord4.toggle_is_secondary();
-    BOOST_REQUIRE(processor.get()->isSkipRecordCore(bamRecord4));
+    BOOST_REQUIRE(processor.isSkipRecordCore(bamRecord4));
 
     // Non strict supplementary read
     // Where non-strict supplementary means
@@ -153,13 +153,13 @@ BOOST_AUTO_TEST_CASE( test_SkipRecordCore)
     buildTestBamRecord(bamRecord5);
     bamRecord5.toggle_is_secondary();
     addSupplementaryAlignmentEvidence(bamRecord5);
-    BOOST_REQUIRE(processor.get()->isSkipRecordCore(bamRecord5));
+    BOOST_REQUIRE(processor.isSkipRecordCore(bamRecord5));
 
     // Proper innie paired read
     std::string querySeq1 = "TCTATCACCCATTTTACCACTCACGGGAGCTCTCC";
     bam_record bamRecord6;
     buildTestBamRecord(bamRecord6, 0, 9, 0, 100, 150, 15, "35M", querySeq1);
-    BOOST_REQUIRE(!processor.get()->isSkipRecordCore(bamRecord6));
+    BOOST_REQUIRE(!processor.isSkipRecordCore(bamRecord6));
 }
 
 // Test the search range of a sv candidate which is located around centerPos of sv candidate
@@ -180,22 +180,23 @@ BOOST_AUTO_TEST_CASE( test_nextBAMIndex )
     candidate.bp2.interval.range = known_pos_range2(150,151);
     SVEvidence evidence;
     // isBP1 = true. So search range is calculated around BP1.
-    std::shared_ptr<SVScorePairRefProcessor> processor(new SVScorePairRefProcessor(bamFileInfo,
-                                                       scanner.operator*(), options, candidate, true, evidence));
+    SVScorePairRefProcessor processor1(bamFileInfo,
+                                      scanner.operator*(), options, candidate, true, evidence);
     // center positin of BP1 = 100
     // So range start = 100 - (125-50) = 25
     // range end = 100 + (125-50) + 1 = 176
-    GenomeInterval genomeInterval = processor.get()->nextBamIndex(0);
+    GenomeInterval genomeInterval = processor1.nextBamIndex(0);
     BOOST_REQUIRE_EQUAL(genomeInterval.range.begin_pos(), 25);
     BOOST_REQUIRE_EQUAL(genomeInterval.range.end_pos(), 176);
 
     // isBP1 = false. So search range is calculated around BP2.
-    std::shared_ptr<SVScorePairRefProcessor> processor1(new SVScorePairRefProcessor(bamFileInfo,
-                                                        scanner.operator*(), options, candidate, false, evidence));
+    SVScorePairRefProcessor processor2(bamFileInfo,
+                                       scanner.operator*(), options, candidate, false,
+                                       evidence);
     // center position of BP2 = 150
     // So range start = 150 - (125-50) = 75
     // range end = 150 + (125-50) + 1 = 226
-    genomeInterval = processor1.get()->nextBamIndex(0);
+    genomeInterval = processor2.nextBamIndex(0);
     BOOST_REQUIRE_EQUAL(genomeInterval.range.begin_pos(), 75);
     BOOST_REQUIRE_EQUAL(genomeInterval.range.end_pos(), 226);
 }
@@ -222,11 +223,11 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord )
     candidate.bp2.interval.range = known_pos_range2(250, 370);
     SVEvidence evidence;
     evidence.samples.resize(1);
-    std::shared_ptr<SVScorePairRefProcessor> processor(new SVScorePairRefProcessor(bamFileInfo,
-                                                       scanner.operator*(), options1, candidate, true, evidence));
+    SVScorePairRefProcessor processor1(bamFileInfo,
+                                       scanner.operator*(), options1, candidate, true, evidence);
     // So Search range start = 159 - (125-50) = 84
     // range end = 159 + (125-50) + 1 = 235
-    processor.get()->nextBamIndex(0);
+    processor1.nextBamIndex(0);
     SVId id;
     SupportFragments suppFrags;
 
@@ -237,7 +238,7 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord )
     bam_record bamRecord1;
     buildTestBamRecord(bamRecord1, 0, 9, 0, 100, 150, 15, "35M", querySeq1);
     bamRecord1.set_qname("bamRecord1");
-    processor.get()->processClearedRecord(id, bamRecord1, suppFrags);
+    processor1.processClearedRecord(id, bamRecord1, suppFrags);
     BOOST_REQUIRE(!evidence.getSampleEvidence(0)[bamRecord1.qname()].ref.bp1.isFragmentSupport);
 
     // case-2 is designed here.
@@ -247,7 +248,7 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord )
     bam_record bamRecord2;
     buildTestBamRecord(bamRecord2, 0, 109, 0, 125, 49, 15, "35M", querySeq1);
     bamRecord2.set_qname("bamRecord2");
-    processor.get()->processClearedRecord(id, bamRecord2, suppFrags);
+    processor1.processClearedRecord(id, bamRecord2, suppFrags);
     BOOST_REQUIRE(!evidence.getSampleEvidence(0)[bamRecord2.qname()].ref.bp1.isFragmentSupport);
 
     // Case-3 is designed here.
@@ -257,7 +258,7 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord )
     bam_record bamRecord3;
     buildTestBamRecord(bamRecord3, 0, 109, 0, 200, 130, 15, "35M", querySeq1);
     bamRecord3.set_qname("bamRecord3");
-    processor.get()->processClearedRecord(id, bamRecord3, suppFrags);
+    processor1.processClearedRecord(id, bamRecord3, suppFrags);
     BOOST_REQUIRE(!evidence.getSampleEvidence(0)[bamRecord3.qname()].ref.bp1.isFragmentSupport);
 
     // Case-4 is designed here.
@@ -266,7 +267,7 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord )
     bam_record bamRecord4;
     buildTestBamRecord(bamRecord4, 0, 109, 0, 125, 60, 15, "35M", querySeq1);
     bamRecord4.set_qname("bamRecord4");
-    processor.get()->processClearedRecord(id, bamRecord4, suppFrags);
+    processor1.processClearedRecord(id, bamRecord4, suppFrags);
     BOOST_REQUIRE(!evidence.getSampleEvidence(0)[bamRecord4.qname()].ref.bp1.isFragmentSupport);
 
     // Here min(159-109+1, 208-159) = 51 which is greater than 50
@@ -276,26 +277,26 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord )
     bam_record bamRecord5;
     buildTestBamRecord(bamRecord5, 0, 109, 0, 200, 100, 15, "35M", querySeq1);
     bamRecord5.set_qname("bamRecord5");
-    processor.get()->processClearedRecord(id, bamRecord5, suppFrags);
+    processor1.processClearedRecord(id, bamRecord5, suppFrags);
     BOOST_REQUIRE(evidence.getSampleEvidence(0)[bamRecord5.qname()].ref.bp1.isFragmentSupport);
 
     // The following two test cases are for RNA sample
     const PairOptions options2(true);
-    std::shared_ptr<SVScorePairRefProcessor> processor1(new SVScorePairRefProcessor(bamFileInfo,
-                                                                                    scanner.operator*(), options2,
-                                                                                    candidate, true, evidence));
+    SVScorePairRefProcessor processor2(bamFileInfo,
+                                       scanner.operator*(), options2,
+                                       candidate, true, evidence);
     // For RNA, read should be in proper pair. Following
     // bam read is not in proper pair. As a result of this, this fragment is
     // not supporting allele on BP1.
     bam_record bamRecord6;
     buildTestBamRecord(bamRecord6, 0, 109, 0, 200, 150, 15, "35M", querySeq1);
     bamRecord6.set_qname("bamRecord6");
-    processor1.get()->nextBamIndex(0);
-    processor1.get()->processClearedRecord(id, bamRecord6, suppFrags);
+    processor2.nextBamIndex(0);
+    processor2.processClearedRecord(id, bamRecord6, suppFrags);
     BOOST_REQUIRE(!evidence.getSampleEvidence(0)[bamRecord6.qname()].ref.bp1.isFragmentSupport);
 
-    std::shared_ptr<SVScorePairRefProcessor> processor2(new SVScorePairRefProcessor(bamFileInfo,
-                                                        scanner.operator*(), options2, candidate, true, evidence));
+    SVScorePairRefProcessor processor3(bamFileInfo,
+                                       scanner.operator*(), options2, candidate, true, evidence);
     // All the above points are satisfied for RNA sample.
     // Also fragment is in proper pair.
     // So this fragment is supporting allele on BP1.
@@ -303,8 +304,8 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord )
     buildTestBamRecord(bamRecord7, 0, 109, 0, 200, 150, 15, "35M", querySeq1);
     bamRecord7.set_qname("bamRecord7");
     bamRecord7.get_data()->core.flag ^= BAM_FLAG::PROPER_PAIR;
-    processor2.get()->nextBamIndex(0);
-    processor2.get()->processClearedRecord(id, bamRecord7, suppFrags);
+    processor3.nextBamIndex(0);
+    processor3.processClearedRecord(id, bamRecord7, suppFrags);
     BOOST_REQUIRE(evidence.getSampleEvidence(0)[bamRecord7.qname()].ref.bp1.isFragmentSupport);
 
     // count only from the down stream reads. So here mate location
@@ -318,7 +319,7 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord )
     buildTestBamRecord(bamRecord8, 0, 200, 0, 109, 150, 15, "84M");
     bamRecord8.set_qname("bamRecord8");
     bamRecord8.get_data()->core.flag ^= BAM_FLAG::PROPER_PAIR;
-    processor2.get()->processClearedRecord(id, bamRecord8, suppFrags);
+    processor3.processClearedRecord(id, bamRecord8, suppFrags);
     BOOST_REQUIRE(evidence.getSampleEvidence(0)[bamRecord8.qname()].ref.bp1.isFragmentSupport);
 }
 

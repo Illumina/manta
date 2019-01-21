@@ -48,6 +48,7 @@ struct TestSVScorer
     }
 };
 
+std::unique_ptr<SVLocusScanner> buildSVLocusScanner(bam_header_info bamHeaderInfo);
 // Creating locus scanner for two bam files
 std::unique_ptr<SVLocusScanner> buildSVLocusScanner(bam_header_info bamHeaderInfo)
 {
@@ -137,7 +138,7 @@ BOOST_FIXTURE_TEST_SUITE( SVScorerPair_test_suite, BamStream )
 BOOST_AUTO_TEST_CASE( test_getFragInfo )
 {
     SVCandidateSetSequenceFragment fragment1;
-    SpanReadInfo  read1;
+    SpanReadInfo read1;
     SpanReadInfo read2;
 
     std::string readSeq1 = "GGTATTTTCGTCTGGGGGGT";
@@ -229,7 +230,7 @@ BOOST_AUTO_TEST_CASE( test_getTerminal )
 // 9. If Read2 is in reverse strand and sv.bp1.state == SVBreakendState::RIGHT_OPEN, it throws an exception
 BOOST_AUTO_TEST_CASE( test_getFragProb )
 {
-    static const double eps(0.00000001);
+    static const float eps(0.00000001);
     PairOptions options1(false); // false means it is a DNA sample
     bool isFragSupportSV;
     float fragProb;
@@ -473,12 +474,12 @@ BOOST_AUTO_TEST_CASE( test_processExistingAltPairInfo )
     group1.add(bamHeader, bamRecord1, false, true, true);
     group1.add(bamHeader, bamRecord2, false, true, true);
     SVSequenceFragmentAssociation association(0, SVEvidenceType::PAIR);
-    group1.begin().operator*().svLink.push_back(association);
+    group1.begin()->svLink.push_back(association);
     // Creating fragment information for 2nd bam
     SVCandidateSetSequenceFragmentSampleGroup& group2 = candidateSetData.getDataGroup(1);
     group2.add(bamHeader, bamRecord3, false, true, true);
     group2.add(bamHeader, bamRecord4, false, true, true);
-    group2.begin().operator*().svLink.push_back(association);
+    group2.begin()->svLink.push_back(association);
 
     SVId id;
     SVEvidence evidence;
@@ -546,7 +547,7 @@ BOOST_AUTO_TEST_CASE( test_processExistingAltPairInfo )
 }
 
 // Following two cases are designed here:
-// Let's say, fragment length in extreme 5th-95th percentiles over all read groups is F and
+// Let's say, 95th percentile value is F and
 // deletion size from candidate SV is D.
 // 1. If D <= 2*F then it is incomplete alt pair info, so it will not support allele on BPs
 // 2. If D > 2*F, then fragment probability is calculated as:
@@ -579,7 +580,7 @@ BOOST_AUTO_TEST_CASE( test_getSVPairSupport )
     candidateAssemblyData.extendedContigs.push_back("GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
                                                     "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA");
     candidateAssemblyData.isCandidateSpanning = true;
-    // Test SV  locus created with max fragment length in 5th to 95th percentile is 125
+    // Test SV  locus created where 95th percentile value is 125
     const bam_header_info bamHeader(buildTestBamHeader());
     std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
 
@@ -612,7 +613,7 @@ BOOST_AUTO_TEST_CASE( test_getSVPairSupport )
     group1.add(bamHeader, bamRecord1, false, true, true);
     group1.add(bamHeader, bamRecord2, false, true, true);
     SVSequenceFragmentAssociation association(0, SVEvidenceType::PAIR);
-    group1.begin().operator*().svLink.push_back(association);
+    group1.begin()->svLink.push_back(association);
     SVId id;
     SVEvidence evidence1;
     SupportSamples suppSamples1;
@@ -655,7 +656,7 @@ BOOST_AUTO_TEST_CASE( test_getSVPairSupport )
     SVCandidateSetSequenceFragmentSampleGroup& group2 = candidateSetData2.getDataGroup(0);
     group2.add(bamHeader, bamRecord3, false, true, true);
     group2.add(bamHeader, bamRecord4, false, true, true);
-    group2.begin().operator*().svLink.push_back(association);
+    group2.begin()->svLink.push_back(association);
     SVEvidence evidence2;
     SupportSamples suppSamples2;
     suppSamples2.supportSamples.resize(1);
