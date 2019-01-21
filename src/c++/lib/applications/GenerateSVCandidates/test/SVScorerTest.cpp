@@ -1835,6 +1835,7 @@ BOOST_AUTO_TEST_CASE( test_getBreakendMaxMappedDepthAndMQ0 )
     std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
     GSCOptions options;
     options.alignFileOpt.alignmentFilenames = {bamFilename};
+    options.alignFileOpt.isAlignmentTumor = {false};
     SVScorer scorer(options, scanner.operator*(), bamHeader);
     TestSVScorer fSVScorer;
     SVBreakend breakend;
@@ -1974,6 +1975,7 @@ BOOST_AUTO_TEST_CASE( test_ScoreSV )
     std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
     GSCOptions options;
     options.alignFileOpt.alignmentFilenames = {bamFilename};
+    options.alignFileOpt.isAlignmentTumor = {false};
     SVScorer scorer(options, scanner.operator*(), bamHeader);
     BOOST_CHECK_THROW(scorer.scoreSV(svData, mjAssemblyData, mjSV, mjSVId, isJunctionFiltered,
                                      false, true, mjModelScoreInfo, mjJointModelScoreInfo, isMJEvent, svSupports),
