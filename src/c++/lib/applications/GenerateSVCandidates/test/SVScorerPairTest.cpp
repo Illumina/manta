@@ -431,6 +431,7 @@ BOOST_AUTO_TEST_CASE( test_processExistingAltPairInfo )
     std::unique_ptr<SVLocusScanner> scanner(buildSVLocusScanner(bamHeader));
     GSCOptions options;
     options.alignFileOpt.alignmentFilenames = {bamFileName, bamFileName};
+    options.alignFileOpt.isAlignmentTumor = {false, false};
     SVScorer scorer(options, scanner.operator*(), bamHeader);
     TestSVScorer fSVScorer;
     PairOptions pairOptions(false); // false means it is a DNA sample
@@ -586,9 +587,9 @@ BOOST_AUTO_TEST_CASE( test_getSVPairSupport )
 
     GSCOptions options;
     options.alignFileOpt.alignmentFilenames = { bamFileName };
+    options.alignFileOpt.isAlignmentTumor = {false};
     SVScorer scorer(options, scanner.operator*(), bamHeader);
     TestSVScorer fSVScorer;
-    PairOptions pairOptions(false);
     SVCandidate candidate1;
     candidate1.bp1.interval = GenomeInterval(0, 250, 260);
     candidate1.bp1.state = SVBreakendState::RIGHT_OPEN;
