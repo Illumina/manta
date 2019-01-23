@@ -89,6 +89,7 @@ struct BamStream
         const bam_header_info bamHeader(buildTestBamHeader());
 
         std::string querySeq = "TCTATCACCCATTTTACCACTCACGGGAGCTCTCC";
+        // Creating 1st bam
         bam_record bamRecord1;
         buildTestBamRecord(bamRecord1, 0, 9, 0, 70, 125, 15, "35M", querySeq);
         bamRecord1.set_qname("bamRecord1");
@@ -101,32 +102,62 @@ struct BamStream
         bam_record bamRecord4;
         buildTestBamRecord(bamRecord4, 0, 109, 0, 175, 100, 15, "35M", querySeq);
         bamRecord4.set_qname("bamRecord4");
-        readsToAdd.push_back(bamRecord1);
-        readsToAdd.push_back(bamRecord2);
-        readsToAdd.push_back(bamRecord3);
-        readsToAdd.push_back(bamRecord4);
-        bamFileName = _bamFilename();
-        buildTestBamFile(bamHeader, readsToAdd, bamFileName);
+        readsToAddForFirstBam.push_back(bamRecord1);
+        readsToAddForFirstBam.push_back(bamRecord2);
+        readsToAddForFirstBam.push_back(bamRecord3);
+        readsToAddForFirstBam.push_back(bamRecord4);
+        bamFileName1 = _bamFilename1();
+        buildTestBamFile(bamHeader, readsToAddForFirstBam, bamFileName1);
 
+        // Creating 2nd bam
+        bam_record bamRecord5;
+        buildTestBamRecord(bamRecord5, 0, 10, 0, 70, 125, 15, "35M", querySeq);
+        bamRecord5.set_qname("bamRecord5");
+        bam_record bamRecord6;
+        buildTestBamRecord(bamRecord6, 0, 108, 0, 170, 130, 15, "35M", querySeq);
+        bamRecord6.set_qname("bamRecord6");
+        bam_record bamRecord7;
+        buildTestBamRecord(bamRecord7, 0, 108, 0, 170, 130, 15, "35M", querySeq);
+        bamRecord7.set_qname("bamRecord7");
+        bam_record bamRecord8;
+        buildTestBamRecord(bamRecord8, 0, 109, 0, 175, 100, 15, "35M", querySeq);
+        bamRecord8.set_qname("bamRecord8");
+        readsToAddForSecondBam.push_back(bamRecord5);
+        readsToAddForSecondBam.push_back(bamRecord6);
+        readsToAddForSecondBam.push_back(bamRecord7);
+        readsToAddForSecondBam.push_back(bamRecord8);
+        bamFileName2 = _bamFilename2();
+        buildTestBamFile(bamHeader, readsToAddForSecondBam, bamFileName2);
         const std::string referenceFilename = getTestReferenceFilename();
-        std::vector<std::string> bamFilenames = { bamFileName };
+        std::vector<std::string> bamFilenames = { bamFileName1, bamFileName2 };
         std::vector<std::shared_ptr<bam_streamer>> bamStreams;
         openBamStreams(referenceFilename, bamFilenames, bamStreams);
-        bamStream = bamStreams[0];
+        bamStream1 = bamStreams[0];
+        bamStream2 = bamStreams[1];
     }
 
-    std::shared_ptr<bam_streamer> bamStream;
-    std::vector<bam_record> readsToAdd;
-    std::string bamFileName;
+    std::shared_ptr<bam_streamer> bamStream1;
+    std::vector<bam_record> readsToAddForFirstBam;
+    std::string bamFileName1;
+    std::shared_ptr<bam_streamer> bamStream2;
+    std::vector<bam_record> readsToAddForSecondBam;
+    std::string bamFileName2;
 
 private:
 
     const std::string&
-    _bamFilename() const
+    _bamFilename1() const
     {
-        return _bamFilenameMaker.getFilename();
+        return _bamFilenameMaker1.getFilename();
     }
-    const BamFilenameMaker _bamFilenameMaker;
+
+    const std::string&
+    _bamFilename2() const
+    {
+        return _bamFilenameMaker2.getFilename();
+    }
+    const BamFilenameMaker _bamFilenameMaker1;
+    const BamFilenameMaker _bamFilenameMaker2;
 };
 
 BOOST_FIXTURE_TEST_SUITE( SVScorerPair_test_suite, BamStream )
@@ -222,7 +253,8 @@ BOOST_AUTO_TEST_CASE( test_getTerminal )
 // 1. If a fragment supports SV, frag probability is calculated as mentioned above
 // 2. Fragment probability should be greater than 0.0001f.
 // 3. Distance from breakpoint center position to read position should be greater than or equal to 50
-// 4. For RNA FragProb = max(FragProb, 0.0001f)
+// 4. For RNA FragProb = max(FragProb, 0.0001f) that means if FragProb is less than 0.0001f, then for RNA
+//    always 0.0001f will be taken as fragment probability.
 // 5. If read pair is inter chromosomal but breakpoint pair is not inter chromosomal, it throws an exception.
 // 6. If Read1 chromosome id and bp1 chromosome id is not same, it throws an exception
 // 7. If Read2 chromosome id and bp2 chromosome id is not same, it throws an exception
@@ -357,7 +389,7 @@ BOOST_AUTO_TEST_CASE( test_getFragProb )
                                   isFragSupportSV, fragProb), illumina::common::GeneralException);
 }
 
-// Test whether a bam read satisfies the following criteria
+// For each bam test whether a bam read satisfies the following criteria
 // 1. Start of bam read should overlap with the search range where search range is calculated as:
 //            search range start = BP center pos - (max fragment size of the sample - min fragment support)
 //            search range end = BP center pos + (max fragment size of the sample - min fragment support) + 1
@@ -366,12 +398,13 @@ BOOST_AUTO_TEST_CASE( test_getFragProb )
 // 4. minimum of (breakpoint center pos - fragment start + 1) and (fragment end - breakpoint center pos)
 //    should be greater than minimum fragment threshold which is 50
 // If the above 4 conditions are satisfied for a fragment, then that fragment supports allele on breakpoint.
+// Here the test cases are constructed with bams.
 BOOST_AUTO_TEST_CASE( test_processBamProcList )
 {
     // whether alignment file tumor or normal
-    const std::vector<bool> bamFileInfo = {false};
+    const std::vector<bool> bamFileInfo = {false, false};
     const bam_header_info bamHeader(buildTestBamHeader());
-    std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
+    std::unique_ptr<SVLocusScanner> scanner(buildSVLocusScanner(bamHeader));
     const PairOptions options1(false);
     SVCandidate candidate;
     candidate.insertSeq = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
@@ -379,20 +412,23 @@ BOOST_AUTO_TEST_CASE( test_processBamProcList )
     // BP1 center pos = 159
     candidate.bp1.interval.range = known_pos_range2(100, 220);
     // BP2 center pos = 309
-    candidate.bp2.interval.range = known_pos_range2(250,370);
+    candidate.bp2.interval.range = known_pos_range2(250, 370);
     SVEvidence evidence;
-    evidence.samples.resize(1);
+    evidence.samples.resize(2);
     // As we are interested in BP1,
     // search range start = 159 - (125-50) = 84
     // search range end = 159 + (125-50) + 1 = 235
+    // Test cases for search range are mentioned in test_nextBAMIndex in SVScorePairProcessorTest.cpp
     std::shared_ptr<SVScorePairRefProcessor> processor(new SVScorePairRefProcessor(bamFileInfo,
-                                                       scanner.operator*(), options1, candidate, true, evidence));
+                                                                                    scanner.operator*(), options1,
+                                                                                    candidate, true, evidence));
     std::vector<SVScorer::pairProcPtr> pairProcList = {processor};
-    std::vector<SVScorer::streamPtr> bamStreams = {bamStream};
+    std::vector<SVScorer::streamPtr> bamStreams = {bamStream1, bamStream2};
     SVId id;
     SupportSamples suppSamples;
-    suppSamples.supportSamples.resize(1);
+    suppSamples.supportSamples.resize(2);
     processBamProcList(bamStreams, id, pairProcList, suppSamples);
+    // Check info for 1st bam
     // bam read start = 9. It is not overlapping with search range [84, 235).
     // As a result of this, the fragment is not supporting allele on BP1.
     BOOST_REQUIRE(!evidence.getSampleEvidence(0)["bamRecord1"].ref.bp1.isFragmentSupport);
@@ -411,6 +447,26 @@ BOOST_AUTO_TEST_CASE( test_processBamProcList )
     // As a result of this, fragment support of this
     // bam read will be set.
     BOOST_REQUIRE(evidence.getSampleEvidence(0)["bamRecord4"].ref.bp1.isFragmentSupport);
+
+    // Check info for 2nd bam
+    // bam read start = 10. It is not overlapping with search range [84, 235).
+    // As a result of this, the fragment is not supporting allele on BP1.
+    BOOST_REQUIRE(!evidence.getSampleEvidence(1)["bamRecord5"].ref.bp1.isFragmentSupport);
+    // Bam read start = 108. It does overlap with the search range. However,
+    // its fragment length is 49 which is less than minimum fragment length(50) of the sample
+    // As a result of this, the fragment is not supporting allele on BP1.
+    BOOST_REQUIRE(!evidence.getSampleEvidence(1)["bamRecord6"].ref.bp1.isFragmentSupport);
+    // Bam read start = 108. It does overlap with the search range. However,
+    // its fragment length is 130 which is greater than maximum fragment length(125) of the
+    // sample. As a result of this, the fragment is not supporting allele on BP1.
+    BOOST_REQUIRE(!evidence.getSampleEvidence(1)["bamRecord7"].ref.bp1.isFragmentSupport);
+    // Here min(159-109+1, 208-159) = 51 which is greater than 50
+    // And also case-1, case-2 and case-3 are satisfied.
+    // Fragment start = 109 which is overlapping with the search range[84,235).
+    // Fragment size = 100 which is greater than 50 and less than 125.
+    // As a result of this, fragment support of this
+    // bam read will be set.
+    BOOST_REQUIRE(evidence.getSampleEvidence(1)["bamRecord8"].ref.bp1.isFragmentSupport);
 }
 
 // For Each sample Api computes the following informations:
@@ -430,7 +486,7 @@ BOOST_AUTO_TEST_CASE( test_processExistingAltPairInfo )
     const bam_header_info bamHeader(buildTestBamHeader());
     std::unique_ptr<SVLocusScanner> scanner(buildSVLocusScanner(bamHeader));
     GSCOptions options;
-    options.alignFileOpt.alignmentFilenames = {bamFileName, bamFileName};
+    options.alignFileOpt.alignmentFilenames = {bamFileName1, bamFileName2};
     options.alignFileOpt.isAlignmentTumor = {false, false};
     SVScorer scorer(options, scanner.operator*(), bamHeader);
     TestSVScorer fSVScorer;
@@ -586,7 +642,7 @@ BOOST_AUTO_TEST_CASE( test_getSVPairSupport )
     std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
 
     GSCOptions options;
-    options.alignFileOpt.alignmentFilenames = { bamFileName };
+    options.alignFileOpt.alignmentFilenames = { bamFileName1 };
     options.alignFileOpt.isAlignmentTumor = {false};
     SVScorer scorer(options, scanner.operator*(), bamHeader);
     TestSVScorer fSVScorer;

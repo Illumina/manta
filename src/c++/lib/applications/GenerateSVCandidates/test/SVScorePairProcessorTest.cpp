@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE( test_isSkipRecord )
     std::string querySeq1 = "TCTATCACCCATTTTACCACTCACGGGAGCTCTCC";
     // BamRecord1 is mapped and its mate is unmapped
     bam_record bamRecord1;
-    buildTestBamRecord(bamRecord1, 0, 9, 0, 9, 0, 15, "35M", querySeq1);
+    buildTestBamRecord(bamRecord1, 0, 9, 0, 9, 35, 15, "35M", querySeq1);
     bamRecord1.toggle_is_first();
     bamRecord1.set_qname("bamRecord1");
     bamRecord1.toggle_is_mate_unmapped();
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE( test_isSkipRecord )
     // BamRecord3 and its mate are translocated pair that means it is
     // not an innie pair.
     bam_record bamRecord3;
-    buildTestBamRecord(bamRecord3, 0, 9, 1, 25, 0, 15, "35M", querySeq1);
+    buildTestBamRecord(bamRecord3, 0, 9, 1, 25, 35, 15, "35M", querySeq1);
     bamRecord3.toggle_is_first();
     bamRecord3.set_qname("bamRecord3");
     BOOST_REQUIRE(processor.isSkipRecord(bamRecord3));
