@@ -51,6 +51,7 @@ struct TestSVCandidateProcessor
     }
 };
 
+std::unique_ptr<SVLocusScanner> buildSomaticSVLocusScanner(bam_header_info bamHeaderInfo);
 // As for somatic, minimum two bam files(normal and tumor) are needed,
 // so creating stats for two bam file.
 std::unique_ptr<SVLocusScanner> buildSomaticSVLocusScanner(bam_header_info bamHeaderInfo)
