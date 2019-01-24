@@ -64,7 +64,8 @@ BOOST_AUTO_TEST_CASE( test_isSkipRecord )
     std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
     const PairOptions options1(false);
     SVCandidate candidate;
-    // large insert SV. Insert sequence size is greater than 100.
+    // The test cases below are for large insertions, which has insert
+    // sequence size larger than or equal to 100.
     candidate.insertSeq = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
                           "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
     candidate.bp1.interval.range = known_pos_range2(100, 220);
@@ -116,7 +117,8 @@ BOOST_AUTO_TEST_CASE( test_isSkipRecord )
     bamRecord2.set_qname("bamRecord2");
     BOOST_REQUIRE(processor1.isSkipRecord(bamRecord2));
 
-    // Small insert SV (insert sequence size is less than 100)
+    // The test cases below are for small insertions, which has
+    // insert sequence size less than 100.
     candidate.insertSeq = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTC";
     SVScorePairAltProcessor processor2(bamHeader, scannerOptions,
                                        refinerOptions, tumorNormalInfo,
@@ -131,17 +133,27 @@ BOOST_AUTO_TEST_CASE( test_isSkipRecord )
     BOOST_REQUIRE(processor2.isSkipRecord(bamRecord3));
 }
 
-// Test the following cases for large insertion SV (insert sequence length >= 100):
+// Test whether a fragment will support a breakpoint for the alt allele if the following conditions are satisfied:
+// For large insertion SV (insert sequence length >= 100):
 // 1. If a bamrecord is mapped but it's mate is unmapped, it will not add any fragment support unless
 //    it is properly shadow aligned (assuming the next record of the mapped record is its unmapped mate)
 // 2. Check the position of a shadow read relative to the breakpoint.
 //    The mapped mate should be in forward strand (left of insert) for BP1 and
 //    reverse strand (right of insert) for BP2.
 // 3. Check for shadow alignment
-// 4. Fragment length should be between 50 and 125.
-// 5. minimum of (BP1 center pos - fragment start + 1) and (fragment end - BP2 center pos)
+// For large as well as small insertion SV:
+// 1. Start of bam read should overlap with the search range where search range is calculated as:
+//           search range start = BP center pos - (max fragment size of the sample - min fragment threshold)
+//           search range end = BP center pos + (max fragment size of the sample - min fragment threshold) + 1
+//           search range of a sv candidate is located around centerPos of sv candidate.
+// 2. Alt Fragment length should be greater than or equal to min fragment length of the sample.
+// 3. Alt Fragment length should be less than or equal to max fragment length of the sample
+//        Where Alt Fragment length = fragment length - alt_shift
+//                                  alt_shift = BP2 center pos - BP1 center pos - insert sequence size
+// 4. minimum of (BP1 center pos - fragment start + 1) and (fragment end - BP2 center pos)
 //    should be greater than minimum fragment threshold which is 50
-BOOST_AUTO_TEST_CASE( test_processClearedRecord_LargeInsertion )
+// If any of the above conditions is not satisfied, then the fragment will not support the breakpoint.
+BOOST_AUTO_TEST_CASE( test_processClearedRecord )
 {
     const bam_header_info bamHeader(buildTestBamHeader());
     const std::vector<bool> tumorNormalInfo = {false};
@@ -150,20 +162,20 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord_LargeInsertion )
     SVCandidate candidate1;
     // large insertion (size = 102 > 100)
     candidate1.insertSeq = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
-                          "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
+                           "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
     candidate1.bp1.interval.range = known_pos_range2(100, 220);
     candidate1.bp2.interval.range = known_pos_range2(250, 300);
     candidate1.bp1.state = SVBreakendState::RIGHT_OPEN;
     candidate1.bp2.state = SVBreakendState::LEFT_OPEN;
     candidate1.setPrecise();
     candidate1.assemblyAlignIndex = 0;
-    SVEvidence evidence;
-    evidence.samples.resize(1);
+    SVEvidence evidence1;
+    evidence1.samples.resize(1);
 
     ReadScannerOptions scannerOptions;
     SVRefinerOptions refinerOptions;
-    SVCandidateAssemblyData candidateAssemblyData;
-    candidateAssemblyData.bestAlignmentIndex = 0;
+    SVCandidateAssemblyData candidateAssemblyData1;
+    candidateAssemblyData1.bestAlignmentIndex = 0;
     Alignment alignment1;
     alignment1.beginPos = 30;
     std::string testCigar1("35=");
@@ -176,20 +188,21 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord_LargeInsertion )
     jumpAlignmentResultType.align1 = alignment1;
     jumpAlignmentResultType.align2 = alignment2;
     jumpAlignmentResultType.jumpRange = 2;
-    candidateAssemblyData.spanningAlignments.push_back(jumpAlignmentResultType);
-    candidateAssemblyData.isSpanning = true;
-    candidateAssemblyData.extendedContigs.push_back("GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGG"
-                                                    "TGATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
-                                                    "TGATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
-                                                    "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA");
+    candidateAssemblyData1.spanningAlignments.push_back(jumpAlignmentResultType);
+    candidateAssemblyData1.isSpanning = true;
+    candidateAssemblyData1.extendedContigs.push_back("GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGG"
+                                                     "TGATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
+                                                     "TGATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
+                                                     "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA");
     // Processor for Breakpoint-1
     SVScorePairAltProcessor processor1(
             bamHeader, scannerOptions, refinerOptions, tumorNormalInfo,
-            scanner.operator*(), options1, candidateAssemblyData,
-            candidate1, true, evidence);
+            scanner.operator*(), options1, candidateAssemblyData1,
+            candidate1, true, evidence1);
     SVId id;
     SupportFragments suppFrags;
-
+    // The test cases below are for large insertions, which has insert sequence size larger than
+    // or equal to 100.
     std::string querySeq1 = "TCTATCACCCATTTTACCACTCACGGGAGCTCTCC";
     // Case-1 is designed here.
     // bamRecord1 is mapped, but mate is unmapped. Till this point, the unmapped mate is not processed,
@@ -201,7 +214,7 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord_LargeInsertion )
     bamRecord1.toggle_is_mate_unmapped();
     processor1.nextBamIndex(0);
     processor1.processClearedRecord(id, bamRecord1, suppFrags);
-    BOOST_REQUIRE(!evidence.getSampleEvidence(0)[bamRecord1.qname()].ref.bp1.isFragmentSupport);
+    BOOST_REQUIRE(!evidence1.getSampleEvidence(0)[bamRecord1.qname()].alt.bp1.isFragmentSupport);
 
     // case-2 is designed here.
     // Check the position of a shadow read relative to the breakpoint.
@@ -215,7 +228,7 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord_LargeInsertion )
     bamRecord2.set_qname("Read1");
     bamRecord2.toggle_is_unmapped();
     processor1.processClearedRecord(id, bamRecord2, suppFrags);
-    BOOST_REQUIRE(!evidence.getSampleEvidence(0)[bamRecord2.qname()].ref.bp1.isFragmentSupport);
+    BOOST_REQUIRE(!evidence1.getSampleEvidence(0)[bamRecord2.qname()].alt.bp1.isFragmentSupport);
 
     // bamRecord4 meets the basic criteria for shadow read criteria given it is unmapped
     // and its mate bamRecord3 is mapped. However, one of the conditions for shadow alignment
@@ -234,175 +247,124 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord_LargeInsertion )
     bamRecord4.toggle_is_mate_fwd_strand();
     processor1.processClearedRecord(id, bamRecord3, suppFrags);
     processor1.processClearedRecord(id, bamRecord4, suppFrags);
-    BOOST_REQUIRE(!evidence.getSampleEvidence(0)[bamRecord4.qname()].ref.bp1.isFragmentSupport);
+    BOOST_REQUIRE(!evidence1.getSampleEvidence(0)[bamRecord4.qname()].alt.bp1.isFragmentSupport);
 
-    // Case-4 and Case-5 have been designed here where fragment length should be between 50 and minimum
-    // of (BP1 center pos - fragment start + 1) and (fragment end - BP2 center pos) should be greater
-    // than minimum fragment threshold which is 50.
+    // The test cases below are for large insertions, which has insert sequence size larger than or equal to 100
+    // as well as for small insertions, which has insert sequence size less than 100.
     SVCandidate candidate2;
-    candidate2.insertSeq = "GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
-                           "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA";
-    // BP1 center pos = 54
-    candidate2.bp1.interval.range = known_pos_range2(50, 60);
-    // BP2 center pos = 70
-    candidate2.bp2.interval.range = known_pos_range2(70, 71);
+    candidate2.insertSeq = "GATCACAGGTCTATCACCCTATTAACCACTC";
+    // BP1 center pos = 159
+    candidate2.bp1.interval.range = known_pos_range2(100, 220);
+    // BP2 center pos = 274
+    candidate2.bp2.interval.range = known_pos_range2(250, 300);
     candidate2.bp1.state = SVBreakendState::RIGHT_OPEN;
     candidate2.bp2.state = SVBreakendState::LEFT_OPEN;
     candidate2.setPrecise();
     candidate2.assemblyAlignIndex = 0;
-    // Case-4 - Fragment length = 124 which is greater than 50.
-    // Case-5 - minimum of (BP1 center pos - fragment start + 1) and (fragment end - BP2 center pos)
-    // = min(54-4, 128-70) = 50 >= min fragment size threshold 50.
-    bam_record bamRecord5;
-    buildTestBamRecord(bamRecord5, 0, 4, 0, 100, 124, 15, "35M", querySeq1);
-    bamRecord5.set_qname("bamRecord5");
-    SVScorePairAltProcessor processor2(bamHeader, scannerOptions, refinerOptions, tumorNormalInfo,
-                                       scanner.operator*(), options1, candidateAssemblyData, candidate2,
-                                       true, evidence);
-    processor2.nextBamIndex(0);
-    processor2.processClearedRecord(id, bamRecord5, suppFrags);
-    BOOST_REQUIRE(evidence.getSampleEvidence(0)[bamRecord5.qname()].alt.bp1.isFragmentSupport);
-    BOOST_REQUIRE(evidence.getSampleEvidence(0)[bamRecord5.qname()].ref.bp1.isFragmentSupport);
-}
-
-// A fragment will support a breakpoint for an allele if following conditions are satisfied:
-// 1. Start of bam read should overlap with the search range where search range is calculated as:
-//           search range start = BP center pos - (max fragment size of the sample - min fragment threshold)
-//           search range end = BP center pos + (max fragment size of the sample - min fragment threshold) + 1
-//           search range of a sv candidate is located around centerPos of sv candidate.
-// 2. Alt Fragment length should be greater than or equal to min fragment length of the sample.
-// 3. Alt Fragment length should be less than or equal to max fragment length of the sample
-//        Where Alt Fragment length = fragment length - alt_shift
-//                                  alt_shift = BP2 center pos - BP1 center pos - insert sequence size
-// 4. minimum of (BP1 center pos - fragment start + 1) and (fragment end - BP2 center pos)
-//    should be greater than minimum fragment threshold which is 50
-// If any of the above conditions is not satisfied, then the fragment will not support the breakpoint.
-BOOST_AUTO_TEST_CASE( test_processClearedRecord_smallInsertion )
-{
-    const bam_header_info bamHeader(buildTestBamHeader());
-    const std::vector<bool> bamFileInfo = {false};
-    std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
-    const PairOptions options1(false);
-    SVCandidate candidate;
-    candidate.insertSeq = "GATCACAGGTCTATCACCCTATTAACCACTC";
-    // BP1 center pos = 159
-    candidate.bp1.interval.range = known_pos_range2(100, 220);
-    // BP2 center pos = 274
-    candidate.bp2.interval.range = known_pos_range2(250, 300);
-    candidate.bp1.state = SVBreakendState::RIGHT_OPEN;
-    candidate.bp2.state = SVBreakendState::LEFT_OPEN;
-    candidate.setPrecise();
-    candidate.assemblyAlignIndex = 0;
-    SVEvidence evidence;
-    evidence.samples.resize(1);
-
-    ReadScannerOptions scannerOptions;
-    SVRefinerOptions refinerOptions;
-    SVCandidateAssemblyData candidateAssemblyData;
-    candidateAssemblyData.bestAlignmentIndex = 0;
-    Alignment alignment1;
-    alignment1.beginPos = 406;
-    std::string testCigar1("94=");
-    cigar_to_apath(testCigar1.c_str(), alignment1.apath);
-    Alignment alignment2;
-    alignment2.beginPos = 510;
-    std::string testCigar2("110=75I1D2=");
-    cigar_to_apath(testCigar2.c_str(), alignment2.apath);
-    SVCandidateAssemblyData::JumpAlignmentResultType jumpAlignmentResultType;
-    jumpAlignmentResultType.align1 = alignment1;
-    jumpAlignmentResultType.align2 = alignment2;
+    SVEvidence evidence2;
+    evidence2.samples.resize(1);
+    SVCandidateAssemblyData candidateAssemblyData2;
+    candidateAssemblyData2.bestAlignmentIndex = 0;
+    Alignment alignment3;
+    alignment3.beginPos = 406;
+    std::string testCigar3("94=");
+    cigar_to_apath(testCigar3.c_str(), alignment3.apath);
+    Alignment alignment4;
+    alignment4.beginPos = 510;
+    std::string testCigar4("110=75I1D2=");
+    cigar_to_apath(testCigar4.c_str(), alignment4.apath);
+    jumpAlignmentResultType.align1 = alignment3;
+    jumpAlignmentResultType.align2 = alignment4;
     jumpAlignmentResultType.jumpRange = 2;
-    candidateAssemblyData.spanningAlignments.push_back(jumpAlignmentResultType);
-    candidateAssemblyData.isSpanning = true;
-    candidateAssemblyData.extendedContigs.push_back("GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
-                                                    "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA");
-    SVScorePairAltProcessor processor1(
-            bamHeader, scannerOptions, refinerOptions, bamFileInfo,
-            scanner.operator*(), options1, candidateAssemblyData, candidate,
-            true, evidence);
+    candidateAssemblyData2.spanningAlignments.push_back(jumpAlignmentResultType);
+    candidateAssemblyData2.isSpanning = true;
+    candidateAssemblyData2.extendedContigs.push_back("GATCACAGGTCTATCACCCTATTAACCACTCACGGGAGCTCTCCATGCATTTGGT"
+                                                     "ATTTTCGTCTGGGGGGTGTGCACGCGATAGCATTGCGAGACGCTGGA");
+    SVScorePairAltProcessor processor2(
+            bamHeader, scannerOptions, refinerOptions, tumorNormalInfo,
+            scanner.operator*(), options1, candidateAssemblyData2, candidate2,
+            true, evidence2);
     // As we are interested in BP1,
     // search range start = 159 - (125-50) = 84
     // search range end = 159 + (125-50) + 1 = 235
     // Test cases for search range are mentioned in test_nextBAMIndex in SVScorePairProcessorTest.cpp
-    processor1.nextBamIndex(0);
-    SVId id;
-    SupportFragments suppFrags;
+    processor2.nextBamIndex(0);
+    SVId id2;
+    SupportFragments suppFrags2;
 
-    std::string querySeq1 = "TCTATCACCCATTTTACCACTCACGGGAGCTCTCC";
     // Case-1 is designed here.
     // bam read start = 10. It is not overlapping with search range [84, 235).
     // As a result of this, the fragment is not supporting allele on BP1.
-    bam_record bamRecord0;
-    buildTestBamRecord(bamRecord0, 0, 10, 0, 125, 200, 15, "35M", querySeq1);
-    bamRecord0.set_qname("bamRecord0");
-    processor1.processClearedRecord(id, bamRecord0, suppFrags);
-    BOOST_REQUIRE(!evidence.getSampleEvidence(0)[bamRecord0.qname()].alt.bp1.isFragmentSupport);
-    BOOST_REQUIRE(!evidence.getSampleEvidence(0)[bamRecord0.qname()].ref.bp1.isFragmentSupport);
+    bam_record bamRecord5;
+    buildTestBamRecord(bamRecord5, 0, 10, 0, 125, 200, 15, "35M", querySeq1);
+    bamRecord5.set_qname("bamRecord5");
+    processor2.processClearedRecord(id2, bamRecord5, suppFrags2);
+    BOOST_REQUIRE(!evidence2.getSampleEvidence(0)[bamRecord5.qname()].alt.bp1.isFragmentSupport);
 
     // Case-2 is designed here.
     // Bam read start = 109. It does overlap with the search range. However,
     // here altFragment length = 100 - (274-159-31) = 16 which is less
     // than minimum fragment length(50) of the sample
     // As a result of this, the fragment is not supporting allele on BP1.
-    bam_record bamRecord1;
-    buildTestBamRecord(bamRecord1, 0, 109, 0, 175, 100, 15, "35M", querySeq1);
-    bamRecord1.set_qname("bamRecord1");
-    processor1.processClearedRecord(id, bamRecord1, suppFrags);
-    BOOST_REQUIRE(!evidence.getSampleEvidence(0)[bamRecord1.qname()].alt.bp1.isFragmentSupport);
-    BOOST_REQUIRE(!evidence.getSampleEvidence(0)[bamRecord1.qname()].ref.bp1.isFragmentSupport);
+    bam_record bamRecord6;
+    buildTestBamRecord(bamRecord6, 0, 109, 0, 175, 100, 15, "35M", querySeq1);
+    bamRecord6.set_qname("bamRecord6");
+    processor2.processClearedRecord(id, bamRecord6, suppFrags2);
+    BOOST_REQUIRE(!evidence2.getSampleEvidence(0)[bamRecord6.qname()].alt.bp1.isFragmentSupport);
+    BOOST_REQUIRE(!evidence2.getSampleEvidence(0)[bamRecord6.qname()].ref.bp1.isFragmentSupport);
 
     // Case-3 is designed here.
     // Bam read start = 109. It does overlap with the search range. However,
     // here altFragment length = 300 - (274-159-31) = 216 which is greater
     // than maximum fragment length(125) of the sample.
     // As a result of this, the fragment is not supporting allele on BP1.
-    bam_record bamRecord2;
-    buildTestBamRecord(bamRecord2, 0, 109, 0, 175, 300, 15, "35M", querySeq1);
-    bamRecord2.set_qname("bamRecord2");
-    processor1.processClearedRecord(id, bamRecord2, suppFrags);
-    BOOST_REQUIRE(!evidence.getSampleEvidence(0)[bamRecord2.qname()].alt.bp1.isFragmentSupport);
-    BOOST_REQUIRE(!evidence.getSampleEvidence(0)[bamRecord2.qname()].ref.bp1.isFragmentSupport);
+    bam_record bamRecord7;
+    buildTestBamRecord(bamRecord7, 0, 109, 0, 175, 300, 15, "35M", querySeq1);
+    bamRecord7.set_qname("bamRecord7");
+    processor2.processClearedRecord(id2, bamRecord7, suppFrags2);
+    BOOST_REQUIRE(!evidence2.getSampleEvidence(0)[bamRecord7.qname()].alt.bp1.isFragmentSupport);
+    BOOST_REQUIRE(!evidence2.getSampleEvidence(0)[bamRecord7.qname()].ref.bp1.isFragmentSupport);
 
     // Here case-4 is not satisfied.
     // Here min(159-109+1, 308-274) = 34 which is less than 50
     // As a result of this, the fragment is not supporting allele on BP1.
-    bam_record bamRecord3;
-    buildTestBamRecord(bamRecord3, 0, 109, 0, 175, 200, 15, "35M", querySeq1);
-    bamRecord3.set_qname("bamRecord3");
-    processor1.processClearedRecord(id, bamRecord3, suppFrags);
-    BOOST_REQUIRE(!evidence.getSampleEvidence(0)[bamRecord3.qname()].alt.bp1.isFragmentSupport);
-    BOOST_REQUIRE(!evidence.getSampleEvidence(0)[bamRecord3.qname()].ref.bp1.isFragmentSupport);
+    bam_record bamRecord8;
+    buildTestBamRecord(bamRecord8, 0, 109, 0, 175, 200, 15, "35M", querySeq1);
+    bamRecord8.set_qname("bamRecord8");
+    processor2.processClearedRecord(id2, bamRecord8, suppFrags2);
+    BOOST_REQUIRE(!evidence2.getSampleEvidence(0)[bamRecord8.qname()].alt.bp1.isFragmentSupport);
+    BOOST_REQUIRE(!evidence2.getSampleEvidence(0)[bamRecord8.qname()].ref.bp1.isFragmentSupport);
 
-    candidate.bp1.interval.range = known_pos_range2(80, 81);
-    candidate.bp2.interval.range = known_pos_range2(160, 161);
-    candidate.insertSeq = "";
-    SVScorePairAltProcessor processor2(bamHeader,
-                                       scannerOptions, refinerOptions, bamFileInfo,
-                                       scanner.operator*(), options1, candidateAssemblyData,
-                                       candidate, true, evidence);
+    candidate2.bp1.interval.range = known_pos_range2(80, 81);
+    candidate2.bp2.interval.range = known_pos_range2(160, 161);
+    candidate2.insertSeq = "";
+    SVScorePairAltProcessor processor3(bamHeader,
+                                       scannerOptions, refinerOptions, tumorNormalInfo,
+                                       scanner.operator*(), options1, candidateAssemblyData2,
+                                       candidate2, true, evidence2);
     // As we are interested in BP1,
     // search range start = 80 - (125-50) = 5
     // search range end = 80 + (125-50) + 1 = 156
-    processor2.nextBamIndex(0);
-    id.localId = "INS_1";
+    processor3.nextBamIndex(0);
+    id2.localId = "INS_1";
     // All the above 4 cases are satisfied,
-    // bamRecord4 is overlapping with the [5,156).
+    // bamRecord9 is overlapping with the [5,156).
     // altFragment length = 200 - (160-80-0) = 120 which is greater than 50 and
     // less than 125.
     // Also minimum of (BP1 center pos - fragment start + 1) and (fragment end - BP2 center pos)
     //              = min(80-10+1, 210-160) = 50 >= min fragment length 50.
     // So, the fragment is supporting allele on BP1.
     // It will add spanning pair(PR) support for this segment
-    bam_record bamRecord4;
-    buildTestBamRecord(bamRecord4, 0, 10, 0, 125, 200, 15, "35M", querySeq1);
-    bamRecord4.set_qname("bamRecord4");
-    processor2.processClearedRecord(id, bamRecord4, suppFrags);
-    BOOST_REQUIRE(evidence.getSampleEvidence(0)[bamRecord4.qname()].alt.bp1.isFragmentSupport);
-    BOOST_REQUIRE_EQUAL(suppFrags.getSupportFragment(bamRecord4).read1.SVs.size(), 1);
-    BOOST_REQUIRE_EQUAL(*(suppFrags.getSupportFragment(bamRecord4).read1.SVs["INS_1"].begin()), "PR");
-    BOOST_REQUIRE_EQUAL(suppFrags.getSupportFragment(bamRecord4).read2.SVs.size(), 1);
-    BOOST_REQUIRE_EQUAL(*(suppFrags.getSupportFragment(bamRecord4).read2.SVs["INS_1"].begin()), "PR");
-    BOOST_REQUIRE(evidence.getSampleEvidence(0)[bamRecord4.qname()].ref.bp1.isFragmentSupport);
+    bam_record bamRecord9;
+    buildTestBamRecord(bamRecord9, 0, 10, 0, 125, 200, 15, "35M", querySeq1);
+    bamRecord9.set_qname("bamRecord9");
+    processor3.processClearedRecord(id2, bamRecord9, suppFrags2);
+    BOOST_REQUIRE(evidence2.getSampleEvidence(0)[bamRecord9.qname()].alt.bp1.isFragmentSupport);
+    BOOST_REQUIRE_EQUAL(suppFrags2.getSupportFragment(bamRecord9).read1.SVs.size(), 1);
+    BOOST_REQUIRE_EQUAL(*(suppFrags2.getSupportFragment(bamRecord9).read1.SVs["INS_1"].begin()), "PR");
+    BOOST_REQUIRE_EQUAL(suppFrags2.getSupportFragment(bamRecord9).read2.SVs.size(), 1);
+    BOOST_REQUIRE_EQUAL(*(suppFrags2.getSupportFragment(bamRecord9).read2.SVs["INS_1"].begin()), "PR");
+    BOOST_REQUIRE(evidence2.getSampleEvidence(0)[bamRecord9.qname()].ref.bp1.isFragmentSupport);
 }
 
 // Shadow Read - A unmapped read with its paired mate being mapped,

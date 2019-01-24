@@ -482,7 +482,7 @@ BOOST_AUTO_TEST_CASE( test_processBamProcList )
 // 4) If the fragment supports allele on the BPs, then set that flag.
 BOOST_AUTO_TEST_CASE( test_processExistingAltPairInfo )
 {
-    static const double eps(0.00000001);
+    static const float eps(0.00000001);
     const bam_header_info bamHeader(buildTestBamHeader());
     std::unique_ptr<SVLocusScanner> scanner(buildSVLocusScanner(bamHeader));
     GSCOptions options;
@@ -616,7 +616,7 @@ BOOST_AUTO_TEST_CASE( test_processExistingAltPairInfo )
 //            read2Distance = distance from center pos of BP2 to read2
 BOOST_AUTO_TEST_CASE( test_getSVPairSupport )
 {
-    static const double eps(0.00000001);
+    static const float eps(0.00000001);
     // Dummy Assembly data is created
     SVCandidateAssemblyData candidateAssemblyData;
     candidateAssemblyData.bestAlignmentIndex = 0;
