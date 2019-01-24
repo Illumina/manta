@@ -770,6 +770,7 @@ BOOST_AUTO_TEST_CASE( test_SVCandidates )
     options.edgeRuntimeFilename = fileNameMaker2.getFilename();
     options.referenceFilename = referenceFilename;
     options.alignFileOpt.alignmentFilenames = {bamFileName};
+    options.alignFileOpt.isAlignmentTumor = {false};
     options.graphFilename = graphFilename;
     options.chromDepthFilename = depthFileName;
     EdgeRuntimeTracker edgeTracker(options.edgeRuntimeFilename);
