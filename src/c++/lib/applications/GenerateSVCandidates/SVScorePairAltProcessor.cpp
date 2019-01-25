@@ -457,7 +457,7 @@ processClearedRecord(
             if (isShadowRead)
             {
 
-                // does the shadow occur to the left or right of the insertion?
+                // does the shadow's mate occur to the left or right of the insertion?
                 const bool isLeftOfInsert(bamRead.is_mate_fwd_strand());
 
                 // eval left of insert for Bp1 and right of insert for Bp2:
