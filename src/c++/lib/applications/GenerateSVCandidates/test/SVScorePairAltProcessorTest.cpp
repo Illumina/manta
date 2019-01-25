@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE( test_isSkipRecord )
 //    The mapped mate should be in forward strand (left of insert) for BP1 and
 //    reverse strand (right of insert) for BP2.
 // 3. Check for shadow alignment
-// For large as well as small insertion SV:
+// For all SVs, including large insertions:
 // 1. Start of bam read should overlap with the search range where search range is calculated as:
 //           search range start = BP center pos - (max fragment size of the sample - min fragment threshold)
 //           search range end = BP center pos + (max fragment size of the sample - min fragment threshold) + 1
@@ -249,8 +249,7 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord )
     processor1.processClearedRecord(id, bamRecord4, suppFrags);
     BOOST_REQUIRE(!evidence1.getSampleEvidence(0)[bamRecord4.qname()].alt.bp1.isFragmentSupport);
 
-    // The test cases below are for large insertions, which has insert sequence size larger than or equal to 100
-    // as well as for small insertions, which has insert sequence size less than 100.
+    // The test cases below are for all SVs, including large insertions.
     SVCandidate candidate2;
     candidate2.insertSeq = "GATCACAGGTCTATCACCCTATTAACCACTC";
     // BP1 center pos = 159
