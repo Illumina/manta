@@ -87,6 +87,11 @@ struct EdgeRuntimeTracker : private boost::noncopyable
     /// Time to retrieve reads from remote locations prior to assembling large insertions.
     /// Note this is a subset of assemblyTime
     TimeTracker remoteReadRetrievalTime;
+
+    /// TestEdgeRuntimeTracker is a friend structure of EdgeRuntimeTracker. So that it can access private
+    /// members of EdgeRuntimeTracker.
+    friend struct TestEdgeRuntimeTracker;
+
 private:
     std::ostream* _osPtr;
     TimeTracker edgeTime;
