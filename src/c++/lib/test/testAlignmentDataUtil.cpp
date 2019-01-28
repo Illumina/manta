@@ -117,10 +117,11 @@ buildTestBamRecord(
     int pos,
     int mateTargetID,
     int matePos,
-    int fragmentSize,
+    int readLength,
     int mapQ,
     std::string cigarString,
-    std::string querySeq)
+    std::string querySeq,
+    int fragmentSize)
 {
     bam1_t& bamData(*(bamRead.get_data()));
 
@@ -133,7 +134,7 @@ buildTestBamRecord(
     {
         if (cigarString.empty())
         {
-            cigarString = std::to_string(fragmentSize) + "M";
+            cigarString = std::to_string(readLength) + "M";
         }
 
         ALIGNPATH::path_t inputPath;
@@ -145,7 +146,7 @@ buildTestBamRecord(
     {
         if ( querySeq.empty() )
         {
-            querySeq = std::string(fragmentSize,'A');
+            querySeq = std::string(readLength, 'A');
         }
         const unsigned querySize(querySeq.length());
         // initialize test qual array to all Q30's:
@@ -156,7 +157,6 @@ buildTestBamRecord(
         }
         edit_bam_read_and_quality(querySeq.c_str(), qual.get(), bamData);
     }
-
     // Set some defaults for the read
     bamRead.toggle_is_paired();
     bamRead.toggle_is_mate_fwd_strand();
