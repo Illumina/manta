@@ -174,11 +174,11 @@ BOOST_AUTO_TEST_CASE( test_IsCandidateCountSufficient )
 BOOST_AUTO_TEST_CASE( test_AddReadToDepthEst )
 {
     bam_record bamRecord1;
-    buildTestBamRecord(bamRecord1, 0, 200, 0, 210, 20, 15, "15M");
+    buildTestBamRecord(bamRecord1, 0, 200, 0, 210, 20, 15);
     bamRecord1.set_qname("Read-1");
 
     bam_record bamRecord2;
-    buildTestBamRecord(bamRecord2, 0, 210, 0, 220, 20, 15, "15M");
+    buildTestBamRecord(bamRecord2, 0, 210, 0, 220, 20, 15);
     bamRecord2.set_qname("Read-2");
 
     std::vector<unsigned>depth(30);

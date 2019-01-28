@@ -70,14 +70,14 @@ struct BamStream
 
         std::string querySeq = "TCTATCACCCATTTTACCACTCACGGGAGCTCTCC";
         bam_record bamRecord1;
-        buildTestBamRecord(bamRecord1, 0, 9, 0, 100, 200, 15, "35M", querySeq);
+        buildTestBamRecord(bamRecord1, 0, 9, 0, 100, 35, 15, "35M", querySeq, 200);
         bamRecord1.set_qname("bamRecord1");
         // small Fragment length read
         bam_record bamRecord2;
-        buildTestBamRecord(bamRecord2, 0, 109, 0, 125, 49, 15, "35M", querySeq);
+        buildTestBamRecord(bamRecord2, 0, 109, 0, 125, 49, 15, "35M", querySeq, 49);
         bamRecord2.set_qname("bamRecord2");
         bam_record bamRecord3;
-        buildTestBamRecord(bamRecord3, 0, 109, 0, 180, 100, 15, "35M", querySeq);
+        buildTestBamRecord(bamRecord3, 0, 109, 0, 180, 35, 15, "35M", querySeq, 100);
         bamRecord3.set_qname("bamRecord3");
         readsToAdd.push_back(bamRecord1);
         readsToAdd.push_back(bamRecord2);
@@ -85,7 +85,7 @@ struct BamStream
         for (unsigned i(0); i < 18; i++)
         {
             bam_record bamRecord;
-            buildTestBamRecord(bamRecord, 0, 109, 0, 180, 100, 0, "35M", querySeq);
+            buildTestBamRecord(bamRecord, 0, 109, 0, 180, 35, 0, "35M", querySeq, 100);
             std::string name = "bamRecord" + std::to_string(i+4);
             bamRecord.set_qname(name.c_str());
             readsToAdd.push_back(bamRecord);
@@ -124,12 +124,12 @@ BOOST_AUTO_TEST_CASE( test_addReadToDepthEst )
 {
     // read length = 15
     bam_record bamRecord1;
-    buildTestBamRecord(bamRecord1, 0, 200, 0, 210, 20, 15, "15M");
+    buildTestBamRecord(bamRecord1, 0, 200, 0, 210, 15, 15, "15M");
     bamRecord1.set_qname("Read-1");
 
     // Read length = 15
     bam_record bamRecord2;
-    buildTestBamRecord(bamRecord2, 0, 210, 0, 220, 20, 15, "15M");
+    buildTestBamRecord(bamRecord2, 0, 210, 0, 220, 15, 15, "15M");
     bamRecord2.set_qname("Read-2");
 
     std::vector<unsigned>depth(30);
