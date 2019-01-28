@@ -74,7 +74,7 @@ struct BamStream
         bamRecord1.set_qname("bamRecord1");
         // small Fragment length read
         bam_record bamRecord2;
-        buildTestBamRecord(bamRecord2, 0, 109, 0, 125, 49, 15, "35M", querySeq, 49);
+        buildTestBamRecord(bamRecord2, 0, 109, 0, 125, 35, 15, "35M", querySeq, 49);
         bamRecord2.set_qname("bamRecord2");
         bam_record bamRecord3;
         buildTestBamRecord(bamRecord3, 0, 109, 0, 180, 35, 15, "35M", querySeq, 100);
