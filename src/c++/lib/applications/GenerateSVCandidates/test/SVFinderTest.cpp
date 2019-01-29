@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE( test_AddSVNodeRead )
     // 1. Local Evidence = GenomeInterval: 0:[400,440) (Based on read end and 40 bp minPairBreakendSize)
     // 2. Remote Evidence = GenomeInterval: 0:[260,300) (Based on mate's start and 40 bp minPairBreakendSize)
     bam_record anomalousReadBasedOnFragment;
-    buildTestBamRecord(anomalousReadBasedOnFragment, 0, 200, 0, 300, 200, 15, "100M2000I100M");
+    buildTestBamRecord(anomalousReadBasedOnFragment, 0, 200, 0, 300, 2200, 15, "100M2000I100M");
     anomalousReadBasedOnFragment.set_qname("anomalous_read");
 
     // test a read is not overlapping with a locus node (mentioned above) when localnode's coordinate is GenomeInterval(0,80,120) and
@@ -567,7 +567,7 @@ BOOST_AUTO_TEST_CASE( test_filterCandidates )
 BOOST_AUTO_TEST_CASE( test_updateEvidenceIndex )
 {
     bam_record bamRecord1;
-    buildTestBamRecord(bamRecord1, 0, 200, 0, 210, 20, 15, "15M");
+    buildTestBamRecord(bamRecord1, 0, 200, 0, 210, 20, 15);
     bamRecord1.set_qname("Read-1");
 
     SVCandidateSetSequenceFragment fragment;
@@ -607,7 +607,7 @@ BOOST_AUTO_TEST_CASE( test_updateEvidenceIndex )
 
     // check read index for PAIR evidence type
     bam_record bamRecord2;
-    buildTestBamRecord(bamRecord2, 0, 210, 0, 220, 20, 15, "15M");
+    buildTestBamRecord(bamRecord2, 0, 210, 0, 220, 20, 15);
     bamRecord2.set_qname("Read-2");
 
     // SV evidence source is Pair Reads
@@ -674,12 +674,12 @@ BOOST_AUTO_TEST_CASE( test_consolidateOverlap )
     std::string queryseq1 = "AGCTGACTGATCGATTTTTTACGTAGAGGAGCTTTGACGTATGAGCCTGATATGAGCCTG";
     std::string queryseq2 = "TGACGTATGAGCCTGATATGAGCCT";
     bam_record bamRecord1;
-    buildTestBamRecord(bamRecord1, 0, 200, 0, 300, 125, 15, "60M", queryseq1);
+    buildTestBamRecord(bamRecord1, 0, 200, 0, 300, 60, 15, "60M", queryseq1);
     bamRecord1.set_qname("Read-1");
     bamRecord1.toggle_is_first();
 
     bam_record bamRecord2;
-    buildTestBamRecord(bamRecord2, 0, 300, 0, 200, 125, 15, "25M", queryseq2);
+    buildTestBamRecord(bamRecord2, 0, 300, 0, 200, 25, 15, "25M", queryseq2);
     bamRecord2.toggle_is_second();
     bamRecord2.toggle_is_fwd_strand();
     bamRecord2.toggle_is_mate_fwd_strand();

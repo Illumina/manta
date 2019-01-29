@@ -33,6 +33,7 @@ BOOST_AUTO_TEST_SUITE( SVScorePairRefProcessor_test_suite )
 // 4. minimum of (breakpoint center pos - fragment start + 1) and (fragment end - breakpoint center pos)
 //    should be greater than minimum fragment threshold which is 50
 // 5. For RNA, bam read should be properly paired.
+// 6. If mate location is less than this read location, fragment support is calculated based on mate's start.
 BOOST_AUTO_TEST_CASE( test_processClearedRecord )
 {
     const std::vector<bool> bamFileInfo = {false}; // whether normal bam or tumor bam file
@@ -133,18 +134,18 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord )
     processor3.processClearedRecord(id, bamRecord7, suppFrags);
     BOOST_REQUIRE(evidence.getSampleEvidence(0)[bamRecord7.qname()].ref.bp1.isFragmentSupport);
 
-    // count only from the down stream reads. So here mate location
+    // Case-6 is designed here where mate location
     // is less than this read's start location. Fragment support is
     // calculated based on mate's location and the fragment length.
     // Here min(159-109+1, 208-159) = 51 which is greater than 50
     // Fragment start = 109 which is overlapping with the search range[84,235).
     // Fragment size = 100 which is greater than 50 and less than 125.
-    // All the above 4 points satisfied, this fragment is supporting allele on BP1.
+    // All the first 4 points satisfied here. As a result of this, the fragment is
+    // supporting allele on BP1.
     bam_record bamRecord8;
-    buildTestBamRecord(bamRecord8, 0, 200, 0, 109, 84, 15, "84M");
+    buildTestBamRecord(bamRecord8, 0, 180, 0, 109, 84, 15, "84M", "" , 100);
     bamRecord8.set_qname("bamRecord8");
-    bamRecord8.get_data()->core.flag ^= BAM_FLAG::PROPER_PAIR;
-    processor3.processClearedRecord(id, bamRecord8, suppFrags);
+    processor1.processClearedRecord(id, bamRecord8, suppFrags);
     BOOST_REQUIRE(evidence.getSampleEvidence(0)[bamRecord8.qname()].ref.bp1.isFragmentSupport);
 }
 

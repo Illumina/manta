@@ -46,13 +46,13 @@ struct BamStream
         buildTestBamRecord(bamRecord3, 0, 10, 1, 69, 35, 15, "35M", "CTATCACCCTATTAACCACTCACGGGAGAAAAAGA", 0);
         bamRecord3.set_qname("Read-3");
         bam_record bamRecord4;
-        buildTestBamRecord(bamRecord4, 0, 299, 0, 350, 35, 15, "35M", "AAACCCCCCCCTCCCCCCGCTTCTGGCCTTTTTTT", 0);
+        buildTestBamRecord(bamRecord4, 0, 299, 0, 350, 35, 15, "35M", "AAACCCCCCCCTCCCCCCGCTTCTGGCCTTTTTTT");
         bamRecord4.set_qname("Read-4");
         bam_record bamRecord5;
-        buildTestBamRecord(bamRecord5, 0, 300, 0, 350, 35, 15, "35M", "AACCCCCCCCTCCCCCCGCTTCTGGCCTTTTTTTT", 0);
+        buildTestBamRecord(bamRecord5, 0, 300, 0, 350, 35, 15, "35M", "AACCCCCCCCTCCCCCCGCTTCTGGCCTTTTTTTT");
         bamRecord5.set_qname("Read-5");
         bam_record bamRecord6;
-        buildTestBamRecord(bamRecord6, 0, 301, 0, 350, 35, 15, "35M", "ACCCCCCCCTCCCCCCGCTTCTGGCCTTTTTTTTT", 0);
+        buildTestBamRecord(bamRecord6, 0, 301, 0, 350, 35, 15, "35M", "ACCCCCCCCTCCCCCCGCTTCTGGCCTTTTTTTTT");
         bamRecord6.set_qname("Read-6");
         bam_record bamRecord7;
         buildTestBamRecord(bamRecord7, 1, 69, 0, 8, 35, 50, "35M", "AAAAAAACTCATCAGTTGATGATACGCCCGAGCAG", 0);
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE( test_getInsertTrim )
     BOOST_REQUIRE_EQUAL(range2.end_pos(), 35);
 
     bam_record bamRecord3;
-    buildTestBamRecord(bamRecord3, 0, 9, 0, 90, 55, 15, "35M5D15M");
+    buildTestBamRecord(bamRecord3, 0, 9, 0, 90, 50, 15, "35M5D15M");
     SimpleAlignment simpleAlignment3(getAlignment(bamRecord3));
     // segment range is (1, 2)
     known_pos_range2 range3(getInsertTrim(simpleAlignment3.path, std::pair<unsigned, unsigned>(1, 2)));
