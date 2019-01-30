@@ -91,16 +91,16 @@ struct BamStream
         std::string querySeq = "TCTATCACCCATTTTACCACTCACGGGAGCTCTCC";
         // Creating 1st bam
         bam_record bamRecord1;
-        buildTestBamRecord(bamRecord1, 0, 9, 0, 70, 125, 15, "35M", querySeq);
+        buildTestBamRecord(bamRecord1, 0, 9, 0, 70, 35, 15, "35M", querySeq, 125);
         bamRecord1.set_qname("bamRecord1");
         bam_record bamRecord2;
-        buildTestBamRecord(bamRecord2, 0, 109, 0, 170, 130, 15, "35M", querySeq);
+        buildTestBamRecord(bamRecord2, 0, 109, 0, 170, 35, 15, "35M", querySeq, 130);
         bamRecord2.set_qname("bamRecord2");
         bam_record bamRecord3;
-        buildTestBamRecord(bamRecord3, 0, 109, 0, 170, 130, 15, "35M", querySeq);
+        buildTestBamRecord(bamRecord3, 0, 109, 0, 170, 35, 15, "35M", querySeq, 130);
         bamRecord3.set_qname("bamRecord3");
         bam_record bamRecord4;
-        buildTestBamRecord(bamRecord4, 0, 109, 0, 175, 100, 15, "35M", querySeq);
+        buildTestBamRecord(bamRecord4, 0, 109, 0, 175, 35, 15, "35M", querySeq, 100);
         bamRecord4.set_qname("bamRecord4");
         readsToAddForFirstBam.push_back(bamRecord1);
         readsToAddForFirstBam.push_back(bamRecord2);
@@ -111,16 +111,16 @@ struct BamStream
 
         // Creating 2nd bam
         bam_record bamRecord5;
-        buildTestBamRecord(bamRecord5, 0, 10, 0, 70, 125, 15, "35M", querySeq);
+        buildTestBamRecord(bamRecord5, 0, 10, 0, 70, 35, 15, "35M", querySeq, 125);
         bamRecord5.set_qname("bamRecord5");
         bam_record bamRecord6;
-        buildTestBamRecord(bamRecord6, 0, 108, 0, 170, 130, 15, "35M", querySeq);
+        buildTestBamRecord(bamRecord6, 0, 108, 0, 170, 35, 15, "35M", querySeq, 130);
         bamRecord6.set_qname("bamRecord6");
         bam_record bamRecord7;
-        buildTestBamRecord(bamRecord7, 0, 108, 0, 170, 130, 15, "35M", querySeq);
+        buildTestBamRecord(bamRecord7, 0, 108, 0, 170, 35, 15, "35M", querySeq, 130);
         bamRecord7.set_qname("bamRecord7");
         bam_record bamRecord8;
-        buildTestBamRecord(bamRecord8, 0, 109, 0, 175, 100, 15, "35M", querySeq);
+        buildTestBamRecord(bamRecord8, 0, 109, 0, 175, 35, 15, "35M", querySeq, 100);
         bamRecord8.set_qname("bamRecord8");
         readsToAddForSecondBam.push_back(bamRecord5);
         readsToAddForSecondBam.push_back(bamRecord6);
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE( test_getFragInfo )
 
     // When mate-1 and mate-2 both are available
     bam_record bamRecord2;
-    buildTestBamRecord(bamRecord2, 0, 270, 0, 200, 20, 15, "10M", readSeq2);
+    buildTestBamRecord(bamRecord2, 0, 270, 0, 200, 10, 15, "10M", readSeq2);
     bamRecord2.toggle_is_fwd_strand();
     bamRecord2.toggle_is_mate_fwd_strand();
     bamRecord2.set_qname("Read-2");
@@ -288,13 +288,13 @@ BOOST_AUTO_TEST_CASE( test_getFragProb )
 
     // This is mate-1 read which is in forward strand
     bam_record bamRecord1;
-    buildTestBamRecord(bamRecord1, 0, 200, 0, 300, 125, 15, "60M", queryseq1);
+    buildTestBamRecord(bamRecord1, 0, 200, 0, 300, 60, 15, "60M", queryseq1, 125);
     bamRecord1.set_qname("Read-1");
     fragment.read1.bamrec = bamRecord1;
 
     // This is mate-2 read which is in reverse strand
     bam_record bamRecord2;
-    buildTestBamRecord(bamRecord2, 0, 300, 0, 200, 125, 15, "25M", queryseq2);
+    buildTestBamRecord(bamRecord2, 0, 300, 0, 200, 25, 15, "25M", queryseq2, 125);
     bamRecord2.toggle_is_fwd_strand();
     bamRecord2.toggle_is_mate_fwd_strand();
     bamRecord2.set_qname("Read-2");
@@ -337,11 +337,11 @@ BOOST_AUTO_TEST_CASE( test_getFragProb )
 
     // Inter-chromosomal read pair
     bam_record bamRecord3;
-    buildTestBamRecord(bamRecord3, 0, 200, 1, 300, -1, 15, "60M", queryseq1);
+    buildTestBamRecord(bamRecord3, 0, 200, 1, 300, 60, 15, "60M", queryseq1, 0);
     bamRecord3.set_qname("Read-3");
     fragment.read1.bamrec = bamRecord3;
     bam_record bamRecord4;
-    buildTestBamRecord(bamRecord4, 1, 300, 0, 200, -1, 15, "25M", queryseq2);
+    buildTestBamRecord(bamRecord4, 1, 300, 0, 200, 25, 15, "25M", queryseq2, 0);
     bamRecord4.toggle_is_fwd_strand();
     bamRecord4.toggle_is_mate_fwd_strand();
     fragment.read2.bamrec = bamRecord4;
@@ -503,11 +503,11 @@ BOOST_AUTO_TEST_CASE( test_processExistingAltPairInfo )
     std::string queryseq1 = "AGCTGACTGATCGATTTTTTACGTAGAGGAGCTTTGACGTATGAGCCTGATATGAGCCTG";
     std::string queryseq2 = "TGACGTATGAGCCTGATATGAGCCT";
     bam_record bamRecord1;
-    buildTestBamRecord(bamRecord1, 0, 200, 0, 300, 125, 20, "60M", queryseq1);
+    buildTestBamRecord(bamRecord1, 0, 200, 0, 300, 60, 20, "60M", queryseq1, 125);
     bamRecord1.set_qname("Read-1");
     bamRecord1.toggle_is_first();
     bam_record bamRecord2;
-    buildTestBamRecord(bamRecord2, 0, 300, 0, 200, 125, 10, "25M", queryseq2);
+    buildTestBamRecord(bamRecord2, 0, 300, 0, 200, 25, 10, "25M", queryseq2, 125);
     bamRecord2.toggle_is_second();
     bamRecord2.toggle_is_fwd_strand();
     bamRecord2.toggle_is_mate_fwd_strand();
@@ -515,11 +515,11 @@ BOOST_AUTO_TEST_CASE( test_processExistingAltPairInfo )
 
     // creating another read pair for 2nd bam file
     bam_record bamRecord3;
-    buildTestBamRecord(bamRecord3, 0, 200, 0, 310, 125, 10, "60M", queryseq1);
+    buildTestBamRecord(bamRecord3, 0, 200, 0, 310, 60, 10, "60M", queryseq1, 125);
     bamRecord3.set_qname("Read-2");
     bamRecord3.toggle_is_first();
     bam_record bamRecord4;
-    buildTestBamRecord(bamRecord4, 0, 310, 0, 200, 125, 20, "25M", queryseq2);
+    buildTestBamRecord(bamRecord4, 0, 310, 0, 200, 25, 20, "25M", queryseq2, 125);
     bamRecord4.toggle_is_second();
     bamRecord4.toggle_is_fwd_strand();
     bamRecord4.toggle_is_mate_fwd_strand();
@@ -654,11 +654,11 @@ BOOST_AUTO_TEST_CASE( test_getSVPairSupport )
     std::string queryseq1 = "AGCTGACTGATCGATTTTTTACGTAGAGGAGCTTTGACGTATGAGCCTGATATGAGCCTG";
     std::string queryseq2 = "TGACGTATGAGCCTGATATGAGCCT";
     bam_record bamRecord1;
-    buildTestBamRecord(bamRecord1, 0, 200, 0, 300, 125, 15, "60M", queryseq1);
+    buildTestBamRecord(bamRecord1, 0, 200, 0, 300, 60, 15, "60M", queryseq1, 125);
     bamRecord1.set_qname("Read-1");
     bamRecord1.toggle_is_first();
     bam_record bamRecord2;
-    buildTestBamRecord(bamRecord2, 0, 300, 0, 200, 125, 15, "25M", queryseq2);
+    buildTestBamRecord(bamRecord2, 0, 300, 0, 200, 25, 15, "25M", queryseq2, 125);
     bamRecord2.toggle_is_second();
     bamRecord2.toggle_is_fwd_strand();
     bamRecord2.toggle_is_mate_fwd_strand();
@@ -698,12 +698,12 @@ BOOST_AUTO_TEST_CASE( test_getSVPairSupport )
     candidate2.bp2.interval = GenomeInterval(0, 770, 780);
     candidate2.bp2.state = SVBreakendState::LEFT_OPEN;
     bam_record bamRecord3;
-    buildTestBamRecord(bamRecord3, 0, 200, 0, 800, 625, 15, "60M", queryseq1);
+    buildTestBamRecord(bamRecord3, 0, 200, 0, 800, 60, 15, "60M", queryseq1, 625);
     bamRecord3.set_qname("Read-2");
     bamRecord3.toggle_is_first();
 
     bam_record bamRecord4;
-    buildTestBamRecord(bamRecord4, 0, 800, 0, 200, 625, 15, "25M", queryseq2);
+    buildTestBamRecord(bamRecord4, 0, 800, 0, 200, 25, 15, "25M", queryseq2, 625);
     bamRecord4.toggle_is_second();
     bamRecord4.toggle_is_fwd_strand();
     bamRecord4.toggle_is_mate_fwd_strand();
