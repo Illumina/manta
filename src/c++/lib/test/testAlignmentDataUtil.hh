@@ -88,10 +88,11 @@ buildTestBamRecord(
     int pos = 100,
     int mateTargetID = 0,
     int matePos = 200,
-    int fragmentSize = 100,
+    int readLength = 100,
     int mapQ = 15,
     std::string cigarString = "",
-    std::string querySeq = "");
+    std::string querySeq = "",
+    int fragmentSize = 400);
 
 
 /// \brief Add supplementary alignment evidence to a bam record

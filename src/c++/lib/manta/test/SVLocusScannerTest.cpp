@@ -34,10 +34,11 @@ BOOST_AUTO_TEST_CASE( test_isAnomalousReadPair  )
 
     const bam_header_info bamHeader(buildTestBamHeader());
     std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
+    std::string querySeq = "TCTATCACCCATTTTACCACTCACGGGAGCTCTCC";
 
     // Proper pair read
     bam_record properPairRead;
-    buildTestBamRecord(properPairRead);
+    buildTestBamRecord(properPairRead, 0, 100, 0, 200, 35, 20, "35M", querySeq, 100);
     BOOST_REQUIRE(! scanner->isAnomalousReadPair(properPairRead, 0));
 
     // Not paired
@@ -92,10 +93,11 @@ BOOST_AUTO_TEST_CASE( test_InniePair  )
 
     const bam_header_info bamHeader(buildTestBamHeader());
     std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
+    std::string querySeq = "TCTATCACCCATTTTACCACTCACGGGAGCTCTCC";
 
     // Passing condition
     bam_record inniePair;
-    buildTestBamRecord(inniePair);
+    buildTestBamRecord(inniePair, 0, 100, 0, 200, 35, 20, "35M", querySeq, 100);
     BOOST_REQUIRE(! scanner->isAnomalousReadPair(inniePair, 0));
 
     // different refID
@@ -117,7 +119,7 @@ BOOST_AUTO_TEST_CASE( test_InniePair  )
 
     // pos = mate pos with all strand configurations
     bam_record samePosInniePair;
-    buildTestBamRecord(samePosInniePair, 0, 100, 0, 100);
+    buildTestBamRecord(samePosInniePair, 0, 100, 0, 100, 35, 20, "35M", querySeq, 100);
     BOOST_REQUIRE(! scanner->isAnomalousReadPair(samePosInniePair, 0));
     samePosInniePair.toggle_is_fwd_strand();
     BOOST_REQUIRE(scanner->isAnomalousReadPair(samePosInniePair, 0));
@@ -134,10 +136,11 @@ BOOST_AUTO_TEST_CASE( test_LargePair  )
 
     const bam_header_info bamHeader(buildTestBamHeader());
     std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
+    std::string querySeq = "TCTATCACCCATTTTACCACTCACGGGAGCTCTCC";
 
     // Control - test normal, proper pair against isNonCompressedAnomalousReadPair(..)
     bam_record properPair;
-    buildTestBamRecord(properPair);
+    buildTestBamRecord(properPair, 0, 100, 0, 200, 35, 20, "35M", querySeq, 100);
     BOOST_REQUIRE(! scanner->isNonCompressedAnomalousReadPair(properPair, 0));
 
     // refId != mate refID
@@ -189,6 +192,7 @@ BOOST_AUTO_TEST_CASE( test_isSVEvidence )
 
     const bam_header_info bamHeader(buildTestBamHeader());
     std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
+    std::string querySeq = "TCTATCACCCATTTTACCACTCACGGGAGCTCTCC";
 
     const unsigned defaultReadGroupIndex = 0;
     reference_contig_segment seq = reference_contig_segment();
@@ -197,7 +201,7 @@ BOOST_AUTO_TEST_CASE( test_isSVEvidence )
 
     // Normal read is not evidence
     bam_record normalRead;
-    buildTestBamRecord(normalRead);
+    buildTestBamRecord(normalRead, 0, 100, 0, 200, 35, 20, "35M", querySeq, 100);
     BOOST_REQUIRE(! scanner->isSVEvidence(normalRead, defaultReadGroupIndex, refSeq, incountsPtr.get()));
 
     bam_record supplementSASplitRead;
@@ -216,6 +220,7 @@ BOOST_AUTO_TEST_CASE( test_LargeIndels )
     // minCandidateVariantSize = 8
     const bam_header_info bamHeader(buildTestBamHeader());
     std::unique_ptr<SVLocusScanner> scanner(buildTestSVLocusScanner(bamHeader));
+    std::string querySeq = "TCTATCACCCATTTTACCACTCACGGGAGCTCTCC";
 
     const unsigned defaultReadGroupIndex = 0;
     reference_contig_segment seq = reference_contig_segment();
@@ -224,42 +229,42 @@ BOOST_AUTO_TEST_CASE( test_LargeIndels )
 
     // Normal read is not evidence
     bam_record normalRead;
-    buildTestBamRecord(normalRead);
+    buildTestBamRecord(normalRead, 0, 100, 0, 200, 35, 20, "35M", querySeq, 100);
     BOOST_REQUIRE(! scanner->isSVEvidence(normalRead, defaultReadGroupIndex, refSeq, incountsPtr.get()));
 
     // Non-indel read is not evidence
     bam_record largeSoftclipRead;
-    buildTestBamRecord(largeSoftclipRead, 0, 100, 0, 200, 100, 15, "100M2000S");
+    buildTestBamRecord(largeSoftclipRead, 0, 100, 0, 200, 2100, 15, "100M2000S", "", 100);
     BOOST_REQUIRE(! scanner->isSVEvidence(largeSoftclipRead, defaultReadGroupIndex, refSeq, incountsPtr.get()));
 
     // large deletion is SV evidence
     bam_record largeDeletionRead;
-    buildTestBamRecord(largeDeletionRead, 0, 100, 0, 200, 100, 15, "100M2000D100M");
+    buildTestBamRecord(largeDeletionRead, 0, 100, 0, 200, 200, 15, "100M2000D100M");
     BOOST_REQUIRE(scanner->isSVEvidence(largeDeletionRead, defaultReadGroupIndex, refSeq, incountsPtr.get()));
 
     // small deletion is not SV evidence
     bam_record smallDeletionRead;
-    buildTestBamRecord(smallDeletionRead, 0, 100, 0, 200, 100, 15, "100M7D100M");
+    buildTestBamRecord(smallDeletionRead, 0, 100, 0, 200, 50, 15, "25M7D25M", "", 100);
     BOOST_REQUIRE(! scanner->isSVEvidence(smallDeletionRead, defaultReadGroupIndex, refSeq, incountsPtr.get()));
 
     // Deletion size = minCandidateVariantSize - deletion is SV evidence
     bam_record equalDeletionRead;
-    buildTestBamRecord(equalDeletionRead, 0, 100, 0, 200, 100, 15, "100M8D100M");
+    buildTestBamRecord(equalDeletionRead, 0, 100, 0, 200, 200, 15, "100M8D100M");
     BOOST_REQUIRE(scanner->isSVEvidence(equalDeletionRead, defaultReadGroupIndex, refSeq, incountsPtr.get()));
 
     // large insertion is SV evidence
     bam_record largeInsertionRead;
-    buildTestBamRecord(largeInsertionRead, 0, 100, 0, 200, 100, 15, "100M2000I100M");
+    buildTestBamRecord(largeInsertionRead, 0, 100, 0, 200, 2200, 15, "100M2000I100M");
     BOOST_REQUIRE(scanner->isSVEvidence(largeInsertionRead, defaultReadGroupIndex, refSeq, incountsPtr.get()));
 
     // small insertion is not SV evidence
     bam_record smallInsertionRead;
-    buildTestBamRecord(smallInsertionRead, 0, 100, 0, 200, 100, 15, "100M7I100M");
+    buildTestBamRecord(smallInsertionRead, 0, 100, 0, 200, 27, 15, "10M7I10M", "", 100);
     BOOST_REQUIRE(! scanner->isSVEvidence(smallInsertionRead, defaultReadGroupIndex, refSeq, incountsPtr.get()));
 
     // insertion size = minCandidateVariantSize - insertion is SV evidence
     bam_record equalInsertionRead;
-    buildTestBamRecord(equalInsertionRead, 0, 100, 0, 200, 100, 15, "100M8I100M");
+    buildTestBamRecord(equalInsertionRead, 0, 100, 0, 200, 208, 15, "100M8I100M");
     BOOST_REQUIRE(scanner->isSVEvidence(equalInsertionRead, defaultReadGroupIndex, refSeq, incountsPtr.get()));
 }
 

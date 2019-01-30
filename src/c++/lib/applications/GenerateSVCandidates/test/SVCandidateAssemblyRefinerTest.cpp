@@ -37,37 +37,37 @@ struct BamStream
         const bam_header_info bamHeader(buildTestBamHeader());
 
         bam_record bamRecord1;
-        buildTestBamRecord(bamRecord1, 0, 8, 1, 69, 0, 15, "35M", "GTCTATCACCCTATTAACCACTCACGGGAGAAAAA");
+        buildTestBamRecord(bamRecord1, 0, 8, 1, 69, 35, 15, "35M", "GTCTATCACCCTATTAACCACTCACGGGAGAAAAA", 0);
         bamRecord1.set_qname("Read-1");
         bam_record bamRecord2;
-        buildTestBamRecord(bamRecord2, 0, 9, 1, 70, 0, 15, "35M", "TCTATCACCCTATTAACCACTCACGGGAGAAAAAG");
+        buildTestBamRecord(bamRecord2, 0, 9, 1, 70, 35, 15, "35M", "TCTATCACCCTATTAACCACTCACGGGAGAAAAAG", 0);
         bamRecord2.set_qname("Read-2");
         bam_record bamRecord3;
-        buildTestBamRecord(bamRecord3, 0, 10, 1, 69, 0, 15, "35M", "CTATCACCCTATTAACCACTCACGGGAGAAAAAGA");
+        buildTestBamRecord(bamRecord3, 0, 10, 1, 69, 35, 15, "35M", "CTATCACCCTATTAACCACTCACGGGAGAAAAAGA", 0);
         bamRecord3.set_qname("Read-3");
         bam_record bamRecord4;
-        buildTestBamRecord(bamRecord4, 0, 299, 0, 350, 0, 15, "35M", "AAACCCCCCCCTCCCCCCGCTTCTGGCCTTTTTTT");
+        buildTestBamRecord(bamRecord4, 0, 299, 0, 350, 35, 15, "35M", "AAACCCCCCCCTCCCCCCGCTTCTGGCCTTTTTTT");
         bamRecord4.set_qname("Read-4");
         bam_record bamRecord5;
-        buildTestBamRecord(bamRecord5, 0, 300, 0, 350, 0, 15, "35M", "AACCCCCCCCTCCCCCCGCTTCTGGCCTTTTTTTT");
+        buildTestBamRecord(bamRecord5, 0, 300, 0, 350, 35, 15, "35M", "AACCCCCCCCTCCCCCCGCTTCTGGCCTTTTTTTT");
         bamRecord5.set_qname("Read-5");
         bam_record bamRecord6;
-        buildTestBamRecord(bamRecord6, 0, 301, 0, 350, 0, 15, "35M", "ACCCCCCCCTCCCCCCGCTTCTGGCCTTTTTTTTT");
+        buildTestBamRecord(bamRecord6, 0, 301, 0, 350, 35, 15, "35M", "ACCCCCCCCTCCCCCCGCTTCTGGCCTTTTTTTTT");
         bamRecord6.set_qname("Read-6");
         bam_record bamRecord7;
-        buildTestBamRecord(bamRecord7, 1, 69, 0, 8, 0, 50, "35M", "AAAAAAACTCATCAGTTGATGATACGCCCGAGCAG");
+        buildTestBamRecord(bamRecord7, 1, 69, 0, 8, 35, 50, "35M", "AAAAAAACTCATCAGTTGATGATACGCCCGAGCAG", 0);
         bamRecord7.toggle_is_mate_fwd_strand();
         bamRecord7.toggle_is_second();
         bamRecord7.toggle_is_fwd_strand();
         bamRecord7.set_qname("Read-1");
         bam_record bamRecord8;
-        buildTestBamRecord(bamRecord8, 1, 70, 0, 9, 0, 50, "35M", "AAAAAACTCATCAGTTGATGATACGCCCGAGCAGA");
+        buildTestBamRecord(bamRecord8, 1, 70, 0, 9, 35, 50, "35M", "AAAAAACTCATCAGTTGATGATACGCCCGAGCAGA", 0);
         bamRecord8.set_qname("Read-2");
         bamRecord8.toggle_is_second();
         bamRecord8.toggle_is_mate_fwd_strand();
         bamRecord8.toggle_is_fwd_strand();
         bam_record bamRecord9;
-        buildTestBamRecord(bamRecord9, 1, 71, 0, 10, 0, 50, "35M", "AAAAACTCATCAGTTGATGATACGCCCGAGCAGAT");
+        buildTestBamRecord(bamRecord9, 1, 71, 0, 10, 35, 50, "35M", "AAAAACTCATCAGTTGATGATACGCCCGAGCAGAT", 0);
         bamRecord9.toggle_is_mate_fwd_strand();
         bamRecord9.toggle_is_second();
         bamRecord9.toggle_is_fwd_strand();
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE( test_GetVariantRange )
 BOOST_AUTO_TEST_CASE( test_getInsertTrim )
 {
     bam_record bamRecord1;
-    buildTestBamRecord(bamRecord1, 0, 9, 0, 90, 150, 15, "35M5I15M");
+    buildTestBamRecord(bamRecord1, 0, 9, 0, 90, 55, 15, "35M5I15M");
     SimpleAlignment simpleAlignment1(getAlignment(bamRecord1));
     // segment range is (1, 1)
     known_pos_range2 range1(getInsertTrim(simpleAlignment1.path, std::pair<unsigned, unsigned>(1, 1)));
@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE( test_getInsertTrim )
     BOOST_REQUIRE_EQUAL(range1.end_pos(), 40);
 
     bam_record bamRecord2;
-    buildTestBamRecord(bamRecord2, 0, 9, 0, 90, 150, 15, "35M5D5I15M");
+    buildTestBamRecord(bamRecord2, 0, 9, 0, 90, 55, 15, "35M5D5I15M");
     SimpleAlignment simpleAlignment2(getAlignment(bamRecord2));
     // segment range is (1, 1)
     known_pos_range2 range2(getInsertTrim(simpleAlignment2.path, std::pair<unsigned, unsigned>(1, 1)));
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE( test_getInsertTrim )
     BOOST_REQUIRE_EQUAL(range2.end_pos(), 35);
 
     bam_record bamRecord3;
-    buildTestBamRecord(bamRecord3, 0, 9, 0, 90, 150, 15, "35M5D15M");
+    buildTestBamRecord(bamRecord3, 0, 9, 0, 90, 50, 15, "35M5D15M");
     SimpleAlignment simpleAlignment3(getAlignment(bamRecord3));
     // segment range is (1, 2)
     known_pos_range2 range3(getInsertTrim(simpleAlignment3.path, std::pair<unsigned, unsigned>(1, 2)));

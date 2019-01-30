@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE( test_isSkipRecord )
                                        candidate, true, evidence);
     // BamRecord3 is mapped and its mate is unmapped
     bam_record bamRecord3;
-    buildTestBamRecord(bamRecord3, 0, 9, -1, -1, 0, 15, "35M", querySeq1);
+    buildTestBamRecord(bamRecord3, 0, 9, 0, 9, 35, 15, "35M", querySeq1, 0);
     bamRecord3.toggle_is_first();
     bamRecord3.set_qname("bamRecord3");
     bamRecord3.toggle_is_mate_unmapped();
@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord )
     // bam read start = 10. It is not overlapping with search range [84, 235).
     // As a result of this, the fragment is not supporting allele on BP1.
     bam_record bamRecord5;
-    buildTestBamRecord(bamRecord5, 0, 10, 0, 125, 200, 15, "35M", querySeq1);
+    buildTestBamRecord(bamRecord5, 0, 10, 0, 125, 35, 15, "35M", querySeq1, 200);
     bamRecord5.set_qname("bamRecord5");
     processor2.processClearedRecord(id2, bamRecord5, suppFrags2);
     BOOST_REQUIRE(!evidence2.getSampleEvidence(0)[bamRecord5.qname()].alt.bp1.isFragmentSupport);
@@ -306,7 +306,7 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord )
     // than minimum fragment length(50) of the sample
     // As a result of this, the fragment is not supporting allele on BP1.
     bam_record bamRecord6;
-    buildTestBamRecord(bamRecord6, 0, 109, 0, 175, 100, 15, "35M", querySeq1);
+    buildTestBamRecord(bamRecord6, 0, 109, 0, 175, 35, 15, "35M", querySeq1, 100);
     bamRecord6.set_qname("bamRecord6");
     processor2.processClearedRecord(id, bamRecord6, suppFrags2);
     BOOST_REQUIRE(!evidence2.getSampleEvidence(0)[bamRecord6.qname()].alt.bp1.isFragmentSupport);
@@ -318,7 +318,7 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord )
     // than maximum fragment length(125) of the sample.
     // As a result of this, the fragment is not supporting allele on BP1.
     bam_record bamRecord7;
-    buildTestBamRecord(bamRecord7, 0, 109, 0, 175, 300, 15, "35M", querySeq1);
+    buildTestBamRecord(bamRecord7, 0, 109, 0, 175, 35, 15, "35M", querySeq1, 300);
     bamRecord7.set_qname("bamRecord7");
     processor2.processClearedRecord(id2, bamRecord7, suppFrags2);
     BOOST_REQUIRE(!evidence2.getSampleEvidence(0)[bamRecord7.qname()].alt.bp1.isFragmentSupport);
@@ -328,7 +328,7 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord )
     // Here min(159-109+1, 308-274) = 34 which is less than 50
     // As a result of this, the fragment is not supporting allele on BP1.
     bam_record bamRecord8;
-    buildTestBamRecord(bamRecord8, 0, 109, 0, 175, 200, 15, "35M", querySeq1);
+    buildTestBamRecord(bamRecord8, 0, 109, 0, 175, 35, 15, "35M", querySeq1, 200);
     bamRecord8.set_qname("bamRecord8");
     processor2.processClearedRecord(id2, bamRecord8, suppFrags2);
     BOOST_REQUIRE(!evidence2.getSampleEvidence(0)[bamRecord8.qname()].alt.bp1.isFragmentSupport);
@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE( test_processClearedRecord )
     // So, the fragment is supporting allele on BP1.
     // It will add spanning pair(PR) support for this segment
     bam_record bamRecord9;
-    buildTestBamRecord(bamRecord9, 0, 10, 0, 125, 200, 15, "35M", querySeq1);
+    buildTestBamRecord(bamRecord9, 0, 10, 0, 125, 35, 15, "35M", querySeq1, 200);
     bamRecord9.set_qname("bamRecord9");
     processor3.processClearedRecord(id2, bamRecord9, suppFrags2);
     BOOST_REQUIRE(evidence2.getSampleEvidence(0)[bamRecord9.qname()].alt.bp1.isFragmentSupport);

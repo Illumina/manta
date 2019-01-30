@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE( test_SupportFragments )
     BOOST_REQUIRE_EQUAL(suppFragment1.read2.pos, 301);
 
     bam_record bamRecord2;
-    buildTestBamRecord(bamRecord2, 1, 350, 0, 250, 200, 15, "100M");
+    buildTestBamRecord(bamRecord2, 1, 350, 0, 250, 100, 15, "100M");
     bamRecord2.toggle_is_second();
     bamRecord2.set_qname("bamRecord2");
 
