@@ -62,6 +62,11 @@ endif ()
 
 superset(THIS_ADDITIONAL_LIB "${THIS_ADDITIONAL_LIB}")
 
+#
+# ctpl
+#
+set(CTPL_PREFIX "ctpl-0.0.2")
+superset(CTPL_DIR "${THIS_REDIST_DIR}/${CTPL_PREFIX}")
 
 #
 # htslib

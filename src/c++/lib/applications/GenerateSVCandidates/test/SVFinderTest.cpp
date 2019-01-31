@@ -746,23 +746,8 @@ BOOST_AUTO_TEST_CASE( test_SVCandidates )
     const std::string depthFileName(depthFileMaker.operator*().getFilename());
     buildTestChromosomeDepthFile(depthFileName);
 
-    // Generate SV locus graph file
-    SVLocus locus1;
-    locusAddPair(locus1, 0, 80, 120, 0, 279, 319);
-    SVLocus locus2;
-    locusAddPair(locus2, 0, 279, 319, 0, 80, 120);
-    SVLocusSetOptions sopt;
-    sopt.minMergeEdgeObservations = 10;
-    SVLocusSet set1(sopt, bamHeader, {bamFileName});
-    set1.merge(locus1);
-    set1.merge(locus2);
-    set1.checkState(true,true);
+    // Create options
     TestFilenameMaker testFilenameMaker;
-    std::string graphFilename = testFilenameMaker.getFilename();
-    const char* testFilenamePtr(graphFilename.c_str());
-    // serialize
-    set1.save(testFilenamePtr);
-
     TestFilenameMaker fileNameMaker1;
     TestFilenameMaker fileNameMaker2;
     GSCOptions options;
@@ -771,52 +756,89 @@ BOOST_AUTO_TEST_CASE( test_SVCandidates )
     options.referenceFilename = referenceFilename;
     options.alignFileOpt.alignmentFilenames = {bamFileName};
     options.alignFileOpt.isAlignmentTumor = {false};
-    options.graphFilename = graphFilename;
+    options.graphFilename = testFilenameMaker.getFilename();;
     options.chromDepthFilename = depthFileName;
+
+    // Various other data structures shared by all tests:
+    SVLocus locus1;
+    locusAddPair(locus1, 0, 80, 120, 0, 279, 319);
+    SVLocus locus2;
+    locusAddPair(locus2, 0, 279, 319, 0, 80, 120);
+    SVLocusSetOptions sopt;
+
+    static const bool isSkipLocusSetIndexCreation(true);
+
     EdgeRuntimeTracker edgeTracker(options.edgeRuntimeFilename);
     GSCEdgeStatsManager edgeStatMan(options.edgeStatsFilename);
-    SVFinder finder(options, scanner.operator*(), edgeTracker, edgeStatMan);
+
     SVCandidateSetData svData;
     std::vector<SVCandidate> svs;
-    SVLocus locus;
     EdgeInfo edgeInfo;
     edgeInfo.nodeIndex1 = 0;
     edgeInfo.nodeIndex2 = 1;
-    finder.findCandidateSV(edgeInfo, svData, svs);
-    // Min edge criteria is not satisfied as minimum
-    // number of edges required is 10
-    BOOST_REQUIRE_EQUAL(svData.getDataGroup(0).size(), 0);
-    BOOST_REQUIRE_EQUAL(svs.size(), 0);
+
+    // Create 1st SVLocus set
+    {
+        sopt.minMergeEdgeObservations = 10;
+        SVLocusSet set(sopt, bamHeader, {bamFileName});
+        set.merge(locus1);
+        set.merge(locus2);
+        set.checkState(true, true);
+        // Serialize SV locus graph
+        set.save(options.graphFilename.c_str());
+
+        // Deserialize SV locus graph
+        const SVLocusSet cset(options.graphFilename.c_str(), isSkipLocusSetIndexCreation);
+        SVFinder finder(options, scanner.operator*(), cset.getBamHeader(), cset.getAllSampleReadCounts(), edgeTracker,
+                        edgeStatMan);
+        finder.findCandidateSV(cset, edgeInfo, svData, svs);
+        // Min edge criteria is not satisfied as minimum
+        // number of edges required is 10
+        BOOST_REQUIRE_EQUAL(svData.getDataGroup(0).size(), 0);
+        BOOST_REQUIRE_EQUAL(svs.size(), 0);
+    }
 
     // Designed the Case-2 where there is an edge from locus node [80,120) to
     // locus node [279,319) but there is no edge from locus node [279,319) to
     // locus node [80,120). So number of SV candidates are 0. Here minimum number
     // of edges required is 1.
-    sopt.minMergeEdgeObservations = 1;
-    SVLocusSet set2(sopt, bamHeader, {bamFileName});
-    // One edge is created.
-    set2.merge(locus1);
-    set2.checkState(true,true);
-    // serialize
-    set2.save(testFilenamePtr);
-    SVFinder finder2(options, scanner.operator*(), edgeTracker, edgeStatMan);
-    finder2.findCandidateSV(edgeInfo, svData, svs);
-    BOOST_REQUIRE_EQUAL(svData.getDataGroup(0).size(), 0);
-    BOOST_REQUIRE_EQUAL(svs.size(), 0);
+    {
+        sopt.minMergeEdgeObservations = 1;
+        SVLocusSet set(sopt, bamHeader, {bamFileName});
+        // One edge is created.
+        set.merge(locus1);
+        set.checkState(true, true);
+        // Serialize SV locus graph
+        set.save(options.graphFilename.c_str());
+
+        // Deserialize SV locus graph
+        const SVLocusSet cset(options.graphFilename.c_str(), isSkipLocusSetIndexCreation);
+        SVFinder finder2(options, scanner.operator*(), cset.getBamHeader(), cset.getAllSampleReadCounts(),
+                         edgeTracker, edgeStatMan);
+        finder2.findCandidateSV(cset, edgeInfo, svData, svs);
+        BOOST_REQUIRE_EQUAL(svData.getDataGroup(0).size(), 0);
+        BOOST_REQUIRE_EQUAL(svs.size(), 0);
+    }
 
     // Designed the Case-3 where there is an edge from locus node [80,120) to
     // locus node [279,319) and also there is an edge from locus node [279,319) to
     // locus node [80,120). Here minimum number of edges required is 1.
-    SVLocusSet set3(sopt, bamHeader, {bamFileName});
-    set3.merge(locus1);
-    set3.merge(locus2);
-    set3.checkState(true,true);
-    // serialize
-    set3.save(testFilenamePtr);
-    SVFinder finder3(options, scanner.operator*(), edgeTracker, edgeStatMan);
-    finder3.findCandidateSV(edgeInfo, svData, svs);
-    BOOST_REQUIRE_EQUAL(svData.getDataGroup(0).size(), 1);
-    BOOST_REQUIRE_EQUAL(svs.size(), 1);
+    {
+        SVLocusSet set(sopt, bamHeader, {bamFileName});
+        set.merge(locus1);
+        set.merge(locus2);
+        set.checkState(true, true);
+        // Serialize SV locus graph
+        set.save(options.graphFilename.c_str());
+
+        // Deserialize SV locus graph
+        const SVLocusSet cset(options.graphFilename.c_str(), isSkipLocusSetIndexCreation);
+        SVFinder finder(options, scanner.operator*(), cset.getBamHeader(), cset.getAllSampleReadCounts(),
+                         edgeTracker, edgeStatMan);
+        finder.findCandidateSV(cset, edgeInfo, svData, svs);
+        BOOST_REQUIRE_EQUAL(svData.getDataGroup(0).size(), 1);
+        BOOST_REQUIRE_EQUAL(svs.size(), 1);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

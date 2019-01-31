@@ -35,6 +35,8 @@
 #include "manta/MultiJunctionUtil.hh"
 #include "manta/SVCandidateUtil.hh"
 
+#include "ctpl.h"
+
 #include <iostream>
 #include <string>
 
@@ -149,28 +151,90 @@ private:
     GSCEdgeStatsManager& _edgeStatMan;
 };
 
-
-#if 0
-/// edge indices+graph evidence counts and regions:
-///
-/// this is designed to be useful even when the locus graph is not present
-struct EhancedEdgeInfo
-{
-
+/// These are thread-local data that we initialize before the thread pool to reduce total initialization costs,
+/// specifically we want to avoid initializing them for every edge (in principal, this has not been benchmarked).
+struct EdgeThreadLocalData {
+    std::unique_ptr<SVFinder> svFindPtr;
+    SVCandidateSetData svData;
+    std::vector<SVCandidate> svs;
+    std::vector<SVMultiJunctionCandidate> mjSVs;
 };
 
-/// reduce the full (very-large) graph down to just the information we need during SVCandidate generation:
-struct ReducedGraphInfo
+/// Process a single edge on one thread:
+void
+processEdge(
+    int threadId,
+    const GSCOptions& opt,
+    const SVLocusSet& cset,
+    std::vector<EdgeThreadLocalData>& edgeDataPool,
+    const EdgeInfo edge)
 {
-    ReducedGraphInfo(const GSCOptions& opt)
-
-    bam_header_info header;
-
-    std::vector<EnhancedEdgeInfo> edges;
-};
+    std::cerr << "Hello from thread " << threadId;
+    EdgeThreadLocalData& edgeData(edgeDataPool[threadId]);
+    try
+    {
+#ifdef RABBIT
+        edgeTracker.start();
 #endif
+        if (opt.isVerbose)
+        {
+            log_os << __FUNCTION__ << ": starting analysis of edge: ";
+            dumpEdgeInfo(edge,cset,log_os);
+        }
+        // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
+        edgeData.svFindPtr->findCandidateSV(cset, edge, edgeData.svData, edgeData.svs);
+#ifdef RABBIT
+
+        // filter long-range junctions outside of the candidate finder so that we can evaluate
+        // junctions which are part of a larger event (like a reciprocal translocation)
+        svMJFilter.filterGroupCandidateSV(edge, svs, mjSVs);
 
 
+        SupportSamples svSupports;
+        svSupports.supportSamples.resize(sampleSize);
+
+        // assemble, score and output SVs
+        svProcessor.evaluateCandidates(edge, mjSVs, svData, svSupports);
+
+        // write supporting reads into bam files
+        if (isGenerateSupportBam)
+        {
+            for (unsigned idx(0); idx<sampleSize; ++idx)
+            {
+                writeSupportBam(origBamStreamPtrs[idx],
+                                svSupports.supportSamples[idx],
+                                supportBamDumperPtrs[idx]);
+            }
+        }
+#endif
+    }
+    catch (illumina::common::ExceptionData& e)
+    {
+        std::ostringstream oss;
+        oss << "Exception caught while processing graph edge: ";
+        dumpEdgeInfo(edge,cset,oss);
+        e << boost::error_info<struct current_edge_info,std::string>(oss.str());
+        throw;
+    }
+    catch (...)
+    {
+        log_os << "Exception caught while processing graph edge: ";
+        dumpEdgeInfo(edge,cset,log_os);
+        throw;
+    }
+
+#ifdef RABBIT
+    edgeTracker.stop(edge);
+    if (opt.isVerbose)
+    {
+        log_os << __FUNCTION__ << ": Time to process last edge: ";
+        edgeTracker.getLastEdgeTime().reportSec(log_os);
+        log_os << "\n";
+    }
+
+    edgeStatMan.updateScoredEdgeTime(edge, edgeTracker);
+#endif
+}
 
 static
 void
@@ -179,29 +243,22 @@ runGSC(
     const char* progName,
     const char* progVersion)
 {
-#if 0
-    {
-        // to save memory, load the graph and process/store only the information we need from it:
-    }
-#endif
-
     EdgeRuntimeTracker edgeTracker(opt.edgeRuntimeFilename);
     GSCEdgeStatsManager edgeStatMan(opt.edgeStatsFilename);
 
     const SVLocusScanner readScanner(opt.scanOpt, opt.statsFilename, opt.alignFileOpt.alignmentFilenames, !opt.isUnstrandedRNA);
 
-    SVFinder svFind(opt, readScanner, edgeTracker,edgeStatMan);
+    static const bool isSkipLocusSetIndexCreation(true);
+    const SVLocusSet cset(opt.graphFilename.c_str(), isSkipLocusSetIndexCreation);
+    const bam_header_info& bamHeader(cset.getBamHeader());
     MultiJunctionFilter svMJFilter(opt,edgeStatMan);
-    const SVLocusSet& cset(svFind.getSet());
 
     SVCandidateProcessor svProcessor(opt, readScanner, progName, progVersion, cset, edgeTracker, edgeStatMan);
 
     std::unique_ptr<EdgeRetriever> edgerPtr(edgeRFactory(cset, opt.edgeOpt));
     EdgeRetriever& edger(*edgerPtr);
 
-    SVCandidateSetData svData;
-    std::vector<SVCandidate> svs;
-    std::vector<SVMultiJunctionCandidate> mjSVs;
+
 
     const unsigned sampleSize(opt.alignFileOpt.alignmentFilenames.size());
     std::vector<bam_streamer_ptr> origBamStreamPtrs;
@@ -226,72 +283,22 @@ runGSC(
 
     if (opt.isVerbose)
     {
-        log_os << __FUNCTION__ << ": " << cset.getBamHeader() << "\n";
+        log_os << __FUNCTION__ << ": " << bamHeader << "\n";
+    }
+
+    int threadCount(8);
+    ctpl::thread_pool pool(threadCount);
+
+    /// Initialize all thread-local edge data:
+    std::vector<EdgeThreadLocalData> edgeDataPool(threadCount);
+    for (auto& edgeData : edgeDataPool)
+    {
+        edgeData.svFindPtr.reset(new SVFinder(opt, readScanner, bamHeader, cset.getAllSampleReadCounts(), edgeTracker, edgeStatMan));
     }
 
     while (edger.next())
     {
-        const EdgeInfo& edge(edger.getEdge());
-
-        try
-        {
-            edgeTracker.start();
-
-            if (opt.isVerbose)
-            {
-                log_os << __FUNCTION__ << ": starting analysis of edge: ";
-                dumpEdgeInfo(edge,cset,log_os);
-            }
-
-            // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
-            svFind.findCandidateSV(edge, svData, svs);
-
-            // filter long-range junctions outside of the candidate finder so that we can evaluate
-            // junctions which are part of a larger event (like a reciprocal translocation)
-            svMJFilter.filterGroupCandidateSV(edge, svs, mjSVs);
-
-
-            SupportSamples svSupports;
-            svSupports.supportSamples.resize(sampleSize);
-
-            // assemble, score and output SVs
-            svProcessor.evaluateCandidates(edge, mjSVs, svData, svSupports);
-
-            // write supporting reads into bam files
-            if (isGenerateSupportBam)
-            {
-                for (unsigned idx(0); idx<sampleSize; ++idx)
-                {
-                    writeSupportBam(origBamStreamPtrs[idx],
-                                    svSupports.supportSamples[idx],
-                                    supportBamDumperPtrs[idx]);
-                }
-            }
-        }
-        catch (illumina::common::ExceptionData& e)
-        {
-            std::ostringstream oss;
-            oss << "Exception caught while processing graph edge: ";
-            dumpEdgeInfo(edge,cset,oss);
-            e << boost::error_info<struct current_edge_info,std::string>(oss.str());
-            throw;
-        }
-        catch (...)
-        {
-            log_os << "Exception caught while processing graph edge: ";
-            dumpEdgeInfo(edge,cset,log_os);
-            throw;
-        }
-
-        edgeTracker.stop(edge);
-        if (opt.isVerbose)
-        {
-            log_os << __FUNCTION__ << ": Time to process last edge: ";
-            edgeTracker.getLastEdgeTime().reportSec(log_os);
-            log_os << "\n";
-        }
-
-        edgeStatMan.updateScoredEdgeTime(edge, edgeTracker);
+        pool.push(processEdge, std::cref(opt), std::cref(cset), std::ref(edgeDataPool), edger.getEdge());
     }
 }
 

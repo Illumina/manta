@@ -44,19 +44,16 @@ struct SVFinder
     SVFinder(
         const GSCOptions& opt,
         const SVLocusScanner& readScanner,
+        const bam_header_info& bamHeader,
+        const AllSampleReadCounts& readCounts,
         EdgeRuntimeTracker& edgeTracker,
         GSCEdgeStatsManager& edgeStatMan);
 
     ~SVFinder();
 
-    const SVLocusSet&
-    getSet() const
-    {
-        return _set;
-    }
-
     void
     findCandidateSV(
+        const SVLocusSet& cset,
         const EdgeInfo& edge,
         SVCandidateSetData& svData,
         std::vector<SVCandidate>& svs);
@@ -136,6 +133,7 @@ private:
 
     void
     findCandidateSVImpl(
+        const SVLocusSet& cset,
         const EdgeInfo& edge,
         SVCandidateSetData& svData,
         std::vector<SVCandidate>& svs,
@@ -147,11 +145,8 @@ private:
         return *(_dFilterPtr);
     }
 
-
-
     const ReadScannerOptions _scanOpt;
     const std::vector<bool> _isAlignmentTumor;
-    SVLocusSet _set;
     std::unique_ptr<ChromDepthFilterUtil> _dFilterPtr;
     const SVLocusScanner& _readScanner;
 

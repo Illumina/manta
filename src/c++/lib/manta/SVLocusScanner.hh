@@ -345,7 +345,4 @@ private:
 
     /// extreme 5th-95th percentiles over all read groups:
     Range _fifthPerc;
-
-    // cached temporary to reduce syscalls:
-    mutable SimpleAlignment _bamAlign;
 };

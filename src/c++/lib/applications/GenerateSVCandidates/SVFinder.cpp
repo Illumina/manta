@@ -85,11 +85,12 @@ SVFinder::
 SVFinder(
     const GSCOptions& opt,
     const SVLocusScanner& readScanner,
+    const bam_header_info& bamHeader,
+    const AllSampleReadCounts& readCounts,
     EdgeRuntimeTracker& edgeTracker,
     GSCEdgeStatsManager& edgeStatMan) :
     _scanOpt(opt.scanOpt),
     _isAlignmentTumor(opt.alignFileOpt.isAlignmentTumor),
-    _set(opt.graphFilename.c_str(), true),
     _readScanner(readScanner),
     _referenceFilename(opt.referenceFilename),
     _isRNA(opt.isRNA),
@@ -98,7 +99,7 @@ SVFinder(
     _edgeTracker(edgeTracker),
     _edgeStatMan(edgeStatMan)
 {
-    _dFilterPtr.reset(new ChromDepthFilterUtil(opt.chromDepthFilename,_scanOpt.maxDepthFactor,_set.getBamHeader()));
+    _dFilterPtr.reset(new ChromDepthFilterUtil(opt.chromDepthFilename,_scanOpt.maxDepthFactor, bamHeader));
 
     // setup regionless bam_streams:
     openBamStreams(opt.referenceFilename, opt.alignFileOpt.alignmentFilenames, _bamStreams);
@@ -121,11 +122,10 @@ SVFinder(
         }
     }
 
-    const AllSampleReadCounts& counts(getSet().getAllSampleReadCounts());
     for (unsigned bamIndex(0); bamIndex<bamCount; ++bamIndex)
     {
-        _spanningNoiseRate.push_back(getSpanningNoiseRate(counts, bamIndex));
-        _assemblyNoiseRate.push_back(getAssemblyNoiseRate(counts, bamIndex));
+        _spanningNoiseRate.push_back(getSpanningNoiseRate(readCounts, bamIndex));
+        _assemblyNoiseRate.push_back(getAssemblyNoiseRate(readCounts, bamIndex));
     }
 }
 
@@ -1308,6 +1308,7 @@ getCandidatesFromData(
 void
 SVFinder::
 findCandidateSVImpl(
+    const SVLocusSet& cset,
     const EdgeInfo& edge,
     SVCandidateSetData& svData,
     std::vector<SVCandidate>& svs,
@@ -1319,8 +1320,6 @@ findCandidateSVImpl(
 #ifdef DEBUG_SVDATA
     log_os << "SVDATA: Evaluating edge: " << edge << "\n";
 #endif
-
-    const SVLocusSet& cset(getSet());
 
     // first determine if this is an edge we're going to evaluate
     //
@@ -1375,6 +1374,7 @@ findCandidateSVImpl(
 void
 SVFinder::
 findCandidateSV(
+    const SVLocusSet& cset,
     const EdgeInfo& edge,
     SVCandidateSetData& svData,
     std::vector<SVCandidate>& svs)
@@ -1383,7 +1383,7 @@ findCandidateSV(
     const TimeScoper candTime(_edgeTracker.candidacyTime);
     SVFinderStats stats;
 
-    findCandidateSVImpl(edge,svData,svs,stats);
+    findCandidateSVImpl(cset, edge,svData,svs,stats);
 
     // time/stats tracking finish:
     _edgeStatMan.updateEdgeCandidates(edge, svs.size(), stats);

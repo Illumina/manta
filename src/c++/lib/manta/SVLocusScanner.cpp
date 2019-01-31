@@ -1644,6 +1644,7 @@ isSVEvidence(
     // exclude innie read pairs which are anomalously short:
     const bool isAnom(isNonCompressedAnomalousReadPair(bamRead, defaultReadGroupIndex));
     const bool isSplit(bamRead.isSASplit());
+    SimpleAlignment _bamAlign;
     getAlignment(bamRead,_bamAlign);
     const bool isIndel(isLocalIndelEvidence(_bamAlign));
     const bool isAssm((_dopt.isSmallCandidates) && ((!isSplit) && isSemiAlignedEvidence(bamRead, _bamAlign, refSeq)));
