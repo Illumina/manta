@@ -27,66 +27,12 @@
 #include "GSCEdgeStatsManager.hh"
 #include "GSCOptions.hh"
 #include "SVCandidateAssemblyRefiner.hh"
-#include "SVScorer.hh"
-
-#include "common/OutStream.hh"
-#include "manta/JunctionIdGenerator.hh"
-#include "manta/SVCandidateAssemblyData.hh"
+#include "manta/SVCandidateSetData.hh"
+#include "manta/SVLocusScanner.hh"
 #include "manta/SVMultiJunctionCandidate.hh"
-#include "format/VcfWriterCandidateSV.hh"
-#include "format/VcfWriterDiploidSV.hh"
-#include "format/VcfWriterSomaticSV.hh"
-#include "format/VcfWriterTumorSV.hh"
-#include "format/VcfWriterRnaSV.hh"
+#include "SVWriter.hh"
+#include "SVSupports.hh"
 
-
-#include <memory>
-
-//#define DEBUG_GSV
-
-
-
-struct SVWriter
-{
-    SVWriter(
-        const GSCOptions& initOpt,
-        const SVLocusScanner& readScanner,
-        const bam_header_info& bamHeaderInfo,
-        const char* progName,
-        const char* progVersion);
-
-    void
-    writeSV(
-        const EdgeInfo& edge,
-        const SVCandidateSetData& svData,
-        const std::vector<SVCandidateAssemblyData>& assemblyData,
-        const SVMultiJunctionCandidate& mjSV,
-        const std::vector<bool>& isInputJunctionFiltered,
-        SupportSamples& svSupports);
-
-    ///////////////////////// data:
-    const GSCOptions& opt;
-    const bool isSomatic;
-    const bool isTumorOnly;
-
-    SVScorer svScore;
-
-    std::vector<SVModelScoreInfo> mjModelScoreInfo;
-
-    OutStream candfs;
-    OutStream dipfs;
-    OutStream somfs;
-    OutStream tumfs;
-    OutStream rnafs;
-
-    VcfWriterCandidateSV candWriter;
-    VcfWriterDiploidSV diploidWriter;
-    VcfWriterSomaticSV somWriter;
-    VcfWriterTumorSV tumorWriter;
-    VcfWriterRnaSV rnaWriter;
-
-    JunctionIdGenerator _idgen;
-};
 
 
 struct SVCandidateProcessor
