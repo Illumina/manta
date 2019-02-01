@@ -149,6 +149,7 @@ struct EdgeThreadLocalData {
     std::shared_ptr<EdgeRuntimeTracker> edgeTrackerPtr;
     GSCEdgeStatsManager edgeStatMan;
     std::unique_ptr<SVFinder> svFindPtr;
+    std::unique_ptr<SVCandidateProcessor> svProcessorPtr;
     SVCandidateSetData svData;
     std::vector<SVCandidate> svs;
     std::vector<SVMultiJunctionCandidate> mjSVs;
@@ -185,13 +186,14 @@ processEdge(
         // junctions which are part of a larger event (like a reciprocal translocation)
         multiJunctionFilterGroupCandidateSV(opt, edge, edgeData.svs,  edgeData.edgeStatMan, edgeData.mjSVs);
 
-#ifdef RABBIT
+        const unsigned sampleSize(opt.alignFileOpt.alignmentFilenames.size());
         SupportSamples svSupports;
         svSupports.supportSamples.resize(sampleSize);
 
         // assemble, score and output SVs
-        svProcessor.evaluateCandidates(edge, mjSVs, svData, svSupports);
+        edgeData.svProcessorPtr->evaluateCandidates(edge, edgeData.mjSVs, edgeData.svData, svSupports);
 
+#ifdef RABBIT
         // write supporting reads into bam files
         if (isGenerateSupportBam)
         {
@@ -245,9 +247,6 @@ runGSC(
     static const bool isSkipLocusSetIndexCreation(true);
     const SVLocusSet cset(opt.graphFilename.c_str(), isSkipLocusSetIndexCreation);
     const bam_header_info& bamHeader(cset.getBamHeader());
-#ifdef RABBIT
-    SVCandidateProcessor svProcessor(opt, readScanner, progName, progVersion, cset, edgeTracker, edgeStatMan);
-#endif
 
     std::unique_ptr<EdgeRetriever> edgerPtr(edgeRFactory(cset, opt.edgeOpt));
     EdgeRetriever& edger(*edgerPtr);
@@ -290,6 +289,9 @@ runGSC(
         edgeData.edgeTrackerPtr.reset(new EdgeRuntimeTracker(edgeTrackerStreamPtr));
         edgeData.svFindPtr.reset(new SVFinder(opt, readScanner, bamHeader, cset.getAllSampleReadCounts(),
             edgeData.edgeTrackerPtr, edgeData.edgeStatMan));
+        edgeData.svProcessorPtr.reset(
+            new SVCandidateProcessor(opt, readScanner, progName, progVersion, cset,
+                edgeData.edgeTrackerPtr, edgeData.edgeStatMan));
     }
 
     std::vector<std::future<GSCEdgeStats>> edgeResults;

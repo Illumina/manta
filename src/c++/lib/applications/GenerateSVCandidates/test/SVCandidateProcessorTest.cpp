@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE( test_tumorOnly )
     options.minCandidateSpanningCount = 1;
     TestStatsFileMaker statsFileMaker;
     options.statsFilename = statsFileMaker.getFilename();
-    EdgeRuntimeTracker edgeTracker(options.edgeRuntimeFilename);
+    auto edgeTrackerPtr(std::make_shared<EdgeRuntimeTracker>(options.edgeRuntimeFilename));
     GSCEdgeStatsManager edgeStatMan;
 
     // Creating SV candidate
@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE( test_tumorOnly )
     // serialize
     set1.save(testFilenamePtr);
     SVCandidateProcessor candidateProcessor(options, scanner.operator*(), programName.c_str(),
-                                            version.c_str(), set1, edgeTracker, edgeStatMan);
+                                            version.c_str(), set1, edgeTrackerPtr, edgeStatMan);
     candidateProcessor.evaluateCandidates(edgeInfo, mjSvs, svData, svSupports);
     TestSVCandidateProcessor testSVCandidateProcessor;
     testSVCandidateProcessor.flushStreams(candidateProcessor);
@@ -372,7 +372,7 @@ BOOST_AUTO_TEST_CASE( test_RNA )
     options.minScoredVariantSize = 20;
     TestStatsFileMaker statsFileMaker;
     options.statsFilename = statsFileMaker.getFilename();
-    EdgeRuntimeTracker edgeTracker(options.edgeRuntimeFilename);
+    auto edgeTrackerPtr(std::make_shared<EdgeRuntimeTracker>(options.edgeRuntimeFilename));
     GSCEdgeStatsManager edgeStatMan;
     // Creating SV Candidate
     SVCandidate candidate1;
@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_CASE( test_RNA )
     // serialize
     set1.save(testFilenamePtr);
     SVCandidateProcessor candidateProcessor(options, scanner.operator*(), programName.c_str(),
-                                            version.c_str(), set1, edgeTracker, edgeStatMan);
+                                            version.c_str(), set1, edgeTrackerPtr, edgeStatMan);
     candidateProcessor.evaluateCandidates(edgeInfo, mjSvs, svData, svSupports);
     TestSVCandidateProcessor testSVCandidateProcessor;
     testSVCandidateProcessor.flushStreams(candidateProcessor);
@@ -484,7 +484,7 @@ BOOST_AUTO_TEST_CASE( test_Diploid )
 
     TestStatsFileMaker statsFileMaker;
     options.statsFilename = statsFileMaker.getFilename();
-    EdgeRuntimeTracker edgeTracker(options.edgeRuntimeFilename);
+    auto edgeTrackerPtr(std::make_shared<EdgeRuntimeTracker>(options.edgeRuntimeFilename));
     GSCEdgeStatsManager edgeStatMan;
 
     // Creating SV candidate
@@ -534,7 +534,7 @@ BOOST_AUTO_TEST_CASE( test_Diploid )
     // serialize
     set1.save(testFilenamePtr);
     SVCandidateProcessor candidateProcessor(options, scanner.operator*(), programName.c_str(),
-                                            version.c_str(), set1, edgeTracker, edgeStatMan);
+                                            version.c_str(), set1, edgeTrackerPtr, edgeStatMan);
     candidateProcessor.evaluateCandidates(edgeInfo, mjSvs, svData, svSupports);
     TestSVCandidateProcessor testSVCandidateProcessor;
     testSVCandidateProcessor.flushStreams(candidateProcessor);
@@ -604,7 +604,7 @@ BOOST_AUTO_TEST_CASE( test_Somatic )
     options.somaticOpt.minOutputSomaticScore = 0;
     TestStatsFileMaker statsFileMaker;
     options.statsFilename = statsFileMaker.getFilename();
-    EdgeRuntimeTracker edgeTracker(options.edgeRuntimeFilename);
+    auto edgeTrackerPtr(std::make_shared<EdgeRuntimeTracker>(options.edgeRuntimeFilename));
     GSCEdgeStatsManager edgeStatMan;
     // Creating SV candidates
     SVCandidate candidate1;
@@ -670,7 +670,7 @@ BOOST_AUTO_TEST_CASE( test_Somatic )
     // serialize
     set1.save(testFilenamePtr);
     SVCandidateProcessor candidateProcessor(options, scanner.operator*(), programName.c_str(),
-                                            version.c_str(), set1, edgeTracker, edgeStatMan);
+                                            version.c_str(), set1, edgeTrackerPtr, edgeStatMan);
     candidateProcessor.evaluateCandidates(edgeInfo, mjSvs, svData, svSupports);
     TestSVCandidateProcessor testSVCandidateProcessor;
     testSVCandidateProcessor.flushStreams(candidateProcessor);

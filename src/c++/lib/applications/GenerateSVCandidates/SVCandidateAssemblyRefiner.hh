@@ -46,7 +46,7 @@ struct SVCandidateAssemblyRefiner
         const GSCOptions& opt,
         const bam_header_info& header,
         const AllSampleReadCounts& counts,
-        EdgeRuntimeTracker& edgeTracker);
+        std::shared_ptr<EdgeRuntimeTracker> edgeTrackerPtr);
 
     /// \brief Given a low-resolution SV candidate, compute a possible base-level refinement via assembly
     ///

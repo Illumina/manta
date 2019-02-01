@@ -97,8 +97,8 @@ struct SVCandidateProcessor
         const char* progName,
         const char* progVersion,
         const SVLocusSet& cset,
-        EdgeRuntimeTracker& edgeTracker,
-        GSCEdgeStatsManager& _edgeStatMan);
+        std::shared_ptr<EdgeRuntimeTracker> edgeTrackerPtr,
+        GSCEdgeStatsManager& edgeStatMan);
 
     /// Refine initial low-resolution candidates using an assembly step, then score and output final SVs
     void
@@ -124,7 +124,7 @@ private:
 
     const GSCOptions& _opt;
     const SVLocusSet& _cset;
-    EdgeRuntimeTracker& _edgeTracker;
+    std::shared_ptr<EdgeRuntimeTracker> _edgeTrackerPtr;
     GSCEdgeStatsManager& _edgeStatMan;
     SVCandidateAssemblyRefiner _svRefine;
     SVWriter _svWriter;

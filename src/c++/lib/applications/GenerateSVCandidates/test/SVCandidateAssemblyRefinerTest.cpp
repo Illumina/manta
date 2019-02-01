@@ -1462,7 +1462,7 @@ BOOST_AUTO_TEST_CASE( test_getCandidateAssemblyData )
     sample1.input.evidenceCount.anomAndSplit = 0;
     sample1.input.evidenceCount.total = 4;
     counts.getSampleCounts(0).merge(sample1);
-    EdgeRuntimeTracker edgeTracker(options.edgeRuntimeFilename);
+    auto edgeTrackerPtr(std::make_shared<EdgeRuntimeTracker>(options.edgeRuntimeFilename));
 
     // Case-1 is designed here. It is a spanning sv candidate where breakpoints
     // are overlapping (with extra padding 350) each other.
@@ -1471,7 +1471,7 @@ BOOST_AUTO_TEST_CASE( test_getCandidateAssemblyData )
     // Let's denote these 3 reads by some index like 0,1,2 respectively. As two breakpoints
     // are overlapping (using 350 padding) each other, so this padded BP is supported by
     // reads with read indices 0,1 and 2.
-    SVCandidateAssemblyRefiner refiner1(options, bamHeader, counts, edgeTracker);
+    SVCandidateAssemblyRefiner refiner1(options, bamHeader, counts, edgeTrackerPtr);
     SVCandidate candidate1;
     candidate1.bp1.state = SVBreakendState::RIGHT_OPEN;
     candidate1.bp1.interval = GenomeInterval(0 , 310, 320);
@@ -1528,7 +1528,7 @@ BOOST_AUTO_TEST_CASE( test_getCandidateAssemblyData )
     candidate3.bp2.interval = GenomeInterval(1 , 65, 75);
     SVCandidateAssemblyData candidateAssemblyData3;
     options.isRNA = true; // This is a RNA sample.
-    SVCandidateAssemblyRefiner refiner2(options, bamHeader, counts, edgeTracker);
+    SVCandidateAssemblyRefiner refiner2(options, bamHeader, counts, edgeTrackerPtr);
     refiner2.getCandidateAssemblyData(candidate3, false, candidateAssemblyData3);
     BOOST_REQUIRE_EQUAL(candidateAssemblyData3.contigs.size(), 2);
     // Read indices {3,4,5} support BP2 contig.
@@ -1553,7 +1553,7 @@ BOOST_AUTO_TEST_CASE( test_getCandidateAssemblyData )
     candidate4.bp2.state = SVBreakendState::UNKNOWN;
     candidate4.bp2.interval = GenomeInterval(0 , 330, 350);
     SVCandidateAssemblyData candidateAssemblyData4;
-    SVCandidateAssemblyRefiner refiner3(options, bamHeader, counts, edgeTracker);
+    SVCandidateAssemblyRefiner refiner3(options, bamHeader, counts, edgeTrackerPtr);
     refiner3.getCandidateAssemblyData(candidate4, true, candidateAssemblyData4);
     // As this is a complex SV, contigs are generated based on BP1 (BP2 is unknown).
     BOOST_REQUIRE_EQUAL(candidateAssemblyData4.contigs.size(), 1);

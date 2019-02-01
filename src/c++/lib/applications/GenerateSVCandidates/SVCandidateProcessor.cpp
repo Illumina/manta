@@ -503,13 +503,13 @@ SVCandidateProcessor(
     const char* progName,
     const char* progVersion,
     const SVLocusSet& cset,
-    EdgeRuntimeTracker& edgeTracker,
+    std::shared_ptr<EdgeRuntimeTracker> edgeTrackerPtr,
     GSCEdgeStatsManager& edgeStatMan) :
     _opt(opt),
     _cset(cset),
-    _edgeTracker(edgeTracker),
+    _edgeTrackerPtr(edgeTrackerPtr),
     _edgeStatMan(edgeStatMan),
-    _svRefine(opt, cset.getBamHeader(), cset.getAllSampleReadCounts(), _edgeTracker),
+    _svRefine(opt, cset.getBamHeader(), cset.getAllSampleReadCounts(), _edgeTrackerPtr),
     _svWriter(opt, readScanner, cset.getBamHeader(), progName, progVersion)
 {}
 
@@ -574,7 +574,7 @@ evaluateCandidate(
 
 
     const bool isComplex(isComplexSV(mjCandidateSV));
-    _edgeTracker.addCandidate(isComplex);
+    _edgeTrackerPtr->addCandidate(isComplex);
 
     _edgeStatMan.updateJunctionCandidateCounts(edge, junctionCount, isComplex);
 
@@ -586,7 +586,7 @@ evaluateCandidate(
 
     if (! _opt.isSkipAssembly)
     {
-        const TimeScoper assmTime(_edgeTracker.assemblyTime);
+        const TimeScoper assmTime(_edgeTrackerPtr->assemblyTime);
         for (unsigned junctionIndex(0); junctionIndex<junctionCount; ++junctionIndex)
         {
             const SVCandidate& candidateSV(mjCandidateSV.junction[junctionIndex]);
@@ -633,7 +633,7 @@ evaluateCandidate(
                 }
 
                 // fill in assembly tracking data:
-                _edgeTracker.addAssembledCandidate(isComplex);
+                _edgeTrackerPtr->addAssembledCandidate(isComplex);
             }
             else
             {
@@ -687,7 +687,7 @@ evaluateCandidate(
         // if any junctions go into the small assembler (for instance b/c the breakends are too close), then
         // treat all junctions as independent:
         //
-        const TimeScoper scoreTime(_edgeTracker.scoreTime);
+        const TimeScoper scoreTime(_edgeTrackerPtr->scoreTime);
         if ((junctionCount>1) && isAnySmallAssembler)
         {
             // call each junction independently by providing a filter vector in each iteration

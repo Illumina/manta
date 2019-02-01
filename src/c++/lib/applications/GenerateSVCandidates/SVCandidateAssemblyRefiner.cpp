@@ -1101,15 +1101,15 @@ SVCandidateAssemblyRefiner(
     const GSCOptions& opt,
     const bam_header_info& header,
     const AllSampleReadCounts& counts,
-    EdgeRuntimeTracker& edgeTracker) :
+    std::shared_ptr<EdgeRuntimeTracker> edgeTrackerPtr) :
     _opt(opt),
     _header(header),
     _smallSVAssembler(opt.scanOpt, opt.refineOpt.smallSVAssembleOpt, opt.alignFileOpt, opt.referenceFilename,
-                      opt.statsFilename, opt.chromDepthFilename, header, counts, opt.isRNA, edgeTracker.remoteReadRetrievalTime),
+                      opt.statsFilename, opt.chromDepthFilename, header, counts, opt.isRNA, edgeTrackerPtr->remoteReadRetrievalTime),
     _spanningAssembler(opt.scanOpt,
                        (opt.isRNA ? opt.refineOpt.RNAspanningAssembleOpt : opt.refineOpt.spanningAssembleOpt),
                        opt.alignFileOpt, opt.referenceFilename,
-                       opt.statsFilename, opt.chromDepthFilename, header, counts, opt.isRNA, edgeTracker.remoteReadRetrievalTime),
+                       opt.statsFilename, opt.chromDepthFilename, header, counts, opt.isRNA, edgeTrackerPtr->remoteReadRetrievalTime),
     _largeSVAligner(opt.refineOpt.largeSVAlignScores,opt.refineOpt.largeGapOpenScore),
     _largeInsertEdgeAligner(opt.refineOpt.largeInsertEdgeAlignScores),
     _largeInsertCompleteAligner(opt.refineOpt.largeInsertCompleteAlignScores),
