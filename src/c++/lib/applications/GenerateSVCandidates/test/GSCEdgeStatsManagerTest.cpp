@@ -23,17 +23,6 @@
 #include "test/testFileMakers.hh"
 #include "boost/filesystem.hpp"
 
-/// TestGSCEdgeStatsManager is a friend of GSCEdgeStatsManager. So that can access private
-/// members of GSCEdgeStatsManager.
-struct TestGSCEdgeStatsManager
-{
-    void flushStream(GSCEdgeStatsManager& edgeStatsManager)
-    {
-        edgeStatsManager.edgeStats.save(*edgeStatsManager._osPtr);
-        edgeStatsManager._osPtr->flush();
-    }
-};
-
 BOOST_AUTO_TEST_SUITE( GSCEdgeStatsManager_test_suite )
 
 // Following statistics are verifed from EdgeStats file
@@ -48,9 +37,8 @@ BOOST_AUTO_TEST_SUITE( GSCEdgeStatsManager_test_suite )
 // 9. Number of spanning assembly candidates
 BOOST_AUTO_TEST_CASE( test_GSCEdgeStatsManager )
 {
-    TestFilenameMaker filenameMaker1;
     TestFilenameMaker filenameMaker2;
-    GSCEdgeStatsManager edgeStatsManager(filenameMaker1.getFilename());
+    GSCEdgeStatsManager edgeStatsManager;
     EdgeRuntimeTracker tracker(filenameMaker2.getFilename());
     EdgeInfo edgeInfo;
     edgeInfo.nodeIndex1 = 1;
@@ -70,8 +58,14 @@ BOOST_AUTO_TEST_CASE( test_GSCEdgeStatsManager )
     // Update the times
     edgeStatsManager.updateScoredEdgeTime(edgeInfo, tracker);
     tracker.stop(edgeInfo);
-    TestGSCEdgeStatsManager testGSCEdgeStatsManager;
-    testGSCEdgeStatsManager.flushStream(edgeStatsManager);
+
+    // put edgeStats through serialize/deserialize cycle to test these functions as well:
+    TestFilenameMaker filenameMaker1;
+    {
+        GSCEdgeStats edgeStats(edgeStatsManager.returnStats());
+        edgeStats.save(filenameMaker1.getFilename().c_str());
+    }
+
     GSCEdgeStats edgeStats;
     // loading edge stats from the file
     edgeStats.load(filenameMaker1.getFilename().c_str());

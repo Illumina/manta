@@ -155,6 +155,7 @@ private:
 /// specifically we want to avoid initializing them for every edge (in principal, this has not been benchmarked).
 struct EdgeThreadLocalData {
     std::shared_ptr<EdgeRuntimeTracker> edgeTrackerPtr;
+    GSCEdgeStatsManager edgeStatMan;
     std::unique_ptr<SVFinder> svFindPtr;
     SVCandidateSetData svData;
     std::vector<SVCandidate> svs;
@@ -162,7 +163,7 @@ struct EdgeThreadLocalData {
 };
 
 /// Process a single edge on one thread:
-void
+GSCEdgeStats
 processEdge(
     int threadId,
     const GSCOptions& opt,
@@ -225,17 +226,16 @@ processEdge(
         throw;
     }
 
-#ifdef RABBIT
-    edgeTracker.stop(edge);
+    edgeData.edgeTrackerPtr->stop(edge);
     if (opt.isVerbose)
     {
         log_os << __FUNCTION__ << ": Time to process last edge: ";
-        edgeTracker.getLastEdgeTime().reportSec(log_os);
+        edgeData.edgeTrackerPtr->getLastEdgeTime().reportSec(log_os);
         log_os << "\n";
     }
 
-    edgeStatMan.updateScoredEdgeTime(edge, edgeTracker);
-#endif
+    edgeData.edgeStatMan.updateScoredEdgeTime(edge, *(edgeData.edgeTrackerPtr));
+    return edgeData.edgeStatMan.returnStats();
 }
 
 static
@@ -246,16 +246,17 @@ runGSC(
     const char* progVersion)
 {
     auto edgeTrackerStreamPtr(std::make_shared<SynchronizedOutputStream>(opt.edgeRuntimeFilename));
-    GSCEdgeStatsManager edgeStatMan(opt.edgeStatsFilename);
 
     const SVLocusScanner readScanner(opt.scanOpt, opt.statsFilename, opt.alignFileOpt.alignmentFilenames, !opt.isUnstrandedRNA);
 
     static const bool isSkipLocusSetIndexCreation(true);
     const SVLocusSet cset(opt.graphFilename.c_str(), isSkipLocusSetIndexCreation);
     const bam_header_info& bamHeader(cset.getBamHeader());
+#ifdef RABBIT
     MultiJunctionFilter svMJFilter(opt,edgeStatMan);
 
-    //SVCandidateProcessor svProcessor(opt, readScanner, progName, progVersion, cset, edgeTracker, edgeStatMan);
+    SVCandidateProcessor svProcessor(opt, readScanner, progName, progVersion, cset, edgeTracker, edgeStatMan);
+#endif
 
     std::unique_ptr<EdgeRetriever> edgerPtr(edgeRFactory(cset, opt.edgeOpt));
     EdgeRetriever& edger(*edgerPtr);
@@ -296,12 +297,34 @@ runGSC(
     for (auto& edgeData : edgeDataPool)
     {
         edgeData.edgeTrackerPtr.reset(new EdgeRuntimeTracker(edgeTrackerStreamPtr));
-        edgeData.svFindPtr.reset(new SVFinder(opt, readScanner, bamHeader, cset.getAllSampleReadCounts(), edgeData.edgeTrackerPtr, edgeStatMan));
+        edgeData.svFindPtr.reset(new SVFinder(opt, readScanner, bamHeader, cset.getAllSampleReadCounts(),
+            edgeData.edgeTrackerPtr, edgeData.edgeStatMan));
     }
 
+    std::vector<std::future<GSCEdgeStats>> edgeResults;
     while (edger.next())
     {
-        pool.push(processEdge, std::cref(opt), std::cref(cset), std::ref(edgeDataPool), edger.getEdge());
+        edgeResults.push_back(
+            pool.push(
+                processEdge, std::cref(opt), std::cref(cset), std::ref(edgeDataPool), edger.getEdge()));
+    }
+
+    pool.stop(true);
+
+    GSCEdgeStats mergedStats;
+    for (auto& edgeResult : edgeResults)
+    {
+        const GSCEdgeStats& edgeStats(edgeResult.get());
+        mergedStats.merge(edgeStats);
+    }
+
+    if (! opt.edgeStatsFilename.empty())
+    {
+        mergedStats.save(opt.edgeStatsFilename.c_str());
+    }
+    if (! opt.edgeStatsReportFilename.empty())
+    {
+        mergedStats.report(opt.edgeStatsReportFilename.c_str());
     }
 }
 

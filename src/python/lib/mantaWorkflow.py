@@ -572,6 +572,9 @@ def runHyGen(self, taskPrefix="", dependencies=None) :
         edgeStatsLogPaths.append(self.paths.getHyGenEdgeStatsPath(binStr))
         hygenCmd.extend(["--edge-stats-log", edgeStatsLogPaths[-1]])
 
+#RABBIT
+        hygenCmd.extend(["--edge-stats-report", TODO)
+
         if self.params.isGenerateSupportBam :
             hygenCmd.extend(["--evidence-bam-stub", self.paths.getSupportBamStub(binStr)])
 

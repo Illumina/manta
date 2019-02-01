@@ -18,7 +18,7 @@
 //
 
 #include <fstream>
-#include <htsapi/vcf_streamer.hh>
+#include "htsapi/vcf_streamer.hh"
 #include "boost/test/unit_test.hpp"
 #include "boost/make_unique.hpp"
 #include "test/testAlignmentDataUtil.hh"
@@ -238,7 +238,6 @@ BOOST_AUTO_TEST_CASE( test_tumorOnly )
 {
     const bam_header_info bamHeader(buildTestBamHeader());
     TestFilenameMaker filenameMaker1;
-    TestFilenameMaker filenameMaker2;
     TestFilenameMaker filenameMaker3;
     TestFilenameMaker filenameMaker4;
     GSCOptions options;
@@ -254,7 +253,6 @@ BOOST_AUTO_TEST_CASE( test_tumorOnly )
     options.alignFileOpt.isAlignmentTumor = {true}; // only tumor bam file
     options.referenceFilename = getTestReferenceFilename();
     options.edgeRuntimeFilename = filenameMaker1.getFilename();
-    options.edgeStatsFilename = filenameMaker2.getFilename();
     // VCF records should be written in this file
     options.tumorOutputFilename = filenameMaker3.getFilename();
     options.candidateOutputFilename = filenameMaker4.getFilename();
@@ -262,7 +260,7 @@ BOOST_AUTO_TEST_CASE( test_tumorOnly )
     TestStatsFileMaker statsFileMaker;
     options.statsFilename = statsFileMaker.getFilename();
     EdgeRuntimeTracker edgeTracker(options.edgeRuntimeFilename);
-    GSCEdgeStatsManager edgeStatMan(options.edgeStatsFilename);
+    GSCEdgeStatsManager edgeStatMan;
 
     // Creating SV candidate
     SVCandidate candidate1;
@@ -351,7 +349,6 @@ BOOST_AUTO_TEST_CASE( test_RNA )
 {
     const bam_header_info bamHeader(buildTestBamHeader());
     TestFilenameMaker filenameMaker1;
-    TestFilenameMaker filenameMaker2;
     TestFilenameMaker filenameMaker3;
     TestFilenameMaker filenameMaker4;
     GSCOptions options;
@@ -368,7 +365,6 @@ BOOST_AUTO_TEST_CASE( test_RNA )
     options.isRNA = true;// This is an rna sample
     options.referenceFilename = getTestReferenceFilename();
     options.edgeRuntimeFilename = filenameMaker1.getFilename();
-    options.edgeStatsFilename = filenameMaker2.getFilename();
     // VCF records should be written in this file
     options.rnaOutputFilename = filenameMaker3.getFilename();
     options.candidateOutputFilename = filenameMaker4.getFilename();
@@ -377,7 +373,7 @@ BOOST_AUTO_TEST_CASE( test_RNA )
     TestStatsFileMaker statsFileMaker;
     options.statsFilename = statsFileMaker.getFilename();
     EdgeRuntimeTracker edgeTracker(options.edgeRuntimeFilename);
-    GSCEdgeStatsManager edgeStatMan(options.edgeStatsFilename);
+    GSCEdgeStatsManager edgeStatMan;
     // Creating SV Candidate
     SVCandidate candidate1;
     candidate1.setPrecise();
@@ -464,7 +460,6 @@ BOOST_AUTO_TEST_CASE( test_Diploid )
 {
     const bam_header_info bamHeader(buildTestBamHeader());
     TestFilenameMaker filenameMaker1;
-    TestFilenameMaker filenameMaker2;
     TestFilenameMaker filenameMaker3;
     TestFilenameMaker filenameMaker4;
     GSCOptions options;
@@ -480,7 +475,6 @@ BOOST_AUTO_TEST_CASE( test_Diploid )
     options.alignFileOpt.isAlignmentTumor = {false};
     options.referenceFilename = getTestReferenceFilename();
     options.edgeRuntimeFilename = filenameMaker1.getFilename();
-    options.edgeStatsFilename = filenameMaker2.getFilename();
     // VCF records should be written in the diploid file
     options.diploidOutputFilename = filenameMaker3.getFilename();
     options.candidateOutputFilename = filenameMaker4.getFilename();
@@ -491,7 +485,7 @@ BOOST_AUTO_TEST_CASE( test_Diploid )
     TestStatsFileMaker statsFileMaker;
     options.statsFilename = statsFileMaker.getFilename();
     EdgeRuntimeTracker edgeTracker(options.edgeRuntimeFilename);
-    GSCEdgeStatsManager edgeStatMan(options.edgeStatsFilename);
+    GSCEdgeStatsManager edgeStatMan;
 
     // Creating SV candidate
     SVCandidate candidate1;
@@ -578,7 +572,6 @@ BOOST_AUTO_TEST_CASE( test_Somatic )
 {
     const bam_header_info bamHeader(buildTestBamHeader());
     TestFilenameMaker filenameMaker1;
-    TestFilenameMaker filenameMaker2;
     TestFilenameMaker filenameMaker3;
     TestFilenameMaker filenameMaker4;
     TestFilenameMaker filenameMaker5;
@@ -597,7 +590,6 @@ BOOST_AUTO_TEST_CASE( test_Somatic )
     options.alignFileOpt.isAlignmentTumor = {false, true}; // normal and tumor
     options.referenceFilename = getTestReferenceFilename();
     options.edgeRuntimeFilename = filenameMaker1.getFilename();
-    options.edgeStatsFilename = filenameMaker2.getFilename();
     options.diploidOutputFilename = filenameMaker3.getFilename();
     // VCF records should be written in this file
     options.somaticOutputFilename = filenameMaker4.getFilename();
@@ -613,7 +605,7 @@ BOOST_AUTO_TEST_CASE( test_Somatic )
     TestStatsFileMaker statsFileMaker;
     options.statsFilename = statsFileMaker.getFilename();
     EdgeRuntimeTracker edgeTracker(options.edgeRuntimeFilename);
-    GSCEdgeStatsManager edgeStatMan(options.edgeStatsFilename);
+    GSCEdgeStatsManager edgeStatMan;
     // Creating SV candidates
     SVCandidate candidate1;
     candidate1.setPrecise();

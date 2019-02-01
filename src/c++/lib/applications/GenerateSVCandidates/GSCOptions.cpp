@@ -85,6 +85,8 @@ parseGSCOptions(
      "optionally log time for long-running edges to this file")
     ("edge-stats-log", po::value(&opt.edgeStatsFilename),
      "optionally log aggregate edge statistics to this file")
+    ("edge-stats-report", po::value(&opt.edgeStatsReportFilename),
+     "optionally generate a report from aggregate edge statistics to this file")
     ("candidate-output-file", po::value(&opt.candidateOutputFilename),
      "Write SV candidates to file (required)")
     ("diploid-output-file", po::value(&opt.diploidOutputFilename),

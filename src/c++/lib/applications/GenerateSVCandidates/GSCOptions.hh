@@ -54,6 +54,7 @@ struct GSCOptions
     std::string chromDepthFilename;
     std::string edgeRuntimeFilename;
     std::string edgeStatsFilename;
+    std::string edgeStatsReportFilename;
 
     std::string candidateOutputFilename;
     std::string diploidOutputFilename;

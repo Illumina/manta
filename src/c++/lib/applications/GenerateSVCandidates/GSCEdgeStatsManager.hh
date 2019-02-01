@@ -34,16 +34,19 @@
 #include <string>
 
 
-/// handles all messy real world interaction for the stats module,
-/// stats module itself just accumulates data and
+/// This object processes incoming edge data to accumulate stats in the edge stats module (GSCEdgeStats)
 ///
 struct GSCEdgeStatsManager : private boost::noncopyable
 {
     explicit
-    GSCEdgeStatsManager(
-        const std::string& outputFile);
+    GSCEdgeStatsManager() { lifeTime.resume(); }
 
-    ~GSCEdgeStatsManager();
+    GSCEdgeStats
+    returnStats()
+    {
+        edgeStats.edgeData.lifeTime = lifeTime.getTimes();
+        return edgeStats;
+    }
 
     void
     updateEdgeCandidates(
@@ -51,8 +54,6 @@ struct GSCEdgeStatsManager : private boost::noncopyable
         const unsigned candCount,
         const SVFinderStats& finderStats)
     {
-        if (_osPtr == nullptr) return;
-
         GSCEdgeGroupStats& gStats(getStatsGroup(edge));
         gStats.totalInputEdgeCount++;
         gStats.totalCandidateCount+=candCount;
@@ -66,8 +67,6 @@ struct GSCEdgeStatsManager : private boost::noncopyable
         const unsigned mjComplexCount,
         const unsigned mjSpanningFilterCount)
     {
-        if (_osPtr == nullptr) return;
-
         GSCEdgeGroupStats& gStats(getStatsGroup(edge));
         gStats.totalComplexCandidate += mjComplexCount;
         gStats.totalSpanningCandidateFilter += mjSpanningFilterCount;
@@ -79,8 +78,6 @@ struct GSCEdgeStatsManager : private boost::noncopyable
         const unsigned junctionCount,
         const bool isComplex)
     {
-        if (_osPtr == nullptr) return;
-
         GSCEdgeGroupStats& gStats(getStatsGroup(edge));
         gStats.totalJunctionCount+=junctionCount;
         if (isComplex) gStats.totalComplexJunctionCount+=junctionCount;
@@ -94,8 +91,6 @@ struct GSCEdgeStatsManager : private boost::noncopyable
         const bool isSpanning,
         const bool isOverlapSkip = false)
     {
-        if (_osPtr == nullptr) return;
-
         GSCEdgeGroupStats& gStats(getStatsGroup(edge));
         gStats.totalAssemblyCandidates += assemblyCount;
         if (isSpanning) gStats.totalSpanningAssemblyCandidates += assemblyCount;
@@ -114,18 +109,12 @@ struct GSCEdgeStatsManager : private boost::noncopyable
         const EdgeInfo& edge,
         const EdgeRuntimeTracker& edgeTracker)
     {
-        if (_osPtr == nullptr) return;
-
         GSCEdgeGroupStats& gStats(getStatsGroup(edge));
         gStats.totalTime.merge(edgeTracker.getLastEdgeTime());
         gStats.candTime.merge(edgeTracker.candidacyTime.getTimes());
         gStats.assemblyTime.merge(edgeTracker.assemblyTime.getTimes());
         gStats.scoringTime.merge(edgeTracker.scoreTime.getTimes());
     }
-
-    /// TestGSCEdgeStatsManager is a friend structure of GSCEdgeStatsManager. So that it can access private
-    /// members of GSCEdgeStatsManager.
-    friend struct TestGSCEdgeStatsManager;
 
 private:
     GSCEdgeGroupStats&
@@ -135,7 +124,6 @@ private:
         return (edge.isSelfEdge() ? edgeStats.edgeData.selfEdges : edgeStats.edgeData.remoteEdges);
     }
 
-    std::ostream* _osPtr;
     TimeTracker lifeTime;
     GSCEdgeStats edgeStats;
 };

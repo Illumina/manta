@@ -749,10 +749,8 @@ BOOST_AUTO_TEST_CASE( test_SVCandidates )
     // Create options
     TestFilenameMaker testFilenameMaker;
     TestFilenameMaker fileNameMaker1;
-    TestFilenameMaker fileNameMaker2;
     GSCOptions options;
     options.edgeStatsFilename = fileNameMaker1.getFilename();
-    options.edgeRuntimeFilename = fileNameMaker2.getFilename();
     options.referenceFilename = referenceFilename;
     options.alignFileOpt.alignmentFilenames = {bamFileName};
     options.alignFileOpt.isAlignmentTumor = {false};
@@ -769,7 +767,7 @@ BOOST_AUTO_TEST_CASE( test_SVCandidates )
     static const bool isSkipLocusSetIndexCreation(true);
 
     auto edgeTrackerPtr(std::make_shared<EdgeRuntimeTracker>(options.edgeRuntimeFilename));
-    GSCEdgeStatsManager edgeStatMan(options.edgeStatsFilename);
+    GSCEdgeStatsManager edgeStatMan;
 
     SVCandidateSetData svData;
     std::vector<SVCandidate> svs;
