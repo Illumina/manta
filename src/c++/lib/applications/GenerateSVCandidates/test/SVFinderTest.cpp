@@ -768,7 +768,7 @@ BOOST_AUTO_TEST_CASE( test_SVCandidates )
 
     static const bool isSkipLocusSetIndexCreation(true);
 
-    EdgeRuntimeTracker edgeTracker(options.edgeRuntimeFilename);
+    auto edgeTrackerPtr(std::make_shared<EdgeRuntimeTracker>(options.edgeRuntimeFilename));
     GSCEdgeStatsManager edgeStatMan(options.edgeStatsFilename);
 
     SVCandidateSetData svData;
@@ -789,8 +789,8 @@ BOOST_AUTO_TEST_CASE( test_SVCandidates )
 
         // Deserialize SV locus graph
         const SVLocusSet cset(options.graphFilename.c_str(), isSkipLocusSetIndexCreation);
-        SVFinder finder(options, scanner.operator*(), cset.getBamHeader(), cset.getAllSampleReadCounts(), edgeTracker,
-                        edgeStatMan);
+        SVFinder finder(options, scanner.operator*(), cset.getBamHeader(), cset.getAllSampleReadCounts(),
+            edgeTrackerPtr, edgeStatMan);
         finder.findCandidateSV(cset, edgeInfo, svData, svs);
         // Min edge criteria is not satisfied as minimum
         // number of edges required is 10
@@ -814,7 +814,7 @@ BOOST_AUTO_TEST_CASE( test_SVCandidates )
         // Deserialize SV locus graph
         const SVLocusSet cset(options.graphFilename.c_str(), isSkipLocusSetIndexCreation);
         SVFinder finder2(options, scanner.operator*(), cset.getBamHeader(), cset.getAllSampleReadCounts(),
-                         edgeTracker, edgeStatMan);
+                         edgeTrackerPtr, edgeStatMan);
         finder2.findCandidateSV(cset, edgeInfo, svData, svs);
         BOOST_REQUIRE_EQUAL(svData.getDataGroup(0).size(), 0);
         BOOST_REQUIRE_EQUAL(svs.size(), 0);
@@ -824,6 +824,7 @@ BOOST_AUTO_TEST_CASE( test_SVCandidates )
     // locus node [279,319) and also there is an edge from locus node [279,319) to
     // locus node [80,120). Here minimum number of edges required is 1.
     {
+        sopt.minMergeEdgeObservations = 1;
         SVLocusSet set(sopt, bamHeader, {bamFileName});
         set.merge(locus1);
         set.merge(locus2);
@@ -834,7 +835,7 @@ BOOST_AUTO_TEST_CASE( test_SVCandidates )
         // Deserialize SV locus graph
         const SVLocusSet cset(options.graphFilename.c_str(), isSkipLocusSetIndexCreation);
         SVFinder finder(options, scanner.operator*(), cset.getBamHeader(), cset.getAllSampleReadCounts(),
-                         edgeTracker, edgeStatMan);
+                        edgeTrackerPtr, edgeStatMan);
         finder.findCandidateSV(cset, edgeInfo, svData, svs);
         BOOST_REQUIRE_EQUAL(svData.getDataGroup(0).size(), 1);
         BOOST_REQUIRE_EQUAL(svs.size(), 1);

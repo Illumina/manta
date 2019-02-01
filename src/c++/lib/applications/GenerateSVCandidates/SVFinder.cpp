@@ -87,7 +87,7 @@ SVFinder(
     const SVLocusScanner& readScanner,
     const bam_header_info& bamHeader,
     const AllSampleReadCounts& readCounts,
-    EdgeRuntimeTracker& edgeTracker,
+    std::shared_ptr<EdgeRuntimeTracker> edgeTrackerPtr,
     GSCEdgeStatsManager& edgeStatMan) :
     _scanOpt(opt.scanOpt),
     _isAlignmentTumor(opt.alignFileOpt.isAlignmentTumor),
@@ -96,7 +96,7 @@ SVFinder(
     _isRNA(opt.isRNA),
     _isVerbose(opt.isVerbose),
     _isSomatic(false),
-    _edgeTracker(edgeTracker),
+    _edgeTrackerPtr(edgeTrackerPtr),
     _edgeStatMan(edgeStatMan)
 {
     _dFilterPtr.reset(new ChromDepthFilterUtil(opt.chromDepthFilename,_scanOpt.maxDepthFactor, bamHeader));
@@ -1380,7 +1380,7 @@ findCandidateSV(
     std::vector<SVCandidate>& svs)
 {
     // time/stats tracking setup:
-    const TimeScoper candTime(_edgeTracker.candidacyTime);
+    const TimeScoper candTime(_edgeTrackerPtr->candidacyTime);
     SVFinderStats stats;
 
     findCandidateSVImpl(cset, edge,svData,svs,stats);
@@ -1392,5 +1392,4 @@ findCandidateSV(
     {
         log_os << __FUNCTION__ << ": Low-resolution candidate generation complete. Candidate count: " << svs.size() << "\n";
     }
-
 }

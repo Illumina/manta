@@ -154,6 +154,7 @@ private:
 /// These are thread-local data that we initialize before the thread pool to reduce total initialization costs,
 /// specifically we want to avoid initializing them for every edge (in principal, this has not been benchmarked).
 struct EdgeThreadLocalData {
+    std::shared_ptr<EdgeRuntimeTracker> edgeTrackerPtr;
     std::unique_ptr<SVFinder> svFindPtr;
     SVCandidateSetData svData;
     std::vector<SVCandidate> svs;
@@ -171,16 +172,17 @@ processEdge(
 {
     std::cerr << "Hello from thread " << threadId;
     EdgeThreadLocalData& edgeData(edgeDataPool[threadId]);
+
     try
     {
-#ifdef RABBIT
-        edgeTracker.start();
-#endif
+        edgeData.edgeTrackerPtr->start();
+
         if (opt.isVerbose)
         {
             log_os << __FUNCTION__ << ": starting analysis of edge: ";
             dumpEdgeInfo(edge,cset,log_os);
         }
+
         // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
         edgeData.svFindPtr->findCandidateSV(cset, edge, edgeData.svData, edgeData.svs);
 #ifdef RABBIT
@@ -243,7 +245,7 @@ runGSC(
     const char* progName,
     const char* progVersion)
 {
-    EdgeRuntimeTracker edgeTracker(opt.edgeRuntimeFilename);
+    auto edgeTrackerStreamPtr(std::make_shared<SynchronizedOutputStream>(opt.edgeRuntimeFilename));
     GSCEdgeStatsManager edgeStatMan(opt.edgeStatsFilename);
 
     const SVLocusScanner readScanner(opt.scanOpt, opt.statsFilename, opt.alignFileOpt.alignmentFilenames, !opt.isUnstrandedRNA);
@@ -253,7 +255,7 @@ runGSC(
     const bam_header_info& bamHeader(cset.getBamHeader());
     MultiJunctionFilter svMJFilter(opt,edgeStatMan);
 
-    SVCandidateProcessor svProcessor(opt, readScanner, progName, progVersion, cset, edgeTracker, edgeStatMan);
+    //SVCandidateProcessor svProcessor(opt, readScanner, progName, progVersion, cset, edgeTracker, edgeStatMan);
 
     std::unique_ptr<EdgeRetriever> edgerPtr(edgeRFactory(cset, opt.edgeOpt));
     EdgeRetriever& edger(*edgerPtr);
@@ -293,7 +295,8 @@ runGSC(
     std::vector<EdgeThreadLocalData> edgeDataPool(threadCount);
     for (auto& edgeData : edgeDataPool)
     {
-        edgeData.svFindPtr.reset(new SVFinder(opt, readScanner, bamHeader, cset.getAllSampleReadCounts(), edgeTracker, edgeStatMan));
+        edgeData.edgeTrackerPtr.reset(new EdgeRuntimeTracker(edgeTrackerStreamPtr));
+        edgeData.svFindPtr.reset(new SVFinder(opt, readScanner, bamHeader, cset.getAllSampleReadCounts(), edgeData.edgeTrackerPtr, edgeStatMan));
     }
 
     while (edger.next())

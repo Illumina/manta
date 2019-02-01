@@ -46,7 +46,7 @@ struct SVFinder
         const SVLocusScanner& readScanner,
         const bam_header_info& bamHeader,
         const AllSampleReadCounts& readCounts,
-        EdgeRuntimeTracker& edgeTracker,
+        std::shared_ptr<EdgeRuntimeTracker> edgeTrackerPtr,
         GSCEdgeStatsManager& edgeStatMan);
 
     ~SVFinder();
@@ -173,6 +173,6 @@ private:
     /// - assembly read noise means reads with edges which have high mismatch density or soft-clipping
     std::vector<double> _assemblyNoiseRate;
 
-    EdgeRuntimeTracker& _edgeTracker;
+    std::shared_ptr<EdgeRuntimeTracker> _edgeTrackerPtr;
     GSCEdgeStatsManager& _edgeStatMan;
 };

@@ -25,6 +25,9 @@
 
 #include <iosfwd>
 #include <memory>
+#include <mutex>
+
+#include "boost/noncopyable.hpp"
 
 
 void
@@ -49,3 +52,20 @@ private:
     std::ostream& _os;
     std::unique_ptr<std::ofstream> _tmp_os;
 };
+
+/// Synchronizes access to a file stream from multiple threads:
+class SynchronizedOutputStream : private boost::noncopyable {
+public:
+    explicit
+    SynchronizedOutputStream(const std::string& outputFile);
+
+    bool isOpen() const;
+
+    void
+    write(const std::string& msg);
+
+private:
+    std::unique_ptr<std::ostream> m_osPtr;
+    std::mutex m_writerMutex;
+};
+

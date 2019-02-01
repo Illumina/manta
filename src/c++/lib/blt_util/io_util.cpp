@@ -64,3 +64,33 @@ StreamScoper::
 {
     _os.copyfmt(*_tmp_os);
 }
+
+
+SynchronizedOutputStream::
+SynchronizedOutputStream(const std::string& outputFile)
+{
+    if (outputFile.empty()) return;
+    m_osPtr.reset(new std::ofstream(outputFile.c_str()));
+    if (! *m_osPtr)
+    {
+        std::ostringstream oss;
+        oss << "Can't open output file: '" << outputFile << "'";
+        throw blt_exception(oss.str().c_str());
+    }
+}
+
+bool
+SynchronizedOutputStream::
+isOpen() const
+{
+    return static_cast<bool>(*m_osPtr);
+}
+
+void
+SynchronizedOutputStream::
+write(const std::string& msg)
+{
+    if (! isOpen()) return;
+    std::lock_guard<std::mutex> lock(m_writerMutex);
+    *m_osPtr << msg;
+}

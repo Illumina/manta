@@ -23,34 +23,44 @@
 
 #pragma once
 
+#include "blt_util/io_util.hh"
 #include "blt_util/time_util.hh"
 #include "svgraph/EdgeInfo.hh"
 
-#include "boost/utility.hpp"
+#include "boost/noncopyable.hpp"
 
 
 #include <iosfwd>
 
 
 
-/// simple edge time tracker and reporter
+/// Simple edge time tracker and reporter
+///
+/// When multiple trackers are used across multiple-threads, the output of all thrackers can be
+/// syncronized through a SynchronizedOutputStream
+///
 struct EdgeRuntimeTracker : private boost::noncopyable
 {
+    /// Default construction method to synchronize Edge tracking output over multiple threads
     explicit
-    EdgeRuntimeTracker(const std::string& outputFile);
+    EdgeRuntimeTracker(std::shared_ptr<SynchronizedOutputStream> streamPtr);
 
-    ~EdgeRuntimeTracker();
+    /// Simpler construction method for single-thread use
+    explicit
+    EdgeRuntimeTracker(const std::string& outputFilename)
+      : EdgeRuntimeTracker(std::make_shared<SynchronizedOutputStream>(outputFilename))
+    {}
 
     void
     start()
     {
-        edgeTime.clear();
+        _edgeTime.clear();
         candidacyTime.clear();
         assemblyTime.clear();
         scoreTime.clear();
         remoteReadRetrievalTime.clear();
 
-        edgeTime.resume();
+        _edgeTime.resume();
         _candidateCount = 0;
         _complexCandidateCount = 0;
         _assembledCandidateCount = 0;
@@ -63,7 +73,7 @@ struct EdgeRuntimeTracker : private boost::noncopyable
     CpuTimes
     getLastEdgeTime() const
     {
-        return edgeTime.getTimes();
+        return _edgeTime.getTimes();
     }
 
     void
@@ -93,8 +103,8 @@ struct EdgeRuntimeTracker : private boost::noncopyable
     friend struct TestEdgeRuntimeTracker;
 
 private:
-    std::ostream* _osPtr;
-    TimeTracker edgeTime;
+    std::shared_ptr<SynchronizedOutputStream> _streamPtr;
+    TimeTracker _edgeTime;
 
     unsigned _candidateCount;
     unsigned _complexCandidateCount;

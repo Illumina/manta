@@ -23,9 +23,6 @@
 
 #include "EdgeRuntimeTracker.hh"
 
-#include "common/Exceptions.hh"
-
-#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -34,32 +31,13 @@
 
 EdgeRuntimeTracker::
 EdgeRuntimeTracker(
-    const std::string& outputFile) :
-    _osPtr(nullptr),
+    std::shared_ptr<SynchronizedOutputStream> streamPtr) :
+    _streamPtr(streamPtr),
     _candidateCount(0),
     _complexCandidateCount(0),
     _assembledCandidateCount(0),
     _assembledComplexCandidateCount(0)
-{
-    if (outputFile.empty()) return;
-    _osPtr = new std::ofstream(outputFile.c_str());
-    if (! *_osPtr)
-    {
-        std::ostringstream oss;
-        oss << "Can't open output file: '" << outputFile << "'";
-        BOOST_THROW_EXCEPTION(illumina::common::GeneralException(oss.str()));
-    }
-
-    *_osPtr << std::setprecision(4);
-}
-
-
-
-EdgeRuntimeTracker::
-~EdgeRuntimeTracker()
-{
-    if (nullptr != _osPtr) delete _osPtr;
-}
+{}
 
 
 
@@ -67,26 +45,29 @@ void
 EdgeRuntimeTracker::
 stop(const EdgeInfo& edge)
 {
-    edgeTime.stop();
-    const double lastTime(edgeTime.getWallSeconds());
+    _edgeTime.stop();
+    const double lastTime(_edgeTime.getWallSeconds());
 
     /// the purpose of the log is to identify the most troublesome cases only, so cutoff the output at a minimum time:
     static const double minLogTime(0.5);
     if (lastTime >= minLogTime)
     {
-        if (nullptr != _osPtr)
+        if (_streamPtr->isOpen())
         {
-            edge.write(*_osPtr);
-            *_osPtr << '\t' << lastTime
-                    << '\t' << _candidateCount
-                    << '\t' << _complexCandidateCount
-                    << '\t' << _assembledCandidateCount
-                    << '\t' << _assembledComplexCandidateCount
-                    << '\t' << candidacyTime.getWallSeconds()
-                    << '\t' << assemblyTime.getWallSeconds()
-                    << '\t' << remoteReadRetrievalTime.getWallSeconds()
-                    << '\t' << scoreTime.getWallSeconds()
-                    << '\n';
+            std::ostringstream oss;
+            oss << std::setprecision(4);
+            edge.write(oss);
+            oss << '\t' << lastTime
+                << '\t' << _candidateCount
+                << '\t' << _complexCandidateCount
+                << '\t' << _assembledCandidateCount
+                << '\t' << _assembledComplexCandidateCount
+                << '\t' << candidacyTime.getWallSeconds()
+                << '\t' << assemblyTime.getWallSeconds()
+                << '\t' << remoteReadRetrievalTime.getWallSeconds()
+                << '\t' << scoreTime.getWallSeconds()
+                << '\n';
+            _streamPtr->write(oss.str());
         }
     }
 }
