@@ -94,62 +94,54 @@ edgeRFactory(
 }
 
 
+
 /// TODO temporarily shoved here, needs a better home:
-struct MultiJunctionFilter
+static
+void
+multiJunctionFilterGroupCandidateSV(
+    const GSCOptions& opt,
+    const EdgeInfo& edge,
+    const std::vector<SVCandidate>& svs,
+    GSCEdgeStatsManager& edgeStatMan,
+    std::vector<SVMultiJunctionCandidate>& mjSVs)
 {
-    MultiJunctionFilter(
-        const GSCOptions& opt,
-        GSCEdgeStatsManager& edgeStatMan)
-        : _opt(opt),
-          _edgeStatMan(edgeStatMan)
-    {}
+    unsigned mjComplexCount(0);
+    unsigned mjSpanningFilterCount(0);
+    findMultiJunctionCandidates(svs, opt.minCandidateSpanningCount, opt.isRNA, mjComplexCount, mjSpanningFilterCount, mjSVs);
+    edgeStatMan.updateMJFilter(edge, mjComplexCount, mjSpanningFilterCount);
 
-    void
-    filterGroupCandidateSV(
-        const EdgeInfo& edge,
-        const std::vector<SVCandidate>& svs,
-        std::vector<SVMultiJunctionCandidate>& mjSVs)
+    if (opt.isVerbose)
     {
-        unsigned mjComplexCount(0);
-        unsigned mjSpanningFilterCount(0);
-        findMultiJunctionCandidates(svs, _opt.minCandidateSpanningCount, _opt.isRNA, mjComplexCount, mjSpanningFilterCount, mjSVs);
-        _edgeStatMan.updateMJFilter(edge, mjComplexCount, mjSpanningFilterCount);
-
-        if (_opt.isVerbose)
+        unsigned junctionCount(mjSVs.size());
+        unsigned candidateCount(0);
+        for (const SVMultiJunctionCandidate& mj : mjSVs)
         {
-            unsigned junctionCount(mjSVs.size());
-            unsigned candidateCount(0);
-            for (const SVMultiJunctionCandidate& mj : mjSVs)
-            {
-                candidateCount += mj.junction.size();
-            }
-            log_os << __FUNCTION__ << ": Low-resolution candidate filtration complete. "
-                   << "candidates: " << candidateCount << " "
-                   << "junctions: " << junctionCount << " "
-                   << "complex: " << mjComplexCount << " "
-                   << "spanningfilt: " << mjSpanningFilterCount << "\n";
+            candidateCount += mj.junction.size();
         }
-#ifdef DEBUG_GSV
-        log_os << __FUNCTION__ << ": final candidate list";
-        const unsigned junctionCount(mjSVs.size());
-        for (unsigned junctionIndex(0); junctionIndex< junctionCount; ++junctionIndex)
-        {
-            const auto& mj(mjSVs[junctionIndex]);
-            const unsigned junctionCandCount(mj.junction.size());
-            log_os << __FUNCTION__ << ": JUNCTION " << junctionIndex << " with " << junctionCandCount << " candidates\n";
-            for (unsigned junctionCandIndex(0); junctionCandIndex< junctionCandCount; ++junctionCandIndex)
-            {
-                log_os << __FUNCTION__ << ":  JUNCTION " << junctionIndex << " Candidate "
-                       << junctionCandIndex << " " << mj.junction[junctionCandIndex] << "\n";
-            }
-        }
-#endif
+        log_os << __FUNCTION__ << ": Low-resolution candidate filtration complete. "
+               << "candidates: " << candidateCount << " "
+               << "junctions: " << junctionCount << " "
+               << "complex: " << mjComplexCount << " "
+               << "spanningfilt: " << mjSpanningFilterCount << "\n";
     }
+#ifdef DEBUG_GSV
+    log_os << __FUNCTION__ << ": final candidate list";
+    const unsigned junctionCount(mjSVs.size());
+    for (unsigned junctionIndex(0); junctionIndex< junctionCount; ++junctionIndex)
+    {
+        const auto& mj(mjSVs[junctionIndex]);
+        const unsigned junctionCandCount(mj.junction.size());
+        log_os << __FUNCTION__ << ": JUNCTION " << junctionIndex << " with " << junctionCandCount << " candidates\n";
+        for (unsigned junctionCandIndex(0); junctionCandIndex< junctionCandCount; ++junctionCandIndex)
+        {
+            log_os << __FUNCTION__ << ":  JUNCTION " << junctionIndex << " Candidate "
+                   << junctionCandIndex << " " << mj.junction[junctionCandIndex] << "\n";
+        }
+    }
+#endif
+}
 
-private:
-    const GSCOptions& _opt;
-    GSCEdgeStatsManager& _edgeStatMan;
-};
+
 
 /// These are thread-local data that we initialize before the thread pool to reduce total initialization costs,
 /// specifically we want to avoid initializing them for every edge (in principal, this has not been benchmarked).
@@ -161,6 +153,8 @@ struct EdgeThreadLocalData {
     std::vector<SVCandidate> svs;
     std::vector<SVMultiJunctionCandidate> mjSVs;
 };
+
+
 
 /// Process a single edge on one thread:
 GSCEdgeStats
@@ -186,13 +180,12 @@ processEdge(
 
         // find number, type and breakend range (or better: breakend distro) of SVs on this edge:
         edgeData.svFindPtr->findCandidateSV(cset, edge, edgeData.svData, edgeData.svs);
-#ifdef RABBIT
 
         // filter long-range junctions outside of the candidate finder so that we can evaluate
         // junctions which are part of a larger event (like a reciprocal translocation)
-        svMJFilter.filterGroupCandidateSV(edge, svs, mjSVs);
+        multiJunctionFilterGroupCandidateSV(opt, edge, edgeData.svs,  edgeData.edgeStatMan, edgeData.mjSVs);
 
-
+#ifdef RABBIT
         SupportSamples svSupports;
         svSupports.supportSamples.resize(sampleSize);
 
@@ -253,8 +246,6 @@ runGSC(
     const SVLocusSet cset(opt.graphFilename.c_str(), isSkipLocusSetIndexCreation);
     const bam_header_info& bamHeader(cset.getBamHeader());
 #ifdef RABBIT
-    MultiJunctionFilter svMJFilter(opt,edgeStatMan);
-
     SVCandidateProcessor svProcessor(opt, readScanner, progName, progVersion, cset, edgeTracker, edgeStatMan);
 #endif
 
